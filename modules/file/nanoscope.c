@@ -85,6 +85,9 @@ static gchar*         get_data_name        (GHashTable *hash);
 static void           get_value_scales    (GHashTable *hash,
                                            gdouble *zscale,
                                            gdouble *curscale);
+static void           fill_metadata       (GwyContainer *data,
+                                           GHashTable *hash,
+                                           GList *list);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -211,6 +214,7 @@ nanoscope_load(const gchar *filename)
         if ((p = get_data_name(ndata->hash)))
             gwy_container_set_string_by_name(GWY_CONTAINER(object),
                                              "/filename/title", p);
+        fill_metadata(GWY_CONTAINER(object), ndata->hash, list);
     }
 
     /* unref all data fields, the container already keeps a reference to the
@@ -300,6 +304,50 @@ get_value_scales(GHashTable *hash,
         *curscale /= 1e9;
     }
 }
+
+static void
+add_metadata(gpointer hkey,
+             gpointer hvalue,
+             gpointer user_data)
+{
+    static gchar buffer[256];
+    gchar *key = (gchar*)hkey;
+    gchar *value = (gchar*)hvalue;
+    gchar *s;
+
+    if (!strcmp(key, "#self") || key[0] == '@' || !value[0])
+        return;
+
+    /* FIXME: naughty /-avoiding trick */
+    s = gwy_strreplace(hkey, "/", "∕", (gsize)-1);
+    g_snprintf(buffer, sizeof(buffer), "/meta/%s", s);
+    gwy_container_set_string_by_name(GWY_CONTAINER(user_data),
+                                     buffer, g_strdup(value));
+    g_free(s);
+}
+
+static void
+fill_metadata(GwyContainer *data,
+              G_GNUC_UNUSED GHashTable *hash,
+              GList *list)
+{
+    static const gchar *hashes[] = {
+        "File list", "Scanner list", "Equipment list",
+    };
+    GList *l;
+    guint i;
+
+    for (l = list; l; l = g_list_next(l)) {
+        GHashTable *h = ((NanoscopeData*)l->data)->hash;
+        for (i = 0; i < G_N_ELEMENTS(hashes); i++) {
+            if (strcmp(g_hash_table_lookup(h, "#self"), hashes[i]) == 0) {
+                g_hash_table_foreach(h, add_metadata, data);
+                break;
+            }
+        }
+    }
+}
+
 
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
