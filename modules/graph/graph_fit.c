@@ -229,7 +229,7 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
              && args->parent_xs[curve][i] <= args->to)
             || (args->from == args->to))
         {
-            if (skip_first_point)
+            if (skip_first_point && i == 0)
                 continue;
 
             xdata->data[j] = args->parent_xs[curve][i];
