@@ -46,7 +46,10 @@ struct _Gwy3DWindow {
     GtkWidget *notebook;
     GtkWidget *gwy3dview;
     GtkWidget *statusbar;
-    GtkWidget *foo;
+    GtkWidget *palette_menu;
+    GtkWidget *palette_label;
+    GtkWidget *material_menu;
+    GtkWidget *material_label;
 
     GwyZoomMode zoom_mode;  /* reserved for future use */
 

@@ -18,7 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <glib.h>
+#include <string.h>
+
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 
@@ -44,6 +45,11 @@ static void     gwy_3d_window_init              (Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_finalize          (GObject *object);
 static void     gwy_3d_window_set_mode          (gpointer userdata,
                                                  GtkWidget *button);
+static void     gwy_3d_window_set_palette       (GtkWidget *item,
+                                                 Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_set_material      (GtkWidget *item,
+                                                 Gwy3DWindow *gwy3dwindow);
+
 /*
 static void     gwy_3d_window_measure_changed   (Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_lame_resize       (Gwy3DWindow *gwy3dwindow);
@@ -171,10 +177,13 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 {
     Gwy3DWindow *gwy3dwindow;
     GwyPalette *palette;
+    GwyGLMaterial *material;
+    GtkRequisition size_req;
+    const gchar *name;
     GtkWidget *vbox, *hbox, *table, *toolbar, *spin, *button, *omenu, *group,
                *label;
+    gboolean is_none;
     gint row;
-    GtkRequisition size_req;
 
     gwy_debug("");
 
@@ -188,7 +197,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
     vbox = gtk_vbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
-    gtk_container_set_border_width(GTK_CONTAINER(vbox), 8);
+    gtk_container_set_border_width(GTK_CONTAINER(vbox), 6);
 
     gwy3dwindow->gwy3dview = (GtkWidget*)gwy3dview;
     gtk_box_pack_start(GTK_BOX(hbox), gwy3dwindow->gwy3dview, TRUE, TRUE, 0);
@@ -229,23 +238,36 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     row = 0;
 
     label = gtk_label_new(_("Material:"));
+    gwy3dwindow->material_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
-    omenu = gwy_option_menu_gl_material(NULL, NULL, NULL);
+    material = gwy_3d_view_get_material(gwy3dview);
+    name = gwy_gl_material_get_name(material);
+    is_none = !strcmp(name, "None");
+    omenu = gwy_option_menu_gl_material(G_CALLBACK(gwy_3d_window_set_material),
+                                        gwy3dwindow, name);
+    gwy3dwindow->material_menu = omenu;
     gtk_table_attach(GTK_TABLE(table), omenu,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
     label = gtk_label_new(_("Palette:"));
+    gwy3dwindow->palette_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+    gtk_widget_set_sensitive(label, is_none);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
-    omenu = gwy_option_menu_palette(NULL, NULL, NULL);
+    palette = gwy_3d_view_get_palette(gwy3dview);
+    name = gwy_palette_def_get_name(gwy_palette_get_palette_def(palette));
+    omenu = gwy_option_menu_palette(G_CALLBACK(gwy_3d_window_set_palette),
+                                    gwy3dwindow, name);
+    gtk_widget_set_sensitive(omenu, is_none);
+    gwy3dwindow->palette_menu = omenu;
     gtk_table_attach(GTK_TABLE(table), omenu,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
@@ -263,6 +285,11 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                                        (GtkObject*)gwy3dview->light_z);
     spin = gwy_table_attach_spinbutton(table, row++, _("Light_y"), _("???"),
                                        (GtkObject*)gwy3dview->light_y);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    button = gwy_stock_like_button_new(_("_Export"), GTK_STOCK_SAVE);
+    gtk_table_attach(GTK_TABLE(table), button,
+                     0, 1, row, row+1, 0, 0, 2, 2);
 
     gtk_widget_show_all(hbox);
 
@@ -311,6 +338,41 @@ gwy_3d_window_set_mode(gpointer userdata, GtkWidget *button)
     g_return_if_fail(GWY_IS_3D_WINDOW(gwy3dwindow));
     gwy_3d_view_set_status(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
                            GPOINTER_TO_INT(userdata));
+}
+
+static void
+gwy_3d_window_set_palette(GtkWidget *item,
+                          Gwy3DWindow *gwy3dwindow)
+{
+    gchar *palette_name;
+    GObject *palette;
+
+    /* FIXME: wouldn't it be better to allow a name in 3DView? */
+    palette_name = g_object_get_data(G_OBJECT(item), "palette-name");
+    palette = gwy_palette_new(NULL);
+    gwy_palette_set_by_name(GWY_PALETTE(palette), palette_name);
+    gwy_3d_view_set_palette(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
+                            GWY_PALETTE(palette));
+    g_object_unref(palette);
+}
+
+static void
+gwy_3d_window_set_material(GtkWidget *item,
+                           Gwy3DWindow *gwy3dwindow)
+{
+    gchar *material_name;
+    GObject *material;
+    gboolean is_none;
+
+    material_name = g_object_get_data(G_OBJECT(item), "material-name");
+    is_none = !strcmp(material_name, "None");
+    material = gwy_gl_material_new(material_name);
+    gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
+                             GWY_GL_MATERIAL(material));
+    g_object_unref(material);
+
+    gtk_widget_set_sensitive(gwy3dwindow->palette_menu, is_none);
+    gtk_widget_set_sensitive(gwy3dwindow->palette_label, is_none);
 }
 
 #if 0
