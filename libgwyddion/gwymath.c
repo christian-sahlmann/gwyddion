@@ -119,21 +119,21 @@ gwy_math_find_nearest_line(gdouble x, gdouble y,
 
     m = -1;
     for (i = 0; i < n; i++) {
-        gdouble x0 = *(coords++);
-        gdouble y0 = *(coords++);
-        gdouble x1 = *(coords++);
-        gdouble y1 = *(coords++);
+        gdouble xl0 = *(coords++);
+        gdouble yl0 = *(coords++);
+        gdouble xl1 = *(coords++);
+        gdouble yl1 = *(coords++);
         gdouble vx, vy, d;
 
-        vx = y1 - y0;
-        vy = x0 - x1;
-        if (vx*(y - y0) < vy*(x - x0))
+        vx = yl1 - yl0;
+        vy = xl0 - xl1;
+        if (vx*(y - yl0) < vy*(x - xl0))
             continue;
-        if (vx*(y1 - y) < vy*(x1 - x))
+        if (vx*(yl1 - y) < vy*(xl1 - x))
             continue;
         if (vx == 0.0 && vy == 0.0)
             continue;
-        d = vx*(x - x0) + vy*(y - y0);
+        d = vx*(x - xl0) + vy*(y - yl0);
         d *= d/(vx*vx + vy*vy);
         if (d < d2m) {
             d2m = d;
