@@ -45,10 +45,7 @@ typedef struct {
     GtkWidget *chisq;
     GtkWidget *selector;
     GtkWidget *equation;
-    GtkWidget *covar_row1;
-    GtkWidget *covar_row2;
-    GtkWidget *covar_row3;
-    GtkWidget *covar_row4;
+    GtkWidget **covar;
     GtkWidget **param_des;
     GtkWidget **param_fit;
     GtkWidget **param_init;
@@ -119,8 +116,6 @@ static gint        normalize_data            (FitArgs *args,
                                               GwyDataLine *xdata,
                                               GwyDataLine *ydata,
                                               gint curve);
-static GtkWidget*  covariance_matrix_table   (gint n,
-                                              GwyNLFitter *fitter);
 static void        create_results_window     (FitArgs *args);
 static void        destroy                   (FitArgs *args, 
                                               FitControls *controls);
@@ -211,23 +206,29 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
 
     if (curve >= args->parent_nofcurves) return 0;
 
-    gwy_data_line_resample(xdata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(ydata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(xdata, args->parent_ns[curve],
+                           GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(ydata, args->parent_ns[curve],
+                           GWY_INTERPOLATION_NONE);
 
 
     j = 0;
-    for (i=0; i<xdata->res; i++)
+    for (i = 0; i < xdata->res; i++)
     {
-        if ((args->parent_xs[curve][i] >= args->from && args->parent_xs[curve][i] <= args->to) || (args->from == args->to))
+        if ((args->parent_xs[curve][i] >= args->from
+             && args->parent_xs[curve][i] <= args->to)
+            || (args->from == args->to))
         {
-            if (args->function_type == GWY_NLFIT_PRESET_GAUSSIAN_PSDF && i == 0) continue;
+            if (args->function_type == GWY_NLFIT_PRESET_GAUSSIAN_PSDF && i == 0)
+                continue;
 
             xdata->data[j] = args->parent_xs[curve][i];
             ydata->data[j] = args->parent_ys[curve][i];
             j++;
         }
     }
-    if (j==0) return 0;
+    if (j == 0)
+        return 0;
 
 
     if (j < xdata->res)
@@ -253,7 +254,7 @@ fit_dialog(FitArgs *args)
     GtkWidget *vbox;
     FitControls controls;
     GwyGraphAutoProperties prop;
-    gint response, i;
+    gint response, i, j;
 
     enum { RESPONSE_RESET = 1,
         RESPONSE_FIT = 2
@@ -395,21 +396,17 @@ fit_dialog(FitArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
-    controls.covar_row1 = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.covar_row1), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row1);
-
-    controls.covar_row2 = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.covar_row2), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row2);
-
-    controls.covar_row3 = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.covar_row3), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row3);
-
-    controls.covar_row4 = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.covar_row4), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row4);
+    controls.covar = g_new0(GtkWidget*, MAX_PARAMS*MAX_PARAMS);
+    table = gtk_table_new(MAX_PARAMS, MAX_PARAMS, TRUE);
+    for (i = 0; i < MAX_PARAMS; i++) {
+        for (j = 0; j <= i; j++) {
+            label = controls.covar[i*MAX_PARAMS + j] = gtk_label_new(NULL);
+            gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+            gtk_table_attach(GTK_TABLE(table), label,
+                             j, j+1, i, i+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        }
+    }
+    gtk_container_add(GTK_CONTAINER(vbox), table);
 
     hbox2 = gtk_hbox_new(FALSE, 0);
     label = gtk_label_new(NULL);
@@ -524,24 +521,23 @@ destroy(FitArgs *args, FitControls *controls)
     g_free(controls->param_res);
     g_free(controls->param_fit);
     g_free(controls->param_err);
-    if (args->fitter) gwy_math_nlfit_free(args->fitter);
+    g_free(controls->covar);
+    if (args->fitter)
+        gwy_math_nlfit_free(args->fitter);
 }
 
 static void
 clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
-    gint i;
-    
-    for (i=0; i<MAX_PARAMS; i++)
-    {
+    gint i, j;
+
+    for (i = 0; i < MAX_PARAMS; i++) {
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), " ");
         gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), " ");
+        for (j = 0; j <= i; j++)
+            gtk_label_set_markup(GTK_LABEL(controls->covar[i*MAX_PARAMS + j]),
+                                 " ");
     }
-
-    gtk_label_set_markup(GTK_LABEL(controls->covar_row1), " ");
-    gtk_label_set_markup(GTK_LABEL(controls->covar_row2), " ");
-    gtk_label_set_markup(GTK_LABEL(controls->covar_row3), " ");
-    gtk_label_set_markup(GTK_LABEL(controls->covar_row4), " ");
 
     gtk_label_set_markup(GTK_LABEL(controls->chisq), " ");
 }
@@ -556,7 +552,7 @@ recompute(FitArgs *args, FitControls *controls)
     gboolean fixed[4];
     gchar buffer[64];
     gboolean ok;
-    gint i;
+    gint i, j, nparams;
     GString *label;
     GwyGraphAreaCurveParams par;
 
@@ -573,6 +569,7 @@ recompute(FitArgs *args, FitControls *controls)
     }
 
     function = gwy_math_nlfit_get_preset(args->function_type);
+    nparams = gwy_math_nlfit_get_function_nparams(args->fitfunc);
 
     for (i=0; i<MAX_PARAMS; i++)
     {
@@ -586,8 +583,7 @@ recompute(FitArgs *args, FitControls *controls)
                                   function->nparams,
                                   args->par_res, args->err, fixed, NULL);
 
-    for (i=0; i<gwy_math_nlfit_get_function_nparams(args->fitfunc); i++)
-    {
+    for (i = 0; i < nparams; i++) {
         g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par_res[i]);
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), buffer);
     }
@@ -595,81 +591,32 @@ recompute(FitArgs *args, FitControls *controls)
 
     if (args->fitter->covar)
     {
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", gwy_math_nlfit_get_dispersion(args->fitter));
+        /* FIXME: this is probably _scaled_ dispersion */
+        g_snprintf(buffer, sizeof(buffer), "%2.3g",
+                   gwy_math_nlfit_get_dispersion(args->fitter));
         gtk_label_set_markup(GTK_LABEL(controls->chisq), buffer);
 
-        for (i=0; i<gwy_math_nlfit_get_function_nparams(args->fitfunc); i++)
-        {
+        for (i = 0; i < nparams; i++) {
             g_snprintf(buffer, sizeof(buffer), "%2.3g", args->err[i]);
             gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), buffer);
         }
 
-
-        if (function->nparams == 2)
-        {
-            g_snprintf(buffer, sizeof(buffer), "%2.3f",
-                       gwy_math_nlfit_get_correlations(args->fitter, 0, 0));
-            gtk_label_set_markup(GTK_LABEL(controls->covar_row1), buffer);
-
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f",
-                       gwy_math_nlfit_get_correlations(args->fitter, 1, 0),
-                       gwy_math_nlfit_get_correlations(args->fitter, 1, 1));
-            gtk_label_set_markup(GTK_LABEL(controls->covar_row2), buffer);
-        }
-        if (function->nparams == 3)
-        {
-            g_snprintf(buffer, sizeof(buffer), "%2.3f",
-                       gwy_math_nlfit_get_correlations(args->fitter, 0, 0));
-            gtk_label_set_markup(GTK_LABEL(controls->covar_row1), buffer);
-
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f",
-                       gwy_math_nlfit_get_correlations(args->fitter, 1, 0),
-                       gwy_math_nlfit_get_correlations(args->fitter, 1, 1));
-            gtk_label_set_markup(GTK_LABEL(controls->covar_row2), buffer);
-
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f   %2.3f",
-                       gwy_math_nlfit_get_correlations(args->fitter, 2, 0),
-                       gwy_math_nlfit_get_correlations(args->fitter, 2, 1),
-                       gwy_math_nlfit_get_correlations(args->fitter, 2, 2));
-            gtk_label_set_markup(GTK_LABEL(controls->covar_row3), buffer);
-         }
-
-        if (function->nparams == 4)
-        {
-            g_snprintf(buffer, sizeof(buffer), "%2.3f",
-                       gwy_math_nlfit_get_correlations(args->fitter, 0, 0));
-            gtk_label_set_markup(GTK_LABEL(controls->covar_row1), buffer);
-
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f",
-                       gwy_math_nlfit_get_correlations(args->fitter, 1, 0),
-                       gwy_math_nlfit_get_correlations(args->fitter, 1, 1));
-            gtk_label_set_markup(GTK_LABEL(controls->covar_row2), buffer);
-
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f   %2.3f",
-                       gwy_math_nlfit_get_correlations(args->fitter, 2, 0),
-                       gwy_math_nlfit_get_correlations(args->fitter, 2, 1),
-                       gwy_math_nlfit_get_correlations(args->fitter, 2, 2));
-            gtk_label_set_markup(GTK_LABEL(controls->covar_row3), buffer);
-
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f   %2.3f   %2.3f",
-                       gwy_math_nlfit_get_correlations(args->fitter, 3, 0),
-                       gwy_math_nlfit_get_correlations(args->fitter, 3, 1),
-                       gwy_math_nlfit_get_correlations(args->fitter, 3, 2),
-                       gwy_math_nlfit_get_correlations(args->fitter, 3, 3));
-            gtk_label_set_markup(GTK_LABEL(controls->covar_row4), buffer);
+        for (i = 0; i < nparams; i++) {
+            for (j = 0; j <= i; j++) {
+                g_snprintf(buffer, sizeof(buffer), "% 0.3f",
+                           gwy_math_nlfit_get_correlations(args->fitter, i, j));
+                gtk_label_set_markup
+                    (GTK_LABEL(controls->covar[i*MAX_PARAMS + j]), buffer);
+            }
          }
     }
     else
-    {
-        g_snprintf(buffer, sizeof(buffer), "Error:");
-        gtk_label_set_markup(GTK_LABEL(controls->covar_row1), buffer);
-        g_snprintf(buffer, sizeof(buffer), "no covariance matrix");
-        gtk_label_set_markup(GTK_LABEL(controls->covar_row2), buffer);
-    }
+        gtk_label_set_markup(GTK_LABEL(controls->covar[0]), _("N. A."));
 
-    for (i=0; i<xdata->res; i++)
+    for (i = 0; i < xdata->res; i++)
     {
-        ydata->data[i] = function->function(xdata->data[i], function->nparams, args->par_res, NULL, &ok);
+        ydata->data[i] = function->function(xdata->data[i], function->nparams,
+                                            args->par_res, NULL, &ok);
     }
 
     graph_update(controls, args);
@@ -899,7 +846,6 @@ attach_label(GtkWidget *table, const gchar *text,
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), text);
-    /*gtk_label_set_selectable(GTK_LABEL(label), TRUE);*/
     gtk_misc_set_alignment(GTK_MISC(label), halign, 0.5);
 
     gtk_table_attach(GTK_TABLE(table), label,
@@ -919,33 +865,13 @@ format_magnitude(GString *str,
     return str->str;
 }
 
-static GtkWidget*
-covariance_matrix_table(gint n,
-                        GwyNLFitter *fitter)
-{
-    gchar buffer[16];
-    GtkWidget *tab;
-    gint i, j;
-
-    tab = gtk_table_new(n, n, TRUE);
-    for (i = 0; i < n; i++) {
-        for (j = 0; j <= i; j++) {
-            g_snprintf(buffer, sizeof(buffer), "% .03f",
-                       gwy_math_nlfit_get_correlations(fitter, i, j));
-            attach_label(tab, buffer, i, j, 1.0);
-        }
-    }
-
-    return tab;
-}
-
 static void
 create_results_window(FitArgs *args)
 {
     GwyNLFitter *fitter = args->fitter;
     GtkWidget *window, *tab, *table;
     gdouble mag, value, sigma;
-    gint row, curve, n, i;
+    gint row, curve, n, i, j;
     gint precision;
     GString *str, *su;
     const gchar *s;
@@ -1017,19 +943,34 @@ create_results_window(FitArgs *args)
     row++;
 
     attach_label(table, _("Residual sum:"), row, 0, 0.0);
-    sigma = gwy_math_nlfit_get_dispersion(fitter);
-    mag = gwy_math_humanize_numbers(sigma/120, sigma, &precision);
-    g_string_printf(str, "%.*f %s",
-                    precision, sigma/mag, format_magnitude(su, mag));
-    attach_label(table, str->str, row, 1, 0.0);
+    if (fitter->covar) {
+        sigma = gwy_math_nlfit_get_dispersion(fitter);
+        mag = gwy_math_humanize_numbers(sigma/120, sigma, &precision);
+        g_string_printf(str, "%.*f %s",
+                        precision, sigma/mag, format_magnitude(su, mag));
+        attach_label(table, str->str, row, 1, 0.0);
+    }
+    else
+        attach_label(table, _("N. A."), row, 1, 0.0);
     row++;
 
-    attach_label(table, _("<b>Covariance matrix</b>"), row, 0, 0.0);
+    attach_label(table, _("<b>Correlation matrix</b>"), row, 0, 0.0);
     row++;
 
-    tab = covariance_matrix_table(n, fitter);
-    gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    if (fitter->covar) {
+        tab = gtk_table_new(n, n, TRUE);
+        for (i = 0; i < n; i++) {
+            for (j = 0; j <= i; j++) {
+                g_string_printf(str, "% .03f",
+                                gwy_math_nlfit_get_correlations(fitter, i, j));
+                attach_label(tab, str->str, i, j, 1.0);
+            }
+        }
+        gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    }
+    else
+        attach_label(table, _("N. A."), row, 0, 0.0);
     row++;
 
     g_string_free(str, TRUE);
