@@ -1,6 +1,6 @@
 Too many things.  Use
 
-  find . -name \*.\[ch] | xargs grep -ir '\<\(XXX\|TODO\|FIXME\|fuck\|shit\)\>'
+  find . -name \*.\[ch] | xargs grep -ir '\<\(XXX\|TODO\|FIXME\|provisory\|fuck\|shit\)\>'
 
 to locate them ;-)
 
@@ -9,23 +9,39 @@ Particularly (overall app issues, module issues not listed):
 - Printing
 - User documentation, even better, integrated help
 - Internationalization and localization
-- Associations, drag'n'drop support
+- Proper associations and drag'n'drop support
 - Palette editor, explicite ranges for palettes
 - Editable metadata
 - Multiple data in one file
 - Use GtkAction (Gtk+ 2.4) for module actions
 - Sessions
-- File module API should be extended to allow (at least): distinguish between
-  cancel and failure, open multiple data windows from a one file
 - ...
 
 Quite a few of these items are intrusive and will have to wait for the next
 unstable version.
 
 ============================================================================
-Worst API bugs:
+Worst API bugs and otherwise things that will change in 2.0:
+- no one knows what parameters modules functions have and can't call them with
+  a particular settings
+- just about everything in graphs: not even slightly MVC, neverending copying
+  of data around, don't use GwySIUnit, ...
 - libgwymodule does GUI stuff
+- GwySerializable don't have free slots for text dump/restore
 - libgwyprocess depends on Gtk+ (GtkOrientation)
+- File module API does not allow to open more files, differentiate between
+  user cancel and failure, ...
+- everything connected to toolbar construction, but this will wait for
+  GtkActionization
+- many argument types are bad, especially serialize functions should take an
+  GwySerializable argument, not a GObject
+- GwyDataField function naming is a mess, some are functions don't have _area
+  in name at all, some have it in silly places, there are two different
+  area border conventions; GwyDataLine is not much better
+- GwyWatchable is unused -- either remove it, or make object actually
+  implement the notifications
+- gwy_ruler_draw_pos() and gwy_ruler_draw_ticks() got to the public API
+  somehow, but they were never meant to
 
 ============================================================================
 Release checklist:
@@ -36,6 +52,7 @@ Release checklist:
 - must build on Linux _from tarballs_
 - must build on Windows
 - check NEWS, generate HTML version
+- generate stable API docs for gwyddion.net and upload them
 - tag CVS
 - build and upload packages
 - sign packages and upload signatures
