@@ -1,0 +1,13 @@
+
+TOP_SRCDIR = ..\..
+
+!include $(TOP_SRCDIR)\make.msc
+
+all:
+
+!include $(TOP_SRCDIR)\rules.msc
+
+install:
+	for %d in (html\*.*) do $(INSTALL) %s "$(DEST_DIR)\devel-docs\libgwydgets"
+
+# vim: ft=make

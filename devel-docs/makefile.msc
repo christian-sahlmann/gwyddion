@@ -1,0 +1,22 @@
+
+TOP_SRCDIR = ..
+
+!include $(TOP_SRCDIR)\make.msc
+
+SUBDIRS = \
+	libgwyapp \
+	libgwyddion \
+	libgwydgets \
+	libgwydraw \
+	libgwymodule \
+	libgwyprocess
+
+all: sub-all
+
+clean:: sub-clean
+
+!include $(TOP_SRCDIR)\rules.msc
+
+install: sub-install
+
+# vim: ft=make
