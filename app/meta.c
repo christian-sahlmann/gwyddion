@@ -193,7 +193,7 @@ gwy_meta_browser_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                GtkTreeIter *piter,
                                gpointer userdata)
 {
-    const gchar *text;
+    gchar *text;
     gulong id;
 
     id = GPOINTER_TO_UINT(userdata);
