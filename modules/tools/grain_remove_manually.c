@@ -76,7 +76,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
         "grain_remove_manually",
-        "gwy_grains_graph",
+        "gwy_grains_remove",
         "Grain (mask) removal tool.",
         98,
         &use,

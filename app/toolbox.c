@@ -163,6 +163,12 @@ gwy_app_toolbox_create(void)
                        GWY_STOCK_GRAINS_REMOVE,
                        G_CALLBACK(gwy_app_run_process_func_cb),
                        "remove_threshold");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Grain distribution"), NULL,
+                       GWY_STOCK_GRAINS_GRAPH,
+                       G_CALLBACK(gwy_app_run_process_func_cb),
+                       "grain_dist");
+
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);

@@ -97,7 +97,7 @@ dist(GwyContainer *data, GwyRunType run)
         lab = g_string_new("Grain size histogram");
         units = gwy_si_unit_get_format(dfield->si_unit_xy, dataline->real, NULL);
         gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
-                                          units->magnitude, 1, units->units, "cnt"); 
+                                          units->magnitude, 1, units->units, " "); 
 
         window = gwy_app_graph_window_create(graph);
         
