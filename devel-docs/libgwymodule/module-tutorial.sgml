@@ -16,29 +16,41 @@
     <para>
       Gwyddion is quite a modular application.  In fact, most of its basic
       functionallity is provided by modules.  Modules allow to easily extend
-      Gwyddion without the need to recompile, XXXX etc.
+      Gwyddion without the need to recompile. Modules need to be copied
+      in appropriate directories only followed by Gwyddion restart. 
+      Modules are then automatically detected, registered and the functions provided by modules
+      are added to Gwyddion menu.
     </para>
     <para>
       There are several distinct module types:
       <itemizedlist>
         <listitem><para>
-          <link linkend="gwymodule-process">data processing modules</link>
+          <link linkend="gwymodule-process">data processing modules</link> - these modules
+          provide functions for processing of two-dimensional data arrays (e. g. <emphasis>fast fourier transform</emphasis> module),
+          or changing the graphical presentation of data (e. g. <emphasis>shading</emphasis> module). Data processing
+          modules usually get data (e. g. two-dimensional field of SPM data), ask for processing options
+          and do requested data processing. For more interactive use, we recommend to use <emphasis>tool module</emphasis> type.
         </para></listitem>
         <listitem><para>
           <link linkend="gwymodule-file">file loading and saving modules</link>
         </para></listitem>
         <listitem><para>
-          <link linkend="gwymodule-graph">graph modules</link>
+          <link linkend="gwymodule-graph">graph modules</link> - these modules are used
+          to process special class of data in the apllication - graphs of one-dimensional functions
+          (e. g. profiles obtained by <emphasis>Profile selection</emphasis> tool).
         </para></listitem>
         <listitem><para>
-          <link linkend="gwymodule-tool">tool modules</link>
+          <link linkend="gwymodule-tool">tool modules</link> - tools are modules extended
+          to provide more interactive interface (namely connected with selections by mouse). 
+          This means ability of active recomputation of the requested parameters while creating and changing selections
+          on the original data (e. g. <emphasis>read value</emphasis> tool, <emphasis>three-point leveling</emphasis> tool). 
         </para></listitem>
       </itemizedlist>
     </para>
     <para>
-      Blah blah blah.  The types above are in fact
+      The types above are in fact
       <emphasis>function</emphasis> types, not module types.
-      A one module can provide a single function or a whole
+      One module can provide a single function or a whole
       bunch of completely unrelated functions, even of different type.
       However, it's usual to
       group functions containing considreable amount of common code to one
@@ -111,7 +123,16 @@ my_invert_value(GwyContainer *data, GwyRunType run)
 }
 ]]></programlisting></informalexample>
   <para>
-    Though it is minimal it still constis of quite a bit of code.
+    Now, we should be able to compile this code (see below),  make a dynamically linked library (*.so, *.dll, depending on
+    the operating system) and put it to your Gwyddion modules directory
+    (e. g. /lib/gwyddion/modules/process/, however depending on your actual installation and operating
+    system). After Gwyddion starts, the module is found and menu entry <emphasis>Test/Invert Value</emphasis>
+    will appear in the main menu. Clicking on this menu item will invert the actual data. 
+    As this is the minimal module it even does not have graphical user interface to change parameters
+    of data processing. However, for its purpose - data inversion - it is sufficient.
+  </para>
+  <para>
+    Though the above example is minimal it still constis of quite a bit of code.
     We will analyse it piece-by-piece in the following paragraphs.
   </para>
   </refsect1>
@@ -134,7 +155,7 @@ my_invert_value(GwyContainer *data, GwyRunType run)
       <filename><link linkend="libgwymodule-gwymoduleloader">gwymodule.h</link></filename>
       declares functions essential for registering the module and its features,
       <filename><link linkend="GwyDataField">datafield.h</link></filename>
-      declated basic <link linkend="GwyDataField">GwyDataField</link> functions
+      declared basic <link linkend="GwyDataField">GwyDataField</link> functions
       (like value inversion we will use in the module later), and
       <filename><link linkend="libgwyapp-app">app.h</link></filename>
       declares undo/redo functions and other main application related
@@ -360,7 +381,8 @@ my_invert_value(GwyContainer *data, GwyRunType run)
    <para>
      Next, we get a datafield from some container.
      The <link linkend="GwyDataField">GwyDataField</link> object is the
-     basic data object representing one XXX how does one call this? XXX.
+     basic data object representing two-dimensional array of values
+     (height field).
      Quite a few datafield manipulating functions already exist in
      <link linkend="libprocess">libprocess</link>, we use one of them
      (<link linkend="gwy-data-field-invert">gwy_data_field_invert()</link>)
