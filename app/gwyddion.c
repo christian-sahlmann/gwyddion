@@ -26,7 +26,7 @@
 #else
 /* XXX: Invent some stuff... */
 #endif
-#endif
+#endif  /* _MSC_VER */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,12 +48,18 @@
 #include "gwyddion.h"
 
 #ifdef G_OS_WIN32
+#define LOG_TO_FILE 1
+#else
+#undef LOG_TO_FILE
+#endif
+
+#ifdef LOG_TO_FILE
 static void setup_logging(void);
 static void logger(const gchar *log_domain,
                    GLogLevelFlags log_level,
                    const gchar *message,
                    gpointer user_data);
-#endif
+#endif  /* LOG_TO_FILE */
 static void print_help(void);
 static void process_preinit_options(int *argc,
                                     char ***argv);
@@ -72,14 +78,16 @@ main(int argc, char *argv[])
 
 #ifdef G_OS_WIN32
     gwy_find_self_set_argv0(argv[0]);
-#endif
+#endif  /* G_OS_WIN32 */
 
     gwy_debug_objects_enable(TRUE);
     process_preinit_options(&argc, &argv);
     gwy_app_settings_create_config_dir();
-#ifdef G_OS_WIN32
+    /* FIXME: somewhat late, actually even gwy_find_self_set_argv0() which MUST
+     * be run first can print things to console when debuggin is enabled. */
+#ifdef LOG_TO_FILE
     setup_logging();
-#endif
+#endif  /* LOG_TO_FILE */
 
     gtk_init(&argc, &argv);
     gwy_gl_ok = gtk_gl_init_check(&argc, &argv);
@@ -253,7 +261,7 @@ APIENTRY WinMain(HINSTANCE hInstance,
 
 #endif /* WIN32 */
 
-#ifdef G_OS_WIN32
+#ifdef LOG_TO_FILE
 /* Redirect messages from all libraries we use to a file.  This (a) creates
  * a possibly useful log if we don't crash totally (b) prevents the mesages
  * to go to a DOS console thus creating it. */
@@ -293,6 +301,6 @@ logger(const gchar *log_domain,
     fprintf(logfile, "%s: %s\n", log_domain, message);
     fflush(logfile);
 }
-#endif
+#endif  /* LOG_TO_FILE */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
