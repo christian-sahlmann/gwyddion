@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *  Copyright (C) 2004 Martin Siler.
  *  E-mail: silerm@physics.muni.cz.
@@ -20,7 +20,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -41,6 +40,7 @@
 #include <GL/glu.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/stats.h>
 #include "gwydgets.h"
@@ -63,6 +63,16 @@
 
 #define GWY_3D_TIMEOUT_DELAY      1000
 
+enum {
+    PROP_0,
+    PROP_MOVEMENT,
+    PROP_PROJECTION,
+    PROP_SHOW_AXES,
+    PROP_SHOW_LABELS,
+    PROP_VISUALIZATION,
+    PROP_REDUCED_SIZE
+};
+
 typedef struct {
     GLfloat x, y, z;
 } Gwy3DVector;
@@ -73,6 +83,14 @@ static void          gwy_3d_view_class_init     (Gwy3DViewClass *klass);
 static void          gwy_3d_view_init           (Gwy3DView *gwy3dview);
 static void          gwy_3d_view_destroy        (GtkObject *object);
 static void          gwy_3d_view_finalize       (GObject *object);
+static void          gwy_3d_view_set_property   (GObject *object,
+                                                 guint prop_id,
+                                                 const GValue *value,
+                                                 GParamSpec *pspec);
+static void          gwy_3d_view_get_property   (GObject*object,
+                                                 guint prop_id,
+                                                 GValue *value,
+                                                 GParamSpec *pspec);
 static void          gwy_3d_view_realize        (GtkWidget *widget);
 static void          gwy_3d_view_unrealize      (GtkWidget *widget);
 static void          gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview);
@@ -80,10 +98,13 @@ static void          gwy_3d_view_update_lists   (Gwy3DView *gwy3dview);
 static void          gwy_3d_view_realize_gl     (Gwy3DView *widget);
 static void          gwy_3d_view_size_request   (GtkWidget *widget,
                                                  GtkRequisition *requisition);
+static void          gwy_3d_view_size_allocate  (GtkWidget *widget,
+                                                 GtkAllocation *allocation);
 static gboolean      gwy_3d_view_expose         (GtkWidget *widget,
                                                  GdkEventExpose *event);
 static gboolean      gwy_3d_view_configure      (GtkWidget *widget,
                                                  GdkEventConfigure *event);
+static void          gwy_3d_view_send_configure (Gwy3DView *gwy3dview);
 static gboolean      gwy_3d_view_button_press   (GtkWidget *widget,
                                                  GdkEventButton *event);
 static gboolean      gwy_3d_view_button_release (GtkWidget *widget,
@@ -160,7 +181,7 @@ gwy_3d_view_get_type(void)
             NULL,
         };
         gwy_debug(" ");
-        gwy_3d_view_type = g_type_register_static(GTK_TYPE_DRAWING_AREA,
+        gwy_3d_view_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                   GWY_3D_VIEW_TYPE_NAME,
                                                   &gwy_3d_view_info,
                                                   0);
@@ -184,6 +205,8 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_3d_view_finalize;
+    gobject_class->set_property = gwy_3d_view_set_property;
+    gobject_class->get_property = gwy_3d_view_get_property;
 
     object_class->destroy = gwy_3d_view_destroy;
 
@@ -192,9 +215,83 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     widget_class->expose_event = gwy_3d_view_expose;
     widget_class->configure_event = gwy_3d_view_configure;
     widget_class->size_request = gwy_3d_view_size_request;
+    widget_class->size_allocate = gwy_3d_view_size_allocate;
     widget_class->button_press_event = gwy_3d_view_button_press;
     widget_class->button_release_event = gwy_3d_view_button_release;
     widget_class->motion_notify_event = gwy_3d_view_motion_notify;
+
+    /* FIXME: change to enum types, once we register them */
+    /**
+     * Gtk3DView:movement_type:
+     *
+     * The :movement property represents type of action on user pointer
+     * drag.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MOVEMENT,
+         g_param_spec_uint("movement_type",
+                           "Movement type",
+                           "What quantity is changed when uses moves pointer",
+                           GWY_3D_NONE, GWY_3D_LIGHT_MOVEMENT,
+                           GWY_3D_ROTATION,
+                           G_PARAM_READWRITE));
+
+    /* FIXME: change to enum types, once we register them */
+    /**
+     * Gtk3DView:projection:
+     *
+     * The :projection property represents type of 3D to 2D projection.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_PROJECTION,
+         g_param_spec_uint("projection",
+                           "Projection type",
+                           "The type of 3D to 2D projection",
+                           GWY_3D_ORTHOGRAPHIC, GWY_3D_PERSPECTIVE,
+                           GWY_3D_ORTHOGRAPHIC,
+                           G_PARAM_READWRITE));
+
+    /**
+     * Gtk3DView:show_axes:
+     *
+     * The :show_axes property determines whether axes around data are shown.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_SHOW_AXES,
+         g_param_spec_boolean("show_axes",
+                              "Show axes",
+                              "Whether to show axies around data",
+                              TRUE, G_PARAM_READWRITE));
+
+    /**
+     * Gtk3DView:show_labels:
+     *
+     * The :show_labels property determines whether axis labels are shown.
+     * Note when axes themselves are not shown, neither are labels.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_SHOW_LABELS,
+         g_param_spec_boolean("show_labels",
+                              "Show labels",
+                              "Whether to show axis labels",
+                              TRUE, G_PARAM_READWRITE));
+
+    /**
+     * Gtk3DView:projection:
+     *
+     * The :projection property represents type of 3D to 2D projection.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_REDUCED_SIZE,
+         g_param_spec_uint("reduced_size",
+                           "Reduced size",
+                           "The size of downsampled data in quick view",
+                           4, 4096, 100, G_PARAM_READWRITE));
 }
 
 static void
@@ -206,7 +303,7 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
 
     gwy3dview->view_scale_max        = 3.0f;
     gwy3dview->view_scale_min        = 0.5f;
-    gwy3dview->movement_status       = GWY_3D_ROTATION;
+    gwy3dview->movement              = GWY_3D_ROTATION;
     gwy3dview->show_axes             = TRUE;
     gwy3dview->show_labels           = TRUE;
     gwy3dview->shape_list_base       = -1;
@@ -240,8 +337,21 @@ gwy_3d_view_destroy(GtkObject *object)
         gwy3dview->shape_list_base = -1;
     }
 
-    for (i = 0; i < G_N_ELEMENTS(labels); i++)
-        gwy_object_unref(gwy3dview->labels[i]);
+    if (gwy3dview->labels) {
+        for (i = 0; i < G_N_ELEMENTS(labels); i++) {
+            g_signal_handler_disconnect(gwy3dview->labels[i],
+                                        gwy3dview->label_signal_ids[2*i]);
+            g_signal_handler_disconnect(gwy3dview->labels[i],
+                                        gwy3dview->label_signal_ids[2*i + 1]);
+            gwy_object_unref(gwy3dview->labels[i]);
+        }
+        g_free(gwy3dview->labels);
+        g_free(gwy3dview->label_signal_ids);
+        gwy3dview->labels = NULL;
+        gwy3dview->label_signal_ids = NULL;
+    }
+
+    GTK_OBJECT_CLASS(parent_class)->destroy(object);
 }
 
 static void
@@ -254,6 +364,76 @@ gwy_3d_view_finalize(GObject *object)
     g_hash_table_destroy(gwy3dview->variables);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void
+gwy_3d_view_set_property(GObject *object,
+                         guint prop_id,
+                         const GValue *value,
+                         GParamSpec *pspec)
+{
+    Gwy3DView *view = GWY_3D_VIEW(object);
+
+    switch (prop_id) {
+        case PROP_MOVEMENT:
+        gwy_3d_view_set_movement_type(view, g_value_get_uint(value));
+        break;
+
+        case PROP_PROJECTION:
+        gwy_3d_view_set_projection(view, g_value_get_uint(value));
+        break;
+
+        case PROP_SHOW_AXES:
+        gwy_3d_view_set_show_axes(view, g_value_get_boolean(value));
+        break;
+
+        case PROP_SHOW_LABELS:
+        gwy_3d_view_set_show_labels(view, g_value_get_boolean(value));
+        break;
+
+        case PROP_REDUCED_SIZE:
+        gwy_3d_view_set_reduced_size(view, g_value_get_uint(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_3d_view_get_property(GObject*object,
+                          guint prop_id,
+                          GValue *value,
+                          GParamSpec *pspec)
+{
+    Gwy3DView *view = GWY_3D_VIEW(object);
+
+    switch (prop_id) {
+        case PROP_MOVEMENT:
+        g_value_set_uint(value, view->movement);
+        break;
+
+        case PROP_PROJECTION:
+        g_value_set_uint(value, view->projection);
+        break;
+
+        case PROP_SHOW_AXES:
+        g_value_set_boolean(value, view->show_axes);
+        break;
+
+        case PROP_SHOW_LABELS:
+        g_value_set_boolean(value, view->show_labels);
+        break;
+
+        case PROP_REDUCED_SIZE:
+        g_value_set_boolean(value, view->reduced_size);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 static void
@@ -274,10 +454,9 @@ gwy_3d_view_unrealize(GtkWidget *widget)
         gwy3dview->shape_list_base = -1;
     }
 
-    g_object_unref(G_OBJECT(gwy3dview->ft2_context));
-    g_object_unref(G_OBJECT(gwy3dview->ft2_font_map));
+    g_object_unref(gwy3dview->ft2_context);
+    g_object_unref(gwy3dview->ft2_font_map);
 
-    /* TODO: save the current view settings into the contaier  */
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
 }
@@ -370,12 +549,12 @@ gwy_3d_view_new(GwyContainer *data)
                                      &gwy3dview->view_scale_min);
     gwy_container_gis_enum_by_name(data, "/0/3d/projection",
                                    &gwy3dview->projection);
+    gwy_container_gis_enum_by_name(data, "/0/3d/visualization",
+                                   &gwy3dview->visual);
     gwy_container_gis_boolean_by_name(data, "/0/3d/show_axes",
                                       &gwy3dview->show_axes);
     gwy_container_gis_boolean_by_name(data, "/0/3d/show_labels",
                                       &gwy3dview->show_labels);
-    gwy_container_gis_boolean_by_name(data, "/0/3d/enable_lights",
-                                      &gwy3dview->enable_lights);
     if (gwy_container_gis_string_by_name(data, "/0/3d/material", &name))
         gwy3dview->mat_current = gwy_gl_material_get_by_name(name);
 
@@ -412,6 +591,7 @@ gwy_3d_view_new(GwyContainer *data)
                                  GDK_GL_RGBA_TYPE);
 
     gwy3dview->labels = g_new0(Gwy3DLabel*, G_N_ELEMENTS(labels));
+    gwy3dview->label_signal_ids = g_new0(gulong, 2*G_N_ELEMENTS(labels));
     for (i = 0; i < G_N_ELEMENTS(labels); i++) {
         if (gwy_container_gis_object_by_name(data, labels[i].key,
                                              &gwy3dview->labels[i]))
@@ -422,10 +602,14 @@ gwy_3d_view_new(GwyContainer *data)
                                              gwy3dview->labels[i]);
         }
 
-        g_signal_connect_swapped(gwy3dview->labels[i], "value_changed",
-                                 G_CALLBACK(gwy_3d_label_changed), gwy3dview);
-        g_signal_connect_swapped(gwy3dview->labels[i], "notify",
-                                 G_CALLBACK(gwy_3d_label_changed), gwy3dview);
+        gwy3dview->label_signal_ids[2*i]
+            = g_signal_connect_swapped(gwy3dview->labels[i], "value_changed",
+                                       G_CALLBACK(gwy_3d_label_changed),
+                                       gwy3dview);
+        gwy3dview->label_signal_ids[2*i + 1]
+            = g_signal_connect_swapped(gwy3dview->labels[i], "notify",
+                                       G_CALLBACK(gwy_3d_label_changed),
+                                       gwy3dview);
     }
     gwy_3d_view_update_labels(gwy3dview);
 
@@ -623,7 +807,7 @@ gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
                                      gradstr);
     g_object_unref(old);
 
-    if (!gwy3dview->enable_lights)
+    if (gwy3dview->visual == GWY_3D_GRADIENT)
         gwy_3d_view_update_lists(gwy3dview);
 }
 
@@ -641,7 +825,7 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
 {
-    if (!gwy3dview->enable_lights)
+    if (gwy3dview->visual == GWY_3D_GRADIENT)
         gwy_3d_view_update_lists(gwy3dview);
 }
 
@@ -661,36 +845,36 @@ gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
 }
 
 /**
- * gwy_3d_view_get_status:
+ * gwy_3d_view_get_movement_type:
  * @gwy3dview: A 3D data view widget.
  *
- * Returns a #Gwy3DMovement describing actual type of response on
+ * Returns a movement type describing actual type of response on
  * the mouse motion event.
  *
  * Returns: actual type of response on the mouse motion event
  **/
 Gwy3DMovement
-gwy_3d_view_get_status (Gwy3DView *gwy3dview)
+gwy_3d_view_get_movement_type(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), GWY_3D_NONE);
-    return gwy3dview->movement_status;
+    return gwy3dview->movement;
 }
 
 /**
- * gwy_3d_view_set_status:
+ * gwy_3d_view_set_movement_type:
  * @gwy3dview: A 3D data view widget.
- * @mv: A new type of response on the mouse motion event.
+ * @movement: A new type of response on the mouse motion event.
  *
  * Sets the type of widget response on the mouse motion event.
- * See #Gwy3DMovement.
  **/
 void
-gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
+gwy_3d_view_set_movement_type(Gwy3DView *gwy3dview,
+                              Gwy3DMovement movement)
 {
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    g_return_if_fail(mv <= GWY_3D_LIGHT_MOVEMENT);
+    g_return_if_fail(movement <= GWY_3D_LIGHT_MOVEMENT);
 
-    gwy3dview->movement_status = mv;
+    gwy3dview->movement = movement;
 }
 
 /**
@@ -752,7 +936,7 @@ gwy_3d_view_get_show_axes(Gwy3DView *gwy3dview)
  * @gwy3dview: A 3D data view widget.
  * @show_axes: Show/hide axes
  *
- * Show/hide axes within @gwy3dview. Widget is invalidated if necessary.
+ * Show/hide axes within @gwy3dview.
  **/
 void
 gwy_3d_view_set_show_axes(Gwy3DView *gwy3dview,
@@ -812,42 +996,39 @@ gwy_3d_view_set_show_labels(Gwy3DView *gwy3dview,
 }
 
 /**
- * gwy_3d_view_get_use_lights:
+ * gwy_3d_view_get_visualization:
  * @gwy3dview: A 3D data view widget.
  *
- * Returns whether the lighst are on or off within the @gwy3dview.
+ * Returns visualization method a 3D view uses.
  *
- * Returns: %TRUE if the lights are on, %FALSE if they are off.
+ * Returns: The visualization type.
  **/
-gboolean
-gwy_3d_view_get_use_lights(Gwy3DView *gwy3dview)
+Gwy3DVisualization
+gwy_3d_view_get_visualization(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
 
-    return gwy3dview->enable_lights;
+    return gwy3dview->visual;
 }
 
 /**
- * gwy_3d_view_set_use_lights:
+ * gwy_3d_view_set_visualization:
  * @gwy3dview: A 3D data view widget.
- * @use_lights: %TRUE if lights should be used, %FALSE to use palette.
+ * @visual: Visualization method to use.
  *
- * Turn lights on/off within @gwy3dview.
- *
- * Widget is invalidated if necessary.
+ * Sets the visualization type a 3D view should use.
  **/
 void
-gwy_3d_view_set_use_lights(Gwy3DView *gwy3dview,
-                           gboolean use_lights)
+gwy_3d_view_set_visualization(Gwy3DView *gwy3dview,
+                              Gwy3DVisualization visual)
 {
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
-    if (use_lights == gwy3dview->enable_lights)
+    if (visual == gwy3dview->visual)
         return;
-    gwy3dview->enable_lights = use_lights;
-    gwy_container_set_boolean_by_name(gwy3dview->container,
-                                      "/0/3d/enable_lights",
-                                      use_lights);
+    gwy3dview->visual = visual;
+    gwy_container_set_enum_by_name(gwy3dview->container, "/0/3d/visualization",
+                                   visual);
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
@@ -885,7 +1066,7 @@ gwy_3d_view_get_reduced_size(Gwy3DView *gwy3dview)
  **/
 void
 gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
-                             guint  reduced_size)
+                             guint reduced_size)
 {
     guint rx, ry;
 
@@ -1310,28 +1491,45 @@ gwy_3d_label_changed(Gwy3DView *gwy3dview)
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
-
 static void
 gwy_3d_view_realize(GtkWidget *widget)
 {
     Gwy3DView *gwy3dview;
+    GdkWindowAttr attributes;
+    gint attributes_mask;
 
     gwy_debug("realizing a Gwy3DView (%ux%u)",
-          widget->allocation.width, widget->allocation.height);
+              widget->allocation.width, widget->allocation.height);
 
-    g_return_if_fail(GWY_IS_3D_VIEW(widget));
-
+    GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
     gwy3dview = GWY_3D_VIEW(widget);
-    gwy_debug("parent realize");
-    GTK_WIDGET_CLASS(parent_class)->realize(widget);
-    gwy_debug("after parent realize");
-    gtk_widget_add_events(widget,
-                          GDK_BUTTON1_MOTION_MASK
-                          | GDK_BUTTON2_MOTION_MASK
-                          | GDK_BUTTON_PRESS_MASK
-                          | GDK_BUTTON_RELEASE_MASK
-                          | GDK_VISIBILITY_NOTIFY_MASK);
 
+    attributes.window_type = GDK_WINDOW_CHILD;
+    attributes.x = widget->allocation.x;
+    attributes.y = widget->allocation.y;
+    attributes.width = widget->allocation.width;
+    attributes.height = widget->allocation.height;
+    attributes.wclass = GDK_INPUT_OUTPUT;
+    attributes.visual = gtk_widget_get_visual(widget);
+    attributes.colormap = gtk_widget_get_colormap(widget);
+    attributes.event_mask = gtk_widget_get_events(widget)
+                           | GDK_EXPOSURE_MASK
+                           | GDK_BUTTON1_MOTION_MASK
+                           | GDK_BUTTON2_MOTION_MASK
+                           | GDK_BUTTON_PRESS_MASK
+                           | GDK_BUTTON_RELEASE_MASK
+                           | GDK_VISIBILITY_NOTIFY_MASK;
+
+    attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
+
+    widget->window = gdk_window_new(gtk_widget_get_parent_window(widget),
+                                    &attributes, attributes_mask);
+    gdk_window_set_user_data(widget->window, widget);
+
+    widget->style = gtk_style_attach(widget->style, widget->window);
+    gtk_style_set_background(widget->style, widget->window, GTK_STATE_NORMAL);
+
+    gwy_3d_view_send_configure(gwy3dview);
     gwy_3d_view_realize_gl(gwy3dview);
 
     /* Get PangoFT2 context. */
@@ -1339,7 +1537,6 @@ gwy_3d_view_realize(GtkWidget *widget)
     pango_ft2_font_map_set_resolution(gwy3dview->ft2_font_map, 72, 72);
     gwy3dview->ft2_context
         = pango_ft2_font_map_create_context(gwy3dview->ft2_font_map);
-
 }
 
 static gboolean
@@ -1375,15 +1572,51 @@ gwy_3d_view_configure(GtkWidget *widget,
 }
 
 static void
-gwy_3d_view_size_request(GtkWidget *widget,
+gwy_3d_view_send_configure(Gwy3DView *gwy3dview)
+{
+    GtkWidget *widget;
+    GdkEvent *event;
+
+    event = gdk_event_new(GDK_CONFIGURE);
+
+    widget = GTK_WIDGET(gwy3dview);
+    event->configure.window = g_object_ref(widget->window);
+    event->configure.send_event = TRUE;
+    event->configure.x = widget->allocation.x;
+    event->configure.y = widget->allocation.y;
+    event->configure.width = widget->allocation.width;
+    event->configure.height = widget->allocation.height;
+
+    gtk_widget_event(widget, event);
+    gdk_event_free(event);
+}
+
+static void
+gwy_3d_view_size_request(G_GNUC_UNUSED GtkWidget *widget,
                          GtkRequisition *requisition)
 {
-    gwy_debug(" ");
-    GTK_WIDGET_CLASS(parent_class)->size_request(widget, requisition);
     requisition->width = GWY_3D_VIEW_DEFAULT_SIZE_X;
     requisition->height = GWY_3D_VIEW_DEFAULT_SIZE_Y;
 }
 
+static void
+gwy_3d_view_size_allocate(GtkWidget *widget,
+                          GtkAllocation *allocation)
+{
+    g_return_if_fail(allocation != NULL);
+
+    widget->allocation = *allocation;
+
+    if (GTK_WIDGET_REALIZED(widget)) {
+        gdk_window_move_resize(widget->window,
+                               allocation->x, allocation->y,
+                               allocation->width, allocation->height);
+
+        gwy_3d_view_send_configure(GWY_3D_VIEW(widget));
+    }
+}
+
+/* Convert gdouble array[4] to GLfloat[4] array */
 static void
 gwy_3d_view_glMaterialdv(GLenum face,
                          GLenum pname,
@@ -1435,7 +1668,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glScalef(1.0f, 1.0f, gwy3D->deformation_z->value);
 
     /* Render shape */
-    if (gwy3D->enable_lights) {
+    if (gwy3D->visual == GWY_3D_LIGHTING) {
         glEnable(GL_LIGHTING);
         gwy_3d_view_glMaterialdv(GL_FRONT, GL_AMBIENT,
                                  gwy3D->mat_current->ambient);
@@ -1459,7 +1692,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glCallList(gwy3D->shape_list_base + gwy3D->shape_current);
     gwy_3d_draw_axes(gwy3D);
 
-    if (gwy3D->movement_status == GWY_3D_LIGHT_MOVEMENT
+    if (gwy3D->movement == GWY_3D_LIGHT_MOVEMENT
           && gwy3D->shape_current == GWY_3D_SHAPE_REDUCED)
         gwy_3d_draw_light_position(gwy3D);
 
@@ -1527,7 +1760,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
 
     /* Rotation. */
     if (event->state & GDK_BUTTON1_MASK)
-        switch (gwy3dview->movement_status) {
+        switch (gwy3dview->movement) {
             case GWY_3D_NONE:
             break;
 
@@ -1951,10 +2184,10 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
 
 
 static void
-gwy_3d_view_realize_gl (Gwy3DView *widget)
+gwy_3d_view_realize_gl(Gwy3DView *widget)
 {
-    GdkGLContext * glcontext;
-    GdkGLDrawable * gldrawable;
+    GdkGLContext *glcontext;
+    GdkGLDrawable *gldrawable;
 
     GLfloat ambient[] = { 0.1, 0.1, 0.1, 1.0 };
     GLfloat diffuse[] = { 1.0, 1.0, 1.0, 1.0 };

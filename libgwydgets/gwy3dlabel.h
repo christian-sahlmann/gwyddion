@@ -48,6 +48,7 @@ struct _Gwy3DLabel {
     gboolean        fixed_size;
     GtkAdjustment  *delta_x;
     GtkAdjustment  *delta_y;
+    GtkAdjustment  *rotation;
     GtkAdjustment  *size;
 };
 
@@ -67,6 +68,7 @@ gdouble        gwy_3d_label_user_size               (Gwy3DLabel *label,
                                                      gdouble user_size);
 GtkAdjustment* gwy_3d_label_get_delta_x_adjustment  (Gwy3DLabel *label);
 GtkAdjustment* gwy_3d_label_get_delta_y_adjustment  (Gwy3DLabel *label);
+GtkAdjustment* gwy_3d_label_get_rotation_adjustment (Gwy3DLabel *label);
 GtkAdjustment* gwy_3d_label_get_size_adjustment     (Gwy3DLabel *label);
 
 G_END_DECLS

@@ -159,10 +159,6 @@ gwy_3d_window_finalize(GObject *object)
               object, object->ref_count);
 
     gwy3dwindow = GWY_3D_WINDOW(object);
-    /*
-    g_free(gwy3dwindow->coord_format);
-    g_free(gwy3dwindow->value_format);
-    */
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -174,6 +170,9 @@ gwy_3d_window_destroy(GtkObject *object)
 
     gwy3dwindow = GWY_3D_WINDOW(object);
     g_free(gwy3dwindow->buttons);
+    gwy3dwindow->buttons = NULL;
+
+    GTK_OBJECT_CLASS(parent_class)->destroy(object);
 }
 
 static void
@@ -238,11 +237,9 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
         { N_("Minimum z value"), GWY_3D_VIEW_LABEL_MIN, },
         { N_("Maximum z value"), GWY_3D_VIEW_LABEL_MAX, }
     };
-    /* there are two modes, represented by a boolean, so we simply use the
-     * boolean value an `enum' */
     static const GwyEnum display_modes[] = {
-        { N_("_Lighting"),    TRUE },
-        { N_("P_alette"),     FALSE },
+        { N_("_Lighting"),    GWY_3D_LIGHTING },
+        { N_("P_alette"),     GWY_3D_GRADIENT },
     };
     Gwy3DWindow *gwy3dwindow;
     GwyGLMaterial *material;
@@ -252,7 +249,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
               *label, *check, *entry;
     GSList *display_mode_group;
     Gwy3DLabel *gwy3dlabel;
-    gboolean lights_on;
+    Gwy3DVisualization visual;
     guint row;
 
     gwy_debug("");
@@ -387,13 +384,13 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
     row = 0;
 
-    lights_on = gwy_3d_view_get_use_lights(gwy3dview);
+    visual = gwy_3d_view_get_visualization(gwy3dview);
     display_mode_group
         = gwy_radio_buttons_create(display_modes, G_N_ELEMENTS(display_modes),
                                    "display-mode",
                                    G_CALLBACK(gwy_3d_window_display_mode_changed),
                                    gwy3dwindow,
-                                   lights_on);
+                                   visual);
     gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(display_mode_group->data),
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
@@ -401,7 +398,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     label = gtk_label_new_with_mnemonic(_("_Material:"));
     gwy3dwindow->material_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-    gtk_widget_set_sensitive(label, lights_on);
+    gtk_widget_set_sensitive(label, visual);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
@@ -411,7 +408,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     omenu = gwy_option_menu_gl_material(G_CALLBACK(gwy_3d_window_set_material),
                                         gwy3dwindow, name);
     gwy3dwindow->material_menu = omenu;
-    gtk_widget_set_sensitive(omenu, lights_on);
+    gtk_widget_set_sensitive(omenu, visual);
     gtk_table_attach(GTK_TABLE(table), omenu,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
@@ -420,19 +417,19 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                (table, row++, _("Light _phi:"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_light_z_adjustment(gwy3dview));
     gwy3dwindow->lights_spin1 = spin;
-    gtk_widget_set_sensitive(spin, lights_on);
+    gtk_widget_set_sensitive(spin, visual);
 
     spin = gwy_table_attach_spinbutton
                (table, row++, _("Light _theta:"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_light_y_adjustment(gwy3dview));
     gwy3dwindow->lights_spin2 = spin;
-    gtk_widget_set_sensitive(spin, lights_on);
+    gtk_widget_set_sensitive(spin, visual);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 12);
     gtk_widget_set_sensitive(gwy3dwindow->buttons[GWY_3D_LIGHT_MOVEMENT],
-                             lights_on);
+                             visual);
     gtk_widget_set_sensitive(gwy3dwindow->buttons[N_BUTTONS
                                                   + GWY_3D_LIGHT_MOVEMENT],
-                             lights_on);
+                             visual);
     row++;
 
     gtk_table_attach(GTK_TABLE(table),
@@ -443,7 +440,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     name = gwy_3d_view_get_gradient(gwy3dview);
     omenu = gwy_option_menu_gradient(G_CALLBACK(gwy_3d_window_set_gradient),
                                      gwy3dwindow, name);
-    gtk_widget_set_sensitive(omenu, !lights_on);
+    gtk_widget_set_sensitive(omenu, !visual);
     gwy3dwindow->gradient_menu = omenu;
     gtk_table_attach(GTK_TABLE(table), omenu,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
@@ -503,7 +500,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
     spin = gwy_table_attach_spinbutton
                (table, row++, _("_Vertically:"), "px",
-                GTK_OBJECT(gwy_3d_label_get_delta_x_adjustment(gwy3dlabel)));
+                GTK_OBJECT(gwy_3d_label_get_delta_y_adjustment(gwy3dlabel)));
     gwy3dwindow->labels_delta_y = spin;
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
@@ -646,7 +643,8 @@ gwy_3d_window_set_mode(gpointer userdata, GtkWidget *button)
     gtk_toggle_button_set_active
         (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[movement + N_BUTTONS]), TRUE);
 
-    gwy_3d_view_set_status(GWY_3D_VIEW(gwy3dwindow->gwy3dview), movement);
+    gwy_3d_view_set_movement_type(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
+                                  movement);
     gwy3dwindow->in_update = FALSE;
 }
 
@@ -750,26 +748,26 @@ static void
 gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
                                    Gwy3DWindow *window)
 {
-    gboolean lights_on;
+    Gwy3DVisualization visual;
     GwyGLMaterial *material;
     GtkWidget *menu, *item;
 
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(radio)))
         return;
 
-    lights_on
+    visual
         = gwy_radio_buttons_get_current(gtk_radio_button_get_group(radio),
                                         "display-mode");
-    gwy_3d_view_set_use_lights(GWY_3D_VIEW(window->gwy3dview), lights_on);
-    gtk_widget_set_sensitive(window->material_menu, lights_on);
-    gtk_widget_set_sensitive(window->material_label, lights_on);
-    gtk_widget_set_sensitive(window->gradient_menu, !lights_on);
-    gtk_widget_set_sensitive(window->lights_spin1, lights_on);
-    gtk_widget_set_sensitive(window->lights_spin2, lights_on);
-    gtk_widget_set_sensitive(window->buttons[GWY_3D_LIGHT_MOVEMENT], lights_on);
+    gwy_3d_view_set_visualization(GWY_3D_VIEW(window->gwy3dview), visual);
+    gtk_widget_set_sensitive(window->material_menu, visual);
+    gtk_widget_set_sensitive(window->material_label, visual);
+    gtk_widget_set_sensitive(window->gradient_menu, !visual);
+    gtk_widget_set_sensitive(window->lights_spin1, visual);
+    gtk_widget_set_sensitive(window->lights_spin2, visual);
+    gtk_widget_set_sensitive(window->buttons[GWY_3D_LIGHT_MOVEMENT], visual);
     gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_LIGHT_MOVEMENT],
-                             lights_on);
-    if (lights_on) {
+                             visual);
+    if (visual) {
         material = gwy_3d_view_get_material(GWY_3D_VIEW(window->gwy3dview));
         /* FIXME: A hack. Maybe should GLMaterial set default different from
          * None? */
@@ -792,7 +790,7 @@ gwy_3d_window_auto_scale_changed(GtkToggleButton *check,
     gint id;
 
     active = gtk_toggle_button_get_active(check);
-    gtk_widget_set_sensitive(window->labels_size, active);
+    gtk_widget_set_sensitive(window->labels_size, !active);
 
     id = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
     label = gwy_3d_view_get_label(GWY_3D_VIEW(window->gwy3dview), id);

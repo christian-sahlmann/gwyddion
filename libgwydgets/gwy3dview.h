@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *  Copyright (C) 2004 Martin Siler.
  *  E-mail: silerm@physics.muni.cz.
@@ -26,7 +26,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
-#include <gtk/gtkdrawingarea.h>
 #include <pango/pangoft2.h>
 
 #include <libprocess/datafield.h>
@@ -51,6 +50,11 @@ typedef enum {
 } Gwy3DProjection;
 
 typedef enum {
+    GWY_3D_GRADIENT = 0,
+    GWY_3D_LIGHTING
+} Gwy3DVisualization;
+
+typedef enum {
     GWY_3D_VIEW_LABEL_X = 0,
     GWY_3D_VIEW_LABEL_Y,
     GWY_3D_VIEW_LABEL_MIN,
@@ -68,7 +72,7 @@ typedef struct _Gwy3DView      Gwy3DView;
 typedef struct _Gwy3DViewClass Gwy3DViewClass;
 
 struct _Gwy3DView {
-    GtkDrawingArea drawing_area;
+    GtkWidget parent_instance;
 
     GwyContainer *container;        /* Container with data */
     GwyDataField *data;             /* Data to be shown */
@@ -79,7 +83,7 @@ struct _Gwy3DView {
     gdouble data_max;               /* maximal z-value od the heights */
     gdouble data_mean;              /* mean z-value od the heights */
 
-    Gwy3DMovement movement_status;  /* What to do, if mouse is moving */
+    Gwy3DMovement movement;         /* What to do, if mouse is moving */
 
     gint shape_list_base;           /* Base index of scene display lists */
     guint shape_current;            /* Actually shown shape in the scene (full or reduced data) */
@@ -97,9 +101,9 @@ struct _Gwy3DView {
     gdouble view_scale_min;         /* Minimum zoom of the scene */
 
     Gwy3DProjection projection;     /* Orthographic or perspectine projection */
+    Gwy3DVisualization visual;      /* Visualization type */
     gboolean show_axes;             /* Whether show axes wihin the scene */
     gboolean show_labels;           /* Whwther show axes labels, only if axes are shown */
-    gboolean enable_lights;         /* Enable lightning */
 
     GwyGLMaterial * mat_current;    /* Current material (influences the color of the object, lights must be on) */
 
@@ -112,6 +116,7 @@ struct _Gwy3DView {
     PangoContext *ft2_context;      /* For text rendering */
     PangoFT2FontMap *ft2_font_map;  /* Font map for text rendering */
     Gwy3DLabel **labels;            /* labels text, displacement etc */
+    gulong      *label_signal_ids;
     GHashTable *variables;          /* Label substitution variables */
 
     gboolean b_reserved1;           /* resreved for thread creating of display-lists */
@@ -128,7 +133,7 @@ struct _Gwy3DView {
 };
 
 struct _Gwy3DViewClass {
-    GtkDrawingAreaClass parent_class;
+    GtkWidgetClass parent_class;
 
     gpointer reserved1;             /* reserved for future use (signals) */
     gpointer reserved2;
@@ -136,60 +141,60 @@ struct _Gwy3DViewClass {
     gpointer reserved4;
 };
 
-GtkWidget*       gwy_3d_view_new               (GwyContainer * data);
-GType            gwy_3d_view_get_type          (void) G_GNUC_CONST;
+GtkWidget*        gwy_3d_view_new               (GwyContainer * data);
+GType             gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
-void             gwy_3d_view_update            (Gwy3DView *gwy3dview);
+void              gwy_3d_view_update            (Gwy3DView *gwy3dview);
 
-const gchar*     gwy_3d_view_get_gradient      (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_gradient      (Gwy3DView *gwy3dview,
-                                                const gchar *gradient);
+const gchar*      gwy_3d_view_get_gradient      (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_gradient      (Gwy3DView *gwy3dview,
+                                                 const gchar *gradient);
 
-Gwy3DMovement    gwy_3d_view_get_status        (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_status        (Gwy3DView *gwy3dview,
-                                                Gwy3DMovement mv);
+Gwy3DMovement     gwy_3d_view_get_movement_type (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_movement_type (Gwy3DView *gwy3dview,
+                                                 Gwy3DMovement movement);
 
-Gwy3DProjection  gwy_3d_view_get_projection    (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_projection    (Gwy3DView *gwy3dview,
-                                                Gwy3DProjection projection);
-gboolean         gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
+Gwy3DProjection   gwy_3d_view_get_projection    (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_projection    (Gwy3DView *gwy3dview,
+                                                 Gwy3DProjection projection);
+gboolean          gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
                                                 gboolean show_axes);
-gboolean         gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
-                                                gboolean show_labels);
+gboolean          gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
+                                                 gboolean show_labels);
 
-gboolean         gwy_3d_view_get_use_lights    (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_use_lights    (Gwy3DView *gwy3dview,
-                                                gboolean use_lights);
+Gwy3DVisualization gwy_3d_view_get_visualization(Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_visualization (Gwy3DView *gwy3dview,
+                                                 Gwy3DVisualization visual);
 
-guint            gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
-                                                guint reduced_size);
+guint             gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
+                                                 guint reduced_size);
 
-GwyGLMaterial*   gwy_3d_view_get_material      (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
-                                                GwyGLMaterial *material);
+GwyGLMaterial*    gwy_3d_view_get_material      (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
+                                                 GwyGLMaterial *material);
 
-GdkPixbuf*       gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview);
-Gwy3DLabel*      gwy_3d_view_get_label         (Gwy3DView *gwy3dview,
-                                                Gwy3DViewLabel label);
-GwyContainer*    gwy_3d_view_get_data          (Gwy3DView *gwy3dview);
-void             gwy_3d_view_reset_view        (Gwy3DView *gwy3dview);
+GdkPixbuf*        gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview);
+Gwy3DLabel*       gwy_3d_view_get_label         (Gwy3DView *gwy3dview,
+                                                 Gwy3DViewLabel label);
+GwyContainer*     gwy_3d_view_get_data          (Gwy3DView *gwy3dview);
+void              gwy_3d_view_reset_view        (Gwy3DView *gwy3dview);
 
-GtkAdjustment*   gwy_3d_view_get_rot_x_adjustment          (Gwy3DView *gwy3dview);
-GtkAdjustment*   gwy_3d_view_get_rot_y_adjustment          (Gwy3DView *gwy3dview);
-GtkAdjustment*   gwy_3d_view_get_view_scale_adjustment     (Gwy3DView *gwy3dview);
-GtkAdjustment*   gwy_3d_view_get_z_deformation_adjustment  (Gwy3DView *gwy3dview);
-GtkAdjustment*   gwy_3d_view_get_light_z_adjustment        (Gwy3DView *gwy3dview);
-GtkAdjustment*   gwy_3d_view_get_light_y_adjustment        (Gwy3DView *gwy3dview);
+GtkAdjustment* gwy_3d_view_get_rot_x_adjustment         (Gwy3DView *gwy3dview);
+GtkAdjustment* gwy_3d_view_get_rot_y_adjustment         (Gwy3DView *gwy3dview);
+GtkAdjustment* gwy_3d_view_get_view_scale_adjustment    (Gwy3DView *gwy3dview);
+GtkAdjustment* gwy_3d_view_get_z_deformation_adjustment (Gwy3DView *gwy3dview);
+GtkAdjustment* gwy_3d_view_get_light_z_adjustment       (Gwy3DView *gwy3dview);
+GtkAdjustment* gwy_3d_view_get_light_y_adjustment       (Gwy3DView *gwy3dview);
 
-gdouble          gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview);
-gdouble          gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
-                                                gdouble new_max_scale);
-void             gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
-                                                gdouble new_min_scale);
+gdouble           gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview);
+gdouble           gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
+                                                 gdouble new_max_scale);
+void              gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
+                                                 gdouble new_min_scale);
 
 G_END_DECLS
 

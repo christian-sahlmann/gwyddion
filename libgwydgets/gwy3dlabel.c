@@ -27,14 +27,23 @@
 
 #define GWY_3D_LABEL_TYPE_NAME "Gwy3DLabel"
 
+#define GWY_PSPEC(type, id, spec) \
+    G_PARAM_SPEC_##spec(g_object_class_find_property \
+                            (G_OBJECT_CLASS(g_type_class_peek \
+                                                    (GWY_TYPE_##type)), id))
+
+#define GEOM_PSPEC(id) GWY_PSPEC(3D_LABEL, id, DOUBLE)
+
 enum {
     PROP_0,
+    /* geometry indices + 1 */
     PROP_DELTA_X,
     PROP_DELTA_Y,
+    PROP_ROTATION,
     PROP_SIZE,
+    /* other properties */
     PROP_FIXED_SIZE,
-    PROP_DEFAULT_TEXT,
-    PROP_LAST
+    PROP_DEFAULT_TEXT
 };
 
 static void        gwy_3d_label_class_init        (Gwy3DLabelClass *klass);
@@ -138,6 +147,12 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
     gobject_class->set_property = gwy_3d_label_set_property;
     gobject_class->get_property = gwy_3d_label_get_property;
 
+    /**
+     * Gtk3DLabel:delta_x:
+     *
+     * The :delta_x property represents horizontal label offset in pixels
+     * (in screen coordinates after mapping from 3D to 2D).
+     */
     g_object_class_install_property
         (gobject_class,
          PROP_DELTA_X,
@@ -145,6 +160,13 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              "Horizontal offset",
                              "Horizontal label offset, in pixels",
                              -1000, 1000, 0.0, G_PARAM_READWRITE));
+
+    /**
+     * Gtk3DLabel:delta_y:
+     *
+     * The :delta_y property represents vertical label offset in pixels
+     * (in screen coordinates after mapping from 3D to 2D).
+     */
     g_object_class_install_property
         (gobject_class,
          PROP_DELTA_Y,
@@ -152,6 +174,27 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              "Vertical offset",
                              "Vertical label offset, in pixels",
                              -1000, 1000, 0.0, G_PARAM_READWRITE));
+
+    /**
+     * Gtk3DLabel:rotation:
+     *
+     * The :rotation property represents label rotation in radians,
+     * counterclokwise (on screen, after mapping from 3D to 2D).
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_ROTATION,
+         g_param_spec_double("rotation",
+                             "Rotation",
+                             "Label rotation in radians, counterclokwise",
+                             -G_PI, G_PI, 0.0, G_PARAM_READWRITE));
+
+    /**
+     * Gtk3DLabel:size:
+     *
+     * The :size property represents label size in pixels.  When :fixed_size
+     * is %FALSE, its value is overwritten with automatic size.
+     */
     g_object_class_install_property
         (gobject_class,
          PROP_SIZE,
@@ -159,6 +202,13 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              "Font size",
                              "Label font size",
                              1.0, 100.0, 14.0, G_PARAM_READWRITE));
+
+    /**
+     * Gtk3DLabel:fixed_size:
+     *
+     * The :fixed_size property controls whether the :size property is kept and
+     * honoured, or conversely ignored and overwritten with automatic size.
+     */
     g_object_class_install_property
         (gobject_class,
          PROP_FIXED_SIZE,
@@ -166,6 +216,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                               "Fixed size",
                               "Whether label size is fixed and doesn't scale",
                               FALSE, G_PARAM_READWRITE));
+
     g_object_class_install_property
         (gobject_class,
          PROP_DEFAULT_TEXT,
@@ -189,8 +240,29 @@ gwy_3d_label_finalize(GObject *object)
     g_free(label->default_text);
     if (label->text)
         g_string_free(label->text, TRUE);
+
+    g_signal_handlers_disconnect_by_func(label->delta_x,
+                                         gwy_3d_label_adj_value_changed, label);
+    g_signal_handlers_disconnect_by_func(label->delta_x,
+                                         gwy_3d_label_adj_changed, label);
     gwy_object_unref(label->delta_x);
+
+    g_signal_handlers_disconnect_by_func(label->delta_y,
+                                         gwy_3d_label_adj_value_changed, label);
+    g_signal_handlers_disconnect_by_func(label->delta_y,
+                                         gwy_3d_label_adj_changed, label);
     gwy_object_unref(label->delta_y);
+
+    g_signal_handlers_disconnect_by_func(label->rotation,
+                                         gwy_3d_label_adj_value_changed, label);
+    g_signal_handlers_disconnect_by_func(label->rotation,
+                                         gwy_3d_label_adj_changed, label);
+    gwy_object_unref(label->rotation);
+
+    g_signal_handlers_disconnect_by_func(label->size,
+                                         gwy_3d_label_adj_value_changed, label);
+    g_signal_handlers_disconnect_by_func(label->size,
+                                         gwy_3d_label_adj_changed, label);
     gwy_object_unref(label->size);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -208,12 +280,13 @@ gwy_3d_label_serialize(GObject *obj,
     label = GWY_3D_LABEL(obj);
     {
         GwySerializeSpec spec[] = {
+            { 'd', "delta_x", &label->delta_x->value, NULL, },
+            { 'd', "delta_y", &label->delta_y->value, NULL, },
+            { 'd', "rotation", &label->rotation->value, NULL, },
+            { 'd', "size", &label->size->value, NULL, },
             { 's', "text", &label->text->str, NULL, },
             { 's', "default_text", &label->default_text, NULL, },
             { 'b', "fixed_size", &label->fixed_size, NULL, },
-            { 'd', "delta_x", &label->delta_x->value, NULL, },
-            { 'd', "delta_y", &label->delta_y->value, NULL, },
-            { 'd', "size", &label->size->value, NULL, },
         };
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_3D_LABEL_TYPE_NAME,
@@ -227,22 +300,28 @@ gwy_3d_label_deserialize(const guchar *buffer,
                          gsize *position)
 {
     gboolean fixed_size;
-    gdouble delta_x = 0.0, delta_y = 0.0, scale = 14.0;
+    gdouble delta_x, delta_y, scale, rotation;
     gchar *text = NULL, *default_text = NULL;
     Gwy3DLabel *label;
     GwySerializeSpec spec[] = {
+        { 'd', "delta_x", &delta_x, NULL, },
+        { 'd', "delta_y", &delta_y, NULL, },
+        { 'd', "rotation", &rotation, NULL, },
+        { 'd', "size", &scale, NULL, },
         { 's', "text", &text, NULL, },
         { 's', "default_text", &default_text, NULL, },
         { 'b', "fixed_size", &fixed_size, NULL, },
-        { 'd', "delta_x", &delta_x, NULL, },
-        { 'd', "delta_y", &delta_y, NULL, },
-        { 'd', "size", &scale, NULL, },
     };
 
     g_return_val_if_fail(buffer, NULL);
+    delta_x = GEOM_PSPEC("delta_x")->default_value;
+    delta_y = GEOM_PSPEC("delta_y")->default_value;
+    rotation = GEOM_PSPEC("rotation")->default_value;
+    size = GEOM_PSPEC("size")->default_value;
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                             GWY_3D_LABEL_TYPE_NAME,
-                                            G_N_ELEMENTS(spec), spec)) {
+                                            G_N_ELEMENTS(spec), spec)
+        || !default_text) {
         g_free(text);
         g_free(default_text);
         return NULL;
@@ -253,6 +332,7 @@ gwy_3d_label_deserialize(const guchar *buffer,
     label->fixed_size = fixed_size;
     gtk_adjustment_set_value(label->delta_x, delta_x);
     gtk_adjustment_set_value(label->delta_y, delta_y);
+    gtk_adjustment_set_value(label->rotation, rotation);
     gtk_adjustment_set_value(label->size, scale);
     gwy_3d_label_set_text(label, text);
     g_object_thaw_notify(G_OBJECT(label));
@@ -299,6 +379,10 @@ gwy_3d_label_set_property(GObject *object,
         gtk_adjustment_set_value(label->delta_y, g_value_get_double(value));
         break;
 
+        case PROP_ROTATION:
+        gtk_adjustment_set_value(label->rotation, g_value_get_double(value));
+        break;
+
         case PROP_SIZE:
         gtk_adjustment_set_value(label->size, g_value_get_double(value));
         break;
@@ -309,7 +393,6 @@ gwy_3d_label_set_property(GObject *object,
 
         case PROP_DEFAULT_TEXT:
         label->default_text = g_value_dup_string(value);
-        g_object_notify(G_OBJECT(label), "default_text");
         break;
 
         default:
@@ -335,6 +418,10 @@ gwy_3d_label_get_property(GObject*object,
         g_value_set_double(value, label->delta_y->value);
         break;
 
+        case PROP_ROTATION:
+        g_value_set_double(value, label->rotation->value);
+        break;
+
         case PROP_SIZE:
         g_value_set_double(value, label->size->value);
         break;
@@ -353,6 +440,14 @@ gwy_3d_label_get_property(GObject*object,
     }
 }
 
+/**
+ * gwy_3d_label_new:
+ * @default_text: Label default text.
+ *
+ * Creates a new 3D view label.
+ *
+ * Returns: A newly created 3D label.
+ **/
 Gwy3DLabel*
 gwy_3d_label_new(const gchar *default_text)
 {
@@ -361,6 +456,8 @@ gwy_3d_label_new(const gchar *default_text)
     label = g_object_new(GWY_TYPE_3D_LABEL, "default_text", default_text, NULL);
     label->delta_x = gwy_3d_label_create_adjustment(label, "delta_x", 1, 10);
     label->delta_y = gwy_3d_label_create_adjustment(label, "delta_y", 1, 10);
+    label->rotation = gwy_3d_label_create_adjustment(label, "rotation",
+                                                     G_PI/50, G_PI/10);
     label->size = gwy_3d_label_create_adjustment(label, "size", 1, 5);
     label->text = g_string_new(default_text);
 
@@ -373,17 +470,16 @@ gwy_3d_label_create_adjustment(Gwy3DLabel *label,
                                gdouble step,
                                gdouble page)
 {
-    GObjectClass *klass;
     GtkAdjustment *adj;
     GParamSpecDouble *pspec;
 
-    klass = G_OBJECT_CLASS(GWY_3D_LABEL_GET_CLASS(label));
-    pspec = G_PARAM_SPEC_DOUBLE(g_object_class_find_property(klass,
-                                                             property_id));
+    pspec = GEOM_PSPEC(property_id);
     adj = GTK_ADJUSTMENT(gtk_adjustment_new(pspec->default_value,
                                             pspec->minimum,
                                             pspec->maximum,
                                             step, page, 0));
+    g_object_ref(adj);
+    gtk_object_sink(GTK_OBJECT(adj));
     g_object_set_data(G_OBJECT(adj), "gwy-3d-label-property_id",
                       (gpointer)property_id);
     g_signal_connect_swapped(adj, "value_changed",
@@ -410,6 +506,13 @@ gwy_3d_label_adj_changed(G_GNUC_UNUSED Gwy3DLabel *label,
     g_warning("Changing 3D Label's adjustment parameters is not supported.");
 }
 
+/**
+ * gwy_3d_label_set_text:
+ * @label: A 3D label.
+ * @text: New label text.
+ *
+ * Sets the text of a 3D label.
+ **/
 void
 gwy_3d_label_set_text(Gwy3DLabel *label,
                       const gchar *text)
@@ -419,6 +522,15 @@ gwy_3d_label_set_text(Gwy3DLabel *label,
     g_signal_emit_by_name(label, "value_changed");
 }
 
+/**
+ * gwy_3d_label_get_text:
+ * @label: A 3D label.
+ *
+ * Gets the text of a 3D label.
+ *
+ * Returns: The label text.  The returned string is owned by label and must no
+ *          be modified or freed.
+ **/
 const gchar*
 gwy_3d_label_get_text(Gwy3DLabel *label)
 {
@@ -479,19 +591,37 @@ gwy_3d_label_expand_text(Gwy3DLabel *label,
 
     return s;
 }
+
+/**
+ * gwy_3d_label_reset:
+ * @label: A 3D label.
+ *
+ * Resets all 3D label properties and text to default values.
+ **/
 void
 gwy_3d_label_reset(Gwy3DLabel *label)
 {
     g_return_if_fail(GWY_IS_3D_LABEL(label));
     g_object_freeze_notify(G_OBJECT(label));
-    gtk_adjustment_set_value(label->delta_x, 0.0);
-    gtk_adjustment_set_value(label->delta_y, 0.0);
-    gtk_adjustment_set_value(label->size, 14.0);
+    gtk_adjustment_set_value(label->delta_x,
+                             GEOM_PSPEC("delta_x")->default_value);
+    gtk_adjustment_set_value(label->delta_y,
+                             GEOM_PSPEC("delta_y")->default_value);
+    gtk_adjustment_set_value(label->rotation,
+                             GEOM_PSPEC("rotation")->default_value);
+    gtk_adjustment_set_value(label->size,
+                             GEOM_PSPEC("size")->default_value);
     gwy_3d_label_set_fixed_size(label, FALSE);
     gwy_3d_label_set_text(label, label->default_text);
     g_object_thaw_notify(G_OBJECT(label));
 }
 
+/**
+ * gwy_3d_label_reset_text:
+ * @label: A 3D label.
+ *
+ * Resets 3D label text to default values.
+ **/
 void
 gwy_3d_label_reset_text(Gwy3DLabel *label)
 {
@@ -499,6 +629,15 @@ gwy_3d_label_reset_text(Gwy3DLabel *label)
     gwy_3d_label_set_text(label, label->default_text);
 }
 
+/**
+ * gwy_3d_label_get_fixed_size:
+ * @label: A 3D label.
+ *
+ * Queries a 3D label for its label size policy.
+ *
+ * Returns: %TRUE if label size is fixed, %FALSE if it's overriden by automatic
+ *          size.
+ **/
 gboolean
 gwy_3d_label_get_fixed_size(Gwy3DLabel *label)
 {
@@ -506,6 +645,13 @@ gwy_3d_label_get_fixed_size(Gwy3DLabel *label)
     return label->fixed_size;
 }
 
+/**
+ * gwy_3d_label_set_fixed_size:
+ * @label: A 3D label.
+ * @fixed_size: Whether @label size should be fixed.
+ *
+ * Sets 3D label size policy.
+ **/
 void
 gwy_3d_label_set_fixed_size(Gwy3DLabel *label,
                             gboolean fixed_size)
@@ -539,6 +685,14 @@ gwy_3d_label_user_size(Gwy3DLabel *label,
     return user_size;
 }
 
+/**
+ * gwy_3d_label_get_delta_x_adjustment:
+ * @label: A 3D label.
+ *
+ * Gets the horizontal offest adjustment of a 3D label.
+ *
+ * Returns: The horizontal offest adjustment.
+ **/
 GtkAdjustment*
 gwy_3d_label_get_delta_x_adjustment(Gwy3DLabel *label)
 {
@@ -546,6 +700,14 @@ gwy_3d_label_get_delta_x_adjustment(Gwy3DLabel *label)
     return label->delta_x;
 }
 
+/**
+ * gwy_3d_label_get_delta_y_adjustment:
+ * @label: A 3D label.
+ *
+ * Gets the vertical offest adjustment of a 3D label.
+ *
+ * Returns: The vertical offest adjustment.
+ **/
 GtkAdjustment*
 gwy_3d_label_get_delta_y_adjustment(Gwy3DLabel *label)
 {
@@ -553,6 +715,29 @@ gwy_3d_label_get_delta_y_adjustment(Gwy3DLabel *label)
     return label->delta_y;
 }
 
+/**
+ * gwy_3d_label_get_rotation_adjustment:
+ * @label: A 3D label.
+ *
+ * Gets the rotation adjustment of a 3D label.
+ *
+ * Returns: The rotation adjustment.
+ **/
+GtkAdjustment*
+gwy_3d_label_get_rotation_adjustment(Gwy3DLabel *label)
+{
+    g_return_val_if_fail(GWY_IS_3D_LABEL(label), NULL);
+    return label->rotation;
+}
+
+/**
+ * gwy_3d_label_get_size_adjustment:
+ * @label: A 3D label.
+ *
+ * Gets the size adjustment of a 3D label.
+ *
+ * Returns: The size adjustment.
+ **/
 GtkAdjustment*
 gwy_3d_label_get_size_adjustment(Gwy3DLabel *label)
 {
