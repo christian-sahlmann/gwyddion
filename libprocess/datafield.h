@@ -85,6 +85,7 @@ gboolean gwy_data_field_copy(GwyDataField *a,
 /*Get and set values of the struct members*/
 
 /*simple operations*/
+gdouble* gwy_data_field_get_data(GwyDataField *a);
 gint gwy_data_field_get_xres(GwyDataField *a);
 gint gwy_data_field_get_yres(GwyDataField *a);
 gdouble gwy_data_field_get_xreal(GwyDataField *a);
