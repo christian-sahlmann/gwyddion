@@ -140,150 +140,160 @@ fft(GwyContainer *data, GwyRunType run)
     else
         fft_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || fft_dialog(&args);
-    if (ok) {
-        data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-        g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-        gwy_app_clean_up_data(data);
+    if (!ok)
+        return FALSE;
 
-        if (gwy_container_contains_by_name(data, "/0/show")) gwy_container_remove_by_name(data, "/0/show");
-        if (gwy_container_contains_by_name(data, "/0/mask")) gwy_container_remove_by_name(data, "/0/mask");
-        
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
+    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+    gwy_app_clean_up_data(data);
 
-        if (gwy_data_field_get_xres(dfield) != gwy_data_field_get_yres(dfield))
-        {
-            dialog
-                = gtk_message_dialog_new(GTK_WINDOW(gwy_app_data_window_get_current()),
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_MESSAGE_ERROR,
-                                         GTK_BUTTONS_CLOSE,
-                                         "FFT: data field must be rectangular.");
-           gtk_dialog_run(GTK_DIALOG(dialog));
-           gtk_widget_destroy(dialog);
-           return ok;
-        }
-        g_assert(gwy_data_field_get_xres(dfield) == gwy_data_field_get_yres(dfield));
+    if (gwy_container_contains_by_name(data, "/0/show"))
+        gwy_container_remove_by_name(data, "/0/show");
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+        gwy_container_remove_by_name(data, "/0/mask");
 
-        xsize = gwy_data_field_get_xres(dfield);
-        ysize = gwy_data_field_get_yres(dfield);
-        newsize = gwy_data_field_get_fft_res(xsize);
-        gwy_data_field_resample(dfield, newsize, newsize, GWY_INTERPOLATION_BILINEAR);
-        raout = GWY_DATA_FIELD(gwy_data_field_new(
-                                   gwy_data_field_get_xres(dfield),
-                                   gwy_data_field_get_yres(dfield),
-                                   gwy_data_field_get_xreal(dfield),
-                                   gwy_data_field_get_yreal(dfield),
-                                   TRUE));
-        ipout = GWY_DATA_FIELD(gwy_data_field_new(
-                                   gwy_data_field_get_xres(dfield),
-                                   gwy_data_field_get_yres(dfield),
-                                   gwy_data_field_get_xreal(dfield),
-                                   gwy_data_field_get_yreal(dfield),
-                                   TRUE));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                "/0/data"));
 
-        imin = GWY_DATA_FIELD(gwy_data_field_new(
-                                   gwy_data_field_get_xres(dfield),
-                                   gwy_data_field_get_yres(dfield),
-                                   gwy_data_field_get_xreal(dfield),
-                                   gwy_data_field_get_yreal(dfield),
-                                   TRUE));
-
-        gwy_data_field_multiply(dfield, 1e6);
-        gwy_data_field_fill(raout,0);
-        gwy_data_field_fill(ipout,0);
-        gwy_data_field_fill(imin,0);
-
-        gwy_data_field_2dfft(dfield, imin,
-                                 raout,
-                                 ipout,
-                                 gwy_data_line_fft_hum,
-                                 args.window,
-                                 1,
-                                 args.interp,
-                                 0,
-                                 0);
-        gwy_data_field_2dffthumanize(raout);
-        gwy_data_field_2dffthumanize(ipout);
-
-        xyunit = (GwySIUnit *)gwy_si_unit_new("m<sup>-1</sup>");
-        zunit = (GwySIUnit *)gwy_si_unit_new("m");
-        newreals = ((gdouble)gwy_data_field_get_xres(dfield))/gwy_data_field_get_xreal(dfield);
-
-        if (args.preserve)
-        {
-            gwy_data_field_resample(dfield, xsize, ysize, args.interp);
-            gwy_data_field_resample(raout, xsize, ysize, args.interp);
-            gwy_data_field_resample(ipout, xsize, ysize, args.interp);
-        }
-
-        if (args.out == GWY_FFT_OUTPUT_REAL_IMG || args.out == GWY_FFT_OUTPUT_REAL)
-        {
-            set_dfield_real(raout, ipout, dfield);
-            gwy_data_field_set_si_unit_xy(dfield, xyunit);
-            gwy_data_field_set_si_unit_z(dfield, zunit);
-            gwy_data_field_set_xreal(dfield, newreals);
-            gwy_data_field_set_yreal(dfield, newreals);
-
-
-            data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                             "FFT Real");
-        }
-        if (args.out == GWY_FFT_OUTPUT_REAL_IMG || args.out == GWY_FFT_OUTPUT_IMG)
-        {
-            if (args.out == GWY_FFT_OUTPUT_REAL_IMG)
-            {
-                data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-                dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-            }
-            set_dfield_imaginary(raout, ipout, dfield);
-            gwy_data_field_set_si_unit_xy(dfield, xyunit);
-            gwy_data_field_set_si_unit_z(dfield, zunit);
-            gwy_data_field_set_xreal(dfield, newreals);
-            gwy_data_field_set_yreal(dfield, newreals);
-
-
-            data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                             "FFT Imag");
-        }
-        if (args.out == GWY_FFT_OUTPUT_MOD_PHASE || args.out == GWY_FFT_OUTPUT_MOD)
-        {
-            set_dfield_module(raout, ipout, dfield);
-            gwy_data_field_set_si_unit_xy(dfield, xyunit);
-            gwy_data_field_set_si_unit_z(dfield, zunit);
-            gwy_data_field_set_xreal(dfield, newreals);
-            gwy_data_field_set_yreal(dfield, newreals);
-
-            
-            data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                             "FFT Modulus");
-        }
-        if (args.out == GWY_FFT_OUTPUT_MOD_PHASE || args.out == GWY_FFT_OUTPUT_PHASE)
-        {
-            if (args.out == GWY_FFT_OUTPUT_MOD_PHASE)
-            {
-                data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-                dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-            }
-            set_dfield_phase(raout, ipout, dfield);
-            gwy_data_field_set_si_unit_xy(dfield, xyunit);
-            gwy_data_field_set_si_unit_xy(dfield, zunit);
-            gwy_data_field_set_xreal(dfield, newreals);
-            gwy_data_field_set_yreal(dfield, newreals);
-
-            data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                             "FFT Phase");
-        }
-
-        if (run != GWY_RUN_WITH_DEFAULTS)
-            fft_save_args(gwy_app_settings_get(), &args);
+    if (gwy_data_field_get_xres(dfield) != gwy_data_field_get_yres(dfield))
+    {
+        dialog
+            = gtk_message_dialog_new(GTK_WINDOW(gwy_app_data_window_get_current()),
+                                     GTK_DIALOG_DESTROY_WITH_PARENT,
+                                     GTK_MESSAGE_ERROR,
+                                     GTK_BUTTONS_CLOSE,
+                                     "FFT: data field must be rectangular.");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return ok;
     }
+    g_assert(gwy_data_field_get_xres(dfield)
+             == gwy_data_field_get_yres(dfield));
+
+    xsize = gwy_data_field_get_xres(dfield);
+    ysize = gwy_data_field_get_yres(dfield);
+    newsize = gwy_data_field_get_fft_res(xsize);
+    gwy_data_field_resample(dfield, newsize, newsize,
+                            GWY_INTERPOLATION_BILINEAR);
+    raout = GWY_DATA_FIELD(gwy_data_field_new(
+                                gwy_data_field_get_xres(dfield),
+                                gwy_data_field_get_yres(dfield),
+                                gwy_data_field_get_xreal(dfield),
+                                gwy_data_field_get_yreal(dfield),
+                                TRUE));
+    ipout = GWY_DATA_FIELD(gwy_data_field_new(
+                                gwy_data_field_get_xres(dfield),
+                                gwy_data_field_get_yres(dfield),
+                                gwy_data_field_get_xreal(dfield),
+                                gwy_data_field_get_yreal(dfield),
+                                TRUE));
+
+    imin = GWY_DATA_FIELD(gwy_data_field_new(
+                                gwy_data_field_get_xres(dfield),
+                                gwy_data_field_get_yres(dfield),
+                                gwy_data_field_get_xreal(dfield),
+                                gwy_data_field_get_yreal(dfield),
+                                TRUE));
+
+    gwy_data_field_multiply(dfield, 1e6);
+    gwy_data_field_fill(raout,0);
+    gwy_data_field_fill(ipout,0);
+    gwy_data_field_fill(imin,0);
+
+    gwy_data_field_2dfft(dfield, imin,
+                         raout,
+                         ipout,
+                         gwy_data_line_fft_hum,
+                         args.window,
+                         1,
+                         args.interp,
+                         0,
+                         0);
+    gwy_data_field_2dffthumanize(raout);
+    gwy_data_field_2dffthumanize(ipout);
+
+    xyunit = (GwySIUnit*)gwy_si_unit_new("m<sup>-1</sup>");
+    zunit = (GwySIUnit*)gwy_si_unit_new("m");
+    newreals = ((gdouble)gwy_data_field_get_xres(dfield))/gwy_data_field_get_xreal(dfield);
+
+    if (args.preserve)
+    {
+        gwy_data_field_resample(dfield, xsize, ysize, args.interp);
+        gwy_data_field_resample(raout, xsize, ysize, args.interp);
+        gwy_data_field_resample(ipout, xsize, ysize, args.interp);
+    }
+
+    if (args.out == GWY_FFT_OUTPUT_REAL_IMG || args.out == GWY_FFT_OUTPUT_REAL)
+    {
+        set_dfield_real(raout, ipout, dfield);
+        gwy_data_field_set_si_unit_xy(dfield, xyunit);
+        gwy_data_field_set_si_unit_z(dfield, zunit);
+        gwy_data_field_set_xreal(dfield, newreals);
+        gwy_data_field_set_yreal(dfield, newreals);
+
+
+        data_window = gwy_app_data_window_create(data);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                            "FFT Real");
+    }
+    if (args.out == GWY_FFT_OUTPUT_REAL_IMG || args.out == GWY_FFT_OUTPUT_IMG)
+    {
+        if (args.out == GWY_FFT_OUTPUT_REAL_IMG)
+        {
+            data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+            dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                "/0/data"));
+        }
+        set_dfield_imaginary(raout, ipout, dfield);
+        gwy_data_field_set_si_unit_xy(dfield, xyunit);
+        gwy_data_field_set_si_unit_z(dfield, zunit);
+        gwy_data_field_set_xreal(dfield, newreals);
+        gwy_data_field_set_yreal(dfield, newreals);
+
+
+        data_window = gwy_app_data_window_create(data);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                            "FFT Imag");
+    }
+    if (args.out == GWY_FFT_OUTPUT_MOD_PHASE || args.out == GWY_FFT_OUTPUT_MOD)
+    {
+        set_dfield_module(raout, ipout, dfield);
+        gwy_data_field_set_si_unit_xy(dfield, xyunit);
+        gwy_data_field_set_si_unit_z(dfield, zunit);
+        gwy_data_field_set_xreal(dfield, newreals);
+        gwy_data_field_set_yreal(dfield, newreals);
+
+
+        data_window = gwy_app_data_window_create(data);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                            "FFT Modulus");
+    }
+    if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
+        || args.out == GWY_FFT_OUTPUT_PHASE)
+    {
+        if (args.out == GWY_FFT_OUTPUT_MOD_PHASE)
+        {
+            data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+            dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                "/0/data"));
+        }
+        set_dfield_phase(raout, ipout, dfield);
+        gwy_data_field_set_si_unit_xy(dfield, xyunit);
+        gwy_data_field_set_si_unit_xy(dfield, zunit);
+        gwy_data_field_set_xreal(dfield, newreals);
+        gwy_data_field_set_yreal(dfield, newreals);
+
+        data_window = gwy_app_data_window_create(data);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                            "FFT Phase");
+    }
+
+    if (run != GWY_RUN_WITH_DEFAULTS)
+        fft_save_args(gwy_app_settings_get(), &args);
+
+    g_object_unref(raout);
+    g_object_unref(ipout);
+    g_object_unref(imin);
 
     return ok;
 }

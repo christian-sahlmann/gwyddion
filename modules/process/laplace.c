@@ -107,13 +107,13 @@ laplace(GwyContainer *data, GwyRunType run)
             if (error < maxer) break;
             if (i==0) starter = error;
 
-            
+
             gwy_app_wait_set_message("Iterating...");
-            
+
             frac = log(error/starter)/log(maxer/starter);
             if ((i/(gdouble)(5000)) > frac) frac = i/(gdouble)(5000);
             if (lastfrac > frac) frac = lastfrac;
-            
+
             if (!gwy_app_wait_set_fraction(frac)) break;
             lastfrac = frac;
         }

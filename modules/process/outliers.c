@@ -75,9 +75,9 @@ outliers(GwyContainer *data, GwyRunType run)
     gdouble thresh;
 
     g_assert(run & OUTLIERS_RUN_MODES);
-   
 
-    
+
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (gwy_container_contains_by_name(data, "/0/mask"))
     {
@@ -86,15 +86,20 @@ outliers(GwyContainer *data, GwyRunType run)
     }
     else
     {
-        maskfield = (GwyDataField *)gwy_data_field_new(dfield->xres, dfield->yres, dfield->xreal, dfield->yreal, FALSE);
+        maskfield = (GwyDataField*)gwy_data_field_new(dfield->xres,
+                                                      dfield->yres,
+                                                      dfield->xreal,
+                                                      dfield->yreal,
+                                                      FALSE);
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
+        g_object_unref(maskfield);
     }
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
     thresh = 3.0;
     gwy_data_field_mask_outliers(dfield, maskfield, thresh);
 
-    
+
     return TRUE;
 }
 

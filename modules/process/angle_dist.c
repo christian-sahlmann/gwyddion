@@ -139,6 +139,7 @@ angle_dist(GwyContainer *data, GwyRunType run)
     if (dfield) {
         data = GWY_CONTAINER(gwy_container_new());
         gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+        g_object_unref(dfield);
         gwy_container_set_string_by_name(data, "/0/base/palette",
                                          g_strdup(pal));
 
