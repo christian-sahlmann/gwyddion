@@ -16,7 +16,7 @@ static void  gwy_palette_value_changed     (GObject *GwyPalette);
 
 gboolean gwy_palette_is_extreme(GwyPaletteEntry a, GwyPaletteEntry am, GwyPaletteEntry ap);
 gboolean gwy_palette_is_bigslopechange(GwyPaletteEntry a, GwyPaletteEntry am, GwyPaletteEntry ap);
-    
+
 GType
 gwy_palette_get_type(void)
 {
@@ -65,7 +65,7 @@ gwy_palette_get_type(void)
 
 static void
 gwy_palette_serializable_init(gpointer giface,
-                               gpointer iface_data)
+                              gpointer iface_data)
 {
     GwySerializableClass *iface = giface;
 
@@ -81,18 +81,18 @@ gwy_palette_serializable_init(gpointer giface,
 
 static void
 gwy_palette_watchable_init(gpointer giface,
-                            gpointer iface_data)
+                           gpointer iface_data)
 {
     GwyWatchableClass *iface = giface;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    
+
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     /* initialize stuff */
-    iface->value_changed = NULL; 
+    iface->value_changed = NULL;
 }
 
 static void
@@ -117,7 +117,7 @@ gwy_palette_init(GwyPalette *palette)
     palette->nofvals = 0;
     palette->color = NULL;
     palette->def = NULL;
-    
+
 }
 
 static void
@@ -126,10 +126,10 @@ gwy_palette_finalize(GwyPalette *palette)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-   
+
     g_free(palette->color);
     g_free(palette->ints);
-    g_array_free(palette->def->data, 0); 
+    g_array_free(palette->def->data, 0);
 }
 
 GObject*
@@ -145,15 +145,15 @@ gwy_palette_new(gdouble n)
     palette->color = (GwyPaletteEntry *) g_try_malloc(palette->nofvals*sizeof(GwyPaletteEntry));
     palette->ints = (guchar *) g_try_malloc(palette->nofvals*sizeof(guchar)*4);
     palette->def = (GwyPaletteDef*)gwy_palette_def_new(n);
-    
+
     return (GObject*)(palette);
 }
 
 
 static guchar*
 gwy_palette_serialize(GObject *obj,
-                       guchar *buffer,
-                       gsize *size)
+                      guchar *buffer,
+                      gsize *size)
 {
     GwyPalette *palette;
 
@@ -161,41 +161,57 @@ gwy_palette_serialize(GObject *obj,
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
     g_return_val_if_fail(GWY_IS_PALETTE(obj), NULL);
-    
+
     palette = GWY_PALETTE(obj);
-    buffer = gwy_serialize_pack(buffer, size, "s", GWY_PALETTE_TYPE_NAME);
-    buffer = gwy_serializable_serialize((GObject *)palette->def, buffer, size);
-    
+    buffer = gwy_serialize_pack(buffer, size, "si",
+                                GWY_PALETTE_TYPE_NAME, 0);
+    {
+        GwySerializeSpec spec[] = {
+            { 'o', "pdef", &palette->def, NULL, },
+        };
+        gsize oldsize = *size;
+
+        buffer = gwy_serialize_pack_struct(buffer, size,
+                                           G_N_ELEMENTS(spec), spec);
+        gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
+                                  *size - oldsize);
+    }
     return buffer;
 }
 
 static GObject*
-gwy_palette_deserialize(const guchar *stream,
+gwy_palette_deserialize(const guchar *buffer,
                          gsize size,
                          gsize *position)
 {
     GwyPalette *palette;
     GwyPaletteDef *pdef;
-    gsize pos, fsize;
+    gsize pos, mysize;
+    GwySerializeSpec spec[] = {
+      { 'o', "pdef", &pdef, NULL, },
+    };
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_return_val_if_fail(stream, NULL);
+    g_return_val_if_fail(buffer, NULL);
 
-    pos = gwy_serialize_check_string(stream, size, *position,
+    pos = gwy_serialize_check_string(buffer, size, *position,
                                      GWY_PALETTE_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
+    mysize = gwy_serialize_unpack_int32(buffer, size, position);
 
-    pdef = (GwyPaletteDef*) gwy_serializable_deserialize(stream, size, &pos);
+    gwy_serialize_unpack_struct(buffer + *position, mysize,
+                                G_N_ELEMENTS(spec), spec);
+    *position += mysize;
 
     palette = (GwyPalette*)gwy_palette_new((gint)pdef->n);
-    g_array_free(palette->def->data, 0);
+    g_array_free(palette->def->data, FALSE);
     palette->def = pdef;
 
     gwy_palette_recompute_table(palette);
-    
+
     return (GObject*)palette;
 }
 
@@ -215,34 +231,34 @@ gwy_palette_value_changed(GObject *palette)
  * @a: palette we want to be set
  * @b: palette definition to be used
  *
- * Sets the palette definition. 
+ * Sets the palette definition.
  *
  * Makes a deep copy of @b and puts it into
  * palette structure. This function does not recompute the color tables
  * inside palette. Call gwy_palette_recompute_table() to do this afterwards
  * or use gwy_palette_setup() instead of this function.
  **/
-void 
+void
 gwy_palette_set_def(GwyPalette *a, GwyPaletteDef* b)
 {
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-     gwy_palette_def_copy(b, a->def); 
+     gwy_palette_def_copy(b, a->def);
 }
 
 /**
  * gwy_palette_recompute_table:
  * @a: palette to be recomputed
  *
- * Recomputes all the color tables inside palette. 
+ * Recomputes all the color tables inside palette.
  *
  * Call this function if you changed the palette definition
  * directly or by calling gwy_palette_set_def().
  *
  * Returns: 0 at success
  **/
-gint 
+gint
 gwy_palette_recompute_table(GwyPalette *a)
 {
     gint i;
@@ -250,14 +266,14 @@ gwy_palette_recompute_table(GwyPalette *a)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
- 
+
     for (i=0; i<a->nofvals; i++)
     {
-	pe = (gwy_palette_def_get_color(a->def, i, GWY_INTERPOLATION_BILINEAR));
-	a->color[i] = pe;
+        pe = (gwy_palette_def_get_color(a->def, i, GWY_INTERPOLATION_BILINEAR));
+        a->color[i] = pe;
     }
     a->ints = gwy_palette_int32_render(a, a->nofvals, a->ints);
-	
+
     return 0;
 }
 
@@ -273,7 +289,7 @@ gwy_palette_recompute_table(GwyPalette *a)
  *
  * Returns: 0 at success
  **/
-gint 
+gint
 gwy_palette_setup(GwyPalette *a, GwyPaletteDef *pdef)
 {
     gwy_palette_set_def(a, pdef);
@@ -288,12 +304,12 @@ gwy_palette_setup(GwyPalette *a, GwyPaletteDef *pdef)
  *
  * Puts the color entry inside palette color table and recomputes palette definition
  *
- * Note: this is not the best way of changing palette. Better choice is 
+ * Note: this is not the best way of changing palette. Better choice is
  * to change the palette definition and recompute the color table.
  *
  * Returns: 0 at success
  **/
-gint 
+gint
 gwy_palette_set_color(GwyPalette *a, GwyPaletteEntry *val, gint i)
 {
     if (i<0 || i>=a->nofvals) { g_warning("Trying to reach value outside of palette.\n"); return 1;}
@@ -339,7 +355,7 @@ gwy_palette_is_bigslopechange(GwyPaletteEntry a, GwyPaletteEntry am, GwyPaletteE
  *
  * Returns: 0 at success
  **/
-gint 
+gint
 gwy_palette_recompute_palette(GwyPalette *a, gint istep)
 {
     /*local extremes will be used as palette definition entries*/
@@ -352,36 +368,36 @@ gwy_palette_recompute_palette(GwyPalette *a, gint istep)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    
+
     g_array_free(a->def->data, 0);
     a->def->data = g_array_new(0, 0, sizeof(GwyPaletteDefEntry));
-    
+
     pd.x = 0; pd.color = a->color[0];
     gwy_palette_def_set_color(a->def, &pd);
     icount = 1;
     for (i=1; i<(a->nofvals-1); i++)
-    {	
-	if (gwy_palette_is_extreme(a->color[i], a->color[i-1], a->color[i+1]) ||
-	    gwy_palette_is_bigslopechange(a->color[i], a->color[i-1], a->color[i+1]))
-	{
-	    pd.x = (gdouble)i; pd.color = a->color[i];
-	    gwy_palette_def_set_color(a->def, &pd);
-	    icount = 1; continue;
-	}
-	else if (icount >= istep)
-	{
-	    pd.x = (gdouble)i; pd.color = a->color[i];
-	    gwy_palette_def_set_color(a->def, &pd);
-	    icount = 1; continue;
-	}
-	icount++;
+    {
+        if (gwy_palette_is_extreme(a->color[i], a->color[i-1], a->color[i+1]) ||
+            gwy_palette_is_bigslopechange(a->color[i], a->color[i-1], a->color[i+1]))
+        {
+            pd.x = (gdouble)i; pd.color = a->color[i];
+            gwy_palette_def_set_color(a->def, &pd);
+            icount = 1; continue;
+        }
+        else if (icount >= istep)
+        {
+            pd.x = (gdouble)i; pd.color = a->color[i];
+            gwy_palette_def_set_color(a->def, &pd);
+            icount = 1; continue;
+        }
+        icount++;
     }
     pd.x = a->nofvals-1; pd.color = a->color[a->nofvals-1];
     gwy_palette_def_set_color(a->def, &pd);
-    
+
     return 0;
 }
-   
+
 /**
  * gwy_palette_int32_render:
  * @a: palette to be rendered
@@ -391,7 +407,7 @@ gwy_palette_recompute_palette(GwyPalette *a, gint istep)
  *
  * Returns:
  **/
-guchar* 
+guchar*
 gwy_palette_int32_render(GwyPalette *a, gint size, guchar *oldpal)
 {
     gint i, k;
@@ -400,20 +416,20 @@ gwy_palette_int32_render(GwyPalette *a, gint size, guchar *oldpal)
 
     if (oldpal==NULL)
     {
-    	oldpal = (guchar *) g_try_malloc(size*sizeof(guchar)*4);
+        oldpal = (guchar *) g_try_malloc(size*sizeof(guchar)*4);
     }
-    else oldpal = (guchar *) g_try_realloc(oldpal, size*sizeof(guchar)*4); 
-	
+    else oldpal = (guchar *) g_try_realloc(oldpal, size*sizeof(guchar)*4);
+
     k = 0;
     cor = a->def->n/(gdouble)size;
     for (i=0; i<size; i++)
     {
-	pe = gwy_palette_def_get_color(a->def, i*cor, GWY_INTERPOLATION_BILINEAR);
-	
-	oldpal[k++] = (guchar)((gint32) pe.r); 
-	oldpal[k++] = (guchar)((gint32) pe.g); 
-	oldpal[k++] = (guchar)((gint32) pe.b); 
-	oldpal[k++] = (guchar)((gint32) pe.a); 
+        pe = gwy_palette_def_get_color(a->def, i*cor, GWY_INTERPOLATION_BILINEAR);
+
+        oldpal[k++] = (guchar)((gint32) pe.r);
+        oldpal[k++] = (guchar)((gint32) pe.g);
+        oldpal[k++] = (guchar)((gint32) pe.b);
+        oldpal[k++] = (guchar)((gint32) pe.a);
     }
     return oldpal;
 }
@@ -421,7 +437,7 @@ gwy_palette_int32_render(GwyPalette *a, gint size, guchar *oldpal)
 /**
  * gwy_palette_setup_predef:
  * @a: palette to be filled
- * @pal: palette index 
+ * @pal: palette index
  *
  * Fills palette with some predefined colors
  *
@@ -432,119 +448,119 @@ gwy_palette_setup_predef(GwyPalette *a, gint pal)
 {
     GwyPaletteDefEntry cval;
     gint i;
-    
+
     /*remove every previous items in the palette definition*/
     g_array_free(a->def->data, 0);
     a->def->data = g_array_new(0, 0, sizeof(GwyPaletteDefEntry));
-  
+
     cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 0;
     gwy_palette_def_set_color(a->def, &cval);
     cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255; cval.x = 511;
     gwy_palette_def_set_color(a->def, &cval);
-    
+
     if (pal == GWY_PALETTE_GRAY)
     {
-	
+
     }
     else if (pal == GWY_PALETTE_RED)
     {
-	cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 256;
-	gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 256;
+        gwy_palette_def_set_color(a->def, &cval);
     }
     else if (pal == GWY_PALETTE_GREEN)
     {
-	cval.color.r = 0; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 256;
-	gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 0; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 256;
+        gwy_palette_def_set_color(a->def, &cval);
     }
 
     else if (pal == GWY_PALETTE_BLUE)
     {
-	cval.color.r = 0; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 256;
-	gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 0; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 256;
+        gwy_palette_def_set_color(a->def, &cval);
     }
 
     else if (pal == GWY_PALETTE_YELLOW)
     {
-	cval.color.r = 212; cval.color.g = 183; cval.color.b = 42; cval.color.a = 255; cval.x = 256;
-	gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 212; cval.color.g = 183; cval.color.b = 42; cval.color.a = 255; cval.x = 256;
+        gwy_palette_def_set_color(a->def, &cval);
     }
 
     else if (pal == GWY_PALETTE_PINK)
     {
-	cval.color.r = 255; cval.color.g = 20; cval.color.b = 160; cval.color.a = 255; cval.x = 256;
-	gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 255; cval.color.g = 20; cval.color.b = 160; cval.color.a = 255; cval.x = 256;
+        gwy_palette_def_set_color(a->def, &cval);
     }
 
     else if (pal == GWY_PALETTE_OLIVE)
     {
-	cval.color.r = 94; cval.color.g = 176; cval.color.b = 117; cval.color.a = 255; cval.x = 256;
-	gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 94; cval.color.g = 176; cval.color.b = 117; cval.color.a = 255; cval.x = 256;
+        gwy_palette_def_set_color(a->def, &cval);
     }
 
     else if (pal == GWY_PALETTE_BW1)
     {
-	for (i=0; i<10; i++)
-	{
-	    if (i%2==0) {cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255; }
-	    else {cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255;}
-	    cval.x = (gdouble)i*(256/10.0);
-	    gwy_palette_def_set_color(a->def, &cval);
-	}
+        for (i=0; i<10; i++)
+        {
+            if (i%2==0) {cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255; }
+            else {cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255;}
+            cval.x = (gdouble)i*(256/10.0);
+            gwy_palette_def_set_color(a->def, &cval);
+        }
     }
     else if (pal == GWY_PALETTE_BW2)
     {
-	for (i=0; i<10; i++)
-	{
-	    if (i%2==0) 
-	    {
-		cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255;
-		cval.x = (gdouble)i*(256/10.0);
-	        gwy_palette_def_set_color(a->def, &cval);
-		cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255;
-		cval.x = (gdouble)i*(256/10.0) + 0.1;
-		gwy_palette_def_set_color(a->def, &cval);
-	    }
-	    else 
-	    {
-		cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255;
-	        cval.x = (gdouble)i*(256/10.0);
-	        gwy_palette_def_set_color(a->def, &cval);
-		cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255;
-		cval.x = (gdouble)i*(256/10.0) + 0.1;
-		gwy_palette_def_set_color(a->def, &cval);
-	    }
-	}
+        for (i=0; i<10; i++)
+        {
+            if (i%2==0)
+            {
+                cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255;
+                cval.x = (gdouble)i*(256/10.0);
+                gwy_palette_def_set_color(a->def, &cval);
+                cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255;
+                cval.x = (gdouble)i*(256/10.0) + 0.1;
+                gwy_palette_def_set_color(a->def, &cval);
+            }
+            else
+            {
+                cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255;
+                cval.x = (gdouble)i*(256/10.0);
+                gwy_palette_def_set_color(a->def, &cval);
+                cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255;
+                cval.x = (gdouble)i*(256/10.0) + 0.1;
+                gwy_palette_def_set_color(a->def, &cval);
+            }
+        }
     }
     else if (pal == GWY_PALETTE_RAINBOW1)
     {
-	cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 64;
-	gwy_palette_def_set_color(a->def, &cval);
-   	cval.color.r = 255; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 128;
-	gwy_palette_def_set_color(a->def, &cval);
-	cval.color.r = 0; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255; cval.x = 192;
-	gwy_palette_def_set_color(a->def, &cval);
-	cval.color.r = 255; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 256;
-	gwy_palette_def_set_color(a->def, &cval);
-	cval.color.r = 0; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 320;
-	gwy_palette_def_set_color(a->def, &cval);
-	cval.color.r = 0; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 384;
-	gwy_palette_def_set_color(a->def, &cval);
-	cval.color.r = 128; cval.color.g = 128; cval.color.b = 128; cval.color.a = 255; cval.x = 448;
-	gwy_palette_def_set_color(a->def, &cval);
- 
+        cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 64;
+        gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 255; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 128;
+        gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 0; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255; cval.x = 192;
+        gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 255; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 256;
+        gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 0; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 320;
+        gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 0; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 384;
+        gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 128; cval.color.g = 128; cval.color.b = 128; cval.color.a = 255; cval.x = 448;
+        gwy_palette_def_set_color(a->def, &cval);
+
     }
     else if (pal == GWY_PALETTE_RAINBOW2)
     {
-   	cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 128;
-	gwy_palette_def_set_color(a->def, &cval);
-	cval.color.r = 0; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 256;
-	gwy_palette_def_set_color(a->def, &cval);
-	cval.color.r = 0; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 384;
-	gwy_palette_def_set_color(a->def, &cval);
- 
+        cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 128;
+        gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 0; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 256;
+        gwy_palette_def_set_color(a->def, &cval);
+        cval.color.r = 0; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 384;
+        gwy_palette_def_set_color(a->def, &cval);
+
     }
     else {g_warning("Palette not implemented yet."); return 1;}
-   
+
     gwy_palette_def_sort(a->def);
     return gwy_palette_recompute_table(a);;
 }
@@ -554,7 +570,7 @@ gwy_palette_setup_predef(GwyPalette *a, gint pal)
  * @a: palette to be outputted
  *
  * Debugging function that prints full palette color tables to stdout.
- * 
+ *
  **/
 void
 gwy_palette_print(GwyPalette *a)
@@ -563,7 +579,9 @@ gwy_palette_print(GwyPalette *a)
     printf("### palette (integer output) ##########################################\n");
     for (i=0; i<a->nofvals; i++)
     {
-	printf("%d : (%d %d %d %d)\n", i, (gint)a->color[i].r, (gint)a->color[i].g, (gint)a->color[i].b, (gint)a->color[i].a);
+        printf("%d : (%d %d %d %d)\n", i, (gint)a->color[i].r, (gint)a->color[i].g, (gint)a->color[i].b, (gint)a->color[i].a);
     }
     printf("######################################################################\n");
 }
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
