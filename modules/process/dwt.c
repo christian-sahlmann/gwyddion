@@ -152,14 +152,17 @@ dwt(GwyContainer *data, GwyRunType run)
 
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
-    gwy_data_field_dwt(dfield, wtcoefs, 1, 64);
-    
+    gwy_data_field_dwt(dfield, wtcoefs, 1, 4);
+
     
     if (args.preserve)
     {
         gwy_data_field_resample(dfield, xsize, ysize, args.interp);
     }
 
+/*    gint k;
+    for (k=0; k<(dfield->xres*dfield->yres); k++) dfield->data[k] = fabs(dfield->data[k]);
+*/
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
 				     "DWT");

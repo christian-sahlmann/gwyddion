@@ -18,6 +18,7 @@ process_PROGRAMS = \
 	edge.so \
 	facet-level.so \
 	fft.so \
+	fit_2d.so \
 	fraccor.so \
 	fractal.so \
 	gradient.so \
@@ -91,6 +92,9 @@ edge_so_LDFLAGS = $(module_ldflags),edge.so
 
 facet_level_so_SOURCES = facet-level.c
 facet_level_so_LDFLAGS = $(module_ldflags),facet-level.so
+
+fit_2d_so_SOURCES = fit_2d.c
+fit_2d_so_LDFLAGS = $(module_ldflags),fit_2d.so
 
 fft_so_SOURCES = fft.c
 fft_so_LDFLAGS = $(module_ldflags),fft.so
