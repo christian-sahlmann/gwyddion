@@ -23,6 +23,7 @@ AC_CONFIG_FILES(\
   plugins/file/Makefile \
   plugins/process/Makefile \
   pixmaps/Makefile \
+  perl/Makefile \
   python/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyapp/Makefile \
@@ -63,10 +64,19 @@ AC_CHECK_PROGS([SED],[sed])
 AC_CHECK_PROGS([STRIP],[strip])
 AM_PATH_PYTHON(2.2,,:)
 AC_PATH_PROGS(PERL,perl5 perl,:)
+AC_PATH_PROGS(POD2MAN,pod2man,:)
 AC_PATH_PROGS(PASCAL,fpc gpc,:)
 gtk_CHECK_GTK_DOC
 
 AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
+AM_CONDITIONAL([HAVE_PERL], [test "$PERL" != :])
+AM_CONDITIONAL([HAVE_PASCAL], [test "$PASCAL" != :])
+
+if test "$PERL" != :; then
+  eval `$PERL -V:installsitelib | sed -e 's/^/perl/'`
+  eval `$PERL -V:prefix | sed -e 's/^/perl/'`
+  PERL_SITE_LIB=`echo $perlinstallsitelib | sed -e "s#^$perlprefix##"`
+fi
 
 dnl With GCC, be paranoiac.  It should compile really cleanly.
 dnl Except -Wno-sign-compare, but older gcc's don't know it.
@@ -135,6 +145,7 @@ LDFLAGS="$TARGET_LDFLAGS $PACKAGE_LIBS $LDFLAGS"
 
 AC_SUBST(RPM_RELEASE)
 AC_SUBST(RPM_VERSION)
+AC_SUBST(PERL_SITE_LIB)
 AC_SUBST(PACKAGE_URL)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
           [Define to package home page, as a string.])

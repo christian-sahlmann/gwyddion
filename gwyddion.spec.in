@@ -17,6 +17,7 @@ BuildPrereq: libpng-devel
 BuildPrereq: libjpeg-devel
 BuildPrereq: gtk-doc >= 1.0
 BuildPrereq: python >= 2.2
+BuildPrereq: perl >= 5.005
 
 %package devel
 Summary: Headers, libraries and tools for Gwyddion module development.
@@ -125,6 +126,12 @@ your own plug-ins.
 %dir %{_datadir}/gtk-doc/html
 %{pythondir}/Gwyddion/*
 %dir %{pythondir}/Gwyddion
+%dir %{pythondir}
+%{perl_sitelib}/Gwyddion/*
+%dir %{perl_sitelib}/Gwyddion
+%dir %{perl_sitelib}
+%doc %{_mandir}/man3/*
+%doc %dir %{_mandir}/man3
 %{_libdir}/pkgconfig/%{name}.pc
 %dir %{_libdir}/pkgconfig
 %{_libdir}/libgwyapp.so
