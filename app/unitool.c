@@ -518,6 +518,56 @@ gwy_unitool_update_label(GwySIValueFormat *units,
     gtk_label_set_text(GTK_LABEL(label), buffer);
 }
 
+/**
+ * gwy_unitool_get_selection_or_all:
+ * @state: Tool state.
+ * @xmin: Where upper-left corner x coordinate should be stored.
+ * @ymin: Where upper-left corner y coordinate should be stored.
+ * @xmax: Where lower-right corner x coordinate should be stored.
+ * @ymax: Where lower-right corner y coordinate should be stored.
+ *
+ * Stores either current selection or complete field in @xmin, @ymin, @xmax,
+ * @ymax.
+ *
+ * Must not be called when the selection layer is not #GwyLayerSelect.
+ *
+ * Returns: Whether there is a selection.
+ **/
+gboolean
+gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
+                                 gdouble *xmin, gdouble *ymin,
+                                 gdouble *xmax, gdouble *ymax)
+{
+    static GType select_layer_type = 0;
+    gdouble xy[4];
+    gboolean is_selected;
+
+    if (!select_layer_type) {
+        select_layer_type = g_type_from_name("GwyLayerSelect");
+        g_return_val_if_fail(select_layer_type, NULL);
+    }
+    g_return_val_if_fail(G_TYPE_CHECK_INSTANCE_TYPE((state->layer),
+                                                    select_layer_type),
+                         NULL);
+
+    is_selected = gwy_vector_layer_get_selection(layer, xy);
+
+    if (is_selected) {
+        *xmin = xy[0];
+        *ymin = xy[1];
+        *xmax = xy[2];
+        *ymax = xy[3];
+    }
+    else {
+        *xmin = 0;
+        *ymin = 0;
+        *xmax = gwy_data_field_get_xreal(dfield);
+        *ymax = gwy_data_field_get_yreal(dfield);
+    }
+
+    return is_selected;
+}
+
 /***** Documentation *******************************************************/
 
 /**

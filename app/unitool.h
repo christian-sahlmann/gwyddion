@@ -97,6 +97,11 @@ gdouble      gwy_unitool_get_z_average           (GwyDataField *dfield,
 void         gwy_unitool_update_label            (GwySIValueFormat *units,
                                                   GtkWidget *label,
                                                   gdouble value);
+gboolean     gwy_unitool_get_selection_or_all    (GwyUnitoolState *state,
+                                                  gdouble *xmin,
+                                                  gdouble *ymin,
+                                                  gdouble *xmax,
+                                                  gdouble *ymax);
 
 #ifdef __cplusplus
 }

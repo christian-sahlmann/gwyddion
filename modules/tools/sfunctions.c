@@ -65,10 +65,6 @@ static void       load_args            (GwyContainer *container,
                                         ToolControls *controls);
 static void       save_args            (GwyContainer *container,
                                         ToolControls *controls);
-static void       get_selection_or_all (GwyDataField *dfield,
-                                        GwyVectorLayer *layer,
-                                        gdouble *xmin, gdouble *ymin,
-                                        gdouble *xmax, gdouble *ymax);
 
 static const gchar *interp_key = "/tool/sfunctions/interp";
 static const gchar *out_key = "/tool/sfunctions/out";
@@ -268,7 +264,7 @@ update_labels(GwyUnitoolState *state)
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    get_selection_or_all(dfield, state->layer, &xmin, &ymin, &xmax, &ymax);
+    gwy_unitool_get_selection_or_all(state, &xmin, &ymin, &xmax, &ymax);
 
     g_snprintf(buffer, sizeof(buffer), "%.*f, %.*f %s",
                units->precision, xmin/units->magnitude,
@@ -303,7 +299,7 @@ dialog_update(GwyUnitoolState *state,
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    get_selection_or_all(dfield, state->layer, &xmin, &ymin, &xmax, &ymax);
+    gwy_unitool_get_selection_or_all(state, &xmin, &ymin, &xmax, &ymax);
 
     /* XXX */
     if (!state->is_visible)
@@ -358,7 +354,7 @@ apply(GwyUnitoolState *state)
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    get_selection_or_all(dfield, state->layer, &xmin, &ymin, &xmax, &ymax);
+    gwy_unitool_get_selection_or_all(state, &xmin, &ymin, &xmax, &ymax);
 
     graph = gwy_graph_new();
 
@@ -459,32 +455,6 @@ save_args(GwyContainer *container, ToolControls *controls)
     gwy_container_set_int32_by_name(container, dir_key, controls->dir);
     gwy_container_set_int32_by_name(container, out_key, controls->out);
 }
-
-static void
-get_selection_or_all(GwyDataField *dfield,
-                     GwyVectorLayer *layer,
-                     gdouble *xmin, gdouble *ymin,
-                     gdouble *xmax, gdouble *ymax)
-{
-    gdouble xy[4];
-    gboolean is_selected;
-
-    is_selected = gwy_vector_layer_get_selection(layer, xy);
-
-    if (is_selected) {
-        *xmin = xy[0];
-        *ymin = xy[1];
-        *xmax = xy[2];
-        *ymax = xy[3];
-    }
-    else {
-        *xmin = 0;
-        *ymin = 0;
-        *xmax = gwy_data_field_get_xreal(dfield);
-        *ymax = gwy_data_field_get_yreal(dfield);
-    }
-}
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
