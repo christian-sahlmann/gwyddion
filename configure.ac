@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.4cvs20040905, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.4cvs20040917, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -104,7 +104,10 @@ if test "$GCC" = yes; then
   ye_PROG_CC_OPTION([WNO_SYS_HEADERS],[-Wno-system-headers],,)
   ye_PROG_CC_OPTION([ERR_IFD],[-Werror-implicit-function-declaration],,)
   ye_PROG_CC_OPTION([WREDUNDANT],[-Wredundant-decls],,)
-  WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith $PROG_CC_ERR_IFS $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WREDUNDANT $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WNO_SIGN_COMPARE"
+  # FIXME: We would like an error, but gcc can't make one w/o -std, which is
+  # too much.
+  ye_PROG_CC_OPTION([WMIXED_DECL],[-Wdeclaration-after-statement],,)
+  WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WREDUNDANT $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WNO_SIGN_COMPARE $PROG_CC_WMIXED_DECL"
 fi
 
 case $target_os in
