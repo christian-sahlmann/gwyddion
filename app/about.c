@@ -41,7 +41,7 @@ void
 gwy_app_about(void)
 {
     GtkWidget *vbox, *hbox, *widget, *credits;
-    gchar *s;
+    gchar *s, *s2;
 
     if (about) {
         gtk_window_present(GTK_WINDOW(about));
@@ -54,11 +54,12 @@ gwy_app_about(void)
                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(about), GTK_RESPONSE_CLOSE);
     gtk_container_set_border_width(GTK_CONTAINER(about), 6);
     gtk_window_set_resizable(GTK_WINDOW(about), FALSE);
     gtk_window_set_transient_for(GTK_WINDOW(about),
                                  GTK_WINDOW(gwy_app_main_window_get()));
-    gtk_window_set_position(GTK_WINDOW(about), GTK_WIN_POS_CENTER_ON_PARENT);
+    gtk_window_set_position(GTK_WINDOW(about), GTK_WIN_POS_CENTER);
     g_free(s);
 
     vbox = GTK_DIALOG(about)->vbox;
@@ -80,12 +81,13 @@ gwy_app_about(void)
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
-    s = g_strdup_printf(_("<big><b>%s</b> %s</big>\n"
-                          "An SPM data analysis framework."),
-                          g_get_application_name(),
-                          PACKAGE_VERSION);
+    s2 = g_strdup_printf("<big><b>%s</b> %s</big>\n",
+                         g_get_application_name(),
+                         PACKAGE_VERSION);
+    s = g_strconcat(s2, _("An SPM data analysis framework."), NULL);
     gtk_label_set_markup(GTK_LABEL(widget), s);
     g_free(s);
+    g_free(s2);
 
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
