@@ -565,7 +565,7 @@ profile_dialog_response_cb(G_GNUC_UNUSED gpointer unused, gint response)
     switch (response) {
         case GTK_RESPONSE_CLOSE:
         case GTK_RESPONSE_DELETE_EVENT:
-        profile_clear();
+        /*profile_clear();*/
         profile_dialog_set_visible(FALSE);
         break;
 
