@@ -51,11 +51,17 @@ typedef struct{
 void gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
     GwyDataField *mask;
+    gdouble min, max;
+
+    printf("************* height: val=%f, dir=%d\n", threshval, dir);
+    
     mask = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
 
     gwy_data_field_copy(data_field, mask);
    
-    gwy_data_field_threshold(mask, threshval, 0, 1);
+    min = gwy_data_field_get_min(mask);
+    max = gwy_data_field_get_max(mask);
+    gwy_data_field_threshold(mask, min + threshval*(max-min)/100.0, 0, 1);
     if (dir==1)
     {
         gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
@@ -69,12 +75,15 @@ void gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *g
 void gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
     GwyDataField *mask;
+    gdouble min, max;
     mask = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
 
     gwy_data_field_copy(data_field, mask);
     gwy_data_field_filter_laplacian(mask, 0, 0, data_field->xres, data_field->yres);
     
-    gwy_data_field_threshold(mask, threshval, 0, 1);
+    min = gwy_data_field_get_min(mask);
+    max = gwy_data_field_get_max(mask);
+    gwy_data_field_threshold(mask, min + threshval*(max-min)/100.0, 0, 1);
     if (dir==1)
     {
         gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
@@ -90,6 +99,7 @@ void gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField
 {
     GwyDataField *maskx, *masky;
     gint i;
+    gdouble min, max;
     maskx = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
     masky = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
 
@@ -101,7 +111,9 @@ void gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField
     for (i=0; i<(data_field->xres*data_field->yres); i++)
         maskx->data[i] = sqrt(maskx->data[i]*maskx->data[i] + masky->data[i]*masky->data[i]);
 
-    gwy_data_field_threshold(maskx, threshval, 0, 1);
+    min = gwy_data_field_get_min(maskx);
+    max = gwy_data_field_get_max(maskx);
+    gwy_data_field_threshold(maskx, min + threshval*(max-min)/100.0, 0, 1);
     if (dir==1)
     {
         gwy_data_field_invert(maskx, FALSE, FALSE, TRUE);
@@ -220,6 +232,47 @@ void gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLi
 {
 }
 
+void 
+gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
+{
+    gint i, xres, yres;
+    GwyDataField *buffer;
+    
+    xres = grain_field->xres;
+    yres = grain_field->yres;
+    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, grain_field->xreal, grain_field->yreal, FALSE);
+
+    for (i=0; i<(xres*yres); i++)
+    {
+        if (grain_field->data[i]>0 || add_field->data[i]>0) buffer->data[i]=1;
+        else buffer->data[i]=0;
+    }
+    
+    number_grains(buffer, grain_field);
+        
+    g_object_unref(buffer);
+}
+
+void 
+gwy_data_field_grains_intersect(GwyDataField *grain_field, GwyDataField *intersect_field)
+{
+    gint i, xres, yres;
+    GwyDataField *buffer;
+    
+    xres = grain_field->xres;
+    yres = grain_field->yres;
+    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, grain_field->xreal, grain_field->yreal, FALSE);
+
+    for (i=0; i<(xres*yres); i++)
+    {
+        if (grain_field->data[i]>0 && intersect_field->data[i]>0) buffer->data[i]=1;
+        else buffer->data[i]=0;
+    }
+    
+    number_grains(buffer, grain_field);
+        
+    g_object_unref(buffer);
+}
 
 /***********************************************************************************************************************/
 /*private functions*/
@@ -344,7 +397,7 @@ void drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint thres
     	    }
     	}
     }
-    
+    g_object_unref(buffer); 
 }
 
 gint wstep_by_one(GwyDataField *data_field, GwyDataField *grain_field, gint *rcol, gint *rrow, gint last_grain)

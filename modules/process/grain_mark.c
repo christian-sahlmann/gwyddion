@@ -78,7 +78,7 @@ static void        isslope_changed_cb          (GtkToggleButton *button,
 static void        islap_changed_cb            (GtkToggleButton *button,
                                                MarkArgs *args);
 static void        merge_changed_cb            (GObject *item,
-                                               MarkControls *controls);
+                                               MarkArgs *args);
 static void        mark_load_args              (GwyContainer *container,
                                                MarkArgs *args);
 static void        mark_save_args              (GwyContainer *container,
@@ -212,8 +212,8 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     g_signal_connect(controls.is_height, "toggled", G_CALLBACK(isheight_changed_cb), &controls);
     gtk_table_attach(GTK_TABLE(table), controls.is_height, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
                 
-    controls.threshold_height = gtk_adjustment_new(args->height, 0.0, 1000.0, 1, 10, 0);
-    gwy_table_attach_spinbutton(table, 2, _("Height value"), _(""),
+    controls.threshold_height = gtk_adjustment_new(args->height, 0.0, 100.0, 0.1, 5, 0);
+    gwy_table_attach_spinbutton(table, 2, _("Height value [fractile]"), _(""),
                                 controls.threshold_height);
 
     controls.is_slope = gtk_check_button_new_with_label("Threshold by slope:");
@@ -222,8 +222,8 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     g_signal_connect(controls.is_slope, "toggled", G_CALLBACK(isslope_changed_cb), &controls);
     gtk_table_attach(GTK_TABLE(table), controls.is_slope, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
                 
-    controls.threshold_slope = gtk_adjustment_new(args->slope, 0.0, 1000.0, 1, 10, 0);
-    gwy_table_attach_spinbutton(table, 4, _("Slope value"), _(""),
+    controls.threshold_slope = gtk_adjustment_new(args->slope, 0.0, 100.0, 0.1, 5, 0);
+    gwy_table_attach_spinbutton(table, 4, _("Slope value [fractile]"), _(""),
                                 controls.threshold_slope);
 
     controls.is_lap = gtk_check_button_new_with_label("Threshold by curvature:");
@@ -232,8 +232,8 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     g_signal_connect(controls.is_lap, "toggled", G_CALLBACK(islap_changed_cb), &controls);
     gtk_table_attach(GTK_TABLE(table), controls.is_lap, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
                 
-    controls.threshold_lap = gtk_adjustment_new(args->lap, 0.0, 1000.0, 1, 10, 0);
-    gwy_table_attach_spinbutton(table, 6, _("Curvature value"), _(""),
+    controls.threshold_lap = gtk_adjustment_new(args->lap, 0.0, 100.0, 0.1, 5, 0);
+    gwy_table_attach_spinbutton(table, 6, _("Curvature value [fractile]"), _(""),
                                 controls.threshold_lap);
 
    
@@ -244,7 +244,10 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     controls.merge = gwy_option_menu_mergegrain(G_CALLBACK(merge_changed_cb),
                                             args, args->merge_type);
     gtk_table_attach(GTK_TABLE(table), controls.merge, 0, 1, 8, 9, GTK_FILL, 0, 2, 2);
-    
+   
+    gtk_toggle_button_set_active(controls.is_height, args->is_height); 
+    gtk_toggle_button_set_active(controls.is_slope, args->is_slope);
+    gtk_toggle_button_set_active(controls.is_lap, args->is_lap);
 
     gtk_widget_show_all(dialog);
     do {
@@ -364,6 +367,10 @@ mark_dialog_update(MarkControls *controls,
                                 args->slope);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_lap),
                                 args->lap);
+    gtk_toggle_button_set_active(controls->is_height, args->is_height); 
+    gtk_toggle_button_set_active(controls->is_slope, args->is_slope);
+    gtk_toggle_button_set_active(controls->is_lap, args->is_lap);
+
 }
 
 static void
@@ -380,8 +387,9 @@ ok(MarkControls *controls,
         GwyContainer *data)
 {
     
-    GwyDataField *maskfield, *dfield;
+    GwyDataField *maskfield, *dfield, *output_field;
     GwyDataViewLayer *layer;
+    gboolean is_field;
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
@@ -402,17 +410,59 @@ ok(MarkControls *controls,
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
     }
     
-    /*fill the mask*/
-    gwy_data_field_grains_mark_height(dfield, maskfield, 
-                                      (gwy_data_field_get_max(dfield)+gwy_data_field_get_min(dfield))/2,
-                                      0);
+    is_field = FALSE;
+    output_field = (GwyDataField*)gwy_data_field_new(gwy_data_field_get_xres(dfield), 
+                                                     gwy_data_field_get_yres(dfield),
+                                                     gwy_data_field_get_xreal(dfield),
+                                                     gwy_data_field_get_yreal(dfield),
+                                                     FALSE);
+   
+    args->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
+    args->slope = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_slope));
+    args->lap = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_lap));
     
+args->inverted = 0;
+    if (args->is_height)
+    {
+        gwy_data_field_grains_mark_height(dfield, maskfield, args->height, args->inverted);
+        is_field = TRUE;
+    }
+    if (args->is_slope)
+    {
+        gwy_data_field_grains_mark_slope(dfield, output_field, args->slope, args->inverted); 
+        if (is_field)
+        {
+            if (args->merge_type == GWY_MERGE_UNION)
+                gwy_data_field_grains_add(maskfield, output_field);
+            else if (args->merge_type == GWY_MERGE_INTERSECTION)
+                gwy_data_field_grains_intersect(maskfield, output_field);
+        }
+        else gwy_data_field_copy(output_field, maskfield);
+        is_field = TRUE;
+    }
+    if (args->is_lap)
+    {
+        gwy_data_field_grains_mark_curvature(dfield, output_field, args->lap, args->inverted); 
+        if (is_field)
+        {
+            if (args->merge_type == GWY_MERGE_UNION)
+                gwy_data_field_grains_add(maskfield, output_field);
+            else if (args->merge_type == GWY_MERGE_INTERSECTION)
+                gwy_data_field_grains_intersect(maskfield, output_field);
+        }
+        else gwy_data_field_copy(output_field, maskfield);
+     }
+    
+    g_object_unref(output_field); 
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
 static void        
-merge_changed_cb(GObject *item, MarkControls *controls)
+merge_changed_cb(GObject *item, MarkArgs *args)
 {
+    args->merge_type = GPOINTER_TO_INT(g_object_get_data(item,
+                                                        "merge-type"));
+    
 }
 
 
