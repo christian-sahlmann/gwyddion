@@ -52,6 +52,8 @@ struct _Gwy3DWindow {
     GtkWidget *material_label;
 
     GtkWidget *notebook;
+    GtkWidget *vbox;
+    GtkWidget *actions;
     GtkWidget *widget1;
     GtkWidget *widget2;
     GtkWidget *widget3;
