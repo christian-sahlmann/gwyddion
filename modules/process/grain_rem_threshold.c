@@ -29,9 +29,13 @@
 #define REMOVE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+enum {
+    PREVIEW_SIZE = 320
+};
 
 /* Data for this function. */
 typedef struct {
+    gboolean inverted;
     gdouble area;
     gdouble height;
     gboolean is_height;
@@ -40,11 +44,16 @@ typedef struct {
 } RemoveArgs;
 
 typedef struct {
+    GtkWidget *inverted;
     GtkWidget *view;
     GtkWidget *is_height;
     GtkWidget *is_area;
     GtkObject *threshold_height;
+    GtkWidget *threshold_height_spin;
+    GtkWidget *threshold_height_units;
     GtkObject *threshold_area;
+    GtkWidget *threshold_area_spin;
+    GtkWidget *threshold_area_units;
     GtkWidget *merge;
     GtkWidget *color_button;
     GwyContainer *mydata;
@@ -65,7 +74,11 @@ static void        remove_dialog_update_controls (RemoveControls *controls,
                                                   RemoveArgs *args);
 static void        remove_dialog_update_args     (RemoveControls *controls,
                                                   RemoveArgs *args);
-static void        preview                        (RemoveControls *controls,
+static void        by_height_changed_cb          (GtkToggleButton *check,
+                                                  RemoveControls *controls);
+static void        by_area_changed_cb            (GtkToggleButton *check,
+                                                  RemoveControls *controls);
+static void        preview                       (RemoveControls *controls,
                                                   RemoveArgs *args,
                                                   GwyContainer *data);
 static void        remove_th_do                  (RemoveArgs *args,
@@ -83,6 +96,7 @@ static void        remove_save_args              (GwyContainer *container,
 static void        remove_sanitize_args          (RemoveArgs *args);
 
 RemoveArgs remove_defaults = {
+    FALSE,
     50,
     50,
     TRUE,
@@ -97,7 +111,7 @@ static GwyModuleInfo module_info = {
     "remove_threshold",
     N_("Remove grains by thresholding"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.4.1",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -148,20 +162,53 @@ remove_th(GwyContainer *data, GwyRunType run)
     return ok;
 }
 
+GtkWidget*
+table_attach_threshold(GtkWidget *table,
+                       GtkWidget *spin,
+                       gint row,
+                       const gchar *name,
+                       const gchar *units,
+                       GtkWidget **units_label)
+{
+    GtkWidget *label, *check;
+
+    check = gtk_check_button_new_with_mnemonic(name);
+    gtk_table_attach(GTK_TABLE(table), check,
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
+    gtk_table_attach(GTK_TABLE(table), spin,
+                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+
+    if (units) {
+        label = gtk_label_new(units);
+        gtk_table_attach(GTK_TABLE(table), label,
+                         2, 3, row, row+1, GTK_FILL, 0, 2, 2);
+        gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
+        gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+        if (units_label)
+            *units_label = label;
+    }
+
+    return check;
+}
 
 static gboolean
 remove_dialog(RemoveArgs *args, GwyContainer *data)
 {
     GtkWidget *dialog, *table, *spin;
     RemoveControls controls;
-    enum { RESPONSE_RESET = 1,
-           RESPONSE_PREVIEW = 2 };
+    enum {
+        RESPONSE_RESET = 1,
+        RESPONSE_PREVIEW = 2
+    };
     gint response;
     gdouble zoomval;
     GtkObject *layer;
     GtkWidget *hbox;
     GwyDataField *dfield;
     GtkWidget *label;
+    gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Grains by Threshold"),
                                          NULL, 0,
@@ -174,8 +221,6 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    table = gtk_table_new(3, 9, FALSE);
-
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
@@ -187,66 +232,103 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                                  GWY_PIXMAP_LAYER(layer));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                              "/0/data"));
-    zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
+    if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
+        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_xres(dfield);
+    else
+        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_yres(dfield);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     layer = gwy_layer_mask_new();
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
 
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    gtk_box_pack_start(GTK_BOX(hbox), table,
-                       FALSE, FALSE, 4);
+    table = gtk_table_new(3, 9, FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    row = 0;
 
-
-    controls.is_height
-        = gtk_check_button_new_with_mnemonic(_("Threshold by _maximum"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
-                                 args->is_height);
-    gtk_table_attach(GTK_TABLE(table), controls.is_height,
-                     0, 1, 1, 2, GTK_FILL, 0, 2, 2);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Threshold By</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("_Height:"), "%",
-                                controls.threshold_height);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-
-    controls.is_area
-        = gtk_check_button_new_with_mnemonic(_("Thresh_old by area"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area),
-                                 args->is_area);
-    gtk_table_attach(GTK_TABLE(table), controls.is_area,
-                     0, 1, 3, 4, GTK_FILL, 0, 2, 2);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_height), 1, 1);
+    controls.is_height
+        = table_attach_threshold(table, spin, row, _("_Height:"), "%",
+                                 &controls.threshold_height_units);
+    controls.threshold_height_spin = spin;
+    g_signal_connect(controls.is_height, "toggled",
+                     G_CALLBACK(by_height_changed_cb), &controls);
+    row++;
 
     controls.threshold_area = gtk_adjustment_new(args->area,
-                                                 0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 4, _("_Area:"), _("pixels"),
-                                controls.threshold_area);
+                                                 0.0, 16384.0, 0.1, 10, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_area), 1, 0);
+    controls.is_area
+        = table_attach_threshold(table, spin, row, _("_Area:"),
+                                 "px<sup>2</sup>",
+                                 &controls.threshold_area_units);
+    controls.threshold_area_spin = spin;
+    g_signal_connect(controls.is_area, "toggled",
+                     G_CALLBACK(by_area_changed_cb), &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
+    controls.inverted = gtk_check_button_new_with_mnemonic(_("_Invert height"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inverted),
+                                 args->inverted);
+    gtk_table_attach(GTK_TABLE(table), controls.inverted,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     label = gtk_label_new_with_mnemonic(_("_Selection mode:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls.merge = gwy_option_menu_mergegrain(NULL, NULL, args->merge_type);
     gtk_table_attach(GTK_TABLE(table), controls.merge,
-                     0, 1, 8, 9, GTK_FILL, 0, 2, 2);
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
-    label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
+    label = gtk_label_new_with_mnemonic(_("_Mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,  0, 1, 9, 10, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
     load_mask_color(controls.color_button,
                     gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
     gtk_table_attach(GTK_TABLE(table), controls.color_button,
-                     1, 2, 9, 10, GTK_FILL, 0, 2, 2);
-
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
+    row++;
+
+    /* cheap sync */
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
+                                 !args->is_height);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
+                                 args->is_height);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area),
+                                 !args->is_area);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area),
+                                 args->is_area);
 
     gtk_widget_show_all(dialog);
     do {
@@ -294,6 +376,8 @@ remove_dialog_update_controls(RemoveControls *controls,
                                 args->height);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_area),
                                 args->area);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inverted),
+                                 args->inverted);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_height),
                                  args->is_height);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_area),
@@ -310,12 +394,34 @@ remove_dialog_update_args(RemoveControls *controls,
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_height));
     args->is_area
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_area));
+    args->inverted
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->inverted));
     args->height
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
     args->area
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
     args->merge_type = gwy_option_menu_get_history(controls->merge,
                                                    "mergegrain-type");
+}
+
+static void
+by_height_changed_cb(GtkToggleButton *check,
+                     RemoveControls *controls)
+{
+    gboolean active = gtk_toggle_button_get_active(check);
+
+    gtk_widget_set_sensitive(controls->threshold_height_spin, active);
+    gtk_widget_set_sensitive(controls->threshold_height_units, active);
+}
+
+static void
+by_area_changed_cb(GtkToggleButton *check,
+                   RemoveControls *controls)
+{
+    gboolean active = gtk_toggle_button_get_active(check);
+
+    gtk_widget_set_sensitive(controls->threshold_area_spin, active);
+    gtk_widget_set_sensitive(controls->threshold_area_units, active);
 }
 
 static void
@@ -410,7 +516,10 @@ mask_process(GwyDataField *dfield,
         || (args->is_height*args->is_area) == 0) {
         if (args->is_height)
             gwy_data_field_grains_remove_by_height(dfield, maskfield,
-                                                   args->height, 0);
+                                                   args->inverted ?
+                                                   100.0 - args->height
+                                                   : args->height,
+                                                   args->inverted);
         if (args->is_area)
             gwy_data_field_grains_remove_by_size(maskfield, args->area);
     }
@@ -420,18 +529,22 @@ mask_process(GwyDataField *dfield,
         output_field_b
             = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(maskfield)));
 
-         gwy_data_field_grains_remove_by_height(dfield, output_field_a,
-                                                args->height, 0);
-         gwy_data_field_grains_remove_by_size(output_field_b, args->area);
+        gwy_data_field_grains_remove_by_height(dfield, output_field_a,
+                                               args->inverted ?
+                                               100.0 - args->height
+                                               : args->height,
+                                               args->inverted);
+        gwy_data_field_grains_remove_by_size(output_field_b, args->area);
 
-         intersect_removes(output_field_a, output_field_b, maskfield);
+        intersect_removes(output_field_a, output_field_b, maskfield);
 
-         g_object_unref(output_field_a);
-         g_object_unref(output_field_b);
+        g_object_unref(output_field_a);
+        g_object_unref(output_field_b);
     }
-
 }
 
+/* FIXME: this is *very* inefficient, should streamlined like other grain
+ * algorithms */
 static void
 intersect_removes(GwyDataField *mask_a, GwyDataField *mask_b, GwyDataField *mask)
 {
@@ -439,13 +552,13 @@ intersect_removes(GwyDataField *mask_a, GwyDataField *mask_b, GwyDataField *mask
     xres = mask->xres;
     yres = mask->yres;
 
-    for (i=0; i<(xres*yres); i++)
-    {
-        if (mask->data[i]>0 && mask_a->data[i]==0 && mask_b->data[i]==0)
+    for (i = 0; i < xres*yres; i++) {
+        if (mask->data[i] > 0 && !mask_a->data[i] && !mask_b->data[i])
             gwy_data_field_grains_remove_manually(mask, i);
     }
 }
 
+static const gchar *inverted_key = "/module/remove_threshold/inverted";
 static const gchar *isheight_key = "/module/remove_threshold/isheight";
 static const gchar *isarea_key = "/module/remove_threshold/isarea";
 static const gchar *height_key = "/module/remove_threshold/height";
@@ -455,6 +568,7 @@ static const gchar *mergetype_key = "/module/remove_threshold/mergetype";
 static void
 remove_sanitize_args(RemoveArgs *args)
 {
+    args->inverted = !!args->inverted;
     args->is_height = !!args->is_height;
     args->is_area = !!args->is_area;
     args->height = CLAMP(args->height, 0.0, 100.0);
@@ -468,6 +582,7 @@ remove_load_args(GwyContainer *container,
 {
     *args = remove_defaults;
 
+    gwy_container_gis_boolean_by_name(container, inverted_key, &args->inverted);
     gwy_container_gis_boolean_by_name(container, isheight_key,
                                       &args->is_height);
     gwy_container_gis_boolean_by_name(container, isarea_key, &args->is_area);
@@ -482,6 +597,7 @@ static void
 remove_save_args(GwyContainer *container,
                  RemoveArgs *args)
 {
+    gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
     gwy_container_set_boolean_by_name(container, isheight_key, args->is_height);
     gwy_container_set_boolean_by_name(container, isarea_key, args->is_area);
     gwy_container_set_double_by_name(container, height_key, args->height);

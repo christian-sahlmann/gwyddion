@@ -126,7 +126,7 @@ dwt(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), "DWT");
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
-        return ok;
+        return FALSE;
     }
 
     if (run == GWY_RUN_WITH_DEFAULTS)

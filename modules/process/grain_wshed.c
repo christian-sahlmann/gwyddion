@@ -29,9 +29,13 @@
 #define WSHED_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+enum {
+    PREVIEW_SIZE = 320
+};
 
 /* Data for this function. */
 typedef struct {
+    gboolean inverted;
     gint locate_steps;
     gint locate_thresh;
     gint wshed_steps;
@@ -40,6 +44,7 @@ typedef struct {
 } WshedArgs;
 
 typedef struct {
+    GtkWidget *inverted;
     GtkWidget *dialog;
     GtkWidget *view;
     GtkObject *locate_steps;
@@ -87,6 +92,7 @@ static void        wshed_save_args              (GwyContainer *container,
 static void        wshed_sanitize_args          (WshedArgs *args);
 
 WshedArgs wshed_defaults = {
+    FALSE,
     10,
     3,
     10,
@@ -101,7 +107,7 @@ static GwyModuleInfo module_info = {
     "wshed_threshold",
     N_("Mark grains by watershed algorithm"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -162,6 +168,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     GtkObject *layer;
     GtkWidget *hbox;
     GwyDataField *dfield;
+    gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Mark Grains by Watershed"),
                                          NULL, 0,
@@ -175,8 +182,6 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    table = gtk_table_new(9, 3, FALSE);
-
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(hbox),
                        FALSE, FALSE, 4);
 
@@ -189,76 +194,106 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                                              "/0/data"));
 
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
-        zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
+        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_xres(dfield);
     else
-        zoomval = 400.0/(gdouble)gwy_data_field_get_yres(dfield);
+        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_yres(dfield);
 
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
 
+    table = gtk_table_new(9, 3, FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    row = 0;
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Grain Location</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
-
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls.locate_steps = gtk_adjustment_new(args->locate_steps,
                                                0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 2, _("_Number of steps:"), "",
+    gwy_table_attach_spinbutton(table, row, _("_Number of steps:"), "",
                                 controls.locate_steps);
     g_signal_connect(controls.locate_steps, "value_changed",
                      G_CALLBACK(wshed_invalidate), &controls);
     controls.locate_dropsize = gtk_adjustment_new(args->locate_dropsize,
                                                   0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 3, _("_Drop size:"), "%",
+    row++;
+
+    spin = gwy_table_attach_spinbutton(table, row, _("_Drop size:"), "%",
                                 controls.locate_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect(controls.locate_dropsize, "value_changed",
                      G_CALLBACK(wshed_invalidate), &controls);
+
+    row++;
     controls.locate_thresh = gtk_adjustment_new(args->locate_thresh,
                                                 0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 4, _("_Threshold:"), _("pixels"),
+    gwy_table_attach_spinbutton(table, row, _("_Threshold:"), "px<sup>2</sup>",
                                 controls.locate_thresh);
     g_signal_connect(controls.locate_thresh, "value_changed",
                      G_CALLBACK(wshed_invalidate), &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), 4, 8);
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Segmentation</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
     controls.wshed_steps = gtk_adjustment_new(args->wshed_steps,
                                               0.0, 1000.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 6, _("Num_ber of steps:"), "",
+    gwy_table_attach_spinbutton(table, row, _("Num_ber of steps:"), "",
                                 controls.wshed_steps);
     g_signal_connect(controls.wshed_steps, "value_changed",
                      G_CALLBACK(wshed_invalidate), &controls);
+    row++;
 
     controls.wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
                                                  0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 7, _("Dr_op size:"), "%",
+    spin = gwy_table_attach_spinbutton(table, row, _("Dr_op size:"), "%",
                                 controls.wshed_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect(controls.wshed_dropsize, "value_changed",
                      G_CALLBACK(wshed_invalidate), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), 8, 8);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
-    label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 9, 10, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
+    controls.inverted = gtk_check_button_new_with_mnemonic(_("_Invert height"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inverted),
+                                 args->inverted);
+    gtk_table_attach(GTK_TABLE(table), controls.inverted,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    g_signal_connect(controls.inverted, "toggled",
+                     G_CALLBACK(wshed_invalidate), &controls);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Mask color:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
     load_mask_color(controls.color_button,
                     gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
     gtk_table_attach(GTK_TABLE(table), controls.color_button,
-                     1, 2, 9, 10, GTK_FILL, 0, 2, 2);
-
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
+    row++;
 
     controls.computed = FALSE;
 
@@ -284,6 +319,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
             break;
 
             case RESPONSE_PREVIEW:
+            wshed_dialog_update_values(&controls, args);
             preview(&controls, args);
             break;
 
@@ -316,6 +352,8 @@ wshed_dialog_update_controls(WshedControls *controls,
                              args->wshed_steps);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->locate_thresh),
                              args->locate_thresh);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inverted),
+                                 args->inverted);
 }
 
 static void
@@ -332,7 +370,8 @@ wshed_dialog_update_values(WshedControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_steps));
     args->wshed_dropsize
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_dropsize));
-
+    args->inverted
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->inverted));
 }
 
 static void
@@ -515,7 +554,7 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
                                          args->locate_dropsize*(max-min)/5000.0,
                                          args->wshed_steps,
                                          args->wshed_dropsize*(max-min)/5000.0,
-                                         FALSE, 0);
+                                         FALSE, args->inverted);
 
         if (status.state == GWY_WSHED_MIN) {
             gwy_app_wait_set_message(_("Finding minima"));
@@ -548,6 +587,7 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
     return status.state == GWY_WSHED_FINISHED;
 }
 
+static const gchar *inverted_key = "/module/mark_wshed/inverted";
 static const gchar *locate_steps_key = "/module/mark_wshed/locate_steps";
 static const gchar *locate_thresh_key = "/module/mark_wshed/locate_thresh";
 static const gchar *locate_dropsize_key = "/module/mark_wshed/locate_dropsize";
@@ -557,6 +597,7 @@ static const gchar *wshed_dropsize_key = "/module/mark_wshed/wshed_dropsize";
 static void
 wshed_sanitize_args(WshedArgs *args)
 {
+    args->inverted = !!args->inverted;
     args->locate_dropsize = CLAMP(args->locate_dropsize, 0.0, 100.0);
     args->wshed_dropsize = CLAMP(args->wshed_dropsize, 0.0, 100.0);
     args->locate_thresh = CLAMP(args->locate_thresh, 0, 100);
@@ -570,6 +611,7 @@ wshed_load_args(GwyContainer *container,
 {
     *args = wshed_defaults;
 
+    gwy_container_gis_boolean_by_name(container, inverted_key, &args->inverted);
     gwy_container_gis_double_by_name(container, locate_dropsize_key,
                                      &args->locate_dropsize);
     gwy_container_gis_double_by_name(container, wshed_dropsize_key,
@@ -587,6 +629,7 @@ static void
 wshed_save_args(GwyContainer *container,
                 WshedArgs *args)
 {
+    gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
     gwy_container_set_double_by_name(container, wshed_dropsize_key,
                                      args->wshed_dropsize);
     gwy_container_set_double_by_name(container, locate_dropsize_key,

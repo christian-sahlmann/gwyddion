@@ -30,6 +30,10 @@
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 enum {
+    PREVIEW_SIZE = 320
+};
+
+enum {
     MARK_HEIGHT = 0,
     MARK_SLOPE  = 1,
     MARK_LAP    = 2
@@ -110,7 +114,7 @@ static void        mark_sanitize_args         (MarkArgs *args);
 
 
 MarkArgs mark_defaults = {
-    MARK_HEIGHT,
+    TRUE,
     100,
     100,
     100,
@@ -210,8 +214,10 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 {
     GtkWidget *dialog, *table, *spin, *label;
     MarkControls controls;
-    enum { RESPONSE_RESET = 1,
-           RESPONSE_PREVIEW = 2 };
+    enum {
+        RESPONSE_RESET = 1,
+        RESPONSE_PREVIEW = 2
+    };
     gint response;
     gdouble zoomval;
     GtkObject *layer;
@@ -229,10 +235,8 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    table = gtk_table_new(10, 3, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
-    row = 0;
 
     controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     controls.view = gwy_data_view_new(controls.mydata);
@@ -243,14 +247,17 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                                                              "/0/data"));
 
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
-        zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
+        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_xres(dfield);
     else
-        zoomval = 400.0/(gdouble)gwy_data_field_get_yres(dfield);
+        zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_yres(dfield);
 
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+
+    table = gtk_table_new(10, 3, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    row = 0;
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Threshold By</b>"));
@@ -261,11 +268,10 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_height), 1, 2);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_height), 1, 1);
     controls.is_height
         = table_attach_threshold(table, spin, row, _("_Height:"), "%",
                                  &controls.threshold_height_units);
-    controls.threshold_height_spin = spin;
     controls.threshold_height_spin = spin;
     g_signal_connect(controls.threshold_height, "value_changed",
                      G_CALLBACK(mark_invalidate), &controls);
@@ -275,7 +281,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_slope = gtk_adjustment_new(args->slope,
                                                   0.0, 100.0, 0.1, 5, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_slope), 1, 2);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_slope), 1, 1);
     controls.is_slope
         = table_attach_threshold(table, spin, row, _("_Slope:"), "%",
                                  &controls.threshold_slope_units);
@@ -288,7 +294,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_lap = gtk_adjustment_new(args->lap,
                                                 0.0, 100.0, 0.1, 5, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_lap), 1, 2);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_lap), 1, 1);
     controls.is_lap
         = table_attach_threshold(table, spin, row, _("_Curvature:"), "%",
                                  &controls.threshold_lap_units);
@@ -329,7 +335,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
+    label = gtk_label_new_with_mnemonic(_("_Mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -341,9 +347,9 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                     gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
     gtk_table_attach(GTK_TABLE(table), controls.color_button,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
+    row++;
 
     controls.computed = FALSE;
 
@@ -638,10 +644,10 @@ mask_process(GwyDataField *dfield,
     g_object_unref(output_field);
 }
 
+static const gchar *inverted_key = "/module/mark_height/inverted";
 static const gchar *isheight_key = "/module/mark_height/isheight";
 static const gchar *isslope_key = "/module/mark_height/isslope";
 static const gchar *islap_key = "/module/mark_height/islap";
-static const gchar *inverted_key = "/module/mark_height/inverted";
 static const gchar *height_key = "/module/mark_height/height";
 static const gchar *slope_key = "/module/mark_height/slope";
 static const gchar *lap_key = "/module/mark_height/lap";
