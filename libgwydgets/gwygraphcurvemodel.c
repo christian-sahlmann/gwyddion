@@ -208,6 +208,8 @@ gwy_graph_curve_model_save_curve(GwyGraphCurveModel *gcmodel,
     /* FIXME: direct access */
     curve = (GwyGraphAreaCurve*)g_ptr_array_index(graph->area->curves, index_);
     params = &curve->params;
+    /* XXX FIXME: this now uses some random unitialized memory as the color.
+     * Fix the graph! */
     gwy_rgba_from_gdk_color(&gcmodel->color, &params->color);
 
     gcmodel->is_point = !!params->is_point;

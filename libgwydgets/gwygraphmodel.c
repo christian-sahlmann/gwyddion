@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include <string.h>
 
 #include <libgwyddion/gwyddion.h>
@@ -25,6 +25,7 @@
 #include "gwygraphmodel.h"
 
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
+#define GRAPH_GLOBALS_FAKE_TYPE_NAME "GwyGraphModel-graph"
 
 static void   gwy_graph_model_class_init        (GwyGraphModelClass *klass);
 static void   gwy_graph_model_init              (GwyGraphModel *gmodel);
@@ -391,7 +392,7 @@ gwy_graph_model_serialize(GObject *obj,
         };
 
         gwy_serialize_pack_object_struct(buffer,
-                                         "GwyGraphModel-graph",
+                                         GRAPH_GLOBALS_FAKE_TYPE_NAME,
                                          G_N_ELEMENTS(spec), spec);
     }
     /* Curves */
@@ -447,7 +448,7 @@ gwy_graph_model_deserialize(const guchar *buffer,
         top_label = bottom_label = left_label = right_label = NULL;
         if (!gwy_serialize_unpack_object_struct(buffer + *position,
                                                 mysize, &pos,
-                                                GWY_GRAPH_MODEL_TYPE_NAME,
+                                                GRAPH_GLOBALS_FAKE_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec)) {
             g_free(top_label);
             g_free(bottom_label);
