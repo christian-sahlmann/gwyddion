@@ -258,15 +258,17 @@ void gwy_grapher_draw_selection_areas(GdkDrawable *drawable,
                                       GwyGrapherDataArea *data_areas, gint n_of_areas)
 {
     gint i;
+    gint xmin, xmax, ymin, ymax;
     GwyRGBA color;
     GdkColor gcl;
     GdkColormap *colormap;
 
+    if (n_of_areas == 0 || data_areas==NULL) return;
     color.r = 0.8;
     color.g = 0.3;
     color.b = 0.6;
     color.a = 1;
-    
+   
     if (gc==NULL) gc = gdk_gc_new(drawable);
 
     colormap = gdk_colormap_get_system();
@@ -277,11 +279,16 @@ void gwy_grapher_draw_selection_areas(GdkDrawable *drawable,
 
     for (i = 0; i<n_of_areas; i++)
     {
+        xmin = x_data_to_pixel(specs, data_areas[i].xmin);
+        xmax = x_data_to_pixel(specs, data_areas[i].xmax);
+        ymin = y_data_to_pixel(specs, data_areas[i].ymin);
+        ymax = y_data_to_pixel(specs, data_areas[i].ymax);
+        
         gdk_draw_rectangle(drawable, gc, TRUE,
-                       x_data_to_pixel(specs, data_areas[i].xmin),
-                       y_data_to_pixel(specs, data_areas[i].ymin),
-                       x_data_to_pixel(specs, data_areas[i].xmax - data_areas[i].xmin),
-                       y_data_to_pixel(specs, data_areas[i].ymax - data_areas[i].ymin));
+                       MIN(xmin, xmax),
+                       MIN(ymin, ymax),
+                       fabs(xmax - xmin),
+                       fabs(ymax - ymin));
     }
 }
 

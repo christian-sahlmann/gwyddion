@@ -64,6 +64,9 @@ static gboolean gwy_grapher_area_button_release       (GtkWidget *widget,
                                                       GdkEventButton *event);
 static gint     gwy_grapher_area_find_curve           (GwyGrapherArea *area, 
                                                       gdouble x, gdouble y);
+static gint     gwy_grapher_area_find_selection       (GwyGrapherArea *area, 
+                                                      gdouble x, gdouble y);
+
 
 /* Forward declarations - area related*/
 static gdouble  scr_to_data_x                       (GtkWidget *widget, gint scr);
@@ -200,6 +203,8 @@ gwy_grapher_area_init(GwyGrapherArea *area)
     area->cursordata = g_new(GwyGrapherStatus_CursorData, 1);
     area->zoomdata = g_new(GwyGrapherStatus_ZoomData, 1);
 
+    area->areasdata->data_areas = g_array_new(FALSE, TRUE, sizeof(GwyGrapherDataArea));
+ 
     area->colors = NULL;
 
     area->lab = GWY_GRAPHER_LABEL(gwy_grapher_label_new());
@@ -208,6 +213,7 @@ gwy_grapher_area_init(GwyGrapherArea *area)
     klass = GWY_GRAPHER_AREA_GET_CLASS(area);
     gwy_vector_layer_cursor_new_or_ref(&klass->cross_cursor, GDK_CROSS);
     gwy_vector_layer_cursor_new_or_ref(&klass->arrow_cursor, GDK_LEFT_PTR);
+
 }
 
 GtkWidget*
@@ -449,7 +455,8 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     GwyGrapherModel *gmodel;
     GtkLayoutChild *child;
     GwyGrapherDataPoint datpnt;
-    gint x, y, curve;
+    GwyGrapherDataArea areadata;
+    gint x, y, curve, selection;
     gdouble dx, dy;
 
     gwy_debug("");
@@ -483,7 +490,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
         return FALSE;
     }
 
-    if (gmodel->ncurves > 0)
+    if (area->status == GWY_GRAPHER_STATUS_PLAIN && gmodel->ncurves > 0)
     {
         curve = gwy_grapher_area_find_curve(area, dx, dy);
         if (curve >= 0)
@@ -492,68 +499,28 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
             gtk_widget_show_all(area->area_dialog);
         }
     }
- 
+
+    if (area->status == GWY_GRAPHER_STATUS_XSEL)
+    {
+        if (event->button == 1) /*add selection*/
+        {
+            areadata.xmin = dx;
+            areadata.xmax = dx;
+            areadata.ymin = gmodel->y_min;
+            areadata.ymax = gmodel->y_max;
+            g_array_append_val(area->areasdata->data_areas, areadata);
+            area->selecting = TRUE;
+        }
+        else /*remove selection*/
+        {
+            selection = gwy_grapher_area_find_selection(area, dx, dy);
+            if (selection >= 0)
+                g_array_remove_index(area->areasdata->data_areas, selection);
+        }
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+    }
 
     
-/*
-    if (area->status == GWY_GRAPHER_STATUS_XSEL
-        || area->status == GWY_GRAPHER_STATUS_YSEL) {
-        if (area->status == GWY_GRAPHER_STATUS_XSEL) {
-            area->seldata->scr_start = x;
-            area->seldata->scr_end = x;
-            area->seldata->data_start = scr_to_data_x(widget, x);
-            area->seldata->data_end = scr_to_data_x(widget, x);
-        }
-        else if (area->status == GWY_GRAPHER_STATUS_YSEL) {
-            area->seldata->scr_start = y;
-            area->seldata->scr_end = y;
-            area->seldata->data_start = scr_to_data_y(widget, y);
-            area->seldata->data_end = scr_to_data_y(widget, y);
-        }
-        area->selecting = 1;
-        gwy_grapher_area_signal_selected(area);
-        gtk_widget_queue_draw(widget);
-    }
-
-    if (area->status == GWY_GRAPHER_STATUS_POINTS) {
-        if (event->button == 1) {
-            if (area->pointsdata->n < N_MAX_POINTS) {
-                scrpnt.i = x;
-                scrpnt.j = y;
-                datpnt.x = scr_to_data_x(widget, x);
-                datpnt.y = scr_to_data_y(widget, y);
-                datpnt.x_unit = NULL;
-                datpnt.y_unit = NULL;
-
-                g_array_append_val(area->pointsdata->scr_points, scrpnt);
-                g_array_append_val(area->pointsdata->data_points, datpnt);
-                area->pointsdata->n++;
-            }
-        }
-        else {
-            g_array_free(area->pointsdata->scr_points, 1);
-            g_array_free(area->pointsdata->data_points, 1);
-
-            area->pointsdata->scr_points
-                = g_array_new(0, 1, sizeof(GwyGrapherScrPoint));
-            area->pointsdata->data_points
-                = g_array_new(0, 1, sizeof(GwyGrapherDataPoint));
-            area->pointsdata->n = 0;
-        }
-        gwy_grapher_area_signal_selected(area);
-
-        gtk_widget_queue_draw(widget);
-    }
-    else if (area->status == GWY_GRAPHER_STATUS_ZOOM) {
-        area->zoomdata->x = x;
-        area->zoomdata->y = y;
-        area->zoomdata->width = 0;
-        area->zoomdata->height = 0;
-        area->selecting = 1;
-        
-
-    }
-    */
     return TRUE;
 }
 
@@ -561,37 +528,35 @@ static gboolean
 gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
 {
     GwyGrapherArea *area;
-    gint x, y, ispos;
+    GwyGrapherModel *gmodel;
+    GtkLayoutChild *child;
+    GwyGrapherDataPoint datpnt;
+    GwyGrapherDataArea *areadata;
+    gint x, y, curve, ispos = 0;
+    gdouble dx, dy;
 
     gwy_debug("");
+    g_return_val_if_fail(GWY_IS_GRAPHER_AREA(widget), FALSE);
+
     area = GWY_GRAPHER_AREA(widget);
+    gdk_window_get_position(event->window, &x, &y);
+    x += (gint)event->x;
+    y += (gint)event->y;
+    dx = scr_to_data_x(widget, x);
+    dy = scr_to_data_y(widget, y);
+
+    gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
 
     
-    ispos = 0;
-
-    /*
-    if ((area->status == GWY_GRAPHER_STATUS_XSEL
-         || area->status == GWY_GRAPHER_STATUS_YSEL)
-        && area->selecting==1) {
-        if (!ispos) {
-            gdk_window_get_position(event->window, &x, &y);
-            x += (gint)event->x;
-            y += (gint)event->y;
-            ispos = 1;
-        }
-        if (area->status == GWY_GRAPHER_STATUS_XSEL) {
-            area->seldata->scr_end = x;
-            area->seldata->data_end = scr_to_data_x(widget, x);
-        }
-        else if (area->status == GWY_GRAPHER_STATUS_YSEL) {
-            area->seldata->scr_end = y;
-            area->seldata->data_end = scr_to_data_y(widget, y);
-        }
-        area->selecting = 0;
-        gwy_grapher_area_signal_selected(area);
-        gtk_widget_queue_draw(widget);
+    if (area->selecting && area->status == GWY_GRAPHER_STATUS_XSEL)
+    {
+         areadata = &g_array_index(area->areasdata->data_areas, GwyGrapherDataArea, area->areasdata->data_areas->len - 1);
+         areadata->xmax = dx;
+         area->selecting = FALSE;
+         gtk_widget_queue_draw(GTK_WIDGET(area));
     }
-*/
+
+
     if (area->active) {
         gwy_grapher_area_draw_child_rectangle(area);
 
@@ -610,29 +575,6 @@ gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
 
         area->active = NULL;
     }
-
-    /*
-    else if (area->status == GWY_GRAPHER_STATUS_ZOOM && (area->selecting != 0)) {
-        if (!ispos) {
-            gdk_window_get_position(event->window, &x, &y);
-            x += (gint)event->x;
-            y += (gint)event->y;
-            ispos = 1;
-        }
-        
-        area->zoomdata->width = x - area->zoomdata->x;
-        area->zoomdata->height = y - area->zoomdata->y;
-        zoom(widget);
-
-        area->zoomdata->x = 0;
-        area->zoomdata->y = 0;
-        area->zoomdata->width = 0;
-        area->zoomdata->height = 0;
-        area->selecting = 0;
-    }
-    */
-
-
     return FALSE;
 }
 
@@ -640,88 +582,33 @@ static gboolean
 gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 {
     GwyGrapherArea *area;
-    GwyGrapherAreaClass *klass;
-    gint x, y, ispos;
+    GwyGrapherModel *gmodel;
+    GtkLayoutChild *child;
+    GwyGrapherDataPoint datpnt;
+    GwyGrapherDataArea *areadata;
+    gint x, y, curve, ispos = 0;
+    gdouble dx, dy;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_GRAPHER_AREA(widget), FALSE);
 
     area = GWY_GRAPHER_AREA(widget);
+    gdk_window_get_position(event->window, &x, &y);
+    x += (gint)event->x;
+    y += (gint)event->y;
+    dx = scr_to_data_x(widget, x);
+    dy = scr_to_data_y(widget, y);
+
+    gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
 
     
-    ispos = 0;
-
-    /*cursor shape
-    klass = GWY_GRAPHER_AREA_GET_CLASS(area);
-    if (area->status == GWY_GRAPHER_STATUS_ZOOM)
-        gdk_window_set_cursor(GTK_LAYOUT(area)->bin_window,
-                              klass->cross_cursor);
-    else
-        gdk_window_set_cursor(GTK_LAYOUT(area)->bin_window,
-                              klass->arrow_cursor);
-
-*/
-    /*cursor position*/
-/*    if (area->status == GWY_GRAPHER_STATUS_CURSOR
-        || area->status == GWY_GRAPHER_STATUS_POINTS) {
-        if (!ispos) {
-            gdk_window_get_position(event->window, &x, &y);
-            x += (gint)event->x;
-            y += (gint)event->y;
-            ispos = 1;
-        }
-        if (area->status == GWY_GRAPHER_STATUS_CURSOR) {
-            area->cursordata->scr_point.i = x;
-            area->cursordata->scr_point.j = y;
-            area->cursordata->data_point.x = scr_to_data_x(widget, x);
-            area->cursordata->data_point.y = scr_to_data_y(widget, y);
-            area->cursordata->data_point.x_unit = NULL;
-            area->cursordata->data_point.y_unit = NULL;
-        }
-        else {
-            area->pointsdata->actual_scr_point.i = x;
-            area->pointsdata->actual_scr_point.j = y;
-            area->pointsdata->actual_data_point.x = scr_to_data_x(widget, x);
-            area->pointsdata->actual_data_point.y = scr_to_data_y(widget, y);
-            area->pointsdata->actual_data_point.x_unit = NULL;
-            area->pointsdata->actual_data_point.y_unit = NULL;
-        }
-        gwy_grapher_area_signal_selected(area);
+    if (area->selecting && area->status == GWY_GRAPHER_STATUS_XSEL)
+    {
+         areadata = &g_array_index(area->areasdata->data_areas, GwyGrapherDataArea, area->areasdata->data_areas->len - 1);
+         areadata->xmax = dx;
+         gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
-    if ((area->status == GWY_GRAPHER_STATUS_XSEL
-         || area->status == GWY_GRAPHER_STATUS_YSEL)
-        && area->selecting == 1) {
-        if (!ispos) {
-            gdk_window_get_position(event->window, &x, &y);
-            x += (gint)event->x;
-            y += (gint)event->y;
-            ispos = 1;
-        }
-        if (area->status == GWY_GRAPHER_STATUS_XSEL) {
-            area->seldata->scr_end = x;
-            area->seldata->data_end = scr_to_data_x(widget, x);
-        }
-        else if (area->status == GWY_GRAPHER_STATUS_YSEL) {
-            area->seldata->scr_end = scr_to_data_y(widget, y);
-            area->seldata->data_end = 0;
-        }
-        gwy_grapher_area_signal_selected(area);
-        gtk_widget_queue_draw(widget);
-    }
-    else if (area->status == GWY_GRAPHER_STATUS_ZOOM
-             && (area->selecting != 0)) {
-        if (!ispos) {
-            gdk_window_get_position(event->window, &x, &y);
-            x += (gint)event->x;
-            y += (gint)event->y;
-            ispos = 1;
-        }
-        area->zoomdata->width = x - area->zoomdata->x;
-        area->zoomdata->height = y - area->zoomdata->y;
-
-
-        gtk_widget_queue_draw(widget);
-     }
-
-*/
     /*widget (label) movement*/
     if (area->active) {
 
@@ -779,6 +666,27 @@ gwy_grapher_area_find_curve(GwyGrapherArea *area, gdouble x, gdouble y)
     if (fabs(closestdistance/(model->y_max - model->y_min)) < 0.05) return closestid;
     else return -1;
 }
+
+static gint
+gwy_grapher_area_find_selection(GwyGrapherArea *area, gdouble x, gdouble y)
+{
+    gint i;
+    GwyGrapherDataArea *selection;
+    gdouble xmin, ymin, xmax, ymax;
+
+    for (i=0; i<area->areasdata->data_areas->len; i++)
+    {
+        selection = &g_array_index(area->areasdata->data_areas, GwyGrapherDataArea, i);
+        xmin = MIN(selection->xmin, selection->xmax);
+        xmax = MAX(selection->xmin, selection->xmax);
+        ymin = MIN(selection->ymin, selection->ymax);
+        ymax = MAX(selection->ymin, selection->ymax);
+
+        if (xmin < x && xmax > x && ymin < y && ymax > y) return i;
+    }
+    return -1;
+}
+
 
 static GtkLayoutChild*
 gwy_grapher_area_find_child(GwyGrapherArea *area, gint x, gint y)
