@@ -639,6 +639,20 @@ gwy_palette_def_setup_presets(void)
         { 0.666667, { 0.764706, 0,        0.000000, 1 } },
         { 1,        { 1.000000, 0.894118, 0.000000, 1 } },
     };
+    GwyPaletteDefEntry spectral[] = {
+        { 0.000000, { 0.000000, 0.000000, 0.000000, 1 } },
+        { 0.090909, { 0.984314, 0.027451, 0.019608, 1 } },
+        { 0.181818, { 0.984314, 0.533333, 0.015686, 1 } },
+        { 0.272727, { 0.992157, 0.952941, 0.015686, 1 } },
+        { 0.363636, { 0.474510, 0.772549, 0.160784, 1 } },
+        { 0.454545, { 0.231373, 0.670588, 0.239216, 1 } },
+        { 0.545455, { 0.407843, 0.952941, 0.976471, 1 } },
+        { 0.636364, { 0.019608, 0.529412, 0.819608, 1 } },
+        { 0.727273, { 0.015686, 0.047059, 0.619608, 1 } },
+        { 0.818182, { 0.388235, 0.007843, 0.678431, 1 } },
+        { 0.909091, { 0.768627, 0.011765, 0.772549, 1 } },
+        { 1.000000, { 0.000000, 0.000000, 0.000000, 1 } },
+    };
 
     GwyPaletteDefEntry pd[] = {
         { 0.0, { 0, 0, 0, 1 } },
@@ -663,6 +677,8 @@ gwy_palette_def_setup_presets(void)
                                   GWY_PALETTE_GOLD);
     gwy_palette_def_create_preset(pm3d, G_N_ELEMENTS(pm3d),
                                   GWY_PALETTE_PM3D);
+    gwy_palette_def_create_preset(spectral, G_N_ELEMENTS(spectral),
+                                  GWY_PALETTE_SPECTRAL);
 
     pd[1].color = red;
     gwy_palette_def_create_preset(pd, G_N_ELEMENTS(pd), GWY_PALETTE_RED);
@@ -684,18 +700,27 @@ gwy_palette_def_setup_presets(void)
     pd3[2].color = violet;
     gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
                                   GWY_PALETTE_RED_VIOLET);
-    pd3[1].color = blue;
-    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
-                                  GWY_PALETTE_BLUE_VIOLET);
     pd3[2].color = cyan;
     gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
-                                  GWY_PALETTE_BLUE_CYAN);
-    pd3[1].color = green;
+                                  GWY_PALETTE_RED_CYAN);
+    pd3[1].color = blue;
     gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
-                                  GWY_PALETTE_GREEN_CYAN);
+                                  GWY_PALETTE_BLUE_CYAN);
+    pd3[2].color = violet;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_BLUE_VIOLET);
     pd3[2].color = yellow;
     gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_BLUE_YELLOW);
+    pd3[1].color = green;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
                                   GWY_PALETTE_GREEN_YELLOW);
+    pd3[2].color = cyan;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_GREEN_CYAN);
+    pd3[2].color = violet;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_GREEN_VIOLET);
 
     pd2 = g_new(GwyPaletteDefEntry, 10);
     for (i = 0; i < 10; i++) {
@@ -1000,9 +1025,21 @@ gwy_palette_def_print(GwyPaletteDef *a)
  **/
 
 /**
+ * GWY_PALETTE_SPECTRAL:
+ *
+ * A palette resembling spectral colors (starting and ending with black).
+ **/
+
+/**
  * GWY_PALETTE_RED_VIOLET:
  *
  * A black-red-violet-white palette.
+ **/
+
+/**
+ * GWY_PALETTE_RED_CYAN:
+ *
+ * A black-red-cyan-white palette.
  **/
 
 /**
@@ -1015,6 +1052,12 @@ gwy_palette_def_print(GwyPaletteDef *a)
  * GWY_PALETTE_BLUE_CYAN:
  *
  * A black-blue-cyan-white palette.
+ **/
+
+/**
+ * GWY_PALETTE_BLUE_YELLOW:
+ *
+ * A black-blue-yellow-white palette.
  **/
 
 /**
@@ -1033,6 +1076,12 @@ gwy_palette_def_print(GwyPaletteDef *a)
  * GWY_PALETTE_GREEN_CYAN:
  *
  * A black-green-cyan-white palette.
+ **/
+
+/**
+ * GWY_PALETTE_GREEN_VIOLET:
+ *
+ * A black-green-violet-white palette.
  **/
 
 /**
