@@ -9,6 +9,8 @@
 
 static GHashTable *process_funcs;
 
+static const gsize bufsize = 1024;
+
 /**
  * gwy_register_process_func:
  * @modname: Module identifier (name).
@@ -87,7 +89,21 @@ static gint
 process_menu_entry_compare(GwyProcessFuncInfo *a,
                            GwyProcessFuncInfo *b)
 {
-    return strcmp(a->menu_path, b->menu_path);
+    gchar p[bufsize], q[bufsize];
+    gsize i, j;
+
+    g_assert(a->menu_path && b->menu_path);
+    for (i = j = 0; a->menu_path[i] && j < bufsize-1; i++) {
+        if (a->menu_path[i] != '_')
+            p[j++] = a->menu_path[i];
+    }
+    p[j] = '\0';
+    for (i = j = 0; b->menu_path[i] && j < bufsize-1; i++) {
+        if (b->menu_path[i] != '_')
+            q[j++] = b->menu_path[i];
+    }
+    q[j] = '\0';
+    return strcmp(p, q);
 }
 
 /**
@@ -106,7 +122,6 @@ GtkObject*
 gwy_build_process_menu(GtkAccelGroup *accel_group,
                        GCallback item_callback)
 {
-    const gsize bufsize = 4096;
     GtkItemFactory *item_factory;
     GtkItemFactoryEntry branch = { NULL, NULL, NULL, 0, "<Branch>", NULL };
     GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
