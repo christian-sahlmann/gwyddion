@@ -75,20 +75,20 @@ noinst_PROGRAMS = main test create-data
 
 main_SOURCES = main.c
 main_LDADD = libgwydgets.la \
-	$(libgwyddion) \
+	$(libgwydraw) \
 	$(libgwyprocess) \
-	$(libgwydraw)
+	$(libgwyddion)
 
 test_SOURCES = test.c
 test_LDADD = libgwydgets.la \
-	$(libgwyddion) \
+	$(libgwydraw) \
 	$(libgwyprocess) \
-	$(libgwydraw)
+	$(libgwyddion)
 
 create_data_SOURCES = create-data.c
 create_data_LDADD = \
-	$(libgwyddion) \
-	$(libgwyprocess)
+	$(libgwyprocess) \
+	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\"

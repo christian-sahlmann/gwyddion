@@ -33,11 +33,11 @@ gwyddion_SOURCES = \
 	settings.c
 
 gwyddion_LDADD = \
-	$(libgwyddion) \
 	$(libgwymodule) \
-	$(libgwyprocess) \
+	$(libgwydgets) \
 	$(libgwydraw) \
-	$(libgwydgets)
+	$(libgwyprocess) \
+	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\"  -DGWY_PLUGIN_DIR=\"$(gwyplugindir)\"
