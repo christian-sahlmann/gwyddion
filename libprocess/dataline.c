@@ -983,17 +983,18 @@ gwy_data_line_acf(GwyDataLine *data_line, GwyDataLine *target_line)
 {
     gint i, j;
     gint n = data_line->res;
-    gdouble val;
+    gdouble val, avg;
 
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
+    avg = gwy_data_line_get_avg(data_line);
     
     
     for (i=0; i<n; i++)
     {
         for (j=0; j<(n-i); j++)
         {
-            val = data_line->data[i+j]*data_line->data[i];
+            val = (data_line->data[i+j]-avg)*(data_line->data[i]-avg);
             target_line->data[j] += val; /*printf("val=%f\n", val);*/
             
         }
@@ -1071,9 +1072,7 @@ gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
         val = (gint)(data_line->data[i]/step) - imin; 
         if (val<0 || val>= nsteps) 
         {
-            /*printf("GRRRR, %f, %d,  val=%d, (ymax=%g, ymin=%g, nsteps=%d)\n", step, imin, val, ymax, ymin, nsteps);
-            printf("data: %g %g %g %g %g\n", data_line->data[0], data_line->data[1], data_line->data[2], data_line->data[3], data_line->data[4]);
-            */
+            /*this should never happened*/
             val = 0;
         }
         target_line->data[val] += 1.0;
@@ -1127,8 +1126,8 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
     for (i=0; i<n; i++)
     {
         val = (gint)(gwy_data_line_get_der(data_line, i)/step - imin);
-        if (val<0) val = 0;
-        if (val>=nsteps) val = nsteps-1;
+        if (val<0) val = 0; /*this should never happened*/
+        if (val>=nsteps) val = nsteps-1; /*this should never happened*/
         target_line->data[val] += 1.0;/*/n/step;*/
     }
 }

@@ -2394,7 +2394,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
     if (orientation == GTK_ORIENTATION_HORIZONTAL)
     {
         size = brcol-ulcol;
-        if (size < 10) {printf("Field too small\n"); return 0;}
+        if (size < 10) {gwy_debug("Field too small"); return 0;}
          
         hlp_line = gwy_data_line_new(size, gwy_data_field_jtor(data_field, size), FALSE);
         hlp_tarline = gwy_data_line_new(size, gwy_data_field_jtor(data_field, size), FALSE);
@@ -2443,7 +2443,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
     else if (orientation == GTK_ORIENTATION_VERTICAL)
     {
         size = brrow-ulrow;
-        if (size < 10) {printf("Field too small\n"); return 0;}
+        if (size < 10) {gwy_debug("Field too small"); return 0;}
          
         hlp_line = gwy_data_line_new(size, gwy_data_field_jtor(data_field, size), FALSE);
         hlp_tarline = gwy_data_line_new(size, gwy_data_field_jtor(data_field, size), FALSE);
