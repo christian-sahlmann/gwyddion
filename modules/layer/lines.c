@@ -234,7 +234,7 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
         PROP_LINE_NUMBERS,
         g_param_spec_boolean("line_numbers",
                              "Number lines",
-                             "Whether to number lines",
+                             "Whether to attach line numbers to the lines.",
                              TRUE,
                              G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
