@@ -189,6 +189,22 @@ gwy_entities_get_entities
 </SECTION>
 
 <SECTION>
+<FILE>gwynlfit</FILE>
+GwyNLFitFunc
+GwyNLFitDerFunc
+GwyNLFitter
+gwy_math_nlfit_new
+gwy_math_nlfit_free
+gwy_math_nlfit_fit
+gwy_math_nlfit_get_max_iterations
+gwy_math_nlfit_set_max_iterations
+gwy_math_nlfit_get_dispersion
+gwy_math_nlfit_get_correlations
+gwy_math_nlfit_get_sigma
+gwy_math_nlfit_derive
+</SECTION>
+
+<SECTION>
 <FILE>gwymacros</FILE>
 _
 gwy_object_unref

@@ -1,8 +1,383 @@
+<!-- ##### SECTION ./tmpl/choleski.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/choleski.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/choleski.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/choleski.sgml:Title ##### -->
+choleski
+
+
+<!-- ##### SECTION ./tmpl/marquardt.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/marquardt.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/marquardt.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/marquardt.sgml:Title ##### -->
+marquardt
+
+
+<!-- ##### SECTION ./tmpl/nlfit.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/nlfit.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/nlfit.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/nlfit.sgml:Title ##### -->
+nlfit
+
+
+<!-- ##### SECTION ./tmpl/types.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/types.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/types.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/types.sgml:Title ##### -->
+types
+
+
+<!-- ##### ENUM BOOLEAN ##### -->
+<para>
+
+</para>
+
+@FALSE: 
+@TRUE: 
+
+<!-- ##### MACRO COMPLEX_DATA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF DATA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### USER_FUNCTION DFUN ##### -->
+<para>
+
+</para>
+
+@i: 
+@dat_x: 
+@n_par: 
+@var_par: 
+@b: 
+@d: 
+
+<!-- ##### MACRO EPS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### USER_FUNCTION FITFUN ##### -->
+<para>
+
+</para>
+
+@x: 
+@n_par: 
+@b: 
+@Returns: 
+
+<!-- ##### MACRO FREE ##### -->
+<para>
+
+</para>
+
+@x: 
+
+<!-- ##### MACRO FitMachEps ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO FitSqrtMachEps ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyNLFitState ##### -->
+<para>
+
+</para>
+
+@fmarq: 
+@dmarq: 
+@maxiter: 
+@eval: 
+@covar: 
+@dispersion: 
+@mfi: 
+@mdec: 
+@minc: 
+@mtol: 
+
 <!-- ##### SIGNAL GwyWatchable::value-changed ##### -->
 <para>
 Emitted when value changes.
 </para>
 
+
+<!-- ##### MACRO INCLAM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO INFINITY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION IndexLongMat ##### -->
+<para>
+
+</para>
+
+@I: 
+@J: 
+@Returns: 
+
+<!-- ##### FUNCTION InvSymMatice ##### -->
+<para>
+
+</para>
+
+@N: 
+@A: 
+
+<!-- ##### MACRO MAXINT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM MERENI ##### -->
+<para>
+
+</para>
+
+@ODRAZ: 
+@RHO: 
+
+<!-- ##### MACRO M_PI ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION Marq ##### -->
+<para>
+
+</para>
+
+@n_dat: 
+@x: 
+@y: 
+@n_par: 
+@b: 
+@Returns: 
+
+<!-- ##### TYPEDEF NEZ ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF PARAM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SQR ##### -->
+<para>
+
+</para>
+
+@x: 
+
+<!-- ##### USER_FUNCTION VYSTUP ##### -->
+<para>
+
+</para>
+
+@b: 
+
+<!-- ##### VARIABLE bOutParamErrors ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE cderiv ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE cfitfun ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION chodec ##### -->
+<para>
+
+</para>
+
+@dimA: 
+@A: 
+
+<!-- ##### FUNCTION chosol ##### -->
+<para>
+
+</para>
+
+@dimA: 
+@A: 
+@B: 
+
+<!-- ##### VARIABLE citer ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE compare_file ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE covar ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE covar_filled ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE covar_size ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE cprint ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE cresid ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE dmarq ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE fmarq ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE formal_par ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF gdouble ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION get_disperze ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION get_korel_koef ##### -->
+<para>
+
+</para>
+
+@Par1: 
+@Par2: 
+@Returns: 
+
+<!-- ##### FUNCTION get_sigma ##### -->
+<para>
+
+</para>
+
+@Par: 
+@Returns: 
 
 <!-- ##### FUNCTION gwy_container_freeze_watch ##### -->
 <para>
@@ -74,4 +449,120 @@ Emitted when value changes.
 @siunit: 
 @magnitude: 
 @Returns: 
+
+<!-- ##### FUNCTION machine_zero ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### VARIABLE mdat ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE mdec ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE mfi ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE minc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE mlambda ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE mmax ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE mpar ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE mtol ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE mvpar ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF number ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE param_file ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE print ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION print_compare ##### -->
+<para>
+
+</para>
+
+@cmp_file: 
+@n_dat: 
+@x: 
+@y: 
+@n_par: 
+@b: 
+@run: 
+
+<!-- ##### FUNCTION print_params ##### -->
+<para>
+
+</para>
+
+@par_file: 
+@lambda: 
+@residuum: 
+@n_par: 
+@b: 
+@run: 
+
+<!-- ##### VARIABLE sumr ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE vystup ##### -->
+<para>
+
+</para>
+
 

@@ -1,0 +1,162 @@
+<!-- ##### SECTION Title ##### -->
+gwynlfit
+
+<!-- ##### SECTION Short_Description ##### -->
+Marquardt-Levenbert nonlinear least square fitter.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### USER_FUNCTION GwyNLFitFunc ##### -->
+<para>
+
+</para>
+
+@x: 
+@n_par: 
+@param: 
+@user_data: 
+@fres: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@params: 
+
+
+<!-- ##### USER_FUNCTION GwyNLFitDerFunc ##### -->
+<para>
+
+</para>
+
+@i: 
+@x: 
+@n_par: 
+@param: 
+@fmarq: 
+@user_data: 
+@deriv: 
+@dres: 
+<!-- # Unused Parameters # -->
+@dat_x: 
+@params: 
+
+
+<!-- ##### STRUCT GwyNLFitter ##### -->
+<para>
+
+</para>
+
+@fmarq: 
+@dmarq: 
+@maxiter: 
+@eval: 
+@covar: 
+@dispersion: 
+@mfi: 
+@mdec: 
+@minc: 
+@mtol: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_new ##### -->
+<para>
+
+</para>
+
+@ff: 
+@df: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_free ##### -->
+<para>
+
+</para>
+
+@nlfit: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_fit ##### -->
+<para>
+
+</para>
+
+@nlfit: 
+@n_dat: 
+@x: 
+@y: 
+@weight: 
+@n_par: 
+@param: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_max_iterations ##### -->
+<para>
+
+</para>
+
+@nlfit: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_set_max_iterations ##### -->
+<para>
+
+</para>
+
+@nlfit: 
+@maxiter: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_dispersion ##### -->
+<para>
+
+</para>
+
+@nlfit: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_correlations ##### -->
+<para>
+
+</para>
+
+@nlfit: 
+@par1: 
+@par2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_sigma ##### -->
+<para>
+
+</para>
+
+@nlfit: 
+@par: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_derive ##### -->
+<para>
+
+</para>
+
+@i: 
+@x: 
+@n_par: 
+@param: 
+@ff: 
+@user_data: 
+@deriv: 
+@dres: 
+
+
