@@ -1,12 +1,23 @@
-1.7cvs20041214
+1.7cvs20041219
 
 1.8
+Application:
+- Option --no-splash recognized anywhere in command line, --debug-objects
+  added.
+
 Modules:
+- NT-MDT file format import module (new): roughly working.
+- CreaTec STM file format import module (new).
 - Blind tip estimate: Insensitive OK button when full estimate was run without
   partial estimate first was fixed.
+- DWT Anisotropy: Undo and data corruption were fixed.
+- Nanoscope, Statistical quantities, FFT: SI unit handling improved.
+- FFT, CWT, DWT modules: Display non-square data error immediately.
+- Profile: Corrupted graph titles for separate profiles were fixed.
 
 Libraries:
 - libgwyddion: Better SI unit parsing, multiplication, division and powers.
+- libgwydgets: 3D View not honouring data aspect ratio was fixed
 - libgwyddion: Value formatting bug causing data ranges consisting entirely
   of negative values to be displayed as (NaN, NaN) was fixed
 - libgwyddion, libgwyprocess: Convenience macros and methods for duplication,
