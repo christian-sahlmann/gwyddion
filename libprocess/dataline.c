@@ -22,6 +22,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include "dataline.h"
 
 #define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
@@ -118,6 +119,7 @@ static void
 gwy_data_line_init(GwyDataLine *data_line)
 {
     gwy_debug("");
+    gwy_debug_objects_creation((GObject*)data_line);
     data_line->data = NULL;
     data_line->res = 0;
     data_line->real = 0.0;

@@ -23,6 +23,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include "datafield.h"
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
@@ -143,6 +144,7 @@ static void
 gwy_data_field_init(GwyDataField *data_field)
 {
     gwy_debug("");
+    gwy_debug_objects_creation((GObject*)data_field);
     data_field->data = NULL;
     data_field->xres = 0;
     data_field->yres = 0;
