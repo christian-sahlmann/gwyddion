@@ -93,13 +93,13 @@ static GwyUnitoolSlots func_slots = {
 };
 
 static const GwyEnum sf_types[] =  {
-    { N_("Height distribution"), GWY_SF_OUTPUT_DH },
-    { N_("Height distribution"), GWY_SF_OUTPUT_CDH },
-    { N_("Slope distribution"),  GWY_SF_OUTPUT_DA },
-    { N_("Slope distribution"),  GWY_SF_OUTPUT_CDA },
-    { N_("ACF"),                 GWY_SF_OUTPUT_ACF },
-    { N_("HHCF"),                GWY_SF_OUTPUT_HHCF },
-    { N_("PSDF"),                GWY_SF_OUTPUT_PSDF },
+    { N_("Height distribution"),      GWY_SF_OUTPUT_DH },
+    { N_("Cum. height distribution"), GWY_SF_OUTPUT_CDH },
+    { N_("Slope distribution"),       GWY_SF_OUTPUT_DA },
+    { N_("Cum. slope distribution"),  GWY_SF_OUTPUT_CDA },
+    { N_("ACF"),                      GWY_SF_OUTPUT_ACF },
+    { N_("HHCF"),                     GWY_SF_OUTPUT_HHCF },
+    { N_("PSDF"),                     GWY_SF_OUTPUT_PSDF },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
