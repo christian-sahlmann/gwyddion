@@ -376,6 +376,20 @@ do_apply(GwyDataField *dfield,
                                           isel[3]-isel[1]);
         break;
 
+        case GWY_FILTER_MINIMUM:
+        gwy_data_field_area_filter_minimum(dfield, size,
+                                           isel[0], isel[1],
+                                           isel[2]-isel[0],
+                                           isel[3]-isel[1]);
+        break;
+
+        case GWY_FILTER_MAXIMUM:
+        gwy_data_field_area_filter_maximum(dfield, size,
+                                           isel[0], isel[1],
+                                           isel[2]-isel[0],
+                                           isel[3]-isel[1]);
+        break;
+
         case GWY_FILTER_CONSERVATIVE:
         gwy_data_field_area_filter_conservative(dfield, size,
                                                 isel[0], isel[1],
@@ -399,12 +413,14 @@ dialog_abandon(GwyUnitoolState *state)
     GwyDataViewLayer *layer;
 
     settings = gwy_app_settings_get();
-
     controls = (ToolControls*)state->user_data;
+    save_args(settings, controls);
+    if (!state->data_window)
+        return;
+
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
 
-    save_args(settings, controls);
     gwy_container_remove_by_name(data, "/0/show");
     gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
 
@@ -450,6 +466,8 @@ filter_changed_cb(GObject *item, GwyUnitoolState *state)
         case GWY_FILTER_MEAN:
         case GWY_FILTER_MEDIAN:
         case GWY_FILTER_CONSERVATIVE:
+        case GWY_FILTER_MINIMUM:
+        case GWY_FILTER_MAXIMUM:
         size_sensitive = TRUE;
         break;
 
@@ -525,7 +543,7 @@ load_args(GwyContainer *container, ToolControls *controls)
     /* sanitize */
     controls->upd = !!controls->upd;
     controls->siz = CLAMP(controls->siz, 1, 20);
-    controls->fil = MIN(controls->fil, GWY_FILTER_CONSERVATIVE);
+    controls->fil = MIN(controls->fil, GWY_FILTER_MAXIMUM);
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
 
