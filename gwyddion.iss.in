@@ -12,42 +12,46 @@ WindowShowCaption=yes
 WindowVisible=no
 LicenseFile=COPYING.wri
 Compression=bzip/9
-SourceDir=.
+SourceDir=inst
+; this means inst too
 OutputDir=.
 OutputBaseFilename=@PACKAGE_NAME@-@PACKAGE_VERSION@
 ; I would like to, but don't know how :-(
 ;ChangesAssociations=yes
 
 [Files]
-Source: "inst\*.*"; DestDir: "{app}"
-Source: "inst\pixmaps\*.*"; DestDir: "{app}\pixmaps"
-Source: "inst\modules\*.*"; DestDir: "{app}\modules"
-Source: "inst\modules\file\*.*"; DestDir: "{app}\modules\file"
-Source: "inst\modules\graph\*.*"; DestDir: "{app}\modules\graph"
-Source: "inst\modules\process\*.*"; DestDir: "{app}\modules\process"
-Source: "inst\modules\tool\*.*"; DestDir: "{app}\modules\tool"
-Source: "inst\lib\*.*"; DestDir: "{app}\lib"
-Source: "inst\include\libgwyddion\*.*"; DestDir: "{app}\include\libgwyddion"
-Source: "inst\include\libprocess\*.*"; DestDir: "{app}\include\libprocess"
-Source: "inst\include\libdraw\*.*"; DestDir: "{app}\include\libdraw"
-Source: "inst\include\libgwydgets\*.*"; DestDir: "{app}\include\libgwydgets"
-Source: "inst\include\libgwymodule\*.*"; DestDir: "{app}\include\libgwymodule"
-Source: "inst\include\libgwyapp\*.*"; DestDir: "{app}\include\libgwyapp"
-Source: "COPYING.wri"; DestDir: "{app}"
-;Source: "README.wri"; DestDir: "{app}"; Flags: isreadme
+Source: "*.dll"; DestDir: "{app}"
+Source: "*.wri"; DestDir: "{app}"
+Source: "@PACKAGE_TARNAME@.exe"; DestDir: "{app}"
+Source: "pixmaps\*.*"; DestDir: "{app}\pixmaps"
+Source: "modules\*.*"; DestDir: "{app}\modules"
+Source: "modules\file\*.*"; DestDir: "{app}\modules\file"
+Source: "modules\graph\*.*"; DestDir: "{app}\modules\graph"
+Source: "modules\process\*.*"; DestDir: "{app}\modules\process"
+Source: "modules\tool\*.*"; DestDir: "{app}\modules\tool"
+; TODO: install plugins, if any
 
 [Icons]
 Name: "{group}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"
 Name: "{group}\@PACKAGE_NAME@ Website"; Filename: "@PACKAGE_URL@"
-Name: "{group}\@PACKAGE_NAME@ Development Website"; Filename: "http://trific.ath.cx/software/@PACKAGE_TARNAME@/"
 Name: "{group}\Uninstall @PACKAGE_NAME@"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"
 
 [Registry]
-; This adds the GTK+ libraries to @PACKAGE_TARNAME@.exe's path
+; Add Gtk+ libraries to @PACKAGE_TARNAME@.exe's path
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletekeyifempty
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueData: "{app}\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueName: "Path"; ValueData: "{app};{code:GetGtkPath}\lib"; Flags: uninsdeletevalue
+; Add @PACKAGE_NAME@ paths to the registry
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@"; Flags: uninsdeletekeyifempty
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "Path"; ValueData: "{app}"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "Version"; ValueData: "@PACKAGE_VERSION@"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@"; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "Path"; ValueData: "{app}"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "Version"; ValueData: "@PACKAGE_VERSION@"; Flags: uninsdeletekey
+
 
 [Code]
 var
@@ -60,7 +64,7 @@ begin
   if not Exists then begin
     Exists := RegQueryStringValue (HKCU, 'Software\GTK\2.0', 'Path', GtkPath);
   end;
-   Result := Exists
+  Result := Exists
 end;
 
 function GetGtkPath (S: String): String;

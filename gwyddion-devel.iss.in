@@ -1,0 +1,70 @@
+[Setup]
+AppName=@PACKAGE_NAME@ Development
+AppVersion=@PACKAGE_VERSION@
+AppVerName=@PACKAGE_NAME@ Development @PACKAGE_VERSION@
+AppPublisher=Trific soft.
+AppPublisherURL=@PACKAGE_URL@
+AppCopyright=Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek
+DefaultDirName=C:\Dev-C++
+DefaultGroupName=@PACKAGE_NAME@
+DisableStartupPrompt=yes
+WindowShowCaption=yes
+WindowVisible=no
+LicenseFile=COPYING.wri
+Compression=bzip/9
+SourceDir=inst
+; this means inst too
+OutputDir=.
+OutputBaseFilename=@PACKAGE_NAME@-Development-@PACKAGE_VERSION@
+; I would like to, but don't know how :-(
+;ChangesAssociations=yes
+
+[Files]
+Source: "lib\*.*"; DestDir: "{app}\lib"
+Source: "include\libgwyddion\*.*"; DestDir: "{app}\include\libgwyddion"
+Source: "include\libprocess\*.*"; DestDir: "{app}\include\libprocess"
+Source: "include\libdraw\*.*"; DestDir: "{app}\include\libdraw"
+Source: "include\libgwydgets\*.*"; DestDir: "{app}\include\libgwydgets"
+Source: "include\libgwymodule\*.*"; DestDir: "{app}\include\libgwymodule"
+Source: "include\libgwyapp\*.*"; DestDir: "{app}\include\libgwyapp"
+Source: "COPYING.wri"; DestDir: "{app}"
+
+[Icons]
+Name: "{group}\@PACKAGE_NAME@ Development Website"; Filename: "http://trific.ath.cx/software/@PACKAGE_TARNAME@/"
+Name: "{group}\Uninstall @PACKAGE_NAME@-Development"; Filename: "{uninstallexe}"
+
+[Registry]
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@ Development"; Flags: uninsdeletekeyifempty
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@ Development\1.0"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@ Development\1.0"; ValueType: string; ValueName: "Path"; ValueData: "{app}"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@ Development\1.0"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@ Development\1.0"; ValueType: string; ValueName: "Path"; ValueData: "{app}"; Flags: uninsdeletekey
+
+
+[Code]
+var
+  Exists: Boolean;
+  GtkPath: String;
+
+function GetGtkInstalled (): Boolean;
+begin
+  Exists := RegQueryStringValue (HKLM, 'Software\GTK\2.0', 'Path', GtkPath);
+  if not Exists then begin
+    Exists := RegQueryStringValue (HKCU, 'Software\GTK\2.0', 'Path', GtkPath);
+  end;
+   Result := Exists
+end;
+
+function GetGtkPath (S: String): String;
+begin
+    Result := GtkPath;
+end;
+
+function InitializeSetup(): Boolean;
+begin
+  Result := GetGtkInstalled ();
+  if not Result then begin
+    MsgBox ('Please install the GTK+ 2.0 Runtime Environment before installing @PACKAGE_NAME@.  You can obtain GTK+ from http://www.dropline.net/gtk.', mbError, MB_OK);
+  end;
+end;
+
