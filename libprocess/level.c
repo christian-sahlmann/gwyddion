@@ -234,8 +234,8 @@ gwy_data_field_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle,
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @row_degree: Degree of polynom to fit row-wise.
- * @col_degree: Degree of polynom to fit column-wise.
+ * @col_degree: Degree of polynom to fit column-wise (x-coordinate).
+ * @row_degree: Degree of polynom to fit row-wise (y-coordinate).
  * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) to store the
  *          coefficients to, or %NULL (a fresh array is allocated then).
  *          The coefficients are stored by row, like data in a datafield.
@@ -251,7 +251,7 @@ gdouble*
 gwy_data_field_area_fit_polynom(GwyDataField *dfield,
                                 gint col, gint row,
                                 gint width, gint height,
-                                gint row_degree, gint col_degree,
+                                gint col_degree, gint row_degree,
                                 gdouble *coeffs)
 {
     gint r, c, i, j, size, xres, yres;

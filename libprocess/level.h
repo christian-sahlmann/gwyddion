@@ -54,8 +54,8 @@ gdouble* gwy_data_field_area_fit_polynom (GwyDataField *dfield,
                                           gint row,
                                           gint width,
                                           gint height,
-                                          gint row_degree,
                                           gint col_degree,
+                                          gint row_degree,
                                           gdouble *coeffs);
 
 G_END_DECLS
