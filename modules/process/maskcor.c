@@ -400,6 +400,19 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
 
     operand1 = args->win1;
     operand2 = args->win2;
+
+    if (operand1 == NULL || operand2 == NULL)
+    {
+        dialog = gtk_message_dialog_new(GTK_WINDOW(maskcor_window),
+                                 GTK_DIALOG_DESTROY_WITH_PARENT,
+                                 GTK_MESSAGE_INFO,
+                                 GTK_BUTTONS_CLOSE,
+                               _("Please, specify two data fields."));
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return FALSE;
+    }
+                    
     
     data = gwy_data_window_get_data(operand1);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
