@@ -82,9 +82,9 @@ static const GwyCDLinePreset fitting_presets[] = {
 };
 
 /**
- * gwy_math_cdline_get_npresets:
+ * gwy_cdline_get_npresets:
  *
- * Returns the number of available NL fitter presets.
+ * Returns the number of available critical dimension (CD)presets.
  *
  * Returns: The number of presets.
  *
@@ -97,12 +97,12 @@ gwy_cdline_get_npresets(void)
 }
 
 /**
- * gwy_math_cdline_get_preset:
- * @preset_id: NL fitter preset number.
+ * gwy_cdline_get_preset:
+ * @preset_id: CD preset number.
  *
- * Returns NL fitter preset number @preset_id.
+ * Returns: CD preset number @preset_id.
  *
- * Presets are numbered sequentially from 0 to gwy_math_cdline_get_npresets()-1.
+ * Presets are numbered sequentially from 0 to gwy_cdline_get_npresets()-1.
  * The numbers are not guaranteed to be constants, use preset names as unique
  * identifiers.
  *
@@ -122,10 +122,10 @@ gwy_cdline_get_preset(gint preset_id)
 }
 
 /**
- * gwy_math_cdline_get_preset_by_name:
- * @name: NL fitter preset name.
+ * gwy_cdline_get_preset_by_name:
+ * @name: CDpreset name.
  *
- * Returns NL fitter preset whose name is @name.
+ * Returns CD preset whose name is @name.
  *
  * Returns: Preset @name, %NULL if not found.  Note the returned value must
  *          not be modified or freed.
@@ -145,10 +145,10 @@ gwy_cdline_get_preset_by_name(const gchar *name)
 }
 
 /**
- * gwy_math_cdline_get_preset_id:
- * @preset: A NL fitter function preset.
+ * gwy_cdline_get_preset_id:
+ * @preset: A CD preset.
  *
- * Returns the id of a NL fitter preset.
+ * Returns the id of a CD preset.
  *
  * Returns: The preset number.
  *
@@ -163,7 +163,7 @@ gwy_cdline_get_preset_id(const GwyCDLinePreset* preset)
 
 
 /**
- * gwy_math_cdline_get_preset_name:
+ * gwy_cdline_get_preset_name:
  * @preset: A NL fitter function preset.
  *
  * Return preset name (its unique identifier).
@@ -179,8 +179,8 @@ gwy_cdline_get_preset_name(const GwyCDLinePreset* preset)
 }
 
 /**
- * gwy_math_cdline_get_preset_formula:
- * @preset: A NL fitter function preset.
+ * gwy_cdline_get_preset_formula:
+ * @preset: A CD preset.
  *
  * Returns function formula of @preset (with Pango markup).
  *
@@ -195,8 +195,8 @@ gwy_cdline_get_preset_formula(const GwyCDLinePreset* preset)
 }
 
 /**
- * gwy_math_cdline_get_preset_param_name:
- * @preset: A NL fitter function preset.
+ * gwy_cdline_get_preset_param_name:
+ * @preset: A CD preset.
  * @param: A parameter number.
  *
  * Returns the name of parameter number @param of preset @preset.
@@ -220,8 +220,8 @@ gwy_cdline_get_preset_param_name(const GwyCDLinePreset* preset,
 }
 
 /**
- * gwy_math_cdline_get_preset_param_default:
- * @preset: A NL fitter function preset.
+ * gwy_cdline_get_preset_param_default:
+ * @preset: A CD preset.
  * @param: A parameter number.
  *
  * Returns a suitable constant default parameter value.
@@ -245,8 +245,8 @@ gwy_cdline_get_preset_param_default(const GwyCDLinePreset* preset,
 }
 
 /**
- * gwy_math_cdline_get_preset_nparams:
- * @preset: A NL fitter function preset.
+ * gwy_cdline_get_preset_nparams:
+ * @preset: A CD preset.
  *
  * Return the number of parameters of @preset.
  *
@@ -261,7 +261,7 @@ gwy_cdline_get_preset_nparams(const GwyCDLinePreset* preset)
 }
 
 /**
- * gwy_math_nlfit_fit_preset:
+ * gwy_nlfit_fit_preset:
  * @preset: 
  * @n_dat: 
  * @x: 
