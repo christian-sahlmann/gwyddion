@@ -62,12 +62,14 @@ typedef struct {
     GtkWidget *merge;
     GtkWidget *color_button;
     GwyContainer *mydata;
+    gboolean computed;
 } MarkControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    mark                        (GwyContainer *data,
+static gboolean    mark                       (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    mark_dialog                 (MarkArgs *args, GwyContainer *data);
+static gboolean    mark_dialog                (MarkArgs *args,
+                                               GwyContainer *data);
 static void        mask_color_change_cb       (GtkWidget *color_button,
                                                MarkControls *controls);
 static void        load_mask_color            (GtkWidget *color_button,
@@ -78,9 +80,12 @@ static void        mark_dialog_update_controls(MarkControls *controls,
                                                MarkArgs *args);
 static void        mark_dialog_update_values  (MarkControls *controls,
                                                MarkArgs *args);
+static void        mark_invalidate            (GObject *obj,
+                                               MarkControls *controls);
 static void        preview                    (MarkControls *controls,
                                                MarkArgs *args);
-static void        mark_do                    (MarkArgs *args,
+static void        mark_ok                    (MarkControls *controls,
+                                               MarkArgs *args,
                                                GwyContainer *data);
 static void        mask_process               (GwyDataField *dfield,
                                                GwyDataField *maskfield,
@@ -110,7 +115,7 @@ static GwyModuleInfo module_info = {
     "mark_threshold",
     N_("Mark grains by thresholding"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -139,7 +144,7 @@ static gboolean
 mark(GwyContainer *data, GwyRunType run)
 {
     MarkArgs args;
-    gboolean ok = FALSE;
+    gboolean ok = TRUE;
 
     g_assert(run & MARK_RUN_MODES);
     if (run == GWY_RUN_WITH_DEFAULTS)
@@ -147,13 +152,12 @@ mark(GwyContainer *data, GwyRunType run)
     else
         mark_load_args(gwy_app_settings_get(), &args);
 
-    ok = (run != GWY_RUN_MODAL) || mark_dialog(&args, data);
-    if (run == GWY_RUN_MODAL)
+    if (run == GWY_RUN_MODAL) {
+        ok = mark_dialog(&args, data);
         mark_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
-
-    mark_do(&args, data);
+    }
+    else
+        mark_ok(NULL, &args, data);
 
     return ok;
 }
@@ -190,7 +194,6 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     controls.view = gwy_data_view_new(controls.mydata);
-    g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
@@ -212,15 +215,18 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
         = gtk_check_button_new_with_mnemonic(_("Threshold by h_eight"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
                                  args->is_height);
-
     gtk_table_attach(GTK_TABLE(table), controls.is_height,
                      0, 1, 1, 2, GTK_FILL, 0, 2, 2);
+    g_signal_connect(controls.is_height, "toggled",
+                     G_CALLBACK(mark_invalidate), &controls);
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_spinbutton(table, 2, _("_Height:"), "%",
                                        controls.threshold_height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    g_signal_connect(controls.threshold_height, "value_changed",
+                     G_CALLBACK(mark_invalidate), &controls);
 
     controls.is_slope
         = gtk_check_button_new_with_mnemonic(_("Threshold by s_lope"));
@@ -228,12 +234,16 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                                  args->is_slope);
     gtk_table_attach(GTK_TABLE(table), controls.is_slope,
                      0, 1, 3, 4, GTK_FILL, 0, 2, 2);
+    g_signal_connect(controls.is_slope, "toggled",
+                     G_CALLBACK(mark_invalidate), &controls);
 
     controls.threshold_slope = gtk_adjustment_new(args->slope,
                                                   0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_spinbutton(table, 4, _("_Slope:"), "%",
                                        controls.threshold_slope);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    g_signal_connect(controls.threshold_slope, "value_changed",
+                     G_CALLBACK(mark_invalidate), &controls);
 
     controls.is_lap
         = gtk_check_button_new_with_mnemonic(_("Threshold by c_urvature"));
@@ -241,18 +251,23 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                                  args->is_lap);
     gtk_table_attach(GTK_TABLE(table), controls.is_lap,
                      0, 1, 5, 6, GTK_FILL, 0, 2, 2);
+    g_signal_connect(controls.is_lap, "toggled",
+                     G_CALLBACK(mark_invalidate), &controls);
 
     controls.threshold_lap = gtk_adjustment_new(args->lap,
                                                 0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_spinbutton(table, 6, _("_Curvature:"), "%",
                                        controls.threshold_lap);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    g_signal_connect(controls.threshold_lap, "value_changed",
+                     G_CALLBACK(mark_invalidate), &controls);
 
     label = gtk_label_new_with_mnemonic(_("Mer_ge mode:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
 
-    controls.merge = gwy_option_menu_mergegrain(NULL, NULL, args->merge_type);
+    controls.merge = gwy_option_menu_mergegrain(G_CALLBACK(mark_invalidate),
+                                                &controls, args->merge_type);
     gtk_table_attach(GTK_TABLE(table), controls.merge,
                      0, 1, 8, 9, GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), 9, 8);
@@ -272,6 +287,8 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
 
+    controls.computed = FALSE;
+
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -279,6 +296,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             mark_dialog_update_values(&controls, args);
+            g_object_unref(controls.mydata);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
@@ -303,9 +321,11 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    mark_dialog_update_values(&controls, args);
     save_mask_color(controls.color_button, data);
+    mark_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
+    mark_ok(&controls, args, data);
+    g_object_unref(controls.mydata);
 
     return TRUE;
 }
@@ -351,6 +371,13 @@ mark_dialog_update_values(MarkControls *controls,
 }
 
 static void
+mark_invalidate(G_GNUC_UNUSED GObject *obj,
+                MarkControls *controls)
+{
+    controls->computed = FALSE;
+}
+
+static void
 mask_color_change_cb(GtkWidget *color_button,
                      MarkControls *controls)
 {
@@ -389,7 +416,8 @@ static void
 preview(MarkControls *controls,
         MarkArgs *args)
 {
-    GwyDataField *maskfield, *dfield;
+    GwyDataField *dfield;
+    GObject *maskfield;
     GwyPixmapLayer *layer;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
@@ -397,14 +425,9 @@ preview(MarkControls *controls,
 
     /*set up the mask*/
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        maskfield
-            = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                              "/0/mask"));
-        gwy_data_field_resample(maskfield,
-                               gwy_data_field_get_xres(dfield),
-                               gwy_data_field_get_yres(dfield),
-                               GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield);
+        maskfield = gwy_container_get_object_by_name(controls->mydata,
+                                                     "/0/mask");
+        gwy_data_field_copy(dfield, GWY_DATA_FIELD(maskfield));
         if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
             layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
             gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
@@ -412,49 +435,51 @@ preview(MarkControls *controls,
         }
     }
     else {
-        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+        maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
         gwy_container_set_object_by_name(controls->mydata, "/0/mask",
-                                         G_OBJECT(maskfield));
+                                         maskfield);
         g_object_unref(maskfield);
         layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                 GWY_PIXMAP_LAYER(layer));
+                                      GWY_PIXMAP_LAYER(layer));
 
     }
 
-    mask_process(dfield, maskfield, args);
-
+    mask_process(dfield, GWY_DATA_FIELD(maskfield), args);
+    controls->computed = TRUE;
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
-
 }
 
 static void
-mark_do(MarkArgs *args,
+mark_ok(MarkControls *controls,
+        MarkArgs *args,
         GwyContainer *data)
 {
+    GwyDataField *dfield;
+    GObject *maskfield;
 
-    GwyDataField *dfield, *maskfield;
+    if (controls && controls->computed) {
+        maskfield = gwy_container_get_object_by_name(controls->mydata,
+                                                     "/0/mask");
+        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
+        return;
+    }
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (gwy_container_contains_by_name(data, "/0/mask")) {
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                    "/0/mask"));
-        gwy_data_field_resample(maskfield,
-                               gwy_data_field_get_xres(dfield),
-                               gwy_data_field_get_yres(dfield),
-                               GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield);
+        maskfield = gwy_container_get_object_by_name(data, "/0/mask");
+        gwy_data_field_copy(dfield, GWY_DATA_FIELD(maskfield));
     }
     else {
-        maskfield
-            = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+        maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
         g_object_unref(maskfield);
     }
 
-    mask_process(dfield, maskfield, args);
+    mask_process(dfield, GWY_DATA_FIELD(maskfield), args);
 }
 
 static void
@@ -467,11 +492,11 @@ mask_process(GwyDataField *dfield,
 
     is_field = FALSE;
     output_field = GWY_DATA_FIELD(gwy_data_field_new
-                                      (gwy_data_field_get_xres(dfield),
-                                       gwy_data_field_get_yres(dfield),
-                                       gwy_data_field_get_xreal(dfield),
-                                       gwy_data_field_get_yreal(dfield),
-                                       FALSE));
+                                          (gwy_data_field_get_xres(dfield),
+                                           gwy_data_field_get_yres(dfield),
+                                           gwy_data_field_get_xreal(dfield),
+                                           gwy_data_field_get_yreal(dfield),
+                                           FALSE));
 
     args->inverted = 0;
     if (args->is_height) {
