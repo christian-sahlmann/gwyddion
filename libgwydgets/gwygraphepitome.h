@@ -77,7 +77,7 @@ struct _GwyGraphEpitome {
 struct _GwyGraphEpitomeClass {
     GObjectClass parent_class;
 
-    void (*value_changed)(GwyGraphEpitome *graph_epitome);
+    void (*value_changed)(GwyGraphEpitome *gepitome);
 };
 
 
