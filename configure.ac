@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.4cvs20040830, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.4cvs20040905, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -98,17 +98,19 @@ if test "$PERL" != :; then
 fi
 
 dnl With GCC, be paranoiac.  It should compile really cleanly.
-dnl Except -Wno-sign-compare, but older gcc's don't know it.
-dnl FIXME: We'd also like -Wno-format-zero-length for -DDEBUG
 if test "$GCC" = yes; then
-  WARNING_CFLAGS="-Wall -W -Wpointer-arith -Werror-implicit-function-declaration -Wno-system-headers -Wshadow -Wredundant-decls"
+  ye_PROG_CC_OPTION([WNO_EMPTY_FMT],[-Wno-format-zero-length],,)
+  ye_PROG_CC_OPTION([WNO_SIGN_COMPARE],[-Wno-sign-compare],,)
+  ye_PROG_CC_OPTION([WNO_SYS_HEADERS],[-Wno-system-headers],,)
+  ye_PROG_CC_OPTION([ERR_IFD],[-Werror-implicit-function-declaration],,)
+  ye_PROG_CC_OPTION([WREDUNDANT],[-Wredundant-decls],,)
+  WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith $PROG_CC_ERR_IFS $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WREDUNDANT $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WNO_SIGN_COMPARE"
 fi
 
 case $target_os in
   mingw*)
     TARGET_CFLAGS="-mms-bitfields"
     TARGET_LDFLAGS="-mwindows"
-    TARGET_TARGETS="README.wri COPYING.wri"
     ;;
   *)
     STRIP="echo"
@@ -178,7 +180,6 @@ AC_SUBST(PERL_SITE_LIB)
 AC_SUBST(PACKAGE_URL)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
           [Define to package home page, as a string.])
-AC_SUBST(TARGET_TARGETS)
 
 gwymoduledir=$libdir/gwyddion/modules
 gwyplugindir=$libexecdir/gwyddion/plugins
