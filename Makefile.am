@@ -38,6 +38,7 @@ EXTRA_DIST = \
 	version.h \
 	utils/update-msvc.py \
 	utils/vim-syn-gen.py \
+	utils/gwyddion-cfg.py \
 	utils/gwyddion.vim \
 	$(M4TESTS)
 
@@ -54,6 +55,6 @@ docs:
 
 # FIXME: depdendencies?
 utils/gwyddion.vim: devel-docs/*/*-decl.txt
-	./utils/vim-syn-gen.py >$@
+	./utils/vim-syn-gen.py ./utils/gwyddion-cfg.py >$@
 
 .PHONY: docs
