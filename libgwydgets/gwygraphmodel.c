@@ -309,6 +309,11 @@ gwy_graph_new_from_model(GwyGraphModel *gmodel)
     graph_widget = gwy_graph_new();
     graph = GWY_GRAPH(graph_widget);
 
+    gmodel->graph = graph;
+    gmodel->graph_destroy_hid
+        = g_signal_connect(graph, "destroy",
+                           G_CALLBACK(gwy_graph_model_graph_destroyed), gmodel);
+
     graph->area->lab->par.position = gmodel->label_position;
     graph->area->lab->par.is_frame = gmodel->label_has_frame;
     graph->area->lab->par.frame_thickness = gmodel->label_frame_thickness;
@@ -455,8 +460,6 @@ gwy_graph_model_deserialize(const guchar *buffer,
             g_free(left_label);
             g_free(right_label);
             g_object_unref(gmodel);
-
-            *position += mysize;
             return NULL;
         }
 
@@ -486,8 +489,6 @@ gwy_graph_model_deserialize(const guchar *buffer,
         if (!gmodel->curves[i]) {
             gmodel->ncurves = i;    /* free only existing curves */
             g_object_unref(gmodel);
-
-            *position += mysize;
             return NULL;
         }
     }
