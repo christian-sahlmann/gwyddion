@@ -47,7 +47,7 @@ struct _GwyLayerPoints {
 
     gint npoints;
     gint nselected;
-    gint near;
+    gint inear;
     guint button;
     gdouble *points;
 };

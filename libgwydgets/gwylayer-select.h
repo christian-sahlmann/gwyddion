@@ -46,7 +46,7 @@ struct _GwyLayerSelect {
     GwyDataViewLayer parent_instance;
 
     gboolean selected;
-    gint near;
+    gint inear;
     guint button;
     gdouble x0;
     gdouble y0;

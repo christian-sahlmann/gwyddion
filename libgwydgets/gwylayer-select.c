@@ -245,7 +245,7 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
     klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
     if (!select_layer->button) {
         i = gwy_layer_select_near_point(select_layer, xreal, yreal);
-        select_layer->near = i;
+        select_layer->inear = i;
         gdk_window_set_cursor(layer->parent->window,
                               i == -1 ? NULL : klass->corner_cursor[i]);
         return FALSE;

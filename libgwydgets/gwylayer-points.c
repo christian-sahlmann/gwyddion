@@ -129,7 +129,7 @@ gwy_layer_points_init(GwyLayerPoints *layer)
 
     layer->npoints = 3;
     layer->nselected = 0;
-    layer->near = -1;
+    layer->inear = -1;
     layer->points = g_new(gdouble, 2*layer->npoints);
 }
 
@@ -200,8 +200,8 @@ gwy_layer_points_set_max_points(GwyDataViewLayer *layer,
     points_layer = (GwyLayerPoints*)layer;
     points_layer->npoints = npoints;
     points_layer->nselected = MIN(points_layer->nselected, npoints);
-    if (points_layer->near >= npoints)
-        points_layer->near = -1;
+    if (points_layer->inear >= npoints)
+        points_layer->inear = -1;
     points_layer->points = g_renew(gdouble, points_layer->points,
                                    2*points_layer->npoints);
 }
@@ -294,7 +294,7 @@ gwy_layer_points_motion_notify(GwyDataViewLayer *layer,
     gdouble xreal, yreal;
 
     points_layer = (GwyLayerPoints*)layer;
-    i = points_layer->near;
+    i = points_layer->inear;
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
@@ -313,7 +313,7 @@ gwy_layer_points_motion_notify(GwyDataViewLayer *layer,
         return FALSE;
     }
 
-    g_assert(points_layer->near != -1);
+    g_assert(points_layer->inear != -1);
     /*gwy_layer_points_draw_point(layer, layer->parent->window, i);*/
     points_layer->points[2*i] = xreal;
     points_layer->points[2*i + 1] = yreal;
@@ -351,14 +351,14 @@ gwy_layer_points_button_pressed(GwyDataViewLayer *layer,
     /* handle existing points */
     i = gwy_layer_points_near_point(points_layer, xreal, yreal);
     if (i >= 0) {
-        points_layer->near = i;
+        points_layer->inear = i;
         gwy_layer_points_draw_point(layer, layer->parent->window, i);
     }
     else {
         /* add a point, or do nothing when maximum is reached */
         if (points_layer->nselected == points_layer->npoints)
             return FALSE;
-        i = points_layer->near = points_layer->nselected;
+        i = points_layer->inear = points_layer->nselected;
         points_layer->nselected++;
     }
     points_layer->button = event->button;
@@ -388,7 +388,7 @@ gwy_layer_points_button_released(GwyDataViewLayer *layer,
     points_layer->button = 0;
     x = event->x;
     y = event->y;
-    i = points_layer->near;
+    i = points_layer->inear;
     gwy_debug("%s: i = %d", __FUNCTION__, i);
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
     outside = (event->x != x) || (event->y != y);

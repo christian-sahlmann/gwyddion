@@ -138,7 +138,7 @@ gwy_layer_lines_init(GwyLayerLines *layer)
 
     layer->nlines = 3;
     layer->nselected = 0;
-    layer->near = -1;
+    layer->inear = -1;
     layer->lines = g_new(gdouble, 4*layer->nlines);
 }
 
@@ -210,8 +210,8 @@ gwy_layer_lines_set_max_lines(GwyDataViewLayer *layer,
     lines_layer = (GwyLayerLines*)layer;
     lines_layer->nlines = nlines;
     lines_layer->nselected = MIN(lines_layer->nselected, nlines);
-    if (lines_layer->near >= nlines)
-        lines_layer->near = -1;
+    if (lines_layer->inear >= nlines)
+        lines_layer->inear = -1;
     lines_layer->lines = g_renew(gdouble, lines_layer->lines,
                                  4*lines_layer->nlines);
 }
@@ -303,7 +303,7 @@ gwy_layer_lines_motion_notify(GwyDataViewLayer *layer,
     gdouble xreal, yreal;
 
     lines_layer = (GwyLayerLines*)layer;
-    i = lines_layer->near;
+    i = lines_layer->inear;
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
@@ -329,7 +329,7 @@ gwy_layer_lines_motion_notify(GwyDataViewLayer *layer,
         return FALSE;
     }
 
-    g_assert(lines_layer->near != -1);
+    g_assert(lines_layer->inear != -1);
     gwy_layer_lines_draw_line(layer, layer->parent->window, i/2);
     lines_layer->lines[2*i] = xreal;
     lines_layer->lines[2*i + 1] = yreal;
@@ -352,9 +352,9 @@ gwy_layer_lines_do_move_line(GwyDataViewLayer *layer,
 
     lines_layer = GWY_LAYER_LINES(layer);
     data_view = GWY_DATA_VIEW(layer->parent);
-    g_return_val_if_fail(lines_layer->near != -1, FALSE);
+    g_return_val_if_fail(lines_layer->inear != -1, FALSE);
 
-    i = lines_layer->near;
+    i = lines_layer->inear;
     line = lines_layer->lines + 4*i;
 
     /* compute wanted new coordinates of the first endpoint */
@@ -425,7 +425,7 @@ gwy_layer_lines_button_pressed(GwyDataViewLayer *layer,
     j = gwy_layer_lines_near_line(lines_layer, xreal, yreal);
     i = gwy_layer_lines_near_point(lines_layer, xreal, yreal);
     if (i == -1 && j >= 0) {
-        lines_layer->near = j;
+        lines_layer->inear = j;
         lines_layer->moving_line = TRUE;
         lines_layer->lmove_x = lines_layer->lines[4*j] - xreal;
         lines_layer->lmove_y = lines_layer->lines[4*j + 1] - yreal;
@@ -433,14 +433,14 @@ gwy_layer_lines_button_pressed(GwyDataViewLayer *layer,
     }
     else {
         if (i >= 0) {
-            lines_layer->near = i;
+            lines_layer->inear = i;
             gwy_layer_lines_draw_line(layer, layer->parent->window, i/2);
         }
         else {
             /* add a line, or do nothing when maximum is reached */
             if (lines_layer->nselected == lines_layer->nlines)
                 return FALSE;
-            i = lines_layer->near = 2*lines_layer->nselected;
+            i = lines_layer->inear = 2*lines_layer->nselected;
             lines_layer->nselected++;
             lines_layer->lines[2*i] = xreal;
             lines_layer->lines[2*i + 1] = yreal;
@@ -475,7 +475,7 @@ gwy_layer_lines_button_released(GwyDataViewLayer *layer,
     lines_layer->button = 0;
     x = event->x;
     y = event->y;
-    i = lines_layer->near;
+    i = lines_layer->inear;
     gwy_debug("%s: i = %d", __FUNCTION__, i);
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
     outside = (event->x != x) || (event->y != y);

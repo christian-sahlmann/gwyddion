@@ -47,7 +47,7 @@ struct _GwyLayerLines {
 
     gint nlines;
     gint nselected;
-    gint near;
+    gint inear;
     gboolean moving_line;
     gdouble lmove_x;
     gdouble lmove_y;
