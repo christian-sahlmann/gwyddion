@@ -108,6 +108,7 @@ profile_use(GwyDataWindow *data_window,
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
+    GwyContainer *data;
     gint i;
 
     gwy_debug("%p", data_window);
@@ -119,6 +120,9 @@ profile_use(GwyDataWindow *data_window,
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(data_view);
+    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                "/0/data"));
 
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == select_layer)
@@ -144,7 +148,8 @@ profile_use(GwyDataWindow *data_window,
     if (!dtl)
     {
         dtl = g_ptr_array_new();
-        for (i=0; i<5; i++) g_ptr_array_add(dtl, (gpointer)gwy_data_line_new(10, 10, 0));
+        for (i = 0; i < 5; i++)
+            g_ptr_array_add(dtl, (gpointer)gwy_data_line_new(10, 10, 0));
     }
     if (!str)
     {
@@ -184,7 +189,8 @@ profile_do(void)
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
-    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                "/0/data"));
 
     xreal = gwy_data_field_get_xreal(datafield);
     yreal = gwy_data_field_get_yreal(datafield);
