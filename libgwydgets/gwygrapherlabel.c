@@ -42,10 +42,10 @@ static void     gwy_grapher_label_size_allocate        (GtkWidget *widget,
                                                       GtkAllocation *allocation);
 static gboolean gwy_grapher_label_expose               (GtkWidget *widget,
                                                       GdkEventExpose *event);
-/*
+
 static gboolean gwy_grapher_label_button_press         (GtkWidget *widget,
                                                       GdkEventButton *event);
-static gboolean gwy_grapher_label_button_release       (GtkWidget *widget,
+/*static gboolean gwy_grapher_label_button_release       (GtkWidget *widget,
                                                       GdkEventButton *event);
 */
 
@@ -105,9 +105,9 @@ gwy_grapher_label_class_init(GwyGrapherLabelClass *klass)
     widget_class->size_request = gwy_grapher_label_size_request;
     widget_class->unrealize = gwy_grapher_label_unrealize;
     widget_class->size_allocate = gwy_grapher_label_size_allocate;
-    /*widget_class->button_press_event = gwy_grapher_label_button_press;
-    widget_class->button_release_event = gwy_grapher_label_button_release;
-    */
+    widget_class->button_press_event = gwy_grapher_label_button_press;
+/*    widget_class->button_release_event = gwy_grapher_label_button_release;*/
+    
 }
 
 static void
@@ -115,6 +115,7 @@ gwy_grapher_label_init(GwyGrapherLabel *label)
 {
     gwy_debug("");
     label->samplepos = NULL;
+    label->rightsidesamples = FALSE;
 }
 
 /**
@@ -295,7 +296,7 @@ gwy_grapher_label_expose(GtkWidget *widget,
 
 void gwy_grapher_label_draw_label(GtkWidget *widget)
 {
-    gint ypos;
+    gint ypos, winheight, winwidth, windepth, winx, winy;
     gint i;
     GwyGrapherLabel *label;
     GwyGrapherCurveModel *curvemodel;
@@ -304,6 +305,8 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
     PangoRectangle rect;
     GdkGC *mygc;
     GdkColor fg;
+    GdkColor curve_color;
+    GdkColormap* cmap;
 
     mygc = gdk_gc_new(widget->window);
 
@@ -312,35 +315,52 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
     layout = gtk_widget_create_pango_layout(widget, "");
     pango_layout_set_font_description(layout, label->label_font);
 
+    cmap = gdk_colormap_get_system();
    
     ypos = 5;
-    fg.pixel = 0x00000000;
+    fg.red = 0;
+    fg.green = 0;
+    fg.blue = 0;
+    gdk_colormap_alloc_color(cmap, &fg, TRUE, TRUE);
+
+    gdk_window_get_geometry(widget->window, &winx, &winy, &winwidth, &winheight, &windepth);    
+    
     for (i=0; i<model->ncurves; i++)
     {
         curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
         
         pango_layout_set_text(layout, curvemodel->description->str, curvemodel->description->len);
-        gdk_draw_layout(widget->window, mygc, 25, ypos, layout);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
-
+        
+        if (label->rightsidesamples)
+            gdk_draw_layout(widget->window, mygc, winwidth - rect.width - 25, ypos, layout);
+        else
+            gdk_draw_layout(widget->window, mygc, 25, ypos, layout);
+        
         label->samplepos[i] = ypos;
 
-/*        gdk_gc_set_foreground(mygc, &(cparams->color));
-        if (cparams->is_line)
+        gwy_rgba_to_gdk_color(&(curvemodel->color), &curve_color);
+        gdk_colormap_alloc_color(cmap, &curve_color, TRUE, TRUE);
+        gdk_gc_set_foreground(mygc, &curve_color);
+        if (curvemodel->is_line)
         {
-            gdk_gc_set_line_attributes (mygc, cparams->line_size,
-                   cparams->line_style, GDK_CAP_ROUND, GDK_JOIN_MITER);
-            gdk_draw_line(widget->window, mygc,
-                   5, ypos + rect.height/2, 20, ypos + rect.height/2);
+            gdk_gc_set_line_attributes (mygc, curvemodel->line_size,
+                   curvemodel->line_style, GDK_CAP_ROUND, GDK_JOIN_MITER);
+
+            if (label->rightsidesamples)
+               gdk_draw_line(widget->window, mygc, winwidth - 20, ypos + rect.height/2, winwidth - 5, ypos + rect.height/2);
+            else
+               gdk_draw_line(widget->window, mygc, 5, ypos + rect.height/2, 20, ypos + rect.height/2);
         }
-        if (cparams->is_point)
+     /*   if (curvemodel->is_point)
         {
              gwy_grapher_draw_point (widget->window, mygc, 12, ypos + rect.height/2,
                                    cparams->point_type, cparams->point_size,
                                    &(cparams->color), cparams->is_line);
         }
-        gdk_gc_set_foreground(mygc, &fg);
         */
+        gdk_gc_set_foreground(mygc, &fg);
+        
         ypos += rect.height + 5;
          
     }
@@ -376,36 +396,36 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
         ypos += rect.height + 5;
     }
 
-    gdk_gc_set_line_attributes (mygc, label->par.frame_thickness,
+    */
+    gdk_gc_set_line_attributes (mygc, model->label_frame_thickness,
                   GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
 
-
     gdk_draw_line(widget->window, mygc,
-                  label->par.frame_thickness/2,
-                  label->par.frame_thickness/2,
-                  widget->allocation.width - label->par.frame_thickness/2 - 1,
-                  label->par.frame_thickness/2);
+                  model->label_frame_thickness/2,
+                  model->label_frame_thickness/2,
+                  widget->allocation.width - model->label_frame_thickness/2 - 1,
+                  model->label_frame_thickness/2);
     gdk_draw_line(widget->window, mygc,
-                  label->par.frame_thickness/2,
-                  widget->allocation.height - label->par.frame_thickness/2 - 1,
-                  widget->allocation.width - label->par.frame_thickness/2 - 1,
-                  widget->allocation.height - label->par.frame_thickness/2 - 1);
+                  model->label_frame_thickness/2,
+                  widget->allocation.height - model->label_frame_thickness/2 - 1,
+                  widget->allocation.width - model->label_frame_thickness/2 - 1,
+                  widget->allocation.height - model->label_frame_thickness/2 - 1);
     gdk_draw_line(widget->window, mygc,
-                  label->par.frame_thickness/2,
-                  label->par.frame_thickness/2,
-                  label->par.frame_thickness/2,
-                  widget->allocation.height - label->par.frame_thickness/2 - 1);
+                  model->label_frame_thickness/2,
+                  model->label_frame_thickness/2,
+                  model->label_frame_thickness/2,
+                  widget->allocation.height - model->label_frame_thickness/2 - 1);
     gdk_draw_line(widget->window, mygc,
-                  widget->allocation.width - label->par.frame_thickness/2 - 1,
-                  label->par.frame_thickness/2,
-                  widget->allocation.width - label->par.frame_thickness/2 - 1,
-                  widget->allocation.height - label->par.frame_thickness/2 - 1);
+                  widget->allocation.width - model->label_frame_thickness/2 - 1,
+                  model->label_frame_thickness/2,
+                  widget->allocation.width - model->label_frame_thickness/2 - 1,
+                  widget->allocation.height - model->label_frame_thickness/2 - 1);
     g_object_unref((GObject *)mygc);
-    */
+    
 }
 
 
-/*
+
 static gboolean
 gwy_grapher_label_button_press(GtkWidget *widget,
                              GdkEventButton *event)
@@ -413,15 +433,19 @@ gwy_grapher_label_button_press(GtkWidget *widget,
     GwyGrapherLabel *label;
 
     gwy_debug("");
+    printf("press\n");
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPHER_LABEL(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     label = GWY_GRAPHER_LABEL(widget);
 
+    printf("press\n");
+
     return FALSE;
 }
 
+/*
 static gboolean
 gwy_grapher_label_button_release(GtkWidget *widget,
                                GdkEventButton *event)
@@ -542,8 +566,6 @@ void
 gwy_grapher_label_refresh(GwyGrapherLabel *label)
 {
     GwyGrapherModel *model = GWY_GRAPHER_MODEL(label->grapher_model);
-    
-    printf("label refresh! (%d curves)\n", model->ncurves);
     
     /*repaint label samples and descriptions*/
     if (label->samplepos) g_free(label->samplepos);

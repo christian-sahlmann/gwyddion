@@ -125,18 +125,20 @@ gwy_grapher_curve_model_init(GwyGrapherCurveModel *gcmodel)
     gcmodel->ydata = NULL;
 
     gcmodel->description = g_string_new("");
-    gcmodel->color.r = 0;
-    gcmodel->color.g = 0;
-    gcmodel->color.b = 0;
-    gcmodel->color.a = 1;
+    gcmodel->color.r = 0.5;
+    gcmodel->color.g = 0.5;
+    gcmodel->color.b = 0.5;
+    gcmodel->color.a = 0.5;
 
     gcmodel->type = GWY_GRAPHER_CURVE_LINE_POINTS;
 
     gcmodel->point_type = GWY_GRAPHER_POINT_SQUARE;
     gcmodel->point_size = 8;
+    gcmodel->is_point = TRUE;
 
     gcmodel->line_style = GDK_LINE_SOLID;
     gcmodel->line_size = 1;
+    gcmodel->is_line = TRUE;
 }
 
 /**

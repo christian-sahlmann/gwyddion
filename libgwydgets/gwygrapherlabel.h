@@ -47,6 +47,7 @@ struct _GwyGrapherLabel {
     gint *samplepos;
     gint reqheight;
     gint reqwidth;
+    gboolean rightsidesamples;
 
     gpointer reserved1;
     gpointer reserved2;

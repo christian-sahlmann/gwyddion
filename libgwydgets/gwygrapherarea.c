@@ -557,7 +557,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     x += (gint)event->x;
     y += (gint)event->y;
 
-    /*
+    
 
     child = gwy_grapher_area_find_child(area, x, y);
     if (child) {
@@ -569,7 +569,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
         gwy_grapher_area_draw_child_rectangle(area);
         return FALSE;
     }
-
+/*
     if (area->status == GWY_GRAPHER_STATUS_XSEL
         || area->status == GWY_GRAPHER_STATUS_YSEL) {
         if (area->status == GWY_GRAPHER_STATUS_XSEL) {
@@ -628,7 +628,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
 
     }
     */
-    return FALSE;
+    return TRUE;
 }
 
 static gboolean
@@ -640,9 +640,10 @@ gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
     gwy_debug("");
     area = GWY_GRAPHER_AREA(widget);
 
-    /*
+    
     ispos = 0;
 
+    /*
     if ((area->status == GWY_GRAPHER_STATUS_XSEL
          || area->status == GWY_GRAPHER_STATUS_YSEL)
         && area->selecting==1) {
@@ -664,7 +665,7 @@ gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
         gwy_grapher_area_signal_selected(area);
         gtk_widget_queue_draw(widget);
     }
-
+*/
     if (area->active) {
         gwy_grapher_area_draw_child_rectangle(area);
 
@@ -683,6 +684,8 @@ gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
 
         area->active = NULL;
     }
+
+    /*
     else if (area->status == GWY_GRAPHER_STATUS_ZOOM && (area->selecting != 0)) {
         if (!ispos) {
             gdk_window_get_position(event->window, &x, &y);
@@ -716,9 +719,9 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 
     area = GWY_GRAPHER_AREA(widget);
 
-    /*
+    
     ispos = 0;
-*/
+
     /*cursor shape
     klass = GWY_GRAPHER_AREA_GET_CLASS(area);
     if (area->status == GWY_GRAPHER_STATUS_ZOOM)
@@ -794,7 +797,7 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 
 */
     /*widget (label) movement*/
-/*    if (area->active) {
+    if (area->active) {
 
         if (!ispos) {
             gdk_window_get_position(event->window, &x, &y);
@@ -813,7 +816,7 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         area->yoff = y - area->y0;
         gwy_grapher_area_draw_child_rectangle(area);
     }
-*/
+
     return FALSE;
 }
 
