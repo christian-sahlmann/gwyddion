@@ -27,7 +27,7 @@ static void     gwy_data_view_update_statusbar (GwyDataView *data_view,
 static void     zoom_changed_cb                (GtkWidget *data_view,
                                                 GtkAllocation *allocation,
                                                 GwyDataWindow *data_window);
-static void     color_axis_clicked_cb          (GtkWidget *coloraxis,
+static gboolean color_axis_clicked_cb          (GtkWidget *coloraxis,
                                                 GdkEventButton *event,
                                                 GtkWidget *data_window);
 static void     palette_selected_cb            (GtkWidget *item,
@@ -182,7 +182,7 @@ gwy_data_window_new(GwyDataView *data_view)
 
     data_window->vruler = gwy_vruler_new();
     gwy_ruler_set_units_placement(GWY_RULER(data_window->vruler),
-                                  GWY_UNITS_PLACEMENT_AT_ZERO);
+                                  GWY_UNITS_PLACEMENT_NONE);
     g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
                              G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->vruler)->motion_notify_event),
                              data_window->vruler);
@@ -494,17 +494,21 @@ zoom_changed_cb(GtkWidget *data_view,
     gwy_data_window_update_title(data_window);
 }
 
-static void
+static gboolean
 color_axis_clicked_cb(GtkWidget *coloraxis,
                       GdkEventButton *event,
                       GtkWidget *data_window)
 {
     GtkWidget *menu;
 
+    if (event->button != 3)
+        return FALSE;
+
     menu = gwy_palette_menu(G_CALLBACK(palette_selected_cb), data_window);
     gtk_widget_show_all(menu);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
+    return FALSE;
 }
 
 static void
