@@ -4,9 +4,12 @@ include_HEADERS = \
 	gwydataviewlayer.h \
 	gwydatawindow.h \
 	gwygradsphere.h \
+	gwyhruler.h \
 	gwylayer-basic.h \
+	gwyruler.h \
 	gwyspherecoords.h \
-	gwyvectorshade.h
+	gwyvectorshade.h \
+	gwyvruler.h
 lib_LTLIBRARIES = libgwydgets.la
 
 noinst_PROGRAMS = main create-data
@@ -22,9 +25,12 @@ libgwydgets_la_SOURCES = \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
 	gwygradsphere.c \
+	gwyhruler.c \
 	gwylayer-basic.c \
+	gwyruler.c \
 	gwyspherecoords.c \
-	gwyvectorshade.c
+	gwyvectorshade.c \
+	gwyvruler.c
 
 main_SOURCES = main.c
 create_data_SOURCES = create-data.c

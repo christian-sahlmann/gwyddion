@@ -69,6 +69,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 
     klass->paint = NULL;
     klass->draw = NULL;
+    klass->wants_repaint = NULL;
 
     klass->button_press = NULL;
     klass->button_release = NULL;
@@ -137,14 +138,29 @@ gwy_data_view_layer_is_vector(GwyDataViewLayer *layer)
     return !layer_class->paint;
 }
 
+gboolean
+gwy_data_view_layer_wants_repaint(GwyDataViewLayer *layer)
+{
+    GwyDataViewLayerClass *layer_class;
+
+    if (!layer)
+        return FALSE;
+
+    layer_class = GWY_DATA_VIEW_LAYER_GET_CLASS(layer);
+    if (!layer_class->wants_repaint)
+        return FALSE;
+
+    return layer_class->wants_repaint(layer);
+}
+
 void
 gwy_data_view_layer_draw(GwyDataViewLayer *layer,
-                         GdkPixbuf *pixbuf)
+                         GdkDrawable *drawable)
 {
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_GET_CLASS(layer);
 
     g_return_if_fail(layer_class->draw);
-    layer_class->draw(layer, pixbuf);
+    layer_class->draw(layer, drawable);
 }
 
 GdkPixbuf*

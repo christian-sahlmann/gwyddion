@@ -28,6 +28,8 @@ typedef struct _GwyLayerBasicClass GwyLayerBasicClass;
 
 struct _GwyLayerBasic {
     GwyDataViewLayer parent_instance;
+
+    gboolean changed;
 };
 
 struct _GwyLayerBasicClass {

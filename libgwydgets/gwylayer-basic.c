@@ -19,6 +19,7 @@ static void       gwy_layer_basic_class_init        (GwyLayerBasicClass *klass);
 static void       gwy_layer_basic_init              (GwyLayerBasic *layer);
 static void       gwy_layer_basic_finalize          (GObject *object);
 static GdkPixbuf* gwy_layer_basic_paint             (GwyDataViewLayer *layer);
+static gboolean   gwy_layer_basic_wants_repaint     (GwyDataViewLayer *layer);
 
 /* Local data */
 
@@ -70,6 +71,7 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
     gobject_class->finalize = gwy_layer_basic_finalize;
 
     layer_class->paint = gwy_layer_basic_paint;
+    layer_class->wants_repaint = gwy_layer_basic_wants_repaint;
 }
 
 static void
@@ -98,6 +100,7 @@ gwy_layer_basic_new(GwyContainer *data)
 {
     GtkObject *object;
     GwyDataViewLayer *layer;
+    GwyLayerBasic *basic_layer;
     GwyDataField *data_field;
     gint width, height;
 
@@ -109,6 +112,7 @@ gwy_layer_basic_new(GwyContainer *data)
 
     object = g_object_new(GWY_TYPE_LAYER_BASIC, NULL);
     layer = (GwyDataViewLayer*)object;
+    basic_layer = (GwyLayerBasic*)layer;
 
     g_object_ref(data);
     layer->data = data;
@@ -126,6 +130,7 @@ gwy_layer_basic_new(GwyContainer *data)
     height = gwy_data_field_get_yres(data_field);
     layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
                                    BITS_PER_SAMPLE, width, height);
+    basic_layer->changed = TRUE;
 
     return object;
 }
@@ -143,9 +148,26 @@ gwy_layer_basic_paint(GwyDataViewLayer *layer)
                      gwy_container_get_object_by_name(layer->data,
                                                       "/0/data"));
     g_return_val_if_fail(data_field, layer->pixbuf);
-    gwy_pixfield_do(layer->pixbuf, data_field, layer->palette);
+    if (GWY_LAYER_BASIC(layer)->changed) {
+        GTimer *timer;
+
+        timer = g_timer_new();
+        gwy_pixfield_do(layer->pixbuf, data_field, layer->palette);
+        g_message("%s: %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+        g_timer_destroy(timer);
+        GWY_LAYER_BASIC(layer)->changed = FALSE;
+    }
 
     return layer->pixbuf;
+}
+
+static gboolean
+gwy_layer_basic_wants_repaint(GwyDataViewLayer *layer)
+{
+    g_return_val_if_fail(layer, FALSE);
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), FALSE);
+
+    return GWY_LAYER_BASIC(layer)->changed;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

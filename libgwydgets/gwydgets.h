@@ -4,6 +4,9 @@
 #include <libgwydgets/gwyspherecoords.h>
 #include <libgwydgets/gwygradsphere.h>
 #include <libgwydgets/gwyvectorshade.h>
+#include <libgwydgets/gwyruler.h>
+#include <libgwydgets/gwyhruler.h>
+#include <libgwydgets/gwyvruler.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydataviewlayer.h>
 #include <libgwydgets/gwylayer-basic.h>

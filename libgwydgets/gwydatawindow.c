@@ -3,6 +3,8 @@
 #include <gtk/gtk.h>
 
 #include "gwydatawindow.h"
+#include "gwyhruler.h"
+#include "gwyvruler.h"
 
 #define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
 
@@ -115,8 +117,8 @@ gwy_data_window_new(GwyDataView *data_view)
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
-    data_window->hruler = gtk_hruler_new();
-    gtk_ruler_set_range(GTK_RULER(data_window->hruler),
+    data_window->hruler = gwy_hruler_new();
+    gwy_ruler_set_range(GWY_RULER(data_window->hruler),
                         0.0, 100.0, 0.0, 100.0);
     gtk_table_attach(GTK_TABLE(table), data_window->hruler, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
@@ -124,8 +126,8 @@ gwy_data_window_new(GwyDataView *data_view)
                              G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->hruler)->motion_notify_event),
                              data_window->hruler);
 
-    data_window->vruler = gtk_vruler_new();
-    gtk_ruler_set_range(GTK_RULER(data_window->vruler),
+    data_window->vruler = gwy_vruler_new();
+    gwy_ruler_set_range(GWY_RULER(data_window->vruler),
                         0.0, 100.0, 0.0, 100.0);
     g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
                              G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->vruler)->motion_notify_event),
@@ -146,6 +148,11 @@ gwy_data_window_new(GwyDataView *data_view)
     gtk_widget_show_all(vbox);
 
     return GTK_WIDGET(data_window);
+}
+
+static void
+measure_changed(GtkWidget *widget, gpointer data)
+{
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

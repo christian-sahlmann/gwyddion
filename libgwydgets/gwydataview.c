@@ -352,7 +352,7 @@ gwy_data_view_size_allocate(GtkWidget *widget,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
 
-        gwy_data_view_make_pixmap(data_view);
+         gwy_data_view_make_pixmap(data_view);
     }
 }
 
@@ -411,6 +411,7 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
     GdkPixbuf *pixbuf, *src_pixbuf;
     gboolean copy_base_to_top = FALSE;
     gboolean is_vector = FALSE;
+    GTimer *timer = NULL;
 
     if (is_base)
         g_assert(layer);
@@ -431,6 +432,7 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
     pixbuf = data_view->pixbuf;
     /* we have to rescale base to final pixbuf once, at least at the end */
     if (copy_base_to_top) {
+        timer = g_timer_new();
         src_pixbuf = data_view->base_pixbuf;
         src_width = gdk_pixbuf_get_width(src_pixbuf);
         src_height = gdk_pixbuf_get_height(src_pixbuf);
@@ -441,6 +443,8 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
                          0.0, 0.0,
                          (double)width/src_width, (double)height/src_height,
                          GDK_INTERP_TILES);
+        g_message("%s: b->t %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+        g_timer_destroy(timer);
     }
     if (!layer)
         return FALSE;
@@ -456,6 +460,7 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
     src_width = gdk_pixbuf_get_width(src_pixbuf);
     src_height = gdk_pixbuf_get_height(src_pixbuf);
     if (to_base) {
+        timer = g_timer_new();
         /* compose to base, no need for scaling */
         pixbuf = data_view->base_pixbuf;
         width = gdk_pixbuf_get_width(pixbuf);
@@ -471,10 +476,15 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
                                  0.0, 0.0,
                                  1.0, 1.0,
                                  GDK_INTERP_TILES, 0x255);
+        g_message("%s: %s %gs",
+                  __FUNCTION__, is_base ? "copy" : "b1:1",
+                  g_timer_elapsed(timer, NULL));
+        g_timer_destroy(timer);
         return TRUE;
     }
     /* compose to scaled */
     g_assert(!is_base);
+    timer = g_timer_new();
     pixbuf = data_view->pixbuf;
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
@@ -483,6 +493,8 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
                          0.0, 0.0,
                          (double)width/src_width, (double)height/src_height,
                          GDK_INTERP_TILES, 0x255);
+    g_message("%s: sZ:Z %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+    g_timer_destroy(timer);
     return FALSE;
 }
 
@@ -490,14 +502,22 @@ static void
 gwy_data_view_paint(GwyDataView *data_view)
 {
     gboolean to_base = TRUE;
+    GTimer *timer = NULL;
 
+    timer = g_timer_new();
     to_base = gwy_data_view_paint_layer(data_view, data_view->base_layer,
                                         to_base, TRUE, FALSE);
+    g_message("%s: base %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+    g_timer_reset(timer);
     /* there could be any number of these */
     to_base = gwy_data_view_paint_layer(data_view, data_view->alpha_layer,
                                         to_base, FALSE, FALSE);
+    g_message("%s: alpha %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+    g_timer_reset(timer);
     to_base = gwy_data_view_paint_layer(data_view, data_view->top_layer,
                                         to_base, FALSE, TRUE);
+    g_message("%s: top %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+    g_timer_destroy(timer);
 }
 
 static gboolean
@@ -518,7 +538,10 @@ gwy_data_view_expose(GtkWidget *widget,
 
     data_view = GWY_DATA_VIEW(widget);
     /* FIXME: ask the layers, if they want to repaint themselves */
-    gwy_data_view_paint(data_view);
+    if (gwy_data_view_layer_wants_repaint(data_view->base_layer)
+        || gwy_data_view_layer_wants_repaint(data_view->alpha_layer)
+        || gwy_data_view_layer_wants_repaint(data_view->top_layer))
+        gwy_data_view_paint(data_view);
 
     xc = (widget->allocation.width
           - gdk_pixbuf_get_width(data_view->pixbuf))/2;

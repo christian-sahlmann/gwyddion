@@ -42,7 +42,8 @@ struct _GwyDataViewLayerClass {
 
     /* renderers */
     GdkPixbuf* (*paint)(GwyDataViewLayer *layer);
-    void (*draw)(GwyDataViewLayer *layer, GdkPixbuf *pixbuf);
+    void (*draw)(GwyDataViewLayer *layer, GdkDrawable *drawable);
+    gboolean (*wants_repaint)(GwyDataViewLayer *layer);
     /* events */
     gboolean (*button_press)(GwyDataViewLayer *layer, GdkEventButton *event);
     gboolean (*button_release)(GwyDataViewLayer *layer, GdkEventButton *event);
@@ -54,8 +55,9 @@ struct _GwyDataViewLayerClass {
 GType            gwy_data_view_layer_get_type        (void) G_GNUC_CONST;
 
 gboolean         gwy_data_view_layer_is_vector       (GwyDataViewLayer *layer) G_GNUC_CONST;
+gboolean         gwy_data_view_layer_wants_repaint   (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_draw            (GwyDataViewLayer *layer,
-                                                      GdkPixbuf *pixbuf);
+                                                      GdkDrawable *drawable);
 GdkPixbuf*       gwy_data_view_layer_paint           (GwyDataViewLayer *layer);
 gboolean         gwy_data_view_layer_button_press    (GwyDataViewLayer *layer,
                                                       GdkEventButton *event);

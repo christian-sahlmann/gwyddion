@@ -118,7 +118,7 @@ main(int argc, char *argv[])
 
     gtk_init(&argc, &argv);
 
-    /*vector_shade_test();*/
+    //vector_shade_test();
     data_view_test();
     gtk_main();
 
