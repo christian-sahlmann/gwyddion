@@ -150,8 +150,9 @@ main(int argc, char *argv[])
                                                "pdf/f"));
 
     ser = gwy_container_get_object_by_name(GWY_CONTAINER(container), "ser");
+    gwy_test_ser_set_radius(GWY_TEST_SER(ser), 2.2);
     g_object_unref(ser);
-    g_assert(G_OBJECT(ser)->ref_count == 1);
+    g_assert(ser->ref_count == 1);
 
     return 0;
 }

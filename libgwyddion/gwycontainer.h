@@ -21,6 +21,10 @@ extern "C" {
 typedef struct _GwyContainer GwyContainer;
 typedef struct _GwyContainerClass GwyContainerClass;
 
+typedef void (*GwyContainerNotifyFunc)(GwyContainer *container,
+                                       const guchar *path,
+                                       gpointer user_data);
+
 typedef struct {
     GQuark key;
     GValue *value;
@@ -32,6 +36,9 @@ struct _GwyContainer {
 
     GHashTable *values;
     GHashTable *watching;
+    GHashTable *objects;
+    gint watch_freeze;
+    gulong last_wid;
 };
 
 struct _GwyContainerClass {
@@ -51,7 +58,7 @@ void       gwy_container_set_value          (GwyContainer *container,
                                              ...);
 void       gwy_container_set_value_by_name  (GwyContainer *container,
                                              ...);
-gboolean   gwy_container_delete             (GwyContainer *container,
+gboolean   gwy_container_remove             (GwyContainer *container,
                                              GQuark key);
 gboolean   gwy_container_foreach            (GwyContainer *container,
                                              const guchar *prefix,
@@ -94,10 +101,17 @@ void       gwy_container_set_object         (GwyContainer *container,
 GObject*   gwy_container_get_object         (GwyContainer *container,
                                              GQuark key);
 
+gulong     gwy_container_watch              (GwyContainer *container,
+                                             const guchar *path,
+                                             GwyContainerNotifyFunc callback,
+                                             gpointer user_data);
+void       gwy_container_freeze_watch       (GwyContainer *container);
+void       gwy_container_thaw_watch         (GwyContainer *container);
+
 #define gwy_container_value_type_by_name(c,n) gwy_container_value_type(c,g_quark_try_string(n))
 #define gwy_container_contains_by_name(c,n) gwy_container_contains(c,g_quark_try_string(n))
 #define gwy_container_get_value_by_name(c,n) gwy_container_get_value(c,g_quark_try_string(n))
-#define gwy_container_delete_by_name(c,n) gwy_container_delete(c,g_quark_try_string(n))
+#define gwy_container_remove_by_name(c,n) gwy_container_remove(c,g_quark_try_string(n))
 #define gwy_container_set_boolean_by_name(c,n,v) gwy_container_set_boolean(c,g_quark_from_string(n),v)
 #define gwy_container_get_boolean_by_name(c,n) gwy_container_get_boolean(c,g_quark_try_string(n))
 #define gwy_container_set_uchar_by_name(c,n,v) gwy_container_set_uchar(c,g_quark_from_string(n),v)

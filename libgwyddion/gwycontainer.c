@@ -13,6 +13,18 @@ typedef struct {
     gsize size;
 } SerializeData;
 
+typedef struct {
+    gulong wid;
+    GwyContainerNotifyFunc callback;
+    gpointer user_data;
+} WatchData;
+
+typedef struct {
+    GwyContainer *container;
+    GQuark key;
+    gulong hid;
+} ObjectWatch;
+
 static void     gwy_container_serializable_init  (gpointer giface);
 static void     gwy_container_class_init         (GwyContainerClass *klass);
 static void     gwy_container_init               (GwyContainer *container);
@@ -46,6 +58,17 @@ static GObject* gwy_container_deserialize        (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
 
+static void     value_changed                    (GwyContainer *container,
+                                                  GQuark key);
+static void     remove_object_callback           (GwyContainer *container,
+                                                  GValue *value);
+static void     objects_remove_object_callback   (gpointer p,
+                                                  ObjectWatch *owatch);
+static void     setup_object_callback            (GwyContainer *container,
+                                                  GQuark key,
+                                                  GValue *value);
+static void     watchable_value_changed          (GObject *object,
+                                                  ObjectWatch *owatch);
 
 
 GType
@@ -122,6 +145,9 @@ gwy_container_init(GwyContainer *container)
     #endif
     container->values = NULL;
     container->watching = NULL;
+    container->objects = NULL;
+    container->watch_freeze = 0;
+    container->last_wid = 1;
 }
 
 static void
@@ -133,8 +159,13 @@ gwy_container_finalize(GObject *obj)
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
 
-    g_hash_table_destroy(container->values);
+    /* FIXME: doens't free memory? */
     g_hash_table_destroy(container->watching);
+    g_hash_table_foreach(container->objects,
+                         (GHFunc)objects_remove_object_callback,
+                         NULL);
+    g_hash_table_destroy(container->objects);
+    g_hash_table_destroy(container->values);
 }
 
 /**
@@ -157,7 +188,9 @@ gwy_container_new(void)
     /* assume GQuarks are good enough hash keys */
     container->values = g_hash_table_new_full(NULL, NULL,
                                               NULL, value_destroy_func);
-    container->watching = g_hash_table_new(NULL, NULL);
+    container->watching = g_hash_table_new_full(NULL, NULL, NULL, g_free);
+    /* the callback removal has to be done separately */
+    container->objects = g_hash_table_new_full(NULL, NULL, NULL, g_free);
 
     return (GObject*)(container);
 }
@@ -209,6 +242,78 @@ gwy_container_contains(GwyContainer *container, GQuark key)
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
     return g_hash_table_lookup(container->values,
                                GUINT_TO_POINTER(key)) != NULL;
+}
+
+static void
+objects_remove_object_callback(gpointer p, ObjectWatch *owatch)
+{
+    g_signal_handler_disconnect(p, owatch->hid);
+}
+
+static void
+remove_object_callback(GwyContainer *container, GValue *value)
+{
+    gpointer p;
+    ObjectWatch *owatch;
+
+    p = g_value_peek_pointer(value);
+    owatch = (ObjectWatch*)g_hash_table_lookup(container->objects, p);
+    g_assert(owatch);
+    g_signal_handler_disconnect(p, owatch->hid);
+    g_hash_table_remove(container->objects, p);  /* also frees owatch */
+}
+
+static void
+watchable_value_changed(GObject *object, ObjectWatch *owatch)
+{
+    g_assert(g_hash_table_lookup(GWY_CONTAINER(owatch->container)->objects,
+                                 object));
+    value_changed(owatch->container, owatch->key);
+}
+
+static void
+setup_object_callback(GwyContainer *container, GQuark key, GValue *value)
+{
+    GObject *obj;
+    ObjectWatch *owatch;
+
+    obj = (GObject*)g_value_peek_pointer(value);
+    owatch = g_new(ObjectWatch, 1);
+    owatch->container = container;
+    owatch->key = key;
+    owatch->hid = g_signal_connect_data(obj, "value_changed",
+                                        G_CALLBACK(watchable_value_changed),
+                                        owatch, NULL, 0);
+    g_hash_table_insert(container->objects, obj, owatch);
+}
+
+/**
+ * gwy_container_delete:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Removes a value identified by @key from @container.
+ *
+ * Returns: %TRUE if there was such a value and was removed.
+ **/
+gboolean
+gwy_container_remove(GwyContainer *container, GQuark key)
+{
+    GValue *value;
+
+    g_return_val_if_fail(key, FALSE);
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    /* TODO: notify */
+
+    value = g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!value)
+        return FALSE;
+
+    if (G_VALUE_HOLDS_OBJECT(value))
+        remove_object_callback(container, value);
+
+    return g_hash_table_remove(container->values,
+                               GUINT_TO_POINTER(key));
 }
 
 /**
@@ -478,7 +583,7 @@ gwy_container_try_set_one(GwyContainer *container,
                           gboolean do_replace,
                           gboolean do_create)
 {
-    GValue *p;
+    GValue *old;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
     g_return_val_if_fail(key, FALSE);
@@ -502,21 +607,29 @@ gwy_container_try_set_one(GwyContainer *container,
                              FALSE);
     }
 
-    p = (GValue*)g_hash_table_lookup(container->values, GINT_TO_POINTER(key));
-    if (p) {
+    old = (GValue*)g_hash_table_lookup(container->values, GINT_TO_POINTER(key));
+    if (old) {
         if (!do_replace)
             return FALSE;
-        g_assert(G_IS_VALUE(p));
-        g_value_unset(p);
+        g_assert(G_IS_VALUE(old));
+        if (G_VALUE_HOLDS_OBJECT(old))
+            remove_object_callback(container, old);
+        g_value_unset(old);
     }
     else {
         if (!do_create)
             return FALSE;
-        p = g_new0(GValue, 1);
-        g_hash_table_insert(container->values, GINT_TO_POINTER(key), p);
+        old = g_new0(GValue, 1);
+        g_hash_table_insert(container->values, GINT_TO_POINTER(key), old);
     }
-    g_value_init(p, G_VALUE_TYPE(value));
-    g_value_copy(value, p);
+    g_value_init(old, G_VALUE_TYPE(value));
+    g_value_copy(value, old);
+
+    /* set up a watch for "value_changed" for objects */
+    if (G_VALUE_HOLDS_OBJECT(value))
+        setup_object_callback(container, key, value);
+
+    value_changed(container, key);
 
     return TRUE;
 }
@@ -536,10 +649,6 @@ gwy_container_try_setv(GwyContainer *container,
                                                       values[i].value,
                                                       do_replace,
                                                       do_create);
-
-    /* TODO:
-    gwy_container_item_changed(container, key);
-    */
 }
 
 static void
@@ -950,6 +1059,96 @@ gwy_container_deserialize(const guchar *buffer,
     }
 
     return (GObject*)container;
+}
+
+/**
+ * gwy_container_freeze_watch:
+ * @container: A #GwyContainer.
+ *
+ * Freezes value update notifications for @container.
+ *
+ * They are collected until gwy_container_thaw_watch() is called (it has to be
+ * called the same number of times as gwy_container_freeze_watch()).
+ **/
+void
+gwy_container_freeze_watch(GwyContainer *container)
+{
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    g_return_if_fail(GWY_IS_CONTAINER(container));
+    g_assert(container->watch_freeze >= 0);
+    container->watch_freeze++;
+}
+
+/**
+ * gwy_container_thaw_watch:
+ * @container: A #GwyContainer.
+ *
+ * Reverts the effect of gwy_container_freeze_watch() causing collected
+ * value change notifications to be performed.
+ *
+ * Due to grouping the number of notifications can be lower than the number of
+ * actual value changes.  E.g., when you are watching "foo", and both
+ * "foo/bar" and "foo/baz" changes in the freezed state, only one notification
+ * is performed after thawing @container.
+ **/
+void
+gwy_container_thaw_watch(GwyContainer *container)
+{
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    g_return_if_fail(GWY_IS_CONTAINER(container));
+    g_assert(container->watch_freeze > 0);
+    if (container->watch_freeze) {
+        container->watch_freeze--;
+        if (!container->watch_freeze) {
+            /* TODO: do the notifications */
+        }
+    }
+}
+
+gulong
+gwy_container_watch(GwyContainer *container,
+                    const guchar *path,
+                    GwyContainerNotifyFunc callback,
+                    gpointer user_data)
+{
+    GList *callbacks;
+    GQuark key;
+    WatchData *wdata;
+
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
+    g_return_val_if_fail(path, 0);
+    g_return_val_if_fail(callback, 0);
+
+    wdata = g_new(WatchData, 1);
+    wdata->wid = container->last_wid++;
+    wdata->callback = callback;
+    wdata->user_data = user_data;
+
+    key = g_quark_from_string(path);
+    /* FIXME: we may need _steal(), if we set up a value freeing function
+     * for container->watching */
+    callbacks = g_hash_table_lookup(container->watching, GUINT_TO_POINTER(key));
+    callbacks = g_list_append(callbacks, wdata);
+    g_hash_table_insert(container->watching, GUINT_TO_POINTER(key), callbacks);
+
+    return wdata->wid;
+}
+
+static void
+value_changed(GwyContainer *container,
+              GQuark key)
+{
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s: [%p] %s",
+          __FUNCTION__, container, g_quark_to_string(key));
+    #endif
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -163,7 +163,7 @@ gwy_serializable_deserialize(const guchar *buffer,
  * gwy_serialize_pack:
  * @buffer: A buffer to which the serialized values should be appended.
  * @size: Current size of @buffer, new size is returned here.
- * @templ: Template string, see below.
+ * @templ: A template string.
  * @...: A list of atomic values to serialize.
  *
  * Serializes a list of plain atomic types.

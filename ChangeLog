@@ -1,4 +1,13 @@
 
+Tue Sep  9 21:22:30 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwyddion/gwycontainer.c:
+      partially implemented value change watching, no user callbacks are
+      actually called yet, but callbacks are set on container items
+
+Sun Sep  7 08:46:28 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwyddion/gwycontainer.c (gwy_container_remove,
+      gwy_container_freeze_watch, gwy_container_thaw_watch): added
+
 Sun Sep  7 00:00:10 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
     * libgwydgets/gwygradsphere.c (gwy_grad_sphere_get_update_policy): added
     * libgwydgets/gwyvectorshade.c (gwy_vector_shade_get_sphere_coords,
