@@ -46,9 +46,9 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 # The world is cruel.
 if test -z "$NO_AUTOCONF"; then
   AC_VERSION=`autoconf --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
-  if test "$AC_VERSION" '<' "2.52"; then
+  if test "$AC_VERSION" '<' "2.59"; then
     echo
-    echo "**ERROR**: You need at least autoconf-2.52 installed to re-generate"
+    echo "**ERROR**: You need at least autoconf-2.59 installed to re-generate"
     echo "all the $PROJECT Makefiles."
     echo "Download the appropriate package for your distribution,"
     echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/."

@@ -106,7 +106,7 @@ available at http://trific.ath.cx/software/gwyddion/ (ATM).
 
 Prerequisities:
 - everything needed for compilation from tarballs
-- GNU autoconf 2.53 or newer
+- GNU autoconf 2.59 or newer
 - GNU automake 1.6 or newer
 - GNU libtool 1.4 or newer
 - Python-2.2 or newer
