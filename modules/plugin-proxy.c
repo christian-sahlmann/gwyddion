@@ -556,9 +556,12 @@ file_plugin_proxy_load(const gchar *filename,
         g_warning("Cannot run plug-in %s: %s",
                     info->file,
                     err ? err->message : "it returned garbage.");
+        data = NULL;
+        ok = FALSE;
     }
-    if (!gwy_container_gis_object_by_name(data, "/0/data", &dfield)
-        || !GWY_IS_DATA_FIELD(dfield)) {
+    if (data
+        && (!gwy_container_gis_object_by_name(data, "/0/data", &dfield)
+            || !GWY_IS_DATA_FIELD(dfield))) {
         g_warning("Output from %s plug-in contains no \"/0/data\" data field",
                   info->file);
         gwy_object_unref(data);
@@ -1077,6 +1080,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
 
 fail:
     gwy_container_remove_by_prefix(data, NULL);
+    g_object_unref(data);
     return NULL;
 }
 
