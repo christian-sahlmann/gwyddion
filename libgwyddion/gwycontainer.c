@@ -2322,6 +2322,13 @@ fail:
 /************************** Documentation ****************************/
 
 /**
+ * GwyContainer:
+ *
+ * The #GwyContainer struct contains private data only and should be accessed
+ * using the functions below.
+ **/
+
+/**
  * GWY_CONTAINER_PATHSEP:
  *
  * Path separator to be used for hierarchical structures in the container.

@@ -465,6 +465,13 @@ gwy_si_unit_value_format_free(GwySIValueFormat *format)
 /************************** Documentation ****************************/
 
 /**
+ * GwySIUnit:
+ *
+ * The #GwySIUnit struct contains private data only and should be accessed
+ * using the functions below.
+ **/
+
+/**
  * GwySIValueFormat:
  * @magnitude: Number to divide a quantity by (a power of 1000).
  * @precision: Number of decimal places to format a quantity to.
