@@ -207,14 +207,20 @@ static gint
 normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve)
 {
     gint i, j;
+    gboolean skip_first_point = FALSE;
+    const gchar *func_name;
 
-    if (curve >= args->parent_nofcurves) return 0;
+    if (curve >= args->parent_nofcurves)
+        return 0;
 
     gwy_data_line_resample(xdata, args->parent_ns[curve],
                            GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(ydata, args->parent_ns[curve],
                            GWY_INTERPOLATION_NONE);
 
+    func_name = gwy_math_nlfit_preset_get_function_name(args->fitfunc);
+    if (strcmp(func_name, "Gaussian (PSDF)") == 0)  /* || something */
+        skip_first_point = TRUE;
 
     j = 0;
     for (i = 0; i < xdata->res; i++)
@@ -223,10 +229,8 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
              && args->parent_xs[curve][i] <= args->to)
             || (args->from == args->to))
         {
-            /* TODO:
-            if (args->function_type == GWY_NLFIT_PRESET_GAUSSIAN_PSDF && i == 0)
+            if (skip_first_point)
                 continue;
-                */
 
             xdata->data[j] = args->parent_xs[curve][i];
             ydata->data[j] = args->parent_ys[curve][i];
@@ -300,10 +304,8 @@ fit_dialog(FitArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
-    /* TODO
     controls.selector = gwy_option_menu_nlfitpreset(G_CALLBACK(type_changed_cb),
                                                     args, args->function_type);
-                                                    */
     gtk_container_add(GTK_CONTAINER(vbox), controls.selector);
 
     controls.equation = gtk_label_new("f(x) =");
@@ -723,8 +725,7 @@ type_changed_cb(GObject *item, FitArgs *args)
 {
 
     args->function_type =
-        GPOINTER_TO_INT(g_object_get_data(item,
-                                            "fit-type"));
+        GPOINTER_TO_INT(g_object_get_data(item, "fit-preset"));
 
     args->fitfunc = gwy_math_nlfit_get_preset(args->function_type);
     dialog_update(pcontrols, args);
@@ -1075,47 +1076,6 @@ create_results_window(FitArgs *args)
     g_signal_connect(window, "response", G_CALLBACK(gtk_widget_destroy), NULL);
     gtk_widget_show_all(window);
 }
-
-/**
- * gwy_option_menu_nlfitpreset:
- * @callback: A callback called when a menu item is activated (or %NULL for
- * @cbdata: User data passed to the callback.
- * @current: Fit preset mode selected
- *           (or -1 to use what happens to appear first).
- *
- * Creates a #GtkOptionMenu of available fit presets
- *
- * It sets object data "fit-type" to line fit
- * for each menu item (use GPOINTER_TO_INT() when retrieving it).
- *
- * Returns: The newly created option menu as #GtkWidget.
- **/
-/*
-GtkWidget*
-gwy_option_menu_nlfitpreset(GCallback callback,
-                       gpointer cbdata,
-                       GwyNLFitPresetType current)
-{
-    static const GwyEnum entries[] = {
-        { "Gaussian",             GWY_NLFIT_PRESET_GAUSSIAN, },
-        { "Gaussian (PSDF)",      GWY_NLFIT_PRESET_GAUSSIAN_PSDF, },
-        { "Gaussian (ACF)",       GWY_NLFIT_PRESET_GAUSSIAN_ACF, },
-        { "Gaussian (HHCF)",      GWY_NLFIT_PRESET_GAUSSIAN_HHCF, },
-        { "Exponential",             GWY_NLFIT_PRESET_EXPONENTIAL, },
-        { "Exponential (PSDF)",      GWY_NLFIT_PRESET_EXPONENTIAL_PSDF, },
-        { "Exponential (ACF)",       GWY_NLFIT_PRESET_EXPONENTIAL_ACF, },
-        { "Exponential (HHCF)",      GWY_NLFIT_PRESET_EXPONENTIAL_HHCF, },
-        { "Polynom (order 0)",       GWY_NLFIT_PRESET_POLY_0, },
-        { "Polynom (order 1)",       GWY_NLFIT_PRESET_POLY_1, },
-        { "Polynom (order 2)",       GWY_NLFIT_PRESET_POLY_2, },
-        { "Polynom (order 3)",       GWY_NLFIT_PRESET_POLY_3, },
-    };
-
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "fit-type", callback, cbdata,
-                                  current);
-}
-*/
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
