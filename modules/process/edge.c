@@ -88,7 +88,7 @@ laplacian(GwyContainer *data, GwyRunType run)
     gdouble avg;
     gint i, j;
 
-    g_assert(run & GRADIENT_RUN_MODES);
+    g_assert(run & EDGE_RUN_MODES);
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
@@ -137,7 +137,7 @@ canny(GwyContainer *data, GwyRunType run)
     GObject *shadefield;
     GwyDataField *dfield;
 
-    g_assert(run & GRADIENT_RUN_MODES);
+    g_assert(run & EDGE_RUN_MODES);
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
