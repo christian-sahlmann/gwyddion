@@ -233,7 +233,7 @@ gwy_load_modules_in_dir(GDir *gdir,
                 g_critical("Cannot unload module %s: %s",
                            modulename, g_module_error());
         }
-
+        g_free(modulename);
     }
 }
 
