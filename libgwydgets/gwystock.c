@@ -89,7 +89,16 @@ guess_pixmap_path(void)
 
     /* try argv[0] */
     p = g_get_prgname();
-    b = g_path_get_dirname(p);
+    if (!g_path_is_absolute(p)) {
+        b = g_get_current_dir();
+        q = g_build_filename(b, p, NULL);
+        g_free(p);
+        g_free(b);
+        p = q;
+    }
+    q = g_path_get_dirname(p);
+    b = g_path_get_dirname(q);
+    g_free(q);
     if (g_path_is_absolute(b)) {
         p = g_build_filename(b, "pixmaps", NULL);
         if (g_file_test(p, G_FILE_TEST_IS_DIR)) {
@@ -100,11 +109,13 @@ guess_pixmap_path(void)
         g_free(p);
     }
 
-    /* try to find gwyddion in path */
+    /* try to find gwyddion in path, this is namely for windows */
     p = g_find_program_in_path("gwyddion");
     if (p) {
         if (g_path_is_absolute(p)) {
-            q = g_path_get_dirname(p);
+            b = g_path_get_dirname(p);
+            q = g_path_get_dirname(b);
+            g_free(b);
             g_free(p);
             p = g_build_filename(q, "pixmaps", NULL);
             g_free(q);
