@@ -38,8 +38,8 @@ x_data_to_pixel(GwyGrapherActiveAreaSpecs *specs, gdouble data)
 static gint 
 y_data_to_pixel(GwyGrapherActiveAreaSpecs *specs, gdouble data)
 {
-    return specs->ymin + specs->height - (gint)(data - specs->real_ymin)
-         /(specs->real_height)*((gdouble)specs->height-1);
+    return specs->ymin + specs->height - (gint)((data - specs->real_ymin)
+         /(specs->real_height)*((gdouble)specs->height-1));
 }
 
 void
@@ -69,7 +69,7 @@ gwy_grapher_draw_curve (GdkDrawable *drawable,
             xn = x_data_to_pixel(specs, cmodel->xdata[i+1]);
             yn = y_data_to_pixel(specs, cmodel->ydata[i+1]);
         }
-        
+      
         if (i>0 && i<(cmodel->n-1) && 
             (cmodel->type == GWY_GRAPHER_CURVE_LINE || cmodel->type == GWY_GRAPHER_CURVE_LINE_POINTS))
                  gwy_grapher_draw_line(drawable, gc,

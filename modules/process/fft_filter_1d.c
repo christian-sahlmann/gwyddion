@@ -452,15 +452,17 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 
     if (args->weights == NULL) args->weights = gwy_data_line_new(dline->res, dline->res, FALSE);
     gwy_data_line_fill(args->weights, 1);
+    gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
     
-    gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
     for (i=0; i<MAX_PREV; i++)
     {
         xdata[i] = ((gdouble)i)/MAX_PREV;
     }
+    gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
     
     cmodel = gwy_grapher_curve_model_new();
     cmodel->xdata = xdata;
+    cmodel->type = GWY_GRAPHER_CURVE_LINE;
     cmodel->ydata = dline->data;
     cmodel->n = MAX_PREV;
     cmodel->description = g_string_new("PSDF");
@@ -469,7 +471,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gwy_grapher_model_add_curve(controls->gmodel, cmodel);
     gwy_grapher_clear_selection(controls->graph);
    
-    update_view(controls, args);
+    if (args->update) update_view(controls, args);
     
     gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));
 }
@@ -483,26 +485,31 @@ graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
 
     /*get graph selection*/
     nofselection = gwy_grapher_get_selection_number(pcontrols->graph);
-    if (nofselection == 0) return;
-    
-    selection = (gdouble *)g_malloc(2*nofselection*sizeof(gdouble));
-    gwy_grapher_get_selection(pcontrols->graph, selection);
-
-    /*setup weights for inverse FFT computation*/
-    if (args->weights == NULL) args->weights = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
-    gwy_data_line_fill(args->weights, 0);
-
-    for (i = 0; i < 2*nofselection; i++)
+    if (nofselection == 0)
     {
-        beg = selection[i];
-        end = selection[i+1];
-        gwy_data_line_part_fill(args->weights, 
+        restore_ps(pcontrols, args);
+    }
+    else
+    {
+        selection = (gdouble *)g_malloc(2*nofselection*sizeof(gdouble));
+        gwy_grapher_get_selection(pcontrols->graph, selection);
+    
+        /*setup weights for inverse FFT computation*/
+        if (args->weights == NULL) args->weights = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
+        gwy_data_line_fill(args->weights, 0);
+
+        for (i = 0; i < 2*nofselection; i++)
+        {
+            beg = selection[i];
+            end = selection[i+1];
+            gwy_data_line_part_fill(args->weights, 
                                     MAX(0, args->weights->res*beg),
                                     MIN(args->weights->res, args->weights->res*end),
                                     1);
+     
+        }
+        if (args->update) update_view(pcontrols, args);
     }
-    
-    update_view(pcontrols, args);
 }
 
 
@@ -561,24 +568,28 @@ static void
 suppress_changed_cb(GObject *item, Fftf1dArgs *args)
 {
     args->suppress = GPOINTER_TO_INT(g_object_get_data(item, "suppress-type"));
+    update_view(pcontrols, args);
 }
 
 static void        
 view_type_changed_cb(GObject *item, Fftf1dArgs *args)
 {
     args->view_type = GPOINTER_TO_INT(g_object_get_data(item, "view-type"));
+    update_view(pcontrols, args);
 }
 
 static void        
 direction_changed_cb(GObject *item, Fftf1dArgs *args)
 {
     args->direction = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
+    restore_ps(pcontrols, args);
 }
 
 static void        
 interpolation_changed_cb(GObject *item, Fftf1dArgs *args)
 {
     args->interpolation = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+    update_view(pcontrols, args);
 }
 
 

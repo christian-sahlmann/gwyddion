@@ -510,24 +510,34 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     iresult_field = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field, TRUE));
      
     dline = GWY_DATA_LINE(gwy_data_line_new(data_field->xres, data_field->xres, FALSE));
+   
+    if (orientation == GTK_ORIENTATION_VERTICAL) gwy_data_field_rotate(data_field, 90, interpolation);
     
     gwy_data_field_xfft(data_field, result_field,
                     hlp_dfield, hlp_idfield,
                     gwy_data_line_fft_hum, GWY_WINDOWING_RECT,
                     1, interpolation,
                     FALSE, FALSE);
+
+    if (orientation == GTK_ORIENTATION_VERTICAL) gwy_data_field_rotate(data_field, -90, interpolation);
     
-    gwy_data_line_resample(weights, hlp_dfield->xres, interpolation);
+    gwy_data_line_resample(weights, hlp_dfield->xres/2, interpolation);
     for (i=0; i<hlp_dfield->yres; i++)
     {
         gwy_data_field_get_row(hlp_dfield, dline, i);
-        for (j=0; j<dline->res; j++)
+        for (j=0; j<weights->res; j++)
+        {
             dline->data[j] *= weights->data[j];
+            dline->data[dline->res - j - 1] *= weights->data[j];
+        }
         gwy_data_field_set_row(hlp_dfield, dline, i);
 
         gwy_data_field_get_row(hlp_idfield, dline, i);
-        for (j=0; j<dline->res; j++)
+        for (j=0; j<weights->res; j++)
+        {
             dline->data[j] *= weights->data[j];
+            dline->data[dline->res - j - 1] *= weights->data[j];
+        }
         gwy_data_field_set_row(hlp_idfield, dline, i);
     }
    
@@ -536,6 +546,8 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                     gwy_data_line_fft_hum, GWY_WINDOWING_RECT,
                     -1, interpolation,
                     FALSE, FALSE);
+    
+    if (orientation == GTK_ORIENTATION_VERTICAL) gwy_data_field_rotate(result_field, -90, interpolation);
     
     g_object_unref(idata_field);
     g_object_unref(hlp_dfield);

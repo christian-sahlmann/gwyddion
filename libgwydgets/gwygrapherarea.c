@@ -548,6 +548,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
             selection = gwy_grapher_area_find_selection(area, dx, dy);
             if (selection >= 0)
                 g_array_remove_index(area->areasdata->data_areas, selection);
+            gwy_grapher_area_signal_selected(area);
         }
         gtk_widget_queue_draw(GTK_WIDGET(area));
     }

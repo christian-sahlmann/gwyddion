@@ -314,7 +314,7 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
     {
         for (i = 0; i < grapher->area->areasdata->data_areas->len; i++)
         {
-            data_area = (GwyGrapherDataArea *)(grapher->area->areasdata->data_areas->data + i);
+            data_area = &g_array_index(grapher->area->areasdata->data_areas, GwyGrapherDataArea, i);
             selection[2*i] = data_area->xmin;
             selection[2*i + 1] = data_area->xmax;
         }
