@@ -32,10 +32,7 @@
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 typedef struct {
-    GtkWidget *x;
-    GtkWidget *y;
-    GtkWidget *val;
-    GtkObject *radius;
+    gint ble;
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
@@ -81,7 +78,7 @@ module_register(const gchar *name)
         "grain_remove_manually",
         "gwy_pointer_measure",
         "Grain (mask) removal tool.",
-        0,
+        98,
         &use,
     };
 
@@ -119,7 +116,6 @@ dialog_create(GwyUnitoolState *state)
     gint radius;
 
     gwy_debug("");
-    controls = (ToolControls*)state->user_data;
 
     dialog = gtk_dialog_new_with_buttons(_("Grain remove tool"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_hide(dialog);
@@ -128,46 +124,13 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(2, 3, FALSE);
+    table = gtk_table_new(2, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>X</b>"));
+    label = gtk_label_new("This tool has no options.");
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Y</b>"));
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Value</b>"));
-    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
-
-    label = controls->x = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, 0, 0, 2, 2);
-    label = controls->y = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, 0, 0, 2, 2);
-    label = controls->val = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 1, 2,
-                        GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
-    table = gtk_table_new(1, 3, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
-
-    settings = gwy_app_settings_get();
-    if (gwy_container_contains_by_name(settings, radius_key))
-        radius = gwy_container_get_int32_by_name(settings, radius_key);
-    else
-        radius = 1;
-    controls->radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
-    gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
-                                controls->radius);
-    g_signal_connect_swapped(controls->radius, "value_changed",
-                             G_CALLBACK(dialog_update), state);
 
     return dialog;
 }
@@ -178,20 +141,17 @@ dialog_update(GwyUnitoolState *state,
 {
     GwyContainer *data;
     GwyDataField *dfield;
-    ToolControls *controls;
     GwyDataViewLayer *layer;
     gdouble value, xy[2];
     gboolean is_visible, is_selected;
-    gint radius;
 
     gwy_debug("");
+    printf("Uaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 
-    controls = (ToolControls*)state->user_data;
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
 
     is_visible = state->is_visible;
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
@@ -199,32 +159,12 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     if (is_selected) {
-        gwy_unitool_update_label(state->coord_format, controls->x, xy[0]);
-        gwy_unitool_update_label(state->coord_format, controls->y, xy[1]);
-        value = gwy_unitool_get_z_average(dfield, xy[0], xy[1], radius);
-        gwy_unitool_update_label(state->value_format, controls->val, value);
-    }
-    else {
-        gtk_label_set_text(GTK_LABEL(controls->x), "");
-        gtk_label_set_text(GTK_LABEL(controls->y), "");
-        gtk_label_set_text(GTK_LABEL(controls->val), "");
     }
 }
 
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
-    GwyContainer *settings;
-    ToolControls *controls;
-    gint radius;
-
-    controls = (ToolControls*)state->user_data;
-    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
-    radius = CLAMP(radius, 1, 16);
-    settings = gwy_app_settings_get();
-    gwy_container_set_int32_by_name(settings, radius_key, radius);
-
-    memset(state->user_data, 0, sizeof(ToolControls));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
