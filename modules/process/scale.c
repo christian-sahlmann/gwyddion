@@ -9,8 +9,8 @@
 #include <app/settings.h>
 #include <app/file.h>
 
-#define GWY_RUN_ANY \
-    (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define SCALE_RUN_MODES \
+    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
@@ -82,7 +82,7 @@ module_register(const gchar *name)
         "scale",
         "/_Basic Operations/Scale...",
         &scale,
-        GWY_RUN_ANY,
+        SCALE_RUN_MODES,
     };
 
     gwy_process_func_register(name, &scale_func_info);
@@ -98,7 +98,7 @@ scale(GwyContainer *data, GwyRunType run)
     ScaleArgs args;
     gboolean ok;
 
-    g_assert(run & GWY_RUN_ANY);
+    g_assert(run & SCALE_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = scale_defaults;
@@ -106,7 +106,7 @@ scale(GwyContainer *data, GwyRunType run)
         scale_load_args(gwy_app_settings_get(), &args);
     args.xres = gwy_data_field_get_xres(dfield);
     args.yres = gwy_data_field_get_yres(dfield);
-    ok = (run != GWY_RUN_INTERACTIVE) || scale_dialog(&args);
+    ok = (run != GWY_RUN_MODAL) || scale_dialog(&args);
     if (ok) {
         data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
         g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);

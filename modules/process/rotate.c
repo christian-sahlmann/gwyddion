@@ -9,8 +9,8 @@
 #include <app/settings.h>
 #include <app/file.h>
 
-#define GWY_RUN_ANY \
-    (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define ROTATE_RUN_MODES \
+    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 /* Data for this function.
  * (It looks a little bit silly with just one parameter.) */
@@ -65,7 +65,7 @@ module_register(const gchar *name)
         "rotate",
         "/_Basic Operations/Rotate By _Angle...",
         &rotate,
-        GWY_RUN_ANY,
+        ROTATE_RUN_MODES,
     };
 
     gwy_process_func_register(name, &rotate_func_info);
@@ -81,13 +81,13 @@ rotate(GwyContainer *data, GwyRunType run)
     RotateArgs args;
     gboolean ok;
 
-    g_assert(run & GWY_RUN_ANY);
+    g_assert(run & ROTATE_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = rotate_defaults;
     else
         rotate_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_INTERACTIVE) || rotate_dialog(&args);
+    ok = (run != GWY_RUN_MODAL) || rotate_dialog(&args);
     if (ok) {
         data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
         g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);

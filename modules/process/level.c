@@ -5,8 +5,8 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 
-#define GWY_RUN_ANY \
-    (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+#define LEVEL_RUN_MODES \
+    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 static gboolean    module_register            (const gchar *name);
 static gboolean    level                      (GwyContainer *data,
@@ -37,13 +37,13 @@ module_register(const gchar *name)
         "level",
         "/_Level/Level",
         &level,
-        GWY_RUN_ANY
+        LEVEL_RUN_MODES,
     };
     static GwyProcessFuncInfo level_rotate_func_info = {
         "level_rotate",
         "/_Level/Level Rotate",
         &level_rotate,
-        GWY_RUN_ANY
+        LEVEL_RUN_MODES,
     };
 
     gwy_process_func_register(name, &level_func_info);
@@ -58,7 +58,7 @@ level(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     gdouble a, b, c;
 
-    g_assert(run & GWY_RUN_ANY);
+    g_assert(run & LEVEL_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
     gwy_data_field_plane_level(dfield, a, b, c);
@@ -72,7 +72,7 @@ level_rotate(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     gdouble a, b, c;
 
-    g_assert(run & GWY_RUN_ANY);
+    g_assert(run & LEVEL_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
     /* FIXME: what funny scale the b and c have? */
