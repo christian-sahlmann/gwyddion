@@ -28,7 +28,7 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-#define DWT_RUN_MODES \
+#define DWT_DENOISE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 /* Data for this function.
@@ -37,35 +37,35 @@ typedef struct {
     gboolean preserve;
     GwyInterpolationType interp;
     GwyDWTType wavelet;
-} DWTArgs;
+} DWTDenoiseArgs;
 
 typedef struct {
     GtkWidget *preserve;
     GtkWidget *wavelet;
     GtkWidget *interp;
-} DWTControls;
+} DWTDenoiseControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    dwt                        (GwyContainer *data,
+static gboolean    dwt_denoise                        (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    dwt_dialog                 (DWTArgs *args);
+static gboolean    dwt_denoise_dialog                 (DWTDenoiseArgs *args);
 static void        interp_changed_cb          (GObject *item,
-                                               DWTArgs *args);
+                                               DWTDenoiseArgs *args);
 static void        wavelet_changed_cb          (GObject *item,
-                                               DWTArgs *args);
+                                               DWTDenoiseArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
-                                               DWTArgs *args);
-static void        dwt_dialog_update          (DWTControls *controls,
-                                               DWTArgs *args);
-static void        dwt_load_args              (GwyContainer *container,
-                                               DWTArgs *args);
-static void        dwt_save_args              (GwyContainer *container,
-                                               DWTArgs *args);
-static void        dwt_sanitize_args          (DWTArgs *args);
+                                               DWTDenoiseArgs *args);
+static void        dwt_denoise_dialog_update          (DWTDenoiseControls *controls,
+                                               DWTDenoiseArgs *args);
+static void        dwt_denoise_load_args              (GwyContainer *container,
+                                               DWTDenoiseArgs *args);
+static void        dwt_denoise_save_args              (GwyContainer *container,
+                                               DWTDenoiseArgs *args);
+static void        dwt_denoise_sanitize_args          (DWTDenoiseArgs *args);
 
 
 
-DWTArgs dwt_defaults = {
+DWTDenoiseArgs dwt_denoise_defaults = {
     0,
     GWY_INTERPOLATION_BILINEAR,
     GWY_DWT_DAUB12,
@@ -75,7 +75,7 @@ DWTArgs dwt_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "dwt",
+    "dwt_denoise",
     N_("2D Discrete Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.3",
@@ -90,38 +90,38 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo dwt_func_info = {
-        "dwt",
-        N_("/_Integral Transforms/_2D DWT..."),
-        (GwyProcessFunc)&dwt,
-        DWT_RUN_MODES,
+    static GwyProcessFuncInfo dwt_denoise_func_info = {
+        "dwt_denoise",
+        N_("/_Integral Transforms/_2D DWT denoise..."),
+        (GwyProcessFunc)&dwt_denoise,
+        DWT_DENOISE_RUN_MODES,
         0,
     };
 
-    gwy_process_func_register(name, &dwt_func_info);
+    gwy_process_func_register(name, &dwt_denoise_func_info);
 
     return TRUE;
 }
 
 static gboolean
-dwt(GwyContainer *data, GwyRunType run)
+dwt_denoise(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window, *dialog;
     GwyDataField *dfield;
     GwyDataLine *wtcoefs;
-    DWTArgs args;
+    DWTDenoiseArgs args;
     gboolean ok;
     gint xsize, ysize, newsize;
 
-    g_assert(run & DWT_RUN_MODES);
+    g_assert(run & DWT_DENOISE_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
-        args = dwt_defaults;
+        args = dwt_denoise_defaults;
     else
-        dwt_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || dwt_dialog(&args);
+        dwt_denoise_load_args(gwy_app_settings_get(), &args);
+    ok = (run != GWY_RUN_MODAL) || dwt_denoise_dialog(&args);
     if (run == GWY_RUN_MODAL)
-        dwt_save_args(gwy_app_settings_get(), &args);
+        dwt_denoise_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
@@ -139,7 +139,7 @@ dwt(GwyContainer *data, GwyRunType run)
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,
-             _("DWT: Data must be square."));
+             _("DWT_DENOISE: Data must be square."));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return ok;
@@ -152,7 +152,7 @@ dwt(GwyContainer *data, GwyRunType run)
 
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
-    gwy_data_field_ydwt(dfield, wtcoefs, 1, 64);
+    gwy_data_field_dwt_denoise(dfield, wtcoefs, TRUE, 10);
     
     
     if (args.preserve)
@@ -162,7 +162,7 @@ dwt(GwyContainer *data, GwyRunType run)
 
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-				     "DWT");
+				     "DWT_DENOISE");
     
     g_object_unref(wtcoefs);
     return FALSE;
@@ -170,14 +170,14 @@ dwt(GwyContainer *data, GwyRunType run)
 
 
 static gboolean
-dwt_dialog(DWTArgs *args)
+dwt_denoise_dialog(DWTDenoiseArgs *args)
 {
     GtkWidget *dialog, *table;
-    DWTControls controls;
+    DWTDenoiseControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(_("2D DWT"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("2D DWT_DENOISE"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -228,8 +228,8 @@ dwt_dialog(DWTArgs *args)
             break;
 
             case RESPONSE_RESET:
-            *args = dwt_defaults;
-            dwt_dialog_update(&controls, args);
+            *args = dwt_denoise_defaults;
+            dwt_denoise_dialog_update(&controls, args);
             break;
 
             default:
@@ -245,7 +245,7 @@ dwt_dialog(DWTArgs *args)
 
 static void
 interp_changed_cb(GObject *item,
-                  DWTArgs *args)
+                  DWTDenoiseArgs *args)
 {
     args->interp = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "interpolation-type"));
@@ -253,20 +253,20 @@ interp_changed_cb(GObject *item,
 
 static void
 wavelet_changed_cb(GObject *item,
-                  DWTArgs *args)
+                  DWTDenoiseArgs *args)
 {
-    args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt-wavelet-type"));
+    args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt_denoise-wavelet-type"));
 }
 
 static void
-preserve_changed_cb(GtkToggleButton *button, DWTArgs *args)
+preserve_changed_cb(GtkToggleButton *button, DWTDenoiseArgs *args)
 {
     args->preserve = gtk_toggle_button_get_active(button);
 }
 
 static void
-dwt_dialog_update(DWTControls *controls,
-                     DWTArgs *args)
+dwt_denoise_dialog_update(DWTDenoiseControls *controls,
+                     DWTDenoiseArgs *args)
 {
     /*
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
@@ -274,17 +274,17 @@ dwt_dialog_update(DWTControls *controls,
      */
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
-    gwy_option_menu_set_history(controls->wavelet, "dwt-wavelet-type",
+    gwy_option_menu_set_history(controls->wavelet, "dwt_denoise-wavelet-type",
                                 args->wavelet);
 }
 
 
-static const gchar *preserve_key = "/module/dwt/preserve";
-static const gchar *interp_key = "/module/dwt/interp";
-static const gchar *wavelet_key = "/module/dwt/window";
+static const gchar *preserve_key = "/module/dwt_denoise/preserve";
+static const gchar *interp_key = "/module/dwt_denoise/interp";
+static const gchar *wavelet_key = "/module/dwt_denoise/window";
 
 static void
-dwt_sanitize_args(DWTArgs *args)
+dwt_denoise_sanitize_args(DWTDenoiseArgs *args)
 {
     args->preserve = !!args->preserve;
     args->interp = CLAMP(args->interp,
@@ -293,20 +293,20 @@ dwt_sanitize_args(DWTArgs *args)
 }
 
 static void
-dwt_load_args(GwyContainer *container,
-              DWTArgs *args)
+dwt_denoise_load_args(GwyContainer *container,
+              DWTDenoiseArgs *args)
 {
-    *args = dwt_defaults;
+    *args = dwt_denoise_defaults;
 
     gwy_container_gis_boolean_by_name(container, preserve_key, &args->preserve);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, wavelet_key, &args->wavelet);
-    dwt_sanitize_args(args);
+    dwt_denoise_sanitize_args(args);
 }
 
 static void
-dwt_save_args(GwyContainer *container,
-              DWTArgs *args)
+dwt_denoise_save_args(GwyContainer *container,
+              DWTDenoiseArgs *args)
 {
     gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
     gwy_container_set_enum_by_name(container, interp_key, args->interp);

@@ -19,6 +19,7 @@
  */
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "dwt.h"
 
 typedef struct {
@@ -35,7 +36,10 @@ static GwyDataLine* pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign
     
 static GwyDWTFilter *wtset(GwyDataLine *wt_coefs);
     
+static gint remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow,
+		                        gboolean hard, gdouble multiple_threshold);
 
+static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow);
 /*public functions*/
 
 
@@ -347,6 +351,38 @@ gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint
     return dfield;
 }
 
+GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_coefs, gboolean hard,
+					                           gdouble multiple_threshold)
+{
+    gint br, ul, ulcol, ulrow, brcol, brrow, count;
+    
+    gwy_data_field_dwt(dfield, wt_coefs, 1, 4);
+
+    for (br = dfield->xres; br>4; br>>=1)
+    {
+	ul = br/2;
+
+	ulcol = ul; ulrow = ul;
+	brcol = br; brrow = br;
+	count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold);
+	printf("Level %d, diagonal: %d removed\n", br, count);
+
+	ulcol = 0; ulrow = ul;
+	brcol = ul; brrow = br;
+	count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold);
+	printf("Level %d, horizontal: %d removed\n", br, count);
+
+	ulcol = ul; ulrow = 0;
+	brcol = br; brrow = ul;
+	count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold);			
+	printf("Level %d, vertical: %d removed\n", br, count);
+    }
+    
+    gwy_data_field_dwt(dfield, wt_coefs, -1, 4);    
+    return dfield;
+}
+
+
 
 /*private functions*/
 
@@ -424,6 +460,7 @@ wtset(GwyDataLine *wt_coefs)
 	sig= -sig;
     }
 
+    /*FIXME none of the NRC shifts centers wavelet well*/
     wt->ioff = wt->joff = -(wt_coefs->res >> 1);
 /*    wt->ioff = -2;
     wt->joff = -wt->ncof+2;*/
@@ -431,9 +468,73 @@ wtset(GwyDataLine *wt_coefs)
     return wt;
 }
 
+static gint
+remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow, 
+		    gboolean hard, gdouble multiple_threshold)
+{
+    gdouble median, threshold;
+    gdouble *datapos;
+    gint i, j, n, count;
+
+    n = (brrow-ulrow)*(brcol-ulcol);
+    median = smedian(dfield, ulcol, ulrow, brcol, brrow);
+    threshold = median/0.6745*multiple_threshold*n;
+    printf("median = %g, threshold = %g\n", median, threshold);
+
+    count = 0;
+    datapos = dfield->data + ulrow*dfield->xres + ulcol;
+    for (i = 0; i < (brrow - ulrow); i++) {
+       gdouble *drow = datapos + i*dfield->xres;
+
+       for (j = 0; j < (brcol - ulcol); j++) {
+	   if (fabs(*drow) < threshold)
+	   {
+	       if (hard) *drow = 0;
+	       else {
+		   if (*drow<0) (*drow)+=threshold;
+		   else (*drow)-=threshold;
+	       }
+	       count++;
+	   }
+	   drow++;
+       }
+    }
+    return count;
+}
 
 
+gint dsort(const void *p_a, const void *p_b)
+{
+   gdouble *a=(gdouble *)p_a;
+   gdouble *b=(gdouble *)p_b;
+   if (*a < *b) return -1;
+   else if (*a == *b) return 0;
+   else return 1;
+}
 
+static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow)
+{
+   gint i, j, n;
+   gdouble *datapos;
+   n = (brrow-ulrow)*(brcol-ulcol);
+   gdouble *buf= g_malloc( sizeof(double)*n);
+   
+
+   datapos = dfield->data + ulrow*dfield->xres + ulcol;
+   for (i = 0; i < (brrow - ulrow); i++) {
+       gdouble *drow = datapos + i*dfield->xres;
+
+       for (j = 0; j < (brcol - ulcol); j++) {
+	   buf[i] = fabs(*drow);
+	   drow++;
+       }
+   }
+   
+   qsort((void *)buf, n, sizeof(gdouble), dsort);
+
+   return (buf[(gint)(n/2)-1]+buf[(gint)(n/2)])/2;
+   g_free(buf);
+}
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -54,6 +54,9 @@ GwyDataField * gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, 
 GwyDataField * gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize);
 GwyDataField * gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize);
 
+/*wavelet denoising*/
+GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_coefs, gboolean hard,
+					 gdouble multiple_threshold);
 
 
 G_END_DECLS

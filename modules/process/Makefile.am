@@ -12,6 +12,7 @@ process_PROGRAMS = \
 	crosscor.so \
 	cwt.so \
 	dwt.so \
+	dwtdenoise.so \
 	edge.so \
 	facet-level.so \
 	fft.so \
@@ -73,6 +74,9 @@ cwt_so_LDFLAGS = $(module_ldflags),cwt.so
 
 dwt_so_SOURCES = dwt.c
 dwt_so_LDFLAGS = $(module_ldflags),dwt.so
+
+dwtdenoise_so_SOURCES = dwtdenoise.c
+dwtdenoise_so_LDFLAGS = $(module_ldflags),dwtdenoise.so
 
 edge_so_SOURCES = edge.c
 edge_so_LDFLAGS = $(module_ldflags),edge.so
