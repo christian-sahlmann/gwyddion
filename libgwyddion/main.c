@@ -20,11 +20,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "gwyserializable.h"
-#include "gwycontainer.h"
-#include "gwyentities.h"
+#include "gwyddion.h"
 #include "gwytestser.h"
-#include "gwyutils.h"
 
 #define FILENAME "testser.object"
 
@@ -283,6 +280,35 @@ main(void)
                                        G_N_ELEMENTS(file_op_names), NULL));
     g_message("%d", gwy_string_to_flags("noninteractive-interactive",
                                         run_mode_names, -1, "-"));
+
+    g_message("====== MATH ======================");
+    {
+        gdouble m[] = { 1, 2, 3, 4 };
+        gdouble b[] = { 5, 6 };
+        gdouble *x;
+
+        x = gwy_math_lin_solve(2, m, b, NULL);
+        g_message("x: [%f %f] == [-4, 9/2]", x[0], x[1]);
+        g_free(x);
+    }
+    {
+        gdouble m[] = { 1, 2, 3, 5, 6, 7, 1, 2, 4 };
+        gdouble b[] = { 4, 8, 8 };
+        gdouble *x;
+
+        x = gwy_math_lin_solve(3, m, b, NULL);
+        g_message("x: [%f %f %f] == [2, -5, 4]", x[0], x[1], x[2]);
+        g_free(x);
+    }
+    {
+        gdouble m[] = { 1, 1.000001, 0.999999, 1 };
+        gdouble b[] = { 1, 1 };
+        gdouble *x;
+
+        x = gwy_math_lin_solve(2, m, b, NULL);
+        g_message("x: [%g %g] == [-1e6, 1e6]", x[0], x[1]);
+        g_free(x);
+    }
 
     return 0;
 }

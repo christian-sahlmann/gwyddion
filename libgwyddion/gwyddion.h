@@ -28,6 +28,7 @@
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwyentities.h>
+#include <libgwyddion/gwysiunit.h>
 
 #ifdef __cplusplus
 extern "C" {

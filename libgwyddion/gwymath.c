@@ -185,5 +185,89 @@ gwy_math_find_nearest_point(gdouble x, gdouble y,
     return m;
 }
 
+/**
+ * gwy_math_lin_solve:
+ * @n: The size of the system.
+ * @matrix: The matrix of the system (@n times @n), ordered by row, then
+ *          column.
+ * @rhs: The right hand side of the sytem.
+ * @result: Where the result should be stored.  May be %NULL to allocate
+ *          a fresh array for the result.
+ *
+ * Solve a system of linear equations.
+ *
+ * Returns: The solution (@result if it wasn't %NULL), may be %NULL if the
+ *          matrix is singular.
+ **/
+gdouble*
+gwy_math_lin_solve(gint n, const gdouble *matrix,
+                   const gdouble *rhs,
+                   gdouble *result)
+{
+    gdouble *m, *r;
+    gint *perm;
+    gint i, j, jj;
+
+    g_return_val_if_fail(n > 0, NULL);
+    g_return_val_if_fail(matrix && rhs, NULL);
+
+    perm = g_new(gint, n);
+    m = (gdouble*)g_memdup(matrix, n*n*sizeof(gdouble));
+    r = (gdouble*)g_memdup(rhs, n*sizeof(gdouble));
+
+    /* elimination */
+    for (i = 0; i < n; i++) {
+        gdouble *row = m + i*n;
+        gdouble piv = 0;
+        gint pivj = 0;
+
+        /* find pivot */
+        for (j = 0; j < n; j++) {
+            if (fabs(row[j]) > piv) {
+                pivj = j;
+                piv = fabs(row[j]);
+            }
+        }
+        if (piv == 0.0) {
+            g_warning("Singluar matrix");
+            g_free(r);
+            g_free(m);
+            g_free(perm);
+            return NULL;
+        }
+        piv = row[pivj];
+        perm[i] = pivj;
+
+        /* substract */
+        for (j = i+1; j < n; j++) {
+            gdouble *jrow = m + j*n;
+            gdouble q = jrow[pivj]/piv;
+
+            for (jj = 0; jj < n; jj++)
+                jrow[jj] -= q*row[jj];
+
+            jrow[pivj] = 0.0;
+            r[j] -= q*r[i];
+        }
+    }
+
+    /* back substitute */
+    if (!result)
+        result = g_new(gdouble, n);
+    for (i = n-1; i >= 0; i--) {
+        gdouble *row = m + i*n;
+        gdouble x = r[i];
+
+        for (j = n-1; j > i; j--)
+            x -= result[perm[j]]*row[perm[j]];
+
+        result[perm[i]] = x/row[perm[i]];
+    }
+    g_free(r);
+    g_free(m);
+    g_free(perm);
+
+    return result;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -43,6 +43,10 @@ gint         gwy_math_find_nearest_point (gdouble x,
                                           gdouble *d2min,
                                           gint n,
                                           gdouble *coords);
+gdouble*     gwy_math_lin_solve          (gint n,
+                                          const gdouble *matrix,
+                                          const gdouble *rhs,
+                                          gdouble *result);
 
 #ifdef __cplusplus
 }
