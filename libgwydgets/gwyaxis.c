@@ -43,31 +43,39 @@ static void     gwy_axis_finalize             (GObject *object);
 static void     gwy_axis_realize              (GtkWidget *widget);
 static void     gwy_axis_unrealize            (GtkWidget *widget);
 static void     gwy_axis_size_request         (GtkWidget *widget,
-                                                      GtkRequisition *requisition);
+                                               GtkRequisition *requisition);
 static void     gwy_axis_size_allocate        (GtkWidget *widget,
-                                                      GtkAllocation *allocation);
+                                               GtkAllocation *allocation);
 static gboolean gwy_axis_expose               (GtkWidget *widget,
-                                                      GdkEventExpose *event);
+                                               GdkEventExpose *event);
 static gboolean gwy_axis_button_press         (GtkWidget *widget,
-                                                      GdkEventButton *event);
+                                               GdkEventButton *event);
 static gboolean gwy_axis_button_release       (GtkWidget *widget,
-                                                      GdkEventButton *event);
+                                               GdkEventButton *event);
 
 /* Forward declarations - axis related*/
 static gdouble  gwy_axis_dbl_raise            (gdouble x, gint y);
-gdouble            gwy_axis_quantize_normal_tics (gdouble arg, gint guide);
-gint            gwy_axis_normalscale          (GwyAxis *a);
-gint            gwy_axis_logscale             (GwyAxis *a);
-gint            gwy_axis_scale                (GwyAxis *a);
-gint            gwy_axis_formatticks          (GwyAxis *a);
-gint            gwy_axis_precompute           (GwyAxis *a, gint scrmin, gint scrmax);
-void            gwy_axis_draw_axis            (GtkWidget *widget);
-void            gwy_axis_draw_ticks           (GtkWidget *widget);
-void            gwy_axis_draw_tlabels         (GtkWidget *widget);
-void            gwy_axis_draw_label           (GtkWidget *widget);
-void            gwy_axis_autoset              (GwyAxis *axis, gint width, gint height);
-void            gwy_axis_adjust               (GwyAxis *axis, gint width, gint height);
-static void     gwy_axis_entry                (GwyAxisDialog *dialog, gint arg1, gpointer user_data);
+static gdouble  gwy_axis_quantize_normal_tics (gdouble arg, gint guide);
+static gint     gwy_axis_normalscale          (GwyAxis *a);
+static gint     gwy_axis_logscale             (GwyAxis *a);
+static gint     gwy_axis_scale                (GwyAxis *a);
+static gint     gwy_axis_formatticks          (GwyAxis *a);
+static gint     gwy_axis_precompute           (GwyAxis *a,
+                                               gint scrmin,
+                                               gint scrmax);
+static void     gwy_axis_draw_axis            (GtkWidget *widget);
+static void     gwy_axis_draw_ticks           (GtkWidget *widget);
+static void     gwy_axis_draw_tlabels         (GtkWidget *widget);
+static void     gwy_axis_draw_label           (GtkWidget *widget);
+static void     gwy_axis_autoset              (GwyAxis *axis,
+                                               gint width,
+                                               gint height);
+static void     gwy_axis_adjust               (GwyAxis *axis,
+                                               gint width,
+                                               gint height);
+static void     gwy_axis_entry                (GwyAxisDialog *dialog,
+                                               gint arg1,
+                                               gpointer user_data);
 
 /* Local data */
 
@@ -340,7 +348,7 @@ gwy_axis_size_allocate(GtkWidget *widget,
 
 }
 
-void
+static void
 gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
 
@@ -368,7 +376,7 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 
 }
 
-void
+static void
 gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
 {
     if (axis->orientation == GWY_AXIS_NORTH || axis->orientation == GWY_AXIS_SOUTH)
@@ -454,7 +462,8 @@ gwy_axis_expose(GtkWidget *widget,
     return FALSE;
 }
 
-void gwy_axis_draw_axis(GtkWidget *widget)
+static void
+gwy_axis_draw_axis(GtkWidget *widget)
 {
     GwyAxis *axis;
     GdkGC *mygc;
@@ -482,7 +491,8 @@ void gwy_axis_draw_axis(GtkWidget *widget)
 }
 
 
-void gwy_axis_draw_ticks(GtkWidget *widget)
+static void
+gwy_axis_draw_ticks(GtkWidget *widget)
 {
     guint i;
     GwyAxis *axis;
@@ -579,7 +589,8 @@ void gwy_axis_draw_ticks(GtkWidget *widget)
 
 }
 
-void gwy_axis_draw_tlabels(GtkWidget *widget)
+static void
+gwy_axis_draw_tlabels(GtkWidget *widget)
 {
     guint i;
     GwyAxis *axis;
@@ -640,7 +651,8 @@ void gwy_axis_draw_tlabels(GtkWidget *widget)
     g_object_unref((GObject *)mygc);
 }
 
-void gwy_axis_draw_label(GtkWidget *widget)
+static void
+gwy_axis_draw_label(GtkWidget *widget)
 {
     GwyAxis *axis;
     PangoLayout *layout;
@@ -653,10 +665,10 @@ void gwy_axis_draw_label(GtkWidget *widget)
     axis = GWY_AXIS(widget);
     layout = gtk_widget_create_pango_layout(widget, "");
     pango_layout_set_font_description(layout, axis->par.major_font);
-    
+
     plotlabel = g_string_new(axis->label_text->str);
 
-    if (axis->has_unit) 
+    if (axis->has_unit)
     {
         g_string_append(plotlabel, " [");
         g_string_append(plotlabel, axis->unit);
@@ -682,7 +694,7 @@ void gwy_axis_draw_label(GtkWidget *widget)
     {
         gdk_draw_layout(widget->window, mygc, axis->label_x_pos - rect.width, axis->label_y_pos, layout);
     }
-    
+
 
 /*    g_free(plotlabel);*/
     g_object_unref((GObject *)mygc);
@@ -729,7 +741,7 @@ gwy_axis_button_release(GtkWidget *widget,
     return FALSE;
 }
 
-static void     
+static void
 gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
 {
     GwyAxis *axis;
@@ -737,14 +749,14 @@ gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
     GdkEventExpose exp;
     gwy_debug("");
 
-    axis = GWY_AXIS(user_data);    
+    axis = GWY_AXIS(user_data);
     g_assert(GWY_IS_AXIS(axis));
 
     rec.x = GTK_WIDGET(axis)->allocation.x;
     rec.y = GTK_WIDGET(axis)->allocation.y;
     rec.width = GTK_WIDGET(axis)->allocation.width;
     rec.height = GTK_WIDGET(axis)->allocation.height;
-     
+
     if (arg1 == GTK_RESPONSE_APPLY)
     {
         gchar *text;
@@ -777,7 +789,7 @@ gwy_axis_dbl_raise(gdouble x, gint y)
     return (val);
 }
 
-gdouble
+static gdouble
 gwy_axis_quantize_normal_tics(gdouble arg, gint guide)
 {
     gdouble power = gwy_axis_dbl_raise(10.0, (gint)floor(log10(arg)));
@@ -804,7 +816,7 @@ gwy_axis_quantize_normal_tics(gdouble arg, gint guide)
 }
 
 
-gint
+static gint
 gwy_axis_normalscale(GwyAxis *a)
 {
     gint i;
@@ -858,7 +870,7 @@ gwy_axis_normalscale(GwyAxis *a)
 }
 
 
-gint
+static gint
 gwy_axis_logscale(GwyAxis *a)
 {
     gint i;
@@ -910,7 +922,7 @@ gwy_axis_logscale(GwyAxis *a)
 }
 
 
-gint
+static gint
 gwy_axis_scale(GwyAxis *a)
 {
 
@@ -934,7 +946,7 @@ gwy_axis_scale(GwyAxis *a)
     return 0;
 }
 
-gint
+static gint
 gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
 {
     guint i;
@@ -967,7 +979,7 @@ gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
 }
 
 
-gint
+static gint
 gwy_axis_formatticks(GwyAxis *a)
 {
     guint i;
@@ -1054,7 +1066,8 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
     gwy_axis_adjust(axis, (GTK_WIDGET(axis))->allocation.width, (GTK_WIDGET(axis))->allocation.height);
 }
 
-void gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
+void
+gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
 {
     axis->par = style;
     gwy_axis_adjust(axis, (GTK_WIDGET(axis))->allocation.width, (GTK_WIDGET(axis))->allocation.height);
@@ -1066,7 +1079,8 @@ gwy_axis_get_maximum(GwyAxis *axis)
     return axis->max;
 }
 
-gdouble gwy_axis_get_minimum(GwyAxis *axis)
+gdouble
+gwy_axis_get_minimum(GwyAxis *axis)
 {
     return axis->min;
 }
@@ -1077,25 +1091,26 @@ gwy_axis_get_reqmaximum(GwyAxis *axis)
     return axis->reqmax;
 }
 
-gdouble gwy_axis_get_reqminimum(GwyAxis *axis)
+gdouble
+gwy_axis_get_reqminimum(GwyAxis *axis)
 {
     return axis->reqmin;
 }
 
-void 
+void
 gwy_axis_set_label(GwyAxis *axis, GString *label_text)
 {
     g_string_assign(axis->label_text, label_text->str);
     gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
-GString* 
+GString*
 gwy_axis_get_label(GwyAxis *axis)
 {
     return axis->label_text;
 }
 
-void 
+void
 gwy_axis_set_unit(GwyAxis *axis, char *unit)
 {
     axis->unit = unit;
