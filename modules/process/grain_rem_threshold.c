@@ -101,7 +101,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "remove_threshold",
-    N_("Remove grains by thresholding"),
+    N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.6",
     "David Nečas (Yeti) & Petr Klapetek",

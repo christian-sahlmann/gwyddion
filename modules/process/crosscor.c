@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "crosscor",
-    N_("Cross-correlation of two data fields."),
+    N_("Calculates cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",

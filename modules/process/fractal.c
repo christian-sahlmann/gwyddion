@@ -143,7 +143,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "fractal",
-    N_("Fractal dimension evaluation"),
+    N_("Calculates fractal dimension using several methods "
+       "(partitioning, box counting, triangulation, power spectrum)."),
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
     "1.5",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",

@@ -90,7 +90,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "unrotate",
-    N_("Rotates data to make main directions parallel with x or y axis."),
+    N_("Rotates data to make characteristic directions parallel "
+       "with x or y axis."),
     "Yeti <yeti@gwyddion.net>",
     "2.0",
     "David Nečas (Yeti) & Petr Klapetek",

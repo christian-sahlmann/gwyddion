@@ -103,7 +103,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "slope_dist",
-    N_("Slope distribution."),
+    N_("Calculates two-dimensional distribution of slopes "
+       "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
     "1.6",
     "David Nečas (Yeti) & Petr Klapetek",

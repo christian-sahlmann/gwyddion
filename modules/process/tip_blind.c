@@ -118,7 +118,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "tip_blind",
-    N_("Blind estimation of SPM tip using Villarubia's algorithm"),
+    N_("Blind estimation of SPM tip using Villarubia's algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",

@@ -100,7 +100,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "arithmetic",
-    N_("Simple arithmetic with two data fields "
+    N_("Simple arithmetic operations with two data fields "
        "(or a data field and a scalar)."),
     "Yeti <yeti@gwyddion.net>",
     "1.2.1",

@@ -50,7 +50,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "edge",
-    N_("Edge detection presentations"),
+    N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
+       "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",

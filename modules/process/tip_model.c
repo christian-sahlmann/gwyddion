@@ -115,7 +115,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "tip_model",
-    N_("Model SPM tip"),
+    N_("Models SPM tip."),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",

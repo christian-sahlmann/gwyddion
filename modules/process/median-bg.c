@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "median_bg",
-    N_("Rank-based background removal."),
+    N_("Subtracts background using a rank-based algorithm."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",

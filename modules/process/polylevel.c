@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "poly_level",
-    N_("Subtract polynomial background."),
+    N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",

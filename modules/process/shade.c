@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "shade",
-    N_("Shade module"),
+    N_("Creates a shaded presentation of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "2.0",
     "David Nečas (Yeti) & Petr Klapetek",

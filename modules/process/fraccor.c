@@ -35,7 +35,7 @@
 
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    fraccor                        (GwyContainer *data,
+static gboolean    fraccor                    (GwyContainer *data,
                                                GwyRunType run);
 
 /* The module info. */
@@ -43,7 +43,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "fraccor",
-    N_("Remove data under mask using fractal approach"),
+    N_("Removes data under mask using fractal interpolation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",

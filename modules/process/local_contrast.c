@@ -74,7 +74,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "local_contrast",
-    N_("Local contrast maximization"),
+    N_("Maximizes local contrast."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",

@@ -39,7 +39,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "maskops",
-    N_("Basic operations with mask."),
+    N_("Basic operations with mask: inversion, removal, extraction."),
     "Yeti <yeti@gwyddion.net>",
     "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",

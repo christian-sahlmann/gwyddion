@@ -42,7 +42,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "level",
-    N_("Simple automatic levelling."),
+    N_("Levels data by simple plane subtraction or by rotation, "
+       "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",

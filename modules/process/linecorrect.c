@@ -38,7 +38,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "line_correct",
-    N_("Line defect correction, mostly experimental algorithms."),
+    N_("Corrects line defects (mostly experimental algorithms)."),
     "Yeti <yeti@gwyddion.net>",
     "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",

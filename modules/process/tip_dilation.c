@@ -56,7 +56,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "tip_dilation",
-    N_("Tip Dilation."),
+    N_("Dilates data with given tip."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",

@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "scale",
-    N_("Scale data by an arbitrary factor."),
+    N_("Scales data by arbitrary factor."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",

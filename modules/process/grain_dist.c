@@ -39,7 +39,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "grain_dist",
-    N_("Evaluate grain distribution"),
+    N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",

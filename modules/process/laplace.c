@@ -42,7 +42,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "laplace",
-    N_("Remove data under mask using laplace equation"),
+    N_("Removes data under mask, "
+       "interpolating them with Laplace equation solution."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",

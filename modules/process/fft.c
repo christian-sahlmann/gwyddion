@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "fft",
-    N_("2D Fast Fourier Transform module"),
+    N_("Two-dimensional FFT (Fast Fourier Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",
     "David Nečas (Yeti) & Petr Klapetek",

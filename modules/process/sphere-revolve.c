@@ -95,7 +95,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "sphere_revolve",
-    N_("Level data by revolving an arc or a sphere."),
+    N_("Subtracts background by arc or sphere revolution."),
     "Yeti <yeti@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",

@@ -48,7 +48,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "basicops",
-    N_("Basic operations like inversion or flipping."),
+    N_("Basic operations like flipping, value inversion, and rotation "
+       "by multiples of 90 degrees."),
     "Yeti <yeti@gwyddion.net>",
     "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",

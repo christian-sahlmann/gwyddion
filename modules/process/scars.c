@@ -99,7 +99,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "scars",
-    N_("Scar detection and removal."),
+    N_("Marks and/or removes scars (horizontal linear artefacts)."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",

@@ -43,7 +43,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "nanoindent_mark",
-    N_("Create mask of nanoindentation hole"),
+    N_("Creates mask of nanoindentation hole."),
     "Pavel Stratil <stratil@gwyddion.net>",
     "1.1.1",
     "Pavel Stratil & David Nečas (Yeti) & Petr Klapetek",

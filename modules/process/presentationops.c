@@ -37,7 +37,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "presentationops",
-    N_("Basic operations with presentation."),
+    N_("Basic operations with presentation: extraction, removal."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",

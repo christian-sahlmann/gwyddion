@@ -56,7 +56,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "tip_map",
-    N_("Certainty Map."),
+    N_("Computes tip certainty map."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",

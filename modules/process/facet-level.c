@@ -38,7 +38,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "facet_level",
-    N_("Automatic facet-orientation based levelling."),
+    N_("Automatic facet-orientation based levelling. "
+       "Levels data to make facets point up."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
