@@ -45,7 +45,7 @@ GtkWidget*       gwy_data_window_new              (GwyDataView *data_view);
 GType            gwy_data_window_get_type         (void) G_GNUC_CONST;
 GtkWidget*       gwy_data_window_get_data_view    (GwyDataWindow *data_window);
 void             gwy_data_window_set_zoom         (GwyDataWindow *data_window,
-                                                   gint zoom1000);
+                                                   gint izoom);
 
 #ifdef __cplusplus
 }
