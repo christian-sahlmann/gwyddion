@@ -67,7 +67,7 @@ GTKDOC_LIBS = \
 	${top_srcdir}/libgwyddion/libgwyddion.la \
 	${top_srcdir}/libdraw/libgwydraw.la \
 	${top_srcdir}/libprocess/libgwyprocess.la \
-	@LDFLAGS@
+	@LDFLAGS@ @GTK_LIBS@
 
 GTKDOC_CC = $(LIBTOOL) --mode=compile $(CC)
 GTKDOC_LD = $(LIBTOOL) --mode=link $(CC)

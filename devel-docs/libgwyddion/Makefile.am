@@ -51,7 +51,7 @@ extra_files = $(DOC_MODULE).types makefile.msc
 GTKDOC_CFLAGS = -I${top_srcdir} @CFLAGS@
 GTKDOC_LIBS = \
 	${top_srcdir}/$(DOC_DIRNAME)/$(DOC_MODULE).la \
-	@LDFLAGS@
+	@LDFLAGS@ @GOBJECT_LIBS@
 
 GTKDOC_CC = $(LIBTOOL) --mode=compile $(CC)
 GTKDOC_LD = $(LIBTOOL) --mode=link $(CC)
