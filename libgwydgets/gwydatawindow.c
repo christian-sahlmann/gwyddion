@@ -772,8 +772,10 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    min = gwy_data_field_get_min(dfield);
-    max = gwy_data_field_get_max(dfield);
+    if (!gwy_container_gis_double_by_name(data, "/0/base/min", &min))
+        min = gwy_data_field_get_min(dfield);
+    if (!gwy_container_gis_double_by_name(data, "/0/base/max", &max))
+        max = gwy_data_field_get_max(dfield);
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
     gwy_data_window_update_units(data_window);
 }
