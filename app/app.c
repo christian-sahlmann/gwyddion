@@ -51,12 +51,14 @@ zoom_set_cb(GtkWidget *button, gpointer data)
 }
 
 void
-foo(void)
+gwy_app_create_toolbox(void)
 {
     GtkWidget *window, *vbox, *toolbar, *menu, *grp, *button;
     GtkAccelGroup *accel_group;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_wmclass(GTK_WINDOW(window), "toolbox",
+                           g_get_application_name());
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
     gwy_app_main_window = window;
 
@@ -183,7 +185,7 @@ main(int argc, char *argv[])
     gwy_type_init();
     gwy_app_settings_load(config_file);
     gwy_module_register_modules(module_dirs);
-    foo();
+    gwy_app_create_toolbox();
     for (i = 1; i < argc; i++) {
         if (!(data = gwy_file_load(argv[i])))
             continue;
