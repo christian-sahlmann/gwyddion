@@ -1,0 +1,64 @@
+<!-- ##### SECTION Title ##### -->
+level
+
+<!-- ##### SECTION Short_Description ##### -->
+Plane and rotation leveling
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_data_field_area_fit_plane ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@pa: 
+@pbx: 
+@pby: 
+
+
+<!-- ##### FUNCTION gwy_data_field_plane_coeffs ##### -->
+<para>
+
+</para>
+
+@a: 
+@ap: 
+@bp: 
+@cp: 
+
+
+<!-- ##### FUNCTION gwy_data_field_plane_level ##### -->
+<para>
+
+</para>
+
+@a: 
+@ap: 
+@bp: 
+@cp: 
+
+
+<!-- ##### FUNCTION gwy_data_field_plane_rotate ##### -->
+<para>
+
+</para>
+
+@a: 
+@xangle: 
+@yangle: 
+@interpolation: 
+
+

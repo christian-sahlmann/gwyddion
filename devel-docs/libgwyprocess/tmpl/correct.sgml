@@ -14,6 +14,19 @@ Data correction
 
 </para>
 
+<!-- ##### ENUM GwyPlaneSymmetry ##### -->
+<para>
+
+</para>
+
+@GWY_SYMMETRY_AUTO: 
+@GWY_SYMMETRY_PARALLEL: 
+@GWY_SYMMETRY_TRIANGULAR: 
+@GWY_SYMMETRY_SQUARE: 
+@GWY_SYMMETRY_RHOMBIC: 
+@GWY_SYMMETRY_HEXAGONAL: 
+@GWY_SYMMETRY_LAST: 
+
 <!-- ##### FUNCTION gwy_data_field_correct_laplace_iteration ##### -->
 <para>
 
@@ -43,5 +56,28 @@ Data correction
 @data_field: 
 @mask_field: 
 @thresh: 
+
+
+<!-- ##### FUNCTION gwy_data_field_mark_scars ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@scar_field: 
+@threshold_high: 
+@threshold_low: 
+@min_scar_len: 
+@max_scar_width: 
+
+
+<!-- ##### FUNCTION gwy_data_field_unrotate_find_corrections ##### -->
+<para>
+
+</para>
+
+@derdist: 
+@correction: 
+@Returns: 
 
 
