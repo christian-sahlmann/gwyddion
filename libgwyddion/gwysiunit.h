@@ -79,6 +79,7 @@ GwySIValueFormat* gwy_si_unit_get_format_with_digits    (GwySIUnit *siunit,
                                                          GwySIValueFormat *format);
 gchar*            gwy_si_unit_get_unit_for_magnitude    (GwySIUnit *siunit,
                                                          gdouble magnitude);
+void              gwy_si_unit_value_format_free         (GwySIValueFormat *format);
 
 
 G_END_DECLS

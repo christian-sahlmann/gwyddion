@@ -342,6 +342,13 @@ gwy_si_unit_get_unit_for_magnitude(GwySIUnit *siunit,
                        NULL);
 }
 
+void
+gwy_si_unit_value_format_free(GwySIValueFormat *format)
+{
+    g_free(format->units);
+    g_free(format);
+}
+
 
 /**
  * gwy_math_SI_prefix:
