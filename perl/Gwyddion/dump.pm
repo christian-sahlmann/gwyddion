@@ -66,23 +66,21 @@ sub _read_dfield {
 
 Read a Gwyddion plug-in proxy dump file.
 
-The file is returned as a dictionary of dump key, value pairs.
+The file is returned as a hash table of dump key, value pairs.
 
-Data fields are packed into dictionaries with following keys
+Data fields are packed as references to hashes with following keys
 (not all has to be present):
-`xres', x-resolution (number of samples),
-`yres', y-resolution (number of samples),
-`xreal', real x size (in base SI units),
-`yreal', real y size (in base SI units),
-`unit-xy', lateral units (base SI, like `m'),
-`unit-z', value units (base SI, like `m' or `A'),
-`data', the data field data itself (array of floats).
+`xres' (x-resolution, in number of samples),
+`yres' (y-resolution, in number of samples),
+`xreal' (real x size, in base SI units),
+`yreal' (real y size, in base SI units),
+`unit-xy' (lateral units, base SI, like `m'),
+`unit-z' (value units, base SI, like `m' or `A'),
+`data' (the data field data itself, an array of floats).
 
-The `data' member is a raw array of floats (please see array module
-documentation).
-
-Exceptions, caused by fatal errors, are not handled -- it is up to
-caller to eventually handle them.
+Fatal errors are not handled, the function simply dies.  If you have
+anything meaningful to do after a fatal error, you have to catch
+the error.
 
 =cut
 sub read {
@@ -143,11 +141,12 @@ sub _write_dfield {
 
 Write a Gwyddion plug-in proxy dump file.
 
-The dictionary to write is expected to follow the same conventions as
+The hash table to write is expected to follow the same conventions as
 those returned by read(), please see its description for more.
 
-Exceptions, caused by fatal errors, are not handled -- it is up to
-caller to eventually handle them.
+Fatal errors are not handled, the function simply dies.  If you have
+anything meaningful to do after a fatal error, you have to catch
+the error.
 
 =cut
 sub write {
