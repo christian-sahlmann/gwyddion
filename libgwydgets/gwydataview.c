@@ -327,7 +327,6 @@ gwy_data_view_realize(GtkWidget *widget)
               widget->allocation.width, widget->allocation.height);
 
     g_return_if_fail(widget != NULL);
-    g_return_if_fail(GWY_IS_DATA_VIEW(widget));
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
     data_view = GWY_DATA_VIEW(widget);
@@ -536,7 +535,6 @@ gwy_data_view_expose(GtkWidget *widget,
     GdkRectangle rect;
     gboolean emit_redrawn = FALSE;
 
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     data_view = GWY_DATA_VIEW(widget);
 
     gdk_region_get_clipbox(event->region, &rect);
@@ -588,7 +586,6 @@ gwy_data_view_button_press(GtkWidget *widget,
     GwyDataView *data_view;
 
     gwy_debug(" ");
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
@@ -605,7 +602,6 @@ gwy_data_view_button_release(GtkWidget *widget,
     GwyDataView *data_view;
 
     gwy_debug(" ");
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
@@ -621,7 +617,6 @@ gwy_data_view_motion_notify(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
@@ -637,7 +632,6 @@ gwy_data_view_key_press(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
@@ -653,7 +647,6 @@ gwy_data_view_key_release(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
