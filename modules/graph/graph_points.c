@@ -250,6 +250,8 @@ selection_updated_cb(GtkWidget *widget, gpointer data)
     graph = (GwyGraph *) data;
     g_return_if_fail(GWY_IS_GRAPH(graph));    
 
+    if (gwy_graph_get_status(graph) != GWY_GRAPH_STATUS_POINTS) return;
+        /*FIXME TODO XXX this must be changed XXX TODO FIXME*/
     g_assert(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS);
     
     cd = (GwyGraphStatus_PointsData*)gwy_graph_get_status_data(graph);

@@ -840,13 +840,13 @@ gdouble
 gwy_data_line_get_rms(GwyDataLine *a)
 {
     gint i;
-    gdouble rms = 0;
-    gdouble avg = gwy_data_line_get_avg(a);
+    gdouble sum2 = 0;
+    gdouble sum = gwy_data_line_get_sum(a);
 
     for (i = 0; i < a->res; i++)
-        rms += (avg - a->data[i])*(avg - a->data[i]);
+        sum2 += a->data[i]*a->data[i];
 
-    return sqrt(rms)/(gdouble)a->res;
+    return sqrt(fabs(sum2 - sum*sum/a->res)/a->res);
 }
 
 /**
@@ -1340,7 +1340,8 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         (*fft)(direction, &multra, &multia, rb, ib, multra.res, interpolation);
 
         rmsb=0;
-        for (i=0; i<(multra.res/2); i++) rmsb+=(rb->data[i]*rb->data[i]+ib->data[i]*ib->data[i])*2;
+        for (i=0; i<(multra.res/2); i++) rmsb+=(rb->data[i]*rb->data[i]+ib->data[i]*ib->data[i])*2
+                                                /(ra->res*ra->res);
         rmsb = sqrt(rmsb);
         
         gwy_data_line_multiply(rb, rmsa/rmsb);
@@ -1443,12 +1444,14 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
                    TRUE, FALSE);
 
     gwy_data_line_resample(target_line, rout.res/2.0, GWY_INTERPOLATION_NONE);
+
     for (i = 0; i < (rout.res/2); i++) {
         target_line->data[i] = (rout.data[i]*rout.data[i] + iout.data[i]*iout.data[i])
             *data_line->real/(data_line->res*data_line->res*2*G_PI);
+
     }
     target_line->real = 2*G_PI*target_line->res/data_line->real;
-/*    gwy_data_line_resize(target_line, 0, rout.res);*/
+
     gwy_data_line_free(&rout);
     gwy_data_line_free(&iin);
     gwy_data_line_free(&iout);
