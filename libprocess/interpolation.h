@@ -9,7 +9,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 /* TODO: change gint arguments to GwyInterpolationType */
-enum {
+typedef enum {
   GWY_INTERPOLATION_NONE      = 0,
   GWY_INTERPOLATION_ROUND     = 1,
   GWY_INTERPOLATION_BILINEAR  = 2,
