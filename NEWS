@@ -26,6 +26,10 @@ Modules:
   Laplace: Undo works properly (bugs #17, #18, #19, #20).
 - Filters: More cases of bug #7 (preview confused by tool switch) were fixed,
   preview properly reflects changes in data.
+- Statistical functions: x axis scale fixed for height and slope distributions,
+  PSDF output improved using windowing properly.
+- Profile selection: profile "thickness" introduced - up to 20 pixel thick
+  averaged profile can be interactively selected and processed.
 - All modules: Dialogs have standard (HIG) button orders.
 
 Library:
