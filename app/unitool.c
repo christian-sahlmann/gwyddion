@@ -847,9 +847,9 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
         gtk_label_set_text(GTK_LABEL(rinfo->hpix), buf);
 
         if (selreal)
-            memcpy(sel, selreal, 4*sizeof(gdouble));
+            memcpy(selreal, sel, 4*sizeof(gdouble));
         if (selpix)
-            memcpy(isel, selpix, 4*sizeof(gint));
+            memcpy(selpix, isel, 4*sizeof(gint));
     }
     else {
         gtk_label_set_text(GTK_LABEL(rinfo->xreal), "");
