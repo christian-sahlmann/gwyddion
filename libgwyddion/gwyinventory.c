@@ -42,13 +42,16 @@ typedef struct {
     guint i;
 } ArrayItem;
 
-static void     gwy_inventory_class_init         (GwyInventoryClass *klass);
-static void     gwy_inventory_init               (GwyInventory *container);
-static void     gwy_inventory_finalize           (GObject *object);
-static void     gwy_inventory_reindex            (GwyInventory *inventory);
-static gint     gwy_inventory_compare_indices    (gint *a,
-                                                  gint *b,
-                                                  GwyInventory *inventory);
+static void     gwy_inventory_class_init           (GwyInventoryClass *klass);
+static void     gwy_inventory_init                 (GwyInventory *container);
+static void     gwy_inventory_finalize             (GObject *object);
+static void     gwy_inventory_reindex              (GwyInventory *inventory);
+static gint     gwy_inventory_compare_indices      (gint *a,
+                                                    gint *b,
+                                                    GwyInventory *inventory);
+static void     gwy_inventory_delete_nth_item_real (GwyInventory *inventory,
+                                                    const gchar *name,
+                                                    guint i);
 
 static guint gwy_inventory_signals[LAST_SIGNAL] = { 0 };
 
@@ -752,6 +755,52 @@ gwy_inventory_compare_indices(gint *a,
 }
 
 /**
+ * gwy_inventory_delete_nth_item_real:
+ * @inventory: An inventory.
+ * @name: Item name (to avoid double lookups from gwy_inventory_delete_item()).
+ * @i: Position of item to remove -- in @items, NOT @idx.
+ *
+ * Removes an item from an inventory given its physical position.
+ *
+ * A kind of g_array_remove_index_fast(), but updating references.
+ **/
+static void
+gwy_inventory_delete_nth_item_real(GwyInventory *inventory,
+                                   const gchar *name,
+                                   guint i)
+{
+    gpointer mp;
+    guint n, last;
+
+    if (inventory->needs_reindex)
+        gwy_inventory_reindex(inventory);
+
+    mp = g_array_index(inventory->items, ArrayItem, i).p;
+    n = g_array_index(inventory->items, ArrayItem, i).i;
+
+    /* Remove item from @idx and @hash */
+    g_hash_table_remove(inventory->hash, name);
+    g_array_remove_index(inventory->idx, n);
+
+    /* Move last item of @items to position of removed item */
+    last = inventory->idx->len;
+    if (i < last) {
+        g_array_index(inventory->items, ArrayItem, i)
+            = g_array_index(inventory->items, ArrayItem, last);
+        g_hash_table_insert(inventory->hash, (gpointer)name,
+                            GUINT_TO_POINTER(i));
+        g_array_index(inventory->idx, guint,
+                      g_array_index(inventory->items, ArrayItem, i).i) = i;
+    }
+    g_array_set_size(inventory->items, last-1);
+
+    if (!inventory->is_simple)
+        g_object_unref(mp);
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEM_DELETED], 0, n);
+}
+
+/**
  * gwy_inventory_delete_item:
  * @inventory: An inventory.
  * @name: Name of item to delete.
@@ -764,8 +813,7 @@ gboolean
 gwy_inventory_delete_item(GwyInventory *inventory,
                           const gchar *name)
 {
-    gpointer mp;
-    guint i, n;
+    guint i;
 
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), FALSE);
     if (!(i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name)))) {
@@ -773,20 +821,7 @@ gwy_inventory_delete_item(GwyInventory *inventory,
         return FALSE;
     }
 
-    /* FIXME: this makes removal of large number of items slow */
-    if (inventory->needs_reindex)
-        gwy_inventory_reindex(inventory);
-
-    mp = g_array_index(inventory->items, ArrayItem, i-1).p;
-    n = g_array_index(inventory->items, ArrayItem, i-1).i;
-    g_hash_table_remove(inventory->hash, name);
-    g_array_remove_index(inventory->idx, n);
-    g_array_remove_index(inventory->items, i-1);
-
-    inventory->needs_reindex = TRUE;
-    g_object_unref(mp);
-
-    g_signal_emit(inventory, gwy_inventory_signals[ITEM_DELETED], 0, n);
+    gwy_inventory_delete_nth_item_real(inventory, name, i-1);
 
     return TRUE;
 }
@@ -804,22 +839,16 @@ gboolean
 gwy_inventory_delete_nth_item(GwyInventory *inventory,
                               guint n)
 {
-    gpointer mp;
+    const gchar *name;
     guint i;
 
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), FALSE);
     g_return_val_if_fail(n <= inventory->items->len, FALSE);
 
     i = g_array_index(inventory->idx, guint, n);
-    mp = g_array_index(inventory->items, ArrayItem, i).p;
-    g_hash_table_remove(inventory->hash, inventory->item_type.get_name(mp));
-    g_array_remove_index(inventory->idx, n);
-    g_array_remove_index(inventory->items, i);
-
-    inventory->needs_reindex = TRUE;
-    g_object_unref(mp);
-
-    g_signal_emit(inventory, gwy_inventory_signals[ITEM_DELETED], 0, n);
+    name = inventory->item_type.get_name(g_array_index(inventory->items,
+                                                       ArrayItem, i).p);
+    gwy_inventory_delete_nth_item_real(inventory, name, i);
 
     return TRUE;
 }
