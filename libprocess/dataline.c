@@ -236,6 +236,15 @@ gwy_data_line_value_changed(GObject *data_line)
 }
 
 
+/**
+ * gwy_data_line_alloc:
+ * @a: data line to be allocated 
+ * @res: resolution (number ov values)
+ *
+ * Allocates field in dataline. Nothing else.
+ * Use gwy_data_line_new for full dataline allocation.
+ * 
+ **/
 void
 gwy_data_line_alloc(GwyDataLine *a, gint res)
 {
@@ -245,6 +254,16 @@ gwy_data_line_alloc(GwyDataLine *a, gint res)
     a->data = g_new(gdouble, a->res);
 }
 
+/**
+ * gwy_data_line_initialize:
+ * @a: data line 
+ * @res: resolution
+ * @real: real size
+ * @nullme: null values or not
+ *
+ * Allocates field in dataline and fills it with
+ * zeros if requested. Also sets the range (real size).
+ **/
 void
 gwy_data_line_initialize(GwyDataLine *a,
                          gint res, gdouble real,
@@ -262,6 +281,12 @@ gwy_data_line_initialize(GwyDataLine *a,
     }
 }
 
+/**
+ * gwy_data_line_free:
+ * @a: data line 
+ *
+ * Frees memory occupied by dataline.
+ **/
 void
 gwy_data_line_free(GwyDataLine *a)
 {
@@ -275,6 +300,16 @@ gwy_data_line_free(GwyDataLine *a)
    
 }
 
+/**
+ * gwy_data_line_resample:
+ * @a: data line 
+ * @res: new resolution
+ * @interpolation: interpolation method used
+ *
+ * Resamples data line, i. e. changes the size of one dimensional
+ * field related with data line. The original values are used
+ * for resampling using a requested resampling alorithm.
+ **/
 void
 gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
 {
@@ -301,6 +336,17 @@ gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
 }
 
 
+/**
+ * gwy_data_line_resize:
+ * @a: data line 
+ * @from: where to start
+ * @to:  where to finish
+ *
+ * Resamples data line to (@from - @to) and fills it
+ * by appropriate original data line part.
+ *
+ * Returns: TRUE if there were no problems.
+ **/
 gboolean
 gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 {
@@ -349,6 +395,17 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
     return TRUE;
 }
 
+/**
+ * gwy_data_line_get_dval:
+ * @a: data line 
+ * @x: position requested (0 - resolution)
+ * @interpolation: interpolation used
+ *
+ * Using a specified interpolation returns value
+ * in any point wihin data line.
+ *
+ * Returns: value interpolated in the data line.
+ **/
 gdouble
 gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
 {
@@ -362,7 +419,6 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     /*simple (and fast) methods*/
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
-        /* XXX: WTF? why is this different from ROUND? */
         return 0.0;
 
         case GWY_INTERPOLATION_ROUND:
@@ -421,35 +477,87 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     return w1*a->data[l-1] + w2*a->data[l] + w3*a->data[l+1] + w4*a->data[l+2];
 }
 
+/**
+ * gwy_data_line_get_res:
+ * @a: data line 
+ *
+ * 
+ *
+ * Returns: Resolution (number of data points).
+ **/
 gint
 gwy_data_line_get_res(GwyDataLine *a)
 {
     return a->res;
 }
 
-gdouble gwy_data_line_get_real(GwyDataLine *a)
+/**
+ * gwy_data_line_get_real:
+ * @a: data line 
+ *
+ * 
+ *
+ * Returns: Real size of data line.
+ **/
+gdouble 
+gwy_data_line_get_real(GwyDataLine *a)
 {
     return a->real;
 }
 
-void gwy_data_line_set_real(GwyDataLine *a, gdouble real)
+/**
+ * gwy_data_line_set_real:
+ * @a: data line 
+ * @real: value to be set
+ *
+ * Sets the real data line size.
+ **/
+void 
+gwy_data_line_set_real(GwyDataLine *a, gdouble real)
 {
     a->real = real;
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
+/**
+ * gwy_data_line_itor:
+ * @a: data line 
+ * @pixval: value in pixel coordinates
+ *
+ * 
+ *
+ * Returns: value in real coordinates.
+ **/
 gdouble
 gwy_data_line_itor(GwyDataLine *a, gdouble pixval)
 {
     return pixval*a->real/a->res;
 }
 
+/**
+ * gwy_data_line_rtoi:
+ * @a: data line 
+ * @realval: value in real coordinates
+ *
+ * 
+ *
+ * Returns: value in pixel coordinates.
+ **/
 gdouble
 gwy_data_line_rtoi(GwyDataLine *a, gdouble realval)
 {
     return realval*a->res/a->real;
 }
 
+/**
+ * gwy_data_line_get_val:
+ * @a: data line 
+ * @i: index (pixel coordinates)
+ *
+ * 
+ *
+ * Returns: value at given index.
+ **/
 gdouble
 gwy_data_line_get_val(GwyDataLine *a, gint i)
 {
@@ -458,6 +566,16 @@ gwy_data_line_get_val(GwyDataLine *a, gint i)
     return a->data[i];
 }
 
+/**
+ * gwy_data_line_set_val:
+ * @a:  data line
+ * @i: pixel coordinates
+ * @value: value to be set
+ *
+ * Sets the value at given index.
+ *
+ * Returns: TRUE it there were no problems.
+ **/
 gboolean
 gwy_data_line_set_val(GwyDataLine *a, gint i, gdouble value)
 {
@@ -470,12 +588,34 @@ gwy_data_line_set_val(GwyDataLine *a, gint i, gdouble value)
 }
 
 
+/**
+ * gwy_data_line_get_dval_real:
+ * @a: data line 
+ * @x: real coordinates position
+ * @interpolation: interpolation method used
+ *
+ * Same as gwy_data_line_get_dval() fucntion, but uses
+ * real coordinates input.
+ *
+ * Returns: Value interpolated in the data line. 
+ **/
 gdouble
 gwy_data_line_get_dval_real(GwyDataLine *a, gdouble x, gint interpolation)
 {
     return gwy_data_line_get_dval(a, gwy_data_line_rtoi(a, x), interpolation);
 }
 
+/**
+ * gwy_data_line_invert:
+ * @a: data line 
+ * @x: invert x axis
+ * @z: invert z axis
+ *
+ * Inverts values. If  @x is TRUE it inverts
+ * x-axis values (x1...xn) to (xn...x1), if
+ * @z is TRUE inverts z-axis values (peaks to valleys
+ * and valleys to peaks).
+ **/
 void
 gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z)
 {
@@ -500,6 +640,13 @@ gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z)
     g_free(b.data);
 }
 
+/**
+ * gwy_data_line_fill:
+ * @a: data line 
+ * @value: value to be used for filling
+ *
+ * Fills whole data lien with specified number.
+ **/
 void
 gwy_data_line_fill(GwyDataLine *a, gdouble value)
 {
@@ -510,6 +657,13 @@ gwy_data_line_fill(GwyDataLine *a, gdouble value)
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
+/**
+ * gwy_data_line_add:
+ * @a: data line 
+ * @value: value to be added.
+ *
+ * Adds a specified number to whole data line.
+ **/
 void
 gwy_data_line_add(GwyDataLine *a, gdouble value)
 {
@@ -520,6 +674,13 @@ gwy_data_line_add(GwyDataLine *a, gdouble value)
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
+/**
+ * gwy_data_line_multiply:
+ * @a: data line 
+ * @value: value to be used for multiplication
+ *
+ * Multiplies whole data line with a specified number.
+ **/
 void
 gwy_data_line_multiply(GwyDataLine *a, gdouble value)
 {
@@ -530,6 +691,15 @@ gwy_data_line_multiply(GwyDataLine *a, gdouble value)
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
+/**
+ * gwy_data_line_part_fill:
+ * @a: data line 
+ * @from: where to start
+ * @to: where to finish
+ * @value: value to be used for filling
+ *
+ * Fills specified part of data line with specified number
+ **/
 void
 gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value)
 {
@@ -545,6 +715,15 @@ gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value)
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
+/**
+ * gwy_data_line_part_add:
+ * @a: data line 
+ * @from: where to start
+ * @to: where to finish
+ * @value: value to be added
+ *
+ * Adds specified number to a part of data line.
+ **/
 void
 gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value)
 {
@@ -560,6 +739,15 @@ gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value)
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
+/**
+ * gwy_data_line_part_multiply:
+ * @a: data line 
+ * @from: where to start
+ * @to: where to finish
+ * @value: value to be used for multiplication
+ *
+ * Multiplies specified part of data line by specified number
+ **/
 void
 gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value)
 {
