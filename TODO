@@ -51,11 +51,12 @@ Release checklist:
 - make sure gwyddion.iss.in contains all translation (XXX: automatize this)
 - update version in configure.ac
 - update version in gwyddion-night-build
-- switch object leak debugging and segfault on critical messages off
+- switch segfault on critical messages off
 - must build on Linux from tarballs
 - must build on Windows
 - check and update NEWS, generate HTML version
 - make sure devel-docs/libfoo/libfoo.types loads all new types
+- make sure stock icon images are included in libgwydgets API docs
 - generate stable API docs for gwyddion.net and upload them
 - tag CVS
 - build and upload packages
