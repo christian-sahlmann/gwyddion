@@ -129,6 +129,8 @@ gwy_option_menu_palette(GCallback callback,
 
     idx = -1;
     omenu = gtk_option_menu_new();
+    g_object_set_data(G_OBJECT(omenu), "gwy-option-menu",
+                      GINT_TO_POINTER(TRUE));
     menu = gwy_palette_menu_create(callback, cbdata, current, &idx);
 
     gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
