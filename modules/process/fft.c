@@ -178,7 +178,8 @@ fft(GwyContainer *data, GwyRunType run)
             set_dfield_real(raout, ipout, dfield); 
 
             data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
+            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                             "FFT Real");
         }
         if (args.out == GWY_FFT_OUTPUT_REAL_IMG || args.out == GWY_FFT_OUTPUT_IMG)
         {
@@ -187,14 +188,16 @@ fft(GwyContainer *data, GwyRunType run)
             set_dfield_imaginary(raout, ipout, dfield); 
 
             data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window)); 
+            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                             "FFT Imag"); 
         }
         if (args.out == GWY_FFT_OUTPUT_MOD_PHASE || args.out == GWY_FFT_OUTPUT_MOD)
         {   
             set_dfield_module(raout, ipout, dfield); 
 
             data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
+            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                             "FFT Modulus");
         }
         if (args.out == GWY_FFT_OUTPUT_MOD_PHASE || args.out == GWY_FFT_OUTPUT_PHASE)
         {
@@ -203,7 +206,8 @@ fft(GwyContainer *data, GwyRunType run)
             set_dfield_phase(raout, ipout, dfield); 
 
             data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window)); 
+            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                             "FFT Phase"); 
         }
 
         if (run != GWY_RUN_WITH_DEFAULTS)

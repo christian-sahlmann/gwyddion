@@ -1,5 +1,6 @@
 /* @(#) $Id$ */
 
+#include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
@@ -28,7 +29,7 @@ static GtkWidget* gwy_app_toolbar_append_tool(GtkWidget *toolbar,
                                               GwyToolUseFunc tool_use_func);
 static void       gwy_app_use_tool_cb        (GtkWidget *unused,
                                               GwyToolUseFunc tool_use_func);
-static void      gwy_app_update_toolbox_state(GwyMenuSensitiveData *sens_data);
+static void       gwy_app_update_toolbox_state(GwyMenuSensitiveData *sens_data);
 
 void
 gwy_app_quit(void)
@@ -213,7 +214,6 @@ GwyContainer*
 gwy_app_get_current_data(void)
 {
     GwyDataWindow *data_window;
-    GtkWidget *data_view;
 
     data_window = gwy_app_data_window_get_current();
     if (!data_window)
@@ -327,17 +327,50 @@ gwy_app_data_window_create(GwyContainer *data)
     return data_window;
 }
 
+/**
+ * gwy_app_data_window_set_untitled:
+ * @data_window: A data window.
+ * @templ: A title template string.
+ *
+ * Clears any file name for @data_window and sets its "/filename/untitled"
+ * data.
+ *
+ * The template tring @templ can be either %NULL, the window then gets a
+ * title like "Untitled 37", or a string "Foo" not containing `%', the window
+ * then gets a title like "Foo 42", or a string "Bar %d" containing a single
+ * '%d', the window then gets a title like "Bar 666".
+ *
+ * Returns: The number that will appear in the title (probably useless).
+ **/
 gint
-gwy_app_data_window_set_untitled(GwyDataWindow *data_window)
+gwy_app_data_window_set_untitled(GwyDataWindow *data_window,
+                                 const gchar *templ)
 {
     GtkWidget *data_view;
     GwyContainer *data;
+    gchar *title, *p;
 
     data_view = gwy_data_window_get_data_view(data_window);
     data = GWY_CONTAINER(gwy_data_view_get_data(GWY_DATA_VIEW(data_view)));
     gwy_container_remove_by_prefix(data, "/filename");
     untitled_no++;
-    gwy_container_set_int32_by_name(data, "/filename/untitled", untitled_no);
+    if (!templ)
+        title = g_strdup_printf(_("Untitled %d"), untitled_no);
+    else {
+        do {
+            p = strchr(templ, '%');
+        } while (p && p[1] == '%' && (p += 2));
+
+        if (!p)
+            title = g_strdup_printf("%s %d", templ, untitled_no);
+        else if (p[1] == 'd' && !strchr(p+2, '%'))
+            title = g_strdup_printf(templ, untitled_no);
+        else {
+            g_warning("Wrong template `%s'", templ);
+            title = g_strdup_printf(_("Untitled %d"), untitled_no);
+        }
+    }
+    gwy_container_set_string_by_name(data, "/filename/untitled", title);
     gwy_data_window_update_title(data_window);
 
     return untitled_no;

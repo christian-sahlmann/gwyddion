@@ -202,7 +202,7 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
     ok &= !exit_status;
     if (ok && (data = text_dump_import(data, buffer, size))) {
         data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
     else {
         g_warning("Cannot run plug-in %s: %s",

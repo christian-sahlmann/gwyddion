@@ -188,20 +188,19 @@ gwy_data_arith_append_line(GwyDataWindow *data_window,
 {
     GwyContainer *data;
     GtkWidget *item;
+    const gchar *fnm;
     gchar *filename;
 
     data = gwy_data_window_get_data(data_window);
 
     /* FIXME: this duplicates code from GwyDataWindow */
     if (gwy_container_contains_by_name(data, "/filename")) {
-        const gchar *fnm = gwy_container_get_string_by_name(data, "/filename");
-
+        fnm = gwy_container_get_string_by_name(data, "/filename");
         filename = g_path_get_basename(fnm);
     }
     else {
-        gint u = gwy_container_get_int32_by_name(data, "/filename/untitled");
-
-        filename = g_strdup_printf(_("Untitled-%d"), u);
+        fnm = gwy_container_get_string_by_name(data, "/filename/untitled");
+        filename = g_strdup(fnm);
     }
 
     item = gtk_menu_item_new_with_label(filename);
@@ -209,6 +208,7 @@ gwy_data_arith_append_line(GwyDataWindow *data_window,
     g_object_set_data(G_OBJECT(item), "data-window", data_window);
     g_signal_connect(item, "activate",
                      G_CALLBACK(gwy_data_arith_data_cb), menu);
+    g_free(filename);
 }
 
 static void
@@ -244,6 +244,8 @@ gwy_data_arith_entry_cb(GtkWidget *entry,
 
     scalar = (gdouble*)g_object_get_data(G_OBJECT(entry), "scalar");
     editable = GTK_EDITABLE(entry);
+    /* validate whether it looks as a number of something like start of a
+     * number */
     s = end = gtk_editable_get_chars(editable, 0, -1);
     for (pos = 0; s[pos]; pos++)
         s[pos] = g_ascii_tolower(s[pos]);
@@ -362,7 +364,7 @@ gwy_data_arith_do(void)
             break;
         }
         data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
         return TRUE;
     }
@@ -404,7 +406,7 @@ gwy_data_arith_do(void)
             break;
         }
         data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
         return TRUE;
     }
@@ -477,7 +479,7 @@ gwy_data_arith_do(void)
             break;
         }
         data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
         return TRUE;
     }

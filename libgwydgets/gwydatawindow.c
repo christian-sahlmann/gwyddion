@@ -24,12 +24,9 @@ static void     compute_statusbar_units        (GwyDataWindow *data_window);
 static void     gwy_data_view_update_statusbar (GwyDataView *data_view,
                                                 GdkEventMotion *event,
                                                 GwyDataWindow *data_window);
-static void     zoom_changed_cb                (GtkWidget *data_view,
-                                                GtkAllocation *allocation,
-                                                GwyDataWindow *data_window);
-static gboolean color_axis_clicked_cb          (GtkWidget *coloraxis,
-                                                GdkEventButton *event,
-                                                GtkWidget *data_window);
+static void     zoom_changed_cb                (GwyDataWindow *data_window);
+static gboolean color_axis_clicked_cb          (GtkWidget *data_window,
+                                                GdkEventButton *event);
 static void     palette_selected_cb            (GtkWidget *item,
                                                 GwyDataWindow *data_window);
 static void     data_view_updated_cb           (GwyDataWindow *data_window);
@@ -134,8 +131,9 @@ gwy_data_window_new(GwyDataView *data_view)
 
     /***** data view *****/
     data_window->data_view = (GtkWidget*)data_view;
-    g_signal_connect_after(data_view, "size_allocate",
-                           G_CALLBACK(zoom_changed_cb), data_window);
+    g_signal_connect_data(data_view, "size_allocate",
+                           G_CALLBACK(zoom_changed_cb), data_window,
+                           NULL, G_CONNECT_AFTER | G_CONNECT_SWAPPED);
     g_signal_connect_swapped(data_view, "updated",
                              G_CALLBACK(data_view_updated_cb), data_window);
 
@@ -199,8 +197,8 @@ gwy_data_window_new(GwyDataView *data_view)
     data_view_updated_cb(data_window);
     gtk_box_pack_start(GTK_BOX(hbox), data_window->coloraxis,
                        FALSE, FALSE, 0);
-    g_signal_connect(data_window->coloraxis, "button_press_event",
-                     G_CALLBACK(color_axis_clicked_cb), data_window);
+    g_signal_connect_swapped(data_window->coloraxis, "button_press_event",
+                             G_CALLBACK(color_axis_clicked_cb), data_window);
 
     /* show everything except the table */
     gtk_widget_show_all(vbox);
@@ -465,6 +463,7 @@ void
 gwy_data_window_update_title(GwyDataWindow *data_window)
 {
     gchar *window_title, *filename, zoomstr[8];
+    const gchar *fnm;
     GwyDataView *data_view;
     GwyContainer *data;
     gdouble zoom;
@@ -477,14 +476,12 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
     if (gwy_container_contains_by_name(data, "/filename")) {
-        const gchar *fnm = gwy_container_get_string_by_name(data, "/filename");
-
+        fnm = gwy_container_get_string_by_name(data, "/filename");
         filename = g_path_get_basename(fnm);
     }
     else {
-        gint u = gwy_container_get_int32_by_name(data, "/filename/untitled");
-
-        filename = g_strdup_printf(_("Untitled-%d"), u);
+        fnm = gwy_container_get_string_by_name(data, "/filename/untitled");
+        filename = g_strdup(fnm);
     }
 
     zoom = gwy_data_view_get_zoom(data_view);
@@ -504,21 +501,16 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
 }
 
 static void
-zoom_changed_cb(GtkWidget *data_view,
-                GtkAllocation *allocation,
-                GwyDataWindow *data_window)
+zoom_changed_cb(GwyDataWindow *data_window)
 {
     gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    g_return_if_fail(data_window->data_view == data_view);
     gwy_data_window_update_title(data_window);
 }
 
 static gboolean
-color_axis_clicked_cb(GtkWidget *coloraxis,
-                      GdkEventButton *event,
-                      GtkWidget *data_window)
+color_axis_clicked_cb(GtkWidget *data_window,
+                      GdkEventButton *event)
 {
     GtkWidget *menu;
 

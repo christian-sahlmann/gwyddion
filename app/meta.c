@@ -48,6 +48,7 @@ gwy_meta_browser(GwyDataWindow *data_window)
     GtkWidget *window, *browser;
     GwyContainer *data;
     gchar *filename, *title;
+    const gchar *fnm;
 
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -55,14 +56,12 @@ gwy_meta_browser(GwyDataWindow *data_window)
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     /* FIXME: this duplicates code from GwyDataWindow */
     if (gwy_container_contains_by_name(data, "/filename")) {
-        const gchar *fnm = gwy_container_get_string_by_name(data, "/filename");
-
+        fnm = gwy_container_get_string_by_name(data, "/filename");
         filename = g_path_get_basename(fnm);
     }
     else {
-        gint u = gwy_container_get_int32_by_name(data, "/filename/untitled");
-
-        filename = g_strdup_printf(_("Untitled-%d"), u);
+        fnm = gwy_container_get_string_by_name(data, "/filename/untitled");
+        filename = g_strdup(fnm);
     }
 
     title = g_strdup_printf("%s Metadata %s", g_get_application_name(),

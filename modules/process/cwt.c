@@ -130,7 +130,7 @@ cwt(GwyContainer *data, GwyRunType run)
         if (args.preserve) gwy_data_field_resample(dfield, xsize, ysize, args.interp);
         
         data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window)); 
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL); 
 
         if (run != GWY_RUN_WITH_DEFAULTS)
             cwt_save_args(gwy_app_settings_get(), &args);

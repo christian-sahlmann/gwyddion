@@ -20,7 +20,8 @@ void            gwy_app_data_window_remove        (GwyDataWindow *data_window);
 void            gwy_app_data_window_foreach       (GFunc func,
                                                    gpointer user_data);
 GtkWidget*      gwy_app_data_window_create        (GwyContainer *data);
-gint            gwy_app_data_window_set_untitled  (GwyDataWindow *data_window);
+gint            gwy_app_data_window_set_untitled  (GwyDataWindow *data_window,
+                                                   const gchar *templ);
 void            gwy_app_quit                      (void);
 
 
