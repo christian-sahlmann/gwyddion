@@ -77,7 +77,6 @@ gwy_datafield_serializable_init(gpointer giface,
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_assert(iface_data == GUINT_TO_POINTER(42));
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -94,7 +93,6 @@ gwy_datafield_watchable_init(gpointer giface,
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_assert(iface_data == GUINT_TO_POINTER(37));
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     /* initialize stuff */
