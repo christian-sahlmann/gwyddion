@@ -56,7 +56,7 @@ gwy_app_about(void)
     g_free(s);
 
     vbox = GTK_DIALOG(about)->vbox;
-    gtk_box_set_spacing(GTK_BOX(vbox), 12);
+    gtk_box_set_spacing(GTK_BOX(vbox), 8);
 
     hbox = gtk_hbox_new(FALSE, 6);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
@@ -84,12 +84,15 @@ gwy_app_about(void)
 
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
-    gtk_misc_set_padding(GTK_MISC(widget), 2, 8);
+    gtk_misc_set_padding(GTK_MISC(widget), 2, 6);
     gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
     s = g_strdup_printf("<i>%s</i>", PACKAGE_URL);
     gtk_label_set_markup(GTK_LABEL(widget), s);
     g_free(s);
     gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
+
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(about)->vbox), vbox, TRUE, TRUE, 0);
 
     widget = gtk_label_new(_("Credits"));
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
@@ -98,7 +101,7 @@ gwy_app_about(void)
     credits = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(credits),
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_widget_set_size_request(credits, -1, 120);
+    gtk_widget_set_size_request(credits, -1, 160);
     gtk_box_pack_start(GTK_BOX(vbox), credits, TRUE, TRUE, 0);
 
     widget = gtk_label_new(NULL);
@@ -126,7 +129,6 @@ gwy_app_about(void)
 
     widget = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
     s = g_strdup_printf(
             _("\n"
               "<small>%s is free software; "
@@ -142,11 +144,16 @@ gwy_app_about(void)
     gtk_label_set_line_wrap(GTK_LABEL(widget), TRUE);
     gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
 
+    gtk_widget_show_all(about);
+    gtk_widget_set_size_request(widget,
+                                GTK_DIALOG(about)->vbox->allocation.width, -1);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
+    gtk_widget_show(widget);
+
     g_signal_connect(about, "delete_event",
                      G_CALLBACK(about_close), NULL);
     g_signal_connect(about, "response",
                      G_CALLBACK(about_close), NULL);
-    gtk_widget_show_all(about);
 }
 
 static void
