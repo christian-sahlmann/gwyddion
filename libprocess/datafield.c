@@ -467,6 +467,7 @@ gwy_data_field_area_copy(GwyDataField *src,
 
     /* make it as fast as gwy_data_field_copy() whenever possible (and maybe
      * faster, as we don't play with units */
+    gwy_data_field_invalidate(dest);
     if (brrow - ulrow == 1
         || (ulcol == 0 && brcol == src->xres && src->xres == dest->xres)) {
         memcpy(dest->data + dest->xres*destrow + destcol,
@@ -591,6 +592,7 @@ gwy_data_field_resize(GwyDataField *a,
     a->xres = xres;
     a->yres = yres;
     GWY_SWAP(gdouble*, a->data, b.data);
+    gwy_data_field_invalidate(a);
 
     _gwy_data_field_free(&b);
     return TRUE;

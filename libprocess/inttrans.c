@@ -83,6 +83,9 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
 
     _gwy_data_field_free(&rh);
     _gwy_data_field_free(&ih);
+
+    gwy_data_field_invalidate(rb);
+    gwy_data_field_invalidate(ib);
 }
 
 /**
@@ -123,6 +126,9 @@ gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
 
     _gwy_data_field_free(&rh);
     _gwy_data_field_free(&ih);
+
+    gwy_data_field_invalidate(rb);
+    gwy_data_field_invalidate(ib);
 }
 
 
@@ -223,6 +229,9 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     g_object_unref(rout);
     g_object_unref(iin);
     g_object_unref(iout);
+
+    gwy_data_field_invalidate(rb);
+    gwy_data_field_invalidate(ib);
 }
 
 /**
@@ -276,6 +285,9 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     g_object_unref(rout);
     g_object_unref(iin);
     g_object_unref(iout);
+
+    gwy_data_field_invalidate(rb);
+    gwy_data_field_invalidate(ib);
 }
 
 /**
@@ -362,9 +374,11 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
     g_object_unref(ift1);
     g_object_unref(ift2);
 
+    gwy_data_field_invalidate(rb);
+    gwy_data_field_invalidate(ib);
 }
 
-static gdouble
+static inline gdouble
 edist(gint xc1, gint yc1, gint xc2, gint yc2)
 {
     return sqrt(((gdouble)xc1-xc2)*((gdouble)xc1-xc2)
@@ -475,6 +489,8 @@ gwy_data_field_cwt(GwyDataField *data_field,
    _gwy_data_field_free(&hlp_r);
    _gwy_data_field_free(&hlp_i);
    _gwy_data_field_free(&imag_field);
+
+    gwy_data_field_invalidate(data_field);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
