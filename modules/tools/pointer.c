@@ -12,29 +12,27 @@ typedef struct {
     gboolean is_visible;  /* GTK_WIDGET_VISIBLE() returns BS? */
     GtkWidget *x;
     GtkWidget *y;
-    GtkWidget *w;
-    GtkWidget *h;
+    GtkWidget *val;
     gdouble mag;
     gint precision;
     gchar *units;
-} CropControls;
+} PointerControls;
 
-static GtkWidget* crop_dialog_create            (GwyDataView *data_view);
-static void       crop_do                       (void);
-static void       crop_selection_finished_cb    (void);
-static void       crop_dialog_response_cb       (gpointer unused,
-                                                 gint response);
-static void       crop_dialog_abandon           (void);
-static void       crop_dialog_set_visible       (gboolean visible);
+static GtkWidget* pointer_dialog_create            (GwyDataView *data_view);
+static void       pointer_selection_updated_cb     (void);
+static void       pointer_dialog_response_cb       (gpointer unused,
+                                                    gint response);
+static void       pointer_dialog_abandon           (void);
+static void       pointer_dialog_set_visible       (gboolean visible);
 
 static GtkWidget *dialog;
-static CropControls controls;
-static gulong finished_id = 0;
+static PointerControls controls;
+static gulong updated_id = 0;
 static gulong response_id = 0;
-static GwyDataViewLayer *select_layer = NULL;
+static GwyDataViewLayer *pointer_layer = NULL;
 
 void
-gwy_tool_crop_use(GwyDataWindow *data_window)
+gwy_tool_pointer_use(GwyDataWindow *data_window)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -42,49 +40,39 @@ gwy_tool_crop_use(GwyDataWindow *data_window)
     gwy_debug("%s: %p", __FUNCTION__, data_window);
 
     if (!data_window) {
-        crop_dialog_abandon();
+        pointer_dialog_abandon();
         return;
     }
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && layer == select_layer)
+    if (layer && layer == pointer_layer)
         return;
-    if (select_layer && finished_id)
-        g_signal_handler_disconnect(select_layer, finished_id);
+    if (pointer_layer && updated_id)
+        g_signal_handler_disconnect(pointer_layer, updated_id);
 
-    if (layer && GWY_IS_LAYER_SELECT(layer))
-        select_layer = layer;
+    if (layer && GWY_IS_LAYER_POINTER(layer))
+        pointer_layer = layer;
     else {
-        select_layer = (GwyDataViewLayer*)gwy_layer_select_new();
-        gwy_data_view_set_top_layer(data_view, select_layer);
+        pointer_layer = (GwyDataViewLayer*)gwy_layer_pointer_new();
+        gwy_data_view_set_top_layer(data_view, pointer_layer);
     }
     if (!dialog)
-        dialog = crop_dialog_create(data_view);
+        dialog = pointer_dialog_create(data_view);
 
-    finished_id = g_signal_connect(select_layer, "finished",
-                                   G_CALLBACK(crop_selection_finished_cb),
+    updated_id = g_signal_connect(pointer_layer, "updated",
+                                   G_CALLBACK(pointer_selection_updated_cb),
                                    NULL);
-    crop_selection_finished_cb();
+    pointer_selection_updated_cb();
 }
 
 static void
-crop_do(void)
+pointer_dialog_abandon(void)
 {
-    gdouble x0, y0, x1, y1;
-
-    if (!gwy_layer_select_get_selection(select_layer, &x0, &y0, &x1, &y1))
-        return;
-    g_warning("Implement me!");
-}
-
-static void
-crop_dialog_abandon(void)
-{
-    if (select_layer && finished_id)
-        g_signal_handler_disconnect(select_layer, finished_id);
-    finished_id = 0;
-    select_layer = NULL;
+    if (pointer_layer && updated_id)
+        g_signal_handler_disconnect(pointer_layer, updated_id);
+    updated_id = 0;
+    pointer_layer = NULL;
     if (dialog) {
         g_signal_handler_disconnect(dialog, response_id);
         gtk_widget_destroy(dialog);
@@ -96,7 +84,7 @@ crop_dialog_abandon(void)
 }
 
 static GtkWidget*
-crop_dialog_create(GwyDataView *data_view)
+pointer_dialog_create(GwyDataView *data_view)
 {
     GwyContainer *data;
     GwyDataField *dfield;
@@ -114,22 +102,21 @@ crop_dialog_create(GwyDataView *data_view)
     controls.mag = gwy_math_humanize_numbers(unit, max, &controls.precision);
     controls.units = g_strconcat(gwy_math_SI_prefix(controls.mag), "m", NULL);
 
-    dialog = gtk_dialog_new_with_buttons(_("Crop"),
+    dialog = gtk_dialog_new_with_buttons(_("Show value"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
     g_signal_connect(dialog, "delete_event",
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     response_id = g_signal_connect(dialog, "response",
-                                   G_CALLBACK(crop_dialog_response_cb), NULL);
-    table = gtk_table_new(6, 3, FALSE);
+                                   G_CALLBACK(pointer_dialog_response_cb), NULL);
+    table = gtk_table_new(5, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Position</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
     label = gtk_label_new(_("X"));
@@ -139,28 +126,22 @@ crop_dialog_create(GwyDataView *data_view)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 2, 3, GTK_FILL, 0, 2, 2);
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Value</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Width"));
+    label = gtk_label_new(_("Value"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 4, 5, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Height"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 5, 6, GTK_FILL, 0, 2, 2);
 
     controls.x = gtk_label_new("");
     controls.y = gtk_label_new("");
-    controls.w = gtk_label_new("");
-    controls.h = gtk_label_new("");
+    controls.val = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.x), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls.y), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls.w), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls.h), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls.val), 1.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls.x, 2, 3, 1, 2);
     gtk_table_attach_defaults(GTK_TABLE(table), controls.y, 2, 3, 2, 3);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.w, 2, 3, 4, 5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.h, 2, 3, 5, 6);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls.val, 2, 3, 4, 5);
     gtk_widget_show_all(table);
     controls.is_visible = FALSE;
 
@@ -178,51 +159,57 @@ update_label(GtkWidget *label, gdouble value)
 }
 
 static void
-crop_selection_finished_cb(void)
+pointer_selection_updated_cb(void)
 {
-    gdouble x0, y0, x1, y1;
+    gdouble x, y;
     gboolean is_visible, is_selected;
 
     gwy_debug("%s", __FUNCTION__);
     /*XXX: seems broken
      * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
     is_visible = controls.is_visible;
-    is_selected = gwy_layer_select_get_selection(select_layer,
-                                                 &x0, &y0, &x1, &y1);
+    is_selected = gwy_layer_pointer_get_point(pointer_layer, &x, &y);
     if (!is_visible && !is_selected)
         return;
     if (is_selected) {
-        update_label(controls.x, MIN(x0, x1));
-        update_label(controls.y, MIN(y0, y1));
-        update_label(controls.w, fabs(x1 - x0));
-        update_label(controls.h, fabs(y1 - y0));
+        update_label(controls.x, x);
+        update_label(controls.y, y);
+        {
+            gchar buffer[16];
+            gdouble value;
+            GwyContainer *data;
+            GwyDataField *dfield;
+
+            data = gwy_data_view_get_data(GWY_DATA_VIEW(pointer_layer->parent));
+            dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                     "/0/data"));
+            value = gwy_data_field_get_dval_real(dfield, x, y,
+                                                 GWY_INTERPOLATION_ROUND);
+            g_snprintf(buffer, sizeof(buffer), "%g", value);
+            gtk_label_set_text(GTK_LABEL(controls.val), buffer);
+        }
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls.x), "");
         gtk_label_set_text(GTK_LABEL(controls.y), "");
-        gtk_label_set_text(GTK_LABEL(controls.w), "");
-        gtk_label_set_text(GTK_LABEL(controls.h), "");
+        gtk_label_set_text(GTK_LABEL(controls.val), "");
     }
     if (!is_visible)
-        crop_dialog_set_visible(TRUE);
+        pointer_dialog_set_visible(TRUE);
 }
 
 static void
-crop_dialog_response_cb(gpointer unused, gint response)
+pointer_dialog_response_cb(gpointer unused, gint response)
 {
     gwy_debug("%s: response %d", __FUNCTION__, response);
     switch (response) {
         case GTK_RESPONSE_CLOSE:
         case GTK_RESPONSE_DELETE_EVENT:
-        crop_dialog_set_visible(FALSE);
+        pointer_dialog_set_visible(FALSE);
         break;
 
         case GTK_RESPONSE_NONE:
-        gwy_tool_crop_use(NULL);
-        break;
-
-        case GTK_RESPONSE_APPLY:
-        crop_do();
+        gwy_tool_pointer_use(NULL);
         break;
 
         default:
@@ -232,7 +219,7 @@ crop_dialog_response_cb(gpointer unused, gint response)
 }
 
 static void
-crop_dialog_set_visible(gboolean visible)
+pointer_dialog_set_visible(gboolean visible)
 {
     gwy_debug("%s: now %d, setting to %d",
               __FUNCTION__, controls.is_visible, visible);

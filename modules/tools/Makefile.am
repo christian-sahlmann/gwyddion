@@ -13,7 +13,8 @@ noinst_HEADERS = \
 
 libtools_la_LDFLAGS = -static
 libtools_la_SOURCES = \
-	crop.c
+	crop.c \
+	pointer.c
 
 libtools_la_LIBADD = \
 	$(libgwyddion) \
