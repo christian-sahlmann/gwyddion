@@ -25,7 +25,7 @@ Config-file options:
   types             Type highligting override map (like {'Enum': 'Keyword'})
 
 Gtk-doc types (case doesn't matter):
-  Constant, Macro, Function, Struct, Enum, Typedef, User_Function
+  Constant, Macro, Function, Struct, Enum, Union, Typedef, User_Function
 Extra vim-syn-gen types:
   Define (parameterless macro)
 
@@ -56,6 +56,7 @@ types = {
     'FUNCTION': 'Function',
     'STRUCT': 'Type',
     'ENUM': 'Type',
+    'UNION': 'Type',
     'TYPEDEF': 'Type',
     'USER_FUNCTION': 'Type'
 }
