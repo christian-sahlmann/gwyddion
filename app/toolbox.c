@@ -204,9 +204,9 @@ gwy_app_toolbox_create(void)
                        GWY_STOCK_GRAPH_ZOOM_FIT,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_unzoom");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Measure distances between points"), NULL,
+                       _("Fit critical dimension"), NULL,
                        GWY_STOCK_GRAPH_MEASURE,
-                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_points");
+                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_cd");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Fit functions to graph data"), NULL,
                        GWY_STOCK_GRAPH_FIT_FUNC,
