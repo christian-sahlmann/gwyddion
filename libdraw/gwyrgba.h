@@ -21,6 +21,8 @@
 #ifndef __GWY_RGBA_H__
 #define __GWY_RGBA_H__
 
+#include <gdk/gdkcolor.h>
+
 G_BEGIN_DECLS
 
 #define GWY_TYPE_RGBA                         (gwy_rgba_get_type())
@@ -34,9 +36,17 @@ struct _GwyRGBA {
     gdouble a;
 };
 
-GType         gwy_rgba_get_type    (void) G_GNUC_CONST;
-GwyRGBA*      gwy_rgba_copy        (const GwyRGBA *color);
-void          gwy_rgba_free        (GwyRGBA *color);
+GType         gwy_rgba_get_type                 (void) G_GNUC_CONST;
+GwyRGBA*      gwy_rgba_copy                     (const GwyRGBA *color);
+void          gwy_rgba_free                     (GwyRGBA *color);
+void          gwy_rgba_to_gdk_color             (GwyRGBA *rgba,
+                                                 GdkColor *gdkcolor);
+guint16       gwy_rgba_to_gdk_alpha             (GwyRGBA *rgba);
+void          gwy_rgba_from_gdk_color           (GwyRGBA *rgba,
+                                                 GdkColor *gdkcolor);
+void          gwy_rgba_from_gdk_color_and_alpha (GwyRGBA *rgba,
+                                                 GdkColor *gdkcolor,
+                                                 guint16 gdkalpha);
 
 G_END_DECLS
 
