@@ -29,9 +29,26 @@
 #define LINECORR_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+#define GOLDEN_RATIO .6180339887498948482
+
+typedef struct {
+    gdouble *a;
+    gdouble *b;
+    guint n;
+} MedianLineData;
+
 static gboolean    module_register            (const gchar *name);
 static gboolean    line_correct_modus         (GwyContainer *data,
                                                GwyRunType run);
+static gboolean    line_correct_median        (GwyContainer *data,
+                                               GwyRunType run);
+static gdouble     find_minima_golden         (gdouble (*func)(gdouble x,
+                                                               gpointer data),
+                                               gdouble from,
+                                               gdouble to,
+                                               gpointer data);
+static gdouble     sum_of_abs_diff            (gdouble shift,
+                                               gpointer data);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -40,7 +57,7 @@ static GwyModuleInfo module_info = {
     "line_correct",
     N_("Corrects line defects (mostly experimental algorithms)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0.1",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -54,13 +71,21 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo line_correct_modus_func_info = {
         "line_correct_modus",
-        N_("/_Correct Data/_Modus Line Correction"),
+        N_("/_Correct Data/M_odus Line Correction"),
         (GwyProcessFunc)&line_correct_modus,
+        LINECORR_RUN_MODES,
+        0,
+    };
+    static GwyProcessFuncInfo line_correct_median_func_info = {
+        "line_correct_median",
+        N_("/_Correct Data/M_edian Line Correction"),
+        (GwyProcessFunc)&line_correct_median,
         LINECORR_RUN_MODES,
         0,
     };
 
     gwy_process_func_register(name, &line_correct_modus_func_info);
+    gwy_process_func_register(name, &line_correct_median_func_info);
 
     return TRUE;
 }
@@ -98,6 +123,105 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     g_object_unref(line);
 
     return TRUE;
+}
+
+static gboolean
+line_correct_median(GwyContainer *data, GwyRunType run)
+{
+    MedianLineData mldata;
+    GwyDataField *dfield;
+    gint xres, yres, i, j;
+    gdouble shift, csum, mindiff, maxdiff, x;
+    gdouble *d;
+
+    g_return_val_if_fail(run & LINECORR_RUN_MODES, FALSE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+
+    yres = gwy_data_field_get_yres(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    d = gwy_data_field_get_data(dfield);
+
+    csum = 0.0;
+    mldata.n = xres;
+    for (i = 1; i < yres; i++) {
+        mldata.a = d + xres*(i - 1);
+        mldata.b = d + xres*i;
+        mindiff = G_MAXDOUBLE;
+        maxdiff = -G_MAXDOUBLE;
+        for (j = 0; j < xres; j++) {
+            x = mldata.b[j] - mldata.a[j];
+            if (x < mindiff)
+                mindiff = x;
+            if (x > maxdiff)
+                maxdiff = x;
+        }
+        shift = find_minima_golden(sum_of_abs_diff, mindiff, maxdiff, &mldata);
+        gwy_data_field_area_add(dfield, 0, i, xres, i+1, -shift);
+        csum -= shift;
+    }
+    gwy_data_field_add(dfield, -csum/(xres*yres));
+
+    return TRUE;
+}
+
+static gdouble
+find_minima_golden(gdouble (*func)(gdouble x, gpointer data),
+                   gdouble from,
+                   gdouble to,
+                   gpointer data)
+{
+    gdouble a, b, c, d;
+    gdouble fa, fb, fc, fd;
+    guint i;
+
+    a = from;
+    b = to;
+    c = GOLDEN_RATIO*a + (1.0 - GOLDEN_RATIO)*b;
+    d = (1.0 - GOLDEN_RATIO)*a + GOLDEN_RATIO*b;
+    fa = func(a, data);
+    fb = func(b, data);
+    fc = func(c, data);
+    fd = func(d, data);
+
+    g_return_val_if_fail(MAX(fa, fb) >= MAX(fc, fd), 0.0);
+
+    /* more than enough to converge on single precision */
+    for (i = 0; i < 40; i++) {
+        if (fc < fd) {
+            b = d;
+            fb = fd;
+            d = (1.0 - GOLDEN_RATIO)*a + GOLDEN_RATIO*b;
+            fd = func(d, data);
+        }
+        else if (fc > fd) {
+            a = c;
+            fa = fc;
+            c = GOLDEN_RATIO*a + (1.0 - GOLDEN_RATIO)*b;
+            fc = func(c, data);
+        }
+        else
+            break;
+    }
+
+    return (c + d)/2.0;
+}
+
+static gdouble
+sum_of_abs_diff(gdouble shift,
+                gpointer data)
+{
+    gdouble *a, *b;
+    gdouble sum = 0.0;
+    guint i, n;
+
+    n = ((MedianLineData*)data)->n;
+    a = ((MedianLineData*)data)->a;
+    b = ((MedianLineData*)data)->b;
+    for (i = 0; i < n; i++)
+        sum += fabs(b[i] - (a[i] + shift));
+
+    return sum;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
