@@ -75,6 +75,7 @@ enum {
     PROP_POSITION,
     PROP_MAX_SIZE,
     PROP_UNITS_PLACEMENT,
+    PROP_EXCHANGED_SIDES,
 };
 
 static void          gwy_ruler_class_init    (GwyRulerClass  *klass);
@@ -202,6 +203,15 @@ gwy_ruler_class_init(GwyRulerClass *class)
                                                       GWY_UNITS_PLACEMENT_AT_ZERO,
                                                       GWY_UNITS_PLACEMENT_NONE,
                                                       G_PARAM_READWRITE));
+
+    g_object_class_install_property(gobject_class,
+                                    PROP_EXCHANGED_SIDES,
+                                    g_param_spec_boolean("exchanged_sides",
+                                                         _("Exchanged sides"),
+                                                         _("Whether ticks should be drawn on other side than normally"),
+                                                         FALSE,
+                                                         G_PARAM_READWRITE));
+
 }
 
 static void
@@ -218,6 +228,7 @@ gwy_ruler_init(GwyRuler *ruler)
     ruler->max_size = 0;
     ruler->units_placement = GWY_UNITS_PLACEMENT_NONE;
     ruler->units = GWY_SI_UNIT(gwy_si_unit_new("m"));
+    ruler->exchanged_sides = GINT_TO_POINTER(0);
 }
 
 static void
@@ -254,6 +265,10 @@ gwy_ruler_set_property(GObject      *object,
                                       (GwyUnitsPlacement)g_value_get_uint(value));
         break;
 
+        case PROP_EXCHANGED_SIDES:
+        gwy_ruler_set_has_exchanged_sides(ruler, g_value_get_boolean(value));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -287,6 +302,10 @@ gwy_ruler_get_property(GObject      *object,
 
         case PROP_UNITS_PLACEMENT:
         g_value_set_uint(value, (guint)ruler->units_placement);
+        break;
+
+        case PROP_EXCHANGED_SIDES:
+        g_value_set_boolean(value, GPOINTER_TO_INT(ruler->exchanged_sides));
         break;
 
         default:
@@ -783,7 +802,7 @@ next_scale(GwyScaleScale scale,
  * @ruler: A #GwyRuler.
  * @units: The base units this ruler should display.
  *
- * Sets the base units to display to @units.
+ * Sets the base units a ruler displays.
  *
  * Setting units to %NULL effectively disables them.
  **/
@@ -803,7 +822,7 @@ gwy_ruler_set_units(GwyRuler *ruler,
  * gwy_ruler_get_units:
  * @ruler: A #GwyRuler.
  *
- * Returns the base units @ruler uses.
+ * Returns the base units a ruler uses.
  *
  * Returns: The units the rules uses.
  **/
@@ -812,6 +831,52 @@ gwy_ruler_get_units(GwyRuler *ruler)
 {
     g_return_val_if_fail(GWY_IS_RULER(ruler), NULL);
     return ruler->units;
+}
+
+/**
+ * gwy_ruler_set_has_exchanged_sides:
+ * @ruler: A #GwyRuler.
+ * @exchanged_sides: Whether the ruler should have exchanged sides.
+ *
+ * Sets exchanged sides for a ruler.
+ *
+ * Rulers have a `normal' side where ticks are drawn (and labels are drawn
+ * on the opposite).  This is bottom for horizontal, and right for vertical
+ * rulers.  A ruler with exchanged sides have ticks and labels drawn on
+ * opposite sides than normally.
+ *
+ * Since: 1.5
+ **/
+void
+gwy_ruler_set_has_exchanged_sides(GwyRuler *ruler,
+                                  gboolean exchanged_sides)
+{
+    g_return_if_fail(GWY_IS_RULER(ruler));
+    exchanged_sides = !!exchanged_sides;
+    if (exchanged_sides == GPOINTER_TO_INT(ruler->exchanged_sides))
+        return;
+
+    ruler->exchanged_sides = GINT_TO_POINTER(exchanged_sides);
+    gtk_widget_queue_draw(GTK_WIDGET(ruler));
+}
+
+/**
+ * gwy_ruler_get_has_exchanged_sides:
+ * @ruler: A #GwyRuler.
+ *
+ * Returns whether a ruler has exchanged sides.
+ *
+ * See gwy_ruler_set_has_exchanged_sides() for details.
+ *
+ * Returns: %TRUE if the rules has exchanged sides, %FALSE if it has not.
+ *
+ * Since: 1.5
+ **/
+gboolean
+gwy_ruler_get_has_exchanged_sides(GwyRuler *ruler)
+{
+    g_return_val_if_fail(GWY_IS_RULER(ruler), FALSE);
+    return GPOINTER_TO_INT(ruler->exchanged_sides);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -95,7 +95,7 @@ struct _GwyRuler
     gdouble position;    /* The position of the mark on the ruler */
     gdouble max_size;    /* The maximum size of the ruler */
 
-    gpointer reserved1;
+    gpointer exchanged_sides;   /* XXX: fix to gboolean when changing ABI */
     gpointer reserved2;
 };
 
@@ -131,6 +131,10 @@ GwySIUnit*        gwy_ruler_get_units           (GwyRuler *ruler);
 GwyUnitsPlacement gwy_ruler_get_units_placement (GwyRuler *ruler);
 void              gwy_ruler_set_units_placement (GwyRuler *ruler,
                                                  GwyUnitsPlacement placement);
+
+void              gwy_ruler_set_has_exchanged_sides (GwyRuler *ruler,
+                                                     gboolean exchanged_sides);
+gboolean          gwy_ruler_get_has_exchanged_sides (GwyRuler *ruler);
 
 /* internal */
 void _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
