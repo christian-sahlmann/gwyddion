@@ -628,24 +628,54 @@ gwy_data_field_set_yreal(GwyDataField *a, gdouble yreal)
 }
 
 
+/**
+ * gwy_data_field_get_si_unit_xy:
+ * @a: A data field 
+ *
+ * 
+ *
+ * Returns: SI unit corresponding to the lateral (XY) dimensions of the field
+ **/
 GwySIUnit* 
 gwy_data_field_get_si_unit_xy(GwyDataField *a)
 {
     return (GwySIUnit*)gwy_si_unit_new(gwy_si_unit_get_unit_string(a->si_unit_xy));
 }
 
+/**
+ * gwy_data_field_get_si_unit_z:
+ * @a: A data field 
+ *
+ * 
+ *
+ * Returns: SI unit corresponding to the "height" (Z) dimension of the field
+ **/
 GwySIUnit* 
 gwy_data_field_get_si_unit_z(GwyDataField *a)
 {
     return (GwySIUnit*)gwy_si_unit_new(gwy_si_unit_get_unit_string(a->si_unit_z));
 }
 
+/**
+ * gwy_data_field_set_si_unit_xy:
+ * @a: A data field 
+ * @si_unit: SI unit to be set
+ *
+ * Sets the SI unit corresponding to the lateral (XY) dimensions of the field.
+ **/
 void 
 gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
 {
     gwy_si_unit_copy(a->si_unit_xy, si_unit);
 }
 
+/**
+ * gwy_data_field_set_si_unit_z:
+ * @a: A data field 
+ * @si_unit: SI unit to be set
+ *
+ * Sets the SI unit corresponding to the "height" (Z) dimension of the field.
+ **/
 void 
 gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit)
 {
