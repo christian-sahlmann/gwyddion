@@ -431,15 +431,17 @@ gwy_data_field_get_area_rms(GwyDataField *a,
 
 /**
  * gwy_data_field_get_stats:
- * @data_field: A data field
- * @avg: average height value of the surface
- * @ra: average value of the irregularities
- * @rms: root mean square value of the irregularities (Rq)
- * @skew: skew (symmetry of height distribution)
- * @kurtosis: kurtosis (peakedness of height ditribution)
+ * @data_field: A data field.
+ * @avg: Where average height value of the surface should be stored, or %NULL.
+ * @ra: Where average value of irregularities should be stored, or %NULL.
+ * @rms: Where root mean square value of irregularities (Rq) should be stored,
+ *       or %NULL.
+ * @skew: Where skew (symmetry of height distribution) should be stored, or
+ *        %NULL.
+ * @kurtosis: Where kurtosis (peakedness of height ditribution) should be
+ *            stored, or %NULL.
  *
- * Computes basic statistical quantities
- * in one interation over the datafield.
+ * Computes basic statistical quantities.
  **/
 void
 gwy_data_field_get_stats(GwyDataField *data_field,
@@ -450,37 +452,55 @@ gwy_data_field_get_stats(GwyDataField *data_field,
                          gdouble *kurtosis)
 {
     gint i;
-    gdouble c_sz1, c_sz2, c_sz3, c_sz4, c_abs1;
+    gdouble c_sz2, c_sz3, c_sz4, c_abs1;
     gdouble *p = data_field->data;
     gdouble nn = data_field->xres * data_field->yres;
-    gdouble dif;
+    gdouble dif, myavg, myrms;
 
-    c_sz1 = c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
+    c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
 
-    *avg = gwy_data_field_get_avg(data_field);
+    myavg = gwy_data_field_get_avg(data_field);
+    if (avg)
+        *avg = myavg;
 
-    for (i = nn; i; i--, p++)
-    {
-        dif = (*p - *avg);
+    for (i = nn; i; i--, p++) {
+        dif = (*p - myavg);
         c_abs1 += fabs(dif);
-        c_sz1 += dif;
         c_sz2 += dif*dif;
         c_sz3 += dif*dif*dif;
         c_sz4 += dif*dif*dif*dif;
 
     }
 
-    *ra = c_abs1/nn;
-    *rms = c_sz2/nn;
-    *skew = c_sz3/pow(*rms, 1.5)/nn;
-    //*(c_sz3/nn - 3*c_sz1*c_sz3/nn2 + 2*c_s3z/nn3)/pow((c_sz2/nn - c_s2z/nn2),1.5);*/
-    *kurtosis = c_sz4/(*rms)/(*rms)/nn - 3;
-    /*(c_sz4/nn - 4*c_sz1*c_sz3/nn4 + 6*c_s2z*c_sz2/nn3 - 3*c_s4z/nn4 - 3)/pow((c_sz2/nn - c_s2z/nn2),2);*/
-
-    *rms = sqrt(*rms);
-
+    myrms = c_sz2/nn;
+    if (ra)
+        *ra = c_abs1/nn;
+    if (skew)
+        *skew = c_sz3/pow(myrms, 1.5)/nn;
+    if (kurtosis)
+        *kurtosis = c_sz4/(myrms)/(myrms)/nn - 3;
+    if (rms)
+        *rms = sqrt(myrms);
 }
 
+/**
+ * gwy_data_field_area_get_stats:
+ * @dfield: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @avg: Where average height value of the surface should be stored, or %NULL.
+ * @ra: Where average value of irregularities should be stored, or %NULL.
+ * @rms: Where root mean square value of irregularities (Rq) should be stored,
+ *       or %NULL.
+ * @skew: Where skew (symmetry of height distribution) should be stored, or
+ *        %NULL.
+ * @kurtosis: Where kurtosis (peakedness of height ditribution) should be
+ *            stored, or %NULL.
+ *
+ * Computes basic statistical quantities of a part of a data field.
+ **/
 void
 gwy_data_field_area_get_stats(GwyDataField *dfield,
                               gint col, gint row, gint width, gint height,
@@ -491,8 +511,8 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
                               gdouble *kurtosis)
 {
     gint i, j;
-    gdouble /*c_sz1,*/ c_sz2, c_sz3, c_sz4, c_abs1;
-    gdouble nn, dif;
+    gdouble c_sz2, c_sz3, c_sz4, c_abs1;
+    gdouble nn, dif, myavg, myrms;
     gdouble *datapos;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
@@ -502,29 +522,34 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
                      && row + height <= dfield->yres);
 
     nn = width*height;
-    /*c_sz1 =*/ c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
+    c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
 
-    *avg = gwy_data_field_area_get_avg(dfield, col, row, width, height);
+    myavg = gwy_data_field_area_get_avg(dfield, col, row, width, height);
+    if (avg)
+        *avg = myavg;
 
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
         gdouble *drow = datapos + i*dfield->xres;
 
         for (j = 0; j < width; j++) {
-            dif = (*(drow++) - *avg);
+            dif = (*(drow++) - myavg);
             c_abs1 += fabs(dif);
-            /*c_sz1 += dif; XXX always zero */
             c_sz2 += dif*dif;
             c_sz3 += dif*dif*dif;
             c_sz4 += dif*dif*dif*dif;
         }
     }
 
-    *ra = c_abs1/nn;
-    *rms = c_sz2/nn;
-    *kurtosis = c_sz4/(*rms)/(*rms)/nn - 3;
-    *rms = sqrt(*rms);
-    *skew = c_sz3/(*rms)/(*rms)/(*rms)/nn;
+    myrms = c_sz2/nn;
+    if (ra)
+        *ra = c_abs1/nn;
+    if (skew)
+        *skew = c_sz3/pow(myrms, 1.5)/nn;
+    if (kurtosis)
+        *kurtosis = c_sz4/(myrms)/(myrms)/nn - 3;
+    if (rms)
+        *rms = sqrt(myrms);
 }
 
 void
