@@ -24,6 +24,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libgwydgets/gwydgets.h>
+#include <app/app.h>
 
 #ifndef G_OS_WIN32
 #include <unistd.h>
@@ -31,11 +33,15 @@
 
 typedef enum {
     RAW_NONE = 0,
-    RAW_BYTE,
-    RAW_WORD,
-    RAW_WORD32,
+    RAW_SIGNED_BYTE,
+    RAW_UNSIGNED_BYTE,
+    RAW_SIGNED_WORD16,
+    RAW_UNSIGNED_WORD16,
+    RAW_SIGNED_WORD32,
+    RAW_UNSIGNED_WORD32,
     RAW_IEEE_FLOAT,
-    RAW_IEEE_DOUBLE
+    RAW_IEEE_DOUBLE,
+    RAW_LAST
 } RawFileBuiltin;
 
 /* note: size, skip, and rowskip are in bits */
@@ -48,11 +54,15 @@ typedef struct {
     gboolean sign;  /* take the number as signed? (unused if not integer) */
     gboolean revsample;  /* reverse bit order in samples? */
     gboolean revbyte;  /* reverse bit order in bytes as we read them? */
-    gsize byteswap;  /* swap bytes, bit set means swap blocks of this size
-                        (only for builtin) */
+    gsize byteswap;  /* swap bytes (relative to HOST order), bit set means
+                        swap blocks of this size (only for builtin) */
+    gsize lineoffset;  /* start reading from this line (ASCII) */
+    gchar *delimiter;  /* field delimiter (ASCII) */
+    gsize skipfields;  /* skip this number of fields at line start (ASCII) */
 } RawFileSpec;
 
 typedef struct {
+    const gchar *filename;
     gsize xres;
     gsize yres;
     gdouble xreal;
@@ -64,6 +74,22 @@ static gboolean      module_register     (const gchar *name);
 static gint          rawfile_detect      (const gchar *filename,
                                           gboolean only_name);
 static GwyContainer* rawfile_load        (const gchar *filename);
+static gboolean      rawfile_dialog      (RawFileSpec *spec,
+                                          RawFileParams *param,
+                                          gsize filesize);
+static GtkWidget*    table_attach_heading(GtkWidget *table,
+                                          const gchar *text,
+                                          gint row);
+static void          rawfile_read_builtin(RawFileSpec *spec,
+                                          RawFileParams *param,
+                                          guchar *buffer,
+                                          gdouble *data);
+static void          rawfile_read_bits   (RawFileSpec *spec,
+                                          RawFileParams *param,
+                                          guchar *buffer,
+                                          gdouble *data);
+static gsize         rawfile_compute_size(RawFileSpec *spec,
+                                          RawFileParams *param);
 
 
 /* The module info. */
@@ -80,7 +106,7 @@ static GwyModuleInfo module_info = {
 
 /* sizes of RawFile built-in types */
 static const gsize BUILTIN_SIZE[] = {
-    0, 1, 2, 4, 4, 8
+    0, 8, 8, 16, 16, 32, 32, 32, 64,
 };
 
 /* precomputed bitmask up to 32 bits */
@@ -96,35 +122,35 @@ static const guint32 BITMASK[] = {
 };
 
 /* precomputed reverted bitorders up to 8 bits */
-static const guchar RTABLE_0[] = {
+static const guint32 RTABLE_0[] = {
     0x00,
 };
 
-static const guchar RTABLE_1[] = {
+static const guint32 RTABLE_1[] = {
     0x00, 0x01,
 };
 
-static const guchar RTABLE_2[] = {
+static const guint32 RTABLE_2[] = {
     0x00, 0x02, 0x01, 0x03,
 };
 
-static const guchar RTABLE_3[] = {
+static const guint32 RTABLE_3[] = {
     0x00, 0x04, 0x02, 0x06, 0x01, 0x05, 0x03, 0x07,
 };
 
-static const guchar RTABLE_4[] = {
+static const guint32 RTABLE_4[] = {
     0x00, 0x08, 0x04, 0x0c, 0x02, 0x0a, 0x06, 0x0e,
     0x01, 0x09, 0x05, 0x0d, 0x03, 0x0b, 0x07, 0x0f,
 };
 
-static const guchar RTABLE_5[] = {
+static const guint32 RTABLE_5[] = {
     0x00, 0x10, 0x08, 0x18, 0x04, 0x14, 0x0c, 0x1c,
     0x02, 0x12, 0x0a, 0x1a, 0x06, 0x16, 0x0e, 0x1e,
     0x01, 0x11, 0x09, 0x19, 0x05, 0x15, 0x0d, 0x1d,
     0x03, 0x13, 0x0b, 0x1b, 0x07, 0x17, 0x0f, 0x1f,
 };
 
-static const guchar RTABLE_6[] = {
+static const guint32 RTABLE_6[] = {
     0x00, 0x20, 0x10, 0x30, 0x08, 0x28, 0x18, 0x38,
     0x04, 0x24, 0x14, 0x34, 0x0c, 0x2c, 0x1c, 0x3c,
     0x02, 0x22, 0x12, 0x32, 0x0a, 0x2a, 0x1a, 0x3a,
@@ -135,7 +161,7 @@ static const guchar RTABLE_6[] = {
     0x07, 0x27, 0x17, 0x37, 0x0f, 0x2f, 0x1f, 0x3f,
 };
 
-static const guchar RTABLE_7[] = {
+static const guint32 RTABLE_7[] = {
     0x00, 0x40, 0x20, 0x60, 0x10, 0x50, 0x30, 0x70,
     0x08, 0x48, 0x28, 0x68, 0x18, 0x58, 0x38, 0x78,
     0x04, 0x44, 0x24, 0x64, 0x14, 0x54, 0x34, 0x74,
@@ -154,7 +180,7 @@ static const guchar RTABLE_7[] = {
     0x0f, 0x4f, 0x2f, 0x6f, 0x1f, 0x5f, 0x3f, 0x7f,
 };
 
-static const guchar RTABLE_8[] = {
+static const guint32 RTABLE_8[] = {
     0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
     0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
     0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
@@ -189,7 +215,7 @@ static const guchar RTABLE_8[] = {
     0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff,
 };
 
-static const guchar *const RTABLE[] = {
+static const guint32 *const RTABLE[] = {
     RTABLE_0,
     RTABLE_1,
     RTABLE_2,
@@ -199,6 +225,17 @@ static const guchar *const RTABLE[] = {
     RTABLE_6,
     RTABLE_7,
     RTABLE_8,
+};
+
+static GwyEnum builtin_menu[] = {
+    { "Signed byte",          RAW_SIGNED_BYTE     },
+    { "Unsigned byte",        RAW_UNSIGNED_BYTE   },
+    { "Signed 16bit word",    RAW_SIGNED_WORD16   },
+    { "Unsigned 16bit word",  RAW_UNSIGNED_WORD16 },
+    { "Signed 32bit word",    RAW_SIGNED_WORD32   },
+    { "Unsigned 32bit word",  RAW_UNSIGNED_WORD32 },
+    { "IEEE single",          RAW_IEEE_FLOAT      },
+    { "IEEE double",          RAW_IEEE_DOUBLE     },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -240,6 +277,8 @@ rawfile_detect(const gchar *filename,
 static GwyContainer*
 rawfile_load(const gchar *filename)
 {
+    RawFileSpec spec;
+    RawFileParams param;
     GObject *object;
     GError *err = NULL;
     guchar *buffer = NULL;
@@ -271,11 +310,195 @@ rawfile_load(const gchar *filename)
         return NULL;
     }
     */
-
+    param.filename = filename;
+    rawfile_dialog(&spec, &param, 100000);
+    return NULL;
     return (GwyContainer*)object;
 }
 
-/* TODO create lookup tables for small number of bits (up to 8) */
+static gboolean
+rawfile_dialog(RawFileSpec *spec, RawFileParams *param,
+               gsize filesize)
+{
+    GtkWidget *dialog, *vbox, *table, *label, *spin, *notebook, *button;
+    GtkWidget *omenu, *entry;
+    GtkObject *adj;
+    gint response, row;
+
+    dialog = gtk_dialog_new_with_buttons(_("Read Raw File"),
+                                         GTK_WINDOW(gwy_app_main_window_get()),
+                                         GTK_DIALOG_MODAL
+                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+
+    vbox = GTK_DIALOG(dialog)->vbox;
+
+    notebook = gtk_notebook_new();
+    gtk_container_set_border_width(GTK_CONTAINER(notebook), 6);
+    gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
+
+    /***** Sample info *****/
+    vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
+    label = gtk_label_new(_("Information"));
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
+
+    table = gtk_table_new(5, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    row = 0;
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>File</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, row, row+1);
+    row++;
+
+    label = gtk_label_new(param->filename);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, row, row+1);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    label = table_attach_heading(table, _("<b>Resolution</b>"), row);
+    row++;
+
+    adj = gtk_adjustment_new(param->xres, 0, 16384, 1, 10, 100);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("Horizontal size"),
+                                       _("data samples"), adj);
+    row++;
+
+    adj = gtk_adjustment_new(param->yres, 0, 16384, 1, 10, 100);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("Vertical size"),
+                                       _("data samples"), adj);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    label = table_attach_heading(table, _("<b>Physical dimensions</b>"), row);
+    row++;
+
+    adj = gtk_adjustment_new(param->xreal, 0, 1e9, 10, 1000, 1000);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("Width"), "nm", adj);
+    row++;
+
+    adj = gtk_adjustment_new(param->yreal, 0, 1e9, 10, 1000, 1000);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("Height"), "nm", adj);
+    row++;
+
+    adj = gtk_adjustment_new(param->yreal, 0, 1e100, 0.1, 10, 10);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("Z-scale"), _("nm/sample unit"), adj);
+    row++;
+
+    /***** General data format *****/
+    vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
+    label = gtk_label_new(_("Data Format"));
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
+
+    table = gtk_table_new(5, 4, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+
+    label = table_attach_heading(table, _("<b>Format</b>"), row);
+    row++;
+
+    button = gtk_radio_button_new_with_label(NULL, _("Binary data"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    row++;
+
+    button
+        = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(button),
+                                                      _("Text data"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    row++;
+
+    button
+        = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(button),
+                                                      _("Standard"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 1, row, row+1);
+
+    omenu = gwy_option_menu_create(builtin_menu, G_N_ELEMENTS(builtin_menu),
+                                   "builtin",
+                                   NULL, NULL, spec->builtin);
+    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("S_wap bytes"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, row, row+1);
+
+    entry = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
+    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 2, row, row+1);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    label = table_attach_heading(table, _("<b>Parameters</b>"), row);
+    row++;
+
+    adj = gtk_adjustment_new(spec->offset, 0, 1 << 31, 16, 1024, 1024);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("Start at _offset"), "bytes", adj);
+    row++;
+
+    adj = gtk_adjustment_new(spec->size, 1, 24, 1, 8, 8);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("_Sample size"), "bits", adj);
+    row++;
+
+    adj = gtk_adjustment_new(spec->skip, 0, 1 << 31, 1, 8, 8);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("After each sample s_kip"), "bits",
+                                       adj);
+    row++;
+
+    adj = gtk_adjustment_new(spec->rowskip, 0, 1 << 31, 1, 8, 8);
+    spin = gwy_table_attach_spinbutton(table, row,
+                                       _("After each _row skip"), "bits", adj);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("_Reverse bits in bytes"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("Reverse b_its in samples"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("Samples are si_gned"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    row++;
+
+    gtk_widget_show_all(dialog);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    return FALSE;
+}
+
+static GtkWidget*
+table_attach_heading(GtkWidget *table,
+                     const gchar *text,
+                     gint row)
+{
+    GtkWidget *label;
+    gchar *s;
+
+    s = g_strconcat("<b>", text, "</b>", NULL);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), s);
+    g_free(s);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, row, row+1);
+
+    return label;
+}
+
 static inline guint32
 reverse_bits(guint32 x, gsize n)
 {
@@ -388,15 +611,90 @@ rawfile_read_builtin(RawFileSpec *spec,
                      guchar *buffer,
                      gdouble *data)
 {
-    guchar b[8];
-    gsize i, j;
+    gsize i, j, k, size, skip, rowskip;
+    guint32 x32;
+    guint16 x16;
+    double good_alignment;
+    guchar *b;
+
+    g_assert(spec->builtin > RAW_NONE && spec->builtin < RAW_LAST);
+    g_assert(spec->size <= 64 && spec->size % 8 == 0);
+    g_assert(spec->skip % 8 == 0);
+    g_assert(spec->rowskip % 8 == 0);
 
     buffer += spec->offset;
+    size = spec->size/8;
+    skip = spec->skip/8;
+    rowskip = spec->rowskip/8;
+    b = (guchar*)&good_alignment;
+    memset(b, 0, 8);
+
     for (i = param->yres; i; i--) {
         for (j = param->xres; j; j--) {
+            /* the XOR magic puts each byte where it belongs according to
+             * byteswap */
+            if (spec->revbyte) {
+                for (k = 0; k < size; k++)
+                    b[k ^ spec->byteswap] = RTABLE_8[*(buffer++)];
+            }
+            else {
+                for (k = 0; k < size; k++)
+                    b[k ^ spec->byteswap] = *(buffer++);
+            }
+            /* now interpret b as a number in HOST order */
+            switch (spec->builtin) {
+                case RAW_SIGNED_BYTE:
+                *(data++) = (gdouble)(gchar)b[0];
+                break;
 
+                case RAW_UNSIGNED_BYTE:
+                *(data++) = (gdouble)b[0];
+                break;
+
+                case RAW_SIGNED_WORD16:
+                *(data++) = (gdouble)*(gint16*)b;
+                break;
+
+                case RAW_UNSIGNED_WORD16:
+                *(data++) = (gdouble)*(guint16*)b;
+                break;
+
+                case RAW_SIGNED_WORD32:
+                *(data++) = (gdouble)*(gint32*)b;
+                break;
+
+                case RAW_UNSIGNED_WORD32:
+                *(data++) = (gdouble)*(guint32*)b;
+                break;
+
+                case RAW_IEEE_FLOAT:
+                *(data++) = *(float*)b;
+                break;
+
+                case RAW_IEEE_DOUBLE:
+                *(data++) = *(double*)b;
+                break;
+
+                default:
+                g_assert_not_reached();
+                break;
+            }
+            buffer += skip;
         }
+        buffer += rowskip;
     }
+}
+
+static void
+rawfile_builtin_to_spec(RawFileSpec *spec)
+{
+    g_assert(spec->builtin > RAW_NONE && spec->builtin < RAW_LAST);
+    spec->size = 8*BUILTIN_SIZE[spec->builtin];
+    spec->sign = (spec->builtin == RAW_SIGNED_BYTE)
+                 || (spec->builtin == RAW_SIGNED_WORD16)
+                 || (spec->builtin == RAW_SIGNED_WORD32);
+    spec->skip = (spec->skip + 7)/8;
+    spec->rowskip = (spec->rowskip + 7)/8;
 }
 
 static gsize
@@ -406,13 +704,16 @@ rawfile_compute_size(RawFileSpec *spec,
     gsize rowstride;
 
     rowstride = (spec->size + spec->skip)*param->xres + spec->rowskip;
-    if (rowstride%8)
+    if (spec->builtin && rowstride%8) {
         g_warning("rowstride is not a whole number of bytes");
-    rowstride = (rowstride + 7)%8;
+        rowstride = (rowstride + 7)%8;
+    }
     return spec->offset + param->yres*rowstride;
 }
 
 #else /* not GENRTABLE */
+/************************ RTABLE generator **************************/
+/* compile as a standalone file with -DGENRTABLE */
 
 int
 main(void)
