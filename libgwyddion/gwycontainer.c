@@ -185,10 +185,6 @@ gwy_container_init(GwyContainer *container)
 {
     gwy_debug("");
     gwy_debug_objects_creation((GObject*)container);
-    container->values = NULL;
-    container->watching = NULL;
-    container->objects = NULL;
-    container->watch_freeze = 0;
     container->last_wid = 1;
 }
 
