@@ -62,6 +62,7 @@ void            gwy_module_register_modules (const gchar **paths);
 gboolean        gwy_register_process_func   (const gchar *modname,
                                              GwyProcessFuncInfo *func_info);
 GtkItemFactory* gwy_build_process_menu      (void);
+void            gwy_module_browser          (void);
 
 #ifdef __cplusplus
 }

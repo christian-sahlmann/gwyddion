@@ -43,8 +43,7 @@ create_view_menu(void)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_View", NULL, NULL, 0, "<Branch>", NULL },
-        { "/_View/Hide", NULL, NULL, 0, "<Item>", NULL },
-        { "/_View/Hide better", NULL, NULL, 0, "<Item>", NULL },
+        { "/_View/Show modules", NULL, gwy_module_browser, 0, "<Item>", NULL },
     };
 
     return create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items), "<view>");

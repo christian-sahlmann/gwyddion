@@ -5,6 +5,13 @@
 #include <libgwydgets/gwydgets.h>
 
 #include "gwymodule.h"
+#include "gwymodulebrowser.h"
+
+typedef struct {
+    GwyModuleInfo *mod_info;
+    gchar *file;
+    gboolean loaded;
+} GwyModuleInfoInternal;
 
 static void gwy_load_modules_in_dir(GDir *gdir,
                                     const gchar *dirname,
@@ -13,6 +20,7 @@ static void gwy_load_modules_in_dir(GDir *gdir,
 static GHashTable *modules;
 static GHashTable *process_funcs;
 static gboolean modules_initialized = FALSE;
+
 
 void
 gwy_modules_init(void)
@@ -161,6 +169,14 @@ gwy_load_modules_in_dir(GDir *gdir,
     }
 }
 
+/*********************** browser *****************************/
+void
+gwy_module_browser(void)
+{
+    gwy_module_browser_run(modules);
+}
+
+/*********************** process func *****************************/
 gboolean
 gwy_register_process_func(const gchar *modname,
                           GwyProcessFuncInfo *func_info)
