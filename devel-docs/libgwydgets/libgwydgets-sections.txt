@@ -2,6 +2,7 @@
 <FILE>gwydataviewlayer</FILE>
 <TITLE>GwyDataViewLayer</TITLE>
 gwy_data_view_layer_is_vector
+gwy_data_view_layer_wants_repaint
 gwy_data_view_layer_draw
 gwy_data_view_layer_paint
 gwy_data_view_layer_button_press
@@ -9,6 +10,8 @@ gwy_data_view_layer_button_release
 gwy_data_view_layer_motion_notify
 gwy_data_view_layer_key_press
 gwy_data_view_layer_key_release
+gwy_data_view_layer_plugged
+gwy_data_view_layer_unplugged
 <SUBSECTION Standard>
 GWY_DATA_VIEW_LAYER
 GWY_IS_DATA_VIEW_LAYER
@@ -17,6 +20,20 @@ gwy_data_view_layer_get_type
 GWY_DATA_VIEW_LAYER_CLASS
 GWY_IS_DATA_VIEW_LAYER_CLASS
 GWY_DATA_VIEW_LAYER_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwyvruler</FILE>
+<TITLE>GwyVRuler</TITLE>
+gwy_vruler_new
+<SUBSECTION Standard>
+GWY_VRULER
+GWY_IS_VRULER
+GWY_TYPE_VRULER
+gwy_vruler_get_type
+GWY_VRULER_CLASS
+GWY_IS_VRULER_CLASS
+GWY_VRULER_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -37,9 +54,31 @@ GWY_SPHERE_COORDS_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyruler</FILE>
+GwyUnitsPlacement
+<TITLE>GwyRuler</TITLE>
+gwy_ruler_set_range
+gwy_ruler_draw_ticks
+gwy_ruler_draw_pos
+gwy_ruler_get_range
+gwy_ruler_get_units_placement
+gwy_ruler_set_units_placement
+<SUBSECTION Standard>
+GWY_RULER
+GWY_IS_RULER
+GWY_TYPE_RULER
+gwy_ruler_get_type
+GWY_RULER_CLASS
+GWY_IS_RULER_CLASS
+GWY_RULER_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwylayer-basic</FILE>
 <TITLE>GwyLayerBasic</TITLE>
 gwy_layer_basic_new
+gwy_layer_basic_set_palette
+gwy_layer_basic_get_palette
 <SUBSECTION Standard>
 GWY_LAYER_BASIC
 GWY_IS_LAYER_BASIC
@@ -82,6 +121,20 @@ GWY_DATA_WINDOW_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyhruler</FILE>
+<TITLE>GwyHRuler</TITLE>
+gwy_hruler_new
+<SUBSECTION Standard>
+GWY_HRULER
+GWY_IS_HRULER
+GWY_TYPE_HRULER
+gwy_hruler_get_type
+GWY_HRULER_CLASS
+GWY_IS_HRULER_CLASS
+GWY_HRULER_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwydataview</FILE>
 <TITLE>GwyDataView</TITLE>
 gwy_data_view_new
@@ -91,6 +144,14 @@ gwy_data_view_get_top_layer
 gwy_data_view_set_base_layer
 gwy_data_view_set_alpha_layer
 gwy_data_view_set_top_layer
+gwy_data_view_get_hexcess
+gwy_data_view_get_vexcess
+gwy_data_view_set_zoom
+gwy_data_view_get_zoom
+gwy_data_view_get_data
+gwy_data_view_coords_xy_clamp
+gwy_data_view_coords_xy_to_real
+gwy_data_view_coords_real_to_xy
 <SUBSECTION Standard>
 GWY_DATA_VIEW
 GWY_IS_DATA_VIEW
@@ -119,6 +180,21 @@ gwy_grad_sphere_get_type
 GWY_GRAD_SPHERE_CLASS
 GWY_IS_GRAD_SPHERE_CLASS
 GWY_GRAD_SPHERE_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwylayer-select</FILE>
+<TITLE>GwyLayerSelect</TITLE>
+gwy_layer_select_new
+gwy_layer_select_get_selection
+<SUBSECTION Standard>
+GWY_LAYER_SELECT
+GWY_IS_LAYER_SELECT
+GWY_TYPE_LAYER_SELECT
+gwy_layer_select_get_type
+GWY_LAYER_SELECT_CLASS
+GWY_IS_LAYER_SELECT_CLASS
+GWY_LAYER_SELECT_GET_CLASS
 </SECTION>
 
 <SECTION>

@@ -6,6 +6,7 @@
 <!ENTITY libgwydgets-GwyDataView SYSTEM "sgml/gwydataview.sgml">
 <!ENTITY libgwydgets-GwyDataViewLayer SYSTEM "sgml/gwydataviewlayer.sgml">
 <!ENTITY libgwydgets-GwyLayerBasic SYSTEM "sgml/gwylayer-basic.sgml">
+<!ENTITY libgwydgets-GwyLayerSelect SYSTEM "sgml/gwylayer-select.sgml">
 ]>
 <book id="index">
   <bookinfo>
@@ -21,5 +22,6 @@
     &libgwydgets-GwyDataView;
     &libgwydgets-GwyDataViewLayer;
     &libgwydgets-GwyLayerBasic;
+    &libgwydgets-GwyLayerSelect;
   </chapter>
 </book>
