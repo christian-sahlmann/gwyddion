@@ -282,8 +282,6 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
                                   gsize size,
                                   gsize *position)
 {
-    gint nxdata, nydata;
-    gchar *description = NULL;
     GwyGraphCurveModel *gcmodel;
 
     gwy_debug("");
@@ -291,6 +289,8 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
 
     gcmodel = (GwyGraphCurveModel*)gwy_graph_curve_model_new();
     {
+        gint nxdata, nydata;
+        gchar *description = NULL;
         GwySerializeSpec spec[] = {
             { 'D', "xdata", &gcmodel->xdata, &nxdata },
             { 'D', "ydata", &gcmodel->ydata, &nydata },
@@ -318,10 +318,12 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
             g_object_unref(gcmodel);
             return NULL;
         }
+        if (description) {
+            g_string_assign(gcmodel->description, description);
+            g_free(description);
+        }
+        gcmodel->n = nxdata;
     }
-    gcmodel->n = nxdata;
-    g_string_assign(gcmodel->description, description);
-    g_free(description);
 
     return (GObject*)gcmodel;
 }
