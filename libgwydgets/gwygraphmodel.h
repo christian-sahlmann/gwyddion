@@ -41,28 +41,35 @@ typedef struct {
     gdouble *xdata;
     gdouble *ydata;
     GwyGraphAreaCurveParams *params;
-    gchar *label;
 
     /* TODO: add some reserved stuff */
 } GwyGraphEpitomeCurve;
 
+/* XXX: really NEVER access these fields directly. They don't have to reflect
+ * the graph values! */
 struct _GwyGraphEpitome {
     GObject parent_instance;
 
-    GwyGraph *weak_graph;    /* weak reference */
+    GwyGraph *graph;
+    gulong graph_destroy_hid;
 
-    gint ncurves;
-    GwyGraphEpitomeCurve *curves;
+    gdouble x_reqmax;
+    gdouble x_reqmin;
+    gdouble y_reqmax;
+    gdouble y_reqmin;
 
     gboolean has_x_unit;
     gboolean has_y_unit;
-    gchar *x_unit;
-    gchar *y_unit;
+    GString *x_unit;
+    GString *y_unit;
 
-    gchar *top_label;
-    gchar *bottom_label;
-    gchar *left_label;
-    gchar *right_label;
+    GString *top_label;
+    GString *bottom_label;
+    GString *left_label;
+    GString *right_label;
+
+    gint ncurves;
+    GwyGraphEpitomeCurve *curves;
 
     /* TODO: add some reserved stuff */
 };
