@@ -122,6 +122,7 @@ points_dialog(GwyGraph *graph)
                                          GTK_STOCK_CLEAR, GTK_RESPONSE_REJECT,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
 
     g_signal_connect_swapped(dialog, "delete_event",
                              G_CALLBACK(points_dialog_closed_cb), graph);

@@ -282,6 +282,7 @@ fit_dialog(FitArgs *args)
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -1048,9 +1049,10 @@ create_results_window(FitArgs *args)
                                          GTK_STOCK_SAVE, RESPONSE_SAVE,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
-    gtk_container_set_border_width(GTK_CONTAINER(window), 6);
+    gtk_dialog_set_default_response(GTK_DIALOG(window), GTK_RESPONSE_CLOSE);
 
     table = gtk_table_new(9, 2, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(window)->vbox), table,
                        FALSE, FALSE, 0);
     row = 0;

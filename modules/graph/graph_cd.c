@@ -86,10 +86,6 @@ static void        from_changed_cb           (GtkWidget *entry,
                                               FitArgs *args);
 static void        to_changed_cb             (GtkWidget *entry,
                                               FitArgs *args);
-static void        double_entry_changed_cb   (GtkWidget *entry,
-                                              gdouble *value);
-static void        toggle_changed_cb         (GtkToggleButton *button,
-                                              gboolean *value);
 static void        dialog_update             (FitControls *controls,
                                               FitArgs *args);
 static void        graph_update              (FitControls *controls,
@@ -272,6 +268,7 @@ fit_dialog(FitArgs *args)
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -502,7 +499,7 @@ fit_dialog(FitArgs *args)
 }
 
 static void
-destroy(FitArgs *args, FitControls *controls)
+destroy(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
     /*g_free(controls->param_init);*/
     g_free(controls->param_res);
@@ -528,7 +525,7 @@ plot_inits(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    const GwyNLFitPreset *function;
+    const GwyCDLinePreset *function;
     gboolean ok;
     gint i;
     GString *label;
@@ -766,12 +763,6 @@ graph_selected(GwyGraphArea *area, FitArgs *args)
 }
 
 static void
-double_entry_changed_cb(GtkWidget *entry, gdouble *value)
-{
-    *value = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
-}
-
-static void
 from_changed_cb(GtkWidget *entry, FitArgs *args)
 {
     args->from = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
@@ -783,12 +774,6 @@ to_changed_cb(GtkWidget *entry, FitArgs *args)
 {
     args->to = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
     dialog_update(pcontrols, args);
-}
-
-static void
-toggle_changed_cb(GtkToggleButton *button, gboolean *value)
-{
-    *value = gtk_toggle_button_get_active(button);
 }
 
 static GtkWidget*
@@ -969,9 +954,10 @@ create_results_window(FitArgs *args)
                                          GTK_STOCK_SAVE, RESPONSE_SAVE,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
-    gtk_container_set_border_width(GTK_CONTAINER(window), 6);
+    gtk_dialog_set_default_response(GTK_DIALOG(window), GTK_RESPONSE_CLOSE);
 
     table = gtk_table_new(9, 2, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(window)->vbox), table,
                        FALSE, FALSE, 0);
     row = 0;

@@ -104,6 +104,7 @@ read_dialog(GwyGraph *graph)
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
 
     g_signal_connect_swapped(dialog, "delete_event",
                              G_CALLBACK(read_dialog_closed_cb), graph);
