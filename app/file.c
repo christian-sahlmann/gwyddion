@@ -24,8 +24,6 @@
 
 #include <string.h>
 
-#define DEBUG
-
 /* chdir */
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
