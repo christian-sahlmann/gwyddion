@@ -6,6 +6,7 @@ module_ldflags = -shared -Wl,-soname
 
 file_PROGRAMS = \
 	asciiexport.so \
+	createc.so \
 	gwyfile.so \
 	nanoscope.so \
 	nt-mdt.so \
@@ -18,6 +19,9 @@ EXTRA_DIST = \
 
 asciiexport_so_SOURCES = asciiexport.c
 asciiexport_so_LDFLAGS = $(module_ldflags),asciiexport.so
+
+createc_so_SOURCES = createc.c
+createc_so_LDFLAGS = $(module_ldflags),createc.so
 
 gwyfile_so_SOURCES = gwyfile.c
 gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
