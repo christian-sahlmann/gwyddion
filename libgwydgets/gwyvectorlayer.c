@@ -342,8 +342,7 @@ gwy_vector_layer_key_release(GwyVectorLayer *layer,
  * gwy_vector_layer_get_selection:
  * @layer: A vector data view layer.
  * @selection: An array where the coordinates should be stored in, or %NULL
- *            (to get only the number of selected lines, you can use
- *             gwy_vector_layer_get_nselected() instead).  If not %NULL it
+ *             to get only the number of selected objects. If not %NULL it
  *             must be long enough to hold all the coordinates.
  *
  * Obtains the selection.
@@ -351,8 +350,7 @@ gwy_vector_layer_key_release(GwyVectorLayer *layer,
  * The selection is a sequence of coordinates whose precise interpretation
  * is layer-dependent.
  *
- * Returns: The number of selected objects (the same value as
- *          gwy_vector_layer_get_nselected() returns).  Usually this is NOT
+ * Returns: The number of selected objects. Usually this is NOT
  *          the number of coordinates in @selection (a point takes two
  *          coordinates, a line four)
  **/
