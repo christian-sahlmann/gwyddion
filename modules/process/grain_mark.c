@@ -28,16 +28,17 @@
 #include <app/gwyapp.h>
 
 #define MARK_RUN_MODES \
-    (GWY_RUN_MODAL)
+    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
-#define MARK_HEIGHT 0
-#define MARK_SLOPE 1
-#define MARK_LAP 2
+enum {
+    MARK_HEIGHT = 0,
+    MARK_SLOPE  = 1,
+    MARK_LAP    = 2
+};
 
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
+/* Data for this function. */
 typedef struct {
-    gboolean inverted;
+    gboolean inverted;   /* unused */
     gdouble height;
     gdouble slope;
     gdouble lap;
@@ -48,7 +49,7 @@ typedef struct {
 } MarkArgs;
 
 typedef struct {
-    GtkWidget *inverted;
+    GtkWidget *inverted;   /* unused */
     GtkWidget *view;
     GtkWidget *is_height;
     GtkWidget *is_slope;
@@ -68,35 +69,23 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    mark                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    mark_dialog                 (MarkArgs *args, GwyContainer *data);
-/*
-static void        inverted_changed_cb        (GtkToggleButton *button,
-                                               MarkArgs *args);
-*/
-static void        isheight_changed_cb        (GtkToggleButton *button,
-                                               MarkArgs *args);
-static void        isslope_changed_cb          (GtkToggleButton *button,
-                                               MarkArgs *args);
-static void        islap_changed_cb            (GtkToggleButton *button,
-                                               MarkArgs *args);
-static void        merge_changed_cb            (GObject *item,
-                                               MarkArgs *args);
 static void        mask_color_changed_cb      (GtkWidget *color_button,
                                                MarkControls *controls);
 static void        load_mask_color            (GtkWidget *color_button,
                                                GwyContainer *data);
 static void        save_mask_color            (GtkWidget *color_button,
                                                GwyContainer *data);
-static void        mark_dialog_update          (MarkControls *controls,
+static void        mark_dialog_update_controls(MarkControls *controls,
                                                MarkArgs *args);
-static void        preview                     (MarkControls *controls,
+static void        mark_dialog_update_values  (MarkControls *controls,
                                                MarkArgs *args);
-static void        ok                         (MarkControls *controls,
-                                               MarkArgs *args,
+static void        preview                    (MarkControls *controls,
+                                               MarkArgs *args);
+static void        mark_do                    (MarkArgs *args,
                                                GwyContainer *data);
 static void        mask_process               (GwyDataField *dfield,
                                                GwyDataField *maskfield,
-                                               MarkArgs *args,
-                                               MarkControls *controls);
+                                               MarkArgs *args);
 static void        mark_load_args              (GwyContainer *container,
                                                MarkArgs *args);
 static void        mark_save_args              (GwyContainer *container,
@@ -150,21 +139,23 @@ static gboolean
 mark(GwyContainer *data, GwyRunType run)
 {
     MarkArgs args;
-    gboolean ook;
+    gboolean ok = FALSE;
 
     g_assert(run & MARK_RUN_MODES);
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = mark_defaults;
     else
         mark_load_args(gwy_app_settings_get(), &args);
-    ook = (run != GWY_RUN_MODAL) || mark_dialog(&args, data);
-    if (ook) {
 
-        if (run != GWY_RUN_WITH_DEFAULTS)
-            mark_save_args(gwy_app_settings_get(), &args);
-    }
+    ok = (run != GWY_RUN_MODAL) || mark_dialog(&args, data);
+    if (!ok)
+        return FALSE;
 
-    return ook;
+    mark_do(&args, data);
+    if (run != GWY_RUN_WITH_DEFAULTS)
+        mark_save_args(gwy_app_settings_get(), &args);
+
+    return ok;
 }
 
 
@@ -222,36 +213,30 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
                                  args->is_height);
 
-    g_signal_connect(controls.is_height, "toggled",
-                     G_CALLBACK(isheight_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_height,
                      0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("Height value [fractile]"), _(""),
-                                controls.threshold_height);
+    spin = gwy_table_attach_spinbutton(table, 2, _("Height value"), "",
+                                       controls.threshold_height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     controls.is_slope
         = gtk_check_button_new_with_label(_("Threshold by slope:"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_slope),
                                  args->is_slope);
-    g_signal_connect(controls.is_slope, "toggled",
-                     G_CALLBACK(isslope_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_slope,
                      0, 1, 3, 4, GTK_FILL, 0, 2, 2);
 
     controls.threshold_slope = gtk_adjustment_new(args->slope,
                                                   0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 4, _("Slope value [fractile]"), _(""),
-                                controls.threshold_slope);
+    spin = gwy_table_attach_spinbutton(table, 4, _("Slope value"), "",
+                                       controls.threshold_slope);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    
+
     controls.is_lap
         = gtk_check_button_new_with_label(_("Threshold by curvature:"));
-    g_signal_connect(controls.is_lap, "toggled",
-                     G_CALLBACK(islap_changed_cb), args);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap),
                                  args->is_lap);
     gtk_table_attach(GTK_TABLE(table), controls.is_lap,
@@ -259,17 +244,17 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_lap = gtk_adjustment_new(args->lap,
                                                 0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 6, _("Curvature value [fractile]"), _(""),
-                                controls.threshold_lap);
+    spin = gwy_table_attach_spinbutton(table, 6, _("Curvature value"), "",
+                                       controls.threshold_lap);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     label = gtk_label_new(_("Merge mode:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
 
-    controls.merge = gwy_option_menu_mergegrain(G_CALLBACK(merge_changed_cb),
-                                            args, args->merge_type);
-    gtk_table_attach(GTK_TABLE(table), controls.merge, 0, 1, 8, 9, GTK_FILL, 0, 2, 2);
+    controls.merge = gwy_option_menu_mergegrain(NULL, NULL, args->merge_type);
+    gtk_table_attach(GTK_TABLE(table), controls.merge,
+                     0, 1, 8, 9, GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), 9, 8);
 
     label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
@@ -298,16 +283,15 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
             break;
 
             case GTK_RESPONSE_OK:
-            save_mask_color(controls.color_button, data);
-            ok(&controls, args, data);
             break;
 
             case RESPONSE_RESET:
             *args = mark_defaults;
-            mark_dialog_update(&controls, args);
+            mark_dialog_update_controls(&controls, args);
             break;
 
             case RESPONSE_PREVIEW:
+            mark_dialog_update_values(&controls, args);
             preview(&controls, args);
             break;
 
@@ -317,40 +301,51 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    args->height
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_height));
-    args->slope
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_slope));
-    args->lap
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_lap));
+    mark_dialog_update_values(&controls, args);
+    save_mask_color(controls.color_button, data);
     gtk_widget_destroy(dialog);
 
     return TRUE;
 }
 
-/*
 static void
-inverted_changed_cb(GtkToggleButton *button, MarkArgs *args)
+mark_dialog_update_controls(MarkControls *controls,
+                            MarkArgs *args)
 {
-    args->inverted = gtk_toggle_button_get_active(button);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_height),
+                             args->height);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_slope),
+                             args->slope);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_lap),
+                             args->lap);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_height),
+                                 args->is_height);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_slope),
+                                 args->is_slope);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_lap),
+                                 args->is_lap);
+    gwy_option_menu_set_history(controls->merge, "mergegrain-type",
+                                args->merge_type);
 }
-*/
 
 static void
-isheight_changed_cb(GtkToggleButton *button, MarkArgs *args)
+mark_dialog_update_values(MarkControls *controls,
+                          MarkArgs *args)
 {
-    args->is_height = gtk_toggle_button_get_active(button);
-}
-
-static void
-isslope_changed_cb(GtkToggleButton *button, MarkArgs *args)
-{
-    args->is_slope = gtk_toggle_button_get_active(button);
-}
-static void
-islap_changed_cb(GtkToggleButton *button, MarkArgs *args)
-{
-    args->is_lap = gtk_toggle_button_get_active(button);
+    args->height
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
+    args->slope
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_slope));
+    args->lap
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_lap));
+    args->is_height
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_height));
+    args->is_slope
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_slope));
+    args->is_lap
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_lap));
+    args->merge_type
+        = gwy_option_menu_get_history(controls->merge, "mergegrain-type");
 }
 
 static void
@@ -431,26 +426,6 @@ save_mask_color(GtkWidget *color_button,
 }
 
 static void
-mark_dialog_update(MarkControls *controls,
-                     MarkArgs *args)
-{
-
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_height),
-                                args->height);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_slope),
-                                args->slope);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_lap),
-                                args->lap);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_height),
-                                 args->is_height);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_slope),
-                                 args->is_slope);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_lap),
-                                 args->is_lap);
-
-}
-
-static void
 preview(MarkControls *controls,
         MarkArgs *args)
 {
@@ -486,16 +461,15 @@ preview(MarkControls *controls,
 
     }
 
-    mask_process(dfield, maskfield, args, controls);
+    mask_process(dfield, maskfield, args);
 
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 
 }
 
 static void
-ok(MarkControls *controls,
-   MarkArgs *args,
-   GwyContainer *data)
+mark_do(MarkArgs *args,
+        GwyContainer *data)
 {
 
     GwyDataField *dfield, *maskfield;
@@ -518,25 +492,13 @@ ok(MarkControls *controls,
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
     }
 
-    mask_process(dfield, maskfield, args, controls);
-
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    mask_process(dfield, maskfield, args);
 }
-
-static void
-merge_changed_cb(GObject *item, MarkArgs *args)
-{
-    args->merge_type = GPOINTER_TO_INT(g_object_get_data(item,
-                                                        "mergegrain-type"));
-
-}
-
 
 static void
 mask_process(GwyDataField *dfield,
              GwyDataField *maskfield,
-             MarkArgs *args,
-             MarkControls *controls)
+             MarkArgs *args)
 {
     GwyDataField *output_field;
     gboolean is_field;
@@ -548,13 +510,6 @@ mask_process(GwyDataField *dfield,
                                        gwy_data_field_get_xreal(dfield),
                                        gwy_data_field_get_yreal(dfield),
                                        FALSE));
-
-    args->height
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
-    args->slope
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_slope));
-    args->lap
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_lap));
 
     args->inverted = 0;
     if (args->is_height) {
