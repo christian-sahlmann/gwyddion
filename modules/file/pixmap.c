@@ -196,8 +196,6 @@ static GdkDrawable*      prepare_drawable          (gint width,
                                                     GdkGC **gc);
 static PangoLayout*      prepare_layout            (gdouble zoom);
 static PixmapFormatInfo* find_format               (const gchar *name);
-static void              find_data_window_for_data (GwyDataWindow *window,
-                                                    gpointer *p);
 static void              pixmap_save_load_args     (GwyContainer *container,
                                                     PixmapSaveArgs *args);
 static void              pixmap_save_save_args     (GwyContainer *container,
@@ -1351,17 +1349,12 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     GwySIUnit *siunit_xy, *siunit_z;
     const guchar *samples;
     guchar *pixels;
-    gpointer p[2];
     gint width, height, zwidth, zheight, hrh, vrw, scw, nsamp, y, lw;
     gint border = 20;
     gint gap = 20;
     gint fmw = 18;
 
-    p[0] = data;
-    p[1] = NULL;
-    gwy_app_data_window_foreach((GFunc)find_data_window_for_data, p);
-    g_return_val_if_fail(p[1], NULL);
-    data_window = (GwyDataWindow*)p[1];
+    data_window = gwy_app_data_window_get_for_data(data);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
     data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
@@ -1963,14 +1956,6 @@ find_format(const gchar *name)
     }
 
     return NULL;
-}
-
-static void
-find_data_window_for_data(GwyDataWindow *window,
-                          gpointer *p)
-{
-    if (gwy_data_window_get_data(window) == p[0])
-        p[1] = window;
 }
 
 static const gchar *zoom_key = "/module/pixmap/zoom";
