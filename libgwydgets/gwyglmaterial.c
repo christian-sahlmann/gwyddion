@@ -357,24 +357,28 @@ gwy_gl_material_setup_presets(void)
         {0.316228, 0.316228, 0.316228, 1.0},
         0.1
     };
+    /*
     static GwyGLMaterialPreset mat_obsidian = {
         {0.05375, 0.05, 0.06625, 1.0},
         {0.18275, 0.17, 0.22525, 1.0},
         {0.332741, 0.328634, 0.346435, 1.0},
         0.3
     };
+    */
     static GwyGLMaterialPreset mat_pearl = {
         {0.25, 0.20725, 0.20725, 1.0},
         {1.0, 0.829, 0.829, 1.0},
         {0.296648, 0.296648, 0.296648, 1.0},
         0.088
     };
+    /*
     static GwyGLMaterialPreset mat_ruby = {
         {0.1745, 0.01175, 0.01175, 1.0},
         {0.61424, 0.04136, 0.04136, 1.0},
         {0.727811, 0.626959, 0.626959, 1.0},
         0.6
     };
+    */
     static GwyGLMaterialPreset mat_turquoise = {
         {0.1, 0.18725, 0.1745, 1.0},
         {0.396, 0.74151, 0.69102, 1.0},
@@ -393,12 +397,14 @@ gwy_gl_material_setup_presets(void)
         {0.393548, 0.271906, 0.166721, 1.0},
         0.2
     };
+    /*
     static GwyGLMaterialPreset mat_chrome = {
         {0.25, 0.25, 0.25, 1.0},
         {0.4, 0.4, 0.4, 1.0},
         {0.774597, 0.774597, 0.774597, 1.0},
         0.6
     };
+    */
     static GwyGLMaterialPreset mat_copper = {
         {0.19125, 0.0735, 0.0225, 1.0},
         {0.7038, 0.27048, 0.0828, 1.0},
@@ -427,13 +433,10 @@ gwy_gl_material_setup_presets(void)
     gwy_gl_material_create_preset(&mat_none,       GWY_GL_MATERIAL_NONE     );
     gwy_gl_material_create_preset(&mat_emerald,    GWY_GL_MATERIAL_EMERALD  );
     gwy_gl_material_create_preset(&mat_jade,       GWY_GL_MATERIAL_JADE     );
-    gwy_gl_material_create_preset(&mat_obsidian,   GWY_GL_MATERIAL_OBSIDIAN );
     gwy_gl_material_create_preset(&mat_pearl,      GWY_GL_MATERIAL_PEARL    );
-    gwy_gl_material_create_preset(&mat_ruby,       GWY_GL_MATERIAL_RUBY     );
     gwy_gl_material_create_preset(&mat_turquoise,  GWY_GL_MATERIAL_TURQUOISE);
     gwy_gl_material_create_preset(&mat_brass,      GWY_GL_MATERIAL_BRASS    );
     gwy_gl_material_create_preset(&mat_bronze,     GWY_GL_MATERIAL_BRONZE   );
-    gwy_gl_material_create_preset(&mat_chrome,     GWY_GL_MATERIAL_CHROME   );
     gwy_gl_material_create_preset(&mat_copper,     GWY_GL_MATERIAL_COPPER   );
     gwy_gl_material_create_preset(&mat_gold,       GWY_GL_MATERIAL_GOLD     );
     gwy_gl_material_create_preset(&mat_silver,     GWY_GL_MATERIAL_SILVER   );
