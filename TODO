@@ -22,3 +22,20 @@ Particularly (overall app issues, module issues not listed):
 Quite a few of these items are intrusive and will have to wait for the next
 unstable version.
 
+
+============================================================================
+Release checklist:
+- update splashscreen
+- update library versions, if interfaces changed
+- update version in configure.ac
+- update version in gwyddion-keep-up
+- must build on Linux _from tarballs_
+- must build on Windows
+- check NEWS, generate HTML version
+- tag CVS
+- build and upload packages
+- sign packages and upload signatures
+- update gwyddion main page
+- publish on Freshmeat, GnomeFiles
+- add the new version to bugzilla
+
