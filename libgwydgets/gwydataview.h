@@ -25,17 +25,9 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 
-#ifndef GWY_TYPE_CONTAINER
-#  include <libgwyddion/gwycontainer.h>
-#endif /* no GWY_TYPE_CONTAINER */
-
-#ifndef GWY_TYPE_VECTOR_LAYER
-#  include <libgwydgets/gwyvectorlayer.h>
-#endif /* no GWY_TYPE_VECTOR_LAYER */
-
-#ifndef GWY_TYPE_PIXMAP_LAYER
-#  include <libgwydgets/gwypixmaplayer.h>
-#endif /* no GWY_TYPE_PIXMAP_LAYER */
+#include <libgwyddion/gwycontainer.h>
+#include <libgwydgets/gwyvectorlayer.h>
+#include <libgwydgets/gwypixmaplayer.h>
 
 G_BEGIN_DECLS
 

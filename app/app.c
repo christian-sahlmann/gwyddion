@@ -1354,7 +1354,7 @@ gwy_app_save_3d_export(GtkWidget *button, Gwy3DWindow *gwy3dwindow)
     filename_sys = g_strdup(filename);
     gtk_widget_destroy(dialog);
 
-    pixbuf = gwy_3d_view_get_pixbuf(GWY_3D_VIEW(gwy3dview), 0, 0);
+    pixbuf = gwy_3d_view_get_pixbuf(GWY_3D_VIEW(gwy3dview));
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
     if (!gdk_pixbuf_save(pixbuf, filename_sys, "png", &err, NULL)) {
         dialog = gtk_message_dialog_new(NULL,

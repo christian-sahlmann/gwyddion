@@ -71,6 +71,7 @@ typedef struct {
 
 static void          gwy_3d_view_class_init     (Gwy3DViewClass *klass);
 static void          gwy_3d_view_init           (Gwy3DView *gwy3dview);
+static void          gwy_3d_view_destroy        (GtkObject *object);
 static void          gwy_3d_view_finalize       (GObject *object);
 static void          gwy_3d_view_realize        (GtkWidget *widget);
 static void          gwy_3d_view_unrealize      (GtkWidget *widget);
@@ -81,7 +82,7 @@ static void          gwy_3d_view_size_request   (GtkWidget *widget,
                                                  GtkRequisition *requisition);
 static gboolean      gwy_3d_view_expose         (GtkWidget *widget,
                                                  GdkEventExpose *event);
-static gboolean      gwy_3d_view_configure      (GtkWidget         *widget,
+static gboolean      gwy_3d_view_configure      (GtkWidget *widget,
                                                  GdkEventConfigure *event);
 static gboolean      gwy_3d_view_button_press   (GtkWidget *widget,
                                                  GdkEventButton *event);
@@ -89,7 +90,7 @@ static gboolean      gwy_3d_view_button_release (GtkWidget *widget,
                                                  GdkEventButton *event);
 static gboolean      gwy_3d_view_motion_notify  (GtkWidget *widget,
                                                  GdkEventMotion *event);
-static Gwy3DVector * gwy_3d_make_normals        (GwyDataField * data,
+static Gwy3DVector*  gwy_3d_make_normals        (GwyDataField * data,
                                                  Gwy3DVector *normals);
 static void          gwy_3d_make_list           (Gwy3DView * gwy3D,
                                                  GwyDataField *data,
@@ -97,6 +98,7 @@ static void          gwy_3d_make_list           (Gwy3DView * gwy3D,
 static void          gwy_3d_draw_axes           (Gwy3DView *gwy3dview);
 static void          gwy_3d_draw_light_position (Gwy3DView *gwy3dview);
 static void          gwy_3d_set_projection      (Gwy3DView *gwy3dview);
+static void          gwy_3d_view_update_labels  (Gwy3DView *gwy3dview);
 static GtkAdjustment* gwy_3d_view_create_adjustment (Gwy3DView *gwy3dview,
                                                      const gchar *key,
                                                      gdouble value,
@@ -104,28 +106,23 @@ static GtkAdjustment* gwy_3d_view_create_adjustment (Gwy3DView *gwy3dview,
                                                      gdouble upper,
                                                      gdouble step,
                                                      gdouble page);
-static void     gwy_3d_adjustment_value_changed (GtkAdjustment* adjustment,
-                                                 gpointer user_data);
-static void     gwy_3d_labels_value_changed     (Gwy3DLabels* labels,
-                                                 gpointer user_data);
+static void          gwy_3d_adjustment_value_changed (GtkAdjustment* adjustment,
+                                                      Gwy3DView *gwy3dview);
+static void          gwy_3d_label_changed       (Gwy3DLabel* label,
+                                                 Gwy3DView *gwy3dview);
 static void          gwy_3d_timeout_start       (Gwy3DView * gwy3dview,
                                                  gboolean immediate,
                                                  gboolean invalidate_now);
 static gboolean      gwy_3d_timeout_func        (gpointer user_data);
-
-static void          gl_pango_ft2_render_layout (PangoLayout *layout);
-static void          gwy_3d_print_text          (Gwy3DView      *gwy3dview,
-                                                 char           *text,
+static void          gwy_3d_pango_ft2_render_layout (PangoLayout *layout);
+static void          gwy_3d_print_text          (Gwy3DView     *gwy3dview,
+                                                 Gwy3DViewLabel   id,
                                                  GLfloat        raster_x,
                                                  GLfloat        raster_y,
                                                  GLfloat        raster_z,
                                                  guint          size,
                                                  gint           vjustify,
-                                                 gint           hjustify,
-                                                 gint           displacement_x,
-                                                 gint           displacement_y,
-                                                 gfloat         rotation);
-
+                                                 gint           hjustify);
 
 /* Local data */
 
@@ -133,7 +130,17 @@ static GtkDrawingAreaClass *parent_class = NULL;
 
 static GQuark container_key_quark = 0;
 
-
+/* Must match Gwy3DViewLabel */
+static const struct {
+    const gchar *key;
+    const gchar *default_text;
+}
+labels[] = {
+    { "/0/3d/label/x",    "x: $x" },
+    { "/0/3d/label/y",    "y: $y" },
+    { "/0/3d/label/min",  "$min"  },
+    { "/0/3d/label/max",  "$max"  },
+};
 
 GType
 gwy_3d_view_get_type(void)
@@ -178,6 +185,9 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_3d_view_finalize;
+
+    object_class->destroy = gwy_3d_view_destroy;
+
     widget_class->realize = gwy_3d_view_realize;
     widget_class->unrealize = gwy_3d_view_unrealize;
     widget_class->expose_event = gwy_3d_view_expose;
@@ -194,19 +204,16 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy_debug(" ");
 
     gwy3dview->reduced_size          = 100;
-    gwy3dview->data_min              = 0.0;
-    gwy3dview->data_max              = 0.0;
-    gwy3dview->data_mean             = 0.0;
 
     gwy3dview->view_scale_max        = 3.0f;
     gwy3dview->view_scale_min        = 0.5f;
     gwy3dview->movement_status       = GWY_3D_ROTATION;
-    gwy3dview->orthogonal_projection = TRUE;
     gwy3dview->show_axes             = TRUE;
     gwy3dview->show_labels           = TRUE;
     gwy3dview->shape_list_base       = -1;
-    gwy3dview->mouse_begin_x         = 0.0;
-    gwy3dview->mouse_begin_y         = 0.0;
+
+    gwy3dview->variables = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                                 NULL, g_free);
 }
 
 /**
@@ -214,11 +221,10 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
  * @data: A #GwyContainer containing the data to display.
  *
  * Creates a new threedimensional OpenGL display of @data.
+ *
  * The widget is initialized from container @data.
  *
  * Returns: The new OpenGL 3D widget as a #GtkWidget.
- *
- * Since: 1.5
  **/
 GtkWidget*
 gwy_3d_view_new(GwyContainer *data)
@@ -226,9 +232,9 @@ gwy_3d_view_new(GwyContainer *data)
     GdkGLConfig *glconfig;
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
-    const guchar *grad_name, *material_name;
-    gdouble x;
+    const guchar *name;
     GObject *dfield;
+    guint i;
 
     gwy_debug(" ");
 
@@ -275,16 +281,16 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->mat_current
              = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
-    if (!gwy_container_gis_string_by_name(data, "/0/3d/palette", &grad_name)) {
+    if (!gwy_container_gis_string_by_name(data, "/0/3d/palette", &name)) {
         if (!gwy_container_gis_string_by_name(data, "/0/base/palette",
-                                              &grad_name))
-            grad_name = GWY_GRADIENT_DEFAULT;
+                                              &name))
+            name = GWY_GRADIENT_DEFAULT;
     }
-    gwy3dview->gradient = gwy_gradients_get_gradient(grad_name);
+    gwy3dview->gradient = gwy_gradients_get_gradient(name);
     if (!gwy3dview->gradient)
         gwy3dview->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
     gwy_container_set_string_by_name(data, "/0/3d/palette",
-                                     g_strdup(grad_name));
+                                     g_strdup(name));
     g_object_ref(gwy3dview->gradient);
     g_signal_connect_swapped(gwy3dview->gradient, "value_changed",
                              G_CALLBACK(gwy_3d_view_gradient_changed),
@@ -292,21 +298,20 @@ gwy_3d_view_new(GwyContainer *data)
 
     gwy_container_gis_int32_by_name(data, "/0/3d/reduced_size",
                                     &gwy3dview->reduced_size);
-    if (gwy_container_gis_double_by_name(data, "/0/3d/view_scale_max", &x))
-        gwy3dview->view_scale_max = x;
-    if (gwy_container_gis_double_by_name(data, "/0/3d/view_scale_min", &x))
-        gwy3dview->view_scale_min = x;
-    gwy_container_gis_boolean_by_name(data, "/0/3d/orthogonal_projection",
-                                      &gwy3dview->orthogonal_projection);
+    gwy_container_gis_double_by_name(data, "/0/3d/view_scale_max",
+                                     &gwy3dview->view_scale_max);
+    gwy_container_gis_double_by_name(data, "/0/3d/view_scale_min",
+                                     &gwy3dview->view_scale_min);
+    gwy_container_gis_enum_by_name(data, "/0/3d/projection",
+                                   &gwy3dview->projection);
     gwy_container_gis_boolean_by_name(data, "/0/3d/show_axes",
                                       &gwy3dview->show_axes);
     gwy_container_gis_boolean_by_name(data, "/0/3d/show_labels",
                                       &gwy3dview->show_labels);
     gwy_container_gis_boolean_by_name(data, "/0/3d/enable_lights",
                                       &gwy3dview->enable_lights);
-    if (gwy_container_gis_string_by_name(data, "/0/3d/material",
-                                         &material_name))
-        gwy3dview->mat_current = gwy_gl_material_get_by_name(material_name);
+    if (gwy_container_gis_string_by_name(data, "/0/3d/material", &name))
+        gwy3dview->mat_current = gwy_gl_material_get_by_name(name);
 
     /* should be always true */
     if (gwy3dview->data != NULL) {
@@ -340,13 +345,28 @@ gwy_3d_view_new(GwyContainer *data)
                                  TRUE,
                                  GDK_GL_RGBA_TYPE);
 
-    gwy3dview->si_unit = (GwySIUnit*) gwy_si_unit_new("m");
-    gwy3dview->labels = gwy_3d_labels_new(gwy3dview->container);
-    g_signal_connect(gwy3dview->labels, "label_changed",
-                     G_CALLBACK(gwy_3d_labels_value_changed), gwy3dview);
-    gwy_3d_labels_update(gwy3dview->labels, gwy3dview->si_unit);
-    gwy_debug("labels:%p", gwy3dview->labels);
+    gwy3dview->labels = g_new0(Gwy3DLabel*, G_N_ELEMENTS(labels));
+    for (i = 0; i < G_N_ELEMENTS(labels); i++) {
+        if (gwy_container_gis_object_by_name(data, labels[i].key,
+                                             &gwy3dview->labels[i]))
+            g_object_ref(gwy3dview->labels[i]);
+        else
+            gwy3dview->labels[i] = gwy_3d_label_new(labels[i].default_text);
+
+        g_signal_connect(gwy3dview->labels[i], "value_changed",
+                         G_CALLBACK(gwy_3d_label_changed), gwy3dview);
+        g_signal_connect(gwy3dview->labels[i], "notify",
+                         G_CALLBACK(gwy_3d_label_changed), gwy3dview);
+    }
+    gwy_3d_view_update_labels(gwy3dview);
+
     return widget;
+}
+
+static void
+gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
+{
+    /* TODO */
 }
 
 static GtkAdjustment*
@@ -378,14 +398,10 @@ gwy_3d_view_create_adjustment(Gwy3DView *gwy3dview,
 }
 
 static void
-gwy_3d_view_finalize(GObject *object)
+gwy_3d_view_destroy(GtkObject *object)
 {
     Gwy3DView *gwy3dview;
-
-    gwy_debug("finalizing a Gwy3DView (refcount = %u)",
-              object->ref_count);
-
-    g_return_if_fail(GWY_IS_3D_VIEW(object));
+    guint i;
 
     gwy3dview = GWY_3D_VIEW(object);
 
@@ -399,8 +415,6 @@ gwy_3d_view_finalize(GObject *object)
     gwy_object_unref(gwy3dview->light_z);
     gwy_object_unref(gwy3dview->light_y);
 
-    gwy_object_unref(gwy3dview->si_unit);
-    gwy_object_unref(gwy3dview->labels);
     gwy_object_unref(gwy3dview->gradient);
 
     if (gwy3dview->shape_list_base >= 0) {
@@ -408,9 +422,20 @@ gwy_3d_view_finalize(GObject *object)
         gwy3dview->shape_list_base = -1;
     }
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    for (i = 0; i < G_N_ELEMENTS(labels); i++)
+        gwy_object_unref(gwy3dview->labels[i]);
+}
 
-    gwy_debug("    ... (refcount = %u)", object->ref_count);
+static void
+gwy_3d_view_finalize(GObject *object)
+{
+    Gwy3DView *gwy3dview;
+
+    gwy3dview = GWY_3D_VIEW(object);
+
+    g_hash_table_destroy(gwy3dview->variables);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void
@@ -453,6 +478,7 @@ gwy_3d_view_unrealize(GtkWidget *widget)
 void
 gwy_3d_view_update(Gwy3DView *gwy3dview)
 {
+    GwyDataField *datafield;
     gboolean update_data = FALSE;
     gboolean update_due_to_gradient = FALSE;
     const guchar *grad_name = NULL;
@@ -460,20 +486,13 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
     gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
-    if (gwy_container_contains_by_name(gwy3dview->container, "/0/data")) {
-        GwyDataField  *data;
-
-        data = GWY_DATA_FIELD(gwy_container_get_object_by_name
-                                    (gwy3dview->container, "/0/data"));
-/*        if (data != gwy3dview->data)
-*/
-        {
-            gwy_object_unref(gwy3dview->data);
-            gwy3dview->data = data;
-            g_object_ref(gwy3dview->data);
-            update_data = TRUE;
-        }
-    }
+    datafield = gwy3dview->data;
+    gwy_container_gis_object_by_name(gwy3dview->container, "/0/data",
+                                     &gwy3dview->data);
+    g_object_ref(gwy3dview->data);
+    g_object_unref(datafield);
+    /* FIXME: we should watch data changes */
+    update_data = TRUE;
 
     if (!gwy_container_gis_string_by_name(gwy3dview->container, "/0/3d/palette",
                                           &grad_name)) {
@@ -511,9 +530,9 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
                                 ry,
                                 GWY_INTERPOLATION_BILINEAR);
 
-        gwy3dview->data_min  = gwy_data_field_get_min(gwy3dview->data);
-        gwy3dview->data_max  = gwy_data_field_get_max(gwy3dview->data);
-        gwy_3d_labels_update(gwy3dview->labels, gwy3dview->si_unit);
+        gwy3dview->data_min = gwy_data_field_get_min(gwy3dview->data);
+        gwy3dview->data_max = gwy_data_field_get_max(gwy3dview->data);
+        gwy_3d_view_update_labels(gwy3dview);
     }
 
     if (!update_due_to_gradient && update_data)
@@ -591,7 +610,6 @@ const gchar*
 gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-
     return gwy_gradient_get_name(gwy3dview->gradient);
 }
 
@@ -605,10 +623,9 @@ gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
  * Returns: actual type of response on the mouse motion event
  **/
 Gwy3DMovement
-gwy_3d_view_get_status (Gwy3DView * gwy3dview)
+gwy_3d_view_get_status (Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), GWY_3D_NONE);
-
     return gwy3dview->movement_status;
 }
 
@@ -630,44 +647,40 @@ gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
 }
 
 /**
- * gwy_3d_view_get_orthographic:
+ * gwy_3d_view_get_projection:
  * @gwy3dview: A 3D data view widget.
  *
+ * Gets projection a 3D data view uses.
  *
- * Returns: TRUE if projection of the data is orthografic
- *          FALSE if projection of the data is perspective
+ * Returns: Projection type used by @gwy3dview.
  **/
-gboolean
-gwy_3d_view_get_orthographic(Gwy3DView *gwy3dview)
+Gwy3DProjection
+gwy_3d_view_get_projection(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
-
-    return gwy3dview->orthogonal_projection;
+    return gwy3dview->projection;
 }
 
 /**
- * gwy_3d_view_set_orthographic:
+ * gwy_3d_view_set_projection:
  * @gwy3dview: A 3D data view widget.
- * @orthographic: Whether the projection of the data is
- *    orthograpic (TRUE) or perspective (FALSE).
+ * @projection: Proejction type to use.
  *
- * Sets the type of projection of the 3D data to the screen and
- * redraws widget (if realized).
+ * Sets the type of projection of a 3D data to the screen.
  **/
 void
-gwy_3d_view_set_orthographic(Gwy3DView *gwy3dview,
-                             gboolean  orthographic)
+gwy_3d_view_set_projection(Gwy3DView *gwy3dview,
+                           Gwy3DProjection projection)
 {
-    gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    g_return_if_fail((gint)projection >= GWY_3D_ORTHOGRAPHIC
+                     && (gint)projection <= GWY_3D_PERSPECTIVE);
 
-    if (orthographic == gwy3dview->orthogonal_projection)
+    if (projection == gwy3dview->projection)
         return;
-    gwy3dview->orthogonal_projection = orthographic;
-    gwy_container_set_boolean_by_name(gwy3dview->container,
-                                      "/0/3d/orthogonal_projection",
-                                      orthographic);
+    gwy3dview->projection = projection;
+    gwy_container_set_enum_by_name(gwy3dview->container, "/0/3d/projection",
+                                   projection);
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
@@ -683,9 +696,7 @@ gwy_3d_view_set_orthographic(Gwy3DView *gwy3dview,
 gboolean
 gwy_3d_view_get_show_axes(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
-
     return gwy3dview->show_axes;
 }
 
@@ -698,9 +709,8 @@ gwy_3d_view_get_show_axes(Gwy3DView *gwy3dview)
  **/
 void
 gwy_3d_view_set_show_axes(Gwy3DView *gwy3dview,
-                          gboolean  show_axes)
+                          gboolean show_axes)
 {
-    gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (show_axes == gwy3dview->show_axes)
@@ -711,7 +721,6 @@ gwy_3d_view_set_show_axes(Gwy3DView *gwy3dview,
                                       show_axes);
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-
 }
 
 /**
@@ -726,9 +735,7 @@ gwy_3d_view_set_show_axes(Gwy3DView *gwy3dview,
 gboolean
 gwy_3d_view_get_show_labels(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
-
     return gwy3dview->show_labels;
 }
 
@@ -737,26 +744,24 @@ gwy_3d_view_get_show_labels(Gwy3DView *gwy3dview)
  * @gwy3dview: A 3D data view widget.
  * @show_labels: Show/hide axes labels
  *
- * Show/hide lables of the axes within @gwy3dview.
+ * Show/hide labels of the axes within @gwy3dview.
  * Widget is invalidated if necessary.
  * The labels of the axes are visible only if #show_axes is TRUE.
  **/
 void
 gwy_3d_view_set_show_labels(Gwy3DView *gwy3dview,
-                            gboolean  show_labels)
+                            gboolean show_labels)
 {
-     gwy_debug(" ");
      g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
-    if (show_labels == gwy3dview->show_labels)
-        return;
-    gwy3dview->show_labels = show_labels;
-    gwy_container_set_boolean_by_name(gwy3dview->container,
-                                      "/0/3d/show_labels",
-                                      show_labels);
+     if (show_labels == gwy3dview->show_labels)
+         return;
+     gwy3dview->show_labels = show_labels;
+     gwy_container_set_boolean_by_name(gwy3dview->container,
+                                       "/0/3d/show_labels",
+                                       show_labels);
 
-    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-
+     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 /**
@@ -770,7 +775,6 @@ gwy_3d_view_set_show_labels(Gwy3DView *gwy3dview,
 gboolean
 gwy_3d_view_get_use_lights(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
 
     return gwy3dview->enable_lights;
@@ -787,10 +791,9 @@ gwy_3d_view_get_use_lights(Gwy3DView *gwy3dview)
  **/
 void
 gwy_3d_view_set_use_lights(Gwy3DView *gwy3dview,
-                           gboolean  use_lights)
+                           gboolean use_lights)
 {
-     gwy_debug(" ");
-     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (use_lights == gwy3dview->enable_lights)
         return;
@@ -884,9 +887,7 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
 GwyGLMaterial*
 gwy_3d_view_get_material(Gwy3DView *gwy3dview)
 {
-     gwy_debug(" ");
-     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->mat_current;
 }
 
@@ -908,7 +909,6 @@ gwy_3d_view_set_material(Gwy3DView *gwy3dview,
 {
     const gchar *name;
 
-    gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (material == gwy3dview->mat_current)
@@ -922,14 +922,19 @@ gwy_3d_view_set_material(Gwy3DView *gwy3dview,
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
+Gwy3DLabel*
+gwy_3d_view_get_label(Gwy3DView *gwy3dview,
+                      Gwy3DViewLabel label)
+{
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    g_return_val_if_fail(label < G_N_ELEMENTS(labels), NULL);
+
+    return gwy3dview->labels[label];
+}
 
 /**
  * gwy_3d_view_get_pixbuf:
  * @gwy3dview: A 3D data view widget.
- * @xres: Requested pixbuf x-resolution.  This parameters is currently
- *        unimplemented.
- * @yres: Requested pixbuf y-resolution.  This parameters is currently
- *        unimplemented.
  *
  * Copies the contents of the framebuffer to the GdkPixbuf.
  *
@@ -939,9 +944,7 @@ gwy_3d_view_set_material(Gwy3DView *gwy3dview,
  * Returns: A newly allocated GdkPixbuf with copy of the framebuffer.
  **/
 GdkPixbuf*
-gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview,
-                       G_GNUC_UNUSED guint xres,
-                       G_GNUC_UNUSED guint yres)
+gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview)
 {
     int width, height, rowstride, n_channels, i, j;
     guchar *pixels, *a, *b, z;
@@ -966,12 +969,14 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview,
 
     a = pixels;
     b = pixels + (height -1)  * rowstride;
-    for (i = 0; i < height / 2; i ++, b = pixels + (height - 1 - i) * rowstride)
+    for (i = 0; i < height/2; i ++, b = pixels + (height - 1 - i) * rowstride) {
         for (j = 0; j < rowstride; j++, a++, b++) {
              z = *a;
             *a = *b;
             *b =  z;
         }
+    }
+
     return pixbuf;
 }
 
@@ -987,7 +992,6 @@ GwyContainer*
 gwy_3d_view_get_data(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GTK_WIDGET_REALIZED(gwy3dview), NULL);
-
     return gwy3dview->container;
 }
 
@@ -999,9 +1003,10 @@ gwy_3d_view_get_data(Gwy3DView *gwy3dview)
  * of the light to the "default" values. Invalidates the widget.
  **/
 void
-gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
+gwy_3d_view_reset_view(Gwy3DView *gwy3dview)
 {
    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+
    gtk_adjustment_set_value(gwy3dview->rot_x, 45.0);
    gtk_adjustment_set_value(gwy3dview->rot_y, -45.0);
    gtk_adjustment_set_value(gwy3dview->view_scale, 1.0);
@@ -1010,7 +1015,6 @@ gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
    gtk_adjustment_set_value(gwy3dview->light_y, 0.0f);
 
    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-
 }
 
 /**
@@ -1021,10 +1025,9 @@ gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
  *
  * Returns: a GtkAdjustment with settings of the Phi angle of rotation
  **/
-GtkAdjustment *
+GtkAdjustment*
 gwy_3d_view_get_rot_x_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->rot_x;
 }
@@ -1037,10 +1040,9 @@ gwy_3d_view_get_rot_x_adjustment(Gwy3DView *gwy3dview)
  *
  * Returns: a GtkAdjustment with settings of the Theta angle of rotation
  **/
-GtkAdjustment *
+GtkAdjustment*
 gwy_3d_view_get_rot_y_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->rot_y;
 }
@@ -1053,10 +1055,9 @@ gwy_3d_view_get_rot_y_adjustment(Gwy3DView *gwy3dview)
  *
  * Returns: a GtkAdjustment with settings of the view zoom
  **/
-GtkAdjustment *
+GtkAdjustment*
 gwy_3d_view_get_view_scale_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->view_scale;
 }
@@ -1069,10 +1070,9 @@ gwy_3d_view_get_view_scale_adjustment(Gwy3DView *gwy3dview)
  *
  * Returns: a GtkAdjustment with settings of the zoom of the z-axis
  **/
-GtkAdjustment *
+GtkAdjustment*
 gwy_3d_view_get_z_deformation_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->deformation_z;
 }
@@ -1085,10 +1085,9 @@ gwy_3d_view_get_z_deformation_adjustment(Gwy3DView *gwy3dview)
  *
  * Returns: a GtkAdjustment with settings of the Phi angle of light position
  **/
-GtkAdjustment *
+GtkAdjustment*
 gwy_3d_view_get_light_z_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->light_z;
 }
@@ -1101,10 +1100,9 @@ gwy_3d_view_get_light_z_adjustment(Gwy3DView *gwy3dview)
  *
  * Returns: a GtkAdjustment with settings of the Theta angle of light position
  **/
-GtkAdjustment *
+GtkAdjustment*
 gwy_3d_view_get_light_y_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->light_y;
 }
@@ -1120,7 +1118,6 @@ gwy_3d_view_get_light_y_adjustment(Gwy3DView *gwy3dview)
 gdouble
 gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), G_MAXDOUBLE);
     return gwy3dview->view_scale_max;
 }
@@ -1136,7 +1133,6 @@ gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview)
 gdouble
 gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), G_MAXDOUBLE);
     return gwy3dview->view_scale_min;
 }
@@ -1147,23 +1143,20 @@ gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
  * @new_max_scale: maximal zoom of the 3D data view
  *
  * Sets the new maximal zoom of 3D data view. Recommended values are 0.5 - 5.0.
- *
- * Returns: whether the function finished succesfully (allways)
  **/
-gboolean
-gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
+void
+gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
+                               gdouble new_max_scale)
 {
-    gwy_debug(" ");
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+
     new_max_scale = fabs(new_max_scale);
     if (new_max_scale != gwy3dview->view_scale_max) {
         gwy3dview->view_scale_max = new_max_scale;
-        if (gwy3dview->view_scale_max < gwy3dview->view_scale_min) {
-            gdouble _tmp = gwy3dview->view_scale_max;
-
-            gwy3dview->view_scale_max = gwy3dview->view_scale_min;
-            gwy3dview->view_scale_min = _tmp;
-        }
+        if (gwy3dview->view_scale_max < gwy3dview->view_scale_min)
+            GWY_SWAP(gdouble,
+                     gwy3dview->view_scale_max,
+                     gwy3dview->view_scale_min);
         if (gwy3dview->view_scale->value > gwy3dview->view_scale_max)
            gtk_adjustment_set_value(gwy3dview->view_scale,
                                     gwy3dview->view_scale_max);
@@ -1171,7 +1164,6 @@ gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
            gtk_adjustment_set_value(gwy3dview->view_scale,
                                     gwy3dview->view_scale_min);
     }
-    return TRUE;
 }
 
 /**
@@ -1180,23 +1172,20 @@ gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
  * @new_min_scale: minimal zoom of the 3D data view
  *
  * Sets the new manimal zoom of 3D data view. Recommended values are 0.5 - 5.0.
- *
- * Returns: whether the function finished succesfully (allways)
  **/
-gboolean
-gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
+void
+gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
+                               gdouble new_min_scale)
 {
-    gwy_debug(" ");
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+
     new_min_scale = fabs(new_min_scale);
     if (new_min_scale != gwy3dview->view_scale_min) {
         gwy3dview->view_scale_min = new_min_scale;
-        if (gwy3dview->view_scale_min < gwy3dview->view_scale_min) {
-            gdouble _tmp = gwy3dview->view_scale_min;
-
-            gwy3dview->view_scale_min = gwy3dview->view_scale_max;
-            gwy3dview->view_scale_max = _tmp;
-        }
+        if (gwy3dview->view_scale_max < gwy3dview->view_scale_min)
+            GWY_SWAP(gdouble,
+                     gwy3dview->view_scale_max,
+                     gwy3dview->view_scale_min);
         if (gwy3dview->view_scale->value < gwy3dview->view_scale_min)
            gtk_adjustment_set_value(gwy3dview->view_scale,
                                     gwy3dview->view_scale_min);
@@ -1204,26 +1193,6 @@ gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
            gtk_adjustment_set_value(gwy3dview->view_scale,
                                     gwy3dview->view_scale_max);
     }
-    return TRUE;
-}
-
-/**
- * gwy_3d_view_get_label_description:
- * @gwy3dview: A 3D data view widget.
- * @label_name: identifier of the label
- *
- * Returns a #Gwy3DLabelDescription structure containing informations about
- * labels shown within 3D data view.
- *
- * Returns: a #Gwy3DLabelDescription structure containing informations about
- *          labels shown within 3D data view.
- **/
-Gwy3DLabelDescription *
-gwy_3d_view_get_label_description(Gwy3DView * gwy3dview,
-                                  Gwy3DLabelName label_name)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy_3d_labels_get_description(gwy3dview->labels, label_name);
 }
 
 /******************************************************************************/
@@ -1275,16 +1244,11 @@ gwy_3d_timeout_func(gpointer user_data)
     return FALSE;
 }
 
-
 static void
-gwy_3d_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_data)
+gwy_3d_adjustment_value_changed(GtkAdjustment* adjustment,
+                                Gwy3DView *gwy3dview)
 {
-    Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
     GQuark quark;
-
-    gwy_debug(" ");
-    g_return_if_fail(GTK_IS_ADJUSTMENT(adjustment));
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if ((quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(adjustment),
                                                      container_key_quark))))
@@ -1294,14 +1258,9 @@ gwy_3d_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_data)
 }
 
 static void
-gwy_3d_labels_value_changed(Gwy3DLabels* labels, gpointer user_data)
+gwy_3d_label_changed(G_GNUC_UNUSED Gwy3DLabel* label,
+                     Gwy3DView *gwy3dview)
 {
-    Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
-
-    gwy_debug(" ");
-    g_return_if_fail(GWY_IS_3D_LABELS(labels));
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
@@ -1310,7 +1269,6 @@ static void
 gwy_3d_view_realize(GtkWidget *widget)
 {
     Gwy3DView *gwy3dview;
-
 
     gwy_debug("realizing a Gwy3DView (%ux%u)",
           widget->allocation.width, widget->allocation.height);
@@ -1328,14 +1286,13 @@ gwy_3d_view_realize(GtkWidget *widget)
                           | GDK_BUTTON_RELEASE_MASK
                           | GDK_VISIBILITY_NOTIFY_MASK);
 
-
     gwy_3d_view_realize_gl(gwy3dview);
 
-   /* Get PangoFT2 context. */
-   gwy3dview->ft2_font_map = (PangoFT2FontMap*) pango_ft2_font_map_new();
-   pango_ft2_font_map_set_resolution(gwy3dview->ft2_font_map, 72, 72);
-   gwy3dview->ft2_context
-       = pango_ft2_font_map_create_context(gwy3dview->ft2_font_map);
+    /* Get PangoFT2 context. */
+    gwy3dview->ft2_font_map = (PangoFT2FontMap*) pango_ft2_font_map_new();
+    pango_ft2_font_map_set_resolution(gwy3dview->ft2_font_map, 72, 72);
+    gwy3dview->ft2_context
+        = pango_ft2_font_map_create_context(gwy3dview->ft2_font_map);
 
 }
 
@@ -1583,7 +1540,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
 
 
 static Gwy3DVector *
-gwy_3d_make_normals(GwyDataField * data, Gwy3DVector *normals)
+gwy_3d_make_normals(GwyDataField *data, Gwy3DVector *normals)
 {
    typedef struct { Gwy3DVector A, B; } RectangleNorm;
    gint i, j, xres, yres;
@@ -1741,8 +1698,7 @@ gwy_3d_make_list(Gwy3DView *gwy3D,
       glTranslatef(0.0, 0.0, -gwy3D->data_min);
       zdifr = 1.0/(gwy3D->data_max - gwy3D->data_min);
       normals = g_new(Gwy3DVector, xres * yres);
-      if (gwy_3d_make_normals(data, normals) == NULL)
-      {
+      if (gwy_3d_make_normals(data, normals) == NULL) {
            /*TODO solve not enough momory problem*/
       }
 
@@ -1773,32 +1729,34 @@ gwy_3d_make_list(Gwy3DView *gwy3D,
 
 }
 
-static void gwy_3d_draw_axes(Gwy3DView * widget)
+static void
+gwy_3d_draw_axes(Gwy3DView *widget)
 {
     GLfloat rx, Ax, Ay, Bx, By, Cx, Cy;
     gint xres, yres, res;
     gboolean yfirst;
     GwyGLMaterial *mat_none;
-    
+
     gwy_debug(" ");
 
     xres = gwy_data_field_get_xres(widget->data);
     yres = gwy_data_field_get_yres(widget->data);
     res  = xres > yres ? xres : yres;
-       
+
     Ax = Ay = Bx = By = Cx = Cy = 0.0f;
     yfirst = TRUE;
     rx = widget->rot_x->value
                  - ((int)(widget->rot_x->value / 360.0)) * 360.0;
     if (rx < 0.0)
         rx += 360.0;
-        
+
     mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
-    
+
     glPushMatrix();
-    glTranslatef(-(xres / (double)res), -(yres / (double)res), GWY_3D_Z_DISPLACEMENT);
-    glScalef(2.0/ res,
-             2.0/ res,
+    glTranslatef(-(xres/(double)res), -(yres/(double)res),
+                 GWY_3D_Z_DISPLACEMENT);
+    glScalef(2.0/res,
+             2.0/res,
              GWY_3D_Z_TRANSFORMATION / (widget->data_max - widget->data_min));
     gwy_3d_view_glMaterialdv(GL_FRONT, GL_AMBIENT, mat_none->ambient);
     gwy_3d_view_glMaterialdv(GL_FRONT, GL_DIFFUSE, mat_none->diffuse);
@@ -1857,10 +1815,10 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                          + Cy*cos(widget->rot_x->value * DIG_2_RAD), 0.0f);
             glRotatef(-widget->rot_x->value, 0.0f, 0.0f, 1.0f);
             glTranslatef(-Cx, -Cy, 0.0f);
-            glVertex3f(Cx , Cy, widget->data_max - widget->data_min);
+            glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
             glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
                      widget->data_max - widget->data_min);
-            glVertex3f(Cx , Cy, (widget->data_max - widget->data_min)/2);
+            glVertex3f(Cx, Cy, (widget->data_max - widget->data_min)/2);
             glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
                        (widget->data_max-widget->data_min)/2);
             glPopMatrix();
@@ -1871,133 +1829,34 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
               into display lists and draw here
         */
         if (widget->show_labels) {
-#if 0
-            gdouble xreal = gwy_data_field_get_xreal(widget->data);
-            gdouble yreal = gwy_data_field_get_yreal(widget->data);
-            gdouble range, maximum;
-            GwySIValueFormat * format;
-            guint size;
-
-            size = GTK_WIDGET(widget)->allocation.width
-                   < GTK_WIDGET(widget)->allocation.height
-                   ? GTK_WIDGET(widget)->allocation.width
-                   : GTK_WIDGET(widget)->allocation.height;
-            range = fabs(widget->data_max - widget->data_min);
-            maximum = MAX(fabs(widget->data_min), fabs(widget->data_max));
-            /*FIXME are the parameters all right?*/
-            format = gwy_si_unit_get_format_with_resolution(
-                         widget->si_unit,
-                         yfirst ? yreal : xreal,
-                         yfirst ? yreal/3 : xreal/3,
-                         NULL);
-            g_snprintf(text, sizeof(text), "%c: %1.1f %s",
-                       yfirst ? 'y' : 'x',
-                       (yfirst ? yreal : xreal)/format->magnitude,
-                       format->units);
-            gwy_debug("label 1: %s", text);
-            gwy_3d_print_text(widget, text, (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
-                              (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f, (int) (sqrt(size)*0.8),
-                              1, 1, 0, 0, 0.0f);
-            gwy_si_unit_get_format_with_resolution(
-                widget->si_unit,
-                !yfirst ? yreal : xreal,
-                !yfirst ? yreal/3 : xreal/3,
-                format);
-            g_snprintf(text, sizeof(text), "%c: %1.1f %s",
-                       !yfirst ? 'y' : 'x',
-                       (!yfirst ? yreal : xreal)/format->magnitude,
-                       format->units);
-            gwy_3d_print_text(widget, text, (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
-                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f, (int) (sqrt(size)*0.8),
-                          1, -1, 0,0, 0.0f);
-            gwy_si_unit_get_format_with_resolution(widget->si_unit,
-                                                   maximum, range/3, format);
-            g_snprintf(text, sizeof(text), "%1.0f %s",
-                       widget->data_max / format->magnitude,
-                       format->units);
-            gwy_3d_print_text(widget, text, Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                          (widget->data_max - widget->data_min), (int) (sqrt(size)*0.8),
-                          0, -1, 0, 0, 0.0f);
-            g_snprintf(text, sizeof(text), "%1.0f %s",
-                       widget->data_min / format->magnitude,
-                       format->units);
-            gwy_3d_print_text(widget, text, Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                              -0.0f, (int) (sqrt(size)*0.8),
-                               0, -1, 0, 0, 0.0f);
-
-
-            gwy_si_unit_value_format_free(format);
-#else
             guint view_size;
             gint size;
-            guint label;
 
-            view_size = (GTK_WIDGET(widget)->allocation.width
-                         < GTK_WIDGET(widget)->allocation.height)
-                        ? GTK_WIDGET(widget)->allocation.width
-                        : GTK_WIDGET(widget)->allocation.height;
-            size = (gint) (sqrt(view_size)*0.8);
-            if (yfirst)
-                label = GWY_3D_VIEW_LABEL_Y;
-            else
-                label = GWY_3D_VIEW_LABEL_X;
+            view_size = MIN(GTK_WIDGET(widget)->allocation.width,
+                            GTK_WIDGET(widget)->allocation.height);
+            size = (gint)(sqrt(view_size)*0.8);
+
             glColor3f(0.0, 0.0, 0.0);
-            gwy_3d_print_text(widget,
-                              gwy_3d_labels_expand_text(widget->labels,label),
+            gwy_3d_print_text(widget, yfirst ? GWY_3D_VIEW_LABEL_Y
+                                             : GWY_3D_VIEW_LABEL_X,
                               (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
                               (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f,
-                              gwy_3d_labels_user_size(widget->labels,
-                                                      label,
-                                                      size),
-                              1, 1,
-                              gwy_3d_labels_get_delta_x(widget->labels, label),
-                              gwy_3d_labels_get_delta_y(widget->labels, label),
-                              gwy_3d_labels_get_rotation(widget->labels, label));
-            if (yfirst)
-               label = GWY_3D_VIEW_LABEL_X;
-            else
-               label = GWY_3D_VIEW_LABEL_Y;
-            gwy_3d_print_text(widget,
-                              gwy_3d_labels_expand_text(widget->labels, label),
+                              size, 1, 1);
+
+            gwy_3d_print_text(widget, yfirst ? GWY_3D_VIEW_LABEL_X
+                                             : GWY_3D_VIEW_LABEL_Y,
                               (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
                               (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f,
-                              gwy_3d_labels_user_size(widget->labels,
-                                                      label,
-                                                      size),
-                              1, -1,
-                              gwy_3d_labels_get_delta_x(widget->labels, label),
-                              gwy_3d_labels_get_delta_y(widget->labels, label),
-                              gwy_3d_labels_get_rotation(widget->labels, label));
-            gwy_3d_print_text(widget,
-                              gwy_3d_labels_expand_text(widget->labels,
-                                                     GWY_3D_VIEW_LABEL_MAX),
+                              size, 1, -1);
+
+            gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MAX,
                               Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
                               (widget->data_max - widget->data_min),
-                              gwy_3d_labels_user_size(widget->labels,
-                                                      GWY_3D_VIEW_LABEL_MAX,
-                                                      size),
-                              0, -1,
-                              gwy_3d_labels_get_delta_x(widget->labels,
-                                                        GWY_3D_VIEW_LABEL_MAX),
-                              gwy_3d_labels_get_delta_y(widget->labels,
-                                                        GWY_3D_VIEW_LABEL_MAX),
-                              gwy_3d_labels_get_rotation(widget->labels,
-                                                         GWY_3D_VIEW_LABEL_MAX));
-            gwy_3d_print_text(widget,
-                              gwy_3d_labels_expand_text(widget->labels,
-                                                     GWY_3D_VIEW_LABEL_MIN),
+                              size, 0, -1);
+
+            gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MIN,
                               Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, 0.0f,
-                              gwy_3d_labels_user_size(widget->labels,
-                                                      GWY_3D_VIEW_LABEL_MIN,
-                                                      size),
-                              0, -1,
-                              gwy_3d_labels_get_delta_x(widget->labels,
-                                                        GWY_3D_VIEW_LABEL_MIN),
-                              gwy_3d_labels_get_delta_y(widget->labels,
-                                                        GWY_3D_VIEW_LABEL_MIN),
-                              gwy_3d_labels_get_rotation(widget->labels,
-                                                         GWY_3D_VIEW_LABEL_MIN));
-#endif
+                              size, 0, -1);
         }
     }
 
@@ -2110,33 +1969,43 @@ static void gwy_3d_set_projection(Gwy3DView *widget)
     glLoadIdentity();
     if (w > h) {
         aspect = w / h;
-        if (widget->orthogonal_projection)
+        switch (widget->projection) {
+            case GWY_3D_ORTHOGRAPHIC:
             glOrtho(-aspect * GWY_3D_ORTHO_CORRECTION,
                      aspect * GWY_3D_ORTHO_CORRECTION,
                      -1.0   * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
                       1.0   * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
                       5.0,
                       60.0);
-        else
+            break;
+
+            case GWY_3D_PERSPECTIVE:
             glFrustum(-aspect, aspect, -1.0 , 1.0, 5.0, 60.0);
+            break;
+        }
     }
     else {
         aspect = h / w;
-        if (widget->orthogonal_projection)
+        switch (widget->projection) {
+            case GWY_3D_ORTHOGRAPHIC:
             glOrtho( -1.0   * GWY_3D_ORTHO_CORRECTION,
                       1.0   * GWY_3D_ORTHO_CORRECTION,
                     -aspect * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
                      aspect * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
                       5.0,
                       60.0);
-        else
+            break;
+
+            case GWY_3D_PERSPECTIVE:
             glFrustum(-1.0, 1.0, -aspect, aspect, 5.0, 60.0);
+            break;
+        }
     }
     glMatrixMode(GL_MODELVIEW);
 }
 
 static void
-gl_pango_ft2_render_layout (PangoLayout *layout)
+gwy_3d_pango_ft2_render_layout (PangoLayout *layout)
 {
     PangoRectangle logical_rect;
     FT_Bitmap bitmap;
@@ -2228,17 +2097,14 @@ gl_pango_ft2_render_layout (PangoLayout *layout)
 }
 
 static void
-gwy_3d_print_text(Gwy3DView      *gwy3dview,
-                  gchar          *text,
+gwy_3d_print_text(Gwy3DView     *gwy3dview,
+                  Gwy3DViewLabel id,
                   GLfloat        raster_x,
                   GLfloat        raster_y,
                   GLfloat        raster_z,
                   guint          size,
                   gint           vjustify,
-                  gint           hjustify,
-                  gint           displacement_x,
-                  gint           displacement_y,
-                  G_GNUC_UNUSED gfloat         rotation)
+                  gint           hjustify)
 {
     PangoContext *widget_context;
     PangoFontDescription *font_desc;
@@ -2246,8 +2112,19 @@ gwy_3d_print_text(Gwy3DView      *gwy3dview,
     PangoRectangle logical_rect;
     GLfloat text_w, text_h;
     guint hlp = 0;
+    Gwy3DLabel *label;
+    gint displacement_x, displacement_y;
+    GtkAdjustment *adj;
+    gchar *text;
 
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    label = gwy3dview->labels[id];
+    text = gwy_3d_label_expand_text(label, gwy3dview->variables);
+    size = gwy_3d_label_user_size(label, size);
+    adj = gwy_3d_label_get_delta_x_adjustment(label);
+    displacement_x = gwy_adjustment_get_int(adj);
+    adj = gwy_3d_label_get_delta_y_adjustment(label);
+    displacement_y = gwy_adjustment_get_int(adj);
+
     /* Font */
     /* FIXME: is it possible for pango to write on trasnparent background? */
     widget_context = gtk_widget_get_pango_context(GTK_WIDGET(gwy3dview));
@@ -2267,7 +2144,6 @@ gwy_3d_print_text(Gwy3DView      *gwy3dview,
     text_w = PANGO_PIXELS(logical_rect.width);
     text_h = PANGO_PIXELS(logical_rect.height);
 
-
     glRasterPos3f(raster_x, raster_y, raster_z);
     glBitmap(0, 0, 0, 0, displacement_x, displacement_y, (GLubyte *)&hlp);
     if (vjustify < 0) {
@@ -2281,6 +2157,7 @@ gwy_3d_print_text(Gwy3DView      *gwy3dview,
        /* vertically justified to the top */
        glBitmap(0, 0, 0, 0, 0, -text_h, (GLubyte *)&hlp);
     }
+
     if (hjustify < 0) {
        /* horizontally justified to the left */
     }
@@ -2294,7 +2171,7 @@ gwy_3d_print_text(Gwy3DView      *gwy3dview,
     }
 
     /* Render text */
-    gl_pango_ft2_render_layout(layout);
+    gwy_3d_pango_ft2_render_layout(layout);
 
     g_object_unref(G_OBJECT(layout));
 

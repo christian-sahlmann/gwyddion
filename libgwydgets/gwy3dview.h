@@ -31,12 +31,31 @@
 
 #include <libprocess/datafield.h>
 #include <libdraw/gwygradient.h>
-#include <libgwyddion/gwysiunit.h>
 
 #include <libgwydgets/gwyglmaterial.h>
-#include <libgwydgets/gwy3dlabels.h>
+#include <libgwydgets/gwy3dlabel.h>
 
 G_BEGIN_DECLS
+
+typedef enum {
+    GWY_3D_NONE = 0,
+    GWY_3D_ROTATION,
+    GWY_3D_SCALE,
+    GWY_3D_DEFORMATION,
+    GWY_3D_LIGHT_MOVEMENT
+} Gwy3DMovement;
+
+typedef enum {
+    GWY_3D_ORTHOGRAPHIC = 0,
+    GWY_3D_PERSPECTIVE
+} Gwy3DProjection;
+
+typedef enum {
+    GWY_3D_VIEW_LABEL_X = 0,
+    GWY_3D_VIEW_LABEL_Y,
+    GWY_3D_VIEW_LABEL_MIN,
+    GWY_3D_VIEW_LABEL_MAX
+} Gwy3DViewLabel;
 
 #define GWY_TYPE_3D_VIEW              (gwy_3d_view_get_type())
 #define GWY_3D_VIEW(obj)              (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_3D_VIEW, Gwy3DView))
@@ -47,15 +66,6 @@ G_BEGIN_DECLS
 
 typedef struct _Gwy3DView      Gwy3DView;
 typedef struct _Gwy3DViewClass Gwy3DViewClass;
-
-typedef enum {
-    GWY_3D_NONE           = 0,
-    GWY_3D_ROTATION       = 1,
-    GWY_3D_SCALE          = 2,
-    GWY_3D_DEFORMATION    = 3,
-    GWY_3D_LIGHT_MOVEMENT = 4
-} Gwy3DMovement;
-
 
 struct _Gwy3DView {
     GtkDrawingArea drawing_area;
@@ -86,7 +96,7 @@ struct _Gwy3DView {
     gdouble view_scale_max;         /* Maximum zoom of the scene */
     gdouble view_scale_min;         /* Minimum zoom of the scene */
 
-    gboolean orthogonal_projection; /* Whether use orthographic or perspectine projection */
+    Gwy3DProjection projection;     /* Orthographic or perspectine projection */
     gboolean show_axes;             /* Whether show axes wihin the scene */
     gboolean show_labels;           /* Whwther show axes labels, only if axes are shown */
     gboolean enable_lights;         /* Enable lightning */
@@ -99,10 +109,10 @@ struct _Gwy3DView {
     gboolean timeout;               /* Is running timeot for redrawing in full scale */
     guint timeout_id;               /* Timeout id */
 
-    PangoContext * ft2_context;     /* For text rendering */
+    PangoContext *ft2_context;      /* For text rendering */
     PangoFT2FontMap *ft2_font_map;  /* Font map for text rendering */
-    GwySIUnit    * si_unit;         /* [m] for axis labels */
-    Gwy3DLabels* labels;            /* labels text, displacement etc */
+    Gwy3DLabel **labels;            /* labels text, displacement etc */
+    GHashTable *variables;          /* Label substitution variables */
 
     gboolean b_reserved1;           /* resreved for thread creating of display-lists */
     gboolean b_reserved2;
@@ -135,38 +145,36 @@ const gchar*     gwy_3d_view_get_gradient      (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_gradient      (Gwy3DView *gwy3dview,
                                                 const gchar *gradient);
 
-Gwy3DMovement    gwy_3d_view_get_status        (Gwy3DView * gwy3dview);
-void             gwy_3d_view_set_status        (Gwy3DView * gwy3dview,
+Gwy3DMovement    gwy_3d_view_get_status        (Gwy3DView *gwy3dview);
+void             gwy_3d_view_set_status        (Gwy3DView *gwy3dview,
                                                 Gwy3DMovement mv);
 
-gboolean         gwy_3d_view_get_orthographic  (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_orthographic  (Gwy3DView *gwy3dview,
-                                                gboolean  orthographic);
+Gwy3DProjection  gwy_3d_view_get_projection    (Gwy3DView *gwy3dview);
+void             gwy_3d_view_set_projection    (Gwy3DView *gwy3dview,
+                                                Gwy3DProjection projection);
 gboolean         gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
-                                                gboolean  show_axes);
+                                                gboolean show_axes);
 gboolean         gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
-                                                gboolean  show_labels);
+                                                gboolean show_labels);
 
 gboolean         gwy_3d_view_get_use_lights    (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_use_lights    (Gwy3DView *gwy3dview,
-                                                gboolean  use_lights);
+                                                gboolean use_lights);
 
 guint            gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
-                                                guint  reduced_size);
+                                                guint reduced_size);
 
 GwyGLMaterial*   gwy_3d_view_get_material      (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
                                                 GwyGLMaterial *material);
 
-GdkPixbuf*       gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview,
-                                                guint xres,
-                                                guint yres);
-
+GdkPixbuf*       gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview);
+Gwy3DLabel*      gwy_3d_view_get_label         (Gwy3DView *gwy3dview,
+                                                Gwy3DViewLabel label);
 GwyContainer*    gwy_3d_view_get_data          (Gwy3DView *gwy3dview);
-
 void             gwy_3d_view_reset_view        (Gwy3DView *gwy3dview);
 
 GtkAdjustment*   gwy_3d_view_get_rot_x_adjustment          (Gwy3DView *gwy3dview);
@@ -178,12 +186,10 @@ GtkAdjustment*   gwy_3d_view_get_light_y_adjustment        (Gwy3DView *gwy3dview
 
 gdouble          gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview);
 gdouble          gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview);
-gboolean         gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
+void             gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
                                                 gdouble new_max_scale);
-gboolean         gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
+void             gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
                                                 gdouble new_min_scale);
-Gwy3DLabelDescription * gwy_3d_view_get_label_description(Gwy3DView * gwy3dview,
-                                                        Gwy3DLabelName label_name);
 
 G_END_DECLS
 

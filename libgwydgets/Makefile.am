@@ -7,7 +7,7 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgetsincludedir = $(pkgincludedir)/libgwydgets
 
 libgwydgetsinclude_HEADERS = \
-	gwy3dlabels.h \
+	gwy3dlabel.h \
 	gwy3dview.h \
 	gwy3dwindow.h \
 	gwyaxis.h \
@@ -62,7 +62,7 @@ EXTRA_DIST = \
 #libgwydgets_la_LDFLAGS = @GTKGLEXT_LIBS@ -version-info 9:0:6
 libgwydgets_la_LDFLAGS = @GTKGLEXT_LIBS@ -release @LIBRARY_RELEASE@
 libgwydgets_la_SOURCES = \
-	gwy3dlabels.c \
+	gwy3dlabel.c \
 	gwy3dview.c \
 	gwy3dwindow.c \
 	gwyaxis.c \
