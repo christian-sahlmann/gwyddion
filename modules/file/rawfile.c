@@ -76,6 +76,8 @@ enum {
 enum {
     RAW_PRESET_NAME = 0,
     RAW_PRESET_TYPE,
+    RAW_PRESET_SIZE,
+    RAW_PRESET_INFO,
     RAW_PRESET_LAST
 };
 
@@ -346,6 +348,18 @@ static const guint32 *const RTABLE[] = {
     RTABLE_6,
     RTABLE_7,
     RTABLE_8,
+};
+
+static const GwyEnum builtin_menu[] = {
+    { "User-specified",       RAW_NONE            },
+    { "Signed byte",          RAW_SIGNED_BYTE     },
+    { "Unsigned byte",        RAW_UNSIGNED_BYTE   },
+    { "Signed 16bit word",    RAW_SIGNED_WORD16   },
+    { "Unsigned 16bit word",  RAW_UNSIGNED_WORD16 },
+    { "Signed 32bit word",    RAW_SIGNED_WORD32   },
+    { "Unsigned 32bit word",  RAW_UNSIGNED_WORD32 },
+    { "IEEE single",          RAW_IEEE_FLOAT      },
+    { "IEEE double",          RAW_IEEE_DOUBLE     },
 };
 
 static const RawFileArgs rawfile_defaults = {
@@ -685,17 +699,6 @@ rawfile_dialog_format_page(RawFileArgs *args,
         { "_Text data",   RAW_TEXT },
         { "_Binary data", RAW_BINARY },
     };
-    static const GwyEnum builtin_menu[] = {
-        { "User-specified",       RAW_NONE            },
-        { "Signed byte",          RAW_SIGNED_BYTE     },
-        { "Unsigned byte",        RAW_UNSIGNED_BYTE   },
-        { "Signed 16bit word",    RAW_SIGNED_WORD16   },
-        { "Unsigned 16bit word",  RAW_UNSIGNED_WORD16 },
-        { "Signed 32bit word",    RAW_SIGNED_WORD32   },
-        { "Unsigned 32bit word",  RAW_UNSIGNED_WORD32 },
-        { "IEEE single",          RAW_IEEE_FLOAT      },
-        { "IEEE double",          RAW_IEEE_DOUBLE     },
-    };
     static const GwyEnum delimiter_menu[] = {
         { "Any whitespace",       RAW_DELIM_ANY_WHITESPACE  },
         { "TAB character",        RAW_DELIM_TAB             },
@@ -842,24 +845,77 @@ rawfile_preset_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
                              GtkTreeIter *piter,
                              gpointer data)
 {
+    static const gchar *prefix = "/module/rawfile/preset/";
+    GwyContainer *settings;
     gulong id;
     gchar *name, *s;
-    gint format;
+    const gchar *delim;
+    guint format, xres, yres;
 
     id = GPOINTER_TO_UINT(data);
     g_assert(id < RAW_PRESET_LAST);
     gtk_tree_model_get(model, piter, RAW_PRESET_NAME, &name, -1);
+    settings = gwy_app_settings_get();
     switch (id) {
         case RAW_PRESET_NAME:
         g_object_set(cell, "text", name, NULL);
         break;
 
         case RAW_PRESET_TYPE:
-        s = g_strconcat("/module/rawfile/preset/", name, "/format", NULL);
-        format = gwy_container_get_int32_by_name(gwy_app_settings_get(), s);
+        s = g_strconcat(prefix, name, "/format", NULL);
+        format = gwy_container_get_int32_by_name(settings, s);
         g_free(s);
         g_object_set(cell, "text", format == RAW_BINARY ? "Binary" : "Text",
                      NULL);
+        break;
+
+        case RAW_PRESET_SIZE:
+        s = g_strconcat(prefix, name, "/xres", NULL);
+        xres = gwy_container_get_int32_by_name(settings, s);
+        g_free(s);
+        s = g_strconcat(prefix, name, "/yres", NULL);
+        yres = gwy_container_get_int32_by_name(settings, s);
+        g_free(s);
+        s = g_strdup_printf("%u×%u", xres, yres);
+        g_object_set(cell, "text", s, NULL);
+        g_free(s);
+        break;
+
+        case RAW_PRESET_INFO:
+        s = g_strconcat(prefix, name, "/format", NULL);
+        format = gwy_container_get_int32_by_name(settings, s);
+        g_free(s);
+        switch (format) {
+            case RAW_BINARY:
+            s = g_strconcat(prefix, name, "/builtin", NULL);
+            format = gwy_container_get_int32_by_name(settings, s);
+            g_free(s);
+            g_object_set(cell, "text",
+                         gwy_enum_to_string(format, builtin_menu,
+                                            G_N_ELEMENTS(builtin_menu)),
+                         NULL);
+            break;
+
+            case RAW_TEXT:
+            s = g_strconcat(prefix, name, "/delimiter", NULL);
+            delim = gwy_container_get_string_by_name(settings, s);
+            g_free(s);
+            if (!delim || !*delim)
+                g_object_set(cell, "text", "Delimiter: whitespace", NULL);
+            else {
+                if (delim[1] == '\0' && !g_ascii_isgraph(delim[0]))
+                    s = g_strdup_printf("Delimiter: 0x%02x", delim[0]);
+                else
+                    s = g_strdup_printf("Delimiter: %s", delim);
+                g_object_set(cell, "text", s, NULL);
+                g_free(s);
+            }
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
         break;
 
         default:
@@ -875,6 +931,8 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     static const GwyEnum columns[] = {
         { "Name", RAW_PRESET_NAME },
         { "Type", RAW_PRESET_TYPE },
+        { "Size", RAW_PRESET_SIZE },
+        { "Info", RAW_PRESET_INFO },
     };
     GtkListStore *store;
     GtkTreeSelection *tselect;
@@ -894,7 +952,11 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    store = gtk_list_store_new(RAW_PRESET_LAST, G_TYPE_STRING, G_TYPE_STRING);
+    store = gtk_list_store_new(RAW_PRESET_LAST,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING);
     if (gwy_container_gis_string_by_name(gwy_app_settings_get(),
                                          "/module/rawfile/presets",
                                          &presets)) {
@@ -903,7 +965,10 @@ rawfile_dialog_preset_page(RawFileArgs *args,
             gtk_list_store_append(store, &iter);
             gtk_list_store_set(store, &iter,
                                RAW_PRESET_NAME, s[i],
-                               RAW_PRESET_TYPE, "", -1);
+                               RAW_PRESET_TYPE, "",
+                               RAW_PRESET_SIZE, "",
+                               RAW_PRESET_INFO, "",
+                               -1);
         }
     }
     gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
@@ -916,6 +981,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
                                          GTK_SORT_ASCENDING);
 
     controls->presetlist = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(controls->presetlist), TRUE);
     g_object_unref(store);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->presetlist);
 
