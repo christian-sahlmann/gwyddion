@@ -199,7 +199,7 @@ gwy_container_finalize(GObject *object)
  *
  * Returns: The container, as a #GObject.
  **/
-GObject*
+GwyContainer*
 gwy_container_new(void)
 {
     GwyContainer *container;
@@ -211,7 +211,7 @@ gwy_container_new(void)
     container->values = g_hash_table_new_full(NULL, NULL,
                                               NULL, value_destroy_func);
 
-    return (GObject*)(container);
+    return container;
 }
 
 static void
@@ -1163,9 +1163,9 @@ gwy_container_gis_string(GwyContainer *container,
  * g_object_ref() if you want to access it even when @container may cease
  * to exist.
  *
- * Returns: The object as #GObject.
+ * Returns: The object as #gpointer.
  **/
-GObject*
+gpointer
 gwy_container_get_object(GwyContainer *container, GQuark key)
 {
     GValue *p;
@@ -1182,7 +1182,8 @@ gwy_container_get_object(GwyContainer *container, GQuark key)
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return NULL;
     }
-    return g_value_get_object(p);
+
+    return (gpointer)g_value_get_object(p);
 }
 
 /**
@@ -1219,7 +1220,7 @@ gwy_container_get_object(GwyContainer *container, GQuark key)
 gboolean
 gwy_container_gis_object(GwyContainer *container,
                          GQuark key,
-                         GObject **value)
+                         gpointer value)
 {
     GValue *p;
 
@@ -1237,7 +1238,7 @@ gwy_container_gis_object(GwyContainer *container,
         return FALSE;
     }
 
-    *value = g_value_get_object(p);
+    value = g_value_get_object(p);
     return TRUE;
 }
 
@@ -1814,7 +1815,7 @@ gwy_container_deserialize(const guchar *buffer,
 static GObject*
 gwy_container_duplicate_real(GObject *object)
 {
-    GObject *duplicate;
+    GwyContainer *duplicate;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_CONTAINER(object), NULL);
@@ -1829,7 +1830,7 @@ gwy_container_duplicate_real(GObject *object)
     g_hash_table_foreach(GWY_CONTAINER(object)->values,
                          hash_duplicate_func, duplicate);
 
-    return duplicate;
+    return (GObject*)duplicate;
 }
 
 static void

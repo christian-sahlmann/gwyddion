@@ -67,7 +67,7 @@ struct _GwyContainerClass {
 #define gwy_container_duplicate(container) ((GwyContainer*)gwy_serializable_duplicate(G_OBJECT(container)))
 
 GType         gwy_container_get_type              (void) G_GNUC_CONST;
-GObject*      gwy_container_new                   (void);
+GwyContainer* gwy_container_new                   (void);
 GType         gwy_container_value_type            (GwyContainer *container,
                                                    GQuark key);
 gboolean      gwy_container_contains              (GwyContainer *container,
@@ -152,11 +152,11 @@ gboolean      gwy_container_gis_string            (GwyContainer *container,
 void          gwy_container_set_object            (GwyContainer *container,
                                                    GQuark key,
                                                    GObject *value);
-GObject*      gwy_container_get_object            (GwyContainer *container,
+gpointer      gwy_container_get_object            (GwyContainer *container,
                                                    GQuark key);
 gboolean      gwy_container_gis_object            (GwyContainer *container,
                                                    GQuark key,
-                                                   GObject **value);
+                                                   gpointer value);
 
 GPtrArray*    gwy_container_serialize_to_text     (GwyContainer *container);
 GwyContainer* gwy_container_deserialize_from_text (const gchar *text);
