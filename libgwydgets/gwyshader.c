@@ -426,7 +426,7 @@ gwy_shader_set_theta(GwyShader *shader,
     shader->old_theta = shader->theta;
     shader->theta = theta;
     gwy_shader_update(shader);
-    g_signal_emit_by_name(shader, "angle_changed");
+    g_signal_emit(shader, shader_signals[ANGLE_CHANGED], 0);
 }
 
 /**
@@ -454,7 +454,7 @@ gwy_shader_set_phi(GwyShader *shader,
     shader->old_phi = shader->phi;
     shader->phi = phi;
     gwy_shader_update(shader);
-    g_signal_emit_by_name(shader, "angle_changed");
+    g_signal_emit(shader, shader_signals[ANGLE_CHANGED], 0);
 }
 
 /**
@@ -488,7 +488,7 @@ gwy_shader_set_angle(GwyShader *shader,
     shader->old_phi = shader->phi;
     shader->phi = phi;
     gwy_shader_update(shader);
-    g_signal_emit_by_name(shader, "angle_changed");
+    g_signal_emit(shader, shader_signals[ANGLE_CHANGED], 0);
 }
 
 /**
@@ -744,7 +744,7 @@ gwy_shader_button_release(GtkWidget *widget,
     }
 
     if (shader->update_policy != GTK_UPDATE_CONTINUOUS)
-        g_signal_emit_by_name(shader, "angle_changed");
+        g_signal_emit(shader, shader_signals[ANGLE_CHANGED], 0);
 
     return FALSE;
 }
@@ -781,7 +781,7 @@ static gboolean
 gwy_shader_timer(GwyShader *shader)
 {
     if (shader->update_policy == GTK_UPDATE_DELAYED)
-        g_signal_emit_by_name(shader, "angle_changed");
+        g_signal_emit(shader, shader_signals[ANGLE_CHANGED], 0);
 
     shader->timer_id = 0;
     return FALSE;
@@ -814,7 +814,7 @@ gwy_shader_update_mouse(GwyShader *shader, gint x, gint y)
 
     switch (shader->update_policy) {
         case GTK_UPDATE_CONTINUOUS:
-        g_signal_emit_by_name(shader, "angle_changed");
+        g_signal_emit(shader, shader_signals[ANGLE_CHANGED], 0);
         break;
 
         case GTK_UPDATE_DELAYED:
