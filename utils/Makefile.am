@@ -8,6 +8,7 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 libgwyapp = $(top_builddir)/app/libgwyapp.la
 
 EXTRA_DIST = \
+	modules-web.xsl \
 	update-msvc.py \
 	update-potfiles.sh \
 	vim-syn-gen.py
