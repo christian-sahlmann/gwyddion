@@ -128,7 +128,9 @@ gwy_load_modules_in_dir(GDir *gdir,
         GwyModuleInfo *mod_info;
         GwyModuleQueryFunc query;
 
-        if (!g_str_has_suffix(filename, ".so"))
+        /* FIXME: Broken for Windows. */
+        if (!g_str_has_suffix(filename, ".so")
+            || g_str_has_prefix(filename, "."))
             continue;
         modulename = g_build_filename(dirname, filename, NULL);
         gwy_debug("Trying to load module %s.", modulename);
