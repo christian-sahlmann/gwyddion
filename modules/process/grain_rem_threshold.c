@@ -25,8 +25,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
 
 #define REMOVE_RUN_MODES \
