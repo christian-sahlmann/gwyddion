@@ -135,6 +135,7 @@ use(GwyDataWindow *data_window,
         state->user_data = g_new0(ToolControls, 1);
     }
     ((ToolControls*)state->user_data)->state = state;
+    state_changed = 1;
     return gwy_unitool_use(state, data_window, reason);
 }
 
@@ -256,8 +257,6 @@ dialog_create(GwyUnitoolState *state)
                        FALSE, FALSE, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update), controls->upd);
     g_signal_connect(controls->update, "toggled", G_CALLBACK(update_changed_cb), controls);
-
-
 
 
     return dialog;
