@@ -364,7 +364,7 @@ gwy_table_attach_hscale(GtkWidget *table,
                         GtkObject *pivot,
                         GwyHScaleStyle style)
 {
-    GtkWidget *spin, *scale, *label, *check, *middle_widget;
+    GtkWidget *spin, *scale, *label, *check, *middle_widget, *align;
     GtkAdjustment *scale_adj = NULL, *adj = NULL;
     GwyHScaleStyle base_style;
     GtkTable *tab;
@@ -391,6 +391,7 @@ gwy_table_attach_hscale(GtkWidget *table,
         break;
 
         case GWY_HSCALE_WIDGET:
+        case GWY_HSCALE_WIDGET_NO_EXPAND:
         g_return_val_if_fail(GTK_IS_WIDGET(pivot), NULL);
         break;
 
@@ -399,7 +400,8 @@ gwy_table_attach_hscale(GtkWidget *table,
         break;
     }
 
-    if (base_style != GWY_HSCALE_WIDGET) {
+    if (base_style != GWY_HSCALE_WIDGET
+        && base_style != GWY_HSCALE_WIDGET_NO_EXPAND) {
         spin = gtk_spin_button_new(adj, 1, 0);
         gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
         gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
@@ -438,9 +440,17 @@ gwy_table_attach_hscale(GtkWidget *table,
             scale_adj = adj;
     }
     else {
-        middle_widget = GTK_WIDGET(pivot);
-        gtk_table_attach(GTK_TABLE(table), middle_widget,
-                         1, 3, row, row+1, GTK_FILL, 0, 2, 2);
+        align = middle_widget = GTK_WIDGET(pivot);
+        if (base_style == GWY_HSCALE_WIDGET_NO_EXPAND) {
+            if (GTK_IS_MISC(middle_widget))
+                gtk_misc_set_alignment(GTK_MISC(middle_widget), 0.0, 0.5);
+            else {
+                align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
+                gtk_container_add(GTK_CONTAINER(align), middle_widget);
+            }
+        }
+        gtk_table_attach(GTK_TABLE(table), align, 1, 3, row, row+1,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
     }
     g_object_set_data(G_OBJECT(pivot), "middle_widget", middle_widget);
 
@@ -653,6 +663,26 @@ gwy_stock_like_button_new(const gchar *label_text,
  * @adj: A #GtkAdjustment to get value of.
  *
  * Gets a properly rounded integer value from an adjustment.
+ *
+ * Since: 1.8
+ **/
+
+/**
+ * GwyHScaleStyle:
+ * @GWY_HSCALE_DEFAULT: Default label, hscale, spinbutton, and units widget
+ *                      row.
+ * @GWY_HSCALE_LOG: Hscale is logarithmic.
+ * @GWY_HSCALE_SQRT: Hscale is square root.
+ * @GWY_HSCALE_NO_SCALE: There is no hscale.
+ * @GWY_HSCALE_WIDGET: An user-specified widget is used in place of hscale and
+ *                     spinbutton.
+ * @GWY_HSCALE_WIDGET_NO_EXPAND: An user-specified widget is used in place of
+ *                               hscale and spinbutton, and it is left-aligned
+ *                               instead of taking all the alloted space.
+ * @GWY_HSCALE_CHECK: The label is actually a check button that controls
+ *                    sensitivity of the row.
+ *
+ * Options controlling gwy_table_attach_hscale() behaviour.
  *
  * Since: 1.8
  **/

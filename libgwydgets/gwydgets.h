@@ -64,12 +64,13 @@ G_BEGIN_DECLS
     ((gint)(gtk_adjustment_get_value(GTK_ADJUSTMENT(adj)) + 0.5))
 
 typedef enum {
-    GWY_HSCALE_DEFAULT  = 0,
-    GWY_HSCALE_LOG      = 1,
-    GWY_HSCALE_SQRT     = 2,
-    GWY_HSCALE_NO_SCALE = 6,
-    GWY_HSCALE_WIDGET   = 7,
-    GWY_HSCALE_CHECK    = 16
+    GWY_HSCALE_DEFAULT          = 0,
+    GWY_HSCALE_LOG              = 1,
+    GWY_HSCALE_SQRT             = 2,
+    GWY_HSCALE_NO_SCALE         = 6,
+    GWY_HSCALE_WIDGET           = 7,
+    GWY_HSCALE_WIDGET_NO_EXPAND = 8,
+    GWY_HSCALE_CHECK            = 1024
 } GwyHScaleStyle;
 
 void         gwy_widgets_type_init          (void);
