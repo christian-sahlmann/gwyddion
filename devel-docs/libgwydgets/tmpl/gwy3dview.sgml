@@ -40,6 +40,13 @@ the 3D view to update self, when data changes.
 <link linkend="GwyGLMaterial">GwyGLMaterial</link>
 </para>
 
+<!-- ##### MACRO WIN32_LEAN_AND_MEAN ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### ENUM Gwy3DMovement ##### -->
 <para>
 
@@ -197,6 +204,24 @@ the 3D view to update self, when data changes.
 @show_labels: 
 <!-- # Unused Parameters # -->
 @gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_use_lights ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_use_lights ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@use_lights: 
 
 
 <!-- ##### FUNCTION gwy_3d_view_get_reduced_size ##### -->
@@ -364,6 +389,16 @@ the 3D view to update self, when data changes.
 
 @gwy3dview: 
 @new_min_scale: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_label_description ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@label_name: 
 @Returns: 
 
 

@@ -158,6 +158,26 @@ GwyLayerSelect
 GwyLayerTriangle
 
 
+<!-- ##### SECTION ./tmpl/gwymenubar.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwymenubar.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwymenubar.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwymenubar.sgml:Title ##### -->
+GwyVMenuBar
+
+
 <!-- ##### SECTION ./tmpl/gwymodulemenus.sgml:Long_Description ##### -->
 <para>
 
@@ -177,6 +197,27 @@ GwyLayerTriangle
 <!-- ##### SECTION ./tmpl/gwymodulemenus.sgml:Title ##### -->
 gwymodulemenus
 
+
+<!-- ##### MACRO GWY_3D_LABELS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GWY_3D_LABELS_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GWY_3D_LABELS_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### MACRO GWY_AXIS_AUTO ##### -->
 <para>
@@ -280,6 +321,24 @@ gwymodulemenus
 </para>
 
 
+<!-- ##### MACRO GWY_GL_MATERIAL_CHROME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_OBSIDIAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_RUBY ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GWY_GRAPH_LABEL_NORTHEAST ##### -->
 <para>
 
@@ -351,6 +410,47 @@ gwymodulemenus
 
 </para>
 
+
+<!-- ##### MACRO GWY_IS_3D_LABELS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GWY_IS_3D_LABELS_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GWY_TYPE_3D_LABELS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_VMENU_BAR ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GWY_VMENU_BAR_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GWY_VMENU_BAR_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### SIGNAL GwyColorButton::color-set ##### -->
 <para>
@@ -474,6 +574,48 @@ gwymodulemenus
 @cbdata: 
 @current: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_3d_labels_connect_signal ##### -->
+<para>
+
+</para>
+
+@labels: 
+@signal_name: 
+@handler: 
+@user_data: 
+
+<!-- ##### FUNCTION gwy_3d_labels_get_text ##### -->
+<para>
+
+</para>
+
+@labels: 
+@label_name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_3d_labels_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_3d_view_get_lights ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_3d_view_set_lights ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@enable_labels: 
 
 <!-- ##### FUNCTION gwy_axis_enable_set_label ##### -->
 <para>

@@ -33,16 +33,14 @@ GWY_GRAPH_CORNER_GET_CLASS
 
 <SECTION>
 <FILE>gwyglmaterial</FILE>
+WIN32_LEAN_AND_MEAN
 GWY_GL_MATERIAL_NONE
 GWY_GL_MATERIAL_EMERALD
 GWY_GL_MATERIAL_JADE
-GWY_GL_MATERIAL_OBSIDIAN
 GWY_GL_MATERIAL_PEARL
-GWY_GL_MATERIAL_RUBY
 GWY_GL_MATERIAL_TURQUOISE
 GWY_GL_MATERIAL_BRASS
 GWY_GL_MATERIAL_BRONZE
-GWY_GL_MATERIAL_CHROME
 GWY_GL_MATERIAL_COPPER
 GWY_GL_MATERIAL_GOLD
 GWY_GL_MATERIAL_SILVER
@@ -57,6 +55,7 @@ gwy_gl_material_get_by_name
 gwy_gl_material_exists
 gwy_gl_material_foreach
 gwy_gl_material_setup_presets
+gwy_gl_material_sample
 <SUBSECTION Standard>
 GWY_GL_MATERIAL
 GWY_IS_GL_MATERIAL
@@ -428,6 +427,7 @@ GWY_HRULER_GET_CLASS
 
 <SECTION>
 <FILE>gwy3dview</FILE>
+WIN32_LEAN_AND_MEAN
 Gwy3DMovement
 <TITLE>Gwy3DView</TITLE>
 Gwy3DView
@@ -444,6 +444,8 @@ gwy_3d_view_get_show_axes
 gwy_3d_view_set_show_axes
 gwy_3d_view_get_show_labels
 gwy_3d_view_set_show_labels
+gwy_3d_view_get_use_lights
+gwy_3d_view_set_use_lights
 gwy_3d_view_get_reduced_size
 gwy_3d_view_set_reduced_size
 gwy_3d_view_get_material
@@ -461,6 +463,7 @@ gwy_3d_view_get_max_view_scale
 gwy_3d_view_get_min_view_scale
 gwy_3d_view_set_max_view_scale
 gwy_3d_view_set_min_view_scale
+gwy_3d_view_get_label_description
 <SUBSECTION Standard>
 GWY_3D_VIEW
 GWY_IS_3D_VIEW
@@ -572,6 +575,34 @@ GWY_3D_WINDOW_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwy3dlabels</FILE>
+Gwy3DLabelDescription
+Gwy3DLabelDescriptionClass
+Gwy3DLabelName
+<TITLE>Gwy3DLabels</TITLE>
+gwy_3d_labels_new
+gwy_3d_labels_update
+gwy_3d_labels_format_text
+gwy_3d_labels_get_description
+gwy_3d_label_description_set_text
+gwy_3d_label_description_reset
+gwy_3d_label_description_get_autoscele
+gwy_3d_label_description_set_autoscale
+gwy_3d_labels_get_delta_x
+gwy_3d_labels_get_delta_y
+gwy_3d_labels_get_rotation
+gwy_3d_labels_get_size
+gwy_3d_labels_user_size
+<SUBSECTION Standard>
+GWY_3D_LABELS
+GWY_IS_3D_LABELS
+GWY_TYPE_3D_LABELS
+gwy_3d_labels_get_type
+GWY_3D_LABELS_CLASS
+GWY_IS_3D_LABELS_CLASS
+GWY_3D_LABELS_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwygradsphere</FILE>
 <TITLE>GwyGradSphere</TITLE>
 GwyGradSphere
@@ -646,6 +677,19 @@ GWY_IS_AXIS_CLASS
 GWY_AXIS_GET_CLASS
 </SECTION>
 
+<SECTION>
+<FILE>gwyvmenubar</FILE>
+<TITLE>GwyVMenuBar</TITLE>
+gwy_vmenu_bar_new
+<SUBSECTION Standard>
+GWY_VMENU_BAR
+GWY_IS_VMENU_BAR
+GWY_TYPE_VMENU_BAR
+gwy_vmenu_bar_get_type
+GWY_VMENU_BAR_CLASS
+GWY_IS_VMENU_BAR_CLASS
+GWY_VMENU_BAR_GET_CLASS
+</SECTION>
 <SECTION>
 <FILE>gwygraph</FILE>
 GwyGraphAutoProperties

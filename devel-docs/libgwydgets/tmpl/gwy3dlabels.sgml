@@ -1,0 +1,168 @@
+<!-- ##### SECTION Title ##### -->
+Gwy3DLabels
+
+<!-- ##### SECTION Short_Description ##### -->
+Labels in 3D view
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT Gwy3DLabelDescription ##### -->
+<para>
+
+</para>
+
+@base_key: 
+@default_text: 
+@text: 
+@auto_scale: 
+@delta_x: 
+@delta_y: 
+@rotation: 
+@size: 
+@owner: 
+
+<!-- ##### STRUCT Gwy3DLabelDescriptionClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM Gwy3DLabelName ##### -->
+<para>
+
+</para>
+
+@GWY_3D_VIEW_LABEL_X: 
+@GWY_3D_VIEW_LABEL_Y: 
+@GWY_3D_VIEW_LABEL_MIN: 
+@GWY_3D_VIEW_LABEL_MAX: 
+
+<!-- ##### FUNCTION gwy_3d_labels_new ##### -->
+<para>
+
+</para>
+
+@container: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_labels_update ##### -->
+<para>
+
+</para>
+
+@labels: 
+@container: 
+@si_unit: 
+
+
+<!-- ##### FUNCTION gwy_3d_labels_format_text ##### -->
+<para>
+
+</para>
+
+@labels: 
+@label_name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_labels_get_description ##### -->
+<para>
+
+</para>
+
+@gwy3dlabels: 
+@label_name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_label_description_set_text ##### -->
+<para>
+
+</para>
+
+@label_description: 
+@text: 
+
+
+<!-- ##### FUNCTION gwy_3d_label_description_reset ##### -->
+<para>
+
+</para>
+
+@label_description: 
+
+
+<!-- ##### FUNCTION gwy_3d_label_description_get_autoscele ##### -->
+<para>
+
+</para>
+
+@label_description: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_label_description_set_autoscale ##### -->
+<para>
+
+</para>
+
+@label_description: 
+@autoscale: 
+
+
+<!-- ##### MACRO gwy_3d_labels_get_delta_x ##### -->
+<para>
+
+</para>
+
+@labels: 
+@name: 
+
+
+<!-- ##### MACRO gwy_3d_labels_get_delta_y ##### -->
+<para>
+
+</para>
+
+@labels: 
+@name: 
+
+
+<!-- ##### MACRO gwy_3d_labels_get_rotation ##### -->
+<para>
+
+</para>
+
+@labels: 
+@name: 
+
+
+<!-- ##### MACRO gwy_3d_labels_get_size ##### -->
+<para>
+
+</para>
+
+@labels: 
+@name: 
+
+
+<!-- ##### FUNCTION gwy_3d_labels_user_size ##### -->
+<para>
+
+</para>
+
+@labels: 
+@name: 
+@user_size: 
+@Returns: 
+
+

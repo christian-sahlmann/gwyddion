@@ -1,0 +1,25 @@
+<!-- ##### SECTION Title ##### -->
+GwyVMenuBar
+
+<!-- ##### SECTION Short_Description ##### -->
+A vertical menu bar.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+#GwyVMenuBar is in all aspects identical to #GtkMenuBar, except that the
+menu bar items are organized vertically.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_vmenu_bar_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
