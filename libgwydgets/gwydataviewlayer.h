@@ -53,8 +53,8 @@ struct _GwyDataViewLayerClass {
     gboolean (*key_press)(GwyDataViewLayer *layer, GdkEventKey *event);
     gboolean (*key_release)(GwyDataViewLayer *layer, GdkEventKey *event);
     /* signal functions */
-    void (*plugged)(GwyDataViewLayer *layer, gpointer data);
-    void (*unplugged)(GwyDataViewLayer *layer, gpointer data);
+    void (*plugged)(GwyDataViewLayer *layer);
+    void (*unplugged)(GwyDataViewLayer *layer);
 };
 
 GType            gwy_data_view_layer_get_type        (void) G_GNUC_CONST;

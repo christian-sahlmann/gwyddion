@@ -8,6 +8,7 @@ include_HEADERS = \
 	gwygradsphere.h \
 	gwyhruler.h \
 	gwylayer-basic.h \
+	gwylayer-select.h \
 	gwyruler.h \
 	gwyspherecoords.h \
 	gwyvectorshade.h \
@@ -29,6 +30,7 @@ libgwydgets_la_SOURCES = \
 	gwygradsphere.c \
 	gwyhruler.c \
 	gwylayer-basic.c \
+	gwylayer-select.c \
 	gwyruler.c \
 	gwyspherecoords.c \
 	gwyvectorshade.c \

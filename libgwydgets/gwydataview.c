@@ -535,6 +535,9 @@ gwy_data_view_button_press(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
@@ -551,6 +554,9 @@ gwy_data_view_button_release(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 

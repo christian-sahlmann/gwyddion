@@ -23,9 +23,11 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_data_view_layer_class_init           (GwyDataViewLayerClass *klass);
-static void     gwy_data_view_layer_init                 (GwyDataViewLayer *layer);
-static void     gwy_data_view_layer_finalize             (GObject *object);
+static void     gwy_data_view_layer_class_init   (GwyDataViewLayerClass *klass);
+static void     gwy_data_view_layer_init         (GwyDataViewLayer *layer);
+static void     gwy_data_view_layer_finalize     (GObject *object);
+static void     plugged                          (GwyDataViewLayer *layer);
+static void     unplugged                        (GwyDataViewLayer *layer);
 
 /* Local data */
 
@@ -88,8 +90,8 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     klass->key_press = NULL;
     klass->key_release = NULL;
 
-    klass->plugged = NULL;
-    klass->unplugged = NULL;
+    klass->plugged = plugged;
+    klass->unplugged = unplugged;
 
     data_view_layer_signals[PLUGGED] =
         g_signal_new("plugged",
@@ -143,12 +145,8 @@ gwy_data_view_layer_finalize(GObject *object)
         g_object_unref(layer->layout);
     if (layer->palette)
         g_object_unref(layer->palette);
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "    child pixbuf ref count %d", G_OBJECT(layer->pixbuf)->ref_count);
     if (layer->pixbuf)
         g_object_unref(layer->pixbuf);
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "    child data ref count %d", G_OBJECT(layer->data)->ref_count);
     if (layer->data)
         g_object_unref(layer->data);
     layer->gc = NULL;
@@ -178,8 +176,9 @@ gwy_data_view_layer_wants_repaint(GwyDataViewLayer *layer)
         return FALSE;
 
     layer_class = GWY_DATA_VIEW_LAYER_GET_CLASS(layer);
+    /* when a layer doesn't have wants_repaint, assume it always wants */
     if (!layer_class->wants_repaint)
-        return FALSE;
+        return TRUE;
 
     return layer_class->wants_repaint(layer);
 }
@@ -209,6 +208,9 @@ gwy_data_view_layer_button_press(GwyDataViewLayer *layer,
 {
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_GET_CLASS(layer);
 
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
     if (layer_class->button_press)
         return layer_class->button_press(layer, event);
     return FALSE;
@@ -270,6 +272,16 @@ gwy_data_view_layer_unplugged(GwyDataViewLayer *layer)
 {
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
     g_signal_emit(layer, data_view_layer_signals[UNPLUGGED], 0);
+}
+
+static void
+plugged(GwyDataViewLayer *layer)
+{
+}
+
+static void
+unplugged(GwyDataViewLayer *layer)
+{
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

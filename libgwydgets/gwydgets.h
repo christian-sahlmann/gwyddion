@@ -12,6 +12,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydataviewlayer.h>
 #include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwylayer-select.h>
 #include <libgwydgets/gwydatawindow.h>
 
 #ifdef __cplusplus

@@ -96,13 +96,16 @@ data_view_test(void)
 
     view = gwy_data_view_new(data);
     layer = (GwyDataViewLayer*)gwy_layer_basic_new(data);
-    gwy_data_view_set_base_layer(view, layer);
-    g_object_unref(data);
-    g_object_unref(data_field);
-
     palette = (GwyPalette*)gwy_palette_new(GWY_PALETTE_YELLOW);
     gwy_layer_basic_set_palette(layer, palette);
     g_object_unref(palette);
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
+
+    layer = gwy_layer_select_new(data);
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), layer);
+
+    g_object_unref(data);
+    g_object_unref(data_field);
 
     window = gwy_data_window_new(GWY_DATA_VIEW(view));
 
