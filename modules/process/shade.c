@@ -38,10 +38,13 @@ typedef struct {
 } ShadeArgs;
 
 typedef struct {
-    GtkWidget *gradsphere;
+    GtkWidget *shader;
+    GtkObject*theta;
+    GtkObject *phi;
     GtkWidget *data_view;
     GwyContainer *data;
     ShadeArgs *args;
+    gboolean in_update;
 } ShadeControls;
 
 static gboolean    module_register              (const gchar *name);
@@ -49,7 +52,11 @@ static gboolean    shade                        (GwyContainer *data,
                                                  GwyRunType run);
 static gboolean    shade_dialog                 (ShadeArgs *args,
                                                  GwyContainer *data);
-static void        shade_changed_cb             (GtkObject *coords,
+static void        shade_changed_cb             (GtkWidget *shader,
+                                                 ShadeControls *controls);
+static void        theta_changed_cb             (GtkObject *adj,
+                                                 ShadeControls *controls);
+static void        phi_changed_cb               (GtkObject *adj,
                                                  ShadeControls *controls);
 static void        shade_dialog_update          (ShadeControls *controls,
                                                  ShadeArgs *args);
@@ -72,7 +79,7 @@ static GwyModuleInfo module_info = {
     "shade",
     N_("Shade module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2.1",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -167,15 +174,16 @@ static gboolean
 shade_dialog(ShadeArgs *args,
              GwyContainer *data)
 {
-    GtkWidget *dialog, *hbox;
-    GtkObject *layer, *coords;
+    GtkWidget *dialog, *hbox, *table, *spin;
+    GtkObject *layer;
     const gchar *palette;
-    GObject *pal, *pdef;
     ShadeControls controls;
     enum { RESPONSE_RESET = 1 };
-    gint response;
+    gint response, row;
 
     controls.args = args;
+    controls.in_update = TRUE;
+
     dialog = gtk_dialog_new_with_buttons(_("Shading"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -183,26 +191,39 @@ shade_dialog(ShadeArgs *args,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
+    hbox = gtk_hbox_new(FALSE, 12);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 0);
+                       FALSE, FALSE, 4);
 
-    coords = gwy_sphere_coords_new(args->theta, args->phi);
-    controls.gradsphere = gwy_vector_shade_new(GWY_SPHERE_COORDS(coords));
+    table = gtk_table_new(3, 3, FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    row = 0;
 
     palette = gwy_container_get_string_by_name(data, "/0/base/palette");
-    pdef = gwy_palette_def_new(palette);
-    pal = gwy_palette_new(GWY_PALETTE_DEF(pdef));
-    gwy_grad_sphere_set_palette(
-              GWY_GRAD_SPHERE(gwy_vector_shade_get_grad_sphere
-                              (GWY_VECTOR_SHADE(controls.gradsphere))),
-              GWY_PALETTE(pal));
-    g_object_unref(pdef);
-    g_object_unref(pal);
-    g_signal_connect(coords, "value_changed",
+    controls.shader = gwy_shader_new(palette);
+    gwy_shader_set_angle(GWY_SHADER(controls.shader), args->theta, args->phi);
+    g_signal_connect(controls.shader, "angle_changed",
                      G_CALLBACK(shade_changed_cb), &controls);
-    gtk_box_pack_start(GTK_BOX(hbox), controls.gradsphere, FALSE, FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), controls.shader,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    controls.theta = gtk_adjustment_new(args->theta*180.0/G_PI,
+                                        0.0, 90.0, 5.0, 15.0, 0.0);
+    spin = gwy_table_attach_spinbutton(table, row, _("_Theta:"), "deg",
+                                       controls.theta);
+    g_signal_connect(controls.theta, "value_changed",
+                     G_CALLBACK(theta_changed_cb), &controls);
+    row++;
+
+    controls.phi = gtk_adjustment_new(args->phi*180.0/G_PI,
+                                      0.0, 360.0, 5.0, 30.0, 0.0);
+    spin = gwy_table_attach_spinbutton(table, row, _("_Phi:"), "deg",
+                                       controls.phi);
+    g_signal_connect(controls.phi, "value_changed",
+                     G_CALLBACK(phi_changed_cb), &controls);
+    row++;
 
     controls.data = create_preview_data(data);
     gwy_container_set_string_by_name(controls.data, "/0/base/palette",
@@ -214,7 +235,8 @@ shade_dialog(ShadeArgs *args,
                                  GWY_PIXMAP_LAYER(layer));
     gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 0);
 
-    shade_changed_cb(coords, &controls);
+    controls.in_update = FALSE;
+    shade_dialog_update(&controls, args);
 
     gtk_widget_show_all(dialog);
     do {
@@ -232,7 +254,8 @@ shade_dialog(ShadeArgs *args,
 
             case RESPONSE_RESET:
             *args = shade_defaults;
-            shade_dialog_update(&controls, args);
+            gwy_shader_set_angle(GWY_SHADER(controls.shader),
+                                 args->theta, args->phi);
             break;
 
             default:
@@ -247,31 +270,71 @@ shade_dialog(ShadeArgs *args,
 }
 
 static void
-shade_changed_cb(GtkObject *coords,
+shade_changed_cb(GtkWidget *shader,
                  ShadeControls *controls)
 {
     ShadeArgs *args;
-    GObject *dfield, *shader;
 
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
     args = controls->args;
-    args->theta = gwy_sphere_coords_get_theta(GWY_SPHERE_COORDS(coords));
-    args->phi = gwy_sphere_coords_get_phi(GWY_SPHERE_COORDS(coords));
-    dfield = gwy_container_get_object_by_name(controls->data, "/0/data");
-    shader = gwy_container_get_object_by_name(controls->data, "/0/show");
-    gwy_data_field_shade(GWY_DATA_FIELD(dfield), GWY_DATA_FIELD(shader),
-                         args->theta*180.0/G_PI, args->phi*180.0/G_PI);
-    gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
+    args->theta = gwy_shader_get_theta(GWY_SHADER(shader));
+    args->phi = gwy_shader_get_phi(GWY_SHADER(shader));
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->theta),
+                             args->theta*180.0/G_PI);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->phi),
+                             args->phi*180.0/G_PI);
+    shade_dialog_update(controls, args);
+    controls->in_update = FALSE;
+}
+
+static void
+theta_changed_cb(GtkObject *adj,
+                 ShadeControls *controls)
+{
+    ShadeArgs *args;
+
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    args = controls->args;
+    args->theta = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj))/180.0*G_PI;
+    gwy_shader_set_theta(GWY_SHADER(controls->shader), args->theta);
+    shade_dialog_update(controls, args);
+    controls->in_update = FALSE;
+}
+
+static void
+phi_changed_cb(GtkObject *adj,
+               ShadeControls *controls)
+{
+    ShadeArgs *args;
+
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    args = controls->args;
+    args->phi = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj))/180.0*G_PI;
+    gwy_shader_set_phi(GWY_SHADER(controls->shader), args->phi);
+    shade_dialog_update(controls, args);
+    controls->in_update = FALSE;
 }
 
 static void
 shade_dialog_update(ShadeControls *controls,
                     ShadeArgs *args)
 {
-    GwySphereCoords *sphere_coords;
+    GObject *dfield, *shader;
 
-    sphere_coords = gwy_vector_shade_get_sphere_coords
-                        (GWY_VECTOR_SHADE(controls->gradsphere));
-    gwy_sphere_coords_set_value(sphere_coords, args->theta, args->phi);
+    dfield = gwy_container_get_object_by_name(controls->data, "/0/data");
+    shader = gwy_container_get_object_by_name(controls->data, "/0/show");
+    gwy_data_field_shade(GWY_DATA_FIELD(dfield), GWY_DATA_FIELD(shader),
+                         args->theta*180.0/G_PI, args->phi*180.0/G_PI);
+    gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
 
 static const gchar *theta_key = "/module/shade/theta";
