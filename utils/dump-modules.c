@@ -88,12 +88,13 @@ int
 main(G_GNUC_UNUSED int argc,
      G_GNUC_UNUSED char *argv[])
 {
+    /* modules we know we don't like to see in the list (XXX: hack) */
     const gchar *filter_modules[] = {
-        "plugin-proxy", "threshold-example",
+        "threshold-example",
     };
 
     gchar **module_dirs;
-    GSList *m, *f, *modules = NULL;
+    GSList *m, *modules = NULL;
     gsize i;
 
 #ifdef G_OS_WIN32
@@ -118,6 +119,7 @@ main(G_GNUC_UNUSED int argc,
     tag_open("modulelist");
     for (m = modules; m; m = g_slist_next(m)) {
         const GwyModuleInfo *mod_info = (const GwyModuleInfo*)m->data;
+        GSList *f = gwy_module_get_functions(mod_info->name);
 
         tag_open("module");
         tag_print("name", mod_info->name);
@@ -126,14 +128,52 @@ main(G_GNUC_UNUSED int argc,
         tag_print("copyright", mod_info->copyright);
         tag_print("date", mod_info->date);
         tag_print("description", mod_info->blurb);
+        /* don't print plugin-proxy's stolen functions (XXX: hack) */
+        if (!strcmp(mod_info->name, "plugin-proxy")) {
+            tag_print("funclist", NULL);
+            continue;
+        }
+
         tag_open("funclist");
-        for (f = gwy_module_get_functions(mod_info->name);
-             f;
-             f = g_slist_next(f)) {
-            const gchar *name = (const gchar*)f->data;
+        for ( ; f; f = g_slist_next(f)) {
+            gchar *name, *class = g_strdup(f->data);
 
             tag_open("func");
+            /* parse class::name string */
+            name = strchr(class, ':');
+            g_assert(name != NULL && name > class && name[1] && name[2]);
+            *name = '\0';
+            name += 2;
+            tag_print("class", class);
             tag_print("name", name);
+
+            /* dig more info about particular function types */
+            if (!strcmp(class, "proc")) {
+                gchar *s = (gchar*)gwy_process_func_get_menu_path(name);
+
+                s = gwy_strkill(gwy_strreplace(s+1, "/", " → ", -1), "_");
+                i = strlen(s);
+                do {
+                    s[i] = '\0';
+                    i--;
+                } while (s[i] == '.');
+                tag_print("info", s);
+                g_free(s);
+            }
+            else if (!strcmp(class, "graph")) {
+                gchar *s = (gchar*)gwy_graph_func_get_menu_path(name);
+
+                s = gwy_strkill(gwy_strreplace(s+1, "/", " → ", -1), "_");
+                i = strlen(s);
+                do {
+                    s[i] = '\0';
+                    i--;
+                } while (s[i] == '.');
+                tag_print("info", s);
+                g_free(s);
+            }
+
+            g_free(class);
             tag_close();
         }
         tag_close();
