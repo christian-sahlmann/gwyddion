@@ -196,7 +196,6 @@ gwy_pixfield_do_mask(GdkPixbuf *pixbuf,
     }
 }
 
-#ifdef GWY_ENABLE_GWYDDION2
 /**
  * gwy_pixbuf_draw_data_field_with_range:
  * @pixbuf: A Gdk pixbuf to draw to.
@@ -210,6 +209,8 @@ gwy_pixfield_do_mask(GdkPixbuf *pixbuf,
  * @minimum and all smaller values are mapped to start of @gradient, @maximum
  * and all greater values to its end, values between are mapped linearly to
  * @gradient.
+ *
+ * Since: 1.8
  **/
 void
 gwy_pixbuf_draw_data_field_with_range(GdkPixbuf *pixbuf,
@@ -268,6 +269,8 @@ gwy_pixbuf_draw_data_field_with_range(GdkPixbuf *pixbuf,
  *
  * Minimum data value is mapped to start of @gradient, maximum value to its
  * end, values between are mapped linearly to @gradient.
+ *
+ * Since: 1.8
  **/
 void
 gwy_pixbuf_draw_data_field(GdkPixbuf *pixbuf,
@@ -329,6 +332,8 @@ gwy_pixbuf_draw_data_field(GdkPixbuf *pixbuf,
  * Values equal or smaller to average-@rmsrange*rms are mapped to start of
  * @gradient, values greater or equal to average+@rmsrange*rms to its end,
  * values between are mapped linearly to @gradient.
+ *
+ * Since: 1.8
  **/
 void
 gwy_pixbuf_draw_data_field_with_rms(GdkPixbuf *pixbuf,
@@ -358,6 +363,8 @@ gwy_pixbuf_draw_data_field_with_rms(GdkPixbuf *pixbuf,
  * Values equal or smaller to 0.0 are drawn as fully transparent, values
  * greater or equal to 1.0 as fully opaque, values between are linearly
  * mapped to pixel opacity.
+ *
+ * Since: 1.8
  **/
 void
 gwy_pixbuf_draw_data_field_as_mask(GdkPixbuf *pixbuf,
@@ -406,6 +413,5 @@ gwy_pixbuf_draw_data_field_as_mask(GdkPixbuf *pixbuf,
         }
     }
 }
-#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
