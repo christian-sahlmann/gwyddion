@@ -950,19 +950,24 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         }
         g_free(key);
 
-        dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
-                                                   FALSE));
+        if (!(xres > 0 && yres > 0 && xreal > 0 && yreal > 0)) {
+            g_critical("Broken dump has nonpositive data field dimensions");
+            goto fail;
+        }
 
         n = xres*yres*sizeof(gdouble);
         if ((gsize)(pos - buffer) + n + 3 > size) {
             g_critical("Unexpected end of file (truncated datafield).");
             goto fail;
         }
+        dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
+                                                   FALSE));
         memcpy(dfield->data, pos, n);
         pos += n;
         val = next_line(&pos);
         if (strcmp(val, "]]") != 0) {
             g_critical("Missed end of data field.");
+            gwy_object_unref(dfield);
             goto fail;
         }
         gwy_container_remove_by_prefix(data, line);
