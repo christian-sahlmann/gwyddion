@@ -108,14 +108,44 @@ create_pyramide(GwyDataField *tip, gdouble height, gint n)
     }
 }
 
+static void
+round_pyramide(GwyDataField *tip, gdouble angle, gdouble radius)
+{
+    gdouble center_x, center_y, center_z;
+    gint icenter_x, icenter_y;
+    gdouble height = gwy_data_field_get_max(tip);
+    gint col, row;
+    gdouble dcol, drow;
+    gdouble sphere;
+    
+    center_x = tip->xreal/2;
+    center_y = tip->yreal/2;
+    center_z = height - radius/sin(angle);
+
+    for (col=0; col<tip->xres; col++)
+    {
+        for (row=0; row<tip->yres; row++)
+        {
+            dcol = gwy_data_field_rtoi(tip, col);
+            drow = gwy_data_field_rtoj(tip, row);
+            sphere = (radius*radius - (dcol-center_x)*(dcol-center_x)
+                          - (drow-center_y)*(drow-center_y));
+           /* if (tip->data[col + tip->xres*row] > sphere)*/
+                tip->data[col + tip->xres*row] = sphere;
+        }
+    }
+}
 
 static void
 contact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
     gdouble angle = atan(sqrt(2));
     height = tip->xreal*tan(angle)/2;
-        
+    
+    printf("radius=%g\n", radius);
+    
     create_pyramide(tip, height, 4);
+    round_pyramide(tip, angle, radius);
     
 }
 

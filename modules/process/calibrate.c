@@ -27,7 +27,6 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-
 #define CALIBRATE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
@@ -172,6 +171,7 @@ calibrate(GwyContainer *data, GwyRunType run)
     return FALSE;
 }
 
+#include <stdio.h>
 static gboolean
 calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 {
@@ -189,6 +189,9 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
+    printf("%d %d\n", &controls, args);
+    pcontrols = &controls;
+    controls.in_update = FALSE;
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     label = gtk_label_new(NULL);
@@ -221,7 +224,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.zreal,
                        FALSE, FALSE, 4);
 
-    pcontrols = &controls;
+    
     
     label = gtk_label_new(NULL);
     gtk_label_set_markup(label, "<b>Calibration coefficients: </b>");
@@ -293,8 +296,6 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
      
-   
-    
     controls.in_update = FALSE;
 
     gtk_widget_show_all(dialog);
@@ -343,6 +344,7 @@ xcalibrate_changed_cb(GtkAdjustment *adj,
     CalibrateControls *controls;
 
     controls = g_object_get_data(G_OBJECT(adj), "controls");
+    
     if (controls->in_update)
         return;
 
@@ -358,6 +360,7 @@ ycalibrate_changed_cb(GtkAdjustment *adj,
     CalibrateControls *controls;
 
     controls = g_object_get_data(G_OBJECT(adj), "controls");
+    
     if (controls->in_update)
         return;
 
@@ -373,6 +376,7 @@ zcalibrate_changed_cb(GtkAdjustment *adj,
     CalibrateControls *controls;
 
     controls = g_object_get_data(G_OBJECT(adj), "controls");
+    
     if (controls->in_update)
         return;
     

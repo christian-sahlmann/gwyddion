@@ -91,6 +91,8 @@ static GtkWidget*  create_preset_menu        (GCallback callback,
                                               gint current);
 static void        tip_update                (TipModelControls *controls,
                                               TipModelArgs *args);                                              
+static void        radius_changed_cb          (GwyValUnit *valunit,
+                                               TipModelArgs *args);
 
 TipModelArgs tip_model_defaults = {
     0,
@@ -232,6 +234,9 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 
 
     controls.radius = gwy_val_unit_new("Tip apex radius: ", gwy_data_field_get_si_unit_xy(dfield));
+    g_signal_connect(controls.radius, "value_changed",
+                                           G_CALLBACK(radius_changed_cb), args);
+     
     gtk_box_pack_start(GTK_BOX(vbox), controls.radius, FALSE, FALSE, 4);                                                   
 
     controls.labsize = gtk_label_new("Resolution will be determined according tip type.");
@@ -421,6 +426,13 @@ tip_process(TipModelArgs *args, TipModelControls *controls)
     
     preset->func(dfield, gwy_data_field_get_max(sfield) - gwy_data_field_get_min(sfield), args->radius, NULL);
     tip_update(controls, args);
+}
+
+static void
+radius_changed_cb(GwyValUnit *valunit, TipModelArgs *args)
+{
+    args->radius = gwy_val_unit_get_value(valunit);
+    printf("radius callback: %g\n", args->radius);
 }
 
 static const gchar *mergetype_key = "/module/tip_model_height/merge_type";
