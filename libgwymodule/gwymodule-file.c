@@ -24,6 +24,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 
+#include "gwymoduleinternal.h"
 #include "gwymodule-file.h"
 
 typedef struct {

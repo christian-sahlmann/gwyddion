@@ -22,6 +22,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <gtk/gtk.h>
 
+#include "gwymoduleinternal.h"
 #include "gwymodulebrowser.h"
 
 static void      gwy_module_browser_cell_renderer (GtkTreeViewColumn *column,

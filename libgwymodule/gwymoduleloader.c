@@ -21,7 +21,7 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 
-#include "gwymoduleloader.h"
+#include "gwymoduleinternal.h"
 
 #define GWY_MODULE_QUERY_NAME G_STRINGIFY(_GWY_MODULE_QUERY)
 

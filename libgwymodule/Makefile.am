@@ -12,6 +12,9 @@ libgwymoduleinclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwymodule.la
 
+noinst_HEADERS = \
+	gwymoduleinternal.h
+
 #noinst_PROGRAMS = main create-data
 
 # In following order do:

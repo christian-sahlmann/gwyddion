@@ -18,45 +18,31 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_MODULE_LOADER_H__
-#define __GWY_MODULE_LOADER_H__
+#ifndef __GWY_MODULE_INTERNAL_H__
+#define __GWY_MODULE_INTERNAL_H__
 
-#include <gmodule.h>
+#include "gwymoduleloader.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#define GWY_MODULE_ABI_VERSION 0
+typedef struct {
+    GwyModuleInfo *mod_info;
+    gchar *file;
+    gboolean loaded;
+    GSList *funcs;
+} _GwyModuleInfoInternal;
 
-#define _GWY_MODULE_QUERY _gwy_module_query
-#define GWY_MODULE_QUERY(mod_info) \
-    G_MODULE_EXPORT GwyModuleInfo* \
-    _GWY_MODULE_QUERY(void) { return &mod_info; }
-
-typedef struct _GwyModuleInfo GwyModuleInfo;
-
-typedef gboolean       (*GwyModuleRegisterFunc) (const gchar *name);
-typedef GwyModuleInfo* (*GwyModuleQueryFunc)    (void);
-
-struct _GwyModuleInfo {
-    guint32 abi_version;
-    GwyModuleRegisterFunc register_func;
-    const gchar *name;
-    const gchar *blurb;
-    const gchar *author;
-    const gchar *version;
-    const gchar *copyright;
-    const gchar *date;
-};
-
-void                    gwy_modules_init            (void);
-void                    gwy_module_register_modules (const gchar **paths);
+_GwyModuleInfoInternal* gwy_module_get_module_info  (const gchar *name);
+void                    gwy_module_foreach          (GHFunc function,
+                                                     gpointer data);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __GWY_MODULE_LOADER_H__ */
+#endif /* __GWY_MODULE_INTERNAL_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+

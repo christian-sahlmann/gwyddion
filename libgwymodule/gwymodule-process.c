@@ -25,6 +25,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 
+#include "gwymoduleinternal.h"
 #include "gwymodule-process.h"
 
 static void gwy_hash_table_to_slist_cb (gpointer key,
