@@ -39,7 +39,7 @@ AC_CONFIG_FILES(\
 AM_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([1.6 gnits check-news dist-bzip2])
+AM_INIT_AUTOMAKE([1.6 gnu check-news dist-bzip2])
 AM_ACLOCAL_INCLUDE(m4)
 AM_MAINTAINER_MODE
 

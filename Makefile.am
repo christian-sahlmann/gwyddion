@@ -38,7 +38,16 @@ EXTRA_DIST = \
 	version.h \
 	update-msvc.py \
 	vim-syn-gen.py \
+	gwyddion.vim \
 	$(M4TESTS)
+
+if MAINTAINER_MODE
+dist-check-maintainer:
+else
+dist-check-maintainer:
+	@echo "*** maintainer mode must be enabled in order to make dist"
+	@false
+endif
 
 docs:
 	(cd devel-docs && $(MAKE) $(AM_MAKEFLAGS) docs)
