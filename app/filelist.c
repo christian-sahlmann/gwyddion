@@ -24,7 +24,7 @@
  * - add thumbnails, see Thumbnail Managing Standard
  *   http://triq.net/~jens/thumbnail-spec/index.html
  */
-
+#define DEBUG 1
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwydgets.h>
@@ -42,9 +42,40 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
+/* And now we are in a deep .... */
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
 #ifdef _MSC_VER
 #include <libgwyddion/gwywin32unistd.h>
 #endif
+
+/* PNG (additional in TMS) */
+#define KEY_DESCRIPTION "tEXt::Description"
+#define KEY_SOFTWARE    "tEXt::Software"
+/* TMS, required */
+#define KEY_THUMB_URI   "tEXt::Thumb::URI"
+#define KEY_THUMB_MTIME "tEXt::Thumb::MTime"
+/* TMS, additional */
+#define KEY_THUMB_FILESIZE "tEXt::Thumb::Size"
+#define KEY_THUMB_MIMETYPE "tEXt::Thumb::Mimetype"
+/* TMS, format specific
+ * XXX: we use Image::Width, Image::Height, even tough the data are not images
+ * but they are very image-like... */
+#define KEY_THUMB_IMAGE_WIDTH "tEXt::Thumb::Image::Width"
+#define KEY_THUMB_IMAGE_HEIGHT "tEXt::Thumb::Image::Height"
+/* Gwyddion specific */
+#define KEY_THUMB_GWY_IMAGES "tEXt::Thumb::X-Gwyddion::Images"
+#define KEY_THUMB_GWY_GRAPHS "tEXt::Thumb::X-Gwyddion::Graphs"
+
+enum {
+    THUMB_SIZE = 48
+};
 
 typedef enum {
     FILE_STATE_UNKNOWN = 0,
@@ -55,7 +86,9 @@ typedef enum {
 
 enum {
     FILELIST_RAW,
+    FILELIST_THUMB,
     FILELIST_FILENAME,
+    FILELIST_SIZE,
     FILELIST_LAST
 };
 
@@ -65,12 +98,17 @@ typedef struct {
     gchar *file_sys;
     gchar *file_uri;
     gulong file_mtime;
-    gint file_width;
-    gint file_height;
+    gulong file_size;
+
+    gint image_width;
+    gint image_height;
+    gint image_images;
+    gint image_graphs;
 
     FileState thumb_state;
     gchar *thumb_sys;    /* doesn't matter, names are ASCII */
     gulong thumb_mtime;
+    GdkPixbuf *pixbuf;
 } GwyRecentFile;
 
 typedef struct {
@@ -80,13 +118,19 @@ typedef struct {
     GtkWidget *list;
     GtkWidget *open;
     GtkWidget *prune;
+    GdkPixbuf *failed_pixbuf;
 } Controls;
 
 static GtkWidget* gwy_app_recent_file_list_construct (Controls *controls);
-static void  gwy_app_recent_file_list_cell_renderer  (GtkTreeViewColumn *column,
+static void  cell_renderer_desc                      (GtkTreeViewColumn *column,
                                                       GtkCellRenderer *cell,
                                                       GtkTreeModel *model,
                                                       GtkTreeIter *piter,
+                                                      gpointer userdata);
+static void  cell_renderer_thumb                     (GtkTreeViewColumn *column,
+                                                      GtkCellRenderer *cell,
+                                                      GtkTreeModel *model,
+                                                      GtkTreeIter *iter,
                                                       gpointer userdata);
 static void  gwy_app_recent_file_list_row_inserted   (GtkTreeModel *store,
                                                       GtkTreePath *path,
@@ -108,12 +152,15 @@ static void  gwy_app_recent_file_list_update_menu    (Controls *controls);
 
 static GwyRecentFile* gwy_recent_file_new            (gchar *filename_utf8,
                                                       gchar *filename_sys);
+static gboolean recent_file_try_load_thumb           (GwyRecentFile *rf);
 static void  gwy_recent_file_free                    (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
 
 static guint remember_recent_files = 256;
 
-static Controls gcontrols = { NULL, NULL, NULL, NULL, NULL, NULL };
+static Controls gcontrols = {
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
 
 /**
  * gwy_app_recent_file_list_new:
@@ -138,7 +185,7 @@ gwy_app_recent_file_list_new(void)
 
     gcontrols.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(gcontrols.window), _("Document History"));
-    gtk_window_set_default_size(GTK_WINDOW(gcontrols.window), -1, 280);
+    gtk_window_set_default_size(GTK_WINDOW(gcontrols.window), -1, 360);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(gcontrols.window), vbox);
@@ -175,6 +222,11 @@ gwy_app_recent_file_list_new(void)
                              G_CALLBACK(gwy_app_recent_file_list_destroyed),
                              &gcontrols);
 
+    gcontrols.failed_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
+                                             THUMB_SIZE, THUMB_SIZE);
+    gwy_debug_objects_creation(G_OBJECT(gcontrols.failed_pixbuf));
+    gdk_pixbuf_fill(gcontrols.failed_pixbuf, 0);
+
     gtk_widget_show_all(vbox);
 
     return gcontrols.window;
@@ -183,41 +235,48 @@ gwy_app_recent_file_list_new(void)
 static GtkWidget*
 gwy_app_recent_file_list_construct(Controls *controls)
 {
-    static const struct {
-        const gchar *title;
-        const guint id;
-    }
-    columns[] = {
-        { "File name", FILELIST_FILENAME },
-    };
-
     GtkWidget *list;
     GtkTreeSelection *selection;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
-    guint i;
 
     g_return_val_if_fail(controls->store, NULL);
 
     list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls->store));
     controls->list = list;
-    /*gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(list), TRUE);*/
-    /* silly for one column */
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(list), FALSE);
 
-    for (i = 0; i < G_N_ELEMENTS(columns); i++) {
-        renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(columns[i].title,
-                                                          renderer,
-                                                          NULL);
-        gtk_tree_view_column_set_cell_data_func
-            (column, renderer,
-             gwy_app_recent_file_list_cell_renderer,
-             GUINT_TO_POINTER(columns[i].id),
-             NULL);  /* destroy notify */
-        gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
-    }
+    /* thumbnail name column */
+    renderer = gtk_cell_renderer_pixbuf_new();
+    column = gtk_tree_view_column_new_with_attributes(_("Thumbnail"),
+                                                      renderer, NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            cell_renderer_thumb,
+                                            GUINT_TO_POINTER(FILELIST_THUMB),
+                                            NULL);  /* destroy notify */
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
 
+    /* file name column */
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(_("File path"),
+                                                      renderer, NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            cell_renderer_desc,
+                                            GUINT_TO_POINTER(FILELIST_FILENAME),
+                                            NULL);  /* destroy notify */
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
+
+    /* size column */
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(_("Size"),
+                                                      renderer, NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            cell_renderer_desc,
+                                            GUINT_TO_POINTER(FILELIST_SIZE),
+                                            NULL);  /* destroy notify */
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
+
+    /* selection */
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
@@ -385,21 +444,63 @@ gwy_app_recent_file_list_open(GtkWidget *list)
 }
 
 static void
-gwy_app_recent_file_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
-                                       GtkCellRenderer *cell,
-                                       GtkTreeModel *model,
-                                       GtkTreeIter *iter,
-                                       gpointer userdata)
+cell_renderer_desc(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                   GtkCellRenderer *cell,
+                   GtkTreeModel *model,
+                   GtkTreeIter *iter,
+                   gpointer userdata)
 {
     guint id;
     GwyRecentFile *rf;
+    gchar s[32];
 
     id = GPOINTER_TO_UINT(userdata);
-    g_assert(id == FILELIST_FILENAME);
     gtk_tree_model_get(model, iter, FILELIST_RAW, &rf, -1);
     switch (id) {
         case FILELIST_FILENAME:
         g_object_set(cell, "text", rf->file_utf8, NULL);
+        break;
+
+        case FILELIST_SIZE:
+        if (rf->thumb_state == FILE_STATE_FAILED
+            || !rf->image_width || !rf->image_height)
+            g_object_set(cell, "text", "?", NULL);
+        else {
+            g_snprintf(s, sizeof(s), "%dx%d",
+                       rf->image_width, rf->image_height);
+            g_object_set(cell, "text", s, NULL);
+        }
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
+
+static void
+cell_renderer_thumb(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                    GtkCellRenderer *cell,
+                    GtkTreeModel *model,
+                    GtkTreeIter *iter,
+                    gpointer userdata)
+{
+    GwyRecentFile *rf;
+    guint id;
+
+    id = GPOINTER_TO_UINT(userdata);
+    g_return_if_fail(id == FILELIST_THUMB);
+    gtk_tree_model_get(model, iter, FILELIST_RAW, &rf, -1);
+    switch (rf->thumb_state) {
+        case FILE_STATE_UNKNOWN:
+        if (!recent_file_try_load_thumb(rf))
+            return;
+        case FILE_STATE_FAILED:
+        case FILE_STATE_OK:
+        case FILE_STATE_OLD:
+        g_object_set(cell, "pixbuf", rf->pixbuf, NULL);
+        /* FIXME: who knows... */
+        /*g_object_unref(rf->pixbuf);*/
         break;
 
         default:
@@ -677,11 +778,114 @@ gwy_recent_file_new(gchar *filename_utf8,
 static void
 gwy_recent_file_free(GwyRecentFile *rf)
 {
+    gwy_object_unref(rf->pixbuf);
     g_free(rf->file_utf8);
     g_free(rf->file_sys);
     g_free(rf->file_uri);
     g_free(rf->thumb_sys);
     g_free(rf);
+}
+
+static gboolean
+recent_file_try_load_thumb(GwyRecentFile *rf)
+{
+    GdkPixbuf *pixbuf;
+    gint width, height;
+    const gchar *option;
+    struct stat st;
+    gdouble scale;
+
+    gwy_debug("<%s>", rf->thumb_sys);
+    rf->thumb_state = FILE_STATE_FAILED;
+    gwy_object_unref(rf->pixbuf);
+
+    if (!rf->thumb_sys) {
+        rf->pixbuf = (GdkPixbuf*)g_object_ref(gcontrols.failed_pixbuf);
+        return FALSE;
+    }
+
+    pixbuf = gdk_pixbuf_new_from_file(rf->thumb_sys, NULL);
+    if (!pixbuf) {
+        rf->pixbuf = (GdkPixbuf*)g_object_ref(gcontrols.failed_pixbuf);
+        return FALSE;
+    }
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+
+    width = gdk_pixbuf_get_width(pixbuf);
+    height = gdk_pixbuf_get_height(pixbuf);
+    scale = (gdouble)THUMB_SIZE/MAX(width, height);
+    width = CLAMP((gint)(scale*width), 1, THUMB_SIZE);
+    height = CLAMP((gint)(scale*height), 1, THUMB_SIZE);
+    rf->pixbuf = gdk_pixbuf_scale_simple(pixbuf, width, height,
+                                         GDK_INTERP_TILES);
+
+    option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_URI);
+    gwy_debug("uri = <%s>", rf->file_uri);
+    if (strcmp(option, rf->file_uri)) {
+        g_warning("URI <%s> from thumb doesn't match <%s>. "
+                  "If this isn't an MD5 collision, it's an implementation bug",
+                  option, rf->file_uri);
+    }
+
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_MTIME))) {
+        sscanf(option, "%lu", &rf->thumb_mtime);
+        gwy_debug("mtime = %lu", rf->thumb_mtime);
+    }
+    else
+        rf->thumb_mtime = 0;
+
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_FILESIZE))) {
+        sscanf(option, "%lu", &rf->file_size);
+        gwy_debug("file size = %lu", rf->file_size);
+    }
+    else
+        rf->file_size = 0;
+
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_IMAGE_WIDTH))) {
+        sscanf(option, "%d", &rf->image_width);
+        gwy_debug("image width = %d", rf->image_width);
+    }
+    else
+        rf->image_width = 0;
+
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_IMAGE_HEIGHT))) {
+        sscanf(option, "%d", &rf->image_height);
+        gwy_debug("image height = %d", rf->image_height);
+    }
+    else
+        rf->image_height = 0;
+
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_IMAGES))) {
+        sscanf(option, "%d", &rf->image_images);
+        gwy_debug("image images = %d", rf->image_images);
+    }
+    else
+        rf->image_images = 0;
+
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_GRAPHS))) {
+        sscanf(option, "%d", &rf->image_graphs);
+        gwy_debug("image graphs = %d", rf->image_graphs);
+    }
+    else
+        rf->image_graphs = 0;
+
+    if (stat(rf->file_sys, &st) == 0) {
+        rf->file_state = FILE_STATE_OK;
+        rf->file_mtime = st.st_mtime;
+        if (rf->thumb_mtime != rf->file_mtime)
+            rf->thumb_state = FILE_STATE_OLD;
+        else
+            rf->thumb_state = FILE_STATE_OK;
+    }
+    else {
+        rf->thumb_state = FILE_STATE_OLD;
+        rf->file_state = FILE_STATE_FAILED;
+    }
+
+    g_object_unref(pixbuf);
+    gwy_debug("<%s> thumbnail loaded OK", rf->file_utf8);
+
+    return TRUE;
 }
 
 static gchar*
