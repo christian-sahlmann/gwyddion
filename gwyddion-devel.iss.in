@@ -16,8 +16,6 @@ SourceDir=inst
 ; this means inst too
 OutputDir=.
 OutputBaseFilename=@PACKAGE_NAME@-Development-@PACKAGE_VERSION@
-; I would like to, but don't know how :-(
-;ChangesAssociations=yes
 
 [Files]
 Source: "lib\*.*"; DestDir: "{app}\lib"
@@ -27,10 +25,22 @@ Source: "include\libdraw\*.*"; DestDir: "{app}\include\libdraw"
 Source: "include\libgwydgets\*.*"; DestDir: "{app}\include\libgwydgets"
 Source: "include\libgwymodule\*.*"; DestDir: "{app}\include\libgwymodule"
 Source: "include\app\*.*"; DestDir: "{app}\include\app"
+Source: "devel-docs\libgwyapp\*.*"; DestDir: "{app}\devel-docs\libgwyapp"
+Source: "devel-docs\libgwyddion\*.*"; DestDir: "{app}\devel-docs\libgwyddion"
+Source: "devel-docs\libgwydgets\*.*"; DestDir: "{app}\devel-docs\libgwydgets"
+Source: "devel-docs\libgwydraw\*.*"; DestDir: "{app}\devel-docs\libgwydraw"
+Source: "devel-docs\libgwymodule\*.*"; DestDir: "{app}\devel-docs\libgwymodule"
+Source: "devel-docs\libgwyprocess\*.*"; DestDir: "{app}\devel-docs\libgwyprocess"
 Source: "COPYING.wri"; DestDir: "{app}"
 
 [Icons]
 Name: "{group}\@PACKAGE_NAME@ Development Website"; Filename: "http://trific.ath.cx/software/@PACKAGE_TARNAME@/"
+Name: "{group}\API reference of libgwyapp"; Filename: "{app}\devel-docs\libgwyapp\index.html"
+Name: "{group}\API reference of libgwyddion"; Filename: "{app}\devel-docs\libgwyddion\index.html"
+Name: "{group}\API reference of libgwydgets"; Filename: "{app}\devel-docs\libgwydgets\index.html"
+Name: "{group}\API reference of libgwydraw"; Filename: "{app}\devel-docs\libgwydraw\index.html"
+Name: "{group}\API reference of libgwymodule"; Filename: "{app}\devel-docs\libgwymodule\index.html"
+Name: "{group}\API reference of libgwyprocess"; Filename: "{app}\devel-docs\libgwyprocess\index.html"
 Name: "{group}\Uninstall @PACKAGE_NAME@-Development"; Filename: "{uninstallexe}"
 
 [Registry]

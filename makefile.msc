@@ -11,7 +11,8 @@ SUBDIRS = \
 	libgwymodule \
 	app \
 	modules \
-	pixmaps
+	pixmaps \
+	devel-docs
 
 DOCUMENTS = \
 	COPYING.wri
@@ -21,7 +22,7 @@ all: sub-all $(DOCUMENTS)
 
 clean:: sub-clean
 
-!INCLUDE rules.msc
+!include rules.msc
 
 install: all sub-install
 	for %d in ($(DOCUMENTS)) do $(INSTALL) %d "$(DEST_DIR)"
