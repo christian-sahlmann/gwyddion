@@ -1,4 +1,3 @@
-1.1cvs20040519
 
 1.2
 Application:
@@ -25,7 +24,8 @@ Modules:
 - Crop: Properly crops masks and presentations.
 - Mark by threshold, Mark by watershed, Remove grains by threshold, and
   Laplace: Undo works properly (bugs #17, #18, #19, #20).
-- Filters: More cases of bug #7 (preview confused by tool switch) were fixed.
+- Filters: More cases of bug #7 (preview confused by tool switch) were fixed,
+  preview properly reflects changes in data.
 - All modules: Dialogs have standard (HIG) button orders.
 
 Library:
