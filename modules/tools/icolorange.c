@@ -299,6 +299,8 @@ dialog_update(GwyUnitoolState *state,
 
         controls->datamin = gwy_data_field_get_min(dfield);
         controls->datamax = gwy_data_field_get_max(dfield);
+        controls->min = controls->datamin;
+        controls->max = controls->datamax;
 
         if (!controls->heightdist)
             controls->heightdist = GWY_DATA_LINE(gwy_data_line_new(HIST_RES,
@@ -316,7 +318,7 @@ dialog_update(GwyUnitoolState *state,
 
         /* XXX */
         graph_title = g_string_new("");
-        gwy_graph_add_dataline(controls->histogram, controls->heightdist,
+        gwy_graph_add_dataline(graph, controls->heightdist,
                                0, graph_title, NULL);
         g_string_free(graph_title, TRUE);
     }
@@ -336,6 +338,18 @@ dialog_update(GwyUnitoolState *state,
         break;
     }
 
+    if (controls->initial_use) {
+        gboolean ok;
+
+        ok = gwy_container_gis_double(data, controls->key_min, &controls->min);
+        ok |= gwy_container_gis_double(data, controls->key_max, &controls->max);
+        if (ok) {
+            controls->range_source = USE_HISTOGRAM;
+            update_percentages(controls);
+            update_graph_selection(controls);
+        }
+    }
+
     if (controls->range_source == USE_SELECTION) {
         if (gwy_unitool_rect_info_table_fill(state, &controls->labels,
                                              NULL, isel)) {
@@ -348,21 +362,13 @@ dialog_update(GwyUnitoolState *state,
                                                         isel[2] - isel[0],
                                                         isel[3] - isel[1]);
         }
-        else {
-            controls->min = controls->datamin;
-            controls->max = controls->datamax;
-        }
         update_percentages(controls);
         update_graph_selection(controls);
     }
 
-    if (controls->range_source == USE_HISTOGRAM) {
+    if (controls->range_source == USE_HISTOGRAM && !controls->initial_use) {
         if (reason == GWY_UNITOOL_UPDATED_DATA) {
-            if (controls->rel_min == 0.0 && controls->rel_max == 1.0) {
-                controls->min = controls->datamin;
-                controls->max = controls->datamax;
-            }
-            else {
+            if (controls->rel_min != 0.0 || controls->rel_max != 1.0) {
                 gdouble range;
 
                 range = controls->datamax - controls->datamin;
@@ -374,12 +380,11 @@ dialog_update(GwyUnitoolState *state,
         else {
             GwyGraphStatus_SelData *fuck;
 
+            /* XXX */
             fuck = (GwyGraphStatus_SelData*)gwy_graph_get_status_data(graph);
             gwy_debug("graph selection: [%d, %d]",
                       fuck->scr_start, fuck->scr_end);
             if (fuck->scr_start == fuck->scr_end) {
-                controls->min = controls->datamin;
-                controls->max = controls->datamax;
                 controls->rel_min = 0.0;
                 controls->rel_max = 1.0;
             }
@@ -496,6 +501,7 @@ update_graph_selection(ToolControls *controls)
     gdouble graph_min, graph_max, graph_range;
 
     graph = GWY_GRAPH(controls->histogram);
+    gwy_debug("%f %f", controls->rel_min, controls->rel_max);
 
     /* XXX */
     if (controls->rel_min == 0.0 && controls->rel_max == 1.0)
