@@ -411,7 +411,7 @@ gwy_option_menu_2dcwt(GCallback callback,
 }
 
 /**
- * gwy_option_menufft_output:
+ * gwy_option_menu_fft_output:
  * @callback: A callback called when a menu item is activated (or %NULL for
  * @cbdata: User data passed to the callback.
  * @current: FFT output type to be shown as currently selected
@@ -442,5 +442,70 @@ gwy_option_menu_fft_output(GCallback callback,
                                   "fft-output-type", callback, cbdata,
                                   current);
 }
+
+/**
+ * gwy_option_menu_sfunctions_output:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @current: Statistical function output type to be shown as currently selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of available one-dimensional statistical functions.
+ *
+ * It sets object data "sf-output-type" to statistical functions output type for each
+ * menu item (use GPOINTER_TO_INT() when retrieving it).
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_sfunctions_output(GCallback callback,
+                           gpointer cbdata,
+                           GwySFOutputType current)
+{
+    static const GwyEnum entries[] = {
+        { "dist. of heights",  GWY_SF_OUTPUT_DH,  },
+        { "cum. dist. of heights",  GWY_SF_OUTPUT_CDH, },
+        { "dist. of angles",  GWY_SF_OUTPUT_DA,      },
+        { "cum. dist. of angles",  GWY_SF_OUTPUT_CDA,       },
+        { "autocorrelation",  GWY_SF_OUTPUT_ACF,       },
+        { "height-height cor.",  GWY_SF_OUTPUT_HHCF,     },
+        { "power spectral density",  GWY_SF_OUTPUT_PSDF,     },
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "sf-output-type", callback, cbdata,
+                                  current);
+}
+
+/**
+ * gwy_option_menu_sfunctions_output:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @current: Direction selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of datafield computation directions available.
+ *
+ * It sets object data "direction-type" to statistical functions output type for each
+ * menu item (use GPOINTER_TO_INT() when retrieving it).
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_direction(GCallback callback,
+                           gpointer cbdata,
+                           GtkOrientation current)
+{
+    static const GwyEnum entries[] = {
+        { "horizontal",  GTK_ORIENTATION_HORIZONTAL,  },
+        { "vertical",  GTK_ORIENTATION_VERTICAL, },
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "direction-type", callback, cbdata,
+                                  current);
+}
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

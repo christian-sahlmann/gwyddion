@@ -38,6 +38,16 @@ extern "C" {
 #define GWY_IS_DATA_LINE_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_LINE))
 #define GWY_DATA_LINE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_LINE, GwyDataLineClass))
 
+typedef enum {
+  GWY_SF_OUTPUT_DH    = 0,  /*distribution of heights*/
+  GWY_SF_OUTPUT_CDH   = 1,  /*cumulative distribution of heights*/
+  GWY_SF_OUTPUT_DA    = 2,  /*distribution of angles*/
+  GWY_SF_OUTPUT_CDA   = 3,  /*cumulative distribution of angles*/
+  GWY_SF_OUTPUT_ACF   = 4,  /*autocorrelation fucntions*/
+  GWY_SF_OUTPUT_HHCF  = 5,   /*height-height correlation function*/
+  GWY_SF_OUTPUT_PSDF  = 6,   /*power spectral density fucntion*/
+} GwySFOutputType;
+
 
 /*provisory struct for field (for function arguments simplification)*/
 typedef struct{

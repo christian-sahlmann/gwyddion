@@ -22,9 +22,11 @@
 #define __GWY_OPTION_MENUS_H__
 
 #include <gtk/gtkwidget.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/cwt.h>
 #include <libprocess/simplefft.h>
+#include <libprocess/dataline.h>
 #include <libgwydgets/gwydatawindow.h>
 
 #ifdef __cplusplus
@@ -51,6 +53,12 @@ GtkWidget* gwy_option_menu_2dcwt          (GCallback callback,
 GtkWidget* gwy_option_menu_fft_output     (GCallback callback,
                                            gpointer cbdata,
                                            GwyFFTOutputType current);
+GtkWidget* gwy_option_menu_sfunctions_output (GCallback callback,
+                                           gpointer cbdata,
+                                           GwySFOutputType current);
+GtkWidget* gwy_option_menu_direction       (GCallback callback,
+                                           gpointer cbdata,
+                                           GtkOrientation current);
 GtkWidget* gwy_option_menu_create         (const GwyEnum *entries,
                                            gint nentries,
                                            const gchar *key,
