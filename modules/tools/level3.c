@@ -177,6 +177,7 @@ level3_do(void)
     gwy_debug("zN[0] = %g, zN[1] = %g, zN[2] = %g", level3_get_z_average(dfield, points[0], points[1], radius),
               level3_get_z_average(dfield, points[2], points[3], radius),
               level3_get_z_average(dfield, points[4], points[5], radius));
+    gwy_layer_points_unselect(points_layer);
     gwy_data_view_update(GWY_DATA_VIEW(points_layer->parent));
 }
 
@@ -375,7 +376,8 @@ level3_selection_finished_cb(void)
 }
 
 static void
-level3_dialog_response_cb(gpointer unused, gint response)
+level3_dialog_response_cb(G_GNUC_UNUSED gpointer unused,
+                          gint response)
 {
     gwy_debug("response %d", response);
     switch (response) {
@@ -391,6 +393,7 @@ level3_dialog_response_cb(gpointer unused, gint response)
 
         case GTK_RESPONSE_APPLY:
         level3_do();
+        level3_dialog_set_visible(FALSE);
         break;
 
         default:
