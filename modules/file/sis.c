@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#define DEBUG 1
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -36,12 +38,27 @@
 #include <unistd.h>
 #endif
 
+#define MAGIC "SIS&STB  SIScan"
+#define MAGIC_SIZE (sizeof(MAGIC)-1)
+
 #define EXTENSION ".sis"
+
+typedef enum {
+    SIS_BLOCK_DOCUMENT     = 1,
+    SIS_BLOCK_PREVIEW      = 2,
+    SIS_BLOCK_CHANNEL      = 3,
+    SIS_BLOCK_IMAGE        = 42,
+} SISBlockType;
 
 typedef enum {
     SIS_AQUISITION_MODE_CONTACT     = 1,
     SIS_AQUISITION_MODE_NON_CONTACT = 2,
 } SISAquisitionMode;
+
+typedef enum {
+    SIS_SCANNING_DIRECTION_FORWARD  = 1,
+    SIS_SCANNING_DIRECTION_BACKWARD = 2,
+} SISScanningDirection;
 
 typedef enum {
     SIS_OFF = FALSE,
@@ -93,17 +110,34 @@ typedef enum {
 } SISSignalSource;
 
 typedef struct {
-    gint idx;
+    guint idx;
     GType type;
     const gchar *meta;
     const gchar *units;
 } SISParameter;
+
+typedef struct {
+    SISDataType data_type;
+    SISSignalSource signal_source;
+    SISScanningDirection direction;
+    gsize processing_steps;
+    /* images */
+} SISChannel;
+
+typedef struct {
+    gsize version_maj;
+    gsize version_min;
+    GHashTable *params;
+    gsize nchannels;
+    SISChannel *channels;
+} SISFile;
 
 static const GwyEnum sis_onoff[] = {
     { "Off", SIS_OFF },
     { "On",  SIS_ON },
 };
 
+/* Map between SIS palettes and Gwyddion palettes */
 static const GwyEnum sis_palettes[] = {
     { "Gray",    SIS_PALETTE_GRAY    },
     { "Warm",    SIS_PALETTE_GLOW    },
@@ -148,7 +182,6 @@ static const GwyEnum sis_signal_sources[] = {
     { "User",                   SIS_SIGNAL_SOURCE_USER             },
 };
 
-/* FIXME: us, � -> UTF-8 */
 static const SISParameter sis_parameters[] = {
     {   0, G_TYPE_STRING, "Name of the sample", NULL },
     {   1, G_TYPE_STRING, "Comment of the sample", NULL },
@@ -163,12 +196,12 @@ static const SISParameter sis_parameters[] = {
     {  10, G_TYPE_STRING, "Type of tip", NULL },
     {  11, G_TYPE_INT,    "Bits per pixels", NULL },
     {  12, G_TYPE_DOUBLE, "Value of the proportional part of feedback", NULL },
-    {  13, G_TYPE_DOUBLE, "Value of the integral part of feedback", "us" },
+    {  13, G_TYPE_DOUBLE, "Value of the integral part of feedback", "µs" },
     {  14, G_TYPE_DOUBLE, "Load force of the tip", "nN" },
     {  15, G_TYPE_DOUBLE, "Resonance frequency of the cantilever", "kHz" },
     {  16, G_TYPE_STRING, "Date of the measurement", NULL },
     {  17, G_TYPE_DOUBLE, "Feedback", NULL },
-    {  18, G_TYPE_DOUBLE, "Scanning direction", "�" },
+    {  18, G_TYPE_DOUBLE, "Scanning direction", "°" },
     {  19, G_TYPE_DOUBLE, "Spring constant", "N/m" },
     {  20, G_TYPE_STRING, "HighVoltage in x and y direction", NULL },
     {  21, G_TYPE_STRING, "Measurement with x and y linearisation", NULL },
@@ -179,66 +212,72 @@ static const SISParameter sis_parameters[] = {
     {  26, G_TYPE_DOUBLE, "Oscilation frequency of the cantilever during the measurement", "kHz" },
     {  27, G_TYPE_DOUBLE, "Field contrast", "nm" },
     {  28, G_TYPE_INT,    "Type of palette", NULL },
-    /* 100-107: Units of data in channels 1-8 (string) */
-    /* 108-115: Ranges of data in channels 1-8 (double) */
+    { 100, G_TYPE_STRING, "Units of data in channel 1", NULL },
+    { 101, G_TYPE_STRING, "Units of data in channel 2", NULL },
+    { 102, G_TYPE_STRING, "Units of data in channel 3", NULL },
+    { 103, G_TYPE_STRING, "Units of data in channel 4", NULL },
+    { 104, G_TYPE_STRING, "Units of data in channel 5", NULL },
+    { 105, G_TYPE_STRING, "Units of data in channel 6", NULL },
+    { 106, G_TYPE_STRING, "Units of data in channel 7", NULL },
+    { 107, G_TYPE_STRING, "Units of data in channel 8", NULL },
+    { 108, G_TYPE_DOUBLE, "Range of of data in channel 1", NULL },
+    { 109, G_TYPE_DOUBLE, "Range of of data in channel 2", NULL },
+    { 110, G_TYPE_DOUBLE, "Range of of data in channel 3", NULL },
+    { 111, G_TYPE_DOUBLE, "Range of of data in channel 4", NULL },
+    { 112, G_TYPE_DOUBLE, "Range of of data in channel 5", NULL },
+    { 113, G_TYPE_DOUBLE, "Range of of data in channel 6", NULL },
+    { 114, G_TYPE_DOUBLE, "Range of of data in channel 7", NULL },
+    { 115, G_TYPE_DOUBLE, "Range of of data in channel 8", NULL },
     { 116, G_TYPE_INT,    "Number of channels", NULL },
     { 117, G_TYPE_DOUBLE, "Offset in x direction in the scanning range", "nm" },
     { 118, G_TYPE_DOUBLE, "Offset in y direction in the scanning range", "nm" },
     { 119, G_TYPE_DOUBLE, "Maximum scanning range in x direction", "nm" },
     { 120, G_TYPE_DOUBLE, "Maximum scanning range in y direction", "nm" },
-    /* 121-128: Minimum range of data in channels 1-8 (double) */
-    /* 129-136: Maximum range of data in channels 1-8 (double) */
-    /* 137-145: Name of data in channels 1-8 (string) */
+    { 121, G_TYPE_DOUBLE, "Minimum range of of data in channel 1", NULL },
+    { 122, G_TYPE_DOUBLE, "Minimum range of of data in channel 2", NULL },
+    { 123, G_TYPE_DOUBLE, "Minimum range of of data in channel 3", NULL },
+    { 124, G_TYPE_DOUBLE, "Minimum range of of data in channel 4", NULL },
+    { 125, G_TYPE_DOUBLE, "Minimum range of of data in channel 5", NULL },
+    { 126, G_TYPE_DOUBLE, "Minimum range of of data in channel 6", NULL },
+    { 127, G_TYPE_DOUBLE, "Minimum range of of data in channel 7", NULL },
+    { 128, G_TYPE_DOUBLE, "Minimum range of of data in channel 8", NULL },
+    { 129, G_TYPE_DOUBLE, "Maximum range of of data in channel 1", NULL },
+    { 130, G_TYPE_DOUBLE, "Maximum range of of data in channel 2", NULL },
+    { 131, G_TYPE_DOUBLE, "Maximum range of of data in channel 3", NULL },
+    { 132, G_TYPE_DOUBLE, "Maximum range of of data in channel 4", NULL },
+    { 133, G_TYPE_DOUBLE, "Maximum range of of data in channel 5", NULL },
+    { 134, G_TYPE_DOUBLE, "Maximum range of of data in channel 6", NULL },
+    { 135, G_TYPE_DOUBLE, "Maximum range of of data in channel 7", NULL },
+    { 136, G_TYPE_DOUBLE, "Maximum range of of data in channel 8", NULL },
+    { 137, G_TYPE_STRING, "Name of data in channel 1", NULL },
+    { 138, G_TYPE_STRING, "Name of data in channel 2", NULL },
+    { 139, G_TYPE_STRING, "Name of data in channel 3", NULL },
+    { 140, G_TYPE_STRING, "Name of data in channel 4", NULL },
+    { 141, G_TYPE_STRING, "Name of data in channel 5", NULL },
+    { 142, G_TYPE_STRING, "Name of data in channel 6", NULL },
+    { 143, G_TYPE_STRING, "Name of data in channel 7", NULL },
+    { 144, G_TYPE_STRING, "Name of data in channel 8", NULL },
 };
-
-#if 0
-typedef enum {
-    NANOSCOPE_FILE_TYPE_NONE = 0,
-    NANOSCOPE_FILE_TYPE_BIN,
-    NANOSCOPE_FILE_TYPE_TXT
-} NanoscopeFileType;
 
 typedef struct {
     GHashTable *hash;
     GwyDataField *data_field;
-} NanoscopeData;
+} SISData;
 
 static gboolean       module_register     (const gchar *name);
-static gint           nanoscope_detect    (const gchar *filename,
+static gint           sis_detect          (const gchar *filename,
                                            gboolean only_name);
-static GwyContainer*  nanoscope_load      (const gchar *filename);
-static GwyDataField*  hash_to_data_field  (GHashTable *hash,
-                                           NanoscopeFileType file_type,
-                                           gsize bufsize,
-                                           gchar *buffer,
-                                           gdouble zscale,
-                                           gdouble curscale,
-                                           gchar **p);
-static NanoscopeData* select_which_data   (GList *list);
-static gboolean       read_ascii_data     (gint n,
-                                           gdouble *data,
-                                           gchar **buffer,
-                                           gint bpp);
-static gboolean       read_binary_data    (gint n,
-                                           gdouble *data,
-                                           gchar *buffer,
-                                           gint bpp);
-static GHashTable*    read_hash           (gchar **buffer);
-static gchar*         next_line           (gchar **buffer);
-
-static void           get_value_scales    (GHashTable *hash,
-                                           gdouble *zscale,
-                                           gdouble *curscale);
+static GwyContainer*  sis_load            (const gchar *filename);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "nanoscope",
-    "Load Nanoscope data.",
+    "sisfile",
+    "Load SIS data.",
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
-    "David Nečas (Yeti) & Petr Klapetek",
+    "0.1",
+    "David Neačs (Yeti) & Petr Klapetek",
     "2004",
 };
 
@@ -249,52 +288,241 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyFileFuncInfo nanoscope_func_info = {
-        "nanoscope",
-        "Nanoscope files",
-        (GwyFileDetectFunc)&nanoscope_detect,
-        (GwyFileLoadFunc)&nanoscope_load,
+    static GwyFileFuncInfo sis_func_info = {
+        "sisfile",
+        "SIS files (" EXTENSION ")",
+        (GwyFileDetectFunc)&sis_detect,
+        (GwyFileLoadFunc)&sis_load,
         NULL,
     };
 
-    gwy_file_func_register(name, &nanoscope_func_info);
+    gwy_file_func_register(name, &sis_func_info);
 
     return TRUE;
 }
 
 static gint
-nanoscope_detect(const gchar *filename,
-                 gboolean only_name)
+sis_detect(const gchar *filename,
+           gboolean only_name)
 {
     FILE *fh;
-    gint score;
     gchar magic[MAGIC_SIZE];
+    gint score;
 
+    gwy_debug("");
     if (only_name)
-        return 0;
+        return g_str_has_suffix(filename, EXTENSION) ? 20 : 0;
 
     if (!(fh = fopen(filename, "rb")))
         return 0;
     score = 0;
     if (fread(magic, 1, MAGIC_SIZE, fh) == MAGIC_SIZE
-        && (memcmp(magic, MAGIC_TXT, MAGIC_SIZE) == 0
-            || memcmp(magic, MAGIC_BIN, MAGIC_SIZE) == 0))
+        && memcmp(magic, MAGIC, MAGIC_SIZE) == 0)
         score = 100;
     fclose(fh);
 
     return score;
 }
 
+static inline gsize
+get_WORD(const guchar **p)
+{
+    gsize z = (gsize)(*p)[0] + ((gsize)(*p)[1] << 8);
+    *p += 2;
+    return z;
+}
+
+static inline gsize
+get_DWORD(const guchar **p)
+{
+    gsize z = (gsize)(*p)[0] + ((gsize)(*p)[1] << 8)
+              + ((gsize)(*p)[2] << 16) + ((gsize)(*p)[3] << 24);
+    *p += 4;
+    return z;
+}
+
+static inline gsize
+get_DOUBLE(const guchar **p)
+{
+    union { guchar pp[8]; double d; } z;
+    /* FIXME: assumes Intel endian */
+    memcpy(z.pp, *p, sizeof(double));
+    *p += sizeof(double);
+    return z.d;
+}
+
+static gboolean
+sis_real_load(const guchar *buffer,
+              gsize size,
+              SISFile *sisfile)
+{
+    gsize start, id, i, j, len;
+    gsize docinfosize, nparams;
+    const guchar *p;
+    gpointer idp;
+    gdouble d;
+
+    p = memchr(buffer, '\x1a', size);
+    if (!p)
+        return FALSE;
+    start = p-buffer + 1;
+    gwy_debug("%.*s", start, buffer);
+
+    if (size - start < 6)
+        return FALSE;
+
+    p = buffer + start;
+    id = get_WORD(&p);
+    gwy_debug("block id = %u", id);
+    if (id != SIS_BLOCK_DOCUMENT)
+        return FALSE;
+
+    docinfosize = get_DWORD(&p);
+    gwy_debug("doc info size = %u", docinfosize);
+    if (size - (p - buffer) < docinfosize - 6
+        || docinfosize < 8)
+        return FALSE;
+
+    sisfile->version_maj = get_WORD(&p);
+    sisfile->version_min = get_WORD(&p);
+    gwy_debug("version = %d.%d", sisfile->version_maj, sisfile->version_min);
+
+    nparams = get_WORD(&p);
+    sisfile->nchannels = get_WORD(&p);
+    gwy_debug("nparams = %d, nchannels = %d", nparams, sisfile->nchannels);
+
+    for (i = 0; i < nparams; i++) {
+        const SISParameter *sisparam;
+
+        if (size - (p - buffer) < 4)
+            return FALSE;
+        id = get_WORD(&p);
+        len = get_WORD(&p);
+        if (!len || size - (p - buffer) < len)
+            return FALSE;
+
+        sisparam = NULL;
+        for (j = 0; j < G_N_ELEMENTS(sis_parameters); j++) {
+            if (sis_parameters[j].idx == id) {
+                gwy_debug("Parameter %s", sis_parameters[j].meta);
+                sisparam = sis_parameters + j;
+                break;
+            }
+        }
+        if (!sisparam) {
+            g_warning("Unknown parameter id %u", id);
+            p += len;
+            continue;
+        }
+
+        idp = GUINT_TO_POINTER(id);
+        switch (sisparam->type) {
+            case G_TYPE_STRING:
+            g_hash_table_insert(sisfile->params, idp, g_strndup(p, len));
+            gwy_debug("Value = %s", g_hash_table_lookup(sisfile->params, idp));
+            p += len;
+            break;
+
+            case G_TYPE_INT:
+            g_assert(len == 2);
+            j = get_WORD(&p);
+            g_hash_table_insert(sisfile->params, idp, g_memdup(&j, sizeof(j)));
+            gwy_debug("Value = %u", j);
+            break;
+
+            case G_TYPE_DOUBLE:
+            g_assert(len == sizeof(double));
+            d = get_DOUBLE(&p);
+            g_hash_table_insert(sisfile->params, idp, g_memdup(&d, sizeof(d)));
+            gwy_debug("Value = %g", d);
+            break;
+
+            default:
+            g_assert_not_reached();
+            p += len;
+            break;
+        }
+    }
+
+    sisfile->channels = g_new(SISChannel, sisfile->nchannels);
+    for (i = 0; i <= sisfile->nchannels; ) {
+        gwy_debug("%06x", p - buffer);
+        if (size - (p - buffer) < 6)
+            return FALSE;
+
+        id = get_WORD(&p);
+        len = get_DWORD(&p);
+        gwy_debug("id = %u, len = %u", id, len);
+        if (!len || size - (p - buffer) < len)
+            return FALSE;
+
+        switch (id) {
+            case SIS_BLOCK_PREVIEW:
+            gwy_debug("Preview");
+            p += len;
+            break;
+
+            case SIS_BLOCK_IMAGE:
+            j++;
+            gwy_debug("Image #%u of channel %u", j, i);
+            /* XXX: This is unreliable bogus, some data files have samples
+             * instead of bytes here... */
+            p += len;
+            break;
+
+            case SIS_BLOCK_CHANNEL:
+            i++;
+            j = 0;
+            gwy_debug("Channel %u", i);
+            p += len;
+            break;
+
+            default:
+            g_warning("Funny stuff");
+            p += len;
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
 static GwyContainer*
-nanoscope_load(const gchar *filename)
+sis_load(const gchar *filename)
+{
+    guchar *buffer;
+    gsize size;
+    GError *err = NULL;
+    GwyContainer *data = NULL;
+    SISFile sisfile;
+
+    gwy_debug("");
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        g_clear_error(&err);
+        return NULL;
+    }
+    memset(&sisfile, 0, sizeof(sisfile));
+    sisfile.params = g_hash_table_new_full(g_direct_hash, g_direct_equal,
+                                           NULL, g_free);
+    sis_real_load(buffer, size, &sisfile);
+    gwy_file_abandon_contents(buffer, size, NULL);
+    g_hash_table_destroy(sisfile.params);
+    g_free(sisfile.channels);
+
+    return data;
+}
+
+#if 0
+static GwyContainer*
+sis_load(const gchar *filename)
 {
     GObject *object = NULL;
     GError *err = NULL;
     gchar *buffer = NULL;
     gchar *p;
     gsize size = 0;
-    NanoscopeFileType file_type;
-    NanoscopeData *ndata;
+    SISFileType file_type;
+    SISData *ndata;
     GHashTable *hash;
     GList *l, *list = NULL;
     /* FIXME defaults */
@@ -325,13 +553,13 @@ nanoscope_load(const gchar *filename)
 
     p = buffer;
     while ((hash = read_hash(&p))) {
-        ndata = g_new0(NanoscopeData, 1);
+        ndata = g_new0(SISData, 1);
         ndata->hash = hash;
         list = g_list_append(list, ndata);
     }
     ok = TRUE;
     for (l = list; ok && l; l = g_list_next(l)) {
-        ndata = (NanoscopeData*)l->data;
+        ndata = (SISData*)l->data;
         hash = ndata->hash;
         if (strcmp(g_hash_table_lookup(hash, "#self"), "Scanner list") == 0) {
             get_value_scales(hash, &zscale, &curscale);
@@ -358,7 +586,7 @@ nanoscope_load(const gchar *filename)
      * right one */
     g_free(buffer);
     for (l = list; l; l = g_list_next(l)) {
-        ndata = (NanoscopeData*)l->data;
+        ndata = (SISData*)l->data;
         g_hash_table_destroy(ndata->hash);
         gwy_object_unref(ndata->data_field);
         g_free(ndata);
@@ -418,7 +646,7 @@ get_value_scales(GHashTable *hash,
 
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
-                   NanoscopeFileType file_type,
+                   SISFileType file_type,
                    gsize bufsize,
                    gchar *buffer,
                    gdouble zscale,
@@ -570,10 +798,10 @@ hash_to_data_field(GHashTable *hash,
     return dfield;
 }
 
-static NanoscopeData*
+static SISData*
 select_which_data(GList *list)
 {
-    NanoscopeData *ndata, *ndata0;
+    SISData *ndata, *ndata0;
     GtkWidget *dialog, *omenu, *menu, *label, *table;
     GObject *item;
     GwyEnum *choices;
@@ -584,7 +812,7 @@ select_which_data(GList *list)
     ndata0 = NULL;
     l = NULL;
     while (list) {
-        ndata = (NanoscopeData*)list->data;
+        ndata = (SISData*)list->data;
         if (ndata->data_field) {
             count++;
             l = g_list_append(l, ndata);
@@ -602,7 +830,7 @@ select_which_data(GList *list)
     choices = g_new(GwyEnum, count);
     i = 0;
     for (l = list; l; l = g_list_next(l)) {
-        ndata = (NanoscopeData*)l->data;
+        ndata = (SISData*)l->data;
         choices[i].name = g_hash_table_lookup(ndata->hash, "@2:Image Data");
         if (choices[i].name[0] && choices[i].name[1])
             choices[i].name += 2;
@@ -656,7 +884,7 @@ select_which_data(GList *list)
     gtk_widget_destroy(dialog);
 
     l = g_list_nth(list, response);
-    ndata0 = (NanoscopeData*)l->data;
+    ndata0 = (SISData*)l->data;
 
     g_free(choices);
     g_list_free(list);
