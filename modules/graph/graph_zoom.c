@@ -53,7 +53,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
         "graph_zoom",
-        "/_Zoom in",
+        "/_Zoom In",
         (GwyGraphFunc)&zoom,
     };
 
@@ -65,13 +65,13 @@ module_register(const gchar *name)
 static gboolean
 zoom(GwyGraph *graph)
 {
-    
+
     if (!graph) {
         return 1;
     }
 
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_ZOOM);
-    
+
     return 1;
 }
 

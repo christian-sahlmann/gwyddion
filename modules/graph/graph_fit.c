@@ -147,7 +147,7 @@ static GwyModuleInfo module_info = {
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2004",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -159,7 +159,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo fit_func_info = {
         "graph_fit",
-        "/_Fit graph",
+        "/_Fit Graph",
         (GwyGraphFunc)&fit,
     };
 

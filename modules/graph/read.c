@@ -70,7 +70,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
         "read",
-        "/_Read values",
+        "/_Read Values",
         (GwyGraphFunc)&read,
     };
 
@@ -148,7 +148,7 @@ selection_updated_cb(gpointer data)
 
     cd = (GwyGraphStatus_CursorData*)gwy_graph_get_status_data(graph);
 
-   
+
     if (cd->data_point.x_unit != NULL)
     {
         if ((fabs(cd->data_point.x)<=1e5 && fabs(cd->data_point.x)>1e-2) || fabs(cd->data_point.x)==0)

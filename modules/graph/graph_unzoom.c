@@ -53,7 +53,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
         "graph_unzoom",
-        "/Zoom _out",
+        "/Zoom _Out",
         (GwyGraphFunc)&unzoom,
     };
 
@@ -65,13 +65,13 @@ module_register(const gchar *name)
 static gboolean
 unzoom(GwyGraph *graph)
 {
-    
+
     if (!graph) {
         return 1;
     }
 
     gwy_graph_unzoom(graph);
-    
+
     return 1;
 }
 

@@ -83,7 +83,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo points_func_info = {
         "graph_points",
-        "/_Measure distances",
+        "/_Measure Distances",
         (GwyGraphFunc)&points,
     };
 
