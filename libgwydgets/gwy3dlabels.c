@@ -189,12 +189,12 @@ gwy_3d_label_description_new(gchar * text, const gchar* key,
                              gint delta_x, gint delta_y,
                              gfloat rot, gint size, Gwy3DLabels * owner)
 {
-    gwy_debug(" ");
     Gwy3DLabelDescription * desc = g_new(Gwy3DLabelDescription, 1);
     gchar * buffer = g_new(gchar, strlen(key) + 20);
     gchar * end;
     gchar * ttext;
 
+    gwy_debug(" ");
     gwy_3d_label_description_init(desc);
     desc->owner = owner;
     desc->base_key = g_strdup(key);
