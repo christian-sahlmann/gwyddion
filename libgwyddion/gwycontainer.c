@@ -29,6 +29,7 @@
 
 #define GWY_CONTAINER_TYPE_NAME "GwyContainer"
 
+/* FIXME: remove all references to GwyWatchable in 2.0 */
 typedef struct {
     GwyContainer *container;
     const gchar *prefix;
@@ -44,6 +45,17 @@ typedef struct {
     const gchar **prefixes;
     gsize *pfxlengths;
 } PrefixListData;
+
+/*
+ * XXX: This is ugly. Having hour own all-in-one type saves us from
+ * - accessing GValue fields directly when we need _pointers_ to values
+ * - special-casing char that is promoted to int in GValue so we can't get
+ *   a pointer anyway
+ */
+typedef struct {
+    GwySerializeItem *items;
+    gint i;
+} SerializeData;
 
 static void     gwy_container_serializable_init  (GwySerializableIface *iface);
 static void     gwy_container_class_init         (GwyContainerClass *klass);
@@ -74,6 +86,14 @@ static void     hash_serialize_func              (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
 static GObject* gwy_container_deserialize        (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+static GByteArray* gwy_container_serialize2      (GObject *object,
+                                                  GByteArray *buffer);
+static void     hash_serialize_func2             (gpointer hkey,
+                                                  gpointer hvalue,
+                                                  gpointer hdata);
+static GObject* gwy_container_deserialize2       (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
 static gboolean hash_remove_prefix_func          (gpointer hkey,
@@ -1660,6 +1680,7 @@ gwy_container_set_object(GwyContainer *container,
     g_object_unref(value);
 }
 
+/***** Old style serialization ***********************************************/
 static GByteArray*
 gwy_container_serialize(GObject *object,
                         GByteArray *buffer)
@@ -1668,7 +1689,7 @@ gwy_container_serialize(GObject *object,
     gsize before_obj;
 
     gwy_debug("");
-    g_return_val_if_fail(GWY_IS_CONTAINER(object), NULL);
+    g_return_val_if_fail(GWY_IS_CONTAINER(object), buffer);
     container = GWY_CONTAINER(object);
 
     buffer = gwy_serialize_pack(buffer, "si", GWY_CONTAINER_TYPE_NAME, 0);
@@ -1807,6 +1828,148 @@ gwy_container_deserialize(const guchar *buffer,
         }
     }
     *position += mysize;
+
+    return (GObject*)container;
+}
+
+/***** New style serialization ***********************************************/
+static GByteArray*
+gwy_container_serialize2(GObject *object,
+                         GByteArray *buffer)
+{
+    GwyContainer *container;
+    gsize nitems = 0;
+    SerializeData sdata;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_CONTAINER(object), buffer);
+    container = GWY_CONTAINER(object);
+
+    nitems = g_hash_table_size(container->values);
+    sdata.items = g_new0(GwySerializeItem, nitems);
+    sdata.i = 0;
+    g_hash_table_foreach(container->values, hash_serialize_func2, &sdata);
+    buffer = gwy_serialize_object_items(buffer, GWY_CONTAINER_TYPE_NAME,
+                                        sdata.i, sdata.items);
+    g_free(sdata.items);
+
+    return buffer;
+}
+
+static void
+hash_serialize_func2(gpointer hkey, gpointer hvalue, gpointer hdata)
+{
+    GQuark key = GPOINTER_TO_UINT(hkey);
+    GValue *value = (GValue*)hvalue;
+    SerializeData *sdata = (SerializeData*)hdata;
+    GwySerializeItem *it;
+    GType type = G_VALUE_TYPE(value);
+    gsize i;
+
+    i = sdata->i;
+    it = sdata->items + i;
+    it->name = g_quark_to_string(key);
+    switch (type) {
+        case G_TYPE_BOOLEAN:
+        it->ctype = 'b';
+        it->value.v_boolean = g_value_get_boolean(value);
+        break;
+
+        case G_TYPE_UCHAR:
+        it->ctype = 'c';
+        it->value.v_char = g_value_get_uchar(value);
+        break;
+
+        case G_TYPE_INT:
+        it->ctype = 'i';
+        it->value.v_int32 = g_value_get_int(value);
+        break;
+
+        case G_TYPE_INT64:
+        it->ctype = 'q';
+        it->value.v_int64 = g_value_get_int64(value);
+        break;
+
+        case G_TYPE_DOUBLE:
+        it->ctype = 'd';
+        it->value.v_double = g_value_get_double(value);
+        break;
+
+        case G_TYPE_STRING:
+        it->ctype = 's';
+        it->value.v_string = (guchar*)g_value_get_string(value);
+        break;
+
+        case G_TYPE_OBJECT:
+        it->ctype = 'o';
+        it->value.v_object = g_value_get_object(value);
+        break;
+
+        default:
+        g_warning("Cannot pack GValue holding %s", g_type_name(type));
+        return;
+        break;
+    }
+
+    sdata->i++;
+}
+
+static GObject*
+gwy_container_deserialize2(const guchar *buffer,
+                           gsize size,
+                           gsize *position)
+{
+    GwySerializeItem *items, *it;
+    GwyContainer *container;
+    GQuark key;
+    gsize i, nitems = 0;
+
+    gwy_debug("");
+    g_return_val_if_fail(buffer, NULL);
+    items = gwy_deserialize_object_hash(buffer, size, position,
+                                        GWY_CONTAINER_TYPE_NAME, &nitems);
+    g_return_val_if_fail(items, NULL);
+
+    container = (GwyContainer*)gwy_container_new();
+    for (i = 0; i < nitems; i++) {
+        it = items + i;
+        key = g_quark_from_string(it->name);
+        switch (it->ctype) {
+            case 'b':
+            gwy_container_set_boolean(container, key, it->value.v_boolean);
+            break;
+
+            case 'c':
+            gwy_container_set_uchar(container, key, it->value.v_char);
+            break;
+
+            case 'i':
+            gwy_container_set_int32(container, key, it->value.v_int32);
+            break;
+
+            case 'q':
+            gwy_container_set_int64(container, key, it->value.v_int64);
+            break;
+
+            case 'd':
+            gwy_container_set_double(container, key, it->value.v_double);
+            break;
+
+            case 's':
+            gwy_container_set_string(container, key, it->value.v_string);
+            break;
+
+            case 'o':
+            gwy_container_set_object(container, key, it->value.v_object);
+            g_object_unref(it->value.v_object);
+            break;
+
+            default:
+            g_critical("Container doesn't support type <%c>", it->ctype);
+            break;
+        }
+    }
+    g_free(items);
 
     return (GObject*)container;
 }
