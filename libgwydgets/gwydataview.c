@@ -26,7 +26,6 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
-#include "gwylayer-mask.h"
 #include "gwydataview.h"
 
 #define GWY_DATA_VIEW_TYPE_NAME "GwyDataView"
