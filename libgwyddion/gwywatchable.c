@@ -66,7 +66,7 @@ gwy_watchable_get_type(void)
 }
 
 static void
-gwy_watchable_base_init(gpointer g_class)
+gwy_watchable_base_init(G_GNUC_UNUSED gpointer g_class)
 {
     static gboolean initialized = FALSE;
 
