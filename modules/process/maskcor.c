@@ -371,17 +371,15 @@ plot_correlated(GwyDataField *retfield, gint xsize, gint ysize, gdouble threshol
 void 
 plot_maxima(GwyDataField *retfield, gdouble threshold)
 {
-    GwyDataField *field;
     gint i, j;
     
-    field = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(retfield)));
-    gwy_data_field_fill(retfield, 0);
-
     for (i=0; i<retfield->xres; i++)
     {
         for (j=0; j<retfield->yres; j++)
         {
+            if (retfield->data[i + retfield->xres*j]>threshold)
                 retfield->data[i + retfield->xres*j] = 1;
+            else retfield->data[i + retfield->xres*j] = 0;
         }
     }
     
@@ -439,6 +437,9 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
     /*score - do new data with score*/
     if (args->result == GWY_MASKCOR_SCORE)
     {
+        if (gwy_container_contains_by_name(ret, "/0/mask"))
+            gwy_container_remove_by_name(ret, "/0/mask");
+
         data_window = gwy_app_data_window_create(ret);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
