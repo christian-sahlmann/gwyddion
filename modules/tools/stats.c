@@ -43,8 +43,11 @@ typedef struct {
     GtkWidget *median;
     GtkWidget *projarea;
     GtkWidget *area;
+    GtkWidget *theta;
+    GtkWidget *phi;
     GwySIValueFormat *vform2;
-    gboolean enable_area;
+    GwySIValueFormat *vformdeg;
+    gboolean same_units;
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
@@ -121,7 +124,7 @@ use(GwyDataWindow *data_window,
         ToolControls *controls;
         GwyContainer *data;
         GwyDataField *dfield;
-        GwySIUnit *siunitxy, *siunitz;
+        GwySIUnit *siunitxy, *siunitz, *siunitdeg;
         gchar *unitxy, *unitz;
         gdouble xreal, yreal, q;
 
@@ -131,11 +134,7 @@ use(GwyDataWindow *data_window,
                                                                  "/0/data"));
         siunitxy = gwy_data_field_get_si_unit_xy(dfield);
         siunitz = gwy_data_field_get_si_unit_z(dfield);
-        unitxy = gwy_si_unit_get_unit_string(siunitxy);
-        unitz = gwy_si_unit_get_unit_string(siunitz);
-        controls->enable_area = !strcmp(unitxy, unitz);
-        g_free(unitxy);
-        g_free(unitz);
+	controls->same_units = gwy_si_unit_equal(siunitxy, siunitz);
 
         xreal = gwy_data_field_get_xreal(dfield);
         yreal = gwy_data_field_get_xreal(dfield);
@@ -148,6 +147,13 @@ use(GwyDataWindow *data_window,
             = gwy_si_unit_get_format_with_resolution(siunitxy, xreal*yreal, q,
                                                      controls->vform2);
         g_object_unref(siunitxy);
+
+	siunitdeg = (GwySIUnit*) gwy_si_unit_new("\xc2\xb0"); /* degree */
+	controls->vformdeg 
+	  = gwy_si_unit_get_format_with_resolution(siunitdeg,
+						   360, 0.01,
+						   controls->vformdeg);
+	g_object_unref(siunitdeg);
     }
 
     return gwy_unitool_use(state, data_window, reason);
@@ -178,6 +184,8 @@ dialog_create(GwyUnitoolState *state)
         { N_("Median"),         G_STRUCT_OFFSET(ToolControls, median)   },
         { N_("Projected area"), G_STRUCT_OFFSET(ToolControls, projarea) },
         { N_("Area"),           G_STRUCT_OFFSET(ToolControls, area)     },
+        { N_("Inclination theta"), G_STRUCT_OFFSET(ToolControls, theta) },
+        { N_("Inclination phi"), G_STRUCT_OFFSET(ToolControls, phi) },
     };
     ToolControls *controls;
     GwySIValueFormat *units;
@@ -244,6 +252,7 @@ dialog_update(GwyUnitoolState *state,
     gint w, h;
     gdouble avg, ra, rms, skew, kurtosis, min, max, median, q;
     gdouble projarea, area = 0.0;
+    gdouble theta, phi;
     gchar buffer[48];
 
     gwy_debug("");
@@ -265,13 +274,15 @@ dialog_update(GwyUnitoolState *state,
     q = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield)
         *gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
     projarea = w*h*q;
-    if (controls->enable_area) {
+    if (controls->same_units) {
         area = gwy_data_field_area_get_surface_area(dfield, isel[0], isel[1],
                                                     w, h,
                                                     GWY_INTERPOLATION_BILINEAR);
         /* prevent rounding errors to produce nonreal results on very flat
          * surfaces */
         area = MAX(area, projarea);
+	gwy_data_field_area_get_inclination(dfield, isel[0], isel[1], w, h,
+					    &theta, &phi);
     }
 
     state->value_format->precision = 2;
@@ -287,10 +298,15 @@ dialog_update(GwyUnitoolState *state,
     gwy_unitool_update_label(state->value_format, controls->max, max);
     gwy_unitool_update_label(state->value_format, controls->median, median);
     gwy_unitool_update_label(controls->vform2, controls->projarea, projarea);
-    if (controls->enable_area)
+    if (controls->same_units) {
         gwy_unitool_update_label(controls->vform2, controls->area, area);
-    else
+        gwy_unitool_update_label(controls->vformdeg, controls->theta, theta);
+        gwy_unitool_update_label(controls->vformdeg, controls->phi, phi);
+    } else {
         gtk_label_set_text(GTK_LABEL(controls->area), _("N.A."));
+        gtk_label_set_text(GTK_LABEL(controls->theta), _("N.A."));
+        gtk_label_set_text(GTK_LABEL(controls->phi), _("N.A."));
+    }
 }
 
 static void
