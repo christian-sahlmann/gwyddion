@@ -29,7 +29,7 @@
 
 static void     gwy_palette_def_class_init        (GwyPaletteDefClass *klass);
 static void     gwy_palette_def_init              (GwyPaletteDef *palette_def);
-static void     gwy_palette_def_finalize          (GwyPaletteDef *palette_def);
+static void     gwy_palette_def_finalize          (GObject *object);
 static void     gwy_palette_def_serializable_init (GwySerializableIface *iface);
 static void     gwy_palette_def_watchable_init    (GwyWatchableIface *iface);
 static GByteArray *gwy_palette_def_serialize      (GObject *obj,
@@ -51,6 +51,8 @@ static gboolean gwy_palette_is_big_slope_change   (GwyRGBA a,
 static gboolean gwy_palette_is_extreme            (GwyRGBA a,
                                                    GwyRGBA am,
                                                    GwyRGBA ap);
+
+static GObjectClass *parent_class = NULL;
 
 GType
 gwy_palette_def_get_type(void)
@@ -123,7 +125,8 @@ gwy_palette_def_class_init(GwyPaletteDefClass *klass)
 
     gwy_debug("");
 
-    gobject_class->finalize = (GObjectFinalizeFunc)gwy_palette_def_finalize;
+    parent_class = g_type_class_peek_parent(klass);
+    gobject_class->finalize = gwy_palette_def_finalize;
     /* static classes are never finalized, so this is never freed */
     klass->palettes = g_hash_table_new(g_str_hash, g_str_equal);
     /*XXX: too early gwy_palette_def_setup_presets(klass->palettes);*/
@@ -139,8 +142,9 @@ gwy_palette_def_init(GwyPaletteDef *palette_def)
 }
 
 static void
-gwy_palette_def_finalize(GwyPaletteDef *palette_def)
+gwy_palette_def_finalize(GObject *object)
 {
+    GwyPaletteDef *palette_def = (GwyPaletteDef*)object;
     GwyPaletteDefClass *klass;
     gboolean removed;
 
@@ -151,6 +155,8 @@ gwy_palette_def_finalize(GwyPaletteDef *palette_def)
     g_assert(removed);
     g_array_free(palette_def->data, TRUE);
     g_free(palette_def->name);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 /**

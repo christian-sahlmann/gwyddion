@@ -37,7 +37,7 @@ typedef struct {
 
 static void     gwy_palette_class_init            (GwyPaletteClass *klass);
 static void     gwy_palette_init                  (GwyPalette *palette);
-static void     gwy_palette_finalize              (GwyPalette *palette);
+static void     gwy_palette_finalize              (GObject *object);
 static void     gwy_palette_serializable_init     (GwySerializableIface *iface);
 static void     gwy_palette_watchable_init        (GwyWatchableIface *iface);
 static GByteArray* gwy_palette_serialize          (GObject *obj,
@@ -56,6 +56,8 @@ static GwyPaletteSamples* gwy_palette_samples_new (GwyPaletteDef *palette_def,
 static void     gwy_palette_samples_free          (GwyPaletteSamples *samples);
 static void     gwy_palette_samples_maybe_free    (GwyPaletteDef *palette_def);
 
+
+static GObjectClass *parent_class = NULL;
 
 GType
 gwy_palette_get_type(void)
@@ -128,7 +130,8 @@ gwy_palette_class_init(GwyPaletteClass *klass)
 
     gwy_debug("");
 
-    gobject_class->finalize = (GObjectFinalizeFunc)gwy_palette_finalize;
+    parent_class = g_type_class_peek_parent(klass);
+    gobject_class->finalize = gwy_palette_finalize;
     klass->palettes = g_hash_table_new(g_direct_hash, g_direct_equal);
 }
 
@@ -141,8 +144,10 @@ gwy_palette_init(GwyPalette *palette)
 }
 
 static void
-gwy_palette_finalize(GwyPalette *palette)
+gwy_palette_finalize(GObject *object)
 {
+    GwyPalette *palette = (GwyPalette*)object;
+
     gwy_debug("%s", palette->def->name);
 
     g_signal_handlers_disconnect_matched(palette->def, G_SIGNAL_MATCH_FUNC,
@@ -150,6 +155,8 @@ gwy_palette_finalize(GwyPalette *palette)
                                          gwy_watchable_value_changed, NULL);
     gwy_palette_samples_maybe_free(palette->def);
     g_object_unref(palette->def);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 /**
