@@ -364,10 +364,8 @@ gwy_ruler_set_units_placement(GwyRuler *ruler,
     if (ruler->units_placement == placement)
         return;
 
-    g_object_freeze_notify(G_OBJECT(ruler));
     ruler->units_placement = placement;
     g_object_notify(G_OBJECT(ruler), "units_placement");
-    g_object_thaw_notify(G_OBJECT(ruler));
 
     if (GTK_WIDGET_DRAWABLE(ruler))
         gtk_widget_queue_draw(GTK_WIDGET(ruler));
