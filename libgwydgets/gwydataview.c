@@ -156,6 +156,25 @@ gwy_data_view_init(GwyDataView *data_view)
     data_view->yoff = 0;
 }
 
+/**
+ * gwy_data_view_new:
+ * @data: A #GwyContainer containing the data to display.
+ *
+ * Creates a new data-displaying widget for @data.
+ *
+ * A newly created #GwyDataView doesn't display anything.  You have to add
+ * some layers to it, at least a base layer with
+ * gwy_data_view_set_base_layer(), and possibly others with
+ * gwy_data_view_set_alpha_layer() and gwy_data_view_set_top_layer().
+ *
+ * The top layer is special. It must be a vector layer and can receive
+ * mouse and keyboard events.
+ *
+ * The base layer it also special. It must be always present, and must not be
+ * transparent or vector.
+ *
+ * Returns: A newly created data view as a #GtkWidget.
+ **/
 GtkWidget*
 gwy_data_view_new(GwyContainer *data)
 {
@@ -677,6 +696,18 @@ gwy_data_view_set_layer(GwyDataView *data_view,
     gwy_data_view_update(data_view);
 }
 
+/**
+ * gwy_data_view_set_base_layer:
+ * @data_view: A #GwyDataView.
+ * @layer: A layer to be used as the base layer for @data_view.
+ *
+ * Plugs @layer to @data_view as the base layer.
+ *
+ * If another base layer is present, it's unplugged.
+ *
+ * The layer must not be a vector layer.  Theoretically, it can be %NULL to
+ * use no base layer, but then @data_view will probably display garbage.
+ **/
 void
 gwy_data_view_set_base_layer(GwyDataView *data_view,
                              GwyDataViewLayer *layer)
@@ -686,6 +717,18 @@ gwy_data_view_set_base_layer(GwyDataView *data_view,
     gwy_data_view_set_layer(data_view, &data_view->base_layer, layer);
 }
 
+/**
+ * gwy_data_view_set_alpha_layer:
+ * @data_view: A #GwyDataView.
+ * @layer: A layer to be used as the alpha layer for @data_view.
+ *
+ * Plugs @layer to @data_view as the alpha layer.
+ *
+ * If another alpha layer is present, it's unplugged.
+ *
+ * The layer must not be a vector layer.  It can be %NULL, meaning no alpha
+ * layer is to be used.
+ **/
 void
 gwy_data_view_set_alpha_layer(GwyDataView *data_view,
                               GwyDataViewLayer *layer)
@@ -695,6 +738,18 @@ gwy_data_view_set_alpha_layer(GwyDataView *data_view,
     gwy_data_view_set_layer(data_view, &data_view->alpha_layer, layer);
 }
 
+/**
+ * gwy_data_view_set_top_layer:
+ * @data_view: A #GwyDataView.
+ * @layer: A layer to be used as the top layer for @data_view.
+ *
+ * Plugs @layer to @data_view as the top layer.
+ *
+ * If another top layer is present, it's unplugged.
+ *
+ * The layer must be a vector layer.  It can be %NULL, meaning no top
+ * layer is to be used.
+ **/
 void
 gwy_data_view_set_top_layer(GwyDataView *data_view,
                             GwyDataViewLayer *layer)
@@ -704,6 +759,16 @@ gwy_data_view_set_top_layer(GwyDataView *data_view,
     gwy_data_view_set_layer(data_view, &data_view->top_layer, layer);
 }
 
+/**
+ * gwy_data_view_get_hexcess:
+ * @data_view: A #GwyDataView.
+ *
+ * Return the horizontal excess of widget size to data size.
+ *
+ * Do not use.  Only useful for #GwyDataWindow implementation.
+ *
+ * Returns: The execess.
+ **/
 gdouble
 gwy_data_view_get_hexcess(GwyDataView* data_view)
 {
@@ -715,6 +780,16 @@ gwy_data_view_get_hexcess(GwyDataView* data_view)
                     / gdk_pixbuf_get_width(data_view->pixbuf) - 1.0;
 }
 
+/**
+ * gwy_data_view_get_vexcess:
+ * @data_view: A #GwyDataView.
+ *
+ * Return the vertical excess of widget size to data size.
+ *
+ * Do not use.  Only useful for #GwyDataWindow implementation.
+ *
+ * Returns: The execess.
+ **/
 gdouble
 gwy_data_view_get_vexcess(GwyDataView *data_view)
 {
@@ -726,6 +801,18 @@ gwy_data_view_get_vexcess(GwyDataView *data_view)
                     / gdk_pixbuf_get_height(data_view->pixbuf) - 1.0;
 }
 
+/**
+ * gwy_data_view_set_zoom:
+ * @data_view: A #GwyDataView.
+ * @zoom: A new zoom value.
+ *
+ * Sets zoom of @data_view to @zoom.
+ *
+ * Zoom greater than 1 means larger image on screen and vice versa.
+ *
+ * Note window manager can prevent the window from resize and thus the zoom
+ * from change.
+ **/
 void
 gwy_data_view_set_zoom(GwyDataView *data_view,
                        gdouble zoom)
@@ -743,6 +830,14 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
     gtk_widget_queue_resize(GTK_WIDGET(data_view));
 }
 
+/**
+ * gwy_data_view_get_zoom:
+ * @data_view: A #GwyDataView.
+ *
+ * Returns current zoom of @data_view.
+ *
+ * Returns: The zoom.
+ **/
 gdouble
 gwy_data_view_get_zoom(GwyDataView *data_view)
 {
@@ -750,6 +845,15 @@ gwy_data_view_get_zoom(GwyDataView *data_view)
     return data_view->zoom;
 }
 
+/**
+ * gwy_data_view_get_xmeasure:
+ * @data_view: A #GwyDataView.
+ *
+ * Returns the ratio between horizontal physical lengths and horizontal
+ * screen lengths in pixels.
+ *
+ * Returns: The horizontal measure.
+ **/
 gdouble
 gwy_data_view_get_xmeasure(GwyDataView *data_view)
 {
@@ -757,6 +861,15 @@ gwy_data_view_get_xmeasure(GwyDataView *data_view)
     return data_view->xmeasure;
 }
 
+/**
+ * gwy_data_view_get_ymeasure:
+ * @data_view: A #GwyDataView.
+ *
+ * Returns the ratio between vertical physical lengths and horizontal
+ * screen lengths in pixels.
+ *
+ * Returns: The vertical measure.
+ **/
 gdouble
 gwy_data_view_get_ymeasure(GwyDataView *data_view)
 {
@@ -764,6 +877,14 @@ gwy_data_view_get_ymeasure(GwyDataView *data_view)
     return data_view->ymeasure;
 }
 
+/**
+ * gwy_data_view_get_data:
+ * @data_view: A #GwyDataView.
+ *
+ * Returns the data container used by @data_view.
+ *
+ * Returns: The data as a #GwyContainer.
+ **/
 GwyContainer*
 gwy_data_view_get_data(GwyDataView *data_view)
 {
@@ -771,6 +892,15 @@ gwy_data_view_get_data(GwyDataView *data_view)
     return data_view->data;
 }
 
+/**
+ * gwy_data_view_coords_xy_clamp:
+ * @data_view: A #GwyDataView.
+ * @xscr: A screen x-coordinate relative to widget origin.
+ * @yscr: A screen y-coordinate relative to widget origin.
+ *
+ * Fixes screen coordinates @xscr and @yscr to be inside the data-displaying
+ * area (which can be smaller than widget size).
+ **/
 void
 gwy_data_view_coords_xy_clamp(GwyDataView *data_view,
                               gint *xscr, gint *yscr)
@@ -791,6 +921,17 @@ gwy_data_view_coords_xy_clamp(GwyDataView *data_view,
     }
 }
 
+/**
+ * gwy_data_view_coords_xy_to_real:
+ * @data_view: A #GwyDataView.
+ * @xscr: A screen x-coordinate relative to widget origin.
+ * @yscr: A screen y-coordinate relative to widget origin.
+ * @xreal: Where the physical x-coordinate in the data sample should be stored.
+ * @yreal: Where the physical y-coordinate in the data sample should be stored.
+ *
+ * Recomputes screen coordinates relative to widget origin to physical
+ * coordinates in the sample.
+ **/
 void
 gwy_data_view_coords_xy_to_real(GwyDataView *data_view,
                                 gint xscr, gint yscr,
@@ -804,6 +945,19 @@ gwy_data_view_coords_xy_to_real(GwyDataView *data_view,
         *yreal = (yscr - data_view->yoff) * data_view->ymeasure;
 }
 
+/**
+ * gwy_data_view_coords_real_to_xy:
+ * @data_view: A #GwyDataView.
+ * @xreal: A physical x-coordinate in the data sample..
+ * @yreal: A physical y-coordinate in the data sample.
+ * @xscr: Where the screen x-coordinate relative to widget origin should be
+ *        stored.
+ * @yscr: Where the screen y-coordinate relative to widget origin should be
+ *        stored.
+ *
+ * Recomputes physical coordinate in the sample to screen coordinate relative
+ * to widget origin.
+ **/
 void
 gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
                                 gdouble xreal, gdouble yreal,

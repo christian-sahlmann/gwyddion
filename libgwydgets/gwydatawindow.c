@@ -83,6 +83,14 @@ gwy_data_window_init(GwyDataWindow *data_window)
     data_window->sidebuttons = NULL;
 }
 
+/**
+ * gwy_data_window_new:
+ * @data_view: A #GwyDataView containing the data-displaying widget to show.
+ *
+ * Creates a new data displaying window.
+ *
+ * Returns: A newly created widget, as #GtkWidget.
+ **/
 GtkWidget*
 gwy_data_window_new(GwyDataView *data_view)
 {

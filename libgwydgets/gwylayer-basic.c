@@ -108,6 +108,8 @@ gwy_layer_basic_finalize(GObject *object)
  *
  * Creates a new basic data displaying layer.
  *
+ * By default, is uses a gray palette.
+ *
  * Returns: The newly created layer.
  **/
 GtkObject*
@@ -161,6 +163,13 @@ gwy_layer_basic_wants_repaint(GwyDataViewLayer *layer)
     return GWY_LAYER_BASIC(layer)->changed;
 }
 
+/**
+ * gwy_layer_basic_set_palette:
+ * @layer: A #GwyLayerBasic.
+ * @palette: The palette @layer should use.
+ *
+ * Sets the palette @layer should used.
+ **/
 void
 gwy_layer_basic_set_palette(GwyDataViewLayer *layer,
                             GwyPalette *palette)
@@ -176,6 +185,14 @@ gwy_layer_basic_set_palette(GwyDataViewLayer *layer,
     g_object_unref(oldpalette);
 }
 
+/**
+ * gwy_layer_basic_get_palette:
+ * @layer: A #GwyLayerBasic.
+ *
+ * Returns the palette used by @layer.
+ *
+ * Returns: The palette as #GwyPalette.
+ **/
 GwyPalette*
 gwy_layer_basic_get_palette(GwyDataViewLayer *layer)
 {
