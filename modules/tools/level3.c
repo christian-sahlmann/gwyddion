@@ -110,7 +110,7 @@ static void
 layer_setup(GwyUnitoolState *state)
 {
     g_assert(GWY_IS_LAYER_POINTS(state->layer));
-    gwy_layer_points_set_max_points(GWY_LAYER_POINTS(state->layer), 3);
+    g_object_set(state->layer, "max_points", 3, NULL);
 }
 
 static GtkWidget*

@@ -146,7 +146,7 @@ static void
 layer_setup(GwyUnitoolState *state)
 {
     g_assert(GWY_IS_LAYER_SELECT(state->layer));
-    gwy_layer_select_set_is_crop(GWY_LAYER_SELECT(state->layer), FALSE);
+    g_object_set(state->layer, "is_crop", FALSE, NULL);
 }
 
 static GtkWidget*
