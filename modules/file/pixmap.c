@@ -1548,9 +1548,12 @@ pixmap_save_dialog(GwyContainer *data,
     gint response;
     gchar *s, *title;
     gint row;
+    gboolean disable_everything;
 
     controls.data = data;
     controls.args = args;
+    /* Don't enable false color scale when it's wrong */
+    disable_everything = gwy_container_contains_by_name(data, "/0/show");
 
     s = g_ascii_strup(name, -1);
     title = g_strconcat(_("Export "), s, NULL);
@@ -1586,6 +1589,9 @@ pixmap_save_dialog(GwyContainer *data,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
+
+    if (disable_everything && args->otype == PIXMAP_EVERYTHING)
+        args->otype = PIXMAP_RULERS;
     controls.group = gwy_radio_buttons_create(output_formats,
                                               G_N_ELEMENTS(output_formats),
                                               "output-format",
@@ -1595,8 +1601,11 @@ pixmap_save_dialog(GwyContainer *data,
     for (l = controls.group; l; l = g_slist_next(l)) {
         gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(l->data),
                          0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        if (disable_everything
+            && g_object_get_data(G_OBJECT(l->data), "output-format")
+               == GUINT_TO_POINTER(PIXMAP_EVERYTHING))
+            gtk_widget_set_sensitive(GTK_WIDGET(l->data), FALSE);
         row++;
-
     }
 
     /* preview */
