@@ -102,7 +102,7 @@ gwyfile_detect(const gchar *filename,
 static GwyContainer*
 gwyfile_load(const gchar *filename)
 {
-    GObject *object;
+    GObject *object, *dfield;
     GError *err = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
@@ -135,6 +135,12 @@ gwyfile_load(const gchar *filename)
     }
     if (!GWY_IS_CONTAINER(object)) {
         g_warning("File %s contains some strange object", filename);
+        g_object_unref(object);
+        return NULL;
+    }
+    dfield = gwy_container_get_object_by_name(GWY_CONTAINER(object), "/0/data");
+    if (!dfield || !GWY_IS_DATA_FIELD(dfield)) {
+        g_warning("File %s contains no data field", filename);
         g_object_unref(object);
         return NULL;
     }
