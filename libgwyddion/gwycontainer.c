@@ -629,8 +629,8 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
  *
  * Get-if-set a boolean from @container.
  *
- * Returns: %TRUE if @value was actually updated, %FALSE when there is no
- *          such boolean in the container.
+ * Expands to %TRUE if @value was actually updated, %FALSE when there is no
+ * such boolean in the container.
  **/
 gboolean
 gwy_container_gis_boolean(GwyContainer *container,
@@ -715,8 +715,8 @@ gwy_container_get_uchar(GwyContainer *container, GQuark key)
  *
  * Get-if-set an unsigned char from @container.
  *
- * Returns: %TRUE if @value was actually updated, %FALSE when there is no
- *          such unsigned char in the container.
+ * Expands to %TRUE if @value was actually updated, %FALSE when there is no
+ * such unsigned char in the container.
  **/
 gboolean
 gwy_container_gis_uchar(GwyContainer *container,
@@ -800,8 +800,8 @@ gwy_container_get_int32(GwyContainer *container, GQuark key)
  *
  * Get-if-set a 32bit integer from @container.
  *
- * Returns: %TRUE if @value was actually updated, %FALSE when there is no
- *          such 32bit integer in the container.
+ * Expands to %TRUE if @value was actually updated, %FALSE when there is no
+ * such 32bit integer in the container.
  **/
 gboolean
 gwy_container_gis_int32(GwyContainer *container,
@@ -885,8 +885,8 @@ gwy_container_get_int64(GwyContainer *container, GQuark key)
  *
  * Get-if-set a 64bit integer from @container.
  *
- * Returns: %TRUE if @value was actually updated, %FALSE when there is no
- *          such 64bit integer in the container.
+ * Expands to %TRUE if @value was actually updated, %FALSE when there is no
+ * such 64bit integer in the container.
  **/
 gboolean
 gwy_container_gis_int64(GwyContainer *container,
@@ -970,8 +970,8 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
  *
  * Get-if-set a double from @container.
  *
- * Returns: %TRUE if @value was actually updated, %FALSE when there is no
- *          such double in the container.
+ * Expands to %TRUE if @value was actually updated, %FALSE when there is no
+ * such double in the container.
  **/
 gboolean
 gwy_container_gis_double(GwyContainer *container,
@@ -1065,8 +1065,8 @@ gwy_container_get_string(GwyContainer *container, GQuark key)
  * The string eventually stored in @value must be treated as constant and
  * never freed or modified.
  *
- * Returns: %TRUE if @value was actually updated, %FALSE when there is no
- *          such string in the container.
+ * Expands to %TRUE if @value was actually updated, %FALSE when there is no
+ * such string in the container.
  **/
 gboolean
 gwy_container_gis_string(GwyContainer *container,
@@ -1166,8 +1166,8 @@ gwy_container_get_object(GwyContainer *container, GQuark key)
  * increased, use g_object_ref() if you want to access it even when
  * @container may cease to exist.
  *
- * Returns: %TRUE if @value was actually updated, %FALSE when there is no
- *          such object in the container.
+ * Expands to %TRUE if @value was actually updated, %FALSE when there is no
+ * such object in the container.
  **/
 gboolean
 gwy_container_gis_object(GwyContainer *container,
