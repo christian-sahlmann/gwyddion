@@ -243,8 +243,11 @@ gwy_si_unit_get_unit_string(GwySIUnit *siunit)
  * Finds reasonable representation for a number.
  * This means that number @value should
  * be written as @value / @number->magnitude [@number->units].
+ *
+ * Returns: The value format.  If @format was %NULL, a newly allocated format
+ *          is returned, otherwise (modified) @format itself is returned.
  **/
-void
+GwySIValueFormat*
 gwy_si_unit_get_format(GwySIUnit *siunit,
                        gdouble value,
                        GwySIValueFormat *format)
@@ -266,6 +269,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
 
     format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
     format->units = strcat(format->units, gwy_si_unit_get_unit_string(siunit));
+    return format;
 }
 
 
@@ -291,6 +295,36 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
                                        gdouble maximum,
                                        gdouble resolution,
                                        GwySIValueFormat *format)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+
+    gwy_si_unit_get_format(siunit, maximum, format);
+    return format;
+}
+
+/**
+ * gwy_si_unit_get_format_with_resolution:
+ * @siunit: A SI unit.
+ * @value: The maximum value to be represented.
+ * @resolution: The number of significant digits the value should have.
+ * @format: A value format to set-up, may be %NULL, a new value format is
+ *          allocated then.
+ *
+ * Finds a good format for representing a values with given number of
+ * significant digits.
+ *
+ * The values should be then printed as value/@format->magnitude
+ * [@format->units] with @format->precision decimal places.
+ *
+ * Returns: The value format.  If @format was %NULL, a newly allocated format
+ *          is returned, otherwise (modified) @format itself is returned.
+ **/
+GwySIValueFormat*
+gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
+                                   gdouble maximum,
+                                   gint sdigits,
+                                   GwySIValueFormat *format)
 {
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
