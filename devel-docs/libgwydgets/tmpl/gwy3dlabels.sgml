@@ -6,7 +6,13 @@ Labels in 3D view
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+The object stores the informations about individual labels taking place
+within a #Gwy3DView. The fields of this class should be considered private.
+The class provides methods to obtain individual #GwyLabelDescription's
+(gwy_3d_labels_get_description()) and takes care of expanding the variables
+within text filed of GwyLabelDescriptions (gwy_3d_labels_format_text() method).
+Currently four variables are implemented and can be used ($X, $Y, $MIN
+and $MAX). Other variables are ignored.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -28,12 +34,6 @@ Labels in 3D view
 @rotation: 
 @size: 
 @owner: 
-
-<!-- ##### STRUCT Gwy3DLabelDescriptionClass ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### ENUM Gwy3DLabelName ##### -->
 <para>
@@ -60,11 +60,12 @@ Labels in 3D view
 </para>
 
 @labels: 
-@container: 
 @si_unit: 
+<!-- # Unused Parameters # -->
+@container: 
 
 
-<!-- ##### FUNCTION gwy_3d_labels_format_text ##### -->
+<!-- ##### FUNCTION gwy_3d_labels_expand_text ##### -->
 <para>
 
 </para>
@@ -101,7 +102,7 @@ Labels in 3D view
 @label_description: 
 
 
-<!-- ##### FUNCTION gwy_3d_label_description_get_autoscele ##### -->
+<!-- ##### FUNCTION gwy_3d_label_description_get_autoscale ##### -->
 <para>
 
 </para>

@@ -452,6 +452,12 @@ gwymodulemenus
 
 @obj: 
 
+<!-- ##### STRUCT Gwy3DLabelDescriptionClass ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### SIGNAL GwyColorButton::color-set ##### -->
 <para>
 
@@ -581,6 +587,14 @@ gwymodulemenus
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_3d_label_description_get_autoscele ##### -->
+<para>
+
+</para>
+
+@label_description: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_3d_labels_connect_signal ##### -->
 <para>
 
@@ -590,6 +604,15 @@ gwymodulemenus
 @signal_name: 
 @handler: 
 @user_data: 
+
+<!-- ##### FUNCTION gwy_3d_labels_format_text ##### -->
+<para>
+
+</para>
+
+@labels: 
+@label_name: 
+@Returns: 
 
 <!-- ##### FUNCTION gwy_3d_labels_get_text ##### -->
 <para>
