@@ -27,7 +27,8 @@ G_BEGIN_DECLS
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
-const gchar* gwy_math_SI_prefix          (gdouble magnitude);
+G_CONST_RETURN
+gchar*       gwy_math_SI_prefix          (gdouble magnitude);
 gdouble      gwy_math_humanize_numbers   (gdouble unit,
                                           gdouble maximum,
                                           gint *precision);

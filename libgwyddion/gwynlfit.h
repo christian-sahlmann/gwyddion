@@ -139,20 +139,25 @@ void           gwy_math_nlfit_derive             (gint i,
 
 gint gwy_math_nlfit_get_npresets(void)
     G_GNUC_CONST;
-const GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(gint preset_id)
+G_CONST_RETURN
+GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(gint preset_id)
     G_GNUC_CONST;
-const GwyNLFitPresetFunction* gwy_math_nlfit_get_preset_by_name(const gchar *name);
+G_CONST_RETURN
+GwyNLFitPresetFunction* gwy_math_nlfit_get_preset_by_name(const gchar *name);
 gint gwy_math_nlfit_get_preset_id(const GwyNLFitPresetFunction* function);
 
 gdouble gwy_math_nlfit_get_function_value(const GwyNLFitPresetFunction* function,
                                           gdouble *params,
                                           gdouble x);
 
-const gchar *gwy_math_nlfit_get_function_name(const GwyNLFitPresetFunction* function);
+G_CONST_RETURN
+gchar *gwy_math_nlfit_get_function_name(const GwyNLFitPresetFunction* function);
 
-const gchar *gwy_math_nlfit_get_function_equation(const GwyNLFitPresetFunction* function);
+G_CONST_RETURN
+gchar *gwy_math_nlfit_get_function_equation(const GwyNLFitPresetFunction* function);
 
-const gchar *gwy_math_nlfit_get_function_param_name(const GwyNLFitPresetFunction* function,
+G_CONST_RETURN
+gchar *gwy_math_nlfit_get_function_param_name(const GwyNLFitPresetFunction* function,
                                               gint param);
 
 gdouble gwy_math_nlfit_get_function_param_default(const GwyNLFitPresetFunction* function,
