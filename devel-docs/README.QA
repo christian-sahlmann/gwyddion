@@ -83,8 +83,8 @@ Packaging, installation
 Object leaking
 - Does not work on Win32 (FIXME: it may work now, begin fixed by -MD, must
   try)
-- Must be compiled with object debugging enabled
-  (gwy_debug_objects_enable(TRUE); in app/gwyddion.c)
+- Run Gwyddion as
+  gwyddion --debug-objects
 - When Gwyddion exits, it prints list of all allocated and freed objects,
   with times of allocation and freeing
 - Objects still alive on exit have ALIVE(<ref_count>) in place of time of
@@ -98,7 +98,7 @@ Object leaking
 
 Valgrinding
 - Does not work on Win32
-- Run gwyddion as
+- Run Gwyddion as
   valgrind --tool=memcheck --num-callers=12 --suppressions=...[5] gwyddion
 - It should print no errors[6]
 - Ideally, all testing should be done with addrcheck at least (instead of
