@@ -56,7 +56,7 @@ gwy_palette_menu_create(GCallback callback,
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_object_set_data(G_OBJECT(item), "palette-name", (gpointer)name);
         if (callback)
-            g_signal_connect(G_OBJECT(item), "activate", callback, cbdata);
+            g_signal_connect(item, "activate", callback, cbdata);
         if (current && strcmp(current, name) == 0)
             index = i;
         i++;
@@ -222,7 +222,7 @@ gwy_option_menu_create(const GwyOptionMenuEntry *entries,
         g_object_set_qdata(G_OBJECT(item), quark,
                           GINT_TO_POINTER(entries[i].value));
         if (callback)
-            g_signal_connect(G_OBJECT(item), "activate", callback, cbdata);
+            g_signal_connect(item, "activate", callback, cbdata);
         if (entries[i].value == current)
             index = i;
     }
