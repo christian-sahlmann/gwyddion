@@ -162,6 +162,11 @@ static const GwyEnum sis_onoff[] = {
     { "On",  SIS_ON },
 };
 
+static const GwyEnum sis_aquisitions[] = {
+    { "Contact",     SIS_AQUISITION_MODE_CONTACT     },
+    { "Non contact", SIS_AQUISITION_MODE_NON_CONTACT },
+};
+
 /* Map between SIS palettes and Gwyddion palettes */
 static const GwyEnum sis_palettes[] = {
     { "Gray",    SIS_PALETTE_GRAY    },
@@ -233,7 +238,7 @@ static const SISProcessingStep processing_steps[] = {
     { "SHRP", 0,                 "Sharpening filter"             },
     { "SMTH", 0,                 "Smoothing filter"              },
     { "STAT", 0,                 "Statistics in z"               },
-    { "STEP", 0,                 "Step correction"               }, 
+    { "STEP", 0,                 "Step correction"               },
     { "SURF", 2*2,               "Surface area"                  },
     { "TIBQ", 0,                 "Biquadratic plane correction"  },
     { "TIL3", 6*2,               "Three point plane correction"  },
@@ -329,8 +334,12 @@ static GwyContainer*  sis_load            (const gchar *filename);
 static gsize          select_which_data   (GwyEnum *choices,
                                            gsize n);
 static GwyContainer*  extract_data        (SISFile *sisfile,
-                                           gsize i,
-                                           gsize j);
+                                           gsize ch,
+                                           gsize im);
+static void           add_metadata        (SISFile *sisfile,
+                                           gsize ch,
+                                           gsize im,
+                                           GwyContainer *data);
 static gboolean       sis_real_load       (const guchar *buffer,
                                            gsize size,
                                            SISFile *sisfile);
@@ -430,8 +439,11 @@ sis_load(const gchar *filename)
     }
     i = select_which_data(choices, n);
     gwy_debug("Selected %u:%u", i/1024, i % 1024);
-    if (i != (gsize)-1)
+    if (i != (gsize)-1) {
         data = extract_data(&sisfile, i/1024, i % 1024);
+        if (data)
+            add_metadata(&sisfile, i/1024, i %1024, data);
+    }
 
     gwy_file_abandon_contents(buffer, size, NULL);
     g_hash_table_destroy(sisfile.params);
@@ -505,28 +517,32 @@ select_which_data(GwyEnum *choices,
 
 static GwyContainer*
 extract_data(SISFile *sisfile,
-             gsize i,
-             gsize j)
+             gsize ch,
+             gsize im)
 {
     GwyContainer *data;
     GwyDataField *dfield;
     SISChannel *channel;
     SISImage *image;
-    gdouble xreal, yreal;
+    gdouble xreal, yreal, zreal;
     gdouble *d;
+    gsize i;
 
-    channel = sisfile->channels + i;
-    image = channel->images + j;
+    channel = sisfile->channels + ch;
+    image = channel->images + im;
     if (image->bpp != 1 && image->bpp != 2 && image->bpp != 4) {
         g_warning("Cannot extract image of bpp = %u", image->bpp);
         return NULL;
     }
 
     xreal = yreal = 100e-9;    /* XXX: whatever */
+    zreal = 1e-9;
     if ((d = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(2))))
-        xreal = *d;
+        xreal = *d * 1e-9;
     if ((d = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(3))))
-        yreal = *d;
+        yreal = *d * 1e-9;
+    if ((d = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(4))))
+        zreal = *d * 1e-9;
     dfield = GWY_DATA_FIELD(gwy_data_field_new(image->width, image->height,
                                                xreal, yreal, FALSE));
 
@@ -556,11 +572,97 @@ extract_data(SISFile *sisfile,
         g_assert_not_reached();
         break;
     }
+    for (i = 0; i < image->width*image->height; i++)
+        d[i] *= zreal;
 
     data = GWY_CONTAINER(gwy_container_new());
     gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
 
     return data;
+}
+
+static void
+add_metadata(SISFile *sisfile,
+             gsize ch,
+             gsize im,
+             GwyContainer *data)
+{
+    static const guint good_metadata[] = {
+        0, 1, 9, 10, 12, 13, 14, 15, 16, 18, 20, 21, 22, 23, 24, 25, 26, 27,
+    };
+    SISChannel *channel;
+    SISImage *image;
+    gsize i, j;
+    guchar *key, *value;
+    gpointer *p;
+
+    channel = sisfile->channels + ch;
+    image = channel->images + im;
+    for (i = 0; i < G_N_ELEMENTS(good_metadata); i++) {
+        for (j = 0; j < G_N_ELEMENTS(sis_parameters); j++) {
+            if (sis_parameters[j].idx == good_metadata[i])
+                break;
+        }
+        g_assert(j < G_N_ELEMENTS(sis_parameters));
+        p = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(j));
+        if (!p)
+            continue;
+
+        key = g_strdup_printf("/meta/%s", sis_parameters[j].meta);
+        switch (sis_parameters[j].type) {
+            case G_TYPE_STRING:
+            value = g_strdup((gchar*)p);
+            break;
+
+            case G_TYPE_INT:
+            if (sis_parameters[j].units)
+                value = g_strdup_printf("%d %s",
+                                        *(gsize*)p, sis_parameters[j].units);
+            else
+                value = g_strdup_printf("%d", *(gsize*)p);
+            break;
+
+            case G_TYPE_DOUBLE:
+            if (sis_parameters[j].units)
+                value = g_strdup_printf("%.5g %s",
+                                        *(gdouble*)p, sis_parameters[j].units);
+            else
+                value = g_strdup_printf("%.5g", *(gdouble*)p);
+            break;
+
+            default:
+            g_assert_not_reached();
+            value = NULL;
+            break;
+        }
+        gwy_container_set_string_by_name(data, key, value);
+        g_free(key);
+    }
+
+    /* Special metadata */
+    if ((p = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(28)))) {
+        value = g_strdup(gwy_enum_to_string(*(gsize*)p,
+                                            sis_palettes,
+                                            G_N_ELEMENTS(sis_palettes)));
+        gwy_container_set_string_by_name(data, "/0/base/palette", value);
+    }
+
+    if ((p = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(6)))) {
+        value = g_strdup(gwy_enum_to_string(*(gsize*)p,
+                                            sis_aquisitions,
+                                            G_N_ELEMENTS(sis_aquisitions)));
+        gwy_container_set_string_by_name(data, "/meta/Aqusition type", value);
+    }
+
+    value = g_strdup(gwy_enum_to_string(channel->data_type,
+                                        sis_data_types,
+                                        G_N_ELEMENTS(sis_data_types)));
+    gwy_container_set_string_by_name(data, "/meta/Data type", value);
+
+    value = g_strdup(gwy_enum_to_string(channel->signal_source,
+                                        sis_signal_sources,
+                                        G_N_ELEMENTS(sis_signal_sources)));
+    gwy_container_set_string_by_name(data, "/meta/Signal source", value);
 }
 
 static inline gsize
