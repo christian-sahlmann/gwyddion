@@ -161,8 +161,8 @@ register_plugins(GList *plugins,
             info->func.name = g_strdup(pname);
             info->func.file_desc = g_strdup(file_desc);
             info->func.detect = plugin_proxy_detect;
-            info->func.load = plugin_proxy_load;
-            info->func.save = plugin_proxy_save;
+            info->func.load = (run && PLUGIN_LOAD) ? plugin_proxy_load : NULL;
+            info->func.save = (run && PLUGIN_SAVE) ? plugin_proxy_save : NULL;
             if (gwy_file_func_register(name, &info->func)) {
                 info->file = g_strdup(file);
                 info->run = run;

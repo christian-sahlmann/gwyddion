@@ -26,7 +26,7 @@ static GwyModuleInfo module_info = {
     "Load and save Gwyddion native serialized objects.",
     "Yeti",
     "0.1",
-    "Yeti",
+    "Yeti & PK",
     "2003",
 };
 
