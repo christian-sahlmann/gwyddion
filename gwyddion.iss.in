@@ -31,6 +31,7 @@ Source: "modules\layer\*.*"; DestDir: "{app}\modules\layer"
 Source: "modules\process\*.*"; DestDir: "{app}\modules\process"
 Source: "modules\tool\*.*"; DestDir: "{app}\modules\tool"
 Source: "plugins\file\*.*"; DestDir: "{app}\plugins\file"
+Source: "locale\cs\LC_MESSAGES\*.*"; DestDir: "{app}\locale\cs\LC_MESSAGES"
 
 [Icons]
 Name: "{group}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"; IconFilename: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
