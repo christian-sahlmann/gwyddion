@@ -33,6 +33,7 @@
 enum {
     PREVIEW_SIZE = 120
 };
+
 /* Data for this function. */
 typedef struct {
     GwyInterpolationType interp;
@@ -220,14 +221,14 @@ unrotate_dialog(UnrotateArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    hbox = gtk_hbox_new(FALSE, 12);
+    hbox = gtk_hbox_new(FALSE, 8);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
     table = gtk_table_new(4, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
 
     label = gtk_label_new(NULL);
@@ -280,7 +281,7 @@ unrotate_dialog(UnrotateArgs *args,
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
                                  GWY_PIXMAP_LAYER(layer));
-    gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 8);
 
     unrotate_dialog_update(&controls, args);
 

@@ -195,13 +195,13 @@ shade_dialog(ShadeArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), TRUE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    hbox = gtk_hbox_new(FALSE, 12);
+    hbox = gtk_hbox_new(FALSE, 8);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
     table = gtk_table_new(3, 3, FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
 
     palette = gwy_container_get_string_by_name(data, "/0/base/palette");
@@ -236,7 +236,7 @@ shade_dialog(ShadeArgs *args,
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
                                  GWY_PIXMAP_LAYER(layer));
-    gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 8);
 
     controls.in_update = FALSE;
     shade_dialog_update(&controls, args);
