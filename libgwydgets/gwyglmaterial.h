@@ -29,31 +29,31 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GLMATERIAL                (gwy_glmaterial_get_type())
-#define GWY_GLMATERIAL(obj)  \
-             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GLMATERIAL, GwyGLMaterial))
-#define GWY_GLMATERIAL_CLASS(klass) \
-             (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GLMATERIAL, GwyGLMaterial))
-#define GWY_IS_GLMATERIAL(obj) \
-             (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GLMATERIAL))
-#define GWY_IS_GLMATERIAL_CLASS(klass) \
-             (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GLMATERIAL))
-#define GWY_GLMATERIAL_GET_CLASS(obj)\
-             (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GLMATERIAL, GwyGLMaterialClass))
+#define GWY_TYPE_GL_MATERIAL                (gwy_gl_material_get_type())
+#define GWY_GL_MATERIAL(obj)  \
+             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GL_MATERIAL, GwyGLMaterial))
+#define GWY_GL_MATERIAL_CLASS(klass) \
+             (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GL_MATERIAL, GwyGLMaterial))
+#define GWY_IS_GL_MATERIAL(obj) \
+             (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GL_MATERIAL))
+#define GWY_IS_GL_MATERIAL_CLASS(klass) \
+             (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GL_MATERIAL))
+#define GWY_GL_MATERIAL_GET_CLASS(obj)\
+             (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GL_MATERIAL, GwyGLMaterialClass))
 
-#define GWY_GLMATERIAL_NONE                 "None"
-#define GWY_GLMATERIAL_EMERALD              "Emerald"
-#define GWY_GLMATERIAL_JADE                 "Jade"
-#define GWY_GLMATERIAL_OBSIDIAN             "Obsidian"
-#define GWY_GLMATERIAL_PEARL                "Pearl"
-#define GWY_GLMATERIAL_RUBY                 "Ruby"
-#define GWY_GLMATERIAL_TURQUOISE            "Turquoise"
-#define GWY_GLMATERIAL_BRASS                "Brass"
-#define GWY_GLMATERIAL_BRONZE               "Bronze"
-#define GWY_GLMATERIAL_CHROME               "Chrome"
-#define GWY_GLMATERIAL_COPPER               "Copper"
-#define GWY_GLMATERIAL_GOLD                 "Gold"
-#define GWY_GLMATERIAL_SILVER               "Silver"
+#define GWY_GL_MATERIAL_NONE                 "None"
+#define GWY_GL_MATERIAL_EMERALD              "Emerald"
+#define GWY_GL_MATERIAL_JADE                 "Jade"
+#define GWY_GL_MATERIAL_OBSIDIAN             "Obsidian"
+#define GWY_GL_MATERIAL_PEARL                "Pearl"
+#define GWY_GL_MATERIAL_RUBY                 "Ruby"
+#define GWY_GL_MATERIAL_TURQUOISE            "Turquoise"
+#define GWY_GL_MATERIAL_BRASS                "Brass"
+#define GWY_GL_MATERIAL_BRONZE               "Bronze"
+#define GWY_GL_MATERIAL_CHROME               "Chrome"
+#define GWY_GL_MATERIAL_COPPER               "Copper"
+#define GWY_GL_MATERIAL_GOLD                 "Gold"
+#define GWY_GL_MATERIAL_SILVER               "Silver"
 
 
 typedef struct _GwyGLMaterial      GwyGLMaterial;
@@ -63,9 +63,9 @@ typedef struct _GwyGLMaterialClass GwyGLMaterialClass;
 struct _GwyGLMaterial
 {
     GObject parent_instance;
-    
+
     gchar *name;
-    
+
     GLfloat ambient[4];
     GLfloat diffuse[4];
     GLfloat specular[4];
@@ -80,20 +80,20 @@ struct _GwyGLMaterialClass {
 };
 
 typedef void (*GwyGLMaterialFunc)(const gchar *name,
-                                     GwyGLMaterial *glmaterial,
-                                     gpointer user_data);
+                                  GwyGLMaterial *glmaterial,
+                                  gpointer user_data);
 
-GType             gwy_glmaterial_get_type         (void) G_GNUC_CONST;
-GObject*          gwy_glmaterial_new              (const gchar *name);
+GType             gwy_gl_material_get_type         (void) G_GNUC_CONST;
+GObject*          gwy_gl_material_new              (const gchar *name);
 G_CONST_RETURN
-gchar*            gwy_glmaterial_get_name         (GwyGLMaterial *glmaterial);
-gboolean          gwy_glmaterial_set_name         (GwyGLMaterial *glmaterial,
-                                                       const gchar *name);
-GwyGLMaterial*    gwy_glmaterial_get_by_name      (const gchar *name);
-gboolean          gwy_glmaterial_exists           (const gchar *name);
-void              gwy_glmaterial_foreach          (GwyGLMaterialFunc callback,
-                                                       gpointer user_data);
-void              gwy_glmaterial_setup_presets    (void);
+gchar*            gwy_gl_material_get_name         (GwyGLMaterial *gl_material);
+gboolean          gwy_gl_material_set_name         (GwyGLMaterial *gl_material,
+                                                    const gchar *name);
+GwyGLMaterial*    gwy_gl_material_get_by_name      (const gchar *name);
+gboolean          gwy_gl_material_exists           (const gchar *name);
+void              gwy_gl_material_foreach          (GwyGLMaterialFunc callback,
+                                                    gpointer user_data);
+void              gwy_gl_material_setup_presets    (void);
 
 G_END_DECLS
 

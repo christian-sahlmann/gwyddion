@@ -34,63 +34,63 @@ typedef struct {
     GLfloat shininess;
 } GwyGLMaterialPreset;
 
-static void     gwy_glmaterial_class_init        (GwyGLMaterialClass *klass);
-static void     gwy_glmaterial_init              (GwyGLMaterial *glmaterial);
-static void     gwy_glmaterial_finalize          (GObject *object);
-static gchar*   gwy_glmaterial_invent_name       (GHashTable *materials,
+static void     gwy_gl_material_class_init        (GwyGLMaterialClass *klass);
+static void     gwy_gl_material_init              (GwyGLMaterial *glmaterial);
+static void     gwy_gl_material_finalize          (GObject *object);
+static gchar*   gwy_gl_material_invent_name       (GHashTable *materials,
                                                       const gchar *prefix);
-static void     gwy_glmaterial_create_preset     (GwyGLMaterialPreset *entries,
+static void     gwy_gl_material_create_preset     (GwyGLMaterialPreset *entries,
                                                       const gchar *name);
 
 static GObjectClass *parent_class = NULL;
 
 GType
-gwy_glmaterial_get_type(void)
+gwy_gl_material_get_type(void)
 {
-    static GType gwy_glmaterial_type = 0;
+    static GType gwy_gl_material_type = 0;
 
-    if (!gwy_glmaterial_type) {
-        static const GTypeInfo gwy_glmaterial_info = {
+    if (!gwy_gl_material_type) {
+        static const GTypeInfo gwy_gl_material_info = {
             sizeof(GwyGLMaterialClass),
             NULL,
             NULL,
-            (GClassInitFunc)gwy_glmaterial_class_init,
+            (GClassInitFunc)gwy_gl_material_class_init,
             NULL,
             NULL,
             sizeof(GwyGLMaterial),
             0,
-            (GInstanceInitFunc)gwy_glmaterial_init,
+            (GInstanceInitFunc)gwy_gl_material_init,
             NULL,
         };
 
 
         gwy_debug("");
-        gwy_glmaterial_type = g_type_register_static(G_TYPE_OBJECT,
+        gwy_gl_material_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_GLMATERIAL_TYPE_NAME,
-                                                   &gwy_glmaterial_info,
+                                                   &gwy_gl_material_info,
                                                    0);
     }
 
-    return gwy_glmaterial_type;
+    return gwy_gl_material_type;
 }
 
 
 static void
-gwy_glmaterial_class_init(GwyGLMaterialClass *klass)
+gwy_gl_material_class_init(GwyGLMaterialClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
     gwy_debug("");
 
     parent_class = g_type_class_peek_parent(klass);
-    gobject_class->finalize = gwy_glmaterial_finalize;
+    gobject_class->finalize = gwy_gl_material_finalize;
     /* static classes are never finalized, so this is never freed */
     klass->materials = g_hash_table_new(g_str_hash, g_str_equal);
-    /*XXX: too early gwy_glmaterial_setup_presets(klass->materials);*/
+    /*XXX: too early gwy_gl_material_setup_presets(klass->materials);*/
 }
 
 static void
-gwy_glmaterial_init(GwyGLMaterial *glmaterial)
+gwy_gl_material_init(GwyGLMaterial *glmaterial)
 {
     gwy_debug("");
     glmaterial->ambient[0]  = 0.0f;
@@ -111,7 +111,7 @@ gwy_glmaterial_init(GwyGLMaterial *glmaterial)
 }
 
 static void
-gwy_glmaterial_finalize(GObject *object)
+gwy_gl_material_finalize(GObject *object)
 {
     GwyGLMaterial *glmaterial = (GwyGLMaterial*)object;
     GwyGLMaterialClass *klass;
@@ -128,7 +128,7 @@ gwy_glmaterial_finalize(GObject *object)
 }
 
 /**
- * gwy_glmaterial_new:
+ * gwy_gl_material_new:
  * @name: Open GL Material name.
  *
  * Returns a Open GL material called @name.
@@ -139,15 +139,15 @@ gwy_glmaterial_finalize(GObject *object)
  *
  * @name can be %NULL, a new unique name is invented then.
  *
- * A newly created Open GL material is non-reflecting non-transparent. 
- * The graphical object is black independently of the light settings. 
+ * A newly created Open GL material is non-reflecting non-transparent.
+ * The graphical object is black independently of the light settings.
  *
  * Returns: The new Open GL material definition as a #GObject.
- * 
- * Since 1.5  
+ *
+ * Since: 1.5
  **/
 GObject*
-gwy_glmaterial_new(const gchar *name)
+gwy_gl_material_new(const gchar *name)
 {
     GwyGLMaterial *glmaterial;
     GwyGLMaterialClass *klass;
@@ -167,7 +167,7 @@ gwy_glmaterial_new(const gchar *name)
     /* now it has to be defined */
     klass = g_type_class_peek(GWY_TYPE_GLMATERIAL);
     g_assert(klass);
-    glmaterial->name = gwy_glmaterial_invent_name(klass->materials, name);
+    glmaterial->name = gwy_gl_material_invent_name(klass->materials, name);
     g_hash_table_insert(klass->materials, glmaterial->name, glmaterial);
 
     return (GObject*)(glmaterial);
@@ -175,7 +175,7 @@ gwy_glmaterial_new(const gchar *name)
 
 
 /**
- * gwy_glmaterial_new_as_copy:
+ * gwy_gl_material_new_as_copy:
  * @src_glmaterial: An existing #GwyGLMaterial.
  *
  * Creates a new Open GL material  as a copy of an existing one.
@@ -183,11 +183,11 @@ gwy_glmaterial_new(const gchar *name)
  * A new name is invented based on the existing one.
  *
  * Returns: The new Open GL material definition as a #GObject.
- * 
- * Since 1.5  
+ *
+ * Since: 1.5
  **/
 GObject*
-gwy_glmaterial_new_as_copy(GwyGLMaterial *src_glmaterial)
+gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
 {
     GwyGLMaterial *glmaterial;
     guint i;
@@ -195,7 +195,7 @@ gwy_glmaterial_new_as_copy(GwyGLMaterial *src_glmaterial)
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GLMATERIAL(src_glmaterial), NULL);
 
-    glmaterial = (GwyGLMaterial*)gwy_glmaterial_new(src_glmaterial->name);
+    glmaterial = (GwyGLMaterial*)gwy_gl_material_new(src_glmaterial->name);
 
     for (i = 0; i < 4; i++) {
         glmaterial->ambient[i]  = src_glmaterial->ambient[i];
@@ -209,27 +209,27 @@ gwy_glmaterial_new_as_copy(GwyGLMaterial *src_glmaterial)
 
 
 /**
- * gwy_glmaterial_get_name:
+ * gwy_gl_material_get_name:
  * @glmaterial: A #GwyGLMaterial.
  *
  * Returns the name of Open GL material @glmaterial.
  *
  * Returns: The name. It should be considered constant and not modifier or
  *          freed.
- *          
- * Since 1.5  
+ *
+ * Since: 1.5
  **/
 G_CONST_RETURN gchar*
-gwy_glmaterial_get_name(GwyGLMaterial *glmaterial)
+gwy_gl_material_get_name(GwyGLMaterial *glmaterial)
 {
     g_return_val_if_fail(GWY_IS_GLMATERIAL(glmaterial), NULL);
     return glmaterial->name;
 }
 
 /**
- * gwy_glmaterial_set_name:
+ * gwy_gl_material_set_name:
  * @glmaterial: A #GwyGLMaterial.
- * @name: A new name of the Open GL material 
+ * @name: A new name of the Open GL material
  *
  * Sets the name of a Open GL material.
  *
@@ -237,11 +237,11 @@ gwy_glmaterial_get_name(GwyGLMaterial *glmaterial)
  * exists.
  *
  * Returns: Whether the rename was successfull.
- * 
- * Since 1.5  
+ *
+ * Since: 1.5
  **/
 gboolean
-gwy_glmaterial_set_name(GwyGLMaterial *glmaterial,
+gwy_gl_material_set_name(GwyGLMaterial *glmaterial,
                          const gchar *name)
 {
     GwyGLMaterialClass *klass;
@@ -267,19 +267,19 @@ gwy_glmaterial_set_name(GwyGLMaterial *glmaterial,
 
 
 /**
- * gwy_glmaterial_get_by_name:
- * @name: A new name of the Open GL material 
+ * gwy_gl_material_get_by_name:
+ * @name: A new name of the Open GL material
  *
- * Returns an Open GL material given by @name. 
- * The function does not incement reference count of material. 
+ * Returns an Open GL material given by @name.
+ * The function does not incement reference count of material.
  *
- * Returns: Open GL material ginven by @name or %NULL if material 
+ * Returns: Open GL material ginven by @name or %NULL if material
  * does not exists.
- * 
- * Since 1.5  
+ *
+ * Since: 1.5
  **/
 GwyGLMaterial*
-gwy_glmaterial_get_by_name(const gchar *name)
+gwy_gl_material_get_by_name(const gchar *name)
 {
     GwyGLMaterialClass *klass;
 
@@ -291,9 +291,9 @@ gwy_glmaterial_get_by_name(const gchar *name)
 
 /*
  * Copied from <libdraw/gwypalettedef.c>
- */ 
+ */
 static gchar*
-gwy_glmaterial_invent_name(GHashTable *materials,
+gwy_gl_material_invent_name(GHashTable *materials,
                             const gchar *prefix)
 {
     gchar *str;
@@ -316,13 +316,13 @@ gwy_glmaterial_invent_name(GHashTable *materials,
 }
 
 static void
-gwy_glmaterial_create_preset(GwyGLMaterialPreset *entry,
+gwy_gl_material_create_preset(GwyGLMaterialPreset *entry,
                               const gchar *name)
 {
     GwyGLMaterial *glmaterial;
     gint i;
 
-    glmaterial = (GwyGLMaterial*)gwy_glmaterial_new(name);
+    glmaterial = (GwyGLMaterial*)gwy_gl_material_new(name);
     for (i = 0; i < 4; i++) {
         glmaterial->ambient[i]  = entry->ambient[i];
         glmaterial->diffuse[i]  = entry->diffuse[i];
@@ -332,15 +332,15 @@ gwy_glmaterial_create_preset(GwyGLMaterialPreset *entry,
 }
 
 /**
- * gwy_glmaterial_setup_presets:
+ * gwy_gl_material_setup_presets:
  *
  * Set up built-in Open GL material definitions.  To be used in Gwyddion initialization
  * and eventually replaced by loading Open GL material definitions from external files.
- * 
- * Sice 1.5  
+ *
+ * Sice 1.5
  **/
 void
-gwy_glmaterial_setup_presets(void)
+gwy_gl_material_setup_presets(void)
 {
     static GwyGLMaterialPreset mat_emerald = {
         {0.0215, 0.1745, 0.0215, 1.0},
@@ -421,34 +421,34 @@ gwy_glmaterial_setup_presets(void)
         0.0
     };
 
-    gwy_glmaterial_create_preset(&mat_none,       GWY_GLMATERIAL_NONE     );
-    gwy_glmaterial_create_preset(&mat_emerald,    GWY_GLMATERIAL_EMERALD  );
-    gwy_glmaterial_create_preset(&mat_jade,       GWY_GLMATERIAL_JADE     );
-    gwy_glmaterial_create_preset(&mat_obsidian,   GWY_GLMATERIAL_OBSIDIAN );
-    gwy_glmaterial_create_preset(&mat_pearl,      GWY_GLMATERIAL_PEARL    );
-    gwy_glmaterial_create_preset(&mat_ruby,       GWY_GLMATERIAL_RUBY     );
-    gwy_glmaterial_create_preset(&mat_turquoise,  GWY_GLMATERIAL_TURQUOISE);
-    gwy_glmaterial_create_preset(&mat_brass,      GWY_GLMATERIAL_BRASS    );
-    gwy_glmaterial_create_preset(&mat_bronze,     GWY_GLMATERIAL_BRONZE   );
-    gwy_glmaterial_create_preset(&mat_chrome,     GWY_GLMATERIAL_CHROME   );
-    gwy_glmaterial_create_preset(&mat_copper,     GWY_GLMATERIAL_COPPER   );
-    gwy_glmaterial_create_preset(&mat_gold,       GWY_GLMATERIAL_GOLD     );
-    gwy_glmaterial_create_preset(&mat_silver,     GWY_GLMATERIAL_SILVER   );
+    gwy_gl_material_create_preset(&mat_none,       GWY_GLMATERIAL_NONE     );
+    gwy_gl_material_create_preset(&mat_emerald,    GWY_GLMATERIAL_EMERALD  );
+    gwy_gl_material_create_preset(&mat_jade,       GWY_GLMATERIAL_JADE     );
+    gwy_gl_material_create_preset(&mat_obsidian,   GWY_GLMATERIAL_OBSIDIAN );
+    gwy_gl_material_create_preset(&mat_pearl,      GWY_GLMATERIAL_PEARL    );
+    gwy_gl_material_create_preset(&mat_ruby,       GWY_GLMATERIAL_RUBY     );
+    gwy_gl_material_create_preset(&mat_turquoise,  GWY_GLMATERIAL_TURQUOISE);
+    gwy_gl_material_create_preset(&mat_brass,      GWY_GLMATERIAL_BRASS    );
+    gwy_gl_material_create_preset(&mat_bronze,     GWY_GLMATERIAL_BRONZE   );
+    gwy_gl_material_create_preset(&mat_chrome,     GWY_GLMATERIAL_CHROME   );
+    gwy_gl_material_create_preset(&mat_copper,     GWY_GLMATERIAL_COPPER   );
+    gwy_gl_material_create_preset(&mat_gold,       GWY_GLMATERIAL_GOLD     );
+    gwy_gl_material_create_preset(&mat_silver,     GWY_GLMATERIAL_SILVER   );
 }
 
 
 /**
- * gwy_glmaterial_exists:
+ * gwy_gl_material_exists:
  * @name: A Open GL material name.
  *
  * Tests whether a Open GL material definition of given name exists.
  *
  * Returns: %TRUE if such a Open GL material definition exists, %FALSE otherwise.
- * 
- * Since 1.5  
+ *
+ * Since: 1.5
  **/
 gboolean
-gwy_glmaterial_exists(const gchar *name)
+gwy_gl_material_exists(const gchar *name)
 {
     GwyGLMaterialClass *klass;
 
@@ -464,22 +464,22 @@ gwy_glmaterial_exists(const gchar *name)
  * @glmaterial: Open GL Material definition.
  * @user_data: A user-specified pointer.
  *
- * Callback function type for gwy_glmaterial_foreach().
- * 
- * Since 1.5  
+ * Callback function type for gwy_gl_material_foreach().
+ *
+ * Since: 1.5
  **/
 
 /**
- * gwy_glmaterial_foreach:
+ * gwy_gl_material_foreach:
  * @callback: A callback.
  * @user_data: User data passed to the callback.
  *
  * Runs @callback for each existing Open GL material definition.
- * 
- * Since 1.5  
+ *
+ * Since: 1.5
  **/
 void
-gwy_glmaterial_foreach(GwyGLMaterialFunc callback,
+gwy_gl_material_foreach(GwyGLMaterialFunc callback,
                         gpointer user_data)
 {
     GwyGLMaterialClass *klass;
@@ -494,97 +494,99 @@ gwy_glmaterial_foreach(GwyGLMaterialFunc callback,
  * GwyGLMaterial:
  *
  * The #GwyGLMaterial struct contains informations about the material properties
- * of OpenGL objects. For details see OpenGL documentation, specifically the light 
+ * of OpenGL objects. For details see OpenGL documentation, specifically the light
  * settings and glMaterialfv and glMaterialf functions.
- * 
+ *
  * @name: name of OpenGL material
- * @ambient: vector of the reflectivity of color components (RGBA) of ambient light. 
- * All values should be in interval 0-1. 
+ * @ambient: vector of the reflectivity of color components (RGBA) of ambient light.
+ * All values should be in interval 0-1.
  * @diffuse: vector of the reflectivity of color components (RGBA) of diffuse light
  * @specular: vector of the reflectivity of color components (RGBA) of specular light
- * @shininess: intrisic shininess of the material. Values should be in inteval 0-1. This 
- * value is multiplied by factor 128 before passing to the glMaterialf function. 
- * 
- * Since 1.5  
+ * @shininess: intrisic shininess of the material. Values should be in inteval 0-1. This
+ * value is multiplied by factor 128 before passing to the glMaterialf function.
+ *
+ * Since: 1.5
  **/
 
 
 /**
  * GWY_GLMATERIAL_NONE:
- * 
+ *
  * Black material independent on light settings.
- * 
+ *
  * This is the default material.
  **/
-   
+
 /**
  * GWY_GLMATERIAL_EMERALD:
- * 
+ *
  * Emerald like mateial. Mainly light green.
- **/ 
+ **/
 
 /**
  * GWY_GLMATERIAL_JADE:
- * 
+ *
  * Jade
- **/ 
+ **/
 
 /**
  * GWY_GLMATERIAL_OBSIDIAN:
- * 
+ *
  * Obsidian, very dark material.
- **/ 
+ **/
 
 /**
  * GWY_GLMATERIAL_PEARL:
- * 
+ *
  * Pearl
  **/
- 
-/** 
+
+/**
  * GWY_GLMATERIAL_RUBY:
- * 
+ *
  * Ruby
  **/
 
 /**
  * GWY_GLMATERIAL_TURQUOISE:
- * 
+ *
  * Turquoise
  **/
-  
+
 /**
  * GWY_GLMATERIAL_BRASS:
- * 
+ *
  * Brass
  **/
-   
+
 /**
  * GWY_GLMATERIAL_BRONZE:
- * 
+ *
  * Bronze
  **/
-  
+
 /**
  * GWY_GLMATERIAL_CHROME:
- * 
+ *
  * Chrome
- **/ 
+ **/
 
 /**
  * GWY_GLMATERIAL_COPPER:
- * 
+ *
  * Copper
- **/ 
+ **/
 
 /**
  * GWY_GLMATERIAL_GOLD:
- * 
+ *
  * Gold
  **/
-  
+
 /**
  * GWY_GLMATERIAL_SILVER:
- *  
+ *
  * Silver
  **/
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
