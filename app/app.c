@@ -78,15 +78,18 @@ static void       gwy_app_reset_color_range        (void);
 gboolean
 gwy_app_quit(void)
 {
-    GwyDataWindow *data_window;
+    GtkWidget *widget;
 
     gwy_debug("");
     if (!gwy_app_confirm_quit())
         return TRUE;
 
-    while ((data_window = gwy_app_data_window_get_current())) {
-        gtk_widget_destroy(GTK_WIDGET(data_window));
-    }
+    while ((widget = (GtkWidget*)(gwy_app_graph_window_get_current())))
+        gtk_widget_destroy(widget);
+    while ((widget = (GtkWidget*)(gwy_app_3d_window_get_current())))
+        gtk_widget_destroy(widget);
+    while ((widget = (GtkWidget*)(gwy_app_data_window_get_current())))
+        gtk_widget_destroy(widget);
 
     gtk_main_quit();
     return TRUE;
@@ -994,6 +997,7 @@ gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow,
                                          0, 0, NULL,
                                          gwy_3d_view_update,
                                          gwy3dview);
+    gwy_app_3d_window_remove(gwy3dwindow);
 }
 
 
