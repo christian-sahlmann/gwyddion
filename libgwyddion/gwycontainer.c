@@ -1633,7 +1633,7 @@ gwy_container_set_string(GwyContainer *container,
  * gwy_container_set_object_by_name:
  * @c: A #GwyContainer.
  * @n: A nul-terminated name (id).
- * @v: An object as #GObject.
+ * @v: An object to store into container.
  *
  * Stores an object into container @c, identified by name @n.
  *
@@ -1644,7 +1644,7 @@ gwy_container_set_string(GwyContainer *container,
  * gwy_container_set_object:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
- * @value: An object as #GObject.
+ * @value: An object to store into container.
  *
  * Stores an object into @container, identified by @key.
  *
@@ -1658,10 +1658,11 @@ gwy_container_set_string(GwyContainer *container,
 void
 gwy_container_set_object(GwyContainer *container,
                          GQuark key,
-                         GObject *value)
+                         gpointer value)
 {
     GValue gvalue;
 
+    g_return_if_fail(G_IS_OBJECT(value));
     memset(&gvalue, 0, sizeof(GValue));
     g_value_init(&gvalue, G_TYPE_OBJECT);
     g_value_set_object(&gvalue, value);  /* this increases refcount too */

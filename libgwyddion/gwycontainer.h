@@ -151,7 +151,7 @@ gboolean      gwy_container_gis_string            (GwyContainer *container,
                                                    const guchar **value);
 void          gwy_container_set_object            (GwyContainer *container,
                                                    GQuark key,
-                                                   GObject *value);
+                                                   gpointer value);
 gpointer      gwy_container_get_object            (GwyContainer *container,
                                                    GQuark key);
 gboolean      gwy_container_gis_object            (GwyContainer *container,
