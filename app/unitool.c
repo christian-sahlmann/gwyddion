@@ -29,7 +29,8 @@
 
 static void       gwy_unitool_name_changed_cb        (GwyUnitoolState *state);
 static void       gwy_unitool_disconnect_handlers    (GwyUnitoolState *state);
-static void       gwy_unitool_dialog_abandon         (GwyUnitoolState *state);
+static void       gwy_unitool_dialog_abandon         (GwyUnitoolState *state,
+                                                      gboolean no_window);
 static void       gwy_unitool_compute_formats        (GwyUnitoolState *state);
 static void       gwy_unitool_selection_updated_cb   (GwyUnitoolState *state);
 static void       gwy_unitool_selection_updated_real (GwyUnitoolState *state,
@@ -73,7 +74,8 @@ gwy_unitool_use(GwyUnitoolState *state,
     g_return_val_if_fail(state, FALSE);
 
     if (!data_window) {
-        gwy_unitool_dialog_abandon(state);
+        gwy_unitool_dialog_abandon(state,
+                                   reason == GWY_TOOL_SWITCH_WINDOW);
         return TRUE;
     }
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), FALSE);
@@ -215,11 +217,14 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
 }
 
 static void
-gwy_unitool_dialog_abandon(GwyUnitoolState *state)
+gwy_unitool_dialog_abandon(GwyUnitoolState *state,
+                           gboolean no_window)
 {
     gwy_debug(" ");
     gwy_unitool_disconnect_handlers(state);
     if (state->dialog) {
+        if (no_window)
+            state->data_window = NULL;
         if (state->func_slots->dialog_abandon)
             state->func_slots->dialog_abandon(state);
         gtk_widget_destroy(state->dialog);
