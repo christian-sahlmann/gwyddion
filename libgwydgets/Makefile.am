@@ -11,6 +11,7 @@ libgwydgetsinclude_HEADERS = \
 	gwy3dview.h \
 	gwy3dwindow.h \
 	gwyaxis.h \
+	gwyaxiser.h \
 	gwyaxisdialog.h \
 	gwycoloraxis.h \
 	gwycolorbutton.h \
@@ -26,6 +27,13 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphcurvemodel.h \
 	gwygraphmodel.h \
 	gwygraphlabel.h \
+	gwygrapher.h \
+	gwygrapherbasics.h \
+	gwygrapherarea.h \
+	gwygraphercorner.h \
+	gwygraphercurvemodel.h \
+	gwygraphermodel.h \
+	gwygrapherlabel.h \
 	gwyhruler.h \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
@@ -61,6 +69,7 @@ libgwydgets_la_SOURCES = \
 	gwy3dview.c \
 	gwy3dwindow.c \
 	gwyaxis.c \
+	gwyaxiser.c \
 	gwyaxisdialog.c \
 	gwycoloraxis.c \
 	gwycolorbutton.c \
@@ -77,6 +86,14 @@ libgwydgets_la_SOURCES = \
 	gwygraphexport.c \
 	gwygraphcorner.c \
 	gwygraphlabel.c \
+	gwygrapher.c \
+	gwygrapherarea.c \
+	gwygrapherbasics.c \
+	gwygraphercurvemodel.c \
+	gwygraphermodel.c \
+	gwygrapherexport.c \
+	gwygraphercorner.c \
+	gwygrapherlabel.c \
 	gwyhruler.c \
 	gwylayer-basic.c \
 	gwylayer-mask.c \
@@ -96,7 +113,7 @@ libgwydgets_la_SOURCES = \
 	gwyvalunit.c
 
 # Note these are test programs not to be included in the distro
-#noinst_PROGRAMS = main test create-data
+noinst_PROGRAMS = test 
 #
 #main_SOURCES = main.c
 #main_LDADD = libgwydgets.la \
@@ -104,11 +121,11 @@ libgwydgets_la_SOURCES = \
 #	$(libgwyprocess) \
 #	$(libgwyddion)
 #
-#test_SOURCES = test.c
-#test_LDADD = libgwydgets.la \
-#	$(libgwydraw) \
-#	$(libgwyprocess) \
-#	$(libgwyddion)
+ test_SOURCES = test.c
+ test_LDADD = libgwydgets.la \
+ 	$(libgwydraw) \
+ 	$(libgwyprocess) \
+ 	$(libgwyddion)
 #
 #wtest_SOURCES = wtest.c
 #wtest_LDADD = libgwydgets.la \

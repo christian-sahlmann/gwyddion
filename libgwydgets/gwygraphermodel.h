@@ -18,36 +18,36 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GRAPH_MODEL_H__
-#define __GWY_GRAPH_MODEL_H__
+#ifndef __GWY_GRAPHER_MODEL_H__
+#define __GWY_GRAPHER_MODEL_H__
 
-#include <libgwydgets/gwygraph.h>
+#include "gwygrapher.h"
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPH_MODEL                  (gwy_graph_model_get_type())
-#define GWY_GRAPH_MODEL(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_MODEL, GwyGraphModel))
-#define GWY_GRAPH_MODEL_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_MODEL, GwyGraphModelClass))
-#define GWY_IS_GRAPH_MODEL(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_MODEL))
-#define GWY_IS_GRAPH_MODEL_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_MODEL))
-#define GWY_GRAPH_MODEL_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_MODEL, GwyGraphModelClass))
+#define GWY_TYPE_GRAPHER_MODEL                  (gwy_grapher_model_get_type())
+#define GWY_GRAPHER_MODEL(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPHER_MODEL, GwyGrapherModel))
+#define GWY_GRAPHER_MODEL_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPHER_MODEL, GwyGrapherModelClass))
+#define GWY_IS_GRAPHER_MODEL(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPHER_MODEL))
+#define GWY_IS_GRAPHER_MODEL_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPHER_MODEL))
+#define GWY_GRAPHER_MODEL_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPHER_MODEL, GwyGrapherModelClass))
 
 
-typedef struct _GwyGraphModel GwyGraphModel;
-typedef struct _GwyGraphModelClass GwyGraphModelClass;
+typedef struct _GwyGrapherModel GwyGrapherModel;
+typedef struct _GwyGrapherModelClass GwyGrapherModelClass;
 
 /* XXX: really NEVER access these fields directly. They don't have to reflect
- * the graph values! */
-struct _GwyGraphModel {
+ * the grapher values! */
+struct _GwyGrapherModel {
     GObject parent_instance;
 
-    GwyGraph *graph;
-    gulong graph_destroy_hid;
+    GwyGrapher *grapher;
+    gulong grapher_destroy_hid;
 
     gint ncurves;
     GObject **curves;
 
-    GString *title;    /* XXX: GwyGraph has no such thing */
+    GString *title;    /* XXX: GwyGrapher has no such thing */
 
     gdouble x_reqmax;
     gdouble x_reqmin;
@@ -56,7 +56,7 @@ struct _GwyGraphModel {
 
     gboolean has_x_unit;
     gboolean has_y_unit;
-    GObject *x_unit;    /* XXX: Silly graph doesn't use GwySIUnit itself */
+    GObject *x_unit;    /* XXX: Silly grapher doesn't use GwySIUnit itself */
     GObject *y_unit;
 
     GString *top_label;
@@ -64,26 +64,27 @@ struct _GwyGraphModel {
     GString *left_label;
     GString *right_label;
 
-    /* like GwyGraphLabelParams */
-    GwyGraphLabelPosition label_position;
+    /* like GwyGrapherLabelParams */
+    GwyGrapherLabelPosition label_position;
     gboolean label_has_frame;
     gint label_frame_thickness;
+    gboolean label_visible;
 
     /* reserved stuff */
     gint int1;
     gint int2;
-    GwyGraphPointType enum1;
-    GwyGraphPointType enum2;
+    GwyGrapherPointType enum1;
+    GwyGrapherPointType enum2;
     gpointer reserved1;
     gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
 };
 
-struct _GwyGraphModelClass {
+struct _GwyGrapherModelClass {
     GObjectClass parent_class;
 
-    void (*value_changed)(GwyGraphModel *gmodel);  /* XXX: only formal */
+    void (*value_changed)(GwyGrapherModel *gmodel);  /* XXX: only formal */
 
     gpointer reserved1;
     gpointer reserved2;
@@ -93,14 +94,13 @@ struct _GwyGraphModelClass {
 };
 
 
-GType      gwy_graph_model_get_type       (void) G_GNUC_CONST;
-GObject*   gwy_graph_model_new            (GwyGraph *graph);
-GtkWidget* gwy_graph_new_from_model       (GwyGraphModel *gmodel);
-gint       gwy_graph_model_get_n_curves   (GwyGraphModel *gmodel);
-
+GType      gwy_grapher_model_get_type       (void) G_GNUC_CONST;
+GObject*   gwy_grapher_model_new            (GwyGrapher *grapher);
+GtkWidget* gwy_grapher_new_from_model       (GwyGrapherModel *gmodel);
+gint       gwy_grapher_model_get_n_curves   (GwyGrapherModel *gmodel);
 
 G_END_DECLS
 
-#endif /* __GWY_GRAPH_MODEL_H__ */
+#endif /* __GWY_GRAPHER_MODEL_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -24,14 +24,9 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
-#include <libgwydgets/gwydgets.h>
-#include <libgwydgets/gwyaxis.h>
-#include <libgwydgets/gwygraphlabel.h>
-#include <libgwydgets/gwygrapharea.h>
-#include <libgwydgets/gwygraph.h>
-#include <libgwydgets/gwycoloraxis.h>
-#include <libgwydgets/gwystock.h>
-
+#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraphermodel.h>
+#include <libgwydgets/gwygraphercurvemodel.h>
 
 
 static void destroy( GtkWidget *widget, gpointer data )
@@ -44,12 +39,10 @@ main(int argc, char *argv[])
 {
     GtkWidget *window;
     GtkWidget *axis, *label, *area, *graph, *foo;
-    GwyPalette *pal;
-    GError *err = NULL;
+    GObject *gmodel;
+    GwyGrapherCurveModel *model;
     gint i;
     GString *str1, *str2, *str3, *str4, *str5;
-    GwyGraphAreaCurveParams par;
-    GwyGraphAutoProperties prop;
     GwyDataLine *dln;
 
     double xs[100];
@@ -85,19 +78,6 @@ main(int argc, char *argv[])
     g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), NULL);
 
     gtk_container_set_border_width (GTK_CONTAINER (window), 0);
-
-
-    gwy_palette_def_setup_presets();
-    gwy_stock_register_stock_items();
-    /*
-    pal = (GwyPalette*) gwy_palette_new(NULL);
-    gwy_palette_set_by_name(pal, GWY_PALETTE_OLIVE);
-    
-    axis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL, 12e-9, 125e-3, pal);
-    
-    gtk_container_add (GTK_CONTAINER (window), axis);
-    gtk_widget_show (axis);
-    */
  
     /*
     label = gwy_graph_label_new();
@@ -123,30 +103,15 @@ main(int argc, char *argv[])
     str4 = g_string_new("cosi");
     str5 = g_string_new("jiny sinus");
 
-    par.is_line = 1;
-    par.is_point = 1;
-    par.line_style = GDK_LINE_SOLID;
-    par.line_size = 1;
-    par.point_type = 0;
-    par.point_size = 8;
-    par.color.pixel = 0x00000000;
+    model = gwy_grapher_curve_model_new();
+    model->xdata = xp;
+    model->ydata = yp;
+    model->n = 100;
     
-    graph = gwy_graph_new();
-    gwy_graph_get_autoproperties(graph, &prop);
-    prop.is_point = 0; 
-    gwy_graph_set_autoproperties(graph, &prop);
-
-    gwy_graph_add_datavalues(graph, xs, ys, 100, str1, NULL);
-    gwy_graph_add_datavalues(graph, xp, yp, 100, str3, NULL);
-    prop.is_point = 1;
-    gwy_graph_set_autoproperties(graph, &prop);
-    gwy_graph_add_datavalues(graph, xr, yr, 10, str2, NULL);
-    gwy_graph_add_datavalues(graph, xu, yu, 10, str4, &par);
-    prop.is_line = 0;
-    gwy_graph_set_autoproperties(graph, &prop);
-    gwy_graph_add_dataline(graph, dln, 0, str5, NULL);
     
-    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_CURSOR);
+    graph = gwy_grapher_new();
+    gmodel = gwy_grapher_model_new(graph);
+    gwy_grapher_add_curve_from_model(graph, model);
     
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show (graph);
