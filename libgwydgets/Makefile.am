@@ -26,6 +26,7 @@ libgwydgetsinclude_HEADERS = \
 	gwyruler.h \
 	gwyscitext.h \
 	gwyspherecoords.h \
+	gwystatusbar.h \
 	gwystock.h \
 	gwytoolbox.h \
 	gwyvectorlayer.h \
@@ -66,6 +67,7 @@ libgwydgets_la_SOURCES = \
 	gwyruler.c \
 	gwyscitext.c \
 	gwyspherecoords.c \
+	gwystatusbar.c \
 	gwystock.c \
 	gwytoolbox.c \
 	gwyvectorlayer.c \

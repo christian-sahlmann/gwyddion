@@ -219,7 +219,7 @@ gwy_ruler_init(GwyRuler *ruler)
     ruler->position = 0;
     ruler->max_size = 0;
     ruler->units_placement = GWY_UNITS_PLACEMENT_NONE;
-    ruler->units = g_strdup("m");
+    ruler->units = GWY_SI_UNIT(gwy_si_unit_new("m"));
 }
 
 static void
@@ -471,7 +471,7 @@ gwy_ruler_unrealize(GtkWidget *widget)
 
     gwy_object_unref(ruler->backing_store);
     gwy_object_unref(ruler->non_gr_exp_gc);
-    g_free(ruler->units);
+    gwy_object_unref(ruler->units);
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         (GTK_WIDGET_CLASS(parent_class)->unrealize)(widget);
@@ -568,7 +568,7 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
     gdouble lower, upper, max;
     gint text_size, labels, i, scale_depth;
     gdouble range, measure, mag, base, step, first;
-    const gchar *prefix;
+    gchar *units;
     GwyScaleScale scale;
     PangoLayout *layout;
     PangoRectangle ink_rect;
@@ -596,15 +596,15 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
 
     range = upper - lower;
     mag = compute_magnitude(max);
-    prefix = gwy_math_SI_prefix(mag);
+    units = gwy_si_unit_get_unit_for_magnitude(ruler->units, mag);
     measure = range/mag / pixelsize;
     max /= mag;
 
     switch (ruler->units_placement && ruler->units) {
         case GWY_UNITS_PLACEMENT_AT_ZERO:
-        unit_str = g_strdup_printf("%d %s%s",
+        unit_str = g_strdup_printf("%d %s",
                                    (lower > 0) ? (gint)(lower/mag) : 0,
-                                   prefix, ruler->units);
+                                   units);
         break;
 
         default:
@@ -673,8 +673,7 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
             && (upper < 0 || val >= 0)
             && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO
             && ruler->units) {
-            unit_str = g_strdup_printf("%d %s%s",
-                                       ROUND(val), prefix, ruler->units);
+            unit_str = g_strdup_printf("%d %s", ROUND(val), units);
             units_drawn = TRUE;
         }
         else
@@ -803,18 +802,17 @@ next_scale(GwyScaleScale scale,
  *
  * Sets the base units to display to @units.
  *
- * Note the ruler still adds appropriate SI prefixes itself, so if you ever
- * needed kilograms as ruler units, you have to use grams instead.
- *
  * Setting units to %NULL effectively disables them.
  **/
 void
 gwy_ruler_set_units(GwyRuler *ruler,
-                    const gchar *units)
+                    GwySIUnit *units)
 {
     g_return_if_fail(GWY_IS_RULER(ruler));
-    g_free(ruler->units);
-    ruler->units = units ? g_strdup(units) : NULL;
+    gwy_object_unref(ruler->units);
+    if (units)
+        g_object_ref(units);
+    ruler->units = units;
     gtk_widget_queue_draw(GTK_WIDGET(ruler));
 }
 
@@ -824,11 +822,9 @@ gwy_ruler_set_units(GwyRuler *ruler,
  *
  * Returns the base units @ruler uses.
  *
- * Returns: The units the rules uses.  The returned string must be considered
- *          cosntant and never modified or freed.  It may retrun %NULL for no
- *          units.
+ * Returns: The units the rules uses.
  **/
-G_CONST_RETURN gchar*
+GwySIUnit*
 gwy_ruler_get_units(GwyRuler *ruler)
 {
     g_return_val_if_fail(GWY_IS_RULER(ruler), NULL);

@@ -40,6 +40,7 @@
 #include <libgwydgets/gwyruler.h>
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyspherecoords.h>
+#include <libgwydgets/gwystatusbar.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwytoolbox.h>
 #include <libgwydgets/gwyvectorlayer.h>

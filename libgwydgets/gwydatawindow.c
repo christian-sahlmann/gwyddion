@@ -42,7 +42,7 @@ static void     gwy_data_window_init           (GwyDataWindow *data_window);
 static void     gwy_data_window_finalize       (GObject *object);
 static void     measure_changed                (GwyDataWindow *data_window);
 static void     lame_window_resize             (GwyDataWindow *data_window);
-static void     compute_statusbar_units        (GwyDataWindow *data_window);
+static void     gwy_data_window_update_units   (GwyDataWindow *data_window);
 static gboolean gwy_data_view_update_statusbar (GwyDataView *data_view,
                                                 GdkEventMotion *event,
                                                 GwyDataWindow *data_window);
@@ -202,12 +202,11 @@ gwy_data_window_new(GwyDataView *data_view)
     gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
 
     /***** statusbar *****/
-    data_window->statusbar = gtk_statusbar_new();
+    data_window->statusbar = gwy_statusbar_new();
     gtk_box_pack_start(GTK_BOX(vbox), data_window->statusbar, FALSE, FALSE, 0);
     data_window->statusbar_context_id
         = gtk_statusbar_get_context_id(GTK_STATUSBAR(data_window->statusbar),
                                        "coordinates");
-    compute_statusbar_units(data_window);
     g_signal_connect(GTK_WIDGET(data_view), "motion_notify_event",
                      G_CALLBACK(gwy_data_view_update_statusbar), data_window);
 
@@ -259,6 +258,7 @@ gwy_data_window_new(GwyDataView *data_view)
                              G_CALLBACK(color_axis_clicked_cb), data_window);
 
     /* show everything except the table */
+    gwy_data_window_update_units(data_window);
     gtk_widget_show_all(vbox);
 
     g_signal_connect(data_window, "size-allocate",
@@ -457,7 +457,7 @@ gwy_data_window_get_zoom_mode(GwyDataWindow *data_window)
 }
 
 static void
-compute_statusbar_units(GwyDataWindow *data_window)
+gwy_data_window_update_units(GwyDataWindow *data_window)
 {
     GwyDataField *dfield;
     GwyContainer *data;
@@ -482,6 +482,10 @@ compute_statusbar_units(GwyDataWindow *data_window)
               data_window->value_format->precision,
               data_window->value_format->magnitude,
               data_window->value_format->units);
+    gwy_ruler_set_units(GWY_RULER(data_window->hruler),
+                        gwy_data_field_get_si_unit_xy(dfield));
+    gwy_ruler_set_units(GWY_RULER(data_window->vruler),
+                        gwy_data_field_get_si_unit_xy(dfield));
 }
 
 static gboolean
@@ -655,23 +659,8 @@ data_view_updated_cb(GwyDataWindow *data_window)
     min = gwy_data_field_get_min(dfield);
     max = gwy_data_field_get_max(dfield);
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
-    compute_statusbar_units(data_window);
+    gwy_data_window_update_units(data_window);
 }
 
-void
-gwy_data_window_set_units(GwyDataWindow *data_window,
-                          const gchar *units)
-{
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    gwy_ruler_set_units(GWY_RULER(data_window->hruler), units);
-    gwy_ruler_set_units(GWY_RULER(data_window->vruler), units);
-}
-
-G_CONST_RETURN gchar*
-gwy_data_window_get_units(GwyDataWindow *data_window)
-{
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
-    return gwy_ruler_get_units(GWY_RULER(data_window->hruler));
-}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
