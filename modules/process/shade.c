@@ -46,11 +46,10 @@ typedef struct {
 static GwySphereCoords *coords;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    shade                        (GwyContainer *data,
+static gboolean    shade                      (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    shade_dialog                 (ShadeArgs *args);
-static void        shade_changed_cb           (GwyVectorShade *gradsphere,
-                                               ShadeArgs *args);
+static gboolean    shade_dialog               (ShadeArgs *args);
+static void        shade_changed_cb           (ShadeArgs *args);
 static void        shade_load_args            (GwyContainer *container,
                                                ShadeArgs *args);
 static void        shade_save_args            (GwyContainer *container,
@@ -100,7 +99,7 @@ shade(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *shadefield;
     ShadeArgs args;
-    gboolean ok; 
+    gboolean ok;
 
     g_assert(run & SHADE_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -161,21 +160,22 @@ shade_dialog(ShadeArgs *args)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    gscoords = gwy_sphere_coords_new(args->theta, args->phi);
+    gscoords = GWY_SPHERE_COORDS(gwy_sphere_coords_new(args->theta, args->phi));
     controls.gradsphere = gwy_vector_shade_new(gscoords);
-    
+
     pdef = gwy_palette_def_new(GWY_PALETTE_GRAY);
     pal = gwy_palette_new(GWY_PALETTE_DEF(pdef));
     gwy_grad_sphere_set_palette(
               GWY_GRAD_SPHERE(gwy_vector_shade_get_grad_sphere(GWY_VECTOR_SHADE(controls.gradsphere))),
               GWY_PALETTE(pal));
-    
+
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.gradsphere,
                                               FALSE, FALSE, 4);
 
     coords = gwy_vector_shade_get_sphere_coords(GWY_VECTOR_SHADE(controls.gradsphere));
-    g_signal_connect(G_OBJECT(coords), "value_changed", G_CALLBACK(shade_changed_cb), args);
+    g_signal_connect_swapped(G_OBJECT(coords), "value_changed",
+                             G_CALLBACK(shade_changed_cb), args);
 
 /*    controls.out
         = gwy_fft_output_menu(G_CALLBACK(out_changed_cb),
@@ -215,8 +215,7 @@ shade_dialog(ShadeArgs *args)
 }
 
 static void
-shade_changed_cb(GwyVectorShade *gradsphere,
-                 ShadeArgs *args)
+shade_changed_cb(ShadeArgs *args)
 {
     args->theta = gwy_sphere_coords_get_theta(coords);
     args->phi = gwy_sphere_coords_get_phi(coords);

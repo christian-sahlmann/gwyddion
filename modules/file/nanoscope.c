@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -274,7 +274,7 @@ hash_to_data_field(GHashTable *hash,
             return NULL;
         }
 
-        if (offset + size > bufsize) {
+        if (offset + size > (gint)bufsize) {
             g_warning("Data don't fit to the file");
             return NULL;
         }

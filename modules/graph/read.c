@@ -28,7 +28,7 @@
 #include <app/file.h>
 #include <app/app.h>
 
-    
+
 /* Data for this function.*/
 
 typedef struct {
@@ -40,9 +40,9 @@ typedef struct {
 static gboolean    module_register            (const gchar *name);
 static gboolean    read                       (GwyGraph *graph);
 static gboolean    read_dialog                (GwyGraph *graph);
-static void        selection_updated_cb       (GtkWidget *widget, gpointer data);
-static void        read_dialog_closed_cb      (GtkWidget *widget, gpointer data);
-static void        read_dialog_response_cb    (GtkWidget *widget, gint arg1, gpointer data);
+static void        selection_updated_cb       (gpointer data);
+static void        read_dialog_closed_cb      (gpointer data);
+static void        read_dialog_response_cb    (gpointer data);
 
 static ReadControls controls;
 static GtkWidget *dialog = NULL;
@@ -85,13 +85,13 @@ read(GwyGraph *graph)
 
     if (!graph) {
         if (dialog) gtk_widget_destroy(dialog);
-        dialog = NULL;    
+        dialog = NULL;
         return 1;
     }
- 
-    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_CURSOR); 
+
+    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_CURSOR);
     if (!dialog) read_dialog(graph);
-  
+
     return 1;
 }
 
@@ -99,21 +99,22 @@ read(GwyGraph *graph)
 static gboolean
 read_dialog(GwyGraph *graph)
 {
-    
+
     dialog = gtk_dialog_new_with_buttons(_("Read graph values"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
 
-    g_signal_connect(dialog, "delete_event",
-                     G_CALLBACK(read_dialog_closed_cb), graph);
-    response_id = g_signal_connect(dialog, "response",
-                     G_CALLBACK(read_dialog_response_cb), graph);
+    g_signal_connect_swapped(dialog, "delete_event",
+                             G_CALLBACK(read_dialog_closed_cb), graph);
+    response_id = g_signal_connect_swapped(dialog, "response",
+                                           G_CALLBACK(read_dialog_response_cb),
+                                           graph);
 
-    g_signal_connect(graph, "destroy",
-                     G_CALLBACK(read_dialog_closed_cb), graph);
-    
+    g_signal_connect_swapped(graph, "destroy",
+                             G_CALLBACK(read_dialog_closed_cb), graph);
+
     controls.xlabel = gtk_label_new("x");
     controls.ylabel = gtk_label_new("y");
 
@@ -121,55 +122,57 @@ read_dialog(GwyGraph *graph)
                                                 FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.ylabel,
                                                 FALSE, FALSE, 4);
-    selection_id = g_signal_connect(graph->area, "selected", G_CALLBACK(selection_updated_cb), graph); 
-   
-    gtk_widget_show_all(dialog); 
-    
+    selection_id = g_signal_connect_swapped(graph->area, "selected",
+                                            G_CALLBACK(selection_updated_cb),
+                                            graph);
+
+    gtk_widget_show_all(dialog);
+
     return TRUE;
 }
 
 static void
-selection_updated_cb(GtkWidget *widget, gpointer data)
+selection_updated_cb(gpointer data)
 {
     GwyGraph *graph;
     GwyGraphStatus_CursorData *cd;
     gchar buffer[50];
-    
+
     graph = (GwyGraph *) data;
-    g_return_if_fail(GWY_IS_GRAPH(graph));    
+    g_return_if_fail(GWY_IS_GRAPH(graph));
 
     if (gwy_graph_get_status(graph) != GWY_GRAPH_STATUS_CURSOR) return;
         /* FIXME TODO XXX this must be changed XXX TODO FIXME*/
-        
+
     g_assert(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_CURSOR);
-    
+
     cd = (GwyGraphStatus_CursorData*)gwy_graph_get_status_data(graph);
 
     if (cd->data_point.x_unit != NULL)
         g_snprintf(buffer, sizeof(buffer), "x = %.3f %s", cd->data_point.x, cd->data_point.x_unit);
     else
         g_snprintf(buffer, sizeof(buffer), "x = %.3f", cd->data_point.x);
-    
+
     gtk_label_set_text(GTK_LABEL(controls.xlabel), buffer);
 
     if (cd->data_point.y_unit != NULL)
         g_snprintf(buffer, sizeof(buffer), "y = %.3f %s", cd->data_point.y, cd->data_point.y_unit);
     else
         g_snprintf(buffer, sizeof(buffer), "y = %.3f", cd->data_point.y);
-     
+
     gtk_label_set_text(GTK_LABEL(controls.ylabel), buffer);
-    
+
 }
 
-static void        
-read_dialog_closed_cb(GtkWidget *widget, gpointer data)
+static void
+read_dialog_closed_cb(gpointer data)
 {
     GwyGraph *graph;
     graph = (GwyGraph *) data;
-    
+
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_PLAIN);
 
-    if (dialog) 
+    if (dialog)
     {
         g_signal_handler_disconnect(dialog, response_id);
         g_signal_handler_disconnect(graph->area, selection_id);
@@ -182,9 +185,9 @@ read_dialog_closed_cb(GtkWidget *widget, gpointer data)
 
 
 static void
-read_dialog_response_cb(GtkWidget *widget, gint arg1, gpointer data)
+read_dialog_response_cb(gpointer data)
 {
-    read_dialog_closed_cb(widget, data);
+    read_dialog_closed_cb(data);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -129,7 +129,7 @@ fft(GwyContainer *data, GwyRunType run)
     GwyDataField *raout, *ipout, *imin;
     GwySIUnit *xyunit, *zunit;
     FFTArgs args;
-    gboolean ok; gint i;
+    gboolean ok;
     gint xsize, ysize, newsize;
     gdouble newreals;
 
@@ -153,13 +153,14 @@ fft(GwyContainer *data, GwyRunType run)
 
         if (gwy_data_field_get_xres(dfield) != gwy_data_field_get_yres(dfield))
         {
-            dialog = gtk_message_dialog_new (gwy_app_data_window_get_current(),
-                                                    GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                    GTK_MESSAGE_ERROR,
-                                                    GTK_BUTTONS_CLOSE,
-                                                   "FFT: data field must be rectangular.");
-           gtk_dialog_run (GTK_DIALOG (dialog));
-           gtk_widget_destroy (dialog);
+            dialog
+                = gtk_message_dialog_new(GTK_WINDOW(gwy_app_data_window_get_current()),
+                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_MESSAGE_ERROR,
+                                         GTK_BUTTONS_CLOSE,
+                                         "FFT: data field must be rectangular.");
+           gtk_dialog_run(GTK_DIALOG(dialog));
+           gtk_widget_destroy(dialog);
            return ok;
         }
         g_assert(gwy_data_field_get_xres(dfield) == gwy_data_field_get_yres(dfield));
@@ -168,22 +169,25 @@ fft(GwyContainer *data, GwyRunType run)
         ysize = gwy_data_field_get_yres(dfield);
         newsize = gwy_data_field_get_fft_res(xsize);
         gwy_data_field_resample(dfield, newsize, newsize, GWY_INTERPOLATION_BILINEAR);
-        raout = gwy_data_field_new(gwy_data_field_get_xres(dfield),
+        raout = GWY_DATA_FIELD(gwy_data_field_new(
+                                   gwy_data_field_get_xres(dfield),
                                    gwy_data_field_get_yres(dfield),
                                    gwy_data_field_get_xreal(dfield),
                                    gwy_data_field_get_yreal(dfield),
-                                   1);
-        ipout = gwy_data_field_new(gwy_data_field_get_xres(dfield),
+                                   TRUE));
+        ipout = GWY_DATA_FIELD(gwy_data_field_new(
+                                   gwy_data_field_get_xres(dfield),
                                    gwy_data_field_get_yres(dfield),
                                    gwy_data_field_get_xreal(dfield),
                                    gwy_data_field_get_yreal(dfield),
-                                   1);
+                                   TRUE));
 
-        imin = gwy_data_field_new(gwy_data_field_get_xres(dfield),
+        imin = GWY_DATA_FIELD(gwy_data_field_new(
+                                   gwy_data_field_get_xres(dfield),
                                    gwy_data_field_get_yres(dfield),
                                    gwy_data_field_get_xreal(dfield),
                                    gwy_data_field_get_yreal(dfield),
-                                   1);
+                                   TRUE));
 
         gwy_data_field_multiply(dfield, 1e6);
         gwy_data_field_fill(raout,0);
@@ -304,23 +308,27 @@ set_dfield_module(GwyDataField *re, GwyDataField *im, GwyDataField *target)
 }
 
 static void
-set_dfield_phase(GwyDataField *re, GwyDataField *im, GwyDataField *target)
+set_dfield_phase(GwyDataField *re, GwyDataField *im,
+                 GwyDataField *target)
 {
     gint i;
     gint xres = gwy_data_field_get_xres(re);
     gint yres = gwy_data_field_get_xres(re);
 
-    for (i=0; i<(xres*yres); i++) target->data[i] = atan2(im->data[i], re->data[i]);
+    for (i = 0; i < (xres*yres); i++)
+        target->data[i] = atan2(im->data[i], re->data[i]);
 }
 
 static void
-set_dfield_real(GwyDataField *re, GwyDataField *im, GwyDataField *target)
+set_dfield_real(GwyDataField *re, G_GNUC_UNUSED GwyDataField *im,
+                GwyDataField *target)
 {
     gwy_data_field_copy(re, target);
 }
 
 static void
-set_dfield_imaginary(GwyDataField *re, GwyDataField *im, GwyDataField *target)
+set_dfield_imaginary(G_GNUC_UNUSED GwyDataField *re, GwyDataField *im,
+                     GwyDataField *target)
 {
     gwy_data_field_copy(im, target);
 }
@@ -352,9 +360,11 @@ fft_dialog(FFTArgs *args)
     controls.preserve = gtk_check_button_new_with_label("preserve size");
     gwy_table_attach_row(table, 0, _("Data size treatment:"), "",
                          controls.preserve);
-    gtk_toggle_button_set_active(controls.preserve, args->preserve);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
+                                 args->preserve);
 
-    g_signal_connect(controls.preserve, "toggled", G_CALLBACK(preserve_changed_cb), args);
+    g_signal_connect(controls.preserve, "toggled",
+                     G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@
 #define DIST_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
-    
+
 static gboolean    module_register            (const gchar *name);
 static gboolean    dist                        (GwyContainer *data,
                                                GwyRunType run);
@@ -70,17 +70,15 @@ module_register(const gchar *name)
 static gboolean
 dist(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
     GString *lab;
     GtkWidget *window, *graph;
     GwyGraphAutoProperties prop;
     GwyDataLine *dataline;
     GwyDataField *dfield;
     GwySIValueFormat *units;
-    gint i;
 
     g_assert(run & DIST_RUN_MODES);
-    
+
     if (gwy_container_contains_by_name(data, "/0/mask"))
     {
         graph = gwy_graph_new();
@@ -97,10 +95,10 @@ dist(GwyContainer *data, GwyRunType run)
         lab = g_string_new("Grain size histogram");
         units = gwy_si_unit_get_format(dfield->si_unit_xy, dataline->real, NULL);
         gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
-                                          units->magnitude, 1, units->units, " "); 
+                                          units->magnitude, 1, units->units, " ");
 
         window = gwy_app_graph_window_create(graph);
-        
+
         g_string_free(lab, TRUE);
         g_object_unref(dataline);
         /*g_object_unref(units);*/

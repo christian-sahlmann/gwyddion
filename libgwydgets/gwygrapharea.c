@@ -376,7 +376,8 @@ gwy_graph_area_draw_curves(GtkWidget *widget)
     GwyGraphArea *area;
     GwyGraphAreaCurve *pcurve;
     GdkColor fg;
-    guint i, j;
+    guint i;
+    gint j;
 
     area = GWY_GRAPH_AREA(widget);
 
@@ -394,7 +395,7 @@ gwy_graph_area_draw_curves(GtkWidget *widget)
                            pcurve->points, pcurve->data.N);
         }
         if (pcurve->params.is_point) {
-            for (j = 0; j < (gint)pcurve->data.N; j++) {
+            for (j = 0; j < pcurve->data.N; j++) {
                 gwy_graph_draw_point(GTK_LAYOUT(widget)->bin_window, area->gc,
                                      pcurve->points[j].x,
                                      pcurve->points[j].y,

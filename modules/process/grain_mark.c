@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -69,8 +69,10 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    mark                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    mark_dialog                 (MarkArgs *args, GwyContainer *data);
+/*
 static void        inverted_changed_cb        (GtkToggleButton *button,
                                                MarkArgs *args);
+*/
 static void        isheight_changed_cb        (GtkToggleButton *button,
                                                MarkArgs *args);
 static void        isslope_changed_cb          (GtkToggleButton *button,
@@ -176,7 +178,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gint response;
     gdouble zoomval;
     GtkObject *layer;
-    GtkHBox *hbox;
+    GtkWidget *hbox;
     GwyDataField *dfield;
     GtkWidget *label;
 
@@ -201,12 +203,13 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata, "/0/data"));
-    
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
+                                                             "/0/data"));
+
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
         zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
     else zoomval = 400.0/(gdouble)gwy_data_field_get_yres(dfield);
-    
+
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view,
@@ -313,12 +316,13 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     return TRUE;
 }
 
-
+/*
 static void
 inverted_changed_cb(GtkToggleButton *button, MarkArgs *args)
 {
     args->inverted = gtk_toggle_button_get_active(button);
 }
+*/
 
 static void
 isheight_changed_cb(GtkToggleButton *button, MarkArgs *args)
@@ -426,7 +430,7 @@ static const gchar *mergetype_key = "/module/mark_height/mergetype";
 
 static void
 mark_load_args(GwyContainer *container,
-                 MarkArgs *args)
+               MarkArgs *args)
 {
     *args = mark_defaults;
 
@@ -445,7 +449,7 @@ mark_load_args(GwyContainer *container,
 
 static void
 mark_save_args(GwyContainer *container,
-                 MarkArgs *args)
+               MarkArgs *args)
 {
     gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
     gwy_container_set_boolean_by_name(container, isheight_key, args->is_height);
@@ -468,9 +472,12 @@ mark_dialog_update(MarkControls *controls,
                                 args->slope);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_lap),
                                 args->lap);
-    gtk_toggle_button_set_active(controls->is_height, args->is_height);
-    gtk_toggle_button_set_active(controls->is_slope, args->is_slope);
-    gtk_toggle_button_set_active(controls->is_lap, args->is_lap);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_height),
+                                 args->is_height);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_slope),
+                                 args->is_slope);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_lap),
+                                 args->is_lap);
 
 }
 
@@ -481,11 +488,11 @@ preview(MarkControls *controls,
     GwyDataField *maskfield, *dfield;
     GwyPixmapLayer *layer;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/0/data"));
 
     /*set up the mask*/
-    if (gwy_container_contains_by_name(controls->mydata, "/0/mask"))
-    {
+    if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                   "/0/mask"));
         gwy_data_field_resample(maskfield,
@@ -493,17 +500,16 @@ preview(MarkControls *controls,
                                gwy_data_field_get_yres(dfield),
                                GWY_INTERPOLATION_NONE);
         gwy_data_field_copy(dfield, maskfield);
-        if (!gwy_data_view_get_alpha_layer(controls->view))
-        {
-            layer = gwy_layer_mask_new();
+        if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
+            layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
             gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), GWY_PIXMAP_LAYER(layer));
         }
     }
-    else
-    {
+    else {
         maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(controls->mydata, "/0/mask", G_OBJECT(maskfield));
-        layer = gwy_layer_mask_new();
+        gwy_container_set_object_by_name(controls->mydata, "/0/mask",
+                                         G_OBJECT(maskfield));
+        layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
                                  GWY_PIXMAP_LAYER(layer));
 
@@ -518,11 +524,11 @@ preview(MarkControls *controls,
 /* Ja se na to fakt vyseru. Promenne pojmenovane stejne jako funkce... */
 static void
 ok(MarkControls *controls,
-        MarkArgs *args,
-        GwyContainer *data)
+   MarkArgs *args,
+   GwyContainer *data)
 {
 
-    GwyDataField *dfield, *maskfield, output_field;
+    GwyDataField *dfield, *maskfield;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 

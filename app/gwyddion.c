@@ -28,11 +28,13 @@
 #include "file.h"
 #include "gwyddion.h"
 
+#ifdef G_OS_WIN32
 static void setup_logging(void);
 static void logger(const gchar *log_domain,
                    GLogLevelFlags log_level,
                    const gchar *message,
                    gpointer user_data);
+#endif
 
 int
 main(int argc, char *argv[])
@@ -90,6 +92,7 @@ APIENTRY WinMain(HINSTANCE hInstance,
 
 #endif /* WIN32 */
 
+#ifdef G_OS_WIN32
 /* Redirect messages from all libraries we use to a file.  This (a) creates
  * a possibly useful log if we don't crash totally (b) prevents the mesages
  * to go to a DOS console thus creating it. */
@@ -128,5 +131,6 @@ logger(const gchar *log_domain,
     fprintf(logfile, "%s: %s\n", log_domain, message);
     fflush(logfile);
 }
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

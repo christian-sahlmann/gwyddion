@@ -54,9 +54,6 @@ static void     gwy_color_axis_adjust               (GwyColorAxis *axis,
                                                      gint height);
 static void     gwy_color_axis_draw_label           (GtkWidget *widget);
 static void     gwy_color_axis_update               (GwyColorAxis *axis);
-static void     prepare_number                      (gdouble number,
-                                                     gdouble *power,
-                                                     gdouble *value);
 
 /* Local data */
 static GtkWidgetClass *parent_class = NULL;
@@ -92,7 +89,7 @@ gwy_color_axis_get_type(void)
 static void
 gwy_color_axis_class_init(GwyColorAxisClass *klass)
 {
-  
+
 
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
@@ -171,8 +168,9 @@ gwy_color_axis_new(GtkOrientation orientation,
     g_signal_connect_swapped(axis->palette, "value_changed",
                              G_CALLBACK(gwy_color_axis_update), axis);
 
-    axis->siunit = gwy_si_unit_new("m");
-     return GTK_WIDGET(axis);
+    axis->siunit = GWY_SI_UNIT(gwy_si_unit_new("m"));
+
+    return GTK_WIDGET(axis);
 }
 
 static void
@@ -429,31 +427,14 @@ gwy_color_axis_expose(GtkWidget *widget,
 
 
 static void
-prepare_number(gdouble number, gdouble *power, gdouble *value)
-{
-    /*printf("number=%f\n", number);*/
-    gint val = (gint)(log10(fabs(number)));
-    /*printf("val=%d\n", val);*/
-    val = 3*ROUND(((gdouble)val/3.0));
-    /*printf("val=%d\n", val);*/
-
-    *power = pow(10, val-3);
-    /*printf("power=%f\n", *power);*/
-    *value = number/ *power;
-    /*printf("value=%f\n", *value);*/
-}
-
-static void
 gwy_color_axis_draw_label(GtkWidget *widget)
 {
     GwyColorAxis *axis;
     PangoLayout *layout;
-    GwySIValueFormat *format;
+    GwySIValueFormat *format = NULL;
     GString *strmin, *strmax;
     GdkGC *mygc;
     PangoRectangle rect;
-    gdouble power;
-    gdouble value;
 
     gwy_debug("");
     mygc = gdk_gc_new(widget->window);
@@ -463,79 +444,47 @@ gwy_color_axis_draw_label(GtkWidget *widget)
 
     /*compute minimum and maximum numbers*/
     strmax = g_string_new(" ");
-    if (axis->max == 0)
-    {
-        if (axis->min == 0) g_string_printf(strmax, "0.0");
-        else
-        {
+    if (axis->max == 0) {
+        if (axis->min == 0)
+            g_string_printf(strmax, "0.0");
+        else {
             format = gwy_si_unit_get_format(axis->siunit, axis->max, NULL);
-            g_string_printf(strmax, "0.0 "); 
-            g_string_append(strmax, format->units);
- 
-             /*
-            prepare_number(axis->max, &power, &value);
             g_string_printf(strmax, "0.0 ");
-            g_string_append(strmax, gwy_math_SI_prefix(power));
-            g_string_append(strmax, "m");
-            */
+            g_string_append(strmax, format->units);
         }
     }
-    else
-    {
+    else {
         format = gwy_si_unit_get_format(axis->siunit, axis->max, NULL);
-        g_string_printf(strmax, "%3.1f ", axis->max/format->magnitude); 
+        g_string_printf(strmax, "%3.1f ", axis->max/format->magnitude);
         g_string_append(strmax, format->units);
-       
-        /*
-        prepare_number(axis->max, &power, &value);
-        g_string_printf(strmax, "%3.1f ", value);
-        g_string_append(strmax, gwy_math_SI_prefix(power));
-        g_string_append(strmax, "m");
-        */
     }
 
 
     strmin = g_string_new(" ");
-    if (axis->min == 0)
-    {
-        if (axis->max == 0) g_string_printf(strmin, "0.0");
-        else
-        {
+    if (axis->min == 0) {
+        if (axis->max == 0)
+            g_string_printf(strmin, "0.0");
+        else {
             format = gwy_si_unit_get_format(axis->siunit, axis->max, format);
-            g_string_printf(strmin, "0.0 "); 
-            g_string_append(strmin, format->units);
-          
-            /*
-             prepare_number(axis->max, &power, &value);
             g_string_printf(strmin, "0.0 ");
-            g_string_append(strmin, gwy_math_SI_prefix(power));
-            g_string_append(strmin, "m");
-            */
+            g_string_append(strmin, format->units);
         }
     }
-    else
-    {
+    else {
         format = gwy_si_unit_get_format(axis->siunit, axis->max, format); /*yes, realy axis->max*/
-        g_string_printf(strmin, "%3.1f ", axis->min/format->magnitude); 
+        g_string_printf(strmin, "%3.1f ", axis->min/format->magnitude);
         g_string_append(strmin, format->units);
-
-        /*value = axis->min/power;
-        g_string_printf(strmin, "%3.1f ", value);
-        g_string_append(strmin, gwy_math_SI_prefix(power));
-        g_string_append(strmin, "m");
-        */
     }
-    
 
 
-    if (axis->orientation == GTK_ORIENTATION_VERTICAL)
-    {
+
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
         /*draw frame around axis*/
         gdk_draw_rectangle(widget->window, mygc, 0,
-                      0,
-                      0,
-                      widget->allocation.width - axis->par.textarea,
-                      widget->allocation.height - 1);
+                           0,
+                           0,
+                           widget->allocation.width - axis->par.textarea,
+                           widget->allocation.height - 1);
 
         gdk_draw_line(widget->window, mygc,
                       widget->allocation.width - axis->par.textarea,
@@ -562,22 +511,23 @@ gwy_color_axis_draw_label(GtkWidget *widget)
 
         pango_layout_set_markup(layout,  strmax->str, strmax->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
-        gdk_draw_layout(widget->window, mygc, widget->allocation.width - axis->par.textarea + 2,
+        gdk_draw_layout(widget->window, mygc,
+                        widget->allocation.width - axis->par.textarea + 2,
                         2, layout);
 
         pango_layout_set_markup(layout,  strmin->str, strmin->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
-        gdk_draw_layout(widget->window, mygc, widget->allocation.width - axis->par.textarea + 2,
+        gdk_draw_layout(widget->window, mygc,
+                        widget->allocation.width - axis->par.textarea + 2,
                         widget->allocation.height - rect.height - 2, layout);
     }
-    else
-    {
+    else {
         /*draw frame around axis*/
         gdk_draw_rectangle(widget->window, mygc, 0,
-                      0,
-                      axis->par.textarea,
-                      widget->allocation.width - 1,
-                      widget->allocation.height - 1);
+                           0,
+                           axis->par.textarea,
+                           widget->allocation.width - 1,
+                           widget->allocation.height - 1);
 
         gdk_draw_line(widget->window, mygc,
                       0,
@@ -609,11 +559,12 @@ gwy_color_axis_draw_label(GtkWidget *widget)
 
         pango_layout_set_markup(layout,  strmax->str, strmax->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
-        gdk_draw_layout(widget->window, mygc, widget->allocation.width - rect.width - 2,
+        gdk_draw_layout(widget->window, mygc,
+                        widget->allocation.width - rect.width - 2,
                         axis->par.textarea - rect.height - 2, layout);
 
     }
-    g_object_unref((GObject *)mygc);
+    g_object_unref(mygc);
 }
 
 
@@ -626,7 +577,7 @@ gwy_color_axis_button_press(GtkWidget *widget,
 
     gwy_debug("");
 
-	    g_return_val_if_fail(widget != NULL, FALSE);
+    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_COLOR_AXIS(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 

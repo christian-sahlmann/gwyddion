@@ -34,8 +34,6 @@ void store_filename (GtkWidget *widget, gpointer user_data);
 void create_file_selection (void);
 
 
-static gulong response_id = 0;
-
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,

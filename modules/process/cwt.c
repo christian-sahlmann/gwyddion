@@ -184,7 +184,8 @@ cwt_dialog(CWTArgs *args)
     controls.preserve = gtk_check_button_new_with_label("preserve size");
     gwy_table_attach_row(table, 0, _("Data size treatment:"), "",
                          controls.preserve);
-    gtk_toggle_button_set_active(controls.preserve, args->preserve);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
+                                 args->preserve);
 
     g_signal_connect(controls.preserve, "toggled", G_CALLBACK(preserve_changed_cb), args);
 

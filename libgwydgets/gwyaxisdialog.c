@@ -67,12 +67,14 @@ gwy_axis_dialog_get_type(void)
 static void
 gwy_axis_dialog_class_init(GwyAxisDialogClass *klass)
 {
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class;
 
     gwy_debug("");
     widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
+    gobject_class->finalize = gwy_axis_dialog_finalize;
     widget_class->delete_event = gwy_axis_dialog_delete;
 }
 

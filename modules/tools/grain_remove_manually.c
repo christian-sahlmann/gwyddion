@@ -43,7 +43,7 @@ static GtkWidget* dialog_create    (GwyUnitoolState *state);
 static void       dialog_update    (GwyUnitoolState *state,
                                     GwyUnitoolUpdateType reason);
 static void       dialog_abandon   (GwyUnitoolState *state);
-static void       sel_finished_cb  (GwyVectorLayer *gwyvectorlayer, GwyUnitoolState *state);
+static void       sel_finished_cb  (GwyUnitoolState *state);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -129,25 +129,26 @@ dialog_create(GwyUnitoolState *state)
     label = gtk_label_new("This tool has no options.");
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
-    g_signal_connect(state->layer, "selection-finished", G_CALLBACK(sel_finished_cb), state);
+    g_signal_connect_swapped(state->layer, "selection-finished",
+                             G_CALLBACK(sel_finished_cb), state);
 
     return dialog;
 }
 
 
 static void
-dialog_update(GwyUnitoolState *state,
+dialog_update(G_GNUC_UNUSED GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
 }
 
 static void
-dialog_abandon(GwyUnitoolState *state)
+dialog_abandon(G_GNUC_UNUSED GwyUnitoolState *state)
 {
 }
 
 static void
-sel_finished_cb(GwyVectorLayer *gwyvectorlayer, GwyUnitoolState *state)
+sel_finished_cb(GwyUnitoolState *state)
 {
     GwyContainer *data;
     GwyDataField *dfield;
@@ -161,7 +162,7 @@ sel_finished_cb(GwyVectorLayer *gwyvectorlayer, GwyUnitoolState *state)
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    if (gwy_container_contains_by_name(data, "/0/mask")) 
+    if (gwy_container_contains_by_name(data, "/0/mask"))
        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     else {
         gwy_debug("No mask");
@@ -169,13 +170,13 @@ sel_finished_cb(GwyVectorLayer *gwyvectorlayer, GwyUnitoolState *state)
     }
 
     xres = gwy_data_field_get_xres(dfield);
-    
+
     is_visible = state->is_visible;
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
 
     row = ROUND(gwy_data_field_rtoj(dfield, xy[1]));
     col = ROUND(gwy_data_field_rtoj(dfield, xy[0]));
-    
+
     if (!is_visible && !is_selected)
         return;
 
@@ -183,7 +184,7 @@ sel_finished_cb(GwyVectorLayer *gwyvectorlayer, GwyUnitoolState *state)
         gwy_data_field_grains_remove_manually(dfield,
                                               col + xres*row);
 
-        gwy_container_set_object_by_name(data, "/0/mask", dfield);
+        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(dfield));
         gwy_vector_layer_unselect(state->layer);
         gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
     }

@@ -142,9 +142,9 @@ gwy_graph_init(GwyGraph *graph)
     gtk_table_set_col_spacings (GTK_TABLE (graph), 0);
 
     graph->axis_top = GWY_AXIS (gwy_axis_new(GWY_AXIS_SOUTH, 2.24, 5.21, "x"));
-    graph->axis_bottom =  GWY_AXIS (gwy_axis_new(GWY_AXIS_NORTH, 2.24, 5.21, "x"));
-    graph->axis_left =  GWY_AXIS (gwy_axis_new(GWY_AXIS_EAST, 100, 500, "y"));
-    graph->axis_right =  GWY_AXIS (gwy_axis_new(GWY_AXIS_WEST, 100, 500, "y"));
+    graph->axis_bottom = GWY_AXIS (gwy_axis_new(GWY_AXIS_NORTH, 2.24, 5.21, "x"));
+    graph->axis_left = GWY_AXIS (gwy_axis_new(GWY_AXIS_EAST, 100, 500, "y"));
+    graph->axis_right = GWY_AXIS (gwy_axis_new(GWY_AXIS_WEST, 100, 500, "y"));
 
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->axis_top), 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
@@ -198,7 +198,7 @@ gwy_graph_init(GwyGraph *graph)
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
     g_signal_connect(graph->area, "zoomed", G_CALLBACK(zoomed_cb), NULL);
-    
+
     gtk_widget_show_all(GTK_WIDGET(graph->area));
 
 }
@@ -213,7 +213,7 @@ gwy_graph_new()
 
 /**
  * gwy_graph_add_dataline:
- * @graph: graph widget 
+ * @graph: graph widget
  * @dataline: dataline to be added
  * @shift: x shift (dataline starts allways at zero)
  * @label: curve label
@@ -249,7 +249,7 @@ gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
 
 /**
  * gwy_graph_add_dataline_with_units:
- * @graph: graph widget 
+ * @graph: graph widget
  * @dataline: dataline to be added
  * @shift: x shift (dataline starts allways at zero)
  * @label: curve label
@@ -310,7 +310,7 @@ gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
 
 /**
  * gwy_graph_add_datavalues:
- * @graph: graph widget 
+ * @graph: graph widget
  * @xvals: x values
  * @yvals: y values
  * @n: number of values
@@ -354,13 +354,13 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
        }
     }
 
-    if (graph->y_reqmax > 1e20 || graph->y_reqmax < -1e20 
+    if (graph->y_reqmax > 1e20 || graph->y_reqmax < -1e20
        || graph->y_reqmin > 1e20 || graph->y_reqmin < -1e20)
     {
         g_warning("Data values are corrupted. Curve not added.");
         return;
     }
-    
+
     if (isdiff) {
       /*  printf("x requirement changed: %f, %f\n", graph->x_reqmin, graph->x_reqmax);*/
        gwy_axis_set_req(graph->axis_top, graph->x_reqmin, graph->x_reqmax);
@@ -447,7 +447,7 @@ gwy_graph_make_curve_data(G_GNUC_UNUSED GwyGraph *graph,
 
 /**
  * gwy_graph_clear:
- * @graph: graph widget 
+ * @graph: graph widget
  *
  * Remove all curves.
  **/
@@ -472,7 +472,7 @@ gwy_graph_clear(GwyGraph *graph)
 
 /**
  * gwy_graph_set_autoproperties:
- * @graph: graph widget 
+ * @graph: graph widget
  * @autoproperties: autoproperties of graph
  *
  * Sets the autoproperties - properties of curves
@@ -488,7 +488,7 @@ gwy_graph_set_autoproperties(GwyGraph *graph,
 
 /**
  * gwy_graph_get_autoproperties:
- * @graph: graph widget 
+ * @graph: graph widget
  * @autoproperties: autoproperties of graph
  *
  * Gets the autoproperties - properties of curves
@@ -503,7 +503,7 @@ gwy_graph_get_autoproperties(GwyGraph *graph,
 
 /**
  * gwy_graph_set_status:
- * @graph: graph widget 
+ * @graph: graph widget
  * @status: graph status to be set
  *
  * sets the graph status. The status is related with ability
@@ -523,14 +523,14 @@ gwy_graph_set_status(GwyGraph *graph,
         graph->area->pointsdata->scr_points = g_array_new(0, 1, sizeof(GwyGraphScrPoint));
         graph->area->pointsdata->data_points = g_array_new(0, 1, sizeof(GwyGraphDataPoint));
         graph->area->pointsdata->n = 0;
-    }                                                          
+    }
 
     graph->area->status = status;
 }
 
 /**
  * gwy_graph_get_status:
- * @graph: graph widget 
+ * @graph: graph widget
  *
  * gets the graph status. The status is related with ability
  * to do different mouse selections.
@@ -544,7 +544,7 @@ gwy_graph_get_status(GwyGraph *graph)
 
 /**
  * gwy_graph_get_status_data:
- * @graph: graph widget 
+ * @graph: graph widget
  *
  * gets the graph status data - data corresponding
  * to mouse selections done by user. Actual contain
@@ -586,7 +586,7 @@ gwy_graph_get_status_data(GwyGraph *graph)
 
 /**
  * gwy_graph_get_boundaries:
- * @graph: graph widget 
+ * @graph: graph widget
  * @x_min: x axis minimum value
  * @x_max: x axis maximum value
  * @y_min: y axis minimum value
@@ -594,7 +594,7 @@ gwy_graph_get_status_data(GwyGraph *graph)
  *
  *
  **/
-void 
+void
 gwy_graph_get_boundaries(GwyGraph *graph, gdouble *x_min, gdouble *x_max, gdouble *y_min, gdouble *y_max)
 {
     *x_min = graph->x_min;
@@ -605,7 +605,7 @@ gwy_graph_get_boundaries(GwyGraph *graph, gdouble *x_min, gdouble *x_max, gdoubl
 
 /**
  * gwy_graph_set_boundaries:
- * @graph: graph widget 
+ * @graph: graph widget
  * @x_min: x axis minimum value
  * @x_max: x axis maximum value
  * @y_min: y axis minimum value
@@ -614,7 +614,7 @@ gwy_graph_get_boundaries(GwyGraph *graph, gdouble *x_min, gdouble *x_max, gdoubl
  * Sets actual axis boundaries of graph. Recomputes and redisplays all
  * necessary things.
  **/
-void 
+void
 gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max)
 {
     /*set the graph requisition*/
@@ -622,7 +622,7 @@ gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdouble 
     graph->x_reqmax = x_max;
     graph->y_reqmin = y_min;
     graph->y_reqmax = y_max;
-  
+
     /*ask axis, what does she thinks about the requisitions*/
     gwy_axis_set_req(graph->axis_top, graph->x_reqmin, graph->x_reqmax);
     gwy_axis_set_req(graph->axis_bottom, graph->x_reqmin, graph->x_reqmax);
@@ -638,17 +638,17 @@ gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdouble 
     graph->x_reqmin = gwy_axis_get_reqminimum(graph->axis_bottom);
     graph->y_reqmax = gwy_axis_get_reqmaximum(graph->axis_left);
     graph->y_reqmin = gwy_axis_get_reqminimum(graph->axis_left);
-    
+
     /*refresh graph*/
     gwy_graph_area_set_boundaries(graph->area, graph->x_min,
                      graph->x_max, graph->y_min, graph->y_max);
 
-  
+
 }
 
 /**
  * gwy_graph_unzoom:
- * @graph: graph widget 
+ * @graph: graph widget
  *
  * resets zoom. Fits all curves into graph.
  **/
@@ -657,7 +657,8 @@ gwy_graph_unzoom(GwyGraph *graph)
 {
     GwyGraphAreaCurve *pcurve;
     gdouble xmax, xmin, ymax, ymin;
-    gint i, j;
+    gsize i;
+    gint j;
 
     xmin = G_MAXDOUBLE;
     ymin = G_MAXDOUBLE;
@@ -667,33 +668,33 @@ gwy_graph_unzoom(GwyGraph *graph)
     gwy_debug("");
 
     /*find extrema*/
-    for (i=0; i<graph->area->curves->len; i++)
+    for (i = 0; i < graph->area->curves->len; i++)
     {
         pcurve = g_ptr_array_index (graph->area->curves, i);
-        for (j=0; j<pcurve->data.N; j++)
-        {        
+        for (j = 0; j < pcurve->data.N; j++)
+        {
             if (pcurve->data.xvals[j] > xmax) xmax = pcurve->data.xvals[j];
             if (pcurve->data.yvals[j] > ymax) ymax = pcurve->data.yvals[j];
             if (pcurve->data.xvals[j] < xmin) xmin = pcurve->data.xvals[j];
             if (pcurve->data.yvals[j] < ymin) ymin = pcurve->data.yvals[j];
         }
     }
-    gwy_graph_set_boundaries(graph, xmin, xmax, ymin, ymax);                                      
+    gwy_graph_set_boundaries(graph, xmin, xmax, ymin, ymax);
     gtk_widget_queue_draw(GTK_WIDGET(graph));
 }
 
-static void 
+static void
 zoomed_cb(GtkWidget *widget)
 {
     GwyGraph *graph;
     gwy_debug("");
 
     graph = GWY_GRAPH(gtk_widget_get_parent(widget));
-        
-    gwy_graph_set_boundaries(graph, 
-                             graph->area->zoomdata->xmin, 
-                             graph->area->zoomdata->xmax, 
-                             graph->area->zoomdata->ymin, 
+
+    gwy_graph_set_boundaries(graph,
+                             graph->area->zoomdata->xmin,
+                             graph->area->zoomdata->xmax,
+                             graph->area->zoomdata->ymin,
                              graph->area->zoomdata->ymax);
     gtk_widget_queue_draw(GTK_WIDGET(graph));
 }

@@ -107,6 +107,7 @@ static void
 gwy_si_unit_init(GwySIUnit *si_unit)
 {
     gwy_debug("");
+    si_unit->unitstr = NULL;
 }
 
 static void

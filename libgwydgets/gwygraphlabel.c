@@ -41,10 +41,12 @@ static void     gwy_graph_label_size_allocate        (GtkWidget *widget,
                                                       GtkAllocation *allocation);
 static gboolean gwy_graph_label_expose               (GtkWidget *widget,
                                                       GdkEventExpose *event);
+/*
 static gboolean gwy_graph_label_button_press         (GtkWidget *widget,
                                                       GdkEventButton *event);
 static gboolean gwy_graph_label_button_release       (GtkWidget *widget,
                                                       GdkEventButton *event);
+*/
 
 /* Forward declarations - label related*/
 void            gwy_graph_label_draw_label           (GtkWidget *widget);
@@ -372,7 +374,7 @@ void gwy_graph_label_draw_label(GtkWidget *widget)
 }
 
 
-
+/*
 static gboolean
 gwy_graph_label_button_press(GtkWidget *widget,
                              GdkEventButton *event)
@@ -405,6 +407,7 @@ gwy_graph_label_button_release(GtkWidget *widget,
 
     return FALSE;
 }
+*/
 
 /**
  * gwy_graph_label_add_curve:
@@ -492,7 +495,7 @@ gwy_graph_label_clear(GwyGraphLabel *label)
  **/
 void
 gwy_graph_draw_point(GdkWindow *window, GdkGC *gc, gint i, gint j, gint type,
-                     gint size, GdkColor *color, gboolean clear)
+                     gint size, G_GNUC_UNUSED GdkColor *color, gboolean clear)
 {
 
     gint size_half = size/2;

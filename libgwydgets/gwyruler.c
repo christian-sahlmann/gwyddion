@@ -94,7 +94,6 @@ static void          gwy_ruler_get_property  (GObject        *object,
                                               guint           prop_id,
                                               GValue         *value,
                                               GParamSpec     *pspec);
-static gdouble       compute_magnitude       (gdouble max);
 static gdouble       compute_base            (gdouble max,
                                               gdouble basebase);
 static GwyScaleScale next_scale              (GwyScaleScale scale,
