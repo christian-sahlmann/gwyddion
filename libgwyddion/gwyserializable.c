@@ -414,9 +414,6 @@ gwy_serialize_store_int32(GByteArray *buffer,
  *
  * 'o' for a serializable object.
  *
- * FIXME: this function currently doesn't create architecture-independent
- * representations, it just copies the memory.
- *
  * Returns: @buffer or a newly allocated #GByteArray with serialization of
  *          given values appended.
  **/
