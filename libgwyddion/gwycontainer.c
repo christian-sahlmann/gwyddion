@@ -102,7 +102,7 @@ static gboolean hash_remove_prefix_func          (gpointer hkey,
 static void     hash_foreach_func                (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
-static GObject* gwy_container_duplicate          (GObject *object);
+static GObject* gwy_container_duplicate_real     (GObject *object);
 static void     hash_duplicate_func              (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
@@ -165,7 +165,7 @@ gwy_container_serializable_init(GwySerializableIface *iface)
     /* initialize stuff */
     iface->serialize = gwy_container_serialize;
     iface->deserialize = gwy_container_deserialize;
-    iface->duplicate = gwy_container_duplicate;
+    iface->duplicate = gwy_container_duplicate_real;
 }
 
 static void
@@ -1976,7 +1976,7 @@ gwy_container_deserialize2(const guchar *buffer,
 }
 
 static GObject*
-gwy_container_duplicate(GObject *object)
+gwy_container_duplicate_real(GObject *object)
 {
     GObject *duplicate;
 
@@ -2524,6 +2524,16 @@ fail:
  *
  * Path separator to be used for hierarchical structures in the container,
  * as a string.
+ **/
+
+/**
+ * gwy_container_duplicate:
+ * @container: A container to duplicate.
+ *
+ * Convenience macro doing gwy_serializable_duplicate() with all the necessary
+ * typecasting.
+ *
+ * Since: 1.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -77,9 +77,9 @@ static void        gwy_si_unit_serializable_init (GwySerializableIface *iface);
 static GByteArray* gwy_si_unit_serialize         (GObject *obj,
                                                   GByteArray *buffer);
 static GObject*    gwy_si_unit_deserialize       (const guchar *buffer,
-                                                 gsize size,
-                                                 gsize *position);
-static GObject*    gwy_si_unit_duplicate         (GObject *object);
+                                                  gsize size,
+                                                  gsize *position);
+static GObject*    gwy_si_unit_duplicate_real     (GObject *object);
 
 
 static const GwyUnitTraits unit_traits[] = {
@@ -190,7 +190,7 @@ gwy_si_unit_serializable_init(GwySerializableIface *iface)
     /* initialize stuff */
     iface->serialize = gwy_si_unit_serialize;
     iface->deserialize = gwy_si_unit_deserialize;
-    iface->duplicate = gwy_si_unit_duplicate;
+    iface->duplicate = gwy_si_unit_duplicate_real;
 }
 
 
@@ -279,7 +279,7 @@ gwy_si_unit_deserialize(const guchar *buffer,
 
 
 static GObject*
-gwy_si_unit_duplicate(GObject *object)
+gwy_si_unit_duplicate_real(GObject *object)
 {
     GwySIUnit *si_unit;
     GObject *duplicate;
@@ -1115,5 +1115,15 @@ gwy_si_unit2_prefix(gint power)
  *
  * A physical quantity formatting information.
  */
+
+/**
+ * gwy_si_unit_duplicate:
+ * @siunit: An SI unit to duplicate.
+ *
+ * Convenience macro doing gwy_serializable_duplicate() with all the necessary
+ * typecasting.
+ *
+ * Since: 1.8
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

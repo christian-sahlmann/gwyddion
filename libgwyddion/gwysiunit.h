@@ -57,6 +57,8 @@ struct _GwySIUnitClass {
     gpointer *reserved2;
 };
 
+#define gwy_si_unit_duplicate(siunit) ((GwySIUnit*)gwy_serializable_duplicate(G_OBJECT(siunit)))
+
 GType gwy_si_unit_get_type  (void) G_GNUC_CONST;
 
 GObject*          gwy_si_unit_new                   (const gchar *unit_string);
