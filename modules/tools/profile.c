@@ -48,7 +48,11 @@ static void       profile_dialog_abandon           (void);
 static void       profile_dialog_set_visible       (gboolean visible);
 static void       interp_changed_cb                (GObject *item,
                                                     ProfileControls *controls);
-static void       separate_changed_cb               (GtkToggleButton *button,
+static void       separate_changed_cb              (GtkToggleButton *button,
+                                                    ProfileControls *controls);
+static void       profile_load_args                (GwyContainer *container,
+                                                    ProfileControls *controls);
+static void       profile_save_args                (GwyContainer *container,
                                                     ProfileControls *controls);
 
 
@@ -92,6 +96,10 @@ gwy_tool_profile_use(GwyDataWindow *data_window,
         select_layer = (GwyDataViewLayer*)gwy_layer_lines_new();
         gwy_data_view_set_top_layer(data_view, select_layer);
     }
+
+    profile_load_args(gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent)), 
+                      &controls);
+    
     if (!dialog)
         dialog = profile_dialog_create(data_view);
 
@@ -243,7 +251,7 @@ profile_dialog_create(GwyDataView *data_view)
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(datafield);
     yreal = gwy_data_field_get_yreal(datafield);
-
+    
     dialog = gtk_dialog_new_with_buttons(_("Extract profile"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -316,6 +324,7 @@ profile_dialog_create(GwyDataView *data_view)
 
     controls.separation = gtk_check_button_new_with_label("separate profiles");
     gtk_box_pack_start(vbox, controls.separation, 0, 0, 0);
+    gtk_toggle_button_set_active(controls.separation, controls.separate);
     g_signal_connect(controls.separation, "toggled", G_CALLBACK(separate_changed_cb), &controls);
     
  
@@ -438,7 +447,7 @@ profile_selection_updated_cb(void)
             if (!gwy_data_field_get_data_line(datafield, dtl->pdata[i], 
                                      x1, y1,
                                      x2, y2,
-                                     100,/*(gint)sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 -y2)), jak to, ze to s timhle pada?*/
+                                     300,/*(gint)sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 -y2)), jak to, ze to s timhle pada?*/
                                      GWY_INTERPOLATION_BILINEAR
                                      )) continue;
             gwy_graph_add_dataline_with_units(controls.graph, dtl->pdata[i],
@@ -471,6 +480,8 @@ profile_clear(void)
     gwy_graph_clear(controls.graph);
     gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
     update_labels();
+    profile_save_args(gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent)), 
+                      &controls);
 }
 
 static void
@@ -531,6 +542,30 @@ static void
 separate_changed_cb(GtkToggleButton *button, ProfileControls *controls)
 {
     controls->separate = gtk_toggle_button_get_active(button);
+}
+
+static const gchar *separate_key = "/tool/profile/separate";
+static const gchar *interp_key = "/tool/profile/interp";
+
+
+static void       
+profile_load_args(GwyContainer *container, ProfileControls *controls)
+{
+    gwy_debug("%s", __FUNCTION__);
+    if (gwy_container_contains_by_name(container, separate_key))
+        controls->separate = gwy_container_get_boolean_by_name(container, separate_key);
+    else controls->separate = 0;
+
+    if (gwy_container_contains_by_name(container, interp_key))
+        controls->interp = gwy_container_get_int32_by_name(container, interp_key);
+    else controls->interp = 2;
+}
+
+static void       
+profile_save_args(GwyContainer *container, ProfileControls *controls)
+{
+    gwy_container_set_boolean_by_name(container, separate_key, controls->separate);
+    gwy_container_set_int32_by_name(container, interp_key, controls->interp);
 }
 
 
