@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     "scale",
     N_("Scale data by an arbitrary factor."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2.1",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -165,6 +165,7 @@ scale_dialog(ScaleArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(4, 3, FALSE);
@@ -173,30 +174,29 @@ scale_dialog(ScaleArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-    controls.ratio = gtk_adjustment_new(args->ratio, 0.01, 100, 0.01, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, 0, _("Scale by _ratio:"), "",
-                                       controls.ratio);
+    controls.ratio = gtk_adjustment_new(args->ratio,
+                                        1.0/MIN(args->xres, args->yres),
+                                        4096.0/MAX(args->xres, args->yres),
+                                        0.01, 0.2, 0);
+    spin = gwy_table_attach_hscale(table, 0, _("Scale by _ratio:"), NULL,
+                                   controls.ratio, GWY_HSCALE_LOG);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_object_set_data(G_OBJECT(controls.ratio), "controls", &controls);
     g_signal_connect(controls.ratio, "value_changed",
                      G_CALLBACK(scale_changed_cb), args);
 
     controls.xres = gtk_adjustment_new(args->ratio*args->xres,
-                                       1, 10000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 1, _("New _width:"), _("px"),
-                                       controls.xres);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
+                                       1, 4096, 1, 10, 0);
+    spin = gwy_table_attach_hscale(table, 1, _("New _width:"), "px",
+                                   controls.xres, GWY_HSCALE_LOG);
     g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
     g_signal_connect(controls.xres, "value_changed",
                      G_CALLBACK(width_changed_cb), args);
 
     controls.yres = gtk_adjustment_new(args->ratio*args->yres,
-                                       1, 10000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("New _height:"), _("px"),
-                                       controls.yres);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
+                                       1, 4096, 1, 10, 0);
+    spin = gwy_table_attach_hscale(table, 2, _("New _height:"), "px",
+                                   controls.yres, GWY_HSCALE_LOG);
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
     g_signal_connect(controls.yres, "value_changed",
                      G_CALLBACK(height_changed_cb), args);
@@ -204,8 +204,8 @@ scale_dialog(ScaleArgs *args)
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
-    gwy_table_attach_row(table, 3, _("_Interpolation type:"), "",
-                         controls.interp);
+    gwy_table_attach_hscale(table, 3, _("_Interpolation type:"), NULL,
+                            GTK_OBJECT(controls.interp), GWY_HSCALE_WIDGET);
 
     controls.in_update = FALSE;
 

@@ -58,17 +58,8 @@ typedef struct {
     GtkWidget *is_slope;
     GtkWidget *is_lap;
     GtkObject *threshold_height;
-    GtkWidget *threshold_height_spin;
-    GtkWidget *threshold_height_units;
-    GtkWidget *threshold_height_scale;
     GtkObject *threshold_slope;
-    GtkWidget *threshold_slope_spin;
-    GtkWidget *threshold_slope_units;
-    GtkWidget *threshold_slope_scale;
     GtkObject *threshold_lap;
-    GtkWidget *threshold_lap_spin;
-    GtkWidget *threshold_lap_units;
-    GtkWidget *threshold_lap_scale;
     GtkWidget *check_height;
     GtkWidget *check_slope;
     GtkWidget *check_lap;
@@ -95,12 +86,6 @@ static void        mark_dialog_update_values  (MarkControls *controls,
                                                MarkArgs *args);
 static void        mark_invalidate            (GObject *obj,
                                                MarkControls *controls);
-static void        by_height_changed_cb       (GtkToggleButton *check,
-                                               MarkControls *controls);
-static void        by_slope_changed_cb        (GtkToggleButton *check,
-                                               MarkControls *controls);
-static void        by_lap_changed_cb          (GtkToggleButton *check,
-                                               MarkControls *controls);
 static void        preview                    (MarkControls *controls,
                                                MarkArgs *args);
 static void        mark_ok                    (MarkControls *controls,
@@ -117,7 +102,7 @@ static void        mark_sanitize_args         (MarkArgs *args);
 
 
 MarkArgs mark_defaults = {
-    TRUE,
+    FALSE,
     100,
     100,
     100,
@@ -181,50 +166,27 @@ mark(GwyContainer *data, GwyRunType run)
     return ok;
 }
 
-static GtkWidget*
-table_attach_threshold(GtkWidget *table,
-                       GtkWidget *spin,
-                       gint row,
-                       const gchar *name,
-                       const gchar *units,
-                       GtkWidget **units_label,
-                       GtkWidget **scale_widget)
+static void
+table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
+                       GtkObject **adj, gdouble value,
+                       GtkWidget **check,
+                       gpointer data)
 {
-    GtkWidget *label, *check, *scale;
+    GtkWidget *spin;
 
-    check = gtk_check_button_new_with_mnemonic(name);
-    gtk_table_attach(GTK_TABLE(table), check,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
-
-    scale
-        = gtk_hscale_new(gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(spin)));
-    gtk_scale_set_draw_value(GTK_SCALE(scale), FALSE);
-    gtk_widget_set_size_request(scale, GWY_HSCALE_WIDTH, -1);
-    gtk_table_attach(GTK_TABLE(table), scale,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
-    *scale_widget = scale;
-
-    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
-    gtk_table_attach(GTK_TABLE(table), spin,
-                     2, 3, row, row+1, GTK_FILL, 0, 2, 2);
-
-    if (units) {
-        label = gtk_label_new(units);
-        gtk_table_attach(GTK_TABLE(table), label,
-                         3, 4, row, row+1, GTK_FILL, 0, 2, 2);
-        gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
-        gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-        if (units_label)
-            *units_label = label;
-    }
-
-    return check;
+    *adj = gtk_adjustment_new(value, 0.0, 100.0, 0.1, 5, 0);
+    spin = gwy_table_attach_hscale(table, *row, name, "%", *adj,
+                                   GWY_HSCALE_CHECK);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+    *check = g_object_get_data(G_OBJECT(*adj), "check");
+    g_signal_connect(*adj, "value_changed", G_CALLBACK(mark_invalidate), data);
+    (*row)++;
 }
 
 static gboolean
 mark_dialog(MarkArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *spin, *label, *hbox, *align;
+    GtkWidget *dialog, *table, *label, *hbox, *align;
     MarkControls controls;
     enum {
         RESPONSE_RESET = 1,
@@ -242,6 +204,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 2);
@@ -277,48 +240,18 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls.threshold_height = gtk_adjustment_new(args->height,
-                                                   0.0, 100.0, 0.1, 5, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_height), 1, 1);
-    controls.is_height
-        = table_attach_threshold(table, spin, row, _("_Height:"), "%",
-                                 &controls.threshold_height_units,
-                                 &controls.threshold_height_scale);
-    controls.threshold_height_spin = spin;
-    g_signal_connect(controls.threshold_height, "value_changed",
-                     G_CALLBACK(mark_invalidate), &controls);
-    g_signal_connect(controls.is_height, "toggled",
-                     G_CALLBACK(by_height_changed_cb), &controls);
-    row++;
+    table_attach_threshold(table, &row, _("_Height:"),
+                           &controls.threshold_height, args->height,
+                           &controls.is_height, &controls);
 
-    controls.threshold_slope = gtk_adjustment_new(args->slope,
-                                                  0.0, 100.0, 0.1, 5, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_slope), 1, 1);
-    controls.is_slope
-        = table_attach_threshold(table, spin, row, _("_Slope:"), "%",
-                                 &controls.threshold_slope_units,
-                                 &controls.threshold_slope_scale);
-    controls.threshold_slope_spin = spin;
-    g_signal_connect(controls.threshold_slope, "value_changed",
-                     G_CALLBACK(mark_invalidate), &controls);
-    g_signal_connect(controls.is_slope, "toggled",
-                     G_CALLBACK(by_slope_changed_cb), &controls);
-    row++;
+    table_attach_threshold(table, &row, _("_Slope:"),
+                           &controls.threshold_slope, args->slope,
+                           &controls.is_slope, &controls);
 
-    controls.threshold_lap = gtk_adjustment_new(args->lap,
-                                                0.0, 100.0, 0.1, 5, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_lap), 1, 1);
-    controls.is_lap
-        = table_attach_threshold(table, spin, row, _("_Curvature:"), "%",
-                                 &controls.threshold_lap_units,
-                                 &controls.threshold_lap_scale);
-    controls.threshold_lap_spin = spin;
-    g_signal_connect(controls.threshold_lap, "value_changed",
-                     G_CALLBACK(mark_invalidate), &controls);
-    g_signal_connect(controls.is_lap, "toggled",
-                     G_CALLBACK(by_lap_changed_cb), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    row++;
+    table_attach_threshold(table, &row, _("_Curvature:"),
+                           &controls.threshold_lap, args->lap,
+                           &controls.is_lap, &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
@@ -336,16 +269,10 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                      G_CALLBACK(mark_invalidate), &controls);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("Mer_ge mode:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
     controls.merge = gwy_option_menu_mergegrain(G_CALLBACK(mark_invalidate),
                                                 &controls, args->merge_type);
-    gtk_table_attach(GTK_TABLE(table), controls.merge, 1, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    gwy_table_attach_hscale(table, row, _("Mer_ge mode:"), NULL,
+                            GTK_OBJECT(controls.merge), GWY_HSCALE_WIDGET);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Mask color:"));
@@ -472,39 +399,6 @@ mark_invalidate(G_GNUC_UNUSED GObject *obj,
                 MarkControls *controls)
 {
     controls->computed = FALSE;
-}
-
-static void
-by_height_changed_cb(GtkToggleButton *check,
-                     MarkControls *controls)
-{
-    gboolean active = gtk_toggle_button_get_active(check);
-
-    gtk_widget_set_sensitive(controls->threshold_height_spin, active);
-    gtk_widget_set_sensitive(controls->threshold_height_units, active);
-    gtk_widget_set_sensitive(controls->threshold_height_scale, active);
-}
-
-static void
-by_slope_changed_cb(GtkToggleButton *check,
-                    MarkControls *controls)
-{
-    gboolean active = gtk_toggle_button_get_active(check);
-
-    gtk_widget_set_sensitive(controls->threshold_slope_spin, active);
-    gtk_widget_set_sensitive(controls->threshold_slope_units, active);
-    gtk_widget_set_sensitive(controls->threshold_slope_scale, active);
-}
-
-static void
-by_lap_changed_cb(GtkToggleButton *check,
-                  MarkControls *controls)
-{
-    gboolean active = gtk_toggle_button_get_active(check);
-
-    gtk_widget_set_sensitive(controls->threshold_lap_spin, active);
-    gtk_widget_set_sensitive(controls->threshold_lap_units, active);
-    gtk_widget_set_sensitive(controls->threshold_lap_scale, active);
 }
 
 static void

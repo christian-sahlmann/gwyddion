@@ -49,11 +49,7 @@ typedef struct {
     GtkWidget *is_height;
     GtkWidget *is_area;
     GtkObject *threshold_height;
-    GtkWidget *threshold_height_spin;
-    GtkWidget *threshold_height_units;
     GtkObject *threshold_area;
-    GtkWidget *threshold_area_spin;
-    GtkWidget *threshold_area_units;
     GtkWidget *merge;
     GtkWidget *color_button;
     GwyContainer *mydata;
@@ -74,10 +70,6 @@ static void        remove_dialog_update_controls (RemoveControls *controls,
                                                   RemoveArgs *args);
 static void        remove_dialog_update_args     (RemoveControls *controls,
                                                   RemoveArgs *args);
-static void        by_height_changed_cb          (GtkToggleButton *check,
-                                                  RemoveControls *controls);
-static void        by_area_changed_cb            (GtkToggleButton *check,
-                                                  RemoveControls *controls);
 static void        preview                       (RemoveControls *controls,
                                                   RemoveArgs *args,
                                                   GwyContainer *data);
@@ -111,7 +103,7 @@ static GwyModuleInfo module_info = {
     "remove_threshold",
     N_("Remove grains by thresholding"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -162,41 +154,10 @@ remove_th(GwyContainer *data, GwyRunType run)
     return ok;
 }
 
-static GtkWidget*
-table_attach_threshold(GtkWidget *table,
-                       GtkWidget *spin,
-                       gint row,
-                       const gchar *name,
-                       const gchar *units,
-                       GtkWidget **units_label)
-{
-    GtkWidget *label, *check;
-
-    check = gtk_check_button_new_with_mnemonic(name);
-    gtk_table_attach(GTK_TABLE(table), check,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
-
-    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
-    gtk_table_attach(GTK_TABLE(table), spin,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
-
-    if (units) {
-        label = gtk_label_new(units);
-        gtk_table_attach(GTK_TABLE(table), label,
-                         2, 3, row, row+1, GTK_FILL, 0, 2, 2);
-        gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
-        gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-        if (units_label)
-            *units_label = label;
-    }
-
-    return check;
-}
-
 static gboolean
 remove_dialog(RemoveArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *spin;
+    GtkWidget *dialog, *table, *spin, *hbox, *align, *label;
     RemoveControls controls;
     enum {
         RESPONSE_RESET = 1,
@@ -205,9 +166,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gint response;
     gdouble zoomval;
     GtkObject *layer;
-    GtkWidget *hbox;
     GwyDataField *dfield;
-    GtkWidget *label;
     gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Grains by Threshold"),
@@ -217,6 +176,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 2);
@@ -257,25 +217,19 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_height), 1, 1);
-    controls.is_height
-        = table_attach_threshold(table, spin, row, _("_Height:"), "%",
-                                 &controls.threshold_height_units);
-    controls.threshold_height_spin = spin;
-    g_signal_connect(controls.is_height, "toggled",
-                     G_CALLBACK(by_height_changed_cb), &controls);
+    spin = gwy_table_attach_hscale(table, row, _("_Height:"), "%",
+                                   controls.threshold_height, GWY_HSCALE_CHECK);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+    controls.is_height = g_object_get_data(G_OBJECT(controls.threshold_height),
+                                           "check");
     row++;
 
     controls.threshold_area = gtk_adjustment_new(args->area,
-                                                 0.0, 16384.0, 0.1, 10, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold_area), 1, 0);
-    controls.is_area
-        = table_attach_threshold(table, spin, row, _("_Area:"),
-                                 "px<sup>2</sup>",
-                                 &controls.threshold_area_units);
-    controls.threshold_area_spin = spin;
-    g_signal_connect(controls.is_area, "toggled",
-                     G_CALLBACK(by_area_changed_cb), &controls);
+                                                 0.0, 16384.0, 1, 10, 0);
+    spin = gwy_table_attach_hscale(table, row, _("_Area:"), "px<sup>2</sup>",
+                                   controls.threshold_area, GWY_HSCALE_CHECK);
+    controls.is_area = g_object_get_data(G_OBJECT(controls.threshold_area),
+                                         "check");
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
@@ -293,16 +247,9 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("_Selection mode:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
-
     controls.merge = gwy_option_menu_mergegrain(NULL, NULL, args->merge_type);
-    gtk_table_attach(GTK_TABLE(table), controls.merge,
-                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    gwy_table_attach_hscale(table, row, _("_Selection mode:"), NULL,
+                            controls.merge, GWY_HSCALE_WIDGET);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Mask color:"));
@@ -314,8 +261,10 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                                    TRUE);
     load_mask_color(controls.color_button,
                     gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
-    gtk_table_attach(GTK_TABLE(table), controls.color_button,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
+    gtk_container_add(GTK_CONTAINER(align), controls.color_button);
+    gtk_table_attach(GTK_TABLE(table), align, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
     row++;
@@ -402,26 +351,6 @@ remove_dialog_update_args(RemoveControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
     args->merge_type = gwy_option_menu_get_history(controls->merge,
                                                    "mergegrain-type");
-}
-
-static void
-by_height_changed_cb(GtkToggleButton *check,
-                     RemoveControls *controls)
-{
-    gboolean active = gtk_toggle_button_get_active(check);
-
-    gtk_widget_set_sensitive(controls->threshold_height_spin, active);
-    gtk_widget_set_sensitive(controls->threshold_height_units, active);
-}
-
-static void
-by_area_changed_cb(GtkToggleButton *check,
-                   RemoveControls *controls)
-{
-    gboolean active = gtk_toggle_button_get_active(check);
-
-    gtk_widget_set_sensitive(controls->threshold_area_spin, active);
-    gtk_widget_set_sensitive(controls->threshold_area_units, active);
 }
 
 static void
