@@ -35,34 +35,6 @@ G_BEGIN_DECLS
 #define GWY_IS_GRADIENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRADIENT))
 #define GWY_GRADIENT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRADIENT, GwyGradientClass))
 
-/* XXX: remove? */
-#define GWY_PALETTE_BLUE         "Blue"
-#define GWY_PALETTE_BLUE_CYAN    "Blue-Cyan"
-#define GWY_PALETTE_BLUE_VIOLET  "Blue-Violet"
-#define GWY_PALETTE_BLUE_YELLOW  "Blue-Yellow"
-#define GWY_PALETTE_BW1          "BW1"
-#define GWY_PALETTE_BW2          "BW2"
-#define GWY_PALETTE_COLD         "Cold"
-#define GWY_PALETTE_DFIT         "DFit"
-#define GWY_PALETTE_GOLD         "Gold"
-#define GWY_PALETTE_GRAY         "Gray"
-#define GWY_PALETTE_GREEN        "Green"
-#define GWY_PALETTE_GREEN_CYAN   "Green-Cyan"
-#define GWY_PALETTE_GREEN_VIOLET "Green-Violet"
-#define GWY_PALETTE_GREEN_YELLOW "Green-Yellow"
-#define GWY_PALETTE_OLIVE        "Olive"
-#define GWY_PALETTE_PINK         "Pink"
-#define GWY_PALETTE_PM3D         "Pm3d"
-#define GWY_PALETTE_RAINBOW1     "Rainbow1"
-#define GWY_PALETTE_RAINBOW2     "Rainbow2"
-#define GWY_PALETTE_RED          "Red"
-#define GWY_PALETTE_RED_CYAN     "Red-Cyan"
-#define GWY_PALETTE_RED_VIOLET   "Red-Violet"
-#define GWY_PALETTE_RED_YELLOW   "Red-Yellow"
-#define GWY_PALETTE_SPECTRAL     "Spectral"
-#define GWY_PALETTE_WARM         "Warm"
-#define GWY_PALETTE_YELLOW       "Yellow"
-
 #define GWY_GRADIENT_DEFAULT "Gray"
 
 typedef struct _GwyGradient      GwyGradient;

@@ -137,7 +137,7 @@ poly_level_do(GwyContainer *data,
 {
     GtkWidget *data_window;
     GwyContainer *newdata;
-    const guchar *pal = GWY_PALETTE_GRAY;
+    const guchar *pal = GWY_GRADIENT_DEFAULT;
     GwyDataField *dfield;
     gint xres, yres;
     gdouble *coeffs;

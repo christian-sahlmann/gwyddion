@@ -67,7 +67,7 @@ static GByteArray* gwy_gradient_serialize          (GObject *obj,
 static GObject* gwy_gradient_deserialize           (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
-static GObject* gwy_gradient_duplicate             (GObject *object);
+static GObject* gwy_gradient_duplicate_real        (GObject *object);
 
 static const gchar *magic_header = "Gwyddion Gradient 1.0";
 
@@ -135,7 +135,7 @@ gwy_gradient_serializable_init(GwySerializableIface *iface)
 {
     iface->serialize = gwy_gradient_serialize;
     iface->deserialize = gwy_gradient_deserialize;
-    iface->duplicate = gwy_gradient_duplicate;
+    iface->duplicate = gwy_gradient_duplicate_real;
 }
 
 static void
@@ -1195,14 +1195,14 @@ _gwy_gradients_setup_presets(void)
     guint i;
 
     gwy_gradient_preset(GWY_GRADIENT_DEFAULT, G_N_ELEMENTS(gray), gray);
-    gwy_gradient_preset(GWY_PALETTE_RAINBOW1, G_N_ELEMENTS(rainbow1), rainbow1),
-    gwy_gradient_preset(GWY_PALETTE_RAINBOW2, G_N_ELEMENTS(rainbow2), rainbow2);
-    gwy_gradient_preset(GWY_PALETTE_GOLD, G_N_ELEMENTS(gold), gold);
-    gwy_gradient_preset(GWY_PALETTE_PM3D, G_N_ELEMENTS(pm3d), pm3d);
-    gwy_gradient_preset(GWY_PALETTE_SPECTRAL, G_N_ELEMENTS(spectral), spectral);
-    gwy_gradient_preset(GWY_PALETTE_WARM, G_N_ELEMENTS(warm), warm);
-    gwy_gradient_preset(GWY_PALETTE_COLD, G_N_ELEMENTS(cold), cold);
-    gwy_gradient_preset(GWY_PALETTE_DFIT, G_N_ELEMENTS(dfit), dfit);
+    gwy_gradient_preset("Rainbow1", G_N_ELEMENTS(rainbow1), rainbow1),
+    gwy_gradient_preset("Rainbow2", G_N_ELEMENTS(rainbow2), rainbow2);
+    gwy_gradient_preset("Gold", G_N_ELEMENTS(gold), gold);
+    gwy_gradient_preset("Pm3d", G_N_ELEMENTS(pm3d), pm3d);
+    gwy_gradient_preset("Spectral", G_N_ELEMENTS(spectral), spectral);
+    gwy_gradient_preset("Warm", G_N_ELEMENTS(warm), warm);
+    gwy_gradient_preset("Cold", G_N_ELEMENTS(cold), cold);
+    gwy_gradient_preset("DFit", G_N_ELEMENTS(dfit), dfit);
 
     gwy_gradient_preset("Spring", G_N_ELEMENTS(spring), spring);
     gwy_gradient_preset("Body", G_N_ELEMENTS(body), body);
@@ -1210,52 +1210,52 @@ _gwy_gradients_setup_presets(void)
     gwy_gradient_preset("Lines", G_N_ELEMENTS(lines), lines);
 
     pd[1].color = red_color;
-    gwy_gradient_preset(GWY_PALETTE_RED, G_N_ELEMENTS(pd), pd);
+    gwy_gradient_preset("Red", G_N_ELEMENTS(pd), pd);
     pd[1].color = green_color;
-    gwy_gradient_preset(GWY_PALETTE_GREEN, G_N_ELEMENTS(pd), pd);
+    gwy_gradient_preset("Green", G_N_ELEMENTS(pd), pd);
     pd[1].color = blue_color;
-    gwy_gradient_preset(GWY_PALETTE_BLUE, G_N_ELEMENTS(pd), pd);
+    gwy_gradient_preset("Blue", G_N_ELEMENTS(pd), pd);
     pd[1].color = xyellow;
-    gwy_gradient_preset(GWY_PALETTE_YELLOW, G_N_ELEMENTS(pd), pd);
+    gwy_gradient_preset("Yellow", G_N_ELEMENTS(pd), pd);
     pd[1].color = pink;
-    gwy_gradient_preset(GWY_PALETTE_PINK, G_N_ELEMENTS(pd), pd);
+    gwy_gradient_preset("Pink", G_N_ELEMENTS(pd), pd);
     pd[1].color = olive;
-    gwy_gradient_preset(GWY_PALETTE_OLIVE, G_N_ELEMENTS(pd), pd);
+    gwy_gradient_preset("Olive", G_N_ELEMENTS(pd), pd);
 
     pd3[1].color = red_color;
     pd3[2].color = yellow_color;
-    gwy_gradient_preset(GWY_PALETTE_RED_YELLOW, G_N_ELEMENTS(pd3), pd3);
+    gwy_gradient_preset("Red-Yellow", G_N_ELEMENTS(pd3), pd3);
     pd3[2].color = violet_color;
-    gwy_gradient_preset(GWY_PALETTE_RED_VIOLET, G_N_ELEMENTS(pd3), pd3);
+    gwy_gradient_preset("Red-Violet", G_N_ELEMENTS(pd3), pd3);
 
     pd3[1].color = blue_color;
     pd3[2].color = cyan_color;
-    gwy_gradient_preset(GWY_PALETTE_BLUE_CYAN, G_N_ELEMENTS(pd3), pd3);
+    gwy_gradient_preset("Blue-Cyan", G_N_ELEMENTS(pd3), pd3);
     pd3[2].color = violet_color;
-    gwy_gradient_preset(GWY_PALETTE_BLUE_VIOLET, G_N_ELEMENTS(pd3), pd3);
+    gwy_gradient_preset("Blue-Violet", G_N_ELEMENTS(pd3), pd3);
 
     pd3[1].color = green_color;
     pd3[2].color = yellow_color;
-    gwy_gradient_preset(GWY_PALETTE_GREEN_YELLOW, G_N_ELEMENTS(pd3), pd3);
+    gwy_gradient_preset("Green-Yellow", G_N_ELEMENTS(pd3), pd3);
     pd3[2].color = cyan_color;
-    gwy_gradient_preset(GWY_PALETTE_GREEN_CYAN, G_N_ELEMENTS(pd3), pd3);
+    gwy_gradient_preset("Green-Cyan", G_N_ELEMENTS(pd3), pd3);
 
     pd4[1].color = red_color;
     pd4[3].color = cyan_color;
-    gwy_gradient_preset(GWY_PALETTE_RED_CYAN, G_N_ELEMENTS(pd4), pd4);
+    gwy_gradient_preset("Red-Cyan", G_N_ELEMENTS(pd4), pd4);
     pd4[1].color = blue_color;
     pd4[3].color = yellow_color;
-    gwy_gradient_preset(GWY_PALETTE_BLUE_YELLOW, G_N_ELEMENTS(pd4), pd4);
+    gwy_gradient_preset("Blue-Yellow", G_N_ELEMENTS(pd4), pd4);
     pd4[1].color = green_color;
     pd4[3].color = violet_color;
-    gwy_gradient_preset(GWY_PALETTE_GREEN_VIOLET, G_N_ELEMENTS(pd4), pd4);
+    gwy_gradient_preset("Green-Violet", G_N_ELEMENTS(pd4), pd4);
 
     pd2 = g_new(GwyGradientPoint, 20);
     for (i = 0; i < 10; i++) {
         pd2[i].x = i/9.0;
         pd2[i].color = i%2 ? black_color : white_color;
     }
-    gwy_gradient_preset(GWY_PALETTE_BW1, 10, pd2);
+    gwy_gradient_preset("BW1", 10, pd2);
 
     pd2[0].x = 0.0;
     pd2[0].color = black_color;
@@ -1265,7 +1265,7 @@ _gwy_gradients_setup_presets(void)
     }
     pd2[19].x = 1.0;
     pd2[19].color = white_color;
-    gwy_gradient_preset(GWY_PALETTE_BW2, 20, pd2);
+    gwy_gradient_preset("BW2", 20, pd2);
     g_free(pd2);
 }
 
@@ -1459,7 +1459,7 @@ fail:
 }
 
 static GObject*
-gwy_gradient_duplicate(GObject *object)
+gwy_gradient_duplicate_real(GObject *object)
 {
     g_return_val_if_fail(GWY_IS_GRADIENT(object), NULL);
     g_object_ref(object);
