@@ -513,6 +513,18 @@ void
 gwy_graph_set_status(GwyGraph *graph,
                      GwyGraphStatusType status)
 {
+
+    /*reset points if status changing*/
+    if (graph->area->status == GWY_GRAPH_STATUS_POINTS)
+    {
+        g_array_free(graph->area->pointsdata->scr_points, 1);
+        g_array_free(graph->area->pointsdata->data_points, 1);
+
+        graph->area->pointsdata->scr_points = g_array_new(0, 1, sizeof(GwyGraphScrPoint));
+        graph->area->pointsdata->data_points = g_array_new(0, 1, sizeof(GwyGraphDataPoint));
+        graph->area->pointsdata->n = 0;
+    }                                                          
+
     graph->area->status = status;
 }
 

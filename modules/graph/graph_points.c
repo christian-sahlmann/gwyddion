@@ -49,6 +49,7 @@ static gboolean    module_register              (const gchar *name);
 static gboolean    points                       (GwyGraph *graph);
 static gboolean    points_dialog                (GwyGraph *graph);
 static void        selection_updated_cb         (GtkWidget *widget, gpointer data);
+static void        clear                        (GtkWidget *widget, gpointer data);
 static void        points_dialog_closed_cb      (GtkWidget *widget, gpointer data);
 static void        points_dialog_response_cb    (GtkWidget *widget, gint arg1, gpointer data);
 
@@ -114,10 +115,12 @@ points_dialog(GwyGraph *graph)
     gint i;
     GtkWidget *label;
     GtkWidget *table;
+    gint response;
     
     dialog = gtk_dialog_new_with_buttons(_("Measure distances"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         _("Clear"), GTK_RESPONSE_REJECT,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
 
@@ -229,8 +232,8 @@ points_dialog(GwyGraph *graph)
     }  
  
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);   
-  
-    gtk_widget_show_all(dialog); 
+ 
+    gtk_widget_show_all(dialog);
     
     return TRUE;
 }
@@ -336,6 +339,16 @@ points_dialog_closed_cb(GtkWidget *widget, gpointer data)
 static void
 points_dialog_response_cb(GtkWidget *widget, gint arg1, gpointer data)
 {
+    GwyGraph *graph;
+    graph = (GwyGraph *) data;
+    
+    if (arg1==GTK_RESPONSE_REJECT)
+    {
+        gwy_graph_set_status(graph, GWY_GRAPH_STATUS_POINTS);
+        gtk_widget_queue_draw(GTK_WIDGET(graph));
+        selection_updated_cb(widget, data);
+    }
+    else
     points_dialog_closed_cb(widget, data);
 }
 
