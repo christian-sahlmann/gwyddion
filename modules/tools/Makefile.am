@@ -5,6 +5,7 @@ toolsdir = $(gwymoduledir)/tool
 module_ldflags = -shared -Wl,-soname
 
 tools_PROGRAMS = \
+	distance.so \
 	crop.so \
 	filter.so \
 	grain_remove_manually.so \
@@ -27,6 +28,9 @@ EXTRA_DIST = \
 
 crop_so_SOURCES = crop.c
 crop_so_LDFLAGS = $(module_ldflags),crop.so
+
+distance_so_SOURCES = distance.c
+distance_so_LDFLAGS = $(module_ldflags),distance.so
 
 filter_so_SOURCES = filter.c
 filter_so_LDFLAGS = $(module_ldflags),filter.so
