@@ -48,6 +48,8 @@ struct _GwyGraphModel {
     gint nautocurves;
     GObject **curves;
 
+    GString *title;    /* XXX: GwyGraph has no such thing */
+
     gdouble x_reqmax;
     gdouble x_reqmin;
     gdouble y_reqmax;

@@ -142,6 +142,7 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->x_unit = gwy_si_unit_new("");
     gmodel->y_unit = gwy_si_unit_new("");
 
+    gmodel->title = g_string_new("Graph"); /* XXX: GwyGraph has no such thing */
     gmodel->top_label = g_string_new("");
     gmodel->bottom_label = g_string_new("");
     gmodel->left_label = g_string_new("");
@@ -198,6 +199,7 @@ gwy_graph_model_finalize(GObject *object)
     g_object_unref(gmodel->x_unit);
     g_object_unref(gmodel->y_unit);
 
+    g_string_free(gmodel->title, TRUE);
     g_string_free(gmodel->top_label, TRUE);
     g_string_free(gmodel->bottom_label, TRUE);
     g_string_free(gmodel->left_label, TRUE);
@@ -380,6 +382,7 @@ gwy_graph_model_serialize(GObject *obj,
             { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
             { 'o', "x_unit", &gmodel->x_unit, NULL },
             { 'o', "y_unit", &gmodel->y_unit, NULL },
+            { 's', "title", &gmodel->title->str, NULL },
             { 's', "top_label", &gmodel->top_label->str, NULL },
             { 's', "bottom_label", &gmodel->bottom_label->str, NULL },
             { 's', "left_label", &gmodel->left_label->str, NULL },
@@ -428,12 +431,13 @@ gwy_graph_model_deserialize(const guchar *buffer,
     pos = 0;
     gmodel = (GwyGraphModel*)gwy_graph_model_new(NULL);
     {
-        gchar *top_label, *bottom_label, *left_label, *right_label;
+        gchar *top_label, *bottom_label, *left_label, *right_label, *title;
         GwySerializeSpec spec[] = {
             { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
             { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
             { 'o', "x_unit", &gmodel->x_unit, NULL },
             { 'o', "y_unit", &gmodel->y_unit, NULL },
+            { 's', "title", &title, NULL },
             { 's', "top_label", &top_label, NULL },
             { 's', "bottom_label", &bottom_label, NULL },
             { 's', "left_label", &left_label, NULL },
@@ -450,7 +454,7 @@ gwy_graph_model_deserialize(const guchar *buffer,
             { 'i', "nautocurves", &gmodel->nautocurves, NULL },
         };
 
-        top_label = bottom_label = left_label = right_label = NULL;
+        top_label = bottom_label = left_label = right_label = title = NULL;
         if (!gwy_serialize_unpack_object_struct(buffer + *position,
                                                 mysize, &pos,
                                                 GRAPH_GLOBALS_FAKE_TYPE_NAME,
@@ -459,10 +463,15 @@ gwy_graph_model_deserialize(const guchar *buffer,
             g_free(bottom_label);
             g_free(left_label);
             g_free(right_label);
+            g_free(title);
             g_object_unref(gmodel);
             return NULL;
         }
 
+        if (title) {
+            g_string_assign(gmodel->title, title);
+            g_free(title);
+        }
         if (top_label) {
             g_string_assign(gmodel->top_label, top_label);
             g_free(top_label);
@@ -512,6 +521,7 @@ gwy_graph_model_duplicate(GObject *object)
 
     duplicate = (GwyGraphModel*)gwy_graph_model_new(NULL);
     /* widget stuff is already initialized to NULL */
+    duplicate->title = g_string_new(gmodel->title->str);;
     duplicate->has_x_unit = gmodel->has_x_unit;
     duplicate->has_y_unit = gmodel->has_y_unit;
     duplicate->x_reqmin = gmodel->x_reqmin;
