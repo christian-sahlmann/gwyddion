@@ -436,7 +436,7 @@ sis_load(const gchar *filename)
                 choices = g_renew(GwyEnum, choices, n);
                 choices[n-1].value = 1024*i + j;
                 choices[n-1].name = g_strdup_printf("Channel %u, image %u "
-                                                    "(%ux%u)",
+                                                    "(%u×%u)",
                                                     i+1, j+1,
                                                     image->width,
                                                     image->height);
