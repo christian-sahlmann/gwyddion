@@ -301,9 +301,9 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
 }
 
 /**
- * gwy_si_unit_get_format_with_resolution:
+ * gwy_si_unit_get_format_with_digits:
  * @siunit: A SI unit.
- * @value: The maximum value to be represented.
+ * @maximum: The maximum value to be represented.
  * @resolution: The number of significant digits the value should have.
  * @format: A value format to set-up, may be %NULL, a new value format is
  *          allocated then.
