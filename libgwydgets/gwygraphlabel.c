@@ -232,9 +232,17 @@ gwy_graph_label_size_request(GtkWidget *widget,
     GwyGraphLabel *label;
     gwy_debug("");
 
-    label = GWY_GRAPH_LABEL(widget);
-    requisition->width = label->maxwidth;
-    requisition->height = label->maxheight;
+    if (widget==NULL)
+    {
+        requisition->width = 0;
+        requisition->height = 0;
+    }
+    else
+    {
+        label = GWY_GRAPH_LABEL(widget);
+        requisition->width = label->maxwidth;
+        requisition->height = label->maxheight;
+    }
 }
 
 static void

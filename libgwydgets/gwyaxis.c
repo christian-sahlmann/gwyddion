@@ -138,14 +138,14 @@ gwy_axis_init(GwyAxis *axis)
     axis->is_logarithmic = 0;
     axis->is_auto = 1;
     axis->is_standalone = 0;
-    axis->orientation = GWY_AXIS_NORTH;
+    /*axis->orientation = GWY_AXIS_NORTH;*/
     axis->max = 0;
     axis->min = 0;
-    axis->mjticks = NULL;
-    axis->miticks = NULL;
+    /*axis->mjticks = NULL;*/
+    /*axis->miticks = NULL;*/
     axis->label_x_pos = 0;
     axis->label_y_pos = 0;
-    axis->label_text = NULL;
+    /*axis->label_text = NULL;*/
     axis->par.major_printmode = GWY_AXIS_AUTO;
 
     axis->par.major_length = 10;
@@ -157,13 +157,13 @@ gwy_axis_init(GwyAxis *axis)
     axis->par.minor_division = 10;
     axis->par.line_thickness = 1;
 
-    axis->dialog = NULL;
+    /*axis->dialog = NULL;*/
     axis->reqmax = 100;
     axis->reqmin = 0;
 
 
     axis->has_unit = 0;
-    axis->unit = NULL;
+    /*axis->unit = NULL;*/
 }
 
 GtkWidget*
