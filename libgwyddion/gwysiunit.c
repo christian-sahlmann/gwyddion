@@ -39,8 +39,6 @@ static GObject* gwy_si_unit_deserialize       (const guchar *buffer,
                                               gsize *position);
 static GObject* gwy_si_unit_duplicate         (GObject *object);
 
-static void gwy_si_unit_copy                         (GwySIUnit *target, 
-                                               GwySIUnit *example);
 
 GType
 gwy_si_unit_get_type(void)
@@ -116,7 +114,7 @@ static void
 gwy_si_unit_finalize(GwySIUnit *si_unit)
 {
     gwy_debug("");
-    if (si_unit->unitstr!=NULL) g_free(si_unit->unitstr);
+    g_free(si_unit->unitstr);
     si_unit->unitstr = NULL;
 }
 
@@ -184,7 +182,7 @@ GObject* gwy_si_unit_duplicate (GObject *object)
 
 /**
  * gwy_si_unit_new:
- * @unit_string: unit string 
+ * @unit_string: unit string
  *
  * Unit string represents unit with no prefixes
  * (e. g. "m", "N", "A", etc.)
@@ -205,8 +203,8 @@ gwy_si_unit_new(char *unit_string)
 
 /**
  * gwy_si_unit_set_unit_string:
- * @siunit: GwySiUnit 
- * @unit_string: unit string to be set 
+ * @siunit: GwySiUnit
+ * @unit_string: unit string to be set
  *
  * Sets string that represents unit. It is the
  * unit with no prefixes (e. g. "m", "N", "A", etc.)
@@ -221,23 +219,10 @@ gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
 }
 
 /**
- * gwy_si_unit_copy:
- * @target: where to copy
- * @example: what to copy 
- *
- * copies GwySiUnit
- **/
-static void
-gwy_si_unit_copy(GwySIUnit *target, GwySIUnit *example)
-{
-    gwy_si_unit_set_unit_string(target, example->unitstr);
-}
-
-/**
  * gwy_si_unit_get_unit_string:
- * @siunit: GwySiUnit 
+ * @siunit: GwySiUnit
  *
- * 
+ *
  *
  * Returns: string that represents unit (with no prefixes)
  **/
@@ -250,26 +235,55 @@ gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 
 
 /**
- * gwy_si_unit_get_prefixed:
- * @siunit: GwySiUnit 
+ * gwy_si_unit_get_format:
+ * @siunit: GwySiUnit
  * @value: input value
- * @number: returned number representation parameters
+ * @format: returned number representation parameters
  *
  * Finds reasonable representation for a number.
  * This means that number @value should
- * be written as @value / @number->magnitude [@number->prefixed].
+ * be written as @value / @number->magnitude [@number->units].
  **/
-void 
-gwy_si_unit_get_prefixed(GwySIUnit *siunit, 
-                         gdouble value, 
-                         GwySIValueFormat *number)
+void
+gwy_si_unit_get_format(GwySIUnit *siunit,
+                       gdouble value,
+                       GwySIValueFormat *format)
 {
     gwy_debug("");
-    number->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
-    strcpy(number->prefixed, gwy_math_SI_prefix(number->magnitude));
-    strcat(number->prefixed, siunit->unitstr);
+    format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
+    strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
+    strcat(format->units, siunit->unitstr);
 }
 
+
+/**
+ * gwy_si_unit_get_format_with_resolution:
+ * @siunit: A SI unit.
+ * @value: The maximum value to be represented.
+ * @resolution: The smallest step (approximately) that should make a visible
+ *              difference in the representation.
+ * @format: A value format to set-up, may be %NULL, a new value format is
+ *          allocated then.
+ *
+ * Finds a good format for representing a range of values with given resolution.
+ *
+ * The values should be then printed as value/@format->magnitude
+ * [@format->units] with @format->precision decimal places.
+ *
+ * Returns: The value format.  If @format was %NULL, a newly allocated format
+ *          is returned, otherwise (modified) @format itself is returned.
+ **/
+GwySIValueFormat*
+gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
+                                       gdouble maximum,
+                                       gdouble resolution,
+                                       GwySIValueFormat *format)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+    gwy_si_unit_get_format(siunit, maximum, format);
+    return format;
+}
 
 
 

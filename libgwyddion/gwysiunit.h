@@ -40,9 +40,9 @@ typedef struct _GwySIUnit GwySIUnit;
 typedef struct _GwySIUnitClass GwySIUnitClass;
 
 typedef struct {
-    gchar *prefixed;
     gdouble magnitude;
     gint precision;
+    gchar *units;
 } GwySIValueFormat;
 
 struct _GwySIUnit {
@@ -62,9 +62,9 @@ GObject* gwy_si_unit_new(gchar *unit_string);
 void gwy_si_unit_set_unit_string(GwySIUnit *siunit, gchar *unit_string);
 gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit);
 
-void gwy_si_unit_get_prefixed(GwySIUnit *siunit, gdouble value, GwySIValueFormat *number);
-
-void gwy_si_unit_copy(GwySIUnit *target, GwySIUnit *example);
+void gwy_si_unit_get_format(GwySIUnit *siunit,
+                            gdouble value,
+                            GwySIValueFormat *format);
 
 
 #ifdef __cplusplus
