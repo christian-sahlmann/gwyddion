@@ -1,54 +1,43 @@
 # @(#) $Id$
 
-libdir = $(gwymoduledir)/process
+processdir = $(gwymoduledir)/process
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
-libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
-libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
-libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
-libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
+module_ldflags = -shared -Wl,-soname
 
-lib_LTLIBRARIES = \
-	libbasicops.la \
-	libcwt.la \
-	libfft.la \
-	liblevel.la \
-	libplugin-proxy.la \
-	librotate.la \
-	libscale.la \
-	libshade.la
+process_PROGRAMS = \
+	basicops.so \
+	level.so \
+	plugin-proxy.so \
+	rotate.so \
+	scale.so \
+	fft.so \
+        cwt.so \
+	shade.so
 
-libbasicops_la_SOURCES = basicops.c
-libbasicops_la_LDFLAGS = -avoid-version -module
-libbasicops_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+basicops_so_SOURCES = basicops.c
+basicops_so_LDFLAGS = $(module_ldflags),basicops.so
 
-libcwt_la_SOURCES = cwt.c
-libcwt_la_LDFLAGS = -avoid-version -module
-libcwt_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+level_so_SOURCES = level.c
+level_so_LDFLAGS = $(module_ldflags),level.so
 
-libfft_la_SOURCES = fft.c
-libfft_la_LDFLAGS = -avoid-version -module
-libfft_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+plugin_proxy_so_SOURCES = plugin-proxy.c
+plugin_proxy_so_LDFLAGS = $(module_ldflags),plugin-proxy.so
 
-liblevel_la_SOURCES = level.c
-liblevel_la_LDFLAGS = -avoid-version -module
-liblevel_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+rotate_so_SOURCES = rotate.c
+rotate_so_LDFLAGS = $(module_ldflags),rotate.so
 
-libplugin_proxy_la_SOURCES = plugin-proxy.c
-libplugin_proxy_la_LDFLAGS = -avoid-version -module
-libplugin_proxy_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+scale_so_SOURCES = scale.c
+scale_so_LDFLAGS = $(module_ldflags),scale.so
 
-librotate_la_SOURCES = rotate.c
-librotate_la_LDFLAGS = -avoid-version -module
-librotate_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+fft_so_SOURCES = fft.c
+fft_so_LDFLAGS = $(module_ldflags),fft.so
 
-libscale_la_SOURCES = scale.c
-libscale_la_LDFLAGS = -avoid-version -module
-libscale_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+cwt_so_SOURCES = cwt.c
+cwt_so_LDFLAGS = $(module_ldflags),cwt.so
 
-libshade_la_SOURCES = shade.c
-libshade_la_LDFLAGS = -avoid-version -module
-libshade_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+shade_so_SOURCES = shade.c
+shade_so_LDFLAGS = $(module_ldflags),shade.so
+
 
 
 INCLUDES = -I$(top_srcdir)
