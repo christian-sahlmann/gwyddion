@@ -44,6 +44,7 @@
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyspherecoords.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwytoolbox.h>
 #include <libgwydgets/gwyvectorshade.h>
 #include <libgwydgets/gwyvruler.h>
 

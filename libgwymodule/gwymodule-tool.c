@@ -19,22 +19,16 @@
  */
 
 #include <string.h>
-#include <gtk/gtktoolbar.h>
-#include <gtk/gtkstock.h>
-#include <gtk/gtkimage.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
+#include <libgwydgets/gwytoolbox.h>
 
 #include "gwymoduleinternal.h"
 #include "gwymodule-tool.h"
 
-static GtkWidget* tool_toolbar_append      (GtkWidget *toolbar,
-                                            GtkWidget *radio,
-                                            GwyToolFuncInfo *func_info,
-                                            GtkSignalFunc callback);
-static gint tool_toolbar_item_compare      (GwyToolFuncInfo *a,
+static gint tool_toolbox_item_compare      (GwyToolFuncInfo *a,
                                             GwyToolFuncInfo *b);
 
 static GHashTable *tool_funcs = NULL;
@@ -108,22 +102,22 @@ gwy_tool_func_use(const guchar *name,
 }
 
 /**
- * gwy_tool_func_build_toolbar:
- * @item_callback: A callback called when a tool from the toolbar is selected
+ * gwy_tool_func_build_toolbox:
+ * @item_callback: A callback called when a tool from the toolbox is selected
  *                 with tool name as the user data.
- * @first_tool: Where name of the first tool in the toolbar should be stored.
+ * @max_width: The number of columns.
+ * @first_tool: Where name of the first tool in the toolbox should be stored.
  *
- * Creates a toolbar with the tools.
+ * Creates a toolbox with the tools.
  *
- * Returns: The toolbar as a #GtkWidget.
+ * Returns: The toolbox as a #GtkWidget.
  **/
-/* XXX: This is broken, because the toolbar may have more than one row.
- * But... */
 GtkWidget*
-gwy_tool_func_build_toolbar(GtkSignalFunc item_callback,
+gwy_tool_func_build_toolbox(GtkSignalFunc item_callback,
+                            gint max_width,
                             const gchar **first_tool)
 {
-    GtkWidget *toolbar, *group;
+    GtkWidget *toolbox, *widget, *group = NULL;
     GSList *l, *entries = NULL;
 
     if (!tool_funcs) {
@@ -133,64 +127,39 @@ gwy_tool_func_build_toolbar(GtkSignalFunc item_callback,
     else
        g_hash_table_foreach(tool_funcs, gwy_hash_table_to_slist_cb,
                             &entries);
-    entries = g_slist_sort(entries, (GCompareFunc)tool_toolbar_item_compare);
+    entries = g_slist_sort(entries, (GCompareFunc)tool_toolbox_item_compare);
 
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
-                                GTK_ORIENTATION_HORIZONTAL);
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
-                              GTK_ICON_SIZE_BUTTON);
+    *first_tool = NULL;
+    toolbox = gwy_toolbox_new(max_width);
     if (!entries)
-        return toolbar;
+        return toolbox;
 
-    group = tool_toolbar_append(toolbar, NULL,
-                                (GwyToolFuncInfo*)entries->data, item_callback);
-    *first_tool = ((GwyToolFuncInfo*)entries->data)->name;
-    for (l = entries->next; l; l = g_slist_next(l))
-        tool_toolbar_append(toolbar, group,
-                            (GwyToolFuncInfo*)l->data, item_callback);
+    for (l = entries->next; l; l = g_slist_next(l)) {
+        GwyToolFuncInfo *func_info = (GwyToolFuncInfo*)l->data;
+
+        widget = gwy_toolbox_append(GWY_TOOLBOX(toolbox),
+                                    GTK_TYPE_RADIO_BUTTON, group,
+                                    func_info->tooltip, NULL,
+                                    func_info->stock_id,
+                                    item_callback, (gpointer)func_info->name);
+        if (!group) {
+            group = widget;
+            *first_tool = func_info->name;
+        }
+    }
+
     g_slist_free(entries);
 
-    return toolbar;
-}
-
-static GtkWidget*
-tool_toolbar_append(GtkWidget *toolbar,
-                    GtkWidget *radio,
-                    GwyToolFuncInfo *func_info,
-                    GtkSignalFunc callback)
-{
-    GtkWidget *icon;
-    const gchar *name, *stock_id, *label, *tooltip;
-
-    /* ,none` tool now unused */
-    if (!func_info) {
-        name = NULL;
-        stock_id = "gwy_none";
-        label = stock_id;
-        tooltip = _("No tool");
-    }
-    else {
-        name = func_info->name;
-        stock_id = func_info->stock_id;
-        label = stock_id;
-        tooltip = func_info->tooltip;
-    }
-    icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
-    return gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
-                                      GTK_TOOLBAR_CHILD_RADIOBUTTON, radio,
-                                      label, tooltip, NULL, icon,
-                                      callback, (gpointer)name);
+    return toolbox;
 }
 
 static gint
-tool_toolbar_item_compare(GwyToolFuncInfo *a,
+tool_toolbox_item_compare(GwyToolFuncInfo *a,
                           GwyToolFuncInfo *b)
 {
-    if (a->toolbar_position < b->toolbar_position)
+    if (a->toolbox_position < b->toolbox_position)
         return -1;
-    else if (a->toolbar_position > b->toolbar_position)
+    else if (a->toolbox_position > b->toolbox_position)
         return 1;
 
     return strcmp(a->name, b->name);
@@ -213,7 +182,7 @@ gwy_tool_func_remove(const gchar *name)
  * @name: An unique data processing function name.
  * @stock_id: Icon stock id or button label (FIXME: more to be said).
  * @tooltip: Tooltip for this tool.
- * @toolbar_position: Position in the toolbar, the tools are sorted by this
+ * @toolbox_position: Position in the toolbox, the tools are sorted by this
  *                    value (and then alphabetically if they are equal).
  *                    Standard tools are in the range [0,100].
  * @use: The tool use function itself.

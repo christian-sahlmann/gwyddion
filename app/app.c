@@ -403,8 +403,8 @@ gwy_app_data_window_foreach(GFunc func,
 }
 
 void
-gwy_app_tool_use_cb(GtkWidget *button,
-                    const gchar *toolname)
+gwy_app_tool_use_cb(const gchar *toolname,
+                    GtkWidget *button)
 {
     GwyDataWindow *data_window;
 

@@ -21,6 +21,7 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwytoolbox.h>
 #include <libgwymodule/gwymodule.h>
 #include "file.h"
 #include "menu.h"
@@ -28,14 +29,6 @@
 
 #include "gwyddion.h"
 
-static GtkWidget* gwy_app_toolbar_append_func (GtkWidget *toolbar,
-                                               const gchar *stock_id,
-                                               const gchar *tooltip,
-                                               const gchar *name);
-static GtkWidget* gwy_app_toolbar_append_zoom (GtkWidget *toolbar,
-                                               const gchar *stock_id,
-                                               const gchar *tooltip,
-                                               gint izoom);
 static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 gint nitems,
                                                 const gchar *root_path,
@@ -86,44 +79,41 @@ gwy_app_toolbox_create(void)
     g_object_set_data(G_OBJECT(toolbox), "<xtns>", menu);
 
     /***************************************************************/
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
-                                GTK_ORIENTATION_HORIZONTAL);
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
-                              GTK_ICON_SIZE_BUTTON);
+    toolbar = gwy_toolbox_new(4);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    gwy_app_toolbar_append_zoom(toolbar, GWY_STOCK_ZOOM_IN,
-                                _("Zoom in"), 1);
-    gwy_app_toolbar_append_zoom(toolbar, GWY_STOCK_ZOOM_1_1,
-                                _("Zoom 1:1"), 10000);
-    gwy_app_toolbar_append_zoom(toolbar, GWY_STOCK_ZOOM_OUT,
-                                _("Zoom out"), -1);
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Zoom in"), NULL, GWY_STOCK_ZOOM_IN,
+                       G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(1));
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Zoom 1:1"), NULL, GWY_STOCK_ZOOM_1_1,
+                       G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(10000));
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Zoom out"), NULL, GWY_STOCK_ZOOM_OUT,
+                       G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(-1));
 
     /***************************************************************/
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
-                                GTK_ORIENTATION_HORIZONTAL);
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
-                              GTK_ICON_SIZE_BUTTON);
+    toolbar = gwy_toolbox_new(4);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    gwy_app_toolbar_append_func(toolbar, GWY_STOCK_FIT_PLANE,
-                                _("Automatically level data"), "level");
-    gwy_app_toolbar_append_func(toolbar, GWY_STOCK_SCALE,
-                                _("Scale data"), "scale");
-    gwy_app_toolbar_append_func(toolbar, GWY_STOCK_ROTATE,
-                                _("Rotate data"), "rotate");
-    gwy_app_toolbar_append_func(toolbar, GWY_STOCK_SHADER,
-                                _("Shade data"), "shade");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Automatically level data"), NULL, GWY_STOCK_FIT_PLANE,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "level");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Scale data"), NULL, GWY_STOCK_SCALE,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "scale");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Rotate by arbitrary angle"), NULL, GWY_STOCK_ROTATE,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "rotate");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Shade data"), NULL, GWY_STOCK_SHADER,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "shade");
 
     /***************************************************************/
-    toolbar = gwy_tool_func_build_toolbar(G_CALLBACK(gwy_app_tool_use_cb),
-                                          &first_tool);
+    toolbar = gwy_tool_func_build_toolbox(G_CALLBACK(gwy_app_tool_use_cb),
+                                          4, &first_tool);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-    gwy_app_tool_use_cb(NULL, first_tool);
+    gwy_app_tool_use_cb(first_tool, NULL);
 
     /***************************************************************/
     gtk_widget_show_all(toolbox);
@@ -133,52 +123,6 @@ gwy_app_toolbox_create(void)
     g_signal_connect(toolbox, "delete_event", G_CALLBACK(gwy_app_quit), NULL);
 
     return toolbox;
-}
-
-static GtkWidget*
-gwy_app_toolbar_append_func(GtkWidget *toolbar,
-                            const gchar *stock_id,
-                            const gchar *tooltip,
-                            const gchar *name)
-{
-    GtkWidget *icon, *button;
-
-    g_return_val_if_fail(GTK_IS_TOOLBAR(toolbar), NULL);
-    g_return_val_if_fail(stock_id, NULL);
-    g_return_val_if_fail(tooltip, NULL);
-
-    icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
-    button = gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
-                                        GTK_TOOLBAR_CHILD_BUTTON, NULL,
-                                        stock_id, tooltip, NULL, icon,
-                                        NULL, NULL);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_app_run_process_func_cb),
-                             (gpointer)name);
-    return button;
-}
-
-static GtkWidget*
-gwy_app_toolbar_append_zoom(GtkWidget *toolbar,
-                            const gchar *stock_id,
-                            const gchar *tooltip,
-                            gint izoom)
-{
-    GtkWidget *icon, *button;
-
-    g_return_val_if_fail(GTK_IS_TOOLBAR(toolbar), NULL);
-    g_return_val_if_fail(stock_id, NULL);
-    g_return_val_if_fail(tooltip, NULL);
-
-    icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
-    button = gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
-                                        GTK_TOOLBAR_CHILD_BUTTON, NULL,
-                                        stock_id, tooltip, NULL, icon,
-                                        NULL, NULL);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_app_zoom_set_cb),
-                             GINT_TO_POINTER(izoom));
-    return button;
 }
 
 /*************************************************************************/

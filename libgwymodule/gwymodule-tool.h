@@ -42,7 +42,7 @@ struct _GwyToolFuncInfo {
     const gchar *name;
     const gchar *stock_id;
     const gchar *tooltip;
-    gint toolbar_position;
+    gint toolbox_position;
     GwyToolUseFunc use;
 };
 
@@ -51,7 +51,8 @@ gboolean     gwy_tool_func_register      (const gchar *modname,
 void         gwy_tool_func_use           (const guchar *name,
                                           GwyDataWindow *data_window,
                                           GwyToolSwitchEvent event);
-GtkWidget*   gwy_tool_func_build_toolbar (GCallback item_callback,
+GtkWidget*   gwy_tool_func_build_toolbox (GCallback item_callback,
+                                          gint max_width,
                                           const gchar **first_tool);
 
 #ifdef __cplusplus

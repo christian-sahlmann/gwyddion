@@ -52,8 +52,8 @@ void            gwy_app_graph_window_set_current  (GtkWidget *window);
 void            gwy_app_graph_window_remove       (GtkWidget *window);
 GtkWidget*      gwy_app_graph_window_create       (GtkWidget *graph);
 
-void            gwy_app_tool_use_cb               (GtkWidget *button,
-                                                   const gchar *toolname);
+void            gwy_app_tool_use_cb               (const gchar *toolname,
+                                                   GtkWidget *button);
 void            gwy_app_zoom_set_cb               (gpointer data);
 void            gwy_app_mask_kill_cb              (void);
 void            gwy_app_show_kill_cb              (void);
