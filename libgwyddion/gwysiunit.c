@@ -539,6 +539,35 @@ static const GwyUnitTraits unit_traits[] = {
     { 0.0,   0 },    /* does not take prefixes */
 };
 
+static const struct {
+    const gchar *prefix;
+    gint power10;
+}
+SI_prefixes[] = {
+    { "k",     3  },
+    { "c",    -2  },
+    { "m",    -3  },
+    { "M",     6  },
+    { "µ",    -6  },
+    /* People are extremely creative when it comes to \mu replacements... */
+    { "μ",    -6  },
+    { "~",    -6  },
+    { "u",    -6  },
+    { "\265", -6  },
+    { "G",     9  },
+    { "n",    -9  },
+    { "T",     12 },
+    { "p",    -12 },
+    { "P",     15 },
+    { "f",    -15 },
+    { "E",     18 },
+    { "a",    -18 },
+    { "Z",     21 },
+    { "z",    -21 },
+    { "Y",     24 },
+    { "y",    -24 },
+};
+
 GwySIUnit2*
 gwy_si_unit_parse(const gchar *string)
 {
@@ -546,8 +575,9 @@ gwy_si_unit_parse(const gchar *string)
     GwySimpleUnit unit;
     gdouble q;
     const gchar *end;
-    gint n;
-    gchar buf[8];
+    gchar *p, *e;
+    gint n, i, pfpower;
+    GString *buf;
     gboolean dividing = FALSE;
 
     siunit = g_new0(GwySIUnit2, 1);
@@ -584,7 +614,7 @@ gwy_si_unit_parse(const gchar *string)
                 siunit->power10 *= n;
             string = end;
         }
-        else if (g_str_has_prefix(string, "^")) {
+        else if (string[0] == '^') {
             n = strtol(string, (gchar**)&end, 10);
             if (end == string)
                 g_warning("Bad exponent %s", string);
@@ -594,26 +624,99 @@ gwy_si_unit_parse(const gchar *string)
         }
     }
 
+    buf = g_string_new("");
+
     /* the rest are units */
     while (*string) {
         end = strpbrk(string, " /");
         if (!end)
             end = string + strlen(string);
 
-        /* TODO: fix silly units (~m, us, latin1 degree, latin1 micro)*/
+        g_string_set_size(buf, 0);
+        g_string_append_len(buf, string, end - string);
+
+        /* fix sloppy notations */
+        if (strcmp(buf->str, "\272")) {
+            g_string_assign(buf, "deg");
+        }
+
         /* TODO: scan known obscure units */
         unit.traits = 0;
-        /* TODO: get prefix */
-        /* get unit */
-        strncpy(buf, string, 4);
-        buf[4] = '\0';
-        unit.unit = g_quark_from_string(buf);
 
-        /* TODO: get unit power */
-        unit.power = dividing ? -1 : 1;
+        /* get prefix */
+        pfpower = 0;
+        if (strlen(buf->str) > 1) {
+            for (i = 0; i < G_N_ELEMENTS(SI_prefixes); i++) {
+                const gchar *pfx = SI_prefixes[i].prefix;
 
-        /* append it */
-        g_array_append_val(siunit->units, unit);
+                if (g_str_has_prefix(buf->str, pfx)
+                    && g_ascii_isalpha(buf->str[strlen(pfx)])) {
+                    pfpower = SI_prefixes[i].power10;
+                    g_string_erase(buf, 0, strlen(pfx));
+                }
+            }
+        }
+
+        /* get unit power */
+        unit.power = 1;
+        if ((p = strstr(buf->str + 1, "<sup>"))) {
+            unit.power = strtol(p + strlen("<sup>"), &e, 10);
+            if (e == p + strlen("<sup>")
+                || !g_str_has_prefix(e, "</sup>")) {
+                g_warning("Bad power %s", p);
+                unit.power = 1;
+            }
+            else if (!unit.power || abs(unit.power) > 12) {
+                g_warning("Bad power %d", unit.power);
+                unit.power = 1;
+            }
+            g_string_truncate(buf, p - buf->str);
+        }
+        else if ((p = strchr(buf->str + 1, '^'))) {
+            unit.power = strtol(p + strlen("<sup>"), &e, 10);
+            if (e == p + strlen("<sup>") || *e) {
+                g_warning("Bad power %s", p);
+                unit.power = 1;
+            }
+            else if (!unit.power || abs(unit.power) > 12) {
+                g_warning("Bad power %d", unit.power);
+                unit.power = 1;
+            }
+            g_string_truncate(buf, p - buf->str);
+        }
+        else if (buf->len) {
+            /* Are we really desperate?  Yes, we are! */
+            i = buf->len;
+            while (i && (g_ascii_isdigit(buf->str[i-1]) 
+                         || buf->str[i-1] == '-'))
+                i--;
+            if (i != buf->len) {
+                unit.power = strtol(buf->str + i, NULL, 10);
+                if (!unit.power || abs(unit.power) > 12) {
+                    g_warning("Bad power %d", unit.power);
+                    unit.power = 1;
+                }
+                g_string_truncate(buf, i);
+            }
+        }
+
+        /* elementary sanity */
+        if (!g_utf8_validate(buf->str, -1, (const gchar**)&p)) {
+            g_warning("Unit string is not valid UTF-8");
+            g_string_truncate(buf, p - buf->str);
+        }
+        if (!buf->len)
+            g_warning("Base unit cannot be empty: %s", string);
+        if (!g_ascii_isalpha(buf->str[0]) && (guchar)buf->str[0] < 128)
+            g_warning("Invalid base unit: %s", buf->str);
+        else {
+            /* append it */
+            unit.unit = g_quark_from_string(buf->str);
+            if (dividing)
+                unit.power = -unit.power;
+            siunit->power10 += unit.power * pfpower;
+            g_array_append_val(siunit->units, unit);
+        }
 
         /* get to the next token, looking for division */
         while (g_ascii_isspace(*end))
