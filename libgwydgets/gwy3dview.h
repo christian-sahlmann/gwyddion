@@ -45,6 +45,7 @@
 #include <libgwyddion/gwysiunit.h>
 
 #include "gwyglmaterial.h"
+#include "gwy3dlabels.h"
 
 G_BEGIN_DECLS
 
@@ -112,9 +113,7 @@ struct _Gwy3DView {
     PangoContext * ft2_context;     /* For text rendering */
     PangoFT2FontMap *ft2_font_map;  /* Font map for text rendering */
     GwySIUnit    * si_unit;         /* [m] for axis labels */
-#ifdef LABELS
-    Gwy3DLabelInfo* labels;         /* labels text, displacement etc */
-#endif
+    Gwy3DLabels* labels;            /* labels text, displacement etc */
 
     gboolean b_reserved1;           /* resreved for thread creating of display-lists */
     gboolean b_reserved2;
@@ -191,7 +190,8 @@ gboolean         gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
                                                 gdouble new_max_scale);
 gboolean         gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
                                                 gdouble new_min_scale);
-
+Gwy3DLabelDescription * gwy_3d_view_get_label_description(Gwy3DView * gwy3dview,
+                                                        Gwy3DLabelName label_name);
 
 G_END_DECLS
 

@@ -6,6 +6,7 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 
 libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
 libgwydgetsinclude_HEADERS = \
+	gwy3dlabels.h \
 	gwy3dview.h \
 	gwy3dwindow.h \
 	gwyaxis.h \
@@ -55,6 +56,7 @@ EXTRA_DIST = \
 # Changing ifaces     C:   R:   0
 libgwydgets_la_LDFLAGS = @GTKGLEXT_LIBS@ -version-info 4:0:1
 libgwydgets_la_SOURCES = \
+	gwy3dlabels.c \
 	gwy3dview.c \
 	gwy3dwindow.c \
 	gwyaxis.c \

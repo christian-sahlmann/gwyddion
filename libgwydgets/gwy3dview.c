@@ -19,7 +19,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG
 
 #include <math.h>
 #include <string.h>
@@ -213,9 +212,7 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->ft2_context           = NULL;
     gwy3dview->ft2_font_map          = NULL;
     gwy3dview->si_unit               = NULL;
-#ifdef LABELS
     gwy3dview->labels                = NULL;
-#endif
 }
 
 /**
@@ -356,11 +353,12 @@ gwy_3d_view_new(GwyContainer *data)
                                  GDK_GL_RGBA_TYPE);
 
     gwy3dview->si_unit = (GwySIUnit*) gwy_si_unit_new("m");
-#ifdef LABELS
     gwy3dview->labels = gwy_3d_labels_new();
-    gwy_3d_labels_update(gwy3dview);
-#endif
-
+    gwy_3d_labels_connect_signal(gwy3dview->labels, "value-changed",
+                                 G_CALLBACK(gwy_3d_adjustment_value_changed),
+                                 (gpointer)gwy3dview);
+    gwy_3d_labels_update(gwy3dview->labels, gwy3dview->container, gwy3dview->si_unit);
+    gwy_debug("labels:%p",gwy3dview->labels);
     return widget;
 }
 
@@ -415,9 +413,7 @@ gwy_3d_view_finalize(GObject *object)
     gwy_object_unref(gwy3dview->light_y);
 
     gwy_object_unref(gwy3dview->si_unit);
-#   ifdef LABELS
-    gwy_3d_labels_finish(gwy3dview->labels);
-#   endif
+    gwy_object_unref(gwy3dview->labels);
 
     if (gwy3dview->shape_list_base >= 0) {
         glDeleteLists(gwy3dview->shape_list_base, 2);
@@ -539,9 +535,7 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
 
         gwy3dview->data_min  = gwy_data_field_get_min(gwy3dview->data);
         gwy3dview->data_max  = gwy_data_field_get_max(gwy3dview->data);
-#       ifdef LABELS
-        gwy_3d_labels_update(gwy3dview);
-#       endif
+        gwy_3d_labels_update(gwy3dview->labels, gwy3dview->container, gwy3dview->si_unit);
     }
 
     if ((update_data == TRUE || update_palette == TRUE)
@@ -1242,6 +1236,22 @@ gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
 
 }
 
+/**
+ * gwy_3d_view_get_label_description:
+ * @gwy3dview: A 3D data view widget.
+ * @label_name:
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+Gwy3DLabelDescription *
+gwy_3d_view_get_label_description(Gwy3DView * gwy3dview, Gwy3DLabelName label_name)
+{
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    return gwy_3d_labels_get_description(gwy3dview->labels, label_name);
+}
 
 /******************************************************************************/
 static void
@@ -1758,7 +1768,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
     GLfloat rx = widget->rot_x->value - ((int)(widget->rot_x->value / 360.0)) * 360.0;
     GLfloat Ax, Ay, Bx, By, Cx, Cy;
     gboolean yfirst = TRUE;
-    gchar text[50];
+/*    gchar text[50];*/
     gint xres = gwy_data_field_get_xres(widget->data);
     gint yres = gwy_data_field_get_yres(widget->data);
     GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
@@ -1848,7 +1858,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
         */
         if (widget->show_labels == TRUE)
         {
-#ifndef LABELS
+#if 0
             gdouble xreal = gwy_data_field_get_xreal(widget->data);
             gdouble yreal = gwy_data_field_get_yreal(widget->data);
             gdouble range, maximum;
@@ -1905,32 +1915,63 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
 
             gwy_si_unit_value_format_free(format);
 #else
-            guint size;
+            guint view_size;
+            gint size;
 
-            size = GTK_WIDGET(widget)->allocation.width
+
+
+            view_size = GTK_WIDGET(widget)->allocation.width
                    < GTK_WIDGET(widget)->allocation.height
                    ? GTK_WIDGET(widget)->allocation.width
                    : GTK_WIDGET(widget)->allocation.height;
-            gwy_3d_print_text(widget, gwy_3d_labels_value(widget, GWY_3D_VIEW_LABEL_X),
+            size = (gint) (sqrt(view_size)*0.8);
+            gwy_3d_print_text(widget,
+                              gwy_3d_labels_get_text(widget->labels,
+                                                     GWY_3D_VIEW_LABEL_X),
                               (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
                               (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f,
-                              (int) (sqrt(size)*0.9),
-                              1, 1, 0, 0, 0.0f);
-            gwy_3d_print_text(widget, gwy_3d_labels_value(widget, GWY_3D_VIEW_LABEL_Y),
+                              gwy_3d_labels_user_size(widget->labels,
+                                                      GWY_3D_VIEW_LABEL_X,
+                                                      size),
+                              1, 1,
+                              gwy_3d_labels_get_delta_x(widget->labels, GWY_3D_VIEW_LABEL_X),
+                              gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_X),
+                              gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_X));
+            gwy_3d_print_text(widget,
+                              gwy_3d_labels_get_text(widget->labels,
+                                                     GWY_3D_VIEW_LABEL_Y),
                               (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
                               (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f,
-                              (int) (sqrt(size)*0.9),
-                              1, -1, 0,0, 0.0f);
-            gwy_3d_print_text(widget, gwy_3d_labels_value(widget, GWY_3D_VIEW_LABEL_MAX),
+                              gwy_3d_labels_user_size(widget->labels,
+                                                      GWY_3D_VIEW_LABEL_Y,
+                                                      size),
+                              1, -1,
+                              gwy_3d_labels_get_delta_x(widget->labels, GWY_3D_VIEW_LABEL_Y),
+                              gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_Y),
+                              gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_Y));
+            gwy_3d_print_text(widget,
+                              gwy_3d_labels_get_text(widget->labels,
+                                                     GWY_3D_VIEW_LABEL_MAX),
                               Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
                               (widget->data_max - widget->data_min),
-                              (int) (sqrt(size)*0.8),
-                              0, -1, 0, 0, 0.0f);
-            gwy_3d_print_text(widget, gwy_3d_labels_value(widget, GWY_3D_VIEW_LABEL_MIN),
-                          Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                          -0.0f, (int) (sqrt(size)*0.8),
-                           0, -1, 0, 0, 0.0f);
-
+                              gwy_3d_labels_user_size(widget->labels,
+                                                      GWY_3D_VIEW_LABEL_MAX,
+                                                      size),
+                              0, -1,
+                              gwy_3d_labels_get_delta_x(widget->labels, GWY_3D_VIEW_LABEL_MAX),
+                              gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_MAX),
+                              gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_MAX));
+            gwy_3d_print_text(widget,
+                              gwy_3d_labels_get_text(widget->labels,
+                                                     GWY_3D_VIEW_LABEL_MIN),
+                              Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, 0.0f,
+                              gwy_3d_labels_user_size(widget->labels,
+                                                      GWY_3D_VIEW_LABEL_MIN,
+                                                      size),
+                              0, -1,
+                              gwy_3d_labels_get_delta_x(widget->labels, GWY_3D_VIEW_LABEL_MIN),
+                              gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_MIN),
+                              gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_MIN));
 #endif
         }
     }
