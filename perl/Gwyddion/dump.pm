@@ -24,7 +24,7 @@ our @EXPORT_OK = qw( read write );
 our %EXPORT_TAGS = ( all => [ @EXPORT_OK ] );
 
 # Sanity check
-our $sizeof_double = length pack 'd', 42;
+our $sizeof_double = length pack 'd', 42.0;
 die if $sizeof_double != 8;
 
 sub _dmove {
@@ -45,8 +45,12 @@ sub _read_dfield {
     my ( $fh, $data, $base ) = @_;
     my ( $c, $a, %dfield, $n, @a );
 
+    return undef if $fh->eof;
     $fh->read( $c, 1 );
-    die if $c ne '[';
+    if ( $c ne '[' ) {
+        $fh->ungetc( $c );
+        return undef;
+    }
     _dmove( $data, $base . '/xres', \%dfield, 'xres', 'int' );
     _dmove( $data, $base . '/yres', \%dfield, 'yres', 'int' );
     _dmove( $data, $base . '/xreal', \%dfield, 'xreal', 'float' );
@@ -60,6 +64,7 @@ sub _read_dfield {
     $c = $fh->getline();
     die if $c ne "]]\n";
     $data->{ $base } = \%dfield;
+    return 'True';
 }
 
 =item read( filename )
@@ -93,9 +98,9 @@ sub read {
     while ( my $line = $fh->getline() ) {
         if ( $line =~ m/$field_re/ ) {
             my $key = $1;
-            _read_dfield( $fh, \%data, $key );
+            next if _read_dfield( $fh, \%data, $key );
         }
-        elsif ( $line =~ m/$line_re/ ) {
+        if ( $line =~ m/$line_re/ ) {
             my $key = $1;
             my $val = $2;
             $data{ $key } = $val;
