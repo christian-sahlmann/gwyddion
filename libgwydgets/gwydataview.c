@@ -488,15 +488,29 @@ gwy_data_view_paint(GwyDataView *data_view)
     else {
         /* base */
         src_pixbuf = gwy_data_view_layer_paint(data_view->base_layer);
+        gwy_debug("%s: [BASE] src alpha: %d", __FUNCTION__,
+                  gdk_pixbuf_get_has_alpha(src_pixbuf));
+        gwy_debug("%s: base alpha: %d", __FUNCTION__,
+                  gdk_pixbuf_get_has_alpha(data_view->base_pixbuf));
         simple_gdk_pixbuf_scale_or_copy(src_pixbuf, data_view->base_pixbuf);
+        gwy_debug("%s: src alpha: %d", __FUNCTION__,
+                  gdk_pixbuf_get_has_alpha(src_pixbuf));
+        gwy_debug("%s: base alpha: %d", __FUNCTION__,
+                  gdk_pixbuf_get_has_alpha(data_view->base_pixbuf));
 
         /* composite with alpha */
         src_pixbuf = gwy_data_view_layer_paint(data_view->alpha_layer);
+        gwy_debug("%s: [ALPHA] src alpha: %d", __FUNCTION__,
+                  gdk_pixbuf_get_has_alpha(src_pixbuf));
         simple_gdk_pixbuf_composite(src_pixbuf, data_view->base_pixbuf);
+        gwy_debug("%s: src alpha: %d", __FUNCTION__,
+                  gdk_pixbuf_get_has_alpha(src_pixbuf));
+        gwy_debug("%s: base alpha: %d", __FUNCTION__,
+                  gdk_pixbuf_get_has_alpha(data_view->base_pixbuf));
 
         /* scale both */
-        simple_gdk_pixbuf_scale_or_copy(data_view->pixbuf,
-                                        data_view->base_pixbuf);
+        simple_gdk_pixbuf_scale_or_copy(data_view->base_pixbuf,
+                                        data_view->pixbuf);
     }
 }
 
