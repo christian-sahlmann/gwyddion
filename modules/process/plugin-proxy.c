@@ -116,7 +116,8 @@ module_register(const gchar *name)
         if (ok)
             plugins = register_plugins(plugins, name, pluginname, buffer);
         else {
-            g_warning("Cannot register plug-in %s: %s", filename, err->message);
+            g_warning("Cannot register plug-in %s: %s",
+                      filename, err ? err->message : "execution failed.");
             g_clear_error(&err);
         }
         g_free(pluginname);
