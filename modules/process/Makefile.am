@@ -20,6 +20,7 @@ process_PROGRAMS = \
 	laplace.so \
 	level.so \
 	maskcor.so \
+	maskops.so \
 	outliers.so \
 	rotate.so \
 	scale.so \
@@ -74,6 +75,9 @@ level_so_LDFLAGS = $(module_ldflags),level.so
 
 maskcor_so_SOURCES = maskcor.c
 maskcor_so_LDFLAGS = $(module_ldflags),maskcor.so
+
+maskops_so_SOURCES = maskops.c
+maskops_so_LDFLAGS = $(module_ldflags),maskops.so
 
 outliers_so_SOURCES = outliers.c
 outliers_so_LDFLAGS = $(module_ldflags),outliers.so
