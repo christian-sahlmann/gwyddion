@@ -1,6 +1,5 @@
-/* LIBGIMP - The GIMP Library
- *
- * gwymd5.c
+/*
+ * @(#) $Id$
  *
  * This code implements the MD5 message-digest algorithm.
  * The algorithm is due to Ron Rivest.  This code was
@@ -52,12 +51,11 @@ static void gwy_md5_final     (GwyMD5Context *ctx,
 
 /**
  * gwy_md5_get_digest:
- * @buffer: byte buffer
- * @buffer_size: buffer size (in bytes) or -1 if @buffer is nul-terminated.
- * @digest: 16 bytes buffer receiving the hash code.
+ * @buffer: A byte buffer.
+ * @buffer_size: Size of @buffer (in bytes) or -1 if @buffer is nul-terminated.
+ * @digest: 16 bytes to store the hash code to.
  *
- * Get the md5 hash of a buffer. The result is put in the 16 bytes
- * buffer @digest.
+ * Compute the MD5 hash of a buffer.
  *
  * The MD5 algorithm takes as input a message of arbitrary length and
  * produces as output a 128-bit "fingerprint" or "message digest" of
@@ -72,8 +70,8 @@ gwy_md5_get_digest(const gchar *buffer,
 {
     GwyMD5Context ctx;
 
-    g_return_if_fail(buffer != NULL);
-    g_return_if_fail(digest != NULL);
+    g_return_if_fail(buffer);
+    g_return_if_fail(digest);
 
     if (buffer_size < 0)
         buffer_size = strlen(buffer);

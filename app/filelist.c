@@ -38,26 +38,40 @@
 #include <string.h>
 #include <stdlib.h>
 
-/* chdir */
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
 #ifdef _MSC_VER
-#include <direct.h>
+#include <libgwyddion/gwywin32unistd.h>
 #endif
 
-typedef struct {
-    guchar md5sum[8];
-    gchar *filename_utf8;
-    gchar *thumbnail_filename;
-} RecentFile;
+typedef enum {
+    FILE_STATE_UNKNOWN = 0,
+    FILE_STATE_OLD,
+    FILE_STATE_OK,
+    FILE_STATE_FAILED
+} FileState;
 
 enum {
     FILELIST_RAW,
     FILELIST_FILENAME,
     FILELIST_LAST
 };
+
+typedef struct {
+    FileState file_state;
+    gchar *file_utf8;
+    gchar *file_sys;
+    gchar *file_uri;
+    gulong file_mtime;
+    gint file_width;
+    gint file_height;
+
+    FileState thumb_state;
+    gchar *thumb_sys;    /* doesn't matter, names are ASCII */
+    gulong thumb_mtime;
+} GwyRecentFile;
 
 typedef struct {
     GtkListStore *store;
@@ -92,7 +106,10 @@ static void  gwy_app_recent_file_list_prune          (Controls *controls);
 static void  gwy_app_recent_file_list_open           (GtkWidget *list);
 static void  gwy_app_recent_file_list_update_menu    (Controls *controls);
 
-static void  free_recent_file_record                 (RecentFile *rf);
+static GwyRecentFile* gwy_recent_file_new            (gchar *filename_utf8,
+                                                      gchar *filename_sys);
+static void  gwy_recent_file_free                    (GwyRecentFile *rf);
+static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
 
 static guint remember_recent_files = 256;
 
@@ -281,7 +298,7 @@ static void
 gwy_app_recent_file_list_prune(Controls *controls)
 {
     GtkTreeIter iter;
-    RecentFile *rf;
+    GwyRecentFile *rf;
     gboolean ok;
 
     g_return_if_fail(controls->store);
@@ -292,9 +309,9 @@ gwy_app_recent_file_list_prune(Controls *controls)
     do {
         gtk_tree_model_get(GTK_TREE_MODEL(controls->store), &iter,
                            FILELIST_RAW, &rf, -1);
-        g_printerr("<%s>\n", rf->filename_utf8);
-        if (!g_file_test(rf->filename_utf8, G_FILE_TEST_IS_REGULAR)) {
-            free_recent_file_record(rf);
+        g_printerr("<%s>\n", rf->file_utf8);
+        if (!g_file_test(rf->file_utf8, G_FILE_TEST_IS_REGULAR)) {
+            gwy_recent_file_free(rf);
             ok = gtk_list_store_remove(controls->store, &iter);
         }
         else
@@ -323,7 +340,8 @@ gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
         gwy_container_set_string_by_name(data, "/filename",
                                          g_strdup(filename_utf8));
         gwy_app_data_window_create(data);
-        gwy_app_recent_file_list_update(filename_utf8);
+        gwy_app_recent_file_list_update(g_strdup(filename_utf8),
+                                        filename_sys);
 
         /* change directory to that of the loaded file */
         dirname = g_path_get_dirname(filename_sys);
@@ -331,7 +349,8 @@ gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
             chdir(dirname);
         g_free(dirname);
     }
-    g_free(filename_sys);
+    else
+        g_free(filename_sys);
 }
 
 static void
@@ -342,12 +361,12 @@ gwy_app_recent_file_list_row_activated(GtkTreeView *treeview,
 {
     GtkTreeModel *model;
     GtkTreeIter iter;
-    RecentFile *rf;
+    GwyRecentFile *rf;
 
     model = gtk_tree_view_get_model(treeview);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_model_get(model, &iter, FILELIST_RAW, &rf, -1);
-    gwy_app_recent_file_list_open_file(rf->filename_utf8);
+    gwy_app_recent_file_list_open_file(rf->file_utf8);
 }
 
 static void
@@ -356,13 +375,13 @@ gwy_app_recent_file_list_open(GtkWidget *list)
     GtkTreeSelection *selection;
     GtkTreeModel *store;
     GtkTreeIter iter;
-    RecentFile *rf;
+    GwyRecentFile *rf;
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
     if (!gtk_tree_selection_get_selected(selection, &store, &iter))
         return;
     gtk_tree_model_get(store, &iter, FILELIST_RAW, &rf, -1);
-    gwy_app_recent_file_list_open_file(rf->filename_utf8);
+    gwy_app_recent_file_list_open_file(rf->file_utf8);
 }
 
 static void
@@ -373,14 +392,14 @@ gwy_app_recent_file_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                        gpointer userdata)
 {
     guint id;
-    RecentFile *rf;
+    GwyRecentFile *rf;
 
     id = GPOINTER_TO_UINT(userdata);
     g_assert(id == FILELIST_FILENAME);
     gtk_tree_model_get(model, iter, FILELIST_RAW, &rf, -1);
     switch (id) {
         case FILELIST_FILENAME:
-        g_object_set(cell, "text", rf->filename_utf8, NULL);
+        g_object_set(cell, "text", rf->file_utf8, NULL);
         break;
 
         default:
@@ -431,16 +450,14 @@ gwy_app_recent_file_list_load(const gchar *filename)
 
     for (n = 0; files[n]; n++) {
         if (*files[n]) {
-            RecentFile *rf;
+            GwyRecentFile *rf;
 
-            rf = g_new0(RecentFile, 1);
-            rf->filename_utf8 = files[n];
+            rf = gwy_recent_file_new(files[n], NULL);
             gtk_list_store_append(gcontrols.store, &iter);
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
             if (n < (guint)gwy_app_n_recent_files) {
                 gcontrols.recent_file_list
-                    = g_list_append(gcontrols.recent_file_list,
-                                    rf->filename_utf8);
+                    = g_list_append(gcontrols.recent_file_list, rf->file_utf8);
             }
         }
         else
@@ -466,7 +483,7 @@ gboolean
 gwy_app_recent_file_list_save(const gchar *filename)
 {
     GtkTreeIter iter;
-    RecentFile *rf;
+    GwyRecentFile *rf;
     guint i;
     FILE *fh;
 
@@ -480,7 +497,7 @@ gwy_app_recent_file_list_save(const gchar *filename)
         do {
             gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
                                FILELIST_RAW, &rf, -1);
-            fputs(rf->filename_utf8, fh);
+            fputs(rf->file_utf8, fh);
             fputc('\n', fh);
             i++;
         } while (i < remember_recent_files
@@ -505,7 +522,7 @@ void
 gwy_app_recent_file_list_free(void)
 {
     GtkTreeIter iter;
-    RecentFile *rf;
+    GwyRecentFile *rf;
 
     if (!gcontrols.store)
         return;
@@ -518,7 +535,7 @@ gwy_app_recent_file_list_free(void)
         do {
             gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
                                FILELIST_RAW, &rf, -1);
-            free_recent_file_record(rf);
+            gwy_recent_file_free(rf);
         } while (gtk_list_store_remove(gcontrols.store, &iter));
     }
     gcontrols.store = NULL;
@@ -531,22 +548,31 @@ gwy_app_recent_file_list_free(void)
 /**
  * gwy_app_recent_file_list_update:
  * @filename_utf8: A recent file to insert or move to the first position in
- *                 document history, in UTF-8 (not system encoding).
+ *                 document history, in UTF-8.  The name is eaten by
+ *                 this function, use g_strdup() if you don't like it.
+ * @filename_sys: A recent file to insert or move to the first position in
+ *                 document history, in system encoding.  The name is eaten
+ *                 by this function, use g_strdup() if you don't like it.
  *
  * Moves @filename_utf8 to the first position in document history, eventually
  * adding it if not present yet.
  *
+ * At least one of @filename_utf8, @filename_sys should be set.
+ *
  * Since: 1.5
  **/
 void
-gwy_app_recent_file_list_update(const gchar *filename_utf8)
+gwy_app_recent_file_list_update(gchar *filename_utf8,
+                                gchar *filename_sys)
 {
-    gwy_debug("%s", filename_utf8);
     g_return_if_fail(gcontrols.store);
+
+    if (!filename_utf8 && filename_sys)
+        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
 
     if (filename_utf8) {
         GtkTreeIter iter;
-        RecentFile *rf;
+        GwyRecentFile *rf;
         gboolean found = FALSE;
 
         if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(gcontrols.store),
@@ -555,7 +581,7 @@ gwy_app_recent_file_list_update(const gchar *filename_utf8)
                 gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
                                    FILELIST_RAW, &rf,
                                    -1);
-                if (strcmp(filename_utf8, rf->filename_utf8) == 0) {
+                if (strcmp(filename_utf8, rf->file_utf8) == 0) {
                     found = TRUE;
                     break;
                 }
@@ -567,8 +593,7 @@ gwy_app_recent_file_list_update(const gchar *filename_utf8)
         }
 
         if (!found) {
-            rf = g_new0(RecentFile, 1);
-            rf->filename_utf8 = g_strdup(filename_utf8);
+            rf = gwy_recent_file_new(filename_utf8, filename_sys);
             gtk_list_store_prepend(gcontrols.store, &iter);
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
         }
@@ -588,18 +613,18 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
     if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(controls->store), &iter)) {
         i = 0;
         do {
-            RecentFile *rf;
+            GwyRecentFile *rf;
 
             gtk_tree_model_get(GTK_TREE_MODEL(controls->store), &iter,
                                FILELIST_RAW, &rf, -1);
             if (l) {
-                l->data = rf->filename_utf8;
+                l->data = rf->file_utf8;
                 l = g_list_next(l);
             }
             else {
                 controls->recent_file_list
                     = g_list_append(controls->recent_file_list,
-                                    rf->filename_utf8);
+                                    rf->file_utf8);
             }
             i++;
         } while (i < (guint)gwy_app_n_recent_files
@@ -619,12 +644,68 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
     gwy_app_menu_recent_files_update(controls->recent_file_list);
 }
 
-static void
-free_recent_file_record(RecentFile *rf)
+static GwyRecentFile*
+gwy_recent_file_new(gchar *filename_utf8,
+                    gchar *filename_sys)
 {
-    g_free(rf->filename_utf8);
-    g_free(rf->thumbnail_filename);
+    GError *err = NULL;
+    GwyRecentFile *rf;
+
+    g_return_val_if_fail(filename_utf8 || filename_sys, NULL);
+
+    if (!filename_utf8)
+        filename_utf8 = g_filename_to_utf8(filename_sys, -1,
+                                           NULL, NULL, NULL);
+    if (!filename_sys)
+        filename_sys = g_filename_from_utf8(filename_utf8, -1,
+                                            NULL, NULL, NULL);
+
+    rf = g_new0(GwyRecentFile, 1);
+    rf->file_utf8 = filename_utf8;
+    rf->file_sys = filename_sys;
+    if (!(rf->file_uri = g_filename_to_uri(filename_sys, NULL, &err))) {
+        /* TODO: recovery ??? */
+        rf->thumb_state = FILE_STATE_FAILED;
+        g_clear_error(&err);
+        return rf;
+    }
+    rf->thumb_sys = gwy_recent_file_thumbnail_name(rf->file_uri);
+
+    return rf;
+}
+
+static void
+gwy_recent_file_free(GwyRecentFile *rf)
+{
+    g_free(rf->file_utf8);
+    g_free(rf->file_sys);
+    g_free(rf->file_uri);
+    g_free(rf->thumb_sys);
     g_free(rf);
+}
+
+static gchar*
+gwy_recent_file_thumbnail_name(const gchar *uri)
+{
+    static const gchar *hex2digit = "0123456789abcdef";
+    guchar md5sum[16];
+    gchar buffer[37], *p;
+    gsize i;
+
+    gwy_md5_get_digest(uri, -1, md5sum);
+    p = buffer;
+    for (i = 0; i < 16; i++) {
+        *p++ = hex2digit[(guint)md5sum[i] >> 4];
+        *p++ = hex2digit[(guint)md5sum[i] & 0x0f];
+    }
+    *p++ = '.';
+    *p++ = 'p';
+    *p++ = 'n';
+    *p++ = 'g';
+    *p = '\0';
+
+    return g_build_filename(g_get_home_dir(), ".thumbnails", "normal", buffer,
+                            NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

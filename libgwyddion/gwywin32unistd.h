@@ -18,22 +18,46 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_APP_FILE_LIST_H__
-#define __GWY_APP_FILE_LIST_H__
+#ifndef __GWY_WIN32_UNISTD_H__
+#define __GWY_WIN32_UNISTD_H__
 
-#include <gtk/gtkwidget.h>
+#include <io.h>
+#include <direct.h>
 
-G_BEGIN_DECLS
+#define chmod(file, mode)     _chmod(file, mode)
+#define ftruncate(file, size) _chsize(file, size)
+#define mkdir(dir, mode)      _mkdir(dir)
+#define unlink(file)          _unlink(file)
 
-GtkWidget* gwy_app_recent_file_list_new     (void);
-void       gwy_app_recent_file_list_update  (gchar *filename_utf8,
-                                             gchar *filename_sys);
-gboolean   gwy_app_recent_file_list_load    (const gchar *filename);
-gboolean   gwy_app_recent_file_list_save    (const gchar *filename);
-void       gwy_app_recent_file_list_free    (void);
-
-G_END_DECLS
-
+#ifndef S_ISREG
+#define S_ISREG(m) (((m) & _S_IFMT) == _S_IFREG)
 #endif
+#ifndef S_ISDIR
+#define S_ISDIR(m) (((m) & _S_IFMT) == _S_IFDIR)
+#endif
+
+#ifndef S_IRUSR
+#define S_IRUSR _S_IREAD
+#endif
+#ifndef S_IWUSR
+#define S_IWUSR _S_IWRITE
+#endif
+#ifndef S_IXUSR
+#define S_IXUSR _S_IEXEC
+#endif
+
+#ifndef _O_BINARY
+#define _O_BINARY 0
+#endif
+#ifndef _O_TEMPORARY
+#define _O_TEMPORARY 0
+#endif
+
+#ifndef W_OK
+#define W_OK 2
+#endif
+
+#endif /* __GWY_WIN32_UNISTD_H__ */
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

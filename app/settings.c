@@ -31,8 +31,7 @@
 #endif
 
 #ifdef _MSC_VER
-#include <direct.h>
-#define mkdir(dir, mode) _mkdir(dir)
+#include <libgwyddion/gwywin32unistd.h>
 #endif
 
 #include <libgwyddion/gwymacros.h>

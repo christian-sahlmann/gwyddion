@@ -12,8 +12,9 @@ libgwyddioninclude_HEADERS = \
 	gwynlfit.h \
 	gwyserializable.h \
 	gwyutils.h \
+	gwysiunit.h \
 	gwywatchable.h \
-	gwysiunit.h
+	gwywin32unistd.h
 
 lib_LTLIBRARIES = libgwyddion.la
 
@@ -39,8 +40,8 @@ libgwyddion_la_SOURCES = \
 	gwynlfit.c \
 	gwyserializable.c \
 	gwyutils.c \
-	gwywatchable.c \
-	gwysiunit.c
+	gwysiunit.c \
+	gwywatchable.c
 
 #noinst_PROGRAMS = main
 #main_SOURCES = \
