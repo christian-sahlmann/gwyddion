@@ -1,7 +1,6 @@
-- I18n under MS Windows
 - Add gwyddion-keepup to CVS
-- Fix cluttered left column layout in Profiles, SFunctions.
-- Make 3D save the larger view, not the small with full controls
+- Fix cluttered left column layout in SFunctions
+- I18n under MS Windows: find out what's wrong
 - Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
 - Do nightly CVS build from a clean checkout, this will also stop the silly
