@@ -42,6 +42,7 @@ enum {
 #define BITS_PER_SAMPLE 8
 #define MAX_CVAL (0.99999999*(1 << (BITS_PER_SAMPLE)))
 
+#ifdef GWY_ENABLE_GWYDDION2
 static void         gwy_gradient_class_init       (GwyGradientClass *klass);
 static void         gwy_gradient_init             (GwyGradient *gradient);
 static void         gwy_gradient_finalize         (GObject *object);
@@ -1604,7 +1605,7 @@ fail:
     g_free(str);
     return gradient;
 }
-
+#endif
 
 /************************** Documentation ****************************/
 

@@ -28,6 +28,8 @@
 
 G_BEGIN_DECLS
 
+#ifdef GWY_ENABLE_GWYDDION2
+
 #define GWY_TYPE_GRADIENT                  (gwy_gradient_get_type())
 #define GWY_GRADIENT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRADIENT, GwyGradient))
 #define GWY_GRADIENT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRADIENT, GwyGradient))
@@ -113,6 +115,8 @@ gboolean          gwy_gradients_delete_gradient      (const gchar *name);
 void              gwy_gradients_foreach              (GwyGradientFunc function,
                                                       gpointer user_data);
 void              gwy_gradients_setup_presets        (void);
+
+#endif
 
 G_END_DECLS
 
