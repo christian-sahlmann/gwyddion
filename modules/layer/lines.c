@@ -361,6 +361,7 @@ gwy_layer_lines_set_max_lines(GwyLayerLines *layer,
 
     if (parent)
         gwy_layer_lines_draw(vector_layer, parent->window);
+    g_object_notify(G_OBJECT(layer), "max_lines");
 }
 
 static void
@@ -382,6 +383,7 @@ gwy_layer_lines_set_line_numbers(GwyLayerLines *layer,
     layer->line_numbers = line_numbers;
     if (parent)
         gwy_layer_lines_draw(vector_layer, parent->window);
+    g_object_notify(G_OBJECT(layer), "line_numbers");
 }
 
 static void

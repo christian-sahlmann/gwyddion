@@ -602,6 +602,7 @@ gwy_layer_select_set_is_crop(GwyLayerSelect *layer,
     layer->is_crop = is_crop;
     if (parent)
         gwy_layer_select_draw(vector_layer, parent->window);
+    g_object_notify(G_OBJECT(layer), "is_crop");
 }
 
 static void

@@ -311,6 +311,7 @@ gwy_layer_points_set_max_points(GwyLayerPoints *layer,
     layer->points = g_renew(gdouble, layer->points, 2*layer->npoints);
     if (parent)
         gwy_layer_points_draw(vector_layer, parent->window);
+    g_object_notify(G_OBJECT(layer), "max_points");
 }
 
 static void

@@ -332,7 +332,8 @@ gwy_layer_axes_set_max_axes(GwyLayerAxes *layer,
         layer->inear = -1;
     layer->axes = g_renew(gdouble, layer->axes, 2*layer->naxes);
     if (parent)
-        gwy_layer_axes_undraw(vector_layer, parent->window);
+        gwy_layer_axes_draw(vector_layer, parent->window);
+    g_object_notify(G_OBJECT(layer), "max_axes");
 }
 
 static void
@@ -348,6 +349,7 @@ gwy_layer_axes_set_orientation(GwyLayerAxes *layer,
     if (layer->nselected)
         gwy_layer_axes_unselect(GWY_VECTOR_LAYER(layer));
     layer->orientation = orientation;
+    g_object_notify(G_OBJECT(layer), "orientation");
 }
 
 static void
