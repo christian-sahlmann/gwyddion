@@ -87,6 +87,8 @@ GType gwy_data_field_get_type  (void) G_GNUC_CONST;
  * simply expand to data_field->valid = 0 to clear them all. */
 #define gwy_data_field_invalidate(data_field) /* */
 
+#define gwy_data_field_duplicate(data_field) ((GwyDataField*)gwy_serializable_duplicate(G_OBJECT(data_field)))
+
 GObject*         gwy_data_field_new                  (gint xres,
                                                       gint yres,
                                                       gdouble xreal,

@@ -44,7 +44,7 @@ static GByteArray* gwy_data_field_serialize      (GObject *obj,
 static GObject* gwy_data_field_deserialize       (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
-static GObject* gwy_data_field_duplicate         (GObject *object);
+static GObject* gwy_data_field_duplicate_real    (GObject *object);
 /*static void     gwy_data_field_value_changed     (GObject *object);*/
 
 /*local functions*/
@@ -95,9 +95,9 @@ gwy_data_field_get_type(void)
 
         gwy_debug("");
         gwy_data_field_type = g_type_register_static(G_TYPE_OBJECT,
-                                                   GWY_DATA_FIELD_TYPE_NAME,
-                                                   &gwy_data_field_info,
-                                                   0);
+                                                     GWY_DATA_FIELD_TYPE_NAME,
+                                                     &gwy_data_field_info,
+                                                     0);
         g_type_add_interface_static(gwy_data_field_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
@@ -116,7 +116,7 @@ gwy_data_field_serializable_init(GwySerializableIface *iface)
     /* initialize stuff */
     iface->serialize = gwy_data_field_serialize;
     iface->deserialize = gwy_data_field_deserialize;
-    iface->duplicate = gwy_data_field_duplicate;
+    iface->duplicate = gwy_data_field_duplicate_real;
 }
 
 static void
@@ -285,7 +285,7 @@ gwy_data_field_deserialize(const guchar *buffer,
 }
 
 static GObject*
-gwy_data_field_duplicate(GObject *object)
+gwy_data_field_duplicate_real(GObject *object)
 {
     GwyDataField *data_field;
     GObject *duplicate;
@@ -2175,6 +2175,16 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  * in 2.x.
  *
  * Since: 1.7
+ **/
+
+/**
+ * gwy_data_field_duplicate:
+ * @data_field: A data field to duplicate.
+ *
+ * Convenience macro doing gwy_serializable_duplicate() with all the necessary
+ * typecasting.
+ *
+ * Since: 1.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -37,7 +37,7 @@ static GByteArray* gwy_data_line_serialize      (GObject *obj,
 static GObject* gwy_data_line_deserialize       (const guchar *buffer,
                                                  gsize size,
                                                  gsize *position);
-static GObject* gwy_data_line_duplicate         (GObject *object);
+static GObject* gwy_data_line_duplicate_real    (GObject *object);
 void            _gwy_data_line_initialize       (GwyDataLine *a,
                                                  gint res, gdouble real,
                                                  gboolean nullme);
@@ -95,7 +95,7 @@ gwy_data_line_serializable_init(GwySerializableIface *iface)
     /* initialize stuff */
     iface->serialize = gwy_data_line_serialize;
     iface->deserialize = gwy_data_line_deserialize;
-    iface->duplicate = gwy_data_line_duplicate;
+    iface->duplicate = gwy_data_line_duplicate_real;
 }
 
 static void
@@ -217,7 +217,7 @@ gwy_data_line_deserialize(const guchar *buffer,
 }
 
 static GObject*
-gwy_data_line_duplicate(GObject *object)
+gwy_data_line_duplicate_real(GObject *object)
 {
     GwyDataLine *data_line;
     GObject *duplicate;
@@ -1610,6 +1610,16 @@ gwy_data_line_get_modus(GwyDataLine *data_line,
  * @GWY_SF_OUTPUT_PSDF: Power spectral density fucntion.
  *
  * Statistical function type.
+ **/
+
+/**
+ * gwy_data_line_duplicate:
+ * @data_line: A data line to duplicate.
+ *
+ * Convenience macro doing gwy_serializable_duplicate() with all the necessary
+ * typecasting.
+ *
+ * Since: 1.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
