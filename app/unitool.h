@@ -89,6 +89,13 @@ struct _GwyUnitoolRectLabels {
     GtkWidget *ypix;
     GtkWidget *wpix;
     GtkWidget *hpix;
+    GtkWidget *rwidget1;
+    GtkWidget *rwidget2;
+    GtkWidget *rwidget3;
+    GtkWidget *rwidget4;
+    gboolean unselected_is_full;
+    gboolean reserved1;
+    gboolean reserved2;
 };
 
 gboolean     gwy_unitool_use                     (GwyUnitoolState *state,
@@ -116,13 +123,12 @@ gboolean     gwy_unitool_get_selection_or_all    (GwyUnitoolState *state,
                                                   gdouble *ymin,
                                                   gdouble *xmax,
                                                   gdouble *ymax);
-void         gwy_unitool_rect_info_table_setup   (GwyUnitoolRectLabels *rinfo,
+gint         gwy_unitool_rect_info_table_setup   (GwyUnitoolRectLabels *rinfo,
                                                   GtkTable *table,
                                                   gint col,
                                                   gint row);
 gboolean     gwy_unitool_rect_info_table_fill    (GwyUnitoolState *state,
                                                   GwyUnitoolRectLabels *rinfo,
-                                                  gboolean unselected_is_full,
                                                   gdouble *selreal,
                                                   gint *selpix);
 

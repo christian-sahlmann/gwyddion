@@ -685,7 +685,23 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
     return is_selected;
 }
 
-void
+/**
+ * gwy_unitool_rect_info_table_setup:
+ * @rinfo: A rectangular selection display data.
+ * @table: Table to place the widgets to.
+ * @col: Starting column in @table.
+ * @row: Starting row in @table.
+ *
+ * Places widgets displaying rectangular selection information to a table.
+ *
+ * This function initializes the #GwyUnitoolRectLabels widgets fields and thus
+ * must be used before gwy_unitool_rect_info_table_fill().
+ *
+ * Returns: The number of rows taken.
+ *
+ * Since: 1.6
+ **/
+gint
 gwy_unitool_rect_info_table_setup(GwyUnitoolRectLabels *rinfo,
                                   GtkTable *table,
                                   gint col,
@@ -693,8 +709,8 @@ gwy_unitool_rect_info_table_setup(GwyUnitoolRectLabels *rinfo,
 {
     GtkWidget *label;
 
-    g_return_if_fail(GTK_IS_TABLE(table));
-    g_return_if_fail(rinfo);
+    g_return_val_if_fail(GTK_IS_TABLE(table), 0);
+    g_return_val_if_fail(rinfo, 0);
 
     gtk_table_set_col_spacing(table, col+1, 12);
     gtk_table_set_col_spacing(table, col+2, 12);
@@ -762,12 +778,29 @@ gwy_unitool_rect_info_table_setup(GwyUnitoolRectLabels *rinfo,
     rinfo->hpix = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(rinfo->hpix), 1.0, 0.5);
     gtk_table_attach_defaults(table, rinfo->hpix, col+3, col+4, row+5, row+6);
+
+    return 6;  /* the number of rows taken */
 }
 
+/**
+ * gwy_unitool_rect_info_table_fill:
+ * @state: Tool state.
+ * @rinfo: A rectangular selection display data.
+ * @selreal: If not %NULL, must be an array of size at least 4 and will be
+ *           filled with selection data xmin, xmax, ymin, ymax in physical
+ *           units.
+ * @selpix: If not %NULL, must be an array of size at least 4 and will be
+ *          filled with selection data xmin, xmax, ymin, ymax in pixels.
+ *
+ * Updates rectangular selection info display.
+ *
+ * Returns: %TRUE if a selection is present, %FALSE otherwise.
+ *
+ * Since: 1.6
+ **/
 gboolean
 gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
                                  GwyUnitoolRectLabels *rinfo,
-                                 gboolean unselected_is_full,
                                  gdouble *selreal,
                                  gint *selpix)
 {
@@ -784,7 +817,7 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
 
     is_selected = gwy_unitool_get_selection_or_all(state,
                                                    sel, sel+1, sel+2, sel+3);
-    if (is_selected || unselected_is_full) {
+    if (is_selected || rinfo->unselected_is_full) {
         units = state->coord_format;
         gwy_unitool_update_label(units, rinfo->xreal, sel[0]);
         gwy_unitool_update_label(units, rinfo->yreal, sel[1]);
@@ -885,6 +918,26 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
  * Always use g_new0() or zero-fill the memory by other means when creating
  * an unitialized state.
  **/
+
+/**
+ * GwyUnitoolRectLabels:
+ * @xreal: Selection x-origin in physical units widget.
+ * @yreal: Selection y-origin in physical units widget.
+ * @wreal: Selection width in physical units widget.
+ * @hreal: Selection height in physical units widget.
+ * @xpix: Selection x-origin in pixels widget.
+ * @ypix: Selection y-origin in pixels widget.
+ * @wpix: Selection width in pixels widget.
+ * @hpix: Selection height in pixels widget.
+ * @unselected_is_full: If %TRUE, no selection is displayed as full data range,
+ *                      if %FALSE, labels are cleared when nothing is selected.
+ *
+ * Widgets and flags for rectangular selection display.
+ *
+ * You will probably ever need to access the flag fields only.
+ *
+ * Since: 1.6
+ */
 
 /**
  * GWY_UNITOOL_RESPONSE_UNSELECT:
