@@ -36,6 +36,8 @@ EXTRA_DIST = \
 	gwyddion.pc.in \
 	version.h.in \
 	version.h \
+	update-msvc.py \
+	vim-syn-gen.py \
 	$(M4TESTS)
 
 docs:

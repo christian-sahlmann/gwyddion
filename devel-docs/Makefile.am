@@ -10,6 +10,7 @@ SUBDIRS = \
 
 EXTRA_DIST = \
 	README \
+	add-objects.py \
 	gtk-doc.mk
 
 docs:
