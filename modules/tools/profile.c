@@ -58,7 +58,7 @@ static void       profile_save_args             (GwyContainer *container,
                                                  ProfileControls *controls);
 
 
-static GtkWidget *dialog = NULL;
+static GtkWidget *profile_dialog = NULL;
 static ProfileControls controls;
 static gulong updated_id = 0;
 static gulong response_id = 0;
@@ -104,7 +104,7 @@ module_register(const gchar *name)
 
 static void
 profile_use(GwyDataWindow *data_window,
-            GwyToolSwitchEvent reason)
+            G_GNUC_UNUSED GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -141,18 +141,16 @@ profile_use(GwyDataWindow *data_window,
     profile_load_args(gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent)),
                       &controls);
 
-    if (!dialog)
-        dialog = profile_dialog_create(data_view);
+    if (!profile_dialog)
+        profile_dialog = profile_dialog_create(data_view);
 
 
-    if (!dtl)
-    {
+    if (!dtl) {
         dtl = g_ptr_array_new();
         for (i = 0; i < 5; i++)
             g_ptr_array_add(dtl, (gpointer)gwy_data_line_new(10, 10, 0));
     }
-    if (!str)
-    {
+    if (!str) {
         str = g_ptr_array_new();
         g_ptr_array_add(str, (gpointer)g_string_new("Profile 1"));
         g_ptr_array_add(str, (gpointer)g_string_new("Profile 2"));
@@ -171,13 +169,11 @@ profile_use(GwyDataWindow *data_window,
 static void
 profile_do(void)
 {
-    GtkWidget *data_window;
     GtkWidget *window, *graph;
     GwyContainer *data;
-    GwyDataField *datafield;
+    /*GwyDataField *datafield;*/
     gdouble lines[12];
     gint i, j, is_selected;
-    gint x1, x2, y1, y2;
     gchar *x_unit, *z_unit;
     gdouble x_mag, z_mag;
     gdouble xreal, yreal, x_max, unit;
@@ -189,8 +185,10 @@ profile_do(void)
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
+    /* the global one should be always the right on.  shoot me if not.
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                 "/0/data"));
+    */
 
     xreal = gwy_data_field_get_xreal(datafield);
     yreal = gwy_data_field_get_yreal(datafield);
@@ -205,47 +203,39 @@ profile_do(void)
     z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
 
 
-    j=0;
-    if (controls.separate)
-    {
-        for (i=0; i<is_selected; i++)
-        {
+    j = 0;
+    if (controls.separate) {
+        for (i = 0; i < is_selected; i++) {
             graph = gwy_graph_new();
-            gwy_graph_get_autoproperties(graph, &prop);
+            gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
             prop.is_point = 0;
             prop.is_line = 1;
-            gwy_graph_set_autoproperties(graph, &prop);
+            gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
 
-            gwy_graph_add_dataline_with_units(graph, dtl->pdata[i],
-                               0, str->pdata[i], NULL,
-                               x_mag, z_mag,
-                               x_unit,
-                               z_unit
-                               );
+            gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dtl->pdata[i],
+                                              0, str->pdata[i], NULL,
+                                              x_mag, z_mag,
+                                              x_unit,
+                                              z_unit);
 
-            window = gwy_app_graph_window_create((GwyGraph *)graph);
-
+            window = gwy_app_graph_window_create(graph);
         }
     }
-    else
-    {
+    else {
         graph = gwy_graph_new();
-        gwy_graph_get_autoproperties(graph, &prop);
+        gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
         prop.is_point = 0;
         prop.is_line = 1;
-        gwy_graph_set_autoproperties(graph, &prop);
+        gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
 
-        for (i=0; i<is_selected; i++)
-        {
-
-            gwy_graph_add_dataline_with_units(graph, dtl->pdata[i],
-                               0, str->pdata[i], NULL,
-                               x_mag, z_mag,
-                               x_unit,
-                               z_unit
-                               );
+        for (i = 0; i < is_selected; i++) {
+            gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dtl->pdata[i],
+                                              0, str->pdata[i], NULL,
+                                              x_mag, z_mag,
+                                              x_unit,
+                                              z_unit);
         }
-        window = gwy_app_graph_window_create((GwyGraph *)graph);
+        window = gwy_app_graph_window_create(graph);
     }
 
 
@@ -255,23 +245,23 @@ profile_do(void)
 static void
 profile_dialog_abandon(void)
 {
-    guint i;
-
     gwy_debug("");
     if (select_layer && updated_id)
         g_signal_handler_disconnect(select_layer, updated_id);
     updated_id = 0;
     select_layer = NULL;
-    if (dialog) {
-        g_signal_handler_disconnect(dialog, response_id);
-        gtk_widget_destroy(dialog);
-        dialog = NULL;
+    if (profile_dialog) {
+        g_signal_handler_disconnect(profile_dialog, response_id);
+        gtk_widget_destroy(profile_dialog);
+        profile_dialog = NULL;
         response_id = 0;
         controls.is_visible = FALSE;
     }
 
-    if (dtl) g_ptr_array_free(dtl, 1);
-    if (str) g_ptr_array_free(str, 1);
+    if (dtl)
+        g_ptr_array_free(dtl, 1);
+    if (str)
+        g_ptr_array_free(str, 1);
     dtl = NULL;
     str = NULL;
 
@@ -281,14 +271,13 @@ static GtkWidget*
 profile_dialog_create(GwyDataView *data_view)
 {
     GwyContainer *data;
-    GwyDataField *dfield;
     GtkWidget *dialog, *table, *label, *vbox;
-    gdouble xreal, yreal, max, unit;
-    gint i;
+    gdouble xreal, yreal;
 
     gwy_debug("");
     data = gwy_data_view_get_data(data_view);
-    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                "/0/data"));
     xreal = gwy_data_field_get_xreal(datafield);
     yreal = gwy_data_field_get_yreal(datafield);
 
@@ -302,10 +291,11 @@ profile_dialog_create(GwyDataView *data_view)
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
 
 
-    gtk_dialog_add_button(dialog, "Clear selection", 1);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), "Clear selection", 1);
 
-    response_id = g_signal_connect(dialog, "response",
-                                   G_CALLBACK(profile_dialog_response_cb), NULL);
+    response_id
+        = g_signal_connect(GTK_DIALOG(dialog), "response",
+                           G_CALLBACK(profile_dialog_response_cb), NULL);
 
 
 
@@ -318,7 +308,7 @@ profile_dialog_create(GwyDataView *data_view)
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Profile positions</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
 
     controls.positions = g_ptr_array_new();
@@ -339,32 +329,39 @@ profile_dialog_create(GwyDataView *data_view)
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Profile 1:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 5);
-    gtk_box_pack_start(vbox, GTK_WIDGET(controls.positions->pdata[0]), 0, 0, 0);
-    gtk_box_pack_start(vbox, GTK_WIDGET(controls.positions->pdata[1]), 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE,5);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(controls.positions->pdata[0]),
+                       FALSE, FALSE,0);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(controls.positions->pdata[1]),
+                       FALSE, FALSE,0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Profile 2:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 5);
-    gtk_box_pack_start(vbox, GTK_WIDGET(controls.positions->pdata[2]), 0, 0, 0);
-    gtk_box_pack_start(vbox, GTK_WIDGET(controls.positions->pdata[3]), 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE,5);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(controls.positions->pdata[2]),
+                       FALSE, FALSE,0);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(controls.positions->pdata[3]),
+                       FALSE, FALSE,0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Profile 3:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 5);
-    gtk_box_pack_start(vbox, GTK_WIDGET(controls.positions->pdata[4]), 0, 0, 0);
-    gtk_box_pack_start(vbox, GTK_WIDGET(controls.positions->pdata[5]), 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE,5);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(controls.positions->pdata[4]),
+                       FALSE, FALSE,0);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(controls.positions->pdata[5]),
+                       FALSE, FALSE,0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Module parameters</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 10);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE,10);
 
     controls.separation = gtk_check_button_new_with_label("separate profiles");
-    gtk_box_pack_start(vbox, controls.separation, 0, 0, 0);
-    gtk_toggle_button_set_active(controls.separation, controls.separate);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.separation, FALSE, FALSE,0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.separation),
+                                 controls.separate);
     g_signal_connect(controls.separation, "toggled",
                      G_CALLBACK(separate_changed_cb), &controls);
 
@@ -372,12 +369,12 @@ profile_dialog_create(GwyDataView *data_view)
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE,2);
 
     controls.interpolation
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         &controls, controls.interp);
-    gtk_box_pack_start(vbox, controls.interpolation, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.interpolation, FALSE, FALSE,2);
 
 
     gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
@@ -440,11 +437,9 @@ profile_selection_updated_cb(void)
 {
     gdouble lines[12];
     gboolean is_visible, is_selected;
-    GString *lab1, *lab2, *lab3;
-    gint i, xres, j;
-    gint x1, x2, y1, y2;
+    gint i, j;
+    gint xl1, xl2, yl1, yl2;
     GwyGraphAutoProperties prop;
-    GwyGraph *gr;
     gchar *x_unit, *z_unit;
     gdouble x_mag, z_mag;
     gdouble xreal, yreal, x_max, unit;
@@ -459,16 +454,15 @@ profile_selection_updated_cb(void)
     if (!is_visible && !is_selected)
         return;
 
-    gwy_graph_get_autoproperties(controls.graph, &prop);
+    gwy_graph_get_autoproperties(GWY_GRAPH(controls.graph), &prop);
     prop.is_point = 0;
     prop.is_line = 1;
-    gwy_graph_set_autoproperties(controls.graph, &prop);
+    gwy_graph_set_autoproperties(GWY_GRAPH(controls.graph), &prop);
 
 
 
     if (is_selected) {
-
-        gwy_graph_clear(controls.graph);
+        gwy_graph_clear(GWY_GRAPH(controls.graph));
 
         xreal = gwy_data_field_get_xreal(datafield);
         yreal = gwy_data_field_get_yreal(datafield);
@@ -479,29 +473,29 @@ profile_selection_updated_cb(void)
         x_unit = g_strconcat(gwy_math_SI_prefix(x_mag), "m", NULL);
 
         z_max = gwy_data_field_get_max(datafield);
-        z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
+        z_mag = pow(10, (3*ROUND((gdouble)((gint)(log10(fabs(z_max))))/3.0))-3);
         z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
 
         j = 0;
-        for (i=0; i<is_selected; i++)
-        {
-            x2 = gwy_data_field_rtoj(datafield, lines[j++]);
-            y2 = gwy_data_field_rtoj(datafield, lines[j++]);
-            x1 = gwy_data_field_rtoj(datafield, lines[j++]);
-            y1 = gwy_data_field_rtoj(datafield, lines[j++]);
+        for (i = 0; i < is_selected; i++) {
+            xl2 = gwy_data_field_rtoj(datafield, lines[j++]);
+            yl2 = gwy_data_field_rtoj(datafield, lines[j++]);
+            xl1 = gwy_data_field_rtoj(datafield, lines[j++]);
+            yl1 = gwy_data_field_rtoj(datafield, lines[j++]);
 
             if (!gwy_data_field_get_data_line(datafield, dtl->pdata[i],
-                                     x1, y1,
-                                     x2, y2,
-                                     300,/*(gint)sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 -y2)), jak to, ze to s timhle pada?*/
+                                     xl1, yl1,
+                                     xl2, yl2,
+                                     300,/*(gint)sqrt((xl1 - xl2)*(xl1 - xl2) + (yl1 - yl2)*(yl1 - yl2)), jak to, ze to s timhle pada?*/
                                      GWY_INTERPOLATION_BILINEAR
-                                     )) continue;
-            gwy_graph_add_dataline_with_units(controls.graph, dtl->pdata[i],
-                               0, str->pdata[i], NULL,
-                               x_mag, z_mag,
-                               x_unit,
-                               z_unit
-                               );
+                                     ))
+                continue;
+            gwy_graph_add_dataline_with_units(GWY_GRAPH(controls.graph),
+                                              dtl->pdata[i],
+                                              0, str->pdata[i], NULL,
+                                              x_mag, z_mag,
+                                              x_unit,
+                                              z_unit);
 
         }
 
@@ -523,15 +517,15 @@ static void
 profile_clear(void)
 {
     gwy_layer_lines_unselect(select_layer);
-    gwy_graph_clear(controls.graph);
-    gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
+    gwy_graph_clear(GWY_GRAPH(controls.graph));
+    gtk_widget_queue_draw(controls.graph);
     update_labels();
     profile_save_args(gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent)),
                       &controls);
 }
 
 static void
-profile_dialog_response_cb(gpointer unused, gint response)
+profile_dialog_response_cb(G_GNUC_UNUSED gpointer unused, gint response)
 {
     gwy_debug("response %d", response);
     switch (response) {
@@ -570,24 +564,25 @@ profile_dialog_set_visible(gboolean visible)
 
     controls.is_visible = visible;
     if (visible)
-        gtk_window_present(GTK_WINDOW(dialog));
+        gtk_window_present(GTK_WINDOW(profile_dialog));
     else
-        gtk_widget_hide(dialog);
+        gtk_widget_hide(profile_dialog);
 }
 
 static void
-interp_changed_cb(GObject *item, ProfileControls *controls)
+interp_changed_cb(GObject *item, ProfileControls *pcontrols)
 {
     gwy_debug("");
-    controls->interp = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+    pcontrols->interp
+        = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
 
-    printf("Interpolation set to %d\n", controls->interp);
+    gwy_debug("Interpolation set to %d\n", pcontrols->interp);
 }
 
 static void
-separate_changed_cb(GtkToggleButton *button, ProfileControls *controls)
+separate_changed_cb(GtkToggleButton *button, ProfileControls *pcontrols)
 {
-    controls->separate = gtk_toggle_button_get_active(button);
+    pcontrols->separate = gtk_toggle_button_get_active(button);
 }
 
 static const gchar *separate_key = "/tool/profile/separate";
@@ -595,23 +590,29 @@ static const gchar *interp_key = "/tool/profile/interp";
 
 
 static void
-profile_load_args(GwyContainer *container, ProfileControls *controls)
+profile_load_args(GwyContainer *container, ProfileControls *pcontrols)
 {
     gwy_debug("");
     if (gwy_container_contains_by_name(container, separate_key))
-        controls->separate = gwy_container_get_boolean_by_name(container, separate_key);
-    else controls->separate = 0;
+        pcontrols->separate = gwy_container_get_boolean_by_name(container,
+                                                                separate_key);
+    else
+        pcontrols->separate = FALSE;
 
     if (gwy_container_contains_by_name(container, interp_key))
-        controls->interp = gwy_container_get_int32_by_name(container, interp_key);
-    else controls->interp = 2;
+        pcontrols->interp = gwy_container_get_int32_by_name(container,
+                                                            interp_key);
+    else
+        pcontrols->interp = GWY_INTERPOLATION_BILINEAR;
 }
 
 static void
-profile_save_args(GwyContainer *container, ProfileControls *controls)
+profile_save_args(GwyContainer *container, ProfileControls *pcontrols)
 {
-    gwy_container_set_boolean_by_name(container, separate_key, controls->separate);
-    gwy_container_set_int32_by_name(container, interp_key, controls->interp);
+    gwy_container_set_boolean_by_name(container, separate_key,
+                                      pcontrols->separate);
+    gwy_container_set_int32_by_name(container, interp_key,
+                                    pcontrols->interp);
 }
 
 
