@@ -57,6 +57,25 @@ GWY_DATA_VIEW_LAYER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwycoloraxis</FILE>
+GwyColorAxisParams
+<TITLE>GwyColorAxis</TITLE>
+gwy_color_axis_new
+gwy_color_axis_get_range
+gwy_color_axis_set_range
+gwy_color_axis_set_palette
+gwy_color_axis_get_palette
+<SUBSECTION Standard>
+GWY_COLOR_AXIS
+GWY_IS_COLOR_AXIS
+GWY_TYPE_COLOR_AXIS
+gwy_color_axis_get_type
+GWY_COLOR_AXIS_CLASS
+GWY_IS_COLOR_AXIS_CLASS
+GWY_COLOR_AXIS_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwyaxisdialog</FILE>
 <TITLE>GwyAxisDialog</TITLE>
 gwy_axis_dialog_new
@@ -209,6 +228,8 @@ gwy_ruler_set_range
 gwy_ruler_draw_ticks
 gwy_ruler_draw_pos
 gwy_ruler_get_range
+gwy_ruler_set_units
+gwy_ruler_get_units
 gwy_ruler_get_units_placement
 gwy_ruler_set_units_placement
 <SUBSECTION Standard>
@@ -256,11 +277,16 @@ GWY_VECTOR_SHADE_GET_CLASS
 
 <SECTION>
 <FILE>gwydatawindow</FILE>
+GwyZoomMode
 <TITLE>GwyDataWindow</TITLE>
 gwy_data_window_new
 gwy_data_window_get_data_view
 gwy_data_window_set_zoom
+gwy_data_view_set_zoom_mode
+gwy_data_view_get_zoom_mode
 gwy_data_window_update_title
+gwy_data_window_set_units
+gwy_data_window_get_units
 <SUBSECTION Standard>
 GWY_DATA_WINDOW
 GWY_IS_DATA_WINDOW
@@ -429,9 +455,14 @@ GWY_GRAPH_GET_CLASS
 
 <SECTION>
 <FILE>gwydgets</FILE>
+GwyOptionMenuEntry
+gwy_palette_menu
 gwy_palette_option_menu
 gwy_interpolation_option_menu
 gwy_windowing_option_menu
+gwy_zoom_mode_option_menu
+gwy_option_menu_create
+gwy_option_menu_set_history
 gwy_table_attach_spinbutton
 gwy_table_attach_row
 gwy_dialog_prevent_delete_cb

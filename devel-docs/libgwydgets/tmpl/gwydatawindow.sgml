@@ -14,6 +14,16 @@ GwyDataWindow
 
 </para>
 
+<!-- ##### ENUM GwyZoomMode ##### -->
+<para>
+
+</para>
+
+@GWY_ZOOM_MODE_SQRT2: 
+@GWY_ZOOM_MODE_CBRT2: 
+@GWY_ZOOM_MODE_PIX4PIX: 
+@GWY_ZOOM_MODE_HALFPIX: 
+
 <!-- ##### FUNCTION gwy_data_window_new ##### -->
 <para>
 
@@ -45,11 +55,47 @@ GwyDataWindow
 @zoom1000: 
 
 
+<!-- ##### FUNCTION gwy_data_view_set_zoom_mode ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@zoom_mode: 
+
+
+<!-- ##### FUNCTION gwy_data_view_get_zoom_mode ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_window_update_title ##### -->
 <para>
 
 </para>
 
 @data_window: 
+
+
+<!-- ##### FUNCTION gwy_data_window_set_units ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@units: 
+
+
+<!-- ##### FUNCTION gwy_data_window_get_units ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
 
 

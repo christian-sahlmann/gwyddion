@@ -14,6 +14,22 @@ gwydgets
 
 </para>
 
+<!-- ##### TYPEDEF GwyOptionMenuEntry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_palette_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_palette_option_menu ##### -->
 <para>
 
@@ -43,6 +59,42 @@ gwydgets
 
 @callback: 
 @cbdata: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_zoom_mode_option_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_create ##### -->
+<para>
+
+</para>
+
+@entries: 
+@nentries: 
+@key: 
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_set_history ##### -->
+<para>
+
+</para>
+
+@option_menu: 
+@key: 
 @current: 
 @Returns: 
 

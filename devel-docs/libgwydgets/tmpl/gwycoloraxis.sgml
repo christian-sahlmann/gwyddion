@@ -1,0 +1,72 @@
+<!-- ##### SECTION Title ##### -->
+GwyColorAxis
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### TYPEDEF GwyColorAxisParams ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_color_axis_new ##### -->
+<para>
+
+</para>
+
+@orientation: 
+@min: 
+@max: 
+@pal: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_color_axis_get_range ##### -->
+<para>
+
+</para>
+
+@axis: 
+@min: 
+@max: 
+
+
+<!-- ##### FUNCTION gwy_color_axis_set_range ##### -->
+<para>
+
+</para>
+
+@axis: 
+@min: 
+@max: 
+
+
+<!-- ##### FUNCTION gwy_color_axis_set_palette ##### -->
+<para>
+
+</para>
+
+@axis: 
+@pal: 
+
+
+<!-- ##### FUNCTION gwy_color_axis_get_palette ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+

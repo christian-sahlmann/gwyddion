@@ -54,7 +54,7 @@ gwymodule-file
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_register_file_func ##### -->
+<!-- ##### FUNCTION gwy_file_func_register ##### -->
 <para>
 
 </para>
@@ -64,7 +64,7 @@ gwymodule-file
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_run_file_detect_func ##### -->
+<!-- ##### FUNCTION gwy_file_func_run_detect ##### -->
 <para>
 
 </para>
@@ -75,7 +75,7 @@ gwymodule-file
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_run_file_load_func ##### -->
+<!-- ##### FUNCTION gwy_file_func_run_load ##### -->
 <para>
 
 </para>
@@ -85,7 +85,7 @@ gwymodule-file
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_run_file_save_func ##### -->
+<!-- ##### FUNCTION gwy_file_func_run_save ##### -->
 <para>
 
 </para>

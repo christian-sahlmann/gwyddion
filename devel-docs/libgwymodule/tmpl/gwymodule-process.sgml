@@ -34,7 +34,7 @@ gwymodule-process
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_register_process_func ##### -->
+<!-- ##### FUNCTION gwy_process_func_register ##### -->
 <para>
 
 </para>
@@ -44,7 +44,7 @@ gwymodule-process
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_run_process_func ##### -->
+<!-- ##### FUNCTION gwy_process_func_run ##### -->
 <para>
 
 </para>
@@ -52,6 +52,15 @@ gwymodule-process
 @name: 
 @data: 
 @run: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_process_func_get_run_types ##### -->
+<para>
+
+</para>
+
+@name: 
 @Returns: 
 
 

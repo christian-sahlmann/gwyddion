@@ -22,6 +22,7 @@
 <!ENTITY libgwydgets-GwyGraphCorner SYSTEM "xml/gwygraphcorner.xml">
 <!ENTITY libgwydgets-GwyGraphLabel SYSTEM "xml/gwygraphlabel.xml">
 <!ENTITY libgwydgets-GwyGraph SYSTEM "xml/gwygraph.xml">
+<!ENTITY libgwydgets-GwyColorAxis SYSTEM "xml/gwycoloraxis.xml">
 <!ENTITY libgwydgets-gwystock SYSTEM "xml/gwystock.xml">
 <!ENTITY libgwydgets-gwydgets SYSTEM "xml/gwydgets.xml">
 ]>
@@ -53,6 +54,7 @@
     &libgwydgets-GwyGraphCorner;
     &libgwydgets-GwyGraphLabel;
     &libgwydgets-GwyGraph;
+    &libgwydgets-GwyColorAxis;
     &libgwydgets-gwystock;
     &libgwydgets-gwydgets;
   </chapter>

@@ -62,6 +62,24 @@ GwyRuler
 @max_size: 
 
 
+<!-- ##### FUNCTION gwy_ruler_set_units ##### -->
+<para>
+
+</para>
+
+@ruler: 
+@units: 
+
+
+<!-- ##### FUNCTION gwy_ruler_get_units ##### -->
+<para>
+
+</para>
+
+@ruler: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_ruler_get_units_placement ##### -->
 <para>
 

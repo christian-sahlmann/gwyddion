@@ -468,6 +468,32 @@ GwyDataField
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_field_clamp ##### -->
+<para>
+
+</para>
+
+@a: 
+@bottom: 
+@top: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_clamp ##### -->
+<para>
+
+</para>
+
+@a: 
+@uli: 
+@ulj: 
+@bri: 
+@brj: 
+@bottom: 
+@top: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_field_get_data_line ##### -->
 <para>
 

@@ -26,8 +26,9 @@ gwy_module_foreach
 <FILE>gwymodule-process</FILE>
 GwyProcessFuncInfo
 GwyProcessFunc
-gwy_register_process_func
-gwy_run_process_func
+gwy_process_func_register
+gwy_process_func_run
+gwy_process_func_get_run_types
 gwy_build_process_menu
 </SECTION>
 
@@ -37,10 +38,10 @@ GwyFileFuncInfo
 GwyFileDetectFunc
 GwyFileLoadFunc
 GwyFileSaveFunc
-gwy_register_file_func
-gwy_run_file_detect_func
-gwy_run_file_load_func
-gwy_run_file_save_func
+gwy_file_func_register
+gwy_file_func_run_detect
+gwy_file_func_run_load
+gwy_file_func_run_save
 gwy_file_detect
 gwy_file_load
 gwy_file_save

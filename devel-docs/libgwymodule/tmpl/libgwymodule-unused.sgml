@@ -17,3 +17,60 @@
 
 @modules: 
 
+<!-- ##### FUNCTION gwy_register_file_func ##### -->
+<para>
+
+</para>
+
+@modname: 
+@func_info: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_register_process_func ##### -->
+<para>
+
+</para>
+
+@modname: 
+@func_info: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_run_file_detect_func ##### -->
+<para>
+
+</para>
+
+@name: 
+@filename: 
+@only_name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_run_file_load_func ##### -->
+<para>
+
+</para>
+
+@name: 
+@filename: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_run_file_save_func ##### -->
+<para>
+
+</para>
+
+@name: 
+@data: 
+@filename: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_run_process_func ##### -->
+<para>
+
+</para>
+
+@name: 
+@data: 
+@run: 
+@Returns: 
+

@@ -110,6 +110,16 @@ GwyContainer
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_remove_by_prefix ##### -->
+<para>
+
+</para>
+
+@container: 
+@prefix: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_container_rename ##### -->
 <para>
 

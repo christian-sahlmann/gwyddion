@@ -43,6 +43,8 @@ gwy_data_field_get_area_rms
 gwy_data_field_get_area_sum
 gwy_data_field_threshold
 gwy_data_field_area_threshold
+gwy_data_field_clamp
+gwy_data_field_area_clamp
 gwy_data_field_get_data_line
 gwy_data_field_get_row
 gwy_data_field_get_column
