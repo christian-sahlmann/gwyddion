@@ -218,11 +218,7 @@ gwy_app_get_current_data(void)
     if (!data_window)
         return NULL;
 
-    data_view = gwy_data_window_get_data_view(data_window);
-    if (!data_view)
-        return NULL;
-
-    return gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    return gwy_data_window_get_data(data_window);
 }
 
 /**

@@ -187,11 +187,10 @@ gwy_data_arith_append_line(GwyDataWindow *data_window,
                            GtkWidget *menu)
 {
     GwyContainer *data;
-    GtkWidget *data_view, *item;
+    GtkWidget *item;
     gchar *filename;
 
-    data_view = gwy_data_window_get_data_view(data_window);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    data = gwy_data_window_get_data(data_window);
 
     /* FIXME: this duplicates code from GwyDataWindow */
     if (gwy_container_contains_by_name(data, "/filename")) {
@@ -278,7 +277,7 @@ gwy_data_arith_entry_cb(GtkWidget *entry,
 static gboolean
 gwy_data_arith_do(void)
 {
-    GtkWidget *dialog, *data_window, *data_view;
+    GtkWidget *dialog, *data_window;
     GwyContainer *data;
     GwyDataField *dfield, *dfield1, *dfield2;
 
@@ -329,8 +328,7 @@ gwy_data_arith_do(void)
 
     /***** datafield x scalar (always possible) *****/
     if (operand1 && !operand2) {
-        data_view = gwy_data_window_get_data_view(operand1);
-        data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+        data = gwy_data_window_get_data(operand1);
         data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
@@ -371,8 +369,7 @@ gwy_data_arith_do(void)
 
     /***** scalar x datafield (always possible) *****/
     if (!operand1 && operand2) {
-        data_view = gwy_data_window_get_data_view(operand2);
-        data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+        data = gwy_data_window_get_data(operand2);
         data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
@@ -414,12 +411,10 @@ gwy_data_arith_do(void)
 
     /***** scalar x datafield (always possible) *****/
     if (operand1 && operand2) {
-        data_view = gwy_data_window_get_data_view(operand2);
-        data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+        data = gwy_data_window_get_data(operand2);
         dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                   "/0/data"));
-        data_view = gwy_data_window_get_data_view(operand1);
-        data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+        data = gwy_data_window_get_data(operand1);
         dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                   "/0/data"));
 

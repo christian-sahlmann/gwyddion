@@ -45,14 +45,11 @@ enum {
 void
 gwy_meta_browser(GwyDataWindow *data_window)
 {
-    GtkWidget *window, *browser, *data_view;
+    GtkWidget *window, *browser;
     GwyContainer *data;
     gchar *filename, *title;
 
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(data_window));
-    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    data = GWY_CONTAINER(gwy_data_view_get_data(GWY_DATA_VIEW(data_view)));
+    data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
