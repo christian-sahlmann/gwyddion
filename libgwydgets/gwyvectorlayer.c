@@ -575,7 +575,7 @@ gwy_vector_layer_setup_gc(GwyVectorLayer *layer)
 }
 
 /**
- * gwy_layer_cursor_new_or_ref:
+ * gwy_vector_layer_cursor_new_or_ref:
  * @cursor: A Gdk cursor, or %NULL.
  * @type: Cursor type to eventually create.
  *
@@ -597,7 +597,7 @@ gwy_vector_layer_cursor_new_or_ref(GdkCursor **cursor,
 }
 
 /**
- * gwy_layer_cursor_free_or_unref:
+ * gwy_vector_layer_cursor_free_or_unref:
  * @cursor: A Gdk cursor.
  *
  * Decrements reference count of a Gdk cursor, possibly freeing it.
