@@ -52,6 +52,8 @@ typedef struct {
     gdouble hmax;
     gdouble datamin;
     gdouble datamax;
+    GQuark key_min;
+    GQuark key_max;
 } ToolControls;
 
 static gboolean   module_register             (const gchar *name);
@@ -119,6 +121,7 @@ use(GwyDataWindow *data_window,
 {
     static const gchar *layer_name = "GwyLayerSelect";
     static GwyUnitoolState *state = NULL;
+    ToolControls *controls;
 
     if (!state) {
         func_slots.layer_type = g_type_from_name(layer_name);
@@ -130,6 +133,9 @@ use(GwyDataWindow *data_window,
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
         state->apply_doesnt_close = TRUE;
+        controls = (ToolControls*)state->user_data;
+        controls->key_min = g_quark_from_string("/0/base/min");
+        controls->key_max = g_quark_from_string("/0/base/max");
     }
     /* TODO: setup initial state according to USE_SELECTION/USE_HISTOGRAM */
     return gwy_unitool_use(state, data_window, reason);
@@ -167,19 +173,7 @@ dialog_create(GwyUnitoolState *state)
     table = gtk_table_new(9, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
-    row = gwy_unitool_rect_info_table_setup(&controls->labels,
-                                            GTK_TABLE(table), 0, 0);
-    controls->labels.unselected_is_full = TRUE;
-
-    controls->cdo_preview
-        = gtk_check_button_new_with_mnemonic(_("_Instant apply"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->cdo_preview),
-                                 controls->do_preview);
-    g_signal_connect(controls->cdo_preview, "toggled",
-                     G_CALLBACK(do_preview_updated), state);
-    gtk_table_attach(GTK_TABLE(table), controls->cdo_preview, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
+    row = 0;
 
     controls->histogram = gwy_graph_new();
     /* XXX */
@@ -225,6 +219,22 @@ dialog_create(GwyUnitoolState *state)
     label = gtk_label_new(_("Full"));
     gtk_table_attach(GTK_TABLE(table), label, 1, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    row += gwy_unitool_rect_info_table_setup(&controls->labels,
+                                             GTK_TABLE(table), 0, row);
+    controls->labels.unselected_is_full = TRUE;
+
+    controls->cdo_preview
+        = gtk_check_button_new_with_mnemonic(_("_Instant apply"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->cdo_preview),
+                                 controls->do_preview);
+    g_signal_connect(controls->cdo_preview, "toggled",
+                     G_CALLBACK(do_preview_updated), state);
+    gtk_table_attach(GTK_TABLE(table), controls->cdo_preview, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     return dialog;
 }
@@ -347,14 +357,14 @@ apply(GwyUnitoolState *state)
         vmax = gwy_data_field_area_get_max(dfield, isel[0], isel[1],
                                            isel[2] - isel[0],
                                            isel[3] - isel[1]);
-        gwy_container_set_double_by_name(data, "/0/base/min", vmin);
-        gwy_container_set_double_by_name(data, "/0/base/max", vmax);
+        gwy_container_set_double(data, controls->key_min, vmin);
+        gwy_container_set_double(data, controls->key_max, vmax);
         controls->hmin = vmin;
         controls->hmax = vmax;
     }
     else {
-        gwy_container_remove_by_name(data, "/0/base/min");
-        gwy_container_remove_by_name(data, "/0/base/max");
+        gwy_container_remove(data, controls->key_min);
+        gwy_container_remove(data, controls->key_max);
         controls->hmin = controls->datamin;
         controls->hmax = controls->datamax;
     }
@@ -408,24 +418,32 @@ histogram_selection_changed(GwyUnitoolState *state)
     if (fuck->scr_start == fuck->scr_end) {
         controls->hmin = controls->datamin;
         controls->hmax = controls->datamax;
-        gwy_container_remove_by_name(data, "/0/base/min");
-        gwy_container_remove_by_name(data, "/0/base/max");
     }
     else {
         controls->hmin = MIN(fuck->data_start, fuck->data_end)
                          + controls->datamin;
         controls->hmax = MAX(fuck->data_end, fuck->data_start)
                          + controls->datamin;
-        gwy_container_set_double_by_name(data, "/0/base/min", controls->hmin);
-        gwy_container_set_double_by_name(data, "/0/base/max", controls->hmax);
     }
     gwy_unitool_update_label(state->value_format, controls->cmin,
                              controls->hmin);
     gwy_unitool_update_label(state->value_format, controls->cmax,
                              controls->hmax);
-    gwy_data_view_update
-        (GWY_DATA_VIEW(gwy_data_window_get_data_view
-                           (GWY_DATA_WINDOW(state->data_window))));
+
+    if (controls->do_preview) {
+        if (fuck->scr_start == fuck->scr_end) {
+            gwy_container_remove(data, controls->key_min);
+            gwy_container_remove(data, controls->key_max);
+        }
+        else {
+            gwy_container_set_double(data, controls->key_min, controls->hmin);
+            gwy_container_set_double(data, controls->key_max, controls->hmax);
+        }
+
+        gwy_data_view_update
+            (GWY_DATA_VIEW(gwy_data_window_get_data_view
+                            (GWY_DATA_WINDOW(state->data_window))));
+    }
 
     controls->in_update = FALSE;
 }
