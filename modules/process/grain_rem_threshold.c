@@ -335,8 +335,10 @@ load_mask_color(GtkWidget *color_button,
 {
     GwyRGBA rgba;
 
-    gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-    gwy_rgba_get_from_container(&rgba, data, "/0/mask");
+    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
+        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
+    }
     gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
