@@ -32,13 +32,13 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo level_func_info = {
         "level",
-        "/_Basic Operations/Level",
+        "/_Level/Level",
         &level,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
     };
     static GwyProcessFuncInfo level_rotate_func_info = {
         "level_rotate",
-        "/_Basic Operations/Level Rotate",
+        "/_Level/Level Rotate",
         &level_rotate,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
     };
@@ -82,7 +82,8 @@ level_rotate(GwyContainer *data, GwyRunType run)
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
     /* FIXME: what funny scale the b and c have? */
     gwy_data_field_plane_rotate(dfield,
-                                -120*b, -120*c,
+                                180/G_PI*atan2(b, 1),
+                                180/G_PI*atan2(c, 1),
                                 GWY_INTERPOLATION_BILINEAR);
 
     return TRUE;
