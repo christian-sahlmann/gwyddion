@@ -389,6 +389,7 @@ preview(WshedControls *controls,
             = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(controls->mydata, "/0/mask",
                                          G_OBJECT(maskfield));
+        g_object_unref(maskfield);
         layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
                                  layer);
@@ -434,7 +435,7 @@ ok(WshedControls *controls,
     {
         maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
-
+        g_object_unref(maskfield);
     }
 
     if (controls->computed == FALSE)
@@ -474,6 +475,7 @@ run_noninteractive(WshedArgs *args, GwyContainer *data)
     {
         maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
+        g_object_unref(maskfield);
 
     }
 

@@ -416,6 +416,7 @@ preview(MarkControls *controls,
         maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(controls->mydata, "/0/mask",
                                          G_OBJECT(maskfield));
+        g_object_unref(maskfield);
         layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
                                  GWY_PIXMAP_LAYER(layer));
@@ -440,7 +441,7 @@ mark_do(MarkArgs *args,
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (gwy_container_contains_by_name(data, "/0/mask")) {
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                  "/0/mask"));
+                                                                    "/0/mask"));
         gwy_data_field_resample(maskfield,
                                gwy_data_field_get_xres(dfield),
                                gwy_data_field_get_yres(dfield),
@@ -451,6 +452,7 @@ mark_do(MarkArgs *args,
         maskfield
             = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
+        g_object_unref(maskfield);
     }
 
     mask_process(dfield, maskfield, args);

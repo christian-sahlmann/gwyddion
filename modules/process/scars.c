@@ -482,6 +482,7 @@ preview(ScarsControls *controls,
         mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(controls->mydata, "/0/mask",
                                          G_OBJECT(mask));
+        g_object_unref(mask);
         layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
                                       GWY_PIXMAP_LAYER(layer));

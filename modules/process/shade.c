@@ -128,6 +128,7 @@ shade(GwyContainer *data, GwyRunType run)
         else {
             shadefield = gwy_serializable_duplicate(G_OBJECT(dfield));
             gwy_container_set_object_by_name(data, "/0/show", shadefield);
+            g_object_unref(shadefield);
         }
 
         gwy_data_field_shade(dfield, GWY_DATA_FIELD(shadefield),
