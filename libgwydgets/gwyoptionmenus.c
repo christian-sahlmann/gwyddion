@@ -40,6 +40,8 @@ static GtkWidget* gwy_palette_menu_create        (const gchar *current,
 static GtkWidget* gwy_sample_palette_to_gtkimage (GwyPaletteDef *palette_def);
 static gint       palette_def_compare            (GwyPaletteDef *a,
                                                   GwyPaletteDef *b);
+static gint       gl_material_compare            (GwyGLMaterial *a,
+                                                  GwyGLMaterial *b);
 static void       gwy_option_menu_metric_unit_destroyed (GwyEnum *entries);
 
 /************************** Palette menu ****************************/
@@ -206,6 +208,122 @@ palette_def_compare(GwyPaletteDef *a,
 {
     /* XXX: should use gwy_palette_def_get_name() */
     return strcmp(a->name, b->name);
+}
+
+
+/************************** Material menu ****************************/
+
+static GtkWidget*
+gwy_gl_material_menu_create(const gchar *current,
+                            gint *current_idx)
+{
+    GSList *l, *entries = NULL;
+    GtkWidget *menu, *item;
+    gint i, idx;
+
+    gwy_gl_material_foreach((GwyGLMaterialFunc)gwy_hash_table_to_slist_cb,
+                            &entries);
+    entries = g_slist_sort(entries, (GCompareFunc)gl_material_compare);
+
+    menu = gtk_menu_new();
+
+    idx = -1;
+    i = 0;
+    for (l = entries; l; l = g_slist_next(l)) {
+        GwyGLMaterial *gl_material = (GwyGLMaterial*)l->data;
+        const gchar *name = gwy_gl_material_get_name(gl_material);
+
+        item = gtk_menu_item_new_with_label(_(name));
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_object_set_data(G_OBJECT(item), "material-name", (gpointer)name);
+        if (current && strcmp(current, name) == 0)
+            idx = i;
+        i++;
+    }
+    g_slist_free(entries);
+
+    if (current_idx && idx != -1)
+        *current_idx = idx;
+
+    return menu;
+}
+
+/**
+ * gwy_menu_gl_material:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ *
+ * Creates a pop-up OpenGL material menu.
+ *
+ * Returns: The newly created pop-up menu as #GtkWidget.
+ *
+ * Since: 1.5.
+ **/
+GtkWidget*
+gwy_menu_gl_material(GCallback callback,
+                     gpointer cbdata)
+{
+    GtkWidget *menu;
+    GList *c;
+
+    menu = gwy_gl_material_menu_create(NULL, NULL);
+    if (callback) {
+        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
+            g_signal_connect(c->data, "activate", callback, cbdata);
+    }
+
+    return menu;
+}
+
+/**
+ * gwy_option_menu_gl_material:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ * @current: Palette definition name to be shown as currently selected
+ *           (or %NULL to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of OpenGL materials.
+ *
+ * It sets object data "material-name" to material definition name for each
+ * menu item.
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ *
+ * Since: 1.5.
+ **/
+GtkWidget*
+gwy_option_menu_gl_material(GCallback callback,
+                            gpointer cbdata,
+                            const gchar *current)
+{
+    GtkWidget *omenu, *menu;
+    GList *c;
+    gint idx;
+
+    idx = -1;
+    omenu = gtk_option_menu_new();
+    g_object_set_data(G_OBJECT(omenu), "gwy-option-menu",
+                      GINT_TO_POINTER(TRUE));
+    menu = gwy_gl_material_menu_create(current, &idx);
+    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
+    if (idx != -1)
+        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), idx);
+
+    if (callback) {
+        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
+            g_signal_connect(c->data, "activate", callback, cbdata);
+    }
+
+    return omenu;
+}
+
+static gint
+gl_material_compare(GwyGLMaterial *a,
+                    GwyGLMaterial *b)
+{
+    return strcmp(gwy_gl_material_get_name(a), gwy_gl_material_get_name(b));
 }
 
 

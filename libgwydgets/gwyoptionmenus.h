@@ -27,12 +27,18 @@
 #include <libgwyddion/gwynlfit.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydatawindow.h>
+#include <libgwydgets/gwyglmaterial.h>
 
 G_BEGIN_DECLS
 
 GtkWidget* gwy_menu_palette                  (GCallback callback,
                                               gpointer cbdata);
+GtkWidget* gwy_menu_gl_material              (GCallback callback,
+                                              gpointer cbdata);
 GtkWidget* gwy_option_menu_palette           (GCallback callback,
+                                              gpointer cbdata,
+                                              const gchar *current);
+GtkWidget* gwy_option_menu_gl_material       (GCallback callback,
                                               gpointer cbdata,
                                               const gchar *current);
 GtkWidget* gwy_option_menu_interpolation     (GCallback callback,
