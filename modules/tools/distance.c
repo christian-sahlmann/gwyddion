@@ -1,6 +1,6 @@
 /*
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2003,2004 Nenad Ocelic, David Necas (Yeti), Petr Klapetek.
+ *  E-mail: ocelic@biochem.mpg.de, yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,10 +36,9 @@
 
 typedef struct {
     GwyUnitoolState *state;
-    GtkWidget *units[ 4];
-    GtkWidget *positions[ NLINES* 2];
-    GtkWidget *vectors[ NLINES* 2];
-    GPtrArray *dtl;
+    GtkWidget *units[4];
+    GtkWidget *positions[NLINES * 2];
+    GtkWidget *vectors[NLINES * 2];
     GPtrArray *str;
 } ToolControls;
 
@@ -59,10 +58,10 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "distance",
-    "Distance measurement tool.",
+    N_("Distance measurement tool."),
     "Nenad Ocelic <ocelic _at_ biochem.mpg.de>",
     "1.1",
-    "David Necas (Yeti) & Petr Klapetek",
+    "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
@@ -86,7 +85,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "distance",
         "gwy_distance",
-        "Measure distances between points.",
+        N_("Measure distances between points."),
         6,
         use,
     };
@@ -143,42 +142,39 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new( NLINES+1, 5, FALSE);
+    table = gtk_table_new(NLINES+1, 5, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
     str = g_string_new("");
 
-    controls->units[0]= label= gtk_label_new(NULL);
-    g_string_printf(str, _("<b>&#916;x</b> [%s]"), state->coord_format->units);
+    controls->units[0] = label= gtk_label_new(NULL);
+    g_string_printf(str, "<b>&#916;x</b> [%s]", state->coord_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
 
-    controls->units[1]= label = gtk_label_new(NULL);
-    g_string_printf(str, _("<b>&#916;y</b> [%s]"), state->coord_format->units);
+    controls->units[1] = label = gtk_label_new(NULL);
+    g_string_printf(str, "<b>&#916;y</b> [%s]", state->coord_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
 
-    controls->units[2]= label = gtk_label_new(NULL);
-    g_string_printf(str, _("<b>   &#8736;</b> [ &#176; ]"));
+    controls->units[2] = label = gtk_label_new(NULL);
+    /*g_string_printf(str, _("<b>   &#8736;</b> [ &#176; ]"));*/
+    g_string_printf(str, _("<b>Angle</b> [deg]"));
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1, GTK_FILL, 0, 2, 2);
 
-    controls->units[3]= label = gtk_label_new(NULL);
-    g_string_printf(str, _("<b> r </b> [%s]"), state->coord_format->units);
+    controls->units[3] = label = gtk_label_new(NULL);
+    g_string_printf(str, "<b>R</b> [%s]", state->coord_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1, GTK_FILL, 0, 2, 2);
 
 
-    controls->dtl = g_ptr_array_new();
     controls->str = g_ptr_array_new();
 
     for (i = 0; i < NLINES; i++) {
-
-        g_ptr_array_add(controls->dtl, gwy_data_line_new(10, 10, 0));
-
         label = gtk_label_new(NULL);
-        g_string_printf(str, _("<b>%d</b>"), i+1);
+        g_string_printf(str, "<b>%d</b>", i+1);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_label_set_markup(GTK_LABEL(label), str->str);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -238,10 +234,11 @@ update_labels(GwyUnitoolState *state)
     for (i = 0; i < NLINES; i++) {
         if (i < nselected) {
             gdouble dx, dy, r, a;
-            dx= lines[4*i+0] - lines[4*i+2];
-            dy= lines[4*i+3] - lines[4*i+1];
-            r= hypot( dx, dy);
-            a= atan2( dy, dx)* 180/ M_PI;
+
+            dx = lines[4*i+0] - lines[4*i+2];
+            dy = lines[4*i+3] - lines[4*i+1];
+            r = hypot(dx, dy);
+            a = atan2(dy, dx)* 180/ M_PI;
 
             gwy_unitool_update_label_no_units(state->coord_format,
                                               controls->positions[2*i+ 0], dx);
@@ -303,16 +300,9 @@ dialog_abandon(GwyUnitoolState *state)
     ToolControls *controls;
 
     controls = (ToolControls*)state->user_data;
-
-    for (i=0; i<NLINES; i++)
-    {
-        g_object_unref(controls->dtl->pdata[i]);
-    }
-
-    g_ptr_array_free(controls->dtl, TRUE);
     g_ptr_array_free(controls->str, TRUE);
-
     memset(state->user_data, 0, sizeof(ToolControls));
 }
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
