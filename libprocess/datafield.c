@@ -3297,6 +3297,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
 }
 
 
+/* XXX: why this function does not have `area' in name? */
 void
 gwy_data_field_convolve(GwyDataField *data_field, GwyDataField *kernel_field,
                         gint ulcol, gint ulrow, gint brcol, gint brrow)
@@ -3358,29 +3359,64 @@ gwy_data_field_convolve(GwyDataField *data_field, GwyDataField *kernel_field,
     g_object_unref(hlp_df);
 }
 
+/* XXX: why this function does not have `area' in name? */
 void
-gwy_data_field_filter_mean(GwyDataField *data_field, gint size,
-                           gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_filter_mean(GwyDataField *data_field,
+                           gint size,
+                           gint ulcol, gint ulrow,
+                           gint brcol, gint brrow)
 {
-    gint i;
-    GwyDataField *kernel_df;
+    gint width, height, rowstride;
+    gint i, j, k;
+    gint from, to;
+    gdouble *buffer, *data, *p;
+    gdouble s;
 
     gwy_debug("");
-    if (size <= 0) {
-        g_warning("Filter cannot have negative or null size");
-        return;
+    g_return_if_fail(size > 0);
+
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+    width = brcol - ulcol;
+    height = brrow - ulrow;
+    g_return_if_fail(width > 0 && height > 0);
+
+    buffer = g_new(gdouble, width*height);
+    rowstride = data_field->xres;
+    data = data_field->data + rowstride*ulrow + ulcol;
+
+    /* vertical pass */
+    for (j = 0; j < width; j++) {
+        for (i = 0; i < height; i++) {
+            s = 0.0;
+            p = data + j;
+            from = MAX(0, i - (size-1)/2);
+            to = MIN(height-1, i + size/2);
+            for (k = from; k <= to; k++)
+                s += p[k*rowstride];
+            buffer[i*width + j] = s/(to - from + 1);
+        }
     }
 
-    kernel_df =
-        (GwyDataField *) gwy_data_field_new(size, size, size, size, TRUE);
-    for (i = 0; i < (size * size); i++)
-        kernel_df->data[i] = 1.0 / ((gdouble)size * (gdouble)size);
+    /* horizontal pass */
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+            s = 0.0;
+            p = buffer + i*width;
+            from = MAX(0, j - (size-1)/2);
+            to = MIN(width-1, j + size/2);
+            for (k = from; k <= to; k++)
+                s += p[k];
+            data[i*rowstride + j] = s/(to - from + 1);
+        }
+    }
 
-    gwy_data_field_convolve(data_field, kernel_df, ulcol, ulrow, brcol, brrow);
-
-    g_object_unref(kernel_df);
+    g_free(buffer);
 }
 
+/* XXX: why this function does not have `area' in name? */
 void gwy_data_field_filter_laplacian(GwyDataField *data_field,
                                 gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
@@ -3402,6 +3438,7 @@ void gwy_data_field_filter_laplacian(GwyDataField *data_field,
     g_object_unref(kernel_df);
 }
 
+/* XXX: why this function does not have `area' in name? */
 void gwy_data_field_filter_sobel(GwyDataField *data_field,
                                  GtkOrientation orientation,
                                  gint ulcol, gint ulrow, gint brcol, gint brrow)
@@ -3438,6 +3475,7 @@ void gwy_data_field_filter_sobel(GwyDataField *data_field,
     g_object_unref(kernel_df);
 }
 
+/* XXX: why this function does not have `area' in name? */
 void gwy_data_field_filter_prewitt(GwyDataField *data_field,
                                  GtkOrientation orientation,
                                  gint ulcol, gint ulrow, gint brcol, gint brrow)
@@ -3474,6 +3512,7 @@ void gwy_data_field_filter_prewitt(GwyDataField *data_field,
     g_object_unref(kernel_df);
 }
 
+#warning bubble_sort still present
 void
 bubble_sort(gdouble *numbers, gdouble array_size)
 {
@@ -3494,6 +3533,7 @@ bubble_sort(gdouble *numbers, gdouble array_size)
     }
 }
 
+/* XXX: why this function does not have `area' in name? */
 void
 gwy_data_field_filter_median(GwyDataField *data_field, gint size,
                              gint ulcol, gint ulrow, gint brcol, gint brrow)
@@ -3561,6 +3601,7 @@ gwy_data_field_filter_median(GwyDataField *data_field, gint size,
 
 }
 
+/* XXX: why this function does not have `area' in name? */
 void
 gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
                                    gint ulcol, gint ulrow, gint brcol,
@@ -3642,6 +3683,7 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
 
 }
 
+/* XXX: why this function does not have `area' in name? */
 void
 gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow,
                          gint brcol, gint brrow, GwyFitLineType fit_type,
