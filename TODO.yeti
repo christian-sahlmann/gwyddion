@@ -1,11 +1,12 @@
 - Kill WIN32-LEAN-AND-MEAN-CAPS
+- Profile tool: separate profiles creates graphs with corrupted titles
 - Speed up Document History
+- Incorporate Zitko's import modules
 - Fix units using new SIUnit capabilities:
   ValUnit
-  Nanoscope
-  Slope distribution
-  Sfunctions
-  FFT
+- Convert Logarithmic scale value to logarithmic presentation
+- Find out why DataWindow statusbar update calls get_format_with_resolution()
+  on each update
 - Fix gwyddion-x.desktop according to whatever current desktop standards happen
   to say
 - Add Invert option to grain modules
