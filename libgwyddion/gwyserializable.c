@@ -82,7 +82,7 @@ gwy_serializable_base_init(G_GNUC_UNUSED gpointer g_class)
  *
  * Serializes an object implementing #GwySerializable interface.
  *
- * Returns: @buffer or a newly allocated #GBaseInitFunc with serialized
+ * Returns: @buffer or a newly allocated #GByteArray with serialized
  *          object appended.
  **/
 GByteArray*
