@@ -389,8 +389,8 @@ gwy_app_data_view_update(GtkWidget *data_view)
  *
  * The template tring @templ can be either %NULL, the window then gets a
  * title like "Untitled 37", or a string "Foo" not containing `%', the window
- * then gets a title like "Foo 42", or a string "Bar %d" containing a single
- * '%d', the window then gets a title like "Bar 666".
+ * then gets a title like "Foo 42", or a string "Bar %%d" containing a single
+ * '%%d', the window then gets a title like "Bar 666".
  *
  * Returns: The number that will appear in the title (probably useless).
  **/

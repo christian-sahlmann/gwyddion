@@ -86,6 +86,7 @@ gwy_app_wait_finish(void)
     progress = NULL;
     label = NULL;
     message_prefix = NULL;
+    wait_widget = NULL;
 }
 
 static void
