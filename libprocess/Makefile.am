@@ -17,7 +17,8 @@ libgwyprocessinclude_HEADERS = \
 	interpolation.h \
 	inttrans.h \
 	linestats.h \
-	simplefft.h
+	simplefft.h \
+	cdline.h
 
 lib_LTLIBRARIES = libgwyprocess.la
 
@@ -43,7 +44,8 @@ libgwyprocess_la_SOURCES = \
 	interpolation.c \
 	inttrans.c \
 	linestats.c \
-	simplefft.c
+	simplefft.c \
+	cdline.c
 
 #noinst_PROGRAMS = test
 #

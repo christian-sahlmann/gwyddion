@@ -10,7 +10,8 @@ graph_PROGRAMS = \
 	graph_zoom.so \
 	graph_unzoom.so \
         graph_points.so \
-	graph_fit.so
+	graph_fit.so \
+	graph_cd.so
  
 
 EXTRA_DIST = \
@@ -33,6 +34,9 @@ graph_points_so_LDFLAGS = $(module_ldflags),graph_points.so
 
 graph_fit_so_SOURCES = graph_fit.c
 graph_fit_so_LDFLAGS = $(module_ldflags),graph_fit.so
+
+graph_cd_so_SOURCES = graph_cd.c
+graph_cd_so_LDFLAGS = $(module_ldflags),graph_cd.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
