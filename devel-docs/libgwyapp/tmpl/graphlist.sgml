@@ -1,0 +1,34 @@
+<!-- ##### SECTION Title ##### -->
+graphlist
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_app_graph_list_new ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_graph_list_add ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@graph: 
+
+
