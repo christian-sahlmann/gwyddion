@@ -4,6 +4,7 @@ libgwyddionincludedir = $(includedir)/gwyddion/libgwyddion
 libgwyddioninclude_HEADERS = \
 	gwycontainer.h \
 	gwyddion.h \
+	gwydebugobjects.h \
 	gwyentities.h \
 	gwymacros.h \
 	gwymath.h \
@@ -29,6 +30,7 @@ noinst_HEADERS = gwytestser.h
 libgwyddion_la_LDFLAGS = -version-info 3:0:0
 libgwyddion_la_SOURCES = \
 	gwycontainer.c \
+	gwydebugobjects.c \
 	gwyentities.c \
 	gwymath.c \
 	gwynlfit.c \
