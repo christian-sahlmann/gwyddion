@@ -384,6 +384,9 @@ gwy_layer_select_button_released(GwyVectorLayer *layer,
     i = gwy_layer_select_near_point(select_layer, xreal, yreal);
     gdk_window_set_cursor(window, i == -1 ? NULL : klass->corner_cursor[i]);
 
+    /* XXX: this assures no artifacts ...  */
+    gtk_widget_queue_draw(GTK_WIDGET(data_view));
+
     return FALSE;
 }
 
