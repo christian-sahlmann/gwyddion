@@ -1,21 +1,4 @@
 <SECTION>
-<FILE>gwytoolbox</FILE>
-<TITLE>GwyToolbox</TITLE>
-GwyToolbox
-GwyToolboxClass
-gwy_toolbox_new
-gwy_toolbox_append
-<SUBSECTION Standard>
-GWY_TOOLBOX
-GWY_IS_TOOLBOX
-GWY_TYPE_TOOLBOX
-gwy_toolbox_get_type
-GWY_TOOLBOX_CLASS
-GWY_IS_TOOLBOX_CLASS
-GWY_TOOLBOX_GET_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gwygraphcorner</FILE>
 <TITLE>GwyGraphCorner</TITLE>
 GwyGraphCorner
@@ -102,21 +85,17 @@ GWY_DATA_VIEW_LAYER_GET_CLASS
 
 <SECTION>
 <FILE>gwycoloraxis</FILE>
-GwyColorAxisParams
 <TITLE>GwyColorAxis</TITLE>
 GwyColorAxis
 GwyColorAxisClass
 gwy_color_axis_new
-gwy_color_axis_new_default
+gwy_color_axis_new_with_range
 gwy_color_axis_get_range
 gwy_color_axis_set_range
 gwy_color_axis_get_si_unit
 gwy_color_axis_set_si_unit
 gwy_color_axis_set_gradient
 gwy_color_axis_get_gradient
-gwy_color_axis_set_unit
-gwy_color_axis_set_palette
-gwy_color_axis_get_palette
 <SUBSECTION Standard>
 GWY_COLOR_AXIS
 GWY_IS_COLOR_AXIS
@@ -178,25 +157,6 @@ gwy_vruler_get_type
 GWY_VRULER_CLASS
 GWY_IS_VRULER_CLASS
 GWY_VRULER_GET_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>gwyspherecoords</FILE>
-<TITLE>GwySphereCoords</TITLE>
-GwySphereCoords
-GwySphereCoordsClass
-gwy_sphere_coords_new
-gwy_sphere_coords_get_theta
-gwy_sphere_coords_get_phi
-gwy_sphere_coords_set_value
-<SUBSECTION Standard>
-GWY_SPHERE_COORDS
-GWY_IS_SPHERE_COORDS
-GWY_TYPE_SPHERE_COORDS
-gwy_sphere_coords_get_type
-GWY_SPHERE_COORDS_CLASS
-GWY_IS_SPHERE_COORDS_CLASS
-GWY_SPHERE_COORDS_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -391,6 +351,33 @@ GWY_SCI_TEXT_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwy3dlabel</FILE>
+<TITLE>Gwy3DLabel</TITLE>
+Gwy3DLabel
+Gwy3DLabelClass
+gwy_3d_label_new
+gwy_3d_label_set_text
+gwy_3d_label_get_text
+gwy_3d_label_expand_text
+gwy_3d_label_reset
+gwy_3d_label_reset_text
+gwy_3d_label_get_fixed_size
+gwy_3d_label_set_fixed_size
+gwy_3d_label_user_size
+gwy_3d_label_get_delta_x_adjustment
+gwy_3d_label_get_delta_y_adjustment
+gwy_3d_label_get_size_adjustment
+<SUBSECTION Standard>
+GWY_3D_LABEL
+GWY_IS_3D_LABEL
+GWY_TYPE_3D_LABEL
+gwy_3d_label_get_type
+GWY_3D_LABEL_CLASS
+GWY_IS_3D_LABEL_CLASS
+GWY_3D_LABEL_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwystatusbar</FILE>
 <TITLE>GwyStatusbar</TITLE>
 GwyStatusbar
@@ -506,8 +493,6 @@ GWY_SHADER_GET_CLASS
 GwyLayerBasic
 GwyLayerBasicClass
 gwy_layer_basic_new
-gwy_layer_basic_set_palette
-gwy_layer_basic_get_palette
 gwy_layer_basic_set_gradient
 gwy_layer_basic_get_gradient
 <SUBSECTION Standard>
@@ -537,25 +522,6 @@ gwy_graph_curve_model_get_type
 GWY_GRAPH_CURVE_MODEL_CLASS
 GWY_IS_GRAPH_CURVE_MODEL_CLASS
 GWY_GRAPH_CURVE_MODEL_GET_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>gwyvectorshade</FILE>
-<TITLE>GwyVectorShade</TITLE>
-GwyVectorShade
-GwyVectorShadeClass
-gwy_vector_shade_new
-gwy_vector_shade_get_grad_sphere
-gwy_vector_shade_get_sphere_coords
-gwy_vector_shade_set_sphere_coords
-<SUBSECTION Standard>
-GWY_VECTOR_SHADE
-GWY_IS_VECTOR_SHADE
-GWY_TYPE_VECTOR_SHADE
-gwy_vector_shade_get_type
-GWY_VECTOR_SHADE_CLASS
-GWY_IS_VECTOR_SHADE_CLASS
-GWY_VECTOR_SHADE_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -603,19 +569,19 @@ GWY_HRULER_GET_CLASS
 <SECTION>
 <FILE>gwy3dview</FILE>
 Gwy3DMovement
+Gwy3DProjection
+Gwy3DViewLabel
 <TITLE>Gwy3DView</TITLE>
 Gwy3DView
 Gwy3DViewClass
 gwy_3d_view_new
 gwy_3d_view_update
-gwy_3d_view_get_palette
-gwy_3d_view_set_palette
 gwy_3d_view_get_gradient
 gwy_3d_view_set_gradient
 gwy_3d_view_get_status
 gwy_3d_view_set_status
-gwy_3d_view_get_orthographic
-gwy_3d_view_set_orthographic
+gwy_3d_view_get_projection
+gwy_3d_view_set_projection
 gwy_3d_view_get_show_axes
 gwy_3d_view_set_show_axes
 gwy_3d_view_get_show_labels
@@ -627,6 +593,7 @@ gwy_3d_view_set_reduced_size
 gwy_3d_view_get_material
 gwy_3d_view_set_material
 gwy_3d_view_get_pixbuf
+gwy_3d_view_get_label
 gwy_3d_view_get_data
 gwy_3d_view_reset_view
 gwy_3d_view_get_rot_x_adjustment
@@ -639,7 +606,6 @@ gwy_3d_view_get_max_view_scale
 gwy_3d_view_get_min_view_scale
 gwy_3d_view_set_max_view_scale
 gwy_3d_view_set_min_view_scale
-gwy_3d_view_get_label_description
 <SUBSECTION Standard>
 GWY_3D_VIEW
 GWY_IS_3D_VIEW
@@ -759,56 +725,19 @@ GWY_3D_WINDOW_GET_CLASS
 
 <SECTION>
 <FILE>gwy3dlabels</FILE>
-Gwy3DLabelDescription
-Gwy3DLabelName
-<TITLE>Gwy3DLabels</TITLE>
-Gwy3DLabels
-Gwy3DLabelsClass
-gwy_3d_labels_new
-gwy_3d_labels_update
-gwy_3d_labels_expand_text
-gwy_3d_labels_get_description
-gwy_3d_label_description_set_text
-gwy_3d_label_description_reset
-gwy_3d_label_description_get_autoscale
-gwy_3d_label_description_set_autoscale
-gwy_3d_labels_get_delta_x
-gwy_3d_labels_get_delta_y
-gwy_3d_labels_get_rotation
-gwy_3d_labels_get_size
-gwy_3d_labels_user_size
+<TITLE>Gwy3DLabelGroup</TITLE>
+gwy_3d_label_group_new
+gwy_3d_label_group_update
+gwy_3d_label_group_expand_label
 <SUBSECTION Standard>
-GWY_3D_LABELS
-GWY_IS_3D_LABELS
-GWY_TYPE_3D_LABELS
-gwy_3d_labels_get_type
-GWY_3D_LABELS_CLASS
-GWY_IS_3D_LABELS_CLASS
-GWY_3D_LABELS_GET_CLASS
+GWY_3D_LABEL_GROUP
+GWY_IS_3D_LABEL_GROUP
+GWY_TYPE_3D_LABEL_GROUP
+gwy_3d_label_group_get_type
+GWY_3D_LABEL_GROUP_CLASS
+GWY_IS_3D_LABEL_GROUP_CLASS
+GWY_3D_LABEL_GROUP_GET_CLASS
 </SECTION>
-
-<SECTION>
-<FILE>gwygradsphere</FILE>
-<TITLE>GwyGradSphere</TITLE>
-GwyGradSphere
-GwyGradSphereClass
-gwy_grad_sphere_new
-gwy_grad_sphere_get_sphere_coords
-gwy_grad_sphere_set_sphere_coords
-gwy_grad_sphere_get_palette
-gwy_grad_sphere_set_palette
-gwy_grad_sphere_get_update_policy
-gwy_grad_sphere_set_update_policy
-<SUBSECTION Standard>
-GWY_GRAD_SPHERE
-GWY_IS_GRAD_SPHERE
-GWY_TYPE_GRAD_SPHERE
-gwy_grad_sphere_get_type
-GWY_GRAD_SPHERE_CLASS
-GWY_IS_GRAD_SPHERE_CLASS
-GWY_GRAD_SPHERE_GET_CLASS
-</SECTION>
-
 <SECTION>
 <FILE>gwypixmaplayer</FILE>
 <TITLE>GwyPixmapLayer</TITLE>
@@ -860,22 +789,6 @@ gwy_axis_get_type
 GWY_AXIS_CLASS
 GWY_IS_AXIS_CLASS
 GWY_AXIS_GET_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>gwyvmenubar</FILE>
-<TITLE>GwyVMenuBar</TITLE>
-GwyVMenuBar
-GwyVMenuBarClass
-gwy_vmenu_bar_new
-<SUBSECTION Standard>
-GWY_VMENU_BAR
-GWY_IS_VMENU_BAR
-GWY_TYPE_VMENU_BAR
-gwy_vmenu_bar_get_type
-GWY_VMENU_BAR_CLASS
-GWY_IS_VMENU_BAR_CLASS
-GWY_VMENU_BAR_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -1023,10 +936,8 @@ gwy_stock_register_stock_items
 
 <SECTION>
 <FILE>gwyoptionmenus</FILE>
-gwy_menu_palette
 gwy_menu_gradient
 gwy_menu_gl_material
-gwy_option_menu_palette
 gwy_option_menu_gradient
 gwy_option_menu_gl_material
 gwy_option_menu_interpolation
@@ -1036,9 +947,7 @@ gwy_option_menu_2dcwt
 gwy_option_menu_dwt
 gwy_option_menu_sfunctions_output
 gwy_option_menu_direction
-gwy_option_menu_filter
 gwy_option_menu_mergegrain
-gwy_option_menu_fit_line
 gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history

@@ -116,39 +116,6 @@ a set of data curves with a given plot properties.
 
 @ble: 
 
-<!-- ##### STRUCT GwyGraphArea ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyGraphArea::selected ##### -->
-<para>
-
-</para>
-
-@gwygrapharea: the object which received the signal.
-
-<!-- ##### SIGNAL GwyGraphArea::zoomed ##### -->
-<para>
-
-</para>
-
-@gwygrapharea: the object which received the signal.
-
-<!-- ##### STRUCT GwyGraphAreaClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@cross_cursor: 
-@arrow_cursor: 
-@selected: 
-@zoomed: 
-@reserved1: 
-@reserved2: 
-
 <!-- ##### FUNCTION gwy_graph_area_new ##### -->
 <para>
 

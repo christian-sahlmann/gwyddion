@@ -47,7 +47,7 @@
   <chapter id="Widgets3D">
     <title>3D Widgets</title>
     <xi:include href="xml/gwy3dview.xml"/>
-    <xi:include href="xml/gwy3dlabels.xml"/>
+    <xi:include href="xml/gwy3dlabel.xml"/>
     <xi:include href="xml/gwy3dwindow.xml"/>
     <xi:include href="xml/gwyglmaterial.xml"/>
   </chapter>

@@ -14,31 +14,20 @@ Simple axis with a false color scale
 
 </para>
 
-<!-- ##### STRUCT GwyColorAxisParams ##### -->
-<para>
-
-</para>
-
-@tick_length: 
-@textarea: 
-@font: 
-
-<!-- ##### STRUCT GwyColorAxis ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyColorAxisClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-
 <!-- ##### FUNCTION gwy_color_axis_new ##### -->
+<para>
+
+</para>
+
+@orientation: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@min: 
+@max: 
+@pal: 
+
+
+<!-- ##### FUNCTION gwy_color_axis_new_with_range ##### -->
 <para>
 
 </para>
@@ -46,16 +35,6 @@ Simple axis with a false color scale
 @orientation: 
 @min: 
 @max: 
-@pal: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_color_axis_new_default ##### -->
-<para>
-
-</para>
-
-@orientation: 
 @Returns: 
 
 
@@ -107,33 +86,6 @@ Simple axis with a false color scale
 
 
 <!-- ##### FUNCTION gwy_color_axis_get_gradient ##### -->
-<para>
-
-</para>
-
-@axis: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_color_axis_set_unit ##### -->
-<para>
-
-</para>
-
-@axis: 
-@unit: 
-
-
-<!-- ##### FUNCTION gwy_color_axis_set_palette ##### -->
-<para>
-
-</para>
-
-@axis: 
-@pal: 
-
-
-<!-- ##### FUNCTION gwy_color_axis_get_palette ##### -->
 <para>
 
 </para>

@@ -60,16 +60,6 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 <link linkend="libgwydgets-gwyradiobuttons">Radio button constructors</link>
 </para>
 
-<!-- ##### FUNCTION gwy_menu_palette ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_menu_gradient ##### -->
 <para>
 
@@ -87,17 +77,6 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 
 @callback: 
 @cbdata: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_palette ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
 @Returns: 
 
 
@@ -200,29 +179,7 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_option_menu_filter ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_option_menu_mergegrain ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_fit_line ##### -->
 <para>
 
 </para>

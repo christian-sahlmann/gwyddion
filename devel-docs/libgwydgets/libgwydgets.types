@@ -1,6 +1,6 @@
 #include "libgwydgets/gwydgets.h"
 
-gwy_3d_labels_get_type
+gwy_3d_label_get_type
 gwy_3d_view_get_type
 gwy_3d_window_get_type
 gwy_axis_get_type

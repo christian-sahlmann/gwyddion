@@ -14,36 +14,6 @@ Data field displaying area
 
 </para>
 
-<!-- ##### STRUCT GwyDataView ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyDataView::redrawn ##### -->
-<para>
-
-</para>
-
-@gwydataview: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataView::updated ##### -->
-<para>
-
-</para>
-
-@gwydataview: the object which received the signal.
-
-<!-- ##### STRUCT GwyDataViewClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@updated: 
-@redrawn: 
-@reserved2: 
-
 <!-- ##### FUNCTION gwy_data_view_new ##### -->
 <para>
 

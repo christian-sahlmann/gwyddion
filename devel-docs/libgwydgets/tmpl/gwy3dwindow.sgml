@@ -18,23 +18,6 @@ can be packed with gwy_3d_window_add_action_widget().
 #Gwy3DView
 </para>
 
-<!-- ##### STRUCT Gwy3DWindow ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT Gwy3DWindowClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-@reserved3: 
-@reserved4: 
-
 <!-- ##### FUNCTION gwy_3d_window_new ##### -->
 <para>
 

@@ -84,20 +84,6 @@ OpenGL materials
 
 
 
-<!-- ##### STRUCT GwyGLMaterial ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyGLMaterialClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@materials: 
-
 <!-- ##### USER_FUNCTION GwyGLMaterialFunc ##### -->
 <para>
 

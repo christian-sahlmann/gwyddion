@@ -24,29 +24,6 @@ Data display window
 @GWY_ZOOM_MODE_PIX4PIX: 
 @GWY_ZOOM_MODE_HALFPIX: 
 
-<!-- ##### STRUCT GwyDataWindow ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyDataWindow::title-changed ##### -->
-<para>
-
-</para>
-
-@gwydatawindow: the object which received the signal.
-
-<!-- ##### STRUCT GwyDataWindowClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@title_changed: 
-@reserved1: 
-@reserved2: 
-
 <!-- ##### FUNCTION gwy_data_window_new ##### -->
 <para>
 

@@ -14,21 +14,6 @@ Display data colored with a gradient
 
 </para>
 
-<!-- ##### STRUCT GwyLayerBasic ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyLayerBasicClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-
 <!-- ##### FUNCTION gwy_layer_basic_new ##### -->
 <para>
 
@@ -37,24 +22,6 @@ Display data colored with a gradient
 @Returns: 
 <!-- # Unused Parameters # -->
 @data: 
-
-
-<!-- ##### FUNCTION gwy_layer_basic_set_palette ##### -->
-<para>
-
-</para>
-
-@layer: 
-@palette: 
-
-
-<!-- ##### FUNCTION gwy_layer_basic_get_palette ##### -->
-<para>
-
-</para>
-
-@layer: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_layer_basic_set_gradient ##### -->
