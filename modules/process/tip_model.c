@@ -434,7 +434,6 @@ preview(TipModelControls *controls,
 {
     GwyPixmapLayer *layer;
     const guchar *name;
-    GwyPalette *palette;
 
     tip_process(args, controls);
     tip_update(controls, args);
@@ -443,8 +442,7 @@ preview(TipModelControls *controls,
                                          &name)) {
         layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
         g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
-        palette = gwy_layer_basic_get_palette(GWY_LAYER_BASIC(layer));
-        gwy_palette_set_by_name(palette, name);
+        gwy_layer_basic_set_gradient(GWY_LAYER_BASIC(layer), name);
     }
 
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));

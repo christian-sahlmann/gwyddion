@@ -21,6 +21,7 @@
 #ifndef __GWY_GRAPH_MODEL_H__
 #define __GWY_GRAPH_MODEL_H__
 
+#include <libgwyddion/gwysiunit.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 
@@ -57,8 +58,8 @@ struct _GwyGraphModel {
 
     gboolean has_x_unit;
     gboolean has_y_unit;
-    GObject *x_unit;    /* XXX: Silly graph doesn't use GwySIUnit itself */
-    GObject *y_unit;
+    GwySIUnit *x_unit;
+    GwySIUnit *y_unit;
 
     GString *top_label;
     GString *bottom_label;

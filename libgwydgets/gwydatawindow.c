@@ -256,8 +256,7 @@ gwy_data_window_new(GwyDataView *data_view)
     /***** rhs stuff *****/
     layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
     g_assert(GWY_IS_LAYER_BASIC(layer));
-    data_window->coloraxis
-        = gwy_color_axis_new_default(GTK_ORIENTATION_VERTICAL);
+    data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL);
     gwy_color_axis_set_gradient
                          (GWY_COLOR_AXIS(data_window->coloraxis),
                           gwy_layer_basic_get_gradient(GWY_LAYER_BASIC(layer)));
@@ -525,8 +524,8 @@ gwy_data_window_update_units(GwyDataWindow *data_window)
                         gwy_data_field_get_si_unit_xy(dfield));
     gwy_ruler_set_units(GWY_RULER(data_window->vruler),
                         gwy_data_field_get_si_unit_xy(dfield));
-    gwy_color_axis_set_unit(GWY_COLOR_AXIS(data_window->coloraxis),
-                            gwy_data_field_get_si_unit_z(dfield));
+    gwy_color_axis_set_si_unit(GWY_COLOR_AXIS(data_window->coloraxis),
+                               gwy_data_field_get_si_unit_z(dfield));
 }
 
 static gboolean

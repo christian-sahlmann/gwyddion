@@ -43,7 +43,6 @@
 #include <GL/glu.h>
 
 #include <libprocess/datafield.h>
-#include <libdraw/gwypalette.h>
 #include <libdraw/gwygradient.h>
 #include <libgwyddion/gwysiunit.h>
 
@@ -74,11 +73,10 @@ typedef enum {
 struct _Gwy3DView {
     GtkDrawingArea drawing_area;
 
-    GwyContainer * container;       /* Container with data */
-    GwyDataField * data;            /* Data to be shown */
-    GwyDataField * downsampled;     /* Downsampled data for faster rendering */
-    GwyPalette   * palette;         /* Color palette of heights (if lights are
-                                       off): XXX remove in 2.0 */
+    GwyContainer *container;        /* Container with data */
+    GwyDataField *data;             /* Data to be shown */
+    GwyDataField *downsampled;      /* Downsampled data for faster rendering */
+    GwyGradient  *gradient;
 
     gdouble data_min;               /* minimal z-value of the heights */
     gdouble data_max;               /* maximal z-value od the heights */
@@ -133,7 +131,6 @@ struct _Gwy3DView {
     gint     i_reserved1;           /* reserved for axis-labels display-list base  */
     gint     i_reserved2;
 
-    GwyGradient *gradient;
     gpointer p_reserved2;           /* reserved for future use   */
     gpointer p_reserved3;
     gpointer p_reserved4;
@@ -152,12 +149,6 @@ GtkWidget*       gwy_3d_view_new               (GwyContainer * data);
 GType            gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
 void             gwy_3d_view_update            (Gwy3DView *gwy3dview);
-
-#ifndef GWY_DISABLE_DEPRECATED
-GwyPalette*      gwy_3d_view_get_palette       (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_palette       (Gwy3DView *gwy3dview,
-                                                GwyPalette *palette);
-#endif
 
 const gchar*     gwy_3d_view_get_gradient      (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_gradient      (Gwy3DView *gwy3dview,

@@ -24,13 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 
-#ifndef GWY_TYPE_PIXMAP_LAYER
-#  include <libgwydgets/gwypixmaplayer.h>
-#endif /* no GWY_TYPE_PIXMAP_LAYER */
-
-#ifndef GWY_TYPE_PALETTE_DEF
-#  include <libdraw/gwypalettedef.h>
-#endif /* no GWY_TYPE_PALETTE_DEF */
+#include <libgwydgets/gwypixmaplayer.h>
 
 G_BEGIN_DECLS
 

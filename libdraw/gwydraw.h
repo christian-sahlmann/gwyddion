@@ -22,8 +22,6 @@
 #define __GWY_GWYDRAW_H__
 
 #include <libdraw/gwygradient.h>
-#include <libdraw/gwypalette.h>
-#include <libdraw/gwypalettedef.h>
 #include <libdraw/gwypixfield.h>
 #include <libdraw/gwyrgba.h>
 

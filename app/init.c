@@ -27,9 +27,6 @@
 static GSList *palettes = NULL;
 
 static void gwy_app_init_set_window_icon (void);
-static void ref_palette                  (const gchar *name,
-                                          GwyPaletteDef *pdef);
-static void unref_palettes               (void);
 
 /**
  * gwy_app_init:
@@ -51,10 +48,7 @@ gwy_app_init(void)
         gwy_gl_ok = gwy_widgets_gl_init();
     /*g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);*/
     g_set_application_name(PACKAGE_NAME);
-    gwy_palette_def_setup_presets();
     gwy_gl_material_setup_presets();
-    gwy_palette_def_foreach((GwyPaletteDefFunc)ref_palette, NULL);
-    g_atexit(unref_palettes);
 
     gwy_app_init_set_window_icon();
 
@@ -105,28 +99,6 @@ gwy_app_init_set_window_icon(void)
     }
     g_free(filename);
     g_free(p);
-}
-
-/* The purpose of this function is to instantiate all palettes and keep them
- * existing all the time */
-static void
-ref_palette(G_GNUC_UNUSED const gchar *name,
-            GwyPaletteDef *pdef)
-{
-    GwyPalette *palette;
-
-    palette = GWY_PALETTE(gwy_palette_new(pdef));
-    palettes = g_slist_prepend(palettes, palette);
-}
-
-static void
-unref_palettes(void)
-{
-    GSList *l;
-
-    for (l = palettes; l; l = g_slist_next(l))
-        gwy_object_unref(l->data);
-    g_slist_free(palettes);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

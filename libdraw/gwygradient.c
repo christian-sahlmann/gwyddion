@@ -32,7 +32,6 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include "gwygradient.h"
-#include "gwypalettedef.h"
 
 #define GWY_GRADIENT_TYPE_NAME "GwyGradient"
 
@@ -193,8 +192,6 @@ gwy_gradient_finalize(GObject *object)
  *
  * Returns: Name of @gradient.  The string is owned by @gradient and must not
  *          be modfied or freed.
- *
- * Since: 1.8
  **/
 const gchar*
 gwy_gradient_get_name(GwyGradient *gradient)
@@ -213,8 +210,6 @@ gwy_gradient_get_name(GwyGradient *gradient)
  * gradients, or to try to delete them.
  *
  * Returns: %TRUE if gradient is modifiable, %FALSE if it's system gradient.
- *
- * Since: 1.8
  **/
 gboolean
 gwy_gradient_get_modifiable(GwyGradient *gradient)
@@ -230,8 +225,6 @@ gwy_gradient_get_modifiable(GwyGradient *gradient)
  * @color: Color to fill with interpolated color at position @x.
  *
  * Computes color at given position of a color gradient.
- *
- * Since: 1.8
  **/
 void
 gwy_gradient_get_color(GwyGradient *gradient,
@@ -280,8 +273,6 @@ gwy_gradient_get_color(GwyGradient *gradient,
  *
  * Returns: Sampled @gradient as a sequence of #GdkPixbuf-like RRGGBBAA
  *          quadruplets.
- *
- * Since: 1.8
  **/
 const guchar*
 gwy_gradient_get_samples(GwyGradient *gradient,
@@ -310,8 +301,6 @@ gwy_gradient_get_samples(GwyGradient *gradient,
  *
  * Returns: Sampled @gradient as a sequence of #GdkPixbuf-like RRGGBBAA
  *          quadruplets.
- *
- * Since: 1.8
  **/
 guchar*
 gwy_gradient_sample(GwyGradient *gradient,
@@ -360,8 +349,6 @@ gwy_gradient_sample(GwyGradient *gradient,
  * Returns the number of points in a gradient.
  *
  * Returns: The number of points in @gradient.
- *
- * Since: 1.8
  **/
 gint
 gwy_gradient_get_npoints(GwyGradient *gradient)
@@ -378,8 +365,6 @@ gwy_gradient_get_npoints(GwyGradient *gradient)
  * Returns point at given index of a color gradient.
  *
  * Returns: Color point at @index_.
- *
- * Since: 1.8
  **/
 GwyGradientPoint
 gwy_gradient_get_point(GwyGradient *gradient,
@@ -459,8 +444,6 @@ gwy_gradient_fix_position(GArray *points,
  *
  * It is an error to try to move points beyond is neighbours, or to move first
  * (or last) point from 0 (or 1).
- *
- * Since: 1.8
  **/
 void
 gwy_gradient_set_point(GwyGradient *gradient,
@@ -488,8 +471,6 @@ gwy_gradient_set_point(GwyGradient *gradient,
  * @color: Color to set the point to.
  *
  * Sets a color of color gradient point without moving it.
- *
- * Since: 1.8
  **/
 void
 gwy_gradient_set_point_color(GwyGradient *gradient,
@@ -517,8 +498,6 @@ gwy_gradient_set_point_color(GwyGradient *gradient,
  *
  * It is an error to try to position a outside its future neighbours, or to
  * move first (or last) point from 0 (or 1).
- *
- * Since: 1.8
  **/
 void
 gwy_gradient_insert_point(GwyGradient *gradient,
@@ -567,8 +546,6 @@ gwy_gradient_insert_point(GwyGradient *gradient,
  * Inserts a point into color gradient based on its x position.
  *
  * Returns: The index @point was inserted at.
- *
- * Since: 1.8
  **/
 gint
 gwy_gradient_insert_point_sorted(GwyGradient *gradient,
@@ -610,8 +587,6 @@ gwy_gradient_insert_point_sorted(GwyGradient *gradient,
  * It is not possible to delete points in gradients with less than 3 points.
  * First and last points should not be deleted unless there's another point
  * with @x = 0 or @x = 1 present.
- *
- * Since: 1.8
  **/
 void
 gwy_gradient_delete_point(GwyGradient *gradient,
@@ -649,8 +624,6 @@ gwy_gradient_delete_point(GwyGradient *gradient,
  * @gradient: A color gradient.
  *
  * Resets a gradient to default two-point gray scale.
- *
- * Since: 1.8
  **/
 void
 gwy_gradient_reset(GwyGradient *gradient)
@@ -680,8 +653,6 @@ gwy_gradient_reset(GwyGradient *gradient)
  *
  * Returns: Complete set @gradient's color points.  The returned array is
  *          owned by @gradient and must not be modified or freed.
- *
- * Since: 1.8
  **/
 const GwyGradientPoint*
 gwy_gradient_get_points(GwyGradient *gradient,
@@ -757,8 +728,6 @@ gwy_gradient_sanitize(GwyGradient *gradient)
  *
  * The point positions should be ordered, and first point should start at 0.0,
  * last end at 1.0.  There should be no redundant points.
- *
- * Since: 1.8
  **/
 void
 gwy_gradient_set_points(GwyGradient *gradient,
@@ -785,8 +754,6 @@ gwy_gradient_set_points(GwyGradient *gradient,
  * Reconstructs color gradient definition from sampled colors.
  *
  * The result is usually approximate.
- *
- * Since: 1.8
  **/
 void
 gwy_gradient_set_from_samples(GwyGradient *gradient,
@@ -822,8 +789,6 @@ gwy_gradient_changed(GwyGradient *gradient)
  * Checks whether a color gradient exists.
  *
  * Returns: %TRUE if gradient @name exists, %FALSE if there's no such gradient.
- *
- * Since: 1.8
  **/
 gboolean
 gwy_gradients_gradient_exists(const gchar *name)
@@ -849,8 +814,6 @@ gwy_gradients_gradient_exists(const gchar *name)
  *
  * Returns: Color gradient @name if it exists, %NULL if there's no such
  *          gradient.
- *
- * Since: 1.8
  **/
 GwyGradient*
 gwy_gradients_get_gradient(const gchar *name)
@@ -1083,8 +1046,6 @@ gwy_gradient_preset(const gchar *name,
  * be used, before user gradients are loaded.
  *
  * Preset (system) gradients are not modifiable.
- *
- * Since: 1.8
  **/
 void
 _gwy_gradients_setup_presets(void)
@@ -1522,8 +1483,6 @@ gwy_gradient_duplicate(GObject *object)
  * Dumps text a color gradient definition.
  *
  * Returns: A #GString with gradient text representation.
- *
- * Since: 1.8
  **/
 GString*
 gwy_gradient_dump(GwyGradient *gradient)
@@ -1574,8 +1533,6 @@ gwy_gradient_dump(GwyGradient *gradient)
  * This function fails if the gradient already exists.
  *
  * Returns: The reconstructed gradient.
- *
- * Since: 1.8
  **/
 GwyGradient*
 gwy_gradient_parse(const gchar *text)
@@ -1669,8 +1626,6 @@ fail:
  *
  * The #GwyGradient struct contains private data only and should be accessed
  * using the functions below.
- *
- * Since: 1.8
  **/
 
 /**
@@ -1679,8 +1634,6 @@ fail:
  * @color: The color at position @x.
  *
  * Gradient color point struct.
- *
- * Since: 1.8
  **/
 
 /**
@@ -1693,8 +1646,6 @@ fail:
  *
  * It is called for each gradient in sequence and must not delete or create
  * gradients.
- *
- * Since: 1.8
  **/
 
 /**
@@ -1704,8 +1655,6 @@ fail:
  *
  * The default grayscale gradient is guaranteed to always exist (once
  * libgwydraw was initialized with gwy_draw_type_init(), that is).
- *
- * Since: 1.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

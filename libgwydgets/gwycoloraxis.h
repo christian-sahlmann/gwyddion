@@ -22,10 +22,8 @@
 #define __GWY_COLOR_AXIS_H__
 
 #include <gdk/gdk.h>
-#include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 #include <libgwyddion/gwysiunit.h>
-#include <libdraw/gwypalette.h>
 #include <libdraw/gwygradient.h>
 
 G_BEGIN_DECLS
@@ -40,20 +38,10 @@ G_BEGIN_DECLS
 typedef struct _GwyColorAxis      GwyColorAxis;
 typedef struct _GwyColorAxisClass GwyColorAxisClass;
 
-/* XXX: merge or something */
-typedef struct {
-    gint tick_length;
-    gint textarea;    /*text area width*/
-
-    PangoFontDescription *font;
-} GwyColorAxisParams;
-
 struct _GwyColorAxis {
     GtkWidget widget;
 
-    GwyColorAxisParams par;
-    GwyPalette *palette;   /* XXX: Remove */
-
+    GwyGradient *gradient;
     GdkPixbuf *pixbuf;
 
     GtkOrientation orientation;
@@ -63,7 +51,10 @@ struct _GwyColorAxis {
     GString *label_text;
     GwySIUnit *siunit;
 
-    GwyGradient *gradient;
+    gint tick_length;
+    gint textarea;    /*text area width*/
+    PangoFontDescription *font;
+
     gpointer reserved2;
 };
 
@@ -75,33 +66,23 @@ struct _GwyColorAxisClass {
 };
 
 
-GType        gwy_color_axis_get_type  (void) G_GNUC_CONST;
-/* XXX: make gwy_color_axis_new_default() the default constructor */
-GtkWidget*   gwy_color_axis_new       (GtkOrientation orientation,
-                                       gdouble min,
-                                       gdouble max,
-                                       GwyPalette *pal);
-GtkWidget*   gwy_color_axis_new_default(GtkOrientation orientation);
-void         gwy_color_axis_get_range (GwyColorAxis *axis,
-                                       gdouble *min,
-                                       gdouble *max);
-void         gwy_color_axis_set_range (GwyColorAxis *axis,
-                                       gdouble min,
-                                       gdouble max);
-GwySIUnit*   gwy_color_axis_get_si_unit(GwyColorAxis *axis);
-void         gwy_color_axis_set_si_unit(GwyColorAxis *axis,
-                                        GwySIUnit *unit);
-
-void         gwy_color_axis_set_gradient(GwyColorAxis *axis,
-                                         const gchar *gradient);
-const gchar* gwy_color_axis_get_gradient(GwyColorAxis *axis);
-
-#ifndef GWY_DISABLE_DEPRECATED
-void         gwy_color_axis_set_unit(GwyColorAxis *axis,
-                                     GwySIUnit *unit);
-void gwy_color_axis_set_palette(GwyColorAxis *axis, GwyPalette *pal);
-GwyPalette* gwy_color_axis_get_palette(GwyColorAxis *axis);
-#endif
+GType        gwy_color_axis_get_type       (void) G_GNUC_CONST;
+GtkWidget*   gwy_color_axis_new            (GtkOrientation orientation);
+GtkWidget*   gwy_color_axis_new_with_range (GtkOrientation orientation,
+                                            gdouble min,
+                                            gdouble max);
+void         gwy_color_axis_get_range      (GwyColorAxis *axis,
+                                            gdouble *min,
+                                            gdouble *max);
+void         gwy_color_axis_set_range      (GwyColorAxis *axis,
+                                            gdouble min,
+                                            gdouble max);
+GwySIUnit*   gwy_color_axis_get_si_unit    (GwyColorAxis *axis);
+void         gwy_color_axis_set_si_unit    (GwyColorAxis *axis,
+                                            GwySIUnit *unit);
+void         gwy_color_axis_set_gradient   (GwyColorAxis *axis,
+                                            const gchar *gradient);
+const gchar* gwy_color_axis_get_gradient   (GwyColorAxis *axis);
 
 G_END_DECLS
 

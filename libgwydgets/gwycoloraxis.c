@@ -123,7 +123,7 @@ gwy_color_axis_init(GwyColorAxis *axis)
     gwy_debug("");
 
     axis->orientation = GTK_ORIENTATION_VERTICAL;
-    axis->par.tick_length = 5;
+    axis->tick_length = 5;
 }
 
 /**
@@ -131,54 +131,47 @@ gwy_color_axis_init(GwyColorAxis *axis)
  * @orientation: The orientation of the axis.
  * @min: The minimum.
  * @max: The maximum.
- * @pal: The palette the color axis should use.
  *
  * Creates a new color axis.
  *
  * Returns: The newly created color axis as a #GtkWidget.
  **/
 GtkWidget*
-gwy_color_axis_new(GtkOrientation orientation,
-                   gdouble min,
-                   gdouble max,
-                   GwyPalette *pal)
+gwy_color_axis_new_with_range(GtkOrientation orientation,
+                              gdouble min,
+                              gdouble max)
 {
     GwyColorAxis *axis;
 
     gwy_debug("");
-    g_return_val_if_fail(GWY_IS_PALETTE(pal), NULL);
 
     axis = gtk_type_new(gwy_color_axis_get_type());
     axis->orientation = orientation;
     /* TODO: use some font properties, at least */
     if (orientation == GTK_ORIENTATION_VERTICAL)
-        axis->par.textarea = 70;
+        axis->textarea = 70;
     else
-        axis->par.textarea = 20;
+        axis->textarea = 20;
     axis->min = min;
     axis->max = max;
 
     /* XXX */
-    axis->par.font = pango_font_description_new();
-    pango_font_description_set_family(axis->par.font, "Helvetica");
-    pango_font_description_set_style(axis->par.font, PANGO_STYLE_NORMAL);
-    pango_font_description_set_variant(axis->par.font, PANGO_VARIANT_NORMAL);
-    pango_font_description_set_weight(axis->par.font, PANGO_WEIGHT_NORMAL);
-    pango_font_description_set_size(axis->par.font, 10*PANGO_SCALE);
+    axis->font = pango_font_description_new();
+    pango_font_description_set_family(axis->font, "Helvetica");
+    pango_font_description_set_style(axis->font, PANGO_STYLE_NORMAL);
+    pango_font_description_set_variant(axis->font, PANGO_VARIANT_NORMAL);
+    pango_font_description_set_weight(axis->font, PANGO_WEIGHT_NORMAL);
+    pango_font_description_set_size(axis->font, 10*PANGO_SCALE);
 
     axis->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
     g_object_ref(axis->gradient);
-    /* XXX: remove */
-    axis->palette = (GwyPalette*)gwy_palette_new(NULL);
-    gwy_color_axis_set_palette(axis, pal);
     axis->siunit = GWY_SI_UNIT(gwy_si_unit_new("m"));
 
     return GTK_WIDGET(axis);
 }
 
-/* FIXME: this should be the default constructor */
 GtkWidget*
-gwy_color_axis_new_default(GtkOrientation orientation)
+gwy_color_axis_new(GtkOrientation orientation)
 {
     GwyColorAxis *axis;
 
@@ -188,18 +181,16 @@ gwy_color_axis_new_default(GtkOrientation orientation)
     axis->orientation = orientation;
     /* TODO: use some font properties, at least */
     if (orientation == GTK_ORIENTATION_VERTICAL)
-        axis->par.textarea = 70;
+        axis->textarea = 70;
     else
-        axis->par.textarea = 20;
+        axis->textarea = 20;
 
     axis->min = 0.0;
     axis->max = 1.0;
 
-    axis->par.font = pango_font_description_from_string("Helvetica 10");
+    axis->font = pango_font_description_from_string("Helvetica 10");
     axis->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
     g_object_ref(axis->gradient);
-    /* XXX: remove */
-    axis->palette = (GwyPalette*)gwy_palette_new(NULL);
     axis->siunit = GWY_SI_UNIT(gwy_si_unit_new("m"));
 
     return GTK_WIDGET(axis);
@@ -213,7 +204,6 @@ gwy_color_axis_finalize(GObject *object)
     gwy_debug("");
 
     axis = (GwyColorAxis*)object;
-    gwy_object_unref(axis->palette);
     gwy_object_unref(axis->pixbuf);
     g_object_unref(axis->siunit);
     g_object_unref(axis->gradient);
@@ -428,10 +418,10 @@ gwy_color_axis_expose(GtkWidget *widget,
         gdk_pixbuf_render_to_drawable(axis->pixbuf, widget->window, mygc, 0,
                                   0,
                                   0,
-                                  axis->par.textarea,
+                                  axis->textarea,
                                   widget->allocation.width,
                                   widget->allocation.height
-                                    - axis->par.textarea,
+                                    - axis->textarea,
                                   GDK_RGB_DITHER_NONE,
                                   0,
                                   0);
@@ -440,7 +430,7 @@ gwy_color_axis_expose(GtkWidget *widget,
                                   0,
                                   0,
                                   0,
-                                  widget->allocation.width - axis->par.textarea,
+                                  widget->allocation.width - axis->textarea,
                                   widget->allocation.height,
                                   GDK_RGB_DITHER_NONE,
                                   0,
@@ -513,88 +503,88 @@ gwy_color_axis_draw_label(GtkWidget *widget)
         gdk_draw_rectangle(widget->window, mygc, 0,
                            0,
                            0,
-                           widget->allocation.width - axis->par.textarea,
+                           widget->allocation.width - axis->textarea,
                            widget->allocation.height - 1);
 
         gdk_draw_line(widget->window, mygc,
-                      widget->allocation.width - axis->par.textarea,
+                      widget->allocation.width - axis->textarea,
                       0,
-                      widget->allocation.width - axis->par.textarea
-                          + axis->par.tick_length,
+                      widget->allocation.width - axis->textarea
+                          + axis->tick_length,
                       0);
 
         gdk_draw_line(widget->window, mygc,
-                      widget->allocation.width - axis->par.textarea,
+                      widget->allocation.width - axis->textarea,
                       widget->allocation.height/2,
-                      widget->allocation.width - axis->par.textarea
-                          + axis->par.tick_length,
+                      widget->allocation.width - axis->textarea
+                          + axis->tick_length,
                       widget->allocation.height/2);
 
         gdk_draw_line(widget->window, mygc,
-                      widget->allocation.width - axis->par.textarea,
+                      widget->allocation.width - axis->textarea,
                       widget->allocation.height - 1,
-                      widget->allocation.width - axis->par.textarea
-                          + axis->par.tick_length,
+                      widget->allocation.width - axis->textarea
+                          + axis->tick_length,
                       widget->allocation.height - 1);
 
 
         /*draw text*/
         layout = gtk_widget_create_pango_layout(widget, "");
-        pango_layout_set_font_description(layout, axis->par.font);
+        pango_layout_set_font_description(layout, axis->font);
 
         pango_layout_set_markup(layout,  strmax->str, strmax->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
         gdk_draw_layout(widget->window, mygc,
-                        widget->allocation.width - axis->par.textarea + 2,
+                        widget->allocation.width - axis->textarea + 2,
                         2, layout);
 
         pango_layout_set_markup(layout,  strmin->str, strmin->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
         gdk_draw_layout(widget->window, mygc,
-                        widget->allocation.width - axis->par.textarea + 2,
+                        widget->allocation.width - axis->textarea + 2,
                         widget->allocation.height - rect.height - 2, layout);
     }
     else {
         /*draw frame around axis*/
         gdk_draw_rectangle(widget->window, mygc, FALSE,
                            0,
-                           axis->par.textarea,
+                           axis->textarea,
                            widget->allocation.width - 1,
                            widget->allocation.height - 1);
 
         gdk_draw_line(widget->window, mygc,
                       0,
-                      axis->par.textarea - axis->par.tick_length,
+                      axis->textarea - axis->tick_length,
                       0,
-                      axis->par.textarea);
+                      axis->textarea);
 
         gdk_draw_line(widget->window, mygc,
                       widget->allocation.width/2,
-                      axis->par.textarea - axis->par.tick_length,
+                      axis->textarea - axis->tick_length,
                       widget->allocation.width/2,
-                      axis->par.textarea);
+                      axis->textarea);
 
         gdk_draw_line(widget->window, mygc,
                       widget->allocation.width - 1,
-                      axis->par.textarea - axis->par.tick_length,
+                      axis->textarea - axis->tick_length,
                       widget->allocation.width - 1,
-                      axis->par.textarea);
+                      axis->textarea);
 
 
         /*draw text*/
         layout = gtk_widget_create_pango_layout(widget, "");
-        pango_layout_set_font_description(layout, axis->par.font);
+        pango_layout_set_font_description(layout, axis->font);
 
         pango_layout_set_markup(layout,  strmin->str, strmin->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
         gdk_draw_layout(widget->window, mygc, 2,
-                        axis->par.textarea - rect.height - 2, layout);
+                        axis->textarea - rect.height - 2, layout);
 
         pango_layout_set_markup(layout,  strmax->str, strmax->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
         gdk_draw_layout(widget->window, mygc,
                         widget->allocation.width - rect.width - 2,
-                        axis->par.textarea - rect.height - 2, layout);
+                        axis->textarea - rect.height - 2, layout);
 
     }
     g_object_unref(mygc);
@@ -679,45 +669,11 @@ gwy_color_axis_set_range(GwyColorAxis *axis,
 }
 
 /**
- * gwy_color_axis_set_palette:
- * @axis: A color axis.
- * @pal: A palette.
- *
- * Sets the palette for color axis @axis to @pal.
- **/
-void
-gwy_color_axis_set_palette(GwyColorAxis *axis,
-                           GwyPalette *pal)
-{
-    g_return_if_fail(GWY_IS_PALETTE(pal));
-
-    gwy_color_axis_set_gradient(axis,
-                                gwy_palette_def_get_name
-                                           (gwy_palette_get_palette_def(pal)));
-}
-
-/**
- * gwy_color_axis_get_palette:
- * @axis: A color axis.
- *
- * Returns the palette the color axis @axis uses.
- *
- * Returns: The palette, as #GwyPalette.
- **/
-GwyPalette*
-gwy_color_axis_get_palette(GwyColorAxis *axis)
-{
-    return axis->palette;
-}
-
-/**
  * gwy_color_axis_set_gradient:
  * @axis: A color axis.
  * @gradient: Name of gradient @axis should use.  It should exist.
  *
  * Sets the color gradient a color axis should use.
- *
- * Since: 1.8
  **/
 void
 gwy_color_axis_set_gradient(GwyColorAxis *axis,
@@ -739,8 +695,6 @@ gwy_color_axis_set_gradient(GwyColorAxis *axis,
     g_signal_connect_swapped(axis->gradient, "value_changed",
                              G_CALLBACK(gwy_color_axis_update), axis);
     g_object_unref(old);
-    /* XXX: remove */
-    gwy_palette_set_by_name(axis->palette, gradient);
 
     gwy_color_axis_update(axis);
 }
@@ -752,8 +706,6 @@ gwy_color_axis_set_gradient(GwyColorAxis *axis,
  * Returns the color gradient a color axis uses.
  *
  * Returns: The color gradient.
- *
- * Since: 1.8
  **/
 const gchar*
 gwy_color_axis_get_gradient(GwyColorAxis *axis)

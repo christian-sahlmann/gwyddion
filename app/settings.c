@@ -31,7 +31,7 @@
 
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwyserializable.h>
-#include <libdraw/gwypalettedef.h>
+#include <libdraw/gwyrgba.h>
 #include "settings.h"
 
 static gboolean create_config_dir_real         (const gchar *cfgdir);

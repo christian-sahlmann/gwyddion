@@ -534,8 +534,8 @@ gwy_graph_model_duplicate(GObject *object)
     duplicate->label_position = gmodel->label_position;
     duplicate->label_has_frame = gmodel->label_has_frame;
     duplicate->label_frame_thickness = gmodel->label_frame_thickness;
-    duplicate->x_unit = gwy_serializable_duplicate(gmodel->x_unit);
-    duplicate->y_unit = gwy_serializable_duplicate(gmodel->y_unit);
+    duplicate->x_unit = gwy_si_unit_duplicate(gmodel->x_unit);
+    duplicate->y_unit = gwy_si_unit_duplicate(gmodel->y_unit);
     duplicate->top_label = g_string_new(gmodel->top_label->str);
     duplicate->bottom_label = g_string_new(gmodel->bottom_label->str);
     duplicate->left_label = g_string_new(gmodel->left_label->str);

@@ -281,9 +281,6 @@ gwy_3d_view_new(GwyContainer *data)
     g_signal_connect_swapped(gwy3dview->gradient, "value_changed",
                              G_CALLBACK(gwy_3d_view_gradient_changed),
                              gwy3dview);
-    /* XXX: remove */
-    gwy3dview->palette = GWY_PALETTE(gwy_palette_new(NULL));
-    gwy_palette_set_by_name(gwy3dview->palette, grad_name);
 
     gwy_container_gis_int32_by_name(data, "/0/3d/reduced_size",
                                     &gwy3dview->reduced_size);
@@ -397,7 +394,6 @@ gwy_3d_view_finalize(GObject *object)
     gwy_object_unref(gwy3dview->si_unit);
     gwy_object_unref(gwy3dview->labels);
     gwy_object_unref(gwy3dview->gradient);
-    gwy_object_unref(gwy3dview->palette);
 
     if (gwy3dview->shape_list_base >= 0) {
         glDeleteLists(gwy3dview->shape_list_base, 2);
@@ -441,15 +437,11 @@ gwy_3d_view_unrealize(GtkWidget *widget)
  * @gwy3dview: A 3D data view widget.
  *
  * Instructs a 3D data view to update self and repaint.
- * The values of GwyDataField @data, GwyPalette @palette
- * are updated from container @container. If necessary new
- * @downsampled data are created. Old values of @data and @palette
- * are unreferenced.
+ * Data, palette, etc. are updated from container @container. If necessary new
+ * @downsampled data are created.
  *
  * The display lists are recreated if the widget is realized. This may
  * take a great amount of processor time (seconds).
- *
- * Since: 1.5
  **/
 void
 gwy_3d_view_update(Gwy3DView *gwy3dview)
@@ -521,59 +513,12 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
         gwy_3d_view_update_lists(gwy3dview);
 }
 
-
-
-/**
- * gwy_3d_view_get_palette:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns the palette a 3D data view uses.
- *
- * Returns: The palette @gwy3dview uses.
- *
- * Since: 1.5
- **/
-GwyPalette*
-gwy_3d_view_get_palette(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-
-    return gwy3dview->palette;
-}
-
-
-/**
- * gwy_3d_view_set_palette:
- * @gwy3dview: A 3D data view widget.
- * @palette: A palette.
- *
- * Sets the palette of a 3D data view.
- *
- * The display lists are recreated if the widget is realized. This may
- * take a great amount of processor time (seconds).
- * Further, the widget is redrawn.
- *
- * Since: 1.5
- **/
-void
-gwy_3d_view_set_palette(Gwy3DView *gwy3dview,
-                        GwyPalette *palette)
-{
-    g_return_if_fail(GWY_IS_PALETTE(palette));
-
-    gwy_3d_view_set_gradient(gwy3dview,
-                             gwy_palette_def_get_name
-                                        (gwy_palette_get_palette_def(palette)));
-}
-
 /**
  * gwy_3d_view_set_gradient:
  * @gwy3dview: A 3D data view widget.
  * @gradient: Name of gradient @gwy3dview should use.  It should exist.
  *
  * Sets the color gradient a 3D data view should use.
- *
- * Since: 1.8
  **/
 void
 gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
@@ -604,10 +549,6 @@ gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
     gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
                                      gradstr);
     g_object_unref(old);
-    /* XXX: remove */
-    if (!gwy_palette_set_by_name(gwy3dview->palette, gradstr))
-        g_warning("Palette <%s> doesn't exist, we've got out of sync",
-                  gradstr);
 
     if (!gwy3dview->enable_lights)
         gwy_3d_view_update_lists(gwy3dview);
@@ -638,8 +579,6 @@ gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
  * Returns the color gradient a 3D data view uses.
  *
  * Returns: The color gradient.
- *
- * Since: 1.8
  **/
 const gchar*
 gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
@@ -657,8 +596,6 @@ gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
  * the mouse motion event.
  *
  * Returns: actual type of response on the mouse motion event
- *
- * Since: 1.5
  **/
 Gwy3DMovement
 gwy_3d_view_get_status (Gwy3DView * gwy3dview)
@@ -675,8 +612,6 @@ gwy_3d_view_get_status (Gwy3DView * gwy3dview)
  *
  * Sets the type of widget response on the mouse motion event.
  * See #Gwy3DMovement.
- *
- * Since: 1.5
  **/
 void
 gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
@@ -694,8 +629,6 @@ gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
  *
  * Returns: TRUE if projection of the data is orthografic
  *          FALSE if projection of the data is perspective
- *
- * Since: 1.5
  **/
 gboolean
 gwy_3d_view_get_orthographic(Gwy3DView *gwy3dview)
@@ -714,8 +647,6 @@ gwy_3d_view_get_orthographic(Gwy3DView *gwy3dview)
  *
  * Sets the type of projection of the 3D data to the screen and
  * redraws widget (if realized).
- *
- * Since: 1.5
  **/
 void
 gwy_3d_view_set_orthographic(Gwy3DView *gwy3dview,
@@ -741,8 +672,6 @@ gwy_3d_view_set_orthographic(Gwy3DView *gwy3dview,
  * Returns whether the axes are shown within the widget.
  *
  * Returns: visibility of the axes
- *
- * Since: 1.5
  **/
 gboolean
 gwy_3d_view_get_show_axes(Gwy3DView *gwy3dview)
@@ -759,8 +688,6 @@ gwy_3d_view_get_show_axes(Gwy3DView *gwy3dview)
  * @show_axes: Show/hide axes
  *
  * Show/hide axes within @gwy3dview. Widget is invalidated if necessary.
- *
- * Since: 1.5
  **/
 void
 gwy_3d_view_set_show_axes(Gwy3DView *gwy3dview,
@@ -788,8 +715,6 @@ gwy_3d_view_set_show_axes(Gwy3DView *gwy3dview,
  * The labels are visible only if #show_axes is TRUE.
  *
  * Returns: Whwteher the axes labels are visible.
- *
- * Since: 1.5
  **/
 gboolean
 gwy_3d_view_get_show_labels(Gwy3DView *gwy3dview)
@@ -808,8 +733,6 @@ gwy_3d_view_get_show_labels(Gwy3DView *gwy3dview)
  * Show/hide lables of the axes within @gwy3dview.
  * Widget is invalidated if necessary.
  * The labels of the axes are visible only if #show_axes is TRUE.
- *
- * Since: 1.5
  **/
 void
 gwy_3d_view_set_show_labels(Gwy3DView *gwy3dview,
@@ -836,8 +759,6 @@ gwy_3d_view_set_show_labels(Gwy3DView *gwy3dview,
  * Returns whether the lighst are on or off within the @gwy3dview.
  *
  * Returns: %TRUE if the lights are on, %FALSE if they are off.
- *
- * Since: 1.5
  **/
 gboolean
 gwy_3d_view_get_use_lights(Gwy3DView *gwy3dview)
@@ -856,8 +777,6 @@ gwy_3d_view_get_use_lights(Gwy3DView *gwy3dview)
  * Turn lights on/off within @gwy3dview.
  *
  * Widget is invalidated if necessary.
- *
- * Since: 1.5
  **/
 void
 gwy_3d_view_set_use_lights(Gwy3DView *gwy3dview,
@@ -885,8 +804,6 @@ gwy_3d_view_set_use_lights(Gwy3DView *gwy3dview,
  * (in the situations like mouse rotations etc.)
  *
  * Returns: The size of the downsampled data.
- *
- * Since: 1.5
  **/
 guint
 gwy_3d_view_get_reduced_size(Gwy3DView *gwy3dview)
@@ -908,8 +825,6 @@ gwy_3d_view_get_reduced_size(Gwy3DView *gwy3dview)
  * size.
  *
  * If necessary a display list is recreated and widget is invalidated
- *
- * Since: 1.5
  **/
 void
 gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
@@ -958,8 +873,6 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
  * Returns a #GwyGLMaterial used to draw data with lights on.
  *
  * Returns: A #GwyGLMaterial used to draw data with lights on.
- *
- * Since: 1.5
  **/
 GwyGLMaterial*
 gwy_3d_view_get_material(Gwy3DView *gwy3dview)
@@ -981,8 +894,6 @@ gwy_3d_view_get_material(Gwy3DView *gwy3dview)
  * is rendered using this material.
  *
  * This function does NOT take reference on material.
- *
- * Since: 1.5
  **/
 void
 gwy_3d_view_set_material(Gwy3DView *gwy3dview,
@@ -1019,8 +930,6 @@ gwy_3d_view_set_material(Gwy3DView *gwy3dview,
  * @xres and @yres will be implemented to set the resolution of the pixbuf.
  *
  * Returns: A newly allocated GdkPixbuf with copy of the framebuffer.
- *
- * Since: 1.5
  **/
 GdkPixbuf*
 gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview,
@@ -1066,8 +975,6 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview,
  * Returns the data container this 3D view displays.
  *
  * Returns: The container as a #GwyContainer.
- *
- * Since: 1.5
  **/
 GwyContainer*
 gwy_3d_view_get_data(Gwy3DView *gwy3dview)
@@ -1083,8 +990,6 @@ gwy_3d_view_get_data(Gwy3DView *gwy3dview)
  *
  * Resets angle of the view, scale, deformation ant the position
  * of the light to the "default" values. Invalidates the widget.
- *
- * Since: 1.5
  **/
 void
 gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
@@ -1108,8 +1013,6 @@ gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
  * Returns a GtkAdjustment with settings of the Phi angle of rotation.
  *
  * Returns: a GtkAdjustment with settings of the Phi angle of rotation
- *
- * Since: 1.5
  **/
 GtkAdjustment *
 gwy_3d_view_get_rot_x_adjustment(Gwy3DView *gwy3dview)
@@ -1126,8 +1029,6 @@ gwy_3d_view_get_rot_x_adjustment(Gwy3DView *gwy3dview)
  * Returns a GtkAdjustment with settings of the Theta angle of rotation
  *
  * Returns: a GtkAdjustment with settings of the Theta angle of rotation
- *
- * Since: 1.5
  **/
 GtkAdjustment *
 gwy_3d_view_get_rot_y_adjustment(Gwy3DView *gwy3dview)
@@ -1144,8 +1045,6 @@ gwy_3d_view_get_rot_y_adjustment(Gwy3DView *gwy3dview)
  * Returns a GtkAdjustment with settings of the view zoom
  *
  * Returns: a GtkAdjustment with settings of the view zoom
- *
- * Since: 1.5
  **/
 GtkAdjustment *
 gwy_3d_view_get_view_scale_adjustment(Gwy3DView *gwy3dview)
@@ -1162,8 +1061,6 @@ gwy_3d_view_get_view_scale_adjustment(Gwy3DView *gwy3dview)
  * Returns a GtkAdjustment with settings of the zoom of the z-axis
  *
  * Returns: a GtkAdjustment with settings of the zoom of the z-axis
- *
- * Since: 1.5
  **/
 GtkAdjustment *
 gwy_3d_view_get_z_deformation_adjustment(Gwy3DView *gwy3dview)
@@ -1180,8 +1077,6 @@ gwy_3d_view_get_z_deformation_adjustment(Gwy3DView *gwy3dview)
  * Returns a GtkAdjustment with settings of the Phi angle of light position.
  *
  * Returns: a GtkAdjustment with settings of the Phi angle of light position
- *
- * Since: 1.5
  **/
 GtkAdjustment *
 gwy_3d_view_get_light_z_adjustment(Gwy3DView *gwy3dview)
@@ -1198,8 +1093,6 @@ gwy_3d_view_get_light_z_adjustment(Gwy3DView *gwy3dview)
  * Returns a GtkAdjustment with settings of the Theta angle of light position.
  *
  * Returns: a GtkAdjustment with settings of the Theta angle of light position
- *
- * Since: 1.5
  **/
 GtkAdjustment *
 gwy_3d_view_get_light_y_adjustment(Gwy3DView *gwy3dview)
@@ -1216,8 +1109,6 @@ gwy_3d_view_get_light_y_adjustment(Gwy3DView *gwy3dview)
  * Returns the maximal zoom of the 3D data view
  *
  * Returns: the maximal zoom of the 3D data view
- *
- * Since: 1.5
  **/
 gdouble
 gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview)
@@ -1234,8 +1125,6 @@ gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview)
  * Returns the minimal zoom of the 3D data view
  *
  * Returns: the minimal zoom of the 3D data view
- *
- * Since: 1.5
  **/
 gdouble
 gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
@@ -1253,8 +1142,6 @@ gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
  * Sets the new maximal zoom of 3D data view. Recommended values are 0.5 - 5.0.
  *
  * Returns: whether the function finished succesfully (allways)
- *
- * Since: 1.5
  **/
 gboolean
 gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
@@ -1288,8 +1175,6 @@ gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
  * Sets the new manimal zoom of 3D data view. Recommended values are 0.5 - 5.0.
  *
  * Returns: whether the function finished succesfully (allways)
- *
- * Since: 1.5
  **/
 gboolean
 gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
@@ -1325,8 +1210,6 @@ gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
  *
  * Returns: a #Gwy3DLabelDescription structure containing informations about
  *          labels shown within 3D data view.
- *
- * Since: 1.5
  **/
 Gwy3DLabelDescription *
 gwy_3d_view_get_label_description(Gwy3DView * gwy3dview,

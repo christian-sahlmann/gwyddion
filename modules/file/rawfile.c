@@ -161,7 +161,7 @@ typedef struct {
     GtkWidget *presetname;
     GtkWidget *preview;
     GtkWidget *do_preview;
-    GwyPalette *palette;
+    GwyGradient *gradient;
     RawFileArgs *args;
     RawFileFile *file;
 } RawFileControls;
@@ -502,7 +502,8 @@ rawfile_dialog(RawFileArgs *args,
     controls.dialog = dialog;
     controls.args = args;
     controls.file = file;
-    controls.palette = GWY_PALETTE(gwy_palette_new(NULL));
+    controls.gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
+    g_object_ref(controls.gradient);
 
     vbox = GTK_DIALOG(dialog)->vbox;
 
@@ -576,7 +577,7 @@ rawfile_dialog(RawFileArgs *args,
             rawfile_save_list_of_presets
                 (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
             gtk_widget_destroy(dialog);
-            g_object_unref(controls.palette);
+            g_object_unref(controls.gradient);
             case GTK_RESPONSE_NONE:
             return FALSE;
             break;
@@ -610,7 +611,7 @@ rawfile_dialog(RawFileArgs *args,
     } while (response != GTK_RESPONSE_OK);
     rawfile_save_list_of_presets
         (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
-    g_object_unref(controls.palette);
+    g_object_unref(controls.gradient);
     gtk_widget_destroy(dialog);
 
     return dfield;
@@ -1405,7 +1406,7 @@ preview_cb(RawFileControls *controls)
     zoom = 120.0/MAX(xres, yres);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    gwy_pixfield_do(pixbuf, dfield, controls->palette);
+    gwy_pixbuf_draw_data_field(pixbuf, dfield, controls->gradient);
     pixbuf2 = gdk_pixbuf_scale_simple(pixbuf,
                                       ceil(xres*zoom), ceil(yres*zoom),
                                       GDK_INTERP_TILES);

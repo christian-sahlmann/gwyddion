@@ -226,7 +226,7 @@ hash_to_data_field(GHashTable *hash,
                    gchar *buffer)
 {
     GwyDataField *dfield;
-    GObject *unit;
+    GwySIUnit *unit;
     const gchar *s; /* for HASH_GET macros */
     gint xres, yres, bpp, offset;
     gdouble xreal, yreal, q;
@@ -272,11 +272,11 @@ hash_to_data_field(GHashTable *hash,
     gwy_data_field_multiply(dfield, q);
 
     unit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(unit));
+    gwy_data_field_set_si_unit_xy(dfield, unit);
     g_object_unref(unit);
 
     unit = gwy_si_unit_new(is_current ? "A" : "m");
-    gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(unit));
+    gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
 
     return dfield;

@@ -155,14 +155,14 @@ gwy_layer_mask_paint(GwyPixmapLayer *layer)
     mask_layer = (GwyLayerMask*)layer;
     data = GWY_DATA_VIEW_LAYER(layer)->data;
 
-    /* TODO Container */
     data_field
         = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     g_return_val_if_fail(data_field, layer->pixbuf);
     gwy_layer_mask_restore(mask_layer);
     /* XXX */
     /*if (GWY_LAYER_MASK(layer)->changed)*/ {
-        gwy_pixfield_do_mask(layer->pixbuf, data_field, &mask_layer->color);
+        gwy_pixbuf_draw_data_field_as_mask(layer->pixbuf, data_field,
+                                           &mask_layer->color);
         mask_layer->changed = FALSE;
     }
 

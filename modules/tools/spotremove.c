@@ -303,15 +303,11 @@ dialog_update(GwyUnitoolState *state,
     pal = gwy_container_get_string_by_name(data, "/0/base/palette");
     if (strcmp(pal, controls->pal)) {
         GwyPixmapLayer *layer;
-        GwyPalette *palette;
 
         g_free(controls->pal);
         controls->pal = g_strdup(pal);
-        palette = GWY_PALETTE(gwy_palette_new(NULL));
-        gwy_palette_set_by_name(palette, controls->pal);
         layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
-        gwy_layer_basic_set_palette(GWY_LAYER_BASIC(layer), palette);
-        g_object_unref(palette);
+        gwy_layer_basic_set_gradient(GWY_LAYER_BASIC(layer), controls->pal);
     }
     if (reason == GWY_UNITOOL_UPDATED_DATA) {
         gdouble min, max;

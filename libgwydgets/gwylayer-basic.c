@@ -152,9 +152,6 @@ gwy_layer_basic_new(void)
 
     layer->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
     g_object_ref(layer->gradient);
-    /* XXX: remove */
-    layer->palette = (GwyPalette*)gwy_palette_new(NULL);
-    gwy_palette_set_by_name(layer->palette, GWY_GRADIENT_DEFAULT);
 
     return object;
 }
@@ -218,47 +215,11 @@ gwy_layer_basic_wants_repaint(GwyDataViewLayer *layer)
 }
 
 /**
- * gwy_layer_basic_set_palette:
- * @layer: A #GwyLayerBasic.
- * @palette: The palette @layer should use.
- *
- * Sets the palette @layer should used.
- **/
-void
-gwy_layer_basic_set_palette(GwyLayerBasic *layer,
-                            GwyPalette *palette)
-{
-    g_return_if_fail(GWY_IS_PALETTE(palette));
-
-    gwy_layer_basic_set_gradient(layer,
-                                 gwy_palette_def_get_name
-                                        (gwy_palette_get_palette_def(palette)));
-}
-
-/**
- * gwy_layer_basic_get_palette:
- * @layer: A #GwyLayerBasic.
- *
- * Returns the palette used by @layer.
- *
- * Returns: The palette as #GwyPalette.
- **/
-GwyPalette*
-gwy_layer_basic_get_palette(GwyLayerBasic *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
-
-    return layer->palette;
-}
-
-/**
  * gwy_layer_basic_set_gradient:
  * @layer: A basic data view layer.
  * @gradient: Name of gradient @layer should use.  It should exist.
  *
  * Sets the color gradient a basic layer should use.
- *
- * Since: 1.8
  **/
 void
 gwy_layer_basic_set_gradient(GwyLayerBasic *layer,
@@ -287,10 +248,6 @@ gwy_layer_basic_set_gradient(GwyLayerBasic *layer,
     gwy_container_set_string_by_name(GWY_DATA_VIEW_LAYER(layer)->data,
                                      "/0/base/palette", gradstr);
     g_object_unref(old);
-    /* XXX: remove */
-    if (!gwy_palette_set_by_name(layer->palette, gradstr))
-        g_warning("Palette <%s> doesn't exist, we've got out of sync",
-                  gradstr);
 
     gwy_layer_basic_update(GWY_DATA_VIEW_LAYER(layer));
 }
@@ -305,8 +262,6 @@ gwy_layer_basic_set_gradient(GwyLayerBasic *layer,
  *          differ the name that was used on initialization or set with
  *          gwy_shader_set_gradient(), if the gradient didn't exist or
  *          was renamed meanwhile.
- *
- * Since: 1.8
  **/
 const gchar*
 gwy_layer_basic_get_gradient(GwyLayerBasic *layer)

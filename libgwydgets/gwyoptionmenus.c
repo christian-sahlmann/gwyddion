@@ -26,7 +26,6 @@
 #include <gtk/gtkimagemenuitem.h>
 
 #include <libgwyddion/gwyddion.h>
-#include <libdraw/gwypalette.h>
 #include <libdraw/gwygradient.h>
 #include "gwyoptionmenus.h"
 
@@ -44,11 +43,6 @@ enum {
  * interface and namely with signals emitted not only when a particular
  * resource changes, but when some is created or deleted */
 
-static GtkWidget* gwy_palette_menu_create        (const gchar *current,
-                                                  gint *current_idx);
-static GtkWidget* gwy_sample_palette_to_gtkimage (GwyPaletteDef *palette_def);
-static gint       palette_def_compare            (GwyPaletteDef *a,
-                                                  GwyPaletteDef *b);
 static GtkWidget* gwy_gradient_menu_create       (const gchar *current,
                                                   gint *current_idx);
 static GtkWidget* gwy_sample_gradient_to_gtkimage(GwyGradient *gradient);
@@ -232,178 +226,6 @@ gradient_compare(GwyGradient *a,
                  GwyGradient *b)
 {
     return strcmp(gwy_gradient_get_name(a), gwy_gradient_get_name(b));
-}
-
-
-/************************** Palette menu ****************************/
-/* XXX: deprecated */
-
-static GtkWidget*
-gwy_palette_menu_create(const gchar *current,
-                        gint *current_idx)
-{
-    GSList *l, *entries = NULL;
-    GtkWidget *menu, *image, *item, *hbox, *label;
-    gint i, idx;
-
-    gwy_palette_def_foreach((GwyPaletteDefFunc)gwy_hash_table_to_slist_cb,
-                            &entries);
-    entries = g_slist_sort(entries, (GCompareFunc)palette_def_compare);
-
-    menu = gtk_menu_new();
-
-    idx = -1;
-    i = 0;
-    for (l = entries; l; l = g_slist_next(l)) {
-        GwyPaletteDef *palette_def = (GwyPaletteDef*)l->data;
-        const gchar *name = gwy_palette_def_get_name(palette_def);
-
-        image = gwy_sample_palette_to_gtkimage(palette_def);
-        item = gtk_menu_item_new();
-        hbox = gtk_hbox_new(FALSE, 6);
-        label = gtk_label_new(name);
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_container_add(GTK_CONTAINER(item), hbox);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "palette-name", (gpointer)name);
-        if (current && strcmp(current, name) == 0)
-            idx = i;
-        i++;
-    }
-    gwy_sample_palette_to_gtkimage(NULL);
-    g_slist_free(entries);
-
-    if (current_idx && idx != -1)
-        *current_idx = idx;
-
-    return menu;
-}
-
-/**
- * gwy_menu_palette:
- * @callback: A callback called when a menu item is activated (or %NULL for
- *            none).
- * @cbdata: User data passed to the callback.
- *
- * Creates a pop-up palette menu.
- *
- * Returns: The newly created pop-up menu as #GtkWidget.
- **/
-GtkWidget*
-gwy_menu_palette(GCallback callback,
-                 gpointer cbdata)
-{
-    GtkWidget *menu;
-    GList *c;
-
-    menu = gwy_palette_menu_create(NULL, NULL);
-    if (callback) {
-        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
-            g_signal_connect(c->data, "activate", callback, cbdata);
-    }
-
-    return menu;
-}
-
-/**
- * gwy_option_menu_palette:
- * @callback: A callback called when a menu item is activated (or %NULL for
- *            none).
- * @cbdata: User data passed to the callback.
- * @current: Palette definition name to be shown as currently selected
- *           (or %NULL to use what happens to appear first).
- *
- * Creates a #GtkOptionMenu of palettes (more preciesly, palettes definitions),
- * alphabetically sorted, with names and small sample images.
- *
- * It sets object data "palette-name" to palette definition name for each
- * menu item.
- *
- * Returns: The newly created option menu as #GtkWidget.
- **/
-GtkWidget*
-gwy_option_menu_palette(GCallback callback,
-                        gpointer cbdata,
-                        const gchar *current)
-{
-    GtkWidget *omenu, *menu;
-    GList *c;
-    gint idx;
-
-    idx = -1;
-    omenu = gtk_option_menu_new();
-    g_object_set_data(G_OBJECT(omenu), "gwy-option-menu",
-                      GINT_TO_POINTER(TRUE));
-    menu = gwy_palette_menu_create(current, &idx);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    if (idx != -1)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), idx);
-
-    if (callback) {
-        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
-            g_signal_connect(c->data, "activate", callback, cbdata);
-    }
-
-    return omenu;
-}
-
-/* XXX: magic static variables */
-static GtkWidget*
-gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
-{
-    static GwyPalette *palette = NULL;
-    static guchar *samples = NULL;
-    GdkPixbuf *pixbuf;
-    GtkWidget *image;
-    guint rowstride;
-    guchar *data;
-    gint i;
-
-    /* clean up when called with NULL */
-    if (!palette_def) {
-        g_free(samples);
-        samples = NULL;
-        gwy_object_unref(palette);
-        return NULL;
-    }
-
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
-                            SAMPLE_WIDTH, SAMPLE_HEIGHT);
-    gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
-    data = gdk_pixbuf_get_pixels(pixbuf);
-
-    if (!palette)
-        palette = (GwyPalette*)gwy_palette_new(palette_def);
-    else
-        gwy_palette_set_palette_def(palette, palette_def);
-
-    samples = gwy_palette_sample(palette, 4*SAMPLE_WIDTH, samples);
-    for (i = 0; i < SAMPLE_WIDTH; i++) {
-        guchar *sam = samples + 4*4*i;
-
-        data[3*i] = ((guint)sam[0] + sam[4] + sam[8] + sam[12])/4;
-        data[3*i + 1] = ((guint)sam[1] + sam[5] + sam[9] + sam[13])/4;
-        data[3*i + 2] = ((guint)sam[2] + sam[6] + sam[10] + sam[14])/4;
-    }
-    for (i = 1; i < SAMPLE_HEIGHT; i++)
-        memcpy(data + i*rowstride, data, 3*SAMPLE_WIDTH);
-    gwy_object_unref(palette);
-
-    image = gtk_image_new_from_pixbuf(pixbuf);
-    g_object_unref(pixbuf);
-
-    return image;
-}
-
-static gint
-palette_def_compare(GwyPaletteDef *a,
-                    GwyPaletteDef *b)
-{
-    /* XXX: should use gwy_palette_def_get_name() */
-    return strcmp(a->name, b->name);
 }
 
 

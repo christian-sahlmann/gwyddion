@@ -121,7 +121,7 @@ spmlab_load(const gchar *filename)
 {
     GObject *object = NULL;
     guchar *buffer = NULL;
-    guint size = 0;
+    gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
 

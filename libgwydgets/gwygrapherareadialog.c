@@ -292,7 +292,7 @@ gwy_point_menu_create(const GwyGrapherPointType current,
         /*gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);*/
         gtk_container_add(GTK_CONTAINER(item), hbox);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "point-type", (gpointer)l);
+        g_object_set_data(G_OBJECT(item), "point-type", GINT_TO_POINTER(l));
         if (current && (current == l))
             idx = l;
     }
@@ -376,7 +376,7 @@ gwy_line_menu_create(const GdkLineStyle current,
         gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
         gtk_container_add(GTK_CONTAINER(item), hbox);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "line-type", (gpointer)l);
+        g_object_set_data(G_OBJECT(item), "line-type", GINT_TO_POINTER(l));
         if (current && (current == l))
             idx = l;
     }

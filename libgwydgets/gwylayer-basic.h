@@ -26,7 +26,6 @@
 
 #include <libgwydgets/gwypixmaplayer.h>
 #include <libdraw/gwygradient.h>
-#include <libdraw/gwypalette.h>
 
 G_BEGIN_DECLS
 
@@ -43,10 +42,9 @@ typedef struct _GwyLayerBasicClass GwyLayerBasicClass;
 struct _GwyLayerBasic {
     GwyPixmapLayer parent_instance;
 
-    GwyPalette *palette;    /* XXX: unused, remove in 2.0 */
+    GwyGradient *gradient;
     gboolean changed;
 
-    GwyGradient *gradient;
     gpointer reserved2;
     /* XXX: add a signal id here for direct disconnection */
 };
@@ -61,11 +59,6 @@ struct _GwyLayerBasicClass {
 GType            gwy_layer_basic_get_type        (void) G_GNUC_CONST;
 
 GtkObject*       gwy_layer_basic_new             (void);
-#ifndef GWY_DISABLE_DEPRECATED
-void             gwy_layer_basic_set_palette     (GwyLayerBasic *layer,
-                                                  GwyPalette *palette);
-GwyPalette*      gwy_layer_basic_get_palette     (GwyLayerBasic *layer);
-#endif
 void             gwy_layer_basic_set_gradient    (GwyLayerBasic *layer,
                                                   const gchar *gradient);
 const gchar*     gwy_layer_basic_get_gradient    (GwyLayerBasic *layer);
