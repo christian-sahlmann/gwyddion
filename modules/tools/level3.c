@@ -126,12 +126,24 @@ level3_do(void)
     c = z[0]*(points[2]*points[5] - points[3]*points[4])
          + z[1]*(points[1]*points[4] - points[5]*points[0])
          + z[2]*(points[0]*points[3] - points[1]*points[2]);
+    gwy_debug("%s: bx = %g, by = %g, c = %g, det = %g", __FUNCTION__,
+              bx, by, c, det);
     bx /= det;
     by /= det;
     c /= det;
     gwy_debug("%s: bx = %g, by = %g, c = %g", __FUNCTION__, bx, by, c);
+    gwy_debug("%s: z[0] = %g, z[1] = %g, z[2] = %g", __FUNCTION__,
+              z[0], z[1], z[2]);
+    gwy_debug("%s: zn[0] = %g, zn[1] = %g, zn[2] = %g", __FUNCTION__,
+              z[0] - c - bx*points[0] - by*points[1],
+              z[1] - c - bx*points[2] - by*points[3],
+              z[2] - c - bx*points[4] - by*points[5]);
     gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_plane_level(dfield, c, bx, by);
+    gwy_debug("%s: zN[0] = %g, zN[1] = %g, zN[2] = %g", __FUNCTION__,
+              level3_get_z_average(dfield, points[0], points[1], radius),
+              level3_get_z_average(dfield, points[2], points[3], radius),
+              level3_get_z_average(dfield, points[4], points[5], radius));
     gwy_data_view_update(GWY_DATA_VIEW(points_layer->parent));
 }
 
@@ -148,7 +160,7 @@ level3_get_z_average(GwyDataField *dfield,
     x = gwy_data_field_rtoj(dfield, xreal);
     y = gwy_data_field_rtoi(dfield, yreal);
     if (radius < 2)
-        return gwy_data_field_get_val(dfield, x, y);
+        return gwy_data_field_get_val(dfield, y, x);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     ulj = CLAMP(x - radius, 0, xres - 1);
