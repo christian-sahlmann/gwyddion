@@ -3065,24 +3065,24 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
     {
         if (orientation == GTK_ORIENTATION_HORIZONTAL)
         {
-            if ((xres-brrow)>ulrow)
+            if ((xres-brcol)>ulcol)
             {
-                ulrow = brrow; brrow = xres;
-            }
-            else
-            {
-                brrow = ulrow; ulrow = 0; 
-            }
-        }
-        else if (orientation == GTK_ORIENTATION_VERTICAL)
-        {
-            if ((yres-brcol)>ulcol)
-            {
-                ulcol = brcol; brcol = yres;
+                ulcol = brcol; brcol = xres;
             }
             else
             {
                 brcol = ulcol; ulcol = 0; 
+            }
+        }
+        else if (orientation == GTK_ORIENTATION_VERTICAL)
+        {
+            if ((yres-brrow)>ulrow)
+            {
+                ulrow = brrow; brrow = yres;
+            }
+            else
+            {
+                brrow = ulrow; ulrow = 0; 
             }             
         }
     }
@@ -3111,7 +3111,7 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
             gwy_data_field_get_column(data_field, hlp, i);
             if (i>ulcol && i<=brcol)
             {
-                gwy_data_line_part_fit_polynom(hlp, n, coefs, ulcol, brcol);
+                gwy_data_line_part_fit_polynom(hlp, n, coefs, ulrow, brrow);
             }
             else
             {
