@@ -588,7 +588,7 @@ gwy_vector_layer_setup_gc(GwyVectorLayer *layer)
 
     if (!layer->gc)
         layer->gc = gdk_gc_new(parent->window);
-    gdk_gc_set_function(layer->gc, GDK_INVERT);
+    gdk_gc_set_function(layer->gc, GDK_XOR);
     fg.pixel = 0xFFFFFFFF;
     bg.pixel = 0x00000000;
     gdk_gc_set_foreground(layer->gc, &fg);
