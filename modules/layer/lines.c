@@ -18,9 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <string.h>
-
 #include <libgwyddion/gwymacros.h>
+#include <string.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwyvectorlayer.h>
@@ -44,6 +43,7 @@
 enum {
     PROP_0,
     PROP_MAX_LINES,
+    PROP_LINE_NUMBERS,
     PROP_LAST
 };
 
@@ -60,7 +60,9 @@ struct _GwyLayerLines {
     gdouble lmove_x;
     gdouble lmove_y;
     guint button;
+    gboolean line_numbers;
     gdouble *lines;
+    GdkPixmap **line_labels;
 };
 
 struct _GwyLayerLinesClass {
@@ -91,6 +93,9 @@ static void       gwy_layer_lines_draw            (GwyVectorLayer *layer,
 static void       gwy_layer_lines_draw_line       (GwyLayerLines *layer,
                                                    GdkDrawable *drawable,
                                                    gint i);
+static void       gwy_layer_lines_setup_label     (GwyLayerLines *layer,
+                                                   GdkDrawable *drawable,
+                                                   gint i);
 static gboolean   gwy_layer_lines_motion_notify   (GwyVectorLayer *layer,
                                                    GdkEventMotion *event);
 static gboolean   gwy_layer_lines_do_move_line    (GwyLayerLines *layer,
@@ -102,6 +107,8 @@ static gboolean   gwy_layer_lines_button_released (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
 static void       gwy_layer_lines_set_max_lines   (GwyLayerLines *layer,
                                                    gint nlines);
+static void       gwy_layer_lines_set_line_numbers(GwyLayerLines *layer,
+                                                   gboolean line_numbers);
 static gint       gwy_layer_lines_get_selection   (GwyVectorLayer *layer,
                                                    gdouble *selection);
 static void       gwy_layer_lines_unselect        (GwyVectorLayer *layer);
@@ -129,9 +136,9 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "layer-lines",
-    N_("Layer allowing selection of arbitrary straight lines."),
+    "Layer allowing selection of arbitrary straight lines.",
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -222,6 +229,14 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
                          "The maximum number of lines that can be selected",
                          1, 1024, 3,
                          G_PARAM_READABLE | G_PARAM_WRITABLE));
+    g_object_class_install_property(
+        gobject_class,
+        PROP_LINE_NUMBERS,
+        g_param_spec_boolean("line_numbers",
+                             "Number lines",
+                             "Whether to number lines",
+                             TRUE,
+                             G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
@@ -240,6 +255,8 @@ gwy_layer_lines_init(GwyLayerLines *layer)
     layer->nselected = 0;
     layer->inear = -1;
     layer->lines = g_new(gdouble, 4*layer->nlines);
+    layer->line_labels = g_new0(GdkPixmap*, layer->nlines);
+    layer->line_numbers = TRUE;
 }
 
 static void
@@ -247,6 +264,7 @@ gwy_layer_lines_finalize(GObject *object)
 {
     GwyLayerLinesClass *klass;
     GwyLayerLines *layer;
+    gint i;
 
     gwy_debug("");
 
@@ -258,6 +276,9 @@ gwy_layer_lines_finalize(GObject *object)
     gwy_vector_layer_cursor_free_or_unref(&klass->move_cursor);
     gwy_vector_layer_cursor_free_or_unref(&klass->nearline_cursor);
 
+    for (i = 0; i < layer->nlines; i++)
+        gwy_object_unref(layer->line_labels[i]);
+    g_free(layer->line_labels);
     g_free(layer->lines);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -274,6 +295,10 @@ gwy_layer_lines_set_property(GObject *object,
     switch (prop_id) {
         case PROP_MAX_LINES:
         gwy_layer_lines_set_max_lines(layer, g_value_get_int(value));
+        break;
+
+        case PROP_LINE_NUMBERS:
+        gwy_layer_lines_set_line_numbers(layer, g_value_get_boolean(value));
         break;
 
         default:
@@ -295,6 +320,10 @@ gwy_layer_lines_get_property(GObject*object,
         g_value_set_int(value, layer->nlines);
         break;
 
+        case PROP_LINE_NUMBERS:
+        g_value_set_boolean(value, layer->line_numbers);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -307,6 +336,7 @@ gwy_layer_lines_set_max_lines(GwyLayerLines *layer,
 {
     GwyVectorLayer *vector_layer;
     GtkWidget *parent;
+    gint oldnlines, i;
 
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
     g_return_if_fail(nlines > 0 && nlines < 1024);
@@ -315,6 +345,7 @@ gwy_layer_lines_set_max_lines(GwyLayerLines *layer,
 
     if (layer->nlines == nlines)
         return;
+    oldnlines = layer->nlines;
 
     if (parent)
         gwy_layer_lines_undraw(vector_layer, parent->window);
@@ -322,7 +353,35 @@ gwy_layer_lines_set_max_lines(GwyLayerLines *layer,
     layer->nselected = MIN(layer->nselected, nlines);
     if (layer->inear >= nlines)
         layer->inear = -1;
+
     layer->lines = g_renew(gdouble, layer->lines, 4*layer->nlines);
+    for (i = nlines; i < oldnlines; i++)
+        gwy_object_unref(layer->line_labels[i]);
+    layer->line_labels = g_renew(GdkPixmap*, layer->line_labels, layer->nlines);
+    for (i = oldnlines; i < nlines; i++)
+        layer->line_labels[i] = NULL;
+
+    if (parent)
+        gwy_layer_lines_draw(vector_layer, parent->window);
+}
+
+static void
+gwy_layer_lines_set_line_numbers(GwyLayerLines *layer,
+                                 gboolean line_numbers)
+{
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
+    g_return_if_fail(GWY_IS_LAYER_LINES(layer));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
+
+    if (line_numbers == layer->line_numbers)
+        return;
+
+    if (parent)
+        gwy_layer_lines_undraw(vector_layer, parent->window);
+    layer->line_numbers = line_numbers;
     if (parent)
         gwy_layer_lines_draw(vector_layer, parent->window);
 }
@@ -349,7 +408,7 @@ gwy_layer_lines_draw_line(GwyLayerLines *layer,
 {
     GwyDataView *data_view;
     GwyVectorLayer *vector_layer;
-    gint xi0, yi0, xi1, yi1;
+    gint xi0, yi0, xi1, yi1, xt, yt;
 
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
@@ -372,6 +431,59 @@ gwy_layer_lines_draw_line(GwyLayerLines *layer,
     gwy_data_view_coords_xy_clamp(data_view, &xi0, &yi0);
     gwy_data_view_coords_xy_clamp(data_view, &xi1, &yi1);
     gdk_draw_line(drawable, vector_layer->gc, xi0, yi0, xi1, yi1);
+
+    if (!layer->line_numbers)
+        return;
+
+    gwy_layer_lines_setup_label(layer, drawable, i);
+    xt = (xi0 + xi1)/2 + 1;
+    yt = (yi0 + yi1)/2;
+    gdk_draw_drawable(drawable, vector_layer->gc, layer->line_labels[i],
+                      0, 0, xt, yt, -1, -1);
+}
+
+static void
+gwy_layer_lines_setup_label(GwyLayerLines *layer,
+                            GdkDrawable *drawable,
+                            gint i)
+{
+    GwyVectorLayer *vector_layer;
+    PangoRectangle rect;
+    GdkPixmap *pixmap;
+    GdkGC *gc;
+    GdkColor color;
+    gchar buffer[8];
+
+    if (GDK_IS_DRAWABLE(layer->line_labels[i]))
+        return;
+
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    if (!vector_layer->layout) {
+        PangoFontDescription *fontdesc;
+
+        vector_layer->layout = gtk_widget_create_pango_layout
+                                   (GWY_DATA_VIEW_LAYER(vector_layer)->parent,
+                                    "");
+        fontdesc = pango_font_description_from_string("Helvetica bold 12");
+        pango_layout_set_font_description(vector_layer->layout, fontdesc);
+        pango_font_description_free(fontdesc);
+    }
+
+    g_snprintf(buffer, sizeof(buffer), "%d", i+1);
+    pango_layout_set_text(vector_layer->layout, buffer, -1);
+    pango_layout_get_pixel_extents(vector_layer->layout, NULL, &rect);
+
+    layer->line_labels[i] = pixmap = gdk_pixmap_new(drawable,
+                                                    rect.width, rect.height,
+                                                    -1);
+    gc = gdk_gc_new(GDK_DRAWABLE(pixmap));
+    gdk_gc_set_function(gc, GDK_COPY);
+    gdk_color_black(gdk_gc_get_colormap(gc), &color);
+    gdk_gc_set_foreground(gc, &color);
+    gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, rect.width, rect.height);
+    gdk_draw_layout(pixmap, vector_layer->gc, -rect.x, -rect.y,
+                    vector_layer->layout);
+    g_object_unref(gc);
 }
 
 static gboolean
