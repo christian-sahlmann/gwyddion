@@ -107,6 +107,9 @@ static gint        normalize_data            (FitArgs *args,
                                               gint curve);
 static GtkWidget*  create_stocklike_button   (const gchar *label_text,
                                               const gchar *stock_id);
+static GtkWidget*  create_preset_menu        (GCallback callback,
+                                              gpointer cbdata,
+                                              gint current);
 static void        load_args                 (GwyContainer *container,
                                               FitArgs *args);
 static void        save_args                 (GwyContainer *container,
@@ -300,8 +303,8 @@ fit_dialog(FitArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
-    controls.selector = gwy_option_menu_nlfitpreset(G_CALLBACK(type_changed_cb),
-                                                    args, args->function_type);
+    controls.selector = create_preset_menu(G_CALLBACK(type_changed_cb),
+                                           args, args->function_type);
     gtk_container_add(GTK_CONTAINER(vbox), controls.selector);
 
     controls.equation = gtk_label_new("f(x) =");
@@ -890,6 +893,32 @@ create_stocklike_button(const gchar *label_text,
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 
     return button;
+}
+
+static GtkWidget*
+create_preset_menu(GCallback callback,
+                   gpointer cbdata,
+                   gint current)
+{
+    static GwyEnum *entries = NULL;
+    static gint nentries = 0;
+
+    if (!entries) {
+        const GwyNLFitPreset *func;
+        gint i;
+
+        nentries = gwy_math_nlfit_get_npresets();
+        entries = g_new(GwyEnum, nentries);
+        for (i = 0; i < nentries; i++) {
+            entries[i].value = i;
+            func = gwy_math_nlfit_get_preset(i);
+            entries[i].name = gwy_math_nlfit_get_preset_name(func);
+        }
+    }
+
+    return gwy_option_menu_create(entries, nentries,
+                                  "fit-preset", callback, cbdata,
+                                  current);
 }
 
 static const gchar *preset_key = "/module/graph_fit/preset";

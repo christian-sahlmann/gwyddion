@@ -764,46 +764,4 @@ gwy_option_menu_metric_unit_destroyed(GwyEnum *entries)
     g_free(entries);
 }
 
-/**
- * gwy_option_menu_nlfitpreset:
- * @callback: A callback called when a menu item is activated (or %NULL for
- * @cbdata: User data passed to the callback.
- * @current: Fit preset mode selected
- *           (or -1 to use what happens to appear first).
- *
- * Creates a #GtkOptionMenu of available fit presets.
- *
- * It sets object data "fit-preset" to fit preset id
- * for each menu item (use GPOINTER_TO_INT() when retrieving it).
- *
- * Returns: The newly created option menu as #GtkWidget.
- *
- * Since: 1.2.
- **/
-GtkWidget*
-gwy_option_menu_nlfitpreset(GCallback callback,
-                            gpointer cbdata,
-                            gint current)
-{
-    static GwyEnum *entries = NULL;
-    static gint nentries = 0;
-
-    if (!entries) {
-        const GwyNLFitPreset *func;
-        gint i;
-
-        nentries = gwy_math_nlfit_get_npresets();
-        entries = g_new(GwyEnum, nentries);
-        for (i = 0; i < nentries; i++) {
-            entries[i].value = i;
-            func = gwy_math_nlfit_get_preset(i);
-            entries[i].name = gwy_math_nlfit_get_preset_name(func);
-        }
-    }
-
-    return gwy_option_menu_create(entries, nentries,
-                                  "fit-preset", callback, cbdata,
-                                  current);
-}
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -71,9 +71,6 @@ GtkWidget* gwy_option_menu_fft_output        (GCallback callback,
                                               gpointer cbdata,
                                               GwyFFTOutputType current);
 #endif
-GtkWidget* gwy_option_menu_nlfitpreset       (GCallback callback,
-                                              gpointer cbdata,
-                                              gint current);
 GtkWidget* gwy_option_menu_fit_line          (GCallback callback,
                                               gpointer cbdata,
                                               GwyFitLineType current);
