@@ -777,6 +777,8 @@ gwy_option_menu_metric_unit_destroyed(GwyEnum *entries)
  * for each menu item (use GPOINTER_TO_INT() when retrieving it).
  *
  * Returns: The newly created option menu as #GtkWidget.
+ *
+ * Since: 1.2.
  **/
 GtkWidget*
 gwy_option_menu_nlfitpreset(GCallback callback,

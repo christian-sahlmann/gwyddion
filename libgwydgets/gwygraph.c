@@ -709,52 +709,93 @@ zoomed_cb(GtkWidget *widget)
 
 /**
  * gwy_graph_get_data:
- * @graph: graph widget 
+ * @graph: graph widget
  * @xval: x data points
  * @yval: y data points
  * @nofvals: number of data points
  * @curve: curve to be extracted
  *
  * Extracts data of a curve.
+ *
+ * Since: 1.2.
  **/
-void 
+void
 gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curve)
 {
     GwyGraphAreaCurve *pcurve;
     gint i;
+
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+    g_return_if_fail(curve >= 0 && curve < graph->area->curves->len);
+
     pcurve = g_ptr_array_index(graph->area->curves, curve);
-    
-    for (i=0; i<pcurve->data.N; i++)
-    {
+
+    for (i = 0; i < pcurve->data.N; i++) {
         xval[i] = pcurve->data.xvals[i];
         yval[i] = pcurve->data.yvals[i];
     }
 }
 
+/**
+ * gwy_graph_get_data_size:
+ * @graph: 
+ * @curve: 
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.2.
+ **/
 gint
 gwy_graph_get_data_size(GwyGraph *graph, gint curve)
 {
     GwyGraphAreaCurve *pcurve;
+
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+    g_return_if_fail(curve >= 0 && curve < graph->area->curves->len);
+
     pcurve = g_ptr_array_index(graph->area->curves, curve);
+
     return pcurve->data.N;
 }
 
 /**
  * gwy_graph_get_number_of_curves:
- * @graph: graph widget 
+ * @graph: graph widget
  *
  * Returns total number of curves within graph widget
+ *
+ * Since: 1.2.
  **/
 gint
 gwy_graph_get_number_of_curves(GwyGraph *graph)
 {
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+
     return graph->n_of_curves;
 }
 
-GString *
+/**
+ * gwy_graph_get_label:
+ * @graph: A graph wiget.
+ * @curve: Graph curve to get label of.
+ *
+ * Return the label of a graph curve.
+ *
+ * Returns: The label as a #GString.  Note the label itself is returned, not
+ *          a copy, you should treat it as constat.
+ *
+ * Since: 1.2.
+ **/
+GString*
 gwy_graph_get_label(GwyGraph *graph, gint curve)
 {
     GwyGraphAreaCurve *pcurve;
+
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+    g_return_if_fail(curve >= 0 && curve < graph->area->curves->len);
+
     pcurve = g_ptr_array_index(graph->area->curves, curve);
 
     /* FIXME: who knows whether it should return a copy or what.
