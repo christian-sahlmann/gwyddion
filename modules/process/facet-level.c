@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     "facet_level",
     N_("Automatic facet-orientation based levelling."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0.1",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -76,7 +76,7 @@ facet_level(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    dfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
 
     /* converge
      * FIXME: this can take a long time */
@@ -106,8 +106,11 @@ facet_level(GwyContainer *data, GwyRunType run)
         }
     };
     gwy_app_wait_finish();
-    if (canceled)
-        gwy_app_undo_undo();
+    if (!canceled) {
+        gwy_app_undo_checkpoint(data, "/0/data", NULL);
+        gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+    }
+    g_object_unref(dfield);
 
     return !canceled;
 }
