@@ -164,6 +164,7 @@ gwy_layer_basic_set_palette(GwyDataViewLayer *layer,
                             GwyPalette *palette)
 {
     GwyPalette *oldpalette;
+    const gchar *palette_name;
 
     g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
     g_return_if_fail(GWY_IS_PALETTE(palette));
@@ -171,6 +172,9 @@ gwy_layer_basic_set_palette(GwyDataViewLayer *layer,
     oldpalette = layer->palette;
     g_object_ref(palette);
     layer->palette = palette;
+    palette_name = gwy_palette_def_get_name(gwy_palette_get_palette_def(palette));
+    gwy_container_set_string_by_name(layer->data, "/0/base/palette",
+                                     g_strdup(palette_name));
     g_object_unref(oldpalette);
 }
 
@@ -195,7 +199,9 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
 {
     GwyDataField *data_field;
     gint width, height;
+    const gchar *palette_name;
 
+    gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
 
     GWY_LAYER_BASIC(layer)->changed = TRUE;
@@ -208,6 +214,18 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
     g_return_if_fail(data_field);
     width = gwy_data_field_get_xres(data_field);
     height = gwy_data_field_get_yres(data_field);
+
+    if (gwy_container_contains_by_name(layer->data, "/0/base/palette")) {
+        palette_name = gwy_container_get_string_by_name(layer->data,
+                                                        "/0/base/palette");
+        gwy_palette_set_by_name(layer->palette, palette_name);
+    }
+    else {
+        palette_name = g_strdup(GWY_PALETTE_GRAY);
+        gwy_palette_set_by_name(layer->palette, palette_name);
+        gwy_container_set_string_by_name(layer->data, "/0/base/palette",
+                                         palette_name);
+    }
 
     layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
                                    BITS_PER_SAMPLE, width, height);
