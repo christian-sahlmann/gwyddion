@@ -583,7 +583,7 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
     step = range/mag / labels;
     base = compute_base(step, 10);
     step /= base;
-    if (step >= 5.0) {
+    if (step >= 5.0 || base < 1.0) {
         scale = GWY_SCALE_1;
         base *= 10;
     }

@@ -34,8 +34,8 @@ main(int argc, char *argv[])
           row[j] = (x+y)/M_PI/M_PI;
       }
     }
-    gwy_data_field_set_xreal(df, 370e-9);
-    gwy_data_field_set_yreal(df, 370e-9);
+    gwy_data_field_set_xreal(df, 4.1e-8);
+    gwy_data_field_set_yreal(df, 4.1e-8);
     buffer = gwy_serializable_serialize(G_OBJECT(df), buffer, &size);
 
     fh = fopen("data_field.object", "wb");
