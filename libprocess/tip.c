@@ -576,11 +576,10 @@ gwy_tip_dilation(GwyDataField *tip,
     }
     else
         result = NULL;
-
     /*free auxiliary data arrays*/
     _gwy_morph_lib_dfreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_dfreematrix(fsurface, surface->xres);
-    _gwy_morph_lib_dfreematrix(fresult, surface->xres);
+    if (fresult) _gwy_morph_lib_dfreematrix(fresult, result->xres);
     if (freetip)
         g_object_unref(buffertip);
     else
@@ -646,7 +645,7 @@ gwy_tip_erosion(GwyDataField *tip,
     /*free auxiliary data arrays*/
     _gwy_morph_lib_dfreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_dfreematrix(fsurface, surface->xres);
-    _gwy_morph_lib_dfreematrix(fresult, surface->xres);
+    if (fresult) _gwy_morph_lib_dfreematrix(fresult, result->xres);
     if (freetip)
         g_object_unref(buffertip);
     else
@@ -709,6 +708,14 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
                                        ftip, buffertip->yres, buffertip->xres,
                                        buffertip->yres/2, buffertip->xres/2,
                                        set_fraction, set_message);
+    if (!rsurface)
+    {
+        _gwy_morph_lib_ifreematrix(ftip, buffertip->xres);
+        _gwy_morph_lib_ifreematrix(fsurface, newx);
+       if (freetip)
+           g_object_unref(buffertip);
+       return NULL;
+    }
 
     /*find certanty map*/
     if (rsurface) {
@@ -734,7 +741,7 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
     _gwy_morph_lib_ifreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_ifreematrix(fsurface, newx);
     _gwy_morph_lib_ifreematrix(rsurface, newx);
-    _gwy_morph_lib_ifreematrix(fresult, surface->xres);
+    if (fresult) _gwy_morph_lib_ifreematrix(fresult, result->xres);
     if (freetip)
         g_object_unref(buffertip);
     else
@@ -770,6 +777,7 @@ gwy_tip_estimate_partial(GwyDataField *tip,
                          GwyDataField *surface,
                          gdouble threshold,
                          gboolean use_edges,
+                         gint *count,
                          GwySetFractionFunc set_fraction,
                          GwySetMessageFunc set_message)
 {
@@ -793,17 +801,20 @@ gwy_tip_estimate_partial(GwyDataField *tip,
         return NULL;
     }
 
-    if (!_gwy_morph_lib_itip_estimate0(fsurface, surface->yres, surface->xres,
-                                       tip->yres, tip->xres,
-                                       tip->yres/2, tip->xres/2,
-                                       ftip, threshold/step,
-                                       use_edges, set_fraction, set_message)
-        || (set_fraction && !set_fraction(0.0))
-        || (set_message && !set_message(N_("Converting fields")))) {
+    *count = _gwy_morph_lib_itip_estimate0(fsurface, surface->yres, surface->xres,
+                                  tip->yres, tip->xres,
+                                  tip->yres/2, tip->xres/2,
+                                  ftip, threshold/step,
+                                  use_edges, set_fraction, set_message);
+    if (*count == -1 || (set_fraction && !set_fraction(0)))
+    {
         _gwy_morph_lib_ifreematrix(ftip, tip->xres);
         _gwy_morph_lib_ifreematrix(fsurface, surface->xres);
         return NULL;
     }
+    gwy_debug("Converting fields");
+    if (set_message)
+        set_message(N_("Converting fields"));
 
     tip = i_field_to_datafield(ftip, tip, tipmin, step);
     gwy_data_field_add(tip, -gwy_data_field_get_min(tip));
@@ -842,6 +853,7 @@ gwy_tip_estimate_full(GwyDataField *tip,
                       GwyDataField *surface,
                       gdouble threshold,
                       gboolean use_edges,
+                      gint *count,
                       GwySetFractionFunc set_fraction,
                       GwySetMessageFunc set_message)
 {
@@ -865,18 +877,19 @@ gwy_tip_estimate_full(GwyDataField *tip,
         return NULL;
     }
 
-    if (!_gwy_morph_lib_itip_estimate(fsurface, surface->yres, surface->xres,
-                                      tip->yres, tip->xres,
-                                      tip->yres/2, tip->xres/2,
-                                      ftip, threshold/step,
-                                      use_edges, set_fraction, set_message)
-        || (set_fraction && !set_fraction(0))
-        || (set_message && !set_message(N_("Converting fields")))) {
+    *count = _gwy_morph_lib_itip_estimate(fsurface, surface->yres, surface->xres,
+                                 tip->yres, tip->xres,
+                                 tip->yres/2, tip->xres/2,
+                                 ftip, threshold/step,
+                                 use_edges, set_fraction, set_message);
+    if (count == -1 || (set_fraction && !set_fraction(0)))
+    {
         _gwy_morph_lib_ifreematrix(ftip, tip->xres);
         _gwy_morph_lib_ifreematrix(fsurface, surface->xres);
         return NULL;
     }
-
+    if (set_message)
+        set_message(N_("Converting fields"));
     tip = i_field_to_datafield(ftip, tip, tipmin, step);
     gwy_data_field_add(tip, -gwy_data_field_get_min(tip));
 

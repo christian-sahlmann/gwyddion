@@ -253,6 +253,8 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    
     /*result fields - after computation result should be at dfield */
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (gwy_container_contains_by_name(data, "/0/mask")) {

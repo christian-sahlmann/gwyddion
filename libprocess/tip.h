@@ -102,6 +102,7 @@ GwyDataField*   gwy_tip_estimate_partial(GwyDataField *tip,
                                          GwyDataField *surface,
                                          gdouble threshold,
                                          gboolean use_edges,
+					 gint *count,
                                          GwySetFractionFunc set_fraction,
                                          GwySetMessageFunc set_message);
 
@@ -109,6 +110,7 @@ GwyDataField*   gwy_tip_estimate_full(GwyDataField *tip,
                                       GwyDataField *surface,
                                       gdouble threshold,
                                       gboolean use_edges,
+				      gint *count,
                                       GwySetFractionFunc set_fraction,
                                       GwySetMessageFunc set_message);
 

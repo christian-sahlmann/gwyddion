@@ -592,7 +592,7 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip,
  *
  * Returns: %FALSE if aborted, otherwise %TRUE.
  **/
-gboolean
+gint
 _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
                              gint tip_xsiz, gint tip_ysiz, gint xc,
                              gint yc, gint **tip0,
@@ -609,17 +609,16 @@ _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
         iter++;
         g_string_printf(str, N_("Iterating estimate (iteration %d)"), iter);
         if (set_message && ! set_message(str->str))
-            return FALSE;
+            return -1;
         count = itip_estimate_iter(image, im_xsiz, im_ysiz,
                                    tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                    use_edges, set_fraction, set_message);
-        g_string_printf(str, N_("%d image locations produced refinement"),
-                        count);
-        if (count < 0 || (set_message && !set_message(str->str)))
-            return FALSE;
+        if (count == -1) return count;
+        g_string_printf(str, N_("%d image locations produced refinement"), count);
+        if (set_message && !set_message(str->str))
+            return -1;
     }
-
-    return TRUE;
+    return count;
 }
 
 
@@ -682,7 +681,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
  *
  * Returns: %FALSE if aborted, otherwise %TRUE.
  **/
-gboolean
+gint
 _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
                               gint tip_xsiz, gint tip_ysiz,
                               gint xc, gint yc,
@@ -710,7 +709,11 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     delta = MAX(MAX(tip_xsiz, tip_ysiz)/10, 1);
 
     if (set_message && !set_message(N_("Searching for local maxima")))
-        goto estim0_end;
+    {
+        g_free(x);
+        g_free(y);
+        return -1;
+    }
 
     /* Create a list of coordinates to use */
     n = 0;                      /* Number of image maxima found so far */
@@ -730,7 +733,11 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     }
     g_string_printf(str, N_("Found %d internal local maxima"), n);
     if (set_message && !set_message(str->str))
-        goto estim0_end;
+    {
+        g_free(x);
+        g_free(y);
+        return -1;
+    }
     if (set_fraction)
         set_fraction(0.0);
 
@@ -740,7 +747,11 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
         iter++;
         g_string_printf(str, N_("Iterating estimate (iteration %d)"), iter);
         if (set_message && !set_message(str->str))
-            goto estim0_end;
+        {
+            g_free(x);
+            g_free(y);
+            return -1;
+        }
 
         for (i = 0; i < n; i++) {
             if (itip_estimate_point(x[i], y[i], image, im_xsiz, im_ysiz,
@@ -748,12 +759,20 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
                                     use_edges))
                 count++;
             if (set_fraction && !set_fraction((gdouble)i/(gdouble)n))
-                goto estim0_end;
+            {
+                g_free(x);
+                g_free(y);
+                return -1;
+            }
         }
         g_string_printf(str, N_("%d image locations produced refinement"),
                         count);
         if (set_message && !set_message(str->str))
-            goto estim0_end;
+        {
+                g_free(x);
+                g_free(y);
+                return -1;
+        }
     } while (count && count > maxcount);
 
     if (set_fraction)
@@ -761,11 +780,10 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
 
     ok = TRUE;
     /* free temporary space */
-estim0_end:
     g_string_free(str, TRUE);
     g_free(x);
     g_free(y);
-    return ok;
+    return count;
 }
 
 /*

@@ -483,6 +483,7 @@ tip_blind_run(TipBlindControls *controls,
     GwyContainer *data;
     GwyPixmapLayer *layer;
     const guchar *name;
+    gint count;
     GwyPalette *palette;
 
     data = args->data;
@@ -498,6 +499,7 @@ tip_blind_run(TipBlindControls *controls,
     if (full) {
         tipfield = gwy_tip_estimate_full(tipfield, surface, args->thresh,
                                          args->use_boundaries,
+                                         &count,
                                          gwy_app_wait_set_fraction,
                                          gwy_app_wait_set_message);
     }
@@ -505,6 +507,7 @@ tip_blind_run(TipBlindControls *controls,
         gwy_data_field_fill(tipfield, 0);
         tipfield = gwy_tip_estimate_partial(tipfield, surface, args->thresh,
                                             args->use_boundaries,
+                                            &count,
                                             gwy_app_wait_set_fraction,
                                             gwy_app_wait_set_message);
     }
