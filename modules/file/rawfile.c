@@ -1105,14 +1105,15 @@ rawfile_read_data_field(GtkWidget *parent,
     gsize reqsize;
     gdouble m;
 
+    reqsize = rawfile_compute_required_size(args);
+    if (reqsize > args->filesize) {
+        rawfile_warn_too_short_file(parent, args, reqsize);
+        return NULL;
+    }
+
     m = exp(G_LN10*args->xyexponent);
     switch (args->format) {
         case RAW_BINARY:
-        reqsize = rawfile_compute_required_size(args);
-        if (reqsize > args->filesize) {
-            rawfile_warn_too_short_file(parent, args, reqsize);
-            return NULL;
-        }
         dfield = GWY_DATA_FIELD(gwy_data_field_new(args->xres, args->yres,
                                                    m*args->xreal,
                                                    m*args->yreal,
@@ -2062,12 +2063,25 @@ rawfile_compute_required_size(RawFileArgs *args)
 {
     gsize rowstride;
 
-    rowstride = (args->size + args->skip)*args->xres + args->rowskip;
-    if (args->builtin && rowstride%8) {
-        g_warning("rowstride is not a whole number of bytes");
-        rowstride = ((rowstride + 7)/8)*8;
+    switch (args->format) {
+        case RAW_BINARY:
+        rowstride = (args->size + args->skip)*args->xres + args->rowskip;
+        if (args->builtin && rowstride%8) {
+            g_warning("rowstride is not a whole number of bytes");
+            rowstride = ((rowstride + 7)/8)*8;
+        }
+        return args->offset + args->yres*rowstride/8;
+        break;
+
+        case RAW_TEXT:
+        rowstride = (args->xres + args->skipfields)
+                     *(1 + MAX(strlen(args->delimiter), 1));
+        return args->lineoffset + args->yres*rowstride;
+        break;
     }
-    return args->offset + args->yres*rowstride/8;
+
+    g_assert_not_reached();
+    return 0;
 }
 
 static const gchar *format_key =      "format";
@@ -2125,6 +2139,12 @@ rawfile_load_preset(GwyContainer *settings,
                     const gchar *presetname,
                     RawFileArgs *args)
 {
+    const gchar *filename;
+    gsize filesize;
+
+    filename = args->filename;
+    filesize = args->filesize;
+
     g_free(args->delimiter);
     g_free(args->presetname);
     *args = rawfile_defaults;
@@ -2157,6 +2177,10 @@ rawfile_load_preset(GwyContainer *settings,
 
     args->delimiter = g_strdup(args->delimiter);
     args->presetname = g_strdup(args->presetname);
+
+    args->filename = filename;
+    args->filesize = filesize;
+
     rawfile_sanitize_args(args);
 }
 
