@@ -27,7 +27,11 @@
 #include <string.h>
 #include <glib.h>
 #include <png.h>
+
+#ifndef G_OS_WIN32
 #include <jpeglib.h>
+#endif
+
 #include <tiffio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
@@ -77,9 +81,11 @@ static gboolean      pixmap_save          (GwyContainer *data,
 static gboolean      pixmap_do_write_png  (FILE *fh,
                                            const gchar *filename,
                                            GdkPixbuf *pixbuf);
+#ifndef G_OS_WIN32
 static gboolean      pixmap_do_write_jpeg (FILE *fh,
                                            const gchar *filename,
                                            GdkPixbuf *pixbuf);
+#endif
 static gboolean      pixmap_do_write_tiff (FILE *fh,
                                            const gchar *filename,
                                            GdkPixbuf *pixbuf);
@@ -104,11 +110,13 @@ const pixmap_formats[] = {
         GWY_PNG_EXTENSIONS,  GWY_PNG_MAGIC,  GWY_PNG_MAGIC_SIZE,
         &pixmap_do_write_png,
     },
+#ifndef G_OS_WIN32
     {
         "jpeg",
         GWY_JPEG_EXTENSIONS, GWY_JPEG_MAGIC, GWY_JPEG_MAGIC_SIZE,
         &pixmap_do_write_jpeg,
     },
+#endif
     {
         "tiff",
         GWY_TIFF_EXTENSIONS, GWY_TIFF_MAGIC, GWY_TIFF_MAGIC_SIZE,
@@ -133,7 +141,9 @@ static GwyModuleInfo module_info = {
     "pixmap",
     "Exports data as as pixmap images.  Supports following image formats: "
         "PNG (Portable Network Graphics), "
+#ifndef G_OS_WIN32
         "JPEG (Joint Photographic Experts Group), "
+#endif
         "TIFF (Tag Image File Format), "
         "PPM (Portable Pixmap), "
         "BMP (Windows or OS2 Bitmap).",
@@ -157,6 +167,7 @@ module_register(const gchar *name)
         NULL,
         (GwyFileSaveFunc)&pixmap_save,
     };
+#ifndef G_OS_WIN32
     static GwyFileFuncInfo gwyjpeg_func_info = {
         "jpeg",
         "JPEG (" GWY_JPEG_EXTENSIONS ")",
@@ -164,6 +175,7 @@ module_register(const gchar *name)
         NULL,
         (GwyFileSaveFunc)&pixmap_save,
     };
+#endif
     static GwyFileFuncInfo gwytiff_func_info = {
         "tiff",
         "TIFF (" GWY_TIFF_EXTENSIONS ")",
@@ -187,7 +199,9 @@ module_register(const gchar *name)
     };
 
     gwy_file_func_register(name, &gwypng_func_info);
+#ifndef G_OS_WIN32
     gwy_file_func_register(name, &gwyjpeg_func_info);
+#endif
     gwy_file_func_register(name, &gwytiff_func_info);
     gwy_file_func_register(name, &gwyppm_func_info);
     gwy_file_func_register(name, &gwybmp_func_info);
@@ -328,6 +342,7 @@ end:
     return ok;
 }
 
+#ifndef G_OS_WIN32
 static gboolean
 pixmap_do_write_jpeg(FILE *fh,
                      G_GNUC_UNUSED const gchar *filename,
@@ -370,6 +385,7 @@ pixmap_do_write_jpeg(FILE *fh,
 
     return ok;
 }
+#endif
 
 static gboolean
 pixmap_do_write_tiff(FILE *fh,
