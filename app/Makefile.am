@@ -29,6 +29,7 @@ EXTRA_DIST = libgwyapp.def
 # Adding ifaces       C:   R:   A++
 # Chaning ifraces     C:   R:   0
 libgwyapp_la_LDFLAGS = -version-info 0:0:0
+libgwyapp_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp_la_SOURCES = \
 	app.c \
 	file.c \
@@ -51,7 +52,7 @@ gwyddion_LDADD = libgwyapp.la \
 	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\"  -DGWY_PLUGIN_DIR=\"$(gwyplugindir)\" -DG_LOG_DOMAIN=\"GwyApp\"
+AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\"  -DGWY_PLUGIN_DIR=\"$(gwyplugindir)\"
 
 clean-local:
 	rm -f core.* *~
