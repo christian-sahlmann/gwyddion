@@ -29,11 +29,11 @@ typedef GObject* (*GwyDeserializeFunc)(const guchar *buffer,
 typedef GObject* (*GwyDuplicateFunc)(GObject *object);
 
 struct _GwySerializable {
-    GObject parent_instance;
+    GTypeInterface parent_instance;
 };
 
 struct _GwySerializableClass {
-    GObjectClass parent_class;
+    GTypeClass parent_class;
 
     GwySerializeFunc serialize;
     GwyDeserializeFunc deserialize;

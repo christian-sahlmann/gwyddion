@@ -21,11 +21,11 @@ typedef struct _GwyWatchable GwyWatchable;
 typedef struct _GwyWatchableClass GwyWatchableClass;
 
 struct _GwyWatchable {
-    GObject parent_instance;
+    GTypeInterface parent_instance;
 };
 
 struct _GwyWatchableClass {
-    GObjectClass parent_class;
+    GTypeClass parent_class;
 
     void (*value_changed)(GObject *watchable);
 };
