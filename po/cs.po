@@ -1,0 +1,1497 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Gwyddion\n"
+"Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
+"POT-Creation-Date: 2004-10-05 01:02+0200\n"
+"PO-Revision-Date: 2004-10-05 01:17+0200\n"
+"Last-Translator: Yeti <yeti@gwyddion.net>\n"
+"Language-Team: Czech\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: libdraw/gwypalettedef.c:544 libgwydgets/gwyglmaterial.c:306
+msgid "Untitled"
+msgstr ""
+
+#: libgwydgets/gwydgets.c:270
+msgid "Change Mask Color"
+msgstr "Změň barvu masky"
+
+#: libgwydgets/gwyvectorshade.c:151
+msgid "_Theta: "
+msgstr "_Théta"
+
+#: libgwydgets/gwyvectorshade.c:156 libgwydgets/gwyvectorshade.c:169
+msgid " deg"
+msgstr ""
+
+#: libgwydgets/gwyvectorshade.c:164
+msgid "_Phi: "
+msgstr "_Fí"
+
+#: libgwydgets/gwy3dwindow.c:176
+msgid "X-axis"
+msgstr "X-ová osa"
+
+#: libgwydgets/gwy3dwindow.c:177
+msgid "Y-axis"
+msgstr "Y-ová osa"
+
+#: libgwydgets/gwy3dwindow.c:178
+msgid "Minimum z value"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:179
+msgid "Maximum z value"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:184
+msgid "_Lighting"
+msgstr "_Osvětlení"
+
+#: libgwydgets/gwy3dwindow.c:185
+msgid "P_alette"
+msgstr "P_aleta"
+
+#: libgwydgets/gwy3dwindow.c:221
+msgid "Rotate the data"
+msgstr "Otáčení dat"
+
+#: libgwydgets/gwy3dwindow.c:228
+msgid "Scale view as a whole"
+msgstr "Škálování celého pohledu"
+
+#: libgwydgets/gwy3dwindow.c:234
+msgid "Scale value range"
+msgstr "Škálování rozsahu hodnot"
+
+#: libgwydgets/gwy3dwindow.c:240
+msgid "Move light source"
+msgstr "Posun zdroje světla"
+
+#: libgwydgets/gwy3dwindow.c:255
+msgid "Basic"
+msgstr "Základní"
+
+#: libgwydgets/gwy3dwindow.c:262
+msgid "Phi"
+msgstr "Fí"
+
+#: libgwydgets/gwy3dwindow.c:262 libgwydgets/gwy3dwindow.c:265
+#: libgwydgets/gwy3dwindow.c:345 libgwydgets/gwy3dwindow.c:351
+#: modules/process/unrotate.c:217
+msgid "deg"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:265
+msgid "Theta"
+msgstr "Théta"
+
+#: libgwydgets/gwy3dwindow.c:268 modules/process/scale.c:163
+msgid "Scale"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:272
+msgid "Value scale"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:276
+msgid "Show _axes"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:285
+msgid "Show _labels"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:295
+msgid "_Ortographic projection"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:309
+msgid "Light & Material"
+msgstr "Světlo a materiál"
+
+#: libgwydgets/gwy3dwindow.c:326
+msgid "Material:"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:345
+msgid "Light phi"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:351
+msgid "Light theta"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:364
+msgid "Palette:"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:387
+msgid "Labels"
+msgstr "Popisky"
+
+#: libgwydgets/gwy3dwindow.c:393
+msgid "Label"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:408
+msgid "Text"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:427
+msgid "Move Label"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:432
+msgid "Horizontally"
+msgstr "Vodorovně"
+
+#: libgwydgets/gwy3dwindow.c:432 libgwydgets/gwy3dwindow.c:439
+#: libgwydgets/gwy3dwindow.c:458 modules/tools/profile.c:211
+#: modules/process/cwt.c:191 modules/process/grain_wshed.c:219
+#: modules/process/grain_rem_threshold.c:226 modules/process/crosscor.c:235
+#: modules/process/crosscor.c:241 modules/process/crosscor.c:255
+#: modules/process/crosscor.c:261
+msgid "pixels"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:439
+msgid "Vertically"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:445
+msgid "_Scale Size Automatically"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:458
+msgid "Size"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:466 modules/file/pixmap.c:676
+#: modules/file/pixmap.c:1557 modules/file/rawfile.c:496
+#: modules/process/cwt.c:180 modules/process/fft.c:368
+#: modules/process/tip_model.c:177 modules/process/scale.c:166
+#: modules/process/scars.c:379 modules/process/angle_dist.c:182
+#: modules/process/shade.c:183 modules/process/unrotate.c:182
+#: modules/process/mask_grow_shrink.c:163 modules/process/tip_blind.c:183
+#: modules/process/slope_dist.c:194 modules/process/rotate.c:186
+#: modules/process/grain_wshed.c:168 modules/process/grain_rem_threshold.c:171
+#: modules/process/polylevel.c:146 modules/process/fractal.c:187
+#: modules/process/calibrate.c:187 modules/process/grain_mark.c:181
+msgid "Reset"
+msgstr ""
+
+#: libgwymodule/gwymodulebrowser.c:200
+msgid "Name-Version:"
+msgstr ""
+
+#: libgwymodule/gwymodulebrowser.c:201
+msgid "File:"
+msgstr ""
+
+#: libgwymodule/gwymodulebrowser.c:202
+msgid "Registered functions:"
+msgstr ""
+
+#: libgwymodule/gwymodulebrowser.c:203
+msgid "Authors:"
+msgstr ""
+
+#: libgwymodule/gwymodulebrowser.c:204
+msgid "Copyright:"
+msgstr ""
+
+#: libgwymodule/gwymodulebrowser.c:205
+msgid "Date:"
+msgstr ""
+
+#: libgwymodule/gwymodulebrowser.c:206
+msgid "Description:"
+msgstr ""
+
+#: app/graphlist.c:174 modules/file/rawfile.c:1110
+msgid "_Delete"
+msgstr ""
+
+#: app/graphlist.c:179
+msgid "Delete _All"
+msgstr ""
+
+#: app/graphlist.c:184
+msgid "_Show All"
+msgstr ""
+
+#: app/graphlist.c:189
+msgid "_Hide All"
+msgstr ""
+
+#: app/app.c:209
+#, c-format
+msgid ""
+"Some data are unsaved:\n"
+"%s\n"
+"Really quit?"
+msgstr ""
+
+#: app/app.c:766
+msgid "Export"
+msgstr ""
+
+#: app/app.c:1090 app/app.c:1102
+#, c-format
+msgid "Untitled %d"
+msgstr ""
+
+#: app/app.c:1303
+msgid "Export 3D View"
+msgstr ""
+
+#: app/app.c:1330
+msgid "Change Default Mask Color"
+msgstr ""
+
+#: app/toolbox.c:171
+msgid "_File"
+msgstr ""
+
+#: app/toolbox.c:174
+msgid "_Edit"
+msgstr ""
+
+#. XXX
+#: app/toolbox.c:177
+msgid "_Data Process"
+msgstr ""
+
+#: app/toolbox.c:180
+msgid "_Graph"
+msgstr ""
+
+#: app/toolbox.c:183
+msgid "_Meta"
+msgstr ""
+
+#. *************************************************************
+#: app/toolbox.c:188
+msgid "View"
+msgstr ""
+
+#: app/toolbox.c:197
+msgid "Zoom in"
+msgstr ""
+
+#: app/toolbox.c:200
+msgid "Zoom 1:1"
+msgstr ""
+
+#: app/toolbox.c:203
+msgid "Zoom out"
+msgstr ""
+
+#: app/toolbox.c:206
+msgid "Display a 3D view of data"
+msgstr ""
+
+#. *************************************************************
+#: app/toolbox.c:220
+msgid "Data Process"
+msgstr ""
+
+#: app/toolbox.c:228
+msgid "Fix minimum value to zero"
+msgstr ""
+
+#: app/toolbox.c:230
+msgid "Scale data"
+msgstr ""
+
+#: app/toolbox.c:232
+msgid "Rotate by arbitrary angle"
+msgstr ""
+
+#: app/toolbox.c:234
+msgid "Automatically correct rotation"
+msgstr ""
+
+#: app/toolbox.c:236
+msgid "Automatically level data"
+msgstr ""
+
+#: app/toolbox.c:238
+msgid "Facet-level data"
+msgstr ""
+
+#: app/toolbox.c:240
+msgid "Fast Fourier Transform"
+msgstr ""
+
+#: app/toolbox.c:242
+msgid "Continuous Wavelet Transform"
+msgstr ""
+
+#: app/toolbox.c:244 modules/process/grain_mark.c:177
+msgid "Mark grains by threshold"
+msgstr ""
+
+#: app/toolbox.c:246
+msgid "Mark grains by watershed"
+msgstr ""
+
+#: app/toolbox.c:248 modules/process/grain_rem_threshold.c:167
+msgid "Remove grains by threshold"
+msgstr ""
+
+#: app/toolbox.c:253
+msgid "Grain distribution"
+msgstr ""
+
+#: app/toolbox.c:257
+msgid "Calculate fractal dimension"
+msgstr ""
+
+#: app/toolbox.c:259
+msgid "Shade data"
+msgstr ""
+
+#. *************************************************************
+#: app/toolbox.c:268
+msgid "Graph"
+msgstr ""
+
+#: app/toolbox.c:276
+msgid "Read coordinates"
+msgstr ""
+
+#: app/toolbox.c:278
+msgid "Zoom a part of graph"
+msgstr ""
+
+#: app/toolbox.c:280
+msgid "Reset zoom to display complete data"
+msgstr ""
+
+#: app/toolbox.c:282
+msgid "Measure graph point distances"
+msgstr ""
+
+#: app/toolbox.c:284
+msgid "Fit critical dimension"
+msgstr ""
+
+#: app/toolbox.c:286
+msgid "Fit functions to graph data"
+msgstr ""
+
+#. *************************************************************
+#: app/toolbox.c:295
+msgid "Tools"
+msgstr ""
+
+#: app/toolbox.c:368
+msgid "Re-show Last"
+msgstr ""
+
+#: app/toolbox.c:381
+msgid "Repeat Last"
+msgstr ""
+
+#: app/splash.c:56
+msgid "Starting "
+msgstr ""
+
+#: app/splash.c:93
+msgid " is free software released under GNU GPL."
+msgstr ""
+
+#: app/gwyddion.c:106
+msgid "Loading settings"
+msgstr ""
+
+#. TODO: remove sometime, but keep the gwy_app_settings_get();
+#: app/gwyddion.c:114
+msgid "Loading document history"
+msgstr ""
+
+#: app/gwyddion.c:119
+msgid "Registering "
+msgstr ""
+
+#: app/gwyddion.c:120
+msgid "stock items"
+msgstr ""
+
+#: app/gwyddion.c:236
+#, c-format
+msgid ""
+"Could not read settings file `%s'.\n"
+"\n"
+"Settings will not be saved until it is repaired or removed."
+msgstr ""
+
+#: app/unitool.c:463
+msgid "_Hide"
+msgstr ""
+
+#: app/unitool.c:719
+msgid "<b>Origin</b>"
+msgstr ""
+
+#: app/unitool.c:724
+msgid "X"
+msgstr ""
+
+#: app/unitool.c:729
+msgid "Y"
+msgstr ""
+
+#: app/unitool.c:735
+msgid "<b>Size</b>"
+msgstr ""
+
+#: app/unitool.c:740 modules/process/crosscor.c:235
+#: modules/process/crosscor.c:255
+msgid "Width"
+msgstr ""
+
+#: app/unitool.c:745 modules/process/crosscor.c:241
+#: modules/process/crosscor.c:261
+msgid "Height"
+msgstr ""
+
+#: app/filelist.c:200
+msgid "Document History"
+msgstr ""
+
+#: app/filelist.c:230
+msgid "_Prune"
+msgstr ""
+
+#: app/filelist.c:234
+msgid "Remove entries of files that no longer exist"
+msgstr ""
+
+#: app/file.c:59
+msgid "Open file"
+msgstr ""
+
+#: app/file.c:84
+msgid "Save File"
+msgstr ""
+
+#: app/file.c:146
+msgid "Export Data"
+msgstr ""
+
+#: app/file.c:160
+msgid "Import Data"
+msgstr ""
+
+#: app/file.c:355
+#, c-format
+msgid "File %s already exists. Overwrite?"
+msgstr ""
+
+#: app/file.c:357
+msgid "Overwrite?"
+msgstr ""
+
+#: app/menu.c:368
+msgid "Repeat"
+msgstr ""
+
+#: app/menu.c:376
+msgid "Re-show"
+msgstr ""
+
+#. doc history
+#: app/menu.c:525
+msgid "_Document history"
+msgstr ""
+
+#: app/meta.c:86
+#, c-format
+msgid "Metadata of %s (%s)"
+msgstr ""
+
+#: app/about.c:50
+#, c-format
+msgid "About %s"
+msgstr ""
+
+#: app/about.c:87
+msgid "An SPM data analysis framework."
+msgstr ""
+
+#: app/about.c:101
+msgid "Credits"
+msgstr ""
+
+#: app/about.c:112
+#, c-format
+msgid ""
+"<b>Core developers</b>\n"
+"David NeÄas (Yeti)\n"
+"Petr Klapetek\n"
+"\n"
+"<b>Developers</b>\n"
+"Martin Ĺ iler\n"
+"JindĹich BĂ­lek\n"
+"\n"
+"%s development is supported by the Czech Metrology Insitute (<i>http://www."
+"cmi.cz/</i>).\n"
+msgstr ""
+
+#: app/about.c:135
+#, c-format
+msgid ""
+"\n"
+"<small>%s is free software; you can redistribute it and/or modify it under "
+"the terms of the GNU General Public License as published by the Free "
+"Software Foundation; either version 2 of the License, or (at your option) "
+"any later version. For full license text see file COPYING included in the "
+"source tarball.</small>"
+msgstr ""
+
+#: app/menu-windowlist.c:97
+msgid "(none)"
+msgstr ""
+
+#: app/wait.c:96
+msgid "Please wait"
+msgstr ""
+
+#: modules/file/nanoscope.c:590 modules/file/sis.c:513
+msgid "Select data"
+msgstr ""
+
+#: modules/file/nanoscope.c:605 modules/file/sis.c:527
+msgid "Data to load:"
+msgstr ""
+
+#: modules/file/pixmap.c:672
+msgid "Import "
+msgstr ""
+
+#: modules/file/pixmap.c:693 modules/file/rawfile.c:684
+msgid "<b>Resolution</b>"
+msgstr ""
+
+#: modules/file/pixmap.c:698
+msgid "_Horizontal size:"
+msgstr ""
+
+#: modules/file/pixmap.c:705
+msgid "_Vertical size:"
+msgstr ""
+
+#: modules/file/pixmap.c:721 modules/file/rawfile.c:707
+msgid "<b>Physical dimensions</b>"
+msgstr ""
+
+#: modules/file/pixmap.c:729 modules/file/rawfile.c:716
+msgid "_Width"
+msgstr ""
+
+#: modules/file/pixmap.c:750 modules/file/rawfile.c:737
+msgid "H_eight"
+msgstr ""
+
+#: modules/file/pixmap.c:757 modules/file/rawfile.c:744
+msgid "Identical _measures"
+msgstr ""
+
+#: modules/file/pixmap.c:769 modules/file/rawfile.c:756
+msgid "_Z-scale"
+msgstr ""
+
+#: modules/file/pixmap.c:785
+msgid ""
+"Warning: Colorful images cannot be reliably mapped to meaningful values."
+msgstr ""
+
+#: modules/file/pixmap.c:800
+msgid "Use"
+msgstr ""
+
+#: modules/file/pixmap.c:800
+msgid "as data"
+msgstr ""
+
+#: modules/file/pixmap.c:1553
+msgid "Export "
+msgstr ""
+
+#: modules/file/pixmap.c:1575
+msgid "_Zoom:"
+msgstr ""
+
+#: modules/file/pixmap.c:1579
+msgid "Output:"
+msgstr ""
+
+#: modules/file/rawfile.c:492
+msgid "Read Raw File"
+msgstr ""
+
+#: modules/file/rawfile.c:516
+msgid "_Information"
+msgstr ""
+
+#: modules/file/rawfile.c:521
+msgid "Data _Format"
+msgstr ""
+
+#: modules/file/rawfile.c:526
+msgid "_Presets"
+msgstr ""
+
+#: modules/file/rawfile.c:625
+msgid "Preview"
+msgstr ""
+
+#: modules/file/rawfile.c:638
+msgid "Update"
+msgstr ""
+
+#: modules/file/rawfile.c:663
+msgid "<b>File</b>"
+msgstr ""
+
+#: modules/file/rawfile.c:689
+msgid "_Horizontal size"
+msgstr ""
+
+#: modules/file/rawfile.c:690 modules/file/rawfile.c:697
+msgid "data samples"
+msgstr ""
+
+#: modules/file/rawfile.c:696
+msgid "_Vertical size"
+msgstr ""
+
+#: modules/file/rawfile.c:701
+msgid "S_quare sample"
+msgstr ""
+
+#: modules/file/rawfile.c:811
+msgid "Start from _line"
+msgstr ""
+
+#: modules/file/rawfile.c:818
+msgid "E_ach row skip"
+msgstr ""
+
+#: modules/file/rawfile.c:823
+msgid "_Field delimiter"
+msgstr ""
+
+#: modules/file/rawfile.c:837
+msgid "_Other:"
+msgstr ""
+
+#: modules/file/rawfile.c:848
+msgid "_Decimal separator is comma"
+msgstr ""
+
+#: modules/file/rawfile.c:867
+msgid "Byte s_wap pattern"
+msgstr ""
+
+#: modules/file/rawfile.c:880
+msgid "Start at _offset"
+msgstr ""
+
+#: modules/file/rawfile.c:887
+msgid "_Sample size"
+msgstr ""
+
+#: modules/file/rawfile.c:895
+msgid "After each sample s_kip"
+msgstr ""
+
+#: modules/file/rawfile.c:903
+msgid "After each _row skip"
+msgstr ""
+
+#: modules/file/rawfile.c:909
+msgid "_Reverse bits in bytes"
+msgstr ""
+
+#: modules/file/rawfile.c:914
+msgid "Reverse bi_ts in samples"
+msgstr ""
+
+#: modules/file/rawfile.c:919
+msgid "Samples are si_gned"
+msgstr ""
+
+#: modules/file/rawfile.c:1037
+msgid "Preset l_ist"
+msgstr ""
+
+#: modules/file/rawfile.c:1095
+msgid "_Load"
+msgstr ""
+
+#: modules/file/rawfile.c:1100
+msgid "_Store"
+msgstr ""
+
+#: modules/file/rawfile.c:1105
+msgid "_Rename"
+msgstr ""
+
+#: modules/file/rawfile.c:1123
+msgid "Preset _name:"
+msgstr ""
+
+#: modules/file/rawfile.c:1197
+#, c-format
+msgid ""
+"The format would require %u bytes long file (at least), but the length of `%"
+"s' is only %u bytes."
+msgstr ""
+
+#: modules/file/rawfile.c:1218
+#, c-format
+msgid ""
+"Parsing of %s failed:\n"
+"%s."
+msgstr ""
+
+#: modules/file/rawfile.c:1557
+#, c-format
+msgid "The name `%s' is invalid."
+msgstr ""
+
+#: modules/graph/graph_points.c:119
+msgid "Measure distances"
+msgstr ""
+
+#: modules/graph/graph_points.c:122
+msgid "Clear"
+msgstr ""
+
+#: modules/graph/read.c:102
+msgid "Read graph values"
+msgstr ""
+
+#: modules/graph/graph_fit.c:272 modules/graph/graph_cd.c:261
+msgid "Fit graph"
+msgstr ""
+
+#: modules/graph/graph_fit.c:277 modules/graph/graph_cd.c:266
+msgid "_Fit"
+msgstr ""
+
+#: modules/graph/graph_fit.c:281
+msgid "_Reset inits"
+msgstr ""
+
+#: modules/graph/graph_fit.c:283
+msgid "_Plot inits"
+msgstr ""
+
+#: modules/graph/graph_fit.c:445 modules/graph/graph_cd.c:414
+msgid "Graph data curve"
+msgstr ""
+
+#: modules/graph/graph_fit.c:686
+msgid "N. A."
+msgstr ""
+
+#: modules/graph/graph_fit.c:993 modules/graph/graph_cd.c:915
+msgid "Save Fit Report"
+msgstr ""
+
+#: modules/graph/graph_fit.c:1050 modules/graph/graph_cd.c:972
+msgid "Fit results"
+msgstr ""
+
+#: modules/graph/graph_fit.c:1062 modules/graph/graph_cd.c:984
+msgid "<b>Data:</b>"
+msgstr ""
+
+#: modules/graph/graph_fit.c:1069 modules/graph/graph_cd.c:991
+msgid "Num of points:"
+msgstr ""
+
+#: modules/graph/graph_fit.c:1076 modules/graph/graph_cd.c:998
+msgid "X range:"
+msgstr ""
+
+#: modules/graph/graph_fit.c:1087 modules/graph/graph_cd.c:1009
+msgid "<b>Function:</b>"
+msgstr ""
+
+#: modules/graph/graph_fit.c:1099 modules/graph/graph_cd.c:1030
+msgid "<b>Results</b>"
+msgstr ""
+
+#: modules/graph/graph_fit.c:1122
+msgid "Residual sum:"
+msgstr ""
+
+#: modules/graph/graph_fit.c:1130
+msgid "<b>Correlation matrix</b>"
+msgstr ""
+
+#: modules/tools/pointer.c:125
+msgid "Show value"
+msgstr ""
+
+#: modules/tools/pointer.c:149 modules/tools/level3.c:160
+msgid "Value"
+msgstr ""
+
+#: modules/tools/filter.c:185
+msgid "Filters"
+msgstr ""
+
+#: modules/tools/filter.c:206
+msgid "<b>Filter:</b>"
+msgstr ""
+
+#: modules/tools/filter.c:210 modules/tools/polynom.c:176
+msgid "Type:"
+msgstr ""
+
+#: modules/tools/filter.c:221 modules/tools/polynom.c:187
+msgid "Direction:"
+msgstr ""
+
+#: modules/tools/filter.c:237
+msgid "Size:"
+msgstr ""
+
+#: modules/tools/stats.c:136
+msgid "Statistical quantities"
+msgstr ""
+
+#: modules/tools/stats.c:151
+msgid "<b>Parameters</b>"
+msgstr ""
+
+#: modules/tools/stats.c:155
+msgid "Ra"
+msgstr ""
+
+#: modules/tools/stats.c:159
+msgid "Rms"
+msgstr ""
+
+#: modules/tools/stats.c:163
+msgid "Skew"
+msgstr ""
+
+#: modules/tools/stats.c:167
+msgid "Kurtosis"
+msgstr ""
+
+#: modules/tools/stats.c:171
+msgid "Average height"
+msgstr ""
+
+#: modules/tools/stats.c:175
+msgid "Projected area"
+msgstr ""
+
+#: modules/tools/stats.c:179 modules/process/grain_rem_threshold.c:226
+msgid "Area"
+msgstr ""
+
+#: modules/tools/sfunctions.c:165
+msgid "Statistical functions"
+msgstr ""
+
+#: modules/tools/sfunctions.c:181
+msgid "<b>Area of computation</b>"
+msgstr ""
+
+#: modules/tools/sfunctions.c:186
+msgid "Origin: (x, y)"
+msgstr ""
+
+#: modules/tools/sfunctions.c:195
+msgid "Size: (w x h)"
+msgstr ""
+
+#: modules/tools/sfunctions.c:205 modules/tools/profile.c:205
+msgid "<b>Module parameters</b>"
+msgstr ""
+
+#: modules/tools/sfunctions.c:210 modules/process/fft.c:400
+#: modules/process/slope_dist.c:204 modules/process/fractal.c:211
+msgid "Output type:"
+msgstr ""
+
+#: modules/tools/sfunctions.c:221
+msgid "Computation direction:"
+msgstr ""
+
+#: modules/tools/sfunctions.c:232 modules/tools/profile.c:226
+#: modules/process/cwt.c:206 modules/process/fft.c:389
+#: modules/process/scale.c:206 modules/process/rotate.c:204
+#: modules/process/fractal.c:204
+msgid "Interpolation type:"
+msgstr ""
+
+#: modules/tools/crop.c:126
+msgid "Crop"
+msgstr ""
+
+#: modules/tools/level3.c:134
+msgid "Level"
+msgstr ""
+
+#: modules/tools/level3.c:167
+#, c-format
+msgid "<b>%d</b>"
+msgstr ""
+
+#: modules/tools/spotremove.c:216
+msgid "Remove Spots"
+msgstr ""
+
+#: modules/tools/spotremove.c:265
+msgid "Removal _method"
+msgstr ""
+
+#: modules/tools/polynom.c:151
+msgid "X/Y Profile Level"
+msgstr ""
+
+#: modules/tools/polynom.c:172
+msgid "<b>Fiting mode:</b>"
+msgstr ""
+
+#: modules/tools/polynom.c:199
+msgid "Exclude area if selected"
+msgstr ""
+
+#: modules/tools/polynom.c:207
+msgid "(otherwise will be used for fitting)"
+msgstr ""
+
+#: modules/tools/icolorange.c:142
+msgid "Color Range"
+msgstr ""
+
+#: modules/tools/icolorange.c:158
+msgid "_Instant apply"
+msgstr ""
+
+#: modules/tools/profile.c:156
+msgid "Extract profile"
+msgstr ""
+
+#: modules/tools/profile.c:171
+msgid "<b>Profile positions</b>"
+msgstr ""
+
+#: modules/tools/profile.c:182
+#, c-format
+msgid "Profile %d"
+msgstr ""
+
+#: modules/tools/profile.c:187
+#, c-format
+msgid "Profile %d:"
+msgstr ""
+
+#: modules/tools/profile.c:211
+msgid "Thickness"
+msgstr ""
+
+#: modules/tools/grain_remove_manually.c:117
+msgid "Grain remove tool"
+msgstr ""
+
+#: modules/process/arithmetic.c:192
+msgid "Data Arithmetic"
+msgstr ""
+
+#. **** First operand ****
+#: modules/process/arithmetic.c:206
+msgid "_First operand:"
+msgstr ""
+
+#. **** Operation ****
+#: modules/process/arithmetic.c:227
+msgid "_Operation:"
+msgstr ""
+
+#. **** Second operand ****
+#: modules/process/arithmetic.c:239
+msgid "_Second operand:"
+msgstr ""
+
+#: modules/process/arithmetic.c:272
+msgid "(scalar)"
+msgstr ""
+
+#: modules/process/arithmetic.c:399
+#, c-format
+msgid "The result is %g, but no data to operate on were selected.\n"
+msgstr ""
+
+#: modules/process/arithmetic.c:424
+msgid "The dimensions differ.\n"
+msgstr ""
+
+#: modules/process/arithmetic.c:437
+msgid "The real dimensions differ.\n"
+msgstr ""
+
+#: modules/process/facet-level.c:86
+msgid "Facet-levelling"
+msgstr ""
+
+#: modules/process/cwt.c:143
+msgid "CWT: Data field must be rectangular."
+msgstr ""
+
+#: modules/process/cwt.c:177
+msgid "2D CWT"
+msgstr ""
+
+#: modules/process/cwt.c:191
+msgid "Scale:"
+msgstr ""
+
+#: modules/process/cwt.c:195 modules/process/fft.c:378
+msgid "Data size treatment:"
+msgstr ""
+
+#: modules/process/cwt.c:211
+msgid "Wavelet type:"
+msgstr ""
+
+#: modules/process/fft.c:178
+msgid "FFT: Data field must be rectangular."
+msgstr ""
+
+#: modules/process/fft.c:365
+msgid "2D FFT"
+msgstr ""
+
+#: modules/process/fft.c:394
+msgid "Windowing type:"
+msgstr ""
+
+#: modules/process/tip_model.c:173 modules/process/tip_blind.c:178
+msgid "Model tip"
+msgstr ""
+
+#: modules/process/tip_model.c:176 modules/process/scars.c:378
+#: modules/process/grain_wshed.c:167 modules/process/grain_rem_threshold.c:170
+#: modules/process/grain_mark.c:180
+msgid "Update preview"
+msgstr ""
+
+#: modules/process/tip_model.c:215 modules/process/tip_blind.c:222
+msgid "Related data:"
+msgstr ""
+
+#: modules/process/tip_model.c:226
+msgid "Tip type:"
+msgstr ""
+
+#: modules/process/scale.c:176
+msgid "Scale by ratio:"
+msgstr ""
+
+#: modules/process/scale.c:185
+msgid "New width:"
+msgstr ""
+
+#: modules/process/scale.c:185 modules/process/scale.c:195
+#: modules/process/tip_blind.c:239 modules/process/tip_blind.c:249
+msgid "px"
+msgstr ""
+
+#: modules/process/scale.c:195
+msgid "New height:"
+msgstr ""
+
+#: modules/process/scars.c:375
+msgid "Mark scars"
+msgstr ""
+
+#: modules/process/scars.c:409
+msgid "Maximum width"
+msgstr ""
+
+#: modules/process/scars.c:415
+msgid "Minimum length"
+msgstr ""
+
+#: modules/process/scars.c:421
+msgid "Hard threshold"
+msgstr ""
+
+#: modules/process/scars.c:430
+msgid "Soft threshold"
+msgstr ""
+
+#: modules/process/scars.c:439 modules/process/grain_wshed.c:237
+#: modules/process/grain_rem_threshold.c:237 modules/process/grain_mark.c:262
+msgid "Preview _mask color:"
+msgstr ""
+
+#: modules/process/angle_dist.c:151
+msgid "Computing angle distribution"
+msgstr ""
+
+#: modules/process/angle_dist.c:164
+msgid "Angle"
+msgstr ""
+
+#: modules/process/angle_dist.c:180
+msgid "Angle Distribution"
+msgstr ""
+
+#: modules/process/angle_dist.c:193 modules/process/slope_dist.c:224
+msgid "Output size:"
+msgstr ""
+
+#: modules/process/angle_dist.c:199
+msgid "Number of steps:"
+msgstr ""
+
+#: modules/process/angle_dist.c:205 modules/process/slope_dist.c:230
+msgid "_Logarithmic value scale"
+msgstr ""
+
+#: modules/process/angle_dist.c:211 modules/process/slope_dist.c:236
+msgid "Use local plane _fitting"
+msgstr ""
+
+#: modules/process/angle_dist.c:220 modules/process/slope_dist.c:245
+msgid "_Plane size:"
+msgstr ""
+
+#: modules/process/shade.c:180
+msgid "Shading"
+msgstr ""
+
+#: modules/process/maskcor.c:162
+msgid "Mask by correlation"
+msgstr ""
+
+#. **** First operand ****
+#: modules/process/maskcor.c:176
+msgid "_Data field to modify:"
+msgstr ""
+
+#. **** Second operand ****
+#: modules/process/maskcor.c:186
+msgid "_Correlation kernel"
+msgstr ""
+
+#: modules/process/maskcor.c:197
+msgid "T_hreshold"
+msgstr ""
+
+#. **** Result ****
+#: modules/process/maskcor.c:206 modules/process/crosscor.c:288
+msgid "_Result:"
+msgstr ""
+
+#: modules/process/laplace.c:134 modules/process/fraccor.c:111
+msgid "There is no mask to be used for computation."
+msgstr ""
+
+#: modules/process/unrotate.c:68
+msgid "Detected"
+msgstr ""
+
+#: modules/process/unrotate.c:69
+msgid "Parallel"
+msgstr ""
+
+#: modules/process/unrotate.c:70
+msgid "Triangular"
+msgstr ""
+
+#: modules/process/unrotate.c:71
+msgid "Square"
+msgstr ""
+
+#: modules/process/unrotate.c:72
+msgid "Rhombic"
+msgstr ""
+
+#: modules/process/unrotate.c:73
+msgid "Hexagonal"
+msgstr ""
+
+#: modules/process/unrotate.c:180
+msgid "Correct Rotation"
+msgstr ""
+
+#: modules/process/unrotate.c:197
+msgid "Assume _structure:"
+msgstr ""
+
+#: modules/process/unrotate.c:201
+msgid "Detected structure:"
+msgstr ""
+
+#: modules/process/unrotate.c:213
+msgid "Rotation correction:"
+msgstr ""
+
+#: modules/process/unrotate.c:231
+msgid "_Interpolation type:"
+msgstr ""
+
+#: modules/process/mask_grow_shrink.c:173
+msgid "samples"
+msgstr ""
+
+#: modules/process/tip_blind.c:181
+msgid "Partial estimation"
+msgstr ""
+
+#: modules/process/tip_blind.c:182
+msgid "Full estimation"
+msgstr ""
+
+#: modules/process/tip_blind.c:233
+msgid "Estimated tip size:"
+msgstr ""
+
+#: modules/process/tip_blind.c:239
+msgid "Width:"
+msgstr ""
+
+#: modules/process/tip_blind.c:249
+msgid "Height:"
+msgstr ""
+
+#: modules/process/tip_blind.c:268
+msgid "Use boundaries"
+msgstr ""
+
+#: modules/process/slope_dist.c:162
+msgid "Slope"
+msgstr ""
+
+#: modules/process/slope_dist.c:192
+msgid "Slope Distribution"
+msgstr ""
+
+#: modules/process/tip_map.c:149
+msgid "Certainty map analysis"
+msgstr ""
+
+#. **** First operand ****
+#: modules/process/tip_map.c:163 modules/process/tip_reconstruction.c:163
+#: modules/process/tip_dilation.c:163
+msgid "_Tip morphology:"
+msgstr ""
+
+#. **** Second operand ****
+#: modules/process/tip_map.c:175
+msgid "_Surface to be analyzed:"
+msgstr ""
+
+#: modules/process/tip_map.c:247 modules/process/tip_reconstruction.c:247
+#: modules/process/tip_dilation.c:247
+msgid ""
+"Tip has different range/resolution ratio than image. Tip will be resampled."
+msgstr ""
+
+#: modules/process/rotate.c:183
+msgid "Rotate"
+msgstr ""
+
+#: modules/process/rotate.c:196
+msgid "Rotate by angle:"
+msgstr ""
+
+#: modules/process/rotate.c:196
+msgid "deg (CCW)"
+msgstr ""
+
+#: modules/process/rotate.c:208
+msgid "_Expand result to fit complete data"
+msgstr ""
+
+#: modules/process/grain_wshed.c:164
+msgid "Mark grains by watershed algorithm"
+msgstr ""
+
+#: modules/process/grain_wshed.c:203
+msgid "<b>Grain location:</b>"
+msgstr ""
+
+#: modules/process/grain_wshed.c:210 modules/process/grain_wshed.c:223
+msgid "Number of steps"
+msgstr ""
+
+#: modules/process/grain_wshed.c:214 modules/process/grain_wshed.c:228
+msgid "Drop size"
+msgstr ""
+
+#: modules/process/grain_wshed.c:219
+msgid "Threshold"
+msgstr ""
+
+#: modules/process/grain_wshed.c:233
+msgid "<b>Segmentation:</b>"
+msgstr ""
+
+#: modules/process/tip_reconstruction.c:149
+msgid "Surface reconstruction"
+msgstr ""
+
+#. **** Second operand ****
+#: modules/process/tip_reconstruction.c:175
+msgid "_Surface to be reconstructed:"
+msgstr ""
+
+#: modules/process/grain_rem_threshold.c:206
+msgid "Threshold by maximum:"
+msgstr ""
+
+#: modules/process/grain_rem_threshold.c:214 modules/process/grain_mark.c:223
+msgid "Height value"
+msgstr ""
+
+#: modules/process/grain_rem_threshold.c:218
+msgid "Threshold by area:"
+msgstr ""
+
+#: modules/process/grain_rem_threshold.c:229
+msgid "Selection mode:"
+msgstr ""
+
+#: modules/process/tip_dilation.c:149
+msgid "Tip dilation"
+msgstr ""
+
+#. **** Second operand ****
+#: modules/process/tip_dilation.c:175
+msgid "_Surface to be dilated:"
+msgstr ""
+
+#: modules/process/polylevel.c:143
+msgid "Remove Polynomial Background"
+msgstr ""
+
+#: modules/process/polylevel.c:158
+msgid "Horizontal polynom degree "
+msgstr ""
+
+#: modules/process/polylevel.c:163
+msgid "Vertical polynom degree "
+msgstr ""
+
+#: modules/process/crosscor.c:188
+msgid "Data Croscorrelation"
+msgstr ""
+
+#. **** First operand ****
+#: modules/process/crosscor.c:202
+msgid "_First data field:"
+msgstr ""
+
+#. **** Second operand ****
+#: modules/process/crosscor.c:214
+msgid "_Second data field:"
+msgstr ""
+
+#. *** Parameters *******
+#. search size
+#: modules/process/crosscor.c:227
+msgid "_Search size"
+msgstr ""
+
+#. window size
+#: modules/process/crosscor.c:247
+msgid "_Window size"
+msgstr ""
+
+#: modules/process/crosscor.c:268
+msgid "Add _low score results mask"
+msgstr ""
+
+#: modules/process/crosscor.c:277
+msgid "Threshold value"
+msgstr ""
+
+#: modules/process/crosscor.c:396
+msgid "Both data fields must have same size."
+msgstr ""
+
+#: modules/process/fractal.c:183
+msgid "Fractal dimension"
+msgstr ""
+
+#: modules/process/fractal.c:186
+msgid "Recompute"
+msgstr ""
+
+#: modules/process/fractal.c:217
+msgid "<b>Fit area:</b>"
+msgstr ""
+
+#: modules/process/fractal.c:222
+msgid "from:"
+msgstr ""
+
+#: modules/process/fractal.c:232
+msgid "to:"
+msgstr ""
+
+#: modules/process/fractal.c:245
+msgid "<b>Result:</b>"
+msgstr ""
+
+#: modules/process/fractal.c:250
+msgid "partitioning:"
+msgstr ""
+
+#: modules/process/fractal.c:262
+msgid "cube counting:"
+msgstr ""
+
+#: modules/process/fractal.c:274
+msgid "triangulation:"
+msgstr ""
+
+#: modules/process/fractal.c:286
+msgid "power spectrum:"
+msgstr ""
+
+#: modules/process/calibrate.c:184
+msgid "Calibrate"
+msgstr ""
+
+#: modules/process/grain_mark.c:214
+msgid "Threshold by height:"
+msgstr ""
+
+#: modules/process/grain_mark.c:228
+msgid "Threshold by slope:"
+msgstr ""
+
+#: modules/process/grain_mark.c:236
+msgid "Slope value"
+msgstr ""
+
+#: modules/process/grain_mark.c:241
+msgid "Threshold by curvature:"
+msgstr ""
+
+#: modules/process/grain_mark.c:249
+msgid "Curvature value"
+msgstr ""
+
+#: modules/process/grain_mark.c:253
+msgid "Merge mode:"
+msgstr ""
