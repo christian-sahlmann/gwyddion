@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -150,13 +150,11 @@ gwy_app_toolbox_create(void)
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Read coordinates"), NULL, GWY_STOCK_GRAPH_MEASURE,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "read");
-
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Zoom in"), NULL, "gwy_graph_zoom_in",
+                       _("Zoom in"), NULL, GWY_STOCK_GRAPH_ZOOM_IN,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_zoom");
-
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Zoom out"), NULL, "gwy_graph_zoom_out",
+                       _("Zoom out"), NULL, GWY_STOCK_GRAPH_ZOOM_OUT,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_unzoom");
 
     g_signal_connect(label, "clicked",
