@@ -49,6 +49,7 @@ struct _GwySerializableIface {
     GwyDuplicateFunc duplicate;
 };
 
+/* FIXME: remove underscore in 2.0, it's public */
 typedef struct _GwySerializeSpec GwySerializeSpec;
 
 struct _GwySerializeSpec {
@@ -58,6 +59,29 @@ struct _GwySerializeSpec {
     guint32 *array_size;
 };
 
+typedef union {
+    gboolean v_boolean;
+    guchar v_char;
+    guint32 v_int32;
+    guint64 v_int64;
+    gdouble v_double;
+    guchar *v_string;
+    GObject *v_object;
+    gboolean *v_boolean_array;
+    guchar *v_char_array;
+    guint32 *v_int32_array;
+    guint64 *v_int64_array;
+    gdouble *v_double_array;
+    guchar **v_string_array;
+    GObject **v_object_array;
+} GwySerializeValue;
+
+typedef struct {
+    guchar ctype;
+    const guchar *name;
+    GwySerializeValue value;
+    guint32 array_size;
+} GwySerializeItem;
 
 GType       gwy_serializable_get_type            (void) G_GNUC_CONST;
 GByteArray* gwy_serializable_serialize           (GObject *serializable,
@@ -130,11 +154,16 @@ gboolean    gwy_serialize_unpack_object_struct   (const guchar *buffer,
                                                   const guchar *object_name,
                                                   gsize nspec,
                                                   const GwySerializeSpec *spec);
-GwySerializeSpec* gwy_serialize_unpack_object    (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position,
-                                                  const guchar *object_name,
-                                                  gsize *nspec);
+
+GByteArray*       gwy_serialize_object_items    (GByteArray *buffer,
+                                                 const guchar *object_name,
+                                                 gsize nitems,
+                                                 const GwySerializeItem *items);
+GwySerializeItem* gwy_deserialize_object_hash   (const guchar *buffer,
+                                                 gsize size,
+                                                 gsize *position,
+                                                 const guchar *object_name,
+                                                 gsize *nitems);
 
 G_END_DECLS
 
