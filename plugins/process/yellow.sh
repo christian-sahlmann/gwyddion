@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/bin/sh
+# @(#) $Id$
+# An extremely simple Gwyddion plug-in example in shell.  Demonstrates data
+# and metadata not outputted are retained from the original data.
+# Written by Yeti <yeti@physics.muni.cz>.
+# Public domain.
 case "$1" in
     register)
     echo "yellow"

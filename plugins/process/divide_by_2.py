@@ -1,5 +1,9 @@
 #!/usr/bin/python
 # @(#) $Id$
+# A very simple Gwyddion plug-in example in Python.  Demonstrates reading,
+# modifying and outputting the data.
+# Written by Yeti <yeti@physics.muni.cz>.
+# Public domain.
 import sys, os, array, re, types
 
 """This is an example Python plug-in.
@@ -15,15 +19,11 @@ divide_by_2
 noninteractive with_defaults\
 """
 
-line_re = re.compile(r'(?P<key>[^=]+)=(?P<val>.*)\n')
-field_re = re.compile(r'(?P<key>[^=]+)=\[\n')
+line_re = re.compile(r'^(?P<key>[^=]+)=(?P<val>.*)\n')
+field_re = re.compile(r'^(?P<key>[^=]+)=\[\n')
 
 stdout = os.fdopen(1, 'wb')
 stderr = os.fdopen(2, 'wb')
-
-def error(m):
-    stderr.write('*** Error: %s\n' % m)
-    sys.exit(1)
 
 def dpop(d, k):
     v = d[k]
@@ -77,7 +77,7 @@ def print_data(data):
 args = sys.argv
 args.pop(0)
 if not args or args[0] not in valid_arguments:
-    error("plug-in has to be called from Gwyddion plugin-proxy.")
+    raise "Plug-in has to be called from Gwyddion plugin-proxy."
 what = args.pop(0)
 if what == 'register':
     print plugin_info
@@ -86,7 +86,6 @@ elif what == 'run':
     data = read_data(args.pop(0))
     data['/meta/A subliminal message'] = 'Python rulez!'
     df = data['/0/data']['data']
-    stderr.write('len(df) = %d\n' % len(df))
     for i in range(len(df)):
         df[i] /= 2.0
     print_data(data)
