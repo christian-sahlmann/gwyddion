@@ -1440,6 +1440,7 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
         target_line->data[i] = rout.data[i]*rout.data[i]
                                + iout.data[i]*iout.data[i];
     }
+/*    gwy_data_line_resize(target_line, 0, rout.res);*/
     gwy_data_line_free(&rout);
     gwy_data_line_free(&iin);
     gwy_data_line_free(&iout);

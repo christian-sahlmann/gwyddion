@@ -2465,6 +2465,11 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
             g_warning("Field too small");
             return 0;
         }
+        if (type==GWY_SF_OUTPUT_PSDF && size < 64)
+        {
+            g_warning("Field too small");
+            return 0;
+        }
 
         hlp_line = GWY_DATA_LINE(gwy_data_line_new(size,
                                                    gwy_data_field_jtor(data_field, size),

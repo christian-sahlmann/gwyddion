@@ -857,9 +857,17 @@ gwy_axis_normalscale(GwyAxis *a)
     gdouble range, tickstep, majorbase, minortickstep, minorbase;
 
     if (a->reqmax == a->reqmin) {g_warning("Axis with zero range!"); a->reqmax = a->reqmin+1;}
+    
         
     /*printf("reqmin=%f, reqmax=%f\n", a->reqmin, a->reqmax);*/
     range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
+
+    if (range > 1e30 || range < -1e30)
+    {
+        g_warning("Axis with extreme range (>1e30)!");
+        a->reqmax = 100; a->reqmin = 0;
+    }
+    
     tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
     majorbase = ceil(a->reqmin/tickstep)*tickstep; /*starting value*/
     minortickstep = tickstep/(gdouble)a->par.minor_division;

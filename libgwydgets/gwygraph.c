@@ -439,7 +439,7 @@ gwy_graph_get_status(GwyGraph *graph)
     return graph->area->status;
 }
 
-#warning what is the @status parameter good for???
+#warning what is the @status parameter good for??? For changing selection modes, for example.
 gpointer
 gwy_graph_get_status_data(GwyGraph *graph, GwyGraphStatusType status)
 {
