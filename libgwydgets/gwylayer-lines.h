@@ -25,7 +25,7 @@
 #include <gtk/gtkwidget.h>
 
 #ifndef GWY_TYPE_DATA_VIEW_LAYER
-#  include <libgwydgets/gwydataviewlayer.h>
+#  include <libgwydgets/gwyvectorlayer.h>
 #endif /* no GWY_TYPE_DATA_VIEW_LAYER */
 
 #ifdef __cplusplus
@@ -43,7 +43,7 @@ typedef struct _GwyLayerLines      GwyLayerLines;
 typedef struct _GwyLayerLinesClass GwyLayerLinesClass;
 
 struct _GwyLayerLines {
-    GwyDataViewLayer parent_instance;
+    GwyVectorLayer parent_instance;
 
     gint nlines;
     gint nselected;
@@ -56,7 +56,7 @@ struct _GwyLayerLines {
 };
 
 struct _GwyLayerLinesClass {
-    GwyDataViewLayerClass parent_class;
+    GwyVectorLayerClass parent_class;
 
     GdkCursor *near_cursor;
     GdkCursor *nearline_cursor;

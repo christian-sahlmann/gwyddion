@@ -133,11 +133,13 @@ gwy_pixmap_layer_paint(GwyPixmapLayer *layer)
 static void
 gwy_pixmap_layer_plugged(GwyDataViewLayer *layer)
 {
+    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
 }
 
 static void
 gwy_pixmap_layer_unplugged(GwyDataViewLayer *layer)
 {
+    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

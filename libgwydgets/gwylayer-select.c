@@ -86,7 +86,7 @@ gwy_layer_select_get_type(void)
         };
         gwy_debug("");
         gwy_layer_select_type
-            = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
+            = g_type_register_static(GWY_TYPE_VECTOR_LAYER,
                                      GWY_LAYER_SELECT_TYPE_NAME,
                                      &gwy_layer_select_info,
                                      0);

@@ -324,6 +324,7 @@ gwy_vector_layer_selection_finished(GwyVectorLayer *layer)
 static void
 gwy_vector_layer_plugged(GwyDataViewLayer *layer)
 {
+    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
 }
 
 static void
@@ -332,6 +333,8 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
     GwyVectorLayer *vector_layer;
 
     gwy_debug("");
+
+    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 
     vector_layer = GWY_VECTOR_LAYER(layer);
     gwy_object_unref(vector_layer->gc);
