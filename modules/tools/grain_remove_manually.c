@@ -43,7 +43,7 @@ static GtkWidget* dialog_create    (GwyUnitoolState *state);
 static void       dialog_update    (GwyUnitoolState *state,
                                     GwyUnitoolUpdateType reason);
 static void       dialog_abandon   (GwyUnitoolState *state);
-
+static void       sel_finished_cb  (GwyVectorLayer *gwyvectorlayer, GwyUnitoolState *state);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -129,6 +129,8 @@ dialog_create(GwyUnitoolState *state)
     label = gtk_label_new("This tool has no options.");
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
+    g_signal_connect(state->layer, "selection-finished", G_CALLBACK(sel_finished_cb), state);
+
     return dialog;
 }
 
@@ -136,6 +138,16 @@ dialog_create(GwyUnitoolState *state)
 static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
+{
+}
+
+static void
+dialog_abandon(GwyUnitoolState *state)
+{
+}
+
+static void
+sel_finished_cb(GwyVectorLayer *gwyvectorlayer, GwyUnitoolState *state)
 {
     GwyContainer *data;
     GwyDataField *dfield;
@@ -175,12 +187,6 @@ dialog_update(GwyUnitoolState *state,
         gwy_vector_layer_unselect(state->layer);
         gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
     }
-    
-}
-
-static void
-dialog_abandon(GwyUnitoolState *state)
-{
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
