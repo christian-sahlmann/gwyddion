@@ -90,7 +90,7 @@ points(GwyGraph *graph)
   
     if (!dialog) points_dialog(graph);
 
-    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_CURSOR);
+    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_POINTS);
     
     
     return 1;
@@ -139,7 +139,7 @@ selection_updated_cb(GtkWidget *widget, gpointer data)
     graph = (GwyGraph *) data;
     g_return_if_fail(GWY_IS_GRAPH(graph));    
 
-    g_assert(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_CURSOR);
+    g_assert(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS);
     
     cd = (GwyGraphStatus_CursorData*)gwy_graph_get_status_data(graph);
 
