@@ -334,7 +334,8 @@ gwy_sci_text_edited(GtkEntry *entry)
         gtk_label_set_markup(sci_text->label, utf8);
     g_free(utf8);
     g_free(text);
-    pango_attr_list_unref(attr_list);
+    if (attr_list)
+        pango_attr_list_unref(attr_list);
     g_clear_error(&err);
 }
 
