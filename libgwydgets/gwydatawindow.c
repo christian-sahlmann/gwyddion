@@ -32,6 +32,7 @@ static void     color_axis_clicked_cb          (GtkWidget *coloraxis,
                                                 GtkWidget *data_window);
 static void     palette_selected_cb            (GtkWidget *item,
                                                 GwyDataWindow *data_window);
+static void     data_view_updated_cb           (GwyDataWindow *data_window);
 
 /* Local data */
 
@@ -133,8 +134,10 @@ gwy_data_window_new(GwyDataView *data_view)
 
     /***** data view *****/
     data_window->data_view = (GtkWidget*)data_view;
-    g_signal_connect_after(data_view, "size-allocate",
+    g_signal_connect_after(data_view, "size_allocate",
                            G_CALLBACK(zoom_changed_cb), data_window);
+    g_signal_connect_swapped(data_view, "updated",
+                             G_CALLBACK(data_view_updated_cb), data_window);
 
     vbox = gtk_vbox_new(0, FALSE);
     gtk_container_add(GTK_CONTAINER(data_window), vbox);
@@ -187,7 +190,7 @@ gwy_data_window_new(GwyDataView *data_view)
                      0, 1, 1, 2,
                      GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
-    /***** rhs stuff TODO *****/
+    /***** rhs stuff *****/
     widget = gtk_vbox_new(TRUE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(widget), 6);
     gtk_box_pack_start(GTK_BOX(hbox), widget, TRUE, TRUE, 0);
@@ -197,6 +200,7 @@ gwy_data_window_new(GwyDataView *data_view)
     palette = gwy_layer_basic_get_palette(layer);
     data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL,
                                                 0, 1, palette);
+    data_view_updated_cb(data_window);
     gtk_container_add(GTK_CONTAINER(widget), data_window->coloraxis);
     g_signal_connect(data_window->coloraxis, "button_press_event",
                      G_CALLBACK(color_axis_clicked_cb), data_window);
@@ -518,6 +522,20 @@ palette_selected_cb(GtkWidget *item,
     g_return_if_fail(GWY_IS_PALETTE(palette));
     gwy_palette_set_by_name(palette, name);
     gwy_data_view_update(GWY_DATA_VIEW(data_window->data_view));
+}
+
+static void
+data_view_updated_cb(GwyDataWindow *data_window)
+{
+    GwyContainer *data;
+    GwyDataField *dfield;
+    gdouble min, max;
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    min = gwy_data_field_get_min(dfield);
+    max = gwy_data_field_get_max(dfield);
+    gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

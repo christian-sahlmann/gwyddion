@@ -15,8 +15,8 @@
 #define BITS_PER_SAMPLE 8
 
 enum {
-    PROP_0,
-    PROP_LAST
+    UPDATED,
+    LAST_SIGNAL
 };
 
 /* Forward declarations */
@@ -67,6 +67,8 @@ static void     gwy_data_view_set_layer            (GwyDataView *data_view,
 /* Local data */
 
 static GtkWidgetClass *parent_class = NULL;
+
+static guint data_view_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gwy_data_view_get_type(void)
@@ -127,6 +129,17 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
     widget_class->motion_notify_event = gwy_data_view_motion_notify;
     widget_class->key_press_event = gwy_data_view_key_press;
     widget_class->key_release_event = gwy_data_view_key_release;
+
+    klass->updated = NULL;
+
+    data_view_signals[UPDATED] =
+        g_signal_new("updated",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyDataViewClass, updated),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
 }
 
 static void
@@ -618,6 +631,7 @@ gwy_data_view_update(GwyDataView *data_view)
     widget = GTK_WIDGET(data_view);
     if (widget->window)
         gdk_window_invalidate_rect(widget->window, NULL, TRUE);
+    g_signal_emit(data_view, data_view_signals[UPDATED], 0);
 }
 
 static void

@@ -54,6 +54,8 @@ struct _GwyDataView {
 
 struct _GwyDataViewClass {
     GtkWidgetClass parent_class;
+
+    void (*updated)(GwyDataView *data_view);
 };
 
 GtkWidget*        gwy_data_view_new               (GwyContainer *data);
