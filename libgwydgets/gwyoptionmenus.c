@@ -206,7 +206,7 @@ palette_def_compare(GwyPaletteDef *a,
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*
-gwy_option_menu_create(const GwyOptionMenuEntry *entries,
+gwy_option_menu_create(const GwyEnum *entries,
                        gint nentries,
                        const gchar *key,
                        GCallback callback,
@@ -296,7 +296,7 @@ gwy_option_menu_interpolation(GCallback callback,
                               gpointer cbdata,
                               GwyInterpolationType current)
 {
-    static const GwyOptionMenuEntry entries[] = {
+    static const GwyEnum entries[] = {
       /*{ "None",     GWY_INTERPOLATION_NONE,     },*/
         { "Round",    GWY_INTERPOLATION_ROUND,    },
         { "Bilinear", GWY_INTERPOLATION_BILINEAR, },
@@ -332,7 +332,7 @@ gwy_option_menu_windowing(GCallback callback,
                               gpointer cbdata,
                               GwyWindowingType current)
 {
-    static const GwyOptionMenuEntry entries[] = {
+    static const GwyEnum entries[] = {
         { "None",     GWY_WINDOWING_NONE      },
         { "Hann",     GWY_WINDOWING_HANN      },
         { "Hamming",  GWY_WINDOWING_HAMMING   },
@@ -368,7 +368,7 @@ gwy_option_menu_zoom_mode(GCallback callback,
                           gpointer cbdata,
                           GwyZoomMode current)
 {
-    static const GwyOptionMenuEntry entries[] = {
+    static const GwyEnum entries[] = {
         { "By square root of 2",     GWY_ZOOM_MODE_SQRT2      },
         { "By cubic root of 2",      GWY_ZOOM_MODE_CBRT2      },
         { "Integer zooms",           GWY_ZOOM_MODE_PIX4PIX    },
@@ -400,7 +400,7 @@ gwy_option_menu_2dcwt(GCallback callback,
                       gpointer cbdata,
                       Gwy2DCWTWaveletType current)
 {
-    static const GwyOptionMenuEntry entries[] = {
+    static const GwyEnum entries[] = {
         { "Gaussian",          GWY_2DCWT_GAUSS      },
         { "Hat",               GWY_2DCWT_HAT        },
     };
@@ -429,7 +429,7 @@ gwy_option_menu_fft_output(GCallback callback,
                            gpointer cbdata,
                            GwyFFTOutputType current)
 {
-    static const GwyOptionMenuEntry entries[] = {
+    static const GwyEnum entries[] = {
         { "Real + Imaginary",  GWY_FFT_OUTPUT_REAL_IMG,  },
         { "Module + Phase",    GWY_FFT_OUTPUT_MOD_PHASE, },
         { "Real",              GWY_FFT_OUTPUT_REAL,      },
@@ -442,15 +442,5 @@ gwy_option_menu_fft_output(GCallback callback,
                                   "fft-output-type", callback, cbdata,
                                   current);
 }
-
-
-/************************** Documentation ****************************/
-/**
- * GwyOptionMenuEntry:
- * @value: Item (enum) value.
- * @entry: Item labels.
- *
- * Item specification for gwy_option_menu_create().
- **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

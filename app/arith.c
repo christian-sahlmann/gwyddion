@@ -63,7 +63,7 @@ typedef enum {
     GWY_ARITH_LAST
 } GwyArithOperation;
 
-static const GwyOptionMenuEntry operations[] = {
+static const GwyEnum operations[] = {
     { "Add",       GWY_ARITH_ADD },
     { "Substract", GWY_ARITH_SUBSTRACT },
     { "Multiply",  GWY_ARITH_MULTIPLY },

@@ -21,19 +21,15 @@
 #ifndef __GWY_OPTION_MENUS_H__
 #define __GWY_OPTION_MENUS_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <gtk/gtkwidget.h>
+#include <libgwyddion/gwyutils.h>
 #include <libprocess/cwt.h>
 #include <libprocess/simplefft.h>
 #include <libgwydgets/gwydatawindow.h>
 
-typedef struct {
-    const gchar *name;
-    gint value;
-} GwyOptionMenuEntry;
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 GtkWidget* gwy_menu_palette               (GCallback callback,
                                            gpointer cbdata);
@@ -55,7 +51,7 @@ GtkWidget* gwy_option_menu_2dcwt          (GCallback callback,
 GtkWidget* gwy_option_menu_fft_output     (GCallback callback,
                                            gpointer cbdata,
                                            GwyFFTOutputType current);
-GtkWidget* gwy_option_menu_create         (const GwyOptionMenuEntry *entries,
+GtkWidget* gwy_option_menu_create         (const GwyEnum *entries,
                                            gint nentries,
                                            const gchar *key,
                                            GCallback callback,
