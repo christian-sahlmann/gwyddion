@@ -354,7 +354,7 @@ static const RawFileArgs rawfile_defaults = {
     0, NULL, 0,                     /* text parameters */
     NULL, 0,                        /* file name and size */
     500, 500, TRUE,                 /* xres, yres */
-    10.0, 10.0, TRUE, -6,           /* physical dimensions */
+    100.0, 100.0, TRUE, -6,         /* physical dimensions */
     1.0, -6,                        /* z-scale */
     NULL,                           /* preset name */
 };
@@ -590,7 +590,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = table_attach_heading(table, _("<b>Resolution</b>"), row);
+    table_attach_heading(table, _("<b>Resolution</b>"), row);
     row++;
 
     adj = gtk_adjustment_new(args->xres, 0, 16384, 1, 10, 100);
@@ -613,7 +613,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = table_attach_heading(table, _("<b>Physical dimensions</b>"), row);
+    table_attach_heading(table, _("<b>Physical dimensions</b>"), row);
     row++;
 
     adj = gtk_adjustment_new(args->xreal, 0.01, 10000, 1, 100, 100);
