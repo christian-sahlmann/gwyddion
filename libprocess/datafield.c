@@ -219,8 +219,10 @@ gwy_data_field_new_alike(GwyDataField *model,
     else
         data_field->data = g_new(gdouble, data_field->xres*data_field->yres);
 
-    data_field->si_unit_xy = gwy_si_unit_duplicate(model->si_unit_xy);
-    data_field->si_unit_z = gwy_si_unit_duplicate(model->si_unit_z);
+    if (model->si_unit_xy)
+        data_field->si_unit_xy = gwy_si_unit_duplicate(model->si_unit_xy);
+    if (model->si_unit_z)
+        data_field->si_unit_z = gwy_si_unit_duplicate(model->si_unit_z);
 
     return (GObject*)(data_field);
 }
@@ -326,10 +328,9 @@ gwy_data_field_duplicate_real(GObject *object)
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(object), NULL);
     data_field = GWY_DATA_FIELD(object);
-    duplicate = gwy_data_field_new(data_field->xres, data_field->yres,
-                                   data_field->xreal, data_field->yreal,
-                                   FALSE);
-    gwy_data_field_copy(data_field, GWY_DATA_FIELD(duplicate));
+    duplicate = gwy_data_field_new_alike(data_field, FALSE);
+    memcpy(((GwyDataField*)duplicate)->data, data_field->data,
+           data_field->xres*data_field->yres*sizeof(gdouble));
 
     return duplicate;
 }
@@ -523,54 +524,58 @@ gwy_data_field_area_copy(GwyDataField *src,
  * @data_field: A data field to be resampled.
  * @xres: Desired X resolution.
  * @yres: Desired Y resolution.
- * @interpolation: Interpolation method.
+ * @interpolation: Interpolation method to use.
  *
  * Resamples a data field using given interpolation method
  **/
 void
-gwy_data_field_resample(GwyDataField *a,
+gwy_data_field_resample(GwyDataField *data_field,
                         gint xres, gint yres,
                         GwyInterpolationType interpolation)
 {
-    GwyDataField b;
+    gdouble *bdata;
     gdouble xratio, yratio, xpos, ypos;
     gint i, j;
 
-    if (a->xres == xres && a->yres == yres)
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    if (data_field->xres == xres && data_field->yres == yres)
         return;
+    g_return_if_fail(xres > 1 && yres > 1);
 
-    gwy_data_field_invalidate(a);
+    gwy_data_field_invalidate(data_field);
 
-    if (interpolation != GWY_INTERPOLATION_NONE) {
-        gwy_data_field_alloc(&b, a->xres, a->yres);
-        gwy_data_field_copy(a, &b);
+    if (interpolation == GWY_INTERPOLATION_NONE) {
+        data_field->xres = xres;
+        data_field->yres = yres;
+        data_field->data = g_renew(gdouble, data_field->data,
+                                   data_field->xres*data_field->yres);
+        return;
     }
 
-    a->xres = xres;
-    a->yres = yres;
-    a->data = g_renew(gdouble, a->data, a->xres*a->yres);
+    bdata = g_new(gdouble, xres*yres);
 
-    if (interpolation == GWY_INTERPOLATION_NONE)
-        return;
+    xratio = (data_field->xres - 1.0)/(xres - 1.0);
+    yratio = (data_field->yres - 1.0)/(yres - 1.0);
 
-    xratio = (gdouble)(b.xres-1)/(gdouble)(a->xres-1);
-    yratio = (gdouble)(b.yres-1)/(gdouble)(a->yres-1);
+    for (i = 0; i < yres; i++) {
+        gdouble *row = bdata + i*xres;
 
-    for (i = 0; i < a->yres; i++) {
-        gdouble *row = a->data + i*a->xres;
+        ypos = i*yratio;
+        if (G_UNLIKELY(ypos > data_field->yres-1))
+            ypos = data_field->yres-1;
 
-        ypos = (gdouble)i*yratio;
-        if (ypos > (b.yres-1))
-            ypos = (b.yres-1);
-
-        for (j = 0; j < a->xres; j++, row++) {
-            xpos = (gdouble)j*xratio;
-            if (xpos > (b.xres-1))
-                xpos = (b.xres-1);
-            *row = gwy_data_field_get_dval(&b, xpos, ypos, interpolation);
+        for (j = 0; j < xres; j++, row++) {
+            xpos = j*xratio;
+            if (G_UNLIKELY(xpos > data_field->xres-1))
+                xpos = data_field->xres-1;
+            *row = gwy_data_field_get_dval(data_field, xpos, ypos,
+                                           interpolation);
         }
     }
-    _gwy_data_field_free(&b);
+    g_free(data_field->data);
+    data_field->data = bdata;
+    data_field->xres = xres;
+    data_field->yres = yres;
 }
 
 void

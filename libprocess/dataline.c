@@ -123,9 +123,6 @@ gwy_data_line_init(GwyDataLine *data_line)
 {
     gwy_debug("");
     gwy_debug_objects_creation((GObject*)data_line);
-    data_line->data = NULL;
-    data_line->res = 0;
-    data_line->real = 0.0;
 }
 
 static void
@@ -148,6 +145,25 @@ gwy_data_line_new(gint res, gdouble real, gboolean nullme)
     data_line = g_object_new(GWY_TYPE_DATA_LINE, NULL);
 
     _gwy_data_line_initialize(data_line, res, real, nullme);
+
+    return (GObject*)(data_line);
+}
+
+GObject*
+gwy_data_line_new_alike(GwyDataLine *model,
+                        gboolean nullme)
+{
+    GwyDataLine *data_line;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(model), NULL);
+    data_line = g_object_new(GWY_TYPE_DATA_LINE, NULL);
+
+    data_line->res = model->res;
+    data_line->real = model->real;
+    if (nullme)
+        data_line->data = g_new0(gdouble, data_line->res);
+    else
+        data_line->data = g_new(gdouble, data_line->res);
 
     return (GObject*)(data_line);
 }
@@ -224,8 +240,9 @@ gwy_data_line_duplicate_real(GObject *object)
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(object), NULL);
     data_line = GWY_DATA_LINE(object);
-    duplicate = gwy_data_line_new(data_line->res, data_line->real, FALSE);
-    gwy_data_line_copy(data_line, GWY_DATA_LINE(duplicate));
+    duplicate = gwy_data_line_new_alike(data_line, FALSE);
+    memcpy(((GwyDataLine*)duplicate)->data, data_line->data,
+           data_line->res*sizeof(gdouble));
 
     return duplicate;
 }
@@ -281,36 +298,47 @@ _gwy_data_line_free(GwyDataLine *a)
 /**
  * gwy_data_line_resample:
  * @data_line: A data line.
- * @res: new resolution
- * @interpolation: interpolation method used
+ * @res: Desired resolution.
+ * @interpolation: Interpolation method to use.
  *
- * Resamples data line, i. e. changes the size of one dimensional
- * field related with data line. The original values are used
- * for resampling using a requested resampling alorithm.
+ * Resamples a data line.
+ *
+ * In otwhe words changes the size of one dimensional field related with data
+ * line. The original values are used for resampling using a requested
+ * interpolation alorithm.
  **/
 void
-gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
+gwy_data_line_resample(GwyDataLine *data_line,
+                       gint res,
+                       GwyInterpolationType interpolation)
 {
+    gdouble *bdata;
+    gdouble ratio, pos;
     gint i;
-    gdouble ratio = ((gdouble)a->res - 1)/((gdouble)res - 1);
-    GwyDataLine b;
 
-    gwy_debug("");
-    if (res == a->res)
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    if (res == data_line->res)
         return;
+    g_return_if_fail(res > 1);
 
-    b.res = a->res;
-    b.data = g_new(gdouble, a->res);
-    gwy_data_line_copy(a, &b);
-
-    a->res = res;
-    a->data = g_renew(gdouble, a->data, a->res);
-    for (i = 0; i < res; i++) {
-        a->data[i] = gwy_data_line_get_dval(&b, (gdouble)i*ratio,
-                                            interpolation);
+    if (interpolation == GWY_INTERPOLATION_NONE) {
+        data_line->res = res;
+        data_line->data = g_renew(gdouble, data_line->data, data_line->res);
+        return;
     }
-    _gwy_data_line_free(&b);
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
+
+    bdata = g_new(gdouble, res);
+    ratio = (data_line->res - 1.0)/(res - 1.0);
+
+    for (i = 0; i < res; i++) {
+        pos = i*ratio;
+        if (G_UNLIKELY(pos > data_line->res-1))
+            pos = data_line->res-1;
+        bdata[i] = gwy_data_line_get_dval(data_line, pos, interpolation);
+    }
+    g_free(data_line->data);
+    data_line->data = bdata;
+    data_line->res = res;
 }
 
 
