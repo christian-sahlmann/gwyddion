@@ -18,10 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#define DEBUG 1
+#define DEBUG
 
-#include <math.h>
 #include <stdio.h>
+#include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
@@ -110,6 +110,7 @@ static gint        normalize_data            (FitArgs *args,
 static GtkWidget*  create_stocklike_button   (const gchar *label_text,
                                               const gchar *stock_id);
 static void        create_results_window     (FitArgs *args);
+static GString*    create_fit_report         (FitArgs *args);
 static void        destroy                   (FitArgs *args,
                                               FitControls *controls);
 
@@ -496,7 +497,8 @@ fit_dialog(FitArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            create_results_window(args);
+            if (args->is_fitted)
+                create_results_window(args);
             gtk_widget_destroy(dialog);
             break;
 
@@ -731,10 +733,8 @@ dialog_update(FitControls *controls, FitArgs *args)
                          gwy_math_nlfit_get_function_equation(args->fitfunc));
 
 
-    for (i=0; i<MAX_PARAMS; i++)
-    {
-        if (i<gwy_math_nlfit_get_function_nparams(args->fitfunc))
-        {
+    for (i = 0; i < MAX_PARAMS; i++) {
+        if (i < gwy_math_nlfit_get_function_nparams(args->fitfunc)) {
             gtk_widget_set_sensitive(controls->param_des[i], TRUE);
             gtk_label_set_markup(GTK_LABEL(controls->param_des[i]),
                       gwy_math_nlfit_get_function_param_name(args->fitfunc, i));
@@ -744,8 +744,7 @@ dialog_update(FitControls *controls, FitArgs *args)
             g_snprintf(buffer, sizeof(buffer), "%.3g", args->par_init[i]);
             gtk_entry_set_text(GTK_ENTRY(controls->param_init[i]), buffer);
         }
-        else
-        {
+        else {
             gtk_widget_set_sensitive(controls->param_des[i], FALSE);
             gtk_widget_set_sensitive(controls->param_init[i], FALSE);
             gtk_widget_set_sensitive(controls->param_fit[i], FALSE);
@@ -796,13 +795,13 @@ graph_update(FitControls *controls, FitArgs *args)
    
 
     /*add curves from parent graph*/
-    for (i=0; i<args->parent_nofcurves; i++)
-    {
+    for (i = 0; i < args->parent_nofcurves; i++) {
         gwy_graph_add_datavalues(GWY_GRAPH(controls->graph),
                                  args->parent_xs[i],
                                  args->parent_ys[i],
                                  args->parent_ns[i],
-                                 gwy_graph_get_label(args->parent_graph, i), NULL);
+                                 gwy_graph_get_label(args->parent_graph, i),
+                                 NULL);
     }
 
     args->is_fitted = FALSE;
@@ -815,9 +814,9 @@ graph_selected(GwyGraphArea *area, FitArgs *args)
     gchar buffer[20];
     gdouble xmin, xmax, ymin, ymax;
 
-    if (area->seldata->data_start == area->seldata->data_end)
-    {
-        gwy_graph_get_boundaries(GWY_GRAPH(pcontrols->graph), &xmin, &xmax, &ymin, &ymax);
+    if (area->seldata->data_start == area->seldata->data_end) {
+        gwy_graph_get_boundaries(GWY_GRAPH(pcontrols->graph),
+                                 &xmin, &xmax, &ymin, &ymax);
 
         args->from = xmin;
         args->to = xmax;
@@ -826,8 +825,7 @@ graph_selected(GwyGraphArea *area, FitArgs *args)
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->to);
         gtk_entry_set_text(GTK_ENTRY(pcontrols->to), buffer);
     }
-    else
-    {
+    else {
         args->from = area->seldata->data_start;
         args->to = area->seldata->data_end;
         if (args->from > args->to) GWY_SWAP(gdouble, args->from, args->to);
@@ -903,6 +901,68 @@ attach_label(GtkWidget *table, const gchar *text,
                      col, col+1, row, row+1, GTK_FILL, 0, 2, 2);
 }
 
+static void
+save_report_cb(GtkWidget *button, GString *report)
+{
+    const gchar *filename;
+    gchar *filename_sys, *filename_utf8;
+    GtkWidget *dialog;
+    FILE *fh;
+
+    dialog = gtk_widget_get_toplevel(button);
+    filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(dialog));
+    filename_sys = g_strdup(filename);
+    gtk_widget_destroy(dialog);
+
+    fh = fopen(filename_sys, "a");
+    if (fh) {
+        fputs(report->str, fh);
+        fclose(fh);
+        return;
+    }
+
+    filename_utf8 = g_filename_to_utf8(filename_sys, -1, 0, 0, NULL);
+    dialog = gtk_message_dialog_new(NULL,
+                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_ERROR,
+                                    GTK_BUTTONS_OK,
+                                    "Cannot save report to %s.\n%s\n",
+                                    filename_utf8,
+                                    g_strerror(errno));
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+}
+
+static void
+results_window_response_cb(GtkWidget *window,
+                           gint response,
+                           GString *report)
+{
+    GtkWidget *dialog;
+
+    gwy_debug("%d", response);
+    if (response == GTK_RESPONSE_CLOSE
+        || response == GTK_RESPONSE_DELETE_EVENT
+        || response == GTK_RESPONSE_NONE) {
+        if (report)
+            g_string_free(report, TRUE);
+        gtk_widget_destroy(window);
+        return;
+    }
+
+    g_assert(report);
+    dialog = gtk_file_selection_new(_("Save Fit Report"));
+
+    g_signal_connect(GTK_FILE_SELECTION(dialog)->ok_button, "clicked",
+                     G_CALLBACK(save_report_cb), report);
+    g_signal_connect_swapped(GTK_FILE_SELECTION(dialog)->cancel_button,
+                             "clicked",
+                             G_CALLBACK(gtk_widget_destroy), dialog);
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(window));
+    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_widget_show_all(dialog);
+}
+
 static gchar*
 format_magnitude(GString *str,
                  gdouble magnitude)
@@ -919,19 +979,23 @@ format_magnitude(GString *str,
 static void
 create_results_window(FitArgs *args)
 {
+    enum { RESPONSE_SAVE = 1 };
     GwyNLFitter *fitter = args->fitter;
-    GtkWidget *window, *tab, *table;
+    GtkWidget *window, *tab, *table, *label, *button;
     gdouble mag, value, sigma;
     gint row, curve, n, i, j;
     gint precision;
     GString *str, *su;
     const gchar *s;
 
-    window = gtk_dialog_new_with_buttons(_("Fit results"), NULL,
-                                         GTK_DIALOG_NO_SEPARATOR,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+    window = gtk_dialog_new_with_buttons(_("Fit results"), NULL, 0,
                                          NULL);
     gtk_container_set_border_width(GTK_CONTAINER(window), 6);
+    button = gtk_dialog_add_button(GTK_DIALOG(window),
+                                   GTK_STOCK_SAVE, RESPONSE_SAVE);
+    gtk_widget_set_sensitive(button, fitter->covar != NULL);
+    gtk_dialog_add_button(GTK_DIALOG(window),
+                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
     table = gtk_table_new(9, 2, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(window)->vbox), table,
@@ -947,8 +1011,8 @@ create_results_window(FitArgs *args)
     /* XXX: show fitted points only */
     str = g_string_new("");
     su = g_string_new("");
-    attach_label(table, _("Num of points FIXME:"), row, 0, 0.0);
-    g_string_printf(str, "%d", args->parent_ns[curve]);
+    attach_label(table, _("Num of points:"), row, 0, 0.0);
+    g_string_printf(str, "<b>FIXME</b> %d", args->parent_ns[curve]);
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
@@ -964,9 +1028,15 @@ create_results_window(FitArgs *args)
     row++;
 
     attach_label(table, _("<b>Function:</b>"), row, 0, 0.0);
-    /* XXX: memory leak now */
-    attach_label(table, gwy_math_nlfit_get_function_equation(args->fitfunc),
+    attach_label(table, gwy_math_nlfit_get_function_name(args->fitfunc),
                  row, 1, 0.0);
+    row++;
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label),
+                         gwy_math_nlfit_get_function_equation(args->fitfunc));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     attach_label(table, _("<b>Results</b>"), row, 0, 0.0);
@@ -979,7 +1049,6 @@ create_results_window(FitArgs *args)
     for (i = 0; i < n; i++) {
         attach_label(tab, "=", i, 1, 0.5);
         attach_label(tab, "±", i, 3, 0.5);
-        /* XXX: memory leak now */
         s = gwy_math_nlfit_get_function_param_name(args->fitfunc, i);
         attach_label(tab, s, i, 0, 0.0);
         value = args->par_res[i];
@@ -1026,10 +1095,60 @@ create_results_window(FitArgs *args)
 
     g_string_free(str, TRUE);
     g_string_free(su, TRUE);
+    str = fitter->covar ? create_fit_report(args) : NULL;
 
-    g_signal_connect(window, "response", G_CALLBACK(gtk_widget_destroy), NULL);
+    g_signal_connect(window, "response",
+                     G_CALLBACK(results_window_response_cb), str);
     gtk_widget_show_all(window);
 }
 
+static GString*
+create_fit_report(FitArgs *args)
+{
+    GString *report, *str;
+    gint i, j, curve, n;
+
+    g_assert(args->fitter->covar);
+    report = g_string_new("");
+
+    curve = args->curve - 1;
+    g_string_append_printf(report, "\n===== Fit Results =====\n");
+
+    str = gwy_graph_get_label(GWY_GRAPH(args->parent_graph), curve);
+    g_string_append_printf(report, "Data: %s\n", str->str);
+    /* XXX: show fitted points only */
+    str = g_string_new("");
+    g_string_append_printf(report, "Number of points: %d\n",
+                           args->parent_ns[curve]);
+    g_string_append_printf(report, "X range:          %g to %g\n",
+                           args->from, args->to);
+    g_string_append_printf(report, "Fitted function:  %s\n", 
+                           gwy_math_nlfit_get_function_name(args->fitfunc));
+    g_string_append_printf(report, "\nResults\n");
+    n = gwy_math_nlfit_get_function_nparams(args->fitfunc);
+    for (i = 0; i < n; i++) {
+        g_string_append_printf
+            (report, "%s = %g ± %g\n",
+             gwy_math_nlfit_get_function_param_name(args->fitfunc, i),
+             args->par_res[i], args->err[i]);
+    }
+    g_string_append_printf(report, "\nResidual sum: %g\n",
+                           gwy_math_nlfit_get_dispersion(args->fitter));
+    g_string_append_printf(report, "\nCorrelation matrix\n");
+    for (i = 0; i < n; i++) {
+        for (j = 0; j <= i; j++) {
+            g_string_append_printf
+                (report, "% .03f",
+                 gwy_math_nlfit_get_correlations(args->fitter, i, j));
+            if (j != i)
+                g_string_append_c(report, ' ');
+        }
+        g_string_append_c(report, '\n');
+    }
+
+    g_string_free(str, TRUE);
+
+    return report;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
