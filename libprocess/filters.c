@@ -1229,4 +1229,124 @@ gwy_data_field_filter_maximum(GwyDataField *data_field,
                                        data_field->xres, data_field->yres);
 }
 
+/**
+ * kuwahara_block:
+ * @a: points to a 5x5 matrix (array of 25 doubles)
+ *
+ * Computes a new value of the center pixel according to the Kuwahara filter.
+ *
+ * Return: Filtered value.
+ */
+gdouble
+kuwahara_block(const gdouble *a)
+{
+   gint r1[] =
+     { 0, 1, 2, 5, 6, 7, 10, 11, 12 };
+   gint r2[] =
+     { 2, 3, 4, 7, 8, 9, 12, 13, 14 };
+   gint r3[] =
+     { 12, 13, 14, 17, 18, 19, 22, 23, 24 };
+   gint r4[] =
+     { 10, 11, 12, 15, 16, 17, 20, 21, 22 };
+   gdouble mean1 = 0.0, mean2 = 0.0, mean3 = 0.0, mean4 = 0.0;
+   gdouble var1 = 0.0, var2 = 0.0, var3 = 0.0, var4 = 0.0;
+   gint i;
+
+   for (i = 0; i < 9; i++)
+     {
+       mean1 += a[r1[i]]/9.0;
+       mean2 += a[r2[i]]/9.0;
+       mean3 += a[r3[i]]/9.0;
+       mean4 += a[r4[i]]/9.0;
+       var1 += a[r1[i]]*a[r1[i]]/9.0;
+       var2 += a[r2[i]]*a[r2[i]]/9.0;
+       var3 += a[r3[i]]*a[r3[i]]/9.0;
+       var4 += a[r4[i]]*a[r4[i]]/9.0;
+     }
+
+   var1 -= mean1 * mean1;
+   var2 -= mean2 * mean2;
+   var3 -= mean3 * mean3;
+   var4 -= mean4 * mean4;
+
+   if (var1 <= var2 && var1 <= var3 && var1 <= var4) return mean1;
+   if (var2 <= var3 && var2 <= var4 && var2 <= var1) return mean2;
+   if (var3 <= var4 && var3 <= var1 && var3 <= var2) return mean3;
+   if (var4 <= var1 && var4 <= var2 && var4 <= var3) return mean4;
+   return 0.0;
+}
+
+#define gwy_data_field_get_val_closest(d, col, row) \
+  ((d)->data[CLAMP((row), 0, (d)->yres-1) * (d)->xres \
+  + CLAMP((col), 0, (d)->xres-1)])
+
+/** 
+ * gwy_data_field_area_filter_kuwahara:
+ * @data_field: A data filed to apply Kuwahara filter to.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with a Kuwahara
+ * (edge-preserving smoothing) filter.
+ *
+ * Since: 1.9
+ **/
+void
+gwy_data_field_area_filter_kuwahara(GwyDataField *data_field,
+                                      gint col, gint row,
+                                      gint width, gint height)
+{
+  gint i, j, x, y, ctr;
+  gdouble *buffer, *kernel;
+
+  g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+  g_return_if_fail(col >= 0 && row >= 0
+                   && width > 0 && height > 0
+                   && col + width <= data_field->xres
+                   && row + height <= data_field->yres);
+  
+  buffer = g_new(gdouble, width*height);
+  kernel = g_new(gdouble, 25);
+  
+  /* TO DO: optimize for speed */
+  for (i = 0; i < height; i++)
+    for (j = 0; j < width; j++) {
+
+      ctr=0;
+      for (y = -2; y <= 2; y++)
+        for (x = -2; x <= 2; x++)
+          kernel[ctr++] = gwy_data_field_get_val_closest(data_field,
+                                                         col + j + x,
+                                                         row + i + y);
+      buffer[i*width + j] = kuwahara_block(kernel);
+    }
+
+  for (i = 0; i < height; i++)
+    for (j = 0; j < width; j++)
+      data_field->data[col + j + data_field->xres * (row + i)] =
+        buffer[i*width + j];
+  
+  g_free(kernel);
+  g_free(buffer);
+}
+
+/**
+ * gwy_data_field_filter_kuwahara:
+ * @data_field: A data field to apply Kuwahara filter to.
+ *
+ * Filters a data field with Kuwahara filter.
+ *
+ * Since: 1.9
+ **/
+void
+gwy_data_field_filter_kuwahara(GwyDataField *data_field)
+{
+  g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+  gwy_data_field_area_filter_kuwahara(data_field, 0, 0,
+                                      data_field->xres, data_field->yres);
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

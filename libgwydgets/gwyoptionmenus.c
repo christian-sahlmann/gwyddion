@@ -983,6 +983,7 @@ gwy_option_menu_filter(GCallback callback,
         { N_("Conservative denoise"),  GWY_FILTER_CONSERVATIVE, },
         { N_("Minimum"),               GWY_FILTER_MINIMUM, },
         { N_("Maximum"),               GWY_FILTER_MAXIMUM, },
+        { N_("Kuwahara"),              GWY_FILTER_KUWAHARA, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),

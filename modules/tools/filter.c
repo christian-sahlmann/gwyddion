@@ -397,6 +397,13 @@ do_apply(GwyDataField *dfield,
                                                 isel[3]-isel[1]);
         break;
 
+        case GWY_FILTER_KUWAHARA:
+        gwy_data_field_area_filter_kuwahara(dfield,
+                                            isel[0], isel[1],
+                                            isel[2]-isel[0],
+                                            isel[3]-isel[1]);
+	break;
+
         default:
         g_assert_not_reached();
         break;
@@ -455,6 +462,7 @@ filter_changed_cb(GObject *item, GwyUnitoolState *state)
 
     switch (controls->fil) {
         case GWY_FILTER_LAPLACIAN:
+        case GWY_FILTER_KUWAHARA:
         break;
 
         /*TODO put here directional filters, if there are any*/
@@ -544,7 +552,7 @@ load_args(GwyContainer *container, ToolControls *controls)
     controls->upd = !!controls->upd;
     controls->old_upd = controls->upd;
     controls->siz = CLAMP(controls->siz, 2, 20);
-    controls->fil = MIN(controls->fil, GWY_FILTER_MAXIMUM);
+    controls->fil = MIN(controls->fil, GWY_FILTER_KUWAHARA);
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
 

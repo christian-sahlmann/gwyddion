@@ -34,7 +34,8 @@ typedef enum {
     GWY_FILTER_SOBEL         = 4, /*Sobel gradient filter*/
     GWY_FILTER_PREWITT       = 5, /*Prewitt gradient filter*/
     GWY_FILTER_MINIMUM,
-    GWY_FILTER_MAXIMUM
+    GWY_FILTER_MAXIMUM,
+    GWY_FILTER_KUWAHARA
 } GwyFilterType;
 
 /* new-style functions */
@@ -106,6 +107,12 @@ void gwy_data_field_filter_rms                 (GwyDataField *data_field,
                                                 gint size);
 void gwy_data_field_area_filter_rms            (GwyDataField *data_field,
                                                 gint size,
+                                                gint col,
+                                                gint row,
+                                                gint width,
+                                                gint height);
+void gwy_data_field_filter_kuwahara            (GwyDataField *data_field);
+void gwy_data_field_area_filter_kuwahara       (GwyDataField *data_field,
                                                 gint col,
                                                 gint row,
                                                 gint width,
