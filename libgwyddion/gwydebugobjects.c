@@ -94,7 +94,6 @@ gwy_debug_objects_creation(GObject *object)
                                                  G_ALLOC_ONLY);
         debug_objects_timer = g_timer_new();
     }
-
     info = g_chunk_new(DebugObjectInfo, debug_objects_chunk);
     info->id = ++id;
     info->type = G_TYPE_FROM_INSTANCE(object);
@@ -104,6 +103,10 @@ gwy_debug_objects_creation(GObject *object)
     g_object_weak_ref(info->address, &debug_objects_set_time,
                       &info->destroy_time);
     debug_objects = g_list_prepend(debug_objects, info);
+
+    gwy_debug("Added watch for %s %p",
+              g_type_name(info->type), info->address);
+
 }
 
 /**
