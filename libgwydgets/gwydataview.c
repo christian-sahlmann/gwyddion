@@ -787,8 +787,8 @@ gwy_data_view_set_layer(GwyDataView *data_view,
     if (layer == *which)
         return;
     if (*which) {
-        (*which)->parent = NULL;
         gwy_data_view_layer_unplugged(*which);
+        (*which)->parent = NULL;
         g_object_unref(*which);
     }
     if (layer) {

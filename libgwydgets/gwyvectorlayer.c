@@ -43,21 +43,22 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_vector_layer_class_init   (GwyVectorLayerClass *klass);
-static void     gwy_vector_layer_init         (GwyVectorLayer *layer);
-static void     gwy_vector_layer_finalize     (GObject *object);
-static void     gwy_vector_layer_set_property (GObject *object,
-                                               guint prop_id,
-                                               const GValue *value,
-                                               GParamSpec *pspec);
-static void     gwy_vector_layer_get_property (GObject*object,
-                                               guint prop_id,
-                                               GValue *value,
-                                               GParamSpec *pspec);
-static void     gwy_vector_layer_plugged      (GwyDataViewLayer *layer);
-static void     gwy_vector_layer_unplugged    (GwyDataViewLayer *layer);
-static void     gwy_vector_layer_real_updated (GwyDataViewLayer *layer);
-static gboolean gwy_vector_layer_timer        (GwyVectorLayer *layer);
+static void     gwy_vector_layer_class_init    (GwyVectorLayerClass *klass);
+static void     gwy_vector_layer_init          (GwyVectorLayer *layer);
+static void     gwy_vector_layer_finalize      (GObject *object);
+static void     gwy_vector_layer_set_property  (GObject *object,
+                                                guint prop_id,
+                                                const GValue *value,
+                                                GParamSpec *pspec);
+static void     gwy_vector_layer_get_property  (GObject*object,
+                                                guint prop_id,
+                                                GValue *value,
+                                                GParamSpec *pspec);
+static void     gwy_vector_layer_plugged       (GwyDataViewLayer *layer);
+static void     gwy_vector_layer_unplugged     (GwyDataViewLayer *layer);
+static void     gwy_vector_layer_update_context(GwyVectorLayer *layer);
+static void     gwy_vector_layer_real_updated  (GwyDataViewLayer *layer);
+static gboolean gwy_vector_layer_timer         (GwyVectorLayer *layer);
 
 /* Local data */
 
@@ -83,7 +84,7 @@ gwy_vector_layer_get_type(void)
             (GInstanceInitFunc)gwy_vector_layer_init,
             NULL,
         };
-        gwy_debug("");
+        gwy_debug(" ");
         gwy_vector_layer_type
             = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
                                      GWY_VECTOR_LAYER_TYPE_NAME,
@@ -101,7 +102,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -150,7 +151,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 static void
 gwy_vector_layer_init(GwyVectorLayer *layer)
 {
-    gwy_debug("");
+    gwy_debug(" ");
 
     layer->gc = NULL;
     layer->layout = NULL;
@@ -164,7 +165,7 @@ gwy_vector_layer_finalize(GObject *object)
 {
     GwyVectorLayer *layer;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     g_return_if_fail(GWY_IS_VECTOR_LAYER(object));
 
@@ -247,7 +248,7 @@ gwy_vector_layer_button_press(GwyVectorLayer *layer,
 {
     GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_assert(layer_class);
     if (layer_class->button_press)
         return layer_class->button_press(layer, event);
@@ -427,7 +428,7 @@ gwy_vector_layer_unselect(GwyVectorLayer *layer)
 void
 gwy_vector_layer_selection_finished(GwyVectorLayer *layer)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
     g_signal_emit(layer, vector_layer_signals[SELECTION_FINISHED], 0);
 }
@@ -524,6 +525,12 @@ gwy_vector_layer_real_updated(GwyDataViewLayer *layer)
 static void
 gwy_vector_layer_plugged(GwyDataViewLayer *layer)
 {
+    g_signal_connect_swapped(layer->parent, "style-set",
+                             G_CALLBACK(gwy_vector_layer_update_context),
+                             layer);
+    g_signal_connect_swapped(layer->parent, "direction-changed",
+                             G_CALLBACK(gwy_vector_layer_update_context),
+                             layer);
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
 }
 
@@ -532,7 +539,7 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
 {
     GwyVectorLayer *vector_layer;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     vector_layer = GWY_VECTOR_LAYER(layer);
     gwy_object_unref(vector_layer->gc);
@@ -540,8 +547,23 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
         gtk_timeout_remove(vector_layer->timer);
         vector_layer->timer = 0;
     }
+    g_signal_handlers_disconnect_matched(layer->parent,
+                                         G_SIGNAL_MATCH_FUNC
+                                            | G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL,
+                                         gwy_vector_layer_update_context,
+                                         layer);
 
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
+}
+
+static void
+gwy_vector_layer_update_context(GwyVectorLayer *layer)
+{
+    gwy_debug(" ");
+
+    if (layer->layout)
+        pango_layout_context_changed(layer->layout);
 }
 
 /**
