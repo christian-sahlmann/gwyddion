@@ -9,7 +9,7 @@
 
 #define GWY_SPHERE_COORDS_TYPE_NAME "GwySphereCoords"
 
-static void     gwy_sphere_coords_class_init        (GwySphereCoordsClass *klass);
+static void     gwy_sphere_coords_class_init        (void);
 static void     gwy_sphere_coords_init              (GwySphereCoords *sphere_coords);
 static void     gwy_sphere_coords_serializable_init (gpointer giface);
 static void     gwy_sphere_coords_watchable_init    (gpointer giface);
@@ -19,7 +19,8 @@ static guchar*  gwy_sphere_coords_serialize         (GObject *obj,
 static GObject* gwy_sphere_coords_deserialize       (const guchar *buffer,
                                                      gsize size,
                                                      gsize *position);
-void puts(const char*);
+static GObject* gwy_sphere_coords_duplicate         (GObject *object);
+
 GType
 gwy_sphere_coords_get_type(void)
 {
@@ -72,6 +73,7 @@ gwy_sphere_coords_serializable_init(gpointer giface)
 
     iface->serialize = gwy_sphere_coords_serialize;
     iface->deserialize = gwy_sphere_coords_deserialize;
+    iface->duplicate = gwy_sphere_coords_duplicate;
 }
 
 static void
@@ -86,7 +88,7 @@ gwy_sphere_coords_watchable_init(gpointer giface)
 }
 
 static void
-gwy_sphere_coords_class_init(GwySphereCoordsClass *klass)
+gwy_sphere_coords_class_init(void)
 {
     gwy_debug("%s", __FUNCTION__);
 }
@@ -215,7 +217,6 @@ gwy_sphere_coords_deserialize(const guchar *buffer,
                               gsize *position)
 {
     gdouble theta, phi;
-    gsize pos, mysize;
     GwySerializeSpec spec[] = {
         { 'd', "theta", &theta, NULL },
         { 'd', "phi", &phi, NULL },
@@ -230,6 +231,19 @@ gwy_sphere_coords_deserialize(const guchar *buffer,
         return NULL;
 
     return (GObject*)gwy_sphere_coords_new(theta, phi);
+}
+
+static GObject*
+gwy_sphere_coords_duplicate(GObject *object)
+{
+    GwySphereCoords *sphere_coords;
+
+    gwy_debug("%s", __FUNCTION__);
+    g_return_val_if_fail(GWY_IS_SPHERE_COORDS(object), NULL);
+
+    sphere_coords = GWY_SPHERE_COORDS(object);
+    return G_OBJECT(gwy_sphere_coords_new(sphere_coords->theta,
+                                          sphere_coords->phi));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
