@@ -119,7 +119,6 @@ gwy_data_field_convolve(GwyDataField *data_field,
                                  brcol-ulcol, brrow-ulrow);
 }
 
-#include <stdio.h>
 /**
  * gwy_data_field_area_filter_mean:
  * @data_field: A data field to apply mean filter to.
@@ -201,6 +200,22 @@ gwy_data_field_filter_mean(GwyDataField *data_field,
                                     ulcol, ulrow,
                                     brcol-ulcol, brrow-ulrow);
 }
+
+
+/**
+ * gwy_data_field_area_filter_canny:
+ * @data_field: A data field to apply mean filter to.
+ * @threshold: slope detection threshold (range 0...1)
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with canny edge detector filter of size @size.
+ * In version 1.6 this function filters whole data field.
+ *
+ * Since: 1.6.
+ **/
 
 void
 gwy_data_field_area_filter_canny(GwyDataField *data_field,
