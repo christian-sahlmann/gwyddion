@@ -26,6 +26,8 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
+
 #define GWY_TYPE_PALETTE                  (gwy_palette_get_type())
 #define GWY_PALETTE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_PALETTE, GwyPalette))
 #define GWY_PALETTE_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_PALETTE, GwyPalette))
@@ -70,9 +72,9 @@ guchar*          gwy_palette_sample               (GwyPalette *palette,
 /*output to stdout (for debgging namely)*/
 void gwy_palette_print(GwyPalette *palette);
 
+#endif
 
 G_END_DECLS
-
 
 #endif /*__GWY_PALETTE_H__*/
 

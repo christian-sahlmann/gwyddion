@@ -7,6 +7,7 @@ libgwydrawincludedir = $(pkgincludedir)/libdraw
 
 libgwydrawinclude_HEADERS = \
 	gwydraw.h \
+	gwygradient.h \
 	gwypalette.h \
 	gwypalettedef.h \
 	gwypixfield.h \
@@ -28,6 +29,7 @@ EXTRA_DIST = \
 libgwydraw_la_LDFLAGS = -version-info 2:0:1
 libgwydraw_la_SOURCES = \
 	gwydraw.c \
+	gwygradient.c \
 	gwypalette.c \
 	gwypalettedef.c \
 	gwypixfield.c \

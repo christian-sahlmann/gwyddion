@@ -30,6 +30,8 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
+
 #define GWY_TYPE_PALETTE_DEF                  (gwy_palette_def_get_type())
 #define GWY_PALETTE_DEF(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_PALETTE_DEF, GwyPaletteDef))
 #define GWY_PALETTE_DEF_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_PALETTE_DEF, GwyPaletteDef))
@@ -119,8 +121,9 @@ GwyPaletteDef* gwy_palette_def_parse            (const gchar *text,
 
 #define gwy_palette_def_is_set(pd) (GWY_PALETTE_DEF(pd)->data->len)
 
-G_END_DECLS
+#endif
 
+G_END_DECLS
 
 #endif /*__GWY_PALETTE_DEF_H__*/
 

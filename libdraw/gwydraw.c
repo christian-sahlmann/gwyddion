@@ -40,6 +40,7 @@ gwy_draw_type_init(void)
 
     gwy_process_type_init();
 
+    types_initialized += gwy_gradient_get_type();
     types_initialized += gwy_palette_get_type();
     types_initialized += gwy_palette_def_get_type();
     types_initialized |= 1;
