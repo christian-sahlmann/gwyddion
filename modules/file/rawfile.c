@@ -1066,13 +1066,14 @@ rawfile_dialog_preset_page(RawFileArgs *args,
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(columns[i].name,
+        column = gtk_tree_view_column_new_with_attributes(_(columns[i].name),
                                                           renderer,
                                                           NULL);
-        gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                                rawfile_preset_cell_renderer,
-                                                GUINT_TO_POINTER(columns[i].value),
-                                                NULL);  /* destroy notify */
+        gtk_tree_view_column_set_cell_data_func
+                                         (column, renderer,
+                                          rawfile_preset_cell_renderer,
+                                          GUINT_TO_POINTER(columns[i].value),
+                                          NULL);  /* destroy notify */
         gtk_tree_view_append_column(GTK_TREE_VIEW(controls->presetlist),
                                     column);
     }
