@@ -224,12 +224,12 @@ dialog_update(GwyUnitoolState *state,
 
     for (i = 0; i < 6; i++) {
         if (i < 2*nselected) {
-            gwy_unitool_update_label(state->coord_units,
+            gwy_unitool_update_label(state->coord_format,
                                      controls->coords[i], points[i]);
             if (i%2 == 0) {
                 val = gwy_unitool_get_z_average(dfield, points[i], points[i+1],
                                                 radius);
-                gwy_unitool_update_label(state->value_units,
+                gwy_unitool_update_label(state->value_format,
                                          controls->values[i/2], val);
             }
         }

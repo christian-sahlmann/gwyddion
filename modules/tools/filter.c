@@ -161,7 +161,7 @@ dialog_create(GwyUnitoolState *state)
     settings = gwy_app_settings_get();
     load_args(settings, controls);
     
-    units = state->coord_units;
+    units = state->coord_format;
 
     dialog = gtk_dialog_new_with_buttons(_("Filtering"),
                                          NULL,
@@ -362,7 +362,7 @@ dialog_update(GwyUnitoolState *state,
     is_visible = state->is_visible;
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_units;
+    units = state->coord_format;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));

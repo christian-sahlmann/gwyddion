@@ -202,10 +202,10 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     if (is_selected) {
-        gwy_unitool_update_label(state->coord_units, controls->x, xy[0]);
-        gwy_unitool_update_label(state->coord_units, controls->y, xy[1]);
+        gwy_unitool_update_label(state->coord_format, controls->x, xy[0]);
+        gwy_unitool_update_label(state->coord_format, controls->y, xy[1]);
         value = gwy_unitool_get_z_average(dfield, xy[0], xy[1], radius);
-        gwy_unitool_update_label(state->value_units, controls->val, value);
+        gwy_unitool_update_label(state->value_format, controls->val, value);
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls->x), "");

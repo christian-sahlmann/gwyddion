@@ -190,7 +190,7 @@ dialog_update(GwyUnitoolState *state,
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_units;
+    units = state->coord_format;
 
     is_visible = state->is_visible;
     is_selected = gwy_vector_layer_get_selection(state->layer, sel);

@@ -131,7 +131,7 @@ dialog_create(GwyUnitoolState *state)
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_units;
+    units = state->coord_format;
 
     dialog = gtk_dialog_new_with_buttons(_("Statistical quantities"),
                                          NULL,
@@ -278,7 +278,7 @@ dialog_update(GwyUnitoolState *state)
     is_visible = state->is_visible;
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_units;
+    units = state->coord_format;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -302,7 +302,7 @@ dialog_update(GwyUnitoolState *state)
     gtk_label_set_text(GTK_LABEL(controls->skew), buffer);
     g_snprintf(buffer, sizeof(buffer), "%2.3e", kurtosis);
     gtk_label_set_text(GTK_LABEL(controls->kurtosis), buffer);
-    gwy_unitool_update_label(state->value_units, controls->avg, avg);
+    gwy_unitool_update_label(state->value_format, controls->avg, avg);
 
     if (!is_visible && !is_selected)
         return;

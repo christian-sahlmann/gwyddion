@@ -267,7 +267,7 @@ update_labels(GwyUnitoolState *state)
     gchar buffer[64];
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_units;
+    units = state->coord_format;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
