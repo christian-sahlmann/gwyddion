@@ -134,7 +134,7 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
     gobject_class->finalize = gwy_graph_model_finalize;
     gobject_class->set_property = gwy_graph_model_set_property;
     gobject_class->get_property = gwy_graph_model_get_property;
-                                                                                                                                                                    
+
 
     g_object_class_install_property(gobject_class,
                                     PROP_N,
@@ -549,7 +549,7 @@ gwy_graph_model_duplicate(GObject *object)
 }
 
 
-static void     
+static void
 gwy_graph_model_set_property  (GObject *object,
                                                guint prop_id,
                                                const GValue *value,
@@ -557,7 +557,7 @@ gwy_graph_model_set_property  (GObject *object,
 {
 }
 
-static void     
+static void
 gwy_graph_model_get_property  (GObject*object,
                                                guint prop_id,
                                                GValue *value,
@@ -566,39 +566,39 @@ gwy_graph_model_get_property  (GObject*object,
 }
 
 
-void       
+void
 gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
 {
     GObject **newcurves;
     gint i;
-    
+
     newcurves = g_new(GObject*, gmodel->ncurves+1);
-    
+
     for (i = 0; i < gmodel->ncurves; i++)
     {
         newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
         g_object_unref(gmodel->curves[i]);
     }
     newcurves[i] = gwy_serializable_duplicate(curve);
- 
+
     gmodel->curves = newcurves;
-    
+
     gmodel->ncurves++;
-   
+
     g_object_notify(G_OBJECT(gmodel), "n");
 }
 
 gint
 gwy_graph_model_get_n_curves(GwyGraphModel *gmodel)
 {
-    
+
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), 0);
 
     if (gmodel->graph)
         return gwy_graph_get_number_of_curves(gmodel->graph);
     else
         return gmodel->ncurves;
-        
+
 }
 
 
@@ -606,16 +606,16 @@ void
 gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
 {
     gint i;
-    
+
     for (i = 0; i < gmodel->ncurves; i++)
         g_object_unref(gmodel->curves[i]);
-    g_free(gmodel->curves);    
+    g_free(gmodel->curves);
 
-    
+
     gmodel->ncurves = 0;
-    
+
     g_object_notify(G_OBJECT(gmodel), "n");
-    
+
 }
 
 

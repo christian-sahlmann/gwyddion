@@ -43,7 +43,7 @@ typedef struct {
     GtkWidget *direction;
     GwyInterpolationType interp;
     GwySFOutputType out;
-    GtkOrientation dir;
+    GwyOrientation dir;
 } ToolControls;
 
 static gboolean   module_register      (const gchar *name);
@@ -218,8 +218,8 @@ dialog_create(GwyUnitoolState *state)
     row++;
 
     controls->direction
-        = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
-                                    controls, controls->dir);
+        = gwy_option_menu_orientation(G_CALLBACK(direction_changed_cb),
+                                      controls, controls->dir);
     gtk_table_attach(GTK_TABLE(table), controls->direction, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
@@ -382,7 +382,8 @@ static void
 direction_changed_cb(GObject *item, ToolControls *controls)
 {
     gwy_debug("");
-    controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
+    controls->dir = GPOINTER_TO_INT(g_object_get_data(item,
+                                                      "orientation-type"));
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 

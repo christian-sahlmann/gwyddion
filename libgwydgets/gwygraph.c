@@ -143,10 +143,10 @@ gwy_graph_init(GwyGraph *graph)
     gtk_table_set_row_spacings (GTK_TABLE (graph), 0);
     gtk_table_set_col_spacings (GTK_TABLE (graph), 0);
 
-    graph->axis_top = GWY_AXIS (gwy_axis_new(GWY_AXIS_SOUTH, 2.24, 5.21, "x"));
-    graph->axis_bottom = GWY_AXIS (gwy_axis_new(GWY_AXIS_NORTH, 2.24, 5.21, "x"));
-    graph->axis_left = GWY_AXIS (gwy_axis_new(GWY_AXIS_EAST, 100, 500, "y"));
-    graph->axis_right = GWY_AXIS (gwy_axis_new(GWY_AXIS_WEST, 100, 500, "y"));
+    graph->axis_top = GWY_AXIS (gwy_axis_new(GTK_POS_BOTTOM, 2.24, 5.21, "x"));
+    graph->axis_bottom = GWY_AXIS (gwy_axis_new(GTK_POS_TOP, 2.24, 5.21, "x"));
+    graph->axis_left = GWY_AXIS (gwy_axis_new(GTK_POS_RIGHT, 100, 500, "y"));
+    graph->axis_right = GWY_AXIS (gwy_axis_new(GTK_POS_LEFT, 100, 500, "y"));
 
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->axis_top), 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);

@@ -206,12 +206,12 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field,
         return;
     }
 
-    if (*state == GWY_COMP_INIT) {
+    if (*state == GWY_COMPUTATION_STATE_INIT) {
         gwy_data_field_fill(score, -1);
-        *state = GWY_COMP_ITERATE;
+        *state = GWY_COMPUTATION_STATE_ITERATE;
         *iteration = 0;
     }
-    else if (*state == GWY_COMP_ITERATE) {
+    else if (*state == GWY_COMPUTATION_STATE_ITERATE) {
         if (iteration == 0)
             i = (kxres/2);
         else
@@ -225,7 +225,7 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field,
         }
         *iteration = i + 1;
         if (*iteration == (xres - kxres/2 - 1))
-            *state = GWY_COMP_FINISHED;
+            *state = GWY_COMPUTATION_STATE_FINISHED;
     }
 
     gwy_data_field_invalidate(score);
@@ -375,7 +375,7 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
  * @window_width: Correlation window width.
  * @window_height: Correlation window height.
  * @state: State of iteration.  It is updated to new state.
- * @iteration: Iteration of computation loop (within GWY_COMP_ITERATE state).
+ * @iteration: Iteration of computation loop (within GWY_COMPUTATION_STATE_ITERATE state).
  *
  * Algorithm for matching two different images of the same object under changes.
  *
@@ -411,14 +411,14 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
 
     g_return_if_fail(xres == data_field2->xres && yres == data_field2->yres);
 
-    if (*state == GWY_COMP_INIT) {
+    if (*state == GWY_COMPUTATION_STATE_INIT) {
         gwy_data_field_clear(x_dist);
         gwy_data_field_clear(y_dist);
         gwy_data_field_clear(score);
-        *state = GWY_COMP_ITERATE;
+        *state = GWY_COMPUTATION_STATE_ITERATE;
         *iteration = 0;
     }
-    else if (*state == GWY_COMP_ITERATE) {
+    else if (*state == GWY_COMPUTATION_STATE_ITERATE) {
         if (iteration == 0)
             i = (search_width/2);
         else
@@ -463,7 +463,7 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
         }
         *iteration = i + 1;
         if (*iteration == (xres - search_height/2))
-            *state = GWY_COMP_FINISHED;
+            *state = GWY_COMPUTATION_STATE_FINISHED;
     }
 
     gwy_data_field_invalidate(score);

@@ -264,7 +264,7 @@ crosscor_window_construct(CrosscorArgs *args,
     gwy_table_attach_hscale(table, row, _("_Output type:"), NULL,
                             GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
     row++;
-    
+
     /*do mask of thresholds*/
     controls->add_ls_mask = gtk_check_button_new_with_mnemonic
                                 (_("Add _low score results mask"));
@@ -309,7 +309,7 @@ crosscor_operation_cb(GtkWidget *item, CrosscorArgs *args)
         = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "operation"));
 }
 
-static void       
+static void
 mask_changed_cb(GtkToggleButton *button, CrosscorArgs *args)
 {
     args->add_ls_mask = gtk_toggle_button_get_active(button);
@@ -428,7 +428,7 @@ crosscor_do(CrosscorArgs *args)
     /*compute crosscorelation */
 
     iteration = 0;
-    state = GWY_COMP_INIT;
+    state = GWY_COMPUTATION_STATE_INIT;
     gwy_app_wait_start(GTK_WIDGET(args->win1),
                        "Initializing...");
     do {
@@ -442,12 +442,12 @@ crosscor_do(CrosscorArgs *args)
                 (iteration/(gdouble)(dfield1->xres - (args->search_x)/2)))
         {
             g_object_unref(dfieldx);
-            g_object_unref(dfieldy);    
-            g_object_unref(score);    
+            g_object_unref(dfieldy);
+            g_object_unref(score);
             return FALSE;
         }
 
-    } while (state != GWY_COMP_FINISHED);
+    } while (state != GWY_COMPUTATION_STATE_FINISHED);
     gwy_app_wait_finish();
     /*set right output */
 

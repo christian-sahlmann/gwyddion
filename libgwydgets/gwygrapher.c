@@ -40,8 +40,8 @@ static void     gwy_grapher_size_allocate        (GtkWidget *widget,
                                                 GtkAllocation *allocation);
 static void     rescaled_cb                    (GtkWidget *widget,
                                                 GwyGrapher *grapher);
-static void     replot_cb                        (GObject *gobject, 
-                                                  GParamSpec *arg1, 
+static void     replot_cb                        (GObject *gobject,
+                                                  GParamSpec *arg1,
                                                   GwyGrapher *grapher);
 static GtkWidgetClass *parent_class = NULL;
 
@@ -126,14 +126,14 @@ gwy_grapher_init(GwyGrapher *grapher)
     gtk_table_set_row_spacings (GTK_TABLE (grapher), 0);
     gtk_table_set_col_spacings (GTK_TABLE (grapher), 0);
 
-    grapher->axis_top = GWY_AXISER(gwy_axiser_new(GWY_AXISER_SOUTH, 2.24, 5.21, "x"));
-    grapher->axis_bottom = GWY_AXISER(gwy_axiser_new(GWY_AXISER_NORTH, 2.24, 5.21, "x"));
-    grapher->axis_left = GWY_AXISER(gwy_axiser_new(GWY_AXISER_EAST, 100, 500, "y"));
-    grapher->axis_right = GWY_AXISER(gwy_axiser_new(GWY_AXISER_WEST, 100, 500, "y"));
+    grapher->axis_top = GWY_AXISER(gwy_axiser_new(GTK_POS_BOTTOM, 2.24, 5.21, "x"));
+    grapher->axis_bottom = GWY_AXISER(gwy_axiser_new(GTK_POS_TOP, 2.24, 5.21, "x"));
+    grapher->axis_left = GWY_AXISER(gwy_axiser_new(GTK_POS_RIGHT, 100, 500, "y"));
+    grapher->axis_right = GWY_AXISER(gwy_axiser_new(GTK_POS_LEFT, 100, 500, "y"));
 
     g_signal_connect(grapher->axis_left, "rescaled", G_CALLBACK(rescaled_cb), grapher);
     g_signal_connect(grapher->axis_bottom, "rescaled", G_CALLBACK(rescaled_cb), grapher);
-    
+
 
     gtk_table_attach(GTK_TABLE (grapher), GTK_WIDGET(grapher->axis_top), 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
@@ -170,7 +170,7 @@ gwy_grapher_init(GwyGrapher *grapher)
 
     grapher->area = GWY_GRAPHER_AREA(gwy_grapher_area_new(NULL,NULL));
 
-    grapher->area->status = GWY_GRAPHER_STATUS_PLAIN;
+    grapher->area->status = GWY_GRAPH_STATUS_PLAIN;
 
     gtk_table_attach(GTK_TABLE (grapher), GTK_WIDGET(grapher->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
@@ -186,7 +186,7 @@ gwy_grapher_new(GwyGraphModel *gmodel)
     gwy_debug("");
 
     if (gmodel != NULL)
-       gwy_grapher_change_model(GWY_GRAPHER(grapher), gmodel);    
+       gwy_grapher_change_model(GWY_GRAPHER(grapher), gmodel);
     return grapher;
 }
 
@@ -215,20 +215,20 @@ gwy_grapher_enable_axis_label_edit(GwyGrapher *grapher, gboolean enable)
 
 /*refresh everything in graph according to the model: reset axis requirements,
  reset all points etc.*/
-void       
+void
 gwy_grapher_refresh(GwyGrapher *grapher)
 {
     GwyGraphModel *model;
     GwyGraphCurveModel *curvemodel;
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
     gint i, j;
-    
+
     if (grapher->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(grapher->graph_model);
 
     if (model->ncurves > 0)
     {
-    
+
         /*refresh axis and reset axis requirements*/
         x_reqmin = y_reqmin = G_MAXDOUBLE;
         x_reqmax = y_reqmax = -G_MAXDOUBLE;
@@ -256,10 +256,10 @@ gwy_grapher_refresh(GwyGrapher *grapher)
 
     /*refresh widgets*/
     gwy_grapher_area_refresh(grapher->area);
-    
+
 }
 
-static void 
+static void
 replot_cb(GObject *gobject, GParamSpec *arg1, GwyGrapher *grapher)
 {
     if (grapher == NULL || grapher->graph_model == NULL) return;
@@ -275,9 +275,9 @@ gwy_grapher_change_model(GwyGrapher *grapher, GwyGraphModel *gmodel)
     gwy_grapher_area_change_model(grapher->area, gmodel);
 }
 
-static void     
+static void
 rescaled_cb(GtkWidget *widget, GwyGrapher *grapher)
-{   
+{
     GwyGraphModel *model;
     if (grapher->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(grapher->graph_model);
@@ -291,15 +291,15 @@ rescaled_cb(GtkWidget *widget, GwyGrapher *grapher)
 
 
 void
-gwy_grapher_set_status(GwyGrapher *grapher, GwyGrapherStatusType status)
+gwy_grapher_set_status(GwyGrapher *grapher, GwyGraphStatusType status)
 {
     grapher->area->status = status;
 }
 
-gint       
+gint
 gwy_grapher_get_selection_number(GwyGrapher *grapher)
 {
-    if (grapher->area->status == GWY_GRAPHER_STATUS_XSEL)
+    if (grapher->area->status == GWY_GRAPH_STATUS_XSEL)
         return grapher->area->areasdata->data_areas->len;
     else return 0;
 }
@@ -310,17 +310,17 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
     gint i;
     GwyGrapherDataArea *data_area;
     GwyGrapherDataPoint *data_point;
-    
+
     if (selection == NULL) return;
 
     switch (grapher->area->status)
     {
-        case GWY_GRAPHER_STATUS_CURSOR:
+        case GWY_GRAPH_STATUS_CURSOR:
         selection[0] = grapher->area->cursordata->data_point.x;
         selection[0] = grapher->area->cursordata->data_point.y;
         break;
-        
-        case GWY_GRAPHER_STATUS_XSEL:    
+
+        case GWY_GRAPH_STATUS_XSEL:
         for (i = 0; i < grapher->area->areasdata->data_areas->len; i++)
         {
             data_area = &g_array_index(grapher->area->areasdata->data_areas, GwyGrapherDataArea, i);
@@ -329,7 +329,7 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
         }
         break;
 
-        case GWY_GRAPHER_STATUS_YSEL:
+        case GWY_GRAPH_STATUS_YSEL:
         for (i = 0; i < grapher->area->areasdata->data_areas->len; i++)
         {
             data_area = &g_array_index(grapher->area->areasdata->data_areas, GwyGrapherDataArea, i);
@@ -338,7 +338,7 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
         }
         break;
 
-        case GWY_GRAPHER_STATUS_POINTS:
+        case GWY_GRAPH_STATUS_POINTS:
         for (i = 0; i < grapher->area->pointsdata->data_points->len; i++)
         {
             data_point = &g_array_index(grapher->area->pointsdata->data_points, GwyGrapherDataPoint, i);
@@ -348,11 +348,11 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
         break;
 
         default:
-        g_assert_not_reached();   
+        g_assert_not_reached();
     }
 }
 
-void       
+void
 gwy_grapher_clear_selection(GwyGrapher *grapher)
 {
     gwy_grapher_area_clear_selection(grapher->area);

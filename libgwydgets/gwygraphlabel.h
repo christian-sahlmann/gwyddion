@@ -25,6 +25,8 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 
+#include <libgwydgets/gwydgetenums.h>
+
 G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAPH_LABEL            (gwy_graph_label_get_type())
@@ -36,25 +38,6 @@ G_BEGIN_DECLS
 
 typedef struct _GwyGraphLabel      GwyGraphLabel;
 typedef struct _GwyGraphLabelClass GwyGraphLabelClass;
-
-typedef enum {
-    GWY_GRAPH_LABEL_NORTHEAST = 0,
-    GWY_GRAPH_LABEL_NORTHWEST = 1,
-    GWY_GRAPH_LABEL_SOUTHEAST = 2,
-    GWY_GRAPH_LABEL_SOUTHWEST = 3,
-    GWY_GRAPH_LABEL_USER      = 4
-} GwyGraphLabelPosition;
-
-typedef enum {
-    GWY_GRAPH_POINT_SQUARE        = 0,
-    GWY_GRAPH_POINT_CROSS         = 1,
-    GWY_GRAPH_POINT_CIRCLE        = 2,
-    GWY_GRAPH_POINT_STAR          = 3,
-    GWY_GRAPH_POINT_TIMES         = 4,
-    GWY_GRAPH_POINT_TRIANGLE_UP   = 5,
-    GWY_GRAPH_POINT_TRIANGLE_DOWN = 6,
-    GWY_GRAPH_POINT_DIAMOND       = 7
-} GwyGraphPointType;
 
 /*single curve properties*/
 typedef struct {

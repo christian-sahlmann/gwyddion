@@ -233,8 +233,8 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
          g_param_spec_uint("movement_type",
                            "Movement type",
                            "What quantity is changed when uses moves pointer",
-                           GWY_3D_NONE, GWY_3D_LIGHT_MOVEMENT,
-                           GWY_3D_ROTATION,
+                           GWY_3D_MOVEMENT_NONE, GWY_3D_MOVEMENT_LIGHT,
+                           GWY_3D_MOVEMENT_ROTATION,
                            G_PARAM_READWRITE));
 
     /* FIXME: change to enum types, once we register them */
@@ -249,8 +249,9 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
          g_param_spec_uint("projection",
                            "Projection type",
                            "The type of 3D to 2D projection",
-                           GWY_3D_ORTHOGRAPHIC, GWY_3D_PERSPECTIVE,
-                           GWY_3D_ORTHOGRAPHIC,
+                           GWY_3D_PROJECTION_ORTHOGRAPHIC,
+                           GWY_3D_PROJECTION_PERSPECTIVE,
+                           GWY_3D_PROJECTION_ORTHOGRAPHIC,
                            G_PARAM_READWRITE));
 
     /**
@@ -303,7 +304,7 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
 
     gwy3dview->view_scale_max        = 3.0f;
     gwy3dview->view_scale_min        = 0.5f;
-    gwy3dview->movement              = GWY_3D_ROTATION;
+    gwy3dview->movement              = GWY_3D_MOVEMENT_ROTATION;
     gwy3dview->show_axes             = TRUE;
     gwy3dview->show_labels           = TRUE;
     gwy3dview->shape_list_base       = -1;
@@ -807,7 +808,7 @@ gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
                                      gradstr);
     g_object_unref(old);
 
-    if (gwy3dview->visual == GWY_3D_GRADIENT)
+    if (gwy3dview->visual == GWY_3D_VISUALIZATION_GRADIENT)
         gwy_3d_view_update_lists(gwy3dview);
 }
 
@@ -825,7 +826,7 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
 {
-    if (gwy3dview->visual == GWY_3D_GRADIENT)
+    if (gwy3dview->visual == GWY_3D_VISUALIZATION_GRADIENT)
         gwy_3d_view_update_lists(gwy3dview);
 }
 
@@ -856,7 +857,7 @@ gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
 Gwy3DMovement
 gwy_3d_view_get_movement_type(Gwy3DView *gwy3dview)
 {
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), GWY_3D_NONE);
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), GWY_3D_MOVEMENT_NONE);
     return gwy3dview->movement;
 }
 
@@ -872,7 +873,7 @@ gwy_3d_view_set_movement_type(Gwy3DView *gwy3dview,
                               Gwy3DMovement movement)
 {
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    g_return_if_fail(movement <= GWY_3D_LIGHT_MOVEMENT);
+    g_return_if_fail(movement <= GWY_3D_MOVEMENT_LIGHT);
 
     gwy3dview->movement = movement;
 }
@@ -904,8 +905,8 @@ gwy_3d_view_set_projection(Gwy3DView *gwy3dview,
                            Gwy3DProjection projection)
 {
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    g_return_if_fail((gint)projection >= GWY_3D_ORTHOGRAPHIC
-                     && (gint)projection <= GWY_3D_PERSPECTIVE);
+    g_return_if_fail((gint)projection >= GWY_3D_PROJECTION_ORTHOGRAPHIC
+                     && (gint)projection <= GWY_3D_PROJECTION_PERSPECTIVE);
 
     if (projection == gwy3dview->projection)
         return;
@@ -1668,7 +1669,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glScalef(1.0f, 1.0f, gwy3D->deformation_z->value);
 
     /* Render shape */
-    if (gwy3D->visual == GWY_3D_LIGHTING) {
+    if (gwy3D->visual == GWY_3D_VISUALIZATION_LIGHTING) {
         glEnable(GL_LIGHTING);
         gwy_3d_view_glMaterialdv(GL_FRONT, GL_AMBIENT,
                                  gwy3D->mat_current->ambient);
@@ -1692,7 +1693,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glCallList(gwy3D->shape_list_base + gwy3D->shape_current);
     gwy_3d_draw_axes(gwy3D);
 
-    if (gwy3D->movement == GWY_3D_LIGHT_MOVEMENT
+    if (gwy3D->movement == GWY_3D_MOVEMENT_LIGHT
           && gwy3D->shape_current == GWY_3D_SHAPE_REDUCED)
         gwy_3d_draw_light_position(gwy3D);
 
@@ -1761,10 +1762,10 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
     /* Rotation. */
     if (event->state & GDK_BUTTON1_MASK)
         switch (gwy3dview->movement) {
-            case GWY_3D_NONE:
+            case GWY_3D_MOVEMENT_NONE:
             break;
 
-            case GWY_3D_ROTATION:
+            case GWY_3D_MOVEMENT_ROTATION:
                 gtk_adjustment_set_value(gwy3dview->rot_x,
                                          gwy3dview->rot_x->value
                                          + x - gwy3dview->mouse_begin_x);
@@ -1773,7 +1774,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
                                          + y - gwy3dview->mouse_begin_y);
                 break;
 
-            case GWY_3D_SCALE:
+            case GWY_3D_MOVEMENT_SCALE:
                 gtk_adjustment_set_value(gwy3dview->view_scale,
                                          gwy3dview->view_scale->value
                                          *(1.0
@@ -1787,7 +1788,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
                                              gwy3dview->view_scale_min);
                 break;
 
-            case GWY_3D_DEFORMATION:
+            case GWY_3D_MOVEMENT_DEFORMATION:
             {
                 int i;
                 double dz = gwy3dview->deformation_z->value;
@@ -1801,7 +1802,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
                 gtk_adjustment_set_value(gwy3dview->deformation_z, dz);
                 break;
             }
-            case GWY_3D_LIGHT_MOVEMENT:
+            case GWY_3D_MOVEMENT_LIGHT:
                 gtk_adjustment_set_value(gwy3dview->light_z,
                                          gwy3dview->light_z->value
                                          + x - gwy3dview->mouse_begin_x);
@@ -2249,7 +2250,7 @@ static void gwy_3d_set_projection(Gwy3DView *widget)
     if (w > h) {
         aspect = w / h;
         switch (widget->projection) {
-            case GWY_3D_ORTHOGRAPHIC:
+            case GWY_3D_PROJECTION_ORTHOGRAPHIC:
             glOrtho(-aspect * GWY_3D_ORTHO_CORRECTION,
                      aspect * GWY_3D_ORTHO_CORRECTION,
                      -1.0   * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
@@ -2258,7 +2259,7 @@ static void gwy_3d_set_projection(Gwy3DView *widget)
                       60.0);
             break;
 
-            case GWY_3D_PERSPECTIVE:
+            case GWY_3D_PROJECTION_PERSPECTIVE:
             glFrustum(-aspect, aspect, -1.0 , 1.0, 5.0, 60.0);
             break;
         }
@@ -2266,7 +2267,7 @@ static void gwy_3d_set_projection(Gwy3DView *widget)
     else {
         aspect = h / w;
         switch (widget->projection) {
-            case GWY_3D_ORTHOGRAPHIC:
+            case GWY_3D_PROJECTION_ORTHOGRAPHIC:
             glOrtho( -1.0   * GWY_3D_ORTHO_CORRECTION,
                       1.0   * GWY_3D_ORTHO_CORRECTION,
                     -aspect * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
@@ -2275,7 +2276,7 @@ static void gwy_3d_set_projection(Gwy3DView *widget)
                       60.0);
             break;
 
-            case GWY_3D_PERSPECTIVE:
+            case GWY_3D_PROJECTION_PERSPECTIVE:
             glFrustum(-1.0, 1.0, -aspect, aspect, 5.0, 60.0);
             break;
         }
@@ -2458,13 +2459,14 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
 }
 
 /************************** Documentation ****************************/
+
 /**
  * Gwy3DMovement:
- * @GWY_3D_NONE: View cannot be changed by user.
- * @GWY_3D_ROTATION: View can be rotated.
- * @GWY_3D_SCALE: View can be scaled.
- * @GWY_3D_DEFORMATION: View can be scaled.
- * @GWY_3D_LIGHT_MOVEMENT: Light position can be changed.
+ * @GWY_3D_MOVEMENT_NONE: View cannot be changed by user.
+ * @GWY_3D_MOVEMENT_ROTATION: View can be rotated.
+ * @GWY_3D_MOVEMENT_SCALE: View can be scaled.
+ * @GWY_3D_MOVEMENT_DEFORMATION: View can be scaled.
+ * @GWY_3D_MOVEMENT_LIGHT: Light position can be changed.
  *
  * The type of 3D view change that happens when user drags it with mouse.
  */

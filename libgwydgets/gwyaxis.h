@@ -25,15 +25,10 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 
+#include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwyaxisdialog.h>
 
 G_BEGIN_DECLS
-
-/* FIXME more */
-#define GWY_AXIS_NORTH   GTK_POS_TOP
-#define GWY_AXIS_SOUTH   GTK_POS_BOTTOM
-#define GWY_AXIS_EAST    GTK_POS_LEFT
-#define GWY_AXIS_WEST    GTK_POS_RIGHT
 
 #define GWY_TYPE_AXIS            (gwy_axis_get_type())
 #define GWY_AXIS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_AXIS, GwyAxis))
@@ -44,13 +39,6 @@ G_BEGIN_DECLS
 
 typedef struct _GwyAxis      GwyAxis;
 typedef struct _GwyAxisClass GwyAxisClass;
-
-typedef enum {
-    GWY_AXIS_FLOAT = 1,
-    GWY_AXIS_EXP,
-    GWY_AXIS_INT,
-    GWY_AXIS_AUTO
-} GwyAxisScaleFormat;
 
 typedef struct {
     gdouble value;      /*tick value*/

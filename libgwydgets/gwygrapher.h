@@ -94,10 +94,10 @@ GType      gwy_grapher_get_type(void) G_GNUC_CONST;
 
 void       gwy_grapher_refresh(GwyGrapher *grapher);
 
-void       gwy_grapher_change_model(GwyGrapher *grapher, 
+void       gwy_grapher_change_model(GwyGrapher *grapher,
                                     GwyGraphModel *gmodel);
 void       gwy_grapher_set_status(GwyGrapher *grapher,
-                                  GwyGrapherStatusType status);
+                                  GwyGraphStatusType status);
 
 gint       gwy_grapher_get_selection_number(GwyGrapher *grapher);
 void       gwy_grapher_get_selection(GwyGrapher *grapher,

@@ -24,16 +24,11 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
+#include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwyaxisdialog.h>
 
 
 G_BEGIN_DECLS
-
-/* FIXME more */
-#define GWY_AXISER_NORTH   GTK_POS_TOP
-#define GWY_AXISER_SOUTH   GTK_POS_BOTTOM
-#define GWY_AXISER_EAST    GTK_POS_LEFT
-#define GWY_AXISER_WEST    GTK_POS_RIGHT
 
 #define GWY_TYPE_AXISER            (gwy_axiser_get_type())
 #define GWY_AXISER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_AXISER, GwyAxiser))
@@ -44,13 +39,6 @@ G_BEGIN_DECLS
 
 typedef struct _GwyAxiser      GwyAxiser;
 typedef struct _GwyAxiserClass GwyAxiserClass;
-
-typedef enum {
-    GWY_AXISER_FLOAT = 1,
-    GWY_AXISER_EXP,
-    GWY_AXISER_INT,
-    GWY_AXISER_AUTO
-} GwyAxiserScaleFormat;
 
 typedef struct {
     gdouble value;      /*tick value*/
@@ -66,7 +54,7 @@ typedef struct {
     gint major_length;
     gint major_thickness;
     gint major_maxticks;
-    GwyAxiserScaleFormat major_printmode;
+    GwyAxisScaleFormat major_printmode;
 
     gint minor_length;
     gint minor_thickness;
@@ -116,7 +104,7 @@ struct _GwyAxiserClass {
 
     void (*label_updated)(GwyAxiser *axiser);
     void (*rescaled)(GwyAxiser *axiser);
-        
+
     gpointer reserved1;
     gpointer reserved2;
 };

@@ -22,18 +22,9 @@
 #define __GWY_PROCESS_INTERPOLATION_H__
 
 #include <glib.h>
+#include <libprocess/gwyprocessenums.h>
 
 G_BEGIN_DECLS
-
-typedef enum {
-  GWY_INTERPOLATION_NONE      = 0,
-  GWY_INTERPOLATION_ROUND     = 1,
-  GWY_INTERPOLATION_BILINEAR  = 2,
-  GWY_INTERPOLATION_KEY       = 3,
-  GWY_INTERPOLATION_BSPLINE   = 4,
-  GWY_INTERPOLATION_OMOMS     = 5,
-  GWY_INTERPOLATION_NNA       = 6
-} GwyInterpolationType;
 
 gdouble gwy_interpolation_get_dval(gdouble x,
                                    gdouble x1_,

@@ -52,13 +52,13 @@
 #ifndef __GWY_RULER_H__
 #define __GWY_RULER_H__
 
-
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
+
 #include <libgwyddion/gwysiunit.h>
+#include <libgwydgets/gwydgetenums.h>
 
 G_BEGIN_DECLS
-
 
 #define GWY_TYPE_RULER            (gwy_ruler_get_type())
 #define GWY_RULER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_RULER, GwyRuler))
@@ -70,11 +70,6 @@ G_BEGIN_DECLS
 
 typedef struct _GwyRuler        GwyRuler;
 typedef struct _GwyRulerClass   GwyRulerClass;
-
-typedef enum {
-    GWY_UNITS_PLACEMENT_NONE,
-    GWY_UNITS_PLACEMENT_AT_ZERO
-} GwyUnitsPlacement;
 
 struct _GwyRuler
 {

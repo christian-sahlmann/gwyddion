@@ -25,16 +25,6 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-    GWY_SYMMETRY_AUTO = 0,
-    GWY_SYMMETRY_PARALLEL,
-    GWY_SYMMETRY_TRIANGULAR,
-    GWY_SYMMETRY_SQUARE,
-    GWY_SYMMETRY_RHOMBIC,
-    GWY_SYMMETRY_HEXAGONAL,
-    GWY_SYMMETRY_LAST
-} GwyPlaneSymmetry;
-
 void gwy_data_field_correct_laplace_iteration (GwyDataField *data_field,
                                                GwyDataField *mask_field,
                                                GwyDataField *buffer_field,

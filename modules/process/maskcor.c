@@ -307,7 +307,7 @@ maskcor_do(MaskcorArgs *args)
     kernelfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(kernel,
                                                                   "/0/data"));
 
-    state = GWY_COMP_INIT;
+    state = GWY_COMPUTATION_STATE_INIT;
     gwy_app_wait_start(GTK_WIDGET(args->win1), "Initializing...");
     do {
         gwy_data_field_correlate_iteration(dfield, kernelfield, retfield,
@@ -317,7 +317,7 @@ maskcor_do(MaskcorArgs *args)
                 (iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2)))
             return FALSE;
 
-    } while (state != GWY_COMP_FINISHED);
+    } while (state != GWY_COMPUTATION_STATE_FINISHED);
     gwy_app_wait_finish();
 
     /*score - do new data with score*/

@@ -25,14 +25,6 @@
 
 G_BEGIN_DECLS
 
-/* XXX */
-typedef enum {
-    GWY_TIP_PYRAMIDE       = 0,
-    GWY_TIP_CONTACT        = 1,
-    GWY_TIP_NONCONTACT     = 2,
-    GWY_TIP_DELTA          = 3
-} GwyTipType;
-
 typedef gboolean (*GwySetFractionFunc)(gdouble fraction);
 typedef gboolean (*GwySetMessageFunc)(const gchar *message);
 
@@ -60,6 +52,7 @@ struct _GwyTipModelPreset {
 };
 
 
+/* XXX: remove presets, each tip type is quite different */
 gint             gwy_tip_model_get_npresets(void);
 
 G_CONST_RETURN

@@ -24,6 +24,8 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include "dataline.h"
+#include "interpolation.h"
+#include "simplefft.h"
 
 #define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
 

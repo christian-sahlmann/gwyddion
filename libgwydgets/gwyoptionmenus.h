@@ -25,12 +25,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwynlfit.h>
-#include <libprocess/datafield.h>
-#include <libprocess/dwt.h>
-#include <libprocess/cwt.h>
-#include <libprocess/grains.h>
-#include <libgwydgets/gwydatawindow.h>
-#include <libgwydgets/gwyglmaterial.h>
+#include <libprocess/gwyprocessenums.h>
 
 G_BEGIN_DECLS
 
@@ -50,12 +45,6 @@ GtkWidget* gwy_option_menu_interpolation     (GCallback callback,
 GtkWidget* gwy_option_menu_windowing         (GCallback callback,
                                               gpointer cbdata,
                                               GwyWindowingType current);
-#ifndef GWY_DISABLE_DEPRECATED
-/* Zoom mode is nowhere used anyway. */
-GtkWidget* gwy_option_menu_zoom_mode         (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyZoomMode current);
-#endif
 GtkWidget* gwy_option_menu_2dcwt             (GCallback callback,
                                               gpointer cbdata,
                                               Gwy2DCWTWaveletType current);
@@ -65,16 +54,12 @@ GtkWidget* gwy_option_menu_dwt                (GCallback callback,
 GtkWidget* gwy_option_menu_sfunctions_output (GCallback callback,
                                               gpointer cbdata,
                                               GwySFOutputType current);
-#ifndef GWY_DISABLE_DEPRECATED
-/* This should not use GtkOrientation, but GwyDirection (new type) */
-GtkWidget* gwy_option_menu_direction         (GCallback callback,
+GtkWidget* gwy_option_menu_orientation       (GCallback callback,
                                               gpointer cbdata,
-                                              GtkOrientation current);
-/* Option menus for enums that should not be public at the first place */
-GtkWidget* gwy_option_menu_mergegrain        (GCallback callback,
+                                              GwyOrientation current);
+GtkWidget* gwy_option_menu_merge_type        (GCallback callback,
                                               gpointer cbdata,
                                               GwyMergeType current);
-#endif
 GtkWidget* gwy_option_menu_metric_unit       (GCallback callback,
                                               gpointer cbdata,
                                               gint from,

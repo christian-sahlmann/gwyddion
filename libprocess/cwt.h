@@ -22,13 +22,9 @@
 #define __GWY_PROCESS_CWT_H__
 
 #include <glib.h>
+#include <libprocess/gwyprocessenums.h>
 
 G_BEGIN_DECLS
-
-typedef enum {
-  GWY_2DCWT_GAUSS       = 0,
-  GWY_2DCWT_HAT         = 1
-} Gwy2DCWTWaveletType;
 
 gdouble gwy_cwt_wfunc_2d(gdouble scale,
                          gdouble mval,

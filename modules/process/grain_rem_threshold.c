@@ -22,7 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/grains.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
@@ -246,7 +246,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls.merge = gwy_option_menu_mergegrain(NULL, NULL, args->merge_type);
+    controls.merge = gwy_option_menu_merge_type(NULL, NULL, args->merge_type);
     gwy_table_attach_hscale(table, row, _("_Selection mode:"), NULL,
                             GTK_OBJECT(controls.merge), GWY_HSCALE_WIDGET);
     row++;
@@ -324,7 +324,7 @@ remove_dialog_update_controls(RemoveControls *controls,
                                  args->is_height);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_area),
                                  args->is_area);
-    gwy_option_menu_set_history(controls->merge, "mergegrain-type",
+    gwy_option_menu_set_history(controls->merge, "merge-type",
                                 args->merge_type);
 }
 
@@ -343,7 +343,7 @@ remove_dialog_update_args(RemoveControls *controls,
     args->area
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
     args->merge_type = gwy_option_menu_get_history(controls->merge,
-                                                   "mergegrain-type");
+                                                   "merge-type");
 }
 
 static void

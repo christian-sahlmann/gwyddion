@@ -22,7 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/grains.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
@@ -268,7 +268,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                      G_CALLBACK(mark_invalidate), &controls);
     row++;
 
-    controls.merge = gwy_option_menu_mergegrain(G_CALLBACK(mark_invalidate),
+    controls.merge = gwy_option_menu_merge_type(G_CALLBACK(mark_invalidate),
                                                 &controls, args->merge_type);
     gwy_table_attach_hscale(table, row, _("Mer_ge mode:"), NULL,
                             GTK_OBJECT(controls.merge), GWY_HSCALE_WIDGET);
@@ -360,7 +360,7 @@ mark_dialog_update_controls(MarkControls *controls,
                                  args->is_slope);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_lap),
                                  args->is_lap);
-    gwy_option_menu_set_history(controls->merge, "mergegrain-type",
+    gwy_option_menu_set_history(controls->merge, "merge-type",
                                 args->merge_type);
 }
 
@@ -383,7 +383,7 @@ mark_dialog_update_values(MarkControls *controls,
     args->is_lap
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_lap));
     args->merge_type
-        = gwy_option_menu_get_history(controls->merge, "mergegrain-type");
+        = gwy_option_menu_get_history(controls->merge, "merge-type");
 }
 
 static void

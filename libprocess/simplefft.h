@@ -22,18 +22,9 @@
 #define __GWY_PROCESS_SIMPLEFFT_H__
 
 #include <glib.h>
+#include <libprocess/gwyprocessenums.h>
 
 G_BEGIN_DECLS
-
-typedef enum {
-  GWY_WINDOWING_NONE       = 0,
-  GWY_WINDOWING_HANN       = 1,
-  GWY_WINDOWING_HAMMING    = 2,
-  GWY_WINDOWING_BLACKMANN  = 3,
-  GWY_WINDOWING_LANCZOS    = 4,
-  GWY_WINDOWING_WELCH      = 5,
-  GWY_WINDOWING_RECT       = 6
-} GwyWindowingType;
 
 gint gwy_fft_hum(gint dir,
                  gdouble *re_in,

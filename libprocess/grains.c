@@ -274,7 +274,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                           gboolean prefilter,
                                           gboolean below)
 {
-    if (status->state == GWY_WSHED_INIT) {
+    if (status->state == GWY_WATERSHED_STATE_INIT) {
         status->min = gwy_data_field_new_alike(data_field->xres, TRUE);
         status->water = gwy_data_field_new_alike(data_field, TRUE);
         status->mark_dfield = gwy_data_field_duplicate(data_field);
@@ -288,30 +288,30 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
         gwy_data_field_clear(grain_field);
 
 
-        status->state = GWY_WSHED_LOCATE;
+        status->state = GWY_WATERSHED_STATE_LOCATE;
         status->internal_i = 0;
     }
 
     /* odrop */
-    if (status->state == GWY_WSHED_LOCATE) {
+    if (status->state == GWY_WATERSHED_STATE_LOCATE) {
         if (status->internal_i < locate_steps) {
             drop_step(status->mark_dfield, status->water, locate_dropsize);
             status->internal_i += 1;
         }
         else {
-            status->state = GWY_WSHED_MIN;
+            status->state = GWY_WATERSHED_STATE_MIN;
             status->internal_i = 0;
         }
     }
 
-    if (status->state == GWY_WSHED_MIN) {
+    if (status->state == GWY_WATERSHED_STATE_MIN) {
         drop_minima(status->water, status->min, locate_thresh);
-        status->state = GWY_WSHED_WSHED;
+        status->state = GWY_WATERSHED_STATE_WATERSHED;
         status->internal_i = 0;
     }
 
 
-    if (status->state == GWY_WSHED_WSHED) {
+    if (status->state == GWY_WATERSHED_STATE_WATERSHED) {
         if (status->internal_i == 0) {
             gwy_data_field_area_copy(data_field, status->mark_dfield, 0, 0,
                                      data_field->xres, data_field->yres, 0, 0);
@@ -324,19 +324,19 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
             status->internal_i += 1;
         }
         else {
-            status->state = GWY_WSHED_MARK;
+            status->state = GWY_WATERSHED_STATE_MARK;
             status->internal_i = 0;
         }
     }
 
-    if (status->state == GWY_WSHED_MARK) {
+    if (status->state == GWY_WATERSHED_STATE_MARK) {
         mark_grain_boundaries(grain_field);
 
         g_object_unref(status->min);
         g_object_unref(status->water);
         g_object_unref(status->mark_dfield);
 
-        status->state = GWY_WSHED_FINISHED;
+        status->state = GWY_WATERSHED_STATE_FINISHED;
     }
     gwy_data_field_invalidate(grain_field);
 }

@@ -23,10 +23,9 @@
 
 #include <glib-object.h>
 
-#include <libprocess/simplefft.h>
-#include <libprocess/interpolation.h>
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
+#include <libprocess/gwyprocessenums.h>
 
 G_BEGIN_DECLS
 
@@ -39,17 +38,6 @@ G_BEGIN_DECLS
 
 typedef struct _GwyDataLine      GwyDataLine;
 typedef struct _GwyDataLineClass GwyDataLineClass;
-
-/* FIXME: is used in linestats */
-typedef enum {
-    GWY_SF_OUTPUT_DH    = 0,
-    GWY_SF_OUTPUT_CDH   = 1,
-    GWY_SF_OUTPUT_DA    = 2,
-    GWY_SF_OUTPUT_CDA   = 3,
-    GWY_SF_OUTPUT_ACF   = 4,
-    GWY_SF_OUTPUT_HHCF  = 5,
-    GWY_SF_OUTPUT_PSDF  = 6
-} GwySFOutputType;
 
 struct _GwyDataLine {
     GObject parent_instance;

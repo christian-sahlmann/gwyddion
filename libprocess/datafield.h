@@ -22,30 +22,11 @@
 #define __GWY_DATAFIELD_H__
 
 #include <glib.h>
-#include <libprocess/interpolation.h>
+#include <libprocess/gwyprocessenums.h>
 #include <libprocess/dataline.h>
 #include <libgwyddion/gwysiunit.h>
 
 G_BEGIN_DECLS
-
-typedef enum {
-    GWY_COMP_INIT         = 0, /*start initializations*/
-    GWY_COMP_ITERATE      = 1, /*locate steps*/
-    GWY_COMP_FINISHED     = 2
-} GwyComputationStateType;
-
-typedef enum {
-    GWY_ORIENTATION_HORIZONTAL,
-    GWY_ORIENTATION_VERTICAL
-} GwyOrientation;
-
-typedef enum {
-    GWY_DATA_FIELD_MIN = 0,
-    GWY_DATA_FIELD_MAX,
-    GWY_DATA_FIELD_AVG,
-    GWY_DATA_FIELD_RMS,
-    GWY_DATA_FIELD_CACHE_SIZE = 8
-} GwyDataFieldCached;
 
 #define GWY_TYPE_DATA_FIELD                  (gwy_data_field_get_type())
 #define GWY_DATA_FIELD(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_FIELD, GwyDataField))
@@ -77,12 +58,11 @@ struct _GwyDataFieldClass {
     GObjectClass parent_class;
 };
 
-
-GType gwy_data_field_get_type  (void) G_GNUC_CONST;
-
 #define gwy_data_field_invalidate(data_field) data_field->cached = 0
 
 #define gwy_data_field_duplicate(data_field) ((GwyDataField*)gwy_serializable_duplicate(G_OBJECT(data_field)))
+
+GType             gwy_data_field_get_type  (void) G_GNUC_CONST;
 
 GwyDataField*     gwy_data_field_new                 (gint xres,
                                                       gint yres,

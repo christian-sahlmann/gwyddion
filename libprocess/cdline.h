@@ -26,6 +26,7 @@
 
 G_BEGIN_DECLS
 
+/* XXX: remove, or remove presets.  Both don't make sense */
 typedef enum {
       GWY_CD_LINE_ULINEHEIGHT  = 0,
       GWY_CD_LINE_ULINEWIDTH   = 1,

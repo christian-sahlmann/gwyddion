@@ -27,6 +27,7 @@
 
 #include <libgwyddion/gwyddion.h>
 #include <libdraw/gwygradient.h>
+#include "gwyglmaterial.h"
 #include "gwyoptionmenus.h"
 
 #define BITS_PER_SAMPLE 8
@@ -619,39 +620,6 @@ gwy_option_menu_windowing(GCallback callback,
 }
 
 /**
- * gwy_option_menu_zoom_mode:
- * @callback: A callback called when a menu item is activated (or %NULL for
- *            none).
- * @cbdata: User data passed to the callback.
- * @current: Zoom mode type to be shown as currently selected
- *           (or -1 to use what happens to appear first).
- *
- * Creates a #GtkOptionMenu of zoom modes i.e., values of
- * #GwyZoomMode.
- *
- * It sets object data "zoom-mode" to zoom mode for each
- * menu item (use GPOINTER_TO_INT() when retrieving it)..
- *
- * Returns: The newly created option menu as #GtkWidget.
- **/
-GtkWidget*
-gwy_option_menu_zoom_mode(GCallback callback,
-                          gpointer cbdata,
-                          GwyZoomMode current)
-{
-    static const GwyEnum entries[] = {
-        { N_("By square root of 2"),     GWY_ZOOM_MODE_SQRT2      },
-        { N_("By cubic root of 2"),      GWY_ZOOM_MODE_CBRT2      },
-        { N_("Integer zooms"),           GWY_ZOOM_MODE_PIX4PIX    },
-        { N_("Half-integer zooms"),      GWY_ZOOM_MODE_HALFPIX    },
-    };
-
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "zoom-mode", callback, cbdata,
-                                  current);
-}
-
-/**
  * gwy_option_menu_2dcwt:
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            none).
@@ -725,15 +693,16 @@ gwy_option_menu_dwt(GCallback callback,
  *
  * Creates a #GtkOptionMenu of available one-dimensional statistical functions.
  *
- * It sets object data "sf-output-type" to statistical functions output type for each
+ * It sets object data "sf-output-type" to statistical functions output type
+ * for each
  * menu item (use GPOINTER_TO_INT() when retrieving it).
  *
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*
 gwy_option_menu_sfunctions_output(GCallback callback,
-                           gpointer cbdata,
-                           GwySFOutputType current)
+                                  gpointer cbdata,
+                                  GwySFOutputType current)
 {
     static const GwyEnum entries[] = {
         { N_("Dist. of heights"),       GWY_SF_OUTPUT_DH,   },
@@ -751,36 +720,36 @@ gwy_option_menu_sfunctions_output(GCallback callback,
 }
 
 /**
- * gwy_option_menu_direction:
+ * gwy_option_menu_orientation:
  * @callback: A callback called when a menu item is activated (or %NULL for
  * @cbdata: User data passed to the callback.
  * @current: Direction selected
  *           (or -1 to use what happens to appear first).
  *
- * Creates a #GtkOptionMenu of datafield computation directions available.
+ * Creates a #GtkOptionMenu of datafield computation orientation available.
  *
- * It sets object data "direction-type" to statistical functions output type
+ * It sets object data "orientation-type" to orientation type
  * for each menu item (use GPOINTER_TO_INT() when retrieving it).
  *
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*
-gwy_option_menu_direction(GCallback callback,
-                           gpointer cbdata,
-                           GtkOrientation current)
+gwy_option_menu_orientation(GCallback callback,
+                            gpointer cbdata,
+                            GwyOrientation current)
 {
     static const GwyEnum entries[] = {
-        { N_("Horizontal"),  GTK_ORIENTATION_HORIZONTAL,  },
-        { N_("Vertical"),  GTK_ORIENTATION_VERTICAL, },
+        { N_("Horizontal"),  GWY_ORIENTATION_HORIZONTAL,  },
+        { N_("Vertical"),    GWY_ORIENTATION_VERTICAL, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "direction-type", callback, cbdata,
+                                  "orientation-type", callback, cbdata,
                                   current);
 }
 
 /**
- * gwy_option_menu_mergegrain:
+ * gwy_option_menu_merge_type:
  * @callback: A callback called when a menu item is activated (or %NULL for
  * @cbdata: User data passed to the callback.
  * @current: Grain merging selected
@@ -788,13 +757,13 @@ gwy_option_menu_direction(GCallback callback,
  *
  * Creates a #GtkOptionMenu of available grain merging modes
  *
- * It sets object data "mergegrain-type" to grain merge type
+ * It sets object data "merge-type" to merge type
  * for each menu item (use GPOINTER_TO_INT() when retrieving it).
  *
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*
-gwy_option_menu_mergegrain(GCallback callback,
+gwy_option_menu_merge_type(GCallback callback,
                            gpointer cbdata,
                            GwyMergeType current)
 {
@@ -804,7 +773,7 @@ gwy_option_menu_mergegrain(GCallback callback,
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "mergegrain-type", callback, cbdata,
+                                  "merge-type", callback, cbdata,
                                   current);
 }
 

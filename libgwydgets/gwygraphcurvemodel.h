@@ -21,8 +21,10 @@
 #ifndef __GWY_GRAPH_CURVE_MODEL_H__
 #define __GWY_GRAPH_CURVE_MODEL_H__
 
-#include <libgwydgets/gwygraph.h>
 #include <libdraw/gwyrgba.h>
+
+#include <libgwydgets/gwydgetenums.h>
+#include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
 
@@ -32,13 +34,6 @@ G_BEGIN_DECLS
 #define GWY_IS_GRAPH_CURVE_MODEL(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_CURVE_MODEL))
 #define GWY_IS_GRAPH_CURVE_MODEL_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_CURVE_MODEL))
 #define GWY_GRAPH_CURVE_MODEL_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_CURVE_MODEL, GwyGraphCurveModelClass))
-
-typedef enum {
-    GWY_GRAPH_CURVE_HIDDEN      = 0,
-    GWY_GRAPH_CURVE_POINTS      = 1,
-    GWY_GRAPH_CURVE_LINE        = 2,
-    GWY_GRAPH_CURVE_LINE_POINTS = 3
-} GwyGraphCurveType;
 
 typedef struct _GwyGraphCurveModel GwyGraphCurveModel;
 typedef struct _GwyGraphCurveModelClass GwyGraphCurveModelClass;

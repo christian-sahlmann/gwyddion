@@ -27,6 +27,7 @@
 
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwysiunit.h>
+#include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwydataview.h>
 
 G_BEGIN_DECLS
@@ -37,13 +38,6 @@ G_BEGIN_DECLS
 #define GWY_IS_DATA_WINDOW(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_DATA_WINDOW))
 #define GWY_IS_DATA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_WINDOW))
 #define GWY_DATA_WINDOW_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_WINDOW, GwyDataWindowClass))
-
-typedef enum {
-    GWY_ZOOM_MODE_SQRT2,
-    GWY_ZOOM_MODE_CBRT2,
-    GWY_ZOOM_MODE_PIX4PIX,
-    GWY_ZOOM_MODE_HALFPIX
-} GwyZoomMode;
 
 typedef struct _GwyDataWindow      GwyDataWindow;
 typedef struct _GwyDataWindowClass GwyDataWindowClass;

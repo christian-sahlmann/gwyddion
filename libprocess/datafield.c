@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include "datafield.h"
+#include "interpolation.h"
 #include "stats.h"
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"

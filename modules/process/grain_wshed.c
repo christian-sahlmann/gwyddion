@@ -527,7 +527,7 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
                                          args->wshed_dropsize*(max-min)/5000.0,
                                          FALSE, 0);
     */
-    status.state = GWY_WSHED_INIT;
+    status.state = GWY_WATERSHED_STATE_INIT;
     gwy_app_wait_start(wait_window, _("Initializing"));
     do {
         gwy_data_field_grains_watershed_iteration(dfield, maskfield,
@@ -539,35 +539,35 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
                                          args->wshed_dropsize*(max-min)/5000.0,
                                          FALSE, args->inverted);
 
-        if (status.state == GWY_WSHED_MIN) {
+        if (status.state == GWY_WATERSHED_STATE_MIN) {
             gwy_app_wait_set_message(_("Finding minima"));
             if (!gwy_app_wait_set_fraction(0.0))
                   break;
         }
-        else if (status.state == GWY_WSHED_LOCATE) {
+        else if (status.state == GWY_WATERSHED_STATE_LOCATE) {
             if (status.state != oldstate)
                 gwy_app_wait_set_message(_("Locating"));
             if (!gwy_app_wait_set_fraction((gdouble)status.internal_i
                                            /(gdouble)args->locate_steps))
                 break;
         }
-        else if (status.state == GWY_WSHED_WSHED) {
+        else if (status.state == GWY_WATERSHED_STATE_WATERSHED) {
             if (status.state != oldstate)
                 gwy_app_wait_set_message(_("Watershed"));
             if (!gwy_app_wait_set_fraction((gdouble)status.internal_i
                                            /(gdouble)args->wshed_steps))
                 break;
         }
-        else if (status.state == GWY_WSHED_MARK) {
+        else if (status.state == GWY_WATERSHED_STATE_MARK) {
             gwy_app_wait_set_message(_("Marking boundaries"));
             if (!gwy_app_wait_set_fraction(0.0))
                 break;
         }
         oldstate = status.state;
-    } while (status.state != GWY_WSHED_FINISHED);
+    } while (status.state != GWY_WATERSHED_STATE_FINISHED);
 
     gwy_app_wait_finish();
-    return status.state == GWY_WSHED_FINISHED;
+    return status.state == GWY_WATERSHED_STATE_FINISHED;
 }
 
 static const gchar *inverted_key = "/module/mark_wshed/inverted";

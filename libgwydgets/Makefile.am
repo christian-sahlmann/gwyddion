@@ -19,6 +19,7 @@ libgwydgetsinclude_HEADERS = \
 	gwydataviewlayer.h \
 	gwydatawindow.h \
 	gwydgets.h \
+	gwydgetenums.h \
 	gwyglmaterial.h \
 	gwygraph.h \
 	gwygrapharea.h \

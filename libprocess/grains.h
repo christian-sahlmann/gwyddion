@@ -25,22 +25,6 @@
 
 G_BEGIN_DECLS
 
-/* XXX: never used in libprocess itself, there should be probably some header
- * file with common enums... */
-typedef enum {
-    GWY_MERGE_UNION        = 0, /*union of all found grains*/
-    GWY_MERGE_INTERSECTION = 1  /*intersection of grains found by different methods*/
-} GwyMergeType;
-
-typedef enum {
-    GWY_WSHED_INIT         = 0, /*start initializations*/
-    GWY_WSHED_LOCATE       = 1, /*locate steps*/
-    GWY_WSHED_MIN          = 2, /*find minima*/
-    GWY_WSHED_WSHED        = 3, /*watershed steps*/
-    GWY_WSHED_MARK         = 4, /*mark grain boundaries*/
-    GWY_WSHED_FINISHED     = 5
-} GwyWatershedStateType;
-
 typedef struct {
     GwyWatershedStateType state;
     gint internal_i;

@@ -21,17 +21,19 @@
 #ifndef __GWY_GWYPROCESS_H__
 #define __GWY_GWYPROCESS_H__
 
-#include <libprocess/interpolation.h>
-#include <libprocess/datafield.h>
-#include <libprocess/dataline.h>
+#include <libprocess/gwyprocessenums.h>
+
 #include <libprocess/arithmetic.h>
 #include <libprocess/correct.h>
 #include <libprocess/correlation.h>
 #include <libprocess/cwt.h>
+#include <libprocess/datafield.h>
+#include <libprocess/dataline.h>
 #include <libprocess/dwt.h>
 #include <libprocess/filters.h>
 #include <libprocess/fractals.h>
 #include <libprocess/grains.h>
+#include <libprocess/interpolation.h>
 #include <libprocess/simplefft.h>
 
 G_BEGIN_DECLS

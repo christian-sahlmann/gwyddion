@@ -25,16 +25,6 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-    GWY_PLANE_FIT_A = 1,
-    GWY_PLANE_FIT_BX,
-    GWY_PLANE_FIT_BY,
-    GWY_PLANE_FIT_ANGLE,
-    GWY_PLANE_FIT_SLOPE,
-    GWY_PLANE_FIT_S0,
-    GWY_PLANE_FIT_S0_REDUCED
-} GwyPlaneFitQuantity;
-
 void gwy_data_field_area_fit_plane        (GwyDataField *data_field,
                                            gint col,
                                            gint row,

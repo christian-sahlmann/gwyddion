@@ -25,6 +25,7 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtklayout.h>
 
+#include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwygraphlabel.h>
 
 G_BEGIN_DECLS
@@ -45,15 +46,6 @@ typedef struct {
     gdouble *yvals;     /*screen coordinates of points*/
     gint N;              /*number of points*/
 } GwyGraphAreaCurvePoints;
-
-typedef enum {
-    GWY_GRAPH_STATUS_PLAIN  = 0,
-    GWY_GRAPH_STATUS_CURSOR = 1,
-    GWY_GRAPH_STATUS_XSEL   = 2,
-    GWY_GRAPH_STATUS_YSEL   = 3,
-    GWY_GRAPH_STATUS_POINTS = 4,
-    GWY_GRAPH_STATUS_ZOOM   = 5
-} GwyGraphStatusType;
 
 typedef struct {
    gdouble x;

@@ -26,16 +26,15 @@
 #include "gwygrapher.h"
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
-#include <stdio.h>
 
-static gint 
+static gint
 x_data_to_pixel(GwyGrapherActiveAreaSpecs *specs, gdouble data)
 {
     return specs->xmin + (gint)((data - specs->real_xmin)
          /(specs->real_width)*((gdouble)specs->width-1));
 }
 
-static gint 
+static gint
 y_data_to_pixel(GwyGrapherActiveAreaSpecs *specs, gdouble data)
 {
     return specs->ymin + specs->height - (gint)((data - specs->real_ymin)
@@ -51,43 +50,36 @@ gwy_grapher_draw_curve (GdkDrawable *drawable,
     gint i, x, y, xn=0, yn=0;
     GwyGraphCurveModel *cmodel;
     cmodel = GWY_GRAPH_CURVE_MODEL(curvemodel);
-    
-    for (i=0; i<(cmodel->n); i++)
-    {
-        if (i == 0)
-        {
+
+    for (i = 0; i < cmodel->n; i++) {
+        if (i == 0) {
             x = x_data_to_pixel(specs, cmodel->xdata[i]);
             y = y_data_to_pixel(specs, cmodel->ydata[i]);
         }
-        else
-        {
+        else {
             x = xn;
             y = yn;
         }
-        if (i<(cmodel->n-1))
-        {
+        if (i < cmodel->n-1) {
             xn = x_data_to_pixel(specs, cmodel->xdata[i+1]);
             yn = y_data_to_pixel(specs, cmodel->ydata[i+1]);
         }
-      
-        if (i>0 && i<(cmodel->n-1) && 
-            (cmodel->type == GWY_GRAPHER_CURVE_LINE || cmodel->type == GWY_GRAPHER_CURVE_LINE_POINTS))
-                 gwy_grapher_draw_line(drawable, gc,
-                                  x,
-                                  y,
-                                  xn,
-                                  yn,
-                                  cmodel->line_style, cmodel->line_size,
-                                  &(cmodel->color));
-             
-         
+
+        if (i > 0
+            && i < cmodel->n-1
+            && (cmodel->type == GWY_GRAPH_CURVE_LINE
+                || cmodel->type == GWY_GRAPH_CURVE_LINE_POINTS))
+                 gwy_grapher_draw_line(drawable, gc, x, y, xn, yn,
+                                       cmodel->line_style, cmodel->line_size,
+                                       &cmodel->color);
+
+
         if (i>0 &&
-            (cmodel->type == GWY_GRAPHER_CURVE_POINTS || cmodel->type == GWY_GRAPHER_CURVE_LINE_POINTS))
-                 gwy_grapher_draw_point(drawable, gc,
-                                  x,
-                                  y,
-                                  cmodel->point_type, cmodel->point_size,
-                                  &(cmodel->color), FALSE);
+            (cmodel->type == GWY_GRAPH_CURVE_POINTS
+             || cmodel->type == GWY_GRAPH_CURVE_LINE_POINTS))
+                 gwy_grapher_draw_point(drawable, gc, x, y,
+                                        cmodel->point_type, cmodel->point_size,
+                                        &(cmodel->color), FALSE);
     }
 }
 
@@ -101,7 +93,7 @@ gwy_grapher_draw_line (GdkDrawable *drawable, GdkGC *gc,
     GdkColor bcl, fcl;
     GdkColormap *colormap;
     GwyRGBA rgba;
-    
+
     if (gc==NULL) gc = gdk_gc_new(drawable);
 
     colormap = gdk_colormap_get_system();
@@ -115,18 +107,18 @@ gwy_grapher_draw_line (GdkDrawable *drawable, GdkGC *gc,
     gwy_rgba_to_gdk_color(&rgba, &bcl);
     gdk_colormap_alloc_color(colormap, &bcl, TRUE, TRUE);
     gdk_gc_set_background(gc, &bcl);
-    
+
     gdk_gc_set_line_attributes (gc, size,
                   line_style, GDK_CAP_BUTT, GDK_JOIN_MITER);
 
     gdk_draw_line(drawable, gc, x_from, y_from, x_to, y_to);
-   
+
 }
 
 
 void
 gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
-                        gint x, gint y, GwyGrapherPointType type,
+                        gint x, gint y, GwyGraphPointType type,
                         gint size, GwyRGBA *color, gboolean clear)
 {
     GdkColor gcl;
@@ -134,23 +126,24 @@ gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
     gint point_thickness;
     gint i, j;
     gint size_half = size/2;
-    
-    if (gc==NULL) gc = gdk_gc_new(drawable);
-    
+
+    if (gc == NULL)
+        gc = gdk_gc_new(drawable);
+
     point_thickness = MAX(size/10, 1);
-   
+
     colormap = gdk_colormap_get_system();
     gwy_rgba_to_gdk_color(color, &gcl);
     gdk_colormap_alloc_color(colormap, &gcl, TRUE, TRUE);
-    
+
     gdk_gc_set_foreground(gc, &gcl);
     gdk_gc_set_line_attributes (gc, point_thickness,
                   GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
-   
+
     i = x;
     j = y;
     switch (type) {
-        case GWY_GRAPHER_POINT_SQUARE:
+        case GWY_GRAPH_POINT_SQUARE:
         gdk_draw_line(drawable, gc,
                  i - size_half, j - size_half, i + size_half, j - size_half);
         gdk_draw_line(drawable, gc,
@@ -161,19 +154,19 @@ gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
                  i - size_half, j + size_half, i - size_half, j - size_half);
         break;
 
-        case GWY_GRAPHER_POINT_CROSS:
+        case GWY_GRAPH_POINT_CROSS:
         gdk_draw_line(drawable, gc,
                  i - size_half, j, i + size_half, j);
         gdk_draw_line(drawable, gc,
                  i, j - size_half, i, j + size_half);
         break;
 
-        case GWY_GRAPHER_POINT_CIRCLE:
+        case GWY_GRAPH_POINT_CIRCLE:
         gdk_draw_arc(drawable, gc, 0, i - size_half, j - size_half,
                      size, size, 0, 23040);
         break;
 
-        case GWY_GRAPHER_POINT_STAR:
+        case GWY_GRAPH_POINT_STAR:
         gdk_draw_line(drawable, gc,
                  i - size_half, j - size_half, i + size_half, j + size_half);
         gdk_draw_line(drawable, gc,
@@ -184,14 +177,14 @@ gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
                  i - size_half, j, i + size_half, j);
         break;
 
-        case GWY_GRAPHER_POINT_TIMES:
+        case GWY_GRAPH_POINT_TIMES:
         gdk_draw_line(drawable, gc,
                  i - size_half, j - size_half, i + size_half, j + size_half);
         gdk_draw_line(drawable, gc,
                  i + size_half, j - size_half, i - size_half, j + size_half);
         break;
 
-        case GWY_GRAPHER_POINT_TRIANGLE_UP:
+        case GWY_GRAPH_POINT_TRIANGLE_UP:
         gdk_draw_line(drawable, gc,
                  i, j - size*0.57, i - size_half, j + size*0.33);
         gdk_draw_line(drawable, gc,
@@ -200,7 +193,7 @@ gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
                  i + size_half, j + size*0.33, i, j - size*0.33);
         break;
 
-        case GWY_GRAPHER_POINT_TRIANGLE_DOWN:
+        case GWY_GRAPH_POINT_TRIANGLE_DOWN:
         gdk_draw_line(drawable, gc,
                  i, j + size*0.57, i - size_half, j - size*0.33);
         gdk_draw_line(drawable, gc,
@@ -209,7 +202,7 @@ gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
                  i + size_half, j - size*0.33, i, j + size*0.33);
         break;
 
-        case GWY_GRAPHER_POINT_DIAMOND:
+        case GWY_GRAPH_POINT_DIAMOND:
         gdk_draw_line(drawable, gc,
                  i - size_half, j, i, j - size_half);
         gdk_draw_line(drawable, gc,
@@ -223,7 +216,7 @@ gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
         default:
         g_assert_not_reached();
         break;
-    } 
+    }
 }
 
 void gwy_grapher_draw_selection_points(GdkDrawable *drawable,
@@ -232,21 +225,21 @@ void gwy_grapher_draw_selection_points(GdkDrawable *drawable,
 {
     gint i, size;
     GwyRGBA color;
-    
+
     color.r = 0.4;
     color.g = 0.4;
     color.b = 0.4;
     color.a = 1;
     size = 6;
-    
+
     if (gc==NULL) gc = gdk_gc_new(drawable);
-    
+
     for (i = 0; i<n_of_points; i++)
     {
        gwy_grapher_draw_point (drawable, gc,
-                        x_data_to_pixel(specs, data_points[i].x), 
-                        y_data_to_pixel(specs, data_points[i].y), 
-                        GWY_GRAPHER_POINT_CROSS,
+                        x_data_to_pixel(specs, data_points[i].x),
+                        y_data_to_pixel(specs, data_points[i].y),
+                        GWY_GRAPH_POINT_CROSS,
                         size, &color, FALSE);
     }
 }
@@ -266,13 +259,13 @@ void gwy_grapher_draw_selection_areas(GdkDrawable *drawable,
     color.g = 0.3;
     color.b = 0.6;
     color.a = 1;
-   
+
     if (gc==NULL) gc = gdk_gc_new(drawable);
 
     colormap = gdk_colormap_get_system();
     gwy_rgba_to_gdk_color(&color, &gcl);
     gdk_colormap_alloc_color(colormap, &gcl, TRUE, TRUE);
-    
+
     gdk_gc_set_foreground(gc, &gcl);
 
     for (i = 0; i<n_of_areas; i++)
@@ -281,7 +274,7 @@ void gwy_grapher_draw_selection_areas(GdkDrawable *drawable,
         xmax = x_data_to_pixel(specs, data_areas[i].xmax);
         ymin = y_data_to_pixel(specs, data_areas[i].ymin);
         ymax = y_data_to_pixel(specs, data_areas[i].ymax);
-        
+
         gdk_draw_rectangle(drawable, gc, TRUE,
                        MIN(xmin, xmax),
                        MIN(ymin, ymax),

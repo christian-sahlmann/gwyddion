@@ -25,21 +25,6 @@
 #include <libprocess/dataline.h>
 #include <libprocess/datafield.h>
 
-typedef enum {
-    GWY_DWT_HAAR = 0,
-    GWY_DWT_DAUB4,
-    GWY_DWT_DAUB6,
-    GWY_DWT_DAUB8,
-    GWY_DWT_DAUB12,
-    GWY_DWT_DAUB20
-} GwyDWTType;
-
-typedef enum {
-    GWY_DWT_DENOISE_UNIVERSAL = 0,
-    GWY_DWT_DENOISE_SCALE_ADAPTIVE,
-    GWY_DWT_DENOISE_SPACE_ADAPTIVE
-} GwyDWTDenoiseType;
-
 G_BEGIN_DECLS
 
 GwyDataLine*  gwy_dwt_set_coefficients(GwyDataLine *dline,

@@ -48,7 +48,7 @@ typedef struct {
     GtkObject *size;
     GtkWidget *update;
     GwyFilterType fil;
-    GtkOrientation dir;
+    GwyOrientation dir;
     gint siz;
     gboolean upd;
     gboolean data_were_updated;
@@ -227,16 +227,16 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
-    controls->filter = gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                              "filter-type",
-                                              filter_changed_cb, state,
-                                              controls->fil);
+    controls->filter
+        = gwy_option_menu_create(entries, G_N_ELEMENTS(entries), "filter-type",
+                                 G_CALLBACK(filter_changed_cb), state,
+                                 controls->fil);
     gwy_table_attach_hscale(table2, 1, _("_Type:"), NULL,
                             GTK_OBJECT(controls->filter), GWY_HSCALE_WIDGET);
 
     controls->direction
-        = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
-                                    state, controls->dir);
+        = gwy_option_menu_orientation(G_CALLBACK(direction_changed_cb),
+                                      state, controls->dir);
     gwy_table_attach_hscale(table2, 2, _("_Direction:"), NULL,
                             GTK_OBJECT(controls->direction), GWY_HSCALE_WIDGET);
     label = gwy_table_get_child_widget(table2, 2, 0);
@@ -464,7 +464,8 @@ direction_changed_cb(GObject *item,
     gwy_debug(" ");
 
     controls = (ToolControls*)state->user_data;
-    controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
+    controls->dir = GPOINTER_TO_INT(g_object_get_data(item,
+                                                      "orientation-type"));
     controls->state_changed = TRUE;
     dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }

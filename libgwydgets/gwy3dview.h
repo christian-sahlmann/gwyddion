@@ -31,28 +31,11 @@
 #include <libprocess/datafield.h>
 #include <libdraw/gwygradient.h>
 
+#include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwyglmaterial.h>
 #include <libgwydgets/gwy3dlabel.h>
 
 G_BEGIN_DECLS
-
-typedef enum {
-    GWY_3D_NONE = 0,
-    GWY_3D_ROTATION,
-    GWY_3D_SCALE,
-    GWY_3D_DEFORMATION,
-    GWY_3D_LIGHT_MOVEMENT
-} Gwy3DMovement;
-
-typedef enum {
-    GWY_3D_ORTHOGRAPHIC = 0,
-    GWY_3D_PERSPECTIVE
-} Gwy3DProjection;
-
-typedef enum {
-    GWY_3D_GRADIENT = 0,
-    GWY_3D_LIGHTING
-} Gwy3DVisualization;
 
 typedef enum {
     GWY_3D_VIEW_LABEL_X = 0,

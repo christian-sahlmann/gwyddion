@@ -39,7 +39,7 @@ enum {
 };
 
 enum {
-    N_BUTTONS = GWY_3D_LIGHT_MOVEMENT+1
+    N_BUTTONS = GWY_3D_MOVEMENT_LIGHT + 1
 };
 
 /* Forward declarations */
@@ -186,11 +186,23 @@ gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
         const gchar *tooltip;
     }
     const buttons[] = {
-        { GWY_3D_ROTATION,    GWY_STOCK_ROTATE,  N_("Rotate view") },
-        { GWY_3D_SCALE,       GWY_STOCK_SCALE,   N_("Scale view as a whole") },
-        { GWY_3D_DEFORMATION, GWY_STOCK_Z_SCALE, N_("Scale value range") },
         {
-            GWY_3D_LIGHT_MOVEMENT,
+            GWY_3D_MOVEMENT_ROTATION,
+            GWY_STOCK_ROTATE,
+            N_("Rotate view")
+        },
+        {
+            GWY_3D_MOVEMENT_SCALE,
+            GWY_STOCK_SCALE,
+            N_("Scale view as a whole")
+        },
+        {
+            GWY_3D_MOVEMENT_DEFORMATION,
+            GWY_STOCK_Z_SCALE,
+            N_("Scale value range")
+        },
+        {
+            GWY_3D_MOVEMENT_LIGHT,
             GWY_STOCK_LIGHT_ROTATE,
             N_("Move light source")
         },
@@ -238,8 +250,8 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
         { N_("Maximum z value"), GWY_3D_VIEW_LABEL_MAX, }
     };
     static const GwyEnum display_modes[] = {
-        { N_("_Lighting"),    GWY_3D_LIGHTING },
-        { N_("P_alette"),     GWY_3D_GRADIENT },
+        { N_("_Lighting"),    GWY_3D_VISUALIZATION_LIGHTING },
+        { N_("P_alette"),     GWY_3D_VISUALIZATION_GRADIENT },
     };
     Gwy3DWindow *gwy3dwindow;
     GwyGLMaterial *material;
@@ -425,10 +437,10 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gwy3dwindow->lights_spin2 = spin;
     gtk_widget_set_sensitive(spin, visual);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 12);
-    gtk_widget_set_sensitive(gwy3dwindow->buttons[GWY_3D_LIGHT_MOVEMENT],
+    gtk_widget_set_sensitive(gwy3dwindow->buttons[GWY_3D_MOVEMENT_LIGHT],
                              visual);
     gtk_widget_set_sensitive(gwy3dwindow->buttons[N_BUTTONS
-                                                  + GWY_3D_LIGHT_MOVEMENT],
+                                                  + GWY_3D_MOVEMENT_LIGHT],
                              visual);
     row++;
 
@@ -725,7 +737,8 @@ gwy_3d_window_projection_changed(GtkToggleButton *check,
 {
     gwy_3d_view_set_projection(GWY_3D_VIEW(window->gwy3dview),
                                gtk_toggle_button_get_active(check)
-                               ? GWY_3D_ORTHOGRAPHIC : GWY_3D_PERSPECTIVE);
+                               ? GWY_3D_PROJECTION_ORTHOGRAPHIC
+                               : GWY_3D_PROJECTION_PERSPECTIVE);
 }
 
 static void
@@ -764,8 +777,8 @@ gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
     gtk_widget_set_sensitive(window->gradient_menu, !visual);
     gtk_widget_set_sensitive(window->lights_spin1, visual);
     gtk_widget_set_sensitive(window->lights_spin2, visual);
-    gtk_widget_set_sensitive(window->buttons[GWY_3D_LIGHT_MOVEMENT], visual);
-    gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_LIGHT_MOVEMENT],
+    gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT], visual);
+    gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_MOVEMENT_LIGHT],
                              visual);
     if (visual) {
         material = gwy_3d_view_get_material(GWY_3D_VIEW(window->gwy3dview));
