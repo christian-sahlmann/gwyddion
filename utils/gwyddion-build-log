@@ -1,0 +1,109 @@
+#!/bin/bash
+pkgname=gwyddion
+logdir=$HOME/Projects/Gwyddion/buildlog
+phpswroot=$HOME/PHP/software
+tmplog=tmplog
+
+source $HOME/.bashrc
+source $HOME/.ssh/current-ssh-agent
+cd $logdir
+
+cat >autostuff.ignore <<':'
+^/usr/share/aclocal/.*.m4:[0-9]*: warning: underquoted definition of 
+^  run info '(automake)Extending aclocal'
+^  or see http://sources\.redhat\.com/automake/automake.html#Extending%20aclocal
+:
+':'
+
+cat >build_documentation.ignore <<':'
+^Writing .* for [^ ]\+(.*)
+^lib.*-scan\.c: In function `.*':
+^lib.*-scan\.c:[0-9]*: warning: unused parameter `.*'
+^Computing chunks\.\.\.
+^grep: \./libgwymodule\.types: No such file or directory
+^grep: \./libgwyapp\.types: No such file or directory
+:
+':'
+
+cat >make_dists.ignore <<':'
+^+
+^cp: cannot stat `\./html/\*\.css': No such file or directory
+^make\[3\]: \[dist-hook\] Error 1 (ignored)
+^libtool: install: warning: `.*\.la' has not been installed in `/usr/lib'
+^libtool: install: warning: remember to run `libtool --finish /usr/lib'
+\.\{6,\}
+^[0-9]\+ blocks
+:
+':'
+
+cat >gnains_index.ignore <<':'
+*** gnains-mkindex-Warning: Cannot decide what to do with <.*>
+*** gnains-mkindex-Warning: Duplicit key <.*>
+:
+':'
+
+function printerr() {
+  f=$1
+  shift
+
+  test -s $f.err || return
+  cat --squeeze-blank $f.err \
+  | {
+    if test -s $f.ignore; then
+      grep -v -f $f.ignore
+    else
+      cat
+    fi
+  } | {
+    if test -n "$1"; then
+      $@
+    else
+      cat
+    fi
+  } >$tmplog
+  test -s $tmplog || return
+  echo "=====[ $f ]====="
+  cat $tmplog
+}
+
+function extract_build_documentation() {
+  test -s $tmplog || echo "=====[ build_documentation ]====="
+  logfile=build_documentation.log
+  grep -P '^(WARNING|ERROR)\b.*(\n\s+.*)*|Entering directory|^\d+%' \
+    $logfile >$tmplog
+  libs=$(grep 'Entering directory' $logfile | sed -e 's#.*/##' -e 's/.$//')
+  for x in $libs; do
+    echo -n "$x: "
+    sed -n -e "/Entering directory .*\\/$x'/,/^[0-9]\\+%/p" $tmplog \
+      | sed -n -e '${s/ symbols*//g;p}'
+    sed -n -e "/Entering directory .*\\/$x'/,/^[0-9]\\+%/p" $tmplog \
+      | sed -e '1d' -e '$d'
+  done
+}
+
+function coding_style_report() {
+  phpdir=$phpswroot/$pkgname
+  cut -d: -f1 coding-style.log  | uniq -c | sort -nr >coding-style-byfile.log
+  head -n 20 coding-style-byfile.log >$phpdir/coding-style-byfile.txt
+
+  cut -d: -f3- coding-style.log \
+    | sed -e 's/: .*//' -e 's/ (col [0-9]*)//' | sort | uniq -c | sort -nr \
+    >coding-style-bytype.log
+  head -n 20 coding-style-bytype.log >$phpdir/coding-style-bytype.txt
+}
+
+printerr update_tags
+printerr update_version
+printerr autostuff
+printerr build_project
+printerr build_documentation
+extract_build_documentation
+printerr check_coding_style
+coding_style_report
+printerr install_to_tmp grep -vFf build_project.err
+printerr make_dists grep -vFf build_project.err
+printerr release_dists
+printerr gnains_index
+printerr webify_api
+
+rm *.ignore $tmplog

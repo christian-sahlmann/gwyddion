@@ -1,0 +1,197 @@
+#!/bin/bash
+disabled=
+pkgname=gwyddion
+basever=1.6
+arch=$(uname -m)
+projectdir=$HOME/Projects/Gwyddion/$pkgname
+logdir=$HOME/Projects/Gwyddion/buildlog
+installroot=$HOME/tmp
+gtkdocdir="/share/gtk-doc/html/*"
+gtkdocdirs=(/usr /usr/local $installroot/usr)
+gtkdocdirs=${gtkdocdirs[@]/%/$gtkdocdir}
+gnainsindex=$HOME/lib/gtk.gnains
+phpswroot=$HOME/PHP/software
+rpmtopdir=$(rpm --showrc | grep '^-[0-9]\+: _topdir' | cut -f2)
+host=$($HOME/bin/Ftpcp)
+
+source $HOME/.bashrc
+source $HOME/.ssh/current-ssh-agent
+export CFLAGS="-ggdb -O"
+
+# =====[ subroutines ]=======================================================
+# execute a function/command with logging and some setup
+function call() {
+  exec >$logdir/$1.log
+  exec 2>$logdir/$1.err
+  cd $projectdir
+  for x in $disabled; do
+    if test "$1" = "$x"; then
+      echo disabled
+      return
+    fi
+  done
+  $@
+}
+
+# extract makefile-style list $2 from $1
+function getlist() {
+  test -f $1 || return
+  grep --quiet "^$2" $1 || return
+  sed -n -e '/^'"$2"' *= *\\/,/[^\\]$/H' \
+         -e '/^'"$2"' *= *[a-zA-Z0-9]/H' \
+         -e '${g;s/\\[[:space:]]*//g;s/.*= *//;p}' $1
+}
+
+# =====[ components ]========================================================
+function update_tags() {
+  ctags *
+  subdirs=$(getlist Makefile.am SUBDIRS)
+  for d in $subdirs; do
+    cd ./$d && { update_tags; cd ..; }
+  done
+}
+
+
+function update_version() {
+  version=${basever}cvs$(date +%Y%m%d)
+  cp -fv NEWS NEWS~
+  cp -fv configure.ac configure.ac~
+  sed -ri -e "1s/^[^ ]*/$version/" NEWS
+  sed -ri -e "s/(AC_INIT\\([A-Za-z0-9]+,) [^ ,]+,/\\1 $version,/" configure.ac
+}
+
+
+function autostuff() {
+  rm -fv config.cache
+  ./autogen.sh --config-cache --prefix=$installroot/usr
+  make -C po gwyddion.pot
+}
+
+
+function build_project() {
+  make -k clean
+  make -k
+  ./utils/update-msvc.py
+}
+
+
+function build_documentation() {
+  cd ./devel-docs
+  rm -fv */*.stamp */*-sections.txt */*-decl-list.txt
+  # A bit dirty, rebuild only subdirs with objects
+  for x in libgwyddion libgwyprocess libgwydraw libgwydgets; do
+    make -C $x -k docs &>/dev/null
+  done
+  touch */*-decl-list.txt
+  make -k docs
+}
+
+function check_coding_style() {
+  find -name \*.c | grep -Ev '/(main|test|wtest)\.c' \
+    | xargs ./utils/check-coding-style.py \
+    | cat --squeeze-blank >$logdir/coding-style.log
+  find -name \*.def \
+    | xargs sed -e $'/^\tgwy_\|^EXPORTS/d' -e 's/^/Evil symbol: /' 1>&2
+}
+
+function install_to_tmp() {
+  make -k install
+}
+
+
+function make_dists() {
+  toremove=$pkgname-${basever}cvs*.tar.*
+  for f in $toremove; do
+    rm -fv $f
+  done
+
+  make dist
+  rpmbuild -ta --clean --target $arch $pkgname-$version.tar.bz2 \
+    && touch .releaseme
+}
+
+
+function release_dists() {
+  if ! test -f .releaseme; then
+    return
+  fi
+
+  pcvs=$pkgname-cvs
+  pver=$pkgname-$version
+  for f in $toremove; do
+    $HOME/bin/Ftprm $pkgname/$f
+  done
+
+  $archdir=$rpmtopdir/RPMS/$arch
+  $HOME/bin/Ftpcp $pkgname $pver.tar.*
+  $HOME/bin/Ftpcp $pkgname \
+    $archdir/$pkgname-{,devel-,plugins-,debuginfo-}$version-1.$arch.rpm \
+    $rpmtopdir/SRPMS/$pver-1.src.rpm
+  if test -f $phpswroot/$pkgname/main.xhtml; then
+    pkgpage=$phpswroot/$pkgname/main.xhtml
+  else
+    pkgpage= $phpswroot/$pkgname.xhtml
+  fi
+  sed -ri -e "2s/\\<1\\.[0-9][0-9.cvs]*/$version/" $pkgpage
+
+  ssh $host "cd Ftp/$pkgname && rm -f $pcvs.tar.* && tar -jxf $pver.tar.bz2 && mv $pver $pcvs && tar -jcf $pcvs.tar.bz2 $pcvs && tar -zcf $pcvs.tar.gz $pcvs; rm -rf $pcvs $pver"
+  rm -f .releaseme
+}
+
+
+function gnains_index() {
+  which gnains-mkindex || return
+  gnains-mkindex -f $gnainsindex $gtkdocdirs
+}
+
+
+function webify_api() {
+  libs="libgwyddion libgwyapp libgwymodule libgwydgets libgwyprocess libgwydraw"
+  ./utils/gendoc.pl
+  for d in $libs; do
+    rm -vf $phpswroot/$pkgname/$d/main.xhtml
+    sed -i '5i<link rel="shortcut icon" type="image/x-icon" href="/Img/favicon.ico"/>' $phpswroot/$pkgname/$d/*.xhtml
+    ln -s index.xhtml $phpswroot/$pkgname/$d/main.xhtml
+  done
+  for d in libgwydgets; do
+    dir=Img/software/$pkgname/$d
+    sed -i 's#src="\(.*\)\.png"#src="/'$dir'/\1"#' $phpswroot/$pkgname/$d/*.xhtml
+    cp devel-docs/$d/html/*.png $HOME/$dir
+    rsync --recursive --rsh=ssh $HOME/$dir $host:Img/software/$pkgname
+  done
+}
+
+
+function help() {
+  sed <$0 -e '1,/^  # LIST-BEGIN/d' \
+          -e '/^  # LIST-END/,$d' \
+          -e 's/^ *call *//'
+}
+
+# =====[ main ]==============================================================
+cd $projectdir
+rm -f .releaseme
+test -d $logdir || mkdir $logdir
+# Set version from Makefile if we don't do update_version
+eval $(grep ^VERSION Makefile | tr -d ' ' | tr '[A-Z]' '[a-z]')
+
+if test -n "$1"; then
+  for x in $@; do
+    call $x
+  done
+else
+  rm -f $logdir/*
+  # LIST-BEGIN
+  call update_tags
+  call update_version
+  call autostuff
+  call build_project
+  call build_documentation
+  call check_coding_style
+  call install_to_tmp
+  call make_dists
+  call release_dists
+  call gnains_index
+  call webify_api
+  # LIST-END
+fi
