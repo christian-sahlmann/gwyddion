@@ -242,9 +242,17 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
     /* Small toolbar */
     toolbar = gwy_toolbox_new(1);
+    gtk_container_set_border_width(GTK_CONTAINER(toolbar), 4);
     gtk_box_pack_end(GTK_BOX(hbox), toolbar, FALSE, FALSE, 0);
     gwy3dwindow->small_toolbar = toolbar;
     g_object_ref(gwy3dwindow->small_toolbar);
+
+    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON,
+                                group, _("Show full controls"),
+                                NULL, GWY_STOCK_LESS,
+                                G_CALLBACK(gwy_3d_window_select_controls),
+                                GINT_TO_POINTER(TRUE));
+    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
 
     button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
                                 NULL, _("Rotate the data"),
@@ -277,13 +285,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                                 G_CALLBACK(gwy_3d_window_set_mode),
                                 GINT_TO_POINTER(GWY_3D_LIGHT_MOVEMENT));
     gwy3dwindow->buttons[BUTTON_LIGHT2] = button;
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
-
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON,
-                                group, _("Show full controls"),
-                                NULL, GWY_STOCK_LESS,
-                                G_CALLBACK(gwy_3d_window_select_controls),
-                                GINT_TO_POINTER(TRUE));
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
 
     /* Toolbar */
