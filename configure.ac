@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.8cvs20050206, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.8cvs20050212, [http://trific.ath.cx/bugzilla/])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -67,31 +67,32 @@ AM_PROG_CC_STDC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_CHECK_PROGS([STRIP],[strip])
-AM_PATH_PYTHON(2.2,,:)
 gtk_CHECK_GTK_DOC
 
 # XDG stuff
 AC_CHECK_PROGS([UPDATE_DESKTOP_DATABASE],[update-desktop-database],:)
 AC_CHECK_PROGS([UPDATE_MIME_DATABASE],[update-mime-database],:)
-AC_ARG_ENABLE(desktop-file-update,
-  AS_HELP_STRING([--enable-desktop-file-update],
-                 [Update XDG databases (yes)]),
-  [case "${enableval}" in
-     yes) desktop_file_update=true ;;
-     no)  desktop_file_update=false ;;
-     *) AC_MSG_ERROR(bad value ${enableval} for --enable-desktop-file-update) ;;
-   esac],
-   [desktop_file_update=true])
-AM_CONDITIONAL([DESKTOP_FILE_UPDATE],[test "x$desktop_file_update" = "xtrue"])
+GWY_ENABLE([desktop-file-update],
+           [desktop_file_update],
+           [Update Freedesktop databases])
+AM_CONDITIONAL([DESKTOP_FILE_UPDATE],[test "$enable_desktop_file_update" != no])
+
+# Python
+GWY_ENABLE([python],,[Install Python modules and plug-ins])
+AM_PATH_PYTHON(2.2,,:)
+AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != : -a "$enable_python" != no])
 
 # Check for Perl
+GWY_ENABLE([perl],,[Install Perl modules and plug-ins])
 AC_PATH_PROGS(PERL,perl5 perl,:)
 if test "$PERL" != :; then
   AC_PATH_PROGS(POD2MAN,pod2man,:)
 fi
+AM_CONDITIONAL([HAVE_PERL], [test "$PERL" != : -a "$enable_perl" != no])
 
 # Check for Ruby
 # The outer [] are necessary to quote the inner [] inside Ruby
+GWY_ENABLE([ruby],,[Install Ruby modules and plug-ins])
 AC_PATH_PROGS(RUBY,ruby,:)
 if test "$RUBY" != :; then
   AC_MSG_CHECKING([if ruby version >= 1.8])
@@ -109,7 +110,9 @@ exit 1"]; then
   fi
   AC_MSG_RESULT([$ruby_version_ok])
 fi
+AM_CONDITIONAL([HAVE_RUBY], [test "$RUBY" != : -a "$enable_ruby" != no])
 
+# Check for Ruby narray module
 ruby_has_narray=no
 if test "$RUBY" != :; then
   AC_MSG_CHECKING([for ruby narray module])
@@ -120,9 +123,11 @@ if test "$RUBY" != :; then
   fi
   AC_MSG_RESULT([$ruby_has_narray])
 fi
+AM_CONDITIONAL([HAVE_RUBY_NARRAY], [test "$ruby_has_narray" = yes])
 
 # Check for Pascal compiler
 # The outer [] are necessary to quote the inner [] inside sed expressions
+GWY_ENABLE([pascal],,[Build sample Pascal plug-ins])
 AC_PATH_PROGS(PASCAL,fpc,:)
 if test "$PASCAL" != :; then
   AC_MSG_CHECKING([if fpc version >= 1.9])
@@ -141,23 +146,18 @@ if test "$PASCAL" != :; then
   fi
   AC_MSG_RESULT([$fpc_version_ok])
 fi
-
-AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
-AM_CONDITIONAL([HAVE_PERL], [test "$PERL" != :])
-AM_CONDITIONAL([HAVE_PASCAL], [test "$PASCAL" != :])
-AM_CONDITIONAL([HAVE_RUBY], [test "$RUBY" != :])
-AM_CONDITIONAL([HAVE_RUBY_NARRAY], [test "$ruby_has_narray" = yes])
+AM_CONDITIONAL([HAVE_PASCAL], [test "$PASCAL" != : -a "$enable_pascal" != no])
 
 dnl With GCC, be paranoiac.  It should compile really cleanly.
 if test "$GCC" = yes; then
-  ye_PROG_CC_OPTION([WNO_EMPTY_FMT],[-Wno-format-zero-length],,)
-  ye_PROG_CC_OPTION([WNO_SIGN_COMPARE],[-Wno-sign-compare],,)
-  ye_PROG_CC_OPTION([WNO_SYS_HEADERS],[-Wno-system-headers],,)
-  ye_PROG_CC_OPTION([ERR_IFD],[-Werror-implicit-function-declaration],,)
-  ye_PROG_CC_OPTION([WREDUNDANT],[-Wredundant-decls],,)
+  GWY_PROG_CC_OPTION([WNO_EMPTY_FMT],[-Wno-format-zero-length],,)
+  GWY_PROG_CC_OPTION([WNO_SIGN_COMPARE],[-Wno-sign-compare],,)
+  GWY_PROG_CC_OPTION([WNO_SYS_HEADERS],[-Wno-system-headers],,)
+  GWY_PROG_CC_OPTION([ERR_IFD],[-Werror-implicit-function-declaration],,)
+  GWY_PROG_CC_OPTION([WREDUNDANT],[-Wredundant-decls],,)
   # FIXME: We would like an error, but gcc can't make one w/o -std, which is
   # too much.
-  ye_PROG_CC_OPTION([WMIXED_DECL],[-Wdeclaration-after-statement],,)
+  GWY_PROG_CC_OPTION([WMIXED_DECL],[-Wdeclaration-after-statement],,)
   WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WREDUNDANT $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WNO_SIGN_COMPARE $PROG_CC_WMIXED_DECL"
 fi
 
@@ -185,10 +185,18 @@ AC_PATH_X
 test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
 test "x$x_libraries" = "x" || CPPFLAGS="$CPPFLAGS -L$x_libraries"
 
-PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= 2.2.0])
+PKG_CHECK_MODULES(GTK, [pangoft2 gtk+-2.0 >= 2.2.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
-PKG_CHECK_MODULES(GTKGLEXT, [gtkglext-1.0 pangoft2])
+
+# GtkGlExt
+GWY_WITH([gl],,[OpenGL 3D view widgets])
+if test "$enable_gl" != no; then
+  PKG_CHECK_MODULES(GTKGLEXT,[gtkglext-1.0],
+                   [AC_DEFINE(HAVE_GTKGLEXT,1,
+                              [Define if we have the GtkGLExt package.])],
+                    [AC_MSG_WARN(GtkGLExt not found, 3D will not be built)])
+fi
 
 AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_LIB([tiff],[TIFFOpen])
@@ -243,6 +251,6 @@ AC_SUBST(RPM_RELEASE)
 AC_SUBST(RPM_VERSION)
 AC_SUBST(PACKAGE_URL)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
-          [Define to package home page, as a string.])
+                   [Define to package home page, as a string.])
 
 AC_OUTPUT
