@@ -36,19 +36,20 @@ enum {
     GRAPHLIST_LAST
 };
 
-static GtkWidget* gwy_graph_list_construct(GwyContainer *data);
-static void gwy_graph_list_cell_renderer(GtkTreeViewColumn *column,
-                                         GtkCellRenderer *cell,
-                                         GtkTreeModel *model,
-                                         GtkTreeIter *piter,
-                                         gpointer userdata);
-static void gwy_graph_list_add_line(gpointer hkey,
-                                    GValue *value,
-                                    GtkListStore *store);
-static gint gwy_graph_list_sort_func(GtkTreeModel *model,
-                                     GtkTreeIter *a,
-                                     GtkTreeIter *b,
-                                     gpointer user_data);
+static GtkWidget* gwy_app_graph_list_construct(GwyContainer *data);
+static void gwy_app_graph_list_cell_renderer(GtkTreeViewColumn *column,
+                                             GtkCellRenderer *cell,
+                                             GtkTreeModel *model,
+                                             GtkTreeIter *piter,
+                                             gpointer userdata);
+static void gwy_app_graph_list_add_line(gpointer hkey,
+                                        GValue *value,
+                                        GtkListStore *store);
+static gint gwy_app_graph_list_sort_func(GtkTreeModel *model,
+                                         GtkTreeIter *a,
+                                         GtkTreeIter *b,
+                                         gpointer user_data);
+static void gwy_app_graph_list_orphaned(GtkWidget *graph_view);
 
 void
 gwy_app_graph_list_add(GwyDataWindow *data_window,
@@ -82,7 +83,8 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
     g_object_set_data(gmodel, "gwy-app-graph-list-id", GINT_TO_POINTER(lastid));
     gwy_container_set_int32_by_name(data, "/0/graph/lastid", lastid);
     gwy_container_set_object_by_name(data, key, gmodel);
-    g_object_unref(gmodel);
+    /* no unref, we keep one reference, released in
+     * gwy_app_graph_list_orphaned */
 
     if (!(graph_view = g_object_get_data(G_OBJECT(data_window),
                                         "gwy-app-graph-list-window")))
@@ -110,7 +112,7 @@ gwy_app_graph_list(GwyDataWindow *data_window)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    list = gwy_graph_list_construct(gwy_data_window_get_data(data_window));
+    list = gwy_app_graph_list_construct(gwy_data_window_get_data(data_window));
     gtk_box_pack_start(GTK_BOX(vbox), list, TRUE, TRUE, 0);
 
     buttonbox = gtk_hbox_new(TRUE, 0);
@@ -130,13 +132,15 @@ gwy_app_graph_list(GwyDataWindow *data_window)
                       window);
     g_object_set_data(G_OBJECT(window), "gwy-app-graph-list-view", list);
 
+    g_signal_connect_swapped(data_window, "destroy",
+                             G_CALLBACK(gwy_app_graph_list_orphaned), window);
     gtk_widget_show_all(vbox);
 
     return window;
 }
 
 static GtkWidget*
-gwy_graph_list_construct(GwyContainer *data)
+gwy_app_graph_list_construct(GwyContainer *data)
 {
     static const struct {
         const gchar *title;
@@ -159,13 +163,7 @@ gwy_graph_list_construct(GwyContainer *data)
     store = gtk_list_store_new(1, G_TYPE_POINTER);
 
     gwy_container_foreach(data, "/0/graph/graph",
-                          (GHFunc)(gwy_graph_list_add_line), store);
-    /*
-    if (!gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter)) {
-        g_object_unref(store);
-        return NULL;
-    }
-    */
+                          (GHFunc)(gwy_app_graph_list_add_line), store);
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
@@ -173,7 +171,8 @@ gwy_graph_list_construct(GwyContainer *data)
     g_object_set_data(G_OBJECT(store), "container", data);
 
     gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
-                                    0, gwy_graph_list_sort_func, NULL, NULL);
+                                    0, gwy_app_graph_list_sort_func,
+                                    NULL, NULL);
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), 0,
                                          GTK_SORT_ASCENDING);
 
@@ -186,10 +185,11 @@ gwy_graph_list_construct(GwyContainer *data)
         column = gtk_tree_view_column_new_with_attributes(columns[i].title,
                                                           renderer,
                                                           NULL);
-        gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                                gwy_graph_list_cell_renderer,
-                                                GUINT_TO_POINTER(columns[i].id),
-                                                NULL);  /* destroy notify */
+        gtk_tree_view_column_set_cell_data_func
+            (column, renderer,
+             gwy_app_graph_list_cell_renderer,
+             GUINT_TO_POINTER(columns[i].id),
+             NULL);  /* destroy notify */
         gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
     }
 
@@ -200,11 +200,11 @@ gwy_graph_list_construct(GwyContainer *data)
 }
 
 static void
-gwy_graph_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
-                             GtkCellRenderer *cell,
-                             GtkTreeModel *model,
-                             GtkTreeIter *piter,
-                             gpointer userdata)
+gwy_app_graph_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                 GtkCellRenderer *cell,
+                                 GtkTreeModel *model,
+                                 GtkTreeIter *piter,
+                                 gpointer userdata)
 {
     GwyGraphModel *gmodel;
     gulong id;
@@ -242,9 +242,9 @@ gwy_graph_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-gwy_graph_list_add_line(gpointer hkey,
-                        GValue *value,
-                        GtkListStore *store)
+gwy_app_graph_list_add_line(gpointer hkey,
+                            GValue *value,
+                            GtkListStore *store)
 {
     GObject *gmodel;
     GtkTreeIter iter;
@@ -252,6 +252,7 @@ gwy_graph_list_add_line(gpointer hkey,
     g_return_if_fail(G_VALUE_HOLDS_OBJECT(value));
     gmodel = g_value_get_object(value);
     g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+    g_object_ref(gmodel);
 
     if (!g_object_get_data(gmodel, "gwy-app-graph-list-id")) {
         GQuark quark;
@@ -277,10 +278,10 @@ gwy_graph_list_add_line(gpointer hkey,
 }
 
 static gint
-gwy_graph_list_sort_func(GtkTreeModel *model,
-                         GtkTreeIter *a,
-                         GtkTreeIter *b,
-                         G_GNUC_UNUSED gpointer user_data)
+gwy_app_graph_list_sort_func(GtkTreeModel *model,
+                             GtkTreeIter *a,
+                             GtkTreeIter *b,
+                             G_GNUC_UNUSED gpointer user_data)
 {
     GObject *p, *q;
     guint x, y;
@@ -299,6 +300,35 @@ gwy_graph_list_sort_func(GtkTreeModel *model,
         return 1;
     else
         return 0;
+}
+
+static gboolean
+gwy_app_graph_list_unref_gmodel(GtkTreeModel *store,
+                                G_GNUC_UNUSED GtkTreePath *path,
+                                GtkTreeIter *iter,
+                                G_GNUC_UNUSED gpointer user_data)
+{
+    GObject *gmodel;
+
+    gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
+    g_object_unref(gmodel);
+
+    return FALSE;
+}
+
+/* What to do when our beloved data window is treacheously murdered:
+ * commit a suicide. */
+static void
+gwy_app_graph_list_orphaned(GtkWidget *graph_view)
+{
+    GtkWidget *list;
+    GtkTreeModel *store;
+
+    list = g_object_get_data(G_OBJECT(graph_view), "gwy-app-graph-list-view");
+    g_assert(list);
+    store = gtk_tree_view_get_model(GTK_TREE_VIEW(list));
+    gtk_tree_model_foreach(store, gwy_app_graph_list_unref_gmodel, NULL);
+    gtk_widget_destroy(graph_view);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
