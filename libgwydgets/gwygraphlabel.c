@@ -121,6 +121,12 @@ gwy_graph_label_init(GwyGraphLabel *label)
     label->maxheight = 5;
 }
 
+/**
+ * gwy_graph_label_new:
+ * 
+ * creates new graph label. 
+ *
+ **/
 GtkWidget*
 gwy_graph_label_new()
 {
@@ -137,8 +143,6 @@ gwy_graph_label_new()
     pango_font_description_set_weight(label->par.font, PANGO_WEIGHT_NORMAL);
     pango_font_description_set_size(label->par.font, 10*PANGO_SCALE);
 
-   /* gtk_widget_add_events(GTK_WIDGET(label), GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
-*/
     gtk_widget_set_events(GTK_WIDGET(label), 0);
     label->curve_params = g_ptr_array_new();
 
@@ -401,6 +405,15 @@ gwy_graph_label_button_release(GtkWidget *widget,
     return FALSE;
 }
 
+/**
+ * gwy_graph_label_add_curve:
+ * @label: label to be changed
+ * @params: curve parameters
+ *
+ * Adds a curve description to label. All the information
+ * is in structure @params, including line/dots sizes
+ * and text of added curve label.
+ **/
 void
 gwy_graph_label_add_curve(GwyGraphLabel *label, GwyGraphAreaCurveParams *params)
 {
@@ -434,6 +447,12 @@ gwy_graph_label_add_curve(GwyGraphLabel *label, GwyGraphAreaCurveParams *params)
     gtk_widget_queue_draw(GTK_WIDGET(label));
 }
 
+/**
+ * gwy_graph_label_clear:
+ * @label: label to be cleared 
+ *
+ * Clears label - removes all the curve descriptions.
+ **/
 void
 gwy_graph_label_clear(GwyGraphLabel *label)
 {
@@ -457,6 +476,19 @@ gwy_graph_label_clear(GwyGraphLabel *label)
 }
 
 
+/**
+ * gwy_graph_draw_point:
+ * @window: widget window 
+ * @gc: Graphical context
+ * @i: x position on the screen
+ * @j: y position on the screen
+ * @type: type of point (square, circle, etc.)
+ * @size: size of point
+ * @color: color of point
+ * @clear: clear window part under symbol
+ *
+ * Plots a point of requested parameters on the screen.
+ **/
 void
 gwy_graph_draw_point(GdkWindow *window, GdkGC *gc, gint i, gint j, gint type,
                      gint size, GdkColor *color, gboolean clear)

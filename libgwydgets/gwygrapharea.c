@@ -859,6 +859,18 @@ gwy_graph_area_draw_child_rectangle(GwyGraphArea *area)
     gdk_gc_set_function(area->gc, GDK_COPY);
 }
 
+/**
+ * gwy_graph_area_set_boundaries:
+ * @area: graph area 
+ * @x_min: x minimum 
+ * @x_max: x maximum
+ * @y_min: y minimim
+ * @y_max: y maximum
+ *
+ * Sets the boudaries of graph area and calls for recomputation of
+ * actual curve screen representation and its redrawing. used for example by
+ * zoom to change curve screen representation.
+ **/
 void
 gwy_graph_area_set_boundaries(GwyGraphArea *area, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max)
 {
@@ -871,6 +883,13 @@ gwy_graph_area_set_boundaries(GwyGraphArea *area, gdouble x_min, gdouble x_max, 
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
+/**
+ * gwy_graph_area_plot_refresh:
+ * @area: graph area 
+ *
+ * Recomputes all data corresponding to actual curve screen representation 
+ * to be plotted according to window size.
+ **/
 static void
 gwy_graph_area_plot_refresh(GwyGraphArea *area)
 {
@@ -899,6 +918,15 @@ gwy_graph_area_plot_refresh(GwyGraphArea *area)
     }
 }
 
+/**
+ * gwy_graph_area_add_curve:
+ * @area: graph area 
+ * @curve: curve to be added
+ *
+ * Adds a curve to graph. Adds the curve data values, but the recomputation
+ * of actual screen points representing curve must be called after
+ * setting the boundaries of the graph area (and complete graph).
+ **/
 void
 gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve)
 {
@@ -938,6 +966,12 @@ gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve)
 
 }
 
+/**
+ * gwy_graph_area_clear:
+ * @area: graph area 
+ *
+ * clear graph area
+ **/
 void
 gwy_graph_area_clear(GwyGraphArea *area)
 {
@@ -979,12 +1013,25 @@ scr_to_data_y(GtkWidget *widget, gint scr)
     return area->y_min + (widget->allocation.height - scr)*(area->y_max - area->y_min)/(widget->allocation.height-1);
 }
 
+/**
+ * gwy_graph_area_signal_selected:
+ * @area: graph area 
+ *
+ * emit signal that something was selected by mouse. "Something" depends on the
+ * actual graph status (points, horizontal selection, etc.).
+ **/
 void
 gwy_graph_area_signal_selected(GwyGraphArea *area)
 {
     g_signal_emit (G_OBJECT (area), gwygrapharea_signals[SELECTED_SIGNAL], 0);
 }
 
+/**
+ * gwy_graph_area_signal_zoomed:
+ * @area: graph area 
+ *
+ * emit signal that user finished drawing zoom rectangle by mouse. 
+ **/
 void
 gwy_graph_area_signal_zoomed(GwyGraphArea *area)
 {

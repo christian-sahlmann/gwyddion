@@ -211,6 +211,16 @@ gwy_graph_new()
 }
 
 
+/**
+ * gwy_graph_add_dataline:
+ * @graph: graph widget 
+ * @dataline: dataline to be added
+ * @shift: x shift (dataline starts allways at zero)
+ * @label: curve label
+ * @params: parameters of curve (lines/points etc.)
+ *
+ * Adds a dataline into graph.
+ **/
 void
 gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
                        G_GNUC_UNUSED gdouble shift, GString *label,
@@ -236,6 +246,22 @@ gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
     g_free(xdata);
 }
 
+/**
+ * gwy_graph_add_dataline_with_units:
+ * @graph: graph widget 
+ * @dataline: dataline to be added
+ * @shift: x shift (dataline starts allways at zero)
+ * @label: curve label
+ * @params: parameters of curve (lines/points etc.)
+ * @x_order: division factor to obtain values corresponding to units
+ * @y_order: division factor to obtain values corresponding to units
+ * @x_unit: unit at x axis
+ * @y_unit: unit at y axis
+ *
+ * Adds a datalien into graph, setting units. Original dataline data
+ * will be divided by @x_order and @y_order factors and axis labels
+ * will have requested units.
+ **/
 void
 gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
                                   G_GNUC_UNUSED gdouble shift, GString *label,
@@ -281,6 +307,18 @@ gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
     g_free(ydata);
 }
 
+/**
+ * gwy_graph_add_datavalues:
+ * @graph: graph widget 
+ * @xvals: x values
+ * @yvals: y values
+ * @n: number of values
+ * @label: curve label
+ * @params: arameters of curve (lines/points etc.)
+ *
+ * Adds raw data to the graph. Data are represented by two arrays
+ * of same size.
+ **/
 void
 gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
                          gint n, GString *label,
@@ -406,6 +444,12 @@ gwy_graph_make_curve_data(G_GNUC_UNUSED GwyGraph *graph,
     }
 }
 
+/**
+ * gwy_graph_clear:
+ * @graph: graph widget 
+ *
+ * Remove all curves.
+ **/
 void
 gwy_graph_clear(GwyGraph *graph)
 {
@@ -425,6 +469,15 @@ gwy_graph_clear(GwyGraph *graph)
     gtk_widget_queue_draw(GTK_WIDGET(graph));
 }
 
+/**
+ * gwy_graph_set_autoproperties:
+ * @graph: graph widget 
+ * @autoproperties: autoproperties of graph
+ *
+ * Sets the autoproperties - properties of curves
+ * added with no specification
+ * (color, point/line draw, etc.).
+ **/
 void
 gwy_graph_set_autoproperties(GwyGraph *graph,
                              GwyGraphAutoProperties *autoproperties)
@@ -432,6 +485,14 @@ gwy_graph_set_autoproperties(GwyGraph *graph,
     graph->autoproperties = *autoproperties;
 }
 
+/**
+ * gwy_graph_get_autoproperties:
+ * @graph: graph widget 
+ * @autoproperties: autoproperties of graph
+ *
+ * Gets the autoproperties - properties of curves
+ * added with no specification (color, point/line draw, etc.).
+ **/
 void
 gwy_graph_get_autoproperties(GwyGraph *graph,
                              GwyGraphAutoProperties *autoproperties)
@@ -439,6 +500,14 @@ gwy_graph_get_autoproperties(GwyGraph *graph,
     *autoproperties = graph->autoproperties;
 }
 
+/**
+ * gwy_graph_set_status:
+ * @graph: graph widget 
+ * @status: graph status to be set
+ *
+ * sets the graph status. The status is related with ability
+ * to do different mouse selections.
+ **/
 void
 gwy_graph_set_status(GwyGraph *graph,
                      GwyGraphStatusType status)
@@ -446,12 +515,30 @@ gwy_graph_set_status(GwyGraph *graph,
     graph->area->status = status;
 }
 
+/**
+ * gwy_graph_get_status:
+ * @graph: graph widget 
+ *
+ * gets the graph status. The status is related with ability
+ * to do different mouse selections.
+ * Returns: current graph status
+ **/
 GwyGraphStatusType
 gwy_graph_get_status(GwyGraph *graph)
 {
     return graph->area->status;
 }
 
+/**
+ * gwy_graph_get_status_data:
+ * @graph: graph widget 
+ *
+ * gets the graph status data - data corresponding
+ * to mouse selections done by user. Actual contain
+ * cooresponds on status type.
+ *
+ * Returns: pointer to status data.
+ **/
 gpointer
 gwy_graph_get_status_data(GwyGraph *graph)
 {
@@ -484,6 +571,16 @@ gwy_graph_get_status_data(GwyGraph *graph)
     return NULL;
 }
 
+/**
+ * gwy_graph_get_boundaries:
+ * @graph: graph widget 
+ * @x_min: x axis minimum value
+ * @x_max: x axis maximum value
+ * @y_min: y axis minimum value
+ * @y_max: y axis maximum value
+ *
+ * Returns actual axis boundaries of graph.
+ **/
 void 
 gwy_graph_get_boundaries(GwyGraph *graph, gdouble *x_min, gdouble *x_max, gdouble *y_min, gdouble *y_max)
 {
@@ -493,6 +590,17 @@ gwy_graph_get_boundaries(GwyGraph *graph, gdouble *x_min, gdouble *x_max, gdoubl
     *y_max = graph->y_max;
 }
 
+/**
+ * gwy_graph_set_boundaries:
+ * @graph: graph widget 
+ * @x_min: x axis minimum value
+ * @x_max: x axis maximum value
+ * @y_min: y axis minimum value
+ * @y_max: y axis maximum value
+ *
+ * Sets actual axis boundaries of graph. Recomputes and redisplays all
+ * necessary things.
+ **/
 void 
 gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max)
 {
@@ -525,6 +633,12 @@ gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdouble 
   
 }
 
+/**
+ * gwy_graph_unzoom:
+ * @graph: graph widget 
+ *
+ * resets zoom. Fits all curves into graph.
+ **/
 void
 gwy_graph_unzoom(GwyGraph *graph)
 {
