@@ -182,6 +182,17 @@ gwy_graph_model_new(GwyGraph *graph)
     return (GObject*)(gmodel);
 }
 
+gint
+gwy_graph_model_get_n_curves(GwyGraphModel *gmodel)
+{
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), 0);
+
+    if (gmodel->graph)
+        return gwy_graph_get_number_of_curves(gmodel->graph);
+    else
+        return gmodel->ncurves;
+}
+
 static void
 gwy_graph_model_finalize(GObject *object)
 {
