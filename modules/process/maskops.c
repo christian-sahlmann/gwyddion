@@ -43,7 +43,7 @@ static GwyModuleInfo module_info = {
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2004",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -130,6 +130,7 @@ mask_extract(GwyContainer *data, GwyRunType run)
 
     pal = gwy_container_get_string_by_name(data, "/0/base/palette");
     dfield = gwy_serializable_duplicate(dfield);
+    gwy_data_field_clamp(GWY_DATA_FIELD(dfield), 0.0, 1.0);
     siunit = gwy_si_unit_new("");
     gwy_data_field_set_si_unit_z(GWY_DATA_FIELD(dfield), GWY_SI_UNIT(siunit));
     g_object_unref(siunit);
