@@ -67,7 +67,7 @@ run_process_func_cb(gchar *name,
     data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(data_view);
     g_return_if_fail(data);
-    gwy_run_process_func(name, data, GWY_RUN_NONINTERACTIVE);
+    gwy_run_process_func(name, data, GWY_RUN_INTERACTIVE);
     /* FIXME: the ugliest hack! */
     gwy_data_view_update(data_view);
 }
