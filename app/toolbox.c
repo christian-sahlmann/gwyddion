@@ -22,7 +22,6 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwytoolbox.h>
-#include <libgwydgets/gwyvmenubar.h>
 #include <libgwymodule/gwymodule.h>
 #include "gwyapp.h"
 
