@@ -250,22 +250,37 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
                        gdouble value,
                        GwySIValueFormat *format)
 {
+    char num[20];
+    
     gwy_debug("");
     if (format==NULL) {
         format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
         format->units = NULL;
     }
-
-    format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
     
     if (format->units)
     {
         g_free(format->units);
     }
-    format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
+   
+    if (strlen(siunit->unitstr)<2)
+    {
+        format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
+        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
   
-    format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
-    format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+        format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
+        format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+    }
+    else
+    {
+        format->magnitude = pow(10, (gint)(log10(fabs(value)))-1);
+        
+        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+20)*sizeof(gchar));
+        sprintf(num, "x 10<sup>%d</sup> ", (gint)(log10(fabs(value)))-1);
+        format->units = strcpy(format->units, num);
+        format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+        
+    }
     format->precision = 2;
     return format;
 }
