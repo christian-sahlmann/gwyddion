@@ -1087,7 +1087,7 @@ gwy_data_field_get_rms(GwyDataField *a)
         sum2 += (*p)*(*p);
 
     n = a->xres * a->yres;
-    rms = sqrt(fabs(sum2 - sum*sum/n))/n;
+    rms = sqrt(fabs(sum2 - sum*sum/n)/n);
 
     return rms;
 }
@@ -1216,7 +1216,7 @@ gwy_data_field_get_area_rms(GwyDataField *a, gint uli, gint ulj, gint bri, gint 
     }
 
     n = (bri-uli)*(brj-ulj);
-    rms = sqrt(fabs(sum2 - sum*sum/n))/n;
+    rms = sqrt(fabs(sum2 - sum*sum/n)/n);
 
     return rms;
 }
