@@ -1,4 +1,4 @@
-1.3cvs20040722
+1.3cvs20040727
 
 1.4
 Application:
@@ -39,6 +39,8 @@ Library:
 Other:
 - New example plug-ins using Gwyddion::dump, Gwyddion.dump.
 - New example plug-ins in C++ and Pascal.
+- Dump plug-in allowing to load and save plug-in proxy dump files is
+  available on MS Windows too.
 - Standard vector layers were documented.
 
 
