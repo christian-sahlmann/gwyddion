@@ -29,6 +29,8 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
+
 #define GWY_TYPE_VECTOR_SHADE            (gwy_vector_shade_get_type())
 #define GWY_VECTOR_SHADE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_VECTOR_SHADE, GwyVectorShade))
 #define GWY_VECTOR_SHADE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_VECTOR_SHADE, GwyVectorShadeClass))
@@ -69,6 +71,8 @@ GtkWidget*       gwy_vector_shade_get_grad_sphere   (GwyVectorShade *vector_shad
 GwySphereCoords* gwy_vector_shade_get_sphere_coords (GwyVectorShade *vector_shade);
 void             gwy_vector_shade_set_sphere_coords (GwyVectorShade *vector_shade,
                                                      GwySphereCoords *sphere_coords);
+
+#endif
 
 G_END_DECLS
 

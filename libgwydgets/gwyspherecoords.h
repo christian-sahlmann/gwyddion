@@ -26,6 +26,8 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
+
 #define GWY_TYPE_SPHERE_COORDS                  (gwy_sphere_coords_get_type())
 #define GWY_SPHERE_COORDS(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SPHERE_COORDS, GwySphereCoords))
 #define GWY_SPHERE_COORDS_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SPHERE_COORDS, GwySphereCoordsClass))
@@ -59,6 +61,8 @@ gdouble    gwy_sphere_coords_get_phi        (GwySphereCoords *sphere_coords);
 void       gwy_sphere_coords_set_value      (GwySphereCoords *sphere_coords,
                                              gdouble theta,
                                              gdouble phi);
+
+#endif
 
 G_END_DECLS
 

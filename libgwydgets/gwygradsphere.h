@@ -35,6 +35,8 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
+
 #define GWY_TYPE_GRAD_SPHERE            (gwy_grad_sphere_get_type())
 #define GWY_GRAD_SPHERE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAD_SPHERE, GwyGradSphere))
 #define GWY_GRAD_SPHERE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAD_SPHERE, GwyGradSphereClass))
@@ -88,6 +90,8 @@ void             gwy_grad_sphere_set_palette       (GwyGradSphere *grad_sphere,
 GtkUpdateType    gwy_grad_sphere_get_update_policy (GwyGradSphere *grad_sphere);
 void             gwy_grad_sphere_set_update_policy (GwyGradSphere *grad_sphere,
                                                     GtkUpdateType update_policy);
+
+#endif
 
 G_END_DECLS
 
