@@ -124,7 +124,6 @@ gwy_val_unit_init(GwyValUnit *val_unit)
   
 }
 
-#include <stdio.h>
 
 GtkWidget*
 gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)

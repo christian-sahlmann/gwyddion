@@ -618,14 +618,14 @@ recompute(FitArgs *args, FitControls *controls)
                                   args->par_res, args->err, fixed, NULL);
 
     for (i = 0; i < nparams; i++) {
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par_res[i]);
+        g_snprintf(buffer, sizeof(buffer), "%3.4g", args->par_res[i]);
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), buffer);
     }
     for (i = 0; i < nparams; i++) {
         if (args->err[i] == -1)
             g_snprintf(buffer, sizeof(buffer), "-");
         else
-            g_snprintf(buffer, sizeof(buffer), "%2.3g", args->err[i]);
+            g_snprintf(buffer, sizeof(buffer), "%3.4g", args->err[i]);
         gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), buffer);
     }
 

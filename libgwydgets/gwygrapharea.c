@@ -65,6 +65,10 @@ static void     gwy_graph_area_plot_refresh         (GwyGraphArea *area);
 
 static gdouble  scr_to_data_x                       (GtkWidget *widget, gint scr);
 static gdouble  scr_to_data_y                       (GtkWidget *widget, gint scr);
+static gint     data_to_scr_x                       (GtkWidget *widget, gdouble data);
+static gint     data_to_scr_y                       (GtkWidget *widget, gdouble data);
+    
+
 
 static void     zoom                                (GtkWidget *widget);
 /* Local data */
@@ -257,11 +261,13 @@ gwy_graph_area_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
+
 static void
 gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     GwyGraphArea *area;
     GtkAllocation *lab_alloc;
+    guint n;
     gwy_debug("");
 
     area = GWY_GRAPH_AREA(widget);
@@ -448,12 +454,14 @@ gwy_graph_area_draw_selection(GtkWidget *widget)
 
 }
 
+#include <stdio.h>
 static void
 gwy_graph_area_draw_selection_points(GtkWidget *widget)
 {
     GwyGraphArea *area;
     GdkColor fg, sg;
     GwyGraphScrPoint scrpnt;
+    GwyGraphDataPoint datpnt;
     guint n;
 
     area = GWY_GRAPH_AREA(widget);
@@ -465,9 +473,11 @@ gwy_graph_area_draw_selection_points(GtkWidget *widget)
     {
         gdk_gc_set_foreground(area->gc, &sg);
 
-        for (n = 0; n < area->pointsdata->scr_points->len; n++) {
-            scrpnt = g_array_index(area->pointsdata->scr_points,
-                                   GwyGraphScrPoint, n);
+        for (n = 0; n < area->pointsdata->data_points->len; n++) {
+            datpnt = g_array_index(area->pointsdata->data_points,
+                                   GwyGraphDataPoint, n);
+            scrpnt.i = data_to_scr_x(widget, datpnt.x);
+            scrpnt.j = data_to_scr_y(widget, datpnt.y);
             gdk_draw_line(GTK_LAYOUT(widget)->bin_window, area->gc,
                           scrpnt.i-5,
                           scrpnt.j,
@@ -1007,6 +1017,15 @@ scr_to_data_x(GtkWidget *widget, gint scr)
     return area->x_min + scr*(area->x_max - area->x_min)/(widget->allocation.width-1);
 }
 
+static gint
+data_to_scr_x(GtkWidget *widget, gdouble data)
+{
+    GwyGraphArea *area;
+    area = GWY_GRAPH_AREA(widget);
+
+    return (data - area->x_min)/((area->x_max - area->x_min)/(widget->allocation.width-1));
+}
+
 static gdouble
 scr_to_data_y(GtkWidget *widget, gint scr)
 {
@@ -1014,6 +1033,15 @@ scr_to_data_y(GtkWidget *widget, gint scr)
     area = GWY_GRAPH_AREA(widget);
 
     return area->y_min + (widget->allocation.height - scr)*(area->y_max - area->y_min)/(widget->allocation.height-1);
+}
+
+static gint
+data_to_scr_y(GtkWidget *widget, gdouble data)
+{
+    GwyGraphArea *area;
+    area = GWY_GRAPH_AREA(widget);
+
+    return widget->allocation.height - (data - area->y_min)/((area->y_max - area->y_min)/(widget->allocation.height-1));
 }
 
 /**
