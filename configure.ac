@@ -88,6 +88,7 @@ AC_C_CONST
 AC_STRUCT_TM
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
+#gwy_C_VARARG_MACROS
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS([getline])
@@ -116,3 +117,12 @@ AC_SUBST(gwymoduledir)
 
 AC_OUTPUT
 
+# XXX: An extremely ugly hack. Force libtool to pass --silent to ltmain.sh
+if test -f libtool; then
+  sed '
+/show=:$/a\
+    silent="--silent "
+s/$SHELL $0 --finish/$SHELL $0 $silent--finish/' libtool >.libtool-hack.$$
+  cat .libtool-hack.$$ >libtool
+  rm -f .libtool-hack.$$
+fi

@@ -42,7 +42,8 @@ extern "C" {
 #  endif
 #else /* no varargs macros */
 #  ifdef DEBUG
-G_INLINE_FUNC void gwy_debug(const gchar *format, ...)
+G_INLINE_FUNC void
+gwy_debug(const gchar *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -50,7 +51,8 @@ G_INLINE_FUNC void gwy_debug(const gchar *format, ...)
   va_end(args);
 }
 #  else
-G_INLINE_FUNC void gwy_debug(const gchar *format, ...)
+G_INLINE_FUNC void
+gwy_debug(const gchar *format, ...)
 {
 }
 #  endif
