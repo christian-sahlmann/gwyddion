@@ -30,6 +30,7 @@ gdouble gwy_data_field_get_min               (GwyDataField *a);
 gdouble gwy_data_field_get_avg               (GwyDataField *a);
 gdouble gwy_data_field_get_rms               (GwyDataField *a);
 gdouble gwy_data_field_get_sum               (GwyDataField *a);
+gdouble gwy_data_field_get_median            (GwyDataField *dfield);
 gdouble gwy_data_field_get_surface_area      (GwyDataField *a,
                                               GwyInterpolationType interpolation);
 gdouble gwy_data_field_area_get_max          (GwyDataField *dfield,
@@ -53,6 +54,11 @@ gdouble gwy_data_field_area_get_rms          (GwyDataField *dfield,
                                               gint width,
                                               gint height);
 gdouble gwy_data_field_area_get_sum          (GwyDataField *dfield,
+                                              gint col,
+                                              gint row,
+                                              gint width,
+                                              gint height);
+gdouble gwy_data_field_area_get_median       (GwyDataField *dfield,
                                               gint col,
                                               gint row,
                                               gint width,

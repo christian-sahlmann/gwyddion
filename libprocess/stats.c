@@ -959,4 +959,68 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
     }
 }
 
+/**
+ * gwy_data_field_area_get_median:
+ * @dfield: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Computes median value of a data field area.
+ *
+ * Returns: The median value.
+ *
+ * Since: 1.7
+ **/
+gdouble
+gwy_data_field_area_get_median(GwyDataField *dfield,
+                               gint col, gint row, gint width, gint height)
+{
+    gdouble median = 0.0/0.0;  /* NaN */
+    gdouble *buffer, *datapos;
+    gint i;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), median);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= dfield->xres
+                         && row + height <= dfield->yres,
+                         median);
+    if (!width || !height)
+        return median;
+
+    buffer = g_new(gdouble, width*height);
+    datapos = dfield->data + row*dfield->xres + col;
+    if (height == 1 || (col == 0 && width == dfield->xres))
+        memcpy(buffer, datapos, width*height*sizeof(gdouble));
+    else {
+        for (i = 0; i < height; i++)
+            memcpy(buffer + i*width, datapos + i*dfield->xres,
+                   width*sizeof(gdouble));
+    }
+    median = gwy_math_median(width*height, buffer);
+    g_free(buffer);
+
+    return median;
+}
+
+/**
+ * gwy_data_field_get_median:
+ * @dfield: A data field.
+ *
+ * Computes median value of a data field.
+ *
+ * Returns: The median value.
+ *
+ * Since: 1.7
+ **/
+gdouble
+gwy_data_field_get_median(GwyDataField *dfield)
+{
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), 0.0/0.0);
+    return gwy_data_field_area_get_median(dfield,
+                                          0, 0, dfield->xres, dfield->yres);
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
