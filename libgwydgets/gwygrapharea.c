@@ -116,7 +116,6 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 static void
 gwy_graph_area_init(GwyGraphArea *area)
 {
-    GtkLabel *ble;
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
@@ -132,8 +131,6 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90); 
 
-    ble = gtk_label_new("ble");
-    gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(ble), 10, 10);
 }
 
 GtkWidget*

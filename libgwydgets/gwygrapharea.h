@@ -61,6 +61,10 @@ typedef struct {
     gdouble x_min;
     gdouble y_max;
     gdouble y_min;
+
+    gint old_width;
+    gint old_height;
+    
     
     /*label movement*/
     GtkWidget *active;
