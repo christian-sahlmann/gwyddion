@@ -40,9 +40,8 @@ static void     gwy_palette_init                  (GwyPalette *palette);
 static void     gwy_palette_finalize              (GwyPalette *palette);
 static void     gwy_palette_serializable_init     (GwySerializableIface *iface);
 static void     gwy_palette_watchable_init        (GwyWatchableIface *iface);
-static guchar*  gwy_palette_serialize             (GObject *obj,
-                                                   guchar *buffer,
-                                                   gsize *size);
+static GByteArray* gwy_palette_serialize          (GObject *obj,
+                                                   GByteArray *buffer);
 static GObject* gwy_palette_deserialize           (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
@@ -287,10 +286,9 @@ gwy_palette_samples_maybe_free(GwyPaletteDef *palette_def)
     }
 }
 
-static guchar*
+static GByteArray*
 gwy_palette_serialize(GObject *obj,
-                      guchar *buffer,
-                      gsize *size)
+                      GByteArray*buffer)
 {
     GwyPalette *palette;
 
@@ -302,7 +300,7 @@ gwy_palette_serialize(GObject *obj,
         GwySerializeSpec spec[] = {
             { 'o', "pdef", &palette->def, NULL, },
         };
-        return gwy_serialize_pack_object_struct(buffer, size,
+        return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_PALETTE_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
     }

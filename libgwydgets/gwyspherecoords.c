@@ -31,9 +31,8 @@ static void     gwy_sphere_coords_class_init        (void);
 static void     gwy_sphere_coords_init              (GwySphereCoords *sphere_coords);
 static void     gwy_sphere_coords_serializable_init (GwySerializableIface *iface);
 static void     gwy_sphere_coords_watchable_init    (GwyWatchableIface *iface);
-static guchar*  gwy_sphere_coords_serialize         (GObject *obj,
-                                                     guchar *buffer,
-                                                     gsize *size);
+static GByteArray* gwy_sphere_coords_serialize      (GObject *obj,
+                                                     GByteArray*buffer);
 static GObject* gwy_sphere_coords_deserialize       (const guchar *buffer,
                                                      gsize size,
                                                      gsize *position);
@@ -201,10 +200,9 @@ gwy_sphere_coords_set_value(GwySphereCoords *sphere_coords,
     }
 }
 
-static guchar*
+static GByteArray*
 gwy_sphere_coords_serialize(GObject *obj,
-                            guchar *buffer,
-                            gsize *size)
+                            GByteArray*buffer)
 {
     GwySphereCoords *sphere_coords;
 
@@ -217,7 +215,7 @@ gwy_sphere_coords_serialize(GObject *obj,
             { 'd', "theta", &sphere_coords->theta, NULL },
             { 'd', "phi", &sphere_coords->phi, NULL },
         };
-        return gwy_serialize_pack_object_struct(buffer, size,
+        return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_SPHERE_COORDS_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
     }

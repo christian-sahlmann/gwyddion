@@ -91,8 +91,7 @@ gboolean
 gwy_app_settings_save_bin(const gchar *filename)
 {
     GwyContainer *settings;
-    gchar *buffer = NULL;
-    gsize size = 0;
+    GByteArray *buffer = NULL;
     FILE *fh;
     gchar *cfgdir;
 
@@ -112,11 +111,11 @@ gwy_app_settings_save_bin(const gchar *filename)
                   filename, g_strerror(errno));
         return FALSE;
     }
-    buffer = gwy_serializable_serialize(G_OBJECT(settings), buffer, &size);
+    buffer = gwy_serializable_serialize(G_OBJECT(settings), NULL);
     if (!buffer)
         return FALSE;
-    fwrite(buffer, 1, size, fh);
-    g_free(buffer);
+    fwrite(buffer->data, 1, buffer->len, fh);
+    g_byte_array_free(buffer, TRUE);
     fclose(fh);
 
     return TRUE;

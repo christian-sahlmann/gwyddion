@@ -31,9 +31,8 @@ static void     gwy_palette_def_init              (GwyPaletteDef *palette_def);
 static void     gwy_palette_def_finalize          (GwyPaletteDef *palette_def);
 static void     gwy_palette_def_serializable_init (GwySerializableIface *iface);
 static void     gwy_palette_def_watchable_init    (GwyWatchableIface *iface);
-static guchar*  gwy_palette_def_serialize         (GObject *obj,
-                                                   guchar *buffer,
-                                                   gsize *size);
+static GByteArray *gwy_palette_def_serialize      (GObject *obj,
+                                                   GByteArray *buffer);
 static GObject* gwy_palette_def_deserialize       (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
@@ -233,10 +232,9 @@ gwy_palette_def_new_as_copy(GwyPaletteDef *src_palette_def)
 }
 
 
-static guchar*
+static GByteArray*
 gwy_palette_def_serialize(GObject *obj,
-                          guchar *buffer,
-                          gsize *size)
+                          GByteArray *buffer)
 {
     GwyPaletteDef *palette_def;
     GwyPaletteDefEntry *pe;
@@ -276,7 +274,7 @@ gwy_palette_def_serialize(GObject *obj,
             { 'D', "alpha", &adat, &ndat, },
             { 'D', "x", &xdat, &ndat, },
         };
-        buffer = gwy_serialize_pack_object_struct(buffer, size,
+        buffer = gwy_serialize_pack_object_struct(buffer,
                                                   GWY_PALETTE_DEF_TYPE_NAME,
                                                   G_N_ELEMENTS(spec), spec);
     }

@@ -146,21 +146,20 @@ static gboolean
 gwyfile_save(GwyContainer *data,
              const gchar *filename)
 {
-    guchar *buffer = NULL;
-    gsize size = 0;
+    GByteArray *buffer;
     FILE *fh;
     gboolean ok = TRUE;
 
     if (!(fh = fopen(filename, "wb")))
         return FALSE;
-    buffer = gwy_serializable_serialize(G_OBJECT(data), buffer, &size);
+    buffer = gwy_serializable_serialize(G_OBJECT(data), NULL);
     if (fwrite(MAGIC, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
-        || fwrite(buffer, 1, size, fh) != size) {
+        || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
         ok = FALSE;
         unlink(filename);
     }
     fclose(fh);
-    g_free(buffer);
+    g_byte_array_free(buffer, TRUE);
 
     return ok;
 }
