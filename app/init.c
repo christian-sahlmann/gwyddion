@@ -26,7 +26,7 @@
 
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/libgwyprocess.h>
+#include <libprocess/gwyprocess.h>
 #include <libgwydgets/gwydgets.h>
 
 static GType optimization_fooler = 0;
