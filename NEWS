@@ -31,6 +31,7 @@ Library:
 - libgwydgets: GwyColorButton reduction to a simple dialogless button using
   GwyRGBA instead of Gdk colors.  Mask color selector helper
   gwy_color_selector_for_mask().
+- libgwyapp: Data window option menus directly display thumbnails.
 
 
 1.2
