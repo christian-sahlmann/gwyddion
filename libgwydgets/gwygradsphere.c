@@ -136,21 +136,23 @@ gwy_grad_sphere_class_init(GwyGradSphereClass *klass)
     widget_class->button_release_event = gwy_grad_sphere_button_release;
     widget_class->motion_notify_event = gwy_grad_sphere_motion_notify;
 
-    g_object_class_install_property(gobject_class,
-                                    PROP_SPHERE_COORDS,
-                                    g_param_spec_object("sphere_coords",
-                                                        _("Spherical coordinates"),
-                                                        _("The GwySphereCoords the shpere"),
-                                                          GWY_TYPE_SPHERE_COORDS,
-                                                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-    g_object_class_install_property(gobject_class,
-                                    PROP_UPDATE_POLICY,
-                                    g_param_spec_enum("update_policy",
-                                                      _("Update Policy"),
-                                                      _("When value changed causes signal emission"),
-                                                      GTK_TYPE_UPDATE_TYPE,
-                                                      GTK_UPDATE_CONTINUOUS,
-                                                      G_PARAM_READABLE | G_PARAM_WRITABLE));
+    g_object_class_install_property(
+        gobject_class,
+        PROP_SPHERE_COORDS,
+        g_param_spec_object("sphere_coords",
+                            _("Spherical coordinates"),
+                            _("The GwySphereCoords the shpere"),
+                            GWY_TYPE_SPHERE_COORDS,
+                            G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property(
+        gobject_class,
+        PROP_UPDATE_POLICY,
+        g_param_spec_enum("update_policy",
+                          _("Update Policy"),
+                          _("When value changed causes signal emission"),
+                          GTK_TYPE_UPDATE_TYPE,
+                          GTK_UPDATE_CONTINUOUS,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
