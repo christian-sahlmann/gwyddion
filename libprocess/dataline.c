@@ -239,7 +239,7 @@ gwy_data_line_value_changed(GObject *data_line)
 void
 gwy_data_line_alloc(GwyDataLine *a, gint res)
 {
-    gwy_debug("");
+    /*gwy_debug("");*/
 
     a->res = res;
     a->data = g_new(gdouble, a->res);
@@ -252,7 +252,7 @@ gwy_data_line_initialize(GwyDataLine *a,
 {
     int i;
 
-    gwy_debug("");
+    /*gwy_debug("");*/
     gwy_data_line_alloc(a, res);
 
     a->real = real;
@@ -796,7 +796,7 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
     gint i;
     gdouble bpix = bv/a->res*a->real;
 
-    gwy_debug("");
+    /*gwy_debug("");*/
     for (i = 0; i < a->res; i++)
         a->data[i] -= av + bpix*i;
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
@@ -1125,7 +1125,9 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
     for (i=0; i<n; i++)
     {
         val = (gint)(gwy_data_line_get_der(data_line, i)/step - imin);
-        target_line->data[val] += 1.0;///n/step;
+        if (val<0) val = 0;
+        if (val>=nsteps) val = nsteps-1;
+        target_line->data[val] += 1.0;/*/n/step;*/
     }
 }
 

@@ -2357,7 +2357,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    
+   
     /*precompute settings if necessary*/
     if (type==GWY_SF_OUTPUT_DH || type==GWY_SF_OUTPUT_CDH)
     {
@@ -2390,13 +2390,13 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
                 }             
         }
     }
-     
+   
     /*average over profiles*/
     if (orientation == GTK_ORIENTATION_HORIZONTAL || orientation == GTK_ORIENTATION_VERTICAL)
     {
         size = brcol-ulcol;
         if (size < 10) {printf("Field too small\n"); return 0;}
-        
+         
         hlp_line = gwy_data_line_new(size, gwy_data_field_jtor(data_field, size), FALSE);
         hlp_tarline = gwy_data_line_new(size, gwy_data_field_jtor(data_field, size), FALSE);
         
@@ -2406,14 +2406,14 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
         if (type==GWY_SF_OUTPUT_DH || type==GWY_SF_OUTPUT_DA || type==GWY_SF_OUTPUT_CDA || type==GWY_SF_OUTPUT_CDH)
         {
             gwy_data_line_resample(target_line, nstats, interpolation);
+            size = nstats;
         }
         else
         {
             gwy_data_line_resample(target_line, size, interpolation);
         }
-        gwy_data_line_fill(target_line, 0);
-
-
+        gwy_data_line_fill(target_line, 0.0); 
+     
         for (k = ulrow; k < brrow; k++) {
             gwy_data_field_get_row_part(data_field, hlp_line, k, ulcol, brcol);
 
@@ -2431,7 +2431,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
                 gwy_data_line_hhcf(hlp_line, hlp_tarline);    
             else if (type==GWY_SF_OUTPUT_PSDF)
                 gwy_data_line_psdf(hlp_line, hlp_tarline, windowing, interpolation);
-        
+     
             for (j=0; j<size; j++)
             {
                 target_line->data[j] += hlp_tarline->data[j]/((gdouble)(brrow-ulrow));
@@ -2445,7 +2445,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
     {
     }
 
-    for (k=0; k<nstats; k++) printf("%f\n", target_line->data[k]);
+    /*for (k=0; k<nstats; k++) printf("%f\n", target_line->data[k]);*/
     return 1;
  
 }
