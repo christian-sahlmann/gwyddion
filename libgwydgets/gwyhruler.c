@@ -32,9 +32,8 @@
  */
 
 #include <string.h>
+#include <libgwyddion/gwymacros.h>
 #include "gwyhruler.h"
-
-#define _(x) x
 
 #define RULER_HEIGHT          18
 #define MINIMUM_INCR          5

@@ -34,10 +34,9 @@
  */
 
 #include <math.h>
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "gwyruler.h"
-
-#define _(x) x
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
 

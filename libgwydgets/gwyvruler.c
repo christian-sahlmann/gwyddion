@@ -32,6 +32,7 @@
  */
 
 #include <string.h>
+#include <libgwyddion/gwymacros.h>
 #include "gwyvruler.h"
 
 #define RULER_WIDTH           18
