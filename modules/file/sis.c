@@ -420,12 +420,11 @@ sis_load(const gchar *filename)
                 gwy_debug("Available data: Channel #%u image #%u", i+1, j+1);
                 choices = g_renew(GwyEnum, choices, n);
                 choices[n-1].value = 1024*i + j;
-                choices[n-1].name = g_strdup_printf("Channel #%u, image #%u "
-                                                    "(%ux%u %.4s)",
+                choices[n-1].name = g_strdup_printf("Channel %u, image %u "
+                                                    "(%ux%u)",
                                                     i+1, j+1,
                                                     image->width,
-                                                    image->height,
-                                                    image->processing_step);
+                                                    image->height);
             }
         }
     }
@@ -447,7 +446,8 @@ static gsize
 select_which_data(GwyEnum *choices,
                   gsize n)
 {
-    GtkWidget *dialog, *omenu, *label, *table;
+    GtkWidget *dialog, *label, *table;
+    GSList *radio, *rl;
     gint response;
     gsize i;
 
@@ -461,7 +461,7 @@ select_which_data(GwyEnum *choices,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    table = gtk_table_new(2, 1, FALSE);
+    table = gtk_table_new(n+1, 1, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
 
@@ -470,9 +470,11 @@ select_which_data(GwyEnum *choices,
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    omenu = gwy_option_menu_create(choices, n, "data", NULL, NULL, -1);
-    gtk_table_attach(GTK_TABLE(table), omenu, 0, 1, 1, 2,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    radio = gwy_radio_buttons_create(choices, n, "data", NULL, NULL, 0);
+    for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
+        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(rl->data),
+                         0, 1, i+1, i+2,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     gtk_widget_show_all(dialog);
     gtk_window_present(GTK_WINDOW(dialog));
@@ -495,7 +497,7 @@ select_which_data(GwyEnum *choices,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    i = GPOINTER_TO_UINT(gwy_option_menu_get_history(omenu, "data"));
+    i = GPOINTER_TO_UINT(gwy_radio_buttons_get_current(radio, "data"));
     gtk_widget_destroy(dialog);
 
     return i;
