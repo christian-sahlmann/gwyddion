@@ -624,6 +624,35 @@ test_path_normalization()
     dcpath("/././../.././");
 }
 
+static void
+test_si_unit()
+{
+    const gchar *pairs[] = {
+        "", "",
+        "", "100",
+        "km^2/m", "cm",
+        "m kg s^-2", "km ug ms-2",
+        "A s kg", "kg A s",
+        "A s kg", "kg A s^2",
+        "m cm km um/mm^5", "m^-1",
+    };
+    GwySIUnit *siunit1, *siunit2;
+    guint i;
+
+    siunit1 = (GwySIUnit*)gwy_si_unit_new("");
+    siunit2 = (GwySIUnit*)gwy_si_unit_new("");
+    for (i = 0; i < G_N_ELEMENTS(pairs)/2; i++) {
+        gwy_si_unit_set_unit_string(siunit1, pairs[2*i]);
+        gwy_si_unit_set_unit_string(siunit2, pairs[2*i + 1]);
+        fprintf(stderr, "<%s> %s <%s>\n",
+                pairs[2*i],
+                gwy_si_unit_equal(siunit1, siunit2) ? "=" : "!=",
+                pairs[2*i + 1]);
+    }
+    g_object_unref(siunit2);
+    g_object_unref(siunit1);
+}
+
 #define dsiunitd(si, dig, val, vf) \
     vf = gwy_si_unit_get_format_with_digits(si, val, dig, vf); \
     fprintf(stderr, "(%s,\t%g,\td=%d) -> %.*f %s\n", \
@@ -637,7 +666,7 @@ test_path_normalization()
             vf->precision, val/vf->magnitude, vf->units)
 
 static void
-test_si_unit(void)
+test_si_unit_format(void)
 {
     GwySIUnit *si;
     GwySIValueFormat *vformat = NULL;
@@ -731,30 +760,37 @@ test_si_unit(void)
     gwy_si_unit_value_format_free(vformat);
 }
 
-/*
-void gwy_si_unit2_parse(const gchar *string);
+#define siparsecompose(str) \
+    siunit = (GwySIUnit*)gwy_si_unit_new_parse(str, &power10); \
+    fprintf(stderr, "<%s> -> <%s>", \
+            str, gwy_si_unit_get_unit_string(siunit)); \
+    if (power10) \
+        fprintf(stderr, " x 10^%d", power10); \
+    fprintf(stderr, "\n");
 
 static void
-test_si_unit2(void)
+test_si_unit_parse(void)
 {
+    GwySIUnit *siunit;
+    gint power10;
+
     g_message("====== SI UNIT 2 ======================");
-    gwy_si_unit2_parse("");
-    gwy_si_unit2_parse("100");
-    gwy_si_unit2_parse("m");
-    gwy_si_unit2_parse("0.1 cm");
-    gwy_si_unit2_parse("um/s");
-    gwy_si_unit2_parse("1e-2 deg");
-    gwy_si_unit2_parse("kPa");
-    gwy_si_unit2_parse("kHz/mV");
-    gwy_si_unit2_parse("m^3 V^-2 s-2");
-    gwy_si_unit2_parse("10^6 m s<sup>-2</sup>");
-    gwy_si_unit2_parse("mm^4/ns^2");
-    gwy_si_unit2_parse("uV/LSB");
-    gwy_si_unit2_parse("m2");
-    gwy_si_unit2_parse("m/m^2");
-    gwy_si_unit2_parse("10 cm^2 km/m^3");
+    siparsecompose("");
+    siparsecompose("100");
+    siparsecompose("m");
+    siparsecompose("0.1 cm");
+    siparsecompose("um/s");
+    siparsecompose("1e-2 deg");
+    siparsecompose("kPa");
+    siparsecompose("kHz/mV");
+    siparsecompose("m^3 V^-2 s-2");
+    siparsecompose("10^6 m s<sup>-2</sup>");
+    siparsecompose("mm^4/ns^2");
+    siparsecompose("uV/LSB");
+    siparsecompose("m2");
+    siparsecompose("m/m^2");
+    siparsecompose("10 cm^2 km/m^3");
 }
-*/
 
 static void
 test_all(void)
@@ -771,6 +807,8 @@ test_all(void)
     test_nlfit();
     test_path_normalization();
     test_si_unit();
+    test_si_unit_format();
+    test_si_unit_parse();
 }
 
 static void

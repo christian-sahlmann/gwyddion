@@ -701,21 +701,42 @@ gwy_si_unit_value_format_free(GwySIValueFormat *format)
  * @siunit1: First unit.
  * @siunit2: Second unit.
  *
- * Returns TRUE if both units are equal.
+ * Checks whether two SI units are equal.
+ *
+ * Returns: %TRUE if units are equal.
+ *
+ * Since: 1.9
  **/
 gboolean
 gwy_si_unit_equal(GwySIUnit *siunit1, GwySIUnit *siunit2)
 {
-  gchar *unit_string1, *unit_string2;
-  gboolean compare;
+    GwySIUnit2 *siunit12, *siunit22;
+    guint i, j;
 
-  unit_string1 = gwy_si_unit_get_unit_string(siunit1);
-  unit_string2 = gwy_si_unit_get_unit_string(siunit2);
-  compare = strstr(unit_string1, unit_string2) != NULL;
-  g_free(unit_string1);
-  g_free(unit_string2);
+    siunit12 = (GwySIUnit2*)g_object_get_data((GObject*)siunit1,
+                                              "gwy-si-unit2");
+    siunit22 = (GwySIUnit2*)g_object_get_data((GObject*)siunit2,
+                                              "gwy-si-unit2");
+    if (siunit22->units->len != siunit12->units->len)
+        return FALSE;
 
-  return compare;
+    for (i = 0; i < siunit12->units->len; i++) {
+        GwySimpleUnit *unit = &g_array_index(siunit12->units, GwySimpleUnit, i);
+
+        for (j = 0; j < siunit22->units->len; j++) {
+            if (g_array_index(siunit22->units, GwySimpleUnit, j).unit
+                == unit->unit) {
+                if (g_array_index(siunit22->units, GwySimpleUnit, j).power
+                    != unit->power)
+                    return FALSE;
+                break;
+            }
+        }
+        if (j == siunit22->units->len)
+            return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -724,7 +745,7 @@ gwy_si_unit_equal(GwySIUnit *siunit1, GwySIUnit *siunit2)
 static void
 gwy_si_unit2_print(GwySIUnit2 *siunit)
 {
-    gint i;
+    guint i;
 
     g_printerr("===== %p =====\n", siunit);
     for (i = 0; i < siunit->units->len; i++)
