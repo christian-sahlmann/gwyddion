@@ -336,4 +336,129 @@ free_the_icon_factory(void)
     gwy_object_unref(the_icon_factory);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * GWY_STOCK_BOLD:
+ *
+ * The "Bold" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_CROP:
+ *
+ * The "Crop" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_FIT_PLANE:
+ *
+ * The "Fit plane" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_FIT_TRIANGLE:
+ *
+ * The "Fit triangle" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_GRAPH:
+ *
+ * The "Graph" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_GWYDDION:
+ *
+ * The "Gwyddion" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_ITALIC:
+ *
+ * The "Italic" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_NONE:
+ *
+ * The "None" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_POINTER:
+ *
+ * The "Pointer" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_POINTER_MEASURE:
+ *
+ * The "Pointer-measure" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_ROTATE:
+ *
+ * The "Rotate" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_SCALE:
+ *
+ * The "Scale" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_SHADER:
+ *
+ * The "Shader" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_SUBSCRIPT:
+ *
+ * The "Subscript" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_SUPERSCRIPT:
+ *
+ * The "Superscript" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_ZOOM_1_1:
+ *
+ * The "Zoom 1:1" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_ZOOM_FIT:
+ *
+ * The "Zoom fit" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_ZOOM_IN:
+ *
+ * The "Zoom in" stock icon.
+ **/
+
+/**
+ * GWY_STOCK_ZOOM_OUT:
+ *
+ * The "Zoom out" stock icon.
+ **/
+
+/**
+ * GWY_ICON_SIZE_ABOUT
+ *
+ * The icon size name for about dialog icon size.
+ *
+ * Note: This is the name, you have to use gtk_icon_size_from_name() to get a
+ * #GtkIconSize from it.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
