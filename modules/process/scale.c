@@ -173,7 +173,7 @@ scale_dialog(ScaleArgs *args)
                        FALSE, FALSE, 4);
 
     controls.ratio = gtk_adjustment_new(args->ratio, 0.01, 100, 0.01, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, 0, _("Scale by ratio:"), "",
+    spin = gwy_table_attach_spinbutton(table, 0, _("Scale by _ratio:"), "",
                                        controls.ratio);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_object_set_data(G_OBJECT(controls.ratio), "controls", &controls);
@@ -182,7 +182,7 @@ scale_dialog(ScaleArgs *args)
 
     controls.xres = gtk_adjustment_new(args->ratio*args->xres,
                                        1, 10000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 1, _("New width:"), _("px"),
+    spin = gwy_table_attach_spinbutton(table, 1, _("New _width:"), _("px"),
                                        controls.xres);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
@@ -192,7 +192,7 @@ scale_dialog(ScaleArgs *args)
 
     controls.yres = gtk_adjustment_new(args->ratio*args->yres,
                                        1, 10000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("New height:"), _("px"),
+    spin = gwy_table_attach_spinbutton(table, 2, _("New _height:"), _("px"),
                                        controls.yres);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
@@ -203,7 +203,7 @@ scale_dialog(ScaleArgs *args)
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
-    gwy_table_attach_row(table, 3, _("Interpolation type:"), "",
+    gwy_table_attach_row(table, 3, _("_Interpolation type:"), "",
                          controls.interp);
 
     controls.in_update = FALSE;

@@ -206,24 +206,24 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 10);
 
-    table2 = gtk_table_new(2, 2, FALSE);    
+    table2 = gtk_table_new(2, 2, FALSE);
     controls->linesize = gtk_adjustment_new(controls->size, 1, 20, 1, 5, 0);
     gwy_table_attach_spinbutton(table2, 0, _("Thickness"), _("pixels"),
                                 controls->linesize);
     gtk_box_pack_start(GTK_BOX(vbox), table2, FALSE, FALSE, 2);
-    
+
     g_signal_connect_swapped(controls->linesize, "value-changed",
                              G_CALLBACK(size_changed_cb), controls);
-    
-    controls->separation = gtk_check_button_new_with_label("separate profiles");
+
+    controls->separation
+        = gtk_check_button_new_with_mnemonic(_("_Separate profiles"));
     gtk_box_pack_start(GTK_BOX(vbox), controls->separation, FALSE, FALSE, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->separation),
                                  controls->separate);
     g_signal_connect(controls->separation, "toggled",
                      G_CALLBACK(separate_changed_cb), controls);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("Interpolation type:"));
+    label = gtk_label_new_with_mnemonic(_("Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 2);
 
@@ -436,7 +436,7 @@ dialog_abandon(GwyUnitoolState *state)
     {
         g_object_unref(controls->dtl->pdata[i]);
     }
-            
+
     g_ptr_array_free(controls->dtl, TRUE);
     g_ptr_array_free(controls->str, TRUE);
     g_ptr_array_free(controls->positions, TRUE);

@@ -193,7 +193,8 @@ rotate_dialog(RotateArgs *args)
                        FALSE, FALSE, 4);
 
     controls.angle = gtk_adjustment_new(args->angle, -360, 360, 5, 30, 0);
-    gwy_table_attach_spinbutton(table, 0, _("Rotate by angle:"), _("deg (CCW)"),
+    gwy_table_attach_spinbutton(table, 0, _("Rotate by _angle:"),
+                                _("deg (CCW)"),
                                 controls.angle);
     g_signal_connect(controls.angle, "value_changed",
                      G_CALLBACK(angle_changed_cb), args);
@@ -201,7 +202,7 @@ rotate_dialog(RotateArgs *args)
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         &controls, args->interp);
-    gwy_table_attach_row(table, 1, _("Interpolation type:"), "",
+    gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
 
     controls.expand

@@ -386,18 +386,18 @@ fft_dialog(FFTArgs *args)
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
-    gwy_table_attach_row(table, 1, _("Interpolation type:"), "",
+    gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
     controls.window
         = gwy_option_menu_windowing(G_CALLBACK(window_changed_cb),
                                     args, args->interp);
-    gwy_table_attach_row(table, 2, _("Windowing type:"), "",
+    gwy_table_attach_row(table, 2, _("_Windowing type:"), "",
                          controls.window);
 
     controls.out
         = gwy_option_menu_fft_output(G_CALLBACK(out_changed_cb),
                                      args, args->out);
-    gwy_table_attach_row(table, 3, _("Output type:"), "",
+    gwy_table_attach_row(table, 3, _("_Output type:"), "",
                          controls.out);
 
     gtk_widget_show_all(dialog);

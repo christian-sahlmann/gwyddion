@@ -119,7 +119,7 @@ points_dialog(GwyGraph *graph)
     dialog = gtk_dialog_new_with_buttons(_("Measure distances"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Clear"), GTK_RESPONSE_REJECT,
+                                         GTK_STOCK_CLEAR, GTK_RESPONSE_REJECT,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
 

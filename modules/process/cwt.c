@@ -188,11 +188,11 @@ cwt_dialog(CWTArgs *args)
 
 
     controls.scale = gtk_adjustment_new(args->scale, 0.0, 1000.0, 1, 10, 0);
-    gwy_table_attach_spinbutton(table, 1, _("Scale:"), _("pixels"),
+    gwy_table_attach_spinbutton(table, 1, _("_Scale:"), _("pixels"),
                                 controls.scale);
 
     controls.preserve = gtk_check_button_new_with_label("preserve size");
-    gwy_table_attach_row(table, 0, _("Data size treatment:"), "",
+    gwy_table_attach_row(table, 0, _("Data si_ze treatment:"), "",
                          controls.preserve);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
                                  args->preserve);
@@ -203,12 +203,12 @@ cwt_dialog(CWTArgs *args)
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
-    gwy_table_attach_row(table, 2, _("Interpolation type:"), "",
+    gwy_table_attach_row(table, 2, _("_Interpolation type:"), "",
                          controls.interp);
     controls.wavelet
         = gwy_option_menu_2dcwt(G_CALLBACK(wavelet_changed_cb),
                                         args, args->wavelet);
-    gwy_table_attach_row(table, 3, _("Wavelet type:"), "",
+    gwy_table_attach_row(table, 3, _("_Wavelet type:"), "",
                          controls.wavelet);
 
     gtk_widget_show_all(dialog);
