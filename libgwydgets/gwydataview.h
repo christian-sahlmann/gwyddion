@@ -119,6 +119,9 @@ gdouble           gwy_data_view_get_xmeasure      (GwyDataView *data_view);
 gdouble           gwy_data_view_get_ymeasure      (GwyDataView *data_view);
 GdkPixbuf*        gwy_data_view_get_thumbnail     (GwyDataView *data_view,
                                                    gint size);
+GdkPixbuf*        gwy_data_view_get_pixbuf        (GwyDataView *data_view,
+                                                   gint max_width,
+                                                   gint max_height);
 void              gwy_data_view_update            (GwyDataView *data_view);
 
 G_END_DECLS

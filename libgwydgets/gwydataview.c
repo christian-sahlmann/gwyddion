@@ -1089,10 +1089,12 @@ gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
  *
  * Creates and returns a thumbnail of the data view.
  *
- * If the data are not square, they are centered onto the pixbuf.
+ * If the data is not square, it is centered onto the pixbuf, with transparent
+ * borders.  The returned pixbuf always has an alpha channel, even if it fits
+ * exactly.
  *
- * Returns: The thumbnail as a newly create #GdkPixbuf, to be freed when no
- * longer necessary.
+ * Returns: The thumbnail as a newly created #GdkPixbuf, which should be freed
+ *          when no longer needed.
  **/
 GdkPixbuf*
 gwy_data_view_get_thumbnail(GwyDataView *data_view,
@@ -1112,12 +1114,62 @@ gwy_data_view_get_thumbnail(GwyDataView *data_view,
     width = gdk_pixbuf_get_width(data_view->pixbuf);
     height = gdk_pixbuf_get_height(data_view->pixbuf);
     scale = MIN((gdouble)size/width, (gdouble)size/height);
-    width_scaled = scale*width;
-    height_scaled = scale*height;
+    width_scaled = CLAMP((gint)(scale*width), 1, size);
+    height_scaled = CLAMP((gint)(scale*height), 1, size);
     gdk_pixbuf_scale(data_view->pixbuf, pixbuf,
                      (size - width_scaled)/2, (size - height_scaled)/2,
                      width_scaled, height_scaled,
                      (size - width_scaled)/2, (size - height_scaled)/2,
+                     scale, scale, GDK_INTERP_TILES);
+
+    return pixbuf;
+}
+
+/**
+ * gwy_data_view_get_pixbuf:
+ * @data_view: A #GwyDataView.
+ * @max_width: Pixbuf width that should not be exceeeded.  Value smaller than
+ *             1 means unlimited size.
+ * @max_height: Pixbuf height that should not be exceeeded.  Value smaller than
+ *              1 means unlimited size.
+ *
+ * Creates and returns a pixbuf from the data view.
+ *
+ * If the data is not square, the resulting pixbuf is also nonsquare, this is
+ * different from gwy_data_view_get_thumbnail().  The returned pixbuf also
+ * never has alpha channel.
+ *
+ * Returns: The pixbuf as a newly created #GdkPixbuf, it should be freed
+ *          when no longer needed.  It is never larger than the actual data
+ *          size, as @max_width and @max_height are only upper limits.
+ *
+ * Since: 1.5
+ **/
+GdkPixbuf*
+gwy_data_view_get_pixbuf(GwyDataView *data_view,
+                         gint max_width,
+                         gint max_height)
+{
+    GdkPixbuf *pixbuf;
+    gint width, height, width_scaled, height_scaled;
+    gdouble xscale, yscale, scale;
+
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
+    g_return_val_if_fail(data_view->pixbuf, NULL);
+
+    width = gdk_pixbuf_get_width(data_view->pixbuf);
+    height = gdk_pixbuf_get_height(data_view->pixbuf);
+    xscale = (max_width > 0) ? (gdouble)max_width/width : 1.0;
+    yscale = (max_height > 0) ? (gdouble)max_height/height : 1.0;
+    scale = MIN(MIN(xscale, yscale), 1.0);
+    width_scaled = CLAMP((gint)(scale*width), 1, max_width);
+    height_scaled = CLAMP((gint)(scale*height), 1, max_height);
+
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
+                            BITS_PER_SAMPLE, width_scaled, height_scaled);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+    gdk_pixbuf_scale(data_view->pixbuf, pixbuf, 0, 0,
+                     width_scaled, height_scaled, 0.0, 0.0,
                      scale, scale, GDK_INTERP_TILES);
 
     return pixbuf;
