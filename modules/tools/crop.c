@@ -72,23 +72,25 @@ gwy_tool_crop_use(GwyDataWindow *data_window)
 static void
 crop_do(void)
 {
+    GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *dfield;
     gdouble x0, y0, x1, y1;
 
     if (!gwy_layer_select_get_selection(select_layer, &x0, &y0, &x1, &y1))
         return;
-    gwy_layer_select_unselect(select_layer);
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     x0 = gwy_data_field_rtoj(dfield, x0);
     y0 = gwy_data_field_rtoi(dfield, y0);
     x1 = gwy_data_field_rtoj(dfield, x1) + 1;
     y1 = gwy_data_field_rtoi(dfield, y1) + 1;
     gwy_data_field_resize(dfield, y0, x0, y1, x1);
-    gwy_app_create_data_window(data);
+    data_window = gwy_app_create_data_window(data);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
     gwy_debug("%s: %d %d", __FUNCTION__,
               gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
