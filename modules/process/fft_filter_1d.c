@@ -450,7 +450,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
                                           GWY_WINDOWING_RECT,
                                           MAX_PREV);
 
-    if (args->weights == NULL) args->weights = gwy_data_line_new(dline->res, dline->res, FALSE);
+    if (args->weights == NULL) args->weights = GWY_DATA_LINE(gwy_data_line_new(dline->res, dline->res, FALSE));
     gwy_data_line_fill(args->weights, 1);
     gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
     
@@ -496,19 +496,46 @@ graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
     
         /*setup weights for inverse FFT computation*/
         if (args->weights == NULL) args->weights = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
-        gwy_data_line_fill(args->weights, 0);
-
-        for (i = 0; i < 2*nofselection; i++)
+        
+        if (args->view_type == GWY_FFTF_1D_VIEW_UNMARKED)
         {
-            beg = selection[i];
-            end = selection[i+1];
-            gwy_data_line_part_fill(args->weights, 
+            gwy_data_line_fill(args->weights, 1);
+
+            for (i = 0; i < nofselection; i++)
+            {
+                beg = selection[2*i];
+                end = selection[2*i+1];
+                if (args->suppress == GWY_FFTF_1D_SUPPRESS_NULL)
+                    gwy_data_line_part_fill(args->weights, 
                                     MAX(0, args->weights->res*beg),
                                     MIN(args->weights->res, args->weights->res*end),
-                                    1);
+                                    0);
+                else /*TODO put there at least some linear interpolation*/
+                    gwy_data_line_part_fill(args->weights,
+                                            MAX(0, args->weights->res*beg),
+                                            MIN(args->weights->res, args->weights->res*end),
+                                            0.5);
      
+            }
+            if (args->update) update_view(pcontrols, args);
         }
-        if (args->update) update_view(pcontrols, args);
+        if (args->view_type == GWY_FFTF_1D_VIEW_MARKED)
+        {
+            gwy_data_line_fill(args->weights, 0);
+
+            for (i = 0; i < nofselection; i++)
+            {    
+                beg = selection[2*i];
+                end = selection[2*i+1];
+
+                gwy_data_line_part_fill(args->weights,
+                                        MAX(0, args->weights->res*beg),
+                                        MIN(args->weights->res, args->weights->res*end),
+                                        1);
+            }
+            if (args->update) update_view(pcontrols, args); 
+        }
+            
     }
 }
 
