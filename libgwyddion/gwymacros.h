@@ -45,7 +45,6 @@
 #define ngettext(sing, plur, n) ((n) == 1 ? (sing) : (plur))
 #endif
 #define _(x) gettext(x)
-#define S_(x) gwy_sgettext(x)
 
 #ifdef gettext_noop
 #define N_(x) gettext_noop(x)
