@@ -95,6 +95,7 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
+/* XXX: Evil static variable */
 CalibrateControls *pcontrols;
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -133,7 +134,7 @@ calibrate(GwyContainer *data, GwyRunType run)
         calibrate_load_args(gwy_app_settings_get(), &args);
     args.xreal = gwy_data_field_get_xreal(GWY_DATA_FIELD(dfield));
     args.yreal = gwy_data_field_get_yreal(GWY_DATA_FIELD(dfield));
-    args.zreal = gwy_data_field_get_max(GWY_DATA_FIELD(dfield)) 
+    args.zreal = gwy_data_field_get_max(GWY_DATA_FIELD(dfield))
         - gwy_data_field_get_min(GWY_DATA_FIELD(dfield));
     ok = (run != GWY_RUN_MODAL) || calibrate_dialog(&args, data);
     if (run == GWY_RUN_MODAL)
@@ -144,12 +145,12 @@ calibrate(GwyContainer *data, GwyRunType run)
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
     dfield = gwy_container_get_object_by_name(data, "/0/data");
- 
-    
+
+
     gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal*args.xratio);
     gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal*args.yratio);
     if (args.zratio != 1.0) gwy_data_field_multiply(GWY_DATA_FIELD(dfield), args.zratio);
-  
+
     if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield))
     {
         gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal*args.xratio);
@@ -162,20 +163,19 @@ calibrate(GwyContainer *data, GwyRunType run)
         gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal*args.yratio);
         if (args.zratio != 1.0) gwy_data_field_multiply(GWY_DATA_FIELD(dfield), args.zratio);
     }
- 
-    
-    
+
+
+
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
     return FALSE;
 }
 
-#include <stdio.h>
 static gboolean
 calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *spin, *hbox, *label;
+    GtkWidget *dialog, *spin, *hbox, *label;
     GwyDataField *dfield;
     CalibrateControls controls;
     enum { RESPONSE_RESET = 1 };
@@ -190,15 +190,15 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                                          NULL);
 
     pcontrols = &controls;
-    controls.in_update = FALSE;
+    controls.in_update = TRUE;
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(label, "<b>New real dimensions: </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>New real dimensions: </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
                        FALSE, FALSE, 4);
-    controls.xreal = gwy_val_unit_new("X range: ", 
+    controls.xreal = gwy_val_unit_new("X range: ",
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.xreal), args->xreal);
     g_signal_connect(GWY_VAL_UNIT(controls.xreal), "value_changed",
@@ -206,7 +206,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xreal,
                        FALSE, FALSE, 4);
-    controls.yreal = gwy_val_unit_new("Y range: ", 
+    controls.yreal = gwy_val_unit_new("Y range: ",
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.yreal), args->yreal);
     g_signal_connect(GWY_VAL_UNIT(controls.yreal), "value_changed",
@@ -214,7 +214,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.yreal,
                        FALSE, FALSE, 4);
-    controls.zreal = gwy_val_unit_new("Z range: ", 
+    controls.zreal = gwy_val_unit_new("Z range: ",
                                        gwy_data_field_get_si_unit_z(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.zreal), args->zreal);
     g_signal_connect(GWY_VAL_UNIT(controls.zreal), "value_changed",
@@ -223,18 +223,18 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.zreal,
                        FALSE, FALSE, 4);
 
-    
-    
+
+
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(label, "<b>Calibration coefficients: </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Calibration coefficients: </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
                        FALSE, FALSE, 4);
-     
+
 
     hbox = gtk_hbox_new(FALSE, 2);
-    
-    label = gtk_label_new("X calibration factor: "); 
+
+    label = gtk_label_new("X calibration factor: ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label,
                        FALSE, FALSE, 4);
@@ -249,12 +249,12 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), spin,
                        FALSE, FALSE, 4);
-    
+
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
-    
+
     hbox = gtk_hbox_new(FALSE, 2);
-    
+
     label = gtk_label_new("Y calibration factor: ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label,
@@ -270,12 +270,12 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), spin,
                        FALSE, FALSE, 4);
-    
+
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
-    
+
     hbox = gtk_hbox_new(FALSE, 2);
-    
+
     label = gtk_label_new("Z calibration factor: ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label,
@@ -291,10 +291,10 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), spin,
                        FALSE, FALSE, 4);
-    
+
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
-     
+
     controls.in_update = FALSE;
 
     gtk_widget_show_all(dialog);
@@ -343,7 +343,8 @@ xcalibrate_changed_cb(GtkAdjustment *adj,
     CalibrateControls *controls;
 
     controls = g_object_get_data(G_OBJECT(adj), "controls");
-    
+
+
     if (controls->in_update)
         return;
 
@@ -359,7 +360,7 @@ ycalibrate_changed_cb(GtkAdjustment *adj,
     CalibrateControls *controls;
 
     controls = g_object_get_data(G_OBJECT(adj), "controls");
-    
+
     if (controls->in_update)
         return;
 
@@ -375,10 +376,10 @@ zcalibrate_changed_cb(GtkAdjustment *adj,
     CalibrateControls *controls;
 
     controls = g_object_get_data(G_OBJECT(adj), "controls");
-    
+
     if (controls->in_update)
         return;
-    
+
     controls->in_update = TRUE;
     args->zratio = gtk_adjustment_get_value(adj);
     calibrate_dialog_update(controls, args);
@@ -396,7 +397,7 @@ width_changed_cb(GwyValUnit *valunit,
     args->xratio = gwy_val_unit_get_value(valunit)/args->xreal;
     calibrate_dialog_update(pcontrols, args);
     pcontrols->in_update = FALSE;
-    
+
 }
 
 static void
@@ -407,7 +408,7 @@ height_changed_cb(GwyValUnit *valunit,
         return;
 
     pcontrols->in_update = TRUE;
-    
+
     args->yratio = gwy_val_unit_get_value(valunit)/args->yreal;
     calibrate_dialog_update(pcontrols, args);
     pcontrols->in_update = FALSE;
@@ -421,7 +422,7 @@ z_changed_cb(GwyValUnit *valunit,
         return;
 
     pcontrols->in_update = TRUE;
-    
+
     args->zratio = gwy_val_unit_get_value(valunit)/args->zreal;
     calibrate_dialog_update(pcontrols, args);
     pcontrols->in_update = FALSE;
@@ -445,11 +446,11 @@ calibrate_dialog_update(CalibrateControls *controls,
                            args->yratio*args->yreal);
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls->zreal),
                            args->zratio*args->zreal);
-                           
+
 
 }
 
-static const gchar *xratio_key = "/module/calibrate/xratio"; 
+static const gchar *xratio_key = "/module/calibrate/xratio";
 static const gchar *yratio_key = "/module/calibrate/yratio";
 
 static void
