@@ -281,7 +281,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.5.1",
+    "4.5.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -675,6 +675,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     g_free(title);
 
@@ -1554,6 +1555,7 @@ pixmap_save_dialog(GwyContainer *data,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     g_free(title);
 

@@ -127,7 +127,7 @@ static GwyModuleInfo module_info = {
     "nanoscope",
     N_("Load Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.9.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -589,6 +589,7 @@ select_which_data(GList *list)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 20);
