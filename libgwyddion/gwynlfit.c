@@ -1087,7 +1087,7 @@ scale_exp_acf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 }
 
 
-/**************      polynomials ********************************/
+/**************   polynomial 0th order ********************************/
 static gdouble
 fit_poly_0(gdouble x, G_GNUC_UNUSED gint n_param, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
@@ -1095,7 +1095,26 @@ fit_poly_0(gdouble x, G_GNUC_UNUSED gint n_param, gdouble *b,
     return b[0];
 }
 
+static void
+guess_poly_0(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+    gint i;
+    param[0] = 0;
+    for (i=0; i<n_dat; i++) param[0] += y[i]/(gdouble)n_dat;
+}
 
+static void
+scale_poly_0(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+{
+    if (dir == 1)
+        param[0] /= yscale;
+    else
+        param[0] *= yscale;
+}
+
+
+/*************** polynomial 1st order ********************************/
 static gdouble
 fit_poly_1(gdouble x, G_GNUC_UNUSED gint n_param, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
@@ -1103,6 +1122,29 @@ fit_poly_1(gdouble x, G_GNUC_UNUSED gint n_param, gdouble *b,
     return b[0] + b[1]*x;
 }
 
+static void
+guess_poly_1(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+    gwy_math_fit_polynom(n_dat, x, y, 1, param);
+}
+
+static void
+scale_poly_1(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+{
+    if (dir == 1)
+    {
+        param[0] /= yscale;
+        param[1] /= yscale/xscale;
+    }
+    else
+    {
+        param[0] *= yscale;
+        param[1] *= yscale/xscale;
+    }
+}
+
+/************* polynomial 2nd order **********************************/
 static gdouble
 fit_poly_2(gdouble x, G_GNUC_UNUSED gint n_param, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
@@ -1110,12 +1152,64 @@ fit_poly_2(gdouble x, G_GNUC_UNUSED gint n_param, gdouble *b,
     return b[0] + b[1]*x + b[2]*x*x;
 }
 
+static void
+guess_poly_2(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+    gwy_math_fit_polynom(n_dat, x, y, 2, param);
+}
+
+static void
+scale_poly_2(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+{
+    if (dir == 1)
+    {
+        param[0] /= yscale;
+        param[1] /= yscale/xscale;
+        param[2] /= yscale/xscale/xscale;
+    }
+    else
+    {
+        param[0] *= yscale;
+        param[1] *= yscale/xscale;
+        param[2] *= yscale/xscale/xscale;
+    }
+}
+
+/************** polynomial 3rd order *****************************/
 static gdouble
 fit_poly_3(gdouble x, G_GNUC_UNUSED gint n_param, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     return b[0] + b[1]*x + b[2]*x*x + b[3]*x*x*x;
 }
+
+static void
+guess_poly_3(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+    gwy_math_fit_polynom(n_dat, x, y, 3, param);
+}
+
+static void
+scale_poly_3(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+{
+    if (dir == 1)
+    {
+        param[0] /= yscale;
+        param[1] /= yscale/xscale;
+        param[2] /= yscale/xscale/xscale;
+        param[3] /= yscale/xscale/xscale/xscale;
+    }
+    else
+    {
+        param[0] *= yscale;
+        param[1] *= yscale/xscale;
+        param[2] *= yscale/xscale/xscale;
+        param[3] *= yscale/xscale/xscale/xscale;
+    }
+}
+
 
 /******************** preset default weights *************************/
 
@@ -1259,8 +1353,8 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        "f(x) = a",
        &fit_poly_0,
        NULL,
-       NULL,
-       NULL,
+       &guess_poly_0,
+       &scale_poly_0,
        &weights_constant,
        1,
        poly0_pars
@@ -1269,8 +1363,8 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        "f(x) = a + b*x",
        &fit_poly_1,
        NULL,
-       NULL,
-       NULL,
+       &guess_poly_1,
+       &scale_poly_1,
        &weights_constant,
        2,
        poly1_pars
@@ -1279,8 +1373,8 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        "f(x) = a + b*x + c*x<sup>2</sup>",
        &fit_poly_2,
        NULL,
-       NULL,
-       NULL,
+       &guess_poly_2,
+       &scale_poly_2,
        &weights_constant,
        3,
        poly2_pars
@@ -1289,8 +1383,8 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        "f(x) = a + b*x + c*x<sup>2</sup> + d*x<sup>3</sup>",
        &fit_poly_3,
        NULL,
-       NULL,
-       NULL,
+       &guess_poly_3,
+       &scale_poly_3,
        &weights_constant,
        4,
        poly3_pars
