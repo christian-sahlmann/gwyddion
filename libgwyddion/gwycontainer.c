@@ -1980,10 +1980,12 @@ gwy_container_duplicate_real(GObject *object)
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_CONTAINER(object), NULL);
 
+    /*
     g_warning("gwy_container_duplicate() called.  Please check whether this "
               "isn't a bug, i.e., whether complete container should be really "
               "duplicated, and either duplicate only a data field, or use "
               "gwy_container_duplicate_by_prefix() for selective duplication.");
+              */
     duplicate = gwy_container_new();
     g_hash_table_foreach(GWY_CONTAINER(object)->values,
                          hash_duplicate_func, duplicate);

@@ -48,7 +48,9 @@ struct _GwyItemType {
     GType         type;
     const gchar* (*get_name) (gconstpointer item);
     const gchar* (*get_text) (gconstpointer item);
-    /* OK, this is going to be a GdkPixbuf, but we can't declare it here */
+    /* this is going to be a GdkPixbuf down the road, but we can't declare
+     * it here; XXX: may move to GwyResource -- anything containing a Pixbuf
+     * can be object itself */
     gpointer     (*get_image)(gconstpointer item);
     gint         (*compare)  (gconstpointer item1,
                               gconstpointer item2);
