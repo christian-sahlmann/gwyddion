@@ -533,9 +533,9 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 
     if (x<0 && x>-0.1) x = 0;
     if (y<0 && x>-0.1) y = 0;
-    if (!(x >= 0 && y >= 0 && y < a->xres && x < a->yres))
+    if (!(x >= 0 && y >= 0 && y < a->yres && x < a->xres))
         printf("GRRRRRRRRRRRR: %f %f\n", x, y);
-    g_return_val_if_fail(x >= 0 && y >= 0 && y < a->xres && x < a->yres,
+    g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres,
                          0.0);
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
@@ -910,8 +910,8 @@ gwy_data_field_get_dval_real(GwyDataField *a, gdouble x, gdouble y,
                              GwyInterpolationType interpolation)
 {
     return  gwy_data_field_get_dval(a,
-                                    gwy_data_field_rtoi(a, x),
-                                    gwy_data_field_rtoj(a, y),
+                                    gwy_data_field_rtoj(a, x),/*swapped ij*/
+                                    gwy_data_field_rtoi(a, y),
                                     interpolation);
 }
 
