@@ -1,7 +1,8 @@
 #!/bin/bash
 disabled=
 pkgname=gwyddion
-basever=1.7
+basever=1.8
+dont_update_version=1
 arch=$(uname -m)
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
@@ -54,6 +55,7 @@ function update_tags() {
 
 function update_version() {
   version=${basever}cvs$(date +%Y%m%d)
+  test -n "$dont_update_version" && return
   cp -fv NEWS NEWS~
   cp -fv configure.ac configure.ac~
   sed -ri -e "1s/^[^ ]*/$version/" NEWS
