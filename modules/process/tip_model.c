@@ -169,44 +169,51 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 3);
 
-    table = gtk_table_new(3, 3, FALSE);
+    table = gtk_table_new(3, 2, FALSE);
     col = 0; 
     row = 0;
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
     controls.tip = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.tip, "/0/data"));
+    gwy_data_field_fill(dfield, 0);
+
     controls.view = gwy_data_view_new(controls.tip);
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    vbox = gtk_vbox_new(FALSE, 3);
+    vbox = gtk_vbox_new(FALSE, 0);
     
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
 
-    label = gtk_label_new(_("Related data (to pick resolution):"));
+    label = gtk_label_new(_("Related data:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
  
     omenu = tip_model_data_option_menu(&args->win);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
+    gtk_table_attach(GTK_TABLE(table), omenu, 1, 2, row, row+1, GTK_FILL, 0, 2, 2);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
+    
+    label = gtk_label_new(_("Tip type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+
     
     controls.type
        = gwy_option_menu_create(tip_type, G_N_ELEMENTS(tip_type), "type", 
                                 G_CALLBACK(tip_type_cb), args,
                                 args->type);
+    gtk_table_attach(GTK_TABLE(table), controls.type, 1, 2, row, row+1, GTK_FILL, 0, 2, 2);
 
-    gtk_box_pack_start(GTK_BOX(vbox), controls.type, FALSE, FALSE, 4);
 
     controls.radius = gwy_val_unit_new("Tip apex radius: ", gwy_data_field_get_si_unit_xy(dfield));
     gtk_box_pack_start(GTK_BOX(vbox), controls.radius, FALSE, FALSE, 4);                                                   
@@ -277,8 +284,9 @@ tip_model_data_cb(GtkWidget *item)
 }
 
 static void        
-unrotate_symmetry_cb(GtkWidget *item,
-                           TipModelArgs *args)
+tip_type_cb     (GtkWidget *item,
+                                             TipModelArgs *args)
+
 {
 }
 
