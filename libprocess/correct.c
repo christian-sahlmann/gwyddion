@@ -77,15 +77,15 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
         if (mask_field->data[i] != 0)
             buffer_field->data[i] = buffer_field->data[i + 2*xres];
         if (mask_field->data[i + xres*(yres - 1)] != 0)
-            buffer_field->data[i + xres*(yres - 1)] =
-                buffer_field->data[i + xres*(yres - 3)];
+            buffer_field->data[i + xres*(yres - 1)]
+                = buffer_field->data[i + xres*(yres - 3)];
     }
     for (i = 0; i < yres; i++) {
         if (mask_field->data[xres*i] != 0)
             buffer_field->data[xres*i] = buffer_field->data[2 + xres*i];
-        if (mask_field->data[yres - 1 + xres*i] != 0)
-            buffer_field->data[yres - 1 + xres*i] =
-                buffer_field->data[yres - 3 + xres*i];
+        if (mask_field->data[xres - 1 + xres*i] != 0)
+            buffer_field->data[xres - 1 + xres*i]
+                = buffer_field->data[xres - 3 + xres*i];
     }
 
     *error = 0;
