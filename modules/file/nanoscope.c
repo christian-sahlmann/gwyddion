@@ -174,6 +174,41 @@ nanoscope_detect(const gchar *filename,
     return score;
 }
 
+static inline const gchar*
+fix_silly_units(const gchar *units)
+{
+    if (!strcmp(units, "\272"))
+        return "deg";
+    if (!strcmp(units, "\272/LSB"))
+        return "deg/LSB";
+    if (!strcmp(units, "\272/V"))
+        return "deg/V";
+
+    if (!strcmp(units, "~m"))
+        return "µm";
+    if (!strcmp(units, "~m/V"))
+        return "µm/V";
+    if (!strcmp(units, "~A"))
+        return "µA";
+    if (!strcmp(units, "~A/V"))
+        return "µA/V";
+    if (!strcmp(units, "~V"))
+        return "µV";
+
+    if (!strcmp(units, "um"))
+        return "µm";
+    if (!strcmp(units, "um/V"))
+        return "µm/V";
+    if (!strcmp(units, "uA"))
+        return "µA";
+    if (!strcmp(units, "uA/V"))
+        return "µA/V";
+    if (!strcmp(units, "uV"))
+        return "µV";
+
+    return units;
+}
+
 static GwyContainer*
 nanoscope_load(const gchar *filename)
 {
@@ -289,18 +324,30 @@ add_metadata(gpointer hkey,
     static gchar buffer[256];
     gchar *key = (gchar*)hkey;
     NanoscopeValue *val = (NanoscopeValue*)hvalue;
-    gchar *s;
+    gchar *s, *v, *w;
 
     if (!strcmp(key, "#self")
         || !val->hard_value_str
         || !val->hard_value_str[0])
         return;
 
+    if (key[0] == '@')
+        key++;
     /* FIXME: naughty /-avoiding trick */
-    s = gwy_strreplace(hkey, "/", "∕", (gsize)-1);
+    s = gwy_strreplace(key, "/", "∕", (gsize)-1);
     g_snprintf(buffer, sizeof(buffer), "/meta/%s", s);
-    gwy_container_set_string_by_name(GWY_CONTAINER(user_data),
-                                     buffer, g_strdup(val->hard_value_str));
+    v = g_strdup(val->hard_value_str);
+    if (strchr(v, '\272')) {
+        w = gwy_strreplace(v, "\272", "deg", -1);
+        g_free(v);
+        v = w;
+    }
+    if (strchr(v, '~')) {
+        w = gwy_strreplace(v, "~", "µ", -1);
+        g_free(v);
+        v = w;
+    }
+    gwy_container_set_string_by_name(GWY_CONTAINER(user_data), buffer, v);
     g_free(s);
 }
 
@@ -310,7 +357,7 @@ fill_metadata(GwyContainer *data,
               GList *list)
 {
     static const gchar *hashes[] = {
-        "File list", "Scanner list", "Equipment list",
+        "File list", "Scanner list", "Equipment list", "Ciao scan list",
     };
     GList *l;
     guint i;
@@ -567,10 +614,6 @@ select_which_data(GList *list)
         ndata = (NanoscopeData*)l->data;
         val = g_hash_table_lookup(ndata->hash, "@2:Image Data");
         choices[i].name = val->hard_value_str;
-        /*
-        if (choices[i].name[0] && choices[i].name[1])
-            choices[i].name += 2;
-            */
         choices[i].value = i;
         i++;
     }
@@ -760,7 +803,10 @@ read_hash(gchar **buffer)
             goto fail;
         }
         *colon = '\0';
-        value = parse_value(line, colon+2);
+        do {
+            colon++;
+        } while (g_ascii_isspace(*colon));
+        value = parse_value(line, colon);
         if (value)
             g_hash_table_insert(hash, line, value);
     }
@@ -819,8 +865,12 @@ parse_value(const gchar *key, gchar *line)
     /* old-style values */
     if (key[0] != '@') {
         val->hard_value = g_ascii_strtod(line, &p);
-        if (p-line > 0 && *p == ' ' && !strchr(p+1, ' '))
-            val->hard_value_units = p+1;
+        if (p-line > 0 && *p == ' ' && !strchr(p+1, ' ')) {
+            do {
+                p++;
+            } while (g_ascii_isspace(*p));
+            val->hard_value_units = fix_silly_units(p);
+        }
         val->hard_value_str = line;
         return val;
     }
@@ -846,12 +896,15 @@ parse_value(const gchar *key, gchar *line)
         break;
     }
 
-    if (line[1] != ' ') {
+    line++;
+    if (line[0] != ' ') {
         g_warning("Cannot parse value type <%s> for key <%s>", line, key);
         g_free(val);
         return NULL;
     }
-    line += 2;
+    do {
+        line++;
+    } while (g_ascii_isspace(*line));
 
     /* softscale */
     if (line[0] == '[') {
@@ -870,17 +923,22 @@ parse_value(const gchar *key, gchar *line)
             g_free(val);
             return NULL;
         }
-        line++;
+        do {
+            line++;
+        } while (g_ascii_isspace(*line));
     }
 
     /* hardscale (probably useless) */
     if (line[0] == '(') {
+        do {
+            line++;
+        } while (g_ascii_isspace(*line));
         if (!(p = strchr(line, ')'))) {
             g_warning("Cannot parse hard scale <%s> for key <%s>", line, key);
             g_free(val);
             return NULL;
         }
-        val->hard_scale = g_ascii_strtod(line+1, &q);
+        val->hard_scale = g_ascii_strtod(line, &q);
         while (g_ascii_isspace(*q))
             q++;
         if (p-q > 0) {
@@ -893,7 +951,9 @@ parse_value(const gchar *key, gchar *line)
             g_free(val);
             return NULL;
         }
-        line++;
+        do {
+            line++;
+        } while (g_ascii_isspace(*line));
     }
 
     /* hard value (everything else) */
@@ -908,8 +968,12 @@ parse_value(const gchar *key, gchar *line)
 
         case NANOSCOPE_VALUE_VALUE:
         val->hard_value = g_ascii_strtod(line, &p);
-        if (p-line > 0 && *p == ' ' && !strchr(p+1, ' '))
-            val->hard_value_units = p+1;
+        if (p-line > 0 && *p == ' ' && !strchr(p+1, ' ')) {
+            do {
+                p++;
+            } while (g_ascii_isspace(*p));
+            val->hard_value_units = fix_silly_units(p);
+        }
         val->hard_value_str = line;
         break;
 
