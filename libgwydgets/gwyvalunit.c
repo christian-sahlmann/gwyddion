@@ -118,6 +118,9 @@ gwy_val_unit_class_init(GwyValUnitClass *klass)
 static void
 gwy_val_unit_init(GwyValUnit *val_unit)
 {
+    val_unit->dival = 0.0;
+    val_unit->unit = 0;
+
     gwy_debug(" ");
 }
 

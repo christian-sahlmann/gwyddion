@@ -84,7 +84,7 @@ struct _GwyGraph {
 
     GwyGraphStatus_SelData seldata;
     GwyGraphStatus_PointsData pointsdata;
-      
+
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -118,7 +118,8 @@ void gwy_graph_clear(GwyGraph *graph);
 void gwy_graph_set_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
 void gwy_graph_get_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
 
-void gwy_graph_export_ascii(GwyGraph *graph, char *filename);
+/* XXX: this is implemented in gwygraphexport.c */
+void gwy_graph_export_ascii(GwyGraph *graph, const char *filename);
 
 /*graph status (selections enabled) handling*/
 
