@@ -27,15 +27,17 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/* this should go to some preferences... */
 extern int gwy_app_n_recent_files;
 
-void gwy_app_file_open_cb       (void);
-void gwy_app_file_save_as_cb    (void);
-void gwy_app_file_save_cb       (void);
-void gwy_app_file_duplicate_cb  (void);
-void gwy_app_file_close_cb      (void);
-void gwy_app_file_export_cb     (const gchar *name);
-void gwy_app_file_import_cb     (const gchar *name);
+void gwy_app_file_open_cb        (void);
+void gwy_app_file_open_recent_cb (GObject *item);
+void gwy_app_file_save_as_cb     (void);
+void gwy_app_file_save_cb        (void);
+void gwy_app_file_duplicate_cb   (void);
+void gwy_app_file_close_cb       (void);
+void gwy_app_file_export_cb      (const gchar *name);
+void gwy_app_file_import_cb      (const gchar *name);
 
 /* FIXME: to be moved somewhere? refactored? */
 void       gwy_app_clean_up_data            (GwyContainer *data);

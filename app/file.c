@@ -33,6 +33,8 @@
 
 static void              file_open_ok_cb       (GtkFileSelection *selector);
 static void              file_save_as_ok_cb    (GtkFileSelection *selector);
+static gboolean          file_real_open        (const gchar *filename_sys,
+                                                const gchar *name);
 static GtkFileSelection* create_save_as_dialog (const gchar *title,
                                                 GCallback ok_callback);
 static GtkFileSelection* create_open_dialog    (const gchar *title,
@@ -199,9 +201,7 @@ create_open_dialog(const gchar *title,
 static void
 file_open_ok_cb(GtkFileSelection *selector)
 {
-    const gchar *filename_utf8;  /* in UTF-8 */
     const gchar *filename_sys;  /* in system (disk) encoding */
-    GwyContainer *data;
     const gchar *name;
 
     filename_sys = gtk_file_selection_get_filename(selector);
@@ -210,18 +210,47 @@ file_open_ok_cb(GtkFileSelection *selector)
         return;
 
     name = (const gchar*)g_object_get_data(G_OBJECT(selector), "file-type");
+    if (file_real_open(filename_sys, name))
+        gtk_widget_destroy(GTK_WIDGET(selector));
+}
+
+void
+gwy_app_file_open_recent_cb(GObject *item)
+{
+    const gchar *filename_utf8;  /* in UTF-8 */
+    gchar *filename_sys;  /* in system (disk) encoding */
+
+    filename_utf8 = g_object_get_data(G_OBJECT(item), "filename");
+    g_return_if_fail(filename_utf8);
+    filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
+    file_real_open(filename_sys, NULL);
+    g_free(filename_sys);
+}
+
+static gboolean
+file_real_open(const gchar *filename_sys,
+               const gchar *name)
+{
+    const gchar *filename_utf8;  /* in UTF-8 */
+    GwyContainer *data;
+
     if (name)
         data = gwy_file_func_run_load(name, filename_sys);
     else
         data = gwy_file_load(filename_sys);
-    if (!data)
-        return;
 
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-    gwy_container_set_string_by_name(data, "/filename", filename_utf8);
-    gtk_widget_destroy(GTK_WIDGET(selector));
-    gwy_app_data_window_create(data);
-    recent_files_update(filename_utf8);
+    if (data) {
+        gwy_container_set_string_by_name(data, "/filename", filename_utf8);
+        gwy_app_data_window_create(data);
+        recent_files_update(filename_utf8);
+    }
+    else {
+        /* TODO: show some warning */
+        g_warning("Open of <%s> failed", filename_utf8);
+    }
+
+    return data != NULL;
 }
 
 void

@@ -315,20 +315,43 @@ gwy_app_run_process_func_cb(gchar *name)
 void
 gwy_menu_recent_files_update(GList *recent_files)
 {
-    GList *l, *c;
+    GtkWidget *widget;
+    GQuark quark;
+    GList *l, *child;
     gchar *s;
     gint i;
 
-    c = GTK_MENU_SHELL(recent_files_menu)->children;
-    while (c) {
-        gwy_debug("%s: %s", __FUNCTION__,
-                  g_type_name(G_TYPE_FROM_INSTANCE(c->data)));
-        c = g_list_next(c);
-    }
+    g_return_if_fail(GTK_IS_MENU(recent_files_menu));
+    child = GTK_MENU_SHELL(recent_files_menu)->children;
+    if (GTK_IS_TEAROFF_MENU_ITEM(child->data))
+        child = g_list_next(child);
+
+    quark = g_quark_from_string("filename");
     for (i = 0, l = recent_files;
          l && i < gwy_app_n_recent_files;
          l = g_list_next(l), i++) {
-
+        s = g_path_get_basename((gchar*)l->data);
+        if (child) {
+            widget = GTK_BIN(child->data)->child;
+            gwy_debug("%s: reusing item %p for <%s> [#%d]", __FUNCTION__,
+                      widget, s, i);
+            gtk_label_set_text(GTK_LABEL(widget), s);
+            g_free(g_object_get_qdata(G_OBJECT(child->data), quark));
+            g_object_set_qdata(G_OBJECT(child->data), quark,
+                               g_strdup((gchar*)l->data));
+            child = g_list_next(child);
+        }
+        else {
+            widget = gtk_menu_item_new_with_label(s);
+            gwy_debug("%s: creating item %p for <%s> [#%d]", __FUNCTION__,
+                      widget, s, i);
+            g_object_set_qdata(G_OBJECT(widget), quark,
+                               g_strdup((gchar*)l->data));
+            gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), widget);
+            g_signal_connect(widget, "activate",
+                             G_CALLBACK(gwy_app_file_open_recent_cb), NULL);
+            gtk_widget_show(widget);
+        }
     }
 }
 
