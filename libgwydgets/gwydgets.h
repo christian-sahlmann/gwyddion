@@ -36,6 +36,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydataviewlayer.h>
 #include <libgwydgets/gwydatawindow.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyglmaterial.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygrapharea.h>
@@ -60,42 +61,9 @@
 
 G_BEGIN_DECLS
 
-#define gwy_adjustment_get_int(adj) \
-    ((gint)(gtk_adjustment_get_value(GTK_ADJUSTMENT(adj)) + 0.5))
-
 void         gwy_widgets_type_init          (void);
 gboolean     gwy_widgets_gl_init            (void);
 GdkGLConfig* gwy_widgets_get_gl_config      (void);
-
-GtkWidget*   gwy_table_attach_spinbutton    (GtkWidget *table,
-                                             gint row,
-                                             const gchar *name,
-                                             const gchar *units,
-                                             GtkObject *adj);
-void         gwy_table_attach_row           (GtkWidget *table,
-                                             gint row,
-                                             const gchar *name,
-                                             const gchar *units,
-                                             GtkWidget *middle_widget);
-GtkWidget*   gwy_table_attach_hscale        (GtkWidget *table,
-                                             gint row,
-                                             const gchar *name,
-                                             const gchar *units,
-                                             GtkObject *pivot,
-                                             GwyHScaleStyle style);
-void         gwy_table_hscale_set_sensitive (GtkObject *pivot,
-                                             gboolean sensitive);
-GtkWidget*   gwy_table_get_child_widget     (GtkWidget *table,
-                                             gint row,
-                                             gint col);
-void         gwy_color_selector_for_mask    (const gchar *dialog_title,
-                                             GwyDataView *data_view,
-                                             GwyColorButton *color_button,
-                                             GwyContainer *container,
-                                             const gchar *prefix);
-gboolean     gwy_dialog_prevent_delete_cb   (void);
-GtkWidget*   gwy_stock_like_button_new      (const gchar *label_text,
-                                             const gchar *stock_id);
 
 G_END_DECLS
 

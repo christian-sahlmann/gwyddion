@@ -21,6 +21,7 @@ libgwydgetsinclude_HEADERS = \
 	gwydgets.h \
 	gwydgetenums.h \
 	gwydgettypes.h \
+	gwydgetutils.h \
 	gwyglmaterial.h \
 	gwygraph.h \
 	gwygrapharea.h \
@@ -84,6 +85,7 @@ libgwydgets_la_SOURCES = \
 	gwydatawindow.c \
 	gwydgets.c \
 	gwydgettypes.c \
+	gwydgetutils.c \
 	gwyglmaterial.c \
 	gwygraph.c \
 	gwygrapharea.c \
