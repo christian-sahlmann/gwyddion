@@ -44,9 +44,9 @@ gwy_pixfield_do(GdkPixbuf *pixbuf,
 
     for (i = 0; i < yres; i++) {
         line = pixels + i*rowstride;
-        row = data_field->data + i;
-        for (j = 0; j < xres*yres; j += yres) {
-            dval = (gint)((row[j] - minimum)*cor + 0.5);
+        row = data_field->data + i*data_field->xres;
+        for (j = 0; j < xres; j++) {
+            dval = (gint)((*(row++) - minimum)*cor + 0.5);
             /* simply index to the guchar samples, it's faster and no one
              * can tell the difference... */
             s = samples + 4*dval;
@@ -104,7 +104,7 @@ gwy_pixfield_mask(GdkPixbuf *pixbuf,
         line = pixels + i*rowstride + 3;
         row = data_field->data + i;
         for (j = 0; j < xres; j++) {
-            *line = (guchar)(cor*row[j]);
+            *line = (guchar)(cor*(*row++));
             line += 4;
         }
     }
