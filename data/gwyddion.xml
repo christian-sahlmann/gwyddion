@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="application/x-gwyddion-spm">
+    <comment>Gwyddion SPM data</comment>
+    <magic priority="90">
+      <match type="string" offset="0" value="GWYOGwyContainer"/>
+      <match type="string" offset="0" value="GWYPGwyContainer"/>
+    </magic>
+    <glob pattern="*.gwy"/>
+  </mime-type>
+
+  <mime-type type="application/x-nanoscope-spm">
+    <comment>Nanoscope SPM data</comment>
+    <magic priority="50">
+      <match type="string" offset="0" value="\\*File list\r\n"/>
+      <match type="string" offset="0" value="?*File list\r\n"/>
+    </magic>
+  </mime-type>
+
+  <mime-type type="application/x-nt-mdt-spm">
+    <comment>NT-MDT SPM data</comment>
+    <magic priority="50">
+      <match type="string" offset="0" value="\x01\xb0\x93\xff"/>
+    </magic>
+    <glob pattern="*.mdt"/>
+    <glob pattern="*.MDT"/>
+  </mime-type>
+
+  <mime-type type="application/x-sis-spm">
+    <comment>SIS SPM data</comment>
+    <magic priority="50">
+      <match type="string" offset="0" value="SIS&amp;STB  SIScan"/>
+    </magic>
+    <glob pattern="*.sis"/>
+    <glob pattern="*.SIS"/>
+  </mime-type>
+</mime-info>

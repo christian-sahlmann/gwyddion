@@ -2,13 +2,11 @@
 
 pkgconfigdatadir = $(libdir)/pkgconfig
 gwyddionappdir = $(datadir)/applications
+gwyddionmimedir = $(datadir)/mime/packages
 
-pkgconfigdata_DATA =\
-	gwyddion.pc
-
-gwyddionapp_DATA = \
-	gwyddion.desktop \
-	x-gwyddion.desktop
+pkgconfigdata_DATA = gwyddion.pc
+gwyddionapp_DATA = data/gwyddion.desktop
+gwyddionmime_DATA = data/gwyddion.xml
 
 SUBDIRS = \
 	m4 \
@@ -47,9 +45,10 @@ EXTRA_DIST = \
 	utils/update-msvc.py \
 	utils/update-potfiles.sh \
 	utils/vim-syn-gen.py \
-	utils/gwyddion-cfg.py \
-	utils/gwyddion.vim \
-	$(gwyddionapp_DATA)
+	data/gwyddion-cfg.py \
+	data/gwyddion.vim \
+	$(gwyddionapp_DATA) \
+	$(gwyddionmime_DATA)
 
 if MAINTAINER_MODE
 dist-check-maintainer:
@@ -62,8 +61,18 @@ endif
 docs:
 	(cd devel-docs && $(MAKE) $(AM_MAKEFLAGS) docs)
 
-# FIXME: depdendencies?
-utils/gwyddion.vim: devel-docs/*/*-decl.txt
-	./utils/vim-syn-gen.py ./utils/gwyddion-cfg.py >$@
+# gwyddion.vim generation
+gwyddion_vim_sources = \
+	devel-docs/libgwyapp/libgwyapp-decl.txt \
+	devel-docs/libgwyddion/libgwyddion-decl.txt \
+	devel-docs/libgwydgets/libgwydgets-decl.txt \
+	devel-docs/libgwydraw/libgwydraw-decl.txt \
+	devel-docs/libgwymodule/libgwymodule-decl.txt \
+	devel-docs/libgwyprocess/libgwyprocess-decl.txt
+
+gwyddion_vim_cfg = $(top_srcdir)/data/gwyddion-cfg.py
+
+data/gwyddion.vim: $(gwyddion_vim_sources) $(gwyddion_vim_cfg)
+	cd $(top_builddir) && $(PYTHON) $(top_srcdir)/utils/vim-syn-gen.py $(gwyddion_vim_cfg) >data/gwyddion.vim
 
 .PHONY: docs
