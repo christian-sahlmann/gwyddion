@@ -30,6 +30,9 @@
 #define UNROTATE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+enum {
+    PREVIEW_SIZE = 120
+};
 /* Data for this function. */
 typedef struct {
     GwyInterpolationType interp;
@@ -41,6 +44,8 @@ typedef struct {
     GtkWidget *symmetry;
     GtkWidget *symmlabel;
     GtkWidget *corrlabel;
+    GtkWidget *data_view;
+    GwyContainer *data;
     UnrotateArgs *args;
     GwyPlaneSymmetry guess;
     gdouble *correction;
@@ -50,6 +55,7 @@ static gboolean         module_register          (const gchar *name);
 static gboolean         unrotate                 (GwyContainer *data,
                                                   GwyRunType run);
 static gboolean         unrotate_dialog          (UnrotateArgs *args,
+                                                  GwyContainer *data,
                                                   gdouble *correction,
                                                   GwyPlaneSymmetry guess);
 static void             unrotate_dialog_update   (UnrotateControls *controls,
@@ -85,7 +91,7 @@ static GwyModuleInfo module_info = {
     "unrotate",
     N_("Rotates data to make main directions parallel with x or y axis."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -135,7 +141,8 @@ unrotate(GwyContainer *data, GwyRunType run)
     symm = gwy_data_field_unrotate_find_corrections(derdist, correction);
     g_object_unref(derdist);
 
-    ok = (run != GWY_RUN_MODAL) || unrotate_dialog(&args, correction, symm);
+    ok = (run != GWY_RUN_MODAL)
+         || unrotate_dialog(&args, data, correction, symm);
     if (run == GWY_RUN_MODAL)
         save_args(gwy_app_settings_get(), &args);
     if (ok) {
@@ -161,13 +168,41 @@ unrotate(GwyContainer *data, GwyRunType run)
     return FALSE;
 }
 
+/* create a smaller copy of data */
+static GwyContainer*
+create_preview_data(GwyContainer *data)
+{
+    GwyContainer *preview;
+    GObject *dfield;
+    gint xres, yres;
+    gdouble zoomval;
+
+    preview = GWY_CONTAINER(gwy_container_duplicate_by_prefix(data,
+                                                              "/0/data",
+                                                              "/0/base/palette",
+                                                              NULL));
+    dfield = gwy_container_get_object_by_name(preview, "/0/data");
+    xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
+    yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
+    zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
+    gwy_data_field_resample(GWY_DATA_FIELD(dfield), xres*zoomval, yres*zoomval,
+                            GWY_INTERPOLATION_BILINEAR);
+    dfield = gwy_serializable_duplicate(dfield);
+    gwy_container_set_object_by_name(preview, "/0/show", dfield);
+    g_object_unref(dfield);
+
+    return preview;
+}
+
 static gboolean
 unrotate_dialog(UnrotateArgs *args,
+                GwyContainer *data,
                 gdouble *correction,
                 GwyPlaneSymmetry guess)
 {
     enum { RESPONSE_RESET = 1 };
-    GtkWidget *dialog, *table, *label;
+    GtkWidget *dialog, *table, *label, *hbox;
+    GtkObject *layer;
     UnrotateControls controls;
     const gchar *s;
     gint response;
@@ -185,23 +220,24 @@ unrotate_dialog(UnrotateArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
+    hbox = gtk_hbox_new(FALSE, 12);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+
     table = gtk_table_new(4, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     row = 0;
 
-    controls.symmetry
-        = gwy_option_menu_create(unrotate_symmetry,
-                                 G_N_ELEMENTS(unrotate_symmetry), "symmetry",
-                                 G_CALLBACK(unrotate_symmetry_cb), &controls,
-                                 args->symmetry);
-    gwy_table_attach_row(table, row, _("Assume _structure:"), "",
-                         controls.symmetry);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Structure</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    label = gtk_label_new(_("Detected structure:"));
+    label = gtk_label_new(_("Detected:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -213,16 +249,20 @@ unrotate_dialog(UnrotateArgs *args,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    label = gtk_label_new(_("Rotation correction:"));
+    controls.symmetry
+        = gwy_option_menu_create(unrotate_symmetry,
+                                 G_N_ELEMENTS(unrotate_symmetry), "symmetry",
+                                 G_CALLBACK(unrotate_symmetry_cb), &controls,
+                                 args->symmetry);
+    gwy_table_attach_row(table, row, _("_Assume:"), NULL, controls.symmetry);
+    row++;
+
+    label = gtk_label_new(_("Correction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("deg"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     controls.corrlabel = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.corrlabel), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls.corrlabel), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.corrlabel,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -233,6 +273,14 @@ unrotate_dialog(UnrotateArgs *args,
                                         &controls, args->interp);
     gwy_table_attach_row(table, row, _("_Interpolation type:"), "",
                          controls.interp);
+
+    controls.data = create_preview_data(data);
+    controls.data_view = gwy_data_view_new(controls.data);
+    g_object_unref(controls.data);
+    layer = gwy_layer_basic_new();
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
+                                 GWY_PIXMAP_LAYER(layer));
+    gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 0);
 
     unrotate_dialog_update(&controls, args);
 
@@ -272,6 +320,9 @@ unrotate_dialog_update(UnrotateControls *controls,
 {
     gchar *lab;
     GwyPlaneSymmetry symm;
+    GwyDataField *dfield, *rfield;
+    GwyContainer *data;
+    gdouble phi;
 
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
@@ -279,9 +330,20 @@ unrotate_dialog_update(UnrotateControls *controls,
                                 args->symmetry);
 
     symm = args->symmetry ? args->symmetry : controls->guess;
-    lab = g_strdup_printf("%.2f", 180/G_PI*controls->correction[symm]);
+    phi = 180.0/G_PI*controls->correction[symm];
+    lab = g_strdup_printf("%.2f %s", phi, _("deg"));
     gtk_label_set_text(GTK_LABEL(controls->corrlabel), lab);
     g_free(lab);
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->data_view));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
+    gwy_data_field_area_copy(dfield, rfield, 0, 0,
+                             gwy_data_field_get_xres(dfield),
+                             gwy_data_field_get_yres(dfield),
+                             0, 0);
+    gwy_data_field_rotate(rfield, phi, args->interp);
+    gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
 
 static void
@@ -290,6 +352,7 @@ unrotate_symmetry_cb(GtkWidget *item, UnrotateControls *controls)
     controls->args->symmetry
         = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "symmetry"));
     unrotate_dialog_update(controls, controls->args);
+
 }
 
 static void
