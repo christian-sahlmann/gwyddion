@@ -48,6 +48,7 @@ def check_file(filename, lines):
         check_oneliners,
         check_eol_operators,
         check_function_call_spaces,
+        check_return_case_parentheses,
         check_boolean_arguments
     ]
 
@@ -220,7 +221,7 @@ def check_eol_operators(tokens, lines, warnings):
 
 def check_function_call_spaces(tokens, lines, warnings):
     "Check for function calls having the silly GNU spaces before (."
-    keywlist = 'if', 'for', 'while', 'switch', 'return'
+    keywlist = 'if', 'for', 'while', 'switch', 'return', 'case', 'goto'
     keywords = dict([(x, 1) for x in keywlist])
     for i, t in enumerate(tokens):
         if t.bracelevel == 0:
@@ -237,6 +238,17 @@ def check_function_call_spaces(tokens, lines, warnings):
             continue
         w = 'Space between function name and parenthesis (col %d): %s'
         warnings.append((t.line, w % (t.col, lines[t.line])))
+
+def check_return_case_parentheses(tokens, lines, warnings):
+    keywlist = 'return', 'case', 'goto'
+    keywords = dict([(x, 1) for x in keywlist])
+    for i, t in enumerate(tokens):
+        if t.typ != Token.punct or t.string != '(':
+            continue
+        if not i or tokens[i-1].string not in keywords:
+            continue
+        w = 'Extra return/case/goto parentheses (col %d)'
+        warnings.append((t.line, w % (t.col)))
 
 def check_boolean_arguments(tokens, lines, warnings):
     "Check for boolean arguments passed as 0, 1."
@@ -276,7 +288,7 @@ def tokenize(lines):
     re_com = re.compile(r'/\*.*?\*/|//.*')
     re_mac = re.compile(r'#.*')
     re_str = re.compile(r'"([^\\"]+|\\"|\\[^"])*"')
-    re_chr = re.compile(r'\'\\?.\'')
+    re_chr = re.compile(r'\'(?:.|\\.|\\[0-7]{3}|\\x[0-9a-f]{2})\'')
     re_id = re.compile(r'\b[A-Za-z_]\w*\b')
     # this eats some integers too
     re_dbl = re.compile(r'\b(\d*\.\d+|\d+\.?)(?:[Ee][-+]?\d+)?\b')
