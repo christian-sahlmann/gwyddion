@@ -19,12 +19,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*
- *  Clean-up, rewrite from C++, and modification for Gwyddion by David
- *  Necas (Yeti), 2004.
- *  E-mail: yeti@gwyddion.net.
- */
-
 #ifndef __GWY_NLFIT_H__
 #define __GWY_NLFIT_H__
 
@@ -52,13 +46,12 @@ typedef void (*GwyNLFitGuessFunc)(gdouble *x,
                                   gint n_dat,
                                   gdouble *param,
                                   gpointer user_data,
-                                  gboolean *fres
-                                  );
+                                  gboolean *fres);
 
 typedef void (*GwyNLFitParamScaleFunc)(gdouble *param,
-                                         gdouble xscale,
-                                         gdouble yscale,
-                                         gint dir);
+                                       gdouble xscale,
+                                       gdouble yscale,
+                                       gint dir);
 
 typedef void (*GwyNLFitWeightFunc)(gdouble *x,
                                    gdouble *y,
@@ -66,15 +59,14 @@ typedef void (*GwyNLFitWeightFunc)(gdouble *x,
                                    gdouble *weight,
                                    gpointer user_data);
 
-typedef struct {
-    const char *name;
-    const char *unit;
-    double default_init;
-} GwyNLFitParam;
+typedef struct _GwyNLFitter GwyNLFitter;
+typedef struct _GwyNLFitPreset GwyNLFitPreset;
+typedef struct _GwyNLFitParam GwyNLFitParam;
 
-typedef struct {
-    gchar *function_name;
-    gchar *function_formula;
+struct _GwyNLFitPreset {
+    const gchar *function_name;
+    const gchar *group_name;
+    const gchar *function_formula;
     GwyNLFitFunc function;
     GwyNLFitDerFunc function_derivation;
     GwyNLFitGuessFunc function_guess;
@@ -82,9 +74,8 @@ typedef struct {
     GwyNLFitWeightFunc set_default_weights;
     gint nparams;
     const GwyNLFitParam *param;
-} GwyNLFitPreset;
-
-typedef struct _GwyNLFitter GwyNLFitter;
+    gpointer _reserved1;
+};
 
 struct _GwyNLFitter {
     GwyNLFitFunc fmarq;  /* fitting function */

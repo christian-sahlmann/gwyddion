@@ -37,6 +37,13 @@
 /* i MUST be greater or equal than j */
 #define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
 
+/* Preset */
+struct _GwyNLFitParam {
+    const char *name;
+    const char *unit;
+    double default_init;
+};
+
 static gboolean gwy_math_choleski_decompose (gint dim,
                                              gdouble *a);
 static void     gwy_math_choleski_solve     (gint dim,
@@ -700,8 +707,11 @@ gwy_math_sym_matrix_invert1(gint n, gdouble *a)
 
 /*********************** gaussian *****************************/
 static gdouble
-fit_gauss(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_gauss(gdouble x,
+          G_GNUC_UNUSED gint n_param,
+          const gdouble *b,
+          G_GNUC_UNUSED gpointer user_data,
+          gboolean *fres)
 {
         gdouble c;
 
@@ -716,16 +726,19 @@ fit_gauss(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
 }
 
 static void
-guess_gauss(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_gauss(gdouble *x,
+            gdouble *y,
+            gint n_dat,
+            gdouble *param,
+            G_GNUC_UNUSED gpointer user_data,
+            gboolean *fres)
 {
     gint i;
 
     param[0] = 0;
     param[1] = G_MAXDOUBLE;
     param[2] = -G_MAXDOUBLE;
-    for (i=0; i<n_dat; i++)
-    {
+    for (i = 0; i < n_dat; i++) {
         param[0] += x[i]/(gdouble)n_dat;
         if (param[1] > y[i])
             param[1] = y[i];
@@ -740,7 +753,10 @@ guess_gauss(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 }
 
 static void
-scale_gauss(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_gauss(gdouble *param,
+            gdouble xscale,
+            gdouble yscale,
+            gint dir)
 {
     if (dir == 1)
     {
@@ -762,39 +778,47 @@ scale_gauss(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 
 /******************** gaussian PSDF ***************************/
 static gdouble
-fit_gauss_psdf(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-               G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_gauss_psdf(gdouble x,
+               G_GNUC_UNUSED gint n_param,
+               const gdouble *b,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
 {
-       gdouble c;
+    gdouble c;
 
-       if (b[1] == 0) {
-            *fres = FALSE;
-            return 0;
-       }
-       *fres = TRUE;
-       c = x*b[1];
+    if (b[1] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = x*b[1];
 
-       return b[0]*b[0]*b[1]/(2.0*sqrt(G_PI)) * exp(-c*c/4);
+    return b[0]*b[0]*b[1]/(2.0*sqrt(G_PI)) * exp(-c*c/4);
 }
 
 static void
-scale_gauss_psdf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_gauss_psdf(gdouble *param,
+                 gdouble xscale,
+                 gdouble yscale,
+                 gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= sqrt(yscale*xscale);
         param[1] *= xscale;
     }
-    else
-    {
+    else {
         param[0] *= sqrt(yscale*xscale);
         param[1] /= xscale;
     }
 }
 
 static void
-guess_gauss_psdf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-                 G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_gauss_psdf(gdouble *x,
+                 gdouble *y,
+                 gint n_dat,
+                 gdouble *param,
+                 G_GNUC_UNUSED gpointer user_data,
+                 gboolean *fres)
 {
     gint i;
 
@@ -802,9 +826,7 @@ guess_gauss_psdf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 
     param[0] = 0;
     for (i = 0; i < n_dat; i++)
-    {
         param[0] += x[1]*y[i];
-    }
 
     *fres = param[0] >= 0;
     param[0] = sqrt(param[0]);
@@ -813,24 +835,31 @@ guess_gauss_psdf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 
 /******************* gaussian HHCF ********************************/
 static gdouble
-fit_gauss_hhcf(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-               G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_gauss_hhcf(gdouble x,
+               G_GNUC_UNUSED gint n_param,
+               const gdouble *b,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
 {
-        gdouble c;
+    gdouble c;
 
-            if (b[1] == 0) {
-            *fres = FALSE;
-            return 0;
-       }
-       *fres = TRUE;
-       c = x/b[1];
+    if (b[1] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = x/b[1];
 
-       return 2*b[0]*b[0] * (1 - exp(-c*c));
+    return 2*b[0]*b[0] * (1 - exp(-c*c));
 }
 
 static void
-guess_gauss_hhcf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-                 G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_gauss_hhcf(gdouble *x,
+                 gdouble *y,
+                 gint n_dat,
+                 gdouble *param,
+                 G_GNUC_UNUSED gpointer user_data,
+                 gboolean *fres)
 {
     gint i;
 
@@ -846,15 +875,16 @@ guess_gauss_hhcf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 }
 
 static void
-scale_gauss_hhcf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_gauss_hhcf(gdouble *param,
+                 gdouble xscale,
+                 gdouble yscale,
+                 gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= sqrt(yscale);
         param[1] /= xscale;
     }
-    else
-    {
+    else {
         param[0] *= sqrt(yscale);
         param[1] *= xscale;
     }
@@ -862,23 +892,31 @@ scale_gauss_hhcf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 
 /****************    gaussian ACF  *****************************************/
 static gdouble
-fit_gauss_acf(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_gauss_acf(gdouble x,
+              G_GNUC_UNUSED gint n_param,
+              const gdouble *b,
+              G_GNUC_UNUSED gpointer user_data,
+              gboolean *fres)
 {
-        gdouble c;
+    gdouble c;
 
-            if (b[1] == 0) {
-            *fres = FALSE;
-            return 0;
-       }
-       *fres = TRUE;
-       c = x/b[1];
+    if (b[1] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = x/b[1];
 
-       return b[0]*b[0] * exp(-c*c);
+    return b[0]*b[0] * exp(-c*c);
 }
+
 static void
-guess_gauss_acf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-                G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_gauss_acf(gdouble *x,
+                gdouble *y,
+                gint n_dat,
+                gdouble *param,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
 {
     param[0] = sqrt(y[1]);
     param[1] = x[n_dat-1]/50;
@@ -887,15 +925,16 @@ guess_gauss_acf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 }
 
 static void
-scale_gauss_acf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_gauss_acf(gdouble *param,
+                gdouble xscale,
+                gdouble yscale,
+                gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= sqrt(yscale);
         param[1] /= xscale;
     }
-    else
-    {
+    else {
         param[0] *= sqrt(yscale);
         param[1] *= xscale;
     }
@@ -904,32 +943,38 @@ scale_gauss_acf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 
 /**************** exponential ************************************/
 static gdouble
-fit_exp(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-        G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_exp(gdouble x,
+        G_GNUC_UNUSED gint n_param,
+        const gdouble *b,
+        G_GNUC_UNUSED gpointer user_data,
+        gboolean *fres)
 {
-        gdouble c;
+    gdouble c;
 
-            if (b[3] == 0) {
-            *fres = FALSE;
-            return 0;
-       }
-       *fres = TRUE;
-       c = (x - b[0])/b[3];
+    if (b[3] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = (x - b[0])/b[3];
 
-       return b[2] * exp(-c/2) + b[1];
+    return b[2] * exp(-c/2) + b[1];
 }
 
 static void
-guess_exp(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-          G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_exp(gdouble *x,
+          gdouble *y,
+          gint n_dat,
+          gdouble *param,
+          G_GNUC_UNUSED gpointer user_data,
+          gboolean *fres)
 {
     gint i;
 
     param[0] = 0;
     param[1] = G_MAXDOUBLE;
     param[2] = -G_MAXDOUBLE;
-    for (i = 0; i < n_dat; i++)
-    {
+    for (i = 0; i < n_dat; i++) {
         param[0] += x[i]/(gdouble)n_dat;
         if (param[1] > y[i])
             param[1] = y[i];
@@ -944,18 +989,19 @@ guess_exp(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 }
 
 static void
-scale_exp(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_exp(gdouble *param,
+          gdouble xscale,
+          gdouble yscale,
+          gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= xscale;
         param[1] /= yscale;
         param[2] /= yscale;
         param[3] /= xscale;
 
     }
-    else
-    {
+    else {
         param[0] *= xscale;
         param[1] *= yscale;
         param[2] *= yscale;
@@ -966,39 +1012,47 @@ scale_exp(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 
 /**************** exponential PSDF **************************/
 static gdouble
-fit_exp_psdf(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_exp_psdf(gdouble x,
+             G_GNUC_UNUSED gint n_param,
+             const gdouble *b,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
 {
-        gdouble c;
+    gdouble c;
 
-            if (b[3] == 0) {
-            *fres = FALSE;
-            return 0;
-       }
-       *fres = TRUE;
-       c = x*b[1];
+    if (b[3] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = x*b[1];
 
-       return b[0]*b[0]*b[1]/(2.0*sqrt(G_PI)) / (1 + c*c);
+    return b[0]*b[0]*b[1]/(2.0*sqrt(G_PI)) / (1 + c*c);
 }
 
 static void
-scale_exp_psdf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_exp_psdf(gdouble *param,
+               gdouble xscale,
+               gdouble yscale,
+               gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= sqrt(yscale*xscale);
         param[1] *= xscale;
     }
-    else
-    {
+    else {
         param[0] *= sqrt(yscale*xscale);
         param[1] /= xscale;
     }
 }
 
 static void
-guess_exp_psdf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-               G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_exp_psdf(gdouble *x,
+               gdouble *y,
+               gint n_dat,
+               gdouble *param,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
 {
     gint i;
 
@@ -1006,9 +1060,7 @@ guess_exp_psdf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 
     param[0] = 0;
     for (i = 0; i < n_dat; i++)
-    {
         param[0] += x[1]*y[i];
-    }
 
     *fres = param[0] >= 0;
     param[0] = sqrt(param[0]);
@@ -1016,32 +1068,37 @@ guess_exp_psdf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 
 /***************** exponential HHCF ********************************/
 static gdouble
-fit_exp_hhcf(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_exp_hhcf(gdouble x,
+             G_GNUC_UNUSED gint n_param,
+             const gdouble *b,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
 {
-        gdouble c;
+    gdouble c;
 
-            if (b[1] == 0) {
-            *fres = FALSE;
-            return 0;
-       }
-       *fres = TRUE;
-       c = x/b[1];
+    if (b[1] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = x/b[1];
 
-       return 2*b[0]*b[0] * (1 - exp(-c));
+    return 2*b[0]*b[0] * (1 - exp(-c));
 }
 
 static void
-guess_exp_hhcf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-               G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_exp_hhcf(gdouble *x,
+               gdouble *y,
+               gint n_dat,
+               gdouble *param,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
 {
     gint i;
 
     param[0] = 0;
-    for (i=(n_dat/2); i<n_dat; i++)
-    {
+    for (i = (n_dat/2); i < n_dat; i++)
         param[0] += y[i]/(n_dat/2);
-    }
 
     *fres = param[0] >= 0;
     param[0] = sqrt(param[0]);
@@ -1049,15 +1106,16 @@ guess_exp_hhcf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 }
 
 static void
-scale_exp_hhcf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_exp_hhcf(gdouble *param,
+               gdouble xscale,
+               gdouble yscale,
+               gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= sqrt(yscale);
         param[1] /= xscale;
     }
-    else
-    {
+    else {
         param[0] *= sqrt(yscale);
         param[1] *= xscale;
     }
@@ -1066,24 +1124,31 @@ scale_exp_hhcf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 
 /*************** exponential ACF ************************************/
 static gdouble
-fit_exp_acf(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_exp_acf(gdouble x,
+            G_GNUC_UNUSED gint n_param,
+            const gdouble *b,
+            G_GNUC_UNUSED gpointer user_data,
+            gboolean *fres)
 {
-        gdouble c;
+    gdouble c;
 
-            if (b[1] == 0) {
-            *fres = FALSE;
-            return 0;
-       }
-       *fres = TRUE;
-       c = x/b[1];
+    if (b[1] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = x/b[1];
 
-       return b[0]*b[0] * exp(-c);
+    return b[0]*b[0] * exp(-c);
 }
 
 static void
-guess_exp_acf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-              G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_exp_acf(gdouble *x,
+              gdouble *y,
+              gint n_dat,
+              gdouble *param,
+              G_GNUC_UNUSED gpointer user_data,
+              gboolean *fres)
 {
     param[0] = sqrt(y[1]);
     param[1] = x[n_dat-1]/50;
@@ -1092,15 +1157,16 @@ guess_exp_acf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
 }
 
 static void
-scale_exp_acf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_exp_acf(gdouble *param,
+              gdouble xscale,
+              gdouble yscale,
+              gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= sqrt(yscale);
         param[1] /= xscale;
     }
-    else
-    {
+    else {
         param[0] *= sqrt(yscale);
         param[1] *= xscale;
     }
@@ -1109,9 +1175,11 @@ scale_exp_acf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 
 /**************   polynomial 0th order ********************************/
 static gdouble
-fit_poly_0(G_GNUC_UNUSED gdouble x, G_GNUC_UNUSED gint n_param,
+fit_poly_0(G_GNUC_UNUSED gdouble x,
+           G_GNUC_UNUSED gint n_param,
            const gdouble *b,
-           G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+           G_GNUC_UNUSED gpointer user_data,
+           gboolean *fres)
 {
     *fres = TRUE;
 
@@ -1119,15 +1187,21 @@ fit_poly_0(G_GNUC_UNUSED gdouble x, G_GNUC_UNUSED gint n_param,
 }
 
 static void
-guess_poly_0(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_poly_0(gdouble *x,
+             gdouble *y,
+             gint n_dat,
+             gdouble *param,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
 {
     gwy_math_fit_polynom(n_dat, x, y, 0, param);
     *fres = TRUE;
 }
 
 static void
-scale_poly_0(gdouble *param, G_GNUC_UNUSED gdouble xscale, gdouble yscale,
+scale_poly_0(gdouble *param,
+             G_GNUC_UNUSED gdouble xscale,
+             gdouble yscale,
              gint dir)
 {
     if (dir == 1)
@@ -1139,8 +1213,11 @@ scale_poly_0(gdouble *param, G_GNUC_UNUSED gdouble xscale, gdouble yscale,
 
 /*************** polynomial 1st order ********************************/
 static gdouble
-fit_poly_1(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-           G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_poly_1(gdouble x,
+           G_GNUC_UNUSED gint n_param,
+           const gdouble *b,
+           G_GNUC_UNUSED gpointer user_data,
+           gboolean *fres)
 {
     *fres = TRUE;
 
@@ -1148,23 +1225,28 @@ fit_poly_1(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
 }
 
 static void
-guess_poly_1(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_poly_1(gdouble *x,
+             gdouble *y,
+             gint n_dat,
+             gdouble *param,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
 {
     gwy_math_fit_polynom(n_dat, x, y, 1, param);
     *fres = TRUE;
 }
 
 static void
-scale_poly_1(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_poly_1(gdouble *param,
+             gdouble xscale,
+             gdouble yscale,
+             gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= yscale;
         param[1] /= yscale/xscale;
     }
-    else
-    {
+    else {
         param[0] *= yscale;
         param[1] *= yscale/xscale;
     }
@@ -1172,8 +1254,11 @@ scale_poly_1(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 
 /************* polynomial 2nd order **********************************/
 static gdouble
-fit_poly_2(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-           G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_poly_2(gdouble x,
+           G_GNUC_UNUSED gint n_param,
+           const gdouble *b,
+           G_GNUC_UNUSED gpointer user_data,
+           gboolean *fres)
 {
     *fres = TRUE;
 
@@ -1181,24 +1266,29 @@ fit_poly_2(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
 }
 
 static void
-guess_poly_2(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_poly_2(gdouble *x,
+             gdouble *y,
+             gint n_dat,
+             gdouble *param,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
 {
     gwy_math_fit_polynom(n_dat, x, y, 2, param);
     *fres = TRUE;
 }
 
 static void
-scale_poly_2(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_poly_2(gdouble *param,
+             gdouble xscale,
+             gdouble yscale,
+             gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= yscale;
         param[1] /= yscale/xscale;
         param[2] /= yscale/xscale/xscale;
     }
-    else
-    {
+    else {
         param[0] *= yscale;
         param[1] *= yscale/xscale;
         param[2] *= yscale/xscale/xscale;
@@ -1207,8 +1297,11 @@ scale_poly_2(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 
 /************** polynomial 3rd order *****************************/
 static gdouble
-fit_poly_3(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
-           G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+fit_poly_3(gdouble x,
+           G_GNUC_UNUSED gint n_param,
+           const gdouble *b,
+           G_GNUC_UNUSED gpointer user_data,
+           gboolean *fres)
 {
     *fres = TRUE;
 
@@ -1216,25 +1309,30 @@ fit_poly_3(gdouble x, G_GNUC_UNUSED gint n_param, const gdouble *b,
 }
 
 static void
-guess_poly_3(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
-            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+guess_poly_3(gdouble *x,
+             gdouble *y,
+             gint n_dat,
+             gdouble *param,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
 {
     gwy_math_fit_polynom(n_dat, x, y, 3, param);
     *fres = TRUE;
 }
 
 static void
-scale_poly_3(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
+scale_poly_3(gdouble *param,
+             gdouble xscale,
+             gdouble yscale,
+             gint dir)
 {
-    if (dir == 1)
-    {
+    if (dir == 1) {
         param[0] /= yscale;
         param[1] /= yscale/xscale;
         param[2] /= yscale/xscale/xscale;
         param[3] /= yscale/xscale/xscale/xscale;
     }
-    else
-    {
+    else {
         param[0] *= yscale;
         param[1] *= yscale/xscale;
         param[2] *= yscale/xscale/xscale;
@@ -1311,126 +1409,162 @@ static const GwyNLFitParam poly3_pars[]= {
 
 
 static const GwyNLFitPreset fitting_presets[] = {
-    { "Gaussian",
-       "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
-       &fit_gauss,
-       NULL,
-       &guess_gauss,
-       &scale_gauss,
-       &weights_constant,
-       4,
-       gaussexp_pars
+    {
+        "Gaussian",
+        "Gaussian",
+        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
+        &fit_gauss,
+        NULL,
+        &guess_gauss,
+        &scale_gauss,
+        &weights_constant,
+        4,
+        gaussexp_pars,
+        NULL
     },
-    { "Gaussian (PSDF)",
-       "f(x) = (\xcf\x83<sup>2</sup>T)/(2)*exp(-(x*T/2)<sup>2</sup>)",
-       &fit_gauss_psdf,
-       NULL,
-       &guess_gauss_psdf,
-       &scale_gauss_psdf,
-       &weights_constant,
-       2,
-       gaussexp_two_pars
+    {
+        "Gaussian (PSDF)",
+        "Gaussian",
+        "f(x) = (\xcf\x83<sup>2</sup>T)/(2)*exp(-(x*T/2)<sup>2</sup>)",
+        &fit_gauss_psdf,
+        NULL,
+        &guess_gauss_psdf,
+        &scale_gauss_psdf,
+        &weights_constant,
+        2,
+        gaussexp_two_pars,
+        NULL
     },
-    { "Gaussian (ACF)",
-       "f(x) = \xcf\x83<sup>2</sup>exp(-(x/T)<sup>2</sup>)",
-       &fit_gauss_acf,
-       NULL,
-       &guess_gauss_acf,
-       &scale_gauss_acf,
-       &weights_linear_decrease,
-       2,
-       gaussexp_two_pars
+    {
+        "Gaussian (ACF)",
+        "Gaussian",
+        "f(x) = \xcf\x83<sup>2</sup>exp(-(x/T)<sup>2</sup>)",
+        &fit_gauss_acf,
+        NULL,
+        &guess_gauss_acf,
+        &scale_gauss_acf,
+        &weights_linear_decrease,
+        2,
+        gaussexp_two_pars,
+        NULL
     },
-    { "Gaussian (HHCF)",
-       "f(x) =  2*\xcf\x83<sup>2</sup>(1 - exp(-(x/T)<sup>2</sup>))",
-       &fit_gauss_hhcf,
-       NULL,
-       &guess_gauss_hhcf,
-       &scale_gauss_hhcf,
-       &weights_linear_decrease,
-       2,
-       gaussexp_two_pars
+    {
+        "Gaussian (HHCF)",
+        "Gaussian",
+        "f(x) =  2*\xcf\x83<sup>2</sup>(1 - exp(-(x/T)<sup>2</sup>))",
+        &fit_gauss_hhcf,
+        NULL,
+        &guess_gauss_hhcf,
+        &scale_gauss_hhcf,
+        &weights_linear_decrease,
+        2,
+        gaussexp_two_pars,
+        NULL
     },
-    { "Exponential",
-       "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>)))",
-       &fit_exp,
-       NULL,
-       &guess_exp,
-       &scale_exp,
-       &weights_constant,
-       4,
-       gaussexp_pars
+    {
+        "Exponential",
+        "Exponential",
+        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>)))",
+        &fit_exp,
+        NULL,
+        &guess_exp,
+        &scale_exp,
+        &weights_constant,
+        4,
+        gaussexp_pars,
+        NULL
     },
-    { "Exponential (PSDF)",
-       "f(x) = (\xcf\x83<sup>2</sup>T)/(2)/(1+((x/T)<sup>2</sup>))))",
-       &fit_exp_psdf,
-       NULL,
-       &guess_exp_psdf,
-       &scale_exp_psdf,
-       &weights_constant,
-       2,
-       gaussexp_two_pars
+    {
+        "Exponential (PSDF)",
+        "Exponential",
+        "f(x) = (\xcf\x83<sup>2</sup>T)/(2)/(1+((x/T)<sup>2</sup>))))",
+        &fit_exp_psdf,
+        NULL,
+        &guess_exp_psdf,
+        &scale_exp_psdf,
+        &weights_constant,
+        2,
+        gaussexp_two_pars,
+        NULL
     },
-    { "Exponential (ACF)",
-       "f(x) = \xcf\x83<sup>2</sup>exp(-(x/T))",
-       &fit_exp_acf,
-       NULL,
-       &guess_exp_acf,
-       &scale_exp_acf,
-       &weights_linear_decrease,
-       2,
-       gaussexp_two_pars
+    {
+        "Exponential (ACF)",
+        "Exponential",
+        "f(x) = \xcf\x83<sup>2</sup>exp(-(x/T))",
+        &fit_exp_acf,
+        NULL,
+        &guess_exp_acf,
+        &scale_exp_acf,
+        &weights_linear_decrease,
+        2,
+        gaussexp_two_pars,
+        NULL
     },
-    { "Exponential (HHCF)",
-       "f(x) =  2*\xcf\x83<sup>2</sup>(1 - exp(-(x/T)))",
-       &fit_exp_hhcf,
-       NULL,
-       &guess_exp_hhcf,
-       &scale_exp_hhcf,
-       &weights_linear_decrease,
-       2,
-       gaussexp_two_pars
+    { 
+        "Exponential (HHCF)",
+        "Exponential",
+        "f(x) =  2*\xcf\x83<sup>2</sup>(1 - exp(-(x/T)))",
+        &fit_exp_hhcf,
+        NULL,
+        &guess_exp_hhcf,
+        &scale_exp_hhcf,
+        &weights_linear_decrease,
+        2,
+        gaussexp_two_pars,
+        NULL
     },
-     { "Polynom (order 0)",
-       "f(x) = a",
-       &fit_poly_0,
-       NULL,
-       &guess_poly_0,
-       &scale_poly_0,
-       &weights_constant,
-       1,
-       poly0_pars
+    {
+        "Polynom (order 0)",
+        "Polynom",
+        "f(x) = a",
+        &fit_poly_0,
+        NULL,
+        &guess_poly_0,
+        &scale_poly_0,
+        &weights_constant,
+        1,
+        poly0_pars,
+        NULL
     },
-    { "Polynom (order 1)",
-       "f(x) = a + b*x",
-       &fit_poly_1,
-       NULL,
-       &guess_poly_1,
-       &scale_poly_1,
-       &weights_constant,
-       2,
-       poly1_pars
+    {
+        "Polynom (order 1)",
+        "Polynom",
+        "f(x) = a + b*x",
+        &fit_poly_1,
+        NULL,
+        &guess_poly_1,
+        &scale_poly_1,
+        &weights_constant,
+        2,
+        poly1_pars,
+        NULL
     },
-    { "Polynom (order 2)",
-       "f(x) = a + b*x + c*x<sup>2</sup>",
-       &fit_poly_2,
-       NULL,
-       &guess_poly_2,
-       &scale_poly_2,
-       &weights_constant,
-       3,
-       poly2_pars
+    {
+        "Polynom (order 2)",
+        "Polynom",
+        "f(x) = a + b*x + c*x<sup>2</sup>",
+        &fit_poly_2,
+        NULL,
+        &guess_poly_2,
+        &scale_poly_2,
+        &weights_constant,
+        3,
+        poly2_pars,
+        NULL
     },
-    { "Polynom (order 3)",
-       "f(x) = a + b*x + c*x<sup>2</sup> + d*x<sup>3</sup>",
-       &fit_poly_3,
-       NULL,
-       &guess_poly_3,
-       &scale_poly_3,
-       &weights_constant,
-       4,
-       poly3_pars
-    }
+    {
+        "Polynom (order 3)",
+        "Polynom",
+        "f(x) = a + b*x + c*x<sup>2</sup> + d*x<sup>3</sup>",
+        &fit_poly_3,
+        NULL,
+        &guess_poly_3,
+        &scale_poly_3,
+        &weights_constant,
+        4,
+        poly3_pars,
+        NULL
+    },
 };
 
 /**
