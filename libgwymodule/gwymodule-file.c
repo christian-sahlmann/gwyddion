@@ -363,6 +363,31 @@ file_menu_entry_compare(GwyFileFuncInfo *a,
     return strcmp(a->file_desc, b->file_desc);
 }
 
+/**
+ * gwy_file_func_get_operations:
+ * @name: File type function name.
+ *
+ * Returns possible operations for a file type function identified by
+ * @name.
+ *
+ * Returns: The file operation bit mask.
+ **/
+GwyFileOperation
+gwy_file_func_get_operations(const gchar *name)
+{
+    GwyFileFuncInfo *func_info;
+    GwyFileOperation capable = 0;
+
+
+    func_info = g_hash_table_lookup(file_funcs, name);
+    g_return_val_if_fail(func_info, 0);
+    capable |= func_info->load ? GWY_FILE_LOAD : 0;
+    capable |= func_info->save ? GWY_FILE_SAVE : 0;
+    capable |= func_info->detect ? GWY_FILE_DETECT : 0;
+
+    return capable;
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -414,6 +439,17 @@ file_menu_entry_compare(GwyFileFuncInfo *a,
  * The type of file saving function.
  *
  * Returns: %TRUE if file save succeeded, %FALSE otherwise.
+ **/
+
+/**
+ * GwyFileOperation:
+ * @GWY_FILE_NONE: None.
+ * @GWY_FILE_LOAD: Posibility to load files of this type.
+ * @GWY_FILE_SAVE: Posibility to save files of this type.
+ * @GWY_FILE_DETECT: Posibility to detect files are of this file type,
+ * @GWY_FILE_MASK: The mask for all the flags.
+ *
+ * File type function file operations (capabilities).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
