@@ -166,6 +166,17 @@ gwy_axis_init(GwyAxis *axis)
     /*axis->unit = NULL;*/
 }
 
+/**
+ * gwy_axis_new:
+ * @orientation:  axis orientation
+ * @min: minimum value
+ * @max: maximum value
+ * @label: axis label
+ *
+ * Creates new axis.
+ *
+ * Returns: new axis
+ **/
 GtkWidget*
 gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
 {
@@ -425,6 +436,13 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
 
 }
 
+/**
+ * gwy_axis_set_logarithmic:
+ * @a: axis 
+ * @is_logarithmic: logarithimc mode
+ *
+ * Sets logarithmic mode. Untested.
+ **/
 void
 gwy_axis_set_logarithmic(GwyAxis *a,
                          gboolean is_logarithmic)
@@ -1108,18 +1126,43 @@ gwy_axis_formatticks(GwyAxis *a)
 
 
 
+/**
+ * gwy_axis_set_visible:
+ * @axis: axis widget 
+ * @is_visible: visibility
+ *
+ * Sets visibility of axis.
+ **/
 void
 gwy_axis_set_visible(GwyAxis *axis, gboolean is_visible)
 {
     axis->is_visible = is_visible;
 }
 
+/**
+ * gwy_axis_set_auto:
+ * @axis: axis widget 
+ * @is_auto: auto preperty
+ *
+ * Sets the auto property. If TRUE, axis changes fonts
+ * and ticks sizes to produce reasonable output at different
+ * widget sizes.
+ **/
 void
 gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
 {
     axis->is_auto = is_auto;
 }
 
+/**
+ * gwy_axis_set_req:
+ * @axis: axis widget 
+ * @min: minimum requisistion
+ * @max: maximum requisition
+ *
+ * Set requisition of axis boundaries. Axis will fix the boundaries
+ * to satisfy requisition but still have reasonable tick values and spacing.
+ **/
 void
 gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
 {
@@ -1134,6 +1177,13 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
                     (GTK_WIDGET(axis))->allocation.height);
 }
 
+/**
+ * gwy_axis_set_style:
+ * @axis: axis widget 
+ * @style: axis style
+ *
+ * Set axis style. The style affects used tick sizes, fonts etc.
+ **/
 void
 gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
 {
@@ -1143,30 +1193,69 @@ gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
                     (GTK_WIDGET(axis))->allocation.height);
 }
 
+/**
+ * gwy_axis_get_maximum:
+ * @axis: axis widget 
+ *
+ * 
+ *
+ * Returns: real maximum of axis
+ **/
 gdouble
 gwy_axis_get_maximum(GwyAxis *axis)
 {
     return axis->max;
 }
 
+/**
+ * gwy_axis_get_minimum:
+ * @axis: axis widget 
+ *
+ * 
+ *
+ * Returns: real minimum of axis
+ **/
 gdouble
 gwy_axis_get_minimum(GwyAxis *axis)
 {
     return axis->min;
 }
 
+/**
+ * gwy_axis_get_reqmaximum:
+ * @axis: axis widget 
+ *
+ * 
+ *
+ * Returns: axis requisition maximum
+ **/
 gdouble
 gwy_axis_get_reqmaximum(GwyAxis *axis)
 {
     return axis->reqmax;
 }
 
+/**
+ * gwy_axis_get_reqminimum:
+ * @axis: axis widget 
+ *
+ * 
+ *
+ * Returns: axis requisition minimum
+ **/
 gdouble
 gwy_axis_get_reqminimum(GwyAxis *axis)
 {
     return axis->reqmin;
 }
 
+/**
+ * gwy_axis_set_label:
+ * @axis: axis widget 
+ * @label_text: label to be set
+ *
+ * sets the label text
+ **/
 void
 gwy_axis_set_label(GwyAxis *axis, GString *label_text)
 {
@@ -1177,12 +1266,28 @@ gwy_axis_set_label(GwyAxis *axis, GString *label_text)
     gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
+/**
+ * gwy_axis_get_label:
+ * @axis: axis widget 
+ *
+ * 
+ *
+ * Returns: axis label string
+ **/
 GString*
 gwy_axis_get_label(GwyAxis *axis)
 {
     return axis->label_text;
 }
 
+/**
+ * gwy_axis_set_unit:
+ * @axis: axis widget 
+ * @unit: label unit
+ *
+ * Sets the label unit. This will be added automatically
+ * to the label.
+ **/
 void
 gwy_axis_set_unit(GwyAxis *axis, char *unit)
 {
