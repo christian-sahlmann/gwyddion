@@ -14,6 +14,8 @@ gwy_gl_material_get_type
 gwy_grad_sphere_get_type
 gwy_graph_get_type
 gwy_graph_area_get_type
+gwy_graph_model_get_type
+gwy_graph_curve_model_get_type
 gwy_graph_corner_get_type
 gwy_graph_label_get_type
 gwy_hruler_get_type
