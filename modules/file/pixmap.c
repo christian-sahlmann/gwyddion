@@ -519,11 +519,11 @@ pixmap_load(const gchar *filename,
         if (!gdk_pixbuf_loader_write(loader, pixmap_ping_buf, n, &err)) {
             g_warning("%s", err->message);
             g_clear_error(&err);
-            gdk_pixbuf_loader_close(loader, NULL);
             g_object_unref(loader);
             return NULL;
         }
     } while (n == pixmap_ping_length);
+
     if (!gdk_pixbuf_loader_close(loader, &err)) {
         g_warning("%s", err->message);
         g_clear_error(&err);
