@@ -71,9 +71,9 @@ static GwyModuleInfo module_info = {
     &module_register,
     "shade",
     "Shade module",
-    "PK",
+    "Petr Klapetek <petr@klapetek.cz>",
     "1.0",
-    "Yeti & PK",
+    "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 

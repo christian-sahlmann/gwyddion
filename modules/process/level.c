@@ -39,9 +39,9 @@ static GwyModuleInfo module_info = {
     &module_register,
     "level",
     "Simple automatic levelling.",
-    "Yeti",
+    "Yeti <yeti@physics.muni.cz>",
     "1.0",
-    "Yeti & PK",
+    "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 

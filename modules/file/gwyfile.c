@@ -43,9 +43,9 @@ static GwyModuleInfo module_info = {
     &module_register,
     "gwyfile",
     "Load and save Gwyddion native serialized objects.",
-    "Yeti",
+    "Yeti <yeti@physics.muni.cz>",
     "0.1",
-    "Yeti & PK",
+    "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 

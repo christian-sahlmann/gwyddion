@@ -113,9 +113,9 @@ static GwyModuleInfo module_info = {
         "JPEG (Joint Photographic Experts Group), "
         "PPM (Portable Pixmap), "
         "BMP (Windows or OS2 Bitmap).",
-    "Yeti",
+    "Yeti <yeti@physics.muni.cz>",
     "2.0",
-    "Yeti & PK",
+    "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 

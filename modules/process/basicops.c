@@ -46,9 +46,9 @@ static GwyModuleInfo module_info = {
     &module_register,
     "basicops",
     "Basic operations like inversion or flipping.",
-    "Yeti",
+    "Yeti <yeti@physics.muni.cz>",
     "1.0",
-    "Yeti & PK",
+    "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 

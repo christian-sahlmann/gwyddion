@@ -61,9 +61,9 @@ static GwyModuleInfo module_info = {
     "Plug-in proxy is a module capable of querying, registering, and running "
         "external programs (plug-ins) on data pretending they are data "
         "processing modules.",
-    "Yeti",
+    "Yeti <yeti@physics.muni.cz>",
     "1.0",
-    "Yeti",
+    "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 
