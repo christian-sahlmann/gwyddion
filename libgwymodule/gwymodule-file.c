@@ -342,7 +342,9 @@ file_menu_entry_compare(GwyFileFuncInfo *a,
 /**
  * GwyFileFuncInfo:
  * @name: File type function name (used for all detect/save/load functions).
- * @file_desc: Brief file type description.
+ * @file_desc: Brief file type description.  This will appear in the menu
+ *             so it should not contain slashes, and the preferred form is
+ *             "Foobar data (.foo)".
  * @detect: The file type detecting function.
  * @load: The file loading function.
  * @save: The file saving function.
