@@ -402,7 +402,7 @@ gwy_unitool_dialog_add_button_hide(GtkWidget *dialog)
     GtkWidget *button;
 
     button = gtk_dialog_add_button(GTK_DIALOG(dialog),
-                                   _("Hide"),
+                                   _("_Hide"),
                                    GTK_RESPONSE_CLOSE);
     g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
                       GINT_TO_POINTER(GTK_RESPONSE_CLOSE));
