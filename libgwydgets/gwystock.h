@@ -57,6 +57,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_LIGHT_ROTATE    "gwy_light_rotate"
 #define GWY_STOCK_MASK_ADD        "gwy_mask_add"
 #define GWY_STOCK_MASK_GROW       "gwy_mask_grow"
+#define GWY_STOCK_MASK_EDITOR     "gwy_mask_editor"
 #define GWY_STOCK_MASK_INTERSECT  "gwy_mask_intersect"
 #define GWY_STOCK_MASK_INVERT     "gwy_mask_invert"
 #define GWY_STOCK_MASK_REMOVE     "gwy_mask_remove"
