@@ -347,7 +347,8 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
         g_free(format->units);
     }
 
-    format->magnitude = gwy_math_humanize_numbers(resolution, maximum, &prec);
+    if (maximum == 0) format->magnitude = 1;
+    else format->magnitude = gwy_math_humanize_numbers(resolution, maximum, &prec);
     format->precision = prec;
 
     if (siunit->unitstr!=NULL && (strlen(siunit->unitstr)<2 && strlen(siunit->unitstr)!=0))
@@ -373,7 +374,8 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
         {
             if (siunit->unitstr==NULL)
                 format->units = strcpy(format->units, " ");
-            format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
+            else
+                format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
         }
 
     }
@@ -474,7 +476,8 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
             {
                 format->units = strcpy(format->units, " ");
             }
-            format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
+            else
+                format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
         }
         format->precision = 2;
 
