@@ -1,12 +1,14 @@
 
+Sat Sep  6 15:18:30 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwyddion/gwytestser.c (gwy_test_ser_finalize):
+      added
+
 Tue Sep  2 22:50:08 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
     * libgwyddion/gwyserializable.c (gwy_serialize_check_string),
       libgwyddion/gwycontainer.c (gwy_container_deserialize):
       fixed always checking string from the begining instead from *position
     * libgwyddion/gwyserializable.c (gwy_serialize_unpack_string,
       gwy_serialize_check_string): fixed bogus new position computation
-
-Tue Sep  2 22:45:04 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
 
 Tue Sep  2 22:16:55 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
     * libgwyddion/gwycontainer.c (gwy_container_deserialize):

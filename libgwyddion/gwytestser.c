@@ -8,10 +8,9 @@
 
 static void       gwy_test_ser_class_init        (GwySerializableClass *klass);
 static void       gwy_test_ser_init              (GwyTestSer *test_ser);
-static void       gwy_test_ser_serializable_init (gpointer giface,
-                                                  gpointer iface_data);
-static void       gwy_test_ser_watchable_init    (gpointer giface,
-                                                  gpointer iface_data);
+static void       gwy_test_ser_finalize          (GwyTestSer *test_ser);
+static void       gwy_test_ser_serializable_init (gpointer giface);
+static void       gwy_test_ser_watchable_init    (gpointer giface);
 static guchar*    gwy_test_ser_serialize         (GObject *obj,
                                                   guchar *buffer,
                                                   gsize *size);
@@ -40,12 +39,12 @@ gwy_test_ser_get_type(void)
         };
 
         GInterfaceInfo gwy_serializable_info = {
-            gwy_test_ser_serializable_init,
+            (GInterfaceInitFunc)gwy_test_ser_serializable_init,
             NULL,
             GUINT_TO_POINTER(42)
         };
         GInterfaceInfo gwy_watchable_info = {
-            gwy_test_ser_watchable_init,
+            (GInterfaceInitFunc)gwy_test_ser_watchable_init,
             NULL,
             GUINT_TO_POINTER(37)
         };
@@ -67,15 +66,13 @@ gwy_test_ser_get_type(void)
 }
 
 static void
-gwy_test_ser_serializable_init(gpointer giface,
-                               gpointer iface_data)
+gwy_test_ser_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_assert(iface_data == GUINT_TO_POINTER(42));
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -84,15 +81,13 @@ gwy_test_ser_serializable_init(gpointer giface,
 }
 
 static void
-gwy_test_ser_watchable_init(gpointer giface,
-                            gpointer iface_data)
+gwy_test_ser_watchable_init(gpointer giface)
 {
     GwyWatchableClass *iface = giface;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_assert(iface_data == GUINT_TO_POINTER(37));
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     /* initialize stuff */
@@ -102,9 +97,13 @@ gwy_test_ser_watchable_init(gpointer giface,
 static void
 gwy_test_ser_class_init(GwySerializableClass *klass)
 {
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
+
+    gobject_class->finalize = gwy_test_ser_finalize;
 }
 
 static void
@@ -116,6 +115,15 @@ gwy_test_ser_init(GwyTestSer *test_ser)
     test_ser->radius = NULL;
     test_ser->history_size = 0;
     test_ser->theta = 0.0;
+}
+
+static void
+gwy_test_ser_finalize(GwyTestSer *test_ser)
+{
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    g_free(test_ser->radius);
 }
 
 GObject*

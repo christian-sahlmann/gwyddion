@@ -13,8 +13,7 @@ typedef struct {
     gsize size;
 } SerializeData;
 
-static void     gwy_container_serializable_init  (gpointer giface,
-                                                  gpointer iface_data);
+static void     gwy_container_serializable_init  (gpointer giface);
 static void     gwy_container_class_init         (GwyContainerClass *klass);
 static void     gwy_container_init               (GwyContainer *container);
 static void     value_destroy_func               (gpointer data);
@@ -69,7 +68,7 @@ gwy_container_get_type(void)
         };
 
         GInterfaceInfo gwy_serializable_info = {
-            gwy_container_serializable_init, NULL, 0
+            (GInterfaceInitFunc)gwy_container_serializable_init, NULL, 0
         };
 
         #ifdef DEBUG
@@ -88,8 +87,7 @@ gwy_container_get_type(void)
 }
 
 static void
-gwy_container_serializable_init(gpointer giface,
-                                gpointer iface_data __attribute__((unused)))
+gwy_container_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
