@@ -9,6 +9,7 @@ libgwydgetsinclude_HEADERS = \
 	gwyaxis.h \
 	gwyaxisdialog.h \
 	gwycoloraxis.h \
+	gwycolorbutton.h \
 	gwydataview.h \
 	gwydataviewlayer.h \
 	gwydatawindow.h \
@@ -49,6 +50,7 @@ libgwydgets_la_SOURCES = \
 	gwyaxis.c \
 	gwyaxisdialog.c \
 	gwycoloraxis.c \
+	gwycolorbutton.c \
 	gwydataview.c \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
