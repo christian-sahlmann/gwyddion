@@ -232,7 +232,7 @@ gwy_data_field_serialize(GObject *obj,
                          GByteArray *buffer)
 {
     GwyDataField *data_field;
-    gsize datasize;
+    guint32 datasize;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), NULL);
@@ -260,7 +260,7 @@ gwy_data_field_deserialize(const guchar *buffer,
                            gsize size,
                            gsize *position)
 {
-    gsize fsize;
+    guint32 fsize;
     gint xres, yres;
     gdouble xreal, yreal, *data = NULL;
     GwySIUnit *si_unit_xy = NULL, *si_unit_z = NULL;

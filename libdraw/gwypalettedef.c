@@ -251,7 +251,7 @@ gwy_palette_def_serialize(GObject *obj,
     GwyPaletteDefEntry *pe;
     GArray *pd;
     gdouble *rdat, *gdat, *bdat, *adat, *xdat;
-    gsize ndat, i;
+    guint32 ndat, i;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_PALETTE_DEF(obj), NULL);

@@ -1349,7 +1349,7 @@ gwy_gradient_serialize(GObject *obj,
     GwyGradientPoint *pt;
     GArray *points;
     gdouble *data, *rdata, *gdata, *bdata, *adata, *xdata;
-    gsize ndata, i;
+    guint32 ndata, i;
 
     g_return_val_if_fail(GWY_IS_GRADIENT(obj), NULL);
 

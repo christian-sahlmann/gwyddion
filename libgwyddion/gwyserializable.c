@@ -1319,7 +1319,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
                            GwySerializeSpec *sp)
 {
     gpointer p;
-    gsize *a;
+    guint32 *a;
 
     p = sp->value;
     a = sp->array_size;

@@ -197,7 +197,7 @@ gwy_data_line_deserialize(const guchar *buffer,
                           gsize size,
                           gsize *position)
 {
-    gsize fsize;
+    guint32 fsize;
     gint res;
     gdouble real, *data = NULL;
     GwyDataLine *data_line;

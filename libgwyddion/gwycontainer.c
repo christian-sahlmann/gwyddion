@@ -2335,7 +2335,7 @@ token_length(const gchar *text)
 }
 
 static gchar*
-dequote_token(const gchar *tok, guint *len)
+dequote_token(const gchar *tok, gsize *len)
 {
     gchar *s, *t;
 
@@ -2367,7 +2367,7 @@ gwy_container_deserialize_from_text(const gchar *text)
     GwyContainer *container;
     const gchar *tok, *type;
     gchar *name = NULL;
-    guint len, namelen, typelen;
+    gsize len, namelen, typelen;
     GQuark key;
 
     container = GWY_CONTAINER(gwy_container_new());
@@ -2444,7 +2444,7 @@ gwy_container_deserialize_from_text(const gchar *text)
             gsize vallen;
 
             vallen = len;
-            s = dequote_token(tok, &vallen);
+            s = dequote_token(tok, &vallen);  /* FIXME: 64bit */
             gwy_container_set_string(container, key, s);
         }
         /* object */
