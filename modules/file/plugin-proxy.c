@@ -218,6 +218,7 @@ plugin_proxy_load(const gchar *filename,
     fd = g_file_open_tmp("gwydXXXXXXXX", &tmpname, &err);
     if (fd < 0) {
         g_warning("Cannot create a temporary file: %s", err->message);
+        g_clear_error(&err);
         return FALSE;
     }
     fh = fdopen(fd, "wb");

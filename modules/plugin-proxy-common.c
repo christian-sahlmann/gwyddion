@@ -144,38 +144,58 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             goto fail;
         }
         pos++;
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, line));
+        if (gwy_container_contains_by_name(data, line))
+            dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                     line));
+        else
+            dfield = NULL;
 
         /* get datafield parameters from already read values, failing back
          * to values of original data field */
         key = g_strconcat(line, "/xres", NULL);
         if (gwy_container_contains_by_name(data, key))
             xres = atoi(gwy_container_get_string_by_name(data, key));
-        else
+        else if (dfield)
             xres = gwy_data_field_get_xres(dfield);
+        else {
+            g_critical("Broken dump doesn't specify data field width.");
+            goto fail;
+        }
         g_free(key);
 
         key = g_strconcat(line, "/yres", NULL);
         if (gwy_container_contains_by_name(data, key))
             yres = atoi(gwy_container_get_string_by_name(data, key));
-        else
+        else if (dfield)
             yres = gwy_data_field_get_yres(dfield);
+        else {
+            g_critical("Broken dump doesn't specify data field height.");
+            goto fail;
+        }
         g_free(key);
 
         key = g_strconcat(line, "/xreal", NULL);
         if (gwy_container_contains_by_name(data, key))
             xreal = g_ascii_strtod(gwy_container_get_string_by_name(data, key),
                                    NULL);
-        else
+        else if (dfield)
             xreal = gwy_data_field_get_xreal(dfield);
+        else {
+            g_critical("Broken dump doesn't specify real data field width.");
+            xreal = 1;   /* 0 could cause troubles */
+        }
         g_free(key);
 
         key = g_strconcat(line, "/yreal", NULL);
         if (gwy_container_contains_by_name(data, key))
             yreal = g_ascii_strtod(gwy_container_get_string_by_name(data, key),
                                    NULL);
-        else
+        else if (dfield)
             yreal = gwy_data_field_get_yreal(dfield);
+        else {
+            g_critical("Broken dump doesn't specify real data field height.");
+            yreal = 1;   /* 0 could cause troubles */
+        }
         g_free(key);
 
         dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
@@ -259,3 +279,5 @@ next_line(gchar **buffer)
 }
 
 #endif /* __PLUGIN_PROXY_COMMON_C__ */
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
