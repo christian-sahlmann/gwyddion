@@ -157,6 +157,12 @@ typedef struct {
     SISChannel *channels;
 } SISFile;
 
+typedef struct {
+    GtkWidget *data_view;
+    GwyContainer *data;
+    SISFile *sisfile;
+} SISDialogControls;
+
 static const GwyEnum sis_onoff[] = {
     { "Off", SIS_OFF },
     { "On",  SIS_ON },
@@ -331,9 +337,10 @@ static gboolean       module_register     (const gchar *name);
 static gint           sis_detect          (const gchar *filename,
                                            gboolean only_name);
 static GwyContainer*  sis_load            (const gchar *filename);
-static gsize          select_which_data   (GwyEnum *choices,
+static gsize          select_which_data   (SISFile *sisfile,
+                                           GwyEnum *choices,
                                            gsize n);
-static GwyContainer*  extract_data        (SISFile *sisfile,
+static GwyDataField*  extract_data        (SISFile *sisfile,
                                            gsize ch,
                                            gsize im);
 static void           add_metadata        (SISFile *sisfile,
@@ -405,6 +412,7 @@ sis_load(const gchar *filename)
     guchar *buffer;
     gsize size;
     GError *err = NULL;
+    GwyDataField *dfield = NULL;
     GwyContainer *data = NULL;
     SISFile sisfile;
     SISImage *image;
@@ -437,12 +445,16 @@ sis_load(const gchar *filename)
             }
         }
     }
-    i = select_which_data(choices, n);
+    i = select_which_data(&sisfile, choices, n);
     gwy_debug("Selected %u:%u", i/1024, i % 1024);
     if (i != (gsize)-1) {
-        data = extract_data(&sisfile, i/1024, i % 1024);
-        if (data)
+        dfield = extract_data(&sisfile, i/1024, i % 1024);
+        if (dfield) {
+            data = GWY_CONTAINER(gwy_container_new());
+            gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+            g_object_unref(dfield);
             add_metadata(&sisfile, i/1024, i %1024, data);
+        }
     }
 
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -454,11 +466,33 @@ sis_load(const gchar *filename)
     return data;
 }
 
+static void
+selection_changed(GtkWidget *button,
+                  SISDialogControls *controls)
+{
+    gsize i;
+    GwyDataField *dfield;
+
+    i = gwy_radio_buttons_get_current_from_widget(button, "data");
+    g_assert(i != (gsize)-1);
+    dfield = extract_data(controls->sisfile, i/1024, i % 1024);
+    gwy_container_set_object_by_name(controls->data, "/0/data",
+                                     G_OBJECT(dfield));
+    g_object_unref(dfield);
+    gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
+}
+
 static gsize
-select_which_data(GwyEnum *choices,
+select_which_data(SISFile *sisfile,
+                  GwyEnum *choices,
                   gsize n)
 {
-    GtkWidget *dialog, *label, *table;
+    GtkWidget *dialog, *label, *vbox, *hbox, *align;
+    SISDialogControls controls;
+    GwyDataField *dfield;
+    gint xres, yres;
+    gdouble zoomval;
+    GtkObject *layer;
     GSList *radio, *rl;
     gint response;
     gsize i;
@@ -469,24 +503,54 @@ select_which_data(GwyEnum *choices,
     if (n == 1)
         return choices[0].value;
 
+    controls.sisfile = sisfile;
+
     dialog = gtk_dialog_new_with_buttons(_("Select data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    table = gtk_table_new(n+1, 1, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
+    hbox = gtk_hbox_new(FALSE, 20);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 12);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
+
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
+
+    vbox = gtk_vbox_new(TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(align), vbox);
 
     label = gtk_label_new(_("Data to load:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
 
-    radio = gwy_radio_buttons_create(choices, n, "data", NULL, NULL, 0);
+    radio = gwy_radio_buttons_create(choices, n, "data",
+                                     G_CALLBACK(selection_changed), &controls,
+                                     0);
     for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
-        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(rl->data),
-                         0, 1, i+1, i+2,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(rl->data), TRUE, TRUE, 0);
+
+    /* preview */
+    align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
+
+    i = choices[0].value;
+    dfield = extract_data(sisfile, i/1024, i % 1024);
+    controls.data = GWY_CONTAINER(gwy_container_new());
+    gwy_container_set_object_by_name(controls.data, "/0/data",
+                                     G_OBJECT(dfield));
+    g_object_unref(dfield);
+    add_metadata(sisfile, i/1024, i %1024, controls.data);
+    xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
+    yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
+    zoomval = 120.0/MAX(xres, yres);
+
+    controls.data_view = gwy_data_view_new(controls.data);
+    g_object_unref(controls.data);
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view), zoomval);
+    layer = gwy_layer_basic_new();
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
+                                 GWY_PIXMAP_LAYER(layer));
+    gtk_container_add(GTK_CONTAINER(align), controls.data_view);
 
     gtk_widget_show_all(dialog);
     gtk_window_present(GTK_WINDOW(dialog));
@@ -515,12 +579,11 @@ select_which_data(GwyEnum *choices,
     return i;
 }
 
-static GwyContainer*
+static GwyDataField*
 extract_data(SISFile *sisfile,
              gsize ch,
              gsize im)
 {
-    GwyContainer *data;
     GwyDataField *dfield;
     SISChannel *channel;
     SISImage *image;
@@ -575,10 +638,7 @@ extract_data(SISFile *sisfile,
     for (i = 0; i < image->width*image->height; i++)
         d[i] *= zreal;
 
-    data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
-
-    return data;
+    return dfield;
 }
 
 static void
