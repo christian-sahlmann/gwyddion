@@ -13,25 +13,6 @@ GWY_WATCHABLE_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gwytestser</FILE>
-<TITLE>GwyTestSer</TITLE>
-gwy_test_ser_new
-gwy_test_ser_set_radius
-gwy_test_ser_set_theta
-gwy_test_ser_get_radius
-gwy_test_ser_get_theta
-gwy_test_ser_print_history
-<SUBSECTION Standard>
-GWY_TEST_SER
-GWY_IS_TEST_SER
-GWY_TYPE_TEST_SER
-gwy_test_ser_get_type
-GWY_TEST_SER_CLASS
-GWY_IS_TEST_SER_CLASS
-GWY_TEST_SER_GET_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gwyserializable</FILE>
 GwySerializeFunc
 GwyDeserializeFunc
@@ -130,6 +111,12 @@ GWY_CONTAINER_GET_CLASS
 
 <SECTION>
 <FILE>gwyddion</FILE>
+</SECTION>
+
+<SECTION>
+<FILE>gwyentities</FILE>
+gwy_entities_entity_to_utf8
+gwy_entities_text_to_utf8
 </SECTION>
 
 <SECTION>

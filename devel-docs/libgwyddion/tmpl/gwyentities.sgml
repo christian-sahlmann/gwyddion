@@ -1,0 +1,34 @@
+<!-- ##### SECTION Title ##### -->
+gwyentities
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_entities_entity_to_utf8 ##### -->
+<para>
+
+</para>
+
+@entity: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_entities_text_to_utf8 ##### -->
+<para>
+
+</para>
+
+@text: 
+@Returns: 
+
+

@@ -2,9 +2,9 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 <!ENTITY libgwyddion-GwyWatchable SYSTEM "xml/gwywatchable.xml">
-<!ENTITY libgwyddion-GwyTestSer SYSTEM "xml/gwytestser.xml">
 <!ENTITY libgwyddion-GwySerializable SYSTEM "xml/gwyserializable.xml">
 <!ENTITY libgwyddion-GwyContainer SYSTEM "xml/gwycontainer.xml">
+<!ENTITY libgwyddion-gwyentities SYSTEM "xml/gwyentities.xml">
 ]>
 <book id="index">
   <bookinfo>
@@ -14,8 +14,8 @@
   <chapter>
     <title>[Insert title here]</title>
     &libgwyddion-GwyWatchable;
-    &libgwyddion-GwyTestSer;
     &libgwyddion-GwySerializable;
     &libgwyddion-GwyContainer;
+    &libgwyddion-gwyentities;
   </chapter>
 </book>
