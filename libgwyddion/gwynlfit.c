@@ -1864,7 +1864,7 @@ gwy_math_nlfit_fit_preset(const GwyNLFitPreset* preset,
 
 /**
  * GwyNLFitFunc:
- * @x: The value to compute the function in.
+ * @x: The value to compute the function at.
  * @n_param: The number of parameters (size of @param).
  * @param: Parameters.
  * @user_data: User data as passed to gwy_math_nlfit_fit().
@@ -1877,7 +1877,7 @@ gwy_math_nlfit_fit_preset(const GwyNLFitPreset* preset,
 
 /**
  * GwyNLFitDerFunc:
- * @i: The index of the value in @x to compute the derivation in.
+ * @i: The index of the value in @x to compute the derivation at.
  * @x: x-data as passed to gwy_math_nlfit_fit().
  * @n_param: The number of parameters (size of @param).
  * @param: Parameters.

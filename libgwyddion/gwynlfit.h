@@ -22,9 +22,9 @@
 #ifndef __GWY_NLFIT_H__
 #define __GWY_NLFIT_H__
 
-G_BEGIN_DECLS
-
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
                                  gint n_param,
