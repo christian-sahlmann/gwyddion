@@ -737,7 +737,8 @@ gwy_axis_normalscale(GwyAxis *a)
     gint i;
     GwyTick mit;
     GwyLabeledTick mjt;
-    
+   
+    printf("reqmin=%f, reqmax=%f\n", a->reqmin, a->reqmax);
     gdouble range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
     gdouble tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/ 
     gdouble majorbase = ceil(a->reqmin/tickstep)*tickstep; /*starting value*/
@@ -974,6 +975,7 @@ gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
 void 
 gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
 {
+    printf("reqmin set from %f to %f\n", axis->reqmin, min);
     axis->reqmin = min;
     axis->reqmax = max;
     gwy_axis_adjust(axis, (GTK_WIDGET(axis))->allocation.width, (GTK_WIDGET(axis))->allocation.height);
@@ -996,5 +998,15 @@ gdouble gwy_axis_get_minimum(GwyAxis *axis)
     return axis->min;
 }
 
+gdouble 
+gwy_axis_get_reqmaximum(GwyAxis *axis)
+{
+    return axis->reqmax;
+}
+
+gdouble gwy_axis_get_reqminimum(GwyAxis *axis)
+{
+    return axis->reqmin;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

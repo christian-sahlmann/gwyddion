@@ -328,6 +328,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
+    g_return_if_fail(GWY_IS_GRAPH_AREA(widget));
     area = GWY_GRAPH_AREA(widget);
     child = gwy_graph_area_find_child(area, event->x, event->y);
     if (child) { printf("Child found.\n");

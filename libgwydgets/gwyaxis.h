@@ -105,6 +105,10 @@ gdouble gwy_axis_get_maximum(GwyAxis *axis);
 
 gdouble gwy_axis_get_minimum(GwyAxis *axis);
 
+gdouble gwy_axis_get_reqmaximum(GwyAxis *axis);
+
+gdouble gwy_axis_get_reqminimum(GwyAxis *axis);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
