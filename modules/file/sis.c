@@ -354,7 +354,7 @@ static GwyModuleInfo module_info = {
     "sisfile",
     N_("Load SIS data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Neačs (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -388,8 +388,15 @@ sis_detect(const gchar *filename,
     gint score;
 
     gwy_debug("");
-    if (only_name)
-        return g_str_has_suffix(filename, EXTENSION) ? 20 : 0;
+    if (only_name) {
+        gchar *filename_lc;
+
+        filename_lc = g_ascii_strdown(filename, -1);
+        score = g_str_has_suffix(filename_lc, EXTENSION) ? 20 : 0;
+        g_free(filename_lc);
+
+        return score;
+    }
 
     if (!(fh = fopen(filename, "rb")))
         return 0;
