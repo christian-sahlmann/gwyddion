@@ -17,12 +17,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
-#include <string.h>
-#include <stdlib.h>
 
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <libgwydgets/gwydgets.h>
 #include "gwyapp.h"
 #include "gwyappinternal.h"
 
@@ -31,6 +29,7 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>
 
 /* chdir */
 #ifdef HAVE_UNISTD_H
@@ -82,7 +81,7 @@ static void  gwy_app_recent_file_list_row_activated  (GtkTreeView *treeview,
                                                       GtkTreeViewColumn *column,
                                                       gpointer user_data);
 static void  gwy_app_recent_file_list_destroyed      (Controls *controls);
-static void  gwy_app_recent_file_list_prune          (GtkWidget *list);
+static void  gwy_app_recent_file_list_prune          (Controls *controls);
 static void  gwy_app_recent_file_list_open           (GtkWidget *list);
 static void  gwy_app_recent_file_list_update_menu    (Controls *controls);
 
@@ -121,10 +120,12 @@ gwy_app_recent_file_list_new(void)
     g_signal_connect_swapped(gcontrols.open, "clicked",
                              G_CALLBACK(gwy_app_recent_file_list_open), list);
 
-    gcontrols.prune = gtk_button_new_with_mnemonic(_("_Remove dangling items"));
+    gcontrols.prune = gwy_stock_like_button_new(_("Prune"),
+                                                GTK_STOCK_FIND);
     gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.prune, TRUE, TRUE, 0);
     g_signal_connect_swapped(gcontrols.prune, "clicked",
-                             G_CALLBACK(gwy_app_recent_file_list_prune), list);
+                             G_CALLBACK(gwy_app_recent_file_list_prune),
+                             &gcontrols);
 
     g_signal_connect_swapped(gcontrols.window, "destroy",
                              G_CALLBACK(gwy_app_recent_file_list_destroyed),
@@ -157,6 +158,8 @@ gwy_app_recent_file_list_construct(Controls *controls)
     list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls->store));
     controls->list = list;
     /*gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(list), TRUE);*/
+    /* silly for one column */
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(list), FALSE);
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
@@ -244,49 +247,30 @@ gwy_app_recent_file_list_destroyed(Controls *controls)
     controls->list = NULL;
 }
 
-/*
-static gboolean
-gwy_app_recent_file_list_delete_file(GtkTreeModel *store,
-                                G_GNUC_UNUSED GtkTreePath *path,
-                                GtkTreeIter *iter,
-                                G_GNUC_UNUSED gpointer userdata)
-{
-    GtkWidget *file;
-    GObject *gmodel;
-    GwyContainer *data;
-    gint id;
-    gchar key[32];
-
-    gtk_tree_model_get(store, iter, FILELIST_GMODEL, &gmodel, -1);
-    file = GTK_WIDGET(GWY_FILE_MODEL(gmodel)->file);
-    if (file)
-        gtk_widget_destroy(gtk_widget_get_toplevel(file));
-
-    gtk_list_store_remove(GTK_LIST_STORE(store), iter);
-    id = GPOINTER_TO_INT(g_object_get_data(gmodel, "gwy-app-file-list-id"));
-    g_assert(id);
-    g_snprintf(key, sizeof(key), "/0/file/file/%d", id);
-    data = (GwyContainer*)g_object_get_data(G_OBJECT(store), "container");
-    g_assert(GWY_IS_CONTAINER(data));
-    gwy_container_remove_by_name(data, key);
-    g_object_unref(gmodel);
-
-    return FALSE;
-}
-*/
-
 static void
-gwy_app_recent_file_list_prune(GtkWidget *list)
+gwy_app_recent_file_list_prune(Controls *controls)
 {
-    GtkTreeModel *store;
     GtkTreeIter iter;
+    RecentFile *rf;
 
-    /*
-    store = gtk_tree_view_get_model(GTK_TREE_VIEW(list));
-    while (gtk_tree_model_get_iter_first(store, &iter))
-        gwy_app_recent_file_list_delete_file(store, NULL, &iter, list);
-    gtk_widget_queue_draw(list);
-    */
+    g_return_if_fail(controls->store);
+
+    if (!gtk_tree_model_get_iter_first(GTK_TREE_MODEL(controls->store), &iter))
+        return;
+
+    do {
+        gtk_tree_model_get(GTK_TREE_MODEL(controls->store), &iter,
+                           FILELIST_RAW, &rf, -1);
+        if (!g_file_test(rf->filename_utf8, G_FILE_TEST_IS_REGULAR)) {
+            /* the remove moves to the next row itself */
+            if (gtk_list_store_remove(controls->store, &iter))
+                continue;
+            else
+                break;
+        }
+    } while (gtk_tree_model_iter_next(GTK_TREE_MODEL(controls->store), &iter));
+
+    gwy_app_recent_file_list_update_menu(controls);
 }
 
 static void
@@ -296,7 +280,8 @@ gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
     gchar *filename_sys, *dirname;
 
     /* XXX: this is copied from file_real_open().
-     * Need an API for doing such things. */
+     * Need an API for doing such things.
+     * Especially when one has to include the silly MS headers */
     filename_sys = g_filename_from_utf8(filename_utf8,
                                         -1, NULL, NULL, NULL);
     g_return_if_fail(filename_sys);
