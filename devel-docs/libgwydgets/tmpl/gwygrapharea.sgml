@@ -80,6 +80,12 @@ GwyGraphArea
 </para>
 
 
+<!-- ##### STRUCT GwyGraphArea ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_graph_area_new ##### -->
 <para>
 

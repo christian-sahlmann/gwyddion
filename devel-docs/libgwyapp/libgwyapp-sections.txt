@@ -29,9 +29,14 @@ gwy_app_clean_up_data
 <SECTION>
 <FILE>unitool</FILE>
 GWY_UNITOOL_RESPONSE_UNSELECT
+GwyUnitoolUpdateType
 GwyUnitoolSlots
 GwyUnitoolUnits
 GwyUnitoolState
+GwyUnitoolFunc
+GwyUnitoolCreateFunc
+GwyUnitoolResponseFunc
+GwyUnitoolUpdateFunc
 gwy_unitool_use
 gwy_unitool_windowname_frame_create
 gwy_unitool_get_z_average

@@ -14,6 +14,12 @@ Base class for #GwyDataView pixmap layers
 
 </para>
 
+<!-- ##### STRUCT GwyPixmapLayer ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_pixmap_layer_paint ##### -->
 <para>
 

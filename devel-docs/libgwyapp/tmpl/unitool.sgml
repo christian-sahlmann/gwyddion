@@ -21,6 +21,15 @@ unitool
 
 
 
+<!-- ##### ENUM GwyUnitoolUpdateType ##### -->
+<para>
+
+</para>
+
+@GWY_UNITOOL_UPDATED_SELECTION: 
+@GWY_UNITOOL_UPDATED_DATA: 
+@GWY_UNITOOL_UPDATED_CONTROLS: 
+
 <!-- ##### STRUCT GwyUnitoolSlots ##### -->
 <para>
 
@@ -44,6 +53,41 @@ unitool
 <para>
 
 </para>
+
+
+<!-- ##### USER_FUNCTION GwyUnitoolFunc ##### -->
+<para>
+
+</para>
+
+@state: 
+
+
+<!-- ##### USER_FUNCTION GwyUnitoolCreateFunc ##### -->
+<para>
+
+</para>
+
+@state: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwyUnitoolResponseFunc ##### -->
+<para>
+
+</para>
+
+@state: 
+@response: 
+
+
+<!-- ##### USER_FUNCTION GwyUnitoolUpdateFunc ##### -->
+<para>
+
+</para>
+
+@state: 
+@reason: 
 
 
 <!-- ##### FUNCTION gwy_unitool_use ##### -->

@@ -132,6 +132,7 @@ tmpl.stamp: tmpl-build.stamp
 
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml
 	@echo '*** Building SGML ***'
+	${top_srcdir}/devel-docs/add-objects.py $(DOC_MODULE)-sections.txt $(DOC_MODULE).hierarchy
 	cd $(srcdir) && \
 	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --output-format=xml $(MKDB_OPTIONS)
 	touch sgml-build.stamp

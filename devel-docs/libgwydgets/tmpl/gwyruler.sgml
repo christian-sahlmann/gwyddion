@@ -22,6 +22,12 @@ Base class for #GwyHRuler and #GwyVRuler
 @GWY_UNITS_PLACEMENT_NONE: 
 @GWY_UNITS_PLACEMENT_AT_ZERO: 
 
+<!-- ##### STRUCT GwyRuler ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_ruler_set_range ##### -->
 <para>
 

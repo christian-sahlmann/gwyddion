@@ -14,6 +14,12 @@ Horizontal ruler, similar to #GtkRuler
 
 </para>
 
+<!-- ##### STRUCT GwyHRuler ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_hruler_new ##### -->
 <para>
 

@@ -20,6 +20,7 @@ GWY_SI_UNIT_GET_CLASS
 <SECTION>
 <FILE>gwywatchable</FILE>
 <TITLE>GwyWatchable</TITLE>
+GwyWatchable
 gwy_watchable_value_changed
 <SUBSECTION Standard>
 GWY_WATCHABLE
@@ -37,6 +38,7 @@ GwySerializeFunc
 GwyDeserializeFunc
 GwyDuplicateFunc
 <TITLE>GwySerializable</TITLE>
+GwySerializable
 GwySerializeSpec
 gwy_serializable_serialize
 gwy_serializable_deserialize
@@ -75,6 +77,7 @@ GWY_CONTAINER_PATHSEP_STR
 GwyContainerNotifyFunc
 GwyKeyVal
 <TITLE>GwyContainer</TITLE>
+GwyContainer
 gwy_container_new
 gwy_container_value_type
 gwy_container_contains

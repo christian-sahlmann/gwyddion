@@ -14,6 +14,12 @@ GwyWatchable
 
 </para>
 
+<!-- ##### STRUCT GwyWatchable ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_watchable_value_changed ##### -->
 <para>
 

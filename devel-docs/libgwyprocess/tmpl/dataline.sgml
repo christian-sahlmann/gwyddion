@@ -27,6 +27,12 @@ GwyDataLine
 @GWY_SF_OUTPUT_HHCF: 
 @GWY_SF_OUTPUT_PSDF: 
 
+<!-- ##### STRUCT GwyDataLine ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_data_line_new ##### -->
 <para>
 

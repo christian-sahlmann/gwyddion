@@ -46,6 +46,7 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_crop-24.png \
 	$(top_srcdir)/pixmaps/gwy_cwt-24.png \
 	$(top_srcdir)/pixmaps/gwy_facet_level-24.png \
+	$(top_srcdir)/pixmaps/gwy_filter-24.png \
 	$(top_srcdir)/pixmaps/gwy_fit_plane-24.png \
 	$(top_srcdir)/pixmaps/gwy_fit_triangle-24.png \
 	$(top_srcdir)/pixmaps/gwy_fix_zero-24.png \
@@ -56,6 +57,7 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_graph_halfgauss-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_measure-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_palette-24.png \
+	$(top_srcdir)/pixmaps/gwy_graph_pointer-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_zoom_fit-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_zoom_in-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_zoom_out-24.png \
@@ -166,6 +168,7 @@ tmpl.stamp: tmpl-build.stamp
 
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml
 	@echo '*** Building SGML ***'
+	${top_srcdir}/devel-docs/add-objects.py $(DOC_MODULE)-sections.txt $(DOC_MODULE).hierarchy
 	cd $(srcdir) && \
 	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --output-format=xml $(MKDB_OPTIONS)
 	touch sgml-build.stamp

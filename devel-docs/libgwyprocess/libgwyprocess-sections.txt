@@ -1,6 +1,8 @@
 <SECTION>
 <FILE>datafield</FILE>
+GwyFilterType
 <TITLE>GwyDataField</TITLE>
+GwyDataField
 gwy_data_field_new
 gwy_data_field_alloc
 gwy_data_field_initialize
@@ -75,6 +77,13 @@ gwy_data_field_shade
 gwy_data_field_get_stats
 gwy_data_field_get_area_stats
 gwy_data_field_get_line_stat_function
+gwy_data_field_filter_median
+gwy_data_field_filter_mean
+gwy_data_field_filter_conservative
+gwy_data_field_filter_laplacian
+gwy_data_field_filter_sobel
+gwy_data_field_filter_prewitt
+gwy_data_field_convolve
 <SUBSECTION Standard>
 GWY_DATA_FIELD
 GWY_IS_DATA_FIELD
@@ -89,6 +98,7 @@ GWY_DATA_FIELD_GET_CLASS
 <FILE>dataline</FILE>
 GwySFOutputType
 <TITLE>GwyDataLine</TITLE>
+GwyDataLine
 gwy_data_line_new
 gwy_data_line_alloc
 gwy_data_line_initialize

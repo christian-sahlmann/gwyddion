@@ -14,6 +14,24 @@ GwyDataField
 
 </para>
 
+<!-- ##### ENUM GwyFilterType ##### -->
+<para>
+
+</para>
+
+@GWY_FILTER_MEAN: 
+@GWY_FILTER_MEDIAN: 
+@GWY_FILTER_CONSERVATIVE: 
+@GWY_FILTER_LAPLACIAN: 
+@GWY_FILTER_SOBEL: 
+@GWY_FILTER_PREWITT: 
+
+<!-- ##### STRUCT GwyDataField ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_data_field_new ##### -->
 <para>
 
@@ -863,5 +881,95 @@ GwyDataField
 @windowing: 
 @nstats: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_median ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_mean ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_conservative ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_laplacian ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_sobel ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@orientation: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_prewitt ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@orientation: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_convolve ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@kernel_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
 
 

@@ -110,6 +110,12 @@ GwyGraphLabel
 </para>
 
 
+<!-- ##### STRUCT GwyGraphLabel ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_graph_label_new ##### -->
 <para>
 

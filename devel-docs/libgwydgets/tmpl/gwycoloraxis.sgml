@@ -20,6 +20,12 @@ Simple axis with a false color scale
 </para>
 
 
+<!-- ##### STRUCT GwyColorAxis ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_color_axis_new ##### -->
 <para>
 

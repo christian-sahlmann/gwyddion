@@ -29,6 +29,7 @@ GWY_PALETTE_YELLOW
 GwyRGBA
 GwyPaletteDefEntry
 <TITLE>GwyPaletteDef</TITLE>
+GwyPaletteDef
 GwyPaletteDefFunc
 gwy_palette_def_new
 gwy_palette_def_new_as_copy
@@ -40,7 +41,6 @@ gwy_palette_def_get_color
 gwy_palette_def_set_color
 gwy_palette_def_set_from_samples
 gwy_palette_def_setup_presets
-gwy_palette_def_print
 gwy_palette_def_is_set
 <SUBSECTION Standard>
 GWY_PALETTE_DEF
@@ -55,6 +55,7 @@ GWY_PALETTE_DEF_GET_CLASS
 <SECTION>
 <FILE>gwypalette</FILE>
 <TITLE>GwyPalette</TITLE>
+GwyPalette
 gwy_palette_new
 gwy_palette_set_palette_def
 gwy_palette_get_palette_def

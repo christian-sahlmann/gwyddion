@@ -208,6 +208,12 @@ GwyPaletteDef
 </para>
 
 
+<!-- ##### STRUCT GwyPaletteDef ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### USER_FUNCTION GwyPaletteDefFunc ##### -->
 <para>
 
@@ -309,14 +315,6 @@ GwyPaletteDef
 
 </para>
 
-
-
-<!-- ##### FUNCTION gwy_palette_def_print ##### -->
-<para>
-
-</para>
-
-@a: 
 
 
 <!-- ##### MACRO gwy_palette_def_is_set ##### -->

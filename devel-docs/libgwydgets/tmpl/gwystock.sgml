@@ -46,6 +46,14 @@ The "Facet-Level" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_FILTER ##### -->
+<para>
+The "Filter" stock icon.
+<inlinegraphic fileref="gwy_filter-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_FIT_PLANE ##### -->
 <para>
 The "Fit-Plane" stock icon.
@@ -128,7 +136,8 @@ The "Graph-Palette" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_POINTER ##### -->
 <para>
-
+The "Graph-Pointer" stock icon.
+<inlinegraphic fileref="gwy_graph_pointer-24.png" format="PNG"></inlinegraphic>
 </para>
 
 

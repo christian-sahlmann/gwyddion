@@ -24,6 +24,12 @@ Data display window
 @GWY_ZOOM_MODE_PIX4PIX: 
 @GWY_ZOOM_MODE_HALFPIX: 
 
+<!-- ##### STRUCT GwyDataWindow ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_data_window_new ##### -->
 <para>
 
