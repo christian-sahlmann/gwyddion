@@ -136,8 +136,7 @@ laplacian(GwyContainer *data, GwyRunType run)
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    gwy_data_field_area_copy(dfield, show, 0, 0, xres, yres, 0, 0);
-
+    gwy_data_field_copy(dfield, show, FALSE);
     gwy_data_field_filter_laplacian(show);
     avg = gwy_data_field_area_get_avg(show, 1, 1, xres-2, yres-2);
 
@@ -174,9 +173,7 @@ canny(GwyContainer *data, GwyRunType run)
         g_object_unref(show);
     }
 
-    gwy_data_field_area_copy(dfield, show,
-                             0, 0, gwy_data_field_get_xres(dfield),
-                             gwy_data_field_get_yres(dfield), 0, 0);
+    gwy_data_field_copy(dfield, show, FALSE);
 
     /*now we use fixed threshold, but in future, there could be API
      with some setting. We could also do smooting before apllying filter.*/
@@ -199,9 +196,7 @@ rms(GwyContainer *data, GwyRunType run)
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
-        gwy_data_field_area_copy(dfield, show,
-                                 0, 0, gwy_data_field_get_xres(dfield),
-                                 gwy_data_field_get_yres(dfield), 0, 0);
+        gwy_data_field_copy(dfield, show, FALSE);
     }
     else {
         show = gwy_data_field_duplicate(dfield);

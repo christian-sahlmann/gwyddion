@@ -421,7 +421,7 @@ do_apply(GwyDataField *dfield,
                                             isel[0], isel[1],
                                             isel[2]-isel[0],
                                             isel[3]-isel[1]);
-	break;
+        break;
 
         default:
         g_assert_not_reached();

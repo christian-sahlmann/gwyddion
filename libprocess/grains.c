@@ -80,8 +80,7 @@ gwy_data_field_grains_mark_height(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
 
-    gwy_data_field_area_copy(data_field, grain_field,
-                             0, 0, data_field->xres, data_field->yres, 0, 0);
+    gwy_data_field_copy(data_field, grain_field, FALSE);
     min = gwy_data_field_get_min(grain_field);
     max = gwy_data_field_get_max(grain_field);
     if (below)
@@ -115,10 +114,8 @@ gwy_data_field_grains_mark_slope(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
 
-    gwy_data_field_area_copy(data_field, grain_field,
-                             0, 0, data_field->xres, data_field->yres, 0, 0);
-    gwy_data_field_area_filter_laplacian(grain_field, 0, 0,
-                                         data_field->xres, data_field->yres);
+    gwy_data_field_copy(data_field, grain_field, FALSE);
+    gwy_data_field_filter_laplacian(grain_field);
 
     min = gwy_data_field_get_min(grain_field);
     max = gwy_data_field_get_max(grain_field);
@@ -160,11 +157,9 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
     yres = data_field->yres;
 
     masky = gwy_data_field_duplicate(data_field);
-    gwy_data_field_area_copy(data_field, grain_field, 0, 0, xres, yres, 0, 0);
-    gwy_data_field_area_filter_sobel(grain_field, GWY_ORIENTATION_HORIZONTAL,
-                                     0, 0, xres, yres);
-    gwy_data_field_area_filter_sobel(masky, GWY_ORIENTATION_HORIZONTAL,
-                                     0, 0, xres, yres);
+    gwy_data_field_copy(data_field, grain_field, FALSE);
+    gwy_data_field_filter_sobel(grain_field, GWY_ORIENTATION_HORIZONTAL);
+    gwy_data_field_filter_sobel(masky, GWY_ORIENTATION_HORIZONTAL);
 
     gdata = grain_field->data;
     for (i = 0; i < xres*yres; i++)
@@ -234,7 +229,7 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
     drop_minima(water, min, locate_thresh);
 
     /* owatershed */
-    gwy_data_field_area_copy(data_field, mark_dfield, 0, 0, xres, yres, 0, 0);
+    gwy_data_field_copy(data_field, mark_dfield, FALSE);
     if (below)
         gwy_data_field_multiply(mark_dfield, -1.0);
     for (i = 0; i < wshed_steps; i++)
@@ -313,8 +308,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
 
     if (status->state == GWY_WATERSHED_STATE_WATERSHED) {
         if (status->internal_i == 0) {
-            gwy_data_field_area_copy(data_field, status->mark_dfield, 0, 0,
-                                     data_field->xres, data_field->yres, 0, 0);
+            gwy_data_field_copy(data_field, status->mark_dfield, FALSE);
             if (below)
                 gwy_data_field_multiply(status->mark_dfield, -1.0);
         }

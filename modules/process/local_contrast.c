@@ -231,7 +231,7 @@ contrast_do(GwyContainer *data, ContrastArgs *args)
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
     if (gwy_container_gis_object_by_name(data, "/0/show", &showfield)) {
         gwy_data_field_resample(showfield, xres, yres, GWY_INTERPOLATION_NONE);
-        gwy_data_field_area_copy(dfield, showfield, 0, 0, xres, yres, 0, 0);
+        gwy_data_field_copy(dfield, showfield, FALSE);
     }
     else {
         showfield = gwy_data_field_new_alike(dfield, FALSE);

@@ -297,30 +297,11 @@ gwy_data_field_filter_canny(GwyDataField *data_field,
     gdouble *data;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    sobel_horizontal = gwy_data_field_new_alike(data_field, FALSE);
-    sobel_vertical = gwy_data_field_new_alike(data_field, FALSE);
-    gwy_data_field_area_copy(data_field, sobel_horizontal,
-                             0, 0,
-                             data_field->xres,
-                             data_field->yres,
-                             0, 0);
-    gwy_data_field_area_copy(data_field, sobel_vertical,
-                             0, 0,
-                             data_field->xres,
-                             data_field->yres,
-                             0, 0);
+    sobel_horizontal = gwy_data_field_duplicate(data_field);
+    sobel_vertical = gwy_data_field_duplicate(data_field);
 
-    gwy_data_field_area_filter_sobel(sobel_horizontal,
-                                     GWY_ORIENTATION_HORIZONTAL,
-                                     0, 0,
-                                     data_field->xres,
-                                     data_field->yres);
-
-    gwy_data_field_area_filter_sobel(sobel_vertical,
-                                     GWY_ORIENTATION_VERTICAL,
-                                     0, 0,
-                                     data_field->xres,
-                                     data_field->yres);
+    gwy_data_field_filter_sobel(sobel_horizontal, GWY_ORIENTATION_HORIZONTAL);
+    gwy_data_field_filter_sobel(sobel_vertical, GWY_ORIENTATION_VERTICAL);
 
     data = data_field->data;
     for (k = 0; k < (data_field->xres*data_field->yres); k++)
@@ -367,8 +348,7 @@ gwy_data_field_filter_canny(GwyDataField *data_field,
         }
     }
     /*result is now in sobel_horizontal field*/
-    gwy_data_field_area_copy(sobel_horizontal, data_field,
-                             0, 0, data_field->xres, data_field->yres, 0, 0);
+    gwy_data_field_copy(sobel_horizontal, data_field, FALSE);
 
     g_object_unref(sobel_horizontal);
     g_object_unref(sobel_vertical);
@@ -626,7 +606,7 @@ gwy_data_field_area_filter_conservative(GwyDataField *data_field,
         gint ifrom = MAX(0, i + row - (size-1)/2);
         gint ito = MIN(yres-1, i + row + size/2);
 
-        for (j = col; j < col + width; j++) {
+        for (j = 0; j < width; j++) {
             gint jfrom = MAX(0, j + col - (size-1)/2);
             gint jto = MIN(xres-1, j + col + size/2);
 
