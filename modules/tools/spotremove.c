@@ -38,6 +38,10 @@ typedef struct {
     GtkWidget *y;
     GtkWidget *w;
     GtkWidget *h;
+    GtkWidget *xp;
+    GtkWidget *yp;
+    GtkWidget *wp;
+    GtkWidget *hp;
     GtkWidget *view;
     gchar *pal;
     gint algorithm;
@@ -113,7 +117,7 @@ static GwyModuleInfo module_info = {
     "spotremove",
     "Removes spots.",
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -264,8 +268,10 @@ dialog_create(GwyUnitoolState *state)
     frame = gwy_unitool_windowname_frame_create(state);
     gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
 
-    table = gtk_table_new(8, 3, FALSE);
+    table = gtk_table_new(8, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 1, 12);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 2, 12);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
 
     label = gtk_label_new(NULL);
@@ -293,26 +299,38 @@ dialog_create(GwyUnitoolState *state)
     controls->y = gtk_label_new("");
     controls->w = gtk_label_new("");
     controls->h = gtk_label_new("");
+    controls->xp = gtk_label_new("");
+    controls->yp = gtk_label_new("");
+    controls->wp = gtk_label_new("");
+    controls->hp = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls->x), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->y), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->w), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->h), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->xp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->yp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->wp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->hp), 1.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->x, 2, 3, 1, 2);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->y, 2, 3, 2, 3);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->w, 2, 3, 4, 5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->h, 2, 3, 5, 6);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->xp, 3, 4, 1, 2);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->yp, 3, 4, 2, 3);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->wp, 3, 4, 4, 5);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->hp, 3, 4, 5, 6);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), 5, 8);
 
     label = gtk_label_new_with_mnemonic(_("Removal _method"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 3, 6, 7, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 4, 6, 7, GTK_FILL, 0, 2, 2);
 
     omenu = gwy_option_menu_create(algorithms, G_N_ELEMENTS(algorithms),
                                    "algorithm",
                                    G_CALLBACK(algorithm_changed_cb), controls,
                                    controls->algorithm);
-    gtk_table_attach(GTK_TABLE(table), omenu, 0, 3, 7, 8, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), omenu, 0, 4, 7, 8, GTK_FILL, 0, 2, 2);
 
     return dialog;
 }
@@ -371,6 +389,7 @@ dialog_update(GwyUnitoolState *state,
 
     if (is_selected) {
         gint ximin, yimin, ximax, yimax;
+        gchar buf[16];
 
         gwy_unitool_update_label(units, controls->x, sel[0]);
         gwy_unitool_update_label(units, controls->y, sel[1]);
@@ -378,6 +397,15 @@ dialog_update(GwyUnitoolState *state,
         gwy_unitool_update_label(units, controls->h, sel[3] - sel[1]);
 
         selection_to_rowcol(dfield, sel, &ximin, &yimin, &ximax, &yimax);
+        g_snprintf(buf, sizeof(buf), "%d px", ximin);
+        gtk_label_set_text(GTK_LABEL(controls->xp), buf);
+        g_snprintf(buf, sizeof(buf), "%d px", yimin);
+        gtk_label_set_text(GTK_LABEL(controls->yp), buf);
+        g_snprintf(buf, sizeof(buf), "%d px", ximax - ximin);
+        gtk_label_set_text(GTK_LABEL(controls->wp), buf);
+        g_snprintf(buf, sizeof(buf), "%d px", yimax - yimin);
+        gtk_label_set_text(GTK_LABEL(controls->hp), buf);
+
         is_ok = ximin > 0
                 && yimin > 0
                 && ximax + 1 < gwy_data_field_get_xres(dfield)
@@ -391,6 +419,10 @@ dialog_update(GwyUnitoolState *state,
         gtk_label_set_text(GTK_LABEL(controls->y), "");
         gtk_label_set_text(GTK_LABEL(controls->w), "");
         gtk_label_set_text(GTK_LABEL(controls->h), "");
+        gtk_label_set_text(GTK_LABEL(controls->xp), "");
+        gtk_label_set_text(GTK_LABEL(controls->yp), "");
+        gtk_label_set_text(GTK_LABEL(controls->wp), "");
+        gtk_label_set_text(GTK_LABEL(controls->hp), "");
         is_ok = FALSE;
         draw_zoom(controls, NULL, -1, -1, -1, -1);
     }

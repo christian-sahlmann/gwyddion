@@ -157,6 +157,8 @@ dialog_create(GwyUnitoolState *state)
     table = gtk_table_new(7, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 1, 12);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 2, 12);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
@@ -211,7 +213,7 @@ dialog_create(GwyUnitoolState *state)
                                  controls->do_preview);
     g_signal_connect(controls->cdo_preview, "toggled",
                      G_CALLBACK(do_preview_updated), state);
-    gtk_table_attach(GTK_TABLE(table), controls->cdo_preview, 0, 3, 6, 7,
+    gtk_table_attach(GTK_TABLE(table), controls->cdo_preview, 0, 4, 6, 7,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     return dialog;

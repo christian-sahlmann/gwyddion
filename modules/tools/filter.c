@@ -36,6 +36,10 @@ typedef struct {
     GtkWidget *y;
     GtkWidget *w;
     GtkWidget *h;
+    GtkWidget *xp;
+    GtkWidget *yp;
+    GtkWidget *wp;
+    GtkWidget *hp;
     GtkWidget *filter;
     GtkWidget *direction;
     GtkObject *size;
@@ -195,10 +199,12 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(6, 3, FALSE);
+    table = gtk_table_new(6, 4, FALSE);
 
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 1, 12);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 2, 12);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
@@ -225,18 +231,26 @@ dialog_create(GwyUnitoolState *state)
     controls->y = gtk_label_new("");
     controls->w = gtk_label_new("");
     controls->h = gtk_label_new("");
+    controls->xp = gtk_label_new("");
+    controls->yp = gtk_label_new("");
+    controls->wp = gtk_label_new("");
+    controls->hp = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls->x), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->y), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->w), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->h), 1.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(controls->x), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->y), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->w), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->h), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(controls->xp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->yp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->wp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->hp), 1.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->x, 2, 3, 1, 2);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->y, 2, 3, 2, 3);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->w, 2, 3, 4, 5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->h, 2, 3, 5, 6);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->xp, 3, 4, 1, 2);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->yp, 3, 4, 2, 3);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->wp, 3, 4, 4, 5);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->hp, 3, 4, 5, 6);
 
     table2 = gtk_table_new(4, 2, FALSE);
 
@@ -391,6 +405,8 @@ dialog_update(GwyUnitoolState *state,
     GwyDataViewLayer *layer;
     gdouble xy[4];
     gboolean is_visible, is_selected;
+    gint ximin, yimin, ximax, yimax;
+    gchar buf[16];
     gint ulcol, brcol, ulrow, brrow;
 
     gwy_debug("");
@@ -411,6 +427,18 @@ dialog_update(GwyUnitoolState *state,
         gwy_unitool_update_label(units, controls->y, MIN(xy[1], xy[3]));
         gwy_unitool_update_label(units, controls->w, fabs(xy[2] - xy[0]));
         gwy_unitool_update_label(units, controls->h, fabs(xy[3] - xy[1]));
+        ximin = gwy_data_field_rtoj(dfield, xy[0]);
+        g_snprintf(buf, sizeof(buf), "%d px", ximin);
+        gtk_label_set_text(GTK_LABEL(controls->xp), buf);
+        yimin = gwy_data_field_rtoi(dfield, xy[1]);
+        g_snprintf(buf, sizeof(buf), "%d px", yimin);
+        gtk_label_set_text(GTK_LABEL(controls->yp), buf);
+        ximax = gwy_data_field_rtoj(dfield, xy[2]) + 1;
+        g_snprintf(buf, sizeof(buf), "%d px", ximax - ximin);
+        gtk_label_set_text(GTK_LABEL(controls->wp), buf);
+        yimax = gwy_data_field_rtoi(dfield, xy[3]) + 1;
+        g_snprintf(buf, sizeof(buf), "%d px", yimax - yimin);
+        gtk_label_set_text(GTK_LABEL(controls->hp), buf);
     }
     else {
         gwy_unitool_update_label(units, controls->x, 0);
@@ -419,6 +447,12 @@ dialog_update(GwyUnitoolState *state,
                                  gwy_data_field_get_xreal(dfield));
         gwy_unitool_update_label(units, controls->h,
                                  gwy_data_field_get_yreal(dfield));
+        gtk_label_set_text(GTK_LABEL(controls->xp), "0 px");
+        gtk_label_set_text(GTK_LABEL(controls->yp), "0 px");
+        g_snprintf(buf, sizeof(buf), "%d px", gwy_data_field_get_xres(dfield));
+        gtk_label_set_text(GTK_LABEL(controls->wp), buf);
+        g_snprintf(buf, sizeof(buf), "%d px", gwy_data_field_get_yres(dfield));
+        gtk_label_set_text(GTK_LABEL(controls->hp), buf);
     }
 
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
