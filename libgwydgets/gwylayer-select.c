@@ -28,6 +28,8 @@ static gboolean   gwy_layer_select_button_released   (GwyDataViewLayer *layer,
                                                       GdkEventButton *event);
 static void       gwy_layer_select_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_select_unplugged         (GwyDataViewLayer *layer);
+static void       gwy_layer_select_save              (GwyDataViewLayer *layer);
+static void       gwy_layer_select_restore           (GwyDataViewLayer *layer);
 
 static int        gwy_layer_select_near_point        (GwyLayerSelect *layer,
                                                       gdouble xreal,
@@ -158,14 +160,9 @@ GtkObject*
 gwy_layer_select_new(void)
 {
     GtkObject *object;
-    GwyDataViewLayer *layer;
-    GwyLayerSelect *select_layer;
 
     gwy_debug("%s", __FUNCTION__);
-
     object = g_object_new(GWY_TYPE_LAYER_SELECT, NULL);
-    layer = (GwyDataViewLayer*)object;
-    select_layer = (GwyLayerSelect*)layer;
 
     return object;
 }
@@ -262,16 +259,7 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
     select_layer->x1 = xreal;
     select_layer->y1 = yreal;
 
-    /* TODO Container */
-    gwy_container_set_double_by_name(layer->data, "/0/select/x0",
-                                     select_layer->x0);
-    gwy_container_set_double_by_name(layer->data, "/0/select/y0",
-                                     select_layer->y0);
-    gwy_container_set_double_by_name(layer->data, "/0/select/x1",
-                                     select_layer->x1);
-    gwy_container_set_double_by_name(layer->data, "/0/select/y1",
-                                     select_layer->y1);
-
+    gwy_layer_select_save(layer);
     gwy_layer_select_draw(layer, layer->parent->window);
     gwy_data_view_layer_updated(layer);
 
@@ -375,20 +363,8 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
             GWY_SWAP(gdouble, select_layer->x0, select_layer->x1);
         if (select_layer->y1 < select_layer->y0)
             GWY_SWAP(gdouble, select_layer->y0, select_layer->y1);
-
-        /* TODO Container */
-        gwy_container_set_double_by_name(layer->data, "/0/select/x0",
-                                         select_layer->x0);
-        gwy_container_set_double_by_name(layer->data, "/0/select/y0",
-                                         select_layer->y0);
-        gwy_container_set_double_by_name(layer->data, "/0/select/x1",
-                                         select_layer->x1);
-        gwy_container_set_double_by_name(layer->data, "/0/select/y1",
-                                         select_layer->y1);
     }
-    /* TODO Container */
-    gwy_container_set_boolean_by_name(layer->data, "/0/select/selected",
-                                      select_layer->selected);
+    gwy_layer_select_save(layer);
     gwy_data_view_layer_updated(layer);
     gwy_data_view_layer_finished(layer);
 
@@ -454,41 +430,21 @@ gwy_layer_select_get_selection(GwyDataViewLayer *layer,
 void
 gwy_layer_select_unselect(GwyDataViewLayer *layer)
 {
-    GwyLayerSelect *select_layer;
-
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
-    select_layer = (GwyLayerSelect*)layer;
-    select_layer->selected = FALSE;
-    gwy_container_set_boolean_by_name(layer->data, "/0/select/selected", FALSE);
+
+    GWY_LAYER_SELECT(layer)->selected = FALSE;
+    gwy_layer_select_save(layer);
 }
 
 static void
 gwy_layer_select_plugged(GwyDataViewLayer *layer)
 {
-    GwyLayerSelect *select_layer;
-
     gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
-    select_layer = (GwyLayerSelect*)layer;
 
-    select_layer->selected = FALSE;
+    GWY_LAYER_SELECT(layer)->selected = FALSE;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
-    /* TODO Container */
-    if (gwy_container_contains_by_name(layer->data, "/0/select/selected")) {
-        select_layer->selected
-            = gwy_container_get_boolean_by_name(layer->data,
-                                                "/0/select/selected");
-        if (select_layer->selected) {
-            select_layer->x0 = gwy_container_get_double_by_name(layer->data,
-                                                                "/0/select/x0");
-            select_layer->y0 = gwy_container_get_double_by_name(layer->data,
-                                                                "/0/select/y0");
-            select_layer->x1 = gwy_container_get_double_by_name(layer->data,
-                                                                "/0/select/x1");
-            select_layer->y1 = gwy_container_get_double_by_name(layer->data,
-                                                                "/0/select/y1");
-        }
-    }
+    gwy_layer_select_restore(layer);
     gwy_data_view_layer_updated(layer);
 }
 
@@ -500,6 +456,40 @@ gwy_layer_select_unplugged(GwyDataViewLayer *layer)
 
     GWY_LAYER_SELECT(layer)->selected = FALSE;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
+}
+
+static void
+gwy_layer_select_save(GwyDataViewLayer *layer)
+{
+    GwyLayerSelect *s = GWY_LAYER_SELECT(layer);
+
+    /* TODO Container */
+    gwy_container_set_boolean_by_name(layer->data, "/0/select/selected",
+                                      s->selected);
+    if (!s->selected)
+        return;
+    gwy_container_set_double_by_name(layer->data, "/0/select/x0", s->x0);
+    gwy_container_set_double_by_name(layer->data, "/0/select/y0", s->y0);
+    gwy_container_set_double_by_name(layer->data, "/0/select/x1", s->x1);
+    gwy_container_set_double_by_name(layer->data, "/0/select/y1", s->y1);
+}
+
+static void
+gwy_layer_select_restore(GwyDataViewLayer *layer)
+{
+    GwyLayerSelect *s = GWY_LAYER_SELECT(layer);
+
+    /* TODO Container */
+    if (!gwy_container_contains_by_name(layer->data, "/0/select/selected"))
+        return;
+    s->selected = gwy_container_get_boolean_by_name(layer->data,
+                                                    "/0/select/selected");
+    if (!s->selected)
+        return;
+    s->x0 = gwy_container_get_double_by_name(layer->data, "/0/select/x0");
+    s->y0 = gwy_container_get_double_by_name(layer->data, "/0/select/y0");
+    s->x1 = gwy_container_get_double_by_name(layer->data, "/0/select/x1");
+    s->y1 = gwy_container_get_double_by_name(layer->data, "/0/select/y1");
 }
 
 static int

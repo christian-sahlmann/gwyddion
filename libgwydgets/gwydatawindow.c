@@ -10,7 +10,8 @@
 
 #define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
 
-#define ZOOM_FACTOR G_SQRT2
+/*#define ZOOM_FACTOR G_SQRT2*/
+#define ZOOM_FACTOR 1.259921049894873164767210607277
 
 /* Forward declarations */
 

@@ -7,6 +7,7 @@
 #include <libgwydgets/gwyspherecoords.h>
 #include <libgwydgets/gwygradsphere.h>
 #include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygrapharea.h>
 #include <libgwydgets/gwygraphcorner.h>
 #include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwyvectorshade.h>

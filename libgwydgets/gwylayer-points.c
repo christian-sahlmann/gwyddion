@@ -32,6 +32,9 @@ static gboolean   gwy_layer_points_button_released (GwyDataViewLayer *layer,
                                                     GdkEventButton *event);
 static void       gwy_layer_points_plugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_points_unplugged       (GwyDataViewLayer *layer);
+static void       gwy_layer_points_save            (GwyDataViewLayer *layer,
+                                                    gint i);
+static void       gwy_layer_points_restore         (GwyDataViewLayer *layer);
 
 static int        gwy_layer_points_near_point      (GwyLayerPoints *layer,
                                                     gdouble xreal,
@@ -154,8 +157,8 @@ gwy_layer_points_finalize(GObject *object)
  *
  * Creates a new rectangular pointsion layer.
  *
- * Container keys: "/0/points/x0", "/0/points/x1", "/0/points/y0",
- * "/0/points/y1", and "/0/points/pointsed".
+ * Container keys: "/0/points/0/x", "/0/points/0/y", "/0/points/1/x",
+ * "/0/points/1/y", etc., and "/0/points/nselected".
  *
  * Returns: The newly created layer.
  **/
@@ -163,14 +166,9 @@ GtkObject*
 gwy_layer_points_new(void)
 {
     GtkObject *object;
-    GwyDataViewLayer *layer;
-    GwyLayerPoints *points_layer;
 
     gwy_debug("%s", __FUNCTION__);
-
     object = g_object_new(GWY_TYPE_LAYER_POINTS, NULL);
-    layer = (GwyDataViewLayer*)object;
-    points_layer = (GwyLayerPoints*)layer;
 
     return object;
 }
@@ -275,10 +273,8 @@ gwy_layer_points_draw_point(GwyDataViewLayer *layer,
     xmax = xc + CROSS_SIZE - 1;
     ymin = yc - CROSS_SIZE + 1;
     ymax = yc + CROSS_SIZE - 1;
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent),
-                                  &xmin, &ymin);
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent),
-                                  &xmax, &ymax);
+    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &xmin, &ymin);
+    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &xmax, &ymax);
     gdk_draw_line(drawable, layer->gc, xmin, yc, xmax, yc);
     gdk_draw_line(drawable, layer->gc, xc, ymin, xc, ymax);
 }
@@ -317,12 +313,7 @@ gwy_layer_points_motion_notify(GwyDataViewLayer *layer,
     /*gwy_layer_points_draw_point(layer, layer->parent->window, i);*/
     points_layer->points[2*i] = xreal;
     points_layer->points[2*i + 1] = yreal;
-
-    /* TODO Container */
-    g_snprintf(key, sizeof(key), "/0/points/x%d", i);
-    gwy_container_set_double_by_name(layer->data, key, xreal);
-    g_snprintf(key, sizeof(key), "/0/points/y%d", i);
-    gwy_container_set_double_by_name(layer->data, key, yreal);
+    gwy_layer_points_save(layer, i);
 
     /*gwy_layer_points_draw_point(layer, layer->parent->window, i);*/
     gwy_data_view_layer_updated(layer);
@@ -402,13 +393,7 @@ gwy_layer_points_button_released(GwyDataViewLayer *layer,
                                     x, y, &xreal, &yreal);
     points_layer->points[2*i] = xreal;
     points_layer->points[2*i + 1] = yreal;
-    /* TODO Container */
-    g_snprintf(key, sizeof(key), "/0/points/x%d", i);
-    gwy_container_set_double_by_name(layer->data, key, xreal);
-    g_snprintf(key, sizeof(key), "/0/points/y%d", i);
-    gwy_container_set_double_by_name(layer->data, key, yreal);
-    gwy_container_set_int32_by_name(layer->data, "/0/points/nselected",
-                                    points_layer->nselected);
+    gwy_layer_points_save(layer, i);
     gwy_layer_points_draw_point(layer, layer->parent->window, i);
     gwy_data_view_layer_updated(layer);
     if (points_layer->nselected == points_layer->npoints)
@@ -435,7 +420,7 @@ gwy_layer_points_button_released(GwyDataViewLayer *layer,
  * The @points array should be twice the size of
  * gwy_layer_points_get_max_points(), points are stored as x, y.
  * If less than gwy_layer_points_get_max_points() points are actually selected
- * the remaining items will not have meaningfull values.
+ * the remaining items will not have meaningful values.
  *
  * Returns: The number of actually selected points.
  **/
@@ -470,39 +455,20 @@ void
 gwy_layer_points_unselect(GwyDataViewLayer *layer)
 {
     g_return_if_fail(GWY_IS_LAYER_POINTS(layer));
+
     GWY_LAYER_POINTS(layer)->nselected = 0;
+    gwy_layer_points_save(layer, -1);
 }
 
 static void
 gwy_layer_points_plugged(GwyDataViewLayer *layer)
 {
-    GwyLayerPoints *points_layer;
-    gchar key[64];
-    gdouble xreal, yreal;
-    gint i;
-
     gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_LAYER_POINTS(layer));
-    points_layer = (GwyLayerPoints*)layer;
 
-    points_layer->nselected = 0;
+    GWY_LAYER_POINTS(layer)->nselected = 0;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
-    /* TODO Container */
-    if (gwy_container_contains_by_name(layer->data, "/0/points/nselected")) {
-        points_layer->nselected
-            = gwy_container_get_int32_by_name(layer->data,
-                                              "/0/points/nselected");
-        points_layer->nselected = MIN(points_layer->nselected,
-                                      points_layer->npoints);
-        for (i = 0; i < points_layer->nselected; i++) {
-            g_snprintf(key, sizeof(key), "/0/points/x%d", i);
-            xreal = gwy_container_get_double_by_name(layer->data, key);
-            points_layer->points[2*i] = xreal;
-            g_snprintf(key, sizeof(key), "/0/points/y%d", i);
-            yreal = gwy_container_get_double_by_name(layer->data, key);
-            points_layer->points[2*i + 1] = yreal;
-        }
-    }
+    gwy_layer_points_restore(layer);
     gwy_data_view_layer_updated(layer);
 }
 
@@ -514,6 +480,58 @@ gwy_layer_points_unplugged(GwyDataViewLayer *layer)
 
     GWY_LAYER_POINTS(layer)->nselected = 0;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
+}
+
+static void
+gwy_layer_points_save(GwyDataViewLayer *layer,
+                      gint i)
+{
+    GwyLayerPoints *p = GWY_LAYER_POINTS(layer);
+    gchar key[64];
+    gint from, to, n;
+
+    /* TODO Container */
+    gwy_container_set_int32_by_name(layer->data, "/0/points/nselected",
+                                    p->nselected);
+    if (i < 0) {
+        from = 0;
+        to = p->nselected - 1;
+    }
+    else
+        from = to = i;
+
+    for (i = from; i <= to; i++) {
+        gdouble *coords = p->points + 2*i;
+
+        n = g_snprintf(key, sizeof(key), "/0/points/%d/x", i);
+        gwy_container_set_double_by_name(layer->data, key, coords[0]);
+        key[n-1] = 'y';
+        gwy_container_set_double_by_name(layer->data, key, coords[1]);
+    }
+}
+
+static void
+gwy_layer_points_restore(GwyDataViewLayer *layer)
+{
+    GwyLayerPoints *p = GWY_LAYER_POINTS(layer);
+    gchar key[64];
+    gint i, n;
+
+    /* TODO Container */
+    if (!gwy_container_contains_by_name(layer->data, "/0/points/nselected"))
+        return;
+
+    p->nselected = gwy_container_get_int32_by_name(layer->data,
+                                                   "/0/points/nselected");
+    p->nselected = MIN(p->nselected, p->npoints);
+    for (i = 0; i < p->nselected; i++) {
+        gdouble *coords = p->points + 2*i;
+
+        n = g_snprintf(key, sizeof(key), "/0/points/%d/x", i);
+        coords[0] = gwy_container_get_double_by_name(layer->data, key);
+        key[n-1] = 'y';
+        coords[1] = gwy_container_get_double_by_name(layer->data, key);
+    }
 }
 
 static int
