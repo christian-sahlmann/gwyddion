@@ -423,9 +423,9 @@ gwy_unitool_update_label(GwySIValueFormat *units,
  * @is_visible: %TRUE if the dialog is visible, %FALSE if it's hidden.
  * @windowname: The name of @data_window.
  * @dialog: The tool dialog.
- * @coord_units: Units format good for coordinate representation
+ * @coord_format: Format good for coordinate representation
  *               (to be used in gwy_unitool_update_label() for coordinates).
- * @value_units: Units format good for value representation
+ * @value_format: Format good for value representation
  *               (to be used in gwy_unitool_update_label() for values).
  *
  * Universal tool state.
