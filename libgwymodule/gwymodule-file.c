@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,7 @@ static gint file_menu_entry_compare    (GwyFileFuncInfo *a,
                                         GwyFileFuncInfo *b);
 
 static GHashTable *file_funcs = NULL;
+static void (*func_register_callback)(const gchar *fullname) = NULL;
 
 enum { bufsize = 1024 };
 
@@ -85,8 +86,16 @@ gwy_file_func_register(const gchar *modname,
     g_hash_table_insert(file_funcs, (gpointer)func_info->name, func_info);
     canon_name = g_strconcat(GWY_MODULE_PREFIX_FILE, func_info->name, NULL);
     iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
+    if (func_register_callback)
+        func_register_callback(canon_name);
 
     return TRUE;
+}
+
+void
+_gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname))
+{
+    func_register_callback = callback;
 }
 
 /**

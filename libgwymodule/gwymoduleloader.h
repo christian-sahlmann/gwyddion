@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -51,8 +51,9 @@ struct _GwyModuleInfo {
 };
 
 void                    gwy_module_register_modules (const gchar **paths);
-G_CONST_RETURN 
+G_CONST_RETURN
 GwyModuleInfo*          gwy_module_lookup           (const gchar *name);
+void                    gwy_module_set_register_callback(void (*callback)(const gchar *fullname));
 
 #ifdef __cplusplus
 }

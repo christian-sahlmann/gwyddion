@@ -49,6 +49,11 @@ gboolean                gwy_process_func_remove     (const gchar *name);
 gboolean                gwy_tool_func_remove        (const gchar *name);
 gboolean                gwy_graph_func_remove       (const gchar *name);
 
+void  _gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname));
+void  _gwy_graph_func_set_register_callback(void (*callback)(const gchar *fullname));
+void  _gwy_process_func_set_register_callback(void (*callback)(const gchar *fullname));
+void  _gwy_tool_func_set_register_callback(void (*callback)(const gchar *fullname));
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

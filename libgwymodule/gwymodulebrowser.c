@@ -155,7 +155,7 @@ gwy_module_browser_construct(GtkWidget *parent)
 }
 
 static void
-gwy_module_browser_cell_renderer(GtkTreeViewColumn *column,
+gwy_module_browser_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                  GtkCellRenderer *cell,
                                  GtkTreeModel *model,
                                  GtkTreeIter *piter,

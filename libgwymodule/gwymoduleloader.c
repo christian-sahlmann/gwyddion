@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,7 +27,7 @@
 
 static void gwy_load_modules_in_dir (GDir *gdir,
                                      const gchar *dirname,
-                                     GHashTable *modules);
+                                     GHashTable *mods);
 static void gwy_module_get_rid_of   (const gchar *modname);
 static void gwy_module_init         (void);
 
@@ -68,6 +68,24 @@ gwy_module_register_modules(const gchar **paths)
         gwy_load_modules_in_dir(gdir, dir, modules);
         g_dir_close(gdir);
     }
+}
+
+/**
+ * gwy_module_set_register_callback:
+ * @callback: A callback function called when a function is registered with
+ *            full (prefixed) function name.
+ *
+ * Sets function registration callback.
+ *
+ * Note this is very rudimentary and only one callback can exist at a time.
+ **/
+void
+gwy_module_set_register_callback(void (*callback)(const gchar *fullname))
+{
+    _gwy_file_func_set_register_callback(callback);
+    _gwy_graph_func_set_register_callback(callback);
+    _gwy_process_func_set_register_callback(callback);
+    _gwy_tool_func_set_register_callback(callback);
 }
 
 /**
@@ -112,7 +130,7 @@ gwy_module_foreach(GHFunc function,
 static void
 gwy_load_modules_in_dir(GDir *gdir,
                         const gchar *dirname,
-                        GHashTable *modules)
+                        GHashTable *mods)
 {
     const gchar *filename;
     gchar *modulename;
@@ -181,7 +199,7 @@ gwy_load_modules_in_dir(GDir *gdir,
         }
 
         if (ok) {
-            ok = !g_hash_table_lookup(modules, mod_info->name);
+            ok = !g_hash_table_lookup(mods, mod_info->name);
             if (!ok)
                 g_warning("Duplicate module %s, keeping only the first one",
                           mod_info->name);
@@ -193,7 +211,7 @@ gwy_load_modules_in_dir(GDir *gdir,
             iinfo->file = g_strdup(modulename);
             iinfo->loaded = TRUE;
             iinfo->funcs = NULL;
-            g_hash_table_insert(modules, (gpointer)mod_info->name, iinfo);
+            g_hash_table_insert(mods, (gpointer)mod_info->name, iinfo);
             ok = mod_info->register_func(mod_info->name);
             if (!ok) {
                 g_warning("Module %s feature registration failed",
