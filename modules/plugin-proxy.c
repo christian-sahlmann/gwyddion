@@ -30,10 +30,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifndef G_OS_WIN32
-#include <unistd.h>
-#endif
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -41,6 +37,10 @@
 #include <app/settings.h>
 #include <app/file.h>
 #include <app/app.h>
+
+#ifndef G_OS_WIN32
+#include <unistd.h>
+#endif
 
 #define PLUGIN_PROXY_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)
