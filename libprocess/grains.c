@@ -46,8 +46,6 @@ static void wdrop_step                    (GwyDataField *data_field,
                                            gdouble dropsize);
 static void mark_grain_boundaries         (GwyDataField *grain_field);
 static gint number_grains                 (GwyDataField *mask_field,
-                                           GwyDataField *grain_field);
-static gint number_grains_int             (GwyDataField *mask_field,
                                            gint *grains);
 static gint gwy_data_field_fill_one_grain (GwyDataField *dfield,
                                            gint col,
@@ -81,20 +79,19 @@ gwy_data_field_grains_mark_height(GwyDataField *data_field,
                                   /* FIXME: change to gboolean */
                                   gint below)
 {
-    GwyDataField *mask;
     gdouble min, max;
 
-    mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
-    min = gwy_data_field_get_min(mask);
-    max = gwy_data_field_get_max(mask);
+    gwy_data_field_area_copy(data_field, grain_field,
+                             0, 0, data_field->xres, data_field->yres, 0, 0);
+    min = gwy_data_field_get_min(grain_field);
+    max = gwy_data_field_get_max(grain_field);
     if (below)
-        gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 1, 0);
+        gwy_data_field_threshold(grain_field,
+                                 min + threshval*(max - min)/100.0, 1, 0);
     else
-        gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 0, 1);
+        gwy_data_field_threshold(grain_field,
+                                 min + threshval*(max - min)/100.0, 0, 1);
 
-    number_grains(mask, grain_field);
-
-    g_object_unref(mask);
     gwy_data_field_invalidate(grain_field);
 }
 
@@ -114,23 +111,22 @@ gwy_data_field_grains_mark_slope(GwyDataField *data_field,
                                  /* FIXME: change to gboolean */
                                  gint below)
 {
-    GwyDataField *mask;
     gdouble min, max;
 
-    mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
-    gwy_data_field_filter_laplacian(mask, 0, 0, data_field->xres,
-                                    data_field->yres);
+    gwy_data_field_area_copy(data_field, grain_field,
+                             0, 0, data_field->xres, data_field->yres, 0, 0);
+    gwy_data_field_area_filter_laplacian(grain_field, 0, 0,
+                                         data_field->xres, data_field->yres);
 
-    min = gwy_data_field_get_min(mask);
-    max = gwy_data_field_get_max(mask);
+    min = gwy_data_field_get_min(grain_field);
+    max = gwy_data_field_get_max(grain_field);
     if (below)
-        gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 1, 0);
+        gwy_data_field_threshold(grain_field,
+                                 min + threshval*(max - min)/100.0, 1, 0);
     else
-        gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 0, 1);
+        gwy_data_field_threshold(grain_field,
+                                 min + threshval*(max - min)/100.0, 0, 1);
 
-    number_grains(mask, grain_field);
-
-    g_object_unref(mask);
     gwy_data_field_invalidate(grain_field);
 }
 
@@ -151,44 +147,39 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
                                      /* FIXME: change to gboolean */
                                      gint below)
 {
-    GwyDataField *maskx, *masky;
+    GwyDataField *masky;
+    gdouble *gdata;
     gint i;
-    gdouble min, max;
+    gdouble xres, yres, min, max;
 
-    maskx = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                              data_field->yres,
+    xres = data_field->xres;
+    yres = data_field->yres;
+
+    masky = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
                                               data_field->xreal,
                                               data_field->yreal,
                                               FALSE));
-    masky = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                              data_field->yres,
-                                              data_field->xreal,
-                                              data_field->yreal,
-                                              FALSE));
 
-    gwy_data_field_copy(data_field, maskx);
-    gwy_data_field_copy(data_field, masky);
-    gwy_data_field_filter_sobel(maskx, GTK_ORIENTATION_HORIZONTAL, 0, 0,
-                                data_field->xres, data_field->yres);
-    gwy_data_field_filter_sobel(masky, GTK_ORIENTATION_HORIZONTAL, 0, 0,
-                                data_field->xres, data_field->yres);
+    gwy_data_field_area_copy(data_field, grain_field, 0, 0, xres, yres, 0, 0);
+    gwy_data_field_area_copy(data_field, masky, 0, 0, xres, yres, 0, 0);
+    gwy_data_field_area_filter_sobel(grain_field, GTK_ORIENTATION_HORIZONTAL,
+                                     0, 0, xres, yres);
+    gwy_data_field_area_filter_sobel(masky, GTK_ORIENTATION_HORIZONTAL,
+                                     0, 0, xres, yres);
 
-    for (i = 0; i < data_field->xres * data_field->yres; i++)
-        maskx->data[i] = sqrt(maskx->data[i]*maskx->data[i]
-                              + masky->data[i]*masky->data[i]);
+    gdata = grain_field->data;
+    for (i = 0; i < xres*yres; i++)
+        gdata[i] = sqrt(gdata[i]*gdata[i] + masky->data[i]*masky->data[i]);
 
-    min = gwy_data_field_get_min(maskx);
-    max = gwy_data_field_get_max(maskx);
+    min = gwy_data_field_get_min(grain_field);
+    max = gwy_data_field_get_max(grain_field);
     if (below)
-        gwy_data_field_threshold(maskx, min + threshval*(max - min)/100.0,
-                                 1, 0);
+        gwy_data_field_threshold(grain_field,
+                                 min + threshval*(max - min)/100.0, 1, 0);
     else
-        gwy_data_field_threshold(maskx, min + threshval*(max - min)/100.0,
-                                 0, 1);
+        gwy_data_field_threshold(grain_field,
+                                 min + threshval*(max - min)/100.0, 0, 1);
 
-    number_grains(maskx, grain_field);
-
-    g_object_unref(maskx);
     g_object_unref(masky);
     gwy_data_field_invalidate(grain_field);
 }
@@ -456,7 +447,7 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
     data = grain_field->data;
 
     grains = g_new0(gint, xres*yres);
-    ngrains = number_grains_int(grain_field, grains);
+    ngrains = number_grains(grain_field, grains);
 
     /* sum grain sizes */
     grain_size = g_new0(gint, ngrains + 1);
@@ -511,7 +502,7 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                              - gwy_data_field_get_min(data_field))/100.0;
 
     grains = g_new0(gint, xres*yres);
-    ngrains = number_grains_int(grain_field, grains);
+    ngrains = number_grains(grain_field, grains);
 
     /* find grains to remove */
     grain_kill = g_new0(gboolean, ngrains + 1);
@@ -575,7 +566,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
     yres = grain_field->yres;
 
     grains = g_new0(gint, xres*yres);
-    ngrains = number_grains_int(grain_field, grains);
+    ngrains = number_grains(grain_field, grains);
     if (!ngrains) {
         gwy_data_line_resample(distribution, 2, GWY_INTERPOLATION_NONE);
         gwy_data_line_fill(distribution, 0);
@@ -623,9 +614,6 @@ void
 gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
 {
     gwy_data_field_max_of_fields(grain_field, grain_field, add_field);
-    /* XXX: kept here for backward comaptibility, but no function should
-     * rely on grains being numbered, remove in 2.0 */
-    number_grains(grain_field, grain_field);
 }
 
 /**
@@ -641,9 +629,6 @@ gwy_data_field_grains_intersect(GwyDataField *grain_field,
                                 GwyDataField *intersect_field)
 {
     gwy_data_field_min_of_fields(grain_field, grain_field, intersect_field);
-    /* XXX: kept here for backward comaptibility, but no function should
-     * rely on grains being numbered, remove in 2.0 */
-    number_grains(grain_field, grain_field);
 }
 
 /****************************************************************************/
@@ -744,7 +729,7 @@ drop_minima(GwyDataField *water_field, GwyDataField *min_field, gint threshval)
     data = water_field->data;
 
     grains = g_new0(gint, xres*yres);
-    ngrains = number_grains_int(water_field, grains);
+    ngrains = number_grains(water_field, grains);
     grain_size = g_new0(gint, ngrains + 1);
     grain_maxima = g_new(gint, ngrains + 1);
     for (i = 1; i <= ngrains; i++)
@@ -893,43 +878,22 @@ mark_grain_boundaries(GwyDataField *grain_field)
     g_object_unref(buffer);
 }
 
-
 /**
  * number_grains:
  * @mask_field: Data field containing positive values in grains, nonpositive
  *              in free space.
- * @grain_field: Data field to put numbered grains to.  It may be identical
- *               to @mask_field.  Grains are numbered sequentially 1, 2, ...
+ * @grains: Zero-filled array of integers of equal size to @mask_field to put
+ *          grain numbers to.  Empty space will be left 0, pixels inside a
+ *          grain will be set to grain number.  Grains are numbered
+ *          sequentially 1, 2, 3, ...
  *
  * Numbers grains in a mask data field:.
  *
  * Returns: The number of last grain (note they are numbered from 1).
  **/
 static gint
-number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
-{
-    gint *grains;
-    gint xres, yres, n, i, ngrains;
-
-    xres = mask_field->xres;
-    yres = mask_field->yres;
-
-    n = xres*yres;
-    grains = g_new0(gint, n);
-    ngrains = number_grains_int(mask_field, grains);
-
-    for (i = 0; i < n; i++)
-        grain_field->data[i] = grains[i];
-
-    g_free(grains);
-
-    gwy_data_field_invalidate(grain_field);
-    return ngrains;
-}
-
-static gint
-number_grains_int(GwyDataField *mask_field,
-                  gint *grains)
+number_grains(GwyDataField *mask_field,
+              gint *grains)
 {
     gint *listv, *listh;
     gint xres, yres, n, i, grain_no;
