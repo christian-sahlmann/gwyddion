@@ -60,7 +60,7 @@ gwy_module_register_modules(const gchar **paths)
         gwy_debug("Opening module directory %s", dir);
         gdir = g_dir_open(dir, 0, &err);
         if (err) {
-            g_warning("Cannot open module directory %s: %s", dir, err->message);
+            gwy_debug("Cannot open module directory %s: %s", dir, err->message);
             g_clear_error(&err);
             continue;
         }
