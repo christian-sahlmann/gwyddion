@@ -2,7 +2,7 @@
 <!DOCTYPE book PUBLIC '-//OASIS//DTD DocBook XML V4.2//EN'
                'http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd'>
 <book>
-   <section>
+   <chapter>
       <title>Introduction</title>
       <section>
          <title>Motivation</title>
@@ -32,8 +32,8 @@
             Gwyddion is covered by Gnu General Public License (Gnu GPL). Netroufam si to popisovat...   
          </para> 
       </section>
-   </section>
-   <section>
+   </chapter>
+   <chapter>
       <title>Installing Gwyddion</title>
       <para>
           Gwyddion source code and binaries can be downloaded from the web pages of the project
@@ -87,8 +87,8 @@
          </para>
  
       </section>
-    </section>
-   <section>
+    </chapter>
+   <chapter>
       <title>Getting started</title>
       <section>
          <title>Managing files</title>
@@ -149,8 +149,8 @@
             on Gwyddion licensing.
          </para>
       </section>
-    </section>
-   <section>
+    </chapter>
+   <chapter>
       <title>Developing Gwyddion</title>
       <para>
          You are encouraged to become a developer of Gwyddion.
@@ -170,6 +170,6 @@
             this is necessary namely for reporting bugs in file loading/saving modules and plugins.
          </para>
       </section>
-    </section>
+    </chapter>
 </book>
 
