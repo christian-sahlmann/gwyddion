@@ -29,6 +29,10 @@ Data containers:
     "gwy-app-undo":      GList of undo level data
     "gwy-app-redo":      GList of redo level data
 
+DataFields:
+    "is_preview":	       If set on a presentation, it marks it as a preview
+                         that should not be duplicated (this is really dirty).
+
 File selectors:
     "file-type":         The file type this file selector was run for
     "data":              The data this file selector was created for
