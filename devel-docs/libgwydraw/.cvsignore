@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+html
+sgml
+libgwydgets-decl-list.txt
+libgwydgets-decl.txt
+libgwydgets.args
+libgwydgets.hierarchy
+libgwydgets.interfaces
+libgwydgets.prerequisites
+libgwydgets.signals

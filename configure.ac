@@ -18,6 +18,7 @@ AC_CONFIG_FILES(\
   devel-docs/Makefile \
   devel-docs/libgwyddion/Makefile \
   devel-docs/libgwydgets/Makefile \
+  devel-docs/libgwydraw/Makefile \
 )
 AM_CONFIG_HEADER(config.h)
 

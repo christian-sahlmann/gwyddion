@@ -1,0 +1,4 @@
+#include "libdraw/gwypalette.h"
+
+gwy_palette_def_get_type
+gwy_palette_get_type

@@ -1,0 +1,205 @@
+<!-- ##### SECTION Title ##### -->
+GwyPaletteDef
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GWY_PALETTE_GRAY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_RED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_GREEN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_BLUE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_YELLOW ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_PINK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_OLIVE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_BW1 ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_BW2 ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_RAINBOW1 ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_RAINBOW2 ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### TYPEDEF GwyRGBA ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyPaletteDefEntry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_palette_def_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_new_as_copy ##### -->
+<para>
+
+</para>
+
+@src_palette_def: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_get_name ##### -->
+<para>
+
+</para>
+
+@palette_def: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_set_name ##### -->
+<para>
+
+</para>
+
+@palette_def: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_exists ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_get_color ##### -->
+<para>
+
+</para>
+
+@palette_def: 
+@x: 
+@interpolation: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_set_color ##### -->
+<para>
+
+</para>
+
+@palette_def: 
+@val: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_set_from_samples ##### -->
+<para>
+
+</para>
+
+@palette_def: 
+@samples: 
+@nsamples: 
+@istep: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_setup_presets ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_palette_def_print ##### -->
+<para>
+
+</para>
+
+@a: 
+
+
+<!-- ##### MACRO gwy_palette_def_is_set ##### -->
+<para>
+
+</para>
+
+@pd: 
+
+

@@ -2,7 +2,8 @@
 
 SUBDIRS = \
 	libgwydgets \
-	libgwyddion
+	libgwyddion \
+	libgwydraw
 EXTRA_DIST = \
 	README \
 	gtk-doc.mk

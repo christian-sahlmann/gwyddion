@@ -1,0 +1,17 @@
+<!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+<!ENTITY libgwydraw-GwyPalette SYSTEM "sgml/gwypalette.sgml">
+<!ENTITY libgwydraw-GwyPaletteDef SYSTEM "sgml/gwypalettedef.sgml">
+<!ENTITY libgwydraw-gwypixfield SYSTEM "sgml/gwypixfield.sgml">
+]>
+<book id="index">
+  <bookinfo>
+    <title>[Insert name here] Reference Manual</title>
+  </bookinfo>
+
+  <chapter>
+    <title>[Insert title here]</title>
+    &libgwydraw-GwyPalette;
+    &libgwydraw-GwyPaletteDef;
+    &libgwydraw-gwypixfield;
+  </chapter>
+</book>

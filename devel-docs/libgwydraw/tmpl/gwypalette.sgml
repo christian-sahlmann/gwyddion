@@ -1,0 +1,102 @@
+<!-- ##### SECTION Title ##### -->
+GwyPalette
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_palette_new ##### -->
+<para>
+
+</para>
+
+@palette_def: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_set_palette_def ##### -->
+<para>
+
+</para>
+
+@palette: 
+@palette_def: 
+
+
+<!-- ##### FUNCTION gwy_palette_get_palette_def ##### -->
+<para>
+
+</para>
+
+@palette: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_set_by_name ##### -->
+<para>
+
+</para>
+
+@palette: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_get_color ##### -->
+<para>
+
+</para>
+
+@palette: 
+@i: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_get_samples ##### -->
+<para>
+
+</para>
+
+@palette: 
+@n_of_samples: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_get_data ##### -->
+<para>
+
+</para>
+
+@palette: 
+@n_of_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_sample ##### -->
+<para>
+
+</para>
+
+@palette: 
+@size: 
+@oldsample: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_print ##### -->
+<para>
+
+</para>
+
+@palette: 
+
+
