@@ -1,4 +1,4 @@
-1.3cvs20040713
+1.3cvs20040718
 
 1.4
 Application:
@@ -10,30 +10,36 @@ Modules:
 - Calibrate (new): FIXME
 - Graph CD (new): Critical dimension measurements.
 - SIS (new): SIS data file format import.
-- Line correct (new): Line corrections, currently featuring modus based step
-  correction.
 - ASCII export (new): Simple export to ASCII data matrix.
+- Line correct (new, experimental): Line corrections, currently featuring
+  modus based step correction.
+- Scars (new, experimental): Scar (line defects) detection and removal.
 - Nanoscope, Pixmap, Rawfile, SIS: Import dialog shows a preview.
 - Pixmap: Export dialog shows a preview.
 - Rawfile: Fixed Load preset damaging file infomation.
 - Shade: A preview was added.
 - Rotate: Can make the result large enough to show all data after rotation.
+- Mask of Outliers: Broken undo was fixed.
 - Plug-in proxy: Random insensitive plug-in menu items were fixed.
 - Plug-in proxy: Alternate plug-in registration method using RGI files
   (without running the plug-ins).
 - Grain mark, watershed, remove: Discrepancy between color button color and
-  actual mask color when first used was fixed.  Memory leaks were fixed.
+  actual mask color when first used was fixed.
+- Grain mark, watershed, Spot remove: Memory leaks were fixed.
 
 Library:
 - libgwydgets: GwyValUnit FIXME
 - libprocess: gwy_data_line_get_modus() and gwy_data_line_part_get_modus()
               approximate modus functions.
+- libprocess: gwy_data_field_mark_scars() scar search function.
+- libgwyddion: gwydebugobjects -- an aid in leaking objects debugging.
 - Gwyddion::dump (Perl) and Gwyddion.dump (Python) modules implementing
   plug-in proxy dump format.
 
 Other:
 - New example plug-ins using Gwyddion::dump, Gwyddion.dump.
 - New example plug-ins in C++ and Pascal.
+- Standard vector layers were documented.
 
 
 1.3
