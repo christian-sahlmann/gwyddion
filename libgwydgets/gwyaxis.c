@@ -295,6 +295,7 @@ gwy_axis_size_request(GtkWidget *widget,
         requisition->width = 100;
         requisition->height = 80;
     }
+ 
 }
 
 static void
@@ -313,16 +314,15 @@ gwy_axis_size_allocate(GtkWidget *widget,
 
     widget->allocation = *allocation;
 
+    axis = GWY_AXIS(widget);
     if (GTK_WIDGET_REALIZED(widget)) {
-        axis = GWY_AXIS(widget);
 
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
-        
-        /*do new computation of thick postitons*/
-        gwy_axis_adjust(axis, allocation->width, allocation->height);
     }
+    gwy_axis_adjust(axis, allocation->width, allocation->height);
+    
 }
 
 void 
@@ -343,13 +343,13 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
     }
     
     
-    
     if (axis->is_auto) gwy_axis_autoset(axis, width, height);
     gwy_axis_scale(axis);
         
     if (axis->orientation == GWY_AXIS_NORTH || axis->orientation == GWY_AXIS_SOUTH)
         gwy_axis_precompute(axis, 0, width);
     else gwy_axis_precompute(axis, 0, height);
+
     
 }
 
@@ -744,6 +744,9 @@ gwy_axis_normalscale(GwyAxis *a)
     gdouble minortickstep = tickstep/(gdouble)a->par.minor_division;
     gdouble minorbase = ceil(a->reqmin/minortickstep)*minortickstep;
 
+    printf("rng=%f, tst=%f, mjb=%f, mnts=%f, mnb=%f\n", 
+       range, tickstep, majorbase, minortickstep, minorbase);
+    
     if (majorbase > a->reqmin) 
     {
         majorbase -= tickstep;
@@ -751,7 +754,9 @@ gwy_axis_normalscale(GwyAxis *a)
         a->min = majorbase;
     }
     else a->min = a->reqmin;
-    
+
+    printf("majorbase = %f, reqmin=%f\n", majorbase, a->reqmin);
+
     /*major tics*/
     i=0;
     do
@@ -761,8 +766,8 @@ gwy_axis_normalscale(GwyAxis *a)
         g_array_append_val(a->mjticks, mjt); 
         majorbase += tickstep;
         i++;
-    } while ((majorbase - tickstep) < a->reqmax && i< a->par.major_maxticks);
-
+    } while ((majorbase - tickstep) < a->reqmax /*&& i< a->par.major_maxticks*/);
+/*printf("majorbase=%f, tickstep=%f, reqmax=%f\n", majorbase, tickstep, a->reqmax);*/
     a->max = majorbase - tickstep;
     
     i=0;
@@ -774,7 +779,7 @@ gwy_axis_normalscale(GwyAxis *a)
         minorbase += minortickstep;
         i++;
     } while (minorbase <= a->max);
-    
+   
     return 0;
 }
 
@@ -848,10 +853,8 @@ gwy_axis_scale(GwyAxis *a)
     /*find tick positions*/
     if (!a->is_logarithmic) gwy_axis_normalscale(a);
     else gwy_axis_logscale(a);
-	
     /*label ticks*/
     gwy_axis_formatticks(a);
-
     /*precompute screen coordinates of ticks (must be done after each geometry change)*/
 
     return 0;
@@ -897,8 +900,8 @@ gwy_axis_formatticks(GwyAxis *a)
     gdouble value;
     gdouble range; /*only for automode and precision*/
     GwyLabeledTick mji, mjx, *pmjt;
-
     /*determine range*/
+    if (a->mjticks->len == 0) {printf("No ticks found?\n"); return 1;}
     mji = g_array_index (a->mjticks, GwyLabeledTick, 0);
     mjx = g_array_index (a->mjticks, GwyLabeledTick, a->mjticks->len - 1);
     if (!a->is_logarithmic) range = fabs(mjx.t.value - mji.t.value);

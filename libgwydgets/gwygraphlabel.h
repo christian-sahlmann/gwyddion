@@ -12,6 +12,15 @@
 #define GWY_GRAPH_LABEL_SOUTHEAST 2
 #define GWY_GRAPH_LABEL_SOUTHWEST 3
 
+#define GWY_GRAPH_POINT_SQUARE         0
+#define GWY_GRAPH_POINT_CROSS          1
+#define GWY_GRAPH_POINT_CIRCLE         2
+#define GWY_GRAPH_POINT_STAR           3
+#define GWY_GRAPH_POINT_TIMES          4
+#define GWY_GRAPH_POINT_TRIANGLE_UP    5
+#define GWY_GRAPH_POINT_TRIANGLE_DOWN  6
+#define GWY_GRAPH_POINT_DIAMOND        7
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -32,6 +41,7 @@ typedef struct {
     gint point_type;
 
     GdkLineStyle line_style;
+    gint line_size;
 
     GString *description;
     GdkColor color;
@@ -41,10 +51,7 @@ typedef struct {
 typedef struct {
     gboolean is_frame;
     gint frame_thickness;
-    
     gint position;
-    gint sample_length;
-    
     PangoFontDescription *font;
 } GwyGraphLabelParams;
 
@@ -53,6 +60,8 @@ typedef struct {
 
     GwyGraphLabelParams par; 
     gboolean is_visible;
+    gint maxwidth;
+    gint maxheight;
 
     GPtrArray *curve_params;
 } GwyGraphLabel;
@@ -73,6 +82,10 @@ void gwy_graph_label_set_style(GwyGraphLabel *label, GwyGraphLabelParams style);
 void gwy_graph_label_add_curve(GwyGraphLabel *label, GwyGraphAreaCurveParams *params);
 
 void gwy_graph_label_clear(GwyGraphLabel *label);
+
+void  gwy_graph_draw_point (GdkWindow *window, 
+                            GdkGC *gc, gint i, gint j, 
+                            gint type, gint size, GdkColor *color, gboolean clear);
 
 #ifdef __cplusplus
 }

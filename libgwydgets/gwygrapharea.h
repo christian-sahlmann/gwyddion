@@ -51,6 +51,7 @@ typedef struct {
     GwyGraphLabel *lab;
     GwyGraphAreaParams par; 
 
+    /*drawing*/
     GPtrArray *curves;
     gdouble x_shift;
     gdouble y_shift;
@@ -61,6 +62,12 @@ typedef struct {
     gdouble y_max;
     gdouble y_min;
     
+    /*label movement*/
+    GtkWidget *active;
+    gint x0;
+    gint y0;
+    gint xoff;
+    gint yoff;    
 } GwyGraphArea;
 
 /*graph area class*/

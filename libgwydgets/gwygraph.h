@@ -51,10 +51,10 @@ typedef struct {
   
    GwyGraphAutoProperties autoproperties;
 
-   gdouble x_max;
-   gdouble x_min;
-   gdouble y_max;
-   gdouble y_min;
+   gdouble x_max, x_reqmax;
+   gdouble x_min, x_reqmin;
+   gdouble y_max, y_reqmax;
+   gdouble y_min, y_reqmin;
     
 } GwyGraph;
 
@@ -66,8 +66,15 @@ typedef struct {
 
 GtkWidget *gwy_graph_new();
   
-void gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline, gdouble shift);
-void gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals, gint n);
+void gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline, 
+                              gdouble shift, GString *label, GwyGraphAreaCurveParams *params);
+void gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals, 
+                              gint n, GString *label, GwyGraphAreaCurveParams *params);
+
+void gwy_graph_clear(GwyGraph *graph);
+void gwy_graph_set_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
+void gwy_graph_get_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
