@@ -255,4 +255,41 @@ gwy_dialog_prevent_delete_cb(void)
     return TRUE;
 }
 
+/**
+ * gwy_stock_like_button_new:
+ * @label_text: Button label text.
+ * @stock_id: Button icon stock id.
+ *
+ * Creates a button that looks like a stock button, but can have different
+ * label text.
+ *
+ * Returns: The newly created button as #GtkWidget.
+ *
+ * Since: 1.5.
+ **/
+GtkWidget*
+gwy_stock_like_button_new(const gchar *label_text,
+                          const gchar *stock_id)
+{
+    GtkWidget *button, *alignment, *hbox, *label, *image;
+
+    button = gtk_button_new();
+
+    alignment = gtk_alignment_new(0.5, 0.5, 0, 0);
+    gtk_container_add(GTK_CONTAINER(button), alignment);
+
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_container_add(GTK_CONTAINER(alignment), hbox);
+
+    image = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
+    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+
+    label = gtk_label_new_with_mnemonic(label_text);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
+
+    return button;
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -71,6 +71,8 @@ void       gwy_color_selector_for_mask    (const gchar *dialog_title,
                                            GwyContainer *container,
                                            const gchar *prefix);
 gboolean   gwy_dialog_prevent_delete_cb   (void);
+GtkWidget* gwy_stock_like_button_new      (const gchar *label_text,
+                                           const gchar *stock_id);
 
 G_END_DECLS
 
