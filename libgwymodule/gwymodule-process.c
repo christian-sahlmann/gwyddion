@@ -241,7 +241,7 @@ gwy_process_func_build_menu(GtkObject *item_factory,
             GtkWidget *widget;
 
             gwy_debug("Setting sens flags for `%s' to %u",
-                      item.path, ipfinfo->sens_flags);
+                      item.path, func_info->sens_flags);
             s = gwy_strkill(g_strdup(item.path), "_");
             widget = gtk_item_factory_get_widget(factory, s);
             g_free(s);
