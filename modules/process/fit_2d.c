@@ -123,7 +123,10 @@ static gdouble     fit_sphere_down		    (gdouble x,
 					                         const gdouble *param,
 					                         gdouble *dimdata,
 					                         gboolean *fres);
-static void        guess_sphere             (GwyDataField *dfield,
+static void        guess_sphere_up          (GwyDataField *dfield,
+	                                         G_GNUC_UNUSED gint n_param,
+	                                         gdouble *param);
+static void        guess_sphere_down        (GwyDataField *dfield,
 	                                         G_GNUC_UNUSED gint n_param,
 	                                         gdouble *param);
 static GwyNLFitter*	gwy_math_nlfit_fit_2d   (GwyNLFitFunc ff,
@@ -516,8 +519,11 @@ guess
                                                                            "/0/data"));
     gchar buffer[20];
 
-    guess_sphere(dfield, 4, args->par_init);
-
+    if (args->function_type == GWY_FIT_2D_FIT_SPHERE_UP)
+        guess_sphere_up(dfield, 4, args->par_init);
+    else
+        guess_sphere_down(dfield, 4, args->par_init);
+    
     gtk_label_set_text(GTK_LABEL(controls->param_des[0]), "radius");
     gtk_label_set_text(GTK_LABEL(controls->param_des[1]), "x center");
     gtk_label_set_text(GTK_LABEL(controls->param_des[2]), "y center");
@@ -726,10 +732,12 @@ static void
 function_changed(GObject *item, Fit2dArgs *args)
 {
     args->function_type = GPOINTER_TO_INT(g_object_get_data(item, "function-type"));
+    guess(pcontrols, args);
+    update_view(pcontrols, args);
 }
 
 static void
-guess_sphere(GwyDataField *dfield,
+guess_sphere_up(GwyDataField *dfield,
 	   G_GNUC_UNUSED gint n_param,
 	   gdouble *param)
 {
@@ -746,11 +754,33 @@ guess_sphere(GwyDataField *dfield,
     
     v = avgtop - avgcorner;
     t = sqrt(dfield->xreal*dfield->xreal + dfield->yreal*dfield->yreal);
-    param[0] = fabs(t*t - 4*v*v)/8/v;
+    param[0] = fabs((t*t - 4*v*v)/8/v);
     param[1] = dfield->xreal/2;
     param[2] = dfield->yreal/2;
-    if (avgtop<avgcorner) param[3] = avgtop+param[0];
-    else param[3] = avgtop-param[0];
+    param[3] = avgtop-param[0];
+}
+static void
+guess_sphere_down(GwyDataField *dfield,
+	   G_GNUC_UNUSED gint n_param,
+	   gdouble *param)
+{
+    gdouble t, v, avgcorner, avgtop;
+
+    avgcorner = gwy_data_field_area_get_avg(dfield, 0, 0, 10, 10);
+    avgcorner += gwy_data_field_area_get_avg(dfield, dfield->xres-10, 0, 10, 10);
+    avgcorner += gwy_data_field_area_get_avg(dfield, 0, dfield->yres-10, 10, 10);
+    avgcorner += gwy_data_field_area_get_avg(dfield, dfield->xres-10, dfield->yres-10, 10, 10);
+    avgcorner/=4;
+
+    avgtop = gwy_data_field_area_get_avg(dfield, dfield->xres/2-5, dfield->yres/2-5, 
+                                         10, 10);
+    
+    v = avgtop - avgcorner;
+    t = sqrt(dfield->xreal*dfield->xreal + dfield->yreal*dfield->yreal);
+    param[0] = fabs((t*t - 4*v*v)/8/v);
+    param[1] = dfield->xreal/2;
+    param[2] = dfield->yreal/2;
+    param[3] = avgtop+param[0];
 }
 
 static gdouble
@@ -812,7 +842,7 @@ fit_sphere_down(gdouble x,
     frow = row*yreal/yres;
     
     val = -sqrt(param[0]*param[0] - (fcol - param[1])*(fcol - param[1])
-	       - (frow - param[2])*(frow - param[2])) + param[0] + param[3];
+	       - (frow - param[2])*(frow - param[2])) + param[3];
    
     *fres = TRUE;
     return val;
