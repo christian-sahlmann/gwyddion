@@ -1,69 +1,5 @@
 
-0. Get the sutff.
-
-   MinGW & MSYS: http://www.mingw.org/
-   Gtk+ Runtime & Development: http://www.dropline.net/gtk/
-
-   Optional:
-   Inno Setup: http://www.jrsoftware.org/isdl.php
-
-
-1. Installation.
-   Note: the order is very important.
-
-   Install MinGW to c:/MinGW (or where it wishes to be installed).
-   Install MSYS to c:/msys/1.0 (or where it wishes to be installed).
-   In the postinstall setup, answer:
-       wish to continue: yes
-       have mingw: yes
-       where is mingw: c:/mingw
-   Running msys (the blue M icon) now should give a functional shell with
-   gcc, make, etc.
-
-   Install Gtk+ Runtime environment to
-       c:/Program Files/Common Files/GTK/2.0
-   (or where it wishes to be installed).
-
-   Install Gtk+ Development environment to c:/Dev-C++
-   (or where it wishes to be installed).
-
-   Optional:
-   Install Inno Setup.
-
-
-2. Setup
-
-   For some strange reason, libraries have to be in PATH too.
-   To run Gtk+ applications from MSYS, add
-       /c/Program Files/Common Files/GTK/2.0/lib
-   to PATH in c:/msys/1.0/etc/profile.  Don't forget the trailing lib.
-
-   Add /c/Dev-C++/bin to PATH in c:/msys/1.0/etc/profile too so that
-   pkg-config et. al. is found.
-
-
-3. Gwyddion compilation.
-
-   Run MSYS, unpack the source tarball, cd to the created directory
-   and run ./configure --enable-static (FIXME: WHY???).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-***********************************************************************
 MSVC:
-
 
 Install Gtk+ runtime library and developement library.
 It might be usefull to recompile also these from source in
@@ -71,6 +7,32 @@ dropline.net/gtk/ , but I did not try this. If you recompile
 them you would have the debug information inside, which is not
 present there now.
 
+
+A. Building Gwyddion on command line
+
+1. Edit make.msc and set GTK_TOP and MSC_TOP to point where you installed
+   Gtk+ and MSVC.  Use wordpad or some other editor that supports Unix EOLs.
+
+2. Add directory directory where cl.exe, link.exe, nmake.exe, etc. are located
+   to PATH (at least for the particular shell/DOS console you are going to run
+   next).
+
+3. Run shell/DOS console in Gwyddion top level directory and run
+   nmake -f makefile.msc all
+   there.
+
+4. If it goes well, run also
+   nmake -f makefile.msc install
+   It will make an inst directory with the same layout as installed application
+   would have.
+
+5. Either set up registry keys (see B) so that Gwyddion finds itself there,
+   or open Gwyddion.iss in Inno Setup -- if you have it installed -- build
+   an installer and install that.
+
+
+
+B. Using MSVC IDE
 
 1. libgwyddion.dll, libgwyddion.def
 
