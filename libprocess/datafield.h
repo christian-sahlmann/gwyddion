@@ -274,7 +274,7 @@ void gwy_data_field_get_row_part(GwyDataField *a,
                                  gint to);
 void gwy_data_field_get_column_part(GwyDataField *a, 
                                  GwyDataLine* b, 
-                                 gint column, 
+                                 gint col, 
                                  gint from, 
                                  gint to);
 
