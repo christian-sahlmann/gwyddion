@@ -216,7 +216,6 @@ gwy_graph_area_finalize(GObject *object)
 
     gwy_debug("finalizing a GwyGraphArea (refcount = %u)", object->ref_count);
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_GRAPH_AREA(object));
 
     area = GWY_GRAPH_AREA(object);

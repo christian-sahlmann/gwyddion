@@ -164,7 +164,6 @@ gwy_vector_layer_finalize(GObject *object)
 
     gwy_debug("");
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_VECTOR_LAYER(object));
 
     layer = GWY_VECTOR_LAYER(object);

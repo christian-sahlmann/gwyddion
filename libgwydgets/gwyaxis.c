@@ -213,7 +213,6 @@ gwy_axis_finalize(GObject *object)
 
     gwy_debug("finalizing a GwyAxis (refcount = %u)", object->ref_count);
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_AXIS(object));
 
     axis = GWY_AXIS(object);

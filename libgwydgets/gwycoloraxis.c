@@ -184,7 +184,6 @@ gwy_color_axis_finalize(GObject *object)
 
     gwy_debug("");
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_COLOR_AXIS(object));
 
     axis = GWY_COLOR_AXIS(object);

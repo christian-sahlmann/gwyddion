@@ -172,7 +172,6 @@ gwy_layer_points_finalize(GObject *object)
 
     gwy_debug("");
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_LAYER_POINTS(object));
 
     layer = (GwyLayerPoints*)object;

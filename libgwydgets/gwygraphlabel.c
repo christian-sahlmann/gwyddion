@@ -152,7 +152,6 @@ gwy_graph_label_finalize(GObject *object)
 
     gwy_debug("finalizing a GwyGraphLabel (refcount = %u)", object->ref_count);
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_GRAPH_LABEL(object));
 
     label = GWY_GRAPH_LABEL(object);

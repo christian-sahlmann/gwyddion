@@ -223,7 +223,6 @@ gwy_grad_sphere_finalize(GObject *object)
     gwy_debug("finalizing a GwyGradSphere (refcount = %u)",
               object->ref_count);
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(object));
 
     grad_sphere = GWY_GRAD_SPHERE(object);

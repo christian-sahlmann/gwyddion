@@ -134,7 +134,6 @@ gwy_graph_corner_finalize(GObject *object)
 
     gwy_debug("finalizing a GwyGraphCorner (refcount = %u)", object->ref_count);
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_GRAPH_CORNER(object));
 
     graph_corner = GWY_GRAPH_CORNER(object);

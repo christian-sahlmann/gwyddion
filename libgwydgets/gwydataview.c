@@ -223,7 +223,6 @@ gwy_data_view_destroy(GtkObject *object)
     gwy_debug("destroying a GwyDataView (refcount = %u)",
               G_OBJECT(object)->ref_count);
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
 
     data_view = GWY_DATA_VIEW(object);
@@ -243,7 +242,6 @@ gwy_data_view_finalize(GObject *object)
     gwy_debug("finalizing a GwyDataView (refcount = %u)",
               object->ref_count);
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
 
     data_view = GWY_DATA_VIEW(object);

@@ -181,7 +181,6 @@ gwy_layer_lines_finalize(GObject *object)
 
     gwy_debug("");
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_LAYER_LINES(object));
 
     layer = (GwyLayerLines*)object;

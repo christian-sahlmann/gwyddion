@@ -114,7 +114,6 @@ gwy_axis_dialog_finalize(GObject *object)
 {
     gwy_debug("");
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_AXIS_DIALOG(object));
 
     G_OBJECT_CLASS(parent_class)->finalize(object);

@@ -142,7 +142,6 @@ gwy_data_view_layer_finalize(GObject *object)
 
     gwy_debug("");
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(object));
 
     layer = GWY_DATA_VIEW_LAYER(object);

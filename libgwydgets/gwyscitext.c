@@ -237,7 +237,6 @@ gwy_sci_text_finalize(GObject *object)
     gwy_debug("finalizing a GwySciText %d (refcount = %u)",
               (gint*)object, object->ref_count);
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_SCI_TEXT(object));
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
