@@ -588,7 +588,7 @@ gchar*
 gwy_data_window_get_base_name(GwyDataWindow *data_window)
 {
     GwyContainer *data;
-    const gchar *fnm;
+    const gchar *fnm = "Untitled";
 
     data = gwy_data_window_get_data(data_window);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
@@ -598,7 +598,7 @@ gwy_data_window_get_base_name(GwyDataWindow *data_window)
         return g_path_get_basename(fnm);
     }
     else {
-        fnm = gwy_container_get_string_by_name(data, "/filename/untitled");
+        gwy_container_gis_string_by_name(data, "/filename/untitled", &fnm);
         return g_strdup(fnm);
     }
 }
