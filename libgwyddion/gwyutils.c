@@ -18,11 +18,32 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+/* To be able to mmap() files.
+ * On Linux we have all, on Win32 we have none, on others who knows */
+#if (HAVE_MMAP \
+     && HAVE_UNISTD_H && HAVE_SYS_STAT_H && HAVE_SYS_TYPES_H && HAVE_FCNTL_H)
+#define USE_MMAP 1
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#else
+#undef USE_MMAP
+#endif
+
 #include <string.h>
 #include "gwymacros.h"
 #include "gwyutils.h"
 
 static gchar *gwy_argv0 = NULL;
+
+static GQuark error_domain = 0;
 
 /**
  * gwy_hash_table_to_slist_cb:
@@ -306,7 +327,82 @@ gwy_strreplace(const gchar *haystack,
     return dest;
 }
 
-/* A debugging message helper */
+gboolean
+gwy_file_get_contents(const gchar *filename,
+                      guchar **buffer,
+                      gsize *size,
+                      GError **error)
+{
+#ifdef USE_MMAP
+    struct stat st;
+    int fd;
+
+    if (!error_domain)
+        error_domain = g_quark_from_static_string("GWY_UTILS_ERROR");
+
+    *buffer = NULL;
+    *size = 0;
+    fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        g_set_error(error, error_domain, errno, "Cannot open file `%s': %s",
+                    filename, g_strerror(errno));
+        return FALSE;
+    }
+    if (fstat(fd, &st) == -1) {
+        close(fd);
+        g_set_error(error, error_domain, errno, "Cannot stat file `%s': %s",
+                    filename, g_strerror(errno));
+        return FALSE;
+    }
+    *buffer = (gchar*)mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+    if (!*buffer) {
+        g_set_error(error, error_domain, errno, "Cannot mmap file `%s': %s",
+                    filename, g_strerror(errno));
+        return FALSE;
+    }
+    *size = st.st_size;
+
+    return TRUE;
+#else
+    return g_file_get_contents(filename, (gchar**)buffer, size, error);
+#endif
+}
+
+gboolean
+gwy_file_abandon_contents(guchar *buffer,
+                          G_GNUC_UNUSED gsize size,
+                          G_GNUC_UNUSED GError **error)
+{
+#ifdef USE_MMAP
+    if (!error_domain)
+        error_domain = g_quark_from_static_string("GWY_UTILS_ERROR");
+
+    if (munmap(buffer, size) == 1) {
+        g_set_error(error, error_domain, errno, "Cannot unmap memory: %s",
+                    g_strerror(errno));
+        return FALSE;
+    }
+    return TRUE;
+#else
+    g_free(buffer);
+
+    return TRUE;
+#endif
+}
+
+/**
+ * gwy_debug_gnu:
+ * @domain: Log domain.
+ * @fileline: File and line info.
+ * @funcname: Function name.
+ * @format: Message format.
+ * @...: Message parameters.
+ *
+ * Print a debugging message.
+ *
+ * To be used via gwy_debug(), should not be used directly.
+ **/
 void
 gwy_debug_gnu(const gchar *domain,
               const gchar *fileline,

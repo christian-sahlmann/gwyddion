@@ -30,36 +30,43 @@ typedef struct {
 
 G_BEGIN_DECLS
 
-void   gwy_hash_table_to_slist_cb (gpointer unused_key,
-                                   gpointer value,
-                                   gpointer user_data);
-void   gwy_hash_table_to_list_cb  (gpointer unused_key,
-                                   gpointer value,
-                                   gpointer user_data);
-gint   gwy_string_to_enum         (const gchar *str,
-                                   const GwyEnum *enum_table,
-                                   gint n);
+void     gwy_hash_table_to_slist_cb (gpointer unused_key,
+                                     gpointer value,
+                                     gpointer user_data);
+void     gwy_hash_table_to_list_cb  (gpointer unused_key,
+                                     gpointer value,
+                                     gpointer user_data);
+gint     gwy_string_to_enum         (const gchar *str,
+                                     const GwyEnum *enum_table,
+                                     gint n);
 G_CONST_RETURN
-gchar* gwy_enum_to_string         (gint enumval,
-                                   const GwyEnum *enum_table,
-                                   gint n);
-gint   gwy_string_to_flags        (const gchar *str,
-                                   const GwyEnum *enum_table,
-                                   gint n,
-                                   const gchar *delimiter);
-gchar* gwy_flags_to_string        (gint enumval,
-                                   const GwyEnum *enum_table,
-                                   gint n,
-                                   const gchar *glue);
-gchar* gwy_strkill                (gchar *s,
-                                   const gchar *killchars);
-gchar* gwy_strreplace             (const gchar *haystack,
-                                   const gchar *needle,
-                                   const gchar *replacement,
-                                   gsize maxrepl);
-gchar* gwy_find_self_dir          (const gchar *dirname);
+gchar*   gwy_enum_to_string         (gint enumval,
+                                     const GwyEnum *enum_table,
+                                     gint n);
+gint     gwy_string_to_flags        (const gchar *str,
+                                     const GwyEnum *enum_table,
+                                     gint n,
+                                     const gchar *delimiter);
+gchar*   gwy_flags_to_string        (gint enumval,
+                                     const GwyEnum *enum_table,
+                                     gint n,
+                                     const gchar *glue);
+gchar*   gwy_strkill                (gchar *s,
+                                     const gchar *killchars);
+gchar*   gwy_strreplace             (const gchar *haystack,
+                                     const gchar *needle,
+                                     const gchar *replacement,
+                                     gsize maxrepl);
+gboolean gwy_file_get_contents      (const gchar *filename,
+                                     guchar **buffer,
+                                     gsize *size,
+                                     GError **error);
+gboolean gwy_file_abandon_contents  (guchar *buffer,
+                                     gsize size,
+                                     GError **error);
+gchar*   gwy_find_self_dir          (const gchar *dirname);
 #ifdef G_OS_WIN32
-void   gwy_find_self_set_argv0    (const gchar *argv0);
+void     gwy_find_self_set_argv0    (const gchar *argv0);
 #endif /* G_OS_WIN32 */
 
 G_END_DECLS

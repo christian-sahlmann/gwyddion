@@ -76,7 +76,9 @@ test_serializable_iface(void)
 
     /* read the object back and restore it */
     g_message("reading objects from %s", FILENAME);
-    g_file_get_contents(FILENAME, (gchar**)&buffer, &size, &err);
+    if (!gwy_file_get_contents(FILENAME, &buffer, &size, &err)) {
+        g_error("%s", err->message);
+    }
     g_message("size = %u", size);
 
     pos = 0;
@@ -90,6 +92,9 @@ test_serializable_iface(void)
     print(ser, "restored");
 
     g_object_unref(ser);
+    if (!gwy_file_abandon_contents(buffer, size, &err)) {
+        g_error("%s", err->message);
+    }
 }
 
 void
@@ -242,7 +247,9 @@ test_container_serialization(void)
     g_free(buffer);
 
     g_message("reading objects from %s", FILENAME);
-    g_file_get_contents(FILENAME, (gchar**)&buffer, &size, &err);
+    if (!gwy_file_get_contents(FILENAME, &buffer, &size, &err)) {
+        g_error("%s", err->message);
+    }
     g_message("size = %u", size);
 
     pos = 0;
@@ -272,6 +279,9 @@ test_container_serialization(void)
 
     container = gwy_container_deserialize_from_text(serialized_text);
     g_object_unref(container);
+    if (!gwy_file_abandon_contents(buffer, size, &err)) {
+        g_error("%s", err->message);
+    }
 }
 
 static void
@@ -600,7 +610,8 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_nlfit();
+    test_serializable_iface();
+    test_container_serialization();
 
     return 0;
 }

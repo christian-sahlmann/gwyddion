@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.1, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.1cvs20040504, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -101,6 +101,7 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS( \
   tiffio.h \
+  fcntl.h \
   time.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -110,6 +111,7 @@ AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
 
 dnl Checks for library functions.
+AC_FUNC_MMAP
 AC_CHECK_FUNCS([getline])
 AC_CHECK_FUNCS([setenv])
 
