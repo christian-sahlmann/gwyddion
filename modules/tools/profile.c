@@ -206,7 +206,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->separation),
                                  controls->separate);
     g_signal_connect(controls->separation, "toggled",
-                     G_CALLBACK(separate_changed_cb), &controls);
+                     G_CALLBACK(separate_changed_cb), controls);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Interpolation type:"));
@@ -215,7 +215,7 @@ dialog_create(GwyUnitoolState *state)
 
     controls->interpolation
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        &controls, controls->interp);
+                                        controls, controls->interp);
     gtk_box_pack_start(GTK_BOX(vbox), controls->interpolation, FALSE, FALSE,2);
 
     gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1,
@@ -449,8 +449,6 @@ load_args(GwyContainer *container, ToolControls *controls)
                                                            interp_key);
     else
         controls->interp = GWY_INTERPOLATION_BILINEAR;
-
-    gwy_debug("Interpolation loaded as %d\n", controls->interp);
 }
 
 static void
