@@ -24,7 +24,9 @@
  * we won't fuck anything up... */
 
 /* for jpeglib */
+#ifdef _MSC_VER
 #define HAVE_BOOLEAN 1
+#endif
 
 #include <stdio.h>
 #include <string.h>
