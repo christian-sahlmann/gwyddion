@@ -252,9 +252,10 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "rawfile",
-    N_("Read raw data according to user-specified format."),
+    N_("Reads raw data files, both ASCII and binary, according to "
+       "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5.1",
+    "1.5.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -669,7 +670,9 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, row, row+1);
     row++;
 
-    label = gtk_label_new(file->filename);
+    s = g_path_get_basename(file->filename);
+    label = gtk_label_new(s);
+    g_free(s);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 2, row, row+1);
 
@@ -1036,7 +1039,6 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     GtkTreeIter iter;
     GtkWidget *vbox, *label, *table, *button, *scroll, *bbox;
     const guchar *presets;
-    gchar **s;
     guint i, row;
 
     row = 0;
@@ -1051,13 +1053,14 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     if (gwy_container_gis_string_by_name(gwy_app_settings_get(),
                                          "/module/rawfile/presets",
                                          &presets)) {
+        gchar **s;
+
         s = g_strsplit(presets, "\n", 0);
         for (i = 0; s[i]; i++) {
             gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter,
-                               RAW_PRESET_NAME, s[i],
-                               -1);
+            gtk_list_store_set(store, &iter, RAW_PRESET_NAME, s[i], -1);
         }
+        g_strfreev(s);
     }
     gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
                                     RAW_PRESET_NAME,
@@ -1471,10 +1474,7 @@ preset_store_cb(RawFileControls *controls)
         gtk_list_store_append(GTK_LIST_STORE(store), &iter);
     }
     gwy_debug("Setting `%s'", name);
-    gtk_list_store_set(GTK_LIST_STORE(store), &iter,
-                       RAW_PRESET_NAME, g_strdup(name),
-                       RAW_PRESET_TYPE, "",
-                       -1);
+    gtk_list_store_set(GTK_LIST_STORE(store), &iter, RAW_PRESET_NAME, name, -1);
     gwy_debug("Done saving `%s'", name);
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
     gtk_tree_selection_select_iter(tselect, &iter);
@@ -1516,7 +1516,7 @@ preset_rename_cb(RawFileControls *controls)
     gwy_container_remove_by_prefix(settings, s);
     g_free(s);
     gtk_list_store_set(GTK_LIST_STORE(store), &iter,
-                       RAW_PRESET_NAME, g_strdup(newname), -1);
+                       RAW_PRESET_NAME, newname, -1);
     g_free(name);
 }
 
