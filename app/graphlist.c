@@ -40,39 +40,57 @@ enum {
     GRAPHLIST_LAST
 };
 
-static GtkWidget* gwy_app_graph_list_construct(GwyContainer *data);
-static void gwy_app_graph_list_cell_renderer(GtkTreeViewColumn *column,
-                                             GtkCellRenderer *cell,
-                                             GtkTreeModel *model,
-                                             GtkTreeIter *piter,
-                                             gpointer userdata);
-static void gwy_app_graph_list_toggled(GtkCellRendererToggle *toggle,
-                                       gchar *pathstring,
-                                       GtkWidget *list);
-static gboolean gwy_app_graph_list_hide_graph(GtkTreeModel *store,
-                                              GtkTreePath *path,
-                                              GtkTreeIter *iter,
-                                              gpointer userdata);
-static gboolean gwy_app_graph_list_show_graph(GtkTreeModel *store,
-                                              GtkTreePath *path,
-                                              GtkTreeIter *iter,
-                                              gpointer userdata);
-static gboolean gwy_app_graph_list_delete_graph(GtkTreeModel *store,
-                                                GtkTreePath *path,
-                                                GtkTreeIter *iter,
-                                                gpointer userdata);
-static void gwy_app_graph_list_hide_all(GtkWidget *list);
-static void gwy_app_graph_list_show_all(GtkWidget *list);
-static void gwy_app_graph_list_delete_all(GtkWidget *list);
-static void gwy_app_graph_list_delete_one(GtkWidget *list);
-static void gwy_app_graph_list_add_line(gpointer hkey,
-                                        GValue *value,
-                                        GtkListStore *store);
-static gint gwy_app_graph_list_sort_func(GtkTreeModel *model,
-                                         GtkTreeIter *a,
-                                         GtkTreeIter *b,
-                                         gpointer user_data);
-static void gwy_app_graph_list_orphaned(GtkWidget *graph_view);
+typedef struct {
+    GtkWidget *delete;
+    GtkWidget *delete_all;
+    GtkWidget *show_all;
+    GtkWidget *hide_all;
+    GtkWidget *list;
+} Controls;
+
+static GtkWidget* gwy_app_graph_list_construct       (GwyContainer *data,
+                                                      Controls *controls);
+static void       gwy_app_graph_list_cell_renderer   (GtkTreeViewColumn *column,
+                                                      GtkCellRenderer *cell,
+                                                      GtkTreeModel *model,
+                                                      GtkTreeIter *piter,
+                                                      gpointer userdata);
+static void       gwy_app_graph_list_row_inserted    (GtkTreeModel *store,
+                                                      GtkTreePath *path,
+                                                      GtkTreeIter *iter,
+                                                      Controls *controls);
+static void       gwy_app_graph_list_row_deleted     (GtkTreeModel *store,
+                                                      GtkTreePath *path,
+                                                      Controls *controls);
+static void       gwy_app_graph_list_selection_changed(GtkTreeSelection *selection,
+                                                      Controls *controls);
+static void       gwy_app_graph_list_toggled         (GtkCellRendererToggle *toggle,
+                                                      gchar *pathstring,
+                                                      GtkWidget *list);
+static gboolean   gwy_app_graph_list_hide_graph      (GtkTreeModel *store,
+                                                      GtkTreePath *path,
+                                                      GtkTreeIter *iter,
+                                                      gpointer userdata);
+static gboolean   gwy_app_graph_list_show_graph      (GtkTreeModel *store,
+                                                      GtkTreePath *path,
+                                                      GtkTreeIter *iter,
+                                                      gpointer userdata);
+static gboolean   gwy_app_graph_list_delete_graph    (GtkTreeModel *store,
+                                                      GtkTreePath *path,
+                                                      GtkTreeIter *iter,
+                                                      gpointer userdata);
+static void       gwy_app_graph_list_hide_all        (GtkWidget *list);
+static void       gwy_app_graph_list_show_all        (GtkWidget *list);
+static void       gwy_app_graph_list_delete_all      (GtkWidget *list);
+static void       gwy_app_graph_list_delete_one      (GtkWidget *list);
+static void       gwy_app_graph_list_add_line        (gpointer hkey,
+                                                      GValue *value,
+                                                      GtkListStore *store);
+static gint       gwy_app_graph_list_sort_func       (GtkTreeModel *model,
+                                                      GtkTreeIter *a,
+                                                      GtkTreeIter *b,
+                                                      gpointer user_data);
+static void       gwy_app_graph_list_orphaned        (GtkWidget *graph_view);
 
 void
 gwy_app_graph_list_add(GwyDataWindow *data_window,
@@ -134,7 +152,8 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
 GtkWidget*
 gwy_app_graph_list(GwyDataWindow *data_window)
 {
-    GtkWidget *window, *vbox, *buttonbox, *button, *list;
+    GtkWidget *window, *vbox, *buttonbox, *list;
+    Controls *controls;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Graph list for FIXME");
@@ -143,31 +162,34 @@ gwy_app_graph_list(GwyDataWindow *data_window)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    list = gwy_app_graph_list_construct(gwy_data_window_get_data(data_window));
+    controls = g_new(Controls, 1);
+    list = gwy_app_graph_list_construct(gwy_data_window_get_data(data_window),
+                                        controls);
+    g_signal_connect_swapped(list, "destroy", G_CALLBACK(g_free), controls);
     gtk_box_pack_start(GTK_BOX(vbox), list, TRUE, TRUE, 0);
 
     buttonbox = gtk_hbox_new(TRUE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(buttonbox), 2);
     gtk_box_pack_start(GTK_BOX(vbox), buttonbox, FALSE, FALSE, 0);
 
-    button = gtk_button_new_with_mnemonic(_("_Delete"));
-    gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
-    g_signal_connect_swapped(button, "clicked",
+    controls->delete = gtk_button_new_with_mnemonic(_("_Delete"));
+    gtk_box_pack_start(GTK_BOX(buttonbox), controls->delete, TRUE, TRUE, 0);
+    g_signal_connect_swapped(controls->delete, "clicked",
                              G_CALLBACK(gwy_app_graph_list_delete_one), list);
 
-    button = gtk_button_new_with_mnemonic(_("Delete _All"));
-    gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
-    g_signal_connect_swapped(button, "clicked",
+    controls->delete_all = gtk_button_new_with_mnemonic(_("Delete _All"));
+    gtk_box_pack_start(GTK_BOX(buttonbox), controls->delete_all, TRUE, TRUE, 0);
+    g_signal_connect_swapped(controls->delete_all, "clicked",
                              G_CALLBACK(gwy_app_graph_list_delete_all), list);
 
-    button = gtk_button_new_with_mnemonic(_("_Show All"));
-    gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
-    g_signal_connect_swapped(button, "clicked",
+    controls->show_all = gtk_button_new_with_mnemonic(_("_Show All"));
+    gtk_box_pack_start(GTK_BOX(buttonbox), controls->show_all, TRUE, TRUE, 0);
+    g_signal_connect_swapped(controls->show_all, "clicked",
                              G_CALLBACK(gwy_app_graph_list_show_all), list);
 
-    button = gtk_button_new_with_mnemonic(_("_Hide All"));
-    gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
-    g_signal_connect_swapped(button, "clicked",
+    controls->hide_all = gtk_button_new_with_mnemonic(_("_Hide All"));
+    gtk_box_pack_start(GTK_BOX(buttonbox), controls->hide_all, TRUE, TRUE, 0);
+    g_signal_connect_swapped(controls->hide_all, "clicked",
                              G_CALLBACK(gwy_app_graph_list_hide_all), list);
 
     g_object_set_data(G_OBJECT(data_window), "gwy-app-graph-list-window",
@@ -182,7 +204,8 @@ gwy_app_graph_list(GwyDataWindow *data_window)
 }
 
 static GtkWidget*
-gwy_app_graph_list_construct(GwyContainer *data)
+gwy_app_graph_list_construct(GwyContainer *data,
+                             Controls *controls)
 {
     static const struct {
         const gchar *title;
@@ -209,6 +232,7 @@ gwy_app_graph_list_construct(GwyContainer *data)
                           (GHFunc)(gwy_app_graph_list_add_line), store);
 
     list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    controls->list = list;
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(list), TRUE);
     g_object_unref(store);
     g_object_set_data(G_OBJECT(store), "container", data);
@@ -252,7 +276,64 @@ gwy_app_graph_list_construct(GwyContainer *data)
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
+    g_signal_connect(selection, "changed",
+                     G_CALLBACK(gwy_app_graph_list_selection_changed),
+                     controls);
+    g_signal_connect(store, "row-deleted",
+                     G_CALLBACK(gwy_app_graph_list_row_deleted), controls);
+    g_signal_connect(store, "row-inserted",
+                     G_CALLBACK(gwy_app_graph_list_row_inserted), controls);
+
     return list;
+}
+
+static void
+gwy_app_graph_list_row_inserted(G_GNUC_UNUSED GtkTreeModel *store,
+                                G_GNUC_UNUSED GtkTreePath *path,
+                                G_GNUC_UNUSED GtkTreeIter *iter,
+                                Controls *controls)
+{
+    GtkTreeSelection *selection;
+
+    gtk_widget_set_sensitive(controls->delete_all, TRUE);
+    gtk_widget_set_sensitive(controls->show_all, TRUE);
+    gtk_widget_set_sensitive(controls->hide_all, TRUE);
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->list));
+    gtk_widget_set_sensitive(controls->delete,
+                             gtk_tree_selection_get_selected(selection,
+                                                             NULL, NULL));
+}
+
+static void
+gwy_app_graph_list_row_deleted(GtkTreeModel *store,
+                               G_GNUC_UNUSED GtkTreePath *path,
+                               Controls *controls)
+{
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    gboolean has_rows;
+
+    has_rows = gtk_tree_model_get_iter_first(store, &iter);
+    gtk_widget_set_sensitive(controls->delete_all, has_rows);
+    gtk_widget_set_sensitive(controls->show_all, has_rows);
+    gtk_widget_set_sensitive(controls->hide_all, has_rows);
+    if (has_rows) {
+        selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->list));
+        gtk_widget_set_sensitive(controls->delete,
+                                 gtk_tree_selection_get_selected(selection,
+                                                                 NULL, NULL));
+    }
+    else
+        gtk_widget_set_sensitive(controls->hide_all, has_rows);
+}
+
+static void
+gwy_app_graph_list_selection_changed(GtkTreeSelection *selection,
+                                     Controls *controls)
+{
+    gtk_widget_set_sensitive(controls->delete,
+                             gtk_tree_selection_get_selected(selection,
+                                                             NULL, NULL));
 }
 
 static void
