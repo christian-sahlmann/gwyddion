@@ -51,7 +51,8 @@ static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
 static gdouble  edist                            (gint xc1, gint yc1,
                                                   gint xc2, gint yc2);
 static gdouble  square_area                      (GwyDataField *data_field,
-                                                  gint ulcol, gint ulrow, gint brcol, gint brrow);
+                                                  gint ulcol, gint ulrow,
+                                                  gint brcol, gint brrow);
 
 
 GType
@@ -437,7 +438,6 @@ gwy_data_field_area_copy(GwyDataField *src,
  *
  * Resamples GwyDataField using given interpolation method
  **/
-/* XY: yeti */
 void
 gwy_data_field_resample(GwyDataField *a,
                         gint xres, gint yres,
@@ -506,7 +506,6 @@ gwy_data_field_confirmsize(GwyDataField *a, gint xres, gint yres)
  *
  * Returns:%TRUE at success
  **/
-/* XY: yeti */
 gboolean
 gwy_data_field_resize(GwyDataField *a,
                       gint ulcol, gint ulrow, gint brcol, gint brrow)
@@ -551,7 +550,6 @@ gwy_data_field_resize(GwyDataField *a,
  *
  * Returns: value at the position (x,y).
  **/
-/* XY: yeti */
 gdouble
 gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
                         GwyInterpolationType interpolation)
@@ -561,12 +559,13 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
     gdouble restx, resty, valpx, valxp, valpp, va, vb, vc, vd;
     gdouble intline[4];
 
-    if (x<0 && x>-0.1) x = 0;
-    if (y<0 && x>-0.1) y = 0;
+    if (x < 0 && x > -0.1)
+        x = 0;
+    if (y < 0 && x > -0.1)
+        y = 0;
     if (!(x >= 0 && y >= 0 && y < a->yres && x < a->xres))
         g_warning("Bad dval request: %f %f", x, y);
-    g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres,
-                         0.0);
+    g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres, 0.0);
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
         return 0.0;
@@ -608,29 +607,38 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
         resty = y - (gdouble)floory;
 
         /*return ROUND result if we have no space for interpolations*/
-        if (floorx < 1 || floory < 1 || floorx >= (a->xres-2) || floory >= (a->yres-2))
-        {
+        if (floorx < 1 || floory < 1
+            || floorx >= (a->xres-2) || floory >= (a->yres-2)) {
             ix = (gint)(x + 0.5);
             iy = (gint)(y + 0.5);
             return a->data[ix + a->xres*iy];
         }
 
         /*interpolation in x direction*/
-        for (i=0; i<4; i++) intline[i] = a->data[floorx - 1 + i + a->xres*(floory - 1)];
-        va = gwy_interpolation_get_dval_of_equidists(restx, intline, interpolation);
-        for (i=0; i<4; i++) intline[i] = a->data[floorx - 1 + i + a->xres*(floory)];
-        vb = gwy_interpolation_get_dval_of_equidists(restx, intline, interpolation);
-        for (i=0; i<4; i++) intline[i] = a->data[floorx - 1 + i + a->xres*(floory + 1)];
-        vc = gwy_interpolation_get_dval_of_equidists(restx, intline, interpolation);
-        for (i=0; i<4; i++) intline[i] = a->data[floorx - 1 + i + a->xres*(floory + 2)];
-        vd = gwy_interpolation_get_dval_of_equidists(restx, intline, interpolation);
+        for (i = 0; i < 4; i++)
+            intline[i] = a->data[floorx - 1 + i + a->xres * (floory - 1)];
+        va = gwy_interpolation_get_dval_of_equidists (restx, intline,
+                                                      interpolation);
+        for (i = 0; i < 4; i++)
+            intline[i] = a->data[floorx - 1 + i + a->xres * (floory)];
+        vb = gwy_interpolation_get_dval_of_equidists (restx, intline,
+                                                      interpolation);
+        for (i = 0; i < 4; i++)
+            intline[i] = a->data[floorx - 1 + i + a->xres * (floory + 1)];
+        vc = gwy_interpolation_get_dval_of_equidists (restx, intline,
+                                                      interpolation);
+        for (i = 0; i < 4; i++)
+            intline[i] = a->data[floorx - 1 + i + a->xres * (floory + 2)];
+        vd = gwy_interpolation_get_dval_of_equidists (restx, intline,
+                                                      interpolation);
 
         /*interpolation in y direction*/
         intline[0] = va;
         intline[1] = vb;
         intline[2] = vc;
         intline[3] = vd;
-        return gwy_interpolation_get_dval_of_equidists(resty, intline, interpolation);
+        return gwy_interpolation_get_dval_of_equidists(resty, intline,
+                                                       interpolation);
     }
 }
 
@@ -1050,7 +1058,6 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
         for (j = 0; j < a->xres; j++) { /*column*/
             ir = a->yres-i-icor;
             jr = j-jcor;
-            /* XXX: cosinus should have no minus!? */
             inew = -ir*cs + jr*sn;
             jnew = ir*sn + jr*cs;
             if (inew > a->yres || jnew > a->xres || inew < -1 || jnew < -1)
@@ -1173,7 +1180,8 @@ gwy_data_field_area_fill(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres);
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0
+                     && brcol <= a->xres && brrow <= a->yres);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1224,7 +1232,8 @@ gwy_data_field_area_multiply(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres);
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0
+                     && brcol <= a->xres && brrow <= a->yres);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1275,7 +1284,8 @@ gwy_data_field_area_add(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres);
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0
+                     && brcol <= a->xres && brrow <= a->yres);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1309,7 +1319,7 @@ gwy_data_field_get_max(GwyDataField *a)
 
 
 gdouble
-gwy_data_field_get_area_max(GwyDataField *a,
+gwy_data_field_area_get_max(GwyDataField *a,
                             gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
     gint i, j;
@@ -1321,7 +1331,8 @@ gwy_data_field_get_area_max(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol <= a->xres && brrow <= a->yres, 0);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1361,7 +1372,7 @@ gwy_data_field_get_min(GwyDataField *a)
 
 
 gdouble
-gwy_data_field_get_area_min(GwyDataField *a,
+gwy_data_field_area_get_min(GwyDataField *a,
                             gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
     gint i, j;
@@ -1373,7 +1384,8 @@ gwy_data_field_get_area_min(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol <= a->xres && brrow <= a->yres, 0);
 
 
     for (i = ulrow; i < brrow; i++) {
@@ -1412,7 +1424,8 @@ gwy_data_field_get_sum(GwyDataField *a)
 }
 
 gdouble
-gwy_data_field_get_area_sum(GwyDataField *a, gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_area_get_sum(GwyDataField *a,
+                            gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
     gint i, j;
     gdouble sum = 0;
@@ -1423,7 +1436,8 @@ gwy_data_field_get_area_sum(GwyDataField *a, gint ulcol, gint ulrow, gint brcol,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol <= a->xres && brrow <= a->yres, 0);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1450,10 +1464,10 @@ gwy_data_field_get_avg(GwyDataField *a)
 }
 
 gdouble
-gwy_data_field_get_area_avg(GwyDataField *a,
+gwy_data_field_area_get_avg(GwyDataField *a,
                             gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
-    return gwy_data_field_get_area_sum(a, ulcol, ulrow, brcol, brrow)
+    return gwy_data_field_area_get_sum(a, ulcol, ulrow, brcol, brrow)
            /((gdouble)(brcol-ulcol)*(brrow-ulrow));
 }
 
@@ -1467,23 +1481,21 @@ gwy_data_field_get_area_avg(GwyDataField *a,
  * Returns: surface area
  **/
 gdouble
-gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolation)
+gwy_data_field_get_surface_area(GwyDataField *a,
+                                GwyInterpolationType interpolation)
 {
     gint i, j;
     gdouble sum = 0;
 
-    for (i=0; i<(a->xres-1); i++)
-    {
-        for (j=0; j<(a->yres-1); j++)
-        {
-            sum += square_area(a, i, j, i+1, j+1);
-        }
+    for (i = 0; i < (a->xres - 1); i++) {
+        for (j = 0; j < (a->yres - 1); j++)
+            sum += square_area(a, i, j, i + 1, j + 1);
     }
     return sum;
 }
 
 /**
- * gwy_data_field_get_area_surface_area:
+ * gwy_data_field_area_get_surface_area:
  * @a: data field
  * @ulcol: upper-left column coordinate
  * @ulrow: upper-left row coordinate
@@ -1496,8 +1508,9 @@ gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolat
  * Returns:
  **/
 gdouble
-gwy_data_field_get_area_surface_area(GwyDataField *a,
-                                     gint ulcol, gint ulrow, gint brcol, gint brrow,
+gwy_data_field_area_get_surface_area(GwyDataField *a,
+                                     gint ulcol, gint ulrow,
+                                     gint brcol, gint brrow,
                                      GwyInterpolationType interpolation)
 {
     gint i, j;
@@ -1508,15 +1521,13 @@ gwy_data_field_get_area_surface_area(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol <= a->xres && brrow <= a->yres, 0);
 
     sum = 0;
-    for (i=ulcol; i<(brcol-1); i++)
-    {
-        for (j=ulrow; j<(brrow-1); j++)
-        {
-            sum += square_area(a, i, j, i+1, j+1);
-        }
+    for (i = ulcol; i < (brcol - 1); i++) {
+        for (j = ulrow; j < (brrow - 1); j++)
+            sum += square_area(a, i, j, i + 1, j + 1);
     }
 
     return sum;
@@ -1550,11 +1561,15 @@ gwy_data_field_get_rms(GwyDataField *a)
 
 
 gdouble
-gwy_data_field_get_area_rms(GwyDataField *a, gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_area_get_rms(GwyDataField *a,
+                            gint ulcol,
+                            gint ulrow,
+                            gint brcol,
+                            gint brrow)
 {
     gint i, j, n;
     gdouble rms = 0, sum2 = 0;
-    gdouble sum = gwy_data_field_get_area_sum(a, ulcol, ulrow, brcol, brrow);
+    gdouble sum = gwy_data_field_area_get_sum(a, ulcol, ulrow, brcol, brrow);
     gdouble *row;
 
     if (ulcol > brcol)
@@ -1562,14 +1577,14 @@ gwy_data_field_get_area_rms(GwyDataField *a, gint ulcol, gint ulrow, gint brcol,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol <= a->xres && brrow <= a->yres, 0);
 
     for (i = ulrow; i < brrow; i++) {
-        row = a->data + i*a->xres + ulcol;
+        row = a->data + i * a->xres + ulcol;
 
-        for (j = 0; j < brcol - ulcol; j++)
-        {
-            sum2 += (*row)*(*row);
+        for (j = 0; j < brcol - ulcol; j++) {
+            sum2 += (*row) * (*row);
             *row++;
         }
     }
@@ -1628,7 +1643,8 @@ gwy_data_field_area_threshold(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol <= a->xres && brrow <= a->yres, 0);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1684,13 +1700,13 @@ gwy_data_field_area_clamp(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol < a->xres && brrow < a->yres, 0);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
 
-        for (j = 0; j < brcol - ulcol; j++)
-        {
+        for (j = 0; j < brcol - ulcol; j++) {
             if (*row < bottom) {
                 *row = bottom;
                 tot++;
@@ -1757,7 +1773,11 @@ gwy_data_field_get_column(GwyDataField *a, GwyDataLine* b, gint col)
  * Extracts row part into data line. Data line should be allocated allready.
  **/
 void
-gwy_data_field_get_row_part(GwyDataField *a, GwyDataLine* b, gint row, gint from, gint to)
+gwy_data_field_get_row_part(GwyDataField *a,
+                            GwyDataLine* b,
+                            gint row,
+                            gint from,
+                            gint to)
 {
     g_return_if_fail(row >= 0 && row < a->yres);
     if (to < from)
@@ -1781,7 +1801,11 @@ gwy_data_field_get_row_part(GwyDataField *a, GwyDataLine* b, gint row, gint from
  * Extracts column part into data line. Data line should be allocated allready.
  **/
 void
-gwy_data_field_get_column_part(GwyDataField *a, GwyDataLine* b, gint col, gint from, gint to)
+gwy_data_field_get_column_part(GwyDataField *a,
+                               GwyDataLine* b,
+                               gint col,
+                               gint from,
+                               gint to)
 {
     gint k;
 
@@ -1861,15 +1885,19 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
     gint k;
     gdouble cosa, sina, size;
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol >= 0 && brrow >= 0
-                         && ulrow <= a->yres && ulcol <= a->xres && brrow <= a->yres && brcol <= a->xres,
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol >= 0 && brrow >= 0
+                         && ulrow <= a->yres && ulcol <= a->xres
+                         && brrow <= a->yres && brcol <= a->xres,
                          FALSE);
 
  /*   brcol -= 1;
     brrow -= 1;
 */
-    size = sqrt((ulcol - brcol)*(ulcol - brcol) + (ulrow - brrow)*(ulrow - brrow));
-    if (res<=0) res = (gint)size;
+    size = sqrt((ulcol - brcol)*(ulcol - brcol)
+                + (ulrow - brrow)*(ulrow - brrow));
+    if (res <= 0)
+        res = (gint)size;
 
     cosa = (gdouble)(brcol - ulcol)/(res - 1);
     sina = (gdouble)(brrow - ulrow)/(res - 1);
@@ -1895,7 +1923,7 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
  **/
 void
 gwy_data_field_plane_coeffs(GwyDataField *a,
-                           gdouble *ap, gdouble *bp, gdouble *cp)
+                            gdouble *ap, gdouble *bp, gdouble *cp)
 {
     gdouble sumxi, sumxixi, sumyi, sumyiyi;
     gdouble sumsi = 0.0;
@@ -2593,7 +2621,7 @@ gwy_data_field_get_stats(GwyDataField *data_field, gdouble *avg, gdouble *ra, gd
 }
 
 void
-gwy_data_field_get_area_stats(GwyDataField *data_field,
+gwy_data_field_area_get_stats(GwyDataField *data_field,
                               gint ulcol, gint ulrow, gint brcol, gint brrow,
                               gdouble *avg, gdouble *ra,
                               gdouble *rms, gdouble *skew, gdouble *kurtosis)
@@ -2620,7 +2648,7 @@ gwy_data_field_get_area_stats(GwyDataField *data_field,
     nn = (brcol-ulcol)*(brrow-ulrow);
     c_sz1 = c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
 
-    *avg = gwy_data_field_get_area_avg(data_field, ulcol, ulrow, brcol, brrow);
+    *avg = gwy_data_field_area_get_avg(data_field, ulcol, ulrow, brcol, brrow);
 
     for (i = ulrow; i < brrow; i++) {
         row = data_field->data + i*data_field->xres + ulcol;
@@ -2638,7 +2666,7 @@ gwy_data_field_get_area_stats(GwyDataField *data_field,
     *ra = c_abs1/nn;
     *rms = c_sz2/nn;
     *skew = c_sz3/pow(*rms, 1.5)/nn;
-    //*(c_sz3/nn - 3*c_sz1*c_sz3/nn2 + 2*c_s3z/nn3)/pow((c_sz2/nn - c_s2z/nn2),1.5);*/
+    /*(c_sz3/nn - 3*c_sz1*c_sz3/nn2 + 2*c_s3z/nn3)/pow((c_sz2/nn - c_s2z/nn2),1.5);*/
     *kurtosis = c_sz4/(*rms)/(*rms)/nn - 3;
     /*(c_sz4/nn - 4*c_sz1*c_sz3/nn4 + 6*c_s2z*c_sz2/nn3 - 3*c_s4z/nn4 - 3)/pow((c_sz2/nn - c_s2z/nn2),2);*/
 
@@ -2671,9 +2699,9 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
 
     /*precompute settings if necessary*/
     if (type==GWY_SF_OUTPUT_DH || type==GWY_SF_OUTPUT_CDH) {
-        min = gwy_data_field_get_area_min(data_field,
+        min = gwy_data_field_area_get_min(data_field,
                                           ulcol, ulrow, brcol, brrow);
-        max = gwy_data_field_get_area_max(data_field,
+        max = gwy_data_field_area_get_max(data_field,
                                           ulcol, ulrow, brcol, brrow);
     }
     else if (type==GWY_SF_OUTPUT_DA || type==GWY_SF_OUTPUT_CDA) {
@@ -2787,12 +2815,15 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
             return 0;
         }
 
-        hlp_line = GWY_DATA_LINE(gwy_data_line_new(size,
-                                                   gwy_data_field_jtor(data_field, size),
-                                                   FALSE));
-        hlp_tarline = GWY_DATA_LINE(gwy_data_line_new(size,
-                                                      gwy_data_field_jtor(data_field, size),
-                                                      FALSE));
+        hlp_line = GWY_DATA_LINE(
+                       gwy_data_line_new(size,
+                                         gwy_data_field_jtor(data_field, size),
+                                         FALSE));
+        hlp_tarline = GWY_DATA_LINE(
+                          gwy_data_line_new(size,
+                                            gwy_data_field_jtor(data_field,
+                                                                size),
+                                            FALSE));
         if (nstats <= 0) {
             nstats = size;
         }
@@ -2836,7 +2867,8 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                 break;
 
                 case GWY_SF_OUTPUT_PSDF:
-                gwy_data_line_psdf(hlp_line, hlp_tarline, windowing, interpolation);
+                gwy_data_line_psdf(hlp_line, hlp_tarline, windowing,
+                                   interpolation);
                 gwy_data_line_resample(hlp_tarline, size, interpolation);
                 break;
 
@@ -2872,60 +2904,70 @@ gwy_data_field_convolve(GwyDataField *data_field, GwyDataField *kernel_field,
     yres = data_field->yres;
     kxres = kernel_field->xres;
     kyres = kernel_field->yres;
-    hlp_df = (GwyDataField*)gwy_data_field_new(xres, yres, data_field->xreal, data_field->yreal, TRUE);
+    hlp_df =
+        (GwyDataField *) gwy_data_field_new(xres, yres, data_field->xreal,
+                                            data_field->yreal, TRUE);
 
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
+
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
     xsize = brcol - ulcol;
     ysize = brrow - ulrow;
-    avgval = gwy_data_field_get_area_avg(data_field, ulcol, ulrow, brcol, brrow);
+    avgval =
+        gwy_data_field_area_get_avg(data_field, ulcol, ulrow, brcol, brrow);
 
-    if (kxres > xsize || kyres > ysize){g_warning("Kernel size larger than field area size."); return;}
+    if (kxres > xsize || kyres > ysize) {
+        g_warning("Kernel size larger than field area size.");
+        return;
+    }
 
-    for (i = ulrow; i < brrow; i++) /*0-yres*/
-    {
-        for (j = ulcol; j < brcol; j++) /*0-xres*/
-        {
-            /*target_field->data[j + data_field->xres*i];*/
-            for (m = (-kyres/2); m<(kyres - kyres/2); m++)
-            {
-                for (n = (-kxres/2); n<(kxres - kxres/2); n++)
-                {
-                    if (((j+n)<xres) && ((i+m)<yres) && ((j+n)>=0) && ((i+m)>=0))
-                        fieldval = data_field->data[(j+n) + xres*(i+m)];
+    for (i = ulrow; i < brrow; i++) {   /*0-yres */
+        for (j = ulcol; j < brcol; j++) {       /*0-xres */
+            /*target_field->data[j + data_field->xres*i]; */
+            for (m = (-kyres/2); m < (kyres - kyres/2); m++) {
+                for (n = (-kxres/2); n < (kxres - kxres/2); n++) {
+                    if (((j + n) < xres) && ((i + m) < yres) && ((j + n) >= 0)
+                        && ((i + m) >= 0))
+                        fieldval = data_field->data[(j + n) + xres * (i + m)];
                     else
                         fieldval = avgval;
 
-                    hlp_df->data[j + xres*i] += fieldval*kernel_field->data[(m+kyres/2) + kxres*(n+kxres/2)];
+                    hlp_df->data[j + xres * i] +=
+                        fieldval * kernel_field->data[(m + kyres/2)
+                                                      + kxres * (n + kxres/2)];
                 }
             }
         }
     }
 
-    for (i = ulrow; i < brrow; i++)
-    {
-        for (j = ulcol; j < brcol; j++)
-        {
-            data_field->data[j + xres*i] = hlp_df->data[j + xres*i];
+    for (i = ulrow; i < brrow; i++) {
+        for (j = ulcol; j < brcol; j++) {
+            data_field->data[j + xres * i] = hlp_df->data[j + xres * i];
         }
     }
     g_object_unref(hlp_df);
 }
 
-void gwy_data_field_filter_mean(GwyDataField *data_field, gint size,
-                                gint ulcol, gint ulrow, gint brcol, gint brrow)
+void
+gwy_data_field_filter_mean(GwyDataField *data_field, gint size,
+                           gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
     gint i;
     GwyDataField *kernel_df;
 
     gwy_debug("");
-    if (size <=0) {g_warning("Filter cannot have negative or null size"); return;}
+    if (size <= 0) {
+        g_warning("Filter cannot have negative or null size");
+        return;
+    }
 
-    kernel_df = (GwyDataField*)gwy_data_field_new(size, size, size, size, TRUE);
-    for (i=0; i<(size*size); i++) kernel_df->data[i] = 1.0/((gdouble)size*(gdouble)size);
+    kernel_df =
+        (GwyDataField *) gwy_data_field_new(size, size, size, size, TRUE);
+    for (i = 0; i < (size * size); i++)
+        kernel_df->data[i] = 1.0 / ((gdouble)size * (gdouble)size);
 
     gwy_data_field_convolve(data_field, kernel_df, ulcol, ulrow, brcol, brrow);
 
@@ -3047,7 +3089,7 @@ bubble_sort(gdouble *numbers, gdouble array_size)
 
 void
 gwy_data_field_filter_median(GwyDataField *data_field, gint size,
-                                gint ulcol, gint ulrow, gint brcol, gint brrow)
+                             gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
     gint xres, yres, kxres, kyres, i, j, m, n;
     gint xsize, ysize, nb;
@@ -3055,51 +3097,55 @@ gwy_data_field_filter_median(GwyDataField *data_field, gint size,
     GwyDataField *hlp_df;
 
     gwy_debug("");
-    if (size <=0) {g_warning("Filter cannot have negative or null size"); return;}
+    if (size <= 0) {
+        g_warning("Filter cannot have negative or null size");
+        return;
+    }
     xres = data_field->xres;
     yres = data_field->yres;
     kxres = size;
     kyres = size;
-    hlp_df = (GwyDataField*)gwy_data_field_new(xres, yres, data_field->xreal, data_field->yreal, TRUE);
-    neighbours = (gdouble *)g_malloc((size*size)*sizeof(gdouble));
+    hlp_df =
+        (GwyDataField *) gwy_data_field_new(xres, yres, data_field->xreal,
+                                            data_field->yreal, TRUE);
+    neighbours = (gdouble *)g_malloc((size * size) * sizeof(gdouble));
 
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
+
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
     xsize = brcol - ulcol;
     ysize = brrow - ulrow;
 
-    if (kxres > xsize || kyres > ysize){g_warning("Kernel size larger than field area size."); return;}
+    if (kxres > xsize || kyres > ysize) {
+        g_warning("Kernel size larger than field area size.");
+        return;
+    }
 
-    for (i = ulrow; i < brrow; i++)
-    {
-        for (j = ulcol; j < brcol; j++)
-        {
+    for (i = ulrow; i < brrow; i++) {
+        for (j = ulcol; j < brcol; j++) {
             nb = 0;
-            for (m = (-kyres/2); m<(kyres - kyres/2); m++)
-            {
-                for (n = (-kxres/2); n<(kxres - kxres/2); n++)
-                {
-                    if (((j+n)<xres) && ((i+m)<yres) && ((j+n)>=0) && ((i+m)>=0))
-                    {
-                        neighbours[nb] = data_field->data[(j+n) + xres*(i+m)];
+            for (m = (-kyres/2); m < (kyres - kyres/2); m++) {
+                for (n = (-kxres/2); n < (kxres - kxres/2); n++) {
+                    if (((j + n) < xres) && ((i + m) < yres) && ((j + n) >= 0)
+                        && ((i + m) >= 0)) {
+                        neighbours[nb] =
+                            data_field->data[(j + n) + xres * (i + m)];
                         nb++;
                     }
                 }
             }
             bubble_sort(neighbours, nb);
             medval = neighbours[nb/2];
-            hlp_df->data[j + xres*i] = medval;
+            hlp_df->data[j + xres * i] = medval;
         }
     }
 
-    for (i = ulrow; i < brrow; i++)
-    {
-        for (j = ulcol; j < brcol; j++)
-        {
-            data_field->data[j + xres*i] = hlp_df->data[j + xres*i];
+    for (i = ulrow; i < brrow; i++) {
+        for (j = ulcol; j < brcol; j++) {
+            data_field->data[j + xres * i] = hlp_df->data[j + xres * i];
         }
     }
 
@@ -3110,7 +3156,8 @@ gwy_data_field_filter_median(GwyDataField *data_field, gint size,
 
 void
 gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
-                                gint ulcol, gint ulrow, gint brcol, gint brrow)
+                                   gint ulcol, gint ulrow, gint brcol,
+                                   gint brrow)
 {
     gint xres, yres, kxres, kyres, i, j, m, n, k;
     gint xsize, ysize, nb;
@@ -3118,62 +3165,68 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
     GwyDataField *hlp_df;
 
     gwy_debug("");
-    if (size <=0) {g_warning("Filter cannot have negative or null size"); return;}
+    if (size <= 0) {
+        g_warning("Filter cannot have negative or null size");
+        return;
+    }
     xres = data_field->xres;
     yres = data_field->yres;
     kxres = size;
     kyres = size;
-    hlp_df = (GwyDataField*)gwy_data_field_new(xres, yres, data_field->xreal, data_field->yreal, TRUE);
-    neighbours = (gdouble *)g_malloc((size*size)*sizeof(gdouble));
+    hlp_df =
+        (GwyDataField *) gwy_data_field_new(xres, yres, data_field->xreal,
+                                            data_field->yreal, TRUE);
+    neighbours = (gdouble *)g_malloc((size * size) * sizeof(gdouble));
 
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
+
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
     xsize = brcol - ulcol;
     ysize = brrow - ulrow;
 
-    if (kxres > xsize || kyres > ysize){g_warning("Kernel size larger than field area size."); return;}
+    if (kxres > xsize || kyres > ysize) {
+        g_warning("Kernel size larger than field area size.");
+        return;
+    }
 
-    for (i = ulrow; i < brrow; i++)
-    {
-        for (j = ulcol; j < brcol; j++)
-        {
+    for (i = ulrow; i < brrow; i++) {
+        for (j = ulcol; j < brcol; j++) {
             nb = 0;
             maxval = -G_MAXDOUBLE;
             minval = G_MAXDOUBLE;
-            for (m = (-kyres/2); m<(kyres - kyres/2); m++)
-            {
-                for (n = (-kxres/2); n<(kxres - kxres/2); n++)
-                {
-                    if (((j+n)<xres) && ((i+m)<yres) && ((j+n)>=0) && ((i+m)>=0))
-                    {
-                        neighbours[nb] = data_field->data[(j+n) + xres*(i+m)];
+            for (m = (-kyres/2); m < (kyres - kyres/2); m++) {
+                for (n = (-kxres/2); n < (kxres - kxres/2); n++) {
+                    if (((j + n) < xres) && ((i + m) < yres) && ((j + n) >= 0)
+                        && ((i + m) >= 0)) {
+                        neighbours[nb] =
+                            data_field->data[(j + n) + xres * (i + m)];
                         nb++;
                     }
                 }
             }
-            for (k=0; k<nb; k++)
-            {
-                if (minval > neighbours[k]) minval = neighbours[k];
-                if (maxval < neighbours[k]) maxval = neighbours[k];
+            for (k = 0; k < nb; k++) {
+                if (minval > neighbours[k])
+                    minval = neighbours[k];
+                if (maxval < neighbours[k])
+                    maxval = neighbours[k];
             }
 
-            if (data_field->data[j + xres*i]>maxval)
-                hlp_df->data[j + xres*i] = maxval;
-            else if (data_field->data[j + xres*i]<minval)
-                hlp_df->data[j + xres*i] = minval;
-            else hlp_df->data[j + xres*i] = data_field->data[j + xres*i];
+            if (data_field->data[j + xres * i] > maxval)
+                hlp_df->data[j + xres * i] = maxval;
+            else if (data_field->data[j + xres * i] < minval)
+                hlp_df->data[j + xres * i] = minval;
+            else
+                hlp_df->data[j + xres * i] = data_field->data[j + xres * i];
 
         }
     }
 
-    for (i = ulrow; i < brrow; i++)
-    {
-        for (j = ulcol; j < brcol; j++)
-        {
-            data_field->data[j + xres*i] = hlp_df->data[j + xres*i];
+    for (i = ulrow; i < brrow; i++) {
+        for (j = ulcol; j < brcol; j++) {
+            data_field->data[j + xres * i] = hlp_df->data[j + xres * i];
         }
     }
 
@@ -3182,91 +3235,82 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
 
 }
 
-void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint brrow,
-                              GwyFitLineType fit_type, gboolean exclude, GtkOrientation orientation)
+void
+gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow,
+                         gint brcol, gint brrow, GwyFitLineType fit_type,
+                         gboolean exclude, GtkOrientation orientation)
 {
 
     gint i, xres, yres, n;
     gdouble coefs[4];
     GwyDataLine *hlp;
+
     gwy_debug("");
 
     xres = data_field->xres;
     yres = data_field->yres;
-    hlp =(GwyDataLine*) gwy_data_line_new(xres, data_field->xreal, 0);
+    hlp = (GwyDataLine *) gwy_data_line_new(xres, data_field->xreal, 0);
 
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
+
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-
-
     n = (gint)fit_type;
 
-    if (exclude)
-    {
-        if (orientation == GTK_ORIENTATION_HORIZONTAL)
-        {
-            if ((xres-brcol)>ulcol)
-            {
-                ulcol = brcol; brcol = xres;
+    if (exclude) {
+        if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+            if ((xres - brcol) > ulcol) {
+                ulcol = brcol;
+                brcol = xres;
             }
-            else
-            {
-                brcol = ulcol; ulcol = 0;
+            else {
+                brcol = ulcol;
+                ulcol = 0;
             }
         }
-        else if (orientation == GTK_ORIENTATION_VERTICAL)
-        {
-            if ((yres-brrow)>ulrow)
-            {
-                ulrow = brrow; brrow = yres;
+        else if (orientation == GTK_ORIENTATION_VERTICAL) {
+            if ((yres - brrow) > ulrow) {
+                ulrow = brrow;
+                brrow = yres;
             }
-            else
-            {
-                brrow = ulrow; ulrow = 0;
+            else {
+                brrow = ulrow;
+                ulrow = 0;
             }
         }
     }
 
-    if (orientation == GTK_ORIENTATION_HORIZONTAL)
-    {
-        for (i=0; i<yres; i++)
-        {
+    if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+        for (i = 0; i < yres; i++) {
             gwy_data_field_get_row(data_field, hlp, i);
-            if (i>ulrow && i<=brrow)
-            {
+            if (i > ulrow && i <= brrow) {
                 gwy_data_line_part_fit_polynom(hlp, n, coefs, ulcol, brcol);
             }
-            else
-            {
+            else {
                 gwy_data_line_fit_polynom(hlp, n, coefs);
             }
             gwy_data_line_subtract_polynom(hlp, n, coefs);
             gwy_data_field_set_row(data_field, hlp, i);
         }
     }
-    else if (orientation == GTK_ORIENTATION_VERTICAL)
-    {
-        for (i=0; i<xres; i++)
-        {
+    else if (orientation == GTK_ORIENTATION_VERTICAL) {
+        for (i = 0; i < xres; i++) {
             gwy_data_field_get_column(data_field, hlp, i);
-            if (i>ulcol && i<=brcol)
-            {
+            if (i > ulcol && i <= brcol) {
                 gwy_data_line_part_fit_polynom(hlp, n, coefs, ulrow, brrow);
             }
-            else
-            {
+            else {
                 gwy_data_line_fit_polynom(hlp, n, coefs);
             }
             gwy_data_line_subtract_polynom(hlp, n, coefs);
             gwy_data_field_set_column(data_field, hlp, i);
         }
-     }
+    }
     g_object_unref(hlp);
 
- }
+}
 
 /**
  * gwy_data_field_get_correlation_score:
@@ -3289,22 +3333,24 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
  * maximum correlation, -1 none correlation.
  **/
 gdouble
-gwy_data_field_get_correlation_score(GwyDataField *data_field, GwyDataField *kernel_field,
-                                     gint ulcol, gint ulrow,
-                                     gint kernel_ulcol, gint kernel_ulrow, gint kernel_brcol, gint kernel_brrow)
+gwy_data_field_get_correlation_score(GwyDataField *data_field,
+                                     GwyDataField *kernel_field, gint ulcol,
+                                     gint ulrow, gint kernel_ulcol,
+                                     gint kernel_ulrow, gint kernel_brcol,
+                                     gint kernel_brrow)
 {
     gint xres, yres, kxres, kyres, i, j;
     gint kwidth, kheight;
     gdouble rms1, rms2, avg1, avg2, sumpoints, score;
 
-    if (data_field == NULL || kernel_field == NULL)
-    {
+    if (data_field == NULL || kernel_field == NULL) {
         g_error("Field for correlation is NULL.");
         return -1;
     }
 
     if (kernel_ulcol > kernel_brcol)
         GWY_SWAP(gint, kernel_ulcol, kernel_brcol);
+
     if (kernel_ulrow > kernel_brrow)
         GWY_SWAP(gint, kernel_ulrow, kernel_brrow);
 
@@ -3316,32 +3362,48 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field, GwyDataField *ker
     kwidth = kernel_brcol - kernel_ulcol;
     kheight = kernel_brrow - kernel_ulrow;
 
-    if (kwidth<=0 || kheight<=0) {g_warning("Correlation kernel has nonpositive size."); return -1;}
+    if (kwidth <= 0 || kheight <= 0) {
+        g_warning("Correlation kernel has nonpositive size.");
+        return -1;
+    }
 
-    /*correlation request outside kernel*/
-    if (kernel_brcol > kxres || kernel_brrow > kyres) return -1;
-    /*correlation request outside data field*/
-    if (ulcol<0 || ulrow<0 || (ulcol+kwidth)>xres || (ulrow+kheight)>yres) return -1;
-    if (kernel_ulcol<0|| kernel_ulrow<0 || (kernel_ulcol+kwidth)>kxres || (kernel_ulrow+kheight)>kyres) return -1;
+    /*correlation request outside kernel */
+    if (kernel_brcol > kxres || kernel_brrow > kyres)
+        return -1;
+    /*correlation request outside data field */
+    if (ulcol < 0 || ulrow < 0 || (ulcol + kwidth) > xres
+        || (ulrow + kheight) > yres)
+        return -1;
+    if (kernel_ulcol < 0 || kernel_ulrow < 0 || (kernel_ulcol + kwidth) > kxres
+        || (kernel_ulrow + kheight) > kyres)
+        return -1;
 
 /*    printf("kul: %d, %d,  kbr: %d, %d, ul: %d, %d\n", kernel_ulcol, kernel_ulrow, kernel_brcol, kernel_brrow,  ulcol, ulrow);*/
 
-    avg1 = gwy_data_field_get_area_avg(data_field, ulcol, ulrow, ulcol+kwidth, ulrow+kheight);
-    avg2 = gwy_data_field_get_area_avg(kernel_field, kernel_ulcol, kernel_ulrow, kernel_brcol, kernel_brrow);
-    rms1 = gwy_data_field_get_area_rms(data_field, ulcol, ulrow, ulcol+kwidth, ulrow+kheight);
-    rms2 = gwy_data_field_get_area_rms(kernel_field, kernel_ulcol, kernel_ulrow, kernel_brcol, kernel_brrow);
+    avg1 =
+        gwy_data_field_area_get_avg(data_field, ulcol, ulrow, ulcol + kwidth,
+                                    ulrow + kheight);
+    avg2 =
+        gwy_data_field_area_get_avg(kernel_field, kernel_ulcol, kernel_ulrow,
+                                    kernel_brcol, kernel_brrow);
+    rms1 =
+        gwy_data_field_area_get_rms(data_field, ulcol, ulrow, ulcol + kwidth,
+                                    ulrow + kheight);
+    rms2 =
+        gwy_data_field_area_get_rms(kernel_field, kernel_ulcol, kernel_ulrow,
+                                    kernel_brcol, kernel_brrow);
 
     score = 0;
-    sumpoints = kwidth*kheight;
-    for (i=0; i<kwidth; i++)/*col*/
-    {
-        for (j=0; j<kheight; j++)/*row*/
-        {
-            score += (data_field->data[(i+ulcol) + xres*(j+ulrow)]-avg1)
-                *(kernel_field->data[(i+kernel_ulcol) + kxres*(j+kernel_ulrow)]-avg2);
+    sumpoints = kwidth * kheight;
+    for (i = 0; i < kwidth; i++) {      /*col */
+        for (j = 0; j < kheight; j++) { /*row */
+            score += (data_field->data[(i + ulcol) + xres * (j + ulrow)] - avg1)
+                *
+                (kernel_field->
+                 data[(i + kernel_ulcol) + kxres * (j + kernel_ulrow)] - avg2);
         }
     }
-    score /= rms1*rms2*sumpoints;
+    score /= rms1 * rms2 * sumpoints;
 
     return score;
 }
@@ -3362,8 +3424,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
 
     gint xres, yres, kxres, kyres, i, j;
 
-    if (data_field == NULL || kernel_field == NULL)
-    {
+    if (data_field == NULL || kernel_field == NULL) {
         g_error("Field for correlation is NULL.");
         return;
     }
@@ -3373,22 +3434,24 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
     kxres = kernel_field->xres;
     kyres = kernel_field->yres;
 
-    if (kxres<=0 || kyres<=0) {g_warning("Correlation kernel has nonpositive size."); return;}
-
-    gwy_data_field_fill(score, -1);
-    /*correlation request outside kernel*/
-    if (kxres > xres || kyres > yres)
-    {
+    if (kxres <= 0 || kyres <= 0) {
+        g_warning("Correlation kernel has nonpositive size.");
         return;
     }
 
-    for (i=(kxres/2); i<(xres-kxres/2); i++)/*col*/
-    {
-        for (j=(kyres/2); j<(yres-kyres/2); j++)/*row*/
-        {
-           score->data[i+xres*j] = gwy_data_field_get_correlation_score(data_field, kernel_field,
-                                        i - kxres/2, j - kyres/2,
-                                        0, 0, kxres, kyres);
+    gwy_data_field_fill(score, -1);
+    /*correlation request outside kernel */
+    if (kxres > xres || kyres > yres) {
+        return;
+    }
+
+    for (i = (kxres/2); i < (xres - kxres/2); i++) {        /*col */
+        for (j = (kyres/2); j < (yres - kyres/2); j++) {    /*row */
+            score->data[i + xres * j] =
+                gwy_data_field_get_correlation_score(data_field, kernel_field,
+                                                     i - kxres/2,
+                                                     j - kyres/2, 0, 0, kxres,
+                                                     kyres);
         }
     }
 }
@@ -3404,13 +3467,15 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
  * Performs one iteration of correlation.
  **/
 void
-gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kernel_field, GwyDataField *score,
-                                   GwyComputationStateType *state, gint *iteration)
+gwy_data_field_correlate_iteration(GwyDataField *data_field,
+                                   GwyDataField *kernel_field,
+                                   GwyDataField *score,
+                                   GwyComputationStateType * state,
+                                   gint *iteration)
 {
     gint xres, yres, kxres, kyres, i, j;
 
-    if (data_field == NULL || kernel_field == NULL)
-    {
+    if (data_field == NULL || kernel_field == NULL) {
         g_error("Field for correlation is NULL.");
         return;
     }
@@ -3420,33 +3485,81 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kerne
     kxres = kernel_field->xres;
     kyres = kernel_field->yres;
 
-    if (kxres<=0 || kyres<=0) {g_warning("Correlation kernel has nonpositive size."); return;}
-    /*correlation request outside kernel*/
-    if (kxres > xres || kyres > yres)
-    {
+    if (kxres <= 0 || kyres <= 0) {
+        g_warning("Correlation kernel has nonpositive size.");
+        return;
+    }
+    /*correlation request outside kernel */
+    if (kxres > xres || kyres > yres) {
         return;
     }
 
-    if (*state == GWY_COMP_INIT)
-    {
+    if (*state == GWY_COMP_INIT) {
         gwy_data_field_fill(score, -1);
         *state = GWY_COMP_ITERATE;
         *iteration = 0;
     }
-    else if (*state == GWY_COMP_ITERATE)
-    {
-        if (iteration==0) i=(kxres/2);
-        else i = *iteration;
-        for (j=(kyres/2); j<(yres-kyres/2); j++)/*row*/
-        {
-           score->data[i+xres*j] = gwy_data_field_get_correlation_score(data_field, kernel_field,
-                                        i - kxres/2, j - kyres/2,
-                                        0, 0, kxres, kyres);
+    else if (*state == GWY_COMP_ITERATE) {
+        if (iteration == 0)
+            i = (kxres/2);
+        else
+            i = *iteration;
+        for (j = (kyres/2); j < (yres - kyres/2); j++) {    /*row */
+            score->data[i + xres * j] =
+                gwy_data_field_get_correlation_score(data_field, kernel_field,
+                                                     i - kxres/2,
+                                                     j - kyres/2,
+                                                     0, 0, kxres, kyres);
         }
-        *iteration = i+1;
-        if (*iteration == (xres-kxres/2 -1)) *state = GWY_COMP_FINISHED;
+        *iteration = i + 1;
+        if (*iteration == (xres - kxres/2 - 1))
+            *state = GWY_COMP_FINISHED;
     }
 }
+
+#if 0
+/*iterate over search area in the second datafield */
+static void
+gwy_data_field_croscorrelate_iter(GwyDataField *data_field1,
+                                  GwyDataField *data_field2,
+                                  gint search_width,
+                                  gint search_height,
+                                  gint i, gint j,
+                                  gint *imax, gint *jmax,
+                                  gdouble *cormax)
+{
+    gint m, n;
+    gdouble lscore;
+
+    *imax = i;
+    *jmax = j;
+    *cormax = -1;
+    for (m = (i - search_width); m < i; m++) {
+        for (n = (j - search_height); n < j; n++) {
+            lscore =
+                gwy_data_field_get_correlation_score(data_field1,
+                                                     data_field2,
+                                                     i-search_width/2,
+                                                     j-search_height/2,
+                                                     m, n,
+                                                     m + search_width,
+                                                     n + search_height);
+
+            /* add a little to score at exactly same point
+             * to prevent problems on flat data */
+            if (m == (i - search_width/2)
+                && n == (j - search_height/2))
+                lscore *= 1.0001;
+
+            if (*cormax < lscore) {
+                *cormax = lscore;
+                *imax = m + search_width/2;
+                *jmax = n + search_height/2;
+            }
+        }
+    }
+}
+#endif
 
 /**
  * gwy_data_field_croscorrelate:
@@ -3463,21 +3576,23 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kerne
  * Algotihm for matching two different images of the same
  * object under changes. It does not use any special features
  * for matching. It simply searches for all points (with their neighbourhood)
- * of @data_field1 within @data_field2. Parameters @search_width and @search_height
+ * of @data_field1 within @data_field2. Parameters @search_width and
+ * @search_height
  * determine maimum area where to search for points. The area is cenetered
  * in the @data_field2 at former position of points at @data_field1.
  **/
 void
-gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field2,
-                             GwyDataField *x_dist, GwyDataField *y_dist, GwyDataField *score,
-                             gint search_width, gint search_height, gint window_width, gint window_height)
+gwy_data_field_croscorrelate(GwyDataField *data_field1,
+                             GwyDataField *data_field2, GwyDataField *x_dist,
+                             GwyDataField *y_dist, GwyDataField *score,
+                             gint search_width, gint search_height,
+                             gint window_width, gint window_height)
 {
     gint xres, yres, i, j, m, n;
     gint imax, jmax;
     gdouble cormax, lscore;
 
-    if (data_field1 == NULL || data_field2 == NULL)
-    {
+    if (data_field1 == NULL || data_field2 == NULL) {
         g_error("Field for correlation is NULL.");
         return;
     }
@@ -3485,8 +3600,7 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
     xres = data_field1->xres;
     yres = data_field1->yres;
 
-    if (xres != data_field2->xres || yres != data_field2->yres)
-    {
+    if (xres != data_field2->xres || yres != data_field2->yres) {
         g_warning("Fields must be of same dimensions");
         return;
     }
@@ -3495,36 +3609,39 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
     gwy_data_field_fill(y_dist, 0);
     gwy_data_field_fill(score, 0);
 
-    /*iterate over all the points*/
-    for (i=(search_width/2); i<(xres-search_height/2); i++)
-    {
-        for (j=(search_height/2); j<(yres-search_height/2); j++)
-        {
-            /*iterate over search area in the second datafield*/
-            imax = i; jmax = j;
+    /*iterate over all the points */
+    for (i = (search_width/2); i < (xres - search_height/2); i++) {
+        for (j = (search_height/2); j < (yres - search_height/2); j++) {
+            /*iterate over search area in the second datafield */
+            imax = i;
+            jmax = j;
             cormax = -1;
-            for (m = (i-search_width); m<i; m++)
-            {
-                for (n = (j-search_height); n<j; n++)
-                {
-                    lscore = gwy_data_field_get_correlation_score(data_field1, data_field2,
-                                                           (i-search_width/2), (j-search_height/2),
-                                                           m, n, m+search_width, n+search_height);
+            for (m = (i - search_width); m < i; m++) {
+                for (n = (j - search_height); n < j; n++) {
+                    lscore =
+                        gwy_data_field_get_correlation_score(data_field1,
+                                                             data_field2,
+                                                             i-search_width/2,
+                                                             j-search_height/2,
+                                                             m, n,
+                                                             m + search_width,
+                                                             n + search_height);
 
-                    /*add a little to score at exactly same point - to prevent problems on flat data*/
-                    if (m==(i-search_width/2) && n==(j-search_height/2)) lscore *= 1.0001;
+                    /*add a little to score at exactly same point - to prevent problems on flat data */
+                    if (m == (i - search_width/2)
+                        && n == (j - search_height/2))
+                        lscore *= 1.0001;
 
-                    if (cormax<lscore)
-                    {
+                    if (cormax < lscore) {
                         cormax = lscore;
-                        imax = m+search_width/2;
-                        jmax = n+search_height/2;
+                        imax = m + search_width/2;
+                        jmax = n + search_height/2;
                     }
                 }
             }
-            score->data[i + xres*j] = cormax;
-            x_dist->data[i + xres*j] = imax - i;
-            y_dist->data[i + xres*j] = jmax - j;
+            score->data[i + xres * j] = cormax;
+            x_dist->data[i + xres * j] = imax - i;
+            y_dist->data[i + xres * j] = jmax - j;
         }
     }
 }
@@ -3546,22 +3663,27 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
  * Algotihm for matching two different images of the same
  * object under changes. It does not use any special features
  * for matching. It simply searches for all points (with their neighbourhood)
- * of @data_field1 within @data_field2. Parameters @search_width and @search_height
+ * of @data_field1 within @data_field2. Parameters @search_width and
+ * @search_height
  * determine maimum area where to search for points. The area is cenetered
  * in the @data_field2 at former position of points at @data_field1.
  **/
 void
-gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *data_field2,
-                             GwyDataField *x_dist, GwyDataField *y_dist, GwyDataField *score,
-                             gint search_width, gint search_height, gint window_width, gint window_height,
-                             GwyComputationStateType *state, gint *iteration)
+gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
+                                       GwyDataField *data_field2,
+                                       GwyDataField *x_dist,
+                                       GwyDataField *y_dist,
+                                       GwyDataField *score, gint search_width,
+                                       gint search_height, gint window_width,
+                                       gint window_height,
+                                       GwyComputationStateType * state,
+                                       gint *iteration)
 {
     gint xres, yres, i, j, m, n;
     gint imax, jmax;
     gdouble cormax, lscore;
 
-    if (data_field1 == NULL || data_field2 == NULL)
-    {
+    if (data_field1 == NULL || data_field2 == NULL) {
         g_error("Field for correlation is NULL.");
         return;
     }
@@ -3569,90 +3691,99 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *
     xres = data_field1->xres;
     yres = data_field1->yres;
 
-    if (xres != data_field2->xres || yres != data_field2->yres)
-    {
+    if (xres != data_field2->xres || yres != data_field2->yres) {
         g_warning("Fields must be of same dimensions");
         return;
     }
 
-    if (*state == GWY_COMP_INIT)
-    {
+    if (*state == GWY_COMP_INIT) {
         gwy_data_field_fill(x_dist, 0);
         gwy_data_field_fill(y_dist, 0);
         gwy_data_field_fill(score, 0);
         *state = GWY_COMP_ITERATE;
         *iteration = 0;
     }
-    else if (*state == GWY_COMP_ITERATE)
-    {
-        if (iteration==0) i=(search_width/2);
-        else i = *iteration;
+    else if (*state == GWY_COMP_ITERATE) {
+        if (iteration == 0)
+            i = (search_width/2);
+        else
+            i = *iteration;
 
-        for (j=(search_height/2); j<(yres-search_height/2); j++)
-        {
-            /*iterate over search area in the second datafield*/
-            imax = i; jmax = j;
+        for (j = (search_height/2); j < (yres - search_height/2); j++) {
+            /*iterate over search area in the second datafield */
+            imax = i;
+            jmax = j;
             cormax = -1;
-            for (m = (i-search_width); m<i; m++)
-            {
-                for (n = (j-search_height); n<j; n++)
-                {
-                    lscore = gwy_data_field_get_correlation_score(data_field1, data_field2,
-                                                           (i-search_width/2), (j-search_height/2),
-                                                           m, n, m+search_width, n+search_height);
+            for (m = (i - search_width); m < i; m++) {
+                for (n = (j - search_height); n < j; n++) {
+                    lscore =
+                        gwy_data_field_get_correlation_score(data_field1,
+                                                             data_field2,
+                                                             i-search_width/2,
+                                                             j-search_height/2,
+                                                             m, n,
+                                                             m + search_width,
+                                                             n + search_height);
 
-                    /*add a little to score at exactly same point - to prevent problems on flat data*/
-                    if (m==(i-search_width/2) && n==(j-search_height/2)) lscore *= 1.01;
+                    /*add a little to score at exactly same point - to prevent problems on flat data */
+                    if (m == (i - search_width/2)
+                        && n == (j - search_height/2))
+                        lscore *= 1.01;
 
-                    if (cormax<lscore)
-                    {
+                    if (cormax < lscore) {
                         cormax = lscore;
-                        imax = m+search_width/2;
-                        jmax = n+search_height/2;
+                        imax = m + search_width/2;
+                        jmax = n + search_height/2;
                     }
 
                 }
             }
-            score->data[i + xres*j] = cormax;
-            x_dist->data[i + xres*j] = imax - i;
-            y_dist->data[i + xres*j] = jmax - j;
+            score->data[i + xres * j] = cormax;
+            x_dist->data[i + xres * j] = imax - i;
+            y_dist->data[i + xres * j] = jmax - j;
 
         }
-        *iteration = i+1;
-        if (*iteration == (xres-search_height/2)) *state = GWY_COMP_FINISHED;
-     }
+        *iteration = i + 1;
+        if (*iteration == (xres - search_height/2))
+            *state = GWY_COMP_FINISHED;
+    }
 }
 
 static gdouble
-square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint brrow)
+square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
+            gint brrow)
 {
     gdouble x, z1, z2, z3, z4, a, b, c, d, e, f, s1, s2, sa, sb, res;
 
-    x = data_field->xreal/data_field->xres;
+    x = data_field->xreal / data_field->xres;
 
-    z1 = data_field->data[(ulcol) + data_field->xres*(ulrow)];
-    z2 = data_field->data[(brcol) + data_field->xres*(ulrow)];
-    z3 = data_field->data[(ulcol) + data_field->xres*(brrow)];
-    z4 = data_field->data[(brcol) + data_field->xres*(brrow)];
+    z1 = data_field->data[(ulcol) + data_field->xres * (ulrow)];
+    z2 = data_field->data[(brcol) + data_field->xres * (ulrow)];
+    z3 = data_field->data[(ulcol) + data_field->xres * (brrow)];
+    z4 = data_field->data[(brcol) + data_field->xres * (brrow)];
 
-    a = sqrt(x*x+(z1-z2)*(z1-z2));
-    b = sqrt(x*x+(z1-z3)*(z1-z3));
-    c = sqrt(x*x+(z3-z4)*(z3-z4));
-    d = sqrt(x*x+(z2-z4)*(z2-z4));
-    e = sqrt(2*x*x+(z3-z2)*(z3-z2));
-    f = sqrt(2*x*x+(z4-z1)*(z4-z1));
+    a = sqrt(x * x + (z1 - z2) * (z1 - z2));
+    b = sqrt(x * x + (z1 - z3) * (z1 - z3));
+    c = sqrt(x * x + (z3 - z4) * (z3 - z4));
+    d = sqrt(x * x + (z2 - z4) * (z2 - z4));
+    e = sqrt(2 * x * x + (z3 - z2) * (z3 - z2));
+    f = sqrt(2 * x * x + (z4 - z1) * (z4 - z1));
 
-    s1 = (a+b+e) / 2;
-    s2 = (c+d+e) / 2;
-    sa = sqrt(s1*(s1-a)*(s1-b)*(s1-e))+sqrt(s2*(s2-c)*(s2-d)*(s2-e));
+    s1 = (a + b + e)/2;
+    s2 = (c + d + e)/2;
+    sa = sqrt(s1 * (s1 - a) * (s1 - b) * (s1 - e)) +
+        sqrt(s2 * (s2 - c) * (s2 - d) * (s2 - e));
 
-    s1 = (a+d+f) / 2;
-    s2 = (c+b+f) / 2;
-    sb = sqrt(s1*(s1-a)*(s1-d)*(s1-f))+sqrt(s2*(s2-c)*(s2-b)*(s2-f));
+    s1 = (a + d + f)/2;
+    s2 = (c + b + f)/2;
+    sb = sqrt(s1 * (s1 - a) * (s1 - d) * (s1 - f))
+         + sqrt(s2 * (s2 - c) * (s2 - b) * (s2 - f));
 
-    if (sa < sb) res = sa; 
-    else res = sb;
-    
+    if (sa < sb)
+        res = sa;
+    else
+        res = sb;
+
     return res;
 }
 
