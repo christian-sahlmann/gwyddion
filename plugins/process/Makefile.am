@@ -2,9 +2,17 @@
 
 processdir = $(gwyplugindir)/process
 
+if HAVE_PERL
+perl_plugins = invert_perl.pl
+endif
+
+if HAVE_PYTHON
+python_plugins = invert_python.py
+endif
+
 process_SCRIPTS = \
-	invert_python.py \
-	invert_perl.pl \
+	$(perl_plugins) \
+	$(python_plugins) \
 	yellow.sh
 
 if HAVE_PASCAL
