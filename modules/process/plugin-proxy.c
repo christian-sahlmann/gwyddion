@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -27,6 +28,12 @@ static gboolean       plugin_proxy               (GwyContainer *data,
                                                   const gchar *name);
 static FILE*          text_dump_export           (GwyContainer *data,
                                                   gchar **filename);
+static void           dump_export_meta_cb        (gpointer hkey,
+                                                  GValue *value,
+                                                  FILE *fh);
+static void           dump_export_data_field     (GwyDataField *dfield,
+                                                  const gchar *name,
+                                                  FILE *fh);
 static GwyContainer*  text_dump_import           (gchar *buffer);
 static GwyRunType     str_to_run_modes           (const gchar *str);
 static const char*    run_mode_to_str            (GwyRunType run);
@@ -190,9 +197,15 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
     args[0] = info->file;
     args[2] = run_mode_to_str(run);
     args[3] = filename;
+    gwy_debug("%s: %s %s %s %s", __FUNCTION__,
+              args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       &buffer, NULL, &exit_status, &err);
+    /* FIXME: on MS Windows we can't unlink open files */
+    unlink(filename);
     fclose(fh);
+    gwy_debug("%s: ok = %d, exit_status = %d, err = %p", __FUNCTION__,
+              ok, exit_status, err);
     ok &= !exit_status;
     if (ok) {
         data = text_dump_import(buffer);
@@ -201,7 +214,9 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
         }
         else {
-            g_warning("Cannot run plug-in %s: %s", info->file, err->message);
+            g_warning("Cannot run plug-in %s: %s",
+                      info->file,
+                      err ? err->message : "it returned garbage.");
             ok = FALSE;
         }
     }
@@ -216,9 +231,56 @@ static FILE*
 text_dump_export(GwyContainer *data, gchar **filename)
 {
     GwyDataField *dfield;
+    GError *err = NULL;
+    FILE *fh;
+    gint fd;
 
-    dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    return NULL;
+    fd = g_file_open_tmp(NULL, filename, &err);
+    if (fd < 0) {
+        g_warning("Cannot create a temporary file: %s", err->message);
+        return NULL;
+    }
+    fh = fdopen(fd, "wb");
+    gwy_container_foreach(data, "/meta", (GHFunc)dump_export_meta_cb, fh);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    dump_export_data_field(dfield, "/0/data", fh);
+    if (gwy_container_contains_by_name(data, "/0/mask")) {
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/mask"));
+        dump_export_data_field(dfield, "/0/mask", fh);
+    }
+
+    return fh;
+}
+
+static void
+dump_export_meta_cb(gpointer hkey, GValue *value, FILE *fh)
+{
+    GQuark quark = GPOINTER_TO_UINT(hkey);
+    const gchar *key;
+
+    key = g_quark_to_string(quark);
+    g_return_if_fail(key);
+    g_return_if_fail(G_VALUE_TYPE(value) == G_TYPE_STRING);
+    fprintf(fh, "%s=%s\n", key, g_value_get_string(value));
+}
+
+static void
+dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
+{
+    gint xres, yres;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    fprintf(fh, "%s/xres=%d\n", name, xres);
+    fprintf(fh, "%s/yres=%d\n", name, yres);
+    fprintf(fh, "%s/xreal=%.16g\n", name, gwy_data_field_get_xreal(dfield));
+    fprintf(fh, "%s/yreal=%.16g\n", name, gwy_data_field_get_yreal(dfield));
+    fprintf(fh, "%s=[\n[", name);
+    fflush(fh);
+    fwrite(dfield->data, sizeof(gdouble), xres*yres, fh);
+    fwrite("]]\n", 1, 3, fh);
+    fflush(fh);
 }
 
 static GwyContainer*
