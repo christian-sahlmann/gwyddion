@@ -21,6 +21,7 @@ libgwydgetsinclude_HEADERS = \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
 	gwylayer-lines.h \
+	gwylayer-pointer.h \
 	gwylayer-points.h \
 	gwylayer-select.h \
 	gwyruler.h \
@@ -54,6 +55,7 @@ libgwydgets_la_SOURCES = \
 	gwylayer-basic.c \
 	gwylayer-mask.c \
 	gwylayer-lines.c \
+	gwylayer-pointer.c \
 	gwylayer-points.c \
 	gwylayer-select.c \
 	gwyruler.c \

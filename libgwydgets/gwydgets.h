@@ -17,6 +17,7 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-lines.h>
 #include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwylayer-pointer.h>
 #include <libgwydgets/gwylayer-points.h>
 #include <libgwydgets/gwylayer-select.h>
 #include <libgwydgets/gwyruler.h>
