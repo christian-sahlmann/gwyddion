@@ -28,8 +28,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-
-enum {
+typedef enum {
     GWY_MENU_FLAG_DATA       = 1 << 0,
     GWY_MENU_FLAG_UNDO       = 1 << 1,
     GWY_MENU_FLAG_REDO       = 1 << 2,
@@ -37,13 +36,13 @@ enum {
     GWY_MENU_FLAG_LAST_PROC  = 1 << 4,
     GWY_MENU_FLAG_LAST_GRAPH = 1 << 5,
     GWY_MENU_FLAG_MASK       = 0x3f
-};
+} GwyMenuSensFlags;
 
 typedef struct _GwyMenuSensitiveData GwyMenuSensitiveData;
 
 struct _GwyMenuSensitiveData {
-    guint flags;
-    guint set_to;
+    GwyMenuSensFlags flags;
+    GwyMenuSensFlags set_to;
 };
 
 GtkWidget* gwy_app_menu_create_xtns_menu         (GtkAccelGroup *accel_group);
@@ -60,10 +59,10 @@ void       gwy_app_menu_set_flags_recursive      (GtkWidget *widget,
 void       gwy_app_menu_set_sensitive_array      (GtkItemFactory *item_factory,
                                                   const gchar *root,
                                                   const gchar **items,
-                                                  guint flags);
+                                                  GwyMenuSensFlags flags);
 void       gwy_app_menu_set_sensitive_both       (GtkWidget *item,
-                                                  gint sens,
-                                                  gint state);
+                                                  GwyMenuSensFlags flags,
+                                                  GwyMenuSensFlags state);
 void       gwy_app_menu_set_recent_files_menu    (GtkWidget *menu);
 
 /* FIXME: where this could really belong? */

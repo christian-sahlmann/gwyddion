@@ -34,15 +34,15 @@
 #include "file.h"
 #include "menu.h"
 
-#define set_sensitive(item, sens) \
+#define set_sensitive(item, flags) \
     g_object_set_qdata(G_OBJECT(item), sensitive_key, \
-                       GUINT_TO_POINTER(sens))
+                       GUINT_TO_POINTER(flags))
 #define set_sensitive_state(item, state) \
     g_object_set_qdata(G_OBJECT(item), sensitive_state_key, \
                        GUINT_TO_POINTER(state))
-#define set_sensitive_both(item, sens, state) \
+#define set_sensitive_both(item, flags, state) \
     do { \
-        set_sensitive(item, sens); \
+        set_sensitive(item, flags); \
         set_sensitive_state(item, state); \
     } while (0)
 
@@ -56,11 +56,21 @@ static GQuark sensitive_state_key = 0;
 
 static GtkWidget *recent_files_menu = NULL;
 
+/**
+ * gwy_app_menu_set_sensitive_array:
+ * @item_factory: A item factory to obtain menu items from.
+ * @root: Menu root, without "<" and ">".
+ * @items: %NULL-terminated array of item paths in the menu (without the
+ *         root).
+ * @flags: Sensitivity bits describing when the item should be sensitive.
+ *
+ * Sets sensitivity flags for a list of menu items.
+ **/
 void
 gwy_app_menu_set_sensitive_array(GtkItemFactory *item_factory,
                                  const gchar *root,
                                  const gchar **items,
-                                 guint flags)
+                                 GwyMenuSensFlags flags)
 {
     GtkWidget *item;
     gsize i, len, maxlen;
@@ -92,6 +102,14 @@ gwy_app_menu_set_sensitive_array(GtkItemFactory *item_factory,
     g_free(path);
 }
 
+/**
+ * gwy_app_menu_set_sensitive_recursive:
+ * @widget: A menu widget (a menu bar, menu, or an item).
+ * @data: Sensitivity data.
+ *
+ * Sets sensitivity bits and current state of a menu subtree at @widget
+ * according @data.
+ **/
 void
 gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
                                      GwyMenuSensitiveData *data)
@@ -146,12 +164,21 @@ gwy_app_menu_set_flags_recursive(GtkWidget *widget,
     }
 }
 
+/**
+ * gwy_app_menu_set_sensitive_both:
+ * @item: A menu item.
+ * @flags: Sensitivity bits describing when the item should be sensitive.
+ * @state: Current state bits determining whether it's actually sensitive
+ *         or not.
+ *
+ * Sets both senstitivity data and current state for a menu item.
+ **/
 void
 gwy_app_menu_set_sensitive_both(GtkWidget *item,
-                                gint sens,
-                                gint state)
+                                GwyMenuSensFlags flags,
+                                GwyMenuSensFlags state)
 {
-    set_sensitive_both(item, sens, state);
+    set_sensitive_both(item, flags, state);
 }
 
 
@@ -350,5 +377,32 @@ gwy_app_menu_set_recent_files_menu(GtkWidget *menu)
 
     recent_files_menu = menu;
 }
+
+/***** Documentation *******************************************************/
+
+/**
+ * GwyMenuSensitivityFlags:
+ * @GWY_MENU_FLAG_DATA: There's at least a one data window present.
+ * @GWY_MENU_FLAG_UNDO: There's something to undo (for current data window).
+ * @GWY_MENU_FLAG_REDO: There's something to redo (for current data window).
+ * @GWY_MENU_FLAG_GRAPH: There's at least a one graph window present.
+ * @GWY_MENU_FLAG_LAST_PROC: There is a last-run data processing function
+ *                           to rerun.
+ * @GWY_MENU_FLAG_LAST_GRAPH: There is a last-run graph function to rerun.
+ * @GWY_MENU_FLAG_MASK: All the bits combined.
+ *
+ * Menu sensitivity flags.
+ *
+ * They represent various application states that may be preconditions for
+ * some menu item (or other widget) to become sensitive.
+ **/
+
+/**
+ * GwyMenuSensitiveData:
+ * @flags: The flags that have to be set for a widget to become sensitive.
+ * @set_to: The actually set flags.
+ *
+ * Sensitivity flags and their current state in one struct.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
