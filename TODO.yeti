@@ -1,6 +1,15 @@
-- Implement APE file format from Paolo Messina, at least import
-- Implement rhk spm32 (.sm2) file import
-- Check for cases where datafield is replaced in container
+GWYDDION-1
+- Convert metadata read from files from Latin1 to UTF-8
+- Check whether imports don't leak objects, namely with data choices
+- Add Ranjan to credits
+- Fix Calibrate for data with different real/pixel ratios
+
+MAIN
+- Fix enum documentation after rename, write missing
+- Canny seems to be broken by datafield caching
+- Change file detection function to take a data structure with lowercase
+  filename (maybe extension) and initial part of file
+- Check for cases where datafield is replaced in container, one is undo
 - Make GWY_PSPEC() public, if it works
 - Find out why there's no cursor in 3D window entries and fix it
 - Use GObject macros for type declarations
