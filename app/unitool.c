@@ -508,7 +508,7 @@ void
 gwy_unitool_update_label(GwySIValueFormat *units,
                          GtkWidget *label, gdouble value)
 {
-    static gchar buffer[32];
+    static gchar buffer[64];
 
     g_return_if_fail(units);
     g_return_if_fail(GTK_IS_LABEL(label));
