@@ -34,6 +34,8 @@
 
 G_BEGIN_DECLS
 
+void gwy_type_init(void);
+
 G_END_DECLS
 
 #endif /* __GWY_GWYDDION_H__ */

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,20 +18,33 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GWYDRAW_H__
-#define __GWY_GWYDRAW_H__
+#include <libprocess/gwyprocess.h>
+#include "gwydraw.h"
 
-#include <libdraw/gwypalette.h>
-#include <libdraw/gwypalettedef.h>
-#include <libdraw/gwypixfield.h>
-#include <libdraw/gwyrgba.h>
+static guint types_initialized = 0;
 
-G_BEGIN_DECLS
+/**
+ * gwy_draw_type_init:
+ *
+ * Initializes libgwydraw types, making their deserialization safe.
+ *
+ * Eventually calls gwy_process_type_init().
+ *
+ * Since 1.4.
+ **/
+void
+gwy_draw_type_init(void)
+{
+    if (types_initialized)
+        return;
 
-void gwy_draw_type_init(void);
+    gwy_process_type_init();
 
-G_END_DECLS
-
-#endif /* __GWY_GWYDRAW_H__ */
+    types_initialized += gwy_palette_get_type();
+    types_initialized += gwy_palette_def_get_type();
+    types_initialized |= 1;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+
+

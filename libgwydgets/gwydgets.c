@@ -23,8 +23,31 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libdraw/gwydraw.h>
 #include "gwydgets.h"
 
+static guint types_initialized = 0;
+
+/**
+ * gwy_widgets_type_init:
+ *
+ * Initializes libgwywidgets data types, making their deserialization safe.
+ *
+ * Eventually calls gwy_draw_type_init().
+ *
+ * Since 1.4.
+ **/
+void
+gwy_widgets_type_init(void)
+{
+    if (types_initialized)
+        return;
+
+    gwy_draw_type_init();
+
+    types_initialized += gwy_sphere_coords_get_type();
+    types_initialized |= 1;
+}
 
 /************************** Table attaching ****************************/
 

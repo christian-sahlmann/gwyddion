@@ -52,6 +52,7 @@
 
 G_BEGIN_DECLS
 
+void       gwy_widgets_type_init          (void);
 GtkWidget* gwy_table_attach_spinbutton    (GtkWidget *table,
                                            gint row,
                                            const gchar *name,
@@ -68,8 +69,6 @@ void       gwy_color_selector_for_mask    (const gchar *dialog_title,
                                            GwyContainer *container,
                                            const gchar *prefix);
 gboolean   gwy_dialog_prevent_delete_cb   (void);
-
-
 
 G_END_DECLS
 

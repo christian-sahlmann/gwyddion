@@ -35,7 +35,7 @@
 
 G_BEGIN_DECLS
 
-/* nothing here yet */
+void gwy_process_type_init(void);
 
 G_END_DECLS
 

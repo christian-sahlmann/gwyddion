@@ -30,6 +30,7 @@ noinst_HEADERS = gwytestser.h
 libgwyddion_la_LDFLAGS = -version-info 4:0:1
 libgwyddion_la_SOURCES = \
 	gwycontainer.c \
+	gwyddion.c \
 	gwydebugobjects.c \
 	gwyentities.c \
 	gwymath.c \

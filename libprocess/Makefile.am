@@ -44,6 +44,7 @@ libgwyprocess_la_SOURCES = \
 	filters.c \
 	fractals.c \
 	grains.c \
+	gwyprocess.c \
 	interpolation.c \
 	inttrans.c \
 	level.c \
