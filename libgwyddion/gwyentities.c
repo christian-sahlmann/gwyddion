@@ -261,10 +261,30 @@ gwy_entities_text_to_utf8(const gchar *text)
     return result;
 }
 
+/**
+ * gwy_entities_get_entities:
+ *
+ * Returns an array of all available entities.
+ *
+ * The array is terminated by { %NULL, %NULL } item.  It must be treated as
+ * constant and never modified or freed.
+ *
+ * Returns: The entities as a #GwyTextEntity array.
+ **/
 G_CONST_RETURN GwyTextEntity*
 gwy_entities_get_entities(void)
 {
     return ENTITIES;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * GwyTextEntity:
+ * @entity: Bare entity name, without the leading ampersand and trailing
+ *          semicolon.
+ * @utf8: The corresponding character, in UTF-8.
+ *
+ * The type of text entity data.
+ **/
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
