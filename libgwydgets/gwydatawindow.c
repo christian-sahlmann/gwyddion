@@ -176,10 +176,10 @@ gwy_data_window_new(GwyDataView *data_view)
     g_signal_connect_swapped(data_view, "updated",
                              G_CALLBACK(data_view_updated_cb), data_window);
 
-    vbox = gtk_vbox_new(0, FALSE);
+    vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(data_window), vbox);
 
-    hbox = gtk_hbox_new(0, FALSE);
+    hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
 
     /***** statusbar *****/

@@ -65,7 +65,7 @@ gwy_app_toolbox_create(void)
     accel_group = gtk_accel_group_new();
     g_object_set_data(G_OBJECT(toolbox), "accel_group", accel_group);
 
-    vbox = gtk_vbox_new(0, FALSE);
+    vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(toolbox), vbox);
 
     menu = gwy_app_menu_create_file_menu(accel_group);
