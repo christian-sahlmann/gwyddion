@@ -141,7 +141,7 @@ selection_updated_cb(GtkWidget *widget, gpointer data)
 
     g_assert(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_CURSOR);
     
-    cd = (GwyGraphStatus_CursorData*)gwy_graph_get_status_data(graph, GWY_GRAPH_STATUS_CURSOR);
+    cd = (GwyGraphStatus_CursorData*)gwy_graph_get_status_data(graph);
 
     if (cd->data_point.x_unit != NULL)
         g_snprintf(buffer, sizeof(buffer), "x = %.3f %s", cd->data_point.x, cd->data_point.x_unit);
