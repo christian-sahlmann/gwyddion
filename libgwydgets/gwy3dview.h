@@ -107,37 +107,37 @@ struct _Gwy3DViewClass {
 GtkWidget*       gwy_3d_view_new               (GwyContainer *data);
 GType            gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
-void             gwy_3d_view_update            (Gwy3DView *gwy3dwiew);
+void             gwy_3d_view_update            (Gwy3DView *gwy3dview);
 
-GwyPalette*      gwy_3d_view_get_palette       (Gwy3DView *gwy3dwiew);
-void             gwy_3d_view_set_palette       (Gwy3DView *gwy3dwiew,
-                                                    GwyPalette *palette);
+GwyPalette*      gwy_3d_view_get_palette       (Gwy3DView *gwy3dview);
+void             gwy_3d_view_set_palette       (Gwy3DView *gwy3dview,
+                                                GwyPalette *palette);
 
-Gwy3DMovement    gwy_3d_view_get_status        (Gwy3DView * gwy3dwiew);
-void             gwy_3d_view_set_status        (Gwy3DView * gwy3dwiew,
-                                                    Gwy3DMovement mv);
+Gwy3DMovement    gwy_3d_view_get_status        (Gwy3DView * gwy3dview);
+void             gwy_3d_view_set_status        (Gwy3DView * gwy3dview,
+                                                Gwy3DMovement mv);
 
-gboolean         gwy_3d_view_get_orthographic  (Gwy3DView *gwy3dwiew);
-void             gwy_3d_view_set_orthographic  (Gwy3DView *gwy3dwiew,
-                                                    gboolean  orthographic);
-gboolean         gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dwiew);
-void             gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dwiew,
-                                                    gboolean  show_axes);
-gboolean         gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dwiew);
-void             gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dwiew,
-                                                    gboolean  show_labels);
+gboolean         gwy_3d_view_get_orthographic  (Gwy3DView *gwy3dview);
+void             gwy_3d_view_set_orthographic  (Gwy3DView *gwy3dview,
+                                                gboolean  orthographic);
+gboolean         gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview);
+void             gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
+                                                gboolean  show_axes);
+gboolean         gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview);
+void             gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
+                                                gboolean  show_labels);
 
-guint            gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dwiew);
-void             gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dwiew,
-                                                    guint  reduced_size);
+guint            gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview);
+void             gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
+                                                guint  reduced_size);
 
-GwyGLMaterialProp*   gwy_3d_view_get_material  (Gwy3DView *gwy3dwiew);
-void                 gwy_3d_view_set_material  (Gwy3DView *gwy3dwiew,
-                                                  GwyGLMaterialProp *material);
+GwyGLMaterialProp*   gwy_3d_view_get_material  (Gwy3DView *gwy3dview);
+void                 gwy_3d_view_set_material  (Gwy3DView *gwy3dview,
+                                                GwyGLMaterialProp *material);
 
-GdkPixbuf *      gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dwiew,
-                                                  guint xres,
-                                                  guint yres);
+GdkPixbuf *      gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview,
+                                                guint xres,
+                                                guint yres);
 
 void             gwy_3d_view_reset_view        (Gwy3DView *gwy3dview);
 
