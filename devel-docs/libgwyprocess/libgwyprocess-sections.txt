@@ -51,6 +51,8 @@ gwy_data_field_get_row
 gwy_data_field_get_column
 gwy_data_field_set_row
 gwy_data_field_set_column
+gwy_data_field_get_row_part
+gwy_data_field_get_column_part
 gwy_data_field_plane_coeffs
 gwy_data_field_plane_level
 gwy_data_field_plane_rotate
@@ -69,6 +71,7 @@ gwy_data_field_cwt
 gwy_data_field_shade
 gwy_data_field_get_stats
 gwy_data_field_get_area_stats
+gwy_data_field_get_line_stat_function
 <SUBSECTION Standard>
 GWY_DATA_FIELD
 GWY_IS_DATA_FIELD
@@ -81,6 +84,7 @@ GWY_DATA_FIELD_GET_CLASS
 
 <SECTION>
 <FILE>dataline</FILE>
+GwySFOutputType
 <TITLE>GwyDataLine</TITLE>
 gwy_data_line_new
 gwy_data_line_alloc
@@ -124,6 +128,13 @@ gwy_data_line_line_rotate
 gwy_data_line_get_der
 gwy_data_line_fft
 gwy_data_line_fft_hum
+gwy_data_line_dh
+gwy_data_line_cdh
+gwy_data_line_da
+gwy_data_line_cda
+gwy_data_line_acf
+gwy_data_line_hhcf
+gwy_data_line_psdf
 <SUBSECTION Standard>
 GWY_DATA_LINE
 GWY_IS_DATA_LINE

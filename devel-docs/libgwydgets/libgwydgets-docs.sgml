@@ -11,6 +11,8 @@
     <xi:include href="xml/gwydatawindow.xml"/>
     <xi:include href="xml/gwydataview.xml"/>
     <xi:include href="xml/gwydataviewlayer.xml"/>
+    <xi:include href="xml/gwypixmaplayer.xml"/>
+    <xi:include href="xml/gwyvectorlayer.xml"/>
     <xi:include href="xml/gwylayer-basic.xml"/>
     <xi:include href="xml/gwylayer-lines.xml"/>
     <xi:include href="xml/gwylayer-mask.xml"/>

@@ -32,7 +32,6 @@ GWY_GRAPH_CORNER_GET_CLASS
 <TITLE>GwyLayerPointer</TITLE>
 gwy_layer_pointer_new
 gwy_layer_pointer_get_point
-gwy_layer_pointer_unselect
 <SUBSECTION Standard>
 GWY_LAYER_POINTER
 GWY_IS_LAYER_POINTER
@@ -46,21 +45,10 @@ GWY_LAYER_POINTER_GET_CLASS
 <SECTION>
 <FILE>gwydataviewlayer</FILE>
 <TITLE>GwyDataViewLayer</TITLE>
-gwy_data_view_layer_is_vector
 gwy_data_view_layer_wants_repaint
-gwy_data_view_layer_draw
-gwy_data_view_layer_paint
-gwy_data_view_layer_button_press
-gwy_data_view_layer_button_release
-gwy_data_view_layer_motion_notify
-gwy_data_view_layer_key_press
-gwy_data_view_layer_key_release
 gwy_data_view_layer_plugged
 gwy_data_view_layer_unplugged
 gwy_data_view_layer_updated
-gwy_data_view_layer_finished
-gwy_layer_cursor_new_or_ref
-gwy_layer_cursor_free_or_unref
 <SUBSECTION Standard>
 GWY_DATA_VIEW_LAYER
 GWY_IS_DATA_VIEW_LAYER
@@ -125,7 +113,6 @@ gwy_layer_lines_new
 gwy_layer_lines_set_max_lines
 gwy_layer_lines_get_max_lines
 gwy_layer_lines_get_lines
-gwy_layer_lines_unselect
 <SUBSECTION Standard>
 GWY_LAYER_LINES
 GWY_IS_LAYER_LINES
@@ -226,7 +213,6 @@ gwy_layer_points_new
 gwy_layer_points_set_max_points
 gwy_layer_points_get_max_points
 gwy_layer_points_get_points
-gwy_layer_points_unselect
 <SUBSECTION Standard>
 GWY_LAYER_POINTS
 GWY_IS_LAYER_POINTS
@@ -235,6 +221,31 @@ gwy_layer_points_get_type
 GWY_LAYER_POINTS_CLASS
 GWY_IS_LAYER_POINTS_CLASS
 GWY_LAYER_POINTS_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwyvectorlayer</FILE>
+<TITLE>GwyVectorLayer</TITLE>
+gwy_vector_layer_draw
+gwy_vector_layer_button_press
+gwy_vector_layer_button_release
+gwy_vector_layer_motion_notify
+gwy_vector_layer_key_press
+gwy_vector_layer_key_release
+gwy_vector_layer_selection_finished
+gwy_vector_layer_get_nselected
+gwy_vector_layer_unselect
+gwy_vector_layer_setup_gc
+gwy_vector_layer_cursor_new_or_ref
+gwy_vector_layer_cursor_free_or_unref
+<SUBSECTION Standard>
+GWY_VECTOR_LAYER
+GWY_IS_VECTOR_LAYER
+GWY_TYPE_VECTOR_LAYER
+gwy_vector_layer_get_type
+GWY_VECTOR_LAYER_CLASS
+GWY_IS_VECTOR_LAYER_CLASS
+GWY_VECTOR_LAYER_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -411,11 +422,24 @@ GWY_GRAD_SPHERE_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwypixmaplayer</FILE>
+<TITLE>GwyPixmapLayer</TITLE>
+gwy_pixmap_layer_paint
+<SUBSECTION Standard>
+GWY_PIXMAP_LAYER
+GWY_IS_PIXMAP_LAYER
+GWY_TYPE_PIXMAP_LAYER
+gwy_pixmap_layer_get_type
+GWY_PIXMAP_LAYER_CLASS
+GWY_IS_PIXMAP_LAYER_CLASS
+GWY_PIXMAP_LAYER_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwylayer-select</FILE>
 <TITLE>GwyLayerSelect</TITLE>
 gwy_layer_select_new
 gwy_layer_select_get_selection
-gwy_layer_select_unselect
 gwy_layer_select_get_is_crop
 gwy_layer_select_set_is_crop
 <SUBSECTION Standard>

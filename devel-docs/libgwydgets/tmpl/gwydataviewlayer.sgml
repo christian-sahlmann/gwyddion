@@ -14,91 +14,12 @@ A one #GwyDataView layer
 
 </para>
 
-<!-- ##### FUNCTION gwy_data_view_layer_is_vector ##### -->
-<para>
-
-</para>
-
-@layer: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_data_view_layer_wants_repaint ##### -->
 <para>
 
 </para>
 
 @layer: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_data_view_layer_draw ##### -->
-<para>
-
-</para>
-
-@layer: 
-@drawable: 
-<!-- # Unused Parameters # -->
-@pixbuf: 
-
-
-<!-- ##### FUNCTION gwy_data_view_layer_paint ##### -->
-<para>
-
-</para>
-
-@layer: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_data_view_layer_button_press ##### -->
-<para>
-
-</para>
-
-@layer: 
-@event: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_data_view_layer_button_release ##### -->
-<para>
-
-</para>
-
-@layer: 
-@event: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_data_view_layer_motion_notify ##### -->
-<para>
-
-</para>
-
-@layer: 
-@event: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_data_view_layer_key_press ##### -->
-<para>
-
-</para>
-
-@layer: 
-@event: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_data_view_layer_key_release ##### -->
-<para>
-
-</para>
-
-@layer: 
-@event: 
 @Returns: 
 
 
@@ -125,38 +46,6 @@ A one #GwyDataView layer
 
 @layer: 
 
-
-<!-- ##### FUNCTION gwy_data_view_layer_finished ##### -->
-<para>
-
-</para>
-
-@layer: 
-
-
-<!-- ##### FUNCTION gwy_layer_cursor_new_or_ref ##### -->
-<para>
-
-</para>
-
-@cursor: 
-@type: 
-
-
-<!-- ##### FUNCTION gwy_layer_cursor_free_or_unref ##### -->
-<para>
-
-</para>
-
-@cursor: 
-
-
-<!-- ##### SIGNAL GwyDataViewLayer::finished ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
 
 <!-- ##### SIGNAL GwyDataViewLayer::plugged ##### -->
 <para>

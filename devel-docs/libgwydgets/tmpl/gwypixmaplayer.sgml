@@ -1,8 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-GwyLayerPointer
+GwyPixmapLayer
 
 <!-- ##### SECTION Short_Description ##### -->
-Simple layer displaying nothing
+Base class for #GwyDataView pixmap layers
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -14,22 +14,12 @@ Simple layer displaying nothing
 
 </para>
 
-<!-- ##### FUNCTION gwy_layer_pointer_new ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_layer_pointer_get_point ##### -->
+<!-- ##### FUNCTION gwy_pixmap_layer_paint ##### -->
 <para>
 
 </para>
 
 @layer: 
-@x: 
-@y: 
 @Returns: 
 
 

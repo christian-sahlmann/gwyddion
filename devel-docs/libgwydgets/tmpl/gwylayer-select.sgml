@@ -35,14 +35,6 @@ Rectangular selection layer
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_layer_select_unselect ##### -->
-<para>
-
-</para>
-
-@layer: 
-
-
 <!-- ##### FUNCTION gwy_layer_select_get_is_crop ##### -->
 <para>
 

@@ -636,6 +636,30 @@ GwyDataField
 @i: 
 
 
+<!-- ##### FUNCTION gwy_data_field_get_row_part ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@row: 
+@from: 
+@to: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_column_part ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@column: 
+@from: 
+@to: 
+
+
 <!-- ##### FUNCTION gwy_data_field_plane_coeffs ##### -->
 <para>
 
@@ -878,5 +902,23 @@ GwyDataField
 @rms: 
 @skew: 
 @kurtosis: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_line_stat_function ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@target_line: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@type: 
+@orientation: 
+@interpolation: 
+@windowing: 
+@nstats: 
 
 

@@ -8,6 +8,28 @@
 @bp: 
 @cp: 
 
+<!-- ##### FUNCTION gwy_data_line_cds ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@target_line: 
+@ymin: 
+@ymax: 
+@nsteps: 
+
+<!-- ##### FUNCTION gwy_data_line_ds ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@target_line: 
+@ymin: 
+@ymax: 
+@nsteps: 
+
 <!-- ##### FUNCTION gwy_data_line_line_coefs ##### -->
 <para>
 

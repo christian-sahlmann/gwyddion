@@ -117,3 +117,10 @@ Data display window
 @Returns: 
 
 
+<!-- ##### SIGNAL GwyDataWindow::title-changed ##### -->
+<para>
+
+</para>
+
+@gwydatawindow: the object which received the signal.
+

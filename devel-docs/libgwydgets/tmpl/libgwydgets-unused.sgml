@@ -62,6 +62,13 @@ gwymodulemenus
 </para>
 
 
+<!-- ##### SIGNAL GwyDataViewLayer::finished ##### -->
+<para>
+
+</para>
+
+@gwydataviewlayer: the object which received the signal.
+
 <!-- ##### SIGNAL GwyGraphArea::gwygrapharea-selected ##### -->
 <para>
 
@@ -100,6 +107,83 @@ gwymodulemenus
 @data_window: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_data_view_layer_button_press ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_data_view_layer_button_release ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_data_view_layer_draw ##### -->
+<para>
+
+</para>
+
+@layer: 
+@drawable: 
+@pixbuf: 
+
+<!-- ##### FUNCTION gwy_data_view_layer_finished ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+<!-- ##### FUNCTION gwy_data_view_layer_is_vector ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_data_view_layer_key_press ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_data_view_layer_key_release ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_data_view_layer_motion_notify ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_data_view_layer_paint ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_data_view_set_zoom_mode ##### -->
 <para>
 
@@ -134,6 +218,49 @@ gwymodulemenus
 @cbdata: 
 @current: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_layer_cursor_free_or_unref ##### -->
+<para>
+
+</para>
+
+@cursor: 
+
+<!-- ##### FUNCTION gwy_layer_cursor_new_or_ref ##### -->
+<para>
+
+</para>
+
+@cursor: 
+@type: 
+
+<!-- ##### FUNCTION gwy_layer_lines_unselect ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+<!-- ##### FUNCTION gwy_layer_pointer_unselect ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+<!-- ##### FUNCTION gwy_layer_points_unselect ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+<!-- ##### FUNCTION gwy_layer_select_unselect ##### -->
+<para>
+
+</para>
+
+@layer: 
 
 <!-- ##### FUNCTION gwy_layer_triangle_get_selection ##### -->
 <para>
