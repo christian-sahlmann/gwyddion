@@ -1,3 +1,16 @@
+1.6cvs20041106
+
+1.7
+Application:
+- Crashing Metadata browser was fixed.
+- Translations work on Win32 too.
+
+Modules:
+- Simple mask editor (new).
+
+Library:
+- libgwyddion, libgwyprocess: Median calculation functions.
+
 
 1.6
 Application:
