@@ -3,6 +3,8 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwypalette.h"
 
+/* TODO: allow NULL argument of gwy_palette_new() (use gray then) */
+
 #define GWY_PALETTE_TYPE_NAME "GwyPalette"
 
 #define GWY_PALETTE_DEFAULT_SIZE 512
