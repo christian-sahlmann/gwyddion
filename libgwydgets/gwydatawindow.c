@@ -568,15 +568,18 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
     }
     else
         xreal = yreal = value = 0.0;
-    g_snprintf(label, sizeof(label), "(%.*f %s, %.*f %s): %.*f %s",
+    g_snprintf(label, sizeof(label), "(%.*f%s%s, %.*f%s%s): %.*f%s%s",
                data_window->coord_format->precision,
                xreal/data_window->coord_format->magnitude,
+               strlen(data_window->coord_format->units) ? " " : "",
                data_window->coord_format->units,
                data_window->coord_format->precision,
                yreal/data_window->coord_format->magnitude,
+               strlen(data_window->coord_format->units) ? " " : "",
                data_window->coord_format->units,
                data_window->value_format->precision,
                value/data_window->value_format->magnitude,
+               strlen(data_window->value_format->units) ? " " : "",
                data_window->value_format->units);
     id = gtk_statusbar_push(sbar, data_window->statusbar_context_id, label);
     if (data_window->statusbar_message_id)
