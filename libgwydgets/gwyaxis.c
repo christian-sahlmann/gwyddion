@@ -489,10 +489,11 @@ gwy_axis_expose(GtkWidget *widget,
                           widget->allocation.width,
                           widget->allocation.height);
 
-    if (axis->is_standalone) gwy_axis_draw_axis(widget);
-    gwy_axis_draw_ticks(widget);
-    gwy_axis_draw_tlabels(widget);
-    gwy_axis_draw_label(widget);
+    if (axis->is_standalone && axis->is_visible) 
+        gwy_axis_draw_axis(widget);
+    if (axis->is_visible) gwy_axis_draw_ticks(widget);
+    if (axis->is_visible) gwy_axis_draw_tlabels(widget);
+    if (axis->is_visible) gwy_axis_draw_label(widget);
 
     return FALSE;
 }

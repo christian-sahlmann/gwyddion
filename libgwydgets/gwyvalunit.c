@@ -147,7 +147,7 @@ gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
     val_unit = (GwyValUnit*)gtk_object_new(gwy_val_unit_get_type (), NULL);
     gtk_box_set_spacing(GTK_BOX(val_unit), 2);
 
-    val_unit->label = gtk_label_new(NULL);
+    val_unit->label = gtk_label_new_with_mnemonic(NULL);
     gtk_label_set_markup(val_unit->label, label_text);
     gtk_box_pack_start(GTK_BOX(val_unit), val_unit->label, FALSE, FALSE, 4);
 
