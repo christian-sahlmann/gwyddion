@@ -1,4 +1,40 @@
 
+1.99.1
+Application:
+- Support for long deprecated binary settings file was removed
+
+Library:
+- libgwymodule: Module names are derived from module file names, they were
+  removed from module ABI.
+- libgwydgets: GwySphereCoords and GwyGradSphere were removed (replaced by
+  GwyShader), GwyVectorShade was removed (no replacement).
+- libgwydgets: GwyVMenubar, GwyToolbox were removed (no replacement).
+- libgwydraw: GwyPaletteDef, GwyPalette were removed (replaced by
+  GwyGradient).
+- libgwydgets: Gwy3DLabels were replaced by (conceptually different)
+  Gwy3DLabel, other changes in Gwy3DView data types.
+- libprocess: Circular dependency between datafield.h (dataline.h) and
+  specialized method headers have been broken: datafield.h no longer includes
+  specialized headers.
+- libprocess, libgwydgets, libgwymodule: Enum definitions were extracted to
+  a separate header; enums are registered as GObject types.
+- libgwydgets: Headers no longer directly depends on GL headers,
+  GwyGLMaterial uses ordinary gdoubles.
+- libprocess, libgwydgets: Many deprecated/unimplemented functions were
+  removed, some unimplemented function arguments were removed.
+- libprocess: Angle arguments in degrees were changed to radians.
+- libgwyddion, libprocess, libgwydgets: non-widget object constructors
+  (Container, SIUnit, DataField, ...) return particular types instead of
+  GObject*
+- libprocess: GwySIUnit internal representation changed from plain string to
+  structured.
+- libprocess: Broken conservative filter was fixed.
+- libgwydgets, libgwyapp: 3D windows are properly destroyed when closed.
+
+Modules:
+- Gwyfile saves new file format (can be read by version 1.7+), loads both.
+
+
 1.9
 Application:
 - Startup time improved.
