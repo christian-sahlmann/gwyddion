@@ -82,6 +82,31 @@ GWY_AXIS_DIALOG_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwycolorbutton</FILE>
+P_
+GwyColorButtonPrivate
+<TITLE>GwyColorButton</TITLE>
+gwy_color_button_new
+gwy_color_button_new_with_color
+gwy_color_button_set_color
+gwy_color_button_set_alpha
+gwy_color_button_get_color
+gwy_color_button_get_alpha
+gwy_color_button_set_use_alpha
+gwy_color_button_get_use_alpha
+gwy_color_button_set_title
+gwy_color_button_get_title
+<SUBSECTION Standard>
+GWY_COLOR_BUTTON
+GTK_IS_COLOR_BUTTON
+GTK_TYPE_COLOR_BUTTON
+gwy_color_button_get_type
+GWY_COLOR_BUTTON_CLASS
+GTK_IS_COLOR_BUTTON_CLASS
+GWY_COLOR_BUTTON_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwyvruler</FILE>
 <TITLE>GwyVRuler</TITLE>
 GwyVRuler
@@ -506,6 +531,8 @@ GWY_STOCK_FIT_TRIANGLE
 GWY_STOCK_FIX_ZERO
 GWY_STOCK_FFT
 GWY_STOCK_GRAINS
+GWY_STOCK_GRAINS_GRAPH
+GWY_STOCK_GRAINS_WATER
 GWY_STOCK_GRAPH
 GWY_STOCK_GRAPH_GAUSS
 GWY_STOCK_GRAPH_HALFGAUSS
@@ -525,6 +552,7 @@ GWY_STOCK_PROFILE
 GWY_STOCK_ROTATE
 GWY_STOCK_SCALE
 GWY_STOCK_SHADER
+GWY_STOCK_SPOT_REMOVE
 GWY_STOCK_STAT_QUANTITIES
 GWY_STOCK_SUBSCRIPT
 GWY_STOCK_SUPERSCRIPT

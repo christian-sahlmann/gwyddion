@@ -1,0 +1,128 @@
+<!-- ##### SECTION Title ##### -->
+GwyColorButton
+
+<!-- ##### SECTION Short_Description ##### -->
+A color displaying button launching GtkColorSelectionDialog
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+This is GtkColorButton widget backported from Gtk+-2.4.  It will be removed
+at some unspecified point in the future when Gtk+-2.4 become common.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO P_ ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### STRUCT GwyColorButtonPrivate ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@gc: 
+@drawing_area: 
+@cs_dialog: 
+@title: 
+@color: 
+@alpha: 
+@use_alpha: 
+
+<!-- ##### FUNCTION gwy_color_button_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_color_button_new_with_color ##### -->
+<para>
+
+</para>
+
+@color: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_color_button_set_color ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@color: 
+
+
+<!-- ##### FUNCTION gwy_color_button_set_alpha ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@alpha: 
+
+
+<!-- ##### FUNCTION gwy_color_button_get_color ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@color: 
+
+
+<!-- ##### FUNCTION gwy_color_button_get_alpha ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_color_button_set_use_alpha ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@use_alpha: 
+
+
+<!-- ##### FUNCTION gwy_color_button_get_use_alpha ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_color_button_set_title ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@title: 
+
+
+<!-- ##### FUNCTION gwy_color_button_get_title ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@Returns: 
+
+

@@ -29,6 +29,7 @@
 
   <chapter>
     <title>General Widgets</title>
+    <xi:include href="xml/gwycolorbutton.xml"/>
     <xi:include href="xml/gwyruler.xml"/>
     <xi:include href="xml/gwyhruler.xml"/>
     <xi:include href="xml/gwyvruler.xml"/>

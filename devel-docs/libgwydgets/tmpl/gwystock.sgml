@@ -94,6 +94,20 @@ The "Grains" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_GRAINS_GRAPH ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAINS_WATER ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_GRAPH ##### -->
 <para>
 The "Graph" stock icon.
@@ -242,6 +256,13 @@ The "Scale" stock icon.
 <para>
 The "Shader" stock icon.
 <inlinegraphic fileref="gwy_shader-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_SPOT_REMOVE ##### -->
+<para>
+
 </para>
 
 
