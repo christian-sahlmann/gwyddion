@@ -132,31 +132,34 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
 					  gint locate_steps, gint locate_thresh, gdouble locate_dropsize,
 					  gint wshed_steps, gdouble wshed_dropsize)
 {
-    GwyDataField *min, *water;
+    GwyDataField *min, *water, *mark_dfield;
     gint i;
 
     min = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
     water = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
+    mark_dfield = gwy_serializable_duplicate(data_field);
     
     /*odrop*/
     for (i=0; i<locate_steps; i++)
     {
-	    drop_step(data_field, water, locate_dropsize);
+	    drop_step(mark_dfield, water, locate_dropsize);
     }
     threshold_drops(water, locate_thresh);
 
     drop_minima(water, min, locate_thresh);
 
     /*owatershed*/
+    gwy_data_field_copy(data_field, mark_dfield);
     for (i=0; i<wshed_steps; i++)
     {
-	    wdrop_step(data_field, min, water, grain_field, wshed_dropsize); 
+	    wdrop_step(mark_dfield, min, water, grain_field, wshed_dropsize); 
     }
     
     /*mark_grain_boundaries(water_field, grain_field);*/
 
     g_object_unref(min);
     g_object_unref(water);
+    g_object_unref(mark_dfield);
 
 }
 
@@ -308,13 +311,13 @@ step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow)
     if (*rrow<(yres-1)) c = data_field->data[*rcol + xres*(*rrow+1)]; else c = -G_MAXDOUBLE;
     if (*rrow>0)        d = data_field->data[*rcol + xres*(*rrow-1)]; else d = -G_MAXDOUBLE;
 				    
-    v = data_field->data[(gint)(rcol + xres*(*rrow))];
+    v = data_field->data[(gint)(*rcol + xres*(*rrow))];
 
     if (v>=a && v>=b && v>=c && v>=d) {return 1;}
-    else if (a>=v && a>=b && a>=c && a>=d) {*rcol++; return 0;}
-    else if (b>=v && b>=a && b>=c && b>=d) {*rcol--; return 0;}
-    else if (c>=v && c>=b && c>=a && c>=d) {*rrow++; return 0;}
-    else {*rrow--; return 0;}
+    else if (a>=v && a>=b && a>=c && a>=d) {*rcol+=1; return 0;}
+    else if (b>=v && b>=a && b>=c && b>=d) {*rcol-=1; return 0;}
+    else if (c>=v && c>=b && c>=a && c>=d) {*rrow+=1; return 0;}
+    else {*rrow-=1; return 0;}
     
     return 0;
 }
@@ -378,15 +381,17 @@ drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize
 
     for (i=0; i<(xres*yres); i++)
     {
-	retval = 0;
-	row = (gint)floor((gdouble)i/(gdouble)xres); 
-	col = i - xres*row;
-	do {
-	    retval = step_by_one(data_field, &col, &row);
-	} while (retval==0);
+    	retval = 0;
+    	row = (gint)floor((gdouble)i/(gdouble)xres); 
+    	col = i - xres*row;
+        if (col==0 || row==0 || col==(xres-1) || row==(yres-1)) continue;
+        
+    	do {
+    	    retval = step_by_one(data_field, &col, &row);
+    	} while (retval==0);
 	
-	water_field->data[i] += 1;
-	data_field->data[i] -= dropsize;
+    	water_field->data[i] += 1;
+    	data_field->data[i] -= dropsize;
 	
     }
 }
