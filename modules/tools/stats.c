@@ -302,9 +302,7 @@ dialog_update(GwyUnitoolState *state)
     gtk_label_set_text(GTK_LABEL(controls->skew), buffer);
     g_snprintf(buffer, sizeof(buffer), "%2.3e", kurtosis);
     gtk_label_set_text(GTK_LABEL(controls->kurtosis), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%2.3e", avg);
-    gtk_label_set_text(GTK_LABEL(controls->avg), buffer);
-
+    gwy_unitool_update_label(state->value_units, controls->avg, avg);
 
     if (!is_visible && !is_selected)
         return;

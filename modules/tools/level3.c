@@ -197,19 +197,9 @@ dialog_create(GwyUnitoolState *state)
 }
 
 static void
-update_value_label(GtkWidget *label, gdouble value)
-{
-    gchar buffer[24];
-
-    g_snprintf(buffer, sizeof(buffer), "%g", value);
-    gtk_label_set_text(GTK_LABEL(label), buffer);
-}
-
-static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
-    GwySIValueFormat *units;
     ToolControls *controls;
     GwyContainer *data;
     GwyDataField *dfield;
@@ -222,7 +212,6 @@ dialog_update(GwyUnitoolState *state,
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -235,12 +224,13 @@ dialog_update(GwyUnitoolState *state,
 
     for (i = 0; i < 6; i++) {
         if (i < 2*nselected) {
-            gwy_unitool_update_label(units, controls->coords[i], points[i]);
+            gwy_unitool_update_label(state->coord_units,
+                                     controls->coords[i], points[i]);
             if (i%2 == 0) {
                 val = gwy_unitool_get_z_average(dfield, points[i], points[i+1],
                                                 radius);
-                /* FIXME: get some units... */
-                update_value_label(controls->values[i/2], val);
+                gwy_unitool_update_label(state->value_units,
+                                         controls->values[i/2], val);
             }
         }
         else {
@@ -275,7 +265,6 @@ apply(GwyUnitoolState *state)
     ToolControls *controls;
     GwyDataViewLayer *layer;
     gdouble points[9], z[3], coeffs[3];
-    gdouble bx, by, c, det;
     gint i, radius;
 
     if (gwy_vector_layer_get_selection(state->layer, points) < 3)

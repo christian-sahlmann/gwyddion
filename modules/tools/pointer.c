@@ -176,31 +176,20 @@ dialog_create(GwyUnitoolState *state)
 }
 
 static void
-update_value_label(GtkWidget *label, gdouble value)
-{
-    gchar buffer[16];
-
-    g_snprintf(buffer, sizeof(buffer), "%g", value);
-    gtk_label_set_text(GTK_LABEL(label), buffer);
-}
-
-static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     GwyContainer *data;
     GwyDataField *dfield;
     ToolControls *controls;
-    GwySIValueFormat *units;
     GwyDataViewLayer *layer;
-    gdouble x, y, value, xy[2];
+    gdouble value, xy[2];
     gboolean is_visible, is_selected;
     gint radius;
 
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
@@ -213,12 +202,10 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     if (is_selected) {
-        x = xy[0];
-        y = xy[1];
-        gwy_unitool_update_label(units, controls->x, x);
-        gwy_unitool_update_label(units, controls->y, y);
-        value = gwy_unitool_get_z_average(dfield, x, y, radius);
-        update_value_label(controls->val, value);
+        gwy_unitool_update_label(state->coord_units, controls->x, xy[0]);
+        gwy_unitool_update_label(state->coord_units, controls->y, xy[1]);
+        value = gwy_unitool_get_z_average(dfield, xy[0], xy[1], radius);
+        gwy_unitool_update_label(state->value_units, controls->val, value);
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls->x), "");
