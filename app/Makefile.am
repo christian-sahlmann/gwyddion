@@ -7,7 +7,6 @@ libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
 libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
-libtools = tools/libtools.la
 
 appincludedir = $(includedir)/gwyddion/app
 
@@ -38,8 +37,7 @@ gwyddion_LDADD = \
 	$(libgwymodule) \
 	$(libgwyprocess) \
 	$(libgwydraw) \
-	$(libgwydgets) \
-	$(libtools)
+	$(libgwydgets)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\"  -DGWY_PLUGIN_DIR=\"$(gwyplugindir)\"

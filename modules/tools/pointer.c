@@ -22,9 +22,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include "tools.h"
 
 typedef struct {
     gboolean is_visible;  /* XXX: GTK_WIDGET_VISIBLE() returns BS? */
@@ -36,6 +36,10 @@ typedef struct {
     gchar *units;
 } PointerControls;
 
+static gboolean   module_register               (const gchar *name);
+/* TODO: remove gwy_, make it static */
+void              gwy_tool_pointer_use             (GwyDataWindow *data_window,
+                                                    GwyToolSwitchEvent reason);
 static GtkWidget* pointer_dialog_create            (GwyDataView *data_view);
 static void       pointer_selection_updated_cb     (void);
 static void       pointer_dialog_response_cb       (gpointer unused,
@@ -48,6 +52,37 @@ static PointerControls controls;
 static gulong updated_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *pointer_layer = NULL;
+
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "pointer",
+    "Pointer tool.",
+    "Yeti <yeti@physics.muni.cz>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2003",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyToolFuncInfo pointer_func_info = {
+        "pointer",
+        "gwy_pointer_measure",
+        "Read value under mouse cursor.",
+        gwy_tool_pointer_use,
+    };
+
+    gwy_tool_func_register(name, &pointer_func_info);
+
+    return TRUE;
+}
 
 void
 gwy_tool_pointer_use(GwyDataWindow *data_window,

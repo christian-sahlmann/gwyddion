@@ -1,32 +1,29 @@
 # @(#) $Id$
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
-libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
-libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
-libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
-libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
+tooldir = $(gwymoduledir)/tool
 
-noinst_LTLIBRARIES = libtools.la
+module_ldflags = -shared -Wl,-soname
 
-noinst_HEADERS = \
-	tools.h
+tool_PROGRAMS = \
+	crop.so \
+	level3.so \
+	pointer.so \
+	profile.so
 
-libtools_la_LDFLAGS = -static
-libtools_la_SOURCES = \
-	crop.c \
-	level3.c \
-	pointer.c \
-        profile.c
+crop_so_SOURCES = crop.c
+crop_so_LDFLAGS = $(module_ldflags),crop.so
 
-libtools_la_LIBADD = \
-	$(libgwyddion) \
-	$(libgwymodule) \
-	$(libgwyprocess) \
-	$(libgwydraw) \
-	$(libgwydgets)
+level3_so_SOURCES = level3.c
+level3_so_LDFLAGS = $(module_ldflags),level3.so
+
+pointer_so_SOURCES = pointer.c
+pointer_so_LDFLAGS = $(module_ldflags),pointer.so
+
+profile_so_SOURCES = profile.c
+profile_so_LDFLAGS = $(module_ldflags),profile.so
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\"
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
 
 clean-local:
 	rm -f core.* *~

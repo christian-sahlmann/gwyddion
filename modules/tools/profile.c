@@ -23,11 +23,11 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/file.h>
 #include <app/app.h>
-#include "tools.h"
 
 typedef struct {
     gboolean is_visible; 
@@ -39,6 +39,10 @@ typedef struct {
     gboolean separate;
 } ProfileControls;
 
+static gboolean   module_register               (const gchar *name);
+/* TODO: remove gwy_, make it static */
+void              gwy_tool_profile_use            (GwyDataWindow *data_window,
+                                                   GwyToolSwitchEvent reason);
 static GtkWidget* profile_dialog_create            (GwyDataView *data_view);
 static void       profile_do                       (void);
 static void       profile_selection_updated_cb    (void);
@@ -67,6 +71,37 @@ static GPtrArray *str = NULL;
 
 #define MAX_N_OF_PROFILES 3
 #define ROUND(x) ((gint)floor((x) + 0.5))
+
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "profile",
+    "Profile tool.",
+    "Petr Klapetek <petr@klapetek.cz>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2003",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyToolFuncInfo profile_func_info = {
+        "profile",
+        "gwy_graph",
+        "Extract profiles from data.",
+        gwy_tool_profile_use,
+    };
+
+    gwy_tool_func_register(name, &profile_func_info);
+
+    return TRUE;
+}
 
 void
 gwy_tool_profile_use(GwyDataWindow *data_window,

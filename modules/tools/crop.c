@@ -22,10 +22,10 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/app.h>
-#include "tools.h"
 
 typedef struct {
     gboolean is_visible;  /* XXX: GTK_WIDGET_VISIBLE() returns BS? */
@@ -38,6 +38,10 @@ typedef struct {
     gchar *units;
 } CropControls;
 
+static gboolean   module_register               (const gchar *name);
+/* TODO: remove gwy_, make it static */
+void              gwy_tool_crop_use             (GwyDataWindow *data_window,
+                                                 GwyToolSwitchEvent reason);
 static GtkWidget* crop_dialog_create            (GwyDataView *data_view);
 static void       crop_do                       (void);
 static void       crop_selection_finished_cb    (void);
@@ -51,6 +55,37 @@ static CropControls controls;
 static gulong finished_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *select_layer = NULL;
+
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "crop",
+    "Crop tool.",
+    "Yeti <yeti@physics.muni.cz>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2003",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyToolFuncInfo crop_func_info = {
+        "crop",
+        "gwy_crop",
+        "Crop data",
+        gwy_tool_crop_use,
+    };
+
+    gwy_tool_func_register(name, &crop_func_info);
+
+    return TRUE;
+}
 
 void
 gwy_tool_crop_use(GwyDataWindow *data_window,

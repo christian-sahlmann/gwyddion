@@ -24,7 +24,6 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include "tools/tools.h"
 #include "init.h"
 #include "file.h"
 #include "menu.h"
@@ -42,7 +41,7 @@ GtkWidget *gwy_app_main_window = NULL;
 
 static GList *current_data = NULL;
 static GList *current_graphs = NULL;
-static GwyToolUseFunc current_tool_use_func = NULL;
+static const gchar* current_tool = NULL;
 static gint untitled_no = 0;
 
 static const gchar *menu_list[] = {
@@ -51,11 +50,6 @@ static const gchar *menu_list[] = {
 
 static void       gwy_app_quit                (void);
 void              gwy_app_create_toolbox      (void);
-static GtkWidget* gwy_app_toolbar_append_tool (GtkWidget *toolbar,
-                                               GtkWidget *radio,
-                                               const gchar *stock_id,
-                                               const gchar *tooltip,
-                                               GwyToolUseFunc tool_use_func);
 static GtkWidget* gwy_app_toolbar_append_func (GtkWidget *toolbar,
                                                const gchar *stock_id,
                                                const gchar *tooltip,
@@ -65,7 +59,7 @@ static GtkWidget* gwy_app_toolbar_append_zoom (GtkWidget *toolbar,
                                                const gchar *tooltip,
                                                gint izoom);
 static void       gwy_app_use_tool_cb         (GtkWidget *unused,
-                                               GwyToolUseFunc tool_use_func);
+                                               const gchar *toolname);
 static void       gwy_app_zoom_set_cb         (gpointer data);
 static void       gwy_app_update_toolbox_state(GwyMenuSensitiveData *sens_data);
 static gint       compare_data_window_data_cb (GwyDataWindow *window,
@@ -78,8 +72,11 @@ int
 main(int argc, char *argv[])
 {
     const gchar *module_dirs[] = {
+        GWY_MODULE_DIR ,
         GWY_MODULE_DIR "/file",
         GWY_MODULE_DIR "/process",
+        GWY_MODULE_DIR "/tool",
+        GWY_MODULE_DIR "/graph",
         NULL
     };
     gchar *config_file;
@@ -116,7 +113,7 @@ gwy_app_quit(void)
 void
 gwy_app_create_toolbox(void)
 {
-    GtkWidget *window, *vbox, *toolbar, *menu, *grp;
+    GtkWidget *window, *vbox, *toolbar, *menu;
     GtkAccelGroup *accel_group;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -187,29 +184,8 @@ gwy_app_create_toolbox(void)
                                 _("Shade data"), "shade");
 
     /***************************************************************/
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
-                                GTK_ORIENTATION_HORIZONTAL);
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
-                              GTK_ICON_SIZE_BUTTON);
+    toolbar = gwy_build_tool_toolbar(G_CALLBACK(gwy_app_use_tool_cb));
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-
-    grp = gwy_app_toolbar_append_tool(toolbar, NULL, GWY_STOCK_NONE,
-                                      _("No tool"),
-                                      NULL);
-    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_POINTER_MEASURE,
-                                _("Read values under mouse cursor"),
-                                gwy_tool_pointer_use);
-    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_CROP,
-                                _("Crop data"),
-                                gwy_tool_crop_use);
-    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_FIT_TRIANGLE,
-                                _("Fit plane using three points"),
-                                gwy_tool_level3_use);
-    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_GRAPH,
-                                _("Extract profile"),
-                                gwy_tool_profile_use);
 
     /***************************************************************/
     gtk_widget_show_all(window);
@@ -259,8 +235,8 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     else
         current_data = g_list_prepend(current_data, window);
     /* FIXME: this calls the use function a little bit too often */
-    if (current_tool_use_func)
-        current_tool_use_func(window, GWY_TOOL_SWITCH_WINDOW);
+    if (current_tool)
+        gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
 
     if (update_state)
         gwy_app_update_toolbox_state(&sens_data);
@@ -287,8 +263,8 @@ gwy_app_data_window_remove(GwyDataWindow *window)
         return;
     }
 
-    if (current_tool_use_func)
-        current_tool_use_func(NULL, GWY_TOOL_SWITCH_WINDOW);
+    if (current_tool)
+        gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
     gwy_app_update_toolbox_state(&sens_data);
 }
 
@@ -538,27 +514,6 @@ gwy_app_data_window_foreach(GFunc func,
 }
 
 static GtkWidget*
-gwy_app_toolbar_append_tool(GtkWidget *toolbar,
-                            GtkWidget *radio,
-                            const gchar *stock_id,
-                            const gchar *tooltip,
-                            GwyToolUseFunc tool_use_func)
-{
-    GtkWidget *icon;
-
-    g_return_val_if_fail(GTK_IS_TOOLBAR(toolbar), NULL);
-    g_return_val_if_fail(stock_id, NULL);
-    g_return_val_if_fail(tooltip, NULL);
-
-    icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
-    return gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
-                                      GTK_TOOLBAR_CHILD_RADIOBUTTON, radio,
-                                      stock_id, tooltip, NULL, icon,
-                                      GTK_SIGNAL_FUNC(gwy_app_use_tool_cb),
-                                      tool_use_func);
-}
-
-static GtkWidget*
 gwy_app_toolbar_append_func(GtkWidget *toolbar,
                             const gchar *stock_id,
                             const gchar *tooltip,
@@ -606,21 +561,21 @@ gwy_app_toolbar_append_zoom(GtkWidget *toolbar,
 
 static void
 gwy_app_use_tool_cb(GtkWidget *unused,
-                    GwyToolUseFunc tool_use_func)
+                    const gchar *toolname)
 {
     GwyDataWindow *data_window;
 
-    gwy_debug("%s: %p", __FUNCTION__, tool_use_func);
+    gwy_debug("%s: %s", __FUNCTION__, toolname ? toolname : "NONE");
     /* don't catch deactivations */
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(unused)))
         return;
-    if (current_tool_use_func)
-        current_tool_use_func(NULL, GWY_TOOL_SWITCH_TOOL);
-    current_tool_use_func = tool_use_func;
-    if (tool_use_func) {
+    if (current_tool)
+        gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_TOOL);
+    current_tool = toolname;
+    if (toolname) {
         data_window = gwy_app_data_window_get_current();
         if (data_window)
-            current_tool_use_func(data_window, GWY_TOOL_SWITCH_TOOL);
+            gwy_tool_func_use(current_tool, data_window, GWY_TOOL_SWITCH_TOOL);
     }
 }
 
