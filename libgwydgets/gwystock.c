@@ -120,6 +120,7 @@ guess_pixmap_path(void)
     }
     g_free(p);
 
+#ifndef G_OS_WIN32
     /* try GWY_PIXMAP_DIR, try it after the previous ones, so an uninstalled
      * version gets its own directory, not the system one */
     gwy_debug("Trying pixmap path: %s", GWY_PIXMAP_DIR);
@@ -127,6 +128,7 @@ guess_pixmap_path(void)
         gwy_debug("Icon path (from GWY_PIXMAP_DIR): %s", GWY_PIXMAP_DIR);
         return g_strdup(GWY_PIXMAP_DIR);
     }
+#endif /* no G_OS_WIN32 */
 
     /* as last resort, try current directory */
     p = g_get_current_dir();
