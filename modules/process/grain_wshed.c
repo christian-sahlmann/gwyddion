@@ -41,6 +41,7 @@ typedef struct {
 } WshedArgs;
 
 typedef struct {
+    GtkWidget *dialog;
     GtkWidget *view;
     GtkObject *locate_steps;
     GtkObject *locate_thresh;
@@ -69,19 +70,20 @@ static void        wshed_dialog_update_values   (WshedControls *controls,
                                                  WshedArgs *args);
 static void        preview                      (WshedControls *controls,
                                                  WshedArgs *args);
-static void        ok                           (WshedControls *controls,
+static gboolean    wshed_ok                     (WshedControls *controls,
                                                  WshedArgs *args,
                                                  GwyContainer *data);
-static void        mask_process                 (GwyDataField *dfield,
+static gboolean    run_noninteractive           (WshedArgs *args,
+                                                 GwyContainer *data);
+static gboolean    mask_process                 (GwyDataField *dfield,
                                                  GwyDataField *maskfield,
-                                                 WshedArgs *args);
+                                                 WshedArgs *args,
+                                                 GtkWidget *wait_window);
 static void        wshed_load_args              (GwyContainer *container,
                                                  WshedArgs *args);
 static void        wshed_save_args              (GwyContainer *container,
                                                  WshedArgs *args);
 static void        wshed_sanitize_args          (WshedArgs *args);
-static void        run_noninteractive           (WshedArgs *args,
-                                                 GwyContainer *data);
 
 WshedArgs wshed_defaults = {
     10,
@@ -98,7 +100,7 @@ static GwyModuleInfo module_info = {
     "wshed_threshold",
     N_("Mark grains by watershed algorithm"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.4.1",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -127,23 +129,21 @@ static gboolean
 wshed(GwyContainer *data, GwyRunType run)
 {
     WshedArgs args;
-    gboolean ook = FALSE;
+    gboolean ok = FALSE;
 
     g_assert(run & WSHED_RUN_MODES);
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = wshed_defaults;
     else
         wshed_load_args(gwy_app_settings_get(), &args);
-    if (run == GWY_RUN_NONINTERACTIVE || run == GWY_RUN_WITH_DEFAULTS) {
-        run_noninteractive(&args, data);
-        ook = TRUE;
-    }
+    if (run == GWY_RUN_NONINTERACTIVE || run == GWY_RUN_WITH_DEFAULTS)
+        ok = run_noninteractive(&args, data);
     else if (run == GWY_RUN_MODAL) {
-        ook = wshed_dialog(&args, data);
+        ok = wshed_dialog(&args, data);
         wshed_save_args(gwy_app_settings_get(), &args);
     }
 
-    return ook;
+    return ok;
 }
 
 
@@ -152,8 +152,10 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
 {
     GtkWidget *dialog, *table, *label, *spin;
     WshedControls controls;
-    enum { RESPONSE_RESET = 1,
-           RESPONSE_PREVIEW = 2 };
+    enum {
+        RESPONSE_RESET = 1,
+        RESPONSE_PREVIEW = 2
+    };
     gint response;
     gdouble zoomval;
     GtkObject *layer;
@@ -168,6 +170,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 2);
 
@@ -186,16 +189,14 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                                              "/0/data"));
 
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
-                zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
-    else zoomval = 400.0/(gdouble)gwy_data_field_get_yres(dfield);
+        zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
+    else
+        zoomval = 400.0/(gdouble)gwy_data_field_get_yres(dfield);
 
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view,
-                       FALSE, FALSE, 4);
-
-    gtk_box_pack_start(GTK_BOX(hbox), table,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
 
 
     label = gtk_label_new(NULL);
@@ -265,8 +266,6 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
             break;
 
             case GTK_RESPONSE_OK:
-            save_mask_color(controls.color_button, data);
-            ok(&controls, args, data);
             break;
 
             case RESPONSE_RESET:
@@ -284,10 +283,12 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
+    save_mask_color(controls.color_button, data);
     wshed_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
+    wshed_ok(&controls, args, data);
 
-    return TRUE;
+    return controls.computed;
 }
 
 static void
@@ -397,97 +398,81 @@ preview(WshedControls *controls,
 
     }
 
-    args->locate_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_steps));
-    args->locate_thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_thresh));
-    args->locate_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_dropsize));
-    args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_steps));
-    args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_dropsize));
+    args->locate_steps
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_steps));
+    args->locate_thresh
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_thresh));
+    args->locate_dropsize
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_dropsize));
+    args->wshed_steps
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_steps));
+    args->wshed_dropsize
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_dropsize));
 
 
-    mask_process(dfield, maskfield, args);
-    controls->computed = TRUE;
+    controls->computed = mask_process(dfield, maskfield, args,
+                                      controls->dialog);
 
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    if (controls->computed)
+        gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 
 }
 
-static void
-ok(WshedControls *controls,
-   WshedArgs *args,
-   GwyContainer *data)
+static gboolean
+wshed_ok(WshedControls *controls,
+         WshedArgs *args,
+         GwyContainer *data)
 {
+    GwyDataField *dfield;
+    GObject *maskfield;
 
-    GwyDataField *dfield, *maskfield;
+    if (controls->computed) {
+        maskfield = gwy_container_get_object_by_name(controls->mydata,
+                                                     "/0/mask");
+        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
+        return TRUE;
+    }
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                  "/0/mask"));
-        gwy_data_field_resample(maskfield,
-                               gwy_data_field_get_xres(dfield),
-                               gwy_data_field_get_yres(dfield),
-                               GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield);
-    }
-    else
-    {
-        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
-        g_object_unref(maskfield);
-    }
-
-    if (controls->computed == FALSE)
-    {
-        wshed_dialog_update_values(controls, args);
-        mask_process(dfield, maskfield, args);
+    maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
+    if (mask_process(dfield, GWY_DATA_FIELD(maskfield), args,
+                     GTK_WIDGET(gwy_app_data_window_get_current()))) {
+        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         controls->computed = TRUE;
     }
-    else
-    {
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/mask"));
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
-    }
+    g_object_unref(maskfield);
 
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    return controls->computed;
 }
 
-static void
+static gboolean
 run_noninteractive(WshedArgs *args, GwyContainer *data)
 {
-    GwyDataField *dfield, *maskfield;
+    GwyDataField *dfield;
+    GObject *maskfield;
+    gboolean computed = FALSE;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                  "/0/mask"));
-        gwy_data_field_resample(maskfield,
-                               gwy_data_field_get_xres(dfield),
-                               gwy_data_field_get_yres(dfield),
-                               GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield);
+    maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
+    if (mask_process(dfield, GWY_DATA_FIELD(maskfield), args,
+                     GTK_WIDGET(gwy_app_data_window_get_current()))) {
+        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
+        computed = TRUE;
     }
-    else
-    {
-        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
-        g_object_unref(maskfield);
+    g_object_unref(maskfield);
 
-    }
-
-    mask_process(dfield, maskfield, args);
+    return computed;
 }
 
-static void
-mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args)
+static gboolean
+mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
+             GtkWidget *wait_window)
 {
     gdouble max, min;
     GwyWatershedStatus status;
+    GwyWatershedStateType oldstate = -1;
 
     max = gwy_data_field_get_max(dfield);
     min = gwy_data_field_get_min(dfield);
@@ -502,9 +487,8 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args)
                                          FALSE, 0);
     */
     status.state = GWY_WSHED_INIT;
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
-    do
-    {
+    gwy_app_wait_start(wait_window, _("Initializing"));
+    do {
         gwy_data_field_grains_watershed_iteration(dfield, maskfield,
                                          &status,
                                          args->locate_steps,
@@ -515,30 +499,34 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args)
                                          FALSE, 0);
 
         if (status.state == GWY_WSHED_MIN) {
-            gwy_app_wait_set_message("Finding minima...");
-            if (!gwy_app_wait_set_fraction(0.0)) break;
+            gwy_app_wait_set_message(_("Finding minima"));
+            if (!gwy_app_wait_set_fraction(0.0))
+                  break;
         }
         else if (status.state == GWY_WSHED_LOCATE) {
-            gwy_app_wait_set_message("Location...");
-            if (!gwy_app_wait_set_fraction((gdouble)status.internal_i/(gdouble)args->locate_steps)) break;
+            if (status.state != oldstate)
+                gwy_app_wait_set_message(_("Locating"));
+            if (!gwy_app_wait_set_fraction((gdouble)status.internal_i
+                                           /(gdouble)args->locate_steps))
+                break;
         }
         else if (status.state == GWY_WSHED_WSHED) {
-            gwy_app_wait_set_message("Watershed...");
-            if (!gwy_app_wait_set_fraction((gdouble)status.internal_i/(gdouble)args->wshed_steps)) break;
+            if (status.state != oldstate)
+                gwy_app_wait_set_message(_("Watershed"));
+            if (!gwy_app_wait_set_fraction((gdouble)status.internal_i
+                                           /(gdouble)args->wshed_steps))
+                break;
         }
         else if (status.state == GWY_WSHED_MARK) {
-            gwy_app_wait_set_message("Marking boundaries...");
-            if (!gwy_app_wait_set_fraction(0.0)) break;
+            gwy_app_wait_set_message(_("Marking boundaries"));
+            if (!gwy_app_wait_set_fraction(0.0))
+                break;
         }
-        else {
-            gwy_app_wait_set_message("Finished.");
-            if (!gwy_app_wait_set_fraction(0.0)) break;
-        }
-
-
+        oldstate = status.state;
     } while (status.state != GWY_WSHED_FINISHED);
-    gwy_app_wait_finish();
 
+    gwy_app_wait_finish();
+    return status.state == GWY_WSHED_FINISHED;
 }
 
 static const gchar *locate_steps_key = "/module/mark_wshed/locate_steps";
