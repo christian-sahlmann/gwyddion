@@ -1340,7 +1340,8 @@ gwy_data_field_get_max(GwyDataField *a)
  *
  * Finds maximum value in a rectangular part of a data field.
  *
- * Returns: The maximum value.
+ * Returns: The maximum value, and undefined value (currently -%G_MAXDOUBLE)
+ *          for zero @width or @height.
  *
  * Since: 1.2:
  **/
@@ -1354,10 +1355,12 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), max);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width > 0 && height > 0
+                         && width >= 0 && height >= 0
                          && col + width <= dfield->xres
                          && row + height <= dfield->yres,
                          max);
+    if (!width || !height)
+        return max;
 
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
@@ -1422,7 +1425,8 @@ gwy_data_field_get_min(GwyDataField *a)
  *
  * Finds minimum value in a rectangular part of a data field.
  *
- * Returns: The minimum value.
+ * Returns: The minimum value, and undefined value (currently %G_MAXDOUBLE)
+ *          for zero @width or @height.
  *
  * Since 1.2.
  **/
@@ -1436,10 +1440,12 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), min);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width > 0 && height > 0
+                         && width >= 0 && height >= 0
                          && col + width <= dfield->xres
                          && row + height <= dfield->yres,
                          min);
+    if (!width || !height)
+        return min;
 
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
@@ -1516,7 +1522,7 @@ gwy_data_field_area_get_sum(GwyDataField *dfield,
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), sum);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width > 0 && height > 0
+                         && width >= 0 && height >= 0
                          && col + width <= dfield->xres
                          && row + height <= dfield->yres,
                          sum);
@@ -1647,15 +1653,14 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
     gint i, j;
     gdouble sum = 0.0;
 
-    if (width == 0 || height == 0)
-        return sum;
-
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), sum);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width > 1 && height > 1
+                         && width >= 0 && height >= 0
                          && col + width <= dfield->xres
                          && row + height <= dfield->yres,
                          sum);
+    if (!width || !height)
+        return sum;
 
     for (i = 0; i < height-1; i++) {
         for (j = 0; j < width-1; j++)
@@ -1738,10 +1743,12 @@ gwy_data_field_area_get_rms(GwyDataField *dfield,
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width > 1 && height > 1
+                         && width >= 0 && height >= 0
                          && col + width <= dfield->xres
                          && row + height <= dfield->yres,
                          rms);
+    if (!width || !height)
+        return rms;
 
     sum = gwy_data_field_area_get_sum(dfield, col, row, width, height);
     datapos = dfield->data + row*dfield->xres + col;
@@ -2274,44 +2281,64 @@ gwy_data_field_area_fit_plane(GwyDataField *dfield,
     gdouble sumsi = 0.0;
     gdouble sumsixi = 0.0;
     gdouble sumsiyi = 0.0;
-    gdouble bx, by;
+    gdouble a, bx, by;
     gdouble *datapos;
     gint i, j;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     g_return_if_fail(col >= 0 && row >= 0
-                     && width > 1 && height > 1
+                     && width >= 0 && height >= 0
                      && col + width <= dfield->xres
                      && row + height <= dfield->yres);
 
-    sumxi = (width - 1.0)/2;
-    sumyi = (height - 1.0)/2;
-    sumxixi = (2.0*width - 1.0)*(width - 1.0)/6;
-    sumyiyi = (2.0*height - 1.0)*(height - 1.0)/6;
-
-    datapos = dfield->data + row*dfield->xres + col;
-    for (i = 0; i < height; i++) {
-        gdouble *drow = datapos + i*dfield->xres;
-
-        for (j = 0; j < width; j++) {
-            sumsi += drow[j];
-            sumsixi += drow[j]*j;
-            sumsiyi += drow[j]*i;
-        }
+    /* try to return something reasonable even in degenerate cases */
+    if (!width || !height)
+        a = bx = by = 0.0;
+    else if (height == 1 && width == 1) {
+        a = dfield->data[row*dfield->xres + col];
+        bx = by = 0.0;
     }
-    sumsi /= width*height;
-    sumsixi /= width*height;
-    sumsiyi /= width*height;
+    else {
+        sumxi = (width - 1.0)/2;
+        sumyi = (height - 1.0)/2;
+        sumxixi = (2.0*width - 1.0)*(width - 1.0)/6;
+        sumyiyi = (2.0*height - 1.0)*(height - 1.0)/6;
 
-    bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
-    by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
+        datapos = dfield->data + row*dfield->xres + col;
+        for (i = 0; i < height; i++) {
+            gdouble *drow = datapos + i*dfield->xres;
+
+            for (j = 0; j < width; j++) {
+                sumsi += drow[j];
+                sumsixi += drow[j]*j;
+                sumsiyi += drow[j]*i;
+            }
+        }
+        sumsi /= width*height;
+        sumsixi /= width*height;
+        sumsiyi /= width*height;
+
+        if (width == 1)
+            bx = 0.0;
+        else
+            bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
+
+        if (height == 1)
+            by = 0.0;
+        else
+            by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
+
+        a = sumsi - bx*sumxi - by*sumyi;
+        bx *= width/dfield->xreal;
+        by *= height/dfield->yreal;
+    }
 
     if (pa)
-        *pa = sumsi - bx*sumxi - by*sumyi;
+        *pa = a;
     if (pbx)
-        *pbx = bx*width/dfield->xreal;
+        *pbx = bx;
     if (pby)
-        *pby = by*height/dfield->yreal;
+        *pby = by;
 }
 
 /**
