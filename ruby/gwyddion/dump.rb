@@ -16,6 +16,7 @@ module Gwyddion
 
 		def initialize( filename= nil)
 			super()
+			@DATA_CLASS= Array
 			self.read filename if filename
 		end 
 
@@ -26,11 +27,20 @@ module Gwyddion
 				self[ fk]= self[ fk].send( v) if v and self.key? fk 
 			end 
 		end 
+		def unpack( bytestr) 
+			bytestr.unpack "d*" 
+		end 
+		def pack( array) 
+			array.pack "d*" 
+		end 
+		def reshape(a, w, h)
+			a # will possibly do something in future or in subclasses
+		end 
 		
 		public
 		# ===Read a Gwyddion plug-in proxy dump file.
 		#
-		# The file is returned as a dictionary of dump key, value pairs.
+		# The file is returned as a Hash subclass of dump key, value pairs.
 		#
 		# Data fields are packed into dictionaries with following keys (not all has to be present):
 		# * `xres', x-resolution (number of samples),
@@ -53,13 +63,15 @@ module Gwyddion
 						if c== L_BRACKET
 							base= $1
 							convert! base # known data types, incl. xres & yres
-							n= self[ base+ '/xres']* self[ base+ '/yres']
-							a= io.read( n* SIZE_OF_DOUBLE).unpack( "d#{n}") # network byte order would be better for portability!
+							w, h= self[ base+ '/xres'], self[ base+ '/yres']
+							n= w* h
+							a= unpack( io.read( n* SIZE_OF_DOUBLE))
+							reshape a, w, h
 							raise "Invalid file format" unless io.gets()== "]]\n"
 							self[ base]= a
 						else 
 							io.ungetc c
-							self[ $1]= "["  # does this make sense?
+							self[ $1]= '['
 						end
 					when LINE
 						self[ $1]= $2
@@ -74,26 +86,39 @@ module Gwyddion
 			
 		# ===Write a Gwyddion plug-in proxy dump file.
 		#
-		# The dictionary to write is expected to follow the same conventions as
+		# The Hash to write is expected to follow the same conventions as
 		# those returned by read(), please see its description for more.
 		#
 		# Exceptions, caused by fatal errors, are not handled -- it is up to
 		# caller to eventually handle them.
 		def write( filename= @filename)			
 			File.open( filename, 'wb') do |io|
-				data, desc= self.to_a.partition{| k, v| Array===v}
-				for v in desc 
+				data, desc= self.to_a.partition{| k, v| @DATA_CLASS===v}
+				for v in desc.sort
 					io.puts '%s=%s' % v	
 				end
 				for k, v in data
-					io.printf "%s=[\n[" % k
-					io.write v.pack( 'd*')
+					io.write "%s=[\n[" % k
+					io.write pack( v)
 					io.puts ']]'
 				end
 			end
 			@filename= filename
 		end
 		
+	end
+	
+	class DumpNArray < Dump
+		def initialize( *arg)
+			super
+			@DATA_CLASS= NArray
+		end 
+		
+		private
+		def unpack( bytestr) NArray.to_na bytestr, Float end 
+		def pack( narray) narray.to_s end 
+		def reshape( a, w, h) a.reshape! w, h end 
+			
 	end
 	
 end
