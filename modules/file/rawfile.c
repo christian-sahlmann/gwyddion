@@ -679,8 +679,8 @@ rawfile_dialog_format_page(RawFileArgs *args,
                            RawFileControls *controls)
 {
     static const GwyEnum formats[] = {
-        { "_Binary data", RAW_BINARY },
         { "_Text data",   RAW_TEXT },
+        { "_Binary data", RAW_BINARY },
     };
     GtkWidget *vbox, *label, *table, *button, *entry, *omenu;
     GtkObject *adj;

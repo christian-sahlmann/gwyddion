@@ -41,7 +41,9 @@
  * It sets object data identified by @key for each menu item to its value.
  * Try to avoid -1 as an enum value.
  *
- * Returns: The newly created radio button group (a #GSList).
+ * Returns: The newly created radio button group (a #GSList).  Iterate over
+ *          the list and pack the widgets (the order is the same as in
+ *          @entries).
  *
  * Since: 1.2.
  **/
@@ -61,7 +63,9 @@ gwy_radio_buttons_create(const GwyEnum *entries,
     quark = g_quark_from_string(key);
 
     button = curbutton = NULL;
-    for (i = 0; i < nentries; i++) {
+    /* FIXME: this relies on undocumented GtkRadioButton behaviour;
+     * we assume it puts the items into the group in reverse order */
+    for (i = nentries-1; i >= 0; i--) {
         button = gtk_radio_button_new_with_mnemonic_from_widget
                                (GTK_RADIO_BUTTON(button), _(entries[i].name));
         g_object_set_qdata(G_OBJECT(button), quark,
