@@ -43,6 +43,8 @@ main(void)
     gwy_data_field_set_yreal(df, 4.1e-8);
     container = (GwyContainer*)gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", G_OBJECT(df));
+    gwy_container_set_string_by_name(container, "/meta/Created by",
+                                     "$Id$");
     buffer = gwy_serializable_serialize(G_OBJECT(container), buffer, &size);
 
     fh = fopen("test.gwy", "wb");
