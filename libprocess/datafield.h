@@ -81,9 +81,6 @@ void gwy_data_field_initialize(GwyDataField *a,
                                gdouble yreal,
                                gboolean nullme);
 
-/*free data field*/
-void gwy_data_field_free(GwyDataField *a);
-
 /*resample data field (change resolution)*/
 void gwy_data_field_resample(GwyDataField *a,
                              gint xres,

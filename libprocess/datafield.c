@@ -43,6 +43,7 @@ static GObject* gwy_data_field_duplicate         (GObject *object);
 /*static void     gwy_data_field_value_changed     (GObject *object);*/
 
 /*local functions*/
+static void     gwy_data_field_free              (GwyDataField *a);
 static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
                                                   GwyDataField *imag_field,
                                                   gdouble scale,
@@ -314,13 +315,7 @@ gwy_data_field_initialize(GwyDataField *a,
     a->si_unit_z = (GwySIUnit*)gwy_si_unit_new("m");
 }
 
-/**
- * gwy_data_field_free:
- * @a: A data field to be freed
- *
- * Frees GwyDataField
- **/
-void
+static void
 gwy_data_field_free(GwyDataField *a)
 {
     gwy_debug("");
