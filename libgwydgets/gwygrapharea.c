@@ -262,6 +262,8 @@ gwy_graph_area_expose(GtkWidget *widget,
     gwy_graph_area_draw_curves(widget);
     gwy_graph_area_draw_area(widget);
 
+    gtk_widget_queue_draw(GTK_WIDGET(area->lab));
+
     GTK_WIDGET_CLASS(parent_class)->expose_event(widget, event);
     return FALSE;
 }

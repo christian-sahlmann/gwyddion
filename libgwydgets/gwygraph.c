@@ -205,7 +205,18 @@ gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
 {
     gwy_debug("%s", __FUNCTION__);
 
+    gdouble *xdata, *ydata;
+    gint n, i;
+    
+    n = gwy_data_line_get_res(dataline);
+    
+    xdata = (gdouble *) g_malloc(n*sizeof(gdouble));
+    for (i=0; i<n; i++) xdata[i] = i*gwy_data_line_get_real(dataline)/(gdouble)n;
 
+    gwy_graph_add_datavalues(graph, xdata, dataline->data,
+                             n, label, NULL);
+
+    g_free(xdata);
 }
 
 void
@@ -328,6 +339,8 @@ void
 gwy_graph_clear(GwyGraph *graph)
 {
   gwy_graph_area_clear(graph->area);
+  graph->n_of_autocurves = 0;
+  graph->n_of_curves = 0;
 }
 
 void

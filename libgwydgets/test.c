@@ -50,6 +50,7 @@ main(int argc, char *argv[])
     GString *str1, *str2, *str3, *str4, *str5;
     GwyGraphAreaCurveParams par;
     GwyGraphAutoProperties prop;
+    GwyDataLine *dln;
 
     double xs[100];
     double ys[100];
@@ -113,6 +114,9 @@ main(int argc, char *argv[])
     gtk_layout_put(GTK_LAYOUT(area), foo, 10, 20);
     */
 
+  
+    dln = (GwyDataLine *) gwy_data_line_new(200, 200, 1);
+    
     str1 = g_string_new("parabola");
     str2 = g_string_new("kousek");
     str3 = g_string_new("sinus");
@@ -140,7 +144,7 @@ main(int argc, char *argv[])
     gwy_graph_add_datavalues(graph, xu, yu, 10, str4, &par);
     prop.is_line = 0;
     gwy_graph_set_autoproperties(graph, &prop);
-    gwy_graph_add_datavalues(graph, xv, yv, 20, str5, NULL);
+    gwy_graph_add_dataline(graph, dln, 0, str5, NULL);
     
     
     gtk_container_add (GTK_CONTAINER (window), graph);

@@ -430,6 +430,8 @@ gwy_graph_label_add_curve(GwyGraphLabel *label, GwyGraphAreaCurveParams *params)
     if (label->maxwidth < rect.width) label->maxwidth = rect.width + 30;
     label->maxheight += rect.height + 5;
     g_ptr_array_add(label->curve_params, (gpointer)(cparams));
+
+    gtk_widget_queue_draw(GTK_WIDGET(label));
 }
 
 void
