@@ -44,7 +44,7 @@ static gint file_menu_entry_compare    (GwyFileFuncInfo *a,
 
 static GHashTable *file_funcs = NULL;
 
-static const gsize bufsize = 1024;
+enum { bufsize = 1024 };
 
 /**
  * gwy_file_func_register:

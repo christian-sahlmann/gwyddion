@@ -34,7 +34,7 @@ static gint process_menu_entry_compare (GwyProcessFuncInfo *a,
 
 static GHashTable *process_funcs = NULL;
 
-static const gsize bufsize = 1024;
+enum { bufsize = 1024 };
 
 /**
  * gwy_process_func_register:

@@ -33,7 +33,7 @@ static gint graph_menu_entry_compare   (GwyGraphFuncInfo *a,
 
 static GHashTable *graph_funcs = NULL;
 
-static const gsize bufsize = 1024;
+enum { bufsize = 1024 };
 
 /**
  * gwy_graph_func_register:

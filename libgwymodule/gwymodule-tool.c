@@ -39,7 +39,7 @@ static gint tool_toolbar_item_compare      (GwyToolFuncInfo *a,
 
 static GHashTable *tool_funcs = NULL;
 
-static const gsize bufsize = 1024;
+enum { bufsize = 1024 };
 
 /**
  * gwy_tool_func_register:
