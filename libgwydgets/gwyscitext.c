@@ -247,7 +247,7 @@ gwy_sci_text_finalize(GObject *object)
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_SCI_TEXT(object));
 
-    sci_text = GWY_SCI_TEXT(object);
+
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }

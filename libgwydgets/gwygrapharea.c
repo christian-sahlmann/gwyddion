@@ -141,10 +141,11 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     widget_class->button_release_event = gwy_graph_area_button_release;
     widget_class->motion_notify_event = gwy_graph_area_motion_notify;
 
-    gwygrapharea_signals[SELECTED_SIGNAL] = g_signal_new ("gwygrapharea-selected",
+    klass->selected = NULL;
+    gwygrapharea_signals[SELECTED_SIGNAL] = g_signal_new ("selected",
                                                           G_TYPE_FROM_CLASS (klass),
                                                           G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                                                          G_STRUCT_OFFSET (GwyGraphAreaClass, gwygrapharea),
+                                                          G_STRUCT_OFFSET (GwyGraphAreaClass, selected),
                                                           NULL,
                                                           NULL,
                                                           g_cclosure_marshal_VOID__VOID,
@@ -499,6 +500,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
         area->selecting = 1;
         printf("Sel started\n");
+        gwy_graph_area_signal_selected(area);
         gtk_widget_queue_draw(widget);
     }    
 
@@ -526,7 +528,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             area->pointsdata->n = 0;
             printf("Points removed.\n");            
         }
-        
+        gwy_graph_area_signal_selected(area);
         
         gtk_widget_queue_draw(widget);
     }    
@@ -566,6 +568,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
         }
         printf("Sel: %d, %d finished.\n", area->seldata->scr_start, area->seldata->scr_end);
         area->selecting = 0;
+        gwy_graph_area_signal_selected(area);
         gtk_widget_queue_draw(widget);
     }
     
@@ -617,7 +620,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         area->cursordata->scr_point.j = y;
         area->cursordata->data_point.x = scr_to_data_x(widget, x);
         area->cursordata->data_point.y = scr_to_data_y(widget, y); 
-        printf("%f, %f\n", area->cursordata->data_point.x, area->cursordata->data_point.y);
+        gwy_graph_area_signal_selected(area);
     }
     
     if ((area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL) && area->selecting==1)
@@ -640,6 +643,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             area->seldata->data_end = 0;
         }
         printf("Sel: %d, %d\n", area->seldata->scr_start, area->seldata->scr_end);
+        gwy_graph_area_signal_selected(area);
         gtk_widget_queue_draw(widget);
     }
     

@@ -57,6 +57,8 @@ typedef enum {
 typedef struct {
    gdouble x;
    gdouble y;
+   char *x_unit;
+   char *y_unit;
 } GwyGraphDataPoint;
 
 typedef struct {
@@ -142,7 +144,7 @@ typedef struct {
 typedef struct {
      GtkLayoutClass parent_class;
 
-     void (* gwygrapharea) (GwyGraphArea *area);
+     void (* selected) (GwyGraphArea *area);
 } GwyGraphAreaClass;
 
 

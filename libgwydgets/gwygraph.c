@@ -436,8 +436,14 @@ gpointer
 gwy_graph_get_status_data(GwyGraph *graph, GwyGraphStatusType status)
 {
     if (graph->area->status==GWY_GRAPH_STATUS_PLAIN) return NULL;
-    else if (graph->area->status==GWY_GRAPH_STATUS_CURSOR) 
+    else if (graph->area->status==GWY_GRAPH_STATUS_CURSOR)
+    {
+        if (graph->has_x_unit) graph->area->cursordata->data_point.x_unit = graph->x_unit; 
+        else graph->area->cursordata->data_point.x_unit = NULL;
+        if (graph->has_y_unit) graph->area->cursordata->data_point.y_unit = graph->y_unit;
+        else graph->area->cursordata->data_point.y_unit = NULL;
         return (gpointer) (graph->area->cursordata);
+    }
     else if (graph->area->status==GWY_GRAPH_STATUS_XSEL || graph->area->status==GWY_GRAPH_STATUS_YSEL)
         return (gpointer) (graph->area->seldata);
     else if (graph->area->status==GWY_GRAPH_STATUS_POINTS)
