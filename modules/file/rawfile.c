@@ -37,6 +37,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/app.h>
 #include <app/settings.h>
@@ -150,6 +151,7 @@ typedef struct {
     GtkWidget *presetname;
     GtkWidget *preview;
     GtkWidget *do_preview;
+    GwyPalette *palette;
     RawFileArgs *args;
     RawFileFile *file;
 } RawFileControls;
@@ -488,6 +490,7 @@ rawfile_dialog(RawFileArgs *args,
     controls.dialog = dialog;
     controls.args = args;
     controls.file = file;
+    controls.palette = GWY_PALETTE(gwy_palette_new(NULL));
 
     vbox = GTK_DIALOG(dialog)->vbox;
 
@@ -561,6 +564,7 @@ rawfile_dialog(RawFileArgs *args,
             rawfile_save_list_of_presets
                 (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
             gtk_widget_destroy(dialog);
+            g_object_unref(controls.palette);
             case GTK_RESPONSE_NONE:
             return FALSE;
             break;
@@ -591,6 +595,7 @@ rawfile_dialog(RawFileArgs *args,
     } while (response != GTK_RESPONSE_OK);
     rawfile_save_list_of_presets
         (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
+    g_object_unref(controls.palette);
     gtk_widget_destroy(dialog);
 
     return dfield;
@@ -1364,13 +1369,28 @@ static void
 preview_cb(RawFileControls *controls)
 {
     GwyDataField *dfield;
+    GdkPixbuf *pixbuf, *pixbuf2;
+    gint xres, yres;
+    gdouble zoom;
 
     update_dialog_values(controls);
-    if ((dfield = rawfile_read_data_field(controls->dialog,
-                                          controls->args,
-                                          controls->file))) {
-        g_object_unref(dfield);
-    }
+    if (!(dfield = rawfile_read_data_field(controls->dialog,
+                                           controls->args,
+                                           controls->file)))
+        return;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    zoom = 120.0/MAX(xres, yres);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
+    gwy_pixfield_do(pixbuf, dfield, controls->palette);
+    pixbuf2 = gdk_pixbuf_scale_simple(pixbuf,
+                                      ceil(xres*zoom), ceil(yres*zoom),
+                                      GDK_INTERP_TILES);
+    gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf2);
+    g_object_unref(pixbuf2);
+    g_object_unref(pixbuf);
+    g_object_unref(dfield);
 }
 
 static void
