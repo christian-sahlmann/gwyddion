@@ -1,0 +1,37 @@
+
+0. Get the sutff.
+
+   MinGW & MSYS: http://www.mingw.org/
+   Gtk+ Runtime & Development: http://www.dropline.net/gtk/
+
+1. Installation.
+   Note: the order is very important.
+
+   Install MinGW to c:/mingw.
+   Install MSYS to c:/msys/1.0 (or whatever version it is).
+   In the postinstall setup, answer:
+       wish to continue: yes
+       have mingw: yes
+       where is mingw: c:/mingw
+   Running msys (the blue M icon) now should give a functional shell with
+   gcc, make, etc.
+
+   Install Gtk+ Runtime environment to c:/msys/1.0/local.
+   Install Gtk+ Development environment to c:/msys/1.0/local.
+
+   For some strange reason, libraries have to be in PATH too.
+   Open c:/msys/1.0/etc/profile in a text editor and change
+
+     if [ $MSYSTEM == MINGW32 ]; then
+       export PATH=".:/usr/local/bin:/mingw/bin:/bin:$PATH"
+     else
+       export PATH=".:/usr/local/bin:/bin:/mingw/bin:$PATH"
+     fi
+
+   to
+
+     if [ $MSYSTEM == MINGW32 ]; then
+       export PATH=".:/usr/local/bin:/usr/local/lib:/mingw/bin:/bin:$PATH"
+     else
+       export PATH=".:/usr/local/bin:/usr/local/lib:/bin:/mingw/bin:$PATH"
+     fi
