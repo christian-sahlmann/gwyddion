@@ -442,6 +442,26 @@ gwy_debug_gnu(const gchar *domain,
 }
 
 /**
+ * sgettext:
+ * @msgid: Message id to translate.  It MUST contain at least one `|'.
+ *
+ * Translate a message id containing disambiguating prefix ending with `|'.
+ *
+ * Returns: Translated message, or @msgid itself with all text up to the last
+ *          `|' removed if there is no translation.
+ *
+ * Since: 1.6
+ **/
+gchar*
+sgettext(const gchar *msgid)
+{
+    char *msgstr;
+
+    msgstr = gettext(msgid);
+    return (msgstr == msgid) ? strrchr(msgstr, '|') + 1 : msgstr;
+}
+
+/**
  * gwy_find_self_dir:
  * @dirname: A gwyddion directory name like "pixmaps" or "modules".
  *
