@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
@@ -224,6 +225,106 @@ gwy_data_field_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle,
         }
         _gwy_data_line_free(&l);
     }
+}
+
+/**
+ * gwy_data_field_area_fit_polynom:
+ * @dfield: A data field
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @row_degree: Degree of polynom to fit row-wise.
+ * @col_degree: Degree of polynom to fit column-wise.
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) to store the
+ *          coefficients to, or %NULL (a fresh array is allocated then).
+ *          The coefficients are stored by row, like data in a datafield.
+ *
+ * Fits a two-dimensional polynom to a part of a #GwyDataField.
+ *
+ * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
+ *          with coefficients.
+ *
+ * Since: 1.6
+ **/
+gdouble*
+gwy_data_field_area_fit_polynom(GwyDataField *dfield,
+                                gint col, gint row,
+                                gint width, gint height,
+                                gint row_degree, gint col_degree,
+                                gdouble *coeffs)
+{
+    gint r, c, i, j, size, xres, yres;
+    gdouble *data, *sums, *m;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+    g_return_val_if_fail(row_degree >= 0 && col_degree >= 0, NULL);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width > 0 && height > 0
+                         && col + width <= dfield->xres
+                         && row + height <= dfield->yres,
+                         NULL);
+
+    data = dfield->data;
+    xres = dfield->xres;
+    yres = dfield->yres;
+    size = (row_degree+1)*(col_degree+1);
+    if (!coeffs)
+        coeffs = g_new0(gdouble, size);
+    else
+        memset(coeffs, 0, size*sizeof(gdouble));
+
+    sums = g_new0(gdouble, (2*row_degree+1)*(2*col_degree+1));
+    for (r = row; r < row + height; r++) {
+        for (c = col; c < col + width; c++) {
+            gdouble ry = 1.0;
+            gdouble z = data[r*xres + c];
+
+            for (i = 0; i <= 2*row_degree; i++) {
+                gdouble cx = 1.0;
+
+                for (j = 0; j <= 2*col_degree; j++) {
+                    sums[i*(2*col_degree+1) + j] += cx*ry;
+                    cx *= c;
+                }
+                ry *= r;
+            }
+
+            ry = 1.0;
+            for (i = 0; i <= row_degree; i++) {
+                gdouble cx = 1.0;
+
+                for (j = 0; j <= col_degree; j++) {
+                    coeffs[i*(col_degree+1) + j] += cx*ry*z;
+                    cx *= c;
+                }
+                ry *= r;
+            }
+        }
+    }
+
+    m = g_new(gdouble, size*(size+1)/2);
+    for (i = 0; i < size; i++) {
+        gdouble *mrow = m + i*(i+1)/2;
+
+        for (j = 0; j < i; j++) {
+            gint pow_x, pow_y;
+
+            pow_x = i % (col_degree+1) + j % (col_degree+1);
+            pow_y = i/(col_degree+1) + j/(col_degree+1);
+            mrow[j] = sums[pow_y*(2*col_degree+1) + pow_x];
+        }
+    }
+
+     if (!gwy_math_choleski_decompose(size, m))
+        memset(coeffs, 0, size*sizeof(gdouble));
+    else
+        gwy_math_choleski_solve(size, m, coeffs);
+
+    g_free(m);
+    g_free(sums);
+
+    return coeffs;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -25,29 +25,38 @@
 
 G_BEGIN_DECLS
 
-void gwy_data_field_area_fit_plane (GwyDataField *dfield,
-                                    gint col,
-                                    gint row,
-                                    gint width,
-                                    gint height,
-                                    gdouble *pa,
-                                    gdouble *pbx,
-                                    gdouble *pby);
+void gwy_data_field_area_fit_plane       (GwyDataField *dfield,
+                                          gint col,
+                                          gint row,
+                                          gint width,
+                                          gint height,
+                                          gdouble *pa,
+                                          gdouble *pbx,
+                                          gdouble *pby);
 
-void gwy_data_field_plane_coeffs   (GwyDataField *a,
-                                    gdouble *ap,
-                                    gdouble *bp,
-                                    gdouble *cp);
+void gwy_data_field_plane_coeffs         (GwyDataField *a,
+                                          gdouble *ap,
+                                          gdouble *bp,
+                                          gdouble *cp);
 
-void gwy_data_field_plane_level    (GwyDataField *a,
-                                    gdouble ap,
-                                    gdouble bp,
-                                    gdouble cp);
+void gwy_data_field_plane_level          (GwyDataField *a,
+                                          gdouble ap,
+                                          gdouble bp,
+                                          gdouble cp);
 
-void gwy_data_field_plane_rotate   (GwyDataField *a,
-                                    gdouble xangle,
-                                    gdouble yangle,
-                                    GwyInterpolationType interpolation);
+void gwy_data_field_plane_rotate         (GwyDataField *a,
+                                          gdouble xangle,
+                                          gdouble yangle,
+                                          GwyInterpolationType interpolation);
+
+gdouble* gwy_data_field_area_fit_polynom (GwyDataField *dfield,
+                                          gint col,
+                                          gint row,
+                                          gint width,
+                                          gint height,
+                                          gint row_degree,
+                                          gint col_degree,
+                                          gdouble *coeffs);
 
 G_END_DECLS
 
