@@ -1960,39 +1960,39 @@ msgstr "Typ _waveletu:"
 #: modules/process/dwt.c:79 modules/process/dwtanisotropy.c:83
 #: modules/process/dwtcorrection.c:74 modules/process/dwtdenoise.c:86
 msgid "2D Discrete Wavelet Transform module"
-msgstr ""
+msgstr "2D diskrétní waveletová transformace"
 
 #: modules/process/dwt.c:95
 msgid "/_Integral Transforms/_2D DWT..."
-msgstr ""
+msgstr "/_Integrální transformace/_2D DWT..."
 
 #: modules/process/dwt.c:142
 msgid "DWT: Data must be square."
-msgstr ""
+msgstr "DWT: datové pole musí být čtvercové."
 
 #: modules/process/dwt.c:183
 msgid "2D DWT"
-msgstr ""
+msgstr "2D DWT"
 
 #: modules/process/dwtanisotropy.c:99
 msgid "/_Integral Transforms/_DWT anisotropy..."
-msgstr ""
+msgstr "/_Integrální transformace/_DWT detekce anisotropie..."
 
 #: modules/process/dwtanisotropy.c:142
 msgid "DWT_ANISOTROPY: Data must be square."
-msgstr ""
+msgstr "Detekce anisotropie: datové pole musí být čtvercové."
 
 #: modules/process/dwtanisotropy.c:198
 msgid "2D DWT_ANISOTROPY"
-msgstr ""
+msgstr "Detekce anisotropie"
 
 #: modules/process/dwtanisotropy.c:227
 msgid "X/Y ratio threshold:"
-msgstr ""
+msgstr "práh poměru X/Y:"
 
 #: modules/process/dwtanisotropy.c:236
 msgid "Low level exclude limit:"
-msgstr ""
+msgstr "Spodní limit rozkladu:"
 
 #: modules/process/dwtcorrection.c:90
 msgid "/_Integral Transforms/_DWT correction..."
@@ -2008,27 +2008,27 @@ msgstr ""
 
 #: modules/process/dwtdenoise.c:102
 msgid "/_Integral Transforms/_DWT denoise..."
-msgstr ""
+msgstr "/_Integrální transformace/__Odšumování pomocí DWT..."
 
 #: modules/process/dwtdenoise.c:149
 msgid "DWT_DENOISE: Data must be square."
-msgstr ""
+msgstr "Odšumování: datové pole musí být čtvercové."
 
 #: modules/process/dwtdenoise.c:187
 msgid "2D DWT_DENOISE"
-msgstr ""
+msgstr "Odšumování pomocí DWT"
 
 #: modules/process/dwtdenoise.c:264
 msgid "Universal"
-msgstr ""
+msgstr "Univerzální"
 
 #: modules/process/dwtdenoise.c:265
 msgid "Scale adaptive"
-msgstr ""
+msgstr "Frekvenčně adaptabilní"
 
 #: modules/process/dwtdenoise.c:266
 msgid "Scale and space adaptive"
-msgstr ""
+msgstr "Frekvenčně a lokálně adaptabilní"
 
 #: modules/process/edge.c:47
 msgid "Edge detection presentations"
@@ -3246,7 +3246,7 @@ msgstr "<b>Parametry</b>"
 #~ msgstr "Inicializace"
 
 #~ msgid "Iterating..."
-#~ msgstr "Probíhá výpočet..."
+#~ msgstr "robíhá výpočet..."
 
 #~ msgid ""
 #~ "Warning: Value is a different physical quantity\n"
