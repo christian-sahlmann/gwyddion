@@ -1,20 +1,30 @@
-1.8cvs20050209
+1.8cvs20050226
 
 1.9
 Application:
 - Startup time improved.
 
 Modules:
+- Assing AFM file import (new).
 - Mark, remove scars: Can remove negative scars too.
 - Edge detection: Experimental RMS, RMS Edge, and Local Nonlinearity filters
   were added.
 - Rotate: Preview showing wrong angle was fixed.
 - Presentation operations: Extract presentation was added.
+- Filter: Kuwahara filter was added.
+- Stats: Displays inclination angles too.
+- Rawfile: Warning message when adding a new preset was fixed, shows only
+           file basename in Info tab.
 
 Library:
 - libgwymodule: Public functions for obtaining module list and detailed module
   information.
-- libgwyprocess: Local rms filter.
+- libgwyprocess: Local rms filter, Kuwahara filter, local plane fitting
+  functions.
+- libgwydgets: Shader can focus and is keyboard-controllable.
+
+Other:
+- Build system fixes and clean-up
 
 
 1.8
