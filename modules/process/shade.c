@@ -50,12 +50,13 @@ static gboolean    shade                      (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    shade_dialog               (ShadeArgs *args);
 static void        shade_changed_cb           (ShadeArgs *args);
+static void        shade_dialog_update        (ShadeControls *controls,
+                                               ShadeArgs *args);
 static void        shade_load_args            (GwyContainer *container,
                                                ShadeArgs *args);
 static void        shade_save_args            (GwyContainer *container,
                                                ShadeArgs *args);
-static void        shade_dialog_update        (ShadeControls *controls,
-                                               ShadeArgs *args);
+static void        shade_sanitize_args        (ShadeArgs *args);
 
 
 ShadeArgs shade_defaults = {
@@ -222,8 +223,26 @@ shade_changed_cb(ShadeArgs *args)
 
 }
 
+static void
+shade_dialog_update(ShadeControls *controls,
+                    ShadeArgs *args)
+{
+    GwySphereCoords *sphere_coords;
+
+    sphere_coords = gwy_vector_shade_get_sphere_coords
+                        (GWY_VECTOR_SHADE(controls->gradsphere));
+    gwy_sphere_coords_set_value(sphere_coords, args->theta, args->phi);
+}
+
 static const gchar *theta_key = "/module/shade/theta";
 static const gchar *phi_key = "/module/shade/phi";
+
+static void
+shade_sanitize_args(ShadeArgs *args)
+{
+    args->theta = CLAMP(args->theta, 0.0, G_PI/2.0);
+    args->phi = CLAMP(args->phi, 0.0, 2.0*G_PI);
+}
 
 static void
 shade_load_args(GwyContainer *container,
@@ -231,10 +250,9 @@ shade_load_args(GwyContainer *container,
 {
     *args = shade_defaults;
 
-    if (gwy_container_contains_by_name(container, theta_key))
-        args->theta = gwy_container_get_double_by_name(container, theta_key);
-    if (gwy_container_contains_by_name(container, phi_key))
-        args->phi = gwy_container_get_double_by_name(container, phi_key);
+    gwy_container_gis_double_by_name(container, theta_key, &args->theta);
+    gwy_container_gis_double_by_name(container, phi_key, &args->phi);
+    shade_sanitize_args(args);
 }
 
 static void
@@ -243,16 +261,6 @@ shade_save_args(GwyContainer *container,
 {
     gwy_container_set_double_by_name(container, theta_key, args->theta);
     gwy_container_set_double_by_name(container, phi_key, args->phi);
-}
-
-static void
-shade_dialog_update(ShadeControls *controls,
-                    ShadeArgs *args)
-{
-    GwySphereCoords *sphere_coords;
-
-    sphere_coords = gwy_vector_shade_get_sphere_coords(GWY_VECTOR_SHADE(controls->gradsphere));
-    gwy_sphere_coords_set_value(sphere_coords, args->theta, args->phi);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
