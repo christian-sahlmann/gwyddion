@@ -161,7 +161,7 @@
          </para>
          <para>
             <menuchoice><guimenu>Data process</guimenu></menuchoice> menu is build automatically from all the modules available
-            at the Gwyddion modules durectory (depending on operating system). Modules are responsible for all the data processing,
+            at the Gwyddion modules directory (depending on operating system). Modules are responsible for all the data processing,
             so this menu item associates most of the commands you will need at analyzing your SPM data.
          </para>
           <para>
@@ -172,13 +172,18 @@
             <menuchoice><guimenu>Externs</guimenu></menuchoice> are commands that provide information about height field metadata
             (e. g. scanning speed, tip voltage, etc.) and information about the Gwyddion (About).
          </para>
+         <para>
+            Finally, you can find some rows of buttons in the main window. These buttons represent tools and some of the modules. 
+         </para>
        </section>
        <section>
          <title>Managing files</title>
          <para>
             Gwyddion uses its internal data format (.gwy) to store data. The main advantage of this format is fact, that it stores
             complete state of processing of concrete data, including selections and other tool and processing
-            fucntion settings. Therefore we recommned to use this format for saving processed files.
+            fucntion settings. Therefore we recommned to use this format for saving processed files. If you open our example files,
+            you can see that each one is plotted in different false color palette. This is direct consequence of the fact that Gwyddion
+            stores full state of the data window including its palette.
          </para>
          <para>
             Other data file formats can be handled with appropriate loading and saving modules or plugins. Currently, only simple
@@ -188,7 +193,8 @@
          </para>
          <para>
             We expect that much more file IO modules and plugins will be written soon, depending on demands and file format
-            specifications available.
+            specifications available. We encourage you to write IO module or plugin for your instrument-specific data file format,
+            or, at least, to send us your format specifications.
          </para>
        </section>
       <section>
@@ -196,7 +202,8 @@
          <para>
             Data window is used for 2D data presentation to user. It is the main widget used for working with Gwyddion.
             The data are presented to user as a field of false colors correponding to heights. Color axis that represents mapping
-            the colors to real height values is also part of the data window. 
+            the colors to real height values is also part of the data window. Color palette used to represent height data can be 
+            changed by clicking on the color axis and selecting appropriate palette fro mthe list of palettes.
          </para>
          <para>
             Graph window is used for 1D data processing. You can get it only by using appropriate tools or modules that
@@ -207,11 +214,49 @@
       <section>
          <title>Modules and tools</title>
          <para>
-            Modules are responsible for most of the Gwyddion features.             
+            Modules are responsible for most of the Gwyddion features. They mostly include data processing fucntions
+            as leveling, rotations, integral transforms, etc. See Data process menu for list of available modules.            
          </para>
          <para>
-            Tools are a special kind of modules that can work with selections. 
+            Tools are a special kind of modules that can work with selections. Tools are used for interactive selecting areas
+            or lines of the data and processing them. Tools can be lounched only from tools button rows located in the main window.
+            Currently, Gwyddion includes at least these tools:
          </para>
+            <itemizedlist>
+            <listitem>
+                <para>
+                 Read value under cursor - reads x,y,z values at the position of mouse click. You can average more points around the point
+                 where you clicked.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                Crop - cuts part of the data and puts it to new window.  
+                </para>
+            </listitem>
+             <listitem>
+                <para>
+                Three-point leveling - levels data by plane obtained by clicking on three points wihin data window.
+                </para>
+            </listitem>
+             <listitem>
+                <para>
+                Statistical values - computes basic statistical quantities (RMS, Ra, etc.) from selection of full data field.
+                </para>
+            </listitem>
+             <listitem>
+                <para>
+                Statistical functions - computes basic statistical functions (distribution of heights, autocorrelation function, etc.)
+                from selection of full data field.
+                </para>
+            </listitem>
+             <listitem>
+                <para>
+                Profile extraction - extracts profiles of the data field and puts them to separate graphs. These graphs can be
+                further processed with commands from the Graph menu.
+                </para>
+            </listitem>
+             </itemizedlist>
       </section>
       <section>
          <title>Presentations and masks</title>
