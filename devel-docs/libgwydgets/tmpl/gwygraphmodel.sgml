@@ -22,6 +22,16 @@ widgets and should be mostly ignored for now.
 </para>
 
 
+<!-- ##### ARG GwyGraphModel:n ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyGraphModel:title ##### -->
+<para>
+
+</para>
+
 <!-- ##### STRUCT GwyGraphModelClass ##### -->
 <para>
 
@@ -60,5 +70,22 @@ widgets and should be mostly ignored for now.
 
 @gmodel: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_add_curve ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@curve: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_remove_all_curves ##### -->
+<para>
+
+</para>
+
+@gmodel: 
 
 

@@ -38,6 +38,46 @@ gwyglmat
 GwyGraphEpitome
 
 
+<!-- ##### SECTION ./tmpl/gwygraphercurvemodel.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwygraphercurvemodel.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwygraphercurvemodel.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwygraphercurvemodel.sgml:Title ##### -->
+GwyGrapherCurveModel
+
+
+<!-- ##### SECTION ./tmpl/gwygraphermodel.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwygraphermodel.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwygraphermodel.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwygraphermodel.sgml:Title ##### -->
+GwyGrapherModel
+
+
 <!-- ##### SECTION ./tmpl/gwylayer-axes.sgml:Long_Description ##### -->
 <para>
 
@@ -938,6 +978,54 @@ gwymodulemenus
 </para>
 
 @graph: 
+
+<!-- ##### FUNCTION gwy_grapher_curve_model_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_curve_model_save_curve ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@grapher: 
+@index_: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_model_add_curve ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@curve: 
+
+<!-- ##### FUNCTION gwy_grapher_model_get_n_curves ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_model_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+@grapher: 
+
+<!-- ##### FUNCTION gwy_grapher_model_remove_all_curves ##### -->
+<para>
+
+</para>
+
+@gmodel: 
 
 <!-- ##### FUNCTION gwy_grapher_new_from_model ##### -->
 <para>

@@ -235,21 +235,6 @@ GWY_IS_AXISER_CLASS
 GWY_AXISER_GET_CLASS
 </SECTION>
 <SECTION>
-<FILE>gwygraphermodel</FILE>
-<TITLE>GwyGrapherModel</TITLE>
-gwy_grapher_model_new
-gwy_grapher_model_get_n_curves
-gwy_grapher_model_add_curve
-<SUBSECTION Standard>
-GWY_GRAPHER_MODEL
-GWY_IS_GRAPHER_MODEL
-GWY_TYPE_GRAPHER_MODEL
-gwy_grapher_model_get_type
-GWY_GRAPHER_MODEL_CLASS
-GWY_IS_GRAPHER_MODEL_CLASS
-GWY_GRAPHER_MODEL_GET_CLASS
-</SECTION>
-<SECTION>
 <FILE>gwygraphercorner</FILE>
 <TITLE>GwyGrapherCorner</TITLE>
 gwy_grapher_corner_new
@@ -298,6 +283,7 @@ gwy_grapher_area_refresh
 gwy_grapher_area_set_selection
 gwy_grapher_area_change_model
 gwy_grapher_area_draw_area_on_drawable
+gwy_grapher_area_clear_selection
 <SUBSECTION Standard>
 GWY_GRAPHER_AREA
 GWY_IS_GRAPHER_AREA
@@ -314,6 +300,10 @@ GwyGrapherAutoProperties
 gwy_grapher_new
 gwy_grapher_refresh
 gwy_grapher_change_model
+gwy_grapher_set_status
+gwy_grapher_get_selection_number
+gwy_grapher_get_selection
+gwy_grapher_clear_selection
 <SUBSECTION Standard>
 GWY_GRAPHER
 GWY_IS_GRAPHER
@@ -461,20 +451,6 @@ GWY_IS_VECTOR_LAYER_CLASS
 GWY_VECTOR_LAYER_GET_CLASS
 </SECTION>
 
-<SECTION>
-<FILE>gwygraphercurvemodel</FILE>
-<TITLE>GwyGrapherCurveModel</TITLE>
-gwy_grapher_curve_model_new
-gwy_grapher_curve_model_save_curve
-<SUBSECTION Standard>
-GWY_GRAPHER_CURVE_MODEL
-GWY_IS_GRAPHER_CURVE_MODEL
-GWY_TYPE_GRAPHER_CURVE_MODEL
-gwy_grapher_curve_model_get_type
-GWY_GRAPHER_CURVE_MODEL_CLASS
-GWY_IS_GRAPHER_CURVE_MODEL_CLASS
-GWY_GRAPHER_CURVE_MODEL_GET_CLASS
-</SECTION>
 <SECTION>
 <FILE>gwyruler</FILE>
 GwyUnitsPlacement
@@ -717,6 +693,8 @@ GwyGraphModelClass
 gwy_graph_model_new
 gwy_graph_new_from_model
 gwy_graph_model_get_n_curves
+gwy_graph_model_add_curve
+gwy_graph_model_remove_all_curves
 <SUBSECTION Standard>
 GWY_GRAPH_MODEL
 GWY_IS_GRAPH_MODEL

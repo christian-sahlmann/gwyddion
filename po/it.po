@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it2\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2005-03-05 04:14+0100\n"
+"POT-Creation-Date: 2005-03-09 09:18+0100\n"
 "PO-Revision-Date: 2005-03-08 19:41+0100\n"
 "Last-Translator: hyperlink <hyperlink@katamail.com>\n"
 "Language-Team:  <it@li.org>\n"
@@ -230,55 +230,55 @@ msgstr "_Ripristina"
 msgid "Change Mask Color"
 msgstr "Cambia colore maschera"
 
-#: libgwydgets/gwygrapherareadialog.c:43
+#: libgwydgets/gwygrapherareadialog.c:44
 msgid "Points"
 msgstr "Punti"
 
-#: libgwydgets/gwygrapherareadialog.c:44
+#: libgwydgets/gwygrapherareadialog.c:45
 msgid "Line"
 msgstr "Linea"
 
-#: libgwydgets/gwygrapherareadialog.c:45
+#: libgwydgets/gwygrapherareadialog.c:46
 msgid "Line + points"
 msgstr "Linea + punti"
 
-#: libgwydgets/gwygrapherareadialog.c:46
+#: libgwydgets/gwygrapherareadialog.c:47
 msgid "Hidden"
 msgstr "Nascosto"
 
-#: libgwydgets/gwygrapherareadialog.c:152
+#: libgwydgets/gwygrapherareadialog.c:153
 msgid "_Curve label:"
 msgstr "_Etichetta Curva:"
 
-#: libgwydgets/gwygrapherareadialog.c:168
+#: libgwydgets/gwygrapherareadialog.c:169
 msgid "_Plot style:"
 msgstr "_Stile diagramma:"
 
-#: libgwydgets/gwygrapherareadialog.c:182
+#: libgwydgets/gwygrapherareadialog.c:183
 msgid "P_lot color:"
 msgstr "Colore diagramma:"
 
-#: libgwydgets/gwygrapherareadialog.c:200
+#: libgwydgets/gwygrapherareadialog.c:201
 msgid "Point type:"
 msgstr "Tipo punti:"
 
-#: libgwydgets/gwygrapherareadialog.c:205
+#: libgwydgets/gwygrapherareadialog.c:206
 msgid "Point size:"
 msgstr "Dimensione punti:"
 
-#: libgwydgets/gwygrapherareadialog.c:214
+#: libgwydgets/gwygrapherareadialog.c:215
 msgid "Line type:"
 msgstr "Tipo Linea:"
 
-#: libgwydgets/gwygrapherareadialog.c:219
+#: libgwydgets/gwygrapherareadialog.c:220
 msgid "Line thickness:"
 msgstr "Spessore Linea:"
 
-#: libgwydgets/gwygrapherlabeldialog.c:115
+#: libgwydgets/gwygrapherlabeldialog.c:116
 msgid "Frame thickness:"
 msgstr "Spessore cornice:"
 
-#: libgwydgets/gwygrapherlabeldialog.c:125
+#: libgwydgets/gwygrapherlabeldialog.c:126
 msgid "_reversed"
 msgstr "invertito"
 
@@ -540,6 +540,10 @@ msgid "<b>Developers</b>\n"
 msgstr "<b> Altri sviluppatori</b>\n"
 
 #: app/about.c:120
+msgid "<b>Translators</b>\n"
+msgstr ""
+
+#: app/about.c:127
 msgid ""
 "Development is supported by the Czech Metrology Insitute (<i>http://www.cmi."
 "cz/</i>).\n"
@@ -547,7 +551,7 @@ msgstr ""
 "Lo sviluppo del programma è sostenuto dall'Istituto di Metrologia Ceco \" "
 "Czech Metrology Institute\" (<i>http://www.cmi.cz/</i>).\n"
 
-#: app/about.c:133
+#: app/about.c:140
 #, c-format
 msgid ""
 "\n"
@@ -1121,7 +1125,11 @@ msgid ""
 "Supports following image formats for export: PNG, JPEG, TIFF (if available), "
 "PPM, BMP, TARGA. Import support relies on GDK and thus may be installation-"
 "dependent."
-msgstr "Esporta dati come immagini pixmap e importa dati da pixmap immagini. Esporta nei seguenti formati: PNG, JPEG, TIFF (se disponibile), L'importazione dei formati PPM, BMP, TARGA. utilizza il GDK in conseguenza potrebbe essere dipendente dall'installazione."
+msgstr ""
+"Esporta dati come immagini pixmap e importa dati da pixmap immagini. Esporta "
+"nei seguenti formati: PNG, JPEG, TIFF (se disponibile), L'importazione dei "
+"formati PPM, BMP, TARGA. utilizza il GDK in conseguenza potrebbe essere "
+"dipendente dall'installazione."
 
 #: modules/file/pixmap.c:675
 msgid "Import "
@@ -1164,7 +1172,8 @@ msgid "m/sample unit"
 msgstr "m/untità campione"
 
 #: modules/file/pixmap.c:789
-msgid "Warning: Colorful images cannot be reliably mapped to meaningful values."
+msgid ""
+"Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Attenzione: Immagini molto colorate non possono essere convertite in modo "
 "affidabile ad una mappatura che abbia valori significativi"
@@ -1205,7 +1214,9 @@ msgstr "Output:"
 msgid ""
 "Imports raw data files, both ASCII and binary, according to user-specified "
 "format."
-msgstr "Importa file dati raw, ASCII o binari, secondo un formato specificato dall'utente"
+msgstr ""
+"Importa file dati raw, ASCII o binari, secondo un formato specificato "
+"dall'utente"
 
 #: modules/file/rawfile.c:387
 msgid "User-specified"
@@ -1459,7 +1470,8 @@ msgstr "Non abbastanza linee (%d) per l'offset (%d)"
 #: modules/file/rawfile.c:2046
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
-msgstr "Mi aspettavo uno spazio per saltare più campi in fila  %u, ottenuto `%.16s'"
+msgstr ""
+"Mi aspettavo uno spazio per saltare più campi in fila  %u, ottenuto `%.16s'"
 
 #: modules/file/rawfile.c:2059
 #, c-format
@@ -1473,20 +1485,21 @@ msgstr "Mi aspettavo `%s' per saltare più campi in fila  %u, ottenuto `%.16s'"
 
 #: modules/file/rawfile.c:2090 modules/file/rawfile.c:2104
 #: modules/file/rawfile.c:2130
-#, c-format
-#, fuzzy
+#, fuzzy, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
 msgstr "Dati spazzatura `%.16s' nella riga %u, colonna %u"
 
 #: modules/file/rawfile.c:2116
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
-msgstr "Delimitatore aspettato`%c' dopo dati in fila %u, colonna %u, ottenuto`%c'"
+msgstr ""
+"Delimitatore aspettato`%c' dopo dati in fila %u, colonna %u, ottenuto`%c'"
 
 #: modules/file/rawfile.c:2142
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
-msgstr "Delimitatore aspettato`%s' dopo dati in fila %u, colonna %u, ottenuto`%.16s'"
+msgstr ""
+"Delimitatore aspettato`%s' dopo dati in fila %u, colonna %u, ottenuto`%.16s'"
 
 #: modules/file/sis.c:357
 msgid "Imports SIS (Surface Imaging Systems) data files."
@@ -1817,7 +1830,9 @@ msgstr "/_Plug-In"
 msgid ""
 "Calculates two-dimensional distribution of angles, that is projections of "
 "slopes to all directions."
-msgstr "Calcola distribuzione di angoli bidimensionale, proiezione delle pendenze in tutte le direzioni"
+msgstr ""
+"Calcola distribuzione di angoli bidimensionale, proiezione delle pendenze in "
+"tutte le direzioni"
 
 #: modules/process/angle_dist.c:122
 msgid "/_Statistics/_Angle Distribution..."
@@ -1855,7 +1870,9 @@ msgstr "Dimensioni piano:"
 msgid ""
 "Simple arithmetic operations with two data fields (or a data field and a "
 "scalar)."
-msgstr "Semplici operazioni matematiche con due campi dati (o un campo dati ed uno scalare)"
+msgstr ""
+"Semplici operazioni matematiche con due campi dati (o un campo dati ed uno "
+"scalare)"
 
 #: modules/process/arithmetic.c:104
 msgid "/M_ultidata/_Arithmetic..."
@@ -1885,7 +1902,9 @@ msgstr "Le dimensioni fisiche differiscono"
 msgid ""
 "Basic operations like flipping, value inversion, and rotation by multiples "
 "of 90 degrees."
-msgstr "Operazioni base quali, capovolgimento, inversione valori e rotazione per multipli di 90 gradi"
+msgstr ""
+"Operazioni base quali, capovolgimento, inversione valori e rotazione per "
+"multipli di 90 gradi"
 
 #: modules/process/basicops.c:68
 msgid "/_Basic Operations/Flip _Horizontally"
@@ -1913,7 +1932,8 @@ msgstr "/Operazioni _Base/Ruota di 180° attorno ad entrambi gli assi"
 
 #: modules/process/calibrate.c:122
 msgid "Recalibrates scan lateral dimensions or value range."
-msgstr "Ricalibra le dimensioni o l'intervallo di valori delle scansioni laterali."
+msgstr ""
+"Ricalibra le dimensioni o l'intervallo di valori delle scansioni laterali."
 
 #: modules/process/calibrate.c:138
 msgid "/_Basic Operations/_Recalibrate..."
@@ -2036,8 +2056,7 @@ msgstr "/Trasformate _Integrali/_2D CWT..."
 #: modules/process/cwt.c:128 modules/process/dwt.c:126
 #: modules/process/dwtanisotropy.c:131 modules/process/dwtcorrection.c:121
 #: modules/process/dwtdenoise.c:133 modules/process/fft.c:156
-#, c-format
-#, fuzzy
+#, fuzzy, c-format
 msgid "%s: Data must be square."
 msgstr "%s: I Dati devono essere square"
 
@@ -2053,7 +2072,7 @@ msgstr "Mantieni dimensioni (non riproporzionare secondo potenze di 2)"
 #: modules/process/cwt.c:210 modules/process/dwt.c:203
 #: modules/process/dwtanisotropy.c:209 modules/process/dwtcorrection.c:190
 #: modules/process/dwtdenoise.c:212 modules/process/fft.c:361
-#: modules/process/fft_filter_1d.c:337 modules/process/fractal.c:230
+#: modules/process/fft_filter_1d.c:339 modules/process/fractal.c:230
 #: modules/process/nanoindent_adjust.c:244 modules/process/rotate.c:247
 #: modules/process/scale.c:207 modules/process/unrotate.c:276
 #: modules/tools/profile.c:272
@@ -2080,7 +2099,8 @@ msgstr "2D DWT"
 
 #: modules/process/dwtanisotropy.c:84
 msgid "2D DWT anisotropy detection based on X/Y components ratio."
-msgstr "Determinazione di anisotropia 2D DWT basata sul rapporto X/Y dei componenti"
+msgstr ""
+"Determinazione di anisotropia 2D DWT basata sul rapporto X/Y dei componenti"
 
 #: modules/process/dwtanisotropy.c:100
 msgid "/_Integral Transforms/DWT _Anisotropy..."
@@ -2151,7 +2171,9 @@ msgstr "Scala and spazio adattati"
 msgid ""
 "Several edge detection methods (Laplacian of Gaussian, Canny, and some "
 "experimental), creates presentation."
-msgstr "Alcuni metodi di individuazione dei bordi (Laplaciano di Gaussian, Canny,altri sperimentali), crea presentazioni."
+msgstr ""
+"Alcuni metodi di individuazione dei bordi (Laplaciano di Gaussian, Canny,"
+"altri sperimentali), crea presentazioni."
 
 #: modules/process/edge.c:70
 msgid "/_Display/_Edge detection/_Laplacian of Gaussian"
@@ -2177,7 +2199,9 @@ msgstr "/Mostra/Determinazione bordi/ Locale non lineare"
 msgid ""
 "Automatic facet-orientation based levelling. Levels data to make facets "
 "point up."
-msgstr "Livellamento automatico basato sull'orientamento delle facce. Livella i dati per esporre le facce verso l'alto."
+msgstr ""
+"Livellamento automatico basato sull'orientamento delle facce. Livella i dati "
+"per esporre le facce verso l'alto."
 
 #: modules/process/facet-level.c:58
 msgid "/_Level/_Facet Level"
@@ -2259,43 +2283,47 @@ msgstr "Esegui"
 msgid "_Restore PS"
 msgstr "_Ripristina PS"
 
-#: modules/process/fft_filter_1d.c:279
+#: modules/process/fft_filter_1d.c:281
 msgid "<b>Power spectrum (select areas by mouse):</b>"
 msgstr "<b>Potere spettrale (selezione area con il mouse):</b>"
 
-#: modules/process/fft_filter_1d.c:299
+#: modules/process/fft_filter_1d.c:301
 msgid "<b>Settings:</b>"
 msgstr "<b>Preferenze:</b>"
 
-#: modules/process/fft_filter_1d.c:305
+#: modules/process/fft_filter_1d.c:307
 msgid "Suppress type:"
 msgstr "Tipo eliminazione:"
 
-#: modules/process/fft_filter_1d.c:318 modules/process/fit_2d.c:288
+#: modules/process/fft_filter_1d.c:320 modules/process/fit_2d.c:288
 msgid "Preview type:"
 msgstr "Tipo Anteprima:"
 
-#: modules/process/fft_filter_1d.c:344 modules/tools/filter.c:220
+#: modules/process/fft_filter_1d.c:346 modules/tools/filter.c:220
 msgid "_Direction:"
 msgstr "_Direzione:"
 
-#: modules/process/fft_filter_1d.c:348
+#: modules/process/fft_filter_1d.c:350
 msgid "_Update dynamically"
 msgstr "Aggiorna dinamicamente"
 
-#: modules/process/fft_filter_1d.c:565
+#: modules/process/fft_filter_1d.c:567
+msgid "Filtered data"
+msgstr ""
+
+#: modules/process/fft_filter_1d.c:577
 msgid "Null"
 msgstr "Nullo"
 
-#: modules/process/fft_filter_1d.c:566
+#: modules/process/fft_filter_1d.c:578
 msgid "Suppress"
 msgstr "Elimina"
 
-#: modules/process/fft_filter_1d.c:578
+#: modules/process/fft_filter_1d.c:590
 msgid "Marked"
 msgstr "Segnato"
 
-#: modules/process/fft_filter_1d.c:579
+#: modules/process/fft_filter_1d.c:591
 msgid "Unmarked"
 msgstr "Non segnato"
 
@@ -2570,8 +2598,11 @@ msgid "Marking boundaries"
 msgstr "Marcatura confini"
 
 #: modules/process/laplace.c:45
-msgid "Removes data under mask, interpolating them with Laplace equation solution."
-msgstr "Rimuove i dati selezionati interpolandoli con la soluzione dell'equazione di Laplace."
+msgid ""
+"Removes data under mask, interpolating them with Laplace equation solution."
+msgstr ""
+"Rimuove i dati selezionati interpolandoli con la soluzione dell'equazione di "
+"Laplace."
 
 #: modules/process/laplace.c:62
 msgid "/_Correct Data/_Remove Data Under Mask"
@@ -2589,7 +2620,9 @@ msgstr "Manca una maschera da usare per il calcolo"
 msgid ""
 "Levels data by simple plane subtraction or by rotation, and fixes minimal or "
 "mean value to zero."
-msgstr "Livella i dati per semplice sottrazione di piani o per rotazione e fissa il valore minimo o medio a zero."
+msgstr ""
+"Livella i dati per semplice sottrazione di piani o per rotazione e fissa il "
+"valore minimo o medio a zero."
 
 #: modules/process/level.c:62
 msgid "/_Level/_Level"
@@ -2786,7 +2819,8 @@ msgstr "E_strapola i dati risultanti al di fuori dell'intervallo di misura"
 
 #: modules/process/nanoindent_adjust.c:310 modules/process/tip_dilation.c:230
 #: modules/process/tip_map.c:232 modules/process/tip_reconstruction.c:230
-msgid "Tip has different range/resolution ratio than image. Tip will be resampled."
+msgid ""
+"Tip has different range/resolution ratio than image. Tip will be resampled."
 msgstr ""
 "La punta ha un rapporto range/risoluzione differente dall'immagine e verrà "
 "ricampionata"
@@ -2951,7 +2985,9 @@ msgstr "Ombreggiatura"
 msgid ""
 "Calculates two-dimensional distribution of slopes or graph of their angular "
 "distribution."
-msgstr "Calcola distribuzione di pendenze in due dimensioni o grafici della loro distribuzione angolare"
+msgstr ""
+"Calcola distribuzione di pendenze in due dimensioni o grafici della loro "
+"distribuzione angolare"
 
 #: modules/process/slope_dist.c:123
 msgid "/_Statistics/_Slope Distribution..."
@@ -2983,7 +3019,8 @@ msgstr "Distribuzione angolare Pendenza"
 
 #: modules/process/sphere-revolve.c:98
 msgid "Subtracts background by arc or sphere revolution."
-msgstr "Sottrae sottofondo ottenuto dalla rivoluzione di un arco o di una sfera"
+msgstr ""
+"Sottrae sottofondo ottenuto dalla rivoluzione di un arco o di una sfera"
 
 #: modules/process/sphere-revolve.c:114
 msgid "/_Level/Revolve _Arc..."
@@ -3181,8 +3218,10 @@ msgid "Hexagonal"
 msgstr "Esagonale"
 
 #: modules/process/unrotate.c:93
-msgid "Rotates data to make characteristic directions parallel with x or y axis."
-msgstr "Ruota i dati per allineare la direzione caratteristica con l'asse X o Y"
+msgid ""
+"Rotates data to make characteristic directions parallel with x or y axis."
+msgstr ""
+"Ruota i dati per allineare la direzione caratteristica con l'asse X o Y"
 
 #: modules/process/unrotate.c:110
 msgid "/_Correct Data/_Unrotate..."
@@ -3242,8 +3281,8 @@ msgid ""
 "Filter tool, processes selected part of data with a filter (conservative "
 "denoise, mean, median. Kuwahara, minimum, maximum)."
 msgstr ""
-"Strumento filtro, fltra i dati selezionati con differenti criteri (conservative "
-"denoise, mean, median. Kuwahara, minimum, maximum)."
+"Strumento filtro, fltra i dati selezionati con differenti criteri "
+"(conservative denoise, mean, median. Kuwahara, minimum, maximum)."
 
 #: modules/tools/filter.c:112
 msgid "Basic filters"
@@ -3267,8 +3306,11 @@ msgstr "Aggiorna vista dinamicamente"
 
 #: modules/tools/grain_remove_manually.c:77
 #, fuzzy
-msgid "Grain removal tool, removes continuous parts of mask and/or underlying data."
-msgstr "Strumento rimozione grana, rimuove parti continue di maschera e/o dati sottostanti."
+msgid ""
+"Grain removal tool, removes continuous parts of mask and/or underlying data."
+msgstr ""
+"Strumento rimozione grana, rimuove parti continue di maschera e/o dati "
+"sottostanti."
 
 #: modules/tools/grain_remove_manually.c:96
 msgid "_Mask"
@@ -3311,7 +3353,10 @@ msgstr "Metodo rimozione dati:"
 msgid ""
 "Interactive color range tool, allows to select data range false color scale "
 "should map to, either on data or on height distribution histogram."
-msgstr "Strumento intervallo colore interattivo, permette di selezionare l'intervallo dati a cui deve riferirsi la scala cromatica di riferimento, per i dati o per l'altezza dell'istogramma di distribuzione"
+msgstr ""
+"Strumento intervallo colore interattivo, permette di selezionare "
+"l'intervallo dati a cui deve riferirsi la scala cromatica di riferimento, "
+"per i dati o per l'altezza dell'istogramma di distribuzione"
 
 #: modules/tools/icolorange.c:125
 msgid "Stretch color range to part of data."
@@ -3337,7 +3382,9 @@ msgstr "Applica istantaneamente"
 msgid ""
 "Three-point level tool, levels data by subtracting a plane fitted through "
 "three selected points."
-msgstr "Strumento livella su tre punti, livella i dati sottraendo un piano passante per tre punti dati."
+msgstr ""
+"Strumento livella su tre punti, livella i dati sottraendo un piano passante "
+"per tre punti dati."
 
 #: modules/tools/level3.c:87
 msgid "Level data using three points."
@@ -3353,7 +3400,9 @@ msgstr "Media raggio:"
 
 #: modules/tools/maskedit.c:70
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
-msgstr "Strumento modifica maschere, permette di aggiungere o rimuovere aree selezionate interattivamente"
+msgstr ""
+"Strumento modifica maschere, permette di aggiungere o rimuovere aree "
+"selezionate interattivamente"
 
 #: modules/tools/maskedit.c:98
 msgid "Edit mask"
@@ -3397,7 +3446,8 @@ msgstr "Leggi Valore"
 
 #: modules/tools/polynom.c:71
 msgid "Polynom fit tool, fits polynoms to X or Y profiles and subtracts them."
-msgstr "Strumento fit polinomiale, adatta polinomio al profilo X o Y e lo sottrae."
+msgstr ""
+"Strumento fit polinomiale, adatta polinomio al profilo X o Y e lo sottrae."
 
 #: modules/tools/polynom.c:99
 msgid "Fit X or Y profiles by polynom"
@@ -3456,7 +3506,9 @@ msgstr "Profili"
 msgid ""
 "Statistical function tool, calculates one-dimensional statistical functions "
 "(height distribution, correlations, PSDF) of selected part of data."
-msgstr "Strumento funzioni statistiche, calcola funzioni statistiche unidimensionali (altezza, distribuzione, correlazione, PSDF) di dati selezionati."
+msgstr ""
+"Strumento funzioni statistiche, calcola funzioni statistiche unidimensionali "
+"(altezza, distribuzione, correlazione, PSDF) di dati selezionati."
 
 #: modules/tools/sfunctions.c:97
 msgid "Height distribution"
@@ -3506,7 +3558,9 @@ msgstr "Tipo interpolazione:"
 msgid ""
 "Spot removal tool, interpolates small parts of data (displayed on a zoomed "
 "view) using selected algorithm."
-msgstr "Strumento rimozione macchie, interpola piccoli intervalli dati (mostrati in una vista ingrandita) utilizzando l'algoritmo selezionato."
+msgstr ""
+"Strumento rimozione macchie, interpola piccoli intervalli dati (mostrati in "
+"una vista ingrandita) utilizzando l'algoritmo selezionato."
 
 #: modules/tools/spotremove.c:128
 msgid "Hyperbolic flatten"
@@ -3533,7 +3587,10 @@ msgid ""
 "Statistical quantities tool, calculates various statistical characteristics "
 "(mean, median, RMS, skew, kurtosis, inclination, area, projected area) of "
 "selected part of data."
-msgstr "Strumento quantità statistiche, calcola variabili statistiche (valori medi e mediani, RMS, deviazione, inclinazione, curtosi, area, area proiettata) di dati selezionati"
+msgstr ""
+"Strumento quantità statistiche, calcola variabili statistiche (valori medi e "
+"mediani, RMS, deviazione, inclinazione, curtosi, area, area proiettata) di "
+"dati selezionati"
 
 #: modules/tools/stats.c:96
 msgid "Statistical quantities"
@@ -3586,4 +3643,3 @@ msgstr "Quantità statistiche"
 #: modules/tools/stats.c:215
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametri</b>"
-

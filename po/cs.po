@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2005-03-08 04:19+0100\n"
-"PO-Revision-Date: 2005-03-09 09:09+0100\n"
+"POT-Creation-Date: 2005-03-09 09:18+0100\n"
+"PO-Revision-Date: 2005-03-09 09:22+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -222,55 +222,55 @@ msgstr "_Obnovit"
 msgid "Change Mask Color"
 msgstr "Změna barvy masky"
 
-#: libgwydgets/gwygrapherareadialog.c:43
+#: libgwydgets/gwygrapherareadialog.c:44
 msgid "Points"
 msgstr "Body"
 
-#: libgwydgets/gwygrapherareadialog.c:44
+#: libgwydgets/gwygrapherareadialog.c:45
 msgid "Line"
 msgstr "Čára"
 
-#: libgwydgets/gwygrapherareadialog.c:45
+#: libgwydgets/gwygrapherareadialog.c:46
 msgid "Line + points"
 msgstr "Body + čára"
 
-#: libgwydgets/gwygrapherareadialog.c:46
+#: libgwydgets/gwygrapherareadialog.c:47
 msgid "Hidden"
 msgstr "Skrytý"
 
-#: libgwydgets/gwygrapherareadialog.c:152
+#: libgwydgets/gwygrapherareadialog.c:153
 msgid "_Curve label:"
 msgstr "Popisek _křivky:"
 
-#: libgwydgets/gwygrapherareadialog.c:168
+#: libgwydgets/gwygrapherareadialog.c:169
 msgid "_Plot style:"
 msgstr "Styl křivky"
 
-#: libgwydgets/gwygrapherareadialog.c:182
+#: libgwydgets/gwygrapherareadialog.c:183
 msgid "P_lot color:"
 msgstr "Barva křivky"
 
-#: libgwydgets/gwygrapherareadialog.c:200
+#: libgwydgets/gwygrapherareadialog.c:201
 msgid "Point type:"
 msgstr "Typ bodu"
 
-#: libgwydgets/gwygrapherareadialog.c:205
+#: libgwydgets/gwygrapherareadialog.c:206
 msgid "Point size:"
 msgstr "Velikost bodu"
 
-#: libgwydgets/gwygrapherareadialog.c:214
+#: libgwydgets/gwygrapherareadialog.c:215
 msgid "Line type:"
 msgstr "Typ čáry"
 
-#: libgwydgets/gwygrapherareadialog.c:219
+#: libgwydgets/gwygrapherareadialog.c:220
 msgid "Line thickness:"
 msgstr "Tloušťka čáry"
 
-#: libgwydgets/gwygrapherlabeldialog.c:115
+#: libgwydgets/gwygrapherlabeldialog.c:116
 msgid "Frame thickness:"
 msgstr "Tloušťka rámečku"
 
-#: libgwydgets/gwygrapherlabeldialog.c:125
+#: libgwydgets/gwygrapherlabeldialog.c:126
 msgid "_reversed"
 msgstr "otočený"
 
@@ -2371,7 +2371,7 @@ msgstr "Koule (dolní část)"
 
 #: modules/process/fit_2d.c:1136
 msgid "Fitted function: sphere\n"
-msgstr "Fitovaná funkce: koule"
+msgstr "Fitovaná funkce: koule\n"
 
 #: modules/process/fraccor.c:46
 msgid "Removes data under mask using fractal interpolation."
