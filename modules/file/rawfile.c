@@ -140,6 +140,8 @@ typedef struct {
     GtkWidget *zexponent;
     GtkWidget *presetlist;
     GtkWidget *presetname;
+    GtkWidget *preview;
+    GtkWidget *do_preview;
     RawFileArgs *args;
 } RawFileControls;
 
@@ -149,6 +151,7 @@ static gint          rawfile_detect                (const gchar *filename,
 static GwyContainer* rawfile_load                  (const gchar *filename);
 static GwyDataField* rawfile_dialog                (RawFileArgs *args,
                                                     guchar *buffer);
+static GtkWidget*    rawfile_dialog_preview_box    (RawFileControls *controls);
 static GtkWidget*    rawfile_dialog_info_page      (RawFileArgs *args,
                                                     RawFileControls *controls);
 static GtkWidget*    rawfile_dialog_format_page    (RawFileArgs *args,
@@ -173,6 +176,7 @@ static void          xyreal_changed_cb             (GtkAdjustment *adj,
 static void          xymeasureeq_changed_cb        (RawFileControls *controls);
 static void          bintext_changed_cb            (GtkWidget *button,
                                                     RawFileControls *controls);
+static void          preview_cb                    (RawFileControls *controls);
 static void          preset_selected_cb            (RawFileControls *controls);
 static void          preset_load_cb                (RawFileControls *controls);
 static void          preset_store_cb               (RawFileControls *controls);
@@ -222,7 +226,7 @@ static GwyModuleInfo module_info = {
     "rawfile",
     "Read raw data according to user-specified format.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -452,7 +456,7 @@ rawfile_dialog(RawFileArgs *args,
 {
     RawFileControls controls;
     GwyDataField *dfield = NULL;
-    GtkWidget *dialog, *vbox, *label, *notebook;
+    GtkWidget *dialog, *vbox, *label, *notebook, *hbox;
     GtkAdjustment *adj2;
     gint response;
 
@@ -469,9 +473,12 @@ rawfile_dialog(RawFileArgs *args,
 
     vbox = GTK_DIALOG(dialog)->vbox;
 
+    hbox = gtk_hbox_new(FALSE, 8);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
+
     notebook = gtk_notebook_new();
-    gtk_container_set_border_width(GTK_CONTAINER(notebook), 6);
-    gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 0);
 
     /* Sample info */
     vbox = rawfile_dialog_info_page(args, &controls);
@@ -487,6 +494,12 @@ rawfile_dialog(RawFileArgs *args,
     vbox = rawfile_dialog_preset_page(args, &controls);
     label = gtk_label_new_with_mnemonic(_("_Presets"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
+
+    gtk_box_pack_start(GTK_BOX(hbox), gtk_vseparator_new(), TRUE, TRUE, 0);
+
+    /* Preview */
+    vbox = rawfile_dialog_preview_box(&controls);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 
     /* Callbacks */
     update_dialog_controls(&controls);
@@ -515,6 +528,9 @@ rawfile_dialog(RawFileArgs *args,
     g_signal_connect_swapped(G_OBJECT(controls.presetlist), "cursor-changed",
                              G_CALLBACK(preset_selected_cb), &controls);
 
+    /* preview */
+    g_signal_connect_swapped(controls.do_preview, "clicked",
+                             G_CALLBACK(preview_cb), &controls);
 
     gtk_widget_show_all(dialog);
 
@@ -560,6 +576,35 @@ rawfile_dialog(RawFileArgs *args,
     gtk_widget_destroy(dialog);
 
     return dfield;
+}
+
+static GtkWidget*
+rawfile_dialog_preview_box(RawFileControls *controls)
+{
+    GtkWidget *align, *label, *vbox;
+    GdkPixbuf *pixbuf;
+
+    align = gtk_alignment_new(0.5, 0.0, 0.0, 0.0);
+
+    vbox = gtk_vbox_new(FALSE, 2);
+    gtk_container_add(GTK_CONTAINER(align), vbox);
+
+    label = gtk_label_new(_("Preview"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
+    controls->preview = gtk_image_new();
+    gtk_box_pack_start(GTK_BOX(vbox), controls->preview, FALSE, FALSE, 0);
+
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 120, 120);
+    gdk_pixbuf_fill(pixbuf, 0);
+    gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
+    g_object_unref(pixbuf);
+
+    controls->do_preview = gtk_button_new_with_label(_("Update"));
+    gtk_box_pack_start(GTK_BOX(vbox), controls->do_preview, FALSE, FALSE, 4);
+
+    return align;
 }
 
 static GtkWidget*
@@ -1271,6 +1316,12 @@ bintext_changed_cb(G_GNUC_UNUSED GtkWidget *button,
 {
     update_dialog_values(controls);
     update_dialog_controls(controls);
+}
+
+static void
+preview_cb(RawFileControls *controls)
+{
+    update_dialog_values(controls);
 }
 
 static void
