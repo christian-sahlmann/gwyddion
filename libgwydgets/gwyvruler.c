@@ -201,19 +201,13 @@ gwy_vruler_draw_ticks(GwyRuler *ruler)
     height = widget->allocation.height;
     width = widget->allocation.width - 2*xthickness;
 
-    gtk_paint_box(widget->style, ruler->backing_store,
-                  GTK_STATE_NORMAL, GTK_SHADOW_OUT,
-                  NULL, widget, "vruler",
-                  0, 0,
-                  widget->allocation.width, widget->allocation.height);
-
     gdk_draw_line(ruler->backing_store, gc,
                   height + xthickness,
                   ythickness,
                   height + xthickness,
                   widget->allocation.height - ythickness);
 
-    gwy_vruler_real_draw_ticks(ruler,height,
+    gwy_vruler_real_draw_ticks(ruler, height,
                                xthickness + MINIMUM_INCR, MINIMUM_INCR);
 }
 

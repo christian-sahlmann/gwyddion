@@ -438,7 +438,7 @@ gwy_ruler_realize(GtkWidget *widget)
     gdk_window_set_user_data(widget->window, ruler);
 
     widget->style = gtk_style_attach(widget->style, widget->window);
-    gtk_style_set_background(widget->style, widget->window, GTK_STATE_ACTIVE);
+    gtk_style_set_background(widget->style, widget->window, GTK_STATE_NORMAL);
 
     gwy_ruler_make_pixmap(ruler);
 }
@@ -482,6 +482,19 @@ gwy_ruler_expose(GtkWidget *widget,
     if (GTK_WIDGET_DRAWABLE(widget)) {
         ruler = GWY_RULER(widget);
 
+        gtk_paint_box(widget->style, widget->window,
+                      GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                      NULL, widget, "ruler",
+                      0, 0,
+                      widget->allocation.width, widget->allocation.height);
+
+        gdk_draw_drawable(ruler->backing_store,
+                          ruler->non_gr_exp_gc,
+                          widget->window,
+                          0, 0, 0, 0,
+                          widget->allocation.width,
+                          widget->allocation.height);
+
         gwy_ruler_draw_ticks(ruler);
 
         gdk_draw_drawable(widget->window,
@@ -519,7 +532,6 @@ gwy_ruler_make_pixmap(GwyRuler *ruler)
                                           widget->allocation.width,
                                           widget->allocation.height,
                                           -1);
-
     ruler->xsrc = 0;
     ruler->ysrc = 0;
 
