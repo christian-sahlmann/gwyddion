@@ -13,7 +13,6 @@ process_PROGRAMS = \
 	cwt.so \
 	dwt.so \
 	dwtanisotropy.so \
-	dwtcorrection.so \
 	dwtdenoise.so \
 	edge.so \
 	facet-level.so \
@@ -82,8 +81,8 @@ dwt_so_LDFLAGS = $(module_ldflags),dwt.so
 dwtanisotropy_so_SOURCES = dwtanisotropy.c
 dwtanisotropy_so_LDFLAGS = $(module_ldflags),dwtanisotropy.so
 
-dwtcorrection_so_SOURCES = dwtcorrection.c
-dwtcorrection_so_LDFLAGS = $(module_ldflags),dwtcorrection.so
+#dwtcorrection_so_SOURCES = dwtcorrection.c
+#dwtcorrection_so_LDFLAGS = $(module_ldflags),dwtcorrection.so
 
 dwtdenoise_so_SOURCES = dwtdenoise.c
 dwtdenoise_so_LDFLAGS = $(module_ldflags),dwtdenoise.so
