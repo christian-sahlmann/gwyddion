@@ -18,23 +18,23 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GRAPH_EPITOME_H__
-#define __GWY_GRAPH_EPITOME_H__
+#ifndef __GWY_GRAPH_MODEL_H__
+#define __GWY_GRAPH_MODEL_H__
 
 #include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPH_EPITOME                  (gwy_graph_epitome_get_type())
-#define GWY_GRAPH_EPITOME(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_EPITOME, GwyGraphEpitome))
-#define GWY_GRAPH_EPITOME_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_EPITOME, GwyGraphEpitomeClass))
-#define GWY_IS_GRAPH_EPITOME(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_EPITOME))
-#define GWY_IS_GRAPH_EPITOME_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_EPITOME))
-#define GWY_GRAPH_EPITOME_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_EPITOME, GwyGraphEpitomeClass))
+#define GWY_TYPE_GRAPH_MODEL                  (gwy_graph_model_get_type())
+#define GWY_GRAPH_MODEL(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_MODEL, GwyGraphModel))
+#define GWY_GRAPH_MODEL_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_MODEL, GwyGraphModelClass))
+#define GWY_IS_GRAPH_MODEL(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_MODEL))
+#define GWY_IS_GRAPH_MODEL_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_MODEL))
+#define GWY_GRAPH_MODEL_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_MODEL, GwyGraphModelClass))
 
 
-typedef struct _GwyGraphEpitome GwyGraphEpitome;
-typedef struct _GwyGraphEpitomeClass GwyGraphEpitomeClass;
+typedef struct _GwyGraphModel GwyGraphModel;
+typedef struct _GwyGraphModelClass GwyGraphModelClass;
 
 typedef struct {
     gint n;
@@ -43,11 +43,11 @@ typedef struct {
     GwyGraphAreaCurveParams *params;
 
     /* TODO: add some reserved stuff */
-} GwyGraphEpitomeCurve;
+} GwyGraphModelCurve;
 
 /* XXX: really NEVER access these fields directly. They don't have to reflect
  * the graph values! */
-struct _GwyGraphEpitome {
+struct _GwyGraphModel {
     GObject parent_instance;
 
     GwyGraph *graph;
@@ -69,24 +69,24 @@ struct _GwyGraphEpitome {
     GString *right_label;
 
     gint ncurves;
-    GwyGraphEpitomeCurve *curves;
+    GwyGraphModelCurve *curves;
 
     /* TODO: add some reserved stuff */
 };
 
-struct _GwyGraphEpitomeClass {
+struct _GwyGraphModelClass {
     GObjectClass parent_class;
 
-    void (*value_changed)(GwyGraphEpitome *gepitome);  /* XXX: only formal */
+    void (*value_changed)(GwyGraphModel *gmodel);  /* XXX: only formal */
 };
 
 
-GType      gwy_graph_epitome_get_type       (void) G_GNUC_CONST;
-GObject*   gwy_graph_epitome_new            (GwyGraph *graph);
-GtkWidget* gwy_graph_new_from_epitome       (GwyGraphEpitome *gepitome);
+GType      gwy_graph_model_get_type       (void) G_GNUC_CONST;
+GObject*   gwy_graph_model_new            (GwyGraph *graph);
+GtkWidget* gwy_graph_new_from_model       (GwyGraphModel *gmodel);
 
 G_END_DECLS
 
-#endif /* __GWY_GRAPH_EPITOME_H__ */
+#endif /* __GWY_GRAPH_MODEL_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

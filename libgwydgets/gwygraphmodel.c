@@ -21,24 +21,24 @@
 #include <string.h>
 
 #include <libgwyddion/gwyddion.h>
-#include "gwygraphepitome.h"
+#include "gwygraphmodel.h"
 
-#define GWY_GRAPH_EPITOME_TYPE_NAME "GwyGraphEpitome"
+#define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
 
-static void   gwy_graph_epitome_class_init        (GwyGraphEpitomeClass *klass);
-static void   gwy_graph_epitome_init              (GwyGraphEpitome *gepitome);
-static void   gwy_graph_epitome_finalize          (GObject *object);
-static void   gwy_graph_epitome_serializable_init (GwySerializableIface *iface);
-static void   gwy_graph_epitome_watchable_init    (GwyWatchableIface *iface);
-static GByteArray* gwy_graph_epitome_serialize    (GObject *obj,
+static void   gwy_graph_model_class_init        (GwyGraphModelClass *klass);
+static void   gwy_graph_model_init              (GwyGraphModel *gmodel);
+static void   gwy_graph_model_finalize          (GObject *object);
+static void   gwy_graph_model_serializable_init (GwySerializableIface *iface);
+static void   gwy_graph_model_watchable_init    (GwyWatchableIface *iface);
+static GByteArray* gwy_graph_model_serialize    (GObject *obj,
                                                    GByteArray*buffer);
-static GObject* gwy_graph_epitome_deserialize     (const guchar *buffer,
+static GObject* gwy_graph_model_deserialize     (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
-static GObject* gwy_graph_epitome_duplicate       (GObject *object);
-static void   gwy_graph_epitome_graph_destroyed   (GwyGraph *graph,
-                                                   GwyGraphEpitome *gepitome);
-static void   gwy_graph_epitome_save_graph        (GwyGraphEpitome *gepitome,
+static GObject* gwy_graph_model_duplicate       (GObject *object);
+static void   gwy_graph_model_graph_destroyed   (GwyGraph *graph,
+                                                   GwyGraphModel *gmodel);
+static void   gwy_graph_model_save_graph        (GwyGraphModel *gmodel,
                                                    GwyGraph *graph);
 
 
@@ -46,60 +46,60 @@ static GObjectClass *parent_class = NULL;
 
 
 GType
-gwy_graph_epitome_get_type(void)
+gwy_graph_model_get_type(void)
 {
-    static GType gwy_graph_epitome_type = 0;
+    static GType gwy_graph_model_type = 0;
 
-    if (!gwy_graph_epitome_type) {
-        static const GTypeInfo gwy_graph_epitome_info = {
-            sizeof(GwyGraphEpitomeClass),
+    if (!gwy_graph_model_type) {
+        static const GTypeInfo gwy_graph_model_info = {
+            sizeof(GwyGraphModelClass),
             NULL,
             NULL,
-            (GClassInitFunc)gwy_graph_epitome_class_init,
+            (GClassInitFunc)gwy_graph_model_class_init,
             NULL,
             NULL,
-            sizeof(GwyGraphEpitome),
+            sizeof(GwyGraphModel),
             0,
-            (GInstanceInitFunc)gwy_graph_epitome_init,
+            (GInstanceInitFunc)gwy_graph_model_init,
             NULL,
         };
 
         GInterfaceInfo gwy_serializable_info = {
-            (GInterfaceInitFunc)gwy_graph_epitome_serializable_init, NULL, 0
+            (GInterfaceInitFunc)gwy_graph_model_serializable_init, NULL, 0
         };
         GInterfaceInfo gwy_watchable_info = {
-            (GInterfaceInitFunc)gwy_graph_epitome_watchable_init, NULL, 0
+            (GInterfaceInitFunc)gwy_graph_model_watchable_init, NULL, 0
         };
 
         gwy_debug("");
-        gwy_graph_epitome_type
+        gwy_graph_model_type
           = g_type_register_static(G_TYPE_OBJECT,
-                                   GWY_GRAPH_EPITOME_TYPE_NAME,
-                                   &gwy_graph_epitome_info,
+                                   GWY_GRAPH_MODEL_TYPE_NAME,
+                                   &gwy_graph_model_info,
                                    0);
-        g_type_add_interface_static(gwy_graph_epitome_type,
+        g_type_add_interface_static(gwy_graph_model_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
-        g_type_add_interface_static(gwy_graph_epitome_type,
+        g_type_add_interface_static(gwy_graph_model_type,
                                     GWY_TYPE_WATCHABLE,
                                     &gwy_watchable_info);
     }
 
-    return gwy_graph_epitome_type;
+    return gwy_graph_model_type;
 }
 
 static void
-gwy_graph_epitome_serializable_init(GwySerializableIface *iface)
+gwy_graph_model_serializable_init(GwySerializableIface *iface)
 {
     gwy_debug("");
     /* initialize stuff */
-    iface->serialize = gwy_graph_epitome_serialize;
-    iface->deserialize = gwy_graph_epitome_deserialize;
-    iface->duplicate = gwy_graph_epitome_duplicate;
+    iface->serialize = gwy_graph_model_serialize;
+    iface->deserialize = gwy_graph_model_deserialize;
+    iface->duplicate = gwy_graph_model_duplicate;
 }
 
 static void
-gwy_graph_epitome_watchable_init(GwyWatchableIface *iface)
+gwy_graph_model_watchable_init(GwyWatchableIface *iface)
 {
     gwy_debug("");
     /* initialize stuff */
@@ -107,7 +107,7 @@ gwy_graph_epitome_watchable_init(GwyWatchableIface *iface)
 }
 
 static void
-gwy_graph_epitome_class_init(GwyGraphEpitomeClass *klass)
+gwy_graph_model_class_init(GwyGraphModelClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
@@ -115,155 +115,155 @@ gwy_graph_epitome_class_init(GwyGraphEpitomeClass *klass)
 
     parent_class = g_type_class_peek_parent(klass);
 
-    gobject_class->finalize = gwy_graph_epitome_finalize;
+    gobject_class->finalize = gwy_graph_model_finalize;
 }
 
 static void
-gwy_graph_epitome_init(GwyGraphEpitome *gepitome)
+gwy_graph_model_init(GwyGraphModel *gmodel)
 {
     gwy_debug("");
 
-    gepitome->graph = NULL;
-    gepitome->graph_destroy_hid = 0;
+    gmodel->graph = NULL;
+    gmodel->graph_destroy_hid = 0;
 
-    gepitome->ncurves = 0;
-    gepitome->curves = NULL;
-    gepitome->has_x_unit = FALSE;
-    gepitome->has_y_unit = FALSE;
-    gepitome->x_unit = gwy_si_unit_new("");
-    gepitome->y_unit = gwy_si_unit_new("");
-    gepitome->top_label = g_string_new("");
-    gepitome->bottom_label = g_string_new("");
-    gepitome->left_label = g_string_new("");
-    gepitome->right_label = g_string_new("");
+    gmodel->ncurves = 0;
+    gmodel->curves = NULL;
+    gmodel->has_x_unit = FALSE;
+    gmodel->has_y_unit = FALSE;
+    gmodel->x_unit = gwy_si_unit_new("");
+    gmodel->y_unit = gwy_si_unit_new("");
+    gmodel->top_label = g_string_new("");
+    gmodel->bottom_label = g_string_new("");
+    gmodel->left_label = g_string_new("");
+    gmodel->right_label = g_string_new("");
 }
 
 /**
- * gwy_graph_epitome_new:
+ * gwy_graph_model_new:
  * @graph: A graph to represent.
  *
- * Creates a new graph epitome.
+ * Creates a new graph model.
  *
- * Returns: New graph epitome as a #GObject.
+ * Returns: New graph model as a #GObject.
  **/
 GObject*
-gwy_graph_epitome_new(GwyGraph *graph)
+gwy_graph_model_new(GwyGraph *graph)
 {
-    GwyGraphEpitome *gepitome;
+    GwyGraphModel *gmodel;
 
     gwy_debug("");
-    gepitome = g_object_new(GWY_TYPE_GRAPH_EPITOME, NULL);
+    gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL, NULL);
 
-    gepitome->graph = graph;
+    gmodel->graph = graph;
     if (graph) {
-        gepitome->graph_destroy_hid
+        gmodel->graph_destroy_hid
             = g_signal_connect(graph, "destroy",
-                               G_CALLBACK(gwy_graph_epitome_graph_destroyed),
-                               gepitome);
+                               G_CALLBACK(gwy_graph_model_graph_destroyed),
+                               gmodel);
     }
 
-    return (GObject*)(gepitome);
+    return (GObject*)(gmodel);
 }
 
 static void
-gwy_graph_epitome_finalize(GObject *object)
+gwy_graph_model_finalize(GObject *object)
 {
-    GwyGraphEpitome *gepitome;
+    GwyGraphModel *gmodel;
     gint i;
 
     gwy_debug("");
 
-    gepitome = GWY_GRAPH_EPITOME(object);
-    if (gepitome->graph_destroy_hid) {
-        g_assert(GWY_IS_GRAPH(gepitome->graph));
-        g_signal_handler_disconnect(gepitome->graph,
-                                    gepitome->graph_destroy_hid);
+    gmodel = GWY_GRAPH_MODEL(object);
+    if (gmodel->graph_destroy_hid) {
+        g_assert(GWY_IS_GRAPH(gmodel->graph));
+        g_signal_handler_disconnect(gmodel->graph,
+                                    gmodel->graph_destroy_hid);
     }
 
-    g_object_unref(gepitome->x_unit);
-    g_object_unref(gepitome->y_unit);
+    g_object_unref(gmodel->x_unit);
+    g_object_unref(gmodel->y_unit);
 
-    g_string_free(gepitome->top_label, TRUE);
-    g_string_free(gepitome->bottom_label, TRUE);
-    g_string_free(gepitome->left_label, TRUE);
-    g_string_free(gepitome->right_label, TRUE);
+    g_string_free(gmodel->top_label, TRUE);
+    g_string_free(gmodel->bottom_label, TRUE);
+    g_string_free(gmodel->left_label, TRUE);
+    g_string_free(gmodel->right_label, TRUE);
 
-    for (i = 0; i < gepitome->ncurves; i++) {
-        GwyGraphEpitomeCurve *curve = gepitome->curves + i;
+    for (i = 0; i < gmodel->ncurves; i++) {
+        GwyGraphModelCurve *curve = gmodel->curves + i;
 
         g_free(curve->xdata);
         g_free(curve->ydata);
         g_string_free(curve->params->description, TRUE);
         g_free(curve->params);
     }
-    g_free(gepitome->curves);
+    g_free(gmodel->curves);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void
-gwy_graph_epitome_graph_destroyed(GwyGraph *graph,
-                                  GwyGraphEpitome *gepitome)
+gwy_graph_model_graph_destroyed(GwyGraph *graph,
+                                  GwyGraphModel *gmodel)
 {
     gwy_debug("");
-    gwy_graph_epitome_save_graph(gepitome, graph);
-    g_signal_handler_disconnect(gepitome->graph, gepitome->graph_destroy_hid);
-    gepitome->graph_destroy_hid = 0;
-    gepitome->graph = NULL;
+    gwy_graph_model_save_graph(gmodel, graph);
+    g_signal_handler_disconnect(gmodel->graph, gmodel->graph_destroy_hid);
+    gmodel->graph_destroy_hid = 0;
+    gmodel->graph = NULL;
 }
 
 /* actually copy save from a -- usually just dying -- graph */
 static void
-gwy_graph_epitome_save_graph(GwyGraphEpitome *gepitome,
+gwy_graph_model_save_graph(GwyGraphModel *gmodel,
                              GwyGraph *graph)
 {
     GString *str;
     gint i, nacurves;
 
     gwy_debug("");
-    g_assert(graph && graph == gepitome->graph);
+    g_assert(graph && graph == gmodel->graph);
 
     /* FIXME: we access object fields directly now as we are supposed to know
      * some their internals anyway. */
     /* graph */
-    if ((gepitome->has_x_unit = graph->has_x_unit))
-        gwy_si_unit_set_unit_string(GWY_SI_UNIT(gepitome->x_unit),
+    if ((gmodel->has_x_unit = graph->has_x_unit))
+        gwy_si_unit_set_unit_string(GWY_SI_UNIT(gmodel->x_unit),
                                     graph->x_unit);
     else
         gwy_object_unref(graph->x_unit);
 
-    if ((gepitome->has_y_unit = graph->has_y_unit))
-        gwy_si_unit_set_unit_string(GWY_SI_UNIT(gepitome->y_unit),
+    if ((gmodel->has_y_unit = graph->has_y_unit))
+        gwy_si_unit_set_unit_string(GWY_SI_UNIT(gmodel->y_unit),
                                     graph->y_unit);
     else
         gwy_object_unref(graph->y_unit);
 
-    gepitome->x_reqmin = graph->x_reqmin;
-    gepitome->y_reqmin = graph->y_reqmin;
-    gepitome->x_reqmax = graph->x_reqmax;
-    gepitome->y_reqmax = graph->y_reqmax;
+    gmodel->x_reqmin = graph->x_reqmin;
+    gmodel->y_reqmin = graph->y_reqmin;
+    gmodel->x_reqmax = graph->x_reqmax;
+    gmodel->y_reqmax = graph->y_reqmax;
 
     /* axes */
-    g_string_assign(gepitome->top_label,
+    g_string_assign(gmodel->top_label,
                     gwy_axis_get_label(graph->axis_top)->str);
-    g_string_assign(gepitome->bottom_label,
+    g_string_assign(gmodel->bottom_label,
                     gwy_axis_get_label(graph->axis_bottom)->str);
-    g_string_assign(gepitome->left_label,
+    g_string_assign(gmodel->left_label,
                     gwy_axis_get_label(graph->axis_left)->str);
-    g_string_assign(gepitome->right_label,
+    g_string_assign(gmodel->right_label,
                     gwy_axis_get_label(graph->axis_right)->str);
 
     /* curves */
     /* somewhat hairy; trying to avoid redundant reallocations:
-     * 1. clear extra curves that epitome has and graph has not
+     * 1. clear extra curves that model has and graph has not
      * 2. realloc curves to the right size
      * 3. replace already existing curves  <-- if lucky, only this happens
      * 4. fill new curves
      */
     nacurves = graph->area->curves->len;
     /* 1. clear */
-    for (i = nacurves; i < gepitome->ncurves; i++) {
-        GwyGraphEpitomeCurve *curve = gepitome->curves + i;
+    for (i = nacurves; i < gmodel->ncurves; i++) {
+        GwyGraphModelCurve *curve = gmodel->curves + i;
 
         g_free(curve->xdata);
         g_free(curve->ydata);
@@ -271,11 +271,11 @@ gwy_graph_epitome_save_graph(GwyGraphEpitome *gepitome,
         g_free(curve->params);
     }
     /* 2. realloc */
-    gepitome->curves = g_renew(GwyGraphEpitomeCurve,
-                               gepitome->curves, nacurves);
+    gmodel->curves = g_renew(GwyGraphModelCurve,
+                               gmodel->curves, nacurves);
     /* 3. replace */
-    for (i = 0; i < gepitome->ncurves; i++) {
-        GwyGraphEpitomeCurve *curve = gepitome->curves + i;
+    for (i = 0; i < gmodel->ncurves; i++) {
+        GwyGraphModelCurve *curve = gmodel->curves + i;
         GwyGraphAreaCurve *acurve = g_ptr_array_index(graph->area->curves, i);
 
         curve->n = acurve->data.N;
@@ -291,8 +291,8 @@ gwy_graph_epitome_save_graph(GwyGraphEpitome *gepitome,
             = g_string_assign(str, acurve->params.description->str);
     }
     /* 4. fill */
-    for (i = gepitome->ncurves; i < nacurves; i++) {
-        GwyGraphEpitomeCurve *curve = gepitome->curves + i;
+    for (i = gmodel->ncurves; i < nacurves; i++) {
+        GwyGraphModelCurve *curve = gmodel->curves + i;
         GwyGraphAreaCurve *acurve = g_ptr_array_index(graph->area->curves, i);
 
         curve->n = acurve->data.N;
@@ -305,46 +305,46 @@ gwy_graph_epitome_save_graph(GwyGraphEpitome *gepitome,
             = g_string_new(acurve->params.description->str);
     }
 
-    gepitome->ncurves = nacurves;
+    gmodel->ncurves = nacurves;
 }
 
 GtkWidget*
-gwy_graph_new_from_epitome(GwyGraphEpitome *gepitome)
+gwy_graph_new_from_model(GwyGraphModel *gmodel)
 {
     GtkWidget *graph_widget;
     gchar *BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS;
     GwyGraph *graph;
     gint i;
 
-    g_return_val_if_fail(gepitome->graph == NULL, gwy_graph_new());
+    g_return_val_if_fail(gmodel->graph == NULL, gwy_graph_new());
 
     graph_widget = gwy_graph_new();
     graph = GWY_GRAPH(graph_widget);
 
-    gwy_debug("ncurves = %d", gepitome->ncurves);
-    for (i = 0; i < gepitome->ncurves; i++) {
-        GwyGraphEpitomeCurve *curve = gepitome->curves + i;
+    gwy_debug("ncurves = %d", gmodel->ncurves);
+    for (i = 0; i < gmodel->ncurves; i++) {
+        GwyGraphModelCurve *curve = gmodel->curves + i;
 
         gwy_graph_add_datavalues(graph, curve->xdata, curve->ydata,
                                  curve->n, curve->params->description,
                                  curve->params);
     }
 
-    gwy_axis_set_label(graph->axis_top, gepitome->top_label);
-    gwy_axis_set_label(graph->axis_bottom, gepitome->bottom_label);
-    gwy_axis_set_label(graph->axis_left, gepitome->left_label);
-    gwy_axis_set_label(graph->axis_right, gepitome->right_label);
-    if (gepitome->has_x_unit) {
+    gwy_axis_set_label(graph->axis_top, gmodel->top_label);
+    gwy_axis_set_label(graph->axis_bottom, gmodel->bottom_label);
+    gwy_axis_set_label(graph->axis_left, gmodel->left_label);
+    gwy_axis_set_label(graph->axis_right, gmodel->right_label);
+    if (gmodel->has_x_unit) {
         BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
-            = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gepitome->x_unit));
+            = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gmodel->x_unit));
         gwy_axis_set_unit(graph->axis_top,
                           g_strdup(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS));
         gwy_axis_set_unit(graph->axis_bottom,
                           BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
     }
-    if (gepitome->has_y_unit) {
+    if (gmodel->has_y_unit) {
         BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
-            = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gepitome->y_unit));
+            = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gmodel->y_unit));
         gwy_axis_set_unit(graph->axis_left,
                           g_strdup(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS));
         gwy_axis_set_unit(graph->axis_right,
@@ -352,60 +352,60 @@ gwy_graph_new_from_epitome(GwyGraphEpitome *gepitome)
     }
 
     gwy_graph_set_boundaries(graph,
-                             gepitome->x_reqmin, gepitome->x_reqmax,
-                             gepitome->y_reqmin, gepitome->y_reqmax);
+                             gmodel->x_reqmin, gmodel->x_reqmax,
+                             gmodel->y_reqmin, gmodel->y_reqmax);
 
     return graph_widget;
 }
 
 static GByteArray*
-gwy_graph_epitome_serialize(GObject *obj,
+gwy_graph_model_serialize(GObject *obj,
                             GByteArray*buffer)
 {
-    GwyGraphEpitome *gepitome;
+    GwyGraphModel *gmodel;
     gsize before_obj;
     gint i;
 
     gwy_debug("");
-    g_return_val_if_fail(GWY_IS_GRAPH_EPITOME(obj), NULL);
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(obj), NULL);
 
-    buffer = gwy_serialize_pack(buffer, "si", GWY_GRAPH_EPITOME_TYPE_NAME, 0);
+    buffer = gwy_serialize_pack(buffer, "si", GWY_GRAPH_MODEL_TYPE_NAME, 0);
     before_obj = buffer->len;
 
-    gepitome = GWY_GRAPH_EPITOME(obj);
-    gwy_graph_epitome_save_graph(gepitome, gepitome->graph);
-    /* Global data, serialized as a fake subobject GwyGraphEpitome-graph */
+    gmodel = GWY_GRAPH_MODEL(obj);
+    gwy_graph_model_save_graph(gmodel, gmodel->graph);
+    /* Global data, serialized as a fake subobject GwyGraphModel-graph */
     {
         gchar *x_unit, *y_unit;
         GwySerializeSpec spec[] = {
-            { 'b', "has_x_unit", &gepitome->has_x_unit, NULL },
-            { 'b', "has_y_unit", &gepitome->has_y_unit, NULL },
+            { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
+            { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
             { 's', "x_unit", &x_unit, NULL },
             { 's', "y_unit", &y_unit, NULL },
-            { 's', "top_label", &gepitome->top_label->str, NULL },
-            { 's', "bottom_label", &gepitome->bottom_label->str, NULL },
-            { 's', "left_label", &gepitome->left_label->str, NULL },
-            { 's', "right_label", &gepitome->right_label->str, NULL },
-            { 'd', "x_reqmin", &gepitome->x_reqmin, NULL },
-            { 'd', "y_reqmin", &gepitome->y_reqmin, NULL },
-            { 'd', "x_reqmax", &gepitome->x_reqmax, NULL },
-            { 'd', "y_reqmax", &gepitome->y_reqmax, NULL },
-            { 'i', "ncurves", &gepitome->ncurves, NULL },
+            { 's', "top_label", &gmodel->top_label->str, NULL },
+            { 's', "bottom_label", &gmodel->bottom_label->str, NULL },
+            { 's', "left_label", &gmodel->left_label->str, NULL },
+            { 's', "right_label", &gmodel->right_label->str, NULL },
+            { 'd', "x_reqmin", &gmodel->x_reqmin, NULL },
+            { 'd', "y_reqmin", &gmodel->y_reqmin, NULL },
+            { 'd', "x_reqmax", &gmodel->x_reqmax, NULL },
+            { 'd', "y_reqmax", &gmodel->y_reqmax, NULL },
+            { 'i', "ncurves", &gmodel->ncurves, NULL },
         };
 
-        x_unit = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gepitome->x_unit));
-        y_unit = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gepitome->y_unit));
+        x_unit = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gmodel->x_unit));
+        y_unit = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gmodel->y_unit));
         gwy_serialize_pack_object_struct(buffer,
-                                         "GwyGraphEpitome-graph",
+                                         "GwyGraphModel-graph",
                                          G_N_ELEMENTS(spec), spec);
         /* XXX: why the fucking gwy_si_unit_get_unit_string() can't return
          * a const? */
         g_free(x_unit);
         g_free(y_unit);
     }
-    /* Per-curve data, serialized as fake subobjects GwyGraphEpitome-curve */
-    for (i = 0; i < gepitome->ncurves; i++) {
-        GwyGraphEpitomeCurve *curve = gepitome->curves + i;
+    /* Per-curve data, serialized as fake subobjects GwyGraphModel-curve */
+    for (i = 0; i < gmodel->ncurves; i++) {
+        GwyGraphModelCurve *curve = gmodel->curves + i;
         GwyGraphAreaCurveParams *params = curve->params;
         gboolean is_line, is_point;
         GwySerializeSpec spec[] = {
@@ -424,7 +424,7 @@ gwy_graph_epitome_serialize(GObject *obj,
         is_line = params->is_line;
         is_point = params->is_point;
         gwy_serialize_pack_object_struct(buffer,
-                                         "GwyGraphEpitome-curve",
+                                         "GwyGraphModel-curve",
                                          G_N_ELEMENTS(spec), spec);
     }
 
@@ -434,7 +434,7 @@ gwy_graph_epitome_serialize(GObject *obj,
 }
 
 static GObject*
-gwy_graph_epitome_deserialize(const guchar *buffer,
+gwy_graph_model_deserialize(const guchar *buffer,
                               gsize size,
                               gsize *position)
 {
@@ -466,50 +466,50 @@ gwy_graph_epitome_deserialize(const guchar *buffer,
 
     /* TODO
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
-                                            GWY_GRAPH_EPITOME_TYPE_NAME,
+                                            GWY_GRAPH_MODEL_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec))
         return NULL;
 
-    return (GObject*)gwy_graph_epitome_new(theta, phi);
+    return (GObject*)gwy_graph_model_new(theta, phi);
     */
     return NULL;
 }
 
 static GObject*
-gwy_graph_epitome_duplicate(GObject *object)
+gwy_graph_model_duplicate(GObject *object)
 {
-    GwyGraphEpitome *gepitome;
+    GwyGraphModel *gmodel;
 
     gwy_debug("");
-    g_return_val_if_fail(GWY_IS_GRAPH_EPITOME(object), NULL);
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(object), NULL);
 
-    gepitome = GWY_GRAPH_EPITOME(object);
-    if (gepitome->graph)
-        return gwy_graph_epitome_new(gepitome->graph);
+    gmodel = GWY_GRAPH_MODEL(object);
+    if (gmodel->graph)
+        return gwy_graph_model_new(gmodel->graph);
     else {
-        GwyGraphEpitome *duplicate;
+        GwyGraphModel *duplicate;
         gint i;
 
-        duplicate = (GwyGraphEpitome*)gwy_graph_epitome_new(NULL);
+        duplicate = (GwyGraphModel*)gwy_graph_model_new(NULL);
         /* widget stuff is already initialized to NULL */
-        duplicate->has_x_unit = gepitome->has_x_unit;
-        duplicate->has_y_unit = gepitome->has_y_unit;
-        duplicate->x_reqmin = gepitome->x_reqmin;
-        duplicate->y_reqmin = gepitome->y_reqmin;
-        duplicate->x_reqmax = gepitome->x_reqmax;
-        duplicate->y_reqmax = gepitome->y_reqmax;
-        duplicate->x_unit = gwy_serializable_duplicate(gepitome->x_unit);
-        duplicate->y_unit = gwy_serializable_duplicate(gepitome->y_unit);
-        duplicate->top_label = g_string_new(gepitome->top_label->str);
-        duplicate->bottom_label = g_string_new(gepitome->bottom_label->str);
-        duplicate->left_label = g_string_new(gepitome->left_label->str);
-        duplicate->right_label = g_string_new(gepitome->right_label->str);
-        duplicate->ncurves = gepitome->ncurves;
+        duplicate->has_x_unit = gmodel->has_x_unit;
+        duplicate->has_y_unit = gmodel->has_y_unit;
+        duplicate->x_reqmin = gmodel->x_reqmin;
+        duplicate->y_reqmin = gmodel->y_reqmin;
+        duplicate->x_reqmax = gmodel->x_reqmax;
+        duplicate->y_reqmax = gmodel->y_reqmax;
+        duplicate->x_unit = gwy_serializable_duplicate(gmodel->x_unit);
+        duplicate->y_unit = gwy_serializable_duplicate(gmodel->y_unit);
+        duplicate->top_label = g_string_new(gmodel->top_label->str);
+        duplicate->bottom_label = g_string_new(gmodel->bottom_label->str);
+        duplicate->left_label = g_string_new(gmodel->left_label->str);
+        duplicate->right_label = g_string_new(gmodel->right_label->str);
+        duplicate->ncurves = gmodel->ncurves;
         duplicate->curves
-            = g_memdup(gepitome->curves,
-                       gepitome->ncurves*sizeof(GwyGraphEpitomeCurve));
+            = g_memdup(gmodel->curves,
+                       gmodel->ncurves*sizeof(GwyGraphModelCurve));
         for (i = 0; i < duplicate->ncurves; i++) {
-            GwyGraphEpitomeCurve *curve = duplicate->curves + i;
+            GwyGraphModelCurve *curve = duplicate->curves + i;
 
             curve->xdata = g_memdup(curve->xdata, curve->n*sizeof(gdouble));
             curve->ydata = g_memdup(curve->ydata, curve->n*sizeof(gdouble));
