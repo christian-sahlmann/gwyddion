@@ -228,10 +228,10 @@ gwy_container_value_type(GwyContainer *container, GQuark key)
 gboolean
 gwy_container_contains(GwyContainer *container, GQuark key)
 {
-    g_return_val_if_fail(key, 0);
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    return g_hash_table_lookup(container->values,
-                               GUINT_TO_POINTER(key)) != NULL;
+    return key
+           && g_hash_table_lookup(container->values,
+                                  GUINT_TO_POINTER(key)) != NULL;
 }
 
 static void
