@@ -23,3 +23,12 @@ GwyDataWindow
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_window_get_data_view ##### -->
+<para>
+
+</para>
+
+@window: 
+@Returns: 
+
+

@@ -36,6 +36,8 @@ GwyGraph
 @graph: 
 @dataline: 
 @shift: 
+@label: 
+@params: 
 
 
 <!-- ##### FUNCTION gwy_graph_add_datavalues ##### -->
@@ -47,5 +49,33 @@ GwyGraph
 @xvals: 
 @yvals: 
 @n: 
+@label: 
+@params: 
+
+
+<!-- ##### FUNCTION gwy_graph_clear ##### -->
+<para>
+
+</para>
+
+@graph: 
+
+
+<!-- ##### FUNCTION gwy_graph_set_autoproperties ##### -->
+<para>
+
+</para>
+
+@graph: 
+@autoproperties: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_autoproperties ##### -->
+<para>
+
+</para>
+
+@graph: 
+@autoproperties: 
 
 

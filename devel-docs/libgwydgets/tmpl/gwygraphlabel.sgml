@@ -42,6 +42,62 @@ GwyGraphLabel
 
 
 
+<!-- ##### MACRO GWY_GRAPH_POINT_SQUARE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_POINT_CROSS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_POINT_CIRCLE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_POINT_STAR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_POINT_TIMES ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_POINT_TRIANGLE_UP ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_POINT_TRIANGLE_DOWN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_POINT_DIAMOND ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### TYPEDEF GwyGraphAreaCurveParams ##### -->
 <para>
 
@@ -95,5 +151,20 @@ GwyGraphLabel
 </para>
 
 @label: 
+
+
+<!-- ##### FUNCTION gwy_graph_draw_point ##### -->
+<para>
+
+</para>
+
+@window: 
+@gc: 
+@i: 
+@j: 
+@type: 
+@size: 
+@color: 
+@clear: 
 
 

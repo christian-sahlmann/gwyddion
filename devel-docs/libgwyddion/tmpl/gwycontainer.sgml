@@ -110,6 +110,18 @@ GwyContainer
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_rename ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@newkey: 
+@force: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_container_foreach ##### -->
 <para>
 
@@ -327,6 +339,17 @@ GwyContainer
 
 @c: 
 @n: 
+
+
+<!-- ##### MACRO gwy_container_rename_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@nn: 
+@f: 
 
 
 <!-- ##### MACRO gwy_container_set_boolean_by_name ##### -->
