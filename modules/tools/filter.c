@@ -298,7 +298,7 @@ static void
 apply(GwyUnitoolState *state)
 {
     GwyContainer *data;
-    GwyDataField *dfield, *shadefield;
+    GwyDataField *dfield;
     GwyDataViewLayer *layer;
     ToolControls *controls;
     gboolean is_selected;
@@ -310,19 +310,9 @@ apply(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    
-    if (gwy_container_contains_by_name(data, "/0/show")) {
-       shadefield
-            = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                         "/0/show"));
-  
-        g_object_set_data(G_OBJECT(shadefield), "is_preview",
-                      GINT_TO_POINTER(FALSE));
- 
-        gwy_container_remove_by_name(data, "/0/show");
-    }
-    
+
     gwy_app_clean_up_data(data);
+    gwy_container_remove_by_name(data, "/0/show");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
