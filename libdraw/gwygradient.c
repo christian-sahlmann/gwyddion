@@ -163,8 +163,16 @@ static void
 gwy_gradient_finalize(GObject *object)
 {
     GwyGradient *gradient = (GwyGradient*)object;
+    GwyGradientClass *klass;
 
     gwy_debug("%s", gradient->name);
+
+    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
+    g_return_val_if_fail(klass, NULL);
+    if (g_hash_table_lookup(klass->gradients, name) == object) {
+        g_critical("Trying to finalize a gradient still present in database");
+        g_hash_table_steal(klass->gradients, name);
+    }
 
     g_array_free(gradient->points, TRUE);
     g_free(gradient->pixels);
@@ -803,10 +811,12 @@ gwy_gradients_gradient_exists(const gchar *name)
  *
  * Returns gradient of given name.
  *
+ * Its reference count is not increased, if you want the gradient object to
+ * survive gwy_gradients_delete_gradient(), you have to add a reference
+ * yourself.
+ *
  * Returns: Color gradient @name if it exists, %NULL if there's no such
- *          gradient.  The reference count is not increased, if you want
- *          the gradient object to survive gwy_gradients_delete_gradient(),
- *          you have to add a reference yourself.
+ *          gradient.
  *
  * Since: 1.8
  **/
@@ -830,6 +840,9 @@ gwy_gradients_get_gradient(const gchar *name)
  * Creates a new color gradient.
  *
  * The gradient is created as a two-point gray scale.
+ *
+ * Its initial reference is owned by the gradient database, you should add
+ * your own if you want it to survive gwy_gradients_delete_gradient().
  *
  * Returns: The newly created gradient.  Its name is guaranteed to be unique
  *          and thus may differ from @newname in the case of name clash.
@@ -856,6 +869,9 @@ gwy_gradients_new_gradient(const gchar *newname)
  *           new name on @name algoritmically.
  *
  * Creates a new color gradient as a copy of an existing one.
+ *
+ * Its initial reference is owned by the gradient database, you should add
+ * your own if you want it to survive gwy_gradients_delete_gradient().
  *
  * Returns: The newly created gradient.  Its name is guaranteed to be unique
  *          and thus may differ from @newname in the case of name clash.
