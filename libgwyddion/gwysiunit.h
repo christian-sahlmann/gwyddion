@@ -73,6 +73,8 @@ GwySIValueFormat* gwy_si_unit_get_format_with_digits    (GwySIUnit *siunit,
                                                          gdouble maximum,
                                                          gint sdigits,
                                                          GwySIValueFormat *format);
+gchar*            gwy_si_unit_get_unit_for_magnitude    (GwySIUnit *siunit,
+                                                         gdouble magnitude);
 
 
 #ifdef __cplusplus

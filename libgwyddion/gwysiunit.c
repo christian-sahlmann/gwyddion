@@ -333,6 +333,17 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
 }
 
 
+gchar*
+gwy_si_unit_get_unit_for_magnitude(GwySIUnit *siunit,
+                                   gdouble magnitude)
+{
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+
+    return g_strconcat(gwy_math_SI_prefix(magnitude),
+                       siunit->unitstr,
+                       NULL);
+}
+
 
 /**
  * gwy_math_SI_prefix:
