@@ -19,6 +19,7 @@ static guchar*  gwy_palette_def_serialize         (GObject *obj,
 static GObject* gwy_palette_def_deserialize       (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
+static GObject* gwy_palette_def_duplicate         (GObject *object);
 static void     gwy_palette_def_value_changed     (GObject *GwyPaletteDef);
 static gint     gwy_palette_def_entry_compare     (GwyPaletteDefEntry *a,
                                                    GwyPaletteDefEntry *b);
@@ -91,6 +92,7 @@ gwy_palette_def_serializable_init(gpointer giface)
     /* initialize stuff */
     iface->serialize = gwy_palette_def_serialize;
     iface->deserialize = gwy_palette_def_deserialize;
+    iface->duplicate = gwy_palette_def_duplicate;
 }
 
 static void
@@ -350,6 +352,13 @@ gwy_palette_def_deserialize(const guchar *buffer,
     return (GObject*)palette_def;
 }
 
+static GObject*
+gwy_palette_def_duplicate(GObject *object)
+{
+    g_return_val_if_fail(GWY_IS_PALETTE_DEF(object), NULL);
+    g_object_ref(object);
+    return object;
+}
 
 /**
  * gwy_palette_def_get_name:
@@ -826,6 +835,8 @@ gwy_palette_def_print(GwyPaletteDef *a)
     g_print("###############################################\n");
 
 }
+
+/************************** Documentation ****************************/
 
 /**
  * GwyRGBA:

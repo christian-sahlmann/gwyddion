@@ -11,7 +11,7 @@
 #include "gwypixfield.h"
 #include <libprocess/datafield.h>
 
-int main(int argc, char *argv[])
+int main(void)
 {
     GError *error=NULL;
     guchar *buffer;

@@ -28,6 +28,7 @@ static guchar*  gwy_palette_serialize             (GObject *obj,
 static GObject* gwy_palette_deserialize           (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
+static GObject* gwy_palette_duplicate             (GObject *object);
 static void     gwy_palette_real_set_palette_def  (GwyPalette *palette,
                                                    GwyPaletteDef* palette_def);
 static void     gwy_palette_value_changed         (GObject *GwyPalette);
@@ -97,6 +98,7 @@ gwy_palette_serializable_init(gpointer giface)
     /* initialize stuff */
     iface->serialize = gwy_palette_serialize;
     iface->deserialize = gwy_palette_deserialize;
+    iface->duplicate = gwy_palette_duplicate;
 }
 
 static void
@@ -324,7 +326,12 @@ gwy_palette_deserialize(const guchar *buffer,
     return (GObject*)palette;
 }
 
-
+static GObject*
+gwy_palette_duplicate(GObject *object)
+{
+    g_return_val_if_fail(GWY_IS_PALETTE(object), NULL);
+    return gwy_palette_new(GWY_PALETTE(object)->def);
+}
 
 /**
  * gwy_palette_value_changed:
