@@ -35,9 +35,10 @@ gwyddion_vim_sources = \
 	$(docsrc)/libgwymodule/libgwymodule-decl.txt \
 	$(docsrc)/libgwyprocess/libgwyprocess-decl.txt
 
+# FIXME: this breaks VPATH build
 gwyddion.vim: $(gwyddion_vim_sources) $(gwyddion_vim_cfg) $(vim_syn_gen)
 	cd $(top_builddir); \
-	    $(PYTHON) $(vim_syn_gen) $(gwyddion_vim_cfg) >data/gwyddion.vim
+	$(PYTHON) utils/vim-syn-gen.py data/gwyddion-cfg.py >data/gwyddion.vim
 
 # Desktop files
 if DESKTOP_FILE_UPDATE
