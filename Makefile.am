@@ -7,6 +7,7 @@ gwyddionmimedir = $(datadir)/mime/packages
 pkgconfigdata_DATA = gwyddion.pc
 gwyddionapp_DATA = data/gwyddion.desktop
 gwyddionmime_DATA = data/gwyddion.xml
+man1_MANS = data/gwyddion.1
 
 SUBDIRS = \
 	m4 \
@@ -47,6 +48,7 @@ EXTRA_DIST = \
 	utils/vim-syn-gen.py \
 	data/gwyddion-cfg.py \
 	data/gwyddion.vim \
+	data/gwyddion.1 \
 	$(gwyddionapp_DATA) \
 	$(gwyddionmime_DATA)
 

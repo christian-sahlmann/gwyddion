@@ -1,0 +1,72 @@
+.TH "gwyddion" "1" "Jan 2005" " " " "
+.\" @(#) $Id$
+.SH NAME
+.PP
+gwyddion \-\- SPM data visualization and analysis program
+.
+.
+.SH "SYNOPSIS"
+.PP
+\fBgwyddion\fR [\fIOPTION\fR]... [\fIFILE\fR]...
+.
+.
+.SH DESCRIPTION
+.PP
+Gwyddion is a graphical SPM (Scanning Probe Microscope) data visualization
+and analysis program, using Gtk+.
+.
+.
+.SH OPTIONS
+.PP
+The program accepts all standard Gtk+, Gdk, and GtkGLExt options like
+\fB--display\fR or \fB--sync\fR.  Please see documentation of these
+packages for description of toolkit options.
+.PP
+Gwyddion options:
+.TP
+\fB-h\fR, \fB--help\fR
+Prints a brief help and terminates.
+.TP
+\fB-v\fR, \fB--version\fR
+Prints version information and terminates.
+.TP
+\fB--no-splash\fR
+Disables splash screen on program startup.
+.TP
+\fB--debug-objects\fR
+Prints list of objects created during run time, with creation and
+desctruction times or reference counts on program exit.  If you don't
+know what it's good for, you don't need it.
+.
+.
+.SH FILES
+.TP
+.B ~/.gwyddion/settings
+Saved user settings and tool states.  Don't edit when Gwyddion is running,
+it will overwrite it at exit.
+.
+.TP
+.B ~/gwyddion/modules
+Directory to place user modules to.  They should be placed into
+\fBfile\fR, \fBgraph\fR, \fBprocess\fR, \fBlayer\fR, and \fBtools\fR
+subdirectories according to their kind, though this is more a convention
+than anything else.
+.
+.TP
+.B ${exec_prefix}/lib/gwyddion/modules
+The same for system-wide modules.
+.
+.TP
+.B ~/gwyddion/plugins
+Directory to place user plug-ins to.  They should be placed into
+\fBfile\fR and \fBprocess\fR subdirectories according to their kind.
+.
+.TP
+.B ${exec_prefix}/libexec/gwyddion/plugins
+The same for system-wide plug-ins.
+.
+.
+.SH SEE ALSO
+.PP
+\fIgxsm\fR(1).
+.

@@ -86,6 +86,7 @@ update-mime-database %{_datadir}/mime
 %doc AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS
 %{_datadir}/%{name}/pixmaps/*.png
 %{_datadir}/%{name}/pixmaps/*.ico
+%{_mandir}/man1/%{name}.*
 %dir %{_datadir}/%{name}/pixmaps
 %dir %{_datadir}/%{name}
 %dir %{_datadir}/pixmaps/%{name}.png
