@@ -193,6 +193,7 @@ gwy_color_axis_finalize(GObject *object)
                                          0, 0, NULL,
                                          gwy_color_axis_update, axis);
     g_object_unref(axis->palette);
+    gwy_object_unref(axis->pixbuf);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -327,10 +328,7 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
 
     gwy_debug("%s", __FUNCTION__);
 
-    if (axis->pixbuf != NULL)
-    {
-        gdk_pixbuf_unref(axis->pixbuf);
-    }
+    gwy_object_unref(axis->pixbuf);
     axis->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                                   width, height);
 
