@@ -81,7 +81,7 @@ gwyfile_detect(const gchar *filename,
                gboolean only_name)
 {
     FILE *fh;
-    gchar magic[4];
+    gchar magic[MAGIC_SIZE];
     gint score;
 
     if (only_name)
@@ -112,14 +112,15 @@ gwyfile_load(const gchar *filename)
         g_clear_error(&err);
         return NULL;
     }
-    if (size < 4
+    if (size < MAGIC_SIZE
         || memcmp(buffer, MAGIC, MAGIC_SIZE)) {
         g_warning("File %s doesn't seem to be a .gwy file", filename);
         g_free(buffer);
         return NULL;
     }
 
-    object = gwy_serializable_deserialize(buffer + 4, size - 4, &pos);
+    object = gwy_serializable_deserialize(buffer + MAGIC_SIZE,
+                                          size - MAGIC_SIZE, &pos);
     g_free(buffer);
     if (!object) {
         g_warning("File %s deserialization failed", filename);
