@@ -79,8 +79,8 @@ static void gwy_color_button_get_property  (GObject        *object,
 
 /* gtkwidget signals */
 static void gwy_color_button_realize       (GtkWidget *widget);
-static void gwy_color_button_state_changed (GtkWidget           *widget,
-                                            GtkStateType         previous_state);
+static void gwy_color_button_state_changed (GtkWidget *widget,
+                                            GtkStateType previous_state);
 static void gwy_color_button_style_set     (GtkWidget *widget,
                                             GtkStyle  *previous_style);
 
@@ -269,15 +269,15 @@ expose_event(GtkWidget      *widget,
              GdkEventExpose *event,
              gpointer        data)
 {
-    GwyColorButton *color_button = GWY_COLOR_BUTTON (data);
+    GwyColorButton *color_button = GWY_COLOR_BUTTON(data);
 
     gint width = color_button->drawing_area->allocation.width;
     gint height = color_button->drawing_area->allocation.height;
 
-    if (color_button->pixbuf == NULL ||
-        width != gdk_pixbuf_get_width(color_button->pixbuf) ||
-        height != gdk_pixbuf_get_height(color_button->pixbuf))
-        render (color_button);
+    if (color_button->pixbuf == NULL
+        || width != gdk_pixbuf_get_width(color_button->pixbuf)
+        || height != gdk_pixbuf_get_height(color_button->pixbuf))
+        render(color_button);
 
     gdk_draw_pixbuf(widget->window,
                     color_button->gc,
@@ -311,7 +311,7 @@ static void
 gwy_color_button_style_set(GtkWidget *widget,
                            GtkStyle  *previous_style)
 {
-    GwyColorButton *color_button = GWY_COLOR_BUTTON (widget);
+    GwyColorButton *color_button = GWY_COLOR_BUTTON(widget);
 
     GTK_WIDGET_CLASS(parent_class)->style_set(widget, previous_style);
 
@@ -323,7 +323,7 @@ static void
 gwy_color_button_state_changed(GtkWidget   *widget,
                                GtkStateType previous_state)
 {
-    GwyColorButton *color_button = GWY_COLOR_BUTTON (widget);
+    GwyColorButton *color_button = GWY_COLOR_BUTTON(widget);
 
     if (widget->state == GTK_STATE_INSENSITIVE
         || previous_state == GTK_STATE_INSENSITIVE)
@@ -340,7 +340,7 @@ gwy_color_button_init(GwyColorButton *color_button)
     gtk_widget_push_composite_child();
 
     alignment = gtk_alignment_new(0.5, 0.5, 1.0, 1.0);
-    gtk_container_set_border_width(GTK_CONTAINER (alignment), 1);
+    gtk_container_set_border_width(GTK_CONTAINER(alignment), 1);
     gtk_container_add(GTK_CONTAINER(color_button), alignment);
     gtk_widget_show(alignment);
 
@@ -351,7 +351,7 @@ gwy_color_button_init(GwyColorButton *color_button)
     gtk_widget_set_size_request(color_button->drawing_area,
                                 rect.width - 2, rect.height - 2);
     g_signal_connect(color_button->drawing_area, "expose_event",
-                     G_CALLBACK (expose_event), color_button);
+                     G_CALLBACK(expose_event), color_button);
     gtk_container_add(GTK_CONTAINER(alignment), color_button->drawing_area);
     gtk_widget_show(color_button->drawing_area);
 
@@ -378,12 +378,12 @@ gwy_color_button_init(GwyColorButton *color_button)
 static void
 gwy_color_button_finalize(GObject *object)
 {
-    GwyColorButton *color_button = GWY_COLOR_BUTTON (object);
+    GwyColorButton *color_button = GWY_COLOR_BUTTON(object);
 
     gwy_object_unref(color_button->gc);
     gwy_object_unref(color_button->pixbuf);
 
-    G_OBJECT_CLASS(parent_class)->finalize (object);
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 
@@ -429,7 +429,7 @@ void
 gwy_color_button_set_color (GwyColorButton *color_button,
                             GwyRGBA        *color)
 {
-    g_return_if_fail(GWY_IS_COLOR_BUTTON (color_button));
+    g_return_if_fail(GWY_IS_COLOR_BUTTON(color_button));
 
     color_button->color.r = color->r;
     color_button->color.g = color->g;
@@ -453,7 +453,7 @@ void
 gwy_color_button_get_color(GwyColorButton *color_button,
                            GwyRGBA       *color)
 {
-    g_return_if_fail (GWY_IS_COLOR_BUTTON (color_button));
+    g_return_if_fail(GWY_IS_COLOR_BUTTON(color_button));
 
     color->r = color_button->color.r;
     color->g = color_button->color.g;
@@ -472,16 +472,16 @@ void
 gwy_color_button_set_use_alpha(GwyColorButton *color_button,
                                gboolean        use_alpha)
 {
-    g_return_if_fail (GWY_IS_COLOR_BUTTON (color_button));
+    g_return_if_fail(GWY_IS_COLOR_BUTTON(color_button));
 
-    use_alpha = (use_alpha != FALSE);
+    use_alpha = !!use_alpha;
     if (color_button->use_alpha != use_alpha) {
         color_button->use_alpha = use_alpha;
         color_button->color.a = 1.0;
         render(color_button);
         gtk_widget_queue_draw(color_button->drawing_area);
 
-        g_object_notify (G_OBJECT (color_button), "use_alpha");
+        g_object_notify(G_OBJECT(color_button), "use_alpha");
     }
 }
 
@@ -534,8 +534,7 @@ gwy_color_button_get_property(GObject    *object,
     GwyColorButton *color_button = GWY_COLOR_BUTTON(object);
     GwyRGBA color;
 
-    switch (param_id)
-    {
+    switch (param_id) {
         case PROP_USE_ALPHA:
         g_value_set_boolean(value,
                             gwy_color_button_get_use_alpha(color_button));
