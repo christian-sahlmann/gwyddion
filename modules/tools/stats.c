@@ -66,7 +66,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     "stats",
     "Statistical quantities.",
-    "pk <petr@klapetek.cz>",
+    "Petr Klapetek <petr@klapetek.cz>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
