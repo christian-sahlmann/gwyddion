@@ -98,6 +98,7 @@ typedef struct {
     gdouble zreal;
     gint32 zexponent;
     PixmapMapType maptype;
+    GdkPixbuf *pixbuf;
 } PixmapLoadArgs;
 
 typedef struct {
@@ -115,6 +116,8 @@ typedef struct {
     GtkWidget *zreal;
     GtkWidget *zexponent;
     GtkWidget *maptype;
+    GtkWidget *image;
+    PixmapLoadArgs *args;
 } PixmapLoadControls;
 
 /* there is a information duplication here,
@@ -136,6 +139,10 @@ static gboolean          pixmap_load_dialog        (PixmapLoadArgs *args,
                                                     gint xres,
                                                     gint yres,
                                                     const gboolean mapknown);
+static void              pixmap_load_create_preview(PixmapLoadArgs *args,
+                                                    PixmapLoadControls *controls);
+static void              pixmap_load_map_type_update(GtkWidget *button,
+                                                     PixmapLoadControls *controls);
 static void              xyreal_changed_cb         (GtkAdjustment *adj,
                                                     PixmapLoadControls *controls);
 static void              xymeasureeq_changed_cb    (PixmapLoadControls *controls);
@@ -257,7 +264,7 @@ static const PixmapSaveArgs pixmap_save_defaults = {
 };
 
 static const PixmapLoadArgs pixmap_load_defaults = {
-    100.0, 100.0, -6, 1.0, -6, PIXMAP_MAP_VALUE
+    100.0, 100.0, -6, 1.0, -6, PIXMAP_MAP_VALUE, NULL
 };
 
 /* The module info. */
@@ -277,7 +284,7 @@ static GwyModuleInfo module_info = {
         "TARGA. "
         "Import support relies on GDK and thus may be installation-dependent.",
     "Yeti <yeti@gwyddion.net>",
-    "4.2",
+    "4.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -531,6 +538,7 @@ pixmap_load(const gchar *filename,
 
     settings = gwy_app_settings_get();
     pixmap_load_load_args(settings, &args);
+    args.pixbuf = pixbuf;
 
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
@@ -649,12 +657,14 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     PixmapLoadControls controls;
     GtkObject *adj;
     GtkAdjustment *adj2;
-    GtkWidget *dialog, *table, *label, *align, *button;
+    GtkWidget *dialog, *table, *label, *align, *button, *hbox;
     enum { RESPONSE_RESET = 1 };
     gint response;
     gchar *s, *title;
     gchar buf[16];
     gint row;
+
+    controls.args = args;
 
     s = g_ascii_strup(name, -1);
     title = g_strconcat(_("Import "), s, NULL);
@@ -667,25 +677,44 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                          NULL);
     g_free(title);
 
-    table = gtk_table_new(9, 3, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
-                       FALSE, FALSE, 4);
+    hbox = gtk_hbox_new(FALSE, 20);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 0);
+
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
+
+    table = gtk_table_new(3, 3, FALSE);
+    gtk_container_add(GTK_CONTAINER(align), table);
     row = 0;
     table_attach_heading(table, _("<b>Resolution</b>"), row++);
 
     g_snprintf(buf, sizeof(buf), "%u", xres);
     label = gtk_label_new(buf);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gwy_table_attach_row(table, row++, _("_Horizontal size:"), "samples",
+    gwy_table_attach_row(table, row++, _("_Horizontal size:"), "pixels",
                          label);
 
     g_snprintf(buf, sizeof(buf), "%u", yres);
     label = gtk_label_new(buf);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    gwy_table_attach_row(table, row++, _("_Vertical size:"), "samples",
+    gwy_table_attach_row(table, row++, _("_Vertical size:"), "pixels",
                          label);
+
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
+
+    controls.image = gtk_image_new();
+    gtk_container_add(GTK_CONTAINER(align), controls.image);
+    pixmap_load_create_preview(args, &controls);
+
+    table = gtk_table_new(6, 3, FALSE);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       FALSE, FALSE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
+    row = 0;
 
     table_attach_heading(table, _("<b>Physical dimensions</b>"), row++);
 
@@ -762,7 +791,10 @@ pixmap_load_dialog(PixmapLoadArgs *args,
         controls.maptype
             = gwy_option_menu_create(value_map_types,
                                      G_N_ELEMENTS(value_map_types),
-                                     "map-type", NULL, NULL, args->maptype);
+                                     "map-type",
+                                     G_CALLBACK(pixmap_load_map_type_update),
+                                     &controls,
+                                     args->maptype);
         gwy_table_attach_row(table, row++, _("Use"), _("as data"),
                              controls.maptype);
     }
@@ -808,6 +840,72 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_widget_destroy(dialog);
 
     return TRUE;
+}
+
+static void
+pixmap_load_create_preview(PixmapLoadArgs *args,
+                           PixmapLoadControls *controls)
+{
+    GdkPixbuf *pixbuf;
+    gint width, height, rowstride, i, j;
+    guchar *pixels, *p;
+    gdouble zoom;
+
+    width = gdk_pixbuf_get_width(args->pixbuf);
+    height = gdk_pixbuf_get_height(args->pixbuf);
+    zoom = 120.0/MAX(width, height);
+    pixbuf = gdk_pixbuf_scale_simple(args->pixbuf,
+                                     zoom*width, zoom*height,
+                                     GDK_INTERP_TILES);
+
+    width = gdk_pixbuf_get_width(pixbuf);
+    height = gdk_pixbuf_get_height(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+            p = pixels + i*rowstride + 3*j;
+            switch (args->maptype) {
+                case PIXMAP_MAP_BLUE:
+                p[0] = p[1] = p[2];
+                break;
+
+                case PIXMAP_MAP_GREEN:
+                p[0] = p[2] = p[1];
+                break;
+
+                case PIXMAP_MAP_RED:
+                p[1] = p[2] = p[0];
+                break;
+
+                case PIXMAP_MAP_VALUE:
+                p[0] = MAX(p[0], p[1]);
+                p[0] = p[1] = p[2] = MAX(p[0], p[2]);
+                break;
+
+                case PIXMAP_MAP_SUM:
+                p[0] = p[1] = p[2] = (p[0] + p[1] + p[2])/3;
+                break;
+
+                default:
+                g_assert_not_reached();
+                break;
+            }
+        }
+    }
+
+    gtk_image_set_from_pixbuf(GTK_IMAGE(controls->image), pixbuf);
+    g_object_unref(pixbuf);
+}
+
+static void
+pixmap_load_map_type_update(G_GNUC_UNUSED GtkWidget *item,
+                            PixmapLoadControls *controls)
+{
+
+    controls->args->maptype = gwy_option_menu_get_history(controls->maptype,
+                                                          "map-type");
+    pixmap_load_create_preview(controls->args, controls);
 }
 
 static void
