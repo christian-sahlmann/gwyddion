@@ -24,7 +24,7 @@ test_SOURCES = \
 test_LDADD = libdraw.la ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Draw\"
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Draw\"
 libdrawincludedir = $(includedir)/gwyddion/libdraw
 
 clean-local:

@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <math.h>
+
+#include <libgwyddion/gwymacros.h>
 #include "gwypalette.h"
 
 #define GWY_PALETTE_TYPE_NAME "GwyPalette"
@@ -55,7 +57,7 @@ gwy_palette_get_type(void)
             NULL
         };
 
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+        gwy_debug("%s", __FUNCTION__);
         gwy_palette_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_PALETTE_TYPE_NAME,
                                                    &gwy_palette_info,
@@ -77,9 +79,7 @@ gwy_palette_serializable_init(gpointer giface,
 {
     GwySerializableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -93,9 +93,7 @@ gwy_palette_watchable_init(gpointer giface,
 {
     GwyWatchableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
@@ -108,9 +106,7 @@ gwy_palette_class_init(GwyPaletteClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     gobject_class->finalize = (GObjectFinalizeFunc)gwy_palette_finalize;
 }
@@ -118,9 +114,7 @@ gwy_palette_class_init(GwyPaletteClass *klass)
 static void
 gwy_palette_init(GwyPalette *palette)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     palette->nofvals = 0;
     palette->color = NULL;
@@ -131,9 +125,7 @@ gwy_palette_init(GwyPalette *palette)
 static void
 gwy_palette_finalize(GwyPalette *palette)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     g_free(palette->color);
     g_free(palette->samples);
@@ -145,9 +137,7 @@ gwy_palette_new(GwyPalettePreset preset)
 {
     GwyPalette *palette;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     palette = g_object_new(GWY_TYPE_PALETTE, NULL);
     palette->nofvals = GWY_PALETTE_DEFAULT_SIZE;
     palette->color = g_new(GwyPaletteEntry, palette->nofvals);
@@ -166,9 +156,7 @@ gwy_palette_serialize(GObject *obj,
 {
     GwyPalette *palette;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_PALETTE(obj), NULL);
 
     palette = GWY_PALETTE(obj);
@@ -193,9 +181,7 @@ gwy_palette_deserialize(const guchar *buffer,
       { 'o', "pdef", &pdef, NULL, },
     };
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -220,9 +206,7 @@ gwy_palette_deserialize(const guchar *buffer,
 static void
 gwy_palette_value_changed(GObject *palette)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "signal: GwyPalette changed");
-    #endif
+    gwy_debug("signal: GwyPalette changed");
     g_signal_emit_by_name(GWY_PALETTE(palette), "value_changed", NULL);
 }
 
@@ -241,9 +225,7 @@ gwy_palette_value_changed(GObject *palette)
 void
 gwy_palette_set_def(GwyPalette *palette, GwyPaletteDef* pdef)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     gwy_palette_def_copy(pdef, palette->def);
 }
 
@@ -264,9 +246,7 @@ gwy_palette_recompute_table(GwyPalette *palette)
     gint i;
     GwyPaletteEntry pe;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     for (i = 0; i < palette->nofvals; i++) {
         pe = (gwy_palette_def_get_color(palette->def,
@@ -387,9 +367,7 @@ gwy_palette_recompute_palette(GwyPalette *palette, gint istep)
     gint i, icount;
     GwyPaletteDefEntry pd;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     g_array_free(palette->def->data, FALSE);
     palette->def->data = g_array_new(FALSE, FALSE, sizeof(GwyPaletteDefEntry));
@@ -571,8 +549,7 @@ gwy_palette_setup_preset(GwyPalette *palette, GwyPalettePreset preset)
 
         default:
         /* nothing means gray here */
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "Palette %d not implemented.", preset);
+        g_warning("Palette %d not implemented.", preset);
         return 1;
         break;
     }
