@@ -15,6 +15,7 @@
 <!ENTITY libgwydgets-GwyRuler SYSTEM "xml/gwyruler.xml">
 <!ENTITY libgwydgets-GwyHRuler SYSTEM "xml/gwyhruler.xml">
 <!ENTITY libgwydgets-GwyVRuler SYSTEM "xml/gwyvruler.xml">
+<!ENTITY libgwydgets-GwySciText SYSTEM "xml/gwyscitext.xml">
 <!ENTITY libgwydgets-GwyAxis SYSTEM "xml/gwyaxis.xml">
 <!ENTITY libgwydgets-GwyGraphArea SYSTEM "xml/gwygrapharea.xml">
 <!ENTITY libgwydgets-GwyGraphCorner SYSTEM "xml/gwygraphcorner.xml">
@@ -43,6 +44,7 @@
     &libgwydgets-GwyRuler;
     &libgwydgets-GwyHRuler;
     &libgwydgets-GwyVRuler;
+    &libgwydgets-GwySciText;
     &libgwydgets-GwyAxis;
     &libgwydgets-GwyGraphArea;
     &libgwydgets-GwyGraphCorner;

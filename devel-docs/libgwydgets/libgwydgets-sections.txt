@@ -41,6 +41,19 @@ GWY_DATA_VIEW_LAYER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyaxisdialog</FILE>
+<TITLE>GwyAxisDialog</TITLE>
+gwy_axis_dialog_new
+<SUBSECTION Standard>
+GWY_AXIS_DIALOG
+GWY_IS_AXIS_DIALOG
+GWY_TYPE_AXIS_DIALOG
+GWY_AXIS_DIALOG_CLASS
+GWY_IS_AXIS_DIALOG_CLASS
+GWY_AXIS_DIALOG_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwyvruler</FILE>
 <TITLE>GwyVRuler</TITLE>
 gwy_vruler_new
@@ -139,6 +152,22 @@ GWY_GRAPH_LABEL_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyscitext</FILE>
+GwySciTextParams
+<TITLE>GwySciText</TITLE>
+gwy_sci_text_new
+gwy_sci_text_get_text
+<SUBSECTION Standard>
+GWY_SCI_TEXT
+GWY_IS_SCI_TEXT
+GWY_TYPE_SCI_TEXT
+gwy_sci_text_get_type
+GWY_SCI_TEXT_CLASS
+GWY_IS_SCI_TEXT_CLASS
+GWY_SCI_TEXT_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwylayer-points</FILE>
 <TITLE>GwyLayerPoints</TITLE>
 gwy_layer_points_new
@@ -215,6 +244,7 @@ GWY_VECTOR_SHADE_GET_CLASS
 gwy_data_window_new
 gwy_data_window_get_data_view
 gwy_data_window_set_zoom
+gwy_data_window_update_title
 <SUBSECTION Standard>
 GWY_DATA_WINDOW
 GWY_IS_DATA_WINDOW
@@ -384,5 +414,9 @@ GWY_GRAPH_GET_CLASS
 <SECTION>
 <FILE>gwydgets</FILE>
 gwy_palette_option_menu
+gwy_interpolation_option_menu
+gwy_windowing_option_menu
+gwy_table_attach_spinbutton
+gwy_table_attach_row
 </SECTION>
 

@@ -45,3 +45,11 @@ GwyDataWindow
 @zoom1000: 
 
 
+<!-- ##### FUNCTION gwy_data_window_update_title ##### -->
+<para>
+
+</para>
+
+@data_window: 
+
+

@@ -25,3 +25,50 @@ gwydgets
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_interpolation_option_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_windowing_option_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_table_attach_spinbutton ##### -->
+<para>
+
+</para>
+
+@table: 
+@row: 
+@name: 
+@units: 
+@adj: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_table_attach_row ##### -->
+<para>
+
+</para>
+
+@table: 
+@row: 
+@name: 
+@units: 
+@middle_widget: 
+
+

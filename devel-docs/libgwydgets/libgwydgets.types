@@ -16,6 +16,7 @@ gwy_layer_mask_get_type
 gwy_layer_points_get_type
 gwy_layer_select_get_type
 gwy_ruler_get_type
+gwy_sci_text_get_type
 gwy_sphere_coords_get_type
 gwy_vector_shade_get_type
 gwy_vruler_get_type
