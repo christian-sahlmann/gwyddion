@@ -35,6 +35,7 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphercurvemodel.h \
 	gwygraphermodel.h \
 	gwygrapherlabel.h \
+	gwygrapherlabeldialog.h \
 	gwyhruler.h \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
@@ -97,6 +98,7 @@ libgwydgets_la_SOURCES = \
 	gwygrapherexport.c \
 	gwygraphercorner.c \
 	gwygrapherlabel.c \
+	gwygrapherlabeldialog.c \
 	gwyhruler.c \
 	gwylayer-basic.c \
 	gwylayer-mask.c \
