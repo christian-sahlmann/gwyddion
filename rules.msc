@@ -16,10 +16,10 @@ $(LIBRARY)-$(LIB_VER).dll: $(LIB_OBJECTS) $(LIBRARY)-$(LIB_VER).def
 	$(LINK32) $(LIB_OBJECTS) $(LIB_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$(LIBRARY)-$(LIB_VER).dll /def:$(LIBRARY)-$(LIB_VER).def /dll /implib:$(LIBRARY)-$(LIB_VER).lib
 
 # installation
-install-prg: prg "$(TOP_SRCDIR)\inst.stamp"
+install-prg: prg
 	$(INSTALL) $(PROGRAM).exe "$(DEST_DIR)"
 
-install-lib: lib "$(TOP_SRCDIR)\inst.stamp"
+install-lib: lib
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).dll "$(DEST_DIR)"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).lib "$(DEST_DIR)\lib"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).def "$(DEST_DIR)\lib"
@@ -39,13 +39,13 @@ PLUGIN_DIR =
 
 # XXX: The *.something is conceptually broken, but considering copy's unability
 # to copy more files and DOS max. line length...
-install-mod: mod "$(TOP_SRCDIR)\inst.stamp"
+install-mod: mod
 	$(INSTALL) *.dll "$(DEST_DIR)\modules$(MOD_DIR)"
 
-install-plugin: plugin "$(TOP_SRCDIR)\inst.stamp"
+install-plugin: plugin
 	for %p in ($(PLUGINS)) do $(INSTALL) %p "$(DEST_DIR)\plugins\$(PLUGIN_TYPE)"
 
-install-pixmap: pixmap "$(TOP_SRCDIR)\inst.stamp"
+install-pixmap: pixmap
 	$(INSTALL) *.png "$(DEST_DIR)\pixmaps"
 	$(INSTALL) *.ico "$(DEST_DIR)\pixmaps"
 

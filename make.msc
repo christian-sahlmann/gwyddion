@@ -166,7 +166,7 @@ clean::
 	cd po
 	nmake -nologo -f makefile.msc installdirs
 	cd ..
-	@echo foo >"$(TOP_SRCDIR)\inst.stamp"
+	@echo foo >"$(TOP_SRCDIR)/inst.stamp"
 
 MOD_LINK = \
 	$(COMMON_LDFLAGS) \

@@ -27,7 +27,7 @@ clean:: sub-clean
 
 !include rules.msc
 
-install: all sub-install
+install: all "$(TOP_SRCDIR)\inst.stamp" sub-install
 	for %d in ($(DOCUMENTS)) do $(INSTALL) %d "$(DEST_DIR)"
 
 # FIXME:
