@@ -243,7 +243,6 @@ gwy_val_unit_unit_changed(GObject *item, GwyValUnit *val_unit)
     gwy_val_unit_signal_value_changed(val_unit);
 }
 
-
 /**
  * gwy_val_unit_set_value:
  * @val_unit: GwyValUnit widget
@@ -260,11 +259,12 @@ gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
     GwySIValueFormat *format;
     format = gwy_si_unit_get_format(val_unit->base_si_unit, value, NULL);
 
-    val_unit->unit = floor(log10(format->magnitude)/3.0);
-    val_unit->dival = value/pow(1000, val_unit->unit);
+    val_unit->unit = floor(log10(format->magnitude)); /* /3 */
+    val_unit->dival = value/pow(10, val_unit->unit);  /*1000*/
 
     gtk_spin_button_set_value(val_unit->spin, val_unit->dival);
-    gtk_option_menu_set_history(val_unit->selection, val_unit->unit + 4);
+
+    gtk_option_menu_set_history(val_unit->selection, floor(val_unit->unit/3) + 4);
 
 }
 
@@ -283,7 +283,7 @@ gwy_val_unit_get_value(GwyValUnit *val_unit)
 {
     val_unit->dival = gtk_spin_button_get_value(val_unit->spin);
 
-    return val_unit->dival * pow(1000, val_unit->unit);
+    return val_unit->dival * pow(10, val_unit->unit);  
 }
 
 void
