@@ -661,7 +661,7 @@ gwy_data_field_get_si_unit_z(GwyDataField *a)
 void
 gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
 {
-    gwy_si_unit_copy(a->si_unit_xy, si_unit);
+    gwy_si_unit_set_unit_string(a->si_unit_xy, gwy_si_unit_get_unit_string(si_unit));
 }
 
 /**
@@ -674,7 +674,7 @@ gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
 void
 gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit)
 {
-    gwy_si_unit_copy(a->si_unit_z, si_unit);
+    gwy_si_unit_set_unit_string(a->si_unit_z, gwy_si_unit_get_unit_string(si_unit));
 }
 
 /**
