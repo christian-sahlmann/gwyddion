@@ -87,7 +87,7 @@ for filename in glob.glob(file_glob):
         d = restruct(d)
         if d.ident.startswith('_'):
             continue
-        if not export_deprecated and d.body.find('<DEPRECATED/>'):
+        if not export_deprecated and d.body.find('<DEPRECATED/>') > -1:
             continue
         decls[d.typ][d.ident] = 1
         if d.typ == 'ENUM':
