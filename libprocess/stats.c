@@ -1063,7 +1063,7 @@ gwy_data_field_get_median(GwyDataField *dfield)
 
 /**
  * gwy_data_field_area_get_normal_coeffs:
- * @a: A data field.
+ * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -1075,75 +1075,81 @@ gwy_data_field_get_median(GwyDataField *dfield)
  *              the vector so that z-component is 1.
  *
  * Computes average normal vector of an area of a data field.
+ *
+ * Since: 1.9
  **/
-gboolean
-gwy_data_field_area_get_normal_coeffs(GwyDataField *a,
-                                      gint col, gint row, gint width, gint height,
+void
+gwy_data_field_area_get_normal_coeffs(GwyDataField *data_field,
+                                      gint col, gint row,
+                                      gint width, gint height,
                                       gdouble *nx, gdouble *ny, gdouble *nz,
                                       gboolean normalize1)
 {
-  gint i, j;
-  int ctr = 0;
-  gdouble d1x, d1y, d1z, d2x, d2y, d2z, dcx, dcy, dcz, dd;
-  gdouble sumdx = 0.0, sumdy = 0.0, sumdz = 0.0, sumw = 0.0;
-  gdouble avgdx, avgdy, avgdz;
+    gint i, j;
+    int ctr = 0;
+    gdouble d1x, d1y, d1z, d2x, d2y, d2z, dcx, dcy, dcz, dd;
+    gdouble sumdx = 0.0, sumdy = 0.0, sumdz = 0.0, sumw = 0.0;
+    gdouble avgdx, avgdy, avgdz;
 
-  g_return_val_if_fail(GWY_IS_DATA_FIELD(a), FALSE);
-  g_return_val_if_fail(col >= 0 && row >= 0
-                        && width > 0 && height > 0
-                        && col + width <= a->xres
-                       && row + height <= a->yres,
-                       FALSE);
-  g_return_val_if_fail(gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(a),
-                                         gwy_data_field_get_si_unit_z(a)),
-                       FALSE);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+    /* This probably should not be enforced */
+    /*
+    g_return_if_fail(gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(a),
+                                       gwy_data_field_get_si_unit_z(a)),
+                     FALSE);
+                     */
 
-  for (i = col; i < col + width; i++)
-    for (j = row; j < row + height; j++)
-      {
-        d1x = 1.0;
-        d1y = 0.0;
-        d1z = gwy_data_field_get_xder(a, i, j);
-        d2x = 0.0;
-        d2y = 1.0;
-        d2z = gwy_data_field_get_yder(a, i, j);
-        /* Cross product = normal vector */
-        dcx = d1y*d2z - d1z*d2y;
-        dcy = d1z*d2x - d1x*d2z;
-        dcz = d1x*d2y - d1y*d2x; /* Always 1 */
-        /* Normalize and add */
-        dd = sqrt(dcx*dcx+dcy*dcy+dcz*dcz);
-        dcx /= dd; sumdx += dcx;
-        dcy /= dd; sumdy += dcy;
-        dcz /= dd; sumdz += dcz;
-        sumw += 1.0/dd;
-        ctr++;
-      }
-  /* average dimensionless normal vector */
-  if (normalize1)
-    { /* normalize to 1 */
-      avgdx = sumdx/ctr;
-      avgdy = sumdy/ctr;
-      avgdz = sumdz/ctr;
+    for (i = col; i < col + width; i++) {
+        for (j = row; j < row + height; j++) {
+            d1x = 1.0;
+            d1y = 0.0;
+            d1z = gwy_data_field_get_xder(data_field, i, j);
+            d2x = 0.0;
+            d2y = 1.0;
+            d2z = gwy_data_field_get_yder(data_field, i, j);
+            /* Cross product = normal vector */
+            dcx = d1y*d2z - d1z*d2y;
+            dcy = d1z*d2x - d1x*d2z;
+            dcz = d1x*d2y - d1y*d2x; /* Always 1 */
+            /* Normalize and add */
+            dd = sqrt(dcx*dcx + dcy*dcy + dcz*dcz);
+            dcx /= dd; sumdx += dcx;
+            dcy /= dd; sumdy += dcy;
+            dcz /= dd; sumdz += dcz;
+            sumw += 1.0/dd;
+            ctr++;
+        }
     }
-  else
-    { /* normalize for gwy_data_field_plane_level */
-      avgdx = sumdx/sumw;
-      avgdy = sumdy/sumw;
-      avgdz = sumdz/sumw;
+    /* average dimensionless normal vector */
+    if (normalize1) {
+        /* normalize to 1 */
+        avgdx = sumdx/ctr;
+        avgdy = sumdy/ctr;
+        avgdz = sumdz/ctr;
+    }
+    else {
+        /* normalize for gwy_data_field_plane_level */
+        avgdx = sumdx/sumw;
+        avgdy = sumdy/sumw;
+        avgdz = sumdz/sumw;
     }
 
-  if (nx) *nx = avgdx;
-  if (ny) *ny = avgdy;
-  if (nz) *nz = avgdz;
-
-  return TRUE;
+    if (nx)
+        *nx = avgdx;
+    if (ny)
+        *ny = avgdy;
+    if (nz)
+        *nz = avgdz;
 }
 
 
 /**
  * gwy_data_field_get_normal_coeffs:
- * @a: A data field.
+ * @data_field: A data field.
  * @nx: Where x-component of average normal vector should be stored, or %NULL.
  * @ny: Where y-component of average normal vector should be stored, or %NULL.
  * @nz: Where z-component of average normal vector should be stored, or %NULL.
@@ -1151,14 +1157,19 @@ gwy_data_field_area_get_normal_coeffs(GwyDataField *a,
  *              the vector so that z-component is 1.
  *
  * Computes average normal vector of a data field.
+ *
+ * Since: 1.9
  **/
-gboolean
-gwy_data_field_get_normal_coeffs(GwyDataField *a,
+void
+gwy_data_field_get_normal_coeffs(GwyDataField *data_field,
                                  gdouble *nx, gdouble *ny, gdouble *nz,
                                  gboolean normalize1)
 {
-  return gwy_data_field_area_get_normal_coeffs(a, 0, 0, a->xres, a->yres,
-                                               nx, ny, nz, normalize1);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_get_normal_coeffs(data_field,
+                                          0, 0,
+                                          data_field->xres, data_field->yres,
+                                          nx, ny, nz, normalize1);
 }
 
 
@@ -1169,52 +1180,60 @@ gwy_data_field_get_normal_coeffs(GwyDataField *a,
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @thetadeg: Where theta angle (in degrees) should be stored, or %NULL.
- * @phideg: Where phi angle (in degrees) should be stored, or %NULL.
+ * @theta: Where theta angle (in radians) should be stored, or %NULL.
+ * @phi: Where phi angle (in radians) should be stored, or %NULL.
  *
  * Calculates the inclination of the image (polar and azimuth angle).
+ *
+ * Since: 1.9
  **/
-gboolean
+void
 gwy_data_field_area_get_inclination(GwyDataField *data_field,
                                     gint col, gint row,
                                     gint width, gint height,
-                                    gdouble *thetadeg,
-                                    gdouble *phideg)
+                                    gdouble *theta,
+                                    gdouble *phi)
 {
-  gdouble nx, ny, nz, nr, theta, phi;
+    gdouble nx, ny, nz, nr;
 
-  if (!gwy_data_field_area_get_normal_coeffs(data_field,
-                                             col, row, width, height,
-                                             &nx, &ny, &nz, TRUE))
-    return FALSE;
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+    gwy_data_field_area_get_normal_coeffs(data_field,
+                                          col, row, width, height,
+                                          &nx, &ny, &nz, TRUE);
 
-  nr = sqrt(nx*nx + ny*ny);
-  theta = atan2(nr, nz);
-  phi = atan2(ny, nx);
-  if (thetadeg) *thetadeg = theta * 180.0/G_PI;
-  if (phideg) *phideg = phi * 180.0/G_PI;
-  return TRUE;
+    nr = sqrt(nx*nx + ny*ny);
+    if (theta)
+        *theta = atan2(nr, nz);
+    if (phi)
+        *phi = atan2(ny, nx);
 }
 
 
 /**
  * gwy_data_field_area_get_inclination:
  * @data_field: A data field.
- * @thetadeg: Where theta angle (in degrees) should be stored, or %NULL.
- * @phideg: Where phi angle (in degrees) should be stored, or %NULL.
+ * @theta: Where theta angle (in radians) should be stored, or %NULL.
+ * @phi: Where phi angle (in radians) should be stored, or %NULL.
  *
  * Calculates the inclination of the image (polar and azimuth angle).
+ *
+ * Since: 1.9
  **/
-gboolean
+void
 gwy_data_field_get_inclination(GwyDataField *data_field,
-                               gdouble *thetadeg,
-                               gdouble *phideg)
+                               gdouble *theta,
+                               gdouble *phi)
 {
-  return gwy_data_field_area_get_inclination(data_field,
-                                             0, 0,
-                                             data_field->xres, data_field->yres,
-                                             thetadeg,
-                                             phideg);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_get_inclination(data_field,
+                                        0, 0,
+                                        data_field->xres, data_field->yres,
+                                        theta,
+                                        phi);
 }
 
 

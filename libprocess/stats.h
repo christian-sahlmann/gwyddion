@@ -99,6 +99,32 @@ gint   gwy_data_field_get_line_stat_function(GwyDataField *data_field,
 void   gwy_data_field_slope_distribution    (GwyDataField *data_field,
                                              GwyDataLine *derdist,
                                              gint kernel_size);
+void   gwy_data_field_get_normal_coeffs     (GwyDataField *a,
+                                             gdouble *nx,
+                                             gdouble *ny,
+                                             gdouble *nz,
+                                             gboolean normalize1);
+void   gwy_data_field_area_get_normal_coeffs(GwyDataField *a,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height,
+                                             gdouble *nx,
+                                             gdouble *ny,
+                                             gdouble *nz,
+                                             gboolean normalize1);
+void   gwy_data_field_area_get_inclination  (GwyDataField *data_field,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height,
+                                             gdouble *theta,
+                                             gdouble *phi);
+void   gwy_data_field_get_inclination       (GwyDataField *data_field,
+                                             gdouble *theta,
+                                             gdouble *phi);
+
+
 
 #ifndef GWY_DISABLE_DEPRECATED
 gdouble gwy_data_field_get_area_max(GwyDataField *data_field,
@@ -143,32 +169,6 @@ void gwy_data_field_get_area_stats(GwyDataField *data_field,
                                    gdouble *rms,
                                    gdouble *skew,
                                    gdouble *kurtosis);
-gboolean gwy_data_field_get_normal_coeffs(GwyDataField *a,
-                                          gdouble *nx,
-                                          gdouble *ny,
-                                          gdouble *nz,
-                                          gboolean normalize1);
-gboolean gwy_data_field_area_get_normal_coeffs(GwyDataField *a,
-                                               gint col,
-                                               gint row,
-                                               gint width,
-                                               gint height,
-                                               gdouble *nx,
-                                               gdouble *ny,
-                                               gdouble *nz,
-                                               gboolean normalize1);
-gboolean gwy_data_field_area_get_inclination(GwyDataField *data_field,
-                                             gint col,
-                                             gint row,
-                                             gint width,
-                                             gint height,
-                                             gdouble *thetadeg,
-                                             gdouble *phideg);
-gboolean gwy_data_field_get_inclination(GwyDataField *data_field,
-                                        gdouble *thetadeg,
-                                        gdouble *phideg);
-
-
 #endif
 
 G_END_DECLS
