@@ -314,8 +314,10 @@ module_register(const gchar *name)
             || strcmp(fmtname, "ani") == 0
             || strcmp(fmtname, "xbm") == 0
             || strcmp(fmtname, "wbmp") == 0
-            || strcmp(fmtname, "svg") == 0)
+            || strcmp(fmtname, "svg") == 0) {
+            g_free(fmtname);
             continue;
+        }
 
         func_info = g_new0(GwyFileFuncInfo, 1);
         func_info->name = fmtname;
@@ -340,7 +342,7 @@ module_register(const gchar *name)
 
             gwy_debug("Found GdkPixbuf loader for new type: %s", fmtname);
             func_info->file_desc
-                = g_strdup(gdk_pixbuf_format_get_description(pixbuf_format));
+                = gdk_pixbuf_format_get_description(pixbuf_format);
             /* FIXME: fix the slashes in menu path better */
             for (s = strchr(func_info->file_desc, '/'); s; s = strchr(s, '/'))
                 *s = '-';
