@@ -40,6 +40,7 @@ void            gwy_app_data_window_foreach       (GFunc func,
 GtkWidget*      gwy_app_data_window_create        (GwyContainer *data);
 gint            gwy_app_data_window_set_untitled  (GwyDataWindow *data_window,
                                                    const gchar *templ);
+void            gwy_app_data_view_update          (GtkWidget *data_view);
 void            gwy_app_undo_checkpoint           (GwyContainer *data,
                                                    const gchar *what);
 void            gwy_app_undo_undo                 (void);

@@ -209,14 +209,14 @@ gwy_app_create_toolbox(void)
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_CROP,
                                 _("Crop tooltip"),
                                 gwy_tool_crop_use);
-    
+
     button = gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SHADER,
                                       "Shade data", NULL,
                                       NULL, NULL, -1);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_run_process_func_cb),
                              "shade");
- 
+
     /*gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_SHADER,
                                 _("Shader tooltip"),
                                 NULL);
@@ -349,9 +349,45 @@ gwy_app_data_window_create(GwyContainer *data)
 
     gwy_data_window_set_units(GWY_DATA_WINDOW(data_window), "m");
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
+    gwy_app_data_view_update(data_view);
     gtk_window_present(GTK_WINDOW(data_window));
 
     return data_window;
+}
+
+/**
+ * gwy_app_data_view_update:
+ * @data_view: A #GwyDataView.
+ *
+ * Repaints a data view.
+ *
+ * Use this function instead of gwy_data_view_update() if you want to
+ * automatically show (hide) the mask layer if present (missing).
+ **/
+void
+gwy_app_data_view_update(GtkWidget *data_view)
+{
+    GwyDataViewLayer *layer;
+    GwyContainer *data;
+    gboolean has_mask;
+    gboolean has_alpha;
+
+    gwy_debug("%s", __FUNCTION__);
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    has_mask = gwy_container_contains_by_name(data, "/0/mask");
+    has_alpha = gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(data_view)) != NULL;
+
+    if (has_mask && !has_alpha) {
+        layer = GWY_DATA_VIEW_LAYER(gwy_layer_mask_new());
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
+    }
+    else if (!has_mask && has_alpha) {
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), NULL);
+    }
+    else {
+        gwy_data_view_update(GWY_DATA_VIEW(data_view));
+    }
 }
 
 /**
@@ -475,10 +511,22 @@ gwy_app_use_tool_cb(GtkWidget *unused,
     }
 }
 
+/**
+ * gwy_app_undo_checkpoint:
+ * @data: A data container.
+ * @what: What in the data should be put into the undo queue.
+ *
+ * Create a point in the undo history we can return to.
+ *
+ * XXX: It can only save the state of standard datafields.
+ **/
 void
 gwy_app_undo_checkpoint(GwyContainer *data,
                         const gchar *what)
 {
+    const char *good_keys[] = {
+        "/0/data", "/0/mask", "/0/show", NULL
+    };
     GwyMenuSensitiveData sens_data = {
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_UNDO
@@ -487,14 +535,17 @@ gwy_app_undo_checkpoint(GwyContainer *data,
     GwyAppFuckingUndo *undo;
     GObject *object;
     GList *l;
+    const gchar **p;
 
     g_return_if_fail(GWY_IS_CONTAINER(data));
-    if (strcmp(what, "/0/data") && strcmp(what, "/0/mask")) {
+    for (p = good_keys; *p && strcmp(what, *p); p++)
+        ;
+    if (!*p) {
         g_warning("FIXME: Undo works only for standard datafields");
         return;
     }
 
-    l = g_list_find_custom(current_data, data, 
+    l = g_list_find_custom(current_data, data,
                            (GCompareFunc)compare_data_window_data_cb);
     if (!l) {
         g_critical("Cannot find data window for container %p", data);
@@ -579,7 +630,7 @@ gwy_app_undo_undo(void)
 
     undo_redo_clean(window, TRUE, TRUE);
     g_object_set_data(window, "redo", redo);
-    gwy_data_view_update(GWY_DATA_VIEW(data_view));
+    gwy_app_data_view_update(data_view);
     gwy_app_update_toolbox_state(&sens_data);
 }
 
@@ -644,7 +695,7 @@ gwy_app_undo_redo(void)
 
     undo_redo_clean(window, TRUE, TRUE);
     g_object_set_data(window, "undo", undo);
-    gwy_data_view_update(GWY_DATA_VIEW(data_view));
+    gwy_app_data_view_update(data_view);
     gwy_app_update_toolbox_state(&sens_data);
 }
 
