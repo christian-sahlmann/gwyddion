@@ -489,10 +489,11 @@ void iterate(GwyDataField *mask_field, GArray *listpnt, gint col, gint row)
     xres = mask_field->xres; 
     yres = mask_field->yres;
     
-    if (mask_field->data != 0) 
+    if (mask_field->data[col + xres*(row)] != 0) 
     {
         gr.col = col; gr.row = row;
         g_array_append_val(listpnt, gr);
+        mask_field->data[col + xres*(row)] = 0;
     }
     else return;
     
@@ -518,6 +519,8 @@ void number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
     GrainPoint pnt;
 
     grain = 0;
+    gwy_data_field_fill(grain_field, 0);
+    
     for (col=0; col<(xres); col++)
     {   
         for (row=0; row<(yres); row++)
@@ -537,10 +540,6 @@ void number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
                 }
 
                 g_array_free(listpnt, TRUE);
-            }
-            else
-            {
-                grain_field->data[col + xres*(row)] = 0;
             }
         }
     } 

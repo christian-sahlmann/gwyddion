@@ -86,7 +86,12 @@ static void        mark_save_args              (GwyContainer *container,
 static void        mark_dialog_update          (MarkControls *controls,
                                                MarkArgs *args);
 static void        preview                     (MarkControls *controls,
-                                               MarkArgs *args);
+                                               MarkArgs *args,
+                                               GwyContainer *data);
+static void        ok                         (MarkControls *controls,
+                                               MarkArgs *args,
+                                               GwyContainer *data);
+
 
 
 MarkArgs mark_defaults = {
@@ -135,29 +140,18 @@ static gboolean
 mark(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GwyDataField *dfield;
     MarkArgs args;
     gboolean ok;
     gint i;
-    gint xsize, ysize;
     gint newsize;
 
     g_assert(run & MARK_RUN_MODES);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = mark_defaults;
     else
         mark_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || mark_dialog(&args, data);
     if (ok) {
-        data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-        g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-        gwy_app_clean_up_data(data);
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-
-        xsize = gwy_data_field_get_xres(dfield);
-        ysize = gwy_data_field_get_yres(dfield);
 
         if (run != GWY_RUN_WITH_DEFAULTS)
             mark_save_args(gwy_app_settings_get(), &args);
@@ -264,6 +258,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
             break;
 
             case GTK_RESPONSE_OK:
+            ok(&controls, args, data);
             break;
 
             case RESPONSE_RESET:
@@ -272,7 +267,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
             break;
 
             case RESPONSE_PREVIEW:
-            preview(&controls, args);
+            preview(&controls, args, data);
             break;
 
             default:
@@ -373,9 +368,46 @@ mark_dialog_update(MarkControls *controls,
 
 static void
 preview(MarkControls *controls,
-        MarkArgs *args)
+        MarkArgs *args,
+        GwyContainer *data)
 {
-    printf("preview!\n");
+    
+}
+
+static void
+ok(MarkControls *controls,
+        MarkArgs *args,
+        GwyContainer *data)
+{
+    
+    GwyDataField *maskfield, *dfield;
+    GwyDataViewLayer *layer;
+    
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    /*set up the mask*/
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+    {
+        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                  "/0/mask"));
+        gwy_data_field_resample(maskfield,
+                               gwy_data_field_get_xres(dfield),
+                               gwy_data_field_get_yres(dfield),
+                               GWY_INTERPOLATION_NONE);
+        gwy_data_field_copy(dfield, maskfield);
+    }
+    else
+    {
+        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
+    }
+    
+    /*fill the mask*/
+    gwy_data_field_grains_mark_height(dfield, maskfield, 
+                                      (gwy_data_field_get_max(dfield)+gwy_data_field_get_min(dfield))/2,
+                                      0);
+    
+    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
 static void        
