@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <glib.h>
 #include <gdk/gdkkeysyms.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
@@ -40,8 +41,8 @@
 #define GWY_3D_VIEW_TYPE_NAME "Gwy3DView"
 
 #define BITS_PER_SAMPLE 8
-#define GWY_3D_VIEW_DEFAULT_SIZE_X 200
-#define GWY_3D_VIEW_DEFAULT_SIZE_Y 200
+#define GWY_3D_VIEW_DEFAULT_SIZE_X 257
+#define GWY_3D_VIEW_DEFAULT_SIZE_Y 257
 #define GWY_3D_SHAPE_AFM     0
 #define GWY_3D_SHAPE_REDUCED 1
 
@@ -49,6 +50,8 @@
 #define  GWY_3D_Z_DEFORMATION     1.01
 #define  GWY_3D_Z_TRANSFORMATION  0.5
 #define  GWY_3D_Z_DISPLACEMENT    -0.2
+
+#define GWY_3D_TIMEOUT_DELAY      1000
 
 typedef struct { GLfloat x, y, z; } Gwy3DVector;
 
@@ -85,13 +88,16 @@ static void          gwy_3d_set_projection      (Gwy3DView *gwy3dview,
                                                  GLfloat height);
 static void     gwy_3d_adjustment_value_changed (GtkAdjustment* adjustment,
                                                  gpointer user_data);
+static void          gwy_3d_timeout_start       (Gwy3DView * gwy3dview,
+                                                 gboolean immediate,
+                                                 gboolean invalidate_now);
+static gboolean      gwy_3d_timeout_func        (gpointer user_data);
+
 
 /* Local data */
 
 static GtkDrawingAreaClass *parent_class = NULL;
 
-static float begin_x = 0.0;
-static float begin_y = 0.0;
 
 /* TODO: use Pango for font family selection */
 #ifdef WIN32
@@ -213,8 +219,12 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->font_list_base        = -1;
     gwy3dview->font_height           = 0;
     gwy3dview->shape_current         = 0;
+    gwy3dview->mouse_begin_x         = 0.0;
+    gwy3dview->mouse_begin_y         = 0.0;
     gwy3dview->reserved1             = NULL;
 }
+
+
 
 /**
  * gwy_3d_view_new:
@@ -268,20 +278,17 @@ gwy_3d_view_new(GwyContainer *data)
     if (gwy_container_contains_by_name(data, "/0/3d/palette"))
     {    palette_name =
              gwy_container_get_string_by_name(data, "/0/3d/palette");
-         gwy_debug("A - %s", palette_name);
     }
     else if (gwy_container_contains_by_name(data, "/0/base/palette"))
     {
         palette_name =
             gwy_container_get_string_by_name(data, "/0/base/palette");
-        gwy_debug("B - %s", palette_name);
         gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
                                          g_strdup(palette_name));
     }
     else
     {
         palette_name =  g_strdup(GWY_PALETTE_YELLOW);
-        gwy_debug("C - %s", palette_name);
         gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
                                          g_strdup(palette_name));
     }
@@ -358,7 +365,6 @@ gwy_3d_view_new(GwyContainer *data)
                                 gwy_data_field_get_xreal(gwy3dview->data),
                                 gwy_data_field_get_yreal(gwy3dview->data),
                                 TRUE);
-        g_object_ref(G_OBJECT(gwy3dview->downsampled));
         gwy_data_field_copy(gwy3dview->data, gwy3dview->downsampled);
         rx = gwy_data_field_get_xres(gwy3dview->downsampled);
         ry = gwy_data_field_get_yres(gwy3dview->downsampled);
@@ -397,7 +403,7 @@ gwy_3d_view_new(GwyContainer *data)
                      gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
     g_signal_connect(gwy3dview->light_z, "value-changed",
                      gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
-    g_signal_connect(gwy3dview->light_z, "value-changed",
+    g_signal_connect(gwy3dview->light_y, "value-changed",
                      gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
     return widget;
 }
@@ -491,9 +497,10 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
 
         data = GWY_DATA_FIELD(gwy_container_get_object_by_name(
                     gwy3dview->container, "/0/data"));
-        if (data != gwy3dview->data)
+/*        if (data != gwy3dview->data)
+*/
         {
-            g_object_unref(G_OBJECT(gwy3dview->data));
+            gwy_object_unref(gwy3dview->data);
             gwy3dview->data = data;
             g_object_ref(G_OBJECT(gwy3dview->data));
             update_data = TRUE;
@@ -529,7 +536,7 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
     {   /* make the dowsampled preview */
         guint rx, ry;
 
-        g_object_unref(G_OBJECT(gwy3dview->downsampled));
+        gwy_object_unref(gwy3dview->downsampled);
         gwy3dview->downsampled =
             (GwyDataField*) gwy_data_field_new(
                                 gwy_data_field_get_xres(gwy3dview->data),
@@ -553,18 +560,23 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
                                 ry,
                                 GWY_INTERPOLATION_BILINEAR);
 
+        gwy3dview->data_min  = gwy_data_field_get_min(gwy3dview->data);
+        gwy3dview->data_max  = gwy_data_field_get_max(gwy3dview->data);
+
     }
 
     if ((update_data == TRUE || update_palette == TRUE)
          && GTK_WIDGET_REALIZED(gwy3dview))
     {
         /* FIXME: ?is it necessary to delete old dislpay lists? */
-        gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
         gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, GWY_3D_SHAPE_REDUCED);
 
-        gdk_window_invalidate_rect(
+        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+/*        gdk_window_invalidate_rect(
             GTK_WIDGET(gwy3dview)->window,
                        &GTK_WIDGET(gwy3dview)->allocation, FALSE);
+*/
+        gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
     }
 
 }
@@ -624,17 +636,19 @@ gwy_3d_view_set_palette       (Gwy3DView *gwy3dview,
 /*    g_signal_connect_swapped(3D_widget->palette, "value_changed",
                              G_CALLBACK(gwy_3d_view_update), 3D_widget);
 */
-    g_object_unref(old);
+    gwy_object_unref(old);
 
     if (GTK_WIDGET_REALIZED(gwy3dview))
     {
         /* FIXME: ?is it necessary to delete old dislpay lists? */
-        gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
         gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, GWY_3D_SHAPE_REDUCED);
+        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+        gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
 
-        gdk_window_invalidate_rect(
+/*        gdk_window_invalidate_rect(
             GTK_WIDGET(gwy3dview)->window,
                        &GTK_WIDGET(gwy3dview)->allocation, FALSE);
+*/
     }
 
 }
@@ -716,10 +730,12 @@ gwy_3d_view_set_orthographic   (Gwy3DView *gwy3dview,
     if (orthographic == gwy3dview->orthogonal_projection) return;
     gwy3dview->orthogonal_projection = orthographic;
 
-    if (GTK_WIDGET_REALIZED(gwy3dview))
+    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+/*    if (GTK_WIDGET_REALIZED(gwy3dview))
         gdk_window_invalidate_rect(
             GTK_WIDGET(gwy3dview)->window,
                        &GTK_WIDGET(gwy3dview)->allocation, FALSE);
+*/
 }
 
 /**
@@ -760,10 +776,13 @@ gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
     if (show_axes == gwy3dview->show_axes) return;
     gwy3dview->show_axes = show_axes;
 
-    if (GTK_WIDGET_REALIZED(gwy3dview))
+    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+
+/*    if (GTK_WIDGET_REALIZED(gwy3dview))
         gdk_window_invalidate_rect(
             GTK_WIDGET(gwy3dview)->window,
                        &GTK_WIDGET(gwy3dview)->allocation, FALSE);
+*/
 }
 
 /**
@@ -807,10 +826,14 @@ gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
     if (show_labels == gwy3dview->show_labels) return;
     gwy3dview->show_labels = show_labels;
 
-    if (GTK_WIDGET_REALIZED(gwy3dview))
+    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+
+
+/*    if (GTK_WIDGET_REALIZED(gwy3dview))
         gdk_window_invalidate_rect(
             GTK_WIDGET(gwy3dview)->window,
                        &GTK_WIDGET(gwy3dview)->allocation, FALSE);
+*/
 }
 
 /**
@@ -859,7 +882,7 @@ gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
 
     if (reduced_size == gwy3dview->reduced_size) return;
     gwy3dview->reduced_size = reduced_size;
-    g_object_unref(G_OBJECT(gwy3dview->downsampled));
+    gwy_object_unref(gwy3dview->downsampled);
     gwy3dview->downsampled =
         (GwyDataField*) gwy_data_field_new(
                             gwy_data_field_get_xres(gwy3dview->data),
@@ -890,9 +913,11 @@ gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
         gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
                          GWY_3D_SHAPE_REDUCED);
 
-        gdk_window_invalidate_rect(
+        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+/*        gdk_window_invalidate_rect(
             GTK_WIDGET(gwy3dview)->window,
             &GTK_WIDGET(gwy3dview)->allocation, FALSE);
+*/
     }
 
 }
@@ -938,10 +963,12 @@ gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
     if (material == gwy3dview->mat_current) return;
     gwy3dview->mat_current = material;
 
-    if (GTK_WIDGET_REALIZED(gwy3dview))
+/*    if (GTK_WIDGET_REALIZED(gwy3dview))
         gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
                                    &GTK_WIDGET(gwy3dview)->allocation,
                                    FALSE);
+*/
+    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 
@@ -1016,11 +1043,14 @@ gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
    gtk_adjustment_set_value(gwy3dview->deformation_z, 1.0);
    gtk_adjustment_set_value(gwy3dview->light_z, 0.0);
    gtk_adjustment_set_value(gwy3dview->light_y, 0.0f);
-   if (GTK_WIDGET_REALIZED(gwy3dview))
+
+   gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+
+/*   if (GTK_WIDGET_REALIZED(gwy3dview))
         gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
                                    &GTK_WIDGET(gwy3dview)->allocation, FALSE);
 
-}
+*/}
 
 /**
  * gwy_3d_view_get_rot_x_adjustment:
@@ -1241,16 +1271,63 @@ gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
 
 /******************************************************************************/
 static void
+gwy_3d_timeout_start(Gwy3DView * gwy3dview, gboolean immediate, gboolean invalidate_now)
+{
+    gwy_debug("");
+
+    if (gwy3dview->timeout == TRUE)
+         g_source_remove(gwy3dview->timeout_id);
+
+    if (!GTK_WIDGET_REALIZED(gwy3dview))
+        return;
+
+    if (immediate == TRUE)
+        gwy3dview->shape_current = GWY_3D_SHAPE_AFM;
+    else
+        gwy3dview->shape_current = GWY_3D_SHAPE_REDUCED;
+
+    if (invalidate_now == TRUE || immediate == TRUE)
+        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
+                                   &GTK_WIDGET(gwy3dview)->allocation, FALSE);
+
+    if (!immediate)
+    {
+        gwy3dview->timeout_id = g_timeout_add(GWY_3D_TIMEOUT_DELAY,
+                                              (GSourceFunc)gwy_3d_timeout_func,
+                                              (gpointer)gwy3dview);
+        gwy3dview->timeout = TRUE;
+    }
+}
+
+static gboolean
+gwy_3d_timeout_func(gpointer user_data)
+{
+    Gwy3DView * gwy3dview;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(user_data), FALSE);
+
+    gwy3dview = (Gwy3DView *) user_data;
+    gwy3dview->shape_current = GWY_3D_SHAPE_AFM;
+    gwy3dview->timeout = FALSE;
+    if (GTK_WIDGET_REALIZED(gwy3dview))
+        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
+                                   &GTK_WIDGET(gwy3dview)->allocation, TRUE);
+
+    return FALSE;
+}
+
+
+static void
 gwy_3d_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_data)
 {
     Gwy3DView * gwy3dview;
+
+    gwy_debug("");
     g_return_if_fail(GTK_IS_ADJUSTMENT(adjustment));
     g_return_if_fail(GWY_IS_3D_VIEW(user_data));
     gwy3dview = (Gwy3DView*) user_data;
-    if (GTK_WIDGET_REALIZED(gwy3dview))
-        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
-                                   &GTK_WIDGET(gwy3dview)->allocation,
-                                   FALSE);
+    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 
@@ -1294,7 +1371,7 @@ gwy_3d_view_configure (GtkWidget *widget, GdkEventConfigure *event)
     GLfloat w = widget->allocation.width;
     GLfloat h = widget->allocation.height;
 
-    gwy_debug("");
+    gwy_debug("width: %f, height: %f", w, h);
     g_return_val_if_fail(GWY_IS_3D_VIEW(widget), FALSE);
     gwy3dview = GWY_3D_VIEW(widget);
 
@@ -1332,7 +1409,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     GdkGLDrawable *gldrawable;
     Gwy3DView * gwy3D;
 
-    GLfloat light_position[] = { 0.0, 3.0, 3.0, 1.0 };
+    GLfloat light_position[] = { 0.0, 0.0, 4.0, 1.0 };
 
     gwy_debug("");
 
@@ -1369,7 +1446,7 @@ gwy_3d_view_expose(GtkWidget *widget,
         glMaterialf(GL_FRONT, GL_SHININESS, gwy3D->mat_current->shininess * 128.0);
         glPushMatrix();
         glRotatef(gwy3D->light_z->value, 0.0f, 0.0f, 1.0f);
-        glRotatef(gwy3D->light_y->value, 1.0f, 0.0f, 0.0f);
+        glRotatef(gwy3D->light_y->value, 0.0f, 1.0f, 0.0f);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glPopMatrix();
     } else {
@@ -1408,13 +1485,13 @@ gwy_3d_view_button_press(GtkWidget *widget,
 
     gwy3dview = GWY_3D_VIEW(widget);
 
-    begin_x = event->x;
-    begin_y = event->y;
+    gwy3dview->mouse_begin_x = event->x;
+    gwy3dview->mouse_begin_y = event->y;
 
-    if ((event->button == 1 || event->button == 2)
+/*    if ((event->button == 1 || event->button == 2)
         && gwy3dview->shape_current == GWY_3D_SHAPE_AFM)
         gwy3dview->shape_current = GWY_3D_SHAPE_REDUCED;
-
+*/
     return FALSE;
 }
 
@@ -1431,13 +1508,13 @@ gwy_3d_view_button_release(GtkWidget *widget,
 
     gwy3dview = GWY_3D_VIEW(widget);
 
-    if ((event->button == 1 || event->button == 2)
+/*    if ((event->button == 1 || event->button == 2)
         && (gwy3dview->shape_current == GWY_3D_SHAPE_REDUCED))
     {
         gwy3dview->shape_current = GWY_3D_SHAPE_AFM;
         gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
     }
-
+*/
     return FALSE;
 }
 
@@ -1464,15 +1541,19 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
         switch (gwy3dview->movement_status)
         {
             case GWY_3D_ROTATION:
-                gtk_adjustment_set_value(gwy3dview->rot_x, gwy3dview->rot_x->value + x - begin_x);
-                gtk_adjustment_set_value(gwy3dview->rot_y, gwy3dview->rot_y->value + y - begin_y);
+                gtk_adjustment_set_value(gwy3dview->rot_x, 
+                                         gwy3dview->rot_x->value 
+                                         + x - gwy3dview->mouse_begin_x);
+                gtk_adjustment_set_value(gwy3dview->rot_y, 
+                                         gwy3dview->rot_y->value 
+                                         + y - gwy3dview->mouse_begin_y);
                 redraw = TRUE;
                 break;
 
             case GWY_3D_SCALE:
                 gtk_adjustment_set_value(gwy3dview->view_scale,
                                         gwy3dview->view_scale->value
-                                        * (1.0 + (y - begin_y) / h));
+                                        * (1.0 + (y - gwy3dview->mouse_begin_y) / h));
                 if (gwy3dview->view_scale->value > gwy3dview->view_scale_max)
                     gtk_adjustment_set_value(gwy3dview->view_scale, gwy3dview->view_scale_max);
                 else if (gwy3dview->view_scale->value < gwy3dview->view_scale_min)
@@ -1484,11 +1565,11 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
             {
                 register int i;
                 double dz = gwy3dview->deformation_z->value;
-                if (y - begin_y > 0)
-                    for (i = 0; i < y - begin_y; i++)
+                if (y - gwy3dview->mouse_begin_y > 0)
+                    for (i = 0; i < y - gwy3dview->mouse_begin_y; i++)
                         dz /= GWY_3D_Z_DEFORMATION;
                 else
-                    for (i = 0; i < begin_y - y; i++)
+                    for (i = 0; i < gwy3dview->mouse_begin_y - y; i++)
                         dz *= GWY_3D_Z_DEFORMATION;
                 gtk_adjustment_set_value(gwy3dview->deformation_z, dz);
                 redraw = TRUE;
@@ -1496,18 +1577,20 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
             }
             case GWY_3D_LIGHT_MOVEMENT:
                 gtk_adjustment_set_value(gwy3dview->light_z,
-                                         gwy3dview->light_z->value + x - begin_x);
+                                         gwy3dview->light_z->value 
+                                         + x - gwy3dview->mouse_begin_x);
                 gtk_adjustment_set_value(gwy3dview->light_y,
-                                         gwy3dview->light_y->value + y - begin_y);
+                                         gwy3dview->light_y->value
+                                         + y - gwy3dview->mouse_begin_y);
                 redraw = TRUE;
                 break;
         }
 
-    begin_x = x;
-    begin_y = y;
-    if (redraw)
+    gwy3dview->mouse_begin_x = x;
+    gwy3dview->mouse_begin_y = y;
+/*    if (redraw)
         gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
-
+*/
     return FALSE;
 }
 
@@ -1851,22 +1934,22 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
     */
     glTranslatef(0.0f, 0.0f, plane_z);
     glRotatef(widget->light_z->value, 0.0f, 0.0f, 1.0f);
-    glRotatef(widget->light_y->value, 1.0f, 0.0f, 0.0f);
+    glRotatef(widget->light_y->value, 0.0f, 1.0f, 0.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUAD_STRIP);
         for (i = -180; i <= 180; i += 5)
         {
-            GLfloat y = cos(i * DIG_2_RAD) * sqrt(2);
+            GLfloat x = cos(i * DIG_2_RAD) * sqrt(2);
             GLfloat z = sin(i * DIG_2_RAD) * sqrt(2);
-            glVertex3f( 0.05f, y, z);
-            glVertex3f(-0.05f, y, z);
+            glVertex3f( x, 0.05f, z);
+            glVertex3f(x, -0.05f, z);
         }
     glEnd();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBegin(GL_LINE_STRIP);
         glVertex3f(0.0f, 0.0f, 0.0f);
-        glVertex3f( 0.05f, 1.0f, 1.0f);
-        glVertex3f(-0.05f, 1.0f, 1.0f);
+        glVertex3f( 0.0, 0.05f, sqrt(2.0));
+        glVertex3f(0.0, -0.05f, sqrt(2.0));
         glVertex3f(0.0f, 0.0f, 0.0f);
     glEnd();
     glPopMatrix();

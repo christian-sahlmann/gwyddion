@@ -95,6 +95,12 @@ struct _Gwy3DView {
 
     GwyGLMaterial * mat_current;    /* Current material (influences the color of the object, lights must be on) */
 
+    gdouble mouse_begin_x;          /* Start x-coordinate of mouse */
+    gdouble mouse_begin_y;          /* Start y-coordinate of mouse */
+    
+    gboolean timeout;               /* Is running timeot for redrawing in full scale */
+    guint timeout_id;               /* Timeout id */
+
     gpointer reserved1;
 };
 
