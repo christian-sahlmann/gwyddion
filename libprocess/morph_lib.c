@@ -666,6 +666,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
 
     delta = MAX(MAX(tip_xsiz, tip_ysiz)/10, 1);
 
+    gwy_debug("Searching for local maxima");
     if (set_message)
         set_message(N_("Searching for local maxima"));
     /* Create a list of coordinates to use */
@@ -684,6 +685,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
             }
         }
     }
+    gwy_debug("Found %d internal local maxima", n);
     g_snprintf(buffer, sizeof(buffer),
                N_("Found %d internal local maxima"), n);
     if (set_message)
@@ -693,6 +695,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     do {
         count = 0;
         iter++;
+        gwy_debug("Iterating estimate (iteration %d)", iter);
         g_snprintf(buffer, sizeof(buffer),
                    N_("Iterating estimate (iteration %d)"), iter);
         if (set_message)
@@ -703,10 +706,10 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
                                     tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                     use_edges))
                 count++;
-                if (set_fraction && !set_fraction((gdouble)i/(gdouble)n)) {
-                    break;
-                }
+            if (set_fraction && !set_fraction((gdouble)i/(gdouble)n))
+                break;
         }
+        gwy_debug("%d image locations produced refinement", count);
         g_snprintf(buffer, sizeof(buffer),
                    N_("%d image locations produced refinement"), count);
         if (set_message)
@@ -752,7 +755,8 @@ useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta)
     /* If the point equals the maximum value in the neighborhood we use it,
        unless there are too many points in the neighborhood with the same
        property--i.e. the neighborhood is flat */
-    if (max == image[y][x] && count <= ((2 * delta + 1) ^ 2)/5)
+    /*if (max == image[y][x] && count <= (((2*delta + 1) ^ 2)/5))*/
+    if (max == image[y][x] && count <= (2*delta + 1)*(2*delta + 1)/5)
         return 1;
     return 0;
 }

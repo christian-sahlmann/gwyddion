@@ -729,11 +729,10 @@ gwy_tip_estimate_partial(GwyDataField *tip,
     gint **fsurface;
     gdouble tipmin, surfacemin, step;
 
+    gwy_debug("Converting fields");
+    if (set_message && !set_message(N_("Converting fields")))
+        return NULL;
 
-    if (set_message) {
-        if (!set_message(N_("Converting fields")))
-            return NULL;
-    }
     tipmin = gwy_data_field_get_min(tip);
     surfacemin = gwy_data_field_get_min(surface);
     step = (gwy_data_field_get_max(surface)-surfacemin)/10000;
@@ -741,19 +740,18 @@ gwy_tip_estimate_partial(GwyDataField *tip,
     ftip = i_datafield_to_field(tip, TRUE,  tipmin, step);
     fsurface = i_datafield_to_field(surface, FALSE, surfacemin, step);
 
-    if (set_message) {
-        if (!set_message(N_("Starting partial estimation")))
-            return NULL;
-    }
+    gwy_debug("Starting partial estimation");
+    if (set_message && !set_message(N_("Starting partial estimation")))
+        return NULL;
+
     _gwy_morph_lib_itip_estimate0(fsurface, surface->yres, surface->xres,
                                   tip->yres, tip->xres,
                                   tip->yres/2, tip->xres/2,
                                   ftip, threshold/step,
                                   use_edges, set_fraction, set_message);
-    if (set_fraction) {
-        if (!set_fraction(0))
-            return NULL;
-    }
+    if (set_fraction && !set_fraction(0))
+        return NULL;
+    gwy_debug("Converting fields");
     if (set_message)
         set_message(N_("Converting fields"));
 
@@ -762,6 +760,7 @@ gwy_tip_estimate_partial(GwyDataField *tip,
 
     _gwy_morph_lib_ifreematrix(ftip, tip->xres);
     _gwy_morph_lib_ifreematrix(fsurface, surface->xres);
+
     return tip;
 }
 
@@ -809,20 +808,17 @@ gwy_tip_estimate_full(GwyDataField *tip,
     ftip = i_datafield_to_field(tip, TRUE, tipmin, step);
     fsurface = i_datafield_to_field(surface, FALSE,  surfacemin, step);
 
-    if (set_message) {
-        if (!set_message(N_("Starting full estimation")))
-            return NULL;
-    }
+    if (set_message && !set_message(N_("Starting full estimation")))
+        return NULL;
+
     _gwy_morph_lib_itip_estimate(fsurface, surface->yres, surface->xres,
                                  tip->yres, tip->xres,
                                  tip->yres/2, tip->xres/2,
                                  ftip, threshold/step,
                                  use_edges, set_fraction, set_message);
 
-    if (set_fraction) {
-        if (!set_fraction(0))
-            return NULL;
-    }
+    if (set_fraction && !set_fraction(0))
+        return NULL;
     if (set_message)
         set_message(N_("Converting fields"));
     tip = i_field_to_datafield(ftip, tip, tipmin, step);
