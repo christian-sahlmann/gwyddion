@@ -295,13 +295,11 @@ dialog_update(GwyUnitoolState *state,
     else
         gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
 
-    g_snprintf(buffer, sizeof(buffer), "%2.3e", ra);
-    gtk_label_set_text(GTK_LABEL(controls->ra), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%2.3e", rms);
-    gtk_label_set_text(GTK_LABEL(controls->rms), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%2.3e", skew);
+    gwy_unitool_update_label(state->value_format, controls->ra, ra);
+    gwy_unitool_update_label(state->value_format, controls->rms, rms);
+    g_snprintf(buffer, sizeof(buffer), "%2.3g", skew);
     gtk_label_set_text(GTK_LABEL(controls->skew), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%2.3e", kurtosis);
+    g_snprintf(buffer, sizeof(buffer), "%2.3g", kurtosis);
     gtk_label_set_text(GTK_LABEL(controls->kurtosis), buffer);
     gwy_unitool_update_label(state->value_format, controls->avg, avg);
 
