@@ -161,18 +161,17 @@ sfunctions_use(GwyDataWindow *data_window,
 static void
 sfunctions_do(void)
 {
-    GtkWidget *window, *graph;
+    GtkWidget *window;
     GwyContainer *data;
     GwyDataField *datafield;
     gint is_selected;
-    gdouble xmin, ymin, xmax, ymax;
-    gchar *x_unit, *z_unit;
-    gdouble x_mag, z_mag;
-    gdouble xreal, yreal, x_max, unit;
-    gdouble xm1, xm2, ym1, ym2;
-    gdouble z_max;
-    gint precision;
     GwyGraphAutoProperties prop;
+    GwyGraph *graph;
+    GwyDataLine *dataline;
+    gint xm1, xm2, ym1, ym2;
+    GString *lab;
+    gdouble xreal, yreal;
+    gdouble xmin, ymin, xmax, ymax;
 
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
@@ -190,39 +189,48 @@ sfunctions_do(void)
         ymax = yreal;
     }
 
-    x_max = MAX(xreal, yreal);
-    unit = MIN(xreal/gwy_data_field_get_xres(datafield),
-               yreal/gwy_data_field_get_yres(datafield));
-    x_mag = gwy_math_humanize_numbers(unit, x_max, &precision);
-    x_unit = g_strconcat(gwy_math_SI_prefix(x_mag), "m", NULL);
-
-    z_max = gwy_data_field_get_max(datafield);
-    z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
-    z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
-
-
-    graph = gwy_graph_new();
-    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
+    graph = (GwyGraph*)gwy_graph_new();
+    
+    gwy_graph_get_autoproperties(graph, &prop);
     prop.is_point = 0;
     prop.is_line = 1;
-    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
+    gwy_graph_set_autoproperties(graph, &prop);
 
-    /* XXX: WFT? */
-    xm1 = gwy_data_field_rtoj(datafield, xmin);
-    ym1 = gwy_data_field_rtoj(datafield, ymin);
-    xm2 = gwy_data_field_rtoj(datafield, xmax);
-    ym2 = gwy_data_field_rtoj(datafield, ymax);
+    xm1 = (gint)floor(gwy_data_field_rtoj(datafield, xmin)+0.5);
+    ym1 = (gint)floor(gwy_data_field_rtoj(datafield, ymin)+0.5);
+    xm2 = (gint)floor(gwy_data_field_rtoj(datafield, xmax)+0.5);
+    ym2 = (gint)floor(gwy_data_field_rtoj(datafield, ymax)+0.5);
 
-        /*
-               gwy_graph_add_dataline_with_units(graph, dtl->pdata[i],
-                               0, str->pdata[i], NULL,
-                               x_mag, z_mag,
-                               x_unit,
-                               z_unit
-                               );*/
+
+    dataline = (GwyDataLine *)gwy_data_line_new(10, 10, 0);
+    lab = g_string_new("");
+    if (controls.out == GWY_SF_OUTPUT_DH || controls.out == GWY_SF_OUTPUT_CDH) g_string_assign(lab, "Height distribution");
+    else if (controls.out == GWY_SF_OUTPUT_DA || controls.out == GWY_SF_OUTPUT_CDA) g_string_assign(lab, "Slope distribution");
+    else if (controls.out == GWY_SF_OUTPUT_ACF) g_string_assign(lab, "ACF");
+    else if (controls.out == GWY_SF_OUTPUT_HHCF) g_string_assign(lab, "HHCF");
+    else if (controls.out == GWY_SF_OUTPUT_PSDF) g_string_assign(lab, "PSDF");
+    
+
+    if (gwy_data_field_get_line_stat_function(datafield,
+                                          dataline,
+                                          xm1,
+                                          ym1,
+                                          xm2,
+                                          ym2,
+                                          controls.out,
+                                          controls.dir,
+                                          controls.interp,
+                                          GWY_WINDOWING_HANN,
+                                          100)) 
+    {
+        gwy_graph_add_dataline(graph, dataline, 0, lab, NULL);
+    } 
+
     window = gwy_app_graph_window_create(graph);
 
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
+    g_string_free(lab, TRUE);
+    gwy_data_line_free(dataline);
 }
 
 static void
@@ -409,16 +417,11 @@ sfunctions_selection_updated_cb(void)
     GwyDataField *datafield;
     GwyDataLine *dataline;
     gboolean is_visible, is_selected;
-    gint j;
     gint xm1, xm2, ym1, ym2;
     GwyGraphAutoProperties prop;
     GString *lab;
-    gchar *x_unit, *z_unit;
-    gdouble x_mag, z_mag;
-    gdouble xreal, yreal, x_max, unit;
+    gdouble xreal, yreal;
     gdouble xmin, ymin, xmax, ymax;
-    gdouble z_max;
-    gint precision;
 
     gwy_debug("");
 
@@ -437,7 +440,6 @@ sfunctions_selection_updated_cb(void)
         ymax = yreal;
     }
 
-
     is_visible = controls.is_visible;
 
     if (!is_visible)
@@ -448,16 +450,8 @@ sfunctions_selection_updated_cb(void)
     prop.is_line = 1;
     gwy_graph_set_autoproperties(GWY_GRAPH(controls.graph), &prop);
 
-
     gwy_graph_clear(GWY_GRAPH(controls.graph));
 
-    x_max = MAX(xreal, yreal);
-    unit = MIN(xreal/gwy_data_field_get_xres(datafield),
-                   yreal/gwy_data_field_get_yres(datafield));
-    x_mag = gwy_math_humanize_numbers(unit, x_max, &precision);
-    x_unit = g_strconcat(gwy_math_SI_prefix(x_mag), "m", NULL);
-
-    j = 0;
     xm1 = (gint)floor(gwy_data_field_rtoj(datafield, xmin)+0.5);
     ym1 = (gint)floor(gwy_data_field_rtoj(datafield, ymin)+0.5);
     xm2 = (gint)floor(gwy_data_field_rtoj(datafield, xmax)+0.5);
@@ -465,7 +459,12 @@ sfunctions_selection_updated_cb(void)
 
 
     dataline = gwy_data_line_new(10, 10, 0);
-    lab = g_string_new("ble");
+    lab = g_string_new("");
+    if (controls.out == GWY_SF_OUTPUT_DH || controls.out == GWY_SF_OUTPUT_CDH) g_string_assign(lab, "Height distribution");
+    else if (controls.out == GWY_SF_OUTPUT_DA || controls.out == GWY_SF_OUTPUT_CDA) g_string_assign(lab, "Slope distribution");
+    else if (controls.out == GWY_SF_OUTPUT_ACF) g_string_assign(lab, "ACF");
+    else if (controls.out == GWY_SF_OUTPUT_HHCF) g_string_assign(lab, "HHCF");
+    else if (controls.out == GWY_SF_OUTPUT_PSDF) g_string_assign(lab, "PSDF");
 
     if (gwy_data_field_get_line_stat_function(datafield,
                                           dataline,
@@ -479,28 +478,11 @@ sfunctions_selection_updated_cb(void)
                                           GWY_WINDOWING_HANN,
                                           100)) 
     {
-
-        z_max = gwy_data_line_get_max(dataline) -  gwy_data_line_get_min(dataline);
-        z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
-        z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
-
         gwy_graph_add_dataline(GWY_GRAPH(controls.graph), dataline, 0, lab, NULL);
-        /*
-        gwy_graph_add_dataline_with_units(controls.graph, dataline,
-                  0, "line", NULL,
-                  x_mag, z_mag,
-                  x_unit,
-                  z_unit
-                  );
-       */
 
         gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
         update_labels();
-        
-        g_free(z_unit);
- 
     }
-    g_free(x_unit);
     g_string_free(lab, TRUE);
 
     gwy_data_line_free(dataline); 
