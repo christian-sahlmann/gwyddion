@@ -21,10 +21,11 @@ Config-file options:
   override          Declaration override map (like {'NULL': 'Constant', ... })
   types             Type highligting override map (like {'Enum': 'Keyword'})
 
-Gtk-doc types (case in doesn't matter):
+Gtk-doc types (case doesn't matter):
   Constant, Macro, Function, Struct, Enum, Typedef, User_Function
 Extra vim-syn-gen types:
   Define (parameterless macro)
+
 Version: $Id$\
 """ % sys.argv[0]
     sys.exit(0)
