@@ -336,14 +336,16 @@ gwy_app_run_process_func_cb(gchar *name)
     };
     GwyRunType run;
     GwyDataWindow *data_window;
-    GwyDataView *data_view;
+    GtkWidget *data_view;
     GwyContainer *data;
     gsize i;
 
     gwy_debug("%s: `%s'", __FUNCTION__, name);
     data_window = gwy_app_data_window_get_current();
-    data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
-    data = gwy_data_view_get_data(data_view);
+    if (!data_window)
+        return;
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
     g_return_if_fail(data);
     run = gwy_process_func_get_run_types(name);
     for (i = 0; i < G_N_ELEMENTS(run_types); i++) {
