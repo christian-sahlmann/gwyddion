@@ -34,21 +34,18 @@
  * _GtkColorButtonPrivate made a normal structure member and moved to the
  * header file as there's no support for private in GLib-2.2.
  * Renamed to GwyColorButton to avoid name clash with Gtk+-2.4.
+ *
+ * In May 2004 all the dialog functionality was removed as we need much
+ * more control.  DnD did not fit then and was removed too.
  */
 
 #ifndef __GWY_COLOR_BUTTON_H__
 #define __GWY_COLOR_BUTTON_H__
 
-
 #include <gtk/gtkbutton.h>
+#include <libdraw/gwyrgba.h>
 
 G_BEGIN_DECLS
-
-/* The GtkColorSelectionButton widget is a simple color picker in a button.
- * The button displays a sample of the currently selected color.  When
- * the user clicks on the button, a color selection dialog pops up.
- * The color picker emits the "color_set" signal when the color is set.
- */
 
 #define GWY_TYPE_COLOR_BUTTON             (gwy_color_button_get_type ())
 #define GWY_COLOR_BUTTON(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GWY_TYPE_COLOR_BUTTON, GwyColorButton))
@@ -59,67 +56,41 @@ G_BEGIN_DECLS
 
 typedef struct _GwyColorButton          GwyColorButton;
 typedef struct _GwyColorButtonClass     GwyColorButtonClass;
-typedef struct _GwyColorButtonPrivate   GwyColorButtonPrivate;
-
-struct _GwyColorButtonPrivate
-{
-  GdkPixbuf *pixbuf;    /* Pixbuf for rendering sample */
-  GdkGC *gc;            /* GC for drawing */
-
-  GtkWidget *drawing_area;/* Drawing area for color sample */
-  GtkWidget *cs_dialog; /* Color selection dialog */
-
-  gchar *title;         /* Title for the color selection window */
-
-  GdkColor color;
-  guint16 alpha;
-
-  guint use_alpha : 1;  /* Use alpha or not */
-};
 
 struct _GwyColorButton {
   GtkButton button;
 
   /*< private >*/
-
-  GwyColorButtonPrivate priv;
+  GdkPixbuf *pixbuf;    /* Pixbuf for rendering sample */
+  GdkGC *gc;            /* GC for drawing */
+  GtkWidget *drawing_area;/* Drawing area for color sample */
+  GwyRGBA color;
+  guint use_alpha : 1;  /* Use alpha or not */
 };
 
 struct _GwyColorButtonClass {
   GtkButtonClass parent_class;
 
-  void (* color_set) (GwyColorButton *cp);
-
   /* Padding for future expansion */
-  void (*_gtk_reserved1) (void);
-  void (*_gtk_reserved2) (void);
-  void (*_gtk_reserved3) (void);
-  void (*_gtk_reserved4) (void);
+  void (*reserved1)(void);
+  void (*reserved2)(void);
 };
 
 
 GType      gwy_color_button_get_type       (void) G_GNUC_CONST;
 GtkWidget *gwy_color_button_new            (void);
-GtkWidget *gwy_color_button_new_with_color (GdkColor       *color);
+GtkWidget *gwy_color_button_new_with_color (GwyRGBA        *color);
 void       gwy_color_button_set_color      (GwyColorButton *color_button,
-					    GdkColor       *color);
-void       gwy_color_button_set_alpha      (GwyColorButton *color_button,
-					    guint16         alpha);
+                                            GwyRGBA        *color);
 void       gwy_color_button_get_color      (GwyColorButton *color_button,
-					    GdkColor       *color);
-guint16    gwy_color_button_get_alpha      (GwyColorButton *color_button);
+                                            GwyRGBA        *color);
 void       gwy_color_button_set_use_alpha  (GwyColorButton *color_button,
-					    gboolean        use_alpha);
+                                            gboolean        use_alpha);
 gboolean   gwy_color_button_get_use_alpha  (GwyColorButton *color_button);
-void       gwy_color_button_set_title      (GwyColorButton *color_button,
-					    const gchar    *title);
-G_CONST_RETURN gchar *gwy_color_button_get_title (GwyColorButton *color_button);
 
 
 G_END_DECLS
 
 #endif  /* __GWY_COLOR_BUTTON_H__ */
 
-
-
-
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

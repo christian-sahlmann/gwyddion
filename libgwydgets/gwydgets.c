@@ -105,6 +105,7 @@ gwy_table_attach_row(GtkWidget *table,
 /************************** Mask colors ****************************/
 typedef struct {
     GwyDataView *data_view;
+    GwyColorButton *color_button;
     GwyContainer *container;
     GQuark keys[4];
 } MaskColorSelectorData;
@@ -134,6 +135,8 @@ mask_color_updated_cb(GtkWidget *selector, MaskColorSelectorData *mcsdata)
     for (i = 0; i < 4; i++)
         gwy_container_set_double(mcsdata->container, mcsdata->keys[i], p[i]);
 
+    if (mcsdata->color_button)
+        gwy_color_button_set_color(mcsdata->color_button, (GwyRGBA*)p); /*XXX*/
     if (mcsdata->data_view)
         gwy_data_view_update(mcsdata->data_view);
 }
@@ -143,6 +146,7 @@ mask_color_updated_cb(GtkWidget *selector, MaskColorSelectorData *mcsdata)
  * @dialog_title: Title of the color selection dialog (%NULL to use default).
  * @data_view: Data view to update on color change (%NULL to not update
  *             any data view).
+ * @color_button: Color button to update on color change (or %NULL).
  * @container: Container to initialize the color from and save it to, may be
  *             %NULL to use @data_view's one if that is not %NULL.
  * @prefix: Prefix in @container (normally "/0/mask").
@@ -157,6 +161,7 @@ mask_color_updated_cb(GtkWidget *selector, MaskColorSelectorData *mcsdata)
 void
 gwy_color_selector_for_mask(const gchar *dialog_title,
                             GwyDataView *data_view,
+                            GwyColorButton *color_button,
                             GwyContainer *container,
                             const gchar *prefix)
 {
@@ -180,6 +185,7 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
 
     mcsdata = g_new(MaskColorSelectorData, 1);
     mcsdata->data_view = data_view;
+    mcsdata->color_button = color_button;
     mcsdata->container = container;
     /* quarkize keys */
     len = strlen(prefix);
@@ -220,6 +226,9 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
         /* restore old */
         for (i = 0; i < 4; i++)
             gwy_container_set_double(container, mcsdata->keys[i], p[i]);
+        if (mcsdata->color_button)
+            gwy_color_button_set_color(mcsdata->color_button,
+                                       (GwyRGBA*)p); /*XXX*/
         if (data_view)
             gwy_data_view_update(data_view);
     }

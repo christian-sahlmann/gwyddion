@@ -58,7 +58,7 @@ static gboolean    wshed                        (GwyContainer *data,
                                                  GwyRunType run);
 static gboolean    wshed_dialog                 (WshedArgs *args,
                                                  GwyContainer *data);
-static void        mask_color_changed_cb        (GtkWidget *color_button,
+static void        mask_color_change_cb         (GtkWidget *color_button,
                                                  WshedControls *controls);
 static void        load_mask_color              (GtkWidget *color_button,
                                                  GwyContainer *data);
@@ -244,8 +244,8 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), controls.color_button,
                      1, 2, 9, 10, GTK_FILL, 0, 2, 2);
 
-    g_signal_connect(controls.color_button, "color_set",
-                     G_CALLBACK(mask_color_changed_cb), &controls);
+    g_signal_connect(controls.color_button, "clicked",
+                     G_CALLBACK(mask_color_change_cb), &controls);
 
     controls.computed = FALSE;
 
@@ -322,24 +322,15 @@ wshed_dialog_update_values(WshedControls *controls,
 }
 
 static void
-mask_color_changed_cb(GtkWidget *color_button,
+mask_color_change_cb(GtkWidget *color_button,
                       WshedControls *controls)
 {
-    GwyContainer *data;
-    GdkColor color;
-    guint16 alpha;
-    const gdouble f = 65535.0;
-
-    gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &color);
-    alpha = gwy_color_button_get_alpha(GWY_COLOR_BUTTON(color_button));
-    gwy_debug("(%u, %u, %u, %u)", color.red, color.green, color.blue, alpha);
-
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
-    gwy_container_set_double_by_name(data, "/0/mask/red", color.red/f);
-    gwy_container_set_double_by_name(data, "/0/mask/green", color.green/f);
-    gwy_container_set_double_by_name(data, "/0/mask/blue", color.blue/f);
-    gwy_container_set_double_by_name(data, "/0/mask/alpha", alpha/f);
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    gwy_color_selector_for_mask(_("Change Preview Mask Color"),
+                                GWY_DATA_VIEW(controls->view),
+                                GWY_COLOR_BUTTON(color_button),
+                                NULL, "/0/mask");
+    load_mask_color(color_button,
+                    gwy_data_view_get_data(GWY_DATA_VIEW(controls->view)));
 }
 
 static void
@@ -347,57 +338,36 @@ load_mask_color(GtkWidget *color_button,
                 GwyContainer *data)
 {
     GwyContainer *settings;
-    GdkColor color;
-    guint16 alpha;
     GwyRGBA rgba;
-    const gdouble f = 65535.0;
 
     settings = gwy_app_settings_get();
-    gwy_debug("has alpha in settings: %s",
-              gwy_container_contains_by_name(settings, "/mask/alpha")
-              ? "TRUE" : "FALSE");
     gwy_container_gis_double_by_name(settings, "/mask/red", &rgba.r);
     gwy_container_gis_double_by_name(settings, "/mask/green", &rgba.g);
     gwy_container_gis_double_by_name(settings, "/mask/blue", &rgba.b);
     gwy_container_gis_double_by_name(settings, "/mask/alpha", &rgba.a);
-
-    gwy_debug("has alpha in data: %s",
-              gwy_container_contains_by_name(data, "/0/mask/alpha")
-              ? "TRUE" : "FALSE");
     gwy_container_gis_double_by_name(data, "/0/mask/red", &rgba.r);
     gwy_container_gis_double_by_name(data, "/0/mask/green", &rgba.g);
     gwy_container_gis_double_by_name(data, "/0/mask/blue", &rgba.b);
     gwy_container_gis_double_by_name(data, "/0/mask/alpha", &rgba.a);
 
     gwy_debug("(%g, %g, %g, %g)", rgba.r, rgba.g, rgba.b, rgba.a);
-    color.red = f*rgba.r;
-    color.green = f*rgba.g;
-    color.blue = f*rgba.b;
-    alpha = f*rgba.a;
-    gwy_debug("(%u, %u, %u, %u)", color.red, color.green, color.blue, alpha);
-
-    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &color);
-    gwy_color_button_set_alpha(GWY_COLOR_BUTTON(color_button), alpha);
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
 static void
 save_mask_color(GtkWidget *color_button,
                 GwyContainer *data)
 {
-    GdkColor color;
-    guint16 alpha;
-    const gdouble f = 65535.0;
+    GwyRGBA rgba;
 
-    gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &color);
-    alpha = gwy_color_button_get_alpha(GWY_COLOR_BUTTON(color_button));
-    gwy_debug("(%u, %u, %u, %u)", color.red, color.green, color.blue, alpha);
+    gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &rgba);
+    gwy_debug("(%u, %u, %u, %u)", rgba.r, rgba.g, rgba.b, rgba.a);
 
-    gwy_container_set_double_by_name(data, "/0/mask/red", color.red/f);
-    gwy_container_set_double_by_name(data, "/0/mask/green", color.green/f);
-    gwy_container_set_double_by_name(data, "/0/mask/blue", color.blue/f);
-    gwy_container_set_double_by_name(data, "/0/mask/alpha", alpha/f);
+    gwy_container_set_double_by_name(data, "/0/mask/red", rgba.r);
+    gwy_container_set_double_by_name(data, "/0/mask/green", rgba.g);
+    gwy_container_set_double_by_name(data, "/0/mask/blue", rgba.b);
+    gwy_container_set_double_by_name(data, "/0/mask/alpha", rgba.a);
 }
-
 
 static void
 preview(WshedControls *controls,

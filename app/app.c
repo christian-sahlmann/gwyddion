@@ -718,7 +718,7 @@ gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
     settings = gwy_app_settings_get();
     if (defaultc) {
         gwy_color_selector_for_mask(_("Change Default Mask Color"),
-                                    NULL, settings, "/mask");
+                                    NULL, NULL, settings, "/mask");
         return;
     }
 
@@ -737,7 +737,7 @@ gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
         }
     }
 
-    gwy_color_selector_for_mask(NULL, GWY_DATA_VIEW(data_view), data,
+    gwy_color_selector_for_mask(NULL, GWY_DATA_VIEW(data_view), NULL, data,
                                 "/0/mask");
 }
 
