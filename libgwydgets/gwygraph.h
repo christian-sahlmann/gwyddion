@@ -121,13 +121,13 @@ void               gwy_graph_set_status(GwyGraph *graph,
 
 GwyGraphStatusType gwy_graph_get_status(GwyGraph *graph);
 
-gpointer           gwy_graph_get_status_data(GwyGraph *graph, 
-					     GwyGraphStatusType status);
+gpointer           gwy_graph_get_status_data(GwyGraph *graph);
 
-/*graph zooms*/
 
 void gwy_graph_get_boundaries(GwyGraph *graph, gdouble *x_min, gdouble *x_max, gdouble *y_min, gdouble *y_max);
 void gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max);
+
+void gwy_graph_unzoom(GwyGraph *graph);
 
 #ifdef __cplusplus
 }

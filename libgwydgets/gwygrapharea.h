@@ -86,10 +86,14 @@ typedef struct {
 } GwyGraphStatus_PointsData;
 
 typedef struct {
-  gdouble x;
-  gdouble y;
-  gdouble width;
-  gdouble height;
+  gint x;
+  gint y;
+  gint width;
+  gint height;
+  gdouble xmin;
+  gdouble xmax;
+  gdouble ymin;
+  gdouble ymax;
 } GwyGraphStatus_ZoomData;
 
 /*NOTE: GwyGraphAreaCurveParams is defined in gwygraphlabel.h*/
@@ -153,6 +157,7 @@ typedef struct {
      GtkLayoutClass parent_class;
 
      void (* selected) (GwyGraphArea *area);
+     void (* zoomed) (GwyGraphArea *area);
 } GwyGraphAreaClass;
 
 
@@ -169,6 +174,8 @@ void gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve);
 void gwy_graph_area_clear(GwyGraphArea *area);
 
 void gwy_graph_area_signal_selected(GwyGraphArea *area);
+
+void gwy_graph_area_signal_zoomed(GwyGraphArea *area);
 
 #ifdef __cplusplus
 }

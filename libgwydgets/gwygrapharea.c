@@ -33,6 +33,7 @@
 
 enum {
           SELECTED_SIGNAL,
+          ZOOMED_SIGNAL,
           LAST_SIGNAL
 };
 
@@ -58,6 +59,7 @@ static void     gwy_graph_area_draw_area            (GtkWidget *widget);
 static void     gwy_graph_area_draw_curves          (GtkWidget *widget);
 static void     gwy_graph_area_draw_selection       (GtkWidget *widget);
 static void     gwy_graph_area_draw_selection_points(GtkWidget *widget);
+static void     gwy_graph_area_draw_zoom            (GtkWidget *widget);
 static void     gwy_graph_area_plot_refresh         (GwyGraphArea *area);
 
 static gdouble  scr_to_data_x                       (GtkWidget *widget, gint scr);
@@ -143,6 +145,7 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     widget_class->motion_notify_event = gwy_graph_area_motion_notify;
 
     klass->selected = NULL;
+    klass->zoomed = NULL;
     gwygrapharea_signals[SELECTED_SIGNAL] = g_signal_new ("selected",
                                                           G_TYPE_FROM_CLASS (klass),
                                                           G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
@@ -151,6 +154,16 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
                                                           NULL,
                                                           g_cclosure_marshal_VOID__VOID,
                                                           G_TYPE_NONE, 0);
+
+    gwygrapharea_signals[ZOOMED_SIGNAL] = g_signal_new ("zoomed",
+                                                          G_TYPE_FROM_CLASS (klass),
+                                                          G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                                                          G_STRUCT_OFFSET (GwyGraphAreaClass, zoomed),
+                                                          NULL,
+                                                          NULL,
+                                                          g_cclosure_marshal_VOID__VOID,
+                                                          G_TYPE_NONE, 0);
+
 
 }
 
@@ -315,6 +328,7 @@ gwy_graph_area_expose(GtkWidget *widget,
     gwy_graph_area_draw_selection(widget);
     gwy_graph_area_draw_curves(widget);
     gwy_graph_area_draw_selection_points(widget);
+    gwy_graph_area_draw_zoom(widget);
     gwy_graph_area_draw_area(widget);
 
     gtk_widget_queue_draw(GTK_WIDGET(area->lab));
@@ -458,6 +472,33 @@ gwy_graph_area_draw_selection_points(GtkWidget *widget)
     }
 }
 
+static void
+gwy_graph_area_draw_zoom(GtkWidget *widget)
+{
+    GwyGraphArea *area;
+
+    gint x, y;
+    area = GWY_GRAPH_AREA(widget);
+
+    printf("x=%d, y=%d, w=%d, h=%d\n", area->zoomdata->x, area->zoomdata->y, area->zoomdata->width, area->zoomdata->height);
+    if (area->status == GWY_GRAPH_STATUS_ZOOM && 
+        area->zoomdata->width!=0 && area->zoomdata->height!=0)
+    {
+        gdk_gc_set_function(area->gc, GDK_INVERT);
+
+        if (area->zoomdata->width<0) x = area->zoomdata->x + area->zoomdata->width;
+        else x = area->zoomdata->x;
+        if (area->zoomdata->height<0) y = area->zoomdata->y + area->zoomdata->height;
+        else y = area->zoomdata->y;
+                
+        gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc, 0, 
+                           x, 
+                           y,
+                           fabs(area->zoomdata->width),
+                           fabs(area->zoomdata->height));
+        gdk_gc_set_function(area->gc, GDK_COPY);
+    }
+}
 
 static gboolean
 gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
@@ -540,10 +581,11 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     }
     else if (area->status == GWY_GRAPH_STATUS_ZOOM)
     {
-        area->zoomdata->x = scr_to_data_x(widget, x);
-        area->zoomdata->y = scr_to_data_x(widget, y);
+        area->zoomdata->x = x;
+        area->zoomdata->y = y;
         area->zoomdata->width = 0;
         area->zoomdata->height = 0;
+        area->selecting = 1;
         /*TODO start drawing rectangle*/
 
     }
@@ -607,13 +649,26 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
 
         area->active = NULL;
     }
-    else if (area->status == GWY_GRAPH_STATUS_ZOOM)
+    else if (area->status == GWY_GRAPH_STATUS_ZOOM && (area->selecting != 0))
     {
-        /*TODO delete rectangle*/
-        area->zoomdata->width = fabs(area->zoomdata->x - scr_to_data_x(widget, x));
-        area->zoomdata->height = fabs(area->zoomdata->y - scr_to_data_y(widget, y));
-        /*zoom*/
+        if (!ispos)
+        {
+            gdk_window_get_position(event->window, &x, &y);
+            x += (gint)event->x;
+            y += (gint)event->y;
+            ispos = 1;
+        }
+         /*TODO delete rectangle*/    
+        area->zoomdata->width = x - area->zoomdata->x;
+        area->zoomdata->height = y - area->zoomdata->y;
         zoom(widget);
+        
+        area->zoomdata->x = 0;
+        area->zoomdata->y = 0;
+        area->zoomdata->width = 0;
+        area->zoomdata->height = 0;
+        area->selecting = 0;
+
     }
 
 
@@ -670,10 +725,22 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         gwy_graph_area_signal_selected(area);
         gtk_widget_queue_draw(widget);
     }
-    else if (area->status == GWY_GRAPH_STATUS_ZOOM)
+    else if (area->status == GWY_GRAPH_STATUS_ZOOM && (area->selecting != 0))
     {
-        /*TODO repaint rectangle...*/
-    }
+        if (!ispos)
+        {
+            gdk_window_get_position(event->window, &x, &y);
+            x += (gint)event->x;
+            y += (gint)event->y;
+            ispos = 1;
+        }
+         /*TODO repaint rectangle...*/
+        area->zoomdata->width = x - area->zoomdata->x;
+        area->zoomdata->height = y - area->zoomdata->y;
+        
+       
+        gtk_widget_queue_draw(widget);
+     }
 
 
     /*widget (label) movement*/
@@ -772,6 +839,7 @@ gwy_graph_area_set_boundaries(GwyGraphArea *area, gdouble x_min, gdouble x_max, 
     area->x_max = x_max;
     area->y_max = y_max;
     gwy_graph_area_plot_refresh(area);
+    gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 static void
@@ -888,13 +956,37 @@ gwy_graph_area_signal_selected(GwyGraphArea *area)
     g_signal_emit (G_OBJECT (area), gwygrapharea_signals[SELECTED_SIGNAL], 0);
 }
 
+void
+gwy_graph_area_signal_zoomed(GwyGraphArea *area)
+{
+    g_signal_emit (G_OBJECT (area), gwygrapharea_signals[ZOOMED_SIGNAL], 0);
+}
+
 
 void
 zoom(GtkWidget *widget)
 {
     GwyGraphArea *area;
+    gdouble xmax, ymax, xmin, ymin, x, y;
+    
     area = GWY_GRAPH_AREA(widget);
-    printf("ZZZZZZZZZZZZZZZZooooooooooooooommmmmmmmmmmmm\n");
+
+    if (area->zoomdata->width<0) x = area->zoomdata->x + area->zoomdata->width;
+    else x = area->zoomdata->x;
+    if (area->zoomdata->height<0) y = area->zoomdata->y + area->zoomdata->height;
+    else y = area->zoomdata->y;
+    
+    area->zoomdata->xmin = scr_to_data_x(widget, x);
+    area->zoomdata->ymin = scr_to_data_y(widget, y) - scr_to_data_y(widget, fabs(area->zoomdata->height));
+    area->zoomdata->xmax = area->zoomdata->xmin + scr_to_data_x(widget, fabs(area->zoomdata->width));
+    area->zoomdata->ymax = scr_to_data_y(widget, y);
+
+    printf("zoom: %f %f to %f %f\n", area->zoomdata->xmin,
+           area->zoomdata->ymin,
+           area->zoomdata->xmax,
+           area->zoomdata->ymax);
+    gwy_graph_area_signal_zoomed(area);
+    area->status = GWY_GRAPH_STATUS_PLAIN;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

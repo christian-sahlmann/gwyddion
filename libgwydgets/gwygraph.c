@@ -39,6 +39,9 @@ static void     gwy_graph_size_allocate        (GtkWidget *widget,
 
 static void gwy_graph_make_curve_data(GwyGraph *graph, GwyGraphAreaCurve *curve, gdouble *xvals, gdouble *yvals, gint n);
 static void     gwy_graph_synchronize          (GwyGraph *graph);
+
+static void     zoomed_cb                      (GtkWidget *widget);
+
 static GtkWidgetClass *parent_class = NULL;
 
 
@@ -194,6 +197,8 @@ gwy_graph_init(GwyGraph *graph)
 
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
+    g_signal_connect(graph->area, "zoomed", G_CALLBACK(zoomed_cb), NULL);
+    
     gtk_widget_show_all(GTK_WIDGET(graph->area));
 
 }
@@ -447,9 +452,8 @@ gwy_graph_get_status(GwyGraph *graph)
     return graph->area->status;
 }
 
-#warning what is the @status parameter good for??? For changing selection modes, for example.
 gpointer
-gwy_graph_get_status_data(GwyGraph *graph, GwyGraphStatusType status)
+gwy_graph_get_status_data(GwyGraph *graph)
 {
     switch (graph->area->status) {
         case GWY_GRAPH_STATUS_PLAIN:
@@ -521,5 +525,50 @@ gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdouble 
   
 }
 
+void
+gwy_graph_unzoom(GwyGraph *graph)
+{
+    GwyGraphAreaCurve *pcurve;
+    gdouble xmax, xmin, ymax, ymin;
+    gint i, j;
+
+    xmin = G_MAXDOUBLE;
+    ymin = G_MAXDOUBLE;
+    xmax = -G_MAXDOUBLE;
+    ymax = -G_MAXDOUBLE;
+
+    gwy_debug("");
+
+    /*find extrema*/
+    for (i=0; i<graph->area->curves->len; i++)
+    {
+        pcurve = g_ptr_array_index (graph->area->curves, i);
+        for (j=0; j<pcurve->data.N; j++)
+        {        
+            if (pcurve->data.xvals[j] > xmax) xmax = pcurve->data.xvals[j];
+            if (pcurve->data.yvals[j] > ymax) ymax = pcurve->data.yvals[j];
+            if (pcurve->data.xvals[j] < xmin) xmin = pcurve->data.xvals[j];
+            if (pcurve->data.yvals[j] < ymin) ymin = pcurve->data.yvals[j];
+        }
+    }
+    gwy_graph_set_boundaries(graph, xmin, xmax, ymin, ymax);                                      
+    gtk_widget_queue_draw(GTK_WIDGET(graph));
+}
+
+static void 
+zoomed_cb(GtkWidget *widget)
+{
+    GwyGraph *graph;
+    gwy_debug("");
+
+    graph = GWY_GRAPH(gtk_widget_get_parent(widget));
+        
+    gwy_graph_set_boundaries(graph, 
+                             graph->area->zoomdata->xmin, 
+                             graph->area->zoomdata->xmax, 
+                             graph->area->zoomdata->ymin, 
+                             graph->area->zoomdata->ymax);
+    gtk_widget_queue_draw(GTK_WIDGET(graph));
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
