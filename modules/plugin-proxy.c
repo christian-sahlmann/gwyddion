@@ -260,7 +260,7 @@ proc_register_plugins(GList *plugins,
                       gchar *buffer)
 {
     ProcPluginInfo *info;
-    gchar *pname, *menu_path, *run_modes;
+    gchar *pname = NULL, *menu_path = NULL, *run_modes = NULL;
     GwyRunType run;
 
     while (buffer) {
@@ -285,6 +285,11 @@ proc_register_plugins(GList *plugins,
                 g_free((gpointer)info->func.menu_path);
                 g_free(info);
             }
+        }
+        else {
+            g_warning("%s failed; "
+                      "pname = %s, menu_path = %s, run_modes = %s",
+                      name, pname, menu_path, run_modes);
         }
         while (buffer && *buffer)
             next_line(&buffer);
@@ -409,7 +414,7 @@ file_register_plugins(GList *plugins,
                       gchar *buffer)
 {
     FilePluginInfo *info;
-    gchar *pname, *file_desc, *run_modes, *glob;
+    gchar *pname = NULL, *file_desc = NULL, *run_modes = NULL, *glob = NULL;
     GwyFileOperation run;
 
     while (buffer) {
@@ -443,6 +448,11 @@ file_register_plugins(GList *plugins,
                 g_free((gpointer)info->func.file_desc);
                 g_free(info);
             }
+        }
+        else {
+            g_warning("%s failed; "
+                      "pname = %s, file_desc = %s, run_modes = %s, glob = %s",
+                      name, pname, file_desc, run_modes, glob);
         }
         while (buffer && *buffer)
             next_line(&buffer);
