@@ -1,7 +1,10 @@
 - Clean up gwy3dlabels API and ugly ways of doing things
-- Reverse engineer and implement SPMLab6 import
+  - implement actual variables to substitute
+  - save 3d labels to container, check restore
+  - check refcounts and leaks
 - Implement APE file format from Paolo Messina, at least import
 - Implement rhk spm32 (.sm2) file import
+- Check for cases where datafield is replaced in container
 - Pixmap export ignores explicite palete range (and presentations?)
 - Add preview to: artithmetic
 - Find out why rectangular selections sometimes leaves a dot, and fix it
