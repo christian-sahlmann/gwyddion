@@ -343,31 +343,25 @@ static void
 gwy_sci_text_entity_selected(GwySciText *sci_text)
 {
     GtkEditable *editable;
-    GString *entity;
-    gint i, pos;
-    gchar *text;
+    gint pos;
+    gchar *text, *p;
+    const gchar *utf8;
 
     gwy_debug("%s", __FUNCTION__);
 
-    entity = g_string_new("");
     editable = GTK_EDITABLE(sci_text->entry);
     text = gtk_editable_get_chars(GTK_EDITABLE(sci_text->entities->entry),
                                   0, -1);
-
-    /* put entity into text entry */
-    for (i = 0; ENTITIES[i].entity; i++) {
-        if (strncmp(text, ENTITIES[i].utf8, strlen(ENTITIES[i].utf8)) == 0) {
-            pos = gtk_editable_get_position(editable);
-            g_string_assign(entity, ENTITIES[i].entity);
-            g_string_append(entity, ";");
-            g_string_prepend(entity, "&");
-            gtk_editable_insert_text(editable, entity->str, entity->len, &pos);
-            gtk_editable_set_position(editable, pos);
-            break;
-        }
-    }
-    g_string_free(entity, TRUE);
+    p = strrchr(text, ' ');
+    g_assert(p);
+    p++;
+    utf8 = gwy_entities_entity_to_utf8(p);
+    p = g_strconcat("&", p, ";", NULL);
+    pos = gtk_editable_get_position(editable);
+    gtk_editable_insert_text(editable, p, strlen(p), &pos);
+    gtk_editable_set_position(editable, pos);
     g_free(text);
+    g_free(p);
     gwy_sci_text_edited(sci_text->entry);
 }
 
