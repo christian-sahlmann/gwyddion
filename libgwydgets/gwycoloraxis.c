@@ -34,27 +34,27 @@
 
 
 /* Forward declarations - widget related*/
-static void     gwy_color_axis_class_init           (GwyColorAxisClass *klass);
-static void     gwy_color_axis_init                 (GwyColorAxis *axis);
-static void     gwy_color_axis_finalize             (GObject *object);
+static void     gwy_color_axis_class_init         (GwyColorAxisClass *klass);
+static void     gwy_color_axis_init               (GwyColorAxis *axis);
+static void     gwy_color_axis_finalize           (GObject *object);
 
-static void     gwy_color_axis_realize              (GtkWidget *widget);
-static void     gwy_color_axis_unrealize            (GtkWidget *widget);
-static void     gwy_color_axis_size_request         (GtkWidget *widget,
-                                                      GtkRequisition *requisition);
-static void     gwy_color_axis_size_allocate        (GtkWidget *widget,
-                                                      GtkAllocation *allocation);
-static gboolean gwy_color_axis_expose               (GtkWidget *widget,
-                                                      GdkEventExpose *event);
-static gboolean gwy_color_axis_button_press         (GtkWidget *widget,
-                                                      GdkEventButton *event);
-static gboolean gwy_color_axis_button_release       (GtkWidget *widget,
-                                                      GdkEventButton *event);
-static void     gwy_color_axis_adjust               (GwyColorAxis *axis,
-                                                     gint width,
-                                                     gint height);
-static void     gwy_color_axis_draw_label           (GtkWidget *widget);
-static void     gwy_color_axis_update               (GwyColorAxis *axis);
+static void     gwy_color_axis_realize            (GtkWidget *widget);
+static void     gwy_color_axis_unrealize          (GtkWidget *widget);
+static void     gwy_color_axis_size_request       (GtkWidget *widget,
+                                                   GtkRequisition *requisition);
+static void     gwy_color_axis_size_allocate      (GtkWidget *widget,
+                                                   GtkAllocation *allocation);
+static gboolean gwy_color_axis_expose             (GtkWidget *widget,
+                                                   GdkEventExpose *event);
+static gboolean gwy_color_axis_button_press       (GtkWidget *widget,
+                                                   GdkEventButton *event);
+static gboolean gwy_color_axis_button_release     (GtkWidget *widget,
+                                                   GdkEventButton *event);
+static void     gwy_color_axis_adjust             (GwyColorAxis *axis,
+                                                   gint width,
+                                                   gint height);
+static void     gwy_color_axis_draw_label         (GtkWidget *widget);
+static void     gwy_color_axis_update             (GwyColorAxis *axis);
 
 /* Local data */
 static GtkWidgetClass *parent_class = NULL;
@@ -252,17 +252,17 @@ gwy_color_axis_realize(GtkWidget *widget)
     /*set backgroun for white forever*/
     s = gtk_style_copy(widget->style);
     s->bg_gc[0] =
-	s->bg_gc[1] =
-	s->bg_gc[2] =
-	s->bg_gc[3] =
- 	s->bg_gc[4] = widget->style->white_gc;
+    s->bg_gc[1] =
+    s->bg_gc[2] =
+    s->bg_gc[3] =
+    s->bg_gc[4] = widget->style->white_gc;
     s->bg[0] =
-	s->bg[1] =
-	s->bg[2] =
-	s->bg[3] =
-	s->bg[4] = widget->style->white;
+    s->bg[1] =
+    s->bg[2] =
+    s->bg[3] =
+    s->bg[4] = widget->style->white;
 
-    gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
+    gtk_style_set_background(s, widget->window, GTK_STATE_NORMAL);
 
     /*compute axis*/
     gwy_color_axis_update(axis);
@@ -277,13 +277,11 @@ gwy_color_axis_size_request(GtkWidget *widget,
 
     gwy_debug("");
 
-    if (axis->orientation == GTK_ORIENTATION_VERTICAL)
-    {
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
         requisition->width = 80;
         requisition->height = 100;
     }
-    else
-    {
+    else {
         requisition->width = 100;
         requisition->height = 80;
     }
@@ -337,15 +335,12 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
     rowstride = gdk_pixbuf_get_rowstride(axis->pixbuf);
     samples = gwy_palette_get_samples(axis->palette, &palsize);
 
-    if (axis->orientation == GTK_ORIENTATION_VERTICAL)
-    {
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
         cor = (palsize-1.0)/height;
-        for (i=0; i<height; i++)
-        {
+        for (i = 0; i < height; i++) {
             line = pixels + i*rowstride;
             dval = (gint)((height-i-1)*cor + 0.5);
-            for (j=0; j<width*height; j+=height)
-            {
+            for (j = 0; j < width*height; j += height) {
                 s = samples + 4*dval;
                 *(line++) = *(s++);
                 *(line++) = *(s++);
@@ -353,14 +348,11 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
             }
         }
     }
-    if (axis->orientation == GTK_ORIENTATION_HORIZONTAL)
-    {
+    if (axis->orientation == GTK_ORIENTATION_HORIZONTAL) {
         cor = (palsize-1.0)/width;
-        for (i=0; i<height; i++)
-        {
+        for (i = 0; i < height; i++) {
             line = pixels + i*rowstride;
-            for (j=0; j<width*height; j+=height)
-            {
+            for (j = 0; j < width*height; j += height) {
                 dval = (gint)((j/height)*cor + 0.5);
                 s = samples + 4*dval;
                 *(line++) = *(s++);
@@ -403,8 +395,9 @@ gwy_color_axis_expose(GtkWidget *widget,
                                   0,
                                   0,
                                   axis->par.textarea,
-                                  widget->allocation.width ,
-                                  widget->allocation.height - axis->par.textarea,
+                                  widget->allocation.width,
+                                  widget->allocation.height
+                                    - axis->par.textarea,
                                   GDK_RGB_DITHER_NONE,
                                   0,
                                   0);
@@ -473,7 +466,8 @@ gwy_color_axis_draw_label(GtkWidget *widget)
         }
     }
     else {
-        format = gwy_si_unit_get_format(axis->siunit, axis->max, format); /*yes, realy axis->max*/
+        /*yes, realy axis->max*/
+        format = gwy_si_unit_get_format(axis->siunit, axis->max, format);
         g_string_printf(strmin, "%3.1f ", axis->min/format->magnitude);
         g_string_append(strmin, format->units);
     }
@@ -491,19 +485,22 @@ gwy_color_axis_draw_label(GtkWidget *widget)
         gdk_draw_line(widget->window, mygc,
                       widget->allocation.width - axis->par.textarea,
                       0,
-                      widget->allocation.width - axis->par.textarea + axis->par.tick_length,
+                      widget->allocation.width - axis->par.textarea
+                          + axis->par.tick_length,
                       0);
 
         gdk_draw_line(widget->window, mygc,
                       widget->allocation.width - axis->par.textarea,
                       widget->allocation.height/2,
-                      widget->allocation.width - axis->par.textarea + axis->par.tick_length,
+                      widget->allocation.width - axis->par.textarea
+                          + axis->par.tick_length,
                       widget->allocation.height/2);
 
         gdk_draw_line(widget->window, mygc,
                       widget->allocation.width - axis->par.textarea,
                       widget->allocation.height - 1,
-                      widget->allocation.width - axis->par.textarea + axis->par.tick_length,
+                      widget->allocation.width - axis->par.textarea
+                          + axis->par.tick_length,
                       widget->allocation.height - 1);
 
 
@@ -525,7 +522,7 @@ gwy_color_axis_draw_label(GtkWidget *widget)
     }
     else {
         /*draw frame around axis*/
-        gdk_draw_rectangle(widget->window, mygc, 0,
+        gdk_draw_rectangle(widget->window, mygc, FALSE,
                            0,
                            axis->par.textarea,
                            widget->allocation.width - 1,
@@ -706,7 +703,8 @@ gwy_color_axis_update(GwyColorAxis *axis)
 void
 gwy_color_axis_set_unit(GwyColorAxis *axis, GwySIUnit *unit)
 {
-    if (axis->siunit != NULL) g_object_unref(axis->siunit);
+    if (axis->siunit != NULL)
+        g_object_unref(axis->siunit);
     axis->siunit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
 }
 
