@@ -29,3 +29,4 @@ EXPORTS
 	gwy_file_func_run_detect
 	gwy_graph_func_build_menu
 	gwy_module_lookup
+	gwy_module_set_register_callback
