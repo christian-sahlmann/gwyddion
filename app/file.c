@@ -8,6 +8,8 @@
 #include "file.h"
 #include "tools/tools.h"
 
+static gint untitled_no = 0;
+
 static void file_open_ok_cb                  (GtkFileSelection *selector);
 static void file_save_as_ok_cb               (GtkFileSelection *selector);
 
@@ -94,14 +96,15 @@ gwy_app_file_save_cb(void)
 void
 gwy_app_file_duplicate_cb(void)
 {
+    GtkWidget *data_window;
     GwyContainer *data, *duplicate;
 
     data = gwy_app_get_current_data();
     g_return_if_fail(GWY_IS_CONTAINER(data));
     duplicate = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     g_return_if_fail(GWY_IS_CONTAINER(duplicate));
-    gwy_container_remove_by_name(duplicate, "/filename");
-    gwy_app_create_data_window(duplicate);
+    data_window = gwy_app_create_data_window(duplicate);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
 }
 
 static void
@@ -127,7 +130,7 @@ file_open_ok_cb(GtkFileSelection *selector)
 }
 
 /* FIXME: to be moved somewhere? refactored? */
-void
+GtkWidget*
 gwy_app_create_data_window(GwyContainer *data)
 {
     GtkWidget *data_window, *data_view;
@@ -150,6 +153,32 @@ gwy_app_create_data_window(GwyContainer *data)
 
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
     gtk_window_present(GTK_WINDOW(data_window));
+
+    return data_window;
+}
+
+void
+gwy_app_clean_up_data(GwyContainer *data)
+{
+    /* TODO: Container */
+    /* FIXME: This is dirty. Clean-up various individual stuff. */
+    gwy_container_remove_by_prefix(data, "/0/select");
+}
+
+gint
+gwy_app_data_window_set_untitled(GwyDataWindow *data_window)
+{
+    GtkWidget *data_view;
+    GwyContainer *data;
+
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = GWY_CONTAINER(gwy_data_view_get_data(GWY_DATA_VIEW(data_view)));
+    gwy_container_remove_by_prefix(data, "/filename");
+    untitled_no++;
+    gwy_container_set_int32_by_name(data, "/filename/untitled", untitled_no);
+    gwy_data_window_update_title(data_window);
+
+    return untitled_no;
 }
 
 static void
@@ -181,6 +210,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
         return;
 
     gwy_container_set_string_by_name(data, "/filename", filename_utf8);
+    gwy_container_remove_by_name(data, "/filename/untitled");
     gtk_widget_destroy(GTK_WIDGET(selector));
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
 }
