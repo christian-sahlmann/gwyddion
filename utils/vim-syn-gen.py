@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # vim-syn-gen.py -- Generate vim syntax highligting from gtk-doc documentation
-# Written by Yeti <yeti@physics.muni.cz>
+# Written by Yeti <yeti@physics.muni.cz>, last changed: 2004-08-13.
 # This file is in the public domain.
 import re, glob, time, sys, os, pwd
 
@@ -103,7 +103,7 @@ re_decl = re.compile(r'<(?P<type>' + r'|'.join(types.keys()) + r')>\n'
                      + r'(?P<body>.*?)'
                      + r'</(?P=type)>\n',
                      re.S)
-re_enum = re.compile(r'^\s+(?P<ident>[A-Z][A-Z0-9_]+)\s*[=,]', re.M)
+re_enum = re.compile(r'^\s+(?P<ident>[A-Z][A-Z0-9_]+)\b', re.M)
 re_param_macro = re.compile(r'^\s*#\s*define\s+\w+\(', re.M)
 re_ident_macro = re.compile(r'^\s*#\s*define\s+\w+\s+'
                             + r'(?P<ident>[A-Za-z_]\w+)\s*$', re.M)
