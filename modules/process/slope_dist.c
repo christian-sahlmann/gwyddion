@@ -228,7 +228,7 @@ slope_dialog(SlopeArgs *args)
         = gtk_radio_button_get_group(GTK_RADIO_BUTTON(radio));
     row++;
 
-    controls.size = gtk_adjustment_new(args->size, 10, 1000, 1, 10, 0);
+    controls.size = gtk_adjustment_new(args->size, 10, 16384, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("Output size:"), "samples",
                                        controls.size);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
@@ -322,8 +322,7 @@ slope_dialog_update_values(SlopeControls *controls,
 {
     GSList *l;
 
-    args->size =
-        gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
+    args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
     args->kernel_size =
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->kernel_size));
     args->logscale =

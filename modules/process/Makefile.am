@@ -24,7 +24,8 @@ process_PROGRAMS = \
 	rotate.so \
 	scale.so \
 	shade.so \
-	slope_dist.so
+	slope_dist.so \
+	unrotate.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -88,6 +89,9 @@ shade_so_LDFLAGS = $(module_ldflags),shade.so
 
 slope_dist_so_SOURCES = slope_dist.c
 slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
+
+unrotate_so_SOURCES = unrotate.c
+unrotate_so_LDFLAGS = $(module_ldflags),unrotate.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
