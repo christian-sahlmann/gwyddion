@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#define DEBUG 1
+
 #include <string.h>
 #include <gtk/gtkitemfactory.h>
 #include <gtk/gtkmenubar.h>
@@ -168,7 +170,7 @@ gwy_process_func_build_menu(GtkObject *item_factory,
     GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
     GtkItemFactoryEntry item = { NULL, NULL, item_callback, 0, "<Item>", NULL };
     GtkItemFactory *factory;
-    gchar *current, *prev;
+    gchar *current, *prev, *s;
     GSList *l, *entries = NULL;
     gint i, dp_len;
 
@@ -259,7 +261,9 @@ gwy_process_func_build_menu(GtkObject *item_factory,
 
             gwy_debug("Setting sens flags for `%s' to %u",
                       item.path, ipfinfo->sens_flags);
-            widget = gtk_item_factory_get_widget(factory, item.path);
+            s = gwy_strkill(g_strdup(item.path), "_");
+            widget = gtk_item_factory_get_widget(factory, s);
+            g_free(s);
             g_object_set_data(G_OBJECT(widget), "sensitive",
                               GUINT_TO_POINTER(ipfinfo->sens_flags));
         }
