@@ -50,12 +50,12 @@ G_BEGIN_DECLS
  * The color picker emits the "color_set" signal when the color is set.
  */
 
-#define GTK_TYPE_COLOR_BUTTON             (gwy_color_button_get_type ())
-#define GWY_COLOR_BUTTON(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GTK_TYPE_COLOR_BUTTON, GwyColorButton))
-#define GWY_COLOR_BUTTON_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GTK_TYPE_COLOR_BUTTON, GwyColorButtonClass))
-#define GTK_IS_COLOR_BUTTON(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GTK_TYPE_COLOR_BUTTON))
-#define GTK_IS_COLOR_BUTTON_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GTK_TYPE_COLOR_BUTTON))
-#define GWY_COLOR_BUTTON_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_TYPE_COLOR_BUTTON, GwyColorButtonClass))
+#define GWY_TYPE_COLOR_BUTTON             (gwy_color_button_get_type ())
+#define GWY_COLOR_BUTTON(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GWY_TYPE_COLOR_BUTTON, GwyColorButton))
+#define GWY_COLOR_BUTTON_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GWY_TYPE_COLOR_BUTTON, GwyColorButtonClass))
+#define GWY_IS_COLOR_BUTTON(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GWY_TYPE_COLOR_BUTTON))
+#define GWY_IS_COLOR_BUTTON_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GWY_TYPE_COLOR_BUTTON))
+#define GWY_COLOR_BUTTON_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GWY_TYPE_COLOR_BUTTON, GwyColorButtonClass))
 
 typedef struct _GwyColorButton          GwyColorButton;
 typedef struct _GwyColorButtonClass     GwyColorButtonClass;
