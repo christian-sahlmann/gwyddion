@@ -133,6 +133,21 @@ gwy_toolbox_destroy(GtkObject *object)
     GTK_OBJECT_CLASS(parent_class)->destroy(object);
 }
 
+/**
+ * gwy_toolbox_append:
+ * @toolbox: A #GwyToolbox.
+ * @type: Widget type to add (only a few are supported).
+ * @widget: Group widget for radio buttons.
+ * @tooltip_text: Widget tooltip text.
+ * @tooltip_private_text: Private tooltip text (deprecated).
+ * @stock_id: Icon stock id.
+ * @callback: Widget activation callback.
+ * @user_data: User data to pass to @callback.
+ *
+ * Adds a widget to toolbox.
+ *
+ * Returns: The newly added widget.
+ **/
 GtkWidget*
 gwy_toolbox_append(GwyToolbox *toolbox,
                    GType type,
@@ -152,6 +167,7 @@ gwy_toolbox_append(GwyToolbox *toolbox,
     icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
     g_return_val_if_fail(GTK_IS_IMAGE(icon), NULL);
 
+    /* Don't try to convert to switch, types are not constants */
     if (type == GTK_TYPE_BUTTON) {
         child = gtk_button_new();
         signame = "clicked";
@@ -165,11 +181,18 @@ gwy_toolbox_append(GwyToolbox *toolbox,
         /* XXX: tools need to know being clicked on even when already active */
         signame = "clicked";
     }
+    else if (type == GTK_TYPE_SEPARATOR) {
+        child = NULL;
+        signame = NULL;
+    }
     else {
-        g_critical("Type %s not supported (yet)", g_type_name(type));
+        g_critical("Type %s not supported (yet).  Implement me!",
+                   g_type_name(type));
         return NULL;
     }
-    gtk_container_add(GTK_CONTAINER(child), icon);
+
+    if (child)
+        gtk_container_add(GTK_CONTAINER(child), icon);
 
     if (toolbox->max_width > 0) {
         row = toolbox->nstuff/toolbox->max_width;
@@ -184,11 +207,13 @@ gwy_toolbox_append(GwyToolbox *toolbox,
     }
     toolbox->nstuff++;
 
-    gtk_tooltips_set_tip(toolbox->tooltips, child,
-                         tooltip_text, tooltip_private_text);
-    gtk_table_attach(GTK_TABLE(toolbox), child, col, col+1, row, row+1,
-                     0, 0, 0, 0);
-    g_signal_connect_swapped(child, signame, callback, user_data);
+    if (child) {
+        gtk_tooltips_set_tip(toolbox->tooltips, child,
+                             tooltip_text, tooltip_private_text);
+        gtk_table_attach(GTK_TABLE(toolbox), child, col, col+1, row, row+1,
+                         0, 0, 0, 0);
+        g_signal_connect_swapped(child, signame, callback, user_data);
+    }
 
     return child;
 }

@@ -52,7 +52,7 @@ struct _Gwy3DWindow {
     GtkWidget *material_label;
     GtkWidget *lights_spin1;
     GtkWidget *lights_spin2;
-    GtkWidget *move_light_button;
+    GtkWidget **buttons;
 
     GtkWidget *labels_menu;
     GtkWidget *labels_text;
@@ -65,13 +65,13 @@ struct _Gwy3DWindow {
     GtkWidget *notebook;
     GtkWidget *vbox;
     GtkWidget *actions;
-    GtkWidget *widget1;
+    GtkWidget *small_toolbar;
     GtkWidget *widget2;
     GtkWidget *widget3;
     GtkWidget *widget4;
     GtkWidget *widget5;
 
-    guint whatever1;
+    gboolean in_update;
     guint whatever2;
 
     gpointer reserved1;
