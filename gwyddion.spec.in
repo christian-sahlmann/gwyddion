@@ -51,6 +51,7 @@ your own plug-ins.
   gwypixmapdir=$RPM_BUILD_ROOT%{_datadir}/%{name}/pixmaps \
   HTML_DIR=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
 %__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/*/*.so
+%__strip $RPM_BUILD_ROOT%{_libdir}/libgwy*.so.*
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
@@ -93,18 +94,20 @@ your own plug-ins.
 %{_includedir}/%{name}/libgwyddion/*.h
 %{_includedir}/%{name}/libgwydgets/*.h
 %{_includedir}/%{name}/libgwymodule/*.h
-%dir %{_includedir}/%{name}/libdraw
 %dir %{_includedir}/%{name}/app
+%dir %{_includedir}/%{name}/libdraw
 %dir %{_includedir}/%{name}/libprocess
 %dir %{_includedir}/%{name}/libgwyddion
 %dir %{_includedir}/%{name}/libgwydgets
 %dir %{_includedir}/%{name}/libgwymodule
 %dir %{_includedir}/%{name}
+%{_datadir}/gtk-doc/html/libgwyapp/*
 %{_datadir}/gtk-doc/html/libgwydraw/*
 %{_datadir}/gtk-doc/html/libgwyprocess/*
 %{_datadir}/gtk-doc/html/libgwyddion/*
 %{_datadir}/gtk-doc/html/libgwydgets/*
 %{_datadir}/gtk-doc/html/libgwymodule/*
+%dir %{_datadir}/gtk-doc/html/libgwyapp
 %dir %{_datadir}/gtk-doc/html/libgwydraw
 %dir %{_datadir}/gtk-doc/html/libgwyprocess
 %dir %{_datadir}/gtk-doc/html/libgwyddion

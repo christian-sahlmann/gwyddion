@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 0.20031206, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
+AC_INIT(Gwyddion, 0.20031214, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -23,6 +23,7 @@ AC_CONFIG_FILES(\
   plugins/process/Makefile \
   pixmaps/Makefile \
   devel-docs/Makefile \
+  devel-docs/libgwyapp/Makefile \
   devel-docs/libgwyddion/Makefile \
   devel-docs/libgwydgets/Makefile \
   devel-docs/libgwydraw/Makefile \
