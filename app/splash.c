@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymodule.h>
 #include "settings.h"
