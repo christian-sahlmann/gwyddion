@@ -61,6 +61,7 @@ static void              remove_data_window_callback (GtkWidget *selector,
 
 int gwy_app_n_recent_files = 10;
 
+static int gwy_app_n_remember_recent_files = 200;
 static GList *recent_files = NULL;
 
 void
@@ -409,7 +410,7 @@ recent_files_from_settings(void)
 {
     const gchar *prefix = "/app/recent";
     GwyContainer *settings;
-    gchar buffer[16];
+    gchar buffer[24];
     GList *list = NULL;
     const gchar *s;
     gint i;
@@ -437,7 +438,8 @@ recent_files_to_settings(void)
 {
     const gchar *prefix = "/app/recent";
     GwyContainer *settings;
-    gchar buffer[16];
+    gchar buffer[24];
+    gchar *s;
     GList *l;
     gint i;
     gsize len;
@@ -449,10 +451,15 @@ recent_files_to_settings(void)
     len = strlen(prefix);
     strcpy(buffer, prefix);
     for (l = recent_files, i = 0;
-         l && i < gwy_app_n_recent_files;
+         l && i < gwy_app_n_remember_recent_files;
          l = g_list_next(l), i++) {
         gwy_debug("storing %s", (gchar*)l->data);
         g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", i);
+        /* It should be safe to assume when we find a file name already in the
+         * right position, then the remaining all right too */
+        if (gwy_container_gis_string_by_name(settings, buffer, &s)
+            && !strcmp(s, (gchar*)l->data))
+            break;
         gwy_container_set_string_by_name(settings, buffer,
                                          g_strdup((gchar*)l->data));
     }
