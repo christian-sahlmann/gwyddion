@@ -36,11 +36,11 @@ static gdouble  square_area                      (GwyDataField *data_field,
 
 /**
  * gwy_data_field_get_max:
- * @a: A data field
+ * @data_field: A data field.
  *
- * Get maximum value of the GwyDataField.
+ * Finds maximum value of a data field.
  *
- * Returns:maximum value of the GwyDataField
+ * Returns: The maximum value.
  **/
 gdouble
 gwy_data_field_get_max(GwyDataField *a)
@@ -59,7 +59,7 @@ gwy_data_field_get_max(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_max:
- * @dfield: A data field
+ * @data_field: A data field
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -67,8 +67,7 @@ gwy_data_field_get_max(GwyDataField *a)
  *
  * Finds maximum value in a rectangular part of a data field.
  *
- * Returns: The maximum value, and undefined value (currently -%G_MAXDOUBLE)
- *          for zero @width or @height.
+ * Returns: The maximum value.
  *
  * Since: 1.2:
  **/
@@ -121,11 +120,11 @@ gwy_data_field_get_area_max(GwyDataField *a,
 
 /**
  * gwy_data_field_get_min:
- * @a: A data field
+ * @data_field: A data field.
  *
- * Get minimum value of the GwyDataField
+ * Finds minimum value of a data field.
  *
- * Returns: minimum value of the GwyDataField
+ * Returns: The minimum value.
  **/
 gdouble
 gwy_data_field_get_min(GwyDataField *a)
@@ -144,7 +143,7 @@ gwy_data_field_get_min(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_min:
- * @dfield: A data field
+ * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -152,10 +151,9 @@ gwy_data_field_get_min(GwyDataField *a)
  *
  * Finds minimum value in a rectangular part of a data field.
  *
- * Returns: The minimum value, and undefined value (currently %G_MAXDOUBLE)
- *          for zero @width or @height.
+ * Returns: The minimum value.
  *
- * Since: 1.2.
+ * Since: 1.2
  **/
 gdouble
 gwy_data_field_area_get_min(GwyDataField *dfield,
@@ -206,11 +204,11 @@ gwy_data_field_get_area_min(GwyDataField *a,
 
 /**
  * gwy_data_field_get_sum:
- * @a: A data field
+ * @data_field: A data field.
  *
- * Sum all the values in GwyDataField
+ * Sums all values in a data field.
  *
- * Returns: sum of GwyDataField.
+ * Returns: The sum of all values.
  **/
 gdouble
 gwy_data_field_get_sum(GwyDataField *a)
@@ -227,7 +225,7 @@ gwy_data_field_get_sum(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_sum:
- * @dfield: A data field
+ * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -235,9 +233,9 @@ gwy_data_field_get_sum(GwyDataField *a)
  *
  * Sums values of a rectangular part of a data field.
  *
- * Returns: The value sum.
+ * Returns: The sum of all values inside area.
  *
- * Since: 1.2.
+ * Since: 1.2
  **/
 gdouble
 gwy_data_field_area_get_sum(GwyDataField *dfield,
@@ -283,11 +281,11 @@ gwy_data_field_get_area_sum(GwyDataField *a,
 
 /**
  * gwy_data_field_get_avg:
- * @a: A data field
+ * @data_field: A data field
  *
- * Averages values of GwyDataField
+ * Computes average value of a data field.
  *
- * Returns: Average value of GwyDataField
+ * Returns: The average value.
  **/
 gdouble
 gwy_data_field_get_avg(GwyDataField *a)
@@ -297,13 +295,13 @@ gwy_data_field_get_avg(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_avg:
- * @dfield: A data field
+ * @data_field: A data field
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Averages values of a rectangular part of a data field.
+ * Computes average value of a rectangular part of a data field.
  *
  * Returns: The average value.
  *
@@ -335,13 +333,12 @@ gwy_data_field_get_area_avg(GwyDataField *a,
 
 /**
  * gwy_data_field_get_rms:
- * @a: A data field
+ * @data_field: A data field.
  *
- * Evaluates Root mean square value of GwyDataField
+ * Computes root mean square value of a data field.
  *
- * Returns: RMS of GwyDataField
+ * Returns: The root mean square value.
  **/
-
 gdouble
 gwy_data_field_get_rms(GwyDataField *a)
 {
@@ -362,7 +359,7 @@ gwy_data_field_get_rms(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_rms:
- * @dfield: A data field
+ * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -441,7 +438,7 @@ gwy_data_field_get_area_rms(GwyDataField *a,
  * @kurtosis: Where kurtosis (peakedness of height ditribution) should be
  *            stored, or %NULL.
  *
- * Computes basic statistical quantities.
+ * Computes basic statistical quantities of a data field.
  **/
 void
 gwy_data_field_get_stats(GwyDataField *data_field,
@@ -485,7 +482,7 @@ gwy_data_field_get_stats(GwyDataField *data_field,
 
 /**
  * gwy_data_field_area_get_stats:
- * @dfield: A data field.
+ * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -499,7 +496,7 @@ gwy_data_field_get_stats(GwyDataField *data_field,
  * @kurtosis: Where kurtosis (peakedness of height ditribution) should be
  *            stored, or %NULL.
  *
- * Computes basic statistical quantities of a part of a data field.
+ * Computes basic statistical quantities of a rectangular part of a data field.
  **/
 void
 gwy_data_field_area_get_stats(GwyDataField *dfield,
@@ -575,6 +572,28 @@ gwy_data_field_get_area_stats(GwyDataField *data_field,
 }
 
 
+/* FIXME: fix return value to boolean */
+/**
+ * gwy_data_field_get_line_stat_function:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @ulcol: Upper-left corner column index.
+ * @ulrow: Upper-left corner row index.
+ * @brcol: Bottom-right corner column index + 1.
+ * @brrow: Bottom-right column row index + 1.
+ * @type: The type of distribution to compute.
+ * @orientation: Orientation to compute the distribution in.
+ * @interpolation: Interpolation to use (unused for some functions).
+ * @windowing: Windowing type to use (unused for some functions).
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, @data_field's resolution is used.
+ *
+ * Computes a statistical distribution of data field values.
+ *
+ * Returns: Normally %FALSE; %TRUE when @data_field is too small.  The return
+ *          value should be ignored.
+ **/
 gint
 gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                                       GwyDataLine *target_line,
@@ -588,7 +607,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     gint i, k, j, size;
     GwyDataLine *hlp_line;
     GwyDataLine *hlp_tarline;
-    gdouble min = G_MAXDOUBLE, max = -G_MAXDOUBLE, val;
+    gdouble min = G_MAXDOUBLE, max = -G_MAXDOUBLE, val, realsize;
 
     gwy_debug("");
     if (ulcol > brcol)
@@ -596,8 +615,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-
-    /*precompute settings if necessary*/
+    /* precompute settings if necessary */
     if (type == GWY_SF_OUTPUT_DH || type == GWY_SF_OUTPUT_CDH) {
         min = gwy_data_field_area_get_min(data_field,
                                           ulcol, ulrow,
@@ -606,14 +624,14 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                                           ulcol, ulrow,
                                           brcol-ulcol, brrow-ulrow);
     }
-    else if (type==GWY_SF_OUTPUT_DA || type==GWY_SF_OUTPUT_CDA) {
+    else if (type == GWY_SF_OUTPUT_DA || type == GWY_SF_OUTPUT_CDA) {
         if (orientation == GTK_ORIENTATION_HORIZONTAL) {
             for (i = ulcol; i < brcol; i++)
                 for (j = ulrow; j < brrow; j++) {
                     val = gwy_data_field_get_xder(data_field, i, j);
-                    if (min>val)
+                    if (min > val)
                         min = val;
-                    if (max<val)
+                    if (max < val)
                         max = val;
                 }
         }
@@ -621,9 +639,9 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
             for (i = ulcol; i < brcol; i++) {
                 for (j = ulrow; j < brrow; j++) {
                     val = gwy_data_field_get_yder(data_field, i, j);
-                    if (min>val)
+                    if (min > val)
                         min = val;
-                    if (max<val)
+                    if (max < val)
                         max = val;
                 }
             }
@@ -637,24 +655,20 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
             g_warning("Field too small");
             return 0;
         }
-        if (type==GWY_SF_OUTPUT_PSDF && size < 64)
-        {
+        if (type == GWY_SF_OUTPUT_PSDF && size < 64) {
             g_warning("Field too small");
             return 0;
         }
 
-        hlp_line = GWY_DATA_LINE(gwy_data_line_new(size,
-                                                   gwy_data_field_jtor(data_field, size),
-                                                   FALSE));
-        hlp_tarline = GWY_DATA_LINE(gwy_data_line_new(size,
-                                                      gwy_data_field_jtor(data_field, size),
-                                                      FALSE));
+        realsize = gwy_data_field_jtor(data_field, size);
+        hlp_line = GWY_DATA_LINE(gwy_data_line_new(size, realsize, FALSE));
+        hlp_tarline = GWY_DATA_LINE(gwy_data_line_new(size, realsize, FALSE));
 
         if (nstats <= 0) {
             nstats = size;
         }
-        if (type == GWY_SF_OUTPUT_DH || type==GWY_SF_OUTPUT_DA
-            || type == GWY_SF_OUTPUT_CDA || type==GWY_SF_OUTPUT_CDH) {
+        if (type == GWY_SF_OUTPUT_DH || type == GWY_SF_OUTPUT_DA
+            || type == GWY_SF_OUTPUT_CDA || type == GWY_SF_OUTPUT_CDH) {
             gwy_data_line_resample(target_line, nstats, interpolation);
             size = nstats;
         }
@@ -692,7 +706,8 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                 break;
 
                 case GWY_SF_OUTPUT_PSDF:
-                gwy_data_line_psdf(hlp_line, hlp_tarline, windowing, interpolation);
+                gwy_data_line_psdf(hlp_line, hlp_tarline, windowing,
+                                   interpolation);
                 gwy_data_line_resample(hlp_tarline, size, interpolation);
                 break;
 
@@ -717,20 +732,15 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
             return 0;
         }
 
-        hlp_line = GWY_DATA_LINE(
-                       gwy_data_line_new(size,
-                                         gwy_data_field_jtor(data_field, size),
-                                         FALSE));
-        hlp_tarline = GWY_DATA_LINE(
-                          gwy_data_line_new(size,
-                                            gwy_data_field_jtor(data_field,
-                                                                size),
-                                            FALSE));
+        realsize = gwy_data_field_itor(data_field, size);
+        hlp_line = GWY_DATA_LINE(gwy_data_line_new(size, realsize, FALSE));
+        hlp_tarline = GWY_DATA_LINE(gwy_data_line_new(size, realsize, FALSE));
+
         if (nstats <= 0) {
             nstats = size;
         }
-        if (type == GWY_SF_OUTPUT_DH || type==GWY_SF_OUTPUT_DA
-            || type == GWY_SF_OUTPUT_CDA || type==GWY_SF_OUTPUT_CDH) {
+        if (type == GWY_SF_OUTPUT_DH || type == GWY_SF_OUTPUT_DA
+            || type == GWY_SF_OUTPUT_CDA || type == GWY_SF_OUTPUT_CDH) {
             gwy_data_line_resample(target_line, nstats, interpolation);
             size = nstats;
         }
@@ -793,16 +803,17 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
 
 /**
  * gwy_data_field_get_surface_area:
- * @a: data field
+ * @data_field: A data field.
  * @interpolation: interpolation method
  *
- * Computes surface area.
+ * Computes surface area of a data field.
  *
  * Returns: surface area
  **/
 gdouble
 gwy_data_field_get_surface_area(GwyDataField *a,
-                                G_GNUC_UNUSED GwyInterpolationType interpolation)
+                                G_GNUC_UNUSED
+                                GwyInterpolationType interpolation)
 {
     gint i, j;
     gdouble sum = 0;
@@ -816,7 +827,7 @@ gwy_data_field_get_surface_area(GwyDataField *a,
 
 /**
  * gwy_data_field_area_get_surface_area:
- * @dfield: A data field
+ * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -833,7 +844,8 @@ gdouble
 gwy_data_field_area_get_surface_area(GwyDataField *dfield,
                                      gint col, gint row,
                                      gint width, gint height,
-                                     G_GNUC_UNUSED GwyInterpolationType interpolation)
+                                     G_GNUC_UNUSED
+                                     GwyInterpolationType interpolation)
 {
     gint i, j;
     gdouble sum = 0.0;
@@ -875,15 +887,16 @@ gwy_data_field_get_area_surface_area(GwyDataField *a,
 
 /**
  * square_area:
- * @data_field: data 
+ * @data_field: data
  * @ulcol: upper-left coordinate (in pixel units)
  * @ulrow: upper-left coordinate (in pixel units)
  * @brcol: bottom-right coordinate (in pixel units)
  * @brrow: bottom-right coordinate (in pixel units)
  *
- * Computes surface area within given rectangle
+ * Computes surface area of a rectangular part of a data field.
  *
- * Returns: surface area (in real units)
+ * Returns: Surface area (in real units).
+ *
  * Since: 1.1
  **/
 static gdouble
@@ -909,8 +922,8 @@ square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
 
     s1 = (a + b + e)/2;
     s2 = (c + d + e)/2;
-    sa = sqrt(s1 * (s1 - a) * (s1 - b) * (s1 - e)) +
-        sqrt(s2 * (s2 - c) * (s2 - d) * (s2 - e));
+    sa = sqrt(s1 * (s1 - a) * (s1 - b) * (s1 - e))
+         + sqrt(s2 * (s2 - c) * (s2 - d) * (s2 - e));
 
     s1 = (a + d + f)/2;
     s2 = (c + b + f)/2;
@@ -927,7 +940,7 @@ square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
 
 /**
  * gwy_data_field_slope_distribution:
- * @dfield: A data field.
+ * @data_field: A data field.
  * @derdist: A data line to fill with angular slope distribution. Its
  *           resolution determines resolution of the distribution.
  * @kernel_size: If positive, local plane fitting will be used for slope
@@ -986,7 +999,7 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
 
 /**
  * gwy_data_field_area_get_median:
- * @dfield: A data field.
+ * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -1032,7 +1045,7 @@ gwy_data_field_area_get_median(GwyDataField *dfield,
 
 /**
  * gwy_data_field_get_median:
- * @dfield: A data field.
+ * @data_field: A data field.
  *
  * Computes median value of a data field.
  *

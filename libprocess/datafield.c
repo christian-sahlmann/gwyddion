@@ -392,7 +392,8 @@ _gwy_data_field_free(GwyDataField *a)
 gboolean
 gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
 {
-    if (a->xres != b->xres && a->yres != b->yres) return FALSE;
+    if (a->xres != b->xres && a->yres != b->yres)
+        return FALSE;
 
     b->xreal = a->xreal;
     b->yreal = a->yreal;
@@ -498,7 +499,7 @@ gwy_data_field_resample(GwyDataField *a,
 {
     GwyDataField b;
     gdouble xratio, yratio, xpos, ypos;
-    gint i,j;
+    gint i, j;
 
     if (a->xres == xres && a->yres == yres)
         return;
@@ -678,20 +679,20 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
         /*interpolation in x direction*/
         for (i = 0; i < 4; i++)
             intline[i] = a->data[floorx - 1 + i + a->xres * (floory - 1)];
-        va = gwy_interpolation_get_dval_of_equidists (restx, intline,
-                                                      interpolation);
+        va = gwy_interpolation_get_dval_of_equidists(restx, intline,
+                                                     interpolation);
         for (i = 0; i < 4; i++)
             intline[i] = a->data[floorx - 1 + i + a->xres * (floory)];
-        vb = gwy_interpolation_get_dval_of_equidists (restx, intline,
-                                                      interpolation);
+        vb = gwy_interpolation_get_dval_of_equidists(restx, intline,
+                                                     interpolation);
         for (i = 0; i < 4; i++)
             intline[i] = a->data[floorx - 1 + i + a->xres * (floory + 1)];
-        vc = gwy_interpolation_get_dval_of_equidists (restx, intline,
-                                                      interpolation);
+        vc = gwy_interpolation_get_dval_of_equidists(restx, intline,
+                                                     interpolation);
         for (i = 0; i < 4; i++)
             intline[i] = a->data[floorx - 1 + i + a->xres * (floory + 2)];
-        vd = gwy_interpolation_get_dval_of_equidists (restx, intline,
-                                                      interpolation);
+        vd = gwy_interpolation_get_dval_of_equidists(restx, intline,
+                                                     interpolation);
 
         /*interpolation in y direction*/
         intline[0] = va;
@@ -1109,7 +1110,7 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
 {
     GwyDataField b;
     gdouble inew, jnew, ir, jr, ang, icor, jcor, sn, cs, val;
-    gint i,j;
+    gint i, j;
 
     angle = fmod(angle, 360.0);
     if (angle < 0.0)
@@ -1130,7 +1131,7 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
             - sn*(a->xres-a->yres)/2;
     jcor = (gdouble)a->xres/2
            + G_SQRT2*(gdouble)a->xres/2*cos(ang)
-           + sn*(a->xres-a->yres)/2;;
+           + sn*(a->xres-a->yres)/2;
     if (angle == 90.0) {
         sn = 1.0;
         cs = 0.0;
@@ -1159,12 +1160,8 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
             if (inew > a->yres || jnew > a->xres || inew < -1 || jnew < -1)
                 a->data[j + a->xres*i] = val;
             else {
-                if (inew > (a->yres - 1))
-                    inew = a->yres-1;
-                if (jnew > (a->xres - 1))
-                    jnew = a->xres-1;
-                if (inew < 0) inew = 0;
-                if (jnew < 0) jnew = 0;
+                inew = CLAMP(inew, 0, a->yres - 1);
+                jnew = CLAMP(jnew, 0, a->xres - 1);
                 a->data[j + a->xres*i] = gwy_data_field_get_dval(&b, jnew, inew,
                                                                  interpolation);
             }
@@ -1191,7 +1188,7 @@ gwy_data_field_invert(GwyDataField *a,
                       gboolean y,
                       gboolean z)
 {
-    gint i,j;
+    gint i, j;
     gdouble avg;
     gdouble *line, *ap, *ap2;
     gsize linelen;
@@ -1474,8 +1471,7 @@ gwy_data_field_area_threshold(GwyDataField *a,
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
 
-        for (j = 0; j < brcol - ulcol; j++)
-        {
+        for (j = 0; j < brcol - ulcol; j++) {
             if (*row < threshval)
                 *row = bottom;
             else {
@@ -1679,7 +1675,7 @@ gwy_data_field_get_column_part(GwyDataField *a,
         gwy_data_line_resample(b, to-from, GWY_INTERPOLATION_NONE);
 
     for (k = 0; k < to-from; k++)
-        b->data[k]=a->data[(k+from)*a->xres + col];
+        b->data[k] = a->data[(k+from)*a->xres + col];
 }
 
 /**
@@ -1894,27 +1890,24 @@ gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
                                              interpolation);
     b->real = size*a->xreal/a->xres;
 
-    if (thickness <= 1) return TRUE;
+    if (thickness <= 1)
+        return TRUE;
 
     /*add neighbour values to the line*/
-    for (k = 0; k < res; k++)
-    {
+    for (k = 0; k < res; k++) {
         mid = b->data[k];
         sum = 0;
-        for (j=(-thickness/2); j<(thickness - thickness/2); j++)
-        {
+        for (j = -thickness/2; j < thickness - thickness/2; j++) {
             srcol = ulcol + k*cosa;
             srrow = ulrow + k*sina;
             col = (srcol + j*sina);
             row = (srrow + j*cosa);
-            if (col >= 0 && col < (a->xres-1) && row >= 0 && row < (a->yres-1))
-            {
+            if (col >= 0 && col < (a->xres-1)
+                && row >= 0 && row < (a->yres-1)) {
                 sum += gwy_data_field_get_dval(a, col, row, interpolation);
             }
             else
-            {
                 sum += mid;
-            }
         }
         b->data[k] = sum/(gdouble)thickness;
     }
@@ -2019,8 +2012,7 @@ gwy_data_field_shade(GwyDataField *data_field,
                             GWY_INTERPOLATION_NONE);
 
     max = -G_MAXDOUBLE;
-    for (i = 0; i < data_field->yres; i++)
-    {
+    for (i = 0; i < data_field->yres; i++) {
 
         for (j = 0; j < data_field->xres; j++) {
             target_field->data[j + data_field->xres*i]
