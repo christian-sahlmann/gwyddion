@@ -158,6 +158,8 @@ gwy_axis_init(GwyAxis *axis)
     axis->par.line_thickness = 1;
 
     axis->dialog = NULL;
+    axis->reqmax = 100;
+    axis->reqmin = 0;
 
 
     axis->has_unit = 0;
