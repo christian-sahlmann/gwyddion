@@ -8,6 +8,7 @@ EXPORTS
 	gwy_graph_clear
 	gwy_axis_get_type
 	gwy_layer_points_set_max_points
+	gwy_layer_axes_get_axes
 	gwy_ruler_set_units
 	gwy_layer_basic_get_type
 	gwy_axis_dialog_get_type
@@ -48,7 +49,9 @@ EXPORTS
 	gwy_graph_get_autoproperties
 	gwy_data_window_get_data
 	gwy_sci_text_set_text
+	gwy_layer_axes_set_max_axes
 	gwy_graph_new
+	gwy_layer_axes_get_max_axes
 	gwy_graph_area_add_curve
 	gwy_color_axis_get_palette
 	gwy_sphere_coords_get_phi
@@ -57,6 +60,7 @@ EXPORTS
 	gwy_layer_lines_get_max_lines
 	gwy_sci_text_get_type
 	gwy_vector_layer_get_type
+	gwy_layer_axes_new
 	gwy_vector_layer_get_update_policy
 	gwy_ruler_draw_pos
 	gwy_data_view_get_thumbnail
@@ -96,6 +100,7 @@ EXPORTS
 	gwy_table_attach_row
 	gwy_layer_basic_set_palette
 	gwy_option_menu_windowing
+	gwy_layer_axes_get_type
 	gwy_layer_mask_set_color
 	gwy_graph_draw_point
 	gwy_graph_label_get_type

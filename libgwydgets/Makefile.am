@@ -19,6 +19,7 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphcorner.h \
 	gwygraphlabel.h \
 	gwyhruler.h \
+	gwylayer-axes.h \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
 	gwylayer-lines.h \
@@ -62,6 +63,7 @@ libgwydgets_la_SOURCES = \
 	gwygraphcorner.c \
 	gwygraphlabel.c \
 	gwyhruler.c \
+	gwylayer-axes.c \
 	gwylayer-basic.c \
 	gwylayer-mask.c \
 	gwylayer-lines.c \

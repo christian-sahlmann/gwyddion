@@ -37,6 +37,7 @@ LIB_OBJECTS = \
 	gwygraphcorner.obj \
 	gwygraphlabel.obj \
 	gwyhruler.obj \
+	gwylayer-axes.obj \
 	gwylayer-basic.obj \
 	gwylayer-mask.obj \
 	gwylayer-lines.obj \
@@ -68,6 +69,7 @@ LIB_HEADERS = \
 	gwygraphcorner.h \
 	gwygraphlabel.h \
 	gwyhruler.h \
+	gwylayer-axes.h \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
 	gwylayer-lines.h \
