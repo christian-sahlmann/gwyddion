@@ -34,7 +34,7 @@
 #define EPS 1e-16
 
 /* Lower symmetric part indexing */
-/* i MUST be greater or equal than j */
+/* i (row) MUST be greater or equal than j (column) */
 #define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
 
 /* Preset */
@@ -54,13 +54,9 @@ static gdouble  gwy_math_nlfit_residua      (GwyNLFitter *nlfit,
                                              gpointer user_data,
                                              gdouble *resid);
 
-/* XXX: brain damage:
- * all the functions whose names end with `1' use 1-based arrays since they
- * were originally written in Pascal (!)
- * never expose then to outer world, we must pretend everything is 0-based
- * eventually everything will be actually rewritten to base 0 */
-static gboolean gwy_math_sym_matrix_invert1(gint n,
-                                            gdouble *a);
+/* XXX: publish in 2.0? */
+static gboolean gwy_math_sym_matrix_invert(gint n,
+                                           gdouble *a);
 
 
 /**
@@ -366,7 +362,7 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
     sumr1 = sumr;
 
     if (nlfit->eval) {
-        if (gwy_math_sym_matrix_invert1(n_var_param, save_a-1)) {
+        if (gwy_math_sym_matrix_invert(n_var_param, save_a)) {
             /* stretch the matrix to span over fixed params too */
             nlfit->covar = g_new(gdouble, n_param*(n_param + 1)/2);
             for (i = 0; i < n_param; i++) {
@@ -590,9 +586,17 @@ gwy_math_nlfit_get_correlations(GwyNLFitter *nlfit, gint par1, gint par2)
 }
 
 
-/* inverze symetricke matice */
+/**
+ * gwy_math_sym_matrix_invert:
+ * @n: Matrix size.
+ * @a: Lower-left part of symmetric, positive definite matrix.
+ *
+ * Inverts a positive definite matrix in place.
+ *
+ * Returns: Whether the matrix invesion succeeded.
+ **/
 static gboolean
-gwy_math_sym_matrix_invert1(gint n, gdouble *a)
+gwy_math_sym_matrix_invert(gint n, gdouble *a)
 {
 
     gint q = 0, m;
@@ -600,33 +604,30 @@ gwy_math_sym_matrix_invert1(gint n, gdouble *a)
     gdouble *x;
     gint k, i, j;
 
-    x = g_new(gdouble, n*(n + 1)/2 + 2);
-    for (k = n; k >= 1; k--) {
-        s = a[1];
-        if (s <= 0) {
-            g_free(x);
+    x = g_newa(gdouble, n);
+    for (k = n-1; k >= 0; k--) {
+        s = a[0];
+        if (s <= 0)
             return FALSE;
-        }
-        m = 1;
-        for (i = 2; i <= n; i++) {
-            q = m;
-            m += i;
-            t = a[q + 1];
+        m = 0;
+        for (i = 0; i < n-1; i++) {
+            q = m+1;
+            m += i+2;
+            t = a[q];
             x[i] = -t/s;      /* note use temporary x */
-            if (i > k)
+            if (i >= k)
                 x[i] = -x[i];
-            for (j = q + 2; j <= m; j++)
-                a[j - i] = a[j] + t * x[j - q];
+            for (j = q; j < m; j++)
+                a[j - (i+1)] = a[j+1] + t * x[j - q];
         }
-        q--;
         a[m] = 1.0/s;
-        for (i = 2; i <= n; i++)
+        for (i = 0; i < n-1; i++)
             a[q + i] = x[i];
     }
-    g_free(x);
 
     return TRUE;
 }
+
 /*********************** gaussian *****************************/
 static gdouble
 fit_gauss(gdouble x,
