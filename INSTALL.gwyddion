@@ -1,0 +1,143 @@
+
+Contents:
+0. Prebuilt binaries
+1. From sources -- Linux/Unix
+2. From sources -- MS Windows
+3. From CVS (Linux/Unix only)
+4. Modules and plug-ins
+
+===[ 0. Prebuilt binaries ]==================================================
+
+Binary packages provided by us, currently that is RPMs for Fedora Core Linux
+and installers from MS Windows, require no additional setup after standard
+package installation procedure.
+
+We cannot tell for packages provided for other systems by other entities, but
+do not expect them to require any additional setup either.
+
+
+===[ 1. From sources -- Linux/Unix ]=========================================
+
+Prerequisities:
+- a compiler, linker, make, etc. capable of Gtk+ compilation (you don't have
+  to compile Gtk+, but what is good enough for Gtk+ should be good enough for
+  Gwyddion), GNU toolchain is the prefered one
+- Gtk+-2.2 or newer, including development files
+- GtkGLExt-1.0 or newer, including development files
+- Pango with FT2 backend, including development files
+
+Optional, for development of plug-in in various languages:
+- Python-2.2 or newer
+- Ruby-1.8 or newer
+- Perl5
+- FreePascal-1.9 or newer
+
+Read generic GNU installation instruction in INSTALL that describe the build
+process, common program arguments, and important environment variables.
+
+If you have Gtk+ in a nonstandard directory, assure PKG_CONFIG_PATH
+environment variable points to directory where gtk+-2.0.pc et al. resides.
+
+Quick instructions:
+Unpack tarball with sources, cd to the created directory, then run:
+  ./configure
+  make
+and as root run:
+  make install
+
+
+===[ 2. From sources -- MS Windows ]=========================================
+
+Prerequisities:
+- MSVC 6 or newer (it may build with Cygwin or MinGW toolchain, but MSVC is
+  the tested one)
+- Gtk+-2.2 or newer, including development files
+- GtkGLExt-1.0 or newer, including development files
+- Pango with FT2 backend, including development files
+The prefered way to get all these is to install Gtk+ all-in-one package from
+GladeWin32.
+
+Optional but recommended, for installer creation:
+- Inno Setup 4
+
+Unpack tarball with sources, change to the created directory and edit
+make.msc (note it has Unix EOLs so use Wordpad or some full-fledged text
+editor, not Notepad).  Point:
+- GTK_TOP to top level directory of your Gtk+ installation (it's the
+  directory that have bin, lib, share, ..., subdirectories).  We will refer
+  to this directory as $GTK_TOP below.
+- GTKGLEXT_TOP to top level directory of your GtkGLExt installation if it
+  differs from $GTK_TOP
+- MSC_TOP to top level directory of you MSVC installation
+
+Run command prompt (DOS) in the directory with unpacked sources.  Assure
+MSVC directories are in PATH, this can be done by running vcvars32.bat,
+provided by MSVC.  Run
+  nmake -f makefile.msc
+  nmake -f makefile.msc install
+
+If you are not going to create an installer and run Gwyddion from where it
+was compiled instead (that its, from the `inst' subdirectory), you have to set
+up registry keys so that it can find Gtk+ libraries.  Run regedit and create
+in
+  HKEY_LOCAL_MACHINE->Software->Microsoft->Windows->Current Version->
+    ->App Paths->Gwyddion.exe
+a string key `Path' and put `$GTK_TOP\lib;$GTK_TOP\bin' there.  If GtkGLExt
+is installed separately, also add its lib and bin directories, separated by
+semicolons.
+
+To create an installer, open gwyddion.iss in Inno Setup and select Build,
+it will create Gwyddion-<VERSION>.exe in the inst subdirectory.  You can
+optionally create installer of Gwyddion development files by repeating these
+steps with gwyddion-devel.iss.
+
+It is possible to build Gwyddion from the MSVC IDE, but it is not supported.
+Namely because there are no decent project files to start with, and if there
+were some, we don't know how to automatically update them for new modules,
+source files, pixmaps, etc. according to Unix makefiles as it works with the
+nmake makefiles now.
+
+
+===[ 3. From CVS (Linux/Unix only) ]=========================================
+
+CVS generally doesn't contain generated files, no matter how unusual tools
+may be needed to generate them.  Consider use of nightly snapshot tarballs
+available at http://trific.ath.cx/software/gwyddion/ (ATM).
+
+Prerequisities:
+- everything needed for compilation from tarballs
+- GNU autoconf 2.53 or newer
+- GNU automake 1.6 or newer
+- GNU libtool 1.4 or newer
+- Python-2.2 or newer
+- Perl5
+- gtk-doc 0.6 or newer
+- GNU gettext
+- who knows what else
+
+First of all run
+  ./autogen.sh
+with any options you'd give to ./configure, note it always adds
+--enable-maintainer-mode.
+
+You should be able to build executables then with
+  make
+There are other things to generate, however.  They can be created only after
+a successful project build.
+- Documentation:
+    make docs
+- MSVC files (makefiles, .def files):
+    ./utils/update-msvc.py
+
+At this point that all files that are included in source tarball should be
+created, and
+  make install
+or
+  make dist
+will work as expected.
+
+
+===[ 4. Modules and plug-ins ]===============================================
+
+To be written.
+

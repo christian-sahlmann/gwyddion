@@ -1,35 +1,28 @@
-This is more-or-less README-devel...
 
-Run ./configure (or ./autogen) with --enable-maintainer-mode
-if you want to make docs or build tarballs
+Gwyddion is a SPM (scanning probe microscopy) data visualization and analysis
+tool, written with Gtk+ and working in both Linux/Unix and MS Windows.
 
-Run ./configure (or ./autogen) with --cache-file=config.cache
-to speed up configure
+Web site:            http://gwyddion.net/
+Sourceforge page:    http://sourceforge.net/projects/gwyddion/
+Public CVS:          ditto
+Bug reports:         http://trific.ath.cx/bugzilla/
+E-mail to authors:   yeti@gwyddion.net, klapetek@gwyddion.net
 
-Ideally, with both.
+See also:
+User-visible changes between versions: NEWS
+Gwyddion installation instructions:    INSTALL.gwyddion
+Generic GNU installation instructions: INSTALL
+License (GNU General Public License):  COPYING
+More info about developers:            AUTHORS
 
-Use ccache.
+Note stuff in the plugins/ directory is public domain.
 
-Note several auxiliary tools are written in Python, most notably
-utils/update-msvc.py -- incorporating changes in Makefile.am's into MSC
-    makefiles and generating MSC .def files
-devel-docs/add-objects.py -- addind object structs to gtkdoc-generated
-    section files
-You don't need Python to compile Gwyddion, but you may need it to
-develop Gwyddion.
-
-See devel-docs/README for HTML doc info (make docs generates it).
-
-Note the stuff in the plugins/ directory is public domain.
 Note module/plugin-proxy.c has a special licensing exception too,
 you can use it as `dump' format documentation without being `tainted',
 see module/plugin-proxy.c for more.
 
-Note library sonames are kept constant in spite of their neverending changes
-till a official version is released.
 
-If you change change public interfaces and/or add or remove files, compile
-gwyddion and run update-msvc.py before creating tarballs.
+===[ hic sunt leones ]========================================================
 
 Subdir dependencies (fully resolved):
     libgwyddion:  (none)
