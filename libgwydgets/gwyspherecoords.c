@@ -216,22 +216,15 @@ gwy_sphere_coords_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_SPHERE_COORDS(obj), NULL);
 
     sphere_coords = GWY_SPHERE_COORDS(obj);
-    buffer = gwy_serialize_pack(buffer, size, "si",
-                                GWY_SPHERE_COORDS_TYPE_NAME, 0);
     {
         GwySerializeSpec spec[] = {
             { 'd', "theta", &sphere_coords->theta, NULL },
             { 'd', "phi", &sphere_coords->phi, NULL },
         };
-        gsize oldsize = *size;
-
-        buffer = gwy_serialize_pack_struct(buffer, size,
-                                           G_N_ELEMENTS(spec), spec);
-        gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
-                                  *size - oldsize);
+        return gwy_serialize_pack_object_struct(buffer, size,
+                                                GWY_SPHERE_COORDS_TYPE_NAME,
+                                                G_N_ELEMENTS(spec), spec);
     }
-    return buffer;
-
 }
 
 static GObject*
@@ -251,15 +244,10 @@ gwy_sphere_coords_deserialize(const guchar *buffer,
     #endif
     g_return_val_if_fail(buffer, NULL);
 
-    pos = gwy_serialize_check_string(buffer, size, *position,
-                                     GWY_SPHERE_COORDS_TYPE_NAME);
-    g_return_val_if_fail(pos, NULL);
-    *position += pos;
-    mysize = gwy_serialize_unpack_int32(buffer, size, position);
-
-    gwy_serialize_unpack_struct(buffer + *position, mysize,
-                                G_N_ELEMENTS(spec), spec);
-    position += mysize;
+    if (!gwy_serialize_unpack_object_struct(buffer, size, position,
+                                            GWY_SPHERE_COORDS_TYPE_NAME,
+                                            G_N_ELEMENTS(spec), spec))
+        return NULL;
 
     return (GObject*)gwy_sphere_coords_new(theta, phi);
 }
