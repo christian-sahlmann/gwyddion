@@ -28,7 +28,7 @@
 #include <app/gwyapp.h>
 
 #define TIP_BLIND_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)
+    (GWY_RUN_MODAL)
 
 enum {
     MIN_RES = 3,
@@ -148,18 +148,12 @@ static gboolean
 tip_blind(GwyContainer *data, GwyRunType run)
 {
     TipBlindArgs args;
-    gboolean ok = FALSE;
 
     g_assert(run & TIP_BLIND_RUN_MODES);
 
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = tip_blind_defaults;
-    else
-        tip_blind_load_args(gwy_app_settings_get(), &args);
-
-    ok = (run != GWY_RUN_MODAL) || tip_blind_dialog(&args, data);
-    if (run == GWY_RUN_MODAL)
-        tip_blind_save_args(gwy_app_settings_get(), &args);
+    tip_blind_load_args(gwy_app_settings_get(), &args);
+    tip_blind_dialog(&args, data);
+    tip_blind_save_args(gwy_app_settings_get(), &args);
 
     return FALSE;
 }
@@ -501,7 +495,7 @@ tip_blind_run(TipBlindControls *controls,
     tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
                                                                "/0/data"));
 
-    gwy_app_wait_start(GTK_WIDGET(controls->data_window), _("Initializing"));
+    gwy_app_wait_start(controls->dialog, _("Initializing"));
 
     /* control tip resolution and real/res ratio*/
     prepare_fields(tipfield, surface, args->xres, args->yres);
