@@ -246,8 +246,8 @@ update_labels(GwyUnitoolState *state)
 
             dx = lines[4*i+0] - lines[4*i+2];
             dy = lines[4*i+3] - lines[4*i+1];
-            r = hypot(dx, dy);
-            a = atan2(dy, dx)* 180/ M_PI;
+            r = sqrt(dx*dx + dy*dy);
+            a = atan2(dy, dx) * 180.0/G_PI;
 
             gwy_unitool_update_label_no_units(state->coord_format,
                                               controls->positions[2*i+ 0], dx);
