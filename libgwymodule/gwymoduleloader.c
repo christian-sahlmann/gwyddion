@@ -5,6 +5,8 @@
 
 #include "gwymoduleloader.h"
 
+#define GWY_MODULE_QUERY_NAME G_STRINGIFY(_GWY_MODULE_QUERY)
+
 static void gwy_load_modules_in_dir(GDir *gdir,
                                     const gchar *dirname,
                                     GHashTable *modules);
@@ -212,5 +214,79 @@ gwy_load_modules_in_dir(GDir *gdir,
 
     }
 }
+
+/**
+ * GWY_MODULE_ABI_VERSION:
+ *
+ * Gwyddion module ABI version.
+ *
+ * To be filled as @abi_version in #GwyModuleInfo.
+ **/
+
+/**
+ * GWY_MODULE_QUERY(mod_info):
+ * @mod_info: The %GwyModuleInfo structure to return as module info.
+ *
+ * The declaration of module info query (the ONLY exported symbol from
+ * a module).
+ **/
+
+/**
+ * GwyRunType:
+ * @GWY_RUN_INTERACTIVE: The function can present a GUI to the user, if it
+ *                       wishes so.
+ * @GWY_RUN_NONINTERACTIVE: The function is run non-interactively, and it
+ *                          should use parameter values stored in the
+ *                          container to reproduce previous runs.
+ * @GWY_RUN_WITH_DEFAULTS: The function is run non-interactively, and it
+ *                         should use default parameter values.
+ * @GWY_RUN_MASK: The mask.
+ *
+ * Data processing function run-modes.
+ **/
+
+/**
+ * GwyModuleRegisterFunc:
+ * @name: An unique module name.
+ *
+ * Module registration function type.
+ *
+ * It actually runs particular featrue registration functions, like
+ * gwy_module_register_file_func() and gwy_module_register_process_func().
+ *
+ * Returns: Whether the registration succeeded.  When it returns %FALSE, the
+ *          module and its features are unloaded (FIXME: maybe. Currenly only
+ *          module is unloaded, features are NOT unregistered, this can lead
+ *          to all kinds of disasters).
+ **/
+
+/**
+ * GwyModuleQueryFunc:
+ *
+ * Module query function type.
+ *
+ * The module query function should be simply declared as
+ * GWY_MODULE_QUERY(mod_info), where mod_info is module info struct for
+ * the module.
+ *
+ * Returns: The module info struct.
+ **/
+
+/**
+ * GwyModuleInfo:
+ * @abi_version: Gwyddion module ABI version, should be always
+ *               #GWY_MODULE_ABI_VERSION.
+ * @register_func: Module registration function (the function run by Gwyddion
+ *                 module system, actually registering particular module
+ *                 features).
+ * @name: An unique module name.
+ * @blurb: Some module description.
+ * @author: Module author(s).
+ * @version: Module version.
+ * @copyright: Who has copyright on this module.
+ * @date: Date (year).
+ *
+ * Module information returned by GWY_MODULE_QUERY().
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

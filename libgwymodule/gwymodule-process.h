@@ -4,6 +4,8 @@
 #define __GWY_MODULE_PROCESS_H__
 
 #include <gtk/gtkobject.h>
+/* FIXME: it should not require anything from Gtk+, move the menu-builder
+ * somewhere else. */
 #include <gtk/gtkaccelgroup.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymoduleloader.h>

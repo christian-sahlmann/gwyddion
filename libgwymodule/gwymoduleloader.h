@@ -11,15 +11,7 @@ extern "C" {
 
 #define GWY_MODULE_ABI_VERSION 0
 
-/**
- * GWY_MODULE_QUERY(mod_info):
- * @mod_info: The %GwyModuleInfo structure to return as module info.
- *
- * The declaration of module info query (the ONLY exported symbol from
- * a module).
- **/
 #define _GWY_MODULE_QUERY _gwy_module_query
-#define GWY_MODULE_QUERY_NAME G_STRINGIFY(_GWY_MODULE_QUERY)
 #define GWY_MODULE_QUERY(mod_info) \
     G_MODULE_EXPORT GwyModuleInfo* \
     _GWY_MODULE_QUERY(void) { return &mod_info; }

@@ -195,4 +195,25 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
     return (GtkObject*)item_factory;
 }
 
+/**
+ * GwyProcessFuncInfo:
+ * @name: An unique data processing function name.
+ * @menu_path: A path under "/Data Process" where the function should appear.
+ *             It must start with "/".
+ * @process: The function itself.
+ * @run: Possible run-modes for this function.
+ *
+ * Information about one data processing function.
+ **/
+
+/**
+ * GwyProcessFunc:
+ * @data: The data container to operate on.
+ * @run: Run mode.
+ *
+ * The type of data processing function.
+ *
+ * Returns: Whether it succeeded (XXX: this means exactly what?).
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

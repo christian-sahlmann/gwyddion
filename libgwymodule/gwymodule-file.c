@@ -17,6 +17,17 @@ typedef struct {
     gboolean must_have_save;
 } GwyFileDetectData;
 
+/**
+ * gwy_register_file_func:
+ * @modname: Module identifier (name).
+ * @func_info: File type function info.
+ *
+ * Registeres a data processing function.
+ *
+ * The passed @func_info must not be an automatic variable.
+ *
+ * Returns: %TRUE on success, %FALSE on failure.
+ **/
 gboolean
 gwy_register_file_func(const gchar *modname,
                        GwyFileFuncInfo *func_info)
@@ -45,6 +56,22 @@ gwy_register_file_func(const gchar *modname,
     return TRUE;
 }
 
+/**
+ * gwy_run_file_detect_func:
+ * @name: A file type function name.
+ * @filename: A file name to detect.
+ * @only_name: Whether to use only file name for a guess, or try to actually
+ *             access the file.
+ *
+ * Runs a file type detection function identified by @name.
+ *
+ * Value of @only_name should be %TRUE if the file doesn't exist (is to be
+ * written) so its contents can't be used for file type detection.
+ *
+ * Returns: An integer score expressing the likehood of the file being
+ *          loadable as this type. A basic scale is 20 for a good extension,
+ *          100 for good magic header, more for more thorough tests.
+ **/
 gint
 gwy_run_file_detect_func(const gchar *name,
                          const gchar *filename,
@@ -60,6 +87,15 @@ gwy_run_file_detect_func(const gchar *name,
     return func_info->detect(filename, only_name);
 }
 
+/**
+ * gwy_run_file_load_func:
+ * @name: A file load function name.
+ * @filename: A file name to load data from.
+ *
+ * Runs a file load function identified by @name.
+ *
+ * Returns: A new #GwyContainer with data from @filename, or %NULL.
+ **/
 GwyContainer*
 gwy_run_file_load_func(const gchar *name,
                        const gchar *filename)
@@ -74,6 +110,16 @@ gwy_run_file_load_func(const gchar *name,
     return func_info->load(filename);
 }
 
+/**
+ * gwy_run_file_save_func:
+ * @name: A file save function name.
+ * @data: A #GwyContainer to save.
+ * @filename: A file name to save @data as.
+ *
+ * Runs a file save function identified by @name.
+ *
+ * Returns: %TRUE if file save succeeded, %FALSE otherwise.
+ **/
 gboolean
 gwy_run_file_save_func(const gchar *name,
                        GwyContainer *data,
@@ -113,6 +159,16 @@ file_detect_max_score(const gchar *key,
     }
 }
 
+/**
+ * gwy_file_detect:
+ * @filename: A file name to detect type of.
+ *
+ * Detects file type of file @filename.
+ *
+ * Returns: The type name (i.e., the same name as passed to
+ *          e.g. gwy_run_file_load_func()) of most probable type of @filename,
+ *          or %NULL if there's no probable one.
+ **/
 G_CONST_RETURN gchar*
 gwy_file_detect(const gchar *filename)
 {
@@ -126,9 +182,19 @@ gwy_file_detect(const gchar *filename)
     ddata.must_have_save = FALSE;
     g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score, &ddata);
 
+    if (!ddata.score)
+        return NULL;
     return ddata.winner;
 }
 
+/**
+ * gwy_file_load:
+ * @filename: A file name to load data from.
+ *
+ * Loads a data file, autodetecting its type.
+ *
+ * Returns: A new #GwyContainer with data from @filename, or %NULL.
+ **/
 GwyContainer*
 gwy_file_load(const gchar *filename)
 {
@@ -141,6 +207,15 @@ gwy_file_load(const gchar *filename)
     return gwy_run_file_load_func(winner, filename);
 }
 
+/**
+ * gwy_file_save:
+ * @data: A #GwyContainer to save.
+ * @filename: A file name to save the data as.
+ *
+ * Saves a data file, deciding to save as what type from the file name.
+ *
+ * Returns: %TRUE if file save succeeded, %FALSE otherwise.
+ **/
 gboolean
 gwy_file_save(GwyContainer *data,
               const gchar *filename)
@@ -160,5 +235,48 @@ gwy_file_save(GwyContainer *data,
 
     return gwy_run_file_save_func(ddata.winner, data, filename);
 }
+
+/**
+ * GwyFileFuncInfo:
+ * @name: File type function name (used for all detect/save/load functions).
+ * @file_desc: Brief file type description.
+ * @detect: The file type detecting function.
+ * @load: The file loading function.
+ * @save: The file saving function.
+ *
+ * Information about set of functions for one file type.
+ **/
+
+/**
+ * GwyFileDetectFunc:
+ * @filename: A file name to detect the filetype of.
+ * @only_name: Whether the type should be guessed only from file name.
+ *
+ * The type of file type detection function.
+ *
+ * When called with %TRUE @only_name it should not try to access the file.
+ *
+ * Returns: An integer likehood score (see gwy_run_file_detect_func() for
+ *          description).
+ **/
+
+/**
+ * GwyFileLoadFunc:
+ * @filename: A file name to load data from.
+ *
+ * The type of file loading function.
+ *
+ * Returns: A newly created data container or %NULL.
+ **/
+
+/**
+ * GwyFileSaveFunc:
+ * @data: A #GwyContainer to save.
+ * @filename: A file name to save @data as.
+ *
+ * The type of file saving function.
+ *
+ * Returns: %TRUE if file save succeeded, %FALSE otherwise.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
