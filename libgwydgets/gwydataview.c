@@ -437,7 +437,7 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     if (scwidth != width || scheight != height) {
         gwy_object_unref(data_view->pixbuf);
         data_view->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
-                                           TRUE,
+                                           FALSE,
                                            BITS_PER_SAMPLE,
                                            scwidth, scheight);
         gdk_pixbuf_fill(data_view->pixbuf, 0x00000000);
@@ -484,6 +484,7 @@ gwy_data_view_paint(GwyDataView *data_view)
 {
     GdkPixbuf *src_pixbuf;
 
+    gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(data_view->base_layer));
 
     /* base layer is always present
@@ -533,10 +534,10 @@ gwy_data_view_expose(GtkWidget *widget,
     ys = MAX(rect.y, data_view->yoff) - data_view->yoff;
     xe = MIN(rect.x + rect.width, data_view->xoff + w) - data_view->xoff;
     ye = MIN(rect.y + rect.height, data_view->yoff + h) - data_view->yoff;
+    gwy_debug("going to draw: %dx%d  at (%d,%d)",
+              xe - xs, ye - ys, xs, ys);
     if (xs >= xe || ys >= ye)
         return FALSE;
-
-    /*gdk_window_set_back_pixmap(widget->window, NULL, FALSE);*/
 
     /* FIXME: ask the layers, if they want to repaint themselves */
     if (data_view->force_update
