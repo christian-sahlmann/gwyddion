@@ -98,6 +98,14 @@ meta
 toolbox
 
 
+<!-- ##### STRUCT GwyMenuSensitiveData ##### -->
+<para>
+
+</para>
+
+@flags: 
+@set_to: 
+
 <!-- ##### FUNCTION gwy_app_about ##### -->
 <para>
 

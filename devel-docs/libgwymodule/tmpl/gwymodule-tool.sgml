@@ -40,6 +40,7 @@ Tool modules
 
 @data_window: 
 @event: 
+@Returns: 
 <!-- # Unused Parameters # -->
 @even: 
 @reason: 
@@ -63,10 +64,10 @@ Tool modules
 @name: 
 @data_window: 
 @event: 
+@Returns: 
 <!-- # Unused Parameters # -->
 @even: 
 @reason: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_tool_func_build_toolbox ##### -->

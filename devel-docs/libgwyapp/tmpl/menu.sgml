@@ -27,7 +27,7 @@ menu
 @GWY_MENU_FLAG_LAST_GRAPH: 
 @GWY_MENU_FLAG_MASK: 
 
-<!-- ##### STRUCT GwyMenuSensitiveData ##### -->
+<!-- ##### STRUCT GwyMenuSensData ##### -->
 <para>
 
 </para>
@@ -135,6 +135,14 @@ menu
 </para>
 
 @menu: 
+
+
+<!-- ##### FUNCTION gwy_app_toolbox_update_state ##### -->
+<para>
+
+</para>
+
+@sens_data: 
 
 
 <!-- ##### FUNCTION gwy_app_run_process_func_cb ##### -->

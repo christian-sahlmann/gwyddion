@@ -128,8 +128,9 @@ GwyGraph
 </para>
 
 @graph: 
-@status: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@status: 
 
 
 <!-- ##### FUNCTION gwy_graph_get_boundaries ##### -->
@@ -154,5 +155,13 @@ GwyGraph
 @x_max: 
 @y_min: 
 @y_max: 
+
+
+<!-- ##### FUNCTION gwy_graph_unzoom ##### -->
+<para>
+
+</para>
+
+@graph: 
 
 

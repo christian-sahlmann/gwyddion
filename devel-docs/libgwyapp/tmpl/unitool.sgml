@@ -27,7 +27,6 @@ unitool
 </para>
 
 @layer_type: 
-@layer_constructor: 
 @layer_setup: 
 @dialog_create: 
 @dialog_update: 
@@ -55,6 +54,7 @@ unitool
 @state: 
 @data_window: 
 @reason: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_unitool_windowname_frame_create ##### -->

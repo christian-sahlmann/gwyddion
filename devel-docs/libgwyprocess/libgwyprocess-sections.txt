@@ -4,7 +4,6 @@
 gwy_data_field_new
 gwy_data_field_alloc
 gwy_data_field_initialize
-gwy_data_field_free
 gwy_data_field_resample
 gwy_data_field_resize
 gwy_data_field_copy
@@ -15,6 +14,10 @@ gwy_data_field_get_xreal
 gwy_data_field_get_yreal
 gwy_data_field_set_xreal
 gwy_data_field_set_yreal
+gwy_data_field_get_si_unit_xy
+gwy_data_field_get_si_unit_z
+gwy_data_field_set_si_unit_xy
+gwy_data_field_set_si_unit_z
 gwy_data_field_itor
 gwy_data_field_jtor
 gwy_data_field_rtoi

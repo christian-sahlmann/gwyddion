@@ -1,3 +1,103 @@
+<!-- ##### SECTION ./tmpl/gwylayer-axes.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-axes.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-axes.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-axes.sgml:Title ##### -->
+GwyLayerAxes
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-lines.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-lines.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-lines.sgml:Short_Description ##### -->
+Lines selection layer.
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-lines.sgml:Title ##### -->
+GwyLayerLines
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-pointer.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-pointer.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-pointer.sgml:Short_Description ##### -->
+Simple layer displaying nothing
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-pointer.sgml:Title ##### -->
+GwyLayerPointer
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-points.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-points.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-points.sgml:Short_Description ##### -->
+Points selection layer
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-points.sgml:Title ##### -->
+GwyLayerPoints
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-select.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-select.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-select.sgml:Short_Description ##### -->
+Rectangular selection layer
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-select.sgml:Title ##### -->
+GwyLayerSelect
+
+
 <!-- ##### SECTION ./tmpl/gwylayer-triangle.sgml:Long_Description ##### -->
 <para>
 
@@ -75,6 +175,36 @@ gwymodulemenus
 </para>
 
 @gwygrapharea: the object which received the signal.
+
+<!-- ##### ARG GwyLayerAxes:max-axes ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GwyLayerAxes:orientation ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GwyLayerLines:max-lines ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GwyLayerPoints:max-points ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GwyLayerSelect:is-crop ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### TYPEDEF GwyOptionMenuEntry ##### -->
 <para>
@@ -219,6 +349,54 @@ gwymodulemenus
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_layer_axes_get_axes ##### -->
+<para>
+
+</para>
+
+@layer: 
+@axes: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_axes_get_max_axes ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_axes_get_orientation ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_axes_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_axes_set_max_axes ##### -->
+<para>
+
+</para>
+
+@layer: 
+@naxes: 
+
+<!-- ##### FUNCTION gwy_layer_axes_set_orientation ##### -->
+<para>
+
+</para>
+
+@layer: 
+@orientation: 
+
 <!-- ##### FUNCTION gwy_layer_cursor_free_or_unref ##### -->
 <para>
 
@@ -234,12 +412,61 @@ gwymodulemenus
 @cursor: 
 @type: 
 
+<!-- ##### FUNCTION gwy_layer_lines_get_lines ##### -->
+<para>
+
+</para>
+
+@layer: 
+@lines: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_lines_get_max_lines ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_lines_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_lines_set_max_lines ##### -->
+<para>
+
+</para>
+
+@layer: 
+@nlines: 
+
 <!-- ##### FUNCTION gwy_layer_lines_unselect ##### -->
 <para>
 
 </para>
 
 @layer: 
+
+<!-- ##### FUNCTION gwy_layer_pointer_get_point ##### -->
+<para>
+
+</para>
+
+@layer: 
+@x: 
+@y: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_pointer_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gwy_layer_pointer_unselect ##### -->
 <para>
@@ -248,12 +475,79 @@ gwymodulemenus
 
 @layer: 
 
+<!-- ##### FUNCTION gwy_layer_points_get_max_points ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_points_get_points ##### -->
+<para>
+
+</para>
+
+@layer: 
+@points: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_points_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_points_set_max_points ##### -->
+<para>
+
+</para>
+
+@layer: 
+@npoints: 
+
 <!-- ##### FUNCTION gwy_layer_points_unselect ##### -->
 <para>
 
 </para>
 
 @layer: 
+
+<!-- ##### FUNCTION gwy_layer_select_get_is_crop ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_select_get_selection ##### -->
+<para>
+
+</para>
+
+@layer: 
+@xmin: 
+@ymin: 
+@xmax: 
+@ymax: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_select_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_select_set_is_crop ##### -->
+<para>
+
+</para>
+
+@layer: 
+@is_crop: 
 
 <!-- ##### FUNCTION gwy_layer_select_unselect ##### -->
 <para>
@@ -308,6 +602,14 @@ gwymodulemenus
 </para>
 
 @sphere_coords: 
+
+<!-- ##### FUNCTION gwy_vector_layer_get_nselected ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
 
 <!-- ##### FUNCTION gwy_windowing_option_menu ##### -->
 <para>

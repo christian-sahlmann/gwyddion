@@ -56,6 +56,20 @@ GwyPaletteDef
 
 
 
+<!-- ##### MACRO GWY_PALETTE_COLD ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_DFIT ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GWY_PALETTE_GOLD ##### -->
 <para>
 
@@ -162,6 +176,13 @@ GwyPaletteDef
 
 
 <!-- ##### MACRO GWY_PALETTE_SPECTRAL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_WARM ##### -->
 <para>
 
 </para>

@@ -2,7 +2,6 @@
 <FILE>gwysiunit</FILE>
 <TITLE>GwySIUnit</TITLE>
 gwy_si_unit_new
-gwy_si_unit_free
 gwy_si_unit_set_unit_string
 gwy_si_unit_get_unit_string
 gwy_si_unit_get_prefix
@@ -131,6 +130,7 @@ GWY_CONTAINER_GET_CLASS
 
 <SECTION>
 <FILE>gwymath</FILE>
+ROUND
 gwy_math_SI_prefix
 gwy_math_humanize_numbers
 gwy_math_find_nearest_line

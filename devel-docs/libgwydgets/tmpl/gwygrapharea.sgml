@@ -136,7 +136,22 @@ GwyGraphArea
 @area: 
 
 
+<!-- ##### FUNCTION gwy_graph_area_signal_zoomed ##### -->
+<para>
+
+</para>
+
+@area: 
+
+
 <!-- ##### SIGNAL GwyGraphArea::selected ##### -->
+<para>
+
+</para>
+
+@gwygrapharea: the object which received the signal.
+
+<!-- ##### SIGNAL GwyGraphArea::zoomed ##### -->
 <para>
 
 </para>

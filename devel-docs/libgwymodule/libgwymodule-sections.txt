@@ -13,6 +13,12 @@ gwy_tool_func_build_toolbox
 </SECTION>
 
 <SECTION>
+<FILE>gwymodule-layer</FILE>
+GwyLayerFuncInfo
+gwy_layer_func_register
+</SECTION>
+
+<SECTION>
 <FILE>gwymodulebrowser</FILE>
 gwy_module_browser
 </SECTION>

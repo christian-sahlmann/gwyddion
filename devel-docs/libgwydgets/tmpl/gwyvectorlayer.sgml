@@ -81,12 +81,13 @@ Base class for #GwyDataView vector (interactive) layers
 @layer: 
 
 
-<!-- ##### FUNCTION gwy_vector_layer_get_nselected ##### -->
+<!-- ##### FUNCTION gwy_vector_layer_get_selection ##### -->
 <para>
 
 </para>
 
 @layer: 
+@selection: 
 @Returns: 
 
 

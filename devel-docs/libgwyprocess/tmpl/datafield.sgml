@@ -50,14 +50,6 @@ GwyDataField
 @nullme: 
 
 
-<!-- ##### FUNCTION gwy_data_field_free ##### -->
-<para>
-
-</para>
-
-@a: 
-
-
 <!-- ##### FUNCTION gwy_data_field_resample ##### -->
 <para>
 
@@ -153,6 +145,42 @@ GwyDataField
 
 @a: 
 @yreal: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_si_unit_xy ##### -->
+<para>
+
+</para>
+
+@a: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_si_unit_z ##### -->
+<para>
+
+</para>
+
+@a: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_set_si_unit_xy ##### -->
+<para>
+
+</para>
+
+@a: 
+@si_unit: 
+
+
+<!-- ##### FUNCTION gwy_data_field_set_si_unit_z ##### -->
+<para>
+
+</para>
+
+@a: 
+@si_unit: 
 
 
 <!-- ##### FUNCTION gwy_data_field_itor ##### -->

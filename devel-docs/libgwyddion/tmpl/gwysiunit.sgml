@@ -23,13 +23,6 @@ gwysiunit
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_si_unit_free ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### FUNCTION gwy_si_unit_set_unit_string ##### -->
 <para>
 
