@@ -48,6 +48,7 @@ typedef struct {
     GtkWidget *result;
     GtkWidget *interp;
     GtkWidget *out;
+    GtkWidget *graph;
 } FractalControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -64,21 +65,6 @@ static void        fractal_save_args              (GwyContainer *container,
                                                FractalArgs *args);
 static void        fractal_dialog_update          (FractalControls *controls,
                                                FractalArgs *args);
-static void        set_dfield_module          (GwyDataField *re,
-                                               GwyDataField *im,
-                                               GwyDataField *target);
-static void        set_dfield_phase           (GwyDataField *re,
-                                               GwyDataField *im,
-                                               GwyDataField *target);
-
-static void        set_dfield_real            (GwyDataField *re,
-                                               GwyDataField *im,
-                                               GwyDataField *target);
-
-static void        set_dfield_imaginary       (GwyDataField *re,
-                                               GwyDataField *im,
-                                               GwyDataField *target);
-
 
 
 FractalArgs fractal_defaults = {
@@ -174,59 +160,10 @@ fractal(GwyContainer *data, GwyRunType run)
     return ok;
 }
 
-static void
-set_dfield_module(GwyDataField *re, GwyDataField *im, GwyDataField *target)
-{
-    gint i, j;
-    gdouble rval, ival;
-    gint xres = gwy_data_field_get_xres(re);
-    gint yres = gwy_data_field_get_xres(re);
-
-    for (i=0; i<xres; i++)
-    {
-        for (j=0; j<yres; j++)
-        {
-            rval = gwy_data_field_get_val(re, i, j);
-            ival = gwy_data_field_get_val(im, i, j);
-            gwy_data_field_set_val(target, i, j, sqrt(rval*rval + ival*ival));
-        }
-    }
-}
-
-static void
-set_dfield_phase(GwyDataField *re, GwyDataField *im,
-                 GwyDataField *target)
-{
-    gint i;
-    gint xres = gwy_data_field_get_xres(re);
-    gint yres = gwy_data_field_get_xres(re);
-
-    for (i = 0; i < (xres*yres); i++)
-        target->data[i] = atan2(im->data[i], re->data[i]);
-}
-
-static void
-set_dfield_real(GwyDataField *re, G_GNUC_UNUSED GwyDataField *im,
-                GwyDataField *target)
-{
-    gwy_data_field_copy(re, target);
-}
-
-static void
-set_dfield_imaginary(G_GNUC_UNUSED GwyDataField *re, GwyDataField *im,
-                     GwyDataField *target)
-{
-    gwy_data_field_copy(im, target);
-}
-
-
-
-
-
 static gboolean
 fractal_dialog(FractalArgs *args)
 {
-    GtkWidget *dialog, *table;
+    GtkWidget *dialog, *table, *hbox;
     FractalControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
@@ -239,10 +176,14 @@ fractal_dialog(FractalArgs *args)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    table = gtk_table_new(2, 4, FALSE);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
+    /*controls*/
+    table = gtk_table_new(2, 4, FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), table,
+                       FALSE, FALSE, 4);
 
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
@@ -255,6 +196,11 @@ fractal_dialog(FractalArgs *args)
                                      args, args->out);
     gwy_table_attach_row(table, 3, _("Output type:"), "",
                          controls.out);
+
+    /*graph*/
+    controls.graph = gwy_graph_new();
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, 
+                       FALSE, FALSE, 4);
 
     gtk_widget_show_all(dialog);
     do {
