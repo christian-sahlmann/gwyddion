@@ -59,6 +59,35 @@ static GtkTargetEntry dnd_target_table[] = {
   { "text/plain", 0, DND_TARGET_STRING },
 };
 
+/* append item only if function exists */
+static inline GtkWidget*
+toolbox_append_proc_func(GtkWidget *toolbox,
+                            const char *tooltip_text,
+                            const gchar *stock_id,
+                            const gchar *name)
+{
+    if (!gwy_process_func_get_run_types(name))
+        return NULL;
+    return gwy_toolbox_append(GWY_TOOLBOX(toolbox), GTK_TYPE_BUTTON, NULL,
+                              tooltip_text, NULL, stock_id,
+                              G_CALLBACK(gwy_app_run_process_func_cb),
+                              (gpointer)name);
+}
+
+static inline GtkWidget*
+toolbox_append_graph_func(GtkWidget *toolbox,
+                          const char *tooltip_text,
+                          const gchar *stock_id,
+                          const gchar *name)
+{
+    if (!gwy_graph_func_exists(name))
+        return NULL;
+    return gwy_toolbox_append(GWY_TOOLBOX(toolbox), GTK_TYPE_BUTTON, NULL,
+                              tooltip_text, NULL, stock_id,
+                              G_CALLBACK(gwy_app_run_graph_func_cb),
+                              (gpointer)name);
+}
+
 GtkWidget*
 gwy_app_toolbox_create(void)
 {
@@ -139,61 +168,39 @@ gwy_app_toolbox_create(void)
     toolbars = g_slist_append(toolbars, toolbar);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Fix minimum value to zero"), NULL, GWY_STOCK_FIX_ZERO,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "fixzero");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Scale data"), NULL, GWY_STOCK_SCALE,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "scale");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Rotate by arbitrary angle"), NULL, GWY_STOCK_ROTATE,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "rotate");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Automatically correct rotation"), NULL,
-                       GWY_STOCK_UNROTATE,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "unrotate");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Automatically level data"), NULL, GWY_STOCK_FIT_PLANE,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "level");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Facet-level data"), NULL, GWY_STOCK_FACET_LEVEL,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "facet_level");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Fast Fourier Transform"), NULL, GWY_STOCK_FFT,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "fft");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Continuous Wavelet Transform"), NULL, GWY_STOCK_CWT,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "cwt");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Mark grains by threshold"), NULL,
-                       GWY_STOCK_GRAINS,
-                       G_CALLBACK(gwy_app_run_process_func_cb),
-                       "mark_threshold");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Mark grains by watershed"), NULL,
-                       GWY_STOCK_GRAINS_WATER,
-                       G_CALLBACK(gwy_app_run_process_func_cb),
-                       "wshed_threshold");
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                                _("Remove grains by threshold"), NULL,
-                                GWY_STOCK_GRAINS_REMOVE,
-                                G_CALLBACK(gwy_app_run_process_func_cb),
-                                "remove_threshold");
-    gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                                _("Grain distribution"), NULL,
-                                GWY_STOCK_GRAINS_GRAPH,
-                                G_CALLBACK(gwy_app_run_process_func_cb),
-                                "grain_dist");
-    gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Calculate fractal dimension"), NULL,
-                       GWY_STOCK_FRACTAL,
-                       G_CALLBACK(gwy_app_run_process_func_cb),
-                       "fractal");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Shade data"), NULL, GWY_STOCK_SHADER,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "shade");
+    toolbox_append_proc_func(toolbar, _("Fix minimum value to zero"),
+                             GWY_STOCK_FIX_ZERO, "fixzero");
+    toolbox_append_proc_func(toolbar, _("Scale data"),
+                             GWY_STOCK_SCALE, "scale");
+    toolbox_append_proc_func(toolbar, _("Rotate by arbitrary angle"),
+                             GWY_STOCK_ROTATE, "rotate");
+    toolbox_append_proc_func(toolbar, _("Automatically correct rotation"),
+                             GWY_STOCK_UNROTATE, "unrotate");
+    toolbox_append_proc_func(toolbar, _("Automatically level data"),
+                             GWY_STOCK_FIT_PLANE, "level");
+    toolbox_append_proc_func(toolbar, _("Facet-level data"),
+                             GWY_STOCK_FACET_LEVEL, "facet_level");
+    toolbox_append_proc_func(toolbar, _("Fast Fourier Transform"),
+                             GWY_STOCK_FFT, "fft");
+    toolbox_append_proc_func(toolbar, _("Continuous Wavelet Transform"),
+                             GWY_STOCK_CWT, "cwt");
+    toolbox_append_proc_func(toolbar, _("Mark grains by threshold"),
+                             GWY_STOCK_GRAINS, "mark_threshold");
+    toolbox_append_proc_func(toolbar, _("Mark grains by watershed"),
+                             GWY_STOCK_GRAINS_WATER, "wshed_threshold");
+    button = toolbox_append_proc_func(toolbar, _("Remove grains by threshold"),
+                                      GWY_STOCK_GRAINS_REMOVE,
+                                      "remove_threshold");
+    if (button)
+        gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
+    button = toolbox_append_proc_func(toolbar, _("Grain distribution"),
+                                      GWY_STOCK_GRAINS_GRAPH, "grain_dist");
+    if (button)
+        gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
+    toolbox_append_proc_func(toolbar, _("Calculate fractal dimension"),
+                             GWY_STOCK_FRACTAL, "fractal");
+    toolbox_append_proc_func(toolbar, _("Shade data"),
+                             GWY_STOCK_SHADER, "shade");
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
@@ -209,24 +216,16 @@ gwy_app_toolbox_create(void)
     toolbars = g_slist_append(toolbars, toolbar);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Read coordinates"), NULL, GWY_STOCK_GRAPH_POINTER,
-                       G_CALLBACK(gwy_app_run_graph_func_cb), "read");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Zoom a part of graph"), NULL, GWY_STOCK_GRAPH_ZOOM_IN,
-                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_zoom");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Reset zoom to display complete data"), NULL,
-                       GWY_STOCK_GRAPH_ZOOM_FIT,
-                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_unzoom");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Fit critical dimension"), NULL,
-                       GWY_STOCK_GRAPH_MEASURE,
-                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_cd");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Fit functions to graph data"), NULL,
-                       GWY_STOCK_GRAPH_FIT_FUNC,
-                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_fit");
+    toolbox_append_graph_func(toolbar, _("Read coordinates"),
+                              GWY_STOCK_GRAPH_POINTER, "read");
+    toolbox_append_graph_func(toolbar, _("Zoom a part of graph"),
+                              GWY_STOCK_GRAPH_ZOOM_IN, "graph_zoom");
+    toolbox_append_graph_func(toolbar, _("Reset zoom to display complete data"),
+                              GWY_STOCK_GRAPH_ZOOM_FIT, "graph_unzoom");
+    toolbox_append_graph_func(toolbar, _("Fit critical dimension"),
+                              GWY_STOCK_GRAPH_MEASURE, "graph_cd");
+    toolbox_append_graph_func(toolbar, _("Fit functions to graph data"),
+                              GWY_STOCK_GRAPH_FIT_FUNC, "graph_fit");
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_graph);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_graph);
