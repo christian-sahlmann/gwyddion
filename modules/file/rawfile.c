@@ -24,6 +24,8 @@
 
 /* define GENRTABLE to create RTABLE generator */
 #ifndef GENRTABLE
+#include <math.h>
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
@@ -80,9 +82,13 @@ typedef struct {
     gsize filesize;
     gsize xres;
     gsize yres;
+    gboolean xyreseq;
     gdouble xreal;
     gdouble yreal;
+    gboolean xymeasureeq;
+    gint xyexponent;
     gdouble zscale;
+    gint zexponent;
 } RawFileArgs;
 
 typedef struct {
@@ -98,9 +104,13 @@ typedef struct {
     GtkWidget *byteswap;
     GtkWidget *xres;
     GtkWidget *yres;
+    GtkWidget *xyreseq;
     GtkWidget *xreal;
     GtkWidget *yreal;
+    GtkWidget *xymeasureeq;
+    GtkWidget *xyexponent;
     GtkWidget *zscale;
+    GtkWidget *zexponent;
     RawFileArgs *args;
 } RawFileControls;
 
@@ -114,6 +124,12 @@ static void          rawfile_warn_too_short_file   (GtkWidget *parent,
                                                     gsize reqsize);
 static void          builtin_changed_cb            (GtkWidget *item,
                                                     RawFileControls *controls);
+static void          xyres_changed_cb              (GtkAdjustment *adj,
+                                                    RawFileControls *controls);
+static void          xyreseq_changed_cb            (RawFileControls *controls);
+static void          xyreal_changed_cb             (GtkAdjustment *adj,
+                                                    RawFileControls *controls);
+static void          xymeasureeq_changed_cb        (RawFileControls *controls);
 static void          update_dialog_controls        (RawFileControls *controls);
 static void          update_dialog_values          (RawFileControls *controls);
 static GtkWidget*    table_attach_heading          (GtkWidget *table,
@@ -164,96 +180,96 @@ static const guint32 BITMASK[] = {
 
 /* precomputed reverted bitorders up to 8 bits */
 static const guint32 RTABLE_0[] = {
-    0x0, 
+    0x0,
 };
 
 static const guint32 RTABLE_1[] = {
-    0x0, 0x1, 
+    0x0, 0x1,
 };
 
 static const guint32 RTABLE_2[] = {
-    0x0, 0x2, 0x1, 0x3, 
+    0x0, 0x2, 0x1, 0x3,
 };
 
 static const guint32 RTABLE_3[] = {
-    0x0, 0x4, 0x2, 0x6, 0x1, 0x5, 0x3, 0x7, 
+    0x0, 0x4, 0x2, 0x6, 0x1, 0x5, 0x3, 0x7,
 };
 
 static const guint32 RTABLE_4[] = {
-    0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 
-    0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf, 
+    0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
+    0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf,
 };
 
 static const guint32 RTABLE_5[] = {
-    0x00, 0x10, 0x08, 0x18, 0x04, 0x14, 0x0c, 0x1c, 
-    0x02, 0x12, 0x0a, 0x1a, 0x06, 0x16, 0x0e, 0x1e, 
-    0x01, 0x11, 0x09, 0x19, 0x05, 0x15, 0x0d, 0x1d, 
-    0x03, 0x13, 0x0b, 0x1b, 0x07, 0x17, 0x0f, 0x1f, 
+    0x00, 0x10, 0x08, 0x18, 0x04, 0x14, 0x0c, 0x1c,
+    0x02, 0x12, 0x0a, 0x1a, 0x06, 0x16, 0x0e, 0x1e,
+    0x01, 0x11, 0x09, 0x19, 0x05, 0x15, 0x0d, 0x1d,
+    0x03, 0x13, 0x0b, 0x1b, 0x07, 0x17, 0x0f, 0x1f,
 };
 
 static const guint32 RTABLE_6[] = {
-    0x00, 0x20, 0x10, 0x30, 0x08, 0x28, 0x18, 0x38, 
-    0x04, 0x24, 0x14, 0x34, 0x0c, 0x2c, 0x1c, 0x3c, 
-    0x02, 0x22, 0x12, 0x32, 0x0a, 0x2a, 0x1a, 0x3a, 
-    0x06, 0x26, 0x16, 0x36, 0x0e, 0x2e, 0x1e, 0x3e, 
-    0x01, 0x21, 0x11, 0x31, 0x09, 0x29, 0x19, 0x39, 
-    0x05, 0x25, 0x15, 0x35, 0x0d, 0x2d, 0x1d, 0x3d, 
-    0x03, 0x23, 0x13, 0x33, 0x0b, 0x2b, 0x1b, 0x3b, 
-    0x07, 0x27, 0x17, 0x37, 0x0f, 0x2f, 0x1f, 0x3f, 
+    0x00, 0x20, 0x10, 0x30, 0x08, 0x28, 0x18, 0x38,
+    0x04, 0x24, 0x14, 0x34, 0x0c, 0x2c, 0x1c, 0x3c,
+    0x02, 0x22, 0x12, 0x32, 0x0a, 0x2a, 0x1a, 0x3a,
+    0x06, 0x26, 0x16, 0x36, 0x0e, 0x2e, 0x1e, 0x3e,
+    0x01, 0x21, 0x11, 0x31, 0x09, 0x29, 0x19, 0x39,
+    0x05, 0x25, 0x15, 0x35, 0x0d, 0x2d, 0x1d, 0x3d,
+    0x03, 0x23, 0x13, 0x33, 0x0b, 0x2b, 0x1b, 0x3b,
+    0x07, 0x27, 0x17, 0x37, 0x0f, 0x2f, 0x1f, 0x3f,
 };
 
 static const guint32 RTABLE_7[] = {
-    0x00, 0x40, 0x20, 0x60, 0x10, 0x50, 0x30, 0x70, 
-    0x08, 0x48, 0x28, 0x68, 0x18, 0x58, 0x38, 0x78, 
-    0x04, 0x44, 0x24, 0x64, 0x14, 0x54, 0x34, 0x74, 
-    0x0c, 0x4c, 0x2c, 0x6c, 0x1c, 0x5c, 0x3c, 0x7c, 
-    0x02, 0x42, 0x22, 0x62, 0x12, 0x52, 0x32, 0x72, 
-    0x0a, 0x4a, 0x2a, 0x6a, 0x1a, 0x5a, 0x3a, 0x7a, 
-    0x06, 0x46, 0x26, 0x66, 0x16, 0x56, 0x36, 0x76, 
-    0x0e, 0x4e, 0x2e, 0x6e, 0x1e, 0x5e, 0x3e, 0x7e, 
-    0x01, 0x41, 0x21, 0x61, 0x11, 0x51, 0x31, 0x71, 
-    0x09, 0x49, 0x29, 0x69, 0x19, 0x59, 0x39, 0x79, 
-    0x05, 0x45, 0x25, 0x65, 0x15, 0x55, 0x35, 0x75, 
-    0x0d, 0x4d, 0x2d, 0x6d, 0x1d, 0x5d, 0x3d, 0x7d, 
-    0x03, 0x43, 0x23, 0x63, 0x13, 0x53, 0x33, 0x73, 
-    0x0b, 0x4b, 0x2b, 0x6b, 0x1b, 0x5b, 0x3b, 0x7b, 
-    0x07, 0x47, 0x27, 0x67, 0x17, 0x57, 0x37, 0x77, 
-    0x0f, 0x4f, 0x2f, 0x6f, 0x1f, 0x5f, 0x3f, 0x7f, 
+    0x00, 0x40, 0x20, 0x60, 0x10, 0x50, 0x30, 0x70,
+    0x08, 0x48, 0x28, 0x68, 0x18, 0x58, 0x38, 0x78,
+    0x04, 0x44, 0x24, 0x64, 0x14, 0x54, 0x34, 0x74,
+    0x0c, 0x4c, 0x2c, 0x6c, 0x1c, 0x5c, 0x3c, 0x7c,
+    0x02, 0x42, 0x22, 0x62, 0x12, 0x52, 0x32, 0x72,
+    0x0a, 0x4a, 0x2a, 0x6a, 0x1a, 0x5a, 0x3a, 0x7a,
+    0x06, 0x46, 0x26, 0x66, 0x16, 0x56, 0x36, 0x76,
+    0x0e, 0x4e, 0x2e, 0x6e, 0x1e, 0x5e, 0x3e, 0x7e,
+    0x01, 0x41, 0x21, 0x61, 0x11, 0x51, 0x31, 0x71,
+    0x09, 0x49, 0x29, 0x69, 0x19, 0x59, 0x39, 0x79,
+    0x05, 0x45, 0x25, 0x65, 0x15, 0x55, 0x35, 0x75,
+    0x0d, 0x4d, 0x2d, 0x6d, 0x1d, 0x5d, 0x3d, 0x7d,
+    0x03, 0x43, 0x23, 0x63, 0x13, 0x53, 0x33, 0x73,
+    0x0b, 0x4b, 0x2b, 0x6b, 0x1b, 0x5b, 0x3b, 0x7b,
+    0x07, 0x47, 0x27, 0x67, 0x17, 0x57, 0x37, 0x77,
+    0x0f, 0x4f, 0x2f, 0x6f, 0x1f, 0x5f, 0x3f, 0x7f,
 };
 
 static const guint32 RTABLE_8[] = {
-    0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 
-    0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0, 
-    0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 
-    0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8, 
-    0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4, 
-    0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4, 
-    0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec, 
-    0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc, 
-    0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2, 
-    0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2, 
-    0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea, 
-    0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa, 
-    0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6, 
-    0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6, 
-    0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee, 
-    0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe, 
-    0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1, 
-    0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1, 
-    0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9, 
-    0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9, 
-    0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5, 
-    0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5, 
-    0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed, 
-    0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd, 
-    0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3, 
-    0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3, 
-    0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb, 
-    0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb, 
-    0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7, 
-    0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7, 
-    0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 
-    0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff, 
+    0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
+    0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
+    0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
+    0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
+    0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4,
+    0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
+    0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec,
+    0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
+    0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2,
+    0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
+    0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea,
+    0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
+    0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6,
+    0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
+    0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee,
+    0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
+    0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1,
+    0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
+    0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9,
+    0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
+    0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5,
+    0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
+    0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed,
+    0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
+    0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3,
+    0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
+    0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb,
+    0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
+    0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7,
+    0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
+    0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef,
+    0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff,
 };
 
 static const guint32 *const RTABLE[] = {
@@ -286,8 +302,9 @@ static const RawFileArgs rawfile_defaults = {
     FALSE, FALSE, FALSE, 0,         /* binary options */
     0, " ", 0,                      /* text parameters */
     NULL, 0,                        /* file name and size */
-    500, 500,                       /* xres, yres */
-    1000.0, 1000.0, 10.0            /* physical dimensions */
+    500, 500, TRUE,                 /* xres, yres */
+    10.0, 10.0, TRUE, -6,           /* physical dimensions */
+    1.0, -6                         /* z-scale */
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -349,17 +366,19 @@ rawfile_load(const gchar *filename)
     args.filesize = size;
     ok = rawfile_dialog(&args);
     if (ok) {
-        /* FIXME: units */
+        gdouble m;
+
+        m = exp(G_LN10*args.xyexponent);
         dfield = GWY_DATA_FIELD(gwy_data_field_new(args.xres, args.yres,
-                                                   1e-9*args.xreal,
-                                                   1e-9*args.yreal,
+                                                   m*args.xreal,
+                                                   m*args.yreal,
                                                    FALSE));
         if (args.builtin)
             rawfile_read_builtin(&args, buffer,
                                  gwy_data_field_get_data(dfield));
         else
             rawfile_read_bits(&args, buffer, gwy_data_field_get_data(dfield));
-        gwy_data_field_multiply(dfield, 1e-9*args.zscale);
+        gwy_data_field_multiply(dfield, exp(G_LN10*args.zexponent)*args.zscale);
         data = GWY_CONTAINER(gwy_container_new());
         gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
         rawfile_save_args(settings, &args);
@@ -373,9 +392,10 @@ static gboolean
 rawfile_dialog(RawFileArgs *args)
 {
     RawFileControls controls;
-    GtkWidget *dialog, *vbox, *table, *label, *notebook, *button;
+    GtkWidget *dialog, *vbox, *table, *label, *notebook, *button, *align;
     GtkWidget *omenu, *entry;
     GtkObject *adj;
+    GtkAdjustment *adj2;
     gint response, row, precision;
     gsize reqsize;
     gdouble magnitude;
@@ -398,10 +418,10 @@ rawfile_dialog(RawFileArgs *args)
 
     /***** Sample info *****/
     vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
-    label = gtk_label_new(_("Information"));
+    label = gtk_label_new_with_mnemonic(_("_Information"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
 
-    table = gtk_table_new(12, 3, FALSE);
+    table = gtk_table_new(14, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
@@ -443,33 +463,84 @@ rawfile_dialog(RawFileArgs *args)
                                                 _("_Vertical size"),
                                                 _("data samples"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.yres), 0);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("S_quare sample"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    controls.xyreseq = button;
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     label = table_attach_heading(table, _("<b>Physical dimensions</b>"), row);
     row++;
 
-    adj = gtk_adjustment_new(args->xreal, 0, 1e9, 10, 1000, 1000);
-    controls.xreal = gwy_table_attach_spinbutton(table, row,
-                                                 _("_Width"), "nm", adj);
+    adj = gtk_adjustment_new(args->xreal, 0.01, 10000, 1, 100, 100);
+    controls.xreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.xreal), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.xreal,
+                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new_with_mnemonic(_("_Width"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.xreal);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+
+    align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
+    controls.xyexponent = gwy_option_menu_metric_unit(NULL, NULL,
+                                                      -12, 3, "m",
+                                                      args->xyexponent);
+    gtk_container_add(GTK_CONTAINER(align), controls.xyexponent);
+    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
     row++;
 
-    adj = gtk_adjustment_new(args->yreal, 0, 1e9, 10, 1000, 1000);
-    controls.yreal = gwy_table_attach_spinbutton(table, row,
-                                                 _("H_eight"), "nm", adj);
+    adj = gtk_adjustment_new(args->yreal, 0.01, 10000, 1, 100, 100);
+    controls.yreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.yreal), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.yreal,
+                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new_with_mnemonic(_("H_eight"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.yreal);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
-    adj = gtk_adjustment_new(args->yreal, 0, 1e100, 0.1, 10, 10);
-    controls.zscale = gwy_table_attach_spinbutton(table, row, _("_Z-scale"),
-                                                  _("nm/sample unit"), adj);
+    button = gtk_check_button_new_with_mnemonic(_("Identical _measures"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    controls.xymeasureeq = button;
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    adj = gtk_adjustment_new(args->zscale, 0.01, 10000, 1, 100, 100);
+    controls.zscale = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.zscale), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.zscale,
+                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new_with_mnemonic(_("_Z-scale"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.zscale);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+
+    align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
+    controls.zexponent = gwy_option_menu_metric_unit(NULL, NULL,
+                                                     -12, 3, "m/sample unit",
+                                                     args->zexponent);
+    gtk_container_add(GTK_CONTAINER(align), controls.zexponent);
+    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
     row++;
 
     /***** General data format *****/
     vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
-    label = gtk_label_new(_("Data Format"));
+    label = gtk_label_new_with_mnemonic(_("Data _Format"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
 
-    table = gtk_table_new(5, 4, FALSE);
+    table = gtk_table_new(14, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
 
@@ -545,7 +616,7 @@ rawfile_dialog(RawFileArgs *args)
     controls.revbyte = button;
     row++;
 
-    button = gtk_check_button_new_with_mnemonic(_("Reverse b_its in samples"));
+    button = gtk_check_button_new_with_mnemonic(_("Reverse bi_ts in samples"));
     gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
     controls.revsample = button;
     row++;
@@ -558,6 +629,27 @@ rawfile_dialog(RawFileArgs *args)
     controls.args = args;
 
     update_dialog_controls(&controls);
+
+    /* xres/yres sync */
+    g_signal_connect_swapped(controls.xyreseq, "toggled",
+                             G_CALLBACK(xyreseq_changed_cb), &controls);
+    adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.xres));
+    g_signal_connect(adj2, "value_changed",
+                     G_CALLBACK(xyres_changed_cb), &controls);
+    adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.yres));
+    g_signal_connect(adj2, "value_changed",
+                     G_CALLBACK(xyres_changed_cb), &controls);
+
+    /* xreal/yreal sync */
+    g_signal_connect_swapped(controls.xymeasureeq, "toggled",
+                             G_CALLBACK(xymeasureeq_changed_cb), &controls);
+    adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.xreal));
+    g_signal_connect(adj2, "value_changed",
+                     G_CALLBACK(xyreal_changed_cb), &controls);
+    adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.yreal));
+    g_signal_connect(adj2, "value_changed",
+                     G_CALLBACK(xyreal_changed_cb), &controls);
+
     gtk_widget_show_all(dialog);
 
     do {
@@ -663,6 +755,90 @@ builtin_changed_cb(GtkWidget *item,
 }
 
 static void
+xyres_changed_cb(GtkAdjustment *adj,
+                 RawFileControls *controls)
+{
+    static gboolean in_update = FALSE;
+    GtkAdjustment *radj;
+    gdouble value;
+
+    value = gtk_adjustment_get_value(adj);
+    radj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xres));
+    if (radj == adj) {
+        /* x */
+        controls->args->xres = (gint)(value + 0.499);
+        radj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yres));
+    }
+    else {
+        /* y */
+        controls->args->yres = (gint)(value + 0.499);
+    }
+
+    if (!in_update && controls->args->xyreseq) {
+        in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(radj), value);
+        in_update = FALSE;
+    }
+
+    /* FIXME: this way of synchrnonization may be contrainituitive.
+     * but which one *is* intuitive? */
+    if (controls->args->xymeasureeq)
+        xyreal_changed_cb(gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal)),
+                          controls);
+}
+
+static void
+xyreseq_changed_cb(RawFileControls *controls)
+{
+    controls->args->xyreseq
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xyreseq));
+    if (controls->args->xyreseq) {
+        update_dialog_values(controls);
+        update_dialog_controls(controls);
+    }
+}
+
+static void
+xyreal_changed_cb(GtkAdjustment *adj,
+                 RawFileControls *controls)
+{
+    static gboolean in_update = FALSE;
+    GtkAdjustment *radj;
+    gdouble value;
+
+    value = gtk_adjustment_get_value(adj);
+    radj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
+    if (radj == adj) {
+        /* x */
+        controls->args->xreal = value;
+        radj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
+        value *= controls->args->yres/(gdouble)controls->args->xres;
+    }
+    else {
+        /* y */
+        controls->args->yreal = value;
+        value *= controls->args->xres/(gdouble)controls->args->yres;
+    }
+
+    if (!in_update && controls->args->xymeasureeq) {
+        in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(radj), value);
+        in_update = FALSE;
+    }
+}
+
+static void
+xymeasureeq_changed_cb(RawFileControls *controls)
+{
+    controls->args->xymeasureeq
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq));
+    if (controls->args->xymeasureeq) {
+        update_dialog_values(controls);
+        update_dialog_controls(controls);
+    }
+}
+
+static void
 update_dialog_controls(RawFileControls *controls)
 {
     RawFileArgs *args;
@@ -677,12 +853,21 @@ update_dialog_controls(RawFileControls *controls)
     gtk_adjustment_set_value(adj, args->xres);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yres));
     gtk_adjustment_set_value(adj, args->yres);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->xyreseq),
+                                 args->xyreseq);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
     gtk_adjustment_set_value(adj, args->xreal);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
     gtk_adjustment_set_value(adj, args->yreal);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq),
+                                 args->xymeasureeq);
+    gwy_option_menu_set_history(controls->xyexponent, "metric-unit",
+                                args->xyexponent);
+
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zscale));
     gtk_adjustment_set_value(adj, args->zscale);
+    gwy_option_menu_set_history(controls->zexponent, "metric-unit",
+                                args->zexponent);
 
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->offset));
     gtk_adjustment_set_value(adj, args->offset);
@@ -736,12 +921,21 @@ update_dialog_values(RawFileControls *controls)
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->xres));
     args->yres
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->yres));
+    args->xyreseq
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xyreseq));
     args->xreal
         = gtk_spin_button_get_value(GTK_SPIN_BUTTON(controls->xreal));
     args->yreal
         = gtk_spin_button_get_value(GTK_SPIN_BUTTON(controls->yreal));
+    args->xymeasureeq
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq));
+    args->xyexponent
+        = gwy_option_menu_get_history(controls->xyexponent, "metric-unit");
+
     args->zscale
         = gtk_spin_button_get_value(GTK_SPIN_BUTTON(controls->zscale));
+    args->zexponent
+        = gwy_option_menu_get_history(controls->zexponent, "metric-unit");
 
     args->offset
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->offset));
@@ -993,6 +1187,10 @@ rawfile_santinize_args(RawFileArgs *args)
         args->builtin = MIN(args->builtin, 24);
         args->byteswap = 0;
     }
+    if (args->xyreseq)
+        args->yres = args->xres;
+    if (args->xymeasureeq)
+        args->yreal = args->xreal/args->xres*args->yres;
 }
 
 static gsize
@@ -1008,20 +1206,24 @@ rawfile_compute_required_size(RawFileArgs *args)
     return args->offset + args->yres*rowstride/8;
 }
 
-static const gchar *builtin_key =   "/module/rawfile/builtin";
-static const gchar *offset_key =    "/module/rawfile/offset";
-static const gchar *size_key =      "/module/rawfile/size";
-static const gchar *skip_key =      "/module/rawfile/skip";
-static const gchar *rowskip_key =   "/module/rawfile/rowskip";
-static const gchar *sign_key =      "/module/rawfile/sign";
-static const gchar *revsample_key = "/module/rawfile/revsample";
-static const gchar *revbyte_key =   "/module/rawfile/revbyte";
-static const gchar *byteswap_key =  "/module/rawfile/byteswap";
-static const gchar *xres_key =      "/module/rawfile/xres";
-static const gchar *yres_key =      "/module/rawfile/yres";
-static const gchar *xreal_key =     "/module/rawfile/xreal";
-static const gchar *yreal_key =     "/module/rawfile/yreal";
-static const gchar *zscale_key =    "/module/rawfile/zscale";
+static const gchar *builtin_key =     "/module/rawfile/builtin";
+static const gchar *offset_key =      "/module/rawfile/offset";
+static const gchar *size_key =        "/module/rawfile/size";
+static const gchar *skip_key =        "/module/rawfile/skip";
+static const gchar *rowskip_key =     "/module/rawfile/rowskip";
+static const gchar *sign_key =        "/module/rawfile/sign";
+static const gchar *revsample_key =   "/module/rawfile/revsample";
+static const gchar *revbyte_key =     "/module/rawfile/revbyte";
+static const gchar *byteswap_key =    "/module/rawfile/byteswap";
+static const gchar *xres_key =        "/module/rawfile/xres";
+static const gchar *yres_key =        "/module/rawfile/yres";
+static const gchar *xyreseq_key =     "/module/rawfile/xyreseq";
+static const gchar *xyexponent_key =  "/module/rawfile/xyexponent";
+static const gchar *xreal_key =       "/module/rawfile/xreal";
+static const gchar *yreal_key =       "/module/rawfile/yreal";
+static const gchar *xymeasureeq_key = "/module/rawfile/xymeasureeq";
+static const gchar *zscale_key =      "/module/rawfile/zscale";
+static const gchar *zexponent_key =   "/module/rawfile/zexponent";
 
 static void
 rawfile_load_args(GwyContainer *settings,
@@ -1055,13 +1257,26 @@ rawfile_load_args(GwyContainer *settings,
         args->xres = gwy_container_get_int32_by_name(settings, xres_key);
     if (gwy_container_contains_by_name(settings, yres_key))
         args->yres = gwy_container_get_int32_by_name(settings, yres_key);
+    if (gwy_container_contains_by_name(settings, xyreseq_key))
+        args->xyreseq = gwy_container_get_boolean_by_name(settings,
+                                                          xyreseq_key);
 
     if (gwy_container_contains_by_name(settings, xreal_key))
         args->xreal = gwy_container_get_double_by_name(settings, xreal_key);
     if (gwy_container_contains_by_name(settings, yreal_key))
         args->yreal = gwy_container_get_double_by_name(settings, yreal_key);
+    if (gwy_container_contains_by_name(settings, xymeasureeq_key))
+        args->xymeasureeq = gwy_container_get_boolean_by_name(settings,
+                                                              xymeasureeq_key);
+    if (gwy_container_contains_by_name(settings, xyexponent_key))
+        args->xyexponent = gwy_container_get_int32_by_name(settings,
+                                                           xyexponent_key);
+
     if (gwy_container_contains_by_name(settings, zscale_key))
         args->zscale = gwy_container_get_double_by_name(settings, zscale_key);
+    if (gwy_container_contains_by_name(settings, zexponent_key))
+        args->zexponent = gwy_container_get_int32_by_name(settings,
+                                                          zexponent_key);
 
     rawfile_santinize_args(args);
 }
@@ -1084,9 +1299,14 @@ rawfile_save_args(GwyContainer *settings,
 
     gwy_container_set_int32_by_name(settings, xres_key, args->xres);
     gwy_container_set_int32_by_name(settings, yres_key, args->yres);
+    gwy_container_set_boolean_by_name(settings, xyreseq_key, args->xyreseq);
     gwy_container_set_double_by_name(settings, xreal_key, args->xreal);
     gwy_container_set_double_by_name(settings, yreal_key, args->yreal);
+    gwy_container_set_int32_by_name(settings, xyexponent_key, args->xyexponent);
+    gwy_container_set_boolean_by_name(settings,
+                                      xymeasureeq_key, args->xymeasureeq);
     gwy_container_set_double_by_name(settings, zscale_key, args->zscale);
+    gwy_container_set_int32_by_name(settings, zexponent_key, args->zexponent);
 }
 
 #else /* not GENRTABLE */
