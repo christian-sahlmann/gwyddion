@@ -388,8 +388,8 @@ gwy_color_axis_expose(GtkWidget *widget,
 
 void prepare_number(gdouble number, gint *power, gdouble *value)
 {
-    *power = (gint)(log(number));
-    *value = number/pow(10, *power);
+    *power = (gint)(log(number)/3);
+    *value = number/pow(1000, *power);
 }
 
 void gwy_color_axis_draw_label(GtkWidget *widget)
@@ -409,6 +409,7 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
 
 
     /*compute minimum and maximum numbers*/
+    printf("min=%f, max=%f\n", axis->min, axis->max);
     strmax = g_string_new(" ");
     if (axis->max == 0)
     {
@@ -579,5 +580,36 @@ gwy_color_axis_button_release(GtkWidget *widget,
     return FALSE;
 }
 
+void
+gwy_color_axis_get_range(GwyColorAxis *axis, gdouble *min, gdouble *max)
+{
+    *min = axis->min;
+    *max = axis->max;
+}
+
+void
+gwy_color_axis_set_range(GwyColorAxis *axis, gdouble min, gdouble max)
+{
+    axis->min = min;
+    axis->max = max;
+    gtk_widget_queue_draw(GTK_WIDGET(axis));    
+
+}
+
+void
+gwy_color_axis_set_palette(GwyColorAxis *axis, GwyPalette *pal)
+{
+    g_object_unref(axis->palette);
+    axis->palette = gwy_palette_new(gwy_palette_get_palette_def(pal));
+
+    gwy_color_axis_adjust(axis, GTK_WIDGET(axis)->allocation.width, GTK_WIDGET(axis)->allocation.height);
+    
+}
+
+GwyPalette*
+gwy_color_axis_get_palette(GwyColorAxis *axis)
+{
+   return (GwyPalette *) gwy_palette_new(gwy_palette_get_palette_def(axis->palette));
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -22,8 +22,7 @@ extern "C" {
 #define GWY_COLOR_AXIS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_COLOR_AXIS, GwyColorAxis))
 #define GWY_IS_COLOR_AXIS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_COLOR_AXIS))
 #define GWY_IS_COLOR_AXIS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_COLOR_AXIS))
-#define GWY_COLOR_AXIS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_COLOR_AXIS, GwyColorAxis))
-    
+#define GWY_COLOR_AXIS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_COLOR_AXIS, GwyColorAxisClass))    
 
 
 typedef struct {
@@ -62,6 +61,9 @@ void gwy_color_axis_get_range(GwyColorAxis *axis, gdouble *min, gdouble *max);
 
 void gwy_color_axis_set_range(GwyColorAxis *axis, gdouble min, gdouble max);
 
+void gwy_color_axis_set_palette(GwyColorAxis *axis, GwyPalette *pal);
+
+GwyPalette * gwy_color_axis_get_palette(GwyColorAxis *axis);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
