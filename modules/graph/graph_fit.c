@@ -71,6 +71,7 @@ typedef struct {
     gint *parent_ns;
     gint parent_nofcurves;
     GwyNLFitter *fitter;
+    gboolean is_fitted;
 } FitArgs;
 
 
@@ -160,6 +161,7 @@ fit(GwyGraph *graph)
     for (i=0; i<MAX_PARAMS; i++) args.par_fix[i] = FALSE;
     args.curve = 1;
     args.fitter = NULL;
+    args.is_fitted = FALSE;
 
     get_data(&args);
 
@@ -537,6 +539,8 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
     gint i, j;
 
+    graph_update(controls, args);
+    
     for (i = 0; i < MAX_PARAMS; i++) {
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), " ");
         gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), " ");
@@ -690,6 +694,7 @@ recompute(FitArgs *args, FitControls *controls)
                                  ydata->data,
                                  xdata->res,
                                  label, &par);
+    args->is_fitted = TRUE;
     g_object_unref(xdata);
     g_object_unref(ydata);
 }
@@ -788,6 +793,7 @@ graph_update(FitControls *controls, FitArgs *args)
 
     /*clear graph*/
     gwy_graph_clear(GWY_GRAPH(controls->graph));
+   
 
     /*add curves from parent graph*/
     for (i=0; i<args->parent_nofcurves; i++)
@@ -798,6 +804,8 @@ graph_update(FitControls *controls, FitArgs *args)
                                  args->parent_ns[i],
                                  gwy_graph_get_label(args->parent_graph, i), NULL);
     }
+
+    args->is_fitted = FALSE;
 
 }
 
