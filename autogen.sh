@@ -105,6 +105,8 @@ case $CC in
   am_opt=--include-deps;;
 esac
 
+sh utils/update-potfiles.sh
+
 dir=.
 test -z "$QUIET" && echo processing $dir
 (cd $dir && \

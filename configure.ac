@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.5cvs20040924, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.5cvs20041003, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -23,6 +23,7 @@ AC_CONFIG_FILES(\
   plugins/file/Makefile \
   plugins/process/Makefile \
   pixmaps/Makefile \
+  po/Makefile.in \
   perl/Makefile \
   python/Makefile \
   devel-docs/Makefile \
@@ -164,6 +165,16 @@ dnl Checks for library functions.
 AC_FUNC_MMAP
 AC_CHECK_FUNCS([getline])
 AC_CHECK_FUNCS([setenv])
+
+dnl I18n stuff
+GETTEXT_PACKAGE=gwyddion
+AM_GLIB_GNU_GETTEXT
+LIBS="$LIBS $INTLLIBS"
+ALL_LINGUAS=
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Gettext package name])
+AC_SUBST(GETTEXT_PACKAGE)
+
+AM_GLIB_DEFINE_LOCALEDIR(GWY_LOCALEDIR)
 
 dnl RPM
 RPM_RELEASE=1

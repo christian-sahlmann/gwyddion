@@ -19,14 +19,23 @@ SUBDIRS = \
 	app \
 	modules \
 	plugins \
+	po \
 	pixmaps \
 	perl \
 	python \
 	devel-docs
 
 M4TESTS = \
+	m4/cc-options.m4 \
+	m4/codeset.m4 \
+	m4/gettext.m4 \
+	m4/glibc21.m4 \
 	m4/gtk-doc.m4 \
+	m4/iconv.m4 \
+	m4/isc-posix.m4 \
+	m4/lcmessage.m4 \
 	m4/pkg.m4 \
+	m4/progtest.m4 \
 	m4/tools.m4
 
 EXTRA_DIST = \
