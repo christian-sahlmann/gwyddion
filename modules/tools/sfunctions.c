@@ -210,7 +210,7 @@ sfunctions_do(void)
     x2 = gwy_data_field_rtoj(datafield, xmax);
     y2 = gwy_data_field_rtoj(datafield, ymax);
 
-            /*
+        /*    
                gwy_graph_add_dataline_with_units(graph, dtl->pdata[i],
                                0, str->pdata[i], NULL,
                                x_mag, z_mag,
@@ -409,6 +409,7 @@ sfunctions_selection_updated_cb(void)
     gint j;
     gint x1, x2, y1, y2;
     GwyGraphAutoProperties prop;
+    GString *lab;
     gchar *x_unit, *z_unit;
     gdouble x_mag, z_mag;
     gdouble xreal, yreal, x_max, unit;
@@ -453,10 +454,6 @@ sfunctions_selection_updated_cb(void)
     x_mag = gwy_math_humanize_numbers(unit, x_max, &precision);
     x_unit = g_strconcat(gwy_math_SI_prefix(x_mag), "m", NULL);
 
-    z_max = gwy_data_field_get_max(datafield);
-    z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
-    z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
-
     j = 0;
     x1 = (gint)floor(gwy_data_field_rtoj(datafield, xmin)+0.5);
     y1 = (gint)floor(gwy_data_field_rtoj(datafield, ymin)+0.5);
@@ -465,7 +462,7 @@ sfunctions_selection_updated_cb(void)
 
 
     gwy_data_line_initialize(&dataline, 10, 10, 0);
-    
+   
     gwy_data_field_get_line_stat_function(datafield,
                                           &dataline,
                                           x1,
@@ -477,20 +474,30 @@ sfunctions_selection_updated_cb(void)
                                           2,
                                           GWY_WINDOWING_HANN,
                                           100);
-   /* 
+  
+/*    for (j=0; j<dataline.res; j++) {printf("%e\n", dataline.data[j]); dataline.data[j]=j;}*/
+
+    z_max = gwy_data_line_get_max(&dataline) -  gwy_data_line_get_min(&dataline);
+    z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
+    z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
+  
+    lab = g_string_new("ble");
+    gwy_graph_add_dataline(controls.graph, &dataline, 0, lab, NULL);
+    /*
     gwy_graph_add_dataline_with_units(controls.graph, &dataline,
               0, "line", NULL,
               x_mag, z_mag,
               x_unit,
               z_unit
               );
-*/
+   */
 
     gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
     update_labels();
 
     g_free(x_unit);
     g_free(z_unit);
+    g_string_free(lab, TRUE);
     gwy_data_line_free(&dataline);
 
     if (!is_visible)

@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     gint i, j;
  
     GwyDataField *a, *b, *c, *d, *p;
-    GwyDataLine *k;
+    GwyDataLine *k, *m;
 
     GwyPalette *pal;
     
@@ -84,9 +84,12 @@ int main(int argc, char *argv[])
     p = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
 
     k = (GwyDataLine *) gwy_data_line_new(20, 20, 1);
+    m = (GwyDataLine *) gwy_data_line_new(500, 20, 1);
     make_test_image(a);
     make_test_image(p);
+    make_test_line(m);
 
+//    gwy_data_line_hhcf(m, k);
 
     gwy_data_field_get_line_stat_function(a, k,
     0, 0, 300, 300, /*GwySFOutputType*/ 0, /*GtkOrientation*/ 0,

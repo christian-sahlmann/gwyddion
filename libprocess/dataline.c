@@ -982,15 +982,17 @@ gwy_data_line_acf(GwyDataLine *data_line, GwyDataLine *target_line)
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
     
+    
     for (i=0; i<n; i++)
     {
         for (j=0; j<(n-i); j++)
         {
-            val = data_line->data[n+i]*data_line->data[n];
-            target_line->data[i] += val*val; printf("val=%f\n", val);
+            val = data_line->data[i+j]*data_line->data[i];
+            target_line->data[j] += val; /*printf("val=%f\n", val);*/
+            
         }
-        target_line->data[i]/=(n-i);
     }
+    for (i=0; i<n; i++) target_line->data[i]/=(n-i);
 }
 
 void
@@ -1007,11 +1009,11 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
     {
         for (j=0; j<(n-i); j++)
         {
-            val = data_line->data[n+i] - data_line->data[n];
-            target_line->data[i] += val*val;
+            val = data_line->data[i+j] - data_line->data[i];
+            target_line->data[j] += val*val;
         }
-        target_line->data[i]/=(n-i);
     }
+    for (i=0; i<n; i++) target_line->data[i]/=(n-i);
 }
 
 void

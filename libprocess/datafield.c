@@ -2306,6 +2306,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
+    
     /*precompute settings if necessary*/
     if (type==GWY_SF_OUTPUT_DH || type==GWY_SF_OUTPUT_CDH)
     {
@@ -2324,11 +2325,14 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
     if (orientation == GTK_ORIENTATION_HORIZONTAL || orientation == GTK_ORIENTATION_VERTICAL)
     {
         size = brcol-ulcol;
+        if (size < 10) {printf("Field too small\n"); return;}
+        
         gwy_data_line_initialize(&hlp_line, size, gwy_data_field_jtor(data_field, size), FALSE);
         gwy_data_line_initialize(&hlp_tarline, size, gwy_data_field_jtor(data_field, size), FALSE);
         
         gwy_data_line_resample(target_line, size, interpolation);
         gwy_data_line_fill(target_line, 0);
+
 
         for (k = ulrow; k < brrow; k++) {
             gwy_data_field_get_data_line(data_field, &hlp_line, k, ulcol, k, brcol-1, size, interpolation);
@@ -2350,7 +2354,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
             
             for (j=0; j<size; j++)
             {
-                target_line->data[j] += hlp_tarline.data[j]/(brcol-ulcol);
+                target_line->data[j] += hlp_tarline.data[j]/((gdouble)(brrow-ulrow))*1e19;
             }
         }
         gwy_data_line_free(&hlp_line);
