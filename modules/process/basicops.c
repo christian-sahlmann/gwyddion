@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -155,7 +155,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield, *old;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
-    old = GWY_CONTAINER(gwy_container_get_object_by_name(data, "/0/data"));
+    old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -173,7 +173,7 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield, *old;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
-    old = GWY_CONTAINER(gwy_container_get_object_by_name(data, "/0/data"));
+    old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
