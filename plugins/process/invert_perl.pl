@@ -20,7 +20,7 @@ sub register {
 
 sub run {
     my ( $run_mode, $filename ) = @_;
-    my ( $data, $dfield, $n, $a, $min, $max, $mean_value );
+    my ( $data, $dfield, $n, $a, $min, $max, $mirror );
 
     $data = Gwyddion::dump::read( $filename );
     $dfield = $data->{ '/0/data' };
@@ -33,8 +33,8 @@ sub run {
        $min = $v if $v < $min;
        $max = $v if $v > $max;
     }
-    $mean_value = ( $min + $max )/2.0;
-    for my $i ( 0 .. $n-1 ) { $a->[ $i ] = $mean_value - $a->[ $i ] }
+    $mirror = $min + $max;
+    for my $i ( 0 .. $n-1 ) { $a->[$i] = $mirror - $a->[$i] }
     Gwyddion::dump::write( $data, $filename );
 }
 

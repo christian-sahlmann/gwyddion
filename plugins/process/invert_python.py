@@ -25,9 +25,9 @@ def run(args):
     a = dfield['data']
 
     n = len(a)
-    mean_value = (min(a) + max(a))/2.0
+    mirror = min(a) + max(a)
     for i in range(n):
-        a[i] = mean_value - a[i]
+        a[i] = mirror - a[i]
     Gwyddion.dump.write(data, filename)
 
 try:
