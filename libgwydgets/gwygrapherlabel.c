@@ -342,7 +342,7 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
         gwy_rgba_to_gdk_color(&(curvemodel->color), &curve_color);
         gdk_colormap_alloc_color(cmap, &curve_color, TRUE, TRUE);
         gdk_gc_set_foreground(mygc, &curve_color);
-        if (curvemodel->is_line)
+        if (curvemodel->type == GWY_GRAPHER_CURVE_LINE || curvemodel->type == GWY_GRAPHER_CURVE_LINE_POINTS)
         {
             gdk_gc_set_line_attributes (mygc, curvemodel->line_size,
                    curvemodel->line_style, GDK_CAP_ROUND, GDK_JOIN_MITER);
@@ -352,13 +352,14 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
             else
                gdk_draw_line(widget->window, mygc, 5, ypos + rect.height/2, 20, ypos + rect.height/2);
         }
-     /*   if (curvemodel->is_point)
+        if (curvemodel->type == GWY_GRAPHER_CURVE_POINTS || curvemodel->type == GWY_GRAPHER_CURVE_LINE_POINTS)
         {
-             gwy_grapher_draw_point (widget->window, mygc, 12, ypos + rect.height/2,
-                                   cparams->point_type, cparams->point_size,
-                                   &(cparams->color), cparams->is_line);
+             gwy_grapher_draw_point (widget->window, mygc, 
+                                     12, ypos + rect.height/2,
+                                   curvemodel->point_type, curvemodel->point_size,
+                                   &(curvemodel->color), FALSE);
         }
-        */
+        
         gdk_gc_set_foreground(mygc, &fg);
         
         ypos += rect.height + 5;

@@ -25,7 +25,8 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtk.h>
 
-#include "gwygrapher.h"
+#include "gwygrapherbasics.h"
+
 
 G_BEGIN_DECLS
 
@@ -42,8 +43,15 @@ typedef struct _GwyGrapherAreaDialogClass GwyGrapherAreaDialogClass;
 struct _GwyGrapherAreaDialog {
     GtkDialog dialog;
 
+    GtkWidget *curvetype_menu;
+    GtkWidget *color_button;
     GtkWidget *pointtype_menu;
-    GwyGrapherPointType ptype;
+    GtkWidget *curve_label;
+    GtkObject *pointsize;
+    GtkObject *linesize;
+
+    GObject *curve_model;
+    /*remove this!*/GwyGrapherPointType ptype;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -59,6 +67,7 @@ struct _GwyGrapherAreaDialogClass {
 GType       gwy_grapher_area_dialog_get_type (void) G_GNUC_CONST;
 GtkWidget*  gwy_grapher_area_dialog_new      (void);
 
+void        gwy_grapher_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel);
 
 G_END_DECLS
 

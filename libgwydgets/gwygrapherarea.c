@@ -29,6 +29,8 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyvectorlayer.h"
 #include "gwygrapher.h"
+#include "gwygraphermodel.h"
+#include "gwygraphercurvemodel.h"
 
 #define GWY_GRAPHER_AREA_TYPE_NAME "GwyGrapherArea"
 
@@ -253,6 +255,7 @@ gwy_grapher_area_finalize(GObject *object)
     gwy_vector_layer_cursor_free_or_unref(&klass->cross_cursor);
     gwy_vector_layer_cursor_free_or_unref(&klass->arrow_cursor);
 
+    gtk_widget_destroy(area->dialog);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -551,6 +554,7 @@ static gboolean
 gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
 {
     GwyGrapherArea *area;
+    GwyGrapherModel *gmodel;
     GtkLayoutChild *child;
     GwyGrapherDataPoint datpnt;
     gint x, y;
@@ -563,9 +567,12 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     x += (gint)event->x;
     y += (gint)event->y;
 
-   
-    gtk_widget_show_all(area->dialog);
-     
+    gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
+    if (gmodel->ncurves > 0)
+    {
+       gwy_grapher_area_dialog_set_curve_data(area->dialog, gmodel->curves[0]);
+       gtk_widget_show_all(area->dialog);
+    }
     
 
     child = gwy_grapher_area_find_child(area, x, y);
@@ -1166,7 +1173,12 @@ gwy_grapher_area_change_model(GwyGrapherArea *area, gpointer gmodel)
 static void     
 gwy_grapher_area_entry_cb(GwyGrapherAreaDialog *dialog, gint arg1, gpointer user_data)
 {
-    printf("updated\n");
+    if (arg1 == GTK_RESPONSE_APPLY) {
+        gwy_grapher_area_refresh(GWY_GRAPHER_AREA(user_data));
+    }
+    else if (arg1 == GTK_RESPONSE_CLOSE) {
+        gtk_widget_hide(GTK_WIDGET(dialog));
+    }
 }
 
 

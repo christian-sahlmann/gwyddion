@@ -24,6 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
+#include <libdraw/gwyrgba.h>
 #include "gwygrapher.h"
 
 G_BEGIN_DECLS
@@ -82,38 +83,37 @@ typedef struct {
 } GwyGrapherActiveAreaSpecs;
 
 
-void  gwy_graph_draw_point (GdkDrawable *drawable,
+void  gwy_grapher_draw_point (GdkDrawable *drawable,
                             GdkGC *gc, 
                             gint x,
                             gint y,
                             GwyGrapherPointType type, 
                             gint size, 
-                            GdkColor *color, 
+                            GwyRGBA *color, 
                             gboolean clear);
 
-void gwy_graph_draw_line   (GdkDrawable *drawable,
+void gwy_grapher_draw_line   (GdkDrawable *drawable,
                             GdkGC *gc,
                             gint x_from,
                             gint y_from,
                             gint x_to,
                             gint y_to,
-                            GwyGrapherCurveType type,
                             GdkLineStyle line_style,
                             gint size,
-                            GdkColor *color);
+                            GwyRGBA *color);
 
-void gwy_graph_draw_curve  (GdkDrawable *drawable,
+void gwy_grapher_draw_curve  (GdkDrawable *drawable,
                             GdkGC *gc,
                             GwyGrapherActiveAreaSpecs *specs,
                             GObject *curvemodel);
 
-void gwy_graph_draw_selection_points(GdkDrawable *drawable,
+void gwy_grapher_draw_selection_points(GdkDrawable *drawable,
                             GdkGC *gc,
                             GwyGrapherActiveAreaSpecs *specs,
                             GwyGrapherDataPoint *data_points,
                             gint n_of_points);
 
-void gwy_graph_draw_selection_areas(GdkDrawable *drawable,
+void gwy_grapher_draw_selection_areas(GdkDrawable *drawable,
                                     GdkGC *gc,
                                     GwyGrapherActiveAreaSpecs *specs,
                                     GwyGrapherDataArea *data_areas,

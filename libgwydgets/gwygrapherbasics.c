@@ -24,7 +24,136 @@
 
 #include <libgwyddion/gwymacros.h>
 #include "gwygrapher.h"
+#include <stdio.h>
 
+void
+gwy_grapher_draw_line (GdkDrawable *drawable, GdkGC *gc,
+                        gint x_from, gint y_from, gint x_to, gint y_to,
+                        GdkLineStyle line_style,
+                        gint size, GwyRGBA *color)
+{
+    GdkColor gcl;
+    GdkColormap *colormap;
+    gint i, j;
+    gint size_half = size/2;
+    
+    if (gc==NULL) gc = gdk_gc_new(drawable);
+    
+   
+    colormap = gdk_colormap_get_system();
+    gwy_rgba_to_gdk_color(color, &gcl);
+    gdk_colormap_alloc_color(colormap, &gcl, TRUE, TRUE);
+    
+    gdk_gc_set_foreground(gc, &gcl);
+    gdk_gc_set_line_attributes (gc, size,
+                  line_style, GDK_CAP_ROUND, GDK_JOIN_MITER);
+
+    gdk_draw_line(drawable, gc, x_from, y_from, x_to, y_to);
+   
+}
+
+
+void
+gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
+                        gint x, gint y, GwyGrapherPointType type,
+                        gint size, GwyRGBA *color, gboolean clear)
+{
+    GdkColor gcl;
+    GdkColormap *colormap;
+    gint point_thickness;
+    gint i, j;
+    gint size_half = size/2;
+    
+    if (gc==NULL) gc = gdk_gc_new(drawable);
+    
+    point_thickness = MAX(size/10, 1);
+   
+    colormap = gdk_colormap_get_system();
+    gwy_rgba_to_gdk_color(color, &gcl);
+    gdk_colormap_alloc_color(colormap, &gcl, TRUE, TRUE);
+    
+    gdk_gc_set_foreground(gc, &gcl);
+    gdk_gc_set_line_attributes (gc, point_thickness,
+                  GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
+   
+    i = x;
+    j = y;
+    switch (type) {
+        case GWY_GRAPHER_POINT_SQUARE:
+        gdk_draw_line(drawable, gc,
+                 i - size_half, j - size_half, i + size_half, j - size_half);
+        gdk_draw_line(drawable, gc,
+                 i + size_half, j - size_half, i + size_half, j + size_half);
+        gdk_draw_line(drawable, gc,
+                 i + size_half, j + size_half, i - size_half, j + size_half);
+        gdk_draw_line(drawable, gc,
+                 i - size_half, j + size_half, i - size_half, j - size_half);
+        break;
+
+        case GWY_GRAPHER_POINT_CROSS:
+        gdk_draw_line(drawable, gc,
+                 i - size_half, j, i + size_half, j);
+        gdk_draw_line(drawable, gc,
+                 i, j - size_half, i, j + size_half);
+        break;
+
+        case GWY_GRAPHER_POINT_CIRCLE:
+        gdk_draw_arc(drawable, gc, 0, i - size_half, j - size_half,
+                     size, size, 0, 23040);
+        break;
+
+        case GWY_GRAPHER_POINT_STAR:
+        gdk_draw_line(drawable, gc,
+                 i - size_half, j - size_half, i + size_half, j + size_half);
+        gdk_draw_line(drawable, gc,
+                 i + size_half, j - size_half, i - size_half, j + size_half);
+        gdk_draw_line(drawable, gc,
+                 i, j - size_half, i, j + size_half);
+        gdk_draw_line(drawable, gc,
+                 i - size_half, j, i + size_half, j);
+        break;
+
+        case GWY_GRAPHER_POINT_TIMES:
+        gdk_draw_line(drawable, gc,
+                 i - size_half, j - size_half, i + size_half, j + size_half);
+        gdk_draw_line(drawable, gc,
+                 i + size_half, j - size_half, i - size_half, j + size_half);
+        break;
+
+        case GWY_GRAPHER_POINT_TRIANGLE_UP:
+        gdk_draw_line(drawable, gc,
+                 i, j - size*0.57, i - size_half, j + size*0.33);
+        gdk_draw_line(drawable, gc,
+                 i - size_half, j + size*0.33, i + size_half, j + size*0.33);
+        gdk_draw_line(drawable, gc,
+                 i + size_half, j + size*0.33, i, j - size*0.33);
+        break;
+
+        case GWY_GRAPHER_POINT_TRIANGLE_DOWN:
+        gdk_draw_line(drawable, gc,
+                 i, j + size*0.57, i - size_half, j - size*0.33);
+        gdk_draw_line(drawable, gc,
+                 i - size_half, j - size*0.33, i + size_half, j - size*0.33);
+        gdk_draw_line(drawable, gc,
+                 i + size_half, j - size*0.33, i, j + size*0.33);
+        break;
+
+        case GWY_GRAPHER_POINT_DIAMOND:
+        gdk_draw_line(drawable, gc,
+                 i - size_half, j, i, j - size_half);
+        gdk_draw_line(drawable, gc,
+                 i, j - size_half, i + size_half, j);
+        gdk_draw_line(drawable, gc,
+                 i + size_half, j, i, j + size_half);
+        gdk_draw_line(drawable, gc,
+                 i, j + size_half, i - size_half, j);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    } 
+}
 
 /**
  * gwy_grapher_draw_point:

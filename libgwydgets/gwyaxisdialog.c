@@ -101,7 +101,7 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                       dialog->sci_text);
-
+    gtk_widget_show_all(dialog->sci_text);
 }
 
 GtkWidget *
