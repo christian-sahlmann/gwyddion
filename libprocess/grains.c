@@ -47,6 +47,10 @@ static void wdrop_step                    (GwyDataField *data_field,
 static void mark_grain_boundaries         (GwyDataField *grain_field);
 static gint number_grains                 (GwyDataField *mask_field,
                                            gint *grains);
+static gint* gwy_data_field_fill_grain    (GwyDataField *dfield,
+                                           gint col,
+                                           gint row,
+                                           gint *nindices);
 static gint gwy_data_field_fill_one_grain (GwyDataField *dfield,
                                            gint col,
                                            gint row,
@@ -54,14 +58,6 @@ static gint gwy_data_field_fill_one_grain (GwyDataField *dfield,
                                            gint grain_no,
                                            gint *listv,
                                            gint *listh);
-
-/* FIXME: is this function public or not? */
-gint *gwy_data_field_fill_grain(GwyDataField *dfield,
-                                gint row,
-                                gint col,
-                                gint *nindices);
-
-/********************/
 
 /**
  * gwy_data_field_grains_mark_height:
@@ -76,8 +72,7 @@ gint *gwy_data_field_fill_grain(GwyDataField *dfield,
 void
 gwy_data_field_grains_mark_height(GwyDataField *data_field,
                                   GwyDataField *grain_field, gdouble threshval,
-                                  /* FIXME: change to gboolean */
-                                  gint below)
+                                  gboolean below)
 {
     gdouble min, max;
 
@@ -108,8 +103,7 @@ gwy_data_field_grains_mark_height(GwyDataField *data_field,
 void
 gwy_data_field_grains_mark_slope(GwyDataField *data_field,
                                  GwyDataField *grain_field, gdouble threshval,
-                                 /* FIXME: change to gboolean */
-                                 gint below)
+                                 gboolean below)
 {
     gdouble min, max;
 
@@ -144,8 +138,7 @@ void
 gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
                                      GwyDataField *grain_field,
                                      gdouble threshval,
-                                     /* FIXME: change to gboolean */
-                                     gint below)
+                                     gboolean below)
 {
     GwyDataField *masky;
     gdouble *gdata;
@@ -204,8 +197,7 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                      gint locate_steps, gint locate_thresh,
                                      gdouble locate_dropsize, gint wshed_steps,
                                      gdouble wshed_dropsize, gboolean prefilter,
-                                     /* FIXME: change to gboolean */
-                                     gint below)
+                                     gboolean below)
 {
     GwyDataField *min, *water, *mark_dfield;
     gint xres, yres, i;
@@ -274,8 +266,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                           gint wshed_steps,
                                           gdouble wshed_dropsize,
                                           gboolean prefilter,
-                                          /* FIXME: change to gboolean */
-                                          gint below)
+                                          gboolean below)
 {
     if (status->state == GWY_WSHED_INIT) {
         status->min = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
@@ -353,37 +344,6 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
     gwy_data_field_invalidate(grain_field);
 }
 
-/* FIXME: wrong name, wrong interface, kill in 2.0 */
-/**
- * gwy_data_field_grains_remove_manually:
- * @grain_field: Field of marked grains (mask)
- * @i: Position of requested grain removal
- *
- * Removes one grain at given position.
- **/
-void
-gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint i)
-{
-    gint *pnt, npnt;
-    gint row, col;
-
-    npnt = 0;
-    if (grain_field->data[i] == 0)
-        return;
-
-    row = (gint)floor((gdouble)i/(gdouble)grain_field->xres);
-    col = i - grain_field->xres*row;
-
-    pnt = gwy_data_field_fill_grain(grain_field, row, col, &npnt);
-
-    for (i = 0; i < npnt; i++) {
-        grain_field->data[pnt[i]] = 0;
-    }
-
-    g_free(pnt);
-    gwy_data_field_invalidate(grain_field);
-}
-
 /**
  * gwy_data_field_grains_remove_grain:
  * @grain_field: Field of marked grains (mask).
@@ -412,8 +372,7 @@ gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
     if (!grain_field->data[grain_field->xres*row + col])
         return FALSE;
 
-    /* XXX: really row, col; not col, row */
-    points = gwy_data_field_fill_grain(grain_field, row, col, &npoints);
+    points = gwy_data_field_fill_grain(grain_field, col, row, &npoints);
     while (npoints) {
         npoints--;
         grain_field->data[points[npoints]] = 0.0;
@@ -455,8 +414,7 @@ gwy_data_field_grains_extract_grain(GwyDataField *grain_field,
         return FALSE;
     }
 
-    /* XXX: really row, col; not col, row */
-    points = gwy_data_field_fill_grain(grain_field, row, col, &npoints);
+    points = gwy_data_field_fill_grain(grain_field, col, row, &npoints);
     gwy_data_field_clear(grain_field);
     while (npoints) {
         npoints--;
@@ -526,8 +484,7 @@ void
 gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                                        GwyDataField *grain_field,
                                        gdouble threshval,
-                                       /* FIXME: change to gboolean */
-                                       gint below)
+                                       gboolean below)
 {
     gint i, xres, yres, ngrains;
     gdouble *data;
@@ -574,13 +531,6 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
 
     g_free(grains);
     g_free(grain_kill);
-}
-
-/* FIXME: WTF? Implement or remove. */
-gdouble
-gwy_data_field_grains_get_average(GwyDataField *grain_field)
-{
-    return 0;
 }
 
 /**
@@ -962,13 +912,11 @@ number_grains(GwyDataField *mask_field,
     return grain_no;
 }
 
-/* FIXME: has wrong order of col and row arguments! */
-/* FIXME: make static in 2.0 */
 /**
  * gwy_data_field_fill_grain:
  * @dfield: A data field with zeroes in empty space and nonzeroes in grains.
- * @row: Row inside a grain.
  * @col: Column inside a grain.
+ * @row: Row inside a grain.
  * @nindices: Where the number of points in the grain at (@col, @row) should
  *            be stored.
  *
@@ -977,9 +925,9 @@ number_grains(GwyDataField *mask_field,
  * Returns: A newly allocated array of indices of grain points in @dfield's
  *          data, the size of the list is returned in @nindices.
  **/
-gint*
+static gint*
 gwy_data_field_fill_grain(GwyDataField *dfield,
-                          gint row, gint col, gint *nindices)
+                          gint col, gint row, gint *nindices)
 {
     gdouble *data;
     gint *visited, *listv, *listh;

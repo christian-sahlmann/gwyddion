@@ -52,7 +52,7 @@ typedef struct {
 void gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
                                           GwyDataField *grain_field,
                                           gdouble threshval,
-                                          gint below);
+                                          gboolean below);
 
 void gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                           GwyDataField *grain_field,
@@ -62,12 +62,7 @@ void gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                           gint wshed_steps,
                                           gdouble wshed_dropsize,
                                           gboolean prefilter,
-                                          gint below);
-
-#ifndef GWY_DISABLE_DEPRECATED
-void gwy_data_field_grains_remove_manually(GwyDataField *grain_field,
-                                           gint i);
-#endif
+                                          gboolean below);
 
 gboolean gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
                                             gint col,
@@ -82,7 +77,7 @@ void gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
 void gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                                             GwyDataField *grain_field,
                                             gdouble threshval,
-                                            gint below);
+                                            gboolean below);
 
 void gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                                GwyDataField *grain_field,
@@ -93,7 +88,7 @@ void gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                                gint wshed_steps,
                                                gdouble wshed_dropsize,
                                                gboolean prefilter,
-                                               gint below);
+                                               gboolean below);
 
 void gwy_data_field_grains_mark_local_maxima(GwyDataField *data_field,
                                              GwyDataField *grain_field);
@@ -101,14 +96,12 @@ void gwy_data_field_grains_mark_local_maxima(GwyDataField *data_field,
 void gwy_data_field_grains_mark_height(GwyDataField *data_field,
                                        GwyDataField *grain_field,
                                        gdouble threshval,
-                                       gint below);
+                                       gboolean below);
 
 void gwy_data_field_grains_mark_slope(GwyDataField *data_field,
                                       GwyDataField *grain_field,
                                       gdouble threshval,
-                                      gint below);
-
-gdouble gwy_data_field_grains_get_average(GwyDataField *grain_field);
+                                      gboolean below);
 
 void gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
                                             GwyDataLine *distribution);
