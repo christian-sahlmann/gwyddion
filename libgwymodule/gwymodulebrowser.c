@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <gtk/gtkwindow.h>
 #include <gtk/gtktreeview.h>
@@ -32,10 +33,12 @@ static void      gwy_module_browser_cell_renderer (GtkTreeViewColumn *column,
                                                    GtkTreeModel *model,
                                                    GtkTreeIter *piter,
                                                    gpointer data);
-static void       gwy_module_browser_add_line     (guchar *name,
-                                                   GwyModuleInfo *mod_info,
-                                                   GtkListStore *store);
 static GtkWidget* gwy_module_browser_construct    (void);
+static void       gwy_hash_table_to_slist_cb      (gpointer key,
+                                                   gpointer value,
+                                                   gpointer user_data);
+static gint       module_name_compare_cb          (_GwyModuleInfoInternal *a,
+                                                   _GwyModuleInfoInternal *b);
 
 enum {
     MODULE_MOD_INFO,
@@ -92,6 +95,8 @@ gwy_module_browser_construct(void)
     GtkTreeSelection *select;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
+    GSList *l, *list = NULL;
+    GtkTreeIter iter;
     gsize i;
 
     store = gtk_list_store_new(MODULE_LAST,
@@ -106,8 +111,14 @@ gwy_module_browser_construct(void)
                               );
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    gwy_module_foreach((GHFunc)gwy_hash_table_to_slist_cb, &list);
+    list = g_slist_sort(list, (GCompareFunc)module_name_compare_cb);
+    for (l = list; l; l = g_slist_next(l)) {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, MODULE_MOD_INFO, l->data, -1);
+    }
+    g_slist_free(list);
     g_object_unref(store);
-    gwy_module_foreach((GHFunc)gwy_module_browser_add_line, store);
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
@@ -182,14 +193,20 @@ gwy_module_browser_cell_renderer(GtkTreeViewColumn *column,
 }
 
 static void
-gwy_module_browser_add_line(guchar *name,
-                            GwyModuleInfo *mod_info,
-                            GtkListStore *store)
+gwy_hash_table_to_slist_cb(gpointer key,
+                           gpointer value,
+                           gpointer user_data)
 {
-    GtkTreeIter iter;
+    GSList **list = (GSList**)user_data;
 
-    gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter, MODULE_MOD_INFO, mod_info, -1);
+    *list = g_slist_prepend(*list, value);
+}
+
+static gint
+module_name_compare_cb(_GwyModuleInfoInternal *a,
+                       _GwyModuleInfoInternal *b)
+{
+    return strcmp(a->mod_info->name, b->mod_info->name);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
