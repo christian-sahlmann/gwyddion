@@ -22,8 +22,8 @@
 #define __GWY_DATAFIELD_H__
 
 #include <glib.h>
-/* GtkOrientation */
-#include <gtk/gtk.h>
+/* XXX: GtkOrientation */
+#include <gtk/gtkenums.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/dataline.h>
 #include <libgwyddion/gwysiunit.h>
