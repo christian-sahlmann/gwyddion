@@ -175,11 +175,17 @@ main(void)
     g_message("====== DUPLICATION ======================");
 
     gwy_container_set_double_by_name(GWY_CONTAINER(container), "dbl", 3.141592);
+    ser = gwy_test_ser_new(0.88, 0.99);
+    gwy_test_ser_set_radius(GWY_TEST_SER(ser), 13.13);
+    gwy_container_set_object_by_name(GWY_CONTAINER(container), "ser", ser);
+    g_object_unref(ser);
     g_message("duplicating a container");
     obj = gwy_serializable_duplicate(container);
     g_object_unref(container);
     g_message("'dbl' -> %g",
               gwy_container_get_double_by_name(GWY_CONTAINER(obj), "dbl"));
+    ser = gwy_container_get_object_by_name(GWY_CONTAINER(obj), "ser");
+    print(ser, "restored");
 
     g_message("====== ENTITIES ======================");
     pent("foo");

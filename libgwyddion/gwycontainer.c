@@ -51,7 +51,7 @@ static void     gwy_container_set_by_name_valist (GwyContainer *container,
                                                   va_list ap,
                                                   gboolean do_replace,
                                                   gboolean do_create);
-static guchar*  gwy_container_serialize          (GObject *obj,
+static guchar*  gwy_container_serialize          (GObject *object,
                                                   guchar *buffer,
                                                   gsize *size);
 static void     hash_serialize_func              (gpointer hkey,
@@ -60,6 +60,10 @@ static void     hash_serialize_func              (gpointer hkey,
 static GObject* gwy_container_deserialize        (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
+static GObject* gwy_container_duplicate          (GObject *object);
+static void     hash_duplicate_func              (gpointer hkey,
+                                                  gpointer hvalue,
+                                                  gpointer hdata);
 
 static void     value_changed                    (GwyContainer *container,
                                                   GQuark key);
@@ -121,6 +125,7 @@ gwy_container_serializable_init(gpointer giface)
     /* initialize stuff */
     iface->serialize = gwy_container_serialize;
     iface->deserialize = gwy_container_deserialize;
+    iface->duplicate = gwy_container_duplicate;
 }
 
 static void
@@ -151,7 +156,7 @@ gwy_container_finalize(GObject *obj)
 
     gwy_debug("%s", __FUNCTION__);
 
-    /* FIXME: doens't free memory? */
+    /* FIXME: doesn't free memory? */
     g_hash_table_destroy(container->watching);
     g_hash_table_foreach(container->objects,
                          (GHFunc)objects_remove_object_callback,
@@ -1104,7 +1109,7 @@ gwy_container_set_object(GwyContainer *container,
 }
 
 static guchar*
-gwy_container_serialize(GObject *obj,
+gwy_container_serialize(GObject *object,
                         guchar *buffer,
                         gsize *size)
 {
@@ -1112,9 +1117,9 @@ gwy_container_serialize(GObject *obj,
     SerializeData sdata;
 
     gwy_debug("%s", __FUNCTION__);
-    g_return_val_if_fail(GWY_IS_CONTAINER(obj), NULL);
+    g_return_val_if_fail(GWY_IS_CONTAINER(object), NULL);
 
-    container = GWY_CONTAINER(obj);
+    container = GWY_CONTAINER(object);
     buffer = gwy_serialize_pack(buffer, size, "si",
                                 GWY_CONTAINER_TYPE_NAME, 0);
     sdata.buffer = buffer;
@@ -1263,6 +1268,54 @@ gwy_container_deserialize(const guchar *buffer,
     *position += mysize;
 
     return (GObject*)container;
+}
+
+static GObject*
+gwy_container_duplicate(GObject *object)
+{
+    GObject *duplicate;
+
+    gwy_debug("%s", __FUNCTION__);
+    g_return_val_if_fail(GWY_IS_CONTAINER(object), NULL);
+
+    duplicate = gwy_container_new();
+    g_hash_table_foreach(GWY_CONTAINER(object)->values,
+                         hash_duplicate_func, duplicate);
+
+    return duplicate;
+}
+
+static void
+hash_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
+{
+    GQuark key = GPOINTER_TO_UINT(hkey);
+    GValue *value = (GValue*)hvalue;
+    GwyContainer *duplicate = (GwyContainer*)hdata;
+    GType type = G_VALUE_TYPE(value);
+    GObject *object;
+
+    switch (type) {
+        case G_TYPE_OBJECT:
+        /* objects have to be handled separately since we want a deep copy */
+        object = gwy_serializable_duplicate(g_value_get_object(value));
+        gwy_container_set_object(duplicate, key, object);
+        g_object_unref(object);
+        break;
+
+        case G_TYPE_BOOLEAN:
+        case G_TYPE_UCHAR:
+        case G_TYPE_INT:
+        case G_TYPE_INT64:
+        case G_TYPE_DOUBLE:
+        case G_TYPE_STRING:
+        gwy_container_set_value(duplicate, key, value, NULL);
+        break;
+
+        default:
+        g_warning("Cannot properly duplicate %s", g_type_name(type));
+        gwy_container_set_value(duplicate, key, value, NULL);
+        break;
+    }
 }
 
 /**
