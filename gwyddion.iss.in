@@ -41,7 +41,7 @@ Name: "{userdesktop}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"; I
 ; Add Gtk+ libraries to @PACKAGE_TARNAME@.exe's path
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletekeyifempty
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueData: "{app}\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueName: "Path"; ValueData: "{app};{code:GetGtkPath}\lib"; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueName: "Path"; ValueData: "{app};{code:GetGtkPath}\lib;{code:GetGtkPath}\bin"; Flags: uninsdeletevalue
 ; Add @PACKAGE_NAME@ paths to the registry
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@"; Flags: uninsdeletekeyifempty
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; Flags: uninsdeletekey
