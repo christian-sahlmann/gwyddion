@@ -68,10 +68,19 @@
       The data samples themselves are stored as a sequence of binary IEEE
       double precision floating point numbers in little-endian byte order.
       The array is
-      preceded by <literal>/0/data=[</literal>, a single LF character, and
-      a single left bracket <literal>[</literal>.  The data samples are
-      closed by a sequence of two right brackets <literal>]]</literal> and
-      a single LF character.
+      preceded by line <literal>/0/data=[</literal> and
+      a single left bracket <literal>[</literal> (with no newline after).
+      The data samples are closed by a sequence of two right brackets
+      <literal>]]</literal> and a single LF character.
+      The end of data field marker serves as a check the data was read
+      correctly, as its size must be know beforehand.
+    </para>
+    <para>
+      To be more precise, <literal>/0/data</literal> is the name of the
+      main data field. As data fields can generally have arbitrary names
+      and left bracket is a valid value, a <literal>[</literal> as a value
+      marks start of a data field if and only if the next line starts with a
+      <literal>[</literal> too.  Otherwise it is a regular metadata value.
     </para>
     <para>
       The data samples are stored in `screen' order.  That means they are
@@ -100,8 +109,12 @@
       <literal>/0/data/unit-z</literal> (value, height) keys.
       If not specified, meters are assumed.
     </para>
+  </refsect1>
+  <refsect1>
+    <title id="plugin-proxy-dump-example">Example</title>
     <para>
-      So a dump file could look (replacing the binary data with dots):
+      A dump file with a single data field <literal>"/0/data"</literal>
+      thus could look (replacing binary data with dots):
     </para>
     <informalexample><programlisting><![CDATA[
 /0/data/xres=240
