@@ -44,7 +44,7 @@ static void wdrop_step                    (GwyDataField *data_field,
                                            GwyDataField *grain_field,
                                            gdouble dropsize);
 static void mark_grain_boundaries         (GwyDataField *grain_field);
-static void number_grains                 (GwyDataField *mask_field,
+static gint number_grains                 (GwyDataField *mask_field,
                                            GwyDataField *grain_field);
 static gint gwy_data_field_fill_one_grain (GwyDataField *dfield,
                                            gint col,
@@ -438,42 +438,43 @@ gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
  * @size: Grain area threshold, in square pixels.
  *
  * Removes all grain below specified area.
- *
- * Returns: The number of grains removed (Since 1.7).
  **/
-gint
+void
 gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
 {
-    gint i, xres, yres, col, row;
-    gint *pnt, npnt, nremoved;
+    gint i, xres, yres, ngrains;
+    gdouble *data, *bdata;
+    gint *grain_sizes;
     GwyDataField *buffer;
 
     xres = grain_field->xres;
     yres = grain_field->yres;
-    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(grain_field)));
+    data = grain_field->data;
 
-    nremoved = 0;
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE));
+    bdata = buffer->data;
+    ngrains = number_grains(grain_field, buffer);
+
+    /* sum pixel sizes */
+    grain_sizes = g_new0(gint, ngrains + 1);
+    for (i = 0; i < xres*yres; i++)
+        grain_sizes[ROUND(bdata[i])]++;
+    grain_sizes[0] = size;
+
+    /* remove grains */
     for (i = 0; i < xres*yres; i++) {
-        if (buffer->data[i] > 0) {
-            row = (gint)floor((gdouble)i/(gdouble)xres);
-            col = i - xres*row;
-            npnt = 0;
-            pnt = gwy_data_field_fill_grain(buffer, row, col, &npnt);
-            if (npnt < size) {
-                gwy_data_field_grains_remove_grain(grain_field,
-                                                   i % xres, i/xres);
-                nremoved++;
-            }
-            gwy_data_field_grains_remove_grain(buffer, i % xres, i/xres);
-            g_free(pnt);
+        if (grain_sizes[ROUND(bdata[i])] < size)
+            data[i] = 0;
+    }
+    for (i = 1; i <= ngrains; i++) {
+        if (grain_sizes[i] < size) {
+            gwy_data_field_invalidate(grain_field);
+            break;
         }
     }
-    g_object_unref(buffer);
-    if (nremoved) {
-        gwy_data_field_invalidate(grain_field);
-    }
 
-    return nremoved;
+    g_object_unref(buffer);
+    g_free(grain_sizes);
 }
 
 /**
@@ -493,28 +494,44 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                                        /* FIXME: implement or remove */
                                        gint G_GNUC_UNUSED direction)
 {
-    gint i, xres, yres, col, row, nremoved;
+    gint i, xres, yres, ngrains;
+    gdouble *data, *bdata;
+    gboolean *grain_kill;
+    GwyDataField *buffer;
 
     xres = grain_field->xres;
     yres = grain_field->yres;
+    data = grain_field->data;
 
     threshval = gwy_data_field_get_min(data_field)
                 + threshval*(gwy_data_field_get_max(data_field)
                              - gwy_data_field_get_min(data_field))/100.0;
 
-    nremoved = 0;
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE));
+    bdata = buffer->data;
+    ngrains = number_grains(grain_field, buffer);
+
+    /* find grains to remove */
+    grain_kill = g_new0(gboolean, ngrains + 1);
     for (i = 0; i < xres*yres; i++) {
-        if (grain_field->data[i] > 0 && data_field->data[i] > threshval) {
-            row = (gint)floor((gdouble)i/(gdouble)xres);
-            col = i - xres*row;
-            gwy_data_field_grains_remove_grain(grain_field, i % xres, i/xres);
-            nremoved++;
+        if (bdata[i] && data_field->data[i] > threshval)
+            grain_kill[ROUND(bdata[i])] = TRUE;
+    }
+
+    /* remove them */
+    for (i = 0; i < xres*yres; i++) {
+        if (grain_kill[ROUND(bdata[i])])
+            data[i] = 0;
+    }
+    for (i = 1; i <= ngrains; i++) {
+        if (grain_kill[i]) {
+            gwy_data_field_invalidate(grain_field);
+            break;
         }
     }
 
-    if (nremoved) {
-        gwy_data_field_invalidate(grain_field);
-    }
+    g_object_unref(buffer);
+    g_free(grain_kill);
 }
 
 /* FIXME: WTF? Implement or remove. */
@@ -531,50 +548,47 @@ gwy_data_field_grains_get_average(GwyDataField G_GNUC_UNUSED *grain_field)
  *
  * Computes grain size distribution.
  *
- * Puts number of grains vs. grain area (in real units) data into
- * @distribution.
+ * Puts number of grains vs. grain size (in real units) data into
+ * @distribution.  Grain size means grain side if it was square.
  **/
 void
 gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
                                        GwyDataLine *distribution)
 {
-    gint i, xres, yres, col, row;
-    gint *pnt, npnt, maxpnt;
+    gint i, xres, yres, ngrains;
+    gint maxpnt;
+    gdouble *bdata;
+    gint *grain_sizes;
     GwyDataField *buffer;
-
 
     xres = grain_field->xres;
     yres = grain_field->yres;
 
-    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
-                                               grain_field->xreal,
-                                               grain_field->yreal,
-                                               FALSE));
-    gwy_data_field_copy(grain_field, buffer);
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE));
+    bdata = buffer->data;
+    ngrains = number_grains(grain_field, buffer);
 
-    gwy_data_line_resample(distribution, sqrt(xres*yres) + 1,
-                           GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(distribution, 0);
+    /* sum pixel sizes */
+    grain_sizes = g_new0(gint, ngrains + 1);
+    for (i = 0; i < xres*yres; i++)
+        grain_sizes[ROUND(bdata[i])]++;
+    g_object_unref(buffer);
 
     maxpnt = 0;
-    for (i = 0; i < xres*yres; i++) {
-        if (buffer->data[i] > 0) {
-            row = (gint)floor((gdouble)i/(gdouble)xres);
-            col = i - xres*row;
-            npnt = 0;
-            pnt = gwy_data_field_fill_grain(buffer, row, col, &npnt);
-            gwy_data_field_grains_remove_grain(buffer, i % xres, i/xres);
-            g_free(pnt);
-
-            if (maxpnt < npnt)
-                maxpnt = npnt;
-            distribution->data[(gint)(sqrt(npnt))] += 1;
-        }
+    for (i = 1; i <= ngrains; i++) {
+        if (maxpnt < grain_sizes[i])
+            maxpnt = grain_sizes[i];
     }
-    gwy_data_line_resize(distribution, 0, sqrt(maxpnt));
+
+    gwy_data_line_resample(distribution, sqrt(maxpnt) + 1,
+                           GWY_INTERPOLATION_NONE);
+    gwy_data_line_fill(distribution, 0);
+    for (i = 1; i <= ngrains; i++)
+        distribution->data[(gint)(sqrt(grain_sizes[i]))] += 1;
+    g_free(grain_sizes);
+
     gwy_data_line_set_real(distribution,
-                           gwy_data_field_itor(grain_field, sqrt(maxpnt)));
-    g_object_unref(buffer);
+                           gwy_data_field_itor(grain_field, sqrt(maxpnt) + 1));
 }
 
 /**
@@ -905,8 +919,8 @@ mark_grain_boundaries(GwyDataField *grain_field)
 }
 
 
-
-static void
+/* returns the number of last grain */
+static gint
 number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
 {
     gint *visited, *listv, *listh;
@@ -936,6 +950,9 @@ number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
     g_free(listh);
     g_free(listv);
     g_free(visited);
+
+    gwy_data_field_invalidate(grain_field);
+    return grain_no;
 }
 
 
@@ -1051,7 +1068,7 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
     g_return_val_if_fail(data[initial], 0);
 
     /* check for a single point */
-    visited[initial] = 1;
+    visited[initial] = grain_no;
     count = 1;
     if ((!col || !data[initial - 1])
         && (!row || !data[initial - xres])
