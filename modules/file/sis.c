@@ -471,6 +471,9 @@ selection_changed(GtkWidget *button,
     gsize i;
     GwyDataField *dfield;
 
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+        return;
+
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     g_assert(i != (gsize)-1);
     dfield = extract_data(controls->sisfile, i/1024, i % 1024);
