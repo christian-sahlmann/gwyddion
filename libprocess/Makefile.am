@@ -14,6 +14,8 @@ libgwyprocessinclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwyprocess.la
 
+EXTRA_DIST = libgwyprocess.def
+
 noinst_PROGRAMS = test
 
 # In following order do:

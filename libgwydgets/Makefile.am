@@ -35,6 +35,8 @@ libgwydgetsinclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwydgets.la
 
+EXTRA_DIST = libgwydgets.def
+
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A

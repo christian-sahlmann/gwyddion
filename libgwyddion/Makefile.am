@@ -13,6 +13,8 @@ libgwyddioninclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwyddion.la
 
+EXTRA_DIST = libgwyddion.def
+
 noinst_PROGRAMS = main
 noinst_HEADERS = gwytestser.h
 

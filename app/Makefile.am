@@ -22,6 +22,8 @@ libgwyappinclude_HEADERS = \
 bin_PROGRAMS = gwyddion
 lib_LTLIBRARIES = libgwyapp.la
 
+EXTRA_DIST = libgwyapp.def
+
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
