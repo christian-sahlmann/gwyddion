@@ -66,10 +66,11 @@ gboolean   gwy_container_rename             (GwyContainer *container,
                                              GQuark key,
                                              GQuark newkey,
                                              gboolean force);
+/*
 gboolean   gwy_container_foreach            (GwyContainer *container,
                                              const guchar *prefix,
                                              gpointer foo);
-
+*/
 void       gwy_container_set_boolean        (GwyContainer *container,
                                              GQuark key,
                                              gboolean value);
@@ -78,7 +79,7 @@ gboolean   gwy_container_get_boolean        (GwyContainer *container,
 void       gwy_container_set_uchar          (GwyContainer *container,
                                              GQuark key,
                                              guchar value);
-guchar     gwy_container_get_char           (GwyContainer *container,
+guchar     gwy_container_get_uchar          (GwyContainer *container,
                                              GQuark key);
 void       gwy_container_set_int32          (GwyContainer *container,
                                              GQuark key,
@@ -107,12 +108,14 @@ void       gwy_container_set_object         (GwyContainer *container,
 GObject*   gwy_container_get_object         (GwyContainer *container,
                                              GQuark key);
 
+/*
 gulong     gwy_container_watch              (GwyContainer *container,
                                              const guchar *path,
                                              GwyContainerNotifyFunc callback,
                                              gpointer user_data);
 void       gwy_container_freeze_watch       (GwyContainer *container);
 void       gwy_container_thaw_watch         (GwyContainer *container);
+*/
 
 #define gwy_container_value_type_by_name(c,n) gwy_container_value_type(c,g_quark_try_string(n))
 #define gwy_container_contains_by_name(c,n) gwy_container_contains(c,g_quark_try_string(n))
@@ -122,7 +125,7 @@ void       gwy_container_thaw_watch         (GwyContainer *container);
 #define gwy_container_set_boolean_by_name(c,n,v) gwy_container_set_boolean(c,g_quark_from_string(n),v)
 #define gwy_container_get_boolean_by_name(c,n) gwy_container_get_boolean(c,g_quark_try_string(n))
 #define gwy_container_set_uchar_by_name(c,n,v) gwy_container_set_uchar(c,g_quark_from_string(n),v)
-#define gwy_container_get_char_by_name(c,n) gwy_container_get_char(c,g_quark_try_string(n))
+#define gwy_container_get_uchar_by_name(c,n) gwy_container_get_uchar(c,g_quark_try_string(n))
 #define gwy_container_set_int32_by_name(c,n,v) gwy_container_set_int32(c,g_quark_from_string(n),v)
 #define gwy_container_get_int32_by_name(c,n) gwy_container_get_int32(c,g_quark_try_string(n))
 #define gwy_container_set_int64_by_name(c,n,v) gwy_container_set_int64(c,g_quark_from_string(n),v)

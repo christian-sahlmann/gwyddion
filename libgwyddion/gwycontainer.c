@@ -195,6 +195,14 @@ value_destroy_func(gpointer data)
 }
 
 /**
+ * gwy_container_value_type_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the type of value in container @c identified by name @n.
+ **/
+
+/**
  * gwy_container_value_type:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
@@ -217,13 +225,21 @@ gwy_container_value_type(GwyContainer *container, GQuark key)
 }
 
 /**
+ * gwy_container_contains_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Expands to %TRUE if container @c contains a value identified by name @n.
+ **/
+
+/**
  * gwy_container_contains:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
  *
  * Returns %TRUE if @container contains a value identified by @key.
  *
- * Returns: Whether @container contains something at @key.
+ * Returns: Whether @container contains something identified by @key.
  **/
 gboolean
 gwy_container_contains(GwyContainer *container, GQuark key)
@@ -278,6 +294,16 @@ setup_object_callback(GwyContainer *container, GQuark key, GValue *value)
 }
 
 /**
+ * gwy_container_remove_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Removes a value identified by name @n from container @c.
+ *
+ * Expands to %TRUE if there was such a value and was removed.
+ **/
+
+/**
  * gwy_container_remove:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
@@ -306,6 +332,19 @@ gwy_container_remove(GwyContainer *container, GQuark key)
     return g_hash_table_remove(container->values,
                                GUINT_TO_POINTER(key));
 }
+
+/**
+ * gwy_container_rename_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @nn: A nul-terminated name (id).
+ * @f: Whether to delete existing value at @newkey.
+ *
+ * Makes a value in container @c identified by name @n to be identified by
+ * new name @nn.
+ *
+ * See gwy_container_rename() for details.
+ **/
 
 /**
  * gwy_container_rename:
@@ -351,6 +390,14 @@ gwy_container_rename(GwyContainer *container,
 }
 
 /**
+ * gwy_container_get_value_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the value in container @c identified by name @n.
+ **/
+
+/**
  * gwy_container_get_value:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
@@ -378,6 +425,14 @@ gwy_container_get_value(GwyContainer *container, GQuark key)
 
     return value;
 }
+
+/**
+ * gwy_container_get_boolean_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the boolean in container @c identified by name @n.
+ **/
 
 /**
  * gwy_container_get_boolean:
@@ -410,6 +465,14 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
 }
 
 /**
+ * gwy_container_get_uchar_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the unsigned character in container @c identified by name @n.
+ **/
+
+/**
  * gwy_container_get_uchar:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
@@ -438,6 +501,14 @@ gwy_container_get_uchar(GwyContainer *container, GQuark key)
     }
     return g_value_get_uchar(p);
 }
+
+/**
+ * gwy_container_get_int32_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the 32bit integer in container @c identified by name @n.
+ **/
 
 /**
  * gwy_container_get_int32:
@@ -470,6 +541,14 @@ gwy_container_get_int32(GwyContainer *container, GQuark key)
 }
 
 /**
+ * gwy_container_get_int64_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the 64bit integer in container @c identified by name @n.
+ **/
+
+/**
  * gwy_container_get_int64:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
@@ -500,6 +579,14 @@ gwy_container_get_int64(GwyContainer *container, GQuark key)
 }
 
 /**
+ * gwy_container_get_double_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the double in container @c identified by name @n.
+ **/
+
+/**
  * gwy_container_get_double:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
@@ -528,6 +615,17 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
     }
     return g_value_get_double(p);
 }
+
+/**
+ * gwy_container_get_string_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the string in container @c identified by name @n.
+ *
+ * The returned string should be considered constant and shouldn't be freed
+ * or modified.
+ **/
 
 /**
  * gwy_container_get_string:
@@ -563,13 +661,25 @@ gwy_container_get_string(GwyContainer *container, GQuark key)
 }
 
 /**
+ * gwy_container_get_object_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the object in container @c identified by name @n.
+ *
+ * The returned object doesn't have its reference count increased, use
+ * g_object_ref() if you want to access it even when @container may cease
+ * to exist.
+ **/
+
+/**
  * gwy_container_get_object:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
  *
  * Returns the object in @container identified by @key.
  *
- * The returned object doesn't have it's reference count increased, use
+ * The returned object doesn't have its reference count increased, use
  * g_object_ref() if you want to access it even when @container may cease
  * to exist.
  *
@@ -768,6 +878,15 @@ gwy_container_set_value_by_name(GwyContainer *container,
 }
 
 /**
+ * gwy_container_set_boolean_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: A boolean.
+ *
+ * Stores a boolean into container @c, identified by name @n.
+ **/
+
+/**
  * gwy_container_set_boolean:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
@@ -787,6 +906,15 @@ gwy_container_set_boolean(GwyContainer *container,
     g_value_set_boolean(&gvalue, value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
+
+/**
+ * gwy_container_set_uchar_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: An unsigned character.
+ *
+ * Stores an unsigned character into container @c, identified by name @n.
+ **/
 
 /**
  * gwy_container_set_uchar:
@@ -810,6 +938,15 @@ gwy_container_set_uchar(GwyContainer *container,
 }
 
 /**
+ * gwy_container_set_int32_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: A 32bit integer.
+ *
+ * Stores a 32bit integer into container @c, identified by name @n.
+ **/
+
+/**
  * gwy_container_set_int32:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
@@ -829,6 +966,15 @@ gwy_container_set_int32(GwyContainer *container,
     g_value_set_int(&gvalue, value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
+
+/**
+ * gwy_container_set_int64_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: A 64bit integer.
+ *
+ * Stores a 64bit integer into container @c, identified by name @n.
+ **/
 
 /**
  * gwy_container_set_int64:
@@ -852,6 +998,15 @@ gwy_container_set_int64(GwyContainer *container,
 }
 
 /**
+ * gwy_container_set_double_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: A double integer.
+ *
+ * Stores a double into container @c, identified by name @n.
+ **/
+
+/**
  * gwy_container_set_double:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
@@ -873,10 +1028,22 @@ gwy_container_set_double(GwyContainer *container,
 }
 
 /**
+ * gwy_container_set_string_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: A nul-terminated string.
+ *
+ * Stores a string into container @c, identified by name @n.
+ *
+ * The container takes ownership of the string, so it can't be used on
+ * static strings, use g_strdup() to duplicate them first.
+ **/
+
+/**
  * gwy_container_set_string:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
- * @value: A string.
+ * @value: A nul-terminated string.
  *
  * Stores a string into @container, identified by @key.
  *
@@ -895,6 +1062,17 @@ gwy_container_set_string(GwyContainer *container,
     g_value_set_string_take_ownership(&gvalue, (gchar*)value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
+
+/**
+ * gwy_container_set_object_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: An object as #GObject.
+ *
+ * Stores an object into container @c, identified by name @n.
+ *
+ * See gwy_container_set_object() for details.
+ **/
 
 /**
  * gwy_container_set_object:

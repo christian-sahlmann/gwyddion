@@ -408,13 +408,17 @@ gwy_serialize_pack(guchar *buffer,
 }
 
 /**
- * gwy_serialize_pack_struct:
+ * gwy_serialize_pack_object_struct:
  * @buffer: A buffer to which the serialized components should be appended.
  * @size: Current size of @buffer, new size is returned here.
+ * @object_name: The g_type_name() of the object.
  * @nspec: The number of items in @spec.
  * @spec: The components to serialize.
  *
+ * Packs a struct as an object.
  *
+ * This is a wrapper around gwy_serialize_pack_struct(), taking care of
+ * adding type name and packed object size.
  *
  * Returns: The buffer with serialization of @spec components appended.
  **/

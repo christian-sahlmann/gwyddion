@@ -71,6 +71,9 @@ typedef struct _GwySerializeSpec GwySerializeSpec;
  *         an object, a #GObject** pointer should be stored).
  * @array_size: Pointer to array size if component is an array, NULL
  *              otherwise.
+ *
+ * A structure containing information for one object/struct component
+ * serialization or deserialization.
  **/
 struct _GwySerializeSpec {
     guchar ctype;
