@@ -232,7 +232,6 @@ static const GScannerConfig scanner_config = {
     FALSE, FALSE, 0,
 };
 
-static GQuark error_domain = 0;
 static gboolean table_sanity_checked = FALSE;
 
 static gboolean
@@ -249,6 +248,17 @@ gwy_expr_check_call_table_sanity(void)
     }
 
     return ok;
+}
+
+GQuark
+gwy_expr_error_quark(void)
+{
+    static GQuark error_domain = 0;
+
+    if (!error_domain)
+        error_domain = g_quark_from_static_string("gwy-expr-error-quark");
+
+    return error_domain;
 }
 
 /****************************************************************************
@@ -639,7 +649,7 @@ gwy_expr_scan_tokens(GwyExpr *expr,
             break;
 
             default:
-            g_set_error(err, error_domain, GWY_EXPR_ERROR_INVALID_TOKEN,
+            g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_INVALID_TOKEN,
                         "Invalid token");
             gwy_expr_token_list_delete(expr, tokens);
             return FALSE;
@@ -648,7 +658,7 @@ gwy_expr_scan_tokens(GwyExpr *expr,
     }
 
     if (!tokens) {
-        g_set_error(err, error_domain, GWY_EXPR_ERROR_EMPTY, "No tokens");
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_EMPTY, "No tokens");
         return FALSE;
     }
 
@@ -877,13 +887,13 @@ gwy_expr_transform_infix_ops(GwyExpr *expr,
         prev = t->prev;
         next = t->next;
         if (!next || !prev) {
-            g_set_error(err, error_domain, GWY_EXPR_ERROR_MISSING_ARGUMENT,
+            g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_MISSING_ARGUMENT,
                         "Missing operator %c argument", operators[i]);
             gwy_expr_token_list_delete(expr, tokens);
             return NULL;
         }
         if (!prev->rpn_block || !next->rpn_block) {
-            g_set_error(err, error_domain, GWY_EXPR_ERROR_INVALID_ARGUMENT,
+            g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_INVALID_ARGUMENT,
                         "Invalid operator %c argument", operators[i]);
             gwy_expr_token_list_delete(expr, tokens);
             return NULL;
@@ -931,13 +941,15 @@ gwy_expr_transform_functions(GwyExpr *expr,
         /* Check arguments */
         for (i = 0, arg = t->next; i < nargs; i++, arg = arg->next) {
             if (!arg) {
-                g_set_error(err, error_domain, GWY_EXPR_ERROR_MISSING_ARGUMENT,
+                g_set_error(err, GWY_EXPR_ERROR,
+                            GWY_EXPR_ERROR_MISSING_ARGUMENT,
                             "Missing %s argument", call_table[func].name);
                 gwy_expr_token_list_delete(expr, tokens);
                 return NULL;
             }
             if (!arg->rpn_block) {
-                g_set_error(err, error_domain, GWY_EXPR_ERROR_INVALID_ARGUMENT,
+                g_set_error(err, GWY_EXPR_ERROR,
+                            GWY_EXPR_ERROR_INVALID_ARGUMENT,
                             "Invalid %s argument", call_table[func].name);
                 gwy_expr_token_list_delete(expr, tokens);
                 return NULL;
@@ -995,7 +1007,7 @@ gwy_expr_transform_to_rpn_real(GwyExpr *expr,
     level++;
 
     if (tokens->token != G_TOKEN_LEFT_PAREN) {
-        g_set_error(err, error_domain, GWY_EXPR_ERROR_OPENING_PAREN,
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_OPENING_PARENTHESIS,
                     "Missing opening parenthesis");
         goto FAIL;
     }
@@ -1037,12 +1049,12 @@ gwy_expr_transform_to_rpn_real(GwyExpr *expr,
     }
     /* missing right parenthesis or empty parentheses */
     if (!t) {
-        g_set_error(err, error_domain, GWY_EXPR_ERROR_CLOSING_PAREN,
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_CLOSING_PARENTHESIS,
                     "Missing closing parenthesis");
         goto FAIL;
     }
     if (!tokens) {
-        g_set_error(err, error_domain, GWY_EXPR_ERROR_EMPTY_PARENTHESES,
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_EMPTY_PARENTHESES,
                     "Empty parentheses");
         goto FAIL;
     }
@@ -1051,7 +1063,7 @@ gwy_expr_transform_to_rpn_real(GwyExpr *expr,
     for (t = tokens; t; t = t->next) {
         if (t->token == G_TOKEN_COMMA) {
             if (!t->next || !t->prev) {
-                g_set_error(err, error_domain, GWY_EXPR_ERROR_STRAY_COMMA,
+                g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_STRAY_COMMA,
                             "Stray comma");
                 goto FAIL;
             }
@@ -1090,7 +1102,7 @@ gwy_expr_transform_to_rpn_real(GwyExpr *expr,
     /* Check */
     for (t = tokens; t; t = t->next) {
         if (!t->rpn_block) {
-            g_set_error(err, error_domain, GWY_EXPR_ERROR_GARBAGE,
+            g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_GARBAGE,
                         "Stray symbol %d", t->token);
             goto FAIL;
         }
@@ -1142,7 +1154,7 @@ gwy_expr_transform_to_rpn(GwyExpr *expr,
     }
 
     if (expr->tokens->next) {
-        g_set_error(err, error_domain, GWY_EXPR_ERROR_GARBAGE,
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_GARBAGE,
                     "Trailing garbage");
         gwy_expr_token_list_delete(expr, expr->tokens);
         expr->tokens = NULL;
@@ -1162,7 +1174,7 @@ gwy_expr_transform_to_rpn(GwyExpr *expr,
     expr->tokens = NULL;
 
     if (!gwy_expr_stack_check_executability(expr)) {
-        g_set_error(err, error_domain, GWY_EXPR_ERROR_NOT_EXECUTABLE,
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_NOT_EXECUTABLE,
                     "Stack not executable");
         return FALSE;
     }
@@ -1190,9 +1202,6 @@ gwy_expr_new(void)
 {
     GwyExpr *expr;
     guint i;
-
-    if (!error_domain)
-        error_domain = g_quark_from_static_string("GWY_EXPR_ERROR");
 
     if (!table_sanity_checked) {
         if (!gwy_expr_check_call_table_sanity())
@@ -1263,7 +1272,7 @@ gwy_expr_evaluate(GwyExpr *expr,
         return FALSE;
 
     if (expr->identifiers->len > 1) {
-        g_set_error(err, error_domain, GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS,
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS,
                     "Unresolved identifiers");
         return FALSE;
     }
@@ -1418,5 +1427,38 @@ gwy_expr_execute(GwyExpr *expr,
     gwy_expr_stack_interpret(expr);
     return expr->stack[0];
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * GwyExprError:
+ * @GWY_EXPR_ERROR_CLOSING_PARENTHESIS: A closing parenthesis is missing.
+ * @GWY_EXPR_ERROR_EMPTY: Expression is empty.
+ * @GWY_EXPR_ERROR_EMPTY_PARENTHESES: A parentheses pair contain nothing
+ *                                    inside.
+ * @GWY_EXPR_ERROR_GARBAGE: An symbol unexpectedly managed to survive
+ *                          (FIXME: can this really happen?)
+ * @GWY_EXPR_ERROR_INVALID_ARGUMENT: Function or operator argument is not a
+ *                                   value.
+ * @GWY_EXPR_ERROR_INVALID_TOKEN: Expression contains an invalid token.
+ * @GWY_EXPR_ERROR_MISSING_ARGUMENT: Function or operator arguments is missing.
+ * @GWY_EXPR_ERROR_NOT_EXECUTABLE: Compiled stack is not executable.
+ * @GWY_EXPR_ERROR_OPENING_PARENTHESIS: An opening parenthesis is missing.
+ * @GWY_EXPR_ERROR_STRAY_COMMA: A comma at the start or end of list.
+ * @GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS: Expression contains unresolved
+ *                                         identifiers.
+ *
+ * Error codes returned by expression parsing and execution.
+ *
+ * Since: 1.9
+ **/
+
+/**
+ * GWY_EXPR_ERROR:
+ * Error domain for expression parsing. Errors in this domain will be from the
+ * #GwyExprError enumeration. See #GError for information on error domains.
+ *
+ * Since: 1.9
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

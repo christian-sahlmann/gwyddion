@@ -21,10 +21,14 @@
 #ifndef __GWY_EXPR_H__
 #define __GWY_EXPR_H__
 
+#include <glib/gerror.h>
+
 G_BEGIN_DECLS
 
+#define GWY_EXPR_ERROR gwy_expr_error_quark()
+
 typedef enum {
-    GWY_EXPR_ERROR_CLOSING_PAREN,
+    GWY_EXPR_ERROR_CLOSING_PARENTHESIS,
     GWY_EXPR_ERROR_EMPTY,
     GWY_EXPR_ERROR_EMPTY_PARENTHESES,
     GWY_EXPR_ERROR_GARBAGE,
@@ -32,12 +36,14 @@ typedef enum {
     GWY_EXPR_ERROR_INVALID_TOKEN,
     GWY_EXPR_ERROR_MISSING_ARGUMENT,
     GWY_EXPR_ERROR_NOT_EXECUTABLE,
-    GWY_EXPR_ERROR_OPENING_PAREN,
+    GWY_EXPR_ERROR_OPENING_PARENTHESIS,
     GWY_EXPR_ERROR_STRAY_COMMA,
     GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS
 } GwyExprError;
 
 typedef struct _GwyExpr GwyExpr;
+
+GQuark    gwy_expr_error_quark       (void);
 
 GwyExpr*  gwy_expr_new               (void);
 void      gwy_expr_free              (GwyExpr *expr);
