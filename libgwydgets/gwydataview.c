@@ -18,13 +18,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
-#include <stdio.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/datafield.h>
 #include "gwydataview.h"
@@ -107,7 +106,7 @@ gwy_data_view_get_type(void)
             (GInstanceInitFunc)gwy_data_view_init,
             NULL,
         };
-        gwy_debug("");
+        gwy_debug(" ");
         gwy_data_view_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                     GWY_DATA_VIEW_TYPE_NAME,
                                                     &gwy_data_view_info,
@@ -124,7 +123,7 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -192,7 +191,7 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
 static void
 gwy_data_view_init(GwyDataView *data_view)
 {
-    gwy_debug("");
+    gwy_debug(" ");
 
     data_view->data = NULL;
     data_view->top_layer = NULL;
@@ -233,7 +232,7 @@ gwy_data_view_new(GwyContainer *data)
 {
     GtkWidget *data_view;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
     data_view = gtk_widget_new(GWY_TYPE_DATA_VIEW, NULL);
@@ -377,7 +376,7 @@ gwy_data_view_size_request(GtkWidget *widget,
     GwyContainer *data;
     GwyDataField *data_field;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     data_view = GWY_DATA_VIEW(widget);
     data = data_view->data;
@@ -507,7 +506,7 @@ gwy_data_view_paint(GwyDataView *data_view)
 {
     GdkPixbuf *src_pixbuf;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(data_view->base_layer));
 
     /* base layer is always present
@@ -596,7 +595,7 @@ gwy_data_view_button_press(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
@@ -613,7 +612,7 @@ gwy_data_view_button_release(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
@@ -689,7 +688,7 @@ gwy_data_view_update(GwyDataView *data_view)
 {
     GtkWidget *widget;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 
     data_view->force_update = TRUE;
