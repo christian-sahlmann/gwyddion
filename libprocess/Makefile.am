@@ -5,12 +5,17 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 
 libgwyprocessincludedir = $(includedir)/gwyddion/libprocess
 libgwyprocessinclude_HEADERS = \
+	correct.h \
+	correlation.h \
 	cwt.h \
 	datafield.h \
 	dataline.h \
+	filters.h \
+	fractals.h \
+	grains.h \
+	gwyprocess.h \
 	interpolation.h \
-	libgwyprocess.h \
-	simplefft.h 
+	simplefft.h
 
 lib_LTLIBRARIES = libgwyprocess.la
 
@@ -26,9 +31,11 @@ EXTRA_DIST = \
 libgwyprocess_la_LDFLAGS = -version-info 2:0:2
 libgwyprocess_la_SOURCES = \
 	correct.c \
+	correlation.c \
 	cwt.c \
 	datafield.c \
 	dataline.c \
+	filters.c \
 	fractals.c \
 	grains.c \
 	interpolation.c \

@@ -22,10 +22,9 @@
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include "filters.h"
 #include "datafield.h"
-#include "cwt.h"
 
-#define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 /*local functions*/
 static gint step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow);
 static void drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize);

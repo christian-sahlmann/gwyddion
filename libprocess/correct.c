@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 Jindrich Bilek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,13 +24,9 @@
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
 
-#define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
-
-
-
 /**
  * gwy_data_field_correct_laplace_iteration:
- * @data_field: data field to be corrected 
+ * @data_field: data field to be corrected
  * @mask_field: mask of places to be corrected
  * @buffer_field: initialized to same size aa mask and data
  * @error: maximum change within last step
@@ -38,10 +34,10 @@
  *
  * Tries to remove all the points in mask off the data by using
  * iterative method similar to solving heat flux equation.
- * Use this function repeatedly until reasonable @error is reached. 
+ * Use this function repeatedly until reasonable @error is reached.
  **/
 void
-gwy_data_field_correct_laplace_iteration(GwyDataField *data_field, GwyDataField *mask_field, GwyDataField *buffer_field, 
+gwy_data_field_correct_laplace_iteration(GwyDataField *data_field, GwyDataField *mask_field, GwyDataField *buffer_field,
                                          gdouble *error, gdouble *corfactor)
 {
     gint xres, yres, i, j;
@@ -49,13 +45,13 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field, GwyDataField 
 
     xres = data_field->xres;
     yres = data_field->yres;
-    
+
     /*check buffer field*/
-    if (buffer_field == NULL) 
+    if (buffer_field == NULL)
     {
         buffer_field = (GwyDataField *)gwy_data_field_new(xres, yres, data_field->xreal, data_field->yreal, TRUE);
     }
-    if (buffer_field->xres != xres || buffer_field->yres != yres) 
+    if (buffer_field->xres != xres || buffer_field->yres != yres)
     {
         gwy_data_field_resample(buffer_field, xres, yres, GWY_INTERPOLATION_NONE);
     }
@@ -82,9 +78,9 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field, GwyDataField 
             if (mask_field->data[i + xres*j]!=0)
             {
                 cor = (*corfactor)*(
-                                (data_field->data[i+1 + xres*j] + data_field->data[i-1 + xres*j] 
+                                (data_field->data[i+1 + xres*j] + data_field->data[i-1 + xres*j]
                                  - 2*data_field->data[i + xres*j])
-                              + (data_field->data[i + xres*(j+1)] + data_field->data[i + xres*(j-1)] 
+                              + (data_field->data[i + xres*(j+1)] + data_field->data[i + xres*(j-1)]
                                  - 2*data_field->data[i + xres*j]));
 
                 buffer_field->data[i + xres*j] += cor;
@@ -93,14 +89,14 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field, GwyDataField 
         }
     }
 
-    gwy_data_field_copy(buffer_field, data_field); 
+    gwy_data_field_copy(buffer_field, data_field);
 
 }
 
 /**
  * gwy_data_field_mask_outliers:
- * @data_field: data field 
- * @mask_field: mask to be changed 
+ * @data_field: data field
+ * @mask_field: mask to be changed
  * @thresh: threshold value
  *
  * Creates mask of data that are above or below
@@ -131,7 +127,7 @@ gwy_data_field_mask_outliers(GwyDataField *data_field, GwyDataField *mask_field,
 
 /**
  * gwy_data_field_correct_average:
- * @data_field: data field 
+ * @data_field: data field
  * @mask_field: mask to be used for changes
  *
  * Function simply puts average value of all the @data_field into
@@ -144,12 +140,12 @@ gwy_data_field_correct_average(GwyDataField *data_field, GwyDataField *mask_fiel
    gint i;
 
    avg = gwy_data_field_get_avg(data_field);
-   
+
    for (i=0; i<(data_field->xres*data_field->yres); i++)
    {
        if (mask_field->data[i]) data_field->data[i] = avg;
    }
-    
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

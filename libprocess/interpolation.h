@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_INTERPOLATION_H__
-#define __GWY_INTERPOLATION_H__
+#ifndef __GWY_PROCESS_INTERPOLATION_H__
+#define __GWY_PROCESS_INTERPOLATION_H__
 #include <glib-object.h>
 
 G_BEGIN_DECLS
@@ -49,7 +49,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 
 G_END_DECLS
 
-#endif /*__GWY_INTERPOLATION_H__*/
+#endif /*__GWY_PROCESS_INTERPOLATION_H__*/
 
 
 

@@ -26,9 +26,6 @@
 #include <gtk/gtk.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/dataline.h>
-#include <libprocess/cwt.h>
-#include <libgwyddion/gwywatchable.h>
-#include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwysiunit.h>
 
 G_BEGIN_DECLS
@@ -42,60 +39,6 @@ G_BEGIN_DECLS
 
 typedef struct _GwyDataField      GwyDataField;
 typedef struct _GwyDataFieldClass GwyDataFieldClass;
-
-typedef enum {
-      GWY_FILTER_MEAN          = 0, /*mean value filter (averaging)*/
-      GWY_FILTER_MEDIAN        = 1, /*median value filter*/
-      GWY_FILTER_CONSERVATIVE  = 2, /*conservative denoising filter*/
-      GWY_FILTER_LAPLACIAN     = 3, /*Laplacian 2nd derivative filter*/
-      GWY_FILTER_SOBEL         = 4, /*Sobel gradient filter*/
-      GWY_FILTER_PREWITT       = 5  /*Prewitt gradient filter*/
-} GwyFilterType;
-
-#ifndef GWY_DISABLE_DEPRECATED
-/* XXX: never used in libprocess itself */
-typedef enum {
-    GWY_MERGE_UNION        = 0, /*union of all found grains*/
-    GWY_MERGE_INTERSECTION = 1  /*intersection of grains found by different methods*/
-} GwyMergeType;
-#endif
-
-typedef enum {
-    GWY_WSHED_INIT         = 0, /*start initializations*/
-    GWY_WSHED_LOCATE       = 1, /*locate steps*/
-    GWY_WSHED_MIN          = 2, /*find minima*/
-    GWY_WSHED_WSHED        = 3, /*watershed steps*/
-    GWY_WSHED_MARK         = 4, /*mark grain boundaries*/
-    GWY_WSHED_FINISHED     = 5
-} GwyWatershedStateType;
-
-typedef enum {
-    GWY_COMP_INIT         = 0, /*start initializations*/
-    GWY_COMP_ITERATE      = 1, /*locate steps*/
-    GWY_COMP_FINISHED     = 2
-} GwyComputationStateType;
-
-#ifndef GWY_DISABLE_DEPRECATED
-/* XXX: this is not *fractal* *type* at all */
-/* XXX: never used in libprocess itself */
-typedef enum {
-    GWY_FRACTAL_PARTITIONING  = 0,
-    GWY_FRACTAL_CUBECOUNTING  = 1,
-    GWY_FRACTAL_TRIANGULATION = 2,
-    GWY_FRACTAL_PSDF          = 3
-} GwyFractalType;
-#endif
-
-typedef struct {
-    GwyWatershedStateType state;
-    gint internal_i;
-    GwyDataField *min;
-    GwyDataField *water;
-    GwyDataField *mark_dfield;
-    gint fraction;
-    GString *description;
-} GwyWatershedStatus;
-
 
 struct _GwyDataField {
     GObject parent_instance;
@@ -114,6 +57,24 @@ struct _GwyDataFieldClass {
     GObjectClass parent_class;
 };
 
+typedef enum {
+    GWY_COMP_INIT         = 0, /*start initializations*/
+    GWY_COMP_ITERATE      = 1, /*locate steps*/
+    GWY_COMP_FINISHED     = 2
+} GwyComputationStateType;
+
+G_END_DECLS
+
+/* XXX: This is here to allow people #include just datafield.h and get all
+ * datafield-related functions as before, should be removed someday */
+#include <libprocess/correct.h>
+#include <libprocess/correlation.h>
+#include <libprocess/cwt.h>
+#include <libprocess/fractals.h>
+#include <libprocess/filters.h>
+#include <libprocess/grains.h>
+
+G_BEGIN_DECLS
 
 GType gwy_data_field_get_type  (void) G_GNUC_CONST;
 
@@ -552,157 +513,6 @@ gint gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                                            GwyWindowingType windowing,
                                            gint nstats);
 
-
-/* new-style functions */
-void gwy_data_field_area_convolve              (GwyDataField *data_field,
-                                                GwyDataField *kernel_field,
-                                                gint col,
-                                                gint row,
-                                                gint width,
-                                                gint height);
-void gwy_data_field_area_filter_median         (GwyDataField *data_field,
-                                                gint size,
-                                                gint col,
-                                                gint row,
-                                                gint width,
-                                                gint height);
-void gwy_data_field_area_filter_mean           (GwyDataField *data_field,
-                                                gint size,
-                                                gint col,
-                                                gint row,
-                                                gint width,
-                                                gint height);
-void gwy_data_field_area_filter_conservative   (GwyDataField *data_field,
-                                                gint size,
-                                                gint col,
-                                                gint row,
-                                                gint width,
-                                                gint height);
-void gwy_data_field_area_filter_laplacian      (GwyDataField *data_field,
-                                                gint col,
-                                                gint row,
-                                                gint width,
-                                                gint height);
-void gwy_data_field_area_filter_sobel          (GwyDataField *data_field,
-                                                GtkOrientation orientation,
-                                                gint col,
-                                                gint row,
-                                                gint width,
-                                                gint height);
-void gwy_data_field_area_filter_prewitt        (GwyDataField *data_field,
-                                                GtkOrientation orientation,
-                                                gint col,
-                                                gint row,
-                                                gint width,
-                                                gint height);
-
-/* old-style functions */
-void gwy_data_field_convolve                   (GwyDataField *data_field,
-                                                GwyDataField *kernel_field,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_median              (GwyDataField *data_field,
-                                                gint size,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_mean                (GwyDataField *data_field,
-                                                gint size,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_conservative        (GwyDataField *data_field,
-                                                gint size,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_laplacian           (GwyDataField *data_field,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_sobel               (GwyDataField *data_field,
-                                                GtkOrientation orientation,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_prewitt             (GwyDataField *data_field,
-                                                GtkOrientation orientation,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-
-void gwy_data_field_grains_mark_local_maxima(GwyDataField *data_field,
-                                             GwyDataField *grain_field);
-
-void gwy_data_field_grains_mark_height(GwyDataField *data_field,
-                                       GwyDataField *grain_field,
-                                       gdouble threshval,
-                                       gint dir);
-
-void gwy_data_field_grains_mark_slope(GwyDataField *data_field,
-                                      GwyDataField *grain_field,
-                                      gdouble threshval,
-                                      gint dir);
-
-void gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
-                                          GwyDataField *grain_field,
-                                          gdouble threshval,
-                                          gint dir);
-
-void gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
-                                          GwyDataField *grain_field,
-                                          gint locate_steps,
-                                          gint locate_thresh,
-                                          gdouble locate_dropsize,
-                                          gint wshed_steps,
-                                          gdouble wshed_dropsize,
-                                          gboolean prefilter,
-                                          gint dir);
-
-void gwy_data_field_grains_remove_manually(
-                                           GwyDataField *grain_field,
-                                           gint i);
-
-void gwy_data_field_grains_remove_by_size(
-                                          GwyDataField *grain_field,
-                                          gint size);
-
-void gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
-                                            GwyDataField *grain_field,
-                                            gdouble threshval,
-                                            gint direction);
-
-void gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
-                                               GwyDataField *grain_field,
-                                               GwyWatershedStatus *status,
-                                               gint locate_steps,
-                                               gint locate_thresh,
-                                               gdouble locate_dropsize,
-                                               gint wshed_steps,
-                                               gdouble wshed_dropsize,
-                                               gboolean prefilter,
-                                               gint dir);
-
-
-gdouble gwy_data_field_grains_get_average(GwyDataField *grain_field);
-
-void gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
-                                            GwyDataLine *distribution);
-
-void gwy_data_field_grains_add(GwyDataField *grain_field,
-                              GwyDataField *add_field);
-
-void gwy_data_field_grains_intersect(GwyDataField *grain_field,
-                                     GwyDataField *intersect_field);
-
 void gwy_data_field_fit_lines(GwyDataField *data_field,
                               gint ulcol,
                               gint ulrow,
@@ -710,111 +520,11 @@ void gwy_data_field_fit_lines(GwyDataField *data_field,
                               gint brrow,
                               GwyFitLineType fit_type,
                               gboolean exclude,
-                              GtkOrientation orientation
-                              );
+                              GtkOrientation orientation);
 
-gdouble gwy_data_field_get_correlation_score(GwyDataField *data_field,
-                                      GwyDataField *kernel_field,
-                                      gint ulcol,
-                                      gint ulrow,
-                                      gint kernel_ulcol,
-                                      gint kernel_ulrow,
-                                      gint kernel_brcol,
-                                      gint kernel_brrow
-                                     );
-
-void gwy_data_field_crosscorrelate(GwyDataField *data_field1,
-                                   GwyDataField *data_field2,
-                                   GwyDataField *x_dist,
-                                   GwyDataField *y_dist,
-                                   GwyDataField *score,
-                                   gint search_width,
-                                   gint search_height,
-                                   gint window_width,
-                                   gint window_height);
-void gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
-                                             GwyDataField *data_field2,
-                                             GwyDataField *x_dist,
-                                             GwyDataField *y_dist,
-                                             GwyDataField *score,
-                                             gint search_width,
-                                             gint search_height,
-                                             gint window_width,
-                                             gint window_height,
-                                             GwyComputationStateType *state,
-                                             gint *iteration);
-
-void gwy_data_field_correlate(GwyDataField *data_field,
-                                  GwyDataField *kernel_field,
-                                  GwyDataField *score);
-
-
-void gwy_data_field_correlate_iteration(GwyDataField *data_field,
-                                        GwyDataField *kernel_field,
-                                        GwyDataField *score,
-                                        GwyComputationStateType *state,
-                                        gint *iteration);
-
-
-void gwy_data_field_fractal_partitioning(GwyDataField *data_field,
-                                         GwyDataLine *xresult,
-                                         GwyDataLine *yresult,
-                                         GwyInterpolationType interpolation);
-
-void gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
-                                         GwyDataLine *xresult,
-                                         GwyDataLine *yresult,
-                                         GwyInterpolationType interpolation);
-
-void gwy_data_field_fractal_triangulation(GwyDataField *data_field,
-                                         GwyDataLine *xresult,
-                                         GwyDataLine *yresult,
-                                         GwyInterpolationType interpolation);
-
-void gwy_data_field_fractal_psdf(GwyDataField *data_field,
-                                         GwyDataLine *xresult,
-                                         GwyDataLine *yresult,
-                                         GwyInterpolationType interpolation);
-
-
-gdouble gwy_data_field_fractal_cubecounting_dim(GwyDataLine *xresult,
-                                                GwyDataLine *yresult,
-                                                gdouble *a,
-                                                gdouble *b);
-
-gdouble gwy_data_field_fractal_triangulation_dim(GwyDataLine *xresult,
-                                                 GwyDataLine *yresult,
-                                                 gdouble *a,
-                                                 gdouble *b);
-
-gdouble gwy_data_field_fractal_partitioning_dim(GwyDataLine *xresult,
-                                                GwyDataLine *yresult,
-                                                gdouble *a,
-                                                gdouble *b);
-
-gdouble gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult,
-                                        GwyDataLine *yresult,
-                                        gdouble *a,
-                                        gdouble *b);
-
-
-
-void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
-                                    GwyDataField *mask_field,
-                                    GwyDataField *buffer_field,
-                                    gdouble *error,
-                                    gdouble *corfactor);
-
-void gwy_data_field_correct_average(GwyDataField *data_field,
-                                    GwyDataField *mask_field);
-
-void
-gwy_data_field_mask_outliers(GwyDataField *data_field,
-                             GwyDataField *mask_field,
-                             gdouble thresh);
 
 G_END_DECLS
 
-
 #endif /*__GWY_DATAFIELD_H__*/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -18,21 +18,27 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GWYPROCESS_H__
-#define __GWY_GWYPROCESS_H__
+#ifndef __GWY_PROCESS_CORRECT_H__
+#define __GWY_PROCESS_CORRECT_H__
 
 #include <libprocess/datafield.h>
-#include <libprocess/dataline.h>
-#include <libprocess/interpolation.h>
-#include <libprocess/simplefft.h>
-#include <libprocess/cwt.h>
 
 G_BEGIN_DECLS
 
-/* XXX: nothing here yet */
+void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
+                                              GwyDataField *mask_field,
+                                              GwyDataField *buffer_field,
+                                              gdouble *error,
+                                              gdouble *corfactor);
+
+void gwy_data_field_correct_average(GwyDataField *data_field,
+                                    GwyDataField *mask_field);
+
+void gwy_data_field_mask_outliers(GwyDataField *data_field,
+                                  GwyDataField *mask_field,
+                                  gdouble thresh);
 
 G_END_DECLS
 
-#endif /* __GWY_GWYPROCESS_H__ */
+#endif /*__GWY_PROCESS_CORRECT__*/
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

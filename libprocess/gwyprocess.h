@@ -18,32 +18,27 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_PROCESS_SIMPLEFFT_H__
-#define __GWY_PROCESS_SIMPLEFFT_H__
+#ifndef __GWY_GWYPROCESS_H__
+#define __GWY_GWYPROCESS_H__
 
-#include <glib.h>
+/* some are currently included by datafiled.h */
+#include <libprocess/datafield.h>
+#include <libprocess/dataline.h>
+#include <libprocess/interpolation.h>
+#include <libprocess/cwt.h>
+#include <libprocess/correct.h>
+#include <libprocess/correlation.h>
+#include <libprocess/filters.h>
+#include <libprocess/fractals.h>
+#include <libprocess/grains.h>
+#include <libprocess/simplefft.h>
 
 G_BEGIN_DECLS
 
-typedef enum {
-  GWY_WINDOWING_NONE       = 0,
-  GWY_WINDOWING_HANN       = 1,
-  GWY_WINDOWING_HAMMING    = 2,
-  GWY_WINDOWING_BLACKMANN  = 3,
-  GWY_WINDOWING_LANCZOS    = 4,
-  GWY_WINDOWING_WELCH      = 5,
-  GWY_WINDOWING_RECT       = 6
-} GwyWindowingType;
-
-/*2^N fft algorithm*/
-gint gwy_fft_hum(gint dir, gdouble *re_in, gdouble *im_in,
-                 gdouble *re_out, gdouble *im_out, gint n);
-
-/*apply windowing*/
-void gwy_fft_window(gdouble *data, gint n, GwyWindowingType windowing);
-
+/* nothing here yet */
 
 G_END_DECLS
 
+#endif /* __GWY_GWYPROCESS_H__ */
 
-#endif /*__GWY_PROCESS_SIMPLEFFT__*/
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -31,6 +31,14 @@
 #define FFT_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+typedef enum {
+  GWY_FFT_OUTPUT_REAL_IMG   = 0,
+  GWY_FFT_OUTPUT_MOD_PHASE  = 1,
+  GWY_FFT_OUTPUT_REAL       = 2,
+  GWY_FFT_OUTPUT_IMG        = 3,
+  GWY_FFT_OUTPUT_MOD        = 4,
+  GWY_FFT_OUTPUT_PHASE      = 5
+} GwyFFTOutputType;
 
 /* Data for this function.
  * (It looks a little bit silly with just one parameter.) */
@@ -62,6 +70,9 @@ static void        preserve_changed_cb        (GtkToggleButton *button,
                                                FFTArgs *args);
 static void        fft_dialog_update          (FFTControls *controls,
                                                FFTArgs *args);
+static GtkWidget*  gwy_option_menu_fft_output (GCallback callback,
+                                               gpointer cbdata,
+                                               GwyFFTOutputType current);
 static void        set_dfield_module          (GwyDataField *re,
                                                GwyDataField *im,
                                                GwyDataField *target);
@@ -461,6 +472,25 @@ fft_dialog_update(FFTControls *controls,
                                 args->interp);
     gwy_option_menu_set_history(controls->window, "windowing-type",
                                 args->window);
+}
+
+static GtkWidget*
+gwy_option_menu_fft_output(GCallback callback,
+                           gpointer cbdata,
+                           GwyFFTOutputType current)
+{
+    static const GwyEnum entries[] = {
+        { "Real + Imaginary",  GWY_FFT_OUTPUT_REAL_IMG,  },
+        { "Module + Phase",    GWY_FFT_OUTPUT_MOD_PHASE, },
+        { "Real",              GWY_FFT_OUTPUT_REAL,      },
+        { "Imaginary",         GWY_FFT_OUTPUT_IMG,       },
+        { "Module",            GWY_FFT_OUTPUT_MOD,       },
+        { "Phase",             GWY_FFT_OUTPUT_PHASE,     },
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "fft-output-type", callback, cbdata,
+                                  current);
 }
 
 static const gchar *preserve_key = "/module/fft/preserve";

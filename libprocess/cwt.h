@@ -18,11 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_CWT_H__
-#define __GWY_CWT_H__
+#ifndef __GWY_PROCESS_CWT_H__
+#define __GWY_PROCESS_CWT_H__
 
 #include <glib.h>
-#include <stdio.h>
 
 G_BEGIN_DECLS
 
@@ -31,14 +30,12 @@ typedef enum {
   GWY_2DCWT_HAT         = 1
 } Gwy2DCWTWaveletType;
 
-#ifndef GWY_DISABLE_DEPRECATED
 /* XXX: never used in libprocess itself */
 typedef enum {
   GWY_CWT_GAUSS       = 0,
   GWY_CWT_HAT         = 1,
   GWY_CWT_MORLET      = 2
 } GwyCWTWaveletType;
-#endif
 
 gdouble
 gwy_cwt_wfunc_2d(gdouble scale,
@@ -49,5 +46,4 @@ gwy_cwt_wfunc_2d(gdouble scale,
 
 G_END_DECLS
 
-
-#endif /*__GWY_CWT__*/
+#endif /*__GWY_PROCESS_CWT__*/

@@ -31,6 +31,12 @@
 #define FRACTAL_RUN_MODES \
     (GWY_RUN_MODAL)
 
+typedef enum {
+    GWY_FRACTAL_PARTITIONING  = 0,
+    GWY_FRACTAL_CUBECOUNTING  = 1,
+    GWY_FRACTAL_TRIANGULATION = 2,
+    GWY_FRACTAL_PSDF          = 3
+} GwyFractalMethod;
 
 /* Data for this function.
  * (It looks a little bit silly with just one parameter.) */
@@ -50,7 +56,7 @@ typedef struct {
     gdouble result_triangulation;
     gdouble result_psdf;
     GwyInterpolationType interp;
-    GwyFractalType out;
+    GwyFractalMethod out;
 } FractalArgs;
 
 typedef struct {
@@ -93,6 +99,9 @@ static gboolean    remove_datapoints          (GwyDataLine *xline,
                                                FractalArgs *args);
 static void        update_labels              (FractalControls *controls,
                                                FractalArgs *args);
+static GtkWidget*  gwy_option_menu_fractal    (GCallback callback,
+                                               gpointer cbdata,
+                                               GwyFractalMethod current);
 static void        fractal_load_args          (GwyContainer *container,
                                                FractalArgs *args);
 static void        fractal_save_args          (GwyContainer *container,
@@ -317,22 +326,22 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
 
             case RESPONSE_RESET:
             switch (args->out){
-                case (GWY_FRACTAL_CUBECOUNTING):
+                case GWY_FRACTAL_CUBECOUNTING:
                 args->from_cubecounting = 0;
                 args->to_cubecounting = 0;
                 break;
 
-                case (GWY_FRACTAL_PARTITIONING):
+                case GWY_FRACTAL_PARTITIONING:
                 args->from_partitioning = 0;
                 args->to_partitioning = 0;
                 break;
 
-                case (GWY_FRACTAL_TRIANGULATION):
+                case GWY_FRACTAL_TRIANGULATION:
                 args->from_triangulation = 0;
                 args->to_partitioning = 0;
                 break;
 
-                case (GWY_FRACTAL_PSDF):
+                case GWY_FRACTAL_PSDF:
                 args->from_psdf = 0;
                 args->to_psdf = 0;
                 break;
@@ -626,22 +635,22 @@ graph_selected(GwyGraphArea *area, FractalArgs *args)
         g_snprintf(buffer, sizeof(buffer), "maximum");
         gtk_label_set_text(GTK_LABEL(global_controls->to), buffer);
         switch (args->out) {
-            case (GWY_FRACTAL_CUBECOUNTING):
+            case GWY_FRACTAL_CUBECOUNTING:
             args->from_cubecounting = 0;
             args->to_cubecounting = 0;
             break;
 
-            case (GWY_FRACTAL_PARTITIONING):
+            case GWY_FRACTAL_PARTITIONING:
             args->from_partitioning = 0;
             args->to_partitioning = 0;
             break;
 
-            case (GWY_FRACTAL_TRIANGULATION):
+            case GWY_FRACTAL_TRIANGULATION:
             args->from_triangulation = 0;
             args->to_triangulation = 0;
             break;
 
-            case (GWY_FRACTAL_PSDF):
+            case GWY_FRACTAL_PSDF:
             args->from_psdf = 0;
             args->to_psdf = 0;
             break;
@@ -656,22 +665,22 @@ graph_selected(GwyGraphArea *area, FractalArgs *args)
             GWY_SWAP(gdouble, from, to);
 
         switch (args->out) {
-            case (GWY_FRACTAL_CUBECOUNTING):
+            case GWY_FRACTAL_CUBECOUNTING:
             args->from_cubecounting = from;
             args->to_cubecounting = to;
             break;
 
-            case (GWY_FRACTAL_PARTITIONING):
+            case GWY_FRACTAL_PARTITIONING:
             args->from_partitioning = from;
             args->to_partitioning = to;
             break;
 
-            case (GWY_FRACTAL_TRIANGULATION):
+            case GWY_FRACTAL_TRIANGULATION:
             args->from_triangulation = from;
             args->to_triangulation = to;
             break;
 
-            case (GWY_FRACTAL_PSDF):
+            case GWY_FRACTAL_PSDF:
             args->from_psdf = from;
             args->to_psdf = to;
             break;
@@ -689,22 +698,22 @@ update_labels(FractalControls *controls, FractalArgs *args)
     gchar buffer[16];
 
     switch (args->out) {
-       case (GWY_FRACTAL_CUBECOUNTING):
+       case GWY_FRACTAL_CUBECOUNTING:
        from = args->from_cubecounting;
        to = args->to_cubecounting;
        break;
 
-       case (GWY_FRACTAL_PARTITIONING):
+       case GWY_FRACTAL_PARTITIONING:
        from = args->from_partitioning;
        to = args->to_partitioning;
        break;
 
-       case (GWY_FRACTAL_TRIANGULATION):
+       case GWY_FRACTAL_TRIANGULATION:
        from = args->from_triangulation;
        to = args->to_triangulation;
        break;
 
-       case (GWY_FRACTAL_PSDF):
+       case GWY_FRACTAL_PSDF:
        from = args->from_psdf;
        to = args->to_psdf;
        break;
@@ -725,6 +734,23 @@ update_labels(FractalControls *controls, FractalArgs *args)
     }
 }
 
+static GtkWidget*
+gwy_option_menu_fractal(GCallback callback,
+                        gpointer cbdata,
+                        GwyFractalMethod current)
+{
+    static const GwyEnum entries[] = {
+        { "Partitioning",       GWY_FRACTAL_PARTITIONING, },
+        { "Cube counting",      GWY_FRACTAL_CUBECOUNTING, },
+        { "Triangulation",      GWY_FRACTAL_TRIANGULATION, },
+        { "Power spectrum",     GWY_FRACTAL_PSDF, },
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "fractal-type", callback, cbdata,
+                                  current);
+}
+
 /*remove datapoints that are below or above selection. New data are in
  newxline and newyline and can be directly used for fitting and fractal dimension
  evaluation.*/
@@ -737,22 +763,22 @@ remove_datapoints(GwyDataLine *xline, GwyDataLine *yline,
     gdouble from = 0, to = 0;
 
     switch (args->out) {
-        case (GWY_FRACTAL_CUBECOUNTING):
+        case GWY_FRACTAL_CUBECOUNTING:
         from = args->from_cubecounting;
         to = args->to_cubecounting;
         break;
 
-        case (GWY_FRACTAL_PARTITIONING):
+        case GWY_FRACTAL_PARTITIONING:
         from = args->from_partitioning;
         to = args->to_partitioning;
         break;
 
-        case (GWY_FRACTAL_TRIANGULATION):
+        case GWY_FRACTAL_TRIANGULATION:
         from = args->from_triangulation;
         to = args->to_triangulation;
         break;
 
-        case (GWY_FRACTAL_PSDF):
+        case GWY_FRACTAL_PSDF:
         from = args->from_psdf;
         to = args->to_psdf;
         break;
