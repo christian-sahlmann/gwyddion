@@ -75,13 +75,15 @@ static gboolean
 level(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
-    gdouble a, b, c;
+    gdouble c, bx, by;
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data");
-    gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
-    gwy_data_field_plane_level(dfield, a, b, c);
+    gwy_data_field_plane_coeffs(dfield, &c, &bx, &by);
+    c = -0.5*(bx*gwy_data_field_get_xreal(dfield)
+              + by*gwy_data_field_get_yreal(dfield));
+    gwy_data_field_plane_level(dfield, c, bx, by);
 
     return TRUE;
 }
