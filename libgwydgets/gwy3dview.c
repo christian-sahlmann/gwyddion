@@ -19,6 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+#define DEBUG
 
 #include <math.h>
 #include <string.h>
@@ -31,7 +32,6 @@
 #include <gdk/gdkevents.h>
 #include <glib-object.h>
 #include <gtk/gtkgl.h>
-#include <pango/pangoft2.h>
 
 
 #include <libgwyddion/gwymacros.h>
@@ -56,7 +56,9 @@
 
 #define GWY_3D_TIMEOUT_DELAY      1000
 
-typedef struct { GLfloat x, y, z; } Gwy3DVector;
+typedef struct {
+    GLfloat x, y, z;
+} Gwy3DVector;
 
 /* Forward declarations */
 
@@ -110,7 +112,10 @@ static void          gwy_3d_print_text          (Gwy3DView      *gwy3dview,
                                                  GLfloat        raster_z,
                                                  guint          size,
                                                  gint           vjustify,
-                                                 gint           hjustify);
+                                                 gint           hjustify,
+                                                 gint           displacement_x,
+                                                 gint           displacement_y,
+                                                 gfloat         rotation);
 
 
 /* Local data */
@@ -208,7 +213,11 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->mouse_begin_x         = 0.0;
     gwy3dview->mouse_begin_y         = 0.0;
     gwy3dview->ft2_context           = NULL;
+    gwy3dview->ft2_font_map          = NULL;
     gwy3dview->si_unit               = NULL;
+#ifdef LABELS
+    gwy3dview->labels                = NULL;
+#endif
 }
 
 /**
@@ -349,6 +358,10 @@ gwy_3d_view_new(GwyContainer *data)
                                  GDK_GL_RGBA_TYPE);
 
     gwy3dview->si_unit = (GwySIUnit*) gwy_si_unit_new("m");
+#ifdef LABELS
+    gwy3dview->labels = gwy_3d_labels_new();
+    gwy_3d_labels_update(gwy3dview);
+#endif
 
     return widget;
 }
@@ -404,6 +417,9 @@ gwy_3d_view_finalize(GObject *object)
     gwy_object_unref(gwy3dview->light_y);
 
     gwy_object_unref(gwy3dview->si_unit);
+#   ifdef LABELS
+    gwy_3d_labels_finish(gwy3dview->labels);
+#   endif
 
     if (gwy3dview->shape_list_base >= 0) {
         glDeleteLists(gwy3dview->shape_list_base, 2);
@@ -431,8 +447,8 @@ gwy_3d_view_unrealize(GtkWidget *widget)
         gwy3dview->shape_list_base = -1;
     }
 
-    g_object_unref(G_OBJECT (gwy3dview->ft2_context));
-    pango_ft2_shutdown_display();
+    g_object_unref( G_OBJECT(gwy3dview->ft2_context));
+    g_object_unref( G_OBJECT(gwy3dview->ft2_font_map));
 
     /* TODO: save the current view settings into the contaier  */
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
@@ -525,7 +541,9 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
 
         gwy3dview->data_min  = gwy_data_field_get_min(gwy3dview->data);
         gwy3dview->data_max  = gwy_data_field_get_max(gwy3dview->data);
-
+#       ifdef LABELS
+        gwy_3d_labels_update(gwy3dview);
+#       endif
     }
 
     if ((update_data == TRUE || update_palette == TRUE)
@@ -1320,7 +1338,9 @@ gwy_3d_view_realize(GtkWidget *widget)
     gwy_3d_view_realize_gl(gwy3dview);
 
    /* Get PangoFT2 context. */
-   gwy3dview->ft2_context = pango_ft2_get_context (72, 72);
+   gwy3dview->ft2_font_map = pango_ft2_font_map_new();
+   pango_ft2_font_map_set_resolution(gwy3dview->ft2_font_map, 72, 72);
+   gwy3dview->ft2_context = pango_ft2_font_map_create_context(gwy3dview->ft2_font_map);
 
 }
 
@@ -1830,6 +1850,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
         */
         if (widget->show_labels == TRUE)
         {
+#ifndef LABELS
             gdouble xreal = gwy_data_field_get_xreal(widget->data);
             gdouble yreal = gwy_data_field_get_yreal(widget->data);
             GwySIValueFormat * format;
@@ -1851,7 +1872,8 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                        format->units);
             gwy_debug("label 1: %s", text);
             gwy_3d_print_text(widget, text, (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
-                              (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f, (int) (sqrt(size)*0.9),  1, 1);
+                              (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f, (int) (sqrt(size)*0.9),
+                              1, 1, 0, 0, 0.0f);
             gwy_si_unit_get_format_with_resolution(
                 widget->si_unit,
                 !yfirst ? yreal : xreal,
@@ -1862,24 +1884,55 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                        (!yfirst ? yreal : xreal)/format->magnitude,
                        format->units);
             gwy_3d_print_text(widget, text, (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
-                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f, (int) (sqrt(size)*0.9),  1, -1);
+                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f, (int) (sqrt(size)*0.9),
+                          1, -1, 0,0, 0.0f);
             gwy_si_unit_get_format_with_resolution(
                 widget->si_unit, widget->data_max, widget->data_max, format);
             g_snprintf(text, sizeof(text), "%1.0f %s",
                        widget->data_max / format->magnitude,
                        format->units);
             gwy_3d_print_text(widget, text, Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                          (widget->data_max - widget->data_min), (int) (sqrt(size)*0.8),  0, -1);
+                          (widget->data_max - widget->data_min), (int) (sqrt(size)*0.8),
+                          0, -1, 0, 0, 0.0f);
             gwy_si_unit_get_format_with_resolution(
                 widget->si_unit, widget->data_min, widget->data_min, format);
             g_snprintf(text, sizeof(text), "%1.0f %s",
                        widget->data_min / format->magnitude,
                        format->units);
             gwy_3d_print_text(widget, text, Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                              -0.0f, (int) (sqrt(size)*0.8),  0, -1);
+                              -0.0f, (int) (sqrt(size)*0.8),
+                               0, -1, 0, 0, 0.0f);
 
 
             gwy_si_unit_value_format_free(format);
+#else
+            guint size;
+
+            size = GTK_WIDGET(widget)->allocation.width
+                   < GTK_WIDGET(widget)->allocation.height
+                   ? GTK_WIDGET(widget)->allocation.width
+                   : GTK_WIDGET(widget)->allocation.height;
+            gwy_3d_print_text(widget, gwy_3d_labels_value(widget, GWY_3D_VIEW_LABEL_X),
+                              (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
+                              (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f,
+                              (int) (sqrt(size)*0.9),
+                              1, 1, 0, 0, 0.0f);
+            gwy_3d_print_text(widget, gwy_3d_labels_value(widget, GWY_3D_VIEW_LABEL_Y),
+                              (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
+                              (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f,
+                              (int) (sqrt(size)*0.9),
+                              1, -1, 0,0, 0.0f);
+            gwy_3d_print_text(widget, gwy_3d_labels_value(widget, GWY_3D_VIEW_LABEL_MAX),
+                              Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
+                              (widget->data_max - widget->data_min),
+                              (int) (sqrt(size)*0.8),
+                              0, -1, 0, 0, 0.0f);
+            gwy_3d_print_text(widget, gwy_3d_labels_value(widget, GWY_3D_VIEW_LABEL_MIN),
+                          Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
+                          -0.0f, (int) (sqrt(size)*0.8),
+                           0, -1, 0, 0, 0.0f);
+
+#endif
         }
     }
 
@@ -2128,7 +2181,10 @@ gwy_3d_print_text(Gwy3DView      *gwy3dview,
                   GLfloat        raster_z,
                   guint          size,
                   gint           vjustify,
-                  gint           hjustify)
+                  gint           hjustify,
+                  gint           displacement_x,
+                  gint           displacement_y,
+                  gfloat         rotation)
 {
     PangoContext *widget_context;
     PangoFontDescription *font_desc;
@@ -2139,6 +2195,7 @@ gwy_3d_print_text(Gwy3DView      *gwy3dview,
 
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
     /* Font */
+    /* FIXME: is it possible for pango to write on trasnparent background? */
     widget_context = gtk_widget_get_pango_context(GTK_WIDGET(gwy3dview));
     font_desc = pango_context_get_font_description(widget_context);
     pango_font_description_set_size(font_desc, size * PANGO_SCALE);
@@ -2149,14 +2206,16 @@ gwy_3d_print_text(Gwy3DView      *gwy3dview,
     pango_layout_set_width(layout, -1);
     pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
     pango_layout_set_text(layout, text, -1);
+    /* TODO: use Pango to rotate text, after Pango is capable doing it */
 
     /* Text position */
-    pango_layout_get_extents (layout, NULL, &logical_rect);
-    text_w = PANGO_PIXELS (logical_rect.width);
-    text_h = PANGO_PIXELS (logical_rect.height);
+    pango_layout_get_extents(layout, NULL, &logical_rect);
+    text_w = PANGO_PIXELS(logical_rect.width);
+    text_h = PANGO_PIXELS(logical_rect.height);
 
 
     glRasterPos3f(raster_x, raster_y, raster_z);
+    glBitmap(0, 0, 0, 0, displacement_x, displacement_y, (GLubyte *)&hlp);
     if (vjustify < 0)
     {
        /* vertically justified to the bottom */

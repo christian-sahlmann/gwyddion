@@ -28,6 +28,7 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtkdrawingarea.h>
 #include <gtk/gtkadjustment.h>
+#include <pango/pangoft2.h>
 
 #include <gtk/gtkgl.h>
 
@@ -109,7 +110,11 @@ struct _Gwy3DView {
     guint timeout_id;               /* Timeout id */
 
     PangoContext * ft2_context;     /* For text rendering */
+    PangoFT2FontMap *ft2_font_map;  /* Font map for text rendering */
     GwySIUnit    * si_unit;         /* [m] for axis labels */
+#ifdef LABELS
+    Gwy3DLabelInfo* labels;         /* labels text, displacement etc */
+#endif
 
     gboolean b_reserved1;           /* resreved for thread creating of display-lists */
     gboolean b_reserved2;
@@ -186,6 +191,7 @@ gboolean         gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
                                                 gdouble new_max_scale);
 gboolean         gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
                                                 gdouble new_min_scale);
+
 
 G_END_DECLS
 
