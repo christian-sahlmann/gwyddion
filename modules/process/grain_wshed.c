@@ -30,8 +30,7 @@
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
+/* Data for this function. */
 typedef struct {
     gint locate_steps;
     gint locate_thresh;
@@ -68,6 +67,8 @@ static void        wshed_dialog_update_controls (WshedControls *controls,
                                                  WshedArgs *args);
 static void        wshed_dialog_update_values   (WshedControls *controls,
                                                  WshedArgs *args);
+static void        wshed_invalidate             (GtkObject *adj,
+                                                 WshedControls *controls);
 static void        preview                      (WshedControls *controls,
                                                  WshedArgs *args);
 static gboolean    wshed_ok                     (WshedControls *controls,
@@ -205,18 +206,24 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
 
 
     controls.locate_steps = gtk_adjustment_new(args->locate_steps,
-                                                     0.0, 100.0, 1, 5, 0);
+                                               0.0, 100.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 2, _("_Number of steps:"), "",
                                 controls.locate_steps);
+    g_signal_connect(controls.locate_steps, "value_changed",
+                     G_CALLBACK(wshed_invalidate), &controls);
     controls.locate_dropsize = gtk_adjustment_new(args->locate_dropsize,
-                                                        0.0, 100.0, 0.1, 5, 0);
+                                                  0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_spinbutton(table, 3, _("_Drop size:"), "%",
                                 controls.locate_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    g_signal_connect(controls.locate_dropsize, "value_changed",
+                     G_CALLBACK(wshed_invalidate), &controls);
     controls.locate_thresh = gtk_adjustment_new(args->locate_thresh,
-                                                      0.0, 100.0, 1, 5, 0);
+                                                0.0, 100.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 4, _("_Threshold:"), _("pixels"),
                                 controls.locate_thresh);
+    g_signal_connect(controls.locate_thresh, "value_changed",
+                     G_CALLBACK(wshed_invalidate), &controls);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), 4, 8);
     label = gtk_label_new(NULL);
@@ -224,20 +231,24 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
     controls.wshed_steps = gtk_adjustment_new(args->wshed_steps,
-                                                    0.0, 1000.0, 1, 5, 0);
+                                              0.0, 1000.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 6, _("Num_ber of steps:"), "",
                                 controls.wshed_steps);
+    g_signal_connect(controls.wshed_steps, "value_changed",
+                     G_CALLBACK(wshed_invalidate), &controls);
 
     controls.wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
-                                                       0.0, 100.0, 0.1, 5, 0);
+                                                 0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_spinbutton(table, 7, _("Dr_op size:"), "%",
                                 controls.wshed_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    g_signal_connect(controls.wshed_dropsize, "value_changed",
+                     G_CALLBACK(wshed_invalidate), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), 8, 8);
 
     label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,  0, 1, 9, 10, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 9, 10, GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
@@ -250,7 +261,6 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                      G_CALLBACK(mask_color_change_cb), &controls);
 
     controls.computed = FALSE;
-
 
     gtk_widget_show_all(dialog);
     do {
@@ -326,8 +336,15 @@ wshed_dialog_update_values(WshedControls *controls,
 }
 
 static void
+wshed_invalidate(G_GNUC_UNUSED GtkObject *adj,
+                 WshedControls *controls)
+{
+    controls->computed = FALSE;
+}
+
+static void
 mask_color_change_cb(GtkWidget *color_button,
-                      WshedControls *controls)
+                     WshedControls *controls)
 {
     gwy_color_selector_for_mask(NULL,
                                 GWY_DATA_VIEW(controls->view),
@@ -430,6 +447,7 @@ wshed_ok(WshedControls *controls,
     if (controls->computed) {
         maskfield = gwy_container_get_object_by_name(controls->mydata,
                                                      "/0/mask");
+        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         return TRUE;
     }
