@@ -40,6 +40,8 @@ static gboolean    rms                          (GwyContainer *data,
                                                  GwyRunType run);
 static gboolean    rms_edge                     (GwyContainer *data,
                                                  GwyRunType run);
+static gboolean    nonlinearity                 (GwyContainer *data,
+                                                 GwyRunType run);
 
 
 
@@ -50,7 +52,7 @@ static GwyModuleInfo module_info = {
     "edge",
     N_("Edge detection presentations"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -90,11 +92,19 @@ module_register(const gchar *name)
         EDGE_RUN_MODES,
         0,
     };
+    static GwyProcessFuncInfo nonlinearity_func_info = {
+        "nonlinearity",
+        N_("/_Display/_Edge detection/Local _Nonlinearity"),
+        (GwyProcessFunc)&nonlinearity,
+        EDGE_RUN_MODES,
+        0,
+    };
 
     gwy_process_func_register(name, &laplacian_func_info);
     gwy_process_func_register(name, &canny_func_info);
     gwy_process_func_register(name, &rms_func_info);
     gwy_process_func_register(name, &rms_edge_func_info);
+    gwy_process_func_register(name, &nonlinearity_func_info);
 
     return TRUE;
 }
@@ -102,7 +112,7 @@ module_register(const gchar *name)
 static gboolean
 laplacian(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *shadefield;
+    GwyDataField *dfield, *show;
     gdouble avg;
     gint i, j;
 
@@ -111,39 +121,38 @@ laplacian(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
     if (gwy_container_gis_object_by_name(data, "/0/show",
-                                         (GObject**)&shadefield)) {
-        gwy_data_field_resample(shadefield,
+                                         (GObject**)&show)) {
+        gwy_data_field_resample(show,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
     }
     else {
-        shadefield
-            = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
-        g_object_unref(shadefield);
+        show = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(show));
+        g_object_unref(show);
     }
 
-    gwy_data_field_area_copy(dfield, shadefield,
+    gwy_data_field_area_copy(dfield, show,
                              0, 0, gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield), 0, 0);
 
-    gwy_data_field_area_filter_laplacian(shadefield,
+    gwy_data_field_area_filter_laplacian(show,
                                          0, 0,
                                          gwy_data_field_get_xres(dfield),
                                          gwy_data_field_get_yres(dfield));
 
-    avg = gwy_data_field_get_area_avg(shadefield, 1, 1,
+    avg = gwy_data_field_get_area_avg(show, 1, 1,
                                       gwy_data_field_get_xres(dfield)-1,
                                       gwy_data_field_get_yres(dfield)-1);
 
     for (i = 0; i < dfield->yres; i++) {
-        shadefield->data[dfield->xres*i] = avg;
-        shadefield->data[dfield->xres - 1 + dfield->xres*i] = avg;
+        show->data[dfield->xres*i] = avg;
+        show->data[dfield->xres - 1 + dfield->xres*i] = avg;
     }
     for (j = 0; j < dfield->xres; j++) {
-        shadefield->data[j] = avg;
-        shadefield->data[j + dfield->xres*(dfield->yres-1)] = avg;
+        show->data[j] = avg;
+        show->data[j + dfield->xres*(dfield->yres-1)] = avg;
     }
 
     return TRUE;
@@ -152,32 +161,32 @@ laplacian(GwyContainer *data, GwyRunType run)
 static gboolean
 canny(GwyContainer *data, GwyRunType run)
 {
-    GObject *shadefield;
+    GObject *show;
     GwyDataField *dfield;
 
     g_assert(run & EDGE_RUN_MODES);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
-        gwy_data_field_resample(GWY_DATA_FIELD(shadefield),
+    if (gwy_container_gis_object_by_name(data, "/0/show", &show)) {
+        gwy_data_field_resample(GWY_DATA_FIELD(show),
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
     }
     else {
-        shadefield = gwy_serializable_duplicate(G_OBJECT(dfield));
-        gwy_container_set_object_by_name(data, "/0/show", shadefield);
-        g_object_unref(shadefield);
+        show = gwy_serializable_duplicate(G_OBJECT(dfield));
+        gwy_container_set_object_by_name(data, "/0/show", show);
+        g_object_unref(show);
     }
 
-    gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(shadefield),
+    gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(show),
                              0, 0, gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield), 0, 0);
 
     /*now we use fixed threshold, but in future, there could be API
      with some setting. We could also do smooting before apllying filter.*/
-    gwy_data_field_area_filter_canny(GWY_DATA_FIELD(shadefield),
+    gwy_data_field_area_filter_canny(GWY_DATA_FIELD(show),
                                      0.1,
                                      0, 0,
                                      gwy_data_field_get_xres(dfield),
@@ -188,29 +197,28 @@ canny(GwyContainer *data, GwyRunType run)
 static gboolean
 rms(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *shadefield;
+    GwyDataField *dfield, *show;
 
     g_assert(run & EDGE_RUN_MODES);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
-    if (gwy_container_gis_object_by_name(data, "/0/show",
-                                         (GObject**)&shadefield)) {
-        gwy_data_field_resample(shadefield,
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&show)) {
+        gwy_data_field_resample(show,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
-        gwy_data_field_area_copy(dfield, shadefield,
+        gwy_data_field_area_copy(dfield, show,
                                  0, 0, gwy_data_field_get_xres(dfield),
                                  gwy_data_field_get_yres(dfield), 0, 0);
     }
     else {
-        shadefield = gwy_data_field_duplicate(dfield);
-        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
-        g_object_unref(shadefield);
+        show = gwy_data_field_duplicate(dfield);
+        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(show));
+        g_object_unref(show);
     }
 
-    gwy_data_field_filter_rms(shadefield, 5);
+    gwy_data_field_filter_rms(show, 5);
 
     return TRUE;
 }
@@ -218,7 +226,7 @@ rms(GwyContainer *data, GwyRunType run)
 static gboolean
 rms_edge(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *shadefield, *tmp;
+    GwyDataField *dfield, *show, *tmp;
     gint xres, yres, i, j;
     gdouble *d;
     const gdouble *t;
@@ -230,20 +238,19 @@ rms_edge(GwyContainer *data, GwyRunType run)
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
-    if (gwy_container_gis_object_by_name(data, "/0/show",
-                                         (GObject**)&shadefield)) {
-        gwy_data_field_resample(shadefield, xres, yres, GWY_INTERPOLATION_NONE);
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&show)) {
+        gwy_data_field_resample(show, xres, yres, GWY_INTERPOLATION_NONE);
     }
     else {
-        shadefield =  GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
-        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
-        g_object_unref(shadefield);
+        show =  GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
+        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(show));
+        g_object_unref(show);
     }
 
     tmp = gwy_data_field_duplicate(dfield);
     gwy_data_field_filter_rms(tmp, 5);
     t = gwy_data_field_get_data_const(tmp);
-    d = gwy_data_field_get_data(shadefield);
+    d = gwy_data_field_get_data(show);
     for (i = 0; i < yres; i++) {
         gint iim = MAX(i-2, 0)*xres;
         gint iip = MIN(i+2, yres-1)*xres;
@@ -261,6 +268,35 @@ rms_edge(GwyContainer *data, GwyRunType run)
         }
     }
     g_object_unref(tmp);
+
+    return TRUE;
+}
+
+static gboolean
+nonlinearity(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield, *show;
+    gint xres, yres, i;
+
+    g_assert(run & EDGE_RUN_MODES);
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/show", NULL);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&show)) {
+        gwy_data_field_resample(show, xres, yres, GWY_INTERPOLATION_NONE);
+    }
+    else {
+        show =  GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
+        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(show));
+        g_object_unref(show);
+    }
+
+    gwy_data_field_local_plane_quantity(dfield, 5, GWY_PLANE_FIT_S0_REDUCED,
+                                        show);
+    for (i = 0; i < xres*yres; i++)
+        show->data[i] = sqrt(show->data[i]);
 
     return TRUE;
 }
