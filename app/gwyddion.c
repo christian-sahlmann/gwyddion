@@ -98,8 +98,10 @@ static void
 setup_logging(void)
 {
     const gchar *domains[] = {
-        "Gwyddion", "GwyProcess", "GwyDraw", "Gwydgets", "GwyModule",
-        "Module",
+        "GLib", "GLib-GObject", "GModule", "GThread",
+        "GdkPixbuf", "Gdk", "Gtk",
+        "Gwyddion", "GwyProcess", "GwyDraw", "Gwydgets", "GwyModule", "GwyApp",
+        "Module", NULL
     };
     const gchar *gwydir =
 #ifdef G_OS_WIN32
