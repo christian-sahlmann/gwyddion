@@ -442,7 +442,7 @@ mark_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, height_key, &args->height);
     gwy_container_gis_double_by_name(container, slope_key, &args->slope);
     gwy_container_gis_double_by_name(container, lap_key, &args->lap);
-    gwy_container_gis_int32_by_name(container, mergetype_key,
+    gwy_container_gis_enum_by_name(container, mergetype_key,
                                     &args->merge_type);
 
 }
@@ -458,7 +458,7 @@ mark_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, height_key, args->height);
     gwy_container_set_double_by_name(container, slope_key, args->slope);
     gwy_container_set_double_by_name(container, lap_key, args->lap);
-    gwy_container_set_int32_by_name(container, mergetype_key, args->merge_type);
+    gwy_container_set_enum_by_name(container, mergetype_key, args->merge_type);
 }
 
 static void

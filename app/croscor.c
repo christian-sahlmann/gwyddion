@@ -492,7 +492,7 @@ gwy_data_croscor_load_args(GwyContainer *settings,
 {
     gboolean b;
 
-    gwy_container_gis_int32_by_name(settings, result_key, &args->result);
+    gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_int32_by_name(settings, search_x_key, &args->search_x);
     gwy_container_gis_int32_by_name(settings, search_y_key, &args->search_y);
     gwy_container_gis_int32_by_name(settings, window_x_key, &args->window_x);
@@ -511,7 +511,7 @@ static void
 gwy_data_croscor_save_args(GwyContainer *settings,
                          GwyCroscorArgs *args)
 {
-    gwy_container_set_int32_by_name(settings, result_key, args->result);
+    gwy_container_set_enum_by_name(settings, result_key, args->result);
     gwy_container_set_int32_by_name(settings, search_x_key, args->search_x);
     gwy_container_set_int32_by_name(settings, search_y_key, args->search_y);
     gwy_container_set_int32_by_name(settings, window_x_key, args->window_x);

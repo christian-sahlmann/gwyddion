@@ -1784,7 +1784,7 @@ pixmap_save_load_args(GwyContainer *container,
     *args = pixmap_save_defaults;
 
     gwy_container_gis_double_by_name(container, zoom_key, &args->zoom);
-    gwy_container_gis_int32_by_name(container, otype_key, &args->otype);
+    gwy_container_gis_enum_by_name(container, otype_key, &args->otype);
 }
 
 static void
@@ -1792,7 +1792,7 @@ pixmap_save_save_args(GwyContainer *container,
                       PixmapSaveArgs *args)
 {
     gwy_container_set_double_by_name(container, zoom_key, args->zoom);
-    gwy_container_set_int32_by_name(container, otype_key, args->otype);
+    gwy_container_set_enum_by_name(container, otype_key, args->otype);
 }
 
 static const gchar *xreal_key = "/module/pixmap/xreal";
@@ -1815,7 +1815,7 @@ pixmap_load_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, zreal_key, &args->zreal);
     gwy_container_gis_int32_by_name(container, zexponent_key,
                                     &args->zexponent);
-    gwy_container_gis_int32_by_name(container, maptype_key, &args->maptype);
+    gwy_container_gis_enum_by_name(container, maptype_key, &args->maptype);
 }
 
 static void
@@ -1829,7 +1829,7 @@ pixmap_load_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, zreal_key, args->zreal);
     gwy_container_set_int32_by_name(container, zexponent_key,
                                     args->zexponent);
-    gwy_container_set_int32_by_name(container, maptype_key, args->maptype);
+    gwy_container_set_enum_by_name(container, maptype_key, args->maptype);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -1975,7 +1975,7 @@ rawfile_load_preset(GwyContainer *settings,
     *args = rawfile_defaults;
 
     sget(format, presetname, int32);
-    sget(builtin, presetname, int32);
+    sget(builtin, presetname, enum);
     sget(offset, presetname, int32);
     sget(size, presetname, int32);
     sget(skip, presetname, int32);
@@ -2020,7 +2020,7 @@ rawfile_save_preset(GwyContainer *settings,
     rawfile_santinize_args(args);
 
     sset(format, presetname, int32);
-    sset(builtin, presetname, int32);
+    sset(builtin, presetname, enum);
     sset(offset, presetname, int32);
     sset(size, presetname, int32);
     sset(skip, presetname, int32);

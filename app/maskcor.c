@@ -471,7 +471,7 @@ gwy_data_maskcor_load_args(GwyContainer *settings,
 {
     gboolean b;
 
-    gwy_container_gis_int32_by_name(settings, result_key, &args->result);
+    gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);    
     gwy_container_gis_boolean_by_name(settings, scalar_is1_key, &b);
     if (b)
@@ -485,7 +485,7 @@ static void
 gwy_data_maskcor_save_args(GwyContainer *settings,
                          GwyMaskcorArgs *args)
 {
-    gwy_container_set_int32_by_name(settings, result_key, args->result);
+    gwy_container_set_enum_by_name(settings, result_key, args->result);
     gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
     gwy_container_set_boolean_by_name(settings, scalar_is1_key,
                                       args->win1 == NULL);

@@ -730,7 +730,7 @@ gwy_data_arith_load_args(GwyContainer *settings,
 {
     gboolean b;
 
-    gwy_container_gis_int32_by_name(settings, operation_key, &args->operation);
+    gwy_container_gis_enum_by_name(settings, operation_key, &args->operation);
     gwy_container_gis_double_by_name(settings, scalar1_key, &args->scalar1);
     gwy_container_gis_double_by_name(settings, scalar2_key, &args->scalar2);
     gwy_container_gis_boolean_by_name(settings, scalar_is1_key, &b);
@@ -745,7 +745,7 @@ static void
 gwy_data_arith_save_args(GwyContainer *settings,
                          GwyArithArgs *args)
 {
-    gwy_container_set_int32_by_name(settings, operation_key, args->operation);
+    gwy_container_set_enum_by_name(settings, operation_key, args->operation);
     gwy_container_set_double_by_name(settings, scalar1_key, args->scalar1);
     gwy_container_set_double_by_name(settings, scalar2_key, args->scalar2);
     gwy_container_set_boolean_by_name(settings, scalar_is1_key,
