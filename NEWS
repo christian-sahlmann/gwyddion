@@ -1,9 +1,10 @@
-1.7cvs20041219
+1.7cvs20041221
 
 1.8
 Application:
 - Option --no-splash recognized anywhere in command line, --debug-objects
   added.
+- Document history now displays physical dimensions too.
 
 Modules:
 - NT-MDT file format import module (new): roughly working.
@@ -14,6 +15,12 @@ Modules:
 - Nanoscope, Statistical quantities, FFT: SI unit handling improved.
 - FFT, CWT, DWT modules: Display non-square data error immediately.
 - Profile: Corrupted graph titles for separate profiles were fixed.
+- Grain mark by threshold, watershed, and remove by threshold: Option to use
+  inverted surface, GUI reworked.
+- Manual grain removal tool: It is possible to remove underlying data or both
+  now.
+- Mask grow, shrink: Always growing (shrinking) down (up) only one pixel was
+  fixed.
 
 Libraries:
 - libgwyddion: Better SI unit parsing, multiplication, division and powers.
