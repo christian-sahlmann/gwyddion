@@ -471,12 +471,12 @@ gwy_app_data_window_set_untitled(GwyDataWindow *data_window,
     return untitled_no;
 }
 
-/**
+/*
  * Assures @window is present in the data window list, but doesn't make
  * it current.
  *
  * XXX: WTF?
- **/
+ */
 void
 gwy_app_data_window_add(GwyDataWindow *window)
 {
