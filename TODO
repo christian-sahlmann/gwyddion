@@ -6,10 +6,17 @@ to locate them ;-)
 
 Particularly:
 - Some real Undo & Redo and revert to saved state
+- Quite a large part of graph functionality
 - Printing
 - User documentation, even better, integrated help
 - Internationalization and localization
-- Palette editor
+- Associations, drag'n'drop support
+- Palette editor, explicite ranges for palettes
 - Editable metadata
 - Multiple data in one file
 - Sessions
+- ...
+
+Quite a few of these items are intrusive and will have to wait for the next
+unstable version.
+
