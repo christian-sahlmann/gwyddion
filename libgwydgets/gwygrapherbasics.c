@@ -32,21 +32,28 @@ gwy_grapher_draw_line (GdkDrawable *drawable, GdkGC *gc,
                         GdkLineStyle line_style,
                         gint size, GwyRGBA *color)
 {
-    GdkColor gcl;
+    GdkColor bcl, fcl;
     GdkColormap *colormap;
+    GwyRGBA rgba;
     gint i, j;
     gint size_half = size/2;
     
     if (gc==NULL) gc = gdk_gc_new(drawable);
-    
-   
+
     colormap = gdk_colormap_get_system();
-    gwy_rgba_to_gdk_color(color, &gcl);
-    gdk_colormap_alloc_color(colormap, &gcl, TRUE, TRUE);
+    gwy_rgba_to_gdk_color(color, &fcl);
+    gdk_colormap_alloc_color(colormap, &fcl, TRUE, TRUE);
+    gdk_gc_set_foreground(gc, &fcl);
+
+    rgba.r = MIN(color->g+0.2, 1);
+    rgba.g = MIN(color->b+0.2, 1);
+    rgba.b = MIN(color->r+0.2, 1);
+    gwy_rgba_to_gdk_color(&rgba, &bcl);
+    gdk_colormap_alloc_color(colormap, &bcl, TRUE, TRUE);
+    gdk_gc_set_background(gc, &bcl);
     
-    gdk_gc_set_foreground(gc, &gcl);
     gdk_gc_set_line_attributes (gc, size,
-                  line_style, GDK_CAP_ROUND, GDK_JOIN_MITER);
+                  line_style, GDK_CAP_BUTT, GDK_JOIN_MITER);
 
     gdk_draw_line(drawable, gc, x_from, y_from, x_to, y_to);
    

@@ -46,12 +46,12 @@ struct _GwyGrapherAreaDialog {
     GtkWidget *curvetype_menu;
     GtkWidget *color_button;
     GtkWidget *pointtype_menu;
+    GtkWidget *linetype_menu;
     GtkWidget *curve_label;
     GtkObject *pointsize;
     GtkObject *linesize;
 
     GObject *curve_model;
-    /*remove this!*/GwyGrapherPointType ptype;
 
     gpointer reserved1;
     gpointer reserved2;
