@@ -199,7 +199,7 @@ cd_rstepheight(gdouble *x,
             param[4] = (x[i+nstep] + x[i])/2.0;
         }
     }
-    iwidth = imin - imax;
+    iwidth = imax - imin;
     
     get_linestatpars(y, n_dat, imin+iwidth/3, imax-iwidth/3, param + 2, err + 2);
   
