@@ -48,7 +48,8 @@ typedef struct {
 } MaskcorControls;
 
 static gboolean   module_register          (const gchar *name);
-static gboolean   maskcor                  (GwyContainer *data);
+static gboolean   maskcor                  (GwyContainer *data,
+                                            GwyRunType run);
 static void       maskcor_load_args        (GwyContainer *settings,
                                             MaskcorArgs *args);
 static void       maskcor_save_args        (GwyContainer *settings,
@@ -60,8 +61,7 @@ static void       maskcor_operation_cb     (GtkWidget *item,
 static void       maskcor_threshold_cb     (GtkAdjustment *adj,
                                             gdouble *value);
 static void       maskcor_data_cb          (GtkWidget *item);
-static gboolean   maskcor_do               (MaskcorArgs *args,
-                                            GtkWidget *maskcor_window);
+static gboolean   maskcor_do               (MaskcorArgs *args);
 
 
 static const GwyEnum results[] = {
@@ -105,52 +105,37 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-/* FIXME: static variables, module not unloadable, ignores Container argument */
+/* FIXME: we ignore the Container argument and use current data window */
 static gboolean
-maskcor(G_GNUC_UNUSED GwyContainer *data)
+maskcor(GwyContainer *data, GwyRunType run)
 {
-    static MaskcorArgs *args = NULL;
-    static GtkWidget *maskcor_window = NULL;
-    static gpointer win1 = NULL, win2 = NULL;
+    GtkWidget *maskcor_window;
+    MaskcorArgs args;
     GwyContainer *settings;
     gboolean ok = FALSE;
 
-    if (!args) {
-        args = g_new(MaskcorArgs, 1);
-        *args = maskcor_defaults;
-    }
+    g_return_val_if_fail(run & MASKCOR_RUN_MODES, FALSE);
     settings = gwy_app_settings_get();
-    if (!maskcor_window) {
-        args->win1 = win1 ? win1 : gwy_app_data_window_get_current();
-        args->win2 = win2 ? win2 : gwy_app_data_window_get_current();
-
-        maskcor_load_args(settings, args);
-        maskcor_window = maskcor_window_construct(args);
-    }
+    maskcor_load_args(settings, &args);
+    args.win1 = args.win2 = gwy_app_data_window_get_current();
+    g_assert(gwy_data_window_get_data(args.win1) == data);
+    maskcor_window = maskcor_window_construct(&args);
     gtk_window_present(GTK_WINDOW(maskcor_window));
+
     do {
         switch (gtk_dialog_run(GTK_DIALOG(maskcor_window))) {
-            case GTK_RESPONSE_CLOSE:
+            case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_NONE:
+            gtk_widget_destroy(maskcor_window);
             ok = TRUE;
             break;
 
             case GTK_RESPONSE_APPLY:
-            ok = maskcor_do(args, maskcor_window);
-            if (ok) {
-                maskcor_save_args(settings, args);
-                if (win1)
-                    g_object_remove_weak_pointer(G_OBJECT(win1), &win1);
-                win1 = args->win1;
-                if (win1)
-                    g_object_add_weak_pointer(G_OBJECT(win1), &win1);
-                if (win2)
-                    g_object_remove_weak_pointer(G_OBJECT(win2), &win2);
-                win2 = args->win2;
-                if (win2)
-                    g_object_add_weak_pointer(G_OBJECT(args->win2), &win2);
-            }
+            gtk_widget_destroy(maskcor_window);
+            maskcor_do(&args);
+            maskcor_save_args(settings, &args);
+            ok = TRUE;
             break;
 
             default:
@@ -158,9 +143,6 @@ maskcor(G_GNUC_UNUSED GwyContainer *data)
             break;
         }
     } while (!ok);
-
-    gtk_widget_destroy(maskcor_window);
-    maskcor_window = NULL;
 
     return FALSE;
 }
@@ -174,7 +156,7 @@ maskcor_window_construct(MaskcorArgs *args)
     dialog = gtk_dialog_new_with_buttons(_("Mask by correlation"),
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
                                          NULL);
     gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
@@ -306,8 +288,7 @@ plot_maxima(GwyDataField * retfield, gdouble threshold)
 }
 
 static gboolean
-maskcor_do(MaskcorArgs *args,
-           G_GNUC_UNUSED GtkWidget *maskcor_window)
+maskcor_do(MaskcorArgs *args)
 {
     GtkWidget *data_window;
     GwyContainer *data, *ret, *kernel;
@@ -324,6 +305,7 @@ maskcor_do(MaskcorArgs *args,
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                              "/0/data"));
 
+    /* FIXME: who frees this when args->result != GWY_MASKCOR_SCORE ??? */
     ret = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     retfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(ret,
                                                              "/0/data"));
@@ -351,10 +333,13 @@ maskcor_do(MaskcorArgs *args,
         if (gwy_container_contains_by_name(ret, "/0/mask"))
             gwy_container_remove_by_name(ret, "/0/mask");
 
+        /* TODO: set some units! */
         data_window = gwy_app_data_window_create(ret);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
     else { /*add mask*/
+        /* FIXME: this is probably a pure nonsense. the whole `ret' thing
+         * is only a leaked memory and user will never see it */
         if (args->result == GWY_MASKCOR_OBJECTS) {
             plot_correlated(retfield, kernelfield->xres, kernelfield->yres,
                             args->threshold);
@@ -369,15 +354,17 @@ maskcor_do(MaskcorArgs *args,
     return TRUE;
 }
 
-
-/* TODO: change keys to /module/maskcor , clean /app/maskcor */
-static const gchar *result_key = "/app/maskcor/result";
-static const gchar *threshold_key = "/app/maskcor/threshold";
+static const gchar *result_key = "/module/maskcor/result";
+static const gchar *threshold_key = "/module/maskcor/threshold";
 
 static void
 maskcor_load_args(GwyContainer *settings,
                   MaskcorArgs *args)
 {
+    /* TODO: remove this someday */
+    gwy_container_remove_by_prefix(settings, "/app/maskcor");
+
+    *args = maskcor_defaults;
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
 }

@@ -67,7 +67,8 @@ typedef struct {
 } CrosscorControls;
 
 static gboolean   module_register             (const gchar *name);
-static gboolean   crosscor                    (GwyContainer *data);
+static gboolean   crosscor                    (GwyContainer *data,
+                                               GwyRunType run);
 static void       crosscor_load_args          (GwyContainer *settings,
                                                CrosscorArgs *args);
 static void       crosscor_save_args          (GwyContainer *settings,
@@ -78,9 +79,11 @@ static GtkWidget* crosscor_data_option_menu   (GwyDataWindow **operand);
 static void       crosscor_operation_cb       (GtkWidget *item,
                                                CrosscorArgs *args);
 static void       crosscor_data_cb            (GtkWidget *item);
-static gboolean   crosscor_do                 (CrosscorArgs *args,
-                                               GtkWidget *crosscor_window,
-                                               CrosscorControls *controls);
+static void       crosscor_update_values      (CrosscorControls *controls,
+                                               CrosscorArgs *args);
+static gboolean   crosscor_check              (CrosscorArgs *args,
+                                               GtkWidget *crosscor_window);
+static gboolean   crosscor_do                 (CrosscorArgs *args);
 
 
 static const GwyEnum results[] = {
@@ -125,56 +128,40 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-/* FIXME: static variables, module not unloadable, ignores Container argument */
+/* FIXME: we ignore the Container argument and use current data window */
 static gboolean
-crosscor(G_GNUC_UNUSED GwyContainer *data)
+crosscor(GwyContainer *data, GwyRunType run)
 {
-    static CrosscorArgs *args = NULL;
-    static CrosscorControls *controls = NULL;
-    static GtkWidget *crosscor_window = NULL;
-    static gpointer win1 = NULL, win2 = NULL;
+    GtkWidget *crosscor_window;
+    CrosscorArgs args;
+    CrosscorControls controls;
     GwyContainer *settings;
     gboolean ok = FALSE;
 
-    if (!args) {
-        args = g_new(CrosscorArgs, 1);
-        *args = crosscor_defaults;
-    }
-    if (!controls) {
-        controls = g_new(CrosscorControls, 1);
-    }
-
+    g_return_val_if_fail(run & CROSSCOR_RUN_MODES, FALSE);
     settings = gwy_app_settings_get();
-    if (!crosscor_window) {
-        args->win1 = win1 ? win1 : gwy_app_data_window_get_current();
-        args->win2 = win2 ? win2 : gwy_app_data_window_get_current();
-
-        crosscor_load_args(settings, args);
-        crosscor_window = crosscor_window_construct(args, controls);
-    }
+    crosscor_load_args(settings, &args);
+    args.win1 = args.win2 = gwy_app_data_window_get_current();
+    g_assert(gwy_data_window_get_data(args.win1) == data);
+    crosscor_window = crosscor_window_construct(&args, &controls);
     gtk_window_present(GTK_WINDOW(crosscor_window));
+
     do {
         switch (gtk_dialog_run(GTK_DIALOG(crosscor_window))) {
-            case GTK_RESPONSE_CLOSE:
+            case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_NONE:
+            gtk_widget_destroy(crosscor_window);
             ok = TRUE;
             break;
 
             case GTK_RESPONSE_APPLY:
-            ok = crosscor_do(args, crosscor_window, controls);
+            crosscor_update_values(&controls, &args);
+            ok = crosscor_check(&args, crosscor_window);
             if (ok) {
-                crosscor_save_args(settings, args);
-                if (win1)
-                    g_object_remove_weak_pointer(G_OBJECT(win1), &win1);
-                win1 = args->win1;
-                if (win1)
-                    g_object_add_weak_pointer(G_OBJECT(win1), &win1);
-                if (win2)
-                    g_object_remove_weak_pointer(G_OBJECT(win2), &win2);
-                win2 = args->win2;
-                if (win2)
-                    g_object_add_weak_pointer(G_OBJECT(args->win2), &win2);
+                gtk_widget_destroy(crosscor_window);
+                crosscor_do(&args);
+                crosscor_save_args(settings, &args);
             }
             break;
 
@@ -184,15 +171,12 @@ crosscor(G_GNUC_UNUSED GwyContainer *data)
         }
     } while (!ok);
 
-    gtk_widget_destroy(crosscor_window);
-    crosscor_window = NULL;
-
     return FALSE;
 }
 
 static GtkWidget*
 crosscor_window_construct(CrosscorArgs *args,
-                                  CrosscorControls *controls)
+                          CrosscorControls *controls)
 {
     GtkWidget *dialog, *table, *omenu, *label, *spin;
     gint row;
@@ -200,7 +184,7 @@ crosscor_window_construct(CrosscorArgs *args,
     dialog = gtk_dialog_new_with_buttons(_("Data Croscorrelation"),
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
                                          NULL);
     gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
@@ -303,7 +287,7 @@ crosscor_window_construct(CrosscorArgs *args,
     return dialog;
 }
 
-GtkWidget*
+static GtkWidget*
 crosscor_data_option_menu(GwyDataWindow **operand)
 {
     GtkWidget *omenu, *menu;
@@ -337,8 +321,8 @@ crosscor_data_cb(GtkWidget *item)
     *pp = p;
 }
 
-void
-abs_field(GwyDataField * dfieldx, GwyDataField * dfieldy)
+static void
+abs_field(GwyDataField *dfieldx, GwyDataField *dfieldy)
 {
     gint i;
 
@@ -349,8 +333,8 @@ abs_field(GwyDataField * dfieldx, GwyDataField * dfieldy)
     }
 }
 
-void
-dir_field(GwyDataField * dfieldx, GwyDataField * dfieldy)
+static void
+dir_field(GwyDataField *dfieldx, GwyDataField *dfieldy)
 {
     gint i;
 
@@ -359,22 +343,10 @@ dir_field(GwyDataField * dfieldx, GwyDataField * dfieldy)
     }
 }
 
-static gboolean
-crosscor_do(CrosscorArgs * args,
-            GtkWidget *crosscor_window, CrosscorControls * controls)
+static void
+crosscor_update_values(CrosscorControls *controls,
+                       CrosscorArgs *args)
 {
-    GtkWidget *dialog, *data_window;
-    GwyContainer *data;
-    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *score;
-    GwyDataWindow *operand1, *operand2;
-    gint iteration = 0;
-    GwyComputationStateType state;
-
-    operand1 = args->win1;
-    operand2 = args->win2;
-    g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
-
-    /*get all parameters back */
     args->search_x =
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->search_area_x));
     args->search_y =
@@ -387,24 +359,59 @@ crosscor_do(CrosscorArgs * args,
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold));
     args->mask =
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->mask));
+}
 
+static gboolean
+crosscor_check(CrosscorArgs *args,
+               GtkWidget *crosscor_window)
+{
+    GtkWidget *dialog;
+    GwyContainer *data;
+    GwyDataField *dfield1, *dfield2;
+    GwyDataWindow *operand1, *operand2;
+
+    operand1 = args->win1;
+    operand2 = args->win2;
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(operand1)
+                         && GWY_IS_DATA_WINDOW(operand2),
+                         FALSE);
 
     data = gwy_data_window_get_data(operand1);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
+    if (dfield1->xres == dfield2->xres && dfield1->yres == dfield2->yres)
+        return TRUE;
 
-    if (dfield1->xres != dfield2->xres || dfield1->yres != dfield2->yres) {
-        dialog = gtk_message_dialog_new(GTK_WINDOW(crosscor_window),
-                                        GTK_DIALOG_DESTROY_WITH_PARENT,
-                                        GTK_MESSAGE_INFO,
-                                        GTK_BUTTONS_CLOSE,
-                                        _("Both data fields must have same size."));
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        return FALSE;
-    }
+    dialog = gtk_message_dialog_new(GTK_WINDOW(crosscor_window),
+                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_INFO,
+                                    GTK_BUTTONS_CLOSE,
+                                    _("Both data fields must have same size."));
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    return FALSE;
+}
+
+static gboolean
+crosscor_do(CrosscorArgs *args)
+{
+    GtkWidget *data_window;
+    GwyContainer *data;
+    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *score;
+    GwyDataWindow *operand1, *operand2;
+    gint iteration = 0;
+    GwyComputationStateType state;
+
+    operand1 = args->win1;
+    operand2 = args->win2;
+    g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
+
+    data = gwy_data_window_get_data(operand1);
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    data = gwy_data_window_get_data(operand2);
+    dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     /*result fields - after computation result should be at dfieldx */
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
@@ -413,7 +420,6 @@ crosscor_do(CrosscorArgs * args,
     score = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfieldx)));
 
     /*compute crosscorelation */
-
 
     iteration = 0;
     state = GWY_COMP_INIT;
@@ -460,19 +466,22 @@ crosscor_do(CrosscorArgs * args,
 }
 
 
-/* TODO: change keys to /module/crosscor , clean /app/croscor */
-static const gchar *result_key = "/app/croscor/result";
-static const gchar *search_x_key = "/app/croscor/search_x";
-static const gchar *search_y_key = "/app/croscor/search_y";
-static const gchar *window_x_key = "/app/croscor/window_x";
-static const gchar *window_y_key = "/app/croscor/window_y";
-static const gchar *rot_pos_key = "/app/croscor/rot_pos";
-static const gchar *rot_neg_key = "/app/croscor/rot_neg";
+static const gchar *result_key = "/module/crosscor/result";
+static const gchar *search_x_key = "/module/crosscor/search_x";
+static const gchar *search_y_key = "/module/crosscor/search_y";
+static const gchar *window_x_key = "/module/crosscor/window_x";
+static const gchar *window_y_key = "/module/crosscor/window_y";
+static const gchar *rot_pos_key = "/module/crosscor/rot_pos";
+static const gchar *rot_neg_key = "/module/crosscor/rot_neg";
 
 static void
 crosscor_load_args(GwyContainer *settings,
                    CrosscorArgs *args)
 {
+    /* TODO: remove this someday (old keys we used as  */
+    gwy_container_remove_by_prefix(settings, "/app/croscor");
+
+    *args = crosscor_defaults;
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_int32_by_name(settings, search_x_key, &args->search_x);
     gwy_container_gis_int32_by_name(settings, search_y_key, &args->search_y);

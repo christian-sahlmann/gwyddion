@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,8 @@ typedef struct {
 } ArithmeticControls;
 
 static gboolean   module_register             (const gchar *name);
-static gboolean   arithmetic                  (GwyContainer *data);
+static gboolean   arithmetic                  (GwyContainer *data,
+                                               GwyRunType run);
 static void       arithmetic_load_args        (GwyContainer *settings,
                                                ArithmeticArgs *args);
 static void       arithmetic_save_args        (GwyContainer *settings,
@@ -71,9 +72,12 @@ static void       arithmetic_operation_cb     (GtkWidget *item,
 static void       arithmetic_data_cb          (GtkWidget *item);
 static void       arithmetic_entry_cb         (GtkWidget *entry,
                                                gpointer data);
-static gboolean   arithmetic_do               (ArithmeticArgs *args,
-                                               GtkWidget *arith_window);
+static gboolean   arithmetic_check            (ArithmeticArgs *args,
+                                               GtkWidget *arithmetic_window);
+static gboolean   arithmetic_do               (ArithmeticArgs *args);
 
+static void       gwy_data_field_reciprocal_value(GwyDataField *dfield,
+                                                  gdouble q);
 static void       gwy_data_field_add2         (GwyDataField *dfield1,
                                                GwyDataField *dfield2);
 static void       gwy_data_field_subtract2    (GwyDataField *dfield1,
@@ -131,52 +135,39 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-/* FIXME: static variables, module not unloadable, ignores Container argument */
+/* FIXME: we ignore the Container argument and use current data window */
 gboolean
-arithmetic(G_GNUC_UNUSED GwyContainer *data)
+arithmetic(GwyContainer *data, GwyRunType run)
 {
-    static ArithmeticArgs *args = NULL;
-    static GtkWidget *arithmetic_window = NULL;
-    static gpointer win1 = NULL, win2 = NULL;
+    GtkWidget *arithmetic_window = NULL;
+    ArithmeticArgs args;
     GwyContainer *settings;
     gboolean ok = FALSE;
 
-    if (!args) {
-        args = g_new(ArithmeticArgs, 1);
-        *args = arithmetic_defaults;
-    }
+    g_return_val_if_fail(run & ARITH_RUN_MODES, FALSE);
     settings = gwy_app_settings_get();
-    if (!arithmetic_window) {
-        args->win1 = win1 ? win1 : gwy_app_data_window_get_current();
-        args->win2 = win2 ? win2 : gwy_app_data_window_get_current();
-
-        /* this may set win1, win2 back to NULL is operands are to be scalars */
-        arithmetic_load_args(settings, args);
-        arithmetic_window = arithmetic_window_construct(args);
-    }
+    arithmetic_load_args(settings, &args);
+    args.win2 = args.win1 = gwy_app_data_window_get_current();
+    g_assert(gwy_data_window_get_data(args.win1) == data);
+    /* this may set win1, win2 back to NULL is operands are to be scalars */
+    arithmetic_window = arithmetic_window_construct(&args);
     gtk_window_present(GTK_WINDOW(arithmetic_window));
+
     do {
         switch (gtk_dialog_run(GTK_DIALOG(arithmetic_window))) {
-            case GTK_RESPONSE_CLOSE:
+            case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_NONE:
+            gtk_widget_destroy(arithmetic_window);
             ok = TRUE;
             break;
 
             case GTK_RESPONSE_APPLY:
-            ok = arithmetic_do(args, arithmetic_window);
+            ok = arithmetic_check(&args, arithmetic_window);
             if (ok) {
-                arithmetic_save_args(settings, args);
-                if (win1)
-                    g_object_remove_weak_pointer(G_OBJECT(win1), &win1);
-                win1 = args->win1;
-                if (win1)
-                    g_object_add_weak_pointer(G_OBJECT(win1), &win1);
-                if (win2)
-                    g_object_remove_weak_pointer(G_OBJECT(win2), &win2);
-                win2 = args->win2;
-                if (win2)
-                    g_object_add_weak_pointer(G_OBJECT(args->win2), &win2);
+                gtk_widget_destroy(arithmetic_window);
+                arithmetic_do(&args);
+                arithmetic_save_args(settings, &args);
             }
             break;
 
@@ -185,9 +176,6 @@ arithmetic(G_GNUC_UNUSED GwyContainer *data)
             break;
         }
     } while (!ok);
-
-    gtk_widget_destroy(arithmetic_window);
-    arithmetic_window = NULL;
 
     return FALSE;
 }
@@ -201,7 +189,7 @@ arithmetic_window_construct(ArithmeticArgs *args)
     dialog = gtk_dialog_new_with_buttons(_("Data Arithmetic"),
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
                                          NULL);
     gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
@@ -354,13 +342,13 @@ arithmetic_entry_cb(GtkWidget *entry,
 }
 
 static gboolean
-arithmetic_do(ArithmeticArgs *args,
-              GtkWidget *arithmetic_window)
+arithmetic_check(ArithmeticArgs *args,
+                 GtkWidget *arithmetic_window)
 {
-    GtkWidget *dialog, *data_window;
-    GwyContainer *data;
-    GwyDataField *dfield, *dfield1, *dfield2;
+    GtkWidget *dialog;
     GwyDataWindow *operand1, *operand2;
+    GwyContainer *data;
+    GwyDataField *dfield1, *dfield2;
     gdouble scalar1, scalar2;
 
     operand1 = args->win1;
@@ -368,7 +356,7 @@ arithmetic_do(ArithmeticArgs *args,
     scalar1 = args->scalar1;
     scalar2 = args->scalar2;
 
-    /***** scalar x scalar (silly) *****/
+    /***** scalar x scalar (silly, handled completely here) *****/
     if (!operand1 && !operand2) {
         gdouble value = 0.0;
 
@@ -412,6 +400,61 @@ arithmetic_do(ArithmeticArgs *args,
         gtk_widget_destroy(dialog);
         return FALSE;
     }
+
+    /***** datafield x datafield, must check *****/
+    if (operand1 && operand2) {
+        data = gwy_data_window_get_data(operand2);
+        dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                  "/0/data"));
+        data = gwy_data_window_get_data(operand1);
+        dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                  "/0/data"));
+
+        if ((gwy_data_field_get_xres(dfield1)
+             != gwy_data_field_get_xres(dfield2))
+            || (gwy_data_field_get_yres(dfield1)
+                != gwy_data_field_get_yres(dfield2))) {
+            dialog = gtk_message_dialog_new(GTK_WINDOW(arithmetic_window),
+                                            GTK_DIALOG_DESTROY_WITH_PARENT,
+                                            GTK_MESSAGE_INFO,
+                                            GTK_BUTTONS_CLOSE,
+                                            _("The dimensions differ.\n"));
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+            return FALSE;
+        }
+        if ((gwy_data_field_get_xreal(dfield1)
+             != gwy_data_field_get_xreal(dfield2))
+            || (gwy_data_field_get_yreal(dfield1)
+                != gwy_data_field_get_yreal(dfield2))) {
+            dialog = gtk_message_dialog_new(GTK_WINDOW(arithmetic_window),
+                                            GTK_DIALOG_DESTROY_WITH_PARENT,
+                                            GTK_MESSAGE_INFO,
+                                            GTK_BUTTONS_CLOSE,
+                                            _("The real dimensions differ.\n"));
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+            return FALSE;
+        }
+    }
+
+    /* everything else is possible */
+    return TRUE;
+}
+
+static gboolean
+arithmetic_do(ArithmeticArgs *args)
+{
+    GtkWidget *data_window;
+    GwyContainer *data;
+    GwyDataField *dfield, *dfield1, *dfield2;
+    GwyDataWindow *operand1, *operand2;
+    gdouble scalar1, scalar2;
+
+    operand1 = args->win1;
+    operand2 = args->win2;
+    scalar1 = args->scalar1;
+    scalar2 = args->scalar2;
 
     /***** datafield x scalar (always possible) *****/
     if (operand1 && !operand2) {
@@ -475,7 +518,7 @@ arithmetic_do(ArithmeticArgs *args,
             break;
 
             case GWY_ARITH_DIVIDE:
-            g_warning("Implement me!?");
+            gwy_data_field_reciprocal_value(dfield, scalar1);
             break;
 
             case GWY_ARITH_MAXIMUM:
@@ -496,7 +539,7 @@ arithmetic_do(ArithmeticArgs *args,
         return TRUE;
     }
 
-    /***** scalar x datafield (always possible) *****/
+    /***** datafield x datafield *****/
     if (operand1 && operand2) {
         data = gwy_data_window_get_data(operand2);
         dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -504,33 +547,6 @@ arithmetic_do(ArithmeticArgs *args,
         data = gwy_data_window_get_data(operand1);
         dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                   "/0/data"));
-
-        if ((gwy_data_field_get_xres(dfield1)
-             != gwy_data_field_get_xres(dfield2))
-            || (gwy_data_field_get_yres(dfield1)
-                != gwy_data_field_get_yres(dfield2))) {
-            dialog = gtk_message_dialog_new(GTK_WINDOW(arithmetic_window),
-                                            GTK_DIALOG_DESTROY_WITH_PARENT,
-                                            GTK_MESSAGE_INFO,
-                                            GTK_BUTTONS_CLOSE,
-                                            _("The dimensions differ.\n"));
-            gtk_dialog_run(GTK_DIALOG(dialog));
-            gtk_widget_destroy(dialog);
-            return FALSE;
-        }
-        if ((gwy_data_field_get_xreal(dfield1)
-             != gwy_data_field_get_xreal(dfield2))
-            || (gwy_data_field_get_yreal(dfield1)
-                != gwy_data_field_get_yreal(dfield2))) {
-            dialog = gtk_message_dialog_new(GTK_WINDOW(arithmetic_window),
-                                            GTK_DIALOG_DESTROY_WITH_PARENT,
-                                            GTK_MESSAGE_INFO,
-                                            GTK_BUTTONS_CLOSE,
-                                            _("The real dimensions differ.\n"));
-            gtk_dialog_run(GTK_DIALOG(dialog));
-            gtk_widget_destroy(dialog);
-            return FALSE;
-        }
         data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
@@ -575,6 +591,22 @@ arithmetic_do(ArithmeticArgs *args,
 
 /************************ Datafield arithmetic ***************************/
 /* XXX: move to libprocess/datafield.c? */
+
+static void
+gwy_data_field_reciprocal_value(GwyDataField *dfield,
+                                gdouble q)
+{
+    gdouble *p;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    p = dfield->data;
+    for (i = xres*yres; i; i--, p++)
+        *p = q / *p;
+}
 
 static void
 gwy_data_field_add2(GwyDataField *dfield1,
@@ -698,28 +730,34 @@ gwy_data_field_maximum2(GwyDataField *dfield1,
             *p = *q;
 }
 
-/* TODO: change keys to /module/arithmetic, clean /app/arith */
-static const gchar *operation_key = "/app/arith/operation";
-static const gchar *scalar1_key = "/app/arith/scalar1";
-static const gchar *scalar2_key = "/app/arith/scalar2";
-static const gchar *scalar_is1_key = "/app/arith/scalar_is1";
-static const gchar *scalar_is2_key = "/app/arith/scalar_is2";
+static const gchar *operation_key = "/module/arithmetic/operation";
+static const gchar *scalar1_key = "/module/arithmetic/scalar1";
+static const gchar *scalar2_key = "/module/arithmetic/scalar2";
+static const gchar *scalar_is1_key = "/module/arithmetic/scalar_is1";
+static const gchar *scalar_is2_key = "/module/arithmetic/scalar_is2";
 
 static void
 arithmetic_load_args(GwyContainer *settings,
                      ArithmeticArgs *args)
 {
-    gboolean b;
+    gboolean b = FALSE;
+    GwyDataWindow *win1, *win2;
 
+    /* TODO: remove this someday */
+    gwy_container_remove_by_prefix(settings, "/app/arith");
+
+    win1 = args->win1;
+    win2 = args->win2;
+    *args = arithmetic_defaults;
     gwy_container_gis_enum_by_name(settings, operation_key, &args->operation);
     gwy_container_gis_double_by_name(settings, scalar1_key, &args->scalar1);
     gwy_container_gis_double_by_name(settings, scalar2_key, &args->scalar2);
     gwy_container_gis_boolean_by_name(settings, scalar_is1_key, &b);
-    if (b)
-        args->win1 = NULL;
+    if (!b)
+        args->win1 = win1;
     gwy_container_gis_boolean_by_name(settings, scalar_is2_key, &b);
-    if (b)
-        args->win2 = NULL;
+    if (!b)
+        args->win2 = win2;
 }
 
 static void
