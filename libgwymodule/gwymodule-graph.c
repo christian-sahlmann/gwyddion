@@ -153,14 +153,13 @@ gwy_graph_func_build_menu(GtkObject *item_factory,
 
     /* the root branch */
     current = strncpy(g_new(gchar, bufsize), prefix, bufsize);
-    branch.path = current;
-    gtk_item_factory_create_item(factory, &branch, NULL, 1);
 
     /* the root tearoff */
     prev = strncpy(g_new(gchar, bufsize), prefix, bufsize);
     g_strlcpy(prev + dp_len, "/---", bufsize - dp_len);
     tearoff.path = prev;
     gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
+    gwy_debug("<Tearoff> %s", tearoff.path);
 
     /* create missing branches
      * XXX: Gtk+ essentially can do this itself
@@ -197,11 +196,13 @@ gwy_graph_func_build_menu(GtkObject *item_factory,
             current[i] = '\0';
             branch.path = current;
             gtk_item_factory_create_item(factory, &branch, NULL, 1);
+            gwy_debug("<Branch> %s", branch.path);
 
             strcpy(prev, current);
             g_strlcat(prev, "/---", bufsize);
             tearoff.path = prev;
             gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
+            gwy_debug("<Tearoff> %s", tearoff.path);
             current[i] = '/';
 
             /* find where the next / is  */
@@ -215,6 +216,7 @@ gwy_graph_func_build_menu(GtkObject *item_factory,
         item.path = current;
         gtk_item_factory_create_item(factory, &item,
                                      (gpointer)func_info->name, 1);
+        gwy_debug("<Item> %s", item.path);
 
         GWY_SWAP(gchar*, current, prev);
     }

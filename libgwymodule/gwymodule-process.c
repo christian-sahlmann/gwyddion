@@ -173,8 +173,6 @@ gwy_process_func_build_menu(GtkObject *item_factory,
 
     /* the root branch */
     current = strncpy(g_new(gchar, bufsize), prefix, bufsize);
-    branch.path = current;
-    gtk_item_factory_create_item(factory, &branch, NULL, 1);
 
     /* the root tearoff */
     prev = strncpy(g_new(gchar, bufsize), prefix, bufsize);
