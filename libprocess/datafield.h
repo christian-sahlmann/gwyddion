@@ -7,6 +7,7 @@
 #include <libprocess/dataline.h>
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
+#include <libprocess/cwt.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -277,6 +278,8 @@ gdouble gwy_data_field_get_angder(GwyDataField *a,
                                   gdouble theta);
 
 /*2DFFT using algorithm fft*/
+gint gwy_data_field_get_fft_res(gint data_res);
+
 void gwy_data_field_2dfft(GwyDataField *ra,
                           GwyDataField *ia,
                           GwyDataField *rb,
@@ -340,6 +343,12 @@ void gwy_data_field_yfft_real(GwyDataField *ra,
                               GwyInterpolationType interpolation,
                               gboolean preserverms,
                               gboolean level);
+
+
+void gwy_data_field_cwt(GwyDataField *data_field,
+                        GwyInterpolationType interpolation,
+			gdouble scale,
+                        Gwy2DCWTWaveletType wtype);
 
 
 #ifdef __cplusplus

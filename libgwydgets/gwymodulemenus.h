@@ -12,6 +12,7 @@ GtkWidget* gwy_fft_output_menu  (GCallback callback,
                                            gpointer cbdata,
                                            GwyFFTOutputType current);
 
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -51,13 +51,11 @@ int main(int argc, char *argv[])
   
     g_message("preparing data_field...");
     a = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
-    b = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
-    c = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
     d = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
     k = (GwyDataLine *) gwy_data_line_new(20, 20, 1);
     make_test_image(a);
 
-    gwy_data_field_xfft(a, b, c, d, gwy_data_line_fft_hum, 1, 1, 1, 0, 0);
+    gwy_data_field_cwt(a, 1, 10, 0);
 
      
     for (i=0; i<512; i++) 

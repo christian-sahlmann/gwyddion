@@ -8,7 +8,8 @@ libgwyprocessinclude_HEADERS = \
 	dataline.h \
 	interpolation.h \
 	libgwyprocess.h \
-	simplefft.h
+	simplefft.h \
+        cwt.h 
 
 lib_LTLIBRARIES = libgwyprocess.la
 
@@ -24,7 +25,8 @@ libgwyprocess_la_SOURCES = \
 	datafield.c \
 	dataline.c \
 	interpolation.c \
-	simplefft.c
+	simplefft.c \
+        cwt.c
 
 test_SOURCES = \
 	test.c

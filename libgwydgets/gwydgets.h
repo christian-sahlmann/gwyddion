@@ -27,6 +27,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyvectorshade.h>
 #include <libgwydgets/gwyvruler.h>
+#include <libprocess/cwt.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,6 +52,9 @@ GtkWidget* gwy_windowing_option_menu      (GCallback callback,
 GtkWidget* gwy_zoom_mode_option_menu      (GCallback callback,
                                            gpointer cbdata,
                                            GwyZoomMode current);
+GtkWidget* gwy_2dcwt_option_menu          (GCallback callback,
+                                           gpointer cbdata,
+                                           Gwy2DCWTWaveletType current);
 GtkWidget* gwy_option_menu_create         (const GwyOptionMenuEntry *entries,
                                            gint nentries,
                                            const gchar *key,

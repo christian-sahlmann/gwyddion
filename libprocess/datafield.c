@@ -6,6 +6,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include "datafield.h"
+#include "cwt.h"
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
@@ -23,6 +24,13 @@ static GObject* gwy_data_field_deserialize       (const guchar *buffer,
 static GObject* gwy_data_field_duplicate         (GObject *object);
 static void     gwy_data_field_value_changed     (GObject *GwyDataField);
 
+/*local functions*/
+static void     gwy_data_field_mult_wav          (GwyDataField *real_field, 
+                                                  GwyDataField *imag_field,
+                                                  gdouble scale,
+                                                  Gwy2DCWTWaveletType wtype);
+
+gdouble         edist                             (gint x1, gint y1, gint x2, gint y2);
 
 GType
 gwy_data_field_get_type(void)
@@ -1604,6 +1612,11 @@ gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
 }
 
 
+gint gwy_data_field_get_fft_res(gint data_res)
+{
+    return (gint) pow (2,((gint) floor(log ((gdouble)data_res)/log (2.0)+0.5)));
+}
+
 /* XY: yeti (I hope) */
 void
 gwy_data_field_2dffthumanize(GwyDataField *a)
@@ -1766,6 +1779,96 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
     gwy_data_line_free(&iout);
 }
 
+gdouble
+edist(gint x1, gint y1, gint x2, gint y2)
+{
+    return sqrt(((gdouble)x1-x2)*((gdouble)x1-x2)+((gdouble)y1-y2)*((gdouble)y1-y2));
+}
+
+static void  
+gwy_data_field_mult_wav(GwyDataField *real_field, 
+                        GwyDataField *imag_field,
+                        gdouble scale,
+                        Gwy2DCWTWaveletType wtype)
+{
+    gint xres, yres, xresh, yresh;
+    gint i, j;
+    
+    xres = real_field->xres;
+    yres = real_field->yres;
+    xresh = xres/2;
+    yresh = yres/2;
+   
+    gdouble mval, val;
+
+    for (i=0; i<xres; i++)
+    {
+        for (j=0; j<yres; j++)
+        {
+            val = 1;
+            if (i<xresh)
+            {
+                if (j<yresh) mval = edist(0,0,i,j);
+                else mval = edist(0,yres,i,j);
+            }
+            else
+            {
+                if (j<yresh) mval = edist(xres,0,i,j);
+                else mval = edist(xres, yres, i, j);
+            }
+            val = wfunc_2d(scale, mval, xres, wtype);
+        
+
+            real_field->data[j + i*xres] *= val;
+            imag_field->data[j + i*xres] *= val;
+        }
+    }
+}
+
+
+void gwy_data_field_cwt(GwyDataField *data_field,
+                        GwyInterpolationType interpolation,
+                        gdouble scale,
+                        Gwy2DCWTWaveletType wtype)
+{
+   GwyDataField *hlp_r;
+   GwyDataField *hlp_i;
+   GwyDataField *imag_field;
+
+   gwy_data_field_initialize(hlp_r, data_field->xres, data_field->yres,
+                        data_field->xreal, data_field->yreal, FALSE);
+   gwy_data_field_initialize(hlp_i, data_field->xres, data_field->yres,
+                        data_field->xreal, data_field->yreal, FALSE);
+   gwy_data_field_initialize(imag_field, data_field->xres, data_field->yres,
+                        data_field->xreal, data_field->yreal, TRUE);
+
+   gwy_data_field_2dfft(data_field,
+                        imag_field,
+                        hlp_r,
+                        hlp_i,
+                        gwy_data_line_fft_hum,
+                        GWY_WINDOWING_RECT,
+                        1,
+                        interpolation,
+                        1,
+                        0);
+   gwy_data_field_mult_wav(hlp_r, hlp_i, scale, wtype);
+   
+   gwy_data_field_2dfft(hlp_r,
+                        hlp_i,
+                        data_field,
+                        imag_field,
+                        gwy_data_line_fft_hum,
+                        GWY_WINDOWING_RECT,
+                        -1,
+                        interpolation,
+                        1,
+                        0);
+   
+   gwy_data_field_free(hlp_r);
+   gwy_data_field_free(hlp_i);
+   gwy_data_field_free(imag_field); 
+}
 
 
 

@@ -374,6 +374,36 @@ gwy_zoom_mode_option_menu(GCallback callback,
                                   current);
 }
 
+/**
+ * gwy_2dcwt_option_menu:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ * @current: 2D CWT wavelet type to be shown as currently selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of available wavelet types.
+ *
+ * It sets object data "2dcwt_wavelet_type" to 2D CWT wavelet type for each
+ * menu item (use GPOINTER_TO_INT() when retrieving it)..
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_2dcwt_option_menu(GCallback callback,
+                      gpointer cbdata,
+                      Gwy2DCWTWaveletType current)
+{
+    static const GwyOptionMenuEntry entries[] = {
+        { "Gaussian",          GWY_2DCWT_GAUSS      },
+        { "Hat",               GWY_2DCWT_HAT        },
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "2dcwt_wavelet_type", callback, cbdata,
+                                  current);
+}
+
 
 /************************** Table attaching ****************************/
 
