@@ -1,13 +1,14 @@
 # @(#) $Id$
 
-if HAVE_PERL
-PERL_TARGET_DIR = ${prefix}@PERL_SITE_LIB@/Gwyddion
-man3dir = $(mandir)/man3
-POD2MAN_FLAGS = --center=$(PACKAGE)
-EXTRA_DIST = $(Gwyddion_PERL)
-
 Gwyddion_PERL = \
 	Gwyddion/dump.pm
+
+EXTRA_DIST = $(Gwyddion_PERL)
+
+if HAVE_PERL
+PERL_TARGET_DIR = $(gwypluginlibdir)/perl/Gwyddion
+man3dir = $(mandir)/man3
+POD2MAN_FLAGS = --center=$(PACKAGE)
 
 man3_pages = \
 	Gwyddion::dump.3pm

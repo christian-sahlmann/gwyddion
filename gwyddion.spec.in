@@ -1,8 +1,4 @@
 # #(@) $Id$
-%define python_version %(%__python -V 2>&1 | cut -d' ' -f2 | cut -d. -f 1,2)
-%define pythondir /usr/lib/python%python_version/site-packages
-%define rubydir %(ruby -rrbconfig -e "puts Config::CONFIG['sitelibdir']")
-
 Summary: A SPM data analysis framework.
 Name: @PACKAGE_TARNAME@
 Version: @RPM_VERSION@
@@ -145,15 +141,16 @@ desktop-file-install --vendor= --delete-original  \
 %dir %{_datadir}/gtk-doc/html/libgwydgets
 %dir %{_datadir}/gtk-doc/html/libgwymodule
 %dir %{_datadir}/gtk-doc/html
-%{pythondir}/Gwyddion/*
-%dir %{pythondir}/Gwyddion
-%dir %{pythondir}
-%{perl_sitelib}/Gwyddion/*
-%dir %{perl_sitelib}/Gwyddion
-%dir %{perl_sitelib}
-%{rubydir}/gwyddion/*
-%dir %{rubydir}/gwyddion
-%dir %{rubydir}
+%{_libdir}/%{name}/pluginlib/perl/Gwyddion/*
+%{_libdir}/%{name}/pluginlib/python/Gwyddion/*
+%{_libdir}/%{name}/pluginlib/ruby/gwyddion/*
+%dir %{_libdir}/%{name}/pluginlib/perl/Gwyddion
+%dir %{_libdir}/%{name}/pluginlib/perl
+%dir %{_libdir}/%{name}/pluginlib/python/Gwyddion
+%dir %{_libdir}/%{name}/pluginlib/python
+%dir %{_libdir}/%{name}/pluginlib/ruby/gwyddion
+%dir %{_libdir}/%{name}/pluginlib/ruby
+%dir %{_libdir}/%{name}/pluginlib
 %doc %{_mandir}/man3/*
 %doc %dir %{_mandir}/man3
 %{_libdir}/pkgconfig/%{name}.pc

@@ -5,6 +5,7 @@
 # Written by Nenad Ocelic <ocelic _at_ biochem.mpg.de>.
 # Public domain.
 
+$:.push(ENV['GWYPLUGINLIB'] + '/ruby')
 require "gwyddion/dump"
 include Gwyddion
 

@@ -68,18 +68,13 @@ AC_CHECK_PROGS([STRIP],[strip])
 AM_PATH_PYTHON(2.2,,:)
 gtk_CHECK_GTK_DOC
 
-# Check Perl presence and paths
+# Check for Perl
 AC_PATH_PROGS(PERL,perl5 perl,:)
 if test "$PERL" != :; then
-  AC_MSG_CHECKING([for perl site module directory])
-  eval `$PERL -V:installsitelib | sed -e 's/^/perl/'`
-  eval `$PERL -V:siteprefix | sed -e 's/^/perl/'`
-  PERL_SITE_LIB=`echo $perlinstallsitelib | sed -e "s#^$perlsiteprefix##"`
-  AC_MSG_RESULT([\${prefix}$PERL_SITE_LIB])
   AC_PATH_PROGS(POD2MAN,pod2man,:)
 fi
 
-# Check Ruby presence, version and paths
+# Check for Ruby
 # The outer [] are necessary to quote the inner [] inside Ruby
 AC_PATH_PROGS(RUBY,ruby,:)
 if test "$RUBY" != :; then
@@ -97,16 +92,9 @@ exit 1"]; then
     RUBY=:
   fi
   AC_MSG_RESULT([$ruby_version_ok])
-  if test "$RUBY" != :; then
-    AC_MSG_CHECKING([for ruby site module directory])
-    [rubysitelib=`$RUBY -rrbconfig -e "puts Config::CONFIG['sitelibdir']"`]
-    [rubyprefix=`$RUBY -rrbconfig -e "puts Config::CONFIG['prefix']"`]
-    RUBY_SITE_LIB=`echo $rubysitelib | sed -e "s#^$rubyprefix##"`
-    AC_MSG_RESULT([\${prefix}$RUBY_SITE_LIB])
-  fi
 fi
 
-# Check Pascal presence and version
+# Check for Pascal compiler
 # The outer [] are necessary to quote the inner [] inside sed expressions
 AC_PATH_PROGS(PASCAL,fpc,:)
 if test "$PASCAL" != :; then
@@ -228,10 +216,12 @@ AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
           [Define to package home page, as a string.])
 
 gwymoduledir=$libdir/gwyddion/modules
-gwyplugindir=$libexecdir/gwyddion/plugins
 gwypixmapdir=$datadir/gwyddion/pixmaps
+gwyplugindir=$libexecdir/gwyddion/plugins
+gwypluginlibdir=$libdir/gwyddion/pluginlib
 AC_SUBST(gwymoduledir)
-AC_SUBST(gwyplugindir)
 AC_SUBST(gwypixmapdir)
+AC_SUBST(gwyplugindir)
+AC_SUBST(gwypluginlibdir)
 
 AC_OUTPUT

@@ -508,9 +508,10 @@ gwy_find_self_dir(const gchar *dirname)
 
 #ifdef G_OS_UNIX
     static const struct { gchar *id; gchar *path; } paths[] = {
-        { "modules", GWY_MODULE_DIR },
-        { "pixmaps", GWY_PIXMAP_DIR },
-        { "plugins", GWY_PLUGIN_DIR },
+        { "modules",   GWY_MODULE_DIR },
+        { "pixmaps",   GWY_PIXMAP_DIR },
+        { "plugins",   GWY_PLUGIN_DIR },
+        { "pluginlib", GWY_PLUGINLIB_DIR },
     };
     gsize i;
 

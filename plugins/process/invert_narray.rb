@@ -10,6 +10,7 @@ begin
 rescue LoadError
 	exit 1
 end
+$:.push(ENV['GWYPLUGINLIB'] + '/ruby')
 require "gwyddion/dump"
 include Gwyddion
 

@@ -51,7 +51,7 @@ libgwyddion_la_SOURCES = \
 #main_LDADD = libgwyddion.la
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_MODULE_DIR=\"$(gwymoduledir)\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\" -DGWY_PLUGIN_DIR=\"$(gwyplugindir)\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_MODULE_DIR=\"$(gwymoduledir)\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\" -DGWY_PLUGIN_DIR=\"$(gwyplugindir)\" -DGWY_PLUGINLIB_DIR=\"$(pluginlibdir)\"
 
 clean-local:
 	rm -f core.* *~ testser.object

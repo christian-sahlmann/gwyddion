@@ -2,7 +2,9 @@
 # @(#) $Id$
 # A very simple Gwyddion plug-in example in Python.
 # Written by Yeti <yeti@gwyddion.net>.  Public domain.
-import sys, Gwyddion
+import sys, os
+sys.path.extend(os.path.join(os.environ['GWYPLUGINLIB'], 'python'))
+import Gwyddion
 
 # Plug-in information.
 run_modes = 'noninteractive', 'with_defaults'

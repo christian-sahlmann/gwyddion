@@ -1,11 +1,12 @@
 # @(#) $Id$
 
-if HAVE_RUBY
-RUBY_TARGET_DIR = ${prefix}@RUBY_SITE_LIB@/gwyddion
-EXTRA_DIST = $(Gwyddion_RUBY)
-
 Gwyddion_RUBY = \
 	gwyddion/dump.rb
+
+EXTRA_DIST = $(Gwyddion_RUBY)
+
+if HAVE_RUBY
+RUBY_TARGET_DIR = $(gwypluginlibdir)/ruby/gwyddion
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(RUBY_TARGET_DIR)
