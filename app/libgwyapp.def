@@ -4,6 +4,7 @@ EXPORTS
 	gwy_app_show_kill_cb
 	gwy_app_data_window_get_current
 	gwy_app_data_window_set_untitled
+	gwy_app_wait_set_fraction
 	gwy_app_settings_save
 	gwy_app_tool_use_cb
 	gwy_app_settings_load
@@ -16,6 +17,7 @@ EXPORTS
 	gwy_unitool_update_label
 	gwy_unitool_use
 	gwy_app_run_graph_func_cb
+	gwy_app_wait_set_message_prefix
 	gwy_app_settings_free
 	gwy_app_main_window_set
 	gwy_unitool_get_z_average
@@ -30,13 +32,16 @@ EXPORTS
 	gwy_app_clean_up_data
 	gwy_app_file_save_cb
 	gwy_app_file_open_recent_cb
+	gwy_app_wait_set_message
 	gwy_app_settings_get_config_filename
+	gwy_app_wait_switch_widget
 	gwy_app_undo_checkpoint
 	gwy_app_data_window_add
 	gwy_app_main_window_get
 	gwy_app_data_window_set_current
 	gwy_app_graph_window_set_current
 	gwy_app_menu_set_flags_recursive
+	gwy_app_wait_finish
 	gwy_app_run_process_func_cb
 	gwy_app_quit
 	gwy_app_settings_get_module_dirs
@@ -48,6 +53,7 @@ EXPORTS
 	gwy_app_file_export_cb
 	gwy_app_graph_window_remove
 	gwy_app_menu_set_sensitive_both
+	gwy_app_wait_start
 	gwy_app_data_window_create
 	gwy_app_menu_set_sensitive_array
 	gwy_app_get_current_data

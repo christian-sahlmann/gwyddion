@@ -14,7 +14,8 @@ libgwyappinclude_HEADERS = \
 	file.h \
 	menu.h \
 	settings.h \
-	unitool.h
+	unitool.h \
+	wait.h
 
 noinst_HEADERS = \
 	gwyddion.h
@@ -38,7 +39,8 @@ libgwyapp_la_SOURCES = \
 	file.c \
 	menu.c \
 	settings.c \
-	unitool.c
+	unitool.c \
+	wait.c
 
 gwyddion_SOURCES = \
 	about.c \
