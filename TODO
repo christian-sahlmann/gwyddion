@@ -13,6 +13,7 @@ Particularly (overall app issues, module issues not listed):
 - Palette editor, explicite ranges for palettes
 - Editable metadata
 - Multiple data in one file
+- Use GtkAction (Gtk+ 2.4) for module actions
 - Sessions
 - ...
 
