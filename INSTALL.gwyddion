@@ -22,7 +22,7 @@ Prerequisities:
 - a C compiler, linker, make, etc. capable of Gtk+ compilation (you don't have
   to compile Gtk+, but what is good enough for Gtk+ should be good enough for
   Gwyddion), GNU toolchain is the prefered one
-- Gtk+-2.2 or newer, including development files
+- Gtk+-2.4 or newer, including development files
 - GtkGLExt-1.0 or newer, including development files
 - Pango with FT2 backend, including development files
 
@@ -51,7 +51,7 @@ and as root run:
 Prerequisities:
 - MSVC 6 or newer (it may build with Cygwin or MinGW toolchain, but MSVC is
   the tested one)
-- Gtk+-2.2 or newer, including development files
+- Gtk+-2.4, including development files
 - GtkGLExt-1.0 or newer, including development files
 - Pango with FT2 backend, including development files
 The prefered way to get all these is to install Gtk+ all-in-one package from
