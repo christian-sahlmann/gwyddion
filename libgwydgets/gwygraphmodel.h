@@ -60,8 +60,8 @@ struct _GwyGraphEpitome {
 
     gboolean has_x_unit;
     gboolean has_y_unit;
-    GString *x_unit;
-    GString *y_unit;
+    GObject *x_unit;    /* NB: Graph itself doesn't use GwySIUnit... */
+    GObject *y_unit;
 
     GString *top_label;
     GString *bottom_label;
