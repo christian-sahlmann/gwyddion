@@ -66,8 +66,8 @@ main(int argc, char *argv[])
 {
     GtkWidget *toolbox;
     gchar **module_dirs;
-    gchar *config_file, *settings_file, *recent_file_file;
-    gboolean has_config, has_settings, settings_ok = FALSE;
+    gchar *settings_file, *recent_file_file;
+    gboolean has_settings, settings_ok = FALSE;
 
 #ifdef G_OS_WIN32
     gwy_find_self_set_argv0(argv[0]);
@@ -85,10 +85,6 @@ main(int argc, char *argv[])
     gtk_init(&argc, &argv);
     gwy_gl_ok = gtk_gl_init_check(&argc, &argv);
 
-    config_file = gwy_app_settings_get_config_filename();
-    has_config = g_file_test(config_file, G_FILE_TEST_IS_REGULAR);
-    gwy_debug("Binary config file is `%s'. Do we have it: %s",
-              config_file, has_config ? "TRUE" : "FALSE");
     settings_file = gwy_app_settings_get_settings_filename();
     has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);
     gwy_debug("Text settings file is `%s'. Do we have it: %s",
@@ -100,8 +96,6 @@ main(int argc, char *argv[])
     if (has_settings)
         settings_ok = gwy_app_settings_load(settings_file);
     gwy_debug("Loading settings was: %s", settings_ok ? "OK" : "Not OK");
-    if (!settings_ok && has_config)
-        gwy_app_settings_load_bin(config_file);
 
     /* TODO: remove sometime, but keep the gwy_app_settings_get(); */
     gwy_app_splash_set_message(_("Loading document history"));
@@ -128,24 +122,14 @@ main(int argc, char *argv[])
         warn_broken_settings_file(toolbox, settings_file);
 
     gtk_main();
-    if ((settings_ok || !has_settings)
-        && gwy_app_settings_save(settings_file)) {
-        if (has_config) {
-            g_warning("Converted settings to human-readable form, "
-                      "deleting old one");
-            unlink(config_file);
-        }
-    }
+    if (settings_ok || !has_settings)
+        gwy_app_settings_save(settings_file);
     gwy_app_recent_file_list_save(recent_file_file);
     gwy_app_settings_free();
     g_free(recent_file_file);
-    g_free(config_file);
     g_free(settings_file);
     g_strfreev(module_dirs);
     gwy_app_recent_file_list_free();
-    /* FIXME: This crashes in Win32.  Do not enable it.
-     * I've run it in a debugger, but still don't know why -- stderr becomes
-     * unusable somehow? */
     gwy_debug_objects_dump_to_file(stderr, 0);
     gwy_debug_objects_clear();
 
