@@ -97,19 +97,31 @@ struct _Gwy3DView {
 
     gdouble mouse_begin_x;          /* Start x-coordinate of mouse */
     gdouble mouse_begin_y;          /* Start y-coordinate of mouse */
-    
+
     gboolean timeout;               /* Is running timeot for redrawing in full scale */
     guint timeout_id;               /* Timeout id */
 
-    gpointer reserved1;
-    gpointer reserved2;
+    gboolean b_reserved1;           /* resreved for thread creating of display-lists */
+    gboolean b_reserved2;
+    gboolean b_reserved3;
+    gboolean b_reserved4;
+
+    gint     i_reserved1;           /* reserved for axis-labels display-list base  */
+    gint     i_reserved2;
+
+    gpointer p_reserved1;           /* reserved for further use   */
+    gpointer p_reserved2;
+    gpointer p_reserved3;
+    gpointer p_reserved4;
 };
 
 struct _Gwy3DViewClass {
     GtkDrawingAreaClass parent_class;
 
-    gpointer reserved1;
+    gpointer reserved1;             /* reserved for further use (signals) */
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 GtkWidget*       gwy_3d_view_new               (GwyContainer * data);

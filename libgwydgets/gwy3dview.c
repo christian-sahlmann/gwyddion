@@ -125,7 +125,7 @@ gwy_3d_view_get_type(void)
             (GInstanceInitFunc)gwy_3d_view_init,
             NULL,
         };
-        gwy_debug("");
+        gwy_debug(" ");
         gwy_3d_view_type = g_type_register_static(GTK_TYPE_DRAWING_AREA,
                                                   GWY_3D_VIEW_TYPE_NAME,
                                                   &gwy_3d_view_info,
@@ -142,7 +142,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -163,7 +163,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
 static void
 gwy_3d_view_init(Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
 
     gwy3dview->container             = NULL;
     gwy3dview->data                  = NULL;
@@ -195,7 +195,6 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->shape_current         = 0;
     gwy3dview->mouse_begin_x         = 0.0;
     gwy3dview->mouse_begin_y         = 0.0;
-    gwy3dview->reserved1             = NULL;
 }
 
 
@@ -217,10 +216,9 @@ gwy_3d_view_new(GwyContainer *data)
     GdkGLConfig *glconfig;
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
-    Gwy3DViewClass * klass;
     const guchar * palette_name;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     glconfig = gwy_widgets_get_gl_config();
     g_return_val_if_fail(glconfig, NULL);
@@ -245,6 +243,18 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->mat_current
              = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
+    gtk_object_ref(GTK_OBJECT(gwy3dview->rot_x));
+    gtk_object_sink(GTK_OBJECT(gwy3dview->rot_x));
+    gtk_object_ref(GTK_OBJECT(gwy3dview->rot_y));
+    gtk_object_sink(GTK_OBJECT(gwy3dview->rot_y));
+    gtk_object_ref(GTK_OBJECT(gwy3dview->view_scale));
+    gtk_object_sink(GTK_OBJECT(gwy3dview->view_scale));
+    gtk_object_ref(GTK_OBJECT(gwy3dview->deformation_z));
+    gtk_object_sink(GTK_OBJECT(gwy3dview->deformation_z));
+    gtk_object_ref(GTK_OBJECT(gwy3dview->light_z));
+    gtk_object_sink(GTK_OBJECT(gwy3dview->light_z));
+    gtk_object_ref(GTK_OBJECT(gwy3dview->light_y));
+    gtk_object_sink(GTK_OBJECT(gwy3dview->light_y));
 
     if (gwy_container_contains_by_name(data, "/0/data"))
     {
@@ -327,11 +337,11 @@ gwy_3d_view_new(GwyContainer *data)
                                               "/0/3d/enable_lights");
     if (gwy_container_contains_by_name(data, "/0/3d/material"))
     {
-        /* TODO: get material type, atfter reworking gwyglmaterial.h */
+        gchar * material_name =
+            gwy_container_get_string_by_name(data,
+                                             "/0/3d/maetrial");
+        gwy3dview->mat_current = gwy_gl_material_get_by_name(material_name);
     }
-    /*
-    TODO: ?? connect the signals value changed of the pallete and the data_field
-    */
     if (gwy3dview->data != NULL)
     {
         guint rx, ry;
@@ -365,7 +375,6 @@ gwy_3d_view_new(GwyContainer *data)
         gwy3dview->data_min  = gwy_data_field_get_min(gwy3dview->data);
         gwy3dview->data_max  = gwy_data_field_get_max(gwy3dview->data);
     }
-    klass = GWY_3D_VIEW_GET_CLASS(gwy3dview);
     gtk_widget_set_gl_capability(GTK_WIDGET(gwy3dview),
                                  glconfig,
                                  NULL,
@@ -401,6 +410,12 @@ gwy_3d_view_finalize(GObject *object)
     gwy_object_unref(gwy3dview->data);
     gwy_object_unref(gwy3dview->downsampled);
     gwy_object_unref(gwy3dview->container);
+    gtk_object_unref(GTK_OBJECT(gwy3dview->rot_x));
+    gtk_object_unref(GTK_OBJECT(gwy3dview->rot_y));
+    gtk_object_unref(GTK_OBJECT(gwy3dview->view_scale));
+    gtk_object_unref(GTK_OBJECT(gwy3dview->deformation_z));
+    gtk_object_unref(GTK_OBJECT(gwy3dview->light_z));
+    gtk_object_unref(GTK_OBJECT(gwy3dview->light_y));
 
     if (gwy3dview->shape_list_base >= 0)
     {
@@ -426,7 +441,7 @@ gwy_3d_view_unrealize(GtkWidget *widget)
 
     gwy3dview = GWY_3D_VIEW(widget);
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     if (gwy3dview->shape_list_base >= 0)
     {
@@ -466,7 +481,7 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
     gboolean update_palette = FALSE;
     const gchar * palette_name = NULL;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (gwy_container_contains_by_name(gwy3dview->container, "/0/data"))
@@ -546,15 +561,9 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
     if ((update_data == TRUE || update_palette == TRUE)
          && GTK_WIDGET_REALIZED(gwy3dview))
     {
-        /* FIXME: ?is it necessary to delete old dislpay lists? */
         gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, GWY_3D_SHAPE_REDUCED);
-
-        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-/*        gdk_window_invalidate_rect(
-            GTK_WIDGET(gwy3dview)->window,
-                       &GTK_WIDGET(gwy3dview)->allocation, FALSE);
-*/
         gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
+        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
     }
 
 }
@@ -574,7 +583,7 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
 GwyPalette*
 gwy_3d_view_get_palette       (Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
 
     return gwy3dview->palette;
@@ -600,33 +609,21 @@ gwy_3d_view_set_palette       (Gwy3DView *gwy3dview,
 {
     GwyPalette *old;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
     g_return_if_fail(GWY_IS_PALETTE(palette));
 
     old = gwy3dview->palette;
-/*    g_signal_handlers_disconnect_matched(old, G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL, NULL, gwy3dview);
-*/
     g_object_ref(palette);
     gwy3dview->palette = palette;
-/*    g_signal_connect_swapped(3D_widget->palette, "value_changed",
-                             G_CALLBACK(gwy_3d_view_update), 3D_widget);
-*/
     gwy_object_unref(old);
 
     if (GTK_WIDGET_REALIZED(gwy3dview))
     {
-        /* FIXME: ?is it necessary to delete old dislpay lists? */
         gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, GWY_3D_SHAPE_REDUCED);
-        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
         gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
-
-/*        gdk_window_invalidate_rect(
-            GTK_WIDGET(gwy3dview)->window,
-                       &GTK_WIDGET(gwy3dview)->allocation, FALSE);
-*/
+        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
     }
 
 }
@@ -681,7 +678,7 @@ gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
 gboolean
 gwy_3d_view_get_orthographic   (Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
 
     return gwy3dview->orthogonal_projection;
@@ -702,18 +699,13 @@ void
 gwy_3d_view_set_orthographic   (Gwy3DView *gwy3dview,
                                  gboolean  orthographic)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (orthographic == gwy3dview->orthogonal_projection) return;
     gwy3dview->orthogonal_projection = orthographic;
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-/*    if (GTK_WIDGET_REALIZED(gwy3dview))
-        gdk_window_invalidate_rect(
-            GTK_WIDGET(gwy3dview)->window,
-                       &GTK_WIDGET(gwy3dview)->allocation, FALSE);
-*/
 }
 
 /**
@@ -729,7 +721,7 @@ gwy_3d_view_set_orthographic   (Gwy3DView *gwy3dview,
 gboolean
 gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
 
     return gwy3dview->show_axes;
@@ -748,7 +740,7 @@ void
 gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
                                  gboolean  show_axes)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (show_axes == gwy3dview->show_axes) return;
@@ -756,11 +748,6 @@ gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 
-/*    if (GTK_WIDGET_REALIZED(gwy3dview))
-        gdk_window_invalidate_rect(
-            GTK_WIDGET(gwy3dview)->window,
-                       &GTK_WIDGET(gwy3dview)->allocation, FALSE);
-*/
 }
 
 /**
@@ -777,7 +764,7 @@ gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
 gboolean
 gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
 
     return gwy3dview->show_labels;
@@ -798,7 +785,7 @@ void
 gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
                                  gboolean  show_labels)
 {
-     gwy_debug("");
+     gwy_debug(" ");
      g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (show_labels == gwy3dview->show_labels) return;
@@ -806,12 +793,6 @@ gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 
-
-/*    if (GTK_WIDGET_REALIZED(gwy3dview))
-        gdk_window_invalidate_rect(
-            GTK_WIDGET(gwy3dview)->window,
-                       &GTK_WIDGET(gwy3dview)->allocation, FALSE);
-*/
 }
 
 /**
@@ -829,7 +810,7 @@ gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
 guint
 gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview)
 {
-     gwy_debug("");
+     gwy_debug(" ");
      g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
 
     return gwy3dview->reduced_size;
@@ -855,7 +836,7 @@ gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
 {
     guint rx, ry;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (reduced_size == gwy3dview->reduced_size) return;
@@ -887,15 +868,10 @@ gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
     if (GTK_WIDGET_REALIZED(gwy3dview))
     {
 
-        /* FIXME: ?is it necessary to delete old dislpay lists? */
         gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
                          GWY_3D_SHAPE_REDUCED);
 
         gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-/*        gdk_window_invalidate_rect(
-            GTK_WIDGET(gwy3dview)->window,
-            &GTK_WIDGET(gwy3dview)->allocation, FALSE);
-*/
     }
 
 }
@@ -913,7 +889,7 @@ gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
 GwyGLMaterial*
 gwy_3d_view_get_material      (Gwy3DView *gwy3dview)
 {
-     gwy_debug("");
+     gwy_debug(" ");
      g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
 
     return gwy3dview->mat_current;
@@ -935,17 +911,12 @@ void
 gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
                                  GwyGLMaterial *material)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (material == gwy3dview->mat_current) return;
     gwy3dview->mat_current = material;
 
-/*    if (GTK_WIDGET_REALIZED(gwy3dview))
-        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
-                                   &GTK_WIDGET(gwy3dview)->allocation,
-                                   FALSE);
-*/
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
@@ -974,7 +945,7 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview, guint xres, guint yres)
     guchar *pixels, *a, *b, z;
     GdkPixbuf * pixbuf;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     g_return_val_if_fail(GTK_WIDGET_REALIZED(gwy3dview), NULL);
@@ -1025,11 +996,7 @@ gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
 
    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 
-/*   if (GTK_WIDGET_REALIZED(gwy3dview))
-        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
-                                   &GTK_WIDGET(gwy3dview)->allocation, FALSE);
-
-*/}
+}
 
 /**
  * gwy_3d_view_get_rot_x_adjustment:
@@ -1044,7 +1011,7 @@ gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
 GtkAdjustment *
 gwy_3d_view_get_rot_x_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->rot_x;
 }
@@ -1062,7 +1029,7 @@ gwy_3d_view_get_rot_x_adjustment(Gwy3DView *gwy3dview)
 GtkAdjustment *
 gwy_3d_view_get_rot_y_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->rot_y;
 }
@@ -1080,7 +1047,7 @@ gwy_3d_view_get_rot_y_adjustment(Gwy3DView *gwy3dview)
 GtkAdjustment *
 gwy_3d_view_get_view_scale_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->view_scale;
 }
@@ -1098,7 +1065,7 @@ gwy_3d_view_get_view_scale_adjustment(Gwy3DView *gwy3dview)
 GtkAdjustment *
 gwy_3d_view_get_z_deformation_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->deformation_z;
 }
@@ -1116,7 +1083,7 @@ gwy_3d_view_get_z_deformation_adjustment(Gwy3DView *gwy3dview)
 GtkAdjustment *
 gwy_3d_view_get_light_z_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->light_z;
 }
@@ -1134,7 +1101,7 @@ gwy_3d_view_get_light_z_adjustment(Gwy3DView *gwy3dview)
 GtkAdjustment *
 gwy_3d_view_get_light_y_adjustment(Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy3dview->light_y;
 }
@@ -1152,7 +1119,7 @@ gwy_3d_view_get_light_y_adjustment(Gwy3DView *gwy3dview)
 gdouble
 gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), G_MAXDOUBLE);
     return gwy3dview->view_scale_max;
 }
@@ -1170,7 +1137,7 @@ gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview)
 gdouble
 gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), G_MAXDOUBLE);
     return gwy3dview->view_scale_min;
 }
@@ -1189,7 +1156,7 @@ gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
 gboolean
 gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
     new_max_scale = fabs(new_max_scale);
     if (new_max_scale != gwy3dview->view_scale_max)
@@ -1224,7 +1191,7 @@ gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
 gboolean
 gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
     new_min_scale = fabs(new_min_scale);
     if (new_min_scale != gwy3dview->view_scale_min)
@@ -1252,7 +1219,7 @@ gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
 static void
 gwy_3d_timeout_start(Gwy3DView * gwy3dview, gboolean immediate, gboolean invalidate_now)
 {
-    gwy_debug("");
+    gwy_debug(" ");
 
     if (gwy3dview->timeout == TRUE)
          g_source_remove(gwy3dview->timeout_id);
@@ -1283,7 +1250,7 @@ gwy_3d_timeout_func(gpointer user_data)
 {
     Gwy3DView * gwy3dview;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(user_data), FALSE);
 
     gwy3dview = (Gwy3DView *) user_data;
@@ -1302,7 +1269,7 @@ gwy_3d_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_data)
 {
     Gwy3DView * gwy3dview;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GTK_IS_ADJUSTMENT(adjustment));
     g_return_if_fail(GWY_IS_3D_VIEW(user_data));
     gwy3dview = (Gwy3DView*) user_data;
@@ -1373,7 +1340,7 @@ static void
 gwy_3d_view_size_request(GtkWidget *widget,
                            GtkRequisition *requisition)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     GTK_WIDGET_CLASS(parent_class)->size_request(widget, requisition);
     requisition->width = GWY_3D_VIEW_DEFAULT_SIZE_X;
     requisition->height = GWY_3D_VIEW_DEFAULT_SIZE_Y;
@@ -1390,7 +1357,7 @@ gwy_3d_view_expose(GtkWidget *widget,
 
     GLfloat light_position[] = { 0.0, 0.0, 4.0, 1.0 };
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     g_return_val_if_fail(GWY_IS_3D_VIEW(widget), FALSE);
     gwy3D = GWY_3D_VIEW(widget);
@@ -1457,7 +1424,7 @@ gwy_3d_view_button_press(GtkWidget *widget,
 {
     Gwy3DView *gwy3dview;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     g_return_val_if_fail(GWY_IS_3D_VIEW(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
@@ -1480,20 +1447,13 @@ gwy_3d_view_button_release(GtkWidget *widget,
 {
     Gwy3DView *gwy3dview;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     g_return_val_if_fail(GWY_IS_3D_VIEW(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     gwy3dview = GWY_3D_VIEW(widget);
 
-/*    if ((event->button == 1 || event->button == 2)
-        && (gwy3dview->shape_current == GWY_3D_SHAPE_REDUCED))
-    {
-        gwy3dview->shape_current = GWY_3D_SHAPE_AFM;
-        gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
-    }
-*/
     return FALSE;
 }
 
@@ -1520,11 +1480,11 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
         switch (gwy3dview->movement_status)
         {
             case GWY_3D_ROTATION:
-                gtk_adjustment_set_value(gwy3dview->rot_x, 
-                                         gwy3dview->rot_x->value 
+                gtk_adjustment_set_value(gwy3dview->rot_x,
+                                         gwy3dview->rot_x->value
                                          + x - gwy3dview->mouse_begin_x);
-                gtk_adjustment_set_value(gwy3dview->rot_y, 
-                                         gwy3dview->rot_y->value 
+                gtk_adjustment_set_value(gwy3dview->rot_y,
+                                         gwy3dview->rot_y->value
                                          + y - gwy3dview->mouse_begin_y);
                 redraw = TRUE;
                 break;
@@ -1556,7 +1516,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
             }
             case GWY_3D_LIGHT_MOVEMENT:
                 gtk_adjustment_set_value(gwy3dview->light_z,
-                                         gwy3dview->light_z->value 
+                                         gwy3dview->light_z->value
                                          + x - gwy3dview->mouse_begin_x);
                 gtk_adjustment_set_value(gwy3dview->light_y,
                                          gwy3dview->light_y->value
@@ -1567,9 +1527,6 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
 
     gwy3dview->mouse_begin_x = x;
     gwy3dview->mouse_begin_y = y;
-/*    if (redraw)
-        gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
-*/
     return FALSE;
 }
 
@@ -1582,7 +1539,7 @@ gwy_3d_make_normals (GwyDataField * data, Gwy3DVector *normals)
    gint i, j, xres, yres;
    RectangleNorm * norms;
 
-   gwy_debug("");
+   gwy_debug(" ");
 
    g_return_val_if_fail(GWY_IS_DATA_FIELD(data), NULL);
    g_return_val_if_fail(normals, NULL);
@@ -1708,7 +1665,7 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
    GwyPaletteDef * pal_def;
    GwyRGBA color;
 
-   gwy_debug("");
+   gwy_debug(" ");
 
    g_return_if_fail(GWY_IS_DATA_FIELD(data));
 
@@ -1726,7 +1683,7 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
       normals = g_new(Gwy3DVector, xres * yres);
       if (gwy_3d_make_normals(data, normals) == NULL)
       {
-           /*TODO udelat chybovy stav*/
+           /*TODO solve not enough momory problem*/
       }
       for (j = 0; j < yres-1; j++)
       {
@@ -1766,7 +1723,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
    gint yres = gwy_data_field_get_yres(widget->data);
    GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
-   gwy_debug("");
+   gwy_debug(" ");
 
    if (rx < 0.0)
        rx += 360.0;
@@ -1846,20 +1803,17 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
       glEnd();
 
         /*
-        xTODO: dodelat aby s prehazovanim os taky prehazovaly ciselne hodnoty
-        xTODO: vyresit nejak zarovnani leveho pisma, chtelo by to zarovnavat doprava
-        TODO: vytvorit symbol mikro
-        TODO: vyresit zmenu velikosti pisma
-        TODO: predelat pomoci GwySIUnit, vytvorit bitmapy hned ze zacatku
-              pomoci Panga, ty ulozit a potom je vykreskovat,
-              mozna tyto bitmapy do display listu
+        TODO: create mu symbol
+        TODO: solve the change of the size of the font
+        TODO: rework using GwySIUnit, create bitmaps in the beginning
+              using Pango, save and draw them using dislpay lists
         */
         if (widget->show_labels == TRUE)
         {
             guint pom = 0;
             gdouble xreal = gwy_data_field_get_xreal(widget->data) * 1e6;
             gdouble yreal = gwy_data_field_get_yreal(widget->data) * 1e6;
-   
+
             glListBase (widget->font_list_base);
             if (yfirst)
                g_snprintf(text, sizeof(text), "y:%1.1f um", yreal);
@@ -1897,7 +1851,7 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
     GLfloat plane_z;
     GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     glMaterialfv(GL_FRONT, GL_AMBIENT,  mat_none->ambient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
@@ -1943,7 +1897,7 @@ static void gwy_3d_init_font(Gwy3DView * widget)
      * Generate font display lists.
      */
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     widget->font_list_base = glGenLists(128);
 
@@ -2023,7 +1977,7 @@ static void gwy_3d_set_projection(Gwy3DView *widget, GLfloat width, GLfloat heig
     static GLfloat w, h;
     GLfloat aspect;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     if (width > 0.0)
         w = width;
