@@ -5,6 +5,7 @@
 #include <gtk/gtk.h>
 
 #include <libprocess/datafield.h>
+#include <libgwyddion/gwymacros.h>
 #include "gwydatawindow.h"
 #include "gwyhruler.h"
 #include "gwyvruler.h"
@@ -12,7 +13,6 @@
 #define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
 
 #define ZOOM_FACTOR G_SQRT2
-#define _(x) (x)
 
 /* Forward declarations */
 
@@ -47,9 +47,7 @@ gwy_data_window_get_type(void)
             (GInstanceInitFunc)gwy_data_window_init,
             NULL,
         };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_data_window_type = g_type_register_static(GTK_TYPE_WINDOW,
                                                       GWY_DATA_WINDOW_TYPE_NAME,
                                                       &gwy_data_window_info,
@@ -62,9 +60,7 @@ gwy_data_window_get_type(void)
 static void
 gwy_data_window_class_init(GwyDataWindowClass *klass)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     parent_class = g_type_class_peek_parent(klass);
 }
@@ -72,9 +68,7 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
 static void
 gwy_data_window_init(GwyDataWindow *data_window)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     data_window->data_view = NULL;
     data_window->hruler = NULL;
@@ -101,9 +95,7 @@ gwy_data_window_new(GwyDataView *data_view)
     GtkWidget *vbox, *hbox, *widget;
     GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     data_window = (GwyDataWindow*)g_object_new(GWY_TYPE_DATA_WINDOW, NULL);
     gtk_window_set_resizable(GTK_WINDOW(data_window), TRUE);

@@ -6,9 +6,8 @@
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
+#include <libgwyddion/gwymacros.h>
 #include "gwygradsphere.h"
-
-#define _(x) x
 
 #define GWY_GRAD_SPHERE_TYPE_NAME "GwyGradSphere"
 
@@ -83,9 +82,7 @@ gwy_grad_sphere_get_type(void)
             (GInstanceInitFunc)gwy_grad_sphere_init,
             NULL,
         };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_grad_sphere_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                       GWY_GRAD_SPHERE_TYPE_NAME,
                                                       &gwy_grad_sphere_info,
@@ -102,9 +99,7 @@ gwy_grad_sphere_class_init(GwyGradSphereClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -144,9 +139,7 @@ gwy_grad_sphere_class_init(GwyGradSphereClass *klass)
 static void
 gwy_grad_sphere_init(GwyGradSphere *grad_sphere)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     grad_sphere->update_policy = GTK_UPDATE_CONTINUOUS;
     grad_sphere->button = 0;
@@ -180,9 +173,7 @@ gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
     GtkWidget *widget;
     GwyGradSphere *grad_sphere;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     if (sphere_coords)
         g_return_val_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords), NULL);
@@ -206,22 +197,16 @@ gwy_grad_sphere_finalize(GObject *object)
 {
     GwyGradSphere *grad_sphere;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "finalizing a GwyGradSphere (refcount = %u)",
-          object->ref_count);
-    #endif
+    gwy_debug("finalizing a GwyGradSphere (refcount = %u)",
+              object->ref_count);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(object));
 
     grad_sphere = GWY_GRAD_SPHERE(object);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "    unreferencing child sphere_coords (refcount = %u)",
-          G_OBJECT(grad_sphere->sphere_coords)->ref_count);
-    #endif
+    gwy_debug("    unreferencing child sphere_coords (refcount = %u)",
+              G_OBJECT(grad_sphere->sphere_coords)->ref_count);
     if (grad_sphere->sphere_coords)
         g_object_unref(grad_sphere->sphere_coords);
     if (grad_sphere->palette)
@@ -229,11 +214,7 @@ gwy_grad_sphere_finalize(GObject *object)
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "    ... (refcount = %u)",
-          object->ref_count);
-    #endif
+    gwy_debug("    ... (refcount = %u)", object->ref_count);
 }
 
 static void
@@ -243,11 +224,8 @@ gwy_grad_sphere_unrealize(GtkWidget *widget)
 
     grad_sphere = GWY_GRAD_SPHERE(widget);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "    unreferencing child pixbuf (refcount = %u)",
-          G_OBJECT(grad_sphere->sphere_pixbuf)->ref_count);
-    #endif
+    gwy_debug("    unreferencing child pixbuf (refcount = %u)",
+              G_OBJECT(grad_sphere->sphere_pixbuf)->ref_count);
     g_object_unref(grad_sphere->sphere_pixbuf);
     grad_sphere->sphere_pixbuf = NULL;
     grad_sphere->radius = -1;
@@ -402,11 +380,8 @@ gwy_grad_sphere_realize(GtkWidget *widget)
     GdkWindowAttr attributes;
     gint attributes_mask;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "realizing a GwyGradSphere (%ux%u)",
+    gwy_debug("realizing a GwyGradSphere (%ux%u)",
           widget->allocation.x, widget->allocation.height);
-    #endif
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(widget));
@@ -444,9 +419,7 @@ static void
 gwy_grad_sphere_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     requisition->width = GRAD_SPHERE_DEFAULT_SIZE;
     requisition->height = GRAD_SPHERE_DEFAULT_SIZE;
@@ -458,9 +431,7 @@ gwy_grad_sphere_size_allocate(GtkWidget *widget,
 {
     GwyGradSphere *grad_sphere;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(widget));

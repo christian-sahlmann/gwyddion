@@ -4,6 +4,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
+#include <libgwyddion/gwymacros.h>
 #include "gwyvectorshade.h"
 
 #define GWY_VECTOR_SHADE_TYPE_NAME "GwyVectorShade"
@@ -43,9 +44,7 @@ gwy_vector_shade_get_type(void)
             (GInstanceInitFunc)gwy_vector_shade_init,
             NULL,
         };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_vector_shade_type = g_type_register_static(GTK_TYPE_TABLE,
                                                        GWY_VECTOR_SHADE_TYPE_NAME,
                                                        &gwy_vector_shade_info,
@@ -58,17 +57,13 @@ gwy_vector_shade_get_type(void)
 static void
 gwy_vector_shade_class_init(GwyVectorShadeClass *klass)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 }
 
 static void
 gwy_vector_shade_init(GwyVectorShade *vector_shade)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     vector_shade->grad_sphere = NULL;
     vector_shade->spin_theta = NULL;
@@ -96,9 +91,7 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
     GwyGradSphere *grad_sphere;
     gdouble phi, theta;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     vector_shade = (GwyVectorShade*)g_object_new(GWY_TYPE_VECTOR_SHADE, NULL);
 
@@ -261,9 +254,7 @@ gwy_vector_shade_theta_update(GtkAdjustment *adj,
     GwySphereCoords *sphere_coords;
 
     g_return_if_fail(GWY_IS_VECTOR_SHADE(vector_shade));
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GwyVectorShade theta adj update");
-    #endif
+    gwy_debug("GwyVectorShade theta adj update");
 
     sphere_coords = gwy_vector_shade_get_sphere_coords(vector_shade);
     theta = G_PI/180.0*gtk_adjustment_get_value(adj);
@@ -282,9 +273,7 @@ gwy_vector_shade_phi_update(GtkAdjustment *adj,
     GwySphereCoords *sphere_coords;
 
     g_return_if_fail(GWY_IS_VECTOR_SHADE(vector_shade));
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GwyVectorShade phi adj update");
-    #endif
+    gwy_debug("GwyVectorShade phi adj update");
 
     sphere_coords = gwy_vector_shade_get_sphere_coords(vector_shade);
     phi = G_PI/180.0*gtk_adjustment_get_value(adj);
@@ -302,9 +291,7 @@ gwy_vector_shade_coords_update(GwySphereCoords *sphere_coords,
     gdouble theta, phi;
 
     g_return_if_fail(GWY_IS_VECTOR_SHADE(vector_shade));
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GwyVectorShade coords update");
-    #endif
+    gwy_debug("GwyVectorShade coords update");
 
     theta = 180.0/G_PI*gwy_sphere_coords_get_theta(sphere_coords);
     phi = 180.0/G_PI*gwy_sphere_coords_get_phi(sphere_coords);

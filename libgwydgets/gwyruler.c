@@ -675,8 +675,7 @@ magnitude_to_si_prefix(gdouble magnitude)
         return negative[-i];
     /* FIXME: the vertical ruler text placing routine can't reasonably
      * break things like 10<sup>-36</sup> to lines */
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-          "magnitude %g outside of prefix range.  FIXME!", magnitude);
+    g_warning("magnitude %g outside of prefix range.  FIXME!", magnitude);
     return unknown;
 }
 

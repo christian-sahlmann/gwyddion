@@ -6,11 +6,9 @@
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
+#include <libgwyddion/gwymacros.h>
 #include "gwydataview.h"
 #include "gwydataviewlayer.h"
-
-#define _(x) x
-#define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
 
 #define GWY_DATA_VIEW_LAYER_TYPE_NAME "GwyDataViewLayer"
 
@@ -54,9 +52,7 @@ gwy_data_view_layer_get_type(void)
             (GInstanceInitFunc)gwy_data_view_layer_init,
             NULL,
         };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_data_view_layer_type
             = g_type_register_static(GTK_TYPE_OBJECT,
                                      GWY_DATA_VIEW_LAYER_TYPE_NAME,
@@ -73,9 +69,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -115,9 +109,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 static void
 gwy_data_view_layer_init(GwyDataViewLayer *layer)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     layer->parent = NULL;
     layer->data = NULL;
@@ -131,9 +123,7 @@ gwy_data_view_layer_finalize(GObject *object)
 {
     GwyDataViewLayer *layer;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(object));
@@ -199,9 +189,7 @@ gwy_data_view_layer_button_press(GwyDataViewLayer *layer,
 {
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_GET_CLASS(layer);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     if (layer_class->button_press)
         return layer_class->button_press(layer, event);
     return FALSE;
@@ -254,9 +242,7 @@ gwy_data_view_layer_key_release(GwyDataViewLayer *layer,
 void
 gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
     g_signal_emit(layer, data_view_layer_signals[PLUGGED], 0);
 }
@@ -264,9 +250,7 @@ gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
 void
 gwy_data_view_layer_unplugged(GwyDataViewLayer *layer)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
     g_signal_emit(layer, data_view_layer_signals[UNPLUGGED], 0);
 }
@@ -276,9 +260,7 @@ gwy_data_view_layer_real_plugged(GwyDataViewLayer *layer)
 {
     GwyContainer *data;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     gwy_object_unref(layer->data);
 
@@ -291,9 +273,7 @@ gwy_data_view_layer_real_plugged(GwyDataViewLayer *layer)
 static void
 gwy_data_view_layer_real_unplugged(GwyDataViewLayer *layer)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     gwy_object_unref(layer->gc);
     gwy_object_unref(layer->data);

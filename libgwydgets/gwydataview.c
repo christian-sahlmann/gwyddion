@@ -6,11 +6,9 @@
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
+#include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include "gwydataview.h"
-
-#define _(x) x
-#define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
 
 #define GWY_DATA_VIEW_TYPE_NAME "GwyDataView"
 
@@ -88,9 +86,7 @@ gwy_data_view_get_type(void)
             (GInstanceInitFunc)gwy_data_view_init,
             NULL,
         };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_data_view_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                     GWY_DATA_VIEW_TYPE_NAME,
                                                     &gwy_data_view_info,
@@ -107,9 +103,7 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -138,9 +132,7 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
 static void
 gwy_data_view_init(GwyDataView *data_view)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     data_view->data = NULL;
     data_view->top_layer = NULL;
@@ -180,9 +172,7 @@ gwy_data_view_new(GwyContainer *data)
 {
     GtkWidget *data_view;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
     data_view = gtk_widget_new(GWY_TYPE_DATA_VIEW, NULL);
@@ -198,11 +188,8 @@ gwy_data_view_destroy(GtkObject *object)
 {
     GwyDataView *data_view;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "destroying a GwyDataView (refcount = %u)",
-          G_OBJECT(object)->ref_count);
-    #endif
+    gwy_debug("destroying a GwyDataView (refcount = %u)",
+              G_OBJECT(object)->ref_count);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
@@ -221,11 +208,8 @@ gwy_data_view_finalize(GObject *object)
 {
     GwyDataView *data_view;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "finalizing a GwyDataView (refcount = %u)",
-          object->ref_count);
-    #endif
+    gwy_debug("finalizing a GwyDataView (refcount = %u)",
+              object->ref_count);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
@@ -235,8 +219,7 @@ gwy_data_view_finalize(GObject *object)
     gwy_object_unref(data_view->base_layer);
     gwy_object_unref(data_view->alpha_layer);
     gwy_object_unref(data_view->top_layer);
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "    child data ref count %d", G_OBJECT(data_view->data)->ref_count);
+    gwy_debug("    child data ref count %d", G_OBJECT(data_view->data)->ref_count);
     gwy_object_unref(data_view->data);
 }
 
@@ -288,11 +271,8 @@ gwy_data_view_realize(GtkWidget *widget)
     GdkWindowAttr attributes;
     gint attributes_mask;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "realizing a GwyDataView (%ux%u)",
-          widget->allocation.width, widget->allocation.height);
-    #endif
+    gwy_debug("realizing a GwyDataView (%ux%u)",
+              widget->allocation.width, widget->allocation.height);
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW(widget));
@@ -336,9 +316,7 @@ gwy_data_view_size_request(GtkWidget *widget,
     GwyContainer *data;
     GwyDataField *data_field;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     data_view = GWY_DATA_VIEW(widget);
     data = data_view->data;
@@ -351,11 +329,8 @@ gwy_data_view_size_request(GtkWidget *widget,
     requisition->height = data_view->newzoom
                           * gwy_data_field_get_yres(data_field);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "%s requesting %d x %d",
-          __FUNCTION__, requisition->width, requisition->height);
-    #endif
+    gwy_debug("%s requesting %d x %d",
+              __FUNCTION__, requisition->width, requisition->height);
 }
 
 static void
@@ -364,11 +339,8 @@ gwy_data_view_size_allocate(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "%s allocating %d x %d",
-          __FUNCTION__, allocation->width, allocation->height);
-    #endif
+    gwy_debug("%s allocating %d x %d",
+              __FUNCTION__, allocation->width, allocation->height);
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW(widget));
@@ -554,9 +526,7 @@ gwy_data_view_button_press(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
@@ -573,9 +543,7 @@ gwy_data_view_button_release(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
 
@@ -821,8 +789,7 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
     if (!data_view->pixbuf || !data_view->base_pixbuf)
         return;
 
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "%s: zoom = %g, new = %g", __FUNCTION__, data_view->newzoom, zoom);
+    gwy_debug("%s: zoom = %g, new = %g", __FUNCTION__, data_view->newzoom, zoom);
     if (fabs(log(data_view->newzoom/zoom)) < 0.001)
         return;
 

@@ -6,12 +6,10 @@
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
+#include <libgwyddion/gwymacros.h>
+#include <libdraw/gwypixfield.h>
 #include "gwylayer-select.h"
 #include "gwydataview.h"
-#include <libdraw/gwypixfield.h>
-
-#define _(x) x
-#define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
 
 #define GWY_LAYER_SELECT_TYPE_NAME "GwyLayerSelect"
 
@@ -55,9 +53,7 @@ gwy_layer_select_get_type(void)
             (GInstanceInitFunc)gwy_layer_select_init,
             NULL,
         };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_layer_select_type
             = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
                                      GWY_LAYER_SELECT_TYPE_NAME,
@@ -74,9 +70,7 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -93,9 +87,7 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
 static void
 gwy_layer_select_init(GwyLayerSelect *layer)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     layer->selected = FALSE;
 }
@@ -103,9 +95,7 @@ gwy_layer_select_init(GwyLayerSelect *layer)
 static void
 gwy_layer_select_finalize(GObject *object)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_LAYER_SELECT(object));
@@ -127,9 +117,7 @@ gwy_layer_select_new(void)
     GwyDataViewLayer *layer;
     GwyLayerSelect *select_layer;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     object = g_object_new(GWY_TYPE_LAYER_SELECT, NULL);
     layer = (GwyDataViewLayer*)object;
@@ -172,10 +160,10 @@ gwy_layer_select_draw(GwyDataViewLayer *layer, GdkDrawable *drawable)
     if (!layer->gc)
         gwy_layer_select_setup_gc(layer);
 
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s [%g,%g] to [%g,%g]",
-          __FUNCTION__,
-          select_layer->x0, select_layer->y0,
-          select_layer->x1, select_layer->y1);
+    gwy_debug("%s [%g,%g] to [%g,%g]",
+              __FUNCTION__,
+              select_layer->x0, select_layer->y0,
+              select_layer->x1, select_layer->y1);
     gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
                                     select_layer->x0, select_layer->y0,
                                     &xmin, &ymin);
@@ -192,8 +180,8 @@ gwy_layer_select_draw(GwyDataViewLayer *layer, GdkDrawable *drawable)
         ymax = ymin;
         ymin = tmp;
     }
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s [%d,%d] to [%d,%d]",
-          __FUNCTION__, xmin, ymin, xmax, ymax);
+    gwy_debug("%s [%d,%d] to [%d,%d]",
+              __FUNCTION__, xmin, ymin, xmax, ymax);
     gdk_draw_rectangle(drawable, layer->gc, FALSE,
                        xmin, ymin, xmax - xmin, ymax - ymin);
 
@@ -212,8 +200,7 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
 
     gwy_layer_select_draw(layer, layer->parent->window);
 
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "motion: %g %g", event->x, event->y);
+    gwy_debug("motion: %g %g", event->x, event->y);
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
@@ -233,18 +220,15 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
     GwyLayerSelect *select_layer;
     gint x, y;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     select_layer = (GwyLayerSelect*)layer;
     if (select_layer->button)
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "unexpected mouse button press when already pressed");
+        g_warning("unexpected mouse button press when already pressed");
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s [%d,%d]",
-          __FUNCTION__, x, y);
+    gwy_debug("%s [%d,%d]",
+              __FUNCTION__, x, y);
     /* do nothing when we are outside */
     if (x != event->x || y != event->y)
         return FALSE;
@@ -257,15 +241,12 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
                                     &select_layer->x0, &select_layer->y0);
     select_layer->x1 = select_layer->x0;
     select_layer->y1 = select_layer->y0;
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s [%g,%g] to [%g,%g]",
-          __FUNCTION__,
-          select_layer->x0, select_layer->y0,
-          select_layer->x1, select_layer->y1);
+    gwy_debug("%s [%g,%g] to [%g,%g]",
+              __FUNCTION__,
+              select_layer->x0, select_layer->y0,
+              select_layer->x1, select_layer->y1);
     select_layer->selected = TRUE;
-    #if DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "selected == %d", select_layer->selected);
-    #endif
+    gwy_debug("selected == %d", select_layer->selected);
 
     return FALSE;
 }
@@ -366,9 +347,7 @@ gwy_layer_select_plugged(GwyDataViewLayer *layer)
 {
     GwyLayerSelect *select_layer;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
     select_layer = (GwyLayerSelect*)layer;
 
@@ -395,9 +374,7 @@ gwy_layer_select_plugged(GwyDataViewLayer *layer)
 static void
 gwy_layer_select_unplugged(GwyDataViewLayer *layer)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
 
     GWY_LAYER_SELECT(layer)->selected = FALSE;

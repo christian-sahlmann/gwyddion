@@ -4,12 +4,10 @@
 
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
+#include <libgwyddion/gwymacros.h>
 #include "gwyspherecoords.h"
 
 #define GWY_SPHERE_COORDS_TYPE_NAME "GwySphereCoords"
-
-#define _(x) x
-#undef DEBUG
 
 static void     gwy_sphere_coords_class_init        (GwySphereCoordsClass *klass);
 static void     gwy_sphere_coords_init              (GwySphereCoords *sphere_coords);
@@ -48,9 +46,7 @@ gwy_sphere_coords_get_type(void)
             (GInterfaceInitFunc)gwy_sphere_coords_watchable_init, NULL, 0
         };
 
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_sphere_coords_type = g_type_register_static(GTK_TYPE_OBJECT,
                                                         GWY_SPHERE_COORDS_TYPE_NAME,
                                                         &gwy_sphere_coords_info,
@@ -71,9 +67,7 @@ gwy_sphere_coords_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     iface->serialize = gwy_sphere_coords_serialize;
@@ -85,9 +79,7 @@ gwy_sphere_coords_watchable_init(gpointer giface)
 {
     GwyWatchableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     iface->value_changed = NULL;
@@ -96,17 +88,13 @@ gwy_sphere_coords_watchable_init(gpointer giface)
 static void
 gwy_sphere_coords_class_init(GwySphereCoordsClass *klass)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 }
 
 static void
 gwy_sphere_coords_init(GwySphereCoords *sphere_coords)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     sphere_coords->theta = 0.0;
     sphere_coords->phi = 0.0;
 }
@@ -126,9 +114,7 @@ gwy_sphere_coords_new(gdouble theta,
 {
     GwySphereCoords *sphere_coords;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     sphere_coords = g_object_new(GWY_TYPE_SPHERE_COORDS, NULL);
 
     sphere_coords->theta = theta;
@@ -192,11 +178,7 @@ gwy_sphere_coords_set_value(GwySphereCoords *sphere_coords,
     if (phi < 0.0)
         phi += 2.0*G_PI;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "setting GwySphereCoords to %f %f",
-          theta, phi);
-    #endif
+    gwy_debug("setting GwySphereCoords to %f %f", theta, phi);
     if (theta != sphere_coords->theta || phi != sphere_coords->phi) {
         sphere_coords->theta = theta;
         sphere_coords->phi = phi;
@@ -212,9 +194,7 @@ gwy_sphere_coords_serialize(GObject *obj,
 {
     GwySphereCoords *sphere_coords;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_SPHERE_COORDS(obj), NULL);
 
     sphere_coords = GWY_SPHERE_COORDS(obj);
@@ -241,9 +221,7 @@ gwy_sphere_coords_deserialize(const guchar *buffer,
         { 'd', "phi", &phi, NULL },
     };
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,

@@ -6,11 +6,9 @@
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
-#include "gwylayer-basic.h"
+#include <libgwyddion/gwymacros.h>
 #include <libdraw/gwypixfield.h>
-
-#define _(x) x
-#define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
+#include "gwylayer-basic.h"
 
 #define GWY_LAYER_BASIC_TYPE_NAME "GwyLayerBasic"
 
@@ -48,9 +46,7 @@ gwy_layer_basic_get_type(void)
             (GInstanceInitFunc)gwy_layer_basic_init,
             NULL,
         };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_layer_basic_type
             = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
                                      GWY_LAYER_BASIC_TYPE_NAME,
@@ -67,9 +63,7 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -84,9 +78,7 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
 static void
 gwy_layer_basic_init(GwyLayerBasic *layer)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     layer->changed = TRUE;
 }
@@ -94,9 +86,7 @@ gwy_layer_basic_init(GwyLayerBasic *layer)
 static void
 gwy_layer_basic_finalize(GObject *object)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     g_return_if_fail(GWY_IS_LAYER_BASIC(object));
 
@@ -118,9 +108,7 @@ gwy_layer_basic_new(void)
     GtkObject *object;
     GwyDataViewLayer *layer;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     object = g_object_new(GWY_TYPE_LAYER_BASIC, NULL);
     layer = (GwyDataViewLayer*)object;

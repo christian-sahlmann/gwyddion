@@ -55,7 +55,7 @@ create_data_SOURCES = create-data.c
 create_data_LDADD = ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\"
+AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\" -DG_LOG_DOMAIN=\"Gwydgets\"
 libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
 
 clean-local:
