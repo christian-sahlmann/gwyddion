@@ -32,6 +32,13 @@
 #define MAX_SIZE 64
 #define SCALE 4
 
+enum {
+    SPOT_REMOVE_HYPER_FLATTEN,
+    SPOT_REMOVE_PSEUDO_LAPLACE,
+    SPOT_REMOVE_LAPLACE,
+    SPOT_REMOVE_FRACTAL,
+};
+
 typedef struct {
     GwyUnitoolRectLabels labels;
     GtkWidget *view;
@@ -94,8 +101,6 @@ static void       pseudo_laplace_average(GwyDataField *dfield,
 static void       algorithm_changed_cb (GObject *item,
                                         GwyUnitoolState *state);
 
-static const gchar *algorithm_key = "/tool/spotremove/algorithm";
-
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -103,7 +108,7 @@ static GwyModuleInfo module_info = {
     "spotremove",
     N_("Removes spots."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3.1",
+    "1.3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -116,13 +121,6 @@ static GwyUnitoolSlots func_slots = {
     dialog_abandon,                /* dialog abandon hook */
     apply,                         /* apply action */
     NULL,                          /* nonstandard response handler */
-};
-
-enum {
-    SPOT_REMOVE_HYPER_FLATTEN,
-    SPOT_REMOVE_PSEUDO_LAPLACE,
-    SPOT_REMOVE_LAPLACE,
-    SPOT_REMOVE_FRACTAL,
 };
 
 static const GwyEnum algorithms[] = {
@@ -245,7 +243,7 @@ dialog_create(GwyUnitoolState *state)
     layer = GWY_PIXMAP_LAYER(gwy_layer_basic_new());
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
     gtk_table_attach(GTK_TABLE(table), controls->view, 0, 1, 0, 1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_table_attach(GTK_TABLE(table), vbox, 1, 2, 0, 1,
@@ -265,7 +263,7 @@ dialog_create(GwyUnitoolState *state)
     label = gtk_label_new_with_mnemonic(_("Removal _method:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     omenu = gwy_option_menu_create(algorithms, G_N_ELEMENTS(algorithms),
@@ -274,7 +272,7 @@ dialog_create(GwyUnitoolState *state)
                                    controls->algorithm);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
     gtk_table_attach(GTK_TABLE(table), omenu, 0, 4, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     return dialog;
 }
@@ -360,7 +358,6 @@ dialog_abandon(GwyUnitoolState *state)
     memset(state->user_data, 0, sizeof(ToolControls));
 }
 
-
 static void
 apply(GwyUnitoolState *state)
 {
@@ -445,8 +442,8 @@ laplace_average(GwyDataField *dfield,
     gwy_debug("laplace: (%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
     /* do pseudo-laplace as the first step to make it converge faster */
     pseudo_laplace_average(dfield, ximin, yimin, ximax, yimax);
-    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-    mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    buffer = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
+    mask = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
     gwy_data_field_fill(mask, 0.0);
     gwy_data_field_area_fill(mask, ximin, yimin, ximax, yimax, 1.0);
 
@@ -607,6 +604,8 @@ algorithm_changed_cb(GObject *item, GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     controls->algorithm = GPOINTER_TO_INT(g_object_get_data(item, "algorithm"));
 }
+
+static const gchar *algorithm_key = "/tool/spotremove/algorithm";
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)
