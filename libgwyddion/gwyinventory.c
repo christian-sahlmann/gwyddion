@@ -742,6 +742,22 @@ gwy_inventory_restore_order(GwyInventory *inventory)
         g_free(new_order);
 }
 
+/**
+ * gwy_inventory_forget_order:
+ * @inventory: An inventory.
+ *
+ * Forces an inventory to be unsorted.
+ *
+ * Item positions don't change, but future gwy_inventory_insert_item() won't
+ * try to insert items in order.
+ **/
+void
+gwy_inventory_forget_order(GwyInventory *inventory)
+{
+    g_return_if_fail(GWY_IS_INVENTORY(inventory));
+    inventory->is_sorted = FALSE;
+}
+
 static gint
 gwy_inventory_compare_indices(gint *a,
                               gint *b,
@@ -793,6 +809,7 @@ gwy_inventory_delete_nth_item_real(GwyInventory *inventory,
                       g_array_index(inventory->items, ArrayItem, i).i) = i;
     }
     g_array_set_size(inventory->items, last-1);
+    inventory->needs_reindex = TRUE;
 
     if (!inventory->is_simple)
         g_object_unref(mp);
