@@ -7,6 +7,12 @@
 #include <gdk/gdk.h>
 
 #include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwyaxis.h>
+#include <libgwydgets/gwygraphlabel.h>
+#include <libgwydgets/gwygrapharea.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwycoloraxis.h>
+
 
 
 static void destroy( GtkWidget *widget, gpointer data )
@@ -18,7 +24,8 @@ int
 main(int argc, char *argv[])
 {
     GtkWidget *window;
-    GtkWidget *axis, *label, *area, *graph, *foo, *dialog, *sci;
+    GtkWidget *axis, *label, *area, *graph, *foo;
+    GwyPalette *pal;
     GError *err = NULL;
     gint i;
     GString *str1, *str2, *str3, *str4, *str5;
@@ -36,7 +43,7 @@ main(int argc, char *argv[])
     double xv[20];
     double yv[20];
          
-    for (i=0; i<100; i++){xs[i]=i; xp[i]=i; ys[i]=(double)i*i/40; 
+    for (i=0; i<100; i++){xs[i]=i-7; xp[i]=i; ys[i]=(double)i*i/40; 
         yp[i]=20*sin((double)i*15/100);
         
         if (i<20) {
@@ -52,39 +59,24 @@ main(int argc, char *argv[])
         }
     
     gtk_init(&argc, &argv);
-    gwy_stock_register_stock_items();
-
+    
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
     g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), NULL);
 
     gtk_container_set_border_width (GTK_CONTAINER (window), 0);
-  
 
-    /* 
-    sci = gwy_sci_text_new();
 
-    gtk_container_add (GTK_CONTAINER (window), sci);
-    gtk_widget_show (sci);
-    */
+    gwy_palette_def_setup_presets();
+    pal = (GwyPalette*) gwy_palette_new(NULL);
+    gwy_palette_set_by_name(pal, GWY_PALETTE_OLIVE);
     
-  /*  dialog = gwy_axis_dialog_new();*/
-    
-   
-  /*  gtk_container_add (GTK_CONTAINER (window), dialog);*/
-/*    printf("Now showind dialog...\n");*/
-/*    
-    gtk_widget_show_all(dialog);*/
-    /*gtk_dialog_run(dialog);*/
-   
-    
-    /* 
-    axis = gwy_axis_new(1, 0, 112.00, "ble");
+    axis = gwy_color_axis_new(GWY_COLOR_AXIS_VERTICAL, 0, 112.00, pal);
     
     gtk_container_add (GTK_CONTAINER (window), axis);
     gtk_widget_show (axis);
     
-    */
+    
     /*
     label = gwy_graph_label_new();
     gtk_container_add (GTK_CONTAINER (window), label);
@@ -101,7 +93,7 @@ main(int argc, char *argv[])
     gtk_layout_put(GTK_LAYOUT(area), foo, 10, 20);
     */
 
-    
+    /*
     str1 = g_string_new("parabola");
     str2 = g_string_new("kousek");
     str3 = g_string_new("sinus");
@@ -134,9 +126,7 @@ main(int argc, char *argv[])
     
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show (graph);
-    
-
-
+    */
     gtk_widget_show_all(window);
     
     gtk_main();
