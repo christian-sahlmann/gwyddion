@@ -35,7 +35,6 @@ typedef struct {
     GtkWidget *filter;
     GtkWidget *direction;
     GtkObject *size;
-    GtkWidget *size_spin;
     GtkWidget *update;
     GwyFilterType fil;
     GtkOrientation dir;
@@ -44,6 +43,7 @@ typedef struct {
     gboolean data_were_updated;
     gpointer last_preview;
     gint old_isel[4];
+    gboolean old_upd;
     gboolean state_changed;
 } ToolControls;
 
@@ -198,7 +198,7 @@ dialog_create(GwyUnitoolState *state)
                                       GTK_TABLE(table), 0, 0);
     controls->labels.unselected_is_full = TRUE;
 
-    table2 = gtk_table_new(4, 2, FALSE);
+    table2 = gtk_table_new(4, 4, FALSE);
 
     gtk_container_set_border_width(GTK_CONTAINER(table2), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table2);
@@ -208,16 +208,16 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
-    controls->filter
-        = gwy_option_menu_filter(G_CALLBACK(filter_changed_cb),
-                                 state, controls->fil);
-    gwy_table_attach_row(table2, 1, _("_Type:"), NULL, controls->filter);
+    controls->filter = gwy_option_menu_filter(G_CALLBACK(filter_changed_cb),
+                                              state, controls->fil);
+    gwy_table_attach_hscale(table2, 1, _("_Type:"), NULL,
+                            GTK_OBJECT(controls->filter), GWY_HSCALE_WIDGET);
 
     controls->direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
                                     state, controls->dir);
-    gwy_table_attach_row(table2, 2, _("_Direction:"), NULL,
-                         controls->direction);
+    gwy_table_attach_hscale(table2, 2, _("_Direction:"), NULL,
+                            GTK_OBJECT(controls->direction), GWY_HSCALE_WIDGET);
     label = gwy_table_get_child_widget(table2, 2, 0);
 
     /* TODO uncomment this when some directional filter is avalilable
@@ -230,16 +230,14 @@ dialog_create(GwyUnitoolState *state)
     gtk_widget_set_sensitive(label, FALSE);
 
     controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
-    controls->size_spin = gwy_table_attach_spinbutton(table2, 3,
-                                                      _("Si_ze:"), "px",
-                                                      controls->size);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);
+    gwy_table_attach_hscale(table2, 3, _("Si_ze:"), "px",
+                            controls->size, 0);
     g_signal_connect_swapped(controls->size, "value-changed",
                              G_CALLBACK(size_changed_cb), state);
 
     controls->update
         = gtk_check_button_new_with_mnemonic(_("_Update preview dynamically"));
-    gtk_table_attach(GTK_TABLE(table2), controls->update, 0, 3, 4, 5,
+    gtk_table_attach(GTK_TABLE(table2), controls->update, 0, 4, 4, 5,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
                                  controls->upd);
@@ -318,7 +316,7 @@ dialog_update(GwyUnitoolState *state,
     }
 
 
-    if (controls->state_changed) {
+    if (controls->state_changed && (controls->upd || controls->old_upd)) {
         if (gwy_container_contains_by_name(data, "/0/show")) {
             shadefield
                 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -352,6 +350,8 @@ dialog_update(GwyUnitoolState *state,
         controls->state_changed = FALSE;
         gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
     }
+
+    controls->old_upd = controls->upd;
 }
 
 static void
@@ -476,7 +476,7 @@ filter_changed_cb(GObject *item, GwyUnitoolState *state)
         break;
     }
     gtk_widget_set_sensitive(controls->direction, direction_sensitive);
-    gtk_widget_set_sensitive(controls->size_spin, size_sensitive);
+    gwy_table_hscale_set_sensitive(controls->size, size_sensitive);
 
     dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
@@ -542,6 +542,7 @@ load_args(GwyContainer *container, ToolControls *controls)
 
     /* sanitize */
     controls->upd = !!controls->upd;
+    controls->old_upd = controls->upd;
     controls->siz = CLAMP(controls->siz, 1, 20);
     controls->fil = MIN(controls->fil, GWY_FILTER_MAXIMUM);
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
