@@ -168,9 +168,7 @@ profile_do(void)
     if (controls.separate)
     {
         for (i=0; i<is_selected; i++)
-        {    
-            window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-            gtk_container_set_border_width (GTK_CONTAINER (window), 0);
+        { 
             graph = gwy_graph_new();
             gwy_graph_get_autoproperties(graph, &prop);
             prop.is_point = 0;
@@ -183,25 +181,22 @@ profile_do(void)
                                x_unit,
                                z_unit
                                );
+
+            window = gwy_app_graph_window_create((GwyGraph *)graph);
             
-            gtk_container_add (GTK_CONTAINER (window), graph);
-            gtk_widget_show (graph);
-            gtk_widget_show_all(window);
         }
     }
     else
     {
-        window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-        gtk_container_set_border_width (GTK_CONTAINER (window), 0);
         graph = gwy_graph_new();
         gwy_graph_get_autoproperties(graph, &prop);
         prop.is_point = 0;
         prop.is_line = 1;
         gwy_graph_set_autoproperties(graph, &prop);
 
-
         for (i=0; i<is_selected; i++)
         {
+            
             gwy_graph_add_dataline_with_units(graph, dtl->pdata[i],
                                0, str->pdata[i], NULL,
                                x_mag, z_mag, 
@@ -209,12 +204,7 @@ profile_do(void)
                                z_unit
                                );
         }
-
-
-        gtk_container_add (GTK_CONTAINER (window), graph);
-        gtk_widget_show (graph);
-        gtk_widget_show_all(window);
-        
+        window = gwy_app_graph_window_create((GwyGraph *)graph);
     }
     
     
