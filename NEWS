@@ -14,6 +14,9 @@ Modules:
 - All modules: State of controls is remembered also on Cancel.
 - Remove by threshold: Has a mask color change button too.
 - Graph fit: beeping and too small From and To entries were fixed.
+- Mask by correlation: Undo works.
+- Mask by correlation and Crosscorrelation: Misleading placement of `Please
+  wait' window was fixed.
 - Filters: Controls for values that don't make sense are insensitive.
 
 Library:
