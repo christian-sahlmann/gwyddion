@@ -250,7 +250,7 @@ gwy_app_toolbox_create(void)
                                       "remove_threshold");
     if (button)
         gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
-    button = toolbox_append_proc_func(toolbar, _("Grain distribution"),
+    button = toolbox_append_proc_func(toolbar, _("Grain size distribution"),
                                       GWY_STOCK_GRAINS_GRAPH, "grain_dist");
     if (button)
         gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
@@ -419,11 +419,45 @@ static GtkWidget*
 gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
-        { "/---",             NULL,  NULL,             0, "<Tearoff>", NULL },
-        { "/Module _Browser", NULL,  gwy_module_browser, 0, "<Item>", NULL },
-        { "/_Metadata Browser", NULL, gwy_app_meta_browser, 0, "<Item>", NULL },
-        { "/---",             NULL,  NULL,             0, "<Separator>", NULL },
-        { "/_About Gwyddion", NULL,  gwy_app_about,    0, "<Item>", NULL },
+        {
+            "/---",
+            NULL,
+            NULL,
+            0,
+            "<Tearoff>",
+            NULL
+        },
+        {
+            N_("/Module _Browser"),
+            NULL,
+            gwy_module_browser,
+            0,
+            "<Item>",
+            NULL
+        },
+        {
+            N_("/_Metadata Browser"),
+            NULL,
+            gwy_app_meta_browser,
+            0,
+            "<Item>",
+            NULL
+        },
+        {
+            "/---",
+            NULL,
+            NULL,
+            0,
+            "<Separator>",
+            NULL },
+        {
+            N_("/_About Gwyddion"),
+            NULL,
+            gwy_app_about,
+            0,
+            "<Item>",
+            NULL
+        },
     };
     static const gchar *items_need_data[] = {
         "/Metadata Browser", NULL
@@ -432,6 +466,11 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
     GtkWidget *menu;
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<meta>", accel_group);
+#ifdef ENABLE_NLS
+    gtk_item_factory_set_translate_func(item_factory,
+                                        (GtkTranslateFunc)&gettext,
+                                        NULL, NULL);
+#endif
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
     menu = gtk_item_factory_get_widget(item_factory, "<meta>");
@@ -445,22 +484,80 @@ static GtkWidget*
 gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items1[] = {
-        { "/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/_Open", "<control>O",
-            gwy_app_file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
-        { "/Open _Recent", NULL, NULL, 0, "<Branch>", NULL },
-        { "/Open Recent/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/_Save", "<control>S",
-            gwy_app_file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
-        { "/Save _As", "<control><shift>S",
-            gwy_app_file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
+        {
+            "/---",
+            NULL,
+            NULL,
+            0,
+            "<Tearoff>",
+            NULL
+        },
+        {
+            N_("/_Open"),
+            "<control>O",
+            gwy_app_file_open_cb,
+            0,
+            "<StockItem>",
+            GTK_STOCK_OPEN
+        },
+        {
+            N_("/Open _Recent"),
+            NULL,
+            NULL,
+            0,
+            "<Branch>",
+            NULL
+        },
+        {
+            N_("/Open Recent/---"),
+            NULL,
+            NULL,
+            0,
+            "<Tearoff>",
+            NULL
+        },
+        {
+            N_("/_Save"),
+            "<control>S",
+            gwy_app_file_save_cb,
+            0,
+            "<StockItem>",
+            GTK_STOCK_SAVE
+        },
+        {
+            N_("/Save _As"),
+            "<control><shift>S",
+            gwy_app_file_save_as_cb,
+            0,
+            "<StockItem>",
+            GTK_STOCK_SAVE_AS
+        },
     };
     static GtkItemFactoryEntry menu_items2[] = {
-        { "/_Close", "<control>W",
-            gwy_app_file_close_cb, 0, "<StockItem>", GTK_STOCK_CLOSE },
-        { "/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/_Quit", "<control>Q",
-            delete_app_window, 0, "<StockItem>", GTK_STOCK_QUIT },
+        {
+            N_("/_Close"),
+            "<control>W",
+            gwy_app_file_close_cb,
+            0,
+            "<StockItem>",
+            GTK_STOCK_CLOSE
+        },
+        {
+            "/---",
+            NULL,
+            NULL,
+            0,
+            "<Separator>",
+            NULL 
+        },
+        {
+            N_("/_Quit"),
+            "<control>Q",
+            delete_app_window,
+            0,
+            "<StockItem>",
+            GTK_STOCK_QUIT
+        },
     };
     static const gchar *items_need_data[] = {
         "/Save", "/Save As", "/Close", NULL
@@ -470,11 +567,16 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
     GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<file>", accel_group);
+#ifdef ENABLE_NLS
+    gtk_item_factory_set_translate_func(item_factory,
+                                        (GtkTranslateFunc)&gettext,
+                                        NULL, NULL);
+#endif
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items1), menu_items1, NULL);
-    gwy_file_func_build_menu(GTK_OBJECT(item_factory), "/_Export To",
+    gwy_file_func_build_menu(GTK_OBJECT(item_factory), N_("/_Export To"),
                              G_CALLBACK(gwy_app_file_export_cb), GWY_FILE_SAVE);
-    gwy_file_func_build_menu(GTK_OBJECT(item_factory), "/_Import From",
+    gwy_file_func_build_menu(GTK_OBJECT(item_factory), N_("/_Import From"),
                              G_CALLBACK(gwy_app_file_import_cb), GWY_FILE_LOAD);
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items2), menu_items2, NULL);
@@ -495,19 +597,78 @@ GtkWidget*
 gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
-        { "/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/_Undo", "<control>Z",
-            gwy_app_undo_undo, 0, "<StockItem>", GTK_STOCK_UNDO },
-        { "/_Redo", "<control>Y",
-            gwy_app_undo_redo, 0, "<StockItem>", GTK_STOCK_REDO },
-        { "/_Duplicate", "<control>D",
-            gwy_app_file_duplicate_cb, 0, "<StockItem>", GTK_STOCK_COPY },
-        { "/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/Remove _Mask", "<control>K", gwy_app_mask_kill_cb, 0, NULL, NULL },
-        { "/Remove _Presentation", NULL, gwy_app_show_kill_cb, 0, NULL, NULL },
-        { "/Mask _Color", NULL, gwy_app_change_mask_color_cb, 0, NULL, NULL },
-        { "/Default Mask _Color", NULL,
-            gwy_app_change_mask_color_cb, 1, NULL, NULL },
+        {
+            "/---",
+            NULL,
+            NULL,
+            0,
+            "<Tearoff>",
+            NULL 
+        },
+        {
+            N_("/_Undo"),
+            "<control>Z",
+            gwy_app_undo_undo,
+            0,
+            "<StockItem>",
+            GTK_STOCK_UNDO 
+        },
+        {
+            N_("/_Redo"),
+            "<control>Y",
+            gwy_app_undo_redo,
+            0,
+            "<StockItem>",
+            GTK_STOCK_REDO 
+        },
+        {
+            N_("/_Duplicate"),
+            "<control>D",
+            gwy_app_file_duplicate_cb,
+            0,
+            "<StockItem>",
+            GTK_STOCK_COPY 
+        },
+        {
+            "/---",
+            NULL,
+            NULL,
+            0,
+            "<Separator>",
+            NULL 
+        },
+        {
+            N_("/Remove _Mask"),
+            "<control>K",
+            gwy_app_mask_kill_cb,
+            0,
+            NULL,
+            NULL 
+        },
+        {
+            N_("/Remove _Presentation"),
+            NULL,
+            gwy_app_show_kill_cb,
+            0,
+            NULL,
+            NULL 
+        },
+        {
+            N_("/Mask _Color"),
+            NULL,
+            gwy_app_change_mask_color_cb,
+            0,
+            NULL,
+            NULL 
+        },
+        {
+            N_("/Default Mask _Color"),
+            NULL,
+            gwy_app_change_mask_color_cb,
+            1,
+            NULL,
+            NULL 
+        },
     };
     static const gchar *items_need_data[] = {
         "/Duplicate", NULL
@@ -529,6 +690,11 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
     GwyMenuSensData sens_data;
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<edit>", accel_group);
+#ifdef ENABLE_NLS
+    gtk_item_factory_set_translate_func(item_factory,
+                                        (GtkTranslateFunc)&gettext,
+                                        NULL, NULL);
+#endif
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items), menu_items, NULL);
     menu = gtk_item_factory_get_widget(item_factory, "<edit>");
