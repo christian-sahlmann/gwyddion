@@ -10,6 +10,8 @@ tool_PROGRAMS = \
 	pointer.so \
 	profile.so
 
+EXTRA_DIST = README
+
 crop_so_SOURCES = crop.c
 crop_so_LDFLAGS = $(module_ldflags),crop.so
 

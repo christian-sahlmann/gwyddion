@@ -143,7 +143,8 @@ crop_do(void)
     ymin = gwy_data_field_rtoi(dfield, ymin);
     xmax = gwy_data_field_rtoj(dfield, xmax) + 1;
     ymax = gwy_data_field_rtoi(dfield, ymax) + 1;
-    gwy_data_field_resize(dfield, xmin, ymin, xmax, ymax);
+    gwy_data_field_resize(dfield,
+                          (gint)xmin, (gint)ymin, (gint)xmax, (gint)ymax);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     gwy_layer_select_unselect(select_layer);
