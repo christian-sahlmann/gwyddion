@@ -84,6 +84,9 @@ struct _GwyPaletteDef {
     gchar *name;
     GArray *data;                  /*color data*/
     gboolean has_alpha;      /*has alpha chanel?*/
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyPaletteDefClass {

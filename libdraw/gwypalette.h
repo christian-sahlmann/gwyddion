@@ -40,6 +40,8 @@ struct _GwyPalette {
     GObject parent_instance;
 
     GwyPaletteDef *def;     /* palette definition */
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyPaletteClass {

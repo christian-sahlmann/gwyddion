@@ -64,6 +64,9 @@ typedef struct {
 
     GString *description;
     GdkColor color;
+
+    gpointer reserved1;
+    gpointer reserved2;
 } GwyGraphAreaCurveParams;
 
 
@@ -72,6 +75,9 @@ typedef struct {
     gint frame_thickness;
     gint position;
     PangoFontDescription *font;
+
+    gpointer reserved1;
+    gpointer reserved2;
 } GwyGraphLabelParams;
 
 struct _GwyGraphLabel {
@@ -91,6 +97,8 @@ struct _GwyGraphLabel {
 struct _GwyGraphLabelClass {
     GtkWidgetClass parent_class;
 
+    void (*selected)(GwyGraphLabel *label);
+    
     gpointer reserved1;
     gpointer reserved2;
 };

@@ -105,6 +105,8 @@ typedef struct {
     GwyGraphAreaCurvePoints data;       /*original data including its size*/
     GwyGraphAreaCurveParams params;     /*parameters of plot*/
     GdkPoint *points;           /*points to be directly plotted*/
+    
+    gpointer reserved;
 } GwyGraphAreaCurve;
 
 /*overall properties of area*/
@@ -154,6 +156,9 @@ struct _GwyGraphArea {
 
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
+    gpointer reserved5;
 };
 
 /*graph area class*/
@@ -164,6 +169,7 @@ struct _GwyGraphAreaClass {
     GdkCursor *arrow_cursor;
     void (*selected)(GwyGraphArea *area);
     void (*zoomed)(GwyGraphArea *area);
+
 
     gpointer reserved1;
     gpointer reserved2;

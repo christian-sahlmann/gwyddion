@@ -47,10 +47,16 @@ struct _GwySIUnit {
     GObject parent_instance;
 
     gchar *unitstr;
+
+    gpointer *reserved1;
+    gpointer *reserved2;
 };
 
 struct _GwySIUnitClass {
     GObjectClass parent_class;
+
+    gpointer *reserved1;
+    gpointer *reserved2;
 };
 
 GType gwy_si_unit_get_type  (void) G_GNUC_CONST;

@@ -115,6 +115,8 @@ struct _GwyAxisClass {
 
     gpointer reserved1;
     gpointer reserved2;
+
+    void (*selected)(GwyAxis *axis);
 };
 
 
