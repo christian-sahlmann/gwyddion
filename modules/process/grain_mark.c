@@ -479,6 +479,7 @@ ok(MarkControls *controls,
     {
         maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
+
     }
     
     is_field = FALSE;
