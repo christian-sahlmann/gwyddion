@@ -117,13 +117,13 @@ main(int argc, char *argv[])
     model->ydata = ys;
     model->description = str2;
     model->n = 100;
-    gwy_grapher_model_add_curve(gmodel, model);
      
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show (graph);
 
     gtk_widget_show_all(window);
-    
+
+    gwy_grapher_model_add_curve(gmodel, model);
     gtk_main();
 
     return 0;

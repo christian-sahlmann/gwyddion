@@ -41,9 +41,24 @@ static void   gwy_grapher_model_grapher_destroyed   (GwyGrapher *grapher,
                                                  GwyGrapherModel *gmodel);
 static void   gwy_grapher_model_save_grapher        (GwyGrapherModel *gmodel,
                                                  GwyGrapher *grapher);
+static void     gwy_grapher_model_set_property  (GObject *object,
+                                                guint prop_id,
+                                               const GValue *value,
+                                               GParamSpec *pspec);
+static void     gwy_grapher_model_get_property  (GObject*object,
+                                               guint prop_id,
+                                               GValue *value,
+                                               GParamSpec *pspec);
 
 
 static GObjectClass *parent_class = NULL;
+
+enum {
+        PROP_0,
+        PROP_N,
+        PROP_TITLE,
+        PROP_LAST
+};
 
 
 GType
@@ -117,7 +132,46 @@ gwy_grapher_model_class_init(GwyGrapherModelClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_grapher_model_finalize;
+    gobject_class->set_property = gwy_grapher_model_set_property;
+    gobject_class->get_property = gwy_grapher_model_get_property;
+
+    g_object_class_install_property(gobject_class,
+                                    PROP_N,
+                                    g_param_spec_int("n",
+                                                      "Number of curves",
+                                                      "Changed number of curves in graph",
+                                                      0,
+                                                      100,
+                                                      0,
+                                                      G_PARAM_READABLE | G_PARAM_WRITABLE));
+    g_object_class_install_property(gobject_class,
+                                    PROP_TITLE,
+                                    g_param_spec_string("title",
+                                                      "Graph Title",
+                                                      "Changed title of graph",
+                                                      "new graph",
+                                                      G_PARAM_READABLE | G_PARAM_WRITABLE));
+ 
 }
+
+static void     
+gwy_grapher_model_set_property  (GObject *object,
+                                                guint prop_id,
+                                               const GValue *value,
+                                               GParamSpec *pspec)
+{
+    GwyGrapherModel *model = GWY_GRAPHER_MODEL(object);
+}
+
+static void     
+gwy_grapher_model_get_property  (GObject*object,
+                                               guint prop_id,
+                                               GValue *value,
+                                               GParamSpec *pspec)
+{
+    GwyGrapherModel *model = GWY_GRAPHER_MODEL(object);
+}
+
 
 static void
 gwy_grapher_model_init(GwyGrapherModel *gmodel)
@@ -205,7 +259,8 @@ gwy_grapher_model_add_curve(GwyGrapherModel *gmodel, GwyGrapherCurveModel *curve
   
     gmodel->curves = newcurves;
     gmodel->ncurves++;
-    
+   
+    g_object_notify(gmodel, "n");
     gwy_grapher_refresh(gmodel->grapher);
 }
 
