@@ -11,6 +11,7 @@
     <xi:include href="module-tutorial-overview.sgml"/>
     <xi:include href="module-tutorial-minimal.sgml"/>
     <xi:include href="module-tutorial-beyond.sgml"/>
+    <xi:include href="module-tutorial-install.sgml"/>
   </chapter>
 
   <chapter>

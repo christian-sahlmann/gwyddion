@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="gwymodule-tutorial-install" revision="@(#) $Id$">
+  <refmeta>
+    <refentrytitle>Gwyddion Module Installation</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>Gwyddion</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>Gwyddion Module Installation</refname>
+    <refpurpose>
+      Compilation, distribution and installation of Gwyddion modules
+    </refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Overview</title>
+    <para>
+      To be written. Meanwhile you can look at the
+      <ulink url="http://trific.ath.cx/software/gwyddion/">threshold-example</ulink>
+      module how it copes with this issues.
+    </para>
+  </refsect1>
+</refentry>
+
+
