@@ -194,9 +194,9 @@ Dump::write(const char *filename)
         if (iter->second.yreal > 0.0)
             fh << iter->first << "/yreal=" << iter->second.yreal << endl;
         if (iter->second.xyunits.size())
-            fh << iter->first << "/xyunits=" << iter->second.xyunits << endl;
+            fh << iter->first << "/units-xy=" << iter->second.xyunits << endl;
         if (iter->second.zunits.size())
-            fh << iter->first << "/zunits=" << iter->second.zunits << endl;
+            fh << iter->first << "/units-z=" << iter->second.zunits << endl;
 
         fh << iter->first << "=[" << endl;
         fh.put('[');
