@@ -1047,7 +1047,7 @@ gwy_gradient_preset(const gchar *name,
  * Since: 1.8
  **/
 void
-gwy_gradients_setup_presets(void)
+_gwy_gradients_setup_presets(void)
 {
     static const GwyRGBA xyellow = { 0.8314, 0.71765, 0.16471, 1 };
     static const GwyRGBA pink = { 1, 0.07843, 0.62745, 1 };

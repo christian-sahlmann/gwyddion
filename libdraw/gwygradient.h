@@ -117,7 +117,7 @@ GwyGradient*      gwy_gradients_new_gradient_as_copy (const gchar *name,
 gboolean          gwy_gradients_delete_gradient      (const gchar *name);
 void              gwy_gradients_foreach              (GwyGradientFunc function,
                                                       gpointer user_data);
-void              gwy_gradients_setup_presets        (void);
+/*void              gwy_gradients_setup_presets        (void);*/
 
 G_END_DECLS
 
