@@ -53,7 +53,6 @@ GTKDOC_CFLAGS = -I${top_srcdir} @CFLAGS@
 GTKDOC_LIBS = \
 	${top_srcdir}/$(DOC_DIRNAME)/$(DOC_MODULE).la \
 	${top_srcdir}/libgwyddion/libgwyddion.la \
-	${top_srcdir}/libdraw/libgwydraw.la \
 	${top_srcdir}/libprocess/libgwyprocess.la \
 	@LDFLAGS@ @GOBJECT_LIBS@
 
