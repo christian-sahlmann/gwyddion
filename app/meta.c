@@ -115,11 +115,15 @@ gwy_meta_sort_func(GtkTreeModel *model,
                    G_GNUC_UNUSED gpointer user_data)
 {
     gchar *ka, *kb;
+    gint result;
 
     gtk_tree_model_get(model, a, 0, &ka, -1);
     gtk_tree_model_get(model, b, 0, &kb, -1);
+    result = strcmp(ka, kb);
+    g_free(ka);
+    g_free(kb);
 
-    return strcmp(ka, kb);
+    return result;
 }
 
 static GtkWidget*
@@ -198,6 +202,7 @@ gwy_meta_browser_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gtk_tree_model_get(model, piter, id, &text, -1);
     g_return_if_fail(text);
     g_object_set(cell, "text", text, NULL);
+    g_free(text);
 }
 
 static void
