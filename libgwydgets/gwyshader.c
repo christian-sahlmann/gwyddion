@@ -17,14 +17,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
-#include <math.h>
 #include <stdio.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include "gwyshader.h"
 
@@ -422,13 +421,14 @@ gwy_shader_set_theta(GwyShader *shader,
 {
     g_return_if_fail(GWY_IS_SHADER(shader));
 
-    theta = CLAMP(theta, 0.0, G_PI);
+    theta = CLAMP(theta, 0.0, G_PI/2);
     if (theta == shader->theta)
         return;
 
     shader->old_theta = shader->theta;
     shader->theta = theta;
     gwy_shader_update(shader);
+    g_signal_emit_by_name(shader, "angle_changed");
 }
 
 /**
@@ -456,6 +456,7 @@ gwy_shader_set_phi(GwyShader *shader,
     shader->old_phi = shader->phi;
     shader->phi = phi;
     gwy_shader_update(shader);
+    g_signal_emit_by_name(shader, "angle_changed");
 }
 
 /**
@@ -476,7 +477,7 @@ gwy_shader_set_angle(GwyShader *shader,
 {
     g_return_if_fail(GWY_IS_SHADER(shader));
 
-    theta = CLAMP(theta, 0.0, G_PI);
+    theta = CLAMP(theta, 0.0, G_PI/2);
     phi = fmod(phi, 2*G_PI);
     if (phi < 0.0)
         phi += 2*G_PI;
@@ -489,6 +490,7 @@ gwy_shader_set_angle(GwyShader *shader,
     shader->old_phi = shader->phi;
     shader->phi = phi;
     gwy_shader_update(shader);
+    g_signal_emit_by_name(shader, "angle_changed");
 }
 
 /**
@@ -532,7 +534,7 @@ gwy_shader_realize(GtkWidget *widget)
     gint attributes_mask;
 
     gwy_debug("realizing a GwyShader (%ux%u)",
-          widget->allocation.x, widget->allocation.height);
+              widget->allocation.x, widget->allocation.height);
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
     shader = GWY_SHADER(widget);
@@ -657,12 +659,12 @@ gwy_shader_paint(GwyShader *shader)
         }
     }
     shader->old_theta = shader->theta;
-    shader->old_theta = shader->phi;
+    shader->old_phi = shader->phi;
 }
 
 static gboolean
 gwy_shader_expose(GtkWidget *widget,
-                       GdkEventExpose *event)
+                  GdkEventExpose *event)
 {
     GwyShader *shader;
     gint xc, yc, xs, ys, xe, ye;
@@ -743,11 +745,8 @@ gwy_shader_button_release(GtkWidget *widget,
         shader->timer_id = 0;
     }
 
-    if (shader->update_policy != GTK_UPDATE_CONTINUOUS) {
-        if (shader->old_theta != shader->theta
-            || shader->old_phi != shader->phi)
-            g_signal_emit_by_name(shader, "angle_changed");
-    }
+    if (shader->update_policy != GTK_UPDATE_CONTINUOUS)
+        g_signal_emit_by_name(shader, "angle_changed");
 
     return FALSE;
 }

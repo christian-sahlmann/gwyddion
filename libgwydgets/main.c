@@ -28,7 +28,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <libgwydgets/gwyshader.h>
 #include <libgwyddion/gwycontainer.h>
-#include <libdraw/gwypalette.h>
+#include <libdraw/gwydraw.h>
 #include <libprocess/datafield.h>
 
 #define TEST_VECTOR_SHADE 0
@@ -68,11 +68,9 @@ foo_cb(GwyShader *c, gpointer p)
 {
     gint n = GPOINTER_TO_INT(p);
     gint i;
-    gdouble theta, phi;
 
     for (i = 0; i < N; i++)
         g_signal_handler_block(G_OBJECT(shade[i]), hid[i]);
-    theta = gwy_shader_get_theta(c);
     gwy_shader_set_phi(GWY_SHADER(shade[(n+N-1) % N]), gwy_shader_get_phi(c));
     gwy_shader_set_theta(GWY_SHADER(shade[(n+1) % N]), gwy_shader_get_theta(c));
     for (i = 0; i < N; i++)
@@ -290,7 +288,7 @@ main(int argc, char *argv[])
 
     gtk_init(&argc, &argv);
     gwy_palette_def_setup_presets();
-    gwy_gradients_setup_presets();
+    gwy_draw_type_init();
     gwy_stock_register_stock_items();
     test();
     gtk_main();
