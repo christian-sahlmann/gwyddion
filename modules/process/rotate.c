@@ -193,8 +193,7 @@ rotate_dialog_update(RotateControls *controls,
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
                              args->angle);
-    /* FIXME: this assumes index == interp type */
-    gtk_option_menu_set_history(GTK_OPTION_MENU(controls->interp),
+    gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
 }
 
