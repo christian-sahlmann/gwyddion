@@ -16,6 +16,7 @@ SUBDIRS = \
 	python \
 	ruby \
 	data \
+	utils \
 	devel-docs
 
 EXTRA_DIST = \
@@ -27,10 +28,7 @@ EXTRA_DIST = \
 	mkinstalldirs \
 	rules.msc \
 	version.h \
-	version.h.in \
-	utils/update-msvc.py \
-	utils/update-potfiles.sh \
-	utils/vim-syn-gen.py
+	version.h.in
 
 if MAINTAINER_MODE
 dist-check-maintainer:
