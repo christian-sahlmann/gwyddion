@@ -102,7 +102,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo angle_dist_func_info = {
         "angle_dist",
-        "/_Statistics/_Angle distribution",
+        "/_Statistics/_Angle distribution...",
         (GwyProcessFunc)&angle_dist,
         ANGLE_DIST_RUN_MODES,
     };

@@ -90,7 +90,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo slope_dist_func_info = {
         "slope_dist",
-        "/_Statistics/_Slope distribution",
+        "/_Statistics/_Slope distribution...",
         (GwyProcessFunc)&slope_dist,
         SLOPE_DIST_RUN_MODES,
     };
