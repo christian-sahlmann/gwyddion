@@ -42,13 +42,19 @@ typedef struct _GwyAxisDialog      GwyAxisDialog;
 typedef struct _GwyAxisDialogClass GwyAxisDialogClass;
 
 struct _GwyAxisDialog {
-   GtkDialog dialog;
+    GtkDialog dialog;
 
-   GtkWidget *sci_text;
+    GtkWidget *sci_text;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyAxisDialogClass {
-   GtkDialogClass parent_class;
+    GtkDialogClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GType       gwy_axis_dialog_get_type (void) G_GNUC_CONST;
@@ -61,3 +67,4 @@ GtkWidget*  gwy_axis_dialog_new      (void);
 
 #endif /* __GWY_GRADSPHERE_H__ */
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

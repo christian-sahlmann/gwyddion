@@ -107,10 +107,16 @@ struct _GwyAxis {
     gchar *unit;                /*axis unit (if any)*/
 
     GtkWidget *dialog;      /*axis label and other properties dialog*/
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyAxisClass {
-     GtkWidgetClass parent_class;
+    GtkWidgetClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 

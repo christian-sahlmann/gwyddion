@@ -63,10 +63,15 @@ struct _GwyColorAxis {
 
     GString *label_text;
 
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyColorAxisClass {
-     GtkWidgetClass parent_class;
+    GtkWidgetClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 
@@ -81,8 +86,11 @@ void gwy_color_axis_set_range(GwyColorAxis *axis, gdouble min, gdouble max);
 void gwy_color_axis_set_palette(GwyColorAxis *axis, GwyPalette *pal);
 
 GwyPalette * gwy_color_axis_get_palette(GwyColorAxis *axis);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 #endif /*__GWY_AXIS_H__*/
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

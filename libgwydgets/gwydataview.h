@@ -72,12 +72,18 @@ struct _GwyDataView {
     GdkPixbuf *base_pixbuf; /* unscaled base (lower layers) */
 
     gboolean force_update;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyDataViewClass {
     GtkWidgetClass parent_class;
 
     void (*updated)(GwyDataView *data_view);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GtkWidget*        gwy_data_view_new               (GwyContainer *data);

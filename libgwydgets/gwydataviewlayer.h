@@ -47,6 +47,9 @@ struct _GwyDataViewLayer {
 
     GtkWidget *parent;
     GwyContainer *data;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyDataViewLayerClass {
@@ -57,6 +60,9 @@ struct _GwyDataViewLayerClass {
     void (*plugged)(GwyDataViewLayer *layer);
     void (*unplugged)(GwyDataViewLayer *layer);
     void (*updated)(GwyDataViewLayer *layer);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GType            gwy_data_view_layer_get_type        (void) G_GNUC_CONST;

@@ -51,10 +51,16 @@ struct _GwyLayerMask {
 
     GwyRGBA color;
     gboolean changed;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyLayerMaskClass {
     GwyPixmapLayerClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GType            gwy_layer_mask_get_type        (void) G_GNUC_CONST;

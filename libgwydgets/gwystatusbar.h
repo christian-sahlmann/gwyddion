@@ -40,10 +40,16 @@ typedef struct _GwyStatusbarClass GwyStatusbarClass;
 
 struct _GwyStatusbar {
     GtkStatusbar parent_instance;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyStatusbarClass {
     GtkStatusbarClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GtkWidget*       gwy_statusbar_new              (void);

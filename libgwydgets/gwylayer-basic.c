@@ -124,6 +124,10 @@ gwy_layer_basic_finalize(GObject *object)
  * By default, is uses a gray palette or the palette stored with the data
  * as "/0/base/palette".
  *
+ * Other used container values: "/0/show" is shown instead of "/0/data" if
+ * present.  If "/0/base/min" and "/0/base/max" is set, it is used as the
+ * color scale range instead of fitting it to data value range.
+ *
  * Returns: The newly created layer.
  **/
 GtkObject*

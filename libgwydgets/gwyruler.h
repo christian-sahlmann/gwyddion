@@ -96,6 +96,9 @@ struct _GwyRuler
     gdouble upper;    /* The lower limit of the ruler */
     gdouble position;    /* The position of the mark on the ruler */
     gdouble max_size;    /* The maximum size of the ruler */
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyRulerClass
@@ -104,6 +107,9 @@ struct _GwyRulerClass
 
     void (*draw_ticks) (GwyRuler *ruler);
     void (*draw_pos)   (GwyRuler *ruler);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 

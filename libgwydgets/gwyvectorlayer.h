@@ -49,6 +49,9 @@ struct _GwyVectorLayer {
     PangoLayout *layout;
     GtkUpdateType update_policy;
     guint timer;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyVectorLayerClass {
@@ -69,6 +72,9 @@ struct _GwyVectorLayerClass {
     gint (*set_selection)(GwyVectorLayer *layer,
                           gint nselected, gdouble *selection);
     void (*unselect)(GwyVectorLayer *layer);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GType            gwy_vector_layer_get_type             (void) G_GNUC_CONST;

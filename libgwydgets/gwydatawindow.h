@@ -70,12 +70,18 @@ struct _GwyDataWindow {
     guint statusbar_message_id;
     GwySIValueFormat *coord_format;
     GwySIValueFormat *value_format;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyDataWindowClass {
     GtkWindowClass parent_class;
 
     void (*title_changed)(GwyDataWindow *data_window);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GtkWidget*       gwy_data_window_new              (GwyDataView *data_view);

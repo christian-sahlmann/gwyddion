@@ -51,10 +51,16 @@ struct _GwyLayerBasic {
 
     GwyPalette *palette;
     gboolean changed;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyLayerBasicClass {
     GwyPixmapLayerClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GType            gwy_layer_basic_get_type        (void) G_GNUC_CONST;

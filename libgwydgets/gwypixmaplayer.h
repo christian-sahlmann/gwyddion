@@ -46,6 +46,9 @@ struct _GwyPixmapLayer {
     GwyDataViewLayer parent_instance;
 
     GdkPixbuf *pixbuf;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyPixmapLayerClass {
@@ -53,6 +56,9 @@ struct _GwyPixmapLayerClass {
 
     /* renderers */
     GdkPixbuf* (*paint)(GwyPixmapLayer *layer);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GType            gwy_pixmap_layer_get_type        (void) G_GNUC_CONST;

@@ -154,16 +154,21 @@ struct _GwyGraphArea {
     gint xoff;
     gint yoff;
 
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 /*graph area class*/
 struct _GwyGraphAreaClass {
-     GtkLayoutClass parent_class;
+    GtkLayoutClass parent_class;
 
-     GdkCursor *cross_cursor;
-     GdkCursor *arrow_cursor;
-     void (*selected)(GwyGraphArea *area);
-     void (*zoomed)(GwyGraphArea *area);
+    GdkCursor *cross_cursor;
+    GdkCursor *arrow_cursor;
+    void (*selected)(GwyGraphArea *area);
+    void (*zoomed)(GwyGraphArea *area);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 

@@ -46,53 +46,58 @@ typedef struct _GwyGraph      GwyGraph;
 typedef struct _GwyGraphClass GwyGraphClass;
 
 typedef struct {
-   gboolean is_line;
-   gboolean is_point;
-   gint line_size;
-   gint point_size;
-   GdkColor color;
+    gboolean is_line;
+    gboolean is_point;
+    gint line_size;
+    gint point_size;
+    GdkColor color;
 } GwyGraphAutoProperties;
 
 
 struct _GwyGraph {
-   GtkTable table;
+    GtkTable table;
 
-   GwyAxis *axis_top;
-   GwyAxis *axis_left;
-   GwyAxis *axis_right;
-   GwyAxis *axis_bottom;
+    GwyAxis *axis_top;
+    GwyAxis *axis_left;
+    GwyAxis *axis_right;
+    GwyAxis *axis_bottom;
 
-   GwyGraphCorner *corner_tl;
-   GwyGraphCorner *corner_bl;
-   GwyGraphCorner *corner_tr;
-   GwyGraphCorner *corner_br;
+    GwyGraphCorner *corner_tl;
+    GwyGraphCorner *corner_bl;
+    GwyGraphCorner *corner_tr;
+    GwyGraphCorner *corner_br;
 
-   GwyGraphArea *area;
+    GwyGraphArea *area;
 
-   gint n_of_curves;
-   gint n_of_autocurves;
+    gint n_of_curves;
+    gint n_of_autocurves;
 
-   GwyGraphAutoProperties autoproperties;
+    GwyGraphAutoProperties autoproperties;
 
-   gdouble x_max, x_reqmax;
-   gdouble x_min, x_reqmin;
-   gdouble y_max, y_reqmax;
-   gdouble y_min, y_reqmin;
+    gdouble x_max, x_reqmax;
+    gdouble x_min, x_reqmin;
+    gdouble y_max, y_reqmax;
+    gdouble y_min, y_reqmin;
 
-   gboolean has_x_unit;
-   gboolean has_y_unit;
-   gchar *x_unit;
-   gchar *y_unit;
+    gboolean has_x_unit;
+    gboolean has_y_unit;
+    gchar *x_unit;
+    gchar *y_unit;
 
-   GwyGraphStatus_SelData seldata;
-   GwyGraphStatus_PointsData pointsdata;
+    GwyGraphStatus_SelData seldata;
+    GwyGraphStatus_PointsData pointsdata;
 
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyGraphClass {
-   GtkTableClass parent_class;
+    GtkTableClass parent_class;
 
-   void (*gwygraph)(GwyGraph *graph);
+    void (*gwygraph)(GwyGraph *graph);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GtkWidget *gwy_graph_new();
@@ -138,3 +143,4 @@ void gwy_graph_unzoom(GwyGraph *graph);
 
 #endif /* __GWY_GRADSPHERE_H__ */
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -44,10 +44,16 @@ struct _GwyToolbox {
     gsize nstuff;
     GList *stuff;
     gint max_width;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyToolboxClass {
     GtkTableClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GType            gwy_toolbox_get_type       (void) G_GNUC_CONST;

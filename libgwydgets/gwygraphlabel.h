@@ -85,10 +85,16 @@ struct _GwyGraphLabel {
     gint maxheight;
 
     GPtrArray *curve_params;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyGraphLabelClass {
-     GtkWidgetClass parent_class;
+    GtkWidgetClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 
@@ -113,3 +119,5 @@ void  gwy_graph_draw_point (GdkWindow *window,
 #endif /* __cplusplus */
 
 #endif /*__GWY_AXIS_H__*/
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

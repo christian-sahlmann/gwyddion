@@ -69,10 +69,14 @@ struct _GwyGradSphere {
 
     /* The sphere */
     GdkPixbuf *sphere_pixbuf;
+
+    gpointer reserved1;
 };
 
 struct _GwyGradSphereClass {
     GtkWidgetClass parent_class;
+
+    gpointer reserved1;
 };
 
 GtkWidget*       gwy_grad_sphere_new               (GwySphereCoords *sphere_coords);

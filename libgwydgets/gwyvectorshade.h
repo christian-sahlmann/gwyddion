@@ -52,11 +52,17 @@ struct _GwyVectorShade {
     GtkAdjustment *adj_phi;
     GtkWidget *spin_theta;
     GtkWidget *spin_phi;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _GwyVectorShadeClass {
     GtkTableClass parent_class;
     void (*vector_shade)(GwyVectorShade *vector_shade);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GType            gwy_vector_shade_get_type          (void) G_GNUC_CONST;
