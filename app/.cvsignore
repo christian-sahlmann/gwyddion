@@ -9,3 +9,4 @@ gwyddion
 core.*
 *.def
 makefile.msc
+authors.h
