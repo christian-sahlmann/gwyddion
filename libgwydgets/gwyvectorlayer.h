@@ -68,7 +68,7 @@ struct _GwyVectorLayerClass {
     void (*selection_finished)(GwyVectorLayer *layer);
     /* selection */
     gint (*get_selection)(GwyVectorLayer *layer, gdouble *selection);
-    gint (*set_selection)(GwyVectorLayer *layer,
+    void (*set_selection)(GwyVectorLayer *layer,
                           gint nselected, gdouble *selection);
     void (*unselect)(GwyVectorLayer *layer);
 
