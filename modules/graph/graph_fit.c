@@ -1111,6 +1111,7 @@ static GString*
 create_fit_report(FitArgs *args)
 {
     GString *report, *str;
+    gchar *s, *s2;
     gint i, j, curve, n;
 
     g_assert(args->fitter->covar);
@@ -1121,7 +1122,6 @@ create_fit_report(FitArgs *args)
 
     str = gwy_graph_get_label(GWY_GRAPH(args->parent_graph), curve);
     g_string_append_printf(report, "Data: %s\n", str->str);
-    /* XXX: show fitted points only */
     str = g_string_new("");
     g_string_append_printf(report, "Number of points: %d of %d\n",
                            count_really_fitted_points(args),
@@ -1133,10 +1133,15 @@ create_fit_report(FitArgs *args)
     g_string_append_printf(report, "\nResults\n");
     n = gwy_math_nlfit_get_function_nparams(args->fitfunc);
     for (i = 0; i < n; i++) {
-        g_string_append_printf
-            (report, "%s = %g ± %g\n",
-             gwy_math_nlfit_get_function_param_name(args->fitfunc, i),
-             args->par_res[i], args->err[i]);
+        /* FIXME: how to do this better? use pango_parse_markup()? */
+        s = gwy_strreplace(gwy_math_nlfit_get_function_param_name(args->fitfunc,
+                                                                  i),
+                           "<sub>", "", (gsize)-1);
+        s2 = gwy_strreplace(s, "</sub>", "", (gsize)-1);
+        g_string_append_printf(report, "%s = %g ± %g\n",
+                               s2, args->par_res[i], args->err[i]);
+        g_free(s2);
+        g_free(s);
     }
     g_string_append_printf(report, "\nResidual sum:   %g\n",
                            gwy_math_nlfit_get_dispersion(args->fitter));
