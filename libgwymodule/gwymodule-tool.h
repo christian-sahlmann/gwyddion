@@ -42,6 +42,7 @@ struct _GwyToolFuncInfo {
     const gchar *name;
     const gchar *stock_id;
     const gchar *tooltip;
+    gint toolbar_position;
     GwyToolUseFunc use;
 };
 

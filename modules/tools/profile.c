@@ -93,6 +93,7 @@ module_register(const gchar *name)
         "profile",
         "gwy_graph",
         "Extract profiles from data.",
+        80,
         profile_use,
     };
 

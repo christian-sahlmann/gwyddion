@@ -78,6 +78,7 @@ module_register(const gchar *name)
         "crop",
         "gwy_crop",
         "Crop data",
+        20,
         crop_use,
     };
 

@@ -85,6 +85,7 @@ module_register(const gchar *name)
         "level3",
         "gwy_fit_triangle",
         "Level data using three points.",
+        50,
         level3_use,
     };
 

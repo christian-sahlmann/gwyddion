@@ -36,7 +36,7 @@ main(int argc, char *argv[])
     gwy_app_settings_load(config_file);
     gwy_app_settings_get();
     module_dirs = gwy_app_settings_get_module_dirs();
-    gwy_module_register_modules(module_dirs);
+    gwy_module_register_modules((const gchar**)module_dirs);
     gwy_app_toolbox_create();
     gwy_app_file_open_initial(argv + 1, argc - 1);
     gtk_main();

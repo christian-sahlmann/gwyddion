@@ -75,6 +75,7 @@ module_register(const gchar *name)
         "pointer",
         "gwy_pointer_measure",
         "Read value under mouse cursor.",
+        0,
         &pointer_use,
     };
 

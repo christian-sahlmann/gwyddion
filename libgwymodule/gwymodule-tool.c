@@ -181,6 +181,11 @@ static gint
 tool_toolbar_item_compare(GwyToolFuncInfo *a,
                           GwyToolFuncInfo *b)
 {
+    if (a->toolbar_position < b->toolbar_position)
+        return -1;
+    else if (a->toolbar_position > b->toolbar_position)
+        return 1;
+
     return strcmp(a->name, b->name);
 }
 
@@ -201,6 +206,9 @@ gwy_tool_func_remove(const gchar *name)
  * @name: An unique data processing function name.
  * @stock_id: Icon stock id or button label (FIXME: more to be said).
  * @tooltip: Tooltip for this tool.
+ * @toolbar_position: Position in the toolbar, the tools are sorted by this
+ *                    value (and then alphabetically if they are equal).
+ *                    Standard tools are in the range [0,100].
  * @use: The tool use function itself.
  *
  * Information about one tool use function.
