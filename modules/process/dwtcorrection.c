@@ -87,7 +87,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dwt_correction_func_info = {
         "dwt_correction",
-        N_("/_Integral Transforms/_DWT Correction..."),
+        N_("/_Integral Transforms/DWT C_orrection..."),
         (GwyProcessFunc)&dwt_correction,
         DWT_CORRECTION_RUN_MODES,
         0,
