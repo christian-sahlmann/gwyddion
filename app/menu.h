@@ -45,26 +45,33 @@ struct _GwyMenuSensData {
     GwyMenuSensFlags set_to;
 };
 
-GtkWidget* gwy_app_menu_create_meta_menu         (GtkAccelGroup *accel_group);
-GtkWidget* gwy_app_menu_create_proc_menu         (GtkAccelGroup *accel_group);
-GtkWidget* gwy_app_menu_create_graph_menu        (GtkAccelGroup *accel_group);
-GtkWidget* gwy_app_menu_create_file_menu         (GtkAccelGroup *accel_group);
-GtkWidget* gwy_app_menu_create_edit_menu         (GtkAccelGroup *accel_group);
-
-void       gwy_app_menu_set_sensitive_recursive  (GtkWidget *widget,
-                                                  GwyMenuSensData *data);
-void       gwy_app_menu_recent_files_update      (GList *recent_files);
-void       gwy_app_menu_set_flags_recursive      (GtkWidget *widget,
-                                                  GwyMenuSensData *data);
-void       gwy_app_menu_set_sensitive_array      (GtkItemFactory *item_factory,
-                                                  const gchar *root,
-                                                  const gchar **items,
-                                                  GwyMenuSensFlags flags);
-void       gwy_app_menu_set_sensitive_both       (GtkWidget *item,
-                                                  GwyMenuSensFlags flags,
-                                                  GwyMenuSensFlags state);
-void       gwy_app_menu_set_recent_files_menu    (GtkWidget *menu);
-void       gwy_app_toolbox_update_state          (GwyMenuSensData *sens_data);
+GtkWidget* gwy_app_menu_create_meta_menu          (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_proc_menu          (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_graph_menu         (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_file_menu          (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_edit_menu          (GtkAccelGroup *accel_group);
+                                                  
+void       gwy_app_menu_set_sensitive_recursive   (GtkWidget *widget,
+                                                   GwyMenuSensData *data);
+void       gwy_app_menu_recent_files_update       (GList *recent_files);
+void       gwy_app_menu_set_flags_recursive       (GtkWidget *widget,
+                                                   GwyMenuSensData *data);
+void       gwy_app_menu_set_sensitive_array       (GtkItemFactory *item_factory,
+                                                   const gchar *root,
+                                                   const gchar **items,
+                                                   GwyMenuSensFlags flags);
+void       gwy_app_menu_set_sensitive_both        (GtkWidget *item,
+                                                   GwyMenuSensFlags flags,
+                                                   GwyMenuSensFlags state);
+void       gwy_app_menu_set_recent_files_menu     (GtkWidget *menu);
+void       gwy_app_toolbox_update_state           (GwyMenuSensData *sens_data);
+GtkWidget* gwy_option_menu_data_window            (GCallback callback,
+                                                   gpointer cbdata,
+                                                   const gchar *none_label,
+                                                   GtkWidget *current);
+gboolean   gwy_option_menu_data_window_set_history(GtkWidget *option_menu,
+                                                   GtkWidget *current);
+GtkWidget* gwy_option_menu_data_window_get_history(GtkWidget *option_menu);
 
 /* FIXME: where this could really belong? */
 void       gwy_app_run_process_func_cb           (gchar *name);

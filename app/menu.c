@@ -48,13 +48,21 @@
         set_sensitive_state(item, state); \
     } while (0)
 
-static void   gwy_app_update_last_process_func (GtkWidget *menu,
-                                                const gchar *name);
-static void   setup_sensitivity_keys           (void);
-static gchar* fix_recent_file_underscores      (gchar *s);
+enum {
+    THUMBNAIL_SIZE = 16
+};
+
+static void   gwy_app_update_last_process_func   (GtkWidget *menu,
+                                                  const gchar *name);
+static void   setup_sensitivity_keys             (void);
+static gchar* fix_recent_file_underscores        (gchar *s);
+static void   gwy_option_menu_data_window_append (GwyDataWindow *data_window,
+                                                  GtkWidget *menu);
 
 static GQuark sensitive_key = 0;
 static GQuark sensitive_state_key = 0;
+static GQuark omenu_data_window_key = 0;
+static GQuark omenu_data_window_id_key = 0;
 
 static GtkWidget *recent_files_menu = NULL;
 
@@ -416,6 +424,157 @@ gwy_app_toolbox_update_state(GwyMenuSensData *sens_data)
     for (l = g_object_get_data(obj, "toolbars"); l; l = g_slist_next(l))
         gwy_app_menu_set_sensitive_recursive(GTK_WIDGET(l->data),
                                              sens_data);
+}
+
+/**
+ * gwy_option_menu_data_window:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            no callback).
+ * @cbdata: User data passed to the callback.
+ * @none_label: Label to use for `none' menu item.  If it is %NULL, no `none'
+ *              item is created, if it is empty, a default label is used.
+ * @current: Data window to be shown as currently selected.
+ *
+ * Creates an option menu of existing data windows, with thumbnails.
+ *
+ * It sets object data "data-window" to data window for each menu item.
+ * Note the menu is static and does NOT react to creation or closing of
+ * data windows.
+ *
+ * Returns: The newly created option menu as a #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_data_window(GCallback callback,
+                            gpointer cbdata,
+                            const gchar *none_label,
+                            GtkWidget *current)
+{
+    GtkWidget *omenu, *menu, *item;
+    GList *c;
+
+    if (!omenu_data_window_key)
+        omenu_data_window_key = g_quark_from_static_string("data-window");
+    if (!omenu_data_window_id_key)
+        omenu_data_window_id_key
+            = g_quark_from_static_string("gwy-option-menu-data-window");
+
+    omenu = gtk_option_menu_new();
+    g_object_set_qdata(G_OBJECT(omenu), omenu_data_window_id_key,
+                       GINT_TO_POINTER(TRUE));
+    menu = gtk_menu_new();
+    gwy_app_data_window_foreach((GFunc)gwy_option_menu_data_window_append,
+                                menu);
+    if (none_label) {
+        if (!*none_label)
+            none_label = _("(none)");
+        item = gtk_menu_item_new_with_label(none_label);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    }
+    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
+    if (current || none_label)
+        gwy_option_menu_data_window_set_history(omenu, current);
+
+    if (callback) {
+        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
+            g_signal_connect(c->data, "activate", callback, cbdata);
+    }
+
+    return omenu;
+}
+
+static void
+gwy_option_menu_data_window_append(GwyDataWindow *data_window,
+                                   GtkWidget *menu)
+{
+    GtkWidget *item, *data_view, *image;
+    GdkPixbuf *pixbuf;
+    gchar *filename;
+
+    data_view = gwy_data_window_get_data_view(data_window);
+    filename = gwy_data_window_get_base_name(data_window);
+
+    pixbuf = gwy_data_view_get_thumbnail(GWY_DATA_VIEW(data_view),
+                                         THUMBNAIL_SIZE);
+    image = gtk_image_new_from_pixbuf(pixbuf);
+    gwy_object_unref(pixbuf);
+    item = gtk_image_menu_item_new_with_label(filename);
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    g_object_set_qdata(G_OBJECT(item), omenu_data_window_key, data_window);
+    g_free(filename);
+}
+
+/**
+ * gwy_option_menu_data_window_set_history:
+ * @option_menu: An option menu created by gwy_option_menu_data_window().
+ * @current: Data window to be shown as currently selected.
+ *
+ * Sets data window option menu history to a specific data window.
+ *
+ * Returns: %TRUE if the history was set, %FALSE if @current was not found.
+ **/
+gboolean
+gwy_option_menu_data_window_set_history(GtkWidget *option_menu,
+                                        GtkWidget *current)
+{
+    GtkWidget *menu;
+    GtkOptionMenu *omenu;
+    GList *c;
+    gint i;
+
+    g_return_val_if_fail(GTK_IS_OPTION_MENU(option_menu), FALSE);
+    g_return_val_if_fail(g_object_get_qdata(G_OBJECT(option_menu),
+                                            omenu_data_window_id_key), FALSE);
+
+    omenu = GTK_OPTION_MENU(option_menu);
+    g_assert(omenu);
+    menu = gtk_option_menu_get_menu(omenu);
+    i = 0;
+    for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c)) {
+        if (g_object_get_qdata(G_OBJECT(c->data), omenu_data_window_key)
+            == current) {
+            gtk_option_menu_set_history(omenu, i);
+            return TRUE;
+        }
+        i++;
+    }
+
+    return FALSE;
+}
+
+/**
+ * gwy_option_menu_data_window_get_history:
+ * @option_menu: An option menu created by gwy_option_menu_data_window().
+ *
+ * Gets the currently selected data window in a data window option menu.
+ *
+ * Returns: The currently selected data window (may be %NULL if `none' is
+ *          selected).
+ **/
+GtkWidget*
+gwy_option_menu_data_window_get_history(GtkWidget *option_menu)
+{
+    GList *c;
+    GtkWidget *menu, *item;
+    GtkOptionMenu *omenu;
+    gint idx;
+
+    g_return_val_if_fail(GTK_IS_OPTION_MENU(option_menu), NULL);
+    g_return_val_if_fail(g_object_get_qdata(G_OBJECT(option_menu),
+                                            omenu_data_window_id_key), NULL);
+
+    omenu = GTK_OPTION_MENU(option_menu);
+    g_assert(omenu);
+    idx = gtk_option_menu_get_history(omenu);
+    if (idx < 0)
+        return NULL;
+    menu = gtk_option_menu_get_menu(omenu);
+    c = g_list_nth(GTK_MENU_SHELL(menu)->children, (guint)idx);
+    g_return_val_if_fail(c, NULL);
+    item = GTK_WIDGET(c->data);
+
+    return (GtkWidget*)g_object_get_qdata(G_OBJECT(item),
+                                          omenu_data_window_key);
 }
 
 /***** Documentation *******************************************************/
