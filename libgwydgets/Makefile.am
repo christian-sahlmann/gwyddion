@@ -25,6 +25,7 @@ libgwydgetsinclude_HEADERS = \
 	gwylayer-pointer.h \
 	gwylayer-points.h \
 	gwylayer-select.h \
+	gwyoptionmenus.h \
 	gwyruler.h \
 	gwyscitext.h \
 	gwyspherecoords.h \
@@ -60,6 +61,7 @@ libgwydgets_la_SOURCES = \
 	gwylayer-pointer.c \
 	gwylayer-points.c \
 	gwylayer-select.c \
+	gwyoptionmenus.c \
 	gwyruler.c \
 	gwyscitext.c \
 	gwyspherecoords.c \
