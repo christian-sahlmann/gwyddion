@@ -125,6 +125,16 @@ gwy_val_unit_init(GwyValUnit *val_unit)
 }
 
 
+/**
+ * gwy_val_unit_new:
+ * @label_text: label to appear on the left side
+ * @si_unit: base unit to appear on the right side
+ *
+ * Creates label, adjustment and selection to
+ * set value with unit.
+ *
+ * Returns: new widget
+ **/
 GtkWidget*
 gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
 {
@@ -232,6 +242,14 @@ gwy_val_unit_unit_changed(GObject *item, GwyValUnit *val_unit)
 }
 
 
+/**
+ * gwy_val_unit_set_value:
+ * @val_unit: GwyValUnit widget 
+ * @value: value to be set
+ *
+ * sets value and automatically chooses its prefix to appear
+ * in selection.
+ **/
 void       
 gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
 {
@@ -246,6 +264,14 @@ gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
     
 }
 
+/**
+ * gwy_val_unit_get_value:
+ * @val_unit: GwyValUnit widget 
+ *
+ * Computes actual value of adjustment and unit prefix.
+ *
+ * Returns: actual value
+ **/
 gdouble    
 gwy_val_unit_get_value(GwyValUnit *val_unit)
 {
