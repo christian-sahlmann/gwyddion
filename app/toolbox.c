@@ -110,8 +110,14 @@ gwy_app_toolbox_create(void)
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Fix minimum value to zero"), NULL, GWY_STOCK_FIX_ZERO,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "fix_zero");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Automatically level data"), NULL, GWY_STOCK_FIT_PLANE,
                        G_CALLBACK(gwy_app_run_process_func_cb), "level");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Facet-level data"), NULL, GWY_STOCK_FACET_LEVEL,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "facet_level");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Scale data"), NULL, GWY_STOCK_SCALE,
                        G_CALLBACK(gwy_app_run_process_func_cb), "scale");
@@ -121,6 +127,12 @@ gwy_app_toolbox_create(void)
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Shade data"), NULL, GWY_STOCK_SHADER,
                        G_CALLBACK(gwy_app_run_process_func_cb), "shade");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Fast Fourier Transform"), NULL, GWY_STOCK_FFT,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "fft");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Continuous Wavelet Transform"), NULL, GWY_STOCK_CWT,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "cwt");
 
     /***************************************************************/
     label = gwy_app_toolbox_create_label(_("Tools"));
