@@ -35,6 +35,7 @@ process_PROGRAMS = \
 	maskcor.so \
 	maskops.so \
 	median-bg.so \
+	nanoindent_adjust.so \
 	outliers.so \
 	polylevel.so \
 	presentationops.so \
@@ -141,8 +142,8 @@ linecorrect_so_LDFLAGS = $(module_ldflags),linecorrect.so
 local_contrast_so_SOURCES = local_contrast.c
 local_contrast_so_LDFLAGS = $(module_ldflags),local_contrast.so
 
-#nanoindent_mark_so_SOURCES = nanoindent_mark.c
-#nanoindent_mark_so_LDFLAGS = $(module_ldflags),nanoindent_mark.so
+nanoindent_adjust_so_SOURCES = nanoindent_adjust.c
+nanoindent_adjust_so_LDFLAGS = $(module_ldflags),nanoindent_adjust.so
 
 mask_grow_shrink_so_SOURCES = mask_grow_shrink.c
 mask_grow_shrink_so_LDFLAGS = $(module_ldflags),mask_grow_shrink.so
