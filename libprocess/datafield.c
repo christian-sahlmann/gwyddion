@@ -2649,7 +2649,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                 target_line->data[j] += hlp_tarline->data[j]
                                         /((gdouble)(brrow-ulrow));
             }
-            if (type==GWY_SF_OUTPUT_PSDF) target_line->real = data_field->xres*3.141592/data_field->xreal;
+            target_line->real = hlp_tarline->real;
         }
         gwy_data_line_free(hlp_line);
         gwy_data_line_free(hlp_tarline);

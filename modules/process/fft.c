@@ -124,7 +124,7 @@ module_register(const gchar *name)
 static gboolean
 fft(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
+    GtkWidget *data_window, *dialog;
     GwyDataField *dfield;
     GwyDataField *raout, *ipout, *imin;
     GwySIUnit *xyunit, *zunit;
@@ -151,6 +151,17 @@ fft(GwyContainer *data, GwyRunType run)
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
 
+        if (gwy_data_field_get_xres(dfield) != gwy_data_field_get_yres(dfield))
+        {
+            dialog = gtk_message_dialog_new (gwy_app_data_window_get_current(),
+                                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                    GTK_MESSAGE_ERROR,
+                                                    GTK_BUTTONS_CLOSE,
+                                                   "FFT: data field must be rectangular.");
+           gtk_dialog_run (GTK_DIALOG (dialog));
+           gtk_widget_destroy (dialog);
+           return ok;
+        }
         g_assert(gwy_data_field_get_xres(dfield) == gwy_data_field_get_yres(dfield));
 
         xsize = gwy_data_field_get_xres(dfield);
