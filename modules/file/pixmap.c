@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <png.h>
 #include <jpeglib.h>
 #include <libgwyddion/gwymacros.h>
