@@ -68,9 +68,11 @@ your own plug-ins.
 %dir %{_datadir}/%{name}/pixmaps
 %dir %{_datadir}/%{name}
 %{_libdir}/%{name}/modules/file/*.so
+%{_libdir}/%{name}/modules/graph/*.so
 %{_libdir}/%{name}/modules/process/*.so
 %{_libdir}/%{name}/modules/tool/*.so
 %dir %{_libdir}/%{name}/modules/file
+%dir %{_libdir}/%{name}/modules/graph
 %dir %{_libdir}/%{name}/modules/process
 %dir %{_libdir}/%{name}/modules/tool
 %dir %{_libdir}/%{name}/modules
