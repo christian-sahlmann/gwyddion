@@ -41,7 +41,7 @@ typedef enum {
 /* Data for this function. */
 typedef struct {
     SphrevDirection direction;
-    gdouble radius;
+    gdouble size;
     gboolean do_extract;
     /* interface only */
     GwySIValueFormat valform;
@@ -84,7 +84,7 @@ static void          sphrev_save_args          (GwyContainer *container,
 
 SphrevArgs sphrev_defaults = {
     SPHREV_HORIZONTAL,
-    1e-9,
+    20,
     FALSE,
     { 1.0, 0, NULL },
     0,
@@ -227,12 +227,9 @@ sphrev_dialog(SphrevArgs *args)
     row = 0;
     controls.in_update = TRUE;
 
-    /* Set it here, to preserve any silly value when GUI it not involved */
-    args->radius = CLAMP(args->radius, args->pixelsize, 16384*args->pixelsize);
     q = args->pixelsize/args->valform.magnitude;
     gwy_debug("q = %f", q);
-    controls.radius = gtk_adjustment_new(args->radius/args->valform.magnitude,
-                                         q, 16384*q, q, 10*q, 0);
+    controls.radius = gtk_adjustment_new(q*args->size, q, 16384*q, q, 10*q, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("Real _radius:"),
                                        args->valform.units,
                                        controls.radius);
@@ -242,8 +239,7 @@ sphrev_dialog(SphrevArgs *args)
                      G_CALLBACK(radius_changed_cb), args);
     row++;
 
-    controls.size = gtk_adjustment_new(args->radius/args->pixelsize,
-                                       1, 16384, 1, 10, 0);
+    controls.size = gtk_adjustment_new(args->size, 1, 16384, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("_Pixel radius:"), _("px"),
                                        controls.size);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
@@ -293,7 +289,7 @@ sphrev_dialog(SphrevArgs *args)
             break;
 
             case RESPONSE_RESET:
-            args->radius = sphrev_defaults.radius;
+            args->size = sphrev_defaults.size;
             args->direction = sphrev_defaults.direction;
             args->do_extract = sphrev_defaults.do_extract;
             sphrev_dialog_update(&controls, args);
@@ -332,11 +328,8 @@ radius_changed_cb(GtkAdjustment *adj,
         return;
 
     controls->in_update = TRUE;
-    args->radius = gtk_adjustment_get_value(adj)*args->valform.magnitude;
-    gwy_debug("radius: %.*f %s",
-              args->valform.precision,
-              args->radius/args->valform.magnitude,
-              args->valform.units);
+    args->size = gtk_adjustment_get_value(adj)
+                 * args->valform.magnitude/args->pixelsize;
     sphrev_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -352,11 +345,7 @@ size_changed_cb(GtkAdjustment *adj,
         return;
 
     controls->in_update = TRUE;
-    args->radius = gtk_adjustment_get_value(adj)*args->pixelsize;
-    gwy_debug("radius: %.*f %s",
-              args->valform.precision,
-              args->radius/args->valform.magnitude,
-              args->valform.units);
+    args->size = gtk_adjustment_get_value(adj);
     sphrev_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -373,9 +362,9 @@ sphrev_dialog_update(SphrevControls *controls,
                      SphrevArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->radius),
-                             args->radius/args->valform.magnitude);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size),
-                             ROUND(args->radius/args->pixelsize));
+                             args->size
+                             * args->pixelsize/args->valform.magnitude);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), args->size);
     gwy_radio_buttons_set_current(controls->direction, "direction-type",
                                   args->direction);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->do_extract),
@@ -457,13 +446,9 @@ sphrev_horizontal(SphrevArgs *args,
     xres = gwy_data_field_get_xres(rfield);
     yres = gwy_data_field_get_yres(rfield);
     rdata = gwy_data_field_get_data(rfield);
-    /* Pathological case */
-    if (args->radius < args->pixelsize)
-        return rfield;
 
     q = gwy_data_field_get_rms(dfield)/sqrt(2.0/3.0 - G_PI/16.0);
-    sphere = sphrev_make_sphere(args->radius/args->pixelsize,
-                                gwy_data_field_get_xres(dfield));
+    sphere = sphrev_make_sphere(args->size, gwy_data_field_get_xres(dfield));
 
     /* Scale-freeing.
      * Data is normalized to have the same RMS as if it was composed from
@@ -540,15 +525,10 @@ sphrev_vertical(SphrevArgs *args,
     xres = gwy_data_field_get_xres(rfield);
     yres = gwy_data_field_get_yres(rfield);
     rdata = gwy_data_field_get_data(rfield);
-    /* Pathological case */
-    if (args->radius < args->pixelsize)
-        return rfield;
 
     q = gwy_data_field_get_rms(dfield)/sqrt(2.0/3.0 - G_PI/16.0);
-    sphere = sphrev_make_sphere(args->radius/args->pixelsize,
-                                args->direction == GTK_ORIENTATION_HORIZONTAL
-                                ? gwy_data_field_get_xres(dfield)
-                                : gwy_data_field_get_yres(dfield));
+    sphere = sphrev_make_sphere(args->size, gwy_data_field_get_yres(dfield));
+
     /* Scale-freeing.
      * Data is normalized to have the same RMS as if it was composed from
      * spheres of radius args->radius.  Actually we normalize the sphere
@@ -652,8 +632,7 @@ static const gchar *do_extract_key = "/module/sphere_revolve/do_extract";
 static void
 sphrev_sanitize_args(SphrevArgs *args)
 {
-    if (args->radius <= 0)
-        args->radius = sphrev_defaults.radius;
+    args->size = CLAMP(args->size, 1, 16384);
     args->direction = CLAMP(args->direction, SPHREV_HORIZONTAL, SPHREV_BOTH);
     args->do_extract = !!args->do_extract;
 }
@@ -664,7 +643,7 @@ sphrev_load_args(GwyContainer *container,
 {
     *args = sphrev_defaults;
 
-    gwy_container_gis_double_by_name(container, radius_key, &args->radius);
+    gwy_container_gis_double_by_name(container, radius_key, &args->size);
     gwy_container_gis_enum_by_name(container, direction_key, &args->direction);
     gwy_container_gis_boolean_by_name(container, do_extract_key,
                                       &args->do_extract);
@@ -675,7 +654,7 @@ static void
 sphrev_save_args(GwyContainer *container,
                  SphrevArgs *args)
 {
-    gwy_container_set_double_by_name(container, radius_key, args->radius);
+    gwy_container_set_double_by_name(container, radius_key, args->size);
     gwy_container_set_enum_by_name(container, direction_key, args->direction);
     gwy_container_set_boolean_by_name(container, do_extract_key,
                                       args->do_extract);
