@@ -1446,12 +1446,15 @@ hash_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
         g_object_unref(object);
         break;
 
+        case G_TYPE_STRING:
+        gwy_container_set_string(duplicate, key, g_value_dup_string(value));
+        break;
+
         case G_TYPE_BOOLEAN:
         case G_TYPE_UCHAR:
         case G_TYPE_INT:
         case G_TYPE_INT64:
         case G_TYPE_DOUBLE:
-        case G_TYPE_STRING:
         gwy_container_set_value(duplicate, key, value, NULL);
         break;
 
