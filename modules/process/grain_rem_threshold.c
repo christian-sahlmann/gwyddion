@@ -465,7 +465,7 @@ mask_process(GwyDataField *dfield,
     }
 }
 
-/* FIXME: this is *very* inefficient, should streamlined like other grain
+/* FIXME: this is *very* inefficient, should be streamlined like other grain
  * algorithms */
 static void
 intersect_removes(GwyDataField *mask_a, GwyDataField *mask_b, GwyDataField *mask)
@@ -476,7 +476,7 @@ intersect_removes(GwyDataField *mask_a, GwyDataField *mask_b, GwyDataField *mask
 
     for (i = 0; i < xres*yres; i++) {
         if (mask->data[i] > 0 && !mask_a->data[i] && !mask_b->data[i])
-            gwy_data_field_grains_remove_manually(mask, i);
+            gwy_data_field_grains_remove_grain(mask, i%xres, i/xres);
     }
 }
 
