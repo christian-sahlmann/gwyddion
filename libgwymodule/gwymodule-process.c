@@ -74,26 +74,13 @@ gwy_run_process_func(const guchar *name,
 }
 
 static void
-create_process_menu_entry(const guchar *key,
-                          GwyProcessFuncInfo *func_info,
-                          GSList **entries)
+gwy_hash_table_to_slist_cb(gpointer key,
+                           gpointer value,
+                           gpointer user_data)
 {
-    GtkItemFactoryEntry *menu_item;
+    GSList **list = (GSList**)user_data;
 
-    g_assert(strcmp(key, func_info->name) == 0);
-    if (!func_info->menu_path || !*func_info->menu_path)
-        return;
-
-    menu_item = g_new(GtkItemFactoryEntry, 1);
-    menu_item->path = g_strconcat("/_Data Process", func_info->menu_path, NULL);
-    menu_item->accelerator = NULL;
-    menu_item->callback = (GtkItemFactoryCallback)(*entries)->data;
-    menu_item->callback_action = 42;
-    menu_item->item_type = "<Item>";
-    /* XXX: this is CHEATING!  we set it to NULL later */
-    menu_item->extra_data = key;
-
-    *entries = g_slist_insert(*entries, menu_item, 1);
+    *list = g_slist_prepend(*list, value);
 }
 
 static gint
@@ -119,102 +106,90 @@ GtkObject*
 gwy_build_process_menu(GtkAccelGroup *accel_group,
                        GCallback item_callback)
 {
+    const gsize bufsize = 4096;
     GtkItemFactory *item_factory;
-    GtkItemFactoryEntry *menu_item;
-    GtkItemFactoryEntry branch, tearoff;
-    GSList *entries = NULL;
-    GSList *l, *p;
-    gpointer cbdata;
-    gint i;
+    GtkItemFactoryEntry branch = { NULL, NULL, NULL, 0, "<Branch>", NULL };
+    GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
+    GtkItemFactoryEntry item = { NULL, NULL, item_callback, 0, "<Item>", NULL };
+    gchar *current, *prev, *dp_str;
+    GSList *l, *entries = NULL;
+    gint i, dp_len;
 
-    /* a silly way of passing the callback to create_process_menu_entry:
-     * add it as the first entries item */
-    entries = g_slist_prepend(entries, item_callback);
-    g_hash_table_foreach(process_funcs, (GHFunc)create_process_menu_entry,
-                         &entries);
-    entries = g_slist_delete_link(entries, entries);
+    g_hash_table_foreach(process_funcs, gwy_hash_table_to_slist_cb, &entries);
     entries = g_slist_sort(entries, (GCompareFunc)process_menu_entry_compare);
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<data>",
                                         accel_group);
 
-    /* the root item */
-    menu_item = g_new(GtkItemFactoryEntry, 1);
-    menu_item->path = g_strdup("/_Data Process");
-    menu_item->accelerator = "<control>D";
-    menu_item->callback = NULL;
-    menu_item->callback_action = 0;
-    menu_item->item_type = "<Branch>";
-    menu_item->extra_data = NULL;
-    entries = g_slist_prepend(entries, menu_item);
-    gwy_debug("inserting %s `%s'", menu_item->item_type, menu_item->path);
-    gtk_item_factory_create_item(item_factory, menu_item, NULL, 1);
+    dp_str = "/_Data Process";
+    dp_len = strlen(dp_str);
+
+    /* the root branch */
+    current = strncpy(g_new(gchar, bufsize), dp_str, bufsize);
+    branch.path = current;
+    gtk_item_factory_create_item(item_factory, &branch, NULL, 1);
 
     /* the root tearoff */
-    tearoff.path = "/_Data Process/---";
-    tearoff.accelerator = NULL;
-    tearoff.callback = NULL;
-    tearoff.callback_action = 0;
-    tearoff.item_type = "<Tearoff>";
-    tearoff.extra_data = NULL;
-    gwy_debug("inserting %s `%s'", tearoff.item_type, tearoff.path);
+    prev = strncpy(g_new(gchar, bufsize), dp_str, bufsize);
+    g_strlcpy(prev + dp_len, "/---", bufsize - dp_len);
+    tearoff.path = prev;
     gtk_item_factory_create_item(item_factory, &tearoff, NULL, 1);
 
-    branch.item_type = "<Branch>";
-    branch.accelerator = NULL;
-    branch.callback = NULL;
-    branch.callback_action = 0;
-    branch.extra_data = NULL;
-
     /* create missing branches
-     * XXX: Gtk+ can do this itself
+     * XXX: Gtk+ essentially can do this itself
      * but this way we can e. g. put a tearoff at the top of each branch... */
-    p = entries;
-    for (l = p->next; l; l = l->next) {
-        GtkItemFactoryEntry *le = (GtkItemFactoryEntry*)l->data;
-        GtkItemFactoryEntry *pe = (GtkItemFactoryEntry*)p->data;
-        guchar *lp = le->path;
-        guchar *pp = pe->path;
+    for (l = entries; l; l = l->next) {
+        GwyProcessFuncInfo *func_info = (GwyProcessFuncInfo*)l->data;
 
-        gwy_debug("<Item> %s", lp);
+        if (!func_info->menu_path || !*func_info->menu_path)
+            continue;
+        if (*func_info->menu_path != '/') {
+            g_warning("Menu path `%s' doesn't start with a slash",
+                      func_info->menu_path);
+            continue;
+        }
+
+        if (g_strlcpy(current + dp_len, func_info->menu_path, bufsize - dp_len)
+            > bufsize-2)
+            g_warning("Too long path `%s' will be truncated",
+                      func_info->menu_path);
         /* find where the paths differ */
-        for (i = 0; lp[i] && pp[i] && lp[i] == pp[i]; i++)
+        for (i = dp_len; current[i] && prev[i] && current[i] == prev[i]; i++)
             ;
-        if (!lp[i])
+        if (!current[i])
             break;
 
         /* find where the next / is  */
         do {
             i++;
-        } while (lp[i] && lp[i] != '/');
-        while (lp[i]) {
+        } while (current[i] && current[i] != '/');
+        while (current[i]) {
             /* create a branch with a tearoff */
-            branch.path = g_strndup(lp, i);
-            gwy_debug("inserting %s `%s'", branch.item_type, branch.path);
+            current[i] = '\0';
+            branch.path = current;
             gtk_item_factory_create_item(item_factory, &branch, NULL, 1);
-            tearoff.path = g_strconcat(branch.path, "/---", NULL);
-            gwy_debug("inserting %s `%s'", tearoff.item_type, tearoff.path);
+
+            strcpy(prev, current);
+            g_strlcat(prev, "/---", bufsize);
+            tearoff.path = prev;
             gtk_item_factory_create_item(item_factory, &tearoff, NULL, 1);
-            g_free(tearoff.path);
-            g_free(branch.path);
+            current[i] = '/';
 
             /* find where the next / is  */
             do {
                 i++;
-            } while (lp[i] && lp[i] != '/');
+            } while (current[i] && current[i] != '/');
         }
 
-        /* the ugly `cbdata in extra_data' trick */
-        menu_item = (GtkItemFactoryEntry*)l->data;
-        cbdata = (gpointer)menu_item->extra_data;
-        menu_item->extra_data = NULL;
-        gtk_item_factory_create_item(item_factory, menu_item, cbdata, 1);
+        /* XXX: passing directly func_info->name may be a little dangerous,
+         * OTOH who would eventually free a newly allocated string? */
+        item.path = current;
+        gtk_item_factory_create_item(item_factory, &item, func_info->name, 1);
+
+        GWY_SWAP(gchar*, current, prev);
     }
 
-    for (l = entries; l; l = l->next) {
-        menu_item = (GtkItemFactoryEntry*)l->data;
-        g_free(menu_item->path);
-        g_free(menu_item);
-    }
+    g_free(prev);
+    g_free(current);
     g_slist_free(entries);
 
     return (GtkObject*)item_factory;
