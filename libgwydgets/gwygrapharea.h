@@ -193,6 +193,8 @@ void gwy_graph_area_signal_selected(GwyGraphArea *area);
 
 void gwy_graph_area_signal_zoomed(GwyGraphArea *area);
 
+void gwy_graph_area_set_selection(GwyGraphArea *area, gdouble from, gdouble to);
+
 G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/

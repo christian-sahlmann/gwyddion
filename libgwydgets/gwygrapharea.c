@@ -470,6 +470,14 @@ gwy_graph_area_draw_selection(GtkWidget *widget)
 
     if (area->status == GWY_GRAPH_STATUS_XSEL
         || area->status == GWY_GRAPH_STATUS_YSEL) {
+        if (area->status == GWY_GRAPH_STATUS_XSEL) {
+            area->seldata->scr_start = data_to_scr_x(widget, area->seldata->data_start);
+            area->seldata->scr_end = data_to_scr_x(widget, area->seldata->data_end);
+        }
+        else if (area->status == GWY_GRAPH_STATUS_YSEL) {
+            area->seldata->scr_start = data_to_scr_y(widget, area->seldata->data_start);
+            area->seldata->scr_end = data_to_scr_y(widget, area->seldata->data_end);
+        }
         start = area->seldata->scr_start;
         end = area->seldata->scr_end;
         if (start > end)
@@ -1110,6 +1118,28 @@ zoom(GtkWidget *widget)
 
     gwy_graph_area_signal_zoomed(area);
     area->status = GWY_GRAPH_STATUS_PLAIN;
+}
+
+void 
+gwy_graph_area_set_selection(GwyGraphArea *area, gdouble from, gdouble to)
+{
+    if (area->status == GWY_GRAPH_STATUS_XSEL
+         || area->status == GWY_GRAPH_STATUS_YSEL) {
+        if (area->status == GWY_GRAPH_STATUS_XSEL) {
+            area->seldata->data_start = from;
+            area->seldata->data_end = to;
+            area->seldata->scr_start = data_to_scr_x(GTK_WIDGET(area), from);
+            area->seldata->scr_end = data_to_scr_x(GTK_WIDGET(area), to);
+        }
+        else if (area->status == GWY_GRAPH_STATUS_YSEL) {
+            area->seldata->data_start = from;
+            area->seldata->data_end = to;
+            area->seldata->scr_start = data_to_scr_y(GTK_WIDGET(area), from);
+            area->seldata->scr_end = data_to_scr_y(GTK_WIDGET(area), to);
+         }
+        gwy_graph_area_signal_selected(area);
+        gwy_graph_area_draw_selection(GTK_WIDGET(area));
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

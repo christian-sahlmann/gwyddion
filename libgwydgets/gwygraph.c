@@ -599,6 +599,7 @@ gwy_graph_get_status_data(GwyGraph *graph)
     return NULL;
 }
 
+
 /**
  * gwy_graph_get_boundaries:
  * @graph: graph widget
