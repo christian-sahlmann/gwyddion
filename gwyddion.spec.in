@@ -88,6 +88,7 @@ update-mime-database %{_datadir}/mime
 %{_datadir}/%{name}/pixmaps/*.ico
 %dir %{_datadir}/%{name}/pixmaps
 %dir %{_datadir}/%{name}
+%dir %{_datadir}/pixmaps/%{name}.png
 %{_libdir}/%{name}/modules/file/*.so
 %{_libdir}/%{name}/modules/graph/*.so
 %{_libdir}/%{name}/modules/layer/*.so

@@ -1,6 +1,10 @@
 # @(#) $Id$
 
+icondatadir = $(datadir)/pixmaps
 pixmapdatadir = $(pkgdatadir)/pixmaps
+
+icondata_DATA = \
+	gwyddion.png
 
 pixmapdata_DATA = \
 	gwy_3d_base-24.png \
@@ -83,4 +87,5 @@ pixmapdata_DATA = \
 
 EXTRA_DIST = \
 	makefile.msc \
+	$(icondata_DATA) \
 	$(pixmapdata_DATA)
