@@ -13,7 +13,8 @@ tools_PROGRAMS = \
 	sfunctions.so \
 	spotremove.so \
 	filter.so \
-	polynom.so
+	polynom.so \
+	grain_remove_manually.so 
 
 EXTRA_DIST = \
 	makefile.msc
@@ -44,6 +45,11 @@ polynom_so_LDFLAGS = $(module_ldflags),polynom.so
 
 spotremove_so_SOURCES = spotremove.c
 spotremove_so_LDFLAGS = $(module_ldflags),spotremove.so
+
+grain_remove_manually_so_SOURCES = grain_remove_manually.c
+grain_remove_manually_so_LDFLAGS = $(module_ldflags),grain_remove_manually.so
+
+
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"

@@ -15,7 +15,8 @@ process_PROGRAMS = \
 	shade.so \
         grain_mark.so \
 	grain_rem_threshold.so \
-	grain_wshed.so
+	grain_wshed.so \
+ 	grain_dist.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -52,6 +53,9 @@ grain_rem_threshold_so_LDFLAGS = $(module_ldflags),grain_rem_threshold.so
 
 grain_wshed_so_SOURCES = grain_wshed.c
 grain_wshed_so_LDFLAGS = $(module_ldflags),grain_wshed.so
+
+grain_dist_so_SOURCES = grain_dist.c
+grain_dist_so_LDFLAGS = $(module_ldflags),grain_dist.so
 
 
 
