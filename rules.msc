@@ -24,8 +24,14 @@ install-lib: lib "$(TOP_SRCDIR)\inst.stamp"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).def "$(DEST_DIR)\lib"
 	for %h in ($(LIB_HEADERS)) do $(INSTALL) %h "$(DEST_DIR)\include\$(XLIBRARY)"
 
+!IFDEF MOD_TYPE
+MOD_DIR = \$(MOD_TYPE)
+!ELSE
+MOD_DIR =
+!ENDIF
+
 install-mod: mod "$(TOP_SRCDIR)\inst.stamp"
-	for %m in ($(MODULES)) do $(INSTALL) %m "$(DEST_DIR)\modules\$(MOD_TYPE)"
+	for %m in ($(MODULES)) do $(INSTALL) %m "$(DEST_DIR)\modules$(MOD_DIR)"
 
 install-plugin: plugin "$(TOP_SRCDIR)\inst.stamp"
 	for %p in ($(PLUGINS)) do $(INSTALL) %p "$(DEST_DIR)\plugins\$(PLUGIN_TYPE)"
