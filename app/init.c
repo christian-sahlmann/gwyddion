@@ -49,7 +49,7 @@ gwy_app_init(void)
     gwy_widgets_type_init();
     if (gwy_gl_ok)
         gwy_gl_ok = gwy_widgets_gl_init();
-    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
+    /*g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);*/
     g_set_application_name(PACKAGE_NAME);
     gwy_palette_def_setup_presets();
     gwy_gl_material_setup_presets();
