@@ -1146,18 +1146,6 @@ gwy_palette_def_parse(const gchar *text,
  **/
 
 /**
- * GwyRGBA:
- * @r: The red component.
- * @g: The green component.
- * @b: The blue component.
- * @a: The alpha (opacity) value.
- *
- * RGB[A] color specification type.
- *
- * All values are from the range [0,1].
- **/
-
-/**
  * GwyPaletteDefEntry:
  * @x: Position of @color in the palette definition.
  * @color: The color at position @x.

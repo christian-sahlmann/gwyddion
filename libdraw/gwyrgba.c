@@ -287,4 +287,18 @@ initialize_quarks(void)
     quarks_initialized = TRUE;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * GwyRGBA:
+ * @r: The red component.
+ * @g: The green component.
+ * @b: The blue component.
+ * @a: The alpha (opacity) value.
+ *
+ * RGB[A] color specification type.
+ *
+ * All values are from the range [0,1].
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
