@@ -68,7 +68,7 @@ spotremove_so_LDFLAGS = $(module_ldflags),spotremove.so
 
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fpic
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fPIC
 
 clean-local:
 	rm -f core.* *~
