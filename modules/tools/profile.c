@@ -62,7 +62,7 @@ static GtkWidget *profile_dialog = NULL;
 static ProfileControls controls;
 static gulong updated_id = 0;
 static gulong response_id = 0;
-static GwyDataViewLayer *select_layer = NULL;
+static GwyDataViewLayer *lines_layer = NULL;
 static GwyDataField *datafield = NULL;
 static GPtrArray *dtl = NULL;
 static GPtrArray *str = NULL;
@@ -125,20 +125,20 @@ profile_use(GwyDataWindow *data_window,
                                                                 "/0/data"));
 
     layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && layer == select_layer)
+    if (layer && layer == lines_layer)
         return;
 
-    if (select_layer && updated_id)
-        g_signal_handler_disconnect(select_layer, updated_id);
+    if (lines_layer && updated_id)
+        g_signal_handler_disconnect(lines_layer, updated_id);
 
-    if (layer && GWY_IS_LAYER_SELECT(layer))
-        select_layer = layer;
+    if (layer && GWY_IS_LAYER_LINES(layer))
+        lines_layer = layer;
     else {
-        select_layer = (GwyDataViewLayer*)gwy_layer_lines_new();
-        gwy_data_view_set_top_layer(data_view, select_layer);
+        lines_layer = (GwyDataViewLayer*)gwy_layer_lines_new();
+        gwy_data_view_set_top_layer(data_view, lines_layer);
     }
 
-    profile_load_args(gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent)),
+    profile_load_args(gwy_data_view_get_data(GWY_DATA_VIEW(lines_layer->parent)),
                       &controls);
 
     if (!profile_dialog)
@@ -160,7 +160,7 @@ profile_use(GwyDataWindow *data_window,
 
     }
 
-    updated_id = g_signal_connect(select_layer, "updated",
+    updated_id = g_signal_connect(lines_layer, "updated",
                                    G_CALLBACK(profile_selection_updated_cb),
                                    NULL);
     profile_selection_updated_cb();
@@ -181,10 +181,10 @@ profile_do(void)
     gint precision;
     GwyGraphAutoProperties prop;
 
-    if (!(is_selected=gwy_layer_lines_get_lines(select_layer, lines)))
+    if (!(is_selected=gwy_layer_lines_get_lines(lines_layer, lines)))
         return;
 
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(lines_layer->parent));
     /* the global one should be always the right on.  shoot me if not.
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                 "/0/data"));
@@ -239,17 +239,17 @@ profile_do(void)
     }
 
 
-    gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
+    gwy_data_view_update(GWY_DATA_VIEW(lines_layer->parent));
 }
 
 static void
 profile_dialog_abandon(void)
 {
     gwy_debug("");
-    if (select_layer && updated_id)
-        g_signal_handler_disconnect(select_layer, updated_id);
+    if (lines_layer && updated_id)
+        g_signal_handler_disconnect(lines_layer, updated_id);
     updated_id = 0;
-    select_layer = NULL;
+    lines_layer = NULL;
     if (profile_dialog) {
         g_signal_handler_disconnect(profile_dialog, response_id);
         gtk_widget_destroy(profile_dialog);
@@ -398,7 +398,7 @@ update_labels()
     gint n_of_lines=0;
 
     gwy_debug("");
-    n_of_lines = gwy_layer_lines_get_lines(select_layer, lines);
+    n_of_lines = gwy_layer_lines_get_lines(lines_layer, lines);
 
     j=0;
     gwy_debug("%d lines.\n", n_of_lines);
@@ -449,7 +449,7 @@ profile_selection_updated_cb(void)
     gwy_debug("");
 
     is_visible = controls.is_visible;
-    is_selected = gwy_layer_lines_get_lines(select_layer, lines);
+    is_selected = gwy_layer_lines_get_lines(lines_layer, lines);
 
     if (!is_visible && !is_selected)
         return;
@@ -516,11 +516,11 @@ profile_selection_updated_cb(void)
 static void
 profile_clear(void)
 {
-    gwy_layer_lines_unselect(select_layer);
+    gwy_layer_lines_unselect(lines_layer);
     gwy_graph_clear(GWY_GRAPH(controls.graph));
     gtk_widget_queue_draw(controls.graph);
     update_labels();
-    profile_save_args(gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent)),
+    profile_save_args(gwy_data_view_get_data(GWY_DATA_VIEW(lines_layer->parent)),
                       &controls);
 }
 
