@@ -39,8 +39,129 @@ typedef struct _GwyCDLineParam {
 
 /*********************** gaussian *****************************/
 #include <stdio.h>
+
 static void
-cd_stepheight(gdouble *x,
+cd_ustepheight(gdouble *x,
+            gdouble *y,
+            gint n_dat,
+            gdouble *param,
+            gdouble *err,
+            G_GNUC_UNUSED gpointer user_data,
+            gboolean *fres)
+{
+    gint i;
+    gint nstep;
+    gdouble max, val;
+    gint imax, iwidth;
+    gint nlow, nup;
+
+    nstep = n_dat/20;
+    iwidth = n_dat/10;
+    if (nstep<1) nstep = 1;
+    
+    max = -G_MAXDOUBLE;
+    for (i=nstep; i<(n_dat - 2*nstep); i++)
+    {
+        val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
+        if (max < val) {
+            max = val;
+            imax = i + nstep/2;
+            param[1] = (x[i+nstep] + x[i])/2.0;
+        }
+    }
+   
+    param[2] = param[3] = 0;
+    nlow=0; 
+    nup = 0;
+    for (i=0; i<n_dat; i++)
+    {
+        if (i<(imax - iwidth/2))
+        {
+            param[2] += y[i];
+            nlow++;
+        }
+        else if (i>(imax + iwidth/2))
+        {
+            param[3] += y[i];
+            nup++;
+        }
+    }
+    param[2]/=(gdouble)nlow;
+    param[3]/=(gdouble)nup;
+
+    param[0] = param[3] - param[2];
+   
+    err[0] = err[1] = err[2] = err[3] = 0;
+    *fres = TRUE;
+
+}
+
+static void
+cd_lstepheight(gdouble *x,
+            gdouble *y,
+            gint n_dat,
+            gdouble *param,
+            gdouble *err,
+            G_GNUC_UNUSED gpointer user_data,
+            gboolean *fres)
+{
+    gint i;
+    gint nstep;
+    gdouble min, val;
+    gint imin, iwidth;
+    gint nlow, nup;
+
+    nstep = n_dat/20;
+    iwidth = n_dat/10;
+    if (nstep<1) nstep = 1;
+    
+    min = G_MAXDOUBLE;
+    for (i=nstep; i<(n_dat - 2*nstep); i++)
+    {
+        val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
+        if (min > val) {
+            min = val;
+            imin = i + nstep/2;
+            param[1] = (x[i+nstep] + x[i])/2.0;
+        }
+    }
+   
+    param[2] = param[3] = 0;
+    nlow=0; 
+    nup = 0;
+    for (i=0; i<n_dat; i++)
+    {
+        if (i<(imin - iwidth/2))
+        {
+            param[2] += y[i];
+            nlow++;
+        }
+        else if (i>(imin + iwidth/2))
+        {
+            param[3] += y[i];
+            nup++;
+        }
+    }
+    param[2]/=(gdouble)nlow;
+    param[3]/=(gdouble)nup;
+
+    param[0] = param[3] - param[2];
+   
+    err[0] = err[1] = err[2] = err[3] = 0;
+    *fres = TRUE;
+
+}
+
+static gdouble
+func_stepheight(gdouble x, gint n_param, gdouble *param, gpointer user_data, gboolean *fres)
+{
+    if (x<param[1]) return param[2];
+    else return param[3];
+}
+
+
+static void
+cd_rlineheight(gdouble *x,
             gdouble *y,
             gint n_dat,
             gdouble *param,
@@ -51,7 +172,8 @@ cd_stepheight(gdouble *x,
     gint i;
     gint nstep;
     gdouble max, min, val;
-    gint imax, imin;
+    gint imax, imin, iwidth;
+    gint nin, nout;
 
 
     nstep = n_dat/20;
@@ -59,33 +181,116 @@ cd_stepheight(gdouble *x,
     
     max = -G_MAXDOUBLE;
     min = G_MAXDOUBLE;
-    for (i=0; i<(n_dat - nstep); i++)
+    
+    for (i=nstep; i<(n_dat - 2*nstep); i++)
     {
         val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
         if (min > val) {
             min = val;
-            imin = i;
-            param[4] = (x[i+nstep] + x[i])/2.0;
+            imin = i + nstep/2;
+            param[3] = (x[i+nstep] + x[i])/2.0;
         }
+    }
+     
+    for (i=imin; i<(n_dat - 2*nstep); i++)
+    {
+        val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
         if (max < val) {
             max = val;
-            imax = i + nstep;
-            param[3] = (x[i+nstep] + x[i])/2.0;
+            imax = i + nstep/2;
+            param[4] = (x[i+nstep] + x[i])/2.0;
         }
     }
    
     param[1] = param[2] = 0;
+    nin=0; 
+    nout = 0;
+    iwidth = imax - imin;
     for (i=0; i<n_dat; i++)
     {
-        if (i>imax && i<imin)
+        if (i>(imin+iwidth/4) && i<(imax-iwidth/4))
         {
-            param[2] += y[i]/((double)imin - (double)imax);
+            param[2] += y[i];
+            nin++;
         }
-        else
+        else if ((i<(imin-iwidth/4) && i>(imin-3*iwidth/4))
+                 || (i>(imax+iwidth/4) && i<(imax+3*iwidth/4)))
         {
-            param[1] += y[i]/((double)n_dat - (imin - imax));
+            param[1] += y[i];
+            nout++;
         }
     }
+    param[2]/=(gdouble)nin;
+    param[1]/=(gdouble)nout;
+
+    param[0] = param[2] - param[1];
+   
+    err[0] = err[1] = err[2] = err[3] = err[4] = 0;
+    *fres = TRUE;
+
+}
+
+static void
+cd_lineheight(gdouble *x,
+            gdouble *y,
+            gint n_dat,
+            gdouble *param,
+            gdouble *err,
+            G_GNUC_UNUSED gpointer user_data,
+            gboolean *fres)
+{
+    gint i;
+    gint nstep;
+    gdouble max, min, val;
+    gint imax, imin, iwidth;
+    gint nin, nout;
+
+
+    nstep = n_dat/20;
+    if (nstep<1) nstep = 1;
+    
+    max = -G_MAXDOUBLE;
+    min = G_MAXDOUBLE;
+    for (i=nstep; i<(n_dat - 2*nstep); i++)
+    {
+        val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
+         if (max < val) {
+            max = val;
+            imax = i + nstep/2;
+            param[3] = (x[i+nstep] + x[i])/2.0;
+        }
+    }
+    
+    for (i=imax; i<(n_dat - 2*nstep); i++)
+    {
+        val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
+        if (min > val) {
+            min = val;
+            imin = i + nstep/2;
+            param[4] = (x[i+nstep] + x[i])/2.0;
+        }
+    }
+   
+    param[1] = param[2] = 0;
+    nin=0; 
+    nout = 0;
+    iwidth = imin - imax;
+    for (i=0; i<n_dat; i++)
+    {
+        if (i>(imax+iwidth/4) && i<(imin-iwidth/4))
+        {
+            param[2] += y[i];
+            nin++;
+        }
+        else if ((i<(imax-iwidth/4) && i>(imax-3*iwidth/4))
+                 || (i>(imin+iwidth/4) && i<(imin+3*iwidth/4)))
+        {
+            param[1] += y[i];
+            nout++;
+        }
+    }
+    param[2]/=(gdouble)nin;
+    param[1]/=(gdouble)nout;
 
     param[0] = param[2] - param[1];
    
@@ -95,7 +300,7 @@ cd_stepheight(gdouble *x,
 }
 
 static gdouble
-func_stepheight(gdouble x, gint n_param, gdouble *param, gpointer user_data, gboolean *fres)
+func_lineheight(gdouble x, gint n_param, gdouble *param, gpointer user_data, gboolean *fres)
 {
     if (x>param[3] && x<param[4]) return param[2];
     else return param[1];
@@ -114,26 +319,48 @@ static const GwyCDLineParam lineheight_pars[]= {
 static const GwyCDLineParam stepheight_pars[]= {
    {"h", " ", 1 },
    {"x", " ", 2 },
+   {"y<sub>1</sub>", " ", 2 },
+   {"y<sub>2</sub>", " ", 2 },
 };
 
 
 static const GwyCDLinePreset fitting_presets[] = {
     {
-        "Step height",
+        "Step height (right)",
         "Step",
         "cd_step.png",
         &func_stepheight,
-        &cd_stepheight,
-        2,
+        &cd_ustepheight,
+        4,
         stepheight_pars,
         NULL
     },
     {
-        "Line height",
+        "Step height (left)",
+        "Step",
+        "cd_rstep.png",
+        &func_stepheight,
+        &cd_lstepheight,
+        4,
+        stepheight_pars,
+        NULL
+    }, 
+    {
+        "Line height (positive)",
         "Line",
         "cd_line.png",
-        &func_stepheight,
-        &cd_stepheight,
+        &func_lineheight,
+        &cd_lineheight,
+        5,
+        lineheight_pars,
+        NULL
+    },
+    {
+        "Line height (negative)",
+        "Line",
+        "cd_rline.png",
+        &func_lineheight,
+        &cd_rlineheight,
         5,
         lineheight_pars,
         NULL

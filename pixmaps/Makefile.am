@@ -50,7 +50,9 @@ pixmapdata_DATA = \
 	gwyddion.ico \
 	splash.png \
 	cd_line.png \
-	cd_step.png
+	cd_rline.png \
+	cd_step.png \
+	cd_rstep.png
 
 EXTRA_DIST = \
 	makefile.msc \
