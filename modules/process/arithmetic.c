@@ -27,6 +27,8 @@
 #include "app.h"
 #include "file.h"
 
+#define THUMBNAIL_SIZE 16
+
 static GtkWidget* gwy_data_arith_window_construct  (void);
 static GtkWidget* gwy_data_arith_data_option_menu  (GtkWidget *entry,
                                                     GwyDataWindow **operand);
@@ -205,13 +207,14 @@ gwy_data_arith_append_line(GwyDataWindow *data_window,
                            GtkWidget *menu)
 {
     GwyContainer *data;
-    GtkWidget *item;
+    GtkWidget *item, *data_view, *image;
+    GdkPixbuf *pixbuf;
     const gchar *fnm;
     gchar *filename;
 
     data = gwy_data_window_get_data(data_window);
+    data_view = gwy_data_window_get_data_view(data_window);
 
-    /* FIXME: this duplicates code from GwyDataWindow */
     if (gwy_container_contains_by_name(data, "/filename")) {
         fnm = gwy_container_get_string_by_name(data, "/filename");
         filename = g_path_get_basename(fnm);
@@ -221,7 +224,12 @@ gwy_data_arith_append_line(GwyDataWindow *data_window,
         filename = g_strdup(fnm);
     }
 
-    item = gtk_menu_item_new_with_label(filename);
+    pixbuf = gwy_data_view_get_thumbnail(GWY_DATA_VIEW(data_view),
+                                         THUMBNAIL_SIZE);
+    image = gtk_image_new_from_pixbuf(pixbuf);
+    gwy_object_unref(pixbuf);
+    item = gtk_image_menu_item_new_with_label(filename);
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
     g_object_set_data(G_OBJECT(item), "data-window", data_window);
     g_signal_connect(item, "activate",
@@ -505,6 +513,9 @@ gwy_data_arith_do(void)
     g_assert_not_reached();
     return FALSE;
 }
+
+/************************ Datafield arithmetic ***************************/
+/* XXX: move to libprocess/datafield.c? */
 
 static void
 gwy_data_field_add2(GwyDataField *dfield1,
