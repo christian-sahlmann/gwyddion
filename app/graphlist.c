@@ -29,6 +29,7 @@
 
 enum {
     GRAPHLIST_GMODEL,
+    GRAPHLIST_EDITABLE,
     GRAPHLIST_VISIBLE,
     GRAPHLIST_TITLE,
     GRAPHLIST_NCURVES,
@@ -69,6 +70,7 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
 
     data = gwy_data_window_get_data(data_window);
     gmodel = gwy_graph_model_new(graph);
+    g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
 
     /* compute new id and new id list */
     if (gwy_container_gis_int32_by_name(data, "/0/graph/lastid", &lastid)) {
@@ -92,6 +94,10 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
 
     list = g_object_get_data(G_OBJECT(graph_view), "gwy-app-graph-list-view");
     g_assert(list);
+    /* XXX: redraw assures the toggles get into a consistent state.  A more
+     * fine-grained method should be probably used... */
+    g_signal_connect_swapped(graph, "destroy",
+                             G_CALLBACK(gtk_widget_queue_draw), list);
     store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(list)));
 
     gtk_list_store_append(store, &iter);
@@ -139,6 +145,41 @@ gwy_app_graph_list(GwyDataWindow *data_window)
     return window;
 }
 
+static void
+gwy_app_graph_list_toggled(GtkCellRendererToggle *toggle,
+                           gchar *pathstring,
+                           GtkWidget *list)
+{
+    GtkWidget *graph;
+    GtkTreeModel *store;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    gboolean active;
+    GObject *gmodel;
+
+    active = gtk_cell_renderer_toggle_get_active(toggle);
+    path = gtk_tree_path_new_from_string(pathstring);
+    store = gtk_tree_view_get_model(GTK_TREE_VIEW(list));
+    gtk_tree_model_get_iter(store, &iter, path);
+    gtk_tree_model_get(store, &iter, GRAPHLIST_GMODEL, &gmodel, -1);
+    if (active) {
+        /* FIXME: this is gross and cruel */
+        graph = GTK_WIDGET(GWY_GRAPH_MODEL(gmodel)->graph);
+        g_assert(graph);
+        gtk_widget_destroy(gtk_widget_get_toplevel(graph));
+    }
+    else {
+        graph = gwy_graph_new_from_model(GWY_GRAPH_MODEL(gmodel));
+        g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
+        /* XXX: redraw assures the toggles get into a consistent state.  A more
+         * fine-grained method should be probably used... */
+        g_signal_connect_swapped(graph, "destroy",
+                                 G_CALLBACK(gtk_widget_queue_draw), list);
+        gwy_app_graph_window_create(graph);
+    }
+    gtk_tree_path_free(path);
+}
+
 static GtkWidget*
 gwy_app_graph_list_construct(GwyContainer *data)
 {
@@ -153,20 +194,21 @@ gwy_app_graph_list_construct(GwyContainer *data)
         { "Id", GRAPHLIST_ID },   /* FIXME: debug only */
     };
 
-    GtkWidget *tree;
+    GtkWidget *list;
     GtkListStore *store;
     GtkTreeSelection *selection;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
     gsize i;
 
-    store = gtk_list_store_new(1, G_TYPE_POINTER);
+    /* use an `editable' boolean column which is alwas true */
+    store = gtk_list_store_new(2, G_TYPE_POINTER, G_TYPE_BOOLEAN);
 
     gwy_container_foreach(data, "/0/graph/graph",
                           (GHFunc)(gwy_app_graph_list_add_line), store);
 
-    tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
+    list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(list), TRUE);
     g_object_unref(store);
     g_object_set_data(G_OBJECT(store), "container", data);
 
@@ -176,12 +218,25 @@ gwy_app_graph_list_construct(GwyContainer *data)
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), 0,
                                          GTK_SORT_ASCENDING);
 
-    for (i = 0; i < G_N_ELEMENTS(columns); i++) {
-        if (i == 0)
-            renderer = gtk_cell_renderer_toggle_new();
-        else
-            renderer = gtk_cell_renderer_text_new();
+    /* first column (toggle) is special, set up it separately */
+    renderer = gtk_cell_renderer_toggle_new();
+    g_signal_connect(renderer, "toggled",
+                     G_CALLBACK(gwy_app_graph_list_toggled), list);
+    column = gtk_tree_view_column_new_with_attributes(columns[0].title,
+                                                      renderer,
+                                                      "activatable",
+                                                      GRAPHLIST_EDITABLE,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_graph_list_cell_renderer,
+         GUINT_TO_POINTER(columns[0].id),
+         NULL);  /* destroy notify */
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
 
+    /* other columns */
+    for (i = 1; i < G_N_ELEMENTS(columns); i++) {
+        renderer = gtk_cell_renderer_text_new();
         column = gtk_tree_view_column_new_with_attributes(columns[i].title,
                                                           renderer,
                                                           NULL);
@@ -190,13 +245,13 @@ gwy_app_graph_list_construct(GwyContainer *data)
              gwy_app_graph_list_cell_renderer,
              GUINT_TO_POINTER(columns[i].id),
              NULL);  /* destroy notify */
-        gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+        gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
     }
 
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
-    return tree;
+    return list;
 }
 
 static void
@@ -274,6 +329,7 @@ gwy_app_graph_list_add_line(gpointer hkey,
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
                        GRAPHLIST_GMODEL, gmodel,
+                       GRAPHLIST_EDITABLE, TRUE,
                        -1);
 }
 

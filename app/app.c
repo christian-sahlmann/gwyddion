@@ -193,8 +193,8 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
  *
  * Removes the data window @window from the list of data windows.
  *
- * All associated structures are freed, active tool gets switch to %NULL
- * window.
+ * All associated structures are freed, active tool gets switched to %NULL
+ * window.  But the widget itself is NOT destroyed by this function.
  **/
 void
 gwy_app_data_window_remove(GwyDataWindow *window)
@@ -503,7 +503,8 @@ gwy_app_graph_window_set_current(GtkWidget *window)
  *
  * Removes the graph window @window from the list of graph windows.
  *
- * All associated structures are freed.
+ * All associated structures are freed, but the widget itself is NOT destroyed
+ * by this function.
  **/
 void
 gwy_app_graph_window_remove(GtkWidget *window)
@@ -552,7 +553,12 @@ gwy_app_graph_window_create(GtkWidget *graph)
 
     /* TODO: this is broken because we do not actually know which data window
      * is the right one, but for GraphModel testing it doesn't matter much. */
-    gwy_app_graph_list_add(gwy_app_data_window_get_current(), GWY_GRAPH(graph));
+    if (!g_object_get_data(G_OBJECT(graph), "graph-model"))
+        /* FIXME: this is convoluted. We try to fix adding a graph just
+         * created from a model for a second time. Also, a GwyGraph should
+         * obviously know its model... */
+        gwy_app_graph_list_add(gwy_app_data_window_get_current(),
+                               GWY_GRAPH(graph));
 
     g_signal_connect(window, "focus-in-event",
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
