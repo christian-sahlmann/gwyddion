@@ -148,9 +148,8 @@ gwy_app_create_data_window(GwyContainer *data)
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(g_object_unref), data);
 
-    gtk_widget_show_all(data_window);
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
-    gwy_tools_crop_use(GWY_DATA_WINDOW(data_window));
+    gtk_window_present(GTK_WINDOW(data_window));
 }
 
 static void

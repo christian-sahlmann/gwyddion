@@ -12,7 +12,9 @@
 
 /* TODO */
 GtkWidget *gwy_app_main_window = NULL;
+
 static GSList *current_data = NULL;
+static GwyToolUseFunc current_tool_use_func = NULL;
 
 static const gchar *menu_list[] = {
     "<file>", "<proc>", "<xtns>", "<edit>",
@@ -22,9 +24,9 @@ static GtkWidget* gwy_app_toolbar_append_tool(GtkWidget *toolbar,
                                               GtkWidget *radio,
                                               const gchar *stock_id,
                                               const gchar *tooltip,
-                                              gpointer tool);
+                                              GwyToolUseFunc tool_use_func);
 static void       gwy_app_use_tool_cb        (GtkWidget *unused,
-                                              gpointer tool);
+                                              GwyToolUseFunc tool_use_func);
 
 void
 gwy_app_quit(void)
@@ -32,7 +34,7 @@ gwy_app_quit(void)
     GwyDataWindow *data_window;
 
     gwy_debug("%s", __FUNCTION__);
-    gwy_tools_crop_use(NULL);
+    /* current_tool_use_func(NULL); */
     while ((data_window = gwy_app_get_current_data_window()))
         gtk_widget_destroy(GTK_WIDGET(data_window));
 
@@ -125,9 +127,11 @@ foo(void)
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     grp = gwy_app_toolbar_append_tool(toolbar, NULL, GWY_STOCK_POINTER_MEASURE,
-                                        _("Pointer tooltip"), NULL);
+                                      _("Pointer tooltip"),
+                                      gwy_tool_pointer_use);
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_CROP,
-                                _("Crop tooltip"), NULL);
+                                _("Crop tooltip"),
+                                gwy_tool_crop_use);
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_SHADER,
                                 _("Shader tooltip"), NULL);
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_FIT_TRIANGLE,
@@ -214,7 +218,9 @@ gwy_app_set_current_data_window(GwyDataWindow *window)
         update_state = TRUE;
         current_data = g_slist_remove(current_data, current_data->data);
     }
-    gwy_tools_crop_use(window);
+    /* FIXME: this calls the use function a little bit too often */
+    if (current_tool_use_func)
+        current_tool_use_func(window);
 
     if (!update_state)
         return;
@@ -237,7 +243,7 @@ gwy_app_toolbar_append_tool(GtkWidget *toolbar,
                             GtkWidget *radio,
                             const gchar *stock_id,
                             const gchar *tooltip,
-                            gpointer tool)  /* XXX: needs some real type... */
+                            GwyToolUseFunc tool_use_func)
 {
     GtkWidget *icon;
     GtkStockItem stock_item;
@@ -255,14 +261,24 @@ gwy_app_toolbar_append_tool(GtkWidget *toolbar,
                                       GTK_TOOLBAR_CHILD_RADIOBUTTON, radio,
                                       stock_item.label, tooltip, NULL, icon,
                                       GTK_SIGNAL_FUNC(gwy_app_use_tool_cb),
-                                      tool);
+                                      tool_use_func);
 }
 
 static void
 gwy_app_use_tool_cb(GtkWidget *unused,
-                    gpointer tool)  /* XXX: needs some real type... */
+                    GwyToolUseFunc tool_use_func)
 {
-    gwy_debug("%s: %p", __FUNCTION__, tool);
+    GwyDataWindow *data_window;
+
+    gwy_debug("%s: %p", __FUNCTION__, tool_use_func);
+    if (current_tool_use_func)
+        current_tool_use_func(NULL);
+    current_tool_use_func = tool_use_func;
+    if (tool_use_func) {
+        data_window = gwy_app_get_current_data_window();
+        if (data_window)
+            current_tool_use_func(data_window);
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
