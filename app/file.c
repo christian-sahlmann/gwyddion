@@ -43,7 +43,7 @@
 
 static void              file_open_ok_cb       (GtkFileSelection *selector);
 static void              file_save_as_ok_cb    (GtkFileSelection *selector);
-static gboolean          file_real_open        (gchar *filename_sys,
+static gboolean          file_real_open        (const gchar *filename_sys,
                                                 const gchar *name);
 static GtkFileSelection* create_save_as_dialog (const gchar *title,
                                                 GCallback ok_callback);
@@ -232,7 +232,7 @@ file_open_ok_cb(GtkFileSelection *selector)
         return;
 
     name = (const gchar*)g_object_get_data(G_OBJECT(selector), "file-type");
-    if (file_real_open(g_strdup(filename_sys), name))
+    if (file_real_open(filename_sys, name))
         gtk_widget_destroy(GTK_WIDGET(selector));
 }
 
@@ -246,11 +246,11 @@ gwy_app_file_open_recent_cb(GObject *item)
     g_return_if_fail(filename_utf8);
     filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
     file_real_open(filename_sys, NULL);
+    g_free(filename_sys);
 }
 
-/* NB: the filename_sys argument is eaten by this function! */
 static gboolean
-file_real_open(gchar *filename_sys,
+file_real_open(const gchar *filename_sys,
                const gchar *name)
 {
     GtkWidget *data_window;
@@ -268,7 +268,7 @@ file_real_open(gchar *filename_sys,
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         data_window = gwy_app_data_window_create(data);
         gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
-                                        g_strdup(filename_utf8),
+                                        filename_utf8,
                                         filename_sys);
 
         /* change directory to that of the loaded file */
@@ -330,8 +330,8 @@ file_save_as_ok_cb(GtkFileSelection *selector)
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_container_remove_by_name(data, "/filename/untitled");
         gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
-                                        g_strdup(filename_utf8),
-                                        g_strdup(filename_sys));
+                                        filename_utf8,
+                                        filename_sys);
     }
 
     gtk_widget_destroy(GTK_WIDGET(selector));
@@ -408,6 +408,7 @@ gwy_app_file_open_initial(gchar **args, gint n)
         else
             filename = g_build_filename(cwd, *p, NULL);
         file_real_open(filename, NULL);
+        g_free(filename);
     }
     g_free(cwd);
 }

@@ -18,17 +18,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * This file implements -- among other things -- Thumbnail Managing Standard
+ * http://triq.net/~jens/thumbnail-spec/index.html
+ *
+ * The implementation is quite minimal: we namely ignore large
+ * thumbnails altogether (as they are ofter larger than SPM data).
+ */
+
 /* TODO:
  * - add some equivalent of file_real_open() to API and use it from the other
  *   places
- * - add thumbnails, see Thumbnail Managing Standard
- *   http://triq.net/~jens/thumbnail-spec/index.html
  * - Do NOT store thumbnails for anything in ~/.thumbnails
  * - Create thumbnail directories.
  */
 #define DEBUG 1
-#define GDK_PIXBUF_ENABLE_BACKEND
-#include <gdk-pixbuf/gdk-pixbuf-io.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwydgets.h>
@@ -96,8 +100,6 @@ enum {
     FILELIST_RAW,
     FILELIST_THUMB,
     FILELIST_FILENAME,
-    FILELIST_SIZE,
-    FILELIST_INFO,
     FILELIST_LAST
 };
 
@@ -166,6 +168,7 @@ static void     gwy_recent_file_update_thumbnail     (GwyRecentFile *rf,
                                                       GwyDataWindow *data_window);
 static void  gwy_recent_file_free                    (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
+static gchar* gwy_canonicalize_path                  (const gchar *path);
 
 static guint remember_recent_files = 256;
 
@@ -253,8 +256,6 @@ gwy_app_recent_file_list_construct(Controls *controls)
     columns[] = {
         { "Preview",    FILELIST_THUMB },
         { "File Path",  FILELIST_FILENAME },
-        { "Resolution", FILELIST_SIZE },
-    /*    { "Info",       FILELIST_INFO }, */
     };
 
     GtkWidget *list;
@@ -386,6 +387,8 @@ gwy_app_recent_file_list_prune(Controls *controls)
                            FILELIST_RAW, &rf, -1);
         g_printerr("<%s>\n", rf->file_utf8);
         if (!g_file_test(rf->file_utf8, G_FILE_TEST_IS_REGULAR)) {
+            if (rf->thumb_sys && rf->thumb_state != FILE_STATE_FAILED)
+                unlink(rf->thumb_sys);
             gwy_recent_file_free(rf);
             ok = gtk_list_store_remove(controls->store, &iter);
         }
@@ -417,7 +420,7 @@ gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
                                          g_strdup(filename_utf8));
         data_window = gwy_app_data_window_create(data);
         gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
-                                        g_strdup(filename_utf8),
+                                        filename_utf8,
                                         filename_sys);
 
         /* change directory to that of the loaded file */
@@ -426,8 +429,7 @@ gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
             chdir(dirname);
         g_free(dirname);
     }
-    else
-        g_free(filename_sys);
+    g_free(filename_sys);
 }
 
 static void
@@ -471,34 +473,20 @@ cell_renderer_desc(G_GNUC_UNUSED GtkTreeViewColumn *column,
     guint id;
     GwyRecentFile *rf;
     gchar s[32];
+    gchar *str;
 
     id = GPOINTER_TO_UINT(userdata);
     gtk_tree_model_get(model, iter, FILELIST_RAW, &rf, -1);
     switch (id) {
         case FILELIST_FILENAME:
-        g_object_set(cell, "text", rf->file_utf8, NULL);
-        break;
-
-        case FILELIST_SIZE:
-        if (rf->thumb_state == FILE_STATE_FAILED
-            || !rf->image_width || !rf->image_height)
-            g_object_set(cell, "text", "", NULL);
-        else {
+        if (!rf->image_width || !rf->image_height)
+            s[0] = '\0';
+        else
             g_snprintf(s, sizeof(s), "%d×%d",
                        rf->image_width, rf->image_height);
-            g_object_set(cell, "text", s, NULL);
-        }
-        break;
-
-        case FILELIST_INFO:
-        if (rf->thumb_state == FILE_STATE_FAILED
-            || !rf->image_images)
-            g_object_set(cell, "text", "", NULL);
-        else {
-            g_snprintf(s, sizeof(s), "%di, %dg",
-                       rf->image_images, rf->image_graphs);
-            g_object_set(cell, "text", s, NULL);
-        }
+        str = g_strconcat(rf->file_utf8, "\n", s, NULL);
+        g_object_set(cell, "text", str, NULL);
+        g_free(str);
         break;
 
         default:
@@ -582,7 +570,7 @@ gwy_app_recent_file_list_load(const gchar *filename)
         if (*files[n]) {
             GwyRecentFile *rf;
 
-            rf = gwy_recent_file_new(files[n], NULL);
+            rf = gwy_recent_file_new(gwy_canonicalize_path(files[n]), NULL);
             gtk_list_store_append(gcontrols.store, &iter);
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
             if (n < (guint)gwy_app_n_recent_files) {
@@ -590,8 +578,7 @@ gwy_app_recent_file_list_load(const gchar *filename)
                     = g_list_append(gcontrols.recent_file_list, rf->file_utf8);
             }
         }
-        else
-            g_free(files[n]);
+        g_free(files[n]);
     }
     g_free(files);
 
@@ -679,11 +666,9 @@ gwy_app_recent_file_list_free(void)
  * gwy_app_recent_file_list_update:
  * @data_window: A data window corresponding to the file (for thumbnails).
  * @filename_utf8: A recent file to insert or move to the first position in
- *                 document history, in UTF-8.  The name is eaten by
- *                 this function, use g_strdup() if you don't like it.
+ *                 document history, in UTF-8.
  * @filename_sys: A recent file to insert or move to the first position in
- *                 document history, in system encoding.  The name is eaten
- *                 by this function, use g_strdup() if you don't like it.
+ *                 document history, in system encoding.
  *
  * Moves @filename_utf8 to the first position in document history, eventually
  * adding it if not present yet.
@@ -694,8 +679,8 @@ gwy_app_recent_file_list_free(void)
  **/
 void
 gwy_app_recent_file_list_update(GwyDataWindow *data_window,
-                                gchar *filename_utf8,
-                                gchar *filename_sys)
+                                const gchar *filename_utf8,
+                                const gchar *filename_sys)
 {
     g_return_if_fail(gcontrols.store);
 
@@ -725,7 +710,8 @@ gwy_app_recent_file_list_update(GwyDataWindow *data_window,
         }
 
         if (!found) {
-            rf = gwy_recent_file_new(filename_utf8, filename_sys);
+            rf = gwy_recent_file_new(gwy_canonicalize_path(filename_utf8),
+                                     gwy_canonicalize_path(filename_sys));
             gtk_list_store_prepend(gcontrols.store, &iter);
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
         }
@@ -779,6 +765,7 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
     gwy_app_menu_recent_files_update(controls->recent_file_list);
 }
 
+/* XXX: eats arguments! */
 static GwyRecentFile*
 gwy_recent_file_new(gchar *filename_utf8,
                     gchar *filename_sys)
@@ -931,10 +918,9 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     GwyDataField *dfield;
     GdkPixbuf *pixbuf;
     struct stat st;
-    gchar *fnm, s[32];
+    gchar *fnm, *str_mtime, *str_size, *str_width, *str_height;
     GError *err = NULL;
 
-    return;
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
 
     if (stat(rf->file_sys, &st) != 0) {
@@ -970,20 +956,22 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                                       TMS_NORMAL_THUMB_SIZE);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
 
-    gdk_pixbuf_set_option(pixbuf, KEY_SOFTWARE, PACKAGE_NAME);
-    gdk_pixbuf_set_option(pixbuf, KEY_THUMB_URI, rf->file_uri);
-    g_snprintf(s, sizeof(s), "%lu", rf->file_mtime);
-    gdk_pixbuf_set_option(pixbuf, KEY_THUMB_MTIME, s);
-    g_snprintf(s, sizeof(s), "%lu", rf->file_size);
-    gdk_pixbuf_set_option(pixbuf, KEY_THUMB_FILESIZE, s);
-    g_snprintf(s, sizeof(s), "%d", rf->image_width);
-    gdk_pixbuf_set_option(pixbuf, KEY_THUMB_IMAGE_WIDTH, s);
-    g_snprintf(s, sizeof(s), "%d", rf->image_height);
-    gdk_pixbuf_set_option(pixbuf, KEY_THUMB_IMAGE_HEIGHT, s);
+    str_mtime = g_strdup_printf("%lu", rf->file_mtime);
+    str_size = g_strdup_printf("%lu", rf->file_size);
+    str_width = g_strdup_printf("%d", rf->image_width);
+    str_height = g_strdup_printf("%d", rf->image_height);
 
-    /* FIXME: rough, but works on Win32 */
+    /* invent an unique temporary name for atomic save
+     * FIXME: rough, but works on Win32 */
     fnm = g_strdup_printf("%s.%u", rf->thumb_sys, getpid());
-    if (!gdk_pixbuf_save(pixbuf, fnm, "png", &err)) {
+    if (!gdk_pixbuf_save(pixbuf, fnm, "png", &err,
+                         KEY_SOFTWARE, PACKAGE_NAME,
+                         KEY_THUMB_URI, rf->file_uri,
+                         KEY_THUMB_MTIME, str_mtime,
+                         KEY_THUMB_FILESIZE, str_size,
+                         KEY_THUMB_IMAGE_WIDTH, str_width,
+                         KEY_THUMB_IMAGE_HEIGHT, str_height,
+                         NULL)) {
         g_clear_error(&err);
         rf->thumb_state = FILE_STATE_FAILED;
     }
@@ -992,6 +980,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
 #endif
     unlink(rf->thumb_sys);
     if (rename(fnm, rf->thumb_sys) != 0) {
+        unlink(fnm);
         rf->thumb_state = FILE_STATE_FAILED;
         rf->thumb_mtime = 0;
     }
@@ -1000,6 +989,10 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         rf->thumb_mtime = rf->file_mtime;
     }
     g_free(fnm);
+    g_free(str_mtime);
+    g_free(str_size);
+    g_free(str_width);
+    g_free(str_height);
 
     gwy_object_unref(rf->pixbuf);
 }
@@ -1026,6 +1019,104 @@ gwy_recent_file_thumbnail_name(const gchar *uri)
 
     return g_build_filename(g_get_home_dir(), ".thumbnails", "normal", buffer,
                             NULL);
+}
+
+/* canonicalize a file path.
+ * does NOT resolve symlinks, as TMS, and the less RFC2396, says nothing about
+ * symlinks resolution */
+static gchar*
+gwy_canonicalize_path(const gchar *path)
+{
+    gchar *spath, *p0, *p, *last_slash;
+    gsize i;
+
+    g_return_val_if_fail(path, NULL);
+
+    /* absolutize */
+    if (!g_path_is_absolute(path)) {
+        p = g_get_current_dir();
+        spath = g_build_filename(p, path, NULL);
+        g_free(p);
+    }
+    else
+        spath = g_strdup(path);
+    p = spath;
+
+#ifdef G_OS_WIN32
+    /* convert backslashes to slashes so we know what to split on */
+    while (*p) {
+        if (*p == '\\')
+            *p = '/';
+        p++;
+    }
+    p = spath;
+
+    /* skip c:, //server */
+    if (g_ascii_isalpha(*p) && p[1] == ':')
+        p += 2;
+    else if (*p == '/' && p[1] == '/') {
+        p = strchr(p+2, '/');
+        /* silly, but better this than a coredump... */
+        if (!p)
+            return spath;
+    }
+    /* now p starts with the `root' / on all systems */
+#endif
+    g_return_val_if_fail(*p == '/', spath);
+
+    p0 = p;
+    while (*p) {
+        if (*p == '/') {
+            if (p[1] == '.') {
+                if (p[2] == '/' || !p[2]) {
+                    /* remove from p here */
+                    for (i = 0; p[i+2]; i++)
+                        p[i] = p[i+2];
+                    p[i] = '\0';
+                }
+                else if (p[2] == '.' && (p[3] == '/' || !p[3])) {
+                    /* remove from last_slash here */
+                    /* ignore if root element */
+                    if (p == p0) {
+                        for (i = 0; p[i+3]; i++)
+                            p[i] = p[i+3];
+                        p[i] = '\0';
+                    }
+                    else {
+                        for (last_slash = p-1; *last_slash != '/'; last_slash--)
+                          ;
+                        for (i = 0; p[i+3]; i++)
+                            last_slash[i] = p[i+3];
+                        last_slash[i] = '\0';
+                        p = last_slash;
+                    }
+                }
+                else
+                    p++;
+            }
+            else {
+                /* remove a continouos sequence of slashes */
+                for (last_slash = p; *last_slash == '/'; last_slash++)
+                    ;
+                last_slash--;
+                if (last_slash > p) {
+                    for (i = 0; last_slash[i]; i++)
+                        p[i] = last_slash[i];
+                    p[i] = '\0';
+                }
+                p++;
+            }
+        }
+        else
+            p++;
+    }
+    /* a final `..' could make us discard the starting slash */
+    if (!*p0) {
+      *p0 = '/';
+      p0[1] = '\0';
+    }
+
+    return spath;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
