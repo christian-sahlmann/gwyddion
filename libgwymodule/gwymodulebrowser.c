@@ -40,7 +40,7 @@ gwy_module_browser_run(GHashTable *modules)
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     browser = gwy_module_browser_construct(modules);
     gtk_container_add(GTK_CONTAINER(window), browser);
-    g_signal_connect(window, "destroy", gtk_widget_destroy, NULL);
+    g_signal_connect(window, "destroy", G_CALLBACK(gtk_widget_destroy), NULL);
     gtk_widget_show_all(window);
 }
 

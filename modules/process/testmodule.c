@@ -29,15 +29,15 @@ module_register(const gchar *name)
 {
    static GwyProcessFuncInfo test_func_info = {
         "test_func",
+        "/_Trific/_Test",
         &test_process_func,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
-        "/_Trific/_Test"
     };
    static GwyProcessFuncInfo test2_func_info = {
         "test2_func",
+        "/_Foo/_Bar/_Baz/_Quux",
         &test_process_func,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
-        "/_Foo/_Bar/_Baz/_Quux"
     };
 
     gwy_register_process_func(name, &test_func_info);

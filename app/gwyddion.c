@@ -5,6 +5,8 @@
 #include <libgwydgets/gwydgets.h>
 #include "init.h"
 
+static GwyContainer *current_data = NULL;
+
 GtkWidget*
 create_aligned_menu(GtkItemFactoryEntry *menu_items,
                     gint nitems,
@@ -115,6 +117,19 @@ main(int argc, char *argv[])
     gtk_main();
 
     return 0;
+}
+
+GwyContainer*
+gwy_app_get_current_data(void)
+{
+    return current_data;
+}
+
+void
+gwy_app_set_current_data(GwyContainer *data)
+{
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+    current_data = data;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

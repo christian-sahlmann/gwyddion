@@ -14,6 +14,7 @@ AC_CONFIG_FILES(\
   libgwymodule/Makefile \
   libprocess/Makefile \
   modules/Makefile \
+  modules/file/Makefile \
   modules/process/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyddion/Makefile \

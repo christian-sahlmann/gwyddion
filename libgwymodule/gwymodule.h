@@ -31,10 +31,19 @@ typedef enum {
     GWY_RUN_MASK           = 0x07
 } GwyRunType;
 
-typedef gboolean (*GwyModuleRegisterFunc)(const gchar *name);
-typedef gboolean (*GwyProcessFunc)(GwyContainer *data, GwyRunType run);
-
 typedef struct _GwyModuleInfo GwyModuleInfo;
+typedef struct _GwyProcessFuncInfo GwyProcessFuncInfo;
+typedef struct _GwyFileFuncInfo GwyFileFuncInfo;
+
+typedef gboolean       (*GwyModuleRegisterFunc) (const gchar *name);
+typedef GwyModuleInfo* (*GwyModuleQueryFunc)    (void);
+typedef gboolean       (*GwyProcessFunc)        (GwyContainer *data,
+                                                 GwyRunType run);
+typedef gint           (*GwyFileDetectFunc)     (const gchar *filename,
+                                                 gboolean only_name);
+typedef GwyContainer*  (*GwyFileLoadFunc)       (const gchar *filename);
+typedef gboolean       (*GwyFileSaveFunc)       (GwyContainer *data,
+                                                 const gchar *filename);
 
 struct _GwyModuleInfo {
     guint32 abi_version;
@@ -47,20 +56,26 @@ struct _GwyModuleInfo {
     const gchar *date;
 };
 
-typedef GwyModuleInfo* (*GwyModuleQueryFunc)(void);
-
-typedef struct _GwyProcessFuncInfo GwyProcessFuncInfo;
-
 struct _GwyProcessFuncInfo {
     const gchar *name;
-    GwyProcessFunc function;
-    GwyRunType run;
     const gchar *menu_path;
+    GwyProcessFunc process;
+    GwyRunType run;
+};
+
+struct _GwyFileFuncInfo {
+    const gchar *name;
+    const gchar *file_desc;
+    GwyFileDetectFunc detect;
+    GwyFileLoadFunc load;
+    GwyFileSaveFunc save;
 };
 
 void            gwy_module_register_modules (const gchar **paths);
 gboolean        gwy_register_process_func   (const gchar *modname,
                                              GwyProcessFuncInfo *func_info);
+gboolean        gwy_register_file_func      (const gchar *modname,
+                                             GwyFileFuncInfo *func_info);
 GtkItemFactory* gwy_build_process_menu      (void);
 void            gwy_module_browser          (void);
 
