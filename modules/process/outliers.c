@@ -30,7 +30,7 @@
 #include <app/gwyapp.h>
 
 #define OUTLIERS_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+    (GWY_RUN_NONINTERACTIVE)
 
 
 static gboolean    module_register            (const gchar *name);

@@ -29,7 +29,7 @@
 
 
 #define REMOVE_RUN_MODES \
-    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+    (GWY_RUN_MODAL)
 
 
 /* Data for this function.

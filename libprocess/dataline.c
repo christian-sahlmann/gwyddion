@@ -1556,6 +1556,7 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
             val = nsteps-1; /*this should never happened*/
         target_line->data[val] += 1.0;/*/n/step;*/
     }
+    target_line->real = ymax - ymin;
 }
 
 /**
