@@ -699,7 +699,21 @@ gwy_si_unit_value_format_free(GwySIValueFormat *format)
 /************************** GwySIUnit2 ***********************************/
 
 static void
-gwy_si_unit2_free(GwySIUnit2* siunit)
+gwy_si_unit2_print(GwySIUnit2 *siunit)
+{
+    gint i;
+
+    g_printerr("===== %p =====\n", siunit);
+    for (i = 0; i < siunit->units->len; i++)
+        g_printerr("<%s>:%u %d\n",
+                   g_quark_to_string(g_array_index(siunit->units,
+                                                   GwySimpleUnit, i).unit),
+                   g_array_index(siunit->units, GwySimpleUnit, i).unit,
+                   g_array_index(siunit->units, GwySimpleUnit, i).power);
+}
+
+static void
+gwy_si_unit2_free(GwySIUnit2 *siunit)
 {
     if (!siunit)
         return;
@@ -892,6 +906,7 @@ gwy_si_unit2_parse(const gchar *string)
             unit.unit = g_quark_from_string(buf->str);
             if (dividing)
                 unit.power = -unit.power;
+            gwy_debug("<%s:%u> %d\n", buf->str, unit.unit, unit.power);
             siunit->power10 += unit.power * pfpower;
             g_array_append_val(siunit->units, unit);
         }
@@ -924,29 +939,39 @@ gwy_si_unit2_power_multiply(GwySIUnit2 *siunit1,
                             GwySIUnit2 *siunit2,
                             gint power2)
 {
-    GwySimpleUnit *unit1, *unit2;
+    GwySimpleUnit *unit, *unit2;
     GwySIUnit2 *siunit;
     gint i, j;
 
-    if (siunit1->units->len < siunit2->units->len) {
+    if (siunit1->units->len < siunit2->units->len || !power1) {
         GWY_SWAP(GwySIUnit2*, siunit1, siunit2);
         GWY_SWAP(gint, power1, power2);
     }
     siunit = gwy_si_unit2_power(siunit1, power1);
-    siunit->power10 += power2*siunit2->power10;
+    if (!power2) {
+        gwy_si_unit2_canonicalize(siunit);
+        return siunit;
+    }
 
+    siunit->power10 += power2*siunit2->power10;
     for (i = 0; i < siunit2->units->len; i++) {
         unit2 = &g_array_index(siunit2->units, GwySimpleUnit, i);
 
-        for (j = 0; j < siunit1->units->len; j++) {
-            unit1 = &g_array_index(siunit1->units, GwySimpleUnit, j);
-            if (unit2->unit == unit1->unit) {
-                unit1->power += power2*unit2->power;
+        for (j = 0; j < siunit->units->len; j++) {
+            unit = &g_array_index(siunit->units, GwySimpleUnit, j);
+            gwy_debug("[%d] %u == [%d] %u",
+                      i, unit2->unit, j, unit->unit);
+            if (unit2->unit == unit->unit) {
+                unit->power += power2*unit2->power;
                 break;
             }
         }
-        if (j == siunit1->units->len)
-            g_array_append_val(siunit1->units, *unit2);
+        if (j == siunit->units->len) {
+            g_array_append_val(siunit->units, *unit2);
+            unit = &g_array_index(siunit->units, GwySimpleUnit,
+                                  siunit->units->len - 1);
+            unit->power *= power2;
+        }
     }
     gwy_si_unit2_canonicalize(siunit);
 
@@ -968,7 +993,8 @@ gwy_si_unit2_power(GwySIUnit2 *siunit1,
     if (!power1)
         return siunit;
 
-    g_array_append_vals(siunit->units, siunit1->units, siunit1->units->len);
+    g_array_append_vals(siunit->units,
+                        siunit1->units->data, siunit1->units->len);
     for (j = 0; j < siunit1->units->len; j++) {
         unit1 = &g_array_index(siunit1->units, GwySimpleUnit, j);
         unit1->power *= power1;
