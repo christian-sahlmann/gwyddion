@@ -1,0 +1,164 @@
+<refentry id="gwymodule-tutorial" revision="20 Mar 2002">
+  <refmeta>
+    <refentrytitle>Gwyddion Module Tutorial</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>Gwyddion</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>Gwyddion Module Tutorial</refname>
+    <refpurpose>Overview of Gwyddion module anatomy and a guide for
+    creating your own modules</refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Overview</title>
+    <para>
+      Gwyddion is quite a modular application.  In fact, most of its basic
+      functionallity is provided by modules.  Modules allow to easily extend
+      Gwyddion without the need to recompile, XXXX etc.
+    </para>
+    <para>
+      There are several distinct module types:
+      <itemizedlist>
+        <listitem><para>
+          <link linkend="gwymodule-process">data processing modules</link>
+        </para></listitem>
+        <listitem><para>
+          <link linkend="gwymodule-file">file loading and saving modules</link>
+        </para></listitem>
+        <listitem><para>
+          <link linkend="gwymodule-graph">graph modules</link>
+        </para></listitem>
+        <listitem><para>
+          <link linkend="gwymodule-tool">tool modules</link>
+        </para></listitem>
+      </itemizedlist>
+    </para>
+    <para>
+      Blah blah blah.  The types above are in fact
+      <emphasis>function</emphasis> types, not module types.
+      A one module can provide a single function or a whole
+      bunch of completely unrelated functions, even of different type.
+      However, it's usual to
+      group functions containing considreable amount of common code to one
+      module to allow its sharing, and use separate modules for unrelated
+      functions.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>A Minimal Module</title>
+    <para>
+      A minimal Gwyddion data-processing module could look like this:
+    </para>
+    <informalexample><programlisting><![CDATA[
+#include <libgwyddion/gwymacros.h>
+#include <libgwymodule/gwymodule.h>
+#include <libprocess/datafield.h>
+#include <app/app.h>
+
+#define INVERT_VALUE_RUN_MODES \
+    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+
+static gboolean    module_register            (const gchar *name);
+static gboolean    invert_value               (GwyContainer *data,
+                                               GwyRunType run);
+
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "value_invert",
+    "Inverts data value.",
+    "J. Random Hacker <hacker.jr@example.org>",
+    "1.0",
+    "J. Random Hacker",
+    "2004",
+};
+
+GWY_MODULE_QUERY(module_info)
+
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyProcessFuncInfo invert_value_func_info = {
+        "invert_value",
+        "/_Test/_Invert Value",
+        (GwyProcessFunc)&invert_value,
+        INVERT_VALUE_RUN_MODES,
+    };
+
+    gwy_process_func_register(name, &invert_value_func_info);
+
+    return TRUE;
+}
+
+static gboolean
+invert_value(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield;
+
+    g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES, FALSE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
+
+    return TRUE;
+}
+]]></programlisting></informalexample>
+  <para>
+    Though it is minimal it still constis of quite a bit of code.
+    We will analyse it piece-by-piece in the following paragraphs.
+  </para>
+  </refsect1>
+  <refsect1>
+    <title>Administrative</title>
+    <para>
+      First of all, of course, some header files.
+    </para>
+    <informalexample><programlisting><![CDATA[
+#include <libgwyddion/gwymacros.h>
+#include <libgwymodule/gwymodule.h>
+#include <libprocess/datafield.h>
+#include <app/app.h>
+]]></programlisting></informalexample>
+    <para>
+      These four are essential, for a complex modules you may need additional
+      headers.
+      <filename><link linkend="libgwyddion-gwymacros">gwymacros.h</link></filename>
+      contains some basic macros (none of them is actually used here),
+      <filename><link linkend="libgwymodule-gwymoduleloader">gwymodule.h</link></filename>
+      declares functions essential for registering the module and its features,
+      <filename><link linkend="GwyDataField">datafield.h</link></filename>
+      declated basic <link linkend="GwyDataField">GwyDataField</link> functions
+      (like value inversion we will use in the module later), and
+      <filename><link linkend="libgwyapp-app">app.h</link></filename>
+      declares undo/redo functions and other main application related
+      stuff.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Run Modes</title>
+    <para>
+      Now we declare the possible
+      <link linkend="GwyRunType">run modes</link> for the module.
+    </para>
+    <informalexample><programlisting><![CDATA[
+#define INVERT_VALUE_RUN_MODES \
+    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+]]></programlisting></informalexample>
+    <para>
+      This is just a convenience macro, so we don't have to type them
+      several times manually.
+    </para>
+    <para>
+      There are four possible <link linkend="GwyRunType">run modes</link>,
+      though <literal>GWY_RUN_MODAL</literal> and
+      <literal>GWY_RUN_INTERACTIVE</literal> are useful only for modules
+      with a GUI.  <literal>GWY_RUN_NONINTERACTIVE</literal> is the right
+      run mode for a noninteractive module like our example.
+      <literal>GWY_RUN_WITH_DEFAULT</literal> is currently
+      unused in Gwyddion, but it's a good idea (and easy) to support it too.
+    </para>
+  </refsect1>
+</refentry>
+

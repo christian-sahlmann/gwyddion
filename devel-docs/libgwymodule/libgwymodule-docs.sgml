@@ -15,4 +15,9 @@
     <xi:include href="xml/gwymodule-graph.xml"/>
     <xi:include href="xml/gwymodulebrowser.xml"/>
   </chapter>
+
+  <chapter>
+    <title>Gwyddion Module Tutorial</title>
+    <xi:include href="module-tutorial.sgml"/>
+  </chapter>
 </book>
