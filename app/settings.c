@@ -51,7 +51,7 @@ static GwyContainer *gwy_settings = NULL;
  *
  * The settings are a #GwyContainer automatically loaded at program startup
  * and saved ad its exit.  For storing persistent module data you should
- * use "/mod/YOUR_MODULE_NAME/" prefix.
+ * use "/module/YOUR_MODULE_NAME/" prefix.
  *
  * Returns: The settings as a #GwyContainer.
  **/
