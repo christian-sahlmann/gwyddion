@@ -1,4 +1,4 @@
-1.0cvs20040406
+1.0cvs20040410
 
 1.1
 - Raw file import supports named presets of import parameters.
@@ -19,6 +19,9 @@
 - Facet-level is cancelable.
 - Fractal dimension of the rough surface can be evaluated using partitioning,
   cube counting, traingulation and power spectrum method.
+- The license of plug-in proxy as a reference dump format implementation
+  was clarified.
+
 
 1.0
 - Data can be exported to bitmaps with rules, units, scale, etc.
