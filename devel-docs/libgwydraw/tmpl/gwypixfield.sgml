@@ -28,7 +28,19 @@ gwypixfield
 @pal: 
 
 
-<!-- ##### FUNCTION gwy_pixfield_mask ##### -->
+<!-- ##### FUNCTION gwy_pixfield_do_with_range ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@data_field: 
+@palette: 
+@minimum: 
+@maximum: 
+
+
+<!-- ##### FUNCTION gwy_pixfield_do_mask ##### -->
 <para>
 
 </para>

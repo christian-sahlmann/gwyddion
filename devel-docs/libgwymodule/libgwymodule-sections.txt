@@ -12,9 +12,9 @@ gwy_module_browser
 GWY_MODULE_ABI_VERSION
 GWY_MODULE_QUERY
 GwyModuleInfo
-GwyModuleInfoInternal
 GwyModuleRegisterFunc
 GwyModuleQueryFunc
+_GwyModuleInfoInternal
 gwy_modules_init
 gwy_module_register_modules
 gwy_module_get_module_info

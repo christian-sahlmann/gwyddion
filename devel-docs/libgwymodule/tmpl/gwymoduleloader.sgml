@@ -43,15 +43,6 @@ gwymoduleloader
 @copyright: 
 @date: 
 
-<!-- ##### STRUCT GwyModuleInfoInternal ##### -->
-<para>
-
-</para>
-
-@mod_info: 
-@file: 
-@loaded: 
-
 <!-- ##### USER_FUNCTION GwyModuleRegisterFunc ##### -->
 <para>
 
@@ -67,6 +58,12 @@ gwymoduleloader
 </para>
 
 @Returns: 
+
+
+<!-- ##### TYPEDEF _GwyModuleInfoInternal ##### -->
+<para>
+
+</para>
 
 
 <!-- ##### FUNCTION gwy_modules_init ##### -->

@@ -4,11 +4,14 @@
 </para>
 
 
-<!-- ##### TYPEDEF _GwyModuleInfoInternal ##### -->
+<!-- ##### STRUCT GwyModuleInfoInternal ##### -->
 <para>
 
 </para>
 
+@mod_info: 
+@file: 
+@loaded: 
 
 <!-- ##### FUNCTION gwy_module_browser_run ##### -->
 <para>

@@ -25,6 +25,22 @@ GwyLayerTriangle
 
 @gwyspherecoords: the object which received the signal.
 
+<!-- ##### FUNCTION gwy_data_view_get_zoom_mode ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_data_view_set_zoom_mode ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@zoom_mode: 
+
 <!-- ##### FUNCTION gwy_layer_triangle_get_selection ##### -->
 <para>
 

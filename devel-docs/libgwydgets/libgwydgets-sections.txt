@@ -283,8 +283,8 @@ gwy_data_window_new
 gwy_data_window_get_data_view
 gwy_data_window_get_data
 gwy_data_window_set_zoom
-gwy_data_view_set_zoom_mode
-gwy_data_view_get_zoom_mode
+gwy_data_window_set_zoom_mode
+gwy_data_window_get_zoom_mode
 gwy_data_window_update_title
 gwy_data_window_set_units
 gwy_data_window_get_units
@@ -332,6 +332,7 @@ gwy_data_view_coords_xy_to_real
 gwy_data_view_coords_real_to_xy
 gwy_data_view_get_xmeasure
 gwy_data_view_get_ymeasure
+gwy_data_view_get_thumbnail
 gwy_data_view_update
 <SUBSECTION Standard>
 GWY_DATA_VIEW

@@ -64,7 +64,7 @@ GwyDataWindow
 @zoom1000: 
 
 
-<!-- ##### FUNCTION gwy_data_view_set_zoom_mode ##### -->
+<!-- ##### FUNCTION gwy_data_window_set_zoom_mode ##### -->
 <para>
 
 </para>
@@ -73,7 +73,7 @@ GwyDataWindow
 @zoom_mode: 
 
 
-<!-- ##### FUNCTION gwy_data_view_get_zoom_mode ##### -->
+<!-- ##### FUNCTION gwy_data_window_get_zoom_mode ##### -->
 <para>
 
 </para>

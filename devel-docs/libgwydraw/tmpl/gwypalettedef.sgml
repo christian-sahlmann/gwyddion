@@ -14,27 +14,6 @@ GwyPaletteDef
 
 </para>
 
-<!-- ##### MACRO GWY_PALETTE_GRAY ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_PALETTE_RED ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_PALETTE_GREEN ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GWY_PALETTE_BLUE ##### -->
 <para>
 
@@ -42,21 +21,21 @@ GwyPaletteDef
 
 
 
-<!-- ##### MACRO GWY_PALETTE_YELLOW ##### -->
+<!-- ##### MACRO GWY_PALETTE_BLUE_CYAN ##### -->
 <para>
 
 </para>
 
 
 
-<!-- ##### MACRO GWY_PALETTE_PINK ##### -->
+<!-- ##### MACRO GWY_PALETTE_BLUE_VIOLET ##### -->
 <para>
 
 </para>
 
 
 
-<!-- ##### MACRO GWY_PALETTE_OLIVE ##### -->
+<!-- ##### MACRO GWY_PALETTE_BLUE_YELLOW ##### -->
 <para>
 
 </para>
@@ -77,6 +56,69 @@ GwyPaletteDef
 
 
 
+<!-- ##### MACRO GWY_PALETTE_GOLD ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_GRAY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_GREEN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_GREEN_CYAN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_GREEN_VIOLET ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_GREEN_YELLOW ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_OLIVE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_PINK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_PM3D ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GWY_PALETTE_RAINBOW1 ##### -->
 <para>
 
@@ -85,6 +127,48 @@ GwyPaletteDef
 
 
 <!-- ##### MACRO GWY_PALETTE_RAINBOW2 ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_RED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_RED_CYAN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_RED_VIOLET ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_RED_YELLOW ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_SPECTRAL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_PALETTE_YELLOW ##### -->
 <para>
 
 </para>

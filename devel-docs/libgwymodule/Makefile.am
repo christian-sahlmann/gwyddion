@@ -91,7 +91,7 @@ SCANOBJ_FILES = 		\
 	$(DOC_MODULE).hierarchy \
 	$(DOC_MODULE).signals \
 	$(DOC_MODULE).prerequisites \
-	$(DOC_MODULE).intefraces
+	$(DOC_MODULE).interfaces
 
 if ENABLE_GTK_DOC
 if MAINTAINER_MODE
