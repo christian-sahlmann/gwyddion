@@ -15,6 +15,8 @@ static gboolean    rotate_clockwise_90        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    rotate_counterclockwise_90 (GwyContainer *data,
                                                GwyRunType run);
+static gboolean    rotate_180                 (GwyContainer *data,
+                                               GwyRunType run);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -65,12 +67,19 @@ module_register(const gchar *name)
         &rotate_counterclockwise_90,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
     };
+    static GwyProcessFuncInfo rotate_180_func_info = {
+        "rotate_180",
+        "/_Basic Operations/Rotate 180 degrees",
+        &rotate_180,
+        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+    };
 
     gwy_register_process_func(name, &flip_horizontally_func_info);
     gwy_register_process_func(name, &flip_vertically_func_info);
     gwy_register_process_func(name, &invert_func_info);
     gwy_register_process_func(name, &rotate_clockwise_90_func_info);
     gwy_register_process_func(name, &rotate_counterclockwise_90_func_info);
+    gwy_register_process_func(name, &rotate_180_func_info);
 
     return TRUE;
 }
@@ -155,5 +164,20 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
     return TRUE;
 }
 
+static gboolean
+rotate_180(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield;
+
+    gwy_debug("%s", __FUNCTION__);
+    g_assert(run & (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS));
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+    dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
+
+    gwy_data_field_rotate(dfield, 180, GWY_INTERPOLATION_ROUND);
+
+    return TRUE;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
