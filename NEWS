@@ -1,28 +1,36 @@
-1.4cvs20040820
+1.4cvs20040920
 
 1.5
 This version requires GtkGLExt in addition to Gtk+ due to the new 3D data
-display capabilities.
+display capabilities (but it is still backward compatible with 1.4 and 1.3).
 Application:
 - Capable of displaying data in 3D.
-- Much longer list of recently open files as File -> Open Recent -> Document
-  History.
-- Position of main windows is remembered between sessions.
+- Document history (File -> Open Recent -> Document History) with much more
+  remembered files, thumbnails, and additional information.  File thumbnails
+  are TMS-compliant and any TMS-aware file manager should display them too.
+- Position of main window is remembered between sessions.
 - Settings that cannot be parsed are no longer silently overwritten and user
   is informed.
+- Toolbox GUI improvements.
 
 Library:
-- libgwydgets: Gwy3DView, Gwy3DWindow, GwyGLMaterial -- new OpenGL 3D data
-  display widgets.
+- libgwydgets: Gwy3DView, Gwy3DWindow, GwyGLMaterial, Gwy3DLabels -- new
+  OpenGL 3D data display widgets.
 - libgwydgets: GwyDataView, GwyGradSphere expose event handling improved,
   making them much more usable over network.
 - libgwydgets: GwyDataView not displaying the image until resized with
   Gtk+-2.4.6 and newer was fixed.
+- libgwydgets: GwyVMenuBar vertical menu widget.
+- libgwyddion: MD5 digest, file path canonicalization, and some unistd
+  emulation on Win32 functions were added.
+- libprocess: Fractal interpolation added.
 - libgwyddion: Deserialization made more robust with regard to future
   extensions and truncated files.
 
 Modules:
-- Spot remove tool: Can use Laplace solver for data removal.
+- Calibrate: Crash on startup was fixed (Bug #25).
+- Spot remove tool: Can use Laplace solver, fractal interpolation for data
+  removal.
 - Select layer: Full widget redraws were eliminated, making it much more
   usable over network.
 - Nanoscope: Basic metadata support was added (see Metadata Browser).
