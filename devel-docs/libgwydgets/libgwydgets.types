@@ -25,7 +25,6 @@ gwy_ruler_get_type
 gwy_sci_text_get_type
 gwy_statusbar_get_type
 gwy_shader_get_type
-gwy_toolbox_get_type
 gwy_val_unit_get_type
 gwy_vector_layer_get_type
 gwy_vruler_get_type
