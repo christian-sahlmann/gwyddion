@@ -1511,9 +1511,9 @@ gwy_data_field_get_area_surface_area(GwyDataField *a,
     g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
 
     sum = 0;
-    for (i=ulcol; i<(brcol); i++)
+    for (i=ulcol; i<(brcol-1); i++)
     {
-        for (j=ulrow; j<(brrow); j++)
+        for (j=ulrow; j<(brrow-1); j++)
         {
             sum += square_area(a, i, j, i+1, j+1);
         }
