@@ -68,7 +68,7 @@ my_invert_value(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
 
     return TRUE;
@@ -319,7 +319,7 @@ my_invert_value(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
 
     return TRUE;
@@ -356,7 +356,7 @@ my_invert_value(GwyContainer *data, GwyRunType run)
      creates a point in the undo history we can return to later, call it
      just before you start modifying the data.  Its second argument is
      what is to be saved, so <literal>"/0/data"</literal> follows us here
-     too.
+     too.  The <literal>NULL</literal> just terminates the argument list.
    </para>
    <para>
      Then we finally invert the value with
