@@ -48,6 +48,7 @@ LIB_OBJECTS = \
 	gwyscitext.obj \
 	gwyspherecoords.obj \
 	gwystock.obj \
+	gwytoolbox.obj \
 	gwyvectorshade.obj \
 	gwyvruler.obj 
 
@@ -76,6 +77,7 @@ LIB_HEADERS = \
 	gwyscitext.h \
 	gwyspherecoords.h \
 	gwystock.h \
+	gwytoolbox.h \
 	gwyvectorshade.h \
 	gwyvruler.h 
 
