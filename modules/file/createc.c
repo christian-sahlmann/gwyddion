@@ -285,9 +285,7 @@ hash_to_data_field(GHashTable *hash,
 /* Macro for storing meta data */
 
 #define HASH_STORE(key) \
-    if (!(val = g_hash_table_lookup(hash, key))) { \
-        g_warning("%s not found",key); \
-    } else { \
+    if ((val = g_hash_table_lookup(hash, key))) { \
         g_string_printf(metakey, "/meta/%s", key); \
         gwy_debug("key = %s, val = %s\n", key, val); \
         gwy_container_set_string_by_name(data, metakey->str, g_strdup(val)); \
