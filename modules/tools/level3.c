@@ -175,7 +175,7 @@ level3_do(void)
               z[1] - c - bx*points[2] - by*points[3],
               z[2] - c - bx*points[4] - by*points[5]);
     gwy_app_undo_checkpoint(data, "/0/data");
-    gwy_data_field_plane_level(dfield, c, bx, by);
+    gwy_data_field_plane_level(dfield, c, bx, by); 
     gwy_debug("%s: zN[0] = %g, zN[1] = %g, zN[2] = %g", __FUNCTION__,
               level3_get_z_average(dfield, points[0], points[1], radius),
               level3_get_z_average(dfield, points[2], points[3], radius),
@@ -203,7 +203,7 @@ level3_get_z_average(GwyDataField *dfield,
     uli = CLAMP(y - radius, 0, yres - 1);
     brj = CLAMP(x + radius, 0, xres - 1);
     bri = CLAMP(y + radius, 0, yres - 1);
-    return gwy_data_field_get_area_avg(dfield, uli, ulj, bri, brj);
+    return gwy_data_field_get_area_avg(dfield, ulj, uli, brj, bri);
 }
 
 static void
