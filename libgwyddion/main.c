@@ -159,7 +159,7 @@ main(void)
     gboolean bb;
     gdouble xx, summ;
     gint i, j;
-
+    gchar *s, *s2;
 
     g_type_init();
 
@@ -341,14 +341,19 @@ main(void)
                                   run_mode_names, G_N_ELEMENTS(run_mode_names),
                                   " @@@ "));
 
-    g_message("%d", gwy_string_to_enum("with_defaults", run_mode_names, -1));
-    g_message("%d", gwy_string_to_enum("modal", run_mode_names,
-                                       G_N_ELEMENTS(run_mode_names)));
-    g_message("%d", gwy_string_to_flags("load save", file_op_names, -1, NULL));
-    g_message("%d", gwy_string_to_flags("load save", file_op_names,
-                                       G_N_ELEMENTS(file_op_names), NULL));
-    g_message("%d", gwy_string_to_flags("noninteractive-interactive",
-                                        run_mode_names, -1, "-"));
+    g_message("<with_defaults> = %d",
+              gwy_string_to_enum("with_defaults", run_mode_names, -1));
+    g_message("<modal> = %d",
+              gwy_string_to_enum("modal", run_mode_names,
+                                 G_N_ELEMENTS(run_mode_names)));
+    g_message("<load save> = %d",
+              gwy_string_to_flags("load save", file_op_names, -1, NULL));
+    g_message("<load save> = %d",
+              gwy_string_to_flags("load save", file_op_names,
+                                  G_N_ELEMENTS(file_op_names), NULL));
+    g_message("<noninteractive-interactive> = %d",
+              gwy_string_to_flags("noninteractive-interactive",
+                                  run_mode_names, -1, "-"));
 
     g_message("====== MATH ======================");
     {
@@ -370,6 +375,28 @@ main(void)
         gdouble e[] = { -1e6, 1e6 };
         linsolv(m, b, x, e);
     }
+
+    g_message("====== STRING UTILS ======================");
+    s = g_strdup("gwy_math_nlfit_new()");
+    s2 = gwy_strkill(g_strdup(s), "");
+    g_message("kill <%s> in <%s> -> <%s>", "", s, s2);
+    g_free(s2);
+    s2 = gwy_strkill(g_strdup(s), "_");
+    g_message("kill <%s> in <%s> -> <%s>", "_", s, s2);
+    g_free(s2);
+    s2 = gwy_strkill(g_strdup(s), "_()w");
+    g_message("kill <%s> in <%s> -> <%s>", "_()w", s, s2);
+    g_free(s2);
+
+    s2 = gwy_strreplace(s, "_", "FOO", (gsize)-1);
+    g_message("replace all <%s> in <%s> with <%s> -> <%s>", "_", s, "FOO", s2);
+    g_free(s2);
+    s2 = gwy_strreplace(s, "_", "FOO", 2);
+    g_message("replace 2 <%s> in <%s> with <%s> -> <%s>", "_", s, "FOO", s2);
+    g_free(s2);
+    s2 = gwy_strreplace(s, "_", "", 1);
+    g_message("replace 1 <%s> in <%s> with <%s> -> <%s>", "_", s, "", s2);
+    g_free(s2);
 
     g_message("====== NLFIT ======================");
     ms = gwy_math_nlfit_new(gauss, gwy_math_nlfit_derive);

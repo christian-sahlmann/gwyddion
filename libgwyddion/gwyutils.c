@@ -231,7 +231,7 @@ gwy_strkill(gchar *s,
         return s;
     killc = *killchars;
     if (killchars[1])
-        g_strdelimit(s, killchars, killc);
+        g_strdelimit(s, killchars+1, killc);
     if ((p = strchr(s, killc))) {
         for (q = p; *p; p++) {
             if (*p != killc) {
@@ -243,6 +243,60 @@ gwy_strkill(gchar *s,
     }
 
     return s;
+}
+
+/**
+ * gwy_strreplace:
+ * @haystack: A NUL-terminated string to search in.
+ * @needle: A NUL-terminated string to search for.
+ * @replacement: A NUL-terminated string to replace @needle with.
+ * @maxrepl: Maximum number of occurences to replace (use (gsize)-1 to replace
+ *           all occurences).
+ *
+ * Replaces occurences of string @needle in @haystack with @replacement.
+ *
+ * Returns: A newly allocated string.
+ **/
+gchar*
+gwy_strreplace(const gchar *haystack,
+               const gchar *needle,
+               const gchar *replacement,
+               gsize maxrepl)
+{
+    gsize n, hlen, nlen, rlen, newlen;
+    const gchar *p, *pp;
+    gchar *dest, *q;
+
+    nlen = strlen(needle);
+    g_return_val_if_fail(nlen, NULL);
+    n = 0;
+    p = haystack;
+    while ((p = strstr(p, needle)) && n < maxrepl) {
+        p += nlen;
+        n++;
+    }
+    if (!n)
+        return g_strdup(haystack);
+
+    hlen = strlen(haystack);
+    rlen = strlen(replacement);
+    newlen = hlen + n*rlen - n*nlen;
+
+    dest = g_new(gchar, newlen+1);
+    pp = haystack;
+    q = dest;
+    n = 0;
+    while ((p = strstr(pp, needle)) && n < maxrepl) {
+        memcpy(q, pp, p - pp);
+        q += p - pp;
+        memcpy(q, replacement, rlen);
+        q += rlen;
+        pp = p + nlen;
+        n++;
+    }
+    strcpy(q, pp);
+
+    return dest;
 }
 
 /* A debugging message helper */
