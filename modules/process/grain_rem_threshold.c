@@ -204,7 +204,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(3, 9, FALSE);
+    table = gtk_table_new(9, 4, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     row = 0;
 
