@@ -60,9 +60,6 @@ typedef enum {
     GWY_UNITS_PLACEMENT_AT_ZERO
 } GwyUnitsPlacement;
 
-/* All distances below are in 1/72nd's of an inch. (According to
- * Adobe that's a point, but points are really 1/72.27 in.)
- */
 struct _GwyRuler
 {
     GtkWidget widget;
@@ -73,7 +70,7 @@ struct _GwyRuler
     gint slider_size;
     GwyUnitsPlacement units_placement;
 
-    gdouble lower;    /* The upper limit of the ruler(in points) */
+    gdouble lower;    /* The upper limit of the ruler (in physical units) */
     gdouble upper;    /* The lower limit of the ruler */
     gdouble position;    /* The position of the mark on the ruler */
     gdouble max_size;    /* The maximum size of the ruler */
@@ -107,6 +104,7 @@ GwyUnitsPlacement gwy_ruler_get_units_placement (GwyRuler *ruler);
 void              gwy_ruler_set_units_placement (GwyRuler *ruler,
                                                  GwyUnitsPlacement placement);
 
+/* internal */
 void _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
                                 gint pixelsize,
                                 gint min_label_spacing,
