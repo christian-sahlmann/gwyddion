@@ -1275,6 +1275,7 @@ gwy_data_line_fft_hum(gint direction,
     }
 }
 
+
 /**
  * gwy_data_line_fft:
  * @ra: real input
@@ -1315,6 +1316,8 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         gwy_data_line_line_coeffs(ia, &av, &bv);
         gwy_data_line_line_level(ia, av, bv);
     }
+    gwy_data_line_add(ra, -(gwy_data_line_get_min(ra)+gwy_data_line_get_max(ra))/2);
+    gwy_data_line_add(ia, -(gwy_data_line_get_min(ia)+gwy_data_line_get_max(ia))/2);
 
     gwy_data_line_fill(rb, 0);
     gwy_data_line_fill(ib, 0);
@@ -1434,12 +1437,12 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
 
     gwy_data_line_fft(data_line, &iin, &rout, &iout, gwy_data_line_fft_hum,
                    windowing, 1, interpolation,
-                   1, 1);
+                   TRUE, FALSE);
 
     gwy_data_line_resample(target_line, rout.res/2.0, GWY_INTERPOLATION_NONE);
     for (i = 0; i < (rout.res/2); i++) {
-        target_line->data[i] = rout.data[i]*rout.data[i]
-                               + iout.data[i]*iout.data[i];
+        target_line->data[i] = (rout.data[i]*rout.data[i] + iout.data[i]*iout.data[i])
+            *data_line->real/(data_line->res*data_line->res*2*G_PI);
     }
     target_line->real = 2*G_PI*target_line->res/data_line->real;
 /*    gwy_data_line_resize(target_line, 0, rout.res);*/
