@@ -1,26 +1,34 @@
 # @(#) $Id$
 
-tooldir = $(gwymoduledir)/tool
+libdir = $(gwymoduledir)/tool
 
-module_ldflags = -shared -Wl,-soname
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
+libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
-tool_PROGRAMS = \
-	crop.so \
-	level3.so \
-	pointer.so \
-	profile.so
+lib_LTLIBRARIES = \
+	libcrop.la \
+	liblevel3.la \
+	libpointer.la \
+	libprofile.la
 
-crop_so_SOURCES = crop.c
-crop_so_LDFLAGS = $(module_ldflags),crop.so
+libcrop_la_SOURCES = crop.c
+libcrop_la_LDFLAGS = -avoid-version -module
+libcrop_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
-level3_so_SOURCES = level3.c
-level3_so_LDFLAGS = $(module_ldflags),level3.so
+liblevel3_la_SOURCES = level3.c
+liblevel3_la_LDFLAGS = -avoid-version -module
+liblevel3_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
-pointer_so_SOURCES = pointer.c
-pointer_so_LDFLAGS = $(module_ldflags),pointer.so
+libpointer_la_SOURCES = pointer.c
+libpointer_la_LDFLAGS = -avoid-version -module
+libpointer_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
-profile_so_SOURCES = profile.c
-profile_so_LDFLAGS = $(module_ldflags),profile.so
+libprofile_la_SOURCES = profile.c
+libprofile_la_LDFLAGS = -avoid-version -module
+libprofile_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"

@@ -1,15 +1,19 @@
 # @(#) $Id$
 
-processdir = $(gwymoduledir)/graph
+libdir = $(gwymoduledir)/graph
 
-module_ldflags = -shared -Wl,-soname
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
+libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
-process_PROGRAMS = \
-	read.so 
+lib_LTLIBRARIES = \
+	libread.la
 
-
-read_so_SOURCES = read.c
-read_so_LDFLAGS = $(module_ldflags),read.so
+libread_la_SOURCES = read.c
+libread_la_LDFLAGS = -avoid-version -module
+libread_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
 
 INCLUDES = -I$(top_srcdir)

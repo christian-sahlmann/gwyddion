@@ -1,22 +1,29 @@
 # @(#) $Id$ */
 
-filedir = $(gwymoduledir)/file
+libdir = $(gwymoduledir)/file
 
-module_ldflags = -shared -Wl,-soname
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
+libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
-file_PROGRAMS = \
-	gwyfile.so \
-	pixmap.so \
-	plugin-proxy.so
+lib_LTLIBRARIES = \
+	libgwyfile.la \
+	libpixmap.la \
+	libplugin-proxy.la
 
-gwyfile_so_SOURCES = gwyfile.c
-gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
+libgwyfile_la_SOURCES = gwyfile.c
+libgwyfile_la_LDFLAGS = -avoid-version -module
+libgwyfile_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
-plugin_proxy_so_SOURCES = plugin-proxy.c
-plugin_proxy_so_LDFLAGS = $(module_ldflags),plugin-proxy.so
+libpixmap_la_SOURCES = pixmap.c
+libpixmap_la_LDFLAGS = -avoid-version -module
+libpixmap_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
-pixmap_so_SOURCES = pixmap.c
-pixmap_so_LDFLAGS = $(module_ldflags),pixmap.so
+libplugin_proxy_la_SOURCES = plugin-proxy.c
+libplugin_proxy_la_LDFLAGS = -avoid-version -module
+libplugin_proxy_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
