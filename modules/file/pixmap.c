@@ -67,11 +67,22 @@ enum { pixmap_ping_length = 4096 };
 
 static guchar pixmap_ping_buf[pixmap_ping_length];
 
+/* What is present on the exported image */
 typedef enum {
     PIXMAP_RAW_DATA,
     PIXMAP_RULERS,
     PIXMAP_EVERYTHING
 } PixmapOutput;
+
+/* What value is used when importing from image */
+typedef enum {
+    PIXMAP_MAP_NONE = 0,
+    PIXMAP_MAP_RED,
+    PIXMAP_MAP_GREEN,
+    PIXMAP_MAP_BLUE,
+    PIXMAP_MAP_VALUE,
+    PIXMAP_MAP_SUM
+} PixmapMapType;
 
 typedef struct {
     gdouble zoom;
@@ -84,6 +95,7 @@ typedef struct {
     gint32 xyexponent;
     gdouble zreal;
     gint32 zexponent;
+    PixmapMapType maptype;
 } PixmapLoadArgs;
 
 typedef struct {
@@ -93,6 +105,7 @@ typedef struct {
     GtkWidget *xymeasureeq;
     GtkWidget *zreal;
     GtkWidget *zexponent;
+    GtkWidget *maptype;
 } PixmapLoadControls;
 
 /* there is a information duplication here,
@@ -113,7 +126,7 @@ static gboolean          pixmap_load_dialog        (PixmapLoadArgs *args,
                                                     const gchar *name,
                                                     gint xres,
                                                     gint yres,
-                                                    const gchar *warning);
+                                                    const gboolean mapknown);
 static void              xyreal_changed_cb         (GtkAdjustment *adj,
                                                     PixmapLoadControls *controls);
 static void              xymeasureeq_changed_cb    (PixmapLoadControls *controls);
@@ -231,12 +244,20 @@ static const GwyEnum output_formats[] = {
     { "Everything",    PIXMAP_EVERYTHING },
 };
 
+static const GwyEnum value_map_types[] = {
+    { "Red",         PIXMAP_MAP_RED },
+    { "Green",       PIXMAP_MAP_GREEN },
+    { "Blue",        PIXMAP_MAP_BLUE },
+    { "Value (max)", PIXMAP_MAP_VALUE },
+    { "RGB sum",     PIXMAP_MAP_SUM },
+};
+
 static const PixmapSaveArgs pixmap_save_defaults = {
     1.0, PIXMAP_EVERYTHING
 };
 
 static const PixmapLoadArgs pixmap_load_defaults = {
-    100.0, 100.0, -6, 1.0, -6
+    100.0, 100.0, -6, 1.0, -6, PIXMAP_MAP_VALUE
 };
 
 /* The module info. */
@@ -256,7 +277,7 @@ static GwyModuleInfo module_info = {
         "TARGA. "
         "Import support relies on GDK and thus may be installation-dependent.",
     "Yeti <yeti@gwyddion.net>",
-    "4.0",
+    "4.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -466,10 +487,10 @@ pixmap_load(const gchar *filename,
     gsize n, bpp;
     guchar *pixels, *p;
     gint i, j, width, height, rowstride;
-    gboolean has_alpha, is_grayscale;
+    gboolean has_alpha, maptype_known;
+    gint not_grayscale, any_red, any_green, any_blue;
     gdouble *val, *r;
     PixmapLoadArgs args;
-    const gchar *warning;
 
     gwy_debug("Loading <%s> as %s", filename, name);
 
@@ -508,52 +529,103 @@ pixmap_load(const gchar *filename,
     g_object_ref(pixbuf);
     g_object_unref(loader);
 
+    settings = gwy_app_settings_get();
+    pixmap_load_load_args(settings, &args);
+
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     has_alpha = gdk_pixbuf_get_has_alpha(pixbuf);
     bpp = has_alpha ? 4 : 3;
+    /* check which value mapping methods seem feasible */
+    not_grayscale = any_red = any_green = any_blue = 0;
+    for (i = 0; i < height; i++) {
+        p = pixels + i*rowstride;
+        for (j = 0; j < width; j++) {
+            guchar red = p[bpp*j], green = p[bpp*j+1], blue = p[bpp*j+2];
 
-    settings = gwy_app_settings_get();
-    pixmap_load_load_args(settings, &args);
+            not_grayscale |= (green ^ red) | (red ^ blue);
+            any_green |= green;
+            any_blue |= blue;
+            any_red |= red;
+        }
+    }
+    maptype_known = FALSE;
+    if (!not_grayscale) {
+        args.maptype = PIXMAP_MAP_VALUE;
+        maptype_known = TRUE;
+    }
+    else if (!any_green && !any_blue) {
+        args.maptype = PIXMAP_MAP_RED;
+        maptype_known = TRUE;
+    }
+    else if (!any_red && !any_blue) {
+        args.maptype = PIXMAP_MAP_GREEN;
+        maptype_known = TRUE;
+    }
+    else if (!any_red && !any_green) {
+        args.maptype = PIXMAP_MAP_BLUE;
+        maptype_known = TRUE;
+    }
+
+    /* ask user what she thinks */
+    if (!pixmap_load_dialog(&args, name, width, height, maptype_known)) {
+        g_object_unref(pixbuf);
+        return NULL;
+    }
+
+    pixmap_load_save_args(settings, &args);
     dfield = GWY_DATA_FIELD(gwy_data_field_new(width, height,
                                                args.xreal, args.yreal,
                                                FALSE));
     val = gwy_data_field_get_data(dfield);
-    is_grayscale = TRUE;
     for (i = 0; i < height; i++) {
         p = pixels + i*rowstride;
         r = val + i*width;
-        for (j = 0; j < width; j++) {
-            guchar red = p[bpp*j], green = p[bpp*j+1], blue = p[bpp*j+2];
-            guchar v = red > green ? red : green;
 
-            if (blue > v)
-                v = blue;
-            r[j] = v/255.0;
+        switch (args.maptype) {
+            case PIXMAP_MAP_BLUE:
+            p++;
+            case PIXMAP_MAP_GREEN:
+            p++;
+            case PIXMAP_MAP_RED:
+            for (j = 0; j < width; j++)
+                r[j] = p[bpp*j]/255.0;
+            break;
 
-            if (red != green || green != blue)
-                is_grayscale = FALSE;
+            case PIXMAP_MAP_VALUE:
+            for (j = 0; j < width; j++) {
+                guchar red = p[bpp*j], green = p[bpp*j+1], blue = p[bpp*j+2];
+                guchar v = MAX(red, green);
+
+                r[j] = MAX(v, blue)/255.0;
+            }
+            break;
+
+            case PIXMAP_MAP_SUM:
+            for (j = 0; j < width; j++) {
+                guchar red = p[bpp*j], green = p[bpp*j+1], blue = p[bpp*j+2];
+
+                r[j] = (red + green + blue)/(3*255.0);
+            }
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
         }
     }
     g_object_unref(pixbuf);
 
-    warning = is_grayscale ? NULL
-              : _("Image is not grayscale, values may be distorted");
-    if (pixmap_load_dialog(&args, name, width, height, warning)) {
-        pixmap_load_save_args(settings, &args);
-        gwy_data_field_set_xreal(dfield,
-                                 args.xreal*exp(G_LN10*args.xyexponent));
-        gwy_data_field_set_yreal(dfield,
-                                 args.yreal*exp(G_LN10*args.xyexponent));
-        gwy_data_field_multiply(dfield,
-                                args.zreal*exp(G_LN10*args.zexponent));
-        data = GWY_CONTAINER(gwy_container_new());
-        gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
-    }
-    else
-        data = NULL;
+    gwy_data_field_set_xreal(dfield,
+                                args.xreal*exp(G_LN10*args.xyexponent));
+    gwy_data_field_set_yreal(dfield,
+                                args.yreal*exp(G_LN10*args.xyexponent));
+    gwy_data_field_multiply(dfield,
+                            args.zreal*exp(G_LN10*args.zexponent));
+    data = GWY_CONTAINER(gwy_container_new());
+    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
     g_object_unref(dfield);
 
     return data;
@@ -564,7 +636,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                    const gchar *name,
                    gint xres,
                    gint yres,
-                   const gchar *warning)
+                   const gboolean mapknown)
 {
     PixmapLoadControls controls;
     GtkObject *adj;
@@ -587,7 +659,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                          NULL);
     g_free(title);
 
-    table = gtk_table_new(8, 3, FALSE);
+    table = gtk_table_new(9, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
@@ -670,15 +742,24 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
     row++;
 
-    if (warning) {
-        s = g_strconcat(_("Warning: "), warning, NULL);
-        label = gtk_label_new(s);
-        g_free(s);
+    if (!mapknown) {
+        label = gtk_label_new(_("Warning: Colorful images cannot be reliably "
+                                "mapped to meaningful values."));
+        gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
         row++;
+
+        controls.maptype
+            = gwy_option_menu_create(value_map_types,
+                                     G_N_ELEMENTS(value_map_types),
+                                     "map-type", NULL, NULL, args->maptype);
+        gwy_table_attach_row(table, row++, _("Use"), _("as data"),
+                             controls.maptype);
     }
+    else
+        controls.maptype = NULL;
 
     g_signal_connect_swapped(controls.xymeasureeq, "toggled",
                              G_CALLBACK(xymeasureeq_changed_cb), &controls);
@@ -738,6 +819,9 @@ pixmap_load_update_controls(PixmapLoadControls *controls,
     gtk_adjustment_set_value(adj, args->zreal);
     gwy_option_menu_set_history(controls->zexponent, "metric-unit",
                                 args->zexponent);
+    if (controls->maptype)
+        gwy_option_menu_set_history(controls->maptype, "map-type",
+                                    args->maptype);
 }
 
 static void
@@ -756,6 +840,9 @@ pixmap_load_update_values(PixmapLoadControls *controls,
     args->zreal = gtk_adjustment_get_value(adj);
     args->zexponent = gwy_option_menu_get_history(controls->zexponent,
                                                   "metric-unit");
+    if (controls->maptype)
+        args->maptype = gwy_option_menu_get_history(controls->maptype,
+                                                    "map-type");
 }
 
 static void
@@ -1713,6 +1800,7 @@ static const gchar *yreal_key = "/module/pixmap/yreal";
 static const gchar *xyexponent_key = "/module/pixmap/xyexponent";
 static const gchar *zreal_key = "/module/pixmap/zreal";
 static const gchar *zexponent_key = "/module/pixmap/zexponent";
+static const gchar *maptype_key = "/module/pixmap/maptype";
 
 static void
 pixmap_load_load_args(GwyContainer *container,
@@ -1727,6 +1815,7 @@ pixmap_load_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, zreal_key, &args->zreal);
     gwy_container_gis_int32_by_name(container, zexponent_key,
                                     &args->zexponent);
+    gwy_container_gis_int32_by_name(container, maptype_key, &args->maptype);
 }
 
 static void
@@ -1740,6 +1829,7 @@ pixmap_load_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, zreal_key, args->zreal);
     gwy_container_set_int32_by_name(container, zexponent_key,
                                     args->zexponent);
+    gwy_container_set_int32_by_name(container, maptype_key, args->maptype);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
