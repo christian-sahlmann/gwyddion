@@ -41,7 +41,18 @@
               </table>
             </xsl:if>
           </div>
-          <p><xsl:value-of select="name"/></p>
+          <p>
+            <xsl:choose>
+              <xsl:when test="count(child::userguide) > 0">
+                <a><xsl:attribute name="href">http://gwyddion.net/documentation/user-guide/<xsl:value-of select="userguide"/></xsl:attribute>
+                  <xsl:value-of select="name"/>
+                </a>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="name"/>
+              </xsl:otherwise>
+            </xsl:choose>
+          </p>
         </td>
         <td><xsl:value-of select="version"/></td>
         <td><xsl:value-of select="author"/></td>

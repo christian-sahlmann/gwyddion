@@ -43,8 +43,15 @@
         <xsl:text> </xsl:text>
         <xsl:value-of select="date"/>
     </p>
-    <p>
-      <b>Description: </b><xsl:apply-templates select="description"/>
+    <p><b>Description: </b><xsl:apply-templates select="description"/>
+      <xsl:if test="count(child::userguide) > 0">
+        <xsl:text> (</xsl:text>
+        <a>
+          <xsl:attribute name="href">http://gwyddion.net/documentation/user-guide/<xsl:value-of select="userguide"/></xsl:attribute>
+          <xsl:text>User guide</xsl:text>
+        </a>
+        <xsl:text>)</xsl:text>
+      </xsl:if>
     </p>
     <xsl:if test="count(child::funclist/func) > 0">
     <table>

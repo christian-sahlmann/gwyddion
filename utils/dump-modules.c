@@ -26,7 +26,27 @@
 #include <stdlib.h>
 #include <string.h>
 
+static GHashTable *user_guide = NULL;
 static GSList *tag_stack = NULL;
+
+static void
+read_user_guide(const gchar *filename)
+{
+    gchar *buf = NULL;
+
+    g_file_get_contents(filename, &buf, NULL, NULL);
+    user_guide = g_hash_table_new(g_str_hash, g_str_equal);
+    while (buf && *buf) {
+        gchar *key = gwy_str_next_line(&buf);
+        gchar *val = strchr(key, ' ');
+
+        if (!val)
+            continue;
+        *val = '\0';
+        val++;
+        g_hash_table_insert(user_guide, key, val);
+    };
+}
 
 /* For module list sorting */
 static gint
@@ -97,6 +117,7 @@ menu_path_print(const gchar *path, const gchar *tag)
     g_free(s);
 }
 
+/* Remove <...> substrings from a string. */
 static gchar*
 kill_mail(const gchar *authors)
 {
@@ -149,6 +170,7 @@ main(G_GNUC_UNUSED int argc,
 #endif  /* G_OS_WIN32 */
 
     g_type_init();
+    read_user_guide("user-guide-modules");
 
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
@@ -177,6 +199,8 @@ main(G_GNUC_UNUSED int argc,
         g_free(s);
         tag_print("copyright", mod_info->copyright);
         tag_print("date", mod_info->date);
+        if ((s = g_hash_table_lookup(user_guide, mod_info->name)))
+            tag_print("userguide", s);
         tag_print("description", mod_info->blurb);
         /* don't print plugin-proxy's stolen functions (XXX: hack) */
         if (!strcmp(mod_info->name, "plugin-proxy")) {
