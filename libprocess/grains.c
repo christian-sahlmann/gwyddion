@@ -658,6 +658,18 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
     initial = row*xres + col;
     g_return_val_if_fail(data[initial], NULL);
 
+    /* check for a single point */
+    if ((!col || !data[initial-1])
+        && (!row || !data[initial-xres])
+        && (col+1 == xres || !data[initial+1])
+        && (row+1 == yres || !data[initial+xres])) {
+        indices = g_new(gint, 1);
+        indices[0] = initial;
+        *nindices = 1;
+
+        return indices;
+    }
+
     n = xres*yres;
     visited = g_new0(gint, n);
     visited[initial] = 1;
@@ -670,7 +682,6 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
     listh = g_new(gint, n/2+2);
     listh[0] = listh[1] = initial;
     nh = 2;
-
 
     while (nv) {
         /* go through vertical lines and expand them horizontally */
