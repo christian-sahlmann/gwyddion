@@ -92,15 +92,13 @@ def check_tab_characters(lines, warnings):
 def check_missing_spaces_around(tokens, lines, warnings):
     "Check for missing spaces around <, >, =, etc."
     operators = '<', '>', '&&', '||', '?', '{'
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.typ != Token.punct:
             continue
         if t.string not in operators and t.string.find('=') == -1:
             continue
-        prec = tokens[i-1]
-        mbefore = prec.line == t.line and prec.end == t.col
-        succ = tokens[i+1]
-        mafter = succ.line == t.line and t.end == succ.col
+        mbefore = t.prec.line == t.line and t.prec.end == t.col
+        mafter = t.succ.line == t.line and t.end == t.succ.col
         w = (None,
              'Missing space before `%s\' (col %d): %s',
              'Missing space after `%s\' (col %d): %s',
@@ -111,33 +109,30 @@ def check_missing_spaces_around(tokens, lines, warnings):
 def check_missing_spaces_after(tokens, lines, warnings):
     "Check for missing spaces after comma, colon"
     operators = ',', ':'
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.typ != Token.punct or t.string not in operators:
             continue
-        succ = tokens[i+1]
-        if succ.line == t.line and t.end == succ.col:
+        if t.succ.line == t.line and t.end == t.succ.col:
             w = 'Missing space after `%s\' (col %d): %s'
             warnings.append((t.line, w % (t.string, t.col, lines[t.line])))
 
 def check_missing_spaces_before(tokens, lines, warnings):
     "Check for missing spaces before }"
     operators = '}',
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.typ != Token.punct or t.string not in operators:
             continue
-        prec = tokens[i-1]
-        if prec.line == t.line and prec.end == t.col:
+        if t.prec.line == t.line and t.prec.end == t.col:
             w = 'Missing space before `%s\' (col %d): %s'
             warnings.append((t.line, w % (t.string, t.col, lines[t.line])))
 
 def check_singlular_opening_braces(tokens, lines, warnings):
     "Check for inappropriate { on a separate line"
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.bracelevel == 0 or t.typ != Token.punct or t.string != '{':
             continue
-        prec = tokens[i-1]
-        if t.line > prec.line and prec.typ == Token.punct \
-           and prec.string == ')':
+        if t.line > t.prec.line and t.prec.typ == Token.punct \
+           and t.prec.string == ')':
             w = 'Opening brace on a separate line (col %d)'
             warnings.append((t.line, w % t.col))
 
@@ -145,36 +140,31 @@ def check_keyword_spacing(tokens, lines, warnings):
     "Check for missing spaces after for, while, etc."
     keywlist = 'if', 'for', 'while', 'switch'
     keywords = dict([(x, 1) for x in keywlist])
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.typ != Token.ident or t.string not in keywords:
             continue
-        succ = tokens[i+1]
-        if succ.line == t.line and t.end == succ.col:
+        if t.succ.line == t.line and t.end == t.succ.col:
             w = 'Missing space after `%s\' (col %d): %s'
             warnings.append((t.line, w % (t.string, t.col, lines[t.line])))
 
 def check_multistatements(tokens, lines, warnings):
     "Check for more than one statemen on one line"
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.typ != Token.punct or t.string != ';' or t.parenlevel > 0:
             continue
-        try:
-            succ = tokens[i+1]
-        except IndexError:
-            break
-        if succ.line == t.line:
+        if t.succ.line == t.line:
             w = 'More than one statement on a line (col %d): %s'
-            warnings.append((t.line, w % (succ.col, lines[t.line])))
+            warnings.append((t.line, w % (t.succ.col, lines[t.line])))
 
 def check_oneliners(tokens, lines, warnings):
     "Check for if, else, statements on the same line."
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.typ != Token.ident:
             continue
         if t.string == 'else':
-            succ = tokens[i+1]
+            succ = t.succ
             if succ.typ == Token.punct and succ.string == '{':
-                succ = tokens[i+2]
+                succ = succ.succ
             if succ.line > t.line:
                 continue
             if succ.typ == Token.ident and succ.string == 'if':
@@ -186,18 +176,19 @@ def check_oneliners(tokens, lines, warnings):
         if t.string in ('for', 'while', 'if'):
             # catch do-while
             if t.string == 'while':
-                prec = tokens[i-1]
+                prec = t.prec
                 if prec.typ == Token.punct and prec.string == '}':
-                    prec = tokens[prec.matching-1]
+                    prec = prec.matching.prec
                     if prec.typ == Token.ident and prec.string == 'do':
                         continue
-            succ = tokens[i+1]
-            assert succ.typ == Token.punct and succ.string == '('
+            succ = t.succ
+            if succ.typ != Token.punct or succ.string != '(':
+                continue
             m = succ.matching
-            succ = tokens[m+1]
+            succ = m.succ
             if succ.typ == Token.punct and succ.string == '{':
-                succ = tokens[m+2]
-            if succ.line > tokens[m].line:
+                succ = succ.succ
+            if succ.line > m.line:
                 continue
             w = 'Statement for `%s\' on the same line (col %d): %s'
             warnings.append((succ.line,
@@ -210,12 +201,12 @@ def check_eol_operators(tokens, lines, warnings):
     oplist = '&&', '||', '+', '-', '*', '/', '%', '|', '&', '^', \
              '==', '!=', '<', '>', '<=', '>=', '?' #, '='
     operators = dict([(x, 1) for x in oplist])
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.bracelevel == 0:
             continue
         if t.typ != Token.punct or t.string not in operators:
             continue
-        if t.line == tokens[i+1].line:
+        if t.line == t.succ.line:
             continue
         w = 'Line ends with an operator `%s\' (col %d): %s'
         warnings.append((t.line, w % (t.string, t.col, lines[t.line])))
@@ -224,18 +215,18 @@ def check_function_call_spaces(tokens, lines, warnings):
     "Check for function calls having the silly GNU spaces before (."
     keywlist = 'if', 'for', 'while', 'switch', 'return', 'case', 'goto'
     keywords = dict([(x, 1) for x in keywlist])
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.bracelevel == 0:
             continue
         if t.typ != Token.punct or t.string != '(':
             continue
-        prec = tokens[i-1]
+        prec = t.prec
         if prec.typ != Token.ident or prec.string in keywords:
             continue
-        if prec.line == t.line and prec.end == t.col:
+        if prec.line == t.line and prec.end == t.col or prec.line < t.line:
             continue
-        m = t.matching
-        if tokens[m+1].typ == Token.punct and tokens[m+1].string == '(':
+        m = t.matching.succ
+        if m.typ == Token.punct and m.string == '(':
             continue
         w = 'Space between function name and parenthesis (col %d): %s'
         warnings.append((t.line, w % (t.col, lines[t.line])))
@@ -243,10 +234,12 @@ def check_function_call_spaces(tokens, lines, warnings):
 def check_return_case_parentheses(tokens, lines, warnings):
     keywlist = 'return', 'case', 'goto'
     keywords = dict([(x, 1) for x in keywlist])
-    for i, t in enumerate(tokens):
+    for t in tokens:
         if t.typ != Token.punct or t.string != '(':
             continue
-        if not i or tokens[i-1].string not in keywords:
+        if t.prec.string not in keywords:
+            continue
+        if t.matching.succ.typ != Token.punct or t.matching.succ.string != ';':
             continue
         w = 'Extra return/case/goto parentheses (col %d)'
         warnings.append((t.line, w % (t.col)))
@@ -254,11 +247,12 @@ def check_return_case_parentheses(tokens, lines, warnings):
 def check_boolean_comparisons(tokens, lines, warnings):
     keywlist = 'TRUE', 'FALSE'
     keywords = dict([(x, 1) for x in keywlist])
-    for i, t in enumerate(tokens):
-        if not i or tokens[i].string not in keywords:
+    for t in tokens:
+        if t.string not in keywords:
             continue
-        if tokens[i-1].typ != Token.punct or (tokens[i-1].string != '!='
-                                              and tokens[i-1].string != '=='):
+        prec = t.prec
+        if prec.typ != Token.punct or (prec.string != '!='
+                                       and prec.string != '=='):
             continue
         w = 'Comparison to TRUE or FALSE (col %d)'
         warnings.append((t.line, w % (t.col)))
@@ -355,6 +349,18 @@ def tokenize(lines):
                 sys.stderr.write('*** ERROR: Completely ugly code '
                                  + '(trying to sync): %s\n' % l)
                 l = ''
+
+    # Make tokens a doubly linked list
+    for i, t in enumerate(tokens):
+        if i:
+            t.prec = tokens[i-1]
+        else:
+            t.prec = None
+
+        try:
+            t.succ = tokens[i+1]
+        except IndexError:
+            t.succ = None
     return tokens
 
 def find_matching_parentheses(tokens):
@@ -365,11 +371,11 @@ def find_matching_parentheses(tokens):
         if t.string in pairs:
             p = stacks[pairs[t.string]].pop()
             t.matching = p
-            tokens[p].matching = i
+            p.matching = t
         t.parenlevel = len(stacks['('])
         t.bracelevel = len(stacks['{'])
         if t.string in stacks:
-            stacks[t.string].append(i)
+            stacks[t.string].append(t)
 
 def gimme_function_arguments(tokens, i):
     "Given an opening parenthesis token, return function argument list."
