@@ -24,6 +24,7 @@ gwy_type_init(void)
     optimization_fooler += gwy_palette_def_get_type();
     optimization_fooler += gwy_container_get_type();
 
+    g_set_application_name(_("Gwyddion"));
     gwy_palette_def_setup_presets();
     gwy_stock_register_stock_items();
 }
