@@ -1,0 +1,93 @@
+[Setup]
+AppName=@PACKAGE_NAME@
+AppVersion=@PACKAGE_VERSION@
+AppVerName=@PACKAGE_STRING@
+AppPublisher=Trific soft.
+AppPublisherURL=@PACKAGE_URL@
+AppCopyright=Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek
+DefaultDirName={pf}\@PACKAGE_NAME@
+DefaultGroupName=@PACKAGE_NAME@
+DisableStartupPrompt=yes
+WindowShowCaption=yes
+WindowVisible=no
+LicenseFile=COPYING.wri
+Compression=bzip/9
+SourceDir=.
+OutputDir=.
+OutputBaseFilename=@PACKAGE_NAME@-@PACKAGE_VERSION@
+; I would like to, but don't know how :-(
+;ChangesAssociations=yes
+
+[Files]
+; FIXME: the header installation is quite rough...
+Source: "app\@PACKAGE_TARNAME@.exe"; DestDir: "{app}"
+Source: "libgwyddion\libgwyddion-*.dll"; DestDir: "{app}"
+Source: "libgwyddion\libgwyddion-*.lib"; DestDir: "{app}\lib"
+Source: "libgwyddion\libgwyddion-*.def"; DestDir: "{app}\lib"
+Source: "libgwyddion\*.h"; DestDir: "{app}\include\libgwyddion"
+Source: "libgwydgets\libgwydgets-*.dll"; DestDir: "{app}"
+Source: "libgwydgets\libgwydgets-*.lib"; DestDir: "{app}\lib"
+Source: "libgwydgets\libgwydgets-*.def"; DestDir: "{app}\lib"
+Source: "libgwydgets\*.h"; DestDir: "{app}\include\libgwydgets"
+Source: "libgwymodule\libgwymodule-*.dll"; DestDir: "{app}"
+Source: "libgwymodule\libgwymodule-*.lib"; DestDir: "{app}\lib"
+Source: "libgwymodule\libgwymodule-*.def"; DestDir: "{app}\lib"
+Source: "libgwymodule\*.h"; DestDir: "{app}\include\libgwymodule"
+Source: "libprocess\libgwyprocess-*.dll"; DestDir: "{app}"
+Source: "libprocess\libgwyprocess-*.lib"; DestDir: "{app}\lib"
+Source: "libprocess\libgwyprocess-*.def"; DestDir: "{app}\lib"
+Source: "libprocess\*.h"; DestDir: "{app}\include\libprocess"
+Source: "libdraw\libgwydraw-*.dll"; DestDir: "{app}"
+Source: "libdraw\libgwydraw-*.lib"; DestDir: "{app}\lib"
+Source: "libdraw\libgwydraw-*.def"; DestDir: "{app}\lib"
+Source: "libdraw\*.h"; DestDir: "{app}\include\libdraw"
+Source: "COPYING.wri"; DestDir: "{app}"
+;Source: "README.wri"; DestDir: "{app}"; Flags: isreadme
+Source: "pixmaps\*.png"; DestDir: "{app}\pixmaps"
+Source: "app\tools\*.dll"; DestDir: "{app}\modules\tools"
+Source: "modules\*.dll"; DestDir: "{app}\modules"
+Source: "modules\file\*.dll"; DestDir: "{app}\modules\file"
+Source: "modules\graph\*.dll"; DestDir: "{app}\modules\graph"
+Source: "modules\process\*.dll"; DestDir: "{app}\modules\process"
+;Source: "pixmaps\@PACKAGE_TARNAME@.ico"; DestDir: "{app}"
+
+[Icons]
+Name: "{group}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"; IconFilename: "{app}\@PACKAGE_TARNAME@.ico"
+Name: "{group}\@PACKAGE_NAME@ Website"; Filename: "@PACKAGE_URL@"
+Name: "{group}\@PACKAGE_NAME@ Development Website"; Filename: "http://trific.ath.cx/software/@PACKAGE_TARNAME@/"
+Name: "{group}\Uninstall @PACKAGE_NAME@"; Filename: "{uninstallexe}"
+Name: "{userdesktop}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"; IconFilename: "{app}\@PACKAGE_TARNAME@.ico"
+
+[Registry]
+; This adds the GTK+ libraries to @PACKAGE_TARNAME@.exe's path
+Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletekeyifempty
+Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueData: "{app}\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueName: "Path"; ValueData: "{app};{code:GetGtkPath}\lib"; Flags: uninsdeletevalue
+
+[Code]
+var
+  Exists: Boolean;
+  GtkPath: String;
+
+function GetGtkInstalled (): Boolean;
+begin
+  Exists := RegQueryStringValue (HKLM, 'Software\GTK\2.0', 'Path', GtkPath);
+  if not Exists then begin
+    Exists := RegQueryStringValue (HKCU, 'Software\GTK\2.0', 'Path', GtkPath);
+  end;
+   Result := Exists
+end;
+
+function GetGtkPath (S: String): String;
+begin
+    Result := GtkPath;
+end;
+
+function InitializeSetup(): Boolean;
+begin
+  Result := GetGtkInstalled ();
+  if not Result then begin
+    MsgBox ('Please install the GTK+ 2.0 Runtime Environment before installing @PACKAGE_NAME@.  You can obtain GTK+ from http://www.dropline.net/gtk.', mbError, MB_OK);
+  end;
+end;
+

@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 0.20031225, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
+AC_INIT(Gwyddion, 0.20040101, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -30,6 +30,7 @@ AC_CONFIG_FILES(\
   devel-docs/libgwymodule/Makefile \
   devel-docs/libgwyprocess/Makefile \
   gwyddion.spec \
+  gwyddion.iss \
   gwyddion.pc \
 )
 AM_CONFIG_HEADER(config.h)
