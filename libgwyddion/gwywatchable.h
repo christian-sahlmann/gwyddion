@@ -25,23 +25,17 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_WATCHABLE                  (gwy_watchable_get_type())
-#define GWY_WATCHABLE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_WATCHABLE, GwyWatchable))
-#define GWY_WATCHABLE_CLASS(klass)          (G_TYPE_CHECK_INSTANCE_CAST((klass), GWY_TYPE_WATCHABLE, GwyWatchableClass))
-#define GWY_IS_WATCHABLE(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_WATCHABLE))
-#define GWY_IS_WATCHABLE_CLASS(klass)       (G_TYPE_CHECK_INSTANCE_TYPE((klass), GWY_TYPE_WATCHABLE))
-#define GWY_WATCHABLE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_INTERFACE((obj), GWY_TYPE_WATCHABLE, GwyWatchableClass))
+#define GWY_TYPE_WATCHABLE           (gwy_watchable_get_type())
+#define GWY_WATCHABLE(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_WATCHABLE, GwyWatchable))
+#define GWY_IS_WATCHABLE(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_WATCHABLE))
+#define GWY_WATCHABLE_GET_IFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE((obj), GWY_TYPE_WATCHABLE, GwyWatchableIface))
 
 
-typedef struct _GwyWatchable GwyWatchable;
-typedef struct _GwyWatchableClass GwyWatchableClass;
+typedef struct _GwyWatchableIface GwyWatchableIface;
+typedef struct _GwyWatchable      GwyWatchable;       /* dummy */
 
-struct _GwyWatchable {
-    GTypeInterface parent_instance;
-};
-
-struct _GwyWatchableClass {
-    GTypeClass parent_class;
+struct _GwyWatchableIface {
+    GTypeInterface parent_class;
 
     void (*value_changed)(GObject *watchable);
 };

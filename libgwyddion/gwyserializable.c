@@ -33,8 +33,7 @@
 
 #define GWY_SERIALIZABLE_TYPE_NAME "GwySerializable"
 
-static void     gwy_serializable_base_init          (GwySerializableClass *klass);
-static void     gwy_serializable_base_finalize      (void);
+static void     gwy_serializable_base_init          (gpointer g_class);
 static GObject* gwy_serializable_duplicate_hard_way (GObject *object);
 
 static inline gsize ctype_size     (guchar ctype);
@@ -46,9 +45,9 @@ gwy_serializable_get_type(void)
 
     if (!gwy_serializable_type) {
         static const GTypeInfo gwy_serializable_info = {
-            sizeof(GwySerializableClass),
+            sizeof(GwySerializableIface),
             (GBaseInitFunc)gwy_serializable_base_init,
-            (GBaseFinalizeFunc)gwy_serializable_base_finalize,
+            NULL,
             NULL,
             NULL,
             NULL,
@@ -66,30 +65,19 @@ gwy_serializable_get_type(void)
         g_type_interface_add_prerequisite(gwy_serializable_type, G_TYPE_OBJECT);
     }
 
+    gwy_debug("%lu", gwy_serializable_type);
     return gwy_serializable_type;
 }
 
-static guint gwy_serializable_base_init_count = 0;
-
 static void
-gwy_serializable_base_init(GwySerializableClass *klass)
+gwy_serializable_base_init(gpointer g_class)
 {
-    gwy_serializable_base_init_count++;
-    gwy_debug("base init count = %d", gwy_serializable_base_init_count);
-    if (gwy_serializable_base_init_count == 1) {
-        klass->duplicate = NULL;
-        /* add signals... */
-    }
-}
+    static gboolean initialized = FALSE;
 
-static void
-gwy_serializable_base_finalize(void)
-{
-    gwy_serializable_base_init_count--;
-    gwy_debug("base init count = %d", gwy_serializable_base_init_count);
-    if (gwy_serializable_base_init_count == 0) {
-        /* destroy signals... */
-    }
+    gwy_debug("initialized = %d", initialized);
+    if (initialized)
+        return;
+    initialized = TRUE;
 }
 
 /**
@@ -115,7 +103,7 @@ gwy_serializable_serialize(GObject *serializable,
     gwy_debug("serializing a %s",
               g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
 
-    serialize_method = GWY_SERIALIZABLE_GET_CLASS(serializable)->serialize;
+    serialize_method = GWY_SERIALIZABLE_GET_IFACE(serializable)->serialize;
     if (!serialize_method) {
         g_error("%s doesn't implement serialize()",
                 g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
@@ -166,7 +154,7 @@ gwy_serializable_deserialize(const guchar *buffer,
      * deserialize() is a class method, not an object method, there already
      * has to be some macro for it in gobject... */
     deserialize_method
-        = ((GwySerializableClass*)
+        = ((GwySerializableIface*)
                 g_type_interface_peek(g_type_class_peek(type),
                                       GWY_TYPE_SERIALIZABLE))->deserialize;
     if (!deserialize_method) {
@@ -209,7 +197,7 @@ gwy_serializable_duplicate(GObject *object)
     }
     g_return_val_if_fail(GWY_IS_SERIALIZABLE(object), NULL);
 
-    duplicate_method = GWY_SERIALIZABLE_GET_CLASS(object)->duplicate;
+    duplicate_method = GWY_SERIALIZABLE_GET_IFACE(object)->duplicate;
     if (duplicate_method)
         return duplicate_method(object);
 

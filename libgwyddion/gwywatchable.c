@@ -33,8 +33,7 @@ enum {
 
 static guint gwy_watchable_signals[LAST_SIGNAL] = { 0 };
 
-static void gwy_watchable_base_init     (GwyWatchableClass *klass);
-static void gwy_watchable_base_finalize (GwyWatchableClass *klass);
+static void gwy_watchable_base_init     (gpointer g_class);
 
 GType
 gwy_watchable_get_type(void)
@@ -43,9 +42,9 @@ gwy_watchable_get_type(void)
 
     if (!gwy_watchable_type) {
         static const GTypeInfo gwy_watchable_info = {
-            sizeof(GwyWatchableClass),
+            sizeof(GwyWatchableIface),
             (GBaseInitFunc)gwy_watchable_base_init,
-            (GBaseFinalizeFunc)gwy_watchable_base_finalize,
+            NULL,
             NULL,
             NULL,
             NULL,
@@ -62,39 +61,28 @@ gwy_watchable_get_type(void)
         g_type_interface_add_prerequisite(gwy_watchable_type, G_TYPE_OBJECT);
     }
 
+    gwy_debug("%lu", gwy_watchable_type);
     return gwy_watchable_type;
 }
 
-static guint gwy_watchable_base_init_count = 0;
-
 static void
-gwy_watchable_base_init(GwyWatchableClass *klass)
+gwy_watchable_base_init(gpointer g_class)
 {
-    gwy_watchable_base_init_count++;
-    gwy_debug("base init count = %d", gwy_watchable_base_init_count);
-    if (gwy_watchable_base_init_count == 1) {
-        gwy_watchable_signals[VALUE_CHANGED] =
-            g_signal_new("value_changed",
-                         G_OBJECT_CLASS_TYPE(klass),
-                         G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
-                         G_STRUCT_OFFSET(GwyWatchableClass, value_changed),
-                         NULL, NULL,
-                         g_cclosure_marshal_VOID__VOID,
-                         G_TYPE_NONE, 0);
-    }
-}
+    static gboolean initialized = FALSE;
 
-static void
-gwy_watchable_base_finalize(GwyWatchableClass *klass)
-{
-    gwy_watchable_base_init_count--;
-    gwy_debug("base init count = %d", gwy_watchable_base_init_count);
-    if (gwy_watchable_base_init_count == 0) {
-        /* destroy signals...
-         * FIXME: but how?
-         */
-    }
-    klass = klass;
+    gwy_debug("initialized = %d", initialized);
+    if (initialized)
+        return;
+
+    gwy_watchable_signals[VALUE_CHANGED] =
+        g_signal_new("value_changed",
+                     GWY_TYPE_WATCHABLE,
+                     G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
+                     G_STRUCT_OFFSET(GwyWatchableIface, value_changed),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
+    initialized = TRUE;
 }
 
 /**

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <string.h>
 #include <stdio.h>
 #include <glib-object.h>
@@ -30,8 +30,8 @@
 static void       gwy_test_ser_class_init        (GwyTestSerClass *klass);
 static void       gwy_test_ser_init              (GwyTestSer *test_ser);
 static void       gwy_test_ser_finalize          (GwyTestSer *test_ser);
-static void       gwy_test_ser_serializable_init (gpointer giface);
-static void       gwy_test_ser_watchable_init    (gpointer giface);
+static void       gwy_test_ser_serializable_init (GwySerializableIface *iface);
+static void       gwy_test_ser_watchable_init    (GwyWatchableIface *iface);
 static guchar*    gwy_test_ser_serialize         (GObject *obj,
                                                   guchar *buffer,
                                                   gsize *size);
@@ -79,30 +79,24 @@ gwy_test_ser_get_type(void)
                                     &gwy_watchable_info);
     }
 
+    gwy_debug("%lu", gwy_test_ser_type);
     return gwy_test_ser_type;
 }
 
 static void
-gwy_test_ser_serializable_init(gpointer giface)
+gwy_test_ser_serializable_init(GwySerializableIface *iface)
 {
-    GwySerializableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
-
     /* initialize stuff */
     iface->serialize = gwy_test_ser_serialize;
     iface->deserialize = gwy_test_ser_deserialize;
+    iface->duplicate = NULL;  /* don't have one */
 }
 
 static void
-gwy_test_ser_watchable_init(gpointer giface)
+gwy_test_ser_watchable_init(GwyWatchableIface *iface)
 {
-    GwyWatchableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
-
     /* initialize stuff */
     iface->value_changed = NULL;
 }

@@ -20,14 +20,16 @@
 
 #ifndef __GWY_DATAFIELD_H__
 #define __GWY_DATAFIELD_H__
+
 #include <glib.h>
+/* GtkOrientation */
 #include <gtk/gtk.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/dataline.h>
+#include <libprocess/cwt.h>
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwysiunit.h>
-#include <libprocess/cwt.h>
 
 G_BEGIN_DECLS
 

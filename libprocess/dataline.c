@@ -29,8 +29,8 @@
 static void     gwy_data_line_class_init        (GwyDataLineClass *klass);
 static void     gwy_data_line_init              (GwyDataLine *data_line);
 static void     gwy_data_line_finalize          (GwyDataLine *data_line);
-static void     gwy_data_line_serializable_init (gpointer giface);
-static void     gwy_data_line_watchable_init    (gpointer giface);
+static void     gwy_data_line_serializable_init (GwySerializableIface *iface);
+static void     gwy_data_line_watchable_init    (GwyWatchableIface *iface);
 static guchar*  gwy_data_line_serialize         (GObject *obj,
                                                  guchar *buffer,
                                                  gsize *size);
@@ -84,13 +84,9 @@ gwy_data_line_get_type(void)
 }
 
 static void
-gwy_data_line_serializable_init(gpointer giface)
+gwy_data_line_serializable_init(GwySerializableIface *iface)
 {
-    GwySerializableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
-
     /* initialize stuff */
     iface->serialize = gwy_data_line_serialize;
     iface->deserialize = gwy_data_line_deserialize;
@@ -98,13 +94,9 @@ gwy_data_line_serializable_init(gpointer giface)
 }
 
 static void
-gwy_data_line_watchable_init(gpointer giface)
+gwy_data_line_watchable_init(GwyWatchableIface *iface)
 {
-    GwyWatchableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
-
     /* initialize stuff */
     iface->value_changed = NULL;
 }

@@ -29,8 +29,8 @@
 
 static void     gwy_sphere_coords_class_init        (void);
 static void     gwy_sphere_coords_init              (GwySphereCoords *sphere_coords);
-static void     gwy_sphere_coords_serializable_init (gpointer giface);
-static void     gwy_sphere_coords_watchable_init    (gpointer giface);
+static void     gwy_sphere_coords_serializable_init (GwySerializableIface *iface);
+static void     gwy_sphere_coords_watchable_init    (GwyWatchableIface *iface);
 static guchar*  gwy_sphere_coords_serialize         (GObject *obj,
                                                      guchar *buffer,
                                                      gsize *size);
@@ -82,26 +82,20 @@ gwy_sphere_coords_get_type(void)
 }
 
 static void
-gwy_sphere_coords_serializable_init(gpointer giface)
+gwy_sphere_coords_serializable_init(GwySerializableIface *iface)
 {
-    GwySerializableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
-
+    /* initialize stuff */
     iface->serialize = gwy_sphere_coords_serialize;
     iface->deserialize = gwy_sphere_coords_deserialize;
     iface->duplicate = gwy_sphere_coords_duplicate;
 }
 
 static void
-gwy_sphere_coords_watchable_init(gpointer giface)
+gwy_sphere_coords_watchable_init(GwyWatchableIface *iface)
 {
-    GwyWatchableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
-
+    /* initialize stuff */
     iface->value_changed = NULL;
 }
 

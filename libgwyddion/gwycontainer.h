@@ -21,8 +21,7 @@
 #ifndef __GWY_CONTAINER_H__
 #define __GWY_CONTAINER_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkobject.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 

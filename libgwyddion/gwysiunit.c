@@ -22,15 +22,16 @@
 #include <string.h>
 #include <stdio.h>
 #include <libgwyddion/gwymacros.h>
-#include "gwymath.h"
-#include "gwysiunit.h"
+#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyserializable.h>
+#include <libgwyddion/gwysiunit.h>
 
 #define GWY_SI_UNIT_TYPE_NAME "GwySIUnit"
 
 static void     gwy_si_unit_class_init        (GwySIUnitClass *klass);
 static void     gwy_si_unit_init              (GwySIUnit *si_unit);
 static void     gwy_si_unit_finalize          (GwySIUnit *si_unit);
-static void     gwy_si_unit_serializable_init (gpointer giface);
+static void     gwy_si_unit_serializable_init (GwySerializableIface *iface);
 static guchar*  gwy_si_unit_serialize         (GObject *obj,
                                               guchar *buffer,
                                               gsize *size);
@@ -67,9 +68,9 @@ gwy_si_unit_get_type(void)
 
         gwy_debug("");
         gwy_si_unit_type = g_type_register_static(G_TYPE_OBJECT,
-                                                   GWY_SI_UNIT_TYPE_NAME,
-                                                   &gwy_si_unit_info,
-                                                   0);
+                                                  GWY_SI_UNIT_TYPE_NAME,
+                                                  &gwy_si_unit_info,
+                                                  0);
         g_type_add_interface_static(gwy_si_unit_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
@@ -79,13 +80,9 @@ gwy_si_unit_get_type(void)
 }
 
 static void
-gwy_si_unit_serializable_init(gpointer giface)
+gwy_si_unit_serializable_init(GwySerializableIface *iface)
 {
-    GwySerializableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
-
     /* initialize stuff */
     iface->serialize = gwy_si_unit_serialize;
     iface->deserialize = gwy_si_unit_deserialize;

@@ -38,8 +38,8 @@ typedef struct {
 static void     gwy_palette_class_init            (GwyPaletteClass *klass);
 static void     gwy_palette_init                  (GwyPalette *palette);
 static void     gwy_palette_finalize              (GwyPalette *palette);
-static void     gwy_palette_serializable_init     (gpointer giface);
-static void     gwy_palette_watchable_init        (gpointer giface);
+static void     gwy_palette_serializable_init     (GwySerializableIface *iface);
+static void     gwy_palette_watchable_init        (GwyWatchableIface *iface);
 static guchar*  gwy_palette_serialize             (GObject *obj,
                                                    guchar *buffer,
                                                    gsize *size);
@@ -105,13 +105,9 @@ gwy_palette_get_type(void)
 }
 
 static void
-gwy_palette_serializable_init(gpointer giface)
+gwy_palette_serializable_init(GwySerializableIface *iface)
 {
-    GwySerializableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
-
     /* initialize stuff */
     iface->serialize = gwy_palette_serialize;
     iface->deserialize = gwy_palette_deserialize;
@@ -119,14 +115,9 @@ gwy_palette_serializable_init(gpointer giface)
 }
 
 static void
-gwy_palette_watchable_init(gpointer giface)
+gwy_palette_watchable_init(GwyWatchableIface *iface)
 {
-    GwyWatchableClass *iface = giface;
-
     gwy_debug("");
-
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
-
     /* initialize stuff */
     iface->value_changed = NULL;
 }

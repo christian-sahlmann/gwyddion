@@ -20,8 +20,8 @@
  */
 
 #include <string.h>
-#include <gwymacros.h>
-#include <gwymath.h>
+#include "gwymacros.h"
+#include "gwymath.h"
 #include "gwynlfit.h"
 
 /* Side step constant for numerical differentiation in gwy_math_nlfit_derive()

@@ -21,9 +21,7 @@
 #ifndef __GWY_SI_UNIT_H__
 #define __GWY_SI_UNIT_H__
 
-#include <glib.h>
-#include <gtk/gtk.h>
-#include <libgwyddion/gwyserializable.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 

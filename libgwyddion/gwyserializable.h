@@ -25,16 +25,14 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_SERIALIZABLE                  (gwy_serializable_get_type())
-#define GWY_SERIALIZABLE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SERIALIZABLE, GwySerializable))
-#define GWY_SERIALIZABLE_CLASS(klass)          (G_TYPE_CHECK_INSTANCE_CAST((klass), GWY_TYPE_SERIALIZABLE, GwySerializableClass))
-#define GWY_IS_SERIALIZABLE(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SERIALIZABLE))
-#define GWY_IS_SERIALIZABLE_CLASS(klass)       (G_TYPE_CHECK_INSTANCE_TYPE((klass), GWY_TYPE_SERIALIZABLE))
-#define GWY_SERIALIZABLE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_INTERFACE((obj), GWY_TYPE_SERIALIZABLE, GwySerializableClass))
+#define GWY_TYPE_SERIALIZABLE           (gwy_serializable_get_type())
+#define GWY_SERIALIZABLE(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SERIALIZABLE, GwySerializable))
+#define GWY_IS_SERIALIZABLE(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SERIALIZABLE))
+#define GWY_SERIALIZABLE_GET_IFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE((obj), GWY_TYPE_SERIALIZABLE, GwySerializableIface))
 
 
-typedef struct _GwySerializable GwySerializable;
-typedef struct _GwySerializableClass GwySerializableClass;
+typedef struct _GwySerializableIface GwySerializableIface;
+typedef struct _GwySerializable      GwySerializable;        /* dummy */
 
 typedef guchar* (*GwySerializeFunc)(GObject *serializable,
                                     guchar *buffer,
@@ -44,12 +42,8 @@ typedef GObject* (*GwyDeserializeFunc)(const guchar *buffer,
                                        gsize *position);
 typedef GObject* (*GwyDuplicateFunc)(GObject *object);
 
-struct _GwySerializable {
-    GTypeInterface parent_instance;
-};
-
-struct _GwySerializableClass {
-    GTypeClass parent_class;
+struct _GwySerializableIface {
+    GTypeInterface parent_class;
 
     GwySerializeFunc serialize;
     GwyDeserializeFunc deserialize;

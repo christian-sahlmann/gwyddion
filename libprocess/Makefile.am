@@ -40,7 +40,7 @@ libgwyprocess_la_SOURCES = \
 #	test.c
 #test_LDADD = libgwyprocess.la \
 #	$(libgwyddion)
-
+#
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyProcess\"
 

@@ -20,7 +20,7 @@
 
 #ifndef __GWY_PALETTE_DEF_H__
 #define __GWY_PALETTE_DEF_H__
-#include <glib/ghash.h>
+
 #include <glib-object.h>
 
 #include <libprocess/interpolation.h>

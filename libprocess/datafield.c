@@ -31,8 +31,8 @@
 static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
 static void     gwy_data_field_init              (GwyDataField *data_field);
 static void     gwy_data_field_finalize          (GwyDataField *data_field);
-static void     gwy_data_field_serializable_init (gpointer giface);
-static void     gwy_data_field_watchable_init    (gpointer giface);
+static void     gwy_data_field_serializable_init (GwySerializableIface *iface);
+static void     gwy_data_field_watchable_init    (GwyWatchableIface *iface);
 static guchar*  gwy_data_field_serialize         (GObject *obj,
                                                   guchar *buffer,
                                                   gsize *size);
@@ -103,13 +103,9 @@ gwy_data_field_get_type(void)
 }
 
 static void
-gwy_data_field_serializable_init(gpointer giface)
+gwy_data_field_serializable_init(GwySerializableIface *iface)
 {
-    GwySerializableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
-
     /* initialize stuff */
     iface->serialize = gwy_data_field_serialize;
     iface->deserialize = gwy_data_field_deserialize;
@@ -117,13 +113,9 @@ gwy_data_field_serializable_init(gpointer giface)
 }
 
 static void
-gwy_data_field_watchable_init(gpointer giface)
+gwy_data_field_watchable_init(GwyWatchableIface *iface)
 {
-    GwyWatchableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
-
     /* initialize stuff */
     iface->value_changed = NULL;
 }
@@ -165,7 +157,6 @@ gwy_data_field_new(gint xres, gint yres,
 {
     GwyDataField *data_field;
 
-    gwy_debug("");
     data_field = g_object_new(GWY_TYPE_DATA_FIELD, NULL);
 
     gwy_data_field_initialize(data_field, xres, yres, xreal, yreal, nullme);

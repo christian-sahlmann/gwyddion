@@ -41,6 +41,9 @@ test_serializable_iface(void)
     guchar *buffer;
     FILE *fh;
     GError *err = NULL;
+    gint x[128];
+
+    memset(x, 0, 128*sizeof(gint));
 
     /* create, write and free an object */
     ser = gwy_test_ser_new(0.42, 1.001);
@@ -139,7 +142,9 @@ test_container(void)
     GwyContainer *container;
     GQuark q;
     gboolean ok;
+    gint x[128];
 
+    memset(x, 0, 128*sizeof(gint));
     g_message("====== CONTAINER ====================================");
 
     container = GWY_CONTAINER(gwy_container_new());
@@ -263,7 +268,8 @@ test_container_serialization(void)
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 2.2);
     g_assert(ser->ref_count == 1);
 
-    gwy_container_set_string_by_name(container, "/string-n", "a\nb\rc\td");
+    gwy_container_set_string_by_name(container, "/string-n",
+                                     g_strdup("a\nb\rc\td"));
     pa = gwy_container_serialize_to_text(container);
     g_object_unref(container);
     g_message("serialized to text");
@@ -611,7 +617,10 @@ main(void)
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
     test_serializable_iface();
+    test_container();
+    test_watchable_iface();
     test_container_serialization();
+    test_duplication();
 
     return 0;
 }

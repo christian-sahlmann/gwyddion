@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
-#include <gtk/gtkmarshal.h>
 
 #include <libgwyddion/gwymacros.h>
 #include "gwycontainer.h"
@@ -57,7 +56,7 @@ typedef struct {
     gulong hid;
 } ObjectWatch;
 
-static void     gwy_container_serializable_init  (gpointer giface);
+static void     gwy_container_serializable_init  (GwySerializableIface *iface);
 static void     gwy_container_class_init         (GwyContainerClass *klass);
 static void     gwy_container_init               (GwyContainer *container);
 static void     value_destroy_func               (gpointer data);
@@ -155,12 +154,9 @@ gwy_container_get_type(void)
 }
 
 static void
-gwy_container_serializable_init(gpointer giface)
+gwy_container_serializable_init(GwySerializableIface *iface)
 {
-    GwySerializableClass *iface = giface;
-
     gwy_debug("");
-    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
     iface->serialize = gwy_container_serialize;
@@ -237,8 +233,8 @@ value_destroy_func(gpointer data)
 #ifdef DEBUG
     GObject *obj = NULL;
 
-    gwy_debug("unsetting value %p, holds object = %d",
-              val, G_VALUE_HOLDS_OBJECT(val));
+    gwy_debug("unsetting value %p, holds object = %d (%s)",
+              val, G_VALUE_HOLDS_OBJECT(val), G_VALUE_TYPE_NAME(val));
     if (G_VALUE_HOLDS_OBJECT(val)) {
         obj = G_OBJECT(g_value_peek_pointer(val));
         gwy_debug("refcount = %d", obj->ref_count);
