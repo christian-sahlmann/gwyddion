@@ -36,6 +36,7 @@ class Token:
 
 def check_file(filename, lines):
     line_checks = [
+        check_tab_characters,
         check_long_lines
     ]
     token_checks = [
@@ -87,7 +88,7 @@ def check_tab_characters(lines, warnings):
     for i, l in enumerate(lines):
         col = l.find('\t')
         if col > -1:
-            warnings.append((i, 'Tab character (col %d)' % col))
+            warnings.append((i, 'Raw tab character (col %d)' % col))
 
 def check_missing_spaces_around(tokens, lines, warnings):
     "Check for missing spaces around <, >, =, etc."
