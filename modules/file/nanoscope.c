@@ -94,7 +94,7 @@ static GwyModuleInfo module_info = {
     "nanoscope",
     N_("Load Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6.1",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -695,6 +695,8 @@ read_ascii_data(gint n, gdouble *data,
     return TRUE;
 }
 
+/* FIXME: We hope Nanoscope files always use little endian, because we only
+ * have seen them on Intel. */
 static gboolean
 read_binary_data(gint n, gdouble *data,
                  gchar *buffer,
@@ -715,7 +717,7 @@ read_binary_data(gint n, gdouble *data,
             gint16 *p = (gint16*)buffer;
 
             for (i = 0; i < n; i++)
-                data[i] = q*p[i];
+                data[i] = q*GINT16_FROM_LE(p[i]);
         }
         break;
 
@@ -724,7 +726,7 @@ read_binary_data(gint n, gdouble *data,
             gint32 *p = (gint32*)buffer;
 
             for (i = 0; i < n; i++)
-                data[i] = q*p[i];
+                data[i] = q*GINT32_FROM_LE(p[i]);
         }
         break;
 
