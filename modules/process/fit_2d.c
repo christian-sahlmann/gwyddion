@@ -67,8 +67,6 @@ static gboolean    fit_2d                  (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    fit_2d_dialog           (Fit2dArgs *args,
                                                GwyContainer *data);
-static void        reset                      (Fit2dControls *controls,
-                                               Fit2dArgs *args);
 static void        guess                      (Fit2dControls *controls,
                                                Fit2dArgs *args);
 static void        fit_2d_load_args        (GwyContainer *container,
@@ -174,7 +172,6 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
     Fit2dControls controls;
     enum {
 	    RESPONSE_FIT = 1,
-        RESPONSE_RESET = 2,
         RESPONSE_GUESS = 3
     };
     gint response, row, i, j;
@@ -185,7 +182,6 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
     dialog = gtk_dialog_new_with_buttons(_("2D fit"), NULL, 0,
                                          _("_Guess"), RESPONSE_GUESS,
                                          _("_Fit"), RESPONSE_FIT,
-                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -371,16 +367,13 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
                 create_results_window(args);
             break;
 
-            case RESPONSE_RESET:
-            reset(&controls, args);
-            break;
-
             case RESPONSE_FIT:
             fit_2d_run(&controls, args);
             break;
 
             case RESPONSE_GUESS:
             guess(&controls, args);
+            dialog_update(&controls, args);
             break;
 
             default:
@@ -427,17 +420,12 @@ dialog_update
 
 }
 
-static void
-reset(Fit2dControls *controls, Fit2dArgs *args)
-{
-    dialog_update(controls, args);
-}
 
 static void
 guess(Fit2dControls *controls, Fit2dArgs *args)
 {
     
-    GwyDataField *dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
+    GwyDataField *dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original_data,
                                                                 "/0/data"));
     guess_sphere(dfield, 4, args->par_init);
 }
@@ -448,7 +436,7 @@ static void
 fit_2d_run(Fit2dControls *controls,
               Fit2dArgs *args)
 {
-    GwyDataField *dfield, *weight;
+    GwyDataField *dfield, *original_field, *weight;
     gdouble param[4], err[4];
     gboolean fix[4], fres;
     gdouble dimdata[4];
@@ -459,20 +447,22 @@ fit_2d_run(Fit2dControls *controls,
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
 							      "/0/data"));
 
+    original_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original_data,
+							      "/0/data"));
+
+
     gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(args->original_data)),
                         _("Initializing"));
     
-    weight = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres, 10, 10, FALSE));
+    weight = GWY_DATA_FIELD(gwy_data_field_new(original_field->xres, original_field->yres, 10, 10, FALSE));
     gwy_data_field_fill(weight, 1);
 
-    max = gwy_data_field_area_get_avg(dfield, dfield->xres/2-20, dfield->yres/2-20, 40, 40);
-    gwy_data_field_add(dfield, -max);
     
     nparams = 4;
-    dimdata[0] = (gdouble)dfield->xres;
-    dimdata[1] = (gdouble)dfield->yres;
-    dimdata[2] = dfield->xreal;
-    dimdata[3] = dfield->yreal;
+    dimdata[0] = (gdouble)original_field->xres;
+    dimdata[1] = (gdouble)original_field->yres;
+    dimdata[2] = original_field->xreal;
+    dimdata[3] = original_field->yreal;
 
     fix[0] = args->par_fix[0];
     fix[1] = args->par_fix[1];
@@ -489,7 +479,7 @@ fit_2d_run(Fit2dControls *controls,
     if (args->fitter) gwy_math_nlfit_free(args->fitter);
     args->fitter = gwy_math_nlfit_fit_2d(fit_sphere,
 		      NULL,		      
-		      dfield,
+		      original_field,
 		      weight,
 		      4,
 		      param, err,
@@ -502,6 +492,8 @@ fit_2d_run(Fit2dControls *controls,
 
     for (i=0; i<4; i++)
     {
+        args->par_res[i] = param[i];
+        args->par_err[i] = err[i];
         g_snprintf(buffer, sizeof(buffer), "%.3g", param[i]);
         gtk_label_set_text(GTK_LABEL(controls->param_res[i]), buffer);
         g_snprintf(buffer, sizeof(buffer), "%.3g", err[i]);
@@ -536,8 +528,6 @@ fit_2d_do(Fit2dControls *controls,
 
     data_window = gwy_app_data_window_create(GWY_CONTAINER(args->data));
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-
-
 }
 
 static void
@@ -563,14 +553,15 @@ guess_sphere(GwyDataField *dfield,
     avgcorner += gwy_data_field_area_get_avg(dfield, dfield->xres-10, 0, 10, 10);
     avgcorner += gwy_data_field_area_get_avg(dfield, 0, dfield->yres-10, 10, 10);
     avgcorner += gwy_data_field_area_get_avg(dfield, dfield->xres-10, dfield->yres-10, 10, 10);
+    avgcorner/=4;
 
     avgtop = gwy_data_field_area_get_avg(dfield, dfield->xres/2-5, dfield->yres/2-5, 
                                          10, 10);
     
     v = avgtop - avgcorner;
     t = sqrt(dfield->xreal*dfield->xreal + dfield->yreal*dfield->yreal);
-    
-    param[0] = fabs(t*t - 2*v*v)/4/v;
+   
+    param[0] = fabs(t*t - 4*v*v)/8/v;
     param[1] = dfield->xreal/2;
     param[2] = dfield->yreal/2;
     if (avgtop<avgcorner) param[3] = param[0];
@@ -606,10 +597,6 @@ fit_sphere(gdouble x,
     val = sqrt(param[0]*param[0] - (fcol - param[1])*(fcol - param[1])
 	       - (frow - param[2])*(frow - param[2])) - param[0] - param[3];
    
-/*    printf("x=%g, co, row = ( %d, %d), fcol, frow= (%g, %g)  params: %g, %g, %g, %g,  res: %g\n", 
-	   x, col, row, fcol, frow, param[0], param[1], param[2], param[3],
-	   val);*/
-    
     *fres = TRUE;
     return val;
     
@@ -682,11 +669,6 @@ fit_2d_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, thresh_key, args->thresh);
     */
 }
-
-
-
-
-
 
 
 
