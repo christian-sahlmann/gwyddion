@@ -22,6 +22,7 @@
 #define __GWY_GWYDGETS_H__
 
 #include <libgwydgets/gwy3dview.h>
+#include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwyaxis.h>
 #include <libgwydgets/gwyaxisdialog.h>
 #include <libgwydgets/gwycoloraxis.h>

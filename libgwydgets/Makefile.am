@@ -7,6 +7,7 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
 libgwydgetsinclude_HEADERS = \
 	gwy3dview.h \
+	gwy3dwindow.h \
 	gwyaxis.h \
 	gwyaxisdialog.h \
 	gwycoloraxis.h \
@@ -54,6 +55,7 @@ EXTRA_DIST = \
 libgwydgets_la_LDFLAGS = @GTKGLEXT_LIBS@ -version-info 4:0:1
 libgwydgets_la_SOURCES = \
 	gwy3dview.c \
+	gwy3dwindow.c \
 	gwyaxis.c \
 	gwyaxisdialog.c \
 	gwycoloraxis.c \
