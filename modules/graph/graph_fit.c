@@ -353,7 +353,7 @@ fit_dialog(FitArgs *args)
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     controls.param1_init = gtk_entry_new_with_max_length(8);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.param1_init), 8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.param1_init), 12);
     g_signal_connect(controls.param1_init, "changed",
                      G_CALLBACK(par1_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param1_init, 1, 2, 1, 2,
@@ -361,21 +361,21 @@ fit_dialog(FitArgs *args)
     
     
     controls.param2_init = gtk_entry_new_with_max_length(8);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.param2_init), 8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.param2_init), 12);
     g_signal_connect(controls.param2_init, "changed",
                      G_CALLBACK(par2_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param2_init, 1, 2, 2, 3,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
      
     controls.param3_init = gtk_entry_new_with_max_length(8);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.param3_init), 8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.param3_init), 12);
     g_signal_connect(controls.param3_init, "changed",
                      G_CALLBACK(par3_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param3_init, 1, 2, 3, 4,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
      
     controls.param4_init = gtk_entry_new_with_max_length(8);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.param4_init), 8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.param4_init), 12);
     g_signal_connect(controls.param4_init, "changed",
                      G_CALLBACK(par4_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param4_init, 1, 2, 4, 5,
