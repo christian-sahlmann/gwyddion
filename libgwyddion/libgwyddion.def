@@ -1,5 +1,4 @@
 EXPORTS
-	_gwy_debug
 	gwy_container_contains
 	gwy_container_foreach
 	gwy_container_freeze_watch
@@ -28,9 +27,12 @@ EXPORTS
 	gwy_container_thaw_watch
 	gwy_container_value_type
 	gwy_container_watch
+	gwy_debug_gnu
 	gwy_entities_entity_to_utf8
 	gwy_entities_get_entities
 	gwy_entities_text_to_utf8
+	gwy_enum_to_string
+	gwy_flags_to_string
 	gwy_hash_table_to_list_cb
 	gwy_hash_table_to_slist_cb
 	gwy_math_SI_prefix
@@ -59,5 +61,7 @@ EXPORTS
 	gwy_serialize_unpack_object_struct
 	gwy_serialize_unpack_string
 	gwy_serialize_unpack_struct
+	gwy_string_to_enum
+	gwy_string_to_flags
 	gwy_watchable_get_type
 	gwy_watchable_value_changed
