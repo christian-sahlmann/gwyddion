@@ -830,4 +830,262 @@ thin_data_field(GwyDataField *data_field)
     return k;
 }
 
+void
+gwy_data_field_area_filter_minimum(GwyDataField *data_field,
+                                   gint size,
+                                   gint col,
+                                   gint row,
+                                   gint width,
+                                   gint height)
+{
+    GwyDataField *buffer, *buffer2;
+    gint d, i, j, ip, ii, im, jp, jm;
+    gint ep, em;  /* positive and negative excess */
+    gdouble *buf, *buf2, *data;
+    gdouble v;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+    g_return_if_fail(size > 0);
+    if (size == 1)
+        return;
+
+    /* FIXME: does this silly case need an alternative implementation? */
+    if (size/2 >= MIN(width, height)) {
+        g_warning("Too large kernel size for too small area.");
+        return;
+    }
+
+    data = data_field->data;
+    buffer = (GwyDataField*)gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    buffer2 = (GwyDataField*)gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    buf = buffer->data;
+    buf2 = buffer2->data;
+
+    d = 1;
+    gwy_data_field_area_copy(data_field, buffer,
+                             col, row, col + width, row + height, 0, 0);
+    while (3*d < size) {
+        for (i = 0; i < height; i++) {
+            ii = i*width;
+            im = MAX(i - d, 0)*width;
+            ip = MIN(i + d, height-1)*width;
+            for (j = 0; j < width; j++) {
+                jm = MAX(j - d, 0);
+                jp = MIN(j + d, width-1);
+
+                v = MIN(buf[im + jm], buf[im + jp]);
+                if (v > buf[im + j])
+                    v = buf[im + j];
+                if (v > buf[ii + jm])
+                    v = buf[ii + jm];
+                if (v > buf[ii + j])
+                    v = buf[ii + j];
+                if (v > buf[ip + j])
+                    v = buf[ip + j];
+                if (v > buf[ii + jp])
+                    v = buf[ii + jp];
+                if (v > buf[ip + jm])
+                    v = buf[ip + jm];
+                if (v > buf[ip + jp])
+                    v = buf[ip + jp];
+
+                buf2[ii + j] = v;
+            }
+        }
+        /* XXX: This breaks the relation between buffer and buf */
+        GWY_SWAP(gdouble*, buf, buf2);
+        d *= 3;
+    }
+
+
+    /* Now we have to overlay the neighbourhoods carefully to get exactly
+     * @size-sized squares.  There are two cases:
+     * 1. @size <= 2*d, it's enough to take four corner representants
+     * 2. @size > 2*d, it's necessary to take all nine representants
+     */
+    ep = size/2;
+    em = (size - 1)/2;
+
+    for (i = 0; i < height; i++) {
+        ii = i*width;
+        im = (MAX(i - em, 0) + d/2)*width;
+        ip = (MIN(i + ep, height-1) - d/2)*width;
+
+        for (j = 0; j < width; j++) {
+            jm = MAX(j - em, 0) + d/2;
+            jp = MIN(j + ep, width-1) - d/2;
+
+            v = MIN(buf[im + jm], buf[im + jp]);
+            if (2*d < size) {
+                if (v > buf[im + j])
+                    v = buf[im + j];
+                if (v > buf[ii + jm])
+                    v = buf[ii + jm];
+                if (v > buf[ii + j])
+                    v = buf[ii + j];
+                if (v > buf[ii + jp])
+                    v = buf[ii + jp];
+                if (v > buf[ip + j])
+                    v = buf[ip + j];
+            }
+            if (v > buf[ip + jm])
+                v = buf[ip + jm];
+            if (v > buf[ip + jp])
+                v = buf[ip + jp];
+
+            buf2[ii + j] = v;
+        }
+    }
+    buffer->data = buf;
+    buffer2->data = buf2;
+
+    gwy_data_field_area_copy(buffer2, data_field,
+                             0, 0, width, height, col, row);
+
+    g_object_unref(buffer2);
+    g_object_unref(buffer);
+}
+
+void
+gwy_data_field_filter_minimum(GwyDataField *data_field,
+                              gint size)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_minimum(data_field, size, 0, 0,
+                                       data_field->xres, data_field->yres);
+}
+
+void
+gwy_data_field_area_filter_maximum(GwyDataField *data_field,
+                                   gint size,
+                                   gint col,
+                                   gint row,
+                                   gint width,
+                                   gint height)
+{
+    GwyDataField *buffer, *buffer2;
+    gint d, i, j, ip, ii, im, jp, jm;
+    gint ep, em;  /* positive and negative excess */
+    gdouble *buf, *buf2, *data;
+    gdouble v;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+    g_return_if_fail(size > 0);
+    if (size == 1)
+        return;
+
+    /* FIXME: does this silly case need an alternative implementation? */
+    if (size/2 >= MIN(width, height)) {
+        g_warning("Too large kernel size for too small area.");
+        return;
+    }
+
+    data = data_field->data;
+    buffer = (GwyDataField*)gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    buffer2 = (GwyDataField*)gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    buf = buffer->data;
+    buf2 = buffer2->data;
+
+    d = 1;
+    gwy_data_field_area_copy(data_field, buffer,
+                             col, row, col + width, row + height, 0, 0);
+    while (3*d < size) {
+        for (i = 0; i < height; i++) {
+            ii = i*width;
+            im = MAX(i - d, 0)*width;
+            ip = MIN(i + d, height-1)*width;
+            for (j = 0; j < width; j++) {
+                jm = MAX(j - d, 0);
+                jp = MIN(j + d, width-1);
+
+                v = MAX(buf[im + jm], buf[im + jp]);
+                if (v < buf[im + j])
+                    v = buf[im + j];
+                if (v < buf[ii + jm])
+                    v = buf[ii + jm];
+                if (v < buf[ii + j])
+                    v = buf[ii + j];
+                if (v < buf[ip + j])
+                    v = buf[ip + j];
+                if (v < buf[ii + jp])
+                    v = buf[ii + jp];
+                if (v < buf[ip + jm])
+                    v = buf[ip + jm];
+                if (v < buf[ip + jp])
+                    v = buf[ip + jp];
+
+                buf2[ii + j] = v;
+            }
+        }
+        /* XXX: This breaks the relation between buffer and buf */
+        GWY_SWAP(gdouble*, buf, buf2);
+        d *= 3;
+    }
+
+
+    /* Now we have to overlay the neighbourhoods carefully to get exactly
+     * @size-sized squares.  There are two cases:
+     * 1. @size <= 2*d, it's enough to take four corner representants
+     * 2. @size > 2*d, it's necessary to take all nine representants
+     */
+    ep = size/2;
+    em = (size - 1)/2;
+
+    for (i = 0; i < height; i++) {
+        ii = i*width;
+        im = (MAX(i - em, 0) + d/2)*width;
+        ip = (MIN(i + ep, height-1) - d/2)*width;
+
+        for (j = 0; j < width; j++) {
+            jm = MAX(j - em, 0) + d/2;
+            jp = MIN(j + ep, width-1) - d/2;
+
+            v = MAX(buf[im + jm], buf[im + jp]);
+            if (2*d < size) {
+                if (v < buf[im + j])
+                    v = buf[im + j];
+                if (v < buf[ii + jm])
+                    v = buf[ii + jm];
+                if (v < buf[ii + j])
+                    v = buf[ii + j];
+                if (v < buf[ii + jp])
+                    v = buf[ii + jp];
+                if (v < buf[ip + j])
+                    v = buf[ip + j];
+            }
+            if (v < buf[ip + jm])
+                v = buf[ip + jm];
+            if (v < buf[ip + jp])
+                v = buf[ip + jp];
+
+            buf2[ii + j] = v;
+        }
+    }
+    buffer->data = buf;
+    buffer2->data = buf2;
+
+    gwy_data_field_area_copy(buffer2, data_field,
+                             0, 0, width, height, col, row);
+
+    g_object_unref(buffer2);
+    g_object_unref(buffer);
+}
+
+void
+gwy_data_field_filter_maximum(GwyDataField *data_field,
+                              gint size)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_maximum(data_field, size, 0, 0,
+                                       data_field->xres, data_field->yres);
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
