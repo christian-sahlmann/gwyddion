@@ -100,6 +100,7 @@ GtkWidget*
 gwy_app_recent_file_list_new(void)
 {
     GtkWidget *vbox, *buttonbox, *list, *scroll;
+    GtkTreeSelection *selection;
 
     g_return_val_if_fail(gcontrols.window == NULL, gcontrols.window);
 
@@ -126,6 +127,10 @@ gwy_app_recent_file_list_new(void)
     gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.open, TRUE, TRUE, 0);
     g_signal_connect_swapped(gcontrols.open, "clicked",
                              G_CALLBACK(gwy_app_recent_file_list_open), list);
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
+    gtk_widget_set_sensitive(gcontrols.open,
+                             gtk_tree_selection_get_selected(selection,
+                                                             NULL, NULL));
 
     gcontrols.prune = gwy_stock_like_button_new(_("Prune"),
                                                 GTK_STOCK_FIND);
@@ -207,6 +212,9 @@ gwy_app_recent_file_list_row_inserted(G_GNUC_UNUSED GtkTreeModel *store,
                                       Controls *controls)
 {
     GtkTreeSelection *selection;
+
+    if (!controls->window)
+        return;
 
     gtk_widget_set_sensitive(controls->prune, TRUE);
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->list));
@@ -334,7 +342,8 @@ gwy_app_recent_file_list_open(GtkWidget *list)
     RecentFile *rf;
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
-    g_return_if_fail(gtk_tree_selection_get_selected(selection, &store, &iter));
+    if (!gtk_tree_selection_get_selected(selection, &store, &iter))
+        return;
     gtk_tree_model_get(store, &iter, FILELIST_RAW, &rf, -1);
     gwy_app_recent_file_list_open_file(rf->filename_utf8);
 }
