@@ -654,7 +654,8 @@ gwy_canonicalize_path(const gchar *path)
                         p[i] = last_slash[i];
                     p[i] = '\0';
                 }
-                p++;
+                else
+                    p++;
             }
         }
         else
