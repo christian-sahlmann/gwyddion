@@ -64,6 +64,7 @@ gboolean          gwy_file_func_run_save        (const gchar *name,
                                                  GwyContainer *data,
                                                  const gchar *filename);
 GwyFileOperation  gwy_file_func_get_operations  (const gchar *name);
+const gchar*      gwy_file_func_get_description (const gchar *name);
 /* high-level interface */
 G_CONST_RETURN
 gchar*          gwy_file_detect             (const gchar *filename,

@@ -215,7 +215,7 @@ gwy_tool_func_remove(const gchar *name)
 
 /**
  * gwy_tool_func_exists:
- * @name: Graph function name.
+ * @name: Tool function name.
  *
  * Returns whether tool function @name exists.
  *
@@ -226,7 +226,29 @@ gwy_tool_func_remove(const gchar *name)
 gboolean
 gwy_tool_func_exists(const gchar *name)
 {
-    return g_hash_table_lookup(tool_funcs, name) != 0;
+    return g_hash_table_lookup(tool_funcs, name) != NULL;
+}
+
+/**
+ * gwy_tool_func_get_tooltip:
+ * @name: Tool function name.
+ *
+ * Gets tool function tooltip.
+ *
+ * Returns: The tooltip as a string owned by module loader.
+ *
+ * Since: 1.9
+ **/
+const gchar*
+gwy_tool_func_get_tooltip(const gchar *name)
+{
+    GwyToolFuncInfo *func_info;
+
+    func_info = g_hash_table_lookup(tool_funcs, name);
+    if (!func_info)
+        return NULL;
+
+    return func_info->tooltip;
 }
 
 /************************** Documentation ****************************/

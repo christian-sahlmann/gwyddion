@@ -52,6 +52,7 @@ gboolean     gwy_tool_func_use           (const guchar *name,
 GtkWidget*   gwy_tool_func_build_toolbox (GCallback item_callback,
                                           gint max_width,
                                           const gchar **first_tool);
+const gchar* gwy_tool_func_get_tooltip   (const gchar *name);
 gboolean     gwy_tool_func_exists        (const gchar *name);
 
 G_END_DECLS

@@ -434,18 +434,42 @@ file_menu_entry_compare(FileFuncInfo *a,
 GwyFileOperation
 gwy_file_func_get_operations(const gchar *name)
 {
-    GwyFileFuncInfo *func_info;
+    FileFuncInfo *func_info;
     GwyFileOperation capable = 0;
 
     func_info = g_hash_table_lookup(file_funcs, name);
     if (!func_info)
         return 0;
 
-    capable |= func_info->load ? GWY_FILE_LOAD : 0;
-    capable |= func_info->save ? GWY_FILE_SAVE : 0;
-    capable |= func_info->detect ? GWY_FILE_DETECT : 0;
+    capable |= func_info->info.load ? GWY_FILE_LOAD : 0;
+    capable |= func_info->info.save ? GWY_FILE_SAVE : 0;
+    capable |= func_info->info.detect ? GWY_FILE_DETECT : 0;
 
     return capable;
+}
+
+/**
+ * gwy_file_func_get_description:
+ * @name: File type function name.
+ *
+ * Gets file function description.
+ *
+ * That is, the @file_desc field of #GwyFileFuncInfo.
+ *
+ * Returns: File function description, as a string owned by module loader.
+ *
+ * Since: 1.9
+ **/
+const gchar*
+gwy_file_func_get_description(const gchar *name)
+{
+    FileFuncInfo *func_info;
+
+    func_info = g_hash_table_lookup(file_funcs, name);
+    if (!func_info)
+        return NULL;
+
+    return func_info->info.file_desc;
 }
 
 gboolean
