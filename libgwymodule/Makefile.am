@@ -6,6 +6,7 @@ libgwymoduleincludedir = $(includedir)/gwyddion/libgwymodule
 libgwymoduleinclude_HEADERS = \
 	gwymodule.h \
 	gwymodule-file.h \
+	gwymodule-graph.h \
 	gwymodule-process.h \
 	gwymodule-tool.h \
 	gwymodulebrowser.h \
@@ -24,6 +25,7 @@ noinst_HEADERS = \
 libgwymodule_la_LDFLAGS = @GMODULE_LIBS@ -version-info 0:0:0
 libgwymodule_la_SOURCES = \
 	gwymodule-file.c \
+	gwymodule-graph.c \
 	gwymodule-process.c \
 	gwymodule-tool.c \
 	gwymodulebrowser.c \

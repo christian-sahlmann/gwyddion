@@ -18,26 +18,39 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_MODULE_H__
-#define __GWY_MODULE_H__
+#ifndef __GWY_MODULE_GRAPH_H__
+#define __GWY_MODULE_GRAPH_H__
 
-#include <libgwymodule/gwymoduleloader.h>
-#include <libgwymodule/gwymodule-file.h>
-#include <libgwymodule/gwymodule-graph.h>
-#include <libgwymodule/gwymodule-process.h>
-#include <libgwymodule/gwymodule-tool.h>
-#include <libgwymodule/gwymodulebrowser.h>
+#include <gtk/gtkobject.h>
+#include <libgwydgets/gwygraph.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-/* nothing here */
+typedef struct _GwyGraphFuncInfo GwyGraphFuncInfo;
+
+typedef gboolean    (*GwyGraphFunc)     (GwyGraph *graph,
+                                         const gchar *name);
+
+struct _GwyGraphFuncInfo {
+    const gchar *name;
+    const gchar *menu_path;
+    GwyGraphFunc graph;
+};
+
+gboolean     gwy_graph_func_register      (const gchar *modname,
+                                           GwyGraphFuncInfo *func_info);
+gboolean     gwy_graph_func_run           (const guchar *name,
+                                           GwyGraph *data);
+GtkObject*   gwy_build_graph_menu         (GtkObject *item_factory,
+                                           const gchar *prefix,
+                                           GCallback item_callback);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __GWY_MODULE_H__ */
+#endif /* __GWY_MODULE_GRAPH_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
