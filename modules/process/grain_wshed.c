@@ -334,6 +334,13 @@ preview(WshedControls *controls,
                                gwy_data_field_get_yres(dfield),
                                GWY_INTERPOLATION_NONE);
         gwy_data_field_copy(dfield, maskfield);
+
+        if (!gwy_data_view_get_alpha_layer(controls->view))
+        {
+            layer = gwy_layer_mask_new();
+            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
+                                 GWY_PIXMAP_LAYER(layer));
+        }
     }
     else
     {
