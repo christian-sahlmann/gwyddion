@@ -57,7 +57,7 @@ struct _GwySIUnitClass {
 
 GType gwy_si_unit_get_type  (void) G_GNUC_CONST;
 
-GObject* gwy_si_unit_new(gchar *unit_string);
+GObject* gwy_si_unit_new(const gchar *unit_string);
 
 void gwy_si_unit_set_unit_string(GwySIUnit *siunit, gchar *unit_string);
 gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit);

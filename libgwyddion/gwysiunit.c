@@ -120,8 +120,8 @@ gwy_si_unit_finalize(GwySIUnit *si_unit)
 
 static guchar*
 gwy_si_unit_serialize(GObject *obj,
-                         guchar *buffer,
-                         gsize *size)
+                      guchar *buffer,
+                      gsize *size)
 {
     GwySIUnit *si_unit;
 
@@ -188,7 +188,7 @@ gwy_si_unit_duplicate(GObject *object)
  * Returns: a new GwySiUnit with a given string
  **/
 GObject*
-gwy_si_unit_new(char *unit_string)
+gwy_si_unit_new(const char *unit_string)
 {
     GwySIUnit *siunit;
 
