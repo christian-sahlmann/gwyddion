@@ -74,7 +74,7 @@ gwy_app_about(void)
     gtk_box_pack_start(GTK_BOX(hbox), widget, TRUE, TRUE, 0);
     s = g_strdup_printf(
             _("<big><b>%s</b> %s</big>\n"
-              "A SPM data analysis framework.\n"
+              "An SPM data analysis framework.\n"
               "\n"
               "Copyright © 2003,2004 David Nečas (Yeti) and Petr Klapetek.\n"
               "E-mail: <i>%s</i>\n"

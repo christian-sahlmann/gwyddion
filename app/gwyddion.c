@@ -18,7 +18,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#ifdef _MSC_VER
+#include "version.h"
+#else
+#include "config.h"
+#endif
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
@@ -35,6 +43,9 @@ static void logger(const gchar *log_domain,
                    const gchar *message,
                    gpointer user_data);
 #endif
+static void print_help(void);
+static void process_preinit_options(int *argc,
+                                    char ***argv);
 
 int
 main(int argc, char *argv[])
@@ -47,6 +58,7 @@ main(int argc, char *argv[])
     gwy_find_self_set_argv0(argv[0]);
 #endif
 
+    process_preinit_options(&argc, &argv);
     gtk_init(&argc, &argv);
     config_file = gwy_app_settings_get_config_filename();
     gwy_app_init();
@@ -72,6 +84,51 @@ main(int argc, char *argv[])
     g_free(config_file);
 
     return 0;
+}
+
+static void
+process_preinit_options(int *argc,
+                        char ***argv)
+{
+    if (*argc == 1)
+        return;
+
+    if (!strcmp((*argv)[1], "--help") || !strcmp((*argv)[1], "-h")) {
+        print_help();
+        exit(0);
+    }
+
+    if (!strcmp((*argv)[1], "--version") || !strcmp((*argv)[1], "-v")) {
+        printf("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
+        exit(0);
+    }
+}
+
+static void
+print_help(void)
+{
+    puts(
+"Usage: gwyddion [OPTIONS...] FILE...\n"
+"An SPM data analysis framework, written in Gtk+.\n"
+        );
+    puts(
+"Gwyddion options:\n"
+" -h, --help                 Print this help and terminate.\n"
+" -v, --version              Print version info and terminate.\n"
+        );
+    puts(
+"Gtk+ and Gdk options:\n"
+"     --display=DISPLAY      Set X display to use.\n"
+"     --screen=SCREEN        Set X screen to use.\n"
+"     --sync                 Make X calls synchronous.\n"
+"     --name=NAME            Set program name as used by the window manager.\n"
+"     --class=CLASS          Set program class as used by the window manager.\n"
+"     --gtk-module=MODULE    Load an additional Gtk module MODULE.\n"
+"They may be other Gtk+ and Gdk options, depending on platform, how it was\n"
+"compiled, and loaded modules.  Please see Gtk+ documentation.\n"
+        );
+    puts("Please report bugs in Gwyddion bugzilla "
+         "http://trific.ath.cx/bugzilla/");
 }
 
 #ifdef WIN32
