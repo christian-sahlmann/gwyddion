@@ -243,24 +243,6 @@ warn_broken_settings_file(GtkWidget *parent,
     gtk_widget_show_all(dialog);
 }
 
-#ifdef WIN32
-#define _X86_
-#include <windef.h>
-
-int
-APIENTRY WinMain(HINSTANCE hInstance,
-                 HINSTANCE hPrevInstance,
-                 LPSTR     lpCmdLine,
-                 int       nCmdShow)
-{
-    /* FIXME: file_real_open() now expects filenames in system encoding, not
-     * UTF-8, how this works on MS Windows? */
-    return main(_argc, _argv);
-
-}
-
-#endif /* WIN32 */
-
 #ifdef LOG_TO_FILE
 /* Redirect messages from all libraries we use to a file.  This (a) creates
  * a possibly useful log if we don't crash totally (b) prevents the mesages
