@@ -290,11 +290,13 @@ gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
     }
     gwy_data_line_add(derdist, avg);
     g_assert(guess != GWY_SYMMETRY_AUTO);
-    gwy_debug("SELECTED: %s", guess);
+    gwy_debug("SELECTED: %d", guess);
     correction[GWY_SYMMETRY_AUTO] = correction[guess];
 
-    for (j = 0; j < GWY_SYMMETRY_LAST; j++)
+    for (j = 0; j < GWY_SYMMETRY_LAST; j++) {
+        gwy_debug("FINAL %d: (%f, %f)", j, correction[j], 360*correction[j]);
         correction[j] *= 2.0*G_PI;
+    }
 
     return guess;
 }
