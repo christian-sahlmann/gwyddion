@@ -23,11 +23,20 @@
  * resort to play dirty tricks with the data windows in the desperate hope
  * we won't fuck anything up... */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
 #include <png.h>
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+/* broken under Win32 */
 #ifndef G_OS_WIN32
 #include <jpeglib.h>
 #endif
@@ -41,10 +50,6 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
 #include <app/app.h>
-
-#ifndef G_OS_WIN32
-#include <unistd.h>
-#endif
 
 #define BITS_PER_SAMPLE 8
 

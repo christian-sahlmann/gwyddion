@@ -18,7 +18,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
+
+/* chdir */
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef _MSC_VER
+#include <direct.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -235,6 +249,7 @@ file_real_open(const gchar *filename_sys,
 {
     const gchar *filename_utf8;  /* in UTF-8 */
     GwyContainer *data;
+    gchar *dirname;
 
     if (name)
         data = gwy_file_func_run_load(name, filename_sys);
@@ -246,6 +261,12 @@ file_real_open(const gchar *filename_sys,
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_app_data_window_create(data);
         recent_files_update(filename_utf8);
+
+        /* change directory to that of the loaded file */
+        dirname = g_path_get_dirname(filename_sys);   /* FIXME: utf-8? */
+        if (strcmp(dirname, "."))
+            chdir(dirname);
+        g_free(dirname);
     }
     else {
         /* TODO: show some warning */
@@ -264,6 +285,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     GwyContainer *data;
     const gchar *name;
     gboolean ok;
+    gchar *dirname;
 
     data = GWY_CONTAINER(g_object_get_data(G_OBJECT(selector), "data"));
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -302,6 +324,12 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     }
     gtk_widget_destroy(GTK_WIDGET(selector));
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
+
+    /* change directory to that of the saved file */
+    dirname = g_path_get_dirname(filename_sys);   /* FIXME: utf-8? */
+    if (strcmp(dirname, "."))
+        chdir(dirname);
+    g_free(dirname);
 }
 
 static gboolean

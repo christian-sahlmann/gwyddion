@@ -28,9 +28,18 @@
  * XXX: the `dump' should probably be `dumb'...
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
@@ -38,12 +47,6 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/file.h>
 #include <app/app.h>
-
-#ifndef G_OS_WIN32
-#include <unistd.h>
-#else
-#include <errno.h>
-#endif
 
 #define PLUGIN_PROXY_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)

@@ -18,6 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,6 +30,10 @@
 #ifndef GENRTABLE
 #include <math.h>
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
@@ -33,10 +41,6 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/app.h>
 #include <app/settings.h>
-
-#ifndef G_OS_WIN32
-#include <unistd.h>
-#endif
 
 typedef enum {
     RAW_NONE = 0,
