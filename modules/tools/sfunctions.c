@@ -242,6 +242,7 @@ dialog_create(GwyUnitoolState *state)
                      GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
 
     controls->graph = gwy_graph_new();
+    gwy_graph_enable_axis_label_update(controls->graph, FALSE);
     gtk_table_attach(GTK_TABLE(table), controls->graph, 1, 2, 0, 1,
                      GTK_FILL, 0, 2, 2);
 

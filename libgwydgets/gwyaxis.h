@@ -106,6 +106,7 @@ struct _GwyAxis {
 
     GtkWidget *dialog;      /*axis label and other properties dialog*/
 
+    gboolean enable_set_label;
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -146,6 +147,8 @@ GString*    gwy_axis_get_label          (GwyAxis *axis);
 void        gwy_axis_set_unit           (GwyAxis *axis,
                                          char *unit);
 
+void        gwy_axis_enable_set_label   (GwyAxis *axis,
+                                         gboolean enable);
 G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/

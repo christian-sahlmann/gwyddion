@@ -84,7 +84,7 @@ struct _GwyGraph {
 
     GwyGraphStatus_SelData seldata;
     GwyGraphStatus_PointsData pointsdata;
-
+      
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -140,6 +140,8 @@ gint gwy_graph_get_data_size(GwyGraph *graph, gint curve);
 gint gwy_graph_get_number_of_curves(GwyGraph *graph);
 
 GString *gwy_graph_get_label(GwyGraph *graph, gint curve);
+
+void gwy_graph_enable_axis_label_update(GwyGraph *graph, gboolean enable);
 
 G_END_DECLS
 

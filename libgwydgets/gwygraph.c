@@ -804,4 +804,23 @@ gwy_graph_get_label(GwyGraph *graph, gint curve)
     return pcurve->params.description;
 }
 
+
+/**
+ * gwy_graph_enable_axis_label_update:
+ * @graph: graph widget 
+ * @enable: enable or disable user to change label
+ *
+ * This function enables/disables user to interact with
+ * graph label by clickig on it and changing text.
+ **/
+void 
+gwy_graph_enable_axis_label_update(GwyGraph *graph, gboolean enable)
+{
+    gwy_axis_enable_set_label(graph->axis_top, enable);
+    gwy_axis_enable_set_label(graph->axis_bottom, enable);
+    gwy_axis_enable_set_label(graph->axis_left, enable);
+    gwy_axis_enable_set_label(graph->axis_right, enable);
+    
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
