@@ -983,8 +983,8 @@ file_pattern_specificity(const gchar *pattern)
  *
  * Dumps data container to a file @filename.
  *
- * In fact, it only dumps data and mask %DataField's and everything under
- * "/meta" as strings.
+ * In fact, it only dumps data, mask %DataField's, palette, and everything
+ * under "/meta" as strings.
  *
  * Returns: A filehandle of the dump file open in "wb" mode.
  **/
@@ -997,6 +997,8 @@ text_dump_export(GwyContainer *data, gchar **filename)
     if (!(fh = open_temporary_file(filename)))
         return NULL;
     gwy_container_foreach(data, "/meta", (GHFunc)dump_export_meta_cb, fh);
+    gwy_container_foreach(data, "/0/base/palette",
+                          (GHFunc)dump_export_meta_cb, fh);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     dump_export_data_field(dfield, "/0/data", fh);
     if (gwy_container_contains_by_name(data, "/0/mask")) {
@@ -1043,6 +1045,7 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
     gchar *unit;
     gint xres, yres;
 
+    gwy_debug("Exporting %s", name);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     fprintf(fh, "%s/xres=%d\n", name, xres);
