@@ -69,8 +69,6 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    mark                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    mark_dialog                 (MarkArgs *args, GwyContainer *data);
-static void        height_changed_cb          (GObject *item,
-                                               MarkArgs *args);
 static void        inverted_changed_cb        (GtkToggleButton *button,
                                                MarkArgs *args);
 static void        isheight_changed_cb        (GtkToggleButton *button,
@@ -149,25 +147,22 @@ module_register(const gchar *name)
 static gboolean
 mark(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
     MarkArgs args;
-    gboolean ok;
-    gint i;
-    gint newsize;
+    gboolean ook;
 
     g_assert(run & MARK_RUN_MODES);
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = mark_defaults;
     else
         mark_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || mark_dialog(&args, data);
-    if (ok) {
+    ook = (run != GWY_RUN_MODAL) || mark_dialog(&args, data);
+    if (ook) {
 
         if (run != GWY_RUN_WITH_DEFAULTS)
             mark_save_args(gwy_app_settings_get(), &args);
     }
 
-    return ok;
+    return ook;
 }
 
 
@@ -479,17 +474,14 @@ static void
 preview(MarkControls *controls,
         MarkArgs *args)
 {
-    GwyDataField *maskfield, *dfield, *output_field;
-    gboolean is_field;
+    GwyDataField *maskfield, *dfield;
     GwyPixmapLayer *layer;
 
-   printf("***preview\n");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
 
     /*set up the mask*/
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask"))
     {
-        printf("***mask found\n");
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                   "/0/mask"));
         gwy_data_field_resample(maskfield,
@@ -500,7 +492,6 @@ preview(MarkControls *controls,
     }
     else
     {
-        printf("***mask not found\n");
         maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", G_OBJECT(maskfield));
         layer = gwy_layer_mask_new();
@@ -523,7 +514,6 @@ ok(MarkControls *controls,
 {
 
     GwyDataField *dfield, *maskfield, output_field;
-    GwyDataViewLayer *layer;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 

@@ -119,25 +119,22 @@ module_register(const gchar *name)
 static gboolean
 wshed(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
     WshedArgs args;
-    gboolean ok;
-    gint i;
-    gint newsize;
+    gboolean ook;
 
     g_assert(run & WSHED_RUN_MODES);
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = wshed_defaults;
     else
         wshed_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || wshed_dialog(&args, data);
-    if (ok) {
+    ook = (run != GWY_RUN_MODAL) || wshed_dialog(&args, data);
+    if (ook) {
 
         if (run != GWY_RUN_WITH_DEFAULTS)
             wshed_save_args(gwy_app_settings_get(), &args);
     }
 
-    return ok;
+    return ook;
 }
 
 
@@ -167,7 +164,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     
     table = gtk_table_new(3, 9, FALSE);
     
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(hbox),
                        FALSE, FALSE, 4);    
 
     controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
@@ -360,8 +357,7 @@ ok(WshedControls *controls,
         GwyContainer *data)
 {
     
-    GwyDataField *dfield, *maskfield, output_field;
-    GwyDataViewLayer *layer;
+    GwyDataField *dfield, *maskfield;
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 

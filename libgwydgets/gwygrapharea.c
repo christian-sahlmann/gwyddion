@@ -394,7 +394,7 @@ gwy_graph_area_draw_curves(GtkWidget *widget)
                            pcurve->points, pcurve->data.N);
         }
         if (pcurve->params.is_point) {
-            for (j = 0; j < pcurve->data.N; j++) {
+            for (j = 0; j < (gint)pcurve->data.N; j++) {
                 gwy_graph_draw_point(GTK_LAYOUT(widget)->bin_window, area->gc,
                                      pcurve->points[j].x,
                                      pcurve->points[j].y,
@@ -1054,7 +1054,7 @@ void
 zoom(GtkWidget *widget)
 {
     GwyGraphArea *area;
-    gdouble xmax, ymax, xmin, ymin, x, y, swap;
+    gdouble x, y, swap;
 
     area = GWY_GRAPH_AREA(widget);
 

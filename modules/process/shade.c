@@ -98,10 +98,9 @@ module_register(const gchar *name)
 static gboolean
 shade(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
     GwyDataField *dfield, *shadefield;
     ShadeArgs args;
-    gboolean ok; gint i;
+    gboolean ok; 
 
     g_assert(run & SHADE_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));

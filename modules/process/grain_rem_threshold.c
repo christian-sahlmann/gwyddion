@@ -122,25 +122,22 @@ module_register(const gchar *name)
 static gboolean
 remove_th(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window;
     RemoveArgs args;
-    gboolean ok;
-    gint i;
-    gint newsize;
+    gboolean ook;
 
     g_assert(run & REMOVE_RUN_MODES);
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = remove_defaults;
     else
         remove_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || remove_dialog(&args, data);
-    if (ok) {
+    ook = (run != GWY_RUN_MODAL) || remove_dialog(&args, data);
+    if (ook) {
 
         if (run != GWY_RUN_WITH_DEFAULTS)
             remove_save_args(gwy_app_settings_get(), &args);
     }
 
-    return ok;
+    return ook;
 }
 
 
@@ -332,9 +329,7 @@ preview(RemoveControls *controls,
         RemoveArgs *args,
         GwyContainer *data)
 {
-    GwyDataField *maskfield, *dfield, *output_field;
-    gboolean is_field;
-    GwyPixmapLayer *layer;
+    GwyDataField *maskfield, *dfield;
    
     printf("***preview\n"); 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
@@ -366,8 +361,7 @@ ok(RemoveControls *controls,
         GwyContainer *data)
 {
     
-    GwyDataField *dfield, *maskfield, output_field;
-    GwyDataViewLayer *layer;
+    GwyDataField *dfield, *maskfield;
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 

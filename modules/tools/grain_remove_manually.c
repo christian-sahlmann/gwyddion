@@ -43,7 +43,6 @@ static void       dialog_update    (GwyUnitoolState *state,
                                     GwyUnitoolUpdateType reason);
 static void       dialog_abandon   (GwyUnitoolState *state);
 
-static const gchar *radius_key = "/tool/pointer/radius";
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -110,10 +109,7 @@ use(GwyDataWindow *data_window,
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
-    ToolControls *controls;
-    GwyContainer *settings;
     GtkWidget *dialog, *table, *label, *frame;
-    gint radius;
 
     gwy_debug("");
 

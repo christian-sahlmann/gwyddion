@@ -58,8 +58,6 @@ static void        window_changed_cb          (GObject *item,
                                                FFTArgs *args);
 static void        out_changed_cb             (GObject *item,
                                                FFTArgs *args);
-static void        window_changed_cb          (GObject *item,
-                                               FFTArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
                                                FFTArgs *args);
 static void        fft_load_args              (GwyContainer *container,

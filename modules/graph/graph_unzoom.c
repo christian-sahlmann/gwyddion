@@ -32,8 +32,6 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    unzoom                       (GwyGraph *graph);
 
 
-static gulong response_id = 0;
-
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,

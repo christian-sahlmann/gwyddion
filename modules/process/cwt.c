@@ -112,7 +112,6 @@ cwt(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     CWTArgs args;
     gboolean ok;
-    gint i;
     gint xsize, ysize;
     gint newsize;
 

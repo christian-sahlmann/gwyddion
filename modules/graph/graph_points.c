@@ -294,7 +294,7 @@ selection_updated_cb(GtkWidget *widget, gpointer data)
         }
         else
         {
-            g_snprintf(buffer, sizeof(buffer), "", pnt.x);
+            g_snprintf(buffer, sizeof(buffer), "");
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointx, i)), buffer);
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointy, i)), buffer);
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.distx, i)), buffer);
