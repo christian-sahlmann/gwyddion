@@ -144,11 +144,6 @@ gwy_data_field_init(GwyDataField *data_field)
 {
     gwy_debug("");
     gwy_debug_objects_creation((GObject*)data_field);
-    data_field->data = NULL;
-    data_field->xres = 0;
-    data_field->yres = 0;
-    data_field->xreal = 0.0;
-    data_field->yreal = 0.0;
 }
 
 static void
@@ -175,7 +170,7 @@ gwy_data_field_finalize(GObject *object)
  *
  * Creates a new data field.
  *
- * Returns: A newly created data field, as a #GOjbect.
+ * Returns: A newly created data field, as a #GObject.
  **/
 GObject*
 gwy_data_field_new(gint xres, gint yres,
@@ -187,6 +182,45 @@ gwy_data_field_new(gint xres, gint yres,
     data_field = g_object_new(GWY_TYPE_DATA_FIELD, NULL);
 
     _gwy_data_field_initialize(data_field, xres, yres, xreal, yreal, nullme);
+
+    return (GObject*)(data_field);
+}
+
+/**
+ * gwy_data_field_new_alike:
+ * @model: A data field to take resolutions and units from.
+ * @nullme: Whether the data field should be initialized to zeroes. If %FALSE,
+ *          the data will not be initialized.
+ *
+ * Creates a new data field similar to an existing one.
+ *
+ * Use gwy_data_field_duplicate() if you want to copy a data field including
+ * data.
+ *
+ * Returns: A newly created data field, as a #GObject.
+ *
+ * Since: 1.8
+ **/
+GObject*
+gwy_data_field_new_alike(GwyDataField *model,
+                         gboolean nullme)
+{
+    GwyDataField *data_field;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(model), NULL);
+    data_field = g_object_new(GWY_TYPE_DATA_FIELD, NULL);
+
+    data_field->xreal = model->xreal;
+    data_field->yreal = model->yreal;
+    data_field->xres = model->xres;
+    data_field->yres = model->yres;
+    if (nullme)
+        data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
+    else
+        data_field->data = g_new(gdouble, data_field->xres*data_field->yres);
+
+    data_field->si_unit_xy = gwy_si_unit_duplicate(model->si_unit_xy);
+    data_field->si_unit_z = gwy_si_unit_duplicate(model->si_unit_z);
 
     return (GObject*)(data_field);
 }
@@ -2183,6 +2217,9 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  *
  * Convenience macro doing gwy_serializable_duplicate() with all the necessary
  * typecasting.
+ *
+ * Use gwy_data_field_new_alike() if you don't want to copy data, only
+ * resolutions and units.
  *
  * Since: 1.8
  **/

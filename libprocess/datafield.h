@@ -89,11 +89,13 @@ GType gwy_data_field_get_type  (void) G_GNUC_CONST;
 
 #define gwy_data_field_duplicate(data_field) ((GwyDataField*)gwy_serializable_duplicate(G_OBJECT(data_field)))
 
-GObject*         gwy_data_field_new                  (gint xres,
-                                                      gint yres,
-                                                      gdouble xreal,
-                                                      gdouble yreal,
-                                                      gboolean nullme);
+GObject*          gwy_data_field_new                  (gint xres,
+                                                       gint yres,
+                                                       gdouble xreal,
+                                                       gdouble yreal,
+                                                       gboolean nullme);
+GObject*          gwy_data_field_new_alike            (GwyDataField *model,
+                                                       gboolean nullme);
 void              gwy_data_field_resample  (GwyDataField *data_field,
                                             gint xres,
                                             gint yres,
