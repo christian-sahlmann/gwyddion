@@ -19,6 +19,7 @@ pixmapdata_DATA = \
 	gwy_rotate-24.png \
 	gwy_scale-24.png \
 	gwy_shader-24.png \
+	gwy_stat_quantities-24.png \
 	gwy_subscript-24.png \
 	gwy_superscript-24.png \
 	gwy_zoom_1_1-24.png \

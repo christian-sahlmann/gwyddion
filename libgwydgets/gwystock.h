@@ -41,6 +41,7 @@ extern "C" {
 #define GWY_STOCK_ROTATE          "gwy_rotate"
 #define GWY_STOCK_SCALE           "gwy_scale"
 #define GWY_STOCK_SHADER          "gwy_shader"
+#define GWY_STOCK_STAT_QUANTITIES "gwy_stat_quantities"
 #define GWY_STOCK_SUBSCRIPT       "gwy_subscript"
 #define GWY_STOCK_SUPERSCRIPT     "gwy_superscript"
 #define GWY_STOCK_ZOOM_1_1        "gwy_zoom_1_1"

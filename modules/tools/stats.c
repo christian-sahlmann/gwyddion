@@ -81,7 +81,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo stats_func_info = {
         "stats",
-        "gwy_graph_halfgauss",
+        "gwy_stat_quantities",
         "Statistical quantities",
         67,
         stats_use,
