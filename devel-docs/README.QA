@@ -43,6 +43,7 @@ Processing
   a mask, must be deduced from context) it doesn't modify data
 - Units are handled correctly, even less common units like Volts, namely in
   operations that change units (FFT, Slope distribution)[2][3]
+- Dimensionless quantities have no units, instead of default meters
 - Operations that take long time has a progress bar with a Cancel button
 
 Tools
@@ -77,8 +78,11 @@ GUI
 - Controls that don't make sense (in a mode of operation, due to state
   of other controls) and would only confuse user are insensitive
 - Previous point also applies to toolbox buttons and toolbox menu items
-- Nothing in toolbox menus causes a crash
+- Nothing in toolbox menus crashes
 - There are no misaligned controls in dialogs
+- Progress dialogs are shown over appropriate windows: dialogs windows during
+  manipulation inside dialogs; data windows during final processing when the
+  dialog is no longer shown
 - Capitalization rules: FIXME
 
 Translateability
