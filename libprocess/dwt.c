@@ -365,8 +365,9 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
     
     gwy_data_field_dwt(dfield, wt_coefs, 1, 4);
 
-    ulcol = br/2; ulrow = br/2;
-    brcol = br; brrow = br;
+    
+    ulcol = dfield->xres/2; ulrow = dfield->xres/2;
+    brcol = dfield->xres; brrow = dfield->xres;
     median = smedian(dfield, ulcol, ulrow, brcol, brrow);
     noise_variance = median/0.6745;
       
