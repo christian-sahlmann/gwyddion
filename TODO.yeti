@@ -1,5 +1,4 @@
 - I18n under MS Windows
-- Show/hide detailed 3D controls
 - Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
 - Do nightly CVS build from a clean checkout, this will also stop the silly
