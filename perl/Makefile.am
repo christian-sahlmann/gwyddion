@@ -6,9 +6,11 @@ Gwyddion_PERL = \
 EXTRA_DIST = $(Gwyddion_PERL)
 
 if HAVE_PERL
-PERL_TARGET_DIR = $(gwypluginlibdir)/perl/Gwyddion
+perllibdir = $(gwypluginlibdir)/perl/Gwyddion
 man3dir = $(mandir)/man3
 POD2MAN_FLAGS = --center=$(PACKAGE)
+
+perllib_DATA = $(Gwyddion_PERL)
 
 man3_pages = \
 	Gwyddion::dump.3pm
@@ -23,20 +25,12 @@ man3.stamp: $(Gwyddion_PERL)
 	@touch man3.stamp
 
 install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(PERL_TARGET_DIR)
-	for i in $(Gwyddion_PERL); do \
-	    $(INSTALL_DATA) $$i $(DESTDIR)$(PERL_TARGET_DIR); \
-	done
 	$(mkinstalldirs) $(DESTDIR)$(man3dir)
 	for i in $(man3_pages); do \
 	    $(INSTALL_DATA) $$i $(DESTDIR)$(man3dir); \
 	done
 
 uninstall-local:
-	for i in $(Gwyddion_PERL); do \
-	    rm -f $(DESTDIR)$(PERL_TARGET_DIR)/$$i; \
-	done
-	-rmdir $(DESTDIR)$(PERL_TARGET_DIR)
 	for i in $(man3_pages); do \
 	    rm -f $(DESTDIR)$(man3dir)/$$i; \
 	done

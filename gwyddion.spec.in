@@ -64,8 +64,9 @@ your own plug-ins.
 [ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
 %makeinstall \
   gwymoduledir=$RPM_BUILD_ROOT%{_libdir}/%{name}/modules \
-  gwyplugindir=$RPM_BUILD_ROOT%{_libexecdir}/%{name}/plugins \
   gwypixmapdir=$RPM_BUILD_ROOT%{_datadir}/%{name}/pixmaps \
+  gwyplugindir=$RPM_BUILD_ROOT%{_libexecdir}/%{name}/plugins \
+  gwypluginlibdir=$RPM_BUILD_ROOT%{_libdir}/%{name}/pluginlib \
   HTML_DIR=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
 %__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/*/*.so
 %__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/*.so
