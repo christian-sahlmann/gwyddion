@@ -215,7 +215,7 @@ gwy_data_window_new(GwyDataView *data_view)
  * gwy_data_window_get_data_view:
  * @data_window: A data view window.
  *
- * Returns the data view widget this data view window currently shows.
+ * Returns the data view widget this data window currently shows.
  *
  * Returns: The currently shown #GwyDataView.
  **/
@@ -225,6 +225,23 @@ gwy_data_window_get_data_view(GwyDataWindow *data_window)
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
 
     return data_window->data_view;
+}
+
+/**
+ * gwy_data_window_get_data:
+ * @data_window: A data view window.
+ *
+ * Returns the data for the data view this data window currently shows.
+ *
+ * Returns: The data as #GwyContainer.
+ **/
+GwyContainer*
+gwy_data_window_get_data(GwyDataWindow *data_window)
+{
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_window->data_view), NULL);
+
+    return gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
 }
 
 static void
