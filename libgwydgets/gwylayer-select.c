@@ -61,6 +61,8 @@ static gboolean   gwy_layer_select_button_pressed    (GwyVectorLayer *layer,
 static gboolean   gwy_layer_select_button_released   (GwyVectorLayer *layer,
                                                       GdkEventButton *event);
 static gint       gwy_layer_select_get_nselected     (GwyVectorLayer *layer);
+static gboolean   gwy_layer_select_get_selection2    (GwyLayerSelect *layer,
+                                                      gdouble *selection);
 static void       gwy_layer_select_unselect          (GwyVectorLayer *layer);
 static void       gwy_layer_select_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_select_unplugged         (GwyDataViewLayer *layer);
@@ -126,6 +128,7 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     vector_class->button_press = gwy_layer_select_button_pressed;
     vector_class->button_release = gwy_layer_select_button_released;
     vector_class->get_nselected = gwy_layer_select_get_nselected;
+    vector_class->get_selection = gwy_layer_select_get_selection2;
     vector_class->unselect = gwy_layer_select_unselect;
 
     memset(klass->corner_cursor, 0, 4*sizeof(GdkCursor*));
@@ -482,6 +485,25 @@ gwy_layer_select_get_selection(GwyLayerSelect *layer,
         *xmax = layer->x1;
     if (ymax)
         *ymax = layer->y1;
+
+    return TRUE;
+}
+
+static gboolean
+gwy_layer_select_get_selection2(GwyLayerSelect *layer,
+                                gdouble *selection)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_SELECT(layer), FALSE);
+
+    if (!layer->selected)
+        return FALSE;
+
+    if (selection) {
+        selection[0] = layer->x0;
+        selection[1] = layer->y0;
+        selection[2] = layer->x1;
+        selection[3] = layer->y1;
+    }
 
     return TRUE;
 }
