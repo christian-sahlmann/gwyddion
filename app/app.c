@@ -630,9 +630,7 @@ gwy_app_graph_window_remove(GtkWidget *window)
 
 /**
  * gwy_app_graph_window_create:
- * @graph: A graph widget;
- * @data_window: A data window to associate @graph with.
- * @title: Title of the graph window.
+ * @graph: A graph widget.
  *
  * Creates a new graph window showing @graph and does some basic setup.
  *
@@ -649,7 +647,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
 
 /**
  * gwy_app_graph_window_create_for_window:
- * @graph: A graph widget;
+ * @graph: A graph widget.
  * @data_window: A data window to associate @graph with.
  * @title: Title of the new graph window.
  *
