@@ -21,6 +21,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydatawindow.h>
@@ -71,7 +72,7 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
         window = gtk_message_dialog_new(NULL, 0,
                                         GTK_MESSAGE_INFO,
                                         GTK_BUTTONS_OK,
-                                        "There is no metadata in %s.",
+                                        N_("There is no metadata in %s."),
                                         filename);
         g_signal_connect(window, "delete_event",
                          G_CALLBACK(gtk_widget_destroy), NULL);
@@ -129,8 +130,8 @@ gwy_meta_browser_construct(GwyContainer *data)
         const guint id;
     }
     columns[] = {
-        { "Key", META_KEY },
-        { "Value", META_VALUE },
+        { N_("metadata|Key"),   META_KEY },
+        { N_("Value"), META_VALUE },
     };
 
     GtkWidget *tree;
@@ -144,7 +145,7 @@ gwy_meta_browser_construct(GwyContainer *data)
     store = gtk_list_store_new(META_LAST,
                                G_TYPE_STRING,  /* key */
                                G_TYPE_STRING   /* value */
-                              );
+                               );
 
     gwy_container_foreach(data, "/meta",
                           (GHFunc)(gwy_meta_browser_add_line), store);
@@ -165,10 +166,9 @@ gwy_meta_browser_construct(GwyContainer *data)
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(columns[i].title,
-                                                          renderer,
-                                                          "text", columns[i].id,
-                                                          NULL);
+        column = gtk_tree_view_column_new_with_attributes
+                                      (gwy_sgettext(columns[i].title),
+                                       renderer, "text", columns[i].id, NULL);
         gtk_tree_view_column_set_cell_data_func(column, renderer,
                                                 gwy_meta_browser_cell_renderer,
                                                 GUINT_TO_POINTER(columns[i].id),

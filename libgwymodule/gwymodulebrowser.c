@@ -71,7 +71,7 @@ gwy_module_browser(void)
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(GTK_WINDOW(window), 480, 480);
-    gtk_window_set_title(GTK_WINDOW(window), "Gwyddion Module Browser");
+    gtk_window_set_title(GTK_WINDOW(window), _("Module Browser"));
     gtk_window_set_wmclass(GTK_WINDOW(window), "browser_module",
                            g_get_application_name());
     paned = gtk_vpaned_new();
@@ -99,10 +99,10 @@ gwy_module_browser_construct(GtkWidget *parent)
         const guint id;
     }
     columns[] = {
-        { "Module", MODULE_NAME },
-        { "Loaded?", MODULE_LOADED },
-        { "Version", MODULE_VERSION },
-        { "Author", MODULE_AUTHOR },
+        { N_("Module"), MODULE_NAME },
+        { N_("Loaded?"), MODULE_LOADED },
+        { N_("Version"), MODULE_VERSION },
+        { N_("Author"), MODULE_AUTHOR },
     };
 
     GtkWidget *tree;
@@ -249,7 +249,7 @@ update_module_info_cb(GtkWidget *tree,
     gtk_label_set_text(label, iinfo->mod_info->date);
 
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "desc"));
-    gtk_label_set_text(label, iinfo->mod_info->blurb);
+    gtk_label_set_text(label, _(iinfo->mod_info->blurb));
 
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "funcs"));
     n = 0;
