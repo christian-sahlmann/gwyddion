@@ -545,7 +545,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
         iy = (gint)(y + 0.5);
         return a->data[ix + a->xres*iy];
 
-        case GWY_INTERPOLATION_BILINEAR:
+        default:
         floorx = (gint)floor(x);
         floory = (gint)floor(y);
         restx = x - (gdouble)floorx;
@@ -570,9 +570,11 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
                + (1 - restx)*(1 - resty)*a->data[floorx + a->xres*floory];
         break;
 
+        /* TODO  other interpolations must be added
         default:
         g_warning("Not supported interpolation type.\n");
         return 0.0;
+        */
     }
 }
 
