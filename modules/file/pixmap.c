@@ -306,7 +306,7 @@ module_register(const gchar *name)
     formats = gdk_pixbuf_get_formats();
     for (l = formats; l; l = g_slist_next(l)) {
         GdkPixbufFormat *pixbuf_format = (GdkPixbufFormat*)l->data;
-        const gchar *fmtname;
+        gchar *fmtname;
 
         fmtname = gdk_pixbuf_format_get_name(pixbuf_format);
         /* ignore some really silly formats */
