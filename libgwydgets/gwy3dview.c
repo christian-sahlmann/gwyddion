@@ -1851,6 +1851,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
 #ifndef LABELS
             gdouble xreal = gwy_data_field_get_xreal(widget->data);
             gdouble yreal = gwy_data_field_get_yreal(widget->data);
+            gdouble range, maximum;
             GwySIValueFormat * format;
             guint size;
 
@@ -1858,11 +1859,13 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                    < GTK_WIDGET(widget)->allocation.height
                    ? GTK_WIDGET(widget)->allocation.width
                    : GTK_WIDGET(widget)->allocation.height;
+            range = fabs(widget->data_max - widget->data_min);
+            maximum = MAX(fabs(widget->data_min), fabs(widget->data_max));
             /*FIXME are the parameters all right?*/
             format = gwy_si_unit_get_format_with_resolution(
                          widget->si_unit,
                          yfirst ? yreal : xreal,
-                         yfirst ? yreal : xreal,
+                         yfirst ? yreal/3 : xreal/3,
                          NULL);
             g_snprintf(text, sizeof(text), "%c: %1.1f %s",
                        yfirst ? 'y' : 'x',
@@ -1875,7 +1878,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
             gwy_si_unit_get_format_with_resolution(
                 widget->si_unit,
                 !yfirst ? yreal : xreal,
-                !yfirst ? yreal : xreal,
+                !yfirst ? yreal/3 : xreal/3,
                 format);
             g_snprintf(text, sizeof(text), "%c: %1.1f %s",
                        !yfirst ? 'y' : 'x',
@@ -1884,16 +1887,14 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
             gwy_3d_print_text(widget, text, (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
                           (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f, (int) (sqrt(size)*0.8),
                           1, -1, 0,0, 0.0f);
-            gwy_si_unit_get_format_with_resolution(
-                widget->si_unit, widget->data_max, widget->data_max, format);
+            gwy_si_unit_get_format_with_resolution(widget->si_unit,
+                                                   maximum, range/3, format);
             g_snprintf(text, sizeof(text), "%1.0f %s",
                        widget->data_max / format->magnitude,
                        format->units);
             gwy_3d_print_text(widget, text, Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
                           (widget->data_max - widget->data_min), (int) (sqrt(size)*0.8),
                           0, -1, 0, 0, 0.0f);
-            gwy_si_unit_get_format_with_resolution(
-                widget->si_unit, widget->data_min, widget->data_min, format);
             g_snprintf(text, sizeof(text), "%1.0f %s",
                        widget->data_min / format->magnitude,
                        format->units);
