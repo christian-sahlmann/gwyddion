@@ -350,7 +350,7 @@ gwy_app_run_process_func_cb(gchar *name)
         if (run & run_types[i]) {
             gwy_process_func_run(name, data, run_types[i]);
             /* FIXME: the ugliest hack! */
-            gwy_data_view_update(data_view);
+            gwy_app_data_view_update(data_view);
 
             return;
         }
