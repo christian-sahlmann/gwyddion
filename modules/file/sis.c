@@ -750,8 +750,19 @@ static inline gsize
 get_DOUBLE(const guchar **p)
 {
     union { guchar pp[8]; double d; } z;
-    /* FIXME: assumes Intel endian */
+
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     memcpy(z.pp, *p, sizeof(double));
+#else
+    z.pp[0] = *p[7];
+    z.pp[1] = *p[6];
+    z.pp[2] = *p[5];
+    z.pp[3] = *p[4];
+    z.pp[4] = *p[3];
+    z.pp[5] = *p[2];
+    z.pp[6] = *p[1];
+    z.pp[7] = *p[0];
+#endif
     *p += sizeof(double);
     return z.d;
 }
@@ -920,6 +931,7 @@ sis_real_load(const guchar *buffer,
             gwy_debug("Image #%u of channel %u", channel->nimages, i);
             if (!i || !channel || len < 26)
                 return FALSE;
+            /* This is really a guchar[4], not int32 */
             memcpy(image->processing_step, p, 4);
             p += 4;
             procstep = NULL;
@@ -939,6 +951,7 @@ sis_real_load(const guchar *buffer,
             }
             image->processing_step_index = get_WORD(&p);
             image->channel_index = get_WORD(&p);
+            /* This is really a guchar[4], not int32 */
             memcpy(image->parent_processing_step, p, 4);
             p += 4;
             image->parent_processing_step_index = get_WORD(&p);
