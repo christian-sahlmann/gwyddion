@@ -140,6 +140,8 @@ static gint        normalize_data            (FitArgs *args,
                                               GwyDataLine *xdata,
                                               GwyDataLine *ydata,
                                               gint curve);
+static GtkWidget*  covariance_matrix_table   (gint n,
+                                              GwyNLFitter *fitter);
 static void        create_results_window     (FitArgs *args);
 
 FitControls *pcontrols;
@@ -1040,11 +1042,44 @@ attach_label(GtkWidget *table, const gchar *text,
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), text);
-    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
+    /*gtk_label_set_selectable(GTK_LABEL(label), TRUE);*/
     gtk_misc_set_alignment(GTK_MISC(label), halign, 0.5);
 
     gtk_table_attach(GTK_TABLE(table), label,
                      col, col+1, row, row+1, GTK_FILL, 0, 2, 2);
+}
+
+static gchar*
+format_magnitude(GString *str,
+                 gdouble magnitude)
+{
+    if (magnitude)
+        g_string_printf(str, "× 10<sup>%d</sup>",
+                        (gint)floor(log10(magnitude) + 0.5));
+    else
+        g_string_assign(str, "");
+
+    return str->str;
+}
+
+static GtkWidget*
+covariance_matrix_table(gint n,
+                        GwyNLFitter *fitter)
+{
+    gchar buffer[16];
+    GtkWidget *tab;
+    gint i, j;
+
+    tab = gtk_table_new(n, n, TRUE);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j <= i; j++) {
+            g_snprintf(buffer, sizeof(buffer), "% .03f",
+                       gwy_math_nlfit_get_correlations(fitter, i, j));
+            attach_label(tab, buffer, i, j, 1.0);
+        }
+    }
+
+    return tab;
 }
 
 static void
@@ -1053,7 +1088,7 @@ create_results_window(FitArgs *args)
     GwyNLFitter *fitter = args->fitter;
     GtkWidget *window, *tab, *table;
     gdouble mag, value, sigma;
-    gint row, curve, n, i, j;
+    gint row, curve, n, i;
     gint precision;
     GString *str, *su;
     const gchar *s;
@@ -1087,11 +1122,10 @@ create_results_window(FitArgs *args)
     mag = gwy_math_humanize_numbers((args->to - args->from)/120,
                                     MAX(fabs(args->from), fabs(args->to)),
                                     &precision);
-    g_string_printf(su, "%sSU", gwy_math_SI_prefix(mag));
     g_string_printf(str, "%.*f–%.*f %s",
                     precision, args->from/mag,
                     precision, args->to/mag,
-                    su->str);
+                    format_magnitude(su, mag));
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
@@ -1121,32 +1155,24 @@ create_results_window(FitArgs *args)
         attach_label(tab, str->str, i, 2, 1.0);
         g_string_printf(str, "%.*f", precision, sigma/mag);
         attach_label(tab, str->str, i, 4, 1.0);
-        g_string_printf(su, "%sSU", gwy_math_SI_prefix(mag));
-        attach_label(tab, su->str, i, 5, 0.0);
+        attach_label(tab, format_magnitude(su, mag), i, 5, 0.0);
     }
     row++;
 
     attach_label(table, _("Residual sum:"), row, 0, 0.0);
     sigma = gwy_math_nlfit_get_dispersion(fitter);
     mag = gwy_math_humanize_numbers(sigma/120, sigma, &precision);
-    g_string_printf(su, "%sSU", gwy_math_SI_prefix(mag));
-    g_string_printf(str, "%.*f %s", precision, sigma/mag, su->str);
+    g_string_printf(str, "%.*f %s",
+                    precision, sigma/mag, format_magnitude(su, mag));
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
     attach_label(table, _("<b>Covariance matrix</b>"), row, 0, 0.0);
     row++;
 
-    tab = gtk_table_new(n, n, TRUE);
+    tab = covariance_matrix_table(n, fitter);
     gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    for (i = 0; i < n; i++) {
-        for (j = 0; j <= i; j++) {
-            g_string_printf(str, "% .03f",
-                            gwy_math_nlfit_get_correlations(fitter, i, j));
-            attach_label(tab, str->str, i, j, 1.0);
-        }
-    }
     row++;
 
     g_string_free(str, TRUE);
