@@ -311,13 +311,15 @@ hash_to_data_field(GHashTable *hash,
                    gchar **p)
 {
     GwyDataField *dfield;
+    GObject *unit;
     const gchar *s;
     gchar *t, *end;
     gchar un[5];
     gint xres, yres, bpp, offset, size;
     gdouble xreal, yreal, q, zmagnify = 1.0, zscalesens = 1.0;
     gdouble *data;
-    gboolean is_current;  /* assume height if not current */
+    gboolean is_current;  /* assume height if not current, and ignore phase,
+                             etc. FIXME: should try to interpret the units */
 
     if (!(s = g_hash_table_lookup(hash, "@2:Image Data"))) {
         g_warning("No `@2 Image Data' found");
@@ -458,10 +460,14 @@ hash_to_data_field(GHashTable *hash,
     gwy_debug("curscale = %fe-9, zscale = %fe-9, zscalesens = %f, zmagnify = %f",
               curscale*1e9, zscale*1e9, zscalesens, zmagnify);
     gwy_data_field_multiply(dfield, q);
-    gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(gwy_si_unit_new("m")));
-    gwy_data_field_set_si_unit_z(dfield,
-                                 GWY_SI_UNIT(gwy_si_unit_new(is_current
-                                                             ? "A" : "m")));
+
+    unit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(unit));
+    g_object_unref(unit);
+
+    unit = gwy_si_unit_new(is_current ? "A" : "m");
+    gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(unit));
+    g_object_unref(unit);
 
     return dfield;
 }
