@@ -122,20 +122,20 @@ static gboolean
 calibrate(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GObject *dfield;
+    GwyDataField *dfield;
     CalibrateArgs args;
     gboolean ok;
 
     g_return_val_if_fail(run & CALIBRATE_RUN_MODES, FALSE);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = calibrate_defaults;
     else
         calibrate_load_args(gwy_app_settings_get(), &args);
-    args.xreal = gwy_data_field_get_xreal(GWY_DATA_FIELD(dfield));
-    args.yreal = gwy_data_field_get_yreal(GWY_DATA_FIELD(dfield));
-    args.zreal = gwy_data_field_get_max(GWY_DATA_FIELD(dfield))
-        - gwy_data_field_get_min(GWY_DATA_FIELD(dfield));
+    args.xreal = gwy_data_field_get_xreal(dfield);
+    args.yreal = gwy_data_field_get_yreal(dfield);
+    args.zreal = gwy_data_field_get_max(dfield)
+        - gwy_data_field_get_min(dfield);
     ok = (run != GWY_RUN_MODAL) || calibrate_dialog(&args, data);
     if (run == GWY_RUN_MODAL)
         calibrate_save_args(gwy_app_settings_get(), &args);
@@ -144,27 +144,25 @@ calibrate(GwyContainer *data, GwyRunType run)
 
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
+    gwy_data_field_set_xreal(dfield, args.xreal*args.xratio);
+    gwy_data_field_set_yreal(dfield, args.yreal*args.yratio);
+    if (args.zratio != 1.0)
+        gwy_data_field_multiply(dfield, args.zratio);
 
-    gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal*args.xratio);
-    gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal*args.yratio);
-    if (args.zratio != 1.0) gwy_data_field_multiply(GWY_DATA_FIELD(dfield), args.zratio);
-
-    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield))
-    {
-        gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal*args.xratio);
-        gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal*args.yratio);
-        if (args.zratio != 1.0) gwy_data_field_multiply(GWY_DATA_FIELD(dfield), args.zratio);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield)) {
+        gwy_data_field_set_xreal(dfield, args.xreal*args.xratio);
+        gwy_data_field_set_yreal(dfield, args.yreal*args.yratio);
+        if (args.zratio != 1.0)
+            gwy_data_field_multiply(dfield, args.zratio);
     }
-    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield))
-    {
-        gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal*args.xratio);
-        gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal*args.yratio);
-        if (args.zratio != 1.0) gwy_data_field_multiply(GWY_DATA_FIELD(dfield), args.zratio);
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield)) {
+        gwy_data_field_set_xreal(dfield, args.xreal*args.xratio);
+        gwy_data_field_set_yreal(dfield, args.yreal*args.yratio);
+        if (args.zratio != 1.0)
+            gwy_data_field_multiply(dfield, args.zratio);
     }
-
-
 
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
@@ -302,9 +300,12 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            args->xratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.xratio));
-            args->yratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.yratio));
-            args->zratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zratio));
+            args->xratio
+                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.xratio));
+            args->yratio
+                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.yratio));
+            args->zratio
+                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zratio));
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;

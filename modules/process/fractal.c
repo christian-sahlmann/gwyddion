@@ -165,7 +165,7 @@ fractal(GwyContainer *data, GwyRunType run)
     if (run == GWY_RUN_MODAL)
         fractal_save_args(data, &args);
 
-    return ok;
+    return FALSE;
 }
 
 static gboolean

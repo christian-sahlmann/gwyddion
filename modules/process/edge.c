@@ -82,51 +82,50 @@ module_register(const gchar *name)
 static gboolean
 laplacian(GwyContainer *data, GwyRunType run)
 {
-    GObject *shadefield;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *shadefield;
     gdouble avg;
     gint i, j;
 
     g_assert(run & EDGE_RUN_MODES);
-    
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
-        gwy_data_field_resample(GWY_DATA_FIELD(shadefield),
+    if (gwy_container_gis_object_by_name(data, "/0/show",
+                                         (GObject**)&shadefield)) {
+        gwy_data_field_resample(shadefield,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
     }
     else {
-        shadefield = gwy_serializable_duplicate(G_OBJECT(dfield));
-        gwy_container_set_object_by_name(data, "/0/show", shadefield);
+        shadefield
+            = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
         g_object_unref(shadefield);
     }
 
-    gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(shadefield), 
+    gwy_data_field_area_copy(dfield, shadefield,
                              0, 0, gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield), 0, 0);
-    
-    gwy_data_field_area_filter_laplacian(GWY_DATA_FIELD(shadefield), 
-                                     0, 0,
-                                     gwy_data_field_get_xres(dfield),
-                                     gwy_data_field_get_yres(dfield));
 
-    avg = gwy_data_field_get_area_avg(GWY_DATA_FIELD(shadefield), 1, 1, 
-                                gwy_data_field_get_xres(dfield)-1,
-                                gwy_data_field_get_yres(dfield)-1);
-    
-    for (i = 0; i < dfield->yres; i++)
-    {
-        GWY_DATA_FIELD(shadefield)->data[dfield->xres*i] = avg;
-        GWY_DATA_FIELD(shadefield)->data[dfield->xres - 1 + dfield->xres*i] = avg;
+    gwy_data_field_area_filter_laplacian(shadefield,
+                                         0, 0,
+                                         gwy_data_field_get_xres(dfield),
+                                         gwy_data_field_get_yres(dfield));
+
+    avg = gwy_data_field_get_area_avg(shadefield, 1, 1,
+                                      gwy_data_field_get_xres(dfield)-1,
+                                      gwy_data_field_get_yres(dfield)-1);
+
+    for (i = 0; i < dfield->yres; i++) {
+        shadefield->data[dfield->xres*i] = avg;
+        shadefield->data[dfield->xres - 1 + dfield->xres*i] = avg;
     }
-    for (j = 0; j < dfield->xres; j++)
-    {
-        GWY_DATA_FIELD(shadefield)->data[j] = avg;
-        GWY_DATA_FIELD(shadefield)->data[j + dfield->xres*(dfield->yres-1)] = avg;
+    for (j = 0; j < dfield->xres; j++) {
+        shadefield->data[j] = avg;
+        shadefield->data[j + dfield->xres*(dfield->yres-1)] = avg;
     }
-    
+
     return TRUE;
 }
 
@@ -137,7 +136,7 @@ canny(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     g_assert(run & EDGE_RUN_MODES);
-    
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
     if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
@@ -152,10 +151,10 @@ canny(GwyContainer *data, GwyRunType run)
         g_object_unref(shadefield);
     }
 
-    gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(shadefield), 
+    gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(shadefield),
                              0, 0, gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield), 0, 0);
-   
+
     /*now we use fixed threshold, but in future, there could be API
      with some setting. We could also do smooting before apllying filter.*/
     gwy_data_field_area_filter_canny(GWY_DATA_FIELD(shadefield),

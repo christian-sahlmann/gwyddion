@@ -158,10 +158,8 @@ tip_blind(GwyContainer *data, GwyRunType run)
     ok = (run != GWY_RUN_MODAL) || tip_blind_dialog(&args, data);
     if (run == GWY_RUN_MODAL)
         tip_blind_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
 
-    return ok;
+    return FALSE;
 }
 
 
