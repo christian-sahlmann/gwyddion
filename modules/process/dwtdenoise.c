@@ -152,7 +152,7 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
 
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
-    gwy_data_field_dwt_denoise(dfield, wtcoefs, TRUE, 10);
+    gwy_data_field_dwt_denoise(dfield, wtcoefs, TRUE, 1, GWY_DWT_DENOISE_SCALE_ADAPTIVE);
     
     
     if (args.preserve)

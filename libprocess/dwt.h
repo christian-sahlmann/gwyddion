@@ -34,6 +34,11 @@ typedef enum {
 	GWY_DWT_DAUB20
 } GwyDWTType;
 
+typedef enum {
+    GWY_DWT_DENOISE_UNIVERSAL,
+    GWY_DWT_DENOISE_SCALE_ADAPTIVE,
+    GWY_DWT_DENOISE_SPACE_ADAPTIVE
+} GwyDWTDenoiseType;
 
 G_BEGIN_DECLS
 
@@ -56,7 +61,7 @@ GwyDataField * gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, g
 
 /*wavelet denoising*/
 GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_coefs, gboolean hard,
-					 gdouble multiple_threshold);
+					 gdouble multiple_threshold, GwyDWTDenoiseType type);
 
 
 G_END_DECLS

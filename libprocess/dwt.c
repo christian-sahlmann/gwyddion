@@ -36,8 +36,13 @@ static GwyDataLine* pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign
     
 static GwyDWTFilter *wtset(GwyDataLine *wt_coefs);
     
+static gint remove_by_universal_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow,
+		                        gboolean hard, gdouble threshold);
+static gint remove_by_adaptive_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow,
+		                        gboolean hard, gdouble multiple_threshold, gdouble noise_variance);
 static gint remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow,
-		                        gboolean hard, gdouble multiple_threshold);
+		                        gboolean hard, gdouble multiple_threshold, gdouble noise_variance);
+
 
 static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow);
 /*public functions*/
@@ -352,29 +357,84 @@ gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint
 }
 
 GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_coefs, gboolean hard,
-					                           gdouble multiple_threshold)
+					                           gdouble multiple_threshold,
+								   GwyDWTDenoiseType type)
 {
     gint br, ul, ulcol, ulrow, brcol, brrow, count;
+    gdouble median, noise_variance;
     
     gwy_data_field_dwt(dfield, wt_coefs, 1, 4);
 
+    ulcol = br/2; ulrow = br/2;
+    brcol = br; brrow = br;
+    median = smedian(dfield, ulcol, ulrow, brcol, brrow);
+    noise_variance = median/0.6745;
+      
     for (br = dfield->xres; br>4; br>>=1)
     {
 	ul = br/2;
 
 	ulcol = ul; ulrow = ul;
 	brcol = br; brrow = br;
-	count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold);
+	switch (type){
+	    case(GWY_DWT_DENOISE_SCALE_ADAPTIVE):
+	    count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold, noise_variance);
+	    break;
+
+	    case(GWY_DWT_DENOISE_UNIVERSAL):
+	    count = remove_by_universal_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold);
+	    break;
+
+	    case(GWY_DWT_DENOISE_SPACE_ADAPTIVE):
+	    count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold, noise_variance);
+	    break;
+
+	    default:
+	    g_assert_not_reached();
+	    break;
+	}
 	printf("Level %d, diagonal: %d removed\n", br, count);
 
 	ulcol = 0; ulrow = ul;
 	brcol = ul; brrow = br;
-	count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold);
+	switch (type){
+	    case(GWY_DWT_DENOISE_SCALE_ADAPTIVE):
+	    count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold, noise_variance);
+	    break;
+
+	    case(GWY_DWT_DENOISE_UNIVERSAL):
+	    count = remove_by_universal_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold);
+	    break;
+
+	    case(GWY_DWT_DENOISE_SPACE_ADAPTIVE):
+	    count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold, noise_variance);
+	    break;
+
+	    default:
+	    g_assert_not_reached();
+	    break;
+	}
 	printf("Level %d, horizontal: %d removed\n", br, count);
 
 	ulcol = ul; ulrow = 0;
 	brcol = br; brrow = ul;
-	count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold);			
+	switch (type){
+	    case(GWY_DWT_DENOISE_SCALE_ADAPTIVE):
+	    count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold, noise_variance);
+	    break;
+
+	    case(GWY_DWT_DENOISE_UNIVERSAL):
+	    count = remove_by_universal_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold);
+	    break;
+
+	    case(GWY_DWT_DENOISE_SPACE_ADAPTIVE):
+	    count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold, noise_variance);
+	    break;
+
+	    default:
+	    g_assert_not_reached();
+	    break;
+	}
 	printf("Level %d, vertical: %d removed\n", br, count);
     }
     
@@ -468,9 +528,39 @@ wtset(GwyDataLine *wt_coefs)
     return wt;
 }
 
+/*universal thresholding with supplied threshold value*/
 static gint
-remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow, 
-		    gboolean hard, gdouble multiple_threshold)
+remove_by_universal_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow, 
+		    gboolean hard, gdouble threshold)
+{
+    gdouble *datapos;
+    gint i, j, count;
+
+    count = 0;
+    datapos = dfield->data + ulrow*dfield->xres + ulcol;
+    for (i = 0; i < (brrow - ulrow); i++) {
+       gdouble *drow = datapos + i*dfield->xres;
+
+       for (j = 0; j < (brcol - ulcol); j++) {
+	   if (fabs(*drow) < threshold)
+	   {
+	       if (hard) *drow = 0;
+	       else {
+		   if (*drow<0) (*drow)+=threshold;
+		   else (*drow)-=threshold;
+	       }
+	       count++;
+	   }
+	   drow++;
+       }
+    }
+    return count;
+}
+
+/*area adaptive thresholding*/
+static gint
+remove_by_adaptive_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow, 
+		    gboolean hard, gdouble multiple_threshold, gdouble noise_variance)
 {
     gdouble median, threshold;
     gdouble *datapos;
@@ -480,6 +570,53 @@ remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gi
     median = smedian(dfield, ulcol, ulrow, brcol, brrow);
     threshold = median/0.6745*multiple_threshold*n;
     printf("median = %g, threshold = %g\n", median, threshold);
+
+    count = 0;
+    datapos = dfield->data + ulrow*dfield->xres + ulcol;
+    for (i = 0; i < (brrow - ulrow); i++) {
+       gdouble *drow = datapos + i*dfield->xres;
+
+       for (j = 0; j < (brcol - ulcol); j++) {
+	   if (fabs(*drow) < threshold)
+	   {
+	       if (hard) *drow = 0;
+	       else {
+		   if (*drow<0) (*drow)+=threshold;
+		   else (*drow)-=threshold;
+	       }
+	       count++;
+	   }
+	   drow++;
+       }
+    }
+    return count;
+}
+
+/*scale adaptive thresholding*/
+static gint
+remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow, 
+		    gboolean hard, gdouble multiple_threshold, gdouble noise_variance)
+{
+    gdouble rms, threshold;
+    gdouble *datapos;
+    gint i, j, n, count;
+
+    n = (brrow-ulrow)*(brcol-ulcol);
+    
+    rms = gwy_data_field_area_get_rms(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow);
+    if ((rms*rms - noise_variance*noise_variance) > 0)
+    {
+	rms = sqrt(rms*rms - noise_variance*noise_variance);
+	threshold = noise_variance*noise_variance/rms*multiple_threshold;
+    }
+    else
+    {	
+        threshold = 
+	    MAX(gwy_data_field_area_get_max(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow), 
+		-gwy_data_field_area_get_min(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow));
+    }
+
+    printf("threshold: %g\n", threshold);
 
     count = 0;
     datapos = dfield->data + ulrow*dfield->xres + ulcol;
@@ -514,26 +651,29 @@ gint dsort(const void *p_a, const void *p_b)
 
 static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
-   gint i, j, n;
-   gdouble *datapos;
+   gint i, j, n, k;
+   gdouble *datapos, val;
    n = (brrow-ulrow)*(brcol-ulcol);
    gdouble *buf= g_malloc( sizeof(double)*n);
    
 
+   k = 0;
    datapos = dfield->data + ulrow*dfield->xres + ulcol;
    for (i = 0; i < (brrow - ulrow); i++) {
        gdouble *drow = datapos + i*dfield->xres;
 
        for (j = 0; j < (brcol - ulcol); j++) {
-	   buf[i] = fabs(*drow);
+	   buf[k] = fabs(*drow);
+	   k++;
 	   drow++;
        }
    }
-   
+  
    qsort((void *)buf, n, sizeof(gdouble), dsort);
 
-   return (buf[(gint)(n/2)-1]+buf[(gint)(n/2)])/2;
+   val = (buf[(gint)(n/2)-1]+buf[(gint)(n/2)])/2;
    g_free(buf);
+   return val;
 }
 
 
