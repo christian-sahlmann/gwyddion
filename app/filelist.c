@@ -126,6 +126,7 @@ typedef struct {
     GtkWidget *list;
     GtkWidget *open;
     GtkWidget *prune;
+    GtkTooltips *tooltips;
     GdkPixbuf *failed_pixbuf;
 } Controls;
 
@@ -171,7 +172,7 @@ static G_CONST_RETURN gchar* gwy_recent_file_thumbnail_dir (void);
 static guint remember_recent_files = 256;
 
 static Controls gcontrols = {
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 /**
@@ -198,6 +199,9 @@ gwy_app_recent_file_list_new(void)
     gcontrols.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(gcontrols.window), _("Document History"));
     gtk_window_set_default_size(GTK_WINDOW(gcontrols.window), -1, 360);
+
+    /* FIXME: who will unref this beast? */
+    gcontrols.tooltips = gtk_tooltips_new();
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(gcontrols.window), vbox);
@@ -226,6 +230,9 @@ gwy_app_recent_file_list_new(void)
     gcontrols.prune = gwy_stock_like_button_new(_("_Prune"),
                                                 GTK_STOCK_FIND);
     gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.prune, TRUE, TRUE, 0);
+    gtk_tooltips_set_tip(gcontrols.tooltips, gcontrols.prune,
+                         _("Remove entries of files that no longer exist"),
+                         NULL);
     g_signal_connect_swapped(gcontrols.prune, "clicked",
                              G_CALLBACK(gwy_app_recent_file_list_prune),
                              &gcontrols);
