@@ -60,7 +60,8 @@ static GPtrArray *str = NULL;
 
 
 void
-gwy_tool_profile_use(GwyDataWindow *data_window)
+gwy_tool_profile_use(GwyDataWindow *data_window,
+                     GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -363,7 +364,8 @@ profile_dialog_response_cb(gpointer unused, gint response)
         break;
 
         case GTK_RESPONSE_NONE:
-        gwy_tool_profile_use(NULL);
+        g_warning("Tool dialog destroyed.");
+        gwy_tool_profile_use(NULL, 0);
         break;
 
         case GTK_RESPONSE_APPLY:

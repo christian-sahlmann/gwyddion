@@ -275,7 +275,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
         current_data = g_list_prepend(current_data, window);
     /* FIXME: this calls the use function a little bit too often */
     if (current_tool_use_func)
-        current_tool_use_func(window);
+        current_tool_use_func(window, GWY_TOOL_SWITCH_WINDOW);
 
     if (update_state)
         gwy_app_update_toolbox_state(&sens_data);
@@ -303,7 +303,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     }
 
     if (current_tool_use_func)
-        current_tool_use_func(NULL);
+        current_tool_use_func(NULL, GWY_TOOL_SWITCH_WINDOW);
     gwy_app_update_toolbox_state(&sens_data);
 }
 
@@ -373,7 +373,7 @@ gwy_app_data_view_update(GtkWidget *data_view)
     gboolean has_mask;
     gboolean has_alpha;
     gdouble x;
-    gint i;
+    gsize i;
 
     gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
@@ -515,12 +515,12 @@ gwy_app_use_tool_cb(GtkWidget *unused,
 
     gwy_debug("%s: %p", __FUNCTION__, tool_use_func);
     if (current_tool_use_func)
-        current_tool_use_func(NULL);
+        current_tool_use_func(NULL, GWY_TOOL_SWITCH_TOOL);
     current_tool_use_func = tool_use_func;
     if (tool_use_func) {
         data_window = gwy_app_data_window_get_current();
         if (data_window)
-            current_tool_use_func(data_window);
+            current_tool_use_func(data_window, GWY_TOOL_SWITCH_TOOL);
     }
 }
 

@@ -27,12 +27,23 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef void (*GwyToolUseFunc)(GwyDataWindow *data_window);
+typedef enum {
+    GWY_TOOL_SWITCH_WINDOW,
+    GWY_TOOL_SWITCH_TOOL
+} GwyToolSwitchEvent;
 
-void gwy_tool_crop_use    (GwyDataWindow *data_window);
-void gwy_tool_level3_use  (GwyDataWindow *data_window);
-void gwy_tool_pointer_use (GwyDataWindow *data_window);
-void gwy_tool_profile_use (GwyDataWindow *data_window);
+typedef void (*GwyToolUseFunc)(GwyDataWindow *data_window,
+                               GwyToolSwitchEvent reason);
+
+void gwy_tool_crop_use    (GwyDataWindow *data_window,
+                           GwyToolSwitchEvent reason);
+void gwy_tool_level3_use  (GwyDataWindow *data_window,
+                           GwyToolSwitchEvent reason);
+void gwy_tool_pointer_use (GwyDataWindow *data_window,
+                           GwyToolSwitchEvent reason);
+void gwy_tool_profile_use (GwyDataWindow *data_window,
+                           GwyToolSwitchEvent reason);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
