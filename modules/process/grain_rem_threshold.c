@@ -28,11 +28,10 @@
 #include <app/gwyapp.h>
 
 #define REMOVE_RUN_MODES \
-    (GWY_RUN_MODAL)
+    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
+/* Data for this function. */
 typedef struct {
     gdouble area;
     gdouble height;
@@ -51,36 +50,31 @@ typedef struct {
     GwyContainer *mydata;
 } RemoveControls;
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    remove_th                  (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    remove_dialog              (RemoveArgs *args, GwyContainer *data);
-static void        isheight_changed_cb        (GtkToggleButton *button,
-                                               RemoveArgs *args);
-static void        isarea_changed_cb          (GtkToggleButton *button,
-                                               RemoveArgs *args);
-static void        merge_changed_cb            (GObject *item,
-                                               RemoveArgs *args);
-static void        remove_dialog_update          (RemoveControls *controls,
-                                               RemoveArgs *args);
-static void        preview                     (RemoveControls *controls,
-                                               RemoveArgs *args,
-                                               GwyContainer *data);
-static void        ok                         (RemoveControls *controls,
-                                               RemoveArgs *args,
-                                               GwyContainer *data);
-static void        mask_process               (GwyDataField *dfield,
-                                               GwyDataField *maskfield,
-                                               RemoveArgs *args,
-                                               RemoveControls *controls);
-static void        intersect_removes          (GwyDataField *mask_a,
-                                               GwyDataField *mask_b,
-                                               GwyDataField *mask);
-static void        remove_load_args           (GwyContainer *container,
-                                               RemoveArgs *args);
-static void        remove_save_args           (GwyContainer *container,
-                                               RemoveArgs *args);
-static void        remove_sanitize_args       (RemoveArgs *args);
+static gboolean    module_register               (const gchar *name);
+static gboolean    remove_th                     (GwyContainer *data,
+                                                  GwyRunType run);
+static gboolean    remove_dialog                 (RemoveArgs *args,
+                                                  GwyContainer *data);
+static void        remove_dialog_update_controls (RemoveControls *controls,
+                                                  RemoveArgs *args);
+static void        remove_dialog_update_args     (RemoveControls *controls,
+                                                  RemoveArgs *args);
+static void        preview                        (RemoveControls *controls,
+                                                  RemoveArgs *args,
+                                                  GwyContainer *data);
+static void        remove_th_do                  (RemoveArgs *args,
+                                                  GwyContainer *data);
+static void        mask_process                  (GwyDataField *dfield,
+                                                  GwyDataField *maskfield,
+                                                  RemoveArgs *args);
+static void        intersect_removes             (GwyDataField *mask_a,
+                                                  GwyDataField *mask_b,
+                                                  GwyDataField *mask);
+static void        remove_load_args              (GwyContainer *container,
+                                                  RemoveArgs *args);
+static void        remove_save_args              (GwyContainer *container,
+                                                  RemoveArgs *args);
+static void        remove_sanitize_args          (RemoveArgs *args);
 
 RemoveArgs remove_defaults = {
     50,
@@ -127,7 +121,7 @@ static gboolean
 remove_th(GwyContainer *data, GwyRunType run)
 {
     RemoveArgs args;
-    gboolean ook = FALSE;
+    gboolean ok = FALSE;
 
     g_assert(run & REMOVE_RUN_MODES);
     if (run == GWY_RUN_WITH_DEFAULTS)
@@ -135,16 +129,18 @@ remove_th(GwyContainer *data, GwyRunType run)
     else
         remove_load_args(gwy_app_settings_get(), &args);
 
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
-        ook = (run != GWY_RUN_MODAL) || remove_dialog(&args, data);
-        if (ook) {
+    if (!gwy_container_contains_by_name(data, "/0/mask"))
+        return FALSE;
 
-            if (run != GWY_RUN_WITH_DEFAULTS)
-                remove_save_args(gwy_app_settings_get(), &args);
-        }
-    }
+    ok = (run != GWY_RUN_MODAL) || remove_dialog(&args, data);
+    if (!ok)
+        return FALSE;
 
-    return ook;
+    remove_th_do(&args, data);
+    if (run != GWY_RUN_WITH_DEFAULTS)
+        remove_save_args(gwy_app_settings_get(), &args);
+
+    return ok;
 }
 
 
@@ -199,39 +195,35 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                        FALSE, FALSE, 4);
 
 
-    controls.is_height = gtk_check_button_new_with_label("Threshold by maximum:");
+    controls.is_height
+        = gtk_check_button_new_with_label(_("Threshold by maximum:"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
                                  args->is_height);
-    g_signal_connect(controls.is_height, "toggled",
-                     G_CALLBACK(isheight_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_height,
                      0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("Height value [fractile]"), _(""),
+    spin = gwy_table_attach_spinbutton(table, 2, _("Height value"), "",
                                 controls.threshold_height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
-    controls.is_area = gtk_check_button_new_with_label("Threshold by area:");
+    controls.is_area = gtk_check_button_new_with_label(_("Threshold by area:"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area),
                                  args->is_area);
-    g_signal_connect(controls.is_area, "toggled",
-                     G_CALLBACK(isarea_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_area,
                      0, 1, 3, 4, GTK_FILL, 0, 2, 2);
 
     controls.threshold_area = gtk_adjustment_new(args->area,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 4, _("Area [pixels]"), _(""),
+    gwy_table_attach_spinbutton(table, 4, _("Area"), _("pixels"),
                                 controls.threshold_area);
 
     label = gtk_label_new(_("Selection mode:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
 
-    controls.merge = gwy_option_menu_mergegrain(G_CALLBACK(merge_changed_cb),
-                                            args, args->merge_type);
+    controls.merge = gwy_option_menu_mergegrain(NULL, NULL, args->merge_type);
     gtk_table_attach(GTK_TABLE(table), controls.merge,
                      0, 1, 8, 9, GTK_FILL, 0, 2, 2);
 
@@ -247,15 +239,15 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
             break;
 
             case GTK_RESPONSE_OK:
-            ok(&controls, args, data);
             break;
 
             case RESPONSE_RESET:
             *args = remove_defaults;
-            remove_dialog_update(&controls, args);
+            remove_dialog_update_controls(&controls, args);
             break;
 
             case RESPONSE_PREVIEW:
+            remove_dialog_update_args(&controls, args);
             preview(&controls, args, data);
             break;
 
@@ -265,32 +257,15 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    args->height
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_height));
-    args->area
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_area));
+    remove_dialog_update_args(&controls, args);
     gtk_widget_destroy(dialog);
 
     return TRUE;
 }
 
-
-
 static void
-isheight_changed_cb(GtkToggleButton *button, RemoveArgs *args)
-{
-    args->is_height = gtk_toggle_button_get_active(button);
-}
-
-static void
-isarea_changed_cb(GtkToggleButton *button, RemoveArgs *args)
-{
-    args->is_area = gtk_toggle_button_get_active(button);
-}
-
-static void
-remove_dialog_update(RemoveControls *controls,
-                     RemoveArgs *args)
+remove_dialog_update_controls(RemoveControls *controls,
+                              RemoveArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_height),
                                 args->height);
@@ -300,7 +275,24 @@ remove_dialog_update(RemoveControls *controls,
                                  args->is_height);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_area),
                                  args->is_area);
+    gwy_option_menu_set_history(controls->merge, "mergegrain-type",
+                                args->merge_type);
+}
 
+static void
+remove_dialog_update_args(RemoveControls *controls,
+                          RemoveArgs *args)
+{
+    args->is_height
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_height));
+    args->is_area
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_area));
+    args->height
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
+    args->area
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
+    args->merge_type = gwy_option_menu_get_history(controls->merge,
+                                                   "mergegrain-type");
 }
 
 static void
@@ -310,15 +302,18 @@ preview(RemoveControls *controls,
 {
     GwyDataField *maskfield, *dfield;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/0/data"));
 
     /*set up the mask*/
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/mask"));
+        maskfield
+            = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                              "/0/mask"));
 
         gwy_data_field_copy(GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                   "/0/mask")), maskfield);
-        mask_process(dfield, maskfield, args, controls);
+        mask_process(dfield, maskfield, args);
 
         gwy_container_set_object_by_name(controls->mydata, "/0/mask",
                                          G_OBJECT(maskfield));
@@ -329,9 +324,8 @@ preview(RemoveControls *controls,
 }
 
 static void
-ok(RemoveControls *controls,
-   RemoveArgs *args,
-   GwyContainer *data)
+remove_th_do(RemoveArgs *args,
+             GwyContainer *data)
 {
 
     GwyDataField *dfield, *maskfield;
@@ -342,33 +336,17 @@ ok(RemoveControls *controls,
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                   "/0/mask"));
-        mask_process(dfield, maskfield, args, controls);
+        mask_process(dfield, maskfield, args);
     }
 
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
-
-static void
-merge_changed_cb(GObject *item, RemoveArgs *args)
-{
-    args->merge_type = GPOINTER_TO_INT(g_object_get_data(item,
-                                                        "mergegrain-type"));
-
-}
-
 
 static void
 mask_process(GwyDataField *dfield,
              GwyDataField *maskfield,
-             RemoveArgs *args,
-             RemoveControls *controls)
+             RemoveArgs *args)
 {
     GwyDataField *output_field_a, *output_field_b;
-
-    args->height
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
-    args->area
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
 
     if (args->merge_type == GWY_MERGE_UNION
         || (args->is_height*args->is_area) == 0) {
