@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
+#include <app/wait.h>
 #include "app.h"
 #include "file.h"
 #include "settings.h"
@@ -394,6 +395,8 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
     GwyContainer *data, *ret, *kernel;
     GwyDataField *dfield, *kernelfield, *retfield;
     GwyDataWindow *operand1, *operand2;
+    gint iteration = 0;
+    GwyComputationStateType state;
 
     operand1 = args->win1;
     operand2 = args->win2;
@@ -409,7 +412,16 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
     kernel = gwy_data_window_get_data(operand2);
     kernelfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(kernel, "/0/data"));
 
-    gwy_data_field_correlate(dfield, kernelfield, retfield);
+    state = GWY_COMP_INIT;
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
+    do
+    {
+        gwy_data_field_correlate_iteration(dfield, kernelfield, retfield, &state, &iteration);
+        gwy_app_wait_set_message("Correlating...");
+        if (!gwy_app_wait_set_fraction(iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2))) break;
+        
+    } while (state != GWY_COMP_FINISHED);
+    gwy_app_wait_finish();
     
     /*score - do new data with score*/
     if (args->result == GWY_MASKCOR_SCORE)
