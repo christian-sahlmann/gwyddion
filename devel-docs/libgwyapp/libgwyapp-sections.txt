@@ -1,6 +1,5 @@
 <SECTION>
 <FILE>app</FILE>
-gwy_app_main_window
 gwy_app_get_current_data
 gwy_app_data_window_get_current
 gwy_app_data_window_set_current
@@ -21,6 +20,8 @@ gwy_app_tool_use_cb
 gwy_app_zoom_set_cb
 gwy_app_mask_kill_cb
 gwy_app_show_kill_cb
+gwy_app_main_window_get
+gwy_app_main_window_set
 gwy_app_quit
 gwy_app_clean_up_data
 </SECTION>

@@ -52,25 +52,11 @@ PRG_LINK = \
 	libgwyprocess-$(LIBGWYPROCESS_VER).lib \
 	libgwyddion-$(LIBGWYDDION_VER).lib
 
-LIB_OBJECTS = \
-	app.obj \
-	file.obj \
-	menu.obj \
-	settings.obj
+<[[:LIB_OBJECTS:]]>
 
-LIB_HEADERS = \
-	app.h \
-	file.h \
-	menu.h \
-	settings.h
+<[[:LIB_HEADERS:]]>
 
-PRG_OBJECTS = \
-	about.obj \
-	arith.obj \
-	gwyddion.obj \
-	init.obj \
-	meta.obj \
-	toolbox.obj
+<[[:PRG_OBJECTS:]]>
 
 ## targets
 all: lib prg sub-all
@@ -88,23 +74,6 @@ clean:: sub-clean
 # the easiest way how to tell appart the program and library sources seems to
 # be list one explicitely; also: msdn says later specified rules take
 # precedence
-about.obj: about.c
-	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) about.c
-
-arith.obj: arith.c
-	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) arith.c
-
-gwyddion.obj: gwyddion.c
-	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) gwyddion.c
-
-init.obj: init.c
-	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) init.c
-
-meta.obj: meta.c
-	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) meta.c
-
-toolbox.obj: toolbox.c
-	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) toolbox.c
-
+<[[:PRG_OBJECT_RULES:]]>
 
 # vim: ft=make

@@ -30,7 +30,7 @@ EXTRA_DIST = \
 	gwyddion.spec.in \
 	gwyddion.spec\
 	gwyddion.iss.in \
-	gwyddion.iss\
+	gwyddion.iss \
 	gwyddion.pc.in \
 	$(M4TESTS)
 

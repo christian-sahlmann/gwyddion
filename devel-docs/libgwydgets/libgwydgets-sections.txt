@@ -1,4 +1,19 @@
 <SECTION>
+<FILE>gwytoolbox</FILE>
+<TITLE>GwyToolbox</TITLE>
+gwy_toolbox_new
+gwy_toolbox_append
+<SUBSECTION Standard>
+GWY_TOOLBOX
+GWY_IS_TOOLBOX
+GWY_TYPE_TOOLBOX
+gwy_toolbox_get_type
+GWY_TOOLBOX_CLASS
+GWY_IS_TOOLBOX_CLASS
+GWY_TOOLBOX_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwygraphcorner</FILE>
 <TITLE>GwyGraphCorner</TITLE>
 gwy_graph_corner_new

@@ -50,7 +50,7 @@ LIB_OBJECTS = \
 	gwystock.obj \
 	gwytoolbox.obj \
 	gwyvectorshade.obj \
-	gwyvruler.obj 
+	gwyvruler.obj
 
 LIB_HEADERS = \
 	gwyaxis.h \
@@ -79,7 +79,7 @@ LIB_HEADERS = \
 	gwystock.h \
 	gwytoolbox.h \
 	gwyvectorshade.h \
-	gwyvruler.h 
+	gwyvruler.h
 
 ## targets
 all: lib

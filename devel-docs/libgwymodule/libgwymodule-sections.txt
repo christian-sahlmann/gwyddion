@@ -9,7 +9,7 @@ GwyToolFuncInfo
 GwyToolUseFunc
 gwy_tool_func_register
 gwy_tool_func_use
-gwy_tool_func_build_toolbar
+gwy_tool_func_build_toolbox
 </SECTION>
 
 <SECTION>

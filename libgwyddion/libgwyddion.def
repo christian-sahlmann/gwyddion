@@ -1,69 +1,69 @@
 EXPORTS
-	gwy_container_contains
-	gwy_container_foreach
-	gwy_container_freeze_watch
-	gwy_container_get_boolean
-	gwy_container_get_double
-	gwy_container_get_int32
-	gwy_container_get_int64
-	gwy_container_get_object
+	gwy_serialize_unpack_char
 	gwy_container_get_string
+	gwy_serialize_check_string
+	gwy_serialize_unpack_char_array
+	gwy_container_get_double
+	gwy_string_to_enum
+	gwy_serialize_unpack_double
+	gwy_enum_to_string
+	gwy_serializable_get_type
+	gwy_math_humanize_numbers
+	gwy_find_self_dir
+	gwy_serialize_unpack_boolean
+	gwy_serialize_unpack_int64_array
+	gwy_container_get_int32
+	gwy_container_value_type
+	gwy_hash_table_to_slist_cb
+	gwy_container_set_object
+	gwy_watchable_get_type
+	gwy_container_get_value
+	gwy_flags_to_string
+	gwy_container_set_boolean
+	gwy_watchable_value_changed
+	gwy_container_remove_by_prefix
 	gwy_container_get_type
 	gwy_container_get_uchar
-	gwy_container_get_value
-	gwy_container_new
-	gwy_container_remove
-	gwy_container_remove_by_prefix
-	gwy_container_rename
-	gwy_container_set_boolean
-	gwy_container_set_double
-	gwy_container_set_int32
-	gwy_container_set_int64
-	gwy_container_set_object
-	gwy_container_set_string
-	gwy_container_set_uchar
-	gwy_container_set_value
-	gwy_container_set_value_by_name
-	gwy_container_thaw_watch
-	gwy_container_value_type
-	gwy_container_watch
-	gwy_debug_gnu
-	gwy_entities_entity_to_utf8
 	gwy_entities_get_entities
-	gwy_entities_text_to_utf8
-	gwy_enum_to_string
-	gwy_find_self_dir
-	gwy_find_self_set_argv0
-	gwy_flags_to_string
-	gwy_hash_table_to_list_cb
-	gwy_hash_table_to_slist_cb
-	gwy_math_SI_prefix
+	gwy_container_set_double
 	gwy_math_find_nearest_line
-	gwy_math_find_nearest_point
-	gwy_math_humanize_numbers
-	gwy_serializable_deserialize
-	gwy_serializable_duplicate
-	gwy_serializable_get_type
-	gwy_serializable_serialize
-	gwy_serialize_check_string
-	gwy_serialize_pack
-	gwy_serialize_pack_object_struct
-	gwy_serialize_pack_struct
+	gwy_container_set_int64
 	gwy_serialize_skip_type
 	gwy_serialize_store_int32
-	gwy_serialize_unpack_boolean
-	gwy_serialize_unpack_char
-	gwy_serialize_unpack_char_array
-	gwy_serialize_unpack_double
-	gwy_serialize_unpack_double_array
+	gwy_entities_text_to_utf8
+	gwy_container_get_object
+	gwy_container_set_value
+	gwy_serialize_pack_object_struct
+	gwy_serialize_pack_struct
+	gwy_container_foreach
+	gwy_container_get_boolean
 	gwy_serialize_unpack_int32
-	gwy_serialize_unpack_int32_array
-	gwy_serialize_unpack_int64
-	gwy_serialize_unpack_int64_array
-	gwy_serialize_unpack_object_struct
+	gwy_container_freeze_watch
+	gwy_serializable_deserialize
+	gwy_entities_entity_to_utf8
 	gwy_serialize_unpack_string
-	gwy_serialize_unpack_struct
-	gwy_string_to_enum
 	gwy_string_to_flags
-	gwy_watchable_get_type
-	gwy_watchable_value_changed
+	gwy_container_remove
+	gwy_serialize_unpack_object_struct
+	gwy_container_set_value_by_name
+	gwy_math_SI_prefix
+	gwy_math_find_nearest_point
+	gwy_serialize_unpack_int64
+	gwy_container_get_int64
+	gwy_serialize_unpack_double_array
+	gwy_hash_table_to_list_cb
+	gwy_container_contains
+	gwy_container_thaw_watch
+	gwy_serializable_serialize
+	gwy_serialize_pack
+	gwy_debug_gnu
+	gwy_container_rename
+	gwy_container_set_int32
+	gwy_container_set_string
+	gwy_serialize_unpack_int32_array
+	gwy_container_new
+	gwy_container_watch
+	gwy_container_set_uchar
+	gwy_serialize_unpack_struct
+	gwy_find_self_set_argv0
+	gwy_serializable_duplicate

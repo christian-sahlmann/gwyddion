@@ -1,8 +1,7 @@
 
 TOP_SRCDIR = ../..
-MOD_TYPE = graph
-MODULES = \
-	read.dll
+MOD_TYPE = file
+<[[:MODULES:]]>
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
@@ -10,6 +9,8 @@ MODULES = \
 LIB_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
 	$(GTK_CFLAGS) \
+	$(PNG_CFLAGS) \
+	$(TIFF_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
 
@@ -22,8 +23,6 @@ install: install-mod
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
-read.dll: read.obj
-	$(LINK32) read.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:read.dll /dll /implib:read.lib
-
+<[[:MOD_DLL_RULES:]]>
 
 # vim: ft=make

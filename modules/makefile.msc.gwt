@@ -1,8 +1,7 @@
 
 TOP_SRCDIR = ..
 MOD_TYPE =
-MODULES = \
-	plugin-proxy.dll
+<[[:MODULES:]]>
 SUBDIRS = file graph process
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
@@ -25,8 +24,6 @@ clean:: sub-clean
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
-plugin-proxy.dll: plugin-proxy.obj
-	$(LINK32) plugin-proxy.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:plugin-proxy.dll /dll /implib:plugin-proxy.lib
-
+<[[:MOD_DLL_RULES:]]>
 
 # vim: ft=make

@@ -14,12 +14,6 @@ app
 
 </para>
 
-<!-- ##### VARIABLE gwy_app_main_window ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION gwy_app_get_current_data ##### -->
 <para>
 
@@ -158,8 +152,8 @@ app
 
 </para>
 
-@button: 
 @toolname: 
+@button: 
 <!-- # Unused Parameters # -->
 @unused: 
 
@@ -184,6 +178,22 @@ app
 
 </para>
 
+
+
+<!-- ##### FUNCTION gwy_app_main_window_get ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_main_window_set ##### -->
+<para>
+
+</para>
+
+@window: 
 
 
 <!-- ##### FUNCTION gwy_app_quit ##### -->

@@ -1,31 +1,31 @@
 EXPORTS
-	gwy_file_detect
-	gwy_file_func_build_menu
-	gwy_file_func_get_operations
-	gwy_file_func_register
+	gwy_tool_func_remove
+	gwy_graph_func_register
+	gwy_file_save
+	gwy_process_func_remove
+	gwy_tool_func_build_toolbox
+	gwy_tool_func_use
 	gwy_file_func_remove
-	gwy_file_func_run_detect
-	gwy_file_func_run_load
+	gwy_module_browser
+	gwy_tool_func_register
+	gwy_process_func_get_menu_path
 	gwy_file_func_run_save
 	gwy_file_load
-	gwy_file_save
-	gwy_graph_func_build_menu
-	gwy_graph_func_get_menu_path
-	gwy_graph_func_register
 	gwy_graph_func_remove
-	gwy_graph_func_run
-	gwy_module_browser
-	gwy_module_foreach
-	gwy_module_get_module_info
-	gwy_module_lookup
+	gwy_file_detect
 	gwy_module_register_modules
-	gwy_process_func_build_menu
-	gwy_process_func_get_menu_path
-	gwy_process_func_get_run_types
+	gwy_module_get_module_info
+	gwy_file_func_get_operations
+	gwy_file_func_run_load
+	gwy_file_func_register
 	gwy_process_func_register
-	gwy_process_func_remove
+	gwy_process_func_get_run_types
+	gwy_graph_func_run
+	gwy_process_func_build_menu
 	gwy_process_func_run
-	gwy_tool_func_build_toolbox
-	gwy_tool_func_register
-	gwy_tool_func_remove
-	gwy_tool_func_use
+	gwy_graph_func_get_menu_path
+	gwy_module_foreach
+	gwy_file_func_build_menu
+	gwy_file_func_run_detect
+	gwy_graph_func_build_menu
+	gwy_module_lookup
