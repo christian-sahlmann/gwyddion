@@ -12,5 +12,6 @@
     <xi:include href="xml/file.xml"/>
     <xi:include href="xml/settings.xml"/>
     <xi:include href="xml/menu.xml"/>
+    <xi:include href="xml/unitool.xml"/>
   </chapter>
 </book>
