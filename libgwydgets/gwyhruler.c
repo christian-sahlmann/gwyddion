@@ -236,6 +236,7 @@ gwy_hruler_real_draw_ticks(GwyRuler *ruler,
     ythickness = widget->style->ythickness;
     xthickness = widget->style->xthickness;
 
+    format = ruler->vformat;
     upper = ruler->upper;
     lower = ruler->lower;
     if (upper <= lower || pixelsize < 2 || pixelsize > 10000)
@@ -245,12 +246,6 @@ gwy_hruler_real_draw_ticks(GwyRuler *ruler,
         max = MAX(fabs(lower), fabs(upper));
 
     range = upper - lower;
-    format = gwy_si_unit_get_format_with_resolution(ruler->units,
-                                                    max, max/12, NULL);
-    if (format->precision > 1)
-        format = gwy_si_unit_get_format_with_resolution(ruler->units,
-                                                        max/12, max/24,
-                                                        format);
     measure = range/format->magnitude / pixelsize;
     max /= format->magnitude;
 
@@ -376,7 +371,6 @@ gwy_hruler_real_draw_ticks(GwyRuler *ruler,
     }
 
     g_free(unit_str);
-    gwy_si_unit_value_format_free(format);
     g_object_unref(layout);
 }
 

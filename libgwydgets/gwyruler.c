@@ -64,23 +64,24 @@ enum {
     PROP_UNITS_PLACEMENT,
 };
 
-static void          gwy_ruler_class_init    (GwyRulerClass  *klass);
-static void          gwy_ruler_init          (GwyRuler       *ruler);
-static void          gwy_ruler_realize       (GtkWidget      *widget);
-static void          gwy_ruler_unrealize     (GtkWidget      *widget);
-static void          gwy_ruler_size_allocate (GtkWidget      *widget,
+static void    gwy_ruler_class_init          (GwyRulerClass  *klass);
+static void    gwy_ruler_init                (GwyRuler       *ruler);
+static void    gwy_ruler_realize             (GtkWidget      *widget);
+static void    gwy_ruler_unrealize           (GtkWidget      *widget);
+static void    gwy_ruler_size_allocate       (GtkWidget      *widget,
                                               GtkAllocation  *allocation);
-static gint          gwy_ruler_expose        (GtkWidget      *widget,
+static gint    gwy_ruler_expose              (GtkWidget      *widget,
                                               GdkEventExpose *event);
-static void          gwy_ruler_make_pixmap   (GwyRuler       *ruler);
-static void          gwy_ruler_set_property  (GObject        *object,
+static void    gwy_ruler_make_pixmap         (GwyRuler       *ruler);
+static void    gwy_ruler_set_property        (GObject        *object,
                                               guint           prop_id,
                                               const GValue   *value,
                                               GParamSpec     *pspec);
-static void          gwy_ruler_get_property  (GObject        *object,
+static void    gwy_ruler_get_property        (GObject        *object,
                                               guint           prop_id,
                                               GValue         *value,
                                               GParamSpec     *pspec);
+static void    gwy_ruler_update_value_format (GwyRuler       *ruler);
 
 static GtkWidgetClass *parent_class;
 
@@ -193,17 +194,8 @@ gwy_ruler_class_init(GwyRulerClass *class)
 static void
 gwy_ruler_init(GwyRuler *ruler)
 {
-    ruler->backing_store = NULL;
-    ruler->non_gr_exp_gc = NULL;
-    ruler->xsrc = 0;
-    ruler->ysrc = 0;
-    ruler->slider_size = 0;
-    ruler->lower = 0;
-    ruler->upper = 0;
-    ruler->position = 0;
-    ruler->max_size = 0;
-    ruler->units_placement = GWY_UNITS_PLACEMENT_NONE;
     ruler->units = GWY_SI_UNIT(gwy_si_unit_new("m"));
+    gwy_ruler_update_value_format(ruler);
 }
 
 static void
@@ -318,6 +310,7 @@ gwy_ruler_set_range(GwyRuler *ruler,
         g_object_notify(G_OBJECT(ruler), "max_size");
     }
     g_object_thaw_notify(G_OBJECT(ruler));
+    gwy_ruler_update_value_format(ruler);
 
     if (GTK_WIDGET_DRAWABLE(ruler))
         gtk_widget_queue_draw(GTK_WIDGET(ruler));
@@ -439,7 +432,8 @@ gwy_ruler_realize(GtkWidget *widget)
 
     attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
 
-    widget->window = gdk_window_new(gtk_widget_get_parent_window(widget), &attributes, attributes_mask);
+    widget->window = gdk_window_new(gtk_widget_get_parent_window(widget),
+                                    &attributes, attributes_mask);
     gdk_window_set_user_data(widget->window, ruler);
 
     widget->style = gtk_style_attach(widget->style, widget->window);
@@ -456,6 +450,7 @@ gwy_ruler_unrealize(GtkWidget *widget)
     gwy_object_unref(ruler->backing_store);
     gwy_object_unref(ruler->non_gr_exp_gc);
     gwy_object_unref(ruler->units);
+    gwy_si_unit_value_format_free(ruler->vformat);
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         (GTK_WIDGET_CLASS(parent_class)->unrealize)(widget);
@@ -564,6 +559,7 @@ gwy_ruler_set_units(GwyRuler *ruler,
     if (units)
         g_object_ref(units);
     ruler->units = units;
+    gwy_ruler_update_value_format(ruler);
     gtk_widget_queue_draw(GTK_WIDGET(ruler));
 }
 
@@ -580,6 +576,26 @@ gwy_ruler_get_units(GwyRuler *ruler)
 {
     g_return_val_if_fail(GWY_IS_RULER(ruler), NULL);
     return ruler->units;
+}
+
+static void
+gwy_ruler_update_value_format(GwyRuler *ruler)
+{
+    gdouble max;
+
+    max = ruler->max_size;
+    if (!max)
+        max = MAX(fabs(ruler->lower), fabs(ruler->upper));
+    if (!max)
+        max = 1.2;
+
+    ruler->vformat = gwy_si_unit_get_format_with_resolution(ruler->units,
+                                                            max, max/12,
+                                                            ruler->vformat);
+    if (ruler->vformat->precision > 1)
+        ruler->vformat = gwy_si_unit_get_format_with_resolution(ruler->units,
+                                                                max/12, max/24,
+                                                                ruler->vformat);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -55,10 +55,7 @@
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
-
-#ifndef GWY_SI_UNIT
-#  include <libgwyddion/gwysiunit.h>
-#endif
+#include <libgwyddion/gwysiunit.h>
 
 G_BEGIN_DECLS
 
@@ -95,7 +92,7 @@ struct _GwyRuler
     gdouble position;    /* The position of the mark on the ruler */
     gdouble max_size;    /* The maximum size of the ruler */
 
-    gpointer reserved1;
+    GwySIValueFormat *vformat;
     gpointer reserved2;
 };
 
