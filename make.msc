@@ -138,6 +138,8 @@ clean::
 
 "$(TOP_SRCDIR)/inst.stamp":
 	-@mkdir "$(DEST_DIR)"
+	$(INSTALL) data\gwyddion.iss inst\gwyddion.iss
+	$(INSTALL) data\gwyddion-devel.iss inst\gwyddion-devel.iss
 	-@mkdir "$(DEST_DIR)\include"
 	-@mkdir "$(DEST_DIR)\include\libdraw"
 	-@mkdir "$(DEST_DIR)\include\app"

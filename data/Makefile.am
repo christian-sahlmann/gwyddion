@@ -10,7 +10,7 @@ gwyddion_vim_cfg = $(top_srcdir)/data/gwyddion-cfg.py
 
 pkgconfigdata_DATA = gwyddion.pc
 gwyddionapp_DATA = gwyddion.desktop
-gwyddionmime_DATA = data/gwyddion.xml
+gwyddionmime_DATA = gwyddion.xml
 man1_MANS = gwyddion.1
 
 EXTRA_DIST = \
