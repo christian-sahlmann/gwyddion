@@ -64,8 +64,14 @@ void gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                           gboolean prefilter,
                                           gint dir);
 
+#ifndef GWY_DISABLE_DEPRECATED
 void gwy_data_field_grains_remove_manually(GwyDataField *grain_field,
                                            gint i);
+#endif
+
+gboolean gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
+                                            gint col,
+                                            gint row);
 
 void gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
                                           gint size);

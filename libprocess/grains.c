@@ -369,7 +369,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
 
 }
 
-/* FIXME: wrong name, wrong interface, change in 2.0 */
+/* FIXME: wrong name, wrong interface, kill in 2.0 */
 /**
  * gwy_data_field_grains_remove_manually:
  * @grain_field: Field of marked grains (mask)
@@ -397,6 +397,44 @@ gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint i)
     }
 
     g_free(pnt);
+}
+
+/**
+ * gwy_data_field_grains_remove_grain:
+ * @grain_field: Field of marked grains (mask).
+ * @col: Column inside a grain.
+ * @row: Row inside a grain.
+ *
+ * Removes one grain at given position.
+ *
+ * Returns: %TRUE if a grain was actually removed (i.e., (@col,@row) was
+ *          inside a grain).
+ *
+ * Since: 1.7
+ **/
+gboolean
+gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
+                                   gint col,
+                                   gint row)
+{
+    gint *points;
+    gint npoints = 0;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(grain_field), FALSE);
+    g_return_val_if_fail(col >= 0 && col < grain_field->xres, FALSE);
+    g_return_val_if_fail(row >= 0 && row < grain_field->yres, FALSE);
+
+    if (!grain_field->data[grain_field->xres*row + col])
+        return FALSE;
+
+    points = gwy_data_field_fill_grain(grain_field, col, row, &npoints);
+    while (npoints) {
+        npoints--;
+        grain_field->data[points[npoints]] = 0.0;
+    }
+    g_free(points);
+
+    return TRUE;
 }
 
 /**
