@@ -1,4 +1,3 @@
-1.6cvs20041203
 
 1.7
 Application:
@@ -18,6 +17,7 @@ Modules:
 - Manual grain removal: Undo works.
 - Statistical quantities: Area computation was fixed; minimum, maximum and
   median values added.
+- Calibrate: GUI was reworked.
 - Level: Zero mean value function (similar to fix zero).
 - Arithmetic: Broken `Physical dimensions differ' check was fixed.
 - Grain mark by watershed: Cancelation behaviour was fixed.
@@ -30,6 +30,8 @@ Library:
 - libgwyprocess: Speed of most grain methods was considerably improved.
 - libgwydgets: 3D View light position marker was fixed to reflect actual light
                position
+- libgwyddion: Serialization packer and unpacker for hash-like objects, new
+               primitive types: string list, object list.
 
 Other:
 - pkg-config file broken by 1.6 build system clean up was updated.

@@ -1,7 +1,7 @@
 #!/bin/bash
 disabled=
 pkgname=gwyddion
-basever=1.6
+basever=1.7
 arch=$(uname -m)
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
