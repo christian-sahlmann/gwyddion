@@ -50,7 +50,6 @@ static GtkWidget* dialog_create    (GwyUnitoolState *state);
 static void       dialog_update    (GwyUnitoolState *state,
                                     GwyUnitoolUpdateType reason);
 static void       dialog_abandon   (GwyUnitoolState *state);
-static void       apply            (GwyUnitoolState *state);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -59,7 +58,7 @@ static GwyModuleInfo module_info = {
     "stats",
     N_("Statistical quantities."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -70,7 +69,7 @@ static GwyUnitoolSlots func_slots = {
     dialog_create,                 /* dialog constructor */
     dialog_update,                 /* update view and controls */
     dialog_abandon,                /* dialog abandon hook */
-    apply,                         /* apply action */
+    NULL,                          /* apply action */
     NULL,                          /* nonstandard response handler */
 };
 
@@ -137,7 +136,6 @@ dialog_create(GwyUnitoolState *state)
                                          NULL, 0, NULL);
     gwy_unitool_dialog_add_button_clear(dialog);
     gwy_unitool_dialog_add_button_hide(dialog);
-    gwy_unitool_dialog_add_button_apply(dialog);
 
     frame = gwy_unitool_windowname_frame_create(state);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
@@ -214,32 +212,6 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_attach_defaults(GTK_TABLE(table), controls->area, 2, 4, 7, 8);
 
     return dialog;
-}
-
-/* TODO */
-static void
-apply(GwyUnitoolState *state)
-{
-    GwyContainer *data;
-    GwyDataField *dfield;
-    GwyDataViewLayer *layer;
-    gdouble xy[4];
-    gdouble avg, ra, rms, skew, kurtosis;
-
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    gwy_app_clean_up_data(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    if (gwy_vector_layer_get_selection(state->layer, xy))
-        gwy_data_field_get_area_stats(dfield,
-                                      gwy_data_field_rtoj(dfield, xy[0]),
-                                      gwy_data_field_rtoi(dfield, xy[1]),
-                                      gwy_data_field_rtoj(dfield, xy[2]),
-                                      gwy_data_field_rtoi(dfield, xy[3]),
-                                      &avg, &ra, &rms, &skew, &kurtosis);
-    else
-        gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
 }
 
 static void
