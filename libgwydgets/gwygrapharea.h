@@ -51,7 +51,8 @@ typedef enum {
   GWY_GRAPH_STATUS_CURSOR = 1,
   GWY_GRAPH_STATUS_XSEL   = 2,
   GWY_GRAPH_STATUS_YSEL   = 3,
-  GWY_GRAPH_STATUS_POINTS = 4
+  GWY_GRAPH_STATUS_POINTS = 4,
+  GWY_GRAPH_STATUS_ZOOM   = 5,
 } GwyGraphStatusType;
 
 typedef struct {
@@ -84,7 +85,12 @@ typedef struct {
    gint n;
 } GwyGraphStatus_PointsData;
 
-
+typedef struct {
+  gdouble x;
+  gdouble y;
+  gdouble width;
+  gdouble height;
+} GwyGraphStatus_ZoomData;
 
 /*NOTE: GwyGraphAreaCurveParams is defined in gwygraphlabel.h*/
 
@@ -113,7 +119,7 @@ typedef struct {
     GwyGraphStatus_SelData *seldata;
     GwyGraphStatus_PointsData *pointsdata;
     GwyGraphStatus_CursorData *cursordata;
-
+    GwyGraphStatus_ZoomData *zoomdata;
 
     /*drawing*/
     GPtrArray *curves;

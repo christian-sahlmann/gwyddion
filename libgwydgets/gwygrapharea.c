@@ -63,6 +63,7 @@ static void     gwy_graph_area_plot_refresh         (GwyGraphArea *area);
 static gdouble  scr_to_data_x                       (GtkWidget *widget, gint scr);
 static gdouble  scr_to_data_y                       (GtkWidget *widget, gint scr);
 
+static void     zoom                                (GtkWidget *widget);
 /* Local data */
 
 
@@ -171,6 +172,7 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->seldata = g_new(GwyGraphStatus_SelData, 1);
     area->pointsdata = g_new(GwyGraphStatus_PointsData, 1);
     area->cursordata = g_new(GwyGraphStatus_CursorData, 1);
+    area->zoomdata = g_new(GwyGraphStatus_ZoomData, 1);
 
     area->seldata->scr_start = 0;
     area->seldata->scr_end = 0;
@@ -180,6 +182,12 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->pointsdata->scr_points = g_array_new(0, 1, sizeof(GwyGraphScrPoint));
     area->pointsdata->data_points = g_array_new(0, 1, sizeof(GwyGraphDataPoint));
     area->pointsdata->n = 0;
+
+    area->zoomdata->x = 0;
+    area->zoomdata->y = 0;
+    area->zoomdata->width = 0;
+    area->zoomdata->height = 0;
+    
 
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
@@ -516,8 +524,8 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         {
             scrpnt.i = x;
             scrpnt.j = y;
-            datpnt.x = scr_to_data_x(widget, x);;
-            datpnt.y = scr_to_data_y(widget, y);;
+            datpnt.x = scr_to_data_x(widget, x);
+            datpnt.y = scr_to_data_y(widget, y);
 
             g_array_append_val(area->pointsdata->scr_points, scrpnt);
             g_array_append_val(area->pointsdata->data_points, datpnt);
@@ -537,6 +545,15 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         gwy_graph_area_signal_selected(area);
 
         gtk_widget_queue_draw(widget);
+    }
+    else if (area->status == GWY_GRAPH_STATUS_ZOOM)
+    {
+        area->zoomdata->x = scr_to_data_x(widget, x);
+        area->zoomdata->y = scr_to_data_x(widget, y);
+        area->zoomdata->width = 0;
+        area->zoomdata->height = 0;
+        /*TODO start drawing rectangle*/
+
     }
 
     return FALSE;
@@ -598,6 +615,15 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
 
         area->active = NULL;
     }
+    else if (area->status == GWY_GRAPH_STATUS_ZOOM)
+    {
+        /*TODO delete rectangle*/
+        area->zoomdata->width = fabs(area->zoomdata->x - scr_to_data_x(widget, x));
+        area->zoomdata->height = fabs(area->zoomdata->y - scr_to_data_y(widget, y));
+        /*zoom*/
+        zoom(widget);
+    }
+
 
     return FALSE;
 }
@@ -652,6 +678,11 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         gwy_graph_area_signal_selected(area);
         gtk_widget_queue_draw(widget);
     }
+    else if (area->status == GWY_GRAPH_STATUS_ZOOM)
+    {
+        /*TODO repaint rectangle...*/
+    }
+
 
     /*widget (label) movement*/
     if (area->active)
@@ -744,7 +775,7 @@ void
 gwy_graph_area_set_boundaries(GwyGraphArea *area, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max)
 {
     gwy_debug("");
-        area->x_min = x_min;
+    area->x_min = x_min;
     area->y_min = y_min;
     area->x_max = x_max;
     area->y_max = y_max;
@@ -787,7 +818,7 @@ gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve)
     GwyGraphAreaCurve *pcurve;
 
     gwy_debug("");
-            /*alloc one element, make deep copy and add it to array*/
+    /*alloc one element, make deep copy and add it to array*/
 
     pcurve = g_new(GwyGraphAreaCurve, 1);
     pcurve->data.xvals = (gdouble *) g_try_malloc(curve->data.N*sizeof(gdouble));
@@ -865,5 +896,13 @@ gwy_graph_area_signal_selected(GwyGraphArea *area)
     g_signal_emit (G_OBJECT (area), gwygrapharea_signals[SELECTED_SIGNAL], 0);
 }
 
+
+void
+zoom(GtkWidget *widget)
+{
+    GwyGraphArea *area;
+    area = GWY_GRAPH_AREA(widget);
+    printf("ZZZZZZZZZZZZZZZZooooooooooooooommmmmmmmmmmmm\n");
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
