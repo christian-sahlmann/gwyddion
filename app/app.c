@@ -220,6 +220,7 @@ main(int argc, char *argv[])
     gwy_app_settings_get();
     gwy_module_register_modules(module_dirs);
     gwy_app_create_toolbox();
+    /* FIXME: this doesn't put files into the recent files list */
     for (i = 1; i < argc; i++) {
         if (!(data = gwy_file_load(argv[i])))
             continue;

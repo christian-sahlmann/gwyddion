@@ -321,7 +321,7 @@ recent_files_update(const gchar *filename)
 {
     GList *item;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("%s: %s", __FUNCTION__, filename);
     if (!recent_files)
         recent_files = recent_files_from_settings();
 
@@ -356,8 +356,9 @@ recent_files_from_settings(void)
     len = strlen(prefix);
     strcpy(buffer, prefix);
     g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", 0);
-    for (i = 0; gwy_container_contains_by_name(settings, buffer); i++) {
+    for (i = 1; gwy_container_contains_by_name(settings, buffer); i++) {
         s = gwy_container_get_string_by_name(settings, buffer);
+        gwy_debug("%s: <%s> is %d", __FUNCTION__, s, i);
         list = g_list_prepend(list, g_strdup(s));
         g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", i);
     }
