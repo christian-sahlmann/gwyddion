@@ -307,6 +307,19 @@ gwy_layer_axes_get_max_axes(GwyLayerAxes *layer)
     return layer->naxes;
 }
 
+void
+gwy_layer_axes_set_orientation(GwyLayerAxes *layer,
+                               GtkOrientation orientation)
+{
+    /* TODO */
+}
+
+GtkOrientation
+gwy_layer_axes_get_orientation (GwyLayerAxes *layer)
+{
+    /* TODO */
+}
+
 static void
 gwy_layer_axes_draw(GwyVectorLayer *layer,
                     GdkDrawable *drawable)
