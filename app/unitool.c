@@ -575,8 +575,9 @@ gwy_unitool_update_label(GwySIValueFormat *units,
     g_return_if_fail(units);
     g_return_if_fail(GTK_IS_LABEL(label));
 
-    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
-               units->precision, value/units->magnitude, units->units);
+    g_snprintf(buffer, sizeof(buffer), "%.*f%s%s",
+               units->precision, value/units->magnitude,
+               (units->units && *units->units) ? " " : "", units->units);
     gtk_label_set_markup(GTK_LABEL(label), buffer);
 }
 
