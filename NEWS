@@ -1,3 +1,20 @@
+1.4cvs20040813
+
+1.5
+Application:
+- Position of main windows is remembered between sessions.
+- Settings that cannot be parsed are no longer silently overwritten and user
+  is informed.
+
+Library:
+- libgwyddion: Deserialization made more robust with regard to future
+  extensions and truncated files.
+- libgwydgets: GwyDataView expose event handling improved, making it much more
+  usable over network.
+
+Modules:
+- Select layer: Full widget redraws were eliminated, making it much more
+  usable over network.
 
 
 1.4
@@ -35,9 +52,9 @@ Modules:
 Library:
 - libgwydgets: GwyValUnit -- value with unit and selection of unit prefix
 - libprocess: gwy_data_line_get_modus() and gwy_data_line_part_get_modus()
-              approximate modus functions.
+  approximate modus functions.
 - libprocess: unrotate functionality available as a function
-              gwy_data_field_unrotate_find_corrections()
+  gwy_data_field_unrotate_find_corrections()
 - all libraries: Explicite functions initializing deserializable classes.
 - libgwyddion: gwydebugobjects -- an aid in leaking objects debugging.
 - Gwyddion::dump (Perl) and Gwyddion.dump (Python) modules implementing
