@@ -219,6 +219,8 @@ gwy_flags_to_string(gint enumval,
  * Use gwy_strkill(g_strdup(@s), @killchars) to get a modified copy.
  *
  * Returns: @s itself, the return value is to allow function call nesting.
+ *
+ * Since: 1.1.
  **/
 gchar*
 gwy_strkill(gchar *s,
@@ -256,6 +258,8 @@ gwy_strkill(gchar *s,
  * Replaces occurences of string @needle in @haystack with @replacement.
  *
  * Returns: A newly allocated string.
+ *
+ * Since: 1.1.
  **/
 gchar*
 gwy_strreplace(const gchar *haystack,

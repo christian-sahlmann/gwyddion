@@ -366,6 +366,8 @@ gwy_process_func_set_sensitivity_flags(const gchar *name,
  *
  * Returns: %TRUE if there was such a function and was removed, %FALSE
  *          otherwise.
+ *
+ * Since: 1.1.
  **/
 gboolean
 gwy_process_func_remove(const gchar *name)
