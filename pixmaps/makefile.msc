@@ -1,4 +1,6 @@
 
+TOP_SRCDIR = ..
+
 PIXMAPS = \
 	gwy_bold-24.png \
 	gwy_crop-24.png \
@@ -27,6 +29,6 @@ pixmap: $(PIXMAPS)
 
 install: install-pixmap
 
-!INCLUDE rules.msc
+!INCLUDE $(TOP_SRCDIR)\rules.msc
 
 # vim: ft=make
