@@ -26,11 +26,14 @@ typedef struct _GwyDataWindowClass GwyDataWindowClass;
 struct _GwyDataWindow {
     GtkWindow parent_instance;
 
+    GtkWidget *table;
     GtkWidget *data_view;
     GtkWidget *hruler;
     GtkWidget *vruler;
     GtkWidget *statusbar;
     GtkWidget *notebook;
+    GtkWidget *sidebox;
+    GtkWidget *sidebuttons;
 };
 
 struct _GwyDataWindowClass {

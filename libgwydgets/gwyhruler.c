@@ -153,12 +153,14 @@ gwy_hruler_draw_ticks(GwyRuler *ruler)
     gint pos;
     PangoLayout *layout;
     PangoRectangle logical_rect, ink_rect;
-    gboolean units_drawn = FALSE;
+    gboolean units_drawn;
+    GwyRulerMetric *metric;
 
     if (!GTK_WIDGET_DRAWABLE(ruler))
         return;
 
     widget = GTK_WIDGET(ruler);
+    metric = ruler->metric;
 
     gc = widget->style->fg_gc[GTK_STATE_NORMAL];
     bg_gc = widget->style->bg_gc[GTK_STATE_NORMAL];
@@ -188,8 +190,8 @@ gwy_hruler_draw_ticks(GwyRuler *ruler)
                   widget->allocation.width - xthickness,
                   height + ythickness);
 
-    upper = ruler->upper / ruler->metric->pixels_per_unit;
-    lower = ruler->lower / ruler->metric->pixels_per_unit;
+    upper = ruler->upper / metric->units_per_meter;
+    lower = ruler->lower / metric->units_per_meter;
 
     if ((upper - lower) == 0)
         return;
@@ -200,12 +202,20 @@ gwy_hruler_draw_ticks(GwyRuler *ruler)
      *  text_width = gdk_string_width(font, unit_str), so that the result
      *  for the scale looks consistent with an accompanying vruler
      */
-    scale = ceil(ruler->max_size / ruler->metric->pixels_per_unit);
-    g_snprintf(unit_str, sizeof(unit_str), "%d", scale);
+    scale = ceil(ruler->max_size / metric->units_per_meter);
+    switch (ruler->units_placement) {
+        case GWY_UNITS_PLACEMENT_AT_ZERO:
+        g_snprintf(unit_str, sizeof(unit_str), "%d mm", scale);
+        break;
+
+        default:
+        g_snprintf(unit_str, sizeof(unit_str), "%d", scale);
+        break;
+    }
     text_width = strlen(unit_str) * digit_height + 1;
 
     for (scale = 0; scale < MAXIMUM_SCALES; scale++)
-        if (ruler->metric->ruler_scale[scale] * fabs(increment) > 2*text_width)
+        if (metric->ruler_scale[scale] * fabs(increment) > 2*text_width)
             break;
 
     if (scale == MAXIMUM_SCALES)
@@ -213,9 +223,10 @@ gwy_hruler_draw_ticks(GwyRuler *ruler)
 
     /* drawing starts here */
     length = 0;
+    units_drawn = FALSE;
     for (i = MAXIMUM_SUBDIVIDE - 1; i >= 0; i--) {
-        subd_incr = (gdouble) ruler->metric->ruler_scale[scale] /
-            (gdouble) ruler->metric->subdivide[i];
+        subd_incr = (gdouble) metric->ruler_scale[scale] /
+            (gdouble) metric->subdivide[i];
         if (subd_incr * fabs(increment) <= MINIMUM_INCR)
             continue;
 
@@ -245,9 +256,11 @@ gwy_hruler_draw_ticks(GwyRuler *ruler)
 
             /* draw label */
             if (i == 0) {
-                if (!units_drawn && (end < 0 || cur >= 0)) {
+                if (ruler->units_placement != GWY_UNITS_PLACEMENT_NONE
+                    && !units_drawn
+                    && (end < 0 || cur >= 0)) {
                     g_snprintf(unit_str, sizeof(unit_str), "%d %s",
-                               (int)cur, ruler->metric->abbrev);
+                               (int)cur, metric->abbrev);
                     units_drawn = TRUE;
                 }
                 else

@@ -143,6 +143,7 @@ gwy_data_view_init(GwyDataView *data_view)
     data_view->base_layer = NULL;
     data_view->pixbuf = NULL;
     data_view->base_pixbuf = NULL;
+    data_view->zoom = 1.0;
 }
 
 GtkWidget*
@@ -325,8 +326,14 @@ gwy_data_view_size_request(GtkWidget *widget,
     data_field = GWY_DATA_FIELD(
                      gwy_container_get_object_by_name(data,
                                                       "/0/data"));
-    requisition->width = gwy_data_field_get_xres(data_field);
-    requisition->height = gwy_data_field_get_yres(data_field);
+    requisition->width = data_view->zoom * gwy_data_field_get_xres(data_field);
+    requisition->height = data_view->zoom * gwy_data_field_get_yres(data_field);
+
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+          "%s requesting %d x %d",
+          __FUNCTION__, requisition->width, requisition->height);
+    #endif
 }
 
 static void
@@ -336,7 +343,9 @@ gwy_data_view_size_allocate(GtkWidget *widget,
     GwyDataView *data_view;
 
     #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+          "%s allocating %d x %d",
+          __FUNCTION__, allocation->width, allocation->height);
     #endif
 
     g_return_if_fail(widget != NULL);
@@ -352,7 +361,7 @@ gwy_data_view_size_allocate(GtkWidget *widget,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
 
-         gwy_data_view_make_pixmap(data_view);
+        gwy_data_view_make_pixmap(data_view);
     }
 }
 
@@ -362,7 +371,6 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     GtkWidget *widget;
     GwyDataField *data_field;
     gint width, height, scwidth, scheight, src_width, src_height;
-    gdouble zoom;
 
     data_field = GWY_DATA_FIELD(
                      gwy_container_get_object_by_name(data_view->data,
@@ -384,10 +392,10 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
         width = height = -1;
 
     widget = GTK_WIDGET(data_view);
-    zoom = MAX((gdouble)src_width/widget->allocation.width,
-               (gdouble)src_height/widget->allocation.height);
-    scwidth = floor(src_width/zoom + 0.000001);
-    scheight = floor(src_height/zoom + 0.000001);
+    data_view->zoom = MIN((gdouble)widget->allocation.width/src_width,
+                          (gdouble)widget->allocation.height/src_height);
+    scwidth = floor(src_width * data_view->zoom + 0.000001);
+    scheight = floor(src_height * data_view->zoom + 0.000001);
     if (scwidth != width || scheight != height) {
         if (data_view->pixbuf)
             g_object_unref(data_view->pixbuf);
@@ -528,9 +536,8 @@ gwy_data_view_expose(GtkWidget *widget,
     gint xc, yc;
     GTimer *timer = NULL;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
+    g_return_val_if_fail(widget, FALSE);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
 
     if (event->count > 0)
         return FALSE;
@@ -569,9 +576,8 @@ gwy_data_view_button_press(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
@@ -586,9 +592,8 @@ gwy_data_view_button_release(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
@@ -603,9 +608,8 @@ gwy_data_view_motion_notify(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
@@ -620,9 +624,8 @@ gwy_data_view_key_press(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
@@ -637,9 +640,8 @@ gwy_data_view_key_release(GtkWidget *widget,
 {
     GwyDataView *data_view;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(event, FALSE);
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
@@ -727,6 +729,52 @@ gwy_data_view_set_top_layer(GwyDataView *data_view,
                             GwyDataViewLayer *layer)
 {
     gwy_data_view_set_layer(data_view, &data_view->top_layer, layer);
+}
+
+gdouble
+gwy_data_view_get_hexcess(GwyDataView* data_view)
+{
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), 0);
+    if (!data_view->pixbuf)
+        return 0;
+
+    return (gdouble)GTK_WIDGET(data_view)->allocation.width
+                    / gdk_pixbuf_get_width(data_view->pixbuf) - 1.0;
+}
+
+gdouble
+gwy_data_view_get_vexcess(GwyDataView *data_view)
+{
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), 0);
+    if (!data_view->pixbuf)
+        return 0;
+
+    return (gdouble)GTK_WIDGET(data_view)->allocation.height
+                    / gdk_pixbuf_get_height(data_view->pixbuf) - 1.0;
+}
+
+void
+gwy_data_view_set_zoom(GwyDataView *data_view,
+                       gdouble zoom)
+{
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    if (!data_view->pixbuf || !data_view->base_pixbuf)
+        return;
+
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+          "%s: zoom = %g, new = %g", __FUNCTION__, data_view->zoom, zoom);
+    if (fabs(data_view->zoom - zoom) < 0.01)
+        return;
+
+    data_view->zoom = zoom;
+    gtk_widget_queue_resize(GTK_WIDGET(data_view));
+}
+
+gdouble
+gwy_data_view_get_zoom(GwyDataView *data_view)
+{
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), 1.0);
+    return data_view->zoom;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

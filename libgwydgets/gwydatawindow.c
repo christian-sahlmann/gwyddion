@@ -8,7 +8,8 @@
 
 #define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
 
-#define _(x) x
+#define ZOOM_FACTOR (1.41421356237309504880)
+#define _(x) (x)
 
 /* Forward declarations */
 
@@ -16,11 +17,12 @@ static void     gwy_data_window_class_init     (GwyDataWindowClass *klass);
 static void     gwy_data_window_init           (GwyDataWindow *data_window);
 GtkWidget*      gwy_data_window_new            (GwyDataView *data_view);
 
-static void
-measure_changed(GwyDataWindow *data_window,
-                GtkAllocation *allocation,
-                gpointer data);
-
+static void     measure_changed                (GwyDataWindow *data_window,
+                                                GtkAllocation *allocation,
+                                                gpointer data);
+static void     lame_window_resize             (GwyDataWindow *data_window);
+static void     zoom_set                       (GtkWidget *button,
+                                                gpointer data);
 /* Local data */
 
 GType
@@ -73,13 +75,16 @@ gwy_data_window_init(GwyDataWindow *data_window)
     data_window->vruler = NULL;
     data_window->statusbar = NULL;
     data_window->notebook = NULL;
+    data_window->table = NULL;
+    data_window->sidebox = NULL;
+    data_window->sidebuttons = NULL;
 }
 
 GtkWidget*
 gwy_data_window_new(GwyDataView *data_view)
 {
     GwyDataWindow *data_window;
-    GtkWidget *vbox, *hbox, *table, *widget;
+    GtkWidget *vbox, *hbox, *widget;
     GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
 
     #ifdef DEBUG
@@ -111,43 +116,75 @@ gwy_data_window_new(GwyDataView *data_view)
     data_window->statusbar = gtk_statusbar_new();
     gtk_box_pack_start(GTK_BOX(vbox), data_window->statusbar, FALSE, FALSE, 0);
 
-    table = gtk_table_new(2, 2, FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
+    data_window->table = gtk_table_new(2, 2, FALSE);
+    gtk_box_pack_start(GTK_BOX(hbox), data_window->table, TRUE, TRUE, 0);
 
     widget = gtk_arrow_new(GTK_ARROW_RIGHT, GTK_SHADOW_OUT);
-    gtk_table_attach(GTK_TABLE(table), widget, 0, 1, 0, 1,
+    gtk_table_attach(GTK_TABLE(data_window->table), widget,
+                     0, 1, 0, 1,
                      GTK_FILL, GTK_FILL, 0, 0);
 
-    gtk_table_attach(GTK_TABLE(table), data_window->data_view, 1, 2, 1, 2,
+    gtk_table_attach(GTK_TABLE(data_window->table), data_window->data_view,
+                     1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
     data_window->hruler = gwy_hruler_new();
-    gwy_ruler_set_range(GWY_RULER(data_window->hruler),
-                        0.0, 100.0, 0.0, 100.0);
-    gtk_table_attach(GTK_TABLE(table), data_window->hruler, 1, 2, 0, 1,
+    gwy_ruler_set_units_placement(GWY_RULER(data_window->hruler),
+                                  GWY_UNITS_PLACEMENT_AT_ZERO);
+    gtk_table_attach(GTK_TABLE(data_window->table), data_window->hruler,
+                     1, 2, 0, 1,
                      GTK_EXPAND | GTK_SHRINK | GTK_FILL, GTK_FILL, 0, 0);
     g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
                              G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->hruler)->motion_notify_event),
                              data_window->hruler);
 
     data_window->vruler = gwy_vruler_new();
-    gwy_ruler_set_range(GWY_RULER(data_window->vruler),
-                        0.0, 100.0, 0.0, 100.0);
+    gwy_ruler_set_units_placement(GWY_RULER(data_window->vruler),
+                                  GWY_UNITS_PLACEMENT_AT_ZERO);
     g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
                              G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->vruler)->motion_notify_event),
                              data_window->vruler);
-    gtk_table_attach(GTK_TABLE(table), data_window->vruler, 0, 1, 1, 2,
+    gtk_table_attach(GTK_TABLE(data_window->table), data_window->vruler,
+                     0, 1, 1, 2,
                      GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
+    data_window->sidebox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), data_window->sidebox, FALSE, FALSE, 0);
+
     data_window->notebook = gtk_notebook_new();
-    gtk_box_pack_start(GTK_BOX(hbox), data_window->notebook, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(data_window->sidebox), data_window->notebook,
+                       TRUE, TRUE, 0);
     widget = gtk_label_new("Crash me!");
     gtk_notebook_append_page(GTK_NOTEBOOK(data_window->notebook),
                              widget, NULL);
     widget = gtk_label_new("Crash me too!");
     gtk_notebook_append_page(GTK_NOTEBOOK(data_window->notebook),
                              widget, NULL);
+
+    /* FIXME: this makes the buttons extremely wide
+     * data_window->sidebuttons = gtk_hbutton_box_new();*/
+    data_window->sidebuttons = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(data_window->sidebox), data_window->sidebuttons,
+                       FALSE, FALSE, 0);
+
+    widget = gtk_button_new_with_label("1:1");
+    gtk_box_pack_start(GTK_BOX(data_window->sidebuttons), widget,
+                       FALSE, FALSE, 0);
+    g_signal_connect(widget, "clicked",
+                     G_CALLBACK(zoom_set), GINT_TO_POINTER(10000));
+
+    widget = gtk_button_new_with_label("In");
+    gtk_box_pack_start(GTK_BOX(data_window->sidebuttons), widget,
+                       FALSE, FALSE, 0);
+    g_signal_connect(widget, "clicked",
+                     G_CALLBACK(zoom_set), GINT_TO_POINTER(1));
+
+    widget = gtk_button_new_with_label("Out");
+    gtk_box_pack_start(GTK_BOX(data_window->sidebuttons), widget,
+                       FALSE, FALSE, 0);
+    g_signal_connect(widget, "clicked",
+                     G_CALLBACK(zoom_set), GINT_TO_POINTER(-1));
 
     /* show everything except the table */
     gtk_widget_show_all(vbox);
@@ -163,26 +200,73 @@ measure_changed(GwyDataWindow *data_window,
                 GtkAllocation *allocation,
                 gpointer data)
 {
-    gint width, height, size;
-    gdouble excess, pos, max;
+    gdouble excess, pos, real;
+    GwyDataView *data_view;
 
-    width = data_window->data_view->allocation.width,
-    height = data_window->data_view->allocation.height;
-    size = MIN(width, height);
-
+    real = 1000;
+    data_view = GWY_DATA_VIEW(data_window->data_view);
     /* horizontal */
-    excess = 100*((gdouble)width/size - 1.0)/2.0;
+    excess = real * gwy_data_view_get_hexcess(data_view)/2.0;
     gwy_ruler_get_range(GWY_RULER(data_window->hruler),
-                        NULL, NULL, &pos, &max);
+                        NULL, NULL, &pos, NULL);
     gwy_ruler_set_range(GWY_RULER(data_window->hruler),
-                        -excess, 100 + excess, pos, max);
+                        -excess, real + excess, pos, real);
 
     /* vertical */
-    excess = 100*((gdouble)height/size - 1.0)/2.0;
+    excess = real * gwy_data_view_get_vexcess(data_view)/2.0;
     gwy_ruler_get_range(GWY_RULER(data_window->vruler),
-                        NULL, NULL, &pos, &max);
+                        NULL, NULL, &pos, NULL);
     gwy_ruler_set_range(GWY_RULER(data_window->vruler),
-                        -excess, 100 + excess, pos, max);
+                        -excess, real + excess, pos, real);
+}
+
+static void
+lame_window_resize(GwyDataWindow *data_window)
+{
+    GtkRequisition hruler_req, vruler_req, statusbar_req, sidebox_req,
+                   view_req;
+    gint width, height;
+
+    gtk_widget_get_child_requisition(data_window->hruler, &hruler_req);
+    gtk_widget_get_child_requisition(data_window->vruler, &vruler_req);
+    gtk_widget_get_child_requisition(data_window->statusbar, &statusbar_req);
+    gtk_widget_size_request(data_window->sidebox, &sidebox_req);
+    gtk_widget_size_request(data_window->data_view, &view_req);
+
+    width = vruler_req.width + view_req.width + sidebox_req.width;
+    height = hruler_req.height + view_req.height + statusbar_req.height;
+    gtk_window_resize(GTK_WINDOW(data_window), width, height);
+}
+
+static void
+zoom_set(GtkWidget *button,
+         gpointer data)
+{
+    GwyDataWindow *data_window;
+    gint zoom = GPOINTER_TO_INT(data);
+    gdouble rzoom;
+
+    data_window = GWY_DATA_WINDOW(gtk_widget_get_toplevel(button));
+
+    switch (zoom) {
+        case -1:
+        rzoom = gwy_data_view_get_zoom(GWY_DATA_VIEW(data_window->data_view))
+                / ZOOM_FACTOR;
+        break;
+
+        case 1:
+        rzoom = gwy_data_view_get_zoom(GWY_DATA_VIEW(data_window->data_view))
+                * ZOOM_FACTOR;
+        break;
+
+        default:
+        rzoom = zoom/10000.0;
+        break;
+    }
+    rzoom = CLAMP(rzoom, 1/8.0, 8.0);
+    rzoom = exp(log(ZOOM_FACTOR)*floor(log(rzoom)/log(ZOOM_FACTOR) + 0.5));
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(data_window->data_view), rzoom);
+    lame_window_resize(data_window);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

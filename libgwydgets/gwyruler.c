@@ -33,7 +33,8 @@ enum {
     PROP_LOWER,
     PROP_UPPER,
     PROP_POSITION,
-    PROP_MAX_SIZE
+    PROP_MAX_SIZE,
+    PROP_UNITS_PLACEMENT,
 };
 
 static void gwy_ruler_class_init    (GwyRulerClass  *klass);
@@ -150,6 +151,17 @@ gwy_ruler_class_init(GwyRulerClass *class)
                                                         G_MAXDOUBLE,
                                                         0.0,
                                                         G_PARAM_READWRITE));
+
+    /* FIXME: in fact it's an enum... */
+    g_object_class_install_property(gobject_class,
+                                    PROP_UNITS_PLACEMENT,
+                                    g_param_spec_uint("units_placement",
+                                                      _("Units Placement"),
+                                                      _("The placement of units on the ruler, if any"),
+                                                      0,
+                                                      GWY_UNITS_PLACEMENT_AT_ZERO,
+                                                      GWY_UNITS_PLACEMENT_NONE,
+                                                      G_PARAM_READWRITE));
 }
 
 static void
@@ -164,6 +176,7 @@ gwy_ruler_init(GwyRuler *ruler)
     ruler->upper = 0;
     ruler->position = 0;
     ruler->max_size = 0;
+    ruler->units_placement = GWY_UNITS_PLACEMENT_NONE;
 
     gwy_ruler_set_metric(ruler, GTK_PIXELS);
 }
@@ -181,17 +194,29 @@ gwy_ruler_set_property(GObject      *object,
         gwy_ruler_set_range(ruler, g_value_get_double(value), ruler->upper,
                             ruler->position, ruler->max_size);
         break;
+
         case PROP_UPPER:
         gwy_ruler_set_range(ruler, ruler->lower, g_value_get_double(value),
                             ruler->position, ruler->max_size);
         break;
+
         case PROP_POSITION:
         gwy_ruler_set_range(ruler, ruler->lower, ruler->upper,
                             g_value_get_double(value), ruler->max_size);
         break;
+
         case PROP_MAX_SIZE:
         gwy_ruler_set_range(ruler, ruler->lower, ruler->upper,
                             ruler->position,  g_value_get_double(value));
+        break;
+
+        case PROP_UNITS_PLACEMENT:
+        gwy_ruler_set_units_placement(ruler,
+                                      (GwyUnitsPlacement)g_value_get_uint(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
 }
@@ -208,15 +233,23 @@ gwy_ruler_get_property(GObject      *object,
         case PROP_LOWER:
         g_value_set_double(value, ruler->lower);
         break;
+
         case PROP_UPPER:
         g_value_set_double(value, ruler->upper);
         break;
+
         case PROP_POSITION:
         g_value_set_double(value, ruler->position);
         break;
+
         case PROP_MAX_SIZE:
         g_value_set_double(value, ruler->max_size);
         break;
+
+        case PROP_UNITS_PLACEMENT:
+        g_value_set_uint(value, (guint)ruler->units_placement);
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -320,6 +353,33 @@ gwy_ruler_get_range(GwyRuler *ruler,
         *position = ruler->position;
     if (max_size)
         *max_size = ruler->max_size;
+}
+
+void
+gwy_ruler_set_units_placement(GwyRuler *ruler,
+                              GwyUnitsPlacement placement)
+{
+    g_return_if_fail(GWY_IS_RULER(ruler));
+    placement = CLAMP(placement,
+                      GWY_UNITS_PLACEMENT_NONE,
+                      GWY_UNITS_PLACEMENT_AT_ZERO);
+    if (ruler->units_placement == placement)
+        return;
+
+    g_object_freeze_notify(G_OBJECT(ruler));
+    ruler->units_placement = placement;
+    g_object_notify(G_OBJECT(ruler), "units_placement");
+    g_object_thaw_notify(G_OBJECT(ruler));
+
+    if (GTK_WIDGET_DRAWABLE(ruler))
+        gtk_widget_queue_draw(GTK_WIDGET(ruler));
+}
+
+GwyUnitsPlacement
+gwy_ruler_get_units_placement(GwyRuler *ruler)
+{
+    g_return_val_if_fail(GWY_IS_RULER(ruler), GWY_UNITS_PLACEMENT_NONE);
+    return ruler->units_placement;
 }
 
 void

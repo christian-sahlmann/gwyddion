@@ -36,6 +36,8 @@ struct _GwyDataView {
     GwyDataViewLayer *alpha_layer;
     GwyDataViewLayer *base_layer;
 
+    gdouble zoom;    /* zoom (larger number means larger pixmaps) */
+
     GdkPixbuf *pixbuf;      /* everything, this is drawn on the screen */
     GdkPixbuf *base_pixbuf; /* unscaled base (lower layers) */
 };
@@ -56,6 +58,11 @@ void              gwy_data_view_set_alpha_layer   (GwyDataView *data_view,
                                                    GwyDataViewLayer *layer);
 void              gwy_data_view_set_top_layer     (GwyDataView *data_view,
                                                    GwyDataViewLayer *layer);
+gdouble           gwy_data_view_get_hexcess       (GwyDataView* data_view);
+gdouble           gwy_data_view_get_vexcess       (GwyDataView* data_view);
+void              gwy_data_view_set_zoom          (GwyDataView *data_view,
+                                                   gdouble zoom);
+gdouble           gwy_data_view_get_zoom          (GwyDataView *data_view);
 
 #ifdef __cplusplus
 }

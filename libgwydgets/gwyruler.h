@@ -21,7 +21,7 @@
  * Modified by the GTK+ Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GTK+ Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GTK+ at ftp://ftp.gtk.org/pub/gtk/. 
+ * GTK+ at ftp://ftp.gtk.org/pub/gtk/.
  */
 
 /*
@@ -54,6 +54,11 @@ typedef struct _GwyRuler        GwyRuler;
 typedef struct _GwyRulerClass   GwyRulerClass;
 typedef struct _GwyRulerMetric  GwyRulerMetric;
 
+typedef enum {
+    GWY_UNITS_PLACEMENT_NONE,
+    GWY_UNITS_PLACEMENT_AT_ZERO,
+} GwyUnitsPlacement;
+
 /* All distances below are in 1/72nd's of an inch. (According to
  * Adobe that's a point, but points are really 1/72.27 in.)
  */
@@ -66,15 +71,12 @@ struct _GwyRuler
     GwyRulerMetric *metric;
     gint xsrc, ysrc;
     gint slider_size;
+    GwyUnitsPlacement units_placement;
 
-    /* The upper limit of the ruler(in points) */
-    gdouble lower;
-    /* The lower limit of the ruler */
-    gdouble upper;
-    /* The position of the mark on the ruler */
-    gdouble position;
-    /* The maximum size of the ruler */
-    gdouble max_size;
+    gdouble lower;    /* The upper limit of the ruler(in points) */
+    gdouble upper;    /* The lower limit of the ruler */
+    gdouble position;    /* The position of the mark on the ruler */
+    gdouble max_size;    /* The maximum size of the ruler */
 };
 
 struct _GwyRulerClass
@@ -97,29 +99,33 @@ struct _GwyRulerMetric
     gchar *abbrev;
     /* This should be points_per_unit. This is the size of the unit
      * in 1/72nd's of an inch and has nothing to do with screen pixels */
-    gdouble pixels_per_unit;
+    gdouble units_per_meter;
     gdouble ruler_scale[10];
     gint subdivide[5];        /* five possible modes of subdivision */
 };
 
 
-GType   gwy_ruler_get_type   (void) G_GNUC_CONST;
-void    gwy_ruler_set_metric (GwyRuler      *ruler,
-                             GtkMetricType  metric);
-void    gwy_ruler_set_range  (GwyRuler      *ruler,
-                              gdouble        lower,
-                              gdouble        upper,
-                              gdouble        position,
-                              gdouble        max_size);
-void    gwy_ruler_draw_ticks (GwyRuler      *ruler);
-void    gwy_ruler_draw_pos   (GwyRuler      *ruler);
+GType             gwy_ruler_get_type            (void) G_GNUC_CONST;
+void              gwy_ruler_set_metric          (GwyRuler      *ruler,
+                                                 GtkMetricType  metric);
+void              gwy_ruler_set_range           (GwyRuler      *ruler,
+                                                 gdouble        lower,
+                                                 gdouble        upper,
+                                                 gdouble        position,
+                                                 gdouble        max_size);
+void              gwy_ruler_draw_ticks          (GwyRuler      *ruler);
+void              gwy_ruler_draw_pos            (GwyRuler      *ruler);
 
-GtkMetricType gwy_ruler_get_metric (GwyRuler *ruler);
-void          gwy_ruler_get_range  (GwyRuler *ruler,
-                                    gdouble  *lower,
-                                    gdouble  *upper,
-                                    gdouble  *position,
-                                    gdouble  *max_size);
+GtkMetricType     gwy_ruler_get_metric          (GwyRuler *ruler);
+void              gwy_ruler_get_range           (GwyRuler *ruler,
+                                                 gdouble  *lower,
+                                                 gdouble  *upper,
+                                                 gdouble  *position,
+                                                 gdouble  *max_size);
+
+GwyUnitsPlacement gwy_ruler_get_units_placement (GwyRuler *ruler);
+void              gwy_ruler_set_units_placement (GwyRuler *ruler,
+                                                 GwyUnitsPlacement placement);
 
 #ifdef __cplusplus
 }

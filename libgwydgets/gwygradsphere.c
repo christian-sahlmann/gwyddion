@@ -277,7 +277,6 @@ gwy_grad_sphere_set_property(GObject *object,
                                           g_value_get_enum(value));
         break;
 
-        break;
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
