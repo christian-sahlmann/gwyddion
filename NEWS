@@ -34,6 +34,7 @@ Library:
 - libgwyprocess: Speed of most grain methods was considerably improved.
 - libgwydgets: 3D View light position marker was fixed to reflect actual light
                position
+- libgwydgets: Graph colors consistent between different visuals (bug #22)
 - libgwyddion: Serialization packer and unpacker for hash-like objects, new
                primitive types: string list, object list.
 
