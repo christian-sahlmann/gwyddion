@@ -40,6 +40,8 @@
 
 #ifndef G_OS_WIN32
 #include <unistd.h>
+#else
+#include <errno.h>
 #endif
 
 #define PLUGIN_PROXY_RUN_MODES \
@@ -110,6 +112,7 @@ static void            dump_export_meta_cb       (gpointer hkey,
 static void            dump_export_data_field    (GwyDataField *dfield,
                                                   const gchar *name,
                                                   FILE *fh);
+static FILE*           open_temporary_file       (gchar **filename);
 static GwyContainer*   text_dump_import          (GwyContainer *old_data,
                                                   gchar *buffer,
                                                   gsize size);
@@ -486,20 +489,13 @@ file_plugin_proxy_load(const gchar *filename,
     FILE *fh;
     gchar *args[] = { NULL, NULL, NULL, NULL, NULL };
     gboolean ok;
-    gint fd;
 
     gwy_debug("called as %s with file `%s'", name, filename);
     if (!(info = file_find_plugin(name, GWY_FILE_LOAD)))
         return FALSE;
 
-    fd = g_file_open_tmp("gwydXXXXXXXX", &tmpname, &err);
-    if (fd < 0) {
-        g_warning("Cannot create a temporary file: %s", err->message);
-        g_clear_error(&err);
+    if (!(fh = open_temporary_file(&tmpname)))
         return FALSE;
-    }
-    fh = fdopen(fd, "wb");
-    g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
     args[1] = g_strdup(gwy_enum_to_string(GWY_FILE_LOAD, file_op_names, -1));
     args[2] = tmpname;
@@ -799,16 +795,10 @@ static FILE*
 text_dump_export(GwyContainer *data, gchar **filename)
 {
     GwyDataField *dfield;
-    GError *err = NULL;
     FILE *fh;
-    gint fd;
 
-    fd = g_file_open_tmp("gwydXXXXXXXX", filename, &err);
-    if (fd < 0) {
-        g_warning("Cannot create a temporary file: %s", err->message);
+    if (!(fh = open_temporary_file(filename)))
         return NULL;
-    }
-    fh = fdopen(fd, "wb");
     gwy_container_foreach(data, "/meta", (GHFunc)dump_export_meta_cb, fh);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     dump_export_data_field(dfield, "/0/data", fh);
@@ -866,6 +856,39 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
     fwrite(dfield->data, sizeof(gdouble), xres*yres, fh);
     fwrite("]]\n", 1, 3, fh);
     fflush(fh);
+}
+
+static FILE*
+open_temporary_file(gchar **filename)
+{
+    FILE *fh;
+#ifdef G_OS_WIN32
+    gchar buf[9];
+    gsize i;
+
+    for (i = 0; i < sizeof(buf)-1; i++)
+        buf[i] = 'a' + (rand()/283)%26;
+    buf[sizeof(buf)-1] = '\0';
+    *filename = g_build_filename(g_get_tmp_dir(), buf, NULL);
+
+    fh = fopen(*filename, "wb");
+    if (!fh)
+        g_warning("Cannot create a temporary file: %s", g_strerror(errno));
+#else
+    GError *err = NULL;
+    int fd;
+
+    fd = g_file_open_tmp("gwydXXXXXXXX", filename, &err);
+    if (fd < 0) {
+        g_warning("Cannot create a temporary file: %s", err->message);
+        g_clear_error(&err);
+        return NULL;
+    }
+    fh = fdopen(fd, "wb");
+    g_assert(fh != NULL);
+#endif
+
+    return fh;
 }
 
 static GwyContainer*
@@ -1020,7 +1043,7 @@ next_line(gchar **buffer)
     q = *buffer;
     p = strchr(*buffer, '\n');
     if (p) {
-        if (p > buffer && *(p-1) == '\r')
+        if (p > *buffer && *(p-1) == '\r')
             *(p-1) = '\0';
         *buffer = p+1;
         *p = '\0';
