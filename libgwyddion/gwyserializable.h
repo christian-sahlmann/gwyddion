@@ -49,15 +49,12 @@ struct _GwySerializableIface {
     GwyDuplicateFunc duplicate;
 };
 
-/* FIXME: remove underscore in 2.0, it's public */
-typedef struct _GwySerializeSpec GwySerializeSpec;
-
-struct _GwySerializeSpec {
+typedef struct {
     guchar ctype;
     const guchar *name;
     gpointer value;
     guint32 *array_size;
-};
+} GwySerializeSpec;
 
 typedef union {
     gboolean v_boolean;
@@ -91,46 +88,6 @@ GObject*    gwy_serializable_deserialize         (const guchar *buffer,
                                                   gsize *position);
 GObject*    gwy_serializable_duplicate           (GObject *object);
 
-#ifndef GWY_DISABLE_DEPRECATED
-gboolean    gwy_serialize_unpack_boolean         (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-guchar      gwy_serialize_unpack_char            (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-guchar*     gwy_serialize_unpack_char_array      (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position,
-                                                  gsize *asize);
-gint32      gwy_serialize_unpack_int32           (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-gint32*     gwy_serialize_unpack_int32_array     (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position,
-                                                  gsize *asize);
-gint64      gwy_serialize_unpack_int64           (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-gint64*     gwy_serialize_unpack_int64_array     (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position,
-                                                  gsize *asize);
-gdouble     gwy_serialize_unpack_double          (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-gdouble*    gwy_serialize_unpack_double_array    (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position,
-                                                  gsize *asize);
-guchar*     gwy_serialize_unpack_string          (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-gsize       gwy_serialize_check_string           (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize position,
-                                                  const guchar *compare_to);
-#endif
 GByteArray* gwy_serialize_pack_object_struct     (GByteArray *buffer,
                                                   const guchar *object_name,
                                                   gsize nspec,

@@ -23,8 +23,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -53,7 +53,7 @@ static GwyModuleInfo module_info = {
     "gwyfile",
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -176,6 +176,152 @@ gwyfile_save(GwyContainer *data,
     g_byte_array_free(buffer, TRUE);
 
     return ok;
+}
+
+static inline gboolean
+gwy_serialize_unpack_boolean(const guchar *buffer,
+                             gsize size,
+                             gsize *position)
+{
+    gboolean value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(guchar) <= size, FALSE);
+    value = !!buffer[*position];
+    *position += sizeof(guchar);
+
+    gwy_debug("value = <%s>", value ? "TRUE" : "FALSE");
+    return value;
+}
+
+static inline guchar
+gwy_serialize_unpack_char(const guchar *buffer,
+                          gsize size,
+                          gsize *position)
+{
+    guchar value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(guchar) <= size, '\0');
+    value = buffer[*position];
+    *position += sizeof(guchar);
+
+    gwy_debug("value = <%c>", value);
+    return value;
+}
+
+static inline gint32
+gwy_serialize_unpack_int32(const guchar *buffer,
+                           gsize size,
+                           gsize *position)
+{
+    gint32 value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(gint32) <= size, 0);
+    memcpy(&value, buffer + *position, sizeof(gint32));
+    value = GINT32_FROM_LE(value);
+    *position += sizeof(gint32);
+
+    gwy_debug("value = <%d>", value);
+    return value;
+}
+
+static inline gint64
+gwy_serialize_unpack_int64(const guchar *buffer,
+                           gsize size,
+                           gsize *position)
+{
+    gint64 value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(gint64) <= size, 0);
+    memcpy(&value, buffer + *position, sizeof(gint64));
+    value = GINT64_FROM_LE(value);
+    *position += sizeof(gint64);
+
+    gwy_debug("value = <%lld>", value);
+    return value;
+}
+
+static inline gdouble
+gwy_serialize_unpack_double(const guchar *buffer,
+                            gsize size,
+                            gsize *position)
+{
+    gdouble value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(gdouble) <= size, 0.0);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    memcpy(&value, buffer + *position, sizeof(gdouble));
+#else
+    gwy_byteswapped_copy(buffer + *position, (guint8*)&value,
+                         sizeof(gdouble), 1, (1 << sizeof(gdouble)) - 1);
+#endif
+    *position += sizeof(gdouble);
+
+    gwy_debug("value = <%g>", value);
+    return value;
+}
+
+static inline guchar*
+gwy_serialize_unpack_string(const guchar *buffer,
+                            gsize size,
+                            gsize *position)
+{
+    guchar *value;
+    const guchar *p;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position < size, NULL);
+    p = memchr(buffer + *position, 0, size - *position);
+    g_return_val_if_fail(p, NULL);
+    value = g_strdup(buffer + *position);
+    *position += (p - buffer) - *position + 1;
+
+    gwy_debug("value = <%s>", value);
+    return value;
+}
+
+static inline gsize
+gwy_serialize_check_string(const guchar *buffer,
+                           gsize size,
+                           gsize position,
+                           const guchar *compare_to)
+{
+    const guchar *p;
+
+    gwy_debug("<%s> buf = %p, size = %" G_GSIZE_FORMAT ", pos = %"
+              G_GSIZE_FORMAT,
+              compare_to ? compare_to : (const guchar*)"(null)",
+              buffer, size, position);
+    g_assert(buffer);
+    g_assert(size > 0);
+    g_return_val_if_fail(position < size, 0);
+    p = (guchar*)memchr(buffer + position, 0, size - position);
+    if (!p || (compare_to && strcmp(buffer + position, compare_to)))
+        return 0;
+
+    return (p - buffer) + 1 - position;
 }
 
 static GObject*

@@ -38,14 +38,10 @@ static GObject*    gwy_serializable_duplicate_hard_way (GObject *object);
 
 static GByteArray* gwy_serialize_spec              (GByteArray *buffer,
                                                     const GwySerializeSpec *sp);
-static guchar**    gwy_deserialize_string_array    (const guchar *buffer,
+static gsize       gwy_serialize_check_string      (const guchar *buffer,
                                                     gsize size,
-                                                    gsize *position,
-                                                    gsize *asize);
-static GObject**   gwy_deserialize_object_array    (const guchar *buffer,
-                                                    gsize size,
-                                                    gsize *position,
-                                                    gsize *asize);
+                                                    gsize position,
+                                                    const guchar *compare_to);
 static gboolean    gwy_deserialize_spec_value      (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position,
@@ -898,6 +894,69 @@ gwy_serialize_spec(GByteArray *buffer,
  ****************************************************************************/
 
 /**
+ * gwy_deserialize_int32:
+ * @buffer: A memory location containing a serialized 32bit integer at position
+ *          @position.
+ * @size: The size of @buffer.
+ * @position: The position of the integer in @buffer, it's updated to
+ *            point after it.
+ *
+ * Deserializes a one 32bit integer.
+ *
+ * Returns: The integer as gint32.
+ **/
+static inline gint32
+gwy_deserialize_int32(const guchar *buffer,
+                           gsize size,
+                           gsize *position)
+{
+    gint32 value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(gint32) <= size, 0);
+    memcpy(&value, buffer + *position, sizeof(gint32));
+    value = GINT32_FROM_LE(value);
+    *position += sizeof(gint32);
+
+    gwy_debug("value = <%d>", value);
+    return value;
+}
+
+/**
+ * gwy_deserialize_char:
+ * @buffer: A memory location containing a serialized character at position
+ *          @position.
+ * @size: The size of @buffer.
+ * @position: The position of the character in @buffer, it's updated to
+ *            point after it.
+ *
+ * Deserializes a one character.
+ *
+ * Returns: The character as guchar.
+ **/
+static inline guchar
+gwy_deserialize_char(const guchar *buffer,
+                          gsize size,
+                          gsize *position)
+{
+    guchar value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(guchar) <= size, '\0');
+    value = buffer[*position];
+    *position += sizeof(guchar);
+
+    gwy_debug("value = <%c>", value);
+    return value;
+}
+
+/**
  * gwy_serialize_skip_type:
  * @buffer: Serialized data.
  * @size: Size of @buffer.
@@ -967,7 +1026,7 @@ gwy_serialize_skip_type(const guchar *buffer,
             *position = size;
             return;
         }
-        tsize = gwy_serialize_unpack_int32(buffer, size, position);
+        tsize = gwy_deserialize_int32(buffer, size, position);
         /* ...and the data */
         if (*position + tsize > size) {
             g_warning(too_short_msg, tsize, ctype, size - *position);
@@ -985,7 +1044,7 @@ gwy_serialize_skip_type(const guchar *buffer,
             *position = size;
             return;
         }
-        alen = gwy_serialize_unpack_int32(buffer, size, position);
+        alen = gwy_deserialize_int32(buffer, size, position);
         while (alen) {
             tsize = gwy_serialize_check_string(buffer, size, *position, NULL);
             if (!tsize) {
@@ -1006,7 +1065,7 @@ gwy_serialize_skip_type(const guchar *buffer,
             *position = size;
             return;
         }
-        alen = gwy_serialize_unpack_int32(buffer, size, position);
+        alen = gwy_deserialize_int32(buffer, size, position);
         while (alen) {
             /* an object consists of its name... */
             tsize = gwy_serialize_check_string(buffer, size, *position, NULL);
@@ -1023,7 +1082,7 @@ gwy_serialize_skip_type(const guchar *buffer,
                 *position = size;
                 return;
             }
-            tsize = gwy_serialize_unpack_int32(buffer, size, position);
+            tsize = gwy_deserialize_int32(buffer, size, position);
             /* ...and the data */
             if (*position + tsize > size) {
                 g_warning(too_short_msg, tsize, ctype, size - *position);
@@ -1045,7 +1104,7 @@ gwy_serialize_skip_type(const guchar *buffer,
             *position = size;
             return;
         }
-        alen = gwy_serialize_unpack_int32(buffer, size, position);
+        alen = gwy_deserialize_int32(buffer, size, position);
         if (*position + alen*tsize > size) {
             g_warning(too_short_msg, alen*tsize, ctype, size - *position);
             *position = size;
@@ -1088,7 +1147,7 @@ gwy_serialize_unpack_struct(const guchar *buffer,
             g_warning("Got past the end of truncated or corrupted buffer");
             return FALSE;
         }
-        ctype = gwy_serialize_unpack_char(buffer, size, &position);
+        ctype = gwy_deserialize_char(buffer, size, &position);
         if ((gsize)(sp - spec) == nspec) {
             g_warning("Extra component %s of type `%c'", name, ctype);
             gwy_serialize_skip_type(buffer, size, &position, ctype);
@@ -1129,7 +1188,7 @@ gwy_serialize_unpack_object_struct(const guchar *buffer,
     g_return_val_if_fail(mysize, FALSE);
     *position += mysize;
 
-    mysize = gwy_serialize_unpack_int32(buffer, size, position);
+    mysize = gwy_deserialize_int32(buffer, size, position);
     g_return_val_if_fail(mysize <= size - *position, FALSE);
     ok = gwy_serialize_unpack_struct(buffer + *position, mysize, nspec, spec);
     *position += mysize;
@@ -1176,7 +1235,7 @@ gwy_deserialize_object_hash(const guchar *buffer,
     g_return_val_if_fail(mysize, NULL);
     *position += mysize;
 
-    mysize = gwy_serialize_unpack_int32(buffer, size, position);
+    mysize = gwy_deserialize_int32(buffer, size, position);
     g_return_val_if_fail(mysize <= size - *position, NULL);
     items = gwy_deserialize_hash_items(buffer + *position, mysize, nitems);
     *position += mysize;
@@ -1211,7 +1270,7 @@ gwy_deserialize_hash_items(const guchar *buffer,
             g_warning("Got past the end of truncated or corrupted buffer");
             break;
         }
-        it.ctype = gwy_serialize_unpack_char(buffer, size, &position);
+        it.ctype = gwy_deserialize_char(buffer, size, &position);
         if (position + ctype_size(it.ctype) > size) {
             g_warning("Got past the end of truncated or corrupted buffer");
             break;
@@ -1230,6 +1289,400 @@ gwy_deserialize_hash_items(const guchar *buffer,
     g_array_free(items, FALSE);
 
     return pit;
+}
+
+/**
+ * gwy_deserialize_boolean:
+ * @buffer: A memory location containing a serialized boolean at position
+ *          @position.
+ * @size: The size of @buffer.
+ * @position: The position of the character in @buffer, it's updated to
+ *            point after it.
+ *
+ * Deserializes a one boolean.
+ *
+ * Returns: The boolean as gboolean.
+ **/
+static inline gboolean
+gwy_deserialize_boolean(const guchar *buffer,
+                             gsize size,
+                             gsize *position)
+{
+    gboolean value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(guchar) <= size, FALSE);
+    value = !!buffer[*position];
+    *position += sizeof(guchar);
+
+    gwy_debug("value = <%s>", value ? "TRUE" : "FALSE");
+    return value;
+}
+
+/**
+ * gwy_deserialize_char_array:
+ * @buffer: A memory location containing a serialized character array at
+ *          position @position.
+ * @size: The size of @buffer.
+ * @position: The position of the array in @buffer, it's updated to
+ *            point after it.
+ * @asize: Where the size of the array is to be returned on success.
+ *
+ * Deserializes a character array.
+ *
+ * Returns: The unpacked character array (newly allocated).
+ **/
+static inline guchar*
+gwy_deserialize_char_array(const guchar *buffer,
+                                gsize size,
+                                gsize *position,
+                                gsize *asize)
+{
+    guchar *value;
+    gsize newasize;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+
+    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
+        return NULL;
+    g_return_val_if_fail(*position + newasize*sizeof(guchar) <= size, NULL);
+    value = g_memdup(buffer + *position, newasize*sizeof(guchar));
+    *position += newasize*sizeof(guchar);
+    *asize = newasize;
+
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
+    return value;
+}
+
+/**
+ * gwy_deserialize_int32_array:
+ * @buffer: A memory location containing a serialized int32 array at
+ *          position @position.
+ * @size: The size of @buffer.
+ * @position: The position of the array in @buffer, it's updated to
+ *            point after it.
+ * @asize: Where the size of the array is to be returned on success.
+ *
+ * Deserializes an int32 array.
+ *
+ * Returns: The unpacked 32bit integer array (newly allocated).
+ **/
+static inline gint32*
+gwy_deserialize_int32_array(const guchar *buffer,
+                                 gsize size,
+                                 gsize *position,
+                                 gsize *asize)
+{
+    gint32 *value;
+    gsize newasize;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+
+    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
+        return NULL;
+    g_return_val_if_fail(*position + newasize*sizeof(gint32) <= size, NULL);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    value = g_memdup(buffer + *position, newasize*sizeof(gint32));
+#else
+    value = g_new(gint32, newasize);
+    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
+                         sizeof(gint32), newasize, (1 << sizeof(gint32)) - 1);
+#endif
+    *position += newasize*sizeof(gint32);
+    *asize = newasize;
+
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
+    return value;
+}
+
+/**
+ * gwy_deserialize_int64:
+ * @buffer: A memory location containing a serialized 64bit integer at position
+ *          @position.
+ * @size: The size of @buffer.
+ * @position: The position of the integer in @buffer, it's updated to
+ *            point after it.
+ *
+ * Deserializes a one 64bit integer.
+ *
+ * Returns: The integer as gint64.
+ **/
+static inline gint64
+gwy_deserialize_int64(const guchar *buffer,
+                           gsize size,
+                           gsize *position)
+{
+    gint64 value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(gint64) <= size, 0);
+    memcpy(&value, buffer + *position, sizeof(gint64));
+    value = GINT64_FROM_LE(value);
+    *position += sizeof(gint64);
+
+    gwy_debug("value = <%lld>", value);
+    return value;
+}
+
+/**
+ * gwy_deserialize_int64_array:
+ * @buffer: A memory location containing a serialized int64 array at
+ *          position @position.
+ * @size: The size of @buffer.
+ * @position: The position of the array in @buffer, it's updated to
+ *            point after it.
+ * @asize: Where the size of the array is to be returned on success.
+ *
+ * Deserializes an int64 array.
+ *
+ * Returns: The unpacked 64bit integer array (newly allocated).
+ **/
+static inline gint64*
+gwy_deserialize_int64_array(const guchar *buffer,
+                                 gsize size,
+                                 gsize *position,
+                                 gsize *asize)
+{
+    gint64 *value;
+    gsize newasize;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+
+    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
+        return NULL;
+    g_return_val_if_fail(*position + newasize*sizeof(gint64) <= size, NULL);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    value = g_memdup(buffer + *position, newasize*sizeof(gint64));
+#else
+    value = g_new(gint64, newasize);
+    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
+                         sizeof(gint64), newasize, (1 << sizeof(gint64)) - 1);
+#endif
+    *position += newasize*sizeof(gint64);
+    *asize = newasize;
+
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
+    return value;
+}
+
+/**
+ * gwy_deserialize_double:
+ * @buffer: A memory location containing a serialized gdouble at position
+ *          @position.
+ * @size: The size of @buffer.
+ * @position: The position of the integer in @buffer, it's updated to
+ *            point after it.
+ *
+ * Deserializes a one gdouble.
+ *
+ * Returns: The integer as gdouble.
+ **/
+static inline gdouble
+gwy_deserialize_double(const guchar *buffer,
+                            gsize size,
+                            gsize *position)
+{
+    gdouble value;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position + sizeof(gdouble) <= size, 0.0);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    memcpy(&value, buffer + *position, sizeof(gdouble));
+#else
+    gwy_byteswapped_copy(buffer + *position, (guint8*)&value,
+                         sizeof(gdouble), 1, (1 << sizeof(gdouble)) - 1);
+#endif
+    *position += sizeof(gdouble);
+
+    gwy_debug("value = <%g>", value);
+    return value;
+}
+
+/**
+ * gwy_deserialize_double_array:
+ * @buffer: A memory location containing a serialized gdouble array at
+ *          position @position.
+ * @size: The size of @buffer.
+ * @position: The position of the array in @buffer, it's updated to
+ *            point after it.
+ * @asize: Where the size of the array is to be returned on success.
+ *
+ * Deserializes a gdouble array.
+ *
+ * Returns: The unpacked gdouble array (newly allocated).
+ **/
+static inline gdouble*
+gwy_deserialize_double_array(const guchar *buffer,
+                                  gsize size,
+                                  gsize *position,
+                                  gsize *asize)
+{
+    gdouble *value;
+    gsize newasize;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+
+    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
+        return NULL;
+    g_return_val_if_fail(*position + newasize*sizeof(gdouble) <= size, NULL);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    value = g_memdup(buffer + *position, newasize*sizeof(gdouble));
+#else
+    value = g_new(gdouble, newasize);
+    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
+                         sizeof(gdouble), newasize, (1 << sizeof(gdouble)) - 1);
+#endif
+    *position += newasize*sizeof(gdouble);
+    *asize = newasize;
+
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
+    return value;
+}
+
+/**
+ * gwy_deserialize_string:
+ * @buffer: A memory location containing a serialized nul-terminated string at
+ *          position @position.
+ * @size: The size of @buffer.
+ * @position: The position of the string in @buffer, it's updated to
+ *            point after it.
+ *
+ * Deserializes a one nul-terminated string.
+ *
+ * Returns: A newly allocated, nul-terminated string.
+ **/
+static inline guchar*
+gwy_deserialize_string(const guchar *buffer,
+                            gsize size,
+                            gsize *position)
+{
+    guchar *value;
+    const guchar *p;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+    g_assert(buffer);
+    g_assert(position);
+    g_return_val_if_fail(*position < size, NULL);
+    p = memchr(buffer + *position, 0, size - *position);
+    g_return_val_if_fail(p, NULL);
+    value = g_strdup(buffer + *position);
+    *position += (p - buffer) - *position + 1;
+
+    gwy_debug("value = <%s>", value);
+    return value;
+}
+
+/**
+ * gwy_deserialize_string_array:
+ * @buffer: A memory location containing an array of serialized nul-terminated
+ *          string at position @position.
+ * @size: The size of @buffer.
+ * @position: The position of the string array in @buffer, it's updated to
+ *            after it.
+ * @asize: Where the size of the array is to be returned on success.
+ *
+ * Deserializes a string array.
+ *
+ * Returns: A newly allocated array of nul-terminated strings.
+ **/
+static inline guchar**
+gwy_deserialize_string_array(const guchar *buffer,
+                             gsize size,
+                             gsize *position,
+                             gsize *asize)
+{
+    guchar **value;
+    gsize newasize, j;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+
+    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
+        return NULL;
+    g_return_val_if_fail(*position + newasize*sizeof(guchar) <= size, NULL);
+    value = g_new(guchar*, newasize);
+    for (j = 0; j < newasize; j++) {
+        value[j] = gwy_deserialize_string(buffer, size, position);
+        if (!value[j]) {
+            while (j) {
+                j--;
+                g_free(value[j]);
+            }
+            g_free(value);
+            return NULL;
+        }
+    }
+    *asize = newasize;
+
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
+    return value;
+}
+
+/**
+ * gwy_deserialize_object_array:
+ * @buffer: A memory location containing an array of serialized object at
+ *          position @position.
+ * @size: The size of @buffer.
+ * @position: The position of the object array in @buffer, it's updated to
+ *            after it.
+ * @asize: Where the size of the array is to be returned on success.
+ *
+ * Deserializes an object array.
+ *
+ * Returns: A newly allocated array of objects.
+ **/
+static inline GObject**
+gwy_deserialize_object_array(const guchar *buffer,
+                             gsize size,
+                             gsize *position,
+                             gsize *asize)
+{
+    GObject **value;
+    gsize j, newasize, minsize;
+
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
+
+    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
+    minsize = 2*sizeof(guchar) + sizeof(gint32);  /* Size of empty object */
+    if (!(newasize = gwy_deserialize_int32(buffer, size, position)))
+        return NULL;
+    g_return_val_if_fail(*position + newasize*minsize <= size, NULL);
+    value = g_new(GObject*, newasize);
+    for (j = 0; j < newasize; j++) {
+        value[j] = gwy_serializable_deserialize(buffer, size, position);
+        if (!value[j]) {
+            while (j) {
+                j--;
+                g_object_unref(value[j]);
+            }
+            g_free(value);
+            return NULL;
+        }
+    }
+    *asize = newasize;
+
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
+    return value;
 }
 
 /**
@@ -1269,29 +1722,29 @@ gwy_deserialize_spec_value(const guchar *buffer,
         break;
 
         case 'b':
-        *(gboolean*)p = gwy_serialize_unpack_boolean(buffer, size, position);
+        *(gboolean*)p = gwy_deserialize_boolean(buffer, size, position);
         break;
 
         case 'c':
-        *(guchar*)p = gwy_serialize_unpack_char(buffer, size, position);
+        *(guchar*)p = gwy_deserialize_char(buffer, size, position);
         break;
 
         case 'i':
-        *(gint32*)p = gwy_serialize_unpack_int32(buffer, size, position);
+        *(gint32*)p = gwy_deserialize_int32(buffer, size, position);
         break;
 
         case 'q':
-        *(gint64*)p = gwy_serialize_unpack_int64(buffer, size, position);
+        *(gint64*)p = gwy_deserialize_int64(buffer, size, position);
         break;
 
         case 'd':
-        *(gdouble*)p = gwy_serialize_unpack_double(buffer, size, position);
+        *(gdouble*)p = gwy_deserialize_double(buffer, size, position);
         break;
 
         case 's': {
             guchar *val, *old = *(guchar**)p;
 
-            val = gwy_serialize_unpack_string(buffer, size, position);
+            val = gwy_deserialize_string(buffer, size, position);
             if (val) {
                 *(guchar**)p = val;
                 g_free(old);
@@ -1303,7 +1756,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
             guchar *val, *old = *(guchar**)p;
             gsize len;
 
-            val = gwy_serialize_unpack_char_array(buffer, size,
+            val = gwy_deserialize_char_array(buffer, size,
                                                   position, &len);
             if (val) {
                 *a = len;
@@ -1317,7 +1770,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
             guint32 *val, *old = *(guint32**)p;
             gsize len;
 
-            val = gwy_serialize_unpack_int32_array(buffer, size,
+            val = gwy_deserialize_int32_array(buffer, size,
                                                    position, &len);
             if (val) {
                 *a = len;
@@ -1331,7 +1784,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
             guint64 *val, *old = *(guint64**)p;
             gsize len;
 
-            val = gwy_serialize_unpack_int64_array(buffer, size,
+            val = gwy_deserialize_int64_array(buffer, size,
                                                    position, &len);
             if (val) {
                 *a = len;
@@ -1345,7 +1798,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
             gdouble *val, *old = *(gdouble**)p;
             gsize len;
 
-            val = gwy_serialize_unpack_double_array(buffer, size,
+            val = gwy_deserialize_double_array(buffer, size,
                                                     position, &len);
             if (val) {
                 *a = len;
@@ -1400,463 +1853,6 @@ gwy_deserialize_spec_value(const guchar *buffer,
 }
 
 /**
- * gwy_serialize_unpack_boolean:
- * @buffer: A memory location containing a serialized boolean at position
- *          @position.
- * @size: The size of @buffer.
- * @position: The position of the character in @buffer, it's updated to
- *            point after it.
- *
- * Deserializes a one boolean.
- *
- * Returns: The boolean as gboolean.
- **/
-gboolean
-gwy_serialize_unpack_boolean(const guchar *buffer,
-                             gsize size,
-                             gsize *position)
-{
-    gboolean value;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-    g_assert(buffer);
-    g_assert(position);
-    g_return_val_if_fail(*position + sizeof(guchar) <= size, FALSE);
-    value = !!buffer[*position];
-    *position += sizeof(guchar);
-
-    gwy_debug("value = <%s>", value ? "TRUE" : "FALSE");
-    return value;
-}
-
-/**
- * gwy_serialize_unpack_char:
- * @buffer: A memory location containing a serialized character at position
- *          @position.
- * @size: The size of @buffer.
- * @position: The position of the character in @buffer, it's updated to
- *            point after it.
- *
- * Deserializes a one character.
- *
- * Returns: The character as guchar.
- **/
-guchar
-gwy_serialize_unpack_char(const guchar *buffer,
-                          gsize size,
-                          gsize *position)
-{
-    guchar value;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-    g_assert(buffer);
-    g_assert(position);
-    g_return_val_if_fail(*position + sizeof(guchar) <= size, '\0');
-    value = buffer[*position];
-    *position += sizeof(guchar);
-
-    gwy_debug("value = <%c>", value);
-    return value;
-}
-
-/**
- * gwy_serialize_unpack_char_array:
- * @buffer: A memory location containing a serialized character array at
- *          position @position.
- * @size: The size of @buffer.
- * @position: The position of the array in @buffer, it's updated to
- *            point after it.
- * @asize: Where the size of the array is to be returned on success.
- *
- * Deserializes a character array.
- *
- * Returns: The unpacked character array (newly allocated).
- **/
-guchar*
-gwy_serialize_unpack_char_array(const guchar *buffer,
-                                gsize size,
-                                gsize *position,
-                                gsize *asize)
-{
-    guchar *value;
-    gsize newasize;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
-    if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
-        return NULL;
-    g_return_val_if_fail(*position + newasize*sizeof(guchar) <= size, NULL);
-    value = g_memdup(buffer + *position, newasize*sizeof(guchar));
-    *position += newasize*sizeof(guchar);
-    *asize = newasize;
-
-    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
-    return value;
-}
-
-/**
- * gwy_serialize_unpack_int32:
- * @buffer: A memory location containing a serialized 32bit integer at position
- *          @position.
- * @size: The size of @buffer.
- * @position: The position of the integer in @buffer, it's updated to
- *            point after it.
- *
- * Deserializes a one 32bit integer.
- *
- * Returns: The integer as gint32.
- **/
-gint32
-gwy_serialize_unpack_int32(const guchar *buffer,
-                           gsize size,
-                           gsize *position)
-{
-    gint32 value;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-    g_assert(buffer);
-    g_assert(position);
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, 0);
-    memcpy(&value, buffer + *position, sizeof(gint32));
-    value = GINT32_FROM_LE(value);
-    *position += sizeof(gint32);
-
-    gwy_debug("value = <%d>", value);
-    return value;
-}
-
-/**
- * gwy_serialize_unpack_int32_array:
- * @buffer: A memory location containing a serialized int32 array at
- *          position @position.
- * @size: The size of @buffer.
- * @position: The position of the array in @buffer, it's updated to
- *            point after it.
- * @asize: Where the size of the array is to be returned on success.
- *
- * Deserializes an int32 array.
- *
- * Returns: The unpacked 32bit integer array (newly allocated).
- **/
-gint32*
-gwy_serialize_unpack_int32_array(const guchar *buffer,
-                                 gsize size,
-                                 gsize *position,
-                                 gsize *asize)
-{
-    gint32 *value;
-    gsize newasize;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
-    if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
-        return NULL;
-    g_return_val_if_fail(*position + newasize*sizeof(gint32) <= size, NULL);
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    value = g_memdup(buffer + *position, newasize*sizeof(gint32));
-#else
-    value = g_new(gint32, newasize);
-    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
-                         sizeof(gint32), newasize, (1 << sizeof(gint32)) - 1);
-#endif
-    *position += newasize*sizeof(gint32);
-    *asize = newasize;
-
-    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
-    return value;
-}
-
-/**
- * gwy_serialize_unpack_int64:
- * @buffer: A memory location containing a serialized 64bit integer at position
- *          @position.
- * @size: The size of @buffer.
- * @position: The position of the integer in @buffer, it's updated to
- *            point after it.
- *
- * Deserializes a one 64bit integer.
- *
- * Returns: The integer as gint64.
- **/
-gint64
-gwy_serialize_unpack_int64(const guchar *buffer,
-                           gsize size,
-                           gsize *position)
-{
-    gint64 value;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-    g_assert(buffer);
-    g_assert(position);
-    g_return_val_if_fail(*position + sizeof(gint64) <= size, 0);
-    memcpy(&value, buffer + *position, sizeof(gint64));
-    value = GINT64_FROM_LE(value);
-    *position += sizeof(gint64);
-
-    gwy_debug("value = <%lld>", value);
-    return value;
-}
-
-/**
- * gwy_serialize_unpack_int64_array:
- * @buffer: A memory location containing a serialized int64 array at
- *          position @position.
- * @size: The size of @buffer.
- * @position: The position of the array in @buffer, it's updated to
- *            point after it.
- * @asize: Where the size of the array is to be returned on success.
- *
- * Deserializes an int64 array.
- *
- * Returns: The unpacked 64bit integer array (newly allocated).
- **/
-gint64*
-gwy_serialize_unpack_int64_array(const guchar *buffer,
-                                 gsize size,
-                                 gsize *position,
-                                 gsize *asize)
-{
-    gint64 *value;
-    gsize newasize;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
-    if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
-        return NULL;
-    g_return_val_if_fail(*position + newasize*sizeof(gint64) <= size, NULL);
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    value = g_memdup(buffer + *position, newasize*sizeof(gint64));
-#else
-    value = g_new(gint64, newasize);
-    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
-                         sizeof(gint64), newasize, (1 << sizeof(gint64)) - 1);
-#endif
-    *position += newasize*sizeof(gint64);
-    *asize = newasize;
-
-    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
-    return value;
-}
-
-/**
- * gwy_serialize_unpack_double:
- * @buffer: A memory location containing a serialized gdouble at position
- *          @position.
- * @size: The size of @buffer.
- * @position: The position of the integer in @buffer, it's updated to
- *            point after it.
- *
- * Deserializes a one gdouble.
- *
- * Returns: The integer as gdouble.
- **/
-gdouble
-gwy_serialize_unpack_double(const guchar *buffer,
-                            gsize size,
-                            gsize *position)
-{
-    gdouble value;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-    g_assert(buffer);
-    g_assert(position);
-    g_return_val_if_fail(*position + sizeof(gdouble) <= size, 0.0);
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    memcpy(&value, buffer + *position, sizeof(gdouble));
-#else
-    gwy_byteswapped_copy(buffer + *position, (guint8*)&value,
-                         sizeof(gdouble), 1, (1 << sizeof(gdouble)) - 1);
-#endif
-    *position += sizeof(gdouble);
-
-    gwy_debug("value = <%g>", value);
-    return value;
-}
-
-/**
- * gwy_serialize_unpack_double_array:
- * @buffer: A memory location containing a serialized gdouble array at
- *          position @position.
- * @size: The size of @buffer.
- * @position: The position of the array in @buffer, it's updated to
- *            point after it.
- * @asize: Where the size of the array is to be returned on success.
- *
- * Deserializes a gdouble array.
- *
- * Returns: The unpacked gdouble array (newly allocated).
- **/
-gdouble*
-gwy_serialize_unpack_double_array(const guchar *buffer,
-                                  gsize size,
-                                  gsize *position,
-                                  gsize *asize)
-{
-    gdouble *value;
-    gsize newasize;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
-    if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
-        return NULL;
-    g_return_val_if_fail(*position + newasize*sizeof(gdouble) <= size, NULL);
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    value = g_memdup(buffer + *position, newasize*sizeof(gdouble));
-#else
-    value = g_new(gdouble, newasize);
-    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
-                         sizeof(gdouble), newasize, (1 << sizeof(gdouble)) - 1);
-#endif
-    *position += newasize*sizeof(gdouble);
-    *asize = newasize;
-
-    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
-    return value;
-}
-
-/**
- * gwy_serialize_unpack_string:
- * @buffer: A memory location containing a serialized nul-terminated string at
- *          position @position.
- * @size: The size of @buffer.
- * @position: The position of the string in @buffer, it's updated to
- *            point after it.
- *
- * Deserializes a one nul-terminated string.
- *
- * Returns: A newly allocated, nul-terminated string.
- **/
-guchar*
-gwy_serialize_unpack_string(const guchar *buffer,
-                            gsize size,
-                            gsize *position)
-{
-    guchar *value;
-    const guchar *p;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-    g_assert(buffer);
-    g_assert(position);
-    g_return_val_if_fail(*position < size, NULL);
-    p = memchr(buffer + *position, 0, size - *position);
-    g_return_val_if_fail(p, NULL);
-    value = g_strdup(buffer + *position);
-    *position += (p - buffer) - *position + 1;
-
-    gwy_debug("value = <%s>", value);
-    return value;
-}
-
-/**
- * gwy_deserialize_string_array:
- * @buffer: A memory location containing an array of serialized nul-terminated
- *          string at position @position.
- * @size: The size of @buffer.
- * @position: The position of the string array in @buffer, it's updated to
- *            after it.
- * @asize: Where the size of the array is to be returned on success.
- *
- * Deserializes a string array.
- *
- * Returns: A newly allocated array of nul-terminated strings.
- **/
-static guchar**
-gwy_deserialize_string_array(const guchar *buffer,
-                             gsize size,
-                             gsize *position,
-                             gsize *asize)
-{
-    guchar **value;
-    gsize newasize, j;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
-    if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
-        return NULL;
-    g_return_val_if_fail(*position + newasize*sizeof(guchar) <= size, NULL);
-    value = g_new(guchar*, newasize);
-    for (j = 0; j < newasize; j++) {
-        value[j] = gwy_serialize_unpack_string(buffer, size, position);
-        if (!value[j]) {
-            while (j) {
-                j--;
-                g_free(value[j]);
-            }
-            g_free(value);
-            return NULL;
-        }
-    }
-    *asize = newasize;
-
-    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
-    return value;
-}
-
-/**
- * gwy_deserialize_object_array:
- * @buffer: A memory location containing an array of serialized object at
- *          position @position.
- * @size: The size of @buffer.
- * @position: The position of the object array in @buffer, it's updated to
- *            after it.
- * @asize: Where the size of the array is to be returned on success.
- *
- * Deserializes an object array.
- *
- * Returns: A newly allocated array of objects.
- **/
-static GObject**
-gwy_deserialize_object_array(const guchar *buffer,
-                             gsize size,
-                             gsize *position,
-                             gsize *asize)
-{
-    GObject **value;
-    gsize j, newasize, minsize;
-
-    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
-              buffer, size, *position);
-
-    g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
-    minsize = 2*sizeof(guchar) + sizeof(gint32);  /* Size of empty object */
-    if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
-        return NULL;
-    g_return_val_if_fail(*position + newasize*minsize <= size, NULL);
-    value = g_new(GObject*, newasize);
-    for (j = 0; j < newasize; j++) {
-        value[j] = gwy_serializable_deserialize(buffer, size, position);
-        if (!value[j]) {
-            while (j) {
-                j--;
-                g_object_unref(value[j]);
-            }
-            g_free(value);
-            return NULL;
-        }
-    }
-    *asize = newasize;
-
-    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
-    return value;
-}
-
-/**
  * gwy_serialize_check_string:
  * @buffer: A memory location containing a nul-terminated string at position
  *          @position.
@@ -1872,7 +1868,7 @@ gwy_deserialize_object_array(const guchar *buffer,
  * Returns: The length of the nul-terminated string including the nul
  * character; zero otherwise.
  **/
-gsize
+static gsize
 gwy_serialize_check_string(const guchar *buffer,
                            gsize size,
                            gsize position,
