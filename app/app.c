@@ -164,7 +164,8 @@ void
 gwy_app_data_window_remove(GwyDataWindow *window)
 {
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA, 0
+        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        0
     };
     GList *item;
 

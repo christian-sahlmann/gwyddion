@@ -123,10 +123,14 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
     obj = G_OBJECT(widget);
     /*gwy_debug("%s", g_type_name(G_TYPE_FROM_INSTANCE(obj)));*/
     i = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_key));
+    /* if there are any relevant flags */
     if (i & data->flags) {
         j = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_state_key));
+        /* clear all data->flags bits in state
+         * and set all data->set_to bits in state */
         j = (j & ~data->flags) | (data->set_to & data->flags);
         set_sensitive_state(obj, j);
+        /* make widget sensitive if all conditions are met */
         gtk_widget_set_sensitive(widget, (j & i) == i);
 
     }
@@ -432,6 +436,8 @@ gwy_app_toolbox_update_state(GwyMenuSensData *sens_data)
  * @set_to: The actually set flags.
  *
  * Sensitivity flags and their current state in one struct.
+ *
+ * All widget bits have to be set to make it sensitive.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
