@@ -529,7 +529,7 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     g_free(window_title);
     g_free(filename);
 
-    g_signal_emit(data_view, data_window_signals[TITLE_CHANGED], 0);
+    g_signal_emit(data_window, data_window_signals[TITLE_CHANGED], 0);
 }
 
 /**
