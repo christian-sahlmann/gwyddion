@@ -295,68 +295,68 @@ sfunctions_dialog_create(GwyDataView *data_view)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
-    vbox = gtk_vbox_new(0,0);
+    vbox = gtk_vbox_new(FALSE,0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Area of computation</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Origin: (x, y)"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
     controls.xy = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.xy), 1.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.xy, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.xy, FALSE, FALSE, 0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Size: (w x h)"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
     controls.wh = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.wh), 1.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.wh, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.wh, FALSE, FALSE, 0);
 
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Module parameters</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 10);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 10);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Output type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 2);
 
     controls.output
         = gwy_option_menu_sfunctions_output(G_CALLBACK(output_changed_cb),
                                         &controls, controls.out);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.output, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.output, FALSE, FALSE, 2);
 
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Computation direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 2);
 
     controls.direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
                                         &controls, controls.dir);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.direction, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.direction, FALSE, FALSE, 2);
 
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 2);
 
     controls.interpolation
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         &controls, controls.interp);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.interpolation, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.interpolation, FALSE, FALSE, 2);
 
 
     gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
@@ -458,7 +458,7 @@ sfunctions_selection_updated_cb(void)
     ym2 = (gint)floor(gwy_data_field_rtoj(datafield, ymax)+0.5);
 
 
-    dataline = gwy_data_line_new(10, 10, 0);
+    dataline = gwy_data_line_new(10, 10, FALSE);
     lab = g_string_new("");
     if (controls.out == GWY_SF_OUTPUT_DH || controls.out == GWY_SF_OUTPUT_CDH) g_string_assign(lab, "Height distribution");
     else if (controls.out == GWY_SF_OUTPUT_DA || controls.out == GWY_SF_OUTPUT_CDA) g_string_assign(lab, "Slope distribution");
