@@ -455,11 +455,16 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     data = gwy_data_view_get_data(data_view);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
-    if (gwy_container_contains_by_name(data, "/filename"))
-        filename = g_path_get_basename(
-                       gwy_container_get_string_by_name(data, "/filename"));
-    else
-        filename = g_strdup(_("Untitled"));
+    if (gwy_container_contains_by_name(data, "/filename")) {
+        const gchar *fnm = gwy_container_get_string_by_name(data, "/filename");
+
+        filename = g_path_get_basename(fnm);
+    }
+    else {
+        gint u = gwy_container_get_int32_by_name(data, "/filename/untitled");
+
+        filename = g_strdup_printf(_("Untitled-%d"), u);
+    }
 
     zoom = gwy_data_view_get_zoom(data_view);
     gwy_debug("%s: %g", __FUNCTION__, zoom);
