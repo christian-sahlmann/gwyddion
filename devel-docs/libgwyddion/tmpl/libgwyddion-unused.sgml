@@ -66,3 +66,12 @@ Emitted when value changes.
 @precision: 
 @prefix: 
 
+<!-- ##### FUNCTION gwy_si_unit_get_unit_for_magnitude ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@magnitude: 
+@Returns: 
+
