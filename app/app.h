@@ -49,7 +49,7 @@ void            gwy_app_undo_redo                 (void);
 void            gwy_app_change_mask_color_cb      (gpointer unused,
                                                    gboolean defaultc);
 
-GtkWidget*       gwy_app_graph_window_get_current  (void);   
+GtkWidget*      gwy_app_graph_window_get_current  (void);
 void            gwy_app_graph_window_set_current  (GtkWidget *window);
 void            gwy_app_graph_window_remove       (GtkWidget *window);
 GtkWidget*      gwy_app_graph_window_create       (GtkWidget *graph);

@@ -67,6 +67,10 @@ static gint       compare_data_window_data_cb (GwyDataWindow *window,
 static void       undo_redo_clean             (GObject *window,
                                                gboolean undo,
                                                gboolean redo);
+static gboolean   gwy_app_confirm_quit        (void);
+static void       gather_unsaved_cb           (GwyDataWindow *data_window,
+                                               GSList **unsaved);
+static gboolean   gwy_app_confirm_quit_dialog (GSList *unsaved);
 
 int
 main(int argc, char *argv[])
@@ -104,13 +108,10 @@ gwy_app_quit(void)
     GwyContainer *data;
 
     gwy_debug("%s", __FUNCTION__);
+    if (!gwy_app_confirm_quit())
+        return TRUE;
     /* current_tool_use_func(NULL); */
     while ((data_window = gwy_app_data_window_get_current())) {
-        data = gwy_data_window_get_data(data_window);
-        gwy_debug("%s: %p: %d", __FUNCTION__,
-                  data_window,
-                  GPOINTER_TO_INT(g_object_get_data(G_OBJECT(data),
-                                                    "modified")));
         gtk_widget_destroy(GTK_WIDGET(data_window));
     }
 
@@ -343,7 +344,7 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     gwy_debug("%s: %p", __FUNCTION__, window);
 
     /*g_return_if_fail(GWY_IS_GRAPH(graph));*/
-  
+
     item = g_list_find(current_graphs, window);
     if (item) {
         current_graphs = g_list_remove_link(current_graphs, item);
@@ -381,15 +382,15 @@ gwy_app_graph_window_remove(GtkWidget *window)
 GtkWidget*
 gwy_app_graph_window_create(GtkWidget *graph)
 {
-    
+
     GtkWidget *window;
 
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_container_set_border_width (GTK_CONTAINER (window), 0);
 
     if (graph == NULL) graph = gwy_graph_new();
-    
-    
+
+
     g_signal_connect(window, "focus-in-event",
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
     g_signal_connect(window, "destroy",
@@ -923,6 +924,67 @@ gwy_app_change_mask_color_cb(gpointer unused,
                                          p[i]);
     if (!defaultc)
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
+}
+
+static gboolean
+gwy_app_confirm_quit(void)
+{
+    GwyDataWindow *data_window;
+    GSList *unsaved = NULL;
+    gboolean ok;
+
+    gwy_app_data_window_foreach((GFunc)gather_unsaved_cb, &unsaved);
+    if (!unsaved)
+        return TRUE;
+    ok = gwy_app_confirm_quit_dialog(unsaved);
+    g_slist_free(unsaved);
+    return ok;
+}
+
+static void
+gather_unsaved_cb(GwyDataWindow *data_window,
+                  GSList **unsaved)
+{
+    GwyContainer *data = gwy_data_window_get_data(data_window);
+
+    if (g_object_get_data(G_OBJECT(data), "modified"))
+        *unsaved = g_slist_prepend(*unsaved, data);
+}
+
+static gboolean
+gwy_app_confirm_quit_dialog(GSList *unsaved)
+{
+    GtkWidget *dialog;
+    const gchar *filename;
+    gchar *text;
+    gint response;
+
+    text = NULL;
+    while (unsaved) {
+        GwyContainer *data = GWY_CONTAINER(unsaved->data);
+
+        if (gwy_container_contains_by_name(data, "/filename"))
+            filename = gwy_container_get_string_by_name(data, "/filename");
+        else
+            filename = gwy_container_get_string_by_name(data,
+                                                        "/filename/untitled");
+        text = g_strconcat(filename, "\n", text, NULL);
+        unsaved = g_slist_next(unsaved);
+    }
+    dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_main_window),
+                                    GTK_DIALOG_MODAL,
+                                    GTK_MESSAGE_QUESTION,
+                                    GTK_BUTTONS_YES_NO,
+                                    _("Some data are unsaved:\n"
+                                      "%s\n"
+                                      "Really quit?"),
+                                    text);
+    g_free(text);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+
+    return response == GTK_RESPONSE_YES;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
