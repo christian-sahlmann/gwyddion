@@ -94,30 +94,44 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     layer_class->plugged = gwy_layer_select_plugged;
     layer_class->unplugged = gwy_layer_select_unplugged;
 
-    klass->near_cursor = gdk_cursor_new(GDK_DOTBOX);
-    klass->resize_cursor = gdk_cursor_new(GDK_SIZING);
+    klass->near_cursor = NULL;
+    klass->resize_cursor = NULL;
 }
 
 static void
 gwy_layer_select_init(GwyLayerSelect *layer)
 {
+    GwyLayerSelectClass *klass;
+
     gwy_debug("%s", __FUNCTION__);
 
-    gdk_cursor_ref(GWY_LAYER_SELECT_GET_CLASS(layer)->near_cursor);
-    gdk_cursor_ref(GWY_LAYER_SELECT_GET_CLASS(layer)->resize_cursor);
+    klass = GWY_LAYER_SELECT_GET_CLASS(layer);
+    if (!klass->near_cursor) {
+        g_assert(!klass->resize_cursor);
+        klass->near_cursor = gdk_cursor_new(GDK_DOTBOX);
+        klass->resize_cursor = gdk_cursor_new(GDK_SIZING);
+    }
+    else {
+        g_assert(klass->resize_cursor);
+        gdk_cursor_ref(klass->near_cursor);
+        gdk_cursor_ref(klass->resize_cursor);
+    }
     layer->selected = FALSE;
 }
 
 static void
 gwy_layer_select_finalize(GObject *object)
 {
+    GwyLayerSelectClass *klass;
+
     gwy_debug("%s", __FUNCTION__);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_LAYER_SELECT(object));
 
-    gdk_cursor_unref(GWY_LAYER_SELECT_GET_CLASS(object)->near_cursor);
-    gdk_cursor_unref(GWY_LAYER_SELECT_GET_CLASS(object)->resize_cursor);
+    klass = GWY_LAYER_SELECT_GET_CLASS(object);
+    gdk_cursor_unref(klass->near_cursor);
+    gdk_cursor_unref(klass->resize_cursor);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
