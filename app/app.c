@@ -527,6 +527,29 @@ gwy_app_data_window_foreach(GFunc func,
         func(l->data, user_data);
 }
 
+/**
+ * gwy_app_data_window_get_for_data:
+ * @data: A data container.
+ *
+ * Finds a data window displaying given data.
+ *
+ * Returns: Data window displaying given data, or %NULL if there is no such
+ *          data window.
+ *
+ * Since: 1.7
+ **/
+GwyDataWindow*
+gwy_app_data_window_get_for_data(GwyContainer *data)
+{
+    GList *l;
+
+    for (l = current_data; l; l = g_list_next(l)) {
+        if (gwy_data_window_get_data((GwyDataWindow*)l->data) == data)
+            return (GwyDataWindow*)l->data;
+    }
+    return NULL;
+}
+
 /*****************************************************************************
  *                                                                           *
  *     Graph window list management                                          *

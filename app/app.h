@@ -45,6 +45,7 @@ GtkWidget*     gwy_app_data_window_create          (GwyContainer *data);
 gulong         gwy_app_data_window_list_add_hook   (gpointer func,
                                                     gpointer data);
 gboolean       gwy_app_data_window_list_remove_hook(gulong hook_id);
+GwyDataWindow* gwy_app_data_window_get_for_data    (GwyContainer *data);
 
 #ifndef GWY_DISALBE_DEPRECATED
 GtkWidget*     gwy_app_graph_window_create         (GtkWidget *graph);
