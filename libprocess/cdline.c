@@ -204,14 +204,14 @@ cd_rstepheight(gdouble *x,
     iwidth = imax - imin;
 
     /*FIXME modidfied now (imin+iwidth/3, imax-iwidth/3)*/
-    get_linestatpars(y, n_dat, imin+iwidth/4, imax-iwidth/4, param + 2, err + 2);
+    get_linestatpars(y, n_dat, imin+iwidth/3, imax-iwidth/3, param + 2, err + 2);
 
     param[1] = err[1] = 0;
     nout = 0;
     for (i=0; i<n_dat; i++)
     {
-        if ((i<(imin-iwidth/4) && i>(imin-iwidth)) /*/3*/
-                 || (i>(imax+iwidth/4) && i<(imax+iwidth))) /*/3*/
+        if ((i<(imin-iwidth/3) && i>(imin-iwidth)) /*/3*/
+                 || (i>(imax+iwidth/3) && i<(imax+iwidth))) /*/3*/
         {
             param[1] += y[i];
             err[1] += y[i]*y[i];
@@ -275,14 +275,14 @@ cd_stepheight(gdouble *x,
     iwidth = imin - imax;
 
     /*FIXME: modified now (imax+iwidth/3, imin-iwidth/3)*/
-    get_linestatpars(y, n_dat, imax+iwidth/4, imin-iwidth/4, param + 2, err + 2);
+    get_linestatpars(y, n_dat, imax+iwidth/3, imin-iwidth/3, param + 2, err + 2);
 
     param[1] = err[1]= 0;
     nout = 0;
     for (i=0; i<n_dat; i++)
     {
-        if ((i<(imax-iwidth/4) && i>(imax-iwidth)) /*/3*/
-                 || (i>(imin+iwidth/4) && i<(imin+iwidth))) /*/3*/
+        if ((i<(imax-iwidth/3) && i>(imax-iwidth)) /*/3*/
+                 || (i>(imin+iwidth/3) && i<(imin+iwidth))) /*/3*/
         {
             param[1] += y[i];
             err[1] += y[i]*y[i];
