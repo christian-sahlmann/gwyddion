@@ -1,6 +1,7 @@
 include_HEADERS = \
 	gwypalette.h \
-	gwypalettedef.h
+	gwypalettedef.h \
+	gwypixfield.h
 lib_LTLIBRARIES = libdraw.la
 
 noinst_PROGRAMS = test
@@ -13,7 +14,8 @@ noinst_PROGRAMS = test
 libdraw_la_LDFLAGS = -version-info 0:0:0
 libdraw_la_SOURCES = \
 	gwypalette.c \
-	gwypalettedef.c
+	gwypalettedef.c \
+	gwypixfield.c
 
 test_SOURCES = \
 	test.c
