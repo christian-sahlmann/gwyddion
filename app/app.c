@@ -66,6 +66,7 @@ static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow,
 static void       gwy_app_3d_window_title_changed  (GtkWidget *data_window,
                                                     GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
+static void       gwy_app_reset_color_range        (void);
 
 /*****************************************************************************
  *                                                                           *
@@ -1117,11 +1118,12 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
         gpointer cbdata;
     }
     const menu_items[] = {
-        { "/_Remove Mask", gwy_app_mask_kill_cb, NULL },
-        { "/Mask _Color",  gwy_app_change_mask_color_cb, NULL },
-        { "/Fix _Zero", gwy_app_run_process_func_cb, "fixzero" },
-        { "/_Level", gwy_app_run_process_func_cb, "level" },
-        { "/Zoom _1:1", gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
+        { N_("/_Remove Mask"), gwy_app_mask_kill_cb, NULL },
+        { N_("/Mask _Color"),  gwy_app_change_mask_color_cb, NULL },
+        { N_("/Fix _Zero"), gwy_app_run_process_func_cb, "fixzero" },
+        { N_("/Reset Color _Range"), gwy_app_reset_color_range, NULL },
+        { N_("/_Level"), gwy_app_run_process_func_cb, "level" },
+        { N_("/Zoom _1:1"), gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
     };
     static const gchar *items_need_data_mask[] = {
         "/Remove Mask", "/Mask Color", NULL
@@ -1136,6 +1138,11 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
     /* XXX: it is probably wrong to use this accel group */
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<data-popup>",
                                         accel_group);
+#ifdef ENABLE_NLS
+    gtk_item_factory_set_translate_func(item_factory,
+                                        (GtkTranslateFunc)&gettext,
+                                        NULL, NULL);
+#endif
     for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
         entry.path = (gchar*)menu_items[i].path;
         entry.callback = (GtkItemFactoryCallback)menu_items[i].callback;
@@ -1382,6 +1389,22 @@ gwy_app_show_kill_cb(void)
         gwy_container_remove_by_name(data, "/0/show");
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
     }
+}
+
+static void
+gwy_app_reset_color_range(void)
+{
+    GwyDataWindow *data_window;
+    GtkWidget *data_view;
+    GwyContainer *data;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    if (gwy_container_remove_by_name(data, "/0/base/min")
+        || gwy_container_remove_by_name(data, "/0/base/max"))
+        gwy_data_view_update(GWY_DATA_VIEW(data_view));
 }
 
 /***** Documentation *******************************************************/
