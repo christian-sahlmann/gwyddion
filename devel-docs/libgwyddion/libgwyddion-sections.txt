@@ -208,9 +208,9 @@ GwyNLFitDerFunc
 GwyNLFitGuessFunc
 GwyNLFitParamScaleFunc
 GwyNLFitWeightFunc
-GwyNLFitParam
-GwyNLFitPreset
 GwyNLFitter
+GwyNLFitPreset
+GwyNLFitParam
 gwy_math_nlfit_new
 gwy_math_nlfit_free
 gwy_math_nlfit_fit

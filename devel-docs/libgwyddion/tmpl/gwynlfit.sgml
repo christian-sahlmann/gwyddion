@@ -85,18 +85,6 @@ Marquardt-Levenberg nonlinear least square fitter.
 @user_data: 
 
 
-<!-- ##### TYPEDEF GwyNLFitParam ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### TYPEDEF GwyNLFitPreset ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### STRUCT GwyNLFitter ##### -->
 <para>
 
@@ -112,6 +100,29 @@ Marquardt-Levenberg nonlinear least square fitter.
 @mdec: 
 @minc: 
 @mtol: 
+
+<!-- ##### STRUCT GwyNLFitPreset ##### -->
+<para>
+
+</para>
+
+@function_name: 
+@group_name: 
+@function_formula: 
+@function: 
+@function_derivation: 
+@function_guess: 
+@parameter_scale: 
+@set_default_weights: 
+@nparams: 
+@param: 
+@_reserved1: 
+
+<!-- ##### STRUCT GwyNLFitParam ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gwy_math_nlfit_new ##### -->
 <para>

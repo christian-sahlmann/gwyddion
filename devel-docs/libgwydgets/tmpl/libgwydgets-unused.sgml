@@ -600,6 +600,16 @@ gwymodulemenus
 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_option_menu_nlfitpreset ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_palette_menu ##### -->
 <para>
 

@@ -622,7 +622,6 @@ gwy_option_menu_filter
 gwy_option_menu_mergegrain
 gwy_option_menu_fractal
 gwy_option_menu_fft_output
-gwy_option_menu_nlfitpreset
 gwy_option_menu_fit_line
 gwy_option_menu_metric_unit
 gwy_option_menu_create
