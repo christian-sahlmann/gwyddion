@@ -7,6 +7,7 @@ pixmapdata_DATA = \
 	gwy_crop-24.png \
 	gwy_cwt-24.png \
 	gwy_facet_level-24.png \
+	gwy_filter-24.png \
 	gwy_fit_plane-24.png \
 	gwy_fit_triangle-24.png \
 	gwy_fix_zero-24.png \
