@@ -74,6 +74,12 @@ typedef void (*GwyNLFitParamScaleFunc)(gdouble *param,
                                          gdouble yscale,
                                          gint dir);
 
+typedef void (*GwyNLFitWeightFunc)(gdouble *x,
+                                   gdouble *y,
+                                   gint n_dat,
+                                   gdouble *weight,
+                                   gpointer user_data);
+
 typedef struct {
     const char *name;
     const char *unit;
@@ -87,6 +93,7 @@ typedef struct {
     GwyNLFitDerFunc function_derivation;
     GwyNLFitGuessFunc function_guess;
     GwyNLFitParamScaleFunc parameter_scale;
+    GwyNLFitWeightFunc set_default_weights;
     gint nparams;
     const Param *param;
 } GwyNLFitPresetFunction;
@@ -168,7 +175,6 @@ gint gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
                                gint n_dat,
                                const gdouble *x,
                                const gdouble *y,
-                               const gdouble *weight,
                                gint n_param,
                                gdouble *param,
                                const gboolean *fixed_param,

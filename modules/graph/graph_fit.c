@@ -183,6 +183,7 @@ fit(GwyGraph *graph)
     args.par2_fix = 0;
     args.par3_fix = 0;
     args.par4_fix = 0;
+    args.curve = 0;
 
     get_data(&args);
 
@@ -225,7 +226,7 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
     j = 0;
     for (i=0; i<xdata->res; i++)
     {
-        if ((xdata->data[i] >= args->from && xdata->data[i] <= args->to) || (args->from == args->to))
+        if ((args->parent_xs[curve][i] >= args->from && args->parent_xs[curve][i] <= args->to) || (args->from == args->to))
         {
             if (args->function_type == GWY_NLFIT_PRESET_GAUSSIAN_PSDF && i == 0) continue;
             
@@ -236,6 +237,7 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
     }
     if (j==0) return 0;
    
+    
     if (j < xdata->res)
     {
         gwy_data_line_resize(xdata, 0, j);
@@ -543,7 +545,6 @@ recompute(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    GwyDataLine *weights;
     GwyNLFitter *fitter;
     GwyNLFitPresetFunction *function;
     gboolean fixed[4];
@@ -559,10 +560,6 @@ recompute(FitArgs *args, FitControls *controls)
 
     normalize_data(args, xdata, ydata, args->curve);
     
-    weights = GWY_DATA_LINE(gwy_data_line_new(xdata->res, xdata->real, FALSE));
-    gwy_data_line_fill(weights, 1);
-    /*fit function though fields*/
-    
     function = gwy_math_nlfit_get_preset(args->function_type);
     
     fixed[0] = args->par1_fix;
@@ -576,7 +573,7 @@ recompute(FitArgs *args, FitControls *controls)
     
     gwy_math_nlfit_fit_preset(function, 
                                   xdata->res, xdata->data, ydata->data,
-                                  weights->data, function->nparams,
+                                  function->nparams,
                                   param, fixed, NULL);
 
    
@@ -615,7 +612,8 @@ recompute(FitArgs *args, FitControls *controls)
                                  ydata->data,
                                  xdata->res, 
                                  label, NULL);    
-     
+    g_object_unref(xdata);
+    g_object_unref(ydata);
 }
 
 static void        
@@ -800,7 +798,7 @@ graph_selected(GwyGraphArea *area, FitArgs *args)
         gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->from), args->from);
         gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->to), args->to);
     }
-        
+    dialog_update(pcontrols, args);    
 }
 
 static void
