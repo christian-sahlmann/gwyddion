@@ -163,7 +163,10 @@ def process_one_dir(makefile):
 
 def recurse(each):
     cwd = os.getcwd()
-    makefile = get_file('Makefile.am')
+    try:
+        makefile = get_file('Makefile.am')
+    except IOError:
+        return
     each(makefile)
     subdirs = get_list(makefile, 'SUBDIRS')
     for s in subdirs:
