@@ -300,10 +300,8 @@ gwy_3d_view_new(GwyContainer *data)
     gwy_container_gis_boolean_by_name(data, "/0/3d/enable_lights",
                                       &gwy3dview->enable_lights);
     if (gwy_container_gis_string_by_name(data, "/0/3d/material",
-                                         &material_name)) {
-        gwy_object_unref(gwy3dview->mat_current);
+                                         &material_name))
         gwy3dview->mat_current = gwy_gl_material_get_by_name(material_name);
-    }
 
     /* should be always true */
     if (gwy3dview->data != NULL)
@@ -899,7 +897,8 @@ gwy_3d_view_set_material(Gwy3DView *gwy3dview,
     gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
-    if (material == gwy3dview->mat_current) return;
+    if (material == gwy3dview->mat_current)
+        return;
     gwy3dview->mat_current = material;
     name = gwy_gl_material_get_name(material);
     gwy_container_set_string_by_name(gwy3dview->container,
