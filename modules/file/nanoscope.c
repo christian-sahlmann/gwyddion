@@ -23,6 +23,7 @@
 #endif
 
 #include <stdio.h>
+#include <errno.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -227,15 +228,19 @@ get_value_scales(GHashTable *hash,
                  gdouble *zscale,
                  gdouble *curscale)
 {
-    gchar *s, un[6];
+    gchar *s, *end, un[6];
 
     /* z sensitivity */
     if (!(s = g_hash_table_lookup(hash, "@Sens. Zscan"))) {
         g_warning("`@Sens. Zscan' not found");
         return;
     }
-    if (s[0] != 'V' || s[1] != ' '
-        || sscanf(s+2, "%lf %5s", zscale, un) != 2) {
+    if (s[0] != 'V' || s[1] != ' ') {
+        g_warning("Cannot parse `@Sens. Zscan': <%s>", s+2);
+        return;
+    }
+    *zscale = g_ascii_strtod(s+2, &end);
+    if (errno || *end != ' ' || sscanf(end+1, "%5s", un) != 1) {
         g_warning("Cannot parse `@Sens. Zscan': <%s>", s+2);
         return;
     }
@@ -253,8 +258,12 @@ get_value_scales(GHashTable *hash,
         g_warning("`@Sens. Current' not found");
          return;
     }
-    if (s[0] != 'V' || s[1] != ' '
-        || sscanf(s+2, "%lf %5s", curscale, un) != 2) {
+    if (s[0] != 'V' || s[1] != ' ') {
+        g_warning("Cannot parse `@Sens. Current': <%s>", s+2);
+        return;
+    }
+    *curscale = g_ascii_strtod(s+2, &end);
+    if (errno || *end != ' ' || sscanf(end+1, "%5s", un) != 1) {
         g_warning("Cannot parse `@Sens. Current': <%s>", s+2);
         return;
     }
@@ -281,7 +290,7 @@ hash_to_data_field(GHashTable *hash,
 {
     GwyDataField *dfield;
     const gchar *s;
-    gchar *t;
+    gchar *t, *end;
     gchar un[5];
     gint xres, yres, bpp, offset, size;
     gdouble xreal, yreal, q, zmagnify = 1.0, zscalesens = 1.0;
@@ -318,7 +327,18 @@ hash_to_data_field(GHashTable *hash,
         g_warning("`Scan size' not found");
         return NULL;
     }
-    if (sscanf(s, "%lf %lf %4s", &xreal, &yreal, un) != 3) {
+    xreal = g_ascii_strtod(s, &end);
+    if (errno || *end != ' ') {
+        g_warning("Cannot parse `Scan size': <%s>", s);
+        return NULL;
+    }
+    t = end+1;
+    yreal = g_ascii_strtod(t, &end);
+    if (errno || *end != ' ') {
+        g_warning("Cannot parse `Scan size': <%s>", s);
+        return NULL;
+    }
+    if (sscanf(end+1, "%4s", un) != 1) {
         g_warning("Cannot parse `Scan size': <%s>", s);
         return NULL;
     }
@@ -367,7 +387,7 @@ hash_to_data_field(GHashTable *hash,
         if (!(s = strchr(t, ']')))
             g_warning("Cannot parse `@Z magnify': <%s>", t);
         else {
-            zmagnify = strtod(s+1, &t);
+            zmagnify = g_ascii_strtod(s+1, &t);
             if (t == s+1) {
                 g_warning("Cannot parse `@Z magnify' value: <%s>", s+1);
                 zmagnify = 1.0;
@@ -381,7 +401,7 @@ hash_to_data_field(GHashTable *hash,
         if (!(s = strchr(t, '(')))
             g_warning("Cannot parse `@2:Z scale': <%s>", t);
         else {
-            zscalesens = strtod(s+1, &t);
+            zscalesens = g_ascii_strtod(s+1, &t);
             if (t == s+1) {
                 g_warning("Cannot parse `@2:Z scale' value: <%s>", s+1);
                 zscalesens = 1.0;
