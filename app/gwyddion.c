@@ -81,11 +81,6 @@ main(int argc, char *argv[])
 #endif  /* LOG_TO_FILE */
 
     gtk_init(&argc, &argv);
-#ifdef ENABLE_NLS
-    bindtextdomain(PACKAGE, LOCALEDIR);
-    textdomain(PACKAGE);
-#endif
-
     gwy_gl_ok = gtk_gl_init_check(&argc, &argv);
 
     config_file = gwy_app_settings_get_config_filename();

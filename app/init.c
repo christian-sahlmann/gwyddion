@@ -18,12 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifdef _MSC_VER
-#include "version.h"
-#else
-#include "config.h"
-#endif
-
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/gwyprocess.h>
@@ -84,6 +78,12 @@ gwy_app_init(void)
                         "}\n"
                         "widget \"*.toolboxmenubar\" style \"toolboxmenubar\"\n"
                         "\n");
+#ifdef ENABLE_NLS
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+    if (!bind_textdomain_codeset(PACKAGE, "UTF-8"))
+        g_critical("Cannot bind gettext `%s' codeset to UTF-8", PACKAGE);
+#endif
 }
 
 static void
