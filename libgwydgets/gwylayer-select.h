@@ -70,6 +70,7 @@ gboolean         gwy_layer_select_get_selection   (GwyDataViewLayer *layer,
                                                    gdouble *ymin,
                                                    gdouble *xmax,
                                                    gdouble *ymax);
+gint             gwy_layer_select_get_nselected   (GwyDataViewLayer *layer);
 void             gwy_layer_select_unselect        (GwyDataViewLayer *layer);
 gboolean         gwy_layer_select_get_is_crop     (GwyDataViewLayer *layer);
 void             gwy_layer_select_set_is_crop     (GwyDataViewLayer *layer,

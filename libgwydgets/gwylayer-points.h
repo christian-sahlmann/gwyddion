@@ -67,6 +67,7 @@ void             gwy_layer_points_set_max_points  (GwyDataViewLayer *layer,
 gint             gwy_layer_points_get_max_points  (GwyDataViewLayer *layer);
 gint             gwy_layer_points_get_points      (GwyDataViewLayer *layer,
                                                    gdouble *points);
+gint             gwy_layer_points_get_nselected   (GwyDataViewLayer *layer);
 void             gwy_layer_points_unselect        (GwyDataViewLayer *layer);
 
 #ifdef __cplusplus

@@ -292,6 +292,21 @@ gwy_layer_pointer_get_point(GwyDataViewLayer *layer,
 }
 
 /**
+ * gwy_layer_lines_get_nselected:
+ * @layer: A #GwyLayerPointer.
+ *
+ * Returns the number of selected points in @layer.
+ *
+ * Returns: The number of selected points (i.e., 0 or 1).
+ **/
+gint
+gwy_layer_pointer_get_nselected(GwyDataViewLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_POINTER(layer), 0);
+    return GWY_LAYER_POINTER(layer)->selected;
+}
+
+/**
  * gwy_layer_pointer_unselect:
  * @layer: A #GwyLayerPointer.
  *

@@ -467,6 +467,21 @@ gwy_layer_points_unselect(GwyDataViewLayer *layer)
     gwy_data_view_layer_updated(layer);
 }
 
+/**
+ * gwy_layer_points_get_nselected:
+ * @layer: A #GwyLayerPoints.
+ *
+ * Returns the number of selected points in @layer.
+ *
+ * Returns: The number of selected points.
+ **/
+gint
+gwy_layer_points_get_nselected(GwyDataViewLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_POINTS(layer), 0);
+    return GWY_LAYER_POINTS(layer)->nselected;
+}
+
 static void
 gwy_layer_points_plugged(GwyDataViewLayer *layer)
 {

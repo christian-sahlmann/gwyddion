@@ -426,6 +426,21 @@ gwy_layer_select_get_selection(GwyDataViewLayer *layer,
 }
 
 /**
+ * gwy_layer_select_get_nselected:
+ * @layer: A #GwyLayerSelect.
+ *
+ * Returns the number of selected rectangles in @layer.
+ *
+ * Returns: The number of selected rectangles (i.e., 0 or 1).
+ **/
+gint
+gwy_layer_select_get_nselected(GwyDataViewLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_SELECT(layer), 0);
+    return GWY_LAYER_SELECT(layer)->selected;
+}
+
+/**
  * gwy_layer_select_unselect:
  * @layer: A #GwyLayerSelect.
  *

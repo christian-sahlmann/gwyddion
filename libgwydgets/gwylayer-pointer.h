@@ -63,6 +63,7 @@ GtkObject*       gwy_layer_pointer_new            (void);
 gboolean         gwy_layer_pointer_get_point      (GwyDataViewLayer *layer,
                                                    gdouble *x,
                                                    gdouble *y);
+gint             gwy_layer_pointer_get_nselected  (GwyDataViewLayer *layer);
 void             gwy_layer_pointer_unselect       (GwyDataViewLayer *layer);
 
 #ifdef __cplusplus

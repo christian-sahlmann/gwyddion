@@ -269,7 +269,7 @@ gwy_layer_lines_draw_line(GwyDataViewLayer *layer,
                           gint i)
 {
     GwyLayerLines *lines_layer;
-    gint x0, y0, x1, y1;
+    gint xi0, yi0, xi1, yi1;
 
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
@@ -283,14 +283,14 @@ gwy_layer_lines_draw_line(GwyDataViewLayer *layer,
     gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
                                     lines_layer->lines[4*i],
                                     lines_layer->lines[4*i + 1],
-                                    &x0, &y0);
+                                    &xi0, &yi0);
     gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
                                     lines_layer->lines[4*i + 2],
                                     lines_layer->lines[4*i + 3],
-                                    &x1, &y1);
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x0, &y0);
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x1, &y1);
-    gdk_draw_line(drawable, layer->gc, x0, y0, x1, y1);
+                                    &xi1, &yi1);
+    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &xi0, &yi0);
+    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &xi1, &yi1);
+    gdk_draw_line(drawable, layer->gc, xi0, yi0, xi1, yi1);
 }
 
 static gboolean
@@ -536,6 +536,21 @@ gwy_layer_lines_get_lines(GwyDataViewLayer *layer,
     }
 
     return lines_layer->nselected;
+}
+
+/**
+ * gwy_layer_lines_get_nselected:
+ * @layer: A #GwyLayerLines.
+ *
+ * Returns the number of selected lines in @layer.
+ *
+ * Returns: The number of selected lines.
+ **/
+gint
+gwy_layer_lines_get_nselected(GwyDataViewLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_LINES(layer), 0);
+    return GWY_LAYER_LINES(layer)->nselected;
 }
 
 /**

@@ -71,6 +71,7 @@ void             gwy_layer_lines_set_max_lines  (GwyDataViewLayer *layer,
 gint             gwy_layer_lines_get_max_lines  (GwyDataViewLayer *layer);
 gint             gwy_layer_lines_get_lines      (GwyDataViewLayer *layer,
                                                  gdouble *lines);
+gint             gwy_layer_lines_get_nselected  (GwyDataViewLayer *layer);
 void             gwy_layer_lines_unselect       (GwyDataViewLayer *layer);
 
 #ifdef __cplusplus
