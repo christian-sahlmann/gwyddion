@@ -7,12 +7,6 @@
 #include "gwymodule.h"
 #include "gwymodulebrowser.h"
 
-typedef struct {
-    GwyModuleInfo *mod_info;
-    gchar *file;
-    gboolean loaded;
-} GwyModuleInfoInternal;
-
 static void gwy_load_modules_in_dir(GDir *gdir,
                                     const gchar *dirname,
                                     GHashTable *modules);
@@ -84,6 +78,7 @@ gwy_load_modules_in_dir(GDir *gdir,
     while ((filename = g_dir_read_name(gdir))) {
         GModule *mod;
         gboolean ok;
+        _GwyModuleInfoInternal *iinfo;
         GwyModuleInfo *mod_info;
         GwyModuleQueryFunc query;
 
@@ -146,13 +141,18 @@ gwy_load_modules_in_dir(GDir *gdir,
         }
 
         if (ok) {
-            g_hash_table_insert(modules, (gpointer)mod_info->name, mod_info);
+            iinfo = g_new(_GwyModuleInfoInternal, 1);
+            iinfo->mod_info = mod_info;
+            iinfo->file = g_strdup(filename);
+            iinfo->loaded = TRUE;
+            g_hash_table_insert(modules, (gpointer)mod_info->name, iinfo);
             ok = mod_info->register_func(mod_info->name);
             if (!ok) {
                 g_warning("Module %s feature registration failed",
                           mod_info->name);
                 /* TODO: clean up all possibly registered features */
                 g_hash_table_remove(modules, (gpointer)mod_info->name);
+                g_free(iinfo);
             }
         }
 
@@ -181,15 +181,15 @@ gboolean
 gwy_register_process_func(const gchar *modname,
                           GwyProcessFuncInfo *func_info)
 {
-    GwyModuleInfo *mod_info;
+    _GwyModuleInfoInternal *iinfo;
 
     gwy_debug("%s", __FUNCTION__);
     gwy_debug("name = %s, menu path = %s, run = %d, func = %p",
               func_info->name, func_info->menu_path, func_info->run,
               func_info->function);
 
-    mod_info = g_hash_table_lookup(modules, modname);
-    g_return_val_if_fail(mod_info, FALSE);
+    iinfo = g_hash_table_lookup(modules, modname);
+    g_return_val_if_fail(iinfo, FALSE);
     g_return_val_if_fail(func_info->function, FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
     g_return_val_if_fail(func_info->run & GWY_RUN_MASK, FALSE);
@@ -212,7 +212,8 @@ gwy_run_process_func(const guchar *name,
     g_return_val_if_fail(func_info, FALSE);
     g_return_val_if_fail(run & func_info->run, FALSE);
     /* XXX the test is commented out only for testing,
-     * since we don't have any container loaded yet */
+     * since we don't have any container loaded yet
+     * TODO uncomment it ASAP */
     /* g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE); */
     return func_info->function(data, run);
 }

@@ -22,6 +22,7 @@ static GtkWidget* gwy_module_browser_construct    (GHashTable *modules);
 enum {
     MODULE_MOD_INFO,
     MODULE_NAME,
+    MODULE_LOADED,
     MODULE_FILENAME,
     MODULE_AUTHOR,
     MODULE_VERSION,
@@ -51,8 +52,9 @@ gwy_module_browser_construct(GHashTable *modules)
         const guint id;
     }
     columns[] = {
-        { "Module name", MODULE_NAME },
-        { "Module file", MODULE_FILENAME },
+        { "Module", MODULE_NAME },
+        { "Loaded?", MODULE_LOADED },
+        { "File", MODULE_FILENAME },
         { "Author", MODULE_AUTHOR },
         { "Version", MODULE_VERSION },
         { "Copyright", MODULE_COPYRIGHT },
@@ -69,6 +71,7 @@ gwy_module_browser_construct(GHashTable *modules)
     store = gtk_list_store_new(MODULE_LAST,
                                G_TYPE_POINTER, /* module info itself */
                                G_TYPE_STRING,  /* name */
+                               G_TYPE_STRING,  /* loaded? */
                                G_TYPE_STRING,  /* file */
                                G_TYPE_STRING,  /* author */
                                G_TYPE_STRING,  /* version */
@@ -106,20 +109,16 @@ gwy_module_browser_cell_renderer(GtkTreeViewColumn *column,
                                  GtkTreeIter *piter,
                                  gpointer data)
 {
+    _GwyModuleInfoInternal *iinfo;
     GwyModuleInfo *mod_info;
     gchar *s;
     gulong id;
 
     id = GPOINTER_TO_UINT(data);
     g_assert(id > MODULE_MOD_INFO && id < MODULE_LAST);
-    gtk_tree_model_get(model, piter, MODULE_MOD_INFO, &mod_info, -1);
+    gtk_tree_model_get(model, piter, MODULE_MOD_INFO, &iinfo, -1);
+    mod_info = iinfo->mod_info;
     switch (id) {
-        case MODULE_FILENAME:
-        s = g_path_get_basename("/who_knows.so");
-        g_object_set(cell, "text", s, NULL);
-        g_free(s);
-        break;
-
         case MODULE_NAME:
         g_object_set(cell, "text", mod_info->name, NULL);
         break;
@@ -138,6 +137,16 @@ gwy_module_browser_cell_renderer(GtkTreeViewColumn *column,
 
         case MODULE_DATE:
         g_object_set(cell, "text", mod_info->date, NULL);
+        break;
+
+        case MODULE_LOADED:
+        g_object_set(cell, "text", iinfo->loaded ? "Yes" : "No", NULL);
+        break;
+
+        case MODULE_FILENAME:
+        s = g_path_get_basename(iinfo->file);
+        g_object_set(cell, "text", s, NULL);
+        g_free(s);
         break;
 
         default:

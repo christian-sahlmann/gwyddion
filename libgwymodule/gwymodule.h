@@ -64,6 +64,12 @@ gboolean        gwy_register_process_func   (const gchar *modname,
 GtkItemFactory* gwy_build_process_menu      (void);
 void            gwy_module_browser          (void);
 
+typedef struct {
+    GwyModuleInfo *mod_info;
+    gchar *file;
+    gboolean loaded;
+} _GwyModuleInfoInternal;
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
