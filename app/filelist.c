@@ -23,14 +23,14 @@
  * http://triq.net/~jens/thumbnail-spec/index.html
  *
  * The implementation is quite minimal: we namely ignore large
- * thumbnails altogether (as they are ofter larger than SPM data).
+ * thumbnails altogether (as they would be usually larger than SPM data).
+ * We try not to break other TMS aware applications though.
  */
 
 /* TODO:
  * - add some equivalent of file_real_open() to API and use it from the other
  *   places
  * - Do NOT store thumbnails for anything in ~/.thumbnails
- * - Create thumbnail directories.
  */
 #define DEBUG 1
 #include <libgwyddion/gwyddion.h>
@@ -55,7 +55,7 @@
 
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
-/* And now we are in a deep .... */
+/* And now we are in a deep s... */
 #endif
 
 #ifdef HAVE_SYS_TYPES_H
@@ -161,6 +161,7 @@ static void  gwy_app_recent_file_list_prune          (Controls *controls);
 static void  gwy_app_recent_file_list_open           (GtkWidget *list);
 static void  gwy_app_recent_file_list_update_menu    (Controls *controls);
 
+static void  gwy_app_recent_file_create_dirs         (void);
 static GwyRecentFile* gwy_recent_file_new            (gchar *filename_utf8,
                                                       gchar *filename_sys);
 static gboolean recent_file_try_load_thumbnail       (GwyRecentFile *rf);
@@ -168,6 +169,7 @@ static void     gwy_recent_file_update_thumbnail     (GwyRecentFile *rf,
                                                       GwyDataWindow *data_window);
 static void  gwy_recent_file_free                    (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
+static G_CONST_RETURN gchar* gwy_recent_file_thumbnail_dir (void);
 static gchar* gwy_canonicalize_path                  (const gchar *path);
 
 static guint remember_recent_files = 256;
@@ -550,6 +552,8 @@ gwy_app_recent_file_list_load(const gchar *filename)
     gchar **files;
     guint n;
 
+    gwy_app_recent_file_create_dirs();
+
     g_return_val_if_fail(gcontrols.store == NULL, FALSE);
     gcontrols.store = gtk_list_store_new(1, G_TYPE_POINTER);
 
@@ -765,6 +769,26 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
     gwy_app_menu_recent_files_update(controls->recent_file_list);
 }
 
+static void
+gwy_app_recent_file_create_dirs(void)
+{
+    const gchar *base;
+    gchar *dir;
+
+    base = gwy_recent_file_thumbnail_dir();
+    if (!g_file_test(base, G_FILE_TEST_IS_DIR)) {
+        gwy_debug("Creating base thumbnail directory <%s>", base);
+        mkdir(base, 0700);
+    }
+
+    dir = g_build_filename(base, "normal", NULL);
+    if (!g_file_test(dir, G_FILE_TEST_IS_DIR)) {
+        gwy_debug("Creating normal thumbnail directory <%s>", dir);
+        mkdir(dir, 0700);
+    }
+    g_free(dir);
+}
+
 /* XXX: eats arguments! */
 static GwyRecentFile*
 gwy_recent_file_new(gchar *filename_utf8,
@@ -943,13 +967,10 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     rf->image_height = gwy_data_field_get_yres(dfield);
     rf->file_state = FILE_STATE_OK;
 
-    fnm = g_build_filename(g_get_home_dir(), ".thumbnails", NULL);
     /* FIXME: bad test, must end with / or nothing! */
-    if (g_str_has_prefix(rf->file_sys, fnm)) {
-        g_free(fnm);
+    if (g_str_has_prefix(rf->file_sys, gwy_recent_file_thumbnail_dir())) {
         return;
     }
-    g_free(fnm);
 
     pixbuf = gwy_data_view_get_pixbuf(GWY_DATA_VIEW(data_view),
                                       TMS_NORMAL_THUMB_SIZE,
@@ -1017,8 +1038,20 @@ gwy_recent_file_thumbnail_name(const gchar *uri)
     *p++ = 'g';
     *p = '\0';
 
-    return g_build_filename(g_get_home_dir(), ".thumbnails", "normal", buffer,
+    return g_build_filename(gwy_recent_file_thumbnail_dir(), "normal", buffer,
                             NULL);
+}
+
+static G_CONST_RETURN gchar*
+gwy_recent_file_thumbnail_dir(void)
+{
+    static gchar *thumbnail_dir = NULL;
+
+    if (thumbnail_dir)
+        return thumbnail_dir;
+
+    thumbnail_dir = g_build_filename(g_get_home_dir(), ".thumbnails", NULL);
+    return thumbnail_dir;
 }
 
 /* canonicalize a file path.
