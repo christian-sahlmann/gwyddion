@@ -1,0 +1,93 @@
+<!-- ##### SECTION Title ##### -->
+linestats
+
+<!-- ##### SECTION Short_Description ##### -->
+1D statistical functions
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_data_line_dh ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@target_line: 
+@ymin: 
+@ymax: 
+@nsteps: 
+
+
+<!-- ##### FUNCTION gwy_data_line_cdh ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@target_line: 
+@ymin: 
+@ymax: 
+@nsteps: 
+
+
+<!-- ##### FUNCTION gwy_data_line_da ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@target_line: 
+@ymin: 
+@ymax: 
+@nsteps: 
+
+
+<!-- ##### FUNCTION gwy_data_line_cda ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@target_line: 
+@ymin: 
+@ymax: 
+@nsteps: 
+
+
+<!-- ##### FUNCTION gwy_data_line_acf ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@target_line: 
+
+
+<!-- ##### FUNCTION gwy_data_line_hhcf ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@target_line: 
+
+
+<!-- ##### FUNCTION gwy_data_line_psdf ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@target_line: 
+@windowing: 
+@interpolation: 
+
+
