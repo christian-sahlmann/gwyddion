@@ -66,7 +66,8 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
         gwy_data_field_resample(buffer_field, xres, yres,
                                 GWY_INTERPOLATION_NONE);
     }
-    gwy_data_field_copy(data_field, buffer_field);
+    gwy_data_field_area_copy(data_field, buffer_field, 0, 0, buffer_field->xres, buffer_field->yres,
+                             0, 0);
 
     /*set boundary condition for masked boundary data */
     for (i = 0; i < xres; i++) {
@@ -103,7 +104,8 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
         }
     }
 
-    gwy_data_field_copy(buffer_field, data_field);
+    gwy_data_field_area_copy(buffer_field, data_field, 0, 0, buffer_field->xres, buffer_field->yres,
+                                                          0, 0);
 
 }
 
