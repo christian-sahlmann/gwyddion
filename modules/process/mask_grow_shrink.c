@@ -66,7 +66,7 @@ static GwyModuleInfo module_info = {
     "mask_grow_shrink",
     N_("Grows and shrinks masks."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -233,11 +233,11 @@ mask_grow_do(GwyDataField *dfield,
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
-    rowstride = xres;
 
     buffer = g_new(gdouble, xres);
     prow = g_new(gdouble, xres);
     for (iter = 0; iter < by; iter++) {
+        rowstride = xres;
         min = G_MAXDOUBLE;
         for (j = 0; j < xres; j++)
             prow[j] = -G_MAXDOUBLE;
@@ -289,11 +289,11 @@ mask_shrink_do(GwyDataField *dfield,
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
-    rowstride = xres;
 
     buffer = g_new(gdouble, xres);
     prow = g_new(gdouble, xres);
     for (iter = 0; iter < by; iter++) {
+        rowstride = xres;
         max = -G_MAXDOUBLE;
         for (j = 0; j < xres; j++)
             prow[j] = G_MAXDOUBLE;
