@@ -480,7 +480,7 @@ fit_dialog(FitArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            if (args->is_fitted && args->fitter->covar)
+            if (args->is_fitted)
                 create_results_window(args);
             gtk_widget_destroy(dialog);
             break;
@@ -987,11 +987,12 @@ create_results_window(FitArgs *args)
     gdouble mag, value, sigma;
     gint row, curve, n, i, j;
     gint precision;
+    gchar *p, *filename;
     GString *str, *su;
+    GtkImage *image;
     const gchar *s;
 
     g_return_if_fail(args->is_fitted);
-    g_return_if_fail(fitter->covar);
 
     window = gtk_dialog_new_with_buttons(_("Fit results"), NULL, 0,
                                          GTK_STOCK_SAVE, RESPONSE_SAVE,
@@ -1031,8 +1032,17 @@ create_results_window(FitArgs *args)
     row++;
 
     attach_label(table, _("<b>Function:</b>"), row, 0, 0.0);
-    attach_label(table, gwy_cdline_get_preset_name(args->fitfunc),
-                 row, 1, 0.0);
+    row++;
+
+    p = gwy_find_self_dir("pixmaps");
+    args->fitfunc = gwy_cdline_get_preset(args->function_type);
+    filename = g_build_filename(p, gwy_cdline_get_preset_formula(args->fitfunc), NULL);
+    g_free(p);
+    
+    image = gtk_image_new_from_file(filename);
+    gtk_table_attach(GTK_TABLE(table), image,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    g_free(filename);
     row++;
 
     label = gtk_label_new(NULL);
@@ -1065,29 +1075,6 @@ create_results_window(FitArgs *args)
     }
     row++;
 
-    attach_label(table, _("Residual sum:"), row, 0, 0.0);
-    sigma = 0;
-    mag = gwy_math_humanize_numbers(sigma/120, sigma, &precision);
-    g_string_printf(str, "%.*f %s",
-                    precision, sigma/mag, format_magnitude(su, mag));
-    attach_label(table, str->str, row, 1, 0.0);
-    row++;
-
-    attach_label(table, _("<b>Correlation matrix</b>"), row, 0, 0.0);
-    row++;
-
-    tab = gtk_table_new(n, n, TRUE);
-    for (i = 0; i < n; i++) {
-        for (j = 0; j <= i; j++) {
-            g_string_printf(str, "% .03f",
-                            0);
-            attach_label(tab, str->str, i, j, 1.0);
-        }
-    }
-    gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
-
     g_string_free(str, TRUE);
     g_string_free(su, TRUE);
     str = create_fit_report(args);
@@ -1104,7 +1091,6 @@ create_fit_report(FitArgs *args)
     gchar *s, *s2;
     gint i, j, curve, n;
 
-    g_assert(args->fitter->covar);
     report = g_string_new("");
 
     curve = args->curve - 1;
@@ -1132,19 +1118,6 @@ create_fit_report(FitArgs *args)
                                s2, args->par_res[i], args->err[i]);
         g_free(s2);
         g_free(s);
-    }
-    g_string_append_printf(report, "\nResidual sum:   %g\n",
-                           0);
-    g_string_append_printf(report, "\nCorrelation matrix\n");
-    for (i = 0; i < n; i++) {
-        for (j = 0; j <= i; j++) {
-            g_string_append_printf
-                (report, "% .03f",
-                 0);
-            if (j != i)
-                g_string_append_c(report, ' ');
-        }
-        g_string_append_c(report, '\n');
     }
 
     g_string_free(str, TRUE);
