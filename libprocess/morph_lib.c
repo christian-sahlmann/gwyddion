@@ -1,4 +1,4 @@
-/* 
+/*
    Library of mathematical morphology and tip estimation routines
    written by John Villarrubia, National Institute of Standards and
    Technology, an agency of the U.S. Department of Commerce,
@@ -20,10 +20,9 @@
 
 
 #include <glib.h>
-#include <stdio.h>
-/* FIXME: memory.h???
- * probably should be replaced with string.h and/or stdlib.h */
-#include <memory.h>
+#include <libgwyddion/gwymacros.h>
+#include <string.h>
+#include <stdlib.h>
 #include <math.h>
 #include "morph_lib.h"
 
@@ -36,7 +35,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                    GwySetMessageFunc set_message);
 
 static gint
-useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta);    
+useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta);
 
 static gint **
 iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz,
@@ -45,59 +44,49 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz,
 static gint
 itip_estimate_point(gint ixp, gint jxp, gint **image,
                     gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-                    gint xc, gint yc, gint **tip0, gint thresh, 
+                    gint xc, gint yc, gint **tip0, gint thresh,
                     gboolean use_edges);
-    
+
 /*end of forward declarations*/
 
 
 /**
- * iallocmatrix: 
+ * _gwy_morph_lib_iallocmatrix:
  * @ysiz: rows number
  * @xsiz: columns number
  *
  *  Allocates an integer matrix of dimension [ysiz][xsiz] using an array
  *  of pointers to rows. ysiz is the number of rows. xsiz is the number
- *  of columns. 
- *  
+ *  of columns.
+ *
  * Returns: alocated matrix
  **/
 gint**
-iallocmatrix(gint ysiz, gint xsiz)
+_gwy_morph_lib_iallocmatrix(gint ysiz, gint xsiz)
 {
     gint **mptr;                /* points to allocated matrix */
     gint i;                     /* counter */
 
     /* Allocate pointers to rows */
-    mptr = (gint **)g_malloc(ysiz * sizeof(gint *));
-    if (mptr == NULL) {
-        g_warning("Error: Allocation of mptr failed in allocmatrix");
-        return NULL;
-    }
-
+    mptr = g_new(gint*, ysiz);
 
     /* Allocate rows */
-    for (i = 0; i < ysiz; i++) {
-        mptr[i] = (gint *)g_malloc(xsiz * sizeof(gint));
-        if (mptr[i] == NULL) {
-            g_warning("Error: Allocation failed in allocmatrix");
-            return NULL;
-        }
-    }
+    for (i = 0; i < ysiz; i++)
+        mptr[i] = g_new(gint, xsiz);
 
     /* Done. Return result. */
     return mptr;
 }
 
 /**
- * ifreematrix:
+ * _gwy_morph_lib_ifreematrix:
  * @mptr: pointer to matrix
  * @ysiz: number of rows
  *
  * Frees memory allocated with allocmatrix.
  **/
 void
-ifreematrix(gint **mptr, gint ysiz)
+_gwy_morph_lib_ifreematrix(gint **mptr, gint ysiz)
 {
     gint i;
 
@@ -108,7 +97,7 @@ ifreematrix(gint **mptr, gint ysiz)
 
 
 /**
- * ireflect:
+ * _gwy_morph_lib_ireflect:
  * @surface: integer array to be reflected.
  * @surf_xsiz: number of columns
  * @surf_ysiz: number of rows
@@ -118,26 +107,26 @@ ifreematrix(gint **mptr, gint ysiz)
  * Returns: reflected array
  **/
 gint **
-ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz)
+_gwy_morph_lib_ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz)
 {
     gint **result;
     gint i, j;                  /* index */
 
     /* create output array of appropriate size */
-    result = iallocmatrix(surf_ysiz, surf_xsiz);
+    result = _gwy_morph_lib_iallocmatrix(surf_ysiz, surf_xsiz);
 
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         for (i = 0; i < surf_xsiz; i++) {
             result[j][i] = -surface[surf_ysiz - 1 - j][surf_xsiz - 1 - i];
         }
     }
-    return (result);
+    return result;
 }
 
 
 
 /**
- * idilation:
+ * _gwy_morph_lib_idilation:
  * @surface: surface array
  * @surf_xsiz: number of columns
  * @surf_ysiz: number of rows
@@ -154,10 +143,11 @@ ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz)
  * Returns: dilated data (newly allocated).
  **/
 gint **
-idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
-          gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-          GwySetFractionFunc set_fraction,
-          GwySetMessageFunc set_message)
+_gwy_morph_lib_idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
+                         gint **tip, gint tip_xsiz, gint tip_ysiz,
+                         gint xc, gint yc,
+                         GwySetFractionFunc set_fraction,
+                         GwySetMessageFunc set_message)
 {
     gint **result;
     gint i, j, px, py;          /* index */
@@ -166,8 +156,9 @@ idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
     gint temp;
 
     /* create output array of appropriate size */
-    result = iallocmatrix(surf_ysiz, surf_xsiz);
-    if (set_message!=NULL) set_message("Dilation...");
+    result = _gwy_morph_lib_iallocmatrix(surf_ysiz, surf_xsiz);
+    if (set_message != NULL)
+        set_message(N_("Dilation"));
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -187,17 +178,17 @@ idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
             }
             result[j][i] = max;
         }
-        if (set_fraction!=NULL && set_fraction((gdouble)j/surf_ysiz)==FALSE)
+        if (set_fraction != NULL && set_fraction((gdouble)j/surf_ysiz)==FALSE)
         {
             return result;
         }
     }
-    if (set_fraction!=NULL) set_fraction(0.0);
+    if (set_fraction != NULL) set_fraction(0.0);
     return (result);
 }
 
 /**
- * ierosion:
+ * _gwy_morph_lib_ierosion:
  * @surface: surface array
  * @surf_xsiz: number of columns
  * @surf_ysiz: number of rows
@@ -214,9 +205,11 @@ idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
  * Returns: eroded data (newly allocated).
  **/
 gint **
-ierosion(gint **image, gint im_xsiz, gint im_ysiz,
-         gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-         GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
+_gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
+                        gint **tip, gint tip_xsiz, gint tip_ysiz,
+                        gint xc, gint yc,
+                        GwySetFractionFunc set_fraction,
+                        GwySetMessageFunc set_message)
 {
     gint **result;
     gint i, j, px, py;          /* index */
@@ -225,9 +218,10 @@ ierosion(gint **image, gint im_xsiz, gint im_ysiz,
     gint temp;
 
     /* create output array of appropriate size */
-    result = iallocmatrix(im_ysiz, im_xsiz);
-    if (set_message!=NULL) set_message("Erosion..."); 
-    for (j = 0; j < im_ysiz; j++) {     /* Loop over all points in output array */
+    result = _gwy_morph_lib_iallocmatrix(im_ysiz, im_xsiz);
+    if (set_message != NULL)
+        set_message(N_("Erosion"));
+    for (j = 0; j < im_ysiz; j++) {   /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
         pymin = MAX(-j, -yc);
@@ -246,17 +240,17 @@ ierosion(gint **image, gint im_xsiz, gint im_ysiz,
             }
             result[j][i] = min;
         }
-        if (set_fraction!=NULL && set_fraction((gdouble)j/im_ysiz)==FALSE)
+        if (set_fraction != NULL && set_fraction((gdouble)j/im_ysiz)==FALSE)
         {
             return result;
         }
     }
-    if (set_fraction!=NULL) set_fraction(0.0);
+    if (set_fraction != NULL) set_fraction(0.0);
     return (result);
 }
 
 /**
- * icmap:
+ * _gwy_morph_lib_icmap:
  * @image: image array
  * @im_xsiz: number of columns
  * @im_ysiz: number of rows
@@ -274,9 +268,11 @@ ierosion(gint **image, gint im_xsiz, gint im_ysiz,
  * Returns: certainty map (newly allocated).
  **/
 gint **
-icmap(gint **image, gint im_xsiz, gint im_ysiz,
-      gint **tip, gint tip_xsiz, gint tip_ysiz, gint **rsurf, gint xc, gint yc,
-      GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
+_gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
+                     gint **tip, gint tip_xsiz, gint tip_ysiz, gint **rsurf,
+                     gint xc, gint yc,
+                     GwySetFractionFunc set_fraction,
+                     GwySetMessageFunc set_message)
 {
     gint **cmap;
     gint imx, imy, tpx, tpy;    /* index */
@@ -287,15 +283,15 @@ icmap(gint **image, gint im_xsiz, gint im_ysiz,
 
     rxc = tip_xsiz - 1 - xc;
     ryc = tip_ysiz - 1 - yc;
-    if (set_message!=NULL) set_message("Certainty map..."); 
+    if (set_message != NULL) set_message(N_("Certainty map"));
     /* create output array of appropriate size */
-    cmap = iallocmatrix(im_ysiz, im_xsiz);
+    cmap = _gwy_morph_lib_iallocmatrix(im_ysiz, im_xsiz);
     for (imy = 0; imy < im_ysiz; imy++)
         for (imx = 0; imx < im_xsiz; imx++)
         {
             cmap[imy][imx] = 0;
         }
-    
+
     /*
        Loop over all pixels in the interior of the image. We skip
        pixels near the edge. Since it is possible there are unseen
@@ -325,63 +321,54 @@ icmap(gint **image, gint im_xsiz, gint im_ysiz,
                 cmap[y][x] = 1; /* 1 contact = good recon */
             }
         }
-        if (set_fraction!=NULL && set_fraction((gdouble)imy/(im_ysiz+ryc-tip_ysiz))==FALSE)
-        {
+        if (set_fraction != NULL
+            && set_fraction((gdouble)imy/(im_ysiz+ryc-tip_ysiz)) == FALSE) {
             return cmap;
         }
     }
-    if (set_fraction!=NULL) set_fraction(0.0);
+    if (set_fraction != NULL)
+        set_fraction(0.0);
     return (cmap);
 }
 
 
 /**
- * dallocmatrix: 
+ * _gwy_morph_lib_dallocmatrix:
  * @ysiz: rows number
  * @xsiz: columns number
  *
- *  Allocates a double matrix of dimension [ysiz][xsiz] using an array
- *  of pointers to rows. ysiz is the number of rows. xsiz is the number
- *  of columns. 
- *  
+ * Allocates a double matrix of dimension [ysiz][xsiz] using an array
+ * of pointers to rows. ysiz is the number of rows. xsiz is the number
+ * of columns.
+ *
  * Returns: alocated matrix
  **/
 gdouble**
-dallocmatrix(gint ysiz, gint xsiz)
+_gwy_morph_lib_dallocmatrix(gint ysiz, gint xsiz)
 {
     gdouble **mptr;                /* points to allocated matrix */
     gint i;                     /* counter */
 
     /* Allocate pointers to rows */
-    mptr = (gdouble **)g_malloc(ysiz * sizeof(gdouble *));
-    if (mptr == NULL) {
-        g_warning("Allocation of mptr failed in allocmatrix\n");
-        return NULL;
-    }
-
+    mptr = g_new(gdouble*, ysiz);
 
     /* Allocate rows */
-    for (i = 0; i < ysiz; i++) {
-        mptr[i] = (gdouble *)g_malloc(xsiz * sizeof(gdouble));
-        if (mptr[i] == NULL) {
-            g_warning("Allocation failed in allocmatrix");
-            return NULL;
-        }
-    }
+    for (i = 0; i < ysiz; i++)
+        mptr[i] = g_new(gdouble, xsiz);
 
     /* Done. Return result. */
     return mptr;
 }
 
 /**
- * dfreematrix:
+ * _gwy_morph_lib_dfreematrix:
  * @mptr: pointer to matrix
  * @ysiz: number of rows
  *
  * Frees memory allocated with dallocmatrix.
  **/
 void
-dfreematrix(gdouble **mptr, gint ysiz)
+_gwy_morph_lib_dfreematrix(gdouble **mptr, gint ysiz)
 {
     gint i;
 
@@ -391,7 +378,7 @@ dfreematrix(gdouble **mptr, gint ysiz)
 }
 
 /**
- * dreflect:
+ * _gwy_morph_lib_dreflect:
  * @surface: double array to be reflected.
  * @surf_xsiz: number of columns
  * @surf_ysiz: number of rows
@@ -401,13 +388,13 @@ dfreematrix(gdouble **mptr, gint ysiz)
  * Returns: reflected array
  **/
 gdouble **
-dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
+_gwy_morph_lib_dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
 {
     gdouble **result;
     gint i, j;                  /* index */
 
     /* create output array of appropriate size */
-    result = dallocmatrix(surf_ysiz, surf_xsiz);
+    result = _gwy_morph_lib_dallocmatrix(surf_ysiz, surf_xsiz);
 
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         for (i = 0; i < surf_xsiz; i++) {
@@ -419,7 +406,7 @@ dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
 
 
 /**
- * ddilation:
+ * _gwy_morph_lib_ddilation:
  * @surface: surface array
  * @surf_xsiz: number of columns
  * @surf_ysiz: number of rows
@@ -436,10 +423,11 @@ dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
  * Returns: dilated data (newly allocated).
  **/
 gdouble **
-ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
-          gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-          GwySetFractionFunc set_fraction,
-          GwySetMessageFunc set_message)
+_gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
+                         gdouble **tip, gint tip_xsiz, gint tip_ysiz,
+                         gint xc, gint yc,
+                         GwySetFractionFunc set_fraction,
+                         GwySetMessageFunc set_message)
 {
     gdouble **result;
     gint i, j, px, py;          /* index */
@@ -448,8 +436,9 @@ ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
     gdouble temp;
 
     /* create output array of appropriate size */
-    result = dallocmatrix(surf_ysiz, surf_xsiz);
-    if (set_message!=NULL) set_message("Dilation...");
+    result = _gwy_morph_lib_dallocmatrix(surf_ysiz, surf_xsiz);
+    if (set_message != NULL)
+        set_message(N_("Dilation"));
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -469,17 +458,17 @@ ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
             }
             result[j][i] = max;
         }
-        if (set_fraction!=NULL && set_fraction((gdouble)j/surf_ysiz)==FALSE)
+        if (set_fraction != NULL && set_fraction((gdouble)j/surf_ysiz)==FALSE)
         {
             return result;
         }
     }
-    if (set_fraction!=NULL) set_fraction(0.0);
+    if (set_fraction != NULL) set_fraction(0.0);
     return (result);
 }
 
 /**
- * derosion:
+ * _gwy_morph_lib_derosion:
  * @surface: surface array
  * @surf_xsiz: number of columns
  * @surf_ysiz: number of rows
@@ -496,10 +485,11 @@ ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
  * Returns: eroded data (newly allocated).
  **/
 gdouble **
-derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
-         gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-         GwySetFractionFunc set_fraction,
-         GwySetMessageFunc set_message)
+_gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
+                        gdouble **tip, gint tip_xsiz, gint tip_ysiz,
+                        gint xc, gint yc,
+                        GwySetFractionFunc set_fraction,
+                        GwySetMessageFunc set_message)
 {
     gdouble **result;
     gint i, j, px, py;          /* index */
@@ -508,9 +498,10 @@ derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
     gdouble temp;
 
     /* create output array of appropriate size */
-    result = dallocmatrix(im_ysiz, im_xsiz);
-    if (set_message!=NULL) set_message("Erosion...");
-    for (j = 0; j < im_ysiz; j++) {     /* Loop over all points in output array */
+    result = _gwy_morph_lib_dallocmatrix(im_ysiz, im_xsiz);
+    if (set_message != NULL)
+        set_message(N_("Erosion"));
+    for (j = 0; j < im_ysiz; j++) {   /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
         pymin = MAX(-j, -yc);
@@ -529,32 +520,35 @@ derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
             }
             result[j][i] = min;
         }
-        if (set_fraction!=NULL && set_fraction((gdouble)j/im_ysiz)==FALSE)
+        if (set_fraction != NULL && set_fraction((gdouble)j/im_ysiz)==FALSE)
         {
             return result;
         }
     }
-    if (set_fraction!=NULL) set_fraction(0.0);
+    if (set_fraction != NULL) set_fraction(0.0);
     return (result);
 }
 
 
 static gint **
-iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz,
-      gint tip_ysiz)
+iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip,
+      gint tip_xsiz, gint tip_ysiz)
 {
     gint **result, **eros;
 
-    eros = ierosion(image, im_xsiz, im_ysiz, tip, tip_xsiz, tip_ysiz,
-                    tip_xsiz/2, tip_ysiz/2, NULL, NULL);
-    result = idilation(eros, im_xsiz, im_ysiz, tip, tip_xsiz, tip_ysiz,
-                       tip_xsiz/2, tip_ysiz/2, NULL, NULL);
-    ifreematrix(eros, im_ysiz);  /* free intermediate result */
+    eros = _gwy_morph_lib_ierosion(image, im_xsiz, im_ysiz, tip,
+                                   tip_xsiz, tip_ysiz,
+                                   tip_xsiz/2, tip_ysiz/2, NULL, NULL);
+    result = _gwy_morph_lib_idilation(eros, im_xsiz, im_ysiz, tip,
+                                      tip_xsiz, tip_ysiz,
+                                      tip_xsiz/2, tip_ysiz/2, NULL, NULL);
+    _gwy_morph_lib_ifreematrix(eros, im_ysiz);  /* free intermediate result */
+
     return (result);
 }
 
 /**
- * itip_estimate:
+ * _gwy_morph_lib_itip_estimate:
  * @image: surface data
  * @im_xsiz: number of columns
  * @im_ysiz: number of rows
@@ -563,7 +557,7 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz,
  * @xc: tip apex column coordinate
  * @yc: tip apex row coordinate
  * @tip0: tip data to be refined
- * @thresh: threshold 
+ * @thresh: threshold
  * @use_edges: whether to use also image edges
  * @set_fraction: function to output computation fraction (or NULL)
  * @set_message: functon to output computation state message (or NULL)
@@ -571,10 +565,12 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz,
  * Performs tip estimation algorithm.
  **/
 void
-itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
-              gint tip_xsiz, gint tip_ysiz, gint xc, gint yc, gint **tip0,
-              gint thresh, gboolean use_edges, GwySetFractionFunc set_fraction,
-              GwySetMessageFunc set_message)
+_gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
+                             gint tip_xsiz, gint tip_ysiz, gint xc,
+                             gint yc, gint **tip0,
+                             gint thresh, gboolean use_edges,
+                             GwySetFractionFunc set_fraction,
+                             GwySetMessageFunc set_message)
 {
     gint iter = 0;
     gint count = 1;
@@ -582,17 +578,17 @@ itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
 
     while (count) {
         iter++;
-        g_snprintf
-            (buffer, 100, "Iterating estimate (iteration %d)...\n",
-             iter);
-        if (set_message!=NULL) set_message(buffer);
+        g_snprintf(buffer, sizeof(buffer),
+                   N_("Iterating estimate (iteration %d)"), iter);
+        if (set_message != NULL)
+            set_message(buffer);
         count = itip_estimate_iter(image, im_xsiz, im_ysiz,
                                    tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                    use_edges, set_fraction, set_message);
-        g_snprintf
-            (buffer, 100, "%d image locations produced refinement.\n",
-             count);
-        if (set_message!=NULL) set_message(buffer);
+        g_snprintf(buffer, sizeof(buffer),
+                   N_("%d image locations produced refinement"), count);
+        if (set_message != NULL)
+            set_message(buffer);
     }
 }
 
@@ -603,11 +599,11 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                    gboolean use_edges, GwySetFractionFunc set_fraction,
                    GwySetMessageFunc set_message)
 {
-    gint ixp, jxp;              /* index into the image (x') */
+    gint ixp, jxp;           /* index into the image (x') */
     gint **open;
     gdouble fraction;
 
-    gint count = 0;             /* counts places where tip estimate is improved */
+    gint count = 0;          /* counts places where tip estimate is improved */
 
     open = iopen(image, im_xsiz, im_ysiz, tip0, tip_xsiz, tip_ysiz);
 
@@ -618,25 +614,22 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                     (ixp, jxp, image, im_xsiz, im_ysiz, tip_xsiz, tip_ysiz, xc,
                      yc, tip0, thresh, use_edges))
                     count++;
-                if (set_fraction!=NULL)
-                {
+                if (set_fraction != NULL) {
                     fraction = (gdouble)(jxp-(tip_ysiz - 1 - yc))/
                         (gdouble)((im_ysiz - 1 - yc) - (tip_ysiz - 1 - yc));
-                    if (fraction<0) fraction = 0;
-                    if (set_fraction(fraction)==FALSE)
-                    {
+                    fraction = MAX(fraction, 0);
+                    if (!set_fraction(fraction))
                         break;
-                    }
                 }
         }
     }
 
-    ifreematrix(open, im_ysiz);
+    _gwy_morph_lib_ifreematrix(open, im_ysiz);
     return (count);
 }
 
 /**
- * itip_estimate:
+ * _gwy_morph_lib_itip_estimate0:
  * @image: surface data
  * @im_xsiz: number of columns
  * @im_ysiz: number of rows
@@ -645,7 +638,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
  * @xc: tip apex column coordinate
  * @yc: tip apex row coordinate
  * @tip0: tip data to be refined
- * @thresh: threshold 
+ * @thresh: threshold
  * @use_edges: whether to use also image edges
  * @set_fraction: function to output computation fraction (or NULL)
  * @set_message: functon to output computation state message (or NULL)
@@ -653,10 +646,13 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
  * Performs partial tip estimation algorithm.
  **/
 void
-itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
-               gint tip_ysiz, gint xc, gint yc, gint **tip0, gint thresh,
-               gboolean use_edges, GwySetFractionFunc set_fraction,
-               GwySetMessageFunc set_message)
+_gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
+                              gint tip_xsiz, gint tip_ysiz,
+                              gint xc, gint yc,
+                              gint **tip0, gint thresh,
+                              gboolean use_edges,
+                              GwySetFractionFunc set_fraction,
+                              GwySetMessageFunc set_message)
 {
     gint i, j, n;
     gint arraysize;  /* size of array allocated to store list of image maxima */
@@ -669,22 +665,13 @@ itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     gchar buffer[100];
 
     arraysize = 300;
-    /* FIXME: replace stuff like this with g_new() */
-    x = (gint *)g_malloc(arraysize * sizeof(gint));
-    if (x == NULL) {
-        g_warning("Unable to allocate x array in itip_estimate0 routine.");
-        return;
-    }
-    y = (gint *)g_malloc(arraysize * sizeof(gint));
-    if (y == NULL) {
-        g_warning("Unable to allocate y array in itip_estimate0 routine.");
-        g_free(x);
-        return;
-    }
+    x = g_new(gint, arraysize);
+    y = g_new(gint, arraysize);
 
     delta = MAX(MAX(tip_xsiz, tip_ysiz)/10, 1);
 
-    if (set_message!=NULL) set_message("Searching for local maxima...");
+    if (set_message != NULL)
+        set_message(N_("Searching for local maxima"));
     /* Create a list of coordinates to use */
     n = 0;                      /* Number of image maxima found so far */
     for (j = tip_ysiz - 1 - yc; j <= im_ysiz - 1 - yc; j++) {
@@ -692,20 +679,8 @@ itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
             if (useit(i, j, image, im_xsiz, im_ysiz, delta)) {
                 if (n == arraysize) {   /* need more room in temporary arrays */
                     arraysize *= 2;     /* increase array size by factor of 2 */
-                    x = (gint *)g_realloc(x, arraysize * sizeof(gint));
-                    if (x == NULL) {
-                        g_warning
-                            ("Unable to realloc x array in itip_estimate0.");
-                        g_free(y);
-                        return;
-                    }
-                    y = (gint *)g_realloc(y, arraysize * sizeof(gint));
-                    if (y == NULL) {
-                        g_warning
-                            ("Unable to realloc y array in itip_estimate0.");
-                        g_free(x);
-                        return;
-                    }
+                    x = g_renew(gint, x, arraysize);
+                    y = g_renew(gint, y, arraysize);
                 }
                 x[n] = i;       /* We found another one */
                 y[n] = j;
@@ -713,42 +688,44 @@ itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
             }
         }
     }
-    g_snprintf(buffer, 100, "Found %d internal local maxima\n", n);
-    if (set_message!=NULL) set_message(buffer);
+    g_snprintf(buffer, sizeof(buffer),
+               N_("Found %d internal local maxima"), n);
+    if (set_message != NULL)
+        set_message(buffer);
 
     /* Now refine tip at these coordinates recursively until no more change */
     do {
         count = 0;
         iter++;
-        g_snprintf
-            (buffer, 100, "Iterating estimate (iteration %d)...\n",
-             iter);
-        if (set_message!=NULL) set_message(buffer);
+        g_snprintf(buffer, sizeof(buffer),
+                   N_("Iterating estimate (iteration %d)"), iter);
+        if (set_message != NULL) set_message(buffer);
 
-        for (i = 0; i < n; i++)
-        {
+        for (i = 0; i < n; i++) {
             if (itip_estimate_point(x[i], y[i], image, im_xsiz, im_ysiz,
                                     tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                     use_edges))
                 count++;
-                if (set_fraction!=NULL && set_fraction((gdouble)i/(gdouble)n)==FALSE)
-                {
+                if (set_fraction != NULL
+                    && !set_fraction((gdouble)i/(gdouble)n)) {
                     break;
                 }
         }
-        g_snprintf
-            (buffer, 100, "%d image locations produced refinement.\n",
-             count);
-        if (set_message!=NULL) set_message(buffer);
-    } while (count && count>maxcount);
-    if (set_fraction!=NULL) set_fraction(0.0);
-    
+        g_snprintf(buffer, sizeof(buffer),
+                   N_("%d image locations produced refinement"), count);
+        if (set_message != NULL)
+            set_message(buffer);
+    } while (count && count > maxcount);
+
+    if (set_fraction != NULL)
+        set_fraction(0.0);
+
     /* free temporary space */
     g_free(x);
     g_free(y);
 }
 
-/* 
+/*
    The following is a routine that determines whether a selected point
    at coordintes x,y within an image is deemed to be suitable for
    image refinement. In this implementation, the algorithm simply
@@ -780,11 +757,11 @@ useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta)
        unless there are too many points in the neighborhood with the same
        property--i.e. the neighborhood is flat */
     if (max == image[y][x] && count <= ((2 * delta + 1) ^ 2)/5)
-        return (1);
-    return (0);
+        return 1;
+    return 0;
 }
 
-/* 
+/*
    The following routine does the same thing as itip_estimate_iter, except
    that instead of looping through all i,j contained within the image, it
    computes the tip shape as deduced from a single i,j coordinate. For what
@@ -793,32 +770,34 @@ useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta)
    constraints on the tip shape. If the tip shape is refined by considering
    these points first, time is saved later. The following routine, since it
    performs the calculation at a single point, allows the user to select
-   the order in which image coordinates are considered. In using the 
+   the order in which image coordinates are considered. In using the
    routine in this mode, the fact that the refined tip replaces tip0 means
    results of one step automatically become the starting point for the next
-   step. The routine returns an integer which is the number of pixels 
+   step. The routine returns an integer which is the number of pixels
    within the starting tip estimate which were updated.
 
    To compile codes which does not use parts of the image within a tipsize
-   of the edge, set USE_EDGES to 0 on the next line.   
+   of the edge, set USE_EDGES to 0 on the next line.
 */
 static gint
 itip_estimate_point(gint ixp, gint jxp, gint **image,
                     gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-                    gint xc, gint yc, gint **tip0, gint thresh, 
+                    gint xc, gint yc, gint **tip0, gint thresh,
                     gboolean use_edges)
 {
-    gint ix, jx,                /* index into the output tip array (x) */
-      id, jd;                   /* index into p' (d) */
-    gint temp, imagep, dil;     /* various intermediate results */
-    gint count = 0;             /* counts places where tip estimate is improved */
-    gint interior;              /* =1 if no edge effects to worry about */
+    gint ix, jx,              /* index into the output tip array (x) */
+      id, jd;                 /* index into p' (d) */
+    gint temp, imagep, dil;   /* various intermediate results */
+    gint count = 0;           /* counts places where tip estimate is improved */
+    gint interior;            /* =1 if no edge effects to worry about */
     gint apexstate, xstate, inside = 1,  /* Point is inside image */
-        outside = 0;            /* point is outside image */
+        outside = 0;          /* point is outside image */
 
 
-    interior = jxp >= tip_ysiz - 1 && jxp <= im_ysiz - tip_ysiz
-        && ixp >= tip_xsiz - 1 && ixp <= im_xsiz - tip_xsiz;
+    interior = jxp >= tip_ysiz - 1
+               && jxp <= im_ysiz - tip_ysiz
+               && ixp >= tip_xsiz - 1
+               && ixp <= im_xsiz - tip_xsiz;
 
     if (interior) {
         for (jx = 0; jx < tip_ysiz; jx++) {
@@ -842,8 +821,7 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                 }               /* end for jd */
                 if (dil == -G_MAXINT)
                     continue;
-                if (dil < tip0[jx][ix] - thresh) 
-                { 
+                if (dil < tip0[jx][ix] - thresh) {
                     count++,
                     tip0[jx][ix] = dil+thresh;
                 }
@@ -852,8 +830,7 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
         return (count);
     }                           /* endif */
 
-    if (use_edges)
-    {
+    if (use_edges) {
         /* Now handle the edges */
         for (jx = 0; jx < tip_ysiz; jx++) {
             for (ix = 0; ix < tip_xsiz; ix++) {
@@ -868,8 +845,8 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                         if (jxp + yc - jd < 0 || jxp + yc - jd >= im_ysiz ||
                             ixp + xc - id < 0 || ixp + xc - id >= im_xsiz)
                             apexstate = inside;
-                        else if (imagep - image[jxp + yc - jd][ixp + xc - id] <=
-                                 tip0[jd][id])
+                        else if (imagep - image[jxp + yc - jd][ixp + xc - id]
+                                 <= tip0[jd][id])
                             apexstate = inside;
                         /* Determine whether the point (ix,jx) under consideration
                            lies within the domain of the translated image */
@@ -878,9 +855,9 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                             xstate = outside;
                         else
                             xstate = inside;
-    
+
                         /* There are 3 actions we might take, depending upon
-                           which of 4 states (2 apexstate possibilities times 2 
+                           which of 4 states (2 apexstate possibilities times 2
                            xstate ones) we are in. */
 
                         /* If apex is outside and x is either in or out no change
@@ -895,7 +872,7 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                         if (xstate == outside)
                             goto nextx;
 
-                        /* The only remaining possibility is x and apex both inside. 
+                        /* The only remaining possibility is x and apex both inside.
                            This is the same case we treated in the interior. */
                         temp =
                             image[jx + jxp - jd][ix + ixp - id] + tip0[jd][id] -
@@ -906,9 +883,9 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                 if (dil == -G_MAXINT)
                     continue;
 
-                tip0[jx][ix] =
-                    dil < tip0[jx][ix] - thresh ? (count++,
-                                                   dil + thresh) : tip0[jx][ix];
+                tip0[jx][ix] = (dil < tip0[jx][ix] - thresh)
+                                ? (count++, dil + thresh)
+                                : tip0[jx][ix];
               nextx:;
             }                       /* end for ix */
         }                           /* end for jx */

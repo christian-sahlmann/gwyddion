@@ -21,34 +21,33 @@
 #ifndef __GWY_PROCESS_TIP_H__
 #define __GWY_PROCESS_TIP_H__
 
-#include "morph_lib.h"
+#include <libprocess/datafield.h>
 
 G_BEGIN_DECLS
 
-/* XXX: never used in libprocess itself, there should be probably some header
- * file with common enums... */
+/* XXX */
 typedef enum {
-    GWY_TIP_PYRAMIDE       = 0, 
+    GWY_TIP_PYRAMIDE       = 0,
     GWY_TIP_CONTACT        = 1,
     GWY_TIP_NONCONTACT     = 2,
     GWY_TIP_DELTA          = 3
 } GwyTipType;
 
+typedef gboolean (*GwySetFractionFunc)(gdouble fraction);
+typedef gboolean (*GwySetMessageFunc)(gchar *message);
 
-G_END_DECLS
-
-typedef void (*GwyTipModelFunc)(GwyDataField *tip,			
-				gdouble height,
-				gdouble radius,
-        gdouble rotation,
-				gdouble *params);
+typedef void (*GwyTipModelFunc)(GwyDataField *tip,
+                                gdouble height,
+                                gdouble radius,
+                                gdouble rotation,
+                                gdouble *params);
 
 typedef void (*GwyTipGuessFunc)(GwyDataField *data,
-				gdouble height,
-				gdouble radius,
-				gdouble *params,
-				gint *xres,
-				gint *yres);
+                                gdouble height,
+                                gdouble radius,
+                                gdouble *params,
+                                gint *xres,
+                                gint *yres);
 
 typedef struct _GwyTipModelPreset GwyTipModelPreset;
 
@@ -57,7 +56,7 @@ struct _GwyTipModelPreset {
     const gchar *group_name;
     GwyTipModelFunc func;
     GwyTipGuessFunc guess;
-    gint nparams;    
+    gint nparams;
 };
 
 
@@ -80,25 +79,40 @@ gchar*          gwy_tip_model_get_preset_group_name   (const GwyTipModelPreset* 
 gint            gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset);
 
 
-GwyDataField*   gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-                                  GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
+GwyDataField*   gwy_tip_dilation(GwyDataField *tip,
+                                 GwyDataField *surface,
+                                 GwyDataField *result,
+                                 GwySetFractionFunc set_fraction,
+                                 GwySetMessageFunc set_message);
 
-GwyDataField*   gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-                                 GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
+GwyDataField*   gwy_tip_erosion(GwyDataField *tip,
+                                GwyDataField *surface,
+                                GwyDataField *result,
+                                GwySetFractionFunc set_fraction,
+                                GwySetMessageFunc set_message);
 
-GwyDataField*   gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-                             GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
-
-
-GwyDataField*   gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-					 gboolean use_edges, 
-					 GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
-
-GwyDataField*   gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-					 gboolean use_edges, 
-					 GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
+GwyDataField*   gwy_tip_cmap(GwyDataField *tip,
+                             GwyDataField *surface,
+                             GwyDataField *result,
+                             GwySetFractionFunc set_fraction,
+                             GwySetMessageFunc set_message);
 
 
+GwyDataField*   gwy_tip_estimate_partial(GwyDataField *tip,
+                                         GwyDataField *surface,
+                                         gdouble threshold,
+                                         gboolean use_edges,
+                                         GwySetFractionFunc set_fraction,
+                                         GwySetMessageFunc set_message);
+
+GwyDataField*   gwy_tip_estimate_full(GwyDataField *tip,
+                                      GwyDataField *surface,
+                                      gdouble threshold,
+                                      gboolean use_edges,
+                                      GwySetFractionFunc set_fraction,
+                                      GwySetMessageFunc set_message);
+
+G_END_DECLS
 
 #endif /*__GWY_PROCESS_GRAINS__*/
 
