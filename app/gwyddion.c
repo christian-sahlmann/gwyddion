@@ -263,6 +263,7 @@ setup_logging(void)
     const gchar *domains[] = {
         "GLib", "GLib-GObject", "GModule", "GThread",
         "GdkPixbuf", "Gdk", "Gtk",
+        "GdkGLExt", "GtkGLExt",
         "Gwyddion", "GwyProcess", "GwyDraw", "Gwydgets", "GwyModule", "GwyApp",
         "Module", NULL
     };
