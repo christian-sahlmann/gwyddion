@@ -25,21 +25,6 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 
-/* XXX XXX XXX this should be an enum! */
-#define GWY_GRAPH_LABEL_NORTHEAST 0
-#define GWY_GRAPH_LABEL_NORTHWEST 1
-#define GWY_GRAPH_LABEL_SOUTHEAST 2
-#define GWY_GRAPH_LABEL_SOUTHWEST 3
-
-#define GWY_GRAPH_POINT_SQUARE         0
-#define GWY_GRAPH_POINT_CROSS          1
-#define GWY_GRAPH_POINT_CIRCLE         2
-#define GWY_GRAPH_POINT_STAR           3
-#define GWY_GRAPH_POINT_TIMES          4
-#define GWY_GRAPH_POINT_TRIANGLE_UP    5
-#define GWY_GRAPH_POINT_TRIANGLE_DOWN  6
-#define GWY_GRAPH_POINT_DIAMOND        7
-
 G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAPH_LABEL            (gwy_graph_label_get_type())
@@ -52,12 +37,30 @@ G_BEGIN_DECLS
 typedef struct _GwyGraphLabel      GwyGraphLabel;
 typedef struct _GwyGraphLabelClass GwyGraphLabelClass;
 
+typedef enum {
+    GWY_GRAPH_LABEL_NORTHEAST = 0,
+    GWY_GRAPH_LABEL_NORTHWEST = 1,
+    GWY_GRAPH_LABEL_SOUTHEAST = 2,
+    GWY_GRAPH_LABEL_SOUTHWEST = 3
+} GwyGraphLabelPosition;
+
+typedef enum {
+    GWY_GRAPH_POINT_SQUARE        = 0,
+    GWY_GRAPH_POINT_CROSS         = 1,
+    GWY_GRAPH_POINT_CIRCLE        = 2,
+    GWY_GRAPH_POINT_STAR          = 3,
+    GWY_GRAPH_POINT_TIMES         = 4,
+    GWY_GRAPH_POINT_TRIANGLE_UP   = 5,
+    GWY_GRAPH_POINT_TRIANGLE_DOWN = 6,
+    GWY_GRAPH_POINT_DIAMOND       = 7
+} GwyGraphPointType;
+
 /*single curve properties*/
 typedef struct {
     gint is_line;   /* XXX: booleans should be booleans */
     gint is_point;   /* XXX: booleans should be booleans */
 
-    gint point_size;   /* XXX: enmus should be enums */
+    gint point_size;
     gint point_type;   /* XXX: enmus should be enums */
 
     GdkLineStyle line_style;
@@ -66,7 +69,7 @@ typedef struct {
     GString *description;
     GdkColor color;
 
-    /* when adding meaningful fields, please make sure GwyGraphEpitome
+    /* when adding meaningful fields, please make sure GwyGraphCurveModel
      * understands them too */
     gpointer reserved1;
     gpointer reserved2;
