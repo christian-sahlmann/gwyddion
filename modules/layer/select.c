@@ -113,6 +113,9 @@ static gboolean   gwy_layer_select_get_selection     (GwyVectorLayer *layer,
 static void       gwy_layer_select_set_is_crop       (GwyLayerSelect *layer,
                                                       gboolean is_crop);
 static void       gwy_layer_select_unselect          (GwyVectorLayer *layer);
+static void       gwy_layer_select_set_selection     (GwyVectorLayer *layer,
+                                                      gint n,
+                                                      gdouble *selection);
 static void       gwy_layer_select_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_select_unplugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_select_save              (GwyLayerSelect *layer);
@@ -208,6 +211,7 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     vector_class->button_release = gwy_layer_select_button_released;
     vector_class->get_selection = gwy_layer_select_get_selection;
     vector_class->unselect = gwy_layer_select_unselect;
+    vector_class->set_selection = gwy_layer_select_set_selection;
 
     memset(klass->corner_cursor, 0, 4*sizeof(GdkCursor*));
     klass->resize_cursor = NULL;
@@ -551,6 +555,34 @@ gwy_layer_select_unselect(GwyVectorLayer *layer)
         gwy_layer_select_draw(layer, parent->window);
     select_layer->selected = FALSE;
     gwy_layer_select_save(select_layer);
+}
+
+static void
+gwy_layer_select_set_selection(GwyVectorLayer *layer,
+                               gint n,
+                               gdouble *selection)
+{
+    GwyLayerSelect *select_layer;
+    GtkWidget *parent;
+
+    if (!n)
+        gwy_layer_select_unselect(layer);
+    g_return_if_fail(selection);
+    g_return_if_fail(n > 0 && n <= 1);
+    g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
+    select_layer = GWY_LAYER_SELECT(layer);
+
+    select_layer->x0 = MIN(selection[0], selection[2]);
+    select_layer->y0 = MIN(selection[1], selection[3]);
+    select_layer->x1 = MAX(selection[0], selection[2]);
+    select_layer->y1 = MAX(selection[1], selection[3]);
+    select_layer->selected = TRUE;
+
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
+    if (parent)
+        gtk_widget_queue_draw(parent);
+
+    gwy_vector_layer_selection_finished(layer);
 }
 
 static void
