@@ -261,7 +261,7 @@ gwy_app_get_current_data(void)
 void
 gwy_app_data_window_set_current(GwyDataWindow *window)
 {
-    GwyMenuSensData sens_data = {
+    static GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_DATA
@@ -297,7 +297,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     if (gwy_container_contains_by_name(data, "/0/show"))
         sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
 
-    gwy_app_toolbox_update_state(&sens_data);
+    g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);
     already_current = window;
     gwy_app_set_current_window(GTK_WIDGET(window));
 }
@@ -315,7 +315,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 void
 gwy_app_data_window_remove(GwyDataWindow *window)
 {
-    GwyMenuSensData sens_data = {
+    static GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         0
@@ -341,7 +341,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
 
     if (current_tool)
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
-    gwy_app_toolbox_update_state(&sens_data);
+    g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);
 
     gwy_app_data_window_list_updated();
 }
@@ -554,7 +554,7 @@ gwy_app_graph_window_get_current(void)
 void
 gwy_app_graph_window_set_current(GtkWidget *window)
 {
-    GwyMenuSensData sens_data = {
+    static GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH
     };
     GList *item;
@@ -566,7 +566,7 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     current_graph = g_list_remove_link(current_graph, item);
     current_graph = g_list_concat(item, current_graph);
 
-    gwy_app_toolbox_update_state(&sens_data);
+    g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);
     gwy_app_set_current_window(window);
 }
 
@@ -582,7 +582,7 @@ gwy_app_graph_window_set_current(GtkWidget *window)
 void
 gwy_app_graph_window_remove(GtkWidget *window)
 {
-    GwyMenuSensData sens_data = {
+    static GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_GRAPH, 0
     };
     GList *item;
@@ -597,7 +597,7 @@ gwy_app_graph_window_remove(GtkWidget *window)
     if (current_graph)
         gwy_app_graph_window_set_current(current_graph->data);
     else
-        gwy_app_toolbox_update_state(&sens_data);
+        g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);
 }
 
 /**
