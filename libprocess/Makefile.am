@@ -25,14 +25,14 @@ EXTRA_DIST = \
 # Chaning ifraces     C:   R:   0
 libgwyprocess_la_LDFLAGS = -version-info 1:0:1
 libgwyprocess_la_SOURCES = \
+	correct.c \
 	cwt.c \
 	datafield.c \
 	dataline.c \
-	interpolation.c \
-	simplefft.c \
-	grains.c \
 	fractals.c \
-	correct.c
+	grains.c \
+	interpolation.c \
+	simplefft.c
 
 #noinst_PROGRAMS = test
 #
