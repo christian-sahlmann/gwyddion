@@ -310,6 +310,8 @@ gwy_data_field_initialize(GwyDataField *a,
         for (i = 0; i < (a->xres*a->yres); i++)
             a->data[i] = 0;
     }
+    a->si_unit_xy = (GwySIUnit*)gwy_si_unit_new("m");
+    a->si_unit_z = (GwySIUnit*)gwy_si_unit_new("m");
 }
 
 /**
