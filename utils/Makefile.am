@@ -14,8 +14,7 @@ EXTRA_DIST = \
 	update-potfiles.sh \
 	vim-syn-gen.py
 
-if MAINTAINER_MODE
-all-local: modules.xml module-list.html module-list-nocss.html
+module-list: modules.xml module-list.html module-list-nocss.html
 
 noinst_PROGRAMS = \
 	dump-modules
@@ -41,7 +40,6 @@ module-list.html: modules.xml modules-web.xsl
 
 module-list-nocss.html: modules.xml modules-web-nocss.xsl
 	$(XSLTPROC) modules-web-nocss.xsl modules.xml >module-list-nocss.html
-endif
 
 clean-local:
 	rm -f core.* *~
