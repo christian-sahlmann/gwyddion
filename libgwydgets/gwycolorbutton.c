@@ -55,8 +55,6 @@
 #define CHECK_DARK  (1.0/3.0)
 #define CHECK_LIGHT (2.0/3.0)
 
-#define P_(x) x
-
 /* Properties */
 enum
 {
@@ -147,9 +145,9 @@ gwy_color_button_class_init(GwyColorButtonClass *klass)
     g_object_class_install_property
         (gobject_class,
          PROP_USE_ALPHA,
-         g_param_spec_boolean("use_alpha", P_("Use alpha"),
-                              P_("Whether or not to give the color "
-                                 "an alpha value"),
+         g_param_spec_boolean("use_alpha", "Use alpha",
+                              "Whether or not to give the color "
+                              "an alpha value",
                               FALSE,
                               (G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
@@ -163,8 +161,8 @@ gwy_color_button_class_init(GwyColorButtonClass *klass)
         (gobject_class,
          PROP_COLOR,
          g_param_spec_boxed("color",
-                            P_("Current Color"),
-                            P_("The selected color"),
+                            "Current Color",
+                            "The selected color",
                             GWY_TYPE_RGBA,
                             G_PARAM_READABLE | G_PARAM_WRITABLE));
 }

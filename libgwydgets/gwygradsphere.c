@@ -141,16 +141,16 @@ gwy_grad_sphere_class_init(GwyGradSphereClass *klass)
         gobject_class,
         PROP_SPHERE_COORDS,
         g_param_spec_object("sphere_coords",
-                            _("Spherical coordinates"),
-                            _("The GwySphereCoords the shpere"),
+                            "Spherical coordinates",
+                            "The GwySphereCoords of the sphere",
                             GWY_TYPE_SPHERE_COORDS,
                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
     g_object_class_install_property(
         gobject_class,
         PROP_UPDATE_POLICY,
         g_param_spec_enum("update_policy",
-                          _("Update Policy"),
-                          _("When value changed causes signal emission"),
+                          "Update Policy",
+                          "When value change causes signal emission",
                           GTK_TYPE_UPDATE_TYPE,
                           GTK_UPDATE_CONTINUOUS,
                           G_PARAM_READABLE | G_PARAM_WRITABLE));
