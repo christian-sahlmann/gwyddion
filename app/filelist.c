@@ -31,6 +31,8 @@
  * - add some equivalent of file_real_open() to API and use it from the other
  *   places
  * - Do NOT store thumbnails for anything in ~/.thumbnails
+ * - Fix memory leaks: loading seems to be OK now, but opening files leaks
+ *   pixbufs, even opening files for which a thumbnail exist.
  */
 #define DEBUG 1
 #include <libgwyddion/gwyddion.h>
@@ -831,7 +833,6 @@ gwy_recent_file_new(gchar *filename_utf8,
 static void
 gwy_recent_file_free(GwyRecentFile *rf)
 {
-    gwy_debug("pbuf->ref_count = %d", G_OBJECT(rf->pixbuf)->ref_count);
     gwy_object_unref(rf->pixbuf);
     g_free(rf->file_utf8);
     g_free(rf->file_sys);
