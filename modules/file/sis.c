@@ -117,11 +117,36 @@ typedef struct {
 } SISParameter;
 
 typedef struct {
+    guchar symbol[4];
+    gsize data_size;
+    gchar *meta;
+} SISProcessingStep;
+
+typedef struct {
+    /* image info */
+    guchar processing_step[4];
+    gsize processing_step_index;
+    gsize channel_index;  /* 0 == 1st */
+    guchar parent_processing_step[4];
+    gsize parent_processing_step_index;  /* 0 == 1st, ffff = none */
+    gsize parent_processing_step_channel_index;  /* 0 == 1st */
+    /* memory info */
+    gsize width;
+    gsize height;
+    gsize bpp;
+    gsize priority;
+    gboolean image_data_saved;
+    const guchar *image_data;    /* not allocated, just pointer to buffer */
+} SISImage;
+
+typedef struct {
     SISDataType data_type;
     SISSignalSource signal_source;
-    SISScanningDirection direction;
+    SISScanningDirection scanning_direction;
     gsize processing_steps;
     /* images */
+    gsize nimages;
+    SISImage *images;
 } SISChannel;
 
 typedef struct {
@@ -180,6 +205,39 @@ static const GwyEnum sis_signal_sources[] = {
     { "LOC Software Amplitude", SIS_SIGNAL_SOURCE_LOC_SW_AMPLITUDE },
     { "LOC Software Phase",     SIS_SIGNAL_SOURCE_LOC_SW_PHASE     },
     { "User",                   SIS_SIGNAL_SOURCE_USER             },
+};
+
+static const SISProcessingStep processing_steps[] = {
+    { "BLOB", 2,                 "Particle count"                },
+    { "3DJS", 5*2 + 2*8 + 4*2,   "3DJS"                          },
+    { "ACOR", 0,                 "Autocorrelation"               },
+    { "ALNC", 6*2,               "Autocorrelation LineCut"       },
+    { "BFFT", 0,                 "Biqudratic Fourier filter fit" },
+    { "CONT", 2*2,               "Contrast histogram"            },
+    { "DIF2", 2*2,               "Differentiation"               },
+    { "EDGE", 0,                 "Edge detection filter"         },
+    { "FFBP", 2*8 + 2*2,         "Band pass frequency filter"    },
+    { "FFLP", 0,                 "Low pass frequency filter"     },
+    { "FFMP", 0,                 "High pass frequency filter"    },
+    { "FFT2", 0,                 "Twodimensional FFT"            },
+    { "FLIP", 0,                 "Y axis flip"                   },
+    { "HIST", 2*8 + 4*2 + 8,     "Histogram"                     },
+    { "IFT2", 0,                 "Fourier filter back 2D"        },
+    { "LNCT", 8*2,               "Line profile"                  },
+    { "MEDN", 0,                 "Median filter"                 },
+    { "MIRR", 0,                 "X axis mirror"                 },
+    { "PAVE", 0,                 "Profile average"               },
+    { "RAWR", 0,                 "Raw raster data"               },
+    { "RGOI", 4*2,               "Region of interest"            },
+    { "ROTN", 2,                 "Rotation"                      },
+    { "SHRP", 0,                 "Sharpening filter"             },
+    { "SMTH", 0,                 "Smoothing filter"              },
+    { "STAT", 0,                 "Statistics in z"               },
+    { "STEP", 0,                 "Step correction"               }, 
+    { "SURF", 2*2,               "Surface area"                  },
+    { "TIBQ", 0,                 "Biquadratic plane correction"  },
+    { "TIL3", 6*2,               "Three point plane correction"  },
+    { "TILT", 0,                 "Automatic plane correction"    },
 };
 
 static const SISParameter sis_parameters[] = {
@@ -356,6 +414,10 @@ sis_real_load(const guchar *buffer,
               gsize size,
               SISFile *sisfile)
 {
+    const SISParameter *sisparam;
+    const SISProcessingStep *procstep;
+    SISChannel *channel = NULL;
+    SISImage *image;
     gsize start, id, i, j, len;
     gsize docinfosize, nparams;
     const guchar *p;
@@ -390,10 +452,10 @@ sis_real_load(const guchar *buffer,
     nparams = get_WORD(&p);
     sisfile->nchannels = get_WORD(&p);
     gwy_debug("nparams = %d, nchannels = %d", nparams, sisfile->nchannels);
+    if (!sisfile->nchannels)
+        return FALSE;
 
     for (i = 0; i < nparams; i++) {
-        const SISParameter *sisparam;
-
         if (size - (p - buffer) < 4)
             return FALSE;
         id = get_WORD(&p);
@@ -444,17 +506,38 @@ sis_real_load(const guchar *buffer,
         }
     }
 
-    sisfile->channels = g_new(SISChannel, sisfile->nchannels);
+    sisfile->channels = g_new0(SISChannel, sisfile->nchannels);
     for (i = 0; i <= sisfile->nchannels; ) {
         gwy_debug("%06x", p - buffer);
-        if (size - (p - buffer) < 6)
+        /* this looks like end-of-data */
+        if (i == sisfile->nchannels
+            && channel->nimages == channel->processing_steps) {
+            gwy_debug("OK!");
+            return TRUE;
+        }
+
+        /* we've got out of sync, try to return what we have, if anything */
+        if (size - (p - buffer) < 6) {
+            if (i || channel->nimages) {
+                gwy_debug("Got out of sync, but managed to read something");
+                sisfile->nchannels = i-1;
+                return TRUE;
+            }
             return FALSE;
+        }
 
         id = get_WORD(&p);
         len = get_DWORD(&p);
         gwy_debug("id = %u, len = %u", id, len);
-        if (!len || size - (p - buffer) < len)
+        /* we've got out of sync, try to return what we have, if anything */
+        if (!len || size - (p - buffer) < len) {
+            if (i || channel->nimages) {
+                gwy_debug("Got out of sync, but managed to read something");
+                sisfile->nchannels = i-1;
+                return TRUE;
+            }
             return FALSE;
+        }
 
         switch (id) {
             case SIS_BLOCK_PREVIEW:
@@ -463,18 +546,83 @@ sis_real_load(const guchar *buffer,
             break;
 
             case SIS_BLOCK_IMAGE:
-            j++;
-            gwy_debug("Image #%u of channel %u", j, i);
-            /* XXX: This is unreliable bogus, some data files have samples
-             * instead of bytes here... */
-            p += len;
+            channel->nimages++;
+            channel->images = g_renew(SISImage, channel->images,
+                                      channel->nimages);
+            image = channel->images + channel->nimages-1;
+            gwy_debug("Image #%u of channel %u", channel->nimages, i);
+            if (!i || !channel || len < 26)
+                return FALSE;
+            memcpy(image->processing_step, p, 4);
+            p += 4;
+            procstep = NULL;
+            for (j = 0; j < G_N_ELEMENTS(processing_steps); j++) {
+                if (memcmp(image->processing_step, processing_steps[j].symbol,
+                           4) == 0) {
+                    procstep = processing_steps + j;
+                    gwy_debug("Processing step %.4s (%s), data size = %u",
+                              image->processing_step, procstep->meta,
+                              procstep->data_size);
+                    break;
+                }
+            }
+            if (!procstep) {
+                g_warning("Unknown processing step %.4s",
+                          image->processing_step);
+            }
+            image->processing_step_index = get_WORD(&p);
+            image->channel_index = get_WORD(&p);
+            memcpy(image->parent_processing_step, p, 4);
+            p += 4;
+            image->parent_processing_step_index = get_WORD(&p);
+            image->parent_processing_step_channel_index = get_WORD(&p);
+            p += procstep ? procstep->data_size : 0;
+            if (size - (p - buffer) < 10)
+                return FALSE;
+
+            image->width = get_WORD(&p);
+            image->height = get_WORD(&p);
+            image->bpp = get_WORD(&p);
+            image->priority = get_WORD(&p);
+            image->image_data_saved = get_WORD(&p);
+            gwy_debug("width = %u, height = %u, bpp = %u, saved = %s",
+                      image->width, image->height, image->bpp,
+                      image->image_data_saved ? "NO" : "YES");
+            /* XXX: len is unreliable bogus, some data files have samples
+             * instead of bytes here... but we have to figure out whether
+             * there is some data or not */
+            /*p += len;*/
+            if (len == 26) {
+                gwy_debug("assuming no data");
+                image->image_data = NULL;
+                p += procstep ? procstep->data_size : 0;
+            }
+            else {
+                len = image->width * image->height * image->bpp;
+                gwy_debug("assuming data of size %u", len);
+                if (size - (p - buffer) < len)
+                    return FALSE;
+                image->image_data = p;
+                p += len;
+            }
             break;
 
             case SIS_BLOCK_CHANNEL:
             i++;
-            j = 0;
             gwy_debug("Channel %u", i);
-            p += len;
+            if (len < 8)
+                return FALSE;
+            channel = sisfile->channels + i-1;
+            channel->data_type = get_WORD(&p);
+            channel->signal_source = get_WORD(&p);
+            channel->scanning_direction = get_WORD(&p);
+            channel->processing_steps = get_WORD(&p);
+            gwy_debug("data type = %u, signal source = %u",
+                      channel->data_type, channel->signal_source);
+            gwy_debug("scanning direction = %u, processing steps = %u",
+                      channel->scanning_direction, channel->processing_steps);
+            /* skip whatever undocumented remains */
+            p += len - 8;
             break;
 
             default:
