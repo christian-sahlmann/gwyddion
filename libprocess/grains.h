@@ -73,7 +73,7 @@ gboolean gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
                                             gint col,
                                             gint row);
 
-gint gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
+void gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
                                           gint size);
 
 void gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
