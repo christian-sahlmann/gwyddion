@@ -1,6 +1,10 @@
 # @(#) $Id$
 
-EXTRA_DIST= \
+noinst_DATA = $(M4TESTS)
+
+EXTRA_DIST = $(M4TESTS)
+
+M4TESTS = \
 	cc-options.m4 \
 	codeset.m4 \
 	gettext.m4 \
