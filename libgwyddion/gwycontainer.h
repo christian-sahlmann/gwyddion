@@ -68,11 +68,10 @@ gboolean   gwy_container_rename             (GwyContainer *container,
                                              GQuark key,
                                              GQuark newkey,
                                              gboolean force);
-/*
-gboolean   gwy_container_foreach            (GwyContainer *container,
-                                             const guchar *prefix,
-                                             gpointer foo);
-*/
+gsize      gwy_container_foreach            (GwyContainer *container,
+                                             const gchar *prefix,
+                                             GHFunc function,
+                                             gpointer user_data);
 void       gwy_container_set_boolean        (GwyContainer *container,
                                              GQuark key,
                                              gboolean value);

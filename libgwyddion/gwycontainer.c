@@ -21,6 +21,8 @@ typedef struct {
     const gchar *prefix;
     gsize prefix_length;
     gsize count;
+    GHFunc func;
+    gpointer user_data;
 } PrefixData;
 
 typedef struct {
@@ -68,6 +70,9 @@ static GObject* gwy_container_deserialize        (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
 static gboolean hash_remove_prefix_func          (gpointer hkey,
+                                                  gpointer hvalue,
+                                                  gpointer hdata);
+static void     hash_foreach_func                (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
 static GObject* gwy_container_duplicate          (GObject *object);
@@ -367,7 +372,7 @@ gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
 
     pfdata.container = container;
     pfdata.prefix = prefix;
-    pfdata.prefix_length = strlen(prefix);
+    pfdata.prefix_length = prefix ? strlen(pfdata.prefix) : 0;
     pfdata.count = 0;
     g_hash_table_foreach_remove(container->values, hash_remove_prefix_func,
                                 &pfdata);
@@ -383,10 +388,11 @@ hash_remove_prefix_func(gpointer hkey, gpointer hvalue, gpointer hdata)
     PrefixData *pfdata = (PrefixData*)hdata;
     const gchar *name;
 
-    if (!(name = g_quark_to_string(key))
-        || !g_str_has_prefix(name, pfdata->prefix)
-        || (name[pfdata->prefix_length] != '\0'
-            && name[pfdata->prefix_length] != GWY_CONTAINER_PATHSEP))
+    if (pfdata->prefix
+        && (!(name = g_quark_to_string(key))
+            || !g_str_has_prefix(name, pfdata->prefix)
+            || (name[pfdata->prefix_length] != '\0'
+                && name[pfdata->prefix_length] != GWY_CONTAINER_PATHSEP)))
         return FALSE;
 
     if (G_VALUE_HOLDS_OBJECT(value))
@@ -394,6 +400,65 @@ hash_remove_prefix_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 
     pfdata->count++;
     return TRUE;
+}
+
+/**
+ * gwy_container_foreach:
+ * @container: A #GwyContainer.
+ * @prefix: A nul-terminated id prefix.
+ * @function: The function called on the items.
+ * @user_data: The user data passed to @function.
+ *
+ * Calls @function on each @container item whose identifier starts with
+ * @prefix.
+ *
+ * The function is called @function(#GQuark key, #GValue *value, user_data).
+ *
+ * An empty @prefix means @function will be called on all @container items
+ * with a name.  A %NULL @prefix means @function will be called on all
+ * @container, even those identified only by a stray nameless %GQuark.
+ *
+ * Returns: The number of items @function was called on.
+ **/
+gsize
+gwy_container_foreach(GwyContainer *container,
+                      const gchar *prefix,
+                      GHFunc function,
+                      gpointer user_data)
+{
+    PrefixData pfdata;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
+    g_return_val_if_fail(function, 0);
+
+    pfdata.container = container;
+    pfdata.prefix = prefix;
+    pfdata.prefix_length = prefix ? strlen(pfdata.prefix) : 0;
+    pfdata.count = 0;
+    pfdata.func = function;
+    pfdata.user_data = user_data;
+    g_hash_table_foreach(container->values, hash_foreach_func, &pfdata);
+
+    return pfdata.count;
+}
+
+static void
+hash_foreach_func(gpointer hkey, gpointer hvalue, gpointer hdata)
+{
+    GQuark key = GPOINTER_TO_UINT(hkey);
+    GValue *value = (GValue*)hvalue;
+    PrefixData *pfdata = (PrefixData*)hdata;
+    const gchar *name;
+
+    if (pfdata->prefix
+        && (!(name = g_quark_to_string(key))
+            || !g_str_has_prefix(name, pfdata->prefix)
+            || (name[pfdata->prefix_length] != '\0'
+                && name[pfdata->prefix_length] != GWY_CONTAINER_PATHSEP)))
+        return;
+
+    pfdata->func(hkey, value, pfdata->user_data);
+    pfdata->count++;
 }
 
 /**

@@ -29,6 +29,15 @@ foo_callback(gpointer obj, gpointer data __attribute__((unused)))
     g_message("FOO! %s", g_type_name(G_TYPE_FROM_INSTANCE(obj)));
 }
 
+void
+bar_callback(gpointer hkey, GValue *value, gchar *user_data)
+{
+    g_message("`%s' -> %s (%s)",
+              g_quark_to_string(GPOINTER_TO_UINT(hkey)),
+              G_VALUE_TYPE_NAME(value),
+              user_data);
+}
+
 int
 main(void)
 {
@@ -121,6 +130,8 @@ main(void)
     gwy_container_set_double_by_name(container, "pdf", 0.5227);
     gwy_container_set_double_by_name(container, "pdf/f", 1.4142);
     gwy_container_set_double_by_name(container, "pdfoo", 7.76);
+
+    gwy_container_foreach(container, NULL, (GHFunc)bar_callback, "bar bar bar");
 
     gwy_container_remove_by_prefix(container, "pdf");
     g_message("'pdf': %s", gwy_container_contains_by_name(container, "pdf")
