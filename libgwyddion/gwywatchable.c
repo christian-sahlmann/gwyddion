@@ -17,7 +17,6 @@ static guint gwy_watchable_signals[LAST_SIGNAL] = { 0 };
 
 static void gwy_watchable_base_init     (GwyWatchableClass *klass);
 static void gwy_watchable_base_finalize (GwyWatchableClass *klass);
-static void gwy_watchable_class_init    (GwyWatchableClass *klass);
 
 GType
 gwy_watchable_get_type(void)
