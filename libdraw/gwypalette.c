@@ -236,6 +236,7 @@ gwy_palette_set_palette_def(GwyPalette *palette,
     gwy_palette_real_set_palette_def(palette, palette_def);
     gwy_palette_samples_maybe_free(olddef);
     g_object_unref(olddef);
+    gwy_palette_value_changed(palette);
 }
 
 static void
