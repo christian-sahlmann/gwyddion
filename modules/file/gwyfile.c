@@ -166,7 +166,7 @@ gwyfile_save(GwyContainer *data,
     if (!(fh = fopen(filename, "wb")))
         return FALSE;
     buffer = gwy_serializable_serialize(G_OBJECT(data), NULL);
-    if (fwrite(MAGIC, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
+    if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
         || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
         ok = FALSE;
         unlink(filename);
