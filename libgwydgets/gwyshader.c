@@ -50,39 +50,41 @@ enum {
 };
 /* Forward declarations */
 
-static void     gwy_shader_class_init     (GwyShaderClass *klass);
-static void     gwy_shader_init           (GwyShader *shader);
-static void     gwy_shader_finalize       (GObject *object);
-static void     gwy_shader_set_property   (GObject *object,
-                                           guint prop_id,
-                                           const GValue *value,
-                                           GParamSpec *pspec);
-static void     gwy_shader_get_property   (GObject*object,
-                                           guint prop_id,
-                                           GValue *value,
-                                           GParamSpec *pspec);
-static void     gwy_shader_realize        (GtkWidget *widget);
-static void     gwy_shader_unrealize      (GtkWidget *widget);
-static void     gwy_shader_size_request   (GtkWidget *widget,
-                                           GtkRequisition *requisition);
-static void     gwy_shader_size_allocate  (GtkWidget *widget,
-                                           GtkAllocation *allocation);
-static void     gwy_shader_make_pixmap    (GwyShader *shader);
-static void     gwy_shader_paint          (GwyShader *shader);
-static gboolean gwy_shader_expose         (GtkWidget *widget,
-                                           GdkEventExpose *event);
-static gboolean gwy_shader_button_press   (GtkWidget *widget,
-                                           GdkEventButton *event);
-static gboolean gwy_shader_button_release (GtkWidget *widget,
-                                           GdkEventButton *event);
-static gboolean gwy_shader_motion_notify  (GtkWidget *widget,
-                                           GdkEventMotion *event);
-static gboolean gwy_shader_key_press      (GtkWidget *widget,
-                                           GdkEventKey *event);
-static gboolean gwy_shader_timer          (GwyShader *shader);
-static void     gwy_shader_update_mouse   (GwyShader *shader,
-                                           gint x, gint y);
-static void     gwy_shader_update         (GwyShader *shader);
+static void     gwy_shader_class_init        (GwyShaderClass *klass);
+static void     gwy_shader_init              (GwyShader *shader);
+static void     gwy_shader_finalize          (GObject *object);
+static void     gwy_shader_set_property      (GObject *object,
+                                              guint prop_id,
+                                              const GValue *value,
+                                              GParamSpec *pspec);
+static void     gwy_shader_get_property      (GObject*object,
+                                              guint prop_id,
+                                              GValue *value,
+                                              GParamSpec *pspec);
+static void     gwy_shader_realize           (GtkWidget *widget);
+static void     gwy_shader_unrealize         (GtkWidget *widget);
+static void     gwy_shader_size_request      (GtkWidget *widget,
+                                              GtkRequisition *requisition);
+static void     gwy_shader_size_allocate     (GtkWidget *widget,
+                                              GtkAllocation *allocation);
+static void     gwy_shader_make_pixmap       (GwyShader *shader);
+static void     gwy_shader_paint             (GwyShader *shader);
+static gboolean gwy_shader_expose            (GtkWidget *widget,
+                                              GdkEventExpose *event);
+static gboolean gwy_shader_button_press      (GtkWidget *widget,
+                                              GdkEventButton *event);
+static gboolean gwy_shader_button_release    (GtkWidget *widget,
+                                              GdkEventButton *event);
+static gboolean gwy_shader_motion_notify     (GtkWidget *widget,
+                                              GdkEventMotion *event);
+static gboolean gwy_shader_key_press         (GtkWidget *widget,
+                                              GdkEventKey *event);
+static gboolean gwy_shader_timer             (GwyShader *shader);
+static void     gwy_shader_update_mouse      (GwyShader *shader,
+                                              gint x, gint y);
+static gboolean gwy_shader_mnemonic_activate (GtkWidget *widget,
+                                              gboolean group_cycling);
+static void     gwy_shader_update            (GwyShader *shader);
 
 
 /* Local data */
@@ -146,6 +148,7 @@ gwy_shader_class_init(GwyShaderClass *klass)
     widget_class->button_release_event = gwy_shader_button_release;
     widget_class->motion_notify_event = gwy_shader_motion_notify;
     widget_class->key_press_event = gwy_shader_key_press;
+    widget_class->mnemonic_activate = gwy_shader_mnemonic_activate;
 
     klass->angle_changed = NULL;
 
@@ -744,6 +747,9 @@ gwy_shader_button_press(GtkWidget *widget,
 
     shader = GWY_SHADER(widget);
 
+    if (!GTK_WIDGET_HAS_FOCUS(widget))
+        gtk_widget_grab_focus(widget);
+
     x = event->x - 0.5*widget->allocation.width;
     y = event->y - 0.5*widget->allocation.height;
 
@@ -908,6 +914,14 @@ gwy_shader_key_press(GtkWidget *widget,
     return TRUE;
 }
 
+static gboolean
+gwy_shader_mnemonic_activate(GtkWidget *widget,
+                             G_GNUC_UNUSED gboolean group_cycling)
+{
+    gtk_widget_grab_focus(widget);
+
+    return TRUE;
+}
 
 static void
 gwy_shader_update(GwyShader *shader)
