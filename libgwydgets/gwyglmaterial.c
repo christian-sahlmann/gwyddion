@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyddion.h>
 #include "gwyglmaterial.h"
 
 #define GWY_GL_MATERIAL_TYPE_NAME "GwyGLMaterial"
@@ -93,6 +93,7 @@ static void
 gwy_gl_material_init(GwyGLMaterial *glmaterial)
 {
     gwy_debug("");
+    gwy_debug_objects_creation((GObject*)glmaterial);
     glmaterial->ambient[0]  = 0.0f;
     glmaterial->ambient[1]  = 0.0f;
     glmaterial->ambient[2]  = 0.0f;
