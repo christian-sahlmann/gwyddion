@@ -144,11 +144,12 @@ gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
 
     gwy_debug("");
 
-    val_unit = (GwyValUnit*)gtk_object_new(gwy_val_unit_get_type (), NULL);
-    gtk_box_set_spacing(GTK_BOX(val_unit), 2);
+    val_unit = (GwyValUnit*)g_object_new(gwy_val_unit_get_type(),
+                                         "spacing", 2,
+                                         NULL);
 
     val_unit->label = gtk_label_new_with_mnemonic(label_text);
-    gtk_box_pack_start(GTK_BOX(val_unit), val_unit->label, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(val_unit), val_unit->label, FALSE, FALSE, 2);
 
     val_unit->adjustment = gtk_adjustment_new(val_unit->dival,
                                     -1e6, 1e6, 1, 10, 0);
