@@ -3001,11 +3001,11 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
         for (i=0; i<yres; i++)
         {
             gwy_data_field_get_row(data_field, hlp, i);
-/*            if (i>ulrow && i<=brrow)
+            if (i>ulrow && i<=brrow)
             {
                 gwy_data_line_part_fit_polynom(hlp, n, coefs, ulcol, brcol);
             }
-            else*/
+            else
             {
                 gwy_data_line_fit_polynom(hlp, n, coefs);
             }
