@@ -17,6 +17,7 @@ use strict;
 
 require Exporter;
 
+use Config;
 use IO::File;
 
 our @ISA = qw( Exporter );
@@ -25,7 +26,10 @@ our %EXPORT_TAGS = ( all => [ @EXPORT_OK ] );
 
 # Sanity check
 our $sizeof_double = length pack 'd', 42.0;
-die if $sizeof_double != 8;
+die "Need IEEE double format" if $sizeof_double != 8;
+die "Non-little-endian byteorders not implemented"
+    if $Config{ 'byteorder' } ne '1234'
+       and $Config{ 'byteorder' } ne '12345678';
 
 sub _dmove {
     my ( $hash1, $key1, $hash2, $key2, $type ) = @_;
