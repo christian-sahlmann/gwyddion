@@ -55,12 +55,49 @@ gwy_app_quit(void)
     gwy_debug("");
     if (!gwy_app_confirm_quit())
         return TRUE;
+
     while ((data_window = gwy_app_data_window_get_current())) {
         gtk_widget_destroy(GTK_WIDGET(data_window));
     }
 
     gtk_main_quit();
     return TRUE;
+}
+
+gboolean
+gwy_app_main_window_save_position(void)
+{
+    GwyContainer *settings;
+    gint x, y;
+
+    g_return_val_if_fail(GTK_IS_WINDOW(gwy_app_main_window), FALSE);
+
+    settings = gwy_app_settings_get();
+    /* FIXME: read the gtk_window_get_position() docs about how this is
+     * a broken approach */
+    gtk_window_get_position(GTK_WINDOW(gwy_app_main_window), &x, &y);
+    gwy_container_set_int32_by_name(settings, "/app/toolbox/position/x", x);
+    gwy_container_set_int32_by_name(settings, "/app/toolbox/position/y", y);
+
+    /* to be usable as an event handler */
+    return FALSE;
+}
+
+void
+gwy_app_main_window_restore_position(void)
+{
+    GwyContainer *settings;
+    gint x, y;
+
+    g_return_if_fail(GTK_IS_WINDOW(gwy_app_main_window));
+
+    settings = gwy_app_settings_get();
+    if (gwy_container_gis_int32_by_name(settings,
+                                        "/app/toolbox/position/x", &x)
+        && gwy_container_gis_int32_by_name(settings,
+                                           "/app/toolbox/position/y", &y)) {
+        gtk_window_move(GTK_WINDOW(gwy_app_main_window), x, y);
+    }
 }
 
 /**

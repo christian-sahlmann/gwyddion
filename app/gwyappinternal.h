@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 extern int gwy_app_n_recent_files;
 
 void         gwy_app_main_window_set             (GtkWidget *window);
+gboolean     gwy_app_main_window_save_position   (void);
+void         gwy_app_main_window_restore_position(void);
 void         gwy_app_tool_use_cb                 (const gchar *toolname,
                                                   GtkWidget *button);
 void         gwy_app_zoom_set_cb                 (gpointer data);

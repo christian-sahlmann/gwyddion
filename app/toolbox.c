@@ -107,6 +107,7 @@ gwy_app_toolbox_create(void)
                            g_get_application_name());
     gtk_window_set_resizable(GTK_WINDOW(toolbox), FALSE);
     gwy_app_main_window_set(toolbox);
+    gwy_app_main_window_restore_position();
 
     accel_group = gtk_accel_group_new();
     g_object_set_data(G_OBJECT(toolbox), "accel_group", accel_group);
@@ -263,6 +264,10 @@ gwy_app_toolbox_create(void)
 
     /***************************************************************/
     gtk_widget_show_all(toolbox);
+    gwy_app_main_window_restore_position();
+    while (gtk_events_pending())
+        gtk_main_iteration_do(FALSE);
+
     for (l = labels; l; l = g_slist_next(l))
         g_signal_emit_by_name(l->data, "clicked");
     g_slist_free(labels);
@@ -273,6 +278,8 @@ gwy_app_toolbox_create(void)
     g_object_set_data_full(G_OBJECT(toolbox), "menus", menus,
                            (GDestroyNotify)g_list_free);
     /* XXX */
+    g_signal_connect(toolbox, "delete_event",
+                     G_CALLBACK(gwy_app_main_window_save_position), NULL);
     g_signal_connect(toolbox, "delete_event", G_CALLBACK(gwy_app_quit), NULL);
 
     return toolbox;
