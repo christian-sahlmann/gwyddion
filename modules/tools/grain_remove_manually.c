@@ -76,7 +76,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
         "grain_remove_manually",
-        "gwy_pointer_measure",
+        "gwy_grains_graph",
         "Grain (mask) removal tool.",
         98,
         &use,
@@ -135,6 +135,7 @@ dialog_create(GwyUnitoolState *state)
     return dialog;
 }
 
+
 static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
@@ -142,7 +143,8 @@ dialog_update(GwyUnitoolState *state,
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
-    gdouble value, xy[2];
+    gdouble xy[2];
+    gint xres, col, row;
     gboolean is_visible, is_selected;
 
     gwy_debug("");
@@ -151,15 +153,34 @@ dialog_update(GwyUnitoolState *state,
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    if (gwy_container_contains_by_name(data, "/0/mask")) 
+       dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
+    else {
+        printf("No mask\n");
+        return;
+    }
 
+    xres = gwy_data_field_get_xres(dfield);
+    
     is_visible = state->is_visible;
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
+
+    row = ROUND(gwy_data_field_rtoj(dfield, xy[1]));
+    col = ROUND(gwy_data_field_rtoj(dfield, xy[0]));
+    
     if (!is_visible && !is_selected)
         return;
 
     if (is_selected) {
+        printf("Removing: %d %d\n", col, row);
+        gwy_data_field_grains_remove_manually(dfield,
+                                              col + xres*row);
+
+        gwy_container_set_object_by_name(data, "/0/mask", dfield);
+        gwy_vector_layer_unselect(state->layer);
+        gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
     }
+    
 }
 
 static void

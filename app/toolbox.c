@@ -150,6 +150,14 @@ gwy_app_toolbox_create(void)
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Mark Grains By Threshold"), NULL, GWY_STOCK_GRAINS,
                        G_CALLBACK(gwy_app_run_process_func_cb), "mark_threshold");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Mark Grains By Watershed"), NULL, GWY_STOCK_GRAINS_WATER,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "wshed_threshold");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Remove Grains By Threshold"), NULL, GWY_STOCK_GRAINS,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "remove_threshold");
+     
+
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
