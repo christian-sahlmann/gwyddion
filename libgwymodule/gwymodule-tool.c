@@ -19,8 +19,9 @@
  */
 
 #include <string.h>
-#include <gtk/gtkitemfactory.h>
-#include <gtk/gtkmenubar.h>
+#include <gtk/gtktoolbar.h>
+#include <gtk/gtkstock.h>
+#include <gtk/gtkimage.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
@@ -28,11 +29,15 @@
 #include "gwymoduleinternal.h"
 #include "gwymodule-tool.h"
 
-static void gwy_hash_table_to_slist_cb (gpointer key,
-                                        gpointer value,
-                                        gpointer user_data);
-static gint tool_toolbar_item_compare  (GwyToolFuncInfo *a,
-                                        GwyToolFuncInfo *b);
+static GtkWidget* tool_toolbar_append      (GtkWidget *toolbar,
+                                            GtkWidget *radio,
+                                            GwyToolFuncInfo *func_info,
+                                            GtkSignalFunc callback);
+static void gwy_hash_table_to_slist_cb     (gpointer unused_key,
+                                            gpointer value,
+                                            gpointer user_data);
+static gint tool_toolbar_item_compare      (GwyToolFuncInfo *a,
+                                            GwyToolFuncInfo *b);
 
 static GHashTable *tool_funcs = NULL;
 
@@ -69,6 +74,7 @@ gwy_tool_func_register(const gchar *modname,
     g_return_val_if_fail(func_info->use, FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
     g_return_val_if_fail(func_info->stock_id, FALSE);
+    g_return_val_if_fail(func_info->tooltip, FALSE);
     if (g_hash_table_lookup(tool_funcs, func_info->name)) {
         g_warning("Duplicate function %s, keeping only first", func_info->name);
         return FALSE;
@@ -102,9 +108,9 @@ gwy_tool_func_use(const guchar *name,
 }
 
 /**
- * gwy_build_tool_menu:
- * @item_callback: A #GtkItemFactoryCallback1 called when a tool from the
- *                 toolbar is selected.
+ * gwy_build_tool_toolbar:
+ * @item_callback: A callback called when a tool from the toolbar is selected
+ *                 with tool name as the user data.
  *
  * Creates a toolbar with the tools.
  *
@@ -113,90 +119,62 @@ gwy_tool_func_use(const guchar *name,
 /* XXX: This is broken, because the toolbar may have more than one row.
  * But... */
 GtkWidget*
-gwy_build_tool_toolbar(GCallback item_callback)
+gwy_build_tool_toolbar(GtkSignalFunc item_callback)
 {
+    GtkWidget *toolbar, *group;
     GSList *l, *entries = NULL;
-    gint i, dp_len;
 
     g_hash_table_foreach(tool_funcs, gwy_hash_table_to_slist_cb, &entries);
     entries = g_slist_sort(entries, (GCompareFunc)tool_toolbar_item_compare);
 
-#if 0
-    dp_len = strlen(prefix);
+    toolbar = gtk_toolbar_new();
+    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
+                                GTK_ORIENTATION_HORIZONTAL);
+    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
+                              GTK_ICON_SIZE_BUTTON);
 
-    /* the root branch */
-    current = strncpy(g_new(gchar, bufsize), prefix, bufsize);
-    branch.path = current;
-    gtk_item_factory_create_item(factory, &branch, NULL, 1);
-
-    /* the root tearoff */
-    prev = strncpy(g_new(gchar, bufsize), prefix, bufsize);
-    g_strlcpy(prev + dp_len, "/---", bufsize - dp_len);
-    tearoff.path = prev;
-    gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
-
-    /* create missing branches
-     * XXX: Gtk+ essentially can do this itself
-     * but this way we can e. g. put a tearoff at the top of each branch... */
-    for (l = entries; l; l = g_slist_next(l)) {
-        GwyToolFuncInfo *func_info = (GwyToolFuncInfo*)l->data;
-
-        if (!func_info->menu_path || !*func_info->menu_path)
-            continue;
-        if (*func_info->menu_path != '/') {
-            g_warning("Menu path `%s' doesn't start with a slash",
-                      func_info->menu_path);
-            continue;
-        }
-
-        if (g_strlcpy(current + dp_len, func_info->menu_path, bufsize - dp_len)
-            > bufsize-2)
-            g_warning("Too long path `%s' will be truncated",
-                      func_info->menu_path);
-        /* find where the paths differ */
-        for (i = dp_len; current[i] && prev[i] && current[i] == prev[i]; i++)
-            ;
-        if (!current[i])
-            g_warning("Duplicate menu entry `%s'", func_info->menu_path);
-        else {
-            /* find where the next / is  */
-            do {
-                i++;
-            } while (current[i] && current[i] != '/');
-        }
-
-        while (current[i]) {
-            /* create a branch with a tearoff */
-            current[i] = '\0';
-            branch.path = current;
-            gtk_item_factory_create_item(factory, &branch, NULL, 1);
-
-            strcpy(prev, current);
-            g_strlcat(prev, "/---", bufsize);
-            tearoff.path = prev;
-            gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
-            current[i] = '/';
-
-            /* find where the next / is  */
-            do {
-                i++;
-            } while (current[i] && current[i] != '/');
-        }
-
-        /* XXX: passing directly func_info->name may be a little dangerous,
-         * OTOH who would eventually free a newly allocated string? */
-        item.path = current;
-        gtk_item_factory_create_item(factory, &item, func_info->name, 1);
-
-        GWY_SWAP(gchar*, current, prev);
-    }
-
-    g_free(prev);
-    g_free(current);
+    group = tool_toolbar_append(toolbar, NULL, NULL, item_callback);
+    for (l = entries; l; l = g_slist_next(l))
+        tool_toolbar_append(toolbar, group,
+                            (GwyToolFuncInfo*)l->data, item_callback);
     g_slist_free(entries);
 
-#endif
-    return NULL;
+    return toolbar;
+}
+
+static GtkWidget*
+tool_toolbar_append(GtkWidget *toolbar,
+                    GtkWidget *radio,
+                    GwyToolFuncInfo *func_info,
+                    GtkSignalFunc callback)
+{
+    GtkWidget *icon;
+    GtkStockItem stock_item;
+    const gchar *name, *stock_id, *label, *tooltip;
+
+    if (!func_info) {
+        name = NULL;
+        stock_id = "gwy_none";
+        label = _("No tool");
+        tooltip = _("No tool");
+    }
+    else {
+        name = func_info->name;
+        stock_id = func_info->stock_id;
+        tooltip = func_info->tooltip;
+        if (!gtk_stock_lookup(stock_id, &stock_item)) {
+            g_warning("Couldn't find item for stock id `%s'", stock_id);
+            label = "???";
+        }
+        else
+            label = stock_item.label;
+    }
+    icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
+    return gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
+                                      GTK_TOOLBAR_CHILD_RADIOBUTTON, radio,
+                                      label, tooltip, NULL, icon,
+                                      callback, (gpointer)name);
 }
 
 static gint
@@ -207,7 +185,7 @@ tool_toolbar_item_compare(GwyToolFuncInfo *a,
 }
 
 static void
-gwy_hash_table_to_slist_cb(gpointer key,
+gwy_hash_table_to_slist_cb(gpointer unused_key,
                            gpointer value,
                            gpointer user_data)
 {

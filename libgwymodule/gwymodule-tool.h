@@ -42,6 +42,7 @@ typedef void (*GwyToolUseFunc)(GwyDataWindow *data_window,
 struct _GwyToolFuncInfo {
     const gchar *name;
     const gchar *stock_id;
+    const gchar *tooltip;
     GwyToolUseFunc use;
 };
 
