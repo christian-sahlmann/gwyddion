@@ -47,7 +47,7 @@ struct _Gwy3DWindow {
 
     GtkWidget *gwy3dview;
     GtkWidget *palette_menu;
-    GtkWidget *palette_label;
+    GtkWidget *palette_label;  /* no longer exists */
     GtkWidget *material_menu;
     GtkWidget *material_label;
     GtkWidget *lights_spin1;

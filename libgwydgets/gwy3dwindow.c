@@ -255,7 +255,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
 
     button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                NULL, _("Rotate the data"),
+                                NULL, _("Rotate view"),
                                 NULL, GWY_STOCK_ROTATE,
                                 G_CALLBACK(gwy_3d_window_set_mode),
                                 GINT_TO_POINTER(GWY_3D_ROTATION));
@@ -295,7 +295,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_box_pack_start(GTK_BOX(hbox2), toolbar, FALSE, FALSE, 0);
 
     button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                NULL, _("Rotate the data"),
+                                NULL, _("Rotate view"),
                                 NULL, GWY_STOCK_ROTATE,
                                 G_CALLBACK(gwy_3d_window_set_mode),
                                 GINT_TO_POINTER(GWY_3D_ROTATION));
@@ -352,17 +352,17 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     row = 0;
 
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Phi"), _("deg"),
+               (table, row++, _("_Phi:"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_rot_x_adjustment(gwy3dview));
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Theta"), _("deg"),
+               (table, row++, _("_Theta:"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_rot_y_adjustment(gwy3dview));
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Scale"), "",
+               (table, row++, _("_Scale:"), NULL,
                 (GtkObject*)gwy_3d_view_get_view_scale_adjustment(gwy3dview));
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Value scale"), "",
+               (table, row++, _("_Value scale:"), NULL,
                 (GtkObject*)gwy_3d_view_get_z_deformation_adjustment(gwy3dview));
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
@@ -416,7 +416,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
-    label = gtk_label_new(_("Material:"));
+    label = gtk_label_new_with_mnemonic(_("_Material:"));
     gwy3dwindow->material_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
     gtk_widget_set_sensitive(label, lights_on);
@@ -435,13 +435,13 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     row++;
 
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Light phi"), _("deg"),
+               (table, row++, _("Light _phi:"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_light_z_adjustment(gwy3dview));
     gwy3dwindow->lights_spin1 = spin;
     gtk_widget_set_sensitive(spin, lights_on);
 
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Light theta"), _("deg"),
+               (table, row++, _("Light _theta:"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_light_y_adjustment(gwy3dview));
     gwy3dwindow->lights_spin2 = spin;
     gtk_widget_set_sensitive(spin, lights_on);
@@ -452,14 +452,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
     gtk_table_attach(GTK_TABLE(table),
                      GTK_WIDGET(display_mode_group->next->data),
-                     0, 3, row, row+1, GTK_FILL, 0, 2, 2);
-    row++;
-
-    label = gtk_label_new(_("Palette:"));
-    gwy3dwindow->palette_label = label;
-    gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-    gtk_widget_set_sensitive(label, !lights_on);
-    gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
@@ -484,23 +476,17 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
     row = 0;
 
-    label = gtk_label_new(_("Label"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
-
     omenu = gwy_option_menu_create(label_entries, G_N_ELEMENTS(label_entries),
                                    "labels-type",
                                    G_CALLBACK(gwy_3d_window_set_labels),
                                    gwy3dwindow, -1);
-    gtk_table_attach(GTK_TABLE(table), omenu,
-                     1, 3, row, row+1, GTK_FILL, 0, 2, 2);
+    gwy_table_attach_row(table, row, _("_Label:"), NULL, omenu);
     gwy3dwindow->labels_menu = omenu;
     row++;
 
 
-    label = gtk_label_new(_("Text"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+    label = gtk_label_new_with_mnemonic(_("_Text:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
@@ -516,27 +502,31 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_table_attach(GTK_TABLE(table), entry,
                      1, 3, row, row+1, GTK_FILL, 0, 2, 2);
     gwy3dwindow->labels_text = entry;
-
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
-    label = gtk_label_new(_("Move Label"));
+
+    label = gtk_label_new(_("Move label"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
+
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Horizontally"), _("pixels"),
+               (table, row++, _("_Horizontally:"), _("pixels"),
                 (GtkObject*)gwy_3d_view_get_label_description(
                     gwy3dview, GWY_3D_VIEW_LABEL_X)->delta_x);
     gwy3dwindow->labels_delta_x = spin;
-
     row++;
+
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Vertically"), _("pixels"),
+               (table, row++, _("_Vertically:"), _("pixels"),
                 (GtkObject*)gwy_3d_view_get_label_description(
                     gwy3dview, GWY_3D_VIEW_LABEL_X)->delta_y);
     gwy3dwindow->labels_delta_y = spin;
-
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
-    check = gtk_check_button_new_with_mnemonic(_("_Scale Size Automatically"));
+
+    check = gtk_check_button_new_with_mnemonic(_("Scale size _automatically"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
                                  gwy_3d_view_get_label_description(
                                      gwy3dview,
@@ -548,16 +538,17 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                      gwy3dwindow);
     gwy3dwindow->labels_autosize_check = check;
     row++;
+
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Size"), _("pixels"),
+               (table, row++, _("_Size:"), _("pixels"),
                 (GtkObject*)gwy_3d_view_get_label_description(
                     gwy3dview, GWY_3D_VIEW_LABEL_X)->size);
     gtk_widget_set_sensitive(spin,
                 !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check)));
     gwy3dwindow->labels_size = spin;
-
     row++;
-    button = gtk_button_new_with_label(_("Reset"));
+
+    button = gtk_button_new_with_mnemonic(_("_Reset"));
     g_signal_connect(button, "clicked",
                      G_CALLBACK(gwy_3d_window_labels_reset_clicked),
                      gwy3dwindow);
@@ -797,7 +788,6 @@ gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
     gtk_widget_set_sensitive(window->material_menu, lights_on);
     gtk_widget_set_sensitive(window->material_label, lights_on);
     gtk_widget_set_sensitive(window->palette_menu, !lights_on);
-    gtk_widget_set_sensitive(window->palette_label, !lights_on);
     gtk_widget_set_sensitive(window->lights_spin1, lights_on);
     gtk_widget_set_sensitive(window->lights_spin2, lights_on);
     gtk_widget_set_sensitive(window->buttons[BUTTON_LIGHT], lights_on);
@@ -830,9 +820,11 @@ gwy_3d_window_auto_scale_changed(GtkToggleButton *check,
 static void
 gwy_3d_window_labels_entry_activate(GtkEntry *entry,  Gwy3DWindow *window)
 {
-    gint idx = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
+    gint idx;
 
-    gwy_debug("label id:%d, label text: %s", idx, gtk_entry_get_text(GTK_ENTRY(entry)));
+    idx = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
+    gwy_debug("label id:%d, label text: %s",
+              idx, gtk_entry_get_text(GTK_ENTRY(entry)));
     gwy_3d_label_description_set_text(
         gwy_3d_view_get_label_description(
             GWY_3D_VIEW(window->gwy3dview), idx),
