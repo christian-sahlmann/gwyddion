@@ -26,12 +26,20 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwystock.h"
 
-static void   register_toolbox_icons (const gchar *pixmap_path,
-                                      GtkIconFactory *icon_factory);
-static gchar* guess_pixmap_path      (void);
-static gchar* mangle_pixmap_path     (const gchar *path,
-                                      gsize strip);
-static void   free_the_icon_factory  (void);
+static void           register_toolbox_icons    (const gchar *pixmap_path,
+                                                 GtkIconFactory *icon_factory);
+static gchar*         guess_pixmap_path         (void);
+static gchar*         mangle_pixmap_path        (const gchar *path,
+                                                 gsize strip);
+static void           slurp_icon_directory      (const gchar *path,
+                                                 GHashTable *icons);
+static void           register_icon_set_list_cb (const gchar *id,
+                                                 GList *list,
+                                                 GtkIconFactory *factory);
+static GtkIconSource* file_to_icon_source       (const gchar *path,
+                                                 const gchar *filename,
+                                                 gchar **id);
+static void           free_the_icon_factory     (void);
 
 static GtkIconFactory *the_icon_factory = NULL;
 
@@ -48,6 +56,7 @@ gwy_stock_register_stock_items(void)
     gchar *pixmap_path;
 
     g_return_if_fail(!the_icon_factory);
+    gtk_icon_size_register(GWY_ICON_SIZE_ABOUT, 60, 60);
     pixmap_path = guess_pixmap_path();
     g_return_if_fail(pixmap_path);
     the_icon_factory = gtk_icon_factory_new();
@@ -61,66 +70,13 @@ static void
 register_toolbox_icons(const gchar *pixmap_path,
                        GtkIconFactory *icon_factory)
 {
-  /* Textual stock items */
-    static const GtkStockItem stock_items[] = {
-        { GWY_STOCK_BOLD, "Bold", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_CROP, "Crop", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_FIT_PLANE, "Fit plane", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_FIT_TRIANGLE, "Fit plane", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_GRAPH, "Graph", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_ITALIC, "Italic", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_NONE, "None", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_POINTER, "Pointer", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_POINTER_MEASURE, "Pointer measure", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_ROTATE, "Rotate", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_SCALE, "Scale", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_SHADER, "Shade", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_SUBSCRIPT, "Subscript", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_SUPERSCRIPT, "Superscript", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_ZOOM_1_1, "Zoom 1:1", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_ZOOM_FIT, "Zoom to fit", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_ZOOM_IN, "Zoom in", 0, GDK_VoidSymbol, "gwy" },
-        { GWY_STOCK_ZOOM_OUT, "Zoom out", 0, GDK_VoidSymbol, "gwy" },
-    };
-    static const GtkStockItem gwyddion_stock = {
-        GWY_STOCK_GWYDDION, "Gwyddion", 0, GDK_VoidSymbol, "gwy"
-    };
-    GtkIconSource *icon_source;
-    guint i;
+    GHashTable *icons;
 
-    gtk_stock_add_static(stock_items, G_N_ELEMENTS(stock_items));
-    icon_source = gtk_icon_source_new();
-    for (i = 0; i < G_N_ELEMENTS(stock_items); i++) {
-        GtkIconSet *icon_set = gtk_icon_set_new();
-        const gchar *id = stock_items[i].stock_id;
-        gchar *filename;
-
-        filename = g_strdup_printf("%s/%s-%u.png", pixmap_path, id, 24);
-        gwy_debug("%s: `%s': %d",
-                  __FUNCTION__, filename,
-                  g_file_test(filename, G_FILE_TEST_EXISTS));
-        gtk_icon_source_set_filename(icon_source, filename);
-        gtk_icon_set_add_source(icon_set, icon_source);
-        g_free(filename);
-        gtk_icon_factory_add(icon_factory, id, icon_set);
-    }
-
-    gtk_icon_size_register(GWY_ICON_SIZE_ABOUT, 60, 60);
-    {
-        GtkIconSet *icon_set = gtk_icon_set_new();
-        const gchar *id = gwyddion_stock.stock_id;
-        gchar *filename;
-
-        filename = g_strdup_printf("%s/%s-%u.png", pixmap_path, id, 60);
-        gwy_debug("%s: `%s': %d",
-                  __FUNCTION__, filename,
-                  g_file_test(filename, G_FILE_TEST_EXISTS));
-        gtk_icon_source_set_filename(icon_source, filename);
-        gtk_icon_set_add_source(icon_set, icon_source);
-        g_free(filename);
-        gtk_icon_factory_add(icon_factory, id, icon_set);
-    }
-    gtk_icon_source_free(icon_source);
+    icons = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    slurp_icon_directory(pixmap_path, icons);
+    g_hash_table_foreach(icons, (GHFunc)register_icon_set_list_cb,
+                         icon_factory);
+    g_hash_table_destroy(icons);
 }
 
 static gchar*
@@ -204,28 +160,80 @@ mangle_pixmap_path(const gchar *path,
     return q;
 }
 
-#if 0
-static GList*
-slurp_icon_directory(const gchar *path)
+/* XXX: not only registers the icons but also frees the list */
+static void
+register_icon_set_list_cb(const gchar *id,
+                          GList *list,
+                          GtkIconFactory *factory)
 {
-    GList *icons = NULL;
+    GtkIconSet *icon_set;
+    GtkIconSource *icon_source, *largest;
+    GtkIconSize gtksize;
+    GList *l;
+    gint max, w, h;
+
+    icon_set = gtk_icon_set_new();
+    max = 0;
+    largest = NULL;
+    for (l = list; l; l = g_list_next(l)) {
+        icon_source = (GtkIconSource*)l->data;
+        gtksize = gtk_icon_source_get_size(icon_source);
+        g_assert(gtk_icon_size_lookup(gtksize, &w, &h));
+        if (w*h > max)
+            largest = icon_source;
+    }
+    if (!largest) {
+        g_warning("No icon of nonzero size in the set");
+        return;
+    }
+    gtk_icon_source_set_size_wildcarded(largest, TRUE);
+
+    for (l = list; l; l = g_list_next(l)) {
+        icon_source = (GtkIconSource*)l->data;
+        gtk_icon_set_add_source(icon_set, icon_source);
+        gtk_icon_source_free(icon_source);
+    }
+    gtk_icon_factory_add(factory, id, icon_set);
+    g_list_free(list);
+}
+
+static void
+slurp_icon_directory(const gchar *path,
+                     GHashTable *icons)
+{
+    GtkIconSource *icon_source;
     GDir *gdir = NULL;
     GError *err = NULL;
+    const gchar *filename;
+    GList *list;
+    gchar *id;
 
     gdir = g_dir_open(path, 0, &err);
     if (!gdir) {
         g_warning("Cannot open directory `%s': %s", path, err->message);
-        return NULL;
+        return;
     }
 
-    return icons;
+    while ((filename = g_dir_read_name(gdir))) {
+        icon_source = file_to_icon_source(path, filename, &id);
+        if (!icon_source) {
+            g_free(id);
+            id = NULL;
+            continue;
+        }
+        list = (GList*)g_hash_table_lookup(icons, id);
+        list = g_list_append(list, icon_source);
+        g_hash_table_replace(icons, id, list);
+    }
+    g_dir_close(gdir);
 }
 
 /**
  * Filename format: <gwy_foobar>-<size>[.<state>].png
  **/
 static GtkIconSource*
-file_to_icon_source(const gchar *filename,
+file_to_icon_source(const gchar *path,
+                    const gchar *filename,
                     gchar **id)
 {
     static struct { gchar letter; GtkStateType state; }
@@ -239,22 +247,29 @@ file_to_icon_source(const gchar *filename,
     /* FIXME: Of course, this is conceptually wrong.  however some guess is
      * better than nothing when we have more than one size of the same icon */
     static struct { gint size; GtkIconSize gtksize; }
-    const gtk_sizes[] = {
+    gtk_sizes[] = {
         { 16, GTK_ICON_SIZE_MENU },
         { 18, GTK_ICON_SIZE_SMALL_TOOLBAR },
         { 20, GTK_ICON_SIZE_BUTTON },
         { 24, GTK_ICON_SIZE_LARGE_TOOLBAR },
         { 32, GTK_ICON_SIZE_DND },
         { 48, GTK_ICON_SIZE_DIALOG },
+        { 60, 0 },
     };
     GtkIconSource *icon_source;
     GtkIconSize gtksize = -1;
     GtkStateType state = -1;
-    gchar *sz, *st, *p;
+    gchar *sz, *st, *p, *fullpath;
     gint size;
     gsize i;
 
+    if (!gtk_sizes[G_N_ELEMENTS(gtk_sizes)-1].gtksize) {
+        gtk_sizes[G_N_ELEMENTS(gtk_sizes)-1].gtksize
+            = gtk_icon_size_from_name(GWY_ICON_SIZE_ABOUT);
+    }
     *id = g_strdup(filename);
+    if (!g_str_has_suffix(filename, ".png"))
+        return NULL;
     if (!(sz = strchr(*id, '-')))
         return NULL;
     *sz = '\0';
@@ -301,7 +316,9 @@ file_to_icon_source(const gchar *filename,
         gtksize = gtk_sizes[G_N_ELEMENTS(gtk_sizes)-1].gtksize;
 
     icon_source = gtk_icon_source_new();
-    gtk_icon_source_set_filename(icon_source, filename);
+    fullpath = g_build_filename(path, filename, NULL);
+    gtk_icon_source_set_filename(icon_source, fullpath);
+    g_free(fullpath);
     gtk_icon_source_set_size(icon_source, gtksize);
     gtk_icon_source_set_direction_wildcarded(icon_source, TRUE);
     gtk_icon_source_set_size_wildcarded(icon_source, FALSE);
@@ -312,7 +329,6 @@ file_to_icon_source(const gchar *filename,
 
     return icon_source;
 }
-#endif
 
 static void
 free_the_icon_factory(void)
