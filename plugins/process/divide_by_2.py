@@ -6,18 +6,18 @@
 # Public domain.
 import sys, os, array, re, types
 
-"""This is an example Python plug-in.
-
-It just divides all values by 2.
-"""
-
-valid_arguments = ('register', 'run')
-
+# Plug-in information.
+# Format is similar to GwyProcessFuncInfo:
+# - Name (just an unique identifier)
+# - Menu path
+# - Run modes (possible values: noninteractive with_defaults interactive modal)
 plugin_info = """\
 divide_by_2
-/_Divide by 2 (Python)
+/_Test/_Divide by 2 (Python)
 noninteractive with_defaults\
 """
+
+valid_arguments = 'register', 'run'
 
 line_re = re.compile(r'^(?P<key>[^=]+)=(?P<val>.*)\n')
 field_re = re.compile(r'^(?P<key>[^=]+)=\[\n')
@@ -74,19 +74,24 @@ def print_data(data):
         v['data'].tofile(stdout)
         stdout.write(']]\n')
 
+def process_data(data):
+    data['/meta/A subliminal message'] = 'Python rulez!'
+    df = data['/0/data']['data']
+    for i in range(len(df)):
+        df[i] /= 2.0
+
 args = sys.argv
 args.pop(0)
 if not args or args[0] not in valid_arguments:
     raise "Plug-in has to be called from Gwyddion plugin-proxy."
+
 what = args.pop(0)
 if what == 'register':
     print plugin_info
 elif what == 'run':
     run = args.pop(0)
-    data = read_data(args.pop(0))
-    data['/meta/A subliminal message'] = 'Python rulez!'
-    df = data['/0/data']['data']
-    for i in range(len(df)):
-        df[i] /= 2.0
+    filename = args.pop(0)
+    data = read_data(filename)
+    process_data(data)
     print_data(data)
 sys.exit(0)

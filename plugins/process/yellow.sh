@@ -6,12 +6,14 @@
 # Public domain.
 case "$1" in
     register)
+    # Plug-in info.
     echo "yellow"
-    echo "/Set Palette to _Yellow (shell :o)"
+    echo "/_Test/Set Palette to _Yellow (shell)"
     echo "noninteractive with_defaults"
     ;;
 
     run)
+    # We don't need to read the input when the output doesn't depend on it.
     echo "/0/base/palette=Yellow"
     ;;
 

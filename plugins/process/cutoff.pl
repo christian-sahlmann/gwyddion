@@ -9,32 +9,39 @@ use open ':std';
 use warnings;
 use strict;
 
+# Plug-in information.
+# Format is similar to GwyProcessFuncInfo:
+# - Name (just an unique identifier)
+# - Menu path
+# - Run modes (possible values: noninteractive with_defaults interactive modal)
+my $plugin_info =
+"cutoff
+/_Test/_Cutoff (Perl)
+noninteractive with_defaults
+";
+
+my %valid_arguments = ( 'register' => 1, 'run' => 1 );
+
 my $line_re = "^([^=]+)=(.*)\n";
-my $field_re = "^([^=]+)=\[\n";
+my $field_re = "^([^=]+)=\\[\n";
 
 my $sizeof_double = length pack 'd', 42;
 die if $sizeof_double != 8;
 
-my %valid_arguments = ( 'register' => 1, 'run' => 1 );
-
-my $plugin_info = "cutoff
-/_Cutoff (Perl)
-noninteractive with_defaults";
-
-sub dpop( ) {
+sub dpop {
     my ( $hash, $key ) = @_;
     my $v = $hash->{ $key };
     delete $hash->{ $key };
     return $v;
 }
 
-sub read_data( ) {
+sub read_data {
     open FH, $_[0];
     my %data;
     while ( my $line = <FH> ) {
-        if ($line =~ m/$field_re/) {
+        if ( $line =~ m/$field_re/ ) {
+            my $key = $1;
             my ( $c, $a );
-            $key = $1;
             read FH, $c, 1;
             die if $c ne '[';
             my $xres = dpop( \%data, "$key/xres" ) + 0;
@@ -43,15 +50,16 @@ sub read_data( ) {
             my $yreal = dpop( \%data, "$key/yreal" ) + 0.0;
             my $n = $xres*$yres;
             read FH, $a, $n*$sizeof_double;
-            my @a = unpack( "d[$n]", $a )
+            my @a = unpack( "d[$n]", $a );
             $c = readline( *FH );
             die if $c ne "]]\n";
-            $data{ $key } = [ 'xres' => $xres, 'yres' => $yres,
+            $data{ $key } = { 'xres' => $xres, 'yres' => $yres,
                               'xreal' => $xreal, 'yreal' => $yreal,
-                              'data' => \@a ];
+                              'data' => \@a };
         }
-        else if ( $line =~ m/$line_re/ ) {
-            my ( $key, $val ) = ( $1, $2 );
+        elsif ( $line =~ m/$line_re/ ) {
+            my $key = $1;
+            my $val = $2;
             $data{ $key } = $val;
         }
         else {
@@ -61,7 +69,7 @@ sub read_data( ) {
     return \%data;
 }
 
-sub print_data( ) {
+sub print_data {
     my $data = $_[0];
     local $, = undef;
     local $\ = undef;
@@ -73,19 +81,42 @@ sub print_data( ) {
     for my $k ( keys %$data ) {
         my $v = $data->{ $k };
         next if not ref $v;
-        printf "$k/xres=%d\n", $v->{ 'xres' };
-        printf "$k/yres=%d\n", $v->{ 'yres' };
-        my $n = %$v->{ 'xres' }*$v->{ 'yres' };
-        printf "$k/xreal=%d\n", $v->{ 'xreal' };
-        printf "$k/yreal=%d\n", $v->{ 'yreal' };
+        printf "$k/xres=\%d\n", $v->{ 'xres' };
+        printf "$k/yres=\%d\n", $v->{ 'yres' };
+        my $n = $v->{ 'xres' }*$v->{ 'yres' };
+        printf "$k/xreal=\%g\n", $v->{ 'xreal' };
+        printf "$k/yreal=\%g\n", $v->{ 'yreal' };
         print "$k=[\n[";
         my $a = $v->{ 'data' };
-        my $a = pack( "d[$n]", @$a );
+        $a = pack( "d[$n]", @$a );
         print "$a]]\n";
     }
 }
 
-if not @ARGV or not defined $valid_arguments{ $ARGV[0] } {
+sub process_data {
+    my $data = $_[0];
+    my $df = $data->{ '/0/data' };
+    my $xres = $df->{ 'xres' } + 0;
+    my $yres = $df->{ 'yres' } + 0;
+    my $n = $xres*$yres;
+    my $a = $df->{ 'data' };
+    my $sum = 0.0;
+    my $sum2 = 0.0;
+    for my $v ( @$a ) {
+        $sum += $v;
+        $sum2 += $v**2;
+    }
+    my $rms = sqrt( ( $sum2 - $sum**2/$n )/$n );
+    my $avg = $sum/$n;
+    my $min = $avg - $rms;
+    my $max = $avg + $rms;
+    for my $i ( 0 .. $n-1 ) {
+        $a->[$i] = $max if ( $a->[$i] > $max );
+        $a->[$i] = $min if ( $a->[$i] < $min );
+    }
+}
+
+if ( not @ARGV or not defined $valid_arguments{ $ARGV[0] } ) {
     die "Plug-in has to be called from Gwyddion plugin-proxy.\n";
 }
 
@@ -93,10 +124,11 @@ my $what = shift @ARGV;
 if ( $what eq 'register' ) {
     print $plugin_info;
 }
-else if ( $what eq 'run' ) {
+elsif ( $what eq 'run' ) {
     my $run = shift @ARGV;
     my $filename = shift @ARGV;
     my $data = read_data $filename;
+    process_data $data;
     print_data $data;
 }
-return 0;
+exit 0;
