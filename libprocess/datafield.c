@@ -1623,19 +1623,20 @@ gwy_data_field_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle,
     int k;
     GwyDataLine l;
 
-    gwy_data_line_alloc(&l, a->xres);
+    gwy_data_line_initialize(&l, a->xres, a->xreal, 0);
 
     if (xangle != 0) {
         for (k = 0; k < a->yres; k++) {
             gwy_data_field_get_row(a, &l, k);
-            gwy_data_line_line_rotate(&l, xangle, interpolation);
+            gwy_data_line_line_rotate(&l, -xangle, interpolation);
             gwy_data_field_set_row(a, &l, k);
         }
     }
+    
     if (yangle != 0) {
         for (k = 0; k < a->xres; k++) {
             gwy_data_field_get_column(a, &l, k);
-            gwy_data_line_line_rotate(&l, yangle, interpolation);
+            gwy_data_line_line_rotate(&l, -yangle, interpolation);
             gwy_data_field_set_column(a, &l, k);
         }
     }

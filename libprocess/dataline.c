@@ -301,7 +301,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
     gint i;
     GwyDataLine b;
 
-    gwy_debug("");
+    /*gwy_debug("");*/
     if (to < from)
         GWY_SWAP(gint, from, to);
 
@@ -799,15 +799,15 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
 void
 gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
 {
-    gint i, k, maxi;
+    gint i, k, maxi, res;
     gdouble ratio, x, as, radius, x1, x2, y1, y2;
     GwyDataLine dx, dy;
 
-    gwy_debug("");
+    /*gwy_debug("");*/
     if (angle == 0)
         return;
 
-    dx.res = dy.res = a->res;
+    res = dx.res = dy.res = a->res;
     dx.data = g_new(gdouble, a->res);
     dy.data = g_new(gdouble, a->res);
 
@@ -853,6 +853,8 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
     }
     if (maxi != 0)
         gwy_data_line_resize(a, 0, maxi);
+
+    if (a->res != res) gwy_data_line_resample(a, res, interpolation);
 
     /* XXX: where was this freed? */
     g_free(dx.data);
