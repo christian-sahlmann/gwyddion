@@ -28,6 +28,7 @@ EXPORTS
 	gwy_axis_set_style
 	gwy_layer_points_new
 	gwy_graph_area_signal_selected
+	gwy_layer_axes_set_orientation
 	gwy_vector_shade_get_type
 	gwy_graph_set_status
 	gwy_axis_get_reqminimum
@@ -166,6 +167,7 @@ EXPORTS
 	gwy_vector_layer_set_update_policy
 	gwy_graph_area_clear
 	gwy_layer_points_get_type
+	gwy_layer_axes_get_orientation
 	gwy_layer_lines_new
 	gwy_data_view_layer_plugged
 	gwy_grad_sphere_get_palette
