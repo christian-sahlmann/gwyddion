@@ -195,7 +195,7 @@ rotate_dialog(RotateArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-    controls.angle = gtk_adjustment_new(args->angle, -360, 360, 5, 30, 0);
+    controls.angle = gtk_adjustment_new(args->angle, -360, 360, 1, 30, 0);
     gwy_table_attach_hscale(table, 0, _("Rotate by _angle:"), _("deg (CCW)"),
                             controls.angle, 0);
     g_signal_connect(controls.angle, "value_changed",
