@@ -378,8 +378,8 @@ my_invert_value(GwyContainer *data, GwyRunType run)
 ]]></programlisting></informalexample>
    <para>
      A few things can be seen here.  First, we check the run mode.  More
-     sofisticated modules with GUI and their own settings can do different
-     things based on the run mode, but we just check if it looks sane.
+     sofisticated modules with a GUI and their own settings can do different
+     things based on the run mode, but we just check whether it looks sane.
    </para>
    <para>
      Next, we get a datafield from some container.
@@ -396,7 +396,7 @@ my_invert_value(GwyContainer *data, GwyRunType run)
      was passed to our function.  Just take it as a fact the data are
      called <literal>"/0/data"</literal>, it is probably equally good name
      as anything else.  There are other strange things in the container
-     but you'd rather not want to know about them.
+     but you'd rather not want to know about them, at least not now.
    </para>
    <para>
      The
@@ -430,13 +430,13 @@ my_invert_value(GwyContainer *data, GwyRunType run)
        not work.
      </para>
      <para>
-       So the prefered solution is to register more than function for the
+       The prefered solution is to register more than function for the
        module.  This is as simple as it sounds.  One just has to define more
        <link linkend="GwyProcessFuncInfo">GwyProcessFuncInfo</link>s
        (or other func infos) and register the functions one by one in
        <symbol>module_register()</symbol>.  It is even
        possible to register functions of different kind in a one module, but
-       this is not recommended.
+       usually you don't want to do this.
      </para>
      <para>
        The other posibility, generally not recommended but sometimes
@@ -450,9 +450,9 @@ my_invert_value(GwyContainer *data, GwyRunType run)
      <title>Settings</title>
      <para>
        The nice thing about Gwyddion module dialog boxes is that they show
-       the same parameter values as when you last open them, and they remember
-       the settings even acros sessions.  And you of course want this feature
-       in your modules too.
+       the same parameter values as when you last opened them, and they
+       remember the settings even across sessions.  And you of course want
+       this feature in your modules too.
      </para>
      <para>
        Saving and restoring settings usually has sense only for modules with
@@ -475,7 +475,7 @@ my_invert_value(GwyContainer *data, GwyRunType run)
      </para>
    </refsect2>
    <para>
-     TODO: masks, presentations, GUI.
+     TODO: masks, presentations, creating new windows, file-type modules, GUI.
    </para>
   </refsect1>
 </refentry>
