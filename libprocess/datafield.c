@@ -1623,24 +1623,26 @@ gwy_data_field_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle,
     int k;
     GwyDataLine l;
 
-    gwy_data_line_initialize(&l, a->xres, a->xreal, 0);
-
     if (xangle != 0) {
+        gwy_data_line_initialize(&l, a->xres, a->xreal, 0);
         for (k = 0; k < a->yres; k++) {
             gwy_data_field_get_row(a, &l, k);
             gwy_data_line_line_rotate(&l, -xangle, interpolation);
             gwy_data_field_set_row(a, &l, k);
         }
+        gwy_data_line_free(&l);
     }
     
+     
     if (yangle != 0) {
+        gwy_data_line_initialize(&l, a->yres, a->yreal, 0);
         for (k = 0; k < a->xres; k++) {
             gwy_data_field_get_column(a, &l, k);
             gwy_data_line_line_rotate(&l, -yangle, interpolation);
             gwy_data_field_set_column(a, &l, k);
         }
+        gwy_data_line_free(&l);
     }
-    gwy_data_line_free(&l);
 }
 
 
