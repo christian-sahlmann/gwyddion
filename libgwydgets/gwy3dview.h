@@ -142,6 +142,20 @@ GdkPixbuf *      gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview,
 
 void             gwy_3d_view_reset_view        (Gwy3DView *gwy3dview);
 
+GtkAdjustment *  gwy_3d_view_get_rot_x_adjustment          (Gwy3DView *gwy3dview);
+GtkAdjustment *  gwy_3d_view_get_rot_y_adjustment          (Gwy3DView *gwy3dview);
+GtkAdjustment *  gwy_3d_view_get_view_scale_adjustment     (Gwy3DView *gwy3dview);
+GtkAdjustment *  gwy_3d_view_get_z_deformation_adjustment  (Gwy3DView *gwy3dview);
+GtkAdjustment *  gwy_3d_view_get_light_z_adjustment        (Gwy3DView *gwy3dview);
+GtkAdjustment *  gwy_3d_view_get_light_y_adjustment        (Gwy3DView *gwy3dview);
+
+gdouble          gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview);
+gdouble          gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview);
+gboolean         gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview,
+                                                gdouble new_max_scale);
+gboolean         gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
+                                                gdouble new_min_scale);
+
 G_END_DECLS
 
 #endif  /* __GWY_GWY3DVIEW_H__ */

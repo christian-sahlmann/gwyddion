@@ -83,7 +83,8 @@ static void          gwy_3d_init_font           (Gwy3DView *gwy3dview);
 static void          gwy_3d_set_projection      (Gwy3DView *gwy3dview,
                                                  GLfloat width,
                                                  GLfloat height);
-
+static void     gwy_3d_adjustment_value_changed (GtkAdjustment* adjustment,
+                                                 gpointer user_data);
 
 /* Local data */
 
@@ -247,12 +248,12 @@ gwy_3d_view_new(GwyContainer *data)
 
     gwy3dview->container = data;
 
-    gwy3dview->rot_x         = gtk_adjustment_new(45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
-    gwy3dview->rot_y         = gtk_adjustment_new(-45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
-    gwy3dview->view_scale    = gtk_adjustment_new(1.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
-    gwy3dview->deformation_z = gtk_adjustment_new(1.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
-    gwy3dview->light_z       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
-    gwy3dview->light_y       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
+    gwy3dview->rot_x         = gtk_adjustment_new(45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 5.0, 45.0, 0.0);
+    gwy3dview->rot_y         = gtk_adjustment_new(-45.0, -90.0, 0.0, 5.0, 15.0, 0.0);
+    gwy3dview->view_scale    = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.1, 0.0, 0.0);
+    gwy3dview->deformation_z = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.1, 0.0, 0.0);
+    gwy3dview->light_z       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 45.0, 0.0);
+    gwy3dview->light_y       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 45.0, 0.0);
     gwy3dview->mat_current
              = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
@@ -386,7 +387,18 @@ gwy_3d_view_new(GwyContainer *data)
                                  NULL,
                                  TRUE,
                                  GDK_GL_RGBA_TYPE);
-
+    g_signal_connect(gwy3dview->rot_x, "value-changed",
+                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+    g_signal_connect(gwy3dview->rot_y, "value-changed",
+                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+    g_signal_connect(gwy3dview->view_scale, "value-changed",
+                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+    g_signal_connect(gwy3dview->deformation_z, "value-changed",
+                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+    g_signal_connect(gwy3dview->light_z, "value-changed",
+                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+    g_signal_connect(gwy3dview->light_z, "value-changed",
+                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
     return widget;
 }
 
@@ -1009,6 +1021,237 @@ gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
                                    &GTK_WIDGET(gwy3dview)->allocation, FALSE);
 
 }
+
+/**
+ * gwy_3d_view_get_rot_x_adjustment:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+GtkAdjustment *
+gwy_3d_view_get_rot_x_adjustment(Gwy3DView *gwy3dview)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    return gwy3dview->rot_x;
+}
+
+/**
+ * gwy_3d_view_get_rot_y_adjustment:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+GtkAdjustment *
+gwy_3d_view_get_rot_y_adjustment(Gwy3DView *gwy3dview)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    return gwy3dview->rot_y;
+}
+
+/**
+ * gwy_3d_view_get_view_scale_adjustment:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+GtkAdjustment *
+gwy_3d_view_get_view_scale_adjustment(Gwy3DView *gwy3dview)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    return gwy3dview->view_scale;
+}
+
+/**
+ * gwy_3d_view_get_z_deformation_adjustment:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+GtkAdjustment *
+gwy_3d_view_get_z_deformation_adjustment(Gwy3DView *gwy3dview)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    return gwy3dview->deformation_z;
+}
+
+/**
+ * gwy_3d_view_get_light_z_adjustment:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+GtkAdjustment *
+gwy_3d_view_get_light_z_adjustment(Gwy3DView *gwy3dview)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    return gwy3dview->light_z;
+}
+
+/**
+ * gwy_3d_view_get_light_y_adjustment:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+GtkAdjustment *
+gwy_3d_view_get_light_y_adjustment(Gwy3DView *gwy3dview)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    return gwy3dview->light_y;
+}
+
+/**
+ * gwy_3d_view_get_max_view_scale:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+gdouble
+gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), G_MAXDOUBLE);
+    return gwy3dview->view_scale_max;
+}
+
+/**
+ * gwy_3d_view_get_min_view_scale:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+gdouble
+gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), G_MAXDOUBLE);
+    return gwy3dview->view_scale_min;
+}
+
+/**
+ * gwy_3d_view_set_max_view_scale:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+gboolean
+gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
+    new_max_scale = fabs(new_max_scale);
+    if (new_max_scale != gwy3dview->view_scale_max)
+    {
+        gwy3dview->view_scale_max = new_max_scale;
+        if (gwy3dview->view_scale_max < gwy3dview->view_scale_min)
+        {
+            gdouble _tmp = gwy3dview->view_scale_max;
+            gwy3dview->view_scale_max = gwy3dview->view_scale_min;
+            gwy3dview->view_scale_min = _tmp;
+        }
+        if (gwy3dview->view_scale->value > gwy3dview->view_scale_max)
+           gtk_adjustment_set_value(gwy3dview->view_scale,
+                                    gwy3dview->view_scale_max);
+        if (gwy3dview->view_scale->value < gwy3dview->view_scale_min)
+           gtk_adjustment_set_value(gwy3dview->view_scale,
+                                    gwy3dview->view_scale_min);
+    }
+    return TRUE;
+}
+
+/**
+ * gwy_3d_view_set_min_view_scale:
+ * @gwy3dview: A 3D data view widget.
+ *
+ *
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
+gboolean
+gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
+    new_min_scale = fabs(new_min_scale);
+    if (new_min_scale != gwy3dview->view_scale_min)
+    {
+        gwy3dview->view_scale_min = new_min_scale;
+        if (gwy3dview->view_scale_min < gwy3dview->view_scale_min)
+        {
+            gdouble _tmp = gwy3dview->view_scale_min;
+            gwy3dview->view_scale_min = gwy3dview->view_scale_max;
+            gwy3dview->view_scale_max = _tmp;
+        }
+        if (gwy3dview->view_scale->value < gwy3dview->view_scale_min)
+           gtk_adjustment_set_value(gwy3dview->view_scale,
+                                    gwy3dview->view_scale_min);
+        if (gwy3dview->view_scale->value > gwy3dview->view_scale_max)
+           gtk_adjustment_set_value(gwy3dview->view_scale,
+                                    gwy3dview->view_scale_max);
+    }
+    return TRUE;
+
+}
+
+
+/******************************************************************************/
+static void
+gwy_3d_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_data)
+{
+    Gwy3DView * gwy3dview;
+    g_return_if_fail(GTK_IS_ADJUSTMENT(adjustment));
+    g_return_if_fail(GWY_IS_3D_VIEW(user_data));
+    gwy3dview = (Gwy3DView*) user_data;
+    if (GTK_WIDGET_REALIZED(gwy3dview))
+        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
+                                   &GTK_WIDGET(gwy3dview)->allocation,
+                                   FALSE);
+}
+
 
 static void
 gwy_3d_view_realize(GtkWidget *widget)
