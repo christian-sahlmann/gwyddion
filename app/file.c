@@ -10,7 +10,6 @@
 
 static void file_open_ok_cb            (GtkFileSelection *selector);
 static void file_save_as_ok_cb         (GtkFileSelection *selector);
-static void gwy_app_create_data_window (GwyContainer *data);
 
 void
 gwy_app_file_open_cb(void)
@@ -114,7 +113,7 @@ file_open_ok_cb(GtkFileSelection *selector)
 }
 
 /* FIXME: to be moved somewhere? refactored? */
-static void
+void
 gwy_app_create_data_window(GwyContainer *data)
 {
     GtkWidget *data_window, *data_view;

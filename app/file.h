@@ -10,10 +10,13 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-void gwy_app_file_open_cb      (void);
-void gwy_app_file_save_as_cb   (void);
-void gwy_app_file_save_cb      (void);
-void gwy_app_file_duplicate_cb (void);
+void gwy_app_file_open_cb       (void);
+void gwy_app_file_save_as_cb    (void);
+void gwy_app_file_save_cb       (void);
+void gwy_app_file_duplicate_cb  (void);
+
+/* FIXME: to be moved somewhere? refactored? */
+void gwy_app_create_data_window (GwyContainer *data);
 
 #ifdef __cplusplus
 }

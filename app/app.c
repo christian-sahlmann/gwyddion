@@ -143,11 +143,21 @@ int
 main(int argc, char *argv[])
 {
     const gchar *module_dirs[] = { GWY_MODULE_DIR, NULL };
+    GwyContainer *data;
+    gchar *filename_utf8;
+    gint i;
 
     gtk_init(&argc, &argv);
     gwy_type_init();
     gwy_module_register_modules(module_dirs);
     foo();
+    for (i = 1; i < argc; i++) {
+        if (!(data = gwy_file_load(argv[i])))
+            continue;
+        filename_utf8 = g_filename_to_utf8(argv[i], -1, NULL, NULL, NULL);
+        gwy_container_set_string_by_name(data, "/filename", filename_utf8);
+        gwy_app_create_data_window(data);
+    }
     gtk_main();
 
     return 0;
