@@ -791,7 +791,7 @@ gwy_setenv(const gchar *variable,
 
 /**
  * gwy_object_unref:
- * @obj: A pointer to #GObject or %NULL.
+ * @obj: A pointer to #GObject or %NULL (must be an l-value).
  *
  * If @obj is not %NULL, unreferences @obj.  In all cases sets @obj to %NULL.
  *
