@@ -32,6 +32,7 @@
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 typedef struct {
+    GwyUnitoolState *state;
     GtkWidget *x;
     GtkWidget *y;
     GtkWidget *w;
@@ -39,9 +40,11 @@ typedef struct {
     GtkWidget *filter;
     GtkWidget *direction;
     GtkWidget *size;
+    GtkWidget *update;
     gint fil;
     gint dir;
     gint siz;
+    gboolean upd;
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
@@ -57,6 +60,8 @@ static void       direction_changed_cb (GObject *item,
                                         ToolControls *controls);
 static void       filter_changed_cb (GObject *item,
                                     ToolControls *controls);
+static void       update_changed_cb (GtkToggleButton *button,
+                                    ToolControls *controls);
 static void       my_undo_save (GwyDataField *dfield);
 static void       my_undo_load (GwyDataField *dfield);
 
@@ -66,6 +71,7 @@ gint old_ulrow = 0;
 gint old_brcol = 0;
 gint old_brrow = 0;
 gint unchanged = 1;
+gint state_changed = 0;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -126,6 +132,7 @@ use(GwyDataWindow *data_window,
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
+    ((ToolControls*)state->user_data)->state = state;
     return gwy_unitool_use(state, data_window, reason);
 }
 
@@ -236,10 +243,18 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
    
-    controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
+    controls->size = GTK_WIDGET(gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0));
     gwy_table_attach_spinbutton(table2, 3, "", "px", controls->size);
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);    
+   
+    controls->update = gtk_check_button_new_with_label("update preview dynamically"); 
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->update,
+                       FALSE, FALSE, 0);
+    gtk_toggle_button_set_active(controls->update, controls->upd);
+    g_signal_connect(controls->update, "toggled", G_CALLBACK(update_changed_cb), controls);
+
+ 
     
     
     return dialog;
@@ -369,14 +384,18 @@ dialog_update(GwyUnitoolState *state)
    
     if (unchanged) {my_undo_save(dfield); unchanged = 0;}
     
-    if (is_selected && ((old_ulcol != ulcol) || (old_ulrow != ulrow) || (old_brcol != brcol) || (old_brrow != brrow))) 
+    if (state_changed || (old_ulcol != ulcol) || (old_ulrow != ulrow) || (old_brcol != brcol) || (old_brrow != brrow))
     {
         my_undo_load(dfield);
-        
+    }
+
+    if (is_selected && controls->upd && (state_changed || (old_ulcol != ulcol) || (old_ulrow != ulrow) || (old_brcol != brcol) || (old_brrow != brrow))) 
+    {
         old_ulcol = ulcol;
         old_ulrow = ulrow;
         old_brcol = brcol;
         old_brrow = brrow;
+        if (state_changed) state_changed = 0;
    
     switch (controls->fil){
         case GWY_FILTER_MEAN:
@@ -407,19 +426,38 @@ dialog_update(GwyUnitoolState *state)
         g_assert_not_reached();
         break;
     }
-       gwy_data_view_update(GWY_DATA_VIEW(layer->parent)); 
+        gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
     }
+
+    if (state_changed) 
+    {
+        state_changed=0;
+        gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
+    }
+
 }
 
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
-    memset(state->user_data, 0, sizeof(ToolControls));
+    GwyContainer *data;
+    GwyDataField *dfield;
+    GwyDataViewLayer *layer;
+   
+/*    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+*/
     if (undo_dfield)
     {
+/*        my_undo_load(dfield);
+        gwy_vector_layer_unselect(state->layer);
+        gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
+  */         
         g_object_unref(undo_dfield);
         undo_dfield = NULL;
     }
+    memset(state->user_data, 0, sizeof(ToolControls));
 }
 
 static void       
@@ -427,6 +465,8 @@ direction_changed_cb (GObject *item, ToolControls *controls)
 {
     gwy_debug("");
     controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
+    state_changed = 1;
+    dialog_update(controls->state);
 }
 
 static void
@@ -434,7 +474,18 @@ filter_changed_cb (GObject *item, ToolControls *controls)
 {
     gwy_debug("");
     controls->fil = GPOINTER_TO_INT(g_object_get_data(item, "filter-type"));
+    state_changed = 1;
+    dialog_update(controls->state);
 }    
+
+static void
+update_changed_cb (GtkToggleButton *button, ToolControls *controls)
+{
+    gwy_debug("");
+    controls->upd = gtk_toggle_button_get_active(button);
+    state_changed = 1;
+    dialog_update(controls->state);
+}
 
 static void
 my_undo_save(GwyDataField *dfield)
