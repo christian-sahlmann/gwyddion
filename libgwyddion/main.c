@@ -731,6 +731,25 @@ test_si_unit(void)
     gwy_si_unit_value_format_free(vformat);
 }
 
+void gwy_si_unit_parse(const gchar *string);
+
+static void
+test_si_unit2(void)
+{
+    g_message("====== SI UNIT 2 ======================");
+    gwy_si_unit_parse("m");
+    gwy_si_unit_parse("cm");
+    gwy_si_unit_parse("um/s");
+    gwy_si_unit_parse("deg");
+    gwy_si_unit_parse("kPa");
+    gwy_si_unit_parse("kHz/mV");
+    gwy_si_unit_parse("m^3 V^-2 s-2");
+    gwy_si_unit_parse("m s<sup>-1</sup>");
+    gwy_si_unit_parse("mm^4/ns^2");
+    gwy_si_unit_parse("uV/LSB");
+    gwy_si_unit_parse("m2");
+}
+
 static void
 test_all(void)
 {
@@ -746,6 +765,7 @@ test_all(void)
     test_nlfit();
     test_path_normalization();
     test_si_unit();
+    test_si_unit2();
 }
 
 static void
@@ -763,7 +783,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_all();
+    test_si_unit2();
 
     return 0;
 }
