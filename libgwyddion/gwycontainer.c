@@ -229,9 +229,22 @@ static void
 value_destroy_func(gpointer data)
 {
     GValue *val = (GValue*)data;
+#ifdef DEBUG
+    GObject *obj = NULL;
 
+    gwy_debug("unsetting value %p, holds object = %d",
+              val, G_VALUE_HOLDS_OBJECT(val));
+    if (G_VALUE_HOLDS_OBJECT(val)) {
+        obj = G_OBJECT(g_value_peek_pointer(val));
+        gwy_debug("refcount = %d", obj->ref_count);
+    }
+#endif
     g_value_unset(val);
     g_free(val);
+#ifdef DEBUG
+    if (obj)
+        gwy_debug("refcount = %d", obj->ref_count);
+#endif
 }
 
 /**
@@ -365,10 +378,23 @@ gwy_container_remove(GwyContainer *container, GQuark key)
     value = g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!value)
         return FALSE;
+#ifdef DEBUG
+    if (G_VALUE_HOLDS_OBJECT(value)) {
+        gwy_debug("refcount = %d",
+                  G_OBJECT(g_value_peek_pointer(value))->ref_count);
+    }
+#endif
 
     if (G_VALUE_HOLDS_OBJECT(value))
         remove_object_callback(container, value);
 
+#ifdef DEBUG
+    gwy_debug("holds object = %d", G_VALUE_HOLDS_OBJECT(value));
+    if (G_VALUE_HOLDS_OBJECT(value)) {
+        gwy_debug("refcount = %d",
+                  G_OBJECT(g_value_peek_pointer(value))->ref_count);
+    }
+#endif
     return g_hash_table_remove(container->values,
                                GUINT_TO_POINTER(key));
 }
