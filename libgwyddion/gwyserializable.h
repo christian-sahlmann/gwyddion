@@ -83,27 +83,6 @@ typedef struct {
     guint32 array_size;
 } GwySerializeItem;
 
-typedef GByteArray* (*GwySerializeStructFunc)    (GByteArray *buffer,
-                                                  const guchar *object_name,
-                                                  gsize nspec,
-                                                  const GwySerializeSpec *spec);
-typedef gboolean  (*GwyDeserializeStructFunc)    (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position,
-                                                  const guchar *object_name,
-                                                  gsize nspec,
-                                                  const GwySerializeSpec *spec);
-typedef GByteArray* (*GwySerializeHashFunc)      (GByteArray *buffer,
-                                                  const guchar *object_name,
-                                                  gsize nitems,
-                                                 const GwySerializeItem *items);
-typedef GwySerializeItem* (GwyDeserializeHashFunc)(const guchar *buffer,
-                                                   gsize size,
-                                                   gsize *position,
-                                                   const guchar *object_name,
-                                                   gsize *nitems);
-
-
 GType       gwy_serializable_get_type            (void) G_GNUC_CONST;
 GByteArray* gwy_serializable_serialize           (GObject *serializable,
                                                   GByteArray *buffer);

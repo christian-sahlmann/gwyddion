@@ -722,6 +722,9 @@ gwy_serialize_pack_struct(GByteArray *buffer,
  *
  * Serializes an object to buffer in gwy-file format.
  *
+ * More precisely, it appends serialization of object with g_type_name()
+ * @object_name with components described by @items to @buffer.
+ *
  * Returns: @buffer or a newly allocated #GByteArray with serialization of
  *          @items components appended.
  *
@@ -1213,9 +1216,17 @@ gwy_serialize_unpack_struct(const guchar *buffer,
  *
  * Deserializes an object with arbitrary components from gwy-file format.
  *
- * See #GwyDeserializeHashFunc for discussion.
+ * This function works like gwy_serialize_unpack_object_struct(), except that
+ * it does not use any a priori knowledge of what the object contains.  So
+ * instead of filling values in supplied #GwySerializeSpec's, it constructs
+ * #GwySerializeItem's completely from what is found in @buffer.  It does
+ * considerably less sanity checks and even allows several components of the
+ * same name.
  *
- * Returns: A newly allocated array of deserialized components.
+ * Returns: A newly allocated array of deserialized components.  Note the
+ *          @name fields of #GwySerializeSpec's point to @buffer and thus are
+ *          valid only as long as @buffer is; any arrays or strings are newly
+ *          allocated and must be reused or freed by caller.
  *
  * Since: 1.7
  **/
@@ -2006,102 +2017,6 @@ gwy_serialize_check_string(const guchar *buffer,
  * objects.
  *
  * Since: 1.7
- **/
-
-/**
- * GwySerializeStructFunc:
- * @buffer: A buffer to which the serialized components should be appended.
- * @object_name: The g_type_name() of the object.
- * @nspec: The number of items in @spec.
- * @spec: The components to serialize.
- *
- * The type of struct-like serialization function.
- *
- * It appends serialization of object called @object_name with components
- * described by @spec to @buffer.
- *
- * Returns: The buffer with serialization of @spec components appended.
- *
- * Since: 1.8
- **/
-
-/**
- * GwyDeserializeStructFunc:
- * @buffer: A memory location containing a serialized object at position
- *          @position.
- * @size: Current size of @buffer, new size is returned here.
- * @position: The position of the object in @buffer, it's updated to
- *            point after it.
- * @object_name: The g_type_name() of the object.
- * @nspec: The number of items in @spec.
- * @spec: The components to deserialize.
- *
- * The type of struct-like deserialization function.
- *
- * Extra components are ignored (but cause a warning), components of different
- * type than expected cause failure, missing components are not detected.
- *
- * It is safe to pass pointers to existing non-atomic objects (strings, arrays,
- * objects) in @spec values, they will be dereferenced and freed as necessary
- * when an unpacked value is about to replace them.
- * For the same reason it is an error to pass pointers to unintialized memory
- * there, always initialize non-atomic @spec values to %NULL pointers, at
- * least.
- *
- * Caller is responsible for use/clean-up of these values if deserialization
- * succeeds or not.
- *
- * Returns: Whether the unpacking succeeded (see description body for
- *          definition of success and failure).
- *
- * Since: 1.8
- **/
-
-/**
- * GwySerializeHashFunc:
- * @buffer: A buffer to which the serialized components should be appended,
- *          or %NULL.
- * @object_name: The g_type_name() of the object.
- * @nitems: The number of @items items.
- * @items: The components to serialize.
- *
- * Returns: @buffer or a newly allocated #GByteArray with serialization of
- *          @items components appended.
- *
- * The type of hash-like serialization function.
- *
- * It appends serialization of object called @object_name with components
- * described by @items to @buffer.
- *
- * Since: 1.8
- **/
-
-/**
- * GwyDeserializeHashFunc:
- * @buffer: A block of memory of size @size contaning object representation.
- * @size: The size of @buffer.
- * @position: Current position in buffer, will be updated to point after
- *            object.
- * @object_name: The g_type_name() of the object.
- * @nitems: Where the number of deserialized components should be stored.
- *
- * The type of hash-like deserialization function.
- *
- * It deserializes an object with arbitrary components.
- *
- * This function works like gwy_serialize_unpack_object_struct(), except that
- * it does not use any a priori knowledge of what the object contains.  So
- * instead of filling values in supplied #GwySerializeSpec's, it constructs
- * #GwySerializeItem's completely from what is found in @buffer.  It does
- * considerably less sanity checks and even allows several components of the
- * same name.
- *
- * Returns: A newly allocated array of deserialized components.  Note the
- *          @name fields of #GwySerializeSpec's point to @buffer and thus are
- *          valid only as long as @buffer is; any arrays or strings are newly
- *          allocated and must be reused or freed by caller.
- *
- * Since: 1.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
