@@ -184,18 +184,30 @@ calibrate(GwyContainer *data, GwyRunType run)
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    gwy_data_field_set_xreal(dfield, args.xreal*args.xratio);
-    gwy_data_field_set_yreal(dfield, args.yreal*args.yratio);
+    gwy_data_field_set_xreal(dfield, args.xreal);
+    gwy_data_field_set_yreal(dfield, args.yreal);
     if (args.zratio != 1.0)
         gwy_data_field_multiply(dfield, args.zratio);
 
+<<<<<<< calibrate.c
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
         gwy_data_field_set_xreal(dfield, args.xreal*args.xratio);
         gwy_data_field_set_yreal(dfield, args.yreal*args.yratio);
+=======
+    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield)) {
+        gwy_data_field_set_xreal(dfield, args.xreal);
+        gwy_data_field_set_yreal(dfield, args.yreal);
+>>>>>>> 1.22.2.1
     }
+<<<<<<< calibrate.c
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
         gwy_data_field_set_xreal(dfield, args.xreal*args.xratio);
         gwy_data_field_set_yreal(dfield, args.yreal*args.yratio);
+=======
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield)) {
+        gwy_data_field_set_xreal(dfield, args.xreal);
+        gwy_data_field_set_yreal(dfield, args.yreal);
+>>>>>>> 1.22.2.1
     }
 
     data_window = gwy_app_data_window_create(data);
