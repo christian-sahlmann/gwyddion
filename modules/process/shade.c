@@ -99,7 +99,7 @@ static gboolean
 shade(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *shadefield;
     ShadeArgs args;
     gboolean ok; gint i;
 
@@ -117,8 +117,29 @@ shade(GwyContainer *data, GwyRunType run)
         gwy_app_clean_up_data(data);
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
+
+       /* gwy_app_undo_checkpoint(data, "/0/show");*/
+        if (gwy_container_contains_by_name(data, "/0/show")) {
+            printf("Presentation found\n");
+            shadefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                         "/0/show"));
+            gwy_data_field_resample(shadefield,
+                                    gwy_data_field_get_xres(dfield),
+                                    gwy_data_field_get_yres(dfield),
+                                    GWY_INTERPOLATION_NONE);
+        }
+        else
+        {
+            printf("Presentation not found\n");
+            shadefield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+            gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
+        }
+
+        gwy_data_field_shade(dfield, shadefield,
+                             args.theta, args.phi);
+                            
+        printf("Shading was done.\n");
     
-        printf("Shade was run\n");    
         if (run != GWY_RUN_WITH_DEFAULTS)
             shade_save_args(gwy_app_settings_get(), &args);
     }
