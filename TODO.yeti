@@ -1,3 +1,4 @@
+- Fix Createc warnings if Rok Zitko doesn't fix them
 - Add preview to: artithmetic
 - Find out why rectangular selections sometimes leaves a dot, and fix it
 - Kill WIN32-LEAN-AND-MEAN-CAPS: postponed to 2.0, where we can break binary
@@ -11,7 +12,6 @@
   for near final state
 - Convert Logarithmic scale value to logarithmic presentation
 - Do something reasonable with results of pow10, hypot, etc. detection
-- Rework Scars
 - Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
 - Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
   as now the menu updates would be messy
@@ -25,7 +25,7 @@
   with current data window -- or maybe better, switch data windows when other
   windows are switched
 - Remember app dialog sizes
-- GwyGradSphere background is strangely shifted in pixmap themes
+- GwyShader background is shifted in pixmap themes
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Finish Spot remove
 - Add some guessing to Rawfile
