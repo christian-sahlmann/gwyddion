@@ -13,6 +13,7 @@ EXTRA_DIST = \
 	update-potfiles.sh \
 	vim-syn-gen.py
 
+if MAINTAINER_MODE
 noinst_PROGRAMS = \
 	dump-modules
 
@@ -28,6 +29,7 @@ dump_modules_LDADD = @GTKGLEXT_LIBS@ \
 	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
+endif
 
 clean-local:
 	rm -f core.* *~

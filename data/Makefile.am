@@ -36,9 +36,11 @@ gwyddion_vim_sources = \
 	$(docsrc)/libgwyprocess/libgwyprocess-decl.txt
 
 # FIXME: this breaks VPATH build
+if MAINTAINER_MODE
 gwyddion.vim: $(gwyddion_vim_sources) $(gwyddion_vim_cfg) $(vim_syn_gen)
 	cd $(top_builddir); \
 	$(PYTHON) utils/vim-syn-gen.py data/gwyddion-cfg.py >data/gwyddion.vim
+endif
 
 # Desktop files
 if DESKTOP_FILE_UPDATE
