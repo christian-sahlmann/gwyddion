@@ -110,6 +110,7 @@ GWY_CONTAINER_GET_CLASS
 <SECTION>
 <FILE>gwymath</FILE>
 gwy_math_SI_prefix
+gwy_math_humanize_numbers
 gwy_math_find_nearest_line
 gwy_math_find_nearest_point
 </SECTION>

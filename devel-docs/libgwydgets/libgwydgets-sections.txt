@@ -13,6 +13,22 @@ GWY_GRAPH_CORNER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwylayer-pointer</FILE>
+<TITLE>GwyLayerPointer</TITLE>
+gwy_layer_pointer_new
+gwy_layer_pointer_get_point
+gwy_layer_pointer_unselect
+<SUBSECTION Standard>
+GWY_LAYER_POINTER
+GWY_IS_LAYER_POINTER
+GWY_TYPE_LAYER_POINTER
+gwy_layer_pointer_get_type
+GWY_LAYER_POINTER_CLASS
+GWY_IS_LAYER_POINTER_CLASS
+GWY_LAYER_POINTER_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwydataviewlayer</FILE>
 <TITLE>GwyDataViewLayer</TITLE>
 gwy_data_view_layer_is_vector
@@ -418,6 +434,7 @@ gwy_interpolation_option_menu
 gwy_windowing_option_menu
 gwy_table_attach_spinbutton
 gwy_table_attach_row
+gwy_dialog_prevent_delete_cb
 </SECTION>
 
 <SECTION>
@@ -437,6 +454,8 @@ GWY_STOCK_BOLD
 GWY_STOCK_ITALIC
 GWY_STOCK_SUBSCRIPT
 GWY_STOCK_SUPERSCRIPT
+GWY_STOCK_POINTER
+GWY_STOCK_POINTER_MEASURE
 gwy_stock_register_stock_items
 </SECTION>
 

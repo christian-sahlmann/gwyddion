@@ -10,6 +10,7 @@
 <!ENTITY libgwydgets-GwyLayerBasic SYSTEM "xml/gwylayer-basic.xml">
 <!ENTITY libgwydgets-GwyLayerLines SYSTEM "xml/gwylayer-lines.xml">
 <!ENTITY libgwydgets-GwyLayerMask SYSTEM "xml/gwylayer-mask.xml">
+<!ENTITY libgwydgets-GwyLayerPointer SYSTEM "xml/gwylayer-pointer.xml">
 <!ENTITY libgwydgets-GwyLayerPoints SYSTEM "xml/gwylayer-points.xml">
 <!ENTITY libgwydgets-GwyLayerSelect SYSTEM "xml/gwylayer-select.xml">
 <!ENTITY libgwydgets-GwyRuler SYSTEM "xml/gwyruler.xml">
@@ -40,6 +41,7 @@
     &libgwydgets-GwyLayerBasic;
     &libgwydgets-GwyLayerLines;
     &libgwydgets-GwyLayerMask;
+    &libgwydgets-GwyLayerPointer;
     &libgwydgets-GwyLayerPoints;
     &libgwydgets-GwyLayerSelect;
     &libgwydgets-GwyRuler;

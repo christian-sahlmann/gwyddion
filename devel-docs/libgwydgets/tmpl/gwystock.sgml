@@ -119,6 +119,20 @@ gwystock
 
 
 
+<!-- ##### MACRO GWY_STOCK_POINTER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_POINTER_MEASURE ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### FUNCTION gwy_stock_register_stock_items ##### -->
 <para>
 

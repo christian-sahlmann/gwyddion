@@ -23,6 +23,17 @@ gwymath
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_math_humanize_numbers ##### -->
+<para>
+
+</para>
+
+@unit: 
+@maximum: 
+@precision: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_math_find_nearest_line ##### -->
 <para>
 

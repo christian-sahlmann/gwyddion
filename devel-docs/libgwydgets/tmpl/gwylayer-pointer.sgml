@@ -1,0 +1,45 @@
+<!-- ##### SECTION Title ##### -->
+GwyLayerPointer
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_layer_pointer_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_pointer_get_point ##### -->
+<para>
+
+</para>
+
+@layer: 
+@x: 
+@y: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_pointer_unselect ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+

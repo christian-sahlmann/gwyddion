@@ -72,3 +72,11 @@ gwydgets
 @middle_widget: 
 
 
+<!-- ##### FUNCTION gwy_dialog_prevent_delete_cb ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
