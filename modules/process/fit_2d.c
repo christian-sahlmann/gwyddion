@@ -129,6 +129,7 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
+
 Fit2dControls *pcontrols;
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -184,7 +185,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
 	    RESPONSE_FIT = 1,
         RESPONSE_GUESS = 3
     };
-    gint response, row, i, j;
+    gint response, i, j;
     GtkObject *layer;
     GwyDataField *dfield;
     GtkWidget *label;
@@ -303,7 +304,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
 			 GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.param_init = (GtkWidget **)g_new(GtkWidget*, MAX_PARAMS);
+    controls.param_init = (GtkObject **)g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
 	controls.param_init[i] = gtk_entry_new();
 	gtk_entry_set_max_length(GTK_ENTRY(controls.param_init[i]), 12);
@@ -335,7 +336,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
     controls.param_fit = (GtkWidget **)g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
 	controls.param_fit[i] = gtk_check_button_new();
-	gtk_toggle_button_set_active(controls.param_fit[i], args->par_fix[i]);
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.param_fit[i]), args->par_fix[i]);
 	g_signal_connect(controls.param_fit[i], "toggled",
 			 G_CALLBACK(toggle_changed_cb), &args->par_fix[i]);
 	gtk_table_attach(GTK_TABLE(table), controls.param_fit[i],
@@ -424,7 +425,6 @@ fit_2d_dialog_abandon(Fit2dControls *controls)
 static void        
 update_view(Fit2dControls *controls, Fit2dArgs *args)
 {
-    gint i;
     GwyDataField *outputfield, *resultfield, *originalfield, *fitfield;
 
     originalfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original_data,
@@ -433,8 +433,8 @@ update_view(Fit2dControls *controls, Fit2dArgs *args)
     fitfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
                                                                 "/0/data"));
 
-    resultfield = gwy_data_field_new(originalfield->xres, originalfield->yres,
-                                     originalfield->xreal, originalfield->yreal, TRUE);
+    resultfield = GWY_DATA_FIELD(gwy_data_field_new(originalfield->xres, originalfield->yres,
+                                     originalfield->xreal, originalfield->yreal, TRUE));
     
     g_return_if_fail(GWY_IS_DATA_FIELD(originalfield));
     g_return_if_fail(GWY_IS_DATA_FIELD(fitfield));
@@ -484,7 +484,7 @@ guess
 
     for (i=0; i<4; i++)
     {
-        gtk_widget_set_sensitive(controls->param_init[i], TRUE);
+        gtk_widget_set_sensitive(GTK_WIDGET(controls->param_init[i]), TRUE);
         gtk_widget_set_sensitive(controls->param_fit[i], TRUE);
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->par_init[i]);
         gtk_entry_set_text(GTK_ENTRY(controls->param_init[i]), buffer);
@@ -506,7 +506,6 @@ fit_2d_run(Fit2dControls *controls,
     gdouble dimdata[4];
     gchar buffer[20];
     gint i, j, nparams;
-    gdouble max;
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
 							      "/0/data"));
@@ -703,7 +702,7 @@ gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
     GwyDataField *xsc;
     gint i;
 
-    xsc = gwy_data_field_new(dfield->xres, dfield->yres, dfield->xreal, dfield->yreal, FALSE);
+    xsc = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres, dfield->xreal, dfield->yreal, FALSE));
     for (i=0; i<(dfield->xres*dfield->yres); i++) xsc->data[i] = i;
     
     
@@ -735,15 +734,14 @@ static const gchar *display_key = "/module/fit_2d/display";
 static void
 fit_2d_sanitize_args(Fit2dArgs *args)
 {
-    args->display_type = CLAMP(args->display_type, GWY_FIT_2D_DISPLAY_DATA, GWY_FIT_2D_DISPLAY_DIFF);
+    args->display_type = MIN(args->display_type, GWY_FIT_2D_DISPLAY_DIFF);
 }
 
 static void
 fit_2d_load_args(GwyContainer *container,
                     Fit2dArgs *args)
 {
-    
-    gwy_container_gis_int32_by_name(container, display_key, &args->display_type);
+    gwy_container_gis_enum_by_name(container, display_key, &args->display_type);
     fit_2d_sanitize_args(args);
 }
 
@@ -751,7 +749,7 @@ static void
 fit_2d_save_args(GwyContainer *container,
                     Fit2dArgs *args)
 {
-    gwy_container_set_double_by_name(container, display_key, args->display_type);
+    gwy_container_set_enum_by_name(container, display_key, args->display_type);
     
 }
 
@@ -853,12 +851,11 @@ create_results_window(Fit2dArgs *args)
 {
     enum { RESPONSE_SAVE = 1 };
     GwyNLFitter *fitter = args->fitter;
-    GtkWidget *window, *tab, *table, *label;
+    GtkWidget *window, *tab, *table;
     gdouble mag, value, sigma;
-    gint row, curve, n, i, j;
+    gint row, n, i, j;
     gint precision;
     GString *str, *su;
-    const gchar *s;
 
     g_return_if_fail(args->is_fitted);
     g_return_if_fail(fitter->covar);
@@ -948,9 +945,9 @@ create_fit_report(Fit2dArgs *args)
 {
     GString *report, *str;
     gchar *s, *s2;
-    gint i, j, curve, n;
+    gint i, j, n;
 
-    
+    s = NULL;
     g_assert(args->fitter->covar);
     report = g_string_new("");
 
