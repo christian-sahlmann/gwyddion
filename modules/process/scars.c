@@ -47,6 +47,7 @@ typedef struct {
 } ScarsArgs;
 
 typedef struct {
+    GtkWidget *inverted;
     GtkWidget *view;
     GtkObject *threshold_high;
     GtkObject *threshold_low;
@@ -100,7 +101,7 @@ static GwyModuleInfo module_info = {
     "scars",
     N_("Scar detection and removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -144,14 +145,14 @@ module_register(const gchar *name)
  * @min_scar_len: Minimum length of a scar, shorter ones are discarded
  *                (must be at least one).
  * @max_scar_width: Maximum width of a scar, must be at least one.
+ * @inverted: If TRUE, positive scars are marked, otherwise negative scars
+ *            are marked.
  *
  * Find and marks scars in a data field.
  *
  * Scars are linear horizontal defects, consisting of shifted values.
  * Zero or negative values in @scar_field siginify normal data, positive
  * values siginify samples that are part of a scar.
- *
- * Since: 1.4.
  **/
 static void
 gwy_data_field_mark_scars(GwyDataField *data_field,
@@ -159,11 +160,13 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
                           gdouble threshold_high,
                           gdouble threshold_low,
                           gdouble min_scar_len,
-                          gdouble max_scar_width)
+                          gdouble max_scar_width,
+                          gboolean inverted)
 {
     gint xres, yres, i, j, k;
     gdouble rms;
-    gdouble *d, *m;
+    const gdouble *d;
+    gdouble *m;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(scar_field));
@@ -173,9 +176,9 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
     g_return_if_fail(threshold_high >= threshold_low);
     xres = gwy_data_field_get_xres(data_field);
     yres = gwy_data_field_get_yres(data_field);
-    d = gwy_data_field_get_data(data_field);
+    d = gwy_data_field_get_data_const(data_field);
     gwy_data_field_resample(scar_field, xres, yres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_fill(scar_field, 0.0);
+    gwy_data_field_clear(scar_field);
     m = gwy_data_field_get_data(scar_field);
 
     if (min_scar_len > xres)
@@ -185,7 +188,7 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
     /* compute `vertical rms' */
     rms = 0.0;
     for (i = 0; i < yres-1; i++) {
-        gdouble *row = d + i*xres;
+        const gdouble *row = d + i*xres;
 
         for (j = 0; j < xres; j++) {
             gdouble z = row[j] - row[j + xres];
@@ -201,22 +204,42 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
     for (i = 0; i < yres - (max_scar_width + 1); i++) {
         for (j = 0; j < xres; j++) {
             gdouble top, bottom;
-            gdouble *row = d + i*xres + j;
+            const gdouble *row = d + i*xres + j;
 
-            bottom = row[0];
-            top = row[xres];
-            for (k = 1; k <= max_scar_width; k++) {
-                bottom = MAX(row[0], row[xres*(k + 1)]);
-                top = MIN(top, row[xres*k]);
-                if (top - bottom >= threshold_low*rms)
-                    break;
+            if (inverted) {
+                top = row[0];
+                bottom = row[xres];
+                for (k = 1; k <= max_scar_width; k++) {
+                    top = MIN(row[0], row[xres*(k + 1)]);
+                    bottom = MAX(bottom, row[xres*k]);
+                    if (top - bottom >= threshold_low*rms)
+                        break;
+                }
+                if (k <= max_scar_width) {
+                    gdouble *mrow = m + i*xres + j;
+
+                    while (k) {
+                        mrow[k*xres] = (top - row[k*xres])/rms;
+                        k--;
+                    }
+                }
             }
-            if (k <= max_scar_width) {
-                gdouble *mrow = m + i*xres + j;
+            else {
+                bottom = row[0];
+                top = row[xres];
+                for (k = 1; k <= max_scar_width; k++) {
+                    bottom = MAX(row[0], row[xres*(k + 1)]);
+                    top = MIN(top, row[xres*k]);
+                    if (top - bottom >= threshold_low*rms)
+                        break;
+                }
+                if (k <= max_scar_width) {
+                    gdouble *mrow = m + i*xres + j;
 
-                while (k) {
-                    mrow[k*xres] = (row[k*xres] - bottom)/rms;
-                    k--;
+                    while (k) {
+                        mrow[k*xres] = (row[k*xres] - bottom)/rms;
+                        k--;
+                    }
                 }
             }
         }
@@ -289,7 +312,7 @@ scars_remove(GwyContainer *data, GwyRunType run)
                                              FALSE));
     gwy_data_field_mark_scars(dfield, mask,
                               args.threshold_high, args.threshold_low,
-                              args.min_len, args.max_width);
+                              args.min_len, args.max_width, args.inverted);
     m = gwy_data_field_get_data(mask);
 
     /* interpolate */
@@ -358,7 +381,7 @@ scars_mark_do(ScarsArgs *args, GwyContainer *data)
     }
     gwy_data_field_mark_scars(GWY_DATA_FIELD(dfield), GWY_DATA_FIELD(mask),
                               args->threshold_high, args->threshold_low,
-                              args->min_len, args->max_width);
+                              args->min_len, args->max_width, args->inverted);
 }
 
 static gboolean
@@ -439,6 +462,13 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
                      G_CALLBACK(scars_mark_dialog_update_thresholds),
                      &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    controls.inverted = gtk_check_button_new_with_mnemonic(_("_Negative"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inverted),
+                                 args->inverted);
+    gtk_table_attach(GTK_TABLE(table), controls.inverted,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     controls.color_button = gwy_color_button_new();
@@ -533,6 +563,8 @@ scars_mark_dialog_update_controls(ScarsControls *controls,
                              args->min_len);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->max_width),
                              args->max_width);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->inverted),
+                                 args->inverted);
 }
 
 static void
@@ -545,6 +577,8 @@ scars_mark_dialog_update_values(ScarsControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_low));
     args->min_len = gwy_adjustment_get_int(controls->min_len);
     args->max_width = gwy_adjustment_get_int(controls->max_width);
+    args->inverted
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->inverted));
 }
 
 static void
@@ -623,6 +657,7 @@ preview(ScarsControls *controls,
 
 }
 
+static const gchar *inverted_key = "/module/scars/inverted";
 static const gchar *threshold_low_key = "/module/scars/threshold_low";
 static const gchar *threshold_high_key = "/module/scars/threshold_high";
 static const gchar *min_len_key= "/module/scars/min_len";
@@ -644,6 +679,7 @@ scars_mark_load_args(GwyContainer *container,
 {
     *args = scars_defaults;
 
+    gwy_container_gis_boolean_by_name(container, inverted_key, &args->inverted);
     gwy_container_gis_double_by_name(container, threshold_high_key,
                                      &args->threshold_high);
     gwy_container_gis_double_by_name(container, threshold_low_key,
@@ -657,6 +693,7 @@ static void
 scars_mark_save_args(GwyContainer *container,
                      ScarsArgs *args)
 {
+    gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
     gwy_container_set_double_by_name(container, threshold_high_key,
                                      args->threshold_high);
     gwy_container_set_double_by_name(container, threshold_low_key,
