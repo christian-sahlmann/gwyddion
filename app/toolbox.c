@@ -50,6 +50,7 @@ gwy_app_toolbox_create(void)
 {
     GtkWidget *toolbox, *vbox, *toolbar, *menu;
     GtkAccelGroup *accel_group;
+    const gchar *first_tool;
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(toolbox), g_get_application_name());
@@ -119,8 +120,10 @@ gwy_app_toolbox_create(void)
                                 _("Shade data"), "shade");
 
     /***************************************************************/
-    toolbar = gwy_tool_func_build_toolbar(G_CALLBACK(gwy_app_tool_use_cb));
+    toolbar = gwy_tool_func_build_toolbar(G_CALLBACK(gwy_app_tool_use_cb),
+                                          &first_tool);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+    gwy_app_tool_use_cb(NULL, first_tool);
 
     /***************************************************************/
     gtk_widget_show_all(toolbox);

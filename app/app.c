@@ -66,7 +66,6 @@ gwy_app_quit(void)
     gwy_debug("");
     if (!gwy_app_confirm_quit())
         return TRUE;
-    /* current_tool_use_func(NULL); */
     while ((data_window = gwy_app_data_window_get_current())) {
         gtk_widget_destroy(GTK_WIDGET(data_window));
     }
@@ -404,14 +403,14 @@ gwy_app_data_window_foreach(GFunc func,
 }
 
 void
-gwy_app_tool_use_cb(GtkWidget *unused,
+gwy_app_tool_use_cb(GtkWidget *button,
                     const gchar *toolname)
 {
     GwyDataWindow *data_window;
 
     gwy_debug("%s", toolname ? toolname : "NONE");
     /* don't catch deactivations */
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(unused)))
+    if (button && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
         return;
     if (current_tool)
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_TOOL);

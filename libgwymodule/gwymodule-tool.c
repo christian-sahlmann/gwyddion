@@ -111,6 +111,7 @@ gwy_tool_func_use(const guchar *name,
  * gwy_tool_func_build_toolbar:
  * @item_callback: A callback called when a tool from the toolbar is selected
  *                 with tool name as the user data.
+ * @first_tool: Where name of the first tool in the toolbar should be stored.
  *
  * Creates a toolbar with the tools.
  *
@@ -119,7 +120,8 @@ gwy_tool_func_use(const guchar *name,
 /* XXX: This is broken, because the toolbar may have more than one row.
  * But... */
 GtkWidget*
-gwy_tool_func_build_toolbar(GtkSignalFunc item_callback)
+gwy_tool_func_build_toolbar(GtkSignalFunc item_callback,
+                            const gchar **first_tool)
 {
     GtkWidget *toolbar, *group;
     GSList *l, *entries = NULL;
@@ -140,8 +142,10 @@ gwy_tool_func_build_toolbar(GtkSignalFunc item_callback)
     gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
                               GTK_ICON_SIZE_BUTTON);
 
-    group = tool_toolbar_append(toolbar, NULL, NULL, item_callback);
-    for (l = entries; l; l = g_slist_next(l))
+    group = tool_toolbar_append(toolbar, NULL,
+                                (GwyToolFuncInfo*)entries->data, item_callback);
+    *first_tool = ((GwyToolFuncInfo*)entries->data)->name;
+    for (l = entries->next; l; l = g_slist_next(l))
         tool_toolbar_append(toolbar, group,
                             (GwyToolFuncInfo*)l->data, item_callback);
     g_slist_free(entries);
@@ -158,6 +162,7 @@ tool_toolbar_append(GtkWidget *toolbar,
     GtkWidget *icon;
     const gchar *name, *stock_id, *label, *tooltip;
 
+    /* ,none` tool now unused */
     if (!func_info) {
         name = NULL;
         stock_id = "gwy_none";
