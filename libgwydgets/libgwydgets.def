@@ -171,4 +171,5 @@ EXPORTS
 	gwy_data_view_layer_key_press
 	gwy_layer_select_new
 	gwy_layer_mask_new
+	gwy_data_window_get_base_name
 	gwy_axis_set_unit
