@@ -52,7 +52,7 @@ static GwyModuleInfo module_info = {
     "crop",
     N_("Crop tool."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -192,11 +192,11 @@ apply(GwyUnitoolState *state)
         ximax = gwy_data_field_rtoj(dfield, sel[2]) + 1;
         yimax = gwy_data_field_rtoi(dfield, sel[3]) + 1;
         gwy_data_field_set_xreal(dfield,
-                                 (ximax - ximin + 1)
+                                 (ximax - ximin)
                                  *gwy_data_field_get_xreal(dfield)
                                  /gwy_data_field_get_xres(dfield));
         gwy_data_field_set_yreal(dfield,
-                                 (yimax - yimin + 1)
+                                 (yimax - yimin)
                                  *gwy_data_field_get_yreal(dfield)
                                  /gwy_data_field_get_yres(dfield));
         gwy_data_field_resize(dfield, ximin, yimin, ximax, yimax);
