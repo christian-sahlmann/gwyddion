@@ -2229,8 +2229,9 @@ hash_text_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
         break;
 
         case G_TYPE_INT64:
-        /* FIXME: this probably fails on MS platforms */
-        v = g_strdup_printf("\"%s\" int64 %lld", k, g_value_get_int64(value));
+        /* FIXME: this may fail */
+        v = g_strdup_printf("\"%s\" int64 %" G_GINT64_FORMAT,
+                            k, g_value_get_int64(value));
         break;
 
         case G_TYPE_DOUBLE:
@@ -2427,11 +2428,8 @@ gwy_container_deserialize_from_text(const gchar *text)
         /* int64 */
         else if (typelen+1 == sizeof("int64")
                  && g_str_has_prefix(type, "int64")) {
-            gint64 i64;
-
-            /* FIXME: this probably fails on MS platforms */
-            sscanf(tok, "%lld", &i64);
-            gwy_container_set_int64(container, key, i64);
+            gwy_container_set_int64(container, key,
+                                    g_ascii_strtoull(tok, NULL, 0));
         }
         /* double */
         else if (typelen+1 == sizeof("double")
