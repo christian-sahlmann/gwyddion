@@ -105,8 +105,11 @@ foo(void)
 int
 main(int argc, char *argv[])
 {
+    const gchar *module_dirs[] = { GWY_MODULE_DIR, NULL };
+
     gtk_init(&argc, &argv);
     gwy_type_init();
+    gwy_module_register_modules(module_dirs);
     foo();
     gtk_main();
 

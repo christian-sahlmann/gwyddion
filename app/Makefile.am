@@ -1,19 +1,25 @@
 # @(#) $Id$
 
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
+libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
+
 bin_PROGRAMS = gwyddion
 
 gwyddion_SOURCES = \
 	init.c \
 	gwyddion.c
 gwyddion_LDADD = \
-	../libgwydgets/libgwydgets.la \
-	../libgwyddion/libgwyddion.la \
-	../libprocess/libgwyprocess.la \
-	../libgwymodule/libgwymodule.la \
-	../libdraw/libgwydraw.la
+	$(libgwyddion) \
+	$(libgwymodule) \
+	$(libgwyprocess) \
+	$(libgwydraw) \
+	$(libgwydgets)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG
+AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\"
 
 clean-local:
 	rm -f core.* *~

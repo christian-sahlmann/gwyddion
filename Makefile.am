@@ -6,6 +6,7 @@ SUBDIRS = \
 	libdraw \
 	libgwydgets \
 	libgwymodule \
+	modules \
 	app \
 	devel-docs
 M4TESTS = \

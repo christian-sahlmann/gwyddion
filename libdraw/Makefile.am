@@ -1,9 +1,14 @@
 # @(#) $Id$
 
-include_HEADERS = \
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
+
+libgwydrawincludedir = $(includedir)/gwyddion/libdraw
+libgwydrawinclude_HEADERS = \
 	gwypalette.h \
 	gwypalettedef.h \
 	gwypixfield.h
+
 lib_LTLIBRARIES = libgwydraw.la
 
 noinst_PROGRAMS = test
@@ -22,12 +27,11 @@ libgwydraw_la_SOURCES = \
 test_SOURCES = \
 	test.c
 test_LDADD = libgwydraw.la \
-	../libgwyddion/libgwyddion.la \
-	../libprocess/libgwyprocess.la
+	$(libgwyddion) \
+	$(libgwyprocess)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"GwyDraw\"
-libgwydrawincludedir = $(includedir)/gwyddion/libdraw
 
 clean-local:
 	rm -f core.* *~

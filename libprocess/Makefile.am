@@ -1,11 +1,15 @@
 # @(#) $Id$
 
-include_HEADERS = \
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+
+libgwyprocessincludedir = $(includedir)/gwyddion/libprocess
+libgwyprocessinclude_HEADERS = \
 	datafield.h \
 	dataline.h \
 	interpolation.h \
 	libgwyprocess.h \
 	simplefft.h
+
 lib_LTLIBRARIES = libgwyprocess.la
 
 noinst_PROGRAMS = test
@@ -25,11 +29,10 @@ libgwyprocess_la_SOURCES = \
 test_SOURCES = \
 	test.c
 test_LDADD = libgwyprocess.la \
-	../libgwyddion/libgwyddion.la
+	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"GwyProcess\"
-libgwyprocessincludedir = $(includedir)/gwyddion/libprocess
 
 clean-local:
 	rm -f core.* *~

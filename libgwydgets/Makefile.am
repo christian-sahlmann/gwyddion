@@ -1,6 +1,11 @@
 # @(#) $Id$
 
-include_HEADERS = \
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
+
+libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
+libgwydgetsinclude_HEADERS = \
 	gwydgets.h \
 	gwydataview.h \
 	gwydataviewlayer.h \
@@ -18,7 +23,7 @@ include_HEADERS = \
 	gwygraphlabel.h \
 	gwygraphcorner.h \
 	gwyaxis.h
-	
+
 lib_LTLIBRARIES = libgwydgets.la
 
 noinst_PROGRAMS = main test create-data
@@ -47,22 +52,25 @@ libgwydgets_la_SOURCES = \
 	gwygraphcorner.c \
 	gwyaxis.c
 
-TEST_PROG_LIBS = libgwydgets.la \
-	../libgwyddion/libgwyddion.la \
-	../libprocess/libgwyprocess.la \
-	../libdraw/libgwydraw.la
 main_SOURCES = main.c
+main_LDADD = libgwydgets.la \
+	$(libgwyddion) \
+	$(libgwyprocess) \
+	$(libgwydraw)
+
 test_SOURCES = test.c
-main_LDADD = $(TEST_PROG_LIBS)
-test_LDADD = $(TEST_PROG_LIBS)
+test_LDADD = libgwydgets.la \
+	$(libgwyddion) \
+	$(libgwyprocess) \
+	$(libgwydraw)
+
 create_data_SOURCES = create-data.c
 create_data_LDADD = \
-	../libgwyddion/libgwyddion.la \
-	../libprocess/libgwyprocess.la
+	$(libgwyddion) \
+	$(libgwyprocess)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\" -DG_LOG_DOMAIN=\"Gwydgets\"
-libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
 
 clean-local:
 	rm -f core.* *~

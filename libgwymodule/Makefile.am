@@ -1,7 +1,11 @@
 # @(#) $Id$
 
-include_HEADERS = \
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+
+libgwymoduleincludedir = $(includedir)/gwyddion/libgwymodule
+libgwymoduleinclude_HEADERS = \
 	gwymodule.h
+
 lib_LTLIBRARIES = libgwymodule.la
 
 #noinst_PROGRAMS = main create-data
@@ -20,7 +24,6 @@ libgwymodule_la_SOURCES = \
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwymodule\"
-libgwymoduleincludedir = $(includedir)/gwyddion/libgwymodule
 
 clean-local:
 	rm -f core.* *~

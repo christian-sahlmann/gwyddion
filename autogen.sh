@@ -1,12 +1,16 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
 # Tweaked by David Necas (Yeti) <yeti@physics.muni.cz> from various other
-# autogen.sh's.  This file is in public domain.
+# autogen.sh's.  This file is in the public domain.
 
 DIE=0
 
 PROJECT=Gwyddion
 ACLOCAL_FLAGS="-I m4"
+# When runnig autogen.sh one normally wants this.
+CONF_FLAGS="--enable-maintainer-mode"
+
+echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 
 (autoconf --version) < /dev/null > /dev/null 2>&1 || {
   echo
@@ -39,7 +43,7 @@ ACLOCAL_FLAGS="-I m4"
   NO_AUTOMAKE=yes
 }
 
-# The world is curel.
+# The world is cruel.
 if test -z "$NO_AUTOCONF"; then
   AC_VERSION=`autoconf --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
   if test "$AC_VERSION" '<' "2.52"; then
@@ -50,7 +54,7 @@ if test -z "$NO_AUTOCONF"; then
     echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/."
     DIE=1
   else
-    echo "Autoconf $AC_VERSION: OK"
+    test -z "$QUIET" && echo "Autoconf $AC_VERSION: OK"
   fi
 fi
 
@@ -64,7 +68,7 @@ if test -z "$NO_AUTOMAKE"; then
     echo "(or a newer version if it is available) and read README.devel."
     DIE=1
   else
-    echo "Automake $AM_VERSION: OK"
+    test -z "$QUIET" && echo "Automake $AM_VERSION: OK"
   fi
 fi
 
@@ -88,7 +92,7 @@ if test -z "$NO_LIBTOOL"; then
     echo "(or a newer version if it is available) and read README.devel."
     DIE=1
   else
-    echo "Libtool $LT_VERSION: OK"
+    test -z "$QUIET" && echo "Libtool $LT_VERSION: OK"
   fi
 fi
 
@@ -102,23 +106,22 @@ case $CC in
 esac
 
 dir=.
-echo processing $dir
+test -z "$QUIET" && echo processing $dir
 (cd $dir && \
-  libtoolize --force --copy && \
-  aclocal $ACLOCAL_FLAGS && \
-  autoheader && \
-  automake --add-missing $am_opt && \
-  autoconf) || {
+  eval $QUIET libtoolize --force --copy && \
+  eval $QUIET aclocal $ACLOCAL_FLAGS && \
+  eval $QUIET autoheader && \
+  eval $QUIET automake --add-missing $am_opt && \
+  eval $QUIET autoconf) || {
     echo "**ERROR**: Re-generating failed.  You are allowed to shoot $PROJECT maintainer."
     echo "(BTW, why are you re-generating everything? Have you read README.devel?)"
     exit 1
   }
 
 if test -z "$*"; then
-  echo "**Warning**: I am going to run \`configure' with no arguments."
-  echo "If you wish to pass any to it, please specify them on the"
-  echo "\`$0' command line."
+  echo "**Warning**: I am going to run \`configure' with $CONF_FLAGS."
+  echo "If you wish to pass others to it, please specify them on the"
+  echo "\`$0' command line (the defaults won't be used then)."
   echo
 fi
-
-./configure "$@"
+./configure $CONF_FLAGS "$@"

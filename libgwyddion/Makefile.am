@@ -1,12 +1,14 @@
 # @(#) $Id$
 
-include_HEADERS = \
+libgwyddionincludedir = $(includedir)/gwyddion/libgwyddion
+libgwyddioninclude_HEADERS = \
 	gwycontainer.h \
 	gwyddion.h \
 	gwymacros.h \
 	gwyserializable.h \
 	gwytestser.h \
 	gwywatchable.h
+
 lib_LTLIBRARIES = libgwyddion.la
 
 noinst_PROGRAMS = main
@@ -28,8 +30,7 @@ main_SOURCES = \
 main_LDADD = libgwyddion.la
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwyddion\"
-libgwyddionincludedir = $(includedir)/gwyddion/libgwyddion
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwyddion\"
 
 clean-local:
 	rm -f core.* *~ testser.object

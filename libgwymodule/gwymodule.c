@@ -5,7 +5,9 @@
 
 #include "gwymodule.h"
 
-static void gwy_load_modules_in_dir(GDir *gdir, GHashTable *modules);
+static void gwy_load_modules_in_dir(GDir *gdir,
+                                    const gchar *dirname,
+                                    GHashTable *modules);
 
 static GHashTable *modules;
 static gboolean modules_initialized = FALSE;
@@ -17,7 +19,7 @@ gwy_modules_init(void)
 
     /* Check whether modules are supported. */
     if (!g_module_supported()) {
-        g_error("Cannot initialize modules: not supported on this platform.\n");
+        g_error("Cannot initialize modules: not supported on this platform.");
     }
 
     modules = g_hash_table_new(g_str_hash, g_str_equal);
@@ -25,7 +27,7 @@ gwy_modules_init(void)
 }
 
 /**
- * gwy_register_modules:
+ * gwy_module_register_modules:
  * @paths: A %NULL delimited list of directory names.
  *
  * Register all modules in given directories.
@@ -33,7 +35,7 @@ gwy_modules_init(void)
  * Can be called several times (on different directories).
  **/
 void
-gwy_register_modules(const gchar **paths)
+gwy_module_register_modules(const gchar **paths)
 {
     const gchar *dir;
 
@@ -46,6 +48,7 @@ gwy_register_modules(const gchar **paths)
         GDir *gdir;
         GError *err = NULL;
 
+        gwy_debug("Opening module directory %s", dir);
         gdir = g_dir_open(dir, 0, &err);
         if (err) {
             g_warning("Cannot open module directory %s", dir);
@@ -53,31 +56,38 @@ gwy_register_modules(const gchar **paths)
             continue;
         }
 
-        gwy_load_modules_in_dir(gdir, modules);
+        gwy_load_modules_in_dir(gdir, dir, modules);
         g_dir_close(gdir);
     }
 }
 
 static void
-gwy_load_modules_in_dir(GDir *gdir, GHashTable *modules)
+gwy_load_modules_in_dir(GDir *gdir,
+                        const gchar *dirname,
+                        GHashTable *modules)
 {
-    const gchar *modulename;
+    const gchar *filename;
+    gchar *modulename;
 
-    while ((modulename = g_dir_read_name(gdir))) {
+    modulename = NULL;
+    while ((filename = g_dir_read_name(gdir))) {
         GModule *mod;
         GwyModuleRegisterFunc register_func;
         gboolean ok;
         GwyModuleInfo *mod_info;
 
-        gwy_debug("Trying to load module %s.\n", modulename);
+        if (!g_str_has_suffix(filename, ".so"))
+            continue;
+        modulename = g_build_filename(dirname, filename, NULL);
+        gwy_debug("Trying to load module %s.", modulename);
         mod = g_module_open(modulename, G_MODULE_BIND_LAZY);
 
         if (!mod) {
-            g_warning("Cannot open module %s: %s\n",
+            g_warning("Cannot open module %s: %s",
                       modulename, g_module_error());
             continue;
         }
-        gwy_debug("Module loaded successfully as %s.\n", g_module_name(mod));
+        gwy_debug("Module loaded successfully as %s.", g_module_name(mod));
 
         /* Do a few sanity checks on the module before registration
          * is performed. */
@@ -96,7 +106,7 @@ gwy_load_modules_in_dir(GDir *gdir, GHashTable *modules)
         }
 
         if (ok) {
-            ok = mod_info->abi_version != GWY_MODULE_ABI_VERSION;
+            ok = mod_info->abi_version == GWY_MODULE_ABI_VERSION;
             if (!ok)
                 g_warning("Module %s ABI version %d is different from %d",
                           modulename, mod_info->abi_version,
@@ -124,12 +134,12 @@ gwy_load_modules_in_dir(GDir *gdir, GHashTable *modules)
 
         if (ok) {
             g_hash_table_insert(modules, (gpointer)mod_info->name, mod_info);
-            gwy_debug("Making module %s resident.\n", modulename);
+            gwy_debug("Making module %s resident.", modulename);
             g_module_make_resident(mod);
         }
         else {
             if (!g_module_close(mod))
-                g_critical("Cannot unload module %s: %s\n",
+                g_critical("Cannot unload module %s: %s",
                            modulename, g_module_error());
         }
 

@@ -13,10 +13,14 @@ extern "C" {
 
 /**
  * GWY_MODULE_REGISTER_FUNC:
- * The name of a module registration function (the only exported function).
+ * The declaration of a module registration function (the only exported
+ * function).
  **/
-#define GWY_MODULE_REGISTER_FUNC gwy_module_register
-#define GWY_MODULE_REGISTER_FUNC_NAME G_STRINGIFY(GWY_MODULE_REGISTER_FUNC)
+#define _GWY_MODULE_REGISTER_FUNC gwy_module_register
+#define GWY_MODULE_REGISTER_FUNC_NAME G_STRINGIFY(_GWY_MODULE_REGISTER_FUNC)
+#define GWY_MODULE_REGISTER_FUNC(m) \
+    G_MODULE_EXPORT G_CONST_RETURN GwyModuleInfo* \
+    _GWY_MODULE_REGISTER_FUNC(GModule *m)
 
 typedef struct _GwyModuleInfo GwyModuleInfo;
 
@@ -30,7 +34,9 @@ struct _GwyModuleInfo {
     const gchar *date;
 };
 
-typedef GwyModuleInfo* (*GwyModuleRegisterFunc)(GModule *mod);
+typedef GwyModuleInfo* (*GwyModuleRegisterFunc)(GModule *module);
+
+void gwy_module_register_modules(const gchar **paths);
 
 #ifdef __cplusplus
 }
