@@ -1125,6 +1125,25 @@ gwy_palette_def_print(GwyPaletteDef *a)
  **/
 
 /**
+ * GWY_PALETTE_COLD:
+ *
+ * A blue, cold palette.
+ **/
+
+/**
+ * GWY_PALETTE_WARM:
+ *
+ * A red-yellow, warm palette.
+ **/
+
+/**
+ * GWY_PALETTE_DFIT:
+ *
+ * A light black-violet-red-yellow-green-blue-white palette resembling a
+ * dendrofit palette.
+ **/
+
+/**
  * gwy_palette_def_is_set:
  * @pd: A palette definition.
  *
