@@ -38,6 +38,7 @@
 #include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwyoptionmenus.h>
 #include <libgwydgets/gwypixmaplayer.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwyruler.h>
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyspherecoords.h>

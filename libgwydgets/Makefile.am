@@ -24,6 +24,7 @@ libgwydgetsinclude_HEADERS = \
 	gwylayer-mask.h \
 	gwyoptionmenus.h \
 	gwypixmaplayer.h \
+	gwyradiobuttons.h \
 	gwyruler.h \
 	gwyscitext.h \
 	gwyspherecoords.h \
@@ -66,6 +67,7 @@ libgwydgets_la_SOURCES = \
 	gwylayer-mask.c \
 	gwyoptionmenus.c \
 	gwypixmaplayer.c \
+	gwyradiobuttons.c \
 	gwyruler.c \
 	gwyscitext.c \
 	gwyspherecoords.c \
