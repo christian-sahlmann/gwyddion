@@ -62,9 +62,9 @@ static GtkTargetEntry dnd_target_table[] = {
 /* append item only if function exists */
 static inline GtkWidget*
 toolbox_append_proc_func(GtkWidget *toolbox,
-                            const char *tooltip_text,
-                            const gchar *stock_id,
-                            const gchar *name)
+                         const char *tooltip_text,
+                         const gchar *stock_id,
+                         const gchar *name)
 {
     if (!gwy_process_func_get_run_types(name))
         return NULL;
