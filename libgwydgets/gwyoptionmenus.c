@@ -809,37 +809,6 @@ gwy_option_menu_mergegrain(GCallback callback,
 }
 
 /**
- * gwy_option_menu_fit_line:
- * @callback: A callback called when a menu item is activated (or %NULL for
- * @cbdata: User data passed to the callback.
- * @current: Line fit mode selected
- *           (or -1 to use what happens to appear first).
- *
- * Creates a #GtkOptionMenu of available line fit modes
- *
- * It sets object data "fit-type" to line fit
- * for each menu item (use GPOINTER_TO_INT() when retrieving it).
- *
- * Returns: The newly created option menu as #GtkWidget.
- **/
-GtkWidget*
-gwy_option_menu_fit_line(GCallback callback,
-                       gpointer cbdata,
-                       GwyFitLineType current)
-{
-    static const GwyEnum entries[] = {
-        { N_("Fit height"),    GWY_FIT_POLY_0, },
-        { N_("Fit linear"),    GWY_FIT_POLY_1, },
-        { N_("Fit quadratic"), GWY_FIT_POLY_2, },
-        { N_("Fit cubic"),     GWY_FIT_POLY_3, },
-    };
-
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "fit-type", callback, cbdata,
-                                  current);
-}
-
-/**
  * gwy_option_menu_metric_unit:
  * @callback: A callback called when a menu item is activated (or %NULL for
  * @cbdata: User data passed to the callback.

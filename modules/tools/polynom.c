@@ -35,7 +35,7 @@ typedef struct {
     GtkWidget *fitting;
     GtkWidget *direction;
     GtkWidget *exclude;
-    GwyFitLineType fit;
+    gint fit;
     GtkOrientation dir;
     gboolean exc;
 } ToolControls;
@@ -136,9 +136,15 @@ layer_setup(GwyUnitoolState *state)
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
+    const GwyEnum degrees[] = {
+        { N_("Fit height"),    0, },
+        { N_("Fit linear"),    1, },
+        { N_("Fit quadratic"), 2, },
+        { N_("Fit cubic"),     3, },
+    };
     const GwyEnum directions[] = {
-        { N_("_Horizontal direction"), GTK_ORIENTATION_HORIZONTAL, },
-        { N_("_Vertical direction"),   GTK_ORIENTATION_VERTICAL,   },
+        { N_("_Horizontal direction"), GWY_ORIENTATION_HORIZONTAL, },
+        { N_("_Vertical direction"),   GWY_ORIENTATION_VERTICAL,   },
     };
     ToolControls *controls;
     GwyContainer *settings;
@@ -183,8 +189,10 @@ dialog_create(GwyUnitoolState *state)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls->fitting = gwy_option_menu_fit_line(G_CALLBACK(fitting_changed_cb),
-                                                 state, controls->fit);
+    controls->fitting = gwy_option_menu_create(degrees, G_N_ELEMENTS(degrees),
+                                               "fit-type",
+                                               G_CALLBACK(fitting_changed_cb),
+                                               state, controls->fit);
     gwy_table_attach_row(table2, row, _("_Type:"), NULL, controls->fitting);
     row++;
 
@@ -345,7 +353,7 @@ static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
     controls->exc = FALSE;
-    controls->fit = GWY_FIT_POLY_1;
+    controls->fit = 1;
     controls->dir = GTK_ORIENTATION_HORIZONTAL;
 
     gwy_container_gis_boolean_by_name(container, exc_key, &controls->exc);
@@ -354,7 +362,7 @@ load_args(GwyContainer *container, ToolControls *controls)
 
     /* sanitize */
     controls->exc = !!controls->exc;
-    controls->fit = MIN(controls->fit, GWY_FIT_POLY_3);
+    controls->fit = CLAMP(controls->fit, 0, 3);
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
 

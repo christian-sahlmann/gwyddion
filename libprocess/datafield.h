@@ -282,7 +282,7 @@ void     gwy_data_field_fit_lines          (GwyDataField *data_field,
                                             gint ulrow,
                                             gint brcol,
                                             gint brrow,
-                                            GwyFitLineType fit_type,
+                                            gint degree,
                                             gboolean exclude,
                                             GwyOrientation orientation);
 

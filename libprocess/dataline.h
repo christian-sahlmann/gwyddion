@@ -51,14 +51,6 @@ typedef enum {
     GWY_SF_OUTPUT_PSDF  = 6
 } GwySFOutputType;
 
-/* FIXME: simply use a number? */
-typedef enum {
-    GWY_FIT_POLY_0   = 0,
-    GWY_FIT_POLY_1   = 1,
-    GWY_FIT_POLY_2   = 2,
-    GWY_FIT_POLY_3   = 3
-} GwyFitLineType;
-
 struct _GwyDataLine {
     GObject parent_instance;
 

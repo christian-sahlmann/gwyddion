@@ -2099,7 +2099,7 @@ gwy_data_field_get_angder(GwyDataField *a, gint col, gint row, gdouble theta)
  * @ulrow: Upper-left row coordinate.
  * @brcol: Bottom-right column coordinate + 1.
  * @brrow: Bottom-right row coordinate + 1.
- * @fit_type: Fitted polynom degree.
+ * @degree: Fitted polynom degree.
  * @exclude: If %TRUE, outside of area selected by @ulcol, @ulrow, @brcol,
  *           @brrow will be used for polynom coefficients computation, instead
  *           of inside.
@@ -2116,12 +2116,12 @@ void
 gwy_data_field_fit_lines(GwyDataField *data_field,
                          gint ulcol, gint ulrow,
                          gint brcol, gint brrow,
-                         GwyFitLineType fit_type,
+                         gint degree,
                          gboolean exclude,
                          GwyOrientation orientation)
 {
 
-    gint i, j, xres, yres, res, n;
+    gint i, j, xres, yres, res;
     gdouble real, coefs[4];
     GwyDataLine *hlp, *xdata = NULL, *ydata = NULL;
 
@@ -2143,8 +2143,6 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    n = (gint)fit_type;
-
     if (orientation == GWY_ORIENTATION_HORIZONTAL) {
         if (exclude) {
             for (i = j = 0; i < xres; i++) {
@@ -2161,14 +2159,16 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
                     memcpy(ydata->data + ulcol, hlp->data + brcol,
                            (xres - brcol)*sizeof(gdouble));
                     gwy_math_fit_polynom(xres - (brcol - ulcol),
-                                         xdata->data, ydata->data, n, coefs);
+                                         xdata->data, ydata->data, degree,
+                                         coefs);
                 }
                 else
-                    gwy_data_line_part_fit_polynom(hlp, n, coefs, ulcol, brcol);
+                    gwy_data_line_part_fit_polynom(hlp, degree, coefs,
+                                                   ulcol, brcol);
             }
             else
-                gwy_data_line_fit_polynom(hlp, n, coefs);
-            gwy_data_line_subtract_polynom(hlp, n, coefs);
+                gwy_data_line_fit_polynom(hlp, degree, coefs);
+            gwy_data_line_subtract_polynom(hlp, degree, coefs);
             gwy_data_field_set_row(data_field, hlp, i);
         }
     }
@@ -2188,14 +2188,16 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
                     memcpy(ydata->data + ulrow, hlp->data + brrow,
                            (yres - brrow)*sizeof(gdouble));
                     gwy_math_fit_polynom(yres - (brrow - ulrow),
-                                         xdata->data, ydata->data, n, coefs);
+                                         xdata->data, ydata->data, degree,
+                                         coefs);
                 }
                 else
-                    gwy_data_line_part_fit_polynom(hlp, n, coefs, ulrow, brrow);
+                    gwy_data_line_part_fit_polynom(hlp, degree, coefs,
+                                                   ulrow, brrow);
             }
             else
-                gwy_data_line_fit_polynom(hlp, n, coefs);
-            gwy_data_line_subtract_polynom(hlp, n, coefs);
+                gwy_data_line_fit_polynom(hlp, degree, coefs);
+            gwy_data_line_subtract_polynom(hlp, degree, coefs);
             gwy_data_field_set_column(data_field, hlp, i);
         }
     }

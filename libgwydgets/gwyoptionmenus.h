@@ -34,21 +34,10 @@
 
 G_BEGIN_DECLS
 
-#ifndef GWY_DISABLE_DEPRECATED
-/* Palettes are deprecated. */
-GtkWidget* gwy_menu_palette                  (GCallback callback,
-                                              gpointer cbdata);
-#endif
 GtkWidget* gwy_menu_gradient                 (GCallback callback,
                                               gpointer cbdata);
 GtkWidget* gwy_menu_gl_material              (GCallback callback,
                                               gpointer cbdata);
-#ifndef GWY_DISABLE_DEPRECATED
-/* Palettes are deprecated. */
-GtkWidget* gwy_option_menu_palette           (GCallback callback,
-                                              gpointer cbdata,
-                                              const gchar *current);
-#endif
 GtkWidget* gwy_option_menu_gradient          (GCallback callback,
                                               gpointer cbdata,
                                               const gchar *current);
@@ -85,10 +74,6 @@ GtkWidget* gwy_option_menu_direction         (GCallback callback,
 GtkWidget* gwy_option_menu_mergegrain        (GCallback callback,
                                               gpointer cbdata,
                                               GwyMergeType current);
-/* This is silly and there's no reason for making it public. */
-GtkWidget* gwy_option_menu_fit_line          (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyFitLineType current);
 #endif
 GtkWidget* gwy_option_menu_metric_unit       (GCallback callback,
                                               gpointer cbdata,
