@@ -41,7 +41,7 @@ module_register(const gchar *name)
     };
     static GwyProcessFuncInfo level_rotate_func_info = {
         "level_rotate",
-        "/_Level/Level Rotate",
+        "/_Level/Level Rotate (BROKEN)",
         (GwyProcessFunc)&level_rotate,
         LEVEL_RUN_MODES,
     };

@@ -60,19 +60,19 @@ module_register(const gchar *name)
     };
     static GwyProcessFuncInfo rotate_clockwise_90_func_info = {
         "rotate_clockwise_90",
-        "/_Basic Operations/_Rotate Clockwise",
+        "/_Basic Operations/_Rotate Clockwise (BROKEN)",
         (GwyProcessFunc)&rotate_clockwise_90,
         BASICOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo rotate_counterclockwise_90_func_info = {
         "rotate_counterclockwise_90",
-        "/_Basic Operations/Rotate _Counterclockwise",
+        "/_Basic Operations/Rotate _Counterclockwise (BROKEN)",
         (GwyProcessFunc)&rotate_counterclockwise_90,
         BASICOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo rotate_180_func_info = {
         "rotate_180",
-        "/_Basic Operations/Rotate 1_80 degrees",
+        "/_Basic Operations/Rotate 1_80 degrees (BROKEN)",
         (GwyProcessFunc)&rotate_180,
         BASICOPS_RUN_MODES,
     };
