@@ -163,7 +163,7 @@ label_callback(GwyRuler *ruler,
     gint j;
 
     xthickness = widget->style->xthickness;
-    pango_layout_set_text(layout, label, -1);
+    pango_layout_set_markup(layout, label, -1);
 
     utf8p = label;
     utf8next = g_utf8_next_char(utf8p);

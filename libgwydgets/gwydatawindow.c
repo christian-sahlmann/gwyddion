@@ -551,6 +551,7 @@ gwy_data_window_set_units(GwyDataWindow *data_window,
 {
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     gwy_ruler_set_units(GWY_RULER(data_window->hruler), units);
+    gwy_ruler_set_units(GWY_RULER(data_window->vruler), units);
 }
 
 G_CONST_RETURN gchar*

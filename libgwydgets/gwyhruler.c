@@ -160,7 +160,7 @@ label_callback(GwyRuler *ruler,
     gint ythickness;
 
     ythickness = widget->style->ythickness;
-    pango_layout_set_text(layout, label, -1);
+    pango_layout_set_markup(layout, label, -1);
     /* XXX: this is different from vruler??? taken mindlessly from Gtk+ */
     pango_layout_get_extents(layout, &ink_rect, NULL);
 

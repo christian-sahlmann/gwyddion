@@ -33,6 +33,7 @@
  * a scale-independent scaling is used instead.
  */
 
+#include <string.h>
 #include <math.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -560,7 +561,7 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
     GwyScaleScale scale;
     PangoLayout *layout;
     PangoRectangle ink_rect;
-    gchar unit_str[32];
+    gchar *unit_str;
     gboolean units_drawn;
     GtkWidget *widget;
     gint digit_height, digit_offset;
@@ -590,16 +591,37 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
 
     switch (ruler->units_placement && ruler->units) {
         case GWY_UNITS_PLACEMENT_AT_ZERO:
-        g_snprintf(unit_str, sizeof(unit_str), "%d %s%s",
-                   (lower > 0) ? (gint)(lower/mag) : 0, prefix, ruler->units);
+        unit_str = g_strdup_printf("%d %s%s",
+                                   (lower > 0) ? (gint)(lower/mag) : 0,
+                                   prefix, ruler->units);
         break;
 
         default:
-        g_snprintf(unit_str, sizeof(unit_str), "%d",
-                   (gint)max);
+        unit_str = g_strdup_printf("%d", (gint)max);
         break;
     }
-    text_size = g_utf8_strlen(unit_str, -1)*digit_height + 1;
+    if (strchr(unit_str, '<')) {
+        GError *err = NULL;
+        PangoAttrList *attr_list = NULL;
+        gchar *text = NULL;
+        gboolean ok;
+
+        ok = pango_parse_markup(unit_str, -1, 0, &attr_list, &text, NULL, &err);
+        if (!ok) {
+            g_warning("Cannot parse unit string: %s", err->message);
+            text_size = digit_height + 1;
+        }
+        else {
+            /* FIXME: this is very aproximate */
+            text_size = g_utf8_strlen(text, -1)*digit_height + 1;
+            pango_attr_list_unref(attr_list);
+            g_free(text);
+        }
+        g_clear_error(&err);
+    }
+    else
+        text_size = g_utf8_strlen(unit_str, -1)*digit_height + 1;
+    g_free(unit_str);
 
     /* fit as many labels as you can */
     labels = floor(pixelsize/(text_size + min_label_spacing));
@@ -640,14 +662,15 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
             && (upper < 0 || val >= 0)
             && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO
             && ruler->units) {
-            g_snprintf(unit_str, sizeof(unit_str), "%d %s%s",
-                       ROUND(val), prefix, ruler->units);
+            unit_str = g_strdup_printf("%d %s%s",
+                                       ROUND(val), prefix, ruler->units);
             units_drawn = TRUE;
         }
         else
-            g_snprintf(unit_str, sizeof(unit_str), "%d", ROUND(val));
+            unit_str = g_strdup_printf("%d", ROUND(val));
         label_callback(ruler, pos, unit_str, layout,
                        digit_height, digit_offset);
+        g_free(unit_str);
     }
 
     /* draw tick marks, from smallest to largest */
@@ -762,6 +785,18 @@ next_scale(GwyScaleScale scale,
     return new_scale;
 }
 
+/**
+ * gwy_ruler_set_units:
+ * @ruler: A #GwyRuler.
+ * @units: The base units this ruler should display.
+ *
+ * Sets the base units to display to @units.
+ *
+ * Note the ruler still adds appropriate SI prefixes itself, so if you ever
+ * needed kilograms as ruler units, you have to use grams instead.
+ *
+ * Setting units to %NULL effectively disables them.
+ **/
 void
 gwy_ruler_set_units(GwyRuler *ruler,
                     const gchar *units)
@@ -773,6 +808,16 @@ gwy_ruler_set_units(GwyRuler *ruler,
     gtk_widget_queue_draw(GTK_WIDGET(ruler));
 }
 
+/**
+ * gwy_ruler_get_units:
+ * @ruler: A #GwyRuler.
+ *
+ * Returns the base units @ruler uses.
+ *
+ * Returns: The units the rules uses.  The returned string must be considered
+ *          cosntant and never modified or freed.  It may retrun %NULL for no
+ *          units.
+ **/
 G_CONST_RETURN gchar*
 gwy_ruler_get_units(GwyRuler *ruler)
 {
