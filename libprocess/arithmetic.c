@@ -20,6 +20,11 @@
 
 #include "arithmetic.h"
 
+/* Cache operations */
+#define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
+#define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
+#define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
+
 /**
  * gwy_data_field_sum_fields:
  * @result: A data field to put the result to.  May be one of @operand1,
@@ -53,7 +58,12 @@ gwy_data_field_sum_fields(GwyDataField *result,
     for (i = xres*yres; i; i--, p++, q++, r++)
         *r = *p + *q;
 
-    gwy_data_field_invalidate(result);
+    if (CTEST(operand1, SUM) && CTEST(operand2, SUM)) {
+        result->cached = CBIT(SUM);
+        CVAL(result, SUM) = CVAL(operand1, SUM) + CVAL(operand2, SUM);
+    }
+    else
+        gwy_data_field_invalidate(result);
 }
 
 /**
@@ -89,7 +99,12 @@ gwy_data_field_subtract_fields(GwyDataField *result,
     for (i = xres*yres; i; i--, p++, q++, r++)
         *r = *p - *q;
 
-    gwy_data_field_invalidate(result);
+    if (CTEST(operand1, SUM) && CTEST(operand2, SUM)) {
+        result->cached = CBIT(SUM);
+        CVAL(result, SUM) = CVAL(operand1, SUM) - CVAL(operand2, SUM);
+    }
+    else
+        gwy_data_field_invalidate(result);
 }
 
 /**
@@ -197,7 +212,12 @@ gwy_data_field_min_of_fields(GwyDataField *result,
     for (i = xres*yres; i; i--, p++, q++, r++)
         *r = MIN(*p, *q);
 
-    gwy_data_field_invalidate(result);
+    if (CTEST(operand1, MIN) && CTEST(operand2, MIN)) {
+        result->cached = CBIT(MIN);
+        CVAL(result, MIN) = MIN(CVAL(operand1, MIN), CVAL(operand2, MIN));
+    }
+    else
+        gwy_data_field_invalidate(result);
 }
 
 /**
@@ -233,7 +253,12 @@ gwy_data_field_max_of_fields(GwyDataField *result,
     for (i = xres*yres; i; i--, p++, q++, r++)
         *r = MAX(*p, *q);
 
-    gwy_data_field_invalidate(result);
+    if (CTEST(operand1, MAX) && CTEST(operand2, MAX)) {
+        result->cached = CBIT(MAX);
+        CVAL(result, MAX) = MAX(CVAL(operand1, MAX), CVAL(operand2, MAX));
+    }
+    else
+        gwy_data_field_invalidate(result);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

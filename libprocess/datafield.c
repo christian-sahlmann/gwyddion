@@ -30,6 +30,11 @@
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
+/* Cache operations */
+#define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
+#define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
+#define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
+
 static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
 static void     gwy_data_field_init              (GObject *object);
 static void     gwy_data_field_finalize          (GObject *object);
@@ -170,14 +175,9 @@ gwy_data_field_new(gint xres, gint yres,
     if (nullme) {
         data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
         /* We can precompute stats */
-        data_field->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
-                              | (1 << GWY_DATA_FIELD_CACHE_MAX)
-                              | (1 << GWY_DATA_FIELD_CACHE_SUM)
-                              | (1 << GWY_DATA_FIELD_CACHE_RMS);
-        data_field->cache[GWY_DATA_FIELD_CACHE_MIN] = 0.0;
-        data_field->cache[GWY_DATA_FIELD_CACHE_MAX] = 0.0;
-        data_field->cache[GWY_DATA_FIELD_CACHE_SUM] = 0.0;
-        data_field->cache[GWY_DATA_FIELD_CACHE_RMS] = 0.0;
+        data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                             | CBIT(MED);
+        /* Values cleared implicitely */
     }
     else
         data_field->data = g_new(gdouble, data_field->xres*data_field->yres);
@@ -214,14 +214,9 @@ gwy_data_field_new_alike(GwyDataField *model,
     if (nullme) {
         data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
         /* We can precompute stats */
-        data_field->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
-                              | (1 << GWY_DATA_FIELD_CACHE_MAX)
-                              | (1 << GWY_DATA_FIELD_CACHE_SUM)
-                              | (1 << GWY_DATA_FIELD_CACHE_RMS);
-        data_field->cache[GWY_DATA_FIELD_CACHE_MIN] = 0.0;
-        data_field->cache[GWY_DATA_FIELD_CACHE_MAX] = 0.0;
-        data_field->cache[GWY_DATA_FIELD_CACHE_SUM] = 0.0;
-        data_field->cache[GWY_DATA_FIELD_CACHE_RMS] = 0.0;
+        data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                             | CBIT(MED);
+        /* Values cleared implicitely */
     }
     else
         data_field->data = g_new(gdouble, data_field->xres*data_field->yres);
@@ -374,7 +369,8 @@ gwy_data_field_copy(GwyDataField *src,
     dest->xreal = src->xreal;
     dest->yreal = src->yreal;
 
-    /* TODO: cached stats */
+    dest->cached = src->cached;
+    memcpy(dest->cache, src->cache, GWY_DATA_FIELD_CACHE_SIZE);
 
     if (!nondata_too)
         return;
@@ -471,8 +467,7 @@ gwy_data_field_resample(GwyDataField *data_field,
     gdouble xratio, yratio, xpos, ypos;
     gint i, j;
 
-    /* XXX: cannot be here because many functions don't create proper objects
-     * g_return_if_fail(GWY_IS_DATA_FIELD(data_field)); */
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     if (data_field->xres == xres && data_field->yres == yres)
         return;
     g_return_if_fail(xres > 1 && yres > 1);
@@ -527,20 +522,21 @@ gwy_data_field_resample(GwyDataField *data_field,
  * bottom-right points, recomputing real size.
  **/
 void
-gwy_data_field_resize(GwyDataField *a,
+gwy_data_field_resize(GwyDataField *data_field,
                       gint ulcol, gint ulrow,
                       gint brcol, gint brrow)
 {
     GwyDataField *b;
     gint i, xres, yres;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
     g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol <= a->xres && brrow <= a->yres);
+                     && brcol <= data_field->xres && brrow <= data_field->yres);
 
     yres = brrow - ulrow;
     xres = brcol - ulcol;
@@ -549,17 +545,17 @@ gwy_data_field_resize(GwyDataField *a,
 
     for (i = ulrow; i < brrow; i++) {
         memcpy(b->data + (i-ulrow)*xres,
-               a->data + i*a->xres + ulcol,
+               data_field->data + i*data_field->xres + ulcol,
                xres*sizeof(gdouble));
     }
-    a->xres = xres;
-    a->yres = yres;
-    GWY_SWAP(gdouble*, a->data, b->data);
+    data_field->xres = xres;
+    data_field->yres = yres;
+    GWY_SWAP(gdouble*, data_field->data, b->data);
     g_object_unref(b);
-    a->xreal *= xres/a->xres;
-    a->yreal *= yres/a->yres;
+    data_field->xreal *= xres/data_field->xres;
+    data_field->yreal *= yres/data_field->yres;
 
-    gwy_data_field_invalidate(a);
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
@@ -586,6 +582,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
     gdouble restx, resty, valpx, valxp, valpp, va, vb, vc, vd;
     gdouble intline[4];
 
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), 0.0);
     if (x < 0 && x > -0.1)
         x = 0;
     if (y < 0 && x > -0.1)
@@ -690,6 +687,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 gdouble*
 gwy_data_field_get_data(GwyDataField *data_field)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     gwy_data_field_invalidate(data_field);
     return data_field->data;
 }
@@ -712,6 +710,7 @@ gwy_data_field_get_data(GwyDataField *data_field)
 const gdouble*
 gwy_data_field_get_data_const(GwyDataField *data_field)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     return (const gdouble*)data_field->data;
 }
 
@@ -726,6 +725,7 @@ gwy_data_field_get_data_const(GwyDataField *data_field)
 gint
 gwy_data_field_get_xres(GwyDataField *data_field)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
     return data_field->xres;
 }
 
@@ -740,6 +740,7 @@ gwy_data_field_get_xres(GwyDataField *data_field)
 gint
 gwy_data_field_get_yres(GwyDataField *data_field)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
     return data_field->yres;
 }
 
@@ -754,6 +755,7 @@ gwy_data_field_get_yres(GwyDataField *data_field)
 gdouble
 gwy_data_field_get_xreal(GwyDataField *data_field)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
     return data_field->xreal;
 }
 
@@ -768,6 +770,7 @@ gwy_data_field_get_xreal(GwyDataField *data_field)
 gdouble
 gwy_data_field_get_yreal(GwyDataField *data_field)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
     return data_field->yreal;
 }
 
@@ -781,6 +784,7 @@ gwy_data_field_get_yreal(GwyDataField *data_field)
 void
 gwy_data_field_set_xreal(GwyDataField *data_field, gdouble xreal)
 {
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     data_field->xreal = xreal;
 }
 
@@ -794,6 +798,7 @@ gwy_data_field_set_xreal(GwyDataField *data_field, gdouble xreal)
 void
 gwy_data_field_set_yreal(GwyDataField *data_field, gdouble yreal)
 {
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     data_field->yreal = yreal;
 }
 
@@ -998,8 +1003,7 @@ gwy_data_field_rtoj(GwyDataField *a, gdouble realx)
     return realx * a->xres/a->xreal;
 }
 
-/* FIXME: should be exported or not? */
-gboolean
+static inline gboolean
 gwy_data_field_inside(GwyDataField *a, gint i, gint j)
 {
     if (i >= 0 && j >= 0 && i < a->xres && j < a->yres)
@@ -1059,12 +1063,13 @@ gwy_data_field_set_val(GwyDataField *a, gint col, gint row, gdouble value)
  * Returns: Value at position (@x,@y).
  **/
 gdouble
-gwy_data_field_get_dval_real(GwyDataField *a, gdouble x, gdouble y,
+gwy_data_field_get_dval_real(GwyDataField *data_field, gdouble x, gdouble y,
                              GwyInterpolationType interpolation)
 {
-    return gwy_data_field_get_dval(a,
-                                   gwy_data_field_rtoj(a, x),/*swapped ij*/
-                                   gwy_data_field_rtoi(a, y),
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
+    return gwy_data_field_get_dval(data_field,
+                                   gwy_data_field_rtoj(data_field, x),
+                                   gwy_data_field_rtoi(data_field, y),
                                    interpolation);
 }
 
@@ -1159,6 +1164,8 @@ gwy_data_field_rotate(GwyDataField *a,
  * @z: Whether to invert in Z direction (i.e., invert values).
  *
  * Reflects or inverts a data field.
+ *
+ * In the case of value reflection, it's inverted about mean value.
  **/
 void
 gwy_data_field_invert(GwyDataField *a,
@@ -1177,12 +1184,8 @@ gwy_data_field_invert(GwyDataField *a,
 
     if (z) {
         avg = gwy_data_field_get_avg(a);
-        ap = data;
-        for (i = a->yres*a->xres; i; i--) {
-            *ap = 2*avg - *ap;
-            ap++;
-        }
-        gwy_data_field_invalidate(a);
+        gwy_data_field_multiply(a, -1.0);
+        gwy_data_field_add(a, 2*avg);
     }
 
     if (!x && !y)
@@ -1209,7 +1212,9 @@ gwy_data_field_invert(GwyDataField *a,
             memcpy(ap2, line, linelen);
         }
     }
-    gwy_data_field_invalidate(a);
+
+    /* Nothing changes in cache */
+    a->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS) | CBIT(MED);
     g_free(line);
 }
 
@@ -1226,21 +1231,18 @@ gwy_data_field_fill(GwyDataField *data_field, gdouble value)
     gint i;
     gdouble *p = data_field->data;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     for (i = data_field->xres * data_field->yres; i; i--, p++)
         *p = value;
-    gwy_data_field_invalidate(data_field);
 
     /* We can precompute stats */
-    data_field->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
-                          | (1 << GWY_DATA_FIELD_CACHE_MAX)
-                          | (1 << GWY_DATA_FIELD_CACHE_SUM)
-                          | (1 << GWY_DATA_FIELD_CACHE_RMS);
-    data_field->cache[GWY_DATA_FIELD_CACHE_MIN] = value;
-    data_field->cache[GWY_DATA_FIELD_CACHE_MAX] = value;
-    data_field->cache[GWY_DATA_FIELD_CACHE_SUM] = data_field->xres
-                                                  * data_field->yres
-                                                  * value;
-    data_field->cache[GWY_DATA_FIELD_CACHE_RMS] = 0.0;
+    data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                         | CBIT(MED);
+    CVAL(data_field, MIN) = value;
+    CVAL(data_field, MAX) = value;
+    CVAL(data_field, SUM) = data_field->xres * data_field->yres * value;
+    CVAL(data_field, RMS) = 0.0;
+    CVAL(data_field, MED) = value;
 }
 
 /**
@@ -1291,17 +1293,15 @@ gwy_data_field_clear(GwyDataField *data_field)
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     memset(data_field->data, 0,
            data_field->xres*data_field->yres*sizeof(gdouble));
-    gwy_data_field_invalidate(data_field);
 
     /* We can precompute stats */
-    data_field->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
-                          | (1 << GWY_DATA_FIELD_CACHE_MAX)
-                          | (1 << GWY_DATA_FIELD_CACHE_SUM)
-                          | (1 << GWY_DATA_FIELD_CACHE_RMS);
-    data_field->cache[GWY_DATA_FIELD_CACHE_MIN] = 0.0;
-    data_field->cache[GWY_DATA_FIELD_CACHE_MAX] = 0.0;
-    data_field->cache[GWY_DATA_FIELD_CACHE_SUM] = 0.0;
-    data_field->cache[GWY_DATA_FIELD_CACHE_RMS] = 0.0;
+    data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                         | CBIT(MED);
+    CVAL(data_field, MIN) = 0.0;
+    CVAL(data_field, MAX) = 0.0;
+    CVAL(data_field, SUM) = 0.0;
+    CVAL(data_field, RMS) = 0.0;
+    CVAL(data_field, MED) = 0.0;
 }
 
 /**
@@ -1351,30 +1351,27 @@ gwy_data_field_area_clear(GwyDataField *data_field,
  * Multiplies a data field by given value.
  **/
 void
-gwy_data_field_multiply(GwyDataField *a, gdouble value)
+gwy_data_field_multiply(GwyDataField *data_field, gdouble value)
 {
     gint i;
     gdouble *p;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
-    p = a->data;
-    for (i = a->xres * a->yres; i; i--, p++)
+    p = data_field->data;
+    for (i = data_field->xres * data_field->yres; i; i--, p++)
         *p *= value;
 
     /* We can transform stats */
-    a->cached &= ~((1 << GWY_DATA_FIELD_CACHE_MIN)
-                   | (1 << GWY_DATA_FIELD_CACHE_MAX)
-                   | (1 << GWY_DATA_FIELD_CACHE_SUM)
-                   | (1 << GWY_DATA_FIELD_CACHE_RMS));
-    a->cache[GWY_DATA_FIELD_CACHE_MIN] *= value;
-    a->cache[GWY_DATA_FIELD_CACHE_MAX] *= value;
-    a->cache[GWY_DATA_FIELD_CACHE_SUM] *= value;
-    a->cache[GWY_DATA_FIELD_CACHE_RMS] *= value;
+    data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                          | CBIT(MED);
+    CVAL(data_field, MIN) *= value;
+    CVAL(data_field, MAX) *= value;
+    CVAL(data_field, SUM) *= value;
+    CVAL(data_field, RMS) *= value;
+    CVAL(data_field, MED) *= value;
     if (value < 0)
-        GWY_SWAP(gdouble,
-                 a->cache[GWY_DATA_FIELD_CACHE_MIN],
-                 a->cache[GWY_DATA_FIELD_CACHE_MAX]);
+        GWY_SWAP(gdouble, CVAL(data_field, MIN), CVAL(data_field, MAX));
 }
 
 /**
@@ -1389,28 +1386,29 @@ gwy_data_field_multiply(GwyDataField *a, gdouble value)
  * Multiplies a rectangular part of a data field by given value
  **/
 void
-gwy_data_field_area_multiply(GwyDataField *a,
+gwy_data_field_area_multiply(GwyDataField *data_field,
                              gint ulcol, gint ulrow, gint brcol, gint brrow,
                              gdouble value)
 {
     gint i, j;
     gdouble *row;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
     g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol <= a->xres && brrow <= a->yres);
+                     && brcol <= data_field->xres && brrow <= data_field->yres);
 
     for (i = ulrow; i < brrow; i++) {
-        row = a->data + i*a->xres + ulcol;
+        row = data_field->data + i*data_field->xres + ulcol;
 
         for (j = 0; j < brcol - ulcol; j++)
             *(row++) *= value;
     }
-    gwy_data_field_invalidate(a);
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
@@ -1421,25 +1419,25 @@ gwy_data_field_area_multiply(GwyDataField *a,
  * Adds given value to a data field.
  **/
 void
-gwy_data_field_add(GwyDataField *a, gdouble value)
+gwy_data_field_add(GwyDataField *data_field, gdouble value)
 {
     gint i;
     gdouble *p;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
-    p = a->data;
-    for (i = a->xres * a->yres; i; i--, p++)
+    p = data_field->data;
+    for (i = data_field->xres * data_field->yres; i; i--, p++)
         *p += value;
 
     /* We can transform stats */
-    a->cached &= ~((1 << GWY_DATA_FIELD_CACHE_MIN)
-                   | (1 << GWY_DATA_FIELD_CACHE_MAX)
-                   | (1 << GWY_DATA_FIELD_CACHE_SUM)
-                   | (1 << GWY_DATA_FIELD_CACHE_RMS));
-    a->cache[GWY_DATA_FIELD_CACHE_MIN] += value;
-    a->cache[GWY_DATA_FIELD_CACHE_MAX] += value;
-    a->cache[GWY_DATA_FIELD_CACHE_SUM] += a->xres * a->yres * value;
+    data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                          | CBIT(MED);
+    CVAL(data_field, MIN) += value;
+    CVAL(data_field, MAX) += value;
+    CVAL(data_field, SUM) += data_field->xres * data_field->yres * value;
+    /* RMS doesn't change */
+    CVAL(data_field, MED) += value;
 }
 
 /**
@@ -1454,28 +1452,29 @@ gwy_data_field_add(GwyDataField *a, gdouble value)
  * Adds given value to a rectangular part of a data field.
  **/
 void
-gwy_data_field_area_add(GwyDataField *a,
+gwy_data_field_area_add(GwyDataField *data_field,
                         gint ulcol, gint ulrow, gint brcol, gint brrow,
                         gdouble value)
 {
     gint i, j;
     gdouble *row;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
     g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol <= a->xres && brrow <= a->yres);
+                     && brcol <= data_field->xres && brrow <= data_field->yres);
 
     for (i = ulrow; i < brrow; i++) {
-        row = a->data + i*a->xres + ulcol;
+        row = data_field->data + i*data_field->xres + ulcol;
 
         for (j = 0; j < brcol - ulcol; j++)
             *(row++) += value;
     }
-    gwy_data_field_invalidate(a);
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
@@ -1493,13 +1492,16 @@ gwy_data_field_area_add(GwyDataField *a,
  * Returns: The total number of values above threshold.
  **/
 gint
-gwy_data_field_threshold(GwyDataField *a,
+gwy_data_field_threshold(GwyDataField *data_field,
                          gdouble threshval, gdouble bottom, gdouble top)
 {
-    gint i, tot = 0;
-    gdouble *p = a->data;
+    gint i, n, tot = 0;
+    gdouble *p = data_field->data;
 
-    for (i = a->xres * a->yres; i; i--, p++) {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
+
+    n = data_field->xres * data_field->yres;
+    for (i = n; i; i--, p++) {
         if (*p < threshval)
             *p = bottom;
         else {
@@ -1507,9 +1509,17 @@ gwy_data_field_threshold(GwyDataField *a,
             tot++;
         }
     }
-    if (tot) {
-        gwy_data_field_invalidate(a);
-    }
+
+    /* We can precompute stats */
+    data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                         | CBIT(MED);
+    CVAL(data_field, MIN) = MIN(top, bottom);
+    CVAL(data_field, MAX) = MAX(top, bottom);
+    CVAL(data_field, SUM) = tot*top + (n - tot)*bottom;
+    CVAL(data_field, RMS) = (top - bottom)*(top - bottom)
+                            * tot/(gdouble)n * (n - tot)/(gdouble)n;
+    /* FIXME: may be incorrect for tot == n/2(?) */
+    CVAL(data_field, MED) = tot > n/2 ? top : bottom;
 
     return tot;
 }
@@ -1534,23 +1544,26 @@ gwy_data_field_threshold(GwyDataField *a,
  * Returns: The total number of values above threshold.
  **/
 gint
-gwy_data_field_area_threshold(GwyDataField *a,
+gwy_data_field_area_threshold(GwyDataField *data_field,
                               gint ulcol, gint ulrow, gint brcol, gint brrow,
                               gdouble threshval, gdouble bottom, gdouble top)
 {
     gint i, j, tot = 0;
     gdouble *row;
 
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
     g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= a->xres && brrow <= a->yres, 0);
+                         && brcol <= data_field->xres
+                         && brrow <= data_field->yres,
+                         0);
 
     for (i = ulrow; i < brrow; i++) {
-        row = a->data + i*a->xres + ulcol;
+        row = data_field->data + i*data_field->xres + ulcol;
 
         for (j = 0; j < brcol - ulcol; j++) {
             if (*row < threshval)
@@ -1561,9 +1574,7 @@ gwy_data_field_area_threshold(GwyDataField *a,
             }
         }
     }
-    if (tot) {
-        gwy_data_field_invalidate(a);
-    }
+    gwy_data_field_invalidate(data_field);
 
     return tot;
 }
@@ -1580,13 +1591,16 @@ gwy_data_field_area_threshold(GwyDataField *a,
  *          [@bottom, @top].
  **/
 gint
-gwy_data_field_clamp(GwyDataField *a,
+gwy_data_field_clamp(GwyDataField *data_field,
                      gdouble bottom, gdouble top)
 {
     gint i, tot = 0;
-    gdouble *p = a->data;
+    gdouble *p = data_field->data;
 
-    for (i = a->xres * a->yres; i; i--, p++) {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
+    g_return_val_if_fail(bottom <= top, 0);
+
+    for (i = data_field->xres * data_field->yres; i; i--, p++) {
         if (*p < bottom) {
             *p = bottom;
             tot++;
@@ -1597,14 +1611,11 @@ gwy_data_field_clamp(GwyDataField *a,
         }
     }
     if (tot) {
-        gwy_data_field_invalidate(a);
+        /* We can precompute stats */
+        data_field->cached &= CBIT(MIN) | CBIT(MAX);
+        CVAL(data_field, MIN) = bottom;
+        CVAL(data_field, MAX) = top;
     }
-
-    /* We can precompute stats */
-    a->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
-                 | (1 << GWY_DATA_FIELD_CACHE_MAX);
-    a->cache[GWY_DATA_FIELD_CACHE_MIN] = bottom;
-    a->cache[GWY_DATA_FIELD_CACHE_MAX] = top;
 
     return tot;
 }
@@ -1626,7 +1637,7 @@ gwy_data_field_clamp(GwyDataField *a,
  *          [@bottom, @top].
  **/
 gint
-gwy_data_field_area_clamp(GwyDataField *a,
+gwy_data_field_area_clamp(GwyDataField *data_field,
                           gint ulcol,
                           gint ulrow,
                           gint brcol,
@@ -1637,16 +1648,19 @@ gwy_data_field_area_clamp(GwyDataField *a,
     gint i, j, tot = 0;
     gdouble *row;
 
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0);
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
     g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol < a->xres && brrow < a->yres, 0);
+                         && brcol < data_field->xres
+                         && brrow < data_field->yres,
+                         0);
 
     for (i = ulrow; i < brrow; i++) {
-        row = a->data + i*a->xres + ulcol;
+        row = data_field->data + i*data_field->xres + ulcol;
 
         for (j = 0; j < brcol - ulcol; j++) {
             if (*row < bottom) {
@@ -1660,9 +1674,8 @@ gwy_data_field_area_clamp(GwyDataField *a,
         }
 
     }
-    if (tot) {
-        gwy_data_field_invalidate(a);
-    }
+    if (tot)
+        gwy_data_field_invalidate(data_field);
 
     return tot;
 }

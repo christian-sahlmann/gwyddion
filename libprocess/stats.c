@@ -27,6 +27,11 @@
 #include "stats.h"
 #include "linestats.h"
 
+/* Cache operations */
+#define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
+#define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
+#define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
+
 static gdouble  square_area                      (GwyDataField *data_field,
                                                   gint ulcol, gint ulrow,
                                                   gint brcol, gint brrow);
@@ -40,27 +45,26 @@ static gdouble  square_area                      (GwyDataField *data_field,
  * Returns: The maximum value.
  **/
 gdouble
-gwy_data_field_get_max(GwyDataField *a)
+gwy_data_field_get_max(GwyDataField *data_field)
 {
     gint i;
     gdouble max;
     gdouble *p;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), -G_MAXDOUBLE);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -G_MAXDOUBLE);
 
-    gwy_debug("%s",
-              a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX) ? "cache" : "lame");
-    if (a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX))
-        return a->cache[GWY_DATA_FIELD_CACHE_MAX];
+    gwy_debug("%s", CTEST(data_field, MAX) ? "cache" : "lame");
+    if (CTEST(data_field, MAX))
+        return CVAL(data_field, MAX);
 
-    max = a->data[0];
-    p = a->data;
-    for (i = a->xres * a->yres; i; i--, p++) {
+    max = data_field->data[0];
+    p = data_field->data;
+    for (i = data_field->xres * data_field->yres; i; i--, p++) {
         if (G_UNLIKELY(max < *p))
             max = *p;
     }
-    a->cache[GWY_DATA_FIELD_CACHE_MAX] = max;
-    a->cached |= (1 << GWY_DATA_FIELD_CACHE_MAX);
+    CVAL(data_field, MAX) = max;
+    data_field->cached |= CBIT(MAX);
 
     return max;
 }
@@ -118,27 +122,26 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
  * Returns: The minimum value.
  **/
 gdouble
-gwy_data_field_get_min(GwyDataField *a)
+gwy_data_field_get_min(GwyDataField *data_field)
 {
     gint i;
     gdouble min;
     gdouble *p;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), G_MAXDOUBLE);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), G_MAXDOUBLE);
 
-    gwy_debug("%s",
-              a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX) ? "cache" : "lame");
-    if (a->cached & (1 << GWY_DATA_FIELD_CACHE_MIN))
-        return a->cache[GWY_DATA_FIELD_CACHE_MIN];
+    gwy_debug("%s", CTEST(data_field, MIN) ? "cache" : "lame");
+    if (CTEST(data_field, MIN))
+        return CVAL(data_field, MIN);
 
-    min = a->data[0];
-    p = a->data;
-    for (i = a->xres * a->yres; i; i--, p++) {
+    min = data_field->data[0];
+    p = data_field->data;
+    for (i = data_field->xres * data_field->yres; i; i--, p++) {
         if (G_UNLIKELY(min > *p))
             min = *p;
     }
-    a->cache[GWY_DATA_FIELD_CACHE_MIN] = min;
-    a->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN);
+    CVAL(data_field, MIN) = min;
+    data_field->cached |= CBIT(MIN);
 
     return min;
 }
@@ -196,25 +199,24 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
  * Returns: The sum of all values.
  **/
 gdouble
-gwy_data_field_get_sum(GwyDataField *a)
+gwy_data_field_get_sum(GwyDataField *data_field)
 {
     gint i;
     gdouble sum = 0;
     gdouble *p;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), sum);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), sum);
 
-    gwy_debug("%s",
-              a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX) ? "cache" : "lame");
-    if (a->cached & (1 << GWY_DATA_FIELD_CACHE_SUM))
-        return a->cache[GWY_DATA_FIELD_CACHE_SUM];
+    gwy_debug("%s", CTEST(data_field, SUM) ? "cache" : "lame");
+    if (CTEST(data_field, SUM))
+        return CVAL(data_field, SUM);
 
-    p = a->data;
-    for (i = a->xres * a->yres; i; i--, p++)
+    p = data_field->data;
+    for (i = data_field->xres * data_field->yres; i; i--, p++)
         sum += *p;
 
-    a->cache[GWY_DATA_FIELD_CACHE_SUM] = sum;
-    a->cached |= (1 << GWY_DATA_FIELD_CACHE_SUM);
+    CVAL(data_field, SUM) = sum;
+    data_field->cached |= CBIT(SUM);
 
     return sum;
 }
@@ -266,9 +268,10 @@ gwy_data_field_area_get_sum(GwyDataField *dfield,
  * Returns: The average value.
  **/
 gdouble
-gwy_data_field_get_avg(GwyDataField *a)
+gwy_data_field_get_avg(GwyDataField *data_field)
 {
-    return gwy_data_field_get_sum(a)/((gdouble)(a->xres * a->yres));
+    return gwy_data_field_get_sum(data_field)/((gdouble)(data_field->xres
+                                                         * data_field->yres));
 }
 
 /**
@@ -300,30 +303,29 @@ gwy_data_field_area_get_avg(GwyDataField *dfield,
  * Returns: The root mean square value.
  **/
 gdouble
-gwy_data_field_get_rms(GwyDataField *a)
+gwy_data_field_get_rms(GwyDataField *data_field)
 {
     gint i, n;
     gdouble rms = 0.0, sum, sum2;
     gdouble *p;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), rms);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), rms);
 
-    gwy_debug("%s",
-              a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX) ? "cache" : "lame");
-    if (a->cached & (1 << GWY_DATA_FIELD_CACHE_RMS))
-        return a->cache[GWY_DATA_FIELD_CACHE_RMS];
+    gwy_debug("%s", CTEST(data_field, RMS) ? "cache" : "lame");
+    if (CTEST(data_field, RMS))
+        return CVAL(data_field, RMS);
 
-    sum = gwy_data_field_get_sum(a);
+    sum = gwy_data_field_get_sum(data_field);
     sum2 = 0.0;
-    p = a->data;
-    for (i = a->xres * a->yres; i; i--, p++)
+    p = data_field->data;
+    for (i = data_field->xres * data_field->yres; i; i--, p++)
         sum2 += (*p)*(*p);
 
-    n = a->xres * a->yres;
+    n = data_field->xres * data_field->yres;
     rms = sqrt(fabs(sum2 - sum*sum/n)/n);
 
-    a->cache[GWY_DATA_FIELD_CACHE_RMS] = rms;
-    a->cached |= (1 << GWY_DATA_FIELD_CACHE_RMS);
+    CVAL(data_field, RMS) = rms;
+    data_field->cached |= CBIT(RMS);
 
     return rms;
 }
@@ -956,11 +958,24 @@ gwy_data_field_area_get_median(GwyDataField *dfield,
  * Returns: The median value.
  **/
 gdouble
-gwy_data_field_get_median(GwyDataField *dfield)
+gwy_data_field_get_median(GwyDataField *data_field)
 {
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), 0.0);
-    return gwy_data_field_area_get_median(dfield,
-                                          0, 0, dfield->xres, dfield->yres);
+    gdouble med;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
+
+    gwy_debug("%s", CTEST(data_field, MED) ? "cache" : "lame");
+    if (CTEST(data_field, MED))
+        return CVAL(data_field, MED);
+
+    med = gwy_data_field_area_get_median(data_field,
+                                         0, 0,
+                                         data_field->xres, data_field->yres);
+
+    CVAL(data_field, MED) = med;
+    data_field->cached |= CBIT(MED);
+
+    return med;
 }
 
 /**
