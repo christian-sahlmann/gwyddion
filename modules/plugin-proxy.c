@@ -1039,6 +1039,7 @@ static void
 dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
 {
     gchar *unit;
+    gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
     gint xres, yres;
 
     gwy_debug("Exporting %s", name);
@@ -1046,8 +1047,10 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
     yres = gwy_data_field_get_yres(dfield);
     fprintf(fh, "%s/xres=%d\n", name, xres);
     fprintf(fh, "%s/yres=%d\n", name, yres);
-    fprintf(fh, "%s/xreal=%.16g\n", name, gwy_data_field_get_xreal(dfield));
-    fprintf(fh, "%s/yreal=%.16g\n", name, gwy_data_field_get_yreal(dfield));
+    fprintf(fh, "%s/xreal=%s\n", name,
+            g_ascii_dtostr(buf, sizeof(buf), gwy_data_field_get_xreal(dfield)));
+    fprintf(fh, "%s/yreal=%s\n", name,
+            g_ascii_dtostr(buf, sizeof(buf), gwy_data_field_get_yreal(dfield)));
     unit = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_xy(dfield));
     fprintf(fh, "%s/unit-xy=%s\n", name, unit);
     g_free(unit);
