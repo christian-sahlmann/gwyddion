@@ -463,7 +463,7 @@ gwy_data_field_subtract_polynom(GwyDataField *data_field,
  * gwy_data_field_area_fit_local_planes:
  * @data_field: A data field.
  * @size: Neighbourhood size (must be at least 2).  It is centered around
- *        each pixel, unless @size is even when it stick to the right.
+ *        each pixel, unless @size is even when it sticks to the right.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -477,6 +477,11 @@ gwy_data_field_subtract_polynom(GwyDataField *data_field,
  *
  * Fits a plane through neighbourhood of each sample in a rectangular part
  * of a data field.
+ *
+ * The sample is always in the origin of its local (x,y) coordinate system,
+ * even if the neighbourhood is not centered about it (e.g. because sample
+ * is on the edge of data field).  Z-coordinate is however not centered,
+ * that is @GWY_PLANE_FIT_A is normal mean value.
  *
  * Returns: An array of data fields with requested quantities, that is
  *          @results unless it was %NULL and a new array was allocated.
@@ -493,7 +498,7 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
                                      GwyDataField **results)
 {
     gdouble coeffs[GWY_PLANE_FIT_S0_REDUCED + 1];
-    gdouble xreal, yreal;
+    gdouble xreal, yreal, qx, qy;
     gint xres, yres, ri, i, j, ii, jj;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
@@ -521,8 +526,10 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
     /* Allocate output data fields or fix their dimensions */
     xres = data_field->xres;
     yres = data_field->yres;
-    xreal = data_field->xreal * (gdouble)width/xres;
-    yreal = data_field->yreal * (gdouble)height/yres;
+    qx = data_field->xreal/xres;
+    qy = data_field->yreal/yres;
+    xreal = qx*width;
+    yreal = qy*height;
     for (ri = 0; ri < nresults; ri++) {
         if (!results[ri])
             results[ri] = GWY_DATA_FIELD(gwy_data_field_new(width, height,
@@ -537,21 +544,21 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
     }
 
     /* Fit local planes */
-    for (i = row; i < row + height; i++) {
-        gint ifrom = MAX(0, i - (size-1)/2);
-        gint ito = MIN(yres-1, i + size/2);
+    for (i = 0; i < height; i++) {
+        gint ifrom = MAX(0, i + row - (size-1)/2);
+        gint ito = MIN(yres-1, i + row + size/2);
 
         /* Prevent fitting plane through just one pixel on bottom edge when
          * size == 2 */
         if (G_UNLIKELY(ifrom == ito) && ifrom)
             ifrom--;
 
-        for (j = col; j < col + width; j++) {
-            gint jfrom = MAX(0, j - (size-1)/2);
-            gint jto = MIN(xres-1, j + size/2);
+        for (j = 0; j < width; j++) {
+            gint jfrom = MAX(0, j + col - (size-1)/2);
+            gint jto = MIN(xres-1, j + col + size/2);
             gdouble *drect;
             gdouble sumz, sumzx, sumzy, sumzz, sumx, sumy, sumxx, sumxy, sumyy;
-            gdouble n, bx, by, s0, det, shift;
+            gdouble n, bx, by, s0, s0r, det, shift;
 
             /* Prevent fitting plane through just one pixel on right edge when
              * size == 2 */
@@ -580,14 +587,14 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
 
             /* Move origin to pixel, including in z coordinate, remembering
              * average z value in shift */
-            shift = ifrom - i;
+            shift = ifrom - (i + row);
             sumxy += shift*sumx;
-            sumyy += shift*(2*sumy - n);
+            sumyy += shift*(2*sumy + n*shift);
             sumzy += shift*sumz;
             sumy += n*shift;
 
-            shift = jfrom - j;
-            sumxx += shift*(2*sumx - n);
+            shift = jfrom - (j + col);
+            sumxx += shift*(2*sumx + n*shift);
             sumxy += shift*sumy;
             sumzx += shift*sumz;
             sumx += n*shift;
@@ -595,14 +602,15 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
             shift = -sumz/n;
             sumzx += shift*sumx;
             sumzy += shift*sumy;
-            sumzz += shift*(2*sumz - n);
-            sumz = 0.0;
+            sumzz += shift*(2*sumz + n*shift);
+            /* sumz = 0.0;  unused */
 
             /* Compute coefficients */
             det = sumxx*sumyy - sumxy*sumxy;
             bx = (sumzx*sumyy - sumxy*sumzy)/det;
             by = (sumzy*sumxx - sumxy*sumzx)/det;
             s0 = sumzz - bx*sumzx - by*sumzy;
+            s0r = s0/(1.0 + bx*bx/qx/qx + by*by/qy/qy);
 
             coeffs[GWY_PLANE_FIT_A] = -shift;
             coeffs[GWY_PLANE_FIT_BX] = bx;
@@ -610,11 +618,10 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
             coeffs[GWY_PLANE_FIT_ANGLE] = atan2(by, bx);
             coeffs[GWY_PLANE_FIT_SLOPE] = hypot(bx, by);
             coeffs[GWY_PLANE_FIT_S0] = s0;
-            coeffs[GWY_PLANE_FIT_S0_REDUCED] = s0/(1.0 + bx*bx + by*by);
+            coeffs[GWY_PLANE_FIT_S0_REDUCED] = s0r;
 
             for (ri = 0; ri < nresults; ri++)
-                results[ri]->data[width*(i - row) + (j - col)]
-                    = coeffs[types[ri]];
+                results[ri]->data[width*i + j] = coeffs[types[ri]];
         }
     }
 
@@ -654,5 +661,80 @@ gwy_data_field_fit_local_planes(GwyDataField *data_field,
                                                 data_field->yres,
                                                 nresults, types, results);
 }
+
+/**
+ * gwy_data_field_area_local_plane_quantity:
+ * @data_field: A data field.
+ * @size: Neighbourhood size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @type: The type of requested quantity.
+ * @result: A data field to store result to, or %NULL to allocate a new one.
+ *
+ * Convenience function to get just one quantity from
+ * gwy_data_field_area_fit_local_planes().
+ *
+ * Returns: @result if it isn't %NULL, otherwise a newly allocated data field.
+ *
+ * Since: 1.9
+ **/
+GwyDataField*
+gwy_data_field_area_local_plane_quantity(GwyDataField *data_field,
+                                         gint size,
+                                         gint col, gint row,
+                                         gint width, gint height,
+                                         GwyPlaneFitQuantity type,
+                                         GwyDataField *result)
+{
+    gwy_data_field_area_fit_local_planes(data_field, size,
+                                         col, row, width, height,
+                                         1, &type, &result);
+    return result;
+}
+
+/**
+ * gwy_data_field_local_plane_quantity:
+ * @data_field: A data field.
+ * @size: Neighbourhood size.
+ * @type: The type of requested quantity.
+ * @result: A data field to store result to, or %NULL to allocate a new one.
+ *
+ * Convenience function to get just one quantity from
+ * gwy_data_field_fit_local_planes().
+ *
+ * Returns: @result if it isn't %NULL, otherwise a newly allocated data field.
+ *
+ * Since: 1.9
+ **/
+GwyDataField*
+gwy_data_field_local_plane_quantity(GwyDataField *data_field,
+                                    gint size,
+                                    GwyPlaneFitQuantity type,
+                                    GwyDataField *result)
+{
+    gwy_data_field_fit_local_planes(data_field, size, 1, &type, &result);
+
+    return result;
+}
+
+/************************** Documentation ****************************/
+
+/**
+ * GwyPlaneFitQuantity:
+ * @GWY_PLANE_FIT_A: Constant coefficient (mean value).
+ * @GWY_PLANE_FIT_BX: Linear coefficient in x, if x in in pixel coordinates.
+ * @GWY_PLANE_FIT_BY: Linear coefficient in y, if y is in pixel coordinates.
+ * @GWY_PLANE_FIT_ANGLE: Slope orientation in (x,y) plane (in radians).
+ * @GWY_PLANE_FIT_SLOPE: Absolute slope value (that is sqrt(bx*bx + by*by)).
+ * @GWY_PLANE_FIT_S0: Residual sum of squares.
+ * @GWY_PLANE_FIT_S0_REDUCED: Slope-reduced residual sum of squares.
+ *
+ * Quantity that can be requested from gwy_data_field_area_fit_local_planes()
+ * et al.
+ *
+ * Since: 1.9
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -92,11 +92,22 @@ GwyDataField** gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
                                                     gint nresults,
                                                     const GwyPlaneFitQuantity *types,
                                                     GwyDataField **results);
+GwyDataField* gwy_data_field_area_local_plane_quantity(GwyDataField *data_field,
+                                                       gint size,
+                                                       gint col, gint row,
+                                                       gint width, gint height,
+                                                       GwyPlaneFitQuantity type,
+                                                       GwyDataField *result);
 GwyDataField** gwy_data_field_fit_local_planes(GwyDataField *data_field,
                                                gint size,
                                                gint nresults,
                                                const GwyPlaneFitQuantity *types,
                                                GwyDataField **results);
+GwyDataField* gwy_data_field_local_plane_quantity(GwyDataField *data_field,
+                                                  gint size,
+                                                  GwyPlaneFitQuantity type,
+                                                  GwyDataField *result);
+
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_LEVEL_H__*/
