@@ -49,6 +49,7 @@ def check_file(filename, lines):
         check_eol_operators,
         check_function_call_spaces,
         check_return_case_parentheses,
+        check_boolean_comparisons,
         check_boolean_arguments
     ]
 
@@ -248,6 +249,18 @@ def check_return_case_parentheses(tokens, lines, warnings):
         if not i or tokens[i-1].string not in keywords:
             continue
         w = 'Extra return/case/goto parentheses (col %d)'
+        warnings.append((t.line, w % (t.col)))
+
+def check_boolean_comparisons(tokens, lines, warnings):
+    keywlist = 'TRUE', 'FALSE'
+    keywords = dict([(x, 1) for x in keywlist])
+    for i, t in enumerate(tokens):
+        if not i or tokens[i].string not in keywords:
+            continue
+        if tokens[i-1].typ != Token.punct or (tokens[i-1].string != '!='
+                                              and tokens[i-1].string != '=='):
+            continue
+        w = 'Comparison to TRUE or FALSE (col %d)'
         warnings.append((t.line, w % (t.col)))
 
 def check_boolean_arguments(tokens, lines, warnings):
