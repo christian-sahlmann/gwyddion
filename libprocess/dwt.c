@@ -115,42 +115,42 @@ gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTType type)
 
 	case (GWY_DWT_DAUB12):
 	gwy_data_line_resample(ret, 12, GWY_INTERPOLATION_NONE);
-	ret->data[0] = 0.111540743350*sqrt(2);
-	ret->data[1] = 0.494623890398*sqrt(2);
-	ret->data[2] = 0.751133908021*sqrt(2);
-	ret->data[3] = 0.315250351709*sqrt(2);
-	ret->data[4] = -0.226264693965*sqrt(2);
-	ret->data[5] = -0.129766867567*sqrt(2);
-	ret->data[6] = 0.097501605587*sqrt(2);
-	ret->data[7] = 0.027522865530*sqrt(2);
-	ret->data[8] = -0.031582039318*sqrt(2);
-	ret->data[9] = 0.000553842201*sqrt(2);
-	ret->data[10] = 0.004777257511*sqrt(2);
-	ret->data[11] = -0.001077301085*sqrt(2);
+	ret->data[0] = 0.111540743350*G_SQRT2;
+	ret->data[1] = 0.494623890398*G_SQRT2;
+	ret->data[2] = 0.751133908021*G_SQRT2;
+	ret->data[3] = 0.315250351709*G_SQRT2;
+	ret->data[4] = -0.226264693965*G_SQRT2;
+	ret->data[5] = -0.129766867567*G_SQRT2;
+	ret->data[6] = 0.097501605587*G_SQRT2;
+	ret->data[7] = 0.027522865530*G_SQRT2;
+	ret->data[8] = -0.031582039318*G_SQRT2;
+	ret->data[9] = 0.000553842201*G_SQRT2;
+	ret->data[10] = 0.004777257511*G_SQRT2;
+	ret->data[11] = -0.001077301085*G_SQRT2;
 	break;
 
 	case (GWY_DWT_DAUB20):
 	gwy_data_line_resample(ret, 20, GWY_INTERPOLATION_NONE);
-	ret->data[0] = 0.026670057901*sqrt(2); 
-	ret->data[1] = 0.188176800078*sqrt(2);
-	ret->data[2] = 0.527201188932*sqrt(2);
-	ret->data[3] = 0.688459039454*sqrt(2);
-	ret->data[4] = 0.281172343661*sqrt(2);
-	ret->data[5] = -0.249846424327*sqrt(2);
-	ret->data[6] = -0.195946274377*sqrt(2);
-	ret->data[7] = 0.127369340336*sqrt(2);
-	ret->data[8] = 0.093057364604*sqrt(2); 
-	ret->data[9] = -0.071394147166*sqrt(2);
-	ret->data[10] = -0.029457536822*sqrt(2);
-	ret->data[11] = 0.033212674059*sqrt(2); 
-	ret->data[12] = 0.003606553567*sqrt(2);
-	ret->data[13] = -0.010733175483*sqrt(2);
-	ret->data[14] = 0.001395351747*sqrt(2);
-	ret->data[15] = 0.001992405295*sqrt(2);
-	ret->data[16] = -0.000685856695*sqrt(2);
-	ret->data[17] = -0.000116466855*sqrt(2);
-	ret->data[18] = 0.000093588670*sqrt(2);
-	ret->data[19] = -0.000013264203*sqrt(2);
+	ret->data[0] = 0.026670057901*G_SQRT2; 
+	ret->data[1] = 0.188176800078*G_SQRT2;
+	ret->data[2] = 0.527201188932*G_SQRT2;
+	ret->data[3] = 0.688459039454*G_SQRT2;
+	ret->data[4] = 0.281172343661*G_SQRT2;
+	ret->data[5] = -0.249846424327*G_SQRT2;
+	ret->data[6] = -0.195946274377*G_SQRT2;
+	ret->data[7] = 0.127369340336*G_SQRT2;
+	ret->data[8] = 0.093057364604*G_SQRT2; 
+	ret->data[9] = -0.071394147166*G_SQRT2;
+	ret->data[10] = -0.029457536822*G_SQRT2;
+	ret->data[11] = 0.033212674059*G_SQRT2; 
+	ret->data[12] = 0.003606553567*G_SQRT2;
+	ret->data[13] = -0.010733175483*G_SQRT2;
+	ret->data[14] = 0.001395351747*G_SQRT2;
+	ret->data[15] = 0.001992405295*G_SQRT2;
+	ret->data[16] = -0.000685856695*G_SQRT2;
+	ret->data[17] = -0.000116466855*G_SQRT2;
+	ret->data[18] = 0.000093588670*G_SQRT2;
+	ret->data[19] = -0.000013264203*G_SQRT2;
 	break;
 
 	default:
