@@ -102,7 +102,7 @@ points(GwyGraph *graph)
   
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_POINTS);
     if (!dialog) points_dialog(graph);
-    
+    gtk_widget_queue_draw(GTK_WIDGET(graph)); 
     
     return 1;
 }
@@ -312,6 +312,7 @@ points_dialog_closed_cb(GtkWidget *widget, gpointer data)
     graph = (GwyGraph *) data;
     
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_PLAIN);
+    gtk_widget_queue_draw(GTK_WIDGET(graph));
 
     if (dialog) 
     {
