@@ -472,13 +472,9 @@ gwy_ruler_unrealize(GtkWidget *widget)
 {
     GwyRuler *ruler = GWY_RULER(widget);
 
-    if (ruler->backing_store)
-        g_object_unref(ruler->backing_store);
-    if (ruler->non_gr_exp_gc)
-        g_object_unref(ruler->non_gr_exp_gc);
-
-    ruler->backing_store = NULL;
-    ruler->non_gr_exp_gc = NULL;
+    gwy_object_unref(ruler->backing_store);
+    gwy_object_unref(ruler->non_gr_exp_gc);
+    g_free(ruler->units);
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         (GTK_WIDGET_CLASS(parent_class)->unrealize)(widget);
@@ -820,8 +816,7 @@ gwy_ruler_set_units(GwyRuler *ruler,
                     const gchar *units)
 {
     g_return_if_fail(GWY_IS_RULER(ruler));
-    if (ruler->units)
-        g_free(ruler->units);
+    g_free(ruler->units);
     ruler->units = units ? g_strdup(units) : NULL;
     gtk_widget_queue_draw(GTK_WIDGET(ruler));
 }

@@ -29,6 +29,9 @@
 static void   register_toolbox_icons (const gchar *pixmap_path,
                                       GtkIconFactory *icon_factory);
 static gchar* guess_pixmap_path      (void);
+static void   free_the_icon_factory  (void);
+
+static GtkIconFactory *the_icon_factory = NULL;
 
 /**
  * gwy_stock_register_stock_items:
@@ -40,16 +43,16 @@ static gchar* guess_pixmap_path      (void);
 void
 gwy_stock_register_stock_items(void)
 {
-    GtkIconFactory *icon_factory;
     gchar *pixmap_path;
 
+    g_return_if_fail(!the_icon_factory);
     pixmap_path = guess_pixmap_path();
     g_return_if_fail(pixmap_path);
-
-    icon_factory = gtk_icon_factory_new();
-    register_toolbox_icons(pixmap_path, icon_factory);
-    gtk_icon_factory_add_default(icon_factory);
+    the_icon_factory = gtk_icon_factory_new();
+    register_toolbox_icons(pixmap_path, the_icon_factory);
+    gtk_icon_factory_add_default(the_icon_factory);
     g_free(pixmap_path);
+    g_atexit(free_the_icon_factory);
 }
 
 static void
@@ -292,5 +295,11 @@ file_to_icon_source(const gchar *filename,
     return icon_source;
 }
 #endif
+
+static void
+free_the_icon_factory(void)
+{
+    gwy_object_unref(the_icon_factory);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
