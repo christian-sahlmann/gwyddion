@@ -103,7 +103,6 @@ static gboolean        read_binary_data    (gint n,
                                             gchar *buffer,
                                             gint bpp);
 static GHashTable*     read_hash           (gchar **buffer);
-static gchar*          next_line           (gchar **buffer);
 
 static void            get_scan_list_res   (GHashTable *hash,
                                             gint *xres,
@@ -780,7 +779,7 @@ read_hash(gchar **buffer)
     NanoscopeValue *value;
     gchar *line, *colon;
 
-    line = next_line(buffer);
+    line = gwy_str_next_line(buffer);
     if (line[0] != '\\' || line[1] != '*')
         return NULL;
     if (!strcmp(line, "\\*File list end")) {
@@ -792,7 +791,7 @@ read_hash(gchar **buffer)
     g_hash_table_insert(hash, "#self", line + 2);    /* self */
     gwy_debug("hash table <%s>", line + 2);
     while ((*buffer)[0] == '\\' && (*buffer)[1] && (*buffer)[1] != '*') {
-        line = next_line(buffer) + 1;
+        line = gwy_str_next_line(buffer) + 1;
         if (!line || !line[0] || !line[1] || !line[2]) {
             g_warning("Truncated line <%s>", line ? line : "(null)");
             goto fail;
@@ -816,41 +815,6 @@ read_hash(gchar **buffer)
 fail:
     g_hash_table_destroy(hash);
     return NULL;
-}
-
-/**
- * next_line:
- * @buffer: A character buffer containing some text.
- *
- * Extracts a next line from @buffer.
- *
- * @buffer is updated to point after the end of the line and the "\n" 
- * (or "\r\n") is replaced with "\0", if present.
- *
- * Returns: The start of the line.  %NULL if the buffer is empty or %NULL.
- *          The line is not duplicated, the returned pointer points somewhere
- *          to @buffer.
- **/
-static gchar*
-next_line(gchar **buffer)
-{
-    gchar *p, *q;
-
-    if (!buffer || !*buffer)
-        return NULL;
-
-    q = *buffer;
-    p = strchr(*buffer, '\n');
-    if (p) {
-        if (p > *buffer && *(p-1) == '\r')
-            *(p-1) = '\0';
-        *buffer = p+1;
-        *p = '\0';
-    }
-    else
-        *buffer = NULL;
-
-    return q;
 }
 
 /* General parameter line parser */

@@ -139,7 +139,6 @@ static FILE*           open_temporary_file       (gchar **filename);
 static GwyContainer*   text_dump_import          (GwyContainer *old_data,
                                                   gchar *buffer,
                                                   gsize size);
-static gchar*          next_line                 (gchar **buffer);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -455,11 +454,11 @@ proc_register_plugins(GList *plugins,
 
     gwy_debug("buffer: <<<%s>>>", buffer);
     while (buffer) {
-        if ((pname = next_line(&buffer))
+        if ((pname = gwy_str_next_line(&buffer))
             && *pname
-            && (menu_path = next_line(&buffer))
+            && (menu_path = gwy_str_next_line(&buffer))
             && menu_path[0] == '/'
-            && (run_modes = next_line(&buffer))
+            && (run_modes = gwy_str_next_line(&buffer))
             && (run = gwy_string_to_flags(run_modes,
                                           run_mode_names, -1, NULL))) {
             info = g_new(ProcPluginInfo, 1);
@@ -485,7 +484,7 @@ proc_register_plugins(GList *plugins,
                       name, pname, menu_path, run_modes);
         }
         while (buffer && *buffer)
-            next_line(&buffer);
+            gwy_str_next_line(&buffer);
     }
 
     return plugins;
@@ -612,13 +611,13 @@ file_register_plugins(GList *plugins,
 
     gwy_debug("buffer: <<<%s>>>", buffer);
     while (buffer) {
-        if ((pname = next_line(&buffer))
+        if ((pname = gwy_str_next_line(&buffer))
             && *pname
-            && (file_desc = next_line(&buffer))
+            && (file_desc = gwy_str_next_line(&buffer))
             && *file_desc
-            && (glob = next_line(&buffer))
+            && (glob = gwy_str_next_line(&buffer))
             && *glob
-            && (run_modes = next_line(&buffer))
+            && (run_modes = gwy_str_next_line(&buffer))
             && (run = gwy_string_to_flags(run_modes,
                                           file_op_names, -1, NULL))) {
             info = g_new(FilePluginInfo, 1);
@@ -649,7 +648,7 @@ file_register_plugins(GList *plugins,
                       name, pname, file_desc, run_modes, glob);
         }
         while (buffer && *buffer)
-            next_line(&buffer);
+            gwy_str_next_line(&buffer);
     }
 
     return plugins;
@@ -1135,7 +1134,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         data = GWY_CONTAINER(gwy_container_new());
 
     pos = buffer;
-    while ((line = next_line(&pos)) && *line) {
+    while ((line = gwy_str_next_line(&pos)) && *line) {
         val = strchr(line, '=');
         if (!val || *line != '/') {
             g_warning("Garbage key: %s", line);
@@ -1251,7 +1250,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         gwy_object_unref(uz);
         memcpy(dfield->data, pos, n);
         pos += n;
-        val = next_line(&pos);
+        val = gwy_str_next_line(&pos);
         if (strcmp(val, "]]") != 0) {
             g_warning("Missed end of data field.");
             gwy_object_unref(dfield);
@@ -1267,41 +1266,6 @@ fail:
     gwy_container_remove_by_prefix(data, NULL);
     g_object_unref(data);
     return NULL;
-}
-
-/**
- * next_line:
- * @buffer: A character buffer containing some text.
- *
- * Extracts a next line from @buffer.
- *
- * @buffer is updated to point after the end of the line and the "\n" 
- * (or "\r\n") is replaced with "\0", if present.
- *
- * Returns: The start of the line.  %NULL if the buffer is empty or %NULL.
- *          The line is not duplicated, the returned pointer points somewhere
- *          to @buffer.
- **/
-static gchar*
-next_line(gchar **buffer)
-{
-    gchar *p, *q;
-
-    if (!buffer || !*buffer)
-        return NULL;
-
-    q = *buffer;
-    p = strchr(*buffer, '\n');
-    if (p) {
-        if (p > *buffer && *(p-1) == '\r')
-            *(p-1) = '\0';
-        *buffer = p+1;
-        *p = '\0';
-    }
-    else
-        *buffer = NULL;
-
-    return q;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
