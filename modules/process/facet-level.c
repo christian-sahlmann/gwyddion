@@ -69,14 +69,19 @@ facet_level(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     gdouble c, bx, by;
+    gint i;
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data");
-    facet_level_coeffs(dfield, &bx, &by);
-    c = -0.5*(bx*gwy_data_field_get_xreal(dfield)
-              + by*gwy_data_field_get_yreal(dfield));
-    gwy_data_field_plane_level(dfield, c, bx, by);
+
+    /* to converge, do it twice */
+    for (i = 0; i < 2; i++) {
+        facet_level_coeffs(dfield, &bx, &by);
+        c = -0.5*(bx*gwy_data_field_get_xreal(dfield)
+                  + by*gwy_data_field_get_yreal(dfield));
+        gwy_data_field_plane_level(dfield, c, bx, by);
+    }
 
     return TRUE;
 }
