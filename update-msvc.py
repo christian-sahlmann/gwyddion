@@ -86,6 +86,7 @@ def get_object_symbols(filename, symtype='T'):
     syms = [x for x in syms if x]
     syms = [x.group('symbol') for x in syms if x.group('type') == symtype]
     syms = [x for x in syms if not x.startswith('_')]
+    syms.sort()
     return syms
 
 def make_lib_defs(makefile):
