@@ -1,9 +1,50 @@
+<!-- ##### SECTION ./tmpl/gwylayer-triangle.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-triangle.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-triangle.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwylayer-triangle.sgml:Title ##### -->
+GwyLayerTriangle
+
+
 <!-- ##### SIGNAL GwySphereCoords::value-changed ##### -->
 <para>
 
 </para>
 
 @gwyspherecoords: the object which received the signal.
+
+<!-- ##### FUNCTION gwy_layer_triangle_get_selection ##### -->
+<para>
+
+</para>
+
+@layer: 
+@x0: 
+@y0: 
+@x1: 
+@y1: 
+@x2: 
+@y2: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_triangle_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gwy_sphere_coords_value_changed ##### -->
 <para>

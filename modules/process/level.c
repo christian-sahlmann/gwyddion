@@ -46,8 +46,8 @@ module_register(const gchar *name)
         GWY_RUN_ANY
     };
 
-    gwy_register_process_func(name, &level_func_info);
-    gwy_register_process_func(name, &level_rotate_func_info);
+    gwy_process_func_register(name, &level_func_info);
+    gwy_process_func_register(name, &level_rotate_func_info);
 
     return TRUE;
 }

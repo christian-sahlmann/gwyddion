@@ -17,10 +17,12 @@ extern "C" {
     _GWY_MODULE_QUERY(void) { return &mod_info; }
 
 typedef enum {
-    GWY_RUN_INTERACTIVE    = 1 << 0,
+    GWY_RUN_NONE           = 0,
+    GWY_RUN_WITH_DEFAULTS  = 1 << 0,
     GWY_RUN_NONINTERACTIVE = 1 << 1,
-    GWY_RUN_WITH_DEFAULTS  = 1 << 2,
-    GWY_RUN_MASK           = 0x07
+    GWY_RUN_MODAL          = 1 << 2,
+    GWY_RUN_INTERACTIVE    = 1 << 3,
+    GWY_RUN_MASK           = 0x0f
 } GwyRunType;
 
 typedef struct _GwyModuleInfo GwyModuleInfo;

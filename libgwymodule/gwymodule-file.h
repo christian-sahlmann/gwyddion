@@ -26,14 +26,14 @@ struct _GwyFileFuncInfo {
     GwyFileSaveFunc save;
 };
 
-gboolean        gwy_register_file_func      (const gchar *modname,
+gboolean        gwy_file_func_register      (const gchar *modname,
                                              GwyFileFuncInfo *func_info);
-gint            gwy_run_file_detect_func    (const gchar *name,
+gint            gwy_file_func_run_detect    (const gchar *name,
                                              const gchar *filename,
                                              gboolean only_name);
-GwyContainer*   gwy_run_file_load_func      (const gchar *name,
+GwyContainer*   gwy_file_func_run_load      (const gchar *name,
                                              const gchar *filename);
-gboolean        gwy_run_file_save_func      (const gchar *name,
+gboolean        gwy_file_func_run_save      (const gchar *name,
                                              GwyContainer *data,
                                              const gchar *filename);
 /* high-level interface */

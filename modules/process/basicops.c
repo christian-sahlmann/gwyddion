@@ -77,12 +77,12 @@ module_register(const gchar *name)
         GWY_RUN_ANY,
     };
 
-    gwy_register_process_func(name, &flip_horizontally_func_info);
-    gwy_register_process_func(name, &flip_vertically_func_info);
-    gwy_register_process_func(name, &invert_value_func_info);
-    gwy_register_process_func(name, &rotate_clockwise_90_func_info);
-    gwy_register_process_func(name, &rotate_counterclockwise_90_func_info);
-    gwy_register_process_func(name, &rotate_180_func_info);
+    gwy_process_func_register(name, &flip_horizontally_func_info);
+    gwy_process_func_register(name, &flip_vertically_func_info);
+    gwy_process_func_register(name, &invert_value_func_info);
+    gwy_process_func_register(name, &rotate_clockwise_90_func_info);
+    gwy_process_func_register(name, &rotate_counterclockwise_90_func_info);
+    gwy_process_func_register(name, &rotate_180_func_info);
 
     return TRUE;
 }

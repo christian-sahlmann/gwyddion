@@ -85,7 +85,7 @@ module_register(const gchar *name)
         GWY_RUN_ANY,
     };
 
-    gwy_register_process_func(name, &scale_func_info);
+    gwy_process_func_register(name, &scale_func_info);
 
     return TRUE;
 }

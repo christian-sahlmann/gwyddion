@@ -14,7 +14,7 @@ static GHashTable *process_funcs;
 static const gsize bufsize = 1024;
 
 /**
- * gwy_register_process_func:
+ * gwy_process_func_register:
  * @modname: Module identifier (name).
  * @func_info: Data processing function info.
  *
@@ -25,7 +25,7 @@ static const gsize bufsize = 1024;
  * Returns: %TRUE on success, %FALSE on failure.
  **/
 gboolean
-gwy_register_process_func(const gchar *modname,
+gwy_process_func_register(const gchar *modname,
                           GwyProcessFuncInfo *func_info)
 {
     GwyModuleInfoInternal *iinfo;
@@ -54,7 +54,7 @@ gwy_register_process_func(const gchar *modname,
 }
 
 /**
- * gwy_run_process_func:
+ * gwy_process_func_run:
  * @name: Data processing function name.
  * @data: Data (a #GwyContainer).
  * @run: How the function should be run.
@@ -67,7 +67,7 @@ gwy_register_process_func(const gchar *modname,
  * Returns: %TRUE on success, %FALSE on failure.
  **/
 gboolean
-gwy_run_process_func(const guchar *name,
+gwy_process_func_run(const guchar *name,
                      GwyContainer *data,
                      GwyRunType run)
 {
@@ -81,7 +81,7 @@ gwy_run_process_func(const guchar *name,
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     /* TODO: Container */
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
     g_object_ref(data);
     g_object_ref(dfield);
     status = func_info->process(data, run);
@@ -228,6 +228,25 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
     return (GtkObject*)item_factory;
 }
 
+/**
+ * gwy_process_func_get_run_types:
+ * @name: Data processing function name.
+ *
+ * Returns possible run modes for a data processing function identified by
+ * @name.
+ *
+ * Returns: The run mode bit mask.
+ **/
+GwyRunType
+gwy_process_func_get_run_types(const gchar *name)
+{
+    GwyProcessFuncInfo *func_info;
+
+    func_info = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(func_info, 0);
+    return func_info->run;
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -248,7 +267,8 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
  *
  * The type of data processing function.
  *
- * Returns: Whether it succeeded (XXX: this means exactly what?).
+ * Returns: Whether it succeeded (XXX: this means exactly what? mostly it
+ *          means it really changed the data).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -226,18 +226,32 @@ setup_sensitivity_keys(void)
 void
 gwy_app_run_process_func_cb(gchar *name)
 {
+    GwyRunType run_types[] = {
+        GWY_RUN_INTERACTIVE, GWY_RUN_MODAL,
+        GWY_RUN_NONINTERACTIVE, GWY_RUN_WITH_DEFAULTS,
+    };
+    GwyRunType run;
     GwyDataWindow *data_window;
     GwyDataView *data_view;
     GwyContainer *data;
+    gsize i;
 
     gwy_debug("%s: `%s'", __FUNCTION__, name);
     data_window = gwy_app_data_window_get_current();
     data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
     data = gwy_data_view_get_data(data_view);
     g_return_if_fail(data);
-    gwy_run_process_func(name, data, GWY_RUN_INTERACTIVE);
-    /* FIXME: the ugliest hack! */
-    gwy_data_view_update(data_view);
+    run = gwy_process_func_get_run_types(name);
+    for (i = 0; i < G_N_ELEMENTS(run_types); i++) {
+        if (run & run_types[i]) {
+            gwy_process_func_run(name, data, run_types[i]);
+            /* FIXME: the ugliest hack! */
+            gwy_data_view_update(data_view);
+
+            return;
+        }
+    }
+    g_critical("Trying to run `%s', but no run mode found (%d)", name, run);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

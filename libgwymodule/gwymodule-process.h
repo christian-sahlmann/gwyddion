@@ -26,13 +26,14 @@ struct _GwyProcessFuncInfo {
     GwyRunType run;
 };
 
-gboolean     gwy_register_process_func  (const gchar *modname,
-                                         GwyProcessFuncInfo *func_info);
-gboolean     gwy_run_process_func       (const guchar *name,
-                                         GwyContainer *data,
-                                         GwyRunType run);
-GtkObject*   gwy_build_process_menu     (GtkAccelGroup *accel_group,
-                                         GCallback item_callback);
+gboolean     gwy_process_func_register      (const gchar *modname,
+                                             GwyProcessFuncInfo *func_info);
+gboolean     gwy_process_func_run           (const guchar *name,
+                                             GwyContainer *data,
+                                             GwyRunType run);
+GwyRunType   gwy_process_func_get_run_types (const gchar *name);
+GtkObject*   gwy_build_process_menu         (GtkAccelGroup *accel_group,
+                                             GCallback item_callback);
 
 #ifdef __cplusplus
 }

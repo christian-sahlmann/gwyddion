@@ -45,7 +45,7 @@ module_register(const gchar *name)
         &gwyfile_save,
     };
 
-    gwy_register_file_func(name, &gwyfile_func_info);
+    gwy_file_func_register(name, &gwyfile_func_info);
 
     return TRUE;
 }
@@ -81,7 +81,7 @@ gwyfile_load(const gchar *filename)
     gsize size = 0;
     gsize pos = 0;
 
-    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+    if (!g_file_get_contents(filename, (gchar**)&buffer, &size, &err)) {
         g_warning("Cannot read file %s", filename);
         g_clear_error(&err);
         return NULL;

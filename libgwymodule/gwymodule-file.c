@@ -20,7 +20,7 @@ typedef struct {
 } GwyFileDetectData;
 
 /**
- * gwy_register_file_func:
+ * gwy_file_func_register:
  * @modname: Module identifier (name).
  * @func_info: File type function info.
  *
@@ -31,7 +31,7 @@ typedef struct {
  * Returns: %TRUE on success, %FALSE on failure.
  **/
 gboolean
-gwy_register_file_func(const gchar *modname,
+gwy_file_func_register(const gchar *modname,
                        GwyFileFuncInfo *func_info)
 {
     GwyModuleInfoInternal *iinfo;
@@ -59,7 +59,7 @@ gwy_register_file_func(const gchar *modname,
 }
 
 /**
- * gwy_run_file_detect_func:
+ * gwy_file_func_run_detect:
  * @name: A file type function name.
  * @filename: A file name to detect.
  * @only_name: Whether to use only file name for a guess, or try to actually
@@ -75,7 +75,7 @@ gwy_register_file_func(const gchar *modname,
  *          100 for good magic header, more for more thorough tests.
  **/
 gint
-gwy_run_file_detect_func(const gchar *name,
+gwy_file_func_run_detect(const gchar *name,
                          const gchar *filename,
                          gboolean only_name)
 {
@@ -90,7 +90,7 @@ gwy_run_file_detect_func(const gchar *name,
 }
 
 /**
- * gwy_run_file_load_func:
+ * gwy_file_func_run_load:
  * @name: A file load function name.
  * @filename: A file name to load data from.
  *
@@ -99,7 +99,7 @@ gwy_run_file_detect_func(const gchar *name,
  * Returns: A new #GwyContainer with data from @filename, or %NULL.
  **/
 GwyContainer*
-gwy_run_file_load_func(const gchar *name,
+gwy_file_func_run_load(const gchar *name,
                        const gchar *filename)
 {
     GwyFileFuncInfo *func_info;
@@ -113,7 +113,7 @@ gwy_run_file_load_func(const gchar *name,
 }
 
 /**
- * gwy_run_file_save_func:
+ * gwy_file_func_run_save:
  * @name: A file save function name.
  * @data: A #GwyContainer to save.
  * @filename: A file name to save @data as.
@@ -126,7 +126,7 @@ gwy_run_file_load_func(const gchar *name,
  * Returns: %TRUE if file save succeeded, %FALSE otherwise.
  **/
 gboolean
-gwy_run_file_save_func(const gchar *name,
+gwy_file_func_run_save(const gchar *name,
                        GwyContainer *data,
                        const gchar *filename)
 {
@@ -141,7 +141,7 @@ gwy_run_file_save_func(const gchar *name,
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     /* TODO: Container */
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
     g_object_ref(data);
     g_object_ref(dfield);
     status = func_info->save(data, filename);
@@ -219,7 +219,7 @@ gwy_file_load(const gchar *filename)
     if (!winner)
         return NULL;
 
-    return gwy_run_file_load_func(winner, filename);
+    return gwy_file_func_run_load(winner, filename);
 }
 
 /**
@@ -248,7 +248,7 @@ gwy_file_save(GwyContainer *data,
     if (!ddata.winner)
         return FALSE;
 
-    return gwy_run_file_save_func(ddata.winner, data, filename);
+    return gwy_file_func_run_save(ddata.winner, data, filename);
 }
 
 /************************** Documentation ****************************/
@@ -273,7 +273,7 @@ gwy_file_save(GwyContainer *data,
  *
  * When called with %TRUE @only_name it should not try to access the file.
  *
- * Returns: An integer likehood score (see gwy_run_file_detect_func() for
+ * Returns: An integer likehood score (see gwy_file_func_run_detect() for
  *          description).
  **/
 
