@@ -590,7 +590,7 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip,
  *
  * Performs tip estimation algorithm.
  *
- * Returns: %FALSE if aborted, otherwise %TRUE.
+ * Returns: The number of locations that produced refinement, -1 if aborted.
  **/
 gint
 _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
@@ -679,7 +679,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
  *
  * Performs partial tip estimation algorithm.
  *
- * Returns: %FALSE if aborted, otherwise %TRUE.
+ * Returns: The number of locations that produced refinement, -1 if aborted.
  **/
 gint
 _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,

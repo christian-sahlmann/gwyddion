@@ -756,6 +756,7 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
  * @surface: Surface data.
  * @threshold: Threshold for noise supression.
  * @use_edges: Whether use also edges of image.
+ * @count: Where to store the number of places that produced refinements to.
  * @set_fraction: Function that sets fraction to output (or %NULL).
  * @set_message: Function that sets message to output (or %NULL).
  *
@@ -784,6 +785,7 @@ gwy_tip_estimate_partial(GwyDataField *tip,
     gint **ftip;
     gint **fsurface;
     gdouble tipmin, surfacemin, step;
+    gint cnt;
 
     if (set_message && !set_message(N_("Converting fields")))
         return NULL;
@@ -801,13 +803,12 @@ gwy_tip_estimate_partial(GwyDataField *tip,
         return NULL;
     }
 
-    *count = _gwy_morph_lib_itip_estimate0(fsurface, surface->yres, surface->xres,
-                                  tip->yres, tip->xres,
-                                  tip->yres/2, tip->xres/2,
-                                  ftip, threshold/step,
-                                  use_edges, set_fraction, set_message);
-    if (*count == -1 || (set_fraction && !set_fraction(0)))
-    {
+    cnt = _gwy_morph_lib_itip_estimate0(fsurface, surface->yres, surface->xres,
+                                        tip->yres, tip->xres,
+                                        tip->yres/2, tip->xres/2,
+                                        ftip, threshold/step, use_edges,
+                                        set_fraction, set_message);
+    if (cnt == -1 || (set_fraction && !set_fraction(0.0))) {
         _gwy_morph_lib_ifreematrix(ftip, tip->xres);
         _gwy_morph_lib_ifreematrix(fsurface, surface->xres);
         return NULL;
@@ -821,6 +822,8 @@ gwy_tip_estimate_partial(GwyDataField *tip,
 
     _gwy_morph_lib_ifreematrix(ftip, tip->xres);
     _gwy_morph_lib_ifreematrix(fsurface, surface->xres);
+    if (count)
+        *count = cnt;
 
     return tip;
 }
@@ -832,6 +835,7 @@ gwy_tip_estimate_partial(GwyDataField *tip,
  * @surface: Surface data.
  * @threshold: Threshold for noise supression.
  * @use_edges: Whether use also edges of image.
+ * @count: Where to store the number of places that produced refinements to.
  * @set_fraction: Function that sets fraction to output (or %NULL).
  * @set_message: Function that sets message to output (or %NULL).
  *
@@ -860,6 +864,7 @@ gwy_tip_estimate_full(GwyDataField *tip,
     gint **ftip;
     gint **fsurface;
     gdouble tipmin, surfacemin, step;
+    gint cnt;
 
     if (set_message && !set_message(N_("Converting fields")))
         return NULL;
@@ -877,13 +882,12 @@ gwy_tip_estimate_full(GwyDataField *tip,
         return NULL;
     }
 
-    *count = _gwy_morph_lib_itip_estimate(fsurface, surface->yres, surface->xres,
-                                 tip->yres, tip->xres,
-                                 tip->yres/2, tip->xres/2,
-                                 ftip, threshold/step,
-                                 use_edges, set_fraction, set_message);
-    if (count == -1 || (set_fraction && !set_fraction(0)))
-    {
+    cnt = _gwy_morph_lib_itip_estimate(fsurface, surface->yres, surface->xres,
+                                       tip->yres, tip->xres,
+                                       tip->yres/2, tip->xres/2,
+                                       ftip, threshold/step, use_edges,
+                                       set_fraction, set_message);
+    if (cnt == -1 || (set_fraction && !set_fraction(0.0))) {
         _gwy_morph_lib_ifreematrix(ftip, tip->xres);
         _gwy_morph_lib_ifreematrix(fsurface, surface->xres);
         return NULL;
@@ -895,6 +899,9 @@ gwy_tip_estimate_full(GwyDataField *tip,
 
     _gwy_morph_lib_ifreematrix(ftip, tip->xres);
     _gwy_morph_lib_ifreematrix(fsurface, surface->xres);
+    if (count)
+        *count = cnt;
+
     return tip;
 }
 
