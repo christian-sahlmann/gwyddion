@@ -114,7 +114,14 @@ gboolean gwy_data_field_resize(GwyDataField *a,
 /*copy everything to field (allrady allocated)*/
 gboolean gwy_data_field_copy(GwyDataField *a,
                              GwyDataField *b);
-
+gboolean gwy_data_field_area_copy (GwyDataField *src,
+                                   GwyDataField *dest,
+                                   gint ulcol,
+                                   gint ulrow,
+                                   gint brcol,
+                                   gint brrow,
+                                   gint destcol,
+                                   gint destrow);
 
 /************************************************************/
 /*Get and set values of the struct members*/

@@ -342,6 +342,61 @@ gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
     return TRUE;
 }
 
+/**
+ * gwy_data_field_area_copy:
+ * @src: Source data field.
+ * @dest: Destination data field.
+ * @ulcol: Starting column.
+ * @ulrow: Starting row.
+ * @brcol: Ending column (noninclusive).
+ * @brrow: Ending row (noninclusive).
+ * @destcol: Destination column.
+ * @destrow: Destination row.
+ *
+ * Copies a rectangular area from @src to @dest.
+ *
+ * The area starts at (@ulcol, @ulrow) in @src and ends at (@brcol, @brrow)
+ * (noninclusive).  It is copied to @dest starting from (@destcol, @destrow).
+ *
+ * There must be enough room in the destination data field, areas sticking
+ * out are rejected.  If @src is equal to @dest, the areas may not overlap.
+ *
+ * Returns: Whether it succeeded (area sizes OK).
+ **/
+gboolean
+gwy_data_field_area_copy(GwyDataField *src,
+                         GwyDataField *dest,
+                         gint ulcol, gint ulrow,
+                         gint brcol, gint brrow,
+                         gint destcol, gint destrow)
+{
+    gint i;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(src), FALSE);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dest), FALSE);
+
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    if (ulcol < 0
+        || ulrow < 0
+        || brcol > src->xres
+        || brrow > src->yres
+        || destcol < 0
+        || destrow < 0
+        || destcol + brcol - ulcol > dest->xres
+        || destrow + brrow - ulrow > dest->yres)
+        return FALSE;
+
+    for (i = 0; i < brrow - ulrow; i++)
+        memcpy(dest->data + dest->xres*(destrow + i) + destcol,
+               src->data + src->xres*(ulrow + i) + ulcol,
+               (brcol - ulcol)*sizeof(gdouble));
+
+    return TRUE;
+}
 
 /**
  * gwy_data_field_resample:
