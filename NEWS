@@ -1,20 +1,24 @@
-1.3cvs20040629
+1.3cvs20040704
 
 1.4
 Application:
-- Tools now show a thumbnail of active data window beside its name.
+- Tools show a thumbnail of active data window beside its name.
 
 Modules:
 - Calibrate (new): FIXME
 - Graph CD (new): Critical dimension measurements.
+- SIS (new): SIS data file format import.
 - Line correct (new): Line corrections, currently featuring modus based step
   correction.
 - ASCII export (new): Simple export to ASCII data matrix.
 - Plug-in proxy: Random insensitive plug-in menu items were fixed.
-- Plug-in proxy: Alternate plug-in registration method without running all
-                 the plug-ins.
+- Plug-in proxy: Alternate plug-in registration method using RGI files
+                 (without running the plug-ins).
 
 Library:
+- libgwydgets: GwyValUnit FIXME
+- libprocess: gwy_data_line_get_modus() and gwy_data_line_part_get_modus()
+              approximate modus functions.
 - Gwyddion::dump (Perl) and Gwyddion.dump (Python) modules implementing
   plug-in proxy dump format.
 
