@@ -87,6 +87,9 @@ struct _GwyGraphModelClass {
 
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
+    gpointer reserved5;
 };
 
 

@@ -84,6 +84,7 @@ struct _GwyGraphCurveModelClass {
 
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
 };
 
 
