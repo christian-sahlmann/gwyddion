@@ -23,14 +23,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 
-#include "gwymoduleinternal.h"
 #include "gwymodulebrowser.h"
 
-static void      gwy_module_browser_cell_renderer (GtkTreeViewColumn *column,
-                                                   GtkCellRenderer *cell,
-                                                   GtkTreeModel *model,
-                                                   GtkTreeIter *piter,
-                                                   gpointer data);
 static GtkWidget* gwy_module_browser_construct    (GtkWidget *parent);
 static GtkWidget* gwy_module_browser_info_table   (GtkWidget *parent);
 static void       attach_info_line                (GtkWidget *table,
@@ -40,13 +34,11 @@ static void       attach_info_line                (GtkWidget *table,
                                                    const gchar *key);
 static void       update_module_info_cb           (GtkWidget *tree,
                                                    GtkWidget *parent);
-static gint       module_name_compare_cb          (_GwyModuleInfoInternal *a,
-                                                   _GwyModuleInfoInternal *b);
+static gint       module_name_compare_cb          (const GwyModuleInfo *a,
+                                                   const GwyModuleInfo *b);
 
 enum {
-    MODULE_MOD_INFO,
     MODULE_NAME,
-    MODULE_LOADED,
     MODULE_VERSION,
     MODULE_AUTHOR,
     MODULE_LAST
@@ -100,7 +92,6 @@ gwy_module_browser_construct(GtkWidget *parent)
     }
     columns[] = {
         { N_("Module"), MODULE_NAME },
-        /*{ N_("Loaded?"), MODULE_LOADED },*/
         { N_("Version"), MODULE_VERSION },
         { N_("Author"), MODULE_AUTHOR },
     };
@@ -114,12 +105,21 @@ gwy_module_browser_construct(GtkWidget *parent)
     GtkTreeIter iter;
     gsize i;
 
-    store = gtk_list_store_new(1, G_TYPE_POINTER);
+    store = gtk_list_store_new(MODULE_LAST,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING);
     gwy_module_foreach(gwy_hash_table_to_slist_cb, &list);
     list = g_slist_sort(list, (GCompareFunc)module_name_compare_cb);
     for (l = list; l; l = g_slist_next(l)) {
+        const GwyModuleInfo *mod_info = (const GwyModuleInfo*)l->data;
+
         gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, MODULE_MOD_INFO, l->data, -1);
+        gtk_list_store_set(store, &iter,
+                           MODULE_NAME, mod_info->name,
+                           MODULE_VERSION, mod_info->version,
+                           MODULE_AUTHOR, mod_info->author,
+                           -1);
     }
     g_slist_free(list);
 
@@ -131,12 +131,9 @@ gwy_module_browser_construct(GtkWidget *parent)
         renderer = gtk_cell_renderer_text_new();
         column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
                                                           renderer,
+                                                          "text",
+                                                          columns[i].id,
                                                           NULL);
-        gtk_tree_view_column_set_cell_data_func
-                                          (column, renderer,
-                                           gwy_module_browser_cell_renderer,
-                                           GUINT_TO_POINTER(columns[i].id),
-                                           NULL);  /* destroy notify */
         gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
     }
 
@@ -147,44 +144,6 @@ gwy_module_browser_construct(GtkWidget *parent)
                      G_CALLBACK(update_module_info_cb), parent);
 
     return tree;
-}
-
-static void
-gwy_module_browser_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
-                                 GtkCellRenderer *cell,
-                                 GtkTreeModel *model,
-                                 GtkTreeIter *piter,
-                                 gpointer data)
-{
-    _GwyModuleInfoInternal *iinfo;
-    GwyModuleInfo *mod_info;
-    gulong id;
-
-    id = GPOINTER_TO_UINT(data);
-    g_assert(id > MODULE_MOD_INFO && id < MODULE_LAST);
-    gtk_tree_model_get(model, piter, MODULE_MOD_INFO, &iinfo, -1);
-    mod_info = iinfo->mod_info;
-    switch (id) {
-        case MODULE_NAME:
-        g_object_set(cell, "text", mod_info->name, NULL);
-        break;
-
-        case MODULE_AUTHOR:
-        g_object_set(cell, "text", mod_info->author, NULL);
-        break;
-
-        case MODULE_VERSION:
-        g_object_set(cell, "text", mod_info->version, NULL);
-        break;
-
-        case MODULE_LOADED:
-        g_object_set(cell, "text", iinfo->loaded ? "Yes" : "No", NULL);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
 }
 
 static GtkWidget*
@@ -219,10 +178,10 @@ update_module_info_cb(GtkWidget *tree,
     GtkLabel *label;
     GtkTreeModel *store;
     GtkTreeSelection *selection;
-    _GwyModuleInfoInternal *iinfo;
+    const GwyModuleInfo *mod_info;
     GtkTreeIter iter;
     GSList *l;
-    gchar *s;
+    gchar *s, *name;
     gsize n;
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
@@ -230,39 +189,39 @@ update_module_info_cb(GtkWidget *tree,
     if (!gtk_tree_selection_get_selected(selection, &store, &iter))
         return;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, MODULE_MOD_INFO, &iinfo,
-                       -1);
+    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, MODULE_NAME, &name, -1);
+    mod_info = gwy_module_lookup(name);
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "name-version"));
-    s = g_strconcat(iinfo->mod_info->name, "-", iinfo->mod_info->version, NULL);
+    s = g_strconcat(mod_info->name, "-", mod_info->version, NULL);
     gtk_label_set_text(label, s);
     g_free(s);
 
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "file"));
-    gtk_label_set_text(label, iinfo->file);
+    gtk_label_set_text(label, gwy_module_get_filename(name));
 
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "author"));
-    gtk_label_set_text(label, iinfo->mod_info->author);
+    gtk_label_set_text(label, mod_info->author);
 
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "copy"));
-    gtk_label_set_text(label, iinfo->mod_info->copyright);
+    gtk_label_set_text(label, mod_info->copyright);
 
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "date"));
-    gtk_label_set_text(label, iinfo->mod_info->date);
+    gtk_label_set_text(label, mod_info->date);
 
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "desc"));
-    gtk_label_set_text(label, _(iinfo->mod_info->blurb));
+    gtk_label_set_text(label, _(mod_info->blurb));
 
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "funcs"));
     n = 0;
-    for (l = iinfo->funcs; l; l = g_slist_next(l))
+    for (l = gwy_module_get_functions(name); l; l = g_slist_next(l))
         n += strlen((gchar*)l->data) + 1;
     if (!n)
         gtk_label_set_text(label, "");
     else {
         gchar *p;
 
-        s = g_new(gchar, n);
-        for (l = iinfo->funcs, p = s; l; l = g_slist_next(l)) {
+        p = s = g_new(gchar, n);
+        for (l = gwy_module_get_functions(name); l; l = g_slist_next(l)) {
             p = g_stpcpy(p, (gchar*)l->data);
             *(p++) = '\n';
         }
@@ -270,6 +229,8 @@ update_module_info_cb(GtkWidget *tree,
         gtk_label_set_text(label, s);
         g_free(s);
     }
+
+    g_free(name);
 }
 
 static void
@@ -297,10 +258,10 @@ attach_info_line(GtkWidget *table,
 }
 
 static gint
-module_name_compare_cb(_GwyModuleInfoInternal *a,
-                       _GwyModuleInfoInternal *b)
+module_name_compare_cb(const GwyModuleInfo *a,
+                       const GwyModuleInfo *b)
 {
-    return strcmp(a->mod_info->name, b->mod_info->name);
+    return strcmp(a->name, b->name);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -25,6 +25,11 @@
 
 #define GWY_MODULE_QUERY_NAME G_STRINGIFY(_GWY_MODULE_QUERY)
 
+typedef struct {
+    GHFunc func;
+    gpointer data;
+} GwyModuleForeachData;
+
 static void gwy_load_modules_in_dir (GDir *gdir,
                                      const gchar *dirname,
                                      GHashTable *mods);
@@ -111,29 +116,95 @@ gwy_module_get_module_info(const gchar *name)
     return g_hash_table_lookup(modules, name);
 }
 
+static void
+gwy_module_foreach_one(const gchar *name,
+                       _GwyModuleInfoInternal *iinfo,
+                       GwyModuleForeachData *fdata)
+{
+    fdata->func((gpointer)name, iinfo->mod_info, fdata->data);
+}
+
 /**
  * gwy_module_foreach:
  * @function: A #GHFunc run for each module.
  * @data: User data.
  *
- * Runs @function on each registered module, passing module name as the key
- * and module internal info as the value.
+ * Runs @function on each registered module.
  *
- * This function exposes internal module info and is intended to be used only
- * by the rest of Gwyddion module system.
+ * It passes module name as the key and pointer to module
+ * info as the value. Neither should be modified.
+ *
+ * Since: 1.9
  **/
 void
 gwy_module_foreach(GHFunc function,
                    gpointer data)
 {
+    GwyModuleForeachData fdata;
+
     g_assert(modules_initialized);
 
-    g_hash_table_foreach(modules, function, data);
+    fdata.data = data;
+    fdata.func = function;
+    g_hash_table_foreach(modules, (GHFunc)gwy_module_foreach_one, &fdata);
+}
+
+/**
+ * gwy_module_get_filename:
+ * @name: A module name.
+ *
+ * Returns full file name of a module.
+ *
+ * Returns: Module file name as a string that must be modified or freed.
+ *
+ * Since: 1.9
+ **/
+const gchar*
+gwy_module_get_filename(const gchar *name)
+{
+    _GwyModuleInfoInternal *iinfo;
+
+    g_assert(modules_initialized);
+
+    iinfo = g_hash_table_lookup(modules, name);
+    if (!iinfo) {
+        g_warning("No such module loaded");
+        return NULL;
+    }
+
+    return iinfo->file;
+}
+
+/**
+ * gwy_module_get_functions:
+ * @name: A module name.
+ *
+ * Returns list of names of functions a module implements.
+ *
+ * Returns: List of module function names, as a #GSList that is owned by
+ *          module loader and must not be modified or freed.
+ *
+ * Since: 1.9
+ **/
+GSList*
+gwy_module_get_functions(const gchar *name)
+{
+    _GwyModuleInfoInternal *iinfo;
+
+    g_assert(modules_initialized);
+
+    iinfo = g_hash_table_lookup(modules, name);
+    if (!iinfo) {
+        g_warning("No such module loaded");
+        return NULL;
+    }
+
+    return iinfo->funcs;
 }
 
 /**
  * gwy_module_register_module:
- * @modulename: Module file name to load, including full path and extension.
+ * @name: Module file name to load, including full path and extension.
  *
  * Loads a single module.
  *
@@ -142,12 +213,12 @@ gwy_module_foreach(GHFunc function,
  * Since: 1.4.
  **/
 G_CONST_RETURN GwyModuleInfo*
-gwy_module_register_module(const gchar *modulename)
+gwy_module_register_module(const gchar *name)
 {
     if (!modules_initialized)
         gwy_module_init();
 
-    return gwy_module_do_register_module(modulename, modules);
+    return gwy_module_do_register_module(name, modules);
 }
 
 static G_CONST_RETURN GwyModuleInfo*
