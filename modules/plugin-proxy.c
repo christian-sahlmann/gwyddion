@@ -50,8 +50,8 @@ typedef struct {
     GwyFileFuncInfo func;
     GwyFileOperation run;
     gchar *glob;
-    GPatternSpec *pattern;
-    glong specificity;
+    GPatternSpec **pattern;
+    glong *specificity;
     gchar *file;
 } FilePluginInfo;
 
@@ -93,6 +93,8 @@ static gint            file_plugin_proxy_detect  (const gchar *filename,
                                                   const gchar *name);
 static FilePluginInfo* file_find_plugin          (const gchar *name,
                                                   GwyFileOperation run);
+static GPatternSpec**  file_patternize_globs     (const gchar *glob);
+static glong*          file_glob_specificities   (const gchar *glob);
 static glong           file_pattern_specificity  (const gchar *pattern);
 
 /* common helpers */
@@ -428,8 +430,8 @@ file_register_plugins(GList *plugins,
                 info->file = g_strdup(file);
                 info->run = run;
                 info->glob = g_strdup(glob);
-                info->pattern = g_pattern_spec_new(glob);
-                info->specificity = file_pattern_specificity(glob);
+                info->pattern = file_patternize_globs(glob);
+                info->specificity = file_glob_specificities(glob);
                 plugins = g_list_prepend(plugins, info);
             }
             else {
@@ -582,14 +584,19 @@ file_plugin_proxy_detect(const gchar *filename,
                          const gchar *name)
 {
     FilePluginInfo *info;
+    gint i;
 
     gwy_debug("called as %s with file `%s'", name, filename);
     if (!(info = file_find_plugin(name, GWY_FILE_MASK)))
         return 0;
-    if (!g_pattern_match_string(info->pattern, filename))
+    for (i = 0; info->pattern[i]; i++) {
+        if (g_pattern_match_string(info->pattern[i], filename))
+            break;
+    }
+    if (!info->pattern[i])
         return 0;
 
-    return CLAMP(info->specificity, 1, 20);
+    return CLAMP(info->specificity[i], 1, 20);
 }
 
 /**
@@ -624,6 +631,62 @@ file_find_plugin(const gchar *name,
     }
 
     return info;
+}
+
+static GPatternSpec**
+file_patternize_globs(const gchar *glob)
+{
+    GPatternSpec **specs;
+    gchar **globs;
+    gchar *s;
+    gint i, n;
+
+    globs = g_strsplit(glob, " ", 0);
+    if (!globs) {
+        specs = g_new(GPatternSpec*, 1);
+        *specs = NULL;
+        return specs;
+    }
+
+    for (n = 0; globs[n]; n++)
+        ;
+    specs = g_new(GPatternSpec*, n+1);
+    for (i = 0; i < n; i++) {
+        s = g_strstrip(globs[i]);
+        specs[i] = g_pattern_spec_new(s);
+    }
+    specs[n] = NULL;
+    g_strfreev(globs);
+
+    return specs;
+}
+
+static glong*
+file_glob_specificities(const gchar *glob)
+{
+    glong *specs;
+    gchar **globs;
+    gchar *s;
+    gint i, n;
+
+    globs = g_strsplit(glob, " ", 0);
+    if (!globs) {
+        specs = g_new(glong, 1);
+        *specs = 0;
+        return specs;
+    }
+
+    for (n = 0; globs[n]; n++)
+        ;
+    specs = g_new(glong, n+1);
+    for (i = 0; i < n; i++) {
+        s = g_strstrip(globs[i]);
+        specs[i] = file_pattern_specificity(s);
+    }
+    specs[n] = 0;
+    g_strfreev(globs);
+
+    return specs;
 }
 
 /**
