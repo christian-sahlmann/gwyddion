@@ -86,7 +86,7 @@ gwy_app_toolbox_create(void)
     menus = g_slist_append(menus, menu);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
 
-    menu = gwy_app_menu_create_xtns_menu(accel_group);
+    menu = gwy_app_menu_create_meta_menu(accel_group);
     menus = g_slist_append(menus, menu);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
 
@@ -127,12 +127,6 @@ gwy_app_toolbox_create(void)
                        _("Fix minimum value to zero"), NULL, GWY_STOCK_FIX_ZERO,
                        G_CALLBACK(gwy_app_run_process_func_cb), "fixzero");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Automatically level data"), NULL, GWY_STOCK_FIT_PLANE,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "level");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Facet-level data"), NULL, GWY_STOCK_FACET_LEVEL,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "facet_level");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Scale data"), NULL, GWY_STOCK_SCALE,
                        G_CALLBACK(gwy_app_run_process_func_cb), "scale");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
@@ -142,11 +136,20 @@ gwy_app_toolbox_create(void)
                        _("Shade data"), NULL, GWY_STOCK_SHADER,
                        G_CALLBACK(gwy_app_run_process_func_cb), "shade");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Automatically level data"), NULL, GWY_STOCK_FIT_PLANE,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "level");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Facet-level data"), NULL, GWY_STOCK_FACET_LEVEL,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "facet_level");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Fast Fourier Transform"), NULL, GWY_STOCK_FFT,
                        G_CALLBACK(gwy_app_run_process_func_cb), "fft");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Continuous Wavelet Transform"), NULL, GWY_STOCK_CWT,
                        G_CALLBACK(gwy_app_run_process_func_cb), "cwt");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Mark Grains By Threshold"), NULL, GWY_STOCK_GRAINS,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "mark_threshold");
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
@@ -293,26 +296,26 @@ gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group)
 }
 
 GtkWidget*
-gwy_app_menu_create_xtns_menu(GtkAccelGroup *accel_group)
+gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
-        { "/E_xterns", NULL, NULL, 0, "<Branch>", NULL },
-        { "/Externs/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/Externs/Module Browser", NULL, gwy_module_browser, 0, "<Item>", NULL },
-        { "/Externs/Metadata Browser", NULL, gwy_app_meta_browser, 0, "<Item>", NULL },
-        { "/Externs/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/Externs/About", NULL, gwy_app_about, 0, "<Item>", NULL },
+        { "/_Meta", NULL, NULL, 0, "<Branch>", NULL },
+        { "/Meta/---", NULL, NULL, 0, "<Tearoff>", NULL },
+        { "/Meta/Module _Browser", NULL, gwy_module_browser, 0, "<Item>", NULL },
+        { "/Meta/_Metadata Browser", NULL, gwy_app_meta_browser, 0, "<Item>", NULL },
+        { "/Meta/---", NULL, NULL, 0, "<Separator>", NULL },
+        { "/Meta/_About Gwyddion", NULL, gwy_app_about, 0, "<Item>", NULL },
     };
     static const gchar *items_need_data[] = {
-        "/Externs/Metadata Browser", NULL
+        "/Meta/Metadata Browser", NULL
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu;
     GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
-                                        "<xtns>", accel_group, &item_factory);
-    gwy_app_menu_set_sensitive_array(item_factory, "xtns", items_need_data,
+                                        "<meta>", accel_group, &item_factory);
+    gwy_app_menu_set_sensitive_array(item_factory, "meta", items_need_data,
                                      GWY_MENU_FLAG_DATA);
     gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 

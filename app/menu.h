@@ -45,7 +45,7 @@ struct _GwyMenuSensData {
     GwyMenuSensFlags set_to;
 };
 
-GtkWidget* gwy_app_menu_create_xtns_menu         (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_meta_menu         (GtkAccelGroup *accel_group);
 GtkWidget* gwy_app_menu_create_proc_menu         (GtkAccelGroup *accel_group);
 GtkWidget* gwy_app_menu_create_graph_menu        (GtkAccelGroup *accel_group);
 GtkWidget* gwy_app_menu_create_file_menu         (GtkAccelGroup *accel_group);
