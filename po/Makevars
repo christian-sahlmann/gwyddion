@@ -1,0 +1,8 @@
+# @(#) $Id$
+DOMAIN = $(PACKAGE)
+subdir = po
+top_builddir = ..
+XGETTEXT_OPTIONS = --keyword=_ --keyword=N_  --foreign-user --from-code=UTF-8
+COPYRIGHT_HOLDER = "David Necas (Yeti) & Petr Klapetek"
+MSGID_BUGS_ADDRESS = http://trific.ath.cx/bugzilla/
+EXTRA_LOCALE_CATEGORIES =

@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.5cvs20041004, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.5cvs20041005, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -172,7 +172,6 @@ dnl I18n stuff
 GETTEXT_PACKAGE=$PACKAGE_TARNAME
 ALL_LINGUAS=cs
 AM_GNU_GETTEXT([external])
-XGETTEXT="$XGETTEXT --foreign-user --from-code=UTF-8 --msgid-bugs-address='http://trific.ath.cx/bugzilla/'"
 LIBS="$LIBS $INTLLIBS"
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Gettext package name])
 AC_SUBST(GETTEXT_PACKAGE)

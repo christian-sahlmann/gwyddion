@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-10-05 01:02+0200\n"
+"POT-Creation-Date: 2004-10-05 13:31+0200\n"
 "PO-Revision-Date: 2004-10-05 01:17+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -18,15 +18,18 @@ msgstr ""
 msgid "Change Mask Color"
 msgstr "Změň barvu masky"
 
-#: libgwydgets/gwyvectorshade.c:151
+#: libgwydgets/gwyvectorshade.c:153
 msgid "_Theta: "
 msgstr "_Théta"
 
-#: libgwydgets/gwyvectorshade.c:156 libgwydgets/gwyvectorshade.c:169
-msgid " deg"
+#: libgwydgets/gwyvectorshade.c:158 libgwydgets/gwyvectorshade.c:171
+#: libgwydgets/gwy3dwindow.c:262 libgwydgets/gwy3dwindow.c:265
+#: libgwydgets/gwy3dwindow.c:345 libgwydgets/gwy3dwindow.c:351
+#: modules/process/unrotate.c:217
+msgid "deg"
 msgstr ""
 
-#: libgwydgets/gwyvectorshade.c:164
+#: libgwydgets/gwyvectorshade.c:166
 msgid "_Phi: "
 msgstr "_Fí"
 
@@ -77,12 +80,6 @@ msgstr "Základní"
 #: libgwydgets/gwy3dwindow.c:262
 msgid "Phi"
 msgstr "Fí"
-
-#: libgwydgets/gwy3dwindow.c:262 libgwydgets/gwy3dwindow.c:265
-#: libgwydgets/gwy3dwindow.c:345 libgwydgets/gwy3dwindow.c:351
-#: modules/process/unrotate.c:217
-msgid "deg"
-msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:265
 msgid "Theta"
@@ -260,7 +257,6 @@ msgstr ""
 msgid "_Edit"
 msgstr ""
 
-#. XXX
 #: app/toolbox.c:177
 msgid "_Data Process"
 msgstr ""
@@ -273,7 +269,6 @@ msgstr ""
 msgid "_Meta"
 msgstr ""
 
-#. *************************************************************
 #: app/toolbox.c:188
 msgid "View"
 msgstr ""
@@ -294,7 +289,6 @@ msgstr ""
 msgid "Display a 3D view of data"
 msgstr ""
 
-#. *************************************************************
 #: app/toolbox.c:220
 msgid "Data Process"
 msgstr ""
@@ -355,7 +349,6 @@ msgstr ""
 msgid "Shade data"
 msgstr ""
 
-#. *************************************************************
 #: app/toolbox.c:268
 msgid "Graph"
 msgstr ""
@@ -384,7 +377,6 @@ msgstr ""
 msgid "Fit functions to graph data"
 msgstr ""
 
-#. *************************************************************
 #: app/toolbox.c:295
 msgid "Tools"
 msgstr ""
@@ -409,7 +401,6 @@ msgstr ""
 msgid "Loading settings"
 msgstr ""
 
-#. TODO: remove sometime, but keep the gwy_app_settings_get();
 #: app/gwyddion.c:114
 msgid "Loading document history"
 msgstr ""
@@ -505,7 +496,6 @@ msgstr ""
 msgid "Re-show"
 msgstr ""
 
-#. doc history
 #: app/menu.c:525
 msgid "_Document history"
 msgstr ""
@@ -532,12 +522,12 @@ msgstr ""
 #, c-format
 msgid ""
 "<b>Core developers</b>\n"
-"David NeÄas (Yeti)\n"
+"David Nečas (Yeti)\n"
 "Petr Klapetek\n"
 "\n"
 "<b>Developers</b>\n"
-"Martin Ĺ iler\n"
-"JindĹich BĂ­lek\n"
+"Martin Šiler\n"
+"Jindřich Bílek\n"
 "\n"
 "%s development is supported by the Czech Metrology Insitute (<i>http://www."
 "cmi.cz/</i>).\n"
@@ -1013,17 +1003,14 @@ msgstr ""
 msgid "Data Arithmetic"
 msgstr ""
 
-#. **** First operand ****
 #: modules/process/arithmetic.c:206
 msgid "_First operand:"
 msgstr ""
 
-#. **** Operation ****
 #: modules/process/arithmetic.c:227
 msgid "_Operation:"
 msgstr ""
 
-#. **** Second operand ****
 #: modules/process/arithmetic.c:239
 msgid "_Second operand:"
 msgstr ""
@@ -1181,12 +1168,10 @@ msgstr ""
 msgid "Mask by correlation"
 msgstr ""
 
-#. **** First operand ****
 #: modules/process/maskcor.c:176
 msgid "_Data field to modify:"
 msgstr ""
 
-#. **** Second operand ****
 #: modules/process/maskcor.c:186
 msgid "_Correlation kernel"
 msgstr ""
@@ -1195,7 +1180,6 @@ msgstr ""
 msgid "T_hreshold"
 msgstr ""
 
-#. **** Result ****
 #: modules/process/maskcor.c:206 modules/process/crosscor.c:288
 msgid "_Result:"
 msgstr ""
@@ -1288,13 +1272,11 @@ msgstr ""
 msgid "Certainty map analysis"
 msgstr ""
 
-#. **** First operand ****
 #: modules/process/tip_map.c:163 modules/process/tip_reconstruction.c:163
 #: modules/process/tip_dilation.c:163
 msgid "_Tip morphology:"
 msgstr ""
 
-#. **** Second operand ****
 #: modules/process/tip_map.c:175
 msgid "_Surface to be analyzed:"
 msgstr ""
@@ -1349,7 +1331,6 @@ msgstr ""
 msgid "Surface reconstruction"
 msgstr ""
 
-#. **** Second operand ****
 #: modules/process/tip_reconstruction.c:175
 msgid "_Surface to be reconstructed:"
 msgstr ""
@@ -1374,7 +1355,6 @@ msgstr ""
 msgid "Tip dilation"
 msgstr ""
 
-#. **** Second operand ****
 #: modules/process/tip_dilation.c:175
 msgid "_Surface to be dilated:"
 msgstr ""
@@ -1395,23 +1375,18 @@ msgstr ""
 msgid "Data Croscorrelation"
 msgstr ""
 
-#. **** First operand ****
 #: modules/process/crosscor.c:202
 msgid "_First data field:"
 msgstr ""
 
-#. **** Second operand ****
 #: modules/process/crosscor.c:214
 msgid "_Second data field:"
 msgstr ""
 
-#. *** Parameters *******
-#. search size
 #: modules/process/crosscor.c:227
 msgid "_Search size"
 msgstr ""
 
-#. window size
 #: modules/process/crosscor.c:247
 msgid "_Window size"
 msgstr ""

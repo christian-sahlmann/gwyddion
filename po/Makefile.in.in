@@ -10,12 +10,8 @@
 #
 # Origin: gettext-0.14
 
-subdir = po
-top_builddir= ..
-
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
-DOMAIN = $(PACKAGE)
 
 SHELL = /bin/sh
 @SET_MAKE@
