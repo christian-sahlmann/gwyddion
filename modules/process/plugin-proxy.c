@@ -313,6 +313,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer)
         if (strcmp(pv, "[") != 0) {
             gwy_debug("%s: <%s>=<%s>", __FUNCTION__,
                       line, pv);
+            /* TODO: remove empty values instead */
             gwy_container_set_string_by_name(data, line, g_strdup(pv));
             continue;
         }
