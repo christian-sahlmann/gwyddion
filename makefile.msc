@@ -14,7 +14,8 @@ SUBDIRS = \
 	modules \
 	plugins \
 	pixmaps \
-	devel-docs
+	devel-docs \
+	po
 
 DOCUMENTS = \
 	COPYING.wri

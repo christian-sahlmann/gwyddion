@@ -1,0 +1,18 @@
+# @(#) $Id$
+
+TOP_SRCDIR = ..
+
+!INCLUDE $(TOP_SRCDIR)\make.msc
+
+## targets
+all:
+
+install: install-mo
+
+clean::
+
+!INCLUDE $(TOP_SRCDIR)\rules.msc
+
+<[[:MO_INSTALL_RULES:]]>
+
+# vim: ft=make

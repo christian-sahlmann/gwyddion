@@ -17,6 +17,10 @@ mod_dll_rule = """\
 \t$(LINK32) %s.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:%s.dll /dll /implib:%s.lib
 """
 
+mo_inst_rule = """\
+\t$(INSTALL) %s.gmo "$(DEST_DIR)\\locale\\%s\\LC_MESSAGES\\gwyddion.mo"\
+"""
+
 top_dir = os.getcwd()
 
 quiet = len(sys.argv) > 1 and sys.argv[1] == '-q'
@@ -134,15 +138,28 @@ def expand_template(makefile, name):
                 lst.append(prg_object_rule % (x, x, x))
         return  '\n'.join(lst)
     elif name == 'MODULES':
-        mods = fix_suffixes(get_list(makefile, '\w+_PROGRAMS'),
+        mods = fix_suffixes(get_list(makefile, r'\w+_PROGRAMS'),
                             '.so', '.dll')
         return name + ' =' + ' \\\n\t'.join([''] + mods)
     elif name == 'MOD_DLL_RULES':
-        mods = fix_suffixes(get_list(makefile, '\w+_PROGRAMS'), '.so')
+        mods = fix_suffixes(get_list(makefile, r'\w+_PROGRAMS'), '.so')
         lst = []
         for m in mods:
             lst.append(mod_dll_rule % (m, m, m, m, m))
         return  '\n'.join(lst)
+    elif name == 'MO_INSTALL_RULES':
+        pos = get_list(makefile, 'ALL_LINGUAS')
+        if not pos:
+            return
+        lst = ['installdirs:', '\t-@mkdir "$(DEST_DIR)\\locale"']
+        for p in pos:
+            lst.append('\t-@mkdir "$(DEST_DIR)\\locale\\%s"' % p)
+            lst.append('\t-@mkdir "$(DEST_DIR)\\locale\\%s\\LC_MESSAGES"' % p)
+        lst.append('')
+        lst.append('install-mo:')
+        for p in pos:
+            lst.append(mo_inst_rule % (p, p))
+        return '\n'.join(lst)
     print '*** Unknown template %s ***' % name
     return ''
 
@@ -177,6 +194,11 @@ def recurse(each):
         recurse(each)
         os.chdir(cwd)
 
+configure = get_file('configure.ac')
 recurse(process_one_dir)
 
+cwd = os.getcwd()
+os.chdir('po')
+fill_templates(configure)
+os.chdir(cwd)
 
