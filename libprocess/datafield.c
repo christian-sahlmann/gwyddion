@@ -51,8 +51,7 @@ static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
 static gdouble  edist                            (gint xc1, gint yc1,
                                                   gint xc2, gint yc2);
 static gdouble  square_area                      (GwyDataField *data_field,
-                                                  gint ulcol, gint ulrow, gint brcol, gint brrow,
-                                                  gint division, GwyInterpolationType interpolation);
+                                                  gint ulcol, gint ulrow, gint brcol, gint brrow);
 
 
 GType
@@ -1477,7 +1476,7 @@ gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolat
     {
         for (j=0; j<(a->yres-1); j++)
         {
-            sum += square_area(a, i, j, i+1, j+1, 6, interpolation);
+            sum += square_area(a, i, j, i+1, j+1);
         }
     }
     return sum;
@@ -1512,13 +1511,14 @@ gwy_data_field_get_area_surface_area(GwyDataField *a,
     g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
 
     sum = 0;
-    for (i=ulcol; i<(brcol-0); i++)
+    for (i=ulcol; i<(brcol); i++)
     {
-        for (j=ulrow; j<(brrow-0); j++)
+        for (j=ulrow; j<(brrow); j++)
         {
-            sum += square_area(a, i, j, i+1, j+1, 6, interpolation);
+            sum += square_area(a, i, j, i+1, j+1);
         }
     }
+
     return sum;
 }
 
@@ -3624,9 +3624,9 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *
 }
 
 static gdouble
-square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint brrow, gint division, GwyInterpolationType interpolation)
+square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
-    gdouble x, z1, z2, z3, z4, a, b, c, d, e, f, s1, s2, sa, sb;
+    gdouble x, z1, z2, z3, z4, a, b, c, d, e, f, s1, s2, sa, sb, res;
 
     x = data_field->xreal/data_field->xres;
 
@@ -3650,7 +3650,10 @@ square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint b
     s2 = (c+b+f) / 2;
     sb = sqrt(s1*(s1-a)*(s1-d)*(s1-f))+sqrt(s2*(s2-c)*(s2-b)*(s2-f));
 
-    return(MIN(sa,sb));
+    if (sa < sb) res = sa; 
+    else res = sb;
+    
+    return res;
 }
 
 

@@ -319,13 +319,21 @@ dialog_update(GwyUnitoolState *state,
                                                     gwy_data_field_rtoj(dfield, xy[2]),
                                                     gwy_data_field_rtoj(dfield, xy[3]),
                                                     GWY_INTERPOLATION_BILINEAR);
-        projarea = fabs(xy[0] - xy[2])*fabs(xy[1] - xy[3]);
+        projarea = fabs((gwy_data_field_rtoj(dfield, xy[0]) - gwy_data_field_rtoj(dfield, xy[2])))
+            *fabs((gwy_data_field_rtoj(dfield, xy[1]) - gwy_data_field_rtoj(dfield, xy[3])))
+            *dfield->xreal*dfield->xreal/dfield->xres/dfield->xres;
+
+        /*FIXME: this is to prevent rounding errors to produce nonreal results on very flat surfaces*/
+        if (area < projarea) area = projarea;
     }
     else
     {
         gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
         area = gwy_data_field_get_surface_area(dfield, GWY_INTERPOLATION_BILINEAR);
         projarea = dfield->xreal*dfield->yreal;
+
+        /*FIXME: this is to prevent rounding errors to produce nonreal results on very flat surfaces*/
+        if (area < projarea) area = projarea;
     }
 
     gwy_unitool_update_label(state->value_format, controls->ra, ra);
