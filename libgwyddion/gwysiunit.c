@@ -80,7 +80,6 @@ void gwy_si_unit_get_prefixed(GwySIUnit *siunit, double value, gint precision, c
 {
     gwy_debug("");
     *power = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
-    printf("power = %f\n", *power);
     strcpy(prefix, gwy_math_SI_prefix(*power));
     strcat(prefix, siunit->unitstr);
 }
