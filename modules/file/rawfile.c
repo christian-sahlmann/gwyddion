@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#define DEBUG 1
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -209,7 +207,7 @@ static GwyModuleInfo module_info = {
     "rawfile",
     "Read raw data according to user-specified format.",
     "Yeti <yeti@gwyddion.net>",
-    "0.99.2",
+    "0.99.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -1527,6 +1525,7 @@ update_dialog_values(RawFileControls *controls)
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->revsample));
 
     args->byteswap = atoi(gtk_entry_get_text(GTK_ENTRY(controls->byteswap)));
+    gwy_debug("byteswap = %u", args->byteswap);
 
     args->builtin = gwy_option_menu_get_history(controls->builtin, "builtin");
 
@@ -1890,7 +1889,7 @@ rawfile_santinize_args(RawFileArgs *args)
                     || (args->builtin == RAW_SIGNED_WORD32);
         args->skip = ((args->skip + 7)/8)*8;
         args->rowskip = ((args->rowskip + 7)/8)*8;
-        args->byteswap = MIN(args->byteswap, args->size-1);
+        args->byteswap = MIN(args->byteswap, args->size/8-1);
         args->revsample = FALSE;
     }
     else {
