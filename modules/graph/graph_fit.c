@@ -138,6 +138,7 @@ static gint        normalize_data            (FitArgs *args,
                                               GwyDataLine *xdata, 
                                               GwyDataLine *ydata, 
                                               gint curve);
+static void        create_results_window     (GwyNLFitter *fitter);
 
 FitControls *pcontrols;
 
@@ -557,6 +558,7 @@ fit_dialog(FitArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
+            create_results_window(NULL);
             gtk_widget_destroy(dialog);
             break;
 
@@ -1029,5 +1031,60 @@ ch4_changed_cb(GtkToggleButton *button, FitArgs *args)
 {
     args->par4_fix = gtk_toggle_button_get_active(button);
 }
+
+static void
+create_results_window(GwyNLFitter *fitter)
+{
+    GtkWidget *window, *view, *scroll;
+    GtkTextBuffer *buffer;
+    GtkTextIter iter;
+    GValue v;
+    gchar *s;
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), _("Fitting results"));
+    gtk_container_set_border_width(GTK_CONTAINER(window), 6);
+    gtk_window_set_resizable(GTK_WINDOW(window), TRUE);
+
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_widget_set_size_request(scroll, 480, 300);
+    gtk_container_add(GTK_CONTAINER(window), scroll);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+
+    view = gtk_text_view_new();
+    gtk_container_add(GTK_CONTAINER(scroll), view);
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scroll),
+                                        GTK_SHADOW_IN);
+    memset(&v, 0, sizeof(GValue));
+    g_value_init(&v, G_TYPE_BOOLEAN);
+    g_value_set_boolean(&v, FALSE);
+    g_object_set_property(G_OBJECT(view), "editable", &v);
+    g_object_set_property(G_OBJECT(view), "cursor-visible", &v);
+    g_value_unset(&v);
+    g_value_init(&v, G_TYPE_INT);
+    g_value_set_int(&v, GTK_WRAP_WORD);
+    g_object_set_property(G_OBJECT(view), "wrap-mode", &v);
+    g_value_unset(&v);
+
+    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+    gtk_text_buffer_create_tag(buffer, "pre",
+                               "family", "monospace",
+                               "wrap_mode", GTK_WRAP_NONE,
+                               NULL);
+    gtk_text_buffer_get_end_iter(buffer, &iter);
+    gtk_text_buffer_insert_with_tags_by_name(buffer, &iter,
+                                             "Fitter not available.", -1,
+                                             "pre", NULL);
+
+    gtk_text_buffer_get_start_iter(buffer, &iter);
+    gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(view), &iter,
+                                 0.0, FALSE, 0.0, 0.0);
+
+    g_signal_connect(window, "delete_event",
+                     G_CALLBACK(gtk_widget_destroy), NULL);
+    gtk_widget_show_all(window);
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
