@@ -11,7 +11,7 @@
 typedef struct {
     gboolean is_visible;  /* GTK_WIDGET_VISIBLE() returns BS? */
     GtkWidget *coords[6];
-    GtkObject *average;
+    GtkObject *average;  /* TODO */
     gdouble mag;
     gint precision;
     gchar *units;
@@ -57,7 +57,7 @@ gwy_tool_level3_use(GwyDataWindow *data_window)
     }
     else {
         points_layer = (GwyDataViewLayer*)gwy_layer_points_new();
-        gwy_layer_points_set_max_points(layer, 3);
+        gwy_layer_points_set_max_points(points_layer, 3);
         gwy_data_view_set_top_layer(data_view, points_layer);
     }
     if (!dialog)
@@ -80,7 +80,6 @@ level3_do(void)
 
     if (gwy_layer_points_get_points(points_layer, points) < 3)
         return;
-    g_warning("Implement me!");
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(points_layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -89,19 +88,22 @@ level3_do(void)
     for (i = 0; i < 3; i++)
         z[i] = gwy_data_field_get_dval_real(dfield, points[2*i], points[2*i+1],
                                             GWY_INTERPOLATION_ROUND);
-    for (i = 0; i < 3; i++) {
-        det += points[2*i]*points[(i + 3)%6] - points[2*i]*points[(i + 5)%6];
-        bx += z[i]*points[(i + 3)%6] - z[i]*points[(i + 5)%6];
-        by += points[2*i]*z[(i + 1)%3] - points[2*i]*z[(i + 2)%3];
-        c += points[2*i]*points[(i + 3)%6]*z[(i + 2)%3]
-             - points[2*i]*points[(i + 5)%6]*z[(i + 1)%3];
-    }
+    det = points[0]*(points[3] - points[5])
+          + points[2]*(points[5] - points[1])
+          + points[4]*(points[1] - points[3]);
+    bx = z[0]*(points[3] - points[5])
+         + z[1]*(points[5] - points[1])
+         + z[2]*(points[1] - points[3]);
+    by = z[0]*(points[4] - points[2])
+         + z[1]*(points[0] - points[4])
+         + z[2]*(points[2] - points[0]);
+    c = z[0]*(points[2]*points[5] - points[3]*points[4])
+         + z[1]*(points[1]*points[4] - points[5]*points[0])
+         + z[2]*(points[0]*points[3] - points[1]*points[2]);
     bx /= det;
     by /= det;
     c /= det;
-    gwy_debug("%s: bx = %g, by = %g, c = %g",
-              __FUNCTION__, bx, by, c);
-    /*c = gwy_data_field_get_avg(dfield);*/
+    gwy_debug("%s: bx = %g, by = %g, c = %g", __FUNCTION__, bx, by, c);
     gwy_data_field_plane_level(dfield, c, bx, by);
     gwy_data_view_update(GWY_DATA_VIEW(points_layer->parent));
 }
@@ -183,6 +185,9 @@ level3_dialog_create(GwyDataView *data_view)
         gtk_table_attach_defaults(GTK_TABLE(table), label,
                                   2, 3, 3*i + 2, 3*i + 3);
     }
+    controls.average = gtk_adjustment_new(1, 1, 10, 1, 5, 10);
+    gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
+                                controls.average);
     gtk_widget_show_all(table);
     controls.is_visible = FALSE;
 

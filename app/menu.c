@@ -55,34 +55,18 @@ gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
     return alignment;
 }
 
-static void
-run_process_func_cb(gchar *name,
-                    guint cb_action)
-{
-    GwyDataWindow *data_window;
-    GwyDataView *data_view;
-    GwyContainer *data;
-
-    data_window = gwy_app_get_current_data_window();
-    data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
-    data = gwy_data_view_get_data(data_view);
-    g_return_if_fail(data);
-    gwy_run_process_func(name, data, GWY_RUN_INTERACTIVE);
-    /* FIXME: the ugliest hack! */
-    gwy_data_view_update(data_view);
-}
-
 GtkWidget*
 gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
 {
-    GtkItemFactory *item_factory;
     GtkWidget *widget, *alignment;
+    GtkObject *item_factory;
     GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
-    item_factory = GTK_ITEM_FACTORY(gwy_build_process_menu(
-                                        accel_group,
-                                        G_CALLBACK(run_process_func_cb)));
-    widget = gtk_item_factory_get_widget(item_factory, "<proc>");
+    item_factory
+        = gwy_build_process_menu(accel_group,
+                                 G_CALLBACK(gwy_app_run_process_func_cb));
+    widget = gtk_item_factory_get_widget(GTK_ITEM_FACTORY(item_factory),
+                                         "<proc>");
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
     gtk_container_add(GTK_CONTAINER(alignment), widget);
 
@@ -233,6 +217,23 @@ setup_sensitivity_keys(void)
         sensitive_key = g_quark_from_static_string("sensitive");
     if (!sensitive_state_key)
         sensitive_state_key = g_quark_from_static_string("sensitive-state");
+}
+
+void
+gwy_app_run_process_func_cb(gchar *name)
+{
+    GwyDataWindow *data_window;
+    GwyDataView *data_view;
+    GwyContainer *data;
+
+    gwy_debug("%s: `%s'", __FUNCTION__, name);
+    data_window = gwy_app_get_current_data_window();
+    data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
+    data = gwy_data_view_get_data(data_view);
+    g_return_if_fail(data);
+    gwy_run_process_func(name, data, GWY_RUN_INTERACTIVE);
+    /* FIXME: the ugliest hack! */
+    gwy_data_view_update(data_view);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

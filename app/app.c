@@ -53,7 +53,7 @@ zoom_set_cb(GtkWidget *button, gpointer data)
 void
 foo(void)
 {
-    GtkWidget *window, *vbox, *toolbar, *menu, *grp;
+    GtkWidget *window, *vbox, *toolbar, *menu, *grp, *button;
     GtkAccelGroup *accel_group;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -113,9 +113,12 @@ foo(void)
                               GTK_ICON_SIZE_BUTTON);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_FIT_PLANE,
-                             "Fit plane", NULL,
-                             NULL, NULL, -1);
+    button = gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_FIT_PLANE,
+                                      "Fit plane", NULL,
+                                      NULL, NULL, -1);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_run_process_func_cb),
+                             "level");
 
     /***************************************************************/
     toolbar = gtk_toolbar_new();

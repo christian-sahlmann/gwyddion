@@ -31,6 +31,9 @@ GtkWidget* gwy_menu_create_edit_menu         (GtkAccelGroup *accel_group);
 void       gwy_menu_set_sensitive_recursive  (GtkWidget *widget,
                                               GwyMenuSensitiveData *data);
 
+/* FIXME: where this could really belong? */
+void       gwy_app_run_process_func_cb       (gchar *name);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
