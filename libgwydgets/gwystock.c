@@ -29,6 +29,8 @@
 static void   register_toolbox_icons (const gchar *pixmap_path,
                                       GtkIconFactory *icon_factory);
 static gchar* guess_pixmap_path      (void);
+static gchar* mangle_pixmap_path     (const gchar *path,
+                                      gsize strip);
 static void   free_the_icon_factory  (void);
 
 static GtkIconFactory *the_icon_factory = NULL;
@@ -83,13 +85,14 @@ register_toolbox_icons(const gchar *pixmap_path,
     static const GtkStockItem gwyddion_stock = {
         GWY_STOCK_GWYDDION, "Gwyddion", 0, GDK_VoidSymbol, "gwy"
     };
+    GtkIconSource *icon_source;
     guint i;
 
     gtk_stock_add_static(stock_items, G_N_ELEMENTS(stock_items));
+    icon_source = gtk_icon_source_new();
     for (i = 0; i < G_N_ELEMENTS(stock_items); i++) {
         GtkIconSet *icon_set = gtk_icon_set_new();
         const gchar *id = stock_items[i].stock_id;
-        GtkIconSource *icon_source = gtk_icon_source_new();
         gchar *filename;
 
         filename = g_strdup_printf("%s/%s-%u.png", pixmap_path, id, 24);
@@ -106,7 +109,6 @@ register_toolbox_icons(const gchar *pixmap_path,
     {
         GtkIconSet *icon_set = gtk_icon_set_new();
         const gchar *id = gwyddion_stock.stock_id;
-        GtkIconSource *icon_source = gtk_icon_source_new();
         gchar *filename;
 
         filename = g_strdup_printf("%s/%s-%u.png", pixmap_path, id, 60);
@@ -118,57 +120,53 @@ register_toolbox_icons(const gchar *pixmap_path,
         g_free(filename);
         gtk_icon_factory_add(icon_factory, id, icon_set);
     }
+    gtk_icon_source_free(icon_source);
 }
 
 static gchar*
 guess_pixmap_path(void)
 {
-    gchar *b, *p, *q;
+    gchar *b, *p;
 
-    /* try argv[0] */
+    /* try argv[0], for uninstalled version */
     p = g_strdup(g_get_prgname());
     if (!g_path_is_absolute(p)) {
+        gchar *q;
+
         b = g_get_current_dir();
         q = g_build_filename(b, p, NULL);
         g_free(p);
         g_free(b);
         p = q;
     }
-    q = g_path_get_dirname(p);
-    b = g_path_get_dirname(q);
-    g_free(q);
-    if (g_path_is_absolute(b)) {
-        p = g_build_filename(b, "pixmaps", NULL);
-        if (g_file_test(p, G_FILE_TEST_IS_DIR)) {
-            g_free(b);
-            gwy_debug("Icon path (from argv[0]): %s", p);
-            return p;
-        }
-        g_free(p);
+    /* now p contains an absolute path */
+    b = mangle_pixmap_path(p, 2);
+    g_free(p);
+    gwy_debug("%s: Trying pixmap path: %s", __FUNCTION__, b);
+    if (g_path_is_absolute(b) && g_file_test(b, G_FILE_TEST_IS_DIR)) {
+        gwy_debug("Icon path (from argv[0]): %s", p);
+        return b;
     }
     g_free(b);
 
-    /* try to find gwyddion in path, this is namely for windows */
-    p = g_find_program_in_path("gwyddion");
-    if (p) {
-        if (g_path_is_absolute(p)) {
-            b = g_path_get_dirname(p);
-            q = g_path_get_dirname(b);
-            g_free(b);
+    /* try to find program in path, this is namely for windows, because
+     * unix has different directory structure */
+    p = g_find_program_in_path(g_get_prgname());
+    if (p && g_path_is_absolute(p)) {
+        b = mangle_pixmap_path(p, 1);
+        gwy_debug("%s: Trying pixmap path: %s", __FUNCTION__, b);
+        if (g_path_is_absolute(b) && g_file_test(p, G_FILE_TEST_IS_DIR)) {
+            gwy_debug("Icon path (from $PATH): %s", p);
             g_free(p);
-            p = g_build_filename(q, "pixmaps", NULL);
-            g_free(q);
-            if (g_file_test(p, G_FILE_TEST_IS_DIR)) {
-                g_free(b);
-                gwy_debug("Icon path (from $PATH): %s", p);
-                return p;
-            }
+            return b;
         }
-        g_free(p);
+        g_free(b);
     }
+    g_free(p);
 
     /* try GWY_PIXMAP_DIR, try it after the previous ones, so an uninstalled
      * version gets its own directory, not the system one */
+    gwy_debug("%s: Trying pixmap path: %s", __FUNCTION__, GWY_PIXMAP_DIR);
     if (g_file_test(GWY_PIXMAP_DIR, G_FILE_TEST_IS_DIR)) {
         gwy_debug("Icon path (from GWY_PIXMAP_DIR): %s", GWY_PIXMAP_DIR);
         return g_strdup(GWY_PIXMAP_DIR);
@@ -176,14 +174,34 @@ guess_pixmap_path(void)
 
     /* as last resort, try current directory */
     p = g_get_current_dir();
-    q = g_build_filename(p, b, "pixmaps", NULL);
+    b = mangle_pixmap_path(p, 0);
     g_free(p);
-    if (g_file_test(q, G_FILE_TEST_IS_DIR)) {
-        gwy_debug("Icon path (from cwd): %s", q);
-        return q;
+    gwy_debug("%s: Trying pixmap path: %s", __FUNCTION__, b);
+    if (g_file_test(b, G_FILE_TEST_IS_DIR)) {
+        gwy_debug("Icon path (from cwd): %s", b);
+        return b;
     }
+    free(p);
 
     return NULL;
+}
+
+static gchar*
+mangle_pixmap_path(const gchar *path,
+                   gsize strip)
+{
+    gchar *p, *q;
+
+    p = g_strdup(path);
+    while (strip--) {
+        q = g_path_get_dirname(p);
+        g_free(p);
+        p = q;
+    }
+    q = g_build_filename(p, "pixmaps", NULL);
+    g_free(p);
+
+    return q;
 }
 
 #if 0
