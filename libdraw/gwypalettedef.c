@@ -19,6 +19,7 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 #include <math.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -439,17 +440,16 @@ gwy_palette_def_get_color(GwyPaletteDef *palette_def,
                           gdouble x,
                           GwyInterpolationType interpolation)
 {
-    GwyRGBA ret;
+    GwyRGBA ret = { 0, 0, 0, 0 };
     GwyPaletteDefEntry pe, pf;
     guint i;
     gdouble rlow, rhigh, blow, bhigh, glow, ghigh, alow, ahigh, xlow, xhigh;
 
+    g_return_val_if_fail(GWY_IS_PALETTE_DEF(palette_def), ret);
+
     rlow = rhigh = blow = bhigh = glow = ghigh = alow = ahigh = xlow = xhigh = 0;
 
-    if (x < 0.0 || x > 1.0) {
-        g_warning("Trying to reach value outside of palette.");
-        return ret;
-    }
+    g_return_val_if_fail(x >= 0.0 && x <= 1.0, ret);
 
     /*find the closest color index*/
     for (i = 0; i < palette_def->data->len-1; i++) {
@@ -976,35 +976,140 @@ gwy_palette_def_foreach(GwyPaletteDefFunc callback,
     g_hash_table_foreach(klass->palettes, (GHFunc)callback, user_data);
 }
 
-/**
- * gwy_palette_def_print:
- * @a: palette definition to be outputted
- *
- * Outputs the debugging information about palette definition.
- *
- **/
-void
-gwy_palette_def_print(GwyPaletteDef *a)
+GString*
+gwy_palette_def_dump(GwyPaletteDef *palette_def)
 {
-    guint i, ndat;
-    GArray *pd;
-    GwyPaletteDefEntry *pe;
+    GwyPaletteDefEntry entry;
+    GString *str;
+    guint i;
 
-    pd = a->data;
-    ndat = pd->len;
+    g_return_val_if_fail(GWY_IS_PALETTE_DEF(palette_def), NULL);
+    g_return_val_if_fail(palette_def->data->len > 0, NULL);
 
-    g_print("#### palette def ##############################\n");
-    g_print("%d palette entries in range (0.0-1.0).\n", ndat);
-    for (i = 0; i < ndat; i++) {
-        pe = &g_array_index(pd, GwyPaletteDefEntry, i);
-        g_print("Palette entry %d: (%f %f %f %f) at %f\n",
-                i, pe->color.r, pe->color.g, pe->color.b, pe->color.a, pe->x);
+    str = g_string_sized_new(64*palette_def->data->len);
+    g_string_append(str, "Gwyddion Palette 1.0\n");
+    g_string_append_printf(str, "name=%s\n", palette_def->name);
+    g_string_append_printf(str, "has_alpha=%d\n", palette_def->has_alpha);
+    g_string_append(str, "data\n");
+    for (i = 0; i < palette_def->data->len; i++) {
+        entry = g_array_index(palette_def->data, GwyPaletteDefEntry, i);
+        g_string_append_printf(str, "%.8f %.8f %.8f %.8f %.8f\n",
+                               entry.x,
+                               entry.color.r, entry.color.g, entry.color.b,
+                               entry.color.a);
     }
-    g_print("###############################################\n");
 
+    return str;
+}
+
+static gchar*
+next_line(const gchar *text, gsize *pos)
+{
+    gchar *s;
+    gsize oldpos = *pos;
+
+    if (!text || !*text)
+        return NULL;
+    s = strchr(text + oldpos, '\n');
+    if (!s) {
+        *pos += strlen(text + oldpos);
+        return g_strdup(text);
+    }
+    *pos = s - text;
+    return g_strndup(text + oldpos, *pos - oldpos);
+}
+
+GwyPaletteDef*
+gwy_palette_def_parse(const gchar *text,
+                      gboolean rename_on_clash)
+{
+    GwyPaletteDef *palette_def;
+    GwyPaletteDefClass *klass;
+    GArray *entries;
+    GwyPaletteDefEntry entry;
+    gchar *name;
+    gboolean has_alpha;
+    gchar *line;
+    gsize pos = 0;
+
+    line = next_line(text, &pos);
+    if (!line || strcmp(line, "Gwyddion Palette 1.0")) {
+        g_free(line);
+        return NULL;
+    }
+
+    line = next_line(text, &pos);
+    if (!line || !g_str_has_prefix(line, "name=")) {
+        g_free(line);
+        return NULL;
+    }
+    name = g_strdup(g_strstrip(line + sizeof("name=")));
+    g_free(line);
+    if (!*name)
+        return NULL;
+
+    line = next_line(text, &pos);
+    if (!line || sscanf(line, "has_alpha=%d", &has_alpha) < 1) {
+        g_free(line);
+        return NULL;
+    }
+    has_alpha = !!has_alpha;
+
+    line = next_line(text, &pos);
+    if (!line || strcmp(line, "data")) {
+        g_free(line);
+        return NULL;
+    }
+
+    entries = g_array_new(FALSE, FALSE, sizeof(GwyPaletteDefEntry));
+    while (TRUE) {
+        line = next_line(text, &pos);
+        if (!line)
+            break;
+        if (sscanf(line, "%lf %lf %lf %lf %lf",
+                   &entry.x,
+                   &entry.color.r, &entry.color.g, &entry.color.b,
+                   &entry.color.a) < 5) {
+            g_array_free(entries, TRUE);
+            g_free(line);
+            return NULL;
+        }
+        g_array_append_val(entries, entry);
+    }
+
+    if (!entries->len) {
+        g_array_free(entries, TRUE);
+        return NULL;
+    }
+
+    klass = g_type_class_peek(GWY_TYPE_PALETTE_DEF);
+    g_assert(klass);
+    if ((palette_def = g_hash_table_lookup(klass->palettes, name))
+        && rename_on_clash) {
+        line = name;
+        name = gwy_palette_def_invent_name(klass->palettes, name);
+        g_free(line);
+        palette_def = (GwyPaletteDef*)gwy_palette_def_new(name);
+    }
+    else
+        palette_def = (GwyPaletteDef*)gwy_palette_def_new(name);
+
+    g_free(name);
+    g_array_free(palette_def->data, TRUE);
+    palette_def->data = entries;
+    palette_def->has_alpha = has_alpha;
+
+    return palette_def;
 }
 
 /************************** Documentation ****************************/
+
+/**
+ * GwyPaletteDef:
+ *
+ * The #GwyPaletteDef struct contains private data only and should be accessed
+ * using the functions below.
+ **/
 
 /**
  * GwyRGBA:

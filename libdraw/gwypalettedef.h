@@ -93,26 +93,29 @@ typedef void (*GwyPaletteDefFunc)(const gchar *name,
                                   GwyPaletteDef *palette_def,
                                   gpointer user_data);
 
-GType         gwy_palette_def_get_type         (void) G_GNUC_CONST;
-GObject*      gwy_palette_def_new              (const gchar *name);
-GObject*      gwy_palette_def_new_as_copy      (GwyPaletteDef *src_palette_def);
+GType          gwy_palette_def_get_type         (void) G_GNUC_CONST;
+GObject*       gwy_palette_def_new              (const gchar *name);
+GObject*       gwy_palette_def_new_as_copy      (GwyPaletteDef *src_palette_def);
 G_CONST_RETURN
-gchar*        gwy_palette_def_get_name         (GwyPaletteDef *palette_def);
-gboolean      gwy_palette_def_set_name         (GwyPaletteDef *palette_def,
-                                                const gchar *name);
-gboolean      gwy_palette_def_exists           (const gchar *name);
-void          gwy_palette_def_foreach          (GwyPaletteDefFunc callback,
-                                                gpointer user_data);
-GwyRGBA       gwy_palette_def_get_color        (GwyPaletteDef *palette_def,
-                                                gdouble x,
-                                                GwyInterpolationType interpolation);
-void          gwy_palette_def_set_color        (GwyPaletteDef *palette_def,
-                                                GwyPaletteDefEntry *val);
-void          gwy_palette_def_set_from_samples (GwyPaletteDef *palette_def,
-                                                GwyRGBA *samples,
-                                                gint nsamples,
-                                                gint istep);
-void          gwy_palette_def_setup_presets    (void);
+gchar*         gwy_palette_def_get_name         (GwyPaletteDef *palette_def);
+gboolean       gwy_palette_def_set_name         (GwyPaletteDef *palette_def,
+                                                 const gchar *name);
+gboolean       gwy_palette_def_exists           (const gchar *name);
+void           gwy_palette_def_foreach          (GwyPaletteDefFunc callback,
+                                                 gpointer user_data);
+GwyRGBA        gwy_palette_def_get_color        (GwyPaletteDef *palette_def,
+                                                 gdouble x,
+                                                 GwyInterpolationType interpolation);
+void           gwy_palette_def_set_color        (GwyPaletteDef *palette_def,
+                                                 GwyPaletteDefEntry *val);
+void           gwy_palette_def_set_from_samples (GwyPaletteDef *palette_def,
+                                                 GwyRGBA *samples,
+                                                 gint nsamples,
+                                                 gint istep);
+void           gwy_palette_def_setup_presets    (void);
+GString*       gwy_palette_def_dump             (GwyPaletteDef *palette_def);
+GwyPaletteDef* gwy_palette_def_parse            (const gchar *text,
+                                                 gboolean rename_on_clash);
 
 #define gwy_palette_def_is_set(pd) (GWY_PALETTE_DEF(pd)->data->len)
 

@@ -555,4 +555,13 @@ gwy_palette_print(GwyPalette *palette)
     g_print("##############################################################\n");
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * GwyPalette:
+ *
+ * The #GwyPalette struct contains private data only and should be accessed
+ * using the functions below.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
