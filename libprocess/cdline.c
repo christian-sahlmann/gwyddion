@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 Jindrich Bilek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,35 +29,30 @@
 
 
 /* Preset */
-typedef struct _GwyCDLineParam {
+struct _GwyCDLineParam {
     const char *name;
     const char *unit;
     double default_init;
 };
 
-
-
-/*********************** gaussian *****************************/
-#include <stdio.h>
-
 static void
 get_linestatpars(gdouble *y, gint ndat, gint from, gint to, gdouble *avg, gdouble *sigma)
 {
     gint i, n;
-    
+
     if (from > to) GWY_SWAP(gint, from, to);
 
     *avg = 0;
     *sigma = 0;
-    
+
     if (from < 0) from = 0;
     if (to < 0) from = 0;
     if (from > ndat) from = ndat;
     if (to > ndat) to = ndat;
-    
+
     n = to - from;
     if (n <= 0) return;
-    
+
     for (i=from; i<to; i++)
     {
         *avg += y[i];
@@ -81,13 +76,13 @@ cd_uedgeheight(gdouble *x,
     gint nstep;
     gdouble max, val;
     gint imax, iwidth;
-    gint nlow, nup;
 
     nstep = n_dat/20;
     iwidth = n_dat/8;
     if (nstep<1) nstep = 1;
-    
+
     max = -G_MAXDOUBLE;
+    imax = nstep/2;
     for (i=nstep; i<(n_dat - 2*nstep); i++)
     {
         val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
@@ -97,14 +92,14 @@ cd_uedgeheight(gdouble *x,
             param[1] = (x[i+nstep] + x[i])/2.0;
         }
     }
-   
+
     get_linestatpars(y, n_dat, 0, imax - iwidth/2, param + 2, err + 2);
     get_linestatpars(y, n_dat, imax + iwidth/2, n_dat, param + 3, err + 3);
-    
+
     param[0] = param[3] - param[2];
     err[0] = sqrt(err[2]*err[2] + err[3]*err[3]);
     err[1] = -1;
-   
+
     *fres = TRUE;
 
 }
@@ -122,13 +117,13 @@ cd_ledgeheight(gdouble *x,
     gint nstep;
     gdouble min, val;
     gint imin, iwidth;
-    gint nlow, nup;
 
     nstep = n_dat/20;
     iwidth = n_dat/8;
     if (nstep<1) nstep = 1;
-    
+
     min = G_MAXDOUBLE;
+    imin = nstep/2;
     for (i=nstep; i<(n_dat - 2*nstep); i++)
     {
         val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
@@ -138,12 +133,12 @@ cd_ledgeheight(gdouble *x,
             param[1] = (x[i+nstep] + x[i])/2.0;
         }
     }
-   
+
     get_linestatpars(y, n_dat, 0, imin - iwidth/2, param + 2, err + 2);
     get_linestatpars(y, n_dat, imin + iwidth/2, n_dat, param + 3, err + 3);
 
     param[0] = param[3] - param[2];
-   
+
     err[0] = sqrt(err[2]*err[2] + err[3]*err[3]);
     err[1] = -1;
     *fres = TRUE;
@@ -151,10 +146,16 @@ cd_ledgeheight(gdouble *x,
 }
 
 static gdouble
-func_edgeheight(gdouble x, gint n_param, gdouble *param, gpointer user_data, gboolean *fres)
+func_edgeheight(gdouble x,
+                G_GNUC_UNUSED gint n_param,
+                gdouble *param,
+                G_GNUC_UNUSED gpointer user_data,
+                G_GNUC_UNUSED gboolean *fres)
 {
-    if (x<param[1]) return param[2];
-    else return param[3];
+    if (x<param[1])
+        return param[2];
+    else
+        return param[3];
 }
 
 
@@ -171,15 +172,16 @@ cd_rstepheight(gdouble *x,
     gint nstep;
     gdouble max, min, val;
     gint imax, imin, iwidth;
-    gint nin, nout;
+    gint nout;
 
 
     nstep = n_dat/20;
     if (nstep<1) nstep = 1;
-    
+
     max = -G_MAXDOUBLE;
     min = G_MAXDOUBLE;
-    
+
+    imax = imin = nstep/2;
     for (i=nstep; i<(n_dat - 2*nstep); i++)
     {
         val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
@@ -189,7 +191,7 @@ cd_rstepheight(gdouble *x,
             param[3] = (x[i+nstep] + x[i])/2.0;
         }
     }
-     
+
     for (i=imin; i<(n_dat - 2*nstep); i++)
     {
         val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
@@ -200,9 +202,9 @@ cd_rstepheight(gdouble *x,
         }
     }
     iwidth = imax - imin;
-    
+
     get_linestatpars(y, n_dat, imin+iwidth/3, imax-iwidth/3, param + 2, err + 2);
-  
+
     param[1] = err[1] = 0;
     nout = 0;
     for (i=0; i<n_dat; i++)
@@ -215,12 +217,12 @@ cd_rstepheight(gdouble *x,
             nout++;
         }
     }
-    
+
     err[1] = sqrt(fabs(err[1] - param[1]*param[1]/nout)/nout);
     param[1]/=(gdouble)nout;
-    
+
     param[0] = param[2] - param[1];
-   
+
     err[0] = sqrt(err[2]*err[2] + err[1]*err[1]);
     err[3] = err[4] = -1;
     *fres = TRUE;
@@ -240,14 +242,16 @@ cd_stepheight(gdouble *x,
     gint nstep;
     gdouble max, min, val;
     gint imax, imin, iwidth;
-    gint nin, nout;
+    gint nout;
 
 
     nstep = n_dat/20;
     if (nstep<1) nstep = 1;
-    
+
     max = -G_MAXDOUBLE;
     min = G_MAXDOUBLE;
+    imax = imin = nstep/2;
+
     for (i=nstep; i<(n_dat - 2*nstep); i++)
     {
         val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
@@ -257,7 +261,7 @@ cd_stepheight(gdouble *x,
             param[3] = (x[i+nstep] + x[i])/2.0;
         }
     }
-    
+
     for (i=imax; i<(n_dat - 2*nstep); i++)
     {
         val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
@@ -268,9 +272,9 @@ cd_stepheight(gdouble *x,
         }
     }
     iwidth = imin - imax;
-    
+
     get_linestatpars(y, n_dat, imax+iwidth/3, imin-iwidth/3, param + 2, err + 2);
-    
+
     param[1] = err[1]= 0;
     nout = 0;
     for (i=0; i<n_dat; i++)
@@ -285,21 +289,27 @@ cd_stepheight(gdouble *x,
     }
     err[1] = sqrt(fabs(err[1] - param[1]*param[1]/nout)/nout);
     param[1]/=(gdouble)nout;
-    
+
     param[0] = param[2] - param[1];
-   
+
     err[0] = sqrt(err[2]*err[2] + err[1]*err[1]);
     err[3] = err[4] = -1;
- 
+
     *fres = TRUE;
 
 }
 
 static gdouble
-func_stepheight(gdouble x, gint n_param, gdouble *param, gpointer user_data, gboolean *fres)
+func_stepheight(gdouble x,
+                G_GNUC_UNUSED gint n_param,
+                gdouble *param,
+                G_GNUC_UNUSED gpointer user_data,
+                G_GNUC_UNUSED gboolean *fres)
 {
-    if (x>param[3] && x<param[4]) return param[2];
-    else return param[1];
+    if (x > param[3] && x < param[4])
+        return param[2];
+    else
+        return param[1];
 }
 
 /************************** presets ****************************/
@@ -340,7 +350,7 @@ static const GwyCDLinePreset fitting_presets[] = {
         4,
         edgeheight_pars,
         NULL
-    }, 
+    },
     {
         "Step height (positive)", /*ISO 5436*/
         "Line",
@@ -370,7 +380,7 @@ static const GwyCDLinePreset fitting_presets[] = {
  *
  * Returns: The number of presets.
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 gint
 gwy_cdline_get_npresets(void)
@@ -391,7 +401,7 @@ gwy_cdline_get_npresets(void)
  * Returns: Preset number @preset_id.  Note the returned value must not be
  *          modified or freed.
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 G_CONST_RETURN GwyCDLinePreset*
 gwy_cdline_get_preset(gint preset_id)
@@ -412,7 +422,7 @@ gwy_cdline_get_preset(gint preset_id)
  * Returns: Preset @name, %NULL if not found.  Note the returned value must
  *          not be modified or freed.
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 G_CONST_RETURN GwyCDLinePreset*
 gwy_cdline_get_preset_by_name(const gchar *name)
@@ -434,7 +444,7 @@ gwy_cdline_get_preset_by_name(const gchar *name)
  *
  * Returns: The preset number.
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 gint
 gwy_cdline_get_preset_id(const GwyCDLinePreset* preset)
@@ -452,7 +462,7 @@ gwy_cdline_get_preset_id(const GwyCDLinePreset* preset)
  *
  * Returns: The preset name.
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 G_CONST_RETURN gchar*
 gwy_cdline_get_preset_name(const GwyCDLinePreset* preset)
@@ -468,7 +478,7 @@ gwy_cdline_get_preset_name(const GwyCDLinePreset* preset)
  *
  * Returns: The preset function formula.
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 G_CONST_RETURN gchar*
 gwy_cdline_get_preset_formula(const GwyCDLinePreset* preset)
@@ -487,7 +497,7 @@ gwy_cdline_get_preset_formula(const GwyCDLinePreset* preset)
  *
  * Returns: The name of parameter @param.
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 G_CONST_RETURN gchar*
 gwy_cdline_get_preset_param_name(const GwyCDLinePreset* preset,
@@ -512,7 +522,7 @@ gwy_cdline_get_preset_param_name(const GwyCDLinePreset* preset,
  *
  * Returns: The default parameter value.
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 gdouble
 gwy_cdline_get_preset_param_default(const GwyCDLinePreset* preset,
@@ -534,7 +544,7 @@ gwy_cdline_get_preset_param_default(const GwyCDLinePreset* preset,
  *
  * Returns: The number of function parameters.
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 gint
 gwy_cdline_get_preset_nparams(const GwyCDLinePreset* preset)
@@ -544,29 +554,29 @@ gwy_cdline_get_preset_nparams(const GwyCDLinePreset* preset)
 
 /**
  * gwy_nlfit_fit_preset:
- * @preset: 
- * @n_dat: 
- * @x: 
- * @y: 
- * @n_param: 
- * @param: 
- * @err: 
- * @fixed_param: 
- * @user_data: 
+ * @preset:
+ * @n_dat:
+ * @x:
+ * @y:
+ * @n_param:
+ * @param:
+ * @err:
+ * @fixed_param:
+ * @user_data:
  *
- * 
+ *
  *
  * Returns:
  *
- * Since: 1.2.
+ * Since: 1.4.
  **/
 void
 gwy_cdline_fit_preset(const GwyCDLinePreset* preset,
-                          gint n_dat, const gdouble *x, const gdouble *y,
-                          gint n_param,
-                          gdouble *param, gdouble *err,
-                          const gboolean *fixed_param,
-                          gpointer user_data)
+                      gint n_dat, const gdouble *x, const gdouble *y,
+                      G_GNUC_UNUSED gint n_param,
+                      gdouble *param, gdouble *err,
+                      G_GNUC_UNUSED const gboolean *fixed_param,
+                      gpointer user_data)
 {
     gboolean fres;
     fres = TRUE;
