@@ -103,6 +103,16 @@ GwyPaletteDef
 </para>
 
 
+<!-- ##### USER_FUNCTION GwyPaletteDefFunc ##### -->
+<para>
+
+</para>
+
+@name: 
+@palette_def: 
+@user_data: 
+
+
 <!-- ##### FUNCTION gwy_palette_def_new ##### -->
 <para>
 
@@ -147,6 +157,15 @@ GwyPaletteDef
 
 @name: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_foreach ##### -->
+<para>
+
+</para>
+
+@callback: 
+@user_data: 
 
 
 <!-- ##### FUNCTION gwy_palette_def_get_color ##### -->

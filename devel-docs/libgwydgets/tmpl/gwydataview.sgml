@@ -156,3 +156,21 @@ GwyDataView
 @yscr: 
 
 
+<!-- ##### FUNCTION gwy_data_view_get_xmeasure ##### -->
+<para>
+
+</para>
+
+@data_view: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_get_ymeasure ##### -->
+<para>
+
+</para>
+
+@data_view: 
+@Returns: 
+
+

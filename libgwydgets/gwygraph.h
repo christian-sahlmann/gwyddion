@@ -65,6 +65,7 @@ typedef struct {
 } GwyGraphClass;
 
 GtkWidget *gwy_graph_new();
+GType      gwy_graph_get_type(void) G_GNUC_CONST;
   
 void gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline, 
                               gdouble shift, GString *label, GwyGraphAreaCurveParams *params);

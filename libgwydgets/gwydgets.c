@@ -71,6 +71,19 @@ palette_def_compare(GwyPaletteDef *a,
     return strcmp(a->name, b->name);
 }
 
+/**
+ * gwy_palette_option_menu:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ * @current: Palette definition name to be shown as currently selected
+ *           (or %NULL to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of palettes (more preciesly, palettes definitions),
+ * alphabetically sorted, with names and small sample images.
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
 GtkWidget*
 gwy_palette_option_menu(GCallback callback,
                         gpointer cbdata,

@@ -164,3 +164,21 @@ GwyAxis
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_axis_get_reqmaximum ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_axis_get_reqminimum ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+

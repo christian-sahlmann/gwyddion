@@ -14,11 +14,13 @@ GWY_PALETTE_RAINBOW2
 GwyRGBA
 GwyPaletteDefEntry
 <TITLE>GwyPaletteDef</TITLE>
+GwyPaletteDefFunc
 gwy_palette_def_new
 gwy_palette_def_new_as_copy
 gwy_palette_def_get_name
 gwy_palette_def_set_name
 gwy_palette_def_exists
+gwy_palette_def_foreach
 gwy_palette_def_get_color
 gwy_palette_def_set_color
 gwy_palette_def_set_from_samples

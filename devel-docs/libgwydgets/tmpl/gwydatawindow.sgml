@@ -28,7 +28,20 @@ GwyDataWindow
 
 </para>
 
-@window: 
+@data_window: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@window: 
+
+
+<!-- ##### FUNCTION gwy_data_window_set_zoom ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@izoom: 
+<!-- # Unused Parameters # -->
+@zoom1000: 
 
 
