@@ -65,6 +65,8 @@ module_register(const gchar *name)
     };
 
     gwy_process_func_register(name, &laplace_func_info);
+    gwy_process_func_set_sensitivity_flags(laplace_func_info.name,
+                                           GWY_MENU_FLAG_DATA_MASK);
 
     return TRUE;
 }
@@ -82,20 +84,20 @@ laplace(GwyContainer *data, GwyRunType run)
 
     if (gwy_container_contains_by_name(data, "/0/mask"))
     {
-        
+
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
         buffer = gwy_data_field_new(dfield->xres, dfield->yres, dfield->xreal, dfield->yreal, TRUE);
 
         gwy_app_undo_checkpoint(data, "/0/data", NULL);
-        
-        cor = 0.2; 
+
+        cor = 0.2;
         error = 0;
         maxer = (gwy_data_field_get_max(dfield) - gwy_data_field_get_min(dfield))/1.0e9;
         gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
-        
+
         gwy_data_field_correct_average(dfield, maskfield);
-        
+
         for (i=0; i<10000; i++)
         {
             gwy_data_field_correct_laplace_iteration(dfield, maskfield, buffer,
@@ -106,7 +108,7 @@ laplace(GwyContainer *data, GwyRunType run)
         }
         printf("%d iterations\n", i);
         gwy_app_wait_finish();
-        
+
         gwy_container_remove_by_name(data, "/0/mask");
         g_object_unref(buffer);
     }
@@ -120,7 +122,7 @@ laplace(GwyContainer *data, GwyRunType run)
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return FALSE;
-        
+
     }
     return TRUE;
 }

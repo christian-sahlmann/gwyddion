@@ -25,8 +25,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
 #define DIST_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
@@ -63,6 +62,8 @@ module_register(const gchar *name)
     };
 
     gwy_process_func_register(name, &dist_func_info);
+    gwy_process_func_set_sensitivity_flags(dist_func_info.name,
+                                           GWY_MENU_FLAG_DATA_MASK);
 
     return TRUE;
 }

@@ -118,6 +118,8 @@ module_register(const gchar *name)
     };
 
     gwy_process_func_register(name, &remove_func_info);
+    gwy_process_func_set_sensitivity_flags(remove_func_info.name,
+                                           GWY_MENU_FLAG_DATA_MASK);
 
     return TRUE;
 }
