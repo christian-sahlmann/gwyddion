@@ -26,7 +26,6 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
-#include <app/file.h>
 #include <app/gwyapp.h>
 
 #define SHADE_RUN_MODES \
