@@ -144,6 +144,7 @@ crop_do(void)
     gwy_data_field_resize(dfield, x0, y0, x1, y1);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    gwy_layer_select_unselect(select_layer);
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
     gwy_debug("%d %d", gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }
@@ -296,6 +297,7 @@ crop_dialog_response_cb(G_GNUC_UNUSED gpointer unused,
 
         case GTK_RESPONSE_APPLY:
         crop_do();
+        crop_dialog_set_visible(FALSE);
         break;
 
         default:
