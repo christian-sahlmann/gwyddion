@@ -237,6 +237,14 @@ apply(GwyUnitoolState *state)
     yimin = gwy_data_field_rtoi(dfield, sel[1]);
     ximax = gwy_data_field_rtoj(dfield, sel[2]) + 1;
     yimax = gwy_data_field_rtoi(dfield, sel[3]) + 1;
+    gwy_data_field_set_xreal(dfield,
+                             (ximax - ximin + 1)
+                             *gwy_data_field_get_xreal(dfield)
+                             /gwy_data_field_get_xres(dfield));
+    gwy_data_field_set_yreal(dfield,
+                             (yimax - yimin + 1)
+                             *gwy_data_field_get_yreal(dfield)
+                             /gwy_data_field_get_yres(dfield));
     gwy_data_field_resize(dfield, ximin, yimin, ximax, yimax);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
