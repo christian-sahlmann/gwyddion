@@ -25,7 +25,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void gwy_type_init(void);
+void gwy_app_type_init(void);
 
 #ifdef __cplusplus
 }

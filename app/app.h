@@ -32,6 +32,7 @@ extern "C" {
 
 GtkWidget *gwy_app_main_window;
 
+void            gwy_app_toolbox_create            (void);
 GwyContainer*   gwy_app_get_current_data          (void);
 GwyDataWindow*  gwy_app_data_window_get_current   (void);
 void            gwy_app_data_window_set_current   (GwyDataWindow *data_window);

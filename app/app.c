@@ -21,10 +21,9 @@
 #include <math.h>
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
-#include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-#include "init.h"
 #include "file.h"
 #include "menu.h"
 #include "settings.h"
@@ -49,7 +48,6 @@ static const gchar *menu_list[] = {
 };
 
 static gboolean   gwy_app_quit                (void);
-static void       gwy_app_create_toolbox      (void);
 static GtkWidget* gwy_app_toolbar_append_func (GtkWidget *toolbar,
                                                const gchar *stock_id,
                                                const gchar *tooltip,
@@ -61,7 +59,7 @@ static GtkWidget* gwy_app_toolbar_append_zoom (GtkWidget *toolbar,
 static void       gwy_app_use_tool_cb         (GtkWidget *unused,
                                                const gchar *toolname);
 static void       gwy_app_zoom_set_cb         (gpointer data);
-static void       gwy_app_update_toolbox_state(GwyMenuSensitiveData *sens_data);
+static void       gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data);
 static gint       compare_data_window_data_cb (GwyDataWindow *window,
                                                GwyContainer *data);
 static void       undo_redo_clean             (GObject *window,
@@ -72,60 +70,10 @@ static void       gather_unsaved_cb           (GwyDataWindow *data_window,
                                                GSList **unsaved);
 static gboolean   gwy_app_confirm_quit_dialog (GSList *unsaved);
 
-int
-main(int argc, char *argv[])
-{
-    const gchar *module_dirs[] = {
-        GWY_MODULE_DIR ,
-        GWY_MODULE_DIR "/file",
-        GWY_MODULE_DIR "/process",
-        GWY_MODULE_DIR "/tool",
-        GWY_MODULE_DIR "/graph",
-        NULL
-    };
-    gchar *config_file;
-
-    gtk_init(&argc, &argv);
-    config_file = g_build_filename(g_get_home_dir(), ".gwydrc", NULL);
-    gwy_type_init();
-    gwy_app_settings_load(config_file);
-    gwy_app_settings_get();
-    gwy_module_register_modules(module_dirs);
-    gwy_app_create_toolbox();
-    gwy_app_file_open_initial(argv + 1, argc - 1);
-    gtk_main();
-    gwy_app_settings_save(config_file);
-    gwy_app_settings_free();
-    g_free(config_file);
-
-    return 0;
-}
-
-#ifdef WIN32
-#define _X86_
-#include <windef.h>
-
-int APIENTRY WinMain(HINSTANCE hInstance,
-            HINSTANCE hPrevInstance,
-            LPSTR     lpCmdLine,
-            int       nCmdShow )
-{
-
-    int argc = 1;
-    char* prgname = "STREAM.exe";
-    char** argv=&prgname;
-
-    return main(argc, argv);
-
-}
-#endif
-
-
 static gboolean
 gwy_app_quit(void)
 {
     GwyDataWindow *data_window;
-    GwyContainer *data;
 
     gwy_debug("");
     if (!gwy_app_confirm_quit())
@@ -139,8 +87,8 @@ gwy_app_quit(void)
     return FALSE;
 }
 
-static void
-gwy_app_create_toolbox(void)
+void
+gwy_app_toolbox_create(void)
 {
     GtkWidget *window, *vbox, *toolbar, *menu;
     GtkAccelGroup *accel_group;
@@ -270,7 +218,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
 
     if (update_state)
-        gwy_app_update_toolbox_state(&sens_data);
+        gwy_app_toolbox_update_state(&sens_data);
 }
 
 void
@@ -298,11 +246,11 @@ gwy_app_data_window_remove(GwyDataWindow *window)
 
     if (current_tool)
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
-    gwy_app_update_toolbox_state(&sens_data);
+    gwy_app_toolbox_update_state(&sens_data);
 }
 
 static void
-gwy_app_update_toolbox_state(GwyMenuSensitiveData *sens_data)
+gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data)
 {
     gsize i;
 
@@ -373,7 +321,7 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     else
         current_graphs = g_list_prepend(current_graphs, window);
 
-    gwy_app_update_toolbox_state(&sens_data);
+    gwy_app_toolbox_update_state(&sens_data);
 }
 
 void
@@ -396,7 +344,7 @@ gwy_app_graph_window_remove(GtkWidget *window)
     if (current_graphs)
         gwy_app_graph_window_set_current(current_graphs->data);
     else
-        gwy_app_update_toolbox_state(&sens_data);
+        gwy_app_toolbox_update_state(&sens_data);
 }
 
 GtkWidget*
@@ -686,7 +634,7 @@ gwy_app_undo_checkpoint(GwyContainer *data,
     g_object_set_data(G_OBJECT(data), "modified",
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_data(G_OBJECT(data),
                                                           "modified")) + 1));
-    gwy_app_update_toolbox_state(&sens_data);
+    gwy_app_toolbox_update_state(&sens_data);
 }
 
 void
@@ -754,7 +702,7 @@ gwy_app_undo_undo(void)
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_data(G_OBJECT(data),
                                                           "modified")) - 1));
     gwy_app_data_view_update(data_view);
-    gwy_app_update_toolbox_state(&sens_data);
+    gwy_app_toolbox_update_state(&sens_data);
 }
 
 void
@@ -822,7 +770,7 @@ gwy_app_undo_redo(void)
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_data(G_OBJECT(data),
                                                           "modified")) + 1));
     gwy_app_data_view_update(data_view);
-    gwy_app_update_toolbox_state(&sens_data);
+    gwy_app_toolbox_update_state(&sens_data);
 }
 
 static void
@@ -947,7 +895,6 @@ gwy_app_change_mask_color_cb(gpointer unused,
 static gboolean
 gwy_app_confirm_quit(void)
 {
-    GwyDataWindow *data_window;
     GSList *unsaved = NULL;
     gboolean ok;
 

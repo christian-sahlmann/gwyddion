@@ -42,7 +42,7 @@ static void unref_palettes   (void);
  * palette presets, and similar things.
  **/
 void
-gwy_type_init(void)
+gwy_app_type_init(void)
 {
     g_assert(palettes == NULL);
 
@@ -67,7 +67,7 @@ ref_palette(const gchar *name,
 {
     GwyPalette *palette;
 
-    palette = gwy_palette_new(pdef);
+    palette = GWY_PALETTE(gwy_palette_new(pdef));
     palettes = g_slist_prepend(palettes, palette);
 }
 

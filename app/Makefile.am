@@ -8,11 +8,8 @@ libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
-appincludedir = $(includedir)/gwyddion/app
-
-bin_PROGRAMS = gwyddion
-
-appinclude_HEADERS = \
+libgwyappincludedir = $(includedir)/gwyddion/libgwyapp
+libgwyappinclude_HEADERS = \
 	about.h \
 	app.h \
 	arith.h \
@@ -22,7 +19,16 @@ appinclude_HEADERS = \
 	meta.h \
 	settings.h
 
-gwyddion_SOURCES = \
+bin_PROGRAMS = gwyddion
+lib_LTLIBRARIES = libgwyapp.la
+
+# In following order do:
+# Any code change     C:   R++: A
+# Any iface change    C++: 0:   A
+# Adding ifaces       C:   R:   A++
+# Chaning ifraces     C:   R:   0
+libgwyapp_la_LDFLAGS = -version-info 0:0:0
+libgwyapp_la_SOURCES = \
 	about.c \
 	app.c \
 	arith.c \
@@ -32,7 +38,9 @@ gwyddion_SOURCES = \
 	meta.c \
 	settings.c
 
-gwyddion_LDADD = \
+gwyddion_SOURCES = \
+	gwyddion.c
+gwyddion_LDADD = libgwyapp.la \
 	$(libgwymodule) \
 	$(libgwydgets) \
 	$(libgwydraw) \
