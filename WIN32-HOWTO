@@ -47,3 +47,61 @@
    Run MSYS, unpack the source tarball, cd to the created directory
    and run ./configure --enable-static (FIXME: WHY???).
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+***********************************************************************
+MSVC:
+
+
+Inatall Gtk+ runtime library and developement library.
+It might be usefull to recompile also these from source in
+dropline.net/gtk/ , but I didi not try this. If you recompile
+them you would have the debug information inside, which is not
+present there now.
+
+- create an empty project (Win32 application).
+- add all files from CVS, except test.c and main.c from any directory
+  and create-data.c from libgwydgets
+
+- now change the default project settings:
+
+C/C++    : add the /D /D /D /D /GZ 
+                   GWY_MODULE_DIR="\"d:\gtk\gwyddion\modules\"" 
+		   GWY_PIXMAP_DIR="\"d:\gtk\gwyddion\pixmaps\"" 
+		   GWY_PLUGIN_DIR="\"d:\gtk\gwyddion\plugins\"" /c
+		   which is strange but compiler did this from
+		   deparate preprocessor definitions of all the directiories
+		   
+	   add Preprocessor additional directories - gtk
+	     i. e. C:\Dev-C++\INCLUDE\GTK-2.0,
+                   C:\Dev-C++\LIB\GTK-2.0\INCLUDE,
+                   C: \Dev-C++\INCLUDE\GLIB-2.0,
+		   C:\Dev-C++\LIB\GLIB-2.0\INCLUDE,
+                   C:\Dev-C++\INCLUDE\PANGO-1.0,
+                   C:\Dev-C++\INCLUDE\ATK-1.0,
+                   c:\Dev-C++\include,
+             and gwyddion      
+                   d:\gtk\gwyddion
+
+
+Linker:    add Linker additional modules:
+                  glib-2.0.lib gtk-win32-2.0.lib gdk-win32-2.0.lib 
+		  gobject-2.0.lib gdk_pixbuf-2.0.lib gthread-2.0.lib 
+		  gmodule-2.0.lib pango-1.0.lib intl.lib 
+
+           add Linker additional library path
+	          C:\Dev-C++\lib,C:\Program Files\Common Files\GTK\2.0\lib
+
+
