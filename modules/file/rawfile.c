@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* TODO: storeable named presets */
-
 #define DEBUG 1
 
 #ifdef HAVE_CONFIG_H
@@ -68,7 +66,7 @@ enum {
 };
 
 enum {
-    RAW_PRESET_NAME = 1,
+    RAW_PRESET_NAME = 0,
     RAW_PRESET_TYPE,
     RAW_PRESET_LAST
 };
@@ -88,7 +86,7 @@ typedef struct {
     gsize byteswap;  /* swap bytes (relative to HOST order), bit set means
                         swap blocks of this size (only for builtin) */
     gsize lineoffset;  /* start reading from this line (ASCII) */
-    gchar *delimiter;  /* field delimiter (ASCII) */
+    guchar *delimiter;  /* field delimiter (ASCII) */
     gsize skipfields;  /* skip this number of fields at line start (ASCII) */
 
     const gchar *filename;
@@ -106,6 +104,7 @@ typedef struct {
 } RawFileArgs;
 
 typedef struct {
+    GtkWidget *dialog;
     GSList *format;
     GtkWidget *builtin;
     GtkWidget *offset;
@@ -164,10 +163,17 @@ static void          bintext_changed_cb            (GtkWidget *button,
 static void          preset_selected_cb            (RawFileControls *controls);
 static void          preset_load_cb                (RawFileControls *controls);
 static void          preset_store_cb               (RawFileControls *controls);
+static void          preset_rename_cb              (RawFileControls *controls);
 static void          preset_delete_cb              (RawFileControls *controls);
-static gboolean      find_preset_by_name           (GtkTreeModel *store,
+static gboolean      preset_validate_name          (RawFileControls *controls,
+                                                    const gchar *name,
+                                                    gboolean show_warning);
+static gboolean      preset_find_by_name           (GtkTreeModel *store,
                                                     const gchar *preset_name,
                                                     GtkTreeIter *iter);
+static gint          preset_compare_func           (GtkTreeModel *store,
+                                                    GtkTreeIter *itera,
+                                                    GtkTreeIter *iterb);
 static void          update_dialog_controls        (RawFileControls *controls);
 static void          update_dialog_values          (RawFileControls *controls);
 static GtkWidget*    table_attach_heading          (GtkWidget *table,
@@ -193,8 +199,8 @@ static void          rawfile_save_args             (GwyContainer *settings,
 static void          rawfile_save_preset           (GwyContainer *settings,
                                                     const gchar *presetname,
                                                     RawFileArgs *args);
+static void          rawfile_save_list_of_presets  (GtkTreeModel *store);
 static gsize         rawfile_compute_required_size (RawFileArgs *args);
-
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -401,11 +407,9 @@ rawfile_load(const gchar *filename)
     guchar *buffer = NULL;
     gsize size = 0;
 
-    /* XXX */
-    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
-
     args = g_new0(RawFileArgs, 1);
     settings = gwy_app_settings_get();
+    /*gwy_container_remove_by_prefix(settings, "/module/rawfile/presets");*/
     rawfile_load_args(settings, args);
     if (!g_file_get_contents(filename, (gchar**)&buffer, &size, &err)) {
         g_warning("Cannot read file %s", filename);
@@ -422,6 +426,7 @@ rawfile_load(const gchar *filename)
     }
     g_free(buffer);
     g_free(args->delimiter);
+    g_free(args->presetname);
     g_free(args);
 
     return data;
@@ -446,6 +451,8 @@ rawfile_dialog(RawFileArgs *args,
                                          _("Reset"), RESPONSE_RESET,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    controls.dialog = dialog;
+    controls.args = args;
 
     vbox = GTK_DIALOG(dialog)->vbox;
 
@@ -469,7 +476,6 @@ rawfile_dialog(RawFileArgs *args,
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
 
     /* Callbacks */
-    controls.args = args;
     update_dialog_controls(&controls);
 
     /* xres/yres sync */
@@ -527,6 +533,7 @@ rawfile_dialog(RawFileArgs *args,
                 const gchar *filename = args->filename;
                 gsize filesize = args->filesize;
 
+                /* free delimiter and presetname */
                 *args = rawfile_defaults;
                 args->filename = filename;
                 args->filesize = filesize;
@@ -539,6 +546,8 @@ rawfile_dialog(RawFileArgs *args,
         }
         update_dialog_controls(&controls);
     } while (response != GTK_RESPONSE_OK);
+    rawfile_save_list_of_presets(gtk_tree_view_get_model(
+                                     GTK_TREE_VIEW(controls.presetlist)));
     gtk_widget_destroy(dialog);
 
     return dfield;
@@ -729,7 +738,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
 
     omenu = gwy_option_menu_create(builtin_menu, G_N_ELEMENTS(builtin_menu),
                                    "builtin",
-                                   G_CALLBACK(builtin_changed_cb), &controls,
+                                   G_CALLBACK(builtin_changed_cb), controls,
                                    args->builtin);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
     controls->builtin = omenu;
@@ -807,15 +816,15 @@ rawfile_preset_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gint format;
 
     id = GPOINTER_TO_UINT(data);
-    g_assert(id >= RAW_PRESET_NAME && id < RAW_PRESET_LAST);
-    gtk_tree_model_get(model, piter, 0, &name, -1);
+    g_assert(id < RAW_PRESET_LAST);
+    gtk_tree_model_get(model, piter, RAW_PRESET_NAME, &name, -1);
     switch (id) {
         case RAW_PRESET_NAME:
         g_object_set(cell, "text", name, NULL);
         break;
 
         case RAW_PRESET_TYPE:
-        s = g_strconcat("/module/rawfile/presets/", name, "/format", NULL);
+        s = g_strconcat("/module/rawfile/preset/", name, "/format", NULL);
         format = gwy_container_get_int32_by_name(gwy_app_settings_get(), s);
         g_free(s);
         g_object_set(cell, "text", format == RAW_BINARY ? "Binary" : "Text",
@@ -854,17 +863,26 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    store = gtk_list_store_new(1, G_TYPE_STRING);
+    store = gtk_list_store_new(RAW_PRESET_LAST, G_TYPE_STRING, G_TYPE_STRING);
     if (gwy_container_gis_string_by_name(gwy_app_settings_get(),
                                          "/module/rawfile/presets",
                                          &presets)) {
         s = g_strsplit(presets, "\n", 0);
         for (i = 0; s[i]; i++) {
             gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, 0, s[i], -1);
+            gtk_list_store_set(store, &iter,
+                               RAW_PRESET_NAME, s[i],
+                               RAW_PRESET_TYPE, "", -1);
         }
-        /* FIXME: who will free s[i]? */
     }
+    gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
+                                    RAW_PRESET_NAME,
+                                    (GtkTreeIterCompareFunc)preset_compare_func,
+                                    NULL,  /* user data */
+                                    NULL);  /* destroy notify */
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
+                                         RAW_PRESET_NAME,
+                                         GTK_SORT_ASCENDING);
 
     controls->presetlist = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     g_object_unref(store);
@@ -886,7 +904,8 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     }
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
     gtk_tree_selection_set_mode(tselect, GTK_SELECTION_SINGLE);
-    /* TODO: set selected preset, if applicable */
+    if (preset_find_by_name(GTK_TREE_MODEL(store), args->presetname, &iter))
+        gtk_tree_selection_select_iter(tselect, &iter);
 
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
@@ -909,6 +928,11 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     g_signal_connect_swapped(G_OBJECT(button), "clicked",
                              G_CALLBACK(preset_store_cb), controls);
 
+    button = gtk_button_new_with_mnemonic(_("_Rename"));
+    gtk_container_add(GTK_CONTAINER(bbox), button);
+    g_signal_connect_swapped(G_OBJECT(button), "clicked",
+                             G_CALLBACK(preset_rename_cb), controls);
+
     button = gtk_button_new_with_mnemonic(_("_Delete"));
     gtk_container_add(GTK_CONTAINER(bbox), button);
     g_signal_connect_swapped(G_OBJECT(button), "clicked",
@@ -924,6 +948,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
         gtk_entry_set_text(GTK_ENTRY(controls->presetname), args->presetname);
     gwy_table_attach_row(table, row, _("Preset _name:"), "",
                          controls->presetname);
+    gtk_entry_set_max_length(GTK_ENTRY(controls->presetname), 40);
     row++;
 
     return vbox;
@@ -1069,7 +1094,8 @@ xyres_changed_cb(GtkAdjustment *adj,
     /* FIXME: this way of synchrnonization may be contrainituitive.
      * but which one *is* intuitive? */
     if (controls->args->xymeasureeq)
-        xyreal_changed_cb(gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal)),
+        xyreal_changed_cb(gtk_spin_button_get_adjustment(
+                              GTK_SPIN_BUTTON(controls->xreal)),
                           controls);
 }
 
@@ -1116,8 +1142,8 @@ xyreal_changed_cb(GtkAdjustment *adj,
 static void
 xymeasureeq_changed_cb(RawFileControls *controls)
 {
-    controls->args->xymeasureeq
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq));
+    controls->args->xymeasureeq = gtk_toggle_button_get_active(
+                                      GTK_TOGGLE_BUTTON(controls->xymeasureeq));
     if (controls->args->xymeasureeq) {
         update_dialog_values(controls);
         update_dialog_controls(controls);
@@ -1133,6 +1159,7 @@ bintext_changed_cb(GtkWidget *button,
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
         return;
 
+    update_dialog_values(controls);
     format = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "format"));
     controls->args->format = format;
     update_dialog_controls(controls);
@@ -1148,10 +1175,12 @@ preset_selected_cb(RawFileControls *controls)
 
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
     g_return_if_fail(tselect);
-    if (!gtk_tree_selection_get_selected(tselect, &store, &iter))
+    if (!gtk_tree_selection_get_selected(tselect, &store, &iter)) {
+        gwy_debug("Nothing is selected");
         return;
+    }
 
-    gtk_tree_model_get(store, &iter, 0, &name, -1);
+    gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &name, -1);
     gtk_entry_set_text(GTK_ENTRY(controls->presetname), name);
 }
 
@@ -1168,7 +1197,7 @@ preset_load_cb(RawFileControls *controls)
     if (!gtk_tree_selection_get_selected(tselect, &store, &iter))
         return;
 
-    gtk_tree_model_get(store, &iter, 0, &name, -1);
+    gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &name, -1);
     gwy_debug("Now I'm loading `%s'", name);
     rawfile_load_preset(gwy_app_settings_get(), name, controls->args);
     update_dialog_controls(controls);
@@ -1184,19 +1213,63 @@ preset_store_cb(RawFileControls *controls)
 
     store = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->presetlist));
     name = gtk_entry_get_text(GTK_ENTRY(controls->presetname));
-    if (!name || !*name)
+    if (!preset_validate_name(controls, name, TRUE))
         return;
     update_dialog_values(controls);
     gwy_debug("Now I'm saving `%s'", name);
     rawfile_save_preset(gwy_app_settings_get(), name, controls->args);
-    if (!find_preset_by_name(store, name, &iter)) {
+    if (!preset_find_by_name(store, name, &iter)) {
         gwy_debug("Appending `%s'", name);
         gtk_list_store_append(GTK_LIST_STORE(store), &iter);
     }
     gwy_debug("Setting `%s'", name);
-    gtk_list_store_set(GTK_LIST_STORE(store), &iter, 0, g_strdup(name), -1);
+    gtk_list_store_set(GTK_LIST_STORE(store), &iter,
+                       RAW_PRESET_NAME, g_strdup(name),
+                       RAW_PRESET_TYPE, "",
+                       -1);
     gwy_debug("Done saving `%s'", name);
-    /* TODO: update the preset list */
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
+    gtk_tree_selection_select_iter(tselect, &iter);
+}
+
+static void
+preset_rename_cb(RawFileControls *controls)
+{
+    GtkTreeModel *store;
+    GtkTreeSelection *tselect;
+    GtkTreeIter iter;
+    GwyContainer *settings;
+    RawFileArgs *args;
+    gchar *name, *s;
+    const gchar *newname;
+
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
+    g_return_if_fail(tselect);
+    if (!gtk_tree_selection_get_selected(tselect, &store, &iter))
+        return;
+
+    gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &name, -1);
+    newname = gtk_entry_get_text(GTK_ENTRY(controls->presetname));
+    if (!strcmp(newname, name)
+        || !preset_validate_name(controls, newname, TRUE))
+        return;
+
+    gwy_debug("Now I will rename `%s' to `%s'", name, newname);
+    if (!preset_find_by_name(store, name, &iter)) {
+        g_critical("Cannot find preset `%s'", name);
+        return;
+    }
+    args = g_new0(RawFileArgs, 1);
+    settings = gwy_app_settings_get();
+    rawfile_load_preset(settings, name, args);
+    rawfile_save_preset(settings, newname, args);
+    g_free(args);
+    s = g_strconcat("/module/rawfile/presets/", name, NULL);
+    gwy_container_remove_by_prefix(settings, s);
+    g_free(s);
+    gtk_list_store_set(GTK_LIST_STORE(store), &iter,
+                       RAW_PRESET_NAME, g_strdup(newname), -1);
+    g_free(name);
 }
 
 static void
@@ -1205,39 +1278,81 @@ preset_delete_cb(RawFileControls *controls)
     GtkTreeModel *store;
     GtkTreeSelection *tselect;
     GtkTreeIter iter;
-    gchar *name;
+    gchar *name, *s;
 
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
     g_return_if_fail(tselect);
     if (!gtk_tree_selection_get_selected(tselect, &store, &iter))
         return;
 
-    gtk_tree_model_get(store, &iter, 0, &name, -1);
-    gwy_debug("Now I would delete `%s'", name);
-    /* TODO: really update the preset list */
-    if (!find_preset_by_name(store, name, &iter)) {
+    gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &name, -1);
+    gwy_debug("Now I will delete `%s'", name);
+    if (!preset_find_by_name(store, name, &iter)) {
         g_critical("Cannot find preset `%s'", name);
         return;
     }
+    if (gtk_list_store_remove(GTK_LIST_STORE(store), &iter))
+        gtk_tree_selection_select_iter(tselect, &iter);
+    s = g_strconcat("/module/rawfile/presets/", name, NULL);
+    gwy_container_remove_by_prefix(gwy_app_settings_get(), s);
+    g_free(s);
+    g_free(name);
 }
 
 static gboolean
-find_preset_by_name(GtkTreeModel *store,
+preset_validate_name(RawFileControls *controls,
+                     const gchar *name,
+                     gboolean show_warning)
+{
+    GtkWidget *dlg;
+
+    if (*name && !strchr(name, '/'))
+        return TRUE;
+    if (!show_warning)
+        return FALSE;
+
+    dlg = gtk_message_dialog_new(GTK_WINDOW(controls->dialog),
+                                    GTK_DIALOG_MODAL
+                                        | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_INFO,
+                                    GTK_BUTTONS_CLOSE,
+                                    _("The name `%s' is invalid."),
+                                    name);
+    gtk_dialog_run(GTK_DIALOG(dlg));
+    gtk_widget_destroy(dlg);
+
+    return FALSE;
+}
+
+static gboolean
+preset_find_by_name(GtkTreeModel *store,
                     const gchar *preset_name,
                     GtkTreeIter *iter)
 {
     const gchar *name;
 
-    if (!gtk_tree_model_get_iter_first(store, iter))
+    if (!preset_name || !gtk_tree_model_get_iter_first(store, iter))
         return FALSE;
 
     do {
-        gtk_tree_model_get(store, iter, 0, &name, -1);
+        gtk_tree_model_get(store, iter, RAW_PRESET_NAME, &name, -1);
         if (!strcmp(name, preset_name))
             return TRUE;
     } while (gtk_tree_model_iter_next(store, iter));
 
     return FALSE;
+}
+
+static gint
+preset_compare_func(GtkTreeModel *store,
+                    GtkTreeIter *itera,
+                    GtkTreeIter *iterb)
+{
+    gchar *namea, *nameb;
+
+    gtk_tree_model_get(store, itera, RAW_PRESET_NAME, &namea, -1);
+    gtk_tree_model_get(store, iterb, RAW_PRESET_NAME, &nameb, -1);
+    return strcmp(namea, nameb);
 }
 
 static void
@@ -1366,7 +1481,6 @@ update_dialog_values(RawFileControls *controls)
     GSList *group;
 
     args = controls->args;
-
     g_free(args->delimiter);
 
     args->xres
@@ -1424,8 +1538,6 @@ update_dialog_values(RawFileControls *controls)
             break;
         }
     }
-
-    /* TODO: preset */
 
     rawfile_santinize_args(args);
 }
@@ -1934,6 +2046,38 @@ rawfile_save_preset(GwyContainer *settings,
 
     args->delimiter = g_strdup(args->delimiter);
     args->presetname = g_strdup(args->presetname);
+}
+
+static void
+rawfile_save_list_of_presets(GtkTreeModel *store)
+{
+    GtkTreeIter iter;
+    gint i, n;
+    gchar *s;
+    gchar **presets;
+
+    if (!gtk_tree_model_get_iter_first(store, &iter)) {
+        gwy_container_remove_by_name(gwy_app_settings_get(),
+                                     "/module/rawfile/presets");
+        return;
+    }
+
+    n = 0;
+    do {
+        n++;
+        gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &s, -1);
+    } while (gtk_tree_model_iter_next(store, &iter));
+    presets = g_new0(gchar*, n+1);
+    gtk_tree_model_get_iter_first(store, &iter);
+    for (i = 0; i < n; i++) {
+        gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, presets + i, -1);
+        gtk_tree_model_iter_next(store, &iter);
+    }
+    presets[n] = NULL;
+    s = g_strjoinv("\n", presets);
+    g_strfreev(presets);
+    gwy_container_set_string_by_name(gwy_app_settings_get(),
+                                     "/module/rawfile/presets", s);
 }
 
 #else /* not GENRTABLE */
