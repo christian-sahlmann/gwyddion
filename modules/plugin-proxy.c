@@ -337,7 +337,7 @@ find_plugin_executables(const gchar *dir,
         if (!g_str_has_suffix(filename, ".exe")
             && !g_str_has_suffix(filename, ".bat")
             && !g_str_has_suffix(filename, ".EXE")
-            && !g_str_has_suffix(filename, ".BAT"))
+            && !g_str_has_suffix(filename, ".BAT")) {
             gwy_debug("[Win32] Ignoring %s, is not .exe, .bat", filename);
             g_free(pluginname);
             continue;
