@@ -584,7 +584,9 @@ gwy_option_menu_2dcwt
 gwy_option_menu_fft_output
 gwy_option_menu_sfunctions_output
 gwy_option_menu_direction
+gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history
+gwy_option_menu_get_history
 </SECTION>
 

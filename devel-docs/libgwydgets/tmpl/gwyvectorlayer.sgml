@@ -149,3 +149,15 @@ Base class for #GwyDataView vector (interactive) layers
 @cursor: 
 
 
+<!-- ##### SIGNAL GwyVectorLayer::selection-finished ##### -->
+<para>
+
+</para>
+
+@gwyvectorlayer: the object which received the signal.
+
+<!-- ##### ARG GwyVectorLayer:update-policy ##### -->
+<para>
+
+</para>
+

@@ -112,6 +112,20 @@ Option menu constructors for enums
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_option_menu_metric_unit ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@from: 
+@to: 
+@unit: 
+@current: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_option_menu_create ##### -->
 <para>
 
@@ -134,6 +148,16 @@ Option menu constructors for enums
 @option_menu: 
 @key: 
 @current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_get_history ##### -->
+<para>
+
+</para>
+
+@option_menu: 
+@key: 
 @Returns: 
 
 
