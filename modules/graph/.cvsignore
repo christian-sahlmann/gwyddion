@@ -5,3 +5,5 @@ Makefile.in
 .libs
 .deps
 core.*
+*.def
+makefile.msc

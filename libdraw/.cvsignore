@@ -7,3 +7,5 @@ test
 .deps
 test
 core.*
+*.def
+makefile.msc

@@ -7,3 +7,5 @@ main
 .libs
 .deps
 core.*
+*.def
+makefile.msc

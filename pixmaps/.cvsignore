@@ -1,3 +1,5 @@
 Makefile
 Makefile.in
 .xvpics
+makefile.msc
+*.jpg

@@ -9,3 +9,5 @@ test
 .libs
 .deps
 core.*
+*.def
+makefile.msc
