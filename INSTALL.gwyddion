@@ -112,7 +112,7 @@ Prerequisities:
 - Python-2.2 or newer
 - Perl5
 - gtk-doc 0.6 or newer
-- GNU gettext, including development stuff
+- GNU gettext 0.12 or newer, including development stuff
 - who knows what else
 
 First of all run
