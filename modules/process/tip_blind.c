@@ -38,6 +38,7 @@ typedef struct {
     gint xres;
     gint yres;
     gdouble thresh;
+    gboolean use_boundaries;
     GwyDataWindow *win;
 } TipBlindArgs;
 
@@ -46,11 +47,14 @@ typedef struct {
     GtkWidget *data;
     GtkWidget *type;
     GtkWidget *threshold;
+    GtkWidget *boundaries;
     GwyContainer *tip;
     GwyContainer *vtip;
     GwyContainer *surface;
     GtkObject *xres;
     GtkObject *yres;
+    gint vxres;
+    gint vyres;
 } TipBlindControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -87,12 +91,16 @@ static void        height_changed_cb         (GtkAdjustment *adj,
                                                TipBlindArgs  *args);
 static void        thresh_changed_cb         (GwyValUnit *valunit,
                                              TipBlindArgs *args);
-
+static void        bound_changed_cb          (GtkToggleButton *button,
+                                              TipBlindArgs *args);
+static void        tip_update                (TipBlindControls *controls,
+                                              TipBlindArgs *args);
 
 TipBlindArgs tip_blind_defaults = {
     100,
     100,
-    1e-10,
+    1e-11,
+    FALSE,
     NULL,
 };
 
@@ -179,18 +187,26 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 3);
 
-    table = gtk_table_new(3, 2, FALSE);
+    table = gtk_table_new(5, 2, FALSE);
     col = 0; 
-    row = 0;
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+    row = 0;    
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,            
                        FALSE, FALSE, 4);
 
+    controls.vxres = 200;
+    controls.vyres = 200;
+    
     controls.surface = data;    
     controls.tip = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.tip, "/0/data"));
+    gwy_data_field_resample(dfield, args->xres, args->yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_fill(dfield, 0);
 
-    controls.view = gwy_data_view_new(controls.tip);
+    controls.vtip = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(controls.tip)));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.vtip, "/0/data"));
+    gwy_data_field_resample(dfield, controls.vxres, controls.vyres, GWY_INTERPOLATION_NONE);
+
+    controls.view = gwy_data_view_new(controls.vtip);
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
@@ -237,7 +253,8 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
     g_signal_connect(controls.yres, "value_changed",
                                           G_CALLBACK(height_changed_cb), args);
-    
+   
+                  
     controls.threshold = gwy_val_unit_new("Threshold ",
                                        gwy_data_field_get_si_unit_z(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.threshold), args->thresh);
@@ -247,7 +264,15 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(vbox), controls.threshold,
                                                       FALSE, FALSE, 4);
                  
-
+    controls.boundaries
+                = gtk_check_button_new_with_label(_("Use boundaries"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.boundaries),
+                                                 args->use_boundaries);
+    g_signal_connect(controls.boundaries, "toggled", G_CALLBACK(bound_changed_cb), args);
+     
+    gtk_box_pack_start(GTK_BOX(vbox), controls.boundaries,
+                       FALSE, FALSE, 4);
+ 
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -342,6 +367,12 @@ thresh_changed_cb(GwyValUnit *valunit,
     args->thresh = gwy_val_unit_get_value(valunit);
 }
 
+static void
+bound_changed_cb(GtkToggleButton *button,
+                 TipBlindArgs *args)
+{
+    args->use_boundaries = gtk_toggle_button_get_active(button);
+}
 
 static void
 tip_blind_dialog_update_controls(TipBlindControls *controls, TipBlindArgs *args)
@@ -367,6 +398,22 @@ partial(TipBlindControls *controls, TipBlindArgs *args)
 static void
 full(TipBlindControls *controls, TipBlindArgs *args)
 {
+}
+
+static void
+tip_update(TipBlindControls *controls, TipBlindArgs *args)
+{
+    GwyDataField *tipfield, *vtipfield, *buffer;
+    
+    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
+    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(tipfield));
+    gwy_data_field_resample(buffer, controls->vxres, controls->vyres, GWY_INTERPOLATION_ROUND);
+
+    vtipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->vtip, "/0/data"));
+    
+    gwy_data_field_copy(buffer, vtipfield);
+    
+    g_object_unref(buffer);
 }
 
 static void
