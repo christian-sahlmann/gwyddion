@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,6 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
-#include "gwyaxisdialog.h"
 #include "gwyaxis.h"
 
 #define GWY_AXIS_TYPE_NAME "GwyAxis"
@@ -1173,5 +1172,17 @@ gwy_axis_set_unit(GwyAxis *axis, char *unit)
     axis->unit = unit;
     axis->has_unit = 1;
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * GwyAxisScaleFormat:
+ * @GWY_AXIS_FLOAT: Floating point format.
+ * @GWY_AXIS_EXP: Exponential (`scienfitic') format.
+ * @GWY_AXIS_INT: Integer format.
+ * @GWY_AXIS_AUTO: Automatical format.
+ *
+ * Labeled axis tick mark format.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

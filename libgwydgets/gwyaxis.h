@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -37,13 +37,6 @@ extern "C" {
 #define GWY_AXIS_EAST    GTK_POS_LEFT
 #define GWY_AXIS_WEST    GTK_POS_RIGHT
 
-typedef enum {
-    GWY_AXIS_FLOAT,
-    GWY_AXIS_EXP,
-    GWY_AXIS_INT,
-    GWY_AXIS_AUTO
-} GwyAxisScaleType;
-
 #define GWY_TYPE_AXIS            (gwy_axis_get_type())
 #define GWY_AXIS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_AXIS, GwyAxis))
 #define GWY_AXIS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_AXIS, GwyAxis))
@@ -51,6 +44,13 @@ typedef enum {
 #define GWY_IS_AXIS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_AXIS))
 #define GWY_AXIS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_AXIS, GwyAxisClass))
 
+
+typedef enum {
+    GWY_AXIS_FLOAT = 1,
+    GWY_AXIS_EXP,
+    GWY_AXIS_INT,
+    GWY_AXIS_AUTO
+} GwyAxisScaleFormat;
 
 typedef struct {
     gdouble value;      /*tick value*/
@@ -66,7 +66,7 @@ typedef struct {
     gint major_length;
     gint major_thickness;
     gint major_maxticks;
-    GwyAxisScaleType major_printmode;
+    GwyAxisScaleFormat major_printmode;
 
     gint minor_length;
     gint minor_thickness;
