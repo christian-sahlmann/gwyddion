@@ -46,9 +46,13 @@ static void       delete_app_window            (void);
 GtkWidget*
 gwy_app_toolbox_create(void)
 {
+    GwyMenuSensData sens_data_data = { GWY_MENU_FLAG_DATA, 0 };
+    GwyMenuSensData sens_data_graph = { GWY_MENU_FLAG_GRAPH, 0 };
     GtkWidget *toolbox, *vbox, *toolbar, *menu, *label;
     GtkAccelGroup *accel_group;
     GSList *labels = NULL, *l;
+    GSList *toolbars = NULL;    /* list of all toolbars for sensitivity */
+    GSList *menus = NULL;    /* list of all menus for sensitivity */
     const gchar *first_tool;
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -65,24 +69,25 @@ gwy_app_toolbox_create(void)
     gtk_container_add(GTK_CONTAINER(toolbox), vbox);
 
     menu = gwy_app_menu_create_file_menu(accel_group);
+    menus = g_slist_append(menus, menu);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(toolbox), "<file>", menu);
 
     menu = gwy_app_menu_create_edit_menu(accel_group);
+    menus = g_slist_append(menus, menu);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(toolbox), "<edit>", menu);
 
     menu = gwy_app_menu_create_proc_menu(accel_group);
-    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
+    menus = g_slist_append(menus, menu);
     g_object_set_data(G_OBJECT(toolbox), "<proc>", menu);
+    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
 
     menu = gwy_app_menu_create_graph_menu(accel_group);
+    menus = g_slist_append(menus, menu);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(toolbox), "<graph>", menu);
 
     menu = gwy_app_menu_create_xtns_menu(accel_group);
+    menus = g_slist_append(menus, menu);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(toolbox), "<xtns>", menu);
 
     /***************************************************************/
     label = gwy_app_toolbox_create_label(_("Zoom"), "zoom");
@@ -90,6 +95,7 @@ gwy_app_toolbox_create(void)
     labels = g_slist_append(labels, label);
 
     toolbar = gwy_toolbox_new(4);
+    toolbars = g_slist_append(toolbars, toolbar);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
@@ -102,6 +108,8 @@ gwy_app_toolbox_create(void)
                        _("Zoom out"), NULL, GWY_STOCK_ZOOM_OUT,
                        G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(-1));
 
+    gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
+    gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
@@ -111,7 +119,9 @@ gwy_app_toolbox_create(void)
     labels = g_slist_append(labels, label);
 
     toolbar = gwy_toolbox_new(4);
+    toolbars = g_slist_append(toolbars, toolbar);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Fix minimum value to zero"), NULL, GWY_STOCK_FIX_ZERO,
                        G_CALLBACK(gwy_app_run_process_func_cb), "fixzero");
@@ -137,6 +147,8 @@ gwy_app_toolbox_create(void)
                        _("Continuous Wavelet Transform"), NULL, GWY_STOCK_CWT,
                        G_CALLBACK(gwy_app_run_process_func_cb), "cwt");
 
+    gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
+    gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
@@ -146,7 +158,9 @@ gwy_app_toolbox_create(void)
     labels = g_slist_append(labels, label);
 
     toolbar = gwy_toolbox_new(4);
+    toolbars = g_slist_append(toolbars, toolbar);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Read coordinates"), NULL, GWY_STOCK_GRAPH_MEASURE,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "read");
@@ -154,9 +168,11 @@ gwy_app_toolbox_create(void)
                        _("Zoom in"), NULL, GWY_STOCK_GRAPH_ZOOM_IN,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_zoom");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Zoom out"), NULL, "gwy_graph_zoom_fit",
+                       _("Unzoom"), NULL, GWY_STOCK_GRAPH_ZOOM_FIT,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_unzoom");
 
+    gwy_app_menu_set_flags_recursive(toolbar, &sens_data_graph);
+    gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_graph);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
@@ -167,8 +183,11 @@ gwy_app_toolbox_create(void)
 
     toolbar = gwy_tool_func_build_toolbox(G_CALLBACK(gwy_app_tool_use_cb),
                                           4, &first_tool);
+    toolbars = g_slist_append(toolbars, toolbar);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
+    gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
+    gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
@@ -181,6 +200,8 @@ gwy_app_toolbox_create(void)
     g_slist_free(labels);
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
 
+    g_object_set_data_full(G_OBJECT(toolbox), "toolbars", toolbars, g_free);
+    g_object_set_data_full(G_OBJECT(toolbox), "menus", menus, g_free);
     /* XXX */
     g_signal_connect(toolbox, "delete_event", G_CALLBACK(gwy_app_quit), NULL);
 
@@ -215,7 +236,7 @@ gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
 {
     GtkWidget *menu, *alignment, *last;
     GtkItemFactory *item_factory;
-    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
+    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<proc>",
                                         accel_group);
@@ -248,7 +269,7 @@ gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group)
 {
     GtkWidget *menu, *alignment;
     GtkItemFactory *item_factory;
-    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_GRAPH, 0 };
+    GwyMenuSensData sens_data = { GWY_MENU_FLAG_GRAPH, 0 };
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<graph>",
                                         accel_group);
@@ -281,7 +302,7 @@ gwy_app_menu_create_xtns_menu(GtkAccelGroup *accel_group)
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu;
-    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
+    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
                                         "<xtns>", accel_group, &item_factory);
@@ -314,7 +335,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
     };
     GtkItemFactory *item_factory;
     GtkWidget *alignment, *menu, *item;
-    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
+    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<file>",
                                         accel_group);
@@ -371,7 +392,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu;
-    GwyMenuSensitiveData sens_data;
+    GwyMenuSensData sens_data;
 
     menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
                                         "<edit>", accel_group, &item_factory);

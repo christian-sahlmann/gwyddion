@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwydgets/gwytoolbox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwymodule/gwymodulebrowser.h>
@@ -46,10 +47,10 @@
         set_sensitive_state(item, state); \
     } while (0)
 
-static void       gwy_app_update_last_process_func (GtkWidget *menu,
-                                                    const gchar *name);
-static void       setup_sensitivity_keys           (void);
-static gchar*     fix_recent_file_underscores      (gchar *s);
+static void   gwy_app_update_last_process_func (GtkWidget *menu,
+                                                const gchar *name);
+static void   setup_sensitivity_keys           (void);
+static gchar* fix_recent_file_underscores      (gchar *s);
 
 static GQuark sensitive_key = 0;
 static GQuark sensitive_state_key = 0;
@@ -112,7 +113,7 @@ gwy_app_menu_set_sensitive_array(GtkItemFactory *item_factory,
  **/
 void
 gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
-                                     GwyMenuSensitiveData *data)
+                                     GwyMenuSensData *data)
 {
     GObject *obj;
     guint i, j;
@@ -120,6 +121,7 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
     setup_sensitivity_keys();
 
     obj = G_OBJECT(widget);
+    gwy_debug("%s", g_type_name(G_TYPE_FROM_INSTANCE(obj)));
     i = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_key));
     if (i & data->flags) {
         j = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_state_key));
@@ -129,7 +131,8 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
 
     }
     if (GTK_IS_ALIGNMENT(widget)
-        || GTK_IS_MENU_BAR(widget)) {
+        || GTK_IS_MENU_BAR(widget)
+        || GWY_IS_TOOLBOX(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
                               (GtkCallback)gwy_app_menu_set_sensitive_recursive,
                               data);
@@ -143,7 +146,7 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
 
 void
 gwy_app_menu_set_flags_recursive(GtkWidget *widget,
-                                 GwyMenuSensitiveData *data)
+                                 GwyMenuSensData *data)
 {
     setup_sensitivity_keys();
 
@@ -151,7 +154,8 @@ gwy_app_menu_set_flags_recursive(GtkWidget *widget,
         set_sensitive_both(widget, data->flags, data->set_to);
 
     if (GTK_IS_ALIGNMENT(widget)
-        || GTK_IS_MENU_BAR(widget)) {
+        || GTK_IS_MENU_BAR(widget)
+        || GWY_IS_TOOLBOX(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
                               (GtkCallback)gwy_app_menu_set_flags_recursive,
                               data);
@@ -198,7 +202,7 @@ gwy_app_run_process_func_cb(gchar *name)
         GWY_RUN_INTERACTIVE, GWY_RUN_MODAL,
         GWY_RUN_NONINTERACTIVE, GWY_RUN_WITH_DEFAULTS,
     };
-    GwyMenuSensitiveData sens_data = {
+    GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC,
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
     };
@@ -376,6 +380,35 @@ gwy_app_menu_set_recent_files_menu(GtkWidget *menu)
     recent_files_menu = menu;
 }
 
+/**
+ * gwy_app_toolbox_update_state:
+ * @sens_data: Menu sensitivity data.
+ *
+ * Updates menus and toolbox sensititivity to reflect @sens_data.
+ **/
+void
+gwy_app_toolbox_update_state(GwyMenuSensData *sens_data)
+{
+    GSList *l;
+    GObject *obj;
+
+    gwy_debug("{%d, %d}", sens_data->flags, sens_data->set_to);
+
+    /* FIXME: this actually belongs to toolbox.c; however
+    * gwy_app_toolbox_update_state() is called from gwy_app_data_view_update()
+    * so libgwyapp would depend on gwyddion instead the other way around */
+    obj = G_OBJECT(gwy_app_main_window_get());
+
+    for (l = g_object_get_data(obj, "menus"); l; l = g_slist_next(l))
+        gtk_container_foreach(GTK_CONTAINER(l->data),
+                              (GtkCallback)gwy_app_menu_set_sensitive_recursive,
+                              sens_data);
+
+    for (l = g_object_get_data(obj, "toolbars"); l; l = g_slist_next(l))
+        gwy_app_menu_set_sensitive_recursive(GTK_WIDGET(l->data),
+                                             sens_data);
+}
+
 /***** Documentation *******************************************************/
 
 /**
@@ -396,7 +429,7 @@ gwy_app_menu_set_recent_files_menu(GtkWidget *menu)
  **/
 
 /**
- * GwyMenuSensitiveData:
+ * GwyMenuSensData:
  * @flags: The flags that have to be set for a widget to become sensitive.
  * @set_to: The actually set flags.
  *

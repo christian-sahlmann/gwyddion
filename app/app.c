@@ -43,11 +43,6 @@ static GList *current_graphs = NULL;
 static const gchar* current_tool = NULL;
 static gint untitled_no = 0;
 
-static const gchar *menu_list[] = {
-    "<file>", "<proc>", "<xtns>", "<edit>", "<graph>"
-};
-
-static void       gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data);
 static gint       compare_data_window_data_cb (GwyDataWindow *window,
                                                GwyContainer *data);
 static void       undo_redo_clean             (GObject *window,
@@ -119,7 +114,7 @@ gwy_app_get_current_data(void)
 void
 gwy_app_data_window_set_current(GwyDataWindow *window)
 {
-    GwyMenuSensitiveData sens_data = {
+    GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_DATA
     };
@@ -160,7 +155,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 void
 gwy_app_data_window_remove(GwyDataWindow *window)
 {
-    GwyMenuSensitiveData sens_data = {
+    GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA, 0
     };
     GList *item;
@@ -183,30 +178,6 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     if (current_tool)
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
     gwy_app_toolbox_update_state(&sens_data);
-}
-
-/**
- * gwy_app_toolbox_update_state:
- * @sens_data: Menu sensitivity data.
- *
- * Updates menus and toolbox sensititivity to reflect @sens_data.
- **/
-static void
-gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data)
-{
-    gsize i;
-
-    gwy_debug("{%d, %d}", sens_data->flags, sens_data->set_to);
-
-    for (i = 0; i < G_N_ELEMENTS(menu_list); i++) {
-        GtkWidget *menu = g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
-                                            menu_list[i]);
-
-        g_assert(menu);
-        gtk_container_foreach(GTK_CONTAINER(menu),
-                              (GtkCallback)gwy_app_menu_set_sensitive_recursive,
-                              sens_data);
-    }
 }
 
 /**
@@ -274,7 +245,7 @@ gwy_app_graph_window_get_current(void)
 void
 gwy_app_graph_window_set_current(GtkWidget *window)
 {
-    GwyMenuSensitiveData sens_data = {
+    GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH
     };
     GList *item;
@@ -303,7 +274,7 @@ gwy_app_graph_window_set_current(GtkWidget *window)
 void
 gwy_app_graph_window_remove(GtkWidget *window)
 {
-    GwyMenuSensitiveData sens_data = {
+    GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_GRAPH, 0
     };
     GList *item;
@@ -543,7 +514,7 @@ gwy_app_undo_checkpoint(GwyContainer *data,
     const char *good_keys[] = {
         "/0/data", "/0/mask", "/0/show", NULL
     };
-    GwyMenuSensitiveData sens_data = {
+    GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_UNDO
     };
@@ -591,7 +562,7 @@ gwy_app_undo_checkpoint(GwyContainer *data,
 void
 gwy_app_undo_undo(void)
 {
-    GwyMenuSensitiveData sens_data = {
+    GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_REDO
     };
@@ -659,7 +630,7 @@ gwy_app_undo_undo(void)
 void
 gwy_app_undo_redo(void)
 {
-    GwyMenuSensitiveData sens_data = {
+    GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_UNDO
     };
