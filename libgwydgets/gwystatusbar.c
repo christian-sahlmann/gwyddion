@@ -109,7 +109,7 @@ gwy_statusbar_new(void)
 
 static void
 gwy_statusbar_update_markup(GtkStatusbar *statusbar,
-                            guint context_id,
+                            G_GNUC_UNUSED guint context_id,
                             const gchar *text)
 {
     g_return_if_fail(GTK_IS_STATUSBAR(statusbar));
