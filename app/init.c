@@ -50,7 +50,7 @@ gwy_app_init(void)
     if (gwy_gl_ok)
         gwy_gl_ok = gwy_widgets_gl_init();
     g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
-    g_set_application_name(_(PACKAGE_NAME));
+    g_set_application_name(PACKAGE_NAME);
     gwy_palette_def_setup_presets();
     gwy_gl_material_setup_presets();
     gwy_palette_def_foreach((GwyPaletteDefFunc)ref_palette, NULL);
@@ -79,11 +79,15 @@ gwy_app_init(void)
                         "widget \"*.toolboxmenubar\" style \"toolboxmenubar\"\n"
                         "\n");
 #ifdef ENABLE_NLS
+#ifdef G_OS_WIN32
+    bindtextdomain(PACKAGE, gwy_find_self_dir("locale"));
+#else
     bindtextdomain(PACKAGE, LOCALEDIR);
+#endif  /* G_OS_WIN32 */
     textdomain(PACKAGE);
     if (!bind_textdomain_codeset(PACKAGE, "UTF-8"))
         g_critical("Cannot bind gettext `%s' codeset to UTF-8", PACKAGE);
-#endif
+#endif  /* ENABLE_NLS */
 }
 
 static void

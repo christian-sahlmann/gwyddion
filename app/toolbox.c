@@ -647,7 +647,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
         },
         {
             N_("/Remove _Presentation"),
-            NULL,
+            "<control><shift>K",
             gwy_app_show_kill_cb,
             0,
             NULL,
