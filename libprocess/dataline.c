@@ -419,6 +419,8 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
  * Returns the line data.
  *
  * Returns: The data as an array of doubles of length gwy_data_line_get_res().
+ *
+ * Since: 1.3.
  **/
 gdouble*
 gwy_data_line_get_data(GwyDataLine *a)
