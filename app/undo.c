@@ -328,6 +328,7 @@ gwy_app_undo_or_redo(GwyContainer *data,
         else if (df && !dfapp) {
             gwy_container_set_object(data, quark, df);
             level->items[i].data = NULL;
+            g_object_unref(df);
         }
         else if (!df && dfapp) {
             level->items[i].data = gwy_container_get_object(data, quark);
