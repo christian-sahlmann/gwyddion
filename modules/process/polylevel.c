@@ -35,16 +35,20 @@
 typedef struct {
     gint col_degree;
     gint row_degree;
+    gboolean do_extract;
 } PolyLevelArgs;
 
 typedef struct {
     GtkObject *col_degree;
     GtkObject *row_degree;
+    GtkWidget *do_extract;
 } PolyLevelControls;
 
 static gboolean         module_register          (const gchar *name);
 static gboolean         poly_level               (GwyContainer *data,
                                                   GwyRunType run);
+static void             poly_level_do            (GwyContainer *data,
+                                                  PolyLevelArgs *args);
 static gboolean         poly_level_dialog        (PolyLevelArgs *args);
 static void             poly_level_dialog_update (PolyLevelControls *controls,
                                                   PolyLevelArgs *args);
@@ -59,6 +63,7 @@ static void             sanitize_args            (PolyLevelArgs *args);
 PolyLevelArgs poly_level_defaults = {
     3,
     3,
+    FALSE
 };
 
 /* The module info. */
@@ -96,10 +101,8 @@ module_register(const gchar *name)
 static gboolean
 poly_level(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
     PolyLevelArgs args;
     gboolean ok;
-    gdouble *coeffs;
 
     g_return_val_if_fail(run & UNROTATE_RUN_MODES, FALSE);
     if (run == GWY_RUN_WITH_DEFAULTS)
@@ -107,28 +110,60 @@ poly_level(GwyContainer *data, GwyRunType run)
     else
         load_args(gwy_app_settings_get(), &args);
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
     ok = (run != GWY_RUN_MODAL) || poly_level_dialog(&args);
     if (run == GWY_RUN_MODAL)
         save_args(gwy_app_settings_get(), &args);
-    if (ok) {
-        gwy_app_undo_checkpoint(data, "/0/data", NULL);
-        coeffs
-            = gwy_data_field_area_fit_polynom(dfield, 0, 0,
-                                              gwy_data_field_get_xres(dfield),
-                                              gwy_data_field_get_yres(dfield),
-                                              args.col_degree, args.row_degree,
-                                              NULL);
-        gwy_data_field_area_subtract_polynom(dfield, 0, 0,
-                                             gwy_data_field_get_xres(dfield),
-                                             gwy_data_field_get_yres(dfield),
-                                             args.col_degree, args.row_degree,
-                                             coeffs);
-        g_free(coeffs);
-    }
+    if (ok)
+        poly_level_do(data, &args);
 
     return ok;
+}
+
+static void
+poly_level_do(GwyContainer *data,
+              PolyLevelArgs *args)
+{
+    GtkWidget *data_window;
+    GwyContainer *newdata;
+    const guchar *pal = GWY_PALETTE_GRAY;
+    GwyDataField *dfield;
+    gdouble *coeffs;
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    coeffs = gwy_data_field_area_fit_polynom(dfield, 0, 0,
+                                             gwy_data_field_get_xres(dfield),
+                                             gwy_data_field_get_yres(dfield),
+                                             args->col_degree, args->row_degree,
+                                             NULL);
+    gwy_data_field_area_subtract_polynom(dfield, 0, 0,
+                                         gwy_data_field_get_xres(dfield),
+                                         gwy_data_field_get_yres(dfield),
+                                         args->col_degree, args->row_degree,
+                                         coeffs);
+    if (!args->do_extract) {
+        g_free(coeffs);
+        return;
+    }
+
+    dfield = (GwyDataField*)gwy_serializable_duplicate(G_OBJECT(dfield));
+    gwy_data_field_fill(dfield, 0.0);
+    gwy_data_field_area_subtract_polynom(dfield, 0, 0,
+                                         gwy_data_field_get_xres(dfield),
+                                         gwy_data_field_get_yres(dfield),
+                                         args->col_degree, args->row_degree,
+                                         coeffs);
+    gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
+    g_free(coeffs);
+
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
+    newdata = (GwyContainer*)gwy_container_new();
+    gwy_container_set_string_by_name(newdata, "/0/base/palette", g_strdup(pal));
+    gwy_container_set_object_by_name(newdata, "/0/data", G_OBJECT(dfield));
+    data_window = gwy_app_data_window_create(newdata);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                     _("Background"));
 }
 
 static gboolean
@@ -153,15 +188,23 @@ poly_level_dialog(PolyLevelArgs *args)
                        FALSE, FALSE, 4);
     row = 0;
 
-    controls.col_degree = gtk_adjustment_new(args->col_degree, 0, 3, 1, 1, 0);
+    controls.col_degree = gtk_adjustment_new(args->col_degree, 0, 5, 1, 1, 0);
     gwy_table_attach_spinbutton(table, row++,
                                 _("Horizontal polynom degree "), "",
                                 controls.col_degree);
 
-    controls.row_degree = gtk_adjustment_new(args->row_degree, 0, 3, 1, 1, 0);
+    controls.row_degree = gtk_adjustment_new(args->row_degree, 0, 5, 1, 1, 0);
     gwy_table_attach_spinbutton(table, row++,
                                 _("Vertical polynom degree "), "",
                                 controls.row_degree);
+
+    controls.do_extract
+        = gtk_check_button_new_with_mnemonic(_("Extract background"));
+    gtk_table_attach(GTK_TABLE(table), controls.do_extract,
+                     0, 3, row, row+1, GTK_FILL, 0, 2, 2);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_extract),
+                                 args->do_extract);
+    row++;
 
     gtk_widget_show_all(dialog);
     do {
@@ -203,6 +246,8 @@ poly_level_dialog_update(PolyLevelControls *controls,
                              args->col_degree);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->row_degree),
                              args->row_degree);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->do_extract),
+                                 args->do_extract);
 }
 
 static void
@@ -213,16 +258,20 @@ poly_level_update_values(PolyLevelControls *controls,
         = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->col_degree));
     args->row_degree
         = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->row_degree));
+    args->do_extract
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->do_extract));
 }
 
 static const gchar *col_degree_key = "/module/poly_level/col_degree";
 static const gchar *row_degree_key = "/module/poly_level/row_degree";
+static const gchar *do_extract_key = "/module/poly_level/do_extract";
 
 static void
 sanitize_args(PolyLevelArgs *args)
 {
     args->col_degree = CLAMP(args->col_degree, 0, 3);
     args->row_degree = CLAMP(args->row_degree, 0, 3);
+    args->do_extract = !!args->do_extract;
 }
 
 static void
@@ -235,6 +284,8 @@ load_args(GwyContainer *container,
                                     &args->col_degree);
     gwy_container_gis_int32_by_name(container, row_degree_key,
                                     &args->row_degree);
+    gwy_container_gis_boolean_by_name(container, do_extract_key,
+                                      &args->do_extract);
     sanitize_args(args);
 }
 
@@ -246,6 +297,8 @@ save_args(GwyContainer *container,
                                     args->col_degree);
     gwy_container_set_int32_by_name(container, row_degree_key,
                                     args->row_degree);
+    gwy_container_set_boolean_by_name(container, do_extract_key,
+                                      args->do_extract);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
