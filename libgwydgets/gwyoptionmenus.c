@@ -607,6 +607,36 @@ gwy_option_menu_filter(GCallback callback,
 }
 
 /**
+ * gwy_option_menu_mergegrain:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @current: Grain merging selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of available grain merging modes
+ *
+ * It sets object data "mergegrain-type" to grain merge type
+ * for each menu item (use GPOINTER_TO_INT() when retrieving it).
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_mergegrain(GCallback callback,
+                       gpointer cbdata,
+                       GwyFilterType current)
+{
+    static const GwyEnum entries[] = {
+        { "Union",            GWY_MERGE_UNION,  },
+        { "Intersection",     GWY_MERGE_INTERSECTION, },
+        
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "mergegrain-type", callback, cbdata,
+                                  current);
+}
+
+/**
  * gwy_option_menu_metric_unit:
  * @callback: A callback called when a menu item is activated (or %NULL for
  * @cbdata: User data passed to the callback.

@@ -52,6 +52,11 @@ typedef enum {
       GWY_FILTER_PREWITT       = 5  /*Prewitt gradient filter*/
 } GwyFilterType;
 
+typedef enum {
+    GWY_MERGE_UNION        = 0, /*union of all found grains*/
+    GWY_MERGE_INTERSECTION = 1  /*intersection of grains found by different methods*/
+} GwyMergeType;
+
 struct _GwyDataField {
     GObject parent_instance;
 

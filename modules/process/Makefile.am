@@ -12,7 +12,8 @@ process_PROGRAMS = \
 	level.so \
 	rotate.so \
 	scale.so \
-	shade.so
+	shade.so \
+        grain_mark.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -40,6 +41,10 @@ shade_so_LDFLAGS = $(module_ldflags),shade.so
 
 facet_level_so_SOURCES = facet-level.c
 facet_level_so_LDFLAGS = $(module_ldflags),facet-level.so
+
+grain_mark_so_SOURCES = grain_mark.c
+grain_mark_so_LDFLAGS = $(module_ldflags),grain_mark.so
+
 
 
 INCLUDES = -I$(top_srcdir)
