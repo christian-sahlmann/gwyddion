@@ -19,8 +19,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <locale.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
@@ -35,8 +33,6 @@ static void logger(const gchar *log_domain,
                    GLogLevelFlags log_level,
                    const gchar *message,
                    gpointer user_data);
-static void gwy_setenv(const gchar *name,
-                       const gchar *value);
 
 int
 main(int argc, char *argv[])
@@ -48,17 +44,6 @@ main(int argc, char *argv[])
     setup_logging();
     gwy_find_self_set_argv0(argv[0]);
 #endif
-    /* FIXME: remove, once gwyddion is properly i18d and l10d, but now it
-     * looks ugly */
-    /*
-    gtk_disable_setlocale();
-    setlocale(LC_COLLATE, "");
-    setlocale(LC_CTYPE, "");
-    setlocale(LC_TIME, "");
-    setlocale(LC_NUMERIC, "");
-    setlocale(LC_MESSAGES, "C");
-    */
-    gwy_setenv("LC_MESSAGES", "C");
 
     gtk_init(&argc, &argv);
     config_file = gwy_app_settings_get_config_filename();
@@ -142,27 +127,5 @@ logger(const gchar *log_domain,
         return;
     fprintf(logfile, "%s: %s\n", log_domain, message);
 }
-
-/*
- * An alternative setenv().
- *
- * XXX: May leak memory, but doesn't acces freed memory.  Depends on platform.
- */
-static void
-gwy_setenv(const gchar *name, const gchar *value)
-{
-#ifdef G_OS_WIN32
-  gchar *s;
-
-  while (not putenv(name))
-    ;
-  s = g_strconcat(name, "=", value, NULL);
-  if (putenv(s))
-#else
-  if (setenv(name, value, TRUE))
-#endif
-    g_error("Cannot setenv %s=%s", name, value);
-}
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
