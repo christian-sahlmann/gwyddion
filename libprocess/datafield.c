@@ -253,8 +253,16 @@ gwy_data_field_deserialize(const guchar *buffer,
     data_field->data = data;
     data_field->xres = xres;
     data_field->yres = yres;
-    if (si_unit_z != NULL) data_field->si_unit_z = si_unit_z;
-    if (si_unit_xy != NULL) data_field->si_unit_xy = si_unit_xy;
+    if (si_unit_z != NULL) 
+    {
+        if (data_field->si_unit_z!=NULL) g_object_unref(data_field->si_unit_z);
+        data_field->si_unit_z = si_unit_z;
+    }
+    if (si_unit_xy != NULL) 
+    {
+        if (data_field->si_unit_xy!=NULL) g_object_unref(data_field->si_unit_xy);
+        data_field->si_unit_xy = si_unit_xy;
+    }
 
 
     return (GObject*)data_field;
