@@ -129,25 +129,27 @@ crop_do(void)
     GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *dfield;
-    gdouble x0, y0, x1, y1;
+    gdouble xmin, ymin, xmax, ymax;
 
-    if (!gwy_layer_select_get_selection(select_layer, &x0, &y0, &x1, &y1))
+    if (!gwy_layer_select_get_selection(select_layer,
+                                        &xmin, &ymin, &xmax, &ymax))
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    x0 = gwy_data_field_rtoj(dfield, x0);
-    y0 = gwy_data_field_rtoi(dfield, y0);
-    x1 = gwy_data_field_rtoj(dfield, x1) + 1;
-    y1 = gwy_data_field_rtoi(dfield, y1) + 1;
-    gwy_data_field_resize(dfield, x0, y0, x1, y1);
+    xmin = gwy_data_field_rtoj(dfield, xmin);
+    ymin = gwy_data_field_rtoi(dfield, ymin);
+    xmax = gwy_data_field_rtoj(dfield, xmax) + 1;
+    ymax = gwy_data_field_rtoi(dfield, ymax) + 1;
+    gwy_data_field_resize(dfield, xmin, ymin, xmax, ymax);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     gwy_layer_select_unselect(select_layer);
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
-    gwy_debug("%d %d", gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
+    gwy_debug("%d %d",
+              gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }
 
 static void
@@ -253,7 +255,7 @@ update_label(GtkWidget *label, gdouble value)
 static void
 crop_selection_finished_cb(void)
 {
-    gdouble x0, y0, x1, y1;
+    gdouble xmin, ymin, xmax, ymax;
     gboolean is_visible, is_selected;
 
     gwy_debug("");
@@ -261,14 +263,14 @@ crop_selection_finished_cb(void)
      * is_visible = GTK_WIDGET_VISIBLE(crop_dialog);*/
     is_visible = controls.is_visible;
     is_selected = gwy_layer_select_get_selection(select_layer,
-                                                 &x0, &y0, &x1, &y1);
+                                                 &xmin, &ymin, &xmax, &ymax);
     if (!is_visible && !is_selected)
         return;
     if (is_selected) {
-        update_label(controls.x, MIN(x0, x1));
-        update_label(controls.y, MIN(y0, y1));
-        update_label(controls.w, fabs(x1 - x0));
-        update_label(controls.h, fabs(y1 - y0));
+        update_label(controls.x, MIN(xmin, xmax));
+        update_label(controls.y, MIN(ymin, ymax));
+        update_label(controls.w, fabs(xmax - xmin));
+        update_label(controls.h, fabs(ymax - ymin));
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls.x), "");
