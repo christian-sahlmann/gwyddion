@@ -52,10 +52,6 @@ static gint remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gi
 
 static gint find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdouble threshold, gdouble setsize);
 
-static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow);
-/*static void mask_grow_do(GwyDataField *dfield,
-	                  gint by);
-*/
 /*public functions*/
 
 
@@ -393,8 +389,8 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
 
     ulcol = dfield->xres/2; ulrow = dfield->xres/2;
     brcol = dfield->xres; brrow = dfield->xres;
-	 
-    median = smedian(dfield, ulcol, ulrow, brcol, brrow);
+	
+    median = gwy_data_field_area_get_median(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow);
     noise_variance = median/0.6745;
    
 
@@ -429,7 +425,6 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
 	    g_assert_not_reached();
 	    break;
 	}
-	printf("Level %d, diagonal: %d removed\n", br, count);
 	
 
 	
@@ -452,7 +447,6 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
 	    g_assert_not_reached();
 	    break;
 	}
-	printf("Level %d, horizontal: %d removed\n", br, count);
 	
 
 	
@@ -475,7 +469,6 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
 	    g_assert_not_reached();
 	    break;
 	}
-	printf("Level %d, vertical: %d removed\n", br, count);
 	
     }
     
@@ -915,42 +908,6 @@ find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdou
     return count;
 }
 
-
-gint dsort(const void *p_a, const void *p_b)
-{
-   gdouble *a=(gdouble *)p_a;
-   gdouble *b=(gdouble *)p_b;
-   if (*a < *b) return -1;
-   else if (*a == *b) return 0;
-   else return 1;
-}
-
-static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow)
-{
-   gint i, j, n, k;
-   gdouble *datapos, val, *buf;
-   n = (brrow-ulrow)*(brcol-ulcol);
-   buf = g_malloc( sizeof(double)*n);
-   
-
-   k = 0;
-   datapos = dfield->data + ulrow*dfield->xres + ulcol;
-   for (i = 0; i < (brrow - ulrow); i++) {
-       gdouble *drow = datapos + i*dfield->xres;
-
-       for (j = 0; j < (brcol - ulcol); j++) {
-	   buf[k] = fabs(*drow);
-	   k++;
-	   drow++;
-       }
-   }
-  
-   qsort((void *)buf, n, sizeof(gdouble), dsort);
-
-   val = (buf[(gint)(n/2)-1]+buf[(gint)(n/2)])/2;
-   g_free(buf);
-   return val;
-}
 
 
 
