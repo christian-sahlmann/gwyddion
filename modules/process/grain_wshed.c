@@ -28,7 +28,7 @@
 #include <app/gwyapp.h>
 
 #define WSHED_RUN_MODES \
-    (GWY_RUN_MODAL)
+    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 
 /* Data for this function.
@@ -73,14 +73,14 @@ static void        ok                         (WshedControls *controls,
                                                GwyContainer *data);
 static void        mask_process               (GwyDataField *dfield,
                                                GwyDataField *maskfield,
-                                               WshedArgs *args,
-                                               WshedControls *controls);
+                                               WshedArgs *args);
 static void        wshed_load_args            (GwyContainer *container,
                                                WshedArgs *args);
 static void        wshed_save_args            (GwyContainer *container,
                                                WshedArgs *args);
 static void        wshed_sanitize_args        (WshedArgs *args);
-
+static void        run_noninteractive         (WshedArgs *args, 
+                                               GwyContainer *data);
 
 WshedArgs wshed_defaults = {
     10,
@@ -132,7 +132,15 @@ wshed(GwyContainer *data, GwyRunType run)
         args = wshed_defaults;
     else
         wshed_load_args(gwy_app_settings_get(), &args);
-    ook = (run != GWY_RUN_MODAL) || wshed_dialog(&args, data);
+    if (run == GWY_RUN_NONINTERACTIVE || run == GWY_RUN_WITH_DEFAULTS)
+    {
+        run_noninteractive(&args, data);
+        ook = TRUE;
+    }
+    else if (run == GWY_RUN_MODAL)
+    {
+        ook = wshed_dialog(&args, data);
+    }
     if (ook) {
 
         if (run != GWY_RUN_WITH_DEFAULTS)
@@ -419,7 +427,15 @@ preview(WshedControls *controls,
 
     }
 
-    mask_process(dfield, maskfield, args, controls);
+    args->locate_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_steps));
+    args->locate_thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_thresh));
+    args->locate_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_dropsize));
+    args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_steps));
+    args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize));
+
+
+    mask_process(dfield, maskfield, args);
+    controls->computed = TRUE;
 
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 
@@ -455,7 +471,14 @@ ok(WshedControls *controls,
 
     if (controls->computed == FALSE)
     {
-        mask_process(dfield, maskfield, args, controls);
+            args->locate_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_steps));
+            args->locate_thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_thresh));
+            args->locate_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_dropsize));
+            args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_steps));
+            args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize));
+
+            mask_process(dfield, maskfield, args);
+            controls->computed = TRUE;
     }
     else
     {
@@ -466,21 +489,42 @@ ok(WshedControls *controls,
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
+static void
+run_noninteractive(WshedArgs *args, GwyContainer *data)
+{
+    GwyDataField *dfield, *maskfield;
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+    {
+        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                  "/0/mask"));
+        gwy_data_field_resample(maskfield,
+                               gwy_data_field_get_xres(dfield),
+                               gwy_data_field_get_yres(dfield),
+                               GWY_INTERPOLATION_NONE);
+        gwy_data_field_copy(dfield, maskfield);
+    }
+    else
+    {
+        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
+
+    }
+
+    mask_process(dfield, maskfield, args);
+}
 
 static void
-mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, WshedControls *controls)
+mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args)
 {
     gdouble max, min;
     GwyWatershedStatus status;
 
     max = gwy_data_field_get_max(dfield);
     min = gwy_data_field_get_min(dfield);
-
-    args->locate_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_steps));
-    args->locate_thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_thresh));
-    args->locate_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_dropsize));
-    args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_steps));
-    args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize));
 
     /*
     gwy_data_field_grains_mark_watershed(dfield, maskfield,
@@ -529,7 +573,6 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, Wsh
     } while (status.state != GWY_WSHED_FINISHED);
     gwy_app_wait_finish();
 
-    controls->computed = TRUE;
 }
 
 static const gchar *locate_steps_key = "/module/mark_wshed/locate_steps";
