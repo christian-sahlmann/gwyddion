@@ -1603,13 +1603,13 @@ gwy_data_line_get_modus(GwyDataLine *data_line,
  * GwySFOutputType:
  * @GWY_SF_OUTPUT_DH: Distribution of heights.
  * @GWY_SF_OUTPUT_CDH: Cumulative distribution of heights.
- * @GWY_SF_OUTPUT_DA: Distribution of angles.
- * @GWY_SF_OUTPUT_CDA: Cumulative distribution of angles.
+ * @GWY_SF_OUTPUT_DA: Distribution of angles (slopes).
+ * @GWY_SF_OUTPUT_CDA: Cumulative distribution of angles (slopes).
  * @GWY_SF_OUTPUT_ACF: Autocorrelation fucntions.
  * @GWY_SF_OUTPUT_HHCF: Height-height correlation function.
  * @GWY_SF_OUTPUT_PSDF: Power spectral density fucntion.
  *
- * Statistical function types.
+ * Statistical function type.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
