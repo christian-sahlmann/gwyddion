@@ -35,8 +35,11 @@ Modules:
 Library:
 - libgwyddion: Marquardt-Levenverg non-linear least square fitter was
   added (GwyNLFitter).
-- libprocess: XXX XXX XXX XXX urèitì tam toho dost pøibylo, ale ten bastard
-  k nièemu nenapsal Since: 1.1., tak¾e kdo ví XXX XXX XXX XXX
+- libprocess: Functions for computing fractal dimension and surface area
+  added. Functions for correlation, crosscorrelation, outlier detection
+  and data correction by Laplace solver added.
+- libprocess: Vertical PSDF computation fixed. Some minor bugs having
+  no specific influence on results corrected and code cleaned.
 - libgwymodule: Data process modules can specify sensitivity of their
   menu entries.
 - libgwyddion: Specific functions for storing enums in GwyContainer were
