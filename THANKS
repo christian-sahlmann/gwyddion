@@ -1,4 +1,4 @@
-The Czech Metrology Insititute (http://www.cmi.cz/index.php?lang=2)
+The Czech Metrology Insititute (http://www.cmi.cz/?lang=2)
     for development and domain funding and further support.
 
 Jochen Puchalla <mail@puchalla-online.de>
@@ -16,3 +16,5 @@ Jernej Simoncic
 MV <kasigra@seznam.cz>
     for SPMLab format reverse-engineering.
 
+Livia Della Seta <livia.dellaseta@casaccia.enea.it>
+    for help with Assing AFM file import implementation.
