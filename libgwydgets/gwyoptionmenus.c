@@ -49,7 +49,7 @@ gwy_palette_menu_create(const gchar *current,
                         gint *current_idx)
 {
     GSList *l, *entries = NULL;
-    GtkWidget *menu, *image, *item;
+    GtkWidget *menu, *image, *item, *hbox, *label;
     gint i, idx;
 
     gwy_palette_def_foreach((GwyPaletteDefFunc)gwy_hash_table_to_slist_cb,
@@ -65,8 +65,13 @@ gwy_palette_menu_create(const gchar *current,
         const gchar *name = gwy_palette_def_get_name(palette_def);
 
         image = gwy_sample_palette_to_gtkimage(palette_def);
-        item = gtk_image_menu_item_new_with_label(name);
-        gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+        item = gtk_menu_item_new();
+        hbox = gtk_hbox_new(FALSE, 6);
+        label = gtk_label_new(name);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+        gtk_container_add(GTK_CONTAINER(item), hbox);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_object_set_data(G_OBJECT(item), "palette-name", (gpointer)name);
         if (current && strcmp(current, name) == 0)
