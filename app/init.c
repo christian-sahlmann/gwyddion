@@ -59,7 +59,7 @@ gwy_app_init(void)
     optimization_fooler += gwy_palette_def_get_type();
     optimization_fooler += gwy_container_get_type();
 
-    g_log_set_always_fatal(G_LOG_LEVEL_ERROR);
+    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(_(PACKAGE_NAME));
     gwy_palette_def_setup_presets();
     gwy_palette_def_foreach((GwyPaletteDefFunc)ref_palette, NULL);

@@ -26,6 +26,7 @@
 #include "file.h"
 #include "menu.h"
 #include "app.h"
+#include "undo.h"
 #include "settings.h"
 
 #include "gwyddion.h"

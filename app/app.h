@@ -24,7 +24,6 @@
 #include <gtk/gtkwidget.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwydgets/gwydatawindow.h>
-#include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
 
@@ -38,13 +37,6 @@ GtkWidget*      gwy_app_data_window_create        (GwyContainer *data);
 gint            gwy_app_data_window_set_untitled  (GwyDataWindow *window,
                                                    const gchar *templ);
 void            gwy_app_data_view_update          (GtkWidget *data_view);
-void            gwy_app_undo_checkpoint           (GwyContainer *data,
-                                                   ...);
-void            gwy_app_undo_checkpointv          (GwyContainer *data,
-                                                   gsize n,
-                                                   const gchar **keys);
-void            gwy_app_undo_undo                 (void);
-void            gwy_app_undo_redo                 (void);
 void            gwy_app_change_mask_color_cb      (gpointer unused,
                                                    gboolean defaultc);
 
@@ -64,7 +56,7 @@ gboolean        gwy_app_quit                      (void);
 
 
 /* FIXME: ugly. to be moved somewhere? refactored? */
-void       gwy_app_clean_up_data            (GwyContainer *data);
+void            gwy_app_clean_up_data             (GwyContainer *data);
 
 G_END_DECLS
 

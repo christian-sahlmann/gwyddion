@@ -21,7 +21,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
 #define BASICOPS_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)

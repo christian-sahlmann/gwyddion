@@ -26,9 +26,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-#include <app/unitool.h>
+#include <app/gwyapp.h>
 
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))

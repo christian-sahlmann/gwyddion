@@ -26,6 +26,7 @@
 #include <app/menu.h>
 #include <app/settings.h>
 #include <app/unitool.h>
+#include <app/undo.h>
 #include <app/wait.h>
 
 #endif /* __GWY_APP_GWYAPP_H__ */
