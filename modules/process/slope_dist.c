@@ -58,7 +58,8 @@ static void          save_args                (GwyContainer *container,
 static gdouble       compute_slopes           (GwyDataField *dfield,
                                                gdouble *xder,
                                                gdouble *yder);
-static GwyDataField* make_datafield           (gint res,
+static GwyDataField* make_datafield           (GwyDataField *old,
+                                               gint res,
                                                gulong *count,
                                                gdouble real,
                                                gboolean logscale);
@@ -237,7 +238,7 @@ slope_do(GwyDataField *dfield,
     g_free(yder);
     g_free(xder);
 
-    return make_datafield(args->size, count, 2.0*max, args->logscale);
+    return make_datafield(dfield, args->size, count, 2.0*max, args->logscale);
 }
 
 static gdouble
@@ -277,18 +278,35 @@ compute_slopes(GwyDataField *dfield,
 }
 
 static GwyDataField*
-make_datafield(gint res, gulong *count,
+make_datafield(GwyDataField *old,
+               gint res, gulong *count,
                gdouble real, gboolean logscale)
 {
     GwyDataField *dfield;
-    GwySIUnit *zunit;
+    GwySIUnit *unit;
+    gchar *xyu, *zu, *u;
     gdouble *d;
     gint i;
 
     dfield = GWY_DATA_FIELD(gwy_data_field_new(res, res, real, real, FALSE));
-    zunit = GWY_SI_UNIT(gwy_si_unit_new(""));
-    gwy_data_field_set_si_unit_z(dfield, zunit);
-    g_object_unref(zunit);
+
+    unit = GWY_SI_UNIT(gwy_si_unit_new(""));
+    gwy_data_field_set_si_unit_z(dfield, unit);
+    g_object_unref(unit);
+
+    zu = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_z(old));
+    xyu = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_xy(old));
+    if (!strcmp(zu, xyu))
+        unit = GWY_SI_UNIT(gwy_si_unit_new(""));
+    else {
+        u = g_strconcat(zu, "/", xyu, NULL);
+        unit = GWY_SI_UNIT(gwy_si_unit_new(u));
+        g_free(u);
+    }
+    gwy_data_field_set_si_unit_xy(dfield, unit);
+    g_free(xyu);
+    g_free(zu);
+    g_object_unref(unit);
 
     d = gwy_data_field_get_data(dfield);
     if (logscale) {
