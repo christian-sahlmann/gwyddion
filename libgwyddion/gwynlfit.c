@@ -235,8 +235,15 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
     /* find non-fixed parameters and map all -> non-fixed */
     n_var_param = 0;
     var_param_id = g_new(gint, n_param);
-    for (i = 0; i < n_param; i++)
-        var_param_id[i] = fixed_param[i] ? -1 : n_var_param++;
+    for (i = 0; i < n_param; i++) {
+        if (fixed_param[i])
+            var_param_id[i] = -1;
+        else {
+            var_param_id[i] = n_var_param;
+            n_var_param++;
+        }
+        gwy_debug("var_param_id[%d] = %d", i, var_param_id[i]);
+    }
 
     if (!n_var_param) {
         g_free(w);
@@ -323,7 +330,7 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
         for (i = 0; i < n_param; i++) {
             if (var_param_id[i] < 0)
                 continue;
-            param[i] = saveparam[i] + xr[i];
+            param[i] = saveparam[i] + xr[var_param_id[i]];
             if (fabs(param[i] - saveparam[i]) == 0)
                 count++;
         }

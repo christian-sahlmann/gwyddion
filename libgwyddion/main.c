@@ -561,10 +561,10 @@ test_nlfit(void)
     }
 
     fputs("\n", stderr);
-    param[0] = 5.0;
+    param[0] = 10.0;
     param[1] = 12.0;
-    param[2] = 1.1;
-    fixed[0] = FALSE;
+    param[2] = 1.0;
+    fixed[0] = TRUE;
     fixed[1] = FALSE;
     fixed[2] = TRUE;
     summ = gwy_math_nlfit_fit_with_fixed(ms, count, xmq, ymq, vmq, 3, param,
@@ -916,9 +916,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_si_unit();
-    test_si_unit_format();
-    test_si_unit_parse();
+    test_nlfit();
 
     return 0;
 }
