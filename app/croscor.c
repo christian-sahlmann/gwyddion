@@ -25,6 +25,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include "app.h"
+#include <app/wait.h>
 #include "file.h"
 #include "settings.h"
 
@@ -347,10 +348,24 @@ gwy_data_croscor_do(GwyCroscorArgs *args,
     GwyContainer *data;
     GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2;
     GwyDataWindow *operand1, *operand2;
+    gint iteration = 0;
+    GwyComputationStateType state;
+        
 
     operand1 = args->win1;
     operand2 = args->win2;
-
+    if (operand1 == NULL || operand2 == NULL)
+    {
+        dialog = gtk_message_dialog_new(GTK_WINDOW(croscor_window),
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_INFO,
+                                        GTK_BUTTONS_CLOSE,
+                                        ("Please, specify two data fields."));
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return FALSE;
+    }
+   
     /*get all parameters back*/
     args->search_x = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->search_area_x));
     args->search_y = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->search_area_y));
@@ -362,7 +377,19 @@ gwy_data_croscor_do(GwyCroscorArgs *args,
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-        
+
+    if (dfield1->xres != dfield2->xres || dfield1->yres != dfield2->yres)   
+    {
+        dialog = gtk_message_dialog_new(GTK_WINDOW(croscor_window),
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_INFO,
+                                        GTK_BUTTONS_CLOSE,
+                                        ("Both data fields must have same size."));
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return FALSE;
+     }
+    
     /*result fields - after computation result should be at dfieldx*/
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     dfieldx = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -371,11 +398,23 @@ gwy_data_croscor_do(GwyCroscorArgs *args,
 
     /*compute crosscorelation*/
 
-    gwy_data_field_croscorrelate(dfield1, dfield2, dfieldx, dfieldy, 
+    
+    iteration = 0;
+    state = GWY_COMP_INIT;
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
+    do
+    {
+        gwy_data_field_croscorrelate_iteration(dfield1, dfield2, dfieldx, dfieldy, 
                                  args->search_x, args->search_y,
-                                 args->window_x, args->window_y);
-
+                                 args->window_x, args->window_y, 
+                                 &state, &iteration);
+        gwy_app_wait_set_message("Correlating...");
+        if (!gwy_app_wait_set_fraction(iteration/(gdouble)(dfield1->xres - (args->search_x)/2))) return FALSE;
+        
+    } while (state != GWY_COMP_FINISHED);
+    gwy_app_wait_finish();
     /*set right output*/
+    
     
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);

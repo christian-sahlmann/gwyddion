@@ -431,7 +431,7 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
     {
         gwy_data_field_correlate_iteration(dfield, kernelfield, retfield, &state, &iteration);
         gwy_app_wait_set_message("Correlating...");
-        if (!gwy_app_wait_set_fraction(iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2))) break;
+        if (!gwy_app_wait_set_fraction(iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2))) return FALSE;
         
     } while (state != GWY_COMP_FINISHED);
     gwy_app_wait_finish();

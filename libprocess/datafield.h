@@ -622,6 +622,19 @@ void gwy_data_field_croscorrelate(GwyDataField *data_field1,
                                   gint window_width,
                                   gint window_height);
 
+void gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
+                                  GwyDataField *data_field2,
+                                  GwyDataField *x_dist,
+                                  GwyDataField *y_dist,
+                                  gint search_width, 
+                                  gint search_height,
+                                  gint window_width,
+                                  gint window_height,
+                                  GwyComputationStateType *state,
+                                  gint *iteration);
+
+
+
 void gwy_data_field_correlate(GwyDataField *data_field,
                                   GwyDataField *kernel_field,
                                   GwyDataField *score);

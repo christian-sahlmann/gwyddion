@@ -3417,12 +3417,99 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
             }
             x_dist->data[i + xres*j] = imax - i;
             y_dist->data[i + xres*j] = jmax - j;
-            
         }
-        printf("%d\n", i);
+    }
+}
+
+/**
+ * gwy_data_field_croscorrelate_iteration:
+ * @data_field1: data field 
+ * @data_field2: data field
+ * @x_dist: field of resulting x-distances
+ * @y_dist: field of resulting y-distances
+ * @search_width: search area width
+ * @search_height: search area height
+ * @window_width: correlation window width
+ * @window_height: correlation window height
+ * @state: state of computation
+ * @iteration: iteration of computation loop (winthin GWY_COMP_ITERATE state)
+ *
+ * Algotihm for matching two different images of the same
+ * object under changes. It does not use any special features
+ * for matching. It simply searches for all points (with their neighbourhood)
+ * of @data_field1 within @data_field2. Parameters @search_width and @search_height
+ * determine maimum area where to search for points. The area is cenetered
+ * in the @data_field2 at former position of points at @data_field1.
+ **/
+void
+gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *data_field2, 
+                             GwyDataField *x_dist, GwyDataField *y_dist,
+                             gint search_width, gint search_height, gint window_width, gint window_height,
+                             GwyComputationStateType *state, gint *iteration)
+{
+    gint xres, yres, i, j, m, n;
+    gint imax, jmax; 
+    gdouble cormax, score;
+   
+    if (data_field1 == NULL || data_field2 == NULL) 
+    {
+        g_error("Field for correlation is NULL.");
+        return;
+    }
+    
+    xres = data_field1->xres;
+    yres = data_field1->yres;
+     
+    if (xres != data_field2->xres || yres != data_field2->yres)
+    {
+        g_warning("Fields must be of same dimensions");
+        return;
     }
 
-
+    if (*state == GWY_COMP_INIT)
+    {
+        gwy_data_field_fill(x_dist, 0);
+        gwy_data_field_fill(y_dist, 0);
+        *state = GWY_COMP_ITERATE;
+        *iteration = 0;
+    }
+    else if (*state == GWY_COMP_ITERATE)
+    {
+        if (iteration==0) i=(search_width/2);
+        else i = *iteration;
+ 
+        for (j=(search_height/2); j<(yres-search_height/2); j++)
+        {
+            /*iterate over search area in the second datafield*/
+            imax = i; jmax = j;
+            cormax = -1;
+            for (m = (i-search_width); m<i; m++)
+            {
+                for (n = (j-search_height); n<j; n++)
+                {
+                    score = gwy_data_field_get_correlation_score(data_field1, data_field2,
+                                                           (i-search_width/2), (j-search_height/2),
+                                                           m, n, m+search_width, n+search_height);
+                    
+                    /*add a little to score at exactly same point - to prevent problems on flat data*/
+                    if (m==(i-search_width/2) && n==(j-search_height/2)) score *= 1.01;
+                        
+                    if (cormax<score) 
+                    {
+                        cormax = score; 
+                        imax = m+search_width/2;  
+                        jmax = n+search_height/2;
+                    }
+                    
+                }
+            }
+            x_dist->data[i + xres*j] = imax - i;
+            y_dist->data[i + xres*j] = jmax - j;
+            
+        }
+        *iteration = i+1; 
+        if (*iteration == (xres-search_height/2)) *state = GWY_COMP_FINISHED;
+     }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
