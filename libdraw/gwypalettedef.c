@@ -976,6 +976,16 @@ gwy_palette_def_foreach(GwyPaletteDefFunc callback,
     g_hash_table_foreach(klass->palettes, (GHFunc)callback, user_data);
 }
 
+/**
+ * gwy_palette_def_dump:
+ * @palette_def: A palette definition.
+ *
+ * Dumps a paletted definition to text.
+ *
+ * Returns: A #GString with palette text representation.
+ *
+ * Since: 1.4.
+ **/
 GString*
 gwy_palette_def_dump(GwyPaletteDef *palette_def)
 {
@@ -1019,6 +1029,20 @@ next_line(const gchar *text, gsize *pos)
     return g_strndup(text + oldpos, *pos - oldpos);
 }
 
+/**
+ * gwy_palette_def_parse:
+ * @text: A text palette definition dump, as created with
+ *        gwy_palette_def_dump().
+ * @rename_on_clash: Whether the created palette should be renamed to an
+ *                   unique name instad of overwriting the existing one on
+ *                   a name clash.
+ *
+ * Creates a palette defnition from a text dump.
+ *
+ * Returns: The palette (%NULL on failure).
+ *
+ * Since: 1.4.
+ **/
 GwyPaletteDef*
 gwy_palette_def_parse(const gchar *text,
                       gboolean rename_on_clash)
