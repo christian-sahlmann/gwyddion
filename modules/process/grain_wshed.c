@@ -50,6 +50,7 @@ typedef struct {
     GtkObject *entry_locate_dropsize;
     GtkObject *entry_wshed_dropsize;
     GwyContainer *mydata;
+    gboolean computed;
 } WshedControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -212,7 +213,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
  
-
+    controls.computed = FALSE;
    
 
     gtk_widget_show_all(dialog);
@@ -380,8 +381,16 @@ ok(WshedControls *controls,
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
 
     }
-   
-    mask_process(dfield, maskfield, args, controls);
+  
+    if (controls->computed == FALSE)
+    { 
+        mask_process(dfield, maskfield, args, controls);
+    }
+    else
+    {
+        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/mask"));
+        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
+    }
     
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
@@ -407,6 +416,8 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, Wsh
                                          args->locate_dropsize*(max-min)/5000.0,
                                          args->wshed_steps,
                                          args->wshed_dropsize*(max-min)/5000.0);
+
+    controls->computed = TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
