@@ -137,7 +137,7 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
     /* create missing branches
      * XXX: Gtk+ essentially can do this itself
      * but this way we can e. g. put a tearoff at the top of each branch... */
-    for (l = entries; l; l = l->next) {
+    for (l = entries; l; l = g_slist_next(l)) {
         GwyProcessFuncInfo *func_info = (GwyProcessFuncInfo*)l->data;
 
         if (!func_info->menu_path || !*func_info->menu_path)
