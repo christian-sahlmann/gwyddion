@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
@@ -84,6 +85,16 @@ static void       laplace_average      (GwyDataField *dfield,
                                         gint yimin,
                                         gint ximax,
                                         gint yimax);
+static void       fractal_average      (GwyDataField *dfield,
+                                        gint ximin,
+                                        gint yimin,
+                                        gint ximax,
+                                        gint yimax);
+static void       pseudo_laplace_average(GwyDataField *dfield,
+                                         gint ximin,
+                                         gint yimin,
+                                         gint ximax,
+                                         gint yimax);
 static void       selection_to_rowcol  (GwyDataField *dfield,
                                         gdouble *sel,
                                         gint *ximin,
@@ -101,8 +112,8 @@ static GwyModuleInfo module_info = {
     &module_register,
     "spotremove",
     "Removes spots.",
-    "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "Yeti <yeti@gwyddion.net>",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -119,12 +130,16 @@ static GwyUnitoolSlots func_slots = {
 
 enum {
     SPOT_REMOVE_HYPER_FLATTEN,
-    SPOT_REMOVE_LAPLACE
+    SPOT_REMOVE_PSEUDO_LAPLACE,
+    SPOT_REMOVE_LAPLACE,
+    SPOT_REMOVE_FRACTAL,
 };
 
 static const GwyEnum algorithms[] = {
     { "Hyperbolic flatten", SPOT_REMOVE_HYPER_FLATTEN },
-    { "Laplace solver", SPOT_REMOVE_LAPLACE },
+    { "Pseudo-Laplace",     SPOT_REMOVE_PSEUDO_LAPLACE },
+    { "Laplace solver",     SPOT_REMOVE_LAPLACE },
+    { "Fractal correction", SPOT_REMOVE_FRACTAL },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -424,6 +439,14 @@ apply(GwyUnitoolState *state)
         laplace_average(dfield, ximin, yimin, ximax, yimax);
         break;
 
+        case SPOT_REMOVE_FRACTAL:
+        fractal_average(dfield, ximin, yimin, ximax, yimax);
+        break;
+
+        case SPOT_REMOVE_PSEUDO_LAPLACE:
+        pseudo_laplace_average(dfield, ximin, yimin, ximax, yimax);
+        break;
+
         default:
         g_assert_not_reached();
         break;
@@ -473,6 +496,8 @@ laplace_average(GwyDataField *dfield,
     gint i = 0;
 
     gwy_debug("laplace: (%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
+    /* do pseudo-laplace as the first step to make it converge faster */
+    pseudo_laplace_average(dfield, ximin, yimin, ximax, yimax);
     buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
     mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
     gwy_data_field_fill(mask, 0.0);
@@ -487,6 +512,77 @@ laplace_average(GwyDataField *dfield,
 
     g_object_unref(buffer);
     g_object_unref(mask);
+}
+
+static void
+fractal_average(GwyDataField *dfield,
+                gint ximin, gint yimin,
+                gint ximax, gint yimax)
+{
+    GwyDataField *mask;
+
+    gwy_debug("fractal: (%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
+    mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    gwy_data_field_fill(mask, 0.0);
+    gwy_data_field_area_fill(mask, ximin, yimin, ximax, yimax, 1.0);
+    gwy_data_field_fractal_correction(dfield, mask, GWY_INTERPOLATION_BILINEAR);
+    g_object_unref(mask);
+}
+
+static void
+pseudo_laplace_average(GwyDataField *dfield,
+                       gint ximin, gint yimin,
+                       gint ximax, gint yimax)
+{
+    gdouble *data, *disttable;
+    gint i, j, k, rowstride, width, height;
+
+    gwy_debug("pseudo_laplace: (%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
+    data = gwy_data_field_get_data(dfield);
+    rowstride = gwy_data_field_get_xres(dfield);
+
+    /* compute table of weights between different grid points */
+    width = ximax - ximin + 1;
+    height = yimax - yimin + 1;
+    disttable = g_new(gdouble, width*height);
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++)
+            disttable[i*width + j] = 1.0/(i*i + j*j + 1e-16);
+    }
+
+    for (i = yimin; i < yimax; i++) {
+        for (j = ximin; j < ximax; j++) {
+            gdouble w = 0.0, s = 0.0;
+
+            for (k = yimin-1; k < yimax+1; k++) {
+                gdouble ww;
+
+                ww = disttable[abs(k - i)*width + j-ximin+1];
+                w += ww;
+                s += ww*data[k*rowstride + ximin-1];
+
+                ww = disttable[abs(k - i)*width + ximax-j];
+                w += ww;
+                s += ww*data[k*rowstride + ximax];
+            }
+
+            for (k = ximin-1; k < ximax+1; k++) {
+                gdouble ww;
+
+                ww = disttable[abs(i-yimin+1)*width + abs(k - j)];
+                w += ww;
+                s += ww*data[(yimin-1)*rowstride + k];
+
+                ww = disttable[abs(yimax-i)*width + abs(k - j)];
+                w += ww;
+                s += ww*data[yimax*rowstride + k];
+            }
+
+            data[i*rowstride + j] = s/w;
+        }
+    }
+
+    g_free(disttable);
 }
 
 static void
@@ -586,7 +682,7 @@ load_args(GwyContainer *container, ToolControls *controls)
     /* sanitize */
     controls->algorithm = CLAMP(controls->algorithm,
                                 SPOT_REMOVE_HYPER_FLATTEN,
-                                SPOT_REMOVE_LAPLACE);
+                                SPOT_REMOVE_FRACTAL);
 }
 
 static void
