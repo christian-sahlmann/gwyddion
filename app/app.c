@@ -413,7 +413,8 @@ gwy_app_tool_use_cb(const gchar *toolname,
     /* don't catch deactivations */
     if (button && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
         return;
-    if (current_tool)
+
+    if (current_tool && (!toolname || strcmp(current_tool, toolname)))
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_TOOL);
     current_tool = toolname;
     if (toolname) {
