@@ -18,7 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -173,8 +172,8 @@ fit(GwyGraph *graph)
     load_args(settings, &args);
     get_data(&args);
 
-    if ((ok = fit_dialog(&args)))
-        save_args(settings, &args);
+    ok = fit_dialog(&args);
+    save_args(settings, &args);
 
     return ok;
 }
@@ -251,7 +250,7 @@ fit_dialog(FitArgs *args)
     GtkWidget *vbox;
     FitControls controls;
     GwyGraphAutoProperties prop;
-    gint response, i, j;
+    gint response, i;
     char *p, *filename;
 
     enum {
@@ -301,7 +300,7 @@ fit_dialog(FitArgs *args)
     args->fitfunc = gwy_cdline_get_preset(args->function_type);
     filename = g_build_filename(p, gwy_cdline_get_preset_formula(args->fitfunc), NULL);
     g_free(p);
-    
+
     controls.image = gtk_image_new_from_file(filename);
     gtk_container_add(GTK_CONTAINER(vbox), controls.image);
     g_free(filename);
@@ -343,7 +342,7 @@ fit_dialog(FitArgs *args)
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     */
-    
+
     controls.param_des = g_new(GtkWidget*, MAX_PARAMS);
     for (i=0; i<MAX_PARAMS; i++)
     {
@@ -519,7 +518,7 @@ destroy(FitArgs *args, FitControls *controls)
 static void
 clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
-    gint i, j;
+    gint i;
 
     graph_update(controls, args);
 
@@ -588,7 +587,7 @@ recompute(FitArgs *args, FitControls *controls)
     gboolean fixed[MAX_PARAMS];
     gchar buffer[64];
     gboolean ok;
-    gint i, j, nparams;
+    gint i, nparams;
     GString *label;
     GwyGraphAreaCurveParams par;
 
@@ -668,18 +667,18 @@ static void
 type_changed_cb(GObject *item, FitArgs *args)
 {
     char *p, *filename;
-    
+
     args->function_type =
         GPOINTER_TO_INT(g_object_get_data(item, "cdline-preset"));
 
     args->fitfunc = gwy_cdline_get_preset(args->function_type);
-  
+
     p = gwy_find_self_dir("pixmaps");
     filename = g_build_filename(p, gwy_cdline_get_preset_formula(args->fitfunc), NULL);
     g_free(p);
-    
-    gtk_image_set_from_file(pcontrols->image, filename);
-    
+
+    gtk_image_set_from_file(GTK_IMAGE(pcontrols->image), filename);
+
     dialog_update(pcontrols, args);
 
     g_free(filename);
@@ -688,7 +687,6 @@ type_changed_cb(GObject *item, FitArgs *args)
 static void
 dialog_update(FitControls *controls, FitArgs *args)
 {
-    char buffer[20];
     gint i;
 
     clear(args, controls);
@@ -986,14 +984,13 @@ static void
 create_results_window(FitArgs *args)
 {
     enum { RESPONSE_SAVE = 1 };
-    GwyNLFitter *fitter = args->fitter;
     GtkWidget *window, *tab, *table, *label;
     gdouble mag, value, sigma;
-    gint row, curve, n, i, j;
+    gint row, curve, n, i;
     gint precision;
     gchar *p, *filename;
     GString *str, *su;
-    GtkImage *image;
+    GtkWidget *image;
     const gchar *s;
 
     g_return_if_fail(args->is_fitted);
@@ -1042,7 +1039,7 @@ create_results_window(FitArgs *args)
     args->fitfunc = gwy_cdline_get_preset(args->function_type);
     filename = g_build_filename(p, gwy_cdline_get_preset_formula(args->fitfunc), NULL);
     g_free(p);
-    
+
     image = gtk_image_new_from_file(filename);
     gtk_table_attach(GTK_TABLE(table), image,
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -1103,7 +1100,7 @@ create_fit_report(FitArgs *args)
 {
     GString *report, *str;
     gchar *s, *s2;
-    gint i, j, curve, n;
+    gint i, curve, n;
 
     report = g_string_new("");
 
