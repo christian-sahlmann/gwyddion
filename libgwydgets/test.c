@@ -71,7 +71,7 @@ main(int argc, char *argv[])
     pal = (GwyPalette*) gwy_palette_new(NULL);
     gwy_palette_set_by_name(pal, GWY_PALETTE_OLIVE);
     
-    axis = gwy_color_axis_new(GWY_COLOR_AXIS_VERTICAL, 0, 112.00, pal);
+    axis = gwy_color_axis_new(GWY_COLOR_AXIS_VERTICAL, 0, 112e-6, pal);
     
     gtk_container_add (GTK_CONTAINER (window), axis);
     gtk_widget_show (axis);

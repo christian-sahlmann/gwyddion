@@ -32,7 +32,7 @@ static gboolean gwy_color_axis_button_press         (GtkWidget *widget,
                                                       GdkEventButton *event);
 static gboolean gwy_color_axis_button_release       (GtkWidget *widget,
                                                       GdkEventButton *event);
-
+#define ROUND(x) ((gint)floor((x) + 0.5))
 
 /* Local data */
 void gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height);
@@ -117,7 +117,7 @@ gwy_color_axis_new(gint orientation, gdouble min, gdouble max, GwyPalette *pal)
 
     axis = gtk_type_new (gwy_color_axis_get_type ());
     axis->orientation = orientation;
-    if (orientation == GWY_COLOR_AXIS_VERTICAL) axis->par.textarea = 50;
+    if (orientation == GWY_COLOR_AXIS_VERTICAL) axis->par.textarea = 70;
     else axis->par.textarea = 20;
     axis->min = min;
     axis->max = max;
@@ -386,10 +386,19 @@ gwy_color_axis_expose(GtkWidget *widget,
 }
 
 
-void prepare_number(gdouble number, gint *power, gdouble *value)
+
+void prepare_number(gdouble number, gdouble *power, gdouble *value)
 {
-    *power = (gint)(log(number)/3);
-    *value = number/pow(1000, *power);
+    /*printf("number=%f\n", number);*/
+    gint val = (gint)(log10(fabs(number)));
+    /*printf("val=%d\n", val);*/
+    val = 3*ROUND(((gdouble)val/3.0));
+    /*printf("val=%d\n", val);*/
+    
+    *power = pow(10, val);
+    /*printf("power=%f\n", *power);*/
+    *value = number/ *power;
+    /*printf("value=%f\n", *value);*/
 }
 
 void gwy_color_axis_draw_label(GtkWidget *widget)
@@ -399,7 +408,7 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
     GString *strmin, *strmax;
     GdkGC *mygc;
     PangoRectangle rect;
-    gint power;
+    gdouble power;
     gdouble value;
 
     gwy_debug("%s", __FUNCTION__);
@@ -416,7 +425,7 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
         if (axis->min == 0) g_string_printf(strmax, "0.0");
         else 
         {
-            prepare_number(axis->min, &power, &value);
+            prepare_number(axis->max, &power, &value);
             g_string_printf(strmax, "0.0 ");
             g_string_append(strmax, gwy_math_SI_prefix(power));
             g_string_append(strmax, "m");
@@ -425,7 +434,8 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
     else
     {
         prepare_number(axis->max, &power, &value);
-        g_string_printf(strmax, "%f ", value);
+        printf("max: %f %d %f\n", axis->max, power, value); 
+        g_string_printf(strmax, "%3.3f ", value);
         g_string_append(strmax, gwy_math_SI_prefix(power));
         g_string_append(strmax, "m");
     }
@@ -446,7 +456,8 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
     else
     {
         prepare_number(axis->min, &power, &value);
-        g_string_printf(strmin, "%3.2f ", value);
+        printf("min: %f %d %f\n", axis->min, power, value);
+        g_string_printf(strmin, "%3.3f ", value);
         g_string_append(strmin, gwy_math_SI_prefix(power));
         g_string_append(strmin, "m");
     }
@@ -484,12 +495,12 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
         layout = gtk_widget_create_pango_layout(widget, "");
         pango_layout_set_font_description(layout, axis->par.font);
         
-        pango_layout_set_markup(layout,  strmin->str, strmin->len);
+        pango_layout_set_markup(layout,  strmax->str, strmax->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
         gdk_draw_layout(widget->window, mygc, widget->allocation.width - axis->par.textarea + 2, 
                         2, layout);
         
-        pango_layout_set_markup(layout,  strmax->str, strmax->len);
+        pango_layout_set_markup(layout,  strmin->str, strmin->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
         gdk_draw_layout(widget->window, mygc, widget->allocation.width - axis->par.textarea + 2, 
                         widget->allocation.height - rect.height - 2, layout);
