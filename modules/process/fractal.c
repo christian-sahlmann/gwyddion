@@ -79,8 +79,7 @@ static void        out_changed_cb             (GObject *item,
 static void        fractal_dialog_update      (FractalControls *controls,
                                                FractalArgs *args,
                                                GwyContainer *data);
-static void        ok                         (FractalControls *controls,
-                                               FractalArgs *args,
+static void        ok_cb                      (FractalArgs *args,
                                                GwyContainer *data);
 static void        fractal_dialog_recompute    (FractalControls *controls,
                                                FractalArgs *args,
@@ -311,7 +310,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
             break;
 
             case GTK_RESPONSE_OK:
-            ok(&controls, args, data);
+            ok_cb(args, data);
             break;
 
             case RESPONSE_RESET:
@@ -502,8 +501,7 @@ fractal_dialog_update(FractalControls *controls,
 
 
 static void
-ok(FractalControls *controls,
-                     FractalArgs *args, GwyContainer *data)
+ok_cb(FractalArgs *args, GwyContainer *data)
 {
     GtkWidget *window, *graph;
     GwyDataField *dfield;
