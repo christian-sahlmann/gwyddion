@@ -129,6 +129,7 @@ module_register(const gchar *name)
         "/M_ultidata/_Arithmetic",
         (GwyProcessFunc)&arithmetic,
         ARITH_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &arithmetic_func_info);

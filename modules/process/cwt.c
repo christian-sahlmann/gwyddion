@@ -98,6 +98,7 @@ module_register(const gchar *name)
         "/_Integral Transforms/_2D CWT...",
         (GwyProcessFunc)&cwt,
         CWT_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &cwt_func_info);

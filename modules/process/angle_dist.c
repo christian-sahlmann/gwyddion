@@ -118,6 +118,7 @@ module_register(const gchar *name)
         "/_Statistics/_Angle Distribution...",
         (GwyProcessFunc)&angle_dist,
         ANGLE_DIST_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &angle_dist_func_info);

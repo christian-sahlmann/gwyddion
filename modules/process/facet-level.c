@@ -57,6 +57,7 @@ module_register(const gchar *name)
         "/_Level/_Facet Level",
         (GwyProcessFunc)&facet_level,
         LEVEL_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &facet_level_func_info);

@@ -83,21 +83,18 @@ module_register(const gchar *name)
         "/_Mask Operations/_Grow Mask...",
         (GwyProcessFunc)&mask_grow,
         MASK_GROW_RUN_MODES,
+        GWY_MENU_FLAG_DATA_MASK,
     };
     static GwyProcessFuncInfo mask_shrink_func_info = {
         "mask_shrink",
         "/_Mask Operations/_Shrink Mask...",
         (GwyProcessFunc)&mask_grow,
         MASK_GROW_RUN_MODES,
+        GWY_MENU_FLAG_DATA_MASK,
     };
 
     gwy_process_func_register(name, &mask_shrink_func_info);
     gwy_process_func_register(name, &mask_grow_func_info);
-
-    gwy_process_func_set_sensitivity_flags(mask_shrink_func_info.name,
-                                           GWY_MENU_FLAG_DATA_MASK);
-    gwy_process_func_set_sensitivity_flags(mask_grow_func_info.name,
-                                           GWY_MENU_FLAG_DATA_MASK);
 
     return TRUE;
 }

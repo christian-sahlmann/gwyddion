@@ -46,6 +46,7 @@ struct _GwyProcessFuncInfo {
     const gchar *menu_path;
     GwyProcessFunc process;
     GwyRunType run;
+    guint sens_flags;    /* guint, don't depend on libgwyapp */
 };
 
 gboolean       gwy_process_func_register      (const gchar *modname,
@@ -59,8 +60,6 @@ gchar*         gwy_process_func_get_menu_path (const gchar *name);
 GtkObject*     gwy_process_func_build_menu    (GtkObject *item_factory,
                                                const gchar *prefix,
                                                GCallback item_callback);
-void           gwy_process_func_set_sensitivity_flags (const gchar *name,
-                                                       guint flags);
 guint          gwy_process_func_get_sensitivity_flags (const gchar *name);
 
 G_END_DECLS

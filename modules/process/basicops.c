@@ -67,36 +67,42 @@ module_register(const gchar *name)
         "/_Basic Operations/Flip _Horizontally",
         (GwyProcessFunc)&flip_horizontally,
         BASICOPS_RUN_MODES,
+        0,
     };
     static GwyProcessFuncInfo flip_vertically_func_info = {
         "flip_vertically",
         "/_Basic Operations/Flip _Vertically",
         (GwyProcessFunc)&flip_vertically,
         BASICOPS_RUN_MODES,
+        0,
     };
     static GwyProcessFuncInfo invert_value_func_info = {
         "invert_value",
         "/_Basic Operations/_Invert Value",
         (GwyProcessFunc)&invert_value,
         BASICOPS_RUN_MODES,
+        0,
     };
     static GwyProcessFuncInfo rotate_clockwise_90_func_info = {
         "rotate_clockwise_90",
         "/_Basic Operations/_Rotate Clockwise",
         (GwyProcessFunc)&rotate_clockwise_90,
         BASICOPS_RUN_MODES,
+        0,
     };
     static GwyProcessFuncInfo rotate_counterclockwise_90_func_info = {
         "rotate_counterclockwise_90",
         "/_Basic Operations/Rotate _Counterclockwise",
         (GwyProcessFunc)&rotate_counterclockwise_90,
         BASICOPS_RUN_MODES,
+        0,
     };
     static GwyProcessFuncInfo rotate_180_func_info = {
         "rotate_180",
         "/_Basic Operations/Flip _Both",
         (GwyProcessFunc)&rotate_180,
         BASICOPS_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &flip_horizontally_func_info);

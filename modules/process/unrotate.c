@@ -122,6 +122,7 @@ module_register(const gchar *name)
         "/_Correct data/_Unrotate...",  /* FIXME: a less silly name? */
         (GwyProcessFunc)&unrotate,
         UNROTATE_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &unrotate_func_info);

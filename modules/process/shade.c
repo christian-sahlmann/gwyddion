@@ -88,6 +88,7 @@ module_register(const gchar *name)
         "/_Display/_Shading...",
         (GwyProcessFunc)&shade,
         SHADE_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &shade_func_info);

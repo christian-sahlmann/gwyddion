@@ -122,6 +122,7 @@ module_register(const gchar *name)
         "/M_ultidata/_Cross-Correlation",
         (GwyProcessFunc)&crosscor,
         CROSSCOR_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &crosscor_func_info);

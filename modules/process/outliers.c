@@ -61,6 +61,7 @@ module_register(const gchar *name)
         "/_Statistics/_Mask of Outliers",
         (GwyProcessFunc)&outliers,
         OUTLIERS_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &outliers_func_info);

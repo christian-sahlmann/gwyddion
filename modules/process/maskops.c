@@ -58,30 +58,26 @@ module_register(const gchar *name)
         "/_Mask Operations/_Remove Mask",
         (GwyProcessFunc)&mask_remove,
         MASKOPS_RUN_MODES,
+        GWY_MENU_FLAG_DATA_MASK,
     };
     static GwyProcessFuncInfo mask_invert_func_info = {
         "mask_invert",
         "/_Mask Operations/_Invert Mask",
         (GwyProcessFunc)&mask_invert,
         MASKOPS_RUN_MODES,
+        GWY_MENU_FLAG_DATA_MASK,
     };
     static GwyProcessFuncInfo mask_extract_func_info = {
         "mask_extract",
         "/_Mask Operations/_Extract Mask",
         (GwyProcessFunc)&mask_extract,
         MASKOPS_RUN_MODES,
+        GWY_MENU_FLAG_DATA_MASK,
     };
 
     gwy_process_func_register(name, &mask_remove_func_info);
     gwy_process_func_register(name, &mask_invert_func_info);
     gwy_process_func_register(name, &mask_extract_func_info);
-
-    gwy_process_func_set_sensitivity_flags(mask_remove_func_info.name,
-                                           GWY_MENU_FLAG_DATA_MASK);
-    gwy_process_func_set_sensitivity_flags(mask_invert_func_info.name,
-                                           GWY_MENU_FLAG_DATA_MASK);
-    gwy_process_func_set_sensitivity_flags(mask_extract_func_info.name,
-                                           GWY_MENU_FLAG_DATA_MASK);
 
     return TRUE;
 }

@@ -132,6 +132,7 @@ module_register(const gchar *name)
         "/_Statistics/_Fractal Dimension...",
         (GwyProcessFunc)&fractal,
         FRACTAL_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &fractal_func_info);

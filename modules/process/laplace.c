@@ -62,11 +62,10 @@ module_register(const gchar *name)
         "/_Correct data/_Remove Data Under Mask",
         (GwyProcessFunc)&laplace,
         LAPLACE_RUN_MODES,
+        GWY_MENU_FLAG_DATA_MASK,
     };
 
     gwy_process_func_register(name, &laplace_func_info);
-    gwy_process_func_set_sensitivity_flags(laplace_func_info.name,
-                                           GWY_MENU_FLAG_DATA_MASK);
 
     return TRUE;
 }

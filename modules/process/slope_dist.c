@@ -119,6 +119,7 @@ module_register(const gchar *name)
         "/_Statistics/_Slope Distribution...",
         (GwyProcessFunc)&slope_dist,
         SLOPE_DIST_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &slope_dist_func_info);

@@ -98,6 +98,7 @@ module_register(const gchar *name)
         "/M_ultidata/_Mask by Correlation",
         (GwyProcessFunc)&maskcor,
         MASKCOR_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &maskcor_func_info);

@@ -128,6 +128,7 @@ module_register(const gchar *name)
         "/_Grains/_Mark by Threshold...",
         (GwyProcessFunc)&mark,
         MARK_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &mark_func_info);

@@ -85,6 +85,7 @@ module_register(const gchar *name)
         "/_Basic Operations/Rotate by _Angle...",
         (GwyProcessFunc)&rotate,
         ROTATE_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &rotate_func_info);

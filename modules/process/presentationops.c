@@ -23,7 +23,7 @@
 #include <libprocess/datafield.h>
 #include <app/gwyapp.h>
 
-#define MASKOPS_RUN_MODES \
+#define PRESENTATIONOPS_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 static gboolean    module_register            (const gchar *name);
@@ -53,13 +53,11 @@ module_register(const gchar *name)
         "presentation_remove",
         "/_Display/_Remove Presentation",
         (GwyProcessFunc)&presentation_remove,
-        MASKOPS_RUN_MODES,
+        PRESENTATIONOPS_RUN_MODES,
+        GWY_MENU_FLAG_DATA_SHOW,
     };
 
     gwy_process_func_register(name, &presentation_remove_func_info);
-
-    gwy_process_func_set_sensitivity_flags(presentation_remove_func_info.name,
-                                           GWY_MENU_FLAG_DATA_SHOW);
 
     return TRUE;
 }
@@ -69,7 +67,7 @@ presentation_remove(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_return_val_if_fail(run & MASKOPS_RUN_MODES, FALSE);
+    g_return_val_if_fail(run & PRESENTATIONOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
     g_return_val_if_fail(dfield, FALSE);
 

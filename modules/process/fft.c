@@ -113,6 +113,7 @@ module_register(const gchar *name)
         "/_Integral Transforms/_2D FFT...",
         (GwyProcessFunc)&fft,
         FFT_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &fft_func_info);

@@ -116,6 +116,7 @@ module_register(const gchar *name)
         "/_Grains/Mark by _Watershed...",
         (GwyProcessFunc)&wshed,
         WSHED_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &wshed_func_info);

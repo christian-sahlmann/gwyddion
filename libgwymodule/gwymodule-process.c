@@ -30,20 +30,13 @@
 #include "gwymodule-process.h"
 
 /* FIXME:
- * 1. This should be in GwyProcessFuncInfo, but adding it there would break
- *    binary compatibility, so it has to wait till 2.0, which will use
- *    GtkActions (Gtk+-2.4) anyway
- * 2. To avoid circular dependency on libgwyapp, we cheat and set object
- *    data for sentitivity manually.  Maybe the menu-building doesn't belong
- *    here at all.
+ * To avoid circular dependency on libgwyapp, we cheat and set object
+ * data for sentitivity manually.  Maybe the menu-building doesn't belong
+ * here at all.
  **/
-typedef struct {
-    GwyProcessFuncInfo *func_info;
-    gint sens_flags;
-} GwyProcessFuncInfoInternal;
 
-static gint process_menu_entry_compare (GwyProcessFuncInfoInternal *ipfa,
-                                        GwyProcessFuncInfoInternal *ipfb);
+static gint process_menu_entry_compare (GwyProcessFuncInfo *a,
+                                        GwyProcessFuncInfo *b);
 
 static GHashTable *process_funcs = NULL;
 static void (*func_register_callback)(const gchar *fullname) = NULL;
@@ -65,7 +58,6 @@ gboolean
 gwy_process_func_register(const gchar *modname,
                           GwyProcessFuncInfo *func_info)
 {
-    GwyProcessFuncInfoInternal *ipfinfo;
     _GwyModuleInfoInternal *iinfo;
     gchar *canon_name;
 
@@ -88,9 +80,7 @@ gwy_process_func_register(const gchar *modname,
         g_warning("Duplicate function %s, keeping only first", func_info->name);
         return FALSE;
     }
-    ipfinfo = g_new0(GwyProcessFuncInfoInternal, 1);
-    ipfinfo->func_info = func_info;
-    g_hash_table_insert(process_funcs, (gpointer)func_info->name, ipfinfo);
+    g_hash_table_insert(process_funcs, (gpointer)func_info->name, func_info);
     canon_name = g_strconcat(GWY_MODULE_PREFIX_PROC, func_info->name, NULL);
     iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
     if (func_register_callback)
@@ -123,21 +113,19 @@ gwy_process_func_run(const guchar *name,
                      GwyContainer *data,
                      GwyRunType run)
 {
-    GwyProcessFuncInfoInternal *ipfinfo;
+    GwyProcessFuncInfo *func_info;
     GwyDataField *dfield;
     gboolean status;
 
-    ipfinfo = g_hash_table_lookup(process_funcs, name);
-    g_return_val_if_fail(ipfinfo, FALSE);
-    g_assert(ipfinfo->func_info);
-    g_return_val_if_fail(run & ipfinfo->func_info->run, FALSE);
+    func_info = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(run & func_info->run, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     /* TODO: Container */
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
     g_object_ref(data);
     g_object_ref(dfield);
-    status = ipfinfo->func_info->process(data, run, name);
+    status = func_info->process(data, run, name);
     g_object_unref(dfield);
     g_object_unref(data);
 
@@ -198,11 +186,9 @@ gwy_process_func_build_menu(GtkObject *item_factory,
      * XXX: Gtk+ essentially can do this itself
      * but this way we can e. g. put a tearoff at the top of each branch... */
     for (l = entries; l; l = g_slist_next(l)) {
-        GwyProcessFuncInfoInternal *ipfinfo;
         GwyProcessFuncInfo *func_info;
 
-        ipfinfo = (GwyProcessFuncInfoInternal*)l->data;
-        func_info = ipfinfo->func_info;
+        func_info = (GwyProcessFuncInfo*)l->data;
 
         if (!func_info->menu_path || !*func_info->menu_path)
             continue;
@@ -251,7 +237,7 @@ gwy_process_func_build_menu(GtkObject *item_factory,
         item.path = current;
         gtk_item_factory_create_item(factory, &item,
                                      (gpointer)func_info->name, 1);
-        if (ipfinfo->sens_flags) {
+        if (func_info->sens_flags) {
             GtkWidget *widget;
 
             gwy_debug("Setting sens flags for `%s' to %u",
@@ -260,7 +246,7 @@ gwy_process_func_build_menu(GtkObject *item_factory,
             widget = gtk_item_factory_get_widget(factory, s);
             g_free(s);
             g_object_set_data(G_OBJECT(widget), "sensitive",
-                              GUINT_TO_POINTER(ipfinfo->sens_flags));
+                              GUINT_TO_POINTER(func_info->sens_flags));
         }
 
         GWY_SWAP(gchar*, current, prev);
@@ -274,15 +260,12 @@ gwy_process_func_build_menu(GtkObject *item_factory,
 }
 
 static gint
-process_menu_entry_compare(GwyProcessFuncInfoInternal *ipfa,
-                           GwyProcessFuncInfoInternal *ipfb)
+process_menu_entry_compare(GwyProcessFuncInfo *a,
+                           GwyProcessFuncInfo *b)
 {
-    GwyProcessFuncInfo *a, *b;
     gchar p[bufsize], q[bufsize];
     gsize i, j;
 
-    a = ipfa->func_info;
-    b = ipfb->func_info;
     g_assert(a->menu_path && b->menu_path);
     for (i = j = 0; a->menu_path[i] && j < bufsize-1; i++) {
         if (a->menu_path[i] != '_')
@@ -309,13 +292,12 @@ process_menu_entry_compare(GwyProcessFuncInfoInternal *ipfa,
 GwyRunType
 gwy_process_func_get_run_types(const gchar *name)
 {
-    GwyProcessFuncInfoInternal *ipfinfo;
+    GwyProcessFuncInfo *func_info;
 
-    ipfinfo = g_hash_table_lookup(process_funcs, name);
-    g_return_val_if_fail(ipfinfo, 0);
-    g_assert(ipfinfo->func_info);
+    func_info = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(func_info, 0);
 
-    return ipfinfo->func_info->run;
+    return func_info->run;
 }
 
 /**
@@ -334,39 +316,12 @@ gwy_process_func_get_run_types(const gchar *name)
 G_CONST_RETURN gchar*
 gwy_process_func_get_menu_path(const gchar *name)
 {
-    GwyProcessFuncInfoInternal *ipfinfo;
+    GwyProcessFuncInfo *func_info;
 
-    ipfinfo = g_hash_table_lookup(process_funcs, name);
-    g_return_val_if_fail(ipfinfo, 0);
-    g_assert(ipfinfo->func_info);
+    func_info = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(func_info, 0);
 
-    return ipfinfo->func_info->menu_path;
-}
-
-/**
- * gwy_process_func_set_sensitivity_flags:
- * @name: Data processing function name.
- * @flags: Menu sensitivity flags from #GwyMenuSensFlags.
- *
- * Sets menu sensititivy flags for function @name.
- *
- * All data processing function have implied %GWY_MENU_FLAG_DATA flag which
- * cannot be removed.  This function can be used to set other requirements;
- * the most common (and most useful) probably is %GWY_MENU_FLAG_DATA_MASK
- * meaning the function requires a mask.
- *
- * Since: 1.1.
- **/
-void
-gwy_process_func_set_sensitivity_flags(const gchar *name,
-                                       guint flags)
-{
-    GwyProcessFuncInfoInternal *ipfinfo;
-
-    ipfinfo = g_hash_table_lookup(process_funcs, name);
-    g_return_if_fail(ipfinfo);
-
-    ipfinfo->sens_flags = flags;
+    return func_info->menu_path;
 }
 
 /**
@@ -384,12 +339,12 @@ gwy_process_func_set_sensitivity_flags(const gchar *name,
 guint
 gwy_process_func_get_sensitivity_flags(const gchar *name)
 {
-    GwyProcessFuncInfoInternal *ipfinfo;
+    GwyProcessFuncInfo *func_info;
 
-    ipfinfo = g_hash_table_lookup(process_funcs, name);
-    g_return_val_if_fail(ipfinfo, 0);
+    func_info = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(func_info, 0);
 
-    return ipfinfo->sens_flags;
+    return func_info->sens_flags;
 }
 
 /**
@@ -421,6 +376,10 @@ gwy_process_func_remove(const gchar *name)
  *             It must start with "/".
  * @process: The function itself.
  * @run: Possible run-modes for this function.
+ * @sens: Sensitivity flags.  All data processing function have implied
+ *       %GWY_MENU_FLAG_DATA flag which cannot be removed.  You can specify
+ *       additional flags here, the most common (and most useful) probably
+ *       is %GWY_MENU_FLAG_DATA_MASK meaning the function requires a mask.
  *
  * Information about one data processing function.
  **/
