@@ -6,7 +6,6 @@ MSC_TOP = C:\Program Files\Microsoft Visual Studio\VC98
 DEST_DIR = $(TOP_SRCDIR)\inst
 
 # debug by default
-DEBUG = 0
 
 # gwyddion versions
 LIBGWYDDION_VER = 0
