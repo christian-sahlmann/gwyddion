@@ -95,31 +95,34 @@ static gboolean
 rotate(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GwyDataField *dfield;
+    GObject *dfield;
     RotateArgs args;
     gboolean ok;
 
     g_return_val_if_fail(run & ROTATE_RUN_MODES, FALSE);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    dfield = gwy_container_get_object_by_name(data, "/0/data");
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = rotate_defaults;
     else
         rotate_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || rotate_dialog(&args);
-    if (ok) {
-        data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-        g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-        gwy_app_clean_up_data(data);
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-        gwy_data_field_rotate(dfield, args.angle, args.interp);
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-        if (run != GWY_RUN_WITH_DEFAULTS)
-            rotate_save_args(gwy_app_settings_get(), &args);
-    }
+    if (!ok)
+        return FALSE;
 
-    return ok;
+    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    gwy_app_clean_up_data(data);
+    dfield = gwy_container_get_object_by_name(data, "/0/data");
+    gwy_data_field_rotate(GWY_DATA_FIELD(dfield), args.angle, args.interp);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield))
+        gwy_data_field_rotate(GWY_DATA_FIELD(dfield), args.angle, args.interp);
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield))
+        gwy_data_field_rotate(GWY_DATA_FIELD(dfield), args.angle, args.interp);
+    data_window = gwy_app_data_window_create(data);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    if (run != GWY_RUN_WITH_DEFAULTS)
+        rotate_save_args(gwy_app_settings_get(), &args);
+
+    return FALSE;
 }
 
 static gboolean
