@@ -200,7 +200,7 @@ gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset)
 }
 
 
-gdouble **
+static gdouble **
 datafield_to_field(GwyDataField *datafield, gboolean maxzero)
 {
     gdouble **ret;
@@ -210,7 +210,7 @@ datafield_to_field(GwyDataField *datafield, gboolean maxzero)
     if (maxzero) max = gwy_data_field_get_max(datafield);
     else max = 0;
     
-    ret = allocmatrix(datafield->xres, datafield->yres);
+    ret = dallocmatrix(datafield->xres, datafield->yres);
     for (col=0; col<datafield->xres; col++)
     {
         for (row=0; row<datafield->yres; row++)
@@ -221,36 +221,85 @@ datafield_to_field(GwyDataField *datafield, gboolean maxzero)
     return ret;
 }
 
-gdouble **
-datafield_to_largefield(GwyDataField *datafield, GwyDataField *tipfield)
+static GwyDataField*
+field_to_datafield(gdouble **field, GwyDataField *ret)
 {
-    gdouble **ret;
+    gint col, row;
+    for (col=0; col<ret->xres; col++)
+    {
+        for (row=0; row<ret->yres; row++)
+        {
+            ret->data[col  + ret->xres*row] = field[col][row];
+        }
+    }    
+    return ret;
+}
+
+static gdouble **
+i_datafield_to_field(GwyDataField *datafield, gboolean maxzero, gdouble min, gdouble step)
+{
+    gint **ret;
+    gint col, row;
+    gdouble max;
+    
+    if (maxzero) max = gwy_data_field_get_max(datafield);
+    else max = 0;
+    
+    ret = iallocmatrix(datafield->xres, datafield->yres);
+    for (col=0; col<datafield->xres; col++)
+    {
+        for (row=0; row<datafield->yres; row++)
+        {
+            ret[col][row] = (gint)(((datafield->data[col + datafield->xres*row] - max) - min)/step);
+        }
+    }
+    return ret;
+}
+
+static GwyDataField*
+i_field_to_datafield(gdouble **field, GwyDataField *ret, gdouble min, gdouble step)
+{
+    gint col, row;
+    for (col=0; col<ret->xres; col++)
+    {
+        for (row=0; row<ret->yres; row++)
+        {
+            ret->data[col  + ret->xres*row] = field[col][row]*step + min;
+        }
+    }    
+    return ret;
+}
+
+static gdouble **
+i_datafield_to_largefield(GwyDataField *datafield, GwyDataField *tipfield, gdouble min, gdouble step)
+{
+    gint **ret;
     gint col, row;
     gint xnew, ynew;
-    gdouble min;
+    gint minimum;
     
-    min = gwy_data_field_get_min(datafield);
+    minimum = (gint)((gwy_data_field_get_min(datafield) - min)/step);
     xnew = datafield->xres + tipfield->xres;
     ynew = datafield->yres + tipfield->yres;
     
-    ret = allocmatrix(xnew, ynew);
+    ret = iallocmatrix(xnew, ynew);
     for (col=0; col<xnew; col++)
     {
         for (row=0; row<ynew; row++)
         {
             if (col>=tipfield->xres/2 && col<(datafield->xres + tipfield->xres/2)
                 && row>=tipfield->yres/2 && row<(datafield->yres + tipfield->yres/2))
-            ret[col][row] = datafield->data[col - tipfield->xres/2 
-                + datafield->xres*(row - tipfield->yres/2)];
+            ret[col][row] = (gint)(((datafield->data[col - tipfield->xres/2 
+                + datafield->xres*(row - tipfield->yres/2)]) - min)/step);
             else
-                ret[col][row] = min;
+                ret[col][row] = minimum;
         }
     }
     return ret;
 }
 
-GwyDataField*
-largefield_to_datafield(gdouble **field, GwyDataField *ret, GwyDataField *tipfield)
+static GwyDataField*
+i_largefield_to_datafield(gdouble **field, GwyDataField *ret, GwyDataField *tipfield, gdouble min, gdouble step)
 {
     gint col, row;
     gint xnew, ynew;
@@ -265,26 +314,13 @@ largefield_to_datafield(gdouble **field, GwyDataField *ret, GwyDataField *tipfie
             if (col>=tipfield->xres/2 && col<(ret->xres + tipfield->xres/2)
                 && row>=tipfield->yres/2 && row<(ret->yres + tipfield->yres/2))
             {
-                ret->data[col - tipfield->xres/2 + ret->xres*(row - tipfield->yres/2)] = field[col][row];
+                ret->data[col - tipfield->xres/2 + ret->xres*(row - tipfield->yres/2)] = field[col][row]*step + min;
             }                        
         }
     }    
     return ret;
 }
 
-GwyDataField*
-field_to_datafield(gdouble **field, GwyDataField *ret)
-{
-    gint col, row;
-    for (col=0; col<ret->xres; col++)
-    {
-        for (row=0; row<ret->yres; row++)
-        {
-            ret->data[col  + ret->xres*row] = field[col][row];
-        }
-    }    
-    return ret;
-}
 
 GwyDataField*   
 gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
@@ -297,14 +333,14 @@ gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
     ftip = datafield_to_field(tip, TRUE);    
     fsurface = datafield_to_field(surface, FALSE);
 
-    fresult = idilation(fsurface, surface->yres, surface->xres,
+    fresult = ddilation(fsurface, surface->yres, surface->xres,
                         ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
     
     result = field_to_datafield(fresult, result);
 
-    freematrix(ftip, tip->xres);
-    freematrix(fsurface, surface->xres);
-    freematrix(fresult, result->xres);
+    dfreematrix(ftip, tip->xres);
+    dfreematrix(fsurface, surface->xres);
+    dfreematrix(fresult, result->xres);
     return result;
 }
 
@@ -319,14 +355,14 @@ gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
     ftip = datafield_to_field(tip, TRUE);
     fsurface = datafield_to_field(surface, FALSE);
 
-    fresult = ierosion(fsurface, surface->yres, surface->xres,
+    fresult = derosion(fsurface, surface->yres, surface->xres,
                         ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
     
     result = field_to_datafield(fresult, result);
 
-    freematrix(ftip, tip->xres);
-    freematrix(fsurface, surface->xres);
-    freematrix(fresult, result->xres);
+    dfreematrix(ftip, tip->xres);
+    dfreematrix(fsurface, surface->xres);
+    dfreematrix(fresult, result->xres);
     return result;
     
 }
@@ -334,17 +370,22 @@ gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
 GwyDataField*
 gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
 {
-    gdouble **ftip;
-    gdouble **fsurface;
-    gdouble **rsurface;
-    gdouble **fresult;
+    gint **ftip;
+    gint **fsurface;
+    gint **rsurface;
+    gint **fresult;
     gint newx, newy;
+    gdouble tipmin, surfacemin, step;
 
     newx = surface->xres + tip->xres;
     newy = surface->yres + tip->yres;
    
-    ftip = datafield_to_field(tip, TRUE);
-    fsurface = datafield_to_largefield(surface, tip);
+    tipmin = gwy_data_field_get_min(tip);
+    surfacemin = gwy_data_field_get_min(surface);
+    step = (gwy_data_field_get_max(surface)-surfacemin)/10000;
+    
+    ftip = i_datafield_to_field(tip, TRUE, tipmin, step);
+    fsurface = i_datafield_to_largefield(surface, tip, surfacemin, step);
     
     rsurface = ierosion(fsurface, newy, newx,
                         ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
@@ -352,12 +393,12 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
     fresult = icmap(fsurface, newy, newx,
                         ftip, tip->yres, tip->xres, rsurface, tip->yres/2, tip->xres/2);
     
-    result = largefield_to_datafield(fresult, result, tip);
+    result = i_largefield_to_datafield(fresult, result, tip, surfacemin, step);
 
-    freematrix(ftip, tip->xres);
-    freematrix(fsurface, newx);
-    freematrix(rsurface, newx);
-    freematrix(fresult, result->xres);
+    ifreematrix(ftip, tip->xres);
+    ifreematrix(fsurface, newx);
+    ifreematrix(rsurface, newx);
+    ifreematrix(fresult, result->xres);
     return result;
     
 }
@@ -366,20 +407,25 @@ GwyDataField*
 gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
                                                                        gboolean use_edges)
 {
-    gdouble **ftip;
-    gdouble **fsurface;
+    gint **ftip;
+    gint **fsurface;
+    gdouble tipmin, surfacemin, step;
 
-    ftip = datafield_to_field(tip, TRUE);    
-    fsurface = datafield_to_field(surface, FALSE);
+    tipmin = gwy_data_field_get_min(tip);
+    surfacemin = gwy_data_field_get_min(surface);
+    step = (gwy_data_field_get_max(surface)-surfacemin)/10000;
+     
+    ftip = i_datafield_to_field(tip, TRUE,  tipmin, step);    
+    fsurface = i_datafield_to_field(surface, FALSE, surfacemin, step);
 
     itip_estimate0(fsurface, surface->yres, surface->xres,
                    tip->yres, tip->xres, tip->yres/2, tip->xres/2,
                    ftip, threshold, use_edges);
 
-    tip = field_to_datafield(ftip, tip);
+    tip = i_field_to_datafield(ftip, tip, tipmin, step);
 
-    freematrix(ftip, tip->xres);
-    freematrix(fsurface, surface->xres);
+    ifreematrix(ftip, tip->xres);
+    ifreematrix(fsurface, surface->xres);
     return tip;
 }
 
@@ -388,20 +434,25 @@ GwyDataField*
 gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
                                                                        gboolean use_edges)
 {
-    gdouble **ftip;
-    gdouble **fsurface;
+    gint **ftip;
+    gint **fsurface;
+    gdouble tipmin, surfacemin, step;
 
-    ftip = datafield_to_field(tip, TRUE);    
-    fsurface = datafield_to_field(surface, FALSE);
+    tipmin = gwy_data_field_get_min(tip);
+    surfacemin = gwy_data_field_get_min(surface);
+    step = (gwy_data_field_get_max(surface)-surfacemin)/10000;
+ 
+    ftip = i_datafield_to_field(tip, TRUE, tipmin, step);    
+    fsurface = i_datafield_to_field(surface, FALSE,  surfacemin, step);
 
     itip_estimate(fsurface, surface->yres, surface->xres,
                    tip->yres, tip->xres, tip->yres/2, tip->xres/2,
                    ftip, threshold, use_edges);
 
-    tip = field_to_datafield(ftip, tip);
+    tip = i_field_to_datafield(ftip, tip, tipmin, step);
 
-    freematrix(ftip, tip->xres);
-    freematrix(fsurface, surface->xres);
+    ifreematrix(ftip, tip->xres);
+    ifreematrix(fsurface, surface->xres);
     return tip;    
 }
 

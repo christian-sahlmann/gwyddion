@@ -2,42 +2,58 @@
 #ifndef TIP_MORPH
 #define TIP_MORPH
 
-gdouble **allocmatrix(gint ysiz, gint xsiz);
 
-void freematrix(gdouble **mptr, gint ysiz);
+/*simple routines - integer arithmetics*/
+gint **iallocmatrix(gint ysiz, gint xsiz);
 
-gdouble **ireflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz);
+void ifreematrix(gint **mptr, gint ysiz);
 
-gdouble **idilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
+gint **ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz);
+
+gint **idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
+	      gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc);
+
+gint **ierosion(gint **image, gint im_xsiz, gint im_ysiz,
+	      gint **tip, gint tip_xsiz, gint tip_ysiz,
+	      gint xc, gint yc);
+
+gint **icmap(gint **image, gint im_xsiz, gint im_ysiz,
+	      gint **tip, gint tip_xsiz, gint tip_ysiz,
+              gint **rsurf,
+	      gint xc, gint yc);
+
+/*simple routines - double arithmetics (can be very slow)*/
+gdouble **dallocmatrix(gint ysiz, gint xsiz);
+
+void dfreematrix(gdouble **mptr, gint ysiz);
+
+gdouble **dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz);
+
+gdouble **ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
 	      gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc);
 
-gdouble **ierosion(gdouble **image, gint im_xsiz, gint im_ysiz,
+gdouble **derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
 	      gdouble **tip, gint tip_xsiz, gint tip_ysiz,
 	      gint xc, gint yc);
 
-gdouble **icmap(gdouble **image, gint im_xsiz, gint im_ysiz,
-	      gdouble **tip, gint tip_xsiz,gint tip_ysiz,
-              gdouble **rsurf,
-	      gint xc, gint yc);
+/*tip estimation routines - all in integer artithmetics*/
+gint **iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz, gint tip_ysiz);
 
-gdouble **iopen(gdouble **image, gint im_xsiz, gint im_ysiz, gdouble **tip, gint tip_xsiz, gint tip_ysiz);
+void itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
+		   gint tip_xsiz, gint tip_ysiz, gint xc, gint yc, gint **tip0,
+		   gint thresh, gboolean use_edges);
 
+gint itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
+   gint xc, gint yc, gint **tip0, gint thresh, gboolean use_edges);
 
-void itip_estimate(gdouble **image, gint im_xsiz, gint im_ysiz,
-		   gint tip_xsiz, gint tip_ysiz, gint xc, gint yc, gdouble **tip0,
-		   gdouble thresh, gboolean use_edges);
+void itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
+   gint xc, gint yc, gint **tip0, gint thresh, gboolean use_edges);
 
-gint itip_estimate_iter(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-   gint xc, gint yc, gdouble **tip0, gdouble thresh, gboolean use_edges);
+gint useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta);
 
-void itip_estimate0(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-   gint xc, gint yc, gdouble **tip0, gdouble thresh, gboolean use_edges);
-
-gint useit(gint x, gint y, gdouble **image, gint sx, gint sy, gint delta);
-
-gint itip_estimate_point(gint ixp, gint jxp, gdouble **image, 
+gint itip_estimate_point(gint ixp, gint jxp, gint **image, 
 			 gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-			 gint xc, gint yc, gdouble **tip0, gdouble thresh,
+			 gint xc, gint yc, gint **tip0, gint thresh,
              gboolean use_edges);
 
 
