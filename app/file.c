@@ -151,6 +151,7 @@ gwy_app_data_window_create(GwyContainer *data)
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(g_object_unref), data);
 
+    gwy_data_window_set_units(GWY_DATA_WINDOW(data_window), "m");
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
     gtk_window_present(GTK_WINDOW(data_window));
 
