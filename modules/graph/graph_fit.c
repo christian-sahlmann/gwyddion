@@ -566,7 +566,7 @@ recompute(FitArgs *args, FitControls *controls)
     GwyNLFitPresetFunction *function;
     gboolean fixed[4];
     gdouble param[4];
-    gchar buffer[40];
+    gchar buffer[50];
     gboolean ok;
     gint i;
     GString *label;
@@ -951,14 +951,14 @@ static void
 from_changed_cb(GtkWidget *entry, FitArgs *args)
 {
     args->from = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
-    graph_selected(GWY_GRAPH(pcontrols->graph)->area, args);
+    dialog_update(pcontrols, args);
 }
 
 static void
 to_changed_cb(GtkWidget *entry, FitArgs *args)
 {
     args->to = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
-    graph_selected(GWY_GRAPH(pcontrols->graph)->area, args);
+    dialog_update(pcontrols, args);
 }
 
 static void
