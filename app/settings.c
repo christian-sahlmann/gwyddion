@@ -42,7 +42,8 @@
 
 static gboolean create_config_dir_real         (const gchar *cfgdir);
 static void     gwy_app_settings_set_defaults  (GwyContainer *settings);
-static gchar*   get_gwyddion_dir               (void);
+static G_CONST_RETURN
+gchar*   gwy_app_settings_get_user_dir  (void);
 
 static const gchar *magic_header = "Gwyddion Settings 1.0\n";
 
@@ -337,7 +338,7 @@ gwy_app_settings_load(const gchar *filename)
 gboolean
 gwy_app_settings_create_config_dir(void)
 {
-    return create_config_dir_real(get_gwyddion_dir());
+    return create_config_dir_real(gwy_app_settings_get_user_dir());
 }
 
 static gboolean
@@ -365,13 +366,13 @@ gwy_app_settings_set_defaults(GwyContainer *settings)
 
     if (!gwy_container_contains_by_name(settings, "/mask/alpha")) {
         gwy_container_set_double_by_name(settings, "/mask/red",
-                                        default_mask_color.r);
+                                         default_mask_color.r);
         gwy_container_set_double_by_name(settings, "/mask/green",
-                                        default_mask_color.g);
+                                         default_mask_color.g);
         gwy_container_set_double_by_name(settings, "/mask/blue",
-                                        default_mask_color.b);
+                                         default_mask_color.b);
         gwy_container_set_double_by_name(settings, "/mask/alpha",
-                                        default_mask_color.a);
+                                         default_mask_color.a);
     }
 }
 
@@ -392,14 +393,23 @@ gwy_app_settings_get_module_dirs(void)
     };
     gchar **module_dirs;
     gchar *p;
-    gsize i;
+    gsize n, i;
 
-    module_dirs = g_new(gchar*, G_N_ELEMENTS(module_types)+2);
+    n = G_N_ELEMENTS(module_types);
+    module_dirs = g_new(gchar*, 2*(n+1) + 1);
+
     p = gwy_find_self_dir("modules");
-    for (i = 0; i < G_N_ELEMENTS(module_types); i++)
+    for (i = 0; i < n; i++)
         module_dirs[i] = g_build_filename(p, module_types[i], NULL);
     module_dirs[i++] = p;
-    module_dirs[i] = NULL;
+
+    p = gwy_app_settings_get_user_dir();
+    for (i = 0; i < n; i++)
+        module_dirs[n+1 + i] = g_build_filename(p, "modules", module_types[i],
+                                                NULL);
+    module_dirs[2*n + 1] = g_build_filename(p, "modules", NULL);;
+
+    module_dirs[2*n + 2] = NULL;
 
     return module_dirs;
 }
@@ -416,7 +426,7 @@ gwy_app_settings_get_module_dirs(void)
 gchar*
 gwy_app_settings_get_config_filename(void)
 {
-    return g_build_filename(get_gwyddion_dir(), "gwydrc", NULL);
+    return g_build_filename(gwy_app_settings_get_user_dir(), "gwydrc", NULL);
 }
 
 /**
@@ -431,7 +441,7 @@ gwy_app_settings_get_config_filename(void)
 gchar*
 gwy_app_settings_get_settings_filename(void)
 {
-    return g_build_filename(get_gwyddion_dir(), "settings", NULL);
+    return g_build_filename(gwy_app_settings_get_user_dir(), "settings", NULL);
 }
 
 /**
@@ -444,11 +454,22 @@ gwy_app_settings_get_settings_filename(void)
 gchar*
 gwy_app_settings_get_log_filename(void)
 {
-    return g_build_filename(get_gwyddion_dir(), "gwyddion.log", NULL);
+    return g_build_filename(gwy_app_settings_get_user_dir(), "gwyddion.log",
+                            NULL);
 }
 
-static gchar*
-get_gwyddion_dir(void)
+/**
+ * gwy_app_settings_get_user_dir:
+ *
+ * Return directory where Gwyddion user settings and data should be stored.
+ *
+ * On silly platforms or silly occasions, silly locations can be returned
+ * as fallback.
+ *
+ * Returns: The directory as a string that should not be freed.
+ **/
+static G_CONST_RETURN gchar*
+gwy_app_settings_get_user_dir(void)
 {
     const gchar *gwydir =
 #ifdef G_OS_WIN32
