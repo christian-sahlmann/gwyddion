@@ -266,7 +266,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
         g_free(format->units);
     }
 
-    if (strlen(siunit->unitstr)<2)
+    if (strlen(siunit->unitstr)<2 && strlen(siunit->unitstr)!=0)
     {
         format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+1)*sizeof(gchar));
@@ -280,8 +280,9 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
         if ((gint)(log10(fabs(format->magnitude))) != 0)
         {
             sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
-            format->units = g_strconcat(num, siunit->unitstr, NULL);
-        }
+            if (strlen(siunit->unitstr)==0) format->units = strcpy(format->units, num);
+            else format->units = g_strconcat(num, siunit->unitstr, NULL);
+         }
         else
         {
             format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
@@ -335,7 +336,7 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
     format->magnitude = gwy_math_humanize_numbers(resolution, maximum, &prec);
     format->precision = prec;
 
-    if (strlen(siunit->unitstr)<2)
+    if (strlen(siunit->unitstr)<2 && strlen(siunit->unitstr)!=0)
     {
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+strlen(gwy_math_SI_prefix(format->magnitude)))*sizeof(gchar));
         format->units = g_strconcat(gwy_math_SI_prefix(format->magnitude), siunit->unitstr, NULL);
@@ -347,8 +348,8 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
         if ((gint)(log10(fabs(format->magnitude))) != 0)
         {
             sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
-            format->units = strcpy(format->units, num);
-            format->units = g_strconcat(num, siunit->unitstr, NULL);
+            if (strlen(siunit->unitstr)==0) format->units = strcpy(format->units, num);
+            else format->units = g_strconcat(num, siunit->unitstr, NULL);
         }
         else
         {
@@ -398,7 +399,7 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
         g_free(format->units);
     }
 
-    if (strlen(siunit->unitstr)<2)
+    if (strlen(siunit->unitstr)<2 && strlen(siunit->unitstr)!=0)
     {
         format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(maximum))))/3.0));
         realmag = pow(10, (gint)(log10(fabs(maximum)))-1);
@@ -439,7 +440,8 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
         if ((gint)(log10(fabs(format->magnitude))) != 0)
         {
             sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
-            format->units = g_strconcat(num, siunit->unitstr, NULL);
+            if (strlen(siunit->unitstr)==0) format->units = strcpy(format->units, num);
+            else format->units = g_strconcat(num, siunit->unitstr, NULL);
         }
         else
         {
