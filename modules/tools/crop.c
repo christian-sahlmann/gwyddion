@@ -49,7 +49,7 @@ static void       crop_dialog_response_cb       (gpointer unused,
 static void       crop_dialog_abandon           (void);
 static void       crop_dialog_set_visible       (gboolean visible);
 
-static GtkWidget *dialog = NULL;
+static GtkWidget *crop_dialog = NULL;
 static CropControls controls;
 static gulong finished_id = 0;
 static gulong response_id = 0;
@@ -88,7 +88,7 @@ module_register(const gchar *name)
 
 static void
 crop_use(GwyDataWindow *data_window,
-         GwyToolSwitchEvent reason)
+         G_GNUC_UNUSED GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -113,8 +113,8 @@ crop_use(GwyDataWindow *data_window,
         select_layer = (GwyDataViewLayer*)gwy_layer_select_new();
         gwy_data_view_set_top_layer(data_view, select_layer);
     }
-    if (!dialog)
-        dialog = crop_dialog_create(data_view);
+    if (!crop_dialog)
+        crop_dialog = crop_dialog_create(data_view);
 
     finished_id = g_signal_connect(select_layer, "finished",
                                    G_CALLBACK(crop_selection_finished_cb),
@@ -156,10 +156,10 @@ crop_dialog_abandon(void)
         g_signal_handler_disconnect(select_layer, finished_id);
     finished_id = 0;
     select_layer = NULL;
-    if (dialog) {
-        g_signal_handler_disconnect(dialog, response_id);
-        gtk_widget_destroy(dialog);
-        dialog = NULL;
+    if (crop_dialog) {
+        g_signal_handler_disconnect(crop_dialog, response_id);
+        gtk_widget_destroy(crop_dialog);
+        crop_dialog = NULL;
         response_id = 0;
         g_free(controls.units);
         controls.is_visible = FALSE;
@@ -256,7 +256,7 @@ crop_selection_finished_cb(void)
 
     gwy_debug("");
     /*XXX: seems broken
-     * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
+     * is_visible = GTK_WIDGET_VISIBLE(crop_dialog);*/
     is_visible = controls.is_visible;
     is_selected = gwy_layer_select_get_selection(select_layer,
                                                  &x0, &y0, &x1, &y1);
@@ -279,7 +279,8 @@ crop_selection_finished_cb(void)
 }
 
 static void
-crop_dialog_response_cb(gpointer unused, gint response)
+crop_dialog_response_cb(G_GNUC_UNUSED gpointer unused,
+                        gint response)
 {
     gwy_debug("response %d", response);
     switch (response) {
@@ -313,9 +314,9 @@ crop_dialog_set_visible(gboolean visible)
 
     controls.is_visible = visible;
     if (visible)
-        gtk_window_present(GTK_WINDOW(dialog));
+        gtk_window_present(GTK_WINDOW(crop_dialog));
     else
-        gtk_widget_hide(dialog);
+        gtk_widget_hide(crop_dialog);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
