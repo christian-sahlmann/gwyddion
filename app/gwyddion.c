@@ -113,10 +113,9 @@ main(int argc, char *argv[])
     gwy_app_splash_set_message(_("stock items"));
     gwy_stock_register_stock_items();
 
-    gwy_module_set_register_callback(gwy_app_splash_set_message);
+    gwy_app_splash_set_message(_("modules"));
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
-    gwy_module_set_register_callback(NULL);
     gwy_app_splash_set_message_prefix(NULL);
 
     gwy_app_splash_set_message(_("Initializing GUI"));
