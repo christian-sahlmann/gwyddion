@@ -150,8 +150,6 @@ profile_do(void)
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    gwy_app_clean_up_data(data);
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
  
     xreal = gwy_data_field_get_xreal(datafield);
