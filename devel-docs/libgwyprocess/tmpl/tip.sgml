@@ -1,0 +1,209 @@
+<!-- ##### SECTION Title ##### -->
+tip
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyTipType ##### -->
+<para>
+
+</para>
+
+@GWY_TIP_PYRAMIDE: 
+@GWY_TIP_CONTACT: 
+@GWY_TIP_NONCONTACT: 
+@GWY_TIP_DELTA: 
+
+<!-- ##### USER_FUNCTION GwySetFractionFunc ##### -->
+<para>
+
+</para>
+
+@fraction: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwySetMessageFunc ##### -->
+<para>
+
+</para>
+
+@message: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwyTipModelFunc ##### -->
+<para>
+
+</para>
+
+@tip: 
+@height: 
+@radius: 
+@rotation: 
+@params: 
+
+
+<!-- ##### USER_FUNCTION GwyTipGuessFunc ##### -->
+<para>
+
+</para>
+
+@data: 
+@height: 
+@radius: 
+@params: 
+@xres: 
+@yres: 
+
+
+<!-- ##### STRUCT GwyTipModelPreset ##### -->
+<para>
+
+</para>
+
+@tip_name: 
+@group_name: 
+@func: 
+@guess: 
+@nparams: 
+
+<!-- ##### FUNCTION gwy_tip_model_get_npresets ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_model_get_preset ##### -->
+<para>
+
+</para>
+
+@preset_id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_model_get_preset_by_name ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_model_get_preset_id ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_model_get_preset_tip_name ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_model_get_preset_group_name ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_model_get_preset_nparams ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_dilation ##### -->
+<para>
+
+</para>
+
+@tip: 
+@surface: 
+@result: 
+@set_fraction: 
+@set_message: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_erosion ##### -->
+<para>
+
+</para>
+
+@tip: 
+@surface: 
+@result: 
+@set_fraction: 
+@set_message: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_cmap ##### -->
+<para>
+
+</para>
+
+@tip: 
+@surface: 
+@result: 
+@set_fraction: 
+@set_message: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_estimate_partial ##### -->
+<para>
+
+</para>
+
+@tip: 
+@surface: 
+@threshold: 
+@use_edges: 
+@set_fraction: 
+@set_message: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tip_estimate_full ##### -->
+<para>
+
+</para>
+
+@tip: 
+@surface: 
+@threshold: 
+@use_edges: 
+@set_fraction: 
+@set_message: 
+@Returns: 
+
+

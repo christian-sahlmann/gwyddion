@@ -62,3 +62,34 @@ Plane and rotation leveling
 @interpolation: 
 
 
+<!-- ##### FUNCTION gwy_data_field_area_fit_polynom ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@col_degree: 
+@row_degree: 
+@coeffs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_subtract_polynom ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@col_degree: 
+@row_degree: 
+@coeffs: 
+
+

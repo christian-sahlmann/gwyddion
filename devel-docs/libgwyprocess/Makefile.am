@@ -36,7 +36,7 @@ HFILE_GLOB = $(DOC_SOURCE_DIR)/*.h
 CFILE_GLOB = $(DOC_SOURCE_DIR)/*.c
 
 # Header files to ignore when scanning.
-IGNORE_HFILES =
+IGNORE_HFILES = morph_lib.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

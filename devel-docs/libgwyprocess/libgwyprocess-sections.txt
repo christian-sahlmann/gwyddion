@@ -166,6 +166,8 @@ gwy_data_field_grains_intersect
 <SECTION>
 <FILE>tip</FILE>
 GwyTipType
+GwySetFractionFunc
+GwySetMessageFunc
 GwyTipModelFunc
 GwyTipGuessFunc
 GwyTipModelPreset
@@ -206,32 +208,13 @@ gwy_data_field_cwt
 </SECTION>
 
 <SECTION>
-<FILE>morph_lib</FILE>
-iallocmatrix
-ifreematrix
-ireflect
-idilation
-ierosion
-icmap
-dallocmatrix
-dfreematrix
-dreflect
-ddilation
-derosion
-iopen
-itip_estimate
-itip_estimate_iter
-itip_estimate0
-useit
-itip_estimate_point
-</SECTION>
-
-<SECTION>
 <FILE>level</FILE>
 gwy_data_field_area_fit_plane
 gwy_data_field_plane_coeffs
 gwy_data_field_plane_level
 gwy_data_field_plane_rotate
+gwy_data_field_area_fit_polynom
+gwy_data_field_area_subtract_polynom
 </SECTION>
 
 <SECTION>
@@ -244,6 +227,7 @@ gwy_data_field_area_filter_conservative
 gwy_data_field_area_filter_laplacian
 gwy_data_field_area_filter_sobel
 gwy_data_field_area_filter_prewitt
+gwy_data_field_area_filter_canny
 gwy_data_field_convolve
 gwy_data_field_filter_median
 gwy_data_field_filter_mean

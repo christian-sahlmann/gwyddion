@@ -117,6 +117,19 @@ and directional filters.
 @height: 
 
 
+<!-- ##### FUNCTION gwy_data_field_area_filter_canny ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@threshold: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
 <!-- ##### FUNCTION gwy_data_field_convolve ##### -->
 <para>
 
