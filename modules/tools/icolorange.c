@@ -95,7 +95,7 @@ static GwyModuleInfo module_info = {
     "icolorange",
     N_("Interactive color range tool."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -170,7 +170,7 @@ dialog_create(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwyContainer *settings;
-    GtkWidget *dialog, *table, *frame, *label;
+    GtkWidget *dialog, *table, *frame, *label, *hbox;
     gint row;
 
     gwy_debug(" ");
@@ -237,14 +237,18 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    table = gtk_table_new(8, 4, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
+
+    table = gtk_table_new(8, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
     row = gwy_unitool_rect_info_table_setup(&controls->labels,
                                             GTK_TABLE(table), 0, row);
     controls->labels.unselected_is_full = TRUE;
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     controls->cdo_preview
         = gtk_check_button_new_with_mnemonic(_("_Instant apply"));
@@ -252,7 +256,7 @@ dialog_create(GwyUnitoolState *state)
                                  controls->do_preview);
     g_signal_connect(controls->cdo_preview, "toggled",
                      G_CALLBACK(do_preview_updated), state);
-    gtk_table_attach(GTK_TABLE(table), controls->cdo_preview, 0, 4, row, row+1,
+    gtk_table_attach(GTK_TABLE(table), controls->cdo_preview, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
