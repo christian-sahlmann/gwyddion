@@ -51,7 +51,8 @@ static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
 static void       gwy_app_data_window_list_updated (void);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_data_popup_menu_popup    (GtkWidget *menu,
-                                                    GdkEventButton *event);
+                                                    GdkEventButton *event,
+                                                    GtkWidget *view);
 static void       gwy_app_set_current_window       (GtkWidget *window);
 #ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
 static void       gwy_app_graph_list_toggle_cb     (GtkWidget *toggle,
@@ -1092,10 +1093,17 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
 
 static gboolean
 gwy_app_data_popup_menu_popup(GtkWidget *menu,
-                              GdkEventButton *event)
+                              GdkEventButton *event,
+                              GtkWidget *view)
 {
+    GtkWidget *window;
+
     if (event->button != 3)
         return FALSE;
+
+    window = gtk_widget_get_toplevel(view);
+    g_return_val_if_fail(window, FALSE);
+    gwy_app_data_window_set_current(GWY_DATA_WINDOW(window));
 
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
