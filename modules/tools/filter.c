@@ -26,6 +26,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/app.h>
+#include <app/settings.h>
 #include <app/unitool.h>
 
 #define CHECK_LAYER_TYPE(l) \
@@ -64,6 +65,12 @@ static void       update_changed_cb (GtkToggleButton *button,
                                     ToolControls *controls);
 static void       my_undo_save (GwyDataField *dfield);
 static void       my_undo_load (GwyDataField *dfield);
+
+static void       load_args        (GwyContainer *container,
+                                    ToolControls *controls);
+static void       save_args        (GwyContainer *container,
+                                    ToolControls *controls);
+
 
 GwyDataField *undo_dfield = NULL;
 gint old_ulcol = 0;
@@ -147,12 +154,16 @@ static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
     ToolControls *controls;
+    GwyContainer *settings;
     GwyUnitoolUnits *units;
     GtkWidget *dialog, *table, *table2, *label, *frame;
 
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
+    settings = gwy_app_settings_get();
+    load_args(settings, controls);
+    
     units = &state->coord_units;
 
     dialog = gtk_dialog_new_with_buttons(_("Filtering"),
@@ -440,20 +451,15 @@ dialog_update(GwyUnitoolState *state)
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
-    GwyContainer *data;
-    GwyDataField *dfield;
-    GwyDataViewLayer *layer;
+    GwyContainer *settings;
+    ToolControls *controls;
    
-/*    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-*/
+    settings = gwy_app_settings_get();
+    controls = (ToolControls*)state->user_data;
+    save_args(settings, controls);
+    
     if (undo_dfield)
     {
-/*        my_undo_load(dfield);
-        gwy_vector_layer_unselect(state->layer);
-        gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
-  */         
         g_object_unref(undo_dfield);
         undo_dfield = NULL;
     }
@@ -509,5 +515,53 @@ my_undo_load(GwyDataField *dfield)
     gwy_data_field_copy(undo_dfield, dfield);
 }
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+static const gchar *upd_key = "/tool/filter/update";
+static const gchar *siz_key = "/tool/profile/size";
+static const gchar *fil_key = "/tool/profile/filter";
+static const gchar *dir_key = "/tool/profile/direction";
+
+
+static void
+save_args(GwyContainer *container, ToolControls *controls)
+{
+    gwy_container_set_boolean_by_name(container, upd_key,
+                                      controls->upd);
+    gwy_container_set_int32_by_name(container, siz_key,
+                                    controls->siz);
+    gwy_container_set_int32_by_name(container, fil_key,
+                                    controls->fil);
+    gwy_container_set_int32_by_name(container, dir_key,
+                                    controls->dir);
+}
+
+
+static void
+load_args(GwyContainer *container, ToolControls *controls)
+{
+    if (gwy_container_contains_by_name(container, upd_key))
+        controls->upd = gwy_container_get_boolean_by_name(container,
+                                                               upd_key);
+    else
+        controls->upd = FALSE;
+
+    if (gwy_container_contains_by_name(container, siz_key))
+        controls->siz = gwy_container_get_int32_by_name(container,
+                                                          siz_key);
+    else
+        controls->siz = 6;
+
+    if (gwy_container_contains_by_name(container, fil_key))
+        controls->fil = gwy_container_get_int32_by_name(container,
+                                                          fil_key);
+    else
+        controls->fil = GWY_FILTER_MEAN;
+    
+    if (gwy_container_contains_by_name(container, dir_key))
+        controls->dir = gwy_container_get_int32_by_name(container,
+                                                          dir_key);
+    else
+        controls->dir = 0;;
+
+}
+    /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
