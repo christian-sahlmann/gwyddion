@@ -442,7 +442,6 @@ gwy_graph_area_draw_selection(GtkWidget *widget)
                                widget->allocation.width-1, end-start);
         }
         gdk_gc_set_foreground(area->gc, &fg);
-        printf("Sel started\n");
     }
 
 
@@ -491,7 +490,6 @@ gwy_graph_area_draw_zoom(GtkWidget *widget)
     gint x, y;
     area = GWY_GRAPH_AREA(widget);
 
-    printf("x=%d, y=%d, w=%d, h=%d\n", area->zoomdata->x, area->zoomdata->y, area->zoomdata->width, area->zoomdata->height);
     if (area->status == GWY_GRAPH_STATUS_ZOOM &&
         area->zoomdata->width!=0 && area->zoomdata->height!=0)
     {
@@ -557,7 +555,6 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             area->seldata->data_end = scr_to_data_y(widget, y);
         }
         area->selecting = 1;
-        printf("Sel started\n");
         gwy_graph_area_signal_selected(area);
         gtk_widget_queue_draw(widget);
     }
@@ -578,7 +575,6 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
                 g_array_append_val(area->pointsdata->scr_points, scrpnt);
                 g_array_append_val(area->pointsdata->data_points, datpnt);
                 area->pointsdata->n++;
-                printf("Point added.\n");
             }
         }
         else
@@ -589,7 +585,6 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             area->pointsdata->scr_points = g_array_new(0, 1, sizeof(GwyGraphScrPoint));
             area->pointsdata->data_points = g_array_new(0, 1, sizeof(GwyGraphDataPoint));
             area->pointsdata->n = 0;
-            printf("Points removed.\n");
         }
         gwy_graph_area_signal_selected(area);
 
@@ -639,7 +634,6 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
             area->seldata->scr_end = y;
             area->seldata->data_end = scr_to_data_y(widget, y);
         }
-        printf("Sel: %d, %d finished.\n", area->seldata->scr_start, area->seldata->scr_end);
         area->selecting = 0;
         gwy_graph_area_signal_selected(area);
         gtk_widget_queue_draw(widget);
@@ -761,7 +755,6 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             area->seldata->scr_end = scr_to_data_y(widget, y);
             area->seldata->data_end = 0;
         }
-        printf("Sel: %d, %d\n", area->seldata->scr_start, area->seldata->scr_end);
         gwy_graph_area_signal_selected(area);
         gtk_widget_queue_draw(widget);
     }
@@ -820,8 +813,6 @@ gwy_graph_area_find_child(GwyGraphArea *area, gint x, gint y)
 
         child = (GtkLayoutChild*)chpl->data;
         allocation = &child->widget->allocation;
-        printf("x,y=%d, %d,  child: %d, %d, %dx%d\n", x, y, allocation->x,
-               allocation->y, allocation->width, allocation->height);
         if (x >= allocation->x
             && x < allocation->x + allocation->width
             && y >= allocation->y
@@ -1069,10 +1060,6 @@ zoom(GtkWidget *widget)
     area->zoomdata->ymax = scr_to_data_y(widget, y + fabs(area->zoomdata->height));
     swap = area->zoomdata->ymax; area->zoomdata->ymax = area->zoomdata->ymin; area->zoomdata->ymin = swap;
 
-    printf("zoom: %f %f to %f %f\n", area->zoomdata->xmin,
-           area->zoomdata->ymin,
-           area->zoomdata->xmax,
-           area->zoomdata->ymax);
     gwy_graph_area_signal_zoomed(area);
     area->status = GWY_GRAPH_STATUS_PLAIN;
 }
