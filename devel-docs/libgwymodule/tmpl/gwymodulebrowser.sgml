@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-gwymodule
+gwymodulebrowser
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -13,4 +13,11 @@ gwymodule
 <para>
 
 </para>
+
+<!-- ##### FUNCTION gwy_module_browser ##### -->
+<para>
+
+</para>
+
+
 

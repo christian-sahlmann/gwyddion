@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY libgwymodule-gwymodule SYSTEM "xml/gwymodule.xml">
+<!ENTITY libgwymodule-loader SYSTEM "xml/gwymoduleloader.xml">
+<!ENTITY libgwymodule-browser SYSTEM "xml/gwymodulebrowser.xml">
+<!ENTITY libgwymodule-file SYSTEM "xml/gwymodule-file.xml">
+<!ENTITY libgwymodule-process SYSTEM "xml/gwymodule-process.xml">
 ]>
 <book id="index">
   <bookinfo>
@@ -10,6 +13,9 @@
 
   <chapter>
     <title>[Insert title here]</title>
-    &libgwymodule-gwymodule;
+    &libgwymodule-loader;
+    &libgwymodule-browser;
+    &libgwymodule-file;
+    &libgwymodule-process;
   </chapter>
 </book>

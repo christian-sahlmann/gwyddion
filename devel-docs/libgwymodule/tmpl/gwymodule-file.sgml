@@ -1,0 +1,126 @@
+<!-- ##### SECTION Title ##### -->
+gwymodule-file
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyFileFuncInfo ##### -->
+<para>
+
+</para>
+
+@name: 
+@file_desc: 
+@detect: 
+@load: 
+@save: 
+
+<!-- ##### USER_FUNCTION GwyFileDetectFunc ##### -->
+<para>
+
+</para>
+
+@filename: 
+@only_name: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwyFileLoadFunc ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwyFileSaveFunc ##### -->
+<para>
+
+</para>
+
+@data: 
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_register_file_func ##### -->
+<para>
+
+</para>
+
+@modname: 
+@func_info: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_run_file_detect_func ##### -->
+<para>
+
+</para>
+
+@name: 
+@filename: 
+@only_name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_run_file_load_func ##### -->
+<para>
+
+</para>
+
+@name: 
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_run_file_save_func ##### -->
+<para>
+
+</para>
+
+@name: 
+@data: 
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_file_detect ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_file_load ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_file_save ##### -->
+<para>
+
+</para>
+
+@data: 
+@filename: 
+@Returns: 
+
+

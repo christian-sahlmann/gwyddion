@@ -1,0 +1,67 @@
+<!-- ##### SECTION Title ##### -->
+gwymodule-process
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyProcessFuncInfo ##### -->
+<para>
+
+</para>
+
+@name: 
+@menu_path: 
+@process: 
+@run: 
+
+<!-- ##### USER_FUNCTION GwyProcessFunc ##### -->
+<para>
+
+</para>
+
+@data: 
+@run: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_register_process_func ##### -->
+<para>
+
+</para>
+
+@modname: 
+@func_info: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_run_process_func ##### -->
+<para>
+
+</para>
+
+@name: 
+@data: 
+@run: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_build_process_menu ##### -->
+<para>
+
+</para>
+
+@accel_group: 
+@item_callback: 
+@Returns: 
+
+
