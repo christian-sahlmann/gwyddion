@@ -5,6 +5,8 @@
 #include <libgwyddion/gwyserializable.h>
 #include "settings.h"
 
+static void gwy_app_set_defaults(GwyContainer *settings);
+
 static GwyContainer *settings = NULL;
 
 GwyContainer*
@@ -14,6 +16,8 @@ gwy_app_settings_get(void)
         g_warning("No settings loaded, creating empty");
         settings = GWY_CONTAINER(gwy_container_new());
     }
+    gwy_app_set_defaults(settings);
+
     return settings;
 }
 
@@ -33,7 +37,7 @@ gwy_app_settings_save(const gchar *filename)
 
     gwy_debug("%s: Saving settings to `%s'", __FUNCTION__, filename);
     settings = gwy_app_settings_get();
-    g_return_val_if_fail(settings, FALSE);
+    g_return_val_if_fail(GWY_IS_CONTAINER(settings), FALSE);
     fh = fopen(filename, "wb");
     if (!fh)
         return FALSE;
@@ -70,11 +74,19 @@ gwy_app_settings_load(const gchar *filename)
     }
     gwy_app_settings_free();
     settings = new_settings;
+    gwy_app_set_defaults(settings);
+
+    return TRUE;
+}
+
+static void
+gwy_app_set_defaults(GwyContainer *settings)
+{
+    g_return_if_fail(GWY_IS_CONTAINER(settings));
+
     if (!gwy_container_contains_by_name(settings, "/app/plugindir"))
         gwy_container_set_string_by_name(settings, "/app/plugindir",
                                          GWY_PLUGIN_DIR);
-
-    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -185,6 +185,7 @@ main(int argc, char *argv[])
     config_file = g_build_filename(g_get_home_dir(), ".gwydrc", NULL);
     gwy_type_init();
     gwy_app_settings_load(config_file);
+    gwy_app_settings_get();
     gwy_module_register_modules(module_dirs);
     gwy_app_create_toolbox();
     for (i = 1; i < argc; i++) {
