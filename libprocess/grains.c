@@ -859,8 +859,8 @@ wdrop_step(GwyDataField *data_field, GwyDataField *min_field,
                 grain_field->data[col + xres*row] = grain++;
         }
     }
-    for (col = 1; col < (xres - 1); col++) {
-        for (row = 1; row < (yres - 1); row++) {
+    for (col = 1; col < xres - 1; col++) {
+        for (row = 1; row < yres - 1; row++) {
 
             vcol = col;
             vrow = row;
@@ -894,8 +894,8 @@ mark_grain_boundaries(GwyDataField *grain_field)
     gwy_data_field_copy(grain_field, buffer);
     data = buffer->data;
 
-    for (col = 1; col < (xres - 1); col++) {
-        for (row = 1; row < (yres - 1); row++) {
+    for (col = 1; col < xres - 1; col++) {
+        for (row = 1; row < yres - 1; row++) {
             if (data[col + xres*row] != data[col + 1 + xres*row]
                 || data[col + xres*row] != data[col + xres*(row + 1)])
                 grain_field->data[col + xres*row] = 0;
@@ -909,34 +909,33 @@ mark_grain_boundaries(GwyDataField *grain_field)
 static void
 number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
 {
-    gint *pnt, npnt;
-
-    gint xres, yres, col, row, i, grain;
+    gint *visited, *listv, *listh;
+    gint xres, yres, n, i, grain_no;
 
     xres = mask_field->xres;
     yres = mask_field->yres;
 
-    grain = 0;
-    gwy_data_field_fill(grain_field, 0);
+    n = xres*yres;
+    visited = g_new0(gint, n);
+    listv = g_new(gint, n/2 + 2);
+    listh = g_new(gint, n/2 + 2);
 
-    for (col = 0; col < (xres); col++) {
-        for (row = 0; row < (yres); row++) {
-            if (mask_field->data[col + xres*row] != 0
-                && col > 0 && row > 0 && col < (xres - 1) && row < (yres - 1)) {
-                npnt = 0;
+    grain_no = 0;
 
-                pnt = gwy_data_field_fill_grain(mask_field, row, col, &npnt);
-
-                grain++;
-                for (i = 0; i < npnt; i++) {
-                    grain_field->data[pnt[i]] = grain;
-                    mask_field->data[pnt[i]] = 0;
-                }
-                g_free(pnt);
-
-            }
+    for (i = 0; i < n; i++) {
+        if (mask_field->data[i] && !visited[i]) {
+            grain_no++;
+            gwy_data_field_fill_one_grain(mask_field, i % xres, i/xres,
+                                          visited, grain_no, listv, listh);
         }
     }
+
+    for (i = 0; i < n; i++)
+        grain_field->data[i] = visited[i];
+
+    g_free(listh);
+    g_free(listv);
+    g_free(visited);
 }
 
 
@@ -960,10 +959,9 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
                           gint row, gint col, gint *nindices)
 {
     gdouble *data;
-    gint *visited;
+    gint *visited, *listv, *listh;
     gint *indices;
     gint xres, yres, n, count;
-    gint *listh, *listv;
     gint i, j;
     gint initial;
 
@@ -990,11 +988,11 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
     visited = g_new0(gint, n);
     listv = g_new(gint, n/2 + 2);
     listh = g_new(gint, n/2 + 2);
-    count = gwy_data_field_fill_one_grain(dfield, col, row, visited, 1,
-                                          listv, listh);
+    count = gwy_data_field_fill_one_grain(dfield, col, row,
+                                          visited, 1, listv, listh);
 
-    g_free(listv);
     g_free(listh);
+    g_free(listv);
 
     indices = g_new(gint, count);
 
@@ -1026,7 +1024,8 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
  *
  * The @visited, @listv, and @listh buffers are recyclable between calls so
  * they don't have to be allocated and freed for each grain, speeding up
- * sequential grain processing.
+ * sequential grain processing.  Generally, this function itself does not
+ * allocate or free any memory.
  *
  * Returns: The number of pixels in the grain.
  **/
