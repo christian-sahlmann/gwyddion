@@ -39,31 +39,31 @@ G_BEGIN_DECLS
 typedef struct _GwyDataLine      GwyDataLine;
 typedef struct _GwyDataLineClass GwyDataLineClass;
 
+/* FIXME: is used in linestats */
 typedef enum {
-  GWY_SF_OUTPUT_DH    = 0,  /*distribution of heights*/
-  GWY_SF_OUTPUT_CDH   = 1,  /*cumulative distribution of heights*/
-  GWY_SF_OUTPUT_DA    = 2,  /*distribution of angles*/
-  GWY_SF_OUTPUT_CDA   = 3,  /*cumulative distribution of angles*/
-  GWY_SF_OUTPUT_ACF   = 4,  /*autocorrelation fucntions*/
-  GWY_SF_OUTPUT_HHCF  = 5,  /*height-height correlation function*/
-  GWY_SF_OUTPUT_PSDF  = 6   /*power spectral density fucntion*/
+    GWY_SF_OUTPUT_DH    = 0,
+    GWY_SF_OUTPUT_CDH   = 1,
+    GWY_SF_OUTPUT_DA    = 2,
+    GWY_SF_OUTPUT_CDA   = 3,
+    GWY_SF_OUTPUT_ACF   = 4,
+    GWY_SF_OUTPUT_HHCF  = 5,
+    GWY_SF_OUTPUT_PSDF  = 6
 } GwySFOutputType;
 
+/* FIXME: simply use a number? */
 typedef enum {
-  GWY_FIT_POLY_0   = 0,  /*height fit*/
-  GWY_FIT_POLY_1   = 1,  /*linear fit*/
-  GWY_FIT_POLY_2   = 2,  /*quadratic fit*/
-  GWY_FIT_POLY_3   = 3   /*cubic fit*/
+    GWY_FIT_POLY_0   = 0,
+    GWY_FIT_POLY_1   = 1,
+    GWY_FIT_POLY_2   = 2,
+    GWY_FIT_POLY_3   = 3
 } GwyFitLineType;
 
-
-/*provisory struct for field (for function arguments simplification)*/
 struct _GwyDataLine {
     GObject parent_instance;
 
-    gint res;      /*X resolution*/
-    gdouble real;  /*X real field size (in nanometers)*/
-    gdouble *data; /*data field*/
+    gint res;
+    gdouble real;
+    gdouble *data;
 };
 
 struct _GwyDataLineClass {
@@ -72,127 +72,150 @@ struct _GwyDataLineClass {
 
 G_END_DECLS
 
+/* FIXME: Remove in 2.0 */
 #include <libprocess/linestats.h>
 
 G_BEGIN_DECLS
 
-GType gwy_data_line_get_type  (void) G_GNUC_CONST;
+GType  gwy_data_line_get_type  (void) G_GNUC_CONST;
 
-GObject* gwy_data_line_new(gint res, gdouble real, gboolean nullme);
-
-/*resample data line (change resolution)*/
-void gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation);
-
-/*resize data line according to from-to*/
-gboolean gwy_data_line_resize(GwyDataLine *a, gint from, gint to);
-
-/*copy everything to line (allrady allocated)*/
-gboolean gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b);
-
-
-/************************************************************/
-/*Get and set values of the struct members*/
-
-/*simple operations*/
-gdouble *gwy_data_line_get_data(GwyDataLine *a);
-gint gwy_data_line_get_res(GwyDataLine *a);
-gdouble gwy_data_line_get_real(GwyDataLine *a);
-void gwy_data_line_set_real(GwyDataLine *a, gdouble real);
-
-/*pixel <-> real coords transform*/
-gdouble gwy_data_line_itor(GwyDataLine *a, gdouble pixval);
-gdouble gwy_data_line_rtoi(GwyDataLine *a, gdouble realval);
-
-/*data value at given pixel*/
-gdouble gwy_data_line_get_val(GwyDataLine *a, gint i);
-gint gwy_data_line_set_val(GwyDataLine *a, gint i, gdouble value);
-
-/*data value interpolated somewhere between given pixels*/
-gdouble gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation);
-
-/*data value interpolated somewhere in the (xreal,yreal) coords*/
-gdouble gwy_data_line_get_dval_real(GwyDataLine *a, gdouble x, gint interpolation);
-
-/*************************************************************************************/
-/*Processing*/
-
-/*invert line along x/y/z axis*/
-void gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z);
-
-/*fill, multiply or add something*/
-void gwy_data_line_fill(GwyDataLine *a, gdouble value);
-void gwy_data_line_multiply(GwyDataLine *a, gdouble value);
-void gwy_data_line_add(GwyDataLine *a, gdouble value);
-void gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value);
-void gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value);
-void gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value);
-
-/*get some basic properties:*/
-gdouble gwy_data_line_get_max(GwyDataLine *a);
-gdouble gwy_data_line_get_min(GwyDataLine *a);
-gdouble gwy_data_line_get_avg(GwyDataLine *a);
-gdouble gwy_data_line_get_rms(GwyDataLine *a);
-gdouble gwy_data_line_get_sum(GwyDataLine *a);
-gdouble gwy_data_line_part_get_max(GwyDataLine *a, gint from, gint to);
-gdouble gwy_data_line_part_get_min(GwyDataLine *a, gint from, gint to);
-gdouble gwy_data_line_part_get_avg(GwyDataLine *a, gint from, gint to);
-gdouble gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to);
-gdouble gwy_data_line_part_get_sum(GwyDataLine *a, gint from, gint to);
-
-/*threshold dividing at thresval and setting to top and bottom*/
-gint gwy_data_line_threshold(GwyDataLine *a, gdouble threshval, gdouble bottom, gdouble top);
-gint gwy_data_line_part_threshold(GwyDataLine *a, gint from, gint to, gdouble threshval, gdouble bottom, gdouble top);
-
-/*get 1st order line leveling coefficients*/
-void gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv);
-void gwy_data_line_part_line_coeffs(GwyDataLine *a, gint from, gint to, gdouble *av, gdouble *bv);
-
-/*do 1st order line leveling*/
-void gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv);
-
-/*do "rotation" along the y-axis by specified angle to do better line leveling*/
-void gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation);
-
-/*get derivations (according to "real" sizes of field)*/
-gdouble gwy_data_line_get_der(GwyDataLine *a, gint i);
-
-/*1DFFT interface*/
-void gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
-                       GwyDataLine *rb, GwyDataLine *ib,
-                       void (*fft)(), GwyWindowingType windowing,
-                       gint direction, GwyInterpolationType interpolation,
-                       gboolean preserverms, gboolean level);
-
-/*simple version of (*fft) function using fft_hum() from "simplefft.h"*/
-void gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia,
-                           GwyDataLine *rb, GwyDataLine *ib,
-                           gint interpolation);
-
-gdouble* gwy_data_line_part_fit_polynom (GwyDataLine *data_line,
-                                         gint n,
-                                         gdouble *coeffs,
-                                         gint from,
-                                         gint to);
-gdouble* gwy_data_line_fit_polynom      (GwyDataLine *data_line,
-                                         gint n,
-                                         gdouble *coeffs);
-
-void gwy_data_line_part_subtract_polynom(GwyDataLine *data_line,
-                                    gint n,
-                                    gdouble *coeffs,
-                                    gint from,
-                                    gint to);
-
-void gwy_data_line_subtract_polynom(GwyDataLine *data_line,
-                                    gint n,
-                                    gdouble *coeffs);
-
-gdouble gwy_data_line_get_modus(GwyDataLine *data_line,
-                                gint histogram_steps);
-gdouble gwy_data_line_part_get_modus(GwyDataLine *data_line,
-                                     gint from,
-                                     gint to,
-                                     gint histogram_steps);
+GObject*       gwy_data_line_new                   (gint res,
+                                                    gdouble real,
+                                                    gboolean nullme);
+void           gwy_data_line_resample              (GwyDataLine *data_line,
+                                                    gint res,
+                                                    gint interpolation);
+gboolean       gwy_data_line_resize                (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to);
+gboolean       gwy_data_line_copy                  (GwyDataLine *data_line,
+                                                    GwyDataLine *b);
+gdouble*       gwy_data_line_get_data              (GwyDataLine *data_line);
+const gdouble* gwy_data_line_get_data_const        (GwyDataLine *data_line);
+gint           gwy_data_line_get_res               (GwyDataLine *data_line);
+gdouble        gwy_data_line_get_real              (GwyDataLine *data_line);
+void           gwy_data_line_set_real              (GwyDataLine *data_line,
+                                                    gdouble real);
+gdouble        gwy_data_line_itor                  (GwyDataLine *data_line,
+                                                    gdouble pixval);
+gdouble        gwy_data_line_rtoi                  (GwyDataLine *data_line,
+                                                    gdouble realval);
+gdouble        gwy_data_line_get_val               (GwyDataLine *data_line,
+                                                    gint i);
+gint           gwy_data_line_set_val               (GwyDataLine *data_line,
+                                                    gint i,
+                                                    gdouble value);
+gdouble        gwy_data_line_get_dval              (GwyDataLine *data_line,
+                                                    gdouble x,
+                                                    gint interpolation);
+gdouble        gwy_data_line_get_dval_real         (GwyDataLine *data_line,
+                                                    gdouble x,
+                                                    gint interpolation);
+void           gwy_data_line_invert                (GwyDataLine *data_line,
+                                                    gboolean x,
+                                                    gboolean z);
+void           gwy_data_line_fill                  (GwyDataLine *data_line,
+                                                    gdouble value);
+void           gwy_data_line_multiply              (GwyDataLine *data_line,
+                                                    gdouble value);
+void           gwy_data_line_add                   (GwyDataLine *data_line,
+                                                    gdouble value);
+void           gwy_data_line_part_fill             (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to,
+                                                    gdouble value);
+void           gwy_data_line_part_multiply         (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to,
+                                                    gdouble value);
+void           gwy_data_line_part_add              (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to,
+                                                    gdouble value);
+gdouble        gwy_data_line_get_max               (GwyDataLine *data_line);
+gdouble        gwy_data_line_get_min               (GwyDataLine *data_line);
+gdouble        gwy_data_line_get_avg               (GwyDataLine *data_line);
+gdouble        gwy_data_line_get_rms               (GwyDataLine *data_line);
+gdouble        gwy_data_line_get_sum               (GwyDataLine *data_line);
+gdouble        gwy_data_line_part_get_max          (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to);
+gdouble        gwy_data_line_part_get_min          (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to);
+gdouble        gwy_data_line_part_get_avg          (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to);
+gdouble        gwy_data_line_part_get_rms          (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to);
+gdouble        gwy_data_line_part_get_sum          (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to);
+gint           gwy_data_line_threshold             (GwyDataLine *data_line,
+                                                    gdouble threshval,
+                                                    gdouble bottom,
+                                                    gdouble top);
+gint           gwy_data_line_part_threshold        (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to,
+                                                    gdouble threshval,
+                                                    gdouble bottom,
+                                                    gdouble top);
+void           gwy_data_line_line_coeffs           (GwyDataLine *data_line,
+                                                    gdouble *av,
+                                                    gdouble *bv);
+void           gwy_data_line_part_line_coeffs      (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to,
+                                                    gdouble *av,
+                                                    gdouble *bv);
+void           gwy_data_line_line_level            (GwyDataLine *data_line,
+                                                    gdouble av,
+                                                    gdouble bv);
+void           gwy_data_line_line_rotate           (GwyDataLine *data_line,
+                                                    gdouble angle,
+                                                    gint interpolation);
+gdouble        gwy_data_line_get_der               (GwyDataLine *data_line,
+                                                    gint i);
+void           gwy_data_line_fft            (GwyDataLine *ra,
+                                             GwyDataLine *ia,
+                                             GwyDataLine *rb,
+                                             GwyDataLine *ib,
+                                             void (*fft)(),
+                                             GwyWindowingType windowing,
+                                             gint direction,
+                                             GwyInterpolationType interpolation,
+                                             gboolean preserverms,
+                                             gboolean level);
+void           gwy_data_line_fft_hum               (gint direction,
+                                                    GwyDataLine *ra,
+                                                    GwyDataLine *ia,
+                                                    GwyDataLine *rb,
+                                                    GwyDataLine *ib,
+                                                    gint interpolation);
+gdouble*       gwy_data_line_part_fit_polynom      (GwyDataLine *data_line,
+                                                    gint n,
+                                                    gdouble *coeffs,
+                                                    gint from,
+                                                    gint to);
+gdouble*       gwy_data_line_fit_polynom           (GwyDataLine *data_line,
+                                                    gint n,
+                                                    gdouble *coeffs);
+void           gwy_data_line_part_subtract_polynom (GwyDataLine *data_line,
+                                                    gint n,
+                                                    gdouble *coeffs,
+                                                    gint from,
+                                                    gint to);
+void           gwy_data_line_subtract_polynom      (GwyDataLine *data_line,
+                                                    gint n,
+                                                    gdouble *coeffs);
+gdouble        gwy_data_line_get_modus             (GwyDataLine *data_line,
+                                                    gint histogram_steps);
+gdouble        gwy_data_line_part_get_modus        (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to,
+                                                    gint histogram_steps);
 
 G_END_DECLS
 

@@ -43,14 +43,14 @@ typedef struct _GwyDataFieldClass GwyDataFieldClass;
 struct _GwyDataField {
     GObject parent_instance;
 
-    gint xres;      /*X resolution*/
-    gint yres;      /*Y resolution*/
-    gdouble xreal;  /*X real field size (in nanometers)*/
-    gdouble yreal;  /*Y real field size (in nanometers)*/
-    gdouble *data;  /*data field*/
-    gint N;	    /*xres*yres*/
-    GwySIUnit *si_unit_xy; /*SI unit corresponding to XY axis*/
-    GwySIUnit *si_unit_z; /*SI unit corresponding to height (Z) axis*/
+    gint xres;
+    gint yres;
+    gdouble xreal;
+    gdouble yreal;
+    gdouble *data;
+    gint N;  /* FIXME: remove, not used, not even updated */
+    GwySIUnit *si_unit_xy;
+    GwySIUnit *si_unit_z;
 };
 
 struct _GwyDataFieldClass {
@@ -66,11 +66,11 @@ typedef enum {
 G_END_DECLS
 
 /* XXX: This is here to allow people #include just datafield.h and get all
- * datafield-related functions as before, should be removed someday */
+ * datafield-related functions as before, will be removed in 2.0.
+ * Do NOT add new headers here! Add them to gwyprocess.h. */
 #include <libprocess/correct.h>
 #include <libprocess/correlation.h>
 #include <libprocess/cwt.h>
-#include <libprocess/dwt.h>
 #include <libprocess/fractals.h>
 #include <libprocess/filters.h>
 #include <libprocess/grains.h>
@@ -82,240 +82,203 @@ G_BEGIN_DECLS
 
 GType gwy_data_field_get_type  (void) G_GNUC_CONST;
 
-GObject* gwy_data_field_new(gint xres,
-                            gint yres,
-                            gdouble xreal,
-                            gdouble yreal,
-                            gboolean nullme);
+GObject*         gwy_data_field_new                  (gint xres,
+                                                      gint yres,
+                                                      gdouble xreal,
+                                                      gdouble yreal,
+                                                      gboolean nullme);
+void              gwy_data_field_resample  (GwyDataField *data_field,
+                                            gint xres,
+                                            gint yres,
+                                            GwyInterpolationType interpolation);
+gboolean          gwy_data_field_resize              (GwyDataField *data_field,
+                                                      gint ulcol,
+                                                      gint ulrow,
+                                                      gint brcol,
+                                                      gint brrow);
+gboolean          gwy_data_field_copy                (GwyDataField *a,
+                                                      GwyDataField *b);
+gboolean          gwy_data_field_area_copy           (GwyDataField *src,
+                                                      GwyDataField *dest,
+                                                      gint ulcol,
+                                                      gint ulrow,
+                                                      gint brcol,
+                                                      gint brrow,
+                                                      gint destcol,
+                                                      gint destrow);
+gdouble*          gwy_data_field_get_data            (GwyDataField *data_field);
+const gdouble*    gwy_data_field_get_data_const      (GwyDataField *data_field);
+gint              gwy_data_field_get_xres            (GwyDataField *data_field);
+gint              gwy_data_field_get_yres            (GwyDataField *data_field);
+gdouble           gwy_data_field_get_xreal           (GwyDataField *data_field);
+gdouble           gwy_data_field_get_yreal           (GwyDataField *data_field);
+void              gwy_data_field_set_xreal           (GwyDataField *data_field,
+                                                      gdouble xreal);
+void              gwy_data_field_set_yreal           (GwyDataField *data_field,
+                                                      gdouble yreal);
+GwySIUnit*        gwy_data_field_get_si_unit_xy      (GwyDataField *data_field);
+GwySIUnit*        gwy_data_field_get_si_unit_z       (GwyDataField *data_field);
+void              gwy_data_field_set_si_unit_xy      (GwyDataField *data_field,
+                                                      GwySIUnit *si_unit);
+void              gwy_data_field_set_si_unit_z       (GwyDataField *data_field,
+                                                      GwySIUnit *si_unit);
+GwySIValueFormat* gwy_data_field_get_value_format_xy (GwyDataField *data_field,
+                                                      GwySIValueFormat *format);
+GwySIValueFormat* gwy_data_field_get_value_format_z  (GwyDataField *data_field,
+                                                      GwySIValueFormat *format);
 
-/*resample data field (change resolution)*/
-void gwy_data_field_resample(GwyDataField *a,
-                             gint xres,
-                             gint yres,
-                             GwyInterpolationType interpolation);
-
-/*resize data field according to UL (upper left) and BR (bottom right) points
-  (crop and change resolution if necessary)*/
-gboolean gwy_data_field_resize(GwyDataField *a,
-                               gint ulcol,
-                               gint ulrow,
-                               gint brcol,
-                               gint brrow);
-
-/*copy everything to field (allrady allocated)*/
-gboolean gwy_data_field_copy(GwyDataField *a,
-                             GwyDataField *b);
-gboolean gwy_data_field_area_copy (GwyDataField *src,
-                                   GwyDataField *dest,
-                                   gint ulcol,
-                                   gint ulrow,
-                                   gint brcol,
-                                   gint brrow,
-                                   gint destcol,
-                                   gint destrow);
-
-/************************************************************/
-/*Get and set values of the struct members*/
-
-/*simple operations*/
-gdouble* gwy_data_field_get_data(GwyDataField *a);
-gint gwy_data_field_get_xres(GwyDataField *a);
-gint gwy_data_field_get_yres(GwyDataField *a);
-gdouble gwy_data_field_get_xreal(GwyDataField *a);
-gdouble gwy_data_field_get_yreal(GwyDataField *a);
-void gwy_data_field_set_xreal(GwyDataField *a,
-                              gdouble xreal);
-void gwy_data_field_set_yreal(GwyDataField *a,
-                              gdouble yreal);
-
-GwySIUnit* gwy_data_field_get_si_unit_xy(GwyDataField *a);
-GwySIUnit* gwy_data_field_get_si_unit_z(GwyDataField *a);
-void gwy_data_field_set_si_unit_xy(GwyDataField *a,
-                                   GwySIUnit *si_unit);
-void gwy_data_field_set_si_unit_z(GwyDataField *a,
-                                  GwySIUnit *si_unit);
-GwySIValueFormat* gwy_data_field_get_value_format_xy(GwyDataField *data_field,
-                                                     GwySIValueFormat *format);
-GwySIValueFormat* gwy_data_field_get_value_format_z(GwyDataField *data_field,
-                                                    GwySIValueFormat *format);
-
-/*pixel <-> real coords transform*/
-gdouble gwy_data_field_itor(GwyDataField *a,
-                            gdouble pixval);
-gdouble gwy_data_field_jtor(GwyDataField *a,
-                            gdouble pixval);
-gdouble gwy_data_field_rtoi(GwyDataField *a,
-                            gdouble realval);
-gdouble gwy_data_field_rtoj(GwyDataField *a,
-                            gdouble realval);
+gdouble           gwy_data_field_itor                (GwyDataField *data_field,
+                                                      gdouble pixval);
+gdouble           gwy_data_field_jtor                (GwyDataField *data_field,
+                                                      gdouble pixval);
+gdouble           gwy_data_field_rtoi                (GwyDataField *data_field,
+                                                      gdouble realval);
+gdouble           gwy_data_field_rtoj                (GwyDataField *data_field,
+                                                      gdouble realval);
 
 
-/*data value at given pixel*/
-gboolean gwy_data_field_outside(GwyDataField *a,
-                                gint col,
-                                gint row);
-gdouble gwy_data_field_get_val(GwyDataField *a,
-                               gint col,
-                               gint row);
-void gwy_data_field_set_val(GwyDataField *a,
-                            gint col,
-                            gint row,
-                            gdouble value);
-
-/*data value interpolated somewhere between given pixels*/
-gdouble gwy_data_field_get_dval(GwyDataField *a,
-                                gdouble x,
-                                gdouble y,
-                                GwyInterpolationType interpolation);
-
-/*data value interpolated somewhere in the (xreal,yreal) coords*/
-gdouble gwy_data_field_get_dval_real(GwyDataField *a,
-                                     gdouble x,
-                                     gdouble y,
-                                     GwyInterpolationType interpolation);
-
-/*rotate field. Cut points that will be outside and null points not defined inside*/
-void gwy_data_field_rotate(GwyDataField *a,
-                           gdouble angle,
-                           GwyInterpolationType interpolation);
-
-/*invert field along x/y/z axis*/
-void gwy_data_field_invert(GwyDataField *a,
-                           gboolean x,
-                           gboolean y,
-                           gboolean z);
-
-/*fill,
-  multiply or add something*/
-void gwy_data_field_fill(GwyDataField *a,
-                         gdouble value);
-void gwy_data_field_multiply(GwyDataField *a,
-                             gdouble value);
-void gwy_data_field_add(GwyDataField *a,
-                        gdouble value);
-void gwy_data_field_area_fill(GwyDataField *a,
-                              gint ulcol,
-                              gint ulrow,
-                              gint brcol,
-                              gint brrow,
-                              gdouble value);
-void gwy_data_field_area_multiply(GwyDataField *a,
-                                  gint ulcol,
-                                  gint ulrow,
-                                  gint brcol,
-                                  gint brrow,
-                                  gdouble value);
-void gwy_data_field_area_add(GwyDataField *a,
-                             gint ulcol,
-                             gint ulrow,
-                             gint brcol,
-                             gint brrow,
-                             gdouble value);
-
-/*threshold dividing at thresval and setting to top and bottom*/
-gint gwy_data_field_threshold(GwyDataField *a,
-                              gdouble threshval,
-                              gdouble bottom,
-                              gdouble top);
-gint gwy_data_field_area_threshold(GwyDataField *a,
-                                   gint ulcol,
-                                   gint ulrow,
-                                   gint brcol,
-                                   gint brrow,
-                                   gdouble threshval,
-                                   gdouble bottom,
-                                   gdouble top);
-gint gwy_data_field_clamp(GwyDataField *a,
-                          gdouble bottom,
-                          gdouble top);
-gint gwy_data_field_area_clamp(GwyDataField *a,
-                               gint ulcol,
-                               gint ulrow,
-                               gint brcol,
-                               gint brrow,
-                               gdouble bottom,
-                               gdouble top);
-
-/*data_line extraction*/
-gboolean gwy_data_field_get_data_line(GwyDataField *a,
-                                      GwyDataLine* b,
-                                      gint ulcol,
-                                      gint ulrow,
-                                      gint brcol,
-                                      gint brrow,
-                                      gint res,
-                                      GwyInterpolationType interpolation);
-
-gboolean gwy_data_field_get_data_line_averaged(GwyDataField *a,
-                                      GwyDataLine* b,
-                                      gint ulcol,
-                                      gint ulrow,
-                                      gint brcol,
-                                      gint brrow,
-                                      gint res,
-                                      gint thickness,
-                                      GwyInterpolationType interpolation);
-
-void gwy_data_field_get_row(GwyDataField *a,
-                            GwyDataLine* b,
-                            gint row);
-void gwy_data_field_get_column(GwyDataField *a,
-                               GwyDataLine* b,
-                               gint col);
-void gwy_data_field_set_row(GwyDataField *a,
-                            GwyDataLine* b,
-                            gint row);
-void gwy_data_field_set_column(GwyDataField *a,
-                               GwyDataLine* b,
-                               gint col);
-
-void gwy_data_field_get_row_part(GwyDataField *a,
-                                 GwyDataLine* b,
-                                 gint row,
-                                 gint from,
-                                 gint to);
-void gwy_data_field_get_column_part(GwyDataField *a,
-                                 GwyDataLine* b,
-                                 gint col,
-                                 gint from,
-                                 gint to);
-
-void gwy_data_field_set_row_part(GwyDataField *a,
-                                 GwyDataLine* b,
-                                 gint row,
-                                 gint from,
-                                 gint to);
-void gwy_data_field_set_column_part(GwyDataField *a,
-                                 GwyDataLine* b,
-                                 gint col,
-                                 gint from,
-                                 gint to);
-
-gdouble gwy_data_field_get_xder(GwyDataField *a,
-                                gint col,
-                                gint row);
-gdouble gwy_data_field_get_yder(GwyDataField *a,
-                                gint col,
-                                gint row);
-gdouble gwy_data_field_get_angder(GwyDataField *a,
-                                  gint col,
-                                  gint row,
-                                  gdouble theta);
-
-void gwy_data_field_shade(GwyDataField *data_field,
-                          GwyDataField *target_field,
-                          gdouble theta,
-                          gdouble phi);
-
-void gwy_data_field_fit_lines(GwyDataField *data_field,
-                              gint ulcol,
-                              gint ulrow,
-                              gint brcol,
-                              gint brrow,
-                              GwyFitLineType fit_type,
-                              gboolean exclude,
-                              GtkOrientation orientation);
-
+gboolean          gwy_data_field_outside             (GwyDataField *data_field,
+                                                      gint col,
+                                                      gint row);
+gdouble           gwy_data_field_get_val             (GwyDataField *data_field,
+                                                      gint col,
+                                                      gint row);
+void              gwy_data_field_set_val             (GwyDataField *data_field,
+                                                      gint col,
+                                                      gint row,
+                                                      gdouble value);
+gdouble  gwy_data_field_get_dval           (GwyDataField *data_field,
+                                            gdouble x,
+                                            gdouble y,
+                                            GwyInterpolationType interpolation);
+gdouble  gwy_data_field_get_dval_real      (GwyDataField *data_field,
+                                            gdouble x,
+                                            gdouble y,
+                                            GwyInterpolationType interpolation);
+void     gwy_data_field_rotate             (GwyDataField *data_field,
+                                            gdouble angle,
+                                            GwyInterpolationType interpolation);
+void     gwy_data_field_invert             (GwyDataField *data_field,
+                                            gboolean x,
+                                            gboolean y,
+                                            gboolean z);
+void     gwy_data_field_fill               (GwyDataField *data_field,
+                                            gdouble value);
+void     gwy_data_field_multiply           (GwyDataField *data_field,
+                                            gdouble value);
+void     gwy_data_field_add                (GwyDataField *data_field,
+                                            gdouble value);
+void     gwy_data_field_area_fill          (GwyDataField *data_field,
+                                            gint ulcol,
+                                            gint ulrow,
+                                            gint brcol,
+                                            gint brrow,
+                                            gdouble value);
+void     gwy_data_field_area_multiply      (GwyDataField *data_field,
+                                            gint ulcol,
+                                            gint ulrow,
+                                            gint brcol,
+                                            gint brrow,
+                                            gdouble value);
+void     gwy_data_field_area_add           (GwyDataField *data_field,
+                                            gint ulcol,
+                                            gint ulrow,
+                                            gint brcol,
+                                            gint brrow,
+                                            gdouble value);
+gint     gwy_data_field_threshold          (GwyDataField *data_field,
+                                            gdouble threshval,
+                                            gdouble bottom,
+                                            gdouble top);
+gint     gwy_data_field_area_threshold     (GwyDataField *data_field,
+                                            gint ulcol,
+                                            gint ulrow,
+                                            gint brcol,
+                                            gint brrow,
+                                            gdouble threshval,
+                                            gdouble bottom,
+                                            gdouble top);
+gint     gwy_data_field_clamp              (GwyDataField *data_field,
+                                            gdouble bottom,
+                                            gdouble top);
+gint     gwy_data_field_area_clamp         (GwyDataField *data_field,
+                                            gint ulcol,
+                                            gint ulrow,
+                                            gint brcol,
+                                            gint brrow,
+                                            gdouble bottom,
+                                            gdouble top);
+gboolean gwy_data_field_get_data_line      (GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint ulcol,
+                                            gint ulrow,
+                                            gint brcol,
+                                            gint brrow,
+                                            gint res,
+                                            GwyInterpolationType interpolation);
+gboolean gwy_data_field_get_data_line_averaged(GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint ulcol,
+                                            gint ulrow,
+                                            gint brcol,
+                                            gint brrow,
+                                            gint res,
+                                            gint thickness,
+                                            GwyInterpolationType interpolation);
+void     gwy_data_field_get_row            (GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint row);
+void     gwy_data_field_get_column         (GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint col);
+void     gwy_data_field_set_row            (GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint row);
+void     gwy_data_field_set_column         (GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint col);
+void     gwy_data_field_get_row_part       (GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint row,
+                                            gint from,
+                                            gint to);
+void     gwy_data_field_get_column_part    (GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint col,
+                                            gint from,
+                                            gint to);
+void     gwy_data_field_set_row_part       (GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint row,
+                                            gint from,
+                                            gint to);
+void     gwy_data_field_set_column_part    (GwyDataField *data_field,
+                                            GwyDataLine* data_line,
+                                            gint col,
+                                            gint from,
+                                            gint to);
+gdouble  gwy_data_field_get_xder           (GwyDataField *data_field,
+                                            gint col,
+                                            gint row);
+gdouble  gwy_data_field_get_yder           (GwyDataField *data_field,
+                                            gint col,
+                                            gint row);
+gdouble  gwy_data_field_get_angder         (GwyDataField *data_field,
+                                            gint col,
+                                            gint row,
+                                            gdouble theta);
+void     gwy_data_field_shade              (GwyDataField *data_field,
+                                            GwyDataField *target_field,
+                                            gdouble theta,
+                                            gdouble phi);
+void     gwy_data_field_fit_lines          (GwyDataField *data_field,
+                                            gint ulcol,
+                                            gint ulrow,
+                                            gint brcol,
+                                            gint brrow,
+                                            GwyFitLineType fit_type,
+                                            gboolean exclude,
+                                            GtkOrientation orientation);
 
 G_END_DECLS
 

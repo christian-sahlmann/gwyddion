@@ -242,7 +242,7 @@ gwy_data_line_value_changed(GObject *object)
 
 /**
  * gwy_data_line_initialize:
- * @a: data line
+ * @data_line: A data line.
  * @res: resolution
  * @real: real size
  * @nullme: null values or not
@@ -264,7 +264,7 @@ _gwy_data_line_initialize(GwyDataLine *a,
 
 /**
  * gwy_data_line_free:
- * @a: data line
+ * @data_line: A data line.
  *
  * Frees memory occupied by dataline.
  **/
@@ -280,7 +280,7 @@ _gwy_data_line_free(GwyDataLine *a)
 
 /**
  * gwy_data_line_resample:
- * @a: data line
+ * @data_line: A data line.
  * @res: new resolution
  * @interpolation: interpolation method used
  *
@@ -316,7 +316,7 @@ gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
 
 /**
  * gwy_data_line_resize:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start
  * @to:  where to finish
  *
@@ -354,7 +354,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_copy:
- * @a: Source data line.
+ * @data_line: Source data line.
  * @b: Destination data line.
  *
  * Copies the contents of a data line to another already allocated data line
@@ -375,7 +375,7 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 
 /**
  * gwy_data_line_get_dval:
- * @a: data line
+ * @data_line: A data line.
  * @x: position requested (0 - resolution)
  * @interpolation: interpolation used
  *
@@ -423,69 +423,91 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
 
 /**
  * gwy_data_line_get_data:
- * @a: data line
+ * @data_line: A data line.
  *
- * Returns the line data.
+ * Gets the data of the line.
+ *
+ * This function invalidates any cached information, use
+ * gwy_data_line_get_data_const() if you are not going to change the data.
  *
  * Returns: The data as an array of doubles of length gwy_data_line_get_res().
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 gdouble*
-gwy_data_line_get_data(GwyDataLine *a)
+gwy_data_line_get_data(GwyDataLine *data_line)
 {
-    g_return_val_if_fail(GWY_IS_DATA_LINE(a), NULL);
-    return a->data;
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+    return data_line->data;
+}
+
+/**
+ * gwy_data_line_get_data_const:
+ * @data_line: A data line.
+ *
+ * Gets the data of the line, read-only.
+ *
+ * Use gwy_data_line_get_data() if you want to change the data.
+ *
+ * Returns: The data as an array of doubles of length gwy_data_line_get_res().
+ *
+ * Since: 1.7
+ **/
+const gdouble*
+gwy_data_line_get_data_const(GwyDataLine *data_line)
+{
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+    return (const gdouble*)data_line->data;
 }
 
 /**
  * gwy_data_line_get_res:
- * @a: data line
+ * @data_line: A data line.
  *
  *
  *
  * Returns: Resolution (number of data points).
  **/
 gint
-gwy_data_line_get_res(GwyDataLine *a)
+gwy_data_line_get_res(GwyDataLine *data_line)
 {
-    g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0);
-    return a->res;
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+    return data_line->res;
 }
 
 /**
  * gwy_data_line_get_real:
- * @a: data line
+ * @data_line: A data line.
  *
  *
  *
  * Returns: Real size of data line.
  **/
 gdouble
-gwy_data_line_get_real(GwyDataLine *a)
+gwy_data_line_get_real(GwyDataLine *data_line)
 {
-    g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0);
-    return a->real;
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+    return data_line->real;
 }
 
 /**
  * gwy_data_line_set_real:
- * @a: data line
+ * @data_line: A data line.
  * @real: value to be set
  *
  * Sets the real data line size.
  **/
 void
-gwy_data_line_set_real(GwyDataLine *a, gdouble real)
+gwy_data_line_set_real(GwyDataLine *data_line, gdouble real)
 {
-    g_return_if_fail(GWY_IS_DATA_LINE(a));
-    a->real = real;
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    data_line->real = real;
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
  * gwy_data_line_itor:
- * @a: data line
+ * @data_line: A data line.
  * @pixval: value in pixel coordinates
  *
  *
@@ -493,14 +515,14 @@ gwy_data_line_set_real(GwyDataLine *a, gdouble real)
  * Returns: value in real coordinates.
  **/
 gdouble
-gwy_data_line_itor(GwyDataLine *a, gdouble pixval)
+gwy_data_line_itor(GwyDataLine *data_line, gdouble pixval)
 {
-    return pixval*a->real/a->res;
+    return pixval*data_line->real/data_line->res;
 }
 
 /**
  * gwy_data_line_rtoi:
- * @a: data line
+ * @data_line: A data line.
  * @realval: value in real coordinates
  *
  *
@@ -508,14 +530,14 @@ gwy_data_line_itor(GwyDataLine *a, gdouble pixval)
  * Returns: value in pixel coordinates.
  **/
 gdouble
-gwy_data_line_rtoi(GwyDataLine *a, gdouble realval)
+gwy_data_line_rtoi(GwyDataLine *data_line, gdouble realval)
 {
-    return realval*a->res/a->real;
+    return realval*data_line->res/data_line->real;
 }
 
 /**
  * gwy_data_line_get_val:
- * @a: data line
+ * @data_line: A data line.
  * @i: index (pixel coordinates)
  *
  *
@@ -523,16 +545,16 @@ gwy_data_line_rtoi(GwyDataLine *a, gdouble realval)
  * Returns: value at given index.
  **/
 gdouble
-gwy_data_line_get_val(GwyDataLine *a, gint i)
+gwy_data_line_get_val(GwyDataLine *data_line, gint i)
 {
-    g_return_val_if_fail(i >= 0 && i < a->res, 0.0);
+    g_return_val_if_fail(i >= 0 && i < data_line->res, 0.0);
 
-    return a->data[i];
+    return data_line->data[i];
 }
 
 /**
  * gwy_data_line_set_val:
- * @a:  data line
+ * @data_line:  data line
  * @i: pixel coordinates
  * @value: value to be set
  *
@@ -541,11 +563,11 @@ gwy_data_line_get_val(GwyDataLine *a, gint i)
  * Returns: TRUE it there were no problems.
  **/
 gboolean
-gwy_data_line_set_val(GwyDataLine *a, gint i, gdouble value)
+gwy_data_line_set_val(GwyDataLine *data_line, gint i, gdouble value)
 {
-    g_return_val_if_fail(i >= 0 && i < a->res, FALSE);
+    g_return_val_if_fail(i >= 0 && i < data_line->res, FALSE);
 
-    a->data[i] = value;
+    data_line->data[i] = value;
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 
     return TRUE;
@@ -554,7 +576,7 @@ gwy_data_line_set_val(GwyDataLine *a, gint i, gdouble value)
 
 /**
  * gwy_data_line_get_dval_real:
- * @a: data line
+ * @data_line: A data line.
  * @x: real coordinates position
  * @interpolation: interpolation method used
  *
@@ -571,7 +593,7 @@ gwy_data_line_get_dval_real(GwyDataLine *a, gdouble x, gint interpolation)
 
 /**
  * gwy_data_line_invert:
- * @a: data line
+ * @data_line: A data line.
  * @x: invert x axis
  * @z: invert z axis
  *
@@ -606,7 +628,7 @@ gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z)
 
 /**
  * gwy_data_line_fill:
- * @a: data line
+ * @data_line: A data line.
  * @value: value to be used for filling
  *
  * Fills whole data lien with specified number.
@@ -623,7 +645,7 @@ gwy_data_line_fill(GwyDataLine *a, gdouble value)
 
 /**
  * gwy_data_line_add:
- * @a: data line
+ * @data_line: A data line.
  * @value: value to be added.
  *
  * Adds a specified number to whole data line.
@@ -640,7 +662,7 @@ gwy_data_line_add(GwyDataLine *a, gdouble value)
 
 /**
  * gwy_data_line_multiply:
- * @a: data line
+ * @data_line: A data line.
  * @value: value to be used for multiplication
  *
  * Multiplies whole data line with a specified number.
@@ -657,7 +679,7 @@ gwy_data_line_multiply(GwyDataLine *a, gdouble value)
 
 /**
  * gwy_data_line_part_fill:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start
  * @to: where to finish
  * @value: value to be used for filling
@@ -681,7 +703,7 @@ gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value)
 
 /**
  * gwy_data_line_part_add:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start
  * @to: where to finish
  * @value: value to be added
@@ -705,7 +727,7 @@ gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value)
 
 /**
  * gwy_data_line_part_multiply:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start
  * @to: where to finish
  * @value: value to be used for multiplication
@@ -729,7 +751,7 @@ gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value)
 
 /**
  * gwy_data_line_get_max:
- * @a: data line
+ * @data_line: A data line.
  *
  *
  *
@@ -750,7 +772,7 @@ gwy_data_line_get_max(GwyDataLine *a)
 
 /**
  * gwy_data_line_get_min:
- * @a: data line
+ * @data_line: A data line.
  *
  *
  *
@@ -771,7 +793,7 @@ gwy_data_line_get_min(GwyDataLine *a)
 
 /**
  * gwy_data_line_get_avg:
- * @a: data line
+ * @data_line: A data line.
  *
  *
  *
@@ -791,7 +813,7 @@ gwy_data_line_get_avg(GwyDataLine *a)
 
 /**
  * gwy_data_line_get_rms:
- * @a: data line
+ * @data_line: A data line.
  *
  *
  *
@@ -812,7 +834,7 @@ gwy_data_line_get_rms(GwyDataLine *a)
 
 /**
  * gwy_data_line_get_sum:
- * @a: data line
+ * @data_line: A data line.
  *
  *
  *
@@ -833,7 +855,7 @@ gwy_data_line_get_sum(GwyDataLine *a)
 
 /**
  * gwy_data_line_part_get_max:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
@@ -861,7 +883,7 @@ gwy_data_line_part_get_max(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_part_get_min:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
@@ -890,7 +912,7 @@ gwy_data_line_part_get_min(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_part_get_avg:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
@@ -906,7 +928,7 @@ gwy_data_line_part_get_avg(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_part_get_rms:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
@@ -935,7 +957,7 @@ gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_part_get_sum:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
@@ -962,7 +984,7 @@ gwy_data_line_part_get_sum(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_threshold:
- * @a: data line
+ * @data_line: A data line.
  * @threshval: value used for thresholding
  * @bottom: lower value
  * @top: upper value
@@ -993,7 +1015,7 @@ gwy_data_line_threshold(GwyDataLine *a,
 
 /**
  * gwy_data_line_part_threshold:
- * @a: data line
+ * @data_line: A data line.
  * @from: where to start
  * @to: where to finish
  * @threshval: value used for thresholding
@@ -1032,7 +1054,7 @@ gwy_data_line_part_threshold(GwyDataLine *a,
 
 /**
  * gwy_data_line_line_coeffs:
- * @a: data line
+ * @data_line: A data line.
  * @av: height coefficient
  * @bv: slope coeficient
  *
@@ -1071,7 +1093,7 @@ gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
 
 /**
  * gwy_data_line_line_level:
- * @a: data line
+ * @data_line: A data line.
  * @av: height coefficient
  * @bv: slope coefficient
  *
@@ -1091,7 +1113,7 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
 
 /**
  * gwy_data_line_line_rotate:
- * @a: data line
+ * @data_line: A data line.
  * @angle: angle of rotation (in degrees)
  * @interpolation: interpolation mode used
  *
@@ -1166,7 +1188,7 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
 
 /**
  * gwy_data_line_get_der:
- * @a: data line
+ * @data_line: A data line.
  * @i: pixel coordinate
  *
  *
@@ -1567,5 +1589,27 @@ gwy_data_line_get_modus(GwyDataLine *data_line,
     return gwy_data_line_part_get_modus(data_line, 0, data_line->res,
                                         histogram_steps);
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * GwyDataLine:
+ *
+ * The #GwyDataLine struct contains private data only and should be accessed
+ * using the functions below.
+ **/
+
+/**
+ * GwySFOutputType:
+ * @GWY_SF_OUTPUT_DH: Distribution of heights.
+ * @GWY_SF_OUTPUT_CDH: Cumulative distribution of heights.
+ * @GWY_SF_OUTPUT_DA: Distribution of angles.
+ * @GWY_SF_OUTPUT_CDA: Cumulative distribution of angles.
+ * @GWY_SF_OUTPUT_ACF: Autocorrelation fucntions.
+ * @GWY_SF_OUTPUT_HHCF: Height-height correlation function.
+ * @GWY_SF_OUTPUT_PSDF: Power spectral density fucntion.
+ *
+ * Statistical function types.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
