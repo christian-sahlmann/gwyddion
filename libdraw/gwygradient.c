@@ -702,9 +702,9 @@ gwy_gradient_sanitize(GwyGradient *gradient)
             g_array_remove_index(points, i);
         i--;
     }
-    while (g_array_index(points, GwyGradientPoint, i+1).x == 0.0)
-        i++;
-    g_array_remove_range(points, 0, i);
+
+    while (g_array_index(points, GwyGradientPoint, 1).x == 0.0)
+        g_array_remove_index(points, 0);
 }
 
 /**
