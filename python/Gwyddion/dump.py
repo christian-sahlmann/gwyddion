@@ -23,7 +23,12 @@ def _dmove(d1, k1, d2, k2, typ=None):
 
 def _read_dfield(fh, data, base):
     c = fh.read(1)
-    assert c == '['
+    if not c:
+        return False
+    if c != '[':
+        # Python has no ungetc, seek one byte back
+        fh.seek(-1, 1)
+        return False
     dfield = {}
     _dmove(data, base + '/xres', dfield, 'xres', int)
     _dmove(data, base + '/yres', dfield, 'yres', int)
@@ -37,6 +42,7 @@ def _read_dfield(fh, data, base):
     assert c == ']]\n'
     dfield['data'] = a
     data[base] = dfield
+    return True
 
 def read(filename):
     """Read a Gwyddion plug-in proxy dump file.
@@ -67,8 +73,7 @@ def read(filename):
         line = fh.readline()
         if not line: break
         m = field_re.match(line)
-        if m:
-            _read_dfield(fh, data, m.group('key'))
+        if m and _read_dfield(fh, data, m.group('key')):
             continue
         m = line_re.match(line)
         if m:

@@ -57,6 +57,7 @@ Dump::read(const char *filename)
     int lineno = 0;
     const unsigned long int buf_len = 4096;
     char line_buf[buf_len];
+    char b;
     while (fh.good() && !fh.eof()) {
         string line("");
 
@@ -96,11 +97,9 @@ Dump::read(const char *filename)
         }
 
         /* datafield */
-        if (fh.get() != '[') {
-            cerr << "Expected `[' marker at start of data field" << endl;
-            meta.clear();
-            data.clear();
-            return false;
+        if ((b = fh.get()) != '[') {
+            fh.putback(b);
+            continue;
         }
         {
             map<string,string>::iterator iter;
