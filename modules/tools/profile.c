@@ -48,6 +48,9 @@ static void       profile_dialog_abandon           (void);
 static void       profile_dialog_set_visible       (gboolean visible);
 static void       interp_changed_cb                (GObject *item,
                                                     ProfileControls *controls);
+static void       separate_changed_cb               (GtkToggleButton *button,
+                                                    ProfileControls *controls);
+
 
 static GtkWidget *dialog = NULL;
 static ProfileControls controls;
@@ -119,21 +122,95 @@ static void
 profile_do(void)
 {
     GtkWidget *data_window;
+    GtkWidget *window, *graph;
     GwyContainer *data;
-    GwyDataField *dfield;
-    gdouble mylines[12];
+    GwyDataField *datafield;
+    gdouble lines[12];
+    gint i, j, is_selected;
+    gint x1, x2, y1, y2;
+    gchar *x_unit, *z_unit;
+    gdouble x_mag, z_mag;
+    gdouble xreal, yreal, x_max, unit;
+    gdouble z_max;
+    gint precision;
+    GwyGraphAutoProperties prop;
 
-    if (!gwy_layer_lines_get_lines(select_layer, mylines))
+    if (!(is_selected=gwy_layer_lines_get_lines(select_layer, lines)))
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+ 
+    xreal = gwy_data_field_get_xreal(datafield);
+    yreal = gwy_data_field_get_yreal(datafield);
+    x_max = MAX(xreal, yreal);
+    unit = MIN(xreal/gwy_data_field_get_xres(datafield),
+               yreal/gwy_data_field_get_yres(datafield));
+    x_mag = gwy_math_humanize_numbers(unit, x_max, &precision); 
+    x_unit = g_strconcat(gwy_math_SI_prefix(x_mag), "m", NULL);
 
+    z_max = gwy_data_field_get_max(datafield);
+    z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
+    z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
+    
+    
+    j=0;
+    if (controls.separate)
+    {
+        for (i=0; i<is_selected; i++)
+        {    
+            window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+            gtk_container_set_border_width (GTK_CONTAINER (window), 0);
+            graph = gwy_graph_new();
+            gwy_graph_get_autoproperties(graph, &prop);
+            prop.is_point = 0;
+            prop.is_line = 1;
+            gwy_graph_set_autoproperties(graph, &prop);
+
+            gwy_graph_add_dataline_with_units(graph, dtl->pdata[i],
+                               0, str->pdata[i], NULL,
+                               x_mag, z_mag, 
+                               x_unit,
+                               z_unit
+                               );
+            
+            gtk_container_add (GTK_CONTAINER (window), graph);
+            gtk_widget_show (graph);
+            gtk_widget_show_all(window);
+        }
+    }
+    else
+    {
+        window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+        gtk_container_set_border_width (GTK_CONTAINER (window), 0);
+        graph = gwy_graph_new();
+        gwy_graph_get_autoproperties(graph, &prop);
+        prop.is_point = 0;
+        prop.is_line = 1;
+        gwy_graph_set_autoproperties(graph, &prop);
+
+
+        for (i=0; i<is_selected; i++)
+        {
+            gwy_graph_add_dataline_with_units(graph, dtl->pdata[i],
+                               0, str->pdata[i], NULL,
+                               x_mag, z_mag, 
+                               x_unit,
+                               z_unit
+                               );
+        }
+
+
+        gtk_container_add (GTK_CONTAINER (window), graph);
+        gtk_widget_show (graph);
+        gtk_widget_show_all(window);
+        
+    }
+    
+    
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
-    gwy_debug("%s: %d %d", __FUNCTION__,
-              gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }
 
 static void
@@ -239,6 +316,8 @@ profile_dialog_create(GwyDataView *data_view)
 
     controls.separation = gtk_check_button_new_with_label("separate profiles");
     gtk_box_pack_start(vbox, controls.separation, 0, 0, 0);
+    g_signal_connect(controls.separation, "toggled", G_CALLBACK(separate_changed_cb), &controls);
+    
  
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Interpolation type:"));
@@ -443,7 +522,17 @@ static void
 interp_changed_cb(GObject *item, ProfileControls *controls)
 {
     gwy_debug("%s", __FUNCTION__);
+    controls->interp = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+
+    printf("Interpolation set to %d\n", controls->interp);
 }
+
+static void       
+separate_changed_cb(GtkToggleButton *button, ProfileControls *controls)
+{
+    controls->separate = gtk_toggle_button_get_active(button);
+}
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
