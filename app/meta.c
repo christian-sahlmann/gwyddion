@@ -68,9 +68,25 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
 
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
+    filename = gwy_data_window_get_base_name(data_window);
+
+    browser = gwy_meta_browser_construct(data);
+    if (!browser) {
+        window = gtk_message_dialog_new(NULL, 0,
+                                        GTK_MESSAGE_INFO,
+                                        GTK_BUTTONS_OK,
+                                        "There is no metadata in %s.",
+                                        filename);
+        g_signal_connect(window, "delete_event",
+                         G_CALLBACK(gtk_widget_destroy), NULL);
+        g_signal_connect(window, "response",
+                         G_CALLBACK(gtk_widget_destroy), NULL);
+        gtk_widget_show_all(window);
+
+        return;
+    }
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    filename = gwy_data_window_get_base_name(data_window);
     title = g_strdup_printf("%s Metadata %s", g_get_application_name(),
                             filename);
     gtk_window_set_title(GTK_WINDOW(window), title);
@@ -79,7 +95,7 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
     /* XXX: WTF?
     gtk_window_set_wmclass(GTK_WINDOW(window), "toolbox",
                            g_get_application_name());*/
-    browser = gwy_meta_browser_construct(data);
+
     gtk_widget_size_request(browser, &request);
     gtk_window_set_default_size(GTK_WINDOW(window),
                                 MIN(request.width, 2*gdk_screen_width()/3),
@@ -126,6 +142,7 @@ gwy_meta_browser_construct(GwyContainer *data)
     GtkTreeSelection *select;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
+    GtkTreeIter iter;
     gsize i;
 
     store = gtk_list_store_new(META_LAST,
@@ -133,13 +150,17 @@ gwy_meta_browser_construct(GwyContainer *data)
                                G_TYPE_STRING   /* value */
                               );
 
-    tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
-
-    g_object_unref(store);
-    g_object_set_data(G_OBJECT(store), "container", data);
     gwy_container_foreach(data, "/meta",
                           (GHFunc)(gwy_meta_browser_add_line), store);
+    if (!gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter)) {
+        g_object_unref(store);
+        return NULL;
+    }
+
+    tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
+    g_object_unref(store);
+    g_object_set_data(G_OBJECT(store), "container", data);
 
     gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
                                     0, gwy_meta_sort_func, NULL, NULL);
