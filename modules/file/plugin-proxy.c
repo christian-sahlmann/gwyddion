@@ -34,15 +34,9 @@
 #include <app/settings.h>
 #include <app/file.h>
 
-typedef enum {
-    PLUGIN_LOAD = 1 << 0,
-    PLUGIN_SAVE = 1 << 1,
-    PLUGIN_ANY  = 0x03
-} GwyLoadSave;
-
 typedef struct {
     GwyFileFuncInfo func;
-    GwyLoadSave run;
+    GwyFileOperation run;
     gchar *glob;
     GPatternSpec *pattern;
     glong specificity;
@@ -63,7 +57,7 @@ static gint           plugin_proxy_detect        (const gchar *filename,
                                                   gboolean only_name,
                                                   const gchar *name);
 static PluginInfo*    find_plugin                (const gchar *name,
-                                                  GwyLoadSave run);
+                                                  GwyFileOperation run);
 static glong          pattern_specificity        (const gchar *pattern);
 
 /* The module info. */
@@ -92,8 +86,8 @@ static struct {
     gint run;
 }
 const run_mode_names[] = {
-    { "load", PLUGIN_LOAD },
-    { "save", PLUGIN_SAVE },
+    { "load", GWY_FILE_LOAD },
+    { "save", GWY_FILE_SAVE },
 };
 
 /* XXX: extreme brain damage */
@@ -164,7 +158,7 @@ register_plugins(GList *plugins,
 {
     PluginInfo *info;
     gchar *pname, *file_desc, *run_modes, *glob;
-    GwyLoadSave run;
+    GwyFileOperation run;
 
     while (buffer) {
         if ((pname = next_line(&buffer))
@@ -179,8 +173,8 @@ register_plugins(GList *plugins,
             info->func.name = g_strdup(pname);
             info->func.file_desc = g_strdup(file_desc);
             info->func.detect = plugin_proxy_detect;
-            info->func.load = (run && PLUGIN_LOAD) ? plugin_proxy_load : NULL;
-            info->func.save = (run && PLUGIN_SAVE) ? plugin_proxy_save : NULL;
+            info->func.load = (run && GWY_FILE_LOAD) ? plugin_proxy_load : NULL;
+            info->func.save = (run && GWY_FILE_SAVE) ? plugin_proxy_save : NULL;
             if (gwy_file_func_register(name, &info->func)) {
                 info->file = g_strdup(file);
                 info->run = run;
@@ -218,7 +212,7 @@ plugin_proxy_load(const gchar *filename,
     gint fd;
 
     gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
-    if (!(info = find_plugin(name, PLUGIN_LOAD)))
+    if (!(info = find_plugin(name, GWY_FILE_LOAD)))
         return FALSE;
 
     fd = g_file_open_tmp("gwydXXXXXXXX", &tmpname, &err);
@@ -229,7 +223,7 @@ plugin_proxy_load(const gchar *filename,
     fh = fdopen(fd, "wb");
     g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
-    args[1] = g_strdup(run_mode_to_str(PLUGIN_LOAD));
+    args[1] = g_strdup(run_mode_to_str(GWY_FILE_LOAD));
     args[2] = tmpname;
     args[3] = g_strdup(filename);
     gwy_debug("%s: %s %s %s %s", __FUNCTION__,
@@ -271,13 +265,13 @@ plugin_proxy_save(GwyContainer *data,
     gboolean ok;
 
     gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
-    if (!(info = find_plugin(name, PLUGIN_SAVE)))
+    if (!(info = find_plugin(name, GWY_FILE_SAVE)))
         return FALSE;
 
     fh = text_dump_export(data, &tmpname);
     g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
-    args[1] = g_strdup(run_mode_to_str(PLUGIN_SAVE));
+    args[1] = g_strdup(run_mode_to_str(GWY_FILE_SAVE));
     args[2] = tmpname;
     args[3] = g_strdup(filename);
     gwy_debug("%s: %s %s %s %s", __FUNCTION__,
@@ -311,7 +305,7 @@ plugin_proxy_detect(const gchar *filename,
     PluginInfo *info;
 
     gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
-    if (!(info = find_plugin(name, PLUGIN_ANY)))
+    if (!(info = find_plugin(name, GWY_FILE_MASK)))
         return 0;
     if (!g_pattern_match_string(info->pattern, filename))
         return 0;
@@ -321,7 +315,7 @@ plugin_proxy_detect(const gchar *filename,
 
 static PluginInfo*
 find_plugin(const gchar *name,
-            GwyLoadSave run)
+            GwyFileOperation run)
 {
     PluginInfo *info;
     GList *l;
