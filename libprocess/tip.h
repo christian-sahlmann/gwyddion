@@ -34,7 +34,7 @@ typedef enum {
 } GwyTipType;
 
 typedef gboolean (*GwySetFractionFunc)(gdouble fraction);
-typedef gboolean (*GwySetMessageFunc)(gchar *message);
+typedef gboolean (*GwySetMessageFunc)(const gchar *message);
 
 typedef void (*GwyTipModelFunc)(GwyDataField *tip,
                                 gdouble height,
