@@ -28,24 +28,24 @@
 
 static void gwy_app_set_defaults (GwyContainer *settings);
 
-static GwyContainer *settings = NULL;
+static GwyContainer *gwy_settings = NULL;
 
 GwyContainer*
 gwy_app_settings_get(void)
 {
-    if (!settings) {
+    if (!gwy_settings) {
         g_warning("No settings loaded, creating empty");
-        settings = GWY_CONTAINER(gwy_container_new());
+        gwy_settings = GWY_CONTAINER(gwy_container_new());
     }
-    gwy_app_set_defaults(settings);
+    gwy_app_set_defaults(gwy_settings);
 
-    return settings;
+    return gwy_settings;
 }
 
 void
 gwy_app_settings_free(void)
 {
-    gwy_object_unref(settings);
+    gwy_object_unref(gwy_settings);
 }
 
 gboolean
@@ -114,8 +114,8 @@ gwy_app_settings_load(const gchar *filename)
         return FALSE;
     }
     gwy_app_settings_free();
-    settings = new_settings;
-    gwy_app_set_defaults(settings);
+    gwy_settings = new_settings;
+    gwy_app_set_defaults(gwy_settings);
 
     return TRUE;
 }
@@ -157,6 +157,30 @@ gwy_app_settings_get_module_dirs(void)
     module_dirs[i] = NULL;
 
     return module_dirs;
+}
+
+gchar*
+gwy_app_settings_get_config_filename(void)
+{
+    const gchar *gwydir =
+#ifdef G_OS_WIN32
+        "gwyddion";
+#else
+        ".gwyddion";
+#endif
+    const gchar *homedir;
+    gchar *config_file;
+
+    homedir = g_get_home_dir();
+#ifdef G_OS_WIN32
+    if (!homedir)
+        homedir = g_get_tmp_dir();
+    if (!homedir)
+        homedir = "C:\\Windows";  /* XXX :-))) */
+#endif
+    config_file = g_build_filename(homedir, gwydir, "gwydrc", NULL);
+
+    return config_file;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -46,7 +46,7 @@ static void       pointer_dialog_response_cb     (gpointer unused,
 static void       pointer_dialog_abandon         (void);
 static void       pointer_dialog_set_visible     (gboolean visible);
 
-static GtkWidget *dialog = NULL;
+static GtkWidget *pointer_dialog = NULL;
 static PointerControls controls;
 static gulong updated_id = 0;
 static gulong response_id = 0;
@@ -85,7 +85,7 @@ module_register(const gchar *name)
 
 static void
 pointer_use(GwyDataWindow *data_window,
-            GwyToolSwitchEvent reason)
+            G_GNUC_UNUSED GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -110,8 +110,8 @@ pointer_use(GwyDataWindow *data_window,
         pointer_layer = (GwyDataViewLayer*)gwy_layer_pointer_new();
         gwy_data_view_set_top_layer(data_view, pointer_layer);
     }
-    if (!dialog)
-        dialog = pointer_dialog_create(data_view);
+    if (!pointer_dialog)
+        pointer_dialog = pointer_dialog_create(data_view);
 
     updated_id = g_signal_connect(pointer_layer, "updated",
                                    G_CALLBACK(pointer_selection_updated_cb),
@@ -126,10 +126,10 @@ pointer_dialog_abandon(void)
         g_signal_handler_disconnect(pointer_layer, updated_id);
     updated_id = 0;
     pointer_layer = NULL;
-    if (dialog) {
-        g_signal_handler_disconnect(dialog, response_id);
-        gtk_widget_destroy(dialog);
-        dialog = NULL;
+    if (pointer_dialog) {
+        g_signal_handler_disconnect(pointer_dialog, response_id);
+        gtk_widget_destroy(pointer_dialog);
+        pointer_dialog = NULL;
         response_id = 0;
         g_free(controls.units);
         controls.is_visible = FALSE;
@@ -252,7 +252,7 @@ pointer_selection_updated_cb(void)
 }
 
 static void
-pointer_dialog_response_cb(gpointer unused, gint response)
+pointer_dialog_response_cb(G_GNUC_UNUSED gpointer unused, gint response)
 {
     gwy_debug("response %d", response);
     switch (response) {
@@ -282,9 +282,9 @@ pointer_dialog_set_visible(gboolean visible)
 
     controls.is_visible = visible;
     if (visible)
-        gtk_window_present(GTK_WINDOW(dialog));
+        gtk_window_present(GTK_WINDOW(pointer_dialog));
     else
-        gtk_widget_hide(dialog);
+        gtk_widget_hide(pointer_dialog);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

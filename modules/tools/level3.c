@@ -95,7 +95,7 @@ module_register(const gchar *name)
 
 static void
 level3_use(GwyDataWindow *data_window,
-           GwyToolSwitchEvent reason)
+           G_GNUC_UNUSED GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
