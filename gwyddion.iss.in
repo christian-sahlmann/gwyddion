@@ -29,7 +29,7 @@ Source: "modules\graph\*.*"; DestDir: "{app}\modules\graph"
 Source: "modules\layer\*.*"; DestDir: "{app}\modules\layer"
 Source: "modules\process\*.*"; DestDir: "{app}\modules\process"
 Source: "modules\tool\*.*"; DestDir: "{app}\modules\tool"
-; TODO: install plugins, if any
+Source: "plugins\file\*.*"; DestDir: "{app}\plugins\file"
 
 [Icons]
 Name: "{group}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"; IconFilename: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
