@@ -258,6 +258,10 @@ gwy_app_toolbox_create(void)
                              GWY_STOCK_FRACTAL, "fractal");
     toolbox_append_proc_func(toolbar, _("Shade data"),
                              GWY_STOCK_SHADER, "shade");
+    toolbox_append_proc_func(toolbar, _("Remove polynomial background"),
+                             GWY_STOCK_POLYNOM_REMOVE, "poly_level");
+    toolbox_append_proc_func(toolbar, _("Remove scars"),
+                             GWY_STOCK_SCARS, "scars_remove");
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
