@@ -97,23 +97,23 @@ typedef gdouble (*RawStrtodFunc)(const gchar *nptr, gchar **endptr);
 typedef struct {
     gint format;  /* binary, text */
     RawFileBuiltin builtin;
-    gsize offset;  /* offset from file start, in bytes */
-    gsize size;  /* data sample size (auto if builtin) */
-    gsize skip;  /* skip after each sample (multiple of 8 if builtin) */
-    gsize rowskip;  /* extra skip after each sample row (multiple of 8 if
-                       builtin) */
+    guint32 offset;  /* offset from file start, in bytes */
+    guint32 size;  /* data sample size (auto if builtin) */
+    guint32 skip;  /* skip after each sample (multiple of 8 if builtin) */
+    guint32 rowskip;  /* extra skip after each sample row (multiple of 8 if
+                         builtin) */
     gboolean sign;  /* take the number as signed? (unused if not integer) */
     gboolean revsample;  /* reverse bit order in samples? */
     gboolean revbyte;  /* reverse bit order in bytes as we read them? */
-    gsize byteswap;  /* swap bytes (relative to HOST order), bit set means
-                        swap blocks of this size (only for builtin) */
-    gsize lineoffset;  /* start reading from this line (ASCII) */
+    guint32 byteswap;  /* swap bytes (relative to HOST order), bit set means
+                          swap blocks of this size (only for builtin) */
+    guint32 lineoffset;  /* start reading from this line (ASCII) */
     guchar *delimiter;  /* field delimiter (ASCII) */
-    gsize skipfields;  /* skip this number of fields at line start (ASCII) */
+    guint32 skipfields;  /* skip this number of fields at line start (ASCII) */
     gboolean decomma;  /* decimal separator is comma */
 
-    gsize xres;
-    gsize yres;
+    guint32 xres;
+    guint32 yres;
     gboolean xyreseq;
     gdouble xreal;
     gdouble yreal;
@@ -127,7 +127,7 @@ typedef struct {
 
 typedef struct {
     const gchar *filename;
-    gsize filesize;
+    guint filesize;
     guchar *buffer;
 } RawFileFile;
 
@@ -185,7 +185,7 @@ static GwyDataField* rawfile_read_data_field       (GtkWidget *parent,
                                                     RawFileFile *file);
 static void          rawfile_warn_too_short_file   (GtkWidget *parent,
                                                     RawFileFile *file,
-                                                    gsize reqsize);
+                                                    guint reqsize);
 static void          rawfile_warn_parse_error      (GtkWidget *parent,
                                                     RawFileFile *file,
                                                     GError *err);
@@ -245,7 +245,7 @@ static void          rawfile_save_preset           (GwyContainer *settings,
                                                     const gchar *presetname,
                                                     RawFileArgs *args);
 static void          rawfile_save_list_of_presets  (GtkTreeModel *store);
-static gsize         rawfile_compute_required_size (RawFileArgs *args);
+static guint         rawfile_compute_required_size (RawFileArgs *args);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -260,7 +260,7 @@ static GwyModuleInfo module_info = {
 };
 
 /* sizes of RawFile built-in types */
-static const gsize BUILTIN_SIZE[] = {
+static const guint BUILTIN_SIZE[] = {
     0, 8, 8, 16, 16, 32, 32, 32, 64,
 };
 
@@ -452,7 +452,7 @@ rawfile_load(const gchar *filename)
     GwyContainer *settings, *data;
     GwyDataField *dfield;
     GError *err = NULL;
-    gsize size = 0;
+    guint size = 0;
 
     args = g_new0(RawFileArgs, 1);
     settings = gwy_app_settings_get();
@@ -589,7 +589,7 @@ rawfile_dialog(RawFileArgs *args,
             case RESPONSE_RESET:
             {
                 const gchar *filename = file->filename;
-                gsize filesize = file->filesize;
+                guint filesize = file->filesize;
 
                 /* free delimiter and presetname */
                 g_free(args->delimiter);
@@ -1037,7 +1037,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     GtkWidget *vbox, *label, *table, *button, *scroll, *bbox;
     const guchar *presets;
     gchar **s;
-    gsize i, row;
+    guint i, row;
 
     row = 0;
     vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
@@ -1145,7 +1145,7 @@ rawfile_read_data_field(GtkWidget *parent,
 {
     GwyDataField *dfield = NULL;
     GError *err = NULL;
-    gsize reqsize;
+    guint reqsize;
     gdouble m;
 
     reqsize = rawfile_compute_required_size(args);
@@ -1195,7 +1195,7 @@ rawfile_read_data_field(GtkWidget *parent,
 static void
 rawfile_warn_too_short_file(GtkWidget *parent,
                             RawFileFile *file,
-                            gsize reqsize)
+                            guint32 reqsize)
 {
     GtkWidget *dialog;
 
@@ -1811,7 +1811,7 @@ table_attach_heading(GtkWidget *table,
 }
 
 static inline guint32
-reverse_bits(guint32 x, gsize n)
+reverse_bits(guint32 x, guint n)
 {
     gulong y = 0;
 
@@ -1832,7 +1832,7 @@ rawfile_read_bits(RawFileArgs *args,
                   guchar *buffer,
                   gdouble *data)
 {
-    gsize i, j, nb;
+    guint i, j, nb;
     guint32 b, bucket, x, rem;
 
     g_assert(args->size <= 24);
@@ -1920,7 +1920,7 @@ rawfile_read_builtin(RawFileArgs *args,
                      guchar *buffer,
                      gdouble *data)
 {
-    gsize i, j, k, size, skip, rowskip;
+    guint i, j, k, size, skip, rowskip;
     double good_alignment;
     guchar *b;
 
@@ -1999,7 +1999,7 @@ rawfile_read_ascii(RawFileArgs *args,
                    GError **error)
 {
     RawStrtodFunc strtod_func;
-    gsize i, j, n;
+    guint i, j, n;
     gint cdelim = '\0';
     gint delimtype;
     gdouble x;
@@ -2312,10 +2312,10 @@ rawfile_sanitize_args(RawFileArgs *args)
         args->yreal = args->xreal/args->xres*args->yres;
 }
 
-static gsize
+static guint
 rawfile_compute_required_size(RawFileArgs *args)
 {
-    gsize rowstride;
+    guint rowstride;
 
     switch (args->format) {
         case RAW_BINARY:

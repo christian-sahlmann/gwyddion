@@ -116,23 +116,23 @@ typedef struct {
 
 typedef struct {
     guchar symbol[4];
-    gsize data_size;
+    guint data_size;
     gchar *meta;
 } SISProcessingStep;
 
 typedef struct {
     /* image info */
     guchar processing_step[4];
-    gsize processing_step_index;
-    gsize channel_index;  /* 0 == 1st */
+    guint processing_step_index;
+    guint channel_index;  /* 0 == 1st */
     guchar parent_processing_step[4];
-    gsize parent_processing_step_index;  /* 0 == 1st, ffff = none */
-    gsize parent_processing_step_channel_index;  /* 0 == 1st */
+    guint parent_processing_step_index;  /* 0 == 1st, ffff = none */
+    guint parent_processing_step_channel_index;  /* 0 == 1st */
     /* memory info */
-    gsize width;
-    gsize height;
-    gsize bpp;
-    gsize priority;
+    guint width;
+    guint height;
+    guint bpp;
+    guint priority;
     gboolean image_data_saved;
     const guchar *image_data;    /* not allocated, just pointer to buffer */
 } SISImage;
@@ -141,17 +141,17 @@ typedef struct {
     SISDataType data_type;
     SISSignalSource signal_source;
     SISScanningDirection scanning_direction;
-    gsize processing_steps;
+    guint processing_steps;
     /* images */
-    gsize nimages;
+    guint nimages;
     SISImage *images;
 } SISChannel;
 
 typedef struct {
-    gsize version_maj;
-    gsize version_min;
+    guint version_maj;
+    guint version_min;
     GHashTable *params;
-    gsize nchannels;
+    guint nchannels;
     SISChannel *channels;
 } SISFile;
 
@@ -335,18 +335,18 @@ static gboolean       module_register     (const gchar *name);
 static gint           sis_detect          (const gchar *filename,
                                            gboolean only_name);
 static GwyContainer*  sis_load            (const gchar *filename);
-static gsize          select_which_data   (SISFile *sisfile,
+static guint          select_which_data   (SISFile *sisfile,
                                            GwyEnum *choices,
-                                           gsize n);
+                                           guint n);
 static GwyDataField*  extract_data        (SISFile *sisfile,
-                                           gsize ch,
-                                           gsize im);
+                                           guint ch,
+                                           guint im);
 static void           add_metadata        (SISFile *sisfile,
-                                           gsize ch,
-                                           gsize im,
+                                           guint ch,
+                                           guint im,
                                            GwyContainer *data);
 static gboolean       sis_real_load       (const guchar *buffer,
-                                           gsize size,
+                                           guint size,
                                            SISFile *sisfile);
 
 /* The module info. */
@@ -415,14 +415,15 @@ static GwyContainer*
 sis_load(const gchar *filename)
 {
     guchar *buffer;
-    gsize size;
+    guint size;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     GwyContainer *data = NULL;
     SISFile sisfile;
     SISImage *image;
     GwyEnum *choices = NULL;
-    gsize n, i, j;
+    guint n;
+    guint i, j;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -453,7 +454,7 @@ sis_load(const gchar *filename)
         }
         i = select_which_data(&sisfile, choices, n);
         gwy_debug("Selected %u:%u", i/1024, i % 1024);
-        if (i != (gsize)-1) {
+        if (i != (guint)-1) {
             dfield = extract_data(&sisfile, i/1024, i % 1024);
             if (dfield) {
                 data = GWY_CONTAINER(gwy_container_new());
@@ -481,14 +482,14 @@ static void
 selection_changed(GtkWidget *button,
                   SISDialogControls *controls)
 {
-    gsize i;
+    guint i;
     GwyDataField *dfield;
 
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
         return;
 
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
-    g_assert(i != (gsize)-1);
+    g_assert(i != (guint)-1);
     dfield = extract_data(controls->sisfile, i/1024, i % 1024);
     gwy_container_set_object_by_name(controls->data, "/0/data",
                                      G_OBJECT(dfield));
@@ -496,10 +497,10 @@ selection_changed(GtkWidget *button,
     gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
 
-static gsize
+static guint
 select_which_data(SISFile *sisfile,
                   GwyEnum *choices,
-                  gsize n)
+                  guint n)
 {
     GtkWidget *dialog, *label, *vbox, *hbox, *align;
     SISDialogControls controls;
@@ -509,10 +510,10 @@ select_which_data(SISFile *sisfile,
     GtkObject *layer;
     GSList *radio, *rl;
     gint response;
-    gsize i;
+    guint i;
 
     if (!n)
-        return (gsize)-1;
+        return (guint)-1;
 
     if (n == 1)
         return choices[0].value;
@@ -578,7 +579,7 @@ select_which_data(SISFile *sisfile,
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            return (gsize)-1;
+            return (guint)-1;
             break;
 
             case GTK_RESPONSE_OK:
@@ -598,15 +599,15 @@ select_which_data(SISFile *sisfile,
 
 static GwyDataField*
 extract_data(SISFile *sisfile,
-             gsize ch,
-             gsize im)
+             guint ch,
+             guint im)
 {
     GwyDataField *dfield;
     SISChannel *channel;
     SISImage *image;
     gdouble xreal, yreal, zreal;
     gdouble *d;
-    gsize i;
+    guint i;
 
     channel = sisfile->channels + ch;
     image = channel->images + im;
@@ -660,8 +661,8 @@ extract_data(SISFile *sisfile,
 
 static void
 add_metadata(SISFile *sisfile,
-             gsize ch,
-             gsize im,
+             guint ch,
+             guint im,
              GwyContainer *data)
 {
     static const guint good_metadata[] = {
@@ -669,7 +670,7 @@ add_metadata(SISFile *sisfile,
     };
     SISChannel *channel;
     SISImage *image;
-    gsize i, j;
+    guint i, j;
     guchar *key, *value;
     gpointer *p;
 
@@ -694,9 +695,9 @@ add_metadata(SISFile *sisfile,
             case G_TYPE_INT:
             if (sis_parameters[j].units)
                 value = g_strdup_printf("%d %s",
-                                        *(gsize*)p, sis_parameters[j].units);
+                                        *(guint*)p, sis_parameters[j].units);
             else
-                value = g_strdup_printf("%d", *(gsize*)p);
+                value = g_strdup_printf("%d", *(guint*)p);
             break;
 
             case G_TYPE_DOUBLE:
@@ -718,14 +719,14 @@ add_metadata(SISFile *sisfile,
 
     /* Special metadata */
     if ((p = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(28)))) {
-        value = g_strdup(gwy_enum_to_string(*(gsize*)p,
+        value = g_strdup(gwy_enum_to_string(*(guint*)p,
                                             sis_palettes,
                                             G_N_ELEMENTS(sis_palettes)));
         gwy_container_set_string_by_name(data, "/0/base/palette", value);
     }
 
     if ((p = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(6)))) {
-        value = g_strdup(gwy_enum_to_string(*(gsize*)p,
+        value = g_strdup(gwy_enum_to_string(*(guint*)p,
                                             sis_aquisitions,
                                             G_N_ELEMENTS(sis_aquisitions)));
         gwy_container_set_string_by_name(data, "/meta/Aqusition type", value);
@@ -746,15 +747,15 @@ add_metadata(SISFile *sisfile,
  * specs say anyway... */
 static gboolean
 sis_real_load(const guchar *buffer,
-              gsize size,
+              guint size,
               SISFile *sisfile)
 {
     const SISParameter *sisparam;
     const SISProcessingStep *procstep;
     SISChannel *channel = NULL;
     SISImage *image;
-    gsize start, id, i, j, len;
-    gsize docinfosize, nparams;
+    guint start, id, i, j, len;
+    guint docinfosize, nparams;
     const guchar *p;
     gpointer idp;
     gdouble d;

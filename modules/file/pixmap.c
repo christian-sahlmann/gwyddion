@@ -297,7 +297,7 @@ module_register(const gchar *name)
     PixmapFormatInfo *format_info;
     GSList *formats, *l;
     gboolean registered[G_N_ELEMENTS(saveable_formats)];
-    gsize i;
+    guint i;
 
     memset(registered, 0, G_N_ELEMENTS(saveable_formats)*sizeof(gboolean));
     formats = gdk_pixbuf_get_formats();
@@ -393,9 +393,9 @@ pixmap_detect(const gchar *filename,
     PixmapFormatInfo *format_info;
     gint score;
     FILE *fh;
-    gsize n;
+    guint n;
     gchar **extensions;
-    gsize ext;
+    guint ext;
 
     format_info = find_format(name);
     g_return_val_if_fail(format_info, 0);
@@ -490,7 +490,7 @@ pixmap_load(const gchar *filename,
     GdkPixbuf *pixbuf;
     GError *err = NULL;
     FILE *fh;
-    gsize n, bpp;
+    guint n, bpp;
     guchar *pixels, *p;
     gint i, j, width, height, rowstride;
     gboolean has_alpha, maptype_known, ok;
@@ -1070,7 +1070,7 @@ pixmap_save_tiff(GwyContainer *data,
     GdkPixbuf *pixbuf;
     TIFF *out;
     guchar *pixels = NULL;
-    gsize rowstride, i, width, height;
+    guint rowstride, i, width, height;
     /* TODO: error handling */
     gboolean ok = TRUE;
 
@@ -1116,7 +1116,7 @@ pixmap_save_ppm(GwyContainer *data,
     static const gchar *ppm_header = "P6\n%u\n%u\n255\n";
     GdkPixbuf *pixbuf;
     guchar *pixels = NULL;
-    gsize rowstride, i, width, height;
+    guint rowstride, i, width, height;
     gboolean ok = FALSE;
     gchar *ppmh = NULL;
     FILE *fh;
@@ -1178,8 +1178,8 @@ pixmap_save_bmp(GwyContainer *data,
     };
     GdkPixbuf *pixbuf;
     guchar *pixels = NULL, *buffer = NULL;
-    gsize rowstride, i, j, width, height;
-    gsize bmplen, bmprowstride;
+    guint rowstride, i, j, width, height;
+    guint bmplen, bmprowstride;
     gboolean ok = FALSE;
     FILE *fh;
 
@@ -1252,7 +1252,7 @@ pixmap_save_targa(GwyContainer *data,
     };
     GdkPixbuf *pixbuf;
     guchar *pixels, *buffer = NULL;
-    gsize targarowstride, rowstride, i, j, width, height;
+    guint targarowstride, rowstride, i, j, width, height;
     gboolean ok = FALSE;
     FILE *fh;
 
@@ -1655,7 +1655,7 @@ hruler(gint size,
        gdouble zoom,
        GwySIUnit *siunit)
 {
-    const gsize bufsize = 64;
+    const guint bufsize = 64;
     PangoRectangle logical1, logical2;
     PangoLayout *layout;
     GdkDrawable *drawable;
@@ -1735,7 +1735,7 @@ vruler(gint size,
        gdouble zoom,
        GwySIUnit *siunit)
 {
-    const gsize bufsize = 64;
+    enum { bufsize = 64 };
     PangoRectangle logical1, logical2;
     PangoLayout *layout;
     GdkDrawable *drawable;
@@ -1819,7 +1819,7 @@ fmscale(gint size,
         gdouble zoom,
         GwySIUnit *siunit)
 {
-    const gsize bufsize = 64;
+    enum { bufsize = 64 };
     PangoRectangle logical1, logical2;
     PangoLayout *layout;
     GdkDrawable *drawable;

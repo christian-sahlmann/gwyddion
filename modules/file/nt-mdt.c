@@ -192,7 +192,7 @@ typedef struct {
 } MDTScannedDataFrame;
 
 typedef struct {
-    gsize size;     /* h_sz */
+    guint size;     /* h_sz */
     MDTFrameType type;     /* h_what */
     gint version;  /* h_ver0, h_ver1 */
 
@@ -209,8 +209,8 @@ typedef struct {
 } MDTFrame;
 
 typedef struct {
-    gsize size;  /* f_sz */
-    gsize last_frame; /* f_nt */
+    guint size;  /* f_sz */
+    guint last_frame; /* f_nt */
     MDTFrame *frames;
 } MDTFile;
 
@@ -224,14 +224,14 @@ static gboolean       module_register     (const gchar *name);
 static gint           mdt_detect          (const gchar *filename,
                                            gboolean only_name);
 static GwyContainer*  mdt_load            (const gchar *filename);
-static gsize          select_which_data   (MDTFile *mdtfile,
+static guint          select_which_data   (MDTFile *mdtfile,
                                            GwyEnum *choices,
-                                           gsize n);
+                                           guint n);
 static void           add_metadata        (MDTFile *mdtfile,
-                                           gsize i,
+                                           guint i,
                                            GwyContainer *data);
 static gboolean       mdt_real_load       (const guchar *buffer,
-                                           gsize size,
+                                           guint size,
                                            MDTFile *mdtfile);
 static GwyDataField*  extract_scanned_data(MDTScannedDataFrame *dataframe);
 
@@ -363,13 +363,13 @@ static GwyContainer*
 mdt_load(const gchar *filename)
 {
     guchar *buffer;
-    gsize size;
+    guint size;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     GwyContainer *data = NULL;
     MDTFile mdtfile;
     GwyEnum *choices = NULL;
-    gsize n, i;
+    guint n, i;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -387,8 +387,9 @@ mdt_load(const gchar *filename)
                 n++;
                 choices = g_renew(GwyEnum, choices, n);
                 choices[n-1].value = i;
-                choices[n-1].name = g_strdup_printf("Frame %u "
+                choices[n-1].name = g_strdup_printf("%s %" G_GSIZE_FORMAT " "
                                                     "(%u×%u)",
+                                                    _("Frame"),
                                                     i+1,
                                                     sdframe->fm_xres,
                                                     sdframe->fm_yres);
@@ -396,7 +397,7 @@ mdt_load(const gchar *filename)
         }
         i = select_which_data(&mdtfile, choices, n);
         gwy_debug("Selected %u", i);
-        if (i != (gsize)-1) {
+        if (i != (guint)-1) {
             MDTScannedDataFrame *sdframe;
 
             sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
@@ -423,7 +424,7 @@ static void
 selection_changed(GtkWidget *button,
                   MDTDialogControls *controls)
 {
-    gsize i;
+    guint i;
     MDTScannedDataFrame *sdframe;
     GwyDataField *dfield;
 
@@ -431,7 +432,7 @@ selection_changed(GtkWidget *button,
         return;
 
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
-    g_assert(i != (gsize)-1);
+    g_assert(i != (guint)-1);
     sdframe = (MDTScannedDataFrame*)controls->mdtfile->frames[i].frame_data;
     dfield = extract_scanned_data(sdframe);
     gwy_container_set_object_by_name(controls->data, "/0/data",
@@ -440,10 +441,10 @@ selection_changed(GtkWidget *button,
     gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
 
-static gsize
+static guint
 select_which_data(MDTFile *mdtfile,
                   GwyEnum *choices,
-                  gsize n)
+                  guint n)
 {
     GtkWidget *dialog, *label, *vbox, *hbox, *align;
     MDTScannedDataFrame *sdframe;
@@ -454,10 +455,10 @@ select_which_data(MDTFile *mdtfile,
     GtkObject *layer;
     GSList *radio, *rl;
     gint response;
-    gsize i;
+    guint i;
 
     if (!n)
-        return (gsize)-1;
+        return (guint)-1;
 
     if (n == 1)
         return choices[0].value;
@@ -524,7 +525,7 @@ select_which_data(MDTFile *mdtfile,
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            return (gsize)-1;
+            return (guint)-1;
             break;
 
             case GTK_RESPONSE_OK:
@@ -548,7 +549,7 @@ select_which_data(MDTFile *mdtfile,
 
 static void
 add_metadata(MDTFile *mdtfile,
-             gsize i,
+             guint i,
              GwyContainer *data)
 {
     MDTFrame *frame;
@@ -638,8 +639,8 @@ static gboolean
 mdt_scanned_data_vars(const guchar *p,
                       const guchar *fstart,
                       MDTScannedDataFrame *frame,
-                      gsize frame_size,
-                      gsize vars_size)
+                      guint frame_size,
+                      guint vars_size)
 {
     mdt_read_axis_scales(p, &frame->x_scale, &frame->y_scale, &frame->z_scale);
     p += AXIS_SCALES_SIZE;
@@ -669,7 +670,7 @@ mdt_scanned_data_vars(const guchar *p,
     frame->nl_corr = (gboolean)(*p++);
 
     p = fstart + FRAME_HEADER_SIZE + vars_size;
-    if ((gsize)(p - fstart) + FRAME_MODE_SIZE > frame_size) {
+    if ((guint)(p - fstart) + FRAME_MODE_SIZE > frame_size) {
         gwy_debug("FAILED: Frame too short for Frame Mode");
         return FALSE;
     }
@@ -680,7 +681,7 @@ mdt_scanned_data_vars(const guchar *p,
     gwy_debug("mode = %u, xres = %u, yres = %u, ndots = %u",
               frame->fm_mode, frame->fm_xres, frame->fm_yres, frame->fm_ndots);
 
-    if ((gsize)(p - fstart)
+    if ((guint)(p - fstart)
         + sizeof(gint16)*(2*frame->fm_ndots + frame->fm_xres * frame->fm_yres)
         > frame_size) {
         gwy_debug("FAILED: Frame too short for dots or data");
@@ -700,10 +701,10 @@ mdt_scanned_data_vars(const guchar *p,
 
 static gboolean
 mdt_real_load(const guchar *buffer,
-              gsize size,
+              guint size,
               MDTFile *mdtfile)
 {
-    gsize i;
+    guint i;
     const guchar *p, *fstart;
     MDTScannedDataFrame *scannedframe;
 
@@ -735,13 +736,13 @@ mdt_real_load(const guchar *buffer,
         MDTFrame *frame = mdtfile->frames + i;
 
         fstart = p;
-        if ((gsize)(p - buffer) + FRAME_HEADER_SIZE > size) {
+        if ((guint)(p - buffer) + FRAME_HEADER_SIZE > size) {
             gwy_debug("FAILED: File truncated in frame header #%u", i);
             return FALSE;
         }
         frame->size = get_DWORD(&p);
         gwy_debug("Frame #%u size: %u", i, frame->size);
-        if ((gsize)(p - buffer) + frame->size - 4 > size) {
+        if ((guint)(p - buffer) + frame->size - 4 > size) {
             gwy_debug("FAILED: File truncated in frame #%u (len %u, have %u)",
                       i, frame->size, size - (p - buffer) - 4);
             return FALSE;
@@ -750,7 +751,7 @@ mdt_real_load(const guchar *buffer,
         gwy_debug("Frame #%u type: %s", i,
                   gwy_enum_to_string(frame->type,
                                      frame_types, G_N_ELEMENTS(frame_types)));
-        frame->version = ((gsize)p[0] << 8) + (gsize)p[1];
+        frame->version = ((guint)p[0] << 8) + (gsize)p[1];
         p += 2;
         gwy_debug("Frame #%u version: %d.%d",
                   i, frame->version/0x100, frame->version % 0x100);
@@ -829,7 +830,7 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
 {
     GwyDataField *dfield;
     GwySIUnit *siunitxy, *siunitz;
-    gsize i;
+    guint i;
     gdouble *data;
     gdouble xreal, yreal, zscale;
     gint power10xy, power10z;

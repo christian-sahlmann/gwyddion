@@ -114,7 +114,7 @@ stmprg_detect(const gchar *filename, gboolean only_name)
 }
 
 static gboolean
-read_parameters(gchar *buffer, gsize size)
+read_parameters(gchar *buffer, guint size)
 {
     gchar *ptr = buffer + 4;    /* 4 for MPAR */
 
@@ -134,7 +134,7 @@ read_parameters(gchar *buffer, gsize size)
 }
 
 static GwyDataField *
-read_datafield(gchar *buffer, gsize size)
+read_datafield(gchar *buffer, guint size)
 {
     gint xres, yres, bpp;
     gdouble xreal, yreal, q;
@@ -449,7 +449,7 @@ stmprg_load(const gchar *filename)
 {
     GObject *object = NULL;
     gchar *buffer = NULL;
-    gsize size = 0;
+    guint size = 0;
     GError *err = NULL;
     GwyDataField *dfield;
     char *filename_ta, *ptr;

@@ -38,7 +38,7 @@ static gint          spmlab_detect      (const gchar *filename,
                                          gboolean only_name);
 static GwyContainer* spmlab_load        (const gchar *filename);
 static GwyDataField* read_data_field    (const guchar *buffer,
-                                         gsize size,
+                                         guint size,
                                          guchar version);
 
 
@@ -83,7 +83,7 @@ spmlab_detect(const gchar *filename, gboolean only_name)
     gchar *s;
 
     if (only_name) {
-        gsize len;
+        guint len;
         gchar ext[3];
 
         len = strlen(filename);
@@ -121,7 +121,7 @@ spmlab_load(const gchar *filename)
 {
     GObject *object = NULL;
     guchar *buffer = NULL;
-    gsize size = 0;
+    guint size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
 
@@ -161,14 +161,14 @@ spmlab_load(const gchar *filename)
 }
 
 static GwyDataField*
-read_data_field(const guchar *buffer, gsize size, guchar version)
+read_data_field(const guchar *buffer, guint size, guchar version)
 {
     enum { MIN_REMAINDER = 2620 };
     /* information offsets in different versions, in r5 relative to data
      * start, in order: data offset, pixel dimensions, physical dimensions,
      * value multiplier, multipliers (units) */
-    const gsize offsets5[] = { 0x0104, 0x025c, 0x0268, 0x0288, 0x029c };
-    const gsize offsets4[] = { 0x0104, 0x0196, 0x01a2, 0x01b2, 0x01be };
+    const guint offsets5[] = { 0x0104, 0x025c, 0x0268, 0x0288, 0x029c };
+    const guint offsets4[] = { 0x0104, 0x0196, 0x01a2, 0x01b2, 0x01be };
     /* there probably more constants, the left and right 1e-6 also serve as
      * defaults after CLAMP() */
     const gdouble zfactors[] = { 1e-6, 1e-9, 1e-10, 1e-6 };
@@ -177,7 +177,7 @@ read_data_field(const guchar *buffer, gsize size, guchar version)
     gdouble xreal, yreal, q, z0;
     GwyDataField *dfield;
     gdouble *data;
-    const gsize *offset;
+    const guint *offset;
     const guchar *p, *r, *last;
     /* get floats in single precision from r4 but double from r5 */
     gdouble (*getflt)(const guchar**);

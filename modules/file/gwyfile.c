@@ -42,8 +42,8 @@ static GwyContainer* gwyfile_load               (const gchar *filename);
 static gboolean      gwyfile_save               (GwyContainer *data,
                                                  const gchar *filename);
 static GObject*      gwy_container_deserialize2 (const guchar *buffer,
-                                                 gsize size,
-                                                 gsize *position);
+                                                 guint size,
+                                                 guint *position);
 
 
 /* The module info. */
@@ -107,8 +107,8 @@ gwyfile_load(const gchar *filename)
     GObject *object, *dfield;
     GError *err = NULL;
     guchar *buffer = NULL;
-    gsize size = 0;
-    gsize pos = 0;
+    guint size = 0;
+    guint pos = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         g_warning("Cannot read file %s", filename);
@@ -182,13 +182,13 @@ gwyfile_save(GwyContainer *data,
  * 2.x it will be replaced by old style deserialization to load 1.x files. */
 static GObject*
 gwy_container_deserialize2(const guchar *buffer,
-                           gsize size,
-                           gsize *position)
+                           guint size,
+                           guint *position)
 {
     GwySerializeItem *items, *it;
     GwyContainer *container;
     GQuark key;
-    gsize i, nitems = 0;
+    guint i, nitems = 0;
 
     gwy_debug("");
     g_return_val_if_fail(buffer, NULL);

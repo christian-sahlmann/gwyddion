@@ -89,7 +89,7 @@ static GwyDataField*   hash_to_data_field  (GHashTable *hash,
                                             GHashTable *scannerlist,
                                             GHashTable *scanlist,
                                             NanoscopeFileType file_type,
-                                            gsize bufsize,
+                                            guint bufsize,
                                             gchar *buffer,
                                             gint gxres,
                                             gint gyres,
@@ -182,7 +182,7 @@ nanoscope_load(const gchar *filename)
     GError *err = NULL;
     gchar *buffer = NULL;
     gchar *p;
-    gsize size = 0;
+    guint size = 0;
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
     NanoscopeValue *val;
@@ -302,7 +302,7 @@ add_metadata(gpointer hkey,
     if (key[0] == '@')
         key++;
     /* FIXME: naughty /-avoiding trick */
-    s = gwy_strreplace(key, "/", "∕", (gsize)-1);
+    s = gwy_strreplace(key, "/", "∕", (guint)-1);
     g_snprintf(buffer, sizeof(buffer), "/meta/%s", s);
     v = g_strdup(val->hard_value_str);
     if (strchr(v, '\272')) {
@@ -348,7 +348,7 @@ hash_to_data_field(GHashTable *hash,
                    GHashTable *scannerlist,
                    GHashTable *scanlist,
                    NanoscopeFileType file_type,
-                   gsize bufsize,
+                   guint bufsize,
                    gchar *buffer,
                    gint gxres,
                    gint gyres,
@@ -523,7 +523,7 @@ static void
 selection_changed(GtkWidget *button,
                   NanoscopeDialogControls *controls)
 {
-    gsize i;
+    guint i;
     GList *l;
     GwyDataField *dfield;
 
@@ -532,7 +532,7 @@ selection_changed(GtkWidget *button,
 
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     gwy_debug("%u", i);
-    g_assert(i != (gsize)-1);
+    g_assert(i != (guint)-1);
     l = g_list_nth(controls->list, i);
     dfield = ((NanoscopeData*)l->data)->data_field;
     gwy_container_set_object_by_name(controls->data, "/0/data",
