@@ -57,6 +57,9 @@ GtkWidget* gwy_option_menu_create         (const GwyOptionMenuEntry *entries,
                                            GCallback callback,
                                            gpointer cbdata,
                                            gint current);
+gboolean   gwy_option_menu_set_history    (GtkWidget *option_menu,
+                                           const gchar *key,
+                                           gint current);
 
 GtkWidget* gwy_table_attach_spinbutton    (GtkWidget *table,
                                            gint row,

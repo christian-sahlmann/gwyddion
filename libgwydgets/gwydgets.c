@@ -15,6 +15,10 @@
 #define PALETTE_SAMPLE_HEIGHT 16
 #define PALETTE_SAMPLE_WIDTH 80
 
+static GtkWidget* gwy_palette_menu_create        (GCallback callback,
+                                                  gpointer cbdata,
+                                                  const gchar *current,
+                                                  gint *current_index);
 static GtkWidget* gwy_sample_palette_to_gtkimage (GwyPaletteDef *palette_def);
 static void       gwy_hash_table_to_slist_cb     (gpointer key,
                                                   gpointer value,
@@ -27,7 +31,6 @@ static gint       palette_def_compare            (GwyPaletteDef *a,
 static GtkWidget*
 gwy_palette_menu_create(GCallback callback,
                         gpointer cbdata,
-                        const gchar *signal_id,
                         const gchar *current,
                         gint *current_index)
 {
@@ -53,7 +56,7 @@ gwy_palette_menu_create(GCallback callback,
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_object_set_data(G_OBJECT(item), "palette-name", (gpointer)name);
         if (callback)
-            g_signal_connect(G_OBJECT(item), signal_id, callback, cbdata);
+            g_signal_connect(G_OBJECT(item), "activate", callback, cbdata);
         if (current && strcmp(current, name) == 0)
             index = i;
         i++;
@@ -81,7 +84,7 @@ GtkWidget*
 gwy_palette_menu(GCallback callback,
                  gpointer cbdata)
 {
-    return gwy_palette_menu_create(callback, cbdata, "activate", NULL, NULL);
+    return gwy_palette_menu_create(callback, cbdata, NULL, NULL);
 }
 
 /**
@@ -110,8 +113,7 @@ gwy_palette_option_menu(GCallback callback,
 
     index = -1;
     omenu = gtk_option_menu_new();
-    menu = gwy_palette_menu_create(callback, cbdata, "activate",
-                                   current, &index);
+    menu = gwy_palette_menu_create(callback, cbdata, current, &index);
 
     gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
     if (index != -1)
@@ -233,6 +235,41 @@ gwy_option_menu_create(const GwyOptionMenuEntry *entries,
 }
 
 /**
+ * gwy_option_menu_set_history:
+ * @option_menu: An option menu created by gwy_option_menu_create().
+ * @key: Value object data key.
+ * @current: Value to be shown as currently selected.
+ *
+ * Sets option menu history based on integer item object data (as set by
+ * gwy_option_menu_create()).
+ *
+ * Returns: %TRUE if the history was set, %FALSE if @current was not found.
+ **/
+gboolean
+gwy_option_menu_set_history(GtkWidget *option_menu,
+                            const gchar *key,
+                            gint current)
+{
+    GQuark quark;
+    GtkWidget *menu;
+    GList *c;
+    gint i;
+
+    g_return_val_if_fail(GTK_IS_OPTION_MENU(option_menu), FALSE);
+    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(option_menu));
+    quark = g_quark_from_static_string(key);
+    i = 0;
+    for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c)) {
+        if (GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(c->data), quark))
+            == current) {
+            gtk_option_menu_set_history(GTK_OPTION_MENU(option_menu), i);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/**
  * gwy_interpolation_option_menu:
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            none).
@@ -254,7 +291,7 @@ gwy_interpolation_option_menu(GCallback callback,
                               GwyInterpolationType current)
 {
     static const GwyOptionMenuEntry entries[] = {
-        { "None",     GWY_INTERPOLATION_NONE,     },
+      /*{ "None",     GWY_INTERPOLATION_NONE,     },*/
         { "Round",    GWY_INTERPOLATION_ROUND,    },
         { "Bilinear", GWY_INTERPOLATION_BILINEAR, },
         { "Key",      GWY_INTERPOLATION_KEY,      },
