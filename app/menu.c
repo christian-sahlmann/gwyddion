@@ -54,6 +54,7 @@ static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 GtkAccelGroup *accel_group,
                                                 GtkItemFactory **factory);
 static void       gwy_app_meta_browser         (void);
+static void       destroy_app_window           (void);
 
 static GtkWidget*
 gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
@@ -139,7 +140,7 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     static GtkItemFactoryEntry menu_items2[] = {
         { "/File/_Close", "<control>W", gwy_app_file_close_cb, 0, "<StockItem>", GTK_STOCK_CLOSE },
         { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/File/_Quit...", "<control>Q", gwy_app_quit, 0, "<StockItem>", GTK_STOCK_QUIT },
+        { "/File/_Quit...", "<control>Q", destroy_app_window, 0, "<StockItem>", GTK_STOCK_QUIT },
     };
     GtkItemFactory *item_factory;
     GtkWidget *alignment, *menu, *item;
@@ -304,10 +305,21 @@ gwy_app_run_process_func_cb(gchar *name)
     g_critical("Trying to run `%s', but no run mode found (%d)", name, run);
 }
 
+void
+gwy_menu_recent_files_update(GList *recent_files)
+{
+}
+
 static void
 gwy_app_meta_browser(void)
 {
     gwy_meta_browser(gwy_app_data_window_get_current());
+}
+
+static void
+destroy_app_window(void)
+{
+    g_signal_emit_by_name(gwy_app_main_window, "destroy");
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

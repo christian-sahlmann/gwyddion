@@ -27,6 +27,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
+extern int gwy_app_n_recent_files;
 
 void gwy_app_file_open_cb       (void);
 void gwy_app_file_save_as_cb    (void);

@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -25,7 +26,9 @@
 #include <gtk/gtkfilesel.h>
 #include <gtk/gtkmessagedialog.h>
 #include "app.h"
+#include "menu.h"
 #include "file.h"
+#include "settings.h"
 #include "tools/tools.h"
 
 static void              file_open_ok_cb       (GtkFileSelection *selector);
@@ -36,8 +39,15 @@ static GtkFileSelection* create_open_dialog    (const gchar *title,
                                                 GCallback ok_callback);
 static gboolean          confirm_overwrite     (GtkWindow *parent,
                                                 const gchar *filename);
+static void              recent_files_update   (const gchar *filename);
+static GList*            recent_files_from_settings  (void);
+static void              recent_files_to_settings    (void);
 static void              remove_data_window_callback (GtkWidget *selector,
                                                       GwyDataWindow *data_window);
+
+int gwy_app_n_recent_files = 10;
+
+static GList *recent_files = NULL;
 
 void
 gwy_app_file_open_cb(void)
@@ -211,6 +221,7 @@ file_open_ok_cb(GtkFileSelection *selector)
     gwy_container_set_string_by_name(data, "/filename", filename_utf8);
     gtk_widget_destroy(GTK_WIDGET(selector));
     gwy_app_data_window_create(data);
+    recent_files_update(filename_utf8);
 }
 
 void
@@ -260,6 +271,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     if (!name) {
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_container_remove_by_name(data, "/filename/untitled");
+        recent_files_update(filename_utf8);
     }
     gtk_widget_destroy(GTK_WIDGET(selector));
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
@@ -302,6 +314,84 @@ remove_data_window_callback(GtkWidget *selector,
                                          gtk_widget_destroy,
                                          selector);
 
+}
+
+static void
+recent_files_update(const gchar *filename)
+{
+    GList *item;
+
+    gwy_debug("%s", __FUNCTION__);
+    if (!recent_files)
+        recent_files = recent_files_from_settings();
+
+    item = g_list_find_custom(recent_files, filename, (GCompareFunc)strcmp);
+    if (item) {
+        if (item == recent_files)
+            return;
+        recent_files = g_list_remove_link(recent_files, item);
+        recent_files = g_list_concat(item, recent_files);
+    }
+    else
+        recent_files = g_list_prepend(recent_files, g_strdup(filename));
+
+    gwy_menu_recent_files_update(recent_files);
+}
+
+static GList*
+recent_files_from_settings(void)
+{
+    static gulong cbid = 0;
+    const gchar *prefix = "/app/recent";
+    GwyContainer *settings;
+    gchar buffer[16];
+    GList *list = NULL;
+    const gchar *s;
+    gint i;
+    gsize len;
+
+    gwy_debug("%s", __FUNCTION__);
+    settings = gwy_app_settings_get();
+    g_return_val_if_fail(GWY_IS_CONTAINER(settings), NULL);
+    len = strlen(prefix);
+    strcpy(buffer, prefix);
+    g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", 0);
+    for (i = 0; gwy_container_contains_by_name(settings, buffer); i++) {
+        s = gwy_container_get_string_by_name(settings, buffer);
+        list = g_list_prepend(list, g_strdup(s));
+        g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", i);
+    }
+    list = g_list_reverse(list);
+    if (!cbid && gwy_app_main_window)
+        cbid = g_signal_connect(gwy_app_main_window, "destroy",
+                                G_CALLBACK(recent_files_to_settings), NULL);
+
+    return list;
+}
+
+static void
+recent_files_to_settings(void)
+{
+    const gchar *prefix = "/app/recent";
+    GwyContainer *settings;
+    gchar buffer[16];
+    GList *l;
+    gint i;
+    gsize len;
+
+    gwy_debug("%s", __FUNCTION__);
+    settings = gwy_app_settings_get();
+    g_return_if_fail(GWY_IS_CONTAINER(settings));
+    gwy_container_remove_by_prefix(settings, prefix);
+    len = strlen(prefix);
+    strcpy(buffer, prefix);
+    for (l = recent_files, i = 0;
+         l && i < gwy_app_n_recent_files;
+         l = g_list_next(l), i++) {
+        g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", i);
+        gwy_container_set_string_by_name(settings, buffer,
+                                         g_strdup((gchar*)l->data));
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
