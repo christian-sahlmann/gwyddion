@@ -3595,27 +3595,31 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *
 static gdouble  
 square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint brrow, gint division, GwyInterpolationType interpolation)
 {
-    gdouble lamdax, lamday, s;
-    gint tox, toy, l;
+    gdouble x, z1, z2, z3, z4, a, b, c, d, e, f, s1, s2, sa, sb;
     
-    lamdax = data_field->xreal/data_field->xres;
-    lamday = data_field->yreal/data_field->yres;
-    tox = brcol - ulcol;
-    toy = brrow - ulrow;
+    x = data_field->xreal/data_field->xres;
 
-    s = 0;
-    for(l=0; l<division; l++)
-    {
-        s += toy*lamday/division * 
-            sqrt(lamdax*lamdax + 
-                 (gwy_data_field_get_dval(data_field, ulcol, ulrow+toy*(l+0.5)/division, interpolation) 
-                  - gwy_data_field_get_dval(data_field, ulcol+tox, ulrow+toy*(l+0.5)/division, interpolation))*
-                 (gwy_data_field_get_dval(data_field, ulcol, ulrow+toy*(l+0.5)/division, interpolation)
-                  - gwy_data_field_get_dval(data_field, ulcol+tox, ulrow+toy*(l+0.5)/division, interpolation))
-                 );
-    }  
+    z1 = data_field->data[(ulcol) + data_field->xres*(ulrow)];
+    z2 = data_field->data[(brcol) + data_field->xres*(ulrow)];
+    z3 = data_field->data[(ulcol) + data_field->xres*(brrow)];
+    z4 = data_field->data[(brcol) + data_field->xres*(brrow)];
+    
+    a = sqrt(x*x+(z1-z2)*(z1-z2));
+    b = sqrt(x*x+(z1-z3)*(z1-z3));
+    c = sqrt(x*x+(z3-z4)*(z3-z4));
+    d = sqrt(x*x+(z2-z4)*(z2-z4));
+    e = sqrt(2*x*x+(z3-z2)*(z3-z2));
+    f = sqrt(2*x*x+(z4-z1)*(z4-z1));
+    
+    s1 = (a+b+e) / 2;
+    s2 = (c+d+e) / 2;
+    sa = sqrt(s1*(s1-a)*(s1-b)*(s1-e))+sqrt(s2*(s2-c)*(s2-d)*(s2-e));
 
-    return s;
+    s1 = (a+d+f) / 2;
+    s2 = (c+b+f) / 2;
+    sb = sqrt(s1*(s1-a)*(s1-d)*(s1-f))+sqrt(s2*(s2-c)*(s2-b)*(s2-f));
+
+    return(MIN(sa,sb));
 }
 
 
