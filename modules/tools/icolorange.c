@@ -294,6 +294,9 @@ dialog_update(GwyUnitoolState *state,
     }
 
     if (reason == GWY_UNITOOL_UPDATED_DATA || controls->initial_use) {
+        GwyGraphAutoProperties prop;
+        GString *graph_title;
+
         controls->datamin = gwy_data_field_get_min(dfield);
         controls->datamax = gwy_data_field_get_max(dfield);
 
@@ -303,6 +306,19 @@ dialog_update(GwyUnitoolState *state,
                                                                    TRUE));
 
         gwy_data_field_dh(dfield, controls->heightdist, HIST_RES);
+
+        /* Update the curve even if not visible to get graph ranges right */
+        gwy_graph_clear(graph);
+        gwy_graph_get_autoproperties(graph, &prop);
+        prop.is_point = 0;
+        prop.is_line = 1;
+        gwy_graph_set_autoproperties(graph, &prop);
+
+        /* XXX */
+        graph_title = g_string_new("");
+        gwy_graph_add_dataline(controls->histogram, controls->heightdist,
+                               0, graph_title, NULL);
+        g_string_free(graph_title, TRUE);
     }
 
     switch (reason) {
@@ -477,24 +493,9 @@ static void
 update_graph_selection(ToolControls *controls)
 {
     GwyGraph *graph;
-    GwyGraphAutoProperties prop;
-    GString *graph_title;
     gdouble graph_min, graph_max, graph_range;
 
     graph = GWY_GRAPH(controls->histogram);
-
-    /* Update the curve even if not visible to get graph ranges right */
-    gwy_graph_clear(graph);
-    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
-    prop.is_point = 0;
-    prop.is_line = 1;
-    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
-
-    /* XXX */
-    graph_title = g_string_new("");
-    gwy_graph_add_dataline(GWY_GRAPH(controls->histogram), controls->heightdist,
-                           0, graph_title, NULL);
-    g_string_free(graph_title, TRUE);
 
     /* XXX */
     if (controls->rel_min == 0.0 && controls->rel_max == 1.0)
