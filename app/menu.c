@@ -214,8 +214,7 @@ gwy_app_run_process_func_cb(gchar *name)
 
     gwy_debug("`%s'", name);
     data_window = gwy_app_data_window_get_current();
-    if (!data_window)
-        return;
+    g_return_if_fail(data_window);
     data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
     g_return_if_fail(data);
@@ -295,8 +294,7 @@ gwy_app_run_graph_func_cb(gchar *name)
 
     gwy_debug("`%s'", name);
     graph_window = gwy_app_graph_window_get_current();
-    if (!graph_window)
-        return;
+    g_return_if_fail(graph_window);
     graph = GTK_BIN(graph_window)->child;
     g_return_if_fail(GWY_IS_GRAPH(graph));
     gwy_graph_func_run(name, GWY_GRAPH(graph));

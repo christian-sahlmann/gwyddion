@@ -78,7 +78,7 @@ gwy_app_toolbox_create(void)
 
     menu = gwy_app_menu_create_proc_menu(accel_group);
     menus = g_slist_append(menus, menu);
-    g_object_set_data(G_OBJECT(toolbox), "<proc>", menu);
+    g_object_set_data(G_OBJECT(toolbox), "<proc>", menu);     /* XXX */
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
 
     menu = gwy_app_menu_create_graph_menu(accel_group);
@@ -279,7 +279,7 @@ gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group)
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
     gtk_container_add(GTK_CONTAINER(alignment), menu);
 
-    /* set up sensitivity: all items need an active data window */
+    /* set up sensitivity: all items need an active graph window */
     gwy_app_menu_set_flags_recursive(menu, &sens_data);
     gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 
