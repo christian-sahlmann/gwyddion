@@ -35,6 +35,7 @@
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
 typedef struct {
+    GwyUnitoolState *state;
     GtkWidget *graph;
     GtkWidget *interpolation;
     GtkWidget *separation;
@@ -119,6 +120,7 @@ use(GwyDataWindow *data_window,
         func_slots.layer_type = GWY_TYPE_LAYER_LINES;
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
+        ((ToolControls*)state->user_data)->state = state;
     }
     gwy_unitool_use(state, data_window, reason);
 }
@@ -422,6 +424,7 @@ interp_changed_cb(GObject *item, ToolControls *controls)
         = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
 
     gwy_debug("Interpolation set to %d\n", controls->interp);
+    dialog_update(controls->state);
 }
 
 static void
