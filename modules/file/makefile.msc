@@ -3,7 +3,8 @@ TOP_SRCDIR = ../..
 MOD_TYPE = file
 MODULES = \
 	gwyfile.dll \
-	pixmap.dll
+	pixmap.dll \
+	rawfile.dll
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
@@ -49,6 +50,9 @@ gwyfile.dll: gwyfile.obj
 
 pixmap.dll: pixmap.obj
 	$(LINK32) pixmap.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:pixmap.dll /dll /implib:pixmap.lib
+
+rawfile.dll: rawfile.obj
+	$(LINK32) rawfile.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:rawfile.dll /dll /implib:rawfile.lib
 
 
 # vim: ft=make
