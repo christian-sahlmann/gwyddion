@@ -13,11 +13,10 @@ typedef struct {
     const gchar *winner;
     gint score;
     gboolean only_name;
-    gboolean must_have_load;
-    gboolean must_have_save;
+    GwyFileOperation mode;
 } GwyFileDetectData;
 
-static void file_detect_max_score      (const gchar *key,
+static void file_detect_max_score_cb   (const gchar *key,
                                         GwyFileFuncInfo *func_info,
                                         GwyFileDetectData *ddata);
 static void gwy_hash_table_to_slist_cb (gpointer key,
@@ -163,9 +162,9 @@ gwy_file_func_run_save(const gchar *name,
 }
 
 static void
-file_detect_max_score(const gchar *key,
-                      GwyFileFuncInfo *func_info,
-                      GwyFileDetectData *ddata)
+file_detect_max_score_cb(const gchar *key,
+                         GwyFileFuncInfo *func_info,
+                         GwyFileDetectData *ddata)
 {
     gint score;
 
@@ -173,9 +172,9 @@ file_detect_max_score(const gchar *key,
 
     if (!func_info->detect)
         return;
-    if (ddata->must_have_load && !func_info->load)
+    if ((ddata->mode & GWY_FILE_LOAD) && !func_info->load)
         return;
-    if (ddata->must_have_save && !func_info->save)
+    if ((ddata->mode & GWY_FILE_SAVE) && !func_info->save)
         return;
 
     score = func_info->detect(ddata->filename, ddata->only_name,
@@ -205,9 +204,8 @@ gwy_file_detect(const gchar *filename)
     ddata.winner = NULL;
     ddata.score = 0;
     ddata.only_name = FALSE;
-    ddata.must_have_load = TRUE;
-    ddata.must_have_save = FALSE;
-    g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score, &ddata);
+    ddata.mode = GWY_FILE_LOAD;
+    g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score_cb, &ddata);
 
     if (!ddata.score)
         return NULL;
@@ -253,9 +251,8 @@ gwy_file_save(GwyContainer *data,
     ddata.winner = NULL;
     ddata.score = 0;
     ddata.only_name = TRUE;
-    ddata.must_have_load = FALSE;
-    ddata.must_have_save = TRUE;
-    g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score, &ddata);
+    ddata.mode = GWY_FILE_SAVE;
+    g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score_cb, &ddata);
 
     if (!ddata.winner)
         return FALSE;
