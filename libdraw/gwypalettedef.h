@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,6 +44,8 @@ extern "C" {
 #define GWY_PALETTE_BLUE_YELLOW  "Blue-Yellow"
 #define GWY_PALETTE_BW1          "BW1"
 #define GWY_PALETTE_BW2          "BW2"
+#define GWY_PALETTE_COLD         "Cold"
+#define GWY_PALETTE_DFIT         "DFit"
 #define GWY_PALETTE_GOLD         "Gold"
 #define GWY_PALETTE_GRAY         "Gray"
 #define GWY_PALETTE_GREEN        "Green"
@@ -60,6 +62,7 @@ extern "C" {
 #define GWY_PALETTE_RED_VIOLET   "Red-Violet"
 #define GWY_PALETTE_RED_YELLOW   "Red-Yellow"
 #define GWY_PALETTE_SPECTRAL     "Spectral"
+#define GWY_PALETTE_WARM         "Warm"
 #define GWY_PALETTE_YELLOW       "Yellow"
 
 typedef struct {

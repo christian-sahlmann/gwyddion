@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -639,6 +639,39 @@ gwy_palette_def_setup_presets(void)
         { 0.909091, { 0.533279, 0.008162, 0.536000, 1 } },
         { 1.000000, { 0.000000, 0.000000, 0.000000, 1 } },
     };
+    static GwyPaletteDefEntry warm[] = {
+        { 0.000000, { 0.000000, 0.000000, 0.000000, 1 } },
+        { 0.250000, { 0.484848, 0.188417, 0.266572, 1 } },
+        { 0.450000, { 0.760000, 0.182400, 0.182400, 1 } },
+        { 0.600000, { 0.870000, 0.495587, 0.113100, 1 } },
+        { 0.750000, { 0.890000, 0.751788, 0.106800, 1 } },
+        { 0.900000, { 0.909090, 0.909091, 0.909090, 1 } },
+        { 1.000000, { 1.000000, 1.000000, 1.000000, 1 } },
+    };
+    static GwyPaletteDefEntry cold[] = {
+        { 0.000000, { 0.000000, 0.000000, 0.000000, 1 } },
+        { 0.300000, { 0.168223, 0.273350, 0.488636, 1 } },
+        { 0.500000, { 0.196294, 0.404327, 0.606061, 1 } },
+        { 0.700000, { 0.338800, 0.673882, 0.770000, 1 } },
+        { 0.900000, { 0.909090, 0.909091, 0.909090, 1 } },
+        { 1.000000, { 1.000000, 1.000000, 1.000000, 1 } },
+    };
+    static GwyPaletteDefEntry dfit[] = {
+        { 0.000000, { 0.000000, 0.000000, 0.000000, 1 } },
+        { 0.076923, { 0.435640, 0.135294, 0.500000, 1 } },
+        { 0.153846, { 0.871280, 0.270588, 1.000000, 1 } },
+        { 0.230769, { 0.935640, 0.270588, 0.729688, 1 } },
+        { 0.307692, { 1.000000, 0.270588, 0.459377, 1 } },
+        { 0.384615, { 1.000000, 0.570934, 0.364982, 1 } },
+        { 0.461538, { 1.000000, 0.871280, 0.270588, 1 } },
+        { 0.538461, { 0.601604, 0.906715, 0.341219, 1 } },
+        { 0.615384, { 0.203209, 0.942149, 0.411850, 1 } },
+        { 0.692307, { 0.207756, 0.695298, 0.698082, 1 } },
+        { 0.769230, { 0.212303, 0.448447, 0.984314, 1 } },
+        { 0.846153, { 0.561152, 0.679224, 0.947157, 1 } },
+        { 0.923076, { 0.909090, 0.909091, 0.909090, 1 } },
+        { 1.000000, { 1.000000, 1.000000, 1.000000, 1 } },
+    };
 
     static GwyPaletteDefEntry pd[] = {
         { 0.0, { 0, 0, 0, 1 } },
@@ -672,6 +705,12 @@ gwy_palette_def_setup_presets(void)
                                   GWY_PALETTE_PM3D);
     gwy_palette_def_create_preset(spectral, G_N_ELEMENTS(spectral),
                                   GWY_PALETTE_SPECTRAL);
+    gwy_palette_def_create_preset(warm, G_N_ELEMENTS(warm),
+                                  GWY_PALETTE_WARM);
+    gwy_palette_def_create_preset(cold, G_N_ELEMENTS(cold),
+                                  GWY_PALETTE_COLD);
+    gwy_palette_def_create_preset(dfit, G_N_ELEMENTS(dfit),
+                                  GWY_PALETTE_DFIT);
 
     pd[1].color = red;
     gwy_palette_def_create_preset(pd, G_N_ELEMENTS(pd), GWY_PALETTE_RED);
