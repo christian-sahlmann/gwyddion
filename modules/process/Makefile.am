@@ -23,6 +23,7 @@ process_PROGRAMS = \
 	maskcor.so \
 	maskops.so \
 	outliers.so \
+	presentationops.so \
 	rotate.so \
 	scale.so \
 	shade.so \
@@ -85,6 +86,9 @@ maskops_so_LDFLAGS = $(module_ldflags),maskops.so
 
 outliers_so_SOURCES = outliers.c
 outliers_so_LDFLAGS = $(module_ldflags),outliers.so
+
+presentationops_so_SOURCES = presentationops.c
+presentationops_so_LDFLAGS = $(module_ldflags),presentationops.so
 
 rotate_so_SOURCES = rotate.c
 rotate_so_LDFLAGS = $(module_ldflags),rotate.so
