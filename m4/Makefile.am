@@ -17,6 +17,7 @@ M4TESTS = \
 	lcmessage.m4 \
 	longdouble.m4 \
 	longlong.m4 \
+	nls.m4 \
 	pkg.m4 \
 	po.m4 \
 	printf-posix.m4 \
