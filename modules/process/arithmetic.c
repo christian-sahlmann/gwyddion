@@ -193,6 +193,7 @@ gwy_data_arith_append_line(GwyDataWindow *data_window,
     data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
 
+    /* FIXME: this duplicates code from GwyDataWindow */
     if (gwy_container_contains_by_name(data, "/filename")) {
         const gchar *fnm = gwy_container_get_string_by_name(data, "/filename");
 

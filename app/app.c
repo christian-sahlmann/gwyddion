@@ -58,6 +58,7 @@ gwy_app_create_toolbox(void)
     GtkAccelGroup *accel_group;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), g_get_application_name());
     gtk_window_set_wmclass(GTK_WINDOW(window), "toolbox",
                            g_get_application_name());
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);

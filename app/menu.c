@@ -7,6 +7,7 @@
 #include "app.h"
 #include "file.h"
 #include "arith.h"
+#include "meta.h"
 #include "menu.h"
 
 static GQuark sensitive_key = 0;
@@ -32,6 +33,7 @@ static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 const gchar *root_path,
                                                 GtkAccelGroup *accel_group,
                                                 GtkItemFactory **factory);
+static void       gwy_app_meta_browser         (void);
 
 static GtkWidget*
 gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
@@ -85,12 +87,23 @@ gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
     static GtkItemFactoryEntry menu_items[] = {
         { "/E_xterns", NULL, NULL, 0, "<Branch>", NULL },
         { "/Externs/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/Externs/Module browser", NULL, gwy_module_browser, 0, "<Item>", NULL },
+        { "/Externs/Module browser...", NULL, gwy_module_browser, 0, "<Item>", NULL },
+        { "/Externs/Metadata browser...", NULL, gwy_app_meta_browser, 0, "<Item>", NULL },
     };
+    GtkItemFactory *item_factory;
+    GtkWidget *menu, *item;
+    GwyMenuSensitiveData sens_data;
 
     setup_sensitivity_keys();
-    return gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
-                                        "<xtns>", accel_group, NULL);
+    menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
+                                        "<xtns>", accel_group, &item_factory);
+    item = gtk_item_factory_get_item(item_factory, "<file>/Externs/Metadata browser...");
+    set_sensitive(item, GWY_MENU_FLAG_DATA);
+    sens_data.flags = GWY_MENU_FLAG_DATA;
+    sens_data.set_to = 0;
+    gwy_menu_set_sensitive_recursive(menu, &sens_data);
+
+    return menu;
 }
 
 GtkWidget*
@@ -254,6 +267,12 @@ gwy_app_run_process_func_cb(gchar *name)
         }
     }
     g_critical("Trying to run `%s', but no run mode found (%d)", name, run);
+}
+
+static void
+gwy_app_meta_browser(void)
+{
+    gwy_meta_browser(gwy_app_data_window_get_current());
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
