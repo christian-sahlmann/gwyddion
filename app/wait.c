@@ -115,6 +115,7 @@ gwy_app_wait_create_dialog(GtkWidget *window,
                      G_CALLBACK(gwy_app_wait_canceled), NULL);
 
     gtk_widget_show_all(dialog);
+    gtk_window_present(GTK_WINDOW(dialog));
     while (gtk_events_pending())
         gtk_main_iteration();
 }
