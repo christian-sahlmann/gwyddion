@@ -39,6 +39,7 @@ typedef struct {
     GtkWidget *filter;
     GtkWidget *direction;
     GtkObject *size;
+    GtkWidget *size_spin;
     GtkWidget *update;
     GwyFilterType fil;
     GtkOrientation dir;
@@ -77,7 +78,7 @@ static gint old_ulcol = 0;
 static gint old_ulrow = 0;
 static gint old_brcol = 0;
 static gint old_brrow = 0;
-static gint state_changed = 0;
+static gint state_changed = FALSE;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -86,7 +87,7 @@ static GwyModuleInfo module_info = {
     "filter",
     "Basic filtering procedures.",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -139,7 +140,7 @@ use(GwyDataWindow *data_window,
         state->user_data = g_new0(ToolControls, 1);
     }
     ((ToolControls*)state->user_data)->state = state;
-    state_changed = 1;
+    state_changed = TRUE;
     return gwy_unitool_use(state, data_window, reason);
 }
 
@@ -280,7 +281,8 @@ dialog_create(GwyUnitoolState *state)
                      0, 1, 3, 4, GTK_FILL, 0, 2, 2);
 
     controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
-    gwy_table_attach_spinbutton(table2, 3, "", "px", controls->size);
+    controls->size_spin = gwy_table_attach_spinbutton(table2, 3, "", "px",
+                                                      controls->size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);
 
     g_signal_connect_swapped(controls->size, "value-changed",
@@ -288,8 +290,8 @@ dialog_create(GwyUnitoolState *state)
 
     controls->update
         = gtk_check_button_new_with_label("Update preview dynamically");
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->update,
-                       FALSE, FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table2), controls->update, 0, 3, 4, 5,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
                                  controls->upd);
     g_signal_connect(controls->update, "toggled",
@@ -446,24 +448,23 @@ dialog_update(GwyUnitoolState *state,
         || (old_ulrow != ulrow)
         || (old_brcol != brcol)
         || (old_brrow != brrow)) {
-        state_changed = 1;
+        state_changed = TRUE;
         old_ulcol = ulcol;
         old_ulrow = ulrow;
         old_brcol = brcol;
         old_brrow = brrow;
     }
 
-    if (reason == GWY_UNITOOL_UPDATED_DATA && controls->data_were_updated == FALSE)
-    {
-        state_changed = 1;
+    if (reason == GWY_UNITOOL_UPDATED_DATA
+        && controls->data_were_updated == FALSE) {
+        state_changed = TRUE;
         controls->data_were_updated = TRUE;
     }
-    else
-    {
+    else {
         controls->data_were_updated = FALSE;
     }
-    
-    
+
+
     if (state_changed) {
         if (gwy_container_contains_by_name(data, "/0/show")) {
             shadefield
@@ -528,7 +529,7 @@ dialog_update(GwyUnitoolState *state,
                 break;
             }
         }
-        state_changed = 0;
+        state_changed = FALSE;
         gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
     }
 }
@@ -556,33 +557,55 @@ dialog_abandon(GwyUnitoolState *state)
 }
 
 static void
-direction_changed_cb (GObject *item, ToolControls *controls)
+direction_changed_cb(GObject *item, ToolControls *controls)
 {
     gwy_debug("");
     controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
-    state_changed = 1;
+    state_changed = TRUE;
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-filter_changed_cb (GObject *item, ToolControls *controls)
+filter_changed_cb(GObject *item, ToolControls *controls)
 {
+    gboolean direction_sensitive = FALSE;
+    gboolean size_sensitive = FALSE;
+
     gwy_debug("");
     controls->fil = GPOINTER_TO_INT(g_object_get_data(item, "filter-type"));
-    state_changed = 1;
-    if (controls->fil == GWY_FILTER_SOBEL || controls->fil == GWY_FILTER_PREWITT)
-        gtk_widget_set_sensitive(controls->direction, TRUE);
-    else
-        gtk_widget_set_sensitive(controls->direction, FALSE);
+    state_changed = TRUE;
+
+    switch (controls->fil) {
+        case GWY_FILTER_LAPLACIAN:
+        break;
+
+        case GWY_FILTER_SOBEL:
+        case GWY_FILTER_PREWITT:
+        direction_sensitive = TRUE;
+        break;
+
+        case GWY_FILTER_MEAN:
+        case GWY_FILTER_MEDIAN:
+        case GWY_FILTER_CONSERVATIVE:
+        size_sensitive = TRUE;
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+    gtk_widget_set_sensitive(controls->direction, direction_sensitive);
+    gtk_widget_set_sensitive(controls->size_spin, size_sensitive);
+
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-update_changed_cb (GtkToggleButton *button, ToolControls *controls)
+update_changed_cb(GtkToggleButton *button, ToolControls *controls)
 {
     gwy_debug("");
     controls->upd = gtk_toggle_button_get_active(button);
-    state_changed = 1;
+    state_changed = TRUE;
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
@@ -593,7 +616,7 @@ size_changed_cb(ToolControls *controls)
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
     if (controls->upd)
     {
-        state_changed = 1;
+        state_changed = TRUE;
         dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
     }
 }
@@ -637,5 +660,6 @@ load_args(GwyContainer *container, ToolControls *controls)
     controls->fil = MIN(controls->fil, GWY_FILTER_PREWITT);
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
-    /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
