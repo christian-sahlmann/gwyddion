@@ -21,6 +21,8 @@
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
+
+#define DEBUG 1
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
@@ -55,10 +57,13 @@ static GList *current_graphs = NULL;
 static const gchar* current_tool = NULL;
 static gint untitled_no = 0;
 
-static gboolean   gwy_app_confirm_quit        (void);
-static void       gather_unsaved_cb           (GwyDataWindow *data_window,
-                                               GSList **unsaved);
-static gboolean   gwy_app_confirm_quit_dialog (GSList *unsaved);
+static GHookList window_list_hook_list;
+
+static gboolean   gwy_app_confirm_quit             (void);
+static void       gather_unsaved_cb                (GwyDataWindow *data_window,
+                                                    GSList **unsaved);
+static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
+static void       gwy_app_data_window_list_updated (void);
 
 gboolean
 gwy_app_quit(void)
@@ -115,8 +120,7 @@ gwy_app_get_current_data(void)
  *
  * Makes a data window active, including tool switch, etc.
  *
- * Eventually adds @window it to the data window list if it isn't present
- * there.
+ * The window must be present in the list.
  **/
 void
 gwy_app_data_window_set_current(GwyDataWindow *window)
@@ -126,17 +130,23 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_DATA
     };
+    static GwyDataWindow *already_current = NULL;
     GList *item;
     GwyContainer *data;
 
     gwy_debug("win = %p, tool = %p", window, current_tool);
+    if (already_current == window) {
+        gwy_debug("window already current");
+        g_assert(current_data && current_data->data == (gpointer)window);
+        return;
+    }
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(window));
     item = g_list_find(current_data, window);
     g_assert(item);
     current_data = g_list_remove_link(current_data, item);
     current_data = g_list_concat(item, current_data);
-    /* FIXME: this calls the use function a little bit too often */
+
     if (current_tool)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
 
@@ -152,6 +162,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
         sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
 
     gwy_app_toolbox_update_state(&sens_data);
+    already_current = window;
 }
 
 /**
@@ -191,6 +202,8 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     if (current_tool)
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
     gwy_app_toolbox_update_state(&sens_data);
+
+    gwy_app_data_window_list_updated();
 }
 
 /**
@@ -214,9 +227,9 @@ gwy_app_data_window_create(GwyContainer *data)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view),
                                  GWY_PIXMAP_LAYER(layer));
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
-    gtk_window_add_accel_group(GTK_WINDOW(data_window),
-                               g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
-                                                 "accel_group"));
+    gtk_window_add_accel_group
+        (GTK_WINDOW(data_window),
+         g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
     g_signal_connect(data_window, "focus-in-event",
                      G_CALLBACK(gwy_app_data_window_set_current), NULL);
     g_signal_connect(data_window, "destroy",
@@ -230,7 +243,20 @@ gwy_app_data_window_create(GwyContainer *data)
     gwy_app_data_view_update(data_view);
     gtk_window_present(GTK_WINDOW(data_window));
 
+    gwy_app_data_window_list_updated();
+
     return data_window;
+}
+
+static void
+gwy_app_data_window_list_updated(void)
+{
+    gwy_debug("");
+
+    if (!window_list_hook_list.is_setup) {
+        gwy_debug("initializing window_list_hook_list");
+        g_hook_list_init(&window_list_hook_list, sizeof(GHook));
+    }
 }
 
 /**
@@ -355,8 +381,8 @@ void
 gwy_app_data_view_update(GtkWidget *data_view)
 {
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
-        0
+        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
+        GWY_MENU_FLAG_DATA
     };
     static const gchar *keys[] = {
         "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"
