@@ -65,7 +65,8 @@ struct _GwyInventory {
     GwyItemType item_type;
     gboolean needs_reindex : 1;
     gboolean is_sorted : 1;
-    gboolean is_simple : 1;
+    gboolean is_object : 1;
+    gboolean is_watchable : 1;
     gboolean can_make_copies : 1;
     gboolean has_default : 1;
 
@@ -120,7 +121,12 @@ void          gwy_inventory_set_default_item     (GwyInventory *inventory,
 gpointer      gwy_inventory_get_default_item     (GwyInventory *inventory);
 
 /* Modifiable inventories */
+void          gwy_inventory_item_updated         (GwyInventory *inventory,
+                                                  const gchar *name);
+void          gwy_inventory_nth_item_updated     (GwyInventory *inventory,
+                                                  guint n);
 void          gwy_inventory_restore_order        (GwyInventory *inventory);
+void          gwy_inventory_forget_order         (GwyInventory *inventory);
 gpointer      gwy_inventory_insert_item          (GwyInventory *inventory,
                                                   gpointer item);
 gpointer      gwy_inventory_insert_nth_item      (GwyInventory *inventory,

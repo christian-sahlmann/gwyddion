@@ -46,6 +46,8 @@ static void     gwy_inventory_class_init           (GwyInventoryClass *klass);
 static void     gwy_inventory_init                 (GwyInventory *container);
 static void     gwy_inventory_finalize             (GObject *object);
 static void     gwy_inventory_reindex              (GwyInventory *inventory);
+static void     gwy_inventory_item_changed         (GwyInventory *inventory,
+                                                    gpointer item);
 static gint     gwy_inventory_compare_indices      (gint *a,
                                                     gint *b,
                                                     GwyInventory *inventory);
@@ -189,6 +191,13 @@ gwy_inventory_finalize(GObject *object)
 
     gwy_debug("");
 
+    if (inventory->items && inventory->is_watchable) {
+        for (i = 0; i < inventory->items->len; i++)
+            g_signal_handlers_disconnect_by_func(g_array_index(inventory->items,
+                                                               ArrayItem, i).p,
+                                                 gwy_inventory_item_changed,
+                                                 inventory);
+    }
     if (inventory->default_key)
         g_string_free(inventory->default_key, TRUE);
     if (inventory->hash)
@@ -196,8 +205,10 @@ gwy_inventory_finalize(GObject *object)
     if (inventory->idx)
         g_array_free(inventory->idx, TRUE);
     if (inventory->items) {
-        for (i = 0; i < inventory->items->len; i++)
-            g_object_unref(g_array_index(inventory->items, ArrayItem, i).p);
+        if (inventory->is_object) {
+            for (i = 0; i < inventory->items->len; i++)
+                g_object_unref(g_array_index(inventory->items, ArrayItem, i).p);
+        }
         g_array_free(inventory->items, TRUE);
     }
 
@@ -238,18 +249,17 @@ gwy_inventory_new_filled(const GwyItemType *item_type,
 
     gwy_debug("");
     g_return_val_if_fail(item_type, NULL);
+    g_return_val_if_fail(item_type->get_name, NULL);
     g_return_val_if_fail(items || !nitems, NULL);
 
     inventory = g_object_new(GWY_TYPE_INVENTORY, NULL);
 
     inventory->item_type = *item_type;
     if (item_type->type) {
-        inventory->is_simple = !G_TYPE_IS_CLASSED(item_type->type);
+        inventory->is_object = g_type_is_a(item_type->type, G_TYPE_OBJECT);
+        inventory->is_watchable = g_type_is_a(item_type->type,
+                                              GWY_TYPE_WATCHABLE);
         inventory->can_make_copies = GWY_IS_SERIALIZABLE(item_type->type);
-    }
-    else {
-        inventory->is_simple = TRUE;
-        inventory->can_make_copies = FALSE;
     }
 
     inventory->is_sorted = (item_type->compare != NULL);
@@ -273,9 +283,15 @@ gwy_inventory_new_filled(const GwyItemType *item_type,
                             (gpointer)item_type->get_name(items[i]),
                             GUINT_TO_POINTER(i+1));
     }
-    if (!inventory->is_simple) {
+    if (inventory->is_object) {
         for (i = 0; i < nitems; i++)
             g_object_ref(items[i]);
+    }
+    if (inventory->is_watchable) {
+        for (i = 0; i < nitems; i++)
+            g_signal_connect_swapped(items[i], "value_changed",
+                                     G_CALLBACK(gwy_inventory_item_changed),
+                                     inventory);
     }
 
     return inventory;
@@ -551,6 +567,78 @@ gwy_inventory_set_default_item(GwyInventory *inventory,
 }
 
 /**
+ * gwy_inventory_item_updated:
+ * @inventory: An inventory.
+ * @name: Item name.
+ *
+ * Notifies inventory an item was updated.
+ *
+ * This function makes sense primarily for non-object items, as object items
+ * can implement #GwyWatchable interface.
+ **/
+void
+gwy_inventory_item_updated(GwyInventory *inventory,
+                           const gchar *name)
+{
+    guint i;
+
+    g_return_if_fail(GWY_IS_INVENTORY(inventory));
+    if (!(i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name)))) {
+        g_warning("Item does not exist");
+        return;
+    }
+
+    if (inventory->needs_reindex)
+        gwy_inventory_reindex(inventory);
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEM_UPDATED], 0,
+                  g_array_index(inventory->items, ArrayItem, i-1).i);
+}
+
+/**
+ * gwy_inventory_nth_item_updated:
+ * @inventory: An inventory.
+ * @n: Item position.
+ *
+ * Notifies inventory item on given position was updated.
+ *
+ * This function makes sense primarily for non-object items, as object items
+ * can implement #GwyWatchable interface.
+ **/
+void
+gwy_inventory_nth_item_updated(GwyInventory *inventory,
+                               guint n)
+{
+    g_return_if_fail(GWY_IS_INVENTORY(inventory));
+    g_return_if_fail(n <= inventory->items->len);
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEM_UPDATED], 0, n);
+}
+
+/**
+ * gwy_inventory_item_changed:
+ * @inventory: An inventory.
+ * @item: An item that has changed.
+ *
+ * Handles inventory item "value_changed" signal.
+ **/
+static void
+gwy_inventory_item_changed(GwyInventory *inventory,
+                           gpointer item)
+{
+    const gchar *name;
+    guint i;
+
+    name = inventory->item_type.get_name(item);
+    i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name));
+    if (inventory->needs_reindex)
+        gwy_inventory_reindex(inventory);
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEM_UPDATED], 0,
+                  g_array_index(inventory->items, ArrayItem, i-1).i);
+}
+
+/**
  * gwy_inventory_insert_item:
  * @inventory: An inventory.
  * @item: An item to insert.
@@ -581,7 +669,7 @@ gwy_inventory_insert_item(GwyInventory *inventory,
         return NULL;
     }
 
-    if (!inventory->is_simple)
+    if (inventory->is_object)
         g_object_ref((gpointer)item);
 
     /* Insert into index array */
@@ -627,6 +715,11 @@ gwy_inventory_insert_item(GwyInventory *inventory,
     g_hash_table_insert(inventory->hash, (gpointer)name,
                         GUINT_TO_POINTER(inventory->items->len));
 
+    if (inventory->is_watchable)
+        g_signal_connect_swapped(item, "value_changed",
+                                 G_CALLBACK(gwy_inventory_item_changed),
+                                 inventory);
+
     g_signal_emit(inventory, gwy_inventory_signals[ITEM_INSERTED], 0, m);
 
     return item;
@@ -662,7 +755,7 @@ gwy_inventory_insert_nth_item(GwyInventory *inventory,
         return NULL;
     }
 
-    if (!inventory->is_simple)
+    if (inventory->is_object)
         g_object_ref((gpointer)item);
 
     g_array_insert_val(inventory->idx, n, inventory->items->len);
@@ -690,6 +783,11 @@ gwy_inventory_insert_nth_item(GwyInventory *inventory,
         }
     }
 
+    if (inventory->is_watchable)
+        g_signal_connect_swapped(item, "value_changed",
+                                 G_CALLBACK(gwy_inventory_item_changed),
+                                 inventory);
+
     g_signal_emit(inventory, gwy_inventory_signals[ITEM_INSERTED], 0, n);
 
     return item;
@@ -712,7 +810,7 @@ gwy_inventory_restore_order(GwyInventory *inventory)
         return;
 
     if (!inventory->item_type.compare) {
-        g_warning("Cannot sort inventory without any compare function");
+        g_warning("Inventory has no compare function");
         return;
     }
 
@@ -788,10 +886,14 @@ gwy_inventory_delete_nth_item_real(GwyInventory *inventory,
     gpointer mp;
     guint n, last;
 
+    mp = g_array_index(inventory->items, ArrayItem, i).p;
+    if (inventory->is_watchable)
+        g_signal_handlers_disconnect_by_func(mp, gwy_inventory_item_changed,
+                                             inventory);
+
     if (inventory->needs_reindex)
         gwy_inventory_reindex(inventory);
 
-    mp = g_array_index(inventory->items, ArrayItem, i).p;
     n = g_array_index(inventory->items, ArrayItem, i).i;
 
     /* Remove item from @idx and @hash */
@@ -811,7 +913,7 @@ gwy_inventory_delete_nth_item_real(GwyInventory *inventory,
     g_array_set_size(inventory->items, last-1);
     inventory->needs_reindex = TRUE;
 
-    if (!inventory->is_simple)
+    if (inventory->is_object)
         g_object_unref(mp);
 
     g_signal_emit(inventory, gwy_inventory_signals[ITEM_DELETED], 0, n);
@@ -834,7 +936,7 @@ gwy_inventory_delete_item(GwyInventory *inventory,
 
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), FALSE);
     if (!(i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name)))) {
-        g_warning("Cannot delete nonexistent item");
+        g_warning("Item does not exist");
         return FALSE;
     }
 
@@ -868,6 +970,44 @@ gwy_inventory_delete_nth_item(GwyInventory *inventory,
     gwy_inventory_delete_nth_item_real(inventory, name, i);
 
     return TRUE;
+}
+
+gpointer
+gwy_inventory_rename_item(GwyInventory *inventory,
+                          const gchar *name,
+                          const gchar *newname)
+{
+    gpointer mp;
+    guint i;
+
+    g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
+    g_return_val_if_fail(newname, NULL);
+    g_return_val_if_fail(inventory->item_type.rename, NULL);
+    if (!(i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name)))) {
+        g_warning("Item does not exist");
+        return NULL;
+    }
+    if (g_hash_table_lookup(inventory->hash, newname)) {
+        g_warning("Item already exists");
+        return NULL;
+    }
+
+    mp = g_array_index(inventory->items, ArrayItem, i-1).p;
+    g_hash_table_remove(inventory->hash, name);
+    inventory->item_type.rename(mp, newname);
+    g_hash_table_insert(inventory->hash,
+                        (gpointer)inventory->item_type.get_name(mp),
+                        GUINT_TO_POINTER(i));
+
+    if (inventory->needs_reindex)
+        gwy_inventory_reindex(inventory);
+    if (inventory->is_sorted)
+        gwy_inventory_restore_order(inventory);
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEM_UPDATED], 0,
+                  g_array_index(inventory->items, ArrayItem, i-1).i);
+
+    return mp;
 }
 
 /************************** Documentation ****************************/
