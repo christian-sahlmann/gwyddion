@@ -211,17 +211,26 @@ gwy_meta_browser_add_line(gpointer hkey,
 {
     GQuark quark;
     GtkTreeIter iter;
-    const gchar *key;
+    const gchar *key, *val;
+    gchar *s;
 
     g_return_if_fail(G_VALUE_HOLDS_STRING(value));
+    val = g_value_get_string(value);
+    if (g_utf8_validate(val, -1 , NULL))
+        s = NULL;
+    else {
+        if (!(s = g_locale_to_utf8(val, -1, NULL, NULL, NULL)))
+            s = g_strdup("???");
+    }
     quark = GPOINTER_TO_INT(hkey);
     key = g_quark_to_string(quark);
     g_return_if_fail(key);
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
                        META_KEY, key + sizeof("/meta"),
-                       META_VALUE, g_value_get_string(value),
+                       META_VALUE, s ? s : val,
                        -1);
+    g_free(s);
 }
 
 static void
