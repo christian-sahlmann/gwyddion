@@ -49,6 +49,7 @@ foreach my $dir (glob "*") {
         my $add_topnote = s#<table class="navigation" width="100%"\s*>\s*<tr>\s*<th valign="middle">\s*<p class="title">(.*?)</p>\s*</th>\s*</tr>\s*</table>\s*<hr\s*/>#<h1>$1</h1>#sg;
         s#<h2><span class="refentrytitle">(.*?)</span></h2>#<h1>$1</h1>#s;
         s#<h2 class="title"(.*?)</h2>#<h1$1</h1>#s;
+        s#<h3 class="title">Warning</h3>\n#<p><b class="warning">Warning:</b></p>#s;
         if ( !$add_topnote ) { s#(<table class="navigation".*?</table>)#<div class="topnote">$1</div>#s; }
         s#(.*)(<table class="navigation".*?</table>)#$1<div class="botnote">$2</div>#s;
         s#</td>\s*<td><a#&nbsp;<a#sg;
