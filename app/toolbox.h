@@ -18,19 +18,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWYDDION_ABOUT_H__
-#define __GWYDDION_ABOUT_H__
+#ifndef __GWYDDION_TOOLBOX_H__
+#define __GWYDDION_TOOLBOX_H__
+
+#include <gtk/gtkwidget.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-void gwy_app_about(void);
+GtkWidget* gwy_app_toolbox_create(void);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __GWYDDION_ABOUT_H__ */
+#endif /* __GWYDDION_TOOLBOX_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

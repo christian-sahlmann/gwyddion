@@ -145,7 +145,7 @@ gwy_meta_browser_construct(GwyContainer *data)
 }
 
 static void
-gwy_meta_browser_cell_renderer(GtkTreeViewColumn *column,
+gwy_meta_browser_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                GtkCellRenderer *cell,
                                GtkTreeModel *model,
                                GtkTreeIter *piter,

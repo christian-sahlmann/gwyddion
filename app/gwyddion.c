@@ -23,6 +23,7 @@
 #include "file.h"
 #include "settings.h"
 #include "app.h"
+#include "toolbox.h"
 
 int
 main(int argc, char *argv[])

@@ -10,14 +10,17 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
 libgwyappincludedir = $(includedir)/gwyddion/app
 libgwyappinclude_HEADERS = \
-	about.h \
 	app.h \
-	arith.h \
 	file.h \
-	init.h \
 	menu.h \
-	meta.h \
 	settings.h
+
+noinst_HEADERS = \
+	about.h \
+	arith.h \
+	init.h \
+	meta.h \
+	toolbox.h
 
 bin_PROGRAMS = gwyddion
 lib_LTLIBRARIES = libgwyapp.la
@@ -31,17 +34,19 @@ EXTRA_DIST = libgwyapp.def
 # Chaning ifraces     C:   R:   0
 libgwyapp_la_LDFLAGS = -version-info 0:0:0
 libgwyapp_la_SOURCES = \
-	about.c \
 	app.c \
-	arith.c \
 	file.c \
-	init.c \
 	menu.c \
-	meta.c \
 	settings.c
 
 gwyddion_SOURCES = \
-	gwyddion.c
+	about.c \
+	arith.c \
+	gwyddion.c \
+	init.c \
+	meta.c \
+	toolbox.c
+
 gwyddion_LDADD = libgwyapp.la \
 	$(libgwymodule) \
 	$(libgwydgets) \

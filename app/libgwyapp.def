@@ -1,8 +1,6 @@
 EXPORTS
-	gwy_app_about
 	gwy_app_change_mask_color_cb
 	gwy_app_clean_up_data
-	gwy_app_data_arith
 	gwy_app_data_view_update
 	gwy_app_data_window_add
 	gwy_app_data_window_create
@@ -25,22 +23,23 @@ EXPORTS
 	gwy_app_graph_window_get_current
 	gwy_app_graph_window_remove
 	gwy_app_graph_window_set_current
-	gwy_app_menu_create_edit_menu
-	gwy_app_menu_create_file_menu
-	gwy_app_menu_create_graph_menu
-	gwy_app_menu_create_proc_menu
-	gwy_app_menu_create_xtns_menu
+	gwy_app_mask_kill_cb
 	gwy_app_menu_recent_files_update
+	gwy_app_menu_set_flags_recursive
+	gwy_app_menu_set_recent_files_menu
+	gwy_app_menu_set_sensitive_array
+	gwy_app_menu_set_sensitive_both
 	gwy_app_menu_set_sensitive_recursive
-	gwy_app_metadata_browser
+	gwy_app_quit
 	gwy_app_run_graph_func_cb
 	gwy_app_run_process_func_cb
 	gwy_app_settings_free
 	gwy_app_settings_get
 	gwy_app_settings_load
 	gwy_app_settings_save
-	gwy_app_toolbox_create
-	gwy_app_type_init
+	gwy_app_show_kill_cb
+	gwy_app_tool_use_cb
 	gwy_app_undo_checkpoint
 	gwy_app_undo_redo
 	gwy_app_undo_undo
+	gwy_app_zoom_set_cb

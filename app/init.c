@@ -31,6 +31,7 @@ static GSList *palettes = NULL;
 static void ref_palette      (const gchar *name,
                               GwyPaletteDef *pdef);
 static void unref_palettes   (void);
+
 /**
  * gwy_type_init:
  *
@@ -62,7 +63,7 @@ gwy_app_type_init(void)
 }
 
 static void
-ref_palette(const gchar *name,
+ref_palette(G_GNUC_UNUSED const gchar *name,
             GwyPaletteDef *pdef)
 {
     GwyPalette *palette;

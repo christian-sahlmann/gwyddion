@@ -36,7 +36,7 @@ gwy_app_about(void)
     gchar *s;
 
     if (about) {
-        gtk_window_present(about);
+        gtk_window_present(GTK_WINDOW(about));
         return;
     }
     s = g_strdup_printf(_("About %s"), g_get_application_name());

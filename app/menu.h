@@ -22,6 +22,7 @@
 #define __GWY_APP_MENU_H__
 
 #include <gtk/gtkwidget.h>
+#include <gtk/gtkitemfactory.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,6 +55,16 @@ GtkWidget* gwy_app_menu_create_edit_menu         (GtkAccelGroup *accel_group);
 void       gwy_app_menu_set_sensitive_recursive  (GtkWidget *widget,
                                                   GwyMenuSensitiveData *data);
 void       gwy_app_menu_recent_files_update      (GList *recent_files);
+void       gwy_app_menu_set_flags_recursive      (GtkWidget *widget,
+                                                  GwyMenuSensitiveData *data);
+void       gwy_app_menu_set_sensitive_array      (GtkItemFactory *item_factory,
+                                                  const gchar *root,
+                                                  const gchar **items,
+                                                  guint flags);
+void       gwy_app_menu_set_sensitive_both       (GtkWidget *item,
+                                                  gint sens,
+                                                  gint state);
+void       gwy_app_menu_set_recent_files_menu    (GtkWidget *menu);
 
 /* FIXME: where this could really belong? */
 void       gwy_app_run_process_func_cb           (gchar *name);

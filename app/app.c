@@ -47,18 +47,6 @@ static const gchar *menu_list[] = {
     "<file>", "<proc>", "<xtns>", "<edit>", "<graph>"
 };
 
-static gboolean   gwy_app_quit                (void);
-static GtkWidget* gwy_app_toolbar_append_func (GtkWidget *toolbar,
-                                               const gchar *stock_id,
-                                               const gchar *tooltip,
-                                               const gchar *name);
-static GtkWidget* gwy_app_toolbar_append_zoom (GtkWidget *toolbar,
-                                               const gchar *stock_id,
-                                               const gchar *tooltip,
-                                               gint izoom);
-static void       gwy_app_use_tool_cb         (GtkWidget *unused,
-                                               const gchar *toolname);
-static void       gwy_app_zoom_set_cb         (gpointer data);
 static void       gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data);
 static gint       compare_data_window_data_cb (GwyDataWindow *window,
                                                GwyContainer *data);
@@ -70,7 +58,7 @@ static void       gather_unsaved_cb           (GwyDataWindow *data_window,
                                                GSList **unsaved);
 static gboolean   gwy_app_confirm_quit_dialog (GSList *unsaved);
 
-static gboolean
+gboolean
 gwy_app_quit(void)
 {
     GwyDataWindow *data_window;
@@ -85,91 +73,6 @@ gwy_app_quit(void)
 
     gtk_main_quit();
     return FALSE;
-}
-
-void
-gwy_app_toolbox_create(void)
-{
-    GtkWidget *window, *vbox, *toolbar, *menu;
-    GtkAccelGroup *accel_group;
-
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), g_get_application_name());
-    gtk_window_set_wmclass(GTK_WINDOW(window), "toolbox",
-                           g_get_application_name());
-    gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
-    gwy_app_main_window = window;
-
-    accel_group = gtk_accel_group_new();
-    g_object_set_data(G_OBJECT(window), "accel_group", accel_group);
-
-    vbox = gtk_vbox_new(0, FALSE);
-    gtk_container_add(GTK_CONTAINER(window), vbox);
-
-    menu = gwy_app_menu_create_file_menu(accel_group);
-    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(window), "<file>", menu);
-
-    menu = gwy_app_menu_create_edit_menu(accel_group);
-    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(window), "<edit>", menu);
-
-    menu = gwy_app_menu_create_proc_menu(accel_group);
-    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(window), "<proc>", menu);
-
-    menu = gwy_app_menu_create_graph_menu(accel_group);
-    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(window), "<graph>", menu);
-
-    menu = gwy_app_menu_create_xtns_menu(accel_group);
-    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(window), "<xtns>", menu);
-
-    /***************************************************************/
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
-                                GTK_ORIENTATION_HORIZONTAL);
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
-                              GTK_ICON_SIZE_BUTTON);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-
-    gwy_app_toolbar_append_zoom(toolbar, GWY_STOCK_ZOOM_IN,
-                                _("Zoom in"), 1);
-    gwy_app_toolbar_append_zoom(toolbar, GWY_STOCK_ZOOM_1_1,
-                                _("Zoom 1:1"), 10000);
-    gwy_app_toolbar_append_zoom(toolbar, GWY_STOCK_ZOOM_OUT,
-                                _("Zoom out"), -1);
-
-    /***************************************************************/
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
-                                GTK_ORIENTATION_HORIZONTAL);
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
-                              GTK_ICON_SIZE_BUTTON);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-
-    gwy_app_toolbar_append_func(toolbar, GWY_STOCK_FIT_PLANE,
-                                _("Automatically level data"), "level");
-    gwy_app_toolbar_append_func(toolbar, GWY_STOCK_SCALE,
-                                _("Scale data"), "scale");
-    gwy_app_toolbar_append_func(toolbar, GWY_STOCK_ROTATE,
-                                _("Rotate data"), "rotate");
-    gwy_app_toolbar_append_func(toolbar, GWY_STOCK_SHADER,
-                                _("Shade data"), "shade");
-
-    /***************************************************************/
-    toolbar = gwy_tool_func_build_toolbar(G_CALLBACK(gwy_app_use_tool_cb));
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-
-    /***************************************************************/
-    gtk_widget_show_all(window);
-    gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
-
-    /* XXX */
-    g_signal_connect(window, "delete_event", G_CALLBACK(gwy_app_quit), NULL);
 }
 
 GwyDataWindow*
@@ -500,54 +403,8 @@ gwy_app_data_window_foreach(GFunc func,
         func(l->data, user_data);
 }
 
-static GtkWidget*
-gwy_app_toolbar_append_func(GtkWidget *toolbar,
-                            const gchar *stock_id,
-                            const gchar *tooltip,
-                            const gchar *name)
-{
-    GtkWidget *icon, *button;
-
-    g_return_val_if_fail(GTK_IS_TOOLBAR(toolbar), NULL);
-    g_return_val_if_fail(stock_id, NULL);
-    g_return_val_if_fail(tooltip, NULL);
-
-    icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
-    button = gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
-                                        GTK_TOOLBAR_CHILD_BUTTON, NULL,
-                                        stock_id, tooltip, NULL, icon,
-                                        NULL, NULL);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_app_run_process_func_cb),
-                             (gpointer)name);
-    return button;
-}
-
-static GtkWidget*
-gwy_app_toolbar_append_zoom(GtkWidget *toolbar,
-                            const gchar *stock_id,
-                            const gchar *tooltip,
-                            gint izoom)
-{
-    GtkWidget *icon, *button;
-
-    g_return_val_if_fail(GTK_IS_TOOLBAR(toolbar), NULL);
-    g_return_val_if_fail(stock_id, NULL);
-    g_return_val_if_fail(tooltip, NULL);
-
-    icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
-    button = gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
-                                        GTK_TOOLBAR_CHILD_BUTTON, NULL,
-                                        stock_id, tooltip, NULL, icon,
-                                        NULL, NULL);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_app_zoom_set_cb),
-                             GINT_TO_POINTER(izoom));
-    return button;
-}
-
-static void
-gwy_app_use_tool_cb(GtkWidget *unused,
+void
+gwy_app_tool_use_cb(GtkWidget *unused,
                     const gchar *toolname)
 {
     GwyDataWindow *data_window;
@@ -566,7 +423,7 @@ gwy_app_use_tool_cb(GtkWidget *unused,
     }
 }
 
-static void
+void
 gwy_app_zoom_set_cb(gpointer data)
 {
     GwyDataWindow *data_window;
@@ -817,7 +674,7 @@ gwy_app_clean_up_data(GwyContainer *data)
 }
 
 void
-gwy_app_change_mask_color_cb(gpointer unused,
+gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
                              gboolean defaultc)
 {
     static const gdouble default_mask_color[4] = { 1.0, 0.0, 0.0, 0.5 };
@@ -950,6 +807,42 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
     gtk_widget_destroy(dialog);
 
     return response == GTK_RESPONSE_YES;
+}
+
+void
+gwy_app_mask_kill_cb(void)
+{
+    GwyDataWindow *data_window;
+    GtkWidget *data_view;
+    GwyContainer *data;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    if (gwy_container_contains_by_name(data, "/0/mask")) {
+        gwy_app_undo_checkpoint(data, "/0/mask");
+        gwy_container_remove_by_name(data, "/0/mask");
+        gwy_app_data_view_update(data_view);
+    }
+}
+
+void
+gwy_app_show_kill_cb(void)
+{
+    GwyDataWindow *data_window;
+    GtkWidget *data_view;
+    GwyContainer *data;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    if (gwy_container_contains_by_name(data, "/0/show")) {
+        gwy_app_undo_checkpoint(data, "/0/show");
+        gwy_container_remove_by_name(data, "/0/show");
+        gwy_data_view_update(GWY_DATA_VIEW(data_view));
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_APP_ARITH_H__
-#define __GWY_APP_ARITH_H__
+#ifndef __GWYDDION_ARITH_H__
+#define __GWYDDION_ARITH_H__
 
 #include <gtk/gtkwidget.h>
 
@@ -33,6 +33,6 @@ void gwy_app_data_arith(void);
 }
 #endif /* __cplusplus */
 
-#endif /* __GWY_APP_ARITH_H__ */
+#endif /* __GWYDDION_ARITH_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

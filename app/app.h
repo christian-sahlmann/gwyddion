@@ -32,7 +32,6 @@ extern "C" {
 
 extern GtkWidget *gwy_app_main_window;
 
-void            gwy_app_toolbox_create            (void);
 GwyContainer*   gwy_app_get_current_data          (void);
 GwyDataWindow*  gwy_app_data_window_get_current   (void);
 void            gwy_app_data_window_set_current   (GwyDataWindow *data_window);
@@ -54,6 +53,13 @@ GtkWidget*      gwy_app_graph_window_get_current  (void);
 void            gwy_app_graph_window_set_current  (GtkWidget *window);
 void            gwy_app_graph_window_remove       (GtkWidget *window);
 GtkWidget*      gwy_app_graph_window_create       (GtkWidget *graph);
+
+void            gwy_app_tool_use_cb               (GtkWidget *unused,
+                                                   const gchar *toolname);
+void            gwy_app_zoom_set_cb               (gpointer data);
+void            gwy_app_mask_kill_cb              (void);
+void            gwy_app_show_kill_cb              (void);
+gboolean        gwy_app_quit                      (void);
 
 /* FIXME: ugly. to be moved somewhere? refactored? */
 void       gwy_app_clean_up_data            (GwyContainer *data);
