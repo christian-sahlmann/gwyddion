@@ -8,6 +8,7 @@ process_PROGRAMS = \
 	arithmetic.so \
 	angle_dist.so \
 	basicops.so \
+	calibrate.so \
 	crosscor.so \
 	cwt.so \
 	facet-level.so \
@@ -19,6 +20,7 @@ process_PROGRAMS = \
  	grain_dist.so \
 	laplace.so \
 	level.so \
+	linecorrect.so \
 	mask_grow_shrink.so \
 	maskcor.so \
 	maskops.so \
@@ -28,8 +30,7 @@ process_PROGRAMS = \
 	scale.so \
 	shade.so \
 	slope_dist.so \
-	unrotate.so \
-	calibrate.so
+	unrotate.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -42,6 +43,9 @@ arithmetic_so_LDFLAGS = $(module_ldflags),arithmetic.so
 
 basicops_so_SOURCES = basicops.c
 basicops_so_LDFLAGS = $(module_ldflags),basicops.so
+
+calibrate_so_SOURCES = calibrate.c
+calibrate_so_LDFLAGS = $(module_ldflags),calibrate.so
 
 crosscor_so_SOURCES = crosscor.c
 crosscor_so_LDFLAGS = $(module_ldflags),crosscor.so
@@ -76,6 +80,9 @@ laplace_so_LDFLAGS = $(module_ldflags),laplace.so
 level_so_SOURCES = level.c
 level_so_LDFLAGS = $(module_ldflags),level.so
 
+linecorrect_so_SOURCES = linecorrect.c
+linecorrect_so_LDFLAGS = $(module_ldflags),linecorrect.so
+
 mask_grow_shrink_so_SOURCES = mask_grow_shrink.c
 mask_grow_shrink_so_LDFLAGS = $(module_ldflags),mask_grow_shrink.so
 
@@ -105,9 +112,6 @@ slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
 
 unrotate_so_SOURCES = unrotate.c
 unrotate_so_LDFLAGS = $(module_ldflags),unrotate.so
-
-calibrate_so_SOURCES = calibrate.c
-calibrate_so_LDFLAGS = $(module_ldflags),calibrate.so
 
 
 INCLUDES = -I$(top_srcdir)

@@ -119,7 +119,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo unrotate_func_info = {
         "unrotate",
-        "/_Correct data/_Unrotate...",  /* FIXME: a less silly name? */
+        "/_Correct Data/_Unrotate...",  /* FIXME: a less silly name? */
         (GwyProcessFunc)&unrotate,
         UNROTATE_RUN_MODES,
         0,
