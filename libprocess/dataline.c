@@ -265,7 +265,7 @@ gwy_data_line_initialize(GwyDataLine *a,
 void
 gwy_data_line_free(GwyDataLine *a)
 {
-    gwy_debug("%s", __FUNCTION__);
+/*    gwy_debug("%s", __FUNCTION__);*/
     g_free(a->data);
 }
 
@@ -335,7 +335,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 gboolean
 gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 {
-    gwy_debug("%s", __FUNCTION__);
+/*    gwy_debug("%s", __FUNCTION__);*/
     g_return_val_if_fail(a->res == b->res, FALSE);
 
     memcpy(b->data, a->data, a->res*sizeof(gdouble));

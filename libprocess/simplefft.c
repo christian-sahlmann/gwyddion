@@ -44,7 +44,9 @@ gwy_fft_hum(gint dir, gdouble *re_in, gdouble *im_in,
         }
         m = n >> 1;
         while (j > m && m)
+        {
             j -=m; m >>= 1;
+        }
         j += m;
 
     }

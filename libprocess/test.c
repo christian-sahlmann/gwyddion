@@ -41,7 +41,8 @@ void make_test_image(GwyDataField *a)
     {
 	for (j=0; j<xres; j++)
 	{
-	    a->data[i + j*yres] = exp(-((((gdouble)i-255.5)*((gdouble)i-255.5)+((gdouble)j-255.5)*((gdouble)j-255.5)))/300);
+	    a->data[i + j*yres] = sin((gdouble)i*j*0.75/xres);
+//	    a->data[i + j*yres] = exp(-((((gdouble)i-255.5)*((gdouble)i-255.5)+((gdouble)j-255.5)*((gdouble)j-255.5)))/300);
 //	    a->data[i + j*yres] = 10*sin(6.28*(i+j)/50);
 	}
     }
