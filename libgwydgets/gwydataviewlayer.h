@@ -8,6 +8,10 @@
 #  include <libgwyddion/gwycontainer.h>
 #endif /* no GWY_TYPE_CONTAINER */
 
+#ifndef GWY_TYPE_PALETTE
+#  include <libdraw/gwypalette.h>
+#endif /* no GWY_TYPE_PALETTE */
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -22,16 +26,13 @@ extern "C" {
 typedef struct _GwyDataViewLayer      GwyDataViewLayer;
 typedef struct _GwyDataViewLayerClass GwyDataViewLayerClass;
 
-typedef enum {
-    GWY_LAYER_VECTOR = 1 << 1,
-} GwyLayerFlags;
-
 struct _GwyDataViewLayer {
     GtkObject *parent_instance;
 
     GtkWidget *parent;
     GwyContainer *data;
     GdkPixbuf *pixbuf;
+    GwyPalette *palette;
     GdkGC *gc;
     PangoLayout *layout;
 };
@@ -40,7 +41,7 @@ struct _GwyDataViewLayerClass {
     GtkObjectClass parent_class;
 
     /* renderers */
-    GdkPixbuf* (*pixbuf)(GwyDataViewLayer *layer);
+    GdkPixbuf* (*paint)(GwyDataViewLayer *layer);
     void (*draw)(GwyDataViewLayer *layer, GdkPixbuf *pixbuf);
     /* events */
     gboolean (*button_press)(GwyDataViewLayer *layer, GdkEventButton *event);
@@ -55,7 +56,7 @@ GType            gwy_data_view_layer_get_type        (void) G_GNUC_CONST;
 gboolean         gwy_data_view_layer_is_vector       (GwyDataViewLayer *layer) G_GNUC_CONST;
 void             gwy_data_view_layer_draw            (GwyDataViewLayer *layer,
                                                       GdkPixbuf *pixbuf);
-GdkPixbuf*       gwy_data_view_layer_pixbuf          (GwyDataViewLayer *layer);
+GdkPixbuf*       gwy_data_view_layer_paint           (GwyDataViewLayer *layer);
 gboolean         gwy_data_view_layer_button_press    (GwyDataViewLayer *layer,
                                                       GdkEventButton *event);
 gboolean         gwy_data_view_layer_button_release  (GwyDataViewLayer *layer,

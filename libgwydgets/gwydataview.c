@@ -315,10 +315,10 @@ gwy_data_view_size_request(GtkWidget *widget,
 
     data_view = GWY_DATA_VIEW(widget);
     data = data_view->data;
-    /* TODO */
+    /* TODO Container */
     data_field = GWY_DATA_FIELD(
                      gwy_container_get_object_by_name(data,
-                                                      "/0/width/data"));
+                                                      "/0/data"));
     requisition->width = gwy_data_field_get_xres(data_field);
     requisition->height = gwy_data_field_get_yres(data_field);
 }
@@ -430,7 +430,7 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
     }
 
     /* layer paints pixbufs */
-    src_pixbuf = gwy_data_view_layer_pixbuf(layer);
+    src_pixbuf = gwy_data_view_layer_paint(layer);
     src_width = gdk_pixbuf_get_width(src_pixbuf);
     src_height = gdk_pixbuf_get_height(src_pixbuf);
     if (to_base) {

@@ -4,6 +4,7 @@ include_HEADERS = \
 	gwydataviewlayer.h \
 	gwydatawindow.h \
 	gwygradsphere.h \
+	gwylayer-basic.h \
 	gwyspherecoords.h \
 	gwyvectorshade.h
 lib_LTLIBRARIES = libgwydgets.la
@@ -21,6 +22,7 @@ libgwydgets_la_SOURCES = \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
 	gwygradsphere.c \
+	gwylayer-basic.c \
 	gwyspherecoords.c \
 	gwyvectorshade.c
 

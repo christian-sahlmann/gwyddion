@@ -5,10 +5,10 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
-#include "gwyspherecoords.h"
 #include "gwyvectorshade.h"
 #include <libdraw/gwypalette.h>
 
+/***** VECTOR SHADE [[[ *****************************************************/
 #define N 4
 
 static gulong hid[N];
@@ -35,21 +35,13 @@ foo_cb(GwySphereCoords *c, gpointer p)
         g_signal_handler_unblock(G_OBJECT(coords[i]), hid[i]);
 }
 
-int
-main(int argc, char *argv[])
+static void
+vector_shade_test(void)
 {
     GtkWidget *win, *widget, *box;
     GObject *pal;
     gint i;
-    FILE *fh;
-    guint32 seed;
 
-    fh = fopen("/dev/urandom", "rb");
-    fread(&seed, sizeof(guint32), 1, fh);
-    fclose(fh);
-    g_random_set_seed(seed);
-
-    gtk_init(&argc, &argv);
     win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_container_set_border_width(GTK_CONTAINER(win), 4);
 
@@ -70,6 +62,22 @@ main(int argc, char *argv[])
 
     gtk_widget_show_all(win);
     g_signal_connect(G_OBJECT(win), "destroy", gtk_main_quit, NULL);
+}
+/***** ]]] VECTOR SHADE *****************************************************/
+
+int
+main(int argc, char *argv[])
+{
+    FILE *fh;
+    guint32 seed;
+
+    fh = fopen("/dev/urandom", "rb");
+    fread(&seed, sizeof(guint32), 1, fh);
+    fclose(fh);
+    g_random_set_seed(seed);
+
+    gtk_init(&argc, &argv);
+    vector_shade_test();
     gtk_main();
 
     return 0;

@@ -44,10 +44,11 @@ gwy_data_view_layer_get_type(void)
         #ifdef DEBUG
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
         #endif
-        gwy_data_view_layer_type = g_type_register_static(GTK_TYPE_OBJECT,
-                                                          GWY_DATA_VIEW_LAYER_TYPE_NAME,
-                                                          &gwy_data_view_layer_info,
-                                                          0);
+        gwy_data_view_layer_type
+            = g_type_register_static(GTK_TYPE_OBJECT,
+                                     GWY_DATA_VIEW_LAYER_TYPE_NAME,
+                                     &gwy_data_view_layer_info,
+                                     0);
     }
 
     return gwy_data_view_layer_type;
@@ -66,7 +67,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 
     gobject_class->finalize = gwy_data_view_layer_finalize;
 
-    klass->pixbuf = NULL;
+    klass->paint = NULL;
     klass->draw = NULL;
 
     klass->button_press = NULL;
@@ -87,6 +88,7 @@ gwy_data_view_layer_init(GwyDataViewLayer *layer)
     layer->data = NULL;
     layer->gc = NULL;
     layer->layout = NULL;
+    layer->palette = NULL;
 }
 
 static void
@@ -95,13 +97,11 @@ gwy_data_view_layer_finalize(GObject *object)
     GwyDataViewLayer *layer;
 
     #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "finalizing a GwyDataViewLayer (refcount = %u)",
-          object->ref_count);
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
 
     g_return_if_fail(object != NULL);
-    g_return_if_fail(GWY_IS_DATA_VIEW(object));
+    g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(object));
 
     layer = GWY_DATA_VIEW_LAYER(object);
 
@@ -109,10 +109,14 @@ gwy_data_view_layer_finalize(GObject *object)
         g_object_unref(layer->gc);
     if (layer->layout)
         g_object_unref(layer->layout);
+    if (layer->palette)
+        g_object_unref(layer->palette);
     if (layer->pixbuf)
         g_object_unref(layer->pixbuf);
     if (layer->data)
         g_object_unref(layer->data);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 gboolean
@@ -120,8 +124,8 @@ gwy_data_view_layer_is_vector(GwyDataViewLayer *layer)
 {
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_GET_CLASS(layer);
 
-    g_assert(layer_class->pixbuf || layer_class->draw);
-    return !layer_class->pixbuf;
+    g_assert(layer_class->paint || layer_class->draw);
+    return !layer_class->paint;
 }
 
 void
@@ -135,12 +139,12 @@ gwy_data_view_layer_draw(GwyDataViewLayer *layer,
 }
 
 GdkPixbuf*
-gwy_data_view_layer_pixbuf(GwyDataViewLayer *layer)
+gwy_data_view_layer_paint(GwyDataViewLayer *layer)
 {
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_GET_CLASS(layer);
 
-    g_return_val_if_fail(layer_class->pixbuf, NULL);
-    return layer_class->pixbuf(layer);
+    g_return_val_if_fail(layer_class->paint, NULL);
+    return layer_class->paint(layer);
 }
 
 gboolean
