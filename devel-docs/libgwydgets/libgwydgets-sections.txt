@@ -563,6 +563,7 @@ Gwy3DWindowClass
 gwy_3d_window_new
 gwy_3d_window_get_3d_view
 gwy_3d_window_add_action_widget
+gwy_3d_window_add_small_toolbar_button
 <SUBSECTION Standard>
 GWY_3D_WINDOW
 GWY_IS_3D_WINDOW

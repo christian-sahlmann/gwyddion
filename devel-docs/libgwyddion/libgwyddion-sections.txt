@@ -267,7 +267,6 @@ gwy_math_nlfit_fit_preset
 
 <SECTION>
 <FILE>gwymacros</FILE>
-ENABLE_NLS
 gettext
 ngettext
 _

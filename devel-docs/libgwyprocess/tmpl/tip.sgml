@@ -188,6 +188,7 @@ SPM tip methods
 @surface: 
 @threshold: 
 @use_edges: 
+@count: 
 @set_fraction: 
 @set_message: 
 @Returns: 
@@ -202,6 +203,7 @@ SPM tip methods
 @surface: 
 @threshold: 
 @use_edges: 
+@count: 
 @set_fraction: 
 @set_message: 
 @Returns: 

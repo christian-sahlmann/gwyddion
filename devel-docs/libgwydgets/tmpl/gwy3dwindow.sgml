@@ -62,3 +62,15 @@ can be packed with gwy_3d_window_add_action_widget().
 @widget: 
 
 
+<!-- ##### FUNCTION gwy_3d_window_add_small_toolbar_button ##### -->
+<para>
+
+</para>
+
+@gwy3dwindow: 
+@stock_id: 
+@tooltip: 
+@callback: 
+@cbdata: 
+
+
