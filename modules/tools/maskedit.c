@@ -53,8 +53,8 @@ static void       layer_setup           (GwyUnitoolState *state);
 static GtkWidget* dialog_create         (GwyUnitoolState *state);
 static void       dialog_update         (GwyUnitoolState *state,
                                          GwyUnitoolUpdateType reason);
-static void       mode_changed_cb       (GObject *item,
-                                         GwyUnitoolState *state);
+static void       mode_changed_cb       (GwyUnitoolState *state,
+                                         GObject *item);
 static void       selection_finished_cb (GwyUnitoolState *state);
 static void       dialog_abandon        (GwyUnitoolState *state);
 static void       load_args             (GwyContainer *container,
@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2004",
 };
 
 static GwyUnitoolSlots func_slots = {
@@ -149,16 +149,36 @@ layer_setup(GwyUnitoolState *state)
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
-    GwyEnum modes[] = {
-        { N_("Replace"),   MASK_EDIT_SET       },
-        { N_("Add"),       MASK_EDIT_ADD       },
-        { N_("Remove"),    MASK_EDIT_REMOVE    },
-        { N_("Intersect"), MASK_EDIT_INTERSECT },
+    static struct {
+        MaskEditMode mode;
+        const gchar *stock_id;
+        const gchar *tooltip;
+    }
+    const modes[] = {
+        {
+            MASK_EDIT_SET,
+            GWY_STOCK_MASK_SET,
+            N_("Set mask to selection"),
+        },
+        {
+            MASK_EDIT_ADD,
+            GWY_STOCK_MASK_ADD,
+            N_("Add selection to mask"),
+        },
+        {
+            MASK_EDIT_REMOVE,
+            GWY_STOCK_MASK_SUBTRACT,
+            N_("Subtract selection from mask"),
+        },
+        {
+            MASK_EDIT_INTERSECT,
+            GWY_STOCK_MASK_INTERSECT,
+            N_("Intersect selection with mask"),
+        },
     };
     ToolControls *controls;
-    GtkWidget *dialog, *table, *frame;
-    GSList *radio;
-    gint row;
+    GtkWidget *dialog, *table, *frame, *toolbox, *button, *group, *hbox, *label;
+    gint i, row;
 
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
@@ -171,24 +191,39 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(10, 4, FALSE);
+    table = gtk_table_new(7, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
-    row = gwy_unitool_rect_info_table_setup(&controls->labels,
-                                            GTK_TABLE(table), 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    row = 0;
 
-    radio = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes),
-                                     "select-mode",
-                                     G_CALLBACK(mode_changed_cb), state,
-                                     controls->mode);
-    while (radio) {
-        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(radio->data),
-                         0, 3, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
-        row++;
-        radio = g_slist_next(radio);
+    hbox = gtk_hbox_new(FALSE, 4);
+    gtk_table_attach(GTK_TABLE(table), hbox, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new(_("Mode:"));
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+
+    toolbox = gwy_toolbox_new(G_N_ELEMENTS(modes));
+    group = NULL;
+    for (i = 0; i < G_N_ELEMENTS(modes); i++) {
+        button = gwy_toolbox_append(GWY_TOOLBOX(toolbox),
+                                    GTK_TYPE_RADIO_BUTTON, group,
+                                    _(modes[i].tooltip), NULL,
+                                    modes[i].stock_id,
+                                    G_CALLBACK(mode_changed_cb), state);
+        if (!group)
+            group = button;
+        g_object_set_data(G_OBJECT(button), "select-mode",
+                          GUINT_TO_POINTER(modes[i].mode));
+        if (modes[i].mode == controls->mode)
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
     }
+    gtk_box_pack_start(GTK_BOX(hbox), toolbox, FALSE, FALSE, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    row += gwy_unitool_rect_info_table_setup(&controls->labels,
+                                             GTK_TABLE(table), 0, row);
 
     return dialog;
 }
@@ -212,7 +247,7 @@ dialog_update(GwyUnitoolState *state,
 }
 
 static void
-mode_changed_cb(GObject *item, GwyUnitoolState *state)
+mode_changed_cb(GwyUnitoolState *state, GObject *item)
 {
     ToolControls *controls;
 
