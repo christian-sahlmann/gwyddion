@@ -25,7 +25,7 @@
 #include "gwymath.h"
 #include "gwysiunit.h"
 
-#define GWY_SI_UNIT_TYPE_NAME "GwySiUnit"
+#define GWY_SI_UNIT_TYPE_NAME "GwySIUnit"
 
 static void     gwy_si_unit_class_init        (GwySIUnitClass *klass);
 static void     gwy_si_unit_init              (GwySIUnit *si_unit);

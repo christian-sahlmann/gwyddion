@@ -40,7 +40,7 @@ libgwyprocess_la_SOURCES = \
 #	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"GwyProcess\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyProcess\"
 
 clean-local:
 	rm -f core.* *~

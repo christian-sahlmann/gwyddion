@@ -38,7 +38,7 @@ libgwymodule_la_SOURCES = \
 	gwymoduleloader.c
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"GwyModule\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyModule\"
 
 clean-local:
 	rm -f core.* *~

@@ -31,7 +31,7 @@ graph_points_so_SOURCES = graph_points.c
 graph_points_so_LDFLAGS = $(module_ldflags),graph_points.so
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
 
 clean-local:
 	rm -f core.* *~

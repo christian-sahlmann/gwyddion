@@ -67,7 +67,7 @@ angle_dist_so_LDFLAGS = $(module_ldflags),angle_dist.so
 
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
 
 clean-local:
 	rm -f core.* *~

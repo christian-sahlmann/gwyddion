@@ -4,8 +4,10 @@ Too many things.  Use
 
 to locate them ;-)
 
-Particularly:
+Particularly (overall app issues, module issues not listed):
 - Some real Undo & Redo and revert to saved state
+  The biggest trouble is that when you change e.g. data *and* mask at the
+  same time, only one change can be reverted.
 - Quite a large part of graph functionality
 - Printing
 - User documentation, even better, integrated help
