@@ -7,8 +7,7 @@
 
 /* TODO */
 static GSList *current_data = NULL;
-static GtkAccelGroup *gwy_app_accel_group = NULL;
-static GtkWidget *data_process_menu = NULL;
+static GtkWidget *gwy_app_main_window = NULL;
 
 GwyDataWindow*  gwy_app_get_current_data_window  (void);
 GwyContainer*   gwy_app_get_current_data         (void);
@@ -43,7 +42,9 @@ file_open_ok_cb(GtkFileSelection *selector)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
-    gtk_window_add_accel_group(GTK_WINDOW(data_window), gwy_app_accel_group);
+    gtk_window_add_accel_group(GTK_WINDOW(data_window),
+                               g_object_get_data(G_OBJECT(gwy_app_main_window),
+                                                 "accel_group"));
     g_signal_connect(data_window, "focus-in-event",
                      G_CALLBACK(gwy_app_set_current_data_window), NULL);
     g_signal_connect_swapped(data_window, "destroy",
@@ -251,23 +252,29 @@ zoom_set_cb(GtkWidget *button, gpointer data)
 void
 foo(void)
 {
-    GtkWidget *window, *vbox, *toolbar;
+    GtkWidget *window, *vbox, *toolbar, *menu;
+    GtkAccelGroup *accel_group;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gwy_app_main_window = window;
 
-    gwy_app_accel_group = gtk_accel_group_new();
+    accel_group = gtk_accel_group_new();
+    g_object_set_data(G_OBJECT(window), "accel_group", accel_group);
 
     vbox = gtk_vbox_new(0, FALSE);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    gtk_box_pack_start(GTK_BOX(vbox), create_file_menu(gwy_app_accel_group),
-                       FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), create_view_menu(gwy_app_accel_group),
-                       FALSE, FALSE, 0);
-    data_process_menu = create_data_menu(gwy_app_accel_group);
-    gtk_box_pack_start(GTK_BOX(vbox), data_process_menu, FALSE, FALSE, 0);
-    gtk_container_foreach(GTK_CONTAINER(data_process_menu),
+    menu = create_file_menu(accel_group);
+    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
+
+    menu = create_view_menu(accel_group);
+    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
+
+    menu = create_data_menu(accel_group);
+    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
+    gtk_container_foreach(GTK_CONTAINER(menu),
                           gwy_menu_set_sensitive_recursive, FALSE);
+    g_object_set_data(G_OBJECT(window), "<data>", menu);
 
     toolbar = gtk_toolbar_new();
     gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
@@ -283,16 +290,16 @@ foo(void)
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GTK_STOCK_ZOOM_100,
                              "Zoom 1:1", NULL,
                              GTK_SIGNAL_FUNC(zoom_set_cb),
-                             GINT_TO_POINTER(10000), 0);
+                             GINT_TO_POINTER(10000), 1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GTK_STOCK_ZOOM_OUT,
                              "Zoom out", NULL,
                              GTK_SIGNAL_FUNC(zoom_set_cb),
-                             GINT_TO_POINTER(-1), 0);
+                             GINT_TO_POINTER(-1), 2);
 
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     gtk_widget_show_all(window);
-    gtk_window_add_accel_group(GTK_WINDOW(window), gwy_app_accel_group);
+    gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 
     /* XXX */
     g_signal_connect(window, "destroy", gwy_app_quit, NULL);
@@ -356,6 +363,7 @@ gwy_menu_set_sensitive_recursive(GtkWidget *widget,
 void
 gwy_app_set_current_data_window(GwyDataWindow *window)
 {
+    GtkWidget *data_process_menu;
     gboolean update_state;
 
     if (window) {
@@ -369,6 +377,8 @@ gwy_app_set_current_data_window(GwyDataWindow *window)
         current_data = g_slist_remove(current_data, current_data->data);
     }
 
+    data_process_menu = g_object_get_data(G_OBJECT(gwy_app_main_window),
+                                          "<data>");
     if (update_state)
         gtk_container_foreach(GTK_CONTAINER(data_process_menu),
                               gwy_menu_set_sensitive_recursive,
