@@ -1,0 +1,41 @@
+<!-- ##### SECTION Title ##### -->
+GwyToolbox
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_toolbox_new ##### -->
+<para>
+
+</para>
+
+@max_width: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_toolbox_append ##### -->
+<para>
+
+</para>
+
+@toolbox: 
+@type: 
+@widget: 
+@tooltip_text: 
+@tooltip_private_text: 
+@stock_id: 
+@callback: 
+@user_data: 
+@Returns: 
+
+
