@@ -1432,10 +1432,12 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
     gint k;
     gdouble cosa, sina;
 
+    /*
     if (uli > bri)
         GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
         GWY_SWAP(gint, ulj, brj);
+        */
 
     g_return_val_if_fail(uli >= 0 && ulj >= 0 && bri < a->yres && brj < a->xres,
                          FALSE);
