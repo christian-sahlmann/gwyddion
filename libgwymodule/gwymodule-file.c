@@ -34,19 +34,23 @@ typedef struct {
     gint score;
     gboolean only_name;
     GwyFileOperation mode;
-} GwyFileDetectData;
+} FileDetectData;
+
+typedef struct {
+    GwyFileFuncInfo info;
+    const gchar *menu_path_translated;
+    gchar *menu_path_factory;
+} FileFuncInfo;
 
 static void gwy_file_func_info_free    (gpointer data);
 static void file_detect_max_score_cb   (const gchar *key,
-                                        GwyFileFuncInfo *func_info,
-                                        GwyFileDetectData *ddata);
-static gint file_menu_entry_compare    (GwyFileFuncInfo *a,
-                                        GwyFileFuncInfo *b);
+                                        FileFuncInfo *func_info,
+                                        FileDetectData *ddata);
+static gint file_menu_entry_compare    (FileFuncInfo *a,
+                                        FileFuncInfo *b);
 
 static GHashTable *file_funcs = NULL;
 static void (*func_register_callback)(const gchar *fullname) = NULL;
-
-enum { bufsize = 1024 };
 
 /**
  * gwy_file_func_register:
@@ -65,7 +69,7 @@ gwy_file_func_register(const gchar *modname,
                        GwyFileFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
-    GwyFileFuncInfo *ftinfo;
+    FileFuncInfo *ftinfo;
     gchar *canon_name;
 
     gwy_debug("");
@@ -88,14 +92,15 @@ gwy_file_func_register(const gchar *modname,
         return FALSE;
     }
 
-    ftinfo = g_memdup(func_info, sizeof(GwyFileFuncInfo));
-    ftinfo->name = g_strdup(func_info->name);
-    /* FIXME: This is not very clean. But we need the translated string often,
-     * namely in menu building code. */
-    ftinfo->file_desc = g_strdup(_(func_info->file_desc));
+    ftinfo = g_new0(FileFuncInfo, 1);
+    ftinfo->info = *func_info;
+    ftinfo->info.name = g_strdup(func_info->name);
+    ftinfo->menu_path_translated = _(func_info->file_desc);
+    ftinfo->menu_path_factory
+        = gwy_strkill(g_strdup(ftinfo->menu_path_translated), "_");
 
-    g_hash_table_insert(file_funcs, (gpointer)ftinfo->name, ftinfo);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_FILE, ftinfo->name, NULL);
+    g_hash_table_insert(file_funcs, (gpointer)ftinfo->info.name, ftinfo);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_FILE, ftinfo->info.name, NULL);
     iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
     if (func_register_callback)
         func_register_callback(canon_name);
@@ -112,10 +117,11 @@ _gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname))
 static void
 gwy_file_func_info_free(gpointer data)
 {
-    GwyFileFuncInfo *ftinfo = (GwyFileFuncInfo*)data;
+    FileFuncInfo *ftinfo = (FileFuncInfo*)data;
 
-    g_free((gpointer)ftinfo->name);
-    g_free((gpointer)ftinfo->file_desc);
+    g_free((gpointer)ftinfo->info.name);
+    g_free((gpointer)ftinfo->info.file_desc);
+    g_free((gpointer)ftinfo->menu_path_factory);
     g_free(ftinfo);
 }
 
@@ -143,14 +149,14 @@ gwy_file_func_run_detect(const gchar *name,
                          const gchar *filename,
                          gboolean only_name)
 {
-    GwyFileFuncInfo *func_info;
+    FileFuncInfo *func_info;
 
     g_return_val_if_fail(filename, 0);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, 0);
-    if (!func_info->detect)
+    if (!func_info->info.detect)
         return 0;
-    return func_info->detect(filename, only_name, name);
+    return func_info->info.detect(filename, only_name, name);
 }
 
 /**
@@ -169,14 +175,14 @@ GwyContainer*
 gwy_file_func_run_load(const gchar *name,
                        const gchar *filename)
 {
-    GwyFileFuncInfo *func_info;
+    FileFuncInfo *func_info;
 
     g_return_val_if_fail(filename, NULL);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, NULL);
-    g_return_val_if_fail(func_info->load, NULL);
+    g_return_val_if_fail(func_info->info.load, NULL);
 
-    return func_info->load(filename, name);
+    return func_info->info.load(filename, name);
 }
 
 /**
@@ -200,21 +206,21 @@ gwy_file_func_run_save(const gchar *name,
                        GwyContainer *data,
                        const gchar *filename)
 {
-    GwyFileFuncInfo *func_info;
+    FileFuncInfo *func_info;
     GwyDataField *dfield;
     gboolean status;
 
     g_return_val_if_fail(filename, FALSE);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, FALSE);
-    g_return_val_if_fail(func_info->save, FALSE);
+    g_return_val_if_fail(func_info->info.save, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     /* TODO: Container */
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
     g_object_ref(data);
     g_object_ref(dfield);
-    status = func_info->save(data, filename, name);
+    status = func_info->info.save(data, filename, name);
     g_object_unref(dfield);
     g_object_unref(data);
 
@@ -223,24 +229,24 @@ gwy_file_func_run_save(const gchar *name,
 
 static void
 file_detect_max_score_cb(const gchar *key,
-                         GwyFileFuncInfo *func_info,
-                         GwyFileDetectData *ddata)
+                         FileFuncInfo *func_info,
+                         FileDetectData *ddata)
 {
     gint score;
 
-    g_assert(strcmp(key, func_info->name) == 0);
+    g_assert(strcmp(key, func_info->info.name) == 0);
 
-    if (!func_info->detect)
+    if (!func_info->info.detect)
         return;
-    if ((ddata->mode & GWY_FILE_LOAD) && !func_info->load)
+    if ((ddata->mode & GWY_FILE_LOAD) && !func_info->info.load)
         return;
-    if ((ddata->mode & GWY_FILE_SAVE) && !func_info->save)
+    if ((ddata->mode & GWY_FILE_SAVE) && !func_info->info.save)
         return;
 
-    score = func_info->detect(ddata->filename, ddata->only_name,
-                              func_info->name);
+    score = func_info->info.detect(ddata->filename, ddata->only_name,
+                                   func_info->info.name);
     if (score > ddata->score) {
-        ddata->winner = func_info->name;
+        ddata->winner = func_info->info.name;
         ddata->score = score;
     }
 }
@@ -263,7 +269,7 @@ gwy_file_detect(const gchar *filename,
                 gboolean only_name,
                 GwyFileOperation operations)
 {
-    GwyFileDetectData ddata;
+    FileDetectData ddata;
 
     g_return_val_if_fail(file_funcs, NULL);
 
@@ -314,7 +320,7 @@ gboolean
 gwy_file_save(GwyContainer *data,
               const gchar *filename)
 {
-    GwyFileDetectData ddata;
+    FileDetectData ddata;
 
     g_return_val_if_fail(file_funcs, FALSE);
 
@@ -355,7 +361,7 @@ gwy_file_func_build_menu(GtkObject *item_factory,
     GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
     GtkItemFactoryEntry item = { NULL, NULL, item_callback, 0, "<Item>", NULL };
     GtkItemFactory *factory;
-    gchar *path;
+    GString *path;
     GSList *l, *entries = NULL;
     gint dp_len;
 
@@ -374,43 +380,43 @@ gwy_file_func_build_menu(GtkObject *item_factory,
     dp_len = strlen(prefix);
 
     /* the root branch */
-    path = strncpy(g_new(gchar, bufsize), prefix, bufsize);
-    branch.path = path;
+    path = g_string_new(prefix);
+    branch.path = path->str;
     gtk_item_factory_create_item(factory, &branch, NULL, 1);
 
     /* the root tearoff */
-    g_strlcpy(path + dp_len, "/---", bufsize - dp_len);
-    tearoff.path = path;
+    g_string_append(path, "/---");
+    tearoff.path = path->str;
     gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
 
-    item.path = path;
     for (l = entries; l; l = g_slist_next(l)) {
-        GwyFileFuncInfo *func_info = (GwyFileFuncInfo*)l->data;
+        FileFuncInfo *func_info = (FileFuncInfo*)l->data;
         GwyFileOperation capable = 0;
 
-        capable |= func_info->load ? GWY_FILE_LOAD : 0;
-        capable |= func_info->save ? GWY_FILE_SAVE : 0;
-        capable |= func_info->detect ? GWY_FILE_DETECT : 0;
+        capable |= func_info->info.load ? GWY_FILE_LOAD : 0;
+        capable |= func_info->info.save ? GWY_FILE_SAVE : 0;
+        capable |= func_info->info.detect ? GWY_FILE_DETECT : 0;
         if (!(capable & type))
             continue;
 
-        g_strlcpy(path + dp_len+1, func_info->file_desc, bufsize - dp_len-1);
+        g_string_truncate(path, dp_len + 1);
+        g_string_append(path, func_info->menu_path_translated);
+        item.path = path->str;
         gtk_item_factory_create_item(factory, &item,
-                                     (gpointer)func_info->name, 1);
+                                     (gpointer)func_info->info.name, 1);
     }
 
-    g_free(path);
+    g_string_free(path, TRUE);
     g_slist_free(entries);
 
     return item_factory;
 }
 
 static gint
-file_menu_entry_compare(GwyFileFuncInfo *a,
-                        GwyFileFuncInfo *b)
+file_menu_entry_compare(FileFuncInfo *a,
+                        FileFuncInfo *b)
 {
-    g_assert(a->file_desc && b->file_desc);
-    return strcmp(a->file_desc, b->file_desc);
+    return g_utf8_collate(a->menu_path_factory, b->menu_path_factory);
 }
 
 /**
