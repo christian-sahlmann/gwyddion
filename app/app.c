@@ -7,7 +7,6 @@
 #include "file.h"
 #include "menu.h"
 #include "settings.h"
-#include "stock.h"
 #include "app.h"
 
 /* TODO */

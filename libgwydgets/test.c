@@ -7,12 +7,6 @@
 #include <gdk/gdk.h>
 
 #include <libgwydgets/gwydgets.h>
-#include <libgwydgets/gwyaxis.h>
-#include <libgwydgets/gwygraphlabel.h>
-#include <libgwydgets/gwygrapharea.h>
-#include <libgwydgets/gwygraph.h>
-#include <libgwydgets/gwyaxisdialog.h>
-#include <libgwydgets/gwyscitext.h>
 
 
 static void destroy( GtkWidget *widget, gpointer data )
@@ -58,7 +52,7 @@ main(int argc, char *argv[])
         }
     
     gtk_init(&argc, &argv);
-
+    gwy_stock_register_stock_items();
 
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 

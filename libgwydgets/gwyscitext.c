@@ -14,6 +14,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyentities.h>
+#include "gwystock.h"
 #include "gwyscitext.h"
 
 #define GWY_SCI_TEXT_TYPE_NAME "GwySciText"
@@ -125,14 +126,14 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
 }
 
 static GtkButton*
-gwy_button_new_with_markup(const gchar *markup)
+gwy_image_button_new_from_stock(const gchar *stock_id)
 {
-    GtkWidget *label, *button;
+    GtkWidget *image, *button;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), markup);
+    image = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
     button = gtk_button_new();
-    gtk_container_add(GTK_CONTAINER(button), label);
+    gtk_container_add(GTK_CONTAINER(button), image);
+
     return GTK_BUTTON(button);
 }
 
@@ -152,11 +153,10 @@ gwy_sci_text_init(GwySciText *sci_text)
     sci_text->entry = GTK_ENTRY(gtk_entry_new());
     sci_text->label = gtk_label_new(" ");
     sci_text->entities = gtk_combo_new(); 
-    lower = gwy_button_new_with_markup("<sup> </sup>x<sub>y </sub>");
-    upper = gwy_button_new_with_markup("<sub> </sub>x<sup>y </sup>");
-    bold = gwy_button_new_with_markup("<sup> </sup><b>B</b><sub> </sub>");
-    italic = gwy_button_new_with_markup("<sup> </sup><i>I</i><sub> </sub>");
-                
+    lower = gwy_image_button_new_from_stock(GWY_STOCK_SUBSCRIPT);
+    upper = gwy_image_button_new_from_stock(GWY_STOCK_SUPERSCRIPT);
+    bold = gwy_image_button_new_from_stock(GWY_STOCK_BOLD);
+    italic = gwy_image_button_new_from_stock(GWY_STOCK_ITALIC);
     hbox = gtk_hbox_new(0,0);
 
     items = g_list_append (items,"choose symbol"); 

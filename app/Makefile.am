@@ -16,7 +16,6 @@ noinst_HEADERS = \
 	file.h \
 	menu.h \
 	settings.h \
-	stock.h \
 	app.h
 
 gwyddion_SOURCES = \
@@ -24,7 +23,6 @@ gwyddion_SOURCES = \
 	file.c \
 	menu.c \
 	settings.c \
-	stock.c \
 	app.c
 
 gwyddion_LDADD = \
@@ -36,7 +34,7 @@ gwyddion_LDADD = \
 	$(libtools)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\"
+AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\"
 
 clean-local:
 	rm -f core.* *~

@@ -7,6 +7,7 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
 libgwydgetsinclude_HEADERS = \
 	gwyaxis.h \
+	gwyaxisdialog.h \
 	gwydataview.h \
 	gwydataviewlayer.h \
 	gwydatawindow.h \
@@ -23,11 +24,11 @@ libgwydgetsinclude_HEADERS = \
 	gwylayer-points.h \
 	gwylayer-select.h \
 	gwyruler.h \
+	gwyscitext.h \
 	gwyspherecoords.h \
+	gwystock.h \
 	gwyvectorshade.h \
-	gwyvruler.h \
-	gwyaxisdialog.h \
-	gwyscitext.h
+	gwyvruler.h
 
 lib_LTLIBRARIES = libgwydgets.la
 
@@ -39,6 +40,7 @@ lib_LTLIBRARIES = libgwydgets.la
 libgwydgets_la_LDFLAGS = -version-info 0:0:0
 libgwydgets_la_SOURCES = \
 	gwyaxis.c \
+	gwyaxisdialog.c \
 	gwydataview.c \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
@@ -55,11 +57,11 @@ libgwydgets_la_SOURCES = \
 	gwylayer-points.c \
 	gwylayer-select.c \
 	gwyruler.c \
+	gwyscitext.c \
 	gwyspherecoords.c \
+	gwystock.c \
 	gwyvectorshade.c \
-	gwyvruler.c \
-	gwyaxisdialog.c \
-	gwyscitext.c
+	gwyvruler.c
 #	mylayout.c
 
 # Note these are test programs not to be included in the distro
@@ -90,7 +92,7 @@ create_data_LDADD = \
 #	$(libgwydraw)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\"
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\"
 
 clean-local:
 	rm -f core.* *~

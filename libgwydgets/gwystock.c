@@ -4,14 +4,14 @@
 #include <gtk/gtkiconfactory.h>
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
-#include "stock.h"
+#include "gwystock.h"
 
 static void   register_toolbox_icons (const gchar *pixmap_path,
                                       GtkIconFactory *icon_factory);
 static gchar* guess_pixmap_path      (void);
 
 void
-gwy_app_register_stock_items(void)
+gwy_stock_register_stock_items(void)
 {
     GtkIconFactory *icon_factory;
     gchar *pixmap_path;
