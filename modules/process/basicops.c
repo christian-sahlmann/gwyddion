@@ -4,6 +4,9 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 
+#define GWY_RUN_ANY \
+    (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+
 static gboolean    module_register            (const gchar *name);
 static gboolean    flip_horizontally          (GwyContainer *data,
                                                GwyRunType run);
@@ -41,37 +44,37 @@ module_register(const gchar *name)
         "flip_horizontally",
         "/_Basic Operations/Flip _Horizontally",
         &flip_horizontally,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_ANY,
     };
     static GwyProcessFuncInfo flip_vertically_func_info = {
         "flip_vertically",
         "/_Basic Operations/Flip _Vertically",
         &flip_vertically,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_ANY,
     };
     static GwyProcessFuncInfo invert_value_func_info = {
         "invert_value",
         "/_Basic Operations/_Invert Value",
         &invert_value,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_ANY,
     };
     static GwyProcessFuncInfo rotate_clockwise_90_func_info = {
         "rotate_clockwise_90",
         "/_Basic Operations/_Rotate Clockwise",
         &rotate_clockwise_90,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_ANY,
     };
     static GwyProcessFuncInfo rotate_counterclockwise_90_func_info = {
         "rotate_counterclockwise_90",
         "/_Basic Operations/Rotate _Counterclockwise",
         &rotate_counterclockwise_90,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_ANY,
     };
     static GwyProcessFuncInfo rotate_180_func_info = {
         "rotate_180",
         "/_Basic Operations/Rotate 1_80 degrees",
         &rotate_180,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_ANY,
     };
 
     gwy_register_process_func(name, &flip_horizontally_func_info);
@@ -90,7 +93,7 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     gwy_debug("%s", __FUNCTION__);
-    g_assert(run & (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS));
+    g_assert(run & GWY_RUN_ANY);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
@@ -106,7 +109,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     gwy_debug("%s", __FUNCTION__);
-    g_assert(run & (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS));
+    g_assert(run & GWY_RUN_ANY);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
@@ -122,7 +125,7 @@ invert_value(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     gwy_debug("%s", __FUNCTION__);
-    g_assert(run & (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS));
+    g_assert(run & GWY_RUN_ANY);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
@@ -138,7 +141,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     gwy_debug("%s", __FUNCTION__);
-    g_assert(run & (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS));
+    g_assert(run & GWY_RUN_ANY);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
@@ -154,7 +157,7 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     gwy_debug("%s", __FUNCTION__);
-    g_assert(run & (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS));
+    g_assert(run & GWY_RUN_ANY);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
@@ -170,7 +173,7 @@ rotate_180(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     gwy_debug("%s", __FUNCTION__);
-    g_assert(run & (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS));
+    g_assert(run & GWY_RUN_ANY);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);

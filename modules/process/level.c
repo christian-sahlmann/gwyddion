@@ -5,6 +5,9 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 
+#define GWY_RUN_ANY \
+    (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
+
 static gboolean    module_register            (const gchar *name);
 static gboolean    level                      (GwyContainer *data,
                                                GwyRunType run);
@@ -34,13 +37,13 @@ module_register(const gchar *name)
         "level",
         "/_Level/Level",
         &level,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_ANY
     };
     static GwyProcessFuncInfo level_rotate_func_info = {
         "level_rotate",
         "/_Level/Level Rotate",
         &level_rotate,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_ANY
     };
 
     gwy_register_process_func(name, &level_func_info);
@@ -56,7 +59,7 @@ level(GwyContainer *data, GwyRunType run)
     gdouble a, b, c;
 
     gwy_debug("%s", __FUNCTION__);
-    g_assert(run & (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS));
+    g_assert(run & GWY_RUN_ANY);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
@@ -74,7 +77,7 @@ level_rotate(GwyContainer *data, GwyRunType run)
     gdouble a, b, c;
 
     gwy_debug("%s", __FUNCTION__);
-    g_assert(run & (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS));
+    g_assert(run & GWY_RUN_ANY);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
