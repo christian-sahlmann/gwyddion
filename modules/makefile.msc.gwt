@@ -1,6 +1,5 @@
 
 TOP_SRCDIR = ..
-MOD_TYPE =
 <[[:MODULES:]]>
 SUBDIRS = file graph process tools
 
