@@ -421,7 +421,7 @@ tip_update(TipModelControls *controls,
 
    vtipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->vtip,
                                                                "/0/data"));
-   gwy_data_field_copy(buffer, vtipfield);
+   gwy_data_field_copy(buffer, vtipfield, FALSE);
    g_object_unref(buffer);
 }
 

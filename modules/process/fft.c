@@ -79,12 +79,6 @@ static void        set_dfield_module          (GwyDataField *re,
 static void        set_dfield_phase           (GwyDataField *re,
                                                GwyDataField *im,
                                                GwyDataField *target);
-static void        set_dfield_real            (GwyDataField *re,
-                                               GwyDataField *im,
-                                               GwyDataField *target);
-static void        set_dfield_imaginary       (GwyDataField *re,
-                                               GwyDataField *im,
-                                               GwyDataField *target);
 static void        fft_load_args              (GwyContainer *container,
                                                FFTArgs *args);
 static void        fft_save_args              (GwyContainer *container,
@@ -214,7 +208,7 @@ fft(GwyContainer *data, GwyRunType run)
 
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_REAL) {
-        set_dfield_real(raout, ipout, dfield);
+        gwy_data_field_copy(raout, dfield, FALSE);
         gwy_data_field_set_xreal(dfield, newreals);
         gwy_data_field_set_yreal(dfield, newreals);
 
@@ -232,7 +226,7 @@ fft(GwyContainer *data, GwyRunType run)
             dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                     "/0/data"));
         }
-        set_dfield_imaginary(raout, ipout, dfield);
+        gwy_data_field_copy(ipout, dfield, FALSE);
         gwy_data_field_set_xreal(dfield, newreals);
         gwy_data_field_set_yreal(dfield, newreals);
 
@@ -286,10 +280,8 @@ set_dfield_module(GwyDataField *re, GwyDataField *im, GwyDataField *target)
     gint xres = gwy_data_field_get_xres(re);
     gint yres = gwy_data_field_get_xres(re);
 
-    for (i=0; i<xres; i++)
-    {
-        for (j=0; j<yres; j++)
-        {
+    for (i = 0; i < xres; i++) {
+        for (j=0; j < yres; j++) {
             rval = gwy_data_field_get_val(re, i, j);
             ival = gwy_data_field_get_val(im, i, j);
             gwy_data_field_set_val(target, i, j, sqrt(rval*rval + ival*ival));
@@ -307,20 +299,6 @@ set_dfield_phase(GwyDataField *re, GwyDataField *im,
 
     for (i = 0; i < (xres*yres); i++)
         target->data[i] = atan2(im->data[i], re->data[i]);
-}
-
-static void
-set_dfield_real(GwyDataField *re, G_GNUC_UNUSED GwyDataField *im,
-                GwyDataField *target)
-{
-    gwy_data_field_copy(re, target);
-}
-
-static void
-set_dfield_imaginary(G_GNUC_UNUSED GwyDataField *re, GwyDataField *im,
-                     GwyDataField *target)
-{
-    gwy_data_field_copy(im, target);
 }
 
 static gboolean

@@ -1111,7 +1111,7 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
         k = 0;
         do {
             k++;
-        } while (dx.data[k] < x && k < a->res);
+        } while (dx[k] < x && k < a->res);
 
         if (k >= (a->res-1)) {
             maxi = i;

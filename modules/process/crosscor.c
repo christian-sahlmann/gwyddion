@@ -455,7 +455,7 @@ crosscor_do(CrosscorArgs *args)
         abs_field(dfieldx, dfieldy);
     }
     else if (args->result == GWY_CROSSCOR_Y) {
-        gwy_data_field_copy(dfieldy, dfieldx);
+        gwy_data_field_copy(dfieldy, dfieldx, FALSE);
     }
     else if (args->result == GWY_CROSSCOR_DIR) {
         dir_field(dfieldx, dfieldy);

@@ -442,7 +442,7 @@ preview(MarkControls *controls,
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
         maskfield = gwy_container_get_object_by_name(controls->mydata,
                                                      "/0/mask");
-        gwy_data_field_copy(dfield, maskfield);
+        gwy_data_field_copy(dfield, maskfield, FALSE);
         if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
             layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
             gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
@@ -485,7 +485,7 @@ mark_ok(MarkControls *controls,
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (gwy_container_contains_by_name(data, "/0/mask")) {
         maskfield = gwy_container_get_object_by_name(data, "/0/mask");
-        gwy_data_field_copy(dfield, maskfield);
+        gwy_data_field_copy(dfield, maskfield, FALSE);
     }
     else {
         maskfield = gwy_data_field_duplicate(dfield);
@@ -523,7 +523,8 @@ mask_process(GwyDataField *dfield,
             else if (args->merge_type == GWY_MERGE_INTERSECTION)
                 gwy_data_field_grains_intersect(maskfield, output_field);
         }
-        else gwy_data_field_copy(output_field, maskfield);
+        else
+            gwy_data_field_copy(output_field, maskfield, FALSE);
         is_field = TRUE;
     }
     if (args->is_lap) {
@@ -535,7 +536,8 @@ mask_process(GwyDataField *dfield,
             else if (args->merge_type == GWY_MERGE_INTERSECTION)
                 gwy_data_field_grains_intersect(maskfield, output_field);
         }
-        else gwy_data_field_copy(output_field, maskfield);
+        else
+            gwy_data_field_copy(output_field, maskfield, FALSE);
      }
 
     g_object_unref(output_field);

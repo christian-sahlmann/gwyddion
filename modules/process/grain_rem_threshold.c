@@ -392,16 +392,10 @@ preview(RemoveControls *controls,
                                                              "/0/data"));
 
     /*set up the mask*/
-    if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        maskfield
-            = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                              "/0/mask"));
+    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
+                                         &maskfield))
         mask_process(dfield, maskfield, args);
 
-        gwy_container_set_object_by_name(controls->mydata, "/0/mask",
-                                         maskfield);
-
-    }
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 
 }

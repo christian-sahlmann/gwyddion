@@ -425,7 +425,7 @@ update_view(Fftf1dControls *controls, Fftf1dArgs *args)
     gwy_data_field_resample(rfield, rvfield->xres, rvfield->yres,
                             args->interpolation);
 
-    gwy_data_field_copy(rfield, rvfield);
+    gwy_data_field_copy(rfield, rvfield, FALSE);
     gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));
 }
 

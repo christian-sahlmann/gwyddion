@@ -346,7 +346,7 @@ dialog_update(GwyUnitoolState *state,
                                     gwy_data_field_get_xres(dfield),
                                     gwy_data_field_get_yres(dfield),
                                     GWY_INTERPOLATION_NONE);
-            gwy_data_field_copy(dfield, shadefield);
+            gwy_data_field_copy(dfield, shadefield, FALSE);
         }
         else {
             shadefield = gwy_data_field_duplicate(dfield);

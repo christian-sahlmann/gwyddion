@@ -236,8 +236,7 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
         return 0;
 
 
-    if (j < xdata->res)
-    {
+    if (j < xdata->res) {
         gwy_data_line_resize(xdata, 0, j);
         gwy_data_line_resize(ydata, 0, j);
     }

@@ -80,8 +80,9 @@ void              gwy_data_field_resize              (GwyDataField *data_field,
                                                       gint ulrow,
                                                       gint brcol,
                                                       gint brrow);
-void              gwy_data_field_copy                (GwyDataField *a,
-                                                      GwyDataField *b);
+void              gwy_data_field_copy                (GwyDataField *src,
+                                                      GwyDataField *dest,
+                                                      gboolean nondata_too);
 gboolean          gwy_data_field_area_copy           (GwyDataField *src,
                                                       GwyDataField *dest,
                                                       gint ulcol,

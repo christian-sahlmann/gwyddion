@@ -320,6 +320,8 @@ gwy_data_field_duplicate_real(GObject *object)
     duplicate = gwy_data_field_new_alike(data_field, FALSE);
     memcpy(duplicate->data, data_field->data,
            data_field->xres*data_field->yres*sizeof(gdouble));
+    duplicate->cached = data_field->cached;
+    memcpy(duplicate->cache, data_field->cache, GWY_DATA_FIELD_CACHE_SIZE);
 
     return (GObject*)duplicate;
 }
@@ -335,38 +337,36 @@ gwy_data_field_value_changed(GObject *object)
 
 /**
  * gwy_data_field_copy:
- * @a: source data field.
- * @b: destination data field.
+ * @src: Source data field.
+ * @dest: Destination data field.
+ * @nondata_too: Whether non-data (units) should be compied too.
  *
  * Copies the contents of an already allocated data field to a data field
  * of the same size.
- *
- * It also sets units of @b to units of @a, although it is not what one always
- * wants.  Thus this behavious may change in the future and don't count on it.
- *
- * Generally, use gwy_data_field_area_copy() if you want to be on the safe
- * side.
  **/
 void
-gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
+gwy_data_field_copy(GwyDataField *src,
+                    GwyDataField *dest,
+                    gboolean nondata_too)
 {
-    g_return_if_fail(a->xres == b->xres && a->yres == b->yres);
+    g_return_if_fail(GWY_IS_DATA_FIELD(src));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dest));
+    g_return_if_fail(src->xres == dest->xres && src->yres == dest->yres);
 
-    b->xreal = a->xreal;
-    b->yreal = a->yreal;
-    gwy_object_unref(b->si_unit_xy);
-    gwy_object_unref(b->si_unit_z);
-    b->si_unit_xy = gwy_si_unit_duplicate(a->si_unit_xy);
-    b->si_unit_z = gwy_si_unit_duplicate(a->si_unit_z);
+    memcpy(dest->data, src->data, src->xres*src->yres*sizeof(gdouble));
+    dest->xreal = src->xreal;
+    dest->yreal = src->yreal;
 
-    memcpy(b->data, a->data, a->xres*a->yres*sizeof(gdouble));
+    if (!nondata_too)
+        return;
+
+    gwy_object_unref(dest->si_unit_xy);
+    dest->si_unit_xy = gwy_si_unit_duplicate(src->si_unit_xy);
+
+    gwy_object_unref(dest->si_unit_z);
+    dest->si_unit_z = gwy_si_unit_duplicate(src->si_unit_z);
 }
 
-/* XXX: this docs actually lie, it DID copy the units between revisions
- * 1.92 (klapetek 08-Mar-04)
- * and
- * 1.138 (yeti 14-Aug-04)
- * (i.e., until I noticed leaking SIUnits) */
 /**
  * gwy_data_field_area_copy:
  * @src: Source data field.
@@ -385,9 +385,6 @@ gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
  *
  * There must be enough room in the destination data field, areas sticking
  * out are rejected.  If @src is equal to @dest, the areas may not overlap.
- *
- * Unlike gwy_data_field_copy(), this function keeps destination data field
- * units unchaged.
  *
  * Returns: Whether it succeeded (area sizes OK).
  **/
@@ -1057,7 +1054,8 @@ gwy_data_field_get_dval_real(GwyDataField *a, gdouble x, gdouble y,
  * data field minimum value.
  **/
 void
-gwy_data_field_rotate(GwyDataField *a, gdouble angle,
+gwy_data_field_rotate(GwyDataField *a,
+                      gdouble angle,
                       GwyInterpolationType interpolation)
 {
     GwyDataField *b;

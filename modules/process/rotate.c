@@ -139,7 +139,7 @@ rotate_datafield(GwyDataField *dfield,
     gwy_data_field_rotate(df, args->angle, args->interp);
     gwy_data_field_resample(dfield, xres + 2*xborder, yres + 2*yborder,
                             GWY_INTERPOLATION_NONE);
-    gwy_data_field_copy(df, dfield);
+    gwy_data_field_copy(df, dfield, TRUE);
     gwy_data_field_set_xreal(dfield, xreal*(xres + 2.0*xborder)/xres);
     gwy_data_field_set_yreal(dfield, yreal*(yres + 2.0*yborder)/yres);
     g_object_unref(df);

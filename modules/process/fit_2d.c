@@ -462,7 +462,8 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
 static void
 fit_2d_dialog_abandon(Fit2dControls *controls, Fit2dArgs *args)
 {
-    if (args->fitter) gwy_math_nlfit_free(args->fitter);
+    if (args->fitter)
+        gwy_math_nlfit_free(args->fitter);
     g_object_unref(args->vdata);
 }
 
@@ -486,13 +487,13 @@ update_view(Fit2dControls *controls, Fit2dArgs *args)
     g_return_if_fail(GWY_IS_DATA_FIELD(fitfield));
 
     if (args->display_type == GWY_FIT_2D_DISPLAY_DATA)
-        gwy_data_field_copy(originalfield, resultfield);
+        gwy_data_field_copy(originalfield, resultfield, FALSE);
     else if (args->display_type == GWY_FIT_2D_DISPLAY_RESULT)
-        gwy_data_field_copy(fitfield, resultfield);
-    else
-    {
+        gwy_data_field_copy(fitfield, resultfield, FALSE);
+    else {
         if (args->is_fitted)
-        gwy_data_field_subtract_fields(resultfield, originalfield, fitfield);
+            gwy_data_field_subtract_fields(resultfield, originalfield,
+                                           fitfield);
     }
 
 
@@ -504,7 +505,7 @@ update_view(Fit2dControls *controls, Fit2dArgs *args)
 
     gwy_data_field_resample(resultfield, outputfield->xres, outputfield->yres,
                             GWY_INTERPOLATION_ROUND);
-    gwy_data_field_copy(resultfield, outputfield);
+    gwy_data_field_copy(resultfield, outputfield, FALSE);
 
     g_object_unref(resultfield);
 

@@ -421,15 +421,13 @@ preview(WshedControls *controls,
                                                              "/0/data"));
 
     /*set up the mask*/
-    if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        maskfield
-            = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                              "/0/mask"));
+    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
+                                         &maskfield)) {
         gwy_data_field_resample(maskfield,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield);
+        gwy_data_field_copy(dfield, maskfield, FALSE);
 
         if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
             layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());

@@ -853,7 +853,6 @@ mark_grain_boundaries(GwyDataField *grain_field)
     xres = grain_field->xres;
     yres = grain_field->yres;
     buffer = gwy_data_field_duplicate(grain_field);
-    gwy_data_field_copy(grain_field, buffer);
     data = buffer->data;
 
     for (col = 1; col < xres - 1; col++) {
