@@ -20,7 +20,8 @@ process_PROGRAMS = \
 	shade.so \
 	slope_dist.so \
 	fractal.so \
-	laplace.so
+	laplace.so \
+	outliers.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -72,6 +73,9 @@ fractal_so_LDFLAGS = $(module_ldflags),fractal.so
 
 laplace_so_SOURCES = laplace.c
 laplace_so_LDFLAGS = $(module_ldflags),laplace.so
+
+outliers_so_SOURCES = outliers.c
+outliers_so_LDFLAGS = $(module_ldflags),outliers.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
