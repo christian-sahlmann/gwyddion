@@ -25,9 +25,6 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwynlfit.h>
-#include <libprocess/cwt.h>
-#include <libprocess/simplefft.h>
-#include <libprocess/dataline.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydatawindow.h>
 
@@ -64,12 +61,6 @@ GtkWidget* gwy_option_menu_filter            (GCallback callback,
 GtkWidget* gwy_option_menu_mergegrain        (GCallback callback,
                                               gpointer cbdata,
                                               GwyMergeType current);
-GtkWidget* gwy_option_menu_fractal           (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyFractalType current);
-GtkWidget* gwy_option_menu_fft_output        (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyFFTOutputType current);
 #endif
 GtkWidget* gwy_option_menu_fit_line          (GCallback callback,
                                               gpointer cbdata,
