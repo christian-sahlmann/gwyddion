@@ -13,64 +13,64 @@
 
 #define GWY_DATAFIELD_TYPE_NAME "GwyDataField"
 
-static void  gwy_datafield_class_init        (GwyDataFieldClass *klass);
-static void  gwy_datafield_init              (GwyDataField *datafield);
-static void  gwy_datafield_finalize              (GwyDataField *datafield);
-static void  gwy_datafield_serializable_init (gpointer giface, gpointer iface_data);
-static void  gwy_datafield_watchable_init    (gpointer giface, gpointer iface_data);
-static guchar* gwy_datafield_serialize       (GObject *obj, guchar *buffer, gsize *size);
-static GObject* gwy_datafield_deserialize    (const guchar *buffer, gsize size, gsize *position);
-static void  gwy_datafield_value_changed     (GObject *GwyDataField);
+static void  gwy_data_field_class_init        (GwyDataFieldClass *klass);
+static void  gwy_data_field_init              (GwyDataField *data_field);
+static void  gwy_data_field_finalize              (GwyDataField *data_field);
+static void  gwy_data_field_serializable_init (gpointer giface, gpointer iface_data);
+static void  gwy_data_field_watchable_init    (gpointer giface, gpointer iface_data);
+static guchar* gwy_data_field_serialize       (GObject *obj, guchar *buffer, gsize *size);
+static GObject* gwy_data_field_deserialize    (const guchar *buffer, gsize size, gsize *position);
+static void  gwy_data_field_value_changed     (GObject *GwyDataField);
 
 
 GType
-gwy_datafield_get_type(void)
+gwy_data_field_get_type(void)
 {
-    static GType gwy_datafield_type = 0;
+    static GType gwy_data_field_type = 0;
 
-    if (!gwy_datafield_type) {
-        static const GTypeInfo gwy_datafield_info = {
+    if (!gwy_data_field_type) {
+        static const GTypeInfo gwy_data_field_info = {
             sizeof(GwyDataFieldClass),
             NULL,
             NULL,
-            (GClassInitFunc)gwy_datafield_class_init,
+            (GClassInitFunc)gwy_data_field_class_init,
             NULL,
             NULL,
             sizeof(GwyDataField),
             0,
-            (GInstanceInitFunc)gwy_datafield_init,
+            (GInstanceInitFunc)gwy_data_field_init,
             NULL,
         };
 
         GInterfaceInfo gwy_serializable_info = {
-            gwy_datafield_serializable_init,
+            gwy_data_field_serializable_init,
             NULL,
             NULL
         };
         GInterfaceInfo gwy_watchable_info = {
-            gwy_datafield_watchable_init,
+            gwy_data_field_watchable_init,
             NULL,
             NULL
         };
 
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        gwy_datafield_type = g_type_register_static(G_TYPE_OBJECT,
+        gwy_data_field_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_DATAFIELD_TYPE_NAME,
-                                                   &gwy_datafield_info,
+                                                   &gwy_data_field_info,
                                                    0);
-        g_type_add_interface_static(gwy_datafield_type,
+        g_type_add_interface_static(gwy_data_field_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
-        g_type_add_interface_static(gwy_datafield_type,
+        g_type_add_interface_static(gwy_data_field_type,
                                     GWY_TYPE_WATCHABLE,
                                     &gwy_watchable_info);
     }
 
-    return gwy_datafield_type;
+    return gwy_data_field_type;
 }
 
 static void
-gwy_datafield_serializable_init(gpointer giface,
+gwy_data_field_serializable_init(gpointer giface,
                                gpointer iface_data)
 {
     GwySerializableClass *iface = giface;
@@ -81,12 +81,12 @@ gwy_datafield_serializable_init(gpointer giface,
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
-    iface->serialize = gwy_datafield_serialize;
-    iface->deserialize = gwy_datafield_deserialize;
+    iface->serialize = gwy_data_field_serialize;
+    iface->deserialize = gwy_data_field_deserialize;
 }
 
 static void
-gwy_datafield_watchable_init(gpointer giface,
+gwy_data_field_watchable_init(gpointer giface,
                             gpointer iface_data)
 {
     GwyWatchableClass *iface = giface;
@@ -101,7 +101,7 @@ gwy_datafield_watchable_init(gpointer giface,
 }
 
 static void
-gwy_datafield_class_init(GwyDataFieldClass *klass)
+gwy_data_field_class_init(GwyDataFieldClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
@@ -109,79 +109,79 @@ gwy_datafield_class_init(GwyDataFieldClass *klass)
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
     
-    gobject_class->finalize = (GObjectFinalizeFunc)gwy_datafield_finalize;
+    gobject_class->finalize = (GObjectFinalizeFunc)gwy_data_field_finalize;
 }
 
 static void
-gwy_datafield_init(GwyDataField *datafield)
+gwy_data_field_init(GwyDataField *data_field)
 {
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    datafield->data = NULL;
-    datafield->xres = 0;
-    datafield->yres = 0;
-    datafield->xreal = 0.0;
-    datafield->yreal = 0.0;
+    data_field->data = NULL;
+    data_field->xres = 0;
+    data_field->yres = 0;
+    data_field->xreal = 0.0;
+    data_field->yreal = 0.0;
 }
 
 static void
-gwy_datafield_finalize(GwyDataField *datafield)
+gwy_data_field_finalize(GwyDataField *data_field)
 {
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    gwy_datafield_free(datafield); 
+    gwy_data_field_free(data_field); 
 }
 
 GObject*
-gwy_datafield_new(gint xres, gint yres, gdouble xreal, gdouble yreal, gboolean nullme)
+gwy_data_field_new(gint xres, gint yres, gdouble xreal, gdouble yreal, gboolean nullme)
 {
-    GwyDataField *datafield;
+    GwyDataField *data_field;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    datafield = g_object_new(GWY_TYPE_DATAFIELD, NULL);
+    data_field = g_object_new(GWY_TYPE_DATAFIELD, NULL);
 
-    gwy_datafield_initialize(datafield, xres, yres, xreal, yreal, nullme);
+    gwy_data_field_initialize(data_field, xres, yres, xreal, yreal, nullme);
 
-    return (GObject*)(datafield);
+    return (GObject*)(data_field);
 }
 
 static guchar*
-gwy_datafield_serialize(GObject *obj,
+gwy_data_field_serialize(GObject *obj,
                        guchar *buffer,
                        gsize *size)
 {
-    GwyDataField *datafield;
+    GwyDataField *data_field;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
     g_return_val_if_fail(GWY_IS_DATAFIELD(obj), NULL);
 
-    datafield = GWY_DATAFIELD(obj);
+    data_field = GWY_DATAFIELD(obj);
     return gwy_serialize_pack(buffer, size, "siiddD",
                               GWY_DATAFIELD_TYPE_NAME,
-                              datafield->xres,
-			      datafield->yres,
-                              datafield->xreal,
-			      datafield->yreal,
-                              datafield->xres*datafield->yres,
-			      datafield->data);
+                              data_field->xres,
+			      data_field->yres,
+                              data_field->xreal,
+			      data_field->yreal,
+                              data_field->xres*data_field->yres,
+			      data_field->data);
 
 }
 
 static GObject*
-gwy_datafield_deserialize(const guchar *stream,
+gwy_data_field_deserialize(const guchar *stream,
                          gsize size,
                          gsize *position)
 {
     gsize pos, fsize;
     gint xres, yres;
     gdouble xreal, yreal, *data;
-    GwyDataField *datafield;
+    GwyDataField *data_field;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -199,27 +199,27 @@ gwy_datafield_deserialize(const guchar *stream,
     yreal = gwy_serialize_unpack_double(stream, size, position);
     data = gwy_serialize_unpack_double_array(stream, size, position, &fsize);
 
-    datafield = (GwyDataField*)gwy_datafield_new(xres, yres, xreal, yreal, 0);
-    g_free(datafield->data);
-    datafield->data = data;
+    data_field = (GwyDataField*)gwy_data_field_new(xres, yres, xreal, yreal, 0);
+    g_free(data_field->data);
+    data_field->data = data;
 
-    return (GObject*)datafield;
+    return (GObject*)data_field;
 }
 
 
 
 static void
-gwy_datafield_value_changed(GObject *datafield)
+gwy_data_field_value_changed(GObject *data_field)
 {
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "signal: GwyGwyDataLine changed");
     #endif
-    g_signal_emit_by_name(GWY_DATAFIELD(datafield), "value_changed", NULL);
+    g_signal_emit_by_name(GWY_DATAFIELD(data_field), "value_changed", NULL);
 }
 
 
 gint 
-gwy_datafield_alloc(GwyDataField *a, gint xres, gint yres)
+gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
 {
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -231,13 +231,13 @@ gwy_datafield_alloc(GwyDataField *a, gint xres, gint yres)
 }
 
 gint 
-gwy_datafield_initialize(GwyDataField *a, gint xres, gint yres, gdouble xreal, gdouble yreal, gboolean nullme)
+gwy_data_field_initialize(GwyDataField *a, gint xres, gint yres, gdouble xreal, gdouble yreal, gboolean nullme)
 {
     int i;
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (%dx%d)", __FUNCTION__, xres, yres);
     #endif
-    if (gwy_datafield_alloc(a, xres, yres) != 0) return -1;
+    if (gwy_data_field_alloc(a, xres, yres) != 0) return -1;
     a->xreal = xreal;
     a->yreal = yreal;
     if (nullme) {
@@ -247,7 +247,7 @@ gwy_datafield_initialize(GwyDataField *a, gint xres, gint yres, gdouble xreal, g
 }
 
 void 
-gwy_datafield_free(GwyDataField *a)
+gwy_data_field_free(GwyDataField *a)
 {
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -256,7 +256,7 @@ gwy_datafield_free(GwyDataField *a)
 }
 
 gint 
-gwy_datafield_copy(GwyDataField *a, GwyDataField *b)
+gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
 {
     int i;
     if ((a->xres != b->xres) || (a->yres != b->yres)) {
@@ -271,15 +271,15 @@ gwy_datafield_copy(GwyDataField *a, GwyDataField *b)
 
 
 gint 
-gwy_datafield_resample(GwyDataField *a, gint xres, gint yres, gint interpolation)
+gwy_data_field_resample(GwyDataField *a, gint xres, gint yres, gint interpolation)
 {
     GwyDataField b;
     gdouble xratio, yratio, xpos, ypos;
     gint i,j;
    
     if (a->xres == xres && a->yres == yres) return 0;
-    if (gwy_datafield_alloc(&b, a->xres, a->yres)!=0) return -1;
-    gwy_datafield_copy(a, &b);
+    if (gwy_data_field_alloc(&b, a->xres, a->yres)!=0) return -1;
+    gwy_data_field_copy(a, &b);
 
     a->xres = xres;
     a->yres = yres;
@@ -296,41 +296,41 @@ gwy_datafield_resample(GwyDataField *a, gint xres, gint yres, gint interpolation
 		xpos = (gdouble)i*yratio; if (xpos>(b.yres-1)) xpos=(b.yres-1);
 		ypos = (gdouble)j*xratio; if (ypos>(b.xres-1)) ypos=(b.xres-1);
 		/*printf("(%d, %d), -> %f, %f\n",i, j, xpos, ypos);*/
-		a->data[i + a->yres*j] = gwy_datafield_get_dval(&b, xpos, ypos, interpolation);
+		a->data[i + a->yres*j] = gwy_data_field_get_dval(&b, xpos, ypos, interpolation);
 	    }
         }
     }
 
-    gwy_datafield_free(&b);
+    gwy_data_field_free(&b);
     return 0;
 }
 
 gint 
-gwy_datafield_confirmsize(GwyDataField *a, gint xres, gint yres)
+gwy_data_field_confirmsize(GwyDataField *a, gint xres, gint yres)
 {
     int ret=0;
-    if (a->data == NULL) ret = gwy_datafield_initialize(a, xres, yres, xres, yres, 0);
-    else if (a->xres != xres) ret = gwy_datafield_resample(a, xres, yres, GWY_INTERPOLATION_NONE);
+    if (a->data == NULL) ret = gwy_data_field_initialize(a, xres, yres, xres, yres, 0);
+    else if (a->xres != xres) ret = gwy_data_field_resample(a, xres, yres, GWY_INTERPOLATION_NONE);
     return ret;
 }
 
 gint 
-gwy_datafield_resize(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
+gwy_data_field_resize(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 {
     GwyDataField b;
     gint i, j, xres, yres;
 
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     
     if (uli>bri) swap(gint, uli, bri);
     if (ulj>brj) swap(gint, ulj, brj);
     yres = bri-uli; xres = brj-ulj;
 
-    if (gwy_datafield_alloc(&b, a->xres, a->yres)!=0) return -1;
-    gwy_datafield_copy(a, &b);
+    if (gwy_data_field_alloc(&b, a->xres, a->yres)!=0) return -1;
+    gwy_data_field_copy(a, &b);
 
     a->xres = xres;
     a->yres = yres;
@@ -341,20 +341,20 @@ gwy_datafield_resize(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 	for (j=ulj; j<brj; j++) a->data[i-uli + (j-ulj)*a->yres] = b.data[i + j*b.yres];
     }
     
-    gwy_datafield_free(&b);
+    gwy_data_field_free(&b);
     
     return 0;
 }
 
 gdouble 
-gwy_datafield_get_dval(GwyDataField *a, gdouble x, gdouble y, gint interpolation)
+gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y, gint interpolation)
 {
     gint ix, iy;
     gint floorx, floory;
     gdouble restx, resty, valpx, valxp, valpp;
     
     if (x < 0 || y < 0 || x > (a->yres-1) || y > (a->xres-1)) {
-	g_warning("Trying to reach value outside datafield.\n");
+	g_warning("Trying to reach value outside data_field.\n");
 	/*printf("(%f, %f) <> (%d, %d))\n", x, y, a->yres-1, a->xres-1);*/
 	return -1;
     }
@@ -390,67 +390,67 @@ gwy_datafield_get_dval(GwyDataField *a, gdouble x, gdouble y, gint interpolation
 
 
 gint 
-gwy_datafield_get_xres(GwyDataField *a)
+gwy_data_field_get_xres(GwyDataField *a)
 {
     return a->xres;
 }
 
 gint 
-gwy_datafield_get_yres(GwyDataField *a)
+gwy_data_field_get_yres(GwyDataField *a)
 {
     return a->yres;
 }
 
 gdouble
-gwy_datafield_get_xreal(GwyDataField *a)
+gwy_data_field_get_xreal(GwyDataField *a)
 {
     return a->xreal;
 }
 
 gdouble
-gwy_datafield_get_yreal(GwyDataField *a)
+gwy_data_field_get_yreal(GwyDataField *a)
 {
     return a->yreal;
 }
 
 void
-gwy_datafield_set_xreal(GwyDataField *a, gdouble xreal)
+gwy_data_field_set_xreal(GwyDataField *a, gdouble xreal)
 {
     a->xreal=xreal;
 }
 
 void
-gwy_datafield_set_yreal(GwyDataField *a, gdouble yreal)
+gwy_data_field_set_yreal(GwyDataField *a, gdouble yreal)
 {
     a->yreal=yreal;
 }
 
 gdouble 
-gwy_datafield_itor(GwyDataField *a, gdouble pixval)
+gwy_data_field_itor(GwyDataField *a, gdouble pixval)
 {
     return (gdouble)pixval*a->yreal/a->yres;
 }
 
 gdouble 
-gwy_datafield_jtor(GwyDataField *a, gdouble pixval)
+gwy_data_field_jtor(GwyDataField *a, gdouble pixval)
 {
     return (gdouble)pixval*a->xreal/a->xres;
 }
 
 gdouble 
-gwy_datafield_rtoi(GwyDataField *a, gdouble realval)
+gwy_data_field_rtoi(GwyDataField *a, gdouble realval)
 {
     return realval*a->yres/a->yreal;
 }
 
 gdouble
-gwy_datafield_rtoj(GwyDataField *a, gdouble realval)
+gwy_data_field_rtoj(GwyDataField *a, gdouble realval)
 {
     return realval*a->xres/a->xreal;
 }
 
 gboolean 
-gwy_datafield_outside(GwyDataField *a, gint i, gint j)
+gwy_data_field_outside(GwyDataField *a, gint i, gint j)
 {
     if (i<0 || j<0 || i>=a->yres || j>=a->xres) return 1;
     else return 0;
@@ -458,37 +458,37 @@ gwy_datafield_outside(GwyDataField *a, gint i, gint j)
 
 
 gdouble 
-gwy_datafield_get_val(GwyDataField *a, gint i, gint j)
+gwy_data_field_get_val(GwyDataField *a, gint i, gint j)
 {
-    if (gwy_datafield_outside(a, i, j)) {g_warning("Trying to reach value outside of datafield.\n"); return 1;}
+    if (gwy_data_field_outside(a, i, j)) {g_warning("Trying to reach value outside of data_field.\n"); return 1;}
     return a->data[i + a->yres*j];
 }
 
 void 
-gwy_datafield_set_val(GwyDataField *a, gint i, gint j, gdouble value)
+gwy_data_field_set_val(GwyDataField *a, gint i, gint j, gdouble value)
 {
-    if (gwy_datafield_outside(a, i, j)) {g_warning("Trying to reach value outside of datafield.\n"); return; }
+    if (gwy_data_field_outside(a, i, j)) {g_warning("Trying to reach value outside of data_field.\n"); return; }
     a->data[i + a->yres*j] = value;
 }
  
 gdouble 
-gwy_datafield_get_dval_real(GwyDataField *a, gdouble x, gdouble y, gint interpolation)
+gwy_data_field_get_dval_real(GwyDataField *a, gdouble x, gdouble y, gint interpolation)
 {
-    return  gwy_datafield_get_dval(a, gwy_datafield_rtoi(a, x), gwy_datafield_rtoj(a, y), interpolation);   
+    return  gwy_data_field_get_dval(a, gwy_data_field_rtoi(a, x), gwy_data_field_rtoj(a, y), interpolation);   
 }
 
 gint 
-gwy_datafield_rotate(GwyDataField *a, gdouble angle, gint interpolation)
+gwy_data_field_rotate(GwyDataField *a, gdouble angle, gint interpolation)
 {
     GwyDataField b;
     gdouble inew, jnew, ir, jr, ang, icor, jcor, sn, cs, val;
     gint i,j;
 
     if (((gint)angle%360)==0) return 0;
-    if (gwy_datafield_alloc(&b, a->xres, a->yres)!=0) return -1;
-    gwy_datafield_copy(a, &b);
+    if (gwy_data_field_alloc(&b, a->xres, a->yres)!=0) return -1;
+    gwy_data_field_copy(a, &b);
 
-    val = gwy_datafield_get_min(a);
+    val = gwy_data_field_get_min(a);
     ang = 3*G_PI/4 + angle*G_PI/180;
     sn = sin(angle*G_PI/180);
     cs = cos(angle*G_PI/180);
@@ -514,17 +514,17 @@ gwy_datafield_rotate(GwyDataField *a, gdouble angle, gint interpolation)
 		if (jnew > (a->xres - 1)) jnew = a->xres-1;
 		if (inew < 0) inew = 0;
 		if (jnew < 0) jnew = 0;
-		a->data[i + a->yres*j] = gwy_datafield_get_dval(&b, inew, jnew, interpolation);
+		a->data[i + a->yres*j] = gwy_data_field_get_dval(&b, inew, jnew, interpolation);
 	    }	
 	}
     }
 	
-    gwy_datafield_free(&b); 
+    gwy_data_field_free(&b); 
     return 0;
 }
 
 
-gint gwy_datafield_invert(GwyDataField *a, gboolean x, gboolean y, gboolean z)
+gint gwy_data_field_invert(GwyDataField *a, gboolean x, gboolean y, gboolean z)
 {
     gint i,j;
     gdouble avg;
@@ -532,10 +532,10 @@ gint gwy_datafield_invert(GwyDataField *a, gboolean x, gboolean y, gboolean z)
     
     if (x == 0 && y ==0 && z==0) return 0;
     
-    if (gwy_datafield_alloc(&b, a->xres, a->yres)!=0) return -1;
+    if (gwy_data_field_alloc(&b, a->xres, a->yres)!=0) return -1;
     if (y)
     {
-	gwy_datafield_copy(a, &b);
+	gwy_data_field_copy(a, &b);
 	for (i=0; i<a->yres; i++)
 	{
 	    for (j=0; j<a->xres; j++)
@@ -544,7 +544,7 @@ gint gwy_datafield_invert(GwyDataField *a, gboolean x, gboolean y, gboolean z)
     }
     if (x)
     {
-	gwy_datafield_copy(a, &b);
+	gwy_data_field_copy(a, &b);
 	for (i=0; i<a->yres; i++)
 	{
 	    for (j=0; j<a->xres; j++)
@@ -553,43 +553,43 @@ gint gwy_datafield_invert(GwyDataField *a, gboolean x, gboolean y, gboolean z)
     }
     if (z)
     {
-	avg=gwy_datafield_get_avg(a);
+	avg=gwy_data_field_get_avg(a);
 	for (i=0; i<(a->yres*a->xres); i++)
 		a->data[i] = 2*avg - a->data[i];
     } 
-    gwy_datafield_free(&b);
+    gwy_data_field_free(&b);
     return 0;
 }
 
 void
-gwy_datafield_fill(GwyDataField *a, gdouble value)
+gwy_data_field_fill(GwyDataField *a, gdouble value)
 {
     gint i;
     for (i=0; i<(a->xres * a->yres); i++) a->data[i] = value;
 }
 
 void
-gwy_datafield_multiply(GwyDataField *a, gdouble value)
+gwy_data_field_multiply(GwyDataField *a, gdouble value)
 {
     gint i;
     for (i=0; i<(a->xres * a->yres); i++) a->data[i] *= value;
 }
 
 void
-gwy_datafield_add(GwyDataField *a, gdouble value)
+gwy_data_field_add(GwyDataField *a, gdouble value)
 {
     gint i;
     for (i=0; i<(a->xres * a->yres); i++) a->data[i] += value;
 }
 
 gint
-gwy_datafield_area_fill(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj, gdouble value)
+gwy_data_field_area_fill(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj, gdouble value)
 {
     gint i, j;
     
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     
     if (uli>bri) swap(gint, uli, bri);
@@ -604,13 +604,13 @@ gwy_datafield_area_fill(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj,
 }
 
 gint
-gwy_datafield_area_add(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj, gdouble value)
+gwy_data_field_area_add(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj, gdouble value)
 {
     gint i, j;
     
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     
     if (uli>bri) swap(gint, uli, bri);
@@ -625,13 +625,13 @@ gwy_datafield_area_add(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj, 
 }
 
 gint
-gwy_datafield_area_multiply(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj, gdouble value)
+gwy_data_field_area_multiply(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj, gdouble value)
 {
     gint i, j;
     
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     
     if (uli>bri) swap(gint, uli, bri);
@@ -646,7 +646,7 @@ gwy_datafield_area_multiply(GwyDataField *a, gint uli, gint ulj, gint bri, gint 
 }
 
 gdouble 
-gwy_datafield_get_max(GwyDataField *a)
+gwy_data_field_get_max(GwyDataField *a)
 {
     gint i;
     gdouble max=a->data[0];
@@ -658,7 +658,7 @@ gwy_datafield_get_max(GwyDataField *a)
 }
 
 gdouble 
-gwy_datafield_get_min(GwyDataField *a)
+gwy_data_field_get_min(GwyDataField *a)
 {
     gint i;
     gdouble min=a->data[0];
@@ -670,7 +670,7 @@ gwy_datafield_get_min(GwyDataField *a)
 }
 
 gdouble 
-gwy_datafield_get_avg(GwyDataField *a)
+gwy_data_field_get_avg(GwyDataField *a)
 {
     gint i;
     gdouble avg=0;
@@ -682,11 +682,11 @@ gwy_datafield_get_avg(GwyDataField *a)
 }
 
 gdouble 
-gwy_datafield_get_rms(GwyDataField *a)
+gwy_data_field_get_rms(GwyDataField *a)
 {
     gint i;
     gdouble rms=0;
-    gdouble avg=gwy_datafield_get_avg(a);
+    gdouble avg=gwy_data_field_get_avg(a);
     for (i=1; i<(a->xres * a->yres); i++) 
     {
 	rms += (a->data[i]-avg)*(a->data[i]-avg);
@@ -695,7 +695,7 @@ gwy_datafield_get_rms(GwyDataField *a)
 }
 
 gdouble 
-gwy_datafield_get_sum(GwyDataField *a)
+gwy_data_field_get_sum(GwyDataField *a)
 {
     gint i;
     gdouble sum=0;
@@ -708,14 +708,14 @@ gwy_datafield_get_sum(GwyDataField *a)
 
 
 gdouble
-gwy_datafield_get_area_max(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
+gwy_data_field_get_area_max(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 {
     gint i, j;
     gdouble max=G_MINDOUBLE;
     
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     
     if (uli>bri) swap(gint, uli, bri);
@@ -732,15 +732,15 @@ gwy_datafield_get_area_max(GwyDataField *a, gint uli, gint ulj, gint bri, gint b
 }
 
 gdouble
-gwy_datafield_get_area_min(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
+gwy_data_field_get_area_min(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 {
     gint i, j;
     gdouble min=G_MAXDOUBLE;
     
     
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     if (uli>bri) swap(gint, uli, bri);
     if (ulj>brj) swap(gint, ulj, brj);
@@ -757,14 +757,14 @@ gwy_datafield_get_area_min(GwyDataField *a, gint uli, gint ulj, gint bri, gint b
 }
 
 gdouble
-gwy_datafield_get_area_avg(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
+gwy_data_field_get_area_avg(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 {
     gint i, j;
     gdouble avg=0;
     
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     if (uli>bri) swap(gint, uli, bri);
     if (ulj>brj) swap(gint, ulj, brj);
@@ -780,15 +780,15 @@ gwy_datafield_get_area_avg(GwyDataField *a, gint uli, gint ulj, gint bri, gint b
 }
 
 gdouble
-gwy_datafield_get_area_sum(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
+gwy_data_field_get_area_sum(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 {
     gint i, j;
     gdouble sum=0;
     
     
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     
     if (uli>bri) swap(gint, uli, bri);
@@ -805,15 +805,15 @@ gwy_datafield_get_area_sum(GwyDataField *a, gint uli, gint ulj, gint bri, gint b
 }
 
 gdouble
-gwy_datafield_get_area_rms(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
+gwy_data_field_get_area_rms(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 {
     gint i, j;
     gdouble rms = 0;
-    gdouble avg = gwy_datafield_get_area_avg(a, uli, ulj, bri, brj); 
+    gdouble avg = gwy_data_field_get_area_avg(a, uli, ulj, bri, brj); 
     
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     
     if (uli>bri) swap(gint, uli, bri);
@@ -830,7 +830,7 @@ gwy_datafield_get_area_rms(GwyDataField *a, gint uli, gint ulj, gint bri, gint b
 }
 
 gint
-gwy_datafield_threshold(GwyDataField *a, gdouble threshval, gdouble bottom, gdouble top)
+gwy_data_field_threshold(GwyDataField *a, gdouble threshval, gdouble bottom, gdouble top)
 {
     gint i, tot = 0;
     for (i=0; i<(a->xres * a->yres); i++) 
@@ -842,13 +842,13 @@ gwy_datafield_threshold(GwyDataField *a, gdouble threshval, gdouble bottom, gdou
 }
 
 gint 
-gwy_datafield_area_threshold(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj, gdouble threshval, gdouble bottom, gdouble top)
+gwy_data_field_area_threshold(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj, gdouble threshval, gdouble bottom, gdouble top)
 {
     gint i, j, tot = 0;
 
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     
     if (uli>bri) swap(gint, uli, bri);
@@ -867,60 +867,60 @@ gwy_datafield_area_threshold(GwyDataField *a, gint uli, gint ulj, gint bri, gint
 
 
 gint
-gwy_datafield_get_row(GwyDataField *a, GwyDataLine* b, gint i)
+gwy_data_field_get_row(GwyDataField *a, GwyDataLine* b, gint i)
 {
     gint k;
 
-    if (i<0 || i>=a->yres) {g_warning("Trying to reach row outside of datafield\n"); return 1;}
+    if (i<0 || i>=a->yres) {g_warning("Trying to reach row outside of data_field\n"); return 1;}
  
-    if (gwy_dataline_resample(b, a->xres, GWY_INTERPOLATION_NONE)!=0) return 1;
+    if (gwy_data_line_resample(b, a->xres, GWY_INTERPOLATION_NONE)!=0) return 1;
     for (k=0; k<a->xres; k++) b->data[k] = a->data[i + k*a->yres];
 
     return 0;
 }
 
 gint
-gwy_datafield_get_column(GwyDataField *a, GwyDataLine* b, gint i)
+gwy_data_field_get_column(GwyDataField *a, GwyDataLine* b, gint i)
 {
     gint k;
     
-    if (i<0 || i>=a->xres) {g_warning("Trying to reach column outside of datafield\n"); return 1;}
+    if (i<0 || i>=a->xres) {g_warning("Trying to reach column outside of data_field\n"); return 1;}
 
-    if (gwy_dataline_resample(b, a->yres, GWY_INTERPOLATION_NONE)!=0) return 0;
+    if (gwy_data_line_resample(b, a->yres, GWY_INTERPOLATION_NONE)!=0) return 0;
     for (k=0; k<a->yres; k++) b->data[k] = a->data[k + i*a->yres];
 
     return 0;
 }
 
 gint
-gwy_datafield_set_row(GwyDataField *a, GwyDataLine* b, gint i)
+gwy_data_field_set_row(GwyDataField *a, GwyDataLine* b, gint i)
 {
     gint k;
-    if (i<0 || i>=a->yres) {g_warning("Trying to reach row outside of datafield\n"); return 1;}
+    if (i<0 || i>=a->yres) {g_warning("Trying to reach row outside of data_field\n"); return 1;}
 
     for (k=0; k<a->xres; k++) a->data[i + k*a->yres] = b->data[k];
     return 0;
 }
 
 gint
-gwy_datafield_set_column(GwyDataField *a, GwyDataLine* b, gint i)
+gwy_data_field_set_column(GwyDataField *a, GwyDataLine* b, gint i)
 {
     gint k;
-    if (i<0 || i>=a->xres) {g_warning("Trying to reach row outside of datafield\n"); return 1;}
+    if (i<0 || i>=a->xres) {g_warning("Trying to reach row outside of data_field\n"); return 1;}
 
     for (k=0; k<a->yres; k++) a->data[k + i*a->yres] = b->data[k];
     return 0;
 } 
 
 gint
-gwy_datafield_get_dataline(GwyDataField *a, GwyDataLine* b, gint uli, gint ulj, gint bri, gint brj, gint res, gint interpolation)
+gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b, gint uli, gint ulj, gint bri, gint brj, gint res, gint interpolation)
 {
     gint k;
     gdouble length, alpha, cosa, sina;
    
-    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside datafield.\n"); return -1;}
+    if (uli<0 || ulj<0 || bri<0 || brj<0) {g_warning("Coordinates outside data_field.\n"); return -1;}
     if (uli > a->yres || ulj > a->xres || bri > a->yres || brj > a->xres) {
-	g_warning("Coordinates outside datafield.\n"); return -1;
+	g_warning("Coordinates outside data_field.\n"); return -1;
     }
     
     if (uli>bri) swap(gint, uli, bri);
@@ -930,14 +930,14 @@ gwy_datafield_get_dataline(GwyDataField *a, GwyDataLine* b, gint uli, gint ulj, 
     alpha=atan((brj - ulj)/(bri - uli));
     cosa=cos(alpha)*length/res; sina=sin(alpha)*length/res;
 
-    if (gwy_dataline_resample(b, res, GWY_INTERPOLATION_NONE)!=0) return 1;
-    for (k=0; k<res; k++) b->data[k] = gwy_datafield_get_dval(a, k*cosa, k*sina, interpolation);
+    if (gwy_data_line_resample(b, res, GWY_INTERPOLATION_NONE)!=0) return 1;
+    for (k=0; k<res; k++) b->data[k] = gwy_data_field_get_dval(a, k*cosa, k*sina, interpolation);
     
     return 0;
 }
 
 gint 
-gwy_datafield_plane_coefs(GwyDataField *a, gdouble *ap, gdouble *bp, gdouble *cp)
+gwy_data_field_plane_coefs(GwyDataField *a, gdouble *ap, gdouble *bp, gdouble *cp)
 {
     gint k;
     GwyDataLine l;
@@ -945,31 +945,31 @@ gwy_datafield_plane_coefs(GwyDataField *a, gdouble *ap, gdouble *bp, gdouble *cp
 
     bp = cp = 0;
     
-    gwy_dataline_alloc(&l, a->xres);
+    gwy_data_line_alloc(&l, a->xres);
     for (k=0; k<a->yres; k++)
     {
-	gwy_datafield_get_row(a, &l, k);
-	gwy_dataline_line_coefs(&l, &buff, &val);
+	gwy_data_field_get_row(a, &l, k);
+	gwy_data_line_line_coefs(&l, &buff, &val);
 	*bp += val;
     }
     for (k=0; k<a->xres; k++)
     {
-	gwy_datafield_get_column(a, &l, k);
-	gwy_dataline_line_coefs(&l, &buff, &val);
+	gwy_data_field_get_column(a, &l, k);
+	gwy_data_line_line_coefs(&l, &buff, &val);
 	*cp += val;
     }   
     *cp /= a->xres;
     *bp /= a->yres;
 
-    *ap = gwy_datafield_get_avg(a);
+    *ap = gwy_data_field_get_avg(a);
     
-    gwy_dataline_free(&l);
+    gwy_data_line_free(&l);
     return 0;
 }
 
 
 gint 
-gwy_datafield_plane_level(GwyDataField *a, gdouble ap, gdouble bp, gdouble cp)
+gwy_data_field_plane_level(GwyDataField *a, gdouble ap, gdouble bp, gdouble cp)
 {
     gint i, j;
     
@@ -984,39 +984,39 @@ gwy_datafield_plane_level(GwyDataField *a, gdouble ap, gdouble bp, gdouble cp)
 }
 
 gint 
-gwy_datafield_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle, gint interpolation)
+gwy_data_field_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle, gint interpolation)
 {
     int k;
     GwyDataLine l;
-    gwy_dataline_alloc(&l, a->xres);
+    gwy_data_line_alloc(&l, a->xres);
     
     if (xangle!=0)
     {
         for (k=0; k<a->yres; k++)
         {
-            gwy_datafield_get_row(a, &l, k);
-	    gwy_dataline_line_rotate(&l, xangle, interpolation);
-	    gwy_datafield_set_row(a, &l, k);
+            gwy_data_field_get_row(a, &l, k);
+	    gwy_data_line_line_rotate(&l, xangle, interpolation);
+	    gwy_data_field_set_row(a, &l, k);
         }
     }
     if (yangle!=0)
     {
 	for (k=0; k<a->xres; k++)
 	{
-	    gwy_datafield_get_column(a, &l, k);
-	    gwy_dataline_line_rotate(&l, yangle, interpolation);
-	    gwy_datafield_set_column(a, &l, k);
+	    gwy_data_field_get_column(a, &l, k);
+	    gwy_data_line_line_rotate(&l, yangle, interpolation);
+	    gwy_data_field_set_column(a, &l, k);
         }
     }
-    gwy_dataline_free(&l);
+    gwy_data_line_free(&l);
     
     return 0;
 }
 
 gdouble 
-gwy_datafield_get_xder(GwyDataField *a, gint i, gint j)
+gwy_data_field_get_xder(GwyDataField *a, gint i, gint j)
 {
-   if (gwy_datafield_outside(a, i, j)) {g_warning("Trying to reach value outside of datafield.\n"); return 1;}
+   if (gwy_data_field_outside(a, i, j)) {g_warning("Trying to reach value outside of data_field.\n"); return 1;}
 
    if (j==0) return (a->data[i + a->yres] - a->data[i])*a->yres/a->yreal;
    else if (j==(a->xres-1)) 
@@ -1026,9 +1026,9 @@ gwy_datafield_get_xder(GwyDataField *a, gint i, gint j)
 }
 
 gdouble 
-gwy_datafield_get_yder(GwyDataField *a, gint i, gint j)
+gwy_data_field_get_yder(GwyDataField *a, gint i, gint j)
 {
-   if (gwy_datafield_outside(a, i, j)) {g_warning("Trying to reach value outside of datafield.\n"); return 1;}
+   if (gwy_data_field_outside(a, i, j)) {g_warning("Trying to reach value outside of data_field.\n"); return 1;}
 
    if (i==0) return (a->data[1 + a->yres*j] - a->data[a->yres*j])*a->xres/a->xreal;
    else if (i==(a->yres-1)) 
@@ -1038,59 +1038,59 @@ gwy_datafield_get_yder(GwyDataField *a, gint i, gint j)
 }
 
 gdouble 
-gwy_datafield_get_angder(GwyDataField *a, gint i, gint j, gdouble theta)
+gwy_data_field_get_angder(GwyDataField *a, gint i, gint j, gdouble theta)
 {
-    if (gwy_datafield_outside(a, i, j)) {g_warning("Trying to reach value outside of datafield.\n"); return 1;}
+    if (gwy_data_field_outside(a, i, j)) {g_warning("Trying to reach value outside of data_field.\n"); return 1;}
 
-    return gwy_datafield_get_xder(a, i, j)*cos(theta*G_PI/180) + gwy_datafield_get_yder(a, i, j)*sin(theta*G_PI/180);
+    return gwy_data_field_get_xder(a, i, j)*cos(theta*G_PI/180) + gwy_data_field_get_yder(a, i, j)*sin(theta*G_PI/180);
 }
 
 gint 
-gwy_datafield_2dfft(GwyDataField *ra, GwyDataField *ia, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
+gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
 		 gint windowing, gint direction, gint interpolation, gboolean preserverms, gboolean level)
 {
     GwyDataField rh, ih;
-    if (gwy_datafield_initialize(&rh, ra->xres, ra->yres, ra->xreal, ra->yreal, 0)) return 1;
-    if (gwy_datafield_initialize(&ih, ra->xres, ra->yres, ra->xreal, ra->yreal, 0)) return 1;
+    if (gwy_data_field_initialize(&rh, ra->xres, ra->yres, ra->xreal, ra->yreal, 0)) return 1;
+    if (gwy_data_field_initialize(&ih, ra->xres, ra->yres, ra->xreal, ra->yreal, 0)) return 1;
     
-    if (gwy_datafield_xfft(ra, ia, &rh, &ih, fft, windowing, direction, interpolation, preserverms, level))
+    if (gwy_data_field_xfft(ra, ia, &rh, &ih, fft, windowing, direction, interpolation, preserverms, level))
 	return 1;
-    if (gwy_datafield_yfft(&rh, &ih, rb, ib, fft, windowing, direction, interpolation, preserverms, level))
+    if (gwy_data_field_yfft(&rh, &ih, rb, ib, fft, windowing, direction, interpolation, preserverms, level))
 	return 1;
     
-    gwy_datafield_free(&rh);
-    gwy_datafield_free(&ih); 
+    gwy_data_field_free(&rh);
+    gwy_data_field_free(&ih); 
     return 0;
 }
 
 gint 
-gwy_datafield_2dfft_real(GwyDataField *ra, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
+gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
 		 gint windowing, gint direction, gint interpolation, gboolean preserverms, gboolean level)
 {
     GwyDataField rh, ih;
-    if (gwy_datafield_initialize(&rh, ra->xres, ra->yres, ra->xreal, ra->yreal, 0)) return 1;
-    if (gwy_datafield_initialize(&ih, ra->xres, ra->yres, ra->xreal, ra->yreal, 0)) return 1;
+    if (gwy_data_field_initialize(&rh, ra->xres, ra->yres, ra->xreal, ra->yreal, 0)) return 1;
+    if (gwy_data_field_initialize(&ih, ra->xres, ra->yres, ra->xreal, ra->yreal, 0)) return 1;
     
-    if (gwy_datafield_xfft_real(ra, &rh, &ih, fft, windowing, direction, interpolation, preserverms, level))
+    if (gwy_data_field_xfft_real(ra, &rh, &ih, fft, windowing, direction, interpolation, preserverms, level))
 	return 1;
-    if (gwy_datafield_yfft(&rh, &ih, rb, ib, fft, windowing, direction, interpolation, preserverms, level))
+    if (gwy_data_field_yfft(&rh, &ih, rb, ib, fft, windowing, direction, interpolation, preserverms, level))
 	return 1;
     
-    gwy_datafield_free(&rh);
-    gwy_datafield_free(&ih);
+    gwy_data_field_free(&rh);
+    gwy_data_field_free(&ih);
     return 0;
 }
 
 
 
 gint 
-gwy_datafield_2dffthumanize(GwyDataField *a)
+gwy_data_field_2dffthumanize(GwyDataField *a)
 {
     gint i, j, im, jm;
     GwyDataField b;
     
-    if (gwy_datafield_initialize(&b, a->xres, a->yres, a->xreal, a->yreal, 0)) return 1;
-    gwy_datafield_copy(a, &b);
+    if (gwy_data_field_initialize(&b, a->xres, a->yres, a->xreal, a->yreal, 0)) return 1;
+    gwy_data_field_copy(a, &b);
     
     im=a->yres/2;
     jm=a->xres/2;
@@ -1104,100 +1104,100 @@ gwy_datafield_2dffthumanize(GwyDataField *a)
 	    a->data[i + j*a->yres] = b.data[(i + im) + (j + jm)*a->yres];
 	}
     }
-    gwy_datafield_free(&b);
+    gwy_data_field_free(&b);
     return 0;
 }
 
 gint 
-gwy_datafield_xfft(GwyDataField *ra, GwyDataField *ia, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
+gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
 		gint windowing, gint direction, gint interpolation, gboolean preserverms, gboolean level)
 {
     gint k;
     GwyDataLine rin, iin, rout, iout;
 
-    if (gwy_dataline_initialize(&rin, ra->xres, ra->yreal, 0)) return 1;
-    if (gwy_dataline_initialize(&rout, ra->xres, ra->yreal, 0)) return 1;
-    if (gwy_dataline_initialize(&iin, ra->xres, ra->yreal, 0)) return 1;
-    if (gwy_dataline_initialize(&iout, ra->xres, ra->yreal, 0)) return 1;
-    if (gwy_datafield_resample(ia, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
-    if (gwy_datafield_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
-    if (gwy_datafield_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
+    if (gwy_data_line_initialize(&rin, ra->xres, ra->yreal, 0)) return 1;
+    if (gwy_data_line_initialize(&rout, ra->xres, ra->yreal, 0)) return 1;
+    if (gwy_data_line_initialize(&iin, ra->xres, ra->yreal, 0)) return 1;
+    if (gwy_data_line_initialize(&iout, ra->xres, ra->yreal, 0)) return 1;
+    if (gwy_data_field_resample(ia, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
+    if (gwy_data_field_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
+    if (gwy_data_field_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
     for (k=0; k<ra->yres; k++)
     {
-	gwy_datafield_get_row(ra, &rin, k);
-	gwy_datafield_get_row(ia, &iin, k);
-	gwy_dataline_fft(&rin, &iin, &rout, &iout, fft, windowing, direction, interpolation, preserverms, level);
-	gwy_datafield_set_row(rb, &rout, k);
-	gwy_datafield_set_row(ib, &iout, k);
+	gwy_data_field_get_row(ra, &rin, k);
+	gwy_data_field_get_row(ia, &iin, k);
+	gwy_data_line_fft(&rin, &iin, &rout, &iout, fft, windowing, direction, interpolation, preserverms, level);
+	gwy_data_field_set_row(rb, &rout, k);
+	gwy_data_field_set_row(ib, &iout, k);
     }
-    gwy_dataline_free(&rin);
-    gwy_dataline_free(&rout);
-    gwy_dataline_free(&iin);
-    gwy_dataline_free(&iout);
+    gwy_data_line_free(&rin);
+    gwy_data_line_free(&rout);
+    gwy_data_line_free(&iin);
+    gwy_data_line_free(&iout);
     return 0;
 }
 	
 gint 
-gwy_datafield_yfft(GwyDataField *ra, GwyDataField *ia, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
+gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
 		gint windowing, gint direction, gint interpolation, gboolean preserverms, gboolean level)
 {
     gint k;
     GwyDataLine rin, iin, rout, iout;
 
-    gwy_dataline_initialize(&rin, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&rout, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&iin, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&iout, ra->xres, ra->yreal, 0);
-    gwy_datafield_resample(ia, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
-    gwy_datafield_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
-    gwy_datafield_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
+    gwy_data_line_initialize(&rin, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&rout, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&iin, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&iout, ra->xres, ra->yreal, 0);
+    gwy_data_field_resample(ia, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
     
     
     /*we compute each two FFTs simultaneously*/
     for (k=0; k<ra->xres; k++)
     {
-	gwy_datafield_get_column(ra, &rin, k);
-	gwy_datafield_get_column(ia, &iin, k);
-	gwy_dataline_fft(&rin, &iin, &rout, &iout, fft, windowing, direction, interpolation, preserverms, level);
-	gwy_datafield_set_column(rb, &rout, k);
-	gwy_datafield_set_column(ib, &iout, k);
+	gwy_data_field_get_column(ra, &rin, k);
+	gwy_data_field_get_column(ia, &iin, k);
+	gwy_data_line_fft(&rin, &iin, &rout, &iout, fft, windowing, direction, interpolation, preserverms, level);
+	gwy_data_field_set_column(rb, &rout, k);
+	gwy_data_field_set_column(ib, &iout, k);
     }
-    gwy_dataline_free(&rin);
-    gwy_dataline_free(&rout);
-    gwy_dataline_free(&iin);
-    gwy_dataline_free(&iout);
+    gwy_data_line_free(&rin);
+    gwy_data_line_free(&rout);
+    gwy_data_line_free(&iin);
+    gwy_data_line_free(&iout);
      return 0;
 }
 
 gint 
-gwy_datafield_xfft_real(GwyDataField *ra, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
+gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb, GwyDataField *ib, gint (*fft)(),
 		gint windowing, gint direction, gint interpolation, gboolean preserverms, gboolean level)
 {
     gint k, j, ret=0;
     GwyDataLine rin, iin, rout, iout, rft1, ift1, rft2, ift2;
 
-    if (gwy_datafield_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
-    if (gwy_datafield_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
+    if (gwy_data_field_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
+    if (gwy_data_field_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_NONE)) return 1;
     
-    gwy_dataline_initialize(&rin, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&rout, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&iin, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&iout, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&rft1, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&ift1, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&rft2, ra->xres, ra->yreal, 0);
-    gwy_dataline_initialize(&ift2, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&rin, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&rout, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&iin, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&iout, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&rft1, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&ift1, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&rft2, ra->xres, ra->yreal, 0);
+    gwy_data_line_initialize(&ift2, ra->xres, ra->yreal, 0);
     
     if (ret != 0){g_warning("Could not allocate fields for FFT.\n"); return 0;}
     
     /*we compute allways two FFTs simultaneously*/
     for (k=0; k<ra->yres; k++)
     {
-	gwy_datafield_get_row(ra, &rin, k);
-	if (k<(ra->yres-1)) gwy_datafield_get_row(ra, &iin, k+1);
-	else {gwy_datafield_get_row(ra, &iin, k); gwy_dataline_fill(&iin, 0);} 
+	gwy_data_field_get_row(ra, &rin, k);
+	if (k<(ra->yres-1)) gwy_data_field_get_row(ra, &iin, k+1);
+	else {gwy_data_field_get_row(ra, &iin, k); gwy_data_line_fill(&iin, 0);} 
 
-	gwy_dataline_fft(&rin, &iin, &rout, &iout, fft, windowing, direction, interpolation, preserverms, level);
+	gwy_data_line_fft(&rin, &iin, &rout, &iout, fft, windowing, direction, interpolation, preserverms, level);
 
 	/*extract back the two profiles FFTs*/
 	rft1.data[0] = rout.data[0];
@@ -1212,24 +1212,24 @@ gwy_datafield_xfft_real(GwyDataField *ra, GwyDataField *rb, GwyDataField *ib, gi
 	    ift2.data[j] = -(rout.data[j] - rout.data[ra->xres - j])/2;
 	}
 	
-	gwy_datafield_set_row(rb, &rft1, k);
-	gwy_datafield_set_row(ib, &ift1, k);
+	gwy_data_field_set_row(rb, &rft1, k);
+	gwy_data_field_set_row(ib, &ift1, k);
 
 	if (k<(ra->yres-1)) 
 	{
-	    gwy_datafield_set_row(rb, &rft2, k+1); 
-	    gwy_datafield_set_row(ib, &ift2, k+1);
+	    gwy_data_field_set_row(rb, &rft2, k+1); 
+	    gwy_data_field_set_row(ib, &ift2, k+1);
 	    k++;
 	}
     }
-    gwy_dataline_free(&rft1);
-    gwy_dataline_free(&rft2);
-    gwy_dataline_free(&ift1);
-    gwy_dataline_free(&ift2);
-    gwy_dataline_free(&rin);
-    gwy_dataline_free(&rout);
-    gwy_dataline_free(&iin);
-    gwy_dataline_free(&iout);
+    gwy_data_line_free(&rft1);
+    gwy_data_line_free(&rft2);
+    gwy_data_line_free(&ift1);
+    gwy_data_line_free(&ift2);
+    gwy_data_line_free(&rin);
+    gwy_data_line_free(&rout);
+    gwy_data_line_free(&iin);
+    gwy_data_line_free(&iout);
      return 0;
 }
 

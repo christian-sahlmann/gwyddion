@@ -48,41 +48,41 @@ int main(int argc, char *argv[])
     
     g_type_init();
   
-    g_message("preparing datafield...");
-    a = (GwyDataField *) gwy_datafield_new(500, 500, 500, 500, 1);
+    g_message("preparing data_field...");
+    a = (GwyDataField *) gwy_data_field_new(500, 500, 500, 500, 1);
     make_test_image(a);
     
-    c = (GwyDataLine *) gwy_dataline_new(500, 500, 1);
+    c = (GwyDataLine *) gwy_data_line_new(500, 500, 1);
     make_test_line(c);
     /*test anything with the processing routines*/
 
    
 
-    /*test serialization of the datafield*/
+    /*test serialization of the data_field*/
     size = 0;
     buffer = NULL;
     buffer = gwy_serializable_serialize((GObject *)a, buffer, &size);
     buffer = gwy_serializable_serialize((GObject *)c, buffer, &size);
    
     printf("size is %d\n", size);
-    g_message("writing datafield and dataline to test.datafield...");
+    g_message("writing data_field and data_line to test.data_field...");
     
     
-    fh = fopen("test.datafield", "wb");
+    fh = fopen("test.data_field", "wb");
     fwrite(buffer, 1, size, fh);
     fclose(fh);
     g_object_unref((GObject *)a);
     g_object_unref((GObject *)c);
 
     
-    g_message("reading datafield and dataline from test.datafield...");
-    g_file_get_contents("test.datafield", (gchar**)&buffer, &size, &error);
+    g_message("reading data_field and data_line from test.data_field...");
+    g_file_get_contents("test.data_field", (gchar**)&buffer, &size, &error);
     pos = 0;
     b = (GwyDataField *) gwy_serializable_deserialize(buffer, size, &pos);
     d = (GwyDataLine *) gwy_serializable_deserialize(buffer, size, &pos);
       
 
-    g_message("outputting dataline to xline.dat...");
+    g_message("outputting data_line to xline.dat...");
     fh = fopen("xline.dat", "w");
     for (i=0; i<d->res; i++) fprintf(fh, "%d  %f\n", i, d->data[i]);
     fclose(fh);
