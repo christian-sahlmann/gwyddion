@@ -8,6 +8,9 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
 bin_PROGRAMS = gwyddion
 
+noinst_HEADERS = \
+	init.h
+
 gwyddion_SOURCES = \
 	init.c \
 	gwyddion.c
