@@ -1435,7 +1435,7 @@ gint gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function)
 GwyNLFitter* gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
                                gint n_dat, const gdouble *x, const gdouble *y,
                                gint n_param,
-                               gdouble *param, const gboolean *fixed_param,
+                               gdouble *param, gdouble *err, const gboolean *fixed_param,
                                gpointer user_data)
 {
     GwyNLFitter *fitter;
@@ -1472,10 +1472,14 @@ GwyNLFitter* gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
     gwy_math_nlfit_fit_with_fixed(fitter, n_dat, x, y, weight, 
                                   n_param, param, fixed_param, user_data);
 
-
+    if (fitter->covar)
+    {
+        for (i=0; i<n_param; i++) err[i] = gwy_math_nlfit_get_sigma(fitter, i);
+    }
     /*recompute parameters to be scaled as original data*/
     function->parameter_scale(param, xscale, yscale, -1);
-
+    if (fitter->covar) function->parameter_scale(err, xscale, yscale, -1);
+    
     /*recompute data back to their former scale*/
     for (i=0; i<n_dat; i++)
     {

@@ -563,6 +563,7 @@ recompute(FitArgs *args, FitControls *controls)
     GwyNLFitPresetFunction *function;
     gboolean fixed[4];
     gdouble param[4];
+    gdouble err[4];
     gchar buffer[50];
     gboolean ok;
     gint i;
@@ -595,13 +596,13 @@ recompute(FitArgs *args, FitControls *controls)
     fitter = gwy_math_nlfit_fit_preset(function, 
                                   xdata->res, xdata->data, ydata->data,
                                   function->nparams,
-                                  param, fixed, NULL);
+                                  param, err, fixed, NULL);
 
    
     if (function->nparams > 0)
     {
        if (fitter->covar)
-           g_snprintf(buffer, sizeof(buffer), "%2.3g \xc2\xb1 %2.3g", param[0], gwy_math_nlfit_get_sigma(fitter, 0));
+           g_snprintf(buffer, sizeof(buffer), "%2.3g \xc2\xb1 %2.3g", param[0], err[0]);
        else
            g_snprintf(buffer, sizeof(buffer), "%2.3g", param[0]);
        gtk_label_set_markup(GTK_LABEL(controls->param1_res), buffer); 
@@ -609,7 +610,7 @@ recompute(FitArgs *args, FitControls *controls)
     if (function->nparams > 1)
     {
        if (fitter->covar)
-           g_snprintf(buffer, sizeof(buffer), "%2.3g \xc2\xb1 %2.3g", param[1], gwy_math_nlfit_get_sigma(fitter, 1));
+           g_snprintf(buffer, sizeof(buffer), "%2.3g \xc2\xb1 %2.3g", param[1], err[1]);
        else
         g_snprintf(buffer, sizeof(buffer), "%2.3g", param[1]);
        gtk_label_set_markup(GTK_LABEL(controls->param2_res), buffer);
@@ -617,7 +618,7 @@ recompute(FitArgs *args, FitControls *controls)
     if (function->nparams > 2)
     {
        if (fitter->covar)
-           g_snprintf(buffer, sizeof(buffer), "%2.3g \xc2\xb1 %2.3g", param[2], gwy_math_nlfit_get_sigma(fitter, 2));
+           g_snprintf(buffer, sizeof(buffer), "%2.3g \xc2\xb1 %2.3g", param[2], err[2]);
        else
         g_snprintf(buffer, sizeof(buffer), "%2.3g", param[2]);
        gtk_label_set_markup(GTK_LABEL(controls->param3_res), buffer); 
@@ -625,7 +626,7 @@ recompute(FitArgs *args, FitControls *controls)
     if (function->nparams > 3)
     {
        if (fitter->covar)
-           g_snprintf(buffer, sizeof(buffer), "%2.3g \xc2\xb1 %2.3g", param[3], gwy_math_nlfit_get_sigma(fitter, 3));
+           g_snprintf(buffer, sizeof(buffer), "%2.3g \xc2\xb1 %2.3g", param[3], err[3]);
        else
          g_snprintf(buffer, sizeof(buffer), "%2.3g", param[3]);
         gtk_label_set_markup(GTK_LABEL(controls->param4_res), buffer); 
@@ -721,6 +722,7 @@ recompute(FitArgs *args, FitControls *controls)
                                  label, &par);    
     g_object_unref(xdata);
     g_object_unref(ydata);
+    gwy_math_nlfit_free(fitter);
 }
 
 /*get default parameters (guessed)*/

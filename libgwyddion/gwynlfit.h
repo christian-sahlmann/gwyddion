@@ -177,6 +177,7 @@ GwyNLFitter* gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
                                const gdouble *y,
                                gint n_param,
                                gdouble *param,
+                               gdouble *err,
                                const gboolean *fixed_param,
                                gpointer user_data);
   
