@@ -6,6 +6,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/datafield.h>
 #include "gwylayer-lines.h"
 #include "gwydataview.h"
 
@@ -598,7 +599,9 @@ static void
 gwy_layer_lines_restore(GwyDataViewLayer *layer)
 {
     GwyLayerLines *l = GWY_LAYER_LINES(layer);
-    gchar key[64];
+    GwyDataField *dfield;
+    gchar key[24];
+    gdouble xreal, yreal;
     gint i, n;
 
     /* TODO Container */
@@ -608,19 +611,25 @@ gwy_layer_lines_restore(GwyDataViewLayer *layer)
     l->nselected = gwy_container_get_int32_by_name(layer->data,
                                                    "/0/lines/nselected");
     l->nselected = MIN(l->nselected, l->nlines);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
+                                                             "/0/data"));
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
     for (i = 0; i < l->nselected; i++) {
         gdouble *coords = l->lines + 4*i;
 
         n = g_snprintf(key, sizeof(key), "/0/lines/%d/x0", i);
         coords[0] = gwy_container_get_double_by_name(layer->data, key);
+        coords[0] = CLAMP(coords[0], 0.0, xreal);
         key[n-2] = 'y';
         coords[1] = gwy_container_get_double_by_name(layer->data, key);
+        coords[1] = CLAMP(coords[1], 0.0, yreal);
         key[n-1] = '1';
         coords[3] = gwy_container_get_double_by_name(layer->data, key);
+        coords[3] = CLAMP(coords[3], 0.0, yreal);
         key[n-2] = 'x';
         coords[2] = gwy_container_get_double_by_name(layer->data, key);
-        gwy_debug("%s: %d %g %g %g %g", __FUNCTION__,
-                  i, coords[0], coords[1], coords[2], coords[3]);
+        coords[2] = CLAMP(coords[2], 0.0, xreal);
     }
 }
 

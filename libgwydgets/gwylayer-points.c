@@ -5,6 +5,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/datafield.h>
 #include "gwylayer-points.h"
 #include "gwydataview.h"
 
@@ -494,7 +495,9 @@ static void
 gwy_layer_points_restore(GwyDataViewLayer *layer)
 {
     GwyLayerPoints *p = GWY_LAYER_POINTS(layer);
-    gchar key[64];
+    GwyDataField *dfield;
+    gchar key[24];
+    gdouble xreal, yreal;
     gint i, n;
 
     /* TODO Container */
@@ -504,13 +507,19 @@ gwy_layer_points_restore(GwyDataViewLayer *layer)
     p->nselected = gwy_container_get_int32_by_name(layer->data,
                                                    "/0/points/nselected");
     p->nselected = MIN(p->nselected, p->npoints);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
+                                                             "/0/data"));
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
     for (i = 0; i < p->nselected; i++) {
         gdouble *coords = p->points + 2*i;
 
         n = g_snprintf(key, sizeof(key), "/0/points/%d/x", i);
         coords[0] = gwy_container_get_double_by_name(layer->data, key);
+        coords[0] = CLAMP(coords[0], 0.0, xreal);
         key[n-1] = 'y';
         coords[1] = gwy_container_get_double_by_name(layer->data, key);
+        coords[1] = CLAMP(coords[1], 0.0, yreal);
     }
 }
 
