@@ -133,12 +133,9 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(window));
     item = g_list_find(current_data, window);
-    if (item) {
-        current_data = g_list_remove_link(current_data, item);
-        current_data = g_list_concat(item, current_data);
-    }
-    else
-        current_data = g_list_prepend(current_data, window);
+    g_assert(item);
+    current_data = g_list_remove_link(current_data, item);
+    current_data = g_list_concat(item, current_data);
     /* FIXME: this calls the use function a little bit too often */
     if (current_tool)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
@@ -227,6 +224,8 @@ gwy_app_data_window_create(GwyContainer *data)
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(g_object_unref), data);
 
+    current_data = g_list_append(current_data, data_window);
+
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
     gwy_app_data_view_update(data_view);
     gtk_window_present(GTK_WINDOW(data_window));
@@ -268,12 +267,9 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     gwy_debug("%p", window);
 
     item = g_list_find(current_graphs, window);
-    if (item) {
-        current_graphs = g_list_remove_link(current_graphs, item);
-        current_graphs = g_list_concat(item, current_graphs);
-    }
-    else
-        current_graphs = g_list_prepend(current_graphs, window);
+    g_assert(item);
+    current_graphs = g_list_remove_link(current_graphs, item);
+    current_graphs = g_list_concat(item, current_graphs);
 
     gwy_app_toolbox_update_state(&sens_data);
 }
@@ -335,6 +331,8 @@ gwy_app_graph_window_create(GtkWidget *graph)
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
     g_signal_connect(window, "destroy",
                      G_CALLBACK(gwy_app_graph_window_remove), NULL);
+
+    current_graphs = g_list_append(current_graphs, window);
 
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show(graph);
