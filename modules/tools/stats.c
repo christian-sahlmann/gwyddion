@@ -38,6 +38,9 @@ typedef struct {
     GtkWidget *skew;
     GtkWidget *kurtosis;
     GtkWidget *avg;
+    GtkWidget *min;
+    GtkWidget *max;
+    GtkWidget *median;
     GtkWidget *projarea;
     GtkWidget *area;
 } ToolControls;
@@ -58,7 +61,7 @@ static GwyModuleInfo module_info = {
     "stats",
     N_("Statistical quantities."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -123,9 +126,26 @@ layer_setup(GwyUnitoolState *state)
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
+    static struct {
+        const gchar *name;
+        gsize offset;
+    }
+    const values[] = {
+        { N_("Ra"),             G_STRUCT_OFFSET(ToolControls, ra)       },
+        { N_("Rms"),            G_STRUCT_OFFSET(ToolControls, rms)      },
+        { N_("Skew"),           G_STRUCT_OFFSET(ToolControls, skew)     },
+        { N_("Kurtosis"),       G_STRUCT_OFFSET(ToolControls, kurtosis) },
+        { N_("Average height"), G_STRUCT_OFFSET(ToolControls, avg)      },
+        { N_("Minimum"),        G_STRUCT_OFFSET(ToolControls, min)      },
+        { N_("Maximum"),        G_STRUCT_OFFSET(ToolControls, max)      },
+        { N_("Median"),         G_STRUCT_OFFSET(ToolControls, median)   },
+        { N_("Projected area"), G_STRUCT_OFFSET(ToolControls, projarea) },
+        { N_("Area"),           G_STRUCT_OFFSET(ToolControls, area)     },
+    };
     ToolControls *controls;
     GwySIValueFormat *units;
-    GtkWidget *dialog, *table, *label, *frame;
+    GtkWidget *dialog, *table, *label, *frame, **plabel;
+    gint i;
 
     gwy_debug("");
 
@@ -148,68 +168,27 @@ dialog_create(GwyUnitoolState *state)
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Parameters</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("Ra"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("Rms"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 2, 3, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("Skew"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 3, 4, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("Kurtosis"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 4, 5, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("Average height"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 5, 6, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("Projected area"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 6, 7, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("Area"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 7, 8, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    for (i = 0; i < G_N_ELEMENTS(values); i++) {
+        label = gtk_label_new(_(values[i].name));
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+1, i+2,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+        plabel = (GtkWidget**)G_STRUCT_MEMBER_P(controls, values[i].offset);
+        *plabel = gtk_label_new(NULL);
+        gtk_misc_set_alignment(GTK_MISC(*plabel), 1.0, 0.5);
+        gtk_label_set_selectable(GTK_LABEL(*plabel), TRUE);
+        gtk_table_attach_defaults(GTK_TABLE(table), *plabel,
+                                  1, 3, i+1, i+2);
+    }
 
     gwy_unitool_rect_info_table_setup(&controls->labels,
-                                      GTK_TABLE(table), 0, 8);
+                                      GTK_TABLE(table),
+                                      0, 1 + G_N_ELEMENTS(values));
     controls->labels.unselected_is_full = TRUE;
-
-    controls->ra = gtk_label_new("");
-    controls->rms = gtk_label_new("");
-    controls->avg = gtk_label_new("");
-    controls->skew = gtk_label_new("");
-    controls->kurtosis = gtk_label_new("");
-    controls->projarea = gtk_label_new("");
-    controls->area = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->ra), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->rms), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->avg), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->skew), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->kurtosis), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->projarea), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->area), 1.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(controls->ra), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->rms), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->avg), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->skew), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->kurtosis), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->projarea), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->area), TRUE);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->ra, 2, 4, 1, 2);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->rms, 2, 4, 2, 3);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->skew, 2, 4, 3, 4);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->kurtosis, 2, 4, 4, 5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->avg, 2, 4, 5, 6);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->projarea, 2, 4, 6, 7);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->area, 2, 4, 7, 8);
 
     return dialog;
 }
@@ -225,8 +204,9 @@ dialog_update(GwyUnitoolState *state,
     GwyDataViewLayer *layer;
     gdouble xy[4];
     gint isel[4];
+    gint w, h;
     gboolean is_visible, is_selected;
-    gdouble avg, ra, rms, skew, kurtosis;
+    gdouble avg, ra, rms, skew, kurtosis, min, max, median;
     gdouble projarea, area;
     gchar buffer[30];
 
@@ -244,20 +224,21 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     gwy_unitool_rect_info_table_fill(state, &controls->labels, xy, isel);
-    gwy_data_field_get_area_stats(dfield, isel[0], isel[1], isel[2], isel[3],
+    w = isel[2] - isel[0];
+    h = isel[3] - isel[1];
+    gwy_data_field_area_get_stats(dfield, isel[0], isel[1], w, h,
                                   &avg, &ra, &rms, &skew, &kurtosis);
-    area = gwy_data_field_get_area_surface_area(dfield,
-                                                isel[0], isel[1],
-                                                isel[2], isel[3],
+    min = gwy_data_field_area_get_min(dfield, isel[0], isel[1], w, h);
+    max = gwy_data_field_area_get_max(dfield, isel[0], isel[1], w, h);
+    median = gwy_data_field_area_get_median(dfield, isel[0], isel[1], w, h);
+    area = gwy_data_field_area_get_surface_area(dfield, isel[0], isel[1], w, h,
                                                 GWY_INTERPOLATION_BILINEAR);
-    projarea = fabs((gwy_data_field_rtoj(dfield, xy[0])
-                     - gwy_data_field_rtoj(dfield, xy[2])))
-               * fabs((gwy_data_field_rtoj(dfield, xy[1])
-                       * - gwy_data_field_rtoj(dfield, xy[3])))
-               * dfield->xreal*dfield->xreal/dfield->xres/dfield->xres;
+    projarea
+        = w*gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield)
+          *h*gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
     /*FIXME: this is to prevent rounding errors to produce nonreal 
      * results on very flat surfaces*/
-    if (area < projarea) area = projarea;
+    area = MAX(area, projarea);
 
     gwy_unitool_update_label(state->value_format, controls->ra, ra);
     gwy_unitool_update_label(state->value_format, controls->rms, rms);
@@ -266,6 +247,10 @@ dialog_update(GwyUnitoolState *state,
     g_snprintf(buffer, sizeof(buffer), "%2.3g", kurtosis);
     gtk_label_set_text(GTK_LABEL(controls->kurtosis), buffer);
     gwy_unitool_update_label(state->value_format, controls->avg, avg);
+
+    gwy_unitool_update_label(state->value_format, controls->min, min);
+    gwy_unitool_update_label(state->value_format, controls->max, max);
+    gwy_unitool_update_label(state->value_format, controls->median, median);
 
     g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>",
                projarea, gwy_si_unit_get_unit_string(dfield->si_unit_z));
