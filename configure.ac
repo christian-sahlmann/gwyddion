@@ -41,7 +41,7 @@ AC_CONFIG_FILES(\
   data/gwyddion.iss \
   data/gwyddion-devel.iss \
   data/gwyddion.pc \
-  version.h \
+  version.h:data/version.h.in \
 )
 AM_CONFIG_HEADER(config.h)
 

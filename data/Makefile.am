@@ -23,6 +23,7 @@ EXTRA_DIST = \
 	gwyddion-cfg.py \
 	gwyddion.vim \
 	gwyddion.1 \
+	version.h.in \
 	$(gwyddionapp_DATA) \
 	$(gwyddionmime_DATA)
 

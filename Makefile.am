@@ -27,8 +27,7 @@ EXTRA_DIST = \
 	makefile.msc \
 	mkinstalldirs \
 	rules.msc \
-	version.h \
-	version.h.in
+	version.h
 
 if MAINTAINER_MODE
 dist-check-maintainer:
