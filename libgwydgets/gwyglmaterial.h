@@ -18,14 +18,19 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-
 #ifndef __GWY_GLMATERIAL_H__
 #define __GWY_GLMATERIAL_H__
 
-#include <GL/gl.h>
-
 #include <glib-object.h>
+#include <gtk/gtkgl.h>
 
+#ifdef G_OS_WIN32
+#define WIN32_LEAN_AND_MEAN 1
+#include <windows.h>
+#endif
+
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 G_BEGIN_DECLS
 

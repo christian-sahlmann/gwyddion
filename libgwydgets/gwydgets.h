@@ -21,8 +21,6 @@
 #ifndef __GWY_GWYDGETS_H__
 #define __GWY_GWYDGETS_H__
 
-#include <gdk/gdkgl.h>
-
 #include <libgwydgets/gwy3dview.h>
 #include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwyaxis.h>
