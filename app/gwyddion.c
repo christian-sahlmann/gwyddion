@@ -34,13 +34,8 @@
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#else
-#ifdef _MSC_VER
-#define unlink(name) _unlink(name)
-#else
-int unlink(const char *name);
 #endif
-#endif
+#include <libgwyddion/gwywin32unistd.h>
 
 #include <gtk/gtkglinit.h>
 #include <libgwymodule/gwymodule.h>
@@ -148,7 +143,12 @@ main(int argc, char *argv[])
     g_free(settings_file);
     g_strfreev(module_dirs);
     gwy_app_recent_file_list_free();
+    /* FIXME: This crashes in Win32.  Do not enable it.
+     * I've run it in a debugger, but still don't know why -- stderr becomes
+     * unusable somehow? */
+#ifndef G_OS_WIN32
     gwy_debug_objects_dump_to_file(stderr, 0);
+#endif
     gwy_debug_objects_clear();
 
     return 0;
