@@ -155,7 +155,7 @@ gwy_layer_pointer_motion_notify(GwyDataViewLayer *layer,
 
     pointer_layer = (GwyLayerPointer*)layer;
     if (!pointer_layer->button)
-        return;
+        return FALSE;
     oldx = pointer_layer->x;
     oldy = pointer_layer->y;
     x = event->x;
