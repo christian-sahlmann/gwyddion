@@ -210,7 +210,7 @@ read_datafield(gchar *buffer, gsize size)
 
 #define ByteSwap(x) BYTESWAP((unsigned char *) &x, sizeof(x))
 
-void
+static void
 BYTESWAP(unsigned char *b, int n)
 {
     int i = 0;
@@ -225,7 +225,7 @@ BYTESWAP(unsigned char *b, int n)
     }
 }
 
-float
+static float
 ByteSwapFloat(float x)
 {
     ByteSwap(x);
