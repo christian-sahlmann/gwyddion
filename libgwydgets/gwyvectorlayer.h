@@ -47,6 +47,8 @@ struct _GwyVectorLayer {
 
     GdkGC *gc;
     PangoLayout *layout;
+    GtkUpdateType update_policy;
+    guint timer;
 };
 
 struct _GwyVectorLayerClass {
@@ -83,6 +85,10 @@ gboolean         gwy_vector_layer_key_release          (GwyVectorLayer *layer,
 void             gwy_vector_layer_selection_finished   (GwyVectorLayer *layer);
 gint             gwy_vector_layer_get_nselected        (GwyVectorLayer *layer);
 void             gwy_vector_layer_unselect             (GwyVectorLayer *layer);
+GtkUpdateType    gwy_vector_layer_get_update_policy    (GwyVectorLayer *layer);
+void             gwy_vector_layer_set_update_policy    (GwyVectorLayer *layer,
+                                                        GtkUpdateType policy);
+void             gwy_vector_layer_updated              (GwyVectorLayer *layer);
 
 /* helpers */
 void             gwy_vector_layer_setup_gc             (GwyVectorLayer *layer);

@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
@@ -26,6 +27,7 @@
 
 #define GWY_VECTOR_LAYER_TYPE_NAME "GwyVectorLayer"
 
+#define GWY_SCROLL_DELAY_LENGTH  300
 #define BITS_PER_SAMPLE 8
 
 enum {
@@ -40,6 +42,7 @@ static void     gwy_vector_layer_init         (GwyVectorLayer *layer);
 static void     gwy_vector_layer_finalize     (GObject *object);
 static void     gwy_vector_layer_plugged      (GwyDataViewLayer *layer);
 static void     gwy_vector_layer_unplugged    (GwyDataViewLayer *layer);
+static gboolean gwy_vector_layer_timer        (GwyVectorLayer *layer);
 
 /* Local data */
 
@@ -122,6 +125,8 @@ gwy_vector_layer_init(GwyVectorLayer *layer)
 
     layer->gc = NULL;
     layer->layout = NULL;
+    layer->timer = 0;
+    layer->update_policy = GTK_UPDATE_CONTINUOUS;
 }
 
 static void
@@ -323,6 +328,83 @@ gwy_vector_layer_selection_finished(GwyVectorLayer *layer)
     g_signal_emit(layer, vector_layer_signals[SELECTION_FINISHED], 0);
 }
 
+/**
+ * gwy_vector_layer_set_update_policy:
+ * @layer: A vector data view layer.
+ * @policy: the update policy the vector layer should use.
+ *
+ * Sets update policy for a vector layer @layer.
+ **/
+void
+gwy_vector_layer_set_update_policy(GwyVectorLayer *layer,
+                                   GtkUpdateType policy)
+{
+    g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
+
+    layer->update_policy = policy;
+}
+
+/**
+ * gwy_vector_layer_get_update_policy:
+ * @layer: A vector data view layer.
+ *
+ * Returns the update policy of a vector layer @layer.
+ *
+ * Returns: The update policy.
+ **/
+GtkUpdateType
+gwy_vector_layer_get_update_policy(GwyVectorLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), 0);
+
+    return layer->update_policy;
+}
+
+/**
+ * gwy_vector_layer_updated:
+ * @layer: A vector data view layer.
+ *
+ * Maybe emit the "updated" signal on @layer.
+ *
+ * Unlike gwy_data_view_layer_updated(), this function honours vector layer
+ * update policy, so the "update" signal may not be actually emited right
+ * now.
+ **/
+void
+gwy_vector_layer_updated(GwyVectorLayer *layer)
+{
+    switch (layer->update_policy) {
+        case GTK_UPDATE_CONTINUOUS:
+        g_signal_emit_by_name(layer, "updated");
+        break;
+
+        case GTK_UPDATE_DELAYED:
+        if (layer->timer)
+            gtk_timeout_remove(layer->timer);
+        layer->timer = gtk_timeout_add(GWY_SCROLL_DELAY_LENGTH,
+                                       (GtkFunction)gwy_vector_layer_timer,
+                                       layer);
+        break;
+
+        case GTK_UPDATE_DISCONTINUOUS:
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+}
+
+static gboolean
+gwy_vector_layer_timer(GwyVectorLayer *layer)
+{
+    if (layer->update_policy == GTK_UPDATE_DELAYED)
+        g_signal_emit_by_name(layer, "updated");
+
+    layer->timer = 0;
+    return FALSE;
+}
+
 static void
 gwy_vector_layer_plugged(GwyDataViewLayer *layer)
 {
@@ -336,10 +418,14 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
 
     gwy_debug("");
 
-    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
-
     vector_layer = GWY_VECTOR_LAYER(layer);
     gwy_object_unref(vector_layer->gc);
+    if (vector_layer->timer) {
+        gtk_timeout_remove(vector_layer->timer);
+        vector_layer->timer = 0;
+    }
+
+    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
 
 /**
