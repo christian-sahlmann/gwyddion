@@ -35,12 +35,11 @@
 
 typedef struct {
     GwyUnitoolState *state;
+    GwyUnitoolRectLabels labels;
     GtkWidget *graph;
     GtkWidget *interpolation;
     GtkWidget *output;
     GtkWidget *direction;
-    GtkWidget *xy;
-    GtkWidget *wh;
     GwyInterpolationType interp;
     GwySFOutputType out;
     GtkOrientation dir;
@@ -77,7 +76,7 @@ static GwyModuleInfo module_info = {
     "sfunctions",
     N_("Statistical functions."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -155,7 +154,8 @@ dialog_create(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwyContainer *settings;
-    GtkWidget *dialog, *table, *label, *vbox, *frame;
+    GtkWidget *dialog, *table, *label, *vbox, *frame, *hbox;
+    gint row;
 
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
@@ -168,111 +168,79 @@ dialog_create(GwyUnitoolState *state)
     gwy_unitool_dialog_add_button_hide(dialog);
     gwy_unitool_dialog_add_button_apply(dialog);
 
-    table = gtk_table_new(2, 2, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), hbox);
 
     vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
     frame = gwy_unitool_windowname_frame_create(state);
     gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Area of computation</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+    table = gtk_table_new(6, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    row = 0;
 
-    label = gtk_label_new(_("Origin: (x, y)"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-
-    controls->xy = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->xy), 1.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), controls->xy, FALSE, FALSE, 0);
-
-    label = gtk_label_new(_("Size: (w x h)"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-
-    controls->wh = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->wh), 1.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), controls->wh, FALSE, FALSE, 0);
-
+    row += gwy_unitool_rect_info_table_setup(&controls->labels,
+                                             GTK_TABLE(table), 0, row);
+    controls->labels.unselected_is_full = TRUE;
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 10);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     label = gtk_label_new_with_mnemonic(_("_Output type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls->output
         = gwy_option_menu_sfunctions_output(G_CALLBACK(output_changed_cb),
                                             controls, controls->out);
-    gtk_box_pack_start(GTK_BOX(vbox), controls->output, FALSE, FALSE, 2);
-
+    gtk_table_attach(GTK_TABLE(table), controls->output, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
+    row++;
 
     label = gtk_label_new_with_mnemonic(_("Computation _direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls->direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
                                     controls, controls->dir);
-    gtk_box_pack_start(GTK_BOX(vbox), controls->direction, FALSE, FALSE, 2);
-
+    gtk_table_attach(GTK_TABLE(table), controls->direction, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
+    row++;
 
     label = gtk_label_new_with_mnemonic(_("Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls->interpolation
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         controls, controls->interp);
-    gtk_box_pack_start(GTK_BOX(vbox), controls->interpolation, FALSE, FALSE, 2);
-
-    gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1,
-                     GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls->interpolation,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls->graph = gwy_graph_new();
     gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls->graph), FALSE);
-    gtk_table_attach(GTK_TABLE(table), controls->graph, 1, 2, 0, 1,
-                     GTK_FILL, 0, 2, 2);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->graph, FALSE, FALSE, 0);
 
     return dialog;
-}
-
-static void
-update_labels(GwyUnitoolState *state)
-{
-    ToolControls *controls;
-    GwyContainer *data;
-    GwyDataField *dfield;
-    GwySIValueFormat *units;
-    GwyDataViewLayer *layer;
-    gdouble xmin, xmax, ymin, ymax;
-    gchar buffer[64];
-
-    controls = (ToolControls*)state->user_data;
-    units = state->coord_format;
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_unitool_get_selection_or_all(state, &xmin, &ymin, &xmax, &ymax);
-
-    g_snprintf(buffer, sizeof(buffer), "%.*f, %.*f %s",
-               units->precision, xmin/units->magnitude,
-               units->precision, ymin/units->magnitude,
-               units->units);
-    gtk_label_set_markup(GTK_LABEL(controls->xy), buffer);
-
-    g_snprintf(buffer, sizeof(buffer), "%.*f × %.*f %s",
-               units->precision, fabs(xmax-xmin)/units->magnitude,
-               units->precision, fabs(ymax-ymin)/units->magnitude,
-               units->units);
-    gtk_label_set_markup(GTK_LABEL(controls->wh), buffer);
 }
 
 static void
@@ -284,22 +252,21 @@ dialog_update(GwyUnitoolState *state,
     GwyDataField *dfield;
     GwyDataLine *dataline;
     GwyDataViewLayer *layer;
-    gint xm1, xm2, ym1, ym2;
+    gint isel[4];
     GwyGraphAutoProperties prop;
     GString *lab;
-    gdouble xmin, ymin, xmax, ymax;
 
     gwy_debug("");
+    /* XXX */
+    if (!state->is_visible)
+        return;
 
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_unitool_get_selection_or_all(state, &xmin, &ymin, &xmax, &ymax);
 
-    /* XXX */
-    if (!state->is_visible)
-        return;
+    gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
 
     gwy_graph_get_autoproperties(GWY_GRAPH(controls->graph), &prop);
     prop.is_point = FALSE;
@@ -307,27 +274,20 @@ dialog_update(GwyUnitoolState *state,
     gwy_graph_set_autoproperties(GWY_GRAPH(controls->graph), &prop);
     gwy_graph_clear(GWY_GRAPH(controls->graph));
 
-    xm1 = ROUND(gwy_data_field_rtoj(dfield, xmin));
-    ym1 = ROUND(gwy_data_field_rtoj(dfield, ymin));
-    xm2 = ROUND(gwy_data_field_rtoj(dfield, xmax));
-    ym2 = ROUND(gwy_data_field_rtoj(dfield, ymax));
-
     dataline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
     lab = g_string_new(gwy_enum_to_string(controls->out,
                                           sf_types, G_N_ELEMENTS(sf_types)));
 
     if (gwy_data_field_get_line_stat_function(dfield, dataline,
-                                              xm1, ym1,
-                                              xm2, ym2,
+                                              isel[0], isel[1],
+                                              isel[2], isel[3],
                                               controls->out,
                                               controls->dir,
                                               controls->interp,
                                               GWY_WINDOWING_HANN,
-                                              100)) {
+                                              100))
         gwy_graph_add_dataline(GWY_GRAPH(controls->graph), dataline,
                                0, lab, NULL);
-        update_labels(state);
-    }
     g_string_free(lab, TRUE);
     g_object_unref(dataline);
 }
