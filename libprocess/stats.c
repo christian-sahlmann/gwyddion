@@ -1214,7 +1214,7 @@ gwy_data_field_area_get_inclination(GwyDataField *data_field,
 
 
 /**
- * gwy_data_field_area_get_inclination:
+ * gwy_data_field_get_inclination:
  * @data_field: A data field.
  * @theta: Where theta angle (in radians) should be stored, or %NULL.
  * @phi: Where phi angle (in radians) should be stored, or %NULL.
