@@ -135,7 +135,7 @@ gwy_layer_mask_paint(GwyDataViewLayer *layer)
                      gwy_container_get_object_by_name(layer->data,
                                                       "/0/mask"));
     g_return_val_if_fail(data_field, layer->pixbuf);
-    if (GWY_LAYER_MASK(layer)->changed) {
+    /*if (GWY_LAYER_MASK(layer)->changed)*/ {
         GTimer *timer;
 
         timer = g_timer_new();
