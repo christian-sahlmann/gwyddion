@@ -215,6 +215,8 @@ gwy_load_modules_in_dir(GDir *gdir,
     }
 }
 
+/************************** Documentation ****************************/
+
 /**
  * GWY_MODULE_ABI_VERSION:
  *

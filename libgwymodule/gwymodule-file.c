@@ -2,6 +2,8 @@
 
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwycontainer.h>
+#include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 
 #include "gwymodule-file.h"
@@ -118,6 +120,9 @@ gwy_run_file_load_func(const gchar *name,
  *
  * Runs a file save function identified by @name.
  *
+ * It guarantees the container lifetime spans through the actual file saving,
+ * so the module function doesn't have to care about it.
+ *
  * Returns: %TRUE if file save succeeded, %FALSE otherwise.
  **/
 gboolean
@@ -126,14 +131,24 @@ gwy_run_file_save_func(const gchar *name,
                        const gchar *filename)
 {
     GwyFileFuncInfo *func_info;
+    GwyDataField *dfield;
+    gboolean status;
 
     g_return_val_if_fail(filename, FALSE);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, FALSE);
     g_return_val_if_fail(func_info->save, FALSE);
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+    /* TODO: Container */
+    dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+    g_object_ref(data);
+    g_object_ref(dfield);
+    status = func_info->save(data, filename);
+    g_object_unref(dfield);
+    g_object_unref(data);
 
-    return func_info->save(data, filename);
+    return status;
 }
 
 static void
@@ -235,6 +250,8 @@ gwy_file_save(GwyContainer *data,
 
     return gwy_run_file_save_func(ddata.winner, data, filename);
 }
+
+/************************** Documentation ****************************/
 
 /**
  * GwyFileFuncInfo:

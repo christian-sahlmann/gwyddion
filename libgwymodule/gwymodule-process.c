@@ -4,6 +4,8 @@
 #include <gtk/gtkitemfactory.h>
 #include <gtk/gtkmenubar.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwycontainer.h>
+#include <libprocess/datafield.h>
 
 #include "gwymodule-process.h"
 
@@ -59,6 +61,9 @@ gwy_register_process_func(const gchar *modname,
  *
  * Runs a data processing function identified by @name.
  *
+ * It guarantees the container lifetime spans through the actual processing,
+ * so the module function doesn't have to care about it.
+ *
  * Returns: %TRUE on success, %FALSE on failure.
  **/
 gboolean
@@ -67,12 +72,23 @@ gwy_run_process_func(const guchar *name,
                      GwyRunType run)
 {
     GwyProcessFuncInfo *func_info;
+    GwyDataField *dfield;
+    gboolean status;
 
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, FALSE);
     g_return_val_if_fail(run & func_info->run, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-    return func_info->process(data, run);
+    /* TODO: Container */
+    dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+    g_object_ref(data);
+    g_object_ref(dfield);
+    status = func_info->process(data, run);
+    g_object_unref(dfield);
+    g_object_unref(data);
+
+    return status;
 }
 
 static void
@@ -211,6 +227,8 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
 
     return (GtkObject*)item_factory;
 }
+
+/************************** Documentation ****************************/
 
 /**
  * GwyProcessFuncInfo:
