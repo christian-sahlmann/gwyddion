@@ -8,3 +8,6 @@ test
 core.*
 *.def
 makefile.msc
+gwyprocesstypes.c
+gwyprocesstypes.h
+stamp-gwyprocesstypes.h

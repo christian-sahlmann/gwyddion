@@ -11,3 +11,6 @@ test
 core.*
 *.def
 makefile.msc
+gwydgettypes.c
+gwydgettypes.h
+stamp-gwydgettypes.h
