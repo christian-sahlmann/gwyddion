@@ -12,13 +12,21 @@ if len(sys.argv) != 2:
     print """\
 Usage: %s config-file.py >something.vim'
 Config-file options:
-  syntax_name          Vim syntax name (mandatory)
-  file_glob            SOMETHING-decl.txt files to scan (mandatory)
-  description          Syntax file metadata Language field
-  url                  Syntax file metadata URL field
-  mantainer            Syntax file metadata Maintainer field
-  filter_regexp        Exclude matching symbols (default: r'^_')""" \
-          % sys.argv[0]
+  syntax_name       Vim syntax name (mandatory)
+  file_glob         SOMETHING-decl.txt files to scan (mandatory)
+  description       Syntax file metadata Language field
+  url               Syntax file metadata URL field
+  mantainer         Syntax file metadata Maintainer field
+  filter_regexp     Exclude matching symbols (default: r'^_')
+  override          Declaration override map (like {'NULL': 'Constant', ... })
+  types             Type highligting override map (like {'Enum': 'Keyword'})
+
+Gtk-doc types (case in doesn't matter):
+  Constant, Macro, Function, Struct, Enum, Typedef, User_Function
+Extra vim-syn-gen types:
+  Define (parameterless macro)
+Version: $Id$\
+""" % sys.argv[0]
     sys.exit(0)
 
 xoptions = {}
@@ -39,6 +47,7 @@ else:
 # Default highlighting
 types = {
     'CONSTANT': 'Constant',
+    'DEFINE': 'Constant',   # non-parametric macros
     'MACRO': 'Macro',
     'FUNCTION': 'Function',
     'STRUCT': 'Type',
@@ -46,6 +55,9 @@ types = {
     'TYPEDEF': 'Type',
     'USER_FUNCTION': 'Type'
 }
+
+if options.has_key('types'):
+    types.update(dict([(k.upper(), v) for k, v in options['types'].items()]))
 
 header_template = """\
 " Vim syntax file
@@ -88,6 +100,7 @@ re_decl = re.compile(r'<(?P<type>' + r'|'.join(types.keys()) + r')>\n'
                      + r'</(?P=type)>\n',
                      re.S)
 re_enum = re.compile(r'^\s+(?P<ident>[A-Z][A-Z0-9_]+)\s*=', re.M)
+re_param_macro = re.compile(r'^\s*#\s*define\s+\w+\(', re.M)
 re_filter = re.compile(options['filter_regexp'])
 
 def print_decls(decldict):
@@ -97,6 +110,17 @@ def print_decls(decldict):
             continue
         d.sort()
         print 'syn keyword %s%s %s' % (syntax_name, normalize(t), ' '.join(d))
+
+def override(decldict, overides):
+    for o, v in overides.items():
+        v = v.upper()
+        has_it = False
+        for k, d in decldict.items():
+            if d.has_key(o):
+                has_it = True
+                del d[o]
+        if has_it:
+            decldict[v][o] = 1
 
 decls = dict([(x, {}) for x in types])
 depdecls = dict([(x, {}) for x in types])
@@ -114,10 +138,16 @@ for filename in glob.glob(options['file_glob']):
         else:
             insert_to = decls
 
+        if d['type'] == 'MACRO' and not re_param_macro.search(d['body']):
+            d['type'] = 'DEFINE'
         insert_to[d['type']][d['ident']] = 1
         if d['type'] == 'ENUM':
             for e in re_enum.finditer(d['body']):
                 insert_to['CONSTANT'][e.group('ident')] = 1
+
+if options.has_key('overide'):
+    override(decls, options['override'])
+    override(depdecls, options['override'])
 
 print header
 print_decls(decls)
