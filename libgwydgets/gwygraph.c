@@ -725,7 +725,7 @@ gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curve)
     gint i;
 
     g_return_if_fail(GWY_IS_GRAPH(graph));
-    g_return_if_fail(curve >= 0 && curve < graph->area->curves->len);
+    g_return_if_fail(curve >= 0 && (gsize)curve < graph->area->curves->len);
 
     pcurve = g_ptr_array_index(graph->area->curves, curve);
 
@@ -751,8 +751,9 @@ gwy_graph_get_data_size(GwyGraph *graph, gint curve)
 {
     GwyGraphAreaCurve *pcurve;
 
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-    g_return_if_fail(curve >= 0 && curve < graph->area->curves->len);
+    g_return_val_if_fail(GWY_IS_GRAPH(graph), 0);
+    g_return_val_if_fail(curve >= 0 && (gsize)curve < graph->area->curves->len,
+                         0);
 
     pcurve = g_ptr_array_index(graph->area->curves, curve);
 
@@ -770,7 +771,7 @@ gwy_graph_get_data_size(GwyGraph *graph, gint curve)
 gint
 gwy_graph_get_number_of_curves(GwyGraph *graph)
 {
-    g_return_if_fail(GWY_IS_GRAPH(graph));
+    g_return_val_if_fail(GWY_IS_GRAPH(graph), 0);
 
     return graph->n_of_curves;
 }
@@ -792,8 +793,9 @@ gwy_graph_get_label(GwyGraph *graph, gint curve)
 {
     GwyGraphAreaCurve *pcurve;
 
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-    g_return_if_fail(curve >= 0 && curve < graph->area->curves->len);
+    g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
+    g_return_val_if_fail(curve >= 0 && (gsize)curve < graph->area->curves->len,
+                         NULL);
 
     pcurve = g_ptr_array_index(graph->area->curves, curve);
 
