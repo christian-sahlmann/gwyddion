@@ -16,9 +16,13 @@ Stock icons
 
 <!-- ##### MACRO GWY_STOCK_3D_BASE ##### -->
 <para>
-
+The "3D-Base" stock icon.
+<inlinegraphic fileref="gwy_3d_base-24.png" format="PNG"></inlinegraphic>
 </para>
 
+<para>
+Since: 1.5
+</para>
 
 
 <!-- ##### MACRO GWY_STOCK_BOLD ##### -->
@@ -35,6 +39,17 @@ The "Crop" stock icon.
 <inlinegraphic fileref="gwy_crop-24.png" format="PNG"></inlinegraphic>
 </para>
 
+
+
+<!-- ##### MACRO GWY_STOCK_COLOR_RANGE ##### -->
+<para>
+The "Color-Range" stock icon.
+<inlinegraphic fileref="gwy_color_range-24.png" format="PNG"></inlinegraphic>
+</para>
+
+<para>
+Since: 1.6
+</para>
 
 
 <!-- ##### MACRO GWY_STOCK_CWT ##### -->
@@ -99,6 +114,9 @@ The "Fractal" stock icon.
 <inlinegraphic fileref="gwy_fractal-24.png" format="PNG"></inlinegraphic>
 </para>
 
+<para>
+Since: 1.1
+</para>
 
 
 <!-- ##### MACRO GWY_STOCK_GRAINS ##### -->
@@ -147,6 +165,9 @@ The "Graph-Fit-Func" stock icon.
 <inlinegraphic fileref="gwy_graph_fit_func-24.png" format="PNG"></inlinegraphic>
 </para>
 
+<para>
+Since: 1.2
+</para>
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_GAUSS ##### -->
@@ -195,6 +216,9 @@ The "Graph-Ruler" stock icon.
 <inlinegraphic fileref="gwy_graph_ruler-24.png" format="PNG"></inlinegraphic>
 </para>
 
+<para>
+Since: 1.4
+</para>
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_ZOOM_FIT ##### -->
@@ -239,9 +263,13 @@ The "Italic" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_LIGHT_ROTATE ##### -->
 <para>
-
+The "Light-Rotate" stock icon.
+<inlinegraphic fileref="gwy_light_rotate-24.png" format="PNG"></inlinegraphic>
 </para>
 
+<para>
+Since: 1.5
+</para>
 
 
 <!-- ##### MACRO GWY_STOCK_NONE ##### -->
@@ -346,13 +374,20 @@ The "Unrotate" stock icon.
 <inlinegraphic fileref="gwy_unrotate-24.png" format="PNG"></inlinegraphic>
 </para>
 
+<para>
+Since: 1.2
+</para>
 
 
 <!-- ##### MACRO GWY_STOCK_Z_SCALE ##### -->
 <para>
-
+The "Z-Scale" stock icon.
+<inlinegraphic fileref="gwy_z_scale-24.png" format="PNG"></inlinegraphic>
 </para>
 
+<para>
+Since: 1.5
+</para>
 
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_1_1 ##### -->
