@@ -9,6 +9,14 @@
 import array as _array
 import re as _re
 import types as _types
+import struct as _struct
+
+if _struct.unpack('<i', _struct.pack('@i', 12345))[0] == 12345:
+    _byte_order = None
+elif _struct.unpack('>i', _struct.pack('@i', 12345))[0] == 12345:
+    _byte_order = 'Big-endian, need swap'
+else:
+    raise NotImplementedError, "Uknown or silly byte order"
 
 def _dmove(d1, k1, d2, k2, typ=None):
     try:
@@ -38,6 +46,8 @@ def _read_dfield(fh, data, base):
     _dmove(data, base + '/unit-z', dfield, 'unit-z')
     a = _array.array('d')
     a.fromfile(fh, dfield['xres']*dfield['yres'])
+    if _byte_order:
+        a.byteswap()
     c = fh.readline()
     assert c == ']]\n'
     dfield['data'] = a
@@ -95,7 +105,12 @@ def _write_dfield(fh, dfield, base):
     _dwrite(fh, dfield, base, 'unit-xy', '%s')
     _dwrite(fh, dfield, base, 'unit-z', '%s')
     fh.write('%s=[\n[' % base)
+    if _byte_order:
+        dfield['data'].byteswap()
     dfield['data'].tofile(fh)
+    # swap back to keep the array usable
+    if _byte_order:
+        dfield['data'].byteswap()
     fh.write(']]\n')
 
 def write(data, filename):
