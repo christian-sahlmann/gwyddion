@@ -251,6 +251,25 @@ gwy_data_line_psdf
 </SECTION>
 
 <SECTION>
+<FILE>cdline</FILE>
+GwyCDLineType
+GwyCDLineFitFunc
+GwyCDLineCDFunc
+GwyCDLinePreset
+GwyCDLineParam
+gwy_cdline_get_npresets
+gwy_cdline_get_preset
+gwy_cdline_get_preset_by_name
+gwy_cdline_get_preset_id
+gwy_cdline_get_preset_name
+gwy_cdline_get_preset_formula
+gwy_cdline_get_preset_param_name
+gwy_cdline_get_preset_param_default
+gwy_cdline_get_preset_nparams
+gwy_cdline_fit_preset
+</SECTION>
+
+<SECTION>
 <FILE>fractals</FILE>
 gwy_data_field_fractal_partitioning
 gwy_data_field_fractal_cubecounting

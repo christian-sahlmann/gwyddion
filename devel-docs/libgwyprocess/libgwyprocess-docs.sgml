@@ -8,6 +8,7 @@
 
   <xi:include href="xml/dataline.xml"/>
   <xi:include href="xml/datafield.xml"/>
+  <xi:include href="xml/cdline.xml"/>
   <xi:include href="xml/correct.xml"/>
   <xi:include href="xml/correlation.xml"/>
   <xi:include href="xml/cwt.xml"/>
