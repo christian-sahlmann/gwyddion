@@ -62,11 +62,6 @@ static void          angle_dialog_update_values   (AngleControls *controls,
                                                    AngleArgs *args);
 static void          angle_fit_plane_cb           (GtkToggleButton *check,
                                                    AngleControls *controls);
-static void          plane_coeffs                 (gdouble *datapos,
-                                                   gint rowstride,
-                                                   gint kernel_size,
-                                                   gdouble *bx,
-                                                   gdouble *by);
 static GwyDataField* angle_do                     (GwyDataField *dfield,
                                                    AngleArgs *args);
 static void          load_args                    (GwyContainer *container,
@@ -328,36 +323,6 @@ angle_do(GwyDataField *dfield,
     return make_datafield(dfield, args->size, count, 2.0*G_PI, args->logscale);
 }
 
-static void
-plane_coeffs(gdouble *datapos, gint rowstride, gint kernel_size,
-             gdouble *bx, gdouble *by)
-{
-    gdouble sumxi, sumxixi, sumyi, sumyiyi;
-    gdouble sumsi = 0.0;
-    gdouble sumsixi = 0.0;
-    gdouble sumsiyi = 0.0;
-    gint i, j;
-
-    sumxi = sumyi = (kernel_size-1.0)/2;
-    sumxixi = sumyiyi = (2*kernel_size-1.0)*(kernel_size-1.0)/6;
-
-    for (i = 0; i < kernel_size; i++) {
-        gdouble *row = datapos + i*rowstride;
-
-        for (j = 0; j < kernel_size; j++) {
-            sumsi += row[j];
-            sumsixi += row[j]*j;
-            sumsiyi += row[j]*i;
-        }
-    }
-    sumsi /= kernel_size*kernel_size;
-    sumsixi /= kernel_size*kernel_size;
-    sumsiyi /= kernel_size*kernel_size;
-
-    *bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
-    *by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
-}
-
 static gdouble
 compute_slopes(GwyDataField *dfield,
                gint kernel_size,
@@ -374,17 +339,14 @@ compute_slopes(GwyDataField *dfield,
     data = gwy_data_field_get_data(dfield);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    qx = xres/gwy_data_field_get_xreal(dfield);
-    qy = yres/gwy_data_field_get_yreal(dfield);
     max = 0.0;
     if (kernel_size) {
         for (row = 0; row + kernel_size < yres; row++) {
             for (col = 0; col + kernel_size < xres; col++) {
-                plane_coeffs(data + xres*row + col, xres, kernel_size,
-                             &dx, &dy);
-                dx *= qx;
+                gwy_data_field_area_fit_plane(dfield, col, row,
+                                              kernel_size, kernel_size,
+                                              NULL, &dx, &dy);
                 *(xder++) = dx;
-                dx *= qy;
                 *(yder++) = dy;
                 d = dx*dx + dy*dy;
                 max = MAX(d, max);
@@ -392,6 +354,8 @@ compute_slopes(GwyDataField *dfield,
         }
     }
     else {
+        qx = xres/gwy_data_field_get_xreal(dfield);
+        qy = yres/gwy_data_field_get_yreal(dfield);
         for (row = 1; row + 1 < yres; row++) {
             for (col = 1; col + 1 < xres; col++) {
                 dx = data[row*xres + col + 1] - data[row*xres + col - 1];

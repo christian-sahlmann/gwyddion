@@ -75,11 +75,6 @@ static void          load_args                    (GwyContainer *container,
                                                    SlopeArgs *args);
 static void          save_args                    (GwyContainer *container,
                                                    SlopeArgs *args);
-static void          plane_coeffs                 (gdouble *datapos,
-                                                   gint rowstride,
-                                                   gint kernel_size,
-                                                   gdouble *bx,
-                                                   gdouble *by);
 static gdouble       compute_slopes               (GwyDataField *dfield,
                                                    gint kernel_size,
                                                    gdouble *xder,
@@ -446,36 +441,6 @@ slope_do_graph(GwyDataField *dfield,
     return graph;
 }
 
-static void
-plane_coeffs(gdouble *datapos, gint rowstride, gint kernel_size,
-             gdouble *bx, gdouble *by)
-{
-    gdouble sumxi, sumxixi, sumyi, sumyiyi;
-    gdouble sumsi = 0.0;
-    gdouble sumsixi = 0.0;
-    gdouble sumsiyi = 0.0;
-    gint i, j;
-
-    sumxi = sumyi = (kernel_size-1.0)/2;
-    sumxixi = sumyiyi = (2*kernel_size-1.0)*(kernel_size-1.0)/6;
-
-    for (i = 0; i < kernel_size; i++) {
-        gdouble *row = datapos + i*rowstride;
-
-        for (j = 0; j < kernel_size; j++) {
-            sumsi += row[j];
-            sumsixi += row[j]*j;
-            sumsiyi += row[j]*i;
-        }
-    }
-    sumsi /= kernel_size*kernel_size;
-    sumsixi /= kernel_size*kernel_size;
-    sumsiyi /= kernel_size*kernel_size;
-
-    *bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
-    *by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
-}
-
 static gdouble
 compute_slopes(GwyDataField *dfield,
                gint kernel_size,
@@ -499,17 +464,16 @@ compute_slopes(GwyDataField *dfield,
             for (col = 0; col + kernel_size < xres; col++) {
                 gdouble dx, dy;
 
-                plane_coeffs(data + xres*row + col, xres, kernel_size,
-                             &dx, &dy);
-                d = dx*qx;
-                *(xder++) = d;
-                d = fabs(d);
-                max = MAX(d, max);
+                gwy_data_field_area_fit_plane(dfield, col, row,
+                                              kernel_size, kernel_size,
+                                              NULL, &dx, &dy);
+                *(xder++) = dx;
+                dx = fabs(dx);
+                max = MAX(dx, max);
 
-                d = dy*qy;
-                *(yder++) = d;
-                d = fabs(d);
-                max = MAX(d, max);
+                *(yder++) = dy;
+                dy = fabs(dy);
+                max = MAX(dy, max);
             }
         }
     }
