@@ -57,7 +57,7 @@
 #define CHECK_DARK  21845  /* 65535 / 3     */
 #define CHECK_LIGHT 43690
 
-#define GWY_COLOR_BUTTON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GTK_TYPE_COLOR_BUTTON, GwyColorButtonPrivate))
+#define GWY_COLOR_BUTTON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GWY_TYPE_COLOR_BUTTON, GwyColorButtonPrivate))
 
 #define P_(x) x
 
@@ -636,7 +636,7 @@ gwy_color_button_finalize (GObject *object)
 GtkWidget *
 gwy_color_button_new (void)
 {
-  return g_object_new (GTK_TYPE_COLOR_BUTTON, NULL);
+  return g_object_new (GWY_TYPE_COLOR_BUTTON, NULL);
 }
 
 /**
@@ -652,7 +652,7 @@ gwy_color_button_new (void)
 GtkWidget *
 gwy_color_button_new_with_color (GdkColor *color)
 {
-  return g_object_new (GTK_TYPE_COLOR_BUTTON, "color", color, NULL);
+  return g_object_new (GWY_TYPE_COLOR_BUTTON, "color", color, NULL);
 }
 
 static void
@@ -768,7 +768,7 @@ void
 gwy_color_button_set_color (GwyColorButton *color_button,
 			    GdkColor       *color)
 {
-  g_return_if_fail (GTK_IS_COLOR_BUTTON (color_button));
+  g_return_if_fail (GWY_IS_COLOR_BUTTON (color_button));
 
   color_button->priv.color.red = color->red;
   color_button->priv.color.green = color->green;
@@ -797,7 +797,7 @@ void
 gwy_color_button_set_alpha (GwyColorButton *color_button,
 			    guint16         alpha)
 {
-  g_return_if_fail (GTK_IS_COLOR_BUTTON (color_button));
+  g_return_if_fail (GWY_IS_COLOR_BUTTON (color_button));
 
   color_button->priv.alpha = alpha;
 
@@ -823,7 +823,7 @@ void
 gwy_color_button_get_color (GwyColorButton *color_button,
 			    GdkColor       *color)
 {
-  g_return_if_fail (GTK_IS_COLOR_BUTTON (color_button));
+  g_return_if_fail (GWY_IS_COLOR_BUTTON (color_button));
 
   color->red = color_button->priv.color.red;
   color->green = color_button->priv.color.green;
@@ -843,7 +843,7 @@ gwy_color_button_get_color (GwyColorButton *color_button,
 guint16
 gwy_color_button_get_alpha (GwyColorButton *color_button)
 {
-  g_return_val_if_fail (GTK_IS_COLOR_BUTTON (color_button), 0);
+  g_return_val_if_fail (GWY_IS_COLOR_BUTTON (color_button), 0);
 
   return color_button->priv.alpha;
 }
@@ -861,7 +861,7 @@ void
 gwy_color_button_set_use_alpha (GwyColorButton *color_button,
 				gboolean        use_alpha)
 {
-  g_return_if_fail (GTK_IS_COLOR_BUTTON (color_button));
+  g_return_if_fail (GWY_IS_COLOR_BUTTON (color_button));
 
   use_alpha = (use_alpha != FALSE);
 
@@ -889,7 +889,7 @@ gwy_color_button_set_use_alpha (GwyColorButton *color_button,
 gboolean
 gwy_color_button_get_use_alpha (GwyColorButton *color_button)
 {
-  g_return_val_if_fail (GTK_IS_COLOR_BUTTON (color_button), FALSE);
+  g_return_val_if_fail (GWY_IS_COLOR_BUTTON (color_button), FALSE);
 
   return color_button->priv.use_alpha;
 }
@@ -910,7 +910,7 @@ gwy_color_button_set_title (GwyColorButton *color_button,
 {
   gchar *old_title;
 
-  g_return_if_fail (GTK_IS_COLOR_BUTTON (color_button));
+  g_return_if_fail (GWY_IS_COLOR_BUTTON (color_button));
 
   old_title = color_button->priv.title;
   color_button->priv.title = g_strdup (title);
@@ -936,7 +936,7 @@ gwy_color_button_set_title (GwyColorButton *color_button,
 G_CONST_RETURN gchar *
 gwy_color_button_get_title (GwyColorButton *color_button)
 {
-  g_return_val_if_fail (GTK_IS_COLOR_BUTTON (color_button), NULL);
+  g_return_val_if_fail (GWY_IS_COLOR_BUTTON (color_button), NULL);
 
   return color_button->priv.title;
 }
