@@ -94,7 +94,7 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
 
     g_assert(run & GWY_RUN_ANY);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
+    gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
 
     return TRUE;
 }
@@ -106,7 +106,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
 
     g_assert(run & GWY_RUN_ANY);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
+    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
     return TRUE;
 }
