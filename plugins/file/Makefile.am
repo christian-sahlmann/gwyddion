@@ -2,8 +2,11 @@
 
 filedir = $(gwyplugindir)/file
 
-file_SCRIPTS = \
-	dump.sh
+file_PROGRAMS = \
+	dump
+
+dump_SOURCES = \
+	dump.c
 
 EXTRA_DIST = $(file_SCRIPTS)
 INCLUDES = -I$(top_srcdir)
