@@ -97,7 +97,7 @@ static GwyModuleInfo module_info = {
     "sphere_revolve",
     N_("Level data by revolving an arc or a sphere."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -232,7 +232,8 @@ sphrev_dialog(Sphrev1DArgs *args)
     gwy_debug("q = %f", q);
     controls.radius = gtk_adjustment_new(q*args->size, q, 16384*q, q, 10*q, 0);
     spin = gwy_table_attach_hscale(table, row, _("Real _radius:"),
-                                   args->valform.units, controls.radius, 0);
+                                   args->valform.units, controls.radius,
+                                   GWY_HSCALE_SQRT);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), args->valform.precision);
     g_object_set_data(G_OBJECT(controls.radius), "controls", &controls);
     g_signal_connect(controls.radius, "value_changed",
@@ -241,7 +242,7 @@ sphrev_dialog(Sphrev1DArgs *args)
 
     controls.size = gtk_adjustment_new(args->size, 1, 16384, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("_Pixel radius:"), "px",
-                            controls.size, 0);
+                            controls.size, GWY_HSCALE_SQRT);
     g_object_set_data(G_OBJECT(controls.size), "controls", &controls);
     g_signal_connect(controls.size, "value_changed",
                      G_CALLBACK(size_changed_cb), args);
