@@ -83,6 +83,20 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
     gtk_widget_show_all(window);
 }
 
+static gint
+gwy_meta_sort_func(GtkTreeModel *model,
+                   GtkTreeIter *a,
+                   GtkTreeIter *b,
+                   G_GNUC_UNUSED gpointer user_data)
+{
+    gchar *ka, *kb;
+
+    gtk_tree_model_get(model, a, 0, &ka, -1);
+    gtk_tree_model_get(model, b, 0, &kb, -1);
+
+    return strcmp(ka, kb);
+}
+
 static GtkWidget*
 gwy_meta_browser_construct(GwyContainer *data)
 {
@@ -112,6 +126,11 @@ gwy_meta_browser_construct(GwyContainer *data)
     g_object_set_data(G_OBJECT(store), "container", data);
     gwy_container_foreach(data, "/meta",
                           (GHFunc)(gwy_meta_browser_add_line), store);
+
+    gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
+                                    0, gwy_meta_sort_func, NULL, NULL);
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), 0,
+                                         GTK_SORT_ASCENDING);
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
