@@ -108,8 +108,8 @@ stats_use(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     layer = gwy_data_view_get_top_layer(data_view);
-/*    if (layer && layer == select_layer)
-        return;*/
+    if (layer && layer == select_layer)
+        return;
     if (select_layer && finished_id)
         g_signal_handler_disconnect(select_layer, finished_id);
 
