@@ -84,11 +84,14 @@ end;
 
 function GetGtkGLExtInstalled (): Boolean;
 begin
-  Exists := RegQueryStringValue (HKLM, 'Software\GtkGLExt\2.0\Runtime', 'Path', GtkGLExtPath);
+  Exists := RegQueryStringValue (HKLM, 'Software\GtkGLExt\1.0\Runtime', 'Path', GtkGLExtPath);
   if not Exists then begin
-    Exists := RegQueryStringValue (HKCU, 'Software\GtkGLExt\2.0\Runtime', 'Path', GtkGLExtPath);
+    Exists := RegQueryStringValue (HKCU, 'Software\GtkGLExt\1.0\Runtime', 'Path', GtkGLExtPath);
   end;
-  Result := Exists
+  if not Exists then begin
+    GtkGLExtPath := GtkPath;
+  end;
+  Result := True;
 end;
 
 function GetGtkGLExtPath (S: String): String;
@@ -100,11 +103,11 @@ function InitializeSetup(): Boolean;
 begin
   Result := GetGtkInstalled ();
   if not Result then begin
-    MsgBox ('Please install the GTK+ 2.0 Runtime Environment before installing @PACKAGE_NAME@.  You can obtain GTK+ from http://www.gimp.org/~tml/gimp/win32/.', mbError, MB_OK);
+    MsgBox ('Please install the Gtk+ 2.2 (or newer) Runtime Environment before installing @PACKAGE_NAME@.  You can obtain GTK+ from http://www.gimp.org/~tml/gimp/win32/.', mbError, MB_OK);
   end else begin
     Result := GetGtkGLextInstalled ();
     if not Result then begin
-      MsgBox ('Please install the GtkGLExt+ 1.0 before installing @PACKAGE_NAME@.  You can obtain GtkGLExt from http://gtkglext.sourceforge.net/.', mbError, MB_OK);
+      MsgBox ('Please install the GtkGLExt+ 1.0 (or newer) before installing @PACKAGE_NAME@.  You can obtain GtkGLExt from http://gtkglext.sourceforge.net/.', mbError, MB_OK);
     end;
   end;
 end;
