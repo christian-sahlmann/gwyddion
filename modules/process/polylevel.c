@@ -87,7 +87,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo poly_level_func_info = {
         "poly_level",
-        "/_Level/_Polynomial Background...",
+        N_("/_Level/_Polynomial Background..."),
         (GwyProcessFunc)&poly_level,
         UNROTATE_RUN_MODES,
         0,
@@ -190,16 +190,16 @@ poly_level_dialog(PolyLevelArgs *args)
 
     controls.col_degree = gtk_adjustment_new(args->col_degree, 0, 5, 1, 1, 0);
     gwy_table_attach_spinbutton(table, row++,
-                                _("Horizontal polynom degree "), "",
+                                _("_Horizontal polynom degree:"), "",
                                 controls.col_degree);
 
     controls.row_degree = gtk_adjustment_new(args->row_degree, 0, 5, 1, 1, 0);
     gwy_table_attach_spinbutton(table, row++,
-                                _("Vertical polynom degree "), "",
+                                _("_Vertical polynom degree:"), "",
                                 controls.row_degree);
 
     controls.do_extract
-        = gtk_check_button_new_with_mnemonic(_("Extract background"));
+        = gtk_check_button_new_with_mnemonic(_("E_xtract background"));
     gtk_table_attach(GTK_TABLE(table), controls.do_extract,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_extract),
