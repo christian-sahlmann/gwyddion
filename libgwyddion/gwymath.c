@@ -90,10 +90,12 @@ gwy_math_humanize_numbers(gdouble unit,
 
     /* prefer unscaled numbers (mag = 0), if feasible */
     if (mag < 0 && maximum >= 1.0) {
+        gwy_debug("killing mag = %f, *precision = %d", mag, *precision);
         *precision += -mag;
         mag = 0;
     }
     else if (mag > 0 && mag <= 3.0 && mag - *precision <= 0) {
+        gwy_debug("killing mag = %f, *precision = %d", mag, *precision);
         *precision -= mag;
         mag = 0;
     }
