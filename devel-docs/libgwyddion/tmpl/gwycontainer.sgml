@@ -52,14 +52,17 @@ GwyContainer
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_container_value_type_by_name ##### -->
+<!-- ##### MACRO gwy_container_value_type_by_name ##### -->
 <para>
 
 </para>
 
+@c: 
+@n: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @container: 
 @name: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_container_get_value ##### -->
@@ -100,14 +103,17 @@ GwyContainer
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_container_delete_by_name ##### -->
+<!-- ##### MACRO gwy_container_delete_by_name ##### -->
 <para>
 
 </para>
 
+@c: 
+@n: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @container: 
 @name: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_container_foreach ##### -->
