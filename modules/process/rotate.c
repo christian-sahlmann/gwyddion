@@ -81,7 +81,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo rotate_func_info = {
         "rotate",
-        "/_Basic Operations/Rotate By _Angle... (BROKEN)",
+        "/_Basic Operations/Rotate By _Angle...",
         (GwyProcessFunc)&rotate,
         ROTATE_RUN_MODES,
     };

@@ -39,6 +39,9 @@ static gboolean    rotate_counterclockwise_90 (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    rotate_180                 (GwyContainer *data,
                                                GwyRunType run);
+static void        flip_xy                    (GwyDataField *source,
+                                               GwyDataField *dest,
+                                               gboolean minor);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -79,19 +82,19 @@ module_register(const gchar *name)
     };
     static GwyProcessFuncInfo rotate_clockwise_90_func_info = {
         "rotate_clockwise_90",
-        "/_Basic Operations/_Rotate Clockwise (BROKEN)",
+        "/_Basic Operations/_Rotate Clockwise",
         (GwyProcessFunc)&rotate_clockwise_90,
         BASICOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo rotate_counterclockwise_90_func_info = {
         "rotate_counterclockwise_90",
-        "/_Basic Operations/Rotate _Counterclockwise (BROKEN)",
+        "/_Basic Operations/Rotate _Counterclockwise",
         (GwyProcessFunc)&rotate_counterclockwise_90,
         BASICOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo rotate_180_func_info = {
         "rotate_180",
-        "/_Basic Operations/Rotate 1_80 degrees (BROKEN)",
+        "/_Basic Operations/Flip _Both",
         (GwyProcessFunc)&rotate_180,
         BASICOPS_RUN_MODES,
     };
@@ -148,12 +151,17 @@ invert_value(GwyContainer *data, GwyRunType run)
 static gboolean
 rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GtkWidget *data_window;
+    GwyDataField *dfield, *old;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    old = GWY_CONTAINER(gwy_container_get_object_by_name(data, "/0/data"));
+    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data");
-    gwy_data_field_rotate(dfield, 270, GWY_INTERPOLATION_ROUND);
+    flip_xy(old, dfield, FALSE);
+    data_window = gwy_app_data_window_create(data);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
     return TRUE;
 }
@@ -161,14 +169,48 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 static gboolean
 rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GtkWidget *data_window;
+    GwyDataField *dfield, *old;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    old = GWY_CONTAINER(gwy_container_get_object_by_name(data, "/0/data"));
+    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data");
-    gwy_data_field_rotate(dfield, 90, GWY_INTERPOLATION_ROUND);
+    flip_xy(old, dfield, TRUE);
+    data_window = gwy_app_data_window_create(data);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
     return TRUE;
+}
+
+static void
+flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
+{
+    gint xres, yres, i, j;
+    gdouble *dd, *sd;
+
+    xres = gwy_data_field_get_xres(source);
+    yres = gwy_data_field_get_yres(source);
+    gwy_data_field_resample(dest, yres, xres, GWY_INTERPOLATION_NONE);
+    sd = gwy_data_field_get_data(source);
+    dd = gwy_data_field_get_data(dest);
+    if (minor) {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + j] = sd[j*xres + (xres - 1 - i)];
+            }
+        }
+    }
+    else {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
+            }
+        }
+    }
+    gwy_data_field_set_xreal(dest, gwy_data_field_get_yreal(source));
+    gwy_data_field_set_yreal(dest, gwy_data_field_get_xreal(source));
 }
 
 static gboolean
