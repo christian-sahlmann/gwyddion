@@ -274,8 +274,10 @@ gwy_layer_mask_restore(GwyDataViewLayer *layer)
 {
     GwyLayerMask *mask_layer = GWY_LAYER_MASK(layer);
     GwyRGBA *c;
+    static const GwyRGBA default_color = { 1.0, 0.0, 0.0, 0.5 };
 
     c = &mask_layer->color;
+    *c = default_color;
     /* TODO Container */
     if (gwy_container_contains_by_name(layer->data, "/0/mask/red"))
         c->r = gwy_container_get_double_by_name(layer->data, "/0/mask/red");
