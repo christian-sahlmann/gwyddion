@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.8, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.8cvs20050206, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -28,6 +28,7 @@ AC_CONFIG_FILES(\
   perl/Makefile \
   python/Makefile \
   ruby/Makefile \
+  data/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyapp/Makefile \
   devel-docs/libgwyddion/Makefile \
@@ -35,10 +36,10 @@ AC_CONFIG_FILES(\
   devel-docs/libgwydraw/Makefile \
   devel-docs/libgwymodule/Makefile \
   devel-docs/libgwyprocess/Makefile \
-  gwyddion.spec \
-  gwyddion.iss \
-  gwyddion-devel.iss \
-  gwyddion.pc \
+  gwyddion.spec:data/gwyddion.spec.in \
+  data/gwyddion.iss \
+  data/gwyddion-devel.iss \
+  data/gwyddion.pc \
   version.h \
 )
 AM_CONFIG_HEADER(config.h)

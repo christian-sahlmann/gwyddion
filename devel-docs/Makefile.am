@@ -9,7 +9,9 @@ SUBDIRS = \
 	libgwyapp
 
 EXTRA_DIST = \
+	CODING-STANDARDS \
 	README \
+	README.QA \
 	makefile.msc \
 	add-objects.py \
 	gtk-doc.mk
