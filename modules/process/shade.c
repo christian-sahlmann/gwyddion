@@ -30,6 +30,9 @@
 #define SHADE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+enum {
+    PREVIEW_SIZE = 120
+};
 
 /* Data for this function.*/
 typedef struct {
@@ -39,7 +42,7 @@ typedef struct {
 
 typedef struct {
     GtkWidget *shader;
-    GtkObject*theta;
+    GtkObject *theta;
     GtkObject *phi;
     GtkWidget *data_view;
     GwyContainer *data;
@@ -153,16 +156,16 @@ create_preview_data(GwyContainer *data)
     gint xres, yres;
     gdouble zoomval;
 
-    preview = GWY_CONTAINER(gwy_container_new());
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
-    dfield = gwy_serializable_duplicate(dfield);
+    preview = GWY_CONTAINER(gwy_container_duplicate_by_prefix(data,
+                                                              "/0/data",
+                                                              "/0/base/palette",
+                                                              NULL));
+    dfield = gwy_container_get_object_by_name(preview, "/0/data");
     xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
     yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
-    zoomval = 120.0/MAX(xres, yres);
+    zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
     gwy_data_field_resample(GWY_DATA_FIELD(dfield), xres*zoomval, yres*zoomval,
                             GWY_INTERPOLATION_BILINEAR);
-    gwy_container_set_object_by_name(preview, "/0/data", dfield);
-    g_object_unref(dfield);
     dfield = gwy_serializable_duplicate(dfield);
     gwy_container_set_object_by_name(preview, "/0/show", dfield);
     g_object_unref(dfield);
@@ -193,6 +196,7 @@ shade_dialog(ShadeArgs *args,
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 12);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
@@ -227,8 +231,6 @@ shade_dialog(ShadeArgs *args,
     row++;
 
     controls.data = create_preview_data(data);
-    gwy_container_set_string_by_name(controls.data, "/0/base/palette",
-                                     g_strdup(palette));
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     layer = gwy_layer_basic_new();
