@@ -40,7 +40,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <ctype.h>
 
 #include "stmprg.h"
 
@@ -476,7 +475,7 @@ stmprg_load(const gchar *filename)
 
     filename_ta = g_strdup(filename);
     ptr = filename_ta + strlen(filename_ta) - 1;
-    while (isdigit(*ptr) && ptr > filename_ta+1)
+    while (g_ascii_isdigit(*ptr) && ptr > filename_ta+1)
         ptr--;
     if (*ptr == 'p' && *(ptr - 1) == 't')
         *ptr = 'a';
