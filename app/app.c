@@ -105,6 +105,9 @@ foo(void)
                               GTK_ICON_SIZE_BUTTON);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_POINTER,
+                             "Pointer", NULL,
+                             NULL, NULL, -1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_CROP,
                              "Crop", NULL,
                              NULL, NULL, -1);
@@ -135,28 +138,6 @@ foo(void)
                              NULL, NULL, -1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_GRAPH,
                              "Graph", NULL,
-                             NULL, NULL, -1);
-
-    /***************************************************************/
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
-                                GTK_ORIENTATION_HORIZONTAL);
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
-                              GTK_ICON_SIZE_BUTTON);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_BOLD,
-                             "Bold", NULL,
-                             NULL, NULL, -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ITALIC,
-                             "Italics", NULL,
-                             NULL, NULL, -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SUBSCRIPT,
-                             "Subscript", NULL,
-                             NULL, NULL, -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SUPERSCRIPT,
-                             "Superscript", NULL,
                              NULL, NULL, -1);
 
     /***************************************************************/
@@ -225,10 +206,9 @@ gwy_app_set_current_data_window(GwyDataWindow *window)
     gsize i;
     gboolean update_state;
 
+    gwy_debug("%s: %p", __FUNCTION__, window);
     if (window) {
         g_return_if_fail(GWY_IS_DATA_WINDOW(window));
-        if (current_data && current_data->data == (gpointer)window)
-            return;
         update_state = (current_data == NULL);
         current_data = g_slist_remove(current_data, window);
         current_data = g_slist_prepend(current_data, window);

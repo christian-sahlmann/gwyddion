@@ -64,7 +64,7 @@ run_process_func_cb(gchar *name,
     GwyContainer *data;
 
     data_window = gwy_app_get_current_data_window();
-    data_view = gwy_data_window_get_data_view(data_window);
+    data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
     data = gwy_data_view_get_data(data_view);
     g_return_if_fail(data);
     gwy_run_process_func(name, data, GWY_RUN_INTERACTIVE);
