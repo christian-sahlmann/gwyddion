@@ -1096,8 +1096,11 @@ gwy_data_field_get_area_max(GwyDataField *a,
         row = a->data + i*a->xres + ulcol;
 
         for (j = 0; j < brcol - ulcol; j++)
+        {
             if (max < *row)
-                max = *(row++);
+                max = *row; 
+            row++;
+        }
     }
 
     return max;
@@ -1146,8 +1149,11 @@ gwy_data_field_get_area_min(GwyDataField *a,
         row = a->data + i*a->xres + ulcol;
 
         for (j = 0; j < brcol - ulcol; j++)
+        {
             if (min > *row)
-                min = *(row++);
+                min = *row;
+            row++;
+        }
     }
 
     return min;
@@ -1442,6 +1448,51 @@ gwy_data_field_get_column(GwyDataField *a, GwyDataLine* b, gint col)
         b->data[k] = p[k*a->xres];
 }
 
+/**
+ * gwy_data_field_get_row_part:
+ * @a: A data field
+ * @b: A data line
+ * @row: index of row
+ * @from: beginning index
+ * @to: end index
+ *
+ * Extracts row part into data line. Data line should be allocated allready.
+ **/
+void
+gwy_data_field_get_row_part(GwyDataField *a, GwyDataLine* b, gint row, gint from, gint to)
+{
+    g_return_if_fail(row >= 0 && row < a->yres);
+    if (to<from) GWY_SWAP(gint, from, to);    
+
+    gwy_data_line_resample(b, to-from, GWY_INTERPOLATION_NONE);
+    memcpy(b->data, a->data + row*a->xres + from, (to-from)*sizeof(gdouble));
+}
+
+
+/**
+ * gwy_data_field_get_column_part:
+ * @a: A data field
+ * @b: A data line
+ * @col: index of column
+ * @from: beginning index
+ * @to: end index
+ *
+ * Extracts column part into data line. Data line should be allocated allready.
+ **/
+void
+gwy_data_field_get_column_part(GwyDataField *a, GwyDataLine* b, gint col, gint from, gint to)
+{
+    gint k;
+    gdouble *p;
+
+    g_return_if_fail(col >= 0 && col < a->xres);
+    if (to<from) GWY_SWAP(gint, from, to);
+
+    gwy_data_line_resample(b, to-from, GWY_INTERPOLATION_NONE);
+    p = a->data + col;
+    for (k = from; k < to; k++)
+        b->data[k] = p[k*a->xres];
+}
 
 /**
  * gwy_data_field_set_row:
@@ -2295,10 +2346,10 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
                                       gint ulcol, gint ulrow, gint brcol, gint brrow, GwySFOutputType type, GtkOrientation orientation,
                                       GwyInterpolationType interpolation, GwyWindowingType windowing, gint nstats)
 {
-    gint k, j, size;
+    gint i, k, j, size;
     GwyDataLine hlp_line;
     GwyDataLine hlp_tarline;
-    gdouble min, max;
+    gdouble min, max, val;
 
     gwy_debug("");
     if (ulcol > brcol)
@@ -2315,12 +2366,31 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
     }
     else if (type==GWY_SF_OUTPUT_DA || type==GWY_SF_OUTPUT_CDA)
     {
-        min = -2;
-        max = 2;
+        min = G_MAXDOUBLE;
+        max = -G_MAXDOUBLE;
+
+        if (orientation == GTK_ORIENTATION_HORIZONTAL)
+        {
+            for (i=ulcol; i<brcol; i++)
+                for (j=ulrow; j<brrow; j++)
+                {
+                    val = gwy_data_field_get_xder(data_field, i, j);
+                    if (min>val) min = val;
+                    if (max<val) max = val;
+                }
+        }
+        else if (orientation == GTK_ORIENTATION_VERTICAL)
+        {
+            for (i=ulcol; i<brcol; i++)
+                for (j=ulrow; j<brrow; j++)
+                {
+                    val = gwy_data_field_get_yder(data_field, i, j);
+                    if (min>val) min = val;
+                    if (max<val) max = val;
+                }             
+        }
     }
-    
-   type = GWY_SF_OUTPUT_ACF;
-   
+     
     /*average over profiles*/
     if (orientation == GTK_ORIENTATION_HORIZONTAL || orientation == GTK_ORIENTATION_VERTICAL)
     {
@@ -2335,7 +2405,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
 
 
         for (k = ulrow; k < brrow; k++) {
-            gwy_data_field_get_data_line(data_field, &hlp_line, k, ulcol, k, brcol-1, size, interpolation);
+            gwy_data_field_get_row_part(data_field, &hlp_line, k, ulcol, brcol);
 
             if (type==GWY_SF_OUTPUT_DH) 
                 gwy_data_line_dh(&hlp_line, &hlp_tarline, min, max, nstats);
@@ -2351,10 +2421,10 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
                 gwy_data_line_hhcf(&hlp_line, &hlp_tarline);    
             else if (type==GWY_SF_OUTPUT_PSDF)
                 gwy_data_line_psdf(&hlp_line, &hlp_tarline, windowing, interpolation);
-            
+        
             for (j=0; j<size; j++)
             {
-                target_line->data[j] += hlp_tarline.data[j]/((gdouble)(brrow-ulrow))*1e19;
+                target_line->data[j] += hlp_tarline.data[j]/((gdouble)(brrow-ulrow));
             }
         }
         gwy_data_line_free(&hlp_line);
@@ -2364,7 +2434,6 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
     {
     }
 
-    
  
 }
 

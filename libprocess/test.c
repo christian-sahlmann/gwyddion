@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     gint i, j;
  
     GwyDataField *a, *b, *c, *d, *p;
-    GwyDataLine *k, *m;
+    GwyDataLine *k, *m, n;
 
     GwyPalette *pal;
     
@@ -85,18 +85,20 @@ int main(int argc, char *argv[])
 
     k = (GwyDataLine *) gwy_data_line_new(20, 20, 1);
     m = (GwyDataLine *) gwy_data_line_new(500, 20, 1);
+    gwy_data_line_initialize(&n, 500, 20, 1);
+
     make_test_image(a);
     make_test_image(p);
     make_test_line(m);
 
 //    gwy_data_line_hhcf(m, k);
 
-    gwy_data_field_get_line_stat_function(a, k,
-    0, 0, 300, 300, /*GwySFOutputType*/ 0, /*GtkOrientation*/ 0,
+    gwy_data_field_get_line_stat_function(a, &n,
+    0, 0, 300, 300, /*GwySFOutputType*/ GWY_SF_OUTPUT_PSDF, /*GtkOrientation*/ 0,
     /*interpolation*/ 1, /*GwyWindowingType*/ 1, /*nstats*/ 200);
 
     printf("Dataline:\n");
-    for (i=0; i<20; i++) printf("%d %f\n", i, k->data[i]);
+    for (i=0; i<10; i++) printf("%d %f\n", i, n.data[i]);
 
 
 /*

@@ -56,15 +56,15 @@ static void       sfunctions_dialog_response_cb    (gpointer unused,
 static void       sfunctions_dialog_abandon        (void);
 static void       sfunctions_dialog_set_visible    (gboolean visible);
 static void       interp_changed_cb             (GObject *item,
-                                                 SFunctionsControls *controls);
+                                                 SFunctionsControls *pcontrols);
 static void       output_changed_cb             (GObject *item,
-                                                 SFunctionsControls *controls);
+                                                 SFunctionsControls *pcontrols);
 static void       direction_changed_cb          (GObject *item,
-                                                 SFunctionsControls *controls);
+                                                 SFunctionsControls *pcontrols);
 static void       sfunctions_load_args             (GwyContainer *container,
-                                                 SFunctionsControls *controls);
+                                                 SFunctionsControls *pcontrols);
 static void       sfunctions_save_args             (GwyContainer *container,
-                                                 SFunctionsControls *controls);
+                                                 SFunctionsControls *pcontrols);
 
 
 static GtkWidget *sfunctions_dialog = NULL;
@@ -154,6 +154,8 @@ sfunctions_use(GwyDataWindow *data_window,
     
     if (controls.is_visible)
         sfunctions_selection_updated_cb();
+
+    
 }
 
 static void
@@ -462,16 +464,17 @@ sfunctions_selection_updated_cb(void)
 
 
     gwy_data_line_initialize(&dataline, 10, 10, 0);
-   
+
+ printf("out=%d\n", controls.out);   
     gwy_data_field_get_line_stat_function(datafield,
                                           &dataline,
                                           x1,
                                           y1,
                                           x2,
                                           y2,
-                                          0,
-                                          0,
-                                          2,
+                                          controls.out,
+                                          controls.dir,
+                                          controls.interp,
                                           GWY_WINDOWING_HANN,
                                           100);
   
@@ -562,26 +565,30 @@ sfunctions_dialog_set_visible(gboolean visible)
 }
 
 static void
-interp_changed_cb(GObject *item, SFunctionsControls *controls)
+interp_changed_cb(GObject *item, SFunctionsControls *pcontrols)
 {
     gwy_debug("");
-    controls->interp = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+    pcontrols->interp = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+    controls.interp = pcontrols->interp;
 
 }
 
 static void
-output_changed_cb(GObject *item, SFunctionsControls *controls)
+output_changed_cb(GObject *item, SFunctionsControls *pcontrols)
 {
     gwy_debug("");
-    controls->out = GPOINTER_TO_INT(g_object_get_data(item, "sf-output-type"));
+    pcontrols->out = GPOINTER_TO_INT(g_object_get_data(item, "sf-output-type"));
+    controls.out = pcontrols->out;
+    printf("pc(c)ontrols.out = %d\n", controls.out);
 
 }
 
 static void
-direction_changed_cb(GObject *item, SFunctionsControls *controls)
+direction_changed_cb(GObject *item, SFunctionsControls *pcontrols)
 {
     gwy_debug("");
-    controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
+    pcontrols->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
+    controls.dir = pcontrols->dir;
 
 }
 
@@ -593,28 +600,28 @@ static const gchar *dir_key = "/tool/sfunctions/dir";
 
 
 static void
-sfunctions_load_args(GwyContainer *container, SFunctionsControls *controls)
+sfunctions_load_args(GwyContainer *container, SFunctionsControls *pcontrols)
 {
     gwy_debug("");
     if (gwy_container_contains_by_name(container, dir_key))
-        controls->dir = gwy_container_get_int32_by_name(container, dir_key);
-    else controls->dir = 0;
+        pcontrols->dir = gwy_container_get_int32_by_name(container, dir_key);
+    else pcontrols->dir = 0;
 
     if (gwy_container_contains_by_name(container, out_key))
-        controls->out = gwy_container_get_int32_by_name(container, out_key);
-    else controls->out = 0;
+        pcontrols->out = gwy_container_get_int32_by_name(container, out_key);
+    else pcontrols->out = 0;
 
     if (gwy_container_contains_by_name(container, interp_key))
-        controls->interp = gwy_container_get_int32_by_name(container, interp_key);
-    else controls->interp = 2;
+        pcontrols->interp = gwy_container_get_int32_by_name(container, interp_key);
+    else pcontrols->interp = 2;
 }
 
 static void
-sfunctions_save_args(GwyContainer *container, SFunctionsControls *controls)
+sfunctions_save_args(GwyContainer *container, SFunctionsControls *pcontrols)
 {
-    gwy_container_set_int32_by_name(container, interp_key, controls->interp);
-    gwy_container_set_int32_by_name(container, dir_key, controls->dir);
-    gwy_container_set_int32_by_name(container, out_key, controls->out);
+    gwy_container_set_int32_by_name(container, interp_key, controls.interp);
+    gwy_container_set_int32_by_name(container, dir_key, controls.dir);
+    gwy_container_set_int32_by_name(container, out_key, controls.out);
     
 }
 

@@ -129,3 +129,5 @@ EXPORTS
 	gwy_data_field_get_min
 	gwy_data_field_set_xreal
 	gwy_data_line_get_val
+	gwy_data_field_get_column_part
+	gwy_data_field_get_row_part

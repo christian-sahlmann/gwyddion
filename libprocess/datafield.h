@@ -267,6 +267,20 @@ void gwy_data_field_set_column(GwyDataField *a,
                                GwyDataLine* b,
                                gint col);
 
+void gwy_data_field_get_row_part(GwyDataField *a, 
+                                 GwyDataLine* b, 
+                                 gint row, 
+                                 gint from, 
+                                 gint to);
+void gwy_data_field_get_column_part(GwyDataField *a, 
+                                 GwyDataLine* b, 
+                                 gint column, 
+                                 gint from, 
+                                 gint to);
+
+
+
+
 /*get 1st order plane leveling coefficients*/
 void gwy_data_field_plane_coeffs(GwyDataField *a,
                                  gdouble *ap,
