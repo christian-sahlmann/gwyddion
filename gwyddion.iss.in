@@ -16,8 +16,7 @@ SourceDir=inst
 ; this means inst too
 OutputDir=.
 OutputBaseFilename=@PACKAGE_NAME@-@PACKAGE_VERSION@
-; I would like to, but don't know how :-(
-;ChangesAssociations=yes
+ChangesAssociations=yes
 
 [Files]
 Source: "*.dll"; DestDir: "{app}"
@@ -52,6 +51,11 @@ Root: HKCU; Subkey: "Software\@PACKAGE_NAME@"; Flags: uninsdeletekeyifempty
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "Path"; ValueData: "{app}"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "Version"; ValueData: "@PACKAGE_VERSION@"; Flags: uninsdeletekey
+; File associations
+Root: HKCR; Subkey: ".gwy"; ValueType: string; ValueName: ""; ValueData: "@PACKAGE_NAME@.NativeData"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData"; ValueType: string; ValueName: ""; ValueData: "@PACKAGE_NAME@ Native Data File"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
+Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\@PACKAGE_TARNAME@.exe"" ""%1"""
 
 
 [Code]
