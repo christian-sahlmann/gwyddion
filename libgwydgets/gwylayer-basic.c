@@ -288,7 +288,8 @@ gwy_layer_basic_update(GwyDataViewLayer *layer)
     GWY_LAYER_BASIC(layer)->changed = TRUE;
     pal = gwy_palette_def_get_name(gwy_palette_get_palette_def(layer->palette));
     gwy_debug("%s: storing palette %s", __FUNCTION__, pal);
-    gwy_container_set_string_by_name(layer->data, "/0/base/palette", pal);
+    gwy_container_set_string_by_name(layer->data, "/0/base/palette",
+                                     g_strdup(pal));
     gwy_data_view_layer_updated(layer);
 }
 
