@@ -593,22 +593,22 @@ gwy_palette_def_create_preset(GwyPaletteDefEntry *entries,
 void
 gwy_palette_def_setup_presets(void)
 {
-    GwyPaletteDefEntry gray[] = {
+    static GwyPaletteDefEntry gray[] = {
         { 0.0, { 0, 0, 0, 1 } },
         { 1.0, { 1, 1, 1, 1 } },
     };
-    GwyRGBA black = { 0, 0, 0, 1 };
-    GwyRGBA white = { 1, 1, 1, 1 };
-    GwyRGBA red = { 1, 0, 0, 1 };
-    GwyRGBA green = { 0, 1, 0, 1 };
-    GwyRGBA blue = { 0, 0, 1, 1 };
-    GwyRGBA cyan = { 0, 1, 1, 1 };
-    GwyRGBA violet = { 1, 0, 1, 1 };
-    GwyRGBA yellow = { 1, 1, 0, 1 };
-    GwyRGBA xyellow = { 0.8314, 0.71765, 0.16471, 1 };
-    GwyRGBA pink = { 1, 0.07843, 0.62745, 1 };
-    GwyRGBA olive = { 0.36863, 0.69020, 0.45882, 1 };
-    GwyPaletteDefEntry rainbow1[] = {
+    static GwyRGBA black = { 0, 0, 0, 1 };
+    static GwyRGBA white = { 1, 1, 1, 1 };
+    static GwyRGBA red = { 1, 0, 0, 1 };
+    static GwyRGBA green = { 0, 1, 0, 1 };
+    static GwyRGBA blue = { 0, 0, 1, 1 };
+    static GwyRGBA cyan = { 0, 1, 1, 1 };
+    static GwyRGBA violet = { 1, 0, 1, 1 };
+    static GwyRGBA yellow = { 1, 1, 0, 1 };
+    static GwyRGBA xyellow = { 0.8314, 0.71765, 0.16471, 1 };
+    static GwyRGBA pink = { 1, 0.07843, 0.62745, 1 };
+    static GwyRGBA olive = { 0.36863, 0.69020, 0.45882, 1 };
+    static GwyPaletteDefEntry rainbow1[] = {
         { 0.0,   { 0, 0, 0, 1 } },
         { 0.125, { 1, 0, 0, 1 } },
         { 0.25,  { 1, 1, 0, 1 } },
@@ -619,51 +619,58 @@ gwy_palette_def_setup_presets(void)
         { 0.875, { 0.5, 0.5, 0.5, 1 } },
         { 1.0,   { 1, 1, 1, 1 } },
     };
-    GwyPaletteDefEntry rainbow2[] = {
+    static GwyPaletteDefEntry rainbow2[] = {
         { 0.0,  { 0, 0, 0, 1 } },
         { 0.25, { 1, 0, 0, 1 } },
         { 0.5,  { 0, 1, 0, 1 } },
         { 0.75, { 0, 0, 1, 1 } },
         { 1.0,  { 1, 1, 1, 1 } },
     };
-    GwyPaletteDefEntry gold[] = {
+    static GwyPaletteDefEntry gold[] = {
         { 0,        { 0, 0, 0, 1 } },
         { 0.333333, { 0.345098, 0.109804, 0, 1 } },
         { 0.666667, { 0.737255, 0.501961, 0, 1 } },
         { 1,        { 0.988235, 0.988235, 0.501961, 1 } },
     };
-    GwyPaletteDefEntry pm3d[] = {
+    static GwyPaletteDefEntry pm3d[] = {
         { 0,        { 0,        0,        0,        1 } },
         { 0.166667, { 0.265412, 0,        0.564000, 1 } },
         { 0.333333, { 0.391234, 0,        0.831373, 1 } },
         { 0.666667, { 0.764706, 0,        0.000000, 1 } },
         { 1,        { 1.000000, 0.894118, 0.000000, 1 } },
     };
-    GwyPaletteDefEntry spectral[] = {
+    static GwyPaletteDefEntry spectral[] = {
         { 0.000000, { 0.000000, 0.000000, 0.000000, 1 } },
-        { 0.090909, { 0.984314, 0.027451, 0.019608, 1 } },
-        { 0.181818, { 0.984314, 0.533333, 0.015686, 1 } },
+        { 0.090909, { 0.885000, 0.024681, 0.017629, 1 } },
+        { 0.181818, { 1.000000, 0.541833, 0.015936, 1 } },
         { 0.272727, { 0.992157, 0.952941, 0.015686, 1 } },
-        { 0.363636, { 0.474510, 0.772549, 0.160784, 1 } },
-        { 0.454545, { 0.231373, 0.670588, 0.239216, 1 } },
-        { 0.545455, { 0.407843, 0.952941, 0.976471, 1 } },
+        { 0.363636, { 0.511640, 0.833000, 0.173365, 1 } },
+        { 0.454545, { 0.243246, 0.705000, 0.251491, 1 } },
+        { 0.545455, { 0.332048, 0.775843, 0.795000, 1 } },
         { 0.636364, { 0.019608, 0.529412, 0.819608, 1 } },
         { 0.727273, { 0.015686, 0.047059, 0.619608, 1 } },
         { 0.818182, { 0.388235, 0.007843, 0.678431, 1 } },
-        { 0.909091, { 0.768627, 0.011765, 0.772549, 1 } },
+        { 0.909091, { 0.533279, 0.008162, 0.536000, 1 } },
         { 1.000000, { 0.000000, 0.000000, 0.000000, 1 } },
     };
 
-    GwyPaletteDefEntry pd[] = {
+    static GwyPaletteDefEntry pd[] = {
         { 0.0, { 0, 0, 0, 1 } },
         { 0.5, { 0, 0, 0, 0 } },
         { 1.0, { 1, 1, 1, 1 } },
     };
-    GwyPaletteDefEntry pd3[] = {
+    static GwyPaletteDefEntry pd3[] = {
         { 0.0,  { 0, 0, 0, 1 } },
         { 0.33, { 0, 0, 0, 0 } },
         { 0.67, { 0, 0, 0, 0 } },
         { 1.0,  { 1, 1, 1, 1 } },
+    };
+    static GwyPaletteDefEntry pd4[] = {
+        { 0.0,  { 0,   0,   0,   1 } },
+        { 0.33, { 0,   0,   0,   0 } },
+        { 0.5,  { .67, .67, .67, 1 } },
+        { 0.67, { 0,   0,   0,   0 } },
+        { 1.0,  { 1,   1,   1,   1 } },
     };
     GwyPaletteDefEntry *pd2;
     gsize i;
@@ -700,26 +707,34 @@ gwy_palette_def_setup_presets(void)
     pd3[2].color = violet;
     gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
                                   GWY_PALETTE_RED_VIOLET);
-    pd3[2].color = cyan;
-    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
-                                  GWY_PALETTE_RED_CYAN);
+
     pd3[1].color = blue;
+    pd3[2].color = cyan;
     gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
                                   GWY_PALETTE_BLUE_CYAN);
     pd3[2].color = violet;
     gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
                                   GWY_PALETTE_BLUE_VIOLET);
-    pd3[2].color = yellow;
-    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
-                                  GWY_PALETTE_BLUE_YELLOW);
+
     pd3[1].color = green;
+    pd3[2].color = yellow;
     gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
                                   GWY_PALETTE_GREEN_YELLOW);
     pd3[2].color = cyan;
     gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
                                   GWY_PALETTE_GREEN_CYAN);
-    pd3[2].color = violet;
-    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+
+    pd4[1].color = red;
+    pd4[3].color = cyan;
+    gwy_palette_def_create_preset(pd4, G_N_ELEMENTS(pd4),
+                                  GWY_PALETTE_RED_CYAN);
+    pd4[1].color = blue;
+    pd4[3].color = yellow;
+    gwy_palette_def_create_preset(pd4, G_N_ELEMENTS(pd4),
+                                  GWY_PALETTE_BLUE_YELLOW);
+    pd4[1].color = green;
+    pd4[3].color = violet;
+    gwy_palette_def_create_preset(pd4, G_N_ELEMENTS(pd4),
                                   GWY_PALETTE_GREEN_VIOLET);
 
     pd2 = g_new(GwyPaletteDefEntry, 10);
