@@ -367,7 +367,7 @@ gwy_unitool_dialog_add_button_apply(GtkWidget *dialog)
 }
 
 /**
- * gwy_unitool_dialog_add_button_apply:
+ * gwy_unitool_dialog_add_button_clear:
  * @dialog: The tool dialog.
  *
  * Adds a Unitool-managed "Clear" button to the tool dialog.
@@ -633,6 +633,38 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
  *
  * Response id you should use for "Clear selection" button, if the tool has
  * any.  Universal tool can than handle it itself.
+ **/
+
+/**
+ * GwyUnitoolFunc:
+ * @state: Tool state.
+ *
+ * General Unitool slot function signature.
+ **/
+
+/**
+ * GwyUnitoolCreateFunc:
+ * @state: Tool state.
+ *
+ * Dialog constructor slot function signature.
+ *
+ * Returns: The newly created dialog.
+ **/
+
+/**
+ * GwyUnitoolResponseFunc:
+ * @state: Tool state.
+ * @response: The tool dialog response.
+ *
+ * Extra dialog response handler slot function signature.
+ **/
+
+/**
+ * GwyUnitoolUpdateFunc:
+ * @state: Tool state.
+ * @reason: Update reason.
+ *
+ * Tool update slot function signature.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
