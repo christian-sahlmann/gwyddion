@@ -6,7 +6,6 @@
 - Use GObject macros for type declarations
 - Check whether we always emit notification when object properties change
 - Use BUTTON1_MOTION_MASK instead of MOTION_NOTIFY_MASK where appropriate
-- Pixmap export ignores explicite palete range (and presentations?)
 - Add preview to: artithmetic
 - Find out why rectangular selections sometimes leaves a dot, and fix it
 - Make things actually compile with --disable-gl, also improve GL/gl.h,
