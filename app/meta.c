@@ -83,8 +83,8 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
     }
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    title = g_strdup_printf("%s Metadata %s", g_get_application_name(),
-                            filename);
+    title = g_strdup_printf(_("Metadata of %s (%s)"),
+                            filename, g_get_application_name());
     gtk_window_set_title(GTK_WINDOW(window), title);
     g_free(title);
     g_free(filename);
@@ -94,9 +94,9 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
 
     gtk_widget_size_request(browser, &request);
     gtk_window_set_default_size(GTK_WINDOW(window),
-                                MIN(request.width, 2*gdk_screen_width()/3),
-                                MIN(request.height + 20,
-                                    3*gdk_screen_height()/4));
+                                MIN(request.width + 24, 2*gdk_screen_width()/3),
+                                MIN(request.height + 24,
+                                    2*gdk_screen_height()/3));
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
                                    GTK_POLICY_AUTOMATIC,
