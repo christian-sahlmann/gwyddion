@@ -18,24 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*
- * XXX: this should be placed somewhere...
- * gwy_layer_points_new:
- *
- * Creates a new point selection layer.
- *
- * The default number of points to select is three.
- *
- * Container keys: "/0/select/points/0/x", "/0/select/points/0/y",
- * "/0/select/points/1/x", "/0/select/points/1/y", etc.,
- * and "/0/select/points/nselected".
- *
- * The selection (as returned by gwy_vector_layer_get_selection()) consists
- * of array of coordinate couples x, y.
- *
- * Returns: The newly created layer.
- */
-
 #include <string.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -126,6 +108,9 @@ static gint       gwy_layer_points_near_point      (GwyLayerPoints *layer,
                                                     gdouble xreal,
                                                     gdouble yreal);
 
+#define gwy_layer_points_undraw       gwy_layer_points_draw
+#define gwy_layer_points_undraw_point gwy_layer_points_draw_point
+
 /* Local data */
 
 static GtkObjectClass *parent_class = NULL;
@@ -137,7 +122,7 @@ static GwyModuleInfo module_info = {
     "layer-points",
     "Layer allowing selection of several points.",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -306,14 +291,26 @@ static void
 gwy_layer_points_set_max_points(GwyLayerPoints *layer,
                                 gint npoints)
 {
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
     g_return_if_fail(GWY_IS_LAYER_POINTS(layer));
     g_return_if_fail(npoints > 0 && npoints < 1024);
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
 
+    if (layer->npoints == npoints)
+        return;
+
+    if (parent)
+        gwy_layer_points_undraw(vector_layer, parent->window);
     layer->npoints = npoints;
     layer->nselected = MIN(layer->nselected, npoints);
     if (layer->inear >= npoints)
         layer->inear = -1;
     layer->points = g_renew(gdouble, layer->points, 2*layer->npoints);
+    if (parent)
+        gwy_layer_points_draw(vector_layer, parent->window);
 }
 
 static void
@@ -441,7 +438,7 @@ gwy_layer_points_button_pressed(GwyVectorLayer *layer,
     i = gwy_layer_points_near_point(points_layer, xreal, yreal);
     if (i >= 0) {
         points_layer->inear = i;
-        gwy_layer_points_draw_point(points_layer, window, i);
+        gwy_layer_points_undraw_point(points_layer, window, i);
     }
     else {
         /* add a point, or do nothing when maximum is reached */
@@ -534,9 +531,8 @@ gwy_layer_points_unselect(GwyVectorLayer *layer)
         return;
 
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
-    /* this is in fact undraw */
     if (parent)
-        gwy_layer_points_draw(layer, parent->window);
+        gwy_layer_points_undraw(layer, parent->window);
     points_layer->nselected = 0;
     gwy_layer_points_save(points_layer, -1);
 }

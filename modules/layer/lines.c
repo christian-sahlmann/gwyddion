@@ -18,24 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*
- * XXX: this should be placed somewhere...
- * gwy_layer_lines_new:
- *
- * Creates a new line selection layer.
- *
- * The default number of lines to select is three.
- *
- * Container keys: "/0/select/lines/0/x0", "/0/select/lines/0/y0",
- * "/0/select/lines/0/x1", "/0/select/lines/0/y1", "/0/select/lines/1/x0",
- * "/0/select/lines/1/y0", etc., and "/0/select/lines/nselected".
- *
- * The selection (as returned by gwy_vector_layer_get_selection()) consists
- * of quadruples of line coordinates x0, y0, x1, y1.
- *
- * Returns: The newly created layer.
- */
-
 #include <string.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -136,6 +118,10 @@ static gint       gwy_layer_lines_near_point      (GwyLayerLines *layer,
                                                    gdouble xreal,
                                                    gdouble yreal);
 
+/* Allow to express intent. */
+#define gwy_layer_lines_undraw      gwy_layer_lines_draw
+#define gwy_layer_lines_undraw_line gwy_layer_lines_draw_line
+
 /* Local data */
 
 /* The module info. */
@@ -145,7 +131,7 @@ static GwyModuleInfo module_info = {
     "layer-lines",
     "Layer allowing selection of arbitrary straight lines.",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -319,14 +305,26 @@ static void
 gwy_layer_lines_set_max_lines(GwyLayerLines *layer,
                               gint nlines)
 {
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
     g_return_if_fail(nlines > 0 && nlines < 1024);
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
 
+    if (layer->nlines == nlines)
+        return;
+
+    if (parent)
+        gwy_layer_lines_undraw(vector_layer, parent->window);
     layer->nlines = nlines;
     layer->nselected = MIN(layer->nselected, nlines);
     if (layer->inear >= nlines)
         layer->inear = -1;
     layer->lines = g_renew(gdouble, layer->lines, 4*layer->nlines);
+    if (parent)
+        gwy_layer_lines_draw(vector_layer, parent->window);
 }
 
 static void
@@ -420,7 +418,7 @@ gwy_layer_lines_motion_notify(GwyVectorLayer *layer,
     }
 
     g_assert(lines_layer->inear != -1);
-    gwy_layer_lines_draw_line(lines_layer, window, i/2);
+    gwy_layer_lines_undraw_line(lines_layer, window, i/2);
     lines_layer->lines[2*i] = xreal;
     lines_layer->lines[2*i + 1] = yreal;
     gwy_layer_lines_save(lines_layer, i/2);
@@ -477,7 +475,7 @@ gwy_layer_lines_do_move_line(GwyLayerLines *layer,
     if (coords[0] == line[0] && coords[1] == line[1])
         return FALSE;
 
-    gwy_layer_lines_draw_line(layer, window, i);
+    gwy_layer_lines_undraw_line(layer, window, i);
     gwy_debug("%d %g %g %g %g", i, coords[0], coords[1], coords[2], coords[3]);
     memcpy(line, coords, 4*sizeof(gdouble));
     gwy_layer_lines_save(layer, i);
@@ -529,7 +527,7 @@ gwy_layer_lines_button_pressed(GwyVectorLayer *layer,
     else {
         if (i >= 0) {
             lines_layer->inear = i;
-            gwy_layer_lines_draw_line(lines_layer, window, i/2);
+            gwy_layer_lines_undraw_line(lines_layer, window, i/2);
         }
         else {
             /* add a line, or do nothing when maximum is reached */
@@ -583,7 +581,7 @@ gwy_layer_lines_button_released(GwyVectorLayer *layer,
     if (lines_layer->moving_line)
         gwy_layer_lines_do_move_line(lines_layer, xreal, yreal);
     else {
-        gwy_layer_lines_draw_line(lines_layer, window, i/2);
+        gwy_layer_lines_undraw_line(lines_layer, window, i/2);
         lines_layer->lines[2*i] = xreal;
         lines_layer->lines[2*i + 1] = yreal;
         /* XXX this can happen also with rounding errors */
@@ -642,9 +640,8 @@ gwy_layer_lines_unselect(GwyVectorLayer *layer)
         return;
 
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
-    /* this is in fact undraw */
     if (parent)
-        gwy_layer_lines_draw(layer, parent->window);
+        gwy_layer_lines_undraw(layer, parent->window);
     lines_layer->nselected = 0;
     gwy_layer_lines_save(lines_layer, -1);
 }

@@ -18,21 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*
- * XXX: this should be placed somewhere...
- * gwy_layer_select_new:
- *
- * Creates a new rectangular selection layer.
- *
- * Container keys: "/0/select/rect/x0", "/0/select/x1", "/0/select/y0",
- * "/0/select/rect/y1", and "/0/select/selected".
- *
- * The selection (as returned by gwy_vector_layer_get_selection()) consists
- * of list of four coordinates: xmin, ymin, xmax, ymax.
- *
- * Returns: The newly created layer.
- */
-
 #include <string.h>
 #include <glib-object.h>
 
@@ -124,6 +109,9 @@ static gint       gwy_layer_select_near_point        (GwyLayerSelect *layer,
                                                       gdouble xreal,
                                                       gdouble yreal);
 
+/* Allow to express intent. */
+#define gwy_layer_select_undraw      gwy_layer_select_draw
+
 /* Local data */
 
 /* The module info. */
@@ -133,7 +121,7 @@ static GwyModuleInfo module_info = {
     "layer-select",
     "Layer allowing selection of rectangular areas.",
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -389,7 +377,7 @@ gwy_layer_select_motion_notify(GwyVectorLayer *layer,
         return FALSE;
     }
 
-    gwy_layer_select_draw(layer, window);
+    gwy_layer_select_undraw(layer, window);
     select_layer->x1 = xreal;
     select_layer->y1 = yreal;
 
@@ -436,7 +424,7 @@ gwy_layer_select_button_pressed(GwyVectorLayer *layer,
     if (select_layer->selected) {
         gint i;
 
-        gwy_layer_select_draw(layer, window);
+        gwy_layer_select_undraw(layer, window);
         i = gwy_layer_select_near_point(select_layer, xreal, yreal);
         if (i >= 0) {
             keep_old = TRUE;
@@ -490,7 +478,7 @@ gwy_layer_select_button_released(GwyVectorLayer *layer,
     window = GTK_WIDGET(data_view)->window;
 
     if (select_layer->selected)
-        gwy_layer_select_draw(layer, window);
+        gwy_layer_select_undraw(layer, window);
 
     select_layer->button = 0;
     x = event->x;
@@ -560,9 +548,8 @@ gwy_layer_select_unselect(GwyVectorLayer *layer)
         return;
 
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
-    /* this is in fact undraw */
     if (parent)
-        gwy_layer_select_draw(layer, parent->window);
+        gwy_layer_select_undraw(layer, parent->window);
     select_layer->selected = FALSE;
     gwy_layer_select_save(select_layer);
 }
@@ -604,14 +591,14 @@ gwy_layer_select_set_is_crop(GwyLayerSelect *layer,
     GtkWidget *parent;
 
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
 
     if (is_crop == layer->is_crop)
         return;
 
-    vector_layer = GWY_VECTOR_LAYER(layer);
-    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
     if (parent)
-        gwy_layer_select_draw(vector_layer, parent->window);
+        gwy_layer_select_undraw(vector_layer, parent->window);
     layer->is_crop = is_crop;
     if (parent)
         gwy_layer_select_draw(vector_layer, parent->window);

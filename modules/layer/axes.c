@@ -18,26 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*
- * XXX: this should be placed somewhere...
- * gwy_layer_axes_new:
- *
- * Creates a new vertical/horizontal line selection layer.
- *
- * The default number of axes to select is three and the default orientation
- * os horizontal.
- *
- * Container keys: "/0/select/axes/0/x", "/0/select/axes/0/y",
- * "/0/select/axes/1/x", "/0/select/axes/1/y", etc.,
- * and "/0/select/axes/nselected".
- *
- * The selection (obtained from gwy_vector_layer_get_selection()) consists
- * of a list of x-coordinates alone (for vertical lines) or y-coordinates
- * alone (for horizontal lines).
- *
- * Returns: The newly created layer.
- */
-
 #include <string.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -131,6 +111,10 @@ static gint       gwy_layer_axes_near_point      (GwyLayerAxes *layer,
                                                   gdouble xreal,
                                                   gdouble yreal);
 
+/* Allow to express intent. */
+#define gwy_layer_axes_undraw      gwy_layer_axes_draw
+#define gwy_layer_axes_undraw_line gwy_layer_axes_draw_line
+
 /* Local data */
 
 /* The module info. */
@@ -140,7 +124,7 @@ static GwyModuleInfo module_info = {
     "layer-axes",
     "Layer allowing selection of horizontal or vertical lines.",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -329,14 +313,26 @@ static void
 gwy_layer_axes_set_max_axes(GwyLayerAxes *layer,
                             gint naxes)
 {
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
     g_return_if_fail(GWY_IS_LAYER_AXES(layer));
     g_return_if_fail(naxes > 0 && naxes < 1024);
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
 
+    if (layer->naxes == naxes)
+        return;
+
+    if (parent)
+        gwy_layer_axes_undraw(vector_layer, parent->window);
     layer->naxes = naxes;
     layer->nselected = MIN(layer->nselected, naxes);
     if (layer->inear >= naxes)
         layer->inear = -1;
     layer->axes = g_renew(gdouble, layer->axes, 2*layer->naxes);
+    if (parent)
+        gwy_layer_axes_undraw(vector_layer, parent->window);
 }
 
 static void
@@ -448,7 +444,7 @@ gwy_layer_axes_motion_notify(GwyVectorLayer *layer,
     }
 
     g_assert(axes_layer->inear != -1);
-    gwy_layer_axes_draw_line(axes_layer, window, i);
+    gwy_layer_axes_undraw_line(axes_layer, window, i);
     axes_layer->axes[i] = rcoord;
 
     gwy_layer_axes_draw_line(axes_layer, window, i);
@@ -490,7 +486,7 @@ gwy_layer_axes_button_pressed(GwyVectorLayer *layer,
     /* handle existing axes */
     i = gwy_layer_axes_near_point(axes_layer, xreal, yreal);
     if (i >= 0) {
-        gwy_layer_axes_draw_line(axes_layer, window, i);
+        gwy_layer_axes_undraw_line(axes_layer, window, i);
         axes_layer->inear = i;
     }
     else {
@@ -538,7 +534,7 @@ gwy_layer_axes_button_released(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    gwy_layer_axes_draw_line(axes_layer, window, i);
+    gwy_layer_axes_undraw_line(axes_layer, window, i);
     axes_layer->axes[i] = (axes_layer->orientation == GTK_ORIENTATION_VERTICAL)
                           ? xreal : yreal;
     gwy_layer_axes_save(axes_layer, i);
@@ -586,9 +582,8 @@ gwy_layer_axes_unselect(GwyVectorLayer *layer)
         return;
 
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
-    /* this is in fact undraw */
     if (parent)
-        gwy_layer_axes_draw(layer, parent->window);
+        gwy_layer_axes_undraw(layer, parent->window);
     axes_layer->nselected = 0;
     gwy_layer_axes_save(axes_layer, -1);
 }
