@@ -1066,7 +1066,7 @@ create_results_window(FitArgs *args)
         attach_label(tab, s, i, 0, 0.0);
         value = args->par_res[i];
         sigma = args->err[i];
-        mag = gwy_math_humanize_numbers(sigma/12, value, &precision);
+        mag = gwy_math_humanize_numbers(sigma/12, fabs(value), &precision);
         g_string_printf(str, "%.*f", precision, value/mag);
         attach_label(tab, str->str, i, 2, 1.0);
         g_string_printf(str, "%.*f", precision, sigma/mag);
