@@ -197,7 +197,7 @@ gwy_palette_def_new(const gchar *name)
     klass = g_type_class_peek(GWY_TYPE_PALETTE_DEF);
     g_assert(klass);
     palette_def->name = gwy_palette_def_invent_name(klass->palettes, name);
-    palette_def->data = g_array_new(0, 0, sizeof(GwyPaletteDefEntry));
+    palette_def->data = g_array_new(FALSE, FALSE, sizeof(GwyPaletteDefEntry));
     g_hash_table_insert(klass->palettes, palette_def->name, palette_def);
 
     return (GObject*)(palette_def);
@@ -218,6 +218,7 @@ GObject*
 gwy_palette_def_new_as_copy(GwyPaletteDef *src_palette_def)
 {
     GwyPaletteDef *palette_def;
+    GwyPaletteDefClass *klass;
     guint i, ndat;
 
     gwy_debug("");
@@ -225,8 +226,10 @@ gwy_palette_def_new_as_copy(GwyPaletteDef *src_palette_def)
 
     /* make a deep copy */
     ndat = src_palette_def->data->len;
-    palette_def = (GwyPaletteDef*)gwy_palette_def_new(src_palette_def->name);
-    g_array_free(palette_def->data, FALSE);
+    palette_def = (GwyPaletteDef*)g_object_new(GWY_TYPE_PALETTE_DEF, NULL);
+    klass = g_type_class_peek(GWY_TYPE_PALETTE_DEF);
+    palette_def->name = gwy_palette_def_invent_name(klass->palettes,
+                                                    src_palette_def->name);
     palette_def->data = g_array_sized_new(FALSE, FALSE,
                                           sizeof(GwyPaletteDefEntry), ndat);
     for (i = 0; i < ndat; i++) {
@@ -234,6 +237,7 @@ gwy_palette_def_new_as_copy(GwyPaletteDef *src_palette_def)
                                               GwyPaletteDefEntry, i);
         g_array_append_val(palette_def->data, pe);
     }
+    g_hash_table_insert(klass->palettes, palette_def->name, palette_def);
 
     return (GObject*)(palette_def);
 }

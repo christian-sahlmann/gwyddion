@@ -189,20 +189,22 @@ gwy_gl_material_new(const gchar *name)
 GObject*
 gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
 {
+    GwyGLMaterialClass *klass;
     GwyGLMaterial *glmaterial;
-    guint i;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GL_MATERIAL(src_glmaterial), NULL);
 
-    glmaterial = (GwyGLMaterial*)gwy_gl_material_new(src_glmaterial->name);
+    glmaterial = (GwyGLMaterial*)g_object_new(GWY_TYPE_GL_MATERIAL, NULL);
+    klass = g_type_class_peek(GWY_TYPE_GL_MATERIAL);
+    glmaterial->name = gwy_gl_material_invent_name(klass->materials,
+                                                   src_glmaterial->name);
 
-    for (i = 0; i < 4; i++) {
-        glmaterial->ambient[i]  = src_glmaterial->ambient[i];
-        glmaterial->diffuse[i]  = src_glmaterial->diffuse[i];
-        glmaterial->specular[i] = src_glmaterial->specular[i];
-    }
+    memcpy(glmaterial->ambient, src_glmaterial->ambient, 4*sizeof(GLfloat));
+    memcpy(glmaterial->diffuse, src_glmaterial->diffuse, 4*sizeof(GLfloat));
+    memcpy(glmaterial->specular, src_glmaterial->specular, 4*sizeof(GLfloat));
     glmaterial->shininess = src_glmaterial->shininess;
+    g_hash_table_insert(klass->materials, glmaterial->name, glmaterial);
 
     return (GObject*)(glmaterial);
 }
