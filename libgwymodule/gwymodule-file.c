@@ -582,7 +582,8 @@ _gwy_file_func_remove(const gchar *name)
 
 /**
  * GwyFileDetectFunc:
- * @filename: A file name to detect the filetype of.
+ * @fileinfo: Information about file to detect the filetype of,
+ *            see #GwyFileDetectInfo.
  * @only_name: Whether the type should be guessed only from file name.
  * @name: Function name from #GwyFileFuncInfo (most modules can safely ignore
  *        this argument)
