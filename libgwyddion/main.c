@@ -916,7 +916,9 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_expr();
+    test_si_unit();
+    test_si_unit_format();
+    test_si_unit_parse();
 
     return 0;
 }

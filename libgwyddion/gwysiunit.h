@@ -44,10 +44,10 @@ typedef struct {
 struct _GwySIUnit {
     GObject parent_instance;
 
-    gchar *unitstr;
+    gint power10;
+    GArray *units;
 
     gpointer *reserved1;
-    gpointer *reserved2;
 };
 
 struct _GwySIUnitClass {
@@ -61,8 +61,8 @@ struct _GwySIUnitClass {
 
 GType gwy_si_unit_get_type  (void) G_GNUC_CONST;
 
-GObject*          gwy_si_unit_new                   (const gchar *unit_string);
-GObject*          gwy_si_unit_new_parse             (const gchar *unit_string,
+GwySIUnit*        gwy_si_unit_new                   (const gchar *unit_string);
+GwySIUnit*        gwy_si_unit_new_parse             (const gchar *unit_string,
                                                      gint *power10);
 
 void              gwy_si_unit_set_unit_string       (GwySIUnit *siunit,
@@ -80,6 +80,8 @@ GwySIUnit*        gwy_si_unit_divide                (GwySIUnit *siunit1,
 GwySIUnit*        gwy_si_unit_power                 (GwySIUnit *siunit,
                                                      gint power,
                                                      GwySIUnit *result);
+gboolean          gwy_si_unit_equal                 (GwySIUnit *siunit1,
+                                                     GwySIUnit *siunit2);
 
 GwySIValueFormat* gwy_si_unit_get_format                (GwySIUnit *siunit,
                                                          gdouble value,
@@ -93,8 +95,6 @@ GwySIValueFormat* gwy_si_unit_get_format_with_digits    (GwySIUnit *siunit,
                                                          gint sdigits,
                                                          GwySIValueFormat *format);
 void              gwy_si_unit_value_format_free         (GwySIValueFormat *format);
-gboolean          gwy_si_unit_equal                     (GwySIUnit *siunit1,
-                                                         GwySIUnit *siunit2);
 
 
 G_END_DECLS
