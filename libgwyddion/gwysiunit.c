@@ -276,10 +276,17 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
         format->magnitude = pow(10, (gint)(log10(fabs(value)))-1);
         
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
-        sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(value)))-1);
-        format->units = strcpy(format->units, num);
-        format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
-        
+        if ((gint)(log10(fabs(format->magnitude))) != 0)
+        {
+            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));   
+            format->units = strcpy(format->units, num);
+            format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+        }
+        else
+        {
+            format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
+        }
+          
     }
     format->precision = 2;
     return format;
@@ -337,9 +344,16 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
     {
         
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
-        sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
-        format->units = strcpy(format->units, num);
-        format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+        if ((gint)(log10(fabs(format->magnitude))) != 0)
+        {
+            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));   
+            format->units = strcpy(format->units, num);
+            format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+        }
+        else
+        {
+            format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
+        }
         
     }
      
@@ -423,9 +437,16 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
         format->magnitude = pow(10, (gint)(log10(fabs(maximum)))-1);
         
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
-        sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(maximum)))-1);
-        format->units = strcpy(format->units, num);
-        format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+        if ((gint)(log10(fabs(format->magnitude))) != 0)
+        {
+            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));   
+            format->units = strcpy(format->units, num);
+            format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+        }
+        else
+        {
+            format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
+        }
         format->precision = 2;
         
     }
