@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <stdio.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
@@ -27,6 +28,12 @@
 #include "file.h"
 #include "gwyddion.h"
 
+static void setup_logging(void);
+static void logger(const gchar *log_domain,
+                   GLogLevelFlags log_level,
+                   const gchar *message,
+                   gpointer user_data);
+
 int
 main(int argc, char *argv[])
 {
@@ -34,6 +41,7 @@ main(int argc, char *argv[])
     gchar *config_file;
 
 #ifdef G_OS_WIN32
+    setup_logging();
     gwy_find_self_set_argv0(argv[0]);
 #endif
     gtk_init(&argc, &argv);
@@ -83,6 +91,54 @@ APIENTRY WinMain(HINSTANCE hInstance,
     return main(argc, argv);
 
 }
+
 #endif /* WIN32 */
+
+static void
+setup_logging(void)
+{
+    const gchar *domains[] = {
+        "Gwyddion", "GwyProcess", "GwyDraw", "Gwydgets", "GwyModule",
+        "Module",
+    };
+    const gchar *gwydir =
+#ifdef G_OS_WIN32
+        "gwyddion";
+#else
+        ".gwyddion";
+#endif
+    const gchar *homedir;
+    gchar *log_filename;
+    gsize i;
+    FILE *logfile;
+
+    homedir = g_get_home_dir();
+#ifdef G_OS_WIN32
+    if (!homedir)
+        homedir = g_get_tmp_dir();
+    if (!homedir)
+        homedir = "C:\\Windows";  /* XXX :-))) */
+#endif
+    log_filename = g_build_filename(homedir, gwydir, "gwyddion.log", NULL);
+    logfile = fopen(log_filename, "w");
+    for (i = 0; i < G_N_ELEMENTS(domains); i++)
+        g_log_set_handler(domains[i],
+                          G_LOG_LEVEL_DEBUG | G_LOG_LEVEL_MESSAGE
+                          | G_LOG_LEVEL_INFO | G_LOG_LEVEL_WARNING,
+                          logger, logfile);
+}
+
+static void
+logger(const gchar *log_domain,
+       G_GNUC_UNUSED GLogLevelFlags log_level,
+       const gchar *message,
+       gpointer user_data)
+{
+    FILE *logfile = (FILE*)user_data;
+
+    if (!logfile)
+        return;
+    fprintf(logfile, "%s: %s\n", log_domain, message);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
