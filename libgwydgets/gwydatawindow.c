@@ -111,6 +111,8 @@ gwy_data_window_new(GwyDataView *data_view)
     gwy_debug("%s", __FUNCTION__);
 
     data_window = (GwyDataWindow*)g_object_new(GWY_TYPE_DATA_WINDOW, NULL);
+    gtk_window_set_wmclass(GTK_WINDOW(data_window), "data",
+                           g_get_application_name());
     gtk_window_set_resizable(GTK_WINDOW(data_window), TRUE);
     /* FIXME: this affects the window, not data_view [Fvwm] */
     /*
