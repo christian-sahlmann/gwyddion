@@ -89,7 +89,7 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field, GwyDataField 
                                  - 2*data_field->data[i + xres*j]));
 
                 buffer_field->data[i + xres*j] += cor;
-                if (fabs(cor)>(*error)) (*error) = cor;
+                if (fabs(cor)>(*error)) (*error) = fabs(cor);
             }
         }
     }

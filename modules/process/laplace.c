@@ -77,7 +77,7 @@ laplace(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *dialog;
     GwyDataField *dfield, *maskfield, *buffer;
-    gdouble error, cor, maxer;
+    gdouble error, cor, maxer, lastfrac, frac, starter;
     gint i;
 
     g_assert(run & LAPLACE_RUN_MODES);
@@ -93,20 +93,28 @@ laplace(GwyContainer *data, GwyRunType run)
 
         cor = 0.2;
         error = 0;
-        maxer = (gwy_data_field_get_max(dfield) - gwy_data_field_get_min(dfield))/1.0e9;
+        maxer = gwy_data_field_get_rms(dfield)/1.0e4;
         gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
 
         gwy_data_field_correct_average(dfield, maskfield);
 
-        for (i=0; i<10000; i++)
+        for (i=0; i<5000; i++)
         {
             gwy_data_field_correct_laplace_iteration(dfield, maskfield, buffer,
                                                      &error, &cor);
-            gwy_app_wait_set_message("Iterating...");
             if (error < maxer) break;
-            if (!gwy_app_wait_set_fraction(i/(gdouble)(10000))) break;
+            if (i==0) starter = error;
+
+            
+            gwy_app_wait_set_message("Iterating...");
+            
+            frac = log(error/starter)/log(maxer/starter);
+            if ((i/(gdouble)(5000)) > frac) frac = i/(gdouble)(5000);
+            if (lastfrac > frac) frac = lastfrac;
+            
+            if (!gwy_app_wait_set_fraction(frac)) break;
+            lastfrac = frac;
         }
-        printf("%d iterations\n", i);
         gwy_app_wait_finish();
 
         gwy_container_remove_by_name(data, "/0/mask");
