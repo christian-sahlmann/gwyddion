@@ -392,11 +392,7 @@ _gwy_data_field_free(GwyDataField *a)
 gboolean
 gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
 {
-    /* XXX: PK please read this:
-     * this is only a last resort, g_return_val_if_fail() is NOT a mean of
-     * indicating a problem, it may be set up to coredump or whatever on
-     * failure! */
-    g_return_val_if_fail(a->xres == b->xres && a->yres == b->yres, FALSE);
+    if (a->xres != b->xres && a->yres != b->yres) return FALSE;
 
     b->xreal = a->xreal;
     b->yreal = a->yreal;

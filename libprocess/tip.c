@@ -140,7 +140,7 @@ round_pyramide(GwyDataField *tip, gdouble angle, gint n, gdouble ballradius)
     beta = atan(gwy_data_field_itor(tip,radius)/height);
     center_x = tip->xreal/2;
     center_y = tip->yreal/2;
-    center_z = height - ballradius;//cos(beta);
+    center_z = height - ballradius/cos(beta);
     printf("z:%g, height=%g, ballradius=%g, cosbeta=%g, beta=%g (%g deg of %g deg)\n", 
        center_z, height, ballradius, cos(beta), beta, beta*180/G_PI, angle*180/G_PI);
     for (col=0; col<tip->xres; col++)
@@ -651,6 +651,10 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
 
     /*convert result back*/
     result = i_largefield_to_datafield(fresult, result, buffertip, surfacemin, step);
+/*XXX XXX*/
+    gwy_data_field_add(result, -gwy_data_field_get_min(result));
+    gwy_data_field_multiply(result, 1/gwy_data_field_get_max(result));
+/*FIXME*/
 
     ifreematrix(ftip, buffertip->xres);
     ifreematrix(fsurface, newx);

@@ -23,7 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
-
+#include <stdio.h>
 static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   guint m,
                                                   gdouble phi);
