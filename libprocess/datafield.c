@@ -1388,23 +1388,6 @@ gwy_data_field_get_sum(GwyDataField *a)
 }
 
 gdouble
-gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolation)
-{
-    gint i, j;
-    gdouble sum;
-    
-    for (i=0; i<(a->xres-1); i++)
-    {
-        for (j=0; j<(a->yres-1); j++)
-        {
-            sum += square_area(a, i, j, i+1, j+1, 10, interpolation);
-        }
-    }
-    return sum;
-}
-
-
-gdouble
 gwy_data_field_get_area_sum(GwyDataField *a, gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
     gint i, j;
@@ -1448,6 +1431,48 @@ gwy_data_field_get_area_avg(GwyDataField *a,
 {
     return gwy_data_field_get_area_sum(a, ulcol, ulrow, brcol, brrow)
            /((gdouble)(brcol-ulcol)*(brrow-ulrow));
+}
+
+gdouble
+gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolation)
+{
+    gint i, j;
+    gdouble sum;
+    
+    for (i=0; i<(a->xres-1); i++)
+    {
+        for (j=0; j<(a->yres-1); j++)
+        {
+            sum += square_area(a, i, j, i+1, j+1, 6, interpolation);
+        }
+    }
+    return sum;
+}
+
+gdouble
+gwy_data_field_get_area_surface_area(GwyDataField *a, 
+                                     gint ulcol, gint ulrow, gint brcol, gint brrow,
+                                     GwyInterpolationType interpolation)
+{
+    gint i, j;
+    gdouble sum;
+    
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
+
+    sum = 0;
+    for (i=ulcol; i<(brcol-0); i++)
+    {
+        for (j=ulrow; j<(brrow-0); j++)
+        {
+            sum += square_area(a, i, j, i+1, j+1, 6, interpolation);
+        }
+    }
+    return sum;
 }
 
 /**
