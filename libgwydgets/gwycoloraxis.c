@@ -395,7 +395,7 @@ void prepare_number(gdouble number, gdouble *power, gdouble *value)
     val = 3*ROUND(((gdouble)val/3.0));
     /*printf("val=%d\n", val);*/
     
-    *power = pow(10, val);
+    *power = pow(10, val-3);
     /*printf("power=%f\n", *power);*/
     *value = number/ *power;
     /*printf("value=%f\n", *value);*/
@@ -418,7 +418,6 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
 
 
     /*compute minimum and maximum numbers*/
-    printf("min=%f, max=%f\n", axis->min, axis->max);
     strmax = g_string_new(" ");
     if (axis->max == 0)
     {
@@ -434,8 +433,7 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
     else
     {
         prepare_number(axis->max, &power, &value);
-        printf("max: %f %d %f\n", axis->max, power, value); 
-        g_string_printf(strmax, "%3.3f ", value);
+        g_string_printf(strmax, "%3.1f ", value);
         g_string_append(strmax, gwy_math_SI_prefix(power));
         g_string_append(strmax, "m");
     }
@@ -455,9 +453,9 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
     }
     else
     {
-        prepare_number(axis->min, &power, &value);
-        printf("min: %f %d %f\n", axis->min, power, value);
-        g_string_printf(strmin, "%3.3f ", value);
+        /*prepare_number(axis->min, &power, &value);*/
+        value = axis->min/power;
+        g_string_printf(strmin, "%3.1f ", value);
         g_string_append(strmin, gwy_math_SI_prefix(power));
         g_string_append(strmin, "m");
     }
