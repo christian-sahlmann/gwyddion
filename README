@@ -1,0 +1,10 @@
+run ./configure (or ./autogen) with --enable-maintainer-mode
+if you want to make docs or build tarballs
+
+run ./configure (or ./autogen) with --cache-file=config.cache
+to speed up configure
+
+ideally, with both
+
+see devel-docs/README for HTML doc info
+

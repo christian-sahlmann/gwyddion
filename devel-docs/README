@@ -1,0 +1,24 @@
+gtk-doc scan may place a slightly broken doctype declaration to
+MODULE-docs.sgml
+
+<!doctype book PUBLIC "-//DavenPort//DTD DocBook V3.0//EN" [
+
+fix it to
+
+<!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+
+or else you'll get really weird errors.
+
+
+=========================
+gtk-doc.mk are universal rules to be included in Makefile.am's
+
+
+=========================
+building docs takes too much time, they are not built by default.
+go to the appropriate dir and run
+
+  make docs
+
+there if you want to update them.
+

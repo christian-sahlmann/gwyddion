@@ -1,0 +1,25 @@
+<!-- ##### SECTION Title ##### -->
+GwyVectorShade
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_vector_shade_new ##### -->
+<para>
+
+</para>
+
+@sphere_coords: 
+@Returns: 
+
+

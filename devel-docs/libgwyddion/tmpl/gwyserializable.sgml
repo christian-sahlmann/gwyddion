@@ -1,0 +1,197 @@
+<!-- ##### SECTION Title ##### -->
+GwySerializable
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### USER_FUNCTION GwySerializeFunc ##### -->
+<para>
+
+</para>
+
+@serializable: 
+@buffer: 
+@size: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwyDeserializeFunc ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serializable_serialize ##### -->
+<para>
+
+</para>
+
+@serializable: 
+@buffer: 
+@size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serializable_deserialize ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_pack ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@templ: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_boolean ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_char ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_char_array ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@asize: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_int32 ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_int32_array ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@asize: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_int64 ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_int64_array ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@asize: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_double ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_double_array ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@asize: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_unpack_string ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_check_string ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@compare_to: 
+@Returns: 
+
+

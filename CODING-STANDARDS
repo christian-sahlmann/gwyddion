@@ -1,0 +1,232 @@
+
+
+===== Identifiers ===================================================
+
+General:
+- The length of identifier name is roughly proportional to its scope
+  and its role in the program.
+
+- Global identifiers are compound of words tied with underscores, they
+  are descriptive and unambiguous.  Local identifiers are short.  When
+  there's no reason for doing otherwise, short (one-letter) identifiers
+  correspond with types they are commonly used for:
+  i, j, k, m, n - integer
+  c - char
+  s - string
+  p - pointer
+  r, t, w, x, y - floating point
+  Of course, when 
+
+- Hungarian notation is not used.
+
+    extern int foo_bogosity_level;
+    static int always_restore_state;
+
+    int
+    foo_get_bogosity_level(void)
+    {
+        int i;
+        void *p;
+        char c;
+        char *s;
+        ...
+    }
+
+    static void
+    self_destruct(void)
+    {
+        ...
+    }
+
+Scope:
+- Variables are declared in the scope where really used, to emphasize
+  their scope:
+
+  int
+  foo(int n, FooBar *ff)
+  {
+      int i;
+
+      for (i = 0; i < n; i++) {
+          const char *name = ff[i]->name;
+          double q = ff[i]->quotient;
+          ...
+      }
+      ...
+  }
+
+
+Prefixes:
+- No identifiers start with prefixes colliding with some standard or
+  possibly used library.
+
+- All non-static identifiers use some unique prefix:
+  Macros and constants: GWY_
+  Types: Gwy
+  Functions gwy_
+
+
+===== Case ==========================================================
+
+UPPERCASE_WITH_UNDERSCORES:
+- enum constants:
+
+    enum {
+        FOO_NONE,
+        FOO_SMALL,
+        FOO_LARGE
+    };
+
+- Parameterless preprocessor macros:
+
+    #define BOGUS_CONSTANT 4.2e1
+
+- Other preprocessor macros if they are used like macros:
+
+    #define ABS(x) ((x) < 0 ? (-(x)) : (x))
+
+  Function wrappers look like functions:
+
+    #define foo_bogo(one, two) bar_measure_bogosity(two, one, 0)
+
+MixedCaseWithoutUnderscores:
+- Compound types, enums, and structures:
+
+    typedef struct {
+        void *foo;
+        int bar;
+    } FooBar;
+
+lowercase_with_underscores:
+- Everything else (functions, variables, atomic types):
+
+    int i;
+    typedef unsigned char byte;
+
+    int
+    cup_of_tea(int flavor)
+    {
+        ...
+    }
+
+
+===== Indentaion and grouping =======================================
+
+Indentation unit is 4 spaces.  Tabs are not used.
+
+Functions:
+- Function return type starts in the first column.
+- Function name starts in the first column.
+- Function opening brace starts in the first column:
+
+    const FooBar*
+    gimme_some_foobar(void)
+    {
+         ....
+    }
+
+Conditions, cycles, ... - code grouping:
+- Opening brace (if present) ends the line before the group starts:
+- Closing brace is alone on the line wehre group ends (except for
+  do-while cycles):
+
+    if (i == 0) {
+        while (j > 0) {
+            ...
+        }
+    }
+    else {
+        do {
+            ...
+        } while (j < 100);
+    }
+
+- Standalone groups start with an unindented opening brace:
+
+    {
+        int t1, t2;
+        Foo *f = foobar[3].ff;
+        ...
+    }
+
+- Multiline statements are grouped even if not necessary:
+
+    if (foo) {
+        for (i = 0; i < n; i++)
+            sum += z[i];
+    }
+
+- else-if is not progressively indented:
+
+    if (foo == 2)
+        bar();
+    else if (foo > 4)
+        baz();
+    else
+        abort();
+
+- case is not progressively indented:
+
+    switch (c) {
+        case 'a':
+        croak();
+        break;
+
+        case 'm':
+        carp();
+        break;
+
+        ...
+    }
+
+- Vim settings
+
+  set shiftwidth=4
+  set cindent
+  set cinoptions=>1s,e0,n0,f0,{0,}0,^0,:1s,=0,g1s,h0,t0,c3,C1,(0,u0,)40,*60
+
+===== Spaces =========================================================
+
+Spacing emphasizes priority and thightness of binding.  The more
+logically related are things, the less is the probability of a space
+between them.
+
+Horizontal spaces:
+- There is always a space:
+  after comma
+  around ? and : in conditional expression
+  around comparsion operators (==, <, >, <=, >=, !=)
+  around assignment operators (=, +=, -=, ...)
+  around binary logical operators (||, &&)
+
+- There is never a space:
+  around relationship operators (., ->, ::, .*, ->*)
+  before function call and indexing operators ((), [])
+  after reference or dereference operator (&, *)
+  after negation operators (-, ~, !)
+  before post-increment and post-decrement operators (++, --)
+  after pre-increment and pre-decrement operators (++, --)
+  after type cast ((int*))
+
+- Spacing of other operators is choosen to emphasize priority:
+
+    z = x + 3*y;
+    q = a<<4 + b;
+    c = m+n | 0xff;
+
+- There is a space before if, while, or switch opening parenthesis.
+
+    while (p != NULL)
+         ...
+
+- There is no space before function call (or macro) opening parenthesis.
+
+    foo(bar(x), baz(y));
+
+Empty lines:
+- There's always an empty line after declarations in a group.
+- There's always at least one empty line between functions, structs and
+  and other compound definitions (declarations).
+- There's always an empty line after while line in do-while cycles, except
+  a closing brace follows.
+

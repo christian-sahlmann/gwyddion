@@ -1,0 +1,17 @@
+<!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+<!ENTITY libgwydgets-GwySphereCoords SYSTEM "sgml/gwyspherecoords.sgml">
+<!ENTITY libgwydgets-GwyVectorShade SYSTEM "sgml/gwyvectorshade.sgml">
+<!ENTITY libgwydgets-GwyGradSphere SYSTEM "sgml/gwygradsphere.sgml">
+]>
+<book id="index">
+  <bookinfo>
+    <title>Gwyddion Widgets Reference Manual</title>
+  </bookinfo>
+
+  <chapter>
+    <title>[Insert title here]</title>
+    &libgwydgets-GwySphereCoords;
+    &libgwydgets-GwyVectorShade;
+    &libgwydgets-GwyGradSphere;
+  </chapter>
+</book>

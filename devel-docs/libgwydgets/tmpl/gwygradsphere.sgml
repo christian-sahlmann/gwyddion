@@ -1,0 +1,62 @@
+<!-- ##### SECTION Title ##### -->
+GwyGradSphere
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_grad_sphere_new ##### -->
+<para>
+
+</para>
+
+@sphere_coords: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_grad_sphere_get_sphere_coords ##### -->
+<para>
+
+</para>
+
+@grad_sphere: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_grad_sphere_set_sphere_coords ##### -->
+<para>
+
+</para>
+
+@grad_sphere: 
+@sphere_coords: 
+
+
+<!-- ##### FUNCTION gwy_grad_sphere_set_update_policy ##### -->
+<para>
+
+</para>
+
+@grad_sphere: 
+@policy: 
+
+
+<!-- ##### ARG GwyGradSphere:sphere-coords ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyGradSphere:update-policy ##### -->
+<para>
+
+</para>
+

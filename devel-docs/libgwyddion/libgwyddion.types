@@ -1,0 +1,5 @@
+#include "libgwyddion/gwyddion.h"
+
+gwy_serializable_get_type
+gwy_watchable_get_type
+gwy_container_get_type

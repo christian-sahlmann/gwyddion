@@ -1,0 +1,5 @@
+#include "libgwydgets/gwydgets.h"
+
+gwy_sphere_coords_get_type
+gwy_grad_sphere_get_type
+gwy_vector_shade_get_type
