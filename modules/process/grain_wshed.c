@@ -142,7 +142,6 @@ wshed(GwyContainer *data, GwyRunType run)
         ook = wshed_dialog(&args, data);
     }
     if (ook) {
-
         if (run != GWY_RUN_WITH_DEFAULTS)
             wshed_save_args(gwy_app_settings_get(), &args);
     }

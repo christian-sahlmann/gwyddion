@@ -3645,7 +3645,6 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
     hlp_df =
         (GwyDataField *) gwy_data_field_new(xres, yres, data_field->xreal,
                                             data_field->yreal, TRUE);
-    neighbours = (gdouble *)g_malloc((size * size) * sizeof(gdouble));
 
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
@@ -3669,20 +3668,16 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
             for (m = (-kyres/2); m < (kyres - kyres/2); m++) {
                 for (n = (-kxres/2); n < (kxres - kxres/2); n++) {
                     if (((j + n) < xres) && ((i + m) < yres) && ((j + n) >= 0)
-                        && ((i + m) >= 0)) {
-                        neighbours[nb] =
-                            data_field->data[(j + n) + xres * (i + m)];
-                        nb++;
+                        && ((i + m) >= 0) && !(m==0 && n==0)) {
+
+                        if (minval > data_field->data[(j + n) + xres * (i + m)])
+                            minval = data_field->data[(j + n) + xres * (i + m)];
+                        if (maxval < data_field->data[(j + n) + xres * (i + m)])
+                            maxval = data_field->data[(j + n) + xres * (i + m)];
                     }
                 }
             }
-            for (k = 0; k < nb; k++) {
-                if (minval > neighbours[k])
-                    minval = neighbours[k];
-                if (maxval < neighbours[k])
-                    maxval = neighbours[k];
-            }
-
+            
             if (data_field->data[j + xres * i] > maxval)
                 hlp_df->data[j + xres * i] = maxval;
             else if (data_field->data[j + xres * i] < minval)
@@ -3700,7 +3695,6 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
     }
 
     g_object_unref(hlp_df);
-    g_free(neighbours);
 
 }
 

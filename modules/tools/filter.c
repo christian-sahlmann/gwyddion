@@ -265,6 +265,10 @@ dialog_create(GwyUnitoolState *state)
     controls->direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
                                                  controls, controls->dir);
+    if (controls->fil == GWY_FILTER_SOBEL || controls->fil == GWY_FILTER_PREWITT)
+        gtk_widget_set_sensitive(controls->direction, TRUE);
+    else
+        gtk_widget_set_sensitive(controls->direction, FALSE);
 
     gtk_table_attach(GTK_TABLE(table2), controls->direction,
                      1, 2, 2, 3, GTK_FILL, 0, 2, 2);
@@ -548,6 +552,10 @@ filter_changed_cb (GObject *item, ToolControls *controls)
     gwy_debug("");
     controls->fil = GPOINTER_TO_INT(g_object_get_data(item, "filter-type"));
     state_changed = 1;
+    if (controls->fil == GWY_FILTER_SOBEL || controls->fil == GWY_FILTER_PREWITT)
+        gtk_widget_set_sensitive(controls->direction, TRUE);
+    else
+        gtk_widget_set_sensitive(controls->direction, FALSE);
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
