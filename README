@@ -49,6 +49,7 @@ Subdir contents:
     modules:      Standard modules (file, graph, layer, process, tool)
     plugins:      Standard and sample plug-ins (file, process)
     devel-docs:   Developer-documentation for each library
+    data:         Miscellaneous auxiliary data files
     po:           Translations
     pixmaps:      Stock icons and other graphics
     perl:         Perl modules for plug-in development

@@ -19,7 +19,7 @@ do not expect them to require any additional setup either.
 ===[ 1. From sources -- Linux/Unix ]=========================================
 
 Prerequisities:
-- a compiler, linker, make, etc. capable of Gtk+ compilation (you don't have
+- a C compiler, linker, make, etc. capable of Gtk+ compilation (you don't have
   to compile Gtk+, but what is good enough for Gtk+ should be good enough for
   Gwyddion), GNU toolchain is the prefered one
 - Gtk+-2.2 or newer, including development files
@@ -86,10 +86,10 @@ a string key `Path' and put `$GTK_TOP\lib;$GTK_TOP\bin' there.  If GtkGLExt
 is installed separately, also add its lib and bin directories, separated by
 semicolons.
 
-To create an installer, open gwyddion.iss in Inno Setup and select Build,
-it will create Gwyddion-<VERSION>.exe in the inst subdirectory.  You can
+To create an installer, open inst/gwyddion.iss in Inno Setup and select Build,
+it will create Gwyddion-$VERSION.exe in the inst subdirectory.  You can
 optionally create installer of Gwyddion development files by repeating these
-steps with gwyddion-devel.iss.
+steps with inst/gwyddion-devel.iss.
 
 It is possible to build Gwyddion from the MSVC IDE, but it is not supported.
 Namely because there are no decent project files to start with, and if there
