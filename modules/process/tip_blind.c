@@ -35,9 +35,9 @@
 
 /* Data for this function. */
 typedef struct {
-    gdouble height;
-    gdouble radius;
-    GwyTipType type;
+    gint xres;
+    gint yres;
+    gdouble thresh;
     GwyDataWindow *win;
 } TipBlindArgs;
 
@@ -45,10 +45,12 @@ typedef struct {
     GtkWidget *view;
     GtkWidget *data;
     GtkWidget *type;
-    GtkWidget *radius;
-    GtkObject *slope;
+    GtkWidget *threshold;
     GwyContainer *tip;
+    GwyContainer *vtip;
     GwyContainer *surface;
+    GtkObject *xres;
+    GtkObject *yres;
 } TipBlindControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -59,7 +61,11 @@ static void        tip_blind_dialog_update_controls(TipBlindControls *controls,
                                                TipBlindArgs *args);
 static void        tip_blind_dialog_update_values  (TipBlindControls *controls,
                                                TipBlindArgs *args);
-static void        preview                    (TipBlindControls *controls,
+static void        reset                      (TipBlindControls *controls,
+                                               TipBlindArgs *args);
+static void        partial                    (TipBlindControls *controls,
+                                               TipBlindArgs *args);
+static void        full                        (TipBlindControls *controls,
                                                TipBlindArgs *args);
 static void        tip_blind_do                (TipBlindControls *controls, TipBlindArgs *args);
 static void        tip_process                 (TipBlindControls *controls, TipBlindArgs *args); 
@@ -71,17 +77,22 @@ static void        tip_blind_sanitize_args         (TipBlindArgs *args);
 static GtkWidget*  tip_blind_data_option_menu      (GwyDataWindow **operand);
 static void        tip_blind_data_cb(GtkWidget *item);
 
-static void        tip_type_cb     (GtkWidget *item,
-                                             TipBlindArgs *args);
 static GtkWidget*  create_preset_menu        (GCallback callback,
                                               gpointer cbdata,
                                               gint current);
-                                              
+ 
+static void        width_changed_cb          (GtkAdjustment *adj,
+                                               TipBlindArgs  *args);
+static void        height_changed_cb         (GtkAdjustment *adj,
+                                               TipBlindArgs  *args);
+static void        thresh_changed_cb         (GwyValUnit *valunit,
+                                             TipBlindArgs *args);
+
 
 TipBlindArgs tip_blind_defaults = {
-    0,
-    0,
-    0,
+    100,
+    100,
+    1e-10,
     NULL,
 };
 
@@ -145,10 +156,11 @@ tip_blind(GwyContainer *data, GwyRunType run)
 static gboolean
 tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *omenu, *vbox;
+    GtkWidget *dialog, *table, *omenu, *vbox, *spin;
     TipBlindControls controls;
     enum { RESPONSE_RESET = 1,
-           RESPONSE_PREVIEW = 2 };
+           RESPONSE_PARTIAL = 2,
+           RESPONSE_FULL = 3};
     gint response, col, row;
     GtkObject *layer;
     GtkWidget *hbox;
@@ -158,7 +170,8 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     dialog = gtk_dialog_new_with_buttons(_("Model tip"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Update preview"), RESPONSE_PREVIEW,
+                                         _("Partial estimation"), RESPONSE_PARTIAL,
+                                         _("Full estimation"), RESPONSE_FULL,
                                          _("Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -201,13 +214,39 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
     
-    label = gtk_label_new(_("Tip type:"));
+    label = gtk_label_new(_("Estimated tip size:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
-
-    controls.radius = gwy_val_unit_new("Tip apex radius: ", gwy_data_field_get_si_unit_xy(dfield));
-    gtk_box_pack_start(GTK_BOX(vbox), controls.radius, FALSE, FALSE, 4);                                                   
+    controls.xres = gtk_adjustment_new(args->xres,
+                                                    1, 10000, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, 2, _("Width:"), _("px"),
+                                               controls.xres);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
+    g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
+    g_signal_connect(controls.xres, "value_changed",
+                                     G_CALLBACK(width_changed_cb), args);
+                                                                                                                                                                     
+    controls.yres = gtk_adjustment_new(args->yres,
+                                        1, 10000, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, 3, _("Height:"), _("px"),
+                                            controls.yres);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
+    g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
+    g_signal_connect(controls.yres, "value_changed",
+                                          G_CALLBACK(height_changed_cb), args);
+    
+    controls.threshold = gwy_val_unit_new("Threshold ",
+                                       gwy_data_field_get_si_unit_z(dfield));
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.threshold), args->thresh);
+             g_signal_connect(GWY_VAL_UNIT(controls.threshold), "value_changed",
+                                                   G_CALLBACK(thresh_changed_cb), args);
+                                                                                                                                 
+    gtk_box_pack_start(GTK_BOX(vbox), controls.threshold,
+                                                      FALSE, FALSE, 4);
+                 
 
     gtk_widget_show_all(dialog);
     do {
@@ -225,14 +264,20 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
             break;
 
             case RESPONSE_RESET:
-            *args = tip_blind_defaults;
             tip_blind_dialog_update_controls(&controls, args);
+            reset(&controls, args);
             break;
 
-            case RESPONSE_PREVIEW:
+            case RESPONSE_PARTIAL:
             tip_blind_dialog_update_values(&controls, args);
-            preview(&controls, args);
+            partial(&controls, args);
             break;
+
+            case RESPONSE_FULL:
+            tip_blind_dialog_update_values(&controls, args);
+            full(&controls, args);
+            break;
+
 
             default:
             g_assert_not_reached();
@@ -274,11 +319,27 @@ tip_blind_data_cb(GtkWidget *item)
     *pp = p;
 }
 
-static void        
-tip_type_cb     (GtkWidget *item, TipBlindArgs *args)
+
+
+static void
+width_changed_cb(GtkAdjustment *adj,
+                    TipBlindArgs *args)
 {
-    args->type =
-                GPOINTER_TO_INT(g_object_get_data(item, "tip-preset"));    
+    args->xres =  gtk_adjustment_get_value(adj);
+}
+
+static void
+height_changed_cb(GtkAdjustment *adj,
+                    TipBlindArgs *args)
+{
+    args->yres =  gtk_adjustment_get_value(adj);
+}
+
+static void
+thresh_changed_cb(GwyValUnit *valunit,
+                  TipBlindArgs *args)
+{
+    args->thresh = gwy_val_unit_get_value(valunit);
 }
 
 
@@ -294,7 +355,17 @@ tip_blind_dialog_update_values(TipBlindControls *controls, TipBlindArgs *args)
 
 
 static void
-preview(TipBlindControls *controls, TipBlindArgs *args)
+reset(TipBlindControls *controls, TipBlindArgs *args)
+{
+}
+
+static void
+partial(TipBlindControls *controls, TipBlindArgs *args)
+{
+}
+
+static void
+full(TipBlindControls *controls, TipBlindArgs *args)
 {
 }
 
@@ -322,7 +393,6 @@ tip_blind_load_args(GwyContainer *container,
                TipBlindArgs *args)
 {
     *args = tip_blind_defaults;
-    args->type = 0;
     /*
     gwy_container_gis_double_by_name(container, slope_key, &args->slope);
                                    
