@@ -1,4 +1,4 @@
-1.7cvs20050122
+1.7cvs20050124
 
 1.8
 Application:
@@ -8,9 +8,12 @@ Application:
   rememberes more files.
 
 Modules:
-- NT-MDT file format import module (new).
-- CreaTec STM file format import module (new).
-- Omicron STMPRG file format import module (new).
+- NT-MDT file format import (new).
+- CreaTec STM file format import (new).
+- Omicron STMPRG file format import (new).
+- Spmlab R4 a R5 file format import (new).  Note the closed-source plug-in
+  io_tm_common provides better support than this rudimentary reverse-engineered
+  module.
 - Local contrast enhancement display module (new).
 - Blind tip estimate: Insensitive OK button when full estimate was run without
   partial estimate first was fixed.
