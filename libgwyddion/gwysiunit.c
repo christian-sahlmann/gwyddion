@@ -982,7 +982,7 @@ static GwySIUnit2*
 gwy_si_unit2_power(GwySIUnit2 *siunit1,
                    gint power1)
 {
-    GwySimpleUnit *unit1;
+    GwySimpleUnit *unit;
     GwySIUnit2 *siunit;
     gint j;
 
@@ -995,9 +995,9 @@ gwy_si_unit2_power(GwySIUnit2 *siunit1,
 
     g_array_append_vals(siunit->units,
                         siunit1->units->data, siunit1->units->len);
-    for (j = 0; j < siunit1->units->len; j++) {
-        unit1 = &g_array_index(siunit1->units, GwySimpleUnit, j);
-        unit1->power *= power1;
+    for (j = 0; j < siunit->units->len; j++) {
+        unit = &g_array_index(siunit->units, GwySimpleUnit, j);
+        unit->power *= power1;
     }
 
     return siunit;
