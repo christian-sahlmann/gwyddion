@@ -74,7 +74,7 @@ main(int argc, char *argv[])
     gwy_find_self_set_argv0(argv[0]);
 #endif
 
-    gwy_debug_objects_enable(TRUE);
+    gwy_debug_objects_enable(FALSE);
     process_preinit_options(&argc, &argv);
     gwy_app_settings_create_config_dir();
 #ifdef G_OS_WIN32
