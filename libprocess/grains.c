@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "filters.h"
+#include "arithmetic.h"
 #include "datafield.h"
 
 /*local functions*/
@@ -601,27 +602,10 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
 void
 gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
 {
-    gint i, xres, yres;
-    GwyDataField *buffer;
-
-    xres = grain_field->xres;
-    yres = grain_field->yres;
-    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
-                                               grain_field->xreal,
-                                               grain_field->yreal,
-                                               FALSE));
-
-    for (i = 0; i < xres*yres; i++) {
-        if (grain_field->data[i] > 0 || add_field->data[i] > 0)
-            buffer->data[i] = 1;
-        else
-            buffer->data[i] = 0;
-    }
-
-    number_grains(buffer, grain_field);
-    gwy_data_field_invalidate(grain_field);
-
-    g_object_unref(buffer);
+    gwy_data_field_max_of_fields(grain_field, grain_field, add_field);
+    /* XXX: kept here for backward comaptibility, but no function should
+     * rely on grains being numbered, remove in 2.0 */
+    number_grains(grain_field, grain_field);
 }
 
 /**
@@ -636,27 +620,10 @@ void
 gwy_data_field_grains_intersect(GwyDataField *grain_field,
                                 GwyDataField *intersect_field)
 {
-    gint i, xres, yres;
-    GwyDataField *buffer;
-
-    xres = grain_field->xres;
-    yres = grain_field->yres;
-    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
-                                               grain_field->xreal,
-                                               grain_field->yreal,
-                                               FALSE));
-
-    for (i = 0; i < xres*yres; i++) {
-        if (grain_field->data[i] > 0 && intersect_field->data[i] > 0)
-            buffer->data[i] = 1;
-        else
-            buffer->data[i] = 0;
-    }
-
-    number_grains(buffer, grain_field);
-    gwy_data_field_invalidate(grain_field);
-
-    g_object_unref(buffer);
+    gwy_data_field_min_of_fields(grain_field, grain_field, intersect_field);
+    /* XXX: kept here for backward comaptibility, but no function should
+     * rely on grains being numbered, remove in 2.0 */
+    number_grains(grain_field, grain_field);
 }
 
 /****************************************************************************/
@@ -919,7 +886,17 @@ mark_grain_boundaries(GwyDataField *grain_field)
 }
 
 
-/* returns the number of last grain */
+/**
+ * number_grains:
+ * @mask_field: Data field containing positive values in grains, nonpositive
+ *              in free space.
+ * @grain_field: Data field to put numbered grains to.  It may be identical
+ *               to @mask_field.  Grains are numbered sequentially 1, 2, ...
+ *
+ * Numbers grains in a mask data field:.
+ *
+ * Returns: The number of last grain (note they are numbered from 1).
+ **/
 static gint
 number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
 {
@@ -989,10 +966,10 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
     g_return_val_if_fail(data[initial], NULL);
 
     /* check for a single point */
-    if ((!col || !data[initial - 1])
-        && (!row || !data[initial - xres])
-        && (col + 1 == xres || !data[initial + 1])
-        && (row + 1 == yres || !data[initial + xres])) {
+    if ((!col || data[initial - 1] <= 0)
+        && (!row || data[initial - xres] <= 0)
+        && (col + 1 == xres || data[initial + 1] <= 0)
+        && (row + 1 == yres || data[initial + xres] <= 0)) {
         indices = g_new(gint, 1);
 
         indices[0] = initial;
@@ -1070,10 +1047,10 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
     /* check for a single point */
     visited[initial] = grain_no;
     count = 1;
-    if ((!col || !data[initial - 1])
-        && (!row || !data[initial - xres])
-        && (col + 1 == xres || !data[initial + 1])
-        && (row + 1 == yres || !data[initial + xres])) {
+    if ((!col || data[initial - 1] <= 0)
+        && (!row || data[initial - xres] <= 0)
+        && (col + 1 == xres || data[initial + 1] <= 0)
+        && (row + 1 == yres || data[initial + xres] <= 0)) {
 
         return count;
     }
@@ -1094,7 +1071,7 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
                 start = p - 1;
                 stop = (p/xres)*xres;
                 for (j = start; j >= stop; j--) {
-                    if (visited[j] || !data[j])
+                    if (visited[j] || data[j] <= 0)
                         break;
                     visited[j] = grain_no;
                     count++;
@@ -1108,7 +1085,7 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
                 start = p + 1;
                 stop = (p/xres + 1)*xres;
                 for (j = start; j < stop; j++) {
-                    if (visited[j] || !data[j])
+                    if (visited[j] || data[j] <= 0)
                         break;
                     visited[j] = grain_no;
                     count++;
@@ -1130,7 +1107,7 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
                 start = p - xres;
                 stop = p % xres;
                 for (j = start; j >= stop; j -= xres) {
-                    if (visited[j] || !data[j])
+                    if (visited[j] || data[j] <= 0)
                         break;
                     visited[j] = grain_no;
                     count++;
@@ -1144,7 +1121,7 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
                 start = p + xres;
                 stop = p % xres + n;
                 for (j = start; j < stop; j += xres) {
-                    if (visited[j] || !data[j])
+                    if (visited[j] || data[j] <= 0)
                         break;
                     visited[j] = grain_no;
                     count++;
