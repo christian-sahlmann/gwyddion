@@ -281,6 +281,15 @@ and
 
 <!-- ##### FUNCTION gwy_serialize_pack_object_struct ##### -->
 <para>
+Packs a struct as an object.
+</para>
+
+<para>
+This is a wrapper around gwy_serialize_pack_struct(), taking care of
+adding type name and packed object size.
+</para>
+
+<para>
 Here's how a serialization method of a simple object whose state is described
 by a single real number <structfield>foo</structfield> could look (without
 error checking):
@@ -302,15 +311,20 @@ my_object_serialize(GObject *obj,
 }
 ]]></programlisting></informalexample>
 
-@buffer: 
-@size: 
-@object_name: 
-@nspec: 
-@spec: 
-@Returns: 
+@buffer: A buffer to which the serialized components should be appended.
+@size: Current size of @buffer, new size is returned here.
+@object_name: The g_type_name() of the object.
+@nspec: The number of items in @spec.
+@spec: The components to serialize.
+@Returns: The buffer with serialization of @spec components appended.
 
 
 <!-- ##### FUNCTION gwy_serialize_unpack_object_struct ##### -->
+<para>
+Deserializes an object with named components packed by
+gwy_serialize_pack_object_struct().
+</para>
+
 <para>
 Here's how a deserialization method of a simple object whose state is described
 by a single real number <structfield>foo</structfield> could look (without
@@ -335,12 +349,15 @@ my_object_deserialize(const guchar *buffer,
 }
 ]]></programlisting></informalexample>
 
-@buffer: 
-@size: 
-@position: 
-@object_name: 
-@nspec: 
-@spec: 
-@Returns: 
+@buffer: A memory location containing a serialized object at position
+         @position.
+@size: Current size of @buffer, new size is returned here.
+@position: The position of the object in @buffer, it's updated to
+           point after it.
+@object_name: The g_type_name() of the object.
+@nspec: The number of items in @spec.
+@spec: The components to deserialize.
+@Returns: Whether the unpacking succeeded
+          (see gwy_serialize_unpack_struct() for definition of success).
 
 

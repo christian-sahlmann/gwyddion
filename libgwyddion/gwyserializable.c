@@ -480,21 +480,6 @@ gwy_serialize_pack(guchar *buffer,
     return buffer;
 }
 
-/**
- * gwy_serialize_pack_object_struct:
- * @buffer: A buffer to which the serialized components should be appended.
- * @size: Current size of @buffer, new size is returned here.
- * @object_name: The g_type_name() of the object.
- * @nspec: The number of items in @spec.
- * @spec: The components to serialize.
- *
- * Packs a struct as an object.
- *
- * This is a wrapper around gwy_serialize_pack_struct(), taking care of
- * adding type name and packed object size.
- *
- * Returns: The buffer with serialization of @spec components appended.
- **/
 guchar*
 gwy_serialize_pack_object_struct(guchar *buffer,
                                  gsize *size,
@@ -794,23 +779,6 @@ gwy_serialize_skip_type(const guchar *buffer,
 }
 
 
-/**
- * gwy_serialize_unpack_object_struct:
- * @buffer: A memory location containing a serialized object at position
- *          @position.
- * @size: Current size of @buffer, new size is returned here.
- * @position: The position of the object in @buffer, it's updated to
- *            point after it.
- * @object_name: The g_type_name() of the object.
- * @nspec: The number of items in @spec.
- * @spec: The components to deserialize.
- *
- * Deserializes an object with named components packed by
- * gwy_serialize_pack_object_struct().
- *
- * Returns: Whether the unpacking succeeded
- * (see gwy_serialize_unpack_struct() for definition of success).
- **/
 gboolean
 gwy_serialize_unpack_object_struct(const guchar *buffer,
                                    gsize size,
