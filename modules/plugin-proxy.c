@@ -117,9 +117,9 @@ static GwyContainer*   file_plugin_proxy_load    (const gchar *filename,
 static gboolean        file_plugin_proxy_save    (GwyContainer *data,
                                                   const gchar *filename,
                                                   const gchar *name);
-static gint            file_plugin_proxy_detect  (const gchar *filename,
-                                                  gboolean only_name,
-                                                  const gchar *name);
+static gint        file_plugin_proxy_detect  (const GwyFileDetectInfo *fileinfo,
+                                              gboolean only_name,
+                                              const gchar *name);
 static FilePluginInfo* file_find_plugin          (const gchar *name,
                                                   GwyFileOperation run);
 static GPatternSpec**  file_patternize_globs     (const gchar *glob);
@@ -776,7 +776,7 @@ file_plugin_proxy_save(GwyContainer *data,
 
 /**
  * file_plugin_proxy_detect:
- * @filename: A file name to detect type of..
+ * @filename: File information.
  * @only_name: Whether only name should be used for detection (otherwise
  *             trying to open the file is allowed).  Note this parameter is
  *             formal, as the proxy always decides only on filename basis.
@@ -788,21 +788,21 @@ file_plugin_proxy_save(GwyContainer *data,
  * Returns: The score (as defined in gwyddion filetype module interface).
  **/
 static gint
-file_plugin_proxy_detect(const gchar *filename,
+file_plugin_proxy_detect(const GwyFileDetectInfo *fileinfo,
                          G_GNUC_UNUSED gboolean only_name,
                          const gchar *name)
 {
     FilePluginInfo *info;
     gint i, max;
 
-    gwy_debug("called as %s with file `%s'", name, filename);
+    gwy_debug("called as %s with file `%s'", name, fileinfo->name);
     if (!(info = file_find_plugin(name, GWY_FILE_MASK)))
         return 0;
 
     max = G_MININT;
     for (i = 0; info->pattern[i]; i++) {
         if (info->specificity[i] > max
-            && g_pattern_match_string(info->pattern[i], filename))
+            && g_pattern_match_string(info->pattern[i], fileinfo->name))
             max = info->specificity[i];
     }
     if (max == G_MININT)
