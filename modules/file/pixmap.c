@@ -23,6 +23,9 @@
  * resort to play dirty tricks with the data windows in the desperate hope
  * we won't fuck anything up... */
 
+/* for jpeglib */
+#define HAVE_BOOLEAN 1
+
 #include <stdio.h>
 #include <string.h>
 #include <png.h>
