@@ -248,9 +248,9 @@ gwy_app_toolbox_create(void)
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
 
     g_object_set_data_full(G_OBJECT(toolbox), "toolbars", toolbars,
-                           g_list_free);
+                           (GDestroyNotify)g_list_free);
     g_object_set_data_full(G_OBJECT(toolbox), "menus", menus,
-                           g_list_free);
+                           (GDestroyNotify)g_list_free);
     /* XXX */
     g_signal_connect(toolbox, "delete_event", G_CALLBACK(gwy_app_quit), NULL);
 
