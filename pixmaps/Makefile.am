@@ -5,11 +5,16 @@ pixmapdatadir = $(gwypixmapdir)
 pixmapdata_DATA = \
 	gwy_bold-24.png \
 	gwy_crop-24.png \
+	gwy_cwt-24.png \
+	gwy_facet_level-24.png \
 	gwy_fit_plane-24.png \
 	gwy_fit_triangle-24.png \
+	gwy_fix_zero-24.png \
+	gwy_fft-24.png \
 	gwy_graph-24.png \
 	gwy_graph_gauss-24.png \
 	gwy_graph_halfgauss-24.png \
+	gwy_graph_palette-24.png \
 	gwy_gwyddion-60.png \
 	gwy_italic-24.png \
 	gwy_none-24.png \
