@@ -221,7 +221,7 @@ gwy_gradient_is_modifiable(GwyGradient *gradient)
 }
 
 /**
- * gwy_palette_def_get_color:
+ * gwy_gradient_get_color:
  * @gradient: A color gradient.
  * @x: Position in gradient, in range 0..1.
  * @color: Color to fill with color at position @x.
@@ -1308,6 +1308,7 @@ gwy_gradient_new_internal(gchar *name,
 
     gradient->name = name;
     gradient->modifiable = modifiable;
+    gradient->favourite = TRUE;
     if (npoints && points) {
         gradient->points = g_array_sized_new(FALSE, FALSE,
                                              sizeof(GwyGradientPoint), npoints);

@@ -54,6 +54,7 @@ struct _GwyGradient {
 
     gchar *name;
     gboolean modifiable;
+    gboolean favourite;
     gboolean boolean1;
     GArray *points;
     guchar *pixels;
