@@ -55,7 +55,7 @@ typedef enum {
   GWY_FIT_POLY_0   = 0,  /*height fit*/
   GWY_FIT_POLY_1   = 1,  /*linear fit*/
   GWY_FIT_POLY_2   = 2,  /*quadratic fit*/
-  GWY_FIT_POLY_3   = 3,  /*cubic fit*/
+  GWY_FIT_POLY_3   = 3   /*cubic fit*/
 } GwyFitLineType;
 
 
