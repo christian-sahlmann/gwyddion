@@ -2051,7 +2051,7 @@ rawfile_read_ascii(RawFileArgs *args,
         switch (delimtype) {
             case 0:
             for (i = 0; i < args->xres; i++) {
-                x = strtod(buffer, (char**)&end);
+                x = g_ascii_strtod(buffer, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
                                 "Garbage `%.16s' in row %u, column %u",
@@ -2065,7 +2065,7 @@ rawfile_read_ascii(RawFileArgs *args,
 
             case 1:
             for (i = 0; i < args->xres; i++) {
-                x = strtod(buffer, (char**)&end);
+                x = g_ascii_strtod(buffer, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
                                 "Garbage `%.16s' in row %u, column %u",
@@ -2091,7 +2091,7 @@ rawfile_read_ascii(RawFileArgs *args,
 
             default:
             for (i = 0; i < args->xres; i++) {
-                x = strtod(buffer, (char**)&end);
+                x = g_ascii_strtod(buffer, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
                                 "Garbage `%.16s' in row %u, column %u",
