@@ -506,9 +506,15 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
+    if (x != event->x || y != event->y)
+        return;
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_debug("xreal = %g, yreal = %g, xr = %g, yr = %g, xi = %d, yi = %d",
+              gwy_data_field_get_xreal(dfield),
+              gwy_data_field_get_yreal(dfield),
+              xreal, yreal, x, y);
     value = gwy_data_field_get_dval_real(dfield, xreal, yreal,
                                          GWY_INTERPOLATION_ROUND);
     g_snprintf(label, sizeof(label), "(%.*f %s, %.*f %s): %.*f %s",
