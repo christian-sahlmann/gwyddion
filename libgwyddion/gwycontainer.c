@@ -378,6 +378,8 @@ gwy_container_remove(GwyContainer *container, GQuark key)
  *
  * Removes a values whose key start with @prefix from container @container.
  *
+ * @prefix can be %NULL, all values are then removed.
+ *
  * Returns: The number of values removed.
  **/
 gsize
@@ -386,7 +388,6 @@ gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
     PrefixData pfdata;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    g_return_val_if_fail(prefix, 0);
 
     pfdata.container = container;
     pfdata.prefix = prefix;
