@@ -412,6 +412,23 @@ slope_do_graph(GwyDataField *dfield,
     gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
                                       1, 1, "deg", " ");
 
+    /* FIXME: this is experimental code to test GwyGraphEpitome.
+     * Remove it once it works. */
+    {
+        GObject *epitome;
+        GtkWidget *window;
+
+        epitome = gwy_graph_epitome_new(GWY_GRAPH(graph));
+        window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+        gtk_container_add(GTK_CONTAINER(window), graph);
+        gtk_widget_show_all(window);
+        while (gtk_events_pending())
+            gtk_main_iteration_do(FALSE);
+        gtk_widget_destroy(window);
+        while (gtk_events_pending())
+            gtk_main_iteration_do(FALSE);
+        graph = gwy_graph_new_from_epitome(GWY_GRAPH_EPITOME(epitome));
+    }
     gwy_app_graph_window_create(graph);
 
     g_string_free(lab, TRUE);
