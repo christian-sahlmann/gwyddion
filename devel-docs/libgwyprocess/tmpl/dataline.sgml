@@ -370,7 +370,7 @@ GwyDataLine
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_data_line_line_coefs ##### -->
+<!-- ##### FUNCTION gwy_data_line_line_coeffs ##### -->
 <para>
 
 </para>
@@ -380,7 +380,7 @@ GwyDataLine
 @bv: 
 
 
-<!-- ##### FUNCTION gwy_data_line_part_line_coefs ##### -->
+<!-- ##### FUNCTION gwy_data_line_part_line_coeffs ##### -->
 <para>
 
 </para>

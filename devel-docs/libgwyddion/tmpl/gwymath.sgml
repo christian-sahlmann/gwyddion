@@ -1,0 +1,51 @@
+<!-- ##### SECTION Title ##### -->
+gwymath
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_math_SI_prefix ##### -->
+<para>
+
+</para>
+
+@magnitude: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_find_nearest_line ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+@d2min: 
+@n: 
+@coords: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_find_nearest_point ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+@d2min: 
+@n: 
+@coords: 
+@Returns: 
+
+

@@ -259,6 +259,7 @@ gwy_data_view_coords_xy_to_real
 gwy_data_view_coords_real_to_xy
 gwy_data_view_get_xmeasure
 gwy_data_view_get_ymeasure
+gwy_data_view_update
 <SUBSECTION Standard>
 GWY_DATA_VIEW
 GWY_IS_DATA_VIEW

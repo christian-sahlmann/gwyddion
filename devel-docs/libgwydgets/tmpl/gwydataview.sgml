@@ -174,3 +174,11 @@ GwyDataView
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_view_update ##### -->
+<para>
+
+</para>
+
+@data_view: 
+
+

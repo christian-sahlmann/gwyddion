@@ -48,7 +48,7 @@ gwy_data_field_get_row
 gwy_data_field_get_column
 gwy_data_field_set_row
 gwy_data_field_set_column
-gwy_data_field_plane_coefs
+gwy_data_field_plane_coeffs
 gwy_data_field_plane_level
 gwy_data_field_plane_rotate
 gwy_data_field_get_xder
@@ -109,8 +109,8 @@ gwy_data_line_part_get_rms
 gwy_data_line_part_get_sum
 gwy_data_line_threshold
 gwy_data_line_part_threshold
-gwy_data_line_line_coefs
-gwy_data_line_part_line_coefs
+gwy_data_line_line_coeffs
+gwy_data_line_part_line_coeffs
 gwy_data_line_line_level
 gwy_data_line_line_rotate
 gwy_data_line_get_der

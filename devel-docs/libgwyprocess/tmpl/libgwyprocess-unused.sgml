@@ -1,0 +1,30 @@
+<!-- ##### FUNCTION gwy_data_field_plane_coefs ##### -->
+<para>
+
+</para>
+
+@a: 
+@ap: 
+@bp: 
+@cp: 
+
+<!-- ##### FUNCTION gwy_data_line_line_coefs ##### -->
+<para>
+
+</para>
+
+@a: 
+@av: 
+@bv: 
+
+<!-- ##### FUNCTION gwy_data_line_part_line_coefs ##### -->
+<para>
+
+</para>
+
+@a: 
+@from: 
+@to: 
+@av: 
+@bv: 
+
