@@ -18,6 +18,9 @@
    listed below.
 */
 
+/* Technical and formal modification by Petr Klapetek and David Necas (Yeti),
+ * 2004 to fit better in Gwyddion */
+
 
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>

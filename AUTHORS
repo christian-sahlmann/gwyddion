@@ -1,33 +1,37 @@
 
 === Core developers ===
 David Nečas (Yeti) <yeti@gwyddion.net>
-    (infrastructure, main app, module and plug-in system, data windows,
-     utilities, packaging, artwork, developer docs, web site, bugzilla)
+    Infrastructure, main app, module and plug-in system, data windows,
+    utilities, packaging, artwork, developer docs, web site, bugzilla.
 Petr Klapetek <klapetek@gwyddion.net>
-    (1D and 2D data processing, graphs, most of nontrivial tools and data
-     filters, user guide)
+    1D and 2D data processing, graphs, most of nontrivial tools and data
+    filters, user guide.
 
 
 === Developers ===
 Martin Šiler <silerm@physics.muni.cz>
-    (OpenGL 3D data display, Levenberg-Marquardt minimization)
+    OpenGL 3D data display, Levenberg-Marquardt minimization.
 Jindřich Bílek <bilek@physics.muni.cz>
-    (Fractal algorithms)
+    Fractal algorithms.
 Nenad Ocelic <ocelic@biochem.mpg.de>
-    (Ruby dump module and plug-ins, Distance tool)
+    Ruby dump module and plug-ins, Distance tool.
 
 
 === Copies ===
 Gtk+ and GLib by Peter Mattis, Spencer Kimball, Josh MacDonald, and the GTK+
 and GLib Teams, see the AUTHORS file in Gtk+ and GLib for a complete list.
-    (GwyColorButton was originally taken (backported) from Gtk+2.4
-     GtkColorButton.)
-    (GwyRuler, GwyHRuler, GwyVRuler originated as GtkRuler, GtkHRuler, and
-     GtkVRuler forks.)
-    (GwyVMenuBar is based on modified parts of GtkMenuBar code.)
+    GwyColorButton was originally taken (backported) from Gtk+2.4
+    GtkColorButton.
+    GwyRuler, GwyHRuler, GwyVRuler originated as GtkRuler, GtkHRuler, and
+    GtkVRuler forks.
+    GwyVMenuBar is based on modified parts of GtkMenuBar code.
 
 The GIMP by Spencer Kimball and Peter Mattis and other people, see the
 AUTHORS file in The GIMP for complete list.
-    (The splashscreen code was mostly copied from The GIMP.)
-    (MD5 code in gwymd5 was copied from The GIMP, which seems to use a public
-     domain implementation by Colin Plumb.  See gwymd5.c for details.)
+    The splashscreen code was mostly copied from The GIMP.
+    MD5 code in gwymd5 was copied from The GIMP, which seems to use a public
+    domain implementation by Colin Plumb.  See gwymd5.c for details.
+
+John Villarrubia, National Institute of Standards and Technology
+    Tip algorithms in libprocess/morhp_lib.c, see this file for more.
+
