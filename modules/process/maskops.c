@@ -55,19 +55,19 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo mask_remove_func_info = {
         "mask_remove",
-        "/_Mask Operations/_Remove mask",
+        "/_Mask Operations/_Remove Mask",
         (GwyProcessFunc)&mask_remove,
         MASKOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo mask_invert_func_info = {
         "mask_invert",
-        "/_Mask Operations/_Invert mask",
+        "/_Mask Operations/_Invert Mask",
         (GwyProcessFunc)&mask_invert,
         MASKOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo mask_extract_func_info = {
         "mask_extract",
-        "/_Mask Operations/_Extract mask",
+        "/_Mask Operations/_Extract Mask",
         (GwyProcessFunc)&mask_extract,
         MASKOPS_RUN_MODES,
     };

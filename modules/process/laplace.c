@@ -59,7 +59,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo laplace_func_info = {
         "laplace",
-        "/_Correct data/_Remove data under mask",
+        "/_Correct data/_Remove Data Under Mask",
         (GwyProcessFunc)&laplace,
         LAPLACE_RUN_MODES,
     };

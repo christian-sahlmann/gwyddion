@@ -112,7 +112,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo remove_func_info = {
         "remove_threshold",
-        "/_Grains/_Remove by threshold...",
+        "/_Grains/_Remove by Threshold...",
         (GwyProcessFunc)&remove_th,
         REMOVE_RUN_MODES,
     };

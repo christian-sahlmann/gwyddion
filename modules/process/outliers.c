@@ -58,7 +58,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo outliers_func_info = {
         "outliers",
-        "/_Statistics/_Mask of outliers",
+        "/_Statistics/_Mask of Outliers",
         (GwyProcessFunc)&outliers,
         OUTLIERS_RUN_MODES,
     };

@@ -95,7 +95,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo maskcor_func_info = {
         "maskcor",
-        "/M_ultidata/_Mask by correlation",
+        "/M_ultidata/_Mask by Correlation",
         (GwyProcessFunc)&maskcor,
         MASKCOR_RUN_MODES,
     };

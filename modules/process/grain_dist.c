@@ -56,7 +56,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dist_func_info = {
         "grain_dist",
-        "/_Grains/_Size distribution",
+        "/_Grains/_Size Distribution",
         (GwyProcessFunc)&dist,
         DIST_RUN_MODES,
     };

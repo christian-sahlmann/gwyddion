@@ -127,7 +127,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo fractal_func_info = {
         "fractal",
-        "/_Statistics/_Fractal dimension...",
+        "/_Statistics/_Fractal Dimension...",
         (GwyProcessFunc)&fractal,
         FRACTAL_RUN_MODES,
     };

@@ -119,7 +119,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo crosscor_func_info = {
         "crosscor",
-        "/M_ultidata/_Cross-correlation",
+        "/M_ultidata/_Cross-Correlation",
         (GwyProcessFunc)&crosscor,
         CROSSCOR_RUN_MODES,
     };

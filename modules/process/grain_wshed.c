@@ -113,7 +113,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo wshed_func_info = {
         "wshed_threshold",
-        "/_Grains/Mark by _watershed...",
+        "/_Grains/Mark by _Watershed...",
         (GwyProcessFunc)&wshed,
         WSHED_RUN_MODES,
     };

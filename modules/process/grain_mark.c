@@ -137,7 +137,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo mark_func_info = {
         "mark_threshold",
-        "/_Grains/_Mark by threshold...",
+        "/_Grains/_Mark by Threshold...",
         (GwyProcessFunc)&mark,
         MARK_RUN_MODES,
     };
