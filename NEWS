@@ -1,8 +1,8 @@
-1.8cvs20050304
 
 1.9
 Application:
 - Startup time improved.
+- Italian translation added (partial).
 
 Modules:
 - Assing AFM file import (new).

@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.8cvs20050306, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.9, [http://trific.ath.cx/bugzilla/])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
