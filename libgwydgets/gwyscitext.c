@@ -59,11 +59,8 @@ static void     gwy_sci_text_size_allocate        (GtkWidget *widget,
 /* Forward declarations - sci_text related*/
 static void     gwy_sci_text_edited               (GtkEntry *entry);
 static void     gwy_sci_text_entity_selected      (GtkEntry *entry);
-static void     gwy_sci_text_button_bold_pressed  (GtkButton *button);
-static void     gwy_sci_text_button_italic_pressed(GtkButton *button);
-static void     gwy_sci_text_button_upper_pressed (GtkButton *button);
-static void     gwy_sci_text_button_lower_pressed (GtkButton *button);
-static void     gwy_sci_text_button_some_pressed  (GtkButton *button, gint i);
+static void     gwy_sci_text_button_some_pressed  (GtkButton *button,
+                                                   gpointer p);
 static void     stupid_put_entities               (GList *items);
 static void     stupid_put_entity                 (GList *items, gsize i);
 static void     gwy_sci_text_set_text             (GwySciText *sci_text,
@@ -197,14 +194,18 @@ gwy_sci_text_init(GwySciText *sci_text)
                      G_CALLBACK(gwy_sci_text_edited), NULL);
     g_signal_connect(sci_text->entities->entry, "changed",
                      G_CALLBACK(gwy_sci_text_entity_selected), NULL);
-    g_signal_connect(bold, "button_press_event",
-                     G_CALLBACK(gwy_sci_text_button_bold_pressed), NULL);
-    g_signal_connect(italic, "button_press_event",
-                     G_CALLBACK(gwy_sci_text_button_italic_pressed), NULL);
-    g_signal_connect(upper, "button_press_event",
-                     G_CALLBACK(gwy_sci_text_button_upper_pressed), NULL);
-    g_signal_connect(lower, "button_press_event",
-                     G_CALLBACK(gwy_sci_text_button_lower_pressed), NULL);
+    g_signal_connect(bold, "clicked",
+                     G_CALLBACK(gwy_sci_text_button_some_pressed),
+                     GINT_TO_POINTER(GWY_SCI_TEXT_BOLD));
+    g_signal_connect(italic, "clicked",
+                     G_CALLBACK(gwy_sci_text_button_some_pressed),
+                     GINT_TO_POINTER(GWY_SCI_TEXT_ITALIC));
+    g_signal_connect(upper, "clicked",
+                     G_CALLBACK(gwy_sci_text_button_some_pressed),
+                     GINT_TO_POINTER(GWY_SCI_TEXT_SUPERSCRIPT));
+    g_signal_connect(lower, "clicked",
+                     G_CALLBACK(gwy_sci_text_button_some_pressed),
+                     GINT_TO_POINTER(GWY_SCI_TEXT_SUBSCRIPT));
 
 }
 
@@ -352,13 +353,14 @@ gwy_sci_text_entity_selected(GtkEntry *entry)
 
 
 static void
-gwy_sci_text_button_some_pressed(GtkButton *button, gint i)
+gwy_sci_text_button_some_pressed(GtkButton *button, gpointer p)
 {
     GwySciText *sci_text;
     GtkEditable *editable;
-    gint start, end;
+    gint i, start, end;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("%s: %p", __FUNCTION__, p);
+    i = GPOINTER_TO_INT(p);
     sci_text = (GwySciText*)gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(button)));
     editable = GTK_EDITABLE(sci_text->entry);
     if (!gtk_editable_get_selection_bounds(editable, &start, &end)) {
@@ -394,31 +396,6 @@ gwy_sci_text_button_some_pressed(GtkButton *button, gint i)
         break;
     }
     gwy_sci_text_edited(sci_text->entry);
-}
-
-
-static void
-gwy_sci_text_button_bold_pressed(GtkButton *button)
-{
-    gwy_sci_text_button_some_pressed(button, GWY_SCI_TEXT_BOLD);
-}
-
-static void
-gwy_sci_text_button_italic_pressed(GtkButton *button)
-{
-    gwy_sci_text_button_some_pressed(button, GWY_SCI_TEXT_ITALIC);
-}
-
-static void
-gwy_sci_text_button_lower_pressed(GtkButton *button)
-{
-    gwy_sci_text_button_some_pressed(button, GWY_SCI_TEXT_SUBSCRIPT);
-}
-
-static void
-gwy_sci_text_button_upper_pressed(GtkButton *button)
-{
-    gwy_sci_text_button_some_pressed(button, GWY_SCI_TEXT_SUPERSCRIPT);
 }
 
 
