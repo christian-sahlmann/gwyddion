@@ -85,7 +85,10 @@ static void       crosscor_load_args          (GwyContainer *settings,
 static void       crosscor_save_args          (GwyContainer *settings,
                                                CrosscorArgs *args);
 static void       crosscor_sanitize_args      (CrosscorArgs *args);
+static void       mask_changed_cb             (GtkToggleButton *button,
+                                               CrosscorArgs *args);
 
+CrosscorControls *pcontrols;
 
 static const GwyEnum results[] = {
     { N_("Absolute"),    GWY_CROSSCOR_ABS },
@@ -145,6 +148,7 @@ crosscor(GwyContainer *data, GwyRunType run)
     crosscor_load_args(settings, &args);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
+    pcontrols = &controls;
     crosscor_window = crosscor_window_construct(&args, &controls);
     gtk_window_present(GTK_WINDOW(crosscor_window));
 
@@ -252,23 +256,7 @@ crosscor_window_construct(CrosscorArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    /*do mask of thresholds*/
-    controls->add_ls_mask = gtk_check_button_new_with_mnemonic
-                                (_("Add _low score results mask"));
-    gtk_table_attach(GTK_TABLE(table), controls->add_ls_mask, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->add_ls_mask),
-                                 args->add_ls_mask);
-    row++;
-
-    controls->threshold = gtk_adjustment_new(args->threshold,
-                                             -1, 1, 0.005, 0.05, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_Threshold:"), NULL,
-                                   controls->threshold, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
-    row++;
-
-    /***** Result *****/
+    /*Result*/
     omenu = gwy_option_menu_create(results, G_N_ELEMENTS(results),
                                    "operation",
                                    G_CALLBACK(crosscor_operation_cb),
@@ -276,6 +264,26 @@ crosscor_window_construct(CrosscorArgs *args,
                                    args->result);
     gwy_table_attach_hscale(table, row, _("_Output type:"), NULL,
                             GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
+    row++;
+    
+    /*do mask of thresholds*/
+    controls->add_ls_mask = gtk_check_button_new_with_mnemonic
+                                (_("Add _low score results mask"));
+    gtk_table_attach(GTK_TABLE(table), controls->add_ls_mask, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->add_ls_mask),
+                                 args->add_ls_mask);
+    g_signal_connect(controls->add_ls_mask, "toggled",
+                     G_CALLBACK(mask_changed_cb), args);
+    row++;
+
+    controls->threshold = gtk_adjustment_new(args->threshold,
+                                             -1, 1, 0.005, 0.05, 0);
+    spin = gwy_table_attach_hscale(table, row, _("_Threshold:"), NULL,
+                                   controls->threshold, 0);
+    gwy_table_hscale_set_sensitive(controls->threshold, args->add_ls_mask);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+
 
     gtk_widget_show_all(dialog);
 
@@ -301,6 +309,14 @@ crosscor_operation_cb(GtkWidget *item, CrosscorArgs *args)
     args->result
         = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "operation"));
 }
+
+static void       
+mask_changed_cb(GtkToggleButton *button, CrosscorArgs *args)
+{
+    args->add_ls_mask = gtk_toggle_button_get_active(button);
+    gwy_table_hscale_set_sensitive(pcontrols->threshold, args->add_ls_mask);
+}
+
 
 static void
 crosscor_data_cb(GtkWidget *item)
