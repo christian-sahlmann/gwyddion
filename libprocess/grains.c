@@ -30,7 +30,7 @@
 /*local functions*/
 gint step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow);
 void threshold_drops(GwyDataField *water_field, gdouble locate_thresh);
-void check_neighbours(GwyDataField *data_field, GwyDataField *buffer, gint col, gint row,
+gint check_neighbours(GwyDataField *data_field, GwyDataField *buffer, gint col, gint row,
                                    gint *global_number, gdouble *global_maximum_value, gint *global_col_value, gint *global_row_value);
 void drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize);
 void drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval);
@@ -144,19 +144,22 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
     {
 	    drop_step(mark_dfield, water, locate_dropsize);
     }
-    threshold_drops(water, locate_thresh);
+    /*threshold_drops(water, locate_thresh);*/
 
     drop_minima(water, min, locate_thresh);
+    for (i=0; i<(data_field->xres*data_field->yres); i++) if (min->data[i]!=0) printf("i=%d\n",i);
 
     /*owatershed*/
-    gwy_data_field_copy(data_field, mark_dfield);
+/*    gwy_data_field_copy(data_field, mark_dfield);
     for (i=0; i<wshed_steps; i++)
     {
 	    wdrop_step(mark_dfield, min, water, grain_field, wshed_dropsize); 
     }
-    
+  */  
     /*mark_grain_boundaries(water_field, grain_field);*/
 
+    gwy_data_field_copy(min, grain_field);
+    
     g_object_unref(min);
     g_object_unref(water);
     g_object_unref(mark_dfield);
@@ -337,37 +340,36 @@ threshold_drops(GwyDataField *water_field, gdouble locate_thresh)
 
 }
 
-void 
+gint
 check_neighbours(GwyDataField *data_field, GwyDataField *buffer, gint col, gint row, 
 		     gint *global_number, gdouble *global_maximum_value, gint *global_col_value, gint *global_row_value)
 {
-    gint xres, yres;
+    gint xres, yres, *pnt, npnt, i;
     
-    *global_number++;
     xres = data_field->xres;
     yres = data_field->yres;
 
     if (col<0 || row<0 || col>(xres-1) || row>(yres-1)) return;
 
-    /*mark as judged point and check if this is the minimum*/
-    buffer->data[col + xres*row] = 1;
-    if (*global_maximum_value < data_field->data[(gint)(col + xres*row)])
+    pnt = gwy_data_field_fill_grain(data_field, row, col, &npnt);
+    
+    *global_number += 1;   
+    for (i=0; i<npnt; i++)
     {
-	*global_maximum_value = data_field->data[col + xres*row];
-	*global_col_value = col;
-	*global_row_value = row;
+        if (*global_maximum_value<data_field->data[pnt[i]])
+        *global_maximum_value = data_field->data[pnt[i]];
+        
+        row = (gint)floor((gdouble)i/(gdouble)xres);
+        col = i - xres*row;
+
+        buffer->data[pnt[i]] = *global_number;
+                    
+        *global_col_value = col;
+        *global_row_value = row;
     }
 
-    if (col<(xres-1) && buffer->data[col+1 +xres*row]==0)
-	check_neighbours(data_field, buffer, col+1, row, global_number, global_maximum_value, global_col_value, global_row_value);
-    if (col>0 && buffer->data[col-1 +xres*row]==0)
-	check_neighbours(data_field, buffer, col-1, row, global_number, global_maximum_value, global_col_value, global_row_value);
-    if (row<(yres-1) && buffer->data[col + xres*(row+1)]==0)
-	check_neighbours(data_field, buffer, col, row+1, global_number, global_maximum_value, global_col_value, global_row_value);
-    if (row>0 && buffer->data[col + xres*(row-1)]==0)
-	check_neighbours(data_field, buffer, col, row-1, global_number, global_maximum_value, global_col_value, global_row_value);
-     
-    
+    g_free(pnt);
+    return npnt;
 }
 
 void 
@@ -390,8 +392,8 @@ drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize
     	    retval = step_by_one(data_field, &col, &row);
     	} while (retval==0);
 	
-    	water_field->data[i] += 1;
-    	data_field->data[i] -= dropsize;
+    	water_field->data[col + xres*(row)] += 1;
+    	data_field->data[col + xres*(row)] -= dropsize;
 	
     }
 }
@@ -399,7 +401,7 @@ drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize
 void 
 drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
 {
-    gint xres, yres, i, retval, global_row_value, global_col_value, global_number;
+    gint xres, yres, i, retval, global_row_value, global_col_value, global_number, npnt, *pnt;
     gdouble col, row, global_maximum_value;
     GwyDataField *buffer;
     
@@ -407,6 +409,7 @@ drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
     yres = water_field->yres;
     buffer = (GwyDataField*)gwy_data_field_new(xres, yres, water_field->xreal, water_field->yreal, TRUE);
 
+    global_number = 0;
     for (i=0; i<(xres*yres); i++)
     {
 	    if (water_field->data[i]>0 && buffer->data[i]==0)
@@ -414,14 +417,30 @@ drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
     	    global_maximum_value = water_field->data[i];
     	    row = global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
     	    col = global_col_value = i - xres*row;
-    	    global_number = 0;
-    	    check_neighbours(water_field, buffer, col, row, 
-    			     &global_number, &global_maximum_value, &global_col_value, &global_row_value);
-    	    
-    	    if (global_number>threshval)
-           	    {
-    	        min_field->data[global_col_value + xres*global_row_value] = global_number;
-    	    }
+
+            npnt = 0;
+            pnt = gwy_data_field_fill_grain(water_field, row, col, &npnt);
+    
+            if (npnt>1) 
+            {
+                global_number += 1;   
+                for (i=0; i<npnt; i++)
+                {
+                    if (global_maximum_value<water_field->data[pnt[i]])
+                    global_maximum_value = water_field->data[pnt[i]];
+                
+                    global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
+                    global_col_value = i - xres*global_row_value;
+
+                    buffer->data[pnt[i]] = global_number;
+                }
+                g_free(pnt);
+        
+        	    if (npnt>threshval)
+               	    {
+        	        min_field->data[global_col_value + xres*global_row_value] = global_number;
+        	    }
+            }
     	}
     }
     g_object_unref(buffer); 

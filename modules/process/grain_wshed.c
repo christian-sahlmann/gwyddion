@@ -408,9 +408,9 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, Wsh
     gwy_data_field_grains_mark_watershed(dfield, maskfield, 
                                          args->locate_steps,
                                          args->locate_thresh,
-                                         min + args->locate_dropsize*(max-min)/100.0,
+                                         args->locate_dropsize*(max-min)/5000.0,
                                          args->wshed_steps,
-                                         min + args->wshed_dropsize*(max-min)/100.0);
+                                         args->wshed_dropsize*(max-min)/5000.0);
     printf("Uuuu!\n");
 }
 
