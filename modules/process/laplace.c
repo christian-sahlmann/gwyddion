@@ -69,12 +69,13 @@ module_register(const gchar *name)
     return TRUE;
 }
 
+
 static gboolean
 laplace(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *dialog;
     GwyDataField *dfield, *maskfield, *buffer;
-    gdouble error, cor;
+    gdouble error, cor, maxer;
     gint i;
 
     g_assert(run & LAPLACE_RUN_MODES);
@@ -89,15 +90,21 @@ laplace(GwyContainer *data, GwyRunType run)
         gwy_app_undo_checkpoint(data, "/0/data", NULL);
         
         cor = 0.2; 
-        error = 0.1;
+        error = 0;
+        maxer = (gwy_data_field_get_max(dfield) - gwy_data_field_get_min(dfield))/1.0e9;
         gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
+        
+        gwy_data_field_correct_average(dfield, maskfield);
+        
         for (i=0; i<10000; i++)
         {
-            gwy_app_wait_set_message("Iterating...");
             gwy_data_field_correct_laplace_iteration(dfield, maskfield, buffer,
                                                      &error, &cor);
+            gwy_app_wait_set_message("Iterating...");
+            if (error < maxer) break;
             if (!gwy_app_wait_set_fraction(i/(gdouble)(10000))) break;
         }
+        printf("%d iterations\n", i);
         gwy_app_wait_finish();
         
         gwy_container_remove_by_name(data, "/0/mask");

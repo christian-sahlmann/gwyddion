@@ -252,6 +252,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     global_data = data;
     
     gtk_widget_show_all(dialog);
+    fractal_dialog_update(&controls, args, data);
+
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -334,12 +336,13 @@ fractal_dialog_update(FractalControls *controls,
                      FractalArgs *args, GwyContainer *data)
 {
     GwyDataField *dfield;
-    GwyDataLine *xline, *yline;
+    GwyDataLine *xline, *yline, *xfit, *yfit;
     GString *label;
     GwyGraphAreaCurveParams *params;
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
-
+    gint i;
+    gdouble a, b;
     
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -351,16 +354,23 @@ fractal_dialog_update(FractalControls *controls,
     if (args->out == GWY_FRACTAL_PARTITIONING)
     {
         gwy_data_field_fractal_partitioning(dfield, xline, yline, args->interp);
+        args->result = gwy_data_field_fractal_partitioning_dim(xline, yline, &a, &b);
+        printf("dim_part = %f\n", args->result);
         label = g_string_new("Partitioning");
     }
     else if (args->out == GWY_FRACTAL_CUBECOUNTING)
     {
         gwy_data_field_fractal_cubecounting(dfield, xline, yline, args->interp);
+        args->result = gwy_data_field_fractal_cubecounting_dim(xline, yline, &a, &b);
+        printf("dim_cube = %f\n", args->result);
         label = g_string_new("Cube counting");
+        
     }
     else if (args->out == GWY_FRACTAL_TRIANGULATION)
     {
         gwy_data_field_fractal_triangulation(dfield, xline, yline, args->interp);
+        args->result = gwy_data_field_fractal_triangulation_dim(xline, yline, &a, &b);
+        printf("dim_tri = %f\n", args->result);
         label = g_string_new("Triangulation");
     }
     else if (args->out == GWY_FRACTAL_PSDF)
@@ -368,7 +378,7 @@ fractal_dialog_update(FractalControls *controls,
 /*        gwy_data_field_fractal_triangulation(dfield, xline, yline, args->interp);*/
         label = g_string_new("Power spectrum");
     }
-     else return;
+    else return;
 
     params = g_new(GwyGraphAreaCurveParams, 1);
     params->is_line = 0;
@@ -381,6 +391,19 @@ fractal_dialog_update(FractalControls *controls,
     gwy_graph_add_datavalues(controls->graph, xline->data, yline->data, xline->res,
                              label, params);    
 
+    xfit = gwy_data_line_new(2, 2, FALSE);
+    yfit = gwy_data_line_new(2, 2, FALSE);   
+    xfit->data[0] = xline->data[0];
+    xfit->data[1] = xline->data[xline->res-1];
+    yfit->data[0] = xfit->data[0]*a + b;
+    yfit->data[1] = xfit->data[1]*a + b;;
+   
+    params = g_new(GwyGraphAreaCurveParams, 1);
+    params->is_line = 1;
+    params->is_point = 0;
+    params->color.pixel = 0xff000000; 
+/*    gwy_graph_add_datavalues(controls->graph, xfit->data, yfit->data, xfit->res, 
+                             label, params);*/
 }
 
 static void
@@ -399,6 +422,7 @@ fractal_dialog_recompute(FractalControls *controls,
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
 
+    fractal_dialog_update(controls, args, data);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

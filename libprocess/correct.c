@@ -46,6 +46,7 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field, GwyDataField 
                                          gdouble *error, gdouble *corfactor)
 {
     gint xres, yres, i, j;
+    gdouble cor;
 
     xres = data_field->xres;
     yres = data_field->yres;
@@ -73,24 +74,26 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field, GwyDataField 
         if (mask_field->data[yres - 1 + xres*i]!=0) buffer_field->data[yres - 1 + xres*i] =  buffer_field->data[yres - 3 + xres*i];
     }
 
+    *error = 0;
     /*iterate*/
     for (i=1; i<(xres-1); i++)
     {
         for (j=1; j<(yres-1); j++)
         {
-            buffer_field->data[i + xres*j] += (*corfactor)*(
+            if (mask_field->data[i + xres*j]!=0)
+            {
+                cor = (*corfactor)*(
                                 (data_field->data[i+1 + xres*j] + data_field->data[i-1 + xres*j] 
                                  - 2*data_field->data[i + xres*j])
                               + (data_field->data[i + xres*(j+1)] + data_field->data[i + xres*(j-1)] 
                                  - 2*data_field->data[i + xres*j]));
+
+                buffer_field->data[i + xres*j] += cor;
+                if (fabs(cor)>(*error)) (*error) = cor;
+            }
         }
     }
 
-    /*copy original data with no mask back*/
-    for (i=0; i<(xres*yres); i++)
-    {
-        if (mask_field->data[i]==0) buffer_field->data[i] = data_field->data[i];
-    }
     gwy_data_field_copy(buffer_field, data_field); 
 
 }
@@ -126,5 +129,20 @@ gwy_data_field_mask_outliers(GwyDataField *data_field, GwyDataField *mask_field,
 
 }
 
+
+void
+gwy_data_field_correct_average(GwyDataField *data_field, GwyDataField *mask_field)
+{
+   gdouble avg;
+   gint i;
+
+   avg = gwy_data_field_get_avg(data_field);
+   
+   for (i=0; i<(data_field->xres*data_field->yres); i++)
+   {
+       if (mask_field->data[i]) data_field->data[i] = avg;
+   }
+    
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

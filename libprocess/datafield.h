@@ -672,12 +672,29 @@ void gwy_data_field_fractal_triangulation(GwyDataField *data_field,
                                          GwyDataLine *yresult, 
                                          GwyInterpolationType interpolation);
 
+void gwy_data_field_fractal_psdf(GwyDataField *data_field, 
+                                         GwyDataLine *xresult, 
+                                         GwyDataLine *yresult, 
+                                         GwyInterpolationType interpolation);
+
+
+gdouble gwy_data_field_fractal_cubecounting_dim(GwyDataLine *xresult, GwyDataLine *yresult, gdouble *a, gdouble *b);
+
+gdouble gwy_data_field_fractal_triangulation_dim(GwyDataLine *xresult, GwyDataLine *yresult, gdouble *a, gdouble *b);
+
+gdouble gwy_data_field_fractal_partitioning_dim(GwyDataLine *xresult, GwyDataLine *yresult, gdouble *a, gdouble *b);
+
+gdouble gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult, GwyDataLine *yresult, gdouble *a, gdouble *b);
+    
  
 void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
                                     GwyDataField *mask_field,
                                     GwyDataField *buffer_field, 
                                     gdouble *error,
                                     gdouble *corfactor);
+
+void gwy_data_field_correct_average(GwyDataField *data_field, 
+                                    GwyDataField *mask_field);
 
 void
 gwy_data_field_mask_outliers(GwyDataField *data_field, 
