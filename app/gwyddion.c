@@ -21,12 +21,27 @@
 #ifdef _MSC_VER
 #include "version.h"
 #else
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#else
+/* XXX: Invent some stuff... */
+#endif
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#else
+#ifdef _MSC_VER
+#define unlink(name) _unlink(name)
+#else
+int unlink(const char *name);
+#endif
+#endif
+
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
@@ -51,7 +66,8 @@ int
 main(int argc, char *argv[])
 {
     gchar **module_dirs;
-    gchar *config_file;
+    gchar *config_file, *settings_file;
+    gboolean has_config, has_settings, ok = FALSE;
 
 #ifdef G_OS_WIN32
     setup_logging();
@@ -61,8 +77,14 @@ main(int argc, char *argv[])
     process_preinit_options(&argc, &argv);
     gtk_init(&argc, &argv);
     config_file = gwy_app_settings_get_config_filename();
+    has_config = g_file_test(config_file, G_FILE_TEST_IS_REGULAR);
+    settings_file = gwy_app_settings_get_settings_filename();
+    has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);
     gwy_app_init();
-    gwy_app_settings_load(config_file);
+    if (has_settings)
+        ok = gwy_app_settings_load(settings_file);
+    if (!ok && has_config)
+        gwy_app_settings_load_bin(config_file);
     gwy_app_settings_get();
     module_dirs = gwy_app_settings_get_module_dirs();
 
@@ -79,8 +101,13 @@ main(int argc, char *argv[])
     gwy_app_toolbox_create();
     gwy_app_file_open_initial(argv + 1, argc - 1);
     gtk_main();
-    gwy_app_settings_save(config_file);
-    /*gwy_app_settings_save_text("/home/yeti/settings");*/
+    if (gwy_app_settings_save(settings_file)) {
+        if (has_config) {
+            g_warning("Converted settings to human-readable form, "
+                      "deleting old one");
+            unlink(config_file);
+        }
+    }
     gwy_app_settings_free();
     g_free(config_file);
 
@@ -167,6 +194,7 @@ setup_logging(void)
     gsize i;
     FILE *logfile;
 
+    gwy_app_settings_create_config_dir();
     log_filename = gwy_app_settings_get_log_filename();
     logfile = fopen(log_filename, "w");
     for (i = 0; i < G_N_ELEMENTS(domains); i++)

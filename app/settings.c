@@ -22,6 +22,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 
 #ifdef HAVE_SYS_STAT_H
@@ -39,8 +40,11 @@
 #include <libdraw/gwypalettedef.h>
 #include "settings.h"
 
-static void   gwy_app_settings_set_defaults (GwyContainer *settings);
-static gchar* get_gwyddion_dir              (void);
+static gboolean create_config_dir_real         (const gchar *cfgdir);
+static void     gwy_app_settings_set_defaults  (GwyContainer *settings);
+static gchar*   get_gwyddion_dir               (void);
+
+static const gchar *magic_header = "Gwyddion Settings 1.0\n";
 
 static GwyContainer *gwy_settings = NULL;
 
@@ -74,22 +78,30 @@ gwy_app_settings_free(void)
 }
 
 /**
- * gwy_app_settings_save:
+ * gwy_app_settings_save_bin:
  * @filename: A filename to save the settings to.
  *
- * Saves the settings.
+ * Saves the settings in old binary dump format.
  *
- * Probably useful only in the application.
+ * Do NOT use any more.
  *
  * Returns: Whether it succeeded.
  **/
 gboolean
-gwy_app_settings_save(const gchar *filename)
+gwy_app_settings_save_bin(const gchar *filename)
 {
     GwyContainer *settings;
     gchar *buffer = NULL;
     gsize size = 0;
     FILE *fh;
+    gchar *cfgdir;
+
+    cfgdir = g_path_get_dirname(filename);
+    if (!create_config_dir_real(cfgdir)) {
+        g_free(cfgdir);
+        return FALSE;
+    }
+    g_free(cfgdir);
 
     gwy_debug("Saving binary settings to `%s'", filename);
     settings = gwy_app_settings_get();
@@ -110,6 +122,20 @@ gwy_app_settings_save(const gchar *filename)
     return TRUE;
 }
 
+/**
+ * gwy_app_settings_save_text:
+ * @filename: A filename to save the settings to.
+ *
+ * Saves the settings in human-readable text format.
+ *
+ * Probably useful only in the application.  Use
+ * gwy_app_settings_get_settings_filename() to obtain a suitable default
+ * filename.
+ *
+ * Returns: Whether it succeeded.
+ *
+ * Since: 1.2.
+ **/
 gboolean
 gwy_app_settings_save_text(const gchar *filename)
 {
@@ -118,6 +144,14 @@ gwy_app_settings_save_text(const gchar *filename)
     guint i;
     gboolean ok;
     FILE *fh;
+    gchar *cfgdir;
+
+    cfgdir = g_path_get_dirname(filename);
+    if (!create_config_dir_real(cfgdir)) {
+        g_free(cfgdir);
+        return FALSE;
+    }
+    g_free(cfgdir);
 
     gwy_debug("Saving text settings to `%s'", filename);
     settings = gwy_app_settings_get();
@@ -126,6 +160,12 @@ gwy_app_settings_save_text(const gchar *filename)
     if (!fh) {
         g_warning("Cannot save text settings to `%s': %s",
                   filename, g_strerror(errno));
+        return FALSE;
+    }
+    if (fputs(magic_header, fh) == EOF) {
+        g_warning("Cannot save text settings to `%s': %s",
+                  filename, g_strerror(errno));
+        fclose(fh);
         return FALSE;
     }
 
@@ -150,39 +190,47 @@ gwy_app_settings_save_text(const gchar *filename)
 }
 
 /**
- * gwy_app_settings_load:
- * @filename: A filename to read the settings from.
+ * gwy_app_settings_save:
+ * @filename: A filename to save the settings to.
  *
- * Loads the settings.
+ * Saves the settings.
  *
  * Probably useful only in the application.
  *
- * Returns: Whether it succeeded.  In any case you can call
- * gwy_app_settings_get() then to obtain either the loaded settings or the
- * old ones (if failed), or an empty #GwyContainer.
+ * Since 1.2 it saves settings in human-readable format.  Use
+ * gwy_app_settings_save_bin() if you specifically require the old binary
+ * dump format.
+ *
+ * Returns: Whether it succeeded.
  **/
 gboolean
-gwy_app_settings_load(const gchar *filename)
+gwy_app_settings_save(const gchar *filename)
+{
+    return gwy_app_settings_save_text(filename);
+}
+
+/**
+ * gwy_app_settings_load_bin:
+ * @filename: A filename to read the config from.
+ *
+ * Loads the old binary-dump config.
+ *
+ * Probably useful only in the application, and even there only for
+ * compatibility. Do NOT use binary configs.
+ *
+ * Returns: Whether it succeeded.  In either case you can call
+ * gwy_app_settings_get() then to obtain either the loaded settings or the
+ * old ones (if failed), or an empty #GwyContainer.
+ *
+ * Since: 1.2.
+ **/
+gboolean
+gwy_app_settings_load_bin(const gchar *filename)
 {
     GwyContainer *new_settings;
     GError *err = NULL;
     gchar *buffer = NULL;
     gsize size = 0, position = 0;
-    gchar *cfgdir;
-    gint ok;
-
-    cfgdir = g_path_get_dirname(filename);
-    if (!g_file_test(cfgdir, G_FILE_TEST_IS_DIR)) {
-        gwy_debug("Trying to create config directory %s", cfgdir);
-        ok = !mkdir(cfgdir, 0700);
-        if (!ok) {
-            g_warning("Cannot create config directory %s: %s",
-                      cfgdir, g_strerror(errno));
-        }
-        g_free(cfgdir);
-        return FALSE;
-    }
-    g_free(cfgdir);
 
     gwy_debug("Loading settings from `%s'", filename);
     if (!g_file_get_contents(filename, &buffer, &size, &err)
@@ -204,6 +252,111 @@ gwy_app_settings_load(const gchar *filename)
     gwy_app_settings_set_defaults(gwy_settings);
 
     return TRUE;
+}
+
+/**
+ * gwy_app_settings_load_text:
+ * @filename: A filename to read the config from.
+ *
+ * Loads the human-readable settings file.
+ *
+ * Probably useful only in the application.
+ *
+ * Returns: Whether it succeeded.  In either case you can call
+ * gwy_app_settings_get() then to obtain either the loaded settings or the
+ * old ones (if failed), or an empty #GwyContainer.
+ *
+ * Since: 1.2.
+ **/
+gboolean
+gwy_app_settings_load_text(const gchar *filename)
+{
+    GwyContainer *new_settings;
+    GError *err = NULL;
+    gchar *buffer = NULL;
+    gsize size = 0;
+
+    gwy_debug("Loading settings from `%s'", filename);
+    if (!g_file_get_contents(filename, &buffer, &size, &err)
+        || !size || !buffer) {
+        g_warning("Cannot load settings from `%s': %s",
+                  filename, err ? err->message : "unknown error");
+        g_clear_error(&err);
+        g_free(buffer);
+        return FALSE;
+    }
+    if (!g_str_has_prefix(buffer, magic_header)) {
+        g_warning("Bad magic header of settings file");
+        g_free(buffer);
+        return FALSE;
+    }
+    new_settings = gwy_container_deserialize_from_text(buffer
+                                                       + strlen(magic_header));
+    g_free(buffer);
+    if (!GWY_IS_CONTAINER(new_settings)) {
+        g_object_unref(new_settings);
+        return FALSE;
+    }
+    gwy_app_settings_free();
+    gwy_settings = new_settings;
+    gwy_app_settings_set_defaults(gwy_settings);
+
+    return TRUE;
+}
+
+/**
+ * gwy_app_settings_load:
+ * @filename: A filename to read the config from.
+ *
+ * Loads the old binary-dump config.
+ *
+ * Probably useful only in the application.
+ *
+ * Since 1.2 no longer tries creates to create the parent directory
+ * when it doesn't exist, and loads the human-readable (text) format.
+ *
+ * Returns: Whether it succeeded.  In either case you can call
+ * gwy_app_settings_get() then to obtain either the loaded settings or the
+ * old ones (if failed), or an empty #GwyContainer.
+ **/
+gboolean
+gwy_app_settings_load(const gchar *filename)
+{
+    return gwy_app_settings_load_text(filename);
+}
+
+/**
+ * gwy_app_settings_create_config_dir:
+ *
+ * Create gwyddion config directory.
+ *
+ * Returns: Whether it succeeded (also returns %TRUE if the directory already
+ * exists).
+ *
+ * Since: 1.2.
+ **/
+gboolean
+gwy_app_settings_create_config_dir(void)
+{
+    return create_config_dir_real(get_gwyddion_dir());
+}
+
+static gboolean
+create_config_dir_real(const gchar *cfgdir)
+{
+    gboolean ok;
+
+    if (g_file_test(cfgdir, G_FILE_TEST_IS_DIR))
+        return TRUE;
+
+    gwy_debug("Trying to create config directory %s", cfgdir);
+    ok = !mkdir(cfgdir, 0700);
+    if (!ok) {
+        g_warning("Cannot create config directory %s: %s",
+                  cfgdir, g_strerror(errno));
+    }
+
+    return ok;
 }
 
 static void
@@ -255,7 +408,9 @@ gwy_app_settings_get_module_dirs(void)
 /**
  * gwy_app_settings_get_config_filename:
  *
- * Returns a suitable configuration file name.
+ * Returns a suitable (binary) configuration file name.
+ *
+ * Note binary config is deprecated now.
  *
  * Returns: The file name as a newly allocated string.
  **/
@@ -263,6 +418,21 @@ gchar*
 gwy_app_settings_get_config_filename(void)
 {
     return g_build_filename(get_gwyddion_dir(), "gwydrc", NULL);
+}
+
+/**
+ * gwy_app_settings_get_settings_filename:
+ *
+ * Returns a suitable human-readable settings file name.
+ *
+ * Returns: The file name as a newly allocated string.
+ *
+ * Since: 1.2.
+ **/
+gchar*
+gwy_app_settings_get_settings_filename(void)
+{
+    return g_build_filename(get_gwyddion_dir(), "settings", NULL);
 }
 
 /**
@@ -294,9 +464,9 @@ get_gwyddion_dir(void)
         return gwyhomedir;
 
     homedir = g_get_home_dir();
-#ifdef G_OS_WIN32
     if (!homedir)
         homedir = g_get_tmp_dir();
+#ifdef G_OS_WIN32
     if (!homedir)
         homedir = "C:\\Windows";  /* XXX :-))) */
 #endif

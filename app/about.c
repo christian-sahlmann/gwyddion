@@ -21,7 +21,11 @@
 #ifdef _MSC_VER
 #include "version.h"
 #else
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#else
+/* XXX: Invent some stuff... */
+#endif
 #endif
 
 #include <gtk/gtk.h>
