@@ -16,19 +16,54 @@
   </refnamediv>
 
   <refsect1>
-    <title>Overview</title>
+    <title>Plug-ins Overview</title>
     <para>
       Plug-ins are external programs that can be executed by Gwyddion
       to either perform some operation on the data or to read or write
       data in a third-party file format.
     </para>
     <para>
+      Generally it is preferable to extend Gwyddion functionality by
+      modules, because modules are dynamic libraries linked directly
+      to Gwyddion in run-time allowing much more versatile interaction
+      with the application, and they are also faster (for the same reason).
+      Creation of modules is also no harder than creation of plug-ins,
+      maybe it is even easier.
+    </para>
+    <para>
+      They are however two reasons to use plug-ins:
+      <itemizedlist>
+        <listitem>
+          Instability.  A crash in a module is a crash in Gwyddion
+          because modules, once loaded, become part of the application.
+          When a plug-in fails, one gets garbage or nothing instead of
+          data, but it does not affect the application.
+        </listitem>
+        <listitem>
+          Licensing.  Since modules links with Gwyddion they are derived
+          works of it and thus they have to be licensed under GNU General
+          Public License, if they are to be distributed.  The plug-in
+          interface was on the other hand designed specifically to allow
+          plug-ins to be independent works and thus not bound by GNU GPL
+          (you are of course still encouraged to use GNU GPL for your
+          plug-ins).
+          The interface consists only of a small set of command line
+          arguments and a very simple data file format used for data
+            exchange.
+        </listitem>
+      </itemizedlist>
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Plug-in Proxy</title>
+    <para>
       The capability to use plug-ins is not a built-in Gwyddion feature,
       instead it is provided a by a smart module called plug-in proxy.
       With the small exception there is a dedicated directory for plug-ins
       defined directly in Gwyddion, the plug-in proxy module is in no way
       privileged or otherwise special.
-      It can be removed or there can be added other plug-in proxies and
+      It can be removed and/or other plug-in proxies can be added and
       happily coexist with the current one.
     </para>
     <para>

@@ -38,8 +38,9 @@
         <member><literal>modal</literal></member>
         <member><literal>with_defaults</literal></member>
       </simplelist>
-      Note however, interactive plug-ins are not supported (yet), only modal
-      ones.
+      Note however, truly interactive plug-ins are not supported (and maybe
+      they never will, because it is hard to do this without making plug-ins
+      derived works of Gwyddion), only modal ones.
     </para>
     <para>
       So the output of plugin <command>my_plugin</command> when run as

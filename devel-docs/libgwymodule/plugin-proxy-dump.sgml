@@ -73,6 +73,11 @@
       a single LF character.
     </para>
     <para>
+      The data samples are stored in `screen' order.  That means they are
+      ordered by lines (rows), starting from the uppermost one, and inside
+      lines they are ordered by column, from left to right.
+    </para>
+    <para>
       The resolutions and physical dimensions are specified using special
       keys <literal>/0/data/xres</literal>, <literal>/0/data/yres</literal>,
       <literal>/0/data/xreal</literal>, and <literal>/0/data/yreal</literal>.
@@ -88,8 +93,8 @@
     </para>
     <para>
       All the values are in base SI units, i.e., dimensions are in meters
-      (not nanometres or kilometres), currents in ampers (not pikoampers),
-      etc.  The base units can be specified using the
+      (not micrometers, nanometres or kilometres), currents in ampers
+      (not picoampers), etc.  The base units can be specified using the
       <literal>/0/data/unit-xy</literal> (lateral) and
       <literal>/0/data/unit-z</literal> (value, height) keys.
       If not specified, meters are assumed.
@@ -132,6 +137,9 @@
         <function>text_dump_export()</function> and
         <function>text_dump_import()</function> functions
         in <filename>modules/plugin-proxy.c</filename>.
+        Note this file has a special licensing exception, you can
+        freely study it for the purpose of creation of Gwyddion plug-ins
+        without becoming `tainted'.
       </para>
     </formalpara>
     <formalpara>
@@ -139,6 +147,7 @@
       <para>
         A sample Perl data-processing plug-in is included in the source
         distribution: <filename>plugins/process/cutoff.pl</filename>.
+        This script is in the public domain.
       </para>
     </formalpara>
     <formalpara>
@@ -146,6 +155,7 @@
       <para>
         A sample Python data-processing plug-in is included in the source
         distribution: <filename>plugins/process/divide_by_2.py</filename>.
+        This script is in the public domain.
       </para>
     </formalpara>
   </refsect1>
