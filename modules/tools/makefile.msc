@@ -6,8 +6,8 @@ MODULES = \
 	level3.dll \
 	pointer.dll \
 	profile.dll \
-	sfunctions.dll \
-	stats.dll
+	stats.dll \
+	sfunctions.dll
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
@@ -56,10 +56,11 @@ pointer.dll: pointer.obj
 profile.dll: profile.obj
 	$(LINK32) profile.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:profile.dll /dll /implib:profile.lib
 
+stats.dll: stats.obj
+	$(LINK32) stats.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:stats.dll /dll /implib:stats.lib
+
 sfunctions.dll: sfunctions.obj
 	$(LINK32) sfunctions.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:sfunctions.dll /dll /implib:sfunctions.lib
 
-stats.dll: stats.obj
-	$(LINK32) stats.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:stats.dll /dll /implib:stats.lib
 
 # vim: ft=make

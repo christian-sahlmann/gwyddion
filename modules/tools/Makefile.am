@@ -1,10 +1,10 @@
 # @(#) $Id$
 
-tooldir = $(gwymoduledir)/tool
+toolsdir = $(gwymoduledir)/tool
 
 module_ldflags = -shared -Wl,-soname
 
-tool_PROGRAMS = \
+tools_PROGRAMS = \
 	crop.so \
 	level3.so \
 	pointer.so \
