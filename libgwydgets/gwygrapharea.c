@@ -247,6 +247,8 @@ static void
 gwy_graph_area_finalize(GObject *object)
 {
     GwyGraphArea *area;
+    GwyGraphAreaCurve *pcurve;
+    gsize i;
 
     gwy_debug("finalizing a GwyGraphArea (refcount = %u)", object->ref_count);
 
@@ -254,9 +256,18 @@ gwy_graph_area_finalize(GObject *object)
 
     area = GWY_GRAPH_AREA(object);
 
-    g_ptr_array_free(area->curves, 1);
-    g_array_free(area->pointsdata->scr_points, 1);
-    g_array_free(area->pointsdata->data_points, 1);
+    for (i = 0; i < area->curves->len; i++)
+    {
+        pcurve = g_ptr_array_index (area->curves, i);
+        g_free(pcurve->data.xvals);
+        g_free(pcurve->data.yvals);
+        g_free(pcurve->points);
+        g_string_free(pcurve->params.description, TRUE);
+    }
+
+    g_ptr_array_free(area->curves, TRUE);
+    g_array_free(area->pointsdata->scr_points, TRUE);
+    g_array_free(area->pointsdata->data_points, TRUE);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -993,13 +1004,12 @@ gwy_graph_area_clear(GwyGraphArea *area)
 
     gwy_debug("");
             /*dealloc everything*/
-    for (i=0; i<area->curves->len; i++)
-    {
+    for (i = 0; i < area->curves->len; i++) {
         pcurve = g_ptr_array_index (area->curves, i);
         g_free(pcurve->data.xvals);
         g_free(pcurve->data.yvals);
         g_free(pcurve->points);
-        g_string_free(pcurve->params.description, 1);
+        g_string_free(pcurve->params.description, TRUE);
     }
 
     gwy_graph_label_clear(area->lab);
