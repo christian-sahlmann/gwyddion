@@ -6,12 +6,13 @@ Palette definitions
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+A palette definition consists of defining points, between them the colors are
+interpolated to get a <link linkend="GwyPalette">palette</link>.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+<link linkend="GwyPalette">GwyPalette</link>
 </para>
 
 <!-- ##### MACRO GWY_PALETTE_BLUE ##### -->

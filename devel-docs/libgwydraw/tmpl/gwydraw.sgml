@@ -6,7 +6,10 @@ Base functions
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Gwyddion classes has to be initialized before they can be safely
+deserialized. The function
+<link linkend="gwy-draw-type-init">gwy_draw_type_init()</link>
+performs this initialization.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

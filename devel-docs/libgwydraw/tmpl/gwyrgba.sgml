@@ -6,7 +6,21 @@ Bit depth independet RGBA colors.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+GwyRGBA is a bit depth independent representation of an RGB or RGBA color,
+using floating point values from the [0,1] interval.
+</para>
 
+<para>
+GwyRGBA is not an object, but a simple struct that can be allocated on
+stack on created with <link linkend="g-new">g_new()</link> or malloc().
+Helper functions for conversion between GwyRGBA and
+<link linkend="GdkColor">GdkColor</link>
+(<link linkend="gwy-rgba-to-gdk-color">gwy_rgba_to_gdk_color()</link>,
+<link linkend="gwy-rgba-from-gdk-color">gwy_rgba_from_gdk_color()</link>)
+and for <link linkend="GwyContainer">GwyContainer</link> storage by component
+(<link linkend="gwy-rgba-store-to-container">gwy_rgba_store_to_container()</link>,
+<link linkend="gwy-rgba-get-from-container">gwy_rgba_get_from_container()</link>)
+are provided.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

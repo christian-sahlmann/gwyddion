@@ -6,6 +6,10 @@
     <title>Gwyddion Drawing Library Reference Manual</title>
   </bookinfo>
 
+  <para>
+    This library contains low-level data visualization and color handling
+    functions.
+  </para>
   <xi:include href="xml/gwyrgba.xml"/>
   <xi:include href="xml/gwypalette.xml"/>
   <xi:include href="xml/gwypalettedef.xml"/>

@@ -6,12 +6,15 @@ Palettes mapping number ranges to colors
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+A palette is a map from interval [0,1] to RGB or RGBA space. Palettes as
+created from
+<link linkend="GwyPaletteDef">palette definitions</link> that contain some
+defining points between them the colors are interpolated.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+<link linkend="GwyPaletteDef">GwyPaletteDef</link>
 </para>
 
 <!-- ##### STRUCT GwyPalette ##### -->
