@@ -40,7 +40,7 @@
           data, but it does not affect the application.
         </listitem>
         <listitem>
-          Licensing.  Since modules links with Gwyddion they are derived
+          Licensing.  Since modules link with Gwyddion they are derived
           works of it and thus they have to be licensed under GNU General
           Public License, if they are to be distributed.  The plug-in
           interface was on the other hand designed specifically to allow

@@ -66,7 +66,8 @@
     <title id="plugin-proxy-dump-data-fields">Data Fields</title>
     <para>
       The data samples themselves are stored as a sequence of binary IEEE
-      floating point numbers in little-endian byte order.  The array is
+      double precision floating point numbers in little-endian byte order.
+      The array is
       preceded by <literal>/0/data=[</literal>, a single LF character, and
       a single left bracket <literal>[</literal>.  The data samples are
       closed by a sequence of two right brackets <literal>]]</literal> and
@@ -86,21 +87,21 @@
       <literal>/0/data/xres=<parameter>x-resolution</parameter></literal>
       and
       <literal>/0/data/yres=<parameter>y-resolution</parameter></literal>
-      must appear somewhere before it in the file.  It is also strongly
+      must appear somewhere before them in the file.  It is also strongly
       recommended to specify physical dimensions too, though it is not
       strictly necessary if you don't mind some bogus default value (like
       1 meter) is substituted then.
     </para>
     <para>
       All the values are in base SI units, i.e., dimensions are in meters
-      (not micrometers, nanometres or kilometres), currents in ampers
+      (not micrometers, nanometres, or kilometres), currents in ampers
       (not picoampers), etc.  The base units can be specified using the
       <literal>/0/data/unit-xy</literal> (lateral) and
       <literal>/0/data/unit-z</literal> (value, height) keys.
       If not specified, meters are assumed.
     </para>
     <para>
-      So a dump file could look (excluding the binary data):
+      So a dump file could look (replacing the binary data with dots):
     </para>
     <informalexample><programlisting><![CDATA[
 /0/data/xres=240
@@ -112,8 +113,12 @@
 /0/data=[
 [...
 ...
-..]]
+...]]
 ]]></programlisting></informalexample>
+    <para>
+      This file would describe square data of size 240 × 240 samples
+      and physical dimension 41nm × 41nm, with height as value.
+    </para>
     <para>
       If you want to pass mask (or presentation) instead of the main data,
       just replace the <literal>/0/data</literal> with
