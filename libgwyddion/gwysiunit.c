@@ -268,6 +268,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
   
     format->units = g_stpcpy(format->units, gwy_math_SI_prefix(format->magnitude));
     format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+    format->precision = 2;
     return format;
 }
 
