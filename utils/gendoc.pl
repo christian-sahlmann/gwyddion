@@ -74,7 +74,7 @@ foreach my $dir (glob "*") {
         s#((?:class|rel)=".*?")#\L$1\E#sg;
         s#<body[^>]*>#<body>#s;
         s#(<.*?)(>[^<]*)<a( id=".*?").*?>(.*?)</a>#$1$3$2$4#sg;
-        s#(&nbsp;| ):##sg;
+        s#>(&nbsp;| | ):<#>:<#sg;
         s#&\#13;\n+##sg;
         s#(<td .*?>\s*)<p>(.*?)</p>(\s*</td>)#$1$2$3#sg;
         s#<img\s+src=".*? alt="(.*?)"\s+/>#$1#sg;

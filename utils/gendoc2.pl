@@ -34,7 +34,7 @@ foreach my $dir (glob "*") {
         s#<body[^>]*>#<body>#s;
         s#(<.*?)(>[^<]*)<a( id=".*?").*?>(.*?)</a>#$1$3$2$4#sg;
         s#</(\w+) .*?>#</$1>#sg;
-        s#(&nbsp;| ):##sg;
+        s#>(&nbsp;| | ):<#>:<#sg;
         s#&\#13;\n+##sg;
         s#\.html#\.php#sg;
         s#\s*<div[^>]*>##sg;
