@@ -278,12 +278,11 @@ register_plugins(GList *plugins,
         buffer = NULL;
         ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                           &buffer, NULL, &exit_status, &err);
-        ok &= !exit_status;
         if (ok)
             plugins = register_func(plugins, name, pluginname, buffer);
         else {
             g_warning("Cannot register plug-in %s: %s",
-                      pluginname, err ? err->message : "execution failed.");
+                      pluginname, err->message);
             g_clear_error(&err);
         }
         g_free(pluginname);
