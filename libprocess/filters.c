@@ -156,7 +156,7 @@ gwy_data_field_area_filter_mean(GwyDataField *data_field,
     buffer = g_new(gdouble, width*height);
     rowstride = data_field->xres;
     data = data_field->data + rowstride*row + col;
-/*printf("%d %d, %dx%d\n", col, row, width, height);*/
+
     /* vertical pass */
     for (j = 0; j < width; j++) {
         for (i = 0; i < height; i++) {
@@ -203,6 +203,104 @@ gwy_data_field_filter_mean(GwyDataField *data_field,
                                     brcol-ulcol, brrow-ulrow);
 }
 
+/**
+ * gwy_data_field_area_filter_rms:
+ * @data_field: A data field to apply RMS filter to.
+ * @size: Area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with RMS filter of size @size.
+ *
+ * RMS filter computes root mean square in given area.
+ *
+ * Since: 1.9
+ **/
+void
+gwy_data_field_area_filter_rms(GwyDataField *data_field,
+                               gint size,
+                               gint col, gint row,
+                               gint width, gint height)
+{
+    gint rowstride;
+    gint i, j, k;
+    gint from, to;
+    gdouble *buffer, *data, *p;
+    gdouble s, s2;
+
+    gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(size > 0);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    if (size == 1) {
+        gwy_data_field_clear(data_field);
+        return;
+    }
+
+    buffer = g_new(gdouble, 2*width*height);
+    rowstride = data_field->xres;
+    data = data_field->data + rowstride*row + col;
+
+    /* vertical pass */
+    for (j = 0; j < width; j++) {
+        for (i = 0; i < height; i++) {
+            s = s2 = 0.0;
+            p = data + j;
+            from = MAX(0, i - (size-1)/2);
+            to = MIN(height-1, i + size/2);
+            for (k = from; k <= to; k++) {
+                s += p[k*rowstride];
+                s2 += p[k*rowstride]*p[k*rowstride];
+            }
+            buffer[i*width + j] = s/(to - from + 1);
+            buffer[i*width + j + width*height] = s2/(to - from + 1);
+        }
+    }
+
+    /* horizontal pass */
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+            s = s2 = 0.0;
+            p = buffer + i*width;
+            from = MAX(0, j - (size-1)/2);
+            to = MIN(width-1, j + size/2);
+            for (k = from; k <= to; k++) {
+                s += p[k];
+                s2 += p[width*height + k];
+            }
+            s /= to - from + 1;
+            s2 /= to - from + 1;
+            data[i*rowstride + j] = sqrt(s2 - s*s);
+        }
+    }
+
+    g_free(buffer);
+    gwy_data_field_invalidate(data_field);
+}
+
+/**
+ * gwy_data_field_filter_rms:
+ * @data_field: A data field to apply RMS filter to.
+ * @size: Area size.
+ *
+ * Filters a data field with RMS filter.
+ *
+ * Since: 1.9
+ **/
+void
+gwy_data_field_filter_rms(GwyDataField *data_field,
+                          gint size)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_rms(data_field, size, 0, 0,
+                                   data_field->xres, data_field->yres);
+}
 
 /**
  * gwy_data_field_area_filter_canny:

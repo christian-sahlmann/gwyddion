@@ -102,6 +102,14 @@ void gwy_data_field_area_filter_maximum        (GwyDataField *data_field,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+void gwy_data_field_filter_rms                 (GwyDataField *data_field,
+                                                gint size);
+void gwy_data_field_area_filter_rms            (GwyDataField *data_field,
+                                                gint size,
+                                                gint col,
+                                                gint row,
+                                                gint width,
+                                                gint height);
 
 /* old-style functions */
 void gwy_data_field_convolve                   (GwyDataField *data_field,
