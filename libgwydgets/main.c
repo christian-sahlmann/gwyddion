@@ -18,6 +18,20 @@
 static gulong hid[N];
 static GwySphereCoords *coords[N];
 
+static const char *palettes[] = {
+    GWY_PALETTE_GRAY,
+    GWY_PALETTE_RED,
+    GWY_PALETTE_GREEN,
+    GWY_PALETTE_BLUE,
+    GWY_PALETTE_YELLOW,
+    GWY_PALETTE_PINK,
+    GWY_PALETTE_OLIVE,
+    GWY_PALETTE_BW1,
+    GWY_PALETTE_BW2,
+    GWY_PALETTE_RAINBOW1,
+    GWY_PALETTE_RAINBOW2,
+};
+
 static void
 foo_cb(GwySphereCoords *c, gpointer p)
 {
@@ -43,7 +57,7 @@ static void
 vector_shade_test(void)
 {
     GtkWidget *win, *widget, *box;
-    GObject *pal;
+    GObject *pal, *pdef;
     gint i;
 
     win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -53,7 +67,10 @@ vector_shade_test(void)
     gtk_container_add(GTK_CONTAINER(win), box);
     for (i = 0; i < N; i++) {
         widget = gwy_vector_shade_new(NULL);
-        pal = gwy_palette_new(g_random_int()%10);
+        pdef = gwy_palette_def_new(palettes[g_random_int()
+                                            % G_N_ELEMENTS(palettes)]);
+        pal = gwy_palette_new(GWY_PALETTE_DEF(pdef));
+        g_object_unref(pdef);
         gwy_grad_sphere_set_palette(
             GWY_GRAD_SPHERE(gwy_vector_shade_get_grad_sphere(GWY_VECTOR_SHADE(widget))),
             GWY_PALETTE(pal));
@@ -97,6 +114,7 @@ data_view_test(void)
     gsize size = 0;
     gsize pos = 0;
     GError *err = NULL;
+    GwyPaletteDef *palette_def;
     GwyPalette *palette;
 
     /* FIXME: this is necessary to initialize the object system */
@@ -110,7 +128,9 @@ data_view_test(void)
 
     view = gwy_data_view_new(data);
     layer = (GwyDataViewLayer*)gwy_layer_basic_new();
-    palette = (GwyPalette*)gwy_palette_new(GWY_PALETTE_YELLOW);
+    palette_def = (GwyPaletteDef*)gwy_palette_def_new(GWY_PALETTE_YELLOW);
+    palette = (GwyPalette*)gwy_palette_new(palette_def);
+    g_object_unref(palette_def);
     gwy_layer_basic_set_palette(layer, palette);
     g_object_unref(palette);
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
@@ -141,9 +161,10 @@ main(int argc, char *argv[])
     g_random_set_seed(seed);
 
     gtk_init(&argc, &argv);
+    gwy_palette_def_setup_presets();
 
-    //vector_shade_test();
-    data_view_test();
+    vector_shade_test();
+    //data_view_test();
     gtk_main();
 
     return 0;

@@ -9,8 +9,6 @@
 
 #define GWY_VECTOR_SHADE_TYPE_NAME "GwyVectorShade"
 
-#define _(x) x
-
 /* Forward declarations */
 
 static void     gwy_vector_shade_class_init     (GwyVectorShadeClass *klass);

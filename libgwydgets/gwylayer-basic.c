@@ -107,13 +107,16 @@ gwy_layer_basic_new(void)
 {
     GtkObject *object;
     GwyDataViewLayer *layer;
+    GwyPaletteDef *palette_def;
 
     gwy_debug("%s", __FUNCTION__);
 
     object = g_object_new(GWY_TYPE_LAYER_BASIC, NULL);
     layer = (GwyDataViewLayer*)object;
 
-    layer->palette = (GwyPalette*)gwy_palette_new(GWY_PALETTE_GRAY);
+    palette_def = gwy_palette_def_new(GWY_PALETTE_GRAY);
+    layer->palette = (GwyPalette*)gwy_palette_new(palette_def);
+    g_object_unref(palette_def);
 
     return object;
 }
@@ -135,7 +138,7 @@ gwy_layer_basic_paint(GwyDataViewLayer *layer)
 
         timer = g_timer_new();
         gwy_pixfield_do(layer->pixbuf, data_field, layer->palette);
-        g_message("%s: %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+        gwy_debug("%s: %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
         g_timer_destroy(timer);
         GWY_LAYER_BASIC(layer)->changed = FALSE;
     }

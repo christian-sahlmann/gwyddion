@@ -172,6 +172,7 @@ gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
 {
     GtkWidget *widget;
     GwyGradSphere *grad_sphere;
+    GwyPaletteDef *palette_def;
 
     gwy_debug("%s", __FUNCTION__);
 
@@ -187,7 +188,10 @@ gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
                             NULL);
     grad_sphere = (GwyGradSphere*)widget;
     g_object_unref(sphere_coords);
-    grad_sphere->palette = GWY_PALETTE(gwy_palette_new(GWY_PALETTE_GRAY));
+
+    palette_def = (GwyPaletteDef*)gwy_palette_def_new(GWY_PALETTE_GRAY);
+    grad_sphere->palette = (GwyPalette*)(gwy_palette_new(palette_def));
+    g_object_unref(palette_def);
 
     return widget;
 }
@@ -207,10 +211,8 @@ gwy_grad_sphere_finalize(GObject *object)
 
     gwy_debug("    unreferencing child sphere_coords (refcount = %u)",
               G_OBJECT(grad_sphere->sphere_coords)->ref_count);
-    if (grad_sphere->sphere_coords)
-        g_object_unref(grad_sphere->sphere_coords);
-    if (grad_sphere->palette)
-        g_object_unref(grad_sphere->palette);
+    gwy_object_unref(grad_sphere->sphere_coords);
+    gwy_object_unref(grad_sphere->palette);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 
