@@ -4,11 +4,14 @@
    MinGW & MSYS: http://www.mingw.org/
    Gtk+ Runtime & Development: http://www.dropline.net/gtk/
 
+   Optional:
+   Inno Setup: http://www.jrsoftware.org/isdl.php
+
 1. Installation.
    Note: the order is very important.
 
-   Install MinGW to c:/mingw.
-   Install MSYS to c:/msys/1.0 (or whatever version it is).
+   Install MinGW to c:/MinGW (or where it wishes to be installed).
+   Install MSYS to c:/msys/1.0 (or where it wishes to be installed).
    In the postinstall setup, answer:
        wish to continue: yes
        have mingw: yes
@@ -16,22 +19,21 @@
    Running msys (the blue M icon) now should give a functional shell with
    gcc, make, etc.
 
-   Install Gtk+ Runtime environment to c:/msys/1.0/local.
-   Install Gtk+ Development environment to c:/msys/1.0/local.
+   Install Gtk+ Runtime environment to
+       c:/Program Files/Common Files/GTK/2.0
+   (or where it wishes to be installed).
+
+   Install Gtk+ Development environment to c:/Dev-C++
+   (or where it wishes to be installed).
+
+   Optional:
+   Install Inno Setup.
+
+2. Setup
 
    For some strange reason, libraries have to be in PATH too.
-   Open c:/msys/1.0/etc/profile in a text editor and change
+   To run Gtk+ applications from MSYS, add
+       /c/Program Files/Common Files/GTK/2.0/lib
+   to PATH in c:/msys/1.0/etc/profile.  Don't forget the trailing lib.
 
-     if [ $MSYSTEM == MINGW32 ]; then
-       export PATH=".:/usr/local/bin:/mingw/bin:/bin:$PATH"
-     else
-       export PATH=".:/usr/local/bin:/bin:/mingw/bin:$PATH"
-     fi
-
-   to
-
-     if [ $MSYSTEM == MINGW32 ]; then
-       export PATH=".:/usr/local/bin:/usr/local/lib:/mingw/bin:/bin:$PATH"
-     else
-       export PATH=".:/usr/local/bin:/usr/local/lib:/bin:/mingw/bin:$PATH"
-     fi
+   Add /c/Dev-C++/bin to PATH in c:/msys/1.0/etc/profile too.
