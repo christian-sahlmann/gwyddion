@@ -43,6 +43,7 @@ libgwydgetsinclude_HEADERS = \
 	gwyradiobuttons.h \
 	gwyruler.h \
 	gwyscitext.h \
+	gwyshader.h \
 	gwyspherecoords.h \
 	gwystatusbar.h \
 	gwystock.h \
@@ -104,6 +105,7 @@ libgwydgets_la_SOURCES = \
 	gwyradiobuttons.c \
 	gwyruler.c \
 	gwyscitext.c \
+	gwyshader.c \
 	gwyspherecoords.c \
 	gwystatusbar.c \
 	gwystock.c \
@@ -115,14 +117,14 @@ libgwydgets_la_SOURCES = \
 	gwyvalunit.c
 
 # Note these are test programs not to be included in the distro
-noinst_PROGRAMS = test 
-#
-#main_SOURCES = main.c
-#main_LDADD = libgwydgets.la \
-#	$(libgwydraw) \
-#	$(libgwyprocess) \
-#	$(libgwyddion)
-#
+noinst_PROGRAMS = test main
+
+main_SOURCES = main.c
+main_LDADD = libgwydgets.la \
+	$(libgwydraw) \
+	$(libgwyprocess) \
+	$(libgwyddion)
+
  test_SOURCES = test.c
  test_LDADD = libgwydgets.la \
  	$(libgwydraw) \

@@ -26,6 +26,7 @@
 #include <gdk/gdk.h>
 
 #include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwyshader.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libdraw/gwypalette.h>
 #include <libprocess/datafield.h>
@@ -35,14 +36,14 @@
 #define TEST_OPTION_MENUS 2
 #define TEST_GTKDOC_INFO 3
 
-#define TEST_WHAT TEST_OPTION_MENUS
+#define TEST_WHAT TEST_VECTOR_SHADE
 
 /***** VECTOR SHADE [[[ *****************************************************/
 #if (TEST_WHAT == TEST_VECTOR_SHADE)
 #define N 5
 
 static gulong hid[N];
-static GwySphereCoords *coords[N];
+static GtkWidget *shade[N];
 
 static const char *palettes[] = {
     GWY_PALETTE_GRAY,
@@ -56,15 +57,20 @@ static const char *palettes[] = {
     GWY_PALETTE_BW2,
     GWY_PALETTE_RAINBOW1,
     GWY_PALETTE_RAINBOW2,
+    GWY_PALETTE_WARM,
+    GWY_PALETTE_COLD,
+    "Spring",
+    "Body",
 };
 
 static void
-foo_cb(GwySphereCoords *c, gpointer p)
+foo_cb(GwyShader *c, gpointer p)
 {
     gint n = GPOINTER_TO_INT(p);
     gint i;
     gdouble theta, phi;
 
+    /*
     for (i = 0; i < N; i++)
         g_signal_handler_block(G_OBJECT(coords[i]), hid[i]);
     theta = gwy_sphere_coords_get_theta(c);
@@ -77,13 +83,14 @@ foo_cb(GwySphereCoords *c, gpointer p)
                                 theta, gwy_sphere_coords_get_phi(coords[i]));
     for (i = 0; i < N; i++)
         g_signal_handler_unblock(G_OBJECT(coords[i]), hid[i]);
+        */
 }
 
 static void
 test(void)
 {
-    GtkWidget *win, *widget, *box;
-    GObject *pal, *pdef;
+    GtkWidget *win, *box;
+    const gchar *pal;
     gint i;
 
     win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -92,17 +99,10 @@ test(void)
     box = gtk_vbox_new(4, TRUE);
     gtk_container_add(GTK_CONTAINER(win), box);
     for (i = 0; i < N; i++) {
-        widget = gwy_vector_shade_new(NULL);
-        pdef = gwy_palette_def_new(palettes[g_random_int()
-                                            % G_N_ELEMENTS(palettes)]);
-        pal = gwy_palette_new(GWY_PALETTE_DEF(pdef));
-        g_object_unref(pdef);
-        gwy_grad_sphere_set_palette(
-            GWY_GRAD_SPHERE(gwy_vector_shade_get_grad_sphere(GWY_VECTOR_SHADE(widget))),
-            GWY_PALETTE(pal));
-        gtk_box_pack_start(GTK_BOX(box), widget, TRUE, TRUE, 0);
-        coords[i] = gwy_vector_shade_get_sphere_coords(GWY_VECTOR_SHADE(widget));
-        hid[i] = g_signal_connect(G_OBJECT(coords[i]), "value_changed",
+        pal = palettes[g_random_int_range(0, G_N_ELEMENTS(palettes))];
+        shade[i] = gwy_shader_new(pal);
+        gtk_box_pack_start(GTK_BOX(box), shade[i], TRUE, TRUE, 0);
+        hid[i] = g_signal_connect(shade[i], "angle_changed",
                                   G_CALLBACK(foo_cb), GINT_TO_POINTER(i));
     }
 
@@ -295,6 +295,7 @@ main(int argc, char *argv[])
 
     gtk_init(&argc, &argv);
     gwy_palette_def_setup_presets();
+    gwy_gradients_setup_presets();
     gwy_stock_register_stock_items();
     test();
     gtk_main();
