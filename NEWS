@@ -1,4 +1,4 @@
-1.7cvs20050119
+1.7cvs20050122
 
 1.8
 Application:
@@ -17,7 +17,7 @@ Modules:
 - DWT Anisotropy: Undo and data corruption were fixed.
 - Nanoscope, Statistical quantities, FFT: SI unit handling improved.
 - FFT, CWT, DWT modules: Display non-square data error immediately.
-- Unrotate: Has a preview now.
+- Unrotate, Rotate: have a preview now.
 - Profile: Corrupted graph titles for separate profiles were fixed.
 - Grain mark by threshold, watershed, and remove by threshold: Option to use
   inverted surface, GUI reworked.
@@ -46,6 +46,7 @@ Libraries:
 
 Other:
 - Freedesktop compliance improvements, SPM data MIME type definitions.
+- Simple gwyddion(1) manual page.
 
 
 1.7
