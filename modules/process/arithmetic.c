@@ -77,7 +77,7 @@ static const gchar* arithmetic_check          (ArithmeticArgs *args);
 static void         arithmetic_do             (ArithmeticArgs *args);
 
 
-static const gchar default_expression[] = "data1 - data2";
+static const gchar default_expression[] = "d1 - d2";
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -166,7 +166,7 @@ arithmetic_dialog(ArithmeticArgs *args)
     row++;
 
     for (i = 0; i < WIN_ARGS; i++) {
-        args->name[i] = g_strdup_printf("data_%d", i+1);
+        args->name[i] = g_strdup_printf("d_%d", i+1);
         label = gtk_label_new_with_mnemonic(args->name[i]);
         gwy_strkill(args->name[i], "_");
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -207,6 +207,7 @@ arithmetic_dialog(ArithmeticArgs *args)
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
+    gtk_widget_grab_focus(controls.expression);
     gtk_widget_show_all(dialog);
     arithmetic_expr_cb(entry, &controls);
     do {
@@ -377,7 +378,7 @@ arithmetic_do(ArithmeticArgs *args)
 {
     GtkWidget *data_window;
     GwyContainer *data;
-    GwyDataField *dfield, *result;
+    GwyDataField *dfield, *result = NULL;
     const gdouble *d[WIN_ARGS];
     gdouble *values;
     gdouble *r = NULL;
@@ -411,11 +412,10 @@ arithmetic_do(ArithmeticArgs *args)
     }
 
     data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(data, "/0/data", (GObject*)dfield);
-    g_object_unref(dfield);
+    gwy_container_set_object_by_name(data, "/0/data", (GObject*)result);
+    g_object_unref(result);
 
     data_window = gwy_app_data_window_create(data);
-    g_object_unref(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 }
 
