@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
@@ -566,7 +566,6 @@ void
 gwy_data_window_update_title(GwyDataWindow *data_window)
 {
     gchar *window_title, *filename;
-    const gchar *data_title = NULL;
     gchar zoomstr[8];
     GwyDataView *data_view;
     GwyContainer *data;
@@ -586,12 +585,8 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     g_snprintf(zoomstr, sizeof(zoomstr), "%.*f",
                prec, zoom > 1.0 ? zoom : 1.0/zoom);
 
-    gwy_container_gis_string_by_name(data, "/filename/title", &data_title);
-    window_title = g_strdup_printf("%s %s%s%s %s:%s (%s)",
+    window_title = g_strdup_printf("%s %s:%s (%s)",
                                    filename,
-                                   data_title ? "[" : "",
-                                   data_title ? data_title : "",
-                                   data_title ? "]" : "",
                                    zoom > 1.0 ? zoomstr : "1",
                                    zoom > 1.0 ? "1" : zoomstr,
                                    g_get_application_name());
@@ -618,19 +613,31 @@ gchar*
 gwy_data_window_get_base_name(GwyDataWindow *data_window)
 {
     GwyContainer *data;
+    const gchar *data_title = NULL;
     const gchar *fnm = "Untitled";
+    gchar *s1, *s2;
 
     data = gwy_data_window_get_data(data_window);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
-    if (gwy_container_contains_by_name(data, "/filename")) {
-        fnm = gwy_container_get_string_by_name(data, "/filename");
-        return g_path_get_basename(fnm);
+    gwy_container_gis_string_by_name(data, "/filename/title",
+                                     (const guchar**)&data_title);
+    if (gwy_container_gis_string_by_name(data, "/filename",
+                                         (const guchar**)&fnm)) {
+        if (!data_title)
+            return g_path_get_basename(fnm);
+        s1 = g_path_get_basename(fnm);
+        s2 = g_strconcat(s1, " [", data_title, "]", NULL);
+        g_free(s1);
+        return s2;
     }
     else {
         gwy_container_gis_string_by_name(data, "/filename/untitled",
                                          (const guchar**)&fnm);
-        return g_strdup(fnm);
+        if (!data_title)
+            return g_strdup(fnm);
+        else
+            return g_strconcat(fnm, " [", data_title, "]", NULL);
     }
 }
 
