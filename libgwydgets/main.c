@@ -82,6 +82,7 @@ data_view_test(void)
     gsize size = 0;
     gsize pos = 0;
     GError *err = NULL;
+    GwyPalette *palette;
 
     /* FIXME: this is necessary to initialize the object system */
     g_type_class_ref(gwy_data_field_get_type());
@@ -98,6 +99,10 @@ data_view_test(void)
     gwy_data_view_set_base_layer(view, layer);
     g_object_unref(data);
     g_object_unref(data_field);
+
+    palette = (GwyPalette*)gwy_palette_new(GWY_PALETTE_YELLOW);
+    gwy_layer_basic_set_palette(layer, palette);
+    g_object_unref(palette);
 
     window = gwy_data_window_new(GWY_DATA_VIEW(view));
 

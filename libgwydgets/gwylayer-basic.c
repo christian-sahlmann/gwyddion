@@ -91,7 +91,6 @@ gwy_layer_basic_finalize(GObject *object)
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_LAYER_BASIC(object));
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -119,7 +118,7 @@ gwy_layer_basic_new(GwyContainer *data)
     g_object_ref(data);
     layer->data = data;
 
-    layer->palette = (GwyPalette*)gwy_palette_new(GWY_PALETTE_OLIVE);
+    layer->palette = (GwyPalette*)gwy_palette_new(GWY_PALETTE_GRAY);
 
     /* TODO Container */
     data_field = GWY_DATA_FIELD(
@@ -141,7 +140,6 @@ gwy_layer_basic_paint(GwyDataViewLayer *layer)
 {
     GwyDataField *data_field;
 
-    g_return_val_if_fail(layer, NULL);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
 
     /* TODO Container */
@@ -165,10 +163,32 @@ gwy_layer_basic_paint(GwyDataViewLayer *layer)
 static gboolean
 gwy_layer_basic_wants_repaint(GwyDataViewLayer *layer)
 {
-    g_return_val_if_fail(layer, FALSE);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), FALSE);
 
     return GWY_LAYER_BASIC(layer)->changed;
+}
+
+void
+gwy_layer_basic_set_palette(GwyDataViewLayer *layer,
+                            GwyPalette *palette)
+{
+    GwyPalette *oldpalette;
+
+    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
+    g_return_if_fail(GWY_IS_PALETTE(palette));
+
+    oldpalette = layer->palette;
+    g_object_ref(palette);
+    layer->palette = palette;
+    g_object_unref(oldpalette);
+}
+
+GwyPalette*
+gwy_layer_basic_get_palette(GwyDataViewLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
+
+    return layer->palette;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

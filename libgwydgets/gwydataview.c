@@ -519,10 +519,11 @@ gwy_data_view_expose(GtkWidget *widget,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
     g_message("%s: buf->map %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-    g_timer_reset(timer);
-    if (data_view->top_layer)
+    if (data_view->top_layer) {
+        g_timer_reset(timer);
         gwy_data_view_layer_draw(data_view->top_layer, widget->window);
-    g_message("%s: DRAW %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+        g_message("%s: DRAW %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+    }
     g_timer_destroy(timer);
 
     return FALSE;
