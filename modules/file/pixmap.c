@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -152,7 +152,7 @@ static GwyModuleInfo module_info = {
         "TIFF (Tag Image File Format), "
         "PPM (Portable Pixmap), "
         "BMP (Windows or OS2 Bitmap).",
-    "Yeti <yeti@physics.muni.cz>",
+    "Yeti <yeti@gwyddion.net>",
     "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",

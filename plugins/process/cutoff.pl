@@ -2,7 +2,7 @@
 # @(#) $Id$
 # A very simple Gwyddion plug-in example in Perl.  Demonstrates reading,
 # modifying and outputting the data.
-# Written by Yeti <yeti@physics.muni.cz>.
+# Written by Yeti <yeti@gwyddion.net>.
 # Public domain.
 use warnings;
 use strict;

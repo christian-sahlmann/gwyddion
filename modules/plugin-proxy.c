@@ -1,7 +1,7 @@
 /*
  *  @(%) $Id$
  *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -130,7 +130,7 @@ static GwyModuleInfo module_info = {
     "Plug-in proxy is a module capable of querying, registering, and running "
         "external programs (plug-ins) on data pretending they are data "
         "processing or file loading/saving modules.",
-    "Yeti <yeti@physics.muni.cz>",
+    "Yeti <yeti@gwyddion.net>",
     "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",

@@ -2,7 +2,7 @@
 # @(#) $Id$
 # An extremely simple Gwyddion plug-in example in shell.  Saves and loads
 # the data exactly as got from plugin-proxy.
-# Written by Yeti <yeti@physics.muni.cz>.
+# Written by Yeti <yeti@gwyddion.net>.
 # Public domain.
 case "$1" in
     register)

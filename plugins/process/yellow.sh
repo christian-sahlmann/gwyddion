@@ -2,7 +2,7 @@
 # @(#) $Id$
 # An extremely simple Gwyddion plug-in example in shell.  Demonstrates data
 # and metadata not outputted are retained from the original data.
-# Written by Yeti <yeti@physics.muni.cz>.
+# Written by Yeti <yeti@gwyddion.net>.
 # Public domain.
 case "$1" in
     register)

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
-# Tweaked by David Necas (Yeti) <yeti@physics.muni.cz> from various other
+# Tweaked by David Necas (Yeti) <yeti@gwyddion.net> from various other
 # autogen.sh's.  This file is in the public domain.
 
 DIE=0

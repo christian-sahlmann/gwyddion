@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
  *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     "basicops",
     "Basic operations like inversion or flipping.",
-    "Yeti <yeti@physics.muni.cz>",
+    "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
