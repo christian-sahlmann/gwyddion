@@ -5,8 +5,8 @@ processdir = $(pkglibdir)/modules/process
 module_ldflags = -shared -Wl,-soname
 
 process_PROGRAMS = \
-	arithmetic.so \
 	angle_dist.so \
+	arithmetic.so \
 	basicops.so \
 	calibrate.so \
 	crosscor.so \
@@ -18,13 +18,13 @@ process_PROGRAMS = \
 	edge.so \
 	facet-level.so \
 	fft.so \
-	fractal.so \
 	fraccor.so \
+	fractal.so \
 	gradient.so \
+	grain_dist.so \
 	grain_mark.so \
 	grain_rem_threshold.so \
 	grain_wshed.so \
- 	grain_dist.so \
 	laplace.so \
 	level.so \
 	linecorrect.so \
@@ -40,12 +40,12 @@ process_PROGRAMS = \
 	shade.so \
 	slope_dist.so \
 	sphere-revolve.so \
-	unrotate.so \
 	tip_blind.so \
 	tip_dilation.so \
 	tip_map.so \
 	tip_model.so \
-	tip_reconstruction.so
+	tip_reconstruction.so \
+	unrotate.so
 
 
 #############################################################################
