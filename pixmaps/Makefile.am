@@ -36,12 +36,14 @@ pixmapdata_DATA = \
 	gwy_graph_zoom_out-24.png \
 	gwy_gwyddion-60.png \
 	gwy_gwyddion-32.png \
+	gwy_less-24.png \
 	gwy_light_rotate-24.png \
 	gwy_line_correction-24.png \
 	gwy_mask_grow-24.png \
 	gwy_mask_invert-24.png \
 	gwy_mask_remove-24.png \
 	gwy_mask_shrink-24.png \
+	gwy_more-24.png \
 	gwy_none-24.png \
 	gwy_pointer-24.png \
 	gwy_pointer_measure-24.png \
