@@ -49,6 +49,7 @@ static void       gather_unsaved_cb                (GwyDataWindow *data_window,
                                                     GSList **unsaved);
 static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
 static void       gwy_app_data_window_list_updated (void);
+void              gwy_app_data_window_add          (GwyDataWindow *window);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_data_popup_menu_popup    (GtkWidget *menu,
                                                     GdkEventButton *event,
@@ -418,6 +419,8 @@ gwy_app_data_window_create(GwyContainer *data)
 
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
     gwy_app_data_view_update(data_view);
+    /* Take no chances */
+    gwy_app_data_window_add(GWY_DATA_WINDOW(data_window));
     gtk_window_present(GTK_WINDOW(data_window));
 
     gwy_app_data_window_list_updated();
@@ -493,7 +496,7 @@ gwy_app_data_window_list_remove_hook(gulong hook_id)
  * Assures @window is present in the data window list, but doesn't make
  * it current.
  *
- * XXX: WTF?
+ * XXX: make static in 2.0.
  */
 void
 gwy_app_data_window_add(GwyDataWindow *window)
