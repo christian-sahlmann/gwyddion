@@ -79,8 +79,8 @@ struct _GwyDataViewClass {
     GtkWidgetClass parent_class;
 
     void (*updated)(GwyDataView *data_view);
+    void (*redrawn)(GwyDataView *data_view);
 
-    gpointer reserved1;
     gpointer reserved2;
 };
 

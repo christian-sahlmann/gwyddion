@@ -34,6 +34,7 @@
 
 enum {
     UPDATED,
+    REDRAWN,
     LAST_SIGNAL
 };
 
@@ -148,12 +149,21 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
     widget_class->key_release_event = gwy_data_view_key_release;
 
     klass->updated = NULL;
+    klass->redrawn = NULL;
 
     data_view_signals[UPDATED] =
         g_signal_new("updated",
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyDataViewClass, updated),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
+    data_view_signals[REDRAWN] =
+        g_signal_new("redrawn",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyDataViewClass, redrawn),
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
@@ -507,6 +517,7 @@ gwy_data_view_expose(GtkWidget *widget,
                      GdkEventExpose *event)
 {
     GwyDataView *data_view;
+    gboolean emit_redrawn = FALSE;
 
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
 
@@ -519,8 +530,10 @@ gwy_data_view_expose(GtkWidget *widget,
     /* FIXME: ask the layers, if they want to repaint themselves */
     if (data_view->force_update
         || gwy_data_view_layer_wants_repaint(data_view->base_layer)
-        || gwy_data_view_layer_wants_repaint(data_view->alpha_layer))
+        || gwy_data_view_layer_wants_repaint(data_view->alpha_layer)) {
         gwy_data_view_paint(data_view);
+        emit_redrawn = TRUE;
+    }
     data_view->force_update = FALSE;
 
     gdk_draw_pixbuf(widget->window,
@@ -535,6 +548,9 @@ gwy_data_view_expose(GtkWidget *widget,
     if (data_view->top_layer)
         gwy_vector_layer_draw(GWY_VECTOR_LAYER(data_view->top_layer),
                               widget->window);
+
+    if (emit_redrawn)
+        g_signal_emit(data_view, data_view_signals[REDRAWN], 0);
 
     return FALSE;
 }
