@@ -3,6 +3,13 @@
 <!DOCTYPE book PUBLIC '-//OASIS//DTD DocBook XML V4.2//EN'
                'http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd'>
 <book>
+  <bookinfo>
+    <title>Gwyddion user guide</title>
+    <author>
+      <firstname>Petr</firstname>
+      <surname>Klapetek</surname>
+    </author>
+  </bookinfo>
    <chapter>
       <title>Introduction</title>
       <section>
