@@ -154,7 +154,7 @@ gdouble gwy_data_line_get_der(GwyDataLine *a, gint i);
 /*1DFFT interface*/
 void gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
                        GwyDataLine *rb, GwyDataLine *ib,
-                       gint (*fft)(), GwyWindowingType windowing,
+                       void (*fft)(), GwyWindowingType windowing,
                        gint direction, GwyInterpolationType interpolation,
                        gboolean preserverms, gboolean level);
 

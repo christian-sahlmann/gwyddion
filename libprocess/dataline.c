@@ -39,7 +39,7 @@ static GObject* gwy_data_line_deserialize       (const guchar *buffer,
                                                  gsize size,
                                                  gsize *position);
 static GObject* gwy_data_line_duplicate         (GObject *object);
-static void     gwy_data_line_value_changed     (GObject *GwyDataLine);
+/*static void     gwy_data_line_value_changed     (GObject *object);*/
 
 
 GType
@@ -228,22 +228,24 @@ gwy_data_line_duplicate(GObject *object)
     return duplicate;
 }
 
+/*
 static void
-gwy_data_line_value_changed(GObject *data_line)
+gwy_data_line_value_changed(GObject *object)
 {
     gwy_debug("signal: GwyDataLine changed");
-    g_signal_emit_by_name(GWY_DATA_LINE(data_line), "value_changed", NULL);
+    g_signal_emit_by_name(GWY_DATA_LINE(object), "value_changed", NULL);
 }
+*/
 
 
 /**
  * gwy_data_line_alloc:
- * @a: data line to be allocated 
+ * @a: data line to be allocated
  * @res: resolution (number ov values)
  *
  * Allocates field in dataline. Nothing else.
  * Use gwy_data_line_new for full dataline allocation.
- * 
+ *
  **/
 void
 gwy_data_line_alloc(GwyDataLine *a, gint res)
@@ -256,7 +258,7 @@ gwy_data_line_alloc(GwyDataLine *a, gint res)
 
 /**
  * gwy_data_line_initialize:
- * @a: data line 
+ * @a: data line
  * @res: resolution
  * @real: real size
  * @nullme: null values or not
@@ -283,7 +285,7 @@ gwy_data_line_initialize(GwyDataLine *a,
 
 /**
  * gwy_data_line_free:
- * @a: data line 
+ * @a: data line
  *
  * Frees memory occupied by dataline.
  **/
@@ -297,12 +299,12 @@ gwy_data_line_free(GwyDataLine *a)
         a->data = NULL;
     }
     else {gwy_debug("Neco tady smrdi. Proc me podruhe uvolnujes?");}
-   
+
 }
 
 /**
  * gwy_data_line_resample:
- * @a: data line 
+ * @a: data line
  * @res: new resolution
  * @interpolation: interpolation method used
  *
@@ -338,7 +340,7 @@ gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
 
 /**
  * gwy_data_line_resize:
- * @a: data line 
+ * @a: data line
  * @from: where to start
  * @to:  where to finish
  *
@@ -397,7 +399,7 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 
 /**
  * gwy_data_line_get_dval:
- * @a: data line 
+ * @a: data line
  * @x: position requested (0 - resolution)
  * @interpolation: interpolation used
  *
@@ -479,9 +481,9 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
 
 /**
  * gwy_data_line_get_res:
- * @a: data line 
+ * @a: data line
  *
- * 
+ *
  *
  * Returns: Resolution (number of data points).
  **/
@@ -493,13 +495,13 @@ gwy_data_line_get_res(GwyDataLine *a)
 
 /**
  * gwy_data_line_get_real:
- * @a: data line 
+ * @a: data line
  *
- * 
+ *
  *
  * Returns: Real size of data line.
  **/
-gdouble 
+gdouble
 gwy_data_line_get_real(GwyDataLine *a)
 {
     return a->real;
@@ -507,12 +509,12 @@ gwy_data_line_get_real(GwyDataLine *a)
 
 /**
  * gwy_data_line_set_real:
- * @a: data line 
+ * @a: data line
  * @real: value to be set
  *
  * Sets the real data line size.
  **/
-void 
+void
 gwy_data_line_set_real(GwyDataLine *a, gdouble real)
 {
     a->real = real;
@@ -521,10 +523,10 @@ gwy_data_line_set_real(GwyDataLine *a, gdouble real)
 
 /**
  * gwy_data_line_itor:
- * @a: data line 
+ * @a: data line
  * @pixval: value in pixel coordinates
  *
- * 
+ *
  *
  * Returns: value in real coordinates.
  **/
@@ -536,10 +538,10 @@ gwy_data_line_itor(GwyDataLine *a, gdouble pixval)
 
 /**
  * gwy_data_line_rtoi:
- * @a: data line 
+ * @a: data line
  * @realval: value in real coordinates
  *
- * 
+ *
  *
  * Returns: value in pixel coordinates.
  **/
@@ -551,10 +553,10 @@ gwy_data_line_rtoi(GwyDataLine *a, gdouble realval)
 
 /**
  * gwy_data_line_get_val:
- * @a: data line 
+ * @a: data line
  * @i: index (pixel coordinates)
  *
- * 
+ *
  *
  * Returns: value at given index.
  **/
@@ -590,14 +592,14 @@ gwy_data_line_set_val(GwyDataLine *a, gint i, gdouble value)
 
 /**
  * gwy_data_line_get_dval_real:
- * @a: data line 
+ * @a: data line
  * @x: real coordinates position
  * @interpolation: interpolation method used
  *
  * Same as gwy_data_line_get_dval() fucntion, but uses
  * real coordinates input.
  *
- * Returns: Value interpolated in the data line. 
+ * Returns: Value interpolated in the data line.
  **/
 gdouble
 gwy_data_line_get_dval_real(GwyDataLine *a, gdouble x, gint interpolation)
@@ -607,7 +609,7 @@ gwy_data_line_get_dval_real(GwyDataLine *a, gdouble x, gint interpolation)
 
 /**
  * gwy_data_line_invert:
- * @a: data line 
+ * @a: data line
  * @x: invert x axis
  * @z: invert z axis
  *
@@ -642,7 +644,7 @@ gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z)
 
 /**
  * gwy_data_line_fill:
- * @a: data line 
+ * @a: data line
  * @value: value to be used for filling
  *
  * Fills whole data lien with specified number.
@@ -659,7 +661,7 @@ gwy_data_line_fill(GwyDataLine *a, gdouble value)
 
 /**
  * gwy_data_line_add:
- * @a: data line 
+ * @a: data line
  * @value: value to be added.
  *
  * Adds a specified number to whole data line.
@@ -676,7 +678,7 @@ gwy_data_line_add(GwyDataLine *a, gdouble value)
 
 /**
  * gwy_data_line_multiply:
- * @a: data line 
+ * @a: data line
  * @value: value to be used for multiplication
  *
  * Multiplies whole data line with a specified number.
@@ -693,7 +695,7 @@ gwy_data_line_multiply(GwyDataLine *a, gdouble value)
 
 /**
  * gwy_data_line_part_fill:
- * @a: data line 
+ * @a: data line
  * @from: where to start
  * @to: where to finish
  * @value: value to be used for filling
@@ -717,7 +719,7 @@ gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value)
 
 /**
  * gwy_data_line_part_add:
- * @a: data line 
+ * @a: data line
  * @from: where to start
  * @to: where to finish
  * @value: value to be added
@@ -741,7 +743,7 @@ gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value)
 
 /**
  * gwy_data_line_part_multiply:
- * @a: data line 
+ * @a: data line
  * @from: where to start
  * @to: where to finish
  * @value: value to be used for multiplication
@@ -765,9 +767,9 @@ gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value)
 
 /**
  * gwy_data_line_get_max:
- * @a: data line 
+ * @a: data line
  *
- * 
+ *
  *
  * Returns: Maximum value
  **/
@@ -786,9 +788,9 @@ gwy_data_line_get_max(GwyDataLine *a)
 
 /**
  * gwy_data_line_get_min:
- * @a: data line 
+ * @a: data line
  *
- * 
+ *
  *
  * Returns: Minimum value
  **/
@@ -807,9 +809,9 @@ gwy_data_line_get_min(GwyDataLine *a)
 
 /**
  * gwy_data_line_get_avg:
- * @a: data line 
+ * @a: data line
  *
- * 
+ *
  *
  * Returns: Average value
  **/
@@ -827,9 +829,9 @@ gwy_data_line_get_avg(GwyDataLine *a)
 
 /**
  * gwy_data_line_get_rms:
- * @a: data line 
+ * @a: data line
  *
- * 
+ *
  *
  * Returns: Root mean square deviation of heights
  **/
@@ -848,9 +850,9 @@ gwy_data_line_get_rms(GwyDataLine *a)
 
 /**
  * gwy_data_line_get_sum:
- * @a: data line 
+ * @a: data line
  *
- * 
+ *
  *
  * Returns: sum of all the values
  **/
@@ -869,11 +871,11 @@ gwy_data_line_get_sum(GwyDataLine *a)
 
 /**
  * gwy_data_line_part_get_max:
- * @a: data line 
+ * @a: data line
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
- * 
+ *
  *
  * Returns: Maximum within given interval
  **/
@@ -897,11 +899,11 @@ gwy_data_line_part_get_max(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_part_get_min:
- * @a: data line 
+ * @a: data line
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
- * 
+ *
  *
  * Returns: Minimum within given interval
  **/
@@ -926,11 +928,11 @@ gwy_data_line_part_get_min(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_part_get_avg:
- * @a: data line 
+ * @a: data line
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
- * 
+ *
  *
  * Returns: Average within given interval
  **/
@@ -942,11 +944,11 @@ gwy_data_line_part_get_avg(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_part_get_rms:
- * @a: data line 
+ * @a: data line
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
- * 
+ *
  *
  * Returns: Root mean square deviation of heights within a given interval
  **/
@@ -971,11 +973,11 @@ gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_part_get_sum:
- * @a: data line 
+ * @a: data line
  * @from: where to start (in pixels)
  * @to: where to finish (in pixels)
  *
- * 
+ *
  *
  * Returns: Sum of all values within the interval
  **/
@@ -998,7 +1000,7 @@ gwy_data_line_part_get_sum(GwyDataLine *a, gint from, gint to)
 
 /**
  * gwy_data_line_threshold:
- * @a: data line 
+ * @a: data line
  * @threshval: value used for thresholding
  * @bottom: lower value
  * @top: upper value
@@ -1068,7 +1070,7 @@ gwy_data_line_part_threshold(GwyDataLine *a,
 
 /**
  * gwy_data_line_line_coeffs:
- * @a: data line 
+ * @a: data line
  * @av: height coefficient
  * @bv: slope coeficient
  *
@@ -1107,7 +1109,7 @@ gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
 
 /**
  * gwy_data_line_line_level:
- * @a: data line 
+ * @a: data line
  * @av: height coefficient
  * @bv: slope coefficient
  *
@@ -1139,7 +1141,7 @@ void
 gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
 {
     gint i, k, maxi, res;
-    gdouble ratio, x, as, radius, x1, x2, y1, y2;
+    gdouble ratio, x, as, radius, xl1, xl2, yl1, yl2;
     GwyDataLine dx, dy;
 
     /*gwy_debug("");*/
@@ -1177,15 +1179,15 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
             break;
         }
 
-        x1 = dx.data[k-1];
-        x2 = dx.data[k];
-        y1 = dy.data[k-1];
-        y2 = dy.data[k];
+        xl1 = dx.data[k-1];
+        xl2 = dx.data[k];
+        yl1 = dy.data[k-1];
+        yl2 = dy.data[k];
 
 
         if (interpolation == GWY_INTERPOLATION_ROUND
             || interpolation == GWY_INTERPOLATION_BILINEAR)
-            a->data[i] = gwy_interpolation_get_dval(x, x1, y1, x2, y2,
+            a->data[i] = gwy_interpolation_get_dval(x, xl1, yl1, xl2, yl2,
                                                     interpolation);
         else
             g_warning("Interpolation not implemented yet.\n");
@@ -1203,10 +1205,10 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
 
 /**
  * gwy_data_line_get_der:
- * @a: data line 
+ * @a: data line
  * @i: pixel coordinate
  *
- * 
+ *
  *
  * Returns: derivation at given pixel
  **/
@@ -1225,7 +1227,7 @@ gwy_data_line_get_der(GwyDataLine *a, gint i)
 
 /**
  * gwy_data_line_fft_hum:
- * @direction: FFT direction (1 or -1) 
+ * @direction: FFT direction (1 or -1)
  * @ra: real input
  * @ia: imaginary input
  * @rb: real output
@@ -1235,7 +1237,10 @@ gwy_data_line_get_der(GwyDataLine *a, gint i)
  * Performs 1D FFT using the alogrithm ffthum (see simplefft.h).
  **/
 void
-gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia, GwyDataLine *rb, GwyDataLine *ib, gint interpolation)
+gwy_data_line_fft_hum(gint direction,
+                      GwyDataLine *ra, GwyDataLine *ia,
+                      GwyDataLine *rb, GwyDataLine *ib,
+                      gint interpolation)
 {
     gint order, newres, oldres;
 
@@ -1276,7 +1281,7 @@ gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia, GwyDataL
  * @ia: imaginary input
  * @rb: real output
  * @ib: imaginary output
- * @gint (*fft)(): fft alorithm 
+ * @gint (*fft)(): fft alorithm
  * @windowing: windowing mode
  * @direction: FFT direction (1 or -1)
  * @interpolation: interpolation mode
@@ -1289,7 +1294,7 @@ gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia, GwyDataL
 void
 gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
                   GwyDataLine *rb, GwyDataLine *ib,
-                  gint (*fft)(), GwyWindowingType windowing, gint direction,
+                  void (*fft)(), GwyWindowingType windowing, gint direction,
                   GwyInterpolationType interpolation, gboolean preserverms,
                   gboolean level)
 {
@@ -1349,7 +1354,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
 
 /**
  * gwy_data_line_acf:
- * @data_line: data line 
+ * @data_line: data line
  * @target_line: result data line
  *
  * Coputes autocorrelation function and stores the values in
@@ -1365,23 +1370,22 @@ gwy_data_line_acf(GwyDataLine *data_line, GwyDataLine *target_line)
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
     avg = gwy_data_line_get_avg(data_line);
-    
-    
-    for (i=0; i<n; i++)
-    {
-        for (j=0; j<(n-i); j++)
-        {
+
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < (n-i); j++) {
             val = (data_line->data[i+j]-avg)*(data_line->data[i]-avg);
             target_line->data[j] += val; /*printf("val=%f\n", val);*/
-            
+
         }
     }
-    for (i=0; i<n; i++) target_line->data[i]/=(n-i);
+    for (i = 0; i < n; i++)
+        target_line->data[i]/=(n-i);
 }
 
 /**
  * gwy_data_line_hhcf:
- * @data_line: data line 
+ * @data_line: data line
  * @target_line: result data line
  *
  * Computes height-height correlation function and stores results in
@@ -1396,21 +1400,20 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
 
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
-    
-    for (i=0; i<n; i++)
-    {
-        for (j=0; j<(n-i); j++)
-        {
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < (n-i); j++) {
             val = data_line->data[i+j] - data_line->data[i];
             target_line->data[j] += val*val;
         }
     }
-    for (i=0; i<n; i++) target_line->data[i]/=(n-i);
+    for (i = 0; i < n; i++)
+        target_line->data[i] /= (n-i);
 }
 
 /**
  * gwy_data_line_psdf:
- * @data_line: data line 
+ * @data_line: data line
  * @target_line: result data line
  * @windowing: windowing method
  * @interpolation: interpolation method
@@ -1423,29 +1426,29 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
 {
     GwyDataLine iin, rout, iout;
     gint i;
-    
+
     gwy_data_line_initialize(&iin, data_line->res, data_line->real, FALSE);
     gwy_data_line_initialize(&rout, data_line->res, data_line->real, FALSE);
     gwy_data_line_initialize(&iout, data_line->res, data_line->real, FALSE);
-    
+
     gwy_data_line_fft(data_line, &iin, &rout, &iout, gwy_data_line_fft_hum,
                    windowing, 1, interpolation,
                    1, 1);
 
     gwy_data_line_resample(target_line, rout.res, GWY_INTERPOLATION_NONE);
-    for (i=0; i<rout.res; i++)
-    {
-        target_line->data[i] = rout.data[i]*rout.data[i] + iout.data[i]*iout.data[i];
+    for (i = 0; i < rout.res; i++) {
+        target_line->data[i] = rout.data[i]*rout.data[i]
+                               + iout.data[i]*iout.data[i];
     }
     gwy_data_line_free(&rout);
     gwy_data_line_free(&iin);
     gwy_data_line_free(&iout);
-            
+
 }
 
 /**
  * gwy_data_line_dh:
- * @data_line: data line 
+ * @data_line: data line
  * @target_line: result data line
  * @ymin: minimum value
  * @ymax: maimum value
@@ -1476,16 +1479,16 @@ gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
 
     for (i=0; i<n; i++)
     {
-        val = (gint)(data_line->data[i]/step) - imin; 
-        if (val<0 || val>= nsteps) 
+        val = (gint)(data_line->data[i]/step) - imin;
+        if (val<0 || val>= nsteps)
         {
             /*this should never happened*/
             val = 0;
         }
         target_line->data[val] += 1.0;
-    }   
+    }
     nstep = n*step;
-    
+
     for (i=0; i<nsteps; i++) {target_line->data[i]/=nstep;}
 }
 
@@ -1500,17 +1503,17 @@ gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
  * Computes cumulative distribution of heighs in interval (@ymin - @ymax).
  * If the interval is (0, 0) it computes the distribution from
  * real data minimum and maximum value.
- *  
+ *
  **/
 void
 gwy_data_line_cdh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
 {
     gint i;
-    gdouble sum=0;
+    gdouble sum = 0;
+
     gwy_data_line_dh(data_line, target_line, ymin, ymax, nsteps);
-    
-    for (i=0; i<nsteps; i++)
-    {
+
+    for (i = 0; i < nsteps; i++) {
         sum += target_line->data[i];
         target_line->data[i] = sum;
     }
@@ -1518,7 +1521,7 @@ gwy_data_line_cdh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin
 
 /**
  * gwy_data_line_da:
- * @data_line: data line 
+ * @data_line: data line
  * @target_line: result data line
  * @ymin: minimum value
  * @ymax: maimum value
@@ -1539,34 +1542,36 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
 
-   
+
     /*if ymin==ymax==0 we want to set up histogram area*/
     if ((ymin == ymax) && (ymin == 0))
     {
         ymin = G_MAXDOUBLE;
         ymax = -G_MAXDOUBLE;
-        for (i=0; i<n; i++)
-        {
+        for (i = 0; i < n; i++) {
             angle = gwy_data_line_get_der(data_line, i);
-            if (ymin > angle) ymin = angle;
-            if (ymax < angle)  ymax = angle;
+            if (ymin > angle)
+                ymin = angle;
+            if (ymax < angle)
+                ymax = angle;
         }
     }
     step = (ymax - ymin)/(nsteps-1);
     imin = (int)(ymin/step);
 
-    for (i=0; i<n; i++)
-    {
+    for (i = 0; i < n; i++) {
         val = (gint)(gwy_data_line_get_der(data_line, i)/step - imin);
-        if (val<0) val = 0; /*this should never happened*/
-        if (val>=nsteps) val = nsteps-1; /*this should never happened*/
+        if (val < 0)
+            val = 0; /*this should never happened*/
+        if (val >= nsteps)
+            val = nsteps-1; /*this should never happened*/
         target_line->data[val] += 1.0;/*/n/step;*/
     }
 }
 
 /**
  * gwy_data_line_cda:
- * @data_line: data line 
+ * @data_line: data line
  * @target_line: result data line
  * @ymin: minimum value
  * @ymax: maimum value
@@ -1583,9 +1588,8 @@ gwy_data_line_cda(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin
     gint i;
     gdouble sum=0;
     gwy_data_line_da(data_line, target_line, ymin, ymax, nsteps);
-    
-    for (i=0; i<nsteps; i++)
-    {
+
+    for (i = 0; i < nsteps; i++) {
         sum += target_line->data[i];
         target_line->data[i] = sum;
     }
