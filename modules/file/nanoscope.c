@@ -64,6 +64,8 @@ static GwyDataField*  hash_to_data_field  (GHashTable *hash,
                                            NanoscopeFileType file_type,
                                            gsize bufsize,
                                            gchar *buffer,
+                                           gint gxres,
+                                           gint gyres,
                                            gdouble zscale,
                                            gdouble curscale,
                                            gchar **p);
@@ -149,11 +151,13 @@ nanoscope_load(const gchar *filename)
     GError *err = NULL;
     gchar *buffer = NULL;
     gchar *p;
+    const gchar *s;
     gsize size = 0;
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
     GHashTable *hash;
     GList *l, *list = NULL;
+    gint xres = 0, yres = 0;
     /* FIXME defaults */
     gdouble zscale = 9.583688e-9;
     gdouble curscale = 10.0e-9;
@@ -194,11 +198,22 @@ nanoscope_load(const gchar *filename)
             get_value_scales(hash, &zscale, &curscale);
             continue;
         }
+        if (strcmp(g_hash_table_lookup(hash, "#self"), "Ciao scan list") == 0) {
+            /* XXX: Some observed files contained correct dimensions only in
+             * a global section, sizes in `image list' sections were bogus.
+             * Version: 0x05300001 */
+            if ((s = g_hash_table_lookup(hash, "Samps/line")))
+                xres = atoi(s);
+            if ((s = g_hash_table_lookup(hash, "Lines")))
+                yres = atoi(s);
+            gwy_debug("Global xres, yres = %d, %d", xres, yres);
+        }
         if (strcmp(g_hash_table_lookup(hash, "#self"), "Ciao image list"))
             continue;
 
         ndata->data_field = hash_to_data_field(hash, file_type,
                                                size, buffer,
+                                               xres, yres,
                                                zscale, curscale, &p);
         ok = ok && ndata->data_field;
     }
@@ -352,6 +367,8 @@ hash_to_data_field(GHashTable *hash,
                    NanoscopeFileType file_type,
                    gsize bufsize,
                    gchar *buffer,
+                   gint gxres,
+                   gint gyres,
                    gdouble zscale,
                    gdouble curscale,
                    gchar **p)
@@ -440,8 +457,15 @@ hash_to_data_field(GHashTable *hash,
         }
         size = atoi(s);
         if (size != bpp*xres*yres) {
-            g_warning("Data size %d != %d bpp*xres*yres", size, bpp*xres*yres);
-            return NULL;
+            if (gxres)
+                xres = gxres;
+            if (gyres)
+                yres = gyres;
+            if (size != bpp*xres*yres) {
+               g_warning("Data size %d != %d bpp*xres*yres",
+                         size, bpp*xres*yres);
+                return NULL;
+            }
         }
 
         if (offset + size > (gint)bufsize) {
