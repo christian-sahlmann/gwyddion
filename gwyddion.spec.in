@@ -67,6 +67,7 @@ your own plug-ins.
 %defattr(-,root,root)
 %doc AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS
 %{_datadir}/%{name}/pixmaps/*.png
+%{_datadir}/%{name}/pixmaps/*.ico
 %dir %{_datadir}/%{name}/pixmaps
 %dir %{_datadir}/%{name}
 %{_libdir}/%{name}/modules/file/*.so
