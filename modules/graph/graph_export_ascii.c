@@ -38,7 +38,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "graph ascii export",
-    "Export graph curves to ASCII file",
+    N_("Export graph curves to ASCII file"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -54,7 +54,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
         "graph ascii export",
-        "/_Export ASCII",
+        N_("/_Export ASCII..."),
         (GwyGraphFunc)&ascii,
     };
 
@@ -67,28 +67,29 @@ static gboolean
 ascii(GwyGraph *graph)
 {
     GtkWidget *dialog;
-    const gchar *selected_filename = NULL; 
+    const gchar *selected_filename = NULL;
     gint response;
-    
+
     if (!graph) {
-        return 1;
+        return TRUE;
     }
- 
-    dialog = gtk_file_selection_new("Export graph to file:");
+
+    dialog = gtk_file_selection_new(N_("Export Graph to File"));
     response = gtk_dialog_run(GTK_DIALOG(dialog));
-    if (response == GTK_RESPONSE_OK)
-    {
-        selected_filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(dialog));   
+    if (response == GTK_RESPONSE_OK) {
+        selected_filename
+            = gtk_file_selection_get_filename(GTK_FILE_SELECTION(dialog));
         gtk_widget_destroy(dialog);
     }
-    else {gtk_widget_destroy(dialog); return 1;}
-     
-    if (selected_filename != NULL)
-    {
-        gwy_graph_export_ascii(graph, selected_filename);
+    else {
+        gtk_widget_destroy(dialog);
+        return TRUE;
     }
-      
-    return 1;
+
+    if (selected_filename != NULL)
+        gwy_graph_export_ascii(graph, selected_filename);
+
+    return TRUE;
 }
 
 
