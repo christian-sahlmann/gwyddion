@@ -43,7 +43,10 @@ def check_file(filename, lines):
         check_double_semicolons,
         check_missing_spaces_around,
         check_missing_spaces_after,
+        check_extra_spaces_after,
         check_missing_spaces_before,
+        check_extra_spaces_before,
+        check_spaced_unary_pm,
         check_singlular_opening_braces,
         check_keyword_spacing,
         check_multistatements,
@@ -103,7 +106,8 @@ def check_double_semicolons(tokens, lines, warnings):
 
 def check_missing_spaces_around(tokens, lines, warnings):
     "Check for missing spaces around <, >, =, etc."
-    operators = '<', '>', '&&', '||', '?', '{'
+    oplist = '<', '>', '&&', '||', '?', '{'
+    operators = dict([(x, 1) for x in oplist])
     for t in tokens:
         if t.typ != Token.punct:
             continue
@@ -128,6 +132,19 @@ def check_missing_spaces_after(tokens, lines, warnings):
             w = 'Missing space after `%s\' (col %d): %s'
             warnings.append((t.line, w % (t.string, t.col, lines[t.line])))
 
+def check_extra_spaces_after(tokens, lines, warnings):
+    "Check for extra spaces after unary operators, opening parentheses"
+    oplist = '(', '[', '!', '~', '.', '->'
+    operators = dict([(x, 1) for x in oplist])
+    for t in tokens:
+        if t.typ != Token.punct or t.string not in operators:
+            continue
+        if t.succ.line == t.line and t.end == t.succ.col:
+            continue
+        if t.string != '(' or t.succ.typ != Token.punct or t.succ.string != ';':
+            w = 'Extra space after `%s\' (col %d): %s'
+            warnings.append((t.line, w % (t.string, t.col, lines[t.line])))
+
 def check_missing_spaces_before(tokens, lines, warnings):
     "Check for missing spaces before }"
     operators = '}',
@@ -136,6 +153,31 @@ def check_missing_spaces_before(tokens, lines, warnings):
             continue
         if t.prec.line == t.line and t.prec.end == t.col:
             w = 'Missing space before `%s\' (col %d): %s'
+            warnings.append((t.line, w % (t.string, t.col, lines[t.line])))
+
+def check_extra_spaces_before(tokens, lines, warnings):
+    "Check for extra spaces before operators, closing parentheses"
+    oplist = ',', ')', ']', '.', '->'
+    operators = dict([(x, 1) for x in oplist])
+    for t in tokens:
+        if t.typ != Token.punct or t.string not in operators:
+            continue
+        if t.prec.line < t.line or t.prec.end != t.col:
+            w = 'Extra space before `%s\' (col %d): %s'
+            warnings.append((t.line, w % (t.string, t.col, lines[t.line])))
+
+def check_spaced_unary_pm(tokens, lines, warnings):
+    "Check for spaces after unary operators that also have binary variants"
+    oplist = '-', '+', '*', '&'
+    closers = ')', ']'
+    operators = dict([(x, 1) for x in oplist])
+    for t in tokens:
+        if t.typ != Token.punct or t.string not in operators:
+            continue
+        if t.succ.line == t.line and t.end == t.succ.col:
+            continue
+        if t.prec.typ == Token.punct and t.prec.string not in closers:
+            w = 'Space after unary `%s\' (col %d): %s'
             warnings.append((t.line, w % (t.string, t.col, lines[t.line])))
 
 def check_singlular_opening_braces(tokens, lines, warnings):
