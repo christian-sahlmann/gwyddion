@@ -6,12 +6,13 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
+#include <app/settings.h>
 #include "tools.h"
 
 typedef struct {
     gboolean is_visible;  /* GTK_WIDGET_VISIBLE() returns BS? */
     GtkWidget *coords[6];
-    GtkObject *average;  /* TODO */
+    GtkObject *radius;
     gdouble mag;
     gint precision;
     gchar *units;
@@ -19,11 +20,17 @@ typedef struct {
 
 static GtkWidget* level3_dialog_create            (GwyDataView *data_view);
 static void       level3_do                       (void);
+static gdouble    level3_get_z_average            (GwyDataField *dfield,
+                                                   gdouble xreal,
+                                                   gdouble yreal,
+                                                   gint radius);
 static void       level3_selection_finished_cb    (void);
 static void       level3_dialog_response_cb       (gpointer unused,
                                                    gint response);
 static void       level3_dialog_abandon           (void);
 static void       level3_dialog_set_visible       (gboolean visible);
+
+static const gchar *radius_key = "/tool/level3/radius";
 
 static GtkWidget *dialog;
 static CropControls controls;
@@ -76,18 +83,18 @@ level3_do(void)
     GwyDataField *dfield;
     gdouble points[6], z[3];
     gdouble bx, by, c, det;
-    gint i;
+    gint i, radius;
 
     if (gwy_layer_points_get_points(points_layer, points) < 3)
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(points_layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
 
     det = bx = by = c = 0;
     for (i = 0; i < 3; i++)
-        z[i] = gwy_data_field_get_dval_real(dfield, points[2*i], points[2*i+1],
-                                            GWY_INTERPOLATION_ROUND);
+        z[i] = level3_get_z_average(dfield, points[2*i], points[2*i+1], radius);
     det = points[0]*(points[3] - points[5])
           + points[2]*(points[5] - points[1])
           + points[4]*(points[1] - points[3]);
@@ -108,14 +115,44 @@ level3_do(void)
     gwy_data_view_update(GWY_DATA_VIEW(points_layer->parent));
 }
 
+static gdouble
+level3_get_z_average(GwyDataField *dfield,
+                     gdouble xreal,
+                     gdouble yreal,
+                     gint radius)
+{
+    gint x, y, xres, yres, uli, ulj, bri, brj;
+
+    if (radius < 1)
+        g_warning("Bad averaging radius %d, fixing to 1", radius);
+    x = gwy_data_field_rtoj(dfield, xreal);
+    y = gwy_data_field_rtoi(dfield, yreal);
+    if (radius < 2)
+        return gwy_data_field_get_val(dfield, x, y);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    ulj = CLAMP(x - radius, 0, xres - 1);
+    uli = CLAMP(y - radius, 0, yres - 1);
+    brj = CLAMP(x + radius, 0, xres - 1);
+    bri = CLAMP(y + radius, 0, yres - 1);
+    return gwy_data_field_get_area_avg(dfield, uli, ulj, bri, brj);
+}
+
 static void
 level3_dialog_abandon(void)
 {
+    GwyContainer *settings;
+    gint radius;
+
     if (points_layer && finished_id)
         g_signal_handler_disconnect(points_layer, finished_id);
     finished_id = 0;
     points_layer = NULL;
     if (dialog) {
+        radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
+        radius = CLAMP(radius, 1, 10);
+        settings = gwy_app_settings_get();
+        gwy_container_set_int32_by_name(settings, radius_key, radius);
         g_signal_handler_disconnect(dialog, response_id);
         gtk_widget_destroy(dialog);
         dialog = NULL;
@@ -128,10 +165,11 @@ level3_dialog_abandon(void)
 static GtkWidget*
 level3_dialog_create(GwyDataView *data_view)
 {
-    GwyContainer *data;
+    GwyContainer *data, *settings;
     GwyDataField *dfield;
     GtkWidget *dialog, *table, *label;
     gdouble xreal, yreal, max, unit;
+    gint radius;
     guchar *buffer;
     gint i;
 
@@ -185,9 +223,14 @@ level3_dialog_create(GwyDataView *data_view)
         gtk_table_attach_defaults(GTK_TABLE(table), label,
                                   2, 3, 3*i + 2, 3*i + 3);
     }
-    controls.average = gtk_adjustment_new(1, 1, 10, 1, 5, 10);
+    settings = gwy_app_settings_get();
+    if (gwy_container_contains_by_name(settings, radius_key))
+        radius = gwy_container_get_int32_by_name(settings, radius_key);
+    else
+        radius = 1;
+    controls.radius = gtk_adjustment_new((gdouble)radius, 1, 10, 1, 5, 10);
     gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
-                                controls.average);
+                                controls.radius);
     gtk_widget_show_all(table);
     controls.is_visible = FALSE;
 
