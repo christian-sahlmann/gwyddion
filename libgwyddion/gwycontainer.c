@@ -232,7 +232,7 @@ gwy_container_value_type(GwyContainer *container, GQuark key)
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
  *
- * Returns #TRUE if @container contains a value identified by @key.
+ * Returns %TRUE if @container contains a value identified by @key.
  *
  * Returns: Whether @container contains something at @key.
  **/
@@ -375,7 +375,7 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
-    return g_value_get_int(p);
+    return g_value_get_boolean(p);
 }
 
 /**
@@ -1012,6 +1012,10 @@ gwy_container_deserialize(const guchar *buffer,
 
         type = gwy_serialize_unpack_int32(buf, mysize, &pos);
         name = gwy_serialize_unpack_string(buf, mysize, &pos);
+        #ifdef DEBUG
+        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+              "deserializing %s => %s", __FUNCTION__, name, g_type_name(type));
+        #endif
         key = g_quark_from_string(name);
         g_free(name);
 
