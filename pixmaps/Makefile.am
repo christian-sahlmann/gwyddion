@@ -18,6 +18,7 @@ pixmapdata_DATA = \
 	gwy_grains_remove-24.png \
 	gwy_grains_water-24.png \
 	gwy_graph-24.png \
+	gwy_graph_fit_func-24.png \
 	gwy_graph_gauss-24.png \
 	gwy_graph_halfgauss-24.png \
 	gwy_graph_measure-24.png \
@@ -41,6 +42,7 @@ pixmapdata_DATA = \
 	gwy_stat_quantities-24.png \
 	gwy_subscript-24.png \
 	gwy_superscript-24.png \
+	gwy_unrotate-24.png \
 	gwy_zoom_1_1-24.png \
 	gwy_zoom_fit-24.png \
 	gwy_zoom_in-24.png \

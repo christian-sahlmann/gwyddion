@@ -138,8 +138,9 @@ gwy_app_toolbox_create(void)
                        _("Rotate by arbitrary angle"), NULL, GWY_STOCK_ROTATE,
                        G_CALLBACK(gwy_app_run_process_func_cb), "rotate");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Shade data"), NULL, GWY_STOCK_SHADER,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "shade");
+                       _("Automatically correct rotation"), NULL,
+                       GWY_STOCK_UNROTATE,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "unrotate");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Automatically level data"), NULL, GWY_STOCK_FIT_PLANE,
                        G_CALLBACK(gwy_app_run_process_func_cb), "level");
@@ -153,17 +154,17 @@ gwy_app_toolbox_create(void)
                        _("Continuous Wavelet Transform"), NULL, GWY_STOCK_CWT,
                        G_CALLBACK(gwy_app_run_process_func_cb), "cwt");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Mark Grains By Threshold"), NULL,
+                       _("Mark grains by threshold"), NULL,
                        GWY_STOCK_GRAINS,
                        G_CALLBACK(gwy_app_run_process_func_cb),
                        "mark_threshold");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Mark Grains By Watershed"), NULL,
+                       _("Mark grains by watershed"), NULL,
                        GWY_STOCK_GRAINS_WATER,
                        G_CALLBACK(gwy_app_run_process_func_cb),
                        "wshed_threshold");
     button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                                _("Remove Grains By Threshold"), NULL,
+                                _("Remove grains by threshold"), NULL,
                                 GWY_STOCK_GRAINS_REMOVE,
                                 G_CALLBACK(gwy_app_run_process_func_cb),
                                 "remove_threshold");
@@ -175,10 +176,13 @@ gwy_app_toolbox_create(void)
                                 "grain_dist");
     gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Fractal dimension"), NULL,
+                       _("Calculate fractal dimension"), NULL,
                        GWY_STOCK_FRACTAL,
                        G_CALLBACK(gwy_app_run_process_func_cb),
                        "fractal");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Shade data"), NULL, GWY_STOCK_SHADER,
+                       G_CALLBACK(gwy_app_run_process_func_cb), "shade");
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
@@ -198,14 +202,20 @@ gwy_app_toolbox_create(void)
                        _("Read coordinates"), NULL, GWY_STOCK_GRAPH_POINTER,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "read");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Zoom in"), NULL, GWY_STOCK_GRAPH_ZOOM_IN,
+                       _("Zoom a part of graph"), NULL, GWY_STOCK_GRAPH_ZOOM_IN,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_zoom");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Unzoom"), NULL, GWY_STOCK_GRAPH_ZOOM_FIT,
+                       _("Reset zoom to display complete data"), NULL,
+                       GWY_STOCK_GRAPH_ZOOM_FIT,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_unzoom");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Measure distances"), NULL, GWY_STOCK_GRAPH_MEASURE,
+                       _("Measure distances between points"), NULL,
+                       GWY_STOCK_GRAPH_MEASURE,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_points");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Fit functions to graph data"), NULL,
+                       GWY_STOCK_GRAPH_FIT_FUNC,
+                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_fit");
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_graph);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_graph);
