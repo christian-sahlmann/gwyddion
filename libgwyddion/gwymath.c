@@ -45,6 +45,37 @@ gwy_math_SI_prefix(gdouble magnitude)
 }
 
 /**
+ * gwy_math_humanize_numbers:
+ * @unit: The smallest possible step.
+ * @maximum: The maximum possible value.
+ * @precision: A location to store printf() precession, if not %NULL.
+ *
+ * Find a human readable representation for a range of numbers.
+ *
+ * Returns: The magnitude i.e., a power of 1000.
+ **/
+gdouble
+gwy_math_humanize_numbers(gdouble unit,
+                          gdouble maximum,
+                          gint *precision)
+{
+    gdouble lm, lu, mag, range, min;
+
+    lm = log10(maximum);
+    lu = log10(unit);
+    mag = 3.0*floor((lm + lu)/6.0);
+    if (precision) {
+        range = lm - lu;
+        if (range > 3.0)
+            range = (range + 3.0)/2;
+        min = lm - range;
+        *precision = (min < mag) ? (gint)ceil(mag - min) : 0;
+    }
+
+    return exp(G_LN10*mag);
+}
+
+/**
  * gwy_math_find_nearest_line:
  * @x: X-coordinate of the point to search.
  * @y: Y-coordinate of the point to search.

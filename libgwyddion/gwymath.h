@@ -10,6 +10,9 @@ extern "C" {
 #endif /* __cplusplus */
 
 const gchar* gwy_math_SI_prefix          (gdouble magnitude);
+gdouble      gwy_math_humanize_numbers   (gdouble unit,
+                                          gdouble maximum,
+                                          gint *precision);
 gint         gwy_math_find_nearest_line  (gdouble x,
                                           gdouble y,
                                           gdouble *d2min,
