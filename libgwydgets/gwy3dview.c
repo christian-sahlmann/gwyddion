@@ -792,6 +792,51 @@ gwy_3d_view_set_show_labels(Gwy3DView *gwy3dview,
 }
 
 /**
+ * gwy_3d_view_get_lights:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Returns whether the lighst are on or off within the @gwy3dview.
+ *
+ * Returns: Whwteher the lights are on.
+ *
+ * Since: 1.5
+ **/
+gboolean
+gwy_3d_view_get_lights(Gwy3DView *gwy3dview)
+{
+    gwy_debug(" ");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
+
+    return gwy3dview->enable_lights;
+}
+
+/**
+ * gwy_3d_view_set_show_labels:
+ * @gwy3dview: A 3D data view widget.
+ * @show_labels: Turn Lights On/Off
+ *
+ * Turn Lights On/Off within @gwy3dview.
+ * Widget is invalidated if necessary.
+ *
+ * Since: 1.5
+ **/
+void
+gwy_3d_view_set_lights(Gwy3DView *gwy3dview,
+                       gboolean  enable_lights)
+{
+     gwy_debug(" ");
+     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+
+    if (enable_lights == gwy3dview->enable_lights) return;
+    gwy3dview->enable_lights = enable_lights;
+    gwy_container_set_boolean_by_name(gwy3dview->container,
+                                      "/0/3d/enable_lights",
+                                      enable_lights);
+
+    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+}
+
+/**
  * gwy_3d_view_get_reduced_size:
  * @gwy3dview: A 3D data view widget.
  *
@@ -1446,8 +1491,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glScalef(1.0f, 1.0f, gwy3D->deformation_z->value);
 
     /* Render shape */
-    if (gwy3D->mat_current
-        != gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE))
+    if (gwy3D->enable_lights)
     {
         glEnable(GL_LIGHTING);
         glMaterialfv(GL_FRONT, GL_AMBIENT,   gwy3D->mat_current->ambient);

@@ -109,11 +109,13 @@ gwy_3d_labels_class_init(Gwy3DLabelsClass *klass)
 static void
 gwy_3d_label_description_init(Gwy3DLabelDescription *label_description)
 {
-    label_description->text     = NULL;
-    label_description->delta_x  = NULL;
-    label_description->delta_y  = NULL;
-    label_description->rotation = NULL;
-    label_description->size     = NULL;
+    label_description->default_text  = NULL;
+    label_description->text          = NULL;
+    label_description->delta_x       = NULL;
+    label_description->delta_y       = NULL;
+    label_description->rotation      = NULL;
+    label_description->auto_scale    = TRUE;
+    label_description->size          = NULL;
 }
 
 static void
@@ -130,6 +132,7 @@ gwy_3d_labels_init(Gwy3DLabels *labels)
 static void
 gwy_3d_label_description_free(Gwy3DLabelDescription *label_description)
 {
+    g_free(label_description->default_text);
     g_free(label_description->text);
 
     gwy_object_unref(label_description->delta_x);
@@ -172,11 +175,12 @@ gwy_3d_label_description_new(gchar * text, gint delta_x, gint delta_y,
     Gwy3DLabelDescription * desc = g_new(Gwy3DLabelDescription, 1);
     gwy_3d_label_description_init(desc);
 
+    desc->default_text = g_strdup(text);
     desc->text = g_strdup(text);
     desc->delta_x  = (GtkAdjustment*)gtk_adjustment_new(delta_x, -1000, 1000, 1, 10, 0.0);
     desc->delta_y  = (GtkAdjustment*)gtk_adjustment_new(delta_y, -1000, 1000, 1, 10, 0.0);;
     desc->rotation = (GtkAdjustment*)gtk_adjustment_new(rot, -180, 180, 1, 10, 0.0);;
-    desc->size     = (GtkAdjustment*)gtk_adjustment_new(size, -1, 100, 1, 5, 0.0);;
+    desc->size     = (GtkAdjustment*)gtk_adjustment_new(size, 1, 100, 1, 5, 0.0);;
 
     g_object_ref(G_OBJECT(desc->delta_x));
     g_object_ref(G_OBJECT(desc->delta_y));
@@ -399,6 +403,24 @@ gwy_3d_label_description_set_text(Gwy3DLabelDescription * label_description,
     g_signal_emit_by_name(label_description->delta_x, "value_changed", 0);
 }
 
+/**
+ * gwy_3d_label_description_reset:
+ *
+ *
+ *
+ * Since: 1.5
+ **/
+
+void
+gwy_3d_label_description_reset(Gwy3DLabelDescription * label_description)
+{
+    g_free(label_description->text);
+    label_description->text = g_strdup(label_description->default_text);
+    gtk_adjustment_set_value(label_description->delta_x, 0);
+    gtk_adjustment_set_value(label_description->delta_y, 0);
+    gtk_adjustment_set_value(label_description->size, -1);
+    gtk_adjustment_set_value(label_description->rotation, 0);
+}
 static void
 gwy_3d_labels_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_data)
 {
@@ -411,3 +433,15 @@ gwy_3d_labels_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_
     g_signal_emit(labels, labels_signals[LABEL_CHANGED], 0);
 }
 
+gdouble gwy_3d_labels_user_size(Gwy3DLabels *labels,
+                                Gwy3DLabelName name,
+                                gint user_size)
+{
+    Gwy3DLabelDescription * ld = gwy_3d_labels_get_description(labels, name);
+    if (ld->auto_scale)
+    {
+        gtk_adjustment_set_value(ld->size, user_size);
+        return user_size;
+    } else
+        return ld->size->value;
+}

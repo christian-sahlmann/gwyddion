@@ -59,8 +59,9 @@ typedef enum {
 } Gwy3DLabelName;
 
 struct _Gwy3DLabelDescription {
-
+    gchar          * default_text;
     gchar          * text;
+    gboolean         auto_scale;
     GtkAdjustment  * delta_x;
     GtkAdjustment  * delta_y;
     GtkAdjustment  * rotation;
@@ -105,6 +106,7 @@ Gwy3DLabelDescription  * gwy_3d_labels_get_description(Gwy3DLabels * gwy3dlabels
 
 void    gwy_3d_label_description_set_text(Gwy3DLabelDescription * label_description,
                                           const gchar* text);
+void    gwy_3d_label_description_reset    (Gwy3DLabelDescription * label_description);
 
 #define gwy_3d_labels_get_delta_x(labels, name) \
             (gwy_3d_labels_get_description(labels, name)->delta_x->value)
@@ -114,9 +116,9 @@ void    gwy_3d_label_description_set_text(Gwy3DLabelDescription * label_descript
             (gwy_3d_labels_get_description(labels, name)->rotation->value)
 #define gwy_3d_labels_get_size(labels, name) \
             (gwy_3d_labels_get_description(labels, name)->size->value)
-#define gwy_3d_labels_user_size(labels, name, user_size) \
-            ((gwy_3d_labels_get_description(labels, name)->size->value == -1) ? \
-              (user_size) :(gwy_3d_labels_get_description(labels, name)->size->value))
+gdouble gwy_3d_labels_user_size(Gwy3DLabels *labels,
+                                Gwy3DLabelName name,
+                                gint user_size);
 
 G_END_DECLS
 

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG
 #include <string.h>
 
 #include <gtk/gtk.h>
@@ -57,9 +57,17 @@ static void     gwy_3d_window_show_axes_changed   (GtkToggleButton *check,
                                                    Gwy3DWindow *window);
 static void     gwy_3d_window_show_labels_changed (GtkToggleButton *check,
                                                    Gwy3DWindow *window);
+static void     gwy_3d_window_show_lights_changed (GtkToggleButton *check,
+                                                   Gwy3DWindow *window);
 static gboolean gwy_3d_window_labels_entry_key_pressed(GtkWidget *widget,
                                                    GdkEventKey *event,
                                                    Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_auto_scale_changed  (GtkToggleButton *check,
+                                                   Gwy3DWindow *window);
+static void     gwy_3d_window_labels_entry_activate(GtkEntry *entry,
+                                                   Gwy3DWindow *window);
+static void     gwy_3d_window_labels_reset_clicked(GtkButton *button,
+                                                   Gwy3DWindow *window);
 /* Local data */
 
 static GtkWindowClass *parent_class = NULL;
@@ -298,19 +306,31 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
     row = 0;
 
+    check = gtk_check_button_new_with_mnemonic(_("Enable Light"));
+    is_none = gwy_3d_view_get_lights(gwy3dview);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 is_none);
+    gtk_table_attach(GTK_TABLE(table), check,
+                     0, 3, row, row+1, GTK_FILL, 0, 2, 2);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(gwy_3d_window_show_lights_changed), gwy3dwindow);
+    gwy3dwindow->lights_check = check;
+    row++;
+
     label = gtk_label_new(_("Material:"));
     gwy3dwindow->material_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+    gtk_widget_set_sensitive(label, is_none);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
     material = gwy_3d_view_get_material(gwy3dview);
     name = gwy_gl_material_get_name(material);
-    is_none = !strcmp(name, "None");
     omenu = gwy_option_menu_gl_material(G_CALLBACK(gwy_3d_window_set_material),
                                         gwy3dwindow, name);
     gwy3dwindow->material_menu = omenu;
+    gtk_widget_set_sensitive(omenu, is_none);
     gtk_table_attach(GTK_TABLE(table), omenu,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
@@ -318,7 +338,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     label = gtk_label_new(_("Palette:"));
     gwy3dwindow->palette_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-    gtk_widget_set_sensitive(label, is_none);
+    gtk_widget_set_sensitive(label, !is_none);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
@@ -327,7 +347,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     name = gwy_palette_def_get_name(gwy_palette_get_palette_def(palette));
     omenu = gwy_option_menu_palette(G_CALLBACK(gwy_3d_window_set_palette),
                                     gwy3dwindow, name);
-    gtk_widget_set_sensitive(omenu, is_none);
+    gtk_widget_set_sensitive(omenu, !is_none);
     gwy3dwindow->palette_menu = omenu;
     gtk_table_attach(GTK_TABLE(table), omenu,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
@@ -358,7 +378,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_notebook_append_page(GTK_NOTEBOOK(gwy3dwindow->notebook),
                              vbox, gtk_label_new(_("Labels")));
 
-    table = gtk_table_new(5, 3, FALSE);
+    table = gtk_table_new(8, 3, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
     row = 0;
 
@@ -378,45 +398,75 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
 
     label = gtk_label_new(_("Text"));
-    gwy3dwindow->palette_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+
     entry = gtk_entry_new_with_max_length(100);
+    g_signal_connect (G_OBJECT (entry), "activate",
+                      G_CALLBACK (gwy_3d_window_labels_entry_activate),
+                      (gpointer) gwy3dwindow);
     gtk_entry_set_text(GTK_ENTRY(entry), gwy_3d_view_get_label_description(
                        gwy3dview, GWY_3D_VIEW_LABEL_X)->text);
+    gtk_editable_select_region(GTK_EDITABLE(entry),
+                               0, GTK_ENTRY(entry)->text_length);
+
     gtk_table_attach(GTK_TABLE(table), entry,
                      1, 3, row, row+1, GTK_FILL, 0, 2, 2);
     gwy3dwindow->labels_text = entry;
-    g_signal_connect(entry, "key-press-event",
+/*    g_signal_connect(entry, "key-press-event",
                      G_CALLBACK(gwy_3d_window_labels_entry_key_pressed),
                      gwy3dwindow);
     g_signal_connect(entry, "key-release-event",
                      G_CALLBACK(gwy_3d_window_labels_entry_key_pressed),
                      gwy3dwindow);
-    row++;
+*/
 
+    row++;
+    label = gtk_label_new(_("Move Label"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+    row++;
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Delta X"), _(""),
+               (table, row++, _("Horizontally"), _("pixels"),
                 (GtkObject*)gwy_3d_view_get_label_description(
                     gwy3dview, GWY_3D_VIEW_LABEL_X)->delta_x);
     gwy3dwindow->labels_delta_x = spin;
 
     row++;
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Delta Y"), _(""),
+               (table, row++, _("Vertically"), _("pixels"),
                 (GtkObject*)gwy_3d_view_get_label_description(
                     gwy3dview, GWY_3D_VIEW_LABEL_X)->delta_y);
     gwy3dwindow->labels_delta_y = spin;
 
     row++;
+    check = gtk_check_button_new_with_mnemonic(_("_Scale Size Automatically"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 gwy_3d_view_get_label_description(
+                                     gwy3dview,
+                                     GWY_3D_VIEW_LABEL_X)->auto_scale);
+    gtk_table_attach(GTK_TABLE(table), check,
+                     0, 3, row, row+1, GTK_FILL, 0, 2, 2);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(gwy_3d_window_auto_scale_changed),
+                     gwy3dwindow);
+    row++;
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Size"), _(""),
+               (table, row++, _("Size"), _("pixels"),
                 (GtkObject*)gwy_3d_view_get_label_description(
                     gwy3dview, GWY_3D_VIEW_LABEL_X)->size);
+    gtk_widget_set_sensitive(spin,
+                !gtk_toggle_button_get_active(check));
     gwy3dwindow->labels_size = spin;
 
-
+    row++;
+    button = gtk_button_new_with_label(_("Reset"));
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(gwy_3d_window_labels_reset_clicked),
+                     gwy3dwindow);
+    gtk_table_attach(GTK_TABLE(table), button,
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
     gwy3dwindow->actions = gtk_hbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox), gwy3dwindow->actions,
                        FALSE, FALSE, 0);
@@ -509,17 +559,12 @@ gwy_3d_window_set_material(GtkWidget *item,
 {
     gchar *material_name;
     GObject *material;
-    gboolean is_none;
 
     material_name = g_object_get_data(G_OBJECT(item), "material-name");
-    is_none = !strcmp(material_name, "None");
     material = gwy_gl_material_new(material_name);
     gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
                              GWY_GL_MATERIAL(material));
     g_object_unref(material);
-
-    gtk_widget_set_sensitive(gwy3dwindow->palette_menu, is_none);
-    gtk_widget_set_sensitive(gwy3dwindow->palette_label, is_none);
 }
 
 static void
@@ -573,6 +618,18 @@ gwy_3d_window_show_labels_changed(GtkToggleButton *check,
                                 gtk_toggle_button_get_active(check));
 }
 
+static void
+gwy_3d_window_show_lights_changed(GtkToggleButton *check,
+                                  Gwy3DWindow *window)
+{
+    gboolean active = gtk_toggle_button_get_active(check);
+    gwy_3d_view_set_lights(GWY_3D_VIEW(window->gwy3dview), active);
+    gtk_widget_set_sensitive(window->material_menu, active);
+    gtk_widget_set_sensitive(window->material_label, active);
+    gtk_widget_set_sensitive(window->palette_menu, !active);
+    gtk_widget_set_sensitive(window->palette_label, !active);
+}
+
 static gboolean
 gwy_3d_window_labels_entry_key_pressed(GtkWidget *widget,
                                        GdkEventKey *event,
@@ -587,6 +644,38 @@ gwy_3d_window_labels_entry_key_pressed(GtkWidget *widget,
         gtk_entry_get_text(GTK_ENTRY(widget))
     );
     return FALSE;
+}
+static void
+gwy_3d_window_auto_scale_changed(GtkToggleButton *check,
+                                  Gwy3DWindow *window)
+{
+    gboolean active = gtk_toggle_button_get_active(check);
+    gint idx = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
+    gtk_widget_set_sensitive(window->labels_size, !active);
+    gwy_3d_view_get_label_description(window->gwy3dview, idx)->auto_scale = active;
+}
+
+static void
+gwy_3d_window_labels_entry_activate(GtkEntry *entry,  Gwy3DWindow *window)
+{
+    gint idx = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
+
+    gwy_debug("label id:%d, label text: %s", idx, gtk_entry_get_text(GTK_ENTRY(entry)));
+    gwy_3d_label_description_set_text(
+        gwy_3d_view_get_label_description(
+            GWY_3D_VIEW(window->gwy3dview), idx),
+        gtk_entry_get_text(GTK_ENTRY(entry))
+    );
+}
+
+static void
+gwy_3d_window_labels_reset_clicked(GtkButton *button, Gwy3DWindow *window)
+{
+    gint idx = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
+    gwy_3d_label_description_reset(
+        gwy_3d_view_get_label_description(
+            GWY_3D_VIEW(window->gwy3dview), idx)
+     );
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

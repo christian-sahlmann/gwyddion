@@ -50,6 +50,7 @@ struct _Gwy3DWindow {
     GtkWidget *palette_label;
     GtkWidget *material_menu;
     GtkWidget *material_label;
+    GtkWidget *lights_check;
 
     GtkWidget *labels_menu;
     GtkWidget *labels_text;
