@@ -23,7 +23,6 @@
 
 #include <gtk/gtkobject.h>
 #include <libgwyddion/gwycontainer.h>
-#include <libgwymodule/gwymoduleloader.h>
 
 #ifdef __cplusplus
 extern "C" {

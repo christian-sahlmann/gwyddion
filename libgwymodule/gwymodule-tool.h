@@ -23,7 +23,6 @@
 
 #include <gtk/gtkwidget.h>
 #include <libgwydgets/gwydatawindow.h>
-#include <libgwymodule/gwymoduleloader.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +36,7 @@ typedef enum {
 typedef struct _GwyToolFuncInfo GwyToolFuncInfo;
 
 typedef void (*GwyToolUseFunc)(GwyDataWindow *data_window,
-                               GwyToolSwitchEvent even);
+                               GwyToolSwitchEvent event);
 
 struct _GwyToolFuncInfo {
     const gchar *name;
@@ -50,7 +49,7 @@ gboolean     gwy_tool_func_register      (const gchar *modname,
                                           GwyToolFuncInfo *func_info);
 void         gwy_tool_func_use           (const guchar *name,
                                           GwyDataWindow *data_window,
-                                          GwyToolSwitchEvent even);
+                                          GwyToolSwitchEvent event);
 GtkWidget*   gwy_build_tool_toolbar      (GCallback item_callback);
 
 #ifdef __cplusplus
