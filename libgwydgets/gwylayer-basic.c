@@ -1,9 +1,5 @@
 /* @(#) $Id$ */
 
-#include <math.h>
-#include <stdio.h>
-#include <gtk/gtkmain.h>
-#include <gtk/gtksignal.h>
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>

@@ -1,13 +1,8 @@
 /* @(#) $Id$ */
 
-#include <math.h>
-#include <stdio.h>
-#include <gtk/gtkmain.h>
-#include <gtk/gtksignal.h>
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
-#include <libdraw/gwypixfield.h>
 #include "gwylayer-select.h"
 #include "gwydataview.h"
 
@@ -159,7 +154,6 @@ gwy_layer_select_new(void)
     layer = (GwyDataViewLayer*)object;
     select_layer = (GwyLayerSelect*)layer;
 
-
     return object;
 }
 
@@ -183,7 +177,7 @@ static void
 gwy_layer_select_draw(GwyDataViewLayer *layer, GdkDrawable *drawable)
 {
     GwyLayerSelect *select_layer;
-    gint xmin, ymin, xmax, ymax, tmp;
+    gint xmin, ymin, xmax, ymax;
 
     g_return_if_fail(layer);
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
@@ -206,16 +200,11 @@ gwy_layer_select_draw(GwyDataViewLayer *layer, GdkDrawable *drawable)
     gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
                                     select_layer->x1, select_layer->y1,
                                     &xmax, &ymax);
-    if (xmax < xmin) {
-        tmp = xmax;
-        xmax = xmin;
-        xmin = tmp;
-    }
-    if (ymax < ymin) {
-        tmp = ymax;
-        ymax = ymin;
-        ymin = tmp;
-    }
+    if (xmax < xmin)
+        GWY_SWAP(gint, xmin, xmax);
+    if (ymax < ymin)
+        GWY_SWAP(gint, ymin, ymax);
+
     gwy_debug("%s [%d,%d] to [%d,%d]",
               __FUNCTION__, xmin, ymin, xmax, ymax);
     gdk_draw_rectangle(drawable, layer->gc, FALSE,
@@ -347,7 +336,6 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
 {
     GwyLayerSelect *select_layer;
     gint x, y;
-    gdouble tmp;
     gboolean outside;
 
     select_layer = (GwyLayerSelect*)layer;
@@ -366,16 +354,10 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
                                     &x, &y);
     select_layer->selected = (x != event->x) && (y != event->y);
     if (select_layer->selected) {
-        if (select_layer->x1 < select_layer->x0) {
-            tmp = select_layer->x1;
-            select_layer->x1 = select_layer->x0;
-            select_layer->x0 = tmp;
-        }
-        if (select_layer->y1 < select_layer->y0) {
-            tmp = select_layer->y1;
-            select_layer->y1 = select_layer->y0;
-            select_layer->y0 = tmp;
-        }
+        if (select_layer->x1 < select_layer->x0)
+            GWY_SWAP(gdouble, select_layer->x0, select_layer->x1);
+        if (select_layer->y1 < select_layer->y0)
+            GWY_SWAP(gdouble, select_layer->y0, select_layer->y1);
 
         /* TODO Container */
         gwy_container_set_double_by_name(layer->data, "/0/select/x0",
