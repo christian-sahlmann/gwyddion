@@ -1,0 +1,30 @@
+
+TOP_SRCDIR = ..\..
+PLUGIN_TYPE = file
+PLUGINS = \
+	dump.exe
+
+!INCLUDE $(TOP_SRCDIR)\make.msc
+
+PLUGIN_CFLAGS = \
+	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(PRG_CRUNTIME)
+
+PLUGIN_LINK = \
+	$(COMMON_LDFLAGS) \
+	/subsystem:WINDOWS /entry:mainCRTStartup
+
+## targets
+all: plugin
+
+plugin: $(PLUGINS)
+
+# Install install every .h file
+install: install-plugin
+
+!INCLUDE $(TOP_SRCDIR)\rules.msc
+
+.obj.exe:
+	$(LINK32) $< $(PLUGIN_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$@
+
+# vim: ft=make
+

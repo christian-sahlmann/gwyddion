@@ -1,0 +1,16 @@
+
+TOP_SRCDIR = ..
+SUBDIRS = file
+
+!INCLUDE $(TOP_SRCDIR)\make.msc
+
+## targets
+all: sub-all
+
+install: sub-install
+
+clean:: sub-clean
+
+!INCLUDE $(TOP_SRCDIR)\rules.msc
+
+# vim: ft=make
