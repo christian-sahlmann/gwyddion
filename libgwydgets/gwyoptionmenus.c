@@ -166,6 +166,7 @@ gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
     guchar *data;
     gint i;
 
+    /* clean up when called with NULL */
     if (!palette_def) {
         g_free(samples);
         samples = NULL;
@@ -183,9 +184,14 @@ gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
     else
         gwy_palette_set_palette_def(palette, palette_def);
 
-    samples = gwy_palette_sample(palette, PALETTE_SAMPLE_WIDTH, samples);
-    for (i = 0; i < PALETTE_SAMPLE_WIDTH; i++)
-        memcpy(data + 3*i, samples + 4*i, 3);
+    samples = gwy_palette_sample(palette, 4*PALETTE_SAMPLE_WIDTH, samples);
+    for (i = 0; i < PALETTE_SAMPLE_WIDTH; i++) {
+        guchar *sam = samples + 4*4*i;
+
+        data[3*i] = ((guint)sam[0] + sam[4] + sam[8] + sam[12])/4;
+        data[3*i + 1] = ((guint)sam[1] + sam[5] + sam[9] + sam[13])/4;
+        data[3*i + 2] = ((guint)sam[2] + sam[6] + sam[10] + sam[14])/4;
+    }
     for (i = 1; i < PALETTE_SAMPLE_HEIGHT; i++)
         memcpy(data + i*rowstride, data, 3*PALETTE_SAMPLE_WIDTH);
     gwy_object_unref(palette);
