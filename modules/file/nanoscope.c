@@ -341,7 +341,7 @@ add_metadata(gpointer hkey,
 
 static void
 fill_metadata(GwyContainer *data,
-              G_GNUC_UNUSED GHashTable *hash,
+              GHashTable *hash,
               GList *list)
 {
     static const gchar *hashes[] = {
@@ -359,6 +359,7 @@ fill_metadata(GwyContainer *data,
             }
         }
     }
+    g_hash_table_foreach(hash, add_metadata, data);
 }
 
 
