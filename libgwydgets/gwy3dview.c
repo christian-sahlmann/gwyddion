@@ -1136,7 +1136,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glCallList(gwy3D->shape_list_base + gwy3D->shape_current);
     gwy_3d_draw_axes(gwy3D);
 
-    if (gwy3D->movement_status == GWY_3D_LIGHTMOVEMENT
+    if (gwy3D->movement_status == GWY_3D_LIGHT_MOVEMENT
           && gwy3D->shape_current == GWY_3D_SHAPE_REDUCED)
         gwy_3d_draw_light_position(gwy3D);
 
@@ -1250,7 +1250,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
                 redraw = TRUE;
                 break;
             }
-            case GWY_3D_LIGHTMOVEMENT:
+            case GWY_3D_LIGHT_MOVEMENT:
                 gtk_adjustment_set_value(gwy3dview->light_z,
                                          gwy3dview->light_z->value + x - begin_x);
                 gtk_adjustment_set_value(gwy3dview->light_y,
