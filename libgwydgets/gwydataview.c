@@ -467,7 +467,7 @@ simple_gdk_pixbuf_composite(GdkPixbuf *source, GdkPixbuf *dest)
 
     gdk_pixbuf_composite(source, dest, 0, 0, width, height, 0.0, 0.0,
                          (gdouble)width/src_width, (gdouble)height/src_height,
-                         GDK_INTERP_TILES, 0x255);
+                         GDK_INTERP_TILES, 0xff);
 }
 
 static void
