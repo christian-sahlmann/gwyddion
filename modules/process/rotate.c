@@ -9,12 +9,24 @@
 #define GWY_RUN_ANY \
     (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
-static const gchar *rotate_angle_key = "/mod/rotate/angle";
+/* Data for this function.
+ * (It looks a little bit silly with just one parameter.) */
+typedef struct {
+    gdouble angle;
+} RotateArgs;
 
 static gboolean    module_register            (const gchar *name);
 static gboolean    rotate                     (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    rotate_dialog              (gdouble *angle);
+static gboolean    rotate_dialog              (RotateArgs *args);
+static void        rotate_load_args           (GwyContainer *container,
+                                               RotateArgs *args);
+static void        rotate_save_args           (GwyContainer *container,
+                                               RotateArgs *args);
+
+RotateArgs rotate_defaults = {
+    0.0,
+};
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -51,31 +63,27 @@ static gboolean
 rotate(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
-    gdouble angle;
+    RotateArgs args;
     gboolean ok;
 
     g_assert(run & GWY_RUN_ANY);
-    dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    ok = TRUE;
-    if (gwy_container_contains_by_name(data, rotate_angle_key))
-        angle = gwy_container_get_double_by_name(data, rotate_angle_key);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    if (run == GWY_RUN_WITH_DEFAULTS)
+        args = rotate_defaults;
     else
-        angle = 0.0;
-
-    if (run == GWY_RUN_INTERACTIVE)
-        ok = rotate_dialog(&angle);
-
+        rotate_load_args(data, &args);
+    ok = (run != GWY_RUN_INTERACTIVE) || rotate_dialog(&args);
     if (ok) {
-       gwy_data_field_rotate(dfield, angle, GWY_INTERPOLATION_BILINEAR);
+       gwy_data_field_rotate(dfield, args.angle, GWY_INTERPOLATION_BILINEAR);
        if (run != GWY_RUN_WITH_DEFAULTS)
-           gwy_container_set_double_by_name(data, rotate_angle_key, angle);
+           rotate_save_args(data, &args);
     }
 
     return FALSE;
 }
 
 static gboolean
-rotate_dialog(gdouble *angle)
+rotate_dialog(RotateArgs *args)
 {
     GtkWidget *dialog, *hbox, *widget;
     GtkAdjustment *adj;
@@ -93,7 +101,7 @@ rotate_dialog(gdouble *angle)
 
     widget = gtk_label_new(_("Rotate by angle"));
     gtk_box_pack_start(GTK_BOX(hbox),  widget, FALSE, FALSE, 0);
-    adj = GTK_ADJUSTMENT(gtk_adjustment_new(*angle, -360, 360, 5, 30, 0));
+    adj = GTK_ADJUSTMENT(gtk_adjustment_new(args->angle, -360, 360, 5, 30, 0));
     widget = gtk_spin_button_new(adj, 1.0, 0);
     gtk_box_pack_start(GTK_BOX(hbox),  widget, FALSE, FALSE, 0);
     widget = gtk_label_new(_("deg (CCW)"));
@@ -116,10 +124,29 @@ rotate_dialog(gdouble *angle)
         break;
     }
 
-    *angle = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
+    args->angle = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
     gtk_widget_destroy(dialog);
 
     return TRUE;
+}
+
+static const gchar *angle_key = "/module/rotate/angle";
+
+static void
+rotate_load_args(GwyContainer *container,
+                 RotateArgs *args)
+{
+    if (gwy_container_contains_by_name(container, angle_key))
+        args->angle = gwy_container_get_double_by_name(container, angle_key);
+    else
+        args->angle = rotate_defaults.angle;
+}
+
+static void
+rotate_save_args(GwyContainer *container,
+                 RotateArgs *args)
+{
+    gwy_container_set_double_by_name(container, angle_key, args->angle);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
