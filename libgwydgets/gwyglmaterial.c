@@ -518,14 +518,14 @@ gwy_gl_material_sample(GwyGLMaterial *glmaterial,
     gdouble cor;
     guchar alpha;
 
-    g_return_val_if_fail(GWY_IS_GL_MATERIAL(material), NULL);
+    g_return_val_if_fail(GWY_IS_GL_MATERIAL(glmaterial), NULL);
     g_return_val_if_fail(size > 1, NULL);
 
     oldsample = g_renew(guchar, oldsample, 4*size);
 
     k = 0;
     cor = 1.0/(size - 1.0);
-    if (strcmp(material->name, GWY_GL_MATERIAL_NONE) == 0)
+    if (strcmp(glmaterial->name, GWY_GL_MATERIAL_NONE) == 0)
         alpha = 0;
     else
         alpha = 255;
@@ -533,12 +533,12 @@ gwy_gl_material_sample(GwyGLMaterial *glmaterial,
     for (i = 0; i < size; i++) {
         gdouble NL = i*cor;
         gdouble VR = 2.0*NL*NL - 1.0;
-        gdouble s = VR > 0.0 ? exp(log(VR)*128.0*material->shininess) : 0.0;
+        gdouble s = VR > 0.0 ? exp(log(VR)*128.0*glmaterial->shininess) : 0.0;
 
         for (k = 0; k < 3; k++) {
-            gdouble v = material->ambient[k]*1.0
-                        + material->diffuse[k]*1.0*NL
-                        + material->specular[k]*1.0*s;
+            gdouble v = glmaterial->ambient[k]*1.0
+                        + glmaterial->diffuse[k]*1.0*NL
+                        + glmaterial->specular[k]*1.0*s;
             oldsample[4*i+k] = (guchar)CLAMP(255.999*v, 0.0, 255.0);
         }
         oldsample[4*i + 3] = alpha;
