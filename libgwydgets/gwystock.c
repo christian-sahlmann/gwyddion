@@ -53,6 +53,7 @@ register_toolbox_icons(const gchar *pixmap_path,
         { GWY_STOCK_ITALIC, "Italic", 0, GDK_VoidSymbol, "gwy" },
         { GWY_STOCK_SUBSCRIPT, "Subscript", 0, GDK_VoidSymbol, "gwy" },
         { GWY_STOCK_SUPERSCRIPT, "Superscript", 0, GDK_VoidSymbol, "gwy" },
+        { GWY_STOCK_POINTER, "Pointer", 0, GDK_VoidSymbol, "gwy" },
     };
     guint i;
 

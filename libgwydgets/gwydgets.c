@@ -264,6 +264,18 @@ gwy_windowing_option_menu(GCallback callback,
 
 /************************** Table attaching ****************************/
 
+/**
+ * gwy_table_attach_spinbutton:
+ * @table: A #GtkTable.
+ * @row: Table row to attach to.
+ * @name: The label before @adj.
+ * @units: The label after @adj.
+ * @adj: An adjustment to create spinbutton from.
+ *
+ * Attaches a spinbutton with two labels to a table.
+ *
+ * Returns: The spinbutton as a #GtkWidget.
+ **/
 GtkWidget*
 gwy_table_attach_spinbutton(GtkWidget *table,
                             gint row,
@@ -286,6 +298,16 @@ gwy_table_attach_spinbutton(GtkWidget *table,
     return spin;
 }
 
+/**
+ * gwy_table_attach_row:
+ * @table: A #GtkTable.
+ * @row: Table row to attach to.
+ * @name: The label before @middle_widget.
+ * @units: The label after @adj.
+ * @middle_widget: A widget.
+ *
+ * Attaches a widget with two labels to a table.
+ **/
 void
 gwy_table_attach_row(GtkWidget *table,
                      gint row,
@@ -315,5 +337,28 @@ gwy_table_attach_row(GtkWidget *table,
                      1, 2, row, row+1, GTK_FILL, 0, 2, 2);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), middle_widget);
 }
+
+/************************** Utils ****************************/
+
+/**
+ * gwy_dialog_prevent_delete_cb:
+ *
+ * Returns %TRUE.
+ *
+ * The purpose of this function is to be used as a callback connected to the
+ * "delete_event" of non-modal dialogs so that they can hide instead of
+ * being destroyed.  This is achieved by returning %TRUE from the
+ * "delete_event" callback.
+ *
+ * See #GtkDialog source code for the gory details...
+ *
+ * Returns: %TRUE.
+ **/
+gboolean
+gwy_dialog_prevent_delete_cb(void)
+{
+    return TRUE;
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

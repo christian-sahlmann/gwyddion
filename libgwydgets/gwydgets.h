@@ -51,6 +51,8 @@ void       gwy_table_attach_row           (GtkWidget *table,
                                            const gchar *units,
                                            GtkWidget *middle_widget);
 
+gboolean   gwy_dialog_prevent_delete_cb   (void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

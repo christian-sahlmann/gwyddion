@@ -309,16 +309,19 @@ compute_statusbar_units(GwyDataWindow *data_window)
     GwyDataView *data_view;
     GwyDataField *dfield;
     GwyContainer *data;
-    gdouble mag;
+    gdouble max, unit, mag, xreal, yreal;
 
     data_view = GWY_DATA_VIEW(data_window->data_view);
     data = gwy_data_view_get_data(data_view);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    mag = MIN(gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield),
-              gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield));
-    mag = exp(floor(log(mag)/G_LN10)*G_LN10);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    max = MAX(xreal, yreal);
+    unit = MIN(xreal/gwy_data_field_get_xres(dfield),
+               yreal/gwy_data_field_get_yres(dfield));
+    mag = gwy_math_humanize_numbers(unit, max, &data_window->statusbar_prec);
+    gwy_debug("%s: mag = %g", __FUNCTION__, mag);
     data_window->statusbar_mag = mag;
-    gwy_debug("%s: %g", __FUNCTION__, data_window->statusbar_mag);
     data_window->statusbar_SI_prefix = gwy_math_SI_prefix(mag);
 }
 
@@ -337,9 +340,11 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
     y = event->y;
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    g_snprintf(label, sizeof(label), "%.1f %sm, %.1f %sm",
+    g_snprintf(label, sizeof(label), "%.*f %sm, %.*f %sm",
+               data_window->statusbar_prec,
                xreal/data_window->statusbar_mag,
                data_window->statusbar_SI_prefix,
+               data_window->statusbar_prec,
                yreal/data_window->statusbar_mag,
                data_window->statusbar_SI_prefix);
     id = gtk_statusbar_push(sbar, data_window->statusbar_context_id, label);

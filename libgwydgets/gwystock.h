@@ -22,6 +22,7 @@ extern "C" {
 #define GWY_STOCK_ITALIC         "gwy_italic"
 #define GWY_STOCK_SUBSCRIPT      "gwy_subscript"
 #define GWY_STOCK_SUPERSCRIPT    "gwy_superscript"
+#define GWY_STOCK_POINTER        "gwy_pointer"
 
 void gwy_stock_register_stock_items(void);
 

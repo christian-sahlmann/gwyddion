@@ -41,6 +41,7 @@ struct _GwyDataWindow {
     guint statusbar_context_id;
     guint statusbar_message_id;
     gdouble statusbar_mag;
+    gint statusbar_prec;
     const gchar *statusbar_SI_prefix;
 };
 
