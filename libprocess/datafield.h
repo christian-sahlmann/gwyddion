@@ -2,6 +2,7 @@
 #ifndef __GWY_DATAFIELD_H__
 #define __GWY_DATAFIELD_H__
 #include <glib.h>
+#include "interpolation.h"
 #include "dataline.h"
 #include "gwywatchable.h"
 #include "gwyserializable.h"
@@ -17,16 +18,6 @@ extern "C" {
 #define GWY_IS_DATAFIELD_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATAFIELD))
 #define GWY_DATAFIELD_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATAFIELD, GwyDataField))
 
-#ifndef __GWY_INTERPOLATION__
-#define __GWY_INTERPOLATION__
-#define GWY_INTERPOLATION_NONE      0
-#define GWY_INTERPOLATION_ROUND     1
-#define GWY_INTERPOLATION_BILINEAR  2
-#define GWY_INTERPOLATION_KEY       3
-#define GWY_INTERPOLATION_BSPLINE   4
-#define GWY_INTERPOLATION_OMOMS     5
-#define GWY_INTERPOLATION_NNA       6
-#endif
 
 /*provisory struct for field (for function arguments simplification)*/
 typedef struct{

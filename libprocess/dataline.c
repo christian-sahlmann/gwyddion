@@ -825,31 +825,13 @@ gwy_dataline_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
 	
 	
 	if (interpolation == GWY_INTERPOLATION_ROUND || interpolation == GWY_INTERPOLATION_BILINEAR) 
-	    a->data[i] = gwy_dataline_get_dval_of_ddata(x, x1, y1, x2, y2, interpolation);
+	    a->data[i] = gwy_interpolation_get_dval(x, x1, y1, x2, y2, interpolation);
 	else {
 	    g_warning("Interpolation not implemented yet.\n");
 	}
     } 
     if (maxi!=0) gwy_dataline_resize(a, 0, maxi);
     gwy_dataline_value_changed(G_OBJECT(a));
-    return 0;
-}
-
-gdouble 
-gwy_dataline_get_dval_of_ddata(gdouble x, gdouble x1, gdouble y1, gdouble x2, gdouble y2, gint interpolation)
-{
-    if (x1 > x2){swap(gdouble, x1, x2); swap(gdouble, y1, y2);}
-
-    if (interpolation==GWY_INTERPOLATION_ROUND)
-    {
-	if ((x - x1) < (x2 - x)) return y1;
-	else return y2;
-    }
-    else if (interpolation==GWY_INTERPOLATION_BILINEAR)
-    {
-	return y1 + (x - x1)/(x2 - x1)*(y2 - y1);
-    }
-    else {g_warning("Interpolation not implemented yet.\n");}
     return 0;
 }
 

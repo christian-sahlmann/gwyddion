@@ -1,11 +1,12 @@
 
 #ifndef __GWY_DATALINE_H__
 #define __GWY_DATALINE_H__
-#include <glib.h>
+#include <glib-object.h>
 
 #include "gwywatchable.h"
 #include "gwyserializable.h"
 #include "simplefft.h"
+#include "interpolation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,16 +19,6 @@ extern "C" {
 #define GWY_IS_DATALINE_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATALINE))
 #define GWY_DATALINE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATALINE, GwyDataLine))
     
-#ifndef __GWY_INTERPOLATION__
-#define __GWY_INTERPOLATION__
-#define GWY_INTERPOLATION_NONE      0
-#define GWY_INTERPOLATION_ROUND     1
-#define GWY_INTERPOLATION_BILINEAR  2
-#define GWY_INTERPOLATION_KEY       3
-#define GWY_INTERPOLATION_BSPLINE   4
-#define GWY_INTERPOLATION_OMOMS     5
-#define GWY_INTERPOLATION_NNA       6
-#endif /*__GWY_INTERPOLATION__*/
 
 /*provisory struct for field (for function arguments simplification)*/
 typedef struct{
@@ -87,9 +78,6 @@ gdouble gwy_dataline_get_dval(GwyDataLine *a, gdouble x, gint interpolation);
 
 /*data value interpolated somewhere in the (xreal,yreal) coords*/
 gdouble gwy_dataline_get_dval_real(GwyDataLine *a, gdouble x, gint interpolation);
-
-/*FIXME move this somewhere, this has nothing to do with datafield:*/
-gdouble gwy_dataline_get_dval_of_ddata(gdouble x, gdouble x1, gdouble y1, gdouble x2, gdouble y2, gint interpolation);
 
 /*************************************************************************************/
 /*Processing*/
