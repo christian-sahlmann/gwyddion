@@ -27,7 +27,7 @@
 #include "tools.h"
 
 typedef struct {
-    gboolean is_visible;  /* GTK_WIDGET_VISIBLE() returns BS? */
+    gboolean is_visible;  /* XXX: GTK_WIDGET_VISIBLE() returns BS? */
     GtkWidget *x;
     GtkWidget *y;
     GtkWidget *val;

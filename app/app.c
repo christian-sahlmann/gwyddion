@@ -21,6 +21,7 @@
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
+#include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include "tools/tools.h"
 #include "init.h"
@@ -30,6 +31,11 @@
 #include "app.h"
 
 /* TODO */
+typedef struct {
+    GQuark key;
+    GObject *data;
+} GwyAppFuckingUndo;
+
 GtkWidget *gwy_app_main_window = NULL;
 
 static GList *current_data = NULL;
@@ -40,14 +46,19 @@ static const gchar *menu_list[] = {
     "<file>", "<proc>", "<xtns>", "<edit>",
 };
 
-static GtkWidget* gwy_app_toolbar_append_tool(GtkWidget *toolbar,
-                                              GtkWidget *radio,
-                                              const gchar *stock_id,
-                                              const gchar *tooltip,
-                                              GwyToolUseFunc tool_use_func);
-static void       gwy_app_use_tool_cb        (GtkWidget *unused,
-                                              GwyToolUseFunc tool_use_func);
+static GtkWidget* gwy_app_toolbar_append_tool (GtkWidget *toolbar,
+                                               GtkWidget *radio,
+                                               const gchar *stock_id,
+                                               const gchar *tooltip,
+                                               GwyToolUseFunc tool_use_func);
+static void       gwy_app_use_tool_cb         (GtkWidget *unused,
+                                               GwyToolUseFunc tool_use_func);
 static void       gwy_app_update_toolbox_state(GwyMenuSensitiveData *sens_data);
+static gint       compare_data_window_data_cb (GwyDataWindow *window,
+                                               GwyContainer *data);
+static void       undo_redo_clean             (GObject *window,
+                                               gboolean undo,
+                                               gboolean redo);
 
 void
 gwy_app_quit(void)
@@ -283,6 +294,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
                    window);
         return;
     }
+    undo_redo_clean(G_OBJECT(window), TRUE, TRUE);
     current_data = g_list_delete_link(current_data, item);
     if (current_data) {
         gwy_app_data_window_set_current(GWY_DATA_WINDOW(current_data->data));
@@ -464,6 +476,214 @@ gwy_app_use_tool_cb(GtkWidget *unused,
         if (data_window)
             current_tool_use_func(data_window);
     }
+}
+
+void
+gwy_app_undo_checkpoint(GwyContainer *data,
+                        const gchar *what)
+{
+    GwyMenuSensitiveData sens_data = {
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_UNDO
+    };
+    GwyDataWindow *data_window;
+    GwyAppFuckingUndo *undo;
+    GObject *object;
+    GList *l;
+
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+    if (strcmp(what, "/0/data") && strcmp(what, "/0/mask")) {
+        g_warning("FIXME: Undo works only for standard datafields");
+        return;
+    }
+
+    l = g_list_find_custom(current_data, data, 
+                           (GCompareFunc)compare_data_window_data_cb);
+    if (!l) {
+        g_critical("Cannot find data window for container %p", data);
+        return;
+    }
+    data_window = GWY_DATA_WINDOW(l->data);
+
+    if (gwy_container_contains_by_name(data, what)) {
+        object = gwy_container_get_object_by_name(data, what);
+        g_return_if_fail(GWY_IS_DATA_FIELD(object));
+        object = gwy_serializable_duplicate(object);
+    }
+    else
+        object = NULL;
+
+    undo_redo_clean(G_OBJECT(data_window), TRUE, TRUE);
+    undo = g_new(GwyAppFuckingUndo, 1);
+    undo->key = g_quark_from_string(what);
+    undo->data = object;
+    g_object_set_data(G_OBJECT(data_window), "undo", undo);
+    gwy_app_update_toolbox_state(&sens_data);
+}
+
+void
+gwy_app_undo_undo(void)
+{
+    GwyMenuSensitiveData sens_data = {
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_REDO
+    };
+    GwyDataWindow *data_window;
+    GtkWidget *data_view;
+    GwyAppFuckingUndo *undo, *redo;
+    GwyDataField *dfield, *df;
+    GObject *window, *object;
+    GwyContainer *data;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_view = gwy_data_window_get_data_view(data_window);
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+
+    window = G_OBJECT(data_window);
+    undo = (GwyAppFuckingUndo*)g_object_get_data(window, "undo");
+    g_return_if_fail(undo);
+
+    /* duplicate current state to redo */
+    if (gwy_container_contains(data, undo->key)) {
+        object = gwy_container_get_object(data, undo->key);
+        g_return_if_fail(GWY_IS_DATA_FIELD(object));
+        object = gwy_serializable_duplicate(object);
+    }
+    else
+        object = NULL;
+
+    redo = g_new(GwyAppFuckingUndo, 1);
+    redo->key = undo->key;
+    redo->data = object;
+
+    /* transfer undo to current state */
+    if (gwy_container_contains(data, undo->key)) {
+        if (undo->data) {
+            dfield = GWY_DATA_FIELD(gwy_container_get_object(data, undo->key));
+            df = GWY_DATA_FIELD(undo->data);
+            gwy_data_field_resample(dfield,
+                                    gwy_data_field_get_xres(df),
+                                    gwy_data_field_get_yres(df),
+                                    GWY_INTERPOLATION_NONE);
+            gwy_data_field_copy(df, dfield);
+        }
+        else
+            gwy_container_remove(data, undo->key);
+    }
+    else {
+        /* this refs the undo->data and undo_redo_clean() unrefs it again */
+        if (undo->data)
+            gwy_container_set_object(data, undo->key, undo->data);
+        else
+            g_warning("Trying to undo a NULL datafield to another NULL.");
+    }
+
+    undo_redo_clean(window, TRUE, TRUE);
+    g_object_set_data(window, "redo", redo);
+    gwy_data_view_update(GWY_DATA_VIEW(data_view));
+    gwy_app_update_toolbox_state(&sens_data);
+}
+
+void
+gwy_app_undo_redo(void)
+{
+    GwyMenuSensitiveData sens_data = {
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_UNDO
+    };
+    GwyDataWindow *data_window;
+    GtkWidget *data_view;
+    GwyAppFuckingUndo *undo, *redo;
+    GwyDataField *dfield, *df;
+    GObject *window, *object;
+    GwyContainer *data;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_view = gwy_data_window_get_data_view(data_window);
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+
+    window = G_OBJECT(data_window);
+    redo = (GwyAppFuckingUndo*)g_object_get_data(window, "redo");
+    g_return_if_fail(redo);
+
+    /* duplicate current state to undo */
+    if (gwy_container_contains(data, redo->key)) {
+        object = gwy_container_get_object(data, redo->key);
+        g_return_if_fail(GWY_IS_DATA_FIELD(object));
+        object = gwy_serializable_duplicate(object);
+    }
+    else
+        object = NULL;
+
+    undo = g_new(GwyAppFuckingUndo, 1);
+    undo->key = redo->key;
+    undo->data = object;
+
+    /* transfer redo to current state */
+    if (gwy_container_contains(data, redo->key)) {
+        if (redo->data) {
+            dfield = GWY_DATA_FIELD(gwy_container_get_object(data, redo->key));
+            df = GWY_DATA_FIELD(redo->data);
+            gwy_data_field_resample(dfield,
+                                    gwy_data_field_get_xres(df),
+                                    gwy_data_field_get_yres(df),
+                                    GWY_INTERPOLATION_NONE);
+            gwy_data_field_copy(df, dfield);
+        }
+        else
+            gwy_container_remove(data, redo->key);
+    }
+    else {
+        /* this refs the redo->data and redo_redo_clean() unrefs it again */
+        if (redo->data)
+            gwy_container_set_object(data, redo->key, redo->data);
+        else
+            g_warning("Trying to redo a NULL datafield to another NULL.");
+    }
+
+    undo_redo_clean(window, TRUE, TRUE);
+    g_object_set_data(window, "undo", undo);
+    gwy_data_view_update(GWY_DATA_VIEW(data_view));
+    gwy_app_update_toolbox_state(&sens_data);
+}
+
+static void
+undo_redo_clean(GObject *window,
+                gboolean undo,
+                gboolean redo)
+{
+    GwyAppFuckingUndo *gafu;
+
+    gwy_debug("%s", __FUNCTION__);
+
+    if (undo) {
+        gafu = (GwyAppFuckingUndo*)g_object_get_data(window, "undo");
+        if (gafu) {
+            g_object_set_data(window, "undo", NULL);
+            gwy_object_unref(gafu->data);
+            g_free(gafu);
+        }
+    }
+
+    if (redo) {
+        gafu = (GwyAppFuckingUndo*)g_object_get_data(window, "redo");
+        if (gafu) {
+            g_object_set_data(window, "redo", NULL);
+            gwy_object_unref(gafu->data);
+            g_free(gafu);
+        }
+    }
+}
+
+static gint
+compare_data_window_data_cb(GwyDataWindow *window,
+                            GwyContainer *data)
+{
+    return gwy_data_window_get_data(window) != data;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -25,10 +25,11 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
+#include <app/app.h>
 #include "tools.h"
 
 typedef struct {
-    gboolean is_visible;  /* GTK_WIDGET_VISIBLE() returns BS? */
+    gboolean is_visible;  /* XXX: GTK_WIDGET_VISIBLE() returns BS? */
     GtkWidget *coords[6];
     GtkObject *radius;
     gdouble mag;
@@ -129,6 +130,7 @@ level3_do(void)
     by /= det;
     c /= det;
     gwy_debug("%s: bx = %g, by = %g, c = %g", __FUNCTION__, bx, by, c);
+    gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_plane_level(dfield, c, bx, by);
     gwy_data_view_update(GWY_DATA_VIEW(points_layer->parent));
 }
