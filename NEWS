@@ -1,4 +1,4 @@
-1.5cvs20041015
+1.5cvs20041020
 
 1.6
 Application:
@@ -9,10 +9,13 @@ Modules:
 - Interactive color range change tool (new).
 - Distance and angle reading tool (new) (bug #32).
 - Polynomial background removal/extraction (new).
-- Plug-in proxy: Dump files are always written with POSIX real number format
-  (bug #31).
+- Laplacian, Sobel, Prewitt were moved from Filters tool to separate display
+  modules, Canny added.
+- Wrong selection boundaries in Filters tool was fixed (bug #35).
 - Pointer and Level3: Units in table header are updated on data update
   (bug #37).
+- Plug-in proxy: Dump files are always written with POSIX real number format
+  (bug #31).
 - Crop, Filters, Polynom, Statistics, and Spot remove tools: Also display
   dimensions in pixels.
 - Unrotate: Fixed displayed rotations being 2Pi multiplies of the real ones.
@@ -23,10 +26,14 @@ Modules:
 Library:
 - libgwydgets: Gwy3DWindow swtiching from palette to material for the first
   time no longer displays all-black data.
+- libgwydgets: Gwy3DWindow allows to switch between full and basic controls.
 - libgwyddion: Choleski decomposition and solution functions.
 - libgwyprocess: Two-dimensional polynom fitting.
 - libgwyapp: Helper functions to manage rectangular selections in tools.
 - gwyddion/dump Ruby module implementing plug-in proxy dump format.
+- Installation paths of Gwyddion::dump, Gwyddion.dump, and gwyddion/dump were
+  fixed and their import unified via GWYPLUGINLIB environment variable
+  (bug #33).
 
 Other:
 - New sample plug-ins in Ruby: invert_ruby and invert_narray.
