@@ -66,7 +66,7 @@ static GwyModuleInfo module_info = {
     "mask_grow_shrink",
     N_("Grows and shrinks masks."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -345,7 +345,7 @@ mask_grow_load_args(GwyContainer *container,
     *args = mask_grow_defaults;
 
     s = g_strdup_printf(pixels_key, name);
-    gwy_container_gis_int32_by_name(container, pixels_key, &args->pixels);
+    gwy_container_gis_int32_by_name(container, s, &args->pixels);
     args->pixels = CLAMP(args->pixels, 1, 1024);
     g_free(s);
 }
@@ -357,8 +357,11 @@ mask_grow_save_args(GwyContainer *container,
 {
     gchar *s;
 
+    /* TODO: remove someday */
+    gwy_container_remove_by_name(container, pixels_key);
+
     s = g_strdup_printf(pixels_key, name);
-    gwy_container_set_int32_by_name(container, pixels_key, args->pixels);
+    gwy_container_set_int32_by_name(container, s, args->pixels);
     g_free(s);
 }
 
