@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     "rotate",
     N_("Rotation by an arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -387,7 +387,7 @@ rotate_preview_draw(RotateControls *controls,
                              gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield),
                              0, 0);
-    gwy_data_field_rotate(rfield, 180.0/G_PI*args->angle, args->interp);
+    gwy_data_field_rotate(rfield, args->angle, args->interp);
     gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
 
