@@ -63,10 +63,16 @@ typedef  void (*GwyNLFitDerFunc)(gint i,
 
 typedef void (*GwyNLFitGuessFunc)(gdouble *x,
                                   gdouble *y,
+                                  gint n_dat,
                                   gdouble *param,
                                   gpointer user_data,
                                   gboolean *fres
                                   );
+
+typedef void (*GwyNLFitParamScaleFunc)(gdouble *param,
+                                         gdouble xscale,
+                                         gdouble yscale,
+                                         gint dir);
 
 typedef struct {
     const char *name;
@@ -80,6 +86,7 @@ typedef struct {
     GwyNLFitFunc function;
     GwyNLFitDerFunc function_derivation;
     GwyNLFitGuessFunc function_guess;
+    GwyNLFitParamScaleFunc parameter_scale;
     gint nparams;
     const Param *param;
 } GwyNLFitPresetFunction;
@@ -157,7 +164,16 @@ gdouble gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* functi
 
 gint gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function);
 
-
+gint gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
+                               gint n_dat,
+                               const gdouble *x,
+                               const gdouble *y,
+                               const gdouble *weight,
+                               gint n_param,
+                               gdouble *param,
+                               const gboolean *fixed_param,
+                               gpointer user_data);
+  
 #endif /* __GWY_NFLIT_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -124,6 +124,8 @@ static void        ch4_changed_cb            (GtkToggleButton *button,
                                               FitArgs *args);
 static void        dialog_update             (FitControls *controls, 
                                               FitArgs *args);
+static void        guess                     (FitControls *controls, 
+                                              FitArgs *args);
 static void        graph_update              (FitControls *controls,
                                               FitArgs *args);
 static void        get_data                  (FitArgs *args);
@@ -132,8 +134,6 @@ static void        graph_selected            (GwyGraphArea *area,
 static gint        normalize_data            (FitArgs *args, 
                                               GwyDataLine *xdata, 
                                               GwyDataLine *ydata, 
-                                              gdouble *xcoef, 
-                                              gdouble *ycoef, 
                                               gint curve);
 
 FitControls *pcontrols;
@@ -179,6 +179,10 @@ fit(GwyGraph *graph)
     args.from = 0;
     args.to = 0;
     args.parent_graph = graph;
+    args.par1_fix = 0;
+    args.par2_fix = 0;
+    args.par3_fix = 0;
+    args.par4_fix = 0;
 
     get_data(&args);
 
@@ -211,7 +215,7 @@ get_data(FitArgs *args)
 
 /*extract relevant part of data and normalize it to be fitable*/
 static gint
-normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gdouble *xcoef, gdouble *ycoef, gint curve)
+normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve)
 {
     gint i, j;
     
@@ -236,13 +240,6 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gdouble *x
         gwy_data_line_resize(ydata, 0, j);
     }
 
-    *xcoef = gwy_data_line_get_avg(xdata);
-    *ycoef = gwy_data_line_get_avg(ydata);
-    *ycoef = *xcoef; 
-    
-    gwy_data_line_multiply(xdata, 1.0/(*xcoef));
-    gwy_data_line_multiply(ydata, 1.0/(*ycoef));
-
     return j;    
 }
 
@@ -259,6 +256,7 @@ fit_dialog(FitArgs *args)
     GtkWidget *hbox2;
     GtkWidget *table2;
     GtkWidget *vbox;
+    GtkWidget *spin;
     FitControls controls;
     GwyGraphAutoProperties prop;
     gint response;
@@ -468,14 +466,17 @@ fit_dialog(FitArgs *args)
     table2 = gtk_table_new(2, 2, FALSE);  
     
     controls.from = gtk_adjustment_new(args->from, 0.0, 100.0, 1, 5, 0); 
-    gwy_table_attach_spinbutton(table2, 1, _("from"), _(""),
+    spin = gwy_table_attach_spinbutton(table2, 1, _("from"), _(""),
                                 controls.from);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     gtk_container_add(GTK_CONTAINER(hbox2), table2);
     
     table2 = gtk_table_new(2, 2, FALSE);
     controls.to = gtk_adjustment_new(args->from, 0.0, 100.0, 1, 5, 0); 
-    gwy_table_attach_spinbutton(table2, 1, _("to"), _(""),
+    spin = gwy_table_attach_spinbutton(table2, 1, _("to"), _(""),
                                 controls.to);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+
     gtk_container_add(GTK_CONTAINER(hbox2), table2);
  
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
@@ -538,7 +539,6 @@ fit_dialog(FitArgs *args)
 static void        
 recompute(FitArgs *args, FitControls *controls)
 {
-    gdouble xscale, yscale;
     GwyDataLine *xdata;
     GwyDataLine *ydata;
     GwyDataLine *weights;
@@ -555,43 +555,28 @@ recompute(FitArgs *args, FitControls *controls)
     ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
     
 
-    /*select curve data and put int in x[], y[]
-     (allready in SI base units)*/
-    /*recompute fields to be reasonably scaled,
-     save scaling coefficients*/
-    
-    normalize_data(args, xdata, ydata, &xscale, &yscale, args->curve);
+    normalize_data(args, xdata, ydata, args->curve);
     
     weights = GWY_DATA_LINE(gwy_data_line_new(xdata->res, xdata->real, FALSE));
     gwy_data_line_fill(weights, 1);
     /*fit function though fields*/
     
     function = gwy_math_nlfit_get_preset(args->function_type);
-    if (function->function_derivation == NULL)
-        fitter = gwy_math_nlfit_new(function->function, gwy_math_nlfit_derive);
-    else
-        fitter = gwy_math_nlfit_new(function->function, function->function_derivation);
     
     fixed[0] = args->par1_fix;
     fixed[1] = args->par2_fix;
     fixed[2] = args->par3_fix;
     fixed[3] = args->par4_fix;
-    param[0] = args->par1_init/xscale;
-    param[1] = args->par2_init/xscale;
-    param[2] = args->par3_init/xscale;
-    param[3] = args->par4_init/xscale;
+    param[0] = args->par1_init;
+    param[1] = args->par2_init;
+    param[2] = args->par3_init;
+    param[3] = args->par4_init;
     
-    gwy_math_nlfit_fit_with_fixed(fitter, 
+    gwy_math_nlfit_fit_preset(function, 
                                   xdata->res, xdata->data, ydata->data,
                                   weights->data, function->nparams,
                                   param, fixed, NULL);
 
-   
-    /*rescale results and output them*/
-    param[0] *= xscale; 
-    param[1] *= xscale;
-    param[2] *= xscale;
-    param[3] *= xscale;
    
     if (function->nparams > 0)
     {
@@ -616,7 +601,6 @@ recompute(FitArgs *args, FitControls *controls)
 
     for (i=0; i<xdata->res; i++)
     {
-        xdata->data[i] *= xscale;
         ydata->data[i] = function->function(xdata->data[i], function->nparams, param, NULL, &ok);
     }
    
@@ -667,6 +651,9 @@ static void
 dialog_update(FitControls *controls, FitArgs *args)
 {
     char buffer[20];
+
+    guess(controls, args);
+    
     gtk_label_set_markup(GTK_LABEL(controls->equation), 
                          gwy_math_nlfit_get_function_equation(args->fitfunc));
     if (gwy_math_nlfit_get_function_nparams(args->fitfunc)>0)
@@ -676,7 +663,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param1_fit, TRUE);
         gtk_label_set_markup(GTK_LABEL(controls->param1_des), 
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 0));
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par1_init);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", args->par1_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param1_init), buffer);
     }
     else
@@ -692,7 +679,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param2_fit, TRUE);
         gtk_label_set_markup(GTK_LABEL(controls->param2_des), 
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 1));
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par2_init);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", args->par2_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param2_init), buffer);
      }
     else
@@ -709,7 +696,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param3_fit, TRUE);
         gtk_label_set_markup(GTK_LABEL(controls->param3_des), 
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 2));
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par3_init);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", args->par3_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param3_init), buffer);
      }
     else
@@ -726,7 +713,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param4_fit, TRUE);
         gtk_label_set_markup(GTK_LABEL(controls->param4_des), 
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 3));
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par4_init);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", args->par4_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param4_init), buffer);
      }
     else
@@ -737,6 +724,33 @@ dialog_update(FitControls *controls, FitArgs *args)
     }
  }
 
+static void
+guess(FitControls *controls, FitArgs *args)
+{
+    GwyDataLine *xdata;
+    GwyDataLine *ydata;
+    GwyNLFitPresetFunction *function;
+    gdouble param[4];
+    gboolean ok;
+
+    function = gwy_math_nlfit_get_preset(args->function_type);
+    if (function->function_guess == NULL) return;
+    
+    xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+   
+    normalize_data(args, xdata, ydata, args->curve);
+    
+    function->function_guess(xdata->data, ydata->data, xdata->res, param, NULL, &ok);
+    
+    args->par1_init = param[0];
+    args->par2_init = param[1];
+    args->par3_init = param[2];
+    args->par4_init = param[3];
+    
+    g_object_unref(xdata);
+    g_object_unref(ydata);
+}
 
 static void
 graph_update(FitControls *controls, FitArgs *args)
