@@ -60,13 +60,10 @@ static gboolean         module_register          (const gchar *name);
 static gboolean         unrotate                 (GwyContainer *data,
                                                   GwyRunType run);
 static void             compute_angle_dist       (GwyDataField *dfield,
-                                                  gint nder,
-                                                  gdouble *der);
-static UnrotateSymmetry find_all_corrections     (gint nder,
-                                                  gdouble *der,
+                                                  GwyDataLine *derdist);
+static UnrotateSymmetry find_all_corrections     (GwyDataLine *derdist,
                                                   gdouble *correction);
-static gdouble          compute_correction       (gint nder,
-                                                  gdouble *der,
+static gdouble          compute_correction       (GwyDataLine *derdist,
                                                   guint m,
                                                   gdouble phi);
 static gboolean         unrotate_dialog          (UnrotateArgs *args,
@@ -139,7 +136,7 @@ unrotate(GwyContainer *data, GwyRunType run)
     UnrotateArgs args;
     gdouble correction[UNROTATE_LAST];
     UnrotateSymmetry symm;
-    gdouble *der;
+    GwyDataLine *derdist;
     gdouble phi;
     gboolean ok;
 
@@ -150,10 +147,10 @@ unrotate(GwyContainer *data, GwyRunType run)
         load_args(gwy_app_settings_get(), &args);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    der = g_new(gdouble, nder);
-    compute_angle_dist(dfield, nder, der);
-    symm = find_all_corrections(nder, der, correction);
-    g_free(der);
+    derdist = GWY_DATA_LINE(gwy_data_line_new(nder, 2*G_PI, FALSE));
+    compute_angle_dist(dfield, derdist);
+    symm = find_all_corrections(derdist, correction);
+    g_object_unref(derdist);
 
     ok = (run != GWY_RUN_MODAL) || unrotate_dialog(&args, correction, symm);
     if (run == GWY_RUN_MODAL)
@@ -183,16 +180,17 @@ unrotate(GwyContainer *data, GwyRunType run)
 
 static void
 compute_angle_dist(GwyDataField *dfield,
-                   gint nder,
-                   gdouble *der)
+                   GwyDataLine *derdist)
 {
     enum { kernel_size = 5 };
 
-    gdouble *data;
+    gdouble *data, *der;
     gdouble bx, by, phi;
-    gint xres, yres;
+    gint xres, yres, nder;
     gint col, row, iphi;
 
+    nder = gwy_data_line_get_res(derdist);
+    der = gwy_data_line_get_data(derdist);
     data = gwy_data_field_get_data(dfield);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -225,21 +223,21 @@ compute_angle_dist(GwyDataField *dfield,
  * Returns: The guessed type of symmetry.
  **/
 static UnrotateSymmetry
-find_all_corrections(gint nder,
-                     gdouble *der,
+find_all_corrections(GwyDataLine *derdist,
                      gdouble *correction)
 {
     static const guint symm[] = { 2, 3, 4, 6 };
     UnrotateSymmetry guess, t;
-    gint i;
+    gint i, nder;
     gsize j, m;
     gdouble x, avg, max, total, phi;
+    gdouble *der;
     gdouble sint[G_N_ELEMENTS(symm)], cost[G_N_ELEMENTS(symm)];
 
-    avg = 0.0;
-    for (i = 0; i < nder; i++)
-        avg += der[i];
-    avg /= nder;
+    nder = gwy_data_line_get_res(derdist);
+    der = gwy_data_line_get_data(derdist);
+    avg = gwy_data_line_get_avg(derdist);
+    gwy_data_line_add(derdist, -avg);
 
     guess = UNROTATE_DETECT;
     max = -G_MAXDOUBLE;
@@ -249,8 +247,8 @@ find_all_corrections(gint nder,
         for (i = 0; i < nder; i++) {
             x = 2*G_PI*(i + 0.5)/nder;
 
-            sint[j] += sin(m*x)*(der[i] - avg);
-            cost[j] += cos(m*x)*(der[i] - avg);
+            sint[j] += sin(m*x)*der[i];
+            cost[j] += cos(m*x)*der[i];
         }
 
         phi = atan2(-sint[j], cost[j]);
@@ -260,7 +258,7 @@ find_all_corrections(gint nder,
                   m, sint[j], cost[j], m, total, 180.0/G_PI*phi);
 
         phi /= 2*G_PI*m;
-        phi = compute_correction(nder, der, m, phi);
+        phi = compute_correction(derdist, m, phi);
         t = sizeof("Die, die GCC warning!");
         /*
          *             range from             smallest possible
@@ -325,6 +323,7 @@ find_all_corrections(gint nder,
             guess = t;
         }
     }
+    gwy_data_line_add(derdist, avg);
     g_assert(guess != UNROTATE_DETECT);
     gwy_debug("SELECTED: %s",
               gwy_enum_to_string(guess, unrotate_symmetry,
@@ -336,8 +335,7 @@ find_all_corrections(gint nder,
 
 /**
  * compute_correction:
- * @nder: Size of @der.
- * @der: Angular derivation distribution (as in Slope dist. graph).
+ * @derdist: Angular derivation distribution (as in Slope dist. graph).
  * @m: Symmetry.
  * @phi: Initial correction guess (in the range 0..1!).
  *
@@ -346,11 +344,15 @@ find_all_corrections(gint nder,
  * Returns: The correction (again in the range 0..1!).
  **/
 static gdouble
-compute_correction(gint nder, gdouble *der,
+compute_correction(GwyDataLine *derdist,
                    guint m, gdouble phi)
 {
     gdouble sum, wsum;
-    guint i, j;
+    gdouble *der;
+    guint i, j, nder;
+
+    nder = gwy_data_line_get_res(derdist);
+    der = gwy_data_line_get_data(derdist);
 
     phi -= floor(phi) + 1.0;
     sum = wsum = 0.0;
