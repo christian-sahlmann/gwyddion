@@ -704,7 +704,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 
 /**
  * gwy_data_field_get_data:
- * @dfield: A data field
+ * @data_field: A data field
  *
  * Gets the data of the field.
  *
@@ -725,7 +725,7 @@ gwy_data_field_get_data(GwyDataField *data_field)
 
 /**
  * gwy_data_field_get_data_const:
- * @dfield: A data field
+ * @data_field: A data field
  *
  * Gets the data of the field, read-only.
  *
