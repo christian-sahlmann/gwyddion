@@ -1021,11 +1021,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    store = gtk_list_store_new(RAW_PRESET_LAST,
-                               G_TYPE_STRING,
-                               G_TYPE_STRING,
-                               G_TYPE_STRING,
-                               G_TYPE_STRING);
+    store = gtk_list_store_new(1, G_TYPE_STRING);
     if (gwy_container_gis_string_by_name(gwy_app_settings_get(),
                                          "/module/rawfile/presets",
                                          &presets)) {
@@ -1034,9 +1030,6 @@ rawfile_dialog_preset_page(RawFileArgs *args,
             gtk_list_store_append(store, &iter);
             gtk_list_store_set(store, &iter,
                                RAW_PRESET_NAME, s[i],
-                               RAW_PRESET_TYPE, "",
-                               RAW_PRESET_SIZE, "",
-                               RAW_PRESET_INFO, "",
                                -1);
         }
     }
@@ -1058,8 +1051,6 @@ rawfile_dialog_preset_page(RawFileArgs *args,
         renderer = gtk_cell_renderer_text_new();
         column = gtk_tree_view_column_new_with_attributes(columns[i].name,
                                                           renderer,
-                                                          "text",
-                                                          columns[i].value,
                                                           NULL);
         gtk_tree_view_column_set_cell_data_func(column, renderer,
                                                 rawfile_preset_cell_renderer,
