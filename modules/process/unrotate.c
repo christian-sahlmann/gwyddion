@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#define DEBUG 1
-
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -120,7 +118,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo unrotate_func_info = {
         "unrotate",
-        "/_Correct data/_Unrotate...",
+        "/_Correct data/_Unrotate...",  /* FIXME: a less silly name? */
         (GwyProcessFunc)&unrotate,
         UNROTATE_RUN_MODES,
     };
