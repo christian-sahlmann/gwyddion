@@ -46,6 +46,7 @@ static void     simple_gdk_pixbuf_scale_or_copy    (GdkPixbuf *source,
                                                     GdkPixbuf *dest);
 static void     gwy_data_view_make_pixmap          (GwyDataView *data_view);
 static void     gwy_data_view_paint                (GwyDataView *data_view);
+static void     gwy_data_view_maybe_resize         (GwyDataView *data_view);
 static gboolean gwy_data_view_expose               (GtkWidget *widget,
                                                     GdkEventExpose *event);
 static gboolean gwy_data_view_button_press         (GtkWidget *widget,
@@ -321,9 +322,8 @@ gwy_data_view_size_request(GtkWidget *widget,
     data_view = GWY_DATA_VIEW(widget);
     data = data_view->data;
     /* TODO Container */
-    data_field = GWY_DATA_FIELD(
-                     gwy_container_get_object_by_name(data,
-                                                      "/0/data"));
+    data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
     requisition->width = data_view->newzoom
                          * gwy_data_field_get_xres(data_field);
     requisition->height = data_view->newzoom
@@ -411,9 +411,9 @@ simple_gdk_pixbuf_scale_or_copy(GdkPixbuf *source, GdkPixbuf *dest)
     gint height, width, src_height, src_width;
 
     src_height = gdk_pixbuf_get_height(source);
-    src_width = gdk_pixbuf_get_height(source);
+    src_width = gdk_pixbuf_get_width(source);
     height = gdk_pixbuf_get_height(dest);
-    width = gdk_pixbuf_get_height(dest);
+    width = gdk_pixbuf_get_width(dest);
 
     if (src_width == width && src_height == height)
         gdk_pixbuf_copy_area(source, 0, 0, src_width, src_height,
@@ -430,9 +430,9 @@ simple_gdk_pixbuf_composite(GdkPixbuf *source, GdkPixbuf *dest)
     gint height, width, src_height, src_width;
 
     src_height = gdk_pixbuf_get_height(source);
-    src_width = gdk_pixbuf_get_height(source);
+    src_width = gdk_pixbuf_get_width(source);
     height = gdk_pixbuf_get_height(dest);
-    width = gdk_pixbuf_get_height(dest);
+    width = gdk_pixbuf_get_width(dest);
 
     gdk_pixbuf_composite(source, dest, 0, 0, width, height, 0.0, 0.0,
                          (gdouble)width/src_width, (gdouble)height/src_height,
@@ -614,11 +614,35 @@ gwy_data_view_update(GwyDataView *data_view)
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 
     data_view->force_update = TRUE;
+    gwy_data_view_maybe_resize(data_view);
     widget = GTK_WIDGET(data_view);
     if (widget->window)
         gdk_window_invalidate_rect(widget->window, NULL, TRUE);
 }
 
+static void
+gwy_data_view_maybe_resize(GwyDataView *data_view)
+{
+    GwyDataField *data_field;
+    GwyContainer *data;
+    gint xres, yres, width, height;
+
+    /* XXX: when can happen? */
+    if (!data_view->base_pixbuf)
+        return;
+
+    data = data_view->data;
+    data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
+    xres = gwy_data_field_get_xres(data_field);
+    yres = gwy_data_field_get_yres(data_field);
+    width = gdk_pixbuf_get_width(data_view->base_pixbuf);
+    height = gdk_pixbuf_get_height(data_view->base_pixbuf);
+    if (width != xres || height != yres) {
+        g_warning("Resizing, have to notify layers!");
+        /*(gwy_object_unref(data_view->base_pixbuf);*/
+    }
+}
 /**
  * gwy_data_view_get_base_layer:
  * @data_view: A #GwyDataView.
