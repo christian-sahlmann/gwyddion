@@ -37,7 +37,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                    gboolean use_edges, GwySetFractionFunc set_fraction,
                    GwySetMessageFunc set_message);
 
-static gint
+static gboolean
 useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta);
 
 static gint **
@@ -55,14 +55,14 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
 
 /**
  * _gwy_morph_lib_iallocmatrix:
- * @ysiz: rows number
- * @xsiz: columns number
+ * @ysiz: Rows number.
+ * @xsiz: Columns number.
  *
- *  Allocates an integer matrix of dimension [ysiz][xsiz] using an array
- *  of pointers to rows. ysiz is the number of rows. xsiz is the number
- *  of columns.
+ * Allocates an integer matrix of dimension [ysiz][xsiz] using an array
+ * of pointers to rows. ysiz is the number of rows. xsiz is the number
+ * of columns.
  *
- * Returns: alocated matrix
+ * Returns: Alocated matrix.
  **/
 gint**
 _gwy_morph_lib_iallocmatrix(gint ysiz, gint xsiz)
@@ -83,8 +83,8 @@ _gwy_morph_lib_iallocmatrix(gint ysiz, gint xsiz)
 
 /**
  * _gwy_morph_lib_ifreematrix:
- * @mptr: pointer to matrix
- * @ysiz: number of rows
+ * @mptr: Pointer to matrix.
+ * @ysiz: Number of rows.
  *
  * Frees memory allocated with allocmatrix.
  **/
@@ -93,6 +93,8 @@ _gwy_morph_lib_ifreematrix(gint **mptr, gint ysiz)
 {
     gint i;
 
+    if (!mptr)
+        return;
     for (i = 0; i < ysiz; i++)
         g_free(mptr[i]);
     g_free(mptr);
@@ -101,13 +103,13 @@ _gwy_morph_lib_ifreematrix(gint **mptr, gint ysiz)
 
 /**
  * _gwy_morph_lib_ireflect:
- * @surface: integer array to be reflected.
- * @surf_xsiz: number of columns
- * @surf_ysiz: number of rows
+ * @surface: Integer array to be reflected.
+ * @surf_xsiz: Number of columns.
+ * @surf_ysiz: Number of rows.
  *
  * Perform reflection of integer array.
  *
- * Returns: reflected array
+ * Returns: Reflected array.
  **/
 gint **
 _gwy_morph_lib_ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz)
@@ -130,20 +132,20 @@ _gwy_morph_lib_ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz)
 
 /**
  * _gwy_morph_lib_idilation:
- * @surface: surface array
- * @surf_xsiz: number of columns
- * @surf_ysiz: number of rows
- * @tip: tip array
- * @tip_xsiz: number of columns
- * @tip_ysiz: number of rows
- * @xc: tip apex column coordinate
- * @yc: tip apex row coordinate
- * @set_fraction: function to output computation fraction (or NULL)
- * @set_message: function to output computation state message (or NULL)
+ * @surface: Surface array.
+ * @surf_xsiz: Number of columns.
+ * @surf_ysiz: Number of rows.
+ * @tip: Tip array.
+ * @tip_xsiz: Number of columns.
+ * @tip_ysiz: Number of rows.
+ * @xc: Tip apex column coordinate.
+ * @yc: Tip apex row coordinate.
+ * @set_fraction: Function to output computation fraction (or %NULL).
+ * @set_message: Function to output computation state message (or %NULL).
  *
  * Performs dilation algorithm (for integer arrays).
  *
- * Returns: dilated data (newly allocated).
+ * Returns: Dilated data (newly allocated).  May return %NULL if aborted.
  **/
 gint **
 _gwy_morph_lib_idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
@@ -162,6 +164,8 @@ _gwy_morph_lib_idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
     result = _gwy_morph_lib_iallocmatrix(surf_ysiz, surf_xsiz);
     if (set_message)
         set_message(N_("Dilation"));
+    if (set_fraction)
+        set_fraction(0.0);
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -181,30 +185,33 @@ _gwy_morph_lib_idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
             }
             result[j][i] = max;
         }
-        if (set_fraction && !set_fraction((gdouble)j/surf_ysiz))
-            return result;
+        if (set_fraction && !set_fraction((gdouble)j/surf_ysiz)) {
+            _gwy_morph_lib_ifreematrix(result, surf_ysiz);
+            return NULL;
+        }
     }
-    if (set_fraction != NULL)
-        set_fraction(0.0);
+    if (set_fraction)
+        set_fraction(1.0);
+
     return result;
 }
 
 /**
  * _gwy_morph_lib_ierosion:
- * @surface: surface array
- * @surf_xsiz: number of columns
- * @surf_ysiz: number of rows
- * @tip: tip array
- * @tip_xsiz: number of columns
- * @tip_ysiz: number of rows
- * @xc: tip apex column coordinate
- * @yc: tip apex row coordinate
- * @set_fraction: function to output computation fraction (or NULL)
- * @set_message: function to output computation state message (or NULL)
+ * @surface: Surface array.
+ * @surf_xsiz: Number of columns.
+ * @surf_ysiz: Number of rows.
+ * @tip: Tip array.
+ * @tip_xsiz: Number of columns.
+ * @tip_ysiz: Number of rows.
+ * @xc: Tip apex column coordinate.
+ * @yc: Tip apex row coordinate.
+ * @set_fraction: Function to output computation fraction (or %NULL).
+ * @set_message: Function to output computation state message (or %NULL).
  *
  * Performs erosion algorithm (for integer arrays).
  *
- * Returns: eroded data (newly allocated).
+ * Returns: Eroded data (newly allocated). May return %NULL if aborted.
  **/
 gint **
 _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
@@ -223,6 +230,8 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
     result = _gwy_morph_lib_iallocmatrix(im_ysiz, im_xsiz);
     if (set_message)
         set_message(N_("Erosion"));
+    if (set_fraction)
+        set_fraction(0.0);
     for (j = 0; j < im_ysiz; j++) {   /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -242,31 +251,34 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
             }
             result[j][i] = min;
         }
-        if (set_fraction && !set_fraction((gdouble)j/im_ysiz))
-            return result;
+        if (set_fraction && !set_fraction((gdouble)j/im_ysiz)) {
+            _gwy_morph_lib_ifreematrix(result, im_ysiz);
+            return NULL;
+        }
     }
     if (set_fraction)
-        set_fraction(0.0);
+        set_fraction(1.0);
+
     return result;
 }
 
 /**
  * _gwy_morph_lib_icmap:
- * @image: image array
- * @im_xsiz: number of columns
- * @im_ysiz: number of rows
- * @tip: tip array
- * @tip_xsiz: number of columns
- * @tip_ysiz: number of rows
- * @rsurf: eroded surface array
- * @xc: tip apex column coordinate
- * @yc: tip apex row coordinate
- * @set_fraction: function to output computation fraction (or NULL)
- * @set_message: function to output computation state message (or NULL)
+ * @image: Image array.
+ * @im_xsiz: Number of columns.
+ * @im_ysiz: Number of rows.
+ * @tip: Tip array.
+ * @tip_xsiz: Number of columns.
+ * @tip_ysiz: Number of rows.
+ * @rsurf: Eroded surface array.
+ * @xc: Tip apex column coordinate.
+ * @yc: Tip apex row coordinate.
+ * @set_fraction: Function to output computation fraction (or %NULL).
+ * @set_message: Function to output computation state message (or %NULL).
  *
  * Performs the certainty map algorithm.
  *
- * Returns: certainty map (newly allocated).
+ * Returns: Certainty map (newly allocated).  May return %NULL if aborted.
  **/
 gint **
 _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
@@ -286,12 +298,12 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
     ryc = tip_ysiz - 1 - yc;
     if (set_message)
         set_message(N_("Certainty map"));
+    if (set_fraction)
+        set_fraction(0.0);
     /* create output array of appropriate size */
     cmap = _gwy_morph_lib_iallocmatrix(im_ysiz, im_xsiz);
     for (imy = 0; imy < im_ysiz; imy++)
-        for (imx = 0; imx < im_xsiz; imx++) {
-            cmap[imy][imx] = 0;
-        }
+        memset(cmap[imy], 0, im_xsiz*sizeof(gint));
 
     /*
        Loop over all pixels in the interior of the image. We skip
@@ -320,25 +332,29 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
             if (count == 1)
                 cmap[y][x] = 1; /* 1 contact = good recon */
         }
-        if (set_fraction && !set_fraction((gdouble)imy/(im_ysiz+ryc-tip_ysiz)))
-            return cmap;
+        if (set_fraction
+            && !set_fraction((gdouble)imy/(im_ysiz+ryc-tip_ysiz))) {
+            _gwy_morph_lib_ifreematrix(cmap, im_ysiz);
+            return NULL;
+        }
     }
     if (set_fraction)
-        set_fraction(0.0);
+        set_fraction(1.0);
+
     return cmap;
 }
 
 
 /**
  * _gwy_morph_lib_dallocmatrix:
- * @ysiz: rows number
- * @xsiz: columns number
+ * @ysiz: Rows number.
+ * @xsiz: Columns number.
  *
  * Allocates a double matrix of dimension [ysiz][xsiz] using an array
  * of pointers to rows. ysiz is the number of rows. xsiz is the number
  * of columns.
  *
- * Returns: alocated matrix
+ * Returns: Alocated matrix.
  **/
 gdouble**
 _gwy_morph_lib_dallocmatrix(gint ysiz, gint xsiz)
@@ -359,8 +375,8 @@ _gwy_morph_lib_dallocmatrix(gint ysiz, gint xsiz)
 
 /**
  * _gwy_morph_lib_dfreematrix:
- * @mptr: pointer to matrix
- * @ysiz: number of rows
+ * @mptr: Pointer to matrix.
+ * @ysiz: Number of rows.
  *
  * Frees memory allocated with dallocmatrix.
  **/
@@ -369,6 +385,8 @@ _gwy_morph_lib_dfreematrix(gdouble **mptr, gint ysiz)
 {
     gint i;
 
+    if (!mptr)
+        return;
     for (i = 0; i < ysiz; i++)
         g_free(mptr[i]);
     g_free(mptr);
@@ -376,13 +394,13 @@ _gwy_morph_lib_dfreematrix(gdouble **mptr, gint ysiz)
 
 /**
  * _gwy_morph_lib_dreflect:
- * @surface: double array to be reflected.
- * @surf_xsiz: number of columns
- * @surf_ysiz: number of rows
+ * @surface: Double array to be reflected.
+ * @surf_xsiz: Number of columns.
+ * @surf_ysiz: Number of rows.
  *
  * Perform reflection of double array.
  *
- * Returns: reflected array
+ * Returns: Reflected array.
  **/
 gdouble **
 _gwy_morph_lib_dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
@@ -404,20 +422,20 @@ _gwy_morph_lib_dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
 
 /**
  * _gwy_morph_lib_ddilation:
- * @surface: surface array
- * @surf_xsiz: number of columns
- * @surf_ysiz: number of rows
- * @tip: tip array
- * @tip_xsiz: number of columns
- * @tip_ysiz: number of rows
- * @xc: tip apex column coordinate
- * @yc: tip apex row coordinate
- * @set_fraction: function to output computation fraction (or NULL)
- * @set_message: function to output computation state message (or NULL)
+ * @surface: Surface array.
+ * @surf_xsiz: Number of columns.
+ * @surf_ysiz: Number of rows.
+ * @tip: Tip array.
+ * @tip_xsiz: Number of columns.
+ * @tip_ysiz: Number of rows.
+ * @xc: Tip apex column coordinate.
+ * @yc: Tip apex row coordinate.
+ * @set_fraction: Function to output computation fraction (or %NULL).
+ * @set_message: Function to output computation state message (or %NULL).
  *
  * Performs dilation algorithm (for double arrays).
  *
- * Returns: dilated data (newly allocated).
+ * Returns: Dilated data (newly allocated).  May return %NULL if aborted.
  **/
 gdouble **
 _gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
@@ -436,6 +454,9 @@ _gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
     result = _gwy_morph_lib_dallocmatrix(surf_ysiz, surf_xsiz);
     if (set_message)
         set_message(N_("Dilation"));
+    if (set_fraction)
+        set_fraction(0.0);
+
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -455,30 +476,33 @@ _gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
             }
             result[j][i] = max;
         }
-        if (set_fraction && !set_fraction((gdouble)j/surf_ysiz))
-            return result;
+        if (set_fraction && !set_fraction((gdouble)j/surf_ysiz)) {
+            _gwy_morph_lib_dfreematrix(result, surf_ysiz);
+            return NULL;
+        }
     }
     if (set_fraction)
-        set_fraction(0.0);
+        set_fraction(1.0);
+
     return result;
 }
 
 /**
  * _gwy_morph_lib_derosion:
- * @surface: surface array
- * @surf_xsiz: number of columns
- * @surf_ysiz: number of rows
- * @tip: tip array
- * @tip_xsiz: number of columns
- * @tip_ysiz: number of rows
- * @xc: tip apex column coordinate
- * @yc: tip apex row coordinate
- * @set_fraction: function to output computation fraction (or NULL)
- * @set_message: function to output computation state message (or NULL)
+ * @surface: Surface array.
+ * @surf_xsiz: Number of columns.
+ * @surf_ysiz: Number of rows.
+ * @tip: Tip array.
+ * @tip_xsiz: Number of columns.
+ * @tip_ysiz: Number of rows.
+ * @xc: Tip apex column coordinate.
+ * @yc: Tip apex row coordinate.
+ * @set_fraction: Function to output computation fraction (or %NULL).
+ * @set_message: Function to output computation state message (or %NULL).
  *
  * Performs erosion algorithm (for double arrays).
  *
- * Returns: eroded data (newly allocated).
+ * Returns: Eroded data (newly allocated).  May return %NULL if aborted.
  **/
 gdouble **
 _gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
@@ -497,6 +521,8 @@ _gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
     result = _gwy_morph_lib_dallocmatrix(im_ysiz, im_xsiz);
     if (set_message)
         set_message(N_("Erosion"));
+    if (set_fraction)
+        set_fraction(0.0);
     for (j = 0; j < im_ysiz; j++) {   /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -516,11 +542,14 @@ _gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
             }
             result[j][i] = min;
         }
-        if (set_fraction && !set_fraction((gdouble)j/im_ysiz))
-            return result;
+        if (set_fraction && !set_fraction((gdouble)j/im_ysiz)) {
+            _gwy_morph_lib_dfreematrix(result, im_ysiz);
+            return NULL;
+        }
     }
     if (set_fraction)
-        set_fraction(0.0);
+        set_fraction(1.0);
+
     return result;
 }
 
@@ -534,6 +563,8 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip,
     eros = _gwy_morph_lib_ierosion(image, im_xsiz, im_ysiz, tip,
                                    tip_xsiz, tip_ysiz,
                                    tip_xsiz/2, tip_ysiz/2, NULL, NULL);
+    if (!eros)
+        return NULL;
     result = _gwy_morph_lib_idilation(eros, im_xsiz, im_ysiz, tip,
                                       tip_xsiz, tip_ysiz,
                                       tip_xsiz/2, tip_ysiz/2, NULL, NULL);
@@ -544,22 +575,24 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip,
 
 /**
  * _gwy_morph_lib_itip_estimate:
- * @image: surface data
- * @im_xsiz: number of columns
- * @im_ysiz: number of rows
- * @tip_xsiz: tip number of columns
- * @tip_ysiz: tip numbe rof rows
- * @xc: tip apex column coordinate
- * @yc: tip apex row coordinate
- * @tip0: tip data to be refined
- * @thresh: threshold
- * @use_edges: whether to use also image edges
- * @set_fraction: function to output computation fraction (or NULL)
- * @set_message: functon to output computation state message (or NULL)
+ * @image: Surface data.
+ * @im_xsiz: Number of columns.
+ * @im_ysiz: Number of rows.
+ * @tip_xsiz: Tip number of columns.
+ * @tip_ysiz: Tip numbe rof rows.
+ * @xc: Tip apex column coordinate.
+ * @yc: Tip apex row coordinate.
+ * @tip0: Tip data to be refined.
+ * @thresh: Threshold.
+ * @use_edges: Whether to use also image edges.
+ * @set_fraction: Function to output computation fraction (or %NULL).
+ * @set_message: Functon to output computation state message (or %NULL).
  *
  * Performs tip estimation algorithm.
+ *
+ * Returns: %FALSE if aborted, otherwise %TRUE.
  **/
-void
+gboolean
 _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
                              gint tip_xsiz, gint tip_ysiz, gint xc,
                              gint yc, gint **tip0,
@@ -569,22 +602,24 @@ _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
 {
     gint iter = 0;
     gint count = 1;
-    gchar buffer[100];
+    GString *str;
 
+    str = g_string_new("");
     while (count) {
         iter++;
-        g_snprintf(buffer, sizeof(buffer),
-                   N_("Iterating estimate (iteration %d)"), iter);
-        if (set_message)
-            set_message(buffer);
+        g_string_printf(str, N_("Iterating estimate (iteration %d)"), iter);
+        if (set_message && ! set_message(str->str))
+            return FALSE;
         count = itip_estimate_iter(image, im_xsiz, im_ysiz,
                                    tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                    use_edges, set_fraction, set_message);
-        g_snprintf(buffer, sizeof(buffer),
-                   N_("%d image locations produced refinement"), count);
-        if (set_message)
-            set_message(buffer);
+        g_string_printf(str, N_("%d image locations produced refinement"),
+                        count);
+        if (count < 0 || (set_message && !set_message(str->str)))
+            return FALSE;
     }
+
+    return TRUE;
 }
 
 
@@ -601,6 +636,8 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     gint count = 0;          /* counts places where tip estimate is improved */
 
     open = iopen(image, im_xsiz, im_ysiz, tip0, tip_xsiz, tip_ysiz);
+    if (!open)
+        return -1;
 
     for (jxp = tip_ysiz - 1 - yc; jxp <= im_ysiz - 1 - yc; jxp++) {
          for (ixp = tip_xsiz - 1 - xc; ixp <= im_xsiz - 1 - xc; ixp++) {
@@ -614,34 +651,38 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                                /(gdouble)((im_ysiz - 1 - yc)
                                           - (tip_ysiz - 1 - yc));
                     fraction = MAX(fraction, 0);
-                    if (!set_fraction(fraction))
-                        break;
+                    if (set_fraction && !set_fraction(fraction)) {
+                        _gwy_morph_lib_ifreematrix(open, im_ysiz);
+                        return -1;;
+                    }
                 }
         }
     }
-
     _gwy_morph_lib_ifreematrix(open, im_ysiz);
+
     return count;
 }
 
 /**
  * _gwy_morph_lib_itip_estimate0:
- * @image: surface data
- * @im_xsiz: number of columns
- * @im_ysiz: number of rows
- * @tip_xsiz: tip number of columns
- * @tip_ysiz: tip numbe rof rows
- * @xc: tip apex column coordinate
- * @yc: tip apex row coordinate
- * @tip0: tip data to be refined
- * @thresh: threshold
- * @use_edges: whether to use also image edges
- * @set_fraction: function to output computation fraction (or NULL)
- * @set_message: functon to output computation state message (or NULL)
+ * @image: Surface data.
+ * @im_xsiz: Number of columns.
+ * @im_ysiz: Number of rows.
+ * @tip_xsiz: Tip number of columns.
+ * @tip_ysiz: Tip numbe rof rows.
+ * @xc: Tip apex column coordinate.
+ * @yc: Tip apex row coordinate.
+ * @tip0: Tip data to be refined.
+ * @thresh: Threshold.
+ * @use_edges: Whether to use also image edges.
+ * @set_fraction: Function to output computation fraction (or %NULL).
+ * @set_message: Functon to output computation state message (or %NULL).
  *
  * Performs partial tip estimation algorithm.
+ *
+ * Returns: %FALSE if aborted, otherwise %TRUE.
  **/
-void
+gboolean
 _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
                               gint tip_xsiz, gint tip_ysiz,
                               gint xc, gint yc,
@@ -658,17 +699,19 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     gint delta;      /* defines what is meant by near neighborhood for purposes
                         of point selection. */
     gint maxcount = 20;
-    gchar buffer[100];
+    gboolean ok = FALSE;
+    GString *str;
 
     arraysize = 300;
     x = g_new(gint, arraysize);
     y = g_new(gint, arraysize);
+    str = g_string_new("");
 
     delta = MAX(MAX(tip_xsiz, tip_ysiz)/10, 1);
 
-    gwy_debug("Searching for local maxima");
-    if (set_message)
-        set_message(N_("Searching for local maxima"));
+    if (set_message && !set_message(N_("Searching for local maxima")))
+        goto estim0_end;
+
     /* Create a list of coordinates to use */
     n = 0;                      /* Number of image maxima found so far */
     for (j = tip_ysiz - 1 - yc; j <= im_ysiz - 1 - yc; j++) {
@@ -685,21 +728,19 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
             }
         }
     }
-    gwy_debug("Found %d internal local maxima", n);
-    g_snprintf(buffer, sizeof(buffer),
-               N_("Found %d internal local maxima"), n);
-    if (set_message)
-        set_message(buffer);
+    g_string_printf(str, N_("Found %d internal local maxima"), n);
+    if (set_message && !set_message(str->str))
+        goto estim0_end;
+    if (set_fraction)
+        set_fraction(0.0);
 
     /* Now refine tip at these coordinates recursively until no more change */
     do {
         count = 0;
         iter++;
-        gwy_debug("Iterating estimate (iteration %d)", iter);
-        g_snprintf(buffer, sizeof(buffer),
-                   N_("Iterating estimate (iteration %d)"), iter);
-        if (set_message)
-            set_message(buffer);
+        g_string_printf(str, N_("Iterating estimate (iteration %d)"), iter);
+        if (set_message && !set_message(str->str))
+            goto estim0_end;
 
         for (i = 0; i < n; i++) {
             if (itip_estimate_point(x[i], y[i], image, im_xsiz, im_ysiz,
@@ -707,21 +748,24 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
                                     use_edges))
                 count++;
             if (set_fraction && !set_fraction((gdouble)i/(gdouble)n))
-                break;
+                goto estim0_end;
         }
-        gwy_debug("%d image locations produced refinement", count);
-        g_snprintf(buffer, sizeof(buffer),
-                   N_("%d image locations produced refinement"), count);
-        if (set_message)
-            set_message(buffer);
+        g_string_printf(str, N_("%d image locations produced refinement"),
+                        count);
+        if (set_message && !set_message(str->str))
+            goto estim0_end;
     } while (count && count > maxcount);
 
     if (set_fraction)
-        set_fraction(0.0);
+        set_fraction(1.0);
 
+    ok = TRUE;
     /* free temporary space */
+estim0_end:
+    g_string_free(str, TRUE);
     g_free(x);
     g_free(y);
+    return ok;
 }
 
 /*
@@ -733,7 +777,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
    of its near neighbors, provided there are not too many near neighbors
    with values equal to the maximum (which indicates a flat).
 */
-static gint
+static gboolean
 useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta)
 {
     gint xmin, xmax, ymin, ymax;        /* actual interval to search */
@@ -757,8 +801,8 @@ useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta)
        property--i.e. the neighborhood is flat */
     /*if (max == image[y][x] && count <= (((2*delta + 1) ^ 2)/5))*/
     if (max == image[y][x] && count <= (2*delta + 1)*(2*delta + 1)/5)
-        return 1;
-    return 0;
+        return TRUE;
+    return FALSE;
 }
 
 /*
