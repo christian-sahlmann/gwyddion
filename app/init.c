@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,6 +58,14 @@ gwy_app_init(void)
     optimization_fooler += gwy_palette_get_type();
     optimization_fooler += gwy_palette_def_get_type();
     optimization_fooler += gwy_container_get_type();
+
+    /* FIXME: this is to be removed once layers are modularized, then loading
+     * of the layer module will initiate class instantiation. */
+    optimization_fooler += gwy_layer_axes_get_type();
+    optimization_fooler += gwy_layer_lines_get_type();
+    optimization_fooler += gwy_layer_pointer_get_type();
+    optimization_fooler += gwy_layer_points_get_type();
+    optimization_fooler += gwy_layer_select_get_type();
 
     g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(_(PACKAGE_NAME));
