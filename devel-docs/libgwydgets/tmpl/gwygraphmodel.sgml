@@ -1,12 +1,12 @@
 <!-- ##### SECTION Title ##### -->
-GwyHRuler
+GwyGraphModel
 
 <!-- ##### SECTION Short_Description ##### -->
-Horizontal ruler, similar to #GtkRuler
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Please see #GwyRuler for differences from #GtkHRuler.
+
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -14,24 +14,30 @@ Please see #GwyRuler for differences from #GtkHRuler.
 
 </para>
 
-<!-- ##### STRUCT GwyHRuler ##### -->
+<!-- ##### FUNCTION gwy_graph_model_new ##### -->
 <para>
 
 </para>
 
+@graph: 
+@Returns: 
 
-<!-- ##### STRUCT GwyHRulerClass ##### -->
+
+<!-- ##### FUNCTION gwy_graph_new_from_model ##### -->
 <para>
 
 </para>
 
-@parent_class: 
+@gmodel: 
+@Returns: 
 
-<!-- ##### FUNCTION gwy_hruler_new ##### -->
+
+<!-- ##### FUNCTION gwy_graph_model_get_n_curves ##### -->
 <para>
 
 </para>
 
+@gmodel: 
 @Returns: 
 
 

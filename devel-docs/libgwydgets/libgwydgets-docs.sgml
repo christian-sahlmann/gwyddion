@@ -6,7 +6,21 @@
     <title>Gwyddion Widgets Library Reference Manual</title>
   </bookinfo>
 
+  <para>
+    This library contains Gwyddion extension Gtk+ widgets and widget
+    utilities.
+  </para>
   <chapter id="DataWindowWidgets">
+    <para>
+      <link linkend="GwyDataView">GwyDataView</link> is the basic
+      twodimensional data display widget used in Gwyddion. It contains
+      <link linkend="GwyPixmapLayer">pixmap layers</link> displaying some
+      <link linkend="GwyDataFields">data fields</link>, and may contain a
+      <link linkend="GwyVectorLayer">vector layer</link> allowing user to
+      `draw' on the view.  It is often packed together with
+      <link linkend="GwyColorAxis">GwyColorAxis</link> and other widgets
+      to a <link linkend="GwyDataWindow">GwyDataWindow</link>.
+    </para>
     <title>Data Windows and Views</title>
     <xi:include href="xml/gwydatawindow.xml"/>
     <xi:include href="xml/gwydataview.xml"/>

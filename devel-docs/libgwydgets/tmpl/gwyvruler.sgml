@@ -6,7 +6,7 @@ Vertical ruler, similar to #GtkRuler
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Please see #GwyRuler for differences from #GtkVRuler.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

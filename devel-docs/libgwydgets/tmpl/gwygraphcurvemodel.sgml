@@ -1,0 +1,44 @@
+<!-- ##### SECTION Title ##### -->
+GwyGraphCurveModel
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_graph_curve_model_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_save_curve ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@graph: 
+@index_: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_add_curve_from_model ##### -->
+<para>
+
+</para>
+
+@graph: 
+@gcmodel: 
+
+

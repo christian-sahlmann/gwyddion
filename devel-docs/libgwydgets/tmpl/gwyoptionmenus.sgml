@@ -6,12 +6,58 @@ Option menu constructors for enums
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+Option menus can be easily constructed from #GwyEnum's with
+gwy_option_menu_create() specifying a key that will be used to define value
+of each item so that it can be either fetched with g_object_get_data()
+in a callback function or with gwy_option_menu_get_history().
+</para>
 
+<para>Here's how a option menu can be constructed:</para>
+
+<informalexample><programlisting><![CDATA[
+typedef enum {
+   MY_ENUM_FOO, MY_ENUM_BAR, MY_ENUM_BAZ
+} MyEnum;
+
+static GwyEnum my_enum_fields[] = {
+    { N_("Foo"), MY_ENUM_FOO },
+    { N_("Bar"), MY_ENUM_BAR },
+    { N_("Baz"), MY_ENUM_BAZ },
+};
+
+static void
+menu_callback(GObject *item, gpointer cbdata)
+{
+    MyEnum value;
+
+    value = GPOINTER_TO_UINT(g_object_get_data(item, "my-enum-type"));
+    ...
+}
+
+static void
+function(void) {
+    GtkWidget *omenu;
+    ...
+
+    omenu = gwy_option_menu_create(fields, G_N_ELEMENTS(fields),
+                                   "my-enum-type",
+                                   G_CALLBACK(menu_callback), NULL,
+                                   MY_ENUM_FOO);
+    ...
+}
+]]></programlisting></informalexample>
+
+<para>
+Predefined option menus (and menus) for most standard Gwyddion enums are
+also provided -- gwy_option_menu_interpolation(), gwy_option_menu_windowin(),
+etc. Palette and GL material menus can be constructed with
+gwy_option_menu_palette() (or gwy_menu_palette() for a normal menu), and
+gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+<link linkend="libgwydgets-gwyradiobuttons">Radio button constructors</link>
 </para>
 
 <!-- ##### FUNCTION gwy_menu_palette ##### -->

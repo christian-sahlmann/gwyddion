@@ -6,8 +6,8 @@ Statusbar with Pango markup support
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-This widget is completely identical to GtkStatusbar except that Pango markup
-works in messages.
+This widget is completely identical to #GtkStatusbar except that Pango markup
+can be used in its messages.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

@@ -11,7 +11,7 @@
   <refnamediv>
     <refname>Standard Vector Layers</refname>
     <refpurpose>
-      Vector layers that are distributed with Gwyddion
+      Vector layers that are distributed with <application>Gwyddion</application>
     </refpurpose>
   </refnamediv>
 
@@ -25,7 +25,7 @@
       can define their own means of user interaction.
     </para>
     <para>
-      There are several standard layers distributed with Gwyddion, and their
+      There are several standard layers distributed with <application>Gwyddion</application>, and their
       features and interface is the subject of this section.
       All layers are subclasses of <link linkend="GwyVectorLayer">GwyVectorLayer</link>
       sharing its basic interface.

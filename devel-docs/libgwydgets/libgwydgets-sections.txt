@@ -449,6 +449,7 @@ gwy_3d_view_set_reduced_size
 gwy_3d_view_get_material
 gwy_3d_view_set_material
 gwy_3d_view_get_pixbuf
+gwy_3d_view_get_data
 gwy_3d_view_reset_view
 gwy_3d_view_get_rot_x_adjustment
 gwy_3d_view_get_rot_y_adjustment
@@ -493,6 +494,7 @@ gwy_data_view_coords_real_to_xy
 gwy_data_view_get_xmeasure
 gwy_data_view_get_ymeasure
 gwy_data_view_get_thumbnail
+gwy_data_view_get_pixbuf
 gwy_data_view_update
 <SUBSECTION Standard>
 GWY_DATA_VIEW
@@ -558,6 +560,7 @@ Gwy3DWindow
 Gwy3DWindowClass
 gwy_3d_window_new
 gwy_3d_window_get_3d_view
+gwy_3d_window_add_action_widget
 <SUBSECTION Standard>
 GWY_3D_WINDOW
 GWY_IS_3D_WINDOW

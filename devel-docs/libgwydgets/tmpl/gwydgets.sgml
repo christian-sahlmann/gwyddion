@@ -6,7 +6,13 @@ Miscellaneous utility functions
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+Gwyddion classes has to be initialized before they can be safely
+deserialized. The function gwy_type_init() performs this initialization.
+</para>
 
+<para>
+Before 3D widgets (#Gwy3DView) can be used, OpenGL must be initialized with
+gwy_widgets_gl_init().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

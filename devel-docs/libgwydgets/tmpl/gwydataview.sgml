@@ -214,6 +214,17 @@ Data field displaying area
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_view_get_pixbuf ##### -->
+<para>
+
+</para>
+
+@data_view: 
+@max_width: 
+@max_height: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_view_update ##### -->
 <para>
 

@@ -6,12 +6,38 @@ OpenGL 3D data display
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+#Gwy3DView displays a data field as a threedimensional heightfield using
+OpenGL. You can create a new 3D view for a data container with
+gwy_3d_view_new().  By default, it
+inherits properties like palette from <link linkend="GwyDataView">data
+view</link> settings, but supports separate settings -- see
+gwy_3d_view_set_palette() et al.
+</para>
 
+<para>
+#Gwy3DView allows the user to interactively rotate, scale, z-scale the data or
+move lights, depending on its <link linkend="Gwy3DMovement">movement
+state</link>. There are no controls provided for mode change, you have to
+provide some yourself and set the movement mode with
+gwy_3d_view_set_status().
+There are #GtkAdjustment's for each view
+parameter, you can fetch them with
+gwy_3d_view_get_rot_x_adjustment(),
+gwy_3d_view_get_rot_y_adjustment(),
+etc.
+</para>
+
+<para>
+Due to lack of real #GwyWatchable
+implementation in data fields, you have to call
+gwy_3d_view_update() to instruct
+the 3D view to update self, when data changes.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+<link linkend="Gwy3DWindow">Gwy3DWindow</link>,
+<link linkend="GwyGLMaterial">GwyGLMaterial</link>
 </para>
 
 <!-- ##### ENUM Gwy3DMovement ##### -->
@@ -19,6 +45,7 @@ OpenGL 3D data display
 
 </para>
 
+@GWY_3D_NONE: 
 @GWY_3D_ROTATION: 
 @GWY_3D_SCALE: 
 @GWY_3D_DEFORMATION: 
@@ -38,6 +65,8 @@ OpenGL 3D data display
 @parent_class: 
 @reserved1: 
 @reserved2: 
+@reserved3: 
+@reserved4: 
 
 <!-- ##### FUNCTION gwy_3d_view_new ##### -->
 <para>
@@ -225,6 +254,15 @@ OpenGL 3D data display
 @Returns: 
 <!-- # Unused Parameters # -->
 @gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_data ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_3d_view_reset_view ##### -->

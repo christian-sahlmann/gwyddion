@@ -6,12 +6,16 @@ Gwy3DWindow
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+#Gwy3DWindow encapsulates a #Gwy3DView
+together with appropriate controls. You can create a 3D window for a 3D
+view with gwy_3d_window_new().
+It has an `action area' below the controls where additional widgets
+can be packed with gwy_3d_window_add_action_widget().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#Gwy3DView
 </para>
 
 <!-- ##### STRUCT Gwy3DWindow ##### -->
@@ -28,6 +32,8 @@ Gwy3DWindow
 @parent_class: 
 @reserved1: 
 @reserved2: 
+@reserved3: 
+@reserved4: 
 
 <!-- ##### FUNCTION gwy_3d_window_new ##### -->
 <para>
@@ -45,5 +51,14 @@ Gwy3DWindow
 
 @gwy3dwindow: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_window_add_action_widget ##### -->
+<para>
+
+</para>
+
+@gwy3dwindow: 
+@widget: 
 
 
