@@ -82,6 +82,9 @@ palette_def_compare(GwyPaletteDef *a,
  * Creates a #GtkOptionMenu of palettes (more preciesly, palettes definitions),
  * alphabetically sorted, with names and small sample images.
  *
+ * It sets object data "palette-name" to palette definition name for each
+ * menu item.
+ *
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*

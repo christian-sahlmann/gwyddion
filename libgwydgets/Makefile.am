@@ -26,8 +26,6 @@ libgwydgetsinclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwydgets.la
 
-noinst_PROGRAMS = main test create-data
-
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
@@ -52,6 +50,9 @@ libgwydgets_la_SOURCES = \
 	gwyspherecoords.c \
 	gwyvectorshade.c \
 	gwyvruler.c
+
+# Note these are test programs not to be included in the distro
+noinst_PROGRAMS = main test create-data
 
 main_SOURCES = main.c
 main_LDADD = libgwydgets.la \

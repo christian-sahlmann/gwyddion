@@ -56,6 +56,7 @@ struct _GwyDataViewLayerClass {
     void (*plugged)(GwyDataViewLayer *layer);
     void (*unplugged)(GwyDataViewLayer *layer);
     void (*updated)(GwyDataViewLayer *layer);
+    void (*finished)(GwyDataViewLayer *layer);
 };
 
 GType            gwy_data_view_layer_get_type        (void) G_GNUC_CONST;
@@ -78,6 +79,7 @@ gboolean         gwy_data_view_layer_key_release     (GwyDataViewLayer *layer,
 void             gwy_data_view_layer_plugged         (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_unplugged       (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_updated         (GwyDataViewLayer *layer);
+void             gwy_data_view_layer_finished        (GwyDataViewLayer *layer);
 
 #ifdef __cplusplus
 }

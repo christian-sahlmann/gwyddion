@@ -43,7 +43,7 @@ struct _GwyLayerSelect {
 struct _GwyLayerSelectClass {
     GwyDataViewLayerClass parent_class;
 
-    GdkCursor *near_cursor;
+    GdkCursor *corner_cursor[4];
     GdkCursor *resize_cursor;
 };
 

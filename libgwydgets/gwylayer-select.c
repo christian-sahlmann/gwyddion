@@ -1,5 +1,6 @@
 /* @(#) $Id$ */
 
+#include <string.h>
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -89,7 +90,7 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     layer_class->plugged = gwy_layer_select_plugged;
     layer_class->unplugged = gwy_layer_select_unplugged;
 
-    klass->near_cursor = NULL;
+    memset(klass->corner_cursor, 0, 4*sizeof(GdkCursor*));
     klass->resize_cursor = NULL;
 }
 
@@ -101,14 +102,18 @@ gwy_layer_select_init(GwyLayerSelect *layer)
     gwy_debug("%s", __FUNCTION__);
 
     klass = GWY_LAYER_SELECT_GET_CLASS(layer);
-    if (!klass->near_cursor) {
-        g_assert(!klass->resize_cursor);
-        klass->near_cursor = gdk_cursor_new(GDK_DOTBOX);
+    if (!klass->resize_cursor) {
+        klass->corner_cursor[0] = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
+        klass->corner_cursor[1] = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
+        klass->corner_cursor[2] = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
+        klass->corner_cursor[3] = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
         klass->resize_cursor = gdk_cursor_new(GDK_SIZING);
     }
     else {
-        g_assert(klass->resize_cursor);
-        gdk_cursor_ref(klass->near_cursor);
+        gint i;
+
+        for (i = 0; i < 4; i++)
+            gdk_cursor_ref(klass->corner_cursor[i]);
         gdk_cursor_ref(klass->resize_cursor);
     }
     layer->selected = FALSE;
@@ -118,6 +123,7 @@ static void
 gwy_layer_select_finalize(GObject *object)
 {
     GwyLayerSelectClass *klass;
+    gint i, refcount;
 
     gwy_debug("%s", __FUNCTION__);
 
@@ -125,8 +131,15 @@ gwy_layer_select_finalize(GObject *object)
     g_return_if_fail(GWY_IS_LAYER_SELECT(object));
 
     klass = GWY_LAYER_SELECT_GET_CLASS(object);
-    gdk_cursor_unref(klass->near_cursor);
+    refcount = klass->resize_cursor->ref_count - 1;
+    for (i = 0; i < 4; i++) {
+        gdk_cursor_unref(klass->corner_cursor[i]);
+        if (!refcount)
+            klass->corner_cursor[i] = NULL;
+    }
     gdk_cursor_unref(klass->resize_cursor);
+    if (!refcount)
+        klass->resize_cursor = NULL;
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -240,7 +253,7 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
             select_layer->near = i;
             klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
             gdk_window_set_cursor(GTK_WIDGET(layer->parent)->window,
-                                  i == -1 ? NULL : klass->near_cursor);
+                                  i == -1 ? NULL : klass->corner_cursor[i]);
         }
         return FALSE;
     }
@@ -334,9 +347,10 @@ static gboolean
 gwy_layer_select_button_released(GwyDataViewLayer *layer,
                                  GdkEventButton *event)
 {
+    GwyLayerSelectClass *klass;
     GwyLayerSelect *select_layer;
-    gint x, y;
-    gboolean outside;
+    gint x, y, i;
+    gdouble xreal, yreal;
 
     select_layer = (GwyLayerSelect*)layer;
     if (!select_layer->button)
@@ -345,10 +359,10 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
-    outside = (x != event->x) || (y != event->y);
     gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
-                                    x, y,
-                                    &select_layer->x1, &select_layer->y1);
+                                    x, y, &xreal, &yreal);
+    select_layer->x1 = xreal;
+    select_layer->y1 = yreal;
     gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
                                     select_layer->x0, select_layer->y0,
                                     &x, &y);
@@ -373,10 +387,12 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
     gwy_container_set_boolean_by_name(layer->data, "/0/select/selected",
                                       select_layer->selected);
     gwy_data_view_layer_updated(layer);
+    gwy_data_view_layer_finished(layer);
 
+    klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
+    i = gwy_layer_select_near_point(select_layer, xreal, yreal);
     gdk_window_set_cursor(GTK_WIDGET(layer->parent)->window,
-                          outside ? NULL
-                            : GWY_LAYER_SELECT_GET_CLASS(layer)->near_cursor);
+                          i == -1 ? NULL : klass->corner_cursor[i]);
 
     /* XXX: this assures no artifacts ...  */
     gtk_widget_queue_draw(layer->parent);

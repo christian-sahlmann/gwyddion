@@ -18,6 +18,7 @@ enum {
     PLUGGED,
     UNPLUGGED,
     UPDATED,
+    FINISHED,
     LAST_SIGNAL
 };
 
@@ -89,6 +90,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     klass->plugged = gwy_data_view_layer_real_plugged;
     klass->unplugged = gwy_data_view_layer_real_unplugged;
     klass->updated = NULL;
+    klass->finished = NULL;
 
     data_view_layer_signals[PLUGGED] =
         g_signal_new("plugged",
@@ -111,6 +113,14 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyDataViewLayerClass, updated),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
+    data_view_layer_signals[FINISHED] =
+        g_signal_new("finished",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyDataViewLayerClass, finished),
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
@@ -371,6 +381,20 @@ gwy_data_view_layer_updated(GwyDataViewLayer *layer)
     gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
     g_signal_emit(layer, data_view_layer_signals[UPDATED], 0);
+}
+
+/**
+ * gwy_data_view_layer_finished:
+ * @layer: A data view layer.
+ *
+ * Emits a "finished" singal on a layer.
+ **/
+void
+gwy_data_view_layer_finished(GwyDataViewLayer *layer)
+{
+    gwy_debug("%s", __FUNCTION__);
+    g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
+    g_signal_emit(layer, data_view_layer_signals[FINISHED], 0);
 }
 
 static void
