@@ -137,7 +137,6 @@ guess_pixmap_path(void)
         gwy_debug("Icon path (from cwd): %s", b);
         return b;
     }
-    free(p);
 
     return NULL;
 }
