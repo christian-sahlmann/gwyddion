@@ -215,6 +215,11 @@ void gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
     
 }
 
+void gwy_si_unit_copy(GwySIUnit *target, GwySIUnit *example)
+{
+    gwy_si_unit_set_unit_string(target, example->unitstr);
+}
+
 gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
     gwy_debug("");

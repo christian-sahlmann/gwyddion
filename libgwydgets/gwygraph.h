@@ -112,6 +112,7 @@ void gwy_graph_clear(GwyGraph *graph);
 void gwy_graph_set_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
 void gwy_graph_get_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
 
+void gwy_graph_export_ascii(GwyGraph *graph, char *filename);
 
 /*graph status (selections enabled) handling*/
 

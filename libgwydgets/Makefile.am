@@ -60,6 +60,7 @@ libgwydgets_la_SOURCES = \
 	gwygradsphere.c \
 	gwygraph.c \
 	gwygrapharea.c \
+        gwygraphexport.c \
 	gwygraphcorner.c \
 	gwygraphlabel.c \
 	gwyhruler.c \
@@ -79,7 +80,7 @@ libgwydgets_la_SOURCES = \
 	gwytoolbox.c \
 	gwyvectorlayer.c \
 	gwyvectorshade.c \
-	gwyvruler.c 
+	gwyvruler.c  
 
 # Note these are test programs not to be included in the distro
 #noinst_PROGRAMS = main test create-data

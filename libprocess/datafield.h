@@ -26,6 +26,7 @@
 #include <libprocess/dataline.h>
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
+#include <libgwyddion/gwysiunit.h>
 #include <libprocess/cwt.h>
 
 #ifdef __cplusplus
@@ -40,7 +41,6 @@ extern "C" {
 #define GWY_DATA_FIELD_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_FIELD, GwyDataFieldClass))
 
 
-/*provisory struct for field (for function arguments simplification)*/
 typedef struct{
     GObject parent_instance;
 
@@ -50,6 +50,8 @@ typedef struct{
     gdouble yreal;  /*Y real field size (in nanometers)*/
     gdouble *data;  /*data field*/
     gint N;	    /*xres*yres*/
+    GwySIUnit *si_unit_xy; /*SI unit corresponding to XY axis*/
+    GwySIUnit *si_unit_z; /*SI unit corresponding to height (Z) axis*/
 } GwyDataField;
 
 typedef struct{
@@ -114,6 +116,11 @@ void gwy_data_field_set_xreal(GwyDataField *a,
                               gdouble xreal);
 void gwy_data_field_set_yreal(GwyDataField *a,
                               gdouble yreal);
+
+GwySIUnit* gwy_data_field_get_si_unit_xy(GwyDataField *a);
+GwySIUnit* gwy_data_field_get_si_unit_z(GwyDataField *a);
+void gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit);
+void gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit);
 
 /*pixel <-> real coords transform*/
 gdouble gwy_data_field_itor(GwyDataField *a,

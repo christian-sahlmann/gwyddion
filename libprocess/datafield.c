@@ -627,6 +627,31 @@ gwy_data_field_set_yreal(GwyDataField *a, gdouble yreal)
     a->yreal = yreal;
 }
 
+
+GwySIUnit* 
+gwy_data_field_get_si_unit_xy(GwyDataField *a)
+{
+    return (GwySIUnit*)gwy_si_unit_new(gwy_si_unit_get_unit_string(a->si_unit_xy));
+}
+
+GwySIUnit* 
+gwy_data_field_get_si_unit_z(GwyDataField *a)
+{
+    return (GwySIUnit*)gwy_si_unit_new(gwy_si_unit_get_unit_string(a->si_unit_z));
+}
+
+void 
+gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
+{
+    gwy_si_unit_copy(a->si_unit_xy, si_unit);
+}
+
+void 
+gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit)
+{
+    gwy_si_unit_copy(a->si_unit_z, si_unit);
+}
+
 /**
  * gwy_data_field_itor:
  * @a: A data field
