@@ -141,6 +141,12 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->old_width = 0;
     area->old_height = 0;
 
+    area->selecting = 0;
+    
+    area->seldata = g_new(GwyGraphStatus_SelData, 1);
+    area->pointsdata = g_new(GwyGraphStatus_PointsData, 1);
+    area->cursordata = g_new(GwyGraphStatus_CursorData, 1);
+
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
 
@@ -158,7 +164,8 @@ gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
 
     gtk_widget_add_events(GTK_WIDGET(area), GDK_BUTTON_PRESS_MASK
                           | GDK_BUTTON_RELEASE_MASK
-                          | GDK_BUTTON_MOTION_MASK);
+                          | GDK_BUTTON_MOTION_MASK
+                          | GDK_POINTER_MOTION_MASK);
 
     area->curves = g_ptr_array_new();
 
@@ -349,15 +356,34 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     x += (gint)event->x;
     y += (gint)event->y;
 
+
     child = gwy_graph_area_find_child(area, x, y);
-    if (child) { printf("Child found.\n");
+    if (child) {
         area->active = child->widget;
         area->x0 = x;
         area->y0 = y;
         area->xoff = 0;
         area->yoff = 0;
         gwy_graph_area_draw_child_rectangle(area);
+        return FALSE;
     }
+
+    if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
+    {
+        if (area->status == GWY_GRAPH_STATUS_XSEL)
+        {
+            area->seldata->scr_start = x;
+            area->seldata->data_start = 0;
+        }
+        else if (area->status == GWY_GRAPH_STATUS_YSEL)
+        {
+            area->seldata->scr_start = y;
+            area->seldata->data_start = 0;
+        }
+        area->selecting = 1;
+        printf("Sel started\n");
+    }    
+
     return FALSE;
 }
 
@@ -365,28 +391,56 @@ static gboolean
 gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
 {
     GwyGraphArea *area;
-    gint x, y;
+    gint x, y, ispos;
 
     gwy_debug("%s", __FUNCTION__);
     area = GWY_GRAPH_AREA(widget);
-    if (!area->active)
-        return FALSE;
 
-    gwy_graph_area_draw_child_rectangle(area);
-
-    gdk_window_get_position(event->window, &x, &y);
-    x += (gint)event->x;
-    y += (gint)event->y;
-
-    gwy_graph_area_clamp_coords_for_child(area, &x, &y);
-    if (x != area->x0 || y != area->y0) {
-        x -= area->x0 - area->active->allocation.x;
-        y -= area->y0 - area->active->allocation.y;
-        printf("Moving from %d %d to %d %d\n", area->x0, area->y0,  x, y);
-        gtk_layout_move(GTK_LAYOUT(area), area->active, x, y);
+    ispos = 0;
+    
+    if ((area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL) && area->selecting==1)
+    {
+        if (!ispos)
+        {
+            gdk_window_get_position(event->window, &x, &y);
+            x += (gint)event->x;
+            y += (gint)event->y;
+            ispos = 1;
+        }
+        if (area->status == GWY_GRAPH_STATUS_XSEL)
+        {
+            area->seldata->scr_end = x;
+            area->seldata->data_end = 0;
+        }
+        else if (area->status == GWY_GRAPH_STATUS_YSEL)
+        {
+            area->seldata->scr_end = y;
+            area->seldata->data_end = 0;
+        }
+        printf("Sel: %d, %d finished.\n", area->seldata->scr_start, area->seldata->scr_end);
+        area->selecting = 0;
     }
+    
+    if (area->active)
+    {
+        gwy_graph_area_draw_child_rectangle(area);
 
-    area->active = NULL;
+        if (!ispos)
+        {
+            gdk_window_get_position(event->window, &x, &y);
+            x += (gint)event->x;
+            y += (gint)event->y;
+            ispos = 1;
+        }
+        gwy_graph_area_clamp_coords_for_child(area, &x, &y);
+        if (x != area->x0 || y != area->y0) {
+            x -= area->x0 - area->active->allocation.x;
+            y -= area->y0 - area->active->allocation.y;
+            gtk_layout_move(GTK_LAYOUT(area), area->active, x, y);
+        }
+
+        area->active = NULL;
+    }
 
     return FALSE;
 }
@@ -395,29 +449,76 @@ static gboolean
 gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 {
     GwyGraphArea *area;
-    gint x, y;
+    gint x, y, ispos;
 
     area = GWY_GRAPH_AREA(widget);
-    if (!area->active)
-        return FALSE;
 
-    gwy_debug("%s", __FUNCTION__);
+    ispos = 0;
+    
+    /*cursor position*/
+    if (area->status == GWY_GRAPH_STATUS_CURSOR)
+    {
+        if (!ispos)
+        {
+            gdk_window_get_position(event->window, &x, &y);
+            x += (gint)event->x;
+            y += (gint)event->y;
+            ispos = 1;
+        }
+        area->cursordata->scr_point.i = x;
+        area->cursordata->scr_point.j = y;
+        area->cursordata->data_point.x = 
+            area->x_min + x*(area->x_max - area->x_min)/(widget->allocation.width-1);
+        area->cursordata->data_point.y = 
+            area->y_min + (widget->allocation.height-y)*(area->y_max - area->y_min)/(widget->allocation.height-1);
+        printf("%f, %f\n", area->cursordata->data_point.x, area->cursordata->data_point.y);
+    }
+    
+    if ((area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL) && area->selecting==1)
+    {
+        if (!ispos)
+        {
+            gdk_window_get_position(event->window, &x, &y);
+            x += (gint)event->x;
+            y += (gint)event->y;
+            ispos = 1;
+        }
+        if (area->status == GWY_GRAPH_STATUS_XSEL)
+        {
+            area->seldata->scr_end = x;
+            area->seldata->data_end = 0;
+        }
+        else if (area->status == GWY_GRAPH_STATUS_YSEL)
+        {
+            area->seldata->scr_end = y;
+            area->seldata->data_end = 0;
+        }
+        printf("Sel: %d, %d\n", area->seldata->scr_start, area->seldata->scr_end);
+    }
+    
+    /*widget (label) movement*/
+    if (area->active)
+    {
 
-    gdk_window_get_position(event->window, &x, &y);
-    x += (gint)event->x;
-    y += (gint)event->y;
-    gwy_graph_area_clamp_coords_for_child(area, &x, &y);
-    /* don't draw when we can't move */
+        if (!ispos)
+        {
+            gdk_window_get_position(event->window, &x, &y);
+            x += (gint)event->x;
+            y += (gint)event->y;
+            ispos = 1;
+        }
+        gwy_graph_area_clamp_coords_for_child(area, &x, &y);
+        /* don't draw when we can't move */
+    
+        if (x - area->x0 == area->xoff
+            && y - area->y0 == area->yoff)
+            return FALSE;
 
-    if (x - area->x0 == area->xoff
-        && y - area->y0 == area->yoff)
-        return FALSE;
-
-    gwy_graph_area_draw_child_rectangle(area);
-    area->xoff = x - area->x0;
-    area->yoff = y - area->y0;
-    printf("xoff=%d, yoff=%d\n", area->xoff, area->yoff);
-    gwy_graph_area_draw_child_rectangle(area);
+        gwy_graph_area_draw_child_rectangle(area);
+        area->xoff = x - area->x0;
+        area->yoff = y - area->y0;
+        gwy_graph_area_draw_child_rectangle(area);
+    }
 
     return FALSE;
 }

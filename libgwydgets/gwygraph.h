@@ -41,6 +41,7 @@ extern "C" {
 #define GWY_IS_GRAPH_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH))
 #define GWY_GRAPH_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH, GwyGraphClass))
 
+
 typedef struct {
    gboolean is_line;
    gboolean is_point;
@@ -48,6 +49,7 @@ typedef struct {
    gint point_size;
    GdkColor color;
 } GwyGraphAutoProperties;
+
 
 typedef struct {
    GtkTable table;
@@ -78,6 +80,9 @@ typedef struct {
    gboolean has_y_unit;
    gchar *x_unit;
    gchar *y_unit;
+
+   GwyGraphStatus_SelData seldata;
+   GwyGraphStatus_PointsData pointsdata;
     
 } GwyGraph;
 
@@ -90,6 +95,9 @@ typedef struct {
 GtkWidget *gwy_graph_new();
 GType      gwy_graph_get_type(void) G_GNUC_CONST;
   
+
+/*basic interfaces*/
+
 void gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline, 
                               gdouble shift, GString *label, GwyGraphAreaCurveParams *params, 
 			      gdouble x_order, gdouble y_order, char *x_unit, char *y_unit);
@@ -103,6 +111,19 @@ void gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
 void gwy_graph_clear(GwyGraph *graph);
 void gwy_graph_set_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
 void gwy_graph_get_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
+
+
+/*graph status (selections enabled) handling*/
+
+void               gwy_graph_set_status(GwyGraph *graph, 
+					GwyGraphStatusType status);
+
+GwyGraphStatusType gwy_graph_get_status(GwyGraph *graph);
+
+gpointer           gwy_graph_get_status_data(GwyGraph *graph, 
+					     GwyGraphStatusType status);
+
+
 
 #ifdef __cplusplus
 }

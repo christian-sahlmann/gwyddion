@@ -46,6 +46,44 @@ typedef struct {
     gint N;              /*number of points*/
 } GwyGraphAreaCurvePoints;
 
+typedef enum {
+  GWY_GRAPH_STATUS_PLAIN  = 0,
+  GWY_GRAPH_STATUS_CURSOR = 1,
+  GWY_GRAPH_STATUS_XSEL   = 2,
+  GWY_GRAPH_STATUS_YSEL   = 3,
+  GWY_GRAPH_STATUS_POINTS = 4
+} GwyGraphStatusType;
+
+typedef struct {
+   gdouble x;
+   gdouble y;
+} GwyGraphDataPoint;
+
+typedef struct {
+   gdouble i;
+   gdouble j;
+} GwyGraphScrPoint;
+
+typedef struct {
+   GwyGraphScrPoint scr_point;
+   GwyGraphDataPoint data_point;
+} GwyGraphStatus_CursorData;
+
+typedef struct {
+   gint scr_start;
+   gint scr_end;
+   gdouble data_start;
+   gdouble data_end;
+} GwyGraphStatus_SelData;
+
+typedef struct {
+   GArray *scr_points;
+   GArray *data_points;
+   gint n;
+} GwyGraphStatus_PointsData;
+
+
+
 /*NOTE: GwyGraphAreaCurveParams is defined in gwygraphlabel.h*/
 
 /*single curve*/
@@ -67,7 +105,13 @@ typedef struct {
     GdkGC *gc;
     				/*label*/
     GwyGraphLabel *lab;
-    GwyGraphAreaParams par; 
+    GwyGraphAreaParams par;
+
+    GwyGraphStatusType status;         
+    GwyGraphStatus_SelData *seldata;
+    GwyGraphStatus_PointsData *pointsdata;
+    GwyGraphStatus_CursorData *cursordata;
+
 
     /*drawing*/
     GPtrArray *curves;
@@ -82,7 +126,9 @@ typedef struct {
 
     gint old_width;
     gint old_height;
-    
+   
+    /*selection drawing*/
+    gboolean selecting; 
     
     /*label movement*/
     GtkWidget *active;

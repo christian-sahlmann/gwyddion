@@ -190,6 +190,8 @@ gwy_graph_init(GwyGraph *graph)
     graph->x_unit = NULL;
     graph->y_unit = NULL;
 
+    graph->area->status = GWY_GRAPH_STATUS_PLAIN;
+
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
     gtk_widget_show_all(GTK_WIDGET(graph->area));
@@ -414,5 +416,33 @@ gwy_graph_get_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproper
 {
   *autoproperties = graph->autoproperties;
 }
+
+void
+gwy_graph_set_status(GwyGraph *graph, GwyGraphStatusType status)
+{
+    graph->area->status = status;
+}
+
+GwyGraphStatusType
+gwy_graph_get_status(GwyGraph *graph)
+{
+    return graph->area->status;
+}
+
+gpointer 
+gwy_graph_get_status_data(GwyGraph *graph, GwyGraphStatusType status)
+{
+    if (graph->area->status==GWY_GRAPH_STATUS_PLAIN) return NULL;
+    else if (graph->area->status==GWY_GRAPH_STATUS_CURSOR) 
+        return (gpointer) (graph->area->cursordata);
+    else if (graph->area->status==GWY_GRAPH_STATUS_XSEL || graph->area->status==GWY_GRAPH_STATUS_YSEL)
+        return (gpointer) (graph->area->seldata);
+    else if (graph->area->status==GWY_GRAPH_STATUS_POINTS)
+        return (gpointer) (graph->area->pointsdata);
+    
+    g_assert_not_reached();
+    return NULL;
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
