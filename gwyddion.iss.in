@@ -35,7 +35,7 @@ Source: "modules\tool\*.*"; DestDir: "{app}\modules\tool"
 Name: "{group}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"
 Name: "{group}\@PACKAGE_NAME@ Website"; Filename: "@PACKAGE_URL@"
 Name: "{group}\Uninstall @PACKAGE_NAME@"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"
+Name: "{userdesktop}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"; IconFilename: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
 
 [Registry]
 ; Add Gtk+ libraries to @PACKAGE_TARNAME@.exe's path
