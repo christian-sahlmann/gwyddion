@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <math.h>
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
@@ -743,8 +744,80 @@ gwy_app_clean_up_data(GwyContainer *data)
 }
 
 void
-gwy_app_change_mask_color_cb(void)
+gwy_app_change_mask_color_cb(gpointer user_data)
 {
+    static const gdouble default_mask_color[4] = { 1.0, 0.0, 0.0, 0.5 };
+    static const gchar *keys[] = {
+        "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"
+    };
+    GwyDataWindow *data_window;
+    GtkWidget *data_view = NULL;
+    GwyContainer *data, *settings;
+    GtkWidget *selector, *dialog;
+    GdkColor gdkcolor;
+    guint16 gdkalpha;
+    gdouble p[4];
+    gint i, response;
+    gboolean defaultc;
+
+    defaultc = GPOINTER_TO_INT(user_data);
+
+    if (!defaultc) {
+        data_window = gwy_app_data_window_get_current();
+        g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+        data_view = gwy_data_window_get_data_view(data_window);
+        data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    }
+    else
+        data = NULL;
+
+    settings = gwy_app_settings_get();
+    for (i = 0; i < 4; i++) {
+        if (data && gwy_container_contains_by_name(data, keys[i]))
+            p[i] = gwy_container_get_double_by_name(data, keys[i]);
+        else if (gwy_container_contains_by_name(settings, keys[i]))
+            p[i] = gwy_container_get_double_by_name(settings, keys[i]);
+        else
+            p[i] = default_mask_color[i];
+    }
+
+    gdkcolor.red = (guint16)floor(p[0]*65535.999999);
+    gdkcolor.green = (guint16)floor(p[1]*65535.999999);
+    gdkcolor.blue = (guint16)floor(p[2]*65535.999999);
+    gdkalpha = (guint16)floor(p[3]*65535.999999);
+    gdkcolor.pixel = (guint32)-1; /* FIXME */
+
+    if (defaultc)
+        dialog = gtk_color_selection_dialog_new(_("Change Default Mask Color"));
+    else
+        dialog = gtk_color_selection_dialog_new(_("Change Mask Color"));
+    selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
+    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector),
+                                          &gdkcolor);
+    gtk_color_selection_set_current_alpha(GTK_COLOR_SELECTION(selector),
+                                          gdkalpha);
+    gtk_color_selection_set_has_palette(GTK_COLOR_SELECTION(selector), FALSE);
+    gtk_color_selection_set_has_opacity_control(GTK_COLOR_SELECTION(selector),
+                                                TRUE);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector),
+                                          &gdkcolor);
+    gdkalpha
+        = gtk_color_selection_get_current_alpha(GTK_COLOR_SELECTION(selector));
+    gtk_widget_destroy(dialog);
+    if (response != GTK_RESPONSE_OK)
+        return;
+
+    p[0] = gdkcolor.red/65535.0;
+    p[1] = gdkcolor.green/65535.0;
+    p[2] = gdkcolor.blue/65535.0;
+    p[3] = gdkalpha/65535.0;
+
+    for (i = 0; i < 4; i++)
+        gwy_container_set_double_by_name(defaultc ? settings : data,
+                                         keys[i], p[i]);
+    if (!defaultc)
+        gwy_data_view_update(GWY_DATA_VIEW(data_view));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
