@@ -10,7 +10,6 @@ LIB_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
 	$(GTK_CFLAGS) \
 	$(PNG_CFLAGS) \
-	$(TIFF_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
 
@@ -19,7 +18,6 @@ MOD_LINK = \
 	$(GTK_LIBS) \
 	$(GDK_PIXBUF_LIBS) \
 	$(PNG_LIBS) \
-	$(TIFF_LIBS) \
 	/libpath:$(TOP_SRCDIR)\libgwyddion \
 	/libpath:$(TOP_SRCDIR)\libprocess \
 	/libpath:$(TOP_SRCDIR)\libdraw \

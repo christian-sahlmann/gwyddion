@@ -89,11 +89,10 @@ else
   CPPFLAGS="$CPPFLAGS -I$prefix/include"
 fi
 
-PKG_CHECK_MODULES(PACKAGE, [gtk+-2.0 >= 2.2.0 libpng12])
+PKG_CHECK_MODULES(PACKAGE, [gtk+-2.0 >= 2.2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
 AC_CHECK_LIB([m],[sqrt])
-AC_CHECK_LIB([jpeg],[jpeg_abort])
 AC_CHECK_LIB([tiff],[TIFFOpen])
 PACKAGE_LIBS="$PACKAGE_LIBS $LIBS"
 
@@ -101,7 +100,6 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS( \
-  jpeglib.h \
   tiffio.h \
   time.h)
 
@@ -110,7 +108,6 @@ AC_C_CONST
 AC_STRUCT_TM
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
-#gwy_C_VARARG_MACROS
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS([getline])
