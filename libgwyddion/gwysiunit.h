@@ -38,7 +38,9 @@ extern "C" {
 
 
 typedef struct{
-   gchar *unitstr;
+    GObject parent_instance;
+
+    gchar *unitstr;
 } GwySIUnit;
 
 typedef struct{
