@@ -11,6 +11,7 @@ tools_PROGRAMS = \
 	grain_remove_manually.so \
 	icolorange.so \
 	level3.so \
+	maskedit.so \
 	pointer.so \
 	polynom.so \
 	profile.so \
@@ -43,6 +44,9 @@ icolorange_so_LDFLAGS = $(module_ldflags),icolorange.so
 
 level3_so_SOURCES = level3.c
 level3_so_LDFLAGS = $(module_ldflags),level3.so
+
+maskedit_so_SOURCES = maskedit.c
+maskedit_so_LDFLAGS = $(module_ldflags),maskedit.so
 
 pointer_so_SOURCES = pointer.c
 pointer_so_LDFLAGS = $(module_ldflags),pointer.so
