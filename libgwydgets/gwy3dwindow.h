@@ -43,9 +43,10 @@ typedef struct _Gwy3DWindowClass Gwy3DWindowClass;
 struct _Gwy3DWindow {
     GtkWindow parent_instance;
 
-    GtkWidget *table;
+    GtkWidget *notebook;
     GtkWidget *gwy3dview;
     GtkWidget *statusbar;
+    GtkWidget *foo;
 
     GwyZoomMode zoom_mode;  /* reserved for future use */
 
