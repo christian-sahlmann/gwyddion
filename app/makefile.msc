@@ -4,7 +4,6 @@ LIBRARY = libgwyapp
 XLIBRARY = app
 LIB_VER = $(LIBGWYAPP_VER)
 PROGRAM = gwyddion
-SUBDIRS = tools
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
@@ -79,15 +78,13 @@ PRG_OBJECTS = \
 	toolbox.obj
 
 ## targets
-all: lib prg sub-all
+all: lib prg
 
 lib: $(LIBRARY)-$(LIB_VER).dll
 
 prg: $(PROGRAM).exe
 
-install: install-lib install-prg sub-install
-
-clean:: sub-clean
+install: install-lib install-prg
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
