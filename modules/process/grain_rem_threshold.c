@@ -28,6 +28,7 @@
 #include <app/settings.h>
 #include <app/app.h>
 
+
 #define REMOVE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
     

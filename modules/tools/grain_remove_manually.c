@@ -28,6 +28,7 @@
 #include <app/settings.h>
 #include <app/unitool.h>
 
+
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 

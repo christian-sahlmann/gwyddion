@@ -426,6 +426,7 @@ dialog_update(GwyUnitoolState *state,
           shadefield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
           gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
        }
+       
        if (controls->upd)
        {
      switch (controls->fil){

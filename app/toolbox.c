@@ -30,6 +30,7 @@
 
 #include "gwyddion.h"
 
+
 static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 gint nitems,
                                                 const gchar *root_path,
