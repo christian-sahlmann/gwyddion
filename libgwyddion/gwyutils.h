@@ -18,25 +18,27 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GWYDDION_H__
-#define __GWY_GWYDDION_H__
+#ifndef __GWY_UTILS_H__
+#define __GWY_UTILS_H__
 
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyutils.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwywatchable.h>
-#include <libgwyddion/gwyserializable.h>
-#include <libgwyddion/gwycontainer.h>
-#include <libgwyddion/gwyentities.h>
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+void gwy_hash_table_to_slist_cb (gpointer unused_key,
+                                 gpointer value,
+                                 gpointer user_data);
+void gwy_hash_table_to_list_cb  (gpointer unused_key,
+                                 gpointer value,
+                                 gpointer user_data);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __GWY_GWYDDION_H__ */
+#endif /* __GWY_UTILS_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+

@@ -8,6 +8,7 @@ libgwyddioninclude_HEADERS = \
 	gwymacros.h \
 	gwymath.h \
 	gwyserializable.h \
+	gwyutils.h \
 	gwywatchable.h
 
 lib_LTLIBRARIES = libgwyddion.la
@@ -26,6 +27,7 @@ libgwyddion_la_SOURCES = \
 	gwyentities.c \
 	gwymath.c \
 	gwyserializable.c \
+	gwyutils.c \
 	gwywatchable.c
 
 main_SOURCES = \

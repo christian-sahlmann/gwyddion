@@ -21,8 +21,6 @@
 #ifndef __GWY_MATH_H__
 #define __GWY_MATH_H__
 
-#include <glib-object.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
