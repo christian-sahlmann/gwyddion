@@ -1,6 +1,7 @@
 # #(@) $Id$
 %define python_version %(%__python -V 2>&1 | cut -d' ' -f2 | cut -d. -f 1,2)
 %define pythondir /usr/lib/python%python_version/site-packages
+%define rubydir %(ruby -rrbconfig -e "puts Config::CONFIG['sitelibdir']")
 
 Summary: A SPM data analysis framework.
 Name: @PACKAGE_TARNAME@
@@ -19,6 +20,7 @@ BuildPrereq: libpng-devel
 BuildPrereq: libjpeg-devel
 BuildPrereq: gtk-doc >= 1.0
 BuildPrereq: python >= 2.2
+BuildPrereq: ruby >= 1.8
 BuildPrereq: perl >= 5.005
 BuildPrereq: desktop-file-utils >= 0.3
 BuildPrereq: gettext
@@ -149,6 +151,9 @@ desktop-file-install --vendor= --delete-original  \
 %{perl_sitelib}/Gwyddion/*
 %dir %{perl_sitelib}/Gwyddion
 %dir %{perl_sitelib}
+%{rubydir}/gwyddion/*
+%dir %{rubydir}/gwyddion
+%dir %{rubydir}
 %doc %{_mandir}/man3/*
 %doc %dir %{_mandir}/man3
 %{_libdir}/pkgconfig/%{name}.pc
