@@ -66,6 +66,9 @@ gwy_hash_table_to_list_cb(G_GNUC_UNUSED gpointer unused_key,
     *list = g_list_prepend(*list, value);
 }
 
+/* FIXME: the enum and flags stuff duplicates GLib functionality.
+ * However the GLib stuff requires enum class registration and thus is
+ * hardly usable for more-or-less random, or even dynamic stuff. */
 
 /**
  * gwy_string_to_enum:

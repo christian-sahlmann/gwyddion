@@ -829,6 +829,84 @@ gwy_container_gis_int32(GwyContainer *container,
 }
 
 /**
+ * gwy_container_get_enum_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ *
+ * Gets the enum in container @c identified by name @n.
+ *
+ * Note enums are treated as 32bit integers.
+ *
+ * Since: 1.1.
+ **/
+
+/**
+ * gwy_container_get_enum:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the enum in @container identified by @key.
+ *
+ * Note enums are treated as 32bit integers.
+ *
+ * Returns: The enum as #gint.
+ *
+ * Since: 1.1.
+ **/
+guint
+gwy_container_get_enum(GwyContainer *container, GQuark key)
+{
+    return gwy_container_get_int32(container, key);
+}
+
+/**
+ * gwy_container_gis_enum_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: Pointer to the enum to update.
+ *
+ * Get-if-set an enum from @c.
+ *
+ * Note enums are treated as 32bit integers.
+ *
+ * Expands to %TRUE if @value was actually updated, %FALSE when there is no
+ * such enum in the container.
+ *
+ * Since: 1.1.
+ **/
+
+/**
+ * gwy_container_gis_enum:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: Pointer to the enum to update.
+ *
+ * Get-if-set an enum from @container.
+ *
+ * Note enums are treated as 32bit integers.
+ *
+ * Returns: %TRUE if @v was actually updated, %FALSE when there is no
+ *          such enum in the container.
+ *
+ * Since: 1.1.
+ **/
+/* FIXME: this is probably wrong.  It's here to localize the problem with
+ * enum/int/int32 exchanging in a one place. */
+gboolean
+gwy_container_gis_enum(GwyContainer *container,
+                       GQuark key,
+                       guint *value)
+{
+    gint32 value32;
+
+    if (gwy_container_gis_int32(container, key, &value32)) {
+        *value = value32;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/**
  * gwy_container_get_int64_by_name:
  * @c: A #GwyContainer.
  * @n: A nul-terminated name (id).
@@ -1456,6 +1534,41 @@ gwy_container_set_int32(GwyContainer *container,
     g_value_init(&gvalue, G_TYPE_INT);
     g_value_set_int(&gvalue, value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+}
+
+/**
+ * gwy_container_set_enum_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: An enum.
+ *
+ * Stores an enum into container @c, identified by name @n.
+ *
+ * Note enums are treated as 32bit integers.
+ *
+ * Since: 1.1.
+ **/
+
+/**
+ * gwy_container_set_enum:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: An enum integer.
+ *
+ * Stores an enum into @container, identified by @key.
+ *
+ * Note enums are treated as 32bit integers.
+ *
+ * Since: 1.1.
+ **/
+void
+gwy_container_set_enum(GwyContainer *container,
+                       GQuark key,
+                       guint value)
+{
+    gint32 value32 = value;
+
+    gwy_container_set_int32(container, key, value32);
 }
 
 /**

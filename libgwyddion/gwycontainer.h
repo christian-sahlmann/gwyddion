@@ -112,6 +112,14 @@ gint32     gwy_container_get_int32          (GwyContainer *container,
 gboolean   gwy_container_gis_int32          (GwyContainer *container,
                                              GQuark key,
                                              gint32 *value);
+void       gwy_container_set_enum           (GwyContainer *container,
+                                             GQuark key,
+                                             guint value);
+guint      gwy_container_get_enum           (GwyContainer *container,
+                                             GQuark key);
+gboolean   gwy_container_gis_enum           (GwyContainer *container,
+                                             GQuark key,
+                                             guint *value);
 void       gwy_container_set_int64          (GwyContainer *container,
                                              GQuark key,
                                              gint64 value);
@@ -169,6 +177,9 @@ void       gwy_container_thaw_watch         (GwyContainer *container);
 #define gwy_container_set_int32_by_name(c,n,v) gwy_container_set_int32(c,g_quark_from_string(n),v)
 #define gwy_container_get_int32_by_name(c,n) gwy_container_get_int32(c,g_quark_try_string(n))
 #define gwy_container_gis_int32_by_name(c,n,v) gwy_container_gis_int32(c,g_quark_from_string(n),v)
+#define gwy_container_set_enum_by_name(c,n,v) gwy_container_set_enum(c,g_quark_from_string(n),v)
+#define gwy_container_get_enum_by_name(c,n) gwy_container_get_enum(c,g_quark_try_string(n))
+#define gwy_container_gis_enum_by_name(c,n,v) gwy_container_gis_enum(c,g_quark_from_string(n),v)
 #define gwy_container_set_int64_by_name(c,n,v) gwy_container_set_int64(c,g_quark_from_string(n),v)
 #define gwy_container_get_int64_by_name(c,n) gwy_container_get_int64(c,g_quark_try_string(n))
 #define gwy_container_gis_int64_by_name(c,n,v) gwy_container_gis_int64(c,g_quark_from_string(n),v)
