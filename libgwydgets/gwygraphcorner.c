@@ -115,6 +115,14 @@ gwy_graph_corner_init(G_GNUC_UNUSED GwyGraphCorner *graph_corner)
 
 }
 
+/**
+ * gwy_graph_corner_new:
+ *  
+ *
+ * GwyGraphCorner has now no special features. It is reserved for future.
+ *
+ * Returns: new #GwyGraphCorner widget
+ **/
 GtkWidget*
 gwy_graph_corner_new()
 {

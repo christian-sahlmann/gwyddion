@@ -2,11 +2,19 @@
 GwyGraph
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Widget for displaying graphs
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+GwyGraph is basic widget for displaying graphs.
+It consist of several widgets that can be also used sparately.
+However, it is recomended (and it should be easy)
+to use whole GwyGraph widget and its API for most of the purposes.
+</para>
+<para>
+GwyGraph is still in developement. Basic functionality and API is
+however allready set up. In the future, more API functions will
+be introduced probably.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -16,7 +24,11 @@ GwyGraph
 
 <!-- ##### TYPEDEF GwyGraphAutoProperties ##### -->
 <para>
-
+This structure corresponds to settings of display mode of data that
+are added with no specific display mode requests (lines/points, line color, etc.).
+For these data, drawing properties are determined automatically, in order
+to make curves distinguishable. These automatically generated curve properties
+are saved here.
 </para>
 
 
