@@ -429,6 +429,8 @@ gwy_app_toolbox_update_state(GwyMenuSensData *sens_data)
  * @GWY_MENU_FLAG_LAST_PROC: There is a last-run data processing function
  *                           to rerun.
  * @GWY_MENU_FLAG_LAST_GRAPH: There is a last-run graph function to rerun.
+ * @GWY_MENU_FLAG_DATA_MASK: There is a mask on the data.
+ * @GWY_MENU_FLAG_DATA_SHOW: There is a presentation on the data.
  * @GWY_MENU_FLAG_MASK: All the bits combined.
  *
  * Menu sensitivity flags.
