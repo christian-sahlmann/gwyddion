@@ -1699,25 +1699,28 @@ void gwy_data_line_part_subtract_polynom(GwyDataLine *data_line,
                                          gint n, gdouble *coeffs, gint from, gint to)
 {
     gint i, j;
-    gdouble val=0;
+    gdouble val;
 
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    for (i=from; i<to; i++)
-    {
-        val = coeffs[0];
-        for (j=1; j<n; j++) val += coeffs[j]*pow(i,j);
-        
-        data_line->data[i] -= val;       
+    for (i = from; i < to; i++) {
+        val = 0.0;
+        for (j = n; j; j--) {
+            val += coeffs[j];
+            val *= i;
+        }
+        val += coeffs[0];
+
+        data_line->data[i] -= val;
     }
-    
+
 }
 
 void gwy_data_line_subtract_polynom(GwyDataLine *data_line,
                                          gint n, gdouble *coeffs)
 {
-    gwy_data_line_part_subtract_polynom(data_line, n, coeffs, 
+    gwy_data_line_part_subtract_polynom(data_line, n, coeffs,
                                         0, gwy_data_line_get_res(data_line));
 }
 
