@@ -170,6 +170,8 @@ static void
 gwy_graph_area_finalize(GObject *object)
 {
     GwyGraphArea *area;
+    GwyGraphAreaCurve *pcurve;
+    guint i;
 
     gwy_debug("finalizing a GwyGraphArea (refcount = %u)", object->ref_count);
 
@@ -177,6 +179,15 @@ gwy_graph_area_finalize(GObject *object)
     g_return_if_fail(GWY_IS_GRAPH_AREA(object));
 
     area = GWY_GRAPH_AREA(object);
+   
+    while (area->curves->len)
+    {
+        pcurve = g_ptr_array_index (area->curves, 0);    
+        g_free(pcurve->data.xvals);
+        g_free(pcurve->data.yvals);
+        g_free(pcurve->points);
+    };
+    
     g_ptr_array_free(area->curves, 1);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);

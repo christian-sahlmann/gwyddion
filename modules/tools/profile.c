@@ -82,11 +82,14 @@ gwy_tool_profile_use(GwyDataWindow *data_window,
         profile_dialog_abandon();
         return;
     }
+    
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
+    
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == select_layer)
         return;
+    
     if (select_layer && updated_id)
         g_signal_handler_disconnect(select_layer, updated_id);
 
@@ -107,7 +110,7 @@ gwy_tool_profile_use(GwyDataWindow *data_window,
     if (!dtl)
     {
         dtl = g_ptr_array_new(); 
-        for (i=0; i<5; i++) g_ptr_array_add(dtl, (gpointer)gwy_data_line_new(100, 100, 0));
+        for (i=0; i<5; i++) g_ptr_array_add(dtl, (gpointer)gwy_data_line_new(10, 10, 0));
     }
     if (!str)
     {
@@ -214,6 +217,9 @@ profile_do(void)
 static void
 profile_dialog_abandon(void)
 {
+    guint i;
+    
+    gwy_debug("%s", __FUNCTION__);
     if (select_layer && updated_id)
         g_signal_handler_disconnect(select_layer, updated_id);
     updated_id = 0;
@@ -225,6 +231,12 @@ profile_dialog_abandon(void)
         response_id = 0;
         controls.is_visible = FALSE;
     }
+    
+    if (dtl) g_ptr_array_free(dtl, 1);
+    if (str) g_ptr_array_free(str, 1);
+    dtl = NULL;
+    str = NULL;
+     
 }
 
 static GtkWidget*
