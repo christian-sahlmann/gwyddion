@@ -141,6 +141,8 @@ gwy_tool_func_build_toolbar(GtkSignalFunc item_callback,
     gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
     gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
                               GTK_ICON_SIZE_BUTTON);
+    if (!entries)
+        return toolbar;
 
     group = tool_toolbar_append(toolbar, NULL,
                                 (GwyToolFuncInfo*)entries->data, item_callback);
