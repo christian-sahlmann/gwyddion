@@ -136,7 +136,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "layer-lines",
-    "Layer allowing selection of arbitrary straight lines.",
+    N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -264,7 +264,6 @@ gwy_layer_lines_finalize(GObject *object)
 {
     GwyLayerLinesClass *klass;
     GwyLayerLines *layer;
-    gint i;
 
     gwy_debug("");
 
@@ -276,8 +275,6 @@ gwy_layer_lines_finalize(GObject *object)
     gwy_vector_layer_cursor_free_or_unref(&klass->move_cursor);
     gwy_vector_layer_cursor_free_or_unref(&klass->nearline_cursor);
 
-    for (i = 0; i < layer->nlines; i++)
-        gwy_object_unref(layer->line_labels[i]);
     g_free(layer->line_labels);
     g_free(layer->lines);
 
@@ -354,6 +351,7 @@ gwy_layer_lines_set_max_lines(GwyLayerLines *layer,
     if (layer->inear >= nlines)
         layer->inear = -1;
 
+    /* resize label array */
     layer->lines = g_renew(gdouble, layer->lines, 4*layer->nlines);
     for (i = nlines; i < oldnlines; i++)
         gwy_object_unref(layer->line_labels[i]);
@@ -776,10 +774,16 @@ gwy_layer_lines_plugged(GwyDataViewLayer *layer)
 static void
 gwy_layer_lines_unplugged(GwyDataViewLayer *layer)
 {
+    GwyLayerLines *lines_layer;
+    gint i;
+
     gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
+    lines_layer = GWY_LAYER_LINES(layer);
 
-    GWY_LAYER_LINES(layer)->nselected = 0;
+    for (i = 0; i < lines_layer->nlines; i++)
+        gwy_object_unref(lines_layer->line_labels[i]);
+    lines_layer->nselected = 0;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
 
