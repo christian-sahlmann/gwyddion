@@ -125,6 +125,7 @@ gwy_layer_select_init(GwyLayerSelect *layer)
     gwy_layer_cursor_new_or_ref(&klass->corner_cursor[2], GDK_UR_ANGLE);
     gwy_layer_cursor_new_or_ref(&klass->corner_cursor[3], GDK_LR_ANGLE);
     layer->selected = FALSE;
+    layer->is_crop = FALSE;
 }
 
 static void
@@ -214,10 +215,21 @@ gwy_layer_select_draw(GwyDataViewLayer *layer,
     if (ymax < ymin)
         GWY_SWAP(gint, ymin, ymax);
 
-    gwy_debug("[%d,%d] to [%d,%d]",
-              xmin, ymin, xmax, ymax);
-    gdk_draw_rectangle(drawable, layer->gc, FALSE,
-                       xmin, ymin, xmax - xmin, ymax - ymin);
+    gwy_debug("[%d,%d] to [%d,%d]", xmin, ymin, xmax, ymax);
+    if (select_layer->is_crop) {
+        gint width, height;
+
+        gdk_drawable_get_size(drawable, &width, &height);
+        gdk_draw_line(drawable, layer->gc, 0, ymin, width, ymin);
+        if (ymin != ymax)
+            gdk_draw_line(drawable, layer->gc, 0, ymax, width, ymax);
+        gdk_draw_line(drawable, layer->gc, xmin, 0, xmin, height);
+        if (xmin != xmax)
+            gdk_draw_line(drawable, layer->gc, xmax, 0, xmax, height);
+    }
+    else
+        gdk_draw_rectangle(drawable, layer->gc, FALSE,
+                           xmin, ymin, xmax - xmin, ymax - ymin);
 
 }
 
@@ -310,16 +322,18 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
     select_layer->button = event->button;
     select_layer->x1 = xreal;
     select_layer->y1 = yreal;
+    select_layer->selected = TRUE;
     if (!keep_old) {
         select_layer->x0 = xreal;
         select_layer->y0 = yreal;
+        if (select_layer->is_crop)
+            gwy_layer_select_draw(layer, layer->parent->window);
     }
     else
         gwy_layer_select_draw(layer, layer->parent->window);
     gwy_debug("[%g,%g] to [%g,%g]",
               select_layer->x0, select_layer->y0,
               select_layer->x1, select_layer->y1);
-    select_layer->selected = TRUE;
 
     gdk_window_set_cursor(layer->parent->window, klass->resize_cursor);
 
@@ -433,6 +447,47 @@ gwy_layer_select_unselect(GwyDataViewLayer *layer)
     GWY_LAYER_SELECT(layer)->selected = FALSE;
     gwy_layer_select_save(layer);
     gwy_data_view_layer_updated(layer);
+}
+
+/**
+ * gwy_layer_select_set_is_crop:
+ * @layer: A #GwyLayerSelect.
+ * @is_crop: %TRUE if @layer should be crop-style, %FALSE for select-style.
+ *
+ * Sets crop-style (lines) or select-style (rectangle) of @layer.
+ **/
+void
+gwy_layer_select_set_is_crop(GwyDataViewLayer *layer,
+                             gboolean is_crop)
+{
+    GwyLayerSelect *select_layer;
+
+    g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
+    select_layer = GWY_LAYER_SELECT(layer);
+
+    if (is_crop == select_layer->is_crop)
+        return;
+    if (layer->parent)
+        gwy_layer_select_draw(layer, layer->parent->window);
+    select_layer->is_crop = is_crop;
+    if (layer->parent)
+        gwy_layer_select_draw(layer, layer->parent->window);
+}
+
+/**
+ * gwy_layer_select_get_is_crop:
+ * @layer: A #GwyLayerSelect.
+ *
+ * Returns whether @layer style is crop (lines) or select (rectange).
+ *
+ * Returns: %TRUE when @layer is crop-style, %FALSE when @layer is
+ *          select-style.
+ **/
+gboolean
+gwy_layer_select_get_is_crop(GwyDataViewLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_SELECT(layer), FALSE);
+    return GWY_LAYER_SELECT(layer)->is_crop;
 }
 
 static void

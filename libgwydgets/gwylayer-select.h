@@ -45,6 +45,7 @@ typedef struct _GwyLayerSelectClass GwyLayerSelectClass;
 struct _GwyLayerSelect {
     GwyDataViewLayer parent_instance;
 
+    gboolean is_crop;
     gboolean selected;
     gint inear;
     guint button;
@@ -70,6 +71,9 @@ gboolean         gwy_layer_select_get_selection   (GwyDataViewLayer *layer,
                                                    gdouble *xmax,
                                                    gdouble *ymax);
 void             gwy_layer_select_unselect        (GwyDataViewLayer *layer);
+gboolean         gwy_layer_select_get_is_crop     (GwyDataViewLayer *layer);
+void             gwy_layer_select_set_is_crop     (GwyDataViewLayer *layer,
+                                                   gboolean is_crop);
 
 #ifdef __cplusplus
 }
