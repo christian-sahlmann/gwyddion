@@ -57,7 +57,7 @@ typedef struct _GwyRulerClass   GwyRulerClass;
 
 typedef enum {
     GWY_UNITS_PLACEMENT_NONE,
-    GWY_UNITS_PLACEMENT_AT_ZERO,
+    GWY_UNITS_PLACEMENT_AT_ZERO
 } GwyUnitsPlacement;
 
 /* All distances below are in 1/72nd's of an inch. (According to
