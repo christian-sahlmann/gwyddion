@@ -87,9 +87,7 @@ static void          gwy_3d_make_list           (Gwy3DView * gwy3D,
                                                  gint shape);
 static void          gwy_3d_draw_axes           (Gwy3DView *gwy3dview);
 static void          gwy_3d_draw_light_position (Gwy3DView *gwy3dview);
-static void          gwy_3d_set_projection      (Gwy3DView *gwy3dview,
-                                                 GLfloat width,
-                                                 GLfloat height);
+static void          gwy_3d_set_projection      (Gwy3DView *gwy3dview);
 static GtkAdjustment* gwy_3d_view_create_adjustment (Gwy3DView *gwy3dview,
                                                      const gchar *key,
                                                      gdouble value,
@@ -1366,7 +1364,7 @@ gwy_3d_view_configure(GtkWidget *widget,
         return FALSE;
 
     glViewport(0, 0, w, h);
-    gwy_3d_set_projection(gwy3dview, w, h);
+    gwy_3d_set_projection(gwy3dview);
 
     glMatrixMode(GL_MODELVIEW);
 
@@ -1414,7 +1412,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glLoadIdentity();
 
     /* View transformation. */
-    gwy_3d_set_projection(gwy3D, -1.0, -1.0);
+    gwy_3d_set_projection(gwy3D);
     glTranslatef(0.0, 0.0, -10.0);
     glScalef(gwy3D->view_scale->value,
              gwy3D->view_scale->value,
@@ -1872,7 +1870,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                        format->units);
             gwy_debug("label 1: %s", text);
             gwy_3d_print_text(widget, text, (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
-                              (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f, (int) (sqrt(size)*0.9),
+                              (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f, (int) (sqrt(size)*0.8),
                               1, 1, 0, 0, 0.0f);
             gwy_si_unit_get_format_with_resolution(
                 widget->si_unit,
@@ -1884,7 +1882,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                        (!yfirst ? yreal : xreal)/format->magnitude,
                        format->units);
             gwy_3d_print_text(widget, text, (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
-                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f, (int) (sqrt(size)*0.9),
+                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f, (int) (sqrt(size)*0.8),
                           1, -1, 0,0, 0.0f);
             gwy_si_unit_get_format_with_resolution(
                 widget->si_unit, widget->data_max, widget->data_max, format);
@@ -2034,17 +2032,15 @@ gwy_3d_view_realize_gl (Gwy3DView *widget)
   return;
 }
 
-static void gwy_3d_set_projection(Gwy3DView *widget, GLfloat width, GLfloat height)
+static void gwy_3d_set_projection(Gwy3DView *widget)
 {
-    static GLfloat w, h;
+    GLfloat w, h;
     GLfloat aspect;
 
     gwy_debug(" ");
 
-    if (width > 0.0)
-        w = width;
-    if (height > 0.0)
-        h = height;
+    w = GTK_WIDGET(widget)->allocation.width;
+    h = GTK_WIDGET(widget)->allocation.height;
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
