@@ -48,7 +48,7 @@ gwy_fft_hum(GwyTransformDirection dir,
     gint m, l, i, j, is;
     gdouble imlt;
 
-    imlt = dir * G_PI;
+    imlt = (gint)dir * G_PI;
     fact = 1.0/sqrt(n);
     j = 1;
     for (i = 1; i <= n; i++) {
