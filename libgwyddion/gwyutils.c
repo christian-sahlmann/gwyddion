@@ -25,6 +25,7 @@
 #if (HAVE_MMAP \
      && HAVE_UNISTD_H && HAVE_SYS_STAT_H && HAVE_SYS_TYPES_H && HAVE_FCNTL_H)
 #define USE_MMAP 1
+#include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -331,7 +332,7 @@ gwy_strreplace(const gchar *haystack,
  * @size: Location to store buffer (file) size.
  * @error: Return location for a #GError.
  *
- * Reads or maps file @filename into memory.
+ * Reads or mmaps file @filename into memory.
  *
  * The buffer must be treated as read-only and must be freed with
  * gwy_file_abandon_contents().  It is NOT guaranteed to be NUL-terminated,
@@ -388,7 +389,7 @@ gwy_file_get_contents(const gchar *filename,
  * @size: Buffer size.
  * @error: Return location for a #GError.
  *
- * Frees or unmaps memory allocated by gwy_file_get_contents().
+ * Frees or unmmaps memory allocated by gwy_file_get_contents().
  *
  * Returns: Whether it succeeded.
  **/
@@ -705,13 +706,57 @@ gwy_canonicalize_path(const gchar *path)
         else
             p++;
     }
-    /* a final `..' could make us discard the starting slash */
+    /* a final `..' could fool us into discarding the starting slash */
     if (!*p0) {
       *p0 = '/';
       p0[1] = '\0';
     }
 
     return spath;
+}
+
+/* XXX: Note this function is backported from GLib 2.4 */
+/**
+ * gwy_setenv:
+ * @variable: The environment variable to set, must not contain '='.
+ * @value: The value for to set the variable to.
+ * @overwrite: Whether to change the variable if it already exists.
+ *
+ * Sets an environment variable.
+ *
+ * Note that on some systems, the memory used for the variable and its value
+ * can't be reclaimed later.
+ *
+ * Returns: %FALSE if the environment variable couldn't be set.
+ *
+ * Since: 1.6
+ */
+gboolean
+gwy_setenv(const gchar *variable,
+           const gchar *value,
+           gboolean overwrite)
+{
+    gint result;
+#ifndef HAVE_SETENV
+    gchar *string;
+#endif
+
+    g_return_val_if_fail(strchr(variable, '=') == NULL, FALSE);
+
+#ifdef HAVE_SETENV
+    result = setenv(variable, value, overwrite);
+#else
+    if (!overwrite && g_getenv(variable) != NULL)
+        return TRUE;
+
+    /* This results in a leak when you overwrite existing
+     * settings. It would be fairly easy to fix this by keeping
+     * our own parallel array or hash table.
+     */
+    string = g_strconcat(variable, "=", value, NULL);
+    result = putenv(string);
+#endif
+    return result == 0;
 }
 
 /************************** Documentation ****************************/

@@ -74,6 +74,9 @@ G_CONST_RETURN
 gchar*   gwy_get_home_dir           (void);
 gchar*   gwy_canonicalize_path      (const gchar *path);
 gchar*   gwy_sgettext               (const gchar *msgid);
+gboolean gwy_setenv                 (const gchar *variable,
+                                     const gchar *value,
+                                     gboolean overwrite);
 
 G_END_DECLS
 
