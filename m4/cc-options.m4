@@ -1,6 +1,6 @@
 ## Check for options compiler supports.  This file is in public domain.
 ##
-AC_DEFUN([ye_PROG_CC_OPTION],
+AC_DEFUN([GWY_PROG_CC_OPTION],
 [AC_REQUIRE([AC_PROG_CC])dnl
 dnl
 
