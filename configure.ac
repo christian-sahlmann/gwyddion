@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.5, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.5cvs20040923, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -69,7 +69,7 @@ AC_PATH_PROGS(PASCAL,fpc,:)
 
 # Check Pascal version
 # The outer [] are necessary to quote the inner [] inside sed expressions
-if test "x$PASCAL" != "x"; then
+if test "x$PASCAL" != ":"; then
   AC_MSG_CHECKING([if fpc version >= 1.9])
   fpc_version=`$PASCAL -iV`
   [fpc_major=`echo $fpc_version | sed -e 's/\..*//'`]
