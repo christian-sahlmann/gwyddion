@@ -98,19 +98,19 @@ libgwydgets_la_SOURCES = \
 	gwyvalunit.c
 
 # Note these are test programs not to be included in the distro
-noinst_PROGRAMS = main
-
-main_SOURCES = main.c
-main_LDADD = libgwydgets.la \
-	$(libgwydraw) \
-	$(libgwyprocess) \
-	$(libgwyddion)
-
- test_SOURCES = test.c
- test_LDADD = libgwydgets.la \
- 	$(libgwydraw) \
- 	$(libgwyprocess) \
- 	$(libgwyddion)
+#noinst_PROGRAMS = main
+#
+#main_SOURCES = main.c
+#main_LDADD = libgwydgets.la \
+#	$(libgwydraw) \
+#	$(libgwyprocess) \
+#	$(libgwyddion)
+#
+#test_SOURCES = test.c
+#test_LDADD = libgwydgets.la \
+#	$(libgwydraw) \
+#	$(libgwyprocess) \
+#	$(libgwyddion)
 #
 #wtest_SOURCES = wtest.c
 #wtest_LDADD = libgwydgets.la \
