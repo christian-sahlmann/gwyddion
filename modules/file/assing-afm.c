@@ -45,6 +45,7 @@
 #define EXTENSION ".afm"
 
 #define Angstrom (1e-10)
+#define Z_SCALE (0.5*Angstrom)
 
 typedef struct {
     guint res;
@@ -67,7 +68,7 @@ static GwyModuleInfo module_info = {
     "assing_afm",
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -168,9 +169,7 @@ aafm_load(const gchar *filename)
     read_binary_data(afmfile.res, gwy_data_field_get_data(dfield), p);
     p += 2*afmfile.res*afmfile.res;
     afmfile.range = get_FLOAT(&p);
-    /* FIXME: just getting about the right order of magnitude... */
-    /*gwy_data_field_multiply(dfield, 3e-7/afmfile.range);*/
-    gwy_data_field_multiply(dfield, 1.25e-10*sqrt(afmfile.range*afmfile.real));
+    gwy_data_field_multiply(dfield, Z_SCALE);
 
     unit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(unit));
