@@ -118,5 +118,36 @@
       read them.
     </para>
   </refsect1>
+  <refsect1>
+    <title>Reference Implementations</title>
+    <para>
+      A few sample dump format implementations are included in Gwyddion
+      source distribution.
+    </para>
+    <formalpara>
+      <title>C/C++</title>
+      <para>
+        The plug-in proxy itself is always the most complete reference
+        C/C++ implementation.  See namely
+        <function>text_dump_export()</function> and
+        <function>text_dump_import()</function> functions
+        in <filename>modules/plugin-proxy.c</filename>.
+      </para>
+    </formalpara>
+    <formalpara>
+      <title>Perl</title>
+      <para>
+        A sample Perl data-processing plug-in is included in the source
+        distribution: <filename>plugins/process/cutoff.pl</filename>.
+      </para>
+    </formalpara>
+    <formalpara>
+      <title>Python</title>
+      <para>
+        A sample Python data-processing plug-in is included in the source
+        distribution: <filename>plugins/process/divide_by_2.py</filename>.
+      </para>
+    </formalpara>
+  </refsect1>
 </refentry>
 
