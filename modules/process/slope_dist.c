@@ -72,7 +72,7 @@ static void          slope_output_type_cb         (GObject *radio,
                                                    SlopeControls *controls);
 static GwyDataField* slope_do                     (GwyDataField *dfield,
                                                    SlopeArgs *args);
-static GtkWidget*    slope_do_graph               (GwyDataField *dfield,
+static GtkWidget*    slope_do_graph               (GwyContainer *data,
                                                    SlopeArgs *args);
 static gdouble       compute_slopes               (GwyDataField *dfield,
                                                    gint kernel_size,
@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     "slope_dist",
     N_("Slope distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4.1",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -165,7 +165,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
             break;
 
             case SLOPE_DIST_GRAPH:
-            slope_do_graph(dfield, &args);
+            slope_do_graph(data, &args);
             break;
 
             default:
@@ -382,16 +382,20 @@ slope_do(GwyDataField *dfield,
 }
 
 static GtkWidget*
-slope_do_graph(GwyDataField *dfield,
+slope_do_graph(GwyContainer *container,
                SlopeArgs *args)
 {
-    GtkWidget *graph, *window;
+    GtkWidget *graph;
     GwyGraphAutoProperties prop;
+    GwyDataWindow *data_window;
+    GwyDataField *dfield;
     GwyDataLine *dataline;
     GString *lab;
     gdouble *xder, *yder, *data;
     gint xres, yres, n, i, iphi;
 
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container,
+                                                             "/0/data"));
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
 
@@ -423,8 +427,9 @@ slope_do_graph(GwyDataField *dfield,
     lab = g_string_new(_("Angular slope distribution"));
     gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
                                       1, 1, "deg", " ");
-    window = gwy_app_graph_window_create(graph);
-    gtk_window_set_title(GTK_WINDOW(window), _("Slope Distribution"));
+    data_window = gwy_app_data_window_get_for_data(container);
+    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window,
+                                           _("Slope Distribution"));
 
     g_string_free(lab, TRUE);
     g_object_unref(dataline);

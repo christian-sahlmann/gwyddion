@@ -21,9 +21,12 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
-#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwydatawindow.h>
+#include <libgwydgets/gwyoptionmenus.h>
 #include <app/settings.h>
 #include <app/app.h>
 
@@ -142,7 +145,7 @@ static GwyModuleInfo module_info = {
     "fractal",
     N_("Fractal dimension evaluation"),
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",
     "2004",
 };
@@ -403,12 +406,14 @@ static void
 ok_cb(FractalArgs *args,
       GwyContainer *data)
 {
-    GtkWidget *window, *graph;
+    GtkWidget *graph;
+    GwyDataWindow *data_window;
 
     graph = gwy_graph_new();
     update_graph(args, data, GWY_GRAPH(graph));
-    window = gwy_app_graph_window_create(graph);
-    gtk_window_set_title(GTK_WINDOW(window), _(methods[args->out].name));
+    data_window = gwy_app_data_window_get_for_data(data);
+    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window,
+                                           _(methods[args->out].name));
 }
 
 static gboolean

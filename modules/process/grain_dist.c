@@ -41,7 +41,7 @@ static GwyModuleInfo module_info = {
     "grain_dist",
     N_("Evaluate grain distribution"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.0.2",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -70,7 +70,8 @@ static gboolean
 dist(GwyContainer *data, GwyRunType run)
 {
     GString *lab;
-    GtkWidget *window, *graph;
+    GtkWidget *graph;
+    GwyDataWindow *data_window;
     GwyGraphAutoProperties prop;
     GwyDataLine *dataline;
     GwyDataField *dfield;
@@ -96,8 +97,9 @@ dist(GwyContainer *data, GwyRunType run)
     gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
                                         units->magnitude, 1, units->units, " ");
 
-    window = gwy_app_graph_window_create(graph);
-    gtk_window_set_title(GTK_WINDOW(window), _("Grain size distribution"));
+    data_window = gwy_app_data_window_get_for_data(data);
+    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window,
+                                           _("Grain size distribution"));
 
     g_string_free(lab, TRUE);
     g_object_unref(dataline);
