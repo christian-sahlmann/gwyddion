@@ -546,22 +546,23 @@ gwy_grad_sphere_expose(GtkWidget *widget,
                        GdkEventExpose *event)
 {
     GwyGradSphere *grad_sphere;
-    gint xc, yc;
+    gint xc, yc, xs, ys, xe, ye;
+    GdkRectangle rect;
 
     g_return_val_if_fail(GWY_IS_GRAD_SPHERE(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
-
-    if (event->count > 0)
-        return FALSE;
-
     grad_sphere = GWY_GRAD_SPHERE(widget);
 
-    /* needed?
-    gdk_window_clear_area(widget->window,
-                          0, 0,
-                          widget->allocation.width,
-                          widget->allocation.height);
-    */
+    gdk_region_get_clipbox(event->region, &rect);
+    gwy_debug("bbox = %dx%d  at (%d,%d)",
+              rect.width, rect.height, rect.x, rect.y);
+    xc = (widget->allocation.width - 2*grad_sphere->radius - 1)/2;
+    yc = (widget->allocation.height - 2*grad_sphere->radius - 1)/2;
+    xs = MAX(rect.x, xc) - xc;
+    ys = MAX(rect.y, yc) - yc;
+    xe = MIN(rect.x + rect.width, xc + 2*grad_sphere->radius) - xc;
+    ye = MIN(rect.y + rect.height, yc + 2*grad_sphere->radius) - yc;
+    if (xs >= xe || ys >= ye)
+        return FALSE;
 
     if (grad_sphere->old_theta != grad_sphere->theta
         || grad_sphere->old_phi != grad_sphere->phi) {
@@ -570,15 +571,12 @@ gwy_grad_sphere_expose(GtkWidget *widget,
         grad_sphere->old_theta = grad_sphere->phi;
     }
 
-    xc = (widget->allocation.width - 2*grad_sphere->radius - 1)/2;
-    yc = (widget->allocation.height - 2*grad_sphere->radius - 1)/2;
-    /* TODO: draw only intersection */
     gdk_draw_pixbuf(widget->window,
                     NULL,
                     grad_sphere->sphere_pixbuf,
-                    0, 0,
-                    xc, yc,
-                    -1, -1,
+                    xs, ys,
+                    xc + xs, yc + ys,
+                    xe - xs, ye - ys,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
 
