@@ -1,9 +1,6 @@
 - color range tool -- add histogram
-- add Since: support to gtk-doc.vim
-- context Reset Coolor Range doesn't work
 - I18n under MS Windows
-- Fix creating temporary data by duplicating whole container!!!
-- Fix laplace creating bunches of SIUnits each iteration!!!
+- Fix creating temporary data by duplicating whole container!
 - Do nightly CVS build from a clean checkout, this will also stop the silly
   configure and NEWS modifications
 - Make Ctrl-S save data associated with current window of whatever type, not
@@ -16,7 +13,6 @@
   GwyGradSphere background is strangely shifted.
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Register application/x-gwyddion MIME types, on Win32 and Gnome
-- Remember used function statistics
 - Finish Spot remove
 - Add some guessing to Rawfile
 - Do something with `Remove mask' in Edit menu
