@@ -9,3 +9,10 @@ Tomas Mates <mates@fzu.cz>
 
 NT-MDT Co.
     for MDT format specifications.
+
+Jernej Simoncic
+    for help with win32 libintl linking problems.
+
+MV <kasigra@seznam.cz>
+    for SPMLab format reverse-engineering.
+
