@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-11-26 04:31+0100\n"
-"PO-Revision-Date: 2004-11-26 19:02+0100\n"
+"POT-Creation-Date: 2004-12-06 04:23+0100\n"
+"PO-Revision-Date: 2004-12-06 11:32+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -55,7 +55,7 @@ msgstr "Začínám částečný odhad"
 msgid "Starting full estimation"
 msgstr "Začínám plný odhad"
 
-#: libdraw/gwygradient.c:897 libdraw/gwypalettedef.c:544
+#: libdraw/gwygradient.c:898 libdraw/gwypalettedef.c:544
 #: libgwydgets/gwyglmaterial.c:306
 msgid "Untitled"
 msgstr "Nepojmenovaný"
@@ -206,11 +206,11 @@ msgstr "Veli_kost:"
 
 #: libgwydgets/gwy3dwindow.c:551 modules/file/pixmap.c:674
 #: modules/file/pixmap.c:1553 modules/file/rawfile.c:490
-#: modules/process/angle_dist.c:183 modules/process/calibrate.c:183
+#: modules/process/angle_dist.c:183 modules/process/calibrate.c:213
 #: modules/process/cwt.c:177 modules/process/dwt.c:184
-#: modules/process/dwtanisotropy.c:188 modules/process/dwtcorrection.c:185
+#: modules/process/dwtanisotropy.c:199 modules/process/dwtcorrection.c:185
 #: modules/process/dwtdenoise.c:188 modules/process/fft.c:350
-#: modules/process/fit_2d.c:170 modules/process/fractal.c:208
+#: modules/process/fit_2d.c:174 modules/process/fractal.c:208
 #: modules/process/grain_mark.c:182 modules/process/grain_rem_threshold.c:169
 #: modules/process/grain_wshed.c:169 modules/process/mask_grow_shrink.c:171
 #: modules/process/median-bg.c:180 modules/process/polylevel.c:195
@@ -499,7 +499,7 @@ msgstr ""
 "kterékoli pozdější verze. Plné znění licence najdeš v souboru COPYING v "
 "balíku se zdrojovým kódem.</small>"
 
-#: app/app.c:208
+#: app/app.c:209
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -510,52 +510,52 @@ msgstr ""
 "%s\n"
 "Opravdu skončit?"
 
-#: app/app.c:676
+#: app/app.c:683
 msgid "Untitled Graph"
 msgstr "Nepojmenovaný graf"
 
-#: app/app.c:806
+#: app/app.c:813
 msgid "Export"
 msgstr "Export"
 
-#: app/app.c:810
+#: app/app.c:817
 msgid "Export 3D view to PNG image"
 msgstr "Exportovat trojrozměrný pohled do PNG obrázku"
 
-#: app/app.c:1135 app/app.c:1147
+#: app/app.c:1142 app/app.c:1154
 #, c-format
 msgid "Untitled %d"
 msgstr "Nepojmenovaný %d"
 
-#: app/app.c:1165 app/toolbox.c:641
+#: app/app.c:1172 app/toolbox.c:641
 msgid "/Remove _Mask"
 msgstr "/Odstranit _masku"
 
-#: app/app.c:1166 app/toolbox.c:657
+#: app/app.c:1173 app/toolbox.c:657
 msgid "/Mask _Color"
 msgstr "/_Barva masky"
 
-#: app/app.c:1167
+#: app/app.c:1174
 msgid "/Fix _Zero"
 msgstr "/Opravit _nulu"
 
-#: app/app.c:1168
+#: app/app.c:1175
 msgid "/Reset Color _Range"
 msgstr "/Srovnat _rozsah barev"
 
-#: app/app.c:1169
+#: app/app.c:1176
 msgid "/_Level"
 msgstr "/_Vyrovnat"
 
-#: app/app.c:1170
+#: app/app.c:1177
 msgid "/Zoom _1:1"
 msgstr "/Zvětšení _1:1"
 
-#: app/app.c:1354
+#: app/app.c:1367
 msgid "Export 3D View"
 msgstr "Exportovat trojrozměrný pohled"
 
-#: app/app.c:1381
+#: app/app.c:1394
 msgid "Change Default Mask Color"
 msgstr "Změnit předvolenou barvu masky"
 
@@ -1408,7 +1408,7 @@ msgid "Fit graph"
 msgstr "Proložení grafu"
 
 #: modules/graph/graph_cd.c:259 modules/graph/graph_fit.c:274
-#: modules/process/fit_2d.c:169
+#: modules/process/fit_2d.c:173
 msgid "_Fit"
 msgstr "_Proložit"
 
@@ -1525,32 +1525,32 @@ msgstr "_Obnovit odhady"
 msgid "_Plot inits"
 msgstr "_Použít odhady"
 
-#: modules/graph/graph_fit.c:311 modules/process/fit_2d.c:213
+#: modules/graph/graph_fit.c:311 modules/process/fit_2d.c:217
 msgid "<b>Fitting parameters:</b>"
 msgstr "<b>Parametry prokládání:</b>"
 
-#: modules/graph/graph_fit.c:323 modules/process/fit_2d.c:230
+#: modules/graph/graph_fit.c:323 modules/process/fit_2d.c:234
 msgid "<b>Initial</b>"
 msgstr "<b>Počáteční</b>"
 
-#: modules/graph/graph_fit.c:329 modules/process/fit_2d.c:236
+#: modules/graph/graph_fit.c:329 modules/process/fit_2d.c:240
 #: modules/process/fractal.c:281
 msgid "<b>Result</b>"
 msgstr "<b>Výsledek</b>"
 
-#: modules/graph/graph_fit.c:335 modules/process/fit_2d.c:243
+#: modules/graph/graph_fit.c:335 modules/process/fit_2d.c:247
 msgid "<b>Error</b>"
 msgstr "<b>Chyba</b>"
 
-#: modules/graph/graph_fit.c:341 modules/process/fit_2d.c:249
+#: modules/graph/graph_fit.c:341 modules/process/fit_2d.c:253
 msgid "<b>Fix</b>"
 msgstr "<b>Pevný</b>"
 
-#: modules/graph/graph_fit.c:399 modules/process/fit_2d.c:308
+#: modules/graph/graph_fit.c:399 modules/process/fit_2d.c:312
 msgid "<b>Correlation matrix:</b>"
 msgstr "<b>Korelační matice:</b>"
 
-#: modules/graph/graph_fit.c:417 modules/process/fit_2d.c:327
+#: modules/graph/graph_fit.c:417 modules/process/fit_2d.c:331
 msgid "<b>Chi-square result:</b>"
 msgstr "<b>Chí kvadrát výsledku:</b>"
 
@@ -1815,47 +1815,51 @@ msgstr "/_Jednoduché operace/Rotace v _kladném smyslu"
 msgid "/_Basic Operations/Flip _Both"
 msgstr "/_Jednoduché operace/Překlopení v _obou směrech"
 
-#: modules/process/calibrate.c:91
+#: modules/process/calibrate.c:118
 msgid "Recalibrate scan axis"
 msgstr "Kalibrovat osy"
 
-#: modules/process/calibrate.c:110
+#: modules/process/calibrate.c:134
 msgid "/_Basic Operations/_Recalibrate..."
 msgstr "/_Jednoduché operace/_Kalibrace os..."
 
-#: modules/process/calibrate.c:182
+#: modules/process/calibrate.c:212
 msgid "Calibrate"
 msgstr "Kalibrovat osy"
 
-#: modules/process/calibrate.c:199
+#: modules/process/calibrate.c:230
 msgid "<b>New Real Dimensions</b>"
 msgstr "<b>Nové fyzické rozměry</b>"
 
-#: modules/process/calibrate.c:204
+#: modules/process/calibrate.c:236
 msgid "_X range:"
 msgstr "_X-ový rozsah:"
 
-#: modules/process/calibrate.c:212
+#: modules/process/calibrate.c:259
 msgid "_Y range:"
 msgstr "_Y-ový rozsah:"
 
-#: modules/process/calibrate.c:220
+#: modules/process/calibrate.c:273
+msgid "_Square samples"
+msgstr "Č_tvercové pixely"
+
+#: modules/process/calibrate.c:278
 msgid "_Z range:"
 msgstr "_Z-ový rozsah:"
 
-#: modules/process/calibrate.c:231
+#: modules/process/calibrate.c:303
 msgid "<b>Calibration Coefficients</b>"
 msgstr "<b>Kalibrační koeficienty</b>"
 
-#: modules/process/calibrate.c:239
+#: modules/process/calibrate.c:311
 msgid "_X calibration factor:"
 msgstr "Kalibrační faktor v ose _X:"
 
-#: modules/process/calibrate.c:249
+#: modules/process/calibrate.c:319
 msgid "_Y calibration factor:"
 msgstr "Kalibrační faktor v ose _Y:"
 
-#: modules/process/calibrate.c:259
+#: modules/process/calibrate.c:327
 msgid "_Z calibration factor:"
 msgstr "Kalibrační faktor v ose _Z:"
 
@@ -1939,7 +1943,7 @@ msgid "_Preserve size (don't resize to power of 2)"
 msgstr "Zachovej velikost (neškáluj na mocninu 2)"
 
 #: modules/process/cwt.c:207 modules/process/dwt.c:209
-#: modules/process/dwtanisotropy.c:204 modules/process/dwtcorrection.c:201
+#: modules/process/dwtanisotropy.c:215 modules/process/dwtcorrection.c:201
 #: modules/process/dwtdenoise.c:213 modules/process/fft.c:375
 #: modules/process/fractal.c:228 modules/process/rotate.c:207
 #: modules/process/scale.c:207 modules/process/unrotate.c:233
@@ -1948,12 +1952,12 @@ msgid "_Interpolation type:"
 msgstr "Typ _interpolace:"
 
 #: modules/process/cwt.c:212 modules/process/dwt.c:215
-#: modules/process/dwtanisotropy.c:210 modules/process/dwtcorrection.c:207
+#: modules/process/dwtanisotropy.c:221 modules/process/dwtcorrection.c:207
 #: modules/process/dwtdenoise.c:219
 msgid "_Wavelet type:"
 msgstr "Typ _waveletu:"
 
-#: modules/process/dwt.c:79 modules/process/dwtanisotropy.c:78
+#: modules/process/dwt.c:79 modules/process/dwtanisotropy.c:83
 #: modules/process/dwtcorrection.c:74 modules/process/dwtdenoise.c:86
 msgid "2D Discrete Wavelet Transform module"
 msgstr ""
@@ -1970,20 +1974,24 @@ msgstr ""
 msgid "2D DWT"
 msgstr ""
 
-#: modules/process/dwtanisotropy.c:94
+#: modules/process/dwtanisotropy.c:99
 msgid "/_Integral Transforms/_DWT anisotropy..."
 msgstr ""
 
-#: modules/process/dwtanisotropy.c:137
+#: modules/process/dwtanisotropy.c:142
 msgid "DWT_ANISOTROPY: Data must be square."
 msgstr ""
 
-#: modules/process/dwtanisotropy.c:187
+#: modules/process/dwtanisotropy.c:198
 msgid "2D DWT_ANISOTROPY"
 msgstr ""
 
-#: modules/process/dwtanisotropy.c:216
+#: modules/process/dwtanisotropy.c:227
 msgid "X/Y ratio threshold:"
+msgstr ""
+
+#: modules/process/dwtanisotropy.c:236
+msgid "Low level exclude limit:"
 msgstr ""
 
 #: modules/process/dwtcorrection.c:90
@@ -2086,19 +2094,23 @@ msgstr "Imaginární"
 msgid "Phase"
 msgstr "Fáze"
 
-#: modules/process/fit_2d.c:106
+#: modules/process/fit_2d.c:108
 msgid "2D fitting"
 msgstr ""
 
-#: modules/process/fit_2d.c:122
+#: modules/process/fit_2d.c:124
 msgid "/_Background/_2D fit..."
 msgstr ""
 
-#: modules/process/fit_2d.c:168
+#: modules/process/fit_2d.c:171
 msgid "2D fit"
 msgstr ""
 
-#: modules/process/fit_2d.c:218
+#: modules/process/fit_2d.c:172
+msgid "_Guess"
+msgstr ""
+
+#: modules/process/fit_2d.c:222
 msgid "Function: sphere"
 msgstr ""
 
@@ -2309,19 +2321,19 @@ msgstr "Inicializace"
 
 #: modules/process/grain_wshed.c:521
 msgid "Finding minima"
-msgstr ""
+msgstr "Hledám minima"
 
 #: modules/process/grain_wshed.c:527
 msgid "Locating"
-msgstr ""
+msgstr "Lokalizuji"
 
 #: modules/process/grain_wshed.c:534
 msgid "Watershed"
-msgstr ""
+msgstr "Watershed"
 
 #: modules/process/grain_wshed.c:540
 msgid "Marking boundaries"
-msgstr ""
+msgstr "Označuji hranice"
 
 #: modules/process/laplace.c:45
 msgid "Remove data under mask using laplace equation"
@@ -2339,21 +2351,25 @@ msgstr "Laplaceovská korekce"
 msgid "There is no mask to be used for computation."
 msgstr "Není zde maska, kterou by bylo možné použít."
 
-#: modules/process/level.c:43
+#: modules/process/level.c:45
 msgid "Simple automatic levelling."
 msgstr "Jednoduché automatické vyrovnání."
 
-#: modules/process/level.c:59
+#: modules/process/level.c:61
 msgid "/_Level/_Level"
 msgstr "/_Vyrovnání/_Vyrovnání"
 
-#: modules/process/level.c:66
+#: modules/process/level.c:68
 msgid "/_Level/Level _Rotate"
 msgstr "/_Vyrovnání/Vyrovnání _rotací"
 
-#: modules/process/level.c:73
+#: modules/process/level.c:75
 msgid "/_Level/Fix _Zero"
 msgstr "/_Vyrovnání/Oprava _nuly"
+
+#: modules/process/level.c:82
+msgid "/_Level/Zero _Mean Value"
+msgstr "/_Vyrovnání/Vynulování _střední hodnoty"
 
 #: modules/process/linecorrect.c:41
 msgid "Line defect correction, mostly experimental algorithms."
@@ -2649,12 +2665,12 @@ msgid "Angular slope distribution"
 msgstr "Úhlové rozdělení sklonu"
 
 #: modules/process/sphere-revolve.c:98
-msgid "Level data by revolving a sphere."
-msgstr "Vyrovnání dat valením koule."
+msgid "Level data by revolving an arc or a sphere."
+msgstr "Vyrovnání dat valením oblouku či koule."
 
 #: modules/process/sphere-revolve.c:114
-msgid "/_Level/Revolve _Sphere (1D)..."
-msgstr "/_Vyrovnání/Valení _Koule (1D)..."
+msgid "/_Level/Revolve _Arc..."
+msgstr "/_Vyrovnání/Valení _oblouku..."
 
 #: modules/process/sphere-revolve.c:204 modules/tools/polynom.c:140
 msgid "_Horizontal direction"
@@ -2669,8 +2685,8 @@ msgid "_Both directions"
 msgstr "O_ba směry"
 
 #: modules/process/sphere-revolve.c:215
-msgid "Revolve Sphere (1D)"
-msgstr "Valení koule (1D)"
+msgid "Revolve Arc"
+msgstr "Valení oblouku"
 
 #: modules/process/tip_blind.c:120
 msgid "Blind estimation of SPM tip using Villarubia's algorithm"
@@ -3216,6 +3232,15 @@ msgstr "Statistické veličiny"
 #: modules/tools/stats.c:169
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametry</b>"
+
+#~ msgid "Level data by revolving a sphere."
+#~ msgstr "Vyrovnání dat valením koule."
+
+#~ msgid "/_Level/Revolve _Sphere (1D)..."
+#~ msgstr "/_Vyrovnání/Valení _Koule (1D)..."
+
+#~ msgid "Revolve Sphere (1D)"
+#~ msgstr "Valení koule (1D)"
 
 #~ msgid "Initializing..."
 #~ msgstr "Inicializace"
