@@ -30,11 +30,9 @@ int main(int argc, char *argv[])
 
     /****************************************** palette test ********************************************/
     
-    p = (GwyPalette*)gwy_palette_new(512);
-
     g_message("preparing palette...");
-  
-    gwy_palette_setup_predef(p, GWY_PALETTE_BW2);
+    p = (GwyPalette*)gwy_palette_new(GWY_PALETTE_BW2);
+
   
     /*gwy_palette_def_print(p->def);*/
    
@@ -42,7 +40,8 @@ int main(int argc, char *argv[])
     pec.r=10, pec.g=20; pec.b=30; pec.a=0;
     gwy_palette_set_color(p, &pec, 500);
     */
-    printf("%d %d %d %d\n", (gint32)p->ints[40], (gint32)p->ints[41], (gint32)p->ints[42], (gint32)p->ints[43]);
+    buffer = gwy_palette_get_samples(p, &i);
+    printf("%d %d %d %d\n", (gint32)buffer[40], (gint32)buffer[41], (gint32)buffer[42], (gint32)buffer[43]);
 
     /*plot a field in the given palette*/
     a = (GwyDataField *) gwy_data_field_new(500, 250, 500, 500, 1);

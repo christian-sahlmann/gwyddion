@@ -18,9 +18,11 @@ extern "C" {
 #define GWY_IS_PALETTEDEF(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_PALETTEDEF))
 #define GWY_IS_PALETTEDEF_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_PALETTEDEF))
 #define GWY_PALETTEDEF_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_PALETTEDEF, GwyPaletteDef))
-   
-    
+
+
 /*Palette entry (red/green/blue) in range of 0-255*/
+/* XXX: this is wrong, the doubles should be in the range 0.0-1.0, only
+ * rendered colors should have output bit depth */
 typedef struct{
     gdouble r;
     gdouble g;
