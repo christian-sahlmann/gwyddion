@@ -195,13 +195,30 @@ create_view_menu(GtkAccelGroup *accel_group)
                                accel_group);
 }
 
+static void
+run_process_func_cb(gchar *name,
+                    guint cb_action,
+                    GtkWidget *who_knows)
+{
+    GwyContainer *data;
+
+    gwy_debug("first argument = %s", name);
+    gwy_debug("second argument = %u", cb_action);
+    gwy_debug("third argument = %p (%s)",
+              who_knows, g_type_name(G_TYPE_FROM_INSTANCE(who_knows)));
+    data = gwy_app_get_current_data();
+    g_return_if_fail(data);
+    gwy_run_process_func(name, data, GWY_RUN_NONINTERACTIVE);
+}
+
 GtkWidget*
 create_data_menu(GtkAccelGroup *accel_group)
 {
     GtkItemFactory *item_factory;
     GtkWidget *widget, *alignment;
 
-    item_factory = GTK_ITEM_FACTORY(gwy_build_process_menu(accel_group));
+    item_factory = GTK_ITEM_FACTORY(gwy_build_process_menu(accel_group,
+                                                           run_process_func_cb));
     widget = gtk_item_factory_get_widget(item_factory, "<data>");
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
     gtk_container_add(GTK_CONTAINER(alignment), widget);

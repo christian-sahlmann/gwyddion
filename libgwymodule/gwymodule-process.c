@@ -69,29 +69,14 @@ gwy_run_process_func(const guchar *name,
     func_info = g_hash_table_lookup(process_funcs, name);
     g_return_val_if_fail(func_info, FALSE);
     g_return_val_if_fail(run & func_info->run, FALSE);
-    /* XXX the test is commented out only for testing,
-     * since we don't have any container loaded yet
-     * TODO uncomment it ASAP */
-    /* g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE); */
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     return func_info->process(data, run);
-}
-
-static void
-gwy_run_process_func_cb(gchar *name,
-                        guint cb_action,
-                        GtkWidget *who_knows)
-{
-    gwy_debug("first argument = %s", name);
-    gwy_debug("second argument = %u", cb_action);
-    gwy_debug("third argument = %p (%s)",
-              who_knows, g_type_name(G_TYPE_FROM_INSTANCE(who_knows)));
-    gwy_run_process_func(name, NULL, GWY_RUN_NONINTERACTIVE);
 }
 
 static void
 create_process_menu_entry(const guchar *key,
                           GwyProcessFuncInfo *func_info,
-                          GList **entries)
+                          GSList **entries)
 {
     GtkItemFactoryEntry *menu_item;
 
@@ -102,13 +87,13 @@ create_process_menu_entry(const guchar *key,
     menu_item = g_new(GtkItemFactoryEntry, 1);
     menu_item->path = g_strconcat("/_Data Process", func_info->menu_path, NULL);
     menu_item->accelerator = NULL;
-    menu_item->callback = gwy_run_process_func_cb;
+    menu_item->callback = (GtkItemFactoryCallback)(*entries)->data;
     menu_item->callback_action = 42;
     menu_item->item_type = "<Item>";
     /* XXX: this is CHEATING!  we set it to NULL later */
     menu_item->extra_data = key;
 
-    *entries = g_list_prepend(*entries, menu_item);
+    *entries = g_slist_insert(*entries, menu_item, 1);
 }
 
 static gint
@@ -122,26 +107,33 @@ process_menu_entry_compare(GtkItemFactoryEntry *a,
  * gwy_build_process_menu:
  * @accel_group: The accelerator group the menu should use (%NULL for a new
  *               one).
+ * @item_callback: A #GtkItemFactoryCallback1 called when an item from the
+ *                 menu is selected.
  *
  * Creates #GtkItemFactory for a data processing menu with all registered data
  * processing functions.
  *
- * Returns: The menu as a #GtkObject.
+ * Returns: The menu item factory as a #GtkObject.
  **/
 GtkObject*
-gwy_build_process_menu(GtkAccelGroup *accel_group)
+gwy_build_process_menu(GtkAccelGroup *accel_group,
+                       GCallback *item_callback)
 {
     GtkItemFactory *item_factory;
     GtkItemFactoryEntry *menu_item;
     GtkItemFactoryEntry branch, tearoff;
-    GList *entries = NULL;
-    GList *l, *p;
+    GSList *entries = NULL;
+    GSList *l, *p;
     gpointer cbdata;
     gint i;
 
+    /* a silly way of passing the callback to create_process_menu_entry:
+     * add it as the first entries item */
+    entries = g_slist_prepend(entries, item_callback);
     g_hash_table_foreach(process_funcs, (GHFunc)create_process_menu_entry,
                          &entries);
-    entries = g_list_sort(entries, (GCompareFunc)process_menu_entry_compare);
+    entries = g_slist_delete_link(entries, entries);
+    entries = g_slist_sort(entries, (GCompareFunc)process_menu_entry_compare);
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<data>",
                                         accel_group);
 
@@ -153,7 +145,7 @@ gwy_build_process_menu(GtkAccelGroup *accel_group)
     menu_item->callback_action = 0;
     menu_item->item_type = "<Branch>";
     menu_item->extra_data = NULL;
-    entries = g_list_prepend(entries, menu_item);
+    entries = g_slist_prepend(entries, menu_item);
     gwy_debug("inserting %s `%s'", menu_item->item_type, menu_item->path);
     gtk_item_factory_create_item(item_factory, menu_item, NULL, 1);
 
@@ -223,7 +215,7 @@ gwy_build_process_menu(GtkAccelGroup *accel_group)
         g_free(menu_item->path);
         g_free(menu_item);
     }
-    g_list_free(entries);
+    g_slist_free(entries);
 
     return (GtkObject*)item_factory;
 }
