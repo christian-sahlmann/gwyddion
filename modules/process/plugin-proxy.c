@@ -14,11 +14,6 @@
 #define PLUGIN_PROXY_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)
 
-/* TODO: Either replace g_spawn_sync() with something capable returning
- * the _length_ of the captured stdout, or use a temporary file for
- * plug-in output too.  Now it's a way too easy to crash the proxy.
- */
-
 typedef struct {
     GwyProcessFuncInfo func;
     gchar *file;
@@ -41,7 +36,8 @@ static void           dump_export_data_field     (GwyDataField *dfield,
                                                   const gchar *name,
                                                   FILE *fh);
 static GwyContainer*  text_dump_import           (GwyContainer *old_data,
-                                                  gchar *buffer);
+                                                  gchar *buffer,
+                                                  gsize size);
 static GwyRunType     str_to_run_modes           (const gchar *str);
 static const char*    run_mode_to_str            (GwyRunType run);
 static gchar*         next_line                  (gchar **buffer);
@@ -180,6 +176,7 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
     gchar *filename, *buffer = NULL;
     GError *err = NULL;
     gint exit_status;
+    gsize size = 0;
     FILE *fh;
     GList *l;
     gchar *args[] = { NULL, "run", NULL, NULL, NULL };
@@ -199,7 +196,8 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
     }
     g_return_val_if_fail(run & info->func.run, FALSE);
     /* keep the file open
-     * FIXME: who knows what it causes on MS Windows */
+     * FIXME: who knows what it causes on MS Windows, we definitely can't
+     * unlink it before close, and maybe even not overwrite it */
     fh = text_dump_export(data, &filename);
     g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
@@ -208,15 +206,16 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
     gwy_debug("%s: %s %s %s %s", __FUNCTION__,
               args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
-                      &buffer, NULL, &exit_status, &err);
-    /* FIXME: on MS Windows we can't unlink open files */
+                      NULL, NULL, &exit_status, &err);
+    if (!err)
+        ok &= g_file_get_contents(filename, &buffer, &size, &err);
     unlink(filename);
     fclose(fh);
     gwy_debug("%s: ok = %d, exit_status = %d, err = %p", __FUNCTION__,
               ok, exit_status, err);
     ok &= !exit_status;
     if (ok) {
-        data = text_dump_import(data, buffer);
+        data = text_dump_import(data, buffer, size);
         if (data) {
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
@@ -249,7 +248,7 @@ text_dump_export(GwyContainer *data, gchar **filename)
     FILE *fh;
     gint fd;
 
-    fd = g_file_open_tmp(NULL, filename, &err);
+    fd = g_file_open_tmp("gwydXXXXXXXX", filename, &err);
     if (fd < 0) {
         g_warning("Cannot create a temporary file: %s", err->message);
         return NULL;
@@ -263,6 +262,7 @@ text_dump_export(GwyContainer *data, gchar **filename)
                                                                  "/0/mask"));
         dump_export_data_field(dfield, "/0/mask", fh);
     }
+    fflush(fh);
 
     return fh;
 }
@@ -298,40 +298,45 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
 }
 
 static GwyContainer*
-text_dump_import(GwyContainer *old_data, gchar *buffer)
+text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
 {
-    gchar *line, *pv, *key;
+    gchar *val, *key, *pos, *line;
     GwyContainer *data;
     GwyDataField *dfield;
     gdouble xreal, yreal;
     gint xres, yres;
+    gsize n;
 
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(old_data)));
     gwy_app_clean_up_data(data);
-    while ((line = next_line(&buffer)) && *line) {
-        pv = strchr(line, '=');
-        if (!pv || *line != '/') {
-            g_warning("Garbage line: %s", line);
+    pos = buffer;
+    while ((line = next_line(&pos)) && *line) {
+        val = strchr(line, '=');
+        if (!val || *line != '/') {
+            g_warning("Garbage key: %s", line);
             continue;
         }
-        *pv = '\0';
-        pv++;
-        if (strcmp(pv, "[") != 0) {
+        if ((gsize)(val - buffer) + 1 > size) {
+            g_critical("Unexpected end of file.");
+            goto fail;
+        }
+        *val = '\0';
+        val++;
+        if (strcmp(val, "[") != 0) {
             gwy_debug("%s: <%s>=<%s>", __FUNCTION__,
-                      line, pv);
-            if (*pv)
-                gwy_container_set_string_by_name(data, line, g_strdup(pv));
+                      line, val);
+            if (*val)
+                gwy_container_set_string_by_name(data, line, g_strdup(val));
             else
                 gwy_container_remove_by_name(data, line);
             continue;
         }
 
-        if (!buffer || *buffer != '[') {
-            g_critical("Unexpected end of data");
-            gwy_container_remove_by_prefix(data, NULL);
-            return NULL;
+        if (!pos || *pos != '[') {
+            g_critical("Unexpected end of file.");
+            goto fail;
         }
-        buffer++;
+        pos++;
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, line));
 
         /* get datafield parameters from already read values, failing back
@@ -368,19 +373,27 @@ text_dump_import(GwyContainer *old_data, gchar *buffer)
 
         dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
                                                    FALSE));
-        /* XXX: this can segfault */
-        memcpy(dfield->data, buffer, xres*yres*sizeof(gdouble));
-        buffer += xres*yres*sizeof(gdouble);
-        pv = next_line(&buffer);
-        if (strcmp(pv, "]]") != 0) {
-            g_critical("Missed end of data");
-            gwy_container_remove_by_prefix(data, NULL);
-            return NULL;
+
+        n = xres*yres*sizeof(gdouble);
+        if ((gsize)(pos - buffer) + n + 3 > size) {
+            g_critical("Unexpected end of file.");
+            goto fail;
+        }
+        memcpy(dfield->data, pos, n);
+        pos += n;
+        val = next_line(&pos);
+        if (strcmp(val, "]]") != 0) {
+            g_critical("Missed end of data field.");
+            goto fail;
         }
         gwy_container_remove_by_prefix(data, line);
         gwy_container_set_object_by_name(data, line, G_OBJECT(dfield));
     }
     return data;
+
+fail:
+    gwy_container_remove_by_prefix(data, NULL);
+    return NULL;
 }
 
 static GwyRunType
