@@ -401,7 +401,7 @@ apply(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwySIValueFormat *units;
-    GtkWidget *window, *graph;
+    GtkWidget *graph;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
@@ -440,8 +440,9 @@ apply(GwyUnitoolState *state)
                                               units->magnitude, z_mag,
                                               units->units, z_unit);
 
-            window = gwy_app_graph_window_create(graph);
-            gtk_window_set_title(GTK_WINDOW(window), controls->str->pdata[i]);
+            gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
+                                                   state->data_window,
+                                                   controls->str->pdata[i]);
         }
     }
     else {
@@ -458,8 +459,9 @@ apply(GwyUnitoolState *state)
                                               units->magnitude, z_mag,
                                               units->units, z_unit);
         }
-        window = gwy_app_graph_window_create(graph);
-        gtk_window_set_title(GTK_WINDOW(window), _("Profiles"));
+        gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
+                                               state->data_window,
+                                               _("Profiles"));
     }
 }
 

@@ -296,7 +296,7 @@ static void
 apply(GwyUnitoolState *state)
 {
     ToolControls *controls;
-    GtkWidget *window, *graph;
+    GtkWidget *graph;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyGraphAutoProperties prop;
@@ -338,8 +338,9 @@ apply(GwyUnitoolState *state)
                                               100))
         gwy_graph_add_dataline(GWY_GRAPH(graph), dataline, 0, lab, NULL);
 
-    window = gwy_app_graph_window_create(graph);
-    gtk_window_set_title(GTK_WINDOW(window), _(sf_types[controls->out].name));
+    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
+                                           state->data_window,
+                                           _(sf_types[controls->out].name));
 
     g_string_free(lab, TRUE);
     g_object_unref(dataline);

@@ -245,8 +245,8 @@ dialog_create(GwyUnitoolState *state)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
     row = 0;
-    row = gwy_unitool_rect_info_table_setup(&controls->labels,
-                                            GTK_TABLE(table), 0, row);
+    row += gwy_unitool_rect_info_table_setup(&controls->labels,
+                                             GTK_TABLE(table), 0, row);
     controls->labels.unselected_is_full = TRUE;
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
