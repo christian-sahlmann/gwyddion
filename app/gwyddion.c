@@ -65,13 +65,15 @@ static void process_preinit_options(int *argc,
 static void warn_broken_settings_file(GtkWidget *parent,
                                       const gchar *settings_file);
 
+gboolean gwy_gl_ok = FALSE;
+
 int
 main(int argc, char *argv[])
 {
     GtkWidget *toolbox;
     gchar **module_dirs;
     gchar *config_file, *settings_file, *recent_file_file;
-    gboolean has_config, has_settings, gl_ok, settings_ok = FALSE;
+    gboolean has_config, has_settings, settings_ok = FALSE;
 
 #ifdef G_OS_WIN32
     gwy_find_self_set_argv0(argv[0]);
@@ -85,7 +87,7 @@ main(int argc, char *argv[])
 #endif
 
     gtk_init(&argc, &argv);
-    gl_ok = gtk_gl_init_check(&argc, &argv);
+    gwy_gl_ok = gtk_gl_init_check(&argc, &argv);
 
     config_file = gwy_app_settings_get_config_filename();
     has_config = g_file_test(config_file, G_FILE_TEST_IS_REGULAR);
@@ -122,7 +124,7 @@ main(int argc, char *argv[])
     gwy_app_splash_set_message_prefix(NULL);
 
     gwy_app_splash_set_message("Initializing GUI");
-    toolbox = gwy_app_toolbox_create(gl_ok);
+    toolbox = gwy_app_toolbox_create();
     gwy_app_recent_file_list_update(NULL);
     gwy_app_splash_close();
 

@@ -89,7 +89,7 @@ toolbox_append_graph_func(GtkWidget *toolbox,
 }
 
 GtkWidget*
-gwy_app_toolbox_create(gboolean gl_ok)
+gwy_app_toolbox_create(void)
 {
     GwyMenuSensData sens_data_data = { GWY_MENU_FLAG_DATA, 0 };
     GwyMenuSensData sens_data_graph = { GWY_MENU_FLAG_GRAPH, 0 };
@@ -163,7 +163,7 @@ gwy_app_toolbox_create(gboolean gl_ok)
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_both(button,
                                     GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_GL_OK,
-                                    gl_ok ? GWY_MENU_FLAG_GL_OK : 0);
+                                    gwy_gl_ok ? GWY_MENU_FLAG_GL_OK : 0);
 
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);

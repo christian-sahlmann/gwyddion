@@ -26,7 +26,9 @@
 
 G_BEGIN_DECLS
 
-GtkWidget* gwy_app_toolbox_create            (gboolean gl_ok);
+extern gboolean gwy_gl_ok;
+
+GtkWidget* gwy_app_toolbox_create            (void);
 void       gwy_app_about                     (void);
 void       gwy_app_metadata_browser          (GwyDataWindow *data_window);
 void       gwy_app_init                      (void);

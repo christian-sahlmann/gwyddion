@@ -28,6 +28,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/gwyprocess.h>
 #include <libgwydgets/gwydgets.h>
+#include "gwyddion.h"
 
 static GSList *palettes = NULL;
 
@@ -52,6 +53,8 @@ gwy_app_init(void)
     g_assert(palettes == NULL);
 
     gwy_widgets_type_init();
+    if (gwy_gl_ok)
+        gwy_gl_ok = gwy_widgets_gl_init();
     /*g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);*/
     g_set_application_name(_(PACKAGE_NAME));
     gwy_palette_def_setup_presets();
