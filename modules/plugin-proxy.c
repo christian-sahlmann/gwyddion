@@ -287,7 +287,7 @@ proc_register_plugins(GList *plugins,
                 g_free(info);
             }
         }
-        else {
+        else if (pname && *pname) {
             g_warning("%s failed; "
                       "pname = %s, menu_path = %s, run_modes = %s",
                       name, pname, menu_path, run_modes);
@@ -451,7 +451,7 @@ file_register_plugins(GList *plugins,
                 g_free(info);
             }
         }
-        else {
+        else if (pname && *pname) {
             g_warning("%s failed; "
                       "pname = %s, file_desc = %s, run_modes = %s, glob = %s",
                       name, pname, file_desc, run_modes, glob);
