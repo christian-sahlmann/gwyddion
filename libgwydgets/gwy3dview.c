@@ -192,21 +192,22 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->data_min              = 0.0;
     gwy3dview->data_max              = 0.0;
     gwy3dview->data_mean             = 0.0;
-    gwy3dview->rot_x                 = 45.0f;
-    gwy3dview->rot_y                 = -45.0f;
+
+    gwy3dview->rot_x                 = NULL;
+    gwy3dview->rot_y                 = NULL;
+    gwy3dview->view_scale            = NULL;
+    gwy3dview->deformation_z         = NULL;
+    gwy3dview->light_z               = NULL;
+    gwy3dview->light_y               = NULL;
+
     gwy3dview->view_scale_max        = 3.0f;
     gwy3dview->view_scale_min        = 0.5f;
-    gwy3dview->view_scale            = 1.0f;
-    gwy3dview->deformation_z         = 1.0f;
-    gwy3dview->light_z               = 0.0f;
-    gwy3dview->light_y               = 0.0f;
     gwy3dview->movement_status       = GWY_3D_ROTATION;
     gwy3dview->orthogonal_projection = TRUE;
     gwy3dview->show_axes             = TRUE;
     gwy3dview->show_labels           = TRUE;
     gwy3dview->enable_lights         = FALSE;
-    gwy3dview->mat_current           
-             = gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE);
+    gwy3dview->mat_current           = NULL;
     gwy3dview->shape_list_base       = -1;
     gwy3dview->font_list_base        = -1;
     gwy3dview->font_height           = 0;
@@ -219,6 +220,7 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
  * @data: A #GwyContainer containing the data to display.
  *
  * Creates a new threedimensional OpenGL display of @data.
+ * The widget is initialized from container @data.
  *
  * Returns: The new OpenGL 3D widget as a #GtkWidget.
  *
@@ -244,6 +246,17 @@ gwy_3d_view_new(GwyContainer *data)
     widget = GTK_WIDGET(gwy3dview);
 
     gwy3dview->container = data;
+
+    gwy3dview->rot_x         = gtk_adjustment_new(45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
+    gwy3dview->rot_y         = gtk_adjustment_new(-45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
+    gwy3dview->view_scale    = gtk_adjustment_new(1.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
+    gwy3dview->deformation_z = gtk_adjustment_new(1.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
+    gwy3dview->light_z       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
+    gwy3dview->light_y       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
+    gwy3dview->mat_current
+             = gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE);
+
+
     if (gwy_container_contains_by_name(data, "/0/data"))
     {
         gwy3dview->data = GWY_DATA_FIELD(
@@ -279,13 +292,13 @@ gwy_3d_view_new(GwyContainer *data)
             gwy_container_get_int32_by_name(gwy3dview->container,
                                             "/0/3d/reduced_size"));
     if (gwy_container_contains_by_name(data, "/0/3d/rot_x"))
-        gwy3dview->rot_x = (GLfloat)(
+        gwy3dview->rot_x->value =
             gwy_container_get_double_by_name(data,
-                                             "/0/3d/rot_x"));
+                                             "/0/3d/rot_x");
     if (gwy_container_contains_by_name(data, "/0/3d/rot_y"))
-        gwy3dview->rot_y = (GLfloat)(
+        gwy3dview->rot_y->value =
             gwy_container_get_double_by_name(data,
-                                             "/0/3d/rot_y"));
+                                             "/0/3d/rot_y");
     if (gwy_container_contains_by_name(data, "/0/3d/view_scale_max"))
         gwy3dview->view_scale_max = (GLfloat)(
             gwy_container_get_double_by_name(data,
@@ -295,21 +308,21 @@ gwy_3d_view_new(GwyContainer *data)
             gwy_container_get_double_by_name(data,
                                              "/0/3d/view_scale_min"));
     if (gwy_container_contains_by_name(data, "/0/3d/view_scale"))
-        gwy3dview->view_scale = (GLfloat)(
+        gwy3dview->view_scale->value =
             gwy_container_get_double_by_name(data,
-                                             "/0/3d/view_scale"));
+                                             "/0/3d/view_scale");
     if (gwy_container_contains_by_name(data, "/0/3d/deformation_z"))
-        gwy3dview->deformation_z = (GLfloat)(
+        gwy3dview->deformation_z->value =
             gwy_container_get_double_by_name(data,
-                                             "/0/3d/deformation_z"));
+                                             "/0/3d/deformation_z");
     if (gwy_container_contains_by_name(data, "/0/3d/light_z"))
-        gwy3dview->light_z = (GLfloat)(
+        gwy3dview->light_z->value =
             gwy_container_get_double_by_name(data,
-                                             "/0/3d/light_z"));
+                                             "/0/3d/light_z");
     if (gwy_container_contains_by_name(data, "/0/3d/light_y"))
-        gwy3dview->light_y = (GLfloat)(
+        gwy3dview->light_y->value =
             gwy_container_get_double_by_name(data,
-                                             "/0/3d/light_y"));
+                                             "/0/3d/light_y");
     if (gwy_container_contains_by_name(data, "/0/3d/ortho"))
         gwy3dview->orthogonal_projection =
             gwy_container_get_boolean_by_name(data,
@@ -440,6 +453,13 @@ gwy_3d_view_unrealize(GtkWidget *widget)
  * @gwy3dview: A 3D data view widget.
  *
  * Instructs a 3D data view to update self and repaint.
+ * The values of GwyDataField @data, GwyPalette @palette
+ * are updated from container @container. If necessary new
+ * @downsampled data are created. Old values of @data and @palette
+ * are unreferenced.
+ *
+ * The display lists are recreated if the widget is realized. This may
+ * take a great amount of processor time (seconds).
  *
  * Since: 1.5
  **/
@@ -566,6 +586,10 @@ gwy_3d_view_get_palette       (Gwy3DView *gwy3dview)
  *
  * Sets the palette of a 3D data view.
  *
+ * The display lists are recreated if the widget is realized. This may
+ * take a great amount of processor time (seconds).
+ * Further, the widget is redrawn.
+ *
  * Since: 1.5
  **/
 void
@@ -607,9 +631,10 @@ gwy_3d_view_set_palette       (Gwy3DView *gwy3dview,
  * gwy_3d_view_get_status:
  * @gwy3dview: A 3D data view widget.
  *
- * 
+ * Returns a #Gwy3DMovement describing actual type of response on
+ * the mouse motion event.
  *
- * Returns:
+ * Returns: actual type of response on the mouse motion event
  *
  * Since: 1.5
  **/
@@ -624,9 +649,10 @@ gwy_3d_view_get_status (Gwy3DView * gwy3dview)
 /**
  * gwy_3d_view_set_status:
  * @gwy3dview: A 3D data view widget.
- * @mv: 
+ * @mv: A new type of response on the mouse motion event.
  *
- * 
+ * Sets the type of widget response on the mouse motion event.
+ * See #Gwy3DMovement.
  *
  * Since: 1.5
  **/
@@ -641,9 +667,10 @@ gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
 /**
  * gwy_3d_view_get_orthographic:
  * @gwy3dview: A 3D data view widget.
- * 
  *
- * Returns:
+ *
+ * Returns: TRUE if projection of the data is orthografic
+ *          FALSE if projection of the data is perspective
  *
  * Since: 1.5
  **/
@@ -659,9 +686,11 @@ gwy_3d_view_get_orthographic   (Gwy3DView *gwy3dview)
 /**
  * gwy_3d_view_set_orthographic:
  * @gwy3dview: A 3D data view widget.
- * @orthographic: 
+ * @orthographic: Whether the projection of the data is
+ *    orthograpic (TRUE) or perspective (FALSE).
  *
- * 
+ * Sets the type of projection of the 3D data to the screen and
+ * redraws widget (if realized).
  *
  * Since: 1.5
  **/
@@ -685,9 +714,9 @@ gwy_3d_view_set_orthographic   (Gwy3DView *gwy3dview,
  * gwy_3d_view_get_show_axes:
  * @gwy3dview: A 3D data view widget.
  *
- * 
+ * Returns whether the axes are shown within the widget.
  *
- * Returns:
+ * Returns: visibility of the axes
  *
  * Since: 1.5
  **/
@@ -703,9 +732,9 @@ gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview)
 /**
  * gwy_3d_view_set_show_axes:
  * @gwy3dview: A 3D data view widget.
- * @show_axes: 
+ * @show_axes: Show/hide axes
  *
- * 
+ * Show/hide axes within @gwy3dview. Widget is invalidated if necessary.
  *
  * Since: 1.5
  **/
@@ -729,9 +758,10 @@ gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
  * gwy_3d_view_get_show_labels:
  * @gwy3dview: A 3D data view widget.
  *
- * 
+ * Returns whether the axes labels are shown within the @gwy3dview.
+ * The labels are visible only if #show_axes is TRUE.
  *
- * Returns:
+ * Returns: Whwteher the axes labels are visible.
  *
  * Since: 1.5
  **/
@@ -747,9 +777,11 @@ gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview)
 /**
  * gwy_3d_view_set_show_labels:
  * @gwy3dview: A 3D data view widget.
- * @show_labels: 
+ * @show_labels: Show/hide axes labels
  *
- * 
+ * Show/hide lables of the axes within @gwy3dview.
+ * Widget is invalidated if necessary.
+ * The labels of the axes are visible only if #show_axes is TRUE.
  *
  * Since: 1.5
  **/
@@ -773,9 +805,11 @@ gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
  * gwy_3d_view_get_reduced_size:
  * @gwy3dview: A 3D data view widget.
  *
- * 
+ * Returns the size of the downsampled data. The downampled
+ * data are used when fast rendering of surface is needed
+ * (in the situations like mouse rotations etc.)
  *
- * Returns:
+ * Returns: The size of the downsampled data.
  *
  * Since: 1.5
  **/
@@ -791,9 +825,14 @@ gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview)
 /**
  * gwy_3d_view_set_reduced_size:
  * @gwy3dview: A 3D data view widget.
- * @reduced_size: 
+ * @reduced_size: The size of the downsampled data.
  *
- * 
+ * Sets the size of the downsampled data. In case of the original
+ * data are not square, the @reduced_size is the greater size of the
+ * downsampled data, the other dimension is proportional to the original
+ * size.
+ *
+ * If necessary a display list is recreated and widget is invalidated
  *
  * Since: 1.5
  **/
@@ -850,9 +889,9 @@ gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
  * gwy_3d_view_get_material:
  * @gwy3dview: A 3D data view widget.
  *
- * 
+ * Returns a #GwyGLMaterial used to draw data with lights on.
  *
- * Returns:
+ * Returns: A #GwyGLMaterial used to draw data with lights on.
  *
  * Since: 1.5
  **/
@@ -868,9 +907,12 @@ gwy_3d_view_get_material      (Gwy3DView *gwy3dview)
 /**
  * gwy_3d_view_set_material:
  * @gwy3dview: A 3D data view widget.
- * @material: 
+ * @material: A #GwyGLMaterial used to draw data with lights on.
  *
- * 
+ * Sets the material of the surface. If the material is #GWY_GLMATERIAL_NONE
+ * the surface is drawn using the colors obtained from the #palette.
+ * If any other material is the the lights are turned on and the surface
+ * is rendered using this material.
  *
  * Since: 1.5
  **/
@@ -899,9 +941,12 @@ gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
  * @yres: Requested pixbuf y-resolution.  This parameters is currently
  *        unimplemented.
  *
- * 
+ * Copies the contents of the framebuffer to the GdkPixbuf.
  *
- * Returns:
+ * The size of the pixbuf is currently indentical with the size of the widget.
+ * @xres and @yres will be implemented to set the resolution of the pixbuf.
+ *
+ * Returns: A newly allocated GdkPixbuf with copy of the framebuffer.
  *
  * Since: 1.5
  **/
@@ -944,23 +989,24 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview, guint xres, guint yres)
  * gwy_3d_view_reset_view:
  * @gwy3dview: A 3D data view widget.
  *
- * 
+ * Resets angle of the view, scale, deformation ant the position
+ * of the light to the "default" values. Invalidates the widget.
  *
  * Since: 1.5
  **/
 void
-gwy_3d_view_reset_view(Gwy3DView * widget)
+gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
 {
-   g_return_if_fail(GWY_IS_3D_VIEW(widget));
-   widget->rot_x = 45.0;
-   widget->rot_y = -45.0;
-   widget->view_scale = 1.0;
-   widget->deformation_z = 1.0;
-   widget->light_z = 0.0f;
-   widget->light_y = 0.0f;
-   if (GTK_WIDGET_REALIZED(widget))
-        gdk_window_invalidate_rect(GTK_WIDGET(widget)->window,
-                                   &GTK_WIDGET(widget)->allocation, FALSE);
+   g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+   gtk_adjustment_set_value(gwy3dview->rot_x, 45.0);
+   gtk_adjustment_set_value(gwy3dview->rot_y, -45.0);
+   gtk_adjustment_set_value(gwy3dview->view_scale, 1.0);
+   gtk_adjustment_set_value(gwy3dview->deformation_z, 1.0);
+   gtk_adjustment_set_value(gwy3dview->light_z, 0.0);
+   gtk_adjustment_set_value(gwy3dview->light_y, 0.0f);
+   if (GTK_WIDGET_REALIZED(gwy3dview))
+        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
+                                   &GTK_WIDGET(gwy3dview)->allocation, FALSE);
 
 }
 
@@ -1042,7 +1088,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     GdkGLDrawable *gldrawable;
     Gwy3DView * gwy3D;
 
-    GLfloat position[] = { 0.0, 3.0, 3.0, 1.0 };
+    GLfloat light_position[] = { 0.0, 3.0, 3.0, 1.0 };
 
     gwy_debug("");
 
@@ -1063,11 +1109,11 @@ gwy_3d_view_expose(GtkWidget *widget,
     /* View transformation. */
     gwy_3d_set_projection(gwy3D, -1.0, -1.0);
     glTranslatef(0.0, 0.0, -10.0);
-    glScalef(gwy3D->view_scale, gwy3D->view_scale, gwy3D->view_scale);
+    glScalef(gwy3D->view_scale->value, gwy3D->view_scale->value, gwy3D->view_scale->value);
 
-    glRotatef(gwy3D->rot_y, 1.0, 0.0, 0.0);
-    glRotatef(gwy3D->rot_x, 0.0,  0.0, 1.0);
-    glScalef(1.0f, 1.0f, gwy3D->deformation_z);
+    glRotatef(gwy3D->rot_y->value, 1.0, 0.0, 0.0);
+    glRotatef(gwy3D->rot_x->value, 0.0,  0.0, 1.0);
+    glScalef(1.0f, 1.0f, gwy3D->deformation_z->value);
 
     /* Render shape */
     if (gwy3D->mat_current != gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE))
@@ -1078,9 +1124,9 @@ gwy_3d_view_expose(GtkWidget *widget,
         glMaterialfv(GL_FRONT, GL_SPECULAR,  gwy3D->mat_current->specular);
         glMaterialf(GL_FRONT, GL_SHININESS, gwy3D->mat_current->shininess * 128.0);
         glPushMatrix();
-        glRotatef(gwy3D->light_z, 0.0f, 0.0f, 1.0f);
-        glRotatef(gwy3D->light_y, 1.0f, 0.0f, 0.0f);
-        glLightfv(GL_LIGHT0, GL_POSITION, position);
+        glRotatef(gwy3D->light_z->value, 0.0f, 0.0f, 1.0f);
+        glRotatef(gwy3D->light_y->value, 1.0f, 0.0f, 0.0f);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glPopMatrix();
     } else {
         glDisable(GL_LIGHTING);
@@ -1174,36 +1220,41 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
         switch (gwy3dview->movement_status)
         {
             case GWY_3D_ROTATION:
-                gwy3dview->rot_x += x - begin_x;
-                gwy3dview->rot_y += y - begin_y;
+                gtk_adjustment_set_value(gwy3dview->rot_x, gwy3dview->rot_x->value + x - begin_x);
+                gtk_adjustment_set_value(gwy3dview->rot_y, gwy3dview->rot_y->value + y - begin_y);
                 redraw = TRUE;
                 break;
 
             case GWY_3D_SCALE:
-                gwy3dview->view_scale = gwy3dview->view_scale
-                                        * (1.0 + (y - begin_y) / h);
-                if (gwy3dview->view_scale > gwy3dview->view_scale_max)
-                    gwy3dview->view_scale = gwy3dview->view_scale_max;
-                else if (gwy3dview->view_scale < gwy3dview->view_scale_min)
-                    gwy3dview->view_scale = gwy3dview->view_scale_min;
+                gtk_adjustment_set_value(gwy3dview->view_scale,
+                                        gwy3dview->view_scale->value
+                                        * (1.0 + (y - begin_y) / h));
+                if (gwy3dview->view_scale->value > gwy3dview->view_scale_max)
+                    gtk_adjustment_set_value(gwy3dview->view_scale, gwy3dview->view_scale_max);
+                else if (gwy3dview->view_scale->value < gwy3dview->view_scale_min)
+                    gtk_adjustment_set_value(gwy3dview->view_scale, gwy3dview->view_scale_min);
                 redraw = TRUE;
                 break;
 
             case GWY_3D_DEFORMATION:
             {
                 register int i;
+                double dz = gwy3dview->deformation_z->value;
                 if (y - begin_y > 0)
                     for (i = 0; i < y - begin_y; i++)
-                        gwy3dview->deformation_z /= GWY_3D_Z_DEFORMATION;
+                        dz /= GWY_3D_Z_DEFORMATION;
                 else
                     for (i = 0; i < begin_y - y; i++)
-                        gwy3dview->deformation_z *= GWY_3D_Z_DEFORMATION;
+                        dz *= GWY_3D_Z_DEFORMATION;
+                gtk_adjustment_set_value(gwy3dview->deformation_z, dz);
                 redraw = TRUE;
                 break;
             }
             case GWY_3D_LIGHTMOVEMENT:
-                gwy3dview->light_z += x - begin_x;
-                gwy3dview->light_y += y - begin_y;
+                gtk_adjustment_set_value(gwy3dview->light_z,
+                                         gwy3dview->light_z->value + x - begin_x);
+                gtk_adjustment_set_value(gwy3dview->light_y,
+                                         gwy3dview->light_y->value + y - begin_y);
                 redraw = TRUE;
                 break;
         }
@@ -1401,7 +1452,7 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
 
 static void gwy_3d_draw_axes(Gwy3DView * widget)
 {
-   GLfloat rx = widget->rot_x - ((int)(widget->rot_x / 360.0)) * 360.0;
+   GLfloat rx = widget->rot_x->value - ((int)(widget->rot_x->value / 360.0)) * 360.0;
    GLfloat Ax, Ay, Bx, By, Cx, Cy;
    gboolean yfirst = TRUE;
    gchar text[30];
@@ -1473,9 +1524,11 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
          glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02, 0.0f );
 
          glPushMatrix();
-         glTranslatef(Cx*cos(widget->rot_x) - Cy*sin(widget->rot_x),
-                      Cx*sin(widget->rot_x) + Cy*cos(widget->rot_x), 0.0f);
-         glRotatef(-widget->rot_x, 0.0f, 0.0f, 1.0f);
+         glTranslatef(Cx*cos(widget->rot_x->value * DIG_2_RAD)
+                      - Cy*sin(widget->rot_x->value * DIG_2_RAD),
+                      Cx*sin(widget->rot_x->value * DIG_2_RAD)
+                      + Cy*cos(widget->rot_x->value * DIG_2_RAD), 0.0f);
+         glRotatef(-widget->rot_x->value, 0.0f, 0.0f, 1.0f);
          glTranslatef(-Cx, -Cy, 0.0f);
          glVertex3f(Cx , Cy, widget->data_max - widget->data_min);
          glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
@@ -1553,8 +1606,8 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
     FIXME: show light position does not show the real position of the light
     */
     glTranslatef(0.0f, 0.0f, plane_z);
-    glRotatef(widget->light_z, 0.0f, 0.0f, 1.0f);
-    glRotatef(widget->light_y, 1.0f, 0.0f, 0.0f);
+    glRotatef(widget->light_z->value, 0.0f, 0.0f, 1.0f);
+    glRotatef(widget->light_y->value, 1.0f, 0.0f, 0.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUAD_STRIP);
         for (i = -180; i <= 180; i += 5)
