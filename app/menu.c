@@ -27,6 +27,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwydgets/gwytoolbox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -270,7 +271,7 @@ gwy_app_update_last_process_func(GtkWidget *menu,
     static GtkWidget *label = NULL;
     GtkWidget *item;
     const gchar *menu_path;
-    gsize len, i, j;
+    gsize len;
     gchar *s, *mp;
     GList *l;
 
@@ -301,13 +302,7 @@ gwy_app_update_last_process_func(GtkWidget *menu,
     len = strlen(menu_path);
     if (g_str_has_suffix(menu_path, "..."))
         len -= 3;
-    mp = g_new(gchar, len+1);
-    for (i = j = 0; i < len; i++) {
-        if (menu_path[i] != '_') {
-            mp[j++] = menu_path[i];
-        }
-    }
-    mp[j] = '\0';
+    mp = gwy_strkill(g_strndup(menu_path, len), "_");
     s = g_strconcat(_("_Last Used"), " (", mp, ")", NULL);
     gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
     g_free(mp);
@@ -377,22 +372,11 @@ gwy_app_menu_recent_files_update(GList *recent_files)
 static gchar*
 fix_recent_file_underscores(gchar *s)
 {
-    gsize i, j;
     gchar *s2;
 
-    for (i = j = 0; s[i]; i++, j++) {
-        if (s[i] == '_')
-            j++;
-    }
-    s2 = g_new(gchar, j + 1);
-    for (i = j = 0; s[i]; i++, j++) {
-        if (s[i] == '_')
-            s2[j++] = '_';
-        s2[j] = s[i];
-    }
-    s2[j] = '\0';
-
+    s2 = gwy_strreplace(s, "_", "__", (gsize)-1);
     g_free(s);
+
     return s2;
 }
 
