@@ -1366,7 +1366,7 @@ gwy_expr_get_variables(GwyExpr *expr,
 gint
 gwy_expr_resolve_variables(GwyExpr *expr,
                            guint n,
-                           const gchar **names,
+                           gchar * const *names,
                            guint *indices)
 {
     guint i, j, unresolved;

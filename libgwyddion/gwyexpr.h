@@ -50,7 +50,7 @@ gboolean  gwy_expr_compile           (GwyExpr *expr,
                                       GError **err);
 gint      gwy_expr_resolve_variables (GwyExpr *expr,
                                       guint n,
-                                      const gchar **names,
+                                      gchar * const *names,
                                       guint *indices);
 gint      gwy_expr_get_variables     (GwyExpr *expr,
                                       gchar ***names);
