@@ -56,13 +56,15 @@ LIB_OBJECTS = \
 	app.obj \
 	file.obj \
 	menu.obj \
-	settings.obj
+	settings.obj \
+	unitool.obj
 
 LIB_HEADERS = \
 	app.h \
 	file.h \
 	menu.h \
-	settings.h
+	settings.h \
+	unitool.h
 
 PRG_OBJECTS = \
 	about.obj \
