@@ -35,6 +35,7 @@ process_PROGRAMS = \
 	scars.so \
 	shade.so \
 	slope_dist.so \
+	sphere-revolve.so \
 	unrotate.so \
 	tip_blind.so \
 	tip_dilation.so \
@@ -140,6 +141,9 @@ shade_so_LDFLAGS = $(module_ldflags),shade.so
 
 slope_dist_so_SOURCES = slope_dist.c
 slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
+
+sphere_revolve_so_SOURCES = sphere-revolve.c
+sphere_revolve_so_LDFLAGS = $(module_ldflags),sphere-revolve.so
 
 tip_blind_so_SOURCES = tip_blind.c
 tip_blind_so_LDFLAGS = $(module_ldflags),tip_blind.so
