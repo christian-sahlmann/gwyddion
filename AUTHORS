@@ -1,16 +1,28 @@
 
 === Gwyddion authors ===
 David Necas (Yeti) <yeti@gwyddion.net>
+    (infrastructure, main app, module and plug-in system, data windows,
+     utilities, packaging, artwork, developer docs, bugzilla)
 Petr Klapetek <klapetek@gwyddion.net>
+    (1D and 2D data processing, graphs, most of nontrivial tools and data
+     filters, user guide, official web site)
 
 
-=== Contributions and copies ===
-- GwyColorButton was taken (backported) from Gtk+2.4 GtkColorButton.
-- GwyRuler, GwyHRuler, GwyVRuler originated as GtkRuler, GtkHRuler, and
-  GtkVRuler forks.
+=== Contributors ===
+Martin Siler <FIXME>
+    (Levenberg-Marquardt minimization)
+Jindrich Bilek <FIXME>
+    (Fractal algorithms)
+
+
+=== Copies ===
+GwyColorButton was taken (backported) from Gtk+2.4 GtkColorButton.
+GwyRuler, GwyHRuler, GwyVRuler originated as GtkRuler, GtkHRuler, and
+GtkVRuler forks.
 All are by Peter Mattis, Spencer Kimball, Josh MacDonald, Federico Mena
 and the GTK+ Team, see the AUTHORS file in Gtk+ for complete list.
 
-- The splashscreen code was mostly copied from The GIMP by Spencer Kimball
-  and Peter Mattis and other people, see the AUTHORS file in The GIMP for
-  complete list.
+The splashscreen code was mostly copied from The GIMP by Spencer Kimball
+and Peter Mattis and other people, see the AUTHORS file in The GIMP for
+complete list.
+
