@@ -189,7 +189,6 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    printf("%d %d\n", &controls, args);
     pcontrols = &controls;
     controls.in_update = FALSE;
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
