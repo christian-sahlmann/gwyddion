@@ -41,6 +41,7 @@ EXPORTS
 	gwy_graph_get_autoproperties
 	gwy_data_view_layer_finished
 	gwy_data_window_get_data
+	gwy_sci_text_set_text
 	gwy_graph_new
 	gwy_graph_area_add_curve
 	gwy_color_axis_get_palette

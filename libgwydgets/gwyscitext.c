@@ -19,15 +19,9 @@
  */
 
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <glib.h>
-#include <glib/gprintf.h>
-#include <gtk/gtkmain.h>
-#include <gtk/gtksignal.h>
-
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -37,10 +31,12 @@
 
 #define GWY_SCI_TEXT_TYPE_NAME "GwySciText"
 
-#define GWY_SCI_TEXT_BOLD        1
-#define GWY_SCI_TEXT_ITALIC      2
-#define GWY_SCI_TEXT_SUBSCRIPT   3
-#define GWY_SCI_TEXT_SUPERSCRIPT 4
+enum {
+    GWY_SCI_TEXT_BOLD        = 1,
+    GWY_SCI_TEXT_ITALIC      = 2,
+    GWY_SCI_TEXT_SUBSCRIPT   = 3,
+    GWY_SCI_TEXT_SUPERSCRIPT = 4
+};
 
 /* Forward declarations - widget related*/
 static void     gwy_sci_text_class_init           (GwySciTextClass *klass);
@@ -63,8 +59,6 @@ static void     gwy_sci_text_button_some_pressed  (GtkButton *button,
                                                    gpointer p);
 static GList*   stupid_put_entities               (GList *items);
 static GList*   stupid_put_entity                 (GList *items, gsize i);
-static void     gwy_sci_text_set_text             (GwySciText *sci_text,
-                                                   gchar *new_text);
 
 /* Local data */
 static GtkWidgetClass *parent_class = NULL;
@@ -240,14 +234,11 @@ gwy_sci_text_new()
 static void
 gwy_sci_text_finalize(GObject *object)
 {
-    GwySciText *sci_text;
-
-    gwy_debug("finalizing a GwySciText %d (refcount = %u)", (gint *)object, object->ref_count);
+    gwy_debug("finalizing a GwySciText %d (refcount = %u)",
+              (gint*)object, object->ref_count);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_SCI_TEXT(object));
-
-
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -462,16 +453,21 @@ gwy_sci_text_get_text(GwySciText *sci_text)
     return utf8;
 }
 
-static void
-gwy_sci_text_set_text(GwySciText *sci_text, gchar *new_text)
+/**
+ * gwy_sci_text_set_text:
+ * @sci_text: A science text widget.
+ * @new_text: The text to display.
+ *
+ * Sets the text a science text widget displays.
+ *
+ * It can contain both UTF-8 and entities, but attempt to convert UTF-8
+ * `back' to entities is made.
+ **/
+void
+gwy_sci_text_set_text(GwySciText *sci_text, const gchar *new_text)
 {
-    gint pos=0;
-    GString *text;
-    text = g_string_new(new_text);
-
-    gtk_editable_delete_text(GTK_EDITABLE(sci_text->entry), 0, -1);
-    gtk_editable_insert_text(GTK_EDITABLE(sci_text->entry),
-                             text->str, text->len, &pos);
+    g_return_if_fail(GWY_IS_SCI_TEXT(sci_text));
+    gtk_entry_set_text(GTK_ENTRY(sci_text->entry), new_text);
 
 }
 

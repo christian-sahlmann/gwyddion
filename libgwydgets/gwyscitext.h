@@ -42,7 +42,6 @@ typedef struct {
     GString *utf_text;
 
     PangoFontDescription *label_font;
-
 } GwySciTextParams;
 
 typedef struct {
@@ -54,7 +53,6 @@ typedef struct {
     GtkCombo *entities;
 
     GwySciTextParams par;
-
 } GwySciText;
 
 typedef struct {
@@ -62,11 +60,11 @@ typedef struct {
 } GwySciTextClass;
 
 
-GtkWidget* gwy_sci_text_new();
-
-GType gwy_sci_text_get_type(void) G_GNUC_CONST;
-
-gchar* gwy_sci_text_get_text(GwySciText *sci_text);
+GtkWidget* gwy_sci_text_new       ();
+GType      gwy_sci_text_get_type  (void) G_GNUC_CONST;
+gchar*     gwy_sci_text_get_text  (GwySciText *sci_text);
+void       gwy_sci_text_set_text  (GwySciText *sci_text,
+                                   const gchar *new_text);
 
 #ifdef __cplusplus
 }

@@ -19,10 +19,7 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 #include <glib.h>
-#include <gtk/gtkmain.h>
-#include <gtk/gtksignal.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
@@ -201,28 +198,30 @@ gwy_graph_init(GwyGraph *graph)
 
 }
 
-GtkWidget *
+GtkWidget*
 gwy_graph_new()
 {
     gwy_debug("");
-     return GTK_WIDGET (g_object_new (gwy_graph_get_type (), NULL));
+    return GTK_WIDGET(g_object_new(gwy_graph_get_type(), NULL));
 }
 
 
 void
 gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
-                       gdouble shift, GString *label, GwyGraphAreaCurveParams *params)
+                       gdouble shift, GString *label,
+                       GwyGraphAreaCurveParams *params)
 {
-   
+
 
     gdouble *xdata, *ydata;
     gint n, i;
 
     gwy_debug("");
     n = gwy_data_line_get_res(dataline);
-    
+
     xdata = (gdouble *) g_malloc(n*sizeof(gdouble));
-    for (i=0; i<n; i++) xdata[i] = i*gwy_data_line_get_real(dataline)/(gdouble)n;
+    for (i = 0; i < n; i++)
+        xdata[i] = i*gwy_data_line_get_real(dataline)/(gdouble)n;
 
     gwy_graph_add_datavalues(graph, xdata, dataline->data,
                              n, label, NULL);
@@ -241,77 +240,72 @@ gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
 
     gwy_debug("");
     n = gwy_data_line_get_res(dataline);
-    
+
     /*prepare values (divide by orders)*/
     xdata = (gdouble *) g_malloc(n*sizeof(gdouble));
     ydata = (gdouble *) g_malloc(n*sizeof(gdouble));
-    for (i=0; i<n; i++) 
-    {
-        xdata[i] = (gdouble)i*gwy_data_line_get_real(dataline)/((gdouble)n)/x_order;
+    for (i = 0; i < n; i++) {
+        xdata[i] = i*gwy_data_line_get_real(dataline)/((gdouble)n)/x_order;
         ydata[i] = gwy_data_line_get_val(dataline, i)/y_order;
     }
-    
+
     /*add values*/
     gwy_graph_add_datavalues(graph, xdata, ydata,
                              n, label, NULL);
 
     /*add unit to graph axis*/
-    if (x_unit != NULL)
-    {
+    if (x_unit != NULL) {
         graph->x_unit = g_strdup(x_unit);
         graph->has_x_unit = 1;
 
         gwy_axis_set_unit(graph->axis_top, graph->x_unit);
         gwy_axis_set_unit(graph->axis_bottom, graph->x_unit);
     }
-    if (y_unit != NULL)
-    {
+    if (y_unit != NULL) {
         graph->y_unit = g_strdup(y_unit);
         graph->has_y_unit = 1;
         gwy_axis_set_unit(graph->axis_left, graph->y_unit);
         gwy_axis_set_unit(graph->axis_right, graph->y_unit);
     }
-    
+
     g_free(xdata);
     g_free(ydata);
 }
 
 void
 gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
-                         gint n, GString *label, GwyGraphAreaCurveParams *params)
+                         gint n, GString *label,
+                         GwyGraphAreaCurveParams *params)
 {
-    gint i, isdiff;
+    gint i;
+    gboolean isdiff;
     GwyGraphAreaCurve curve;
 
     gwy_debug("");
 
     /*look whether label maximum or minium will be changed*/
-    isdiff=0;
-    for (i=0; i<n; i++)
+    isdiff = FALSE;
+    for (i = 0; i < n; i++)
     {
-       if (xvals[i] > graph->x_reqmax)
-       {
+       if (xvals[i] > graph->x_reqmax) {
           graph->x_reqmax = xvals[i];
-          isdiff=1;
+          isdiff = TRUE;
        }
-       if (xvals[i] < graph->x_reqmin)
-       {
-          graph->x_reqmin = xvals[i]; /*printf("New x minimum at %f (index %d)\n", xvals[i], i);*/
-          isdiff=1;
+       if (xvals[i] < graph->x_reqmin) {
+          graph->x_reqmin = xvals[i];
+          /*printf("New x minimum at %f (index %d)\n", xvals[i], i);*/
+          isdiff = TRUE;
        }
-       if (yvals[i] > graph->y_reqmax)
-       {
+       if (yvals[i] > graph->y_reqmax) {
           graph->y_reqmax = yvals[i];
-          isdiff=1;
+          isdiff = TRUE;
        }
-       if (yvals[i] < graph->y_reqmin)
-       {
+       if (yvals[i] < graph->y_reqmin) {
           graph->y_reqmin = yvals[i];
-          isdiff=1;
+          isdiff = TRUE;
        }
     }
-    if (isdiff == 1)
-    {
+    if (isdiff) {
       /*  printf("x requirement changed: %f, %f\n", graph->x_reqmin, graph->x_reqmax);*/
        gwy_axis_set_req(graph->axis_top, graph->x_reqmin, graph->x_reqmax);
        gwy_axis_set_req(graph->axis_bottom, graph->x_reqmin, graph->x_reqmax);
@@ -332,8 +326,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
     gwy_graph_make_curve_data(graph, &curve, xvals, yvals, n);
 
     /*configure curve plot properties*/
-    if (params == NULL)
-    {
+    if (params == NULL) {
       curve.params.is_line = graph->autoproperties.is_line;
       curve.params.is_point = graph->autoproperties.is_point;
       curve.params.point_size = graph->autoproperties.point_size;
@@ -353,8 +346,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
         curve.params.point_type = GWY_GRAPH_POINT_TIMES;}
       /**** END OF PROVISORY ******/
     }
-    else
-    {
+    else {
       curve.params.is_line = params->is_line;
       curve.params.is_point = params->is_point;
       curve.params.point_size = params->point_size;
@@ -385,8 +377,7 @@ gwy_graph_make_curve_data(GwyGraph *graph, GwyGraphAreaCurve *curve, gdouble *xv
     curve->data.xvals = (gdouble *) g_try_malloc(n*sizeof(gdouble));
     curve->data.yvals = (gdouble *) g_try_malloc(n*sizeof(gdouble));
     curve->data.N = n;
-    for (i=0; i<n; i++)
-    {
+    for (i = 0; i < n; i++) {
         curve->data.xvals[i] = xvals[i];
         curve->data.yvals[i] = yvals[i];
     }
@@ -395,34 +386,36 @@ gwy_graph_make_curve_data(GwyGraph *graph, GwyGraphAreaCurve *curve, gdouble *xv
 void
 gwy_graph_clear(GwyGraph *graph)
 {
-  gwy_graph_area_clear(graph->area);
-  graph->n_of_autocurves = 0;
-  graph->n_of_curves = 0;
-  graph->x_max = 0;
-  graph->y_max = 0;
-  graph->x_min = 0;
-  graph->x_min = 0;
-  graph->x_reqmax = G_MINDOUBLE;
-  graph->y_reqmax = G_MINDOUBLE;
-  graph->x_reqmin = G_MAXDOUBLE;
-  graph->x_reqmin = G_MAXDOUBLE;
-                                  
+    gwy_graph_area_clear(graph->area);
+    graph->n_of_autocurves = 0;
+    graph->n_of_curves = 0;
+    graph->x_max = 0;
+    graph->y_max = 0;
+    graph->x_min = 0;
+    graph->x_min = 0;
+    graph->x_reqmax = G_MINDOUBLE;
+    graph->y_reqmax = G_MINDOUBLE;
+    graph->x_reqmin = G_MAXDOUBLE;
+    graph->x_reqmin = G_MAXDOUBLE;
 }
 
 void
-gwy_graph_set_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties)
+gwy_graph_set_autoproperties(GwyGraph *graph,
+                             GwyGraphAutoProperties *autoproperties)
 {
-  graph->autoproperties = *autoproperties;
+    graph->autoproperties = *autoproperties;
 }
 
 void
-gwy_graph_get_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties)
+gwy_graph_get_autoproperties(GwyGraph *graph,
+                             GwyGraphAutoProperties *autoproperties)
 {
-  *autoproperties = graph->autoproperties;
+    *autoproperties = graph->autoproperties;
 }
 
 void
-gwy_graph_set_status(GwyGraph *graph, GwyGraphStatusType status)
+gwy_graph_set_status(GwyGraph *graph,
+                     GwyGraphStatusType status)
 {
     graph->area->status = status;
 }
@@ -433,24 +426,36 @@ gwy_graph_get_status(GwyGraph *graph)
     return graph->area->status;
 }
 
-gpointer 
+gpointer
 gwy_graph_get_status_data(GwyGraph *graph, GwyGraphStatusType status)
 {
-    if (graph->area->status==GWY_GRAPH_STATUS_PLAIN) return NULL;
-    else if (graph->area->status==GWY_GRAPH_STATUS_CURSOR)
-    {
-        if (graph->has_x_unit) graph->area->cursordata->data_point.x_unit = graph->x_unit; 
-        else graph->area->cursordata->data_point.x_unit = NULL;
-        if (graph->has_y_unit) graph->area->cursordata->data_point.y_unit = graph->y_unit;
-        else graph->area->cursordata->data_point.y_unit = NULL;
-        return (gpointer) (graph->area->cursordata);
+    /* XXX: what is the @status parameter good for? */
+    switch (graph->area->status) {
+        case GWY_GRAPH_STATUS_PLAIN:
+        return NULL;
+        break;
+
+        case GWY_GRAPH_STATUS_CURSOR:
+        graph->area->cursordata->data_point.x_unit
+            = graph->has_x_unit ? graph->x_unit : NULL;
+        graph->area->cursordata->data_point.y_unit
+            = graph->has_y_unit ? graph->y_unit : NULL;
+        return graph->area->cursordata;
+        break;
+
+        case GWY_GRAPH_STATUS_XSEL:
+        case GWY_GRAPH_STATUS_YSEL:
+        return graph->area->seldata;
+        break;
+
+        case GWY_GRAPH_STATUS_POINTS:
+        return graph->area->pointsdata;
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
     }
-    else if (graph->area->status==GWY_GRAPH_STATUS_XSEL || graph->area->status==GWY_GRAPH_STATUS_YSEL)
-        return (gpointer) (graph->area->seldata);
-    else if (graph->area->status==GWY_GRAPH_STATUS_POINTS)
-        return (gpointer) (graph->area->pointsdata);
-    
-    g_assert_not_reached();
     return NULL;
 }
 

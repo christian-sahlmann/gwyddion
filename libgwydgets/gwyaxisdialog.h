@@ -41,15 +41,15 @@ extern "C" {
 typedef struct {
    GtkDialog dialog;
 
-   GwySciText *sci_text;
-   
+   GtkWidget *sci_text;
 } GwyAxisDialog;
 
 typedef struct {
    GtkDialogClass parent_class;
 } GwyAxisDialogClass;
 
-GtkWidget *gwy_axis_dialog_new();
+GType       gwy_axis_dialog_get_type (void) G_GNUC_CONST;
+GtkWidget*  gwy_axis_dialog_new      (void);
 
 
 #ifdef __cplusplus
