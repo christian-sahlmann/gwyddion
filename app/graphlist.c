@@ -253,6 +253,7 @@ gwy_app_graph_list_construct(GwyContainer *data,
                                                "activatable",
                                                GRAPHLIST_EDITABLE,
                                                NULL);
+    g_object_set(G_OBJECT(column), "expand", FALSE, NULL);
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_graph_list_cell_renderer,
@@ -266,6 +267,9 @@ gwy_app_graph_list_construct(GwyContainer *data,
         column = gtk_tree_view_column_new_with_attributes
                                               (gwy_sgettext(columns[i].title),
                                                renderer, NULL);
+        g_object_set(G_OBJECT(column),
+                     "expand", columns[i].id == GRAPHLIST_TITLE,
+                     NULL);
         gtk_tree_view_column_set_cell_data_func
             (column, renderer,
              gwy_app_graph_list_cell_renderer,
