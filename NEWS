@@ -1,4 +1,4 @@
-1.6cvs20041106
+1.6cvs20041118
 
 1.7
 Application:
@@ -7,9 +7,20 @@ Application:
 
 Modules:
 - Simple mask editor (new).
+- Background removal by arc revolution (new).
+- Median based background removal (new).
+- Nanoscope: Import was significantly improved, most files should be read
+  with correct value ranges now (bug #16).
+- Pixmap: `Same resolution' option really works and its value is remembered.
+- Manual grain removal: Undo works.
+- Statistical quantities: Area computation was fixed; minimum, maximum and
+  median values added.
+- Arithmetic: Broken `Physical dimensions differ' check was fixed.
+- Watershed: Cancelation behaviour was fixed.
 
 Library:
 - libgwyddion, libgwyprocess: Median calculation functions.
+- libgwyprocess: Data field arithmetic functions.
 
 
 1.6
