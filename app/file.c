@@ -7,8 +7,9 @@
 #include "app.h"
 #include "file.h"
 
-static void file_open_ok_cb    (GtkFileSelection *selector);
-static void file_save_as_ok_cb (GtkFileSelection *selector);
+static void file_open_ok_cb            (GtkFileSelection *selector);
+static void file_save_as_ok_cb         (GtkFileSelection *selector);
+static void gwy_app_create_data_window (GwyContainer *data);
 
 void
 gwy_app_file_open_cb(void)
@@ -35,7 +36,7 @@ gwy_app_file_save_as_cb(void)
     const gchar *filename_sys;  /* in system (disk) encoding */
 
     data = gwy_app_get_current_data();
-    g_return_if_fail(data);
+    g_return_if_fail(GWY_IS_CONTAINER(data));
 
     selector = GTK_FILE_SELECTION(gtk_file_selection_new("Save file as"));
     if (gwy_container_contains_by_name(data, "/filename"))
@@ -62,7 +63,7 @@ gwy_app_file_save_cb(void)
     const gchar *filename_sys;  /* in system (disk) encoding */
 
     data = gwy_app_get_current_data();
-    g_return_if_fail(data);
+    g_return_if_fail(GWY_IS_CONTAINER(data));
 
     if (gwy_container_contains_by_name(data, "/filename"))
         filename_utf8 = gwy_container_get_string_by_name(data, "/filename");
@@ -76,6 +77,18 @@ gwy_app_file_save_cb(void)
         gwy_app_file_save_as_cb();
 }
 
+void
+gwy_app_file_duplicate_cb(void)
+{
+    GwyContainer *data, *duplicate;
+
+    data = gwy_app_get_current_data();
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+    duplicate = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    g_return_if_fail(GWY_IS_CONTAINER(duplicate));
+    gwy_container_remove_by_name(duplicate, "/filename");
+    gwy_app_create_data_window(duplicate);
+}
 
 static void
 file_open_ok_cb(GtkFileSelection *selector)
@@ -83,8 +96,6 @@ file_open_ok_cb(GtkFileSelection *selector)
     const gchar *filename_utf8;  /* in UTF-8 */
     const gchar *filename_sys;  /* in system (disk) encoding */
     GwyContainer *data;
-    GtkWidget *data_window, *data_view;
-    GwyDataViewLayer *layer;
 
     filename_sys = gtk_file_selection_get_filename(selector);
     if (!g_file_test(filename_sys,
@@ -98,6 +109,15 @@ file_open_ok_cb(GtkFileSelection *selector)
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
     gwy_container_set_string_by_name(data, "/filename", filename_utf8);
     gtk_widget_destroy(GTK_WIDGET(selector));
+    gwy_app_create_data_window(data);
+}
+
+/* FIXME: to be moved somewhere? refactored? */
+static void
+gwy_app_create_data_window(GwyContainer *data)
+{
+    GtkWidget *data_window, *data_view;
+    GwyDataViewLayer *layer;
 
     data_view = gwy_data_view_new(data);
     layer = (GwyDataViewLayer*)gwy_layer_basic_new();

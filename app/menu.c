@@ -147,7 +147,7 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
         { "/Edit/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/Edit/_Undo", "<control>Z", NULL, 0, "<StockItem>", GTK_STOCK_UNDO },
         { "/Edit/_Redo", "<control>Y", NULL, 0, "<StockItem>", GTK_STOCK_REDO },
-        { "/Edit/_Duplicate", "<control>D", NULL, 0, NULL, NULL },
+        { "/Edit/_Duplicate", "<control>D", gwy_app_file_duplicate_cb, 0, NULL, NULL },
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;
