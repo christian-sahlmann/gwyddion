@@ -55,14 +55,16 @@ gwy_unitool_use(GwyUnitoolState *state,
         return;
     }
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    state->data_window = data_window;
     data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
     layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && (GwyDataViewLayer*)layer == state->layer)
+    if (layer && (GwyDataViewLayer*)layer == state->layer) {
+        g_assert(state->data_window = data_window);
         return;
+    }
 
     /* disconnect existing handlers */
     gwy_unitool_disconnect_handlers(state);
+    state->data_window = data_window;
 
     /* create or set-up the layer */
     slot = state->func_slots;
@@ -103,7 +105,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     state->response_id
         = g_signal_connect_swapped(state->dialog, "response",
                                    G_CALLBACK(gwy_unitool_dialog_response_cb),
-                                   NULL);
+                                   state);
 
     /* setup based on switch reason */
     gwy_unitool_compute_coord_units(state);
@@ -130,15 +132,19 @@ static void
 gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
 {
     if (state->layer) {
+        gwy_debug("1");
         if (state->layer_updated_id)
             g_signal_handler_disconnect(state->layer,
                                         state->layer_updated_id);
+        gwy_debug("2");
         if (state->layer->parent && state->data_updated_id)
             g_signal_handler_disconnect(state->layer->parent,
                                         state->data_updated_id);
     }
+    gwy_debug("3");
     if (state->dialog && state->response_id)
         g_signal_handler_disconnect(state->dialog, state->response_id);
+    gwy_debug("4");
     if (state->data_window && state->windowname_id)
         g_signal_handler_disconnect(state->data_window, state->windowname_id);
 
