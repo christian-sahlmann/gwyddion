@@ -354,6 +354,8 @@ gwy_app_update_last_process_func(GtkWidget *menu,
 
     sens = gwy_process_func_get_sensitivity_flags(name)
            | GWY_MENU_FLAG_DATA;
+    /* FIXME: at least the `_' removal should not be necessary as libgwymodule
+     * knows the right path */
     menu_path = gwy_process_func_get_menu_path(name);
     menu_path = strrchr(menu_path, '/');
     g_assert(menu_path);
