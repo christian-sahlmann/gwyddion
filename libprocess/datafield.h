@@ -597,6 +597,33 @@ void gwy_data_field_fit_lines(GwyDataField *data_field,
                               GtkOrientation orientation
                               );
 
+gdouble gwy_data_field_get_correlation_score(GwyDataField *data_field,
+                                      GwyDataField *kernel_field,
+                                      gint ulcol,
+                                      gint ulrow,
+                                      gint kernel_ulcol,
+                                      gint kernel_ulrow,
+                                      gint kernel_brcol,
+                                      gint kernel_brrow
+                                     );
+
+void gwy_data_field_croscorrelate(GwyDataField *data_field1,
+                                  GwyDataField *data_field2,
+                                  GwyDataField *x_dist,
+                                  GwyDataField *y_dist,
+                                  gint search_width, 
+                                  gint search_height,
+                                  gint window_width,
+                                  gint window_height);
+
+void gwy_data_field_correlate(GwyDataField *data_field,
+                                  GwyDataField *kernel_field,
+                                  GwyDataField *score);
+
+
+
+
+
 G_END_DECLS
 
 
