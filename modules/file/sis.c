@@ -427,11 +427,11 @@ sis_load(const gchar *filename)
         g_clear_error(&err);
         return NULL;
     }
+    n = 0;
     memset(&sisfile, 0, sizeof(sisfile));
     sisfile.params = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                            NULL, g_free);
     if (sis_real_load(buffer, size, &sisfile)) {
-        n = 0;
         for (i = 0; i < sisfile.nchannels; i++) {
             for (j = 0; j < sisfile.channels[i].nimages; j++) {
                 image = sisfile.channels[i].images + j;
@@ -465,6 +465,9 @@ sis_load(const gchar *filename)
 
     gwy_file_abandon_contents(buffer, size, NULL);
     g_hash_table_destroy(sisfile.params);
+    for (i = 0; i < n; i++)
+        g_free((gpointer)choices[i].name);
+    g_free(choices);
     for (i = 0; i < sisfile.nchannels; i++)
         g_free(sisfile.channels[i].images);
     g_free(sisfile.channels);
