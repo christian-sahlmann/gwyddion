@@ -14,6 +14,11 @@
 #define PLUGIN_PROXY_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)
 
+/* TODO: Either replace g_spawn_sync() with something capable returning
+ * the _length_ of the captured stdout, or use a temporary file for
+ * plug-in output too.  Now it's a way too easy to crash the proxy.
+ */
+
 typedef struct {
     GwyProcessFuncInfo func;
     gchar *file;
@@ -314,8 +319,10 @@ text_dump_import(GwyContainer *old_data, gchar *buffer)
         if (strcmp(pv, "[") != 0) {
             gwy_debug("%s: <%s>=<%s>", __FUNCTION__,
                       line, pv);
-            /* TODO: remove empty values instead */
-            gwy_container_set_string_by_name(data, line, g_strdup(pv));
+            if (*pv)
+                gwy_container_set_string_by_name(data, line, g_strdup(pv));
+            else
+                gwy_container_remove_by_name(data, line);
             continue;
         }
 
@@ -423,24 +430,10 @@ next_line(gchar **buffer)
     p = strchr(*buffer, '\n');
     if (p) {
         *buffer = p+1;
-        /*
-        while (p > q) {
-            p--;
-            if (!g_ascii_isspace(*p)) {
-                p++;
-                break;
-            }
-        }
-        */
         *p = '\0';
     }
     else
         *buffer = NULL;
-
-    /*
-    while (g_ascii_isspace(*q))
-        q++;
-    */
 
     return q;
 }
