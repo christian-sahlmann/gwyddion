@@ -164,6 +164,10 @@ gwy_si_unit_deserialize(const guchar *buffer,
         return NULL;
     }
 
+    if (unitstr && *unitstr) {
+        g_free(unitstr);
+        unitstr = NULL;
+    }
     si_unit = gwy_si_unit_new(unitstr);
 
     return si_unit;
