@@ -646,5 +646,15 @@ gwy_stock_like_button_new(const gchar *label_text,
     return button;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * gwy_adjustment_get_int:
+ * @adj: A #GtkAdjustment to get value of.
+ *
+ * Gets a properly rounded integer value from an adjustment.
+ *
+ * Since: 1.8
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
