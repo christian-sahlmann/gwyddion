@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2005-01-20 04:29+0100\n"
-"PO-Revision-Date: 2005-01-20 13:09+0100\n"
+"POT-Creation-Date: 2005-01-24 20:13+0100\n"
+"PO-Revision-Date: 2005-01-24 20:21+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -122,8 +122,8 @@ msgstr "_Fí:"
 #: libgwydgets/gwy3dwindow.c:354 libgwydgets/gwy3dwindow.c:357
 #: libgwydgets/gwy3dwindow.c:437 libgwydgets/gwy3dwindow.c:443
 #: libgwydgets/gwyvectorshade.c:158 libgwydgets/gwyvectorshade.c:171
-#: modules/process/tip_model.c:245 modules/process/tip_model.c:251
-#: modules/process/unrotate.c:334
+#: modules/process/rotate.c:239 modules/process/tip_model.c:245
+#: modules/process/tip_model.c:251 modules/process/unrotate.c:335
 msgid "deg"
 msgstr "stupňů"
 
@@ -209,15 +209,15 @@ msgstr "Veli_kost:"
 #: modules/process/angle_dist.c:184 modules/process/calibrate.c:219
 #: modules/process/cwt.c:179 modules/process/dwt.c:178
 #: modules/process/dwtanisotropy.c:192 modules/process/dwtcorrection.c:174
-#: modules/process/dwtdenoise.c:186 modules/process/fft.c:333
+#: modules/process/dwtdenoise.c:186 modules/process/fft.c:335
 #: modules/process/fractal.c:208 modules/process/grain_mark.c:203
 #: modules/process/grain_rem_threshold.c:175 modules/process/grain_wshed.c:176
 #: modules/process/local_contrast.c:136 modules/process/mask_grow_shrink.c:175
 #: modules/process/median-bg.c:180 modules/process/polylevel.c:192
-#: modules/process/rotate.c:185 modules/process/scale.c:164
+#: modules/process/rotate.c:222 modules/process/scale.c:164
 #: modules/process/scars.c:384 modules/process/shade.c:191
 #: modules/process/slope_dist.c:196 modules/process/sphere-revolve.c:216
-#: modules/process/tip_model.c:180 modules/process/unrotate.c:216
+#: modules/process/tip_model.c:180 modules/process/unrotate.c:217
 msgid "_Reset"
 msgstr "_Obnovit"
 
@@ -471,7 +471,7 @@ msgstr "_Fí"
 msgid "Module Browser"
 msgstr "Prohlížeč modulů"
 
-#: libgwymodule/gwymodulebrowser.c:102 modules/process/fft.c:455
+#: libgwymodule/gwymodulebrowser.c:102 modules/process/fft.c:457
 msgid "Module"
 msgstr "Modul"
 
@@ -1040,14 +1040,6 @@ msgstr "Načítá a ukládá přirozené serializované objekty Gwyddionu."
 msgid "Gwyddion native format (.gwy)"
 msgstr "Přirozený formát Gwyddionu (.gwy) "
 
-#: modules/file/io-tm.c:61
-msgid "Import Thermicroscopes SpmLab R4 and R5 data files"
-msgstr "Načítá datové soubory Thermicroscopes SpmLab R4 a R5"
-
-#: modules/file/io-tm.c:77
-msgid "Thermicroscopes SpmLab R4, R5 files"
-msgstr "Soubory Thermicroscopes SpmLab R4, R5"
-
 #: modules/file/nanoscope.c:128
 msgid "Load Nanoscope data files."
 msgstr "Načítá datové soubory Nanoscope."
@@ -1056,21 +1048,21 @@ msgstr "Načítá datové soubory Nanoscope."
 msgid "Nanoscope files"
 msgstr "Soubory Nanoscope"
 
-#: modules/file/nanoscope.c:588 modules/file/nt-mdt.c:465
-#: modules/file/sis.c:520
+#: modules/file/nanoscope.c:588 modules/file/nt-mdt.c:467
+#: modules/file/sis.c:522
 msgid "Select Data"
 msgstr "Vyber data"
 
-#: modules/file/nanoscope.c:605 modules/file/nt-mdt.c:482
-#: modules/file/sis.c:537
+#: modules/file/nanoscope.c:605 modules/file/nt-mdt.c:484
+#: modules/file/sis.c:539
 msgid "Data to load:"
 msgstr "Data k načtení:"
 
-#: modules/file/nt-mdt.c:303
+#: modules/file/nt-mdt.c:305
 msgid "Load NT-MDT data files."
 msgstr "Načítá datové soubory NT-MDT."
 
-#: modules/file/nt-mdt.c:319
+#: modules/file/nt-mdt.c:321
 msgid "NT-MDT files (.mdt)"
 msgstr "Soubory NT-MDT (.mdt)"
 
@@ -1481,13 +1473,21 @@ msgstr ""
 "Čekal bych oddělovač „%s“ po datech v řádku %u, sloupci %u, ale narazil jsem "
 "na „%.16s“"
 
-#: modules/file/sis.c:355
+#: modules/file/sis.c:357
 msgid "Load SIS data files."
 msgstr "Načítá datové soubory SIS."
 
-#: modules/file/sis.c:371
+#: modules/file/sis.c:373
 msgid "SIS files (.sis)"
 msgstr "SIS soubory (.sis)"
+
+#: modules/file/spmlab.c:50
+msgid "Import Thermicroscopes SpmLab R4 and R5 data files"
+msgstr "Načítá datové soubory Thermicroscopes SpmLab R4 a R5"
+
+#: modules/file/spmlab.c:66
+msgid "Thermicroscopes SpmLab R4, R5 files"
+msgstr "Soubory Thermicroscopes SpmLab R4, R5"
 
 #: modules/file/stmprg.c:66
 msgid "Import Omicron STMPRG data files (tp ta)"
@@ -1510,7 +1510,7 @@ msgid "Fit graph"
 msgstr "Proložení grafu"
 
 #: modules/graph/graph_cd.c:260 modules/graph/graph_fit.c:275
-#: modules/process/fit_2d.c:195
+#: modules/process/fit_2d.c:218
 msgid "_Fit"
 msgstr "_Proložit"
 
@@ -1527,7 +1527,7 @@ msgid "Graph data curve"
 msgstr "Křivka"
 
 #: modules/graph/graph_cd.c:872 modules/graph/graph_fit.c:962
-#: modules/process/fit_2d.c:799
+#: modules/process/fit_2d.c:976
 #, c-format
 msgid ""
 "Cannot save report to %s.\n"
@@ -1537,17 +1537,17 @@ msgstr ""
 "%s\n"
 
 #: modules/graph/graph_cd.c:896 modules/graph/graph_fit.c:986
-#: modules/process/fit_2d.c:823
+#: modules/process/fit_2d.c:1000
 msgid "Save Fit Report"
 msgstr "Uložit výsledky"
 
 #: modules/graph/graph_cd.c:953 modules/graph/graph_fit.c:1043
-#: modules/process/fit_2d.c:863
+#: modules/process/fit_2d.c:1040
 msgid "Fit results"
 msgstr "Výsledky"
 
 #: modules/graph/graph_cd.c:966 modules/graph/graph_fit.c:1056
-#: modules/process/fit_2d.c:875
+#: modules/process/fit_2d.c:1052
 msgid "<b>Data:</b>"
 msgstr "<b>Data:</b>"
 
@@ -1560,17 +1560,17 @@ msgid "X range:"
 msgstr "X-ový rozsah"
 
 #: modules/graph/graph_cd.c:991 modules/graph/graph_fit.c:1081
-#: modules/process/fit_2d.c:881
+#: modules/process/fit_2d.c:1058
 msgid "<b>Function:</b>"
 msgstr "<b>Funkce:</b>"
 
 #: modules/graph/graph_cd.c:1012 modules/graph/graph_fit.c:1093
-#: modules/process/fit_2d.c:886
+#: modules/process/fit_2d.c:1063
 msgid "<b>Results</b>"
 msgstr "<b>Výsledky</b>"
 
 #: modules/graph/graph_cd.c:1064 modules/graph/graph_fit.c:1159
-#: modules/process/fit_2d.c:954
+#: modules/process/fit_2d.c:1131
 msgid ""
 "\n"
 "===== Fit Results =====\n"
@@ -1579,7 +1579,7 @@ msgstr ""
 "===== Výsledky fitu =====\n"
 
 #: modules/graph/graph_cd.c:1067 modules/graph/graph_fit.c:1162
-#: modules/process/fit_2d.c:957
+#: modules/process/fit_2d.c:1134
 #, c-format
 msgid "Data: %s\n"
 msgstr "Data: %s\n"
@@ -1600,7 +1600,7 @@ msgid "Fitted function:  %s\n"
 msgstr "Proložená funkce: %s\n"
 
 #: modules/graph/graph_cd.c:1076 modules/graph/graph_fit.c:1171
-#: modules/process/fit_2d.c:960
+#: modules/process/fit_2d.c:1137
 msgid ""
 "\n"
 "Results\n"
@@ -1632,36 +1632,36 @@ msgstr "/Proložit _funkci"
 msgid "_Reset inits"
 msgstr "_Obnovit odhady"
 
-#: modules/graph/graph_fit.c:281
+#: modules/graph/graph_fit.c:281 modules/process/fit_2d.c:220
 msgid "_Plot inits"
 msgstr "_Použít odhady"
 
-#: modules/graph/graph_fit.c:312 modules/process/fit_2d.c:245
+#: modules/graph/graph_fit.c:312 modules/process/fit_2d.c:269
 msgid "<b>Fitting parameters:</b>"
 msgstr "<b>Parametry prokládání:</b>"
 
-#: modules/graph/graph_fit.c:324 modules/process/fit_2d.c:272
+#: modules/graph/graph_fit.c:324 modules/process/fit_2d.c:312
 msgid "<b>Initial</b>"
 msgstr "<b>Počáteční</b>"
 
-#: modules/graph/graph_fit.c:330 modules/process/fit_2d.c:278
+#: modules/graph/graph_fit.c:330 modules/process/fit_2d.c:318
 #: modules/process/fractal.c:282
 msgid "<b>Result</b>"
 msgstr "<b>Výsledek</b>"
 
-#: modules/graph/graph_fit.c:336 modules/process/fit_2d.c:285
+#: modules/graph/graph_fit.c:336 modules/process/fit_2d.c:325
 msgid "<b>Error</b>"
 msgstr "<b>Chyba</b>"
 
-#: modules/graph/graph_fit.c:342 modules/process/fit_2d.c:291
+#: modules/graph/graph_fit.c:342 modules/process/fit_2d.c:331
 msgid "<b>Fix</b>"
 msgstr "<b>Pevný</b>"
 
-#: modules/graph/graph_fit.c:400 modules/process/fit_2d.c:350
+#: modules/graph/graph_fit.c:400 modules/process/fit_2d.c:390
 msgid "<b>Correlation matrix:</b>"
 msgstr "<b>Korelační matice:</b>"
 
-#: modules/graph/graph_fit.c:418 modules/process/fit_2d.c:369
+#: modules/graph/graph_fit.c:418 modules/process/fit_2d.c:409
 msgid "<b>Chi-square result:</b>"
 msgstr "<b>Chí kvadrát výsledku:</b>"
 
@@ -1681,15 +1681,15 @@ msgstr "Do"
 msgid "N. A."
 msgstr ""
 
-#: modules/graph/graph_fit.c:1116 modules/process/fit_2d.c:911
+#: modules/graph/graph_fit.c:1116 modules/process/fit_2d.c:1088
 msgid "Residual sum:"
 msgstr "Suma reziduí:"
 
-#: modules/graph/graph_fit.c:1124 modules/process/fit_2d.c:919
+#: modules/graph/graph_fit.c:1124 modules/process/fit_2d.c:1096
 msgid "<b>Correlation matrix</b>"
 msgstr "<b>Korelační matice</b>"
 
-#: modules/graph/graph_fit.c:1184 modules/process/fit_2d.c:974
+#: modules/graph/graph_fit.c:1184 modules/process/fit_2d.c:1151
 #, c-format
 msgid ""
 "\n"
@@ -1698,7 +1698,7 @@ msgstr ""
 "\n"
 "Suma reziduí:   %g\n"
 
-#: modules/graph/graph_fit.c:1186 modules/process/fit_2d.c:976
+#: modules/graph/graph_fit.c:1186 modules/process/fit_2d.c:1153
 msgid ""
 "\n"
 "Correlation matrix\n"
@@ -2004,7 +2004,7 @@ msgstr "_Výška:"
 msgid "Window size"
 msgstr "Velikost okna"
 
-#: modules/process/crosscor.c:265 modules/process/fft.c:370
+#: modules/process/crosscor.c:265 modules/process/fft.c:372
 #: modules/process/fractal.c:244 modules/process/maskcor.c:189
 #: modules/tools/sfunctions.c:198
 msgid "_Output type:"
@@ -2044,15 +2044,15 @@ msgid "2D CWT"
 msgstr "2D CWT"
 
 #: modules/process/cwt.c:198 modules/process/dwt.c:191
-#: modules/process/dwtdenoise.c:200 modules/process/fft.c:347
+#: modules/process/dwtdenoise.c:200 modules/process/fft.c:349
 msgid "_Preserve size (don't resize to power of 2)"
 msgstr "Zachovej velikost (neškáluj na mocninu 2)"
 
 #: modules/process/cwt.c:210 modules/process/dwt.c:203
 #: modules/process/dwtanisotropy.c:209 modules/process/dwtcorrection.c:190
-#: modules/process/dwtdenoise.c:212 modules/process/fft.c:359
-#: modules/process/fractal.c:229 modules/process/rotate.c:207
-#: modules/process/scale.c:207 modules/process/unrotate.c:274
+#: modules/process/dwtdenoise.c:212 modules/process/fft.c:361
+#: modules/process/fractal.c:229 modules/process/rotate.c:247
+#: modules/process/scale.c:207 modules/process/unrotate.c:275
 #: modules/tools/profile.c:272
 msgid "_Interpolation type:"
 msgstr "Typ _interpolace:"
@@ -2105,8 +2105,8 @@ msgid "DWT Correction"
 msgstr "DWT korekce"
 
 #: modules/process/dwtcorrection.c:173
-msgid "2D DWT_CORRECTION"
-msgstr "2D DWT korekce"
+msgid "2D DWT Correction"
+msgstr ""
 
 #: modules/process/dwtdenoise.c:102
 msgid "/_Integral Transforms/DWT De_noise..."
@@ -2164,93 +2164,105 @@ msgstr "2D rychlá Fourierova transformace"
 msgid "/_Integral Transforms/_2D FFT..."
 msgstr "/_Integrální transformace/_2D FFT..."
 
-#: modules/process/fft.c:221
+#: modules/process/fft.c:223
 msgid "FFT Real"
 msgstr "Reálná část FFT"
 
-#: modules/process/fft.c:240
+#: modules/process/fft.c:242
 msgid "FFT Imag"
 msgstr "Imaginární část FFT"
 
-#: modules/process/fft.c:251
+#: modules/process/fft.c:253
 msgid "FFT Modulus"
 msgstr "Modul FFT"
 
-#: modules/process/fft.c:269
+#: modules/process/fft.c:271
 msgid "FFT Phase"
 msgstr "Fáze FFT"
 
-#: modules/process/fft.c:332
+#: modules/process/fft.c:334
 msgid "2D FFT"
 msgstr "2D FFT"
 
-#: modules/process/fft.c:364
+#: modules/process/fft.c:366
 msgid "_Windowing type:"
 msgstr "Typ _okénkové funkce:"
 
-#: modules/process/fft.c:451
+#: modules/process/fft.c:453
 msgid "Real + Imaginary"
 msgstr "Reálný + imaginární"
 
-#: modules/process/fft.c:452
+#: modules/process/fft.c:454
 msgid "Module + Phase"
 msgstr "Modul + fáze"
 
-#: modules/process/fft.c:453
+#: modules/process/fft.c:455
 msgid "Real"
 msgstr "Reálný"
 
-#: modules/process/fft.c:454
+#: modules/process/fft.c:456
 msgid "Imaginary"
 msgstr "Imaginární"
 
-#: modules/process/fft.c:456
+#: modules/process/fft.c:458
 msgid "Phase"
 msgstr "Fáze"
 
-#: modules/process/fit_2d.c:125
+#: modules/process/fit_2d.c:148
 msgid "2D fitting"
 msgstr ""
 
-#: modules/process/fit_2d.c:144
-msgid "/_Background/_2D fit..."
-msgstr ""
+#: modules/process/fit_2d.c:167
+msgid "/_Level/_Fit Sphere..."
+msgstr "/_Vyrovnání/Proložit s_féru..."
 
-#: modules/process/fit_2d.c:193
+#: modules/process/fit_2d.c:217
 msgid "Fit sphere"
-msgstr ""
+msgstr "Proložení sféry"
 
-#: modules/process/fit_2d.c:194
+#: modules/process/fit_2d.c:219
 msgid "_Guess"
 msgstr ""
 
-#: modules/process/fit_2d.c:251
+#: modules/process/fit_2d.c:275
+msgid "Function type:"
+msgstr ""
+
+#: modules/process/fit_2d.c:288
 msgid "Preview type:"
 msgstr ""
 
-#: modules/process/fit_2d.c:518 modules/process/grain_wshed.c:531
+#: modules/process/fit_2d.c:601 modules/process/grain_wshed.c:531
 #: modules/process/tip_blind.c:500 modules/process/tip_map.c:270
 #: modules/process/tip_reconstruction.c:264
 msgid "Initializing"
 msgstr "Inicializace"
 
-#: modules/process/fit_2d.c:541
+#: modules/process/fit_2d.c:619
 msgid "Fitting"
 msgstr ""
 
-#: modules/process/fit_2d.c:601
+#: modules/process/fit_2d.c:696
 msgid "Data"
 msgstr "Data"
 
-#: modules/process/fit_2d.c:602
+#: modules/process/fit_2d.c:697
 msgid "Fit result"
 msgstr ""
 
-#: modules/process/fit_2d.c:603
+#: modules/process/fit_2d.c:698
 msgid "Difference"
 msgstr ""
 
-#: modules/process/fit_2d.c:959
+#: modules/process/fit_2d.c:710
+msgid "Sphere (up)"
+msgstr ""
+
+#: modules/process/fit_2d.c:711
+msgid "Sphere (down)"
+msgstr ""
+
+#: modules/process/fit_2d.c:1136
 msgid "Fitted function: sphere\n"
 msgstr ""
 
@@ -2690,27 +2702,23 @@ msgstr "Základní operace s presentacemi."
 msgid "/_Display/_Remove Presentation"
 msgstr "/_Zobrazení/Odst_ranit presentaci"
 
-#: modules/process/rotate.c:77
+#: modules/process/rotate.c:86
 msgid "Rotation by an arbitrary angle."
 msgstr "Rotace o libovolný úhel."
 
-#: modules/process/rotate.c:93
+#: modules/process/rotate.c:102
 msgid "/_Basic Operations/Rotate by _Angle..."
 msgstr "/_Jednoduché operace/Rot_ace o úhel..."
 
-#: modules/process/rotate.c:184
+#: modules/process/rotate.c:221
 msgid "Rotate"
 msgstr "Rotace"
 
-#: modules/process/rotate.c:199
+#: modules/process/rotate.c:239
 msgid "Rotate by _angle:"
 msgstr "Otočit o ú_hel:"
 
-#: modules/process/rotate.c:199
-msgid "deg (CCW)"
-msgstr "stupňů (v kladném smyslu)"
-
-#: modules/process/rotate.c:211
+#: modules/process/rotate.c:251
 msgid "E_xpand result to fit complete data"
 msgstr "_Rozšířit výsledek, aby se vešla celá data"
 
@@ -3002,55 +3010,55 @@ msgstr "Rekonstrukce povrchu"
 msgid "_Surface to be reconstructed:"
 msgstr "Rekonstruovat _povrch:"
 
-#: modules/process/unrotate.c:74
+#: modules/process/unrotate.c:75
 msgid "Detected"
 msgstr "Detekovaná"
 
-#: modules/process/unrotate.c:75
+#: modules/process/unrotate.c:76
 msgid "Parallel"
 msgstr "Dvojčetná"
 
-#: modules/process/unrotate.c:76
+#: modules/process/unrotate.c:77
 msgid "Triangular"
 msgstr "Trojčetná"
 
-#: modules/process/unrotate.c:77
+#: modules/process/unrotate.c:78
 msgid "Square"
 msgstr "Čtvercová"
 
-#: modules/process/unrotate.c:78
+#: modules/process/unrotate.c:79
 msgid "Rhombic"
 msgstr "Rombická"
 
-#: modules/process/unrotate.c:79
+#: modules/process/unrotate.c:80
 msgid "Hexagonal"
 msgstr "Hexagonální"
 
-#: modules/process/unrotate.c:92
+#: modules/process/unrotate.c:93
 msgid "Rotates data to make main directions parallel with x or y axis."
 msgstr "Rotuje daty, aby zrovnoběžnil význačné směry s osou x či y."
 
-#: modules/process/unrotate.c:108
+#: modules/process/unrotate.c:109
 msgid "/_Correct Data/_Unrotate..."
 msgstr "/_Korekce dat/Korekce _Rotace..."
 
-#: modules/process/unrotate.c:215
+#: modules/process/unrotate.c:216
 msgid "Correct Rotation"
 msgstr "Oprava rotace"
 
-#: modules/process/unrotate.c:234
+#: modules/process/unrotate.c:235
 msgid "<b>Structure</b>"
 msgstr "<b>Struktura</b>"
 
-#: modules/process/unrotate.c:240
+#: modules/process/unrotate.c:241
 msgid "Detected:"
 msgstr "Detekovaná:"
 
-#: modules/process/unrotate.c:257
+#: modules/process/unrotate.c:258
 msgid "_Assume:"
 msgstr "_Předpokládat:"
 
-#: modules/process/unrotate.c:260
+#: modules/process/unrotate.c:261
 msgid "Correction:"
 msgstr "Korekce:"
 
@@ -3411,3 +3419,5 @@ msgstr "<b>Parametry</b>"
 msgid "N.A."
 msgstr ""
 
+#~ msgid "2D DWT_CORRECTION"
+#~ msgstr "2D DWT korekce"
