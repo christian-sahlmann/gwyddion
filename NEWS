@@ -1,4 +1,4 @@
-1.3cvs20040718
+1.3cvs20040722
 
 1.4
 Application:
@@ -177,10 +177,11 @@ Other:
 
 
 1.0
+Gwyddion:
 - Data can be exported to bitmaps with rules, units, scale, etc.
 - Physical unit handling was improved.
 - Tons of bugfixes.
 
 
 0.99.1
-- Release candidate 1 for v1.0.
+Release candidate 1 for v1.0.
