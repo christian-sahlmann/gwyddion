@@ -135,21 +135,22 @@ createc_load(const gchar *filename)
 
     dfield = hash_to_data_field(hash, buffer);
 
-    if (dfield) { 
+    if (dfield) {
       object = gwy_container_new();
       gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
                                        G_OBJECT(dfield));
+      g_object_unref(dfield);
 
       store_metadata(GWY_CONTAINER(object), hash);
-      
+
       g_hash_table_destroy(hash);
       g_free(buffer);
-      
+
       return (GwyContainer*)object;
     } else {
       g_hash_table_destroy(hash);
       g_free(buffer);
-      
+
       return NULL;
     }
 }
@@ -297,15 +298,15 @@ store_metadata(GwyContainer *data, GHashTable *hash)
 {
     gchar *val;
     GString *metakey; /* for HASH_STORE macro */
-    gchar *tobestored[] = { 
-        "Titel", "Titel / Titel", 
+    gchar *tobestored[] = {
+        "Titel", "Titel / Titel",
         "Length x[A]",
         "Length y[A]",
         "Z-Res. [A]: +/- ",
         "BiasVoltage", "BiasVoltage / BiasVolt.[mV]",
         "Current[A]",
         "Delta X", "Delta X / Delta X [Dac]",
-        "Delta Y", "Delta Y / Delta Y [Dac]", 
+        "Delta Y", "Delta Y / Delta Y [Dac]",
         "Delay X+", "Delay X+ / Delay X+",
         "Delay X-", "Delay X- / Delay X-",
         "Delay Y", "Delay Y / Delay Y",
@@ -318,23 +319,23 @@ store_metadata(GwyContainer *data, GHashTable *hash)
         "Chan(1,2,4)", "Chan(1,2,4) / Chan(1,2,4)",
         "Scancoarse", "Scancoarse / Scancoarse",
         "Scantype", "Scantype / Scantype",
-        "FBIset", 
-        "FBLogIset", 
-        "FBRC", 
-        "FBLingain", 
+        "FBIset",
+        "FBLogIset",
+        "FBRC",
+        "FBLingain",
         "FBLog",
         "FBPropGain",
-        "ZPiezoconst", 
-        "Xpiezoconst", 
+        "ZPiezoconst",
+        "Xpiezoconst",
         "YPiezoconst",
-        "Sec/line:", 
-        "Sec/Image:", 
+        "Sec/line:",
+        "Sec/Image:",
         "Channels", "Channels / Channels",
         "Dactonmx", "Dacto[A]xy",
         "Dactonmz", "Dacto[A]z",
         "memo:0",
-        "memo:1", 
-        "memo:2", 
+        "memo:1",
+        "memo:2",
         "T_ADC2[K]",
         "T_ADC3[K]",
         NULL

@@ -495,6 +495,7 @@ stmprg_load(const gchar *filename)
     object = gwy_container_new();
     gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
                                      G_OBJECT(dfield));
+    g_object_unref(dfield);
 
     store_metadata(GWY_CONTAINER(object));
 
