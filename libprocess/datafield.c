@@ -3457,6 +3457,7 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kerne
  * @search_height: search area height
  * @window_width: correlation window width
  * @window_height: correlation window height
+ * @score: correlation score result
  *
  * Algotihm for matching two different images of the same
  * object under changes. It does not use any special features
@@ -3533,6 +3534,7 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
  * @data_field2: data field
  * @x_dist: field of resulting x-distances
  * @y_dist: field of resulting y-distances
+ * @score: correlation score
  * @search_width: search area width
  * @search_height: search area height
  * @window_width: correlation window width
