@@ -170,10 +170,10 @@ AC_CHECK_FUNCS([setenv])
 
 dnl I18n stuff
 GETTEXT_PACKAGE=$PACKAGE_TARNAME
+ALL_LINGUAS=cs
 AM_GNU_GETTEXT([external])
 XGETTEXT="$XGETTEXT --foreign-user --from-code=UTF-8 --msgid-bugs-address='http://trific.ath.cx/bugzilla/'"
 LIBS="$LIBS $INTLLIBS"
-ALL_LINGUAS=
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Gettext package name])
 AC_SUBST(GETTEXT_PACKAGE)
 
