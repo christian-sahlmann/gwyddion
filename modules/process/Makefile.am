@@ -15,6 +15,7 @@ process_PROGRAMS = \
 	fft.so \
 	fractal.so \
 	fraccor.so \
+	gradient.so \
 	grain_mark.so \
 	grain_rem_threshold.so \
 	grain_wshed.so \
@@ -78,6 +79,9 @@ fractal_so_LDFLAGS = $(module_ldflags),fractal.so
 
 fraccor_so_SOURCES = fraccor.c
 fraccor_so_LDFLAGS = $(module_ldflags),fraccor.so
+
+gradient_so_SOURCES = gradient.c
+gradient_so_LDFLAGS = $(module_ldflags),gradient.so
 
 grain_mark_so_SOURCES = grain_mark.c
 grain_mark_so_LDFLAGS = $(module_ldflags),grain_mark.so
