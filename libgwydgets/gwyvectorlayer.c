@@ -128,6 +128,15 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     klass->set_selection = NULL;
     klass->unselect = NULL;
 
+/**
+ * GwyVectorLayer::selection-finished:
+ * @gwyvectorlayer: The vector layer which received the signal.
+ * @user_data: User data set when the signal handler was connected.
+ *
+ * The ::selection_finished signal is emitted when user finishes a selection
+ * (stops dragging, selects enough points, etc., the pecise meaning depends
+ * on how particular subclasses define it).
+ */
     vector_layer_signals[SELECTION_FINISHED] =
         g_signal_new("selection_finished",
                      G_OBJECT_CLASS_TYPE(object_class),

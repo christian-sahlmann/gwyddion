@@ -54,6 +54,7 @@
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include "gwyruler.h"
+#include "gwydgettypes.h"
 
 enum {
     PROP_0,
@@ -138,7 +139,7 @@ gwy_ruler_class_init(GwyRulerClass *class)
         (gobject_class,
          PROP_LOWER,
          g_param_spec_double("lower",
-                             "Lower",
+                             "Lower limit",
                              "Lower limit of ruler",
                              -G_MAXDOUBLE,
                              G_MAXDOUBLE,
@@ -149,7 +150,7 @@ gwy_ruler_class_init(GwyRulerClass *class)
         (gobject_class,
          PROP_UPPER,
          g_param_spec_double("upper",
-                             "Upper",
+                             "Upper limit",
                              "Upper limit of ruler",
                              -G_MAXDOUBLE,
                              G_MAXDOUBLE,
@@ -171,22 +172,20 @@ gwy_ruler_class_init(GwyRulerClass *class)
         (gobject_class,
          PROP_MAX_SIZE,
          g_param_spec_double("max_size",
-                             "Max Size",
+                             "Maximum size",
                              "Maximum size of the ruler",
                              -G_MAXDOUBLE,
                              G_MAXDOUBLE,
                              0.0,
                              G_PARAM_READWRITE));
 
-    /* FIXME: in fact it's an enum... */
     g_object_class_install_property
         (gobject_class,
          PROP_UNITS_PLACEMENT,
-         g_param_spec_uint("units_placement",
-                           "Units Placement",
+         g_param_spec_enum("units_placement",
+                           "Units placement",
                            "The placement of units on the ruler, if any",
-                           0,
-                           GWY_UNITS_PLACEMENT_AT_ZERO,
+                           GWY_TYPE_UNITS_PLACEMENT,
                            GWY_UNITS_PLACEMENT_NONE,
                            G_PARAM_READWRITE));
 }

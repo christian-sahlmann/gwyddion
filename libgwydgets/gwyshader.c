@@ -160,6 +160,7 @@ gwy_shader_class_init(GwyShaderClass *klass)
                             "Name of gradient the sphere is colored with",
                             NULL,
                             G_PARAM_READWRITE));
+
     g_object_class_install_property(
         gobject_class,
         PROP_UPDATE_POLICY,
@@ -171,8 +172,8 @@ gwy_shader_class_init(GwyShaderClass *klass)
                           G_PARAM_READWRITE));
 
 /**
- * GwyShader::angle_changed:
- * @shader: The #GwyShader which received the signal.
+ * GwyShader::angle-changed:
+ * @gwyshader: The shader which received the signal.
  * @user_data: User data set when the signal handler was connected.
  *
  * The ::angle_changed signal is emitted when the spherical angle changes.
