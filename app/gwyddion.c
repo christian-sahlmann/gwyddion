@@ -157,7 +157,8 @@ static void
 process_preinit_options(int *argc,
                         char ***argv)
 {
-    int i;
+    int i, j;
+    gboolean ignore = FALSE;
 
     if (*argc == 1)
         return;
@@ -172,16 +173,28 @@ process_preinit_options(int *argc,
         exit(0);
     }
 
-    for (i = 1; i < *argc; i++) {
-        if (strncmp((*argv)[i], "--", 2) || !strcmp((*argv)[i], "--"))
-            break;
+    for (i = j = 1; i < *argc; i++) {
+        if (!strcmp((*argv)[i], "--"))
+            ignore = TRUE;
 
-        if (!strcmp((*argv)[i], "--no-splash"))
-            gwy_app_splash_enable(FALSE);
+        (*argv)[j] = (*argv)[i];
 
-        if (!strcmp((*argv)[i], "--debug-objects"))
-            enable_object_debugging = TRUE;
+        if (!ignore) {
+            if (!strcmp((*argv)[i], "--no-splash")) {
+                gwy_app_splash_enable(FALSE);
+                continue;
+            }
+
+            if (!strcmp((*argv)[i], "--debug-objects")) {
+                enable_object_debugging = TRUE;
+                continue;
+            }
+        }
+
+        j++;
     }
+    (*argv)[j] = NULL;
+    *argc = j;
 }
 
 static void
