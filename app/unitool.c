@@ -721,12 +721,12 @@ gwy_unitool_rect_info_table_setup(GwyUnitoolRectLabels *rinfo,
     gtk_table_attach(table, label, col+0, col+1, row+0, row+1,
                      GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(_("X"));
+    label = gtk_label_new("X");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, col+1, col+2, row+1, row+2,
                      GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(_("Y"));
+    label = gtk_label_new("Y");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, col+1, col+2, row+2, row+3,
                      GTK_FILL, 0, 2, 2);
