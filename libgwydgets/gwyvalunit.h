@@ -42,7 +42,7 @@ typedef struct _GwyValUnitClass GwyValUnitClass;
 
 struct _GwyValUnit {
     GtkHBox hbox;
-    
+
     GtkObject *adjustment;
     GtkWidget *spin;
     GtkWidget *selection;
@@ -66,7 +66,7 @@ struct _GwyValUnitClass {
 };
 
 
-GtkWidget* gwy_val_unit_new       (gchar *label_text, GwySIUnit *unit);
+GtkWidget* gwy_val_unit_new       (gchar *label_text, GwySIUnit *si_unit);
 GType      gwy_val_unit_get_type  (void) G_GNUC_CONST;
 
 void       gwy_val_unit_set_value (GwyValUnit *val_unit, gdouble value);
