@@ -151,7 +151,23 @@ gwy_grapher_model_class_init(GwyGrapherModelClass *klass)
                                                       "Changed title of graph",
                                                       "new graph",
                                                       G_PARAM_READABLE | G_PARAM_WRITABLE));
- 
+    /*
+    g_object_class_install_property(gobject_class,
+                                    PROP_LABEL_POSITION,
+                                    g_param_spec_string("label-position",
+                                                      "Graph Label Position",
+                                                      "Changed label position",
+                                                      "new graph",
+                                                      G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    g_object_class_install_property(gobject_class,
+                                    PROP_LABEL_REVERSE,
+                                    g_param_spec_string("label-reverse",
+                                                      "Graph Label Alingment",
+                                                      "Changed label alingment",
+                                                      "new graph",
+                                                      G_PARAM_READABLE | G_PARAM_WRITABLE));
+ */
 }
 
 static void     
@@ -318,7 +334,6 @@ gwy_grapher_model_save_grapher(GwyGrapherModel *gmodel,
     gwy_debug("");
     g_assert(grapher && grapher == gmodel->grapher);
 
-    /* FIXME: we access object fields directly now as we are supposed to know
      * some their internals anyway. */
     /* grapher */
     /*
@@ -339,8 +354,6 @@ gwy_grapher_model_save_grapher(GwyGrapherModel *gmodel,
     gmodel->x_reqmax = grapher->x_reqmax;
     gmodel->y_reqmax = grapher->y_reqmax;
 
-    /* axes */
-    /*
     g_string_assign(gmodel->top_label,
                     gwy_axiser_get_label(grapher->axis_top)->str);
     g_string_assign(gmodel->bottom_label,
@@ -350,14 +363,10 @@ gwy_grapher_model_save_grapher(GwyGrapherModel *gmodel,
     g_string_assign(gmodel->right_label,
                     gwy_axiser_get_label(grapher->axis_right)->str);
 
-    /* label */
-    /*
     gmodel->label_position = grapher->area->lab->par.position;
     gmodel->label_has_frame = grapher->area->lab->par.is_frame;
     gmodel->label_frame_thickness = grapher->area->lab->par.frame_thickness;
 
-    /* curves */
-    /* somewhat hairy; trying to avoid redundant reallocations:
      * 1. clear extra curves that model has and grapher has not
      * 2. realloc curves to the right size
      * 3. replace already existing curves  <-- if lucky, only this happens
@@ -365,19 +374,13 @@ gwy_grapher_model_save_grapher(GwyGrapherModel *gmodel,
      */
     /*
     nacurves = grapher->area->curves->len;
-    /* 1. clear */
-    /*
     for (i = nacurves; i < gmodel->ncurves; i++)
         gwy_object_unref(gmodel->curves[i]);
-    /* 2. realloc */
-    /*
     gmodel->curves = g_renew(GObject*, gmodel->curves, nacurves);
-    /* 3. replace */
-    /*
     for (i = 0; i < gmodel->ncurves; i++) {
         gcmodel = GWY_GRAPHER_CURVE_MODEL(gmodel->curves[i]);
         gwy_grapher_curve_model_save_curve(gcmodel, grapher, i);
-    }
+    }*/
     /* 4. fill */
     /*
     for (i = gmodel->ncurves; i < nacurves; i++) {
