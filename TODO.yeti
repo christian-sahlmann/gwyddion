@@ -1,13 +1,9 @@
-- Clean up gwy3dlabels API and ugly ways of doing things
-  - implement actual variables to substitute
-  - save 3d labels to container, check restore
-  - check refcounts and leaks
 - Implement APE file format from Paolo Messina, at least import
 - Implement rhk spm32 (.sm2) file import
 - Check for cases where datafield is replaced in container
-- Split widget utils from gwydgets
-- Register enum types in GLib type system and fix paramspecs
 - Make GWY_PSPEC() public, if it works
+- Find out why there's no cursor in 3D window entries and fix it
+- Use GObject macros for type declarations
 - Check whether we always emit notification when object properties change
 - Use BUTTON1_MOTION_MASK instead of MOTION_NOTIFY_MASK where appropriate
 - Pixmap export ignores explicite palete range (and presentations?)
