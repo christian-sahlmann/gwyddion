@@ -185,7 +185,7 @@ palette_def_compare(GwyPaletteDef *a,
 /**
  * gwy_option_menu_create:
  * @entries: Option menu entries.
- * @nentires: The number of entries.
+ * @nentries: The number of entries.
  * @key: Value object data key.
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            no callback).
