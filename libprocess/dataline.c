@@ -1228,6 +1228,8 @@ gwy_data_line_fft_hum(gint direction,
         gwy_data_line_resample(rb, newres, GWY_INTERPOLATION_NONE);
         gwy_data_line_resample(ib, newres, GWY_INTERPOLATION_NONE);
     }
+    gwy_data_line_fill(rb, 0);
+    gwy_data_line_fill(ib, 0);
 
     gwy_fft_hum(direction, ra->data, ia->data, rb->data, ib->data, newres);
 
@@ -1409,8 +1411,8 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     
     iin = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, TRUE);
-    rout = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, FALSE);
-    iout = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, FALSE);
+    rout = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, TRUE);
+    iout = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, TRUE);
 
 
     gwy_data_line_fft(data_line, iin, rout, iout, gwy_data_line_fft_hum,
