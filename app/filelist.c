@@ -82,7 +82,7 @@
 #define KEY_THUMB_GWY_GRAPHS "tEXt::Thumb::X-Gwyddion::Graphs"
 
 enum {
-    THUMB_SIZE = 48,
+    THUMB_SIZE = 60,
     TMS_NORMAL_THUMB_SIZE = 128
 };
 
@@ -167,7 +167,6 @@ static void     gwy_recent_file_update_thumbnail     (GwyRecentFile *rf,
 static void  gwy_recent_file_free                    (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
 static G_CONST_RETURN gchar* gwy_recent_file_thumbnail_dir (void);
-static gchar* gwy_canonicalize_path                  (const gchar *path);
 
 static guint remember_recent_files = 256;
 
