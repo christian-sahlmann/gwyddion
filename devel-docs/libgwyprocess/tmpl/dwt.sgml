@@ -1,0 +1,152 @@
+<!-- ##### SECTION Title ##### -->
+dwt
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyDWTType ##### -->
+<para>
+
+</para>
+
+@GWY_DWT_HAAR: 
+@GWY_DWT_DAUB4: 
+@GWY_DWT_DAUB6: 
+@GWY_DWT_DAUB8: 
+@GWY_DWT_DAUB12: 
+@GWY_DWT_DAUB20: 
+
+<!-- ##### ENUM GwyDWTDenoiseType ##### -->
+<para>
+
+</para>
+
+@GWY_DWT_DENOISE_UNIVERSAL: 
+@GWY_DWT_DENOISE_SCALE_ADAPTIVE: 
+@GWY_DWT_DENOISE_SPACE_ADAPTIVE: 
+
+<!-- ##### FUNCTION gwy_dwt_set_coefficients ##### -->
+<para>
+
+</para>
+
+@dline: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_dwt_plot_wavelet ##### -->
+<para>
+
+</para>
+
+@dline: 
+@wt_coefs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_dwt_plot_scaling_function ##### -->
+<para>
+
+</para>
+
+@dline: 
+@wt_coefs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_line_dwt ##### -->
+<para>
+
+</para>
+
+@dline: 
+@wt_coefs: 
+@isign: 
+@minsize: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_xdwt ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@wt_coefs: 
+@isign: 
+@minsize: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_ydwt ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@wt_coefs: 
+@isign: 
+@minsize: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_dwt ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@wt_coefs: 
+@isign: 
+@minsize: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_dwt_denoise ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@wt_coefs: 
+@hard: 
+@multiple_threshold: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_dwt_mark_anisotropy ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@mask: 
+@wt_coefs: 
+@ratio: 
+@lowlimit: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_dwt_correction ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@mask: 
+@wt_coefs: 
+@Returns: 
+
+

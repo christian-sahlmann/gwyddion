@@ -1,0 +1,76 @@
+<!-- ##### SECTION Title ##### -->
+arithmetic
+
+<!-- ##### SECTION Short_Description ##### -->
+Arithmetic opetations on data fields
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_data_field_sum_fields ##### -->
+<para>
+
+</para>
+
+@result: 
+@operand1: 
+@operand2: 
+
+
+<!-- ##### FUNCTION gwy_data_field_subtract_fields ##### -->
+<para>
+
+</para>
+
+@result: 
+@operand1: 
+@operand2: 
+
+
+<!-- ##### FUNCTION gwy_data_field_divide_fields ##### -->
+<para>
+
+</para>
+
+@result: 
+@operand1: 
+@operand2: 
+
+
+<!-- ##### FUNCTION gwy_data_field_multiply_fields ##### -->
+<para>
+
+</para>
+
+@result: 
+@operand1: 
+@operand2: 
+
+
+<!-- ##### FUNCTION gwy_data_field_min_of_fields ##### -->
+<para>
+
+</para>
+
+@result: 
+@operand1: 
+@operand2: 
+
+
+<!-- ##### FUNCTION gwy_data_field_max_of_fields ##### -->
+<para>
+
+</para>
+
+@result: 
+@operand1: 
+@operand2: 
+
+
