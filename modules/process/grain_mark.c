@@ -61,6 +61,7 @@ typedef struct {
     GtkWidget *check_slope;
     GtkWidget *check_lap;
     GtkWidget *merge;
+    GwyContainer *mydata;
 } MarkControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -86,8 +87,7 @@ static void        mark_save_args              (GwyContainer *container,
 static void        mark_dialog_update          (MarkControls *controls,
                                                MarkArgs *args);
 static void        preview                     (MarkControls *controls,
-                                               MarkArgs *args,
-                                               GwyContainer *data);
+                                               MarkArgs *args);
 static void        ok                         (MarkControls *controls,
                                                MarkArgs *args,
                                                GwyContainer *data);
@@ -191,11 +191,12 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);    
 
-    controls.view = gwy_data_view_new(data);
+    controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata, "/0/data"));
     zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
     
@@ -270,7 +271,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
             break;
 
             case RESPONSE_PREVIEW:
-            preview(&controls, args, data);
+            preview(&controls, args);
             break;
 
             default:
@@ -375,25 +376,34 @@ mark_dialog_update(MarkControls *controls,
 
 static void
 preview(MarkControls *controls,
-        MarkArgs *args,
-        GwyContainer *data)
+        MarkArgs *args)
 {
     GwyDataField *maskfield, *dfield, *output_field;
     GwyDataViewLayer *layer;
-    GwyPixmapLayer *mask_layer;
     gboolean is_field;
-    
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+   
+   printf("***preview\n"); 
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
 
     /*set up the mask*/
-    if ((mask_layer=gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view)))==NULL)
+    if (gwy_container_contains_by_name(controls->mydata, "/0/mask"))
     {
-        mask_layer = gwy_layer_basic_new();
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                 GWY_PIXMAP_LAYER(mask_layer));
-   
+        printf("***mask found\n");
+        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                  "/0/mask"));
+        gwy_data_field_resample(maskfield,
+                               gwy_data_field_get_xres(dfield),
+                               gwy_data_field_get_yres(dfield),
+                               GWY_INTERPOLATION_NONE);
+        gwy_data_field_copy(dfield, maskfield);
     }
-
+    else
+    {
+        printf("***mask not found\n");
+        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+        gwy_container_set_object_by_name(controls->mydata, "/0/mask", G_OBJECT(maskfield));
+    }
+ 
     is_field = FALSE;
     output_field = (GwyDataField*)gwy_data_field_new(gwy_data_field_get_xres(dfield), 
                                                      gwy_data_field_get_yres(dfield),
