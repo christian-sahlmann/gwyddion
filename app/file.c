@@ -125,11 +125,15 @@ gwy_app_file_duplicate_cb(void)
 {
     GtkWidget *data_window;
     GwyContainer *data, *duplicate;
+    GObject *show;
 
     data = gwy_app_get_current_data();
     g_return_if_fail(GWY_IS_CONTAINER(data));
     duplicate = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     g_return_if_fail(GWY_IS_CONTAINER(duplicate));
+    if (gwy_container_gis_object_by_name(duplicate, "/0/show", &show)
+        && g_object_get_data(show, "is_preview"))
+        gwy_container_remove_by_name(duplicate, "/0/show");
     data_window = gwy_app_data_window_create(duplicate);
     g_object_set_data(G_OBJECT(duplicate), "gwy-app-modified",
                       GINT_TO_POINTER(1));
