@@ -68,10 +68,8 @@ foreach my $dir (glob "*") {
     next if !-d $dir;
     my $oldcwd = getcwd;
     chdir $dir;
-    my $ok = 0;
     foreach my $f (glob "html/*.html") {
         print "$dir/$f\n";
-        $ok = 1;
         $_ = qx(cat $f | sed -e 's:</*gtkdoc[^>]*>::gi' | $tidy 2>/dev/null);
         s#((?:class|rel)=".*?")#\L$1\E#sg;
         s#<body[^>]*>#<body>#s;
@@ -94,10 +92,6 @@ foreach my $dir (glob "*") {
         $f =~ s/.*\///;
         $f =~ s/\.html$/.xhtml/;
         open FH, ">$APIDOCS/$dir/$f" or die; print FH $_; close FH;
-    }
-    if ($ok) {
-        chdir "$APIDOCS/$dir";
-        symlink "index.xhtml", "main.xhtml";
     }
     chdir $oldcwd;
 }
