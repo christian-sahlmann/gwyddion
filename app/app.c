@@ -61,6 +61,8 @@ static gboolean   gwy_app_graph_list_delete_cb     (GtkWidget *toggle);
 #endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 static void       gwy_app_3d_window_orphaned       (GtkWidget *view,
                                                     GtkWidget *gwy3dwindow);
+static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow,
+                                                    GtkWidget *view);
 
 /*****************************************************************************
  *                                                                           *
@@ -766,7 +768,7 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     g_signal_connect(gwy3dwindow, "focus-in-event",
                      G_CALLBACK(gwy_app_3d_window_set_current), NULL);
     g_signal_connect(gwy3dwindow, "destroy",
-                     G_CALLBACK(gwy_app_3d_window_remove), NULL);
+                     G_CALLBACK(gwy_app_3d_window_destroyed), view);
 
     gtk_widget_show_all(gwy3dwindow);
     gtk_window_present(GTK_WINDOW(gwy3dwindow));
@@ -865,8 +867,26 @@ static void
 gwy_app_3d_window_orphaned(GtkWidget *view,
                            GtkWidget *gwy3dwindow)
 {
+    g_signal_handlers_disconnect_matched(gwy3dwindow,
+                                         G_SIGNAL_MATCH_FUNC
+                                         | G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL,
+                                         gwy_app_3d_window_destroyed,
+                                         view);
+}
+
+static void
+gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow,
+                            GtkWidget *view)
+{
     GtkWidget *gwy3dview;
 
+    g_signal_handlers_disconnect_matched(view,
+                                         G_SIGNAL_MATCH_FUNC
+                                         | G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL,
+                                         gwy_app_3d_window_orphaned,
+                                         gwy3dwindow);
     gwy3dview = gwy_3d_window_get_3d_view(GWY_3D_WINDOW(gwy3dwindow));
     g_signal_handlers_disconnect_matched(view,
                                          G_SIGNAL_MATCH_FUNC
