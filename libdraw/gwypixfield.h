@@ -28,12 +28,17 @@
 #include <libprocess/datafield.h>
 #include <libdraw/gwypalette.h>
 
-void     gwy_pixfield_do         (GdkPixbuf *pixbuf,
-                                  GwyDataField *data_field,
-                                  GwyPalette *palette);
-void     gwy_pixfield_mask       (GdkPixbuf *pixbuf,
-                                  GwyDataField *data_field,
-                                  GwyRGBA *color);
+void     gwy_pixfield_do            (GdkPixbuf *pixbuf,
+                                     GwyDataField *data_field,
+                                     GwyPalette *palette);
+void     gwy_pixfield_do_with_range (GdkPixbuf *pixbuf,
+                                     GwyDataField *data_field,
+                                     GwyPalette *palette,
+                                     gdouble minimum,
+                                     gdouble maximum);
+void     gwy_pixfield_do_mask       (GdkPixbuf *pixbuf,
+                                     GwyDataField *data_field,
+                                     GwyRGBA *color);
 
 
 #endif /*__GWY_PIXFIELD__*/
