@@ -9,12 +9,12 @@ PROJECT=Gwyddion
 ACLOCAL_FLAGS="-I m4"
 # When runnig autogen.sh one normally wants this.
 CONF_FLAGS="--enable-maintainer-mode"
-AUTOCONF=autoconf
-LIBTOOL=libtool
-LIBTOOLIZE=libtoolize
-AUTOMAKE=automake
-ACLOCAL=aclocal
-AUTOHEADER=autoheader
+AUTOCONF=${AUTOCONF:-autoconf}
+LIBTOOL=${LIBTOOL:-libtool}
+LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
+AUTOMAKE=${AUTOMAKE:-automake}
+ACLOCAL=${ACLOCAL:-aclocal}
+AUTOHEADER=${AUTOHEADER:-autoheader}
 
 echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 
