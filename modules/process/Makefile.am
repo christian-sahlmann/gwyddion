@@ -9,14 +9,15 @@ process_PROGRAMS = \
 	cwt.so \
 	facet-level.so \
 	fft.so \
+	grain_mark.so \
+	grain_rem_threshold.so \
+	grain_wshed.so \
+ 	grain_dist.so \
 	level.so \
 	rotate.so \
 	scale.so \
 	shade.so \
-        grain_mark.so \
-	grain_rem_threshold.so \
-	grain_wshed.so \
- 	grain_dist.so
+	slope_dist.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -57,6 +58,8 @@ grain_wshed_so_LDFLAGS = $(module_ldflags),grain_wshed.so
 grain_dist_so_SOURCES = grain_dist.c
 grain_dist_so_LDFLAGS = $(module_ldflags),grain_dist.so
 
+slope_dist_so_SOURCES = slope_dist.c
+slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
 
 
 INCLUDES = -I$(top_srcdir)
