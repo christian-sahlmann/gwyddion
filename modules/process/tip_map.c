@@ -283,7 +283,7 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
         g_object_unref(dfield);
     }
 
-/*    dfield = gwy_tip_cmap(dfield1, dfield2, dfield);*/
+    dfield = gwy_tip_cmap(dfield1, dfield2, dfield);
 
 
     /*
