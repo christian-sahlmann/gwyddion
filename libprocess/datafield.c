@@ -3300,7 +3300,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
   **/
 void
 gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kernel_field, GwyDataField *score, 
-                                   GwyComputationStateType *stae, gint iteration)
+                                   GwyComputationStateType *state, gint *iteration)
 {
     gint xres, yres, kxres, kyres, i, j;
    
@@ -3316,24 +3316,31 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kerne
     kyres = kernel_field->yres;
 
     if (kxres<=0 || kyres<=0) {g_warning("Correlation kernel has nonpositive size."); return -1;}
-
-    gwy_data_field_fill(score, -1);
     /*correlation request outside kernel*/
     if (kxres > xres || kyres > yres) 
     {
         return;
     }
- 
-    for (i=(kxres/2); i<(xres-kxres/2); i++)/*col*/
+  
+    if (*state == GWY_COMP_INIT)
     {
+        gwy_data_field_fill(score, -1);
+        *state = GWY_COMP_ITERATE;
+        *iteration = 0;
+    }
+    else if (*state == GWY_COMP_ITERATE)
+    {
+        if (iteration==0) i=(kxres/2);
+        else i = *iteration;
         for (j=(kyres/2); j<(yres-kyres/2); j++)/*row*/
         {
            score->data[i+xres*j] = gwy_data_field_get_correlation_score(data_field, kernel_field,
                                         i - kxres/2, j - kyres/2,
                                         0, 0, kxres, kyres);
         }
+        *iteration = i+1; 
+        if (*iteration == (xres-kxres/2 -1)) *state = GWY_COMP_FINISHED;
     }
-    
 }
 
 /**

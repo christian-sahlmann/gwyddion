@@ -631,7 +631,7 @@ void gwy_data_field_correlate_iteration(GwyDataField *data_field,
                                         GwyDataField *kernel_field,
                                         GwyDataField *score,
                                         GwyComputationStateType *state, 
-                                        gint iteration);
+                                        gint *iteration);
                               
 
 void gwy_data_field_fractal_partitioning(GwyDataField *data_field, 
