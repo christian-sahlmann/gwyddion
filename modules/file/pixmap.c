@@ -112,7 +112,8 @@ static GwyContainer*     pixmap_load               (const gchar *filename,
 static gboolean          pixmap_load_dialog        (PixmapLoadArgs *args,
                                                     const gchar *name,
                                                     gint xres,
-                                                    gint yres);
+                                                    gint yres,
+                                                    const gchar *warning);
 static void              xyreal_changed_cb         (GtkAdjustment *adj,
                                                     PixmapLoadControls *controls);
 static void              xymeasureeq_changed_cb    (PixmapLoadControls *controls);
@@ -465,9 +466,10 @@ pixmap_load(const gchar *filename,
     gsize n, bpp;
     guchar *pixels, *p;
     gint i, j, width, height, rowstride;
-    gboolean has_alpha;
+    gboolean has_alpha, is_grayscale;
     gdouble *val, *r;
     PixmapLoadArgs args;
+    const gchar *warning;
 
     gwy_debug("Loading <%s> as %s", filename, name);
 
@@ -519,21 +521,27 @@ pixmap_load(const gchar *filename,
                                                args.xreal, args.yreal,
                                                FALSE));
     val = gwy_data_field_get_data(dfield);
+    is_grayscale = TRUE;
     for (i = 0; i < height; i++) {
         p = pixels + i*rowstride;
         r = val + i*width;
         for (j = 0; j < width; j++) {
-            guchar v = p[bpp*j] > p[bpp*j+1] ? p[bpp*j] : p[bpp*j+1];
+            guchar red = p[bpp*j], green = p[bpp*j+1], blue = p[bpp*j+2];
+            guchar v = red > green ? red : green;
 
-            if (p[bpp*j+2] > v)
-                v = p[bpp*j+2];
-
+            if (blue > v)
+                v = blue;
             r[j] = v/255.0;
+
+            if (red != green || green != blue)
+                is_grayscale = FALSE;
         }
     }
     g_object_unref(pixbuf);
 
-    if (pixmap_load_dialog(&args, name, width, height)) {
+    warning = is_grayscale ? NULL
+              : _("Image is not grayscale, values may be distorted");
+    if (pixmap_load_dialog(&args, name, width, height, warning)) {
         pixmap_load_save_args(settings, &args);
         gwy_data_field_set_xreal(dfield,
                                  args.xreal*exp(G_LN10*args.xyexponent));
@@ -555,7 +563,8 @@ static gboolean
 pixmap_load_dialog(PixmapLoadArgs *args,
                    const gchar *name,
                    gint xres,
-                   gint yres)
+                   gint yres,
+                   const gchar *warning)
 {
     PixmapLoadControls controls;
     GtkObject *adj;
@@ -578,7 +587,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                          NULL);
     g_free(title);
 
-    table = gtk_table_new(6, 3, FALSE);
+    table = gtk_table_new(8, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
@@ -660,6 +669,16 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
     row++;
+
+    if (warning) {
+        s = g_strconcat(_("Warning: "), warning, NULL);
+        label = gtk_label_new(s);
+        g_free(s);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        row++;
+    }
 
     g_signal_connect_swapped(controls.xymeasureeq, "toggled",
                              G_CALLBACK(xymeasureeq_changed_cb), &controls);
