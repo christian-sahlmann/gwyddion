@@ -51,9 +51,11 @@ static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
 static void       gwy_app_data_window_list_updated (void);
 void              gwy_app_data_window_add          (GwyDataWindow *window);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
-static gboolean   gwy_app_data_popup_menu_popup    (GtkWidget *menu,
-                                                    GdkEventButton *event,
-                                                    GtkWidget *view);
+static gboolean   gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
+                                                      GdkEventButton *event,
+                                                      GtkWidget *view);
+static void       gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
+                                                    GtkWidget *data_window);
 static void       gwy_app_set_current_window       (GtkWidget *window);
 static void       gwy_app_graph_list_toggle_cb     (GtkWidget *toggle,
                                                     GwyDataWindow *data_window);
@@ -418,7 +420,10 @@ gwy_app_data_window_create(GwyContainer *data)
 
     current_data = g_list_append(current_data, data_window);
     g_signal_connect_swapped(data_view, "button_press_event",
-                             G_CALLBACK(gwy_app_data_popup_menu_popup),
+                             G_CALLBACK(gwy_app_data_popup_menu_popup_mouse),
+                             popup_menu);
+    g_signal_connect_swapped(data_window, "popup-menu",
+                             G_CALLBACK(gwy_app_data_popup_menu_popup_key),
                              popup_menu);
 
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
@@ -1220,9 +1225,9 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
 }
 
 static gboolean
-gwy_app_data_popup_menu_popup(GtkWidget *menu,
-                              GdkEventButton *event,
-                              GtkWidget *view)
+gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
+                                    GdkEventButton *event,
+                                    GtkWidget *view)
 {
     GtkWidget *window;
 
@@ -1235,7 +1240,32 @@ gwy_app_data_popup_menu_popup(GtkWidget *menu,
 
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
+
     return TRUE;
+}
+
+static void
+gwy_app_data_popup_menu_position(GtkMenu *menu,
+                                 gint *x,
+                                 gint *y,
+                                 gboolean *push_in,
+                                 GtkWidget *window)
+{
+    GtkWidget *data_view;
+
+    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
+    gdk_window_get_origin(data_view->window, x, y);
+    *push_in = TRUE;
+}
+
+static void
+gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
+                                  GtkWidget *data_window)
+{
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL,
+                   (GtkMenuPositionFunc)gwy_app_data_popup_menu_position,
+                   data_window,
+                   0, gtk_get_current_event_time());
 }
 
 void
