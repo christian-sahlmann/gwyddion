@@ -40,8 +40,8 @@ typedef struct {
     GtkWidget *direction;
     GtkObject *size;
     GtkWidget *update;
-    gint fil;
-    gint dir;
+    GwyFilterType fil;
+    GtkOrientation dir;
     gint siz;
     gboolean upd;
     gpointer last_preview;
@@ -572,52 +572,42 @@ size_changed_cb(ToolControls *controls)
 
 
 static const gchar *upd_key = "/tool/filter/update";
-static const gchar *siz_key = "/tool/profile/size";
-static const gchar *fil_key = "/tool/profile/filter";
-static const gchar *dir_key = "/tool/profile/direction";
-
+static const gchar *siz_key = "/tool/filter/size";
+static const gchar *fil_key = "/tool/filter/filter";
+static const gchar *dir_key = "/tool/filter/direction";
 
 static void
 save_args(GwyContainer *container, ToolControls *controls)
 {
-    gwy_container_set_boolean_by_name(container, upd_key,
-                                      controls->upd);
-    gwy_container_set_int32_by_name(container, siz_key,
-                                    controls->siz);
-    gwy_container_set_int32_by_name(container, fil_key,
-                                    controls->fil);
-    gwy_container_set_int32_by_name(container, dir_key,
-                                    controls->dir);
-}
+    /* TODO: remove someday, old misnamed keys */
+    gwy_container_remove_by_name(container, "/tool/profile/size");
+    gwy_container_remove_by_name(container, "/tool/profile/filter");
+    gwy_container_remove_by_name(container, "/tool/profile/direction");
 
+    gwy_container_set_boolean_by_name(container, upd_key, controls->upd);
+    gwy_container_set_int32_by_name(container, siz_key, controls->siz);
+    gwy_container_set_enum_by_name(container, fil_key, controls->fil);
+    gwy_container_set_enum_by_name(container, dir_key, controls->dir);
+}
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
-    if (gwy_container_contains_by_name(container, upd_key))
-        controls->upd = gwy_container_get_boolean_by_name(container,
-                                                               upd_key);
-    else
-        controls->upd = FALSE;
+    controls->upd = FALSE;
+    controls->siz = 6;
+    controls->fil = GWY_FILTER_MEAN;
+    controls->dir = GTK_ORIENTATION_HORIZONTAL;
 
-    if (gwy_container_contains_by_name(container, siz_key))
-        controls->siz = gwy_container_get_int32_by_name(container,
-                                                          siz_key);
-    else
-        controls->siz = 6;
+    gwy_container_gis_boolean_by_name(container, upd_key, &controls->upd);
+    gwy_container_gis_int32_by_name(container, siz_key, &controls->siz);
+    gwy_container_gis_enum_by_name(container, fil_key, &controls->fil);
+    gwy_container_gis_enum_by_name(container, dir_key, &controls->dir);
 
-    if (gwy_container_contains_by_name(container, fil_key))
-        controls->fil = gwy_container_get_int32_by_name(container,
-                                                          fil_key);
-    else
-        controls->fil = GWY_FILTER_MEAN;
-
-    if (gwy_container_contains_by_name(container, dir_key))
-        controls->dir = gwy_container_get_int32_by_name(container,
-                                                          dir_key);
-    else
-        controls->dir = 0;;
-
+    /* sanitize */
+    controls->upd = !!controls->upd;
+    controls->siz = CLAMP(controls->siz, 1, 20);
+    controls->fil = MIN(controls->fil, GWY_FILTER_PREWITT);
+    controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
     /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

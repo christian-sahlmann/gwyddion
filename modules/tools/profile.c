@@ -64,9 +64,6 @@ static void       load_args           (GwyContainer *container,
 static void       save_args           (GwyContainer *container,
                                        ToolControls *controls);
 
-static const gchar *separate_key = "/tool/profile/separate";
-static const gchar *interp_key = "/tool/profile/interp";
-
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -441,21 +438,23 @@ separate_changed_cb(GtkToggleButton *button, ToolControls *controls)
     controls->separate = gtk_toggle_button_get_active(button);
 }
 
+static const gchar *separate_key = "/tool/profile/separate";
+static const gchar *interp_key = "/tool/profile/interp";
+
 static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
-    gwy_debug("");
-    if (gwy_container_contains_by_name(container, separate_key))
-        controls->separate = gwy_container_get_boolean_by_name(container,
-                                                               separate_key);
-    else
-        controls->separate = FALSE;
+    controls->separate = FALSE;
+    controls->interp = GWY_INTERPOLATION_BILINEAR;
 
-    if (gwy_container_contains_by_name(container, interp_key))
-        controls->interp = gwy_container_get_int32_by_name(container,
-                                                           interp_key);
-    else
-        controls->interp = GWY_INTERPOLATION_BILINEAR;
+    gwy_container_gis_boolean_by_name(container, separate_key,
+                                      &controls->separate);
+    gwy_container_gis_enum_by_name(container, interp_key, &controls->interp);
+
+    /* sanitize */
+    controls->separate = !!controls->separate;
+    controls->interp = CLAMP(controls->interp,
+                             GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
 }
 
 static void
@@ -463,8 +462,7 @@ save_args(GwyContainer *container, ToolControls *controls)
 {
     gwy_container_set_boolean_by_name(container, separate_key,
                                       controls->separate);
-    gwy_container_set_int32_by_name(container, interp_key,
-                                    controls->interp);
+    gwy_container_set_enum_by_name(container, interp_key, controls->interp);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
