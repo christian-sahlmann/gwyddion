@@ -1,3 +1,4 @@
+# @(#) $Id$
 
 if HAVE_PERL
 PERL_TARGET_DIR = ${prefix}@PERL_SITE_LIB@/Gwyddion
