@@ -2639,9 +2639,9 @@ gwy_data_field_convolve(GwyDataField *data_field, GwyDataField *kernel_field,
         for (j = ulcol; j < brcol; j++) /*0-xres*/
         {
             /*target_field->data[j + data_field->xres*i];*/
-            for (m = (-kyres/2); m<(kyres/2); m++)
+            for (m = (-kyres/2); m<(kyres - kyres/2); m++)
             {
-                for (n = (-kxres/2); n<(kxres/2); n++)
+                for (n = (-kxres/2); n<(kxres - kxres/2); n++)
                 {
                     if (((j+n)<xres) && ((i+m)<yres) && ((j+n)>=0) && ((i+m)>=0))
                         fieldval = data_field->data[(j+n) + xres*(i+m)];
@@ -2827,9 +2827,9 @@ gwy_data_field_filter_median(GwyDataField *data_field, gint size,
         for (j = ulcol; j < brcol; j++) 
         {
             nb = 0;
-            for (m = (-kyres/2); m<(kyres/2); m++)
+            for (m = (-kyres/2); m<(kyres - kyres/2); m++)
             {
-                for (n = (-kxres/2); n<(kxres/2); n++)
+                for (n = (-kxres/2); n<(kxres - kxres/2); n++)
                 {
                     if (((j+n)<xres) && ((i+m)<yres) && ((j+n)>=0) && ((i+m)>=0))
                     {
@@ -2892,9 +2892,9 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
             nb = 0;
             maxval = -G_MAXDOUBLE;
             minval = G_MAXDOUBLE;
-            for (m = (-kyres/2); m<(kyres/2); m++)
+            for (m = (-kyres/2); m<(kyres - kyres/2); m++)
             {
-                for (n = (-kxres/2); n<(kxres/2); n++)
+                for (n = (-kxres/2); n<(kxres - kxres/2); n++)
                 {
                     if (((j+n)<xres) && ((i+m)<yres) && ((j+n)>=0) && ((i+m)>=0))
                     {
