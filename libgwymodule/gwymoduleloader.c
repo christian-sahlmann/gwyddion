@@ -231,6 +231,7 @@ gwy_module_do_register_module(const gchar *filename,
     GwyModuleInfo *mod_info = NULL;
     GwyModuleQueryFunc query;
     gchar *modname, *s;
+    size_t span_length;
 
     s = g_path_get_basename(filename);
     modname = g_ascii_strdown(s, -1);
@@ -244,6 +245,11 @@ gwy_module_do_register_module(const gchar *filename,
         g_free(modname);
         return NULL;
     }
+
+    span_length = strspn(modname, G_CSET_a_2_z G_CSET_DIGITS "-_");
+    if (span_length != strlen(modname) || !g_ascii_isalpha(modname[0]))
+        g_warning("Module name `%s' is not a valid identifier. "
+                  "It may be rejected in future.", modname);
 
     if (g_hash_table_lookup(mods, modname)) {
         g_warning("Ignoring duplicate module `%s' (`%s')", modname, filename);
