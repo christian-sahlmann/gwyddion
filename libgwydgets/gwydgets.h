@@ -33,6 +33,7 @@
 #include <libgwydgets/gwygraphcorner.h>
 #include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwyhruler.h>
+#include <libgwydgets/gwylayer-axes.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-lines.h>
 #include <libgwydgets/gwylayer-mask.h>

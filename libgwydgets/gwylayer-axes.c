@@ -447,8 +447,8 @@ gwy_layer_axes_button_pressed(GwyVectorLayer *layer,
     /* handle existing axes */
     i = gwy_layer_axes_near_point(axes_layer, xreal, yreal);
     if (i >= 0) {
+        gwy_layer_axes_draw_line(axes_layer, window, i);
         axes_layer->inear = i;
-        /*gwy_layer_axes_draw_line(axes_layer, window, i);*/
     }
     else {
         /* add a point, or do nothing when maximum is reached */
@@ -460,6 +460,7 @@ gwy_layer_axes_button_pressed(GwyVectorLayer *layer,
     axes_layer->button = event->button;
     axes_layer->axes[i] = (axes_layer->orientation == GTK_ORIENTATION_VERTICAL)
                           ? xreal : yreal;
+    gwy_layer_axes_draw_line(axes_layer, window, i);
 
     gdk_window_set_cursor(window,
                           GWY_LAYER_AXES_GET_CLASS(layer)->move_cursor);

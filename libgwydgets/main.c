@@ -35,7 +35,7 @@
 #define TEST_OPTION_MENUS 2
 #define TEST_GTKDOC_INFO 3
 
-#define TEST_WHAT TEST_OPTION_MENUS
+#define TEST_WHAT TEST_DATA_VIEW
 
 /***** VECTOR SHADE [[[ *****************************************************/
 #if (TEST_WHAT == TEST_VECTOR_SHADE)
@@ -114,7 +114,7 @@ test(void)
 
 /***** DATA VIEW [[[ ********************************************************/
 #if (TEST_WHAT == TEST_DATA_VIEW)
-#define FILENAME "data_field.object"
+#define FILENAME "test.gwy"
 
 static void
 quit_callback(GObject *data)
@@ -149,20 +149,20 @@ test(void)
 
     g_file_get_contents(FILENAME, &buffer, &size, &err);
     g_assert(!err);
-    data = GWY_CONTAINER(gwy_serializable_deserialize(buffer, size, &pos));
+    data = GWY_CONTAINER(gwy_serializable_deserialize(buffer+4, size-1, &pos));
 
     data_field = gwy_container_get_object_by_name(data, "/0/data");
 
     view = gwy_data_view_new(data);
     layer = (GwyDataViewLayer*)gwy_layer_basic_new();
     palette = (GwyPalette*)(gwy_palette_new(NULL));
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), GWY_PIXMAP_LAYER(layer));
     gwy_palette_set_by_name(palette, GWY_PALETTE_RAINBOW2);
-    gwy_layer_basic_set_palette(layer, palette);
+    gwy_layer_basic_set_palette(GWY_LAYER_BASIC(layer), palette);
     g_object_unref(palette);
 
-    layer = (GwyDataViewLayer*)gwy_layer_lines_new();
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), layer);
+    layer = (GwyDataViewLayer*)gwy_layer_axes_new();
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), GWY_VECTOR_LAYER(layer));
 
     g_object_unref(data);
 
