@@ -11,6 +11,7 @@ process_PROGRAMS = \
 	calibrate.so \
 	crosscor.so \
 	cwt.so \
+	dwt.so \
 	edge.so \
 	facet-level.so \
 	fft.so \
@@ -70,8 +71,8 @@ crosscor_so_LDFLAGS = $(module_ldflags),crosscor.so
 cwt_so_SOURCES = cwt.c
 cwt_so_LDFLAGS = $(module_ldflags),cwt.so
 
-#dwt_so_SOURCES = dwt.c
-#dwt_so_LDFLAGS = $(module_ldflags),dwt.so
+dwt_so_SOURCES = dwt.c
+dwt_so_LDFLAGS = $(module_ldflags),dwt.so
 
 edge_so_SOURCES = edge.c
 edge_so_LDFLAGS = $(module_ldflags),edge.so
