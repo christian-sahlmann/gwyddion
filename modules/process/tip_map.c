@@ -306,8 +306,6 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
     */
     /*set right output */
 
-    
-
     return TRUE;
 }
 
