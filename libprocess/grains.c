@@ -55,11 +55,6 @@ gint *gwy_data_field_fill_grain(GwyDataField *dfield,
 
 /********************/
 
-typedef struct {
-    gint col;
-    gint row;
-} GrainPoint;
-
 /**
  * gwy_data_field_grains_mark_height:
  * @data_field: Data to be used for marking.
@@ -427,7 +422,8 @@ gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
     if (!grain_field->data[grain_field->xres*row + col])
         return FALSE;
 
-    points = gwy_data_field_fill_grain(grain_field, col, row, &npoints);
+    /* XXX: really row, col; not col, row */
+    points = gwy_data_field_fill_grain(grain_field, row, col, &npoints);
     while (npoints) {
         npoints--;
         grain_field->data[points[npoints]] = 0.0;
@@ -927,6 +923,7 @@ number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
 }
 
 
+/* FIXME: has wrong order of col and row arguments! */
 /**
  * gwy_data_field_fill_grain:
  * @dfield: A data field with zeroes in empty space and nonzeroes in grains.
