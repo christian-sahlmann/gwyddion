@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
+#include <errno.h>
 
 /* define GENRTABLE to create RTABLE generator */
 #ifndef GENRTABLE
@@ -86,6 +88,8 @@ enum {
     RAW_ASCII_PARSE_ERROR = 1,
 };
 
+typedef gdouble (*RawStrtodFunc)(const gchar *nptr, gchar **endptr);
+
 /* note: size, skip, and rowskip are in bits */
 typedef struct {
     gint format;  /* binary, text */
@@ -103,6 +107,7 @@ typedef struct {
     gsize lineoffset;  /* start reading from this line (ASCII) */
     guchar *delimiter;  /* field delimiter (ASCII) */
     gsize skipfields;  /* skip this number of fields at line start (ASCII) */
+    gboolean decomma;  /* decimal separator is comma */
 
     gsize xres;
     gsize yres;
@@ -114,6 +119,7 @@ typedef struct {
     gdouble zscale;
     gint zexponent;
     gchar *presetname;
+
 } RawFileArgs;
 
 typedef struct {
@@ -138,6 +144,7 @@ typedef struct {
     GtkWidget *delimmenu;
     GtkWidget *delimiter;
     GtkWidget *skipfields;
+    GtkWidget *decomma;
     GtkWidget *xres;
     GtkWidget *yres;
     GtkWidget *xyreseq;
@@ -221,6 +228,8 @@ static gboolean      rawfile_read_ascii            (RawFileArgs *args,
                                                     guchar *buffer,
                                                     gdouble *data,
                                                     GError **error);
+gdouble              gwy_comma_strtod              (const gchar *nptr,
+                                                    gchar **endptr);
 static void          rawfile_sanitize_args         (RawFileArgs *args);
 static void          rawfile_load_args             (GwyContainer *settings,
                                                     RawFileArgs *args);
@@ -242,7 +251,7 @@ static GwyModuleInfo module_info = {
     "rawfile",
     "Read raw data according to user-specified format.",
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -386,7 +395,7 @@ static const RawFileArgs rawfile_defaults = {
     RAW_BINARY,                     /* format */
     RAW_UNSIGNED_BYTE, 0, 8, 0, 0,  /* binary parameters */
     FALSE, FALSE, FALSE, 0,         /* binary options */
-    0, NULL, 0,                     /* text parameters */
+    0, NULL, 0, FALSE,              /* text parameters */
     500, 500, TRUE,                 /* xres, yres */
     100.0, 100.0, TRUE, -6,         /* physical dimensions */
     1.0, -6,                        /* z-scale */
@@ -832,6 +841,12 @@ rawfile_dialog_format_page(RawFileArgs *args,
     gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
     gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row+1,
                      GTK_FILL, 0, 2, 2);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("_Decimal separator "
+                                                  "is comma"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    controls->decomma = button;
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
     row++;
 
@@ -1619,6 +1634,9 @@ update_dialog_controls(RawFileControls *controls)
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->skipfields));
     gtk_adjustment_set_value(adj, args->skipfields);
 
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->decomma),
+                                 args->decomma);
+
     gtk_entry_set_text(GTK_ENTRY(controls->delimiter), args->delimiter);
     if (!args->delimiter || !*args->delimiter)
         gwy_option_menu_set_history(controls->delimmenu, "delimiter",
@@ -1654,6 +1672,7 @@ update_dialog_controls(RawFileControls *controls)
         gtk_widget_set_sensitive(controls->delimiter, FALSE);
         gtk_widget_set_sensitive(controls->delimmenu, FALSE);
         gtk_widget_set_sensitive(controls->skipfields, FALSE);
+        gtk_widget_set_sensitive(controls->decomma, FALSE);
 
         gtk_widget_set_sensitive(controls->builtin, TRUE);
         gtk_widget_set_sensitive(controls->offset, TRUE);
@@ -1676,6 +1695,7 @@ update_dialog_controls(RawFileControls *controls)
         gtk_widget_set_sensitive(controls->delimiter, delim_other);
         gtk_widget_set_sensitive(controls->delimmenu, TRUE);
         gtk_widget_set_sensitive(controls->skipfields, TRUE);
+        gtk_widget_set_sensitive(controls->decomma, TRUE);
 
         gtk_widget_set_sensitive(controls->builtin, FALSE);
         gtk_widget_set_sensitive(controls->offset, FALSE);
@@ -1739,6 +1759,8 @@ update_dialog_values(RawFileControls *controls)
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->lineoffset));
     args->skipfields
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->skipfields));
+    args->decomma
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->decomma));
 
     args->sign
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->sign));
@@ -1962,6 +1984,7 @@ rawfile_read_ascii(RawFileArgs *args,
                    gdouble *data,
                    GError **error)
 {
+    RawStrtodFunc strtod_func;
     gsize i, j, n;
     gint cdelim = '\0';
     gint delimtype;
@@ -1970,6 +1993,11 @@ rawfile_read_ascii(RawFileArgs *args,
 
     if (!error_domain)
         error_domain = g_quark_from_static_string("RAWFILE_ERROR");
+
+    if (args->decomma)
+        strtod_func = &gwy_comma_strtod;
+    else
+        strtod_func = &g_ascii_strtod;
 
     /* skip lines */
     for (i = 0; i < args->lineoffset; i++) {
@@ -2042,7 +2070,7 @@ rawfile_read_ascii(RawFileArgs *args,
         switch (delimtype) {
             case 0:
             for (i = 0; i < args->xres; i++) {
-                x = g_ascii_strtod(buffer, (char**)&end);
+                x = strtod_func(buffer, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
                                 "Garbage `%.16s' in row %u, column %u",
@@ -2056,7 +2084,7 @@ rawfile_read_ascii(RawFileArgs *args,
 
             case 1:
             for (i = 0; i < args->xres; i++) {
-                x = g_ascii_strtod(buffer, (char**)&end);
+                x = strtod_func(buffer, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
                                 "Garbage `%.16s' in row %u, column %u",
@@ -2082,7 +2110,7 @@ rawfile_read_ascii(RawFileArgs *args,
 
             default:
             for (i = 0; i < args->xres; i++) {
-                x = g_ascii_strtod(buffer, (char**)&end);
+                x = strtod_func(buffer, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
                                 "Garbage `%.16s' in row %u, column %u",
@@ -2111,11 +2139,144 @@ rawfile_read_ascii(RawFileArgs *args,
     return TRUE;
 }
 
+gdouble
+gwy_comma_strtod(const gchar *nptr, gchar **endptr)
+{
+    gchar *fail_pos;
+    gdouble val;
+    struct lconv *locale_data;
+    const char *decimal_point;
+    int decimal_point_len;
+    const char *p, *decimal_point_pos;
+    const char *end = NULL;     /* Silence gcc */
+
+    g_return_val_if_fail(nptr != NULL, 0);
+
+    fail_pos = NULL;
+
+    locale_data = localeconv();
+    decimal_point = locale_data->decimal_point;
+    decimal_point_len = strlen(decimal_point);
+
+    g_assert(decimal_point_len != 0);
+
+    decimal_point_pos = NULL;
+    if (decimal_point[0] != ',' || decimal_point[1] != 0) {
+        p = nptr;
+        /* Skip leading space */
+        while (g_ascii_isspace(*p))
+            p++;
+
+        /* Skip leading optional sign */
+        if (*p == '+' || *p == '-')
+            p++;
+
+        if (p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
+            p += 2;
+            /* HEX - find the (optional) decimal point */
+
+            while (g_ascii_isxdigit(*p))
+                p++;
+
+            if (*p == ',') {
+                decimal_point_pos = p++;
+
+                while (g_ascii_isxdigit(*p))
+                    p++;
+
+                if (*p == 'p' || *p == 'P')
+                    p++;
+                if (*p == '+' || *p == '-')
+                    p++;
+                while (g_ascii_isdigit(*p))
+                    p++;
+            }
+        }
+        else {
+            while (g_ascii_isdigit(*p))
+                p++;
+
+            if (*p == ',') {
+                decimal_point_pos = p++;
+
+                while (g_ascii_isdigit(*p))
+                    p++;
+
+                if (*p == 'e' || *p == 'E')
+                    p++;
+                if (*p == '+' || *p == '-')
+                    p++;
+                while (g_ascii_isdigit(*p))
+                    p++;
+            }
+        }
+        /* For the other cases, we need not convert the decimal point */
+        end = p;
+    }
+
+    /* Set errno to zero, so that we can distinguish zero results
+       and underflows */
+    errno = 0;
+
+    if (decimal_point_pos) {
+        char *copy, *c;
+
+        /* We need to convert the ',' to the locale specific decimal point */
+        copy = g_malloc(end - nptr + 1 + decimal_point_len);
+
+        c = copy;
+        memcpy(c, nptr, decimal_point_pos - nptr);
+        c += decimal_point_pos - nptr;
+        memcpy(c, decimal_point, decimal_point_len);
+        c += decimal_point_len;
+        memcpy(c, decimal_point_pos + 1, end - (decimal_point_pos + 1));
+        c += end - (decimal_point_pos + 1);
+        *c = 0;
+
+        val = strtod(copy, &fail_pos);
+
+        if (fail_pos) {
+            if (fail_pos - copy > decimal_point_pos - nptr)
+                fail_pos =
+                    (char *)nptr + (fail_pos - copy) - (decimal_point_len - 1);
+            else
+                fail_pos = (char *)nptr + (fail_pos - copy);
+        }
+
+        g_free(copy);
+
+    }
+    else if (decimal_point[0] != ',' || decimal_point[1] != 0) {
+        char *copy;
+
+        copy = g_malloc(end - (char *)nptr + 1);
+        memcpy(copy, nptr, end - nptr);
+        *(copy + (end - (char *)nptr)) = 0;
+
+        val = strtod(copy, &fail_pos);
+
+        if (fail_pos) {
+            fail_pos = (char *)nptr + (fail_pos - copy);
+        }
+
+        g_free(copy);
+    }
+    else {
+        val = strtod(nptr, &fail_pos);
+    }
+
+    if (endptr)
+        *endptr = fail_pos;
+
+    return val;
+}
+
 static void
 rawfile_sanitize_args(RawFileArgs *args)
 {
     if (!args->delimiter)
         args->delimiter = g_strdup("");
+    args->decomma = !!args->decomma;
     args->builtin = MIN(args->builtin, RAW_LAST-1);
     if (args->builtin) {
         args->size = BUILTIN_SIZE[args->builtin];
@@ -2176,6 +2337,7 @@ static const gchar *byteswap_key =    "byteswap";
 static const gchar *lineoffset_key =  "lineoffset";
 static const gchar *delimiter_key =   "delimiter";
 static const gchar *skipfields_key =  "skipfields";
+static const gchar *decomma_key =     "decomma";
 static const gchar *xres_key =        "xres";
 static const gchar *yres_key =        "yres";
 static const gchar *xyreseq_key =     "xyreseq";
@@ -2206,6 +2368,12 @@ fmtkey(const gchar *key,
 #define sset(k, p, t) \
     gwy_container_set_##t##_by_name(settings, fmtkey(k##_key, p), args->k)
 
+#define sgetstr(k, p) \
+    gwy_container_gis_string_by_name(settings, fmtkey(k##_key, p), \
+                                     (const guchar**)&args->k)
+#define ssetstr(k, p) \
+    gwy_container_set_string_by_name(settings, fmtkey(k##_key, p), args->k)
+
 static void
 rawfile_load_args(GwyContainer *settings,
                   RawFileArgs *args)
@@ -2231,7 +2399,8 @@ rawfile_load_preset(GwyContainer *settings,
     sget(byteswap, presetname, int32);
     sget(lineoffset, presetname, int32);
     sget(skipfields, presetname, int32);
-    sget(delimiter, presetname, string);
+    sgetstr(delimiter, presetname);
+    sget(decomma, presetname, boolean);
     sget(sign, presetname, boolean);
     sget(revsample, presetname, boolean);
     sget(revbyte, presetname, boolean);
@@ -2278,6 +2447,7 @@ rawfile_save_preset(GwyContainer *settings,
     sset(lineoffset, presetname, int32);
     sset(skipfields, presetname, int32);
     sset(delimiter, presetname, string);
+    sset(decomma, presetname, boolean);
     sset(sign, presetname, boolean);
     sset(revsample, presetname, boolean);
     sset(revbyte, presetname, boolean);
