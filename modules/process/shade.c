@@ -40,22 +40,25 @@ typedef struct {
 
 typedef struct {
     GtkWidget *gradsphere;
+    GtkWidget *data_view;
+    GwyContainer *data;
+    ShadeArgs *args;
 } ShadeControls;
 
-static GwySphereCoords *coords;
-
-static gboolean    module_register            (const gchar *name);
-static gboolean    shade                      (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    shade_dialog               (ShadeArgs *args);
-static void        shade_changed_cb           (ShadeArgs *args);
-static void        shade_dialog_update        (ShadeControls *controls,
-                                               ShadeArgs *args);
-static void        shade_load_args            (GwyContainer *container,
-                                               ShadeArgs *args);
-static void        shade_save_args            (GwyContainer *container,
-                                               ShadeArgs *args);
-static void        shade_sanitize_args        (ShadeArgs *args);
+static gboolean    module_register              (const gchar *name);
+static gboolean    shade                        (GwyContainer *data,
+                                                 GwyRunType run);
+static gboolean    shade_dialog                 (ShadeArgs *args,
+                                                 GwyContainer *data);
+static void        shade_changed_cb             (GtkObject *coords,
+                                                 ShadeControls *controls);
+static void        shade_dialog_update          (ShadeControls *controls,
+                                                 ShadeArgs *args);
+static void        shade_load_args              (GwyContainer *container,
+                                                 ShadeArgs *args);
+static void        shade_save_args              (GwyContainer *container,
+                                                 ShadeArgs *args);
+static void        shade_sanitize_args          (ShadeArgs *args);
 
 
 ShadeArgs shade_defaults = {
@@ -70,7 +73,7 @@ static GwyModuleInfo module_info = {
     "shade",
     "Shade module",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -111,7 +114,7 @@ shade(GwyContainer *data, GwyRunType run)
     else
         shade_load_args(gwy_app_settings_get(), &args);
 
-    ok = (run != GWY_RUN_MODAL) || shade_dialog(&args);
+    ok = (run != GWY_RUN_MODAL) || shade_dialog(&args, data);
     if (run == GWY_RUN_MODAL)
         shade_save_args(gwy_app_settings_get(), &args);
     if (ok) {
@@ -134,17 +137,45 @@ shade(GwyContainer *data, GwyRunType run)
     return ok;
 }
 
+/* create a smaller copy of data */
+static GwyContainer*
+create_preview_data(GwyContainer *data)
+{
+    GwyContainer *preview;
+    GObject *dfield;
+    gint xres, yres;
+    gdouble zoomval;
+
+    preview = GWY_CONTAINER(gwy_container_new());
+    dfield = gwy_container_get_object_by_name(data, "/0/data");
+    dfield = gwy_serializable_duplicate(dfield);
+    xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
+    yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
+    zoomval = 120.0/MAX(xres, yres);
+    gwy_data_field_resample(GWY_DATA_FIELD(dfield), xres*zoomval, yres*zoomval,
+                            GWY_INTERPOLATION_BILINEAR);
+    gwy_container_set_object_by_name(preview, "/0/data", dfield);
+    g_object_unref(dfield);
+    dfield = gwy_serializable_duplicate(dfield);
+    gwy_container_set_object_by_name(preview, "/0/show", dfield);
+    g_object_unref(dfield);
+
+    return preview;
+}
 
 static gboolean
-shade_dialog(ShadeArgs *args)
+shade_dialog(ShadeArgs *args,
+             GwyContainer *data)
 {
-    GtkWidget *dialog;
+    GtkWidget *dialog, *hbox;
+    GtkObject *layer, *coords;
+    const gchar *palette;
     GObject *pal, *pdef;
     ShadeControls controls;
-    GwySphereCoords *gscoords;
     enum { RESPONSE_RESET = 1 };
     gint response;
 
+    controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Shading"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -153,29 +184,38 @@ shade_dialog(ShadeArgs *args)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    gscoords = GWY_SPHERE_COORDS(gwy_sphere_coords_new(args->theta, args->phi));
-    controls.gradsphere = gwy_vector_shade_new(gscoords);
+    hbox = gtk_hbox_new(FALSE, 20);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 0);
 
-    pdef = gwy_palette_def_new(GWY_PALETTE_GRAY);
+    coords = gwy_sphere_coords_new(args->theta, args->phi);
+    controls.gradsphere = gwy_vector_shade_new(GWY_SPHERE_COORDS(coords));
+
+    palette = gwy_container_get_string_by_name(data, "/0/base/palette");
+    pdef = gwy_palette_def_new(palette);
     pal = gwy_palette_new(GWY_PALETTE_DEF(pdef));
     gwy_grad_sphere_set_palette(
-              GWY_GRAD_SPHERE(gwy_vector_shade_get_grad_sphere(GWY_VECTOR_SHADE(controls.gradsphere))),
+              GWY_GRAD_SPHERE(gwy_vector_shade_get_grad_sphere
+                              (GWY_VECTOR_SHADE(controls.gradsphere))),
               GWY_PALETTE(pal));
+    g_object_unref(pdef);
+    g_object_unref(pal);
+    g_signal_connect(coords, "value_changed",
+                     G_CALLBACK(shade_changed_cb), &controls);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.gradsphere, FALSE, FALSE, 0);
 
+    controls.data = create_preview_data(data);
+    gwy_container_set_string_by_name(controls.data, "/0/base/palette",
+                                     g_strdup(palette));
+    controls.data_view = gwy_data_view_new(controls.data);
+    g_object_unref(controls.data);
+    layer = gwy_layer_basic_new();
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
+                                 GWY_PIXMAP_LAYER(layer));
+    gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 0);
 
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.gradsphere,
-                                              FALSE, FALSE, 4);
-
-    coords = gwy_vector_shade_get_sphere_coords(GWY_VECTOR_SHADE(controls.gradsphere));
-    g_signal_connect_swapped(G_OBJECT(coords), "value_changed",
-                             G_CALLBACK(shade_changed_cb), args);
-
-/*    controls.out
-        = gwy_fft_output_menu(G_CALLBACK(out_changed_cb),
-                                        args, args->out);
-    gwy_table_attach_row(table, 3, _("Output type:"), "",
-                         controls.out);
-*/
+    shade_changed_cb(coords, &controls);
 
     gtk_widget_show_all(dialog);
     do {
@@ -208,10 +248,20 @@ shade_dialog(ShadeArgs *args)
 }
 
 static void
-shade_changed_cb(ShadeArgs *args)
+shade_changed_cb(GtkObject *coords,
+                 ShadeControls *controls)
 {
-    args->theta = gwy_sphere_coords_get_theta(coords);
-    args->phi = gwy_sphere_coords_get_phi(coords);
+    ShadeArgs *args;
+    GObject *dfield, *shader;
+
+    args = controls->args;
+    args->theta = gwy_sphere_coords_get_theta(GWY_SPHERE_COORDS(coords));
+    args->phi = gwy_sphere_coords_get_phi(GWY_SPHERE_COORDS(coords));
+    dfield = gwy_container_get_object_by_name(controls->data, "/0/data");
+    shader = gwy_container_get_object_by_name(controls->data, "/0/show");
+    gwy_data_field_shade(GWY_DATA_FIELD(dfield), GWY_DATA_FIELD(shader),
+                         args->theta*180.0/G_PI, args->phi*180.0/G_PI);
+    gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
 
 static void
