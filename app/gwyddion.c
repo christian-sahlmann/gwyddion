@@ -31,6 +31,8 @@ create_file_menu(void)
         { "/File/_Open...", "<control>O", NULL, 0, "<StockItem>", GTK_STOCK_OPEN },
         { "/File/_Save", "<control>S", NULL, 0, "<StockItem>", GTK_STOCK_SAVE },
         { "/File/Save _As...", "<control><shift>S", NULL, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
+        { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
+        { "/File/_Quit...", "<control>Q", gtk_main_quit, 0, "<StockItem>", GTK_STOCK_QUIT },
     };
 
     return create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items), "<file>");

@@ -10,6 +10,7 @@ static void gwy_load_modules_in_dir(GDir *gdir,
                                     GHashTable *modules);
 
 static GHashTable *modules;
+static GHashTable *process_funcs;
 static gboolean modules_initialized = FALSE;
 
 void
@@ -23,6 +24,7 @@ gwy_modules_init(void)
     }
 
     modules = g_hash_table_new(g_str_hash, g_str_equal);
+    process_funcs = g_hash_table_new(g_direct_hash, g_direct_equal);
     modules_initialized = TRUE;
 }
 
@@ -72,9 +74,9 @@ gwy_load_modules_in_dir(GDir *gdir,
     modulename = NULL;
     while ((filename = g_dir_read_name(gdir))) {
         GModule *mod;
-        GwyModuleRegisterFunc register_func;
         gboolean ok;
         GwyModuleInfo *mod_info;
+        GwyModuleQueryFunc query;
 
         if (!g_str_has_suffix(filename, ".so"))
             continue;
@@ -92,17 +94,18 @@ gwy_load_modules_in_dir(GDir *gdir,
         /* Do a few sanity checks on the module before registration
          * is performed. */
         ok = TRUE;
-        if (!g_module_symbol(mod, GWY_MODULE_REGISTER_FUNC_NAME,
-                             (gpointer)&register_func)) {
-            g_warning("No registration function in module %s", modulename);
+        if (!g_module_symbol(mod, GWY_MODULE_QUERY_NAME, (gpointer)&query)
+            || !query) {
+            g_warning("No query function in module %s", modulename);
             ok = FALSE;
         }
 
         if (ok) {
-            mod_info = register_func(mod);
-            ok = mod_info != NULL;
-            if (!ok)
-                g_warning("Module %s returned empty info", modulename);
+            mod_info = query();
+            if (!mod_info) {
+                g_warning("No module info in module %s", modulename);
+                ok = FALSE;
+            }
         }
 
         if (ok) {
@@ -114,14 +117,15 @@ gwy_load_modules_in_dir(GDir *gdir,
         }
 
         if (ok) {
-            ok = mod_info->name && &mod_info->name
+            ok = mod_info->register_func
+                 && mod_info->name && &mod_info->name
                  && mod_info->blurb && &mod_info->blurb
                  && mod_info->author && &mod_info->author
                  && mod_info->version && &mod_info->version
                  && mod_info->copyright && &mod_info->copyright
                  && mod_info->date && &mod_info->date;
             if (!ok)
-                g_warning("Module %s description field are invalid.",
+                g_warning("Module %s info is invalid.",
                           modulename);
         }
 
@@ -134,6 +138,16 @@ gwy_load_modules_in_dir(GDir *gdir,
 
         if (ok) {
             g_hash_table_insert(modules, (gpointer)mod_info->name, mod_info);
+            ok = mod_info->register_func(mod_info->name);
+            if (!ok) {
+                g_warning("Module %s feature registration failed",
+                          mod_info->name);
+                /* TODO: clean up all possibly registered features */
+                g_hash_table_remove(modules, (gpointer)mod_info->name);
+            }
+        }
+
+        if (ok) {
             gwy_debug("Making module %s resident.", modulename);
             g_module_make_resident(mod);
         }
@@ -146,13 +160,43 @@ gwy_load_modules_in_dir(GDir *gdir,
     }
 }
 
-/*
 gboolean
-gwy_module_register_process_func(GModule *mod,
-                                 GwyProcessFuncInfo *func_info)
+gwy_register_process_func(const gchar *modname,
+                          GwyProcessFuncInfo *func_info)
 {
+    GwyModuleInfo *mod_info;
+
     gwy_debug("%s", __FUNCTION__);
+    gwy_debug("name = %s, menu path = %s, run = %d, func = %p",
+              func_info->name, func_info->menu_path, func_info->run,
+              func_info->function);
+
+    mod_info = g_hash_table_lookup(modules, modname);
+    g_return_val_if_fail(mod_info, FALSE);
+    g_return_val_if_fail(func_info->function, FALSE);
+    g_return_val_if_fail(func_info->name, FALSE);
+    g_return_val_if_fail(func_info->run & GWY_RUN_MASK, FALSE);
+    if (g_hash_table_lookup(process_funcs, func_info->name)) {
+        g_warning("Duplicate function %s, keeping only first", func_info->name);
+        return FALSE;
+    }
+    g_hash_table_insert(process_funcs, (gpointer)func_info->name, func_info);
+    return TRUE;
 }
-*/
+
+gboolean
+gwy_run_process_func(const guchar *name,
+                     GwyContainer *data,
+                     GwyRunType run)
+{
+    GwyProcessFunc func;
+
+    func = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(func, FALSE);
+    g_return_val_if_fail(run & GWY_RUN_MASK, FALSE);
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+    func(data, run);
+    return TRUE;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -51,16 +51,6 @@ GwyPalette
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_palette_get_color ##### -->
-<para>
-
-</para>
-
-@palette: 
-@i: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_palette_get_samples ##### -->
 <para>
 
