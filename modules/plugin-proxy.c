@@ -1,6 +1,6 @@
 /*
  *  @(%) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,9 @@
  * plug-in runs, then unlinks it and closes at last.
  *
  * XXX: it also has to open dump files in binary mode, BUT still assumes
- * normal Unix \n EOLs.
+ * normal Unix \n EOLs (one-way now fixed by next_line() accepting both).
+ *
+ * XXX: the `dump' should probably be `dumb'...
  */
 
 #include <stdlib.h>
@@ -858,6 +860,17 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
     fflush(fh);
 }
 
+/**
+ * open_temporary_file:
+ * @filename: Where the filename is to be stored.
+ *
+ * Open a temporary file in "wb" mode, return the stream handle.
+ *
+ * On *nix, it tries to open the file in a safe manner.  On MS systems,
+ * it just opens a file.
+ *
+ * Returns: The filehandle of the open file.
+ **/
 static FILE*
 open_temporary_file(gchar **filename)
 {
@@ -866,6 +879,7 @@ open_temporary_file(gchar **filename)
     gchar buf[9];
     gsize i;
 
+    /* FIXME: this is bogus. like the OS it's needed for. */
     for (i = 0; i < sizeof(buf)-1; i++)
         buf[i] = 'a' + (rand()/283)%26;
     buf[sizeof(buf)-1] = '\0';
