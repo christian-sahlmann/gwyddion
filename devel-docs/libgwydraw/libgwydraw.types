@@ -1,6 +1,4 @@
 #include "libdraw/gwydraw.h"
 
-gwy_palette_def_get_type
-gwy_palette_get_type
 gwy_gradient_get_type
 gwy_rgba_get_type
