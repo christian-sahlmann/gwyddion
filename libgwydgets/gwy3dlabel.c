@@ -164,7 +164,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
          PROP_FIXED_SIZE,
          g_param_spec_boolean("fixed_size",
                               "Fixed size",
-                              "Whether label size is fixed and don't scale",
+                              "Whether label size is fixed and doesn't scale",
                               FALSE, G_PARAM_READWRITE));
     g_object_class_install_property
         (gobject_class,
@@ -172,7 +172,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
          g_param_spec_string("default_text",
                              "Default text",
                              "Default label text",
-                             "", G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY));
+                             "", G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -309,6 +309,7 @@ gwy_3d_label_set_property(GObject *object,
 
         case PROP_DEFAULT_TEXT:
         label->default_text = g_value_dup_string(value);
+        g_object_notify(G_OBJECT(label), "default_text");
         break;
 
         default:
@@ -372,15 +373,18 @@ gwy_3d_label_create_adjustment(Gwy3DLabel *label,
                                gdouble step,
                                gdouble page)
 {
+    GObjectClass *klass;
     GtkAdjustment *adj;
     GParamSpecDouble *pspec;
 
-    pspec = G_PARAM_SPEC_DOUBLE(g_object_class_find_property(G_OBJECT_CLASS(GWY_3D_LABEL_GET_CLASS(label)), property_id));
+    klass = G_OBJECT_CLASS(GWY_3D_LABEL_GET_CLASS(label));
+    pspec = G_PARAM_SPEC_DOUBLE(g_object_class_find_property(klass,
+                                                             property_id));
     adj = GTK_ADJUSTMENT(gtk_adjustment_new(pspec->default_value,
                                             pspec->minimum,
                                             pspec->maximum,
                                             step, page, 0));
-    g_object_set_data(G_OBJECT(adj), "gwy-3d-label-property-id",
+    g_object_set_data(G_OBJECT(adj), "gwy-3d-label-property_id",
                       (gpointer)property_id);
     g_signal_connect_swapped(adj, "value_changed",
                              G_CALLBACK(gwy_3d_label_adj_value_changed), label);

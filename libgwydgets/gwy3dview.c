@@ -45,8 +45,8 @@
 #include <libprocess/stats.h>
 #include "gwydgets.h"
 
-#define DIG_2_RAD (G_PI / 180.0)
-#define RAD_2_DIG (180.0 / G_PI)
+#define DEG_2_RAD (G_PI / 180.0)
+#define RAD_2_DEG (180.0 / G_PI)
 
 #define GWY_3D_VIEW_TYPE_NAME "Gwy3DView"
 
@@ -108,8 +108,7 @@ static GtkAdjustment* gwy_3d_view_create_adjustment (Gwy3DView *gwy3dview,
                                                      gdouble page);
 static void          gwy_3d_adjustment_value_changed (GtkAdjustment* adjustment,
                                                       Gwy3DView *gwy3dview);
-static void          gwy_3d_label_changed       (Gwy3DLabel* label,
-                                                 Gwy3DView *gwy3dview);
+static void          gwy_3d_label_changed       (Gwy3DView *gwy3dview);
 static void          gwy_3d_timeout_start       (Gwy3DView * gwy3dview,
                                                  gboolean immediate,
                                                  gboolean invalidate_now);
@@ -216,6 +215,73 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
                                                  NULL, g_free);
 }
 
+static void
+gwy_3d_view_destroy(GtkObject *object)
+{
+    Gwy3DView *gwy3dview;
+    guint i;
+
+    gwy3dview = GWY_3D_VIEW(object);
+
+    gwy_object_unref(gwy3dview->data);
+    gwy_object_unref(gwy3dview->downsampled);
+    gwy_object_unref(gwy3dview->container);
+    gwy_object_unref(gwy3dview->rot_x);
+    gwy_object_unref(gwy3dview->rot_y);
+    gwy_object_unref(gwy3dview->view_scale);
+    gwy_object_unref(gwy3dview->deformation_z);
+    gwy_object_unref(gwy3dview->light_z);
+    gwy_object_unref(gwy3dview->light_y);
+
+    gwy_object_unref(gwy3dview->gradient);
+
+    if (gwy3dview->shape_list_base >= 0) {
+        glDeleteLists(gwy3dview->shape_list_base, 2);
+        gwy3dview->shape_list_base = -1;
+    }
+
+    for (i = 0; i < G_N_ELEMENTS(labels); i++)
+        gwy_object_unref(gwy3dview->labels[i]);
+}
+
+static void
+gwy_3d_view_finalize(GObject *object)
+{
+    Gwy3DView *gwy3dview;
+
+    gwy3dview = GWY_3D_VIEW(object);
+
+    g_hash_table_destroy(gwy3dview->variables);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void
+gwy_3d_view_unrealize(GtkWidget *widget)
+{
+    Gwy3DView *gwy3dview;
+
+    gwy3dview = GWY_3D_VIEW(widget);
+
+    gwy_debug(" ");
+
+    g_signal_handlers_disconnect_matched(gwy3dview->gradient,
+                                         G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, gwy3dview);
+
+    if (gwy3dview->shape_list_base >= 0) {
+        glDeleteLists(gwy3dview->shape_list_base, 2);
+        gwy3dview->shape_list_base = -1;
+    }
+
+    g_object_unref(G_OBJECT(gwy3dview->ft2_context));
+    g_object_unref(G_OBJECT(gwy3dview->ft2_font_map));
+
+    /* TODO: save the current view settings into the contaier  */
+    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
+        GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
+}
+
 /**
  * gwy_3d_view_new:
  * @data: A #GwyContainer containing the data to display.
@@ -233,7 +299,7 @@ gwy_3d_view_new(GwyContainer *data)
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
     const guchar *name;
-    GObject *dfield;
+    GwyDataField *dfield;
     guint i;
 
     gwy_debug(" ");
@@ -251,7 +317,7 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview = (Gwy3DView*)widget;
 
     gwy3dview->container = data;
-    gwy3dview->data = (GwyDataField*)dfield;
+    gwy3dview->data = dfield;
 
     gwy3dview->rot_x
         = gwy_3d_view_create_adjustment(gwy3dview, "/0/3d/rot_x",
@@ -350,13 +416,16 @@ gwy_3d_view_new(GwyContainer *data)
         if (gwy_container_gis_object_by_name(data, labels[i].key,
                                              &gwy3dview->labels[i]))
             g_object_ref(gwy3dview->labels[i]);
-        else
+        else {
             gwy3dview->labels[i] = gwy_3d_label_new(labels[i].default_text);
+            gwy_container_set_object_by_name(data, labels[i].key,
+                                             gwy3dview->labels[i]);
+        }
 
-        g_signal_connect(gwy3dview->labels[i], "value_changed",
-                         G_CALLBACK(gwy_3d_label_changed), gwy3dview);
-        g_signal_connect(gwy3dview->labels[i], "notify",
-                         G_CALLBACK(gwy_3d_label_changed), gwy3dview);
+        g_signal_connect_swapped(gwy3dview->labels[i], "value_changed",
+                                 G_CALLBACK(gwy_3d_label_changed), gwy3dview);
+        g_signal_connect_swapped(gwy3dview->labels[i], "notify",
+                                 G_CALLBACK(gwy_3d_label_changed), gwy3dview);
     }
     gwy_3d_view_update_labels(gwy3dview);
 
@@ -366,7 +435,52 @@ gwy_3d_view_new(GwyContainer *data)
 static void
 gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
 {
-    /* TODO */
+    GwySIValueFormat *format;
+    GwySIUnit *unit;
+    gdouble xreal, yreal, data_min, data_max, range, maximum;
+    gchar buffer[32], *s;
+
+    xreal = gwy_data_field_get_xreal(gwy3dview->data);
+    yreal = gwy_data_field_get_yreal(gwy3dview->data);
+    data_min = gwy_data_field_get_min(gwy3dview->data);
+    data_max = gwy_data_field_get_max(gwy3dview->data);
+    range = fabs(data_max - data_min);
+    maximum = MAX(fabs(data_min), fabs(data_max));
+
+    /* $x */
+    unit = gwy_data_field_get_si_unit_xy(gwy3dview->data);
+    format = gwy_si_unit_get_format_with_resolution(unit, xreal, xreal/3, NULL);
+    g_snprintf(buffer, sizeof(buffer), "%1.1f %s",
+               xreal/format->magnitude, format->units);
+    s = g_hash_table_lookup(gwy3dview->variables, "x");
+    if (!s || strcmp(s, buffer))
+        g_hash_table_insert(gwy3dview->variables, "x", g_strdup(buffer));
+
+    /* $y */
+    gwy_si_unit_get_format_with_resolution(unit, yreal, yreal/3, format);
+    g_snprintf(buffer, sizeof(buffer), "%1.1f %s",
+               yreal/format->magnitude, format->units);
+    s = g_hash_table_lookup(gwy3dview->variables, "y");
+    if (!s || strcmp(s, buffer))
+        g_hash_table_insert(gwy3dview->variables, "y", g_strdup(buffer));
+
+    /* $max */
+    unit = gwy_data_field_get_si_unit_z(gwy3dview->data);
+    gwy_si_unit_get_format_with_resolution(unit, maximum, range/3, format);
+    g_snprintf(buffer, sizeof(buffer), "%1.0f %s",
+               data_max/format->magnitude, format->units);
+    s = g_hash_table_lookup(gwy3dview->variables, "max");
+    if (!s || strcmp(s, buffer))
+        g_hash_table_insert(gwy3dview->variables, "max", g_strdup(buffer));
+
+    /* $min */
+    g_snprintf(buffer, sizeof(buffer), "%1.0f %s",
+               data_min/format->magnitude, format->units);
+    s = g_hash_table_lookup(gwy3dview->variables, "min");
+    if (!s || strcmp(s, buffer))
+        g_hash_table_insert(gwy3dview->variables, "min", g_strdup(buffer));
+
+    gwy_si_unit_value_format_free(format);
 }
 
 static GtkAdjustment*
@@ -395,73 +509,6 @@ gwy_3d_view_create_adjustment(Gwy3DView *gwy3dview,
                      G_CALLBACK(gwy_3d_adjustment_value_changed), gwy3dview);
 
     return (GtkAdjustment*)adj;
-}
-
-static void
-gwy_3d_view_destroy(GtkObject *object)
-{
-    Gwy3DView *gwy3dview;
-    guint i;
-
-    gwy3dview = GWY_3D_VIEW(object);
-
-    gwy_object_unref(gwy3dview->data);
-    gwy_object_unref(gwy3dview->downsampled);
-    gwy_object_unref(gwy3dview->container);
-    gwy_object_unref(gwy3dview->rot_x);
-    gwy_object_unref(gwy3dview->rot_y);
-    gwy_object_unref(gwy3dview->view_scale);
-    gwy_object_unref(gwy3dview->deformation_z);
-    gwy_object_unref(gwy3dview->light_z);
-    gwy_object_unref(gwy3dview->light_y);
-
-    gwy_object_unref(gwy3dview->gradient);
-
-    if (gwy3dview->shape_list_base >= 0) {
-        glDeleteLists(gwy3dview->shape_list_base, 2);
-        gwy3dview->shape_list_base = -1;
-    }
-
-    for (i = 0; i < G_N_ELEMENTS(labels); i++)
-        gwy_object_unref(gwy3dview->labels[i]);
-}
-
-static void
-gwy_3d_view_finalize(GObject *object)
-{
-    Gwy3DView *gwy3dview;
-
-    gwy3dview = GWY_3D_VIEW(object);
-
-    g_hash_table_destroy(gwy3dview->variables);
-
-    G_OBJECT_CLASS(parent_class)->finalize(object);
-}
-
-static void
-gwy_3d_view_unrealize(GtkWidget *widget)
-{
-    Gwy3DView *gwy3dview;
-
-    gwy3dview = GWY_3D_VIEW(widget);
-
-    gwy_debug(" ");
-
-    g_signal_handlers_disconnect_matched(gwy3dview->gradient,
-                                         G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL, NULL, gwy3dview);
-
-    if (gwy3dview->shape_list_base >= 0) {
-        glDeleteLists(gwy3dview->shape_list_base, 2);
-        gwy3dview->shape_list_base = -1;
-    }
-
-    g_object_unref(G_OBJECT(gwy3dview->ft2_context));
-    g_object_unref(G_OBJECT(gwy3dview->ft2_font_map));
-
-    /* TODO: save the current view settings into the contaier  */
-    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
-        GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
 }
 
 /**
@@ -1197,7 +1244,7 @@ gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview,
 
 /******************************************************************************/
 static void
-gwy_3d_timeout_start(Gwy3DView * gwy3dview,
+gwy_3d_timeout_start(Gwy3DView *gwy3dview,
                      gboolean immediate,
                      gboolean invalidate_now)
 {
@@ -1258,8 +1305,7 @@ gwy_3d_adjustment_value_changed(GtkAdjustment* adjustment,
 }
 
 static void
-gwy_3d_label_changed(G_GNUC_UNUSED Gwy3DLabel* label,
-                     Gwy3DView *gwy3dview)
+gwy_3d_label_changed(Gwy3DView *gwy3dview)
 {
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
@@ -1809,10 +1855,10 @@ gwy_3d_draw_axes(Gwy3DView *widget)
             glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02, 0.0f );
 
             glPushMatrix();
-            glTranslatef(Cx*cos(widget->rot_x->value * DIG_2_RAD)
-                         - Cy*sin(widget->rot_x->value * DIG_2_RAD),
-                         Cx*sin(widget->rot_x->value * DIG_2_RAD)
-                         + Cy*cos(widget->rot_x->value * DIG_2_RAD), 0.0f);
+            glTranslatef(Cx*cos(widget->rot_x->value * DEG_2_RAD)
+                         - Cy*sin(widget->rot_x->value * DEG_2_RAD),
+                         Cx*sin(widget->rot_x->value * DEG_2_RAD)
+                         + Cy*cos(widget->rot_x->value * DEG_2_RAD), 0.0f);
             glRotatef(-widget->rot_x->value, 0.0f, 0.0f, 1.0f);
             glTranslatef(-Cx, -Cy, 0.0f);
             glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
@@ -1887,8 +1933,8 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUAD_STRIP);
         for (i = -180; i <= 180; i += 5) {
-            GLfloat x = cos(i * DIG_2_RAD) * G_SQRT2;
-            GLfloat z = sin(i * DIG_2_RAD) * G_SQRT2;
+            GLfloat x = cos(i * DEG_2_RAD) * G_SQRT2;
+            GLfloat z = sin(i * DEG_2_RAD) * G_SQRT2;
             glVertex3f( x, 0.05f, z);
             glVertex3f(x, -0.05f, z);
         }
