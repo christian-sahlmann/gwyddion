@@ -75,11 +75,16 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_copy ##### -->
@@ -201,9 +206,12 @@ GwyDataField
 </para>
 
 @a: 
+@col: 
+@row: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @i: 
 @j: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_val ##### -->
@@ -212,9 +220,12 @@ GwyDataField
 </para>
 
 @a: 
+@col: 
+@row: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @i: 
 @j: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_set_val ##### -->
@@ -223,9 +234,12 @@ GwyDataField
 </para>
 
 @a: 
+@col: 
+@row: 
+@value: 
+<!-- # Unused Parameters # -->
 @i: 
 @j: 
-@value: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_dval ##### -->
@@ -306,11 +320,16 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@value: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@value: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_multiply ##### -->
@@ -319,11 +338,16 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@value: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@value: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_add ##### -->
@@ -332,11 +356,16 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@value: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@value: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_max ##### -->
@@ -390,11 +419,16 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_min ##### -->
@@ -403,11 +437,16 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_avg ##### -->
@@ -416,11 +455,16 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_rms ##### -->
@@ -429,11 +473,16 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_sum ##### -->
@@ -442,11 +491,16 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_threshold ##### -->
@@ -467,14 +521,19 @@ GwyDataField
 </para>
 
 @a: 
-@uli: 
-@ulj: 
-@bri: 
-@brj: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
 @threshval: 
 @bottom: 
 @top: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@uli: 
+@ulj: 
+@bri: 
+@brj: 
 
 
 <!-- ##### FUNCTION gwy_data_field_clamp ##### -->
@@ -494,13 +553,18 @@ GwyDataField
 </para>
 
 @a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@bottom: 
+@top: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@bottom: 
-@top: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_data_line ##### -->
@@ -510,13 +574,18 @@ GwyDataField
 
 @a: 
 @b: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@res: 
+@interpolation: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @uli: 
 @ulj: 
 @bri: 
 @brj: 
-@res: 
-@interpolation: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_row ##### -->
@@ -526,6 +595,8 @@ GwyDataField
 
 @a: 
 @b: 
+@row: 
+<!-- # Unused Parameters # -->
 @i: 
 
 
@@ -536,6 +607,8 @@ GwyDataField
 
 @a: 
 @b: 
+@col: 
+<!-- # Unused Parameters # -->
 @i: 
 
 
@@ -546,6 +619,8 @@ GwyDataField
 
 @a: 
 @b: 
+@row: 
+<!-- # Unused Parameters # -->
 @i: 
 
 
@@ -556,6 +631,8 @@ GwyDataField
 
 @a: 
 @b: 
+@col: 
+<!-- # Unused Parameters # -->
 @i: 
 
 
@@ -598,9 +675,12 @@ GwyDataField
 </para>
 
 @a: 
+@col: 
+@row: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @i: 
 @j: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_yder ##### -->
@@ -609,9 +689,12 @@ GwyDataField
 </para>
 
 @a: 
+@col: 
+@row: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @i: 
 @j: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_angder ##### -->
@@ -620,10 +703,13 @@ GwyDataField
 </para>
 
 @a: 
-@i: 
-@j: 
+@col: 
+@row: 
 @theta: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@i: 
+@j: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_fft_res ##### -->
@@ -751,5 +837,16 @@ GwyDataField
 @interpolation: 
 @scale: 
 @wtype: 
+
+
+<!-- ##### FUNCTION gwy_data_field_shade ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@target_field: 
+@theta: 
+@phi: 
 
 

@@ -1,0 +1,79 @@
+<!-- ##### SECTION Title ##### -->
+gwymodule-tool
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyToolSwitchEvent ##### -->
+<para>
+
+</para>
+
+@GWY_TOOL_SWITCH_WINDOW: 
+@GWY_TOOL_SWITCH_TOOL: 
+
+<!-- ##### STRUCT GwyToolFuncInfo ##### -->
+<para>
+
+</para>
+
+@name: 
+@stock_id: 
+@tooltip: 
+@use: 
+
+<!-- ##### USER_FUNCTION GwyToolUseFunc ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@event: 
+<!-- # Unused Parameters # -->
+@even: 
+@reason: 
+
+
+<!-- ##### FUNCTION gwy_tool_func_register ##### -->
+<para>
+
+</para>
+
+@modname: 
+@func_info: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_tool_func_use ##### -->
+<para>
+
+</para>
+
+@name: 
+@data_window: 
+@event: 
+<!-- # Unused Parameters # -->
+@even: 
+@reason: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_build_tool_toolbar ##### -->
+<para>
+
+</para>
+
+@item_callback: 
+@Returns: 
+
+

@@ -182,3 +182,30 @@ GwyAxis
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_axis_set_label ##### -->
+<para>
+
+</para>
+
+@axis: 
+@label_text: 
+
+
+<!-- ##### FUNCTION gwy_axis_get_label ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_axis_set_unit ##### -->
+<para>
+
+</para>
+
+@axis: 
+@unit: 
+
+

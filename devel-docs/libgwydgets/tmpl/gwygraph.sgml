@@ -28,6 +28,22 @@ GwyGraph
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_graph_add_dataline_with_units ##### -->
+<para>
+
+</para>
+
+@graph: 
+@dataline: 
+@shift: 
+@label: 
+@params: 
+@x_order: 
+@y_order: 
+@x_unit: 
+@y_unit: 
+
+
 <!-- ##### FUNCTION gwy_graph_add_dataline ##### -->
 <para>
 

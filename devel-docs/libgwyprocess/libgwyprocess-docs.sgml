@@ -9,11 +9,11 @@
 ]>
 <book id="index">
   <bookinfo>
-    <title>[Insert name here] Reference Manual</title>
+    <title>Gwyddion Data Processing Library Reference Manual</title>
   </bookinfo>
 
   <chapter>
-    <title>[Insert title here]</title>
+    <title>Gwyddion Data Processing Library</title>
     &libgwyprocess-GwyDataField;
     &libgwyprocess-GwyDataLine;
     &libgwyprocess-interpolation;

@@ -25,17 +25,15 @@
 <!ENTITY libgwydgets-GwyColorAxis SYSTEM "xml/gwycoloraxis.xml">
 <!ENTITY libgwydgets-gwystock SYSTEM "xml/gwystock.xml">
 <!ENTITY libgwydgets-gwydgets SYSTEM "xml/gwydgets.xml">
+<!ENTITY libgwydgets-gwyoptionmenus SYSTEM "xml/gwyoptionmenus.xml">
 ]>
 <book id="index">
   <bookinfo>
-    <title>Gwyddion Widgets Reference Manual</title>
+    <title>Gwyddion Widgets Library Reference Manual</title>
   </bookinfo>
 
   <chapter>
-    <title>[Insert title here]</title>
-    &libgwydgets-GwySphereCoords;
-    &libgwydgets-GwyVectorShade;
-    &libgwydgets-GwyGradSphere;
+    <title>Data Window</title>
     &libgwydgets-GwyDataWindow;
     &libgwydgets-GwyDataView;
     &libgwydgets-GwyDataViewLayer;
@@ -45,17 +43,37 @@
     &libgwydgets-GwyLayerPointer;
     &libgwydgets-GwyLayerPoints;
     &libgwydgets-GwyLayerSelect;
-    &libgwydgets-GwyRuler;
-    &libgwydgets-GwyHRuler;
-    &libgwydgets-GwyVRuler;
-    &libgwydgets-GwySciText;
+    &libgwydgets-GwyColorAxis;
+  </chapter>
+
+  <chapter>
+    <title>Graph</title>
     &libgwydgets-GwyAxis;
     &libgwydgets-GwyGraphArea;
     &libgwydgets-GwyGraphCorner;
     &libgwydgets-GwyGraphLabel;
     &libgwydgets-GwyGraph;
-    &libgwydgets-GwyColorAxis;
+  </chapter>
+
+  <chapter>
+    <title>General Widgets</title>
+    &libgwydgets-GwyRuler;
+    &libgwydgets-GwyHRuler;
+    &libgwydgets-GwyVRuler;
+    &libgwydgets-GwySciText;
+  </chapter>
+
+  <chapter>
+    <title>Shader</title>
+    &libgwydgets-GwySphereCoords;
+    &libgwydgets-GwyVectorShade;
+    &libgwydgets-GwyGradSphere;
+  </chapter>
+
+  <chapter>
+    <title>Widget Utilities</title>
     &libgwydgets-gwystock;
+    &libgwydgets-gwyoptionmenus;
     &libgwydgets-gwydgets;
   </chapter>
 </book>

@@ -18,6 +18,26 @@
 GwyLayerTriangle
 
 
+<!-- ##### SECTION ./tmpl/gwymodulemenus.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwymodulemenus.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwymodulemenus.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwymodulemenus.sgml:Title ##### -->
+gwymodulemenus
+
+
 <!-- ##### SIGNAL GwySphereCoords::value-changed ##### -->
 <para>
 

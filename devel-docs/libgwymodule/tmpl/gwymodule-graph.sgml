@@ -1,0 +1,66 @@
+<!-- ##### SECTION Title ##### -->
+gwymodule-graph
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyGraphFuncInfo ##### -->
+<para>
+
+</para>
+
+@name: 
+@menu_path: 
+@graph: 
+
+<!-- ##### USER_FUNCTION GwyGraphFunc ##### -->
+<para>
+
+</para>
+
+@graph: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_func_register ##### -->
+<para>
+
+</para>
+
+@modname: 
+@func_info: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_func_run ##### -->
+<para>
+
+</para>
+
+@name: 
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_build_graph_menu ##### -->
+<para>
+
+</para>
+
+@item_factory: 
+@prefix: 
+@item_callback: 
+@Returns: 
+
+

@@ -14,28 +14,14 @@ gwystock
 
 </para>
 
-<!-- ##### MACRO GWY_STOCK_ZOOM_IN ##### -->
+<!-- ##### MACRO GWY_STOCK_BOLD ##### -->
 <para>
 
 </para>
 
 
 
-<!-- ##### MACRO GWY_STOCK_ZOOM_OUT ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_STOCK_ZOOM_1_1 ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_STOCK_ZOOM_FIT ##### -->
+<!-- ##### MACRO GWY_STOCK_CROP ##### -->
 <para>
 
 </para>
@@ -70,14 +56,28 @@ gwystock
 
 
 
-<!-- ##### MACRO GWY_STOCK_CROP ##### -->
+<!-- ##### MACRO GWY_STOCK_ITALIC ##### -->
 <para>
 
 </para>
 
 
 
-<!-- ##### MACRO GWY_STOCK_SCALE ##### -->
+<!-- ##### MACRO GWY_STOCK_NONE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_POINTER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_POINTER_MEASURE ##### -->
 <para>
 
 </para>
@@ -91,21 +91,14 @@ gwystock
 
 
 
+<!-- ##### MACRO GWY_STOCK_SCALE ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_SHADER ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_STOCK_BOLD ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_STOCK_ITALIC ##### -->
 <para>
 
 </para>
@@ -126,14 +119,35 @@ gwystock
 
 
 
-<!-- ##### MACRO GWY_STOCK_POINTER ##### -->
+<!-- ##### MACRO GWY_STOCK_ZOOM_1_1 ##### -->
 <para>
 
 </para>
 
 
 
-<!-- ##### MACRO GWY_STOCK_POINTER_MEASURE ##### -->
+<!-- ##### MACRO GWY_STOCK_ZOOM_FIT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_ZOOM_IN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_ZOOM_OUT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_ICON_SIZE_ABOUT ##### -->
 <para>
 
 </para>

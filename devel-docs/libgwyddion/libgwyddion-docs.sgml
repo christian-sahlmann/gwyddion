@@ -7,19 +7,21 @@
 <!ENTITY libgwyddion-gwymacros SYSTEM "xml/gwymacros.xml">
 <!ENTITY libgwyddion-gwyentities SYSTEM "xml/gwyentities.xml">
 <!ENTITY libgwyddion-gwymath SYSTEM "xml/gwymath.xml">
+<!ENTITY libgwyddion-gwyutils SYSTEM "xml/gwyutils.xml">
 ]>
 <book id="index">
   <bookinfo>
-    <title>[Insert name here] Reference Manual</title>
+    <title>Gwyddion Library Reference Manual</title>
   </bookinfo>
 
   <chapter>
-    <title>[Insert title here]</title>
+    <title>Gwyddion Library</title>
     &libgwyddion-GwyWatchable;
     &libgwyddion-GwySerializable;
     &libgwyddion-GwyContainer;
     &libgwyddion-gwymacros;
     &libgwyddion-gwyentities;
     &libgwyddion-gwymath;
+    &libgwyddion-gwyutils;
   </chapter>
 </book>

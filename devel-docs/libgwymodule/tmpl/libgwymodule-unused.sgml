@@ -13,12 +13,42 @@
 @file: 
 @loaded: 
 
+<!-- ##### TYPEDEF _GwyModuleInfoInternal ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_build_tool_bar ##### -->
+<para>
+
+</para>
+
+@item_callback: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_module_browser_run ##### -->
 <para>
 
 </para>
 
 @modules: 
+
+<!-- ##### FUNCTION gwy_module_foreach ##### -->
+<para>
+
+</para>
+
+@function: 
+@data: 
+
+<!-- ##### FUNCTION gwy_module_get_module_info ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
 
 <!-- ##### FUNCTION gwy_register_file_func ##### -->
 <para>

@@ -60,12 +60,6 @@ gwymoduleloader
 @Returns: 
 
 
-<!-- ##### TYPEDEF _GwyModuleInfoInternal ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION gwy_modules_init ##### -->
 <para>
 
@@ -79,23 +73,5 @@ gwymoduleloader
 </para>
 
 @paths: 
-
-
-<!-- ##### FUNCTION gwy_module_get_module_info ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_module_foreach ##### -->
-<para>
-
-</para>
-
-@function: 
-@data: 
 
 

@@ -3,6 +3,16 @@
 </SECTION>
 
 <SECTION>
+<FILE>gwymodule-tool</FILE>
+GwyToolSwitchEvent
+GwyToolFuncInfo
+GwyToolUseFunc
+gwy_tool_func_register
+gwy_tool_func_use
+gwy_build_tool_toolbar
+</SECTION>
+
+<SECTION>
 <FILE>gwymodulebrowser</FILE>
 gwy_module_browser
 </SECTION>
@@ -14,11 +24,17 @@ GWY_MODULE_QUERY
 GwyModuleInfo
 GwyModuleRegisterFunc
 GwyModuleQueryFunc
-_GwyModuleInfoInternal
 gwy_modules_init
 gwy_module_register_modules
-gwy_module_get_module_info
-gwy_module_foreach
+</SECTION>
+
+<SECTION>
+<FILE>gwymodule-graph</FILE>
+GwyGraphFuncInfo
+GwyGraphFunc
+gwy_graph_func_register
+gwy_graph_func_run
+gwy_build_graph_menu
 </SECTION>
 
 <SECTION>

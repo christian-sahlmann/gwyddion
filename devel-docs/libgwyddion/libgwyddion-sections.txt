@@ -118,6 +118,12 @@ gwy_math_find_nearest_point
 </SECTION>
 
 <SECTION>
+<FILE>gwyutils</FILE>
+gwy_hash_table_to_slist_cb
+gwy_hash_table_to_list_cb
+</SECTION>
+
+<SECTION>
 <FILE>gwyddion</FILE>
 </SECTION>
 
