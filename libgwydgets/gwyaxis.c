@@ -857,14 +857,14 @@ gwy_axis_normalscale(GwyAxis *a)
     gdouble range, tickstep, majorbase, minortickstep, minorbase;
 
     if (a->reqmax == a->reqmin) {g_warning("Axis with zero range!"); a->reqmax = a->reqmin+1;}
-    
         
     /*printf("reqmin=%f, reqmax=%f\n", a->reqmin, a->reqmax);*/
     range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
 
-    if (range > 1e30 || range < -1e30)
+    if (range > 1e40 || range < -1e40)
     {
-        g_warning("Axis with extreme range (>1e30)!");
+        g_warning("Axis with extreme range (>1e40)!");
+        printf("max=%f, min=%f\n", a->reqmax, a->reqmin);
         a->reqmax = 100; a->reqmin = 0;
     }
     
@@ -977,6 +977,7 @@ gwy_axis_scale(GwyAxis *a)
     gsize i;
     GwyLabeledTick *mjt;
 
+    
     /*never use logarithmic mode for negative numbers*/
     if (a->min < 0 && a->is_logarithmic == TRUE)
         return 1; /*this is an error*/
@@ -1127,7 +1128,7 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
     
     /*prevent axis to allow null range. It has no sense*/
     if (min==max) axis->reqmax += 10.0;
-    
+   
     gwy_axis_adjust(axis,
                     (GTK_WIDGET(axis))->allocation.width,
                     (GTK_WIDGET(axis))->allocation.height);

@@ -309,6 +309,14 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
           isdiff = TRUE;
        }
     }
+
+    if (graph->y_reqmax > 1e20 || graph->y_reqmax < -1e20 
+       || graph->y_reqmin > 1e20 || graph->y_reqmin < -1e20)
+    {
+        g_warning("Data values are corrupted. Curve not added.");
+        return;
+    }
+    
     if (isdiff) {
       /*  printf("x requirement changed: %f, %f\n", graph->x_reqmin, graph->x_reqmax);*/
        gwy_axis_set_req(graph->axis_top, graph->x_reqmin, graph->x_reqmax);

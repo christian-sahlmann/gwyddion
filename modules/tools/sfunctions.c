@@ -481,7 +481,9 @@ sfunctions_selection_updated_cb(void)
     {
 
         /*this is to prevent problems with numbers as 1e34 in axis widget. FIXME by using appropriate units*/
-    if (controls.out == GWY_SF_OUTPUT_PSDF) gwy_data_line_multiply(dataline, 100.0/gwy_data_line_get_max(dataline));
+    
+    if (controls.out == GWY_SF_OUTPUT_PSDF || gwy_data_line_get_max(dataline)) 
+        gwy_data_line_multiply(dataline, 100.0/gwy_data_line_get_max(dataline));
     
         z_max = gwy_data_line_get_max(dataline) -  gwy_data_line_get_min(dataline);
         z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
