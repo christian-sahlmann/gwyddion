@@ -61,7 +61,6 @@ typedef struct {
 
 struct _GwyUnitoolSlots {
     GType layer_type;
-    GtkObject* (*layer_constructor)(void);
     void (*layer_setup)(GwyUnitoolState *state);
     GtkWidget* (*dialog_create)(GwyUnitoolState *state);
     void (*dialog_update)(GwyUnitoolState *state);

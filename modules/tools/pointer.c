@@ -59,7 +59,6 @@ static GwyModuleInfo module_info = {
 
 static GwyUnitoolSlots func_slots = {
     0,                             /* layer type, must be set runtime */
-    gwy_layer_pointer_new,         /* layer object constructor */
     NULL,                          /* layer setup func */
     dialog_create,                 /* dialog constructor */
     dialog_update,                 /* update view and controls */

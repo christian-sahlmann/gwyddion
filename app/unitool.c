@@ -89,7 +89,8 @@ gwy_unitool_use(GwyUnitoolState *state,
             slot->layer_setup(state);
     }
     else {
-        state->layer = GWY_VECTOR_LAYER(slot->layer_constructor());
+        state->layer = GWY_VECTOR_LAYER(g_object_new(slot->layer_type, NULL));
+        g_assert(state->layer);
         if (slot->layer_setup)
             slot->layer_setup(state);
         gwy_data_view_set_top_layer(data_view, state->layer);
@@ -385,8 +386,6 @@ gwy_unitool_update_label(GwyUnitoolUnits *units,
  * GwyUnitoolSlots:
  * @layer_type: The type of the active layer this particular tool uses, like
  *              %GWY_LAYER_SELECT.
- * @layer_constructor: The constructor of the layer.  It must have the same
- *                     function signature.
  * @layer_setup: Function called when the active layer is created or changed
  *               to tune its properties.
  * @dialog_create: Function creating the tool dialog.
@@ -406,7 +405,7 @@ gwy_unitool_update_label(GwyUnitoolUnits *units,
  * The custom functions constituting a particular tool, called by universal
  * tool on various occasions.
  *
- * Most of the slots (FIXME: all?) can be %NULL.
+ * Most of the slots (FIXME: all?) can be %NULL, except @layer_type.
  **/
 
 /**
