@@ -22,6 +22,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include <libgwymodule/gwymodule.h>
@@ -354,6 +355,7 @@ arithmetic_check(ArithmeticArgs *args,
     GwyContainer *data;
     GwyDataField *dfield1, *dfield2;
     gdouble scalar1, scalar2;
+    gdouble xreal1, xreal2, yreal1, yreal2;
 
     operand1 = args->win1;
     operand2 = args->win2;
@@ -427,10 +429,12 @@ arithmetic_check(ArithmeticArgs *args,
             gtk_widget_destroy(dialog);
             return FALSE;
         }
-        if ((gwy_data_field_get_xreal(dfield1)
-             != gwy_data_field_get_xreal(dfield2))
-            || (gwy_data_field_get_yreal(dfield1)
-                != gwy_data_field_get_yreal(dfield2))) {
+        xreal1 = gwy_data_field_get_xreal(dfield1);
+        yreal1 = gwy_data_field_get_yreal(dfield1);
+        xreal2 = gwy_data_field_get_xreal(dfield2);
+        yreal2 = gwy_data_field_get_yreal(dfield2);
+        if (fabs(log(xreal1/xreal2)) > 0.0001
+            || fabs(log(yreal1/yreal2)) > 0.0001) {
             dialog = gtk_message_dialog_new(GTK_WINDOW(arithmetic_window),
                                             GTK_DIALOG_DESTROY_WITH_PARENT,
                                             GTK_MESSAGE_INFO,
