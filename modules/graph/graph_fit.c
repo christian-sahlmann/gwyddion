@@ -128,7 +128,7 @@ static GwyModuleInfo module_info = {
     "graph_fit",
     "Fit graph with function",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -478,7 +478,7 @@ fit_dialog(FitArgs *args)
 
      /*graph*/
     controls.graph = gwy_graph_new();
-    gwy_graph_enable_axis_label_update(GWY_GRAPH(controls.graph), FALSE);
+    gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls.graph), FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
                        FALSE, FALSE, 4);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);

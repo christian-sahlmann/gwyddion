@@ -124,7 +124,7 @@ static GwyModuleInfo module_info = {
     "fractal",
     "Fractal dimension evaluation",
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",
     "2004",
 };
@@ -296,7 +296,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
 
     /*graph*/
     controls.graph = gwy_graph_new();
-    gwy_graph_enable_axis_label_update(GWY_GRAPH(controls.graph), FALSE);
+    gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls.graph), FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
                        FALSE, FALSE, 4);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);

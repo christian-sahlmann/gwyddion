@@ -161,7 +161,7 @@ gwy_axis_init(GwyAxis *axis)
     axis->reqmax = 100;
     axis->reqmin = 0;
 
-    axis->enable_set_label = TRUE;
+    axis->enable_label_edit = TRUE;
 
     axis->has_unit = 0;
     /*axis->unit = NULL;*/
@@ -775,7 +775,7 @@ gwy_axis_button_press(GtkWidget *widget,
 
     axis = GWY_AXIS(widget);
 
-    if (axis->enable_set_label)
+    if (axis->enable_label_edit)
         gtk_widget_show_all(axis->dialog);
 
     return FALSE;
@@ -1298,17 +1298,18 @@ gwy_axis_set_unit(GwyAxis *axis, char *unit)
 
 
 /**
- * gwy_axis_enable_set_label:
+ * gwy_axis_enable_label_edit:
  * @axis: Axis widget 
  * @enable: enable/disable user to change axis label 
  *
- * Function enables/disables user to change axis label by
- * clicking on axis widget
+ * Enables/disables user to change axis label by clicking on axis widget.
+ *
+ * Since: 1.3.
  **/
 void
-gwy_axis_enable_set_label(GwyAxis *axis, gboolean enable)
+gwy_axis_enable_label_edit(GwyAxis *axis, gboolean enable)
 {
-    axis->enable_set_label = enable;
+    axis->enable_label_edit = enable;
 }
 
 /************************** Documentation ****************************/

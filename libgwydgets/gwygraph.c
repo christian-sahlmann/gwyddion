@@ -36,10 +36,12 @@ static void     gwy_graph_size_request         (GtkWidget *widget,
                                                 GtkRequisition *requisition);
 static void     gwy_graph_size_allocate        (GtkWidget *widget,
                                                 GtkAllocation *allocation);
-
-static void gwy_graph_make_curve_data(GwyGraph *graph, GwyGraphAreaCurve *curve, gdouble *xvals, gdouble *yvals, gint n);
+static void     gwy_graph_make_curve_data      (GwyGraph *graph,
+                                                GwyGraphAreaCurve *curve,
+                                                gdouble *xvals,
+                                                gdouble *yvals,
+                                                gint n);
 static void     gwy_graph_synchronize          (GwyGraph *graph);
-
 static void     zoomed_cb                      (GtkWidget *widget);
 
 static GtkWidgetClass *parent_class = NULL;
@@ -737,10 +739,10 @@ gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curve)
 
 /**
  * gwy_graph_get_data_size:
- * @graph: 
- * @curve: 
+ * @graph:
+ * @curve:
  *
- * 
+ *
  *
  * Returns:
  *
@@ -807,20 +809,21 @@ gwy_graph_get_label(GwyGraph *graph, gint curve)
 
 /**
  * gwy_graph_enable_axis_label_update:
- * @graph: graph widget 
- * @enable: enable or disable user to change label
+ * @graph: A graph widget.
+ * @enable: Enable or disable user to change label
  *
- * This function enables/disables user to interact with
- * graph label by clickig on it and changing text.
+ * Enables/disables user to interact with graph label by clickig on it and
+ * changing text.
+ *
+ * Since: 1.3.
  **/
-void 
-gwy_graph_enable_axis_label_update(GwyGraph *graph, gboolean enable)
+void
+gwy_graph_enable_axis_label_edit(GwyGraph *graph, gboolean enable)
 {
-    gwy_axis_enable_set_label(graph->axis_top, enable);
-    gwy_axis_enable_set_label(graph->axis_bottom, enable);
-    gwy_axis_enable_set_label(graph->axis_left, enable);
-    gwy_axis_enable_set_label(graph->axis_right, enable);
-    
+    gwy_axis_enable_label_edit(graph->axis_top, enable);
+    gwy_axis_enable_label_edit(graph->axis_bottom, enable);
+    gwy_axis_enable_label_edit(graph->axis_left, enable);
+    gwy_axis_enable_label_edit(graph->axis_right, enable);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

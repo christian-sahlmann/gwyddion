@@ -76,7 +76,7 @@ static GwyModuleInfo module_info = {
     "profile",
     "Profile tool.",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -236,7 +236,7 @@ dialog_create(GwyUnitoolState *state)
                      GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
 
     controls->graph = gwy_graph_new();
-    gwy_graph_enable_axis_label_update(controls->graph, FALSE);
+    gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls->graph), FALSE);
     gtk_table_attach(GTK_TABLE(table), controls->graph, 1, 2, 0, 1,
                      GTK_FILL, 0, 2, 2);
 

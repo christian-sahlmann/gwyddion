@@ -141,7 +141,7 @@ gint gwy_graph_get_number_of_curves(GwyGraph *graph);
 
 GString *gwy_graph_get_label(GwyGraph *graph, gint curve);
 
-void gwy_graph_enable_axis_label_update(GwyGraph *graph, gboolean enable);
+void gwy_graph_enable_axis_label_edit(GwyGraph *graph, gboolean enable);
 
 G_END_DECLS
 
