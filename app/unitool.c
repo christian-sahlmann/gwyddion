@@ -704,9 +704,9 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
 
 /**
  * GwyUnitoolUpdateType:
- * GWY_UNITOOL_UPDATED_SELECTION: Selection have changed.
- * GWY_UNITOOL_UPDATED_DATA: Data have changed.
- * GWY_UNITOOL_UPDATED_CONTROLS: Unused.
+ * @GWY_UNITOOL_UPDATED_SELECTION: Selection have changed.
+ * @GWY_UNITOOL_UPDATED_DATA: Data have changed.
+ * @GWY_UNITOOL_UPDATED_CONTROLS: Unused.
  *
  * Reason why dialog_update() tool function was called.
  */
