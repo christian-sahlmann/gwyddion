@@ -12,7 +12,11 @@ file_PROGRAMS = \
 	nt-mdt.so \
 	pixmap.so \
 	rawfile.so \
-	sis.so
+	sis.so \
+	stmprg.so
+
+noinst_HEADERS = \
+	stmprg.h
 
 EXTRA_DIST = \
 	makefile.msc
@@ -41,6 +45,8 @@ rawfile_so_LDFLAGS = $(module_ldflags),rawfile.so
 sis_so_SOURCES = sis.c
 sis_so_LDFLAGS = $(module_ldflags),sis.so
 
+stmprg_so_SOURCES = stmprg.c
+stmprg_so_LDFLAGS = $(module_ldflags),stmprg.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fPIC
