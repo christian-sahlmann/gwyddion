@@ -28,7 +28,10 @@ SCAN_OPTIONS =
 MKDB_OPTIONS =
 
 # Extra options to supply to gtkdoc-fixref.
-FIXXREF_OPTIONS =
+FIXXREF_OPTIONS = \
+	--extra-dir=$(srcdir)/../libgwyddion/html \
+	--extra-dir=$(srcdir)/../libgwydraw/html \
+	--extra-dir=$(srcdir)/../libgwyprocess/html
 
 # Used for dependencies.
 HFILE_GLOB = $(DOC_SOURCE_DIR)/*.h
