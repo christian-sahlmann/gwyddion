@@ -269,7 +269,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
     if (strlen(siunit->unitstr)<2)
     {
         format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
-        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
+        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+1)*sizeof(gchar));
         format->units = g_strconcat(gwy_math_SI_prefix(format->magnitude), siunit->unitstr, NULL);
     }
     else
@@ -337,7 +337,7 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
 
     if (strlen(siunit->unitstr)<2)
     {
-        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
+        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+strlen(gwy_math_SI_prefix(format->magnitude)))*sizeof(gchar));
         format->units = g_strconcat(gwy_math_SI_prefix(format->magnitude), siunit->unitstr, NULL);
     }
     else
