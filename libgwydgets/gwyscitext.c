@@ -140,22 +140,24 @@ gwy_image_button_new_from_stock(const gchar *stock_id)
 static void
 gwy_sci_text_init(GwySciText *sci_text)
 {
-    GtkWidget *lab1, *lab2, *frame, *lower, *upper, *bold, *italic, *add, *hbox;
+    GtkWidget *lab1, *frame, *lower, *upper, *bold, *italic, *add, *hbox;
     GList *items = NULL;
 
     gwy_debug("%s", __FUNCTION__);
 
-    lab1 = gtk_label_new("Entry hypertext:");
-    lab2 = gtk_label_new(" ");
-    frame = gtk_frame_new("Resulting label:");
+    lab1 = gtk_label_new_with_mnemonic("Enter hyper_text");
+    gtk_misc_set_alignment(GTK_MISC(lab1), 0.0, 0.5);
+    frame = gtk_frame_new("Preview");
+    gtk_container_set_border_width(GTK_CONTAINER(frame), 4);
     sci_text->entry = GTK_ENTRY(gtk_entry_new());
+    gtk_label_set_mnemonic_widget(GTK_LABEL(lab1), GTK_WIDGET(sci_text->entry));
     sci_text->label = GTK_LABEL(gtk_label_new(" "));
     sci_text->entities = GTK_COMBO(gtk_combo_new());
     lower = gwy_image_button_new_from_stock(GWY_STOCK_SUBSCRIPT);
     upper = gwy_image_button_new_from_stock(GWY_STOCK_SUPERSCRIPT);
     bold = gwy_image_button_new_from_stock(GWY_STOCK_BOLD);
     italic = gwy_image_button_new_from_stock(GWY_STOCK_ITALIC);
-    add = gtk_button_new_with_mnemonic("A_dd");
+    add = gtk_button_new_with_mnemonic("A_dd symbol");
     hbox = gtk_hbox_new(FALSE, 0);
 
     items = stupid_put_entities(NULL);
@@ -179,8 +181,7 @@ gwy_sci_text_init(GwySciText *sci_text)
     gtk_box_pack_start(GTK_BOX(sci_text), GTK_WIDGET(sci_text->entry),
                        FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(sci_text), hbox, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(sci_text), lab2, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(sci_text), frame, TRUE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(sci_text), frame, TRUE, FALSE, 6);
     gtk_container_add(GTK_CONTAINER(frame), GTK_WIDGET(sci_text->label));
 
     gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(sci_text->entities),
@@ -194,16 +195,11 @@ gwy_sci_text_init(GwySciText *sci_text)
     gtk_widget_set_events(GTK_WIDGET(sci_text->entry), GDK_KEY_RELEASE_MASK);
     gtk_widget_set_events(sci_text->entities->list, GDK_BUTTON_PRESS_MASK);
 
-    /* FIXME: this is utterely broken, try to scroll the combo using cursor
-     * arrows; it even sometimes spontaneously inserts extra symbols */
-    g_signal_connect(sci_text->entry, "key_release_event",
+    g_signal_connect(sci_text->entry, "changed",
                      G_CALLBACK(gwy_sci_text_edited), NULL);
-    /*
-    g_signal_connect(sci_text->entities->entry, "changed",
-                     G_CALLBACK(gwy_sci_text_entity_selected), NULL);
-                     */
     g_signal_connect_swapped(add, "clicked",
-                             G_CALLBACK(gwy_sci_text_entity_selected), sci_text);
+                             G_CALLBACK(gwy_sci_text_entity_selected),
+                             sci_text);
     g_signal_connect(bold, "clicked",
                      G_CALLBACK(gwy_sci_text_button_some_pressed),
                      GINT_TO_POINTER(GWY_SCI_TEXT_BOLD));
@@ -369,46 +365,48 @@ gwy_sci_text_entity_selected(GwySciText *sci_text)
 static void
 gwy_sci_text_button_some_pressed(GtkButton *button, gpointer p)
 {
+    static struct {
+        gint markup;
+        const gchar *start;
+        const gchar *end;
+        gsize len;
+    }
+    const tags[] = {
+        { GWY_SCI_TEXT_BOLD, "<b>", "</b>", sizeof("<b>")-1 },
+        { GWY_SCI_TEXT_ITALIC, "<i>", "</i>", sizeof("<i>")-1 },
+        { GWY_SCI_TEXT_SUBSCRIPT, "<sub>", "</sub>", sizeof("<sub>")-1 },
+        { GWY_SCI_TEXT_SUPERSCRIPT, "<sup>", "</sup>", sizeof("<sup>")-1 },
+    };
     GwySciText *sci_text;
     GtkEditable *editable;
+    gboolean selected;
     gint i, start, end;
+    gsize j;
 
     gwy_debug("%s: %p", __FUNCTION__, p);
     i = GPOINTER_TO_INT(p);
     sci_text = GWY_SCI_TEXT(gtk_widget_get_ancestor(GTK_WIDGET(button),
                                                     GWY_TYPE_SCI_TEXT));
     editable = GTK_EDITABLE(sci_text->entry);
-    if (!gtk_editable_get_selection_bounds(editable, &start, &end)) {
+    selected = gtk_editable_get_selection_bounds(editable, &start, &end);
+    if (!selected) {
         start = gtk_editable_get_position(editable);
         end = start;
     }
-    switch (i) {
-        case GWY_SCI_TEXT_BOLD:
-        gtk_editable_insert_text(editable, "<b>", 3, &start);
-        end += 3;
-        gtk_editable_insert_text(editable, "</b>", 4, &end);
-        break;
-
-        case GWY_SCI_TEXT_ITALIC:
-        gtk_editable_insert_text(editable, "<i>", 3, &start);
-        end += 3;
-        gtk_editable_insert_text(editable, "</i>", 4, &end);
-        break;
-
-        case GWY_SCI_TEXT_SUBSCRIPT:
-        gtk_editable_insert_text(editable, "<sub>", 5, &start);
-        end += 5;
-        gtk_editable_insert_text(editable, "</sub>", 6, &end);
-        break;
-
-        case GWY_SCI_TEXT_SUPERSCRIPT:
-        gtk_editable_insert_text(editable, "<sup>", 5, &start);
-        end += 5;
-        gtk_editable_insert_text(editable, "</sup>", 6, &end);
-        break;
-
-        default:
-        break;
+    for (j = 0; j < G_N_ELEMENTS(tags); j++) {
+        if (tags[j].markup == i) {
+            gtk_editable_insert_text(editable,
+                                     tags[j].start, tags[j].len, &start);
+            end += tags[j].len;
+            gtk_editable_insert_text(editable,
+                                     tags[j].end, tags[j].len+1, &end);
+            gtk_widget_grab_focus(GTK_WIDGET(sci_text->entry));
+            if (selected)
+                gtk_editable_select_region(editable, start, end-tags[j].len-1);
+            else
+                gtk_editable_set_position(editable, start);
+            break;
+        }
     }
     gwy_sci_text_edited(sci_text->entry);
 }
