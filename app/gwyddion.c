@@ -70,11 +70,15 @@ main(int argc, char *argv[])
     gboolean has_config, has_settings, ok = FALSE;
 
 #ifdef G_OS_WIN32
-    setup_logging();
     gwy_find_self_set_argv0(argv[0]);
 #endif
 
     process_preinit_options(&argc, &argv);
+    gwy_app_settings_create_config_dir();
+#ifdef G_OS_WIN32
+    setup_logging();
+#endif
+
     gtk_init(&argc, &argv);
     config_file = gwy_app_settings_get_config_filename();
     has_config = g_file_test(config_file, G_FILE_TEST_IS_REGULAR);
@@ -216,7 +220,6 @@ setup_logging(void)
     gsize i;
     FILE *logfile;
 
-    gwy_app_settings_create_config_dir();
     log_filename = gwy_app_settings_get_log_filename();
     logfile = fopen(log_filename, "w");
     for (i = 0; i < G_N_ELEMENTS(domains); i++)

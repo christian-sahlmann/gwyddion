@@ -17,6 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -331,6 +332,9 @@ gwy_app_settings_load(const gchar *filename)
  * Returns: Whether it succeeded (also returns %TRUE if the directory already
  * exists).
  *
+ * Since 1.3 it also creates user module directories (that themselves exist
+ * since 1.3).
+ *
  * Since: 1.2.
  **/
 gboolean
@@ -343,16 +347,39 @@ static gboolean
 create_config_dir_real(const gchar *cfgdir)
 {
     gboolean ok;
+    gchar **moddirs;
+    gint i, n;
 
-    if (g_file_test(cfgdir, G_FILE_TEST_IS_DIR))
-        return TRUE;
+    ok = g_file_test(cfgdir, G_FILE_TEST_IS_DIR);
+    moddirs = gwy_app_settings_get_module_dirs();
+    for (n = 0; moddirs[n]; n++)
+        ;
+    n /= 2;
+    g_assert(n > 0);
+    /* put the toplevel module dir before particula module dirs */
+    g_free(moddirs[n-1]);
+    moddirs[n-1] = g_path_get_dirname(moddirs[n]);
 
-    gwy_debug("Trying to create config directory %s", cfgdir);
-    ok = !mkdir(cfgdir, 0700);
     if (!ok) {
-        g_warning("Cannot create config directory %s: %s",
-                  cfgdir, g_strerror(errno));
+        gwy_debug("Trying to create user config directory %s", cfgdir);
+        ok = !mkdir(cfgdir, 0700);
+        if (!ok) {
+            g_warning("Cannot create user config directory %s: %s",
+                      cfgdir, g_strerror(errno));
+        }
     }
+
+    if (ok) {
+        for (i = n-1; i < 2*n; i++) {
+            if (g_file_test(moddirs[i], G_FILE_TEST_IS_DIR))
+                continue;
+            gwy_debug("Trying to create user module directory %s", moddirs[i]);
+            if (mkdir(moddirs[i], 0700))
+                g_warning("Cannot create user module directory %s: %s",
+                          moddirs[i], g_strerror(errno));
+        }
+    }
+    g_strfreev(moddirs);
 
     return ok;
 }
