@@ -172,8 +172,8 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 {
     GtkWidget *dialog, *table;
     MarkControls controls;
-    enum { RESPONSE_RESET = 1 };
-    enum { RESPONSE_PREVIEW = 2 };
+    enum { RESPONSE_RESET = 1,
+           RESPONSE_PREVIEW = 2 };
     gint response;
     gdouble zoomval;
     GtkObject *layer;
@@ -273,6 +273,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
             case RESPONSE_PREVIEW:
             preview(&controls, args);
+            break;
 
             default:
             g_assert_not_reached();
@@ -374,6 +375,7 @@ static void
 preview(MarkControls *controls,
         MarkArgs *args)
 {
+    printf("preview!\n");
 }
 
 static void        

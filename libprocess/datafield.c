@@ -3015,7 +3015,21 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
     }
     else if (orientation == GTK_ORIENTATION_VERTICAL)
     {
-    }
+        for (i=0; i<xres; i++)
+        {
+            gwy_data_field_get_column(data_field, hlp, i);
+            if (i>ulcol && i<=brcol)
+            {
+                gwy_data_line_part_fit_polynom(hlp, n, coefs, ulcol, brcol);
+            }
+            else
+            {
+                gwy_data_line_fit_polynom(hlp, n, coefs);
+            }
+            gwy_data_line_subtract_polynom(hlp, n, coefs);
+            gwy_data_field_set_column(data_field, hlp, i);
+        }
+     }
     g_object_unref(hlp);
 
  }
