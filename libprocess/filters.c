@@ -27,7 +27,7 @@
 
 static gdouble quick_select(gsize size, gdouble *array);
 static gint thin_data_field(GwyDataField *data_field);
-    
+
 
 /**
  * gwy_data_field_area_convolve:
@@ -205,8 +205,8 @@ gwy_data_field_filter_mean(GwyDataField *data_field,
 void
 gwy_data_field_area_filter_canny(GwyDataField *data_field,
                                  gdouble threshold,
-                                     gint col, gint row,
-                                     gint width, gint height)
+                                 gint col, gint row,
+                                 gint width, gint height)
 {
     GwyDataField *sobel_horizontal;
     GwyDataField *sobel_vertical;
@@ -240,7 +240,7 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
                                      0, 0,
                                      data_field->xres,
                                      data_field->yres);
-    
+
     gwy_data_field_area_filter_sobel(sobel_vertical,
                                      GTK_ORIENTATION_VERTICAL,
                                      0, 0,
@@ -249,18 +249,18 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
 
     for (k = 0; k < (data_field->xres*data_field->yres); k++)
         data_field->data[k] = fabs(sobel_horizontal->data[k]) + fabs(sobel_vertical->data[k]);
-        
- 
+
+
     threshold = gwy_data_field_get_min(data_field) +
         (gwy_data_field_get_max(data_field)-gwy_data_field_get_min(data_field))*threshold;
-    
+
     for (i = 0; i < data_field->yres; i++)
     {
         for (j = 0; j < data_field->xres; j++)
         {
             pass = FALSE;
-            if (data_field->data[j + data_field->xres*i] > threshold 
-                && i>0 && j>0 && i < (data_field->yres - 1) 
+            if (data_field->data[j + data_field->xres*i] > threshold
+                && i>0 && j>0 && i < (data_field->yres - 1)
                 && j < (data_field->xres - 1))
             {
                 angle = atan2(sobel_vertical->data[j + data_field->xres*i],
@@ -718,41 +718,43 @@ gwy_data_field_filter_conservative(GwyDataField *data_field,
 static gint
 pixel_status(GwyDataField *data_field, gint i, gint j)
 {
-    if (data_field->data[j + data_field->xres * i]==0) return 0;
-    else return 1;
+    if (data_field->data[j + data_field->xres * i] == 0)
+        return 0;
+    else
+        return 1;
 }
 
 
 static gint
 znzt_val(GwyDataField *data_field, gint i, gint j)
 {
-    gint ch=0;
-    gint pi[9]; 
+    gint ch = 0;
+    gint pi[9];
     gint pj[9], k;
 
-    pi[0]=i+1;
-    pi[1]=i;
-    pi[2]=i-1;
-    pi[3]=i-1;
-    pi[4]=i-1;
-    pi[5]=i;
-    pi[6]=i+1;
-    pi[7]=i+1;
-    pi[8]=i+1;
+    pi[0] = i + 1;
+    pi[1] = i;
+    pi[2] = i - 1;
+    pi[3] = i - 1;
+    pi[4] = i - 1;
+    pi[5] = i;
+    pi[6] = i + 1;
+    pi[7] = i + 1;
+    pi[8] = i + 1;
 
-    pj[0]=j+1;
-    pj[1]=j+1;
-    pj[2]=j+1;
-    pj[3]=j;
-    pj[4]=j-1;
-    pj[5]=j-1;
-    pj[6]=j-1;
-    pj[7]=j;
-    pj[8]=j+1;
+    pj[0] = j + 1;
+    pj[1] = j + 1;
+    pj[2] = j + 1;
+    pj[3] = j;
+    pj[4] = j - 1;
+    pj[5] = j - 1;
+    pj[6] = j - 1;
+    pj[7] = j;
+    pj[8] = j + 1;
 
-    for (k=0; k<8; k++)
-        if (pixel_status(data_field, pi[k], pj[k]) == 0 
-            && pixel_status(data_field, pi[k+1], pj[k+1]) == 1)
+    for (k = 0; k < 8; k++)
+        if (pixel_status(data_field, pi[k], pj[k]) == 0
+            && pixel_status(data_field, pi[k + 1], pj[k + 1]) == 1)
             ch++;
 
     return ch;
@@ -762,15 +764,16 @@ static gint
 nzn_val(GwyDataField *data_field, gint i, gint j)
 {
     gint ch, ip, jp;
-    
-    for (ip=-1; ip<=1; ip++)
-    {
-        for (jp=-1; jp<=1; jp++)
-        {
-            if (!(ip==0 && jp==0))
-                ch += pixel_status(data_field, i+ip, j+jp);
+
+    ch = 0;
+    for (ip = -1; ip <= 1; ip++) {
+        for (jp = -1; jp <= 1; jp++) {
+            if (!(ip == 0 && jp == 0))
+                ch += pixel_status(data_field, i + ip, j + jp);
         }
     }
+
+    return ch;
 }
 
 static gint
@@ -783,28 +786,35 @@ pixel_thinnable(GwyDataField *data_field, gint i, gint j)
     xres = data_field->xres;
     yres = data_field->yres;
 
-    if (i<=1 || j<=1 || i>=(xres-2) || (j>=yres-2)) return -1;
-    
+    if (i <= 1 || j <= 1 || i >= (xres - 2) || (j >= yres - 2))
+        return -1;
+
     c1 = c2 = c3 = c4 = 0;
 
-    if (znzt_val(data_field, i, j) == 1) c1=1;
+    if (znzt_val(data_field, i, j) == 1)
+        c1 = 1;
     val = nzn_val(data_field, i, j);
 
-    if (val>=2 && val<=6) c2=1;
+    if (val >= 2 && val <= 6)
+        c2 = 1;
 
-    if ((znzt_val(data_field, i+1, j)!=1) ||
-        ((pixel_status(data_field, i, j+1)*
-          pixel_status(data_field, i, j-1)*
-          pixel_status(data_field, i+1, j))==0)) c3=1;
+    if ((znzt_val(data_field, i + 1, j) != 1)
+        || ((pixel_status(data_field, i, j + 1)
+             * pixel_status(data_field, i, j - 1)
+             * pixel_status(data_field, i + 1, j)) == 0))
+        c3 = 1;
 
-    if ((znzt_val(data_field, i, j+1)!=1) ||
-        ((pixel_status(data_field, i, j+1)*
-          pixel_status(data_field, i-1, j)*
-          pixel_status(data_field, i+1, j)==0))) c4=1;
+    if ((znzt_val(data_field, i, j + 1) != 1)
+        || ((pixel_status(data_field, i, j + 1)
+             * pixel_status(data_field, i - 1, j)
+             * pixel_status(data_field, i + 1, j) == 0)))
+        c4 = 1;
 
-    if (c1==1 && c2==1 && c3==1 && c4==1) return 1;
-    else return 0;
-    
+    if (c1 == 1 && c2 == 1 && c3 == 1 && c4 == 1)
+        return 1;
+    else
+        return 0;
+
 }
 
 static gint
@@ -812,30 +822,26 @@ thinstep(GwyDataField *data_field)
 {
     GwyDataField *hlp;
     gint i, j, ch;
-    
+
     hlp = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                          data_field->yres,
-                                          data_field->xreal,
-                                          data_field->yreal,
-                                          TRUE));
+                                            data_field->yres,
+                                            data_field->xreal,
+                                            data_field->yreal, TRUE));
 
     ch = 0;
-    for (i = 2; i < (data_field->yres - 1); i++)
-    {
-        for (j = 2; j < (data_field->xres - 1); j++)
-        {
-            if (pixel_status(data_field, i, j)==1 && pixel_thinnable(data_field, i, j)==1)
-            {
+    for (i = 2; i < (data_field->yres - 1); i++) {
+        for (j = 2; j < (data_field->xres - 1); j++) {
+            if (pixel_status(data_field, i, j) == 1
+                && pixel_thinnable(data_field, i, j) == 1) {
                 ch++;
-                hlp->data[j + data_field->xres*i] = 1;
-            }     
+                hlp->data[j + data_field->xres * i] = 1;
+            }
         }
     }
-    for (i = 2; i < (data_field->yres - 1); i++)
-    {
-        for (j = 2; j < (data_field->xres - 1); j++)
-        {
-            if (hlp->data[j + data_field->xres*i] == 1) data_field->data[j + data_field->xres*i] = 0;
+    for (i = 2; i < (data_field->yres - 1); i++) {
+        for (j = 2; j < (data_field->xres - 1); j++) {
+            if (hlp->data[j + data_field->xres * i] == 1)
+                data_field->data[j + data_field->xres * i] = 0;
         }
     }
 
@@ -847,10 +853,10 @@ thin_data_field(GwyDataField *data_field)
 {
     gint k, n;
 
-    for (k = 0; k < 2000; k++)
-    {
+    for (k = 0; k < 2000; k++) {
         n = thinstep(data_field);
-        if (n == 0) break;
+        if (n == 0)
+            break;
     }
     return k;
 }
