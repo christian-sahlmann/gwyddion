@@ -119,8 +119,14 @@ gwy_math_find_nearest_point
 
 <SECTION>
 <FILE>gwyutils</FILE>
+GwyEnum
 gwy_hash_table_to_slist_cb
 gwy_hash_table_to_list_cb
+gwy_string_to_enum
+gwy_enum_to_string
+gwy_string_to_flags
+gwy_flags_to_string
+gwy_find_self_dir
 </SECTION>
 
 <SECTION>
@@ -141,5 +147,6 @@ _
 gwy_object_unref
 GWY_SWAP
 gwy_debug
+gwy_debug_gnu
 </SECTION>
 

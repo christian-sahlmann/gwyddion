@@ -14,7 +14,9 @@ libgwymoduleinclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwymodule.la
 
-EXTRA_DIST = libgwymodule.def
+EXTRA_DIST = \
+	makefile.msc \
+	libgwymodule.def
 
 noinst_HEADERS = \
 	gwymoduleinternal.h

@@ -13,7 +13,9 @@ libgwyddioninclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwyddion.la
 
-EXTRA_DIST = libgwyddion.def
+EXTRA_DIST = \
+	makefile.msc \
+	libgwyddion.def
 
 noinst_HEADERS = gwytestser.h
 

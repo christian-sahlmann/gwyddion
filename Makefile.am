@@ -22,10 +22,15 @@ M4TESTS = \
 	m4/tools.m4
 
 EXTRA_DIST = \
+	make.msc \
+	rules.msc \
+	makefile.msc \
 	CODING-STANDARDS \
 	autogen.sh \
 	gwyddion.spec.in \
 	gwyddion.spec\
+	gwyddion.iss.in \
+	gwyddion.iss\
 	gwyddion.pc.in \
 	$(M4TESTS)
 

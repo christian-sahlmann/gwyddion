@@ -47,3 +47,19 @@ settings
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_app_settings_get_module_dirs ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_settings_get_config_filename ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

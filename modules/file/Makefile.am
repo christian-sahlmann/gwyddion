@@ -8,6 +8,9 @@ file_PROGRAMS = \
 	gwyfile.so \
 	pixmap.so
 
+EXTRA_DIST = \
+	makefile.msc
+
 gwyfile_so_SOURCES = gwyfile.c
 gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
 

@@ -11,7 +11,9 @@ libgwydrawinclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwydraw.la
 
-EXTRA_DIST = libgwydraw.def
+EXTRA_DIST = \
+	makefile.msc \
+	libgwydraw.def
 
 #noinst_PROGRAMS = test
 

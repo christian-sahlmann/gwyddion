@@ -398,6 +398,8 @@ GWY_GRAD_SPHERE_GET_CLASS
 gwy_layer_select_new
 gwy_layer_select_get_selection
 gwy_layer_select_unselect
+gwy_layer_select_get_is_crop
+gwy_layer_select_set_is_crop
 <SUBSECTION Standard>
 GWY_LAYER_SELECT
 GWY_IS_LAYER_SELECT
@@ -503,7 +505,6 @@ gwy_stock_register_stock_items
 
 <SECTION>
 <FILE>gwyoptionmenus</FILE>
-GwyOptionMenuEntry
 gwy_menu_palette
 gwy_option_menu_palette
 gwy_option_menu_interpolation

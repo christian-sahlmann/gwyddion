@@ -14,7 +14,9 @@ libgwyprocessinclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwyprocess.la
 
-EXTRA_DIST = libgwyprocess.def
+EXTRA_DIST = \
+	makefile.msc \
+	libgwyprocess.def
 
 #noinst_PROGRAMS = test
 

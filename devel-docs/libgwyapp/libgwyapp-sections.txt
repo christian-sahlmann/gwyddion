@@ -45,6 +45,8 @@ gwy_app_settings_get
 gwy_app_settings_free
 gwy_app_settings_save
 gwy_app_settings_load
+gwy_app_settings_get_module_dirs
+gwy_app_settings_get_config_filename
 </SECTION>
 
 <SECTION>

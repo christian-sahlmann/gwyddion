@@ -21,7 +21,9 @@ noinst_HEADERS = \
 bin_PROGRAMS = gwyddion
 lib_LTLIBRARIES = libgwyapp.la
 
-EXTRA_DIST = libgwyapp.def
+EXTRA_DIST = \
+	makefile.msc \
+	libgwyapp.def
 
 # In following order do:
 # Any code change     C:   R++: A

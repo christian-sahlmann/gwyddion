@@ -13,6 +13,9 @@ process_PROGRAMS = \
 	scale.so \
 	shade.so
 
+EXTRA_DIST = \
+	makefile.msc
+
 basicops_so_SOURCES = basicops.c
 basicops_so_LDFLAGS = $(module_ldflags),basicops.so
 

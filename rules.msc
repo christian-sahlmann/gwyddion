@@ -1,17 +1,64 @@
 
-$(LIBRARY)-$(LIB_VER).def: $(LIBRARY).def
-	copy $(LIBRARY).def $(LIBRARY)-$(LIB_VER).def
-
-$(LIBRARY)-$(LIB_VER).dll: $(OBJECTS) $(LIBRARY)-$(LIB_VER).def
-	$(LINK32) $(OBJECTS) $(LIB_LINK) user32.lib advapi32.lib wsock32.lib $(LDFLAGS) /out:$(LIBRARY)-$(LIB_VER).dll /def:$(LIBRARY)-$(LIB_VER).def /dll /implib:$(LIBRARY)-$(LIB_VER).lib
+# building
+WIN32LIBS = user32.lib advapi32.lib wsock32.lib
 
 .c.obj:
 	$(CC) $(CFLAGS) -GD -c $(LIB_CFLAGS) $<
 
-install: all "$(TOP_SRCDIR)\inst.stamp"
+$(LIBRARY)-$(LIB_VER).def: $(LIBRARY).def
+	copy $(LIBRARY).def $(LIBRARY)-$(LIB_VER).def
+
+$(PROGRAM).exe: $(PRG_OBJECTS)
+	$(LINK32) $(PRG_OBJECTS) $(PRG_LINK) $(WIN32LIBS) $(LDFLAGS) /subsystem:windows /out:$(PROGRAM).exe
+
+.obj.dll:
+	$(LINK32) $< $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$<.dll /dll /implib:$<.lib
+
+$(LIBRARY)-$(LIB_VER).dll: $(LIB_OBJECTS) $(LIBRARY)-$(LIB_VER).def
+	$(LINK32) $(LIB_OBJECTS) $(LIB_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$(LIBRARY)-$(LIB_VER).dll /def:$(LIBRARY)-$(LIB_VER).def /dll /implib:$(LIBRARY)-$(LIB_VER).lib
+
+# installation
+install-prg: prg "$(TOP_SRCDIR)\inst.stamp"
+	$(INSTALL) $(PROGRAM).exe "$(DEST_DIR)"
+
+install-lib: lib "$(TOP_SRCDIR)\inst.stamp"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).dll "$(DEST_DIR)"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).lib "$(DEST_DIR)\lib"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).def "$(DEST_DIR)\lib"
-	for %h in ($(HEADERS)) do $(INSTALL) %h "$(DEST_DIR)\include\$(XLIBRARY)"
+	for %h in ($(LIB_HEADERS)) do $(INSTALL) %h "$(DEST_DIR)\include\$(XLIBRARY)"
+
+install-mod: mod "$(TOP_SRCDIR)\inst.stamp"
+	for %m in ($(MODULES)) do $(INSTALL) %m "$(DEST_DIR)\modules\$(MOD_TYPE)"
+
+install-plugin: plugin "$(TOP_SRCDIR)\inst.stamp"
+	for %p in ($(PLUGINS)) do $(INSTALL) %p "$(DEST_DIR)\plugins\$(PLUGIN_TYPE)"
+
+install-pixmap: pixmap "$(TOP_SRCDIR)\inst.stamp"
+	for %p in ($(PIXMAPS)) do $(INSTALL) %p "$(DEST_DIR)\pixmaps"
+
+# recursion
+sub-all:
+	for %d in ($(SUBDIRS)) do nmake -nologo -f makefile.msc sub1-all THIS=%d
+
+sub1-all:
+	cd $(THIS)
+	nmake -nologo -f makefile.msc all
+	cd ..
+
+sub-clean:
+	for %d in ($(SUBDIRS)) do nmake -nologo -f makefile.msc sub1-clean THIS=%d
+
+sub1-clean:
+	cd $(THIS)
+	nmake -nologo -f makefile.msc clean
+	cd ..
+
+sub-install:
+	for %d in ($(SUBDIRS)) do nmake -nologo -f makefile.msc sub1-install THIS=%d
+
+sub1-install:
+	cd $(THIS)
+	nmake -nologo -f makefile.msc install
+	cd ..
 
 # vim: ft=make

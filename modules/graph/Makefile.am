@@ -7,10 +7,11 @@ module_ldflags = -shared -Wl,-soname
 process_PROGRAMS = \
 	read.so 
 
+EXTRA_DIST = \
+	makefile.msc
 
 read_so_SOURCES = read.c
 read_so_LDFLAGS = $(module_ldflags),read.so
-
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"

@@ -45,6 +45,12 @@ gwymodulemenus
 
 @gwygrapharea: the object which received the signal.
 
+<!-- ##### TYPEDEF GwyOptionMenuEntry ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### SIGNAL GwySphereCoords::value-changed ##### -->
 <para>
 

@@ -1,4 +1,4 @@
 GwyPaletteClass
-GwyPaletteDef
-GwyPaletteDefClass
 GwyPalette
+GwyPaletteDefClass
+GwyPaletteDef

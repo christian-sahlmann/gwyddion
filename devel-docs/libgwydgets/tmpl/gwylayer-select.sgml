@@ -43,3 +43,21 @@ GwyLayerSelect
 @layer: 
 
 
+<!-- ##### FUNCTION gwy_layer_select_get_is_crop ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_select_set_is_crop ##### -->
+<para>
+
+</para>
+
+@layer: 
+@is_crop: 
+
+

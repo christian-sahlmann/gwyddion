@@ -26,23 +26,21 @@ GLIB_VER = 2.0
 GTK_VER = 2.0
 PANGO_VER = 1.0
 
-!IF "$(OS)" == "Windows_NT"
-NULL=
-!ELSE
-NULL=nul
-!ENDIF
-
 !IFNDEF DEBUG
 # Full optimization:
 OPTIMIZE = -Ox
-CRUNTIME = -MD
+LIB_CRUNTIME = -MD
+PRG_CRUNTIME = -ML
+MOD_CRUNTIME = -MT
 # Line number debug info only
 DEBUGINFO = -Zd
 LINKDEBUG =
 !ELSE
 # Debugging:
 OPTIMIZE =
-CRUNTIME = -MDd
+LIB_CRUNTIME = -MDd
+PRG_CRUNTIME = -MLd
+MOD_CRUNTIME = -MTd
 DEBUGINFO = -Zi
 LINKDEBUG = /debug
 !ENDIF
@@ -70,7 +68,6 @@ INTL_LIBS = intl.lib
 LIBICONV_CFLAGS =
 LIBICONV_LIBS = iconv.lib
 
-# XXX:
 JPEG_CFLAGS =
 JPEG_LIBS = libjpeg.lib
 
@@ -78,7 +75,6 @@ PANGO_CFLAGS = -I "$(GTK_TOP)\include\pango-$(PANGO_VER)"
 PANGO_LIBS = pango-$(PANGO_VER).lib
 PANGOWIN32_LIBS = $(PANGO_LIBS) pangowin32-$(PANGO_VER).lib
 
-# XXX:
 PNG_CFLAGS = -I "$(GTK_TOP)\include\libpng12" $(ZLIB_CFLAGS)
 PNG_LIBS = libpng.lib $(ZLIB_LIBS)
 
@@ -92,7 +88,7 @@ INSTALL = copy
 LINK32 = link.exe
 
 CCOMPILER = cl
-CC = $(CCOMPILER) -G6 -GF $(CRUNTIME) -W3 -nologo
+CC = $(CCOMPILER) -G6 -GF -W3 /nologo
 
 ################
 # The including makefile should define INCLUDES, DEFINES and
@@ -111,20 +107,21 @@ CFLAGS = $(OPTIMIZE) $(DEBUGINFO) $(INCLUDES) $(DEFINES) $(DEPCFLAGS)
 default: all
 
 clean::
-	-del *.obj
-	-del *.res
-	-del *.i
-	-del *.exe
 	-del *.dll
-	-del *.lib
 	-del *.err
-	-del *.map
-	-del *.sym
+	-del *.exe
 	-del *.exp
-	-del *.lk1
-	-del *.mk1
-	-del *.pdb
+	-del *.i
+	-del *.idb
 	-del *.ilk
+	-del *.lib
+	-del *.lk1
+	-del *.map
+	-del *.mk1
+	-del *.obj
+	-del *.pdb
+	-del *.res
+	-del *.sym
 
 "$(TOP_SRCDIR)/inst.stamp":
 	-@mkdir "$(DEST_DIR)"
@@ -147,3 +144,4 @@ clean::
 	-@mkdir "$(DEST_DIR)/plugins/process"
 	@echo foo >"$(TOP_SRCDIR)/inst.stamp"
 
+# vim: ft=make

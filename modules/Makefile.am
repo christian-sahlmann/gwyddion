@@ -12,6 +12,9 @@ SUBDIRS = \
 module_PROGRAMS = \
 	plugin-proxy.so
 
+EXTRA_DIST = \
+	makefile.msc
+
 plugin_proxy_so_SOURCES = plugin-proxy.c
 plugin_proxy_so_LDFLAGS = $(module_ldflags),plugin-proxy.so
 

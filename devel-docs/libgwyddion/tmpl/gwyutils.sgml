@@ -14,6 +14,12 @@ gwyutils
 
 </para>
 
+<!-- ##### TYPEDEF GwyEnum ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_hash_table_to_slist_cb ##### -->
 <para>
 
@@ -32,5 +38,62 @@ gwyutils
 @unused_key: 
 @value: 
 @user_data: 
+
+
+<!-- ##### FUNCTION gwy_string_to_enum ##### -->
+<para>
+
+</para>
+
+@str: 
+@enum_table: 
+@n: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_enum_to_string ##### -->
+<para>
+
+</para>
+
+@enumval: 
+@enum_table: 
+@n: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_string_to_flags ##### -->
+<para>
+
+</para>
+
+@str: 
+@enum_table: 
+@n: 
+@delimiter: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_flags_to_string ##### -->
+<para>
+
+</para>
+
+@enumval: 
+@enum_table: 
+@n: 
+@glue: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@delimiter: 
+
+
+<!-- ##### FUNCTION gwy_find_self_dir ##### -->
+<para>
+
+</para>
+
+@dirname: 
+@Returns: 
 
 

@@ -23,4 +23,6 @@ pixmapdata_DATA = \
 	gwy_zoom_in-24.png \
 	gwy_zoom_out-24.png
 
-EXTRA_DIST = $(pixmapdata_DATA)
+EXTRA_DIST = \
+	makefile.msc \
+	$(pixmapdata_DATA)
