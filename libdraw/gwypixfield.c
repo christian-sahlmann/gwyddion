@@ -5,41 +5,107 @@
 #include "gwypixfield.h"
 
 
+/**
+ * gwy_pixfield_do:
+ * @pixbuf: A Gdk pixbuf to draw to.
+ * @data_field: A data to draw.
+ * @palette: A palette to draw with.
+ *
+ * Paints a pixbuf @pixbuf with data from @data_field using false color
+ * palette @palette.
+ *
+ * FIXME: This is a provisory function, probably to be renamed, moved,
+ * changed, etc.
+ **/
 void
-gwy_pixfield_do(GdkPixbuf *g, GwyDataField *f, GwyPalette *pal)
+gwy_pixfield_do(GdkPixbuf *pixbuf,
+                GwyDataField *data_field,
+                GwyPalette *palette)
 {
-    int xres = f->xres;
-    int yres = f->yres;
-    int i, j, palsize;
+    int xres, yres, i, j, palsize, rowstride, dval;
     guchar *pixels, *line;
     const guchar *samples, *s;
-    gint rowstride, dval;
     gdouble maximum, minimum, cor;
+    gdouble *row;
 
-    maximum = gwy_data_field_get_max(f);
-    minimum = gwy_data_field_get_min(f);
+    g_return_if_fail(GDK_IS_PIXBUF(pixbuf));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_PALETTE(palette));
 
-    pixels = gdk_pixbuf_get_pixels(g);
-    rowstride = gdk_pixbuf_get_rowstride(g);
-    samples = gwy_palette_get_samples(pal, &palsize);
+    xres = gwy_data_field_get_xres(data_field);
+    yres = gwy_data_field_get_yres(data_field);;
+    maximum = gwy_data_field_get_max(data_field);
+    minimum = gwy_data_field_get_min(data_field);
+
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    samples = gwy_palette_get_samples(palette, &palsize);
     cor = (palsize-1.0)/(maximum-minimum);
 
     for (i = 0; i < yres; i++) {
-        line=pixels + i*rowstride;
-        for (j = 0; j < xres; j++) {
-            dval=(gint)((f->data[i + j*f->yres]-minimum)*cor + 0.5);
+        line = pixels + i*rowstride;
+        row = data_field->data + i;
+        for (j = 0; j < xres*yres; j += yres) {
+            dval = (gint)((row[j] - minimum)*cor + 0.5);
             /* simply index to the guchar samples, it's faster and no one
              * can tell the difference... */
             s = samples + 4*dval;
             *(line++) = *(s++);
             *(line++) = *(s++);
             *(line++) = *s;
+        }
+    }
+}
 
-            /*
-            *(line++) = (guchar)(gint)(255.999*pal->color[dval].r);
-            *(line++) = (guchar)(gint)(255.999*pal->color[dval].g);
-            *(line++) = (guchar)(gint)(255.999*pal->color[dval].b);
-            */
+/**
+ * gwy_pixfield_mask:
+ * @pixbuf: A Gdk pixbuf to draw to.
+ * @data_field: A data to draw.
+ * @color: A color to use.
+ *
+ * Paints a pixbuf @pixbuf with data from @data_field using a signle color
+ * @color with opacity varying with data value.  The data range is assumed
+ * to be [0,1).
+ *
+ * FIXME: This is a provisory function, probably to be renamed, moved,
+ * changed, etc.
+ **/
+void
+gwy_pixfield_mask(GdkPixbuf *pixbuf,
+                  GwyDataField *data_field,
+                  GwyRGBA *color)
+{
+    int xres, yres, i, j, rowstride;
+    guchar *pixels, *line;
+    guint32 pixel;
+    gdouble *row;
+    gdouble cor;
+
+    g_return_if_fail(GDK_IS_PIXBUF(pixbuf));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(color);
+
+    pixel = 0xff
+            | ((guint32)(guchar)floor(255.99999*color->b) << 8)
+            | ((guint32)(guchar)floor(255.99999*color->g) << 16)
+            | ((guint32)(guchar)floor(255.99999*color->r) << 24);
+    gdk_pixbuf_fill(pixbuf, pixel);
+    if (!gdk_pixbuf_get_has_alpha(pixbuf))
+        return;
+
+    xres = gwy_data_field_get_xres(data_field);
+    yres = gwy_data_field_get_yres(data_field);
+
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    cor = color->a + 0.99999;
+
+    for (i = 0; i < yres; i++) {
+        line = pixels + i*rowstride + 3;
+        row = data_field->data + i;
+        for (j = 0; j < xres; j++) {
+            *line = (guchar)(cor*row[j]);
+            line += 4;
         }
     }
 }
