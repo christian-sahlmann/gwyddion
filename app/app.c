@@ -63,6 +63,8 @@ static void       gwy_app_3d_window_orphaned       (GtkWidget *view,
                                                     GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow,
                                                     GtkWidget *view);
+static void       gwy_app_3d_window_title_changed  (GtkWidget *data_window,
+                                                    GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
 
 /*****************************************************************************
@@ -765,15 +767,28 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     gwy_3d_window_add_action_widget(GWY_3D_WINDOW(gwy3dwindow), button);
 
     current_3d = g_list_append(current_3d, gwy3dwindow);
-    /* TODO: change title on "title-changed" */
+    /*
+     * There are some signal cross-connections.
+     *
+     * object    signal            handler           data      destroy in
+     *
+     * window    "title-changed"   title_changed()   3dwindow  destroyed()
+     * window    "destroyed"       orphaned()        3dwindow  destroyed()
+     * view      "updated"         3d_view_update()  3dview    destroyed()
+     * 3dwindow  "destroy"         destroyed()       window    orphaned()
+     * 3dwindow  "focun-in-event"  set_current()     NULL      --
+     * button    "clicked"         export()          3dwindow  --
+     */
+    g_signal_connect(data_window, "title-changed",
+                     G_CALLBACK(gwy_app_3d_window_title_changed), gwy3dwindow);
     g_signal_connect_swapped(view, "updated",
                              G_CALLBACK(gwy_3d_view_update), gwy3dview);
-    g_signal_connect(view, "destroy",
+    g_signal_connect(data_window, "destroy",
                      G_CALLBACK(gwy_app_3d_window_orphaned), gwy3dwindow);
     g_signal_connect(gwy3dwindow, "focus-in-event",
                      G_CALLBACK(gwy_app_3d_window_set_current), NULL);
     g_signal_connect(gwy3dwindow, "destroy",
-                     G_CALLBACK(gwy_app_3d_window_destroyed), view);
+                     G_CALLBACK(gwy_app_3d_window_destroyed), data_window);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_window_export), gwy3dwindow);
 
@@ -872,7 +887,7 @@ gwy_app_3d_window_remove(GtkWidget *window)
 }
 
 static void
-gwy_app_3d_window_orphaned(GtkWidget *view,
+gwy_app_3d_window_orphaned(GtkWidget *data_window,
                            GtkWidget *gwy3dwindow)
 {
     g_signal_handlers_disconnect_matched(gwy3dwindow,
@@ -880,21 +895,41 @@ gwy_app_3d_window_orphaned(GtkWidget *view,
                                          | G_SIGNAL_MATCH_DATA,
                                          0, 0, NULL,
                                          gwy_app_3d_window_destroyed,
-                                         view);
+                                         data_window);
+}
+
+static void
+gwy_app_3d_window_title_changed(GtkWidget *data_window,
+                                GtkWidget *gwy3dwindow)
+{
+    gchar *name, *title;
+
+    name = gwy_data_window_get_base_name(GWY_DATA_WINDOW(data_window));
+    title = g_strconcat("3D ", name, NULL);
+    gtk_window_set_title(GTK_WINDOW(gwy3dwindow), title);
+    g_free(title);
+    g_free(name);
 }
 
 static void
 gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow,
-                            GtkWidget *view)
+                            GtkWidget *data_window)
 {
-    GtkWidget *gwy3dview;
+    GtkWidget *gwy3dview, *view;
 
-    g_signal_handlers_disconnect_matched(view,
+    g_signal_handlers_disconnect_matched(data_window,
+                                         G_SIGNAL_MATCH_FUNC
+                                         | G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL,
+                                         gwy_app_3d_window_title_changed,
+                                         gwy3dwindow);
+    g_signal_handlers_disconnect_matched(data_window,
                                          G_SIGNAL_MATCH_FUNC
                                          | G_SIGNAL_MATCH_DATA,
                                          0, 0, NULL,
                                          gwy_app_3d_window_orphaned,
                                          gwy3dwindow);
+    view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(data_window));
     gwy3dview = gwy_3d_window_get_3d_view(GWY_3D_WINDOW(gwy3dwindow));
     g_signal_handlers_disconnect_matched(view,
                                          G_SIGNAL_MATCH_FUNC
@@ -903,6 +938,7 @@ gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow,
                                          gwy_3d_view_update,
                                          gwy3dview);
 }
+
 
 /*****************************************************************************
  *                                                                           *
