@@ -23,8 +23,6 @@
 
 #include <gtk/gtkobject.h>
 #include <libgwyddion/gwycontainer.h>
-/* XXX: GwyMenuSensFlags */
-#include <app/menu.h>
 
 G_BEGIN_DECLS
 
@@ -62,7 +60,7 @@ GtkObject*     gwy_process_func_build_menu    (GtkObject *item_factory,
                                                const gchar *prefix,
                                                GCallback item_callback);
 void           gwy_process_func_set_sensitivity_flags (const gchar *name,
-                                                       GwyMenuSensFlags flags);
+                                                       guint flags);
 
 G_END_DECLS
 

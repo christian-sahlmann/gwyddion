@@ -25,8 +25,6 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
-/* XXX: for GwyMenuSensFlags */
-#include <app/menu.h>
 
 #include "gwymoduleinternal.h"
 #include "gwymodule-process.h"
@@ -37,8 +35,7 @@
  *    GtkActions (Gtk+-2.4) anyway
  * 2. To avoid circular dependency on libgwyapp, we cheat and set object
  *    data for sentitivity manually.  Maybe the menu-building doesn't belong
- *    here at all.  However, we *do* include its header file to get definition
- *    of GwyMenuSensFlags.
+ *    here at all.
  **/
 typedef struct {
     GwyProcessFuncInfo *func_info;
@@ -346,9 +343,23 @@ gwy_process_func_get_menu_path(const gchar *name)
     return ipfinfo->func_info->menu_path;
 }
 
+/**
+ * gwy_process_func_set_sensitivity_flags:
+ * @name: Data processing function name.
+ * @flags: Menu sensitivity flags from #GwyMenuSensFlags.
+ *
+ * Sets menu sensititivy flags for function @name.
+ *
+ * All data processing function have implied %GWY_MENU_FLAG_DATA flag which
+ * cannot be removed.  This function can be used to set other requirements;
+ * the most common (and most useful) probably is %GWY_MENU_FLAG_DATA_MASK
+ * meaning the function requires a mask.
+ *
+ * Since: 1.1.
+ **/
 void
 gwy_process_func_set_sensitivity_flags(const gchar *name,
-                                       GwyMenuSensFlags flags)
+                                       guint flags)
 {
     GwyProcessFuncInfoInternal *ipfinfo;
 
@@ -366,8 +377,6 @@ gwy_process_func_set_sensitivity_flags(const gchar *name,
  *
  * Returns: %TRUE if there was such a function and was removed, %FALSE
  *          otherwise.
- *
- * Since: 1.1.
  **/
 gboolean
 gwy_process_func_remove(const gchar *name)
