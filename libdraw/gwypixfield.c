@@ -174,7 +174,7 @@ gwy_pixbuf_draw_data_field_with_rms(GdkPixbuf *pixbuf,
 }
 
 /**
- * gwy_pixbuf_draw_mask:
+ * gwy_pixbuf_draw_data_field_as_mask:
  * @pixbuf: A Gdk pixbuf to draw to.
  * @data_field: A data field to draw.
  * @color: A color to use.
