@@ -242,7 +242,7 @@ gwy_data_field_plane_rotate(GwyDataField *data_field,
 
 /**
  * gwy_data_field_area_fit_polynom:
- * @data_field: A data field
+ * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -251,9 +251,11 @@ gwy_data_field_plane_rotate(GwyDataField *data_field,
  * @row_degree: Degree of polynom to fit row-wise (y-coordinate).
  * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) to store the
  *          coefficients to, or %NULL (a fresh array is allocated then).
- *          The coefficients are stored by row, like data in a datafield.
  *
- * Fits a two-dimensional polynom to a part of a #GwyDataField.
+ * Fits a two-dimensional polynom to a rectangular part of a data field.
+ *
+ * The coefficients are stored by row into @coeffs, like data in a datafield.
+ * Row index is y-degree, column index is x-degree.
  *
  * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
  *          with coefficients.
@@ -341,18 +343,45 @@ gwy_data_field_area_fit_polynom(GwyDataField *data_field,
 }
 
 /**
+ * gwy_data_field_fit_polynom:
+ * @data_field: A data field.
+ * @col_degree: Degree of polynom to fit column-wise (x-coordinate).
+ * @row_degree: Degree of polynom to fit row-wise (y-coordinate).
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) to store the
+ *          coefficients to, or %NULL (a fresh array is allocated then),
+ *          see gwy_data_field_area_fit_polynom() for details.
+ *
+ * Fits a two-dimensional polynom to a data field.
+ *
+ * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
+ *          with coefficients.
+ *
+ * Since: 1.9
+ **/
+gdouble*
+gwy_data_field_fit_polynom(GwyDataField *data_field,
+                           gint col_degree, gint row_degree,
+                           gdouble *coeffs)
+{
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    return gwy_data_field_area_fit_polynom(data_field, 0, 0,
+                                           data_field->xres, data_field->yres,
+                                           col_degree, row_degree, coeffs);
+}
+
+/**
  * gwy_data_field_area_subtract_polynom:
- * @data_field: A data field
+ * @data_field: A data field.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  * @col_degree: Degree of polynom to subtract column-wise (x-coordinate).
  * @row_degree: Degree of polynom to subtract row-wise (y-coordinate).
- * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) with coefficients
- *          in the same order as gwy_data_field_area_fit_polynom() uses.
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) with coefficients,
+ *          see gwy_data_field_area_fit_polynom() for details.
  *
- * Subtract a two-dimensional polynom from a part of a #GwyDataField.
+ * Subtracts a two-dimensional polynom from a rectangular part of a data field.
  *
  * Since: 1.6
  **/
@@ -361,7 +390,7 @@ gwy_data_field_area_subtract_polynom(GwyDataField *data_field,
                                      gint col, gint row,
                                      gint width, gint height,
                                      gint col_degree, gint row_degree,
-                                     gdouble *coeffs)
+                                     const gdouble *coeffs)
 {
     gint r, c, i, j, size, xres, yres;
     gdouble *data;
@@ -400,6 +429,30 @@ gwy_data_field_area_subtract_polynom(GwyDataField *data_field,
     }
 
     gwy_data_field_invalidate(data_field);
+}
+
+/**
+ * gwy_data_field_subtract_polynom:
+ * @data_field: A data field.
+ * @col_degree: Degree of polynom to subtract column-wise (x-coordinate).
+ * @row_degree: Degree of polynom to subtract row-wise (y-coordinate).
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) with coefficients,
+ *          see gwy_data_field_area_fit_polynom() for details.
+ *
+ * Subtracts a two-dimensional polynom from a data field.
+ *
+ * Since: 1.9
+ **/
+void
+gwy_data_field_subtract_polynom(GwyDataField *data_field,
+                                gint col_degree, gint row_degree,
+                                const gdouble *coeffs)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_subtract_polynom(data_field,
+                                         0, 0,
+                                         data_field->xres, data_field->yres,
+                                         col_degree, row_degree, coeffs);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

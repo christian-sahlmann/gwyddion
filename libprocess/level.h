@@ -49,6 +49,10 @@ void gwy_data_field_plane_rotate          (GwyDataField *data_field,
                                            gdouble yangle,
                                            GwyInterpolationType interpolation);
 
+gdouble* gwy_data_field_fit_polynom       (GwyDataField *data_field,
+                                           gint col_degree,
+                                           gint row_degree,
+                                           gdouble *coeffs);
 gdouble* gwy_data_field_area_fit_polynom  (GwyDataField *data_field,
                                            gint col,
                                            gint row,
@@ -58,6 +62,10 @@ gdouble* gwy_data_field_area_fit_polynom  (GwyDataField *data_field,
                                            gint row_degree,
                                            gdouble *coeffs);
 
+void gwy_data_field_subtract_polynom      (GwyDataField *data_field,
+                                           gint col_degree,
+                                           gint row_degree,
+                                           const gdouble *coeffs);
 void gwy_data_field_area_subtract_polynom (GwyDataField *data_field,
                                            gint col,
                                            gint row,
@@ -65,7 +73,7 @@ void gwy_data_field_area_subtract_polynom (GwyDataField *data_field,
                                            gint height,
                                            gint col_degree,
                                            gint row_degree,
-                                           gdouble *coeffs);
+                                           const gdouble *coeffs);
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_LEVEL_H__*/
