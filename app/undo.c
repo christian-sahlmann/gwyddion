@@ -25,7 +25,6 @@
 #include "menu.h"
 #include "undo.h"
 
-/* this is not used (yet), the GUI doesn't allow more levels */
 enum {
     UNDO_LEVELS = 3
 };
@@ -116,7 +115,8 @@ gwy_app_undo_checkpointv(GwyContainer *data,
         "/0/data", "/0/mask", "/0/show", NULL
     };
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
+            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_UNDO
     };
     static gulong undo_level_id = 0;
@@ -187,6 +187,11 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     g_object_set_qdata(G_OBJECT(data), modif_key,
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
                                                            modif_key)) + 1));
+
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
+    if (gwy_container_contains_by_name(data, "/0/show"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
     gwy_app_toolbox_update_state(&sens_data);
 
     return level->id;
@@ -201,7 +206,8 @@ void
 gwy_app_undo_undo(void)
 {
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
+            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_REDO
     };
     GwyDataWindow *data_window;
@@ -238,6 +244,10 @@ gwy_app_undo_undo(void)
     gwy_app_data_view_update(data_view);
     if (undo)
         sens_data.set_to |= GWY_MENU_FLAG_UNDO;
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
+    if (gwy_container_contains_by_name(data, "/0/show"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
     gwy_app_toolbox_update_state(&sens_data);
 }
 
@@ -250,7 +260,8 @@ void
 gwy_app_undo_redo(void)
 {
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
+            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_UNDO
     };
     GwyDataWindow *data_window;
@@ -287,6 +298,10 @@ gwy_app_undo_redo(void)
     gwy_app_data_view_update(data_view);
     if (redo)
         sens_data.set_to |= GWY_MENU_FLAG_REDO;
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
+    if (gwy_container_contains_by_name(data, "/0/show"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
     gwy_app_toolbox_update_state(&sens_data);
 }
 

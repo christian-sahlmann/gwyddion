@@ -122,10 +122,12 @@ void
 gwy_app_data_window_set_current(GwyDataWindow *window)
 {
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
+            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_DATA
     };
     GList *item;
+    GwyContainer *data;
 
     gwy_debug("win = %p, tool = %p", window, current_tool);
 
@@ -146,6 +148,12 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     if (gwy_app_data_window_has_redo(window))
         sens_data.set_to |= GWY_MENU_FLAG_REDO;
 
+    data = gwy_data_window_get_data(window);
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
+    if (gwy_container_contains_by_name(data, "/0/show"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
+
     gwy_app_toolbox_update_state(&sens_data);
 }
 
@@ -162,7 +170,8 @@ void
 gwy_app_data_window_remove(GwyDataWindow *window)
 {
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
+            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         0
     };
     GList *item;
@@ -347,6 +356,10 @@ gwy_app_graph_window_create(GtkWidget *graph)
 void
 gwy_app_data_view_update(GtkWidget *data_view)
 {
+    GwyMenuSensData sens_data = {
+        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
+        0
+    };
     static const gchar *keys[] = {
         "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"
     };
@@ -384,6 +397,12 @@ gwy_app_data_view_update(GtkWidget *data_view)
     else {
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
     }
+
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
+    if (gwy_container_contains_by_name(data, "/0/show"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
+    gwy_app_toolbox_update_state(&sens_data);
 }
 
 /**

@@ -207,7 +207,8 @@ gwy_app_run_process_func_cb(gchar *name)
         GWY_RUN_NONINTERACTIVE, GWY_RUN_WITH_DEFAULTS,
     };
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC,
+        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
+            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
     };
     GwyRunType run;
@@ -224,18 +225,22 @@ gwy_app_run_process_func_cb(gchar *name)
     g_return_if_fail(data);
     run = gwy_process_func_get_run_types(name);
     for (i = 0; i < G_N_ELEMENTS(run_types); i++) {
-        if (run & run_types[i]) {
-            gwy_process_func_run(name, data, run_types[i]);
-            /* FIXME: the ugliest hack! */
-            gwy_app_data_view_update(data_view);
-            menu = GTK_WIDGET(g_object_get_data(G_OBJECT(
-                                                    gwy_app_main_window_get()),
-                                                "<proc>"));
-            gwy_app_update_last_process_func(menu, name);
-            gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
-
+        if (!(run & run_types[i]))
+            continue;
+        if (!gwy_process_func_run(name, data, run_types[i]))
             return;
-        }
+        /* FIXME: the ugliest hack! */
+        gwy_app_data_view_update(data_view);
+        menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
+                                            "<proc>"));
+        gwy_app_update_last_process_func(menu, name);
+        if (gwy_container_contains_by_name(data, "/0/mask"))
+            sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
+        if (gwy_container_contains_by_name(data, "/0/show"))
+            sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
+        gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
+
+        return;
     }
     g_critical("Trying to run `%s', but no run mode found (%d)", name, run);
 }

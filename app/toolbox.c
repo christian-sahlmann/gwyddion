@@ -410,9 +410,13 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
         { "/Edit/Change Default Mask _Color", NULL, gwy_app_change_mask_color_cb, 1, NULL, NULL },
     };
     static const gchar *items_need_data[] = {
-        "/Edit/Duplicate", "/Edit/Data Arithmetic",
-        "/Edit/Remove Mask", "/Edit/Remove Presentation",
-        "/Edit/Change Mask Color", NULL
+        "/Edit/Duplicate", "/Edit/Data Arithmetic", NULL
+    };
+    static const gchar *items_need_data_mask[] = {
+        "/Edit/Remove Mask", "/Edit/Change Mask Color", NULL
+    };
+    static const gchar *items_need_data_show[] = {
+        "/Edit/Remove Presentation", NULL
     };
     static const gchar *items_need_undo[] = {
         "/Edit/Undo", NULL
@@ -434,9 +438,15 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
                                      GWY_MENU_FLAG_REDO);
     gwy_app_menu_set_sensitive_array(item_factory, "edit", items_need_data,
                                      GWY_MENU_FLAG_DATA);
+    gwy_app_menu_set_sensitive_array(item_factory, "edit", items_need_data_mask,
+                                     GWY_MENU_FLAG_DATA_MASK);
+    gwy_app_menu_set_sensitive_array(item_factory, "edit", items_need_data_show,
+                                     GWY_MENU_FLAG_DATA_SHOW);
     sens_data.flags = GWY_MENU_FLAG_DATA
                       | GWY_MENU_FLAG_REDO
-                      | GWY_MENU_FLAG_UNDO;
+                      | GWY_MENU_FLAG_UNDO
+                      | GWY_MENU_FLAG_DATA_MASK
+                      | GWY_MENU_FLAG_DATA_SHOW;
     sens_data.set_to = 0;
     gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 
