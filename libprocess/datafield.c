@@ -3393,9 +3393,15 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
 }
 
 /**
-  * @state - current status
-  * @iteration - current itaration within datafield row
-  **/
+ * gwy_data_field_correlate_iteration:
+ * @data_field: data field 
+ * @kernel_field: kernel to be correlated with data
+ * @score: correlation scores
+ * @state: state of iteration
+ * @iteration: actual iteration row coordinate
+ *
+ * Performs one iteration of correlation.
+ **/
 void
 gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kernel_field, GwyDataField *score, 
                                    GwyComputationStateType *state, gint *iteration)
