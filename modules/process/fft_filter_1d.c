@@ -283,7 +283,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
     controls.gmodel = GWY_GRAPHER_MODEL(gwy_grapher_model_new(NULL));
-    controls.graph = gwy_grapher_new(controls.gmodel);
+    controls.graph = gwy_grapher_new(GWY_GRAPHER_MODEL(controls.gmodel));
     gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_top, FALSE);
     gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_left, FALSE);
     gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_bottom, FALSE);
@@ -437,7 +437,6 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     GwyDataLine *dline;
     GwyGrapherCurveModel *cmodel;
     gdouble xdata[200];
-    gdouble max;
     gint i;
 
     dline = GWY_DATA_LINE(gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE));
@@ -462,7 +461,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     }
     gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
     
-    cmodel = gwy_grapher_curve_model_new();
+    cmodel = GWY_GRAPHER_CURVE_MODEL(gwy_grapher_curve_model_new());
     cmodel->xdata = xdata;
     cmodel->type = GWY_GRAPHER_CURVE_LINE;
     cmodel->ydata = dline->data;
@@ -471,7 +470,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 
     gwy_grapher_model_remove_all_curves(controls->gmodel);
     gwy_grapher_model_add_curve(controls->gmodel, cmodel);
-    gwy_grapher_clear_selection(controls->graph);
+    gwy_grapher_clear_selection(GWY_GRAPHER(controls->graph));
    
     if (args->update) update_view(controls, args);
     
@@ -486,7 +485,7 @@ graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
     gdouble *selection;
 
     /*get graph selection*/
-    nofselection = gwy_grapher_get_selection_number(pcontrols->graph);
+    nofselection = gwy_grapher_get_selection_number(GWY_GRAPHER(pcontrols->graph));
     if (nofselection == 0)
     {
         restore_ps(pcontrols, args);
@@ -494,7 +493,7 @@ graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
     else
     {
         selection = (gdouble *)g_malloc(2*nofselection*sizeof(gdouble));
-        gwy_grapher_get_selection(pcontrols->graph, selection);
+        gwy_grapher_get_selection(GWY_GRAPHER(pcontrols->graph), selection);
     
         /*setup weights for inverse FFT computation*/
         if (args->weights == NULL) args->weights = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
@@ -569,6 +568,7 @@ fftf_1d_do(Fftf1dControls *controls,
             
 }
 
+
 /*display mode menu*/
 static GtkWidget*  
 menu_suppress(GCallback callback, gpointer cbdata, GwyFftf1dSuppressType current)
@@ -617,7 +617,7 @@ suppress_changed_cb(GObject *item, Fftf1dArgs *args)
     }
     else
         gtk_widget_set_sensitive(pcontrols->menu_view_type, TRUE);
-    graph_selected(GWY_GRAPHER(pcontrols->graph)->area, args);
+    graph_selected(GWY_GRAPHER_AREA(GWY_GRAPHER(pcontrols->graph)->area), args);
     update_view(pcontrols, args);
 }
 
@@ -625,7 +625,7 @@ static void
 view_type_changed_cb(GObject *item, Fftf1dArgs *args)
 {
     args->view_type = GPOINTER_TO_INT(g_object_get_data(item, "view-type"));
-    graph_selected(GWY_GRAPHER(pcontrols->graph)->area, args);
+    graph_selected(GWY_GRAPHER_AREA(GWY_GRAPHER(pcontrols->graph)->area), args);
     update_view(pcontrols, args);
 }
 
