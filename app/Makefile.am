@@ -12,22 +12,24 @@ libtools = tools/libtools.la
 bin_PROGRAMS = gwyddion
 
 noinst_HEADERS = \
-	init.h \
+	about.h \
+	app.h \
+	arith.h \
 	file.h \
+	init.h \
 	menu.h \
 	meta.h \
-	settings.h \
-	arith.h \
-	app.h
+	settings.h
 
 gwyddion_SOURCES = \
-	init.c \
-	file.c \
-	meta.c \
-	menu.c \
-	settings.c \
+	about.c \
+	app.c \
 	arith.c \
-	app.c
+	file.c \
+	init.c \
+	menu.c \
+	meta.c \
+	settings.c
 
 gwyddion_LDADD = \
 	$(libgwyddion) \

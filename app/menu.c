@@ -9,6 +9,7 @@
 #include "file.h"
 #include "arith.h"
 #include "meta.h"
+#include "about.h"
 #include "menu.h"
 
 static GQuark sensitive_key = 0;
@@ -89,6 +90,8 @@ gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
         { "/Externs/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/Externs/Module browser...", NULL, gwy_module_browser, 0, "<Item>", NULL },
         { "/Externs/Metadata browser...", NULL, gwy_app_meta_browser, 0, "<Item>", NULL },
+        { "/Externs/---", NULL, NULL, 0, "<Separator>", NULL },
+        { "/Externs/About...", NULL, gwy_app_about, 0, "<Item>", NULL },
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;

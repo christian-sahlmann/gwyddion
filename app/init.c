@@ -1,5 +1,7 @@
 /* @(#) $Id$ */
 
+#include "config.h"
+
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
@@ -24,7 +26,7 @@ gwy_type_init(void)
     optimization_fooler += gwy_palette_def_get_type();
     optimization_fooler += gwy_container_get_type();
 
-    g_set_application_name(_("Gwyddion"));
+    g_set_application_name(_(PACKAGE_NAME));
     gwy_palette_def_setup_presets();
     gwy_stock_register_stock_items();
 }
