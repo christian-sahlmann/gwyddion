@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     "slope_dist",
     N_("Slope distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.5.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -500,8 +500,7 @@ make_datafield(GwyDataField *old,
                gdouble real, gboolean logscale)
 {
     GwyDataField *dfield;
-    GwySIUnit *unit;
-    gchar *xyu, *zu, *u;
+    GwySIUnit *unit, *uz, *uxy;
     gdouble *d;
     gint i;
 
@@ -511,19 +510,11 @@ make_datafield(GwyDataField *old,
     gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
 
-    zu = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_z(old));
-    xyu = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_xy(old));
-    if (!strcmp(zu, xyu))
-        unit = GWY_SI_UNIT(gwy_si_unit_new(""));
-    else {
-        u = g_strconcat(zu, "/", xyu, NULL);
-        unit = GWY_SI_UNIT(gwy_si_unit_new(u));
-        g_free(u);
-    }
-
+    uz = gwy_data_field_get_si_unit_z(old);
+    uxy = gwy_data_field_get_si_unit_xy(old);
+    unit = GWY_SI_UNIT(gwy_si_unit_new(""));
+    gwy_si_unit_divide(uz, uxy, unit);
     gwy_data_field_set_si_unit_xy(dfield, unit);
-    g_free(xyu);
-    g_free(zu);
     g_object_unref(unit);
 
     d = gwy_data_field_get_data(dfield);
