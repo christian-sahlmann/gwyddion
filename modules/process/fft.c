@@ -313,7 +313,6 @@ fft_dialog(FFTArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-    double ble;
     controls.preserve = gtk_check_button_new_with_label("preserve size");
     gwy_table_attach_row(table, 0, _("Data size treatment:"), "",
                          controls.preserve);
