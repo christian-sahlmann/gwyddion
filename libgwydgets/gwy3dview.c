@@ -1767,7 +1767,7 @@ gwy_3d_make_normals(GwyDataField * data, Gwy3DVector *normals)
 
 static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
 {
-   gint i, j, xres, yres;
+   gint i, j, xres, yres, res;
    GLdouble zdifr;
    Gwy3DVector * normals;
    GwyPaletteDef * pal_def;
@@ -1779,12 +1779,13 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
 
    xres = gwy_data_field_get_xres(data);
    yres = gwy_data_field_get_yres(data);
+   res  = xres > yres ? xres : yres;
    pal_def = gwy_palette_get_palette_def(gwy3D->palette);
 
    glNewList(gwy3D->shape_list_base + shape, GL_COMPILE);
       glPushMatrix();
-      glTranslatef(-1.0, -1.0, GWY_3D_Z_DISPLACEMENT);
-      glScalef(2.0/xres, 2.0/yres,
+      glTranslatef(-(xres / (double)res), -(yres / (double)res), GWY_3D_Z_DISPLACEMENT);
+      glScalef(2.0/res, 2.0/res,
                GWY_3D_Z_TRANSFORMATION / (gwy3D->data_max - gwy3D->data_min) );
       glTranslatef(0.0, 0.0, -gwy3D->data_min);
       zdifr = 1.0/(gwy3D->data_max - gwy3D->data_min);
@@ -1827,24 +1828,30 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
 
 static void gwy_3d_draw_axes(Gwy3DView * widget)
 {
-    GLfloat rx = widget->rot_x->value
-                 - ((int)(widget->rot_x->value / 360.0)) * 360.0;
-    GLfloat Ax, Ay, Bx, By, Cx, Cy;
-    gboolean yfirst = TRUE;
-    gint xres = gwy_data_field_get_xres(widget->data);
-    gint yres = gwy_data_field_get_yres(widget->data);
-    GwyGLMaterial *mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
-
+    GLfloat rx, Ax, Ay, Bx, By, Cx, Cy;
+    gint xres, yres, res;
+    gboolean yfirst;
+    GwyGLMaterial *mat_none;
+    
     gwy_debug(" ");
 
+    xres = gwy_data_field_get_xres(widget->data);
+    yres = gwy_data_field_get_yres(widget->data);
+    res  = xres > yres ? xres : yres;
+       
+    Ax = Ay = Bx = By = Cx = Cy = 0.0f;
+    yfirst = TRUE;
+    rx = widget->rot_x->value
+                 - ((int)(widget->rot_x->value / 360.0)) * 360.0;
     if (rx < 0.0)
         rx += 360.0;
-    Ax = Ay = Bx = By = Cx = Cy = 0.0f;
-
+        
+    mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
+    
     glPushMatrix();
-    glTranslatef(-1.0, -1.0, GWY_3D_Z_DISPLACEMENT);
-    glScalef(2.0/ xres,
-             2.0/ yres,
+    glTranslatef(-(xres / (double)res), -(yres / (double)res), GWY_3D_Z_DISPLACEMENT);
+    glScalef(2.0/ res,
+             2.0/ res,
              GWY_3D_Z_TRANSFORMATION / (widget->data_max - widget->data_min));
     glMaterialfv(GL_FRONT, GL_AMBIENT,  mat_none->ambient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
@@ -1859,7 +1866,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
         } else if (rx > 90.0 && rx <= 180.0) {
             Ax = xres;
             Ay = yres;
-            By = xres;
+            By = yres;
             yfirst = FALSE;
         } else if (rx > 180.0 && rx <= 270.0) {
             Ax = xres;
