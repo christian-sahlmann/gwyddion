@@ -521,10 +521,10 @@ gwy_layer_select_get_selection(GwyVectorLayer *layer,
         return FALSE;
 
     if (selection) {
-        selection[0] = select_layer->x0;
-        selection[1] = select_layer->y0;
-        selection[2] = select_layer->x1;
-        selection[3] = select_layer->y1;
+        selection[0] = MIN(select_layer->x0, select_layer->x1);
+        selection[1] = MIN(select_layer->y0, select_layer->y1);
+        selection[2] = MAX(select_layer->x0, select_layer->x1);
+        selection[3] = MAX(select_layer->y0, select_layer->y1);
     }
 
     return TRUE;
