@@ -10,7 +10,8 @@ tools_PROGRAMS = \
 	pointer.so \
 	profile.so \
 	stats.so \
-	sfunctions.so
+	sfunctions.so \
+        filter.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -32,6 +33,9 @@ stats_so_LDFLAGS = $(module_ldflags),stats.so
 
 sfunctions_so_SOURCES = sfunctions.c
 sfunctions_so_LDFLAGS = $(module_ldflags),sfunctions.so
+
+filter_so_SOURCES = filter.c
+filter_so_LDFLAGS = $(module_ldflags),filter.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"

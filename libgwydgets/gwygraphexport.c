@@ -41,7 +41,11 @@ gwy_graph_export_ascii(GwyGraph *graph, char *filename)
     {
         pcurve = g_ptr_array_index (graph->area->curves, i);
         if (maxj<pcurve->data.N) maxj = pcurve->data.N;
-        fprintf(fw, "x%d           y%d           ", i+1, i+1);
+        fprintf(fw, "x%d ", i+1);
+        if (graph->has_x_unit) fprintf(fw, "[%s]       ", graph->x_unit);
+        fprintf(fw, "y%d ", i+1);
+        if (graph->has_y_unit) fprintf(fw, "[%s]       ", graph->y_unit);
+         
     }
     fprintf(fw, "\n");
     
