@@ -122,18 +122,23 @@ clean-local:
 
 if MAINTAINER_MODE
 enum_headers = gwydgetenums.h
+stamp_files = stamp-gwyprocessenums.h
 
 MAINTAINERCLEANFILES = $(built_sources) $(stamp_files)
 
 BUILT_SOURCES = $(built_sources)
 
-gwydgettypes.h: $(enum_headers) gwydgettypes.h.template
+gwydgettypes.h: stamp-gwydgettypes.h
+	@true
+
+stamp-gwydgettypes.h: $(enum_headers) gwydgettypes.h.template
 	( cd $(srcdir) \
 	  && glib-mkenums --template gwydgettypes.h.template $(enum_headers) ) \
 	| sed -e 's/_3_D/_3D_/g' >gwydgettypes.h.xgen \
 	&& (cmp -s gwydgettypes.h.xgen gwydgettypes.h \
 		|| cp gwydgettypes.h.xgen gwydgettypes.h ) \
-	&& rm -f gwydgettypes.h.xgen
+	&& rm -f gwydgettypes.h.xgen \
+	&& echo timestamp >stamp-gwydgettypes.h
 
 gwydgettypes.c: $(enum_headers) gwydgettypes.c.template
 	( cd $(srcdir) \
