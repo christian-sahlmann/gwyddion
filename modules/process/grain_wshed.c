@@ -200,7 +200,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gwy_table_attach_spinbutton(table, 4, _("Threshold [size in pixels]"), _(""),
                                 controls.entry_locate_thresh);
 
-    controls.entry_wshed_steps = gtk_adjustment_new(args->wshed_steps, 0.0, 100.0, 0.1, 5, 0);
+    controls.entry_wshed_steps = gtk_adjustment_new(args->wshed_steps, 0.0, 1000.0, 0.1, 5, 0);
     gwy_table_attach_spinbutton(table, 6, _("Number of steps"), _(""),
                                 controls.entry_wshed_steps);
     controls.entry_wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize, 0.0, 100.0, 0.1, 5, 0);
