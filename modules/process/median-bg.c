@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     "median_bg",
     N_("Rank-based background removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -181,9 +181,10 @@ median_dialog(MedianBgArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(5, 3, FALSE);
+    table = gtk_table_new(5, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
@@ -194,9 +195,9 @@ median_dialog(MedianBgArgs *args)
     q = args->pixelsize/args->valform.magnitude;
     gwy_debug("q = %f", q);
     controls.radius = gtk_adjustment_new(q*args->size, q, 16384*q, q, 10*q, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Real _radius:"),
-                                       args->valform.units,
-                                       controls.radius);
+    spin = gwy_table_attach_hscale(table, row, _("Real _radius:"),
+                                   args->valform.units,
+                                   controls.radius, GWY_HSCALE_SQRT);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), args->valform.precision);
     g_object_set_data(G_OBJECT(controls.radius), "controls", &controls);
     g_signal_connect(controls.radius, "value_changed",
@@ -204,10 +205,8 @@ median_dialog(MedianBgArgs *args)
     row++;
 
     controls.size = gtk_adjustment_new(args->size, 1, 16384, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Pixel radius:"), _("px"),
-                                       controls.size);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
+    spin = gwy_table_attach_hscale(table, row, _("_Pixel radius:"), "px",
+                                   controls.size, GWY_HSCALE_SQRT);
     g_object_set_data(G_OBJECT(controls.size), "controls", &controls);
     g_signal_connect(controls.size, "value_changed",
                      G_CALLBACK(size_changed_cb), args);
@@ -216,7 +215,7 @@ median_dialog(MedianBgArgs *args)
     controls.do_extract
         = gtk_check_button_new_with_mnemonic(_("E_xtract background"));
     gtk_table_attach(GTK_TABLE(table), controls.do_extract,
-                     0, 3, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_extract),
                                  args->do_extract);
     g_signal_connect(controls.do_extract, "toggled",
