@@ -64,8 +64,9 @@ struct _GwyVectorLayerClass {
     gboolean (*key_release)(GwyVectorLayer *layer, GdkEventKey *event);
     /* signal functions */
     void (*selection_finished)(GwyVectorLayer *layer);
-    /* other */
+    /* selection */
     gint (*get_nselected)(GwyVectorLayer *layer);
+    gint (*get_selection)(GwyVectorLayer *layer, gdouble *selection);
     void (*unselect)(GwyVectorLayer *layer);
 };
 
@@ -84,6 +85,8 @@ gboolean         gwy_vector_layer_key_release          (GwyVectorLayer *layer,
                                                         GdkEventKey *event);
 void             gwy_vector_layer_selection_finished   (GwyVectorLayer *layer);
 gint             gwy_vector_layer_get_nselected        (GwyVectorLayer *layer);
+gint             gwy_vector_layer_get_selection        (GwyVectorLayer *layer,
+                                                        gdouble *selection);
 void             gwy_vector_layer_unselect             (GwyVectorLayer *layer);
 GtkUpdateType    gwy_vector_layer_get_update_policy    (GwyVectorLayer *layer);
 void             gwy_vector_layer_set_update_policy    (GwyVectorLayer *layer,

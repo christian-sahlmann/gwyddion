@@ -124,6 +124,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 
     klass->selection_finished = NULL;
     klass->get_nselected = NULL;
+    klass->get_selection = NULL;
     klass->unselect = NULL;
 
     vector_layer_signals[SELECTION_FINISHED] =
@@ -355,6 +356,36 @@ gwy_vector_layer_get_nselected(GwyVectorLayer *layer)
     g_assert(layer_class);
     if (layer_class->get_nselected)
         return layer_class->get_nselected(layer);
+    return FALSE;
+}
+
+/**
+ * gwy_vector_layer_get_selection:
+ * @layer: A vector data view layer.
+ * @selection: An array where the coordinates should be stored in, or %NULL
+ *            (to get only the number of selected lines, you can use
+ *             gwy_vector_layer_get_nselected() instead).  If not %NULL it
+ *             must be long enough to hold all the coordinates.
+ *
+ * Obtains the selection.
+ *
+ * The selection is a sequence of coordinates whose precise interpretation
+ * is layer-dependent.
+ *
+ * Returns: The number of selected objects (the same value as
+ *          gwy_vector_layer_get_nselected() returns).  Usually this is NOT
+ *          the number of coordinates in @selection (a point takes two
+ *          coordinates, a line four)
+ **/
+gint
+gwy_vector_layer_get_selection(GwyVectorLayer *layer,
+                               gdouble *selection)
+{
+    GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
+
+    g_assert(layer_class);
+    if (layer_class->get_selection)
+        return layer_class->get_selection(layer, selection);
     return FALSE;
 }
 
