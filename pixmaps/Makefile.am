@@ -28,6 +28,7 @@ pixmapdata_DATA = \
 	gwy_none-24.png \
 	gwy_pointer-24.png \
 	gwy_pointer_measure-24.png \
+	gwy_polynom_remove-24.png \
 	gwy_profile-24.png \
 	gwy_rotate-24.png \
 	gwy_scale-24.png \

@@ -49,6 +49,7 @@ extern "C" {
 #define GWY_STOCK_NONE            "gwy_none"
 #define GWY_STOCK_POINTER         "gwy_pointer"
 #define GWY_STOCK_POINTER_MEASURE "gwy_pointer_measure"
+#define GWY_STOCK_POLYNOM_REMOVE  "gwy_polynom_remove"
 #define GWY_STOCK_PROFILE         "gwy_profile"
 #define GWY_STOCK_ROTATE          "gwy_rotate"
 #define GWY_STOCK_SCALE           "gwy_scale"

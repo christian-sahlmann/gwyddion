@@ -11,7 +11,7 @@ tools_PROGRAMS = \
 	profile.so \
 	stats.so \
 	sfunctions.so \
-        filter.so \
+	filter.so \
 	polynom.so
 
 EXTRA_DIST = \

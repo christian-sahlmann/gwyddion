@@ -100,7 +100,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
         "polynom",
-        GWY_STOCK_FILTER,
+        GWY_STOCK_POLYNOM_REMOVE,
         "Fit X or Y profiles by polynom",
         14,
         use,
