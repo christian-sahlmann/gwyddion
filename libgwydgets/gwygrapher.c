@@ -45,6 +45,8 @@ static void     gwy_grapher_make_curve_data      (GwyGrapher *grapher,
                                                 gint n);
 static void     gwy_grapher_synchronize          (GwyGrapher *grapher);
 static void     zoomed_cb                      (GtkWidget *widget);
+static void     rescaled_cb                    (GtkWidget *widget,
+                                                GwyGrapher *grapher);
 
 static GtkWidgetClass *parent_class = NULL;
 
@@ -149,6 +151,10 @@ gwy_grapher_init(GwyGrapher *grapher)
     grapher->axis_bottom = GWY_AXISER(gwy_axiser_new(GWY_AXISER_NORTH, 2.24, 5.21, "x"));
     grapher->axis_left = GWY_AXISER(gwy_axiser_new(GWY_AXISER_EAST, 100, 500, "y"));
     grapher->axis_right = GWY_AXISER(gwy_axiser_new(GWY_AXISER_WEST, 100, 500, "y"));
+
+    g_signal_connect(grapher->axis_left, "rescaled", G_CALLBACK(rescaled_cb), grapher);
+    g_signal_connect(grapher->axis_bottom, "rescaled", G_CALLBACK(rescaled_cb), grapher);
+    
 
     gtk_table_attach(GTK_TABLE (grapher), GTK_WIDGET(grapher->axis_top), 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
@@ -652,5 +658,20 @@ gwy_grapher_change_model(GwyGrapher *grapher, gpointer *gmodel)
     grapher->grapher_model = gmodel;
     gwy_grapher_area_change_model(grapher->area, gmodel);
 }
+
+static void     
+rescaled_cb(GtkWidget *widget, GwyGrapher *grapher)
+{   
+    GwyGrapherModel *model;
+    if (grapher->grapher_model == NULL) return;
+    model = GWY_GRAPHER_MODEL(grapher->grapher_model);
+    model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
+    model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
+    model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
+    model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
+
+    gwy_grapher_area_refresh(grapher->area);
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

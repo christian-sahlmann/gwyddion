@@ -33,6 +33,7 @@
 
 enum {
     LABEL_UPDATED,
+    RESCALED,
     LAST_SIGNAL
 };
 
@@ -137,12 +138,21 @@ gwy_axiser_class_init(GwyAxiserClass *klass)
     widget_class->button_release_event = gwy_axiser_button_release;
 
     klass->label_updated = NULL;
+    klass->rescaled = NULL;
 
     axiser_signals[LABEL_UPDATED] =
         g_signal_new("label_updated",
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyAxiserClass, label_updated),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
+    axiser_signals[RESCALED] =
+        g_signal_new("rescaled",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyAxiserClass, rescaled),
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
@@ -858,6 +868,12 @@ gwy_axiser_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
 }
 
 
+void        
+gwy_axiser_signal_rescaled(GwyAxiser *axiser)
+{
+    g_signal_emit(axiser, axiser_signals[RESCALED], 0);
+}
+
 static gdouble
 gwy_axiser_dbl_raise(gdouble x, gint y)
 {
@@ -929,7 +945,7 @@ gwy_axiser_normalscale(GwyAxiser *a)
     if (majorbase > a->reqmin) {
         majorbase -= tickstep;
         minorbase = majorbase;
-        a->min = majorbase;
+        a->min = majorbase; 
     }
     else
         a->min = a->reqmin;
@@ -945,9 +961,9 @@ gwy_axiser_normalscale(GwyAxiser *a)
         majorbase += tickstep;
         i++;
     } while ((majorbase - tickstep) < a->reqmax /*&& i< a->par.major_maxticks*/);
-/*printf("majorbase=%f, tickstep=%f, reqmax=%f\n", majorbase, tickstep, a->reqmax);*/
     a->max = majorbase - tickstep;
-
+    
+    
     i = 0;
     /*minor tics*/
     do {
@@ -960,7 +976,6 @@ gwy_axiser_normalscale(GwyAxiser *a)
 
     return 0;
 }
-
 
 static gint
 gwy_axiser_logscale(GwyAxiser *a)
@@ -1052,6 +1067,7 @@ gwy_axiser_scale(GwyAxiser *a)
     gwy_axiser_formatticks(a);
     /*precompute screen coordinates of ticks (must be done after each geometry change)*/
 
+    gwy_axiser_signal_rescaled(a);
     return 0;
 }
 

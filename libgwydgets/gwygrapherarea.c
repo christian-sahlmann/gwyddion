@@ -395,15 +395,6 @@ gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
 
     model = GWY_GRAPHER_MODEL(area->grapher_model);
     cmap = gdk_colormap_get_system();
-
-    /*draw continuous selection*/
-    if (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL)
-        gwy_grapher_draw_selection_areas(drawable,
-                                         gc, &specs,
-                                         (GwyGrapherDataArea *)area->areasdata->data_areas->data, 
-                                         area->areasdata->data_areas->len);
-    
-    /*draw curves*/
     specs.xmin = 0;
     specs.ymin = 0;
     specs.height = height;
@@ -413,7 +404,15 @@ gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     specs.real_width = model->x_max - model->x_min;
     specs.real_height = model->y_max - model->y_min;
     specs.log_x = specs.log_y = FALSE;
-   
+
+    /*printf("x axis: %g ... %g,    y axis: %g ... %g\n", model->x_min, model->x_max, model->y_min, model->y_max);*/
+    /*draw continuous selection*/
+    if (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL)
+        gwy_grapher_draw_selection_areas(drawable,
+                                         gc, &specs,
+                                         (GwyGrapherDataArea *)area->areasdata->data_areas->data, 
+                                         area->areasdata->data_areas->len);
+    
     for (i=0; i<model->ncurves; i++)
     {
         curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
@@ -766,7 +765,7 @@ gwy_grapher_area_find_curve(GwyGrapherArea *area, gdouble x, gdouble y)
         {
             if (curvemodel->xdata[j] <= x && curvemodel->xdata[j + 1] >= x)
             {
-                distance = fabs(y - (x - curvemodel->xdata[j + 1])*
+                distance = fabs(y - curvemodel->ydata[j] + (x - curvemodel->xdata[j])*
                                 (curvemodel->ydata[j + 1] - curvemodel->ydata[j])/
                                 (curvemodel->xdata[j + 1] - curvemodel->xdata[j]));
                 if (distance < closestdistance) {
@@ -776,9 +775,8 @@ gwy_grapher_area_find_curve(GwyGrapherArea *area, gdouble x, gdouble y)
                 break;
             }
         }
-        printf("curve %d: dist = %g\n", i, distance);
     }
-    if (data_to_scr_y(area, closestdistance) < 20) return closestid;
+    if (fabs(closestdistance/(model->y_max - model->y_min)) < 0.05) return closestid;
     else return -1;
 }
 

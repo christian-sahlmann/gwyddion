@@ -38,7 +38,7 @@ x_data_to_pixel(GwyGrapherActiveAreaSpecs *specs, gdouble data)
 static gint 
 y_data_to_pixel(GwyGrapherActiveAreaSpecs *specs, gdouble data)
 {
-    return specs->ymin + (gint)(data - specs->real_ymin)
+    return specs->ymin + specs->height - (gint)(data - specs->real_ymin)
          /(specs->real_height)*((gdouble)specs->height-1);
 }
 

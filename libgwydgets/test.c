@@ -56,8 +56,8 @@ main(int argc, char *argv[])
     double xv[20];
     double yv[20];
          
-    for (i=0; i<100; i++){xs[i]=i-7; xp[i]=i; ys[i]=(double)i*i/40; 
-        yp[i]=20*sin((double)i*15/100);
+    for (i=0; i<100; i++){xs[i]=i-7; xp[i]=i; ys[i]= 100 + (double)i*i/40; 
+        yp[i]=50 + 20*sin((double)i*15/100);
         
         if (i<20) {
             xv[i]=5.0*i + 12;

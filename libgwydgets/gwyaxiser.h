@@ -115,7 +115,8 @@ struct _GwyAxiserClass {
     GtkWidgetClass parent_class;
 
     void (*label_updated)(GwyAxiser *axiser);
-
+    void (*rescaled)(GwyAxiser *axiser);
+        
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -148,6 +149,7 @@ void        gwy_axiser_set_unit           (GwyAxiser *axiser,
                                          char *unit);
 void        gwy_axiser_enable_label_edit  (GwyAxiser *axiser,
                                          gboolean enable);
+void        gwy_axiser_signal_rescaled   (GwyAxiser *axiser);
 
 G_END_DECLS
 
