@@ -237,7 +237,7 @@ update_labels(GwyUnitoolState *state)
     gdouble lines[4*NPROFILE];
     GPtrArray *positions;
     gchar buffer[64];
-    gint i, j;
+    gint i;
     gint nselected = 0;
 
     gwy_debug("");
@@ -248,28 +248,24 @@ update_labels(GwyUnitoolState *state)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     positions = controls->positions;
 
-    j = 0;
     gwy_debug("%d lines", nselected);
-    for (i = 0; i < 2*NPROFILE; i++) {
-        if (i < 2*nselected) {
-            g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
-                       (gint)gwy_data_field_rtoj(dfield, lines[j]),
-                       (gint)gwy_data_field_rtoi(dfield, lines[j+1]));
-            j += 2;
-            gtk_label_set_text(GTK_LABEL(positions->pdata[i+1]), buffer);
-
+    for (i = 0; i < NPROFILE; i++) {
+        if (i < nselected) {
             g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
-                       (gint)gwy_data_field_rtoj(dfield, lines[j]),
-                       (gint)gwy_data_field_rtoi(dfield, lines[j+1]));
-            j += 2;
-            gtk_label_set_text(GTK_LABEL(positions->pdata[i]), buffer);
-            i++;
+                       (gint)gwy_data_field_rtoj(dfield, lines[4*i]),
+                       (gint)gwy_data_field_rtoi(dfield, lines[4*i+1]));
+            gtk_label_set_text(GTK_LABEL(positions->pdata[2*i]), buffer);
+
+            g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
+                       (gint)gwy_data_field_rtoj(dfield, lines[4*i+2]),
+                       (gint)gwy_data_field_rtoi(dfield, lines[4*i+3]));
+            gtk_label_set_text(GTK_LABEL(positions->pdata[2*i+1]), buffer);
         }
         else {
             g_snprintf(buffer, sizeof(buffer), " ");
-            gtk_label_set_text(GTK_LABEL(positions->pdata[i++]), buffer);
+            gtk_label_set_text(GTK_LABEL(positions->pdata[2*i]), buffer);
             g_snprintf(buffer, sizeof(buffer), " ");
-            gtk_label_set_text(GTK_LABEL(positions->pdata[i]), buffer);
+            gtk_label_set_text(GTK_LABEL(positions->pdata[2*i+1]), buffer);
         }
     }
 }
