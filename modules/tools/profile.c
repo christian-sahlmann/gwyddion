@@ -172,8 +172,15 @@ profile_dialog_create(GwyDataView *data_view)
                                          NULL);
     g_signal_connect(dialog, "delete_event",
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
+
+
+    gtk_dialog_add_button(dialog, "Clear selection", 1);
+    
     response_id = g_signal_connect(dialog, "response",
                                    G_CALLBACK(profile_dialog_response_cb), NULL);
+
+    
+    
     table = gtk_table_new(2, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
@@ -278,14 +285,6 @@ update_labels()
                );
         gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]), buffer); 
      }       
-                
-    /*
-    gchar buffer[16];
-
-    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
-               controls.precision, value/controls.mag, controls.units);
-    gtk_label_set_text(GTK_LABEL(label), buffer);
-    */
 }
 
 
@@ -348,6 +347,12 @@ profile_selection_updated_cb(void)
 }
 
 static void
+profile_clear(void)
+{
+    gwy_layer_lines_unselect(select_layer);
+}
+
+static void
 profile_dialog_response_cb(gpointer unused, gint response)
 {
     gwy_debug("%s: response %d", __FUNCTION__, response);
@@ -363,6 +368,10 @@ profile_dialog_response_cb(gpointer unused, gint response)
 
         case GTK_RESPONSE_APPLY:
         profile_do();
+        break;
+
+        case 1:
+        profile_clear();
         break;
 
         default:
