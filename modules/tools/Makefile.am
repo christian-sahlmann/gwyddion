@@ -8,7 +8,8 @@ tool_PROGRAMS = \
 	crop.so \
 	level3.so \
 	pointer.so \
-	profile.so
+	profile.so \
+	stats.so
 
 EXTRA_DIST = \
 	makefile.msc \
@@ -25,6 +26,9 @@ pointer_so_LDFLAGS = $(module_ldflags),pointer.so
 
 profile_so_SOURCES = profile.c
 profile_so_LDFLAGS = $(module_ldflags),profile.so
+
+stats_so_SOURCES = stats.c
+stats_so_LDFLAGS = $(module_ldflags),stats.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"

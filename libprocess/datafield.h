@@ -193,6 +193,10 @@ gdouble gwy_data_field_get_min(GwyDataField *a);
 gdouble gwy_data_field_get_avg(GwyDataField *a);
 gdouble gwy_data_field_get_rms(GwyDataField *a);
 gdouble gwy_data_field_get_sum(GwyDataField *a);
+gdouble gwy_data_field_get_ra(GwyDataField *a);
+gdouble gwy_data_field_get_skew(GwyDataField *a);
+gdouble gwy_data_field_get_kurtosis(GwyDataField *a);
+
 gdouble gwy_data_field_get_area_max(GwyDataField *a,
                                     gint ulcol,
                                     gint ulrow,
@@ -214,6 +218,21 @@ gdouble gwy_data_field_get_area_rms(GwyDataField *a,
                                     gint brcol,
                                     gint brrow);
 gdouble gwy_data_field_get_area_sum(GwyDataField *a,
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
+gdouble gwy_data_field_get_area_ra(GwyDataField *a,
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
+gdouble gwy_data_field_get_area_skew(GwyDataField *a,
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
+gdouble gwy_data_field_get_area_kurtosis(GwyDataField *a,
                                     gint ulcol,
                                     gint ulrow,
                                     gint brcol,
@@ -372,6 +391,23 @@ void gwy_data_field_cwt(GwyDataField *data_field,
 void gwy_data_field_shade(GwyDataField *data_field, GwyDataField *target_field,
 			  gdouble theta, gdouble phi);
 
+void gwy_data_field_get_stats(GwyDataField *data_field, 
+                              gdouble *avg, 
+                              gdouble *ra, 
+                              gdouble *rms, 
+                              gdouble *skew, 
+                              gdouble *kurtosis);
+
+void gwy_data_field_get_area_stats(GwyDataField *data_field,
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow,
+   		                    gdouble *avg, 
+				    gdouble *ra,
+				    gdouble *rms, 
+                                    gdouble *skew, 
+                                    gdouble *kurtosis);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
