@@ -141,7 +141,7 @@ gwy_toolbox_destroy(GtkObject *object)
  * @tooltip_text: Widget tooltip text.
  * @tooltip_private_text: Private tooltip text (deprecated).
  * @stock_id: Icon stock id.
- * @callback: Widget activation callback.
+ * @callback: Widget activation callback.  The callback is connected swapped.
  * @user_data: User data to pass to @callback.
  *
  * Adds a widget to toolbox.
