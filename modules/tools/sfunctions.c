@@ -477,7 +477,7 @@ sfunctions_selection_updated_cb(void)
                                           controls.dir,
                                           controls.interp,
                                           GWY_WINDOWING_HANN,
-                                          10)) 
+                                          100)) 
     {
 
         /*this is to prevent problems with numbers as 1e34 in axis widget. FIXME by using appropriate units*/
@@ -501,7 +501,7 @@ sfunctions_selection_updated_cb(void)
         update_labels();
         
         g_free(z_unit);
-  
+ 
     }
     g_free(x_unit);
     g_string_free(lab, TRUE);
