@@ -25,6 +25,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/datafield.h>
 #include "gwydataview.h"
 
@@ -430,11 +431,13 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     src_width = gwy_data_field_get_xres(data_field);
     src_height = gwy_data_field_get_yres(data_field);
 
-    if (!data_view->base_pixbuf)
+    if (!data_view->base_pixbuf) {
         data_view->base_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
                                                 FALSE,
                                                 BITS_PER_SAMPLE,
                                                 src_width, src_height);
+        gwy_debug_objects_creation(G_OBJECT(data_view->base_pixbuf));
+    }
 
     if (data_view->pixbuf) {
         width = gdk_pixbuf_get_width(data_view->pixbuf);
@@ -459,6 +462,7 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
                                            FALSE,
                                            BITS_PER_SAMPLE,
                                            scwidth, scheight);
+        gwy_debug_objects_creation(G_OBJECT(data_view->pixbuf));
         gdk_pixbuf_fill(data_view->pixbuf, 0x00000000);
         gwy_data_view_paint(data_view);
     }
@@ -1103,6 +1107,7 @@ gwy_data_view_get_thumbnail(GwyDataView *data_view,
     g_return_val_if_fail(size > 0, NULL);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE,
                             BITS_PER_SAMPLE, size, size);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
     gdk_pixbuf_fill(pixbuf, 0x00000000);
     width = gdk_pixbuf_get_width(data_view->pixbuf);
     height = gdk_pixbuf_get_height(data_view->pixbuf);

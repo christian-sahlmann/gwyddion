@@ -33,6 +33,7 @@
 #include <gtk/gtkgl.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include "gwydgets.h"
 
 #define DIG_2_RAD (G_PI / 180.0)
@@ -982,6 +983,7 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview, guint xres, guint yres)
     height = GTK_WIDGET(gwy3dview)->allocation.height;
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, width, height);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
     n_channels = gdk_pixbuf_get_n_channels(pixbuf);
 
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);

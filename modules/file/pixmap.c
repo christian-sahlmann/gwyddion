@@ -1415,6 +1415,7 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
                             vrw + zwidth + 2*lw + 2*border
                             + gap + fmw + 2*lw + scw,
                             hrh + zheight + 2*lw + 2*border + border/3);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
     gdk_pixbuf_fill(pixbuf, 0xffffffff);
     gdk_pixbuf_scale(datapixbuf, pixbuf,
                      vrw + lw + border, hrh + lw + border,
@@ -1465,6 +1466,7 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     tmpixbuf = gdk_pixbuf_new_subpixbuf(pixbuf,
                                         vrw + border, hrh + border,
                                         lw, zheight + 2*lw);
+    gwy_debug_objects_creation(G_OBJECT(tmpixbuf));
     gdk_pixbuf_fill(tmpixbuf, 0x000000);
     gdk_pixbuf_copy_area(tmpixbuf, 0, 0, lw, zheight + 2*lw,
                          pixbuf, vrw + border + zwidth + lw, hrh + border);
@@ -1483,6 +1485,7 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     tmpixbuf = gdk_pixbuf_new_subpixbuf(pixbuf,
                                         vrw + border, hrh + border,
                                         zwidth + 2*lw, lw);
+    gwy_debug_objects_creation(G_OBJECT(tmpixbuf));
     gdk_pixbuf_fill(tmpixbuf, 0x000000);
     gdk_pixbuf_copy_area(tmpixbuf, 0, 0, zwidth + 2*lw, lw,
                          pixbuf, vrw + border, hrh + border + zheight + lw);

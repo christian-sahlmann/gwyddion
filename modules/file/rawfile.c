@@ -36,6 +36,7 @@
 #endif
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -629,6 +630,7 @@ rawfile_dialog_preview_box(RawFileControls *controls)
     gtk_box_pack_start(GTK_BOX(vbox), controls->preview, FALSE, FALSE, 0);
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 120, 120);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
     gdk_pixbuf_fill(pixbuf, 0);
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
     g_object_unref(pixbuf);
@@ -1389,10 +1391,12 @@ preview_cb(RawFileControls *controls)
     yres = gwy_data_field_get_yres(dfield);
     zoom = 120.0/MAX(xres, yres);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
     gwy_pixfield_do(pixbuf, dfield, controls->palette);
     pixbuf2 = gdk_pixbuf_scale_simple(pixbuf,
                                       ceil(xres*zoom), ceil(yres*zoom),
                                       GDK_INTERP_TILES);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf2));
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf2);
     g_object_unref(pixbuf2);
     g_object_unref(pixbuf);

@@ -25,6 +25,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include "gwygradsphere.h"
 
 #define GWY_GRAD_SPHERE_TYPE_NAME "GwyGradSphere"
@@ -493,6 +494,7 @@ gwy_grad_sphere_make_pixmap(GwyGradSphere *grad_sphere)
                                                     BITS_PER_SAMPLE,
                                                     2*radius + 1,
                                                     2*radius + 1);
+        gwy_debug_objects_creation(G_OBJECT(grad_sphere->sphere_pixbuf));
         gdk_pixbuf_fill(grad_sphere->sphere_pixbuf, 0x00000000);
         gwy_grad_sphere_paint(grad_sphere);
     }

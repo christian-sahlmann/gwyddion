@@ -25,6 +25,7 @@
 
 #include <glib-object.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwymath.h>
 
 #include "gwycoloraxis.h"
@@ -328,6 +329,7 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
     gwy_object_unref(axis->pixbuf);
     axis->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                                   width, height);
+    gwy_debug_objects_creation(G_OBJECT(axis->pixbuf));
 
     g_return_if_fail(GWY_IS_PALETTE(axis->palette));
     /*render pixbuf according to orientation*/

@@ -25,9 +25,7 @@
 #include <gtk/gtkoptionmenu.h>
 #include <gtk/gtkimagemenuitem.h>
 
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwyddion.h>
 #include <libdraw/gwypalette.h>
 #include "gwyoptionmenus.h"
 
@@ -179,6 +177,7 @@ gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, BITS_PER_SAMPLE,
                             PALETTE_SAMPLE_WIDTH, PALETTE_SAMPLE_HEIGHT);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     data = gdk_pixbuf_get_pixels(pixbuf);
 

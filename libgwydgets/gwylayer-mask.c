@@ -22,6 +22,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwypixfield.h>
 #include "gwylayer-mask.h"
 
@@ -243,6 +244,7 @@ gwy_layer_mask_plugged(GwyDataViewLayer *layer)
 
     pixmap_layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE,
                                           BITS_PER_SAMPLE, width, height);
+    gwy_debug_objects_creation(G_OBJECT(pixmap_layer->pixbuf));
 }
 
 static void

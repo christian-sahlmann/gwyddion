@@ -46,6 +46,7 @@
 #include <gtk/gtkdrawingarea.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwymath.h>
 #include "gwycolorbutton.h"
 
@@ -193,6 +194,7 @@ render(GwyColorButton *color_button)
             g_object_unref(color_button->pixbuf);
         color_button->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                                               width, height);
+        gwy_debug_objects_creation(G_OBJECT(color_button->pixbuf));
     }
 
 
@@ -360,6 +362,7 @@ gwy_color_button_init(GwyColorButton *color_button)
      */
     color_button->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                                           rect.width, rect.height);
+    gwy_debug_objects_creation(G_OBJECT(color_button->pixbuf));
 
     color_button->gc = NULL;
 
