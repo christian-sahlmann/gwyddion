@@ -1,0 +1,38 @@
+
+Data set on various gwyddion objects by main app (g_object_set_data()).
+May change, namely many may get some "gwy-app-" prefix.
+
+Toolbox (gwy_app_main_window_get()):
+    "accel_group":       The toolbox's main accelerator group
+    "<proc>":            `Data Process' menu widget
+    "toolbars":          GList of all toolbox toolbars
+    "menus":             GList of all toolbox menus
+
+Some item in "<proc>" menu:
+    "run-last-item":     Nonzero if the item is the `Last Used' menu item
+
+`Recent Files' menu items:
+    "filename":          The file name
+
+Toolbar show/hide buttons:
+    "arrow":             The arrow widget
+    "key":               Settings key holding visibility for this toolbox
+                         ("/app/toolbox/visible/SOMETHING")
+
+Toolbox menu items and buttons:
+    "sensitive":         The sensitivity flags that apply to this widget
+    "sensitive-state":   The current sensitivity flags
+
+Data containers:
+    "gwy-app-modified":  Integer modification level, 0 means unmodified
+    "gwy-app-undo":      GList of undo level data
+    "gwy-app-redo":      GList of redo level data
+
+File selectors:
+    "file-type":         The file type this file selector was run for
+    "data":              The data this file selector was created for
+    "window":            The data window this file selector was created for
+
+Tool dialog buttons:
+    "gwy-unitool-response-id":  Responde id's (if button created by unitool)
+
