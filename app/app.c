@@ -194,6 +194,12 @@ gwy_app_create_toolbox(void)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_run_process_func_cb),
                              "rotate");
+    button = gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SHADER,
+                                      "Shade data", NULL,
+                                      NULL, NULL, -1);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_run_process_func_cb),
+                             "shade");
 
     /***************************************************************/
     toolbar = gtk_toolbar_new();
@@ -205,23 +211,12 @@ gwy_app_create_toolbox(void)
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     grp = gwy_app_toolbar_append_tool(toolbar, NULL, GWY_STOCK_POINTER_MEASURE,
-                                      _("Pointer tooltip"),
+                                      _("Read values under mouse cursor"),
                                       gwy_tool_pointer_use);
+    current_tool_use_func = gwy_tool_pointer_use;
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_CROP,
-                                _("Crop tooltip"),
+                                _("Crop data"),
                                 gwy_tool_crop_use);
-
-    button = gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SHADER,
-                                      "Shade data", NULL,
-                                      NULL, NULL, -1);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_app_run_process_func_cb),
-                             "shade");
-
-    /*gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_SHADER,
-                                _("Shader tooltip"),
-                                NULL);
-                                */
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_FIT_TRIANGLE,
                                 _("Fit plane using three points"),
                                 gwy_tool_level3_use);
