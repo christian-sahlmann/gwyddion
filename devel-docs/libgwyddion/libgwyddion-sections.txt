@@ -10,6 +10,7 @@ gwy_si_unit_get_format
 gwy_si_unit_get_format_with_resolution
 gwy_si_unit_get_format_with_digits
 gwy_si_unit_get_unit_for_magnitude
+gwy_si_unit_value_format_free
 <SUBSECTION Standard>
 GWY_SI_UNIT
 GWY_IS_SI_UNIT
