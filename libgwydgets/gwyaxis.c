@@ -712,7 +712,7 @@ gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
         g_string_assign(axis->label_text, gwy_sci_text_get_text(dialog->sci_text));
         gtk_widget_queue_draw(GTK_WIDGET(axis));
     }
-    else if (arg1 == GTK_RESPONSE_CANCEL)
+    else if (arg1 == GTK_RESPONSE_CLOSE)
     {
         gtk_widget_hide(GTK_WIDGET(dialog));
     }

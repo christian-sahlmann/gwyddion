@@ -105,8 +105,8 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
     gwy_debug("%s", __FUNCTION__);
 
     dialog->sci_text = gwy_sci_text_new();
-    gtk_dialog_add_button(dialog, "Apply", GTK_RESPONSE_APPLY);
-    gtk_dialog_add_button(dialog, "Cancel", GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(dialog, GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
+    gtk_dialog_add_button(dialog, GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
     gtk_container_add (GTK_CONTAINER (GTK_DIALOG(dialog)->vbox), dialog->sci_text);
     
