@@ -42,7 +42,6 @@ typedef struct {
 
 typedef struct {
     gint power10;
-    gchar *origstr;
     GArray *units;
 } GwySIUnit2;
 
@@ -67,10 +66,6 @@ static GwySIUnit2* gwy_si_unit_canonicalize  (GwySIUnit2 *siunit);
 const gchar*       gwy_si_unit_prefix        (gint power);
 static gchar*  gwy_si_unit_format_as_plain_string(GwySIUnit2 *siunit,
                                                   const GwySIFormatStyle *fs);
-static gchar*     gwy_si_unit_format_plain   (GwySIUnit2 *siunit);
-static gchar*     gwy_si_unit_format_markup  (GwySIUnit2 *siunit);
-static gchar*     gwy_si_unit_format_backwoods(GwySIUnit2 *siunit);
-static gchar*     gwy_si_unit_format_TeX     (GwySIUnit2 *siunit);
 static GString*    gwy_si_unit_format        (GwySIUnit2 *siunit,
                                               const GwySIFormatStyle *fs);
 
@@ -93,12 +88,12 @@ static const GwyUnitTraits unit_traits[] = {
     { 0.0,   0 },    /* does not take prefixes */
 };
 
-/* Canonical form must be always first, because this table is used for reverse
- * mapping too */
 static const struct {
     const gchar *prefix;
     gint power10;
 }
+/* Canonical form must be always first, because this table is used for reverse
+ * mapping too */
 SI_prefixes[] = {
     { "k",     3  },
     { "c",    -2  },
@@ -221,6 +216,7 @@ gwy_si_unit_finalize(GObject *object)
     GwySIUnit *si_unit = (GwySIUnit*)object;
 
     gwy_debug("");
+    gwy_si_unit_free(g_object_get_data(object, "gwy-si-unit2"));
     g_free(si_unit->unitstr);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -312,6 +308,9 @@ gwy_si_unit_new(const char *unit_string)
     else
         siunit->unitstr = g_strdup(unit_string);
 
+    g_object_set_data((GObject*)siunit, "gwy-si-unit2",
+                      gwy_si_unit_parse(unit_string));
+
     return (GObject*)siunit;
 }
 
@@ -330,6 +329,9 @@ gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
 
     g_free(siunit->unitstr);
     siunit->unitstr = g_strdup(unit_string);
+    gwy_si_unit_free(g_object_get_data((GObject*)siunit, "gwy-si-unit2"));
+    g_object_set_data((GObject*)siunit, "gwy-si-unit2",
+                      gwy_si_unit_parse(unit_string));
 }
 
 /**
@@ -623,7 +625,8 @@ gwy_si_unit_value_format_free(GwySIValueFormat *format)
 static void
 gwy_si_unit_free(GwySIUnit2* siunit)
 {
-    g_free(siunit->origstr);
+    if (!siunit)
+        return;
     g_array_free(siunit->units, TRUE);
     g_free(siunit);
 }
@@ -644,7 +647,6 @@ gwy_si_unit_parse(const gchar *string)
         string = "";
 
     siunit = g_new0(GwySIUnit2, 1);
-    siunit->origstr = g_strdup(string);
     siunit->units = g_array_new(FALSE, FALSE, sizeof(GwySimpleUnit));
     siunit->power10 = 0;
 
@@ -862,7 +864,6 @@ gwy_si_unit_power(GwySIUnit2 *siunit1,
     gint j;
 
     siunit = g_new0(GwySIUnit2, 1);
-    siunit->origstr = NULL;
     siunit->units = g_array_new(FALSE, FALSE, sizeof(GwySimpleUnit));
     siunit->power10 = power1*siunit1->power10;
 
@@ -882,7 +883,6 @@ static GwySIUnit2*
 gwy_si_unit_canonicalize(GwySIUnit2 *siunit)
 {
     GwySimpleUnit *dst, *src;
-    gboolean kill_origstr = FALSE;
     gint i, j;
 
     /* consolidate multiple occurences of the same unit */
@@ -895,7 +895,6 @@ gwy_si_unit_canonicalize(GwySIUnit2 *siunit)
             if (src->unit == dst->unit) {
                 dst->power += src->power;
                 g_array_remove_index(siunit->units, i);
-                kill_origstr = TRUE;
                 break;
             }
         }
@@ -911,40 +910,10 @@ gwy_si_unit_canonicalize(GwySIUnit2 *siunit)
             i++;
         else {
             g_array_remove_index(siunit->units, i);
-            kill_origstr = TRUE;
         }
     }
 
-    if (kill_origstr) {
-        g_free(siunit->origstr);
-        siunit->origstr = NULL;
-    }
-
     return siunit;
-}
-
-static gchar*
-gwy_si_unit_format_plain(GwySIUnit2 *siunit)
-{
-    return gwy_si_unit_format_as_plain_string(siunit, &format_style_plain);
-}
-
-static gchar*
-gwy_si_unit_format_markup(GwySIUnit2 *siunit)
-{
-    return gwy_si_unit_format_as_plain_string(siunit, &format_style_markup);
-}
-
-static gchar*
-gwy_si_unit_format_backwoods(GwySIUnit2 *siunit)
-{
-    return gwy_si_unit_format_as_plain_string(siunit, &format_style_backwoods);
-}
-
-static gchar*
-gwy_si_unit_format_TeX(GwySIUnit2 *siunit)
-{
-    return gwy_si_unit_format_as_plain_string(siunit, &format_style_TeX);
 }
 
 static gchar*
