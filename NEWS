@@ -1,3 +1,8 @@
 
+1.0
+- data can be exported to bitmaps with rules, units, scale, etc.
+- physical unit handling was improved
+- tons of bugfixes
+
 0.99.1
 - release candidate 1 for v1.0
