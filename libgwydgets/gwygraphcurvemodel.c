@@ -118,6 +118,7 @@ static void
 gwy_graph_curve_model_init(GwyGraphCurveModel *gcmodel)
 {
     gwy_debug("");
+    gwy_debug_objects_creation((GObject*)gcmodel);
 
     gcmodel->n = 0;
     gcmodel->xdata = NULL;

@@ -124,6 +124,7 @@ static void
 gwy_graph_model_init(GwyGraphModel *gmodel)
 {
     gwy_debug("");
+    gwy_debug_objects_creation((GObject*)gmodel);
 
     gmodel->graph = NULL;
     gmodel->graph_destroy_hid = 0;
