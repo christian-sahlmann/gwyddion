@@ -163,7 +163,8 @@ aafm_load(const gchar *filename)
     p += 2*afmfile.res*afmfile.res;
     afmfile.range = get_FLOAT(&p);
     /* FIXME: just getting about the right order of magnitude... */
-    gwy_data_field_multiply(dfield, 3e-7/afmfile.range);
+    /*gwy_data_field_multiply(dfield, 3e-7/afmfile.range);*/
+    gwy_data_field_multiply(dfield, 1.25e-10*sqrt(afmfile.range*afmfile.real));
 
     unit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(unit));
