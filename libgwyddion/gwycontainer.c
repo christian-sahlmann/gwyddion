@@ -56,7 +56,7 @@ static void     gwy_container_serializable_init  (GwySerializableIface *iface);
 static void     gwy_container_class_init         (GwyContainerClass *klass);
 static void     gwy_container_init               (GwyContainer *container);
 static void     value_destroy_func               (gpointer data);
-static void     gwy_container_finalize           (GObject *obj);
+static void     gwy_container_finalize           (GObject *object);
 static gboolean gwy_container_try_set_one        (GwyContainer *container,
                                                   GQuark key,
                                                   GValue *value,
@@ -111,6 +111,7 @@ static guint    token_length                     (const gchar *text);
 static gchar*   dequote_token                    (const gchar *tok,
                                                   guint *len);
 
+static GObjectClass *parent_class = NULL;
 
 GType
 gwy_container_get_type(void)
@@ -166,6 +167,8 @@ gwy_container_class_init(GwyContainerClass *klass)
 
     gwy_debug("");
 
+    parent_class = g_type_class_peek_parent(klass);
+
     gobject_class->finalize = gwy_container_finalize;
 }
 
@@ -182,9 +185,9 @@ gwy_container_init(GwyContainer *container)
 }
 
 static void
-gwy_container_finalize(GObject *obj)
+gwy_container_finalize(GObject *object)
 {
-    GwyContainer *container = (GwyContainer*)obj;
+    GwyContainer *container = (GwyContainer*)object;
 
     gwy_debug("");
 
@@ -195,6 +198,8 @@ gwy_container_finalize(GObject *obj)
                          NULL);
     g_hash_table_destroy(container->objects);
     g_hash_table_destroy(container->values);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 /**

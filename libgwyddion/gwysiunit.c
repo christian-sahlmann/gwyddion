@@ -31,7 +31,7 @@
 
 static void        gwy_si_unit_class_init        (GwySIUnitClass *klass);
 static void        gwy_si_unit_init              (GwySIUnit *si_unit);
-static void        gwy_si_unit_finalize          (GwySIUnit *si_unit);
+static void        gwy_si_unit_finalize          (GObject *object);
 static void        gwy_si_unit_serializable_init (GwySerializableIface *iface);
 static GByteArray* gwy_si_unit_serialize         (GObject *obj,
                                                   GByteArray *buffer);
@@ -40,6 +40,8 @@ static GObject*    gwy_si_unit_deserialize       (const guchar *buffer,
                                                  gsize *position);
 static GObject*    gwy_si_unit_duplicate         (GObject *object);
 
+
+static GObjectClass *parent_class = NULL;
 
 GType
 gwy_si_unit_get_type(void)
@@ -97,7 +99,9 @@ gwy_si_unit_class_init(GwySIUnitClass *klass)
 
     gwy_debug("");
 
-    gobject_class->finalize = (GObjectFinalizeFunc)gwy_si_unit_finalize;
+    parent_class = g_type_class_peek_parent(klass);
+
+    gobject_class->finalize = gwy_si_unit_finalize;
 }
 
 static void
@@ -109,11 +113,15 @@ gwy_si_unit_init(GwySIUnit *si_unit)
 }
 
 static void
-gwy_si_unit_finalize(GwySIUnit *si_unit)
+gwy_si_unit_finalize(GObject *object)
 {
+    GwySIUnit *si_unit = (GwySIUnit*)object;
+
     gwy_debug("");
     g_free(si_unit->unitstr);
     si_unit->unitstr = NULL;
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static GByteArray*

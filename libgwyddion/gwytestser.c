@@ -29,7 +29,7 @@
 
 static void        gwy_test_ser_class_init        (GwyTestSerClass *klass);
 static void        gwy_test_ser_init              (GwyTestSer *test_ser);
-static void        gwy_test_ser_finalize          (GwyTestSer *test_ser);
+static void        gwy_test_ser_finalize          (GObject *object);
 static void        gwy_test_ser_serializable_init (GwySerializableIface *iface);
 static void        gwy_test_ser_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_test_ser_serialize         (GObject *obj,
@@ -38,6 +38,8 @@ static GObject*    gwy_test_ser_deserialize       (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
 static void        gwy_test_ser_value_changed     (GObject *test_ser);
+
+static GObjectClass *parent_class = NULL;
 
 GType
 gwy_test_ser_get_type(void)
@@ -107,7 +109,9 @@ gwy_test_ser_class_init(GwyTestSerClass *klass)
 
     gwy_debug("");
 
-    gobject_class->finalize = (GObjectFinalizeFunc)gwy_test_ser_finalize;
+    parent_class = g_type_class_peek_parent(klass);
+
+    gobject_class->finalize = gwy_test_ser_finalize;
 }
 
 static void
@@ -120,10 +124,14 @@ gwy_test_ser_init(GwyTestSer *test_ser)
 }
 
 static void
-gwy_test_ser_finalize(GwyTestSer *test_ser)
+gwy_test_ser_finalize(GObject *object)
 {
+    GwyTestSer *test_ser = (GwyTestSer*)object;
+
     gwy_debug("");
     g_free(test_ser->radius);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 GObject*
