@@ -227,7 +227,7 @@ tip_certainty_map_check(TipCertaintyMapArgs *args,
         dialog = gtk_message_dialog_new(GTK_WINDOW(tip_certainty_map_window),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_INFO,
-                                    GTK_BUTTONS_CLOSE,
+                                    GTK_BUTTONS_OK,
                                     _("Tip has different range/resolution "
                                       "ratio than image. Tip will be "
                                       "resampled."));
@@ -254,8 +254,8 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     /*result fields - after computation result should be at dfield */
+    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (gwy_container_contains_by_name(data, "/0/mask")) {
-        printf("mask found\n");
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/mask"));
     }
@@ -264,10 +264,12 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(dfield));
         g_object_unref(dfield);
     }
-    gwy_app_wait_start(GTK_WIDGET(args->win2), _("Initializing..."));
-    dfield = gwy_tip_cmap(dfield1, dfield2, dfield,
-                          gwy_app_wait_set_fraction,
-                          gwy_app_wait_set_message);
+    gwy_app_wait_start(GTK_WIDGET(args->win2), _("Initializing"));
+    if (!gwy_tip_cmap(dfield1, dfield2, dfield,
+                      gwy_app_wait_set_fraction,
+                      gwy_app_wait_set_message)) {
+        gwy_app_undo_undo_window(args->win2);
+    }
     gwy_app_wait_finish();
     /*set right output */
 

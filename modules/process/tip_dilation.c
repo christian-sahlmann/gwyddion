@@ -218,14 +218,17 @@ tip_dilation_check(TipDilationArgs *args,
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    if (fabs((dfield1->xreal/dfield1->xres)/(dfield2->xreal/dfield2->xres) - 1)>0.01
-        || fabs((dfield1->yreal/dfield1->yres)/(dfield2->yreal/dfield2->yres) - 1)>0.01)
-    {
+    if (fabs((dfield1->xreal/dfield1->xres)
+             /(dfield2->xreal/dfield2->xres) - 1) > 0.01
+        || fabs((dfield1->yreal/dfield1->yres)
+                /(dfield2->yreal/dfield2->yres) - 1) > 0.01) {
         dialog = gtk_message_dialog_new(GTK_WINDOW(tip_dilation_window),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_INFO,
-                                    GTK_BUTTONS_CLOSE,
-                                    _("Tip has different range/resolution ratio than image. Tip will be resampled."));
+                                    GTK_BUTTONS_OK,
+                                    _("Tip has different range/resolution "
+                                      "ratio than image. Tip will be "
+                                      "resampled."));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
     }
@@ -250,10 +253,11 @@ tip_dilation_do(TipDilationArgs *args)
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     /*result fields - after computation result should be at dfield */
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
-        gwy_container_remove_by_name(data, "/0/mask");
-    }
+    data = gwy_container_duplicate_by_prefix(data,
+                                             "/0/data",
+                                             "/0/base/palette",
+                                             "/0/select",
+                                             NULL);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     gwy_app_wait_start(GTK_WIDGET(args->win2), "Initializing...");
@@ -263,8 +267,12 @@ tip_dilation_do(TipDilationArgs *args)
     gwy_app_wait_finish();
     /*set right output */
 
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    if (dfield) {
+        data_window = gwy_app_data_window_create(data);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    }
+    else
+        g_object_unref(data);
 
     return TRUE;
 }
