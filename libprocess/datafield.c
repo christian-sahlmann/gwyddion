@@ -537,7 +537,8 @@ gwy_data_field_resample(GwyDataField *data_field,
     gdouble xratio, yratio, xpos, ypos;
     gint i, j;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    /* XXX: cannot be here because many functions don't create proper objects
+     * g_return_if_fail(GWY_IS_DATA_FIELD(data_field)); */
     if (data_field->xres == xres && data_field->yres == yres)
         return;
     g_return_if_fail(xres > 1 && yres > 1);

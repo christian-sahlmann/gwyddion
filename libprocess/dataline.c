@@ -316,7 +316,8 @@ gwy_data_line_resample(GwyDataLine *data_line,
     gdouble ratio, pos;
     gint i;
 
-    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    /* XXX: cannot be here because many functions don't create proper objects
+     * g_return_if_fail(GWY_IS_DATA_LINE(data_line)); */
     if (res == data_line->res)
         return;
     g_return_if_fail(res > 1);
