@@ -173,7 +173,11 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata, "/0/data"));
-    zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
+    
+    if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
+                zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
+    else zoomval = 400.0/(gdouble)gwy_data_field_get_yres(dfield);
+        
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
     
     gtk_box_pack_start(GTK_BOX(hbox), controls.view,
