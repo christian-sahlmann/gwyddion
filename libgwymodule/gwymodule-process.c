@@ -84,10 +84,10 @@ gwy_hash_table_to_slist_cb(gpointer key,
 }
 
 static gint
-process_menu_entry_compare(GtkItemFactoryEntry *a,
-                           GtkItemFactoryEntry *b)
+process_menu_entry_compare(GwyProcessFuncInfo *a,
+                           GwyProcessFuncInfo *b)
 {
-    return strcmp(a->path, b->path);
+    return strcmp(a->menu_path, b->menu_path);
 }
 
 /**
