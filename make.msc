@@ -132,6 +132,7 @@ clean::
 	-@mkdir "$(DEST_DIR)/modules"
 	-@mkdir "$(DEST_DIR)/modules/file"
 	-@mkdir "$(DEST_DIR)/modules/graph"
+	-@mkdir "$(DEST_DIR)/modules/layer"
 	-@mkdir "$(DEST_DIR)/modules/process"
 	-@mkdir "$(DEST_DIR)/modules/tool"
 	-@mkdir "$(DEST_DIR)/plugins"
