@@ -195,10 +195,10 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     if (is_selected) {
-        gwy_unitool_update_label(units, controls->x, MIN(sel[0], sel[2]));
-        gwy_unitool_update_label(units, controls->y, MIN(sel[1], sel[3]));
-        gwy_unitool_update_label(units, controls->w, fabs(sel[2] - sel[0]));
-        gwy_unitool_update_label(units, controls->h, fabs(sel[3] - sel[1]));
+        gwy_unitool_update_label(units, controls->x, sel[0]);
+        gwy_unitool_update_label(units, controls->y, sel[1]);
+        gwy_unitool_update_label(units, controls->w, sel[2] - sel[0]);
+        gwy_unitool_update_label(units, controls->h, sel[3] - sel[1]);
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls->x), "");

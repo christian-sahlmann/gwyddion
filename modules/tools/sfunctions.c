@@ -111,7 +111,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
         "sfunctions",
-        "gwy_graph_halfgauss",
+        GWY_STOCK_GRAPH_HALFGAUSS,
         "Compute 1D statistical functions.",
         77,
         use,

@@ -83,7 +83,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
         "stats",
-        "gwy_stat_quantities",
+        GWY_STOCK_STAT_QUANTITIES,
         "Statistical quantities",
         67,
         use,
