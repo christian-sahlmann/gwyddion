@@ -47,6 +47,7 @@ foo(void)
     GtkAccelGroup *accel_group;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
     gwy_app_main_window = window;
 
     accel_group = gtk_accel_group_new();
