@@ -172,9 +172,6 @@ gwy_data_field_new(gint xres, gint yres,
     else
         data_field->data = g_new(gdouble, data_field->xres*data_field->yres);
 
-    data_field->si_unit_xy = gwy_si_unit_new("m");
-    data_field->si_unit_z = gwy_si_unit_new("m");
-
     return data_field;
 }
 
@@ -793,6 +790,9 @@ gwy_data_field_get_si_unit_xy(GwyDataField *a)
 {
     g_return_val_if_fail(GWY_IS_DATA_FIELD(a), NULL);
 
+    if (!a->si_unit_xy)
+        a->si_unit_xy = gwy_si_unit_new("m");
+
     gwy_debug("xy unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_xy));
     return a->si_unit_xy;
 }
@@ -810,6 +810,9 @@ GwySIUnit*
 gwy_data_field_get_si_unit_z(GwyDataField *a)
 {
     g_return_val_if_fail(GWY_IS_DATA_FIELD(a), NULL);
+
+    if (!a->si_unit_z)
+        a->si_unit_z = gwy_si_unit_new("m");
 
     gwy_debug("z unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_z));
     return a->si_unit_z;
