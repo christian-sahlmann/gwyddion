@@ -119,7 +119,6 @@ gwy_si_unit_finalize(GObject *object)
 
     gwy_debug("");
     g_free(si_unit->unitstr);
-    si_unit->unitstr = NULL;
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -135,8 +134,9 @@ gwy_si_unit_serialize(GObject *obj,
 
     si_unit = GWY_SI_UNIT(obj);
     {
+        const gchar *unitstr = si_unit->unitstr ? si_unit->unitstr : "";
         GwySerializeSpec spec[] = {
-            { 's', "unitstr", &si_unit->unitstr, NULL, },
+            { 's', "unitstr", &unitstr, NULL, },
         };
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_SI_UNIT_TYPE_NAME,
