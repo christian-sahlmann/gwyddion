@@ -58,6 +58,8 @@ static void       layer_setup           (GwyUnitoolState *state);
 static GtkWidget* dialog_create         (GwyUnitoolState *state);
 static void       dialog_abandon        (GwyUnitoolState *state);
 static void       selection_finished_cb (GwyUnitoolState *state);
+static void       laplace_interpolation (GwyDataField *dfield,
+                                         GwyDataField *grain);
 static void       mode_changed_cb       (GObject *item,
                                          GwyUnitoolState *state);
 static void       algorithm_changed_cb  (GObject *item,
@@ -74,7 +76,7 @@ static GwyModuleInfo module_info = {
     "grain_remove_manually",
     N_("Grain (mask) removal tool."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -274,12 +276,11 @@ static void
 selection_finished_cb(GwyUnitoolState *state)
 {
     GwyContainer *data;
-    GwyDataField *dfield, *tmp, *buffer, *mask = NULL;
+    GwyDataField *dfield, *tmp, *mask = NULL;
     GwyDataViewLayer *layer;
     ToolControls *controls;
     gdouble xy[2];
-    gint col, row, i;
-    gdouble error, maxer, cor;
+    gint col, row;
     gboolean is_visible, is_selected;
 
     gwy_debug(" ");
@@ -318,18 +319,7 @@ selection_finished_cb(GwyUnitoolState *state)
             gwy_app_undo_checkpoint(data, "/0/data", NULL);
         switch (controls->algorithm) {
             case GRAIN_REMOVE_LAPLACE:
-            maxer = gwy_data_field_get_rms(dfield)/1.0e3;
-            gwy_data_field_correct_average(dfield, tmp);
-            buffer = GWY_DATA_FIELD(gwy_data_field_new_alike(mask, FALSE));
-            cor = 0.2;
-            error = 0;
-            i = 0;
-            do {
-                gwy_data_field_correct_laplace_iteration(dfield, tmp, buffer,
-                                                         &error, &cor);
-                i++;
-            } while (error >= maxer && i < 1000);
-            g_object_unref(buffer);
+            laplace_interpolation(dfield, tmp);
             break;
 
             case GRAIN_REMOVE_FRACTAL:
@@ -348,6 +338,71 @@ selection_finished_cb(GwyUnitoolState *state)
     gwy_vector_layer_unselect(state->layer);
 
     gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
+}
+
+static void
+laplace_interpolation(GwyDataField *dfield,
+                      GwyDataField *grain)
+{
+    GwyDataField *area, *buffer, *mask;
+    gdouble error, maxer, cor;
+    const gdouble *data;
+    gint xres, yres, xmin, xmax, ymin, ymax;
+    gint i, j;
+
+    /* Find mask bounds */
+    xmin = ymin = G_MAXINT;
+    xmax = ymax = -1;
+    xres = gwy_data_field_get_xres(grain);
+    yres = gwy_data_field_get_yres(grain);
+    data = gwy_data_field_get_data_const(grain);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            if (data[i*xres + j]) {
+                if (i < ymin)
+                    ymin = i;
+                if (i > ymax)
+                    ymax = i;
+                if (j < xmin)
+                    xmin = j;
+                if (j > xmax)
+                    xmax = j;
+            }
+        }
+    }
+    g_return_if_fail(xmax > -1 && ymax > -1);
+    xmin = MAX(0, xmin-1);
+    xmax = MIN(xres, xmax+2);
+    ymin = MAX(0, ymin-1);
+    ymax = MIN(yres, ymax+2);
+
+    /* Create smaller working datafields */
+    area = (GwyDataField*)gwy_data_field_new(xmax - xmin, ymax - ymin,
+                                             1.0, 1.0, FALSE);
+    gwy_data_field_area_copy(dfield, area, xmin, ymin, xmax, ymax, 0, 0);
+    mask = (GwyDataField*)gwy_data_field_new(xmax - xmin, ymax - ymin,
+                                             1.0, 1.0, FALSE);
+    gwy_data_field_area_copy(grain, mask, xmin, ymin, xmax, ymax, 0, 0);
+
+    /* Interpolate */
+    maxer = gwy_data_field_get_rms(area)/1.0e3;
+    gwy_data_field_correct_average(area, mask);
+    buffer = GWY_DATA_FIELD(gwy_data_field_new_alike(mask, FALSE));
+    cor = 0.2;
+    error = 0;
+    i = 0;
+    do {
+        gwy_data_field_correct_laplace_iteration(area, mask, buffer,
+                                                 &error, &cor);
+        i++;
+    } while (error >= maxer && i < 1000);
+    g_object_unref(buffer);
+    g_object_unref(mask);
+
+    /* Copy result back */
+    gwy_data_field_area_copy(area, dfield, 0, 0, xmax - xmin, ymax - ymin,
+                             xmin, ymin);
+    g_object_unref(area);
 }
 
 static const gchar *mode_key = "/tool/grain_remove_manually/mode";
