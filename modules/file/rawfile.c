@@ -971,6 +971,12 @@ update_dialog_controls(RawFileControls *controls)
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->rowskip));
     gtk_adjustment_set_value(adj, args->rowskip);
 
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->lineoffset));
+    gtk_adjustment_set_value(adj, args->lineoffset);
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->skipfields));
+    gtk_adjustment_set_value(adj, args->skipfields);
+    gtk_entry_set_text(GTK_ENTRY(controls->delimiter), args->delimiter);
+
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->sign),
                                  args->sign);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->revbyte),
@@ -1078,6 +1084,13 @@ update_dialog_values(RawFileControls *controls)
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->skip));
     args->rowskip
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->rowskip));
+
+    args->delimiter
+        = g_strdup(gtk_entry_get_text(GTK_ENTRY(controls->delimiter)));
+    args->lineoffset
+        = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->lineoffset));
+    args->skipfields
+        = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->skipfields));
 
     args->sign
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->sign));
@@ -1374,9 +1387,10 @@ rawfile_read_ascii(RawFileArgs *args,
         for (i = 0; i < args->xres; i++) {
             x = strtod(buffer, (char**)&end);
             if (end == buffer) {
-                g_warning("Garbage at (%u, %u)", n, i);
+                g_warning("Garbage `%32s' at (%u, %u)", buffer, n, i);
                 return FALSE;
             }
+            buffer = end;
             *(data++) = x;
         }
     }
@@ -1421,6 +1435,7 @@ rawfile_compute_required_size(RawFileArgs *args)
     return args->offset + args->yres*rowstride/8;
 }
 
+static const gchar *format_key =      "/module/rawfile/format";
 static const gchar *builtin_key =     "/module/rawfile/builtin";
 static const gchar *offset_key =      "/module/rawfile/offset";
 static const gchar *size_key =        "/module/rawfile/size";
@@ -1449,62 +1464,40 @@ rawfile_load_args(GwyContainer *settings,
 {
     *args = rawfile_defaults;
 
-    if (gwy_container_contains_by_name(settings, builtin_key))
-        args->builtin = gwy_container_get_int32_by_name(settings, builtin_key);
-    if (gwy_container_contains_by_name(settings, offset_key))
-        args->offset = gwy_container_get_int32_by_name(settings, offset_key);
-    if (gwy_container_contains_by_name(settings, size_key))
-        args->size = gwy_container_get_int32_by_name(settings, size_key);
-    if (gwy_container_contains_by_name(settings, skip_key))
-        args->skip = gwy_container_get_int32_by_name(settings, skip_key);
-    if (gwy_container_contains_by_name(settings, rowskip_key))
-        args->rowskip = gwy_container_get_int32_by_name(settings, rowskip_key);
-    if (gwy_container_contains_by_name(settings, byteswap_key))
-        args->byteswap = gwy_container_get_int32_by_name(settings,
-                                                         byteswap_key);
-    if (gwy_container_contains_by_name(settings, lineoffset_key))
-        args->lineoffset = gwy_container_get_int32_by_name(settings,
-                                                         lineoffset_key);
-    if (gwy_container_contains_by_name(settings, skipfields_key))
-        args->skipfields = gwy_container_get_int32_by_name(settings,
-                                                         skipfields_key);
+    gwy_container_gis_int32_by_name(settings, format_key, &args->format);
+    gwy_container_gis_int32_by_name(settings, builtin_key,
+                                    (gint32*)&args->builtin);
+    gwy_container_gis_int32_by_name(settings, offset_key, &args->offset);
+    gwy_container_gis_int32_by_name(settings, size_key, &args->size);
+    gwy_container_gis_int32_by_name(settings, skip_key, &args->skip);
+    gwy_container_gis_int32_by_name(settings, rowskip_key, &args->rowskip);
+    gwy_container_gis_int32_by_name(settings, byteswap_key, &args->byteswap);
+    gwy_container_gis_int32_by_name(settings, lineoffset_key,
+                                    &args->lineoffset);
+    gwy_container_gis_int32_by_name(settings, skipfields_key,
+                                    &args->skipfields);
     if (gwy_container_contains_by_name(settings, delimiter_key))
         args->delimiter
             = g_strdup(gwy_container_get_string_by_name(settings,
                                                         delimiter_key));
-    if (gwy_container_contains_by_name(settings, sign_key))
-        args->sign = gwy_container_get_boolean_by_name(settings, sign_key);
-    if (gwy_container_contains_by_name(settings, revsample_key))
-        args->revsample = gwy_container_get_boolean_by_name(settings,
-                                                            revsample_key);
-    if (gwy_container_contains_by_name(settings, revbyte_key))
-        args->revbyte = gwy_container_get_boolean_by_name(settings,
-                                                          revbyte_key);
+    gwy_container_gis_boolean_by_name(settings, sign_key, &args->sign);
+    gwy_container_gis_boolean_by_name(settings, revsample_key,
+                                      &args->revsample);
+    gwy_container_gis_boolean_by_name(settings, revbyte_key, &args->revbyte);
 
-    if (gwy_container_contains_by_name(settings, xres_key))
-        args->xres = gwy_container_get_int32_by_name(settings, xres_key);
-    if (gwy_container_contains_by_name(settings, yres_key))
-        args->yres = gwy_container_get_int32_by_name(settings, yres_key);
-    if (gwy_container_contains_by_name(settings, xyreseq_key))
-        args->xyreseq = gwy_container_get_boolean_by_name(settings,
-                                                          xyreseq_key);
+    gwy_container_gis_int32_by_name(settings, xres_key, &args->xres);
+    gwy_container_gis_int32_by_name(settings, yres_key, &args->yres);
+    gwy_container_gis_boolean_by_name(settings, xyreseq_key, &args->xyreseq);
 
-    if (gwy_container_contains_by_name(settings, xreal_key))
-        args->xreal = gwy_container_get_double_by_name(settings, xreal_key);
-    if (gwy_container_contains_by_name(settings, yreal_key))
-        args->yreal = gwy_container_get_double_by_name(settings, yreal_key);
-    if (gwy_container_contains_by_name(settings, xymeasureeq_key))
-        args->xymeasureeq = gwy_container_get_boolean_by_name(settings,
-                                                              xymeasureeq_key);
-    if (gwy_container_contains_by_name(settings, xyexponent_key))
-        args->xyexponent = gwy_container_get_int32_by_name(settings,
-                                                           xyexponent_key);
+    gwy_container_gis_double_by_name(settings, xreal_key, &args->xreal);
+    gwy_container_gis_double_by_name(settings, yreal_key, &args->yreal);
+    gwy_container_gis_boolean_by_name(settings, xymeasureeq_key,
+                                      &args->xymeasureeq);
+    gwy_container_gis_int32_by_name(settings, xyexponent_key,
+                                    &args->xyexponent);
 
-    if (gwy_container_contains_by_name(settings, zscale_key))
-        args->zscale = gwy_container_get_double_by_name(settings, zscale_key);
-    if (gwy_container_contains_by_name(settings, zexponent_key))
-        args->zexponent = gwy_container_get_int32_by_name(settings,
-                                                          zexponent_key);
+    gwy_container_gis_double_by_name(settings, zscale_key, &args->zscale);
+    gwy_container_gis_int32_by_name(settings, zexponent_key, &args->zexponent);
 
     rawfile_santinize_args(args);
 }
@@ -1515,6 +1508,7 @@ rawfile_save_args(GwyContainer *settings,
 {
     rawfile_santinize_args(args);
 
+    gwy_container_set_int32_by_name(settings, format_key, args->format);
     gwy_container_set_int32_by_name(settings, builtin_key, args->builtin);
     gwy_container_set_int32_by_name(settings, offset_key, args->offset);
     gwy_container_set_int32_by_name(settings, size_key, args->size);
