@@ -91,7 +91,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo profile_func_info = {
         "profile",
-        "gwy_graph",
+        "gwy_profile",
         "Extract profiles from data.",
         80,
         profile_use,

@@ -65,7 +65,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "stats",
-    "Stat. quantities.",
+    "Statistical quantities.",
     "pk <petr@klapetek.cz>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -81,9 +81,9 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo stats_func_info = {
         "stats",
-        "gwy_crop",
-        "Stat. quantities",
-        47,
+        "gwy_graph_halfgauss",
+        "Statistical quantities",
+        67,
         stats_use,
     };
 
@@ -94,7 +94,7 @@ module_register(const gchar *name)
 
 static void
 stats_use(GwyDataWindow *data_window,
-         G_GNUC_UNUSED GwyToolSwitchEvent reason)
+          G_GNUC_UNUSED GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
