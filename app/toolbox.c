@@ -187,8 +187,8 @@ gwy_app_toolbox_create(void)
                        _("Unzoom"), NULL, GWY_STOCK_GRAPH_ZOOM_FIT,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_unzoom");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Read coordinates"), NULL, GWY_STOCK_GRAPH_MEASURE,
-                       G_CALLBACK(gwy_app_run_graph_func_cb), "read");
+                       _("Measure distances"), NULL, GWY_STOCK_GRAPH_MEASURE,
+                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_points");
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_graph);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_graph);

@@ -426,6 +426,8 @@ dialog_update(GwyUnitoolState *state,
           shadefield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
           gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
        }
+       if (controls->upd)
+       {
      switch (controls->fil){
         case GWY_FILTER_MEAN:
         gwy_data_field_filter_mean(shadefield, controls->siz, ulcol, ulrow, brcol, brrow);
@@ -455,6 +457,7 @@ dialog_update(GwyUnitoolState *state,
         g_assert_not_reached();
         break;
     }
+       }
         state_changed = 0;
         gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
    }

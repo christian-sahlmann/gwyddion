@@ -130,13 +130,16 @@ remove_th(GwyContainer *data, GwyRunType run)
         args = remove_defaults;
     else
         remove_load_args(gwy_app_settings_get(), &args);
-    ook = (run != GWY_RUN_MODAL) || remove_dialog(&args, data);
-    if (ook) {
 
-        if (run != GWY_RUN_WITH_DEFAULTS)
-            remove_save_args(gwy_app_settings_get(), &args);
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+    {
+        ook = (run != GWY_RUN_MODAL) || remove_dialog(&args, data);
+        if (ook) {
+    
+            if (run != GWY_RUN_WITH_DEFAULTS)
+                remove_save_args(gwy_app_settings_get(), &args);
+        }
     }
-
     return ook;
 }
 
@@ -192,8 +195,8 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
 
     controls.is_height = gtk_check_button_new_with_label("Threshold by maximum:");
-    if (args->height) gtk_toggle_button_set_active(controls.is_height, TRUE);
-    else gtk_toggle_button_set_active(controls.is_height, FALSE);
+    if (args->height) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height), TRUE);
+    else gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height), FALSE);
     g_signal_connect(controls.is_height, "toggled", G_CALLBACK(isheight_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_height, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
                 
@@ -202,8 +205,8 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                                 controls.threshold_height);
 
     controls.is_area = gtk_check_button_new_with_label("Threshold by area:");
-    if (args->area) gtk_toggle_button_set_active(controls.is_area, TRUE);
-    else gtk_toggle_button_set_active(controls.is_area, FALSE);
+    if (args->area) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area), TRUE);
+    else gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area), FALSE);
     g_signal_connect(controls.is_area, "toggled", G_CALLBACK(isarea_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_area, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
                 
@@ -220,8 +223,8 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                                             args, args->merge_type);
     gtk_table_attach(GTK_TABLE(table), controls.merge, 0, 1, 8, 9, GTK_FILL, 0, 2, 2);
    
-    gtk_toggle_button_set_active(controls.is_height, args->is_height); 
-    gtk_toggle_button_set_active(controls.is_area, args->is_area);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height), args->is_height); 
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area), args->is_area);
 
     gtk_widget_show_all(dialog);
     do {
@@ -319,8 +322,8 @@ remove_dialog_update(RemoveControls *controls,
                                 args->height);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_area),
                                 args->area);
-    gtk_toggle_button_set_active(controls->is_height, args->is_height); 
-    gtk_toggle_button_set_active(controls->is_area, args->is_area);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_height), args->is_height); 
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_area), args->is_area);
 
 }
 
@@ -331,7 +334,6 @@ preview(RemoveControls *controls,
 {
     GwyDataField *maskfield, *dfield;
    
-    printf("***preview\n"); 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
 
     /*set up the mask*/
@@ -348,7 +350,6 @@ preview(RemoveControls *controls,
     }
     else
     {
-        printf("No mask!\n");
         
     }
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
@@ -374,7 +375,6 @@ ok(RemoveControls *controls,
     }
     else
     {
-        printf("No mask!\n");
     }
    
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));

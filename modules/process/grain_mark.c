@@ -213,8 +213,8 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
 
     controls.is_height = gtk_check_button_new_with_label("Threshold by height:");
-    if (args->height) gtk_toggle_button_set_active(controls.is_height, TRUE);
-    else gtk_toggle_button_set_active(controls.is_height, FALSE);
+    if (args->height) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height), TRUE);
+    else gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height), FALSE);
     g_signal_connect(controls.is_height, "toggled", G_CALLBACK(isheight_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_height, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
@@ -223,8 +223,8 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                                 controls.threshold_height);
 
     controls.is_slope = gtk_check_button_new_with_label("Threshold by slope:");
-    if (args->slope) gtk_toggle_button_set_active(controls.is_slope, TRUE);
-    else gtk_toggle_button_set_active(controls.is_slope, FALSE);
+    if (args->slope) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_slope), TRUE);
+    else gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_slope), FALSE);
     g_signal_connect(controls.is_slope, "toggled", G_CALLBACK(isslope_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_slope, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
 
@@ -233,8 +233,8 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                                 controls.threshold_slope);
 
     controls.is_lap = gtk_check_button_new_with_label("Threshold by curvature:");
-    if (args->lap) gtk_toggle_button_set_active(controls.is_lap, TRUE);
-    else gtk_toggle_button_set_active(controls.is_lap, FALSE);
+    if (args->lap) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap), TRUE);
+    else gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap), FALSE);
     g_signal_connect(controls.is_lap, "toggled", G_CALLBACK(islap_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_lap, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
 
@@ -252,9 +252,9 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), controls.merge, 0, 1, 8, 9, GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), 9, 8);
 
-    gtk_toggle_button_set_active(controls.is_height, args->is_height);
-    gtk_toggle_button_set_active(controls.is_slope, args->is_slope);
-    gtk_toggle_button_set_active(controls.is_lap, args->is_lap);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height), args->is_height);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_slope), args->is_slope);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap), args->is_lap);
 
     label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);

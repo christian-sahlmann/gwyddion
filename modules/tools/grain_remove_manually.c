@@ -144,7 +144,6 @@ dialog_update(GwyUnitoolState *state,
     gboolean is_visible, is_selected;
 
     gwy_debug("");
-    printf("Uaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
@@ -152,7 +151,7 @@ dialog_update(GwyUnitoolState *state,
     if (gwy_container_contains_by_name(data, "/0/mask")) 
        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     else {
-        printf("No mask\n");
+        gwy_debug("No mask");
         return;
     }
 
@@ -168,7 +167,6 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     if (is_selected) {
-        printf("Removing: %d %d\n", col, row);
         gwy_data_field_grains_remove_manually(dfield,
                                               col + xres*row);
 
