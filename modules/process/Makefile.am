@@ -19,6 +19,7 @@ process_PROGRAMS = \
  	grain_dist.so \
 	laplace.so \
 	level.so \
+	mask_grow_shrink.so \
 	maskcor.so \
 	maskops.so \
 	outliers.so \
@@ -72,6 +73,9 @@ laplace_so_LDFLAGS = $(module_ldflags),laplace.so
 
 level_so_SOURCES = level.c
 level_so_LDFLAGS = $(module_ldflags),level.so
+
+mask_grow_shrink_so_SOURCES = mask_grow_shrink.c
+mask_grow_shrink_so_LDFLAGS = $(module_ldflags),mask_grow_shrink.so
 
 maskcor_so_SOURCES = maskcor.c
 maskcor_so_LDFLAGS = $(module_ldflags),maskcor.so
