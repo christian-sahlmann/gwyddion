@@ -25,8 +25,6 @@
 #include "gwymath.h"
 #include "gwysiunit.h"
 
-#define ROUND(x) ((gint)floor((x) + 0.5))
-
 #define GWY_SI_UNIT_TYPE_NAME "GwySiUnit"
 
 static void     gwy_si_unit_class_init        (GwySIUnitClass *klass);

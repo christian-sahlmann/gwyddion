@@ -18,7 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <gtk/gtkmain.h>
@@ -58,8 +57,6 @@ static void     gwy_color_axis_update               (GwyColorAxis *axis);
 static void     prepare_number                      (gdouble number,
                                                      gdouble *power,
                                                      gdouble *value);
-
-#define ROUND(x) ((gint)floor((x) + 0.5))
 
 /* Local data */
 static GtkWidgetClass *parent_class = NULL;

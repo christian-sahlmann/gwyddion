@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,9 +21,13 @@
 #ifndef __GWY_MATH_H__
 #define __GWY_MATH_H__
 
+#include <math.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+#define ROUND(x) ((gint)floor((x) + 0.5))
 
 const gchar* gwy_math_SI_prefix          (gdouble magnitude);
 gdouble      gwy_math_humanize_numbers   (gdouble unit,

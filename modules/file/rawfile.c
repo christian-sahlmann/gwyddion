@@ -28,7 +28,6 @@
 
 /* define GENRTABLE to create RTABLE generator */
 #ifndef GENRTABLE
-#include <math.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

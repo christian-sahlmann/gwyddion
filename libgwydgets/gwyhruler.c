@@ -51,12 +51,11 @@
 
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include "gwyhruler.h"
 
 #define RULER_HEIGHT          18
 #define MINIMUM_INCR          5
-
-#define ROUND(x)((int)((x) + 0.5))
 
 static void     gwy_hruler_class_init    (GwyHRulerClass *klass);
 static void     gwy_hruler_init          (GwyHRuler      *hruler);

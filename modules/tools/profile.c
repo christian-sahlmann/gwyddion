@@ -18,7 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -34,8 +33,6 @@
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 #define NPROFILE 3
-
-#define ROUND(x) ((gint)floor((x) + 0.5))
 
 typedef struct {
     GwyUnitoolState *state;

@@ -20,9 +20,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include "datafield.h"
 #include "cwt.h"
 
@@ -51,8 +51,6 @@ static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
 
 static gdouble  edist                            (gint xc1, gint yc1,
                                                   gint xc2, gint yc2);
-
-#define ROUND(x) ((gint)floor((x) + 0.5))
 
 GType
 gwy_data_field_get_type(void)

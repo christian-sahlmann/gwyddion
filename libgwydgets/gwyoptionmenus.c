@@ -19,7 +19,6 @@
  */
 
 #include <string.h>
-#include <math.h>
 #include <gtk/gtkimage.h>
 #include <gtk/gtkmenu.h>
 #include <gtk/gtkmenuitem.h>

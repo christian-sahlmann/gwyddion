@@ -23,8 +23,6 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwymath.h"
 
-#define ROUND(x) ((gint)floor((x) + 0.5))
-
 /**
  * gwy_math_SI_prefix:
  * @magnitude: A power of 1000.

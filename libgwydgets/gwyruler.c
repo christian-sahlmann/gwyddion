@@ -52,12 +52,9 @@
  */
 
 #include <string.h>
-#include <math.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "gwyruler.h"
-
-#define ROUND(x) ((gint)floor((x) + 0.5))
 
 typedef enum {
     GWY_SCALE_0,
