@@ -3,55 +3,55 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-10-25 04:53+0200\n"
-"PO-Revision-Date: 2004-10-26 01:06+0200\n"
+"POT-Creation-Date: 2004-10-26 12:29+0200\n"
+"PO-Revision-Date: 2004-10-26 12:30+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: libprocess/morph_lib.c:164 libprocess/morph_lib.c:438
+#: libprocess/morph_lib.c:166 libprocess/morph_lib.c:456
 msgid "Dilation"
 msgstr "Konvoluce"
 
-#: libprocess/morph_lib.c:225 libprocess/morph_lib.c:499
+#: libprocess/morph_lib.c:232 libprocess/morph_lib.c:523
 msgid "Erosion"
 msgstr "Eroze"
 
-#: libprocess/morph_lib.c:288
+#: libprocess/morph_lib.c:300
 msgid "Certainty map"
 msgstr "Mapa spolehlivosti"
 
-#: libprocess/morph_lib.c:577 libprocess/morph_lib.c:700
+#: libprocess/morph_lib.c:610 libprocess/morph_lib.c:741
 #, c-format
 msgid "Iterating estimate (iteration %d)"
 msgstr "Iteruji odhad (iterace %d)"
 
-#: libprocess/morph_lib.c:584 libprocess/morph_lib.c:714
+#: libprocess/morph_lib.c:616 libprocess/morph_lib.c:753
 #, c-format
 msgid "%d image locations produced refinement"
 msgstr "%d míst v obrázku dalo zpřesnění"
 
-#: libprocess/morph_lib.c:671
+#: libprocess/morph_lib.c:712
 msgid "Searching for local maxima"
 msgstr "Hledám lokální maxima"
 
-#: libprocess/morph_lib.c:690
+#: libprocess/morph_lib.c:731
 #, c-format
 msgid "Found %d internal local maxima"
 msgstr "Bylo nalezeno %d lokálních maxim"
 
-#: libprocess/tip.c:733 libprocess/tip.c:756 libprocess/tip.c:801
-#: libprocess/tip.c:823
+#: libprocess/tip.c:780 libprocess/tip.c:802 libprocess/tip.c:852
+#: libprocess/tip.c:874
 msgid "Converting fields"
 msgstr "Konvertuji pole"
 
-#: libprocess/tip.c:744
+#: libprocess/tip.c:790
 msgid "Starting partial estimation"
 msgstr "Začínám částečný odhad"
 
-#: libprocess/tip.c:811
+#: libprocess/tip.c:862
 msgid "Starting full estimation"
 msgstr "Začínám plný odhad"
 
@@ -188,7 +188,6 @@ msgstr "_Vodorovně:"
 #: modules/process/crosscor.c:228 modules/process/crosscor.c:242
 #: modules/process/crosscor.c:248 modules/process/cwt.c:191
 #: modules/process/grain_rem_threshold.c:226 modules/process/grain_wshed.c:218
-#: modules/tools/profile.c:214
 msgid "pixels"
 msgstr "pixelů"
 
@@ -891,7 +890,7 @@ msgstr "Výška"
 #: modules/process/scars.c:417 modules/process/slope_dist.c:228
 #: modules/process/slope_dist.c:249 modules/process/tip_blind.c:248
 #: modules/process/tip_blind.c:258 modules/tools/level3.c:199
-#: modules/tools/pointer.c:180
+#: modules/tools/pointer.c:180 modules/tools/profile.c:255
 msgid "px"
 msgstr "px"
 
@@ -1776,27 +1775,35 @@ msgstr "/_Jednoduché operace/_Kalibrace os..."
 msgid "Calibrate"
 msgstr "Kalibrovat osy"
 
-#: modules/process/calibrate.c:198
+#: modules/process/calibrate.c:199
+msgid "<b>New Real Dimensions</b>"
+msgstr "<b>Nové fyzické rozměry</b>"
+
+#: modules/process/calibrate.c:204
 msgid "_X range:"
 msgstr "_X-ový rozsah:"
 
-#: modules/process/calibrate.c:206
+#: modules/process/calibrate.c:212
 msgid "_Y range:"
 msgstr "_Y-ový rozsah:"
 
-#: modules/process/calibrate.c:214
+#: modules/process/calibrate.c:220
 msgid "_Z range:"
 msgstr "_Z-ový rozsah:"
 
-#: modules/process/calibrate.c:234
+#: modules/process/calibrate.c:231
+msgid "<b>Calibration Coefficients</b>"
+msgstr "<b>Kalibrační koeficienty</b>"
+
+#: modules/process/calibrate.c:239
 msgid "_X calibration factor:"
 msgstr "Kalibrační faktor v ose _X:"
 
-#: modules/process/calibrate.c:255
+#: modules/process/calibrate.c:249
 msgid "_Y calibration factor:"
 msgstr "Kalibrační faktor v ose _Y:"
 
-#: modules/process/calibrate.c:276
+#: modules/process/calibrate.c:259
 msgid "_Z calibration factor:"
 msgstr "Kalibrační faktor v ose _Z:"
 
@@ -1880,7 +1887,7 @@ msgstr "Zachovej velikost (neškáluj na mocninu 2)"
 #: modules/process/cwt.c:207 modules/process/fft.c:375
 #: modules/process/fractal.c:225 modules/process/rotate.c:207
 #: modules/process/scale.c:207 modules/process/unrotate.c:233
-#: modules/tools/profile.c:229
+#: modules/tools/profile.c:272
 msgid "_Interpolation type:"
 msgstr "Typ _interpolace:"
 
@@ -2160,7 +2167,7 @@ msgstr "Odstranit data pod maskou pomocí Laplaceovy rovnice"
 msgid "/_Correct Data/_Remove Data Under Mask"
 msgstr "/_Korekce dat/_Odstranit data pod maskou"
 
-#: modules/process/laplace.c:98 modules/process/tip_map.c:267
+#: modules/process/laplace.c:98
 msgid "Initializing..."
 msgstr "Inicializace"
 
@@ -2488,7 +2495,8 @@ msgstr "S_tejná rozlišení"
 msgid "Use _boundaries"
 msgstr "Použít _okraje"
 
-#: modules/process/tip_blind.c:494 modules/process/tip_reconstruction.c:262
+#: modules/process/tip_blind.c:494 modules/process/tip_map.c:267
+#: modules/process/tip_reconstruction.c:263
 msgid "Initializing"
 msgstr "Inicializace"
 
@@ -2513,7 +2521,7 @@ msgstr "_Tvar hrotu:"
 msgid "_Surface to be dilated:"
 msgstr "Konvolvovat _povrch:"
 
-#: modules/process/tip_dilation.c:228 modules/process/tip_map.c:231
+#: modules/process/tip_dilation.c:229 modules/process/tip_map.c:231
 #: modules/process/tip_reconstruction.c:229
 msgid ""
 "Tip has different range/resolution ratio than image. Tip will be resampled."
@@ -2806,45 +2814,40 @@ msgstr "V_yjmi vybranou oblast"
 msgid "(otherwise will be used for fitting)"
 msgstr "(jinak bude použit jen výběr)"
 
-#: modules/tools/profile.c:77
+#: modules/tools/profile.c:79
 msgid "Profile tool."
 msgstr "Nástroj Výběr profilů"
 
-#: modules/tools/profile.c:104
+#: modules/tools/profile.c:106
 msgid "Extract profiles from data."
 msgstr "Výbrat profily z dat"
 
-#: modules/tools/profile.c:159
+#: modules/tools/profile.c:168
 msgid "Extract Profile"
 msgstr "Vybrat profil"
 
-#: modules/tools/profile.c:174
-msgid "<b>Profile positions</b>"
-msgstr "<b>Umístění profilů</b>"
+#: modules/tools/profile.c:192
+msgid "<b>Profile Positions</b> [pixels]"
+msgstr "<b>Polohy profilů</b> [v pixelech]"
 
-#: modules/tools/profile.c:185 modules/tools/profile.c:408
+#: modules/tools/profile.c:232
 #, c-format
 msgid "Profile %d"
 msgstr "Profil %d"
 
-#: modules/tools/profile.c:190
-#, c-format
-msgid "Profile %d:"
-msgstr "Profil %d:"
-
-#: modules/tools/profile.c:208 modules/tools/sfunctions.c:203
+#: modules/tools/profile.c:248 modules/tools/sfunctions.c:203
 msgid "<b>Options</b>"
 msgstr "<b>Volby</b>"
 
-#: modules/tools/profile.c:214
-msgid "Thickness"
-msgstr "Tloušťka"
+#: modules/tools/profile.c:255
+msgid "Thickness:"
+msgstr "Tloušťka:"
 
-#: modules/tools/profile.c:222
+#: modules/tools/profile.c:262
 msgid "_Separate profiles"
 msgstr "_Oddělit profily"
 
-#: modules/tools/profile.c:427
+#: modules/tools/profile.c:462
 msgid "Profiles"
 msgstr "Profily"
 
@@ -2983,12 +2986,3 @@ msgstr "Projektovaná plocha"
 #: modules/tools/stats.c:179
 msgid "Area"
 msgstr "Plocha"
-
-#~ msgid "Read graph values"
-#~ msgstr "Odečítání hodnot"
-
-#~ msgid "Slope distribution"
-#~ msgstr "Rozdělení sklonů"
-
-#~ msgid "Cum. slope distribution"
-#~ msgstr "Kumul. rozdělení sklonů"
