@@ -28,7 +28,7 @@
 #include <app/gwyapp.h>
 
 #define DIST_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE)
+    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 
 static gboolean    module_register            (const gchar *name);
