@@ -1,10 +1,11 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.8cvs20050217, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.8cvs20050224, [http://trific.ath.cx/bugzilla/])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
+AC_CONFIG_MACRO_DIR(m4)
 AC_CONFIG_FILES(\
   Makefile \
   m4/Makefile \
@@ -49,7 +50,6 @@ AC_CANONICAL_TARGET
 dnl F***ing automake requires the silly ABOUT-NLS file.  Use `foreign'
 dnl strictness level.
 AM_INIT_AUTOMAKE([1.6 foreign check-news dist-bzip2])
-AM_ACLOCAL_INCLUDE(m4)
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.
@@ -67,6 +67,7 @@ AM_PROG_CC_STDC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_CHECK_PROGS([STRIP],[strip])
+AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
 gtk_CHECK_GTK_DOC
 
 # XDG stuff
