@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.3cvs20040704, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.3cvs20040712, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -46,12 +46,10 @@ AM_ACLOCAL_INCLUDE(m4)
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.
-dnl FIXME: the tagnames= inhibits at least part of the Fortran and C++ brain
-dnl damage.
-tagnames=
 AC_DISABLE_STATIC
 AC_PROG_AWK
 AC_PROG_CC
+AC_PROG_CXX
 AC_AIX
 AC_GNU_SOURCE
 AC_ISC_POSIX
@@ -65,7 +63,7 @@ AC_CHECK_PROGS([STRIP],[strip])
 AM_PATH_PYTHON(2.2,,:)
 AC_PATH_PROGS(PERL,perl5 perl,:)
 AC_PATH_PROGS(POD2MAN,pod2man,:)
-AC_PATH_PROGS(PASCAL,fpc gpc,:)
+AC_PATH_PROGS(PASCAL,fpc,:)
 gtk_CHECK_GTK_DOC
 
 AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
@@ -120,6 +118,7 @@ AC_CHECK_HEADERS( \
   GL/gl.h \
   tiffio.h \
   fcntl.h \
+  stdbool.h \
   time.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
