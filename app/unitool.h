@@ -82,6 +82,11 @@ gboolean     gwy_unitool_use                     (GwyUnitoolState *state,
                                                   GwyDataWindow *data_window,
                                                   GwyToolSwitchEvent reason);
 /* helpers */
+GtkWidget*   gwy_unitool_dialog_add_button_apply (GtkWidget *dialog);
+GtkWidget*   gwy_unitool_dialog_add_button_clear (GtkWidget *dialog);
+GtkWidget*   gwy_unitool_dialog_add_button_hide  (GtkWidget *dialog);
+void         gwy_unitool_apply_set_sensitive     (GwyUnitoolState *state,
+                                                  gboolean sensitive);
 GtkWidget*   gwy_unitool_windowname_frame_create (GwyUnitoolState *state);
 gdouble      gwy_unitool_get_z_average           (GwyDataField *dfield,
                                                   gdouble xreal,

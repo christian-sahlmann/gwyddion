@@ -25,16 +25,18 @@
 #include <libgwydgets/gwydgets.h>
 #include "unitool.h"
 
-static void gwy_unitool_name_changed_cb      (GwyUnitoolState *state);
-static void gwy_unitool_disconnect_handlers  (GwyUnitoolState *state);
-static void gwy_unitool_dialog_abandon       (GwyUnitoolState *state);
-static void gwy_unitool_compute_formats      (GwyUnitoolState *state);
-static void gwy_unitool_selection_updated_cb (GwyUnitoolState *state);
-static void gwy_unitool_data_updated_cb      (GwyUnitoolState *state);
-static void gwy_unitool_dialog_response_cb   (GwyUnitoolState *state,
-                                              gint response);
-static void gwy_unitool_dialog_set_visible   (GwyUnitoolState *state,
-                                              gboolean visible);
+static void       gwy_unitool_name_changed_cb      (GwyUnitoolState *state);
+static void       gwy_unitool_disconnect_handlers  (GwyUnitoolState *state);
+static void       gwy_unitool_dialog_abandon       (GwyUnitoolState *state);
+static void       gwy_unitool_compute_formats      (GwyUnitoolState *state);
+static void       gwy_unitool_selection_updated_cb (GwyUnitoolState *state);
+static void       gwy_unitool_data_updated_cb      (GwyUnitoolState *state);
+static void       gwy_unitool_dialog_response_cb   (GwyUnitoolState *state,
+                                                    gint response);
+static void       gwy_unitool_dialog_set_visible   (GwyUnitoolState *state,
+                                                    gboolean visible);
+static GtkWidget* gwy_unitool_dialog_find_button   (GwyUnitoolState *state,
+                                                    gint response_id);
 
 /***** Public ***************************************************************/
 
@@ -219,6 +221,7 @@ static void
 gwy_unitool_selection_updated_cb(GwyUnitoolState *state)
 {
     gint nselected;
+    GtkWidget *clear;
 
     gwy_debug("");
     nselected = gwy_vector_layer_get_selection(state->layer, NULL);
@@ -226,6 +229,10 @@ gwy_unitool_selection_updated_cb(GwyUnitoolState *state)
         state->func_slots->dialog_update(state, GWY_UNITOOL_UPDATED_SELECTION);
     if (nselected && !state->is_visible)
         gwy_unitool_dialog_set_visible(state, TRUE);
+    clear = gwy_unitool_dialog_find_button(state,
+                                           GWY_UNITOOL_RESPONSE_UNSELECT);
+    if (clear)
+        gtk_widget_set_sensitive(clear, nselected);
 }
 
 /*
@@ -292,7 +299,114 @@ gwy_unitool_dialog_set_visible(GwyUnitoolState *state,
         gtk_widget_hide(state->dialog);
 }
 
+static GtkWidget*
+gwy_unitool_dialog_find_button(GwyUnitoolState *state,
+                               gint response_id)
+{
+    GtkWidget *dialog, *hbbox;
+    GList *children, *c;
+
+    g_return_val_if_fail(state, NULL);
+    dialog = state->dialog;
+    g_return_val_if_fail(GTK_IS_DIALOG(dialog), NULL);
+    hbbox = GTK_DIALOG(dialog)->action_area;
+    children = GTK_BOX(hbbox)->children;
+    for (c = children; c; c = g_list_next(c)) {
+        GtkBoxChild *cld = (GtkBoxChild*)c->data;
+        gint id;
+
+        id = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(cld->widget),
+                                               "gwy-unitool-response-id"));
+        if (id == response_id)
+            return cld->widget;
+    }
+    return NULL;
+}
+
 /***** Helpers *************************************************************/
+
+/**
+ * gwy_unitool_dialog_add_button_apply:
+ * @dialog: The tool dialog.
+ *
+ * Adds a Unitool-partially-managed "Apply" button to the tool dialog.
+ *
+ * See also gwy_unitool_apply_set_sensitive().
+ *
+ * Returns: The just added button as a #GtkWidget.
+ **/
+GtkWidget*
+gwy_unitool_dialog_add_button_apply(GtkWidget *dialog)
+{
+    GtkWidget *button;
+
+    button = gtk_dialog_add_button(GTK_DIALOG(dialog),
+                                   GTK_STOCK_APPLY,
+                                   GTK_RESPONSE_APPLY);
+    g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
+                      GINT_TO_POINTER(GTK_RESPONSE_APPLY));
+    return button;
+}
+
+/**
+ * gwy_unitool_dialog_add_button_apply:
+ * @dialog: The tool dialog.
+ *
+ * Adds a Unitool-managed "Clear" button to the tool dialog.
+ *
+ * Returns: The just added button as a #GtkWidget.
+ **/
+GtkWidget*
+gwy_unitool_dialog_add_button_clear(GtkWidget *dialog)
+{
+    GtkWidget *button;
+
+    button = gtk_dialog_add_button(GTK_DIALOG(dialog),
+                                   GTK_STOCK_CLEAR,
+                                   GWY_UNITOOL_RESPONSE_UNSELECT);
+    g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
+                      GINT_TO_POINTER(GWY_UNITOOL_RESPONSE_UNSELECT));
+    return button;
+}
+
+/**
+ * gwy_unitool_dialog_add_button_hide:
+ * @dialog: The tool dialog.
+ *
+ * Adds a Unitool-managed "Hide" button to the tool dialog.
+ *
+ * Returns: The just added button as a #GtkWidget.
+ **/
+GtkWidget*
+gwy_unitool_dialog_add_button_hide(GtkWidget *dialog)
+{
+    GtkWidget *button;
+
+    button = gtk_dialog_add_button(GTK_DIALOG(dialog),
+                                   _("Hide"),
+                                   GTK_RESPONSE_CLOSE);
+    g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
+                      GINT_TO_POINTER(GTK_RESPONSE_CLOSE));
+    return button;
+}
+
+/**
+ * gwy_unitool_apply_set_sensitive:
+ * @state: Tool state.
+ * @sensitive: %TRUE to make the "Apply" button sensitive.
+ *
+ * Makes the "Apply" button sensitive or insensitive.
+ **/
+void
+gwy_unitool_apply_set_sensitive(GwyUnitoolState *state,
+                                gboolean sensitive)
+{
+    GtkWidget *apply;
+
+    apply = gwy_unitool_dialog_find_button(state, GTK_RESPONSE_APPLY);
+    g_return_if_fail(apply);
+    gtk_widget_set_sensitive(apply, sensitive);
+}
 
 /**
  * gwy_unitool_windowname_frame_create:
