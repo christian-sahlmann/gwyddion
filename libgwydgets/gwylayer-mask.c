@@ -64,7 +64,7 @@ gwy_layer_mask_get_type(void)
             (GInstanceInitFunc)gwy_layer_mask_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_layer_mask_type
             = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
                                      GWY_LAYER_MASK_TYPE_NAME,
@@ -81,7 +81,7 @@ gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -96,7 +96,7 @@ gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
 static void
 gwy_layer_mask_init(GwyLayerMask *layer)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     layer->changed = TRUE;
     layer->color.r = layer->color.g = layer->color.b = layer->color.a = 0.0;
@@ -107,7 +107,7 @@ static void
 gwy_layer_mask_finalize(GObject *object)
 {
     GwyDataViewLayer *layer;
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(GWY_IS_LAYER_MASK(object));
     layer = GWY_DATA_VIEW_LAYER(object);
@@ -133,7 +133,7 @@ gwy_layer_mask_new(void)
     GtkObject *object;
     GwyDataViewLayer *layer;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     object = g_object_new(GWY_TYPE_LAYER_MASK, NULL);
     layer = (GwyDataViewLayer*)object;
@@ -219,7 +219,7 @@ gwy_layer_mask_plugged(GwyDataViewLayer *layer)
     GwyLayerMask *mask_layer;
     gint width, height;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_MASK(layer));
 
     mask_layer = (GwyLayerMask*)layer;
@@ -287,8 +287,7 @@ gwy_layer_mask_restore(GwyDataViewLayer *layer)
         c->b = gwy_container_get_double_by_name(layer->data, "/0/mask/blue");
     if (gwy_container_contains_by_name(layer->data, "/0/mask/alpha"))
         c->a = gwy_container_get_double_by_name(layer->data, "/0/mask/alpha");
-    gwy_debug("%s: r = %f, g = %f, b = %f, a = %f", __FUNCTION__,
-              c->r, c->g, c->b, c->a);
+    gwy_debug("r = %f, g = %f, b = %f, a = %f", c->r, c->g, c->b, c->a);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -89,7 +89,7 @@ gwy_palette_get_type(void)
             NULL
         };
 
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_palette_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_PALETTE_TYPE_NAME,
                                                    &gwy_palette_info,
@@ -110,7 +110,7 @@ gwy_palette_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -124,7 +124,7 @@ gwy_palette_watchable_init(gpointer giface)
 {
     GwyWatchableClass *iface = giface;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
@@ -137,7 +137,7 @@ gwy_palette_class_init(GwyPaletteClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     gobject_class->finalize = (GObjectFinalizeFunc)gwy_palette_finalize;
     klass->palettes = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -146,7 +146,7 @@ gwy_palette_class_init(GwyPaletteClass *klass)
 static void
 gwy_palette_init(GwyPalette *palette)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     palette->def = NULL;
 }
@@ -154,7 +154,7 @@ gwy_palette_init(GwyPalette *palette)
 static void
 gwy_palette_finalize(GwyPalette *palette)
 {
-    gwy_debug("%s (%s)", __FUNCTION__, palette->def->name);
+    gwy_debug("%s", palette->def->name);
 
     g_signal_handlers_disconnect_matched(palette->def, G_SIGNAL_MATCH_FUNC,
                                          0, 0, NULL,
@@ -180,7 +180,7 @@ gwy_palette_new(GwyPaletteDef *palette_def)
     GwyPalette *palette;
     gboolean dont_ref = FALSE;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     if (!palette_def) {
         palette_def = (GwyPaletteDef*)gwy_palette_def_new(GWY_PALETTE_GRAY);
@@ -238,7 +238,7 @@ gwy_palette_set_palette_def(GwyPalette *palette,
 {
     GwyPaletteDef *olddef;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_PALETTE(palette));
     g_return_if_fail(GWY_IS_PALETTE_DEF(palette_def));
     g_return_if_fail(gwy_palette_def_is_set(palette_def));
@@ -304,7 +304,7 @@ gwy_palette_serialize(GObject *obj,
 {
     GwyPalette *palette;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_PALETTE(obj), NULL);
 
     palette = GWY_PALETTE(obj);
@@ -329,7 +329,7 @@ gwy_palette_deserialize(const guchar *buffer,
       { 'o', "pdef", &pdef, NULL, },
     };
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -399,7 +399,7 @@ gwy_palette_recompute_samples(GwyPaletteDef *palette_def,
     GwyRGBA pe;
     guchar *pixels = samples->pixels;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     for (i = 0; i < samples->nofvals; i++) {
         pe = (gwy_palette_def_get_color(palette_def,

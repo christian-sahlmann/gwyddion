@@ -62,7 +62,7 @@ gwy_graph_get_type(void)
          (GInstanceInitFunc)gwy_graph_init,
          NULL,
          };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_graph_type = g_type_register_static (GTK_TYPE_TABLE,
                                                  GWY_GRAPH_TYPE_NAME,
                                                  &gwy_graph_info,
@@ -78,7 +78,7 @@ gwy_graph_class_init(GwyGraphClass *klass)
 {
     GtkWidgetClass *widget_class;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
@@ -103,7 +103,7 @@ static void
 gwy_graph_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     GwyGraph *graph;
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     graph = GWY_GRAPH(widget);
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
@@ -126,7 +126,7 @@ gwy_graph_synchronize(GwyGraph *graph)
 static void
 gwy_graph_init(GwyGraph *graph)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     graph->n_of_curves = 0;
     graph->n_of_autocurves = 0;
@@ -204,7 +204,7 @@ gwy_graph_init(GwyGraph *graph)
 GtkWidget *
 gwy_graph_new()
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
      return GTK_WIDGET (g_object_new (gwy_graph_get_type (), NULL));
 }
 
@@ -213,7 +213,7 @@ void
 gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
                        gdouble shift, GString *label, GwyGraphAreaCurveParams *params)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     gdouble *xdata, *ydata;
     gint n, i;
@@ -234,7 +234,7 @@ gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
                        gdouble shift, GString *label, GwyGraphAreaCurveParams *params,
                        gdouble x_order, gdouble y_order, char *x_unit, char *y_unit)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     gdouble *xdata, *ydata;
     gint n, i;
@@ -282,7 +282,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
     gint i, isdiff;
     GwyGraphAreaCurve curve;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     /*look whether label maximum or minium will be changed*/
     isdiff=0;

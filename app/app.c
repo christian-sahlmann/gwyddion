@@ -107,7 +107,7 @@ gwy_app_quit(void)
     GwyDataWindow *data_window;
     GwyContainer *data;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     if (!gwy_app_confirm_quit())
         return TRUE;
     /* current_tool_use_func(NULL); */
@@ -234,7 +234,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     gboolean update_state;
     GList *item;
 
-    gwy_debug("%s: %p", __FUNCTION__, window);
+    gwy_debug("%p", window);
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(window));
     update_state = (current_data == NULL);
@@ -341,7 +341,7 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     };
     GList *item;
 
-    gwy_debug("%s: %p", __FUNCTION__, window);
+    gwy_debug("%p", window);
 
     /*g_return_if_fail(GWY_IS_GRAPH(graph));*/
 
@@ -426,7 +426,7 @@ gwy_app_data_view_update(GtkWidget *data_view)
     gdouble x;
     gsize i;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
     has_mask = gwy_container_contains_by_name(data, "/0/mask");
@@ -512,7 +512,7 @@ gwy_app_data_window_set_untitled(GwyDataWindow *data_window,
 void
 gwy_app_data_window_add(GwyDataWindow *window)
 {
-    gwy_debug("%s: %p", __FUNCTION__, window);
+    gwy_debug("%p", window);
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(window));
 
@@ -584,7 +584,7 @@ gwy_app_use_tool_cb(GtkWidget *unused,
 {
     GwyDataWindow *data_window;
 
-    gwy_debug("%s: %s", __FUNCTION__, toolname ? toolname : "NONE");
+    gwy_debug("%s", toolname ? toolname : "NONE");
     /* don't catch deactivations */
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(unused)))
         return;
@@ -812,7 +812,7 @@ undo_redo_clean(GObject *window,
 {
     GwyAppFuckingUndo *gafu;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     if (undo) {
         gafu = (GwyAppFuckingUndo*)g_object_get_data(window, "undo");

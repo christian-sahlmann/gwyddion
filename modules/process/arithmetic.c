@@ -283,7 +283,7 @@ gwy_data_arith_entry_cb(GtkWidget *entry,
         if (*end == '-')
             end++;
     }
-    /*gwy_debug("%s: <%s> <%s>", __FUNCTION__, s, end);*/
+    /*gwy_debug("<%s> <%s>", s, end);*/
     if (!*end) {
         g_free(s);
         return;

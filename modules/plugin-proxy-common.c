@@ -130,8 +130,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         *val = '\0';
         val++;
         if (strcmp(val, "[") != 0) {
-            gwy_debug("%s: <%s>=<%s>", __FUNCTION__,
-                      line, val);
+            gwy_debug("<%s>=<%s>", line, val);
             if (*val)
                 gwy_container_set_string_by_name(data, line, g_strdup(val));
             else

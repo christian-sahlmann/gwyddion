@@ -60,7 +60,7 @@ gwy_vector_shade_get_type(void)
             (GInstanceInitFunc)gwy_vector_shade_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_vector_shade_type = g_type_register_static(GTK_TYPE_TABLE,
                                                        GWY_VECTOR_SHADE_TYPE_NAME,
                                                        &gwy_vector_shade_info,
@@ -73,13 +73,13 @@ gwy_vector_shade_get_type(void)
 static void
 gwy_vector_shade_class_init(void)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 }
 
 static void
 gwy_vector_shade_init(GwyVectorShade *vector_shade)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     vector_shade->grad_sphere = NULL;
     vector_shade->spin_theta = NULL;
@@ -107,7 +107,7 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
     GwyGradSphere *grad_sphere;
     gdouble phi, theta;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     vector_shade = (GwyVectorShade*)g_object_new(GWY_TYPE_VECTOR_SHADE, NULL);
 

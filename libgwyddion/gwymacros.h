@@ -21,8 +21,11 @@
 #ifndef __GWY_GWYMACROS_H__
 #define __GWY_GWYMACROS_H__
 
-#include <glib/gmessages.h>
 #include <glib/gmacros.h>
+#include <glib/gstrfuncs.h>
+#include <glib/gmem.h>
+#include <glib/gutils.h>
+#include <glib/gmessages.h>
 
 #define _(x) (x)
 
@@ -82,33 +85,34 @@ extern "C" {
  **/
 #ifdef G_HAVE_GNUC_VARARGS
 #  ifdef DEBUG
-#    define gwy_debug(format...) g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, format)
+#    define gwy_debug(format...) \
+            _gwy_debug_gnu(G_LOG_DOMAIN, __FUNCTION__, format)
 #  else
 #    define gwy_debug(format...) /* */
 #  endif
 #elif defined(G_HAVE_ISO_VARARGS)
 #  ifdef DEBUG
-#    define gwy_debug(...) g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#    define gwy_debug(...) \
+            _gwy_debug_gnu(G_LOG_DOMAIN, __FILE__, __VA_ARGS__)
 #  else
 #    define gwy_debug(...) /* */
 #  endif
-#else /* no varargs macros */
+#else /* no varargs macros FIXME: this is broken, though it's like gutils.h */
 #  ifdef DEBUG
-G_INLINE_FUNC void
-gwy_debug(const gchar *format, ...)
-{
-  va_list args;
-  va_start(args, format);
-  g_logv(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, format, args);
-  va_end(args);
+G_INLINE_FUNC void gwy_debug(const gchar *format, ...) {
+    va_list args;
+    va_start(args, format);
+    g_logv(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, format, args);
+    va_end(args);
 }
 #  else
-G_INLINE_FUNC void
-gwy_debug(const gchar *format, ...)
-{
-}
+G_INLINE_FUNC void gwy_debug(const gchar *format, ...) { }
 #  endif
 #endif /* varargs macros */
+
+void _gwy_debug_gnu(const gchar *domain,
+                    const gchar *funcname,
+                    const gchar *format, ...);
 
 #ifdef __cplusplus
 }

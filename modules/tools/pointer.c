@@ -90,7 +90,7 @@ pointer_use(GwyDataWindow *data_window,
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
 
-    gwy_debug("%s: %p", __FUNCTION__, data_window);
+    gwy_debug("%p", data_window);
 
     if (!data_window) {
         pointer_dialog_abandon();
@@ -144,7 +144,7 @@ pointer_dialog_create(GwyDataView *data_view)
     GtkWidget *dialog, *table, *label;
     gdouble xreal, yreal, max, unit;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     data = gwy_data_view_get_data(data_view);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
@@ -217,7 +217,7 @@ pointer_selection_updated_cb(void)
     gdouble x, y;
     gboolean is_visible, is_selected;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     /*XXX: seems broken
      * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
     is_visible = controls.is_visible;
@@ -254,7 +254,7 @@ pointer_selection_updated_cb(void)
 static void
 pointer_dialog_response_cb(gpointer unused, gint response)
 {
-    gwy_debug("%s: response %d", __FUNCTION__, response);
+    gwy_debug("response %d", response);
     switch (response) {
         case GTK_RESPONSE_CLOSE:
         case GTK_RESPONSE_DELETE_EVENT:
@@ -275,8 +275,8 @@ pointer_dialog_response_cb(gpointer unused, gint response)
 static void
 pointer_dialog_set_visible(gboolean visible)
 {
-    gwy_debug("%s: now %d, setting to %d",
-              __FUNCTION__, controls.is_visible, visible);
+    gwy_debug("now %d, setting to %d",
+              controls.is_visible, visible);
     if (controls.is_visible == visible)
         return;
 

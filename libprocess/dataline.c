@@ -68,7 +68,7 @@ gwy_data_line_get_type(void)
             (GInterfaceInitFunc)gwy_data_line_watchable_init, NULL, 0,
         };
 
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_data_line_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_DATA_LINE_TYPE_NAME,
                                                    &gwy_data_line_info,
@@ -89,7 +89,7 @@ gwy_data_line_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -103,7 +103,7 @@ gwy_data_line_watchable_init(gpointer giface)
 {
     GwyWatchableClass *iface = giface;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     /* initialize stuff */
@@ -115,7 +115,7 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
      gobject_class->finalize = (GObjectFinalizeFunc)gwy_data_line_finalize;
 }
@@ -123,7 +123,7 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
 static void
 gwy_data_line_init(GwyDataLine *data_line)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     data_line->data = NULL;
     data_line->res = 0;
     data_line->real = 0.0;
@@ -132,7 +132,7 @@ gwy_data_line_init(GwyDataLine *data_line)
 static void
 gwy_data_line_finalize(GwyDataLine *data_line)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     gwy_data_line_free(data_line);
 }
 
@@ -141,7 +141,7 @@ gwy_data_line_new(gint res, gdouble real, gboolean nullme)
 {
     GwyDataLine *data_line;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     data_line = g_object_new(GWY_TYPE_DATA_LINE, NULL);
 
     gwy_data_line_initialize(data_line, res, real, nullme);
@@ -157,7 +157,7 @@ gwy_data_line_serialize(GObject *obj,
 {
     GwyDataLine *data_line;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_DATA_LINE(obj), NULL);
 
     data_line = GWY_DATA_LINE(obj);
@@ -189,7 +189,7 @@ gwy_data_line_deserialize(const guchar *buffer,
       { 'D', "data", &data, &fsize, },
     };
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -239,7 +239,7 @@ gwy_data_line_value_changed(GObject *data_line)
 void
 gwy_data_line_alloc(GwyDataLine *a, gint res)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     a->res = res;
     a->data = g_new(gdouble, a->res);
@@ -252,7 +252,7 @@ gwy_data_line_initialize(GwyDataLine *a,
 {
     int i;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     gwy_data_line_alloc(a, res);
 
     a->real = real;
@@ -265,7 +265,7 @@ gwy_data_line_initialize(GwyDataLine *a,
 void
 gwy_data_line_free(GwyDataLine *a)
 {
-/*    gwy_debug("%s", __FUNCTION__);*/
+/*    gwy_debug("");*/
     g_free(a->data);
 }
 
@@ -276,7 +276,7 @@ gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
     gdouble ratio = ((gdouble)a->res - 1)/((gdouble)res - 1);
     GwyDataLine b;
 
-/*    gwy_debug("%s", __FUNCTION__);*/
+/*    gwy_debug("");*/
     if (res == a->res)
         return;
 
@@ -301,7 +301,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
     gint i;
     GwyDataLine b;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     if (to < from)
         GWY_SWAP(gint, from, to);
 
@@ -335,7 +335,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 gboolean
 gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 {
-/*    gwy_debug("%s", __FUNCTION__);*/
+/*    gwy_debug("");*/
     g_return_val_if_fail(a->res == b->res, FALSE);
 
     memcpy(b->data, a->data, a->res*sizeof(gdouble));
@@ -350,7 +350,7 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     gdouble w1, w2, w3, w4;
     gdouble rest = x - (gdouble)l;
 
-    /*gwy_debug("%s", __FUNCTION__);*/
+    /*gwy_debug("");*/
     g_return_val_if_fail(x >= 0 && x < a->res, 0.0);
 
     /*simple (and fast) methods*/
@@ -477,7 +477,7 @@ gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z)
     gdouble avg;
     GwyDataLine b;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     if (x) {
         b.res = a->res;
         b.data = g_new(gdouble, a->res);
@@ -790,7 +790,7 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
     gint i;
     gdouble bpix = bv/a->res*a->real;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     for (i = 0; i < a->res; i++)
         a->data[i] -= av + bpix*i;
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
@@ -803,7 +803,7 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
     gdouble ratio, x, as, radius, x1, x2, y1, y2;
     GwyDataLine dx, dy;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     if (angle == 0)
         return;
 
@@ -919,7 +919,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
     gdouble rmsa, rmsb, av, bv;
     GwyDataLine multra, multia;
 
-   /* gwy_debug("%s", __FUNCTION__);*/
+   /* gwy_debug("");*/
     if (ia->res != ra->res)
         gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
     if (rb->res != ra->res)

@@ -82,7 +82,7 @@ gwy_layer_points_get_type(void)
             (GInstanceInitFunc)gwy_layer_points_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_layer_points_type
             = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
                                      GWY_LAYER_POINTS_TYPE_NAME,
@@ -99,7 +99,7 @@ gwy_layer_points_class_init(GwyLayerPointsClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -121,7 +121,7 @@ gwy_layer_points_init(GwyLayerPoints *layer)
 {
     GwyLayerPointsClass *klass;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     klass = GWY_LAYER_POINTS_GET_CLASS(layer);
     gwy_layer_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
@@ -139,7 +139,7 @@ gwy_layer_points_finalize(GObject *object)
     GwyLayerPointsClass *klass;
     GwyLayerPoints *layer;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_LAYER_POINTS(object));
@@ -172,7 +172,7 @@ gwy_layer_points_new(void)
 {
     GtkObject *object;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     object = g_object_new(GWY_TYPE_LAYER_POINTS, NULL);
 
     return object;
@@ -333,7 +333,7 @@ gwy_layer_points_button_pressed(GwyDataViewLayer *layer,
     gint x, y, i;
     gdouble xreal, yreal;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     points_layer = (GwyLayerPoints*)layer;
     if (points_layer->button)
         g_warning("unexpected mouse button press when already pressed");
@@ -341,7 +341,7 @@ gwy_layer_points_button_pressed(GwyDataViewLayer *layer,
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
-    gwy_debug("%s [%d,%d]", __FUNCTION__, x, y);
+    gwy_debug("[%d,%d]", x, y);
     /* do nothing when we are outside */
     if (x != event->x || y != event->y)
         return FALSE;
@@ -389,7 +389,7 @@ gwy_layer_points_button_released(GwyDataViewLayer *layer,
     x = event->x;
     y = event->y;
     i = points_layer->inear;
-    gwy_debug("%s: i = %d", __FUNCTION__, i);
+    gwy_debug("i = %d", i);
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
     outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
@@ -470,7 +470,7 @@ gwy_layer_points_unselect(GwyDataViewLayer *layer)
 static void
 gwy_layer_points_plugged(GwyDataViewLayer *layer)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_POINTS(layer));
 
     GWY_LAYER_POINTS(layer)->nselected = 0;
@@ -482,7 +482,7 @@ gwy_layer_points_plugged(GwyDataViewLayer *layer)
 static void
 gwy_layer_points_unplugged(GwyDataViewLayer *layer)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_POINTS(layer));
 
     GWY_LAYER_POINTS(layer)->nselected = 0;

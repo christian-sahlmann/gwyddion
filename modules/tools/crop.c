@@ -93,7 +93,7 @@ crop_use(GwyDataWindow *data_window,
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
 
-    gwy_debug("%s: %p", __FUNCTION__, data_window);
+    gwy_debug("%p", data_window);
 
     if (!data_window) {
         crop_dialog_abandon();
@@ -145,14 +145,13 @@ crop_do(void)
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
-    gwy_debug("%s: %d %d", __FUNCTION__,
-              gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
+    gwy_debug("%d %d", gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }
 
 static void
 crop_dialog_abandon(void)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     if (select_layer && finished_id)
         g_signal_handler_disconnect(select_layer, finished_id);
     finished_id = 0;
@@ -175,7 +174,7 @@ crop_dialog_create(GwyDataView *data_view)
     GtkWidget *dialog, *table, *label;
     gdouble xreal, yreal, max, unit;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     data = gwy_data_view_get_data(data_view);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
@@ -255,7 +254,7 @@ crop_selection_finished_cb(void)
     gdouble x0, y0, x1, y1;
     gboolean is_visible, is_selected;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     /*XXX: seems broken
      * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
     is_visible = controls.is_visible;
@@ -282,7 +281,7 @@ crop_selection_finished_cb(void)
 static void
 crop_dialog_response_cb(gpointer unused, gint response)
 {
-    gwy_debug("%s: response %d", __FUNCTION__, response);
+    gwy_debug("response %d", response);
     switch (response) {
         case GTK_RESPONSE_CLOSE:
         case GTK_RESPONSE_DELETE_EVENT:
@@ -307,8 +306,8 @@ crop_dialog_response_cb(gpointer unused, gint response)
 static void
 crop_dialog_set_visible(gboolean visible)
 {
-    gwy_debug("%s: now %d, setting to %d",
-              __FUNCTION__, controls.is_visible, visible);
+    gwy_debug("now %d, setting to %d",
+              controls.is_visible, visible);
     if (controls.is_visible == visible)
         return;
 

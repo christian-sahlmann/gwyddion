@@ -109,7 +109,7 @@ module_register(const gchar *name)
     settings = gwy_app_settings_get();
     plugin_path = gwy_container_get_string_by_name(settings, "/app/plugindir");
     g_return_val_if_fail(plugin_path, FALSE);
-    gwy_debug("%s: plug-in path is: %s", __FUNCTION__, plugin_path);
+    gwy_debug("plug-in path is: %s", plugin_path);
 
     dir = g_build_filename(plugin_path, "file", NULL);
     gdir = g_dir_open(dir, 0, &err);
@@ -129,7 +129,7 @@ module_register(const gchar *name)
             g_free(pluginname);
             continue;
         }
-        gwy_debug("%s: plug-in %s", __FUNCTION__, filename);
+        gwy_debug("plug-in %s", filename);
         args[0] = pluginname;
         buffer = NULL;
         ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
@@ -212,7 +212,7 @@ plugin_proxy_load(const gchar *filename,
     gboolean ok;
     gint fd;
 
-    gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
+    gwy_debug("called as %s with file `%s'", name, filename);
     if (!(info = find_plugin(name, GWY_FILE_LOAD)))
         return FALSE;
 
@@ -228,16 +228,14 @@ plugin_proxy_load(const gchar *filename,
     args[1] = g_strdup(run_mode_to_str(GWY_FILE_LOAD));
     args[2] = tmpname;
     args[3] = g_strdup(filename);
-    gwy_debug("%s: %s %s %s %s", __FUNCTION__,
-              args[0], args[1], args[2], args[3]);
+    gwy_debug("%s %s %s %s", args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       NULL, NULL, &exit_status, &err);
     if (!err)
         ok &= g_file_get_contents(tmpname, &buffer, &size, &err);
     unlink(tmpname);
     fclose(fh);
-    gwy_debug("%s: ok = %d, exit_status = %d, err = %p", __FUNCTION__,
-              ok, exit_status, err);
+    gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
     ok &= !exit_status;
     if (!ok || !(data = text_dump_import(data, buffer, size))) {
         g_warning("Cannot run plug-in %s: %s",
@@ -266,7 +264,7 @@ plugin_proxy_save(GwyContainer *data,
     gchar *args[] = { NULL, NULL, NULL, NULL, NULL };
     gboolean ok;
 
-    gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
+    gwy_debug("called as %s with file `%s'", name, filename);
     if (!(info = find_plugin(name, GWY_FILE_SAVE)))
         return FALSE;
 
@@ -276,14 +274,12 @@ plugin_proxy_save(GwyContainer *data,
     args[1] = g_strdup(run_mode_to_str(GWY_FILE_SAVE));
     args[2] = tmpname;
     args[3] = g_strdup(filename);
-    gwy_debug("%s: %s %s %s %s", __FUNCTION__,
-              args[0], args[1], args[2], args[3]);
+    gwy_debug("%s %s %s %s", args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       NULL, NULL, &exit_status, &err);
     unlink(tmpname);
     fclose(fh);
-    gwy_debug("%s: ok = %d, exit_status = %d, err = %p", __FUNCTION__,
-              ok, exit_status, err);
+    gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
     ok &= !exit_status;
     if (!ok) {
         g_warning("Cannot run plug-in %s: %s",
@@ -306,7 +302,7 @@ plugin_proxy_detect(const gchar *filename,
 {
     PluginInfo *info;
 
-    gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
+    gwy_debug("called as %s with file `%s'", name, filename);
     if (!(info = find_plugin(name, GWY_FILE_MASK)))
         return 0;
     if (!g_pattern_match_string(info->pattern, filename))

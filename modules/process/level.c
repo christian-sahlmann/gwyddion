@@ -102,8 +102,8 @@ level_rotate(GwyContainer *data, GwyRunType run)
                                 180/G_PI*atan2(b, 1),
                                 180/G_PI*atan2(c, 1),
                                 GWY_INTERPOLATION_BILINEAR);
-    gwy_debug("%s: b = %g, alpha = %g deg, c = %g, beta = %g deg",
-              __FUNCTION__, b, 180/G_PI*atan2(b, 1), c, 180/G_PI*atan2(c, 1));
+    gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
+              b, 180/G_PI*atan2(b, 1), c, 180/G_PI*atan2(c, 1));
 
     return TRUE;
 }

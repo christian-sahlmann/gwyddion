@@ -64,13 +64,13 @@ gwy_file_func_register(const gchar *modname,
     _GwyModuleInfoInternal *iinfo;
     gchar *canon_name;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     gwy_debug("name = %s, file_desc = %s, detect = %p, load = %p, save = %p",
               func_info->name, func_info->file_desc,
               func_info->detect, func_info->load, func_info->save);
 
     if (!file_funcs) {
-        gwy_debug("%s: Initializing...", __FUNCTION__);
+        gwy_debug("Initializing...");
         file_funcs = g_hash_table_new(g_str_hash, g_str_equal);
     }
 

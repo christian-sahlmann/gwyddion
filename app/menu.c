@@ -379,7 +379,7 @@ gwy_app_run_process_func_cb(gchar *name)
     GwyContainer *data;
     gsize i;
 
-    gwy_debug("%s: `%s'", __FUNCTION__, name);
+    gwy_debug("`%s'", name);
     data_window = gwy_app_data_window_get_current();
     if (!data_window)
         return;
@@ -473,7 +473,7 @@ gwy_app_run_graph_func_cb(gchar *name)
 {
     GtkWidget *graph_window, *graph;
 
-    gwy_debug("%s: `%s'", __FUNCTION__, name);
+    gwy_debug("`%s'", name);
     graph_window = gwy_app_graph_window_get_current();
     if (!graph_window)
         return;
@@ -508,8 +508,7 @@ gwy_menu_recent_files_update(GList *recent_files)
         label = g_strdup_printf("%s%d. %s", i < 10 ? "_" : "", i, s);
         if (child) {
             item = GTK_BIN(child->data)->child;
-            gwy_debug("%s: reusing item %p for <%s> [#%d]", __FUNCTION__,
-                      item, s, i);
+            gwy_debug("reusing item %p for <%s> [#%d]", item, s, i);
             gtk_label_set_text_with_mnemonic(GTK_LABEL(item), label);
             g_free(g_object_get_qdata(G_OBJECT(child->data), quark));
             g_object_set_qdata(G_OBJECT(child->data), quark,
@@ -518,8 +517,7 @@ gwy_menu_recent_files_update(GList *recent_files)
         }
         else {
             item = gtk_menu_item_new_with_mnemonic(label);
-            gwy_debug("%s: creating item %p for <%s> [#%d]", __FUNCTION__,
-                      item, s, i);
+            gwy_debug("creating item %p for <%s> [#%d]", item, s, i);
             g_object_set_qdata_full(G_OBJECT(item), quark, g_strdup(filename),
                                     g_free);
             gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);

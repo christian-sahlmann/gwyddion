@@ -98,7 +98,7 @@ gwy_app_file_save_cb(void)
         gwy_app_file_save_as_cb();
         return;
     }
-    gwy_debug("%s: %s", __FUNCTION__, filename_utf8);
+    gwy_debug("%s", filename_utf8);
     filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
     if (!filename_sys || !*filename_sys || !gwy_file_save(data, filename_sys))
         gwy_app_file_save_as_cb();
@@ -348,7 +348,7 @@ recent_files_update(const gchar *filename_utf8)
 {
     GList *item;
 
-    gwy_debug("%s: %s", __FUNCTION__, filename_utf8);
+    gwy_debug("%s", filename_utf8);
     if (!recent_files)
         recent_files = recent_files_from_settings();
 
@@ -378,7 +378,7 @@ recent_files_from_settings(void)
     gint i;
     gsize len;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     settings = gwy_app_settings_get();
     g_return_val_if_fail(GWY_IS_CONTAINER(settings), NULL);
     len = strlen(prefix);
@@ -386,7 +386,7 @@ recent_files_from_settings(void)
     g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", 0);
     for (i = 1; gwy_container_contains_by_name(settings, buffer); i++) {
         s = gwy_container_get_string_by_name(settings, buffer);
-        gwy_debug("%s: <%s> is %d", __FUNCTION__, s, i);
+        gwy_debug("<%s> is %d", s, i);
         list = g_list_prepend(list, g_strdup(s));
         g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", i);
     }
@@ -408,7 +408,7 @@ recent_files_to_settings(void)
     gint i;
     gsize len;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     settings = gwy_app_settings_get();
     g_return_if_fail(GWY_IS_CONTAINER(settings));
     gwy_container_remove_by_prefix(settings, prefix);

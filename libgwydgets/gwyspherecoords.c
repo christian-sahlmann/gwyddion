@@ -65,7 +65,7 @@ gwy_sphere_coords_get_type(void)
             (GInterfaceInitFunc)gwy_sphere_coords_watchable_init, NULL, 0
         };
 
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_sphere_coords_type = g_type_register_static(GTK_TYPE_OBJECT,
                                                         GWY_SPHERE_COORDS_TYPE_NAME,
                                                         &gwy_sphere_coords_info,
@@ -86,7 +86,7 @@ gwy_sphere_coords_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     iface->serialize = gwy_sphere_coords_serialize;
@@ -99,7 +99,7 @@ gwy_sphere_coords_watchable_init(gpointer giface)
 {
     GwyWatchableClass *iface = giface;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     iface->value_changed = NULL;
@@ -108,13 +108,13 @@ gwy_sphere_coords_watchable_init(gpointer giface)
 static void
 gwy_sphere_coords_class_init(void)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 }
 
 static void
 gwy_sphere_coords_init(GwySphereCoords *sphere_coords)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     sphere_coords->theta = 0.0;
     sphere_coords->phi = 0.0;
 }
@@ -134,7 +134,7 @@ gwy_sphere_coords_new(gdouble theta,
 {
     GwySphereCoords *sphere_coords;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     sphere_coords = g_object_new(GWY_TYPE_SPHERE_COORDS, NULL);
 
     sphere_coords->theta = theta;
@@ -214,7 +214,7 @@ gwy_sphere_coords_serialize(GObject *obj,
 {
     GwySphereCoords *sphere_coords;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_SPHERE_COORDS(obj), NULL);
 
     sphere_coords = GWY_SPHERE_COORDS(obj);
@@ -240,7 +240,7 @@ gwy_sphere_coords_deserialize(const guchar *buffer,
         { 'd', "phi", &phi, NULL },
     };
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -256,7 +256,7 @@ gwy_sphere_coords_duplicate(GObject *object)
 {
     GwySphereCoords *sphere_coords;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_SPHERE_COORDS(object), NULL);
 
     sphere_coords = GWY_SPHERE_COORDS(object);

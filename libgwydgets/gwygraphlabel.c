@@ -74,7 +74,7 @@ gwy_graph_label_get_type(void)
             (GInstanceInitFunc)gwy_graph_label_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_graph_label_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                       GWY_GRAPH_LABEL_TYPE_NAME,
                                                       &gwy_graph_label_info,
@@ -91,7 +91,7 @@ gwy_graph_label_class_init(GwyGraphLabelClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -113,7 +113,7 @@ gwy_graph_label_class_init(GwyGraphLabelClass *klass)
 static void
 gwy_graph_label_init(GwyGraphLabel *label)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     label->is_visible = 1;
 
@@ -129,7 +129,7 @@ gwy_graph_label_new()
 {
     GwyGraphLabel *label;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     label = gtk_type_new (gwy_graph_label_get_type ());
 
@@ -234,7 +234,7 @@ gwy_graph_label_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
     GwyGraphLabel *label;
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     label = GWY_GRAPH_LABEL(widget);
     requisition->width = label->maxwidth;
@@ -247,7 +247,7 @@ gwy_graph_label_size_allocate(GtkWidget *widget,
 {
     GwyGraphLabel *label;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_GRAPH_LABEL(widget));
@@ -275,7 +275,7 @@ gwy_graph_label_expose(GtkWidget *widget,
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_LABEL(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     if (event->count > 0)
         return FALSE;
@@ -372,7 +372,7 @@ gwy_graph_label_button_press(GtkWidget *widget,
     GwyGraphLabel *label;
     double x, y;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_LABEL(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
@@ -389,7 +389,7 @@ gwy_graph_label_button_release(GtkWidget *widget,
     GwyGraphLabel *label;
     gdouble x, y;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
 
     g_return_val_if_fail(widget != NULL, FALSE);
@@ -409,7 +409,7 @@ gwy_graph_label_add_curve(GwyGraphLabel *label, GwyGraphAreaCurveParams *params)
     PangoLayout *layout;
     PangoRectangle rect;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     cparams = g_new(GwyGraphAreaCurveParams, 1);
     cparams->description = g_string_new(params->description->str);
@@ -441,7 +441,7 @@ gwy_graph_label_clear(GwyGraphLabel *label)
     guint i;
     GwyGraphAreaCurveParams *cparams;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     label->maxwidth = 0;
     label->maxheight = 0;

@@ -100,7 +100,7 @@ gwy_grad_sphere_get_type(void)
             (GInstanceInitFunc)gwy_grad_sphere_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_grad_sphere_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                       GWY_GRAD_SPHERE_TYPE_NAME,
                                                       &gwy_grad_sphere_info,
@@ -117,7 +117,7 @@ gwy_grad_sphere_class_init(GwyGradSphereClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -157,7 +157,7 @@ gwy_grad_sphere_class_init(GwyGradSphereClass *klass)
 static void
 gwy_grad_sphere_init(GwyGradSphere *grad_sphere)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     grad_sphere->update_policy = GTK_UPDATE_CONTINUOUS;
     grad_sphere->button = 0;
@@ -191,7 +191,7 @@ gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
     GtkWidget *widget;
     GwyGradSphere *grad_sphere;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     if (sphere_coords)
         g_return_val_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords), NULL);
@@ -445,7 +445,7 @@ static void
 gwy_grad_sphere_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     requisition->width = GRAD_SPHERE_DEFAULT_SIZE;
     requisition->height = GRAD_SPHERE_DEFAULT_SIZE;
@@ -457,7 +457,7 @@ gwy_grad_sphere_size_allocate(GtkWidget *widget,
 {
     GwyGradSphere *grad_sphere;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(widget));

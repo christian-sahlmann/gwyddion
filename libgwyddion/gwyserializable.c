@@ -68,8 +68,7 @@ static void
 gwy_serializable_base_init(GwySerializableClass *klass)
 {
     gwy_serializable_base_init_count++;
-    gwy_debug("%s (base init count = %d)",
-              __FUNCTION__, gwy_serializable_base_init_count);
+    gwy_debug("base init count = %d", gwy_serializable_base_init_count);
     if (gwy_serializable_base_init_count == 1) {
         klass->duplicate = NULL;
         /* add signals... */
@@ -80,8 +79,7 @@ static void
 gwy_serializable_base_finalize(void)
 {
     gwy_serializable_base_init_count--;
-    gwy_debug("%s (base init count = %d)",
-              __FUNCTION__, gwy_serializable_base_init_count);
+    gwy_debug("base init count = %d", gwy_serializable_base_init_count);
     if (gwy_serializable_base_init_count == 0) {
         /* destroy signals... */
     }
@@ -290,7 +288,7 @@ gwy_serialize_pack(guchar *buffer,
     gsize nobjs;  /* number of items which are objects */
     struct o { gsize size; guchar *buffer; } *objects;  /* serialized objects */
 
-    gwy_debug("%s (templ: %s)", __FUNCTION__, templ);
+    gwy_debug("templ: %s", templ);
     nargs = strlen(templ);
     if (!nargs)
         return buffer;
@@ -544,7 +542,7 @@ gwy_serialize_pack_struct(guchar *buffer,
     gsize nobjs;  /* number of items which are objects */
     struct o { gsize size; guchar *buffer; } *objects;  /* serialized objects */
 
-    gwy_debug("%s (nspec = %d)", __FUNCTION__, nspec);
+    gwy_debug("nspec = %d", nspec);
     if (!nspec)
         return buffer;
 
@@ -976,7 +974,7 @@ gwy_serialize_unpack_boolean(const guchar *buffer,
 {
     gboolean value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(guchar) <= size);
@@ -1005,7 +1003,7 @@ gwy_serialize_unpack_char(const guchar *buffer,
 {
     guchar value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(guchar) <= size);
@@ -1036,7 +1034,7 @@ gwy_serialize_unpack_char_array(const guchar *buffer,
 {
     guchar *value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(guchar) <= size);
@@ -1065,7 +1063,7 @@ gwy_serialize_unpack_int32(const guchar *buffer,
 {
     gint32 value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(gint32) <= size);
@@ -1096,7 +1094,7 @@ gwy_serialize_unpack_int32_array(const guchar *buffer,
 {
     gint32 *value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gint32) <= size);
@@ -1125,7 +1123,7 @@ gwy_serialize_unpack_int64(const guchar *buffer,
 {
     gint64 value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(gint64) <= size);
@@ -1156,7 +1154,7 @@ gwy_serialize_unpack_int64_array(const guchar *buffer,
 {
     gint64 *value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gint64) <= size);
@@ -1185,7 +1183,7 @@ gwy_serialize_unpack_double(const guchar *buffer,
 {
     gdouble value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(gdouble) <= size);
@@ -1216,7 +1214,7 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
 {
     gdouble *value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gdouble) <= size);
@@ -1246,7 +1244,7 @@ gwy_serialize_unpack_string(const guchar *buffer,
     guchar *value;
     const guchar *p;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(buffer);
     g_assert(position);
     g_assert(*position < size);
@@ -1282,7 +1280,7 @@ gwy_serialize_check_string(const guchar *buffer,
 {
     const guchar *p;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(buffer);
     g_assert(size > 0);
     g_assert(position < size);

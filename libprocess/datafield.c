@@ -82,7 +82,7 @@ gwy_data_field_get_type(void)
             NULL
         };
 
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_data_field_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_DATA_FIELD_TYPE_NAME,
                                                    &gwy_data_field_info,
@@ -103,7 +103,7 @@ gwy_data_field_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -117,7 +117,7 @@ gwy_data_field_watchable_init(gpointer giface)
 {
     GwyWatchableClass *iface = giface;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     /* initialize stuff */
@@ -129,7 +129,7 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     gobject_class->finalize = (GObjectFinalizeFunc)gwy_data_field_finalize;
 }
@@ -137,7 +137,7 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
 static void
 gwy_data_field_init(GwyDataField *data_field)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     data_field->data = NULL;
     data_field->xres = 0;
     data_field->yres = 0;
@@ -148,7 +148,7 @@ gwy_data_field_init(GwyDataField *data_field)
 static void
 gwy_data_field_finalize(GwyDataField *data_field)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     gwy_data_field_free(data_field);
 }
 
@@ -159,7 +159,7 @@ gwy_data_field_new(gint xres, gint yres,
 {
     GwyDataField *data_field;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     data_field = g_object_new(GWY_TYPE_DATA_FIELD, NULL);
 
     gwy_data_field_initialize(data_field, xres, yres, xreal, yreal, nullme);
@@ -175,7 +175,7 @@ gwy_data_field_serialize(GObject *obj,
     GwyDataField *data_field;
     gsize datasize;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), NULL);
 
     data_field = GWY_DATA_FIELD(obj);
@@ -211,7 +211,7 @@ gwy_data_field_deserialize(const guchar *buffer,
         { 'D', "data", &data, &fsize, },
     };
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -272,7 +272,7 @@ gwy_data_field_value_changed(GObject *data_field)
 void
 gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     a->xres = xres;
     a->yres = yres;
@@ -298,7 +298,7 @@ gwy_data_field_initialize(GwyDataField *a,
 {
     int i;
 
-    gwy_debug("%s (%dx%d)", __FUNCTION__, xres, yres);
+    gwy_debug("(%dx%d)", xres, yres);
 
     gwy_data_field_alloc(a, xres, yres);
     a->xreal = xreal;
@@ -318,7 +318,7 @@ gwy_data_field_initialize(GwyDataField *a,
 void
 gwy_data_field_free(GwyDataField *a)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_free(a->data);
 }
 

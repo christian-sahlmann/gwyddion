@@ -18,7 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <libgwyddion/gwymacros.h>
+#include "gwymacros.h"
 #include "gwyutils.h"
 
 /**
@@ -61,6 +61,19 @@ gwy_hash_table_to_list_cb(gpointer unused_key,
     GList **list = (GList**)user_data;
 
     *list = g_list_prepend(*list, value);
+}
+
+void
+_gwy_debug_gnu(const gchar *domain,
+               const gchar *funcname,
+               const gchar *format, ...)
+{
+    gchar *fmt2 = g_strconcat(funcname, ": ", format, NULL);
+    va_list args;
+    va_start(args, format);
+    g_logv(domain, G_LOG_LEVEL_DEBUG, fmt2, args);
+    va_end(args);
+    g_free(fmt2);
 }
 
 

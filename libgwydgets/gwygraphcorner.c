@@ -72,7 +72,7 @@ gwy_graph_corner_get_type(void)
             (GInstanceInitFunc)gwy_graph_corner_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_graph_corner_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                       GWY_GRAPH_CORNER_TYPE_NAME,
                                                       &gwy_graph_corner_info,
@@ -89,7 +89,7 @@ gwy_graph_corner_class_init(GwyGraphCornerClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -111,7 +111,7 @@ gwy_graph_corner_class_init(GwyGraphCornerClass *klass)
 static void
 gwy_graph_corner_init(GwyGraphCorner *graph_corner)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
 }
 
@@ -120,7 +120,7 @@ gwy_graph_corner_new()
 {
     GwyGraphCorner *graph_corner;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     graph_corner = gtk_type_new (gwy_graph_corner_get_type ());
 
@@ -216,7 +216,7 @@ gwy_graph_corner_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
     GwyGraphCorner *graph_corner;
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     graph_corner = GWY_GRAPH_CORNER(widget);
 
@@ -230,7 +230,7 @@ gwy_graph_corner_size_allocate(GtkWidget *widget,
 {
     GwyGraphCorner *graph_corner;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_GRAPH_CORNER(widget));
@@ -282,7 +282,7 @@ gwy_graph_corner_button_press(GtkWidget *widget,
     GwyGraphCorner *graph_corner;
     double x, y;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
             g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
@@ -300,7 +300,7 @@ gwy_graph_corner_button_release(GtkWidget *widget,
     GwyGraphCorner *graph_corner;
     gdouble x, y;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
 
     g_return_val_if_fail(widget != NULL, FALSE);

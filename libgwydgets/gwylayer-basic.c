@@ -62,7 +62,7 @@ gwy_layer_basic_get_type(void)
             (GInstanceInitFunc)gwy_layer_basic_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_layer_basic_type
             = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
                                      GWY_LAYER_BASIC_TYPE_NAME,
@@ -79,7 +79,7 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -94,7 +94,7 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
 static void
 gwy_layer_basic_init(GwyLayerBasic *layer)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     layer->changed = TRUE;
 }
@@ -103,7 +103,7 @@ static void
 gwy_layer_basic_finalize(GObject *object)
 {
     GwyDataViewLayer *layer;
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(GWY_IS_LAYER_BASIC(object));
     layer = GWY_DATA_VIEW_LAYER(object);
@@ -127,7 +127,7 @@ gwy_layer_basic_new(void)
     GtkObject *object;
     GwyDataViewLayer *layer;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     object = g_object_new(GWY_TYPE_LAYER_BASIC, NULL);
     layer = (GwyDataViewLayer*)object;
@@ -147,7 +147,7 @@ gwy_layer_basic_paint(GwyDataViewLayer *layer)
 {
     GwyDataField *data_field;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
 
     /* TODO Container */
@@ -231,7 +231,7 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
     gint width, height;
     const gchar *palette_name;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
 
     GWY_LAYER_BASIC(layer)->changed = TRUE;
@@ -287,7 +287,7 @@ gwy_layer_basic_update(GwyDataViewLayer *layer)
 
     GWY_LAYER_BASIC(layer)->changed = TRUE;
     pal = gwy_palette_def_get_name(gwy_palette_get_palette_def(layer->palette));
-    gwy_debug("%s: storing palette %s", __FUNCTION__, pal);
+    gwy_debug("storing palette %s", pal);
     gwy_container_set_string_by_name(layer->data, "/0/base/palette",
                                      g_strdup(pal));
     gwy_data_view_layer_updated(layer);

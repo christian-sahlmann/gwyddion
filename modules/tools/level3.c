@@ -99,7 +99,7 @@ level3_use(GwyDataWindow *data_window,
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
 
-    gwy_debug("%s: %p", __FUNCTION__, data_window);
+    gwy_debug("%p", data_window);
 
     if (!data_window) {
         level3_dialog_abandon();
@@ -162,22 +162,18 @@ level3_do(void)
     c = z[0]*(points[2]*points[5] - points[3]*points[4])
          + z[1]*(points[1]*points[4] - points[5]*points[0])
          + z[2]*(points[0]*points[3] - points[1]*points[2]);
-    gwy_debug("%s: bx = %g, by = %g, c = %g, det = %g", __FUNCTION__,
-              bx, by, c, det);
+    gwy_debug("bx = %g, by = %g, c = %g, det = %g", bx, by, c, det);
     bx /= det;
     by /= det;
     c /= det;
-    gwy_debug("%s: bx = %g, by = %g, c = %g", __FUNCTION__, bx, by, c);
-    gwy_debug("%s: z[0] = %g, z[1] = %g, z[2] = %g", __FUNCTION__,
-              z[0], z[1], z[2]);
-    gwy_debug("%s: zn[0] = %g, zn[1] = %g, zn[2] = %g", __FUNCTION__,
-              z[0] - c - bx*points[0] - by*points[1],
+    gwy_debug("bx = %g, by = %g, c = %g", bx, by, c);
+    gwy_debug("z[0] = %g, z[1] = %g, z[2] = %g", z[0], z[1], z[2]);
+    gwy_debug("zn[0] = %g, zn[1] = %g, zn[2] = %g", z[0] - c - bx*points[0] - by*points[1],
               z[1] - c - bx*points[2] - by*points[3],
               z[2] - c - bx*points[4] - by*points[5]);
     gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_plane_level(dfield, c, bx, by);
-    gwy_debug("%s: zN[0] = %g, zN[1] = %g, zN[2] = %g", __FUNCTION__,
-              level3_get_z_average(dfield, points[0], points[1], radius),
+    gwy_debug("zN[0] = %g, zN[1] = %g, zN[2] = %g", level3_get_z_average(dfield, points[0], points[1], radius),
               level3_get_z_average(dfield, points[2], points[3], radius),
               level3_get_z_average(dfield, points[4], points[5], radius));
     gwy_data_view_update(GWY_DATA_VIEW(points_layer->parent));
@@ -241,7 +237,7 @@ level3_dialog_create(GwyDataView *data_view)
     guchar *buffer;
     gint i;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     data = gwy_data_view_get_data(data_view);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
@@ -322,7 +318,7 @@ level3_selection_finished_cb(void)
     gboolean is_visible;
     gint nselected, i;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     /*XXX: seems broken
      * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
     is_visible = controls.is_visible;
@@ -342,7 +338,7 @@ level3_selection_finished_cb(void)
 static void
 level3_dialog_response_cb(gpointer unused, gint response)
 {
-    gwy_debug("%s: response %d", __FUNCTION__, response);
+    gwy_debug("response %d", response);
     switch (response) {
         case GTK_RESPONSE_CLOSE:
         case GTK_RESPONSE_DELETE_EVENT:
@@ -367,8 +363,8 @@ level3_dialog_response_cb(gpointer unused, gint response)
 static void
 level3_dialog_set_visible(gboolean visible)
 {
-    gwy_debug("%s: now %d, setting to %d",
-              __FUNCTION__, controls.is_visible, visible);
+    gwy_debug("now %d, setting to %d",
+              controls.is_visible, visible);
     if (controls.is_visible == visible)
         return;
 

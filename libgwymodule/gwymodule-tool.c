@@ -59,12 +59,12 @@ gwy_tool_func_register(const gchar *modname,
     _GwyModuleInfoInternal *iinfo;
     gchar *canon_name;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     gwy_debug("name = %s, stock id = %s, func = %p",
               func_info->name, func_info->stock_id, func_info->use);
 
     if (!tool_funcs) {
-        gwy_debug("%s: Initializing...", __FUNCTION__);
+        gwy_debug("Initializing...");
         tool_funcs = g_hash_table_new(g_str_hash, g_str_equal);
     }
 

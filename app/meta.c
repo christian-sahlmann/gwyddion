@@ -187,7 +187,7 @@ gwy_meta_destroy(GtkWidget *window,
 {
     GtkTreeModel *model;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(browser));
     gtk_widget_destroy(window);
 }

@@ -98,7 +98,7 @@ guess_pixmap_path(void)
     /* now p contains an absolute path */
     b = mangle_pixmap_path(p, 2);
     g_free(p);
-    gwy_debug("%s: Trying pixmap path: %s", __FUNCTION__, b);
+    gwy_debug("Trying pixmap path: %s", b);
     if (g_path_is_absolute(b) && g_file_test(b, G_FILE_TEST_IS_DIR)) {
         gwy_debug("Icon path (from argv[0]): %s", p);
         return b;
@@ -110,7 +110,7 @@ guess_pixmap_path(void)
     p = g_find_program_in_path(g_get_prgname());
     if (p && g_path_is_absolute(p)) {
         b = mangle_pixmap_path(p, 1);
-        gwy_debug("%s: Trying pixmap path: %s", __FUNCTION__, b);
+        gwy_debug("Trying pixmap path: %s", b);
         if (g_path_is_absolute(b) && g_file_test(p, G_FILE_TEST_IS_DIR)) {
             gwy_debug("Icon path (from $PATH): %s", p);
             g_free(p);
@@ -122,7 +122,7 @@ guess_pixmap_path(void)
 
     /* try GWY_PIXMAP_DIR, try it after the previous ones, so an uninstalled
      * version gets its own directory, not the system one */
-    gwy_debug("%s: Trying pixmap path: %s", __FUNCTION__, GWY_PIXMAP_DIR);
+    gwy_debug("Trying pixmap path: %s", GWY_PIXMAP_DIR);
     if (g_file_test(GWY_PIXMAP_DIR, G_FILE_TEST_IS_DIR)) {
         gwy_debug("Icon path (from GWY_PIXMAP_DIR): %s", GWY_PIXMAP_DIR);
         return g_strdup(GWY_PIXMAP_DIR);
@@ -132,7 +132,7 @@ guess_pixmap_path(void)
     p = g_get_current_dir();
     b = mangle_pixmap_path(p, 0);
     g_free(p);
-    gwy_debug("%s: Trying pixmap path: %s", __FUNCTION__, b);
+    gwy_debug("Trying pixmap path: %s", b);
     if (g_file_test(b, G_FILE_TEST_IS_DIR)) {
         gwy_debug("Icon path (from cwd): %s", b);
         return b;

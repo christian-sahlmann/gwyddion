@@ -71,8 +71,7 @@ static void
 gwy_watchable_base_init(GwyWatchableClass *klass)
 {
     gwy_watchable_base_init_count++;
-    gwy_debug("%s (base init count = %d)",
-              __FUNCTION__, gwy_watchable_base_init_count);
+    gwy_debug("base init count = %d", gwy_watchable_base_init_count);
     if (gwy_watchable_base_init_count == 1) {
         gwy_watchable_signals[VALUE_CHANGED] =
             g_signal_new("value_changed",
@@ -89,8 +88,7 @@ static void
 gwy_watchable_base_finalize(GwyWatchableClass *klass)
 {
     gwy_watchable_base_init_count--;
-    gwy_debug("%s (base init count = %d)",
-              __FUNCTION__, gwy_watchable_base_init_count);
+    gwy_debug("base init count = %d", gwy_watchable_base_init_count);
     if (gwy_watchable_base_init_count == 0) {
         /* destroy signals...
          * FIXME: but how?

@@ -53,7 +53,7 @@ gwy_app_settings_save(const gchar *filename)
     gsize size = 0;
     FILE *fh;
 
-    gwy_debug("%s: Saving settings to `%s'", __FUNCTION__, filename);
+    gwy_debug("Saving settings to `%s'", filename);
     settings = gwy_app_settings_get();
     g_return_val_if_fail(GWY_IS_CONTAINER(settings), FALSE);
     fh = fopen(filename, "wb");
@@ -77,7 +77,7 @@ gwy_app_settings_load(const gchar *filename)
     gchar *buffer = NULL;
     gsize size = 0, position = 0;
 
-    gwy_debug("%s: Loading settings from `%s'", __FUNCTION__, filename);
+    gwy_debug("Loading settings from `%s'", filename);
     if (!g_file_get_contents(filename, &buffer, &size, &err)
         || !size || !buffer) {
         g_clear_error(&err);

@@ -90,7 +90,7 @@ gwy_sci_text_get_type(void)
             (GInstanceInitFunc)gwy_sci_text_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_sci_text_type = g_type_register_static(GTK_TYPE_VBOX,
                                                       GWY_SCI_TEXT_TYPE_NAME,
                                                       &gwy_sci_text_info,
@@ -107,7 +107,7 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -141,7 +141,7 @@ gwy_sci_text_init(GwySciText *sci_text)
     GtkWidget *lab1, *frame, *lower, *upper, *bold, *italic, *add, *hbox;
     GList *items = NULL;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     lab1 = gtk_label_new_with_mnemonic("Enter hyper_text");
     gtk_misc_set_alignment(GTK_MISC(lab1), 0.0, 0.5);
@@ -218,7 +218,7 @@ gwy_sci_text_new()
 {
     GwySciText *sci_text;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     sci_text = (GwySciText*)gtk_object_new(gwy_sci_text_get_type (), NULL);
 
@@ -283,7 +283,7 @@ gwy_sci_text_size_request(GtkWidget *widget,
                           GtkRequisition *requisition)
 {
     GwySciText *sci_text;
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     sci_text = GWY_SCI_TEXT(widget);
 
@@ -298,7 +298,7 @@ static void
 gwy_sci_text_size_allocate(GtkWidget *widget,
                            GtkAllocation *allocation)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_SCI_TEXT(widget));
@@ -318,7 +318,7 @@ gwy_sci_text_edited(GtkEntry *entry)
     gchar *text = NULL;
     gchar *utf8;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     sci_text = GWY_SCI_TEXT(gtk_widget_get_ancestor(GTK_WIDGET(entry),
                                                     GWY_TYPE_SCI_TEXT));
@@ -341,7 +341,7 @@ gwy_sci_text_entity_selected(GwySciText *sci_text)
     gchar *text, *p;
     const gchar *utf8;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     editable = GTK_EDITABLE(sci_text->entry);
     text = gtk_editable_get_chars(GTK_EDITABLE(sci_text->entities->entry),
@@ -381,7 +381,7 @@ gwy_sci_text_button_some_pressed(GtkButton *button, gpointer p)
     gint i, start, end;
     gsize j;
 
-    gwy_debug("%s: %p", __FUNCTION__, p);
+    gwy_debug("%p", p);
     i = GPOINTER_TO_INT(p);
     sci_text = GWY_SCI_TEXT(gtk_widget_get_ancestor(GTK_WIDGET(button),
                                                     GWY_TYPE_SCI_TEXT));

@@ -134,7 +134,7 @@ gwy_container_get_type(void)
             (GInterfaceInitFunc)gwy_container_serializable_init, NULL, 0
         };
 
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_container_type = g_type_register_static(G_TYPE_OBJECT,
                                                     GWY_CONTAINER_TYPE_NAME,
                                                     &gwy_container_info,
@@ -152,7 +152,7 @@ gwy_container_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -166,7 +166,7 @@ gwy_container_class_init(GwyContainerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     gobject_class->finalize = gwy_container_finalize;
 }
@@ -174,7 +174,7 @@ gwy_container_class_init(GwyContainerClass *klass)
 static void
 gwy_container_init(GwyContainer *container)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     container->values = NULL;
     container->watching = NULL;
     container->objects = NULL;
@@ -187,7 +187,7 @@ gwy_container_finalize(GObject *obj)
 {
     GwyContainer *container = (GwyContainer*)obj;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     /* FIXME: doesn't free memory? */
     g_hash_table_destroy(container->watching);
@@ -210,7 +210,7 @@ gwy_container_new(void)
 {
     GwyContainer *container;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     container = g_object_new(GWY_TYPE_CONTAINER, NULL);
 
     /* assume GQuarks are good enough hash keys */
@@ -1260,7 +1260,7 @@ gwy_container_serialize(GObject *object,
     GwyContainer *container;
     SerializeData sdata;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_CONTAINER(object), NULL);
 
     container = GWY_CONTAINER(object);
@@ -1337,7 +1337,7 @@ gwy_container_deserialize(const guchar *buffer,
     gsize mysize, pos;
     const guchar *buf;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
 
     pos = gwy_serialize_check_string(buffer, size, *position,
@@ -1419,7 +1419,7 @@ gwy_container_duplicate(GObject *object)
 {
     GObject *duplicate;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_CONTAINER(object), NULL);
 
     duplicate = gwy_container_new();
@@ -1477,7 +1477,7 @@ hash_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 void
 gwy_container_freeze_watch(GwyContainer *container)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_CONTAINER(container));
     g_assert(container->watch_freeze >= 0);
     container->watch_freeze++;
@@ -1498,7 +1498,7 @@ gwy_container_freeze_watch(GwyContainer *container)
 void
 gwy_container_thaw_watch(GwyContainer *container)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_CONTAINER(container));
     g_assert(container->watch_freeze > 0);
     if (container->watch_freeze) {
@@ -1519,7 +1519,7 @@ gwy_container_watch(GwyContainer *container,
     GQuark key;
     WatchData *wdata;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
     g_return_val_if_fail(path, 0);
     g_return_val_if_fail(callback, 0);
@@ -1543,7 +1543,7 @@ static void
 value_changed(GwyContainer *container,
               GQuark key)
 {
-    gwy_debug("%s: [%p] %s", __FUNCTION__, container, g_quark_to_string(key));
+    gwy_debug("[%p] %s", container, g_quark_to_string(key));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

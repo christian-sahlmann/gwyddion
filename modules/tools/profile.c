@@ -109,7 +109,7 @@ profile_use(GwyDataWindow *data_window,
     GwyDataView *data_view;
     gint i;
 
-    gwy_debug("%s: %p", __FUNCTION__, data_window);
+    gwy_debug("%p", data_window);
 
     if (!data_window) {
         profile_dialog_abandon();
@@ -250,7 +250,7 @@ profile_dialog_abandon(void)
 {
     guint i;
     
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     if (select_layer && updated_id)
         g_signal_handler_disconnect(select_layer, updated_id);
     updated_id = 0;
@@ -279,7 +279,7 @@ profile_dialog_create(GwyDataView *data_view)
     gdouble xreal, yreal, max, unit;
     gint i;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     data = gwy_data_view_get_data(data_view);
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(datafield);
@@ -390,7 +390,7 @@ update_labels()
     gint i, j;
     gint n_of_lines=0;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     n_of_lines = gwy_layer_lines_get_lines(select_layer, lines);
     
     j=0;
@@ -439,7 +439,7 @@ profile_selection_updated_cb(void)
     gdouble z_max;
     gint precision;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     
     is_visible = controls.is_visible;
     is_selected = gwy_layer_lines_get_lines(select_layer, lines);
@@ -521,7 +521,7 @@ profile_clear(void)
 static void
 profile_dialog_response_cb(gpointer unused, gint response)
 {
-    gwy_debug("%s: response %d", __FUNCTION__, response);
+    gwy_debug("response %d", response);
     switch (response) {
         case GTK_RESPONSE_CLOSE:
         case GTK_RESPONSE_DELETE_EVENT:
@@ -551,8 +551,8 @@ profile_dialog_response_cb(gpointer unused, gint response)
 static void
 profile_dialog_set_visible(gboolean visible)
 {
-    gwy_debug("%s: now %d, setting to %d",
-              __FUNCTION__, controls.is_visible, visible);
+    gwy_debug("now %d, setting to %d",
+              controls.is_visible, visible);
     if (controls.is_visible == visible)
         return;
 
@@ -566,7 +566,7 @@ profile_dialog_set_visible(gboolean visible)
 static void       
 interp_changed_cb(GObject *item, ProfileControls *controls)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     controls->interp = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
 
     printf("Interpolation set to %d\n", controls->interp);
@@ -585,7 +585,7 @@ static const gchar *interp_key = "/tool/profile/interp";
 static void       
 profile_load_args(GwyContainer *container, ProfileControls *controls)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     if (gwy_container_contains_by_name(container, separate_key))
         controls->separate = gwy_container_get_boolean_by_name(container, separate_key);
     else controls->separate = 0;

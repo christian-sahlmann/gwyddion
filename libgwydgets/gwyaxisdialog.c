@@ -60,7 +60,7 @@ gwy_axis_dialog_get_type(void)
 	 (GInstanceInitFunc)gwy_axis_dialog_init,
 	 NULL,
          };
-	gwy_debug("%s", __FUNCTION__);
+	gwy_debug("");
 	gwy_axis_dialog_type = g_type_register_static (GTK_TYPE_DIALOG, 
 						 GWY_AXIS_DIALOG_TYPE_NAME, 
 						 &gwy_axis_dialog_info, 
@@ -76,7 +76,7 @@ gwy_axis_dialog_class_init(GwyAxisDialogClass *klass)
 {
     GtkWidgetClass *widget_class;
     
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
@@ -86,7 +86,7 @@ gwy_axis_dialog_class_init(GwyAxisDialogClass *klass)
 static void
 gwy_axis_dialog_delete(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     gtk_widget_hide(widget);
 }
 
@@ -102,7 +102,7 @@ gwy_axis_dialog_size_request(GtkWidget *widget, GtkRequisition *requisition)
 static void
 gwy_axis_dialog_init(GwyAxisDialog *dialog)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     dialog->sci_text = gwy_sci_text_new();
     gtk_dialog_add_button(dialog, GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
@@ -115,14 +115,14 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
 GtkWidget *
 gwy_axis_dialog_new()
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     return GTK_WIDGET (g_object_new (gwy_axis_dialog_get_type (), NULL));
 }
 
 static void     
 gwy_axis_dialog_finalize(GObject *object)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_AXIS_DIALOG(object));

@@ -180,7 +180,7 @@ gwy_pixfield_do_mask(GdkPixbuf *pixbuf,
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     cor = 255*color->a + 0.99999;
-    gwy_debug("%s: cor = %g", __FUNCTION__, cor);
+    gwy_debug("cor = %g", cor);
 
     for (i = 0; i < yres; i++) {
         line = pixels + i*rowstride + 3;

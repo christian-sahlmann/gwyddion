@@ -54,13 +54,13 @@ gwy_process_func_register(const gchar *modname,
     _GwyModuleInfoInternal *iinfo;
     gchar *canon_name;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     gwy_debug("name = %s, menu path = %s, run = %d, func = %p",
               func_info->name, func_info->menu_path, func_info->run,
               func_info->process);
 
     if (!process_funcs) {
-        gwy_debug("%s: Initializing...", __FUNCTION__);
+        gwy_debug("Initializing...");
         process_funcs = g_hash_table_new(g_str_hash, g_str_equal);
     }
 

@@ -89,7 +89,7 @@ gwy_layer_lines_get_type(void)
             (GInstanceInitFunc)gwy_layer_lines_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_layer_lines_type
             = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
                                      GWY_LAYER_LINES_TYPE_NAME,
@@ -106,7 +106,7 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -129,7 +129,7 @@ gwy_layer_lines_init(GwyLayerLines *layer)
 {
     GwyLayerLinesClass *klass;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     klass = GWY_LAYER_LINES_GET_CLASS(layer);
     gwy_layer_cursor_new_or_ref(&klass->near_cursor, GDK_DOTBOX);
@@ -148,7 +148,7 @@ gwy_layer_lines_finalize(GObject *object)
     GwyLayerLinesClass *klass;
     GwyLayerLines *layer;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_LAYER_LINES(object));
@@ -182,7 +182,7 @@ gwy_layer_lines_new(void)
 {
     GtkObject *object;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     object = g_object_new(GWY_TYPE_LAYER_LINES, NULL);
 
     return object;
@@ -388,8 +388,7 @@ gwy_layer_lines_do_move_line(GwyDataViewLayer *layer,
         return FALSE;
 
     gwy_layer_lines_draw_line(layer, layer->parent->window, i);
-    gwy_debug("%s: %d %g %g %g %g", __FUNCTION__,
-              i, coords[0], coords[1], coords[2], coords[3]);
+    gwy_debug("%d %g %g %g %g", i, coords[0], coords[1], coords[2], coords[3]);
     memcpy(line, coords, 4*sizeof(gdouble));
     gwy_layer_lines_save(layer, i);
     gwy_layer_lines_draw_line(layer, layer->parent->window, i);
@@ -406,7 +405,7 @@ gwy_layer_lines_button_pressed(GwyDataViewLayer *layer,
     gint x, y, i, j;
     gdouble xreal, yreal;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     lines_layer = (GwyLayerLines*)layer;
     if (lines_layer->button)
         g_warning("unexpected mouse button press when already pressed");
@@ -414,7 +413,7 @@ gwy_layer_lines_button_pressed(GwyDataViewLayer *layer,
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
-    gwy_debug("%s [%d,%d]", __FUNCTION__, x, y);
+    gwy_debug("[%d,%d]", x, y);
     /* do nothing when we are outside */
     if (x != event->x || y != event->y)
         return FALSE;
@@ -476,7 +475,7 @@ gwy_layer_lines_button_released(GwyDataViewLayer *layer,
     x = event->x;
     y = event->y;
     i = lines_layer->inear;
-    gwy_debug("%s: i = %d", __FUNCTION__, i);
+    gwy_debug("i = %d", i);
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
     outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
@@ -567,7 +566,7 @@ gwy_layer_lines_unselect(GwyDataViewLayer *layer)
 static void
 gwy_layer_lines_plugged(GwyDataViewLayer *layer)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
 
     GWY_LAYER_LINES(layer)->nselected = 0;
@@ -579,7 +578,7 @@ gwy_layer_lines_plugged(GwyDataViewLayer *layer)
 static void
 gwy_layer_lines_unplugged(GwyDataViewLayer *layer)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
 
     GWY_LAYER_LINES(layer)->nselected = 0;
@@ -607,8 +606,7 @@ gwy_layer_lines_save(GwyDataViewLayer *layer,
     for (i = from; i <= to; i++) {
         gdouble *coords = l->lines + 4*i;
 
-        gwy_debug("%s: %d %g %g %g %g", __FUNCTION__,
-                  i, coords[0], coords[1], coords[2], coords[3]);
+        gwy_debug("%d %g %g %g %g", i, coords[0], coords[1], coords[2], coords[3]);
         n = g_snprintf(key, sizeof(key), "/0/select/lines/%d/x0", i);
         gwy_container_set_double_by_name(layer->data, key, coords[0]);
         key[n-2] = 'y';

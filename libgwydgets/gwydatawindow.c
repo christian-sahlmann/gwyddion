@@ -78,7 +78,7 @@ gwy_data_window_get_type(void)
             (GInstanceInitFunc)gwy_data_window_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_data_window_type = g_type_register_static(GTK_TYPE_WINDOW,
                                                       GWY_DATA_WINDOW_TYPE_NAME,
                                                       &gwy_data_window_info,
@@ -91,7 +91,7 @@ gwy_data_window_get_type(void)
 static void
 gwy_data_window_class_init(GwyDataWindowClass *klass)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     parent_class = g_type_class_peek_parent(klass);
 }
@@ -99,7 +99,7 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
 static void
 gwy_data_window_init(GwyDataWindow *data_window)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     data_window->data_view = NULL;
     data_window->hruler = NULL;
@@ -129,7 +129,7 @@ gwy_data_window_new(GwyDataView *data_view)
     GtkWidget *vbox, *hbox, *widget;
     GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     data_window = (GwyDataWindow*)g_object_new(GWY_TYPE_DATA_WINDOW, NULL);
     gtk_window_set_wmclass(GTK_WINDOW(data_window), "data",
@@ -302,7 +302,7 @@ lame_window_resize(GwyDataWindow *data_window)
                    view_req;
     gint width, height;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     gtk_widget_get_child_requisition(data_window->hruler, &hruler_req);
     gtk_widget_get_child_requisition(data_window->vruler, &vruler_req);
     gtk_widget_get_child_requisition(data_window->statusbar, &statusbar_req);
@@ -331,7 +331,7 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
     gdouble rzoom, factor;
     gint curzoom = 0;
 
-    gwy_debug("%s: %d", __FUNCTION__, izoom);
+    gwy_debug("%d", izoom);
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     g_return_if_fail(izoom == -1 || izoom == 1
                      || (izoom >= 625 && izoom <= 160000));
@@ -433,7 +433,7 @@ compute_statusbar_units(GwyDataWindow *data_window)
     unit = MIN(xreal/gwy_data_field_get_xres(dfield),
                yreal/gwy_data_field_get_yres(dfield));
     mag = gwy_math_humanize_numbers(unit, max, &data_window->statusbar_prec);
-    gwy_debug("%s: mag = %g", __FUNCTION__, mag);
+    gwy_debug("mag = %g", mag);
     data_window->statusbar_mag = mag;
     data_window->statusbar_SI_prefix = gwy_math_SI_prefix(mag);
 }
@@ -503,7 +503,7 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     }
 
     zoom = gwy_data_view_get_zoom(data_view);
-    gwy_debug("%s: %g", __FUNCTION__, zoom);
+    gwy_debug("%g", zoom);
     prec = (zoom == floor(zoom)) ? 0 : 1;
     g_snprintf(zoomstr, sizeof(zoomstr), "%.*f",
                prec, zoom > 1.0 ? zoom : 1.0/zoom);
@@ -521,7 +521,7 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
 static void
 zoom_changed_cb(GwyDataWindow *data_window)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     gwy_data_window_update_title(data_window);
 }
@@ -551,7 +551,7 @@ palette_selected_cb(GtkWidget *item,
     const gchar *name;
 
     name = g_object_get_data(G_OBJECT(item), "palette-name");
-    gwy_debug("%s: %s", __FUNCTION__, name);
+    gwy_debug("%s", name);
     g_return_if_fail(gwy_palette_def_exists(name));
 
     layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));

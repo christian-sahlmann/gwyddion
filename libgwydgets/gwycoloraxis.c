@@ -82,7 +82,7 @@ gwy_color_axis_get_type(void)
             (GInstanceInitFunc)gwy_color_axis_init,
             NULL,
         };
-        gwy_debug("%s", __FUNCTION__);
+        gwy_debug("");
         gwy_color_axis_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                       GWY_COLOR_AXIS_TYPE_NAME,
                                                       &gwy_color_axis_info,
@@ -95,7 +95,7 @@ gwy_color_axis_get_type(void)
 static void
 gwy_color_axis_class_init(GwyColorAxisClass *klass)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
@@ -121,7 +121,7 @@ gwy_color_axis_class_init(GwyColorAxisClass *klass)
 static void
 gwy_color_axis_init(GwyColorAxis *axis)
 {
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     axis->orientation = GTK_ORIENTATION_VERTICAL;
     axis->max = 0;
@@ -149,7 +149,7 @@ gwy_color_axis_new(GtkOrientation orientation,
 {
     GwyColorAxis *axis;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     g_return_val_if_fail(GWY_IS_PALETTE(pal), NULL);
 
     axis = gtk_type_new(gwy_color_axis_get_type());
@@ -181,7 +181,7 @@ gwy_color_axis_finalize(GObject *object)
 {
     GwyColorAxis *axis;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_COLOR_AXIS(object));
@@ -203,7 +203,7 @@ gwy_color_axis_unrealize(GtkWidget *widget)
 {
     GwyColorAxis *axis;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     axis = GWY_COLOR_AXIS(widget);
 
@@ -221,7 +221,7 @@ gwy_color_axis_realize(GtkWidget *widget)
     gint attributes_mask;
     GtkStyle *s;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_COLOR_AXIS(widget));
@@ -277,7 +277,7 @@ gwy_color_axis_size_request(GtkWidget *widget,
     GwyColorAxis *axis;
     axis = GWY_COLOR_AXIS(widget);
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     if (axis->orientation == GTK_ORIENTATION_VERTICAL)
     {
@@ -298,7 +298,7 @@ gwy_color_axis_size_allocate(GtkWidget *widget,
 {
     GwyColorAxis *axis;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_COLOR_AXIS(widget));
@@ -326,7 +326,7 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
     gdouble cor;
 
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     gwy_object_unref(axis->pixbuf);
     axis->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
@@ -381,7 +381,7 @@ gwy_color_axis_expose(GtkWidget *widget,
     GwyColorAxis *axis;
     GdkGC *mygc;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_COLOR_AXIS(widget), FALSE);
@@ -455,7 +455,7 @@ gwy_color_axis_draw_label(GtkWidget *widget)
     gdouble power;
     gdouble value;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
     mygc = gdk_gc_new(widget->window);
 
     axis = GWY_COLOR_AXIS(widget);
@@ -601,7 +601,7 @@ gwy_color_axis_button_press(GtkWidget *widget,
 {
     GwyColorAxis *axis;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
 	    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_COLOR_AXIS(widget), FALSE);
@@ -619,7 +619,7 @@ gwy_color_axis_button_release(GtkWidget *widget,
 {
     GwyColorAxis *axis;
 
-    gwy_debug("%s", __FUNCTION__);
+    gwy_debug("");
 
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_COLOR_AXIS(widget), FALSE);
