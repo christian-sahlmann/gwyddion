@@ -32,6 +32,7 @@ static GtkWidget *progress = NULL;
 static GtkWidget *label = NULL;
 static gchar *message_prefix = NULL;
 static gboolean canceled = FALSE;
+static gboolean silent_waiting = FALSE;
 
 /**
  * gwy_app_wait_start:
@@ -46,18 +47,20 @@ void
 gwy_app_wait_start(GtkWidget *window,
                    const gchar *message)
 {
-    g_return_if_fail(GTK_IS_WIDGET(window));
-    if (!GTK_IS_WINDOW(window))
-        g_warning("widget is not a window");
+    if (window && !GTK_IS_WINDOW(window))
+        g_warning("Widget is not a window");
 
-    if (wait_widget) {
+    if (wait_widget || silent_waiting) {
         g_warning("Already waiting on a widget, switching to the new one");
         gwy_app_wait_switch_widget(window, message);
         return;
     }
 
     canceled = FALSE;
-    gwy_app_wait_create_dialog(window, message);
+    if (!window)
+        silent_waiting = TRUE;
+    else
+        gwy_app_wait_create_dialog(window, message);
     wait_widget = window;
 }
 
@@ -78,15 +81,17 @@ gwy_app_wait_finish(void)
         return;
     }
 
-    g_return_if_fail(dialog != NULL);
-
-    gtk_widget_destroy(dialog);
-    g_free(message_prefix);
+    if (!silent_waiting) {
+        g_return_if_fail(dialog != NULL);
+        gtk_widget_destroy(dialog);
+        g_free(message_prefix);
+    }
     dialog = NULL;
     progress = NULL;
     label = NULL;
     message_prefix = NULL;
     wait_widget = NULL;
+    silent_waiting = FALSE;
 }
 
 static void
@@ -136,6 +141,11 @@ gboolean
 gwy_app_wait_switch_widget(GtkWidget *window,
                            const gchar *message)
 {
+    if (!window || !silent_waiting) {
+        g_warning("Cannot switch between normal and silent waiting.");
+        return TRUE;
+    }
+
     while (gtk_events_pending())
         gtk_main_iteration();
     if (canceled)
@@ -148,7 +158,7 @@ gwy_app_wait_switch_widget(GtkWidget *window,
 
     if (message)
         gwy_app_wait_set_message(message);
-    return canceled;
+    return !canceled;
 }
 
 /**
@@ -166,6 +176,9 @@ gwy_app_wait_switch_widget(GtkWidget *window,
 gboolean
 gwy_app_wait_set_message(const gchar *message)
 {
+    if (silent_waiting)
+        return TRUE;
+
     while (gtk_events_pending())
         gtk_main_iteration();
     if (canceled)
@@ -200,6 +213,8 @@ gwy_app_wait_set_message(const gchar *message)
 gboolean
 gwy_app_wait_set_message_prefix(const gchar *prefix)
 {
+    if (silent_waiting)
+        return TRUE;
     if (canceled)
         return FALSE;
 
@@ -226,6 +241,9 @@ gboolean
 gwy_app_wait_set_fraction(gdouble fraction)
 {
     gchar buf[8];
+
+    if (silent_waiting)
+        return TRUE;
 
     while (gtk_events_pending())
         gtk_main_iteration();
