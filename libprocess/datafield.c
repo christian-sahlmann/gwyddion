@@ -2621,16 +2621,18 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
 
                 case GWY_SF_OUTPUT_PSDF:
                 gwy_data_line_psdf(hlp_line, hlp_tarline, windowing, interpolation);
+                gwy_data_line_resample(hlp_tarline, size, interpolation);
                 break;
 
                 default:
                 g_assert_not_reached();
                 break;
             }
-            for (j = 0; j < size; j++) {
+            for (j = 0; j < size; j++) { /*size*/
                 target_line->data[j] += hlp_tarline->data[j]
                                         /((gdouble)(brrow-ulrow));
             }
+            if (type==GWY_SF_OUTPUT_PSDF) target_line->real = data_field->xres*3.141592/data_field->xreal;
         }
         gwy_data_line_free(hlp_line);
         gwy_data_line_free(hlp_tarline);

@@ -1437,8 +1437,8 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
                    windowing, 1, interpolation,
                    1, 1);
 
-    gwy_data_line_resample(target_line, rout.res, GWY_INTERPOLATION_NONE);
-    for (i = 0; i < rout.res; i++) {
+    gwy_data_line_resample(target_line, rout.res/2.0, GWY_INTERPOLATION_NONE);
+    for (i = 0; i < (rout.res/2); i++) {
         target_line->data[i] = rout.data[i]*rout.data[i]
                                + iout.data[i]*iout.data[i];
     }
