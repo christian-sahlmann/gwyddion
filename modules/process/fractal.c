@@ -124,7 +124,7 @@ static GwyModuleInfo module_info = {
     "fractal",
     "Fractal dimension evaluation",
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",
     "2004",
 };
@@ -198,100 +198,107 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), table,
                        FALSE, FALSE, 4);
 
+    label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, 0, 1, GTK_FILL, 0, 2, 2);
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
-    gwy_table_attach_row(table, 1, _("Interpolation type:"), "",
-                         controls.interp);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interp);
+    gtk_table_attach(GTK_TABLE(table), controls.interp,
+                     0, 3, 1, 2, GTK_FILL, 0, 2, 2);
 
-
+    label = gtk_label_new_with_mnemonic(_("_Output type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, 2, 3, GTK_FILL, 0, 2, 2);
     controls.out
         = gwy_option_menu_fractal(G_CALLBACK(out_changed_cb),
                                      args, args->out);
-    gwy_table_attach_row(table, 3, _("Output type:"), "",
-                         controls.out);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.out);
+    gtk_table_attach(GTK_TABLE(table), controls.out,
+                     0, 3, 3, 4, GTK_FILL, 0, 2, 2);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), 3, 15);
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Fit area:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 4, 5, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 5, 7, GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), _("from:"));
+    gtk_label_set_markup(GTK_LABEL(label), _("From:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
 
-    controls.from = gtk_label_new("minimum");
+    controls.from = gtk_label_new(_("minimum"));
     gtk_misc_set_alignment(GTK_MISC(controls.from), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.from, 1, 2, 5, 6,
+    gtk_table_attach(GTK_TABLE(table), controls.from, 1, 2, 7, 8,
                      GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), _("to:"));
+    gtk_label_set_markup(GTK_LABEL(label), _("To:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 6, 7, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 8, 9, GTK_FILL, 0, 2, 2);
 
-    controls.to = gtk_label_new("maxium");
+    controls.to = gtk_label_new(_("maxium"));
     gtk_misc_set_alignment(GTK_MISC(controls.to), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.to, 1, 2, 6, 7,
+    gtk_table_attach(GTK_TABLE(table), controls.to, 1, 2, 8, 9,
                      GTK_FILL, 0, 2, 2);
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), 6, 15);
+    gtk_table_set_row_spacing(GTK_TABLE(table), 8, 15);
     /*results*/
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Result:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
-
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), _("partitioning:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 8, 9, GTK_FILL, 0, 2, 2);
-
-    controls.res_partitioning = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls.res_partitioning), 0.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(controls.res_partitioning), TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.res_partitioning, 1, 2, 8, 9,
-                     GTK_FILL, 0, 2, 2);
-
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), _("cube counting:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 9, 10, GTK_FILL, 0, 2, 2);
 
-    controls.res_cubecounting = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls.res_cubecounting), 0.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(controls.res_cubecounting), TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.res_cubecounting, 1, 2, 9, 10,
-                     GTK_FILL, 0, 2, 2);
-
     label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), _("triangulation:"));
+    gtk_label_set_markup(GTK_LABEL(label), _("Partitioning:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_selectable(GTK_LABEL(label), TRUE);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 10, 11, GTK_FILL, 0, 2, 2);
 
-    controls.res_triangulation = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls.res_triangulation), 0.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(controls.res_triangulation), TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.res_triangulation, 1, 2, 10, 11,
+    controls.res_partitioning = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(controls.res_partitioning), 0.0, 0.5);
+    gtk_label_set_selectable(GTK_LABEL(controls.res_partitioning), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.res_partitioning, 1, 2, 10, 11,
                      GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), _("power spectrum:"));
+    gtk_label_set_markup(GTK_LABEL(label), _("Cube counting:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_selectable(GTK_LABEL(label), TRUE);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 11, 12, GTK_FILL, 0, 2, 2);
 
+    controls.res_cubecounting = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(controls.res_cubecounting), 0.0, 0.5);
+    gtk_label_set_selectable(GTK_LABEL(controls.res_cubecounting), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.res_cubecounting, 1, 2, 11, 12,
+                     GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), _("Triangulation:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 12, 13, GTK_FILL, 0, 2, 2);
+
+    controls.res_triangulation = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(controls.res_triangulation), 0.0, 0.5);
+    gtk_label_set_selectable(GTK_LABEL(controls.res_triangulation), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.res_triangulation, 1, 2, 12, 13,
+                     GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), _("Power spectrum:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 13, 14, GTK_FILL, 0, 2, 2);
+
     controls.res_psdf = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.res_psdf), 0.0, 0.5);
     gtk_label_set_selectable(GTK_LABEL(controls.res_psdf), TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.res_psdf, 1, 2, 11, 12,
+    gtk_table_attach(GTK_TABLE(table), controls.res_psdf, 1, 2, 13, 14,
                      GTK_FILL, 0, 2, 2);
 
     /*graph*/
