@@ -65,6 +65,10 @@ gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit);
 void gwy_si_unit_get_format(GwySIUnit *siunit,
                             gdouble value,
                             GwySIValueFormat *format);
+GwySIValueFormat* gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
+                                                         gdouble maximum,
+                                                         gdouble resolution,
+                                                         GwySIValueFormat *format);
 
 
 #ifdef __cplusplus
