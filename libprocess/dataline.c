@@ -258,7 +258,7 @@ gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
     gdouble ratio = ((gdouble)a->res - 1)/((gdouble)res - 1);
     GwyDataLine b;
 
-    gwy_debug("%s", __FUNCTION__);
+/*    gwy_debug("%s", __FUNCTION__);*/
     if (res == a->res)
         return;
 
@@ -901,7 +901,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
     gdouble rmsa, rmsb, av, bv;
     GwyDataLine multra, multia;
 
-    gwy_debug("%s", __FUNCTION__);
+   /* gwy_debug("%s", __FUNCTION__);*/
     if (ia->res != ra->res)
         gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
     if (rb->res != ra->res)
@@ -915,6 +915,10 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         gwy_data_line_line_coeffs(ia, &av, &bv);
         gwy_data_line_line_level(ia, av, bv);
     }
+
+    gwy_data_line_fill(rb, 0);
+    gwy_data_line_fill(ib, 0);
+
 
     if (preserverms == TRUE
         && windowing != GWY_WINDOWING_NONE
@@ -944,6 +948,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
 
         (*fft)(direction, ra, ia, rb, ib, ra->res, interpolation);
     }
+
     /* XXX: gwy_data_line_value_changed(G_OBJECT(ra));*/
 }
 

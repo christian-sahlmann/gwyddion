@@ -1632,12 +1632,12 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     gwy_data_field_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
 
     for (k = 0; k < ra->yres; k++) {
-        gwy_data_field_get_row(ra, &rin, k);
-        gwy_data_field_get_row(ia, &iin, k);
+        gwy_data_field_get_row(ra, &rin, k);  
+        gwy_data_field_get_row(ia, &iin, k);  
         gwy_data_line_fft(&rin, &iin, &rout, &iout, fft,
                           windowing, direction, interpolation,
                           preserverms, level);
-        gwy_data_field_set_row(rb, &rout, k);
+        gwy_data_field_set_row(rb, &rout, k); 
         gwy_data_field_set_row(ib, &iout, k);
     }
 

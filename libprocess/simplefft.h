@@ -21,6 +21,17 @@ typedef enum {
   GWY_WINDOWING_RECT       = 6
 } GwyWindowingType;
 
+typedef enum {
+  GWY_FFT_OUTPUT_REAL_IMG   = 0,
+  GWY_FFT_OUTPUT_MOD_PHASE  = 1,
+  GWY_FFT_OUTPUT_REAL       = 2,
+  GWY_FFT_OUTPUT_IMG        = 3,
+  GWY_FFT_OUTPUT_MOD        = 4,
+  GWY_FFT_OUTPUT_PHASE      = 5
+} GwyFFTOutputType;
+  
+  
+
 /*2^N fft algorithm*/
 gint gwy_fft_hum(gint dir, gdouble *re_in, gdouble *im_in,
                  gdouble *re_out, gdouble *im_out, gint n);

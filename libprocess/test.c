@@ -42,24 +42,33 @@ int main(int argc, char *argv[])
     guchar *buffer;
     gsize size, pos;
     FILE *fh;
-    gint i;
+    gint i, j;
  
-    GwyDataField *a, *b;
-    GwyDataLine *c, *d;
+    GwyDataField *a, *b, *c, *d;
+    GwyDataLine *k;
     
     g_type_init();
   
     g_message("preparing data_field...");
-    a = (GwyDataField *) gwy_data_field_new(500, 500, 500, 500, 1);
+    a = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
+    b = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
+    c = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
+    d = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
+    k = (GwyDataLine *) gwy_data_line_new(20, 20, 1);
     make_test_image(a);
-    
-    c = (GwyDataLine *) gwy_data_line_new(500, 500, 1);
-    make_test_line(c);
-    /*test anything with the processing routines*/
 
+    gwy_data_field_xfft(a, b, c, d, gwy_data_line_fft_hum, 1, 1, 1, 0, 0);
+
+     
+    for (i=0; i<512; i++) 
+   {
+       printf("%f\n", a->data[200 + 512*i]);
+   }
    
+    return 0;
 
     /*test serialization of the data_field*/
+    /*
     size = 0;
     buffer = NULL;
     buffer = gwy_serializable_serialize((GObject *)a, buffer, &size);
@@ -91,4 +100,5 @@ int main(int argc, char *argv[])
     g_object_unref((GObject *)b);
     g_object_unref((GObject *)d);
     return 0;
+    */
 }
