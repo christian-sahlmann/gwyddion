@@ -23,17 +23,26 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
+#include <app/undo.h>
 
 #define SPHREV_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+typedef enum {
+    SPHREV_HORIZONTAL = 1,
+    SPHREV_VERTICAL,
+    SPHREV_BOTH
+} SphrevDirection;
+
 /* Data for this function. */
 typedef struct {
-    GtkOrientation direction;
+    SphrevDirection direction;
     gdouble radius;
+    gboolean do_extract;
     /* interface only */
     GwySIValueFormat valform;
     gdouble pixelsize;
@@ -43,23 +52,27 @@ typedef struct {
     GSList *direction;
     GtkObject *radius;
     GtkObject *size;
+    GtkWidget *do_extract;
     gboolean in_update;
 } SphrevControls;
 
 static gboolean      module_register           (const gchar *name);
 static gboolean      sphrev                    (GwyContainer *data,
                                                 GwyRunType run);
-static GwyDataField* sphrev_do                 (SphrevArgs *args,
+static GwyDataField* sphrev_horizontal         (SphrevArgs *args,
+                                                GwyDataField *dfield);
+static GwyDataField* sphrev_vertical          (SphrevArgs *args,
                                                 GwyDataField *dfield);
 static GwyDataLine*  sphrev_make_sphere        (gdouble radius,
                                                 gint maxres);
-static gboolean      sphrev_dialog             (SphrevArgs *args,
-                                                GwyDataField *dfield);
+static gboolean      sphrev_dialog             (SphrevArgs *args);
 static void          direction_changed_cb      (GObject *item,
                                                 SphrevArgs *args);
 static void          radius_changed_cb         (GtkAdjustment *adj,
                                                 SphrevArgs *args);
 static void          size_changed_cb           (GtkAdjustment *adj,
+                                                SphrevArgs *args);
+static void          do_extract_changed_cb     (GtkWidget *check,
                                                 SphrevArgs *args);
 static void          sphrev_dialog_update      (SphrevControls *controls,
                                                 SphrevArgs *args);
@@ -70,8 +83,9 @@ static void          sphrev_save_args          (GwyContainer *container,
                                                 SphrevArgs *args);
 
 SphrevArgs sphrev_defaults = {
-    GTK_ORIENTATION_HORIZONTAL,
+    SPHREV_HORIZONTAL,
     1e-9,
+    FALSE,
     { 1.0, 0, NULL },
     0,
 };
@@ -112,7 +126,7 @@ static gboolean
 sphrev(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *background = NULL;
     SphrevArgs args;
     gdouble xr, yr;
     gboolean ok;
@@ -133,31 +147,63 @@ sphrev(GwyContainer *data, GwyRunType run)
               args.pixelsize, args.valform.magnitude, args.valform.precision,
               args.valform.units);
 
-    ok = (run != GWY_RUN_MODAL) || sphrev_dialog(&args, dfield);
+    ok = (run != GWY_RUN_MODAL) || sphrev_dialog(&args);
     if (run == GWY_RUN_MODAL)
         sphrev_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    switch (args.direction) {
+        case SPHREV_HORIZONTAL:
+        background = sphrev_horizontal(&args, dfield);
+        break;
+
+        case SPHREV_VERTICAL:
+        background = sphrev_vertical(&args, dfield);
+        break;
+
+        case SPHREV_BOTH: {
+            GwyDataField *tmp;
+
+            background = sphrev_horizontal(&args, dfield);
+            tmp = sphrev_vertical(&args, dfield);
+            gwy_data_field_sum_fields(background, background, tmp);
+            g_object_unref(tmp);
+            gwy_data_field_multiply(background, 0.5);
+        }
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+    gwy_data_field_subtract_fields(dfield, dfield, background);
+
+    if (!args.do_extract) {
+        g_object_unref(background);
+        return TRUE;
+    }
+
     data = gwy_container_duplicate_by_prefix(data,
                                              "/0/base/palette",
                                              "/0/select",
                                              NULL);
-    dfield = sphrev_do(&args, dfield);
-    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(background));
     data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                     "Background");
 
-    return FALSE;
+    return TRUE;
 }
 
 static gboolean
-sphrev_dialog(SphrevArgs *args,
-              GwyDataField *dfield)
+sphrev_dialog(SphrevArgs *args)
 {
     const GwyEnum directions[] = {
-        { N_("_Horizontal direction"), GTK_ORIENTATION_HORIZONTAL, },
-        { N_("_Vertical direction"),   GTK_ORIENTATION_VERTICAL,   },
+        { N_("_Horizontal direction"), SPHREV_HORIZONTAL, },
+        { N_("_Vertical direction"),   SPHREV_VERTICAL,   },
+        { N_("_Both directions"),      SPHREV_BOTH,   },
     };
     enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *spin;
@@ -207,28 +253,6 @@ sphrev_dialog(SphrevArgs *args,
                      G_CALLBACK(size_changed_cb), args);
     row++;
 
-    {
-        gchar *mustfreethis1, *mustfreethis2;
-        GwySIUnit *siunit;
-        GtkWidget *label;
-
-        siunit = gwy_data_field_get_si_unit_xy(dfield);
-        mustfreethis1 = gwy_si_unit_get_unit_string(siunit);
-        siunit = gwy_data_field_get_si_unit_z(dfield);
-        mustfreethis2 = gwy_si_unit_get_unit_string(siunit);
-        if (strcmp(mustfreethis1, mustfreethis2)) {
-            label = gtk_label_new(_("Warning: Value is a different physical "
-                                    "quantity\nthan latitude, sphere makes "
-                                    "no sense."));
-            gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-            gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
-                             GTK_EXPAND | GTK_FILL, 0, 2, 2);
-            row++;
-        }
-        g_free(mustfreethis2);
-        g_free(mustfreethis1);
-    }
-
     radio = gwy_radio_buttons_create(directions, G_N_ELEMENTS(directions),
                                      "direction-type",
                                      G_CALLBACK(direction_changed_cb), args,
@@ -241,6 +265,16 @@ sphrev_dialog(SphrevArgs *args,
         row++;
         radio = g_slist_next(radio);
     }
+
+    controls.do_extract
+        = gtk_check_button_new_with_mnemonic(_("E_xtract background"));
+    gtk_table_attach(GTK_TABLE(table), controls.do_extract,
+                     0, 3, row, row+1, GTK_FILL, 0, 2, 2);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_extract),
+                                 args->do_extract);
+    g_signal_connect(controls.do_extract, "toggled",
+                     G_CALLBACK(do_extract_changed_cb), args);
+    row++;
 
     controls.in_update = FALSE;
 
@@ -261,6 +295,7 @@ sphrev_dialog(SphrevArgs *args,
             case RESPONSE_RESET:
             args->radius = sphrev_defaults.radius;
             args->direction = sphrev_defaults.direction;
+            args->do_extract = sphrev_defaults.do_extract;
             sphrev_dialog_update(&controls, args);
             break;
 
@@ -327,6 +362,13 @@ size_changed_cb(GtkAdjustment *adj,
 }
 
 static void
+do_extract_changed_cb(GtkWidget *check,
+                      SphrevArgs *args)
+{
+    args->do_extract = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check));
+}
+
+static void
 sphrev_dialog_update(SphrevControls *controls,
                      SphrevArgs *args)
 {
@@ -334,17 +376,80 @@ sphrev_dialog_update(SphrevControls *controls,
                              args->radius/args->valform.magnitude);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size),
                              ROUND(args->radius/args->pixelsize));
-    gwy_radio_buttons_set_current(controls->direction, "interpolation-type",
+    gwy_radio_buttons_set_current(controls->direction, "direction-type",
                                   args->direction);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->do_extract),
+                                 args->do_extract);
+}
+
+/* An efficient summing algorithm.  Although I'm author of this code, don't
+ * ask me how it works... */
+static void
+moving_sums(gint res, gdouble *row, gdouble *buffer, gint size)
+{
+    gdouble *sum, *sum2;
+    gint i, ls2, rs2;
+
+    memset(buffer, 0, 2*res*sizeof(gdouble));
+    sum = buffer;
+    sum2 = buffer + res;
+
+    ls2 = size/2;
+    rs2 = (size - 1)/2;
+
+    /* Shortcut: very large size */
+    if (rs2 >= res) {
+        for (i = 0; i < res; i++) {
+            sum[i] += row[i];
+            sum2[i] += row[i]*row[i];
+        }
+        for (i = 1; i < res; i++) {
+            sum[i] = sum[0];
+            sum2[i] = sum2[0];
+        }
+        return;
+    }
+
+    /* Phase 1: Fill first element */
+    for (i = 0; i <= rs2; i++) {
+       sum[0] += row[i];
+       sum2[0] += row[i]*row[i];
+    }
+
+    /* Phase 2: Next elements only gather new data */
+    for (i = 1; i <= MIN(ls2, res-1 - rs2); i++) {
+        sum[i] = sum[i-1] + row[i + rs2];
+        sum2[i] = sum2[i-1] + row[i + rs2]*row[i + rs2];
+    }
+
+    /* Phase 3a: Moving a sprat! */
+    for (i = ls2+1; i <= res-1 - rs2; i++) {
+        sum[i] = sum[i-1] + row[i + rs2] - row[i - ls2 - 1];
+        sum2[i] = sum2[i-1] + row[i + rs2]*row[i + rs2]
+                  - row[i - ls2 - 1]*row[i - ls2 - 1];
+    }
+
+    /* Phase 3b: Moving a whale! */
+    for (i = res-1 - rs2; i <= ls2; i++) {
+        sum[i] = sum[i-1];
+        sum2[i] = sum2[i-1];
+    }
+
+    /* Phase 4: Next elements only lose data */
+    for (i = MAX(ls2+1, res - rs2); i < res; i++) {
+        sum[i] = sum[i-1] - row[i - ls2 - 1];
+        sum2[i] = sum2[i-1] - row[i - ls2 - 1]*row[i - ls2 - 1];
+    }
 }
 
 static GwyDataField*
-sphrev_do(SphrevArgs *args,
-          GwyDataField *dfield)
+sphrev_horizontal(SphrevArgs *args,
+                  GwyDataField *dfield)
 {
     GwyDataField *rfield;
     GwyDataLine *sphere;
-    gdouble *data, *rdata, *sphdata;
+    gdouble *data, *rdata, *sphdata, *sum, *sum2, *weight, *tmp;
+    gdouble q;
     gint i, j, k, size, xres, yres;
 
     data = gwy_data_field_get_data(dfield);
@@ -356,38 +461,151 @@ sphrev_do(SphrevArgs *args,
     if (args->radius < args->pixelsize)
         return rfield;
 
+    q = gwy_data_field_get_rms(dfield)/sqrt(2.0/3.0 - G_PI/16.0);
+    sphere = sphrev_make_sphere(args->radius/args->pixelsize,
+                                gwy_data_field_get_xres(dfield));
+
+    /* Scale-freeing.
+     * Data is normalized to have the same RMS as if it was composed from
+     * spheres of radius args->radius.  Actually we normalize the sphere
+     * instead, but the effect is the same.  */
+    gwy_data_line_multiply(sphere, -q);
+    sphdata = gwy_data_line_get_data(sphere);
+    size = gwy_data_line_get_res(sphere)/2;
+
+    sum = g_new(gdouble, 4*xres);
+    sum2 = sum + xres;
+    weight = sum + 2*xres;
+    tmp = sum + 3*xres;
+
+    /* Weights for RMS filter.  The fool-proof way is to sum 1's. */
+    for (j = 0; j < xres; j++)
+        weight[j] = 1.0;
+    moving_sums(xres, weight, sum, size);
+    memcpy(weight, sum, xres*sizeof(gdouble));
+
+    for (i = 0; i < yres; i++) {
+        gdouble *rrow = rdata + i*xres;
+        gdouble *drow = data + i*xres;
+
+        /* Kill data that stick down too much */
+        moving_sums(xres, data + i*xres, sum, size);
+        for (j = 0; j < xres; j++) {
+            /* transform to avg - 2.5*rms */
+            sum[j] = sum[j]/weight[j];
+            sum2[j] = 2.5*sqrt(sum2[j]/weight[j] - sum[j]*sum[j]);
+            sum[j] -= sum2[j];
+        }
+        for (j = 0; j < xres; j++)
+            tmp[j] = MAX(drow[j], sum[j]);
+
+        /* Find the touching point */
+        for (j = 0; j < xres; j++) {
+            gdouble *row = tmp + j;
+            gint from, to, km;
+            gdouble min;
+
+            from = MAX(0, j-size) - j;
+            to = MIN(j+size, xres-1) - j;
+            min = G_MAXDOUBLE;
+            km = 0;
+            for (k = from; k <= to; k++) {
+                if (-(sphdata[size+k] - row[k]) < min) {
+                    min = -(sphdata[size+k] - row[k]);
+                    km = k;
+                }
+            }
+            rrow[j] = min;
+        }
+    }
+
+    g_free(sum);
+    g_object_unref(sphere);
+
+    return rfield;
+}
+
+static GwyDataField*
+sphrev_vertical(SphrevArgs *args,
+                GwyDataField *dfield)
+{
+    GwyDataField *rfield;
+    GwyDataLine *sphere;
+    gdouble *data, *rdata, *sphdata, *sum, *sum2, *weight, *tmp;
+    gdouble q;
+    gint i, j, k, size, xres, yres;
+
+    data = gwy_data_field_get_data(dfield);
+    rfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    xres = gwy_data_field_get_xres(rfield);
+    yres = gwy_data_field_get_yres(rfield);
+    rdata = gwy_data_field_get_data(rfield);
+    /* Pathological case */
+    if (args->radius < args->pixelsize)
+        return rfield;
+
+    q = gwy_data_field_get_rms(dfield)/sqrt(2.0/3.0 - G_PI/16.0);
     sphere = sphrev_make_sphere(args->radius/args->pixelsize,
                                 args->direction == GTK_ORIENTATION_HORIZONTAL
                                 ? gwy_data_field_get_xres(dfield)
                                 : gwy_data_field_get_yres(dfield));
-    gwy_data_line_multiply(sphere, -args->radius);
+    /* Scale-freeing.
+     * Data is normalized to have the same RMS as if it was composed from
+     * spheres of radius args->radius.  Actually we normalize the sphere
+     * instead, but the effect is the same.  */
+    gwy_data_line_multiply(sphere, -q);
     sphdata = gwy_data_line_get_data(sphere);
     size = gwy_data_line_get_res(sphere)/2;
 
-    if (args->direction == GTK_ORIENTATION_HORIZONTAL) {
-        for (i = 0; i < yres; i++) {
-            gdouble *rrow = rdata + i*xres;
+    sum = g_new(gdouble, 4*yres);
+    sum2 = sum + yres;
+    weight = sum + 2*yres;
+    tmp = sum + 3*yres;
 
-            for (j = 0; j < xres; j++) {
-                gdouble *row = data + i*xres + j;
-                gint from, to, km;
-                gdouble min;
+    /* Weights for RMS filter.  The xresl-proof way is to sum 1's. */
+    for (j = 0; j < yres; j++)
+        weight[j] = 1.0;
+    moving_sums(yres, weight, sum, size);
+    memcpy(weight, sum, yres*sizeof(gdouble));
 
-                from = MAX(0, j-size) - j;
-                to = MIN(j+size, xres-1) - j;
-                min = G_MAXDOUBLE;
-                km = 0;
-                for (k = from; k <= to; k++) {
-                    if (-(sphdata[size+k] - row[k]) < min) {
-                        min = -(sphdata[size+k] - row[k]);
-                        km = k;
-                    }
+    for (i = 0; i < xres; i++) {
+        gdouble *rcol = rdata + i;
+        gdouble *dcol = data + i;
+
+        /* Kill data that stick down too much */
+        for (j = 0; j < yres; j++)
+            tmp[j] = dcol[j*xres];
+        moving_sums(yres, tmp, sum, size);
+        for (j = 0; j < yres; j++) {
+            /* transform to avg - 2.5*rms */
+            sum[j] = sum[j]/weight[j];
+            sum2[j] = 2.5*sqrt(sum2[j]/weight[j] - sum[j]*sum[j]);
+            sum[j] -= sum2[j];
+        }
+        for (j = 0; j < yres; j++)
+            tmp[j] = MAX(dcol[j*xres], sum[j]);
+
+        /* Find the touching point */
+        for (j = 0; j < yres; j++) {
+            gdouble *col = tmp + j;
+            gint from, to, km;
+            gdouble min;
+
+            from = MAX(0, j-size) - j;
+            to = MIN(j+size, yres-1) - j;
+            min = G_MAXDOUBLE;
+            km = 0;
+            for (k = from; k <= to; k++) {
+                if (-(sphdata[size+k] - col[k]) < min) {
+                    min = -(sphdata[size+k] - col[k]);
+                    km = k;
                 }
-                /* FIXME */
-                rrow[j] = row[0] - min;
             }
+            rcol[j*xres] = min;
         }
     }
+
+    g_free(sum);
     g_object_unref(sphere);
 
     return rfield;
@@ -429,13 +647,15 @@ sphrev_make_sphere(gdouble radius, gint maxres)
 
 static const gchar *radius_key = "/module/sphere_revolve/radius";
 static const gchar *direction_key = "/module/sphere_revolve/direction";
+static const gchar *do_extract_key = "/module/sphere_revolve/do_extract";
 
 static void
 sphrev_sanitize_args(SphrevArgs *args)
 {
     if (args->radius <= 0)
         args->radius = sphrev_defaults.radius;
-    args->direction = MIN(args->direction, GTK_ORIENTATION_VERTICAL);
+    args->direction = CLAMP(args->direction, SPHREV_HORIZONTAL, SPHREV_BOTH);
+    args->do_extract = !!args->do_extract;
 }
 
 static void
@@ -446,6 +666,8 @@ sphrev_load_args(GwyContainer *container,
 
     gwy_container_gis_double_by_name(container, radius_key, &args->radius);
     gwy_container_gis_enum_by_name(container, direction_key, &args->direction);
+    gwy_container_gis_boolean_by_name(container, do_extract_key,
+                                      &args->do_extract);
     sphrev_sanitize_args(args);
 }
 
@@ -455,6 +677,8 @@ sphrev_save_args(GwyContainer *container,
 {
     gwy_container_set_double_by_name(container, radius_key, args->radius);
     gwy_container_set_enum_by_name(container, direction_key, args->direction);
+    gwy_container_set_boolean_by_name(container, do_extract_key,
+                                      args->do_extract);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
