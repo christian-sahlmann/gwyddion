@@ -589,7 +589,7 @@ gwy_layer_select_set_selection(GwyVectorLayer *layer,
     gwy_layer_select_save(select_layer);
 
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
-    if (parent) {
+    if (parent)
         gtk_widget_queue_draw(parent);
 
     gwy_vector_layer_selection_finished(layer);
