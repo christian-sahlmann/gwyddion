@@ -632,28 +632,12 @@ gwy_data_view_key_release(GtkWidget *widget,
 void
 gwy_data_view_update(GwyDataView *data_view)
 {
-    GwyDataViewLayer *layer;
-    GwyContainer *data;
     GtkWidget *widget;
-    gboolean has_mask;
 
     gwy_debug("%s", __FUNCTION__);
-    g_return_if_fail(data_view != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    data = data_view->data;
 
     data_view->force_update = TRUE;
-    /* XXX FIXME: this doesn't belong here.
-     * probably create gwy_app_data_view_update() taking care of the mask
-     * state automatically -- data view itself should not care */
-    has_mask = gwy_container_contains_by_name(data, "/0/mask");
-    if (has_mask && !data_view->alpha_layer) {
-        layer = GWY_DATA_VIEW_LAYER(gwy_layer_mask_new());
-        gwy_data_view_set_layer(data_view, &data_view->alpha_layer, layer);
-    }
-    else if (!has_mask && data_view->alpha_layer) {
-        gwy_data_view_set_layer(data_view, &data_view->alpha_layer, NULL);
-    }
     gwy_data_view_maybe_resize(data_view);
     widget = GTK_WIDGET(data_view);
     if (widget->window)
