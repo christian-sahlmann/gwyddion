@@ -312,7 +312,7 @@ gwy_data_view_layer_key_press(GwyDataViewLayer *layer,
 }
 
 /**
- * gwy_data_view_layer_key_press:
+ * gwy_data_view_layer_key_release:
  * @layer: A data view layer.
  * @event: A Gdk key event.
  *

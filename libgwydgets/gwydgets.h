@@ -3,8 +3,12 @@
 #ifndef __GWY_GWYDGETS_H__
 #define __GWY_GWYDGETS_H__
 
+#include <libgwydgets/gwyaxis.h>
 #include <libgwydgets/gwyspherecoords.h>
 #include <libgwydgets/gwygradsphere.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygraphcorner.h>
+#include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwyvectorshade.h>
 #include <libgwydgets/gwyruler.h>
 #include <libgwydgets/gwyhruler.h>
