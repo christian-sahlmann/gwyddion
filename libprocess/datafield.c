@@ -1786,7 +1786,8 @@ gwy_data_field_get_area_rms(GwyDataField *a,
  *
  * Tresholds values of GwyDataField. Values
  * smaller than @threshold will be set to value
- * @bottom, values higher than @threshold will be set to value @top
+ * @bottom, values higher than @threshold or equal to it will be set to value
+ * @top
  *
  * Returns: total number of values above threshold.
  **/
