@@ -223,3 +223,13 @@ are saved here.
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_graph_get_label ##### -->
+<para>
+
+</para>
+
+@graph: 
+@curve: 
+@Returns: 
+
+

@@ -183,6 +183,8 @@ gwy_string_to_flags
 gwy_flags_to_string
 gwy_strkill
 gwy_strreplace
+gwy_file_get_contents
+gwy_file_abandon_contents
 gwy_find_self_dir
 gwy_find_self_set_argv0
 </SECTION>
@@ -201,14 +203,13 @@ gwy_entities_get_entities
 
 <SECTION>
 <FILE>gwynlfit</FILE>
-GwyNLFitPresetType
 GwyNLFitFunc
 GwyNLFitDerFunc
 GwyNLFitGuessFunc
 GwyNLFitParamScaleFunc
 GwyNLFitWeightFunc
-Param
-GwyNLFitPresetFunction
+GwyNLFitParam
+GwyNLFitPreset
 GwyNLFitter
 gwy_math_nlfit_new
 gwy_math_nlfit_free
@@ -220,13 +221,16 @@ gwy_math_nlfit_get_dispersion
 gwy_math_nlfit_get_correlations
 gwy_math_nlfit_get_sigma
 gwy_math_nlfit_derive
+gwy_math_nlfit_get_npresets
 gwy_math_nlfit_get_preset
-gwy_math_nlfit_get_function_value
-gwy_math_nlfit_get_function_name
-gwy_math_nlfit_get_function_equation
-gwy_math_nlfit_get_function_param_name
-gwy_math_nlfit_get_function_param_default
-gwy_math_nlfit_get_function_nparams
+gwy_math_nlfit_get_preset_by_name
+gwy_math_nlfit_get_preset_id
+gwy_math_nlfit_get_preset_value
+gwy_math_nlfit_get_preset_name
+gwy_math_nlfit_get_preset_formula
+gwy_math_nlfit_get_preset_param_name
+gwy_math_nlfit_get_preset_param_default
+gwy_math_nlfit_get_preset_nparams
 gwy_math_nlfit_fit_preset
 </SECTION>
 

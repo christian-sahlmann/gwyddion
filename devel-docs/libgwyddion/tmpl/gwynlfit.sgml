@@ -14,24 +14,6 @@ Marquardt-Levenberg nonlinear least square fitter.
 
 </para>
 
-<!-- ##### ENUM GwyNLFitPresetType ##### -->
-<para>
-
-</para>
-
-@GWY_NLFIT_PRESET_GAUSSIAN: 
-@GWY_NLFIT_PRESET_GAUSSIAN_PSDF: 
-@GWY_NLFIT_PRESET_GAUSSIAN_ACF: 
-@GWY_NLFIT_PRESET_GAUSSIAN_HHCF: 
-@GWY_NLFIT_PRESET_EXPONENTIAL: 
-@GWY_NLFIT_PRESET_EXPONENTIAL_PSDF: 
-@GWY_NLFIT_PRESET_EXPONENTIAL_ACF: 
-@GWY_NLFIT_PRESET_EXPONENTIAL_HHCF: 
-@GWY_NLFIT_PRESET_POLY_0: 
-@GWY_NLFIT_PRESET_POLY_1: 
-@GWY_NLFIT_PRESET_POLY_2: 
-@GWY_NLFIT_PRESET_POLY_3: 
-
 <!-- ##### USER_FUNCTION GwyNLFitFunc ##### -->
 <para>
 
@@ -103,13 +85,13 @@ Marquardt-Levenberg nonlinear least square fitter.
 @user_data: 
 
 
-<!-- ##### TYPEDEF Param ##### -->
+<!-- ##### TYPEDEF GwyNLFitParam ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### TYPEDEF GwyNLFitPresetFunction ##### -->
+<!-- ##### TYPEDEF GwyNLFitPreset ##### -->
 <para>
 
 </para>
@@ -249,70 +231,100 @@ Marquardt-Levenberg nonlinear least square fitter.
 @n_par: 
 
 
+<!-- ##### FUNCTION gwy_math_nlfit_get_npresets ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_math_nlfit_get_preset ##### -->
 <para>
 
 </para>
 
-@type: 
+@preset_id: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@type: 
 
 
-<!-- ##### FUNCTION gwy_math_nlfit_get_function_value ##### -->
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_by_name ##### -->
 <para>
 
 </para>
 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_id ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @function: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_value ##### -->
+<para>
+
+</para>
+
+@preset: 
 @params: 
 @x: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_math_nlfit_get_function_name ##### -->
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_name ##### -->
 <para>
 
 </para>
 
-@function: 
+@preset: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_math_nlfit_get_function_equation ##### -->
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_formula ##### -->
 <para>
 
 </para>
 
-@function: 
+@preset: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_math_nlfit_get_function_param_name ##### -->
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_param_name ##### -->
 <para>
 
 </para>
 
-@function: 
+@preset: 
 @param: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_math_nlfit_get_function_param_default ##### -->
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_param_default ##### -->
 <para>
 
 </para>
 
-@function: 
+@preset: 
 @param: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_math_nlfit_get_function_nparams ##### -->
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_nparams ##### -->
 <para>
 
 </para>
 
-@function: 
+@preset: 
 @Returns: 
 
 
@@ -321,7 +333,7 @@ Marquardt-Levenberg nonlinear least square fitter.
 
 </para>
 
-@function: 
+@preset: 
 @n_dat: 
 @x: 
 @y: 
@@ -332,6 +344,7 @@ Marquardt-Levenberg nonlinear least square fitter.
 @user_data: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@function: 
 @weight: 
 
 

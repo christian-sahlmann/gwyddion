@@ -12,6 +12,7 @@
     <xi:include href="xml/file.xml"/>
     <xi:include href="xml/settings.xml"/>
     <xi:include href="xml/menu.xml"/>
+    <xi:include href="xml/menu-windowlist.xml"/>
     <xi:include href="xml/undo.xml"/>
     <xi:include href="xml/unitool.xml"/>
     <xi:include href="xml/wait.xml"/>

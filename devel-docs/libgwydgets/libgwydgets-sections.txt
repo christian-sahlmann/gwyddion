@@ -532,6 +532,7 @@ gwy_graph_unzoom
 gwy_graph_get_data
 gwy_graph_get_data_size
 gwy_graph_get_number_of_curves
+gwy_graph_get_label
 <SUBSECTION Standard>
 GWY_GRAPH
 GWY_IS_GRAPH
@@ -615,14 +616,14 @@ gwy_option_menu_interpolation
 gwy_option_menu_windowing
 gwy_option_menu_zoom_mode
 gwy_option_menu_2dcwt
-gwy_option_menu_fft_output
 gwy_option_menu_sfunctions_output
 gwy_option_menu_direction
 gwy_option_menu_filter
 gwy_option_menu_mergegrain
-gwy_option_menu_fit_line
 gwy_option_menu_fractal
+gwy_option_menu_fft_output
 gwy_option_menu_nlfitpreset
+gwy_option_menu_fit_line
 gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history

@@ -97,6 +97,25 @@ Core application interface.
 @defaultc: 
 
 
+<!-- ##### FUNCTION gwy_app_data_window_list_add_hook ##### -->
+<para>
+
+</para>
+
+@func: 
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_data_window_list_remove_hook ##### -->
+<para>
+
+</para>
+
+@hook_id: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_app_graph_window_get_current ##### -->
 <para>
 

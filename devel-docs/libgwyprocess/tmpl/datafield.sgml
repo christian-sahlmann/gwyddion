@@ -796,6 +796,23 @@ Mask processing merging (namely used in grain processing).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_field_get_data_line_averaged ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@res: 
+@thickness: 
+@interpolation: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_field_get_row ##### -->
 <para>
 

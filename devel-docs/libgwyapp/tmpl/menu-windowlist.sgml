@@ -1,0 +1,47 @@
+<!-- ##### SECTION Title ##### -->
+menu-windowlist
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_option_menu_data_window ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@none_label: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_data_window_set_history ##### -->
+<para>
+
+</para>
+
+@option_menu: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_data_window_get_history ##### -->
+<para>
+
+</para>
+
+@option_menu: 
+@Returns: 
+
+

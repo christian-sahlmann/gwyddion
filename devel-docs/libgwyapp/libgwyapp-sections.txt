@@ -9,6 +9,8 @@ gwy_app_data_window_create
 gwy_app_data_window_set_untitled
 gwy_app_data_view_update
 gwy_app_change_mask_color_cb
+gwy_app_data_window_list_add_hook
+gwy_app_data_window_list_remove_hook
 gwy_app_graph_window_get_current
 gwy_app_graph_window_set_current
 gwy_app_graph_window_remove
@@ -96,12 +98,16 @@ gwy_app_menu_set_sensitive_array
 gwy_app_menu_set_sensitive_both
 gwy_app_menu_set_recent_files_menu
 gwy_app_toolbox_update_state
-gwy_option_menu_data_window
-gwy_option_menu_data_window_set_history
-gwy_option_menu_data_window_get_history
 gwy_app_run_process_func_cb
 gwy_app_run_process_func_in_mode
 gwy_app_run_graph_func_cb
+</SECTION>
+
+<SECTION>
+<FILE>menu-windowlist</FILE>
+gwy_option_menu_data_window
+gwy_option_menu_data_window_set_history
+gwy_option_menu_data_window_get_history
 </SECTION>
 
 <SECTION>
