@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 #include <math.h>
+#include <stdio.h>
 #include "dwt.h"
 
 typedef struct {
@@ -158,17 +159,29 @@ GwyDataLine*
 gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign)
 {
     gint nn;
-    gint n = dline->res;
+    gint n = dline->res; 
+    gint k;
+    GwyDataLine *shiftedline;
     GwyDWTFilter *wt;
     if (n < 4) return NULL;
+    if (wt_coefs==NULL) printf("Uaaaaaaaa\n");
+    printf("wt_coefs->res=%d\n", wt_coefs->res);
+
+    shiftedline = GWY_DATA_LINE(gwy_data_line_new(dline->res + 1, dline->real, FALSE));
     
     wt = wtset(wt_coefs);
 
+    for (k=0; k<dline->res; k++) shiftedline->data[k+1] = dline->data[k];
+    
     if (isign >= 0)
 	for (nn=n; nn>=4; nn>>=1) pwt(wt, dline, nn, isign);
     else
 	for (nn=4; nn<=n; nn<<=1) pwt(wt, dline, nn, isign);
-   
+
+    for (k=0; k<dline->res; k++) dline->data[k] = shiftedline->data[k+1];
+  
+    g_object_unref(shiftedline);
+    
     return dline;
 }
 
@@ -179,14 +192,15 @@ gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign)
     gint k;
     GwyDataLine *rin;
 
-    rin = (GwyDataLine *)gwy_data_line_new(dfield->xres, dfield->xreal, FALSE);
+    rin = GWY_DATA_LINE(gwy_data_line_new(dfield->xres, dfield->xreal, FALSE));
 
     for (k = 0; k < dfield->yres; k++) {
 	gwy_data_field_get_row(dfield, rin, k);
-	gwy_data_line_dwt(rin, wt_coefs, isign);
+	rin = gwy_data_line_dwt(rin, wt_coefs, isign);
 	gwy_data_field_set_row(dfield, rin, k);
     }
     g_object_unref(rin);	 
+    return dfield;
 }
 
 GwyDataField* 
@@ -195,21 +209,24 @@ gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign)
     gint k;
     GwyDataLine *rin;
 
-    rin = (GwyDataLine *)gwy_data_line_new(dfield->yres, dfield->yreal, FALSE);
+    rin = GWY_DATA_LINE(gwy_data_line_new(dfield->yres, dfield->yreal, FALSE));
 
     for (k = 0; k < dfield->xres; k++) {
 	gwy_data_field_get_column(dfield, rin, k);
-	gwy_data_line_dwt(rin, wt_coefs, isign);
+	rin = gwy_data_line_dwt(rin, wt_coefs, isign);
 	gwy_data_field_set_column(dfield, rin, k);
     }
     g_object_unref(rin);	     
+    return dfield;
 }
 
 GwyDataField* 
 gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign)
 {
-    gwy_data_field_xdwt(dfield, wt_coefs, isign);
-    gwy_data_field_ydwt(dfield, wt_coefs, isign);    
+    if ((!dfield) || (!wt_coefs)) return NULL;
+    dfield = gwy_data_field_xdwt(dfield, wt_coefs, isign);
+    dfield = gwy_data_field_ydwt(dfield, wt_coefs, isign);    
+    return dfield;
 }
 
 
@@ -222,8 +239,10 @@ pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign)
 	long i, ii, j, jf, jr, k, n1, ni, nj, nh, nmod;
 
 	if (n < 4) return NULL;
-	GwyDataLine *wksp = (GwyDataLine *)gwy_data_line_new(n+1, n+1, TRUE);
-	
+	GwyDataLine *wksp;
+	wksp = GWY_DATA_LINE(gwy_data_line_new(n+1, n+1, TRUE));
+
+	/*
 	nmod = wt->ncof*n; 
 	n1 = n-1;			 
 	nh = n >> 1;
@@ -241,6 +260,7 @@ pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign)
 				wksp->data[ii+nh] += wt->cr[k] * dline->data[jr+1];
 			}
 		}
+
 	} 
 	else 
 	{ 
@@ -259,8 +279,9 @@ pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign)
 			}
 		}
 	}
+	*/
 	for (j=1; j<=n; j++) dline->data[j]=wksp->data[j];
-	
+	gwy_data_line_multiply(dline, 0);	
 	g_object_unref(wksp);
 
 	return dline;
@@ -275,8 +296,9 @@ wtset(GwyDataLine *wt_coefs)
     GwyDWTFilter *wt;
 
     wt = g_new(GwyDWTFilter, 1);
-    wt->cc = g_new(gdouble, wt_coefs->res + 1);
-    wt->cr = g_new(gdouble, wt_coefs->res + 1);
+    wt->cc = g_malloc(sizeof(gdouble)*(wt_coefs->res + 1));
+    wt->cr = g_malloc(sizeof(gdouble)*(wt_coefs->res + 1));
+    wt->ncof = wt_coefs->res;
     
     for (i=0; i<wt_coefs->res; i++) wt->cc[i+1]=wt_coefs->data[i]/sqrt(2);
 
