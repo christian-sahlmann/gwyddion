@@ -685,6 +685,153 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
     return is_selected;
 }
 
+void
+gwy_unitool_rect_info_table_setup(GwyUnitoolRectLabels *rinfo,
+                                  GtkTable *table,
+                                  gint col,
+                                  gint row)
+{
+    GtkWidget *label;
+
+    g_return_if_fail(GTK_IS_TABLE(table));
+    g_return_if_fail(rinfo);
+
+    gtk_table_set_col_spacing(table, col+1, 12);
+    gtk_table_set_col_spacing(table, col+2, 12);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, col+0, col+1, row+0, row+1,
+                     GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new(_("X"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, col+1, col+2, row+1, row+2,
+                     GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new(_("Y"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, col+1, col+2, row+2, row+3,
+                     GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, col+0, col+1, row+3, row+4,
+                     GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new(_("Width"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, col+1, col+2, row+4, row+5,
+                     GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new(_("Height"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, col+1, col+2, row+5, row+6,
+                     GTK_FILL, 0, 2, 2);
+
+    rinfo->xreal = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(rinfo->xreal), 1.0, 0.5);
+    gtk_table_attach_defaults(table, rinfo->xreal, col+2, col+3, row+1, row+2);
+
+    rinfo->yreal = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(rinfo->yreal), 1.0, 0.5);
+    gtk_table_attach_defaults(table, rinfo->yreal, col+2, col+3, row+2, row+3);
+
+    rinfo->wreal = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(rinfo->wreal), 1.0, 0.5);
+    gtk_table_attach_defaults(table, rinfo->wreal, col+2, col+3, row+4, row+5);
+
+    rinfo->hreal = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(rinfo->hreal), 1.0, 0.5);
+    gtk_table_attach_defaults(table, rinfo->hreal, col+2, col+3, row+5, row+6);
+
+    rinfo->xpix = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(rinfo->xpix), 1.0, 0.5);
+    gtk_table_attach_defaults(table, rinfo->xpix, col+3, col+4, row+1, row+2);
+
+    rinfo->ypix = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(rinfo->ypix), 1.0, 0.5);
+    gtk_table_attach_defaults(table, rinfo->ypix, col+3, col+4, row+2, row+3);
+
+    rinfo->wpix = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(rinfo->wpix), 1.0, 0.5);
+    gtk_table_attach_defaults(table, rinfo->wpix, col+3, col+4, row+4, row+5);
+
+    rinfo->hpix = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(rinfo->hpix), 1.0, 0.5);
+    gtk_table_attach_defaults(table, rinfo->hpix, col+3, col+4, row+5, row+6);
+}
+
+gboolean
+gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
+                                 GwyUnitoolRectLabels *rinfo,
+                                 gboolean unselected_is_full,
+                                 gdouble *selreal,
+                                 gint *selpix)
+{
+    GwyContainer *data;
+    GwyDataField *dfield;
+    GwySIValueFormat *units;
+    gdouble sel[4];
+    gint isel[4];
+    gchar buf[16];
+    gboolean is_selected;
+
+    data = gwy_data_window_get_data(GWY_DATA_WINDOW(state->data_window));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    is_selected = gwy_unitool_get_selection_or_all(state,
+                                                   sel, sel+1, sel+2, sel+3);
+    if (is_selected || unselected_is_full) {
+        units = state->coord_format;
+        gwy_unitool_update_label(units, rinfo->xreal, sel[0]);
+        gwy_unitool_update_label(units, rinfo->yreal, sel[1]);
+        gwy_unitool_update_label(units, rinfo->wreal, sel[2] - sel[0]);
+        gwy_unitool_update_label(units, rinfo->hreal, sel[3] - sel[1]);
+
+        isel[0] = gwy_data_field_rtoj(dfield, sel[0]);
+        g_snprintf(buf, sizeof(buf), "%d px", isel[0]);
+        gtk_label_set_text(GTK_LABEL(rinfo->xpix), buf);
+
+        isel[1] = gwy_data_field_rtoi(dfield, sel[1]);
+        g_snprintf(buf, sizeof(buf), "%d px", isel[1]);
+        gtk_label_set_text(GTK_LABEL(rinfo->ypix), buf);
+
+        if (is_selected)
+            isel[2] = gwy_data_field_rtoj(dfield, sel[2]) + 1;
+        else
+            isel[2] = gwy_data_field_get_xres(dfield);
+        g_snprintf(buf, sizeof(buf), "%d px", isel[2] - isel[0]);
+        gtk_label_set_text(GTK_LABEL(rinfo->wpix), buf);
+
+        if (is_selected)
+            isel[3] = gwy_data_field_rtoi(dfield, sel[3]) + 1;
+        else
+            isel[3] = gwy_data_field_get_yres(dfield);
+        g_snprintf(buf, sizeof(buf), "%d px", isel[3] - isel[1]);
+        gtk_label_set_text(GTK_LABEL(rinfo->hpix), buf);
+
+        if (selreal)
+            memcpy(sel, selreal, 4*sizeof(gdouble));
+        if (selpix)
+            memcpy(isel, selpix, 4*sizeof(gint));
+    }
+    else {
+        gtk_label_set_text(GTK_LABEL(rinfo->xreal), "");
+        gtk_label_set_text(GTK_LABEL(rinfo->yreal), "");
+        gtk_label_set_text(GTK_LABEL(rinfo->wreal), "");
+        gtk_label_set_text(GTK_LABEL(rinfo->hreal), "");
+        gtk_label_set_text(GTK_LABEL(rinfo->xpix), "");
+        gtk_label_set_text(GTK_LABEL(rinfo->ypix), "");
+        gtk_label_set_text(GTK_LABEL(rinfo->wpix), "");
+        gtk_label_set_text(GTK_LABEL(rinfo->hpix), "");
+    }
+
+    return is_selected;
+}
+
 /***** Documentation *******************************************************/
 
 /**

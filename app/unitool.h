@@ -37,6 +37,7 @@ typedef enum {
 } GwyUnitoolUpdateType;
 
 typedef struct _GwyUnitoolSlots GwyUnitoolSlots;
+typedef struct _GwyUnitoolRectLabels GwyUnitoolRectLabels;
 
 typedef struct {
     /*< public >*/
@@ -79,6 +80,17 @@ struct _GwyUnitoolSlots {
     GwyUnitoolResponseFunc response;
 };
 
+struct _GwyUnitoolRectLabels {
+    GtkWidget *xreal;
+    GtkWidget *yreal;
+    GtkWidget *wreal;
+    GtkWidget *hreal;
+    GtkWidget *xpix;
+    GtkWidget *ypix;
+    GtkWidget *wpix;
+    GtkWidget *hpix;
+};
+
 gboolean     gwy_unitool_use                     (GwyUnitoolState *state,
                                                   GwyDataWindow *data_window,
                                                   GwyToolSwitchEvent reason);
@@ -104,6 +116,15 @@ gboolean     gwy_unitool_get_selection_or_all    (GwyUnitoolState *state,
                                                   gdouble *ymin,
                                                   gdouble *xmax,
                                                   gdouble *ymax);
+void         gwy_unitool_rect_info_table_setup   (GwyUnitoolRectLabels *rinfo,
+                                                  GtkTable *table,
+                                                  gint col,
+                                                  gint row);
+gboolean     gwy_unitool_rect_info_table_fill    (GwyUnitoolState *state,
+                                                  GwyUnitoolRectLabels *rinfo,
+                                                  gboolean unselected_is_full,
+                                                  gdouble *selreal,
+                                                  gint *selpix);
 
 G_END_DECLS
 
