@@ -377,7 +377,8 @@ gwy_layer_select_button_released(GwyVectorLayer *layer,
     }
     gwy_layer_select_save(select_layer);
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
-    gwy_vector_layer_selection_finished(layer);
+    if (select_layer->selected)
+        gwy_vector_layer_selection_finished(layer);
 
     klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
     i = gwy_layer_select_near_point(select_layer, xreal, yreal);
@@ -449,7 +450,6 @@ gwy_layer_select_unselect(GwyVectorLayer *layer)
         gwy_layer_select_draw(layer, parent->window);
     select_layer->selected = FALSE;
     gwy_layer_select_save(select_layer);
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
 /**

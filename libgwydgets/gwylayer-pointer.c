@@ -320,7 +320,6 @@ gwy_layer_pointer_unselect(GwyVectorLayer *layer)
 
     pointer_layer->selected = FALSE;
     gwy_layer_pointer_save(pointer_layer);
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
 static void

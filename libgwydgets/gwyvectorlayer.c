@@ -303,8 +303,10 @@ gwy_vector_layer_unselect(GwyVectorLayer *layer)
     GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
 
     g_assert(layer_class);
-    if (layer_class->unselect)
+    if (layer_class->unselect) {
         layer_class->unselect(layer);
+        gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+    }
 }
 
 /**

@@ -552,7 +552,6 @@ gwy_layer_lines_unselect(GwyVectorLayer *layer)
         gwy_layer_lines_draw(layer, parent->window);
     lines_layer->nselected = 0;
     gwy_layer_lines_save(lines_layer, -1);
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
 static void

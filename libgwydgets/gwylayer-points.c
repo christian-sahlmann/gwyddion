@@ -447,7 +447,6 @@ gwy_layer_points_unselect(GwyVectorLayer *layer)
         gwy_layer_points_draw(layer, parent->window);
     points_layer->nselected = 0;
     gwy_layer_points_save(points_layer, -1);
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
 gint
