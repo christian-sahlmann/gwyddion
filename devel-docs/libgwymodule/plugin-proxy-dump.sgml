@@ -24,15 +24,46 @@
       IEEE double precision numbers.
     </para>
     <para>
-      Since the dump files contain binary data (along with the text ones)
+      Since dump files contain binary data (along with text lines)
       they have to be always opened in binary mode to avoid end-of-line
       conversions (on systems distinguishing between text and binary files).
       Unix end-of-lines are always used, i.e., lines are always terminated
-      by a single LF (line feed) character, ASCII 0x0a.
+      by a single LF (line feed) character, ASCII 0x0a.  Plugin-proxy
+      always writes data with Unix end-of-lines and though it may read
+      dumps with CRLF end-of-lines without problems too, don't count on it.
     </para>
   </refsect1>
   <refsect1>
-    <title>Data Fields</title>
+    <title>String Data</title>
+    <para>The text lines have the form
+      <literal><parameter>key</parameter>=<parameter>value</parameter></literal>.
+      The keys are keys in data <link linkend="GwyContainer">container</link>
+      created for the data, and the values are corresponding values.
+      Except for a few special keys specified below, all values are stored
+      as strings.
+    </para>
+    <para>
+      There are only a few types of data you may expect to find in or 
+      want to write to a dump file:
+      <itemizedlist>
+        <listitem>
+          Data fields.  They use some specific keys and you can read more
+          about them
+          <link linkend="plugin-proxy-dump-data-fields">below</link>.
+        </listitem>
+        <listitem>
+          Metadata about the data.  They start with <literal>/meta/</literal>
+          followed by an arbitrary key string.  Not used directly by
+          Gwyddion, but will appear in Metadata Browser.
+        </listitem>
+        <listitem>
+          Queer stuff (everything else).  It's best to ignore it.
+        </listitem>
+      </itemizedlist>
+    </para>
+  </refsect1>
+  <refsect1>
+    <title id="plugin-proxy-dump-data-fields">Data Fields</title>
     <para>
       The data samples themselves are stored as a sequence of binary IEEE
       floating point numbers in little-endian byte order.  The array is
@@ -54,6 +85,22 @@
       recommended to specify physical dimensions too, though it is not
       strictly necessary if you don't mind some bogus default value (like
       1 meter) is substituted then.
+    </para>
+    <para>
+      All the values are in base SI units, i.e., dimensions are in meters
+      (not nanometres or kilometres), currents in ampers (not pikoampers),
+      etc.  The base units can be specified using the
+      <literal>/0/data/unit-xy</literal> (lateral) and
+      <literal>/0/data/unit-z</literal> (value, height) keys.
+      If not specified, meters are assumed.
+    </para>
+    <para>
+      If you want to pass mask (or presentation) instead of the main data,
+      just replace the <literal>/0/data</literal> with
+      <literal>/0/mask</literal> (or <literal>/0/show</literal>) in the
+      previous description.  If they are present in the data, they are
+      always written to the dump, so you don't need anything special to
+      read them.
     </para>
   </refsect1>
 </refentry>

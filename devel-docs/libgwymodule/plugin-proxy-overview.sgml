@@ -18,9 +18,6 @@
   <refsect1>
     <title>Overview</title>
     <para>
-      FIXME: Much more to be said.
-    </para>
-    <para>
       Plug-ins are external programs that can be executed by Gwyddion
       to either perform some operation on the data or to read or write
       data in a third-party file format.
@@ -42,6 +39,9 @@
       the appropriate plug-in to process it and passes the result back to
       Gwyddion.  All plug-in features thus look as plug-in proxy features
       to Gwyddion, as you can see yourself in the Module Browser.
+    </para>
+    <para>
+      FIXME: More to be said.
     </para>
   </refsect1>
 </refentry>

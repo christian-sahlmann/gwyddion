@@ -345,7 +345,10 @@ my_invert_value(GwyContainer *data, GwyRunType run)
      was passed to our function.  Just take it as a fact the data are
      called <literal>"/0/data"</literal>, it is probably equally good name
      as anything else.  There are other strange things in the container
-     but you'd rather not want to know about them, at least not now.
+     but you'd rather not want to know about them (at least not now, some
+     more exotic container inhabitants are described in the
+     <link linkend="module-tutorial-beyond">Beyond Minimal Module</link>
+     section).
    </para>
    <para>
      The

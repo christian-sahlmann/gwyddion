@@ -11,7 +11,7 @@
   <refnamediv>
     <refname>Beyond The Minimal Module</refname>
     <refpurpose>
-      Description of some common and useful module idioms.
+      Some common and useful module idioms.
     </refpurpose>
   </refnamediv>
 
@@ -25,9 +25,9 @@
     <para>
       The naive approach would be to put the code of all the modules to
       a one file and share what is shareable.  But alas! there can be only
-      one <link linkend="GWY-MODULE-QUERY-CAPS">GWY_MODULE_QUERY</link>,
-      thus a one file can register only a one module and this approach would
-      not work.
+      one <link linkend="GWY-MODULE-QUERY-CAPS">GWY_MODULE_QUERY</link> per
+      file, thus a one file can register only a one module and this approach
+      would not work.
     </para>
     <para>
       The prefered solution is to register more than function for the
@@ -90,13 +90,13 @@ module_register(const gchar *name)
       The function
       <link linkend="gwy-app-settings-get">gwy_app_settings_get()</link>
       will bring it to you.  It is loaded on startup and saved
-      on exit so you don't need to take care about this.
+      on exit and you don't need to take care about this.
       So the only thing you have to care about is to read the settings from
       it when your module starts and store them there on exit.  OK, there
       are in fact two things you have to care about.  There are no
-      limitations on who can access what in the container, so to avoid
+      limitations on who can access what in the settings, so to avoid
       surprises you should use only keys startings with
-      <literal>"/mod/my-module-name/"</literal>.
+      <literal>"/mod/<parameter>my-module-name</parameter>/"</literal>.
     </para>
     <para>
       Loading settings could look (remember they may not always exist, for
@@ -106,10 +106,16 @@ module_register(const gchar *name)
 GwyContainer *settings;
 
 settings = gwy_app_settings_get();
-if (gwy_container_contains_by_name(settings, "/mod/my_module/ratio")
-    ratio = gwy_container_get_double_by_name(settings,
-                                             "/mod/my_module/ratio");
+ratio = 1.61803;
+gwy_container_gis_double_by_name(settings,
+                                 "/mod/my_module/ratio",
+                                 &ratio);
 ]]></programlisting></informalexample>
+    <para>
+      The <link linkend="gwy-container-gis-double-by-name">gwy_container_gis_double_by_name()</link>
+      function updates its last argument only when there is a corresponding
+      value in the container.
+    </para>
     <para>
       And saving settings could look:
     </para>
@@ -163,8 +169,32 @@ gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
       <link linkend="gwy-app-data-window-set-untitled">gwy_app_data_window_set_untitled()</link>
       for details.
     </para>
+  </refsect1>
+  <refsect1>
+    <title>Masks and presentations</title>
     <para>
-      TODO: masks, presentations, file-type modules, GUI.
+      To highlight some areas in the data (like the grain modules do) you may
+      want to use a mask.  Masks are data fields too, differing only
+      by a few things from the ordinary ones.  They live at
+      <literal>"/0/mask"</literal> instead of <literal>"/0/data"</literal>
+      in the container, they may not be present there, and their units are
+      irrelevant – the value range is always from 0 to 1,
+      0 being fully transparent and 1 the mask color set by user (may not be
+      fully opaque).  To create a mask, just create a new data field and
+      put it to the container with key <literal>"/0/mask"</literal>.  When
+      a mask is already present there, it is more efficient to reuse it.
+    </para>
+    <para>
+      You may also want to conceal the true nature of the data and make
+      gwyddion to display them in a funny way, but without actually modifying
+      them (like the shader module does).  This is possible by putting a
+      <literal>"/0/show"</literal> data field to the container.  When
+      present, it is displayed instead of the data.  It is really only useful
+      for some final presentations, because it is not obviously updated when
+      the data changes.
+    </para>
+    <para>
+      TODO: file-type and other modules, GUI.
     </para>
   </refsect1>
 </refentry>

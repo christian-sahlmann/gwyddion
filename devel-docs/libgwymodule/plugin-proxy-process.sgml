@@ -21,12 +21,12 @@
       When the plug-in is called with <literal>register</literal> as
       its first argument it should dump following information about self to
       standard output (each on a separate line) and terminate:
-    </para>
     <itemizedlist>
       <listitem>plug-in name</listitem>
       <listitem>menu path</listitem>
       <listitem>run modes</listitem>
     </itemizedlist>
+    </para>
     <para>
       This information correspond to similar
       <link linkend="libgwymodule-gwymodule-process">data process module</link>

@@ -48,7 +48,7 @@ HTML_IMAGES =
 content_files = \
 	module-tutorial-overview.sgml \
 	module-tutorial-minimal.sgml \
-	module-tutorial-beyond.sgml
+	module-tutorial-beyond.sgml \
 	plugin-proxy-overview.sgml \
 	plugin-proxy-dump.sgml \
 	plugin-proxy-process.sgml \

@@ -21,13 +21,13 @@
       When the plug-in is called with <literal>register</literal> as
       its first argument it should dump following information to standard
       output (each on a separate line) and terminate:
+      <itemizedlist>
+        <listitem>plug-in name</listitem>
+        <listitem>file format description</listitem>
+        <listitem>file globs</listitem>
+        <listitem>supported operations</listitem>
+      </itemizedlist>
     </para>
-    <itemizedlist>
-      <listitem>plug-in name</listitem>
-      <listitem>file format description</listitem>
-      <listitem>file globs</listitem>
-      <listitem>supported operations</listitem>
-    </itemizedlist>
     <para>
       These information correspond to similar
       <link linkend="libgwymodule-gwymodule-file">file module</link>
