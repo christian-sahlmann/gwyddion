@@ -1246,19 +1246,29 @@ scale_poly_3(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 /******************** preset default weights *************************/
 
 static void
-weights_constant(G_GNUC_UNUSED gdouble *x, G_GNUC_UNUSED gdouble *y, gint n_dat,
-                 gdouble *weight, G_GNUC_UNUSED gpointer user_data)
+weights_constant(G_GNUC_UNUSED gdouble *x,
+                 G_GNUC_UNUSED gdouble *y,
+                 gint n_dat,
+                 gdouble *weight,
+                 G_GNUC_UNUSED gpointer user_data)
 {
     gint i;
-    for (i=0; i<n_dat; i++) weight[i] = 1;
+
+    for (i = 0; i < n_dat; i++)
+        weight[i] = 1;
 }
 
 static void
-weights_linear_decrease(G_GNUC_UNUSED gdouble *x, G_GNUC_UNUSED gdouble *y, gint n_dat,
-                 gdouble *weight, G_GNUC_UNUSED gpointer user_data)
+weights_linear_decrease(G_GNUC_UNUSED gdouble *x,
+                        G_GNUC_UNUSED gdouble *y,
+                        gint n_dat,
+                        gdouble *weight,
+                        G_GNUC_UNUSED gpointer user_data)
 {
     gint i;
-    for (i=0; i<n_dat; i++) weight[i] = 1 - (gdouble)i/(gdouble)n_dat;
+
+    for (i = 0; i < n_dat; i++)
+        weight[i] = 1 - (gdouble)i/(gdouble)n_dat;
 }
 
 
@@ -1300,7 +1310,7 @@ static const GwyNLFitParam poly3_pars[]= {
 };
 
 
-static const GwyNLFitPresetFunction fitting_presets[] = {
+static const GwyNLFitPreset fitting_presets[] = {
     { "Gaussian",
        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
        &fit_gauss,
@@ -1423,13 +1433,37 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
     }
 };
 
+/**
+ * gwy_math_nlfit_get_npresets:
+ *
+ * Returns the number of available NL fitter presets.
+ *
+ * Returns: The number of presets.
+ *
+ * Since: 1.2.
+ **/
 gint
 gwy_math_nlfit_get_npresets(void)
 {
     return (gint)G_N_ELEMENTS(fitting_presets);
 }
 
-const GwyNLFitPresetFunction*
+/**
+ * gwy_math_nlfit_get_preset:
+ * @preset_id: NL fitter preset number.
+ *
+ * Returns NL fitter preset number @preset_id.
+ *
+ * Presets are numbered sequentially from 0 to gwy_math_nlfit_get_npresets()-1.
+ * The numbers are not guaranteed to be constants, use preset names as unique
+ * identifiers.
+ *
+ * Returns: Preset number @preset_id.  Note the returned value must not be
+ *          modified or freed.
+ *
+ * Since: 1.2.
+ **/
+G_CONST_RETURN GwyNLFitPreset*
 gwy_math_nlfit_get_preset(gint preset_id)
 {
     g_return_val_if_fail(preset_id >= 0
@@ -1439,7 +1473,18 @@ gwy_math_nlfit_get_preset(gint preset_id)
     return fitting_presets + preset_id;
 }
 
-const GwyNLFitPresetFunction*
+/**
+ * gwy_math_nlfit_get_preset_by_name:
+ * @name: NL fitter preset name.
+ *
+ * Returns NL fitter preset whose name is @name.
+ *
+ * Returns: Preset @name, %NULL if not found.  Note the returned value must
+ *          not be modified or freed.
+ *
+ * Since: 1.2.
+ **/
+G_CONST_RETURN GwyNLFitPreset*
 gwy_math_nlfit_get_preset_by_name(const gchar *name)
 {
     gsize i;
@@ -1451,63 +1496,162 @@ gwy_math_nlfit_get_preset_by_name(const gchar *name)
     return NULL;
 }
 
+/**
+ * gwy_math_nlfit_get_preset_id:
+ * @preset: A NL fitter function preset.
+ *
+ * Returns the id of a NL fitter preset.
+ *
+ * Returns: The preset number.
+ *
+ * Since: 1.2.
+ **/
 gint
-gwy_math_nlfit_get_preset_id(const GwyNLFitPresetFunction* function)
+gwy_math_nlfit_get_preset_id(const GwyNLFitPreset* preset)
 {
     /* XXX: some sanity check? */
-    return function - fitting_presets;
+    return preset - fitting_presets;
 }
 
+/**
+ * gwy_math_nlfit_get_preset_value:
+ * @preset: A NL fitter function preset.
+ * @params: Preset parameter values.
+ * @x: The point to compute value at.
+ *
+ * Return preset function value in point @x with parameters @params.
+ *
+ * Returns: The function value.
+ *
+ * Since: 1.2.
+ **/
 gdouble
-gwy_math_nlfit_get_function_value(const GwyNLFitPresetFunction* function,
-                                  gdouble *params, gdouble x)
+gwy_math_nlfit_get_preset_value(const GwyNLFitPreset* preset,
+                                gdouble *params, gdouble x)
 {
     gboolean res;
 
-    return (function->function)(x, function->nparams, params, NULL, &res);
+    return (preset->function)(x, preset->nparams, params, NULL, &res);
 }
 
-const gchar*
-gwy_math_nlfit_get_function_name(const GwyNLFitPresetFunction* function)
+/**
+ * gwy_math_nlfit_get_preset_name:
+ * @preset: A NL fitter function preset.
+ *
+ * Return preset name (its unique identifier).
+ *
+ * Returns: The preset name.
+ *
+ * Since: 1.2.
+ **/
+G_CONST_RETURN gchar*
+gwy_math_nlfit_get_preset_name(const GwyNLFitPreset* preset)
 {
-    return function->function_name;
+    return preset->function_name;
 }
 
-const gchar*
-gwy_math_nlfit_get_function_equation(const GwyNLFitPresetFunction* function)
+/**
+ * gwy_math_nlfit_get_preset_formula:
+ * @preset: A NL fitter function preset.
+ *
+ * Returns function formula of @preset (with Pango markup).
+ *
+ * Returns: The preset function formula.
+ *
+ * Since: 1.2.
+ **/
+G_CONST_RETURN gchar*
+gwy_math_nlfit_get_preset_formula(const GwyNLFitPreset* preset)
 {
-    return function->function_equation;
+    return preset->function_formula;
 }
 
-const gchar*
-gwy_math_nlfit_get_function_param_name(const GwyNLFitPresetFunction* function,
-                                       gint param)
+/**
+ * gwy_math_nlfit_get_preset_param_name:
+ * @preset: A NL fitter function preset.
+ * @param: A parameter number.
+ *
+ * Returns the name of parameter number @param of preset @preset.
+ *
+ * The name may contain Pango markup.
+ *
+ * Returns: The name of parameter @param.
+ *
+ * Since: 1.2.
+ **/
+G_CONST_RETURN gchar*
+gwy_math_nlfit_get_preset_param_name(const GwyNLFitPreset* preset,
+                                     gint param)
 {
     const GwyNLFitParam *par;
 
-    par = function->param + param;
+    g_return_val_if_fail(param >= 0 && param < preset->nparams, NULL);
+    par = preset->param + param;
 
     return par->name;
 }
 
+/**
+ * gwy_math_nlfit_get_preset_param_default:
+ * @preset: A NL fitter function preset.
+ * @param: A parameter number.
+ *
+ * Returns a suitable constant default parameter value.
+ *
+ * It is usually better to do an educated guess of initial parameter value.
+ *
+ * Returns: The default parameter value.
+ *
+ * Since: 1.2.
+ **/
 gdouble
-gwy_math_nlfit_get_function_param_default(const GwyNLFitPresetFunction* function,
-                                          gint param)
+gwy_math_nlfit_get_preset_param_default(const GwyNLFitPreset* preset,
+                                        gint param)
 {
     const GwyNLFitParam *par;
 
-    par = function->param + param;
+    g_return_val_if_fail(param >= 0 && param < preset->nparams, G_MAXDOUBLE);
+    par = preset->param + param;
+
     return par->default_init;
 }
 
+/**
+ * gwy_math_nlfit_get_preset_nparams:
+ * @preset: A NL fitter function preset.
+ *
+ * Return the number of parameters of @preset.
+ *
+ * Returns: The number of function parameters.
+ *
+ * Since: 1.2.
+ **/
 gint
-gwy_math_nlfit_get_function_nparams(const GwyNLFitPresetFunction* function)
+gwy_math_nlfit_get_preset_nparams(const GwyNLFitPreset* preset)
 {
-    return function->nparams;
+    return preset->nparams;
 }
 
+/**
+ * gwy_math_nlfit_fit_preset:
+ * @preset: 
+ * @n_dat: 
+ * @x: 
+ * @y: 
+ * @n_param: 
+ * @param: 
+ * @err: 
+ * @fixed_param: 
+ * @user_data: 
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.2.
+ **/
 GwyNLFitter*
-gwy_math_nlfit_fit_preset(const GwyNLFitPresetFunction* function,
+gwy_math_nlfit_fit_preset(const GwyNLFitPreset* preset,
                           gint n_dat, const gdouble *x, const gdouble *y,
                           gint n_param,
                           gdouble *param, gdouble *err,
@@ -1536,19 +1680,19 @@ gwy_math_nlfit_fit_preset(const GwyNLFitPresetFunction* function,
         ysc[i] = y[i]/yscale;
 
     }
-    function->parameter_scale(param, xscale, yscale, 1);
+    preset->parameter_scale(param, xscale, yscale, 1);
 
     /*use numerical derivation if necessary*/
-    if (function->function_derivation == NULL)
-        fitter = gwy_math_nlfit_new(function->function,
+    if (preset->function_derivation == NULL)
+        fitter = gwy_math_nlfit_new(preset->function,
                                     gwy_math_nlfit_derive);
     else
-        fitter = gwy_math_nlfit_new(function->function,
-                                    function->function_derivation);
+        fitter = gwy_math_nlfit_new(preset->function,
+                                    preset->function_derivation);
 
     /*load default weights for given function type*/
     weight = (gdouble *)g_malloc(n_dat*sizeof(gdouble));
-    function->set_default_weights(xsc, ysc, n_dat, weight, NULL);
+    preset->set_default_weights(xsc, ysc, n_dat, weight, NULL);
 
     gwy_math_nlfit_fit_with_fixed(fitter, n_dat, xsc, ysc, weight,
                                   n_param, param, fixed_param, user_data);
@@ -1559,8 +1703,8 @@ gwy_math_nlfit_fit_preset(const GwyNLFitPresetFunction* function,
             err[i] = gwy_math_nlfit_get_sigma(fitter, i);
     }
     /*recompute parameters to be scaled as original data*/
-    function->parameter_scale(param, xscale, yscale, -1);
-    if (fitter->covar) function->parameter_scale(err, xscale, yscale, -1);
+    preset->parameter_scale(param, xscale, yscale, -1);
+    if (fitter->covar) preset->parameter_scale(err, xscale, yscale, -1);
 
     g_free(ysc);
     g_free(xsc);
