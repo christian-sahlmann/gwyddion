@@ -72,9 +72,9 @@ static void        interp_changed_cb          (GObject *item,
 
 static GwyDataField *gwy_nanoindent_adjust           (GwyDataField *model, 
                                                       GwyDataField *sample, 
-                                                      GwyDataField *result,
                                                       GwySetFractionFunc set_fraction,
-                                                      GwySetMessageFunc set_message);
+                                                      GwySetMessageFunc set_message,
+                                                      NanoindentAdjustArgs *args);
 
 static void        nanoindent_adjust_sanitize_args       (NanoindentAdjustArgs *args);
 static void        nanoindent_adjust_load_args           (GwyContainer *container,
@@ -342,9 +342,10 @@ nanoindent_adjust_do(NanoindentAdjustArgs *args)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     gwy_app_wait_start(GTK_WIDGET(args->win2), "Initializing...");
-    dfield = gwy_nanoindent_adjust(dfield1, dfield2, dfield,
+    dfield = gwy_nanoindent_adjust(dfield1, dfield,
                               gwy_app_wait_set_fraction,
-                              gwy_app_wait_set_message);
+                              gwy_app_wait_set_message,
+                              args);
     gwy_app_wait_finish();
     /*set right output */
 
@@ -432,29 +433,59 @@ get_rotation_angle(GwyDataField *model, GwyDataField *sample)
     return sample_phi - model_phi;
 }
 
+static void
+data_field_move(GwyDataField *sample, gint xoff, gint yoff)
+{
+    GwyDataField *buffer;
+    gint ulcol, ulrow, brcol, brrow, dest_ulcol, dest_ulrow;
+
+    buffer = GWY_DATA_FIELD(gwy_data_field_new_alike(sample, FALSE));
+    gwy_data_field_copy(sample, buffer);
+
+   
+    dest_ulcol = MAX(0, xoff);
+    dest_ulrow = MAX(0, yoff);
+    ulcol = MAX(0, -xoff);
+    ulrow = MAX(0, -yoff);
+    brcol = MIN(sample->xres, sample->xres - xoff);
+    brrow = MIN(sample->yres, sample->xres - yoff);
+   
+    printf("Moving by %d, %d with parameters: ul: %d %d br: %d %d dul: %d %d\n", xoff, yoff, ulcol, ulrow, brcol, brrow, dest_ulcol, dest_ulrow);
+    gwy_data_field_area_copy(buffer, sample,
+                             ulcol, ulrow, brcol, brrow,
+                             dest_ulcol, dest_ulrow);
+
+    g_object_unref(buffer);
+}
+
 static GwyDataField*
-gwy_nanoindent_adjust(GwyDataField *model, GwyDataField *sample, GwyDataField *result,
+gwy_nanoindent_adjust(GwyDataField *model, GwyDataField *sample,
                                 GwySetFractionFunc set_fraction,
-                                GwySetMessageFunc set_message)
+                                GwySetMessageFunc set_message,
+                                NanoindentAdjustArgs *args)
 {
     gint mod_xmin, mod_ymin, sam_xmin, sam_ymin;
     gdouble angle;
     
-    /*Find position of minimum*/
-    get_weighted_minimum(model, &mod_xmin, &mod_ymin);
-    get_weighted_minimum(sample, &sam_xmin, &sam_ymin);
-
-    printf("model center: %d, %d    sample center: %d, %d\n", mod_xmin, mod_ymin, sam_xmin, sam_ymin);
-    
     /*rotate if requested*/
-    angle = get_rotation_angle(model, sample);
-    printf("rotation angle: %g rad (%g deg)\n", angle, angle*180/G_PI);
+    if (args->rotate) {
+        angle = get_rotation_angle(model, sample);
+        printf("rotation angle: %g rad (%g deg)\n", angle, angle*180/G_PI);
 
+        gwy_data_field_rotate(sample, angle*G_PI/180, args->interp);
+    }
+        
     /*move if requested*/
+    if (args->move) {
+        get_weighted_minimum(model, &mod_xmin, &mod_ymin);
+        get_weighted_minimum(sample, &sam_xmin, &sam_ymin);
 
-    /*extrapolate if requested*/
+        printf("mc: %d, %d  sc: %d, %d\n", mod_xmin, mod_ymin, sam_xmin, sam_ymin);
     
-    return result;
+        data_field_move(sample, mod_xmin - sam_xmin, mod_ymin - sam_ymin);    
+    }
+    
+    return sample;
 }
 
 
