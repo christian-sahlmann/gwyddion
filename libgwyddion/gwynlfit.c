@@ -1,8 +1,6 @@
 /*
  *  @(#) $Id$
  *  Copyright (C) 2000-2003 Martin Siler.
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +15,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
+ */
+
+/*
+ *  Clean-up, rewrite from C++, and modification for Gwyddion by David
+ *  Necas (Yeti), 2004.
+ *  E-mail: yeti@gwyddion.net.
  */
 
 #include <gwymacros.h>
@@ -49,7 +53,7 @@ static gboolean gwy_math_choleski_decompose1(gint dimA,
 static gboolean gwy_math_sym_matrix_invert1(gint N,
                                             gdouble *A);
 
-static gdouble gwy_math_nlfit_residua1(GwyNLFitState *ms,
+static gdouble gwy_math_nlfit_residua1(GwyNLFitState *nlfit,
                                        gint n_dat,
                                        gdouble *x,
                                        gdouble *y,
@@ -74,40 +78,40 @@ static gdouble gwy_math_nlfit_residua1(GwyNLFitState *ms,
 GwyNLFitState*
 gwy_math_nlfit_new(GwyNLFitFunc ff, GwyNLFitDerFunc df)
 {
-    GwyNLFitState *ms;
+    GwyNLFitState *nlfit;
 
-    ms = g_new0(GwyNLFitState, 1);
-    ms->fmarq = ff;
-    ms->dmarq = df;
-    ms->mfi = 1.0;
-    ms->mdec = 0.4;
-    ms->minc = 10.0;
-    ms->mtol = 1e-6;
-    ms->maxiter = 50;
-    ms->eval = FALSE;
-    ms->dispersion = -1;
-    ms->covar = NULL;
+    nlfit = g_new0(GwyNLFitState, 1);
+    nlfit->fmarq = ff;
+    nlfit->dmarq = df;
+    nlfit->mfi = 1.0;
+    nlfit->mdec = 0.4;
+    nlfit->minc = 10.0;
+    nlfit->mtol = 1e-6;
+    nlfit->maxiter = 50;
+    nlfit->eval = FALSE;
+    nlfit->dispersion = -1;
+    nlfit->covar = NULL;
 
-    return ms;
+    return nlfit;
 }
 
 /**
  * gwy_math_nlfit_free:
- * @ms: A Marquardt-Levenberg nonlinear fitter.
+ * @nlfit: A Marquardt-Levenberg nonlinear fitter.
  *
  * Completely frees a Marquardt-Levenberg nonlinear fitter.
  **/
 void
-gwy_math_nlfit_free(GwyNLFitState *ms)
+gwy_math_nlfit_free(GwyNLFitState *nlfit)
 {
-    g_free(ms->covar);
-    ms->covar = NULL;
-    g_free(ms);
+    g_free(nlfit->covar);
+    nlfit->covar = NULL;
+    g_free(nlfit);
 }
 
 /**
  * gwy_math_nlfit_fit:
- * @ms: A Marquardt-Levenberg nonlinear fitter.
+ * @nlfit: A Marquardt-Levenberg nonlinear fitter.
  * @n_dat: The number of data points in @x, @y, @w.
  * @x: Array of independent variable values.
  * @y: Array of dependent variable values.
@@ -118,12 +122,12 @@ gwy_math_nlfit_free(GwyNLFitState *ms)
  * @user_data: Any pointer that will be passed to the function and derivation
  *             as @user_data.
  *
- * Performs a nonlinear fit of @ms function on (@x,@y) data.
+ * Performs a nonlinear fit of @nlfit function on (@x,@y) data.
  *
  * Returns: The final residual sum, a negative number in the case of failure.
  **/
 gdouble
-gwy_math_nlfit_fit(GwyNLFitState *ms,
+gwy_math_nlfit_fit(GwyNLFitState *nlfit,
                    gint n_dat,
                    gdouble *x,
                    gdouble *y,
@@ -164,11 +168,11 @@ gwy_math_nlfit_fit(GwyNLFitState *ms,
     param -= 1;
 
     resid = g_new(gdouble, n_dat+1);
-    sumr1 = gwy_math_nlfit_residua1(ms, n_dat, x, y, weight, n_par, param,
+    sumr1 = gwy_math_nlfit_residua1(nlfit, n_dat, x, y, weight, n_par, param,
                                     user_data, resid);
     sumr = sumr1;
 
-    if (ms->eval == FALSE) {
+    if (nlfit->eval == FALSE) {
         g_warning("Initial residua evaluation failed");
         g_free(resid);
         return -1;
@@ -181,10 +185,10 @@ gwy_math_nlfit_fit(GwyNLFitState *ms,
     a = g_new(gdouble, covar_size);
     save_a = g_new(gdouble, covar_size);
 
-    if (ms->eval) {
+    if (nlfit->eval) {
         do {                    /* Hlavni iteracni cyklus*/
             if (Step1) {
-                mlambda *= ms->mdec;
+                mlambda *= nlfit->mdec;
                 sumr = sumr1;
 
                 for (i = 0; i < covar_size; i++)
@@ -195,19 +199,20 @@ gwy_math_nlfit_fit(GwyNLFitState *ms,
                 /* Vypocet J'J a J'r*/
                 for (i = 1; i <= n_dat; i++) {
                     /* XXX: has to shift things back */
-                    ms->dmarq(i-1, x+1, n_par, param+1, ms->fmarq,
-                              user_data, der+1, &ms->eval);
-                    if (!ms->eval)
+                    nlfit->dmarq(i-1, x+1, n_par, param+1, nlfit->fmarq,
+                              user_data, der+1, &nlfit->eval);
+                    if (!nlfit->eval)
                         break;
                     for (j = 1; j <= n_par; j++) {
                         gint q = j * (j - 1)/2;
 
-                        v[j] += weight[i] * der[j] * resid[i]; /* Do vypoctu J'r*/
+                        /* Do vypoctu J'r*/
+                        v[j] += weight[i]* der[j] * resid[i];
                         for (k = 1; k <= j; k++)    /* Do vypoctu J'J*/
                             a[q + k] += weight[i] * der[j] * der[k];
                     }
                 }
-                if (ms->eval) {
+                if (nlfit->eval) {
                     for (i = 1; i < covar_size; i++)
                         save_a[i] = a[i];
                     for (i = 1; i <= n_par; i++)
@@ -229,16 +234,18 @@ gwy_math_nlfit_fit(GwyNLFitState *ms,
                         first = FALSE;
                     for (j = 1; j <= n_par; j++) {
                         /* Doplneni diagonalnich prvku */
-                        gint q = j * (j + 1)/2;        /* Index diag.prvku*/
+                        gint q = j*(j + 1)/2;        /* Index diag.prvku*/
 
-                        a[q] = save_a[q] * (1.0 + mlambda) + ms->mfi * mlambda;
+                        a[q] = save_a[q] * (1.0 + mlambda) + nlfit->mfi * mlambda;
                         xr[j] = -v[j];
                     }
-                    posdef = gwy_math_choleski_decompose1(n_par, a);   /* Choleskeho rozklad J'J v A*/
+                    /* Choleskeho rozklad J'J v A*/
+                    posdef = gwy_math_choleski_decompose1(n_par, a);
                     if (!posdef) {
-                        mlambda *= ms->minc;     /* Provede zvetseni "lambda"*/
-                        if (mlambda == 0.)
-                            mlambda = ms->mtol;
+                        /* Provede zvetseni "lambda"*/
+                        mlambda *= nlfit->minc;
+                        if (mlambda == 0.0)
+                            mlambda = nlfit->mtol;
                     }
                 }
                 gwy_math_choleski_solve1(n_par, a, xr);
@@ -251,16 +258,17 @@ gwy_math_nlfit_fit(GwyNLFitState *ms,
                 if (count == n_par)
                     end = TRUE;
                 else {
-                    sumr1 = gwy_math_nlfit_residua1(ms, n_dat, x, y, weight,
+                    sumr1 = gwy_math_nlfit_residua1(nlfit, n_dat, x, y, weight,
                                                     n_par, param,
                                                     user_data, resid);
                     if ((sumr1 == 0)
                         || (miter > 2 && fabs((sumr - sumr1)/sumr1) < EPS))
                         end = TRUE;
-                    if (!ms->eval || sumr1 >= sumr) {
-                        mlambda *= ms->minc;     /* Provede zvetseni "lambda"*/
+                    if (!nlfit->eval || sumr1 >= sumr) {
+                        /* Provede zvetseni "lambda"*/
+                        mlambda *= nlfit->minc;
                         if (mlambda == 0.0)
-                            mlambda = ms->mtol;
+                            mlambda = nlfit->mtol;
                         Step1 = FALSE;
                     }
                     else
@@ -268,22 +276,22 @@ gwy_math_nlfit_fit(GwyNLFitState *ms,
                 }
             }
 
-            if (++miter >= ms->maxiter)
+            if (++miter >= nlfit->maxiter)
                 end = TRUE;
         } while (!end);
 
     }
     sumr1 = sumr;
 
-    g_free(ms->covar);
-    ms->covar = NULL;
+    g_free(nlfit->covar);
+    nlfit->covar = NULL;
 
-    if (ms->eval) {
+    if (nlfit->eval) {
         if (gwy_math_sym_matrix_invert1(n_par, save_a)) {
-            ms->covar = g_new0(gdouble, covar_size);
+            nlfit->covar = g_new0(gdouble, covar_size);
             for (i = 0; i < covar_size; i++)
-                ms->covar[i] = save_a[i];
-            ms->dispersion = sumr/(n_dat - n_par);
+                nlfit->covar[i] = save_a[i];
+            nlfit->dispersion = sumr/(n_dat - n_par);
         }
         /* XXX: else what? */
     }
@@ -351,7 +359,7 @@ gwy_math_nlfit_derive(gint i,
 }
 
 static gdouble
-gwy_math_nlfit_residua1(GwyNLFitState *ms,
+gwy_math_nlfit_residua1(GwyNLFitState *nlfit,
                         gint n_dat,
                         gdouble *x,
                         gdouble *y,
@@ -364,43 +372,114 @@ gwy_math_nlfit_residua1(GwyNLFitState *ms,
     gdouble s = 0;
     gint i;
 
-    ms->eval = TRUE;
-    for (i = 1; (i <= n_dat) && (ms->eval == TRUE); i++) {
-        resid[i] = ms->fmarq(x[i], n_par, param+1, user_data, &ms->eval) - y[i];
+    nlfit->eval = TRUE;
+    for (i = 1; (i <= n_dat) && (nlfit->eval == TRUE); i++) {
+        resid[i] = nlfit->fmarq(x[i], n_par, param+1, user_data, &nlfit->eval)
+                   - y[i];
         s += resid[i] * resid[i] * weight[i];
     }
     return s;
 }
 
-gdouble
-gwy_math_nlfit_get_sigma(GwyNLFitState *ms, gint par)
+/**
+ * gwy_math_nlfit_get_max_iterations:
+ * @nlfit: A Marquardt-Levenberg nonlinear fitter.
+ *
+ * Returns the maximum number of iterations of nonlinear fitter @nlfit.
+ *
+ * Returns: The maximum number of iterations.
+ **/
+gint
+gwy_math_nlfit_get_max_iterations(GwyNLFitState *nlfit)
 {
-    g_return_val_if_fail(ms->covar, G_MAXDOUBLE);
-
-    par++;
-    return sqrt(ms->dispersion * ms->covar[IndexLongMat(par, par)]);
+    return nlfit->maxiter;
 }
 
+/**
+ * gwy_math_nlfit_set_max_iterations:
+ * @nlfit: A Marquardt-Levenberg nonlinear fitter.
+ * @maxiter: The maximum number of iterations.
+ *
+ * Sets the maximum number of iterations for nonlinear fitter @nlfit.
+ **/
+void
+gwy_math_nlfit_set_max_iterations(GwyNLFitState *nlfit,
+                                  gint maxiter)
+{
+    g_return_if_fail(maxiter > 0);
+    nlfit->maxiter = maxiter;
+}
+
+
+/**
+ * gwy_math_nlfit_get_sigma:
+ * @nlfit: A Marquardt-Levenberg nonlinear fitter.
+ * @par: Parameter index.
+ *
+ * Returns the standard deviation of parameter number @par.
+ *
+ * This function makes sense only after a successful fit.
+ *
+ * Returns: The SD of @par-th parameter.
+ **/
 gdouble
-gwy_math_nlfit_get_correlations(GwyNLFitState *ms, gint par1, gint par2)
+gwy_math_nlfit_get_sigma(GwyNLFitState *nlfit, gint par)
+{
+    g_return_val_if_fail(nlfit->covar, G_MAXDOUBLE);
+
+    par++;
+    return sqrt(nlfit->dispersion * nlfit->covar[IndexLongMat(par, par)]);
+}
+
+/**
+ * gwy_math_nlfit_get_dispersion:
+ * @nlfit: A Marquardt-Levenberg nonlinear fitter.
+ *
+ * Returns the residual sum divided by the number of degrees of freedom.
+ *
+ * This function makes sense only after a successful fit.
+ *
+ * Returns: The dispersion.
+ **/
+gdouble
+gwy_math_nlfit_get_dispersion(GwyNLFitState *nlfit)
+{
+    g_return_val_if_fail(nlfit->covar, G_MAXDOUBLE);
+    return nlfit->dispersion;
+}
+
+/**
+ * gwy_math_nlfit_get_correlations:
+ * @nlfit: A Marquardt-Levenberg nonlinear fitter.
+ * @par1: First parameter index.
+ * @par2: Second parameter index.
+ *
+ * Returns the correlation coefficient between @par1-th and @par2-th parameter.
+ *
+ * This function makes sense only after a successful fit.
+ *
+ * Returns: The correlation coefficient.
+ **/
+gdouble
+gwy_math_nlfit_get_correlations(GwyNLFitState *nlfit, gint par1, gint par2)
 {
     gdouble Pom;
 
-    g_return_val_if_fail(ms->covar, G_MAXDOUBLE);
+    g_return_val_if_fail(nlfit->covar, G_MAXDOUBLE);
 
     if (par1 == par2)
         return 1.0;
 
     par1++;
     par2++;
-    Pom = ms->covar[IndexLongMat(par1, par1)]
-          * ms->covar[IndexLongMat(par2, par2)];
+    Pom = nlfit->covar[IndexLongMat(par1, par1)]
+          * nlfit->covar[IndexLongMat(par2, par2)];
     if (Pom == 0) {
         g_warning("Zero element in covar matrix");
         return G_MAXDOUBLE;
     }
 
-    return ms->covar[IndexLongMat(par1, par2)]/sqrt(Pom);
+    return nlfit->covar[IndexLongMat(par1, par2)]/sqrt(Pom);
 }
 
 
