@@ -61,6 +61,7 @@ main(int argc, char *argv[])
     fh = fopen(FILENAME, "wb");
     fwrite(buffer, 1, size, fh);
     fclose(fh);
+    g_free(buffer);
 
     /* create and free yet another object just to overwrite memory */
     ser = gwy_test_ser_new(1.618, 0.33333333);
@@ -68,7 +69,6 @@ main(int argc, char *argv[])
 
     /* read the object back and restore it */
     g_message("reading objects from %s", FILENAME);
-    g_free(buffer);
     g_file_get_contents(FILENAME, (gchar**)&buffer, &size, &err);
     g_message("size = %u", size);
 
@@ -113,13 +113,32 @@ main(int argc, char *argv[])
     g_message("(int32) 'foobar' -> %d",
                 gwy_container_get_int32(GWY_CONTAINER(container), q));
 
-    gwy_container_set_double(GWY_CONTAINER(container), "pdf", 0.5227);
-    gwy_container_set_double(GWY_CONTAINER(container), "pdf/f", 1.4142);
-    gwy_container_set_int64(GWY_CONTAINER(container), "x64", 64LL);
+    g_message("====== CONTAINER SERIALIZATION ======================");
+    gwy_container_set_double_by_name(GWY_CONTAINER(container), "pdf", 0.5227);
+    gwy_container_set_double_by_name(GWY_CONTAINER(container), "pdf/f", 1.4142);
+    gwy_container_set_int64_by_name(GWY_CONTAINER(container), "x64", 64LL);
 
     size = 0;
     buffer = NULL;
     buffer = gwy_serializable_serialize(container, buffer, &size);
+    g_object_unref(container);
+
+    fh = fopen(FILENAME, "wb");
+    fwrite(buffer, 1, size, fh);
+    fclose(fh);
+    g_free(buffer);
+
+    g_message("reading objects from %s", FILENAME);
+    g_file_get_contents(FILENAME, (gchar**)&buffer, &size, &err);
+    g_message("size = %u", size);
+
+    pos = 0;
+    g_message("restoring container");
+    container = gwy_serializable_deserialize(buffer, size, &pos);
+
+    g_message("'pdf/f' -> %g",
+              gwy_container_get_double_by_name(GWY_CONTAINER(container),
+                                               "pdf/f"));
 
     return 0;
 }

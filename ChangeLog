@@ -1,0 +1,26 @@
+
+Tue Sep  2 22:50:08 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwyddion/gwyserializable.c (gwy_serialize_check_string),
+      libgwyddion/gwycontainer.c (gwy_container_deserialize):
+      fixed always checking string from the begining instead from *position
+    * libgwyddion/gwyserializable.c (gwy_serialize_unpack_string,
+      gwy_serialize_check_string): fixed bogus new position computation
+
+Tue Sep  2 22:45:04 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+
+Tue Sep  2 22:16:55 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwyddion/gwycontainer.c (gwy_container_deserialize):
+      implemented
+
+Tue Sep  2 21:46:20 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwyddion/gwycontainer.c (gwy_container_serialize):
+      added sentinel to the end, so it's possible to deserialize it
+    * libgwyddion/gwycontainer.c (gwy_container_finalize):
+      added
+    * libgwyddion/gwycontainer.c, libgwyddion/gwycontainer.h:
+      added methods acting on strings and objects
+
+Tue Sep  2 21:18:48 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwyddion/gwycontainer.h:
+      fixed g_quark_try_string() to g_quark_from_string() in `set' methods
+

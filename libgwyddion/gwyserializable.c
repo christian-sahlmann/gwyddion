@@ -127,7 +127,8 @@ gwy_serializable_deserialize(const guchar *buffer,
     GwyDeserializeFunc deserialize_method;
 
     g_return_val_if_fail(buffer, NULL);
-    if (!(namelen = gwy_serialize_check_string(buffer, size, NULL))) {
+    if (!(namelen = gwy_serialize_check_string(buffer + *position,
+                                               size - *position, NULL))) {
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
               "memory contents at %p doesn't look as an serialized object",
               buffer);
@@ -222,21 +223,12 @@ gwy_serialize_pack(guchar *buffer,
         nobjs = 0;
         pos = 0;
 
-        #ifdef DEBUG
-            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s %s phase",
-                  __FUNCTION__, do_copy ? "COPY" : "SCAN");
-        #endif
         for (i = 0; i < nargs; i++) {
             switch (templ[i]) {
                 case 'b':
                 {
                     char value = va_arg(ap, gboolean);  /* store it as char */
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u boolean %s",
-                              i, pos, value ? "TRUE" : "FALSE");
-                    #endif
                     if (do_copy)
                         memcpy(p + pos, &value, sizeof(char));
                     pos += sizeof(char);
@@ -247,11 +239,6 @@ gwy_serialize_pack(guchar *buffer,
                 {
                     char value = va_arg(ap, int);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u char `%c'",
-                              i, pos, value);
-                    #endif
                     if (do_copy)
                         memcpy(p + pos, &value, sizeof(char));
                     pos += sizeof(char);
@@ -263,11 +250,6 @@ gwy_serialize_pack(guchar *buffer,
                     gint32 alen = va_arg(ap, gsize);
                     guchar *value = va_arg(ap, guchar*);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u array[%lu] of char %p",
-                              i, pos, (long unsigned int)alen, value);
-                    #endif
                     if (do_copy) {
                         memcpy(p + pos, &alen, sizeof(gint32));
                         memcpy(p + pos + sizeof(gint32), value,
@@ -281,11 +263,6 @@ gwy_serialize_pack(guchar *buffer,
                 {
                     gint32 value = va_arg(ap, gint32);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u int32 %lu",
-                              i, pos, (long unsigned int)value);
-                    #endif
                     if (do_copy)
                         memcpy(p + pos, &value, sizeof(gint32));
                     pos += sizeof(gint32);
@@ -297,11 +274,6 @@ gwy_serialize_pack(guchar *buffer,
                     gint32 alen = va_arg(ap, gsize);
                     gint32 *value = va_arg(ap, gint32*);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u array[%lu] of int32 %p",
-                              i, pos, (long unsigned int)alen, value);
-                    #endif
                     if (do_copy) {
                         memcpy(p + pos, &alen, sizeof(gint32));
                         memcpy(p + pos + sizeof(gint32), value,
@@ -315,11 +287,6 @@ gwy_serialize_pack(guchar *buffer,
                 {
                     gint64 value = va_arg(ap, gint64);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u int64 %llu",
-                              i, pos, value);
-                    #endif
                     if (do_copy)
                         memcpy(p + pos, &value, sizeof(gint64));
                     pos += sizeof(gint64);
@@ -331,11 +298,6 @@ gwy_serialize_pack(guchar *buffer,
                     gint32 alen = va_arg(ap, gsize);
                     gint64 *value = va_arg(ap, gint64*);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u array[%lu] of int64 %p",
-                              i, pos, (long unsigned int)alen, value);
-                    #endif
                     if (do_copy) {
                         memcpy(p + pos, &alen, sizeof(gint32));
                         memcpy(p + pos + sizeof(gint32), value,
@@ -349,11 +311,6 @@ gwy_serialize_pack(guchar *buffer,
                 {
                     double value = va_arg(ap, double);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u double %g",
-                              i, pos, value);
-                    #endif
                     if (do_copy)
                         memcpy(p + pos, &value, sizeof(double));
                     pos += sizeof(double);
@@ -365,11 +322,6 @@ gwy_serialize_pack(guchar *buffer,
                     gint32 alen = va_arg(ap, gsize);
                     double *value = va_arg(ap, double*);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u array[%lu] of double %p",
-                              i, pos, (long unsigned int)alen, value);
-                    #endif
                     if (do_copy) {
                         memcpy(p + pos, &alen, sizeof(gint32));
                         memcpy(p + pos + sizeof(gint32), value,
@@ -383,11 +335,6 @@ gwy_serialize_pack(guchar *buffer,
                 {
                     guchar *value = va_arg(ap, guchar*);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u string %s",
-                              i, pos, value);
-                    #endif
                     if (!value) {
                         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
                               "representing NULL string as an empty string");
@@ -409,11 +356,6 @@ gwy_serialize_pack(guchar *buffer,
                 {
                     GObject *value = va_arg(ap, GObject*);
 
-                    #ifdef DEBUG
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-                              "[%u] %u object %p",
-                              i, pos, value);
-                    #endif
                     g_assert(value);
                     g_assert(GWY_IS_SERIALIZABLE(value));
                     if (do_copy) {
@@ -748,13 +690,15 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
 
 /**
  * gwy_serialize_unpack_string:
- * @buffer: 
- * @size: 
- * @position: 
+ * @buffer: A memory location containing a serialized nul-terminated string at
+ *          position @pos.
+ * @size: The size of @buffer.
+ * @position: The position of the string in @buffer, it's updated to
+ *            point after it.
  *
  * Deserializes a one nul-terminated string.
  *
- * Returns:
+ * Returns: A newly allocated, nul-terminated string.
  **/
 guchar*
 gwy_serialize_unpack_string(const guchar *buffer,
@@ -773,7 +717,7 @@ gwy_serialize_unpack_string(const guchar *buffer,
     p = memchr(buffer + *position, 0, size - *position);
     g_assert(p);
     value = g_strdup(buffer + *position);
-    *position += sizeof(p - buffer + 1);
+    *position += (p - buffer) - *position + 1;
 
     return value;
 }
@@ -806,7 +750,7 @@ gwy_serialize_check_string(const guchar *buffer,
     if (!p || (compare_to && strcmp(buffer, compare_to)))
         return 0;
 
-    return p - buffer + 1;
+    return (p - buffer) + 1;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

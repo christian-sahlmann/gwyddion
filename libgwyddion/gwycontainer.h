@@ -80,20 +80,35 @@ void       gwy_container_set_double         (GwyContainer *container,
                                              gdouble value);
 gdouble    gwy_container_get_double         (GwyContainer *container,
                                              GQuark key);
+void       gwy_container_set_string         (GwyContainer *container,
+                                             GQuark key,
+                                             const guchar *value);
+G_CONST_RETURN
+guchar*    gwy_container_get_string         (GwyContainer *container,
+                                             GQuark key);
+void       gwy_container_set_object         (GwyContainer *container,
+                                             GQuark key,
+                                             GObject *value);
+GObject*   gwy_container_get_object         (GwyContainer *container,
+                                             GQuark key);
 
 #define gwy_container_value_type_by_name(c,n) gwy_container_value_type(c,g_quark_try_string(n))
 #define gwy_container_get_value_by_name(c,n) gwy_container_get_value(c,g_quark_try_string(n))
 #define gwy_container_delete_by_name(c,n) gwy_container_delete(c,g_quark_try_string(n))
-#define gwy_container_set_boolean_by_name(c,n,v) gwy_container_set_boolean(c,g_quark_try_string(n),v)
+#define gwy_container_set_boolean_by_name(c,n,v) gwy_container_set_boolean(c,g_quark_from_string(n),v)
 #define gwy_container_get_boolean_by_name(c,n) gwy_container_get_boolean(c,g_quark_try_string(n))
-#define gwy_container_set_char_by_name(c,n,v) gwy_container_set_char(c,g_quark_try_string(n),v)
+#define gwy_container_set_char_by_name(c,n,v) gwy_container_set_char(c,g_quark_from_string(n),v)
 #define gwy_container_get_char_by_name(c,n) gwy_container_get_char(c,g_quark_try_string(n))
-#define gwy_container_set_int32_by_name(c,n,v) gwy_container_set_int32(c,g_quark_try_string(n),v)
+#define gwy_container_set_int32_by_name(c,n,v) gwy_container_set_int32(c,g_quark_from_string(n),v)
 #define gwy_container_get_int32_by_name(c,n) gwy_container_get_int32(c,g_quark_try_string(n))
-#define gwy_container_set_int64_by_name(c,n,v) gwy_container_set_int64(c,g_quark_try_string(n),v)
+#define gwy_container_set_int64_by_name(c,n,v) gwy_container_set_int64(c,g_quark_from_string(n),v)
 #define gwy_container_get_int64_by_name(c,n) gwy_container_get_int64(c,g_quark_try_string(n))
-#define gwy_container_set_double_by_name(c,n,v) gwy_container_set_double(c,g_quark_try_string(n),v)
+#define gwy_container_set_double_by_name(c,n,v) gwy_container_set_double(c,g_quark_from_string(n),v)
 #define gwy_container_get_double_by_name(c,n) gwy_container_get_double(c,g_quark_try_string(n))
+#define gwy_container_set_string_by_name(c,n,v) gwy_container_set_string(c,g_quark_from_string(n),v)
+#define gwy_container_get_string_by_name(c,n) gwy_container_get_string(c,g_quark_try_string(n))
+#define gwy_container_set_object_by_name(c,n,v) gwy_container_set_object(c,g_quark_from_string(n),v)
+#define gwy_container_get_object_by_name(c,n) gwy_container_get_object(c,g_quark_try_string(n))
 
 #ifdef __cplusplus
 }
