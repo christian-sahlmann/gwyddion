@@ -207,6 +207,43 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     gwy_app_data_window_list_updated();
 }
 
+static GtkWidget*
+gwy_app_menu_create_data_popup_menu(GtkAccelGroup *accel_group)
+{
+    static GtkItemFactoryEntry menu_items[] = {
+        { "/Change Mask _Color", NULL,
+            gwy_app_change_mask_color_cb, 0, NULL, NULL },
+    };
+    static const gchar *items_need_data_mask[] = {
+        "/Change Mask _Color", NULL
+    };
+    GtkItemFactory *item_factory;
+    GtkWidget *menu, *item;
+    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_MASK, 0 };
+
+    item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<data-popup>",
+                                        accel_group);
+    gtk_item_factory_create_items(item_factory,
+                                  G_N_ELEMENTS(menu_items), menu_items, NULL);
+    menu = gtk_item_factory_get_widget(item_factory, "<data-popup>");
+    gwy_app_menu_set_sensitive_array(item_factory, "data-popup",
+                                     items_need_data_mask, sens_data.flags);
+
+    return menu;
+}
+
+static gboolean
+gwy_app_data_popup_menu_popup(GtkWidget *menu,
+                              GdkEventButton *event)
+{
+    if (event->button != 3)
+        return FALSE;
+
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+    return TRUE;
+}
+
 /**
  * gwy_app_data_window_create:
  * @data: A data container.
@@ -220,8 +257,15 @@ gwy_app_data_window_remove(GwyDataWindow *window)
 GtkWidget*
 gwy_app_data_window_create(GwyContainer *data)
 {
+    static GtkWidget *popup_menu = NULL;
+
     GtkWidget *data_window, *data_view;
     GtkObject *layer;
+
+    if (!popup_menu) {
+        popup_menu = gwy_app_menu_create_data_popup_menu(NULL);
+        gtk_widget_show_all(popup_menu);
+    }
 
     data_view = gwy_data_view_new(data);
     layer = gwy_layer_basic_new();
@@ -239,6 +283,9 @@ gwy_app_data_window_create(GwyContainer *data)
                              G_CALLBACK(g_object_unref), data);
 
     current_data = g_list_append(current_data, data_window);
+    g_signal_connect_swapped(data_view, "button_press_event",
+                             G_CALLBACK(gwy_app_data_popup_menu_popup),
+                             popup_menu);
 
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
     gwy_app_data_view_update(data_view);
@@ -795,6 +842,7 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
     return response == GTK_RESPONSE_YES;
 }
 
+/* FIXME: this functionality is provided by modules now -- remove? */
 void
 gwy_app_mask_kill_cb(void)
 {

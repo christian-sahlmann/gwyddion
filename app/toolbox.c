@@ -359,12 +359,18 @@ GtkWidget*
 gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
-        { "/_Meta", NULL, NULL, 0, "<Branch>", NULL },
-        { "/Meta/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/Meta/Module _Browser", NULL, gwy_module_browser, 0, "<Item>", NULL },
-        { "/Meta/_Metadata Browser", NULL, gwy_app_meta_browser, 0, "<Item>", NULL },
-        { "/Meta/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/Meta/_About Gwyddion", NULL, gwy_app_about, 0, "<Item>", NULL },
+        { "/_Meta", NULL,
+            NULL, 0, "<Branch>", NULL },
+        { "/Meta/---", NULL,
+            NULL, 0, "<Tearoff>", NULL },
+        { "/Meta/Module _Browser", NULL,
+            gwy_module_browser, 0, "<Item>", NULL },
+        { "/Meta/_Metadata Browser", NULL,
+            gwy_app_meta_browser, 0, "<Item>", NULL },
+        { "/Meta/---", NULL, NULL, 0,
+            "<Separator>", NULL },
+        { "/Meta/_About Gwyddion", NULL,
+            gwy_app_about, 0, "<Item>", NULL },
     };
     static const gchar *items_need_data[] = {
         "/Meta/Metadata Browser", NULL
@@ -386,18 +392,28 @@ GtkWidget*
 gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items1[] = {
-        { "/_File", NULL, NULL, 0, "<Branch>", NULL },
-        { "/File/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/File/_Open", "<control>O", gwy_app_file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
-        { "/File/Open _Recent", NULL, NULL, 0, "<Branch>", NULL },
-        { "/File/Open Recent/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/File/_Save", "<control>S", gwy_app_file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
-        { "/File/Save _As", "<control><shift>S", gwy_app_file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
+        { "/_File", NULL,
+            NULL, 0, "<Branch>", NULL },
+        { "/File/---", NULL,
+            NULL, 0, "<Tearoff>", NULL },
+        { "/File/_Open", "<control>O",
+            gwy_app_file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
+        { "/File/Open _Recent", NULL,
+            NULL, 0, "<Branch>", NULL },
+        { "/File/Open Recent/---", NULL,
+            NULL, 0, "<Tearoff>", NULL },
+        { "/File/_Save", "<control>S",
+            gwy_app_file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
+        { "/File/Save _As", "<control><shift>S",
+            gwy_app_file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
     };
     static GtkItemFactoryEntry menu_items2[] = {
-        { "/File/_Close", "<control>W", gwy_app_file_close_cb, 0, "<StockItem>", GTK_STOCK_CLOSE },
-        { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/File/_Quit", "<control>Q", delete_app_window, 0, "<StockItem>", GTK_STOCK_QUIT },
+        { "/File/_Close", "<control>W",
+            gwy_app_file_close_cb, 0, "<StockItem>", GTK_STOCK_CLOSE },
+        { "/File/---", NULL, NULL, 0,
+            "<Separator>", NULL },
+        { "/File/_Quit", "<control>Q",
+            delete_app_window, 0, "<StockItem>", GTK_STOCK_QUIT },
     };
     static const gchar *items_need_data[] = {
         "/File/Save", "/File/Save As", "/File/Close", NULL
@@ -436,16 +452,26 @@ GtkWidget*
 gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
-        { "/_Edit", NULL, NULL, 0, "<Branch>", NULL },
-        { "/Edit/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/Edit/_Undo", "<control>Z", gwy_app_undo_undo, 0, "<StockItem>", GTK_STOCK_UNDO },
-        { "/Edit/_Redo", "<control>R", gwy_app_undo_redo, 0, "<StockItem>", GTK_STOCK_REDO },
-        { "/Edit/_Duplicate", "<control>D", gwy_app_file_duplicate_cb, 0, "<StockItem>", GTK_STOCK_COPY },
-        { "/Edit/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/Edit/Remove _Mask", NULL, gwy_app_mask_kill_cb, 0, NULL, NULL },
-        { "/Edit/Remove _Presentation", NULL, gwy_app_show_kill_cb, 0, NULL, NULL },
-        { "/Edit/Change Mask _Color", NULL, gwy_app_change_mask_color_cb, 0, NULL, NULL },
-        { "/Edit/Change Default Mask _Color", NULL, gwy_app_change_mask_color_cb, 1, NULL, NULL },
+        { "/_Edit", NULL,
+            NULL, 0, "<Branch>", NULL },
+        { "/Edit/---", NULL,
+            NULL, 0, "<Tearoff>", NULL },
+        { "/Edit/_Undo", "<control>Z",
+            gwy_app_undo_undo, 0, "<StockItem>", GTK_STOCK_UNDO },
+        { "/Edit/_Redo", "<control>R",
+            gwy_app_undo_redo, 0, "<StockItem>", GTK_STOCK_REDO },
+        { "/Edit/_Duplicate", "<control>D",
+            gwy_app_file_duplicate_cb, 0, "<StockItem>", GTK_STOCK_COPY },
+        { "/Edit/---", NULL,
+            NULL, 0, "<Separator>", NULL },
+        { "/Edit/Remove _Mask", NULL,
+            gwy_app_mask_kill_cb, 0, NULL, NULL },
+        { "/Edit/Remove _Presentation", NULL,
+            gwy_app_show_kill_cb, 0, NULL, NULL },
+        { "/Edit/Change Mask _Color", NULL,
+            gwy_app_change_mask_color_cb, 0, NULL, NULL },
+        { "/Edit/Change Default Mask _Color", NULL,
+            gwy_app_change_mask_color_cb, 1, NULL, NULL },
     };
     static const gchar *items_need_data[] = {
         "/Edit/Duplicate", NULL
