@@ -51,6 +51,8 @@ struct _GwyModuleInfo {
 void                    gwy_module_register_modules (const gchar **paths);
 G_CONST_RETURN
 GwyModuleInfo*          gwy_module_lookup           (const gchar *name);
+G_CONST_RETURN
+GwyModuleInfo*          gwy_module_register_module  (const gchar *modulename);
 void                    gwy_module_set_register_callback(void (*callback)(const gchar *fullname));
 
 G_END_DECLS

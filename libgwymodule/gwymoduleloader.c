@@ -30,6 +30,9 @@ static void gwy_load_modules_in_dir (GDir *gdir,
                                      GHashTable *mods);
 static void gwy_module_get_rid_of   (const gchar *modname);
 static void gwy_module_init         (void);
+static G_CONST_RETURN
+GwyModuleInfo* gwy_module_do_register_module(const gchar *modulename,
+                                             GHashTable *mods);
 
 static GHashTable *modules;
 static gboolean modules_initialized = FALSE;
@@ -128,6 +131,118 @@ gwy_module_foreach(GHFunc function,
     g_hash_table_foreach(modules, function, data);
 }
 
+/**
+ * gwy_module_register_module:
+ * @modulename: Module file name to load, including full path and extension.
+ *
+ * Loads a single module.
+ *
+ * Returns: Module info on success, %NULL on failure.
+ *
+ * Since: 1.4.
+ **/
+G_CONST_RETURN GwyModuleInfo*
+gwy_module_register_module(const gchar *modulename)
+{
+    if (!modules_initialized)
+        gwy_module_init();
+
+    return gwy_module_do_register_module(modulename, modules);
+}
+
+static G_CONST_RETURN GwyModuleInfo*
+gwy_module_do_register_module(const gchar *modulename,
+                              GHashTable *mods)
+{
+    GModule *mod;
+    gboolean ok;
+    _GwyModuleInfoInternal *iinfo;
+    GwyModuleInfo *mod_info = NULL;
+    GwyModuleQueryFunc query;
+
+    gwy_debug("Trying to load module %s.", modulename);
+    mod = g_module_open(modulename, G_MODULE_BIND_LAZY);
+
+    if (!mod) {
+        g_warning("Cannot open module %s: %s",
+                  modulename, g_module_error());
+        return NULL;
+    }
+    gwy_debug("Module loaded successfully as %s.", g_module_name(mod));
+
+    /* Do a few sanity checks on the module before registration
+        * is performed. */
+    ok = TRUE;
+    if (!g_module_symbol(mod, GWY_MODULE_QUERY_NAME, (gpointer)&query)
+        || !query) {
+        g_warning("No query function in module %s", modulename);
+        ok = FALSE;
+    }
+
+    if (ok) {
+        mod_info = query();
+        if (!mod_info) {
+            g_warning("No module info in module %s", modulename);
+            ok = FALSE;
+        }
+    }
+
+    if (ok) {
+        ok = mod_info->abi_version == GWY_MODULE_ABI_VERSION;
+        if (!ok)
+            g_warning("Module %s ABI version %d is different from %d",
+                        modulename, mod_info->abi_version,
+                        GWY_MODULE_ABI_VERSION);
+    }
+
+    if (ok) {
+        ok = mod_info->register_func
+                && mod_info->name && &mod_info->name
+                && mod_info->blurb && &mod_info->blurb
+                && mod_info->author && &mod_info->author
+                && mod_info->version && &mod_info->version
+                && mod_info->copyright && &mod_info->copyright
+                && mod_info->date && &mod_info->date;
+        if (!ok)
+            g_warning("Module %s info is invalid.",
+                        modulename);
+    }
+
+    if (ok) {
+        ok = !g_hash_table_lookup(mods, mod_info->name);
+        if (!ok)
+            g_warning("Duplicate module %s, keeping only the first one",
+                        mod_info->name);
+    }
+
+    if (ok) {
+        iinfo = g_new(_GwyModuleInfoInternal, 1);
+        iinfo->mod_info = mod_info;
+        iinfo->file = g_strdup(modulename);
+        iinfo->loaded = TRUE;
+        iinfo->funcs = NULL;
+        g_hash_table_insert(mods, (gpointer)mod_info->name, iinfo);
+        ok = mod_info->register_func(mod_info->name);
+        if (!ok) {
+            g_warning("Module %s feature registration failed",
+                        mod_info->name);
+            gwy_module_get_rid_of(mod_info->name);
+        }
+    }
+
+    if (ok) {
+        gwy_debug("Making module %s resident.", modulename);
+        g_module_make_resident(mod);
+    }
+    else {
+        if (!g_module_close(mod))
+            g_critical("Cannot unload module %s: %s",
+                        modulename, g_module_error());
+    }
+
+    return ok ? mod_info : NULL;
+}
+
 static void
 gwy_load_modules_in_dir(GDir *gdir,
                         const gchar *dirname,
@@ -138,12 +253,6 @@ gwy_load_modules_in_dir(GDir *gdir,
 
     modulename = NULL;
     while ((filename = g_dir_read_name(gdir))) {
-        GModule *mod;
-        gboolean ok;
-        _GwyModuleInfoInternal *iinfo;
-        GwyModuleInfo *mod_info;
-        GwyModuleQueryFunc query;
-
         if (g_str_has_prefix(filename, "."))
             continue;
         if (!g_str_has_suffix(filename, ".so")
@@ -151,85 +260,7 @@ gwy_load_modules_in_dir(GDir *gdir,
              && !g_str_has_suffix(filename, ".DLL"))
             continue;
         modulename = g_build_filename(dirname, filename, NULL);
-        gwy_debug("Trying to load module %s.", modulename);
-        mod = g_module_open(modulename, G_MODULE_BIND_LAZY);
-
-        if (!mod) {
-            g_warning("Cannot open module %s: %s",
-                      modulename, g_module_error());
-            continue;
-        }
-        gwy_debug("Module loaded successfully as %s.", g_module_name(mod));
-
-        /* Do a few sanity checks on the module before registration
-         * is performed. */
-        ok = TRUE;
-        if (!g_module_symbol(mod, GWY_MODULE_QUERY_NAME, (gpointer)&query)
-            || !query) {
-            g_warning("No query function in module %s", modulename);
-            ok = FALSE;
-        }
-
-        if (ok) {
-            mod_info = query();
-            if (!mod_info) {
-                g_warning("No module info in module %s", modulename);
-                ok = FALSE;
-            }
-        }
-
-        if (ok) {
-            ok = mod_info->abi_version == GWY_MODULE_ABI_VERSION;
-            if (!ok)
-                g_warning("Module %s ABI version %d is different from %d",
-                          modulename, mod_info->abi_version,
-                          GWY_MODULE_ABI_VERSION);
-        }
-
-        if (ok) {
-            ok = mod_info->register_func
-                 && mod_info->name && &mod_info->name
-                 && mod_info->blurb && &mod_info->blurb
-                 && mod_info->author && &mod_info->author
-                 && mod_info->version && &mod_info->version
-                 && mod_info->copyright && &mod_info->copyright
-                 && mod_info->date && &mod_info->date;
-            if (!ok)
-                g_warning("Module %s info is invalid.",
-                          modulename);
-        }
-
-        if (ok) {
-            ok = !g_hash_table_lookup(mods, mod_info->name);
-            if (!ok)
-                g_warning("Duplicate module %s, keeping only the first one",
-                          mod_info->name);
-        }
-
-        if (ok) {
-            iinfo = g_new(_GwyModuleInfoInternal, 1);
-            iinfo->mod_info = mod_info;
-            iinfo->file = g_strdup(modulename);
-            iinfo->loaded = TRUE;
-            iinfo->funcs = NULL;
-            g_hash_table_insert(mods, (gpointer)mod_info->name, iinfo);
-            ok = mod_info->register_func(mod_info->name);
-            if (!ok) {
-                g_warning("Module %s feature registration failed",
-                          mod_info->name);
-                gwy_module_get_rid_of(mod_info->name);
-            }
-        }
-
-        if (ok) {
-            gwy_debug("Making module %s resident.", modulename);
-            g_module_make_resident(mod);
-        }
-        else {
-            if (!g_module_close(mod))
-                g_critical("Cannot unload module %s: %s",
-                           modulename, g_module_error());
-        }
+        gwy_module_do_register_module(modulename, mods);
         g_free(modulename);
     }
 }
