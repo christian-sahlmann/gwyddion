@@ -1138,7 +1138,7 @@ gwy_graph_area_set_selection(GwyGraphArea *area, gdouble from, gdouble to)
             area->seldata->scr_end = data_to_scr_y(GTK_WIDGET(area), to);
          }
         gwy_graph_area_signal_selected(area);
-        gwy_graph_area_draw_selection(GTK_WIDGET(area));
+        gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 }
 
