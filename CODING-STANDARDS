@@ -239,3 +239,13 @@ Empty lines:
 - There's always an empty line after while line in do-while cycles, except
   when a closing brace follows.
 
+===== Miscellaneous ==================================================
+
+There are no extra parentheses around return values in return statements:
+
+  return x + y;
+
+or case values in switch statements:
+
+  case GTK_FOOBAR:
+
