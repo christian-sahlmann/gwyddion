@@ -122,10 +122,7 @@ gwy_3d_window_init(Gwy3DWindow *gwy3dwindow)
     gwy_debug("");
 
     gwy3dwindow->gwy3dview = NULL;
-    gwy3dwindow->statusbar = NULL;
     gwy3dwindow->zoom_mode = GWY_ZOOM_MODE_HALFPIX;
-    gwy3dwindow->statusbar_context_id = 0;
-    gwy3dwindow->statusbar_message_id = 0;
 }
 
 static void
