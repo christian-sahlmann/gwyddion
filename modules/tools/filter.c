@@ -317,7 +317,6 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
-   printf("%d, %d, %d, %d : wxh=%d, %d\n", isel[0], isel[1], isel[2], isel[3], isel[1]-isel[0], isel[3]-isel[2]);
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 
     for (i = 0; i < 4; i++) {
@@ -382,26 +381,25 @@ do_apply(GwyDataField *dfield,
          gint *isel)
 {
    
-    printf("%d, %d, %d, %d : wxh=%d, %d\n", isel[0], isel[1], isel[2], isel[3], isel[1]-isel[0], isel[3]-isel[2]);
     switch (filter_type) {
         case GWY_FILTER_MEAN:
         gwy_data_field_area_filter_mean(dfield, size,
-                                   isel[0], isel[2], isel[1]-isel[0], isel[3]-isel[2]);
+                                   isel[0], isel[1], isel[2]-isel[0], isel[3]-isel[1]);
         break;
 
         case GWY_FILTER_MEDIAN:
         gwy_data_field_area_filter_median(dfield, size,
-                                     isel[0], isel[2], isel[1]-isel[0], isel[3]-isel[2]);
+                                     isel[0], isel[1], isel[2]-isel[0], isel[3]-isel[1]);
         break;
 
         case GWY_FILTER_CONSERVATIVE:
         gwy_data_field_area_filter_conservative(dfield, size,
-                                           isel[0], isel[2], isel[1]-isel[0], isel[3]-isel[2]);
+                                           isel[0], isel[1], isel[2]-isel[0], isel[3]-isel[1]);
         break;
 
         case GWY_FILTER_LAPLACIAN:
         gwy_data_field_area_filter_laplacian(dfield,
-                                        isel[0], isel[2], isel[1]-isel[0], isel[3]-isel[2]);
+                                        isel[0], isel[1], isel[2]-isel[0], isel[3]-isel[1]);
         break;
 
         default:
