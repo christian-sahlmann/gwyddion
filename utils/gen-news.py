@@ -68,7 +68,7 @@ if in_list:
 if in_para:
     text.append('</p>')
 
-print '<p>News for version:'
+print '<p>Jump to news for version:'
 print ',\n'.join(['<a href="#v%s">%s</a>' % (x, x) for x in version_list]) + '.'
 print '</p>'
 print '\n'.join(text)
