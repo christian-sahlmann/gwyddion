@@ -79,7 +79,7 @@ main(void)
                 row[j] += rand() % 6 + 1;
         }
     }
-    gwy_data_field_multiply(df, 12e-9);
+    gwy_data_field_multiply(df, 12e-12);
     gwy_data_field_area_convolve(df, kernel, 0, 0, N, N);
     gwy_data_field_resample(kernel, 4, 4, GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_area_convolve(df, kernel, 0, 0, N, N);
