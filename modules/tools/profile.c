@@ -403,15 +403,17 @@ update_labels()
         if (i<(2*n_of_lines))
         {
             g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
-                   (gint)gwy_data_field_rtoj(datafield, lines[j++]),
-                   (gint)gwy_data_field_rtoj(datafield, lines[j++])
+                   (gint)gwy_data_field_rtoj(datafield, lines[j]),
+                   (gint)gwy_data_field_rtoj(datafield, lines[j+1])
                    );
+            j += 2;
             gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i+1]), buffer);
 
             g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
-                   (gint)gwy_data_field_rtoj(datafield, lines[j++]),
-                   (gint)gwy_data_field_rtoj(datafield, lines[j++])
+                   (gint)gwy_data_field_rtoj(datafield, lines[j]),
+                   (gint)gwy_data_field_rtoj(datafield, lines[j+1])
                    );
+            j += 2;
             gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]), buffer);
             i++;
         }
