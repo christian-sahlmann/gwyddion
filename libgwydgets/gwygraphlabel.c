@@ -273,8 +273,6 @@ gwy_graph_label_expose(GtkWidget *widget,
                        GdkEventExpose *event)
 {
     GwyGraphLabel *label;
-    gint xc, yc;
-    GdkPoint ps[4];
 
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_LABEL(widget), FALSE);
@@ -298,7 +296,8 @@ gwy_graph_label_expose(GtkWidget *widget,
 
 void gwy_graph_label_draw_label(GtkWidget *widget)
 {
-    gint i, ypos;
+    gint ypos;
+    guint i;
     GwyGraphLabel *label;
     PangoLayout *layout;
     PangoRectangle rect;
@@ -315,7 +314,7 @@ void gwy_graph_label_draw_label(GtkWidget *widget)
     ypos = 5;
     fg.pixel = 0x00000000;
     /*plot samples of lines and text*/
-    for (i=0; i<label->curve_params->len; i++)
+    for (i = 0; i < label->curve_params->len; i++)
     {
         cparams = g_ptr_array_index (label->curve_params, i);
         pango_layout_set_text(layout, cparams->description->str, cparams->description->len);
@@ -374,7 +373,6 @@ gwy_graph_label_button_press(GtkWidget *widget,
                              GdkEventButton *event)
 {
     GwyGraphLabel *label;
-    double x, y;
 
     gwy_debug("");
     g_return_val_if_fail(widget != NULL, FALSE);
@@ -391,17 +389,14 @@ gwy_graph_label_button_release(GtkWidget *widget,
                                GdkEventButton *event)
 {
     GwyGraphLabel *label;
-    gdouble x, y;
 
     gwy_debug("");
-
 
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_LABEL(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     label = GWY_GRAPH_LABEL(widget);
-
 
     return FALSE;
 }
@@ -464,7 +459,7 @@ gwy_graph_label_clear(GwyGraphLabel *label)
 
 void
 gwy_graph_draw_point(GdkWindow *window, GdkGC *gc, gint i, gint j, gint type,
-                               gint size, GdkColor *color, gboolean clear)
+                     gint size, GdkColor *color, gboolean clear)
 {
 
     gint size_half = size/2;
@@ -480,8 +475,8 @@ gwy_graph_draw_point(GdkWindow *window, GdkGC *gc, gint i, gint j, gint type,
     /*plot symbol*/
     gdk_gc_set_line_attributes (gc, 1,
                   GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
-    if (type==GWY_GRAPH_POINT_SQUARE)
-    {
+    switch (type) {
+        case GWY_GRAPH_POINT_SQUARE:
         gdk_draw_line(window, gc,
                  i - size_half, j - size_half, i + size_half, j - size_half);
         gdk_draw_line(window, gc,
@@ -490,21 +485,21 @@ gwy_graph_draw_point(GdkWindow *window, GdkGC *gc, gint i, gint j, gint type,
                  i + size_half, j + size_half, i - size_half, j + size_half);
         gdk_draw_line(window, gc,
                  i - size_half, j + size_half, i - size_half, j - size_half);
-    }
-    else if (type==GWY_GRAPH_POINT_CROSS)
-    {
+        break;
+
+        case GWY_GRAPH_POINT_CROSS:
         gdk_draw_line(window, gc,
                  i - size_half, j, i + size_half, j);
         gdk_draw_line(window, gc,
                  i, j - size_half, i, j + size_half);
-    }
-    else if (type==GWY_GRAPH_POINT_CIRCLE)
-    {
+        break;
+
+        case GWY_GRAPH_POINT_CIRCLE:
         gdk_draw_arc(window, gc, 0, i - size_half, j - size_half,
                      size, size, 0, 23040);
-    }
-    else if (type==GWY_GRAPH_POINT_STAR)
-    {
+        break;
+
+        case GWY_GRAPH_POINT_STAR:
         gdk_draw_line(window, gc,
                  i - size_half, j - size_half, i + size_half, j + size_half);
         gdk_draw_line(window, gc,
@@ -513,34 +508,34 @@ gwy_graph_draw_point(GdkWindow *window, GdkGC *gc, gint i, gint j, gint type,
                  i, j - size_half, i, j + size_half);
         gdk_draw_line(window, gc,
                  i - size_half, j, i + size_half, j);
-    }
-    else if (type==GWY_GRAPH_POINT_TIMES)
-    {
+        break;
+
+        case GWY_GRAPH_POINT_TIMES:
         gdk_draw_line(window, gc,
                  i - size_half, j - size_half, i + size_half, j + size_half);
         gdk_draw_line(window, gc,
                  i + size_half, j - size_half, i - size_half, j + size_half);
-    }
-    else if (type==GWY_GRAPH_POINT_TRIANGLE_UP)
-    {
+        break;
+
+        case GWY_GRAPH_POINT_TRIANGLE_UP:
         gdk_draw_line(window, gc,
                  i, j - size*0.57, i - size_half, j + size*0.33);
         gdk_draw_line(window, gc,
                  i - size_half, j + size*0.33, i + size_half, j + size*0.33);
         gdk_draw_line(window, gc,
                  i + size_half, j + size*0.33, i, j - size*0.33);
-    }
-    else if (type==GWY_GRAPH_POINT_TRIANGLE_DOWN)
-    {
+        break;
+
+        case GWY_GRAPH_POINT_TRIANGLE_DOWN:
         gdk_draw_line(window, gc,
                  i, j + size*0.57, i - size_half, j - size*0.33);
         gdk_draw_line(window, gc,
                  i - size_half, j - size*0.33, i + size_half, j - size*0.33);
         gdk_draw_line(window, gc,
                  i + size_half, j - size*0.33, i, j + size*0.33);
-    }
-    else if (type==GWY_GRAPH_POINT_DIAMOND)
-    {
+        break;
+
+        case GWY_GRAPH_POINT_DIAMOND:
         gdk_draw_line(window, gc,
                  i - size_half, j, i, j - size_half);
         gdk_draw_line(window, gc,
@@ -549,6 +544,11 @@ gwy_graph_draw_point(GdkWindow *window, GdkGC *gc, gint i, gint j, gint type,
                  i + size_half, j, i, j + size_half);
         gdk_draw_line(window, gc,
                  i, j + size_half, i - size_half, j);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
     }
 }
 

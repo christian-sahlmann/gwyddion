@@ -32,7 +32,6 @@
 
 static void     gwy_graph_class_init           (GwyGraphClass *klass);
 static void     gwy_graph_init                 (GwyGraph *graph);
-static void     gwy_graph_finalize             (GObject *object);
 static void     gwy_graph_size_request         (GtkWidget *widget,
                                                 GtkRequisition *requisition);
 static void     gwy_graph_size_allocate        (GtkWidget *widget,
@@ -209,12 +208,12 @@ gwy_graph_new()
 
 void
 gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
-                       gdouble shift, GString *label,
-                       GwyGraphAreaCurveParams *params)
+                       G_GNUC_UNUSED gdouble shift, GString *label,
+                       G_GNUC_UNUSED GwyGraphAreaCurveParams *params)
 {
 
 
-    gdouble *xdata, *ydata;
+    gdouble *xdata;
     gint n, i;
 
     gwy_debug("");
@@ -234,8 +233,10 @@ gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
 
 void
 gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
-                       gdouble shift, GString *label, GwyGraphAreaCurveParams *params,
-                       gdouble x_order, gdouble y_order, char *x_unit, char *y_unit)
+                                  G_GNUC_UNUSED gdouble shift, GString *label,
+                                  G_GNUC_UNUSED GwyGraphAreaCurveParams *params,
+                                  gdouble x_order, gdouble y_order,
+                                  char *x_unit, char *y_unit)
 {
 
     gdouble *xdata, *ydata;
@@ -377,7 +378,9 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
 }
 
 static void
-gwy_graph_make_curve_data(GwyGraph *graph, GwyGraphAreaCurve *curve, gdouble *xvals, gdouble *yvals, gint n)
+gwy_graph_make_curve_data(G_GNUC_UNUSED GwyGraph *graph,
+                          GwyGraphAreaCurve *curve,
+                          gdouble *xvals, gdouble *yvals, gint n)
 {
     gint i;
 
@@ -436,10 +439,10 @@ gwy_graph_get_status(GwyGraph *graph)
     return graph->area->status;
 }
 
+#warning what is the @status parameter good for???
 gpointer
 gwy_graph_get_status_data(GwyGraph *graph, GwyGraphStatusType status)
 {
-    /* XXX: what is the @status parameter good for? */
     switch (graph->area->status) {
         case GWY_GRAPH_STATUS_PLAIN:
         return NULL;

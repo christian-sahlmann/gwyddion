@@ -109,7 +109,7 @@ gwy_graph_corner_class_init(GwyGraphCornerClass *klass)
 }
 
 static void
-gwy_graph_corner_init(GwyGraphCorner *graph_corner)
+gwy_graph_corner_init(G_GNUC_UNUSED GwyGraphCorner *graph_corner)
 {
     gwy_debug("");
 
@@ -253,8 +253,6 @@ gwy_graph_corner_expose(GtkWidget *widget,
                        GdkEventExpose *event)
 {
     GwyGraphCorner *graph_corner;
-    gint xc, yc;
-    GdkPoint ps[4];
 
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
@@ -279,7 +277,6 @@ gwy_graph_corner_button_press(GtkWidget *widget,
                              GdkEventButton *event)
 {
     GwyGraphCorner *graph_corner;
-    double x, y;
 
     gwy_debug("");
             g_return_val_if_fail(widget != NULL, FALSE);
@@ -297,7 +294,6 @@ gwy_graph_corner_button_release(GtkWidget *widget,
                                GdkEventButton *event)
 {
     GwyGraphCorner *graph_corner;
-    gdouble x, y;
 
     gwy_debug("");
 
