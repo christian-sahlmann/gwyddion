@@ -87,7 +87,7 @@ gwy_palette_menu_create(GCallback callback,
 }
 
 /**
- * gwy_palette_menu:
+ * gwy_menu_palette:
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            none).
  * @cbdata: User data passed to the callback.
@@ -97,14 +97,14 @@ gwy_palette_menu_create(GCallback callback,
  * Returns: The newly created pop-up menu as #GtkWidget.
  **/
 GtkWidget*
-gwy_palette_menu(GCallback callback,
+gwy_menu_palette(GCallback callback,
                  gpointer cbdata)
 {
     return gwy_palette_menu_create(callback, cbdata, NULL, NULL);
 }
 
 /**
- * gwy_palette_option_menu:
+ * gwy_option_menu_palette:
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            none).
  * @cbdata: User data passed to the callback.
@@ -120,7 +120,7 @@ gwy_palette_menu(GCallback callback,
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*
-gwy_palette_option_menu(GCallback callback,
+gwy_option_menu_palette(GCallback callback,
                         gpointer cbdata,
                         const gchar *current)
 {
@@ -276,7 +276,7 @@ gwy_option_menu_set_history(GtkWidget *option_menu,
 }
 
 /**
- * gwy_interpolation_option_menu:
+ * gwy_option_menu_interpolation:
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            none).
  * @cbdata: User data passed to the callback.
@@ -292,7 +292,7 @@ gwy_option_menu_set_history(GtkWidget *option_menu,
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*
-gwy_interpolation_option_menu(GCallback callback,
+gwy_option_menu_interpolation(GCallback callback,
                               gpointer cbdata,
                               GwyInterpolationType current)
 {
@@ -312,7 +312,7 @@ gwy_interpolation_option_menu(GCallback callback,
 }
 
 /**
- * gwy_windowing_option_menu:
+ * gwy_option_menu_windowing:
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            none).
  * @cbdata: User data passed to the callback.
@@ -328,7 +328,7 @@ gwy_interpolation_option_menu(GCallback callback,
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*
-gwy_windowing_option_menu(GCallback callback,
+gwy_option_menu_windowing(GCallback callback,
                               gpointer cbdata,
                               GwyWindowingType current)
 {
@@ -348,7 +348,7 @@ gwy_windowing_option_menu(GCallback callback,
 }
 
 /**
- * gwy_zoom_mode_option_menu:
+ * gwy_option_menu_zoom_mode:
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            none).
  * @cbdata: User data passed to the callback.
@@ -364,7 +364,7 @@ gwy_windowing_option_menu(GCallback callback,
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*
-gwy_zoom_mode_option_menu(GCallback callback,
+gwy_option_menu_zoom_mode(GCallback callback,
                           gpointer cbdata,
                           GwyZoomMode current)
 {
@@ -381,7 +381,7 @@ gwy_zoom_mode_option_menu(GCallback callback,
 }
 
 /**
- * gwy_2dcwt_option_menu:
+ * gwy_option_menu_2dcwt:
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            none).
  * @cbdata: User data passed to the callback.
@@ -390,13 +390,13 @@ gwy_zoom_mode_option_menu(GCallback callback,
  *
  * Creates a #GtkOptionMenu of available wavelet types.
  *
- * It sets object data "2dcwt_wavelet_type" to 2D CWT wavelet type for each
+ * It sets object data "2dcwt-wavelet-type" to 2D CWT wavelet type for each
  * menu item (use GPOINTER_TO_INT() when retrieving it)..
  *
  * Returns: The newly created option menu as #GtkWidget.
  **/
 GtkWidget*
-gwy_2dcwt_option_menu(GCallback callback,
+gwy_option_menu_2dcwt(GCallback callback,
                       gpointer cbdata,
                       Gwy2DCWTWaveletType current)
 {
@@ -410,10 +410,24 @@ gwy_2dcwt_option_menu(GCallback callback,
                                   current);
 }
 
+/**
+ * gwy_option_menufft_output:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @current: FFT output type to be shown as currently selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of available FFT outputs.
+ *
+ * It sets object data "fft-output-type" to FFT output type for each
+ * menu item (use GPOINTER_TO_INT() when retrieving it).
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
 GtkWidget*
-gwy_fft_output_menu(GCallback callback,
-                    gpointer cbdata,
-                    GwyFFTOutputType current)
+gwy_option_menu_fft_output(GCallback callback,
+                           gpointer cbdata,
+                           GwyFFTOutputType current)
 {
     static const GwyOptionMenuEntry entries[] = {
         { "Real + Imaginary",  GWY_FFT_OUTPUT_REAL_IMG,  },

@@ -91,7 +91,7 @@ gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
 }
 
 GtkWidget*
-gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
+gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
 {
     GtkWidget *menu, *alignment, *last;
     GtkItemFactory *item_factory;
@@ -108,7 +108,7 @@ gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
     /* set up sensitivity: all items need an active data window */
     setup_sensitivity_keys();
     gwy_menu_set_flags_recursive(menu, &sens_data);
-    gwy_menu_set_sensitive_recursive(menu, &sens_data);
+    gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 
     /* re-run last item */
     menu = gtk_item_factory_get_widget(item_factory, "<proc>/Data Process");
@@ -123,7 +123,7 @@ gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
 }
 
 GtkWidget*
-gwy_menu_create_graph_menu(GtkAccelGroup *accel_group)
+gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group)
 {
     GtkWidget *menu, *alignment;
     GtkItemFactory *item_factory;
@@ -140,13 +140,13 @@ gwy_menu_create_graph_menu(GtkAccelGroup *accel_group)
     /* set up sensitivity: all items need an active data window */
     setup_sensitivity_keys();
     gwy_menu_set_flags_recursive(menu, &sens_data);
-    gwy_menu_set_sensitive_recursive(menu, &sens_data);
+    gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 
     return alignment;
 }
 
 GtkWidget*
-gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
+gwy_app_menu_create_xtns_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/E_xterns", NULL, NULL, 0, "<Branch>", NULL },
@@ -166,13 +166,13 @@ gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
     item = gtk_item_factory_get_item(item_factory,
                                      "<xtns>/Externs/Metadata browser");
     set_sensitive(item, sens_data.flags);
-    gwy_menu_set_sensitive_recursive(menu, &sens_data);
+    gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 
     return menu;
 }
 
 GtkWidget*
-gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
+gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items1[] = {
         { "/_File", NULL, NULL, 0, "<Branch>", NULL },
@@ -215,7 +215,7 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
                                  sens_data.flags);
     item = gtk_item_factory_get_item(item_factory, "<file>/File/Export To");
     gwy_menu_set_flags_recursive(item, &sens_data);
-    gwy_menu_set_sensitive_recursive(menu, &sens_data);
+    gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 
     recent_files_menu = gtk_item_factory_get_widget(item_factory,
                                                     "<file>/File/Open Recent");
@@ -224,7 +224,7 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
 }
 
 GtkWidget*
-gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
+gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_Edit", NULL, NULL, 0, "<Branch>", NULL },
@@ -263,7 +263,7 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
                       | GWY_MENU_FLAG_REDO
                       | GWY_MENU_FLAG_UNDO;
     sens_data.set_to = 0;
-    gwy_menu_set_sensitive_recursive(menu, &sens_data);
+    gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 
     return menu;
 }
@@ -303,8 +303,8 @@ gwy_menu_set_sensitive_array(GtkItemFactory *item_factory,
 }
 
 void
-gwy_menu_set_sensitive_recursive(GtkWidget *widget,
-                                 GwyMenuSensitiveData *data)
+gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
+                                     GwyMenuSensitiveData *data)
 {
     GObject *obj;
     guint i, j;
@@ -321,15 +321,14 @@ gwy_menu_set_sensitive_recursive(GtkWidget *widget,
     if (GTK_IS_ALIGNMENT(widget)
         || GTK_IS_MENU_BAR(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
-                              (GtkCallback)gwy_menu_set_sensitive_recursive,
+                              (GtkCallback)gwy_app_menu_set_sensitive_recursive,
                               data);
     }
-    else if (GTK_IS_MENU_ITEM(widget)) {
-        if ((widget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(widget))))
-            gtk_container_foreach(GTK_CONTAINER(widget),
-                                  (GtkCallback)gwy_menu_set_sensitive_recursive,
-                                  data);
-    }
+    else if (GTK_IS_MENU_ITEM(widget)
+             && (widget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(widget))))
+        gtk_container_foreach(GTK_CONTAINER(widget),
+                              (GtkCallback)gwy_app_menu_set_sensitive_recursive,
+                              data);
 }
 
 static void
@@ -395,7 +394,7 @@ gwy_app_run_process_func_cb(gchar *name)
             menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window),
                                                 "<proc>"));
             gwy_app_update_last_process_func(menu, name);
-            gwy_menu_set_sensitive_recursive(menu, &sens_data);
+            gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 
             return;
         }
@@ -486,7 +485,7 @@ gwy_app_run_graph_func_cb(gchar *name)
 }
 
 void
-gwy_menu_recent_files_update(GList *recent_files)
+gwy_app_menu_recent_files_update(GList *recent_files)
 {
     GtkWidget *item;
     GQuark quark;
@@ -533,7 +532,7 @@ gwy_menu_recent_files_update(GList *recent_files)
 static void
 gwy_app_meta_browser(void)
 {
-    gwy_meta_browser(gwy_app_data_window_get_current());
+    gwy_app_metadata_browser(gwy_app_data_window_get_current());
 }
 
 static void

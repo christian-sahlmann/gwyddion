@@ -45,19 +45,19 @@ struct _GwyMenuSensitiveData {
     guint set_to;
 };
 
-GtkWidget* gwy_menu_create_xtns_menu         (GtkAccelGroup *accel_group);
-GtkWidget* gwy_menu_create_proc_menu         (GtkAccelGroup *accel_group);
-GtkWidget* gwy_menu_create_graph_menu        (GtkAccelGroup *accel_group);
-GtkWidget* gwy_menu_create_file_menu         (GtkAccelGroup *accel_group);
-GtkWidget* gwy_menu_create_edit_menu         (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_xtns_menu         (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_proc_menu         (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_graph_menu        (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_file_menu         (GtkAccelGroup *accel_group);
+GtkWidget* gwy_app_menu_create_edit_menu         (GtkAccelGroup *accel_group);
 
-void       gwy_menu_set_sensitive_recursive  (GtkWidget *widget,
-                                              GwyMenuSensitiveData *data);
-void       gwy_menu_recent_files_update      (GList *recent_files);
+void       gwy_app_menu_set_sensitive_recursive  (GtkWidget *widget,
+                                                  GwyMenuSensitiveData *data);
+void       gwy_app_menu_recent_files_update      (GList *recent_files);
 
 /* FIXME: where this could really belong? */
-void       gwy_app_run_process_func_cb       (gchar *name);
-void       gwy_app_run_graph_func_cb         (gchar *name);
+void       gwy_app_run_process_func_cb           (gchar *name);
+void       gwy_app_run_graph_func_cb             (gchar *name);
 
 #ifdef __cplusplus
 }

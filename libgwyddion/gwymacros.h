@@ -99,14 +99,19 @@ extern "C" {
 #  endif
 #else /* no varargs macros FIXME: this is broken, though it's like gutils.h */
 #  ifdef DEBUG
-G_INLINE_FUNC void gwy_debug(const gchar *format, ...) {
+G_INLINE_FUNC void
+gwy_debug(const gchar *format, ...)
+{
     va_list args;
     va_start(args, format);
     g_logv(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, format, args);
     va_end(args);
 }
 #  else
-G_INLINE_FUNC void gwy_debug(const gchar *format, ...) { }
+G_INLINE_FUNC void
+gwy_debug(const gchar *format, ...)
+{
+}
 #  endif
 #endif /* varargs macros */
 

@@ -363,7 +363,7 @@ recent_files_update(const gchar *filename_utf8)
     else
         recent_files = g_list_prepend(recent_files, g_strdup(filename_utf8));
 
-    gwy_menu_recent_files_update(recent_files);
+    gwy_app_menu_recent_files_update(recent_files);
 }
 
 static GList*
@@ -455,7 +455,7 @@ gwy_app_file_open_initial(gchar **args, gint n)
     if (!recent_files)
         recent_files = recent_files_from_settings();
 
-    gwy_menu_recent_files_update(recent_files);
+    gwy_app_menu_recent_files_update(recent_files);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -1,5 +1,4 @@
 EXPORTS
-	gwy_2dcwt_option_menu
 	gwy_axis_dialog_get_type
 	gwy_axis_dialog_new
 	gwy_axis_get_label
@@ -67,7 +66,6 @@ EXPORTS
 	gwy_data_window_set_zoom_mode
 	gwy_data_window_update_title
 	gwy_dialog_prevent_delete_cb
-	gwy_fft_output_menu
 	gwy_grad_sphere_get_palette
 	gwy_grad_sphere_get_sphere_coords
 	gwy_grad_sphere_get_type
@@ -103,7 +101,6 @@ EXPORTS
 	gwy_graph_set_status
 	gwy_hruler_get_type
 	gwy_hruler_new
-	gwy_interpolation_option_menu
 	gwy_layer_basic_get_palette
 	gwy_layer_basic_get_type
 	gwy_layer_basic_new
@@ -134,10 +131,15 @@ EXPORTS
 	gwy_layer_select_get_type
 	gwy_layer_select_new
 	gwy_layer_select_unselect
+	gwy_menu_palette
+	gwy_option_menu_2dcwt
 	gwy_option_menu_create
+	gwy_option_menu_fft_output
+	gwy_option_menu_interpolation
+	gwy_option_menu_palette
 	gwy_option_menu_set_history
-	gwy_palette_menu
-	gwy_palette_option_menu
+	gwy_option_menu_windowing
+	gwy_option_menu_zoom_mode
 	gwy_ruler_draw_pos
 	gwy_ruler_draw_ticks
 	gwy_ruler_get_range
@@ -165,5 +167,3 @@ EXPORTS
 	gwy_vector_shade_set_sphere_coords
 	gwy_vruler_get_type
 	gwy_vruler_new
-	gwy_windowing_option_menu
-	gwy_zoom_mode_option_menu

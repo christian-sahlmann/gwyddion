@@ -106,23 +106,23 @@ gwy_app_toolbox_create(void)
     vbox = gtk_vbox_new(0, FALSE);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    menu = gwy_menu_create_file_menu(accel_group);
+    menu = gwy_app_menu_create_file_menu(accel_group);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(window), "<file>", menu);
 
-    menu = gwy_menu_create_edit_menu(accel_group);
+    menu = gwy_app_menu_create_edit_menu(accel_group);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(window), "<edit>", menu);
 
-    menu = gwy_menu_create_proc_menu(accel_group);
+    menu = gwy_app_menu_create_proc_menu(accel_group);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(window), "<proc>", menu);
 
-    menu = gwy_menu_create_graph_menu(accel_group);
+    menu = gwy_app_menu_create_graph_menu(accel_group);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(window), "<graph>", menu);
 
-    menu = gwy_menu_create_xtns_menu(accel_group);
+    menu = gwy_app_menu_create_xtns_menu(accel_group);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(window), "<xtns>", menu);
 
@@ -260,7 +260,7 @@ gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data)
 
         g_assert(menu);
         gtk_container_foreach(GTK_CONTAINER(menu),
-                              (GtkCallback)gwy_menu_set_sensitive_recursive,
+                              (GtkCallback)gwy_app_menu_set_sensitive_recursive,
                               sens_data);
     }
 }

@@ -13,7 +13,7 @@ lib_LTLIBRARIES = libgwydraw.la
 
 EXTRA_DIST = libgwydraw.def
 
-noinst_PROGRAMS = test
+#noinst_PROGRAMS = test
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -26,11 +26,11 @@ libgwydraw_la_SOURCES = \
 	gwypalettedef.c \
 	gwypixfield.c
 
-test_SOURCES = \
-	test.c
-test_LDADD = libgwydraw.la \
-	$(libgwyprocess) \
-	$(libgwyddion)
+#test_SOURCES = \
+#	test.c
+#test_LDADD = libgwydraw.la \
+#	$(libgwyprocess) \
+#	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyDraw\"

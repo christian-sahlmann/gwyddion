@@ -218,28 +218,28 @@ test(void)
 
     widget = gtk_label_new("Palettes: ");
     gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 0, 1);
-    omenu = gwy_palette_option_menu(G_CALLBACK(menu_callback),
+    omenu = gwy_option_menu_palette(G_CALLBACK(menu_callback),
                                     "palette",
                                     GWY_PALETTE_OLIVE);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 0, 1);
 
     widget = gtk_label_new("Interpolation types: ");
     gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 1, 2);
-    omenu = gwy_interpolation_option_menu(G_CALLBACK(menu_callback),
+    omenu = gwy_option_menu_interpolation(G_CALLBACK(menu_callback),
                                           "interpolation",
                                           GWY_INTERPOLATION_BILINEAR);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 1, 2);
 
     widget = gtk_label_new("Windowing types: ");
     gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 2, 3);
-    omenu = gwy_windowing_option_menu(G_CALLBACK(menu_callback),
+    omenu = gwy_option_menu_windowing(G_CALLBACK(menu_callback),
                                       "windowing",
                                       GWY_WINDOWING_HAMMING);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 2, 3);
 
     widget = gtk_label_new("Zoom modes: ");
     gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 3, 4);
-    omenu = gwy_zoom_mode_option_menu(G_CALLBACK(menu_callback),
+    omenu = gwy_option_menu_zoom_mode(G_CALLBACK(menu_callback),
                                       "zoom_mode",
                                       GWY_ZOOM_MODE_CBRT2);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 3, 4);

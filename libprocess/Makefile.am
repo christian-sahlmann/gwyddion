@@ -5,18 +5,18 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 
 libgwyprocessincludedir = $(includedir)/gwyddion/libprocess
 libgwyprocessinclude_HEADERS = \
+	cwt.h \
 	datafield.h \
 	dataline.h \
 	interpolation.h \
 	libgwyprocess.h \
-	simplefft.h \
-        cwt.h 
+	simplefft.h
 
 lib_LTLIBRARIES = libgwyprocess.la
 
 EXTRA_DIST = libgwyprocess.def
 
-noinst_PROGRAMS = test
+#noinst_PROGRAMS = test
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -25,16 +25,16 @@ noinst_PROGRAMS = test
 # Chaning ifraces     C:   R:   0
 libgwyprocess_la_LDFLAGS = -version-info 0:0:0
 libgwyprocess_la_SOURCES = \
+	cwt.c \
 	datafield.c \
 	dataline.c \
 	interpolation.c \
-	simplefft.c \
-        cwt.c
+	simplefft.c
 
-test_SOURCES = \
-	test.c
-test_LDADD = libgwyprocess.la \
-	$(libgwyddion)
+#test_SOURCES = \
+#	test.c
+#test_LDADD = libgwyprocess.la \
+#	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"GwyProcess\"

@@ -61,7 +61,7 @@ enum {
  * Shows a simple metadata browser.
  **/
 void
-gwy_meta_browser(GwyDataWindow *data_window)
+gwy_app_metadata_browser(GwyDataWindow *data_window)
 {
     GtkWidget *window, *browser;
     GwyContainer *data;

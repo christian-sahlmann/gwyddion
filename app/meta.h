@@ -27,7 +27,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void gwy_meta_browser(GwyDataWindow *data_window);
+void gwy_app_metadata_browser(GwyDataWindow *data_window);
 
 #ifdef __cplusplus
 }

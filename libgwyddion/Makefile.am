@@ -15,7 +15,7 @@ lib_LTLIBRARIES = libgwyddion.la
 
 EXTRA_DIST = libgwyddion.def
 
-noinst_PROGRAMS = main
+#noinst_PROGRAMS = main
 noinst_HEADERS = gwytestser.h
 
 # In following order do:
@@ -32,10 +32,10 @@ libgwyddion_la_SOURCES = \
 	gwyutils.c \
 	gwywatchable.c
 
-main_SOURCES = \
-	main.c \
-	gwytestser.c
-main_LDADD = libgwyddion.la
+#main_SOURCES = \
+#	main.c \
+#	gwytestser.c
+#main_LDADD = libgwyddion.la
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\"

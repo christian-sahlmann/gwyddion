@@ -535,7 +535,7 @@ color_axis_clicked_cb(GtkWidget *data_window,
     if (event->button != 3)
         return FALSE;
 
-    menu = gwy_palette_menu(G_CALLBACK(palette_selected_cb), data_window);
+    menu = gwy_menu_palette(G_CALLBACK(palette_selected_cb), data_window);
     gtk_widget_show_all(menu);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);

@@ -35,24 +35,24 @@ typedef struct {
     gint value;
 } GwyOptionMenuEntry;
 
-GtkWidget* gwy_palette_menu               (GCallback callback,
+GtkWidget* gwy_menu_palette               (GCallback callback,
                                            gpointer cbdata);
-GtkWidget* gwy_palette_option_menu        (GCallback callback,
+GtkWidget* gwy_option_menu_palette        (GCallback callback,
                                            gpointer cbdata,
                                            const gchar *current);
-GtkWidget* gwy_interpolation_option_menu  (GCallback callback,
+GtkWidget* gwy_option_menu_interpolation  (GCallback callback,
                                            gpointer cbdata,
                                            GwyInterpolationType current);
-GtkWidget* gwy_windowing_option_menu      (GCallback callback,
+GtkWidget* gwy_option_menu_windowing      (GCallback callback,
                                            gpointer cbdata,
                                            GwyWindowingType current);
-GtkWidget* gwy_zoom_mode_option_menu      (GCallback callback,
+GtkWidget* gwy_option_menu_zoom_mode      (GCallback callback,
                                            gpointer cbdata,
                                            GwyZoomMode current);
-GtkWidget* gwy_2dcwt_option_menu          (GCallback callback,
+GtkWidget* gwy_option_menu_2dcwt          (GCallback callback,
                                            gpointer cbdata,
                                            Gwy2DCWTWaveletType current);
-GtkWidget* gwy_fft_output_menu            (GCallback callback,
+GtkWidget* gwy_option_menu_fft_output     (GCallback callback,
                                            gpointer cbdata,
                                            GwyFFTOutputType current);
 GtkWidget* gwy_option_menu_create         (const GwyOptionMenuEntry *entries,

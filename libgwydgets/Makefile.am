@@ -72,25 +72,24 @@ libgwydgets_la_SOURCES = \
 	gwyvruler.c 
 
 # Note these are test programs not to be included in the distro
-#noinst_PROGRAMS = main test create-data layout
-noinst_PROGRAMS = main test create-data
-
-main_SOURCES = main.c
-main_LDADD = libgwydgets.la \
-	$(libgwydraw) \
-	$(libgwyprocess) \
-	$(libgwyddion)
-
-test_SOURCES = test.c
-test_LDADD = libgwydgets.la \
-	$(libgwydraw) \
-	$(libgwyprocess) \
-	$(libgwyddion)
-
-create_data_SOURCES = create-data.c
-create_data_LDADD = \
-	$(libgwyprocess) \
-	$(libgwyddion)
+#noinst_PROGRAMS = main test create-data
+#
+#main_SOURCES = main.c
+#main_LDADD = libgwydgets.la \
+#	$(libgwydraw) \
+#	$(libgwyprocess) \
+#	$(libgwyddion)
+#
+#test_SOURCES = test.c
+#test_LDADD = libgwydgets.la \
+#	$(libgwydraw) \
+#	$(libgwyprocess) \
+#	$(libgwyddion)
+#
+#create_data_SOURCES = create-data.c
+#create_data_LDADD = \
+#	$(libgwyprocess) \
+#	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\"
