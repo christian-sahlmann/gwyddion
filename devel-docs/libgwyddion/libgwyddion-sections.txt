@@ -2,6 +2,7 @@
 <FILE>gwysiunit</FILE>
 GwySIValueFormat
 <TITLE>GwySIUnit</TITLE>
+GwySIUnit
 gwy_si_unit_new
 gwy_si_unit_set_unit_string
 gwy_si_unit_get_unit_string

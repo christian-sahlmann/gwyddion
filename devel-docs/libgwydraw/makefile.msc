@@ -8,6 +8,6 @@ all:
 !include $(TOP_SRCDIR)\rules.msc
 
 install:
-	for %d in (html\*.*) do $(INSTALL) %s "$(DEST_DIR)\devel-docs\libgwydraw"
+	for %d in (html\*.*) do $(INSTALL) %d "$(DEST_DIR)\devel-docs\libgwydraw"
 
 # vim: ft=make
