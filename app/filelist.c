@@ -33,12 +33,6 @@
  * - Do NOT store thumbnails for anything in ~/.thumbnails
  */
 
-#include <libgwyddion/gwyddion.h>
-#include <libgwymodule/gwymodule-file.h>
-#include <libgwydgets/gwydgets.h>
-#include "gwyapp.h"
-#include "gwyappinternal.h"
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #else
@@ -62,6 +56,12 @@
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+
+#include <libgwyddion/gwyddion.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <libgwydgets/gwydgets.h>
+#include "gwyapp.h"
+#include "gwyappinternal.h"
 
 /* PNG (additional in TMS) */
 #define KEY_DESCRIPTION "tEXt::Description"
