@@ -5,6 +5,7 @@
 
 #define GWY_SPHERE_COORDS_TYPE_NAME "GwySphereCoords"
 
+#undef DEBUG
 #define _(x) x
 
 enum {

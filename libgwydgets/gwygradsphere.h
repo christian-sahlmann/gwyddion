@@ -9,6 +9,10 @@
 #  include <libgwydgets/gwyspherecoords.h>
 #endif /* no GWY_TYPE_SPHERE_COORDS */
 
+#ifndef GWY_TYPE_PALETTE
+#  include <libdraw/gwypalette.h>
+#endif /* no GWY_TYPE_PALETTE */
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -26,20 +30,12 @@ typedef struct _GwyGradSphereClass GwyGradSphereClass;
 struct _GwyGradSphere {
     GtkWidget widget;
 
-    /* Update policy */
-    guint update_policy : 2;
-
-    /* Whether we have grabbed focus (mouse button pressed) */
-    guint8 button;
-
-    /* Dimensions */
-    gint radius;
-
-    /* The gradient */
-    gpointer fixme; /* FIXME */
-
-    /* ID of update timer, or 0 if none */
-    guint32 timer;
+    guint update_policy : 2;    /* Update policy */
+    guint8 button;    /* Whether we have grabbed focus (mouse button pressed) */
+    gint radius;    /* Dimensions */
+    GwyPalette *palette;    /* The gradient */
+    guchar *gradient;    /* The gradient, rendered */
+    guint32 timer;    /* ID of update timer, or 0 if none */
 
     /* Current angles */
     gdouble theta;
@@ -65,6 +61,9 @@ GType            gwy_grad_sphere_get_type          (void) G_GNUC_CONST;
 GwySphereCoords* gwy_grad_sphere_get_sphere_coords (GwyGradSphere *grad_sphere);
 void             gwy_grad_sphere_set_sphere_coords (GwyGradSphere *grad_sphere,
                                                     GwySphereCoords *sphere_coords);
+GwyPalette*      gwy_grad_sphere_get_palette       (GwyGradSphere *grad_sphere);
+void             gwy_grad_sphere_set_palette       (GwyGradSphere *grad_sphere,
+                                                    GwyPalette *palette);
 GtkUpdateType    gwy_grad_sphere_get_update_policy (GwyGradSphere *grad_sphere);
 void             gwy_grad_sphere_set_update_policy (GwyGradSphere *grad_sphere,
                                                     GtkUpdateType update_policy);

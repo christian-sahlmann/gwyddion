@@ -98,8 +98,7 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
 
-    vector_shade
-        = GWY_VECTOR_SHADE(gtk_widget_new(GWY_TYPE_VECTOR_SHADE, NULL));
+    vector_shade = (GwyVectorShade*)g_object_new(GWY_TYPE_VECTOR_SHADE, NULL);
 
     grad_sphere = GWY_GRAD_SPHERE(gwy_grad_sphere_new(sphere_coords));
     if (!sphere_coords)
