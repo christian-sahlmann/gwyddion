@@ -85,7 +85,7 @@ module_register(const gchar *name)
 
 static void
 pointer_use(GwyDataWindow *data_window,
-            G_GNUC_UNUSED GwyToolSwitchEvent reason)
+            GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -116,6 +116,9 @@ pointer_use(GwyDataWindow *data_window,
     updated_id = g_signal_connect(pointer_layer, "updated",
                                    G_CALLBACK(pointer_selection_updated_cb),
                                    NULL);
+    if (reason == GWY_TOOL_SWITCH_TOOL)
+        pointer_dialog_set_visible(TRUE);
+
     pointer_selection_updated_cb();
 }
 
