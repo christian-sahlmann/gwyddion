@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,12 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/wait.h>
-#include "app.h"
-#include "file.h"
-#include "settings.h"
-
-#define THUMBNAIL_SIZE 16
+#include "gwyapp.h"
 
 typedef enum {
     GWY_MASKCOR_OBJECTS,
@@ -50,24 +45,20 @@ typedef struct {
     GtkWidget *result;
 } GwyMaskcorControls;
 
-static void       gwy_data_maskcor_load_args         (GwyContainer *settings,
-                                                    GwyMaskcorArgs *args);
-static void       gwy_data_maskcor_save_args         (GwyContainer *settings,
-                                                    GwyMaskcorArgs *args);
-static GtkWidget* gwy_data_maskcor_window_construct  (GwyMaskcorArgs *args);
-static GtkWidget* gwy_data_maskcor_data_option_menu  (GtkWidget *entry,
-                                                    GwyDataWindow **operand);
-static void       gwy_data_maskcor_append_line       (GwyDataWindow *data_window,
-                                                    GtkWidget *menu);
-static void       gwy_data_maskcor_menu_set_history  (GtkWidget *omenu,
-                                                    gpointer current);
-static void       gwy_data_maskcor_operation_cb      (GtkWidget *item,
-                                                    GwyMaskcorArgs *args);
-static void       gwy_data_maskcor_data_cb           (GtkWidget *item);
-static void       gwy_data_maskcor_entry_cb          (GtkWidget *entry,
-                                                    gpointer data);
-static gboolean   gwy_data_maskcor_do                (GwyMaskcorArgs *args,
-                                                    GtkWidget *maskcor_window);
+static void       gwy_data_maskcor_load_args        (GwyContainer *settings,
+                                                     GwyMaskcorArgs *args);
+static void       gwy_data_maskcor_save_args        (GwyContainer *settings,
+                                                     GwyMaskcorArgs *args);
+static GtkWidget* gwy_data_maskcor_window_construct (GwyMaskcorArgs *args);
+static GtkWidget* gwy_data_maskcor_data_option_menu (GtkWidget *entry,
+                                                     GwyDataWindow **operand);
+static void       gwy_data_maskcor_operation_cb     (GtkWidget *item,
+                                                     GwyMaskcorArgs *args);
+static void       gwy_data_maskcor_data_cb          (GtkWidget *item);
+static void       gwy_data_maskcor_entry_cb         (GtkWidget *entry,
+                                                     gpointer data);
+static gboolean   gwy_data_maskcor_do               (GwyMaskcorArgs *args,
+                                                     GtkWidget *maskcor_window);
 
 
 static const GwyEnum results[] = {
@@ -98,7 +89,6 @@ gwy_app_data_maskcor(void)
         args->win1 = win1 ? win1 : gwy_app_data_window_get_current();
         args->win2 = win2 ? win2 : gwy_app_data_window_get_current();
 
-        /* this may set win1, win2 back to NULL is operands are to be scalars */
         gwy_data_maskcor_load_args(settings, args);
         maskcor_window = gwy_data_maskcor_window_construct(args);
     }
@@ -195,7 +185,7 @@ gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
     g_signal_connect(entry, "changed",
                      G_CALLBACK(gwy_data_maskcor_entry_cb), NULL);
 
-    
+
     /***** Result *****/
     label = gtk_label_new_with_mnemonic(_("_Result:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -217,69 +207,15 @@ GtkWidget*
 gwy_data_maskcor_data_option_menu(GtkWidget *entry,
                                 GwyDataWindow **operand)
 {
-    GtkWidget *omenu, *menu, *item;
+    GtkWidget *omenu, *menu;
 
-    omenu = gtk_option_menu_new();
-    menu = gtk_menu_new();
+    omenu = gwy_option_menu_data_window(G_CALLBACK(gwy_data_maskcor_data_cb),
+                                        NULL, NULL, GTK_WIDGET(*operand));
+    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
     g_object_set_data(G_OBJECT(menu), "entry", entry);
     g_object_set_data(G_OBJECT(menu), "operand", operand);
-    gwy_app_data_window_foreach((GFunc)gwy_data_maskcor_append_line, menu);
-    item = gtk_menu_item_new_with_label(_("(null)"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    gwy_data_maskcor_menu_set_history(omenu, *operand);
-    g_signal_connect(item, "activate",
-                     G_CALLBACK(gwy_data_maskcor_data_cb), menu);
 
     return omenu;
-}
-
-static void
-gwy_data_maskcor_append_line(GwyDataWindow *data_window,
-                           GtkWidget *menu)
-{
-    GtkWidget *item, *data_view, *image;
-    GdkPixbuf *pixbuf;
-    gchar *filename;
-
-    data_view = gwy_data_window_get_data_view(data_window);
-    filename = gwy_data_window_get_base_name(data_window);
-
-    pixbuf = gwy_data_view_get_thumbnail(GWY_DATA_VIEW(data_view),
-                                         THUMBNAIL_SIZE);
-    image = gtk_image_new_from_pixbuf(pixbuf);
-    gwy_object_unref(pixbuf);
-    item = gtk_image_menu_item_new_with_label(filename);
-    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    g_object_set_data(G_OBJECT(item), "data-window", data_window);
-    g_signal_connect(item, "activate",
-                     G_CALLBACK(gwy_data_maskcor_data_cb), menu);
-    g_free(filename);
-}
-
-static void
-gwy_data_maskcor_menu_set_history(GtkWidget *omenu,
-                                gpointer current)
-{
-    GtkWidget *menu;
-    GList *l;
-    gpointer p;
-    gint i;
-
-    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
-    l = GTK_MENU_SHELL(menu)->children;
-    i = 0;
-    while (l) {
-        p = g_object_get_data(G_OBJECT(l->data), "data-window");
-        if (p == current) {
-            gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), i);
-            return;
-        }
-        l = g_list_next(l);
-        i++;
-    }
-    g_warning("Cannot select data window %p", current);
 }
 
 static void
@@ -348,48 +284,47 @@ gwy_data_maskcor_entry_cb(GtkWidget *entry,
     g_signal_stop_emission_by_name(editable, "changed");
 }
 
-void 
-plot_correlated(GwyDataField *retfield, gint xsize, gint ysize, gdouble threshold)
+void
+plot_correlated(GwyDataField * retfield, gint xsize, gint ysize,
+                gdouble threshold)
 {
     GwyDataField *field;
     gint i, j;
-    
+
     field = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(retfield)));
     gwy_data_field_fill(retfield, 0);
 
-    for (i=0; i<retfield->xres; i++)
-    {
-        for (j=0; j<retfield->yres; j++)
-        {
-            if ((field->data[i + retfield->xres*j]) > threshold)
-                gwy_data_field_area_fill(retfield, i-xsize/2, j-ysize/2, i+xsize/2, j+ysize/2, 1.0);
+    for (i = 0; i < retfield->xres; i++) {
+        for (j = 0; j < retfield->yres; j++) {
+            if ((field->data[i + retfield->xres * j]) > threshold)
+                gwy_data_field_area_fill(retfield, i - xsize/2, j - ysize/2,
+                                         i + xsize/2, j + ysize/2, 1.0);
         }
     }
-    
+
 }
 
-void 
-plot_maxima(GwyDataField *retfield, gdouble threshold)
+void
+plot_maxima(GwyDataField * retfield, gdouble threshold)
 {
     gint i, j;
-    
-    for (i=0; i<retfield->xres; i++)
-    {
-        for (j=0; j<retfield->yres; j++)
-        {
-            if (retfield->data[i + retfield->xres*j]>threshold)
-                retfield->data[i + retfield->xres*j] = 1;
-            else retfield->data[i + retfield->xres*j] = 0;
+
+    for (i = 0; i < retfield->xres; i++) {
+        for (j = 0; j < retfield->yres; j++) {
+            if (retfield->data[i + retfield->xres * j] > threshold)
+                retfield->data[i + retfield->xres * j] = 1;
+            else
+                retfield->data[i + retfield->xres * j] = 0;
         }
     }
-    
+
 }
 
 static gboolean
 gwy_data_maskcor_do(GwyMaskcorArgs *args,
-                  GtkWidget *maskcor_window)
+                    G_GNUC_UNUSED GtkWidget *maskcor_window)
 {
-    GtkWidget *dialog, *data_window;
+    GtkWidget *data_window;
     GwyContainer *data, *ret, *kernel;
     GwyDataField *dfield, *kernelfield, *retfield;
     GwyDataWindow *operand1, *operand2;
@@ -398,24 +333,12 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
 
     operand1 = args->win1;
     operand2 = args->win2;
+    g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
 
-    if (operand1 == NULL || operand2 == NULL)
-    {
-        dialog = gtk_message_dialog_new(GTK_WINDOW(maskcor_window),
-                                 GTK_DIALOG_DESTROY_WITH_PARENT,
-                                 GTK_MESSAGE_INFO,
-                                 GTK_BUTTONS_CLOSE,
-                               _("Please, specify two data fields."));
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        return FALSE;
-    }
-                    
-    
     data = gwy_data_window_get_data(operand1);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                              "/0/data"));
-    
+
     ret = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     retfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(ret,
                                                              "/0/data"));
@@ -430,10 +353,10 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
         gwy_data_field_correlate_iteration(dfield, kernelfield, retfield, &state, &iteration);
         gwy_app_wait_set_message("Correlating...");
         if (!gwy_app_wait_set_fraction(iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2))) return FALSE;
-        
+
     } while (state != GWY_COMP_FINISHED);
     gwy_app_wait_finish();
-    
+
     /*score - do new data with score*/
     if (args->result == GWY_MASKCOR_SCORE)
     {
@@ -456,7 +379,7 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(retfield));
     }
     gwy_app_data_view_update(gwy_data_window_get_data_view(operand1));
-    
+
     return TRUE;
 }
 
@@ -473,7 +396,7 @@ gwy_data_maskcor_load_args(GwyContainer *settings,
     gboolean b;
 
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
-    gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);    
+    gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
     gwy_container_gis_boolean_by_name(settings, scalar_is1_key, &b);
     if (b)
         args->win1 = NULL;

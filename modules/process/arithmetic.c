@@ -24,11 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include "app.h"
-#include "file.h"
-#include "settings.h"
-
-#define THUMBNAIL_SIZE 16
+#include "gwyapp.h"
 
 typedef enum {
     GWY_ARITH_ADD,
@@ -64,10 +60,6 @@ static void       gwy_data_arith_save_args         (GwyContainer *settings,
 static GtkWidget* gwy_data_arith_window_construct  (GwyArithArgs *args);
 static GtkWidget* gwy_data_arith_data_option_menu  (GtkWidget *entry,
                                                     GwyDataWindow **operand);
-static void       gwy_data_arith_append_line       (GwyDataWindow *data_window,
-                                                    GtkWidget *menu);
-static void       gwy_data_arith_menu_set_history  (GtkWidget *omenu,
-                                                    gpointer current);
 static void       gwy_data_arith_operation_cb      (GtkWidget *item,
                                                     GwyArithArgs *args);
 static void       gwy_data_arith_data_cb           (GtkWidget *item);
@@ -242,69 +234,16 @@ GtkWidget*
 gwy_data_arith_data_option_menu(GtkWidget *entry,
                                 GwyDataWindow **operand)
 {
-    GtkWidget *omenu, *menu, *item;
+    GtkWidget *omenu, *menu;
 
-    omenu = gtk_option_menu_new();
-    menu = gtk_menu_new();
+    omenu = gwy_option_menu_data_window(G_CALLBACK(gwy_data_arith_data_cb),
+                                        NULL,
+                                        _("(scalar)"), GTK_WIDGET(*operand));
+    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
     g_object_set_data(G_OBJECT(menu), "entry", entry);
     g_object_set_data(G_OBJECT(menu), "operand", operand);
-    gwy_app_data_window_foreach((GFunc)gwy_data_arith_append_line, menu);
-    item = gtk_menu_item_new_with_label(_("(scalar)"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    gwy_data_arith_menu_set_history(omenu, *operand);
-    g_signal_connect(item, "activate",
-                     G_CALLBACK(gwy_data_arith_data_cb), menu);
 
     return omenu;
-}
-
-static void
-gwy_data_arith_append_line(GwyDataWindow *data_window,
-                           GtkWidget *menu)
-{
-    GtkWidget *item, *data_view, *image;
-    GdkPixbuf *pixbuf;
-    gchar *filename;
-
-    data_view = gwy_data_window_get_data_view(data_window);
-    filename = gwy_data_window_get_base_name(data_window);
-
-    pixbuf = gwy_data_view_get_thumbnail(GWY_DATA_VIEW(data_view),
-                                         THUMBNAIL_SIZE);
-    image = gtk_image_new_from_pixbuf(pixbuf);
-    gwy_object_unref(pixbuf);
-    item = gtk_image_menu_item_new_with_label(filename);
-    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    g_object_set_data(G_OBJECT(item), "data-window", data_window);
-    g_signal_connect(item, "activate",
-                     G_CALLBACK(gwy_data_arith_data_cb), menu);
-    g_free(filename);
-}
-
-static void
-gwy_data_arith_menu_set_history(GtkWidget *omenu,
-                                gpointer current)
-{
-    GtkWidget *menu;
-    GList *l;
-    gpointer p;
-    gint i;
-
-    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
-    l = GTK_MENU_SHELL(menu)->children;
-    i = 0;
-    while (l) {
-        p = g_object_get_data(G_OBJECT(l->data), "data-window");
-        if (p == current) {
-            gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), i);
-            return;
-        }
-        l = g_list_next(l);
-        i++;
-    }
-    g_warning("Cannot select data window %p", current);
 }
 
 static void
