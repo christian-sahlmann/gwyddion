@@ -164,6 +164,19 @@ gwy_data_field_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
+/**
+ * gwy_data_field_new:
+ * @xres: X-resolution, i.e., the number of columns.
+ * @yres: Y-resolution, i.e., the number of rows.
+ * @xreal: Real horizontal physical dimension.
+ * @yreal: Real vertical physical dimension.
+ * @nullme: Whether the data field should be initialized to zeroes. If %FALSE,
+ *          the data will not be initialized.
+ *
+ * Creates a new data field.
+ *
+ * Returns: A newly created data field, as a #GOjbect.
+ **/
 GObject*
 gwy_data_field_new(gint xres, gint yres,
                    gdouble xreal, gdouble yreal,
