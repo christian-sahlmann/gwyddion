@@ -222,6 +222,8 @@ gwy_app_toolbox_create(void)
                               GWY_STOCK_GRAPH_ZOOM_IN, "graph_zoom");
     toolbox_append_graph_func(toolbar, _("Reset zoom to display complete data"),
                               GWY_STOCK_GRAPH_ZOOM_FIT, "graph_unzoom");
+    toolbox_append_graph_func(toolbar, _("Measure graph point distances"),
+                              GWY_STOCK_GRAPH_RULER, "graph_points");
     toolbox_append_graph_func(toolbar, _("Fit critical dimension"),
                               GWY_STOCK_GRAPH_MEASURE, "graph_cd");
     toolbox_append_graph_func(toolbar, _("Fit functions to graph data"),
