@@ -1,7 +1,7 @@
 
 TOP_SRCDIR = ..
 <[[:MODULES:]]>
-SUBDIRS = file graph process tools
+SUBDIRS = file graph layer process tools
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 

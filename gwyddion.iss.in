@@ -27,6 +27,7 @@ Source: "pixmaps\*.*"; DestDir: "{app}\pixmaps"
 Source: "modules\*.*"; DestDir: "{app}\modules"
 Source: "modules\file\*.*"; DestDir: "{app}\modules\file"
 Source: "modules\graph\*.*"; DestDir: "{app}\modules\graph"
+Source: "modules\layer\*.*"; DestDir: "{app}\modules\layer"
 Source: "modules\process\*.*"; DestDir: "{app}\modules\process"
 Source: "modules\tool\*.*"; DestDir: "{app}\modules\tool"
 ; TODO: install plugins, if any
