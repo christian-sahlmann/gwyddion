@@ -19,8 +19,22 @@ gwypixfield
 
 </para>
 
+@pixbuf: 
+@data_field: 
+@palette: 
+<!-- # Unused Parameters # -->
 @g: 
 @f: 
 @pal: 
+
+
+<!-- ##### FUNCTION gwy_pixfield_mask ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@data_field: 
+@color: 
 
 

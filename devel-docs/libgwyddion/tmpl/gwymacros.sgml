@@ -1,0 +1,55 @@
+<!-- ##### SECTION Title ##### -->
+gwymacros
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO _ ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO gwy_object_unref ##### -->
+<para>
+
+</para>
+
+@obj: 
+<!-- # Unused Parameters # -->
+@x: 
+
+
+<!-- ##### MACRO GWY_SWAP ##### -->
+<para>
+
+</para>
+
+@t: 
+@x: 
+@y: 
+
+
+<!-- ##### MACRO gwy_debug ##### -->
+<para>
+
+</para>
+
+@format...: 
+<!-- # Unused Parameters # -->
+@...: 
+@format: 
+
+

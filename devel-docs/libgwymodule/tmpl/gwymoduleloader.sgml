@@ -1,0 +1,121 @@
+<!-- ##### SECTION Title ##### -->
+gwymoduleloader
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GWY_MODULE_ABI_VERSION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_MODULE_QUERY_NAME ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_MODULE_QUERY ##### -->
+<para>
+
+</para>
+
+@mod_info: 
+
+
+<!-- ##### ENUM GwyRunType ##### -->
+<para>
+
+</para>
+
+@GWY_RUN_INTERACTIVE: 
+@GWY_RUN_NONINTERACTIVE: 
+@GWY_RUN_WITH_DEFAULTS: 
+@GWY_RUN_MASK: 
+
+<!-- ##### STRUCT GwyModuleInfo ##### -->
+<para>
+
+</para>
+
+@abi_version: 
+@register_func: 
+@name: 
+@blurb: 
+@author: 
+@version: 
+@copyright: 
+@date: 
+
+<!-- ##### STRUCT GwyModuleInfoInternal ##### -->
+<para>
+
+</para>
+
+@mod_info: 
+@file: 
+@loaded: 
+
+<!-- ##### USER_FUNCTION GwyModuleRegisterFunc ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwyModuleQueryFunc ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_modules_init ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_module_register_modules ##### -->
+<para>
+
+</para>
+
+@paths: 
+
+
+<!-- ##### FUNCTION gwy_module_get_module_info ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_module_foreach ##### -->
+<para>
+
+</para>
+
+@function: 
+@data: 
+
+

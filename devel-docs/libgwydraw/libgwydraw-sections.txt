@@ -61,5 +61,6 @@ GWY_PALETTE_GET_CLASS
 <SECTION>
 <FILE>gwypixfield</FILE>
 gwy_pixfield_do
+gwy_pixfield_mask
 </SECTION>
 
