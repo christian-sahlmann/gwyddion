@@ -208,7 +208,14 @@ void gwy_data_line_psdf(GwyDataLine *data_line,
 		      gint windowing,
                       gint interpolation);
 
-
+gdouble* gwy_data_line_part_fit_polynom (GwyDataLine *data_line,
+                                         gint n,
+                                         gdouble *coeffs,
+                                         gint from,
+                                         gint to);
+gdouble* gwy_data_line_fit_polynom      (GwyDataLine *data_line,
+                                         gint n,
+                                         gdouble *coeffs);
 
 
 #ifdef __cplusplus

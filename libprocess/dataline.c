@@ -23,6 +23,7 @@
 #include <math.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include "dataline.h"
 
 #define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
@@ -1583,7 +1584,6 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
  * If the interval is (0, 0) it computes the distribution from
  * real data minimum and maximum angle value.
  **/
-
 void
 gwy_data_line_cda(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
 {
@@ -1597,6 +1597,101 @@ gwy_data_line_cda(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin
     }
 }
 
+/**
+ * gwy_data_line_part_fit_polynom:
+ * @data_line: A data line.
+ * @n: Polynom degree.
+ * @coeffs: An array of size @n+1 to store the coefficients to, or %NULL
+ *          (a fresh array is allocated then).
+ * @from: The index in @data_line to start from (inclusive).
+ * @to: The index in @data_line to stop (noninclusive).
+ *
+ * Fits a polynom through a part of a data line.
+ *
+ * Please see gwy_data_line_fit_polynom() for more details.
+ *
+ * Returns: The coefficients of the polynom (@coeffs when it was not %NULL,
+ *          otherwise a newly allocated array).
+ **/
+gdouble*
+gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
+                               gint n, gdouble *coeffs,
+                               gint from, gint to)
+{
+    gdouble *sumx, *sumy, *m;
+    gint i, j;
+    gdouble *data;
 
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+    g_return_val_if_fail(n >= 0, NULL);
+    data = data_line->data;
+
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    sumx = g_new(gdouble, 2*n+1);
+    for (j = 0; j <= 2*n; j++)
+        sumx[j] = 0.0;
+    sumy = g_new(gdouble, n+1);
+    for (j = 0; j <= n; j++)
+        sumy[j] = 0.0;
+
+    for (i = from; i < to; i++) {
+        gdouble x = i;
+        gdouble y = data[i];
+        gdouble xp;
+
+        xp = 1.0;
+        for (j = 0; j <= n; j++) {
+            sumx[j] += xp;
+            sumy[j] += xp*y;
+            xp *= x;
+        }
+        for (j = n+1; j <= 2*n; j++) {
+            sumx[j] += xp;
+            xp *= x;
+        }
+    }
+
+    m = g_new(gdouble, (n+1)*(n+1));
+    for (i = 0; i <= n; i++) {
+        gdouble *row = m + i*(n+1);
+
+        for (j = 0; j <= n; j++)
+            row[j] = sumx[i+j];
+    }
+    coeffs = gwy_math_lin_solve(n+1, m, sumy, coeffs);
+    g_free(m);
+    g_free(sumx);
+    g_free(sumy);
+
+    return coeffs;
+}
+
+/**
+ * gwy_data_line_fit_polynom:
+ * @data_line: A data line.
+ * @n: Polynom degree.
+ * @coeffs: An array of size @n+1 to store the coefficients to, or %NULL
+ *          (a fresh array is allocated then).
+ *
+ * Fits a polynom through a data line.
+ *
+ * Note @n is polynom degree, so the size of @coeffs is @n+1.  X-values
+ * are indices in the data line.
+ *
+ * For polynoms of degree 0 and 1 it's better to use gwy_data_line_get_avg()
+ * and gwy_data_line_line_coeffs() because they are faster.
+ *
+ * Returns: The coefficients of the polynom (@coeffs when it was not %NULL,
+ *          otherwise a newly allocated array).
+ **/
+gdouble*
+gwy_data_line_fit_polynom(GwyDataLine *data_line,
+                          gint n, gdouble *coeffs)
+{
+    return gwy_data_line_part_fit_polynom(data_line, n, coeffs,
+                                          0, gwy_data_line_get_res(data_line));
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
