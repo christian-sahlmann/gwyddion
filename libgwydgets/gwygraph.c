@@ -678,7 +678,7 @@ gwy_graph_unzoom(GwyGraph *graph)
     /*find extrema*/
     for (i = 0; i < graph->area->curves->len; i++)
     {
-        pcurve = g_ptr_array_index (graph->area->curves, i);
+        pcurve = g_ptr_array_index(graph->area->curves, i);
         for (j = 0; j < pcurve->data.N; j++)
         {
             if (pcurve->data.xvals[j] > xmax) xmax = pcurve->data.xvals[j];
@@ -722,7 +722,7 @@ gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curve)
 {
     GwyGraphAreaCurve *pcurve;
     gint i;
-    pcurve = g_ptr_array_index (graph->area->curves, curve);
+    pcurve = g_ptr_array_index(graph->area->curves, curve);
     
     for (i=0; i<pcurve->data.N; i++)
     {
@@ -735,7 +735,7 @@ gint
 gwy_graph_get_data_size(GwyGraph *graph, gint curve)
 {
     GwyGraphAreaCurve *pcurve;
-    pcurve = g_ptr_array_index (graph->area->curves, curve);
+    pcurve = g_ptr_array_index(graph->area->curves, curve);
     return pcurve->data.N;
 }
 
@@ -750,13 +750,16 @@ gwy_graph_get_number_of_curves(GwyGraph *graph)
 {
     return graph->n_of_curves;
 }
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
 GString *
 gwy_graph_get_label(GwyGraph *graph, gint curve)
 {
     GwyGraphAreaCurve *pcurve;
-    pcurve = g_ptr_array_index (graph->area->curves, curve);
+    pcurve = g_ptr_array_index(graph->area->curves, curve);
 
-    return g_strdup(pcurve->params.description);
+    /* FIXME: who knows whether it should return a copy or what.
+     * originally it tried to apply g_strdup() a GString... */
+    return pcurve->params.description;
 }
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
