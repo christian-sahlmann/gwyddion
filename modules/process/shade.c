@@ -131,7 +131,7 @@ shade(GwyContainer *data, GwyRunType run)
         }
 
         gwy_data_field_shade(dfield, shadefield,
-                             args.theta, args.phi);
+                             args.theta*180/G_PI, args.phi*180/G_PI);
                             
         printf("Shading was done.\n");
     

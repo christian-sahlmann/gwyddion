@@ -1687,10 +1687,10 @@ gwy_data_field_get_yder(GwyDataField *a, gint col, gint row)
     xres = a->xres;
     p = a->data + row*xres + col;
     if (row == 0)
-        return (*(p+xres) - *p) * a->yres/a->yreal;
+        return (*p - *(p+xres)) * a->yres/a->yreal;
     if (row == a->yres-1)
-        return (*p - *(p-xres)) * a->yres/a->yreal;
-    return (*(p+xres) - *(p-xres)) * a->yres/a->yreal/2;
+        return ( *(p-xres) - *p) * a->yres/a->yreal;
+    return (*(p-xres) - *(p+xres)) * a->yres/a->yreal/2;
 }
 
 /**
@@ -1709,7 +1709,6 @@ gdouble
 gwy_data_field_get_angder(GwyDataField *a, gint col, gint row, gdouble theta)
 {
     g_return_val_if_fail(gwy_data_field_inside(a, col, row), 0.0);
-
     return gwy_data_field_get_xder(a, col, row)*cos(theta*G_PI/180)
            + gwy_data_field_get_yder(a, col, row)*sin(theta*G_PI/180);
 }
@@ -2169,7 +2168,7 @@ gwy_data_field_shade(GwyDataField *data_field, GwyDataField *target_field,
 
         for (j = 0; j < data_field->xres; j++)
         {
-            target_field->data[j + data_field->xres*i] = gwy_data_field_get_angder(data_field, j, i, theta);
+            target_field->data[j + data_field->xres*i] = - gwy_data_field_get_angder(data_field, j, i, phi);
         }
     }
 }
