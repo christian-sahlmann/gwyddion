@@ -74,6 +74,7 @@
 #define KEY_THUMB_IMAGE_WIDTH "tEXt::Thumb::Image::Width"
 #define KEY_THUMB_IMAGE_HEIGHT "tEXt::Thumb::Image::Height"
 /* Gwyddion specific, unimplemented */
+#define KEY_THUMB_GWY_REAL_SIZE "tEXt::Thumb::X-Gwyddion::RealSize"
 #define KEY_THUMB_GWY_IMAGES "tEXt::Thumb::X-Gwyddion::Images"
 #define KEY_THUMB_GWY_GRAPHS "tEXt::Thumb::X-Gwyddion::Graphs"
 
@@ -106,6 +107,7 @@ typedef struct {
 
     gint image_width;
     gint image_height;
+    gchar *image_real_size;
     gint image_images;
     gint image_graphs;
 
@@ -274,6 +276,7 @@ gwy_app_recent_file_list_construct(Controls *controls)
 
     /* thumbnail name column */
     renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_renderer_set_fixed_size(renderer, THUMB_SIZE, THUMB_SIZE);
     column = gtk_tree_view_column_new_with_attributes(_(columns[0].title),
                                                       renderer, NULL);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
@@ -285,6 +288,7 @@ gwy_app_recent_file_list_construct(Controls *controls)
     /* other columns */
     for (i = 1; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
+        gtk_cell_renderer_set_fixed_size(renderer, -1, THUMB_SIZE);
         column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
                                                           renderer,
                                                           NULL);
@@ -476,23 +480,25 @@ cell_renderer_desc(G_GNUC_UNUSED GtkTreeViewColumn *column,
                    GtkTreeIter *iter,
                    gpointer userdata)
 {
+    static GString *s = NULL;    /* XXX: never freed */
     guint id;
     GwyRecentFile *rf;
-    gchar s[32];
-    gchar *str;
 
     id = GPOINTER_TO_UINT(userdata);
     gtk_tree_model_get(model, iter, FILELIST_RAW, &rf, -1);
     switch (id) {
         case FILELIST_FILENAME:
-        if (!rf->image_width || !rf->image_height)
-            s[0] = '\0';
-        else
-            g_snprintf(s, sizeof(s), "%d×%d",
-                       rf->image_width, rf->image_height);
-        str = g_strconcat(rf->file_utf8, "\n", s, NULL);
-        g_object_set(cell, "text", str, NULL);
-        g_free(str);
+        if (!s)
+            s = g_string_new("");
+        g_string_assign(s, rf->file_utf8);
+        if (rf->image_width && rf->image_height)
+            g_string_append_printf(s, "\n%d×%d px",
+                                   rf->image_width, rf->image_height);
+        if (rf->image_real_size) {
+            g_string_append_c(s, '\n');
+            g_string_append(s, rf->image_real_size);
+        }
+        g_object_set(cell, "text", s->str, NULL);
         break;
 
         default:
@@ -514,6 +520,7 @@ cell_renderer_thumb(G_GNUC_UNUSED GtkTreeViewColumn *column,
     id = GPOINTER_TO_UINT(userdata);
     g_return_if_fail(id == FILELIST_THUMB);
     gtk_tree_model_get(model, iter, FILELIST_RAW, &rf, -1);
+    gwy_debug("<%s>", rf->file_utf8);
     switch (rf->thumb_state) {
         case FILE_STATE_UNKNOWN:
         if (!recent_file_try_load_thumbnail(rf))
@@ -837,6 +844,7 @@ gwy_recent_file_free(GwyRecentFile *rf)
     g_free(rf->file_sys);
     g_free(rf->file_uri);
     g_free(rf->thumb_sys);
+    g_free(rf->image_real_size);
     g_free(rf);
 }
 
@@ -881,47 +889,26 @@ recent_file_try_load_thumbnail(GwyRecentFile *rf)
                   option, rf->file_uri);
     }
 
-    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_MTIME))) {
-        sscanf(option, "%lu", &rf->thumb_mtime);
-        gwy_debug("mtime = %lu", rf->thumb_mtime);
-    }
-    else
-        rf->thumb_mtime = 0;
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_MTIME)))
+        rf->thumb_mtime = atol(option);
 
-    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_FILESIZE))) {
-        sscanf(option, "%lu", &rf->file_size);
-        gwy_debug("file size = %lu", rf->file_size);
-    }
-    else
-        rf->file_size = 0;
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_FILESIZE)))
+        rf->file_size = atol(option);
 
-    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_IMAGE_WIDTH))) {
-        sscanf(option, "%d", &rf->image_width);
-        gwy_debug("image width = %d", rf->image_width);
-    }
-    else
-        rf->image_width = 0;
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_IMAGE_WIDTH)))
+        rf->image_width = atoi(option);
 
-    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_IMAGE_HEIGHT))) {
-        sscanf(option, "%d", &rf->image_height);
-        gwy_debug("image height = %d", rf->image_height);
-    }
-    else
-        rf->image_height = 0;
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_IMAGE_HEIGHT)))
+        rf->image_height = atoi(option);
 
-    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_IMAGES))) {
-        sscanf(option, "%d", &rf->image_images);
-        gwy_debug("image images = %d", rf->image_images);
-    }
-    else
-        rf->image_images = 0;
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_REAL_SIZE)))
+        rf->image_real_size = g_strdup(option);
 
-    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_GRAPHS))) {
-        sscanf(option, "%d", &rf->image_graphs);
-        gwy_debug("image graphs = %d", rf->image_graphs);
-    }
-    else
-        rf->image_graphs = 0;
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_IMAGES)))
+        rf->image_images = atoi(option);
+
+    if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_GRAPHS)))
+        rf->image_graphs = atoi(option);
 
     if (stat(rf->file_sys, &st) == 0) {
         rf->file_state = FILE_STATE_OK;
@@ -951,7 +938,12 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     GwyDataField *dfield;
     GdkPixbuf *pixbuf;
     struct stat st;
-    gchar *fnm, *str_mtime, *str_size, *str_width, *str_height;
+    gchar *fnm;
+    GwySIValueFormat *vf;
+    gchar str_mtime[22];
+    gchar str_size[22];
+    gchar str_width[22];
+    gchar str_height[22];
     GError *err = NULL;
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
@@ -974,6 +966,15 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     rf->file_size = st.st_size;
     rf->image_width = gwy_data_field_get_xres(dfield);
     rf->image_height = gwy_data_field_get_yres(dfield);
+    vf = gwy_data_field_get_value_format_xy(dfield, NULL);
+    g_free(rf->image_real_size);
+    rf->image_real_size
+        = g_strdup_printf("%.*f×%.*f%s%s",
+                          vf->precision,
+                          gwy_data_field_get_xreal(dfield)/vf->magnitude,
+                          vf->precision,
+                          gwy_data_field_get_yreal(dfield)/vf->magnitude,
+                          (vf->units && *vf->units) ? " " : "", vf->units);
     rf->file_state = FILE_STATE_OK;
 
     /* FIXME: bad test, must end with / or nothing! */
@@ -986,10 +987,10 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                                       TMS_NORMAL_THUMB_SIZE);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
 
-    str_mtime = g_strdup_printf("%lu", rf->file_mtime);
-    str_size = g_strdup_printf("%lu", rf->file_size);
-    str_width = g_strdup_printf("%d", rf->image_width);
-    str_height = g_strdup_printf("%d", rf->image_height);
+    g_snprintf(str_mtime, sizeof(str_mtime), "%lu", rf->file_mtime);
+    g_snprintf(str_size, sizeof(str_size), "%lu", rf->file_size);
+    g_snprintf(str_width, sizeof(str_width), "%d", rf->image_width);
+    g_snprintf(str_height, sizeof(str_height), "%d", rf->image_height);
 
     /* invent an unique temporary name for atomic save
      * FIXME: rough, but works on Win32 */
@@ -1001,6 +1002,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                          KEY_THUMB_FILESIZE, str_size,
                          KEY_THUMB_IMAGE_WIDTH, str_width,
                          KEY_THUMB_IMAGE_HEIGHT, str_height,
+                         KEY_THUMB_GWY_REAL_SIZE, rf->image_real_size,
                          NULL)) {
         g_clear_error(&err);
         rf->thumb_state = FILE_STATE_FAILED;
@@ -1019,10 +1021,6 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         rf->thumb_mtime = rf->file_mtime;
     }
     g_free(fnm);
-    g_free(str_mtime);
-    g_free(str_size);
-    g_free(str_width);
-    g_free(str_height);
 
     gwy_object_unref(rf->pixbuf);
     g_object_unref(pixbuf);
