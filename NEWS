@@ -1,4 +1,4 @@
-1.5cvs20041005
+1.5cvs20041008
 
 1.6
 Application:
@@ -12,6 +12,7 @@ Modules:
   (bug #31).
 - Crop, Filters, Polynom, Statistics, and Spot remove tools: Also display
   dimensions in pixels.
+- Unrotate: Fixed displayed rotations being 2Pi multiplies of the real ones.
 
 Library:
 - libgwydgets: Gwy3DWindow swtiching from palette to material for the first
