@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.7cvs20041223, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.7cvs20050119, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -209,6 +209,7 @@ AC_CHECK_HEADERS( \
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_C_INLINE
 AC_STRUCT_TM
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
