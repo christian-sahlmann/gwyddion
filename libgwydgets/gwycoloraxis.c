@@ -123,9 +123,6 @@ gwy_color_axis_init(GwyColorAxis *axis)
     gwy_debug("");
 
     axis->orientation = GTK_ORIENTATION_VERTICAL;
-    axis->max = 0;
-    axis->min = 0;
-    axis->pixbuf = NULL;
     axis->par.tick_length = 5;
 }
 
@@ -153,6 +150,7 @@ gwy_color_axis_new(GtkOrientation orientation,
 
     axis = gtk_type_new(gwy_color_axis_get_type());
     axis->orientation = orientation;
+    /* TODO: use some font properties, at least */
     if (orientation == GTK_ORIENTATION_VERTICAL)
         axis->par.textarea = 70;
     else
@@ -160,6 +158,7 @@ gwy_color_axis_new(GtkOrientation orientation,
     axis->min = min;
     axis->max = max;
 
+    /* XXX */
     axis->par.font = pango_font_description_new();
     pango_font_description_set_family(axis->par.font, "Helvetica");
     pango_font_description_set_style(axis->par.font, PANGO_STYLE_NORMAL);
@@ -172,6 +171,35 @@ gwy_color_axis_new(GtkOrientation orientation,
     /* XXX: remove */
     axis->palette = (GwyPalette*)gwy_palette_new(NULL);
     gwy_color_axis_set_palette(axis, pal);
+    axis->siunit = GWY_SI_UNIT(gwy_si_unit_new("m"));
+
+    return GTK_WIDGET(axis);
+}
+
+/* FIXME: this should be the default constructor */
+GtkWidget*
+gwy_color_axis_new_default(GtkOrientation orientation)
+{
+    GwyColorAxis *axis;
+
+    gwy_debug(" ");
+
+    axis = (GwyColorAxis*)g_object_new(GWY_TYPE_COLOR_AXIS, NULL);
+    axis->orientation = orientation;
+    /* TODO: use some font properties, at least */
+    if (orientation == GTK_ORIENTATION_VERTICAL)
+        axis->par.textarea = 70;
+    else
+        axis->par.textarea = 20;
+
+    axis->min = 0.0;
+    axis->max = 1.0;
+
+    axis->par.font = pango_font_description_from_string("Helvetica 10");
+    axis->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
+    g_object_ref(axis->gradient);
+    /* XXX: remove */
+    axis->palette = (GwyPalette*)gwy_palette_new(NULL);
     axis->siunit = GWY_SI_UNIT(gwy_si_unit_new("m"));
 
     return GTK_WIDGET(axis);

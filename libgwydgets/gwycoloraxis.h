@@ -76,11 +76,12 @@ struct _GwyColorAxisClass {
 
 
 GType        gwy_color_axis_get_type  (void) G_GNUC_CONST;
-/* XXX: change arguments, ideally to orientation only */
+/* XXX: make gwy_color_axis_new_default() the default constructor */
 GtkWidget*   gwy_color_axis_new       (GtkOrientation orientation,
                                        gdouble min,
                                        gdouble max,
                                        GwyPalette *pal);
+GtkWidget*   gwy_color_axis_new_default(GtkOrientation orientation);
 void         gwy_color_axis_get_range (GwyColorAxis *axis,
                                        gdouble *min,
                                        gdouble *max);

@@ -66,6 +66,8 @@ static void          gwy_3d_view_init           (Gwy3DView *gwy3dview);
 static void          gwy_3d_view_finalize       (GObject *object);
 static void          gwy_3d_view_realize        (GtkWidget *widget);
 static void          gwy_3d_view_unrealize      (GtkWidget *widget);
+static void          gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview);
+static void          gwy_3d_view_update_lists   (Gwy3DView *gwy3dview);
 static void          gwy_3d_view_realize_gl     (Gwy3DView *widget);
 static void          gwy_3d_view_size_request   (GtkWidget *widget,
                                                  GtkRequisition *requisition);
@@ -183,21 +185,10 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
 {
     gwy_debug(" ");
 
-    gwy3dview->container             = NULL;
-    gwy3dview->data                  = NULL;
-    gwy3dview->downsampled           = NULL;
-    gwy3dview->palette               = NULL;
     gwy3dview->reduced_size          = 100;
     gwy3dview->data_min              = 0.0;
     gwy3dview->data_max              = 0.0;
     gwy3dview->data_mean             = 0.0;
-
-    gwy3dview->rot_x                 = NULL;
-    gwy3dview->rot_y                 = NULL;
-    gwy3dview->view_scale            = NULL;
-    gwy3dview->deformation_z         = NULL;
-    gwy3dview->light_z               = NULL;
-    gwy3dview->light_y               = NULL;
 
     gwy3dview->view_scale_max        = 3.0f;
     gwy3dview->view_scale_min        = 0.5f;
@@ -205,16 +196,9 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->orthogonal_projection = TRUE;
     gwy3dview->show_axes             = TRUE;
     gwy3dview->show_labels           = TRUE;
-    gwy3dview->enable_lights         = FALSE;
-    gwy3dview->mat_current           = NULL;
     gwy3dview->shape_list_base       = -1;
-    gwy3dview->shape_current         = 0;
     gwy3dview->mouse_begin_x         = 0.0;
     gwy3dview->mouse_begin_y         = 0.0;
-    gwy3dview->ft2_context           = NULL;
-    gwy3dview->ft2_font_map          = NULL;
-    gwy3dview->si_unit               = NULL;
-    gwy3dview->labels                = NULL;
 }
 
 /**
@@ -234,8 +218,7 @@ gwy_3d_view_new(GwyContainer *data)
     GdkGLConfig *glconfig;
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
-    const guchar *palette_name, *material_name;
-    GwyPaletteDef *pdef;
+    const guchar *grad_name, *material_name;
     gdouble x;
     GObject *dfield;
 
@@ -284,17 +267,23 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->mat_current
              = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
-    if (!gwy_container_gis_string_by_name(data, "/0/3d/palette",
-                                          &palette_name)) {
+    if (!gwy_container_gis_string_by_name(data, "/0/3d/palette", &grad_name)) {
         if (!gwy_container_gis_string_by_name(data, "/0/base/palette",
-                                              &palette_name))
-            palette_name = GWY_PALETTE_GRAY;
-        gwy_container_set_string_by_name(data, "/0/3d/palette",
-                                         g_strdup(palette_name));
+                                              &grad_name))
+            grad_name = GWY_GRADIENT_DEFAULT;
     }
-    pdef = GWY_PALETTE_DEF(gwy_palette_def_new(palette_name));
-    gwy3dview->palette = GWY_PALETTE(gwy_palette_new(pdef));
-    g_object_ref(gwy3dview->palette);
+    gwy3dview->gradient = gwy_gradients_get_gradient(grad_name);
+    if (!gwy3dview->gradient)
+        gwy3dview->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
+    gwy_container_set_string_by_name(data, "/0/3d/palette",
+                                     g_strdup(grad_name));
+    g_object_ref(gwy3dview->gradient);
+    g_signal_connect_swapped(gwy3dview->gradient, "value_changed",
+                             G_CALLBACK(gwy_3d_view_gradient_changed),
+                             gwy3dview);
+    /* XXX: remove */
+    gwy3dview->palette = GWY_PALETTE(gwy_palette_new(NULL));
+    gwy_palette_set_by_name(gwy3dview->palette, grad_name);
 
     gwy_container_gis_int32_by_name(data, "/0/3d/reduced_size",
                                     &gwy3dview->reduced_size);
@@ -407,6 +396,8 @@ gwy_3d_view_finalize(GObject *object)
 
     gwy_object_unref(gwy3dview->si_unit);
     gwy_object_unref(gwy3dview->labels);
+    gwy_object_unref(gwy3dview->gradient);
+    gwy_object_unref(gwy3dview->palette);
 
     if (gwy3dview->shape_list_base >= 0) {
         glDeleteLists(gwy3dview->shape_list_base, 2);
@@ -427,6 +418,10 @@ gwy_3d_view_unrealize(GtkWidget *widget)
     gwy3dview = GWY_3D_VIEW(widget);
 
     gwy_debug(" ");
+
+    g_signal_handlers_disconnect_matched(gwy3dview->gradient,
+                                         G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, gwy3dview);
 
     if (gwy3dview->shape_list_base >= 0) {
         glDeleteLists(gwy3dview->shape_list_base, 2);
@@ -460,8 +455,8 @@ void
 gwy_3d_view_update(Gwy3DView *gwy3dview)
 {
     gboolean update_data = FALSE;
-    gboolean update_palette = FALSE;
-    const guchar *palette_name = NULL;
+    gboolean update_due_to_gradient = FALSE;
+    const guchar *grad_name = NULL;
 
     gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
@@ -482,19 +477,17 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
     }
 
     if (!gwy_container_gis_string_by_name(gwy3dview->container, "/0/3d/palette",
-                                          &palette_name)) {
+                                          &grad_name)) {
         if (!gwy_container_gis_string_by_name(gwy3dview->container,
                                               "/0/base/palette",
-                                              &palette_name))
-            palette_name = GWY_PALETTE_GRAY;
+                                              &grad_name))
+            grad_name = GWY_GRADIENT_DEFAULT;
         gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
-                                         g_strdup(palette_name));
+                                         g_strdup(grad_name));
     }
-    if (strcmp(palette_name,
-               gwy_palette_def_get_name(gwy_palette_get_palette_def
-                                                      (gwy3dview->palette)))) {
-        gwy_palette_set_by_name(gwy3dview->palette, palette_name);
-        update_palette = TRUE;
+    if (strcmp(grad_name, gwy_gradient_get_name(gwy3dview->gradient))) {
+        update_due_to_gradient = TRUE;
+        gwy_3d_view_set_gradient(gwy3dview, grad_name);
     }
 
     if (update_data) {
@@ -502,14 +495,7 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
         guint rx, ry;
 
         gwy_object_unref(gwy3dview->downsampled);
-        gwy3dview->downsampled =
-            (GwyDataField*) gwy_data_field_new(
-                                gwy_data_field_get_xres(gwy3dview->data),
-                                gwy_data_field_get_yres(gwy3dview->data),
-                                gwy_data_field_get_xreal(gwy3dview->data),
-                                gwy_data_field_get_yreal(gwy3dview->data),
-                                TRUE);
-        gwy_data_field_copy(gwy3dview->data, gwy3dview->downsampled);
+        gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data);
         rx = gwy_data_field_get_xres(gwy3dview->downsampled);
         ry = gwy_data_field_get_yres(gwy3dview->downsampled);
         if (rx > ry) {
@@ -531,15 +517,8 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
         gwy_3d_labels_update(gwy3dview->labels, gwy3dview->si_unit);
     }
 
-    if ((update_data || update_palette)
-         && GTK_WIDGET_REALIZED(gwy3dview)) {
-        gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
-                         GWY_3D_SHAPE_REDUCED);
-        gwy_3d_make_list(gwy3dview, gwy3dview->data,
-                         GWY_3D_SHAPE_AFM);
-        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-    }
-
+    if (!update_due_to_gradient && update_data)
+        gwy_3d_view_update_lists(gwy3dview);
 }
 
 
@@ -555,9 +534,8 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
  * Since: 1.5
  **/
 GwyPalette*
-gwy_3d_view_get_palette       (Gwy3DView *gwy3dview)
+gwy_3d_view_get_palette(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
 
     return gwy3dview->palette;
@@ -578,34 +556,97 @@ gwy_3d_view_get_palette       (Gwy3DView *gwy3dview)
  * Since: 1.5
  **/
 void
-gwy_3d_view_set_palette       (Gwy3DView *gwy3dview,
-                                 GwyPalette *palette)
+gwy_3d_view_set_palette(Gwy3DView *gwy3dview,
+                        GwyPalette *palette)
 {
-    GwyPalette *old;
-    const gchar *name;
-
-    gwy_debug(" ");
-
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
     g_return_if_fail(GWY_IS_PALETTE(palette));
 
-    old = gwy3dview->palette;
-    g_object_ref(palette);
-    gwy3dview->palette = palette;
-    gwy_object_unref(old);
+    gwy_3d_view_set_gradient(gwy3dview,
+                             gwy_palette_def_get_name
+                                        (gwy_palette_get_palette_def(palette)));
+}
 
-    name = gwy_palette_def_get_name(gwy_palette_get_palette_def(palette));
+/**
+ * gwy_3d_view_set_gradient:
+ * @gwy3dview: A 3D data view widget.
+ * @gradient: Name of gradient @gwy3dview should use.  It should exist.
+ *
+ * Sets the color gradient a 3D data view should use.
+ *
+ * Since: 1.8
+ **/
+void
+gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
+                         const gchar *gradient)
+{
+    GwyGradient *grad, *old;
+    gchar *gradstr;
+
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    gwy_debug("%s", gradient);
+
+    grad = gwy_gradients_get_gradient(gradient);
+    if (!grad || grad == gwy3dview->gradient)
+        return;
+
+    /* the string we've got as argument can be owned by somethin we are
+     * going to destroy */
+    gradstr = g_strdup(gradient);
+    old = gwy3dview->gradient;
+    g_signal_handlers_disconnect_matched(gwy3dview->gradient,
+                                         G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, gwy3dview);
+    g_object_ref(grad);
+    gwy3dview->gradient = grad;
+    g_signal_connect_swapped(gwy3dview->gradient, "value_changed",
+                             G_CALLBACK(gwy_3d_view_gradient_changed),
+                             gwy3dview);
     gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
-                                     g_strdup(name));
+                                     gradstr);
+    g_object_unref(old);
+    /* XXX: remove */
+    if (!gwy_palette_set_by_name(gwy3dview->palette, gradstr))
+        g_warning("Palette <%s> doesn't exist, we've got out of sync",
+                  gradstr);
 
-    if (GTK_WIDGET_REALIZED(gwy3dview)) {
-        gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
-                         GWY_3D_SHAPE_REDUCED);
-        gwy_3d_make_list(gwy3dview, gwy3dview->data,
-                         GWY_3D_SHAPE_AFM);
-        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-    }
+    if (!gwy3dview->enable_lights)
+        gwy_3d_view_update_lists(gwy3dview);
+}
 
+static void
+gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
+{
+    if (!GTK_WIDGET_REALIZED(gwy3dview))
+        return;
+
+    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, GWY_3D_SHAPE_REDUCED);
+    gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
+    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+}
+
+static void
+gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
+{
+    if (!gwy3dview->enable_lights)
+        gwy_3d_view_update_lists(gwy3dview);
+}
+
+/**
+ * gwy_3d_view_get_gradient:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Returns the color gradient a 3D data view uses.
+ *
+ * Returns: The color gradient.
+ *
+ * Since: 1.8
+ **/
+const gchar*
+gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
+{
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+
+    return gwy_gradient_get_name(gwy3dview->gradient);
 }
 
 /**
@@ -1765,12 +1806,15 @@ gwy_3d_make_normals(GwyDataField * data, Gwy3DVector *normals)
    return normals;
 }
 
-static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
+static void
+gwy_3d_make_list(Gwy3DView *gwy3D,
+                 GwyDataField *data,
+                 gint shape)
 {
    gint i, j, xres, yres, res;
    GLdouble zdifr;
-   Gwy3DVector * normals;
-   GwyPaletteDef * pal_def;
+   Gwy3DVector *normals;
+   GwyGradient *grad;
    GwyRGBA color;
 
    gwy_debug(" ");
@@ -1780,11 +1824,12 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
    xres = gwy_data_field_get_xres(data);
    yres = gwy_data_field_get_yres(data);
    res  = xres > yres ? xres : yres;
-   pal_def = gwy_palette_get_palette_def(gwy3D->palette);
+   grad = gwy3D->gradient;
 
    glNewList(gwy3D->shape_list_base + shape, GL_COMPILE);
       glPushMatrix();
-      glTranslatef(-(xres / (double)res), -(yres / (double)res), GWY_3D_Z_DISPLACEMENT);
+      glTranslatef(-(xres / (double)res), -(yres / (double)res),
+                   GWY_3D_Z_DISPLACEMENT);
       glScalef(2.0/res, 2.0/res,
                GWY_3D_Z_TRANSFORMATION / (gwy3D->data_max - gwy3D->data_min) );
       glTranslatef(0.0, 0.0, -gwy3D->data_min);
@@ -1804,17 +1849,13 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
             glNormal3d(normals[j*xres+i].x,
                        normals[j*xres+i].y,
                        normals[j*xres+i].z);
-            color = gwy_palette_def_get_color(pal_def,
-                                              (a - gwy3D->data_min) * zdifr,
-                                              GWY_INTERPOLATION_BILINEAR);
+            gwy_gradient_get_color(grad, (a - gwy3D->data_min) * zdifr, &color);
             glColor3d(color.r , color.g, color.b);
             glVertex3d((double)i, (double)j, a);
             glNormal3d(normals[(j+1)*xres+i].x,
                        normals[(j+1)*xres+i].y,
                        normals[(j+1)*xres+i].z);
-            color = gwy_palette_def_get_color(pal_def,
-                                              (b - gwy3D->data_min) * zdifr,
-                                              GWY_INTERPOLATION_BILINEAR);
+            gwy_gradient_get_color(grad, (b - gwy3D->data_min) * zdifr, &color);
             glColor3d(color.r , color.g, color.b);
             glVertex3d((double)i, (double)(j+1), b);
          }
