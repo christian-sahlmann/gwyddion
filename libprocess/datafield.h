@@ -495,15 +495,18 @@ void gwy_data_field_grains_mark_local_maxima(GwyDataField *data_field,
 
 void gwy_data_field_grains_mark_height(GwyDataField *data_field, 
                                        GwyDataField *grain_field, 
-                                       gdouble threshval);
+                                       gdouble threshval,
+                                       gint dir);
 
 void gwy_data_field_grains_mark_slope(GwyDataField *data_field, 
                                       GwyDataField *grain_field, 
-                                      gdouble threshval);
+                                      gdouble threshval,
+                                      gint dir);
 
 void gwy_data_field_grains_mark_curvature(GwyDataField *data_field, 
                                           GwyDataField *grain_field, 
-                                          gdouble threshval);
+                                          gdouble threshval,
+                                          gint dir);
 
 void gwy_data_field_grains_mark_watershed(GwyDataField *data_field, 
                                           GwyDataField *grain_field,

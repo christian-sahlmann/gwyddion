@@ -41,21 +41,70 @@ void mark_grain_boundaries (GwyDataField *grain_field, GwyDataField *mark_field)
 
 /********************/
 
-void gwy_data_field_grains_mark_local_maxima(GwyDataField *data_field, GwyDataField *grain_field)
+void gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
+    GwyDataField *mask;
+    mask = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
+
+    gwy_data_field_copy(data_field, mask);
+   
+    gwy_data_field_threshold(mask, threshval, 0, 1);
+    if (dir==1)
+    {
+        gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
+    }
+
+    /*TODO: ocislovat zrna a oznacit hranice*/
+    
+    g_object_unref(mask);
+}
+
+void gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
+{
+    GwyDataField *mask;
+    mask = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
+
+    gwy_data_field_copy(data_field, mask);
+    gwy_data_field_filter_laplacian(mask, 0, 0, data_field->xres, data_field->yres);
+    
+    gwy_data_field_threshold(mask, threshval, 0, 1);
+    if (dir==1)
+    {
+        gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
+    }
+
+    /*TODO: ocislovat zrna a oznacit hranice*/
+
+    g_object_unref(mask);
     
 }
 
-void gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval)
+void gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
-}
+    GwyDataField *maskx, *masky;
+    gint i;
+    maskx = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
+    masky = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
 
-void gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval)
-{
-}
+    gwy_data_field_copy(data_field, maskx);
+    gwy_data_field_copy(data_field, masky);
+    gwy_data_field_filter_sobel(maskx, GTK_ORIENTATION_HORIZONTAL, 0, 0, data_field->xres, data_field->yres);
+    gwy_data_field_filter_sobel(masky, GTK_ORIENTATION_HORIZONTAL, 0, 0, data_field->xres, data_field->yres);
 
-void gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval)
-{
+    for (i=0; i<(data_field->xres*data_field->yres); i++)
+        maskx->data[i] = sqrt(maskx->data[i]*maskx->data[i] + masky->data[i]*masky->data[i]);
+
+    gwy_data_field_threshold(maskx, threshval, 0, 1);
+    if (dir==1)
+    {
+        gwy_data_field_invert(maskx, FALSE, FALSE, TRUE);
+    }  
+
+    /*TODO: ocislovat zrna a oznacit hranice*/
+
+    g_object_unref(maskx);
+    g_object_unref(masky);
+    
 }
 
 void gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *grain_field,
