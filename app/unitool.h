@@ -33,7 +33,8 @@ extern "C" {
 
 typedef enum {
     GWY_UNITOOL_UPDATED_SELECTION,
-    GWY_UNITOOL_UPDATED_DATA
+    GWY_UNITOOL_UPDATED_DATA,
+    GWY_UNITOOL_UPDATED_CONTROLS
 } GwyUnitoolUpdateType;
 
 typedef struct _GwyUnitoolSlots GwyUnitoolSlots;
