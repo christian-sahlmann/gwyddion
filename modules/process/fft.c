@@ -181,8 +181,21 @@ fft(GwyContainer *data, GwyRunType run)
                                  args.interp,
                                  0,
                                  0);
-        gwy_data_field_2dffthumanize(raout);
-        gwy_data_field_2dffthumanize(ipout);
+//        gwy_data_field_2dffthumanize(raout);
+//        gwy_data_field_2dffthumanize(ipout);
+        gwy_data_field_copy(raout, dfield);
+        gwy_data_field_copy(ipout, imin);
+        gwy_data_field_2dfft(dfield, imin,
+                                 raout,
+                                 ipout,
+                                 gwy_data_line_fft_hum,
+                                 args.window,
+                                 -1,
+                                 args.interp,
+                                 0,
+                                 0);
+
+
 
         if (args.preserve)
         {

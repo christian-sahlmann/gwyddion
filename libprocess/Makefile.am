@@ -1,6 +1,7 @@
 # @(#) $Id$
 
 libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 
 libgwyprocessincludedir = $(includedir)/gwyddion/libprocess
 libgwyprocessinclude_HEADERS = \
@@ -31,6 +32,7 @@ libgwyprocess_la_SOURCES = \
 test_SOURCES = \
 	test.c
 test_LDADD = libgwyprocess.la \
+        $(libgwydraw) \
 	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)

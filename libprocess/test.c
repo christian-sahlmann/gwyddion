@@ -26,6 +26,8 @@
 #include <gtk/gtk.h>
 
 #include "libgwyprocess.h"
+#include <libdraw/gwypalette.h>
+#include <libdraw/gwypixfield.h>
 
 void make_test_image(GwyDataField *a)
 {
@@ -40,6 +42,7 @@ void make_test_image(GwyDataField *a)
 	for (j=0; j<xres; j++)
 	{
 	    a->data[i + j*yres] = exp(-((((gdouble)i-255.5)*((gdouble)i-255.5)+((gdouble)j-255.5)*((gdouble)j-255.5)))/300);
+//	    a->data[i + j*yres] = 10*sin(6.28*(i+j)/50);
 	}
     }
 }
@@ -62,59 +65,57 @@ int main(int argc, char *argv[])
     FILE *fh;
     gint i, j;
  
-    GwyDataField *a, *b, *c, *d;
+    GwyDataField *a, *b, *c, *d, *p;
     GwyDataLine *k;
+
+    GwyPalette *pal;
     
     g_type_init();
   
     g_message("preparing data_field...");
     a = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
+    b = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
+    c = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
     d = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
+    p = (GwyDataField *) gwy_data_field_new(512, 512, 512, 512, 1);
+
     k = (GwyDataLine *) gwy_data_line_new(20, 20, 1);
     make_test_image(a);
+    make_test_image(p);
 
-    gwy_data_field_cwt(a, 1, 10, 0);
+    gwy_data_field_2dfft(a, b, c, d, gwy_data_line_fft_hum, GWY_WINDOWING_RECT, 1, GWY_INTERPOLATION_BILINEAR, 0, 0);
+    gwy_data_field_copy(c, a);
+    gwy_data_field_copy(d, b);
 
-     
-    for (i=0; i<512; i++) 
-   {
-       printf("%f\n", a->data[200 + 512*i]);
-   }
+    gwy_data_field_fill(c, 0);
+    gwy_data_field_fill(d, 0);
+    gwy_data_field_2dfft(a, b, c, d, gwy_data_line_fft_hum, GWY_WINDOWING_RECT, -1, GWY_INTERPOLATION_BILINEAR, 0, 0);
+
+/*    for (i=0; i<512; i++) 
+    {
+       printf("%f  %f\n", a->data[20 + 512*i], //sqrt(a->data[20 + 512*i]*a->data[20 + 512*i]+ b->data[20 + 512*i]*b->data[20 + 512*i]), 
+	p->data[20 + 512*i]);
+    }
+*/
+
+    gwy_palette_def_setup_presets();
+    pal = (GwyPalette*) gwy_palette_new(NULL);
+    gwy_palette_set_by_name(pal, GWY_PALETTE_OLIVE);
+
+    pxb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, a->xres, a->yres);
+    gwy_pixfield_do(pxb, a, pal);
+    gdk_pixbuf_save(pxb, "a.jpg", "jpeg", &error, "quality", "100", NULL);
+    gwy_pixfield_do(pxb, b, pal);
+    gdk_pixbuf_save(pxb, "b.jpg", "jpeg", &error, "quality", "100", NULL);
+
+    gwy_pixfield_do(pxb, c, pal);
+    gdk_pixbuf_save(pxb, "c.jpg", "jpeg", &error, "quality", "100", NULL);
+    gwy_pixfield_do(pxb, d, pal);
+    gdk_pixbuf_save(pxb, "d.jpg", "jpeg", &error, "quality", "100", NULL);
+
+
+
+
    
     return 0;
-
-    /*test serialization of the data_field*/
-    /*
-    size = 0;
-    buffer = NULL;
-    buffer = gwy_serializable_serialize((GObject *)a, buffer, &size);
-    buffer = gwy_serializable_serialize((GObject *)c, buffer, &size);
-   
-    printf("size is %d\n", size);
-    g_message("writing data_field and data_line to test.data_field...");
-    
-    
-    fh = fopen("test.data_field", "wb");
-    fwrite(buffer, 1, size, fh);
-    fclose(fh);
-    g_object_unref((GObject *)a);
-    g_object_unref((GObject *)c);
-
-    
-    g_message("reading data_field and data_line from test.data_field...");
-    g_file_get_contents("test.data_field", (gchar**)&buffer, &size, &error);
-    pos = 0;
-    b = (GwyDataField *) gwy_serializable_deserialize(buffer, size, &pos);
-    d = (GwyDataLine *) gwy_serializable_deserialize(buffer, size, &pos);
-      
-
-    g_message("outputting data_line to xline.dat...");
-    fh = fopen("xline.dat", "w");
-    for (i=0; i<d->res; i++) fprintf(fh, "%d  %f\n", i, d->data[i]);
-    fclose(fh);
-    
-    g_object_unref((GObject *)b);
-    g_object_unref((GObject *)d);
-    return 0;
-    */
 }

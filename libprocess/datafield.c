@@ -271,6 +271,7 @@ void
 gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
 {
     gwy_debug("%s", __FUNCTION__);
+
     a->xres = xres;
     a->yres = yres;
     a->data = g_new(gdouble, a->xres*a->yres);
@@ -1849,43 +1850,44 @@ void gwy_data_field_cwt(GwyDataField *data_field,
                         gdouble scale,
                         Gwy2DCWTWaveletType wtype)
 {
-   GwyDataField *hlp_r;
-   GwyDataField *hlp_i;
-   GwyDataField *imag_field;
+   GwyDataField hlp_r;
+   GwyDataField hlp_i;
+   GwyDataField imag_field;
 
-   gwy_data_field_initialize(hlp_r, data_field->xres, data_field->yres,
+   gwy_data_field_initialize(&hlp_r, data_field->xres, data_field->yres,
                         data_field->xreal, data_field->yreal, FALSE);
-   gwy_data_field_initialize(hlp_i, data_field->xres, data_field->yres,
+   gwy_data_field_initialize(&hlp_i, data_field->xres, data_field->yres,
                         data_field->xreal, data_field->yreal, FALSE);
-   gwy_data_field_initialize(imag_field, data_field->xres, data_field->yres,
+   gwy_data_field_initialize(&imag_field, data_field->xres, data_field->yres,
                         data_field->xreal, data_field->yreal, TRUE);
 
    gwy_data_field_2dfft(data_field,
-                        imag_field,
-                        hlp_r,
-                        hlp_i,
+                        &imag_field,
+                        &hlp_r,
+                        &hlp_i,
                         gwy_data_line_fft_hum,
                         GWY_WINDOWING_RECT,
                         1,
                         interpolation,
                         1,
                         0);
-   gwy_data_field_mult_wav(hlp_r, hlp_i, scale, wtype);
+   gwy_data_field_mult_wav(&hlp_r, &hlp_i, scale, wtype);
    
-   gwy_data_field_2dfft(hlp_r,
-                        hlp_i,
+   gwy_data_field_2dfft(&hlp_r,
+                        &hlp_i,
                         data_field,
-                        imag_field,
+                        &imag_field,
                         gwy_data_line_fft_hum,
                         GWY_WINDOWING_RECT,
                         -1,
                         interpolation,
                         1,
                         0);
-   
-   gwy_data_field_free(hlp_r);
-   gwy_data_field_free(hlp_i);
-   gwy_data_field_free(imag_field); 
+ 
+                       
+   gwy_data_field_free(&hlp_r);
+   gwy_data_field_free(&hlp_i);
+   gwy_data_field_free(&imag_field); 
 }
 
 
