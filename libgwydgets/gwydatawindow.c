@@ -327,6 +327,16 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
     lame_window_resize(data_window);
 }
 
+/**
+ * gwy_data_view_set_zoom_mode:
+ * @data_window: A data window.
+ * @zoom_mode: A zoom mode to use.
+ *
+ * Sets the zoom mode @data_window should use to @zoom_mode.
+ *
+ * It does not affect the current zoom in any way, only its changes in the
+ * future.
+ **/
 void
 gwy_data_view_set_zoom_mode(GwyDataWindow *data_window,
                             GwyZoomMode zoom_mode)
@@ -336,6 +346,14 @@ gwy_data_view_set_zoom_mode(GwyDataWindow *data_window,
     data_window->zoom_mode = zoom_mode;
 }
 
+/**
+ * gwy_data_view_get_zoom_mode:
+ * @data_window: A data window.
+ *
+ * Returns the current zoom mode of a data window @data_window.
+ *
+ * Returns: The current zoom mode.
+ **/
 GwyZoomMode
 gwy_data_view_get_zoom_mode(GwyDataWindow *data_window)
 {
@@ -395,6 +413,15 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
     data_window->statusbar_message_id = id;
 }
 
+/**
+ * gwy_data_window_update_title:
+ * @data_window: A data window.
+ *
+ * Updates the title of @data_window to reflect current state.
+ *
+ * FIXME: (a) the window title format should be configurable (b) this
+ * should probably happen automatically(?).
+ **/
 void
 gwy_data_window_update_title(GwyDataWindow *data_window)
 {
@@ -422,10 +449,11 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     g_snprintf(zoomstr, sizeof(zoomstr), "%.*f",
                prec, zoom > 1.0 ? zoom : 1.0/zoom);
 
-    window_title = g_strdup_printf("%s %s:%s (Gwyddion)",
+    window_title = g_strdup_printf("%s %s:%s (%s)",
                                    filename,
                                    zoom > 1.0 ? zoomstr : "1",
-                                   zoom > 1.0 ? "1" : zoomstr);
+                                   zoom > 1.0 ? "1" : zoomstr,
+                                   g_get_application_name());
     gtk_window_set_title(GTK_WINDOW(data_window), window_title);
     g_free(window_title);
     g_free(filename);
