@@ -6,6 +6,7 @@ Application:
 
 Modules:
 - Assing AFM file import (new).
+- 1D FFT Filtering (new).
 - Mark, remove scars: Can remove negative scars too.
 - Edge detection: Experimental RMS, RMS Edge, and Local Nonlinearity filters
   were added.
