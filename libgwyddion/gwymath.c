@@ -299,4 +299,13 @@ gwy_math_lin_solve_rewrite(gint n, gdouble *matrix,
     return result;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * ROUND:
+ * @x: A double value.
+ *
+ * Rounds a number to nearest integer.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
