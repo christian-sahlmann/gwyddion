@@ -62,6 +62,8 @@ static void print_help(void);
 static void process_preinit_options(int *argc,
                                     char ***argv);
 
+static gboolean show_splash = TRUE;
+
 int
 main(int argc, char *argv[])
 {
@@ -81,6 +83,7 @@ main(int argc, char *argv[])
     settings_file = gwy_app_settings_get_settings_filename();
     has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);
     gwy_app_init();
+
     if (has_settings)
         ok = gwy_app_settings_load(settings_file);
     if (!ok && has_config)
@@ -88,15 +91,21 @@ main(int argc, char *argv[])
     gwy_app_settings_get();
     module_dirs = gwy_app_settings_get_module_dirs();
 
-    gwy_app_splash_create();
-    gwy_app_splash_set_message_prefix(_("Registering "));
-    gwy_app_splash_set_message(_("stock items"));
+    if (show_splash) {
+        gwy_app_splash_create();
+        gwy_app_splash_set_message_prefix(_("Registering "));
+        gwy_app_splash_set_message(_("stock items"));
+    }
+
     gwy_stock_register_stock_items();
-    gwy_module_set_register_callback(gwy_app_splash_set_message);
+    if (show_splash)
+        gwy_module_set_register_callback(gwy_app_splash_set_message);
     gwy_module_register_modules((const gchar**)module_dirs);
-    gwy_module_set_register_callback(NULL);
-    gwy_app_splash_set_message_prefix(NULL);
-    gwy_app_splash_close();
+    if (show_splash) {
+        gwy_module_set_register_callback(NULL);
+        gwy_app_splash_set_message_prefix(NULL);
+        gwy_app_splash_close();
+    }
 
     gwy_app_toolbox_create();
     gwy_app_file_open_initial(argv + 1, argc - 1);
@@ -118,6 +127,8 @@ static void
 process_preinit_options(int *argc,
                         char ***argv)
 {
+    int i;
+
     if (*argc == 1)
         return;
 
@@ -130,6 +141,18 @@ process_preinit_options(int *argc,
         printf("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
         exit(0);
     }
+
+    for (i = 1; i < *argc; i++) {
+        if (strncmp((*argv)[i], "--", 2) || !strcmp((*argv)[i], "--"))
+            break;
+
+        if (!strcmp((*argv)[i], "--no-splash"))
+            show_splash = FALSE;
+    }
+
+    (*argv)[i-1] = (*argv)[0];
+    *argv += i-1;
+    *argc -= i-1;
 }
 
 static void
@@ -143,6 +166,7 @@ print_help(void)
 "Gwyddion options:\n"
 " -h, --help                 Print this help and terminate.\n"
 " -v, --version              Print version info and terminate.\n"
+"     --no-splash            Don't show splash screen.\n"
         );
     puts(
 "Gtk+ and Gdk options:\n"
