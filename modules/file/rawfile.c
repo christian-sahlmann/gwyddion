@@ -173,7 +173,7 @@ static GwyModuleInfo module_info = {
     "rawfile",
     "Read raw data according to user-specified format.",
     "Yeti <yeti@gwyddion.net>",
-    "0.99",
+    "0.99.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -1368,6 +1368,7 @@ rawfile_read_ascii(RawFileArgs *args,
                               cdelim, n);
                     return FALSE;
                 }
+                buffer++;
             }
             break;
 
@@ -1379,19 +1380,70 @@ rawfile_read_ascii(RawFileArgs *args,
                               args->delimiter, n);
                     return FALSE;
                 }
+                buffer += delimtype;
             }
             break;
         }
 
         /* read data */
-        for (i = 0; i < args->xres; i++) {
-            x = strtod(buffer, (char**)&end);
-            if (end == buffer) {
-                g_warning("Garbage `%32s' at (%u, %u)", buffer, n, i);
-                return FALSE;
+        switch (delimtype) {
+            case 0:
+            for (i = 0; i < args->xres; i++) {
+                x = strtod(buffer, (char**)&end);
+                if (end == buffer) {
+                    g_warning("Garbage `%.32s' at (%u, %u)", buffer, n, i);
+                    return FALSE;
+                }
+                buffer = end;
+                *(data++) = x;
             }
-            buffer = end;
-            *(data++) = x;
+            break;
+
+            case 1:
+            for (i = 0; i < args->xres; i++) {
+                x = strtod(buffer, (char**)&end);
+                if (end == buffer) {
+                    g_warning("Garbage `%.32s' at (%u, %u)", buffer, n, i);
+                    return FALSE;
+                }
+                buffer = end + strspn(end, " \t");
+                if (*buffer == cdelim)
+                    buffer++;
+                else if (i + 1 == args->xres
+                         && (j = strspn(buffer, "\n\r")))
+                    buffer += j;
+                else {
+                    g_warning("Expected delimiter `%c' after (%u, %u), "
+                              "got `%c'",
+                              cdelim, n, i, *buffer);
+                    return FALSE;
+                }
+                *(data++) = x;
+            }
+            break;
+
+            default:
+            for (i = 0; i < args->xres; i++) {
+                x = strtod(buffer, (char**)&end);
+                if (end == buffer) {
+                    g_warning("Garbage `%.32s' at (%u, %u)", buffer, n, i);
+                    return FALSE;
+                }
+                buffer = end + strspn(end, " \t");
+                if (strncmp(buffer, args->delimiter, delimtype) == 0)
+                    buffer += delimtype;
+                else if (i + 1 == args->xres
+                         && (j = strspn(buffer, "\n\r")))
+                    buffer += j;
+                else {
+                    g_warning("Expected delimiter `%s' after (%u, %u), "
+                              "got `%.32s'",
+                              args->delimiter, n, i, buffer);
+                    return FALSE;
+                }
+                *(data++) = x;
+            }
+            break;
         }
     }
 
