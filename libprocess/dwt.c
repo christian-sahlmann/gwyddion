@@ -44,18 +44,18 @@ static gint remove_by_adaptive_threshold(GwyDataField *dfield, gint ulcol, gint 
 		                        gboolean hard, gdouble multiple_threshold, gdouble noise_variance);
 static gint remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow,
 		                        gboolean hard, gdouble multiple_threshold, gdouble noise_variance);
-static gint remove_by_threshold_under_mask(GwyDataField *dfield, 
+/*static gint remove_by_threshold_under_mask(GwyDataField *dfield, 
 					   GwyDataField *mask,
 					   gint ulcol, gint ulrow, gint brcol, gint brrow,
 		                        gboolean hard, gdouble multiple_threshold, gdouble noise_variance);
-
+*/
 
 static gint find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdouble threshold, gdouble setsize);
 
 static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow);
-static void mask_grow_do(GwyDataField *dfield,
+/*static void mask_grow_do(GwyDataField *dfield,
 	                  gint by);
-
+*/
 /*public functions*/
 
 
@@ -521,7 +521,7 @@ GwyDataField *gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield, GwyDataFi
     g_object_unref(buffer);
     return mask;   
 }
-
+/*
 static void
 average_under_mask(GwyDataField *dfield, GwyDataField *mask)
 {
@@ -533,7 +533,7 @@ average_under_mask(GwyDataField *dfield, GwyDataField *mask)
 	if (mask->data[n]>0) dfield->data[n] = avg;
     }
 }
-
+*/
 /*
 GwyDataField *gwy_data_field_dwt_correction(GwyDataField *dfield, GwyDataField *mask,
 					    GwyDataLine *wt_coefs)
@@ -815,6 +815,7 @@ remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gi
     return count;
 }
 
+/*
 static gint
 remove_by_threshold_under_mask(GwyDataField *dfield, GwyDataField *mask, gint ulcol, gint ulrow, gint brcol, gint brrow, 
 		    G_GNUC_UNUSED gboolean hard, gdouble multiple_threshold, gdouble noise_variance)
@@ -855,7 +856,7 @@ remove_by_threshold_under_mask(GwyDataField *dfield, GwyDataField *mask, gint ul
     }
     return count;
 }
-
+*/
 
 static gint
 find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdouble threshold, gdouble setsize)
@@ -870,6 +871,7 @@ find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdou
     blpos = dfield->data + ul*dfield->xres;
 
     /*ratio between all field and its fraction*/
+    
     cor = dfield->xres/(gdouble)(br-ul);
     mcor = MIN(cor, 30);
     scor = MAX(cor, mcor/3.5);
@@ -951,62 +953,6 @@ static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol,
 }
 
 
-
-static void
-mask_grow_do(GwyDataField *dfield,
-             gint by)
-{
-    gdouble *data, *buffer, *prow;
-    gdouble min, q1, q2;
-    gint xres, yres, rowstride;
-    gint i, j, iter;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    data = gwy_data_field_get_data(dfield);
-    rowstride = xres;
-
-    buffer = g_new(gdouble, xres);
-    prow = g_new(gdouble, xres);
-    for (iter = 0; iter < by; iter++) {
-        min = G_MAXDOUBLE;
-        for (j = 0; j < xres; j++)
-            prow[j] = -G_MAXDOUBLE;
-        memcpy(buffer, data, xres*sizeof(gdouble));
-        for (i = 0; i < yres; i++) {
-            gdouble *row = data + i*xres;
-
-            if (i == yres-1)
-                rowstride = 0;
-
-            j = 0;
-            q2 = MAX(buffer[j], buffer[j+1]);
-            q1 = MAX(prow[j], row[j+rowstride]);
-            row[j] = MAX(q1, q2);
-            min = MIN(min, row[j]);
-            for (j = 1; j < xres-1; j++) {
-                q1 = MAX(prow[j], buffer[j-1]);
-                q2 = MAX(buffer[j], buffer[j+1]);
-                q2 = MAX(q2, row[j+rowstride]);
-                row[j] = MAX(q1, q2);
-                min = MIN(min, row[j]);
-            }
-            j = xres-1;
-            q2 = MAX(buffer[j-1], buffer[j]);
-            q1 = MAX(prow[j], row[j+rowstride]);
-            row[j] = MAX(q1, q2);
-            min = MIN(min, row[j]);
-
-            GWY_SWAP(gdouble*, prow, buffer);
-            if (i < yres-1)
-                memcpy(buffer, data + (i+1)*xres, xres*sizeof(gdouble));
-        }
-        if (min >= 1.0)
-            break;
-    }
-    g_free(buffer);
-    g_free(prow);
-}
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

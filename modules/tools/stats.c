@@ -235,6 +235,7 @@ dialog_update(GwyUnitoolState *state,
      * results on very flat surfaces*/
     area = MAX(area, projarea);
 
+    state->value_format->precision = 2;
     gwy_unitool_update_label(state->value_format, controls->ra, ra);
     gwy_unitool_update_label(state->value_format, controls->rms, rms);
     g_snprintf(buffer, sizeof(buffer), "%2.3g", skew);

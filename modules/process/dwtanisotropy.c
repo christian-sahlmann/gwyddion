@@ -111,7 +111,7 @@ static gboolean
 dwt_anisotropy(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *dialog;
-    GwyDataField *dfield, *mask, *maskfield;
+    GwyDataField *dfield, *mask;
     GwyDataLine *wtcoefs;
     DWTAnisotropyArgs args;
     gboolean ok;
@@ -151,11 +151,11 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     }
     else
     {
-	mask = gwy_data_field_new(gwy_data_field_get_xres(dfield),
+	mask = GWY_DATA_FIELD(gwy_data_field_new(gwy_data_field_get_xres(dfield),
 				       gwy_data_field_get_yres(dfield),
 				       gwy_data_field_get_xreal(dfield),
 				       gwy_data_field_get_yreal(dfield),
-				       TRUE);
+				       TRUE));
 	gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
 	g_object_unref(mask);
     }
@@ -168,7 +168,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
                             GWY_INTERPOLATION_BILINEAR);
 
 
-    wtcoefs = gwy_data_line_new(10, 10, TRUE);
+    wtcoefs = GWY_DATA_LINE(gwy_data_line_new(10, 10, TRUE));
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
     
     /*justo for sure clamp the lowlimit again*/

@@ -150,7 +150,7 @@ dwt(GwyContainer *data, GwyRunType run)
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
 
-    wtcoefs = gwy_data_line_new(10, 10, TRUE);
+    wtcoefs = GWY_DATA_LINE(gwy_data_line_new(10, 10, TRUE));
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
     gwy_data_field_dwt(dfield, wtcoefs, 1, 4);
 
