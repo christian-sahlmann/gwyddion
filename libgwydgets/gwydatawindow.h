@@ -35,7 +35,13 @@ struct _GwyDataWindow {
     GtkWidget *statusbar;
     GtkWidget *notebook;
     GtkWidget *sidebox;
-    GtkWidget *sidebuttons;  /* unused */
+
+    gint zoom_mode;  /* reserved for future use */
+
+    guint statusbar_context_id;
+    guint statusbar_message_id;
+    gdouble statusbar_mag;
+    const gchar *statusbar_SI_prefix;
 };
 
 struct _GwyDataWindowClass {

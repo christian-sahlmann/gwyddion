@@ -34,6 +34,7 @@
  */
 
 #include <math.h>
+#include <libgwyddion/gwymath.h>
 #include "gwyruler.h"
 
 #define _(x) x
@@ -79,7 +80,6 @@ static void          gwy_ruler_get_property  (GObject        *object,
                                               guint           prop_id,
                                               GValue         *value,
                                               GParamSpec     *pspec);
-static const gchar*  magnitude_to_si_prefix  (gdouble magnitude);
 static gdouble       compute_magnitude       (gdouble max);
 static gdouble       compute_base            (gdouble max,
                                               gdouble basebase);
@@ -584,7 +584,7 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
 
     range = upper - lower;
     mag = compute_magnitude(max);
-    prefix = magnitude_to_si_prefix(mag);
+    prefix = gwy_math_SI_prefix(mag);
     measure = range/mag / pixelsize;
     max /= mag;
 
@@ -680,29 +680,6 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
     }
 
     g_object_unref(layout);
-}
-
-static const gchar*
-magnitude_to_si_prefix(gdouble magnitude)
-{
-    static const gchar *positive[] = {
-        "", "k", "M", "G", "T", "P", "E", "Z", "Y"
-    };
-    static const gchar *negative[] = {
-        "", "m", "µ", "n", "p", "f", "a", "z", "y"
-    };
-    static const gchar *unknown = "?";
-    gint i;
-
-    i = ROUND(log10(magnitude)/3.0);
-    if (i >= 0 && i < G_N_ELEMENTS(positive))
-        return positive[i];
-    if (i <= 0 && -i < G_N_ELEMENTS(negative))
-        return negative[-i];
-    /* FIXME: the vertical ruler text placing routine can't reasonably
-     * break things like 10<sup>-36</sup> to lines */
-    g_warning("magnitude %g outside of prefix range.  FIXME!", magnitude);
-    return unknown;
 }
 
 static gdouble

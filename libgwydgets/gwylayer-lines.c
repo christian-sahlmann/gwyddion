@@ -5,6 +5,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include "gwylayer-lines.h"
 #include "gwydataview.h"
 
@@ -46,16 +47,6 @@ static int        gwy_layer_lines_near_line       (GwyLayerLines *layer,
 static int        gwy_layer_lines_near_point      (GwyLayerLines *layer,
                                                    gdouble xreal,
                                                    gdouble yreal);
-static int        gwy_math_find_nearest_line      (gdouble x,
-                                                   gdouble y,
-                                                   gdouble *d2min,
-                                                   gint n,
-                                                   gdouble *coords);
-static int        gwy_math_find_nearest_point     (gdouble x,
-                                                   gdouble y,
-                                                   gdouble *d2min,
-                                                   gint n,
-                                                   gdouble *coords);
 
 /* Local data */
 
@@ -683,70 +674,6 @@ gwy_layer_lines_near_point(GwyLayerLines *layer,
     if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
         return -1;
     return i;
-}
-
-/*********** FIXME: move it somewhere ************/
-static int
-gwy_math_find_nearest_line(gdouble x, gdouble y,
-                           gdouble *d2min,
-                           gint n, gdouble *coords)
-{
-    gint i, m;
-
-    *d2min = G_MAXDOUBLE;
-    g_return_val_if_fail(n > 0, 0);
-    g_return_val_if_fail(coords, 0);
-
-    m = -1;
-    for (i = 0; i < n; i++) {
-        gdouble x0 = *(coords++);
-        gdouble y0 = *(coords++);
-        gdouble x1 = *(coords++);
-        gdouble y1 = *(coords++);
-        gdouble vx, vy, d;
-
-        vx = y1 - y0;
-        vy = x0 - x1;
-        if (vx*(y - y0) < vy*(x - x0))
-            continue;
-        if (vx*(y1 - y) < vy*(x1 - x))
-            continue;
-        if (vx == 0.0 && vy == 0.0)
-            continue;
-        d = vx*(x - x0) + vy*(y - y0);
-        d *= d/(vx*vx + vy*vy);
-        if (d < *d2min) {
-            *d2min = d;
-            m = i;
-        }
-    }
-    return m;
-}
-
-static int
-gwy_math_find_nearest_point(gdouble x, gdouble y,
-                            gdouble *d2min,
-                            gint n, gdouble *coords)
-{
-    gint i, m;
-
-    *d2min = G_MAXDOUBLE;
-    g_return_val_if_fail(n > 0, 0);
-    g_return_val_if_fail(coords, 0);
-
-    m = 0;
-    for (i = 0; i < n; i++) {
-        gdouble xx = *(coords++);
-        gdouble yy = *(coords++);
-        gdouble d;
-
-        d = (xx - x)*(xx - x) + (yy - y)*(yy - y);
-        if (d < *d2min) {
-            *d2min = d;
-            m = i;
-        }
-    }
-    return m;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

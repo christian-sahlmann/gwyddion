@@ -4,6 +4,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include "gwylayer-select.h"
 #include "gwydataview.h"
 
@@ -34,11 +35,6 @@ static void       gwy_layer_select_restore           (GwyDataViewLayer *layer);
 static int        gwy_layer_select_near_point        (GwyLayerSelect *layer,
                                                       gdouble xreal,
                                                       gdouble yreal);
-static int        gwy_math_find_nearest_point        (gdouble x,
-                                                      gdouble y,
-                                                      gdouble *d2min,
-                                                      gint n,
-                                                      gdouble *coords);
 
 /* Local data */
 
@@ -496,33 +492,6 @@ gwy_layer_select_near_point(GwyLayerSelect *layer,
     if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
         return -1;
     return i;
-}
-
-/*********** FIXME: move it somewhere ************/
-static int
-gwy_math_find_nearest_point(gdouble x, gdouble y,
-                            gdouble *d2min,
-                            gint n, gdouble *coords)
-{
-    gint i, m;
-
-    *d2min = G_MAXDOUBLE;
-    g_return_val_if_fail(n > 0, 0);
-    g_return_val_if_fail(coords, 0);
-
-    m = 0;
-    for (i = 0; i < n; i++) {
-        gdouble xx = *(coords++);
-        gdouble yy = *(coords++);
-        gdouble d;
-
-        d = (xx - x)*(xx - x) + (yy - y)*(yy - y);
-        if (d < *d2min) {
-            *d2min = d;
-            m = i;
-        }
-    }
-    return m;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

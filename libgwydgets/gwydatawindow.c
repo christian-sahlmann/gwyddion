@@ -6,6 +6,7 @@
 
 #include <libprocess/datafield.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include "gwydgets.h"
 
 #define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
@@ -18,10 +19,13 @@
 static void     gwy_data_window_class_init     (GwyDataWindowClass *klass);
 static void     gwy_data_window_init           (GwyDataWindow *data_window);
 
-static void     measure_changed                (GwyDataWindow *data_window,
-                                                GtkAllocation *allocation,
-                                                gpointer data);
+static void     measure_changed                (GwyDataWindow *data_window);
 static void     lame_window_resize             (GwyDataWindow *data_window);
+static void     compute_statusbar_units        (GwyDataWindow *data_window);
+static void     gwy_data_view_update_statusbar (GwyDataView *data_view,
+                                                GdkEventMotion *event,
+                                                GwyDataWindow *data_window);
+
 /* Local data */
 
 static GtkWidgetClass *parent_class = NULL;
@@ -74,7 +78,9 @@ gwy_data_window_init(GwyDataWindow *data_window)
     data_window->notebook = NULL;
     data_window->table = NULL;
     data_window->sidebox = NULL;
-    data_window->sidebuttons = NULL;
+    data_window->zoom_mode = 0;
+    data_window->statusbar_context_id = 0;
+    data_window->statusbar_message_id = 0;
 }
 
 /**
@@ -118,6 +124,12 @@ gwy_data_window_new(GwyDataView *data_view)
 
     data_window->statusbar = gtk_statusbar_new();
     gtk_box_pack_start(GTK_BOX(vbox), data_window->statusbar, FALSE, FALSE, 0);
+    data_window->statusbar_context_id
+        = gtk_statusbar_get_context_id(GTK_STATUSBAR(data_window->statusbar),
+                                       "coordinates");
+    compute_statusbar_units(data_window);
+    g_signal_connect(GTK_WIDGET(data_view), "motion_notify_event",
+                     G_CALLBACK(gwy_data_view_update_statusbar), data_window);
 
     data_window->table = gtk_table_new(2, 2, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), data_window->table, TRUE, TRUE, 0);
@@ -165,32 +177,6 @@ gwy_data_window_new(GwyDataView *data_view)
     gtk_notebook_append_page(GTK_NOTEBOOK(data_window->notebook),
                              widget, NULL);
 
-    /* FIXME: this makes the buttons extremely wide
-     * data_window->sidebuttons = gtk_hbutton_box_new();*/
-    /*
-    data_window->sidebuttons = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(data_window->sidebox), data_window->sidebuttons,
-                       FALSE, FALSE, 0);
-
-    widget = gtk_button_new_with_label("1:1");
-    gtk_box_pack_start(GTK_BOX(data_window->sidebuttons), widget,
-                       FALSE, FALSE, 0);
-    g_signal_connect(widget, "clicked",
-                     G_CALLBACK(zoom_set), GINT_TO_POINTER(10000));
-
-    widget = gtk_button_new_with_label("In");
-    gtk_box_pack_start(GTK_BOX(data_window->sidebuttons), widget,
-                       FALSE, FALSE, 0);
-    g_signal_connect(widget, "clicked",
-                     G_CALLBACK(zoom_set), GINT_TO_POINTER(1));
-
-    widget = gtk_button_new_with_label("Out");
-    gtk_box_pack_start(GTK_BOX(data_window->sidebuttons), widget,
-                       FALSE, FALSE, 0);
-    g_signal_connect(widget, "clicked",
-                     G_CALLBACK(zoom_set), GINT_TO_POINTER(-1));
-                     */
-
     /* show everything except the table */
     gtk_widget_show_all(vbox);
 
@@ -217,9 +203,7 @@ gwy_data_window_get_data_view(GwyDataWindow *data_window)
 }
 
 static void
-measure_changed(GwyDataWindow *data_window,
-                GtkAllocation *allocation,
-                gpointer user_data)
+measure_changed(GwyDataWindow *data_window)
 {
     gdouble excess, pos, real;
     GwyDataView *data_view;
@@ -306,6 +290,53 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
     rzoom = exp(log(ZOOM_FACTOR)*floor(log(rzoom)/log(ZOOM_FACTOR) + 0.5));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(data_window->data_view), rzoom);
     lame_window_resize(data_window);
+}
+
+static void
+compute_statusbar_units(GwyDataWindow *data_window)
+{
+    GwyDataView *data_view;
+    GwyDataField *dfield;
+    GwyContainer *data;
+    gdouble mag;
+
+    data_view = GWY_DATA_VIEW(data_window->data_view);
+    data = gwy_data_view_get_data(data_view);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    mag = MIN(gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield),
+              gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield));
+    mag = exp(floor(log(mag)/G_LN10)*G_LN10);
+    data_window->statusbar_mag = mag;
+    gwy_debug("%s: %g", __FUNCTION__, data_window->statusbar_mag);
+    data_window->statusbar_SI_prefix = gwy_math_SI_prefix(mag);
+}
+
+static void
+gwy_data_view_update_statusbar(GwyDataView *data_view,
+                               GdkEventMotion *event,
+                               GwyDataWindow *data_window)
+{
+    GtkStatusbar *sbar = GTK_STATUSBAR(data_window->statusbar);
+    guint id;
+    gdouble xreal, yreal;
+    gint x, y;
+    gchar label[100];
+
+    x = event->x;
+    y = event->y;
+    gwy_data_view_coords_xy_clamp(data_view, &x, &y);
+    gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
+    g_snprintf(label, sizeof(label), "%.1f %sm, %.1f %sm",
+               xreal/data_window->statusbar_mag,
+               data_window->statusbar_SI_prefix,
+               yreal/data_window->statusbar_mag,
+               data_window->statusbar_SI_prefix);
+    id = gtk_statusbar_push(sbar, data_window->statusbar_context_id, label);
+    if (data_window->statusbar_message_id)
+        gtk_statusbar_remove(sbar,
+                             data_window->statusbar_context_id,
+                             data_window->statusbar_message_id);
+    data_window->statusbar_message_id = id;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
