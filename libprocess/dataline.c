@@ -1282,7 +1282,7 @@ gwy_data_line_fft_hum(gint direction,
  * @ia: imaginary input
  * @rb: real output
  * @ib: imaginary output
- * @gint (*fft)(): fft alorithm
+ * @(*fft)(): fft alorithm
  * @windowing: windowing mode
  * @direction: FFT direction (1 or -1)
  * @interpolation: interpolation mode
