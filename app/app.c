@@ -101,6 +101,26 @@ main(int argc, char *argv[])
     return 0;
 }
 
+#ifdef WIN32
+#define _X86_
+#include <windef.h>
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+            HINSTANCE hPrevInstance,
+            LPSTR     lpCmdLine,
+            int       nCmdShow )
+{
+
+    int argc = 1;
+    char* prgname = "STREAM.exe";
+    char** argv=&prgname;
+
+    return main(argc, argv);
+
+}
+#endif
+
+
 static gboolean
 gwy_app_quit(void)
 {
