@@ -4,11 +4,25 @@
 #define __GWY_GWYMACROS_H__
 
 #include <glib/gmessages.h>
+#include <glib/gmacros.h>
 
 #define _(x) (x)
 
-/* FIXME: doesn't behive as a single statement */
-#define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
+#define gwy_object_unref(x) \
+    G_STMT_START \
+    if (x) \
+        g_object_unref(x); \
+    (x) = NULL; \
+    G_STMT_END
+
+#define GWY_SWAP(t, x, y) \
+    do { \
+    t safe ## x ## y; \
+    safe ## x ## y = x; \
+    x = y; \
+    y = safe ## x ## y; \
+    } while (0)
+
 
 #ifdef __cplusplus
 extern "C" {
