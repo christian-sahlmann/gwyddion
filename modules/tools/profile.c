@@ -136,7 +136,10 @@ static void
 layer_setup(GwyUnitoolState *state)
 {
     g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer, "max_lines", NPROFILE, NULL);
+    g_object_set(state->layer,
+                 "max_lines", NPROFILE,
+                 "line_numbers", TRUE,
+                 NULL);
 }
 
 static GtkWidget*

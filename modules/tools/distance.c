@@ -120,7 +120,10 @@ static void
 layer_setup(GwyUnitoolState *state)
 {
     g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer, "max_lines", NLINES, NULL);
+    g_object_set(state->layer,
+                 "max_lines", NLINES,
+                 "line_numbers", TRUE,
+                 NULL);
 }
 
 static GtkWidget*
