@@ -89,6 +89,9 @@ gwy_app_menu_set_sensitive_array
 gwy_app_menu_set_sensitive_both
 gwy_app_menu_set_recent_files_menu
 gwy_app_toolbox_update_state
+gwy_option_menu_data_window
+gwy_option_menu_data_window_set_history
+gwy_option_menu_data_window_get_history
 gwy_app_run_process_func_cb
 gwy_app_run_graph_func_cb
 </SECTION>

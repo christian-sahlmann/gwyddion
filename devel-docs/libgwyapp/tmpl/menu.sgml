@@ -147,6 +147,37 @@ Menu functions.
 @sens_data: 
 
 
+<!-- ##### FUNCTION gwy_option_menu_data_window ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@none_label: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_data_window_set_history ##### -->
+<para>
+
+</para>
+
+@option_menu: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_data_window_get_history ##### -->
+<para>
+
+</para>
+
+@option_menu: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_app_run_process_func_cb ##### -->
 <para>
 

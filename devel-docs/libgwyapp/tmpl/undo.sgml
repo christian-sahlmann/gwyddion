@@ -1,0 +1,79 @@
+<!-- ##### SECTION Title ##### -->
+undo
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_app_undo_checkpoint ##### -->
+<para>
+
+</para>
+
+@data: 
+@Varargs: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@what: 
+
+
+<!-- ##### FUNCTION gwy_app_undo_checkpointv ##### -->
+<para>
+
+</para>
+
+@data: 
+@n: 
+@keys: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_undo_undo ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_app_undo_redo ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_app_data_window_has_undo ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_data_window_has_redo ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_undo_clear ##### -->
+<para>
+
+</para>
+
+@data_window: 
+
+
