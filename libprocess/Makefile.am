@@ -17,12 +17,12 @@ libgwyprocessinclude_HEADERS = \
 	gwyprocess.h \
 	interpolation.h \
 	inttrans.h \
-	morph_lib.h \
 	level.h \
 	linestats.h \
 	simplefft.h \
-	stats.h \
-	tip.h
+	stats.h
+#       morph_lib.h
+#	tip.h
 
 lib_LTLIBRARIES = libgwyprocess.la
 
@@ -51,10 +51,10 @@ libgwyprocess_la_SOURCES = \
 	inttrans.c \
 	level.c \
 	linestats.c \
-	morph_lib.c \
 	simplefft.c \
-	stats.c \
-	tip.c
+	stats.c 
+#       morph_lib.c
+#	tip.c
 
 #noinst_PROGRAMS = test
 #

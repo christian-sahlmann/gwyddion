@@ -32,12 +32,13 @@ process_PROGRAMS = \
 	scars.so \
 	shade.so \
 	slope_dist.so \
-	tip_blind.so \
-	tip_dilation.so \
-	tip_map.so \
-	tip_model.so \
-	tip_reconstruction.so \
 	unrotate.so
+#	tip_blind.so 
+#	tip_dilation.so 
+#	tip_map.so 
+#	tip_model.so 
+#	tip_reconstruction.so 
+	
 
 #############################################################################
 # If you know what an alphabet is, please keep the alphabetic order.
@@ -128,20 +129,20 @@ shade_so_LDFLAGS = $(module_ldflags),shade.so
 slope_dist_so_SOURCES = slope_dist.c
 slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
 
-tip_blind_so_SOURCES = tip_blind.c
-tip_blind_so_LDFLAGS = $(module_ldflags),tip_blind.so
+#tip_blind_so_SOURCES = tip_blind.c
+#tip_blind_so_LDFLAGS = $(module_ldflags),tip_blind.so
 
-tip_dilation_so_SOURCES = tip_dilation.c
-tip_dilation_so_LDFLAGS = $(module_ldflags),tip_dilation.so
+#tip_dilation_so_SOURCES = tip_dilation.c
+#tip_dilation_so_LDFLAGS = $(module_ldflags),tip_dilation.so
 
-tip_map_so_SOURCES = tip_map.c
-tip_map_so_LDFLAGS = $(module_ldflags),tip_map.so
+#tip_map_so_SOURCES = tip_map.c
+#tip_map_so_LDFLAGS = $(module_ldflags),tip_map.so
 
-tip_model_so_SOURCES = tip_model.c
-tip_model_so_LDFLAGS = $(module_ldflags),tip_model.so
+#tip_model_so_SOURCES = tip_model.c
+#tip_model_so_LDFLAGS = $(module_ldflags),tip_model.so
 
-tip_reconstruction_so_SOURCES = tip_reconstruction.c
-tip_reconstruction_so_LDFLAGS = $(module_ldflags),tip_reconstruction.so
+#tip_reconstruction_so_SOURCES = tip_reconstruction.c
+#tip_reconstruction_so_LDFLAGS = $(module_ldflags),tip_reconstruction.so
 
 unrotate_so_SOURCES = unrotate.c
 unrotate_so_LDFLAGS = $(module_ldflags),unrotate.so
