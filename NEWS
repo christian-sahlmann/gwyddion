@@ -1,8 +1,19 @@
+1.0cvs20040328
+
+1.1
+- Raw file import supports named presets of import parameters.
+- Raw file import no longer clears text/binary parameters when switching
+  to the other type.
+- It is possible to change mask color in Watershed.
+- Bug preventing new windows from appearing in Data Artithmetic in some
+  window managers was fixed.
+
 
 1.0
-- data can be exported to bitmaps with rules, units, scale, etc.
-- physical unit handling was improved
-- tons of bugfixes
+- Data can be exported to bitmaps with rules, units, scale, etc.
+- Physical unit handling was improved.
+- Tons of bugfixes.
+
 
 0.99.1
-- release candidate 1 for v1.0
+- Release candidate 1 for v1.0.
