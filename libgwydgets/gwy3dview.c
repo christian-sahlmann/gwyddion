@@ -1169,6 +1169,7 @@ gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
 /**
  * gwy_3d_view_set_max_view_scale:
  * @gwy3dview: A 3D data view widget.
+ * @new_max_scale:
  *
  *
  *
@@ -1204,7 +1205,7 @@ gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
 /**
  * gwy_3d_view_set_min_view_scale:
  * @gwy3dview: A 3D data view widget.
- *
+ * @new_min_scale:
  *
  *
  * Returns:

@@ -149,9 +149,9 @@ gwy_3d_window_finalize(GObject *object)
 
 /**
  * gwy_3d_window_new:
- * @data_view: A #GwyDataView containing the data-displaying widget to show.
+ * @gwy3dview: A #Gwy3DView containing the data-displaying widget to show.
  *
- * Creates a new data displaying window.
+ * Creates a new OpenGL 3D data displaying window.
  *
  * Returns: A newly created widget, as #GtkWidget.
  *

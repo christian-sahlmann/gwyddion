@@ -210,7 +210,7 @@ gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
 
 /**
  * gwy_gl_material_get_name:
- * @glmaterial: A #GwyGLMaterial.
+ * @gl_material: A #GwyGLMaterial.
  *
  * Returns the name of Open GL material @glmaterial.
  *
@@ -228,7 +228,7 @@ gwy_gl_material_get_name(GwyGLMaterial *glmaterial)
 
 /**
  * gwy_gl_material_set_name:
- * @glmaterial: A #GwyGLMaterial.
+ * @gl_material: A #GwyGLMaterial.
  * @name: A new name of the Open GL material
  *
  * Sets the name of a Open GL material.

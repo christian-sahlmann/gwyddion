@@ -151,6 +151,16 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
     klass->updated = NULL;
     klass->redrawn = NULL;
 
+/**
+ * GwyDataView::updated:
+ * @gwydataview: The #GwyDataView which received the signal.
+ * @user_data: User data set when the signal handler was connected.
+ *
+ * The ::updated signal is emitted when the displayed data, or the way they
+ * are displayed, changes.  However, actual redraw takes place later in the
+ * main Gtk+ loop, so if you want to e.g. actualize a thumbnail, connect
+ * to ::redrawn instead.
+ */
     data_view_signals[UPDATED] =
         g_signal_new("updated",
                      G_OBJECT_CLASS_TYPE(object_class),
@@ -159,6 +169,15 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
+
+/**
+ * GwyDataView::redrawn:
+ * @gwydataview: The #GwyDataView which received the signal.
+ * @user_data: User data set when the signal handler was connected.
+ *
+ * The ::redrawn signal is emitted when #GwyDataView actually redraws itself
+ * after an update.
+ */
     data_view_signals[REDRAWN] =
         g_signal_new("redrawn",
                      G_OBJECT_CLASS_TYPE(object_class),

@@ -112,6 +112,14 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
 
     klass->title_changed = NULL;
 
+/**
+ * GwyDataWindow::title-changed:
+ * @gwydatawindow: The #GwyDataWindow which received the signal.
+ * @user_data: User data set when the signal handler was connected.
+ *
+ * The ::title-changed signal is emitted when the title of #GwyDataWindow
+ * changes.
+ */
     data_window_signals[TITLE_CHANGED] =
         g_signal_new("title_changed",
                      G_OBJECT_CLASS_TYPE(object_class),

@@ -794,6 +794,14 @@ gwy_grad_sphere_coords_changed(GwySphereCoords *sphere_coords,
         gwy_grad_sphere_update(grad_sphere);
 }
 
+/**
+ * gwy_grad_sphere_get_palette:
+ * @grad_sphere: a #GwyGradSphere.
+ *
+ * Returns the palette a gradient sphere uses.
+ *
+ * Returns: The palette.
+ **/
 GwyPalette*
 gwy_grad_sphere_get_palette(GwyGradSphere *grad_sphere)
 {
@@ -802,6 +810,13 @@ gwy_grad_sphere_get_palette(GwyGradSphere *grad_sphere)
     return grad_sphere->palette;
 }
 
+/**
+ * gwy_grad_sphere_set_palette:
+ * @grad_sphere: a #GwyGradSphere.
+ * @palette: A palette @grad_sphere should use.
+ *
+ * Sets the palette a gradient sphere uses.
+ **/
 void
 gwy_grad_sphere_set_palette(GwyGradSphere *grad_sphere,
                             GwyPalette *palette)
