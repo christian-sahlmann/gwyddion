@@ -60,6 +60,11 @@ gwy_app_init(void)
 
     gwy_app_init_set_window_icon();
 
+    gtk_rc_parse_string("style \"cornerbutton\" {\n"
+                        "GtkButton::focus_line_width = 0\n"
+                        "GtkButton::focus_padding = 0\n"
+                        "}\n"
+                        "widget \"*.cornerbutton\" style \"cornerbutton\"");
 }
 
 static void

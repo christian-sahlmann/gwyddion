@@ -81,7 +81,7 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
     g_object_unref(gmodel);
 
     if ((graph_view = g_object_get_data(G_OBJECT(data_window),
-                                        "gwy-app-graph-list-view"))) {
+                                        "gwy-app-graph-list-window"))) {
         /* TODO: update the view */
     }
 }
@@ -111,6 +111,10 @@ gwy_app_graph_list(GwyDataWindow *data_window)
     gtk_box_pack_start(GTK_BOX(buttonbox), button, FALSE, FALSE, 0);
     button = gtk_button_new_with_mnemonic(_("_Hide All"));
     gtk_box_pack_start(GTK_BOX(buttonbox), button, FALSE, FALSE, 0);
+
+    g_object_set_data(G_OBJECT(data_window), "gwy-app-graph-list-window",
+                      window);
+    g_object_set_data(G_OBJECT(window), "gwy-app-graph-list-view", list);
 
     gtk_widget_show_all(vbox);
 
@@ -205,7 +209,7 @@ gwy_graph_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
         break;
 
         case GRAPHLIST_NCURVES:
-        g_snprintf(s, sizeof(s), "%d", gmodel->ncurves);
+        g_snprintf(s, sizeof(s), "%d", gwy_graph_model_get_n_curves(gmodel));
         g_object_set(cell, "text", s, NULL);
         break;
 
