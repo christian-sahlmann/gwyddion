@@ -390,7 +390,7 @@ gwy_app_recent_file_list_prune(Controls *controls)
     do {
         gtk_tree_model_get(GTK_TREE_MODEL(controls->store), &iter,
                            FILELIST_RAW, &rf, -1);
-        g_printerr("<%s>\n", rf->file_utf8);
+        gwy_debug("<%s>\n", rf->file_utf8);
         if (!g_file_test(rf->file_utf8, G_FILE_TEST_IS_REGULAR)) {
             if (rf->thumb_sys && rf->thumb_state != FILE_STATE_FAILED)
                 unlink(rf->thumb_sys);
