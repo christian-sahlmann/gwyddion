@@ -63,6 +63,7 @@ static void       gwy_app_3d_window_orphaned       (GtkWidget *view,
                                                     GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow,
                                                     GtkWidget *view);
+static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
 
 /*****************************************************************************
  *                                                                           *
@@ -739,7 +740,7 @@ gwy_app_3d_view_cb(void)
 GtkWidget*
 gwy_app_3d_window_create(GwyDataWindow *data_window)
 {
-    GtkWidget *gwy3dview, *gwy3dwindow, *view;
+    GtkWidget *gwy3dview, *gwy3dwindow, *view, *button;
     GwyContainer *data;
     gchar *name, *title;
 
@@ -760,7 +761,11 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     g_free(title);
     g_free(name);
 
+    button = gwy_stock_like_button_new(_("Export"), GTK_STOCK_SAVE);
+    gwy_3d_window_add_action_widget(GWY_3D_WINDOW(gwy3dwindow), button);
+
     current_3d = g_list_append(current_3d, gwy3dwindow);
+    /* TODO: change title on "title-changed" */
     g_signal_connect_swapped(view, "updated",
                              G_CALLBACK(gwy_3d_view_update), gwy3dview);
     g_signal_connect(view, "destroy",
@@ -769,6 +774,8 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
                      G_CALLBACK(gwy_app_3d_window_set_current), NULL);
     g_signal_connect(gwy3dwindow, "destroy",
                      G_CALLBACK(gwy_app_3d_window_destroyed), view);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_3d_window_export), gwy3dwindow);
 
     gtk_widget_show_all(gwy3dwindow);
     gtk_window_present(GTK_WINDOW(gwy3dwindow));
@@ -854,6 +861,7 @@ gwy_app_3d_window_remove(GtkWidget *window)
                    window);
         return;
     }
+    g_free(g_object_get_data(G_OBJECT(item->data), "gwy-app-export-filename"));
     current_3d = g_list_delete_link(current_3d, item);
     if (current_3d)
         gwy_app_3d_window_set_current(current_3d->data);
@@ -1191,6 +1199,85 @@ gwy_app_clean_up_data(GwyContainer *data)
     gwy_container_remove_by_prefix(data, "/0/select");
 }
 
+static void
+gwy_app_save_3d_export(GtkWidget *button, Gwy3DWindow *gwy3dwindow)
+{
+    const gchar *filename;
+    gchar *filename_sys, *filename_utf8;
+    GdkPixbuf *pixbuf;
+    GtkWidget *dialog, *gwy3dview;
+    GError *err = NULL;
+
+    gwy3dview = gwy_3d_window_get_3d_view(GWY_3D_WINDOW(gwy3dwindow));
+
+    dialog = gtk_widget_get_toplevel(button);
+    filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(dialog));
+    filename_sys = g_strdup(filename);
+    gtk_widget_destroy(dialog);
+
+    pixbuf = gwy_3d_view_get_pixbuf(GWY_3D_VIEW(gwy3dview), 0, 0);
+    filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
+    if (!gdk_pixbuf_save(pixbuf, filename_sys, "png", &err, NULL)) {
+        dialog = gtk_message_dialog_new(NULL,
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_ERROR,
+                                        GTK_BUTTONS_OK,
+                                        "Cannot save report to %s.\n%s\n",
+                                        filename_utf8,
+                                        err->message);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        g_clear_error(&err);
+    }
+    g_free(filename_sys);
+    g_object_unref(pixbuf);
+    g_free(g_object_get_data(G_OBJECT(gwy3dwindow), "gwy-app-export-filename"));
+    g_object_set_data(G_OBJECT(gwy3dwindow), "gwy-app-export-filename",
+                      filename_utf8);
+}
+
+static void
+gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
+{
+    GwyContainer *data;
+    GtkWidget *dialog, *gwy3dview;
+    const gchar *filename_utf8;
+    gchar *filename_sys;
+    gboolean need_free_utf = FALSE;
+
+    gwy3dview = gwy_3d_window_get_3d_view(gwy3dwindow);
+    data = gwy_3d_view_get_data(GWY_3D_VIEW(gwy3dview));
+
+    filename_utf8 = g_object_get_data(G_OBJECT(gwy3dwindow),
+                                      "gwy-app-export-filename");
+    if (!filename_utf8) {
+        if (gwy_container_gis_string_by_name(data, "/filename",
+                                             (const guchar**)&filename_utf8)) {
+            /* FIXME: this is ugly, invent a better filename */
+            filename_utf8 = g_strconcat(filename_utf8, ".png", NULL);
+            need_free_utf = TRUE;
+        }
+        else
+            filename_utf8 = "3d.png";
+    }
+    filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
+    if (need_free_utf)
+        g_free((gpointer)filename_utf8);
+
+    dialog = gtk_file_selection_new(_("Export 3D View"));
+    gtk_file_selection_set_filename(GTK_FILE_SELECTION(dialog), filename_sys);
+    g_free(filename_sys);
+
+    g_signal_connect(GTK_FILE_SELECTION(dialog)->ok_button, "clicked",
+                     G_CALLBACK(gwy_app_save_3d_export), gwy3dwindow);
+    g_signal_connect_swapped(GTK_FILE_SELECTION(dialog)->cancel_button,
+                             "clicked",
+                             G_CALLBACK(gtk_widget_destroy), dialog);
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(gwy3dwindow));
+    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_widget_show_all(dialog);
+}
+
 void
 gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
                              gboolean defaultc)
@@ -1270,7 +1357,7 @@ gwy_app_show_kill_cb(void)
  * @GWY_APP_WINDOW_TYPE_3D: 3D view window.
  * @GWY_APP_WINDOW_TYPE_ANY: Window of any type.
  *
- * Application window types..
+ * Application window types.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
