@@ -1,17 +1,21 @@
-- Document GWYPLUGINLIB, add to NEWS
-- Color range tool -- add histogram
 - I18n under MS Windows
+- IColorange: fix remaining graph interaction issues, figure out what to do
+  when we are used on data that have both selection and min/max set (probably
+  switch to USE_HISTOGRAM and use the latter)
+- Document GWYPLUGINLIB, add to NEWS
+- Document new layer numbering properties
+- Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
+  Some function duplicating only a given container parts is needed
 - Do nightly CVS build from a clean checkout, this will also stop the silly
-  configure and NEWS modifications
+  configure and NEWS modifications; should be done as a part of move to sf
 - Make Ctrl-S save data associated with current window of whatever type, not
   with current data window -- or maybe better, switch data windows when other
   windows are switched
 - Use "row-changed" singal in graphlist instead of queue draw
 - Remember file open/save dialog size
 - Generate module list to docs, add at least short descriptions
-- Keep theme colors in GwyColorAxis and graph widgets
-  GwyGradSphere background is strangely shifted in pixmap themes
+- GwyGradSphere background is strangely shifted in pixmap themes
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Register application/x-gwyddion MIME types, on Win32 and Gnome
 - Finish Spot remove
