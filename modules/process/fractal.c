@@ -355,14 +355,14 @@ fractal_dialog_update(FractalControls *controls,
     {
         gwy_data_field_fractal_partitioning(dfield, xline, yline, args->interp);
         args->result = gwy_data_field_fractal_partitioning_dim(xline, yline, &a, &b);
-        printf("dim_part = %f\n", args->result);
+/*        printf("dim_part = %f\n", args->result);*/
         label = g_string_new("Partitioning");
     }
     else if (args->out == GWY_FRACTAL_CUBECOUNTING)
     {
         gwy_data_field_fractal_cubecounting(dfield, xline, yline, args->interp);
         args->result = gwy_data_field_fractal_cubecounting_dim(xline, yline, &a, &b);
-        printf("dim_cube = %f\n", args->result);
+/*        printf("dim_cube = %f\n", args->result);*/
         label = g_string_new("Cube counting");
         
     }
@@ -370,12 +370,12 @@ fractal_dialog_update(FractalControls *controls,
     {
         gwy_data_field_fractal_triangulation(dfield, xline, yline, args->interp);
         args->result = gwy_data_field_fractal_triangulation_dim(xline, yline, &a, &b);
-        printf("dim_tri = %f\n", args->result);
+/*        printf("dim_tri = %f\n", args->result);*/
         label = g_string_new("Triangulation");
     }
     else if (args->out == GWY_FRACTAL_PSDF)
     {
-/*        gwy_data_field_fractal_triangulation(dfield, xline, yline, args->interp);*/
+        gwy_data_field_fractal_psdf(dfield, xline, yline, args->interp);
         label = g_string_new("Power spectrum");
     }
     else return;
@@ -391,19 +391,24 @@ fractal_dialog_update(FractalControls *controls,
     gwy_graph_add_datavalues(controls->graph, xline->data, yline->data, xline->res,
                              label, params);    
 
-    xfit = gwy_data_line_new(2, 2, FALSE);
-    yfit = gwy_data_line_new(2, 2, FALSE);   
-    xfit->data[0] = xline->data[0];
-    xfit->data[1] = xline->data[xline->res-1];
-    yfit->data[0] = xfit->data[0]*a + b;
-    yfit->data[1] = xfit->data[1]*a + b;;
+    xfit = gwy_data_line_new(xline->res, xline->res, FALSE);
+    yfit = gwy_data_line_new(xline->res, xline->res, FALSE);   
+    for (i=0; i<xline->res; i++)
+    {
+        xfit->data[i] = xline->data[i];
+        yfit->data[i] = xfit->data[i]*a + b;
+        printf("%g %g\n",xfit->data[i], yfit->data[i]);
+    }
    
     params = g_new(GwyGraphAreaCurveParams, 1);
+    label = g_string_new("fit");
+    
     params->is_line = 1;
     params->is_point = 0;
-    params->color.pixel = 0xff000000; 
-/*    gwy_graph_add_datavalues(controls->graph, xfit->data, yfit->data, xfit->res, 
-                             label, params);*/
+    params->line_size = 1;
+    params->color.pixel = 0x00000000; 
+    gwy_graph_add_datavalues(controls->graph, xfit->data, yfit->data, xline->res, 
+                             label, params);
 }
 
 static void
