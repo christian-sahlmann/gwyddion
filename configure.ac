@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.5cvs20041003, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.5cvs20041004, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -169,6 +169,7 @@ AC_CHECK_FUNCS([setenv])
 dnl I18n stuff
 GETTEXT_PACKAGE=gwyddion
 AM_GLIB_GNU_GETTEXT
+XGETTEXT="$XGETTEXT --from-code=UTF-8"
 LIBS="$LIBS $INTLLIBS"
 ALL_LINGUAS=
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Gettext package name])
