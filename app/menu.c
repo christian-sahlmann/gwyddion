@@ -52,12 +52,14 @@ enum {
     THUMBNAIL_SIZE = 16
 };
 
-static void   gwy_app_update_last_process_func   (GtkWidget *menu,
-                                                  const gchar *name);
-static void   setup_sensitivity_keys             (void);
-static gchar* fix_recent_file_underscores        (gchar *s);
-static void   gwy_option_menu_data_window_append (GwyDataWindow *data_window,
-                                                  GtkWidget *menu);
+static void       gwy_app_update_last_process_func  (GtkWidget *menu,
+                                                     const gchar *name);
+static void       setup_sensitivity_keys            (void);
+static gchar*     fix_recent_file_underscores       (gchar *s);
+static void       gwy_option_menu_data_window_append(GwyDataWindow *data_window,
+                                                     GtkWidget *menu);
+static GtkWidget* find_label_of_repeat_last_item    (GtkWidget *menu,
+                                                     const gchar *key);
 
 static GQuark sensitive_key = 0;
 static GQuark sensitive_state_key = 0;
@@ -276,32 +278,17 @@ static void
 gwy_app_update_last_process_func(GtkWidget *menu,
                                  const gchar *name)
 {
-    static GtkWidget *label = NULL;
-    GtkWidget *item;
+    static GtkWidget *repeat_label = NULL;
+    static GtkWidget *reshow_label = NULL;
     const gchar *menu_path;
     gsize len;
     gchar *s, *mp;
-    GList *l;
 
     g_object_set_data(G_OBJECT(menu), "last-func", (gpointer)name);
-    /* Find the "run-last-item" menu item
-     * FIXME: this is very fragile */
-    if (!label) {
-        while (GTK_IS_BIN(menu))
-            menu = GTK_BIN(menu)->child;
-        item = GTK_WIDGET(GTK_MENU_SHELL(menu)->children->data);
-        menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(item));
-        for (l = GTK_MENU_SHELL(menu)->children; l; l = g_list_next(l)) {
-            if (g_object_get_data(G_OBJECT(l->data), "run-last-item"))
-                break;
-        }
-        if (!l) {
-            g_warning("Cannot find `Last Used' menu item");
-            return;
-        }
-        item = GTK_WIDGET(l->data);
-        label = GTK_BIN(item)->child;
-    }
+    if (!repeat_label)
+        repeat_label = find_label_of_repeat_last_item(menu, "run-last-item");
+    if (!reshow_label)
+        reshow_label = find_label_of_repeat_last_item(menu, "show-last-item");
 
     menu_path = gwy_process_func_get_menu_path(name);
     menu_path = strrchr(menu_path, '/');
@@ -311,10 +298,48 @@ gwy_app_update_last_process_func(GtkWidget *menu,
     if (g_str_has_suffix(menu_path, "..."))
         len -= 3;
     mp = gwy_strkill(g_strndup(menu_path, len), "_");
-    s = g_strconcat(_("_Last Used"), " (", mp, ")", NULL);
-    gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
+
+    if (repeat_label) {
+        s = g_strconcat(_("Repeat Last"), " (", mp, ")", NULL);
+        gtk_label_set_text_with_mnemonic(GTK_LABEL(repeat_label), s);
+        g_free(s);
+    }
+
+    if (reshow_label) {
+        s = g_strconcat(_("Re-show Last"), " (", mp, ")", NULL);
+        gtk_label_set_text_with_mnemonic(GTK_LABEL(reshow_label), s);
+        g_free(s);
+    }
+
     g_free(mp);
-    g_free(s);
+}
+
+/* Find the "run-last-item" menu item
+ * FIXME: this is fragile */
+static GtkWidget*
+find_label_of_repeat_last_item(GtkWidget *menu,
+                               const gchar *key)
+{
+    GtkWidget *item;
+    GQuark quark;
+    GList *l;
+
+    quark = g_quark_from_string(key);
+    while (GTK_IS_BIN(menu))
+        menu = GTK_BIN(menu)->child;
+    item = GTK_WIDGET(GTK_MENU_SHELL(menu)->children->data);
+    menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(item));
+    for (l = GTK_MENU_SHELL(menu)->children; l; l = g_list_next(l)) {
+        if (g_object_get_qdata(G_OBJECT(l->data), quark))
+            break;
+    }
+    if (!l) {
+        g_warning("Cannot find `%s' menu item", key);
+        return NULL;
+    }
+
+    item = GTK_WIDGET(l->data);
+    return GTK_BIN(item)->child;
 }
 
 void

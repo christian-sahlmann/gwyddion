@@ -9,7 +9,8 @@ Toolbox (gwy_app_main_window_get()):
     "menus":             GList of all toolbox menus
 
 Some item in "<proc>" menu:
-    "run-last-item":     Nonzero if the item is the `Last Used' menu item
+    "run-last-item":     Nonzero if the item is the `Repeat Last' menu item
+    "show-last-item":    Nonzero if the item is the `Re-show Last' menu item
 
 `Recent Files' menu items:
     "filename":          The file name

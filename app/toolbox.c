@@ -18,7 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#define DEBUG 1
+
 #include <string.h>
+#include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwytoolbox.h>
@@ -41,7 +44,7 @@ static GtkWidget* gwy_app_toolbox_create_label (const gchar *text,
                                                 const gchar *id);
 static void       gwy_app_toolbox_showhide_cb  (GtkWidget *button,
                                                 GtkWidget *widget);
-static void       gwy_app_rerun_process_func_cb (void);
+static void       gwy_app_rerun_process_func_cb(gpointer user_data);
 static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
 
@@ -270,6 +273,8 @@ gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
 GtkWidget*
 gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
 {
+    static const gchar *reshow_accel_path = "<proc>/Data Process/Re-show Last";
+    static const gchar *repeat_accel_path = "<proc>/Data Process/Repeat Last";
     GtkWidget *menu, *alignment, *last;
     GtkItemFactory *item_factory;
     GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, 0 };
@@ -288,14 +293,33 @@ gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
 
     /* re-run last item */
     menu = gtk_item_factory_get_widget(item_factory, "<proc>/Data Process");
-    last = gtk_menu_item_new_with_mnemonic(_("_Last Used"));
+
+    last = gtk_menu_item_new_with_mnemonic(_("Re-show Last"));
+    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(last), reshow_accel_path);
+    gtk_accel_map_add_entry(reshow_accel_path, GDK_f, GDK_CONTROL_MASK);
+    g_object_set_data(G_OBJECT(last), "show-last-item", GINT_TO_POINTER(TRUE));
+    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
+    gwy_app_menu_set_sensitive_both(last,
+                                    GWY_MENU_FLAG_DATA
+                                    | GWY_MENU_FLAG_LAST_PROC, 0);
+    g_signal_connect_swapped(last, "activate",
+                             G_CALLBACK(gwy_app_rerun_process_func_cb),
+                             GUINT_TO_POINTER(GWY_RUN_MODAL));
+
+    last = gtk_menu_item_new_with_mnemonic(_("Repeat Last"));
+    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(last), repeat_accel_path);
+    gtk_accel_map_add_entry(repeat_accel_path, GDK_f,
+                            GDK_CONTROL_MASK | GDK_SHIFT_MASK);
     g_object_set_data(G_OBJECT(last), "run-last-item", GINT_TO_POINTER(TRUE));
     gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
     gwy_app_menu_set_sensitive_both(last,
                                     GWY_MENU_FLAG_DATA
                                     | GWY_MENU_FLAG_LAST_PROC, 0);
-    g_signal_connect(last, "activate",
-                     G_CALLBACK(gwy_app_rerun_process_func_cb), NULL);
+    g_signal_connect_swapped(last, "activate",
+                             G_CALLBACK(gwy_app_rerun_process_func_cb),
+                             GUINT_TO_POINTER(GWY_RUN_NONINTERACTIVE));
+
+    gtk_accel_group_lock(gtk_menu_get_accel_group(GTK_MENU(menu)));
 
     return alignment;
 }
@@ -526,9 +550,10 @@ gwy_app_toolbox_showhide_cb(GtkWidget *button,
 }
 
 static void
-gwy_app_rerun_process_func_cb(void)
+gwy_app_rerun_process_func_cb(gpointer user_data)
 {
     GtkWidget *menu;
+    GwyRunType run;
     gchar *name;
 
     menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
@@ -536,6 +561,8 @@ gwy_app_rerun_process_func_cb(void)
     g_return_if_fail(menu);
     name = (gchar*)g_object_get_data(G_OBJECT(menu), "last-func");
     g_return_if_fail(name);
+    run = GPOINTER_TO_UINT(user_data);
+    gwy_debug("run mode = %u", run);
     gwy_app_run_process_func_cb(name);
 }
 
