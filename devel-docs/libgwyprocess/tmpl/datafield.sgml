@@ -2,11 +2,14 @@
 GwyDataField
 
 <!-- ##### SECTION Short_Description ##### -->
-
+array representing 2D data
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+GwyDataField is an object that is used for representation
+of all two-dimensional data matrices. Most of the basic data handling
+and processing functions in Gwyddion are declared here
+as they are connected with GwyDataField.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -16,7 +19,8 @@ GwyDataField
 
 <!-- ##### ENUM GwyFilterType ##### -->
 <para>
-
+Filtering type. Possibilities constist of simple statisical
+and directional filters. 
 </para>
 
 @GWY_FILTER_MEAN: 
@@ -28,7 +32,7 @@ GwyDataField
 
 <!-- ##### ENUM GwyMergeType ##### -->
 <para>
-
+Mask processing merging (namely used in grain processing).
 </para>
 
 @GWY_MERGE_UNION: 
@@ -36,7 +40,7 @@ GwyDataField
 
 <!-- ##### STRUCT GwyDataField ##### -->
 <para>
-
+Basic object for working with 2D data arrays.
 </para>
 
 

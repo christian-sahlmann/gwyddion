@@ -2,7 +2,7 @@
 simplefft
 
 <!-- ##### SECTION Short_Description ##### -->
-
+simple FFT algorithm
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -16,28 +16,28 @@ simplefft
 
 <!-- ##### ENUM GwyWindowingType ##### -->
 <para>
-
+Selection of windowing applied before FFT (if requested).
 </para>
 
-@GWY_WINDOWING_NONE: 
-@GWY_WINDOWING_HANN: 
-@GWY_WINDOWING_HAMMING: 
-@GWY_WINDOWING_BLACKMANN: 
-@GWY_WINDOWING_LANCZOS: 
-@GWY_WINDOWING_WELCH: 
-@GWY_WINDOWING_RECT: 
+@GWY_WINDOWING_NONE: no windowing
+@GWY_WINDOWING_HANN: Hann windowing
+@GWY_WINDOWING_HAMMING: Hamming windowing
+@GWY_WINDOWING_BLACKMANN: Blackmann windowing
+@GWY_WINDOWING_LANCZOS: Lanczos windowing
+@GWY_WINDOWING_WELCH: Welch windowing
+@GWY_WINDOWING_RECT: Rectangular windowing
 
 <!-- ##### ENUM GwyFFTOutputType ##### -->
 <para>
-
+FFT output.
 </para>
 
-@GWY_FFT_OUTPUT_REAL_IMG: 
-@GWY_FFT_OUTPUT_MOD_PHASE: 
-@GWY_FFT_OUTPUT_REAL: 
-@GWY_FFT_OUTPUT_IMG: 
-@GWY_FFT_OUTPUT_MOD: 
-@GWY_FFT_OUTPUT_PHASE: 
+@GWY_FFT_OUTPUT_REAL_IMG: real and imaginary
+@GWY_FFT_OUTPUT_MOD_PHASE: module and phase
+@GWY_FFT_OUTPUT_REAL: real
+@GWY_FFT_OUTPUT_IMG: imaginary
+@GWY_FFT_OUTPUT_MOD: module
+@GWY_FFT_OUTPUT_PHASE: phase
 
 <!-- ##### FUNCTION gwy_fft_hum ##### -->
 <para>

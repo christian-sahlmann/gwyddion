@@ -2,11 +2,13 @@
 GwyDataLine
 
 <!-- ##### SECTION Short_Description ##### -->
-
+array representing 1D data
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+This object represents 1D data arrays in Gwyddion.
+It is used for most of the data processing functions
+connected with 1D data, graphs, etc.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -16,20 +18,20 @@ GwyDataLine
 
 <!-- ##### ENUM GwySFOutputType ##### -->
 <para>
-
+Statistical functions selection.
 </para>
 
-@GWY_SF_OUTPUT_DH: 
-@GWY_SF_OUTPUT_CDH: 
-@GWY_SF_OUTPUT_DA: 
-@GWY_SF_OUTPUT_CDA: 
-@GWY_SF_OUTPUT_ACF: 
-@GWY_SF_OUTPUT_HHCF: 
-@GWY_SF_OUTPUT_PSDF: 
+@GWY_SF_OUTPUT_DH: distribution of heights
+@GWY_SF_OUTPUT_CDH: cumulative distribution of heights
+@GWY_SF_OUTPUT_DA: distribution of angles (slopes)
+@GWY_SF_OUTPUT_CDA: cumulative distribution of angles
+@GWY_SF_OUTPUT_ACF: autocorrelation function
+@GWY_SF_OUTPUT_HHCF: height-height correlation function
+@GWY_SF_OUTPUT_PSDF: power spectral density function
 
 <!-- ##### ENUM GwyFitLineType ##### -->
 <para>
-
+Fit polynomial degree selection.
 </para>
 
 @GWY_FIT_POLY_0: 
@@ -39,7 +41,7 @@ GwyDataLine
 
 <!-- ##### STRUCT GwyDataLine ##### -->
 <para>
-
+Basic object for 1D data array representation.
 </para>
 
 
