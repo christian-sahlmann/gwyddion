@@ -101,8 +101,6 @@ static gint        normalize_data            (FitArgs *args,
                                               GwyDataLine *xdata,
                                               GwyDataLine *ydata,
                                               gint curve);
-static GtkWidget*  create_stocklike_button   (const gchar *label_text,
-                                              const gchar *stock_id);
 static GtkWidget*  create_preset_menu        (GCallback callback,
                                               gpointer cbdata,
                                               gint current);
@@ -265,8 +263,8 @@ fit_dialog(FitArgs *args)
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                 create_stocklike_button(_("_Fit"),
-                                                         GTK_STOCK_EXECUTE),
+                                 gwy_stock_like_button_new(_("_Fit"),
+                                                           GTK_STOCK_EXECUTE),
                                  RESPONSE_FIT);
 /*    gtk_dialog_add_button(GTK_DIALOG(dialog),
                           _("_Reset inits"), RESPONSE_RESET);
@@ -794,30 +792,6 @@ static void
 toggle_changed_cb(GtkToggleButton *button, gboolean *value)
 {
     *value = gtk_toggle_button_get_active(button);
-}
-
-static GtkWidget*
-create_stocklike_button(const gchar *label_text,
-                        const gchar *stock_id)
-{
-    GtkWidget *button, *alignment, *hbox, *label, *image;
-
-    button = gtk_button_new();
-
-    alignment = gtk_alignment_new(0.5, 0.5, 0, 0);
-    gtk_container_add(GTK_CONTAINER(button), alignment);
-
-    hbox = gtk_hbox_new(FALSE, 2);
-    gtk_container_add(GTK_CONTAINER(alignment), hbox);
-
-    image = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
-    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
-
-    label = gtk_label_new_with_mnemonic(label_text);
-    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-    gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
-
-    return button;
 }
 
 static GtkWidget*
