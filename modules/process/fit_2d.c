@@ -42,6 +42,7 @@ typedef struct {
     GwyNLFitter *fitter;
     gboolean is_fitted;
     GwyContainer *data;
+    GwyContainer *original_data;
     GwyContainer *vdata;
 } Fit2dArgs;
 
@@ -85,11 +86,17 @@ static void        double_entry_changed_cb   (GtkWidget *entry,
 
 static void        toggle_changed_cb         (GtkToggleButton *button,
 					      gboolean *value);
+static void        dialog_update             (Fit2dControls *controls,
+                                             Fit2dArgs *args);
 static gdouble     fit_sphere		(gdouble x,
 					   G_GNUC_UNUSED gint n_param,
 					   const gdouble *param,
 					   gdouble *dimdata,
 					   gboolean *fres);
+
+static void        guess_sphere(GwyDataField *dfield,
+	                   G_GNUC_UNUSED gint n_param,
+	                   gdouble *param);
 
 static GwyNLFitter*	   gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
 		    		    	      GwyNLFitDerFunc df,		      
@@ -145,6 +152,7 @@ fit_2d(GwyContainer *data, GwyRunType run)
     args.par_fix[1] = TRUE;
     args.par_fix[2] = TRUE;
     args.par_fix[3] = FALSE;
+    args.original_data = data;
     
     if ((ok = fit_2d_dialog(&args, data)))
 	    fit_2d_save_args(gwy_app_settings_get(), &args);
@@ -338,10 +346,8 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
 
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
-    
-    
-    
-    
+    dialog_update(&controls, args); 
+     
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -386,14 +392,45 @@ fit_2d_dialog_abandon(Fit2dControls *controls)
 {		      
 }
 
+static void        
+dialog_update             
+(Fit2dControls *controls, Fit2dArgs *args)
+{
+    gint i;
+    gchar buffer[20];
+    
+    guess(controls, args);
+
+    gtk_label_set_text(GTK_LABEL(controls->param_des[0]), "radius");
+    gtk_label_set_text(GTK_LABEL(controls->param_des[1]), "x center");
+    gtk_label_set_text(GTK_LABEL(controls->param_des[2]), "y center");
+    gtk_label_set_text(GTK_LABEL(controls->param_des[3]), "z center");
+
+    for (i=0; i<4; i++)
+    {
+        gtk_widget_set_sensitive(controls->param_init[i], TRUE);
+        gtk_widget_set_sensitive(controls->param_fit[i], TRUE);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", args->par_init[i]);
+        gtk_entry_set_text(GTK_ENTRY(controls->param_init[i]), buffer);
+        gtk_label_set_text(GTK_LABEL(controls->param_res[i]), " ");
+        gtk_label_set_text(GTK_LABEL(controls->param_err[i]), " ");
+    }
+
+}
+
 static void
 reset(Fit2dControls *controls, Fit2dArgs *args)
 {
+    dialog_update(controls, args);
 }
 
 static void
 guess(Fit2dControls *controls, Fit2dArgs *args)
 {
+    
+    GwyDataField *dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
+                                                                "/0/data"));
+    guess_sphere(dfield, 4, args->par_init);
 }
 
 
@@ -407,18 +444,21 @@ fit_2d_run(Fit2dControls *controls,
     gdouble param[4], err[4];
     gboolean fix[4], fres;
     gdouble dimdata[4];
+    gchar buffer[20];
     gint i;
     gdouble max;
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
 							      "/0/data"));
 
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(args->original_data)),
+                        _("Initializing"));
+    
     weight = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres, 10, 10, FALSE));
     gwy_data_field_fill(weight, 1);
 
     max = gwy_data_field_area_get_avg(dfield, dfield->xres/2-20, dfield->yres/2-20, 40, 40);
     gwy_data_field_add(dfield, -max);
-    printf("maximum (%g) subtracted\n", max);
     
     dimdata[0] = (gdouble)dfield->xres;
     dimdata[1] = (gdouble)dfield->yres;
@@ -429,12 +469,8 @@ fit_2d_run(Fit2dControls *controls,
     fix[1] = args->par_fix[1];
     fix[2] = args->par_fix[2];
     fix[3] = args->par_fix[3];
-    
-    param[0] = args->par_init[0];
-    param[1] = dfield->xreal/2;/*args->par_init[1];*/
-    param[2] = dfield->yreal/2;/*args->par_init[2];*/
-    param[3] = args->par_init[3];
- 
+  
+    gwy_app_wait_set_message(_("Fitting"));
     fitter = gwy_math_nlfit_fit_2d(fit_sphere,
 		      NULL,		      
 		      dfield,
@@ -443,6 +479,7 @@ fit_2d_run(Fit2dControls *controls,
 		      param, err,
 		      fix,
 		      dimdata);
+    gwy_app_wait_finish();
 
     for (i=0; i<4; i++)
     {
@@ -451,11 +488,14 @@ fit_2d_run(Fit2dControls *controls,
     for (i=0; i<(dfield->xres*dfield->yres); i++)
 	dfield->data[i] = fit_sphere((gdouble)i, 4, param, dimdata, &fres);
 
-
-    printf("maximum (%g) added\n", max);
-    gwy_data_field_add(dfield, max);
-    
-    
+    for (i=0; i<4; i++)
+    {
+        g_snprintf(buffer, sizeof(buffer), "%.3g", param[i]);
+        gtk_label_set_text(GTK_LABEL(controls->param_res[i]), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", err[i]);
+        gtk_label_set_text(GTK_LABEL(controls->param_err[i]), buffer);
+    }
+ 
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 
     g_object_unref(weight);
@@ -484,6 +524,17 @@ toggle_changed_cb(GtkToggleButton *button, gboolean *value)
     *value = gtk_toggle_button_get_active(button);
 }
 
+static void
+guess_sphere(GwyDataField *dfield,
+	   G_GNUC_UNUSED gint n_param,
+	   gdouble *param)
+{
+    param[0] = 0;
+    param[1] = dfield->xreal/2;
+    param[2] = dfield->yreal/2;
+    param[3] = 0;
+    
+}
 
 static gdouble
 fit_sphere(gdouble x,

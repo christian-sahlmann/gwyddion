@@ -107,7 +107,7 @@ mask_nanoindent(GwyDataField *dfield, GwyDataField *maskfield)
     yres = gwy_data_field_get_yres(maskfield);
     
     gwy_data_field_fill(maskfield, 0);
-    gwy_data_field_area_fill(maskfield, xres/10, yres/10, xres/2, yres/2, 1);
+    gwy_data_field_area_fill(maskfield, xres/5, yres/10, xres/2, yres/2, 1);
 }
 
 
