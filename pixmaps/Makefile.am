@@ -3,6 +3,7 @@
 pixmapdatadir = $(gwypixmapdir)
 
 pixmapdata_DATA = \
+	gwy_3d_base-24.png \
 	gwy_bold-24.png \
 	gwy_crop-24.png \
 	gwy_cwt-24.png \
