@@ -139,6 +139,7 @@ G_END_DECLS
 
 #pragma warning(disable:4244) /* No possible loss of data warnings */
 #pragma warning(disable:4305)   /* No truncation from int to char warnings */
+#pragma warning(disable:4761) /* integral size mismatch in argument; conversion supplied */
 #endif /* _MSC_VER */
 
 #endif /* __GWY_GWYMACROS_H__ */
