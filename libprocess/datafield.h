@@ -365,6 +365,17 @@ gboolean gwy_data_field_get_data_line(GwyDataField *a,
                                       gint brrow,
                                       gint res,
                                       GwyInterpolationType interpolation);
+
+gboolean gwy_data_field_get_data_line_averaged(GwyDataField *a,
+                                      GwyDataLine* b,
+                                      gint ulcol,
+                                      gint ulrow,
+                                      gint brcol,
+                                      gint brrow,
+                                      gint res,
+                                      gint thickness,
+                                      GwyInterpolationType interpolation);
+
 void gwy_data_field_get_row(GwyDataField *a,
                             GwyDataLine* b,
                             gint row);

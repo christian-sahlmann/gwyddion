@@ -2122,6 +2122,84 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
 }
 
 /**
+ * gwy_data_field_get_data_line_averaged:
+ * @a: A data field
+ * @b: A data line
+ * @ulcol: upper-left column coordinate
+ * @ulrow: upper-left row coordinate
+ * @brcol: bottom-right column coordinate + 1
+ * @brrow: bottom-right row coordinate + 1
+ * @res: requested resolution of data line
+ * @thickness: thickness of line to be averaged
+ * @interpolation: interpolation type
+ *
+ * Extracts an averaged  profile from data field and
+ * puts it into data line. It is expected that the data
+ * line is allready allocated.
+ *
+ * Returns: true at success
+ **/
+gboolean
+gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
+                             gint ulcol, gint ulrow, gint brcol, gint brrow,
+                             gint res, gint thickness, GwyInterpolationType interpolation)
+{
+    gint k, j;
+    gdouble cosa, sina, size, mid, sum;
+    gdouble col, row, srcol, srrow;
+
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol >= 0 && brrow >= 0
+                         && ulrow <= a->yres && ulcol <= a->xres
+                         && brrow <= a->yres && brcol <= a->xres,
+                         FALSE);
+
+    size = sqrt((ulcol - brcol)*(ulcol - brcol)
+                + (ulrow - brrow)*(ulrow - brrow));
+    if (res <= 0)
+        res = (gint)size;
+
+    cosa = (gdouble)(brcol - ulcol)/(res - 1);
+    sina = (gdouble)(brrow - ulrow)/(res - 1);
+
+    /*extract regular one-pixel line*/
+    gwy_data_line_resample(b, res, GWY_INTERPOLATION_NONE);
+    for (k = 0; k < res; k++)
+        b->data[k] = gwy_data_field_get_dval(a, ulcol + k*cosa, ulrow + k*sina,
+                                             interpolation);
+    b->real = size*a->xreal/a->xres;
+
+    if (thickness <= 1) return TRUE;
+    
+    /*add neighbour values to the line*/
+    for (k = 0; k < res; k++)
+    {
+        mid = b->data[k];
+        sum = 0;
+        for (j=(-thickness/2); j<(thickness - thickness/2); j++)
+        {
+            srcol = ulcol + k*cosa;
+            srrow = ulrow + k*sina;
+            col = (srcol + j*sina);
+            row = (srrow + j*cosa);
+            if (col >= 0 && col < a->xres && row >= 0 && row < a->yres)
+            {
+                if (!(col >= 0 && row >= 0 && row < a->yres && col < a->xres)) printf("blbce!\n");
+                /*printf("%d x %d, col=%f, row=%f\n", a->xres, a->yres, col, row);*/
+                sum += gwy_data_field_get_dval(a, col, row, interpolation);
+            }
+            else
+            {
+                sum += mid;
+            }
+        }
+        b->data[k] = sum/(gdouble)thickness;
+    }
+
+    return TRUE;
+}
+
+/**
  * gwy_data_field_plane_coeffs:
  * @a: A data field
  * @ap: coefficient
@@ -3946,8 +4024,8 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                 }
             }
             score->data[i + xres * j] = cormax;
-            x_dist->data[i + xres * j] = imax - i;
-            y_dist->data[i + xres * j] = jmax - j;
+            x_dist->data[i + xres * j] = (gdouble)(imax - i)*data_field1->xreal/(gdouble)data_field1->xres;
+            y_dist->data[i + xres * j] = (gdouble)(jmax - j)*data_field1->yreal/(gdouble)data_field1->yres;
         }
     }
 }
@@ -4061,8 +4139,8 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
                 }
             }
             score->data[i + xres * j] = cormax;
-            x_dist->data[i + xres * j] = imax - i;
-            y_dist->data[i + xres * j] = jmax - j;
+            x_dist->data[i + xres * j] = (gdouble)(imax - i)*data_field1->xreal/(gdouble)data_field1->xres;;
+            y_dist->data[i + xres * j] = (gdouble)(jmax - j)*data_field1->yreal/(gdouble)data_field1->yres;;
 
         }
         *iteration = i + 1;
@@ -4070,6 +4148,7 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
             *state = GWY_COMP_FINISHED;
     }
 }
+
 
 void
 gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
@@ -4089,6 +4168,18 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
                                             state, iteration);
 }
 
+/**
+ * square_area:
+ * @data_field: data 
+ * @ulcol: upper-left coordinate (in pixel units)
+ * @ulrow: upper-left coordinate (in pixel units)
+ * @brcol: bottom-right coordinate (in pixel units)
+ * @brrow: bottom-right coordinate (in pixel units)
+ *
+ * Computes surface area within given rectangle
+ *
+ * Returns: surface area (in real units)
+ **/
 static gdouble
 square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
             gint brrow)
