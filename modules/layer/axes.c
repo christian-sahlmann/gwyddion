@@ -140,7 +140,7 @@ static GwyModuleInfo module_info = {
     "layer-axes",
     "Layer allowing selection of horizontal or vertical lines.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -426,8 +426,13 @@ gwy_layer_axes_motion_notify(GwyVectorLayer *layer,
 
     axes_layer = GWY_LAYER_AXES(layer);
     i = axes_layer->inear;
-    x = event->x;
-    y = event->y;
+    if (event->is_hint)
+        gdk_window_get_pointer(window, &x, &y, NULL);
+    else {
+        x = event->x;
+        y = event->y;
+    }
+    gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     rcoord = (axes_layer->orientation == GTK_ORIENTATION_VERTICAL)

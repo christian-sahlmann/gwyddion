@@ -145,7 +145,7 @@ static GwyModuleInfo module_info = {
     "layer-lines",
     "Layer allowing selection of arbitrary straight lines.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -392,8 +392,13 @@ gwy_layer_lines_motion_notify(GwyVectorLayer *layer,
 
     lines_layer = GWY_LAYER_LINES(layer);
     i = lines_layer->inear;
-    x = event->x;
-    y = event->y;
+    if (event->is_hint)
+        gdk_window_get_pointer(window, &x, &y, NULL);
+    else {
+        x = event->x;
+        y = event->y;
+    }
+    gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     if (lines_layer->button && lines_layer->moving_line)

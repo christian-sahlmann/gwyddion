@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     "layer-points",
     "Layer allowing selection of several points.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -379,8 +379,13 @@ gwy_layer_points_motion_notify(GwyVectorLayer *layer,
 
     points_layer = GWY_LAYER_POINTS(layer);
     i = points_layer->inear;
-    x = event->x;
-    y = event->y;
+    if (event->is_hint)
+        gdk_window_get_pointer(window, &x, &y, NULL);
+    else {
+        x = event->x;
+        y = event->y;
+    }
+    gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     if (i > -1

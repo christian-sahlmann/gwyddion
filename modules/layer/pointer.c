@@ -105,7 +105,7 @@ static GwyModuleInfo module_info = {
     "Layer allowing selection of a single point, more precisely "
         "just reading pointer coordinates.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -230,18 +230,26 @@ gwy_layer_pointer_motion_notify(GwyVectorLayer *layer,
 {
     GwyDataView *data_view;
     GwyLayerPointer *pointer_layer;
+    GdkWindow *window;
     gint x, y;
     gdouble oldx, oldy, xreal, yreal;
 
     pointer_layer = GWY_LAYER_POINTER(layer);
     if (!pointer_layer->button)
         return FALSE;
+
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    window = GTK_WIDGET(data_view)->window;
 
     oldx = pointer_layer->x;
     oldy = pointer_layer->y;
-    x = event->x;
-    y = event->y;
+    if (event->is_hint)
+        gdk_window_get_pointer(window, &x, &y, NULL);
+    else {
+        x = event->x;
+        y = event->y;
+    }
+    gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     if (xreal == oldx && yreal == oldy)

@@ -133,7 +133,7 @@ static GwyModuleInfo module_info = {
     "layer-select",
     "Layer allowing selection of rectangular areas.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -369,8 +369,13 @@ gwy_layer_select_motion_notify(GwyVectorLayer *layer,
     select_layer = GWY_LAYER_SELECT(layer);
     oldx = select_layer->x1;
     oldy = select_layer->y1;
-    x = event->x;
-    y = event->y;
+    if (event->is_hint)
+        gdk_window_get_pointer(window, &x, &y, NULL);
+    else {
+        x = event->x;
+        y = event->y;
+    }
+    gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     if (xreal == oldx && yreal == oldy)
