@@ -457,7 +457,7 @@ check_neighbours(GwyDataField *data_field, GwyDataField *buffer, gint col, gint 
     xres = data_field->xres;
     yres = data_field->yres;
 
-    if (col<0 || row<0 || col>(xres-1) || row>(yres-1)) return;
+    if (col<0 || row<0 || col>(xres-1) || row>(yres-1)) return 0;
 
     pnt = gwy_data_field_fill_grain(data_field, row, col, &npnt);
     
