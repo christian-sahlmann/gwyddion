@@ -92,6 +92,7 @@ static GtkDrawingAreaClass *parent_class = NULL;
 static float begin_x = 0.0;
 static float begin_y = 0.0;
 
+/* TODO: use Pango for font family selection */
 #ifdef WIN32
 static const gchar font_string[] = "arial 12";
 #else
@@ -204,7 +205,8 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->show_axes             = TRUE;
     gwy3dview->show_labels           = TRUE;
     gwy3dview->enable_lights         = FALSE;
-    gwy3dview->mat_current           = gwyGL_mat_none;
+    gwy3dview->mat_current           
+             = gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE);
     gwy3dview->shape_list_base       = -1;
     gwy3dview->font_list_base        = -1;
     gwy3dview->font_height           = 0;
@@ -223,7 +225,7 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
  * Since: 1.5
  **/
 GtkWidget*
-gwy_3d_view_new(GwyContainer *container)
+gwy_3d_view_new(GwyContainer *data)
 {
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
@@ -232,32 +234,32 @@ gwy_3d_view_new(GwyContainer *container)
 
     gwy_debug("");
 
-    if (container)
-        g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
+    if (data)
+        g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     else
         return NULL;
-    g_object_ref(G_OBJECT(container));
+    g_object_ref(G_OBJECT(data));
 
     gwy3dview = gtk_type_new(gwy_3d_view_get_type());
     widget = GTK_WIDGET(gwy3dview);
 
-    gwy3dview->container = container;
-    if (gwy_container_contains_by_name(container, "/0/data"))
+    gwy3dview->container = data;
+    if (gwy_container_contains_by_name(data, "/0/data"))
     {
         gwy3dview->data = GWY_DATA_FIELD(
-            gwy_container_get_object_by_name(container, "/0/data"));
+            gwy_container_get_object_by_name(data, "/0/data"));
         g_object_ref(G_OBJECT(gwy3dview->data));
     }
 
-    if (gwy_container_contains_by_name(container, "/0/3d/palette"))
+    if (gwy_container_contains_by_name(data, "/0/3d/palette"))
     {    palette_name =
-             gwy_container_get_string_by_name(container, "/0/3d/palette");
+             gwy_container_get_string_by_name(data, "/0/3d/palette");
          gwy_debug("A - %s", palette_name);
     }
-    else if (gwy_container_contains_by_name(container, "/0/base/palette"))
+    else if (gwy_container_contains_by_name(data, "/0/base/palette"))
     {
         palette_name =
-            gwy_container_get_string_by_name(container, "/0/base/palette");
+            gwy_container_get_string_by_name(data, "/0/base/palette");
         gwy_debug("B - %s", palette_name);
         gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
                                          g_strdup(palette_name));
@@ -269,65 +271,64 @@ gwy_3d_view_new(GwyContainer *container)
         gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
                                          g_strdup(palette_name));
     }
-    gwy3dview->palette
-        = gwy_palette_new(GWY_PALETTE_DEF(gwy_palette_def_new(palette_name)));
+    gwy3dview->palette = gwy_palette_new(gwy_palette_def_new(palette_name));
     g_object_ref(G_OBJECT(gwy3dview->palette));
 
-    if (gwy_container_contains_by_name(container, "/0/3d/reduced_size"))
+    if (gwy_container_contains_by_name(data, "/0/3d/reduced_size"))
         gwy3dview->reduced_size = (guint)(
-            gwy_container_get_int32_by_name(container,
+            gwy_container_get_int32_by_name(gwy3dview->container,
                                             "/0/3d/reduced_size"));
-    if (gwy_container_contains_by_name(container, "/0/3d/rot_x"))
+    if (gwy_container_contains_by_name(data, "/0/3d/rot_x"))
         gwy3dview->rot_x = (GLfloat)(
-            gwy_container_get_double_by_name(container,
+            gwy_container_get_double_by_name(data,
                                              "/0/3d/rot_x"));
-    if (gwy_container_contains_by_name(container, "/0/3d/rot_y"))
+    if (gwy_container_contains_by_name(data, "/0/3d/rot_y"))
         gwy3dview->rot_y = (GLfloat)(
-            gwy_container_get_double_by_name(container,
+            gwy_container_get_double_by_name(data,
                                              "/0/3d/rot_y"));
-    if (gwy_container_contains_by_name(container, "/0/3d/view_scale_max"))
+    if (gwy_container_contains_by_name(data, "/0/3d/view_scale_max"))
         gwy3dview->view_scale_max = (GLfloat)(
-            gwy_container_get_double_by_name(container,
+            gwy_container_get_double_by_name(data,
                                              "/0/3d/view_scale_max"));
-    if (gwy_container_contains_by_name(container, "/0/3d/view_scale_min"))
+    if (gwy_container_contains_by_name(data, "/0/3d/view_scale_min"))
         gwy3dview->view_scale_min = (GLfloat)(
-            gwy_container_get_double_by_name(container,
+            gwy_container_get_double_by_name(data,
                                              "/0/3d/view_scale_min"));
-    if (gwy_container_contains_by_name(container, "/0/3d/view_scale"))
+    if (gwy_container_contains_by_name(data, "/0/3d/view_scale"))
         gwy3dview->view_scale = (GLfloat)(
-            gwy_container_get_double_by_name(container,
+            gwy_container_get_double_by_name(data,
                                              "/0/3d/view_scale"));
-    if (gwy_container_contains_by_name(container, "/0/3d/deformation_z"))
+    if (gwy_container_contains_by_name(data, "/0/3d/deformation_z"))
         gwy3dview->deformation_z = (GLfloat)(
-            gwy_container_get_double_by_name(container,
+            gwy_container_get_double_by_name(data,
                                              "/0/3d/deformation_z"));
-    if (gwy_container_contains_by_name(container, "/0/3d/light_z"))
+    if (gwy_container_contains_by_name(data, "/0/3d/light_z"))
         gwy3dview->light_z = (GLfloat)(
-            gwy_container_get_double_by_name(container,
+            gwy_container_get_double_by_name(data,
                                              "/0/3d/light_z"));
-    if (gwy_container_contains_by_name(container, "/0/3d/light_y"))
+    if (gwy_container_contains_by_name(data, "/0/3d/light_y"))
         gwy3dview->light_y = (GLfloat)(
-            gwy_container_get_double_by_name(container,
+            gwy_container_get_double_by_name(data,
                                              "/0/3d/light_y"));
-    if (gwy_container_contains_by_name(container, "/0/3d/ortho"))
+    if (gwy_container_contains_by_name(data, "/0/3d/ortho"))
         gwy3dview->orthogonal_projection =
-            gwy_container_get_boolean_by_name(container,
+            gwy_container_get_boolean_by_name(data,
                                               "/0/3d/view_scale_max");
-    if (gwy_container_contains_by_name(container, "/0/3d/show_axes"))
+    if (gwy_container_contains_by_name(data, "/0/3d/show_axes"))
         gwy3dview->show_axes =
-            gwy_container_get_boolean_by_name(container,
+            gwy_container_get_boolean_by_name(data,
                                               "/0/3d/show_axes");
-    if (gwy_container_contains_by_name(container, "/0/3d/show_labels"))
+    if (gwy_container_contains_by_name(data, "/0/3d/show_labels"))
         gwy3dview->show_labels =
-            gwy_container_get_boolean_by_name(container,
+            gwy_container_get_boolean_by_name(data,
                                               "/0/3d/show_labels");
-    if (gwy_container_contains_by_name(container, "/0/3d/enable_lights"))
+    if (gwy_container_contains_by_name(data, "/0/3d/enable_lights"))
         gwy3dview->enable_lights =
-            gwy_container_get_boolean_by_name(container,
+            gwy_container_get_boolean_by_name(data,
                                               "/0/3d/enable_lights");
-    if (gwy_container_contains_by_name(container, "/0/3d/material"))
+    if (gwy_container_contains_by_name(data, "/0/3d/material"))
     {
-        /* TODO: get material type, atfter reworking gwyglmat.h */
+        /* TODO: get material type, atfter reworking gwyglmaterial.h */
     }
     /*
     TODO: ?? connect the signals value changed of the pallete and the data_field
@@ -556,6 +557,7 @@ gwy_3d_view_get_palette       (Gwy3DView *gwy3dview)
 
     return gwy3dview->palette;
 }
+
 
 /**
  * gwy_3d_view_set_palette:
@@ -854,7 +856,7 @@ gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
  *
  * Since: 1.5
  **/
-GwyGLMaterialProp*
+GwyGLMaterial*
 gwy_3d_view_get_material      (Gwy3DView *gwy3dview)
 {
      gwy_debug("");
@@ -874,7 +876,7 @@ gwy_3d_view_get_material      (Gwy3DView *gwy3dview)
  **/
 void
 gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
-                                 GwyGLMaterialProp *material)
+                                 GwyGLMaterial *material)
 {
     gwy_debug("");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
@@ -904,9 +906,7 @@ gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
  * Since: 1.5
  **/
 GdkPixbuf*
-gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview,
-                       G_GNUC_UNUSED guint xres,
-                       G_GNUC_UNUSED guint yres)
+gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview, guint xres, guint yres)
 {
     int width, height, rowstride, n_channels, i, j;
     guchar *pixels, *a, *b, z;
@@ -949,18 +949,18 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview,
  * Since: 1.5
  **/
 void
-gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
+gwy_3d_view_reset_view(Gwy3DView * widget)
 {
-   g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-   gwy3dview->rot_x = 45.0;
-   gwy3dview->rot_y = -45.0;
-   gwy3dview->view_scale = 1.0;
-   gwy3dview->deformation_z = 1.0;
-   gwy3dview->light_z = 0.0f;
-   gwy3dview->light_y = 0.0f;
-   if (GTK_WIDGET_REALIZED(gwy3dview))
-        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
-                                   &GTK_WIDGET(gwy3dview)->allocation, FALSE);
+   g_return_if_fail(GWY_IS_3D_VIEW(widget));
+   widget->rot_x = 45.0;
+   widget->rot_y = -45.0;
+   widget->view_scale = 1.0;
+   widget->deformation_z = 1.0;
+   widget->light_z = 0.0f;
+   widget->light_y = 0.0f;
+   if (GTK_WIDGET_REALIZED(widget))
+        gdk_window_invalidate_rect(GTK_WIDGET(widget)->window,
+                                   &GTK_WIDGET(widget)->allocation, FALSE);
 
 }
 
@@ -993,8 +993,7 @@ gwy_3d_view_realize(GtkWidget *widget)
 }
 
 static gboolean
-gwy_3d_view_configure (GtkWidget *widget,
-                       G_GNUC_UNUSED GdkEventConfigure *event)
+gwy_3d_view_configure (GtkWidget *widget, GdkEventConfigure *event)
 {
     Gwy3DView *gwy3dview;
 
@@ -1035,11 +1034,9 @@ gwy_3d_view_size_request(GtkWidget *widget,
 }
 
 
-/* TODO: is it possible to redraw only the exposed part like e.g. GwyDataView
- * does? */
 static gboolean
 gwy_3d_view_expose(GtkWidget *widget,
-                   G_GNUC_UNUSED GdkEventExpose *event)
+                       GdkEventExpose *event)
 {
     GdkGLContext  *glcontext;
     GdkGLDrawable *gldrawable;
@@ -1073,7 +1070,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glScalef(1.0f, 1.0f, gwy3D->deformation_z);
 
     /* Render shape */
-    if (gwy3D->mat_current != gwyGL_mat_none)
+    if (gwy3D->mat_current != gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE))
     {
         glEnable(GL_LIGHTING);
         glMaterialfv(GL_FRONT, GL_AMBIENT,   gwy3D->mat_current->ambient);
@@ -1407,9 +1404,10 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
    GLfloat rx = widget->rot_x - ((int)(widget->rot_x / 360.0)) * 360.0;
    GLfloat Ax, Ay, Bx, By, Cx, Cy;
    gboolean yfirst = TRUE;
-   gchar text[32];
+   gchar text[30];
    gint xres = gwy_data_field_get_xres(widget->data);
    gint yres = gwy_data_field_get_yres(widget->data);
+   GwyGLMaterial * mat_none = gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE);
 
    gwy_debug("");
 
@@ -1422,10 +1420,10 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
    glScalef(2.0/ xres,
             2.0/ yres,
             GWY_3D_Z_TRANSFORMATION / (widget->data_max - widget->data_min));
-   glMaterialfv(GL_FRONT, GL_AMBIENT, gwyGL_mat_none->ambient);
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, gwyGL_mat_none->diffuse);
-   glMaterialfv(GL_FRONT, GL_SPECULAR, gwyGL_mat_none->specular);
-   glMaterialf(GL_FRONT, GL_SHININESS, gwyGL_mat_none->shininess * 128.0);
+   glMaterialfv(GL_FRONT, GL_AMBIENT,  mat_none->ambient);
+   glMaterialfv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
+   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_none->specular);
+   glMaterialf(GL_FRONT, GL_SHININESS, mat_none->shininess * 128.0);
 
    if (widget->show_axes == TRUE)
    {
@@ -1488,49 +1486,48 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
          glPopMatrix();
       glEnd();
 
-      /*
-      xTODO: dodelat aby s prehazovanim os taky prehazovaly ciselne hodnoty
-      xTODO: vyresit nejak zarovnani leveho pisma, chtelo by to zarovnavat doprava
-      TODO: vytvorit symbol mikro
-      TODO: vyresit zmenu velikosti pisma
-      TODO: predelat pomoci GwySIUnit, vytvorit bitmapy hned ze zacatku
-            pomoci Panga, ty ulozit a potom je vykreskovat,
-            mozna tyto bitmapy do display listu
-      */
-      if (widget->show_labels == TRUE)
-      {
-         guint pom = 0;
-         gdouble xreal = gwy_data_field_get_xreal(widget->data) * 1e6;
-         gdouble yreal = gwy_data_field_get_yreal(widget->data) * 1e6;
-
-         glListBase (widget->font_list_base);
-         if (yfirst)
-            g_snprintf(text, sizeof(text), "y:%1.1f um", yreal);
-         else
-            g_snprintf(text, sizeof(text), "x:%1.1f um", xreal);
-         glRasterPos3f((Ax+2*Bx)/3 - (Cx-Bx)*0.1,
-                       (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f );
-         glBitmap(0, 0, 0, 0, -100, 0, (GLubyte *)&pom);
-         glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
-         if (! yfirst)
-            g_snprintf(text, sizeof(text), "y:%1.1f um", yreal);
-         else
-            g_snprintf(text, sizeof(text), "x:%1.1f um", xreal);
-         glRasterPos3f((2*Bx+Cx)/3 - (Ax-Bx)*0.1,
-                       (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f );
-         glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
-
-         g_snprintf(text, sizeof(text), "%1.1f nm", widget->data_max*1e9);
-         glRasterPos3f(Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                       (widget->data_max - widget->data_min));
-         glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
-
-         g_snprintf(text, sizeof(text), "%1.1f nm", widget->data_min*1e9);
-         glRasterPos3f(Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, -0.0f);
-         glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
-
-      }
-   }
+        /*
+        xTODO: dodelat aby s prehazovanim os taky prehazovaly ciselne hodnoty
+        xTODO: vyresit nejak zarovnani leveho pisma, chtelo by to zarovnavat doprava
+        TODO: vytvorit symbol mikro
+        TODO: vyresit zmenu velikosti pisma
+        TODO: predelat pomoci GwySIUnit, vytvorit bitmapy hned ze zacatku
+              pomoci Panga, ty ulozit a potom je vykreskovat,
+              mozna tyto bitmapy do display listu
+        */
+        if (widget->show_labels == TRUE)
+        {
+            guint pom = 0;
+            gdouble xreal = gwy_data_field_get_xreal(widget->data) * 1e6;
+            gdouble yreal = gwy_data_field_get_yreal(widget->data) * 1e6;
+   
+            glListBase (widget->font_list_base);
+            if (yfirst)
+               g_snprintf(text, sizeof(text), "y:%1.1f um", yreal);
+            else
+               g_snprintf(text, sizeof(text), "x:%1.1f um", xreal);
+            glRasterPos3f((Ax+2*Bx)/3 - (Cx-Bx)*0.1,
+                          (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f );
+            glBitmap(0, 0, 0, 0, -100, 0, (GLubyte *)&pom);
+            glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
+            if (! yfirst)
+               g_snprintf(text, sizeof(text), "y:%1.1f um", yreal);
+            else
+               g_snprintf(text, sizeof(text), "x:%1.1f um", xreal);
+            glRasterPos3f((2*Bx+Cx)/3 - (Ax-Bx)*0.1,
+                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f );
+            glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
+   
+            g_snprintf(text, sizeof(text), "%1.1f nm", widget->data_max*1e9);
+            glRasterPos3f(Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
+                          (widget->data_max - widget->data_min));
+            glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
+   
+            g_snprintf(text, sizeof(text), "%1.1f nm", widget->data_min*1e9);
+            glRasterPos3f(Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, -0.0f);
+            glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
+        }
+    }
 
    glPopMatrix();
 }
@@ -1539,13 +1536,14 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
 {
     int i;
     GLfloat plane_z;
+    GwyGLMaterial * mat_none = gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE);
 
     gwy_debug("");
 
-    glMaterialfv(GL_FRONT, GL_AMBIENT, gwyGL_mat_none->ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, gwyGL_mat_none->diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, gwyGL_mat_none->specular);
-    glMaterialf(GL_FRONT, GL_SHININESS, gwyGL_mat_none->shininess * 128.0);
+    glMaterialfv(GL_FRONT, GL_AMBIENT,  mat_none->ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_none->specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, mat_none->shininess * 128.0);
     glPushMatrix();
     plane_z =   GWY_3D_Z_TRANSFORMATION
               * (widget->data_mean - widget->data_min)

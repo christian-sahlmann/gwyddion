@@ -17,7 +17,7 @@
 #include <gtk/gtkgl.h>
 
 #include "gwy3dview.h"
-#include "gwyglmat.h"
+#include "gwyglmaterial.h"
 
 #define MAGIC "GWYO"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -76,18 +76,18 @@ gwyfile_load(const gchar *filename)
 
 static void gwy3D_ChangeMaterial (gpointer g3w, guint mat, GtkMenuItem  *menuitem)
 {
-    guint mat_current = (guint) mat-1;
+    GwyGLMaterial * mat_current = (GwyGLMaterial*) mat;
+    GwyGLMaterial * mat_none = gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE);
 
     gtk_widget_set_sensitive(
              gtk_item_factory_get_item (global_item_factory, "/Move light"),
-             mat_current != 0 ? TRUE : FALSE);
-    if (mat_current == 0)
+             mat_current != mat_none ? TRUE : FALSE);
+    if (mat_current == mat_none)
        gtk_check_menu_item_set_active(
              GTK_CHECK_MENU_ITEM (gtk_item_factory_get_item (
                  global_item_factory, "/Rotation")), TRUE);
    gwy_debug("material: %d %d", mat_current, (guint) menuitem);
-   gwy_3d_view_set_material(g3w, gwyGL_materials[mat_current].mat);
-
+   gwy_3d_view_set_material(g3w, mat_current);
 }
 
 static void gwy3D_ChangeMovementStatus (gpointer g3w, guint mv, GtkMenuItem  *menuitem)
@@ -175,6 +175,19 @@ button_press_event_popup_menu (GtkWidget      *widget,
   return FALSE;
 }
 
+struct IF_IFE {GtkItemFactory *item_factory; GtkItemFactoryEntry *mats; Gwy3DView *gwy3d;};
+
+void MaterialsMenu(const gchar *name, GwyGLMaterial *glmaterial,  gpointer user_data)
+ {
+     GtkItemFactoryEntry *mats = ((struct IF_IFE*) user_data)->mats; 
+     GtkItemFactory *item_factory = ((struct IF_IFE*) user_data)->item_factory;
+     Gwy3DView *gwy3d = ((struct IF_IFE*) user_data)->gwy3d;
+
+     gwy_debug("%s %s", name, mats->path );
+     mats->callback_action = (guint) glmaterial;
+     strcpy(mats->path + 11, name);
+     gtk_item_factory_create_item(item_factory, mats, gwy3d, 1);
+ }
 
 /* Creates the popup menu.*/
 static GtkWidget *
@@ -191,9 +204,7 @@ gwy3D_create_popup_menu (GtkWidget* window, Gwy3DView *gwy3d)
     { "/_Orthogonal projection", "<CTRL>O",gwy3D_ChangeOrthogonal, 1,               "<CheckItem>" },
     { "/Show _axes",   "<CTRL>A",         gwy3D_ChangeShowAxes,    1,               "<CheckItem>" },
     { "/Show la_bels", "<CTRL>B",       gwy3D_ChangeShowLabels,    1,               "<CheckItem>" },
-
     { "/sep02",        NULL,       NULL,                           0,               "<Separator>"},
-
     { "/_Materials",        NULL,         NULL,           0, "<Branch>" },
     { "/Materials/None",     NULL, gwy3D_ChangeMaterial, (guint) 1,     "<RadioItem>" },
     { "/Materials/sep",      NULL, NULL,                 0,                     "<Separator>" },
@@ -206,11 +217,10 @@ gwy3D_create_popup_menu (GtkWidget* window, Gwy3DView *gwy3d)
   GtkItemFactoryEntry mats;
   GtkItemFactory *item_factory;
   GtkAccelGroup *accel_group;
-  gint i;
-  GtkMenu * last = NULL;
-  GSList * menu_group;
+  struct IF_IFE matif_e;
 
 
+  menu_items[12].callback_action = (guint) gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE);
   /* Make an accelerator group (shortcut keys) */
   accel_group = gtk_accel_group_new ();
 
@@ -225,31 +235,15 @@ gwy3D_create_popup_menu (GtkWidget* window, Gwy3DView *gwy3d)
   /* Attach the new accelerator group to the window. */
   gtk_window_add_accel_group (GTK_WINDOW (window), accel_group);
 
-/*  last = GTK_MENU(gtk_item_factory_get_widget (item_factory, "/Materials"));
-  menu_group  = gtk_radio_menu_item_get_group( GTK_RADIO_MENU_ITEM( gtk_item_factory_get_item( item_factory, "/Materials/None")));
-  for(i = 1; gwyGL_materials[i].name !=NULL; i++)
-  {
-     GtkRadioMenuItem * o  = GTK_RADIO_MENU_ITEM(gtk_radio_menu_item_new_with_label(menu_group ,gwyGL_materials[i].name));
-     menu_group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (o));
-     gtk_menu_shell_append (GTK_MENU_SHELL (last), GTK_WIDGET(o));
-     g_signal_connect (G_OBJECT (o), "activate",
-                                G_CALLBACK (gwy3D_ChangeMaterial),
-                                (gpointer) (i+1));
-     gtk_widget_show (GTK_WIDGET(o));
-  }
-*/
   gwy_debug("");
   mats.path = g_strdup("/Materials/                                                        ");
   mats.accelerator =  NULL;
   mats.callback = gwy3D_ChangeMaterial;
   mats.item_type = g_strdup("/Materials/None");
-  for(i = 1; gwyGL_materials[i].name !=NULL; i++)
-  {
-     gwy_debug("%d %s %s", i,  gwyGL_materials[i].name,mats.path );
-     mats.callback_action = i+1;
-     strcpy(mats.path + 11, gwyGL_materials[i].name);
-     gtk_item_factory_create_item(item_factory, &mats, gwy3d, 1);
-  }
+  matif_e.item_factory = item_factory;
+  matif_e.mats = &mats;
+  matif_e.gwy3d = gwy3d;
+  gwy_glmaterial_foreach(MaterialsMenu, &matif_e);
   g_free(mats.path);
   g_free(mats.item_type);
 
@@ -277,7 +271,7 @@ gwy3D_create_popup_menu (GtkWidget* window, Gwy3DView *gwy3d)
            gtk_item_factory_get_item (item_factory, "/Show labels"),
            FALSE);
 
-  if (gwy3d->mat_current == gwyGL_mat_none)
+  if (gwy3d->mat_current == gwy_glmaterial_get_by_name(GWY_GLMATERIAL_NONE))
      gtk_widget_set_sensitive(
            gtk_item_factory_get_item (item_factory, "/Move light"),
            FALSE);
@@ -327,7 +321,9 @@ main (int argc, char *argv[])
   gtk_widget_show(vbox);
 
   gwy_widgets_type_init();
+  gwy_glmaterial_setup_presets();
   gwy_palette_def_setup_presets();
+  
   cont  = gwyfile_load(argv[1]);
   gwy3D = gwy_3d_view_new(cont);
 
