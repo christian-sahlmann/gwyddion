@@ -1449,8 +1449,8 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
 void
 gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
 {
-    gint i, n, val, imin;
-    gdouble step, nstep;
+    gint i, n, val;
+    gdouble step, nstep, imin;
     n = data_line->res;
 
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
@@ -1463,11 +1463,11 @@ gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
         ymax = gwy_data_line_get_max(data_line);
     }
     step = (ymax - ymin)/(nsteps-1);
-    imin = (int)(ymin/step);
+    imin = (ymin/step);
 
     for (i=0; i<n; i++)
     {
-        val = (gint)(data_line->data[i]/step) - imin;
+        val = (gint)((data_line->data[i]/step) - imin);
         if (val<0 || val>= nsteps)
         {
             /*this should never happened*/
@@ -1478,6 +1478,7 @@ gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
     nstep = n*step;
 
     for (i=0; i<nsteps; i++) {target_line->data[i]/=nstep;}
+    target_line->real = ymax - ymin;
 }
 
 /**
@@ -1523,8 +1524,8 @@ void
 gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
 {
     /*not yet...*/
-    gint i, n, val, imin;
-    gdouble step, angle;
+    gint i, n, val;
+    gdouble step, angle, imin;
 
     n = data_line->res;
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
@@ -1545,7 +1546,7 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
         }
     }
     step = (ymax - ymin)/(nsteps-1);
-    imin = (int)(ymin/step);
+    imin = (ymin/step);
 
     for (i = 0; i < n; i++) {
         val = (gint)(gwy_data_line_get_der(data_line, i)/step - imin);
