@@ -579,6 +579,161 @@ gwy_math_sym_matrix_invert1(gint n, gdouble *a)
     return TRUE;
 }
 
+/*FIXME only for test*/
+gdouble
+gauss(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+        gdouble c;
+
+            if (b[3] == 0) {
+            *fres = FALSE;
+            return 0;
+       }
+       *fres = TRUE;
+       c = (x - b[0])/b[3];
+
+       return b[2] * exp(-c*c/2) + b[1];
+}
+
+/*FIXME only for test*/
+gdouble
+exponential(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+        gdouble c;
+
+            if (b[3] == 0) {
+            *fres = FALSE;
+            return 0;
+       }
+       *fres = TRUE;
+       c = (x - b[0])/b[3];
+
+       return b[2] * exp(-c/2) + b[1];
+}
+
+/*FIXME only for test*/
+gdouble
+poly0(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+    return b[0];
+}
+
+/*FIXME only for test*/
+gdouble
+poly1(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+    return b[0] + b[1]*x;
+}
+
+
+GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(GwyNLFitPresetType type)
+{
+    GwyNLFitPresetFunction* ret;
+    ret = g_new(GwyNLFitPresetFunction, 1);
+
+    switch (type) {
+       case GWY_NLFIT_PRESET_GAUSSIAN:
+       ret->function_name = g_strdup("Gaussian");
+       ret->function_equation = g_strdup("f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)");
+       ret->nparams = 4;
+       ret->param_name = (gchar **)g_malloc(ret->nparams*sizeof(gchar*));
+       ret->param_name[0] = g_strdup("x<sub>0</sub>");
+       ret->param_name[1] = g_strdup("y<sub>0</sub>");
+       ret->param_name[2] = g_strdup("a");
+       ret->param_name[3] = g_strdup("b");
+       ret->defaults = (gdouble *)g_malloc(ret->nparams*sizeof(gdouble));
+       ret->defaults[0] = 3.14;
+       ret->defaults[1] = 6.28;
+       ret->defaults[2] = 1212;
+       ret->defaults[3] = 0.1234;        
+       ret->function = gauss;
+       ret->function_derivation = gwy_math_nlfit_derive;
+       break;
+       
+       case GWY_NLFIT_PRESET_POLY_0:
+       ret->function_name = g_strdup("Polynom (order 0)");
+       ret->function_equation = g_strdup("f(x) = a");
+       ret->nparams = 1;
+       ret->param_name = (gchar **)g_malloc(ret->nparams*sizeof(gchar*));
+       ret->param_name[0] = g_strdup("a");
+       ret->defaults = (gdouble *)g_malloc(ret->nparams*sizeof(gdouble));
+       ret->defaults[0] = 5;
+       ret->function = poly0;
+       ret->function_derivation = gwy_math_nlfit_derive;
+       break;
+       
+       case GWY_NLFIT_PRESET_POLY_1:
+       ret->function_name = g_strdup("Polynom (order 1)");
+       ret->function_equation = g_strdup("f(x) = a + b*x");
+       ret->nparams = 2;
+       ret->param_name = (gchar **)g_malloc(ret->nparams*sizeof(gchar*));
+       ret->param_name[0] = g_strdup("a");
+       ret->param_name[1] = g_strdup("b");
+       ret->defaults = (gdouble *)g_malloc(ret->nparams*sizeof(gdouble));
+       ret->defaults[0] = 1;
+       ret->defaults[1] = 2;
+       ret->function = poly1;
+       ret->function_derivation = gwy_math_nlfit_derive;
+       break;
+       
+       default:
+       ret->function_name = g_strdup("Exponential");
+       ret->function_equation = g_strdup("f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>)))");
+       ret->nparams = 4;
+       ret->param_name = (gchar **)g_malloc(ret->nparams*sizeof(gchar*));
+       ret->param_name[0] = g_strdup("x<sub>0</sub>");
+       ret->param_name[1] = g_strdup("y<sub>0</sub>");
+       ret->param_name[2] = g_strdup("a");
+       ret->param_name[3] = g_strdup("b");
+       ret->defaults = (gdouble *)g_malloc(ret->nparams*sizeof(gdouble));
+       ret->defaults[0] = 0.125;
+       ret->defaults[1] = 1258;
+       ret->defaults[2] = 0.25;
+       ret->defaults[3] = 0.05;
+       ret->function = exponential;
+       ret->function_derivation = gwy_math_nlfit_derive;
+       break;
+    }
+    
+    return ret;
+}
+
+gdouble gwy_math_nlfit_get_function_value(GwyNLFitPresetFunction* function, gdouble *params, gdouble x)
+{
+    gboolean res;
+    return (function->function)(x, function->nparams, params, NULL, &res);
+}
+
+gchar *gwy_math_nlfit_get_function_name(GwyNLFitPresetFunction* function)
+{
+    return g_strdup(function->function_name);
+}
+
+gchar *gwy_math_nlfit_get_function_equation(GwyNLFitPresetFunction* function)
+{
+    return g_strdup(function->function_equation);
+}
+
+gchar *gwy_math_nlfit_get_function_param_name(GwyNLFitPresetFunction* function, gint param)
+{
+    return g_strdup(function->param_name[param]);
+}
+
+gdouble gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* function, gint param)
+{
+    return function->defaults[param];
+}
+
+gint gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function)
+{
+    return function->nparams;
+}
+
+
 /************************** Documentation ****************************/
 
 /**

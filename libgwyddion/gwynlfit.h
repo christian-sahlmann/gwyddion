@@ -45,14 +45,6 @@ typedef enum {
     GWY_NLFIT_PRESET_POLY_3            = 11
 } GwyNLFitPresetType;
     
-typedef struct {
-    gchar *function_name;
-    gchar *function_equation;
-    gchar **param_description;
-    gint nparams;
-    gdouble *defaults;   
-} GwyNLFitPresetFunction;
-
 
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
                                  gint n_par,
@@ -68,6 +60,17 @@ typedef  void (*GwyNLFitDerFunc)(gint i,
                                  gpointer user_data,
                                  gdouble *deriv,
                                  gboolean *dres);
+
+typedef struct {
+    gchar *function_name;
+    gchar *function_equation;
+    gchar **param_name;
+    gchar **param_unit;
+    gint nparams;
+    gdouble *defaults;  
+    GwyNLFitFunc function;
+    GwyNLFitFunc function_derivation;
+} GwyNLFitPresetFunction;
 
 typedef struct _GwyNLFitter GwyNLFitter;
 
@@ -114,6 +117,26 @@ void           gwy_math_nlfit_derive             (gint i,
                                                   gpointer user_data,
                                                   gdouble *deriv,
                                                   gboolean *dres);
+
+GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(GwyNLFitPresetType type);
+
+gdouble gwy_math_nlfit_get_function_value(GwyNLFitPresetFunction* function, 
+                                          gdouble *params, 
+                                          gdouble x);
+
+gchar *gwy_math_nlfit_get_function_name(GwyNLFitPresetFunction* function);
+
+gchar *gwy_math_nlfit_get_function_equation(GwyNLFitPresetFunction* function);
+
+gchar *gwy_math_nlfit_get_function_param_name(GwyNLFitPresetFunction* function, 
+                                              gint param);
+
+gdouble gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* function, 
+                                                  gint param);
+
+gint gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function);
+
+
 #endif /* __GWY_NFLIT_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
