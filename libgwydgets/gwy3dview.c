@@ -2081,18 +2081,18 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUAD_STRIP);
         for (i = -180; i <= 180; i += 5) {
-            GLfloat x = cos(i * DIG_2_RAD) * sqrt(2);
-            GLfloat z = sin(i * DIG_2_RAD) * sqrt(2);
+            GLfloat x = cos(i * DIG_2_RAD) * G_SQRT2;
+            GLfloat z = sin(i * DIG_2_RAD) * G_SQRT2;
             glVertex3f( x, 0.05f, z);
             glVertex3f(x, -0.05f, z);
         }
     glEnd();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBegin(GL_LINE_STRIP);
-        glVertex3f(0.0f, 0.0f, 0.0f);
-        glVertex3f( 0.0, 0.05f, sqrt(2.0));
-        glVertex3f(0.0, -0.05f, sqrt(2.0));
-        glVertex3f(0.0f, 0.0f, 0.0f);
+        glVertex3f(0.0f,  0.0f,  0.0f);
+        glVertex3f(0.0f,  0.05f, G_SQRT2);
+        glVertex3f(0.0f, -0.05f, G_SQRT2);
+        glVertex3f(0.0f,  0.0f,  0.0f);
     glEnd();
     glPopMatrix();
 }
