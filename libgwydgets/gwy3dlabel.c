@@ -148,7 +148,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
     gobject_class->get_property = gwy_3d_label_get_property;
 
     /**
-     * Gtk3DLabel:delta_x:
+     * Gwy3DLabel:delta_x:
      *
      * The :delta_x property represents horizontal label offset in pixels
      * (in screen coordinates after mapping from 3D to 2D).
@@ -162,7 +162,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              -1000, 1000, 0.0, G_PARAM_READWRITE));
 
     /**
-     * Gtk3DLabel:delta_y:
+     * Gwy3DLabel:delta_y:
      *
      * The :delta_y property represents vertical label offset in pixels
      * (in screen coordinates after mapping from 3D to 2D).
@@ -176,7 +176,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              -1000, 1000, 0.0, G_PARAM_READWRITE));
 
     /**
-     * Gtk3DLabel:rotation:
+     * Gwy3DLabel:rotation:
      *
      * The :rotation property represents label rotation in radians,
      * counterclokwise (on screen, after mapping from 3D to 2D).
@@ -190,7 +190,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              -G_PI, G_PI, 0.0, G_PARAM_READWRITE));
 
     /**
-     * Gtk3DLabel:size:
+     * Gwy3DLabel:size:
      *
      * The :size property represents label size in pixels.  When :fixed_size
      * is %FALSE, its value is overwritten with automatic size.
@@ -204,7 +204,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              1.0, 100.0, 14.0, G_PARAM_READWRITE));
 
     /**
-     * Gtk3DLabel:fixed_size:
+     * Gwy3DLabel:fixed_size:
      *
      * The :fixed_size property controls whether the :size property is kept and
      * honoured, or conversely ignored and overwritten with automatic size.
