@@ -181,7 +181,6 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
 
     controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     controls.view = gwy_data_view_new(controls.mydata);
-    g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
@@ -287,6 +286,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     wshed_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
     wshed_ok(&controls, args, data);
+    g_object_unref(controls.mydata);
 
     return controls.computed;
 }
@@ -436,7 +436,7 @@ wshed_ok(WshedControls *controls,
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
     if (mask_process(dfield, GWY_DATA_FIELD(maskfield), args,
-                     GTK_WIDGET(gwy_app_data_window_get_current()))) {
+                     GTK_WIDGET(gwy_app_data_window_get_for_data(data)))) {
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         controls->computed = TRUE;
@@ -456,7 +456,7 @@ run_noninteractive(WshedArgs *args, GwyContainer *data)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
     if (mask_process(dfield, GWY_DATA_FIELD(maskfield), args,
-                     GTK_WIDGET(gwy_app_data_window_get_current()))) {
+                     GTK_WIDGET(gwy_app_data_window_get_for_data(data)))) {
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         computed = TRUE;
