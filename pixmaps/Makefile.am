@@ -8,11 +8,14 @@ pixmapdata_DATA = \
 	gwy_fit_plane-24.png \
 	gwy_fit_triangle-24.png \
 	gwy_graph-24.png \
+	gwy_graph_gauss-24.png \
+	gwy_graph_halfgauss-24.png \
 	gwy_gwyddion-60.png \
 	gwy_italic-24.png \
 	gwy_none-24.png \
 	gwy_pointer-24.png \
 	gwy_pointer_measure-24.png \
+	gwy_profile-24.png \
 	gwy_rotate-24.png \
 	gwy_scale-24.png \
 	gwy_shader-24.png \
