@@ -30,8 +30,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-extern GtkWidget *gwy_app_main_window;
-
 GwyContainer*   gwy_app_get_current_data          (void);
 GwyDataWindow*  gwy_app_data_window_get_current   (void);
 void            gwy_app_data_window_set_current   (GwyDataWindow *data_window);
@@ -59,6 +57,8 @@ void            gwy_app_tool_use_cb               (GtkWidget *button,
 void            gwy_app_zoom_set_cb               (gpointer data);
 void            gwy_app_mask_kill_cb              (void);
 void            gwy_app_show_kill_cb              (void);
+GtkWidget*      gwy_app_main_window_get           (void);
+void            gwy_app_main_window_set           (GtkWidget *window);
 gboolean        gwy_app_quit                      (void);
 
 /* FIXME: ugly. to be moved somewhere? refactored? */

@@ -39,15 +39,16 @@ gwy_app_about(void)
         return;
     }
     s = g_strdup_printf(_("About %s"), g_get_application_name());
-    about = gtk_dialog_new_with_buttons(s, GTK_WINDOW(gwy_app_main_window),
-                                         GTK_DIALOG_NO_SEPARATOR
-                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                         NULL);
+    about = gtk_dialog_new_with_buttons(s,
+                                        GTK_WINDOW(gwy_app_main_window_get()),
+                                        GTK_DIALOG_NO_SEPARATOR
+                                        | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                        NULL);
     gtk_container_set_border_width(GTK_CONTAINER(about), 6);
     gtk_window_set_resizable(GTK_WINDOW(about), FALSE);
     gtk_window_set_transient_for(GTK_WINDOW(about),
-                                 GTK_WINDOW(gwy_app_main_window));
+                                 GTK_WINDOW(gwy_app_main_window_get()));
     gtk_window_set_position(GTK_WINDOW(about), GTK_WIN_POS_CENTER_ON_PARENT);
     g_free(s);
 

@@ -194,7 +194,8 @@ gwy_app_run_process_func_cb(gchar *name)
             gwy_process_func_run(name, data, run_types[i]);
             /* FIXME: the ugliest hack! */
             gwy_app_data_view_update(data_view);
-            menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window),
+            menu = GTK_WIDGET(g_object_get_data(G_OBJECT(
+                                                    gwy_app_main_window_get()),
                                                 "<proc>"));
             gwy_app_update_last_process_func(menu, name);
             gwy_app_menu_set_sensitive_recursive(menu, &sens_data);

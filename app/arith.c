@@ -117,7 +117,7 @@ gwy_data_arith_window_construct(void)
     GtkWidget *dialog, *table, *omenu, *entry, *label;
 
     dialog = gtk_dialog_new_with_buttons(_("Data Arithmetic"),
-                                         GTK_WINDOW(gwy_app_main_window),
+                                         GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,

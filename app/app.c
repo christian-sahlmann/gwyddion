@@ -36,7 +36,7 @@ typedef struct {
     GObject *data;
 } GwyAppFuckingUndo;
 
-GtkWidget *gwy_app_main_window = NULL;
+static GtkWidget *gwy_app_main_window = NULL;
 
 static GList *current_data = NULL;
 static GList *current_graphs = NULL;
@@ -157,7 +157,7 @@ gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data)
     gsize i;
 
     for (i = 0; i < G_N_ELEMENTS(menu_list); i++) {
-        GtkWidget *menu = g_object_get_data(G_OBJECT(gwy_app_main_window),
+        GtkWidget *menu = g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
                                             menu_list[i]);
 
         g_assert(menu);
@@ -180,7 +180,7 @@ gwy_app_data_window_create(GwyContainer *data)
                                  GWY_DATA_VIEW_LAYER(layer));
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
     gtk_window_add_accel_group(GTK_WINDOW(data_window),
-                               g_object_get_data(G_OBJECT(gwy_app_main_window),
+                               g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
                                                  "accel_group"));
     g_signal_connect(data_window, "focus-in-event",
                      G_CALLBACK(gwy_app_data_window_set_current), NULL);
@@ -748,6 +748,24 @@ gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
 }
 
+GtkWidget*
+gwy_app_main_window_get(void)
+{
+    if (!gwy_app_main_window)
+        g_critical("Trying to access app main window before its creation");
+    return gwy_app_main_window;
+}
+
+void
+gwy_app_main_window_set(GtkWidget *window)
+{
+    if (gwy_app_main_window && window != gwy_app_main_window)
+        g_critical("Trying to change app main window");
+    if (!GTK_IS_WINDOW(window))
+        g_warning("Setting app main window to a non-GtkWindow");
+    gwy_app_main_window = window;
+}
+
 static gboolean
 gwy_app_confirm_quit(void)
 {
@@ -792,7 +810,7 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
         text = g_strconcat(filename, "\n", text, NULL);
         unsaved = g_slist_next(unsaved);
     }
-    dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_main_window),
+    dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_main_window_get()),
                                     GTK_DIALOG_MODAL,
                                     GTK_MESSAGE_QUESTION,
                                     GTK_BUTTONS_YES_NO,

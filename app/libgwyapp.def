@@ -23,7 +23,8 @@ EXPORTS
 	gwy_app_graph_window_get_current
 	gwy_app_graph_window_remove
 	gwy_app_graph_window_set_current
-	gwy_app_main_window
+	gwy_app_main_window_get
+	gwy_app_main_window_set
 	gwy_app_mask_kill_cb
 	gwy_app_menu_recent_files_update
 	gwy_app_menu_set_flags_recursive

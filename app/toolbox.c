@@ -57,7 +57,7 @@ gwy_app_toolbox_create(void)
     gtk_window_set_wmclass(GTK_WINDOW(toolbox), "toolbox",
                            g_get_application_name());
     gtk_window_set_resizable(GTK_WINDOW(toolbox), FALSE);
-    gwy_app_main_window = toolbox;
+    gwy_app_main_window_set(toolbox);
 
     accel_group = gtk_accel_group_new();
     g_object_set_data(G_OBJECT(toolbox), "accel_group", accel_group);
@@ -392,7 +392,7 @@ gwy_app_rerun_process_func_cb(void)
     GtkWidget *menu;
     gchar *name;
 
-    menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window),
+    menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
                                         "<proc>"));
     g_return_if_fail(menu);
     name = (gchar*)g_object_get_data(G_OBJECT(menu), "last-func");
@@ -411,6 +411,7 @@ delete_app_window(void)
 {
     gboolean boo;
 
-    g_signal_emit_by_name(gwy_app_main_window, "delete_event", NULL, &boo);
+    g_signal_emit_by_name(gwy_app_main_window_get(), "delete_event",
+                          NULL, &boo);
 }
 
