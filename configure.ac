@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.6, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.6cvs20041205, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -178,7 +178,7 @@ AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_LIB([tiff],[TIFFOpen])
 PACKAGE_LIBS="$PACKAGE_LIBS $GOBJECT_LIBS $LIBS"
 # XXX: need Gtk+ headers.
-PACKAGE_CFLAGS="$PACKAGE_CFLAGS $GTK_CFLAGS $GTKGLEXT_CFLAGS"
+PACKAGE_CFLAGS="-DGWYDDION_COMPILATION $PACKAGE_CFLAGS $GTK_CFLAGS $GTKGLEXT_CFLAGS"
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -203,6 +203,9 @@ dnl Checks for library functions.
 AC_FUNC_MMAP
 AC_CHECK_FUNCS([getline])
 AC_CHECK_FUNCS([setenv])
+AC_CHECK_FUNCS([cbrt])
+AC_CHECK_FUNCS([hypot])
+AC_CHECK_FUNCS([pow10])
 
 dnl I18n stuff
 GETTEXT_PACKAGE=$PACKAGE_TARNAME

@@ -21,6 +21,7 @@
 #ifndef __GWY_GWYMACROS_H__
 #define __GWY_GWYMACROS_H__
 
+#ifdef GWYDDION_COMPILATION
 #ifdef _MSC_VER
 #include "version.h"
 #else
@@ -29,7 +30,8 @@
 #else
 /* XXX: whatever */
 #endif
-#endif
+#endif  /* _MSC_VER */
+#endif  /* GWYDDION_COMPILATION */
 
 #include <glibconfig.h>
 #include <glib/gmacros.h>
