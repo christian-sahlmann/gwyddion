@@ -276,16 +276,16 @@ gwy_data_field_deserialize(const guchar *buffer,
                                             GWY_DATA_FIELD_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
         g_free(data);
-        g_object_unref(si_unit_xy);
-        g_object_unref(si_unit_z);
+        gwy_object_unref(si_unit_xy);
+        gwy_object_unref(si_unit_z);
         return NULL;
     }
     if (fsize != (gsize)(xres*yres)) {
         g_critical("Serialized %s size mismatch %u != %u",
               GWY_DATA_FIELD_TYPE_NAME, fsize, xres*yres);
         g_free(data);
-        g_object_unref(si_unit_xy);
-        g_object_unref(si_unit_z);
+        gwy_object_unref(si_unit_xy);
+        gwy_object_unref(si_unit_z);
         return NULL;
     }
 
@@ -297,12 +297,12 @@ gwy_data_field_deserialize(const guchar *buffer,
     data_field->yres = yres;
     if (si_unit_z != NULL) {
         if (data_field->si_unit_z != NULL)
-            g_object_unref(data_field->si_unit_z);
+            gwy_object_unref(data_field->si_unit_z);
         data_field->si_unit_z = si_unit_z;
     }
     if (si_unit_xy != NULL) {
         if (data_field->si_unit_xy != NULL)
-            g_object_unref(data_field->si_unit_xy);
+            gwy_object_unref(data_field->si_unit_xy);
         data_field->si_unit_xy = si_unit_xy;
     }
 
