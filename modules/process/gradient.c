@@ -126,7 +126,7 @@ gradient_filter(GwyContainer *data,
     else if (!strcmp(name, "prewitt_vertical"))
         gwy_data_field_filter_prewitt(gradfield, GWY_ORIENTATION_VERTICAL);
     else {
-        g_critical("Function called under unregistered name `%s'");
+        g_critical("Function called under unregistered name `%s'", name);
     }
 
     return TRUE;
