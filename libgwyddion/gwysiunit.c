@@ -219,7 +219,7 @@ gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
 {
     gwy_debug("");
 
-    if (siunit->unitstr!=NULL) g_free(siunit->unitstr);
+    g_free(siunit->unitstr);
     siunit->unitstr = g_strdup(unit_string);
 }
 
@@ -235,8 +235,7 @@ gchar*
 gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
     gwy_debug("");
-    if (siunit->unitstr == NULL) return NULL;
-    else return g_strdup(siunit->unitstr);
+    return g_strdup(siunit->unitstr);
 }
 
 void
