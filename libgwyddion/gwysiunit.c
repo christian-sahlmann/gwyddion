@@ -444,6 +444,12 @@ gwy_si_unit_get_unit_for_magnitude(GwySIUnit *siunit,
                        NULL);
 }
 
+/**
+ * gwy_si_unit_value_format_free:
+ * @format: A value format to free.
+ *
+ * Frees a value format structure.
+ **/
 void
 gwy_si_unit_value_format_free(GwySIValueFormat *format)
 {
