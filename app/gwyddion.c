@@ -5,6 +5,7 @@
 #include <libgwydgets/gwydgets.h>
 #include "init.h"
 
+/* TODO */
 static GwyContainer *current_data = NULL;
 
 GtkWidget*
@@ -57,7 +58,7 @@ create_data_menu(void)
     GtkItemFactory *item_factory;
     GtkWidget *widget, *alignment;
 
-    item_factory = gwy_build_process_menu();
+    item_factory = GTK_ITEM_FACTORY(gwy_build_process_menu());
     widget = gtk_item_factory_get_widget(item_factory, "<data>");
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
     gtk_container_add(GTK_CONTAINER(alignment), widget);
