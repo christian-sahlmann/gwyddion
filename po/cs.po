@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-12-06 04:23+0100\n"
-"PO-Revision-Date: 2004-12-06 11:32+0100\n"
+"POT-Creation-Date: 2004-12-11 04:29+0100\n"
+"PO-Revision-Date: 2004-12-12 10:43+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -42,16 +42,16 @@ msgstr "Hledám lokální maxima"
 msgid "Found %d internal local maxima"
 msgstr "Bylo nalezeno %d lokálních maxim"
 
-#: libprocess/tip.c:790 libprocess/tip.c:818 libprocess/tip.c:869
-#: libprocess/tip.c:896
+#: libprocess/tip.c:813 libprocess/tip.c:841 libprocess/tip.c:892
+#: libprocess/tip.c:919
 msgid "Converting fields"
 msgstr "Konvertuji pole"
 
-#: libprocess/tip.c:800
+#: libprocess/tip.c:823
 msgid "Starting partial estimation"
 msgstr "Začínám částečný odhad"
 
-#: libprocess/tip.c:879
+#: libprocess/tip.c:902
 msgid "Starting full estimation"
 msgstr "Začínám plný odhad"
 
@@ -206,7 +206,7 @@ msgstr "Veli_kost:"
 
 #: libgwydgets/gwy3dwindow.c:551 modules/file/pixmap.c:674
 #: modules/file/pixmap.c:1553 modules/file/rawfile.c:490
-#: modules/process/angle_dist.c:183 modules/process/calibrate.c:213
+#: modules/process/angle_dist.c:183 modules/process/calibrate.c:219
 #: modules/process/cwt.c:177 modules/process/dwt.c:184
 #: modules/process/dwtanisotropy.c:199 modules/process/dwtcorrection.c:185
 #: modules/process/dwtdenoise.c:188 modules/process/fft.c:350
@@ -527,11 +527,11 @@ msgstr "Exportovat trojrozměrný pohled do PNG obrázku"
 msgid "Untitled %d"
 msgstr "Nepojmenovaný %d"
 
-#: app/app.c:1172 app/toolbox.c:641
+#: app/app.c:1172 app/toolbox.c:645
 msgid "/Remove _Mask"
 msgstr "/Odstranit _masku"
 
-#: app/app.c:1173 app/toolbox.c:657
+#: app/app.c:1173 app/toolbox.c:661
 msgid "/Mask _Color"
 msgstr "/_Barva masky"
 
@@ -803,111 +803,119 @@ msgstr "Výpočet fraktální dimenze"
 msgid "Shade data"
 msgstr "Vystínování dat"
 
-#: app/toolbox.c:268
+#: app/toolbox.c:261
+msgid "Remove polynomial background"
+msgstr "Odstranění polynomiálního pozadí"
+
+#: app/toolbox.c:263
+msgid "Remove scars"
+msgstr "Odstranění šrámů"
+
+#: app/toolbox.c:272
 msgid "Graph"
 msgstr "Graf"
 
-#: app/toolbox.c:276
+#: app/toolbox.c:280
 msgid "Read coordinates"
 msgstr "Odečítání souřadnic"
 
-#: app/toolbox.c:278
+#: app/toolbox.c:282
 msgid "Zoom a part of graph"
 msgstr "Zvětšení části grafu"
 
-#: app/toolbox.c:280
+#: app/toolbox.c:284
 msgid "Reset zoom to display complete data"
 msgstr "Nastavení zvětšení, aby se zobrazila celá data"
 
-#: app/toolbox.c:282
+#: app/toolbox.c:286
 msgid "Measure graph point distances"
 msgstr "Měření vzdálenosti bodů na grafu"
 
-#: app/toolbox.c:284
+#: app/toolbox.c:288
 msgid "Fit critical dimension"
 msgstr "Proložení kritické dimenze"
 
-#: app/toolbox.c:286
+#: app/toolbox.c:290
 msgid "Fit functions to graph data"
 msgstr "Proložení funkce grafem"
 
-#: app/toolbox.c:295
+#: app/toolbox.c:299
 msgid "Tools"
 msgstr "Nástroje"
 
-#: app/toolbox.c:368
+#: app/toolbox.c:372
 msgid "Re-show Last"
 msgstr "Ukázat poslední"
 
-#: app/toolbox.c:381
+#: app/toolbox.c:385
 msgid "Repeat Last"
 msgstr "Opakovat poslední"
 
-#: app/toolbox.c:431
+#: app/toolbox.c:435
 msgid "/Module _Browser"
 msgstr "/_Prohlížeč modulů"
 
-#: app/toolbox.c:439
+#: app/toolbox.c:443
 msgid "/_Metadata Browser"
 msgstr "/Prohlížeč _metadat"
 
-#: app/toolbox.c:454
+#: app/toolbox.c:458
 msgid "/_About Gwyddion"
 msgstr "/_O Gwyddionu"
 
-#: app/toolbox.c:496
+#: app/toolbox.c:500
 msgid "/_Open"
 msgstr "/_Otevřít"
 
-#: app/toolbox.c:504
+#: app/toolbox.c:508
 msgid "/Open _Recent"
 msgstr "/Otevřít _nedávný"
 
-#: app/toolbox.c:512
+#: app/toolbox.c:516
 msgid "/Open Recent/---"
 msgstr "/Otevřít _nedávný/---"
 
-#: app/toolbox.c:520
+#: app/toolbox.c:524
 msgid "/_Save"
 msgstr "/_Uložit"
 
-#: app/toolbox.c:528
+#: app/toolbox.c:532
 msgid "/Save _As"
 msgstr "/Uložit j_ako"
 
-#: app/toolbox.c:538
+#: app/toolbox.c:542
 msgid "/_Close"
 msgstr "/_Zavřít"
 
-#: app/toolbox.c:554
+#: app/toolbox.c:558
 msgid "/_Quit"
 msgstr "/U_končit"
 
-#: app/toolbox.c:577
+#: app/toolbox.c:581
 msgid "/_Export To"
 msgstr "/_Exportovat do"
 
-#: app/toolbox.c:579
+#: app/toolbox.c:583
 msgid "/_Import From"
 msgstr "/_Načíst z"
 
-#: app/toolbox.c:609
+#: app/toolbox.c:613
 msgid "/_Undo"
 msgstr "/_Zpět"
 
-#: app/toolbox.c:617
+#: app/toolbox.c:621
 msgid "/_Redo"
 msgstr "/Z_novu"
 
-#: app/toolbox.c:625
+#: app/toolbox.c:629
 msgid "/_Duplicate"
 msgstr "/Vytvořit _kopii"
 
-#: app/toolbox.c:649
+#: app/toolbox.c:653
 msgid "/Remove _Presentation"
 msgstr "/Odstranit _presentaci"
 
-#: app/toolbox.c:665
+#: app/toolbox.c:669
 msgid "/Default Mask _Color"
 msgstr "/Předvolená ba_rva masky"
 
@@ -972,13 +980,23 @@ msgstr "Načítá datové soubory Nanoscope."
 msgid "Nanoscope files"
 msgstr "Soubory Nanoscope"
 
-#: modules/file/nanoscope.c:655 modules/file/sis.c:510
+#: modules/file/nanoscope.c:655 modules/file/nt-mdt.c:425
+#: modules/file/sis.c:517
 msgid "Select Data"
 msgstr "Vyber data"
 
-#: modules/file/nanoscope.c:671 modules/file/sis.c:526
+#: modules/file/nanoscope.c:671 modules/file/nt-mdt.c:441
+#: modules/file/sis.c:533
 msgid "Data to load:"
 msgstr "Data k načtení:"
+
+#: modules/file/nt-mdt.c:267
+msgid "Load NT-MDT data files."
+msgstr ""
+
+#: modules/file/nt-mdt.c:283
+msgid "NT-MDT files (.mdt)"
+msgstr ""
 
 #: modules/file/pixmap.c:219
 msgid "Portable Network Graphics (.png)"
@@ -1815,51 +1833,51 @@ msgstr "/_Jednoduché operace/Rotace v _kladném smyslu"
 msgid "/_Basic Operations/Flip _Both"
 msgstr "/_Jednoduché operace/Překlopení v _obou směrech"
 
-#: modules/process/calibrate.c:118
+#: modules/process/calibrate.c:122
 msgid "Recalibrate scan axis"
 msgstr "Kalibrovat osy"
 
-#: modules/process/calibrate.c:134
+#: modules/process/calibrate.c:138
 msgid "/_Basic Operations/_Recalibrate..."
 msgstr "/_Jednoduché operace/_Kalibrace os..."
 
-#: modules/process/calibrate.c:212
+#: modules/process/calibrate.c:218
 msgid "Calibrate"
 msgstr "Kalibrovat osy"
 
-#: modules/process/calibrate.c:230
+#: modules/process/calibrate.c:236
 msgid "<b>New Real Dimensions</b>"
 msgstr "<b>Nové fyzické rozměry</b>"
 
-#: modules/process/calibrate.c:236
+#: modules/process/calibrate.c:242
 msgid "_X range:"
 msgstr "_X-ový rozsah:"
 
-#: modules/process/calibrate.c:259
+#: modules/process/calibrate.c:265
 msgid "_Y range:"
 msgstr "_Y-ový rozsah:"
 
-#: modules/process/calibrate.c:273
+#: modules/process/calibrate.c:279
 msgid "_Square samples"
 msgstr "Č_tvercové pixely"
 
-#: modules/process/calibrate.c:278
+#: modules/process/calibrate.c:284
 msgid "_Z range:"
 msgstr "_Z-ový rozsah:"
 
-#: modules/process/calibrate.c:303
+#: modules/process/calibrate.c:309
 msgid "<b>Calibration Coefficients</b>"
 msgstr "<b>Kalibrační koeficienty</b>"
 
-#: modules/process/calibrate.c:311
+#: modules/process/calibrate.c:317
 msgid "_X calibration factor:"
 msgstr "Kalibrační faktor v ose _X:"
 
-#: modules/process/calibrate.c:319
+#: modules/process/calibrate.c:325
 msgid "_Y calibration factor:"
 msgstr "Kalibrační faktor v ose _Y:"
 
-#: modules/process/calibrate.c:327
+#: modules/process/calibrate.c:333
 msgid "_Z calibration factor:"
 msgstr "Kalibrační faktor v ose _Z:"
 
