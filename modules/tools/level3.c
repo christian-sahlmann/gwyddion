@@ -196,7 +196,7 @@ level3_get_z_average(GwyDataField *dfield,
     x = gwy_data_field_rtoj(dfield, xreal);
     y = gwy_data_field_rtoi(dfield, yreal);
     if (radius < 2)
-        return gwy_data_field_get_val(dfield, y, x);
+        return gwy_data_field_get_val(dfield, x, y);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     ulj = CLAMP(x - radius, 0, xres - 1);
