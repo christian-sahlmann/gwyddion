@@ -482,8 +482,15 @@ gwy_layer_lines_button_released(GwyVectorLayer *layer,
         gwy_layer_lines_draw_line(lines_layer, window, i/2);
         lines_layer->lines[2*i] = xreal;
         lines_layer->lines[2*i + 1] = yreal;
-        gwy_layer_lines_save(lines_layer, i/2);
-        gwy_layer_lines_draw_line(lines_layer, window, i/2);
+        /* XXX this can happen also with rounding errors */
+        if (lines_layer->lines[2*i] == lines_layer->lines[2*i + 2]
+            && lines_layer->lines[2*i + 1] == lines_layer->lines[2*i + 3]) {
+            lines_layer->nselected--;
+        }
+        else {
+            gwy_layer_lines_save(lines_layer, i/2);
+            gwy_layer_lines_draw_line(lines_layer, window, i/2);
+        }
         gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
     }
     if (lines_layer->nselected == lines_layer->nlines)
