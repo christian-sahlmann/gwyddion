@@ -203,6 +203,7 @@ scars_mark(GwyContainer *data, GwyRunType run)
     if (!ok)
         return FALSE;
 
+    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     scars_mark_do(&args, data);
 
     return ok;
@@ -215,7 +216,6 @@ scars_mark_do(ScarsArgs *args, GwyContainer *data)
 
     dfield = gwy_container_get_object_by_name(data, "/0/data");
 
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (!gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
         mask = gwy_serializable_duplicate(dfield);
         gwy_container_set_object_by_name(data, "/0/mask", mask);
@@ -464,9 +464,8 @@ preview(ScarsControls *controls,
                                                              "/0/data"));
 
     /*set up the mask*/
-    if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                               "/0/mask"));
+    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
+                                         (GObject**)&mask)) {
         gwy_data_field_resample(mask,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
