@@ -58,7 +58,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && (GwyDataViewLayer*)layer == state->layer) {
-        g_assert(state->data_window = data_window);
+        g_assert(state->data_window == data_window);
         if (reason == GWY_TOOL_SWITCH_TOOL)
             gwy_unitool_dialog_set_visible(state, TRUE);
         return;
