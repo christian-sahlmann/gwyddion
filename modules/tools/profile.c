@@ -182,8 +182,8 @@ dialog_create(GwyUnitoolState *state)
     table = gtk_table_new(3 + NPROFILE, 5, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
-    gtk_table_set_col_spacing(GTK_TABLE(table), 0, 8);
-    gtk_table_set_col_spacing(GTK_TABLE(table), 2, 8);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 0, 12);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 2, 12);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
 
@@ -410,7 +410,6 @@ apply(GwyUnitoolState *state)
     gchar *z_unit;
     gdouble z_mag, z_max;
     GwyGraphAutoProperties prop;
-    gchar buf[16];
 
     controls = (ToolControls*)state->user_data;
     units = state->coord_format;
