@@ -787,10 +787,10 @@ gwy_unitool_rect_info_table_setup(GwyUnitoolRectLabels *rinfo,
  * @state: Tool state.
  * @rinfo: A rectangular selection display data.
  * @selreal: If not %NULL, must be an array of size at least 4 and will be
- *           filled with selection data xmin, xmax, ymin, ymax in physical
+ *           filled with selection data xmin, ymin, xmax, ymax in physical
  *           units.
  * @selpix: If not %NULL, must be an array of size at least 4 and will be
- *          filled with selection data xmin, xmax, ymin, ymax in pixels.
+ *          filled with selection data xmin, ymin, xmax, ymax in pixels.
  *
  * Updates rectangular selection info display.
  *
