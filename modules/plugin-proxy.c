@@ -15,15 +15,26 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA.
+ *
+ **************************************************************************
+ *
+ *  As a special exception, you are allowed to freely study this one file
+ *  (plugin-proxy.c) for the purpose of creation of Gwyddion plug-ins
+ *  reading and/or writing the `dump' file format, and license them under
+ *  any license.
+ *
+ *  This shall not be considered license infringement in the sense of
+ *  creation of non-GPL derived work, as this file serves as the ultimate
+ *  `dump' format documentation.
+ *
+ **************************************************************************
  */
 
 /* XXX: ,safe` for Unix, but probably broken for Win32
  * It always creates the temporary file, keeps it open all the time during
- * plug-in runs, then unlinks it and closes at last.
- *
- * XXX: it also has to open dump files in binary mode, BUT still assumes
- * normal Unix \n EOLs (one-way now fixed by next_line() accepting both).
+ * plug-in runs, then unlinks it and closes at last.  It seems to work on
+ * Win32 too, but one never knows...
  *
  * XXX: the `dump' should probably be `dumb'...
  */

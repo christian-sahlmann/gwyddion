@@ -12,7 +12,10 @@ Use ccache.
 
 See devel-docs/README for HTML doc info (make docs generates it).
 
-Note stuff in the plugins/ directory is public domain.
+Note the stuff in the plugins/ directory is public domain.
+Note module/plugin-proxy.c has a special licensing exception too,
+you can use it as `dump' format documentation without being `tainted',
+see module/plugin-proxy.c for more.
 
 Note library sonames are kept constant in spite of their neverending changes
 till a official version is released.
