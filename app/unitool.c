@@ -28,7 +28,7 @@
 static void gwy_unitool_name_changed_cb      (GwyUnitoolState *state);
 static void gwy_unitool_disconnect_handlers  (GwyUnitoolState *state);
 static void gwy_unitool_dialog_abandon       (GwyUnitoolState *state);
-static void gwy_unitool_compute_units        (GwyUnitoolState *state);
+static void gwy_unitool_compute_formats      (GwyUnitoolState *state);
 static void gwy_unitool_selection_updated_cb (GwyUnitoolState *state);
 static void gwy_unitool_data_updated_cb      (GwyUnitoolState *state);
 static void gwy_unitool_dialog_response_cb   (GwyUnitoolState *state,
@@ -126,7 +126,7 @@ gwy_unitool_use(GwyUnitoolState *state,
                                    state);
 
     /* setup based on switch reason */
-    gwy_unitool_compute_units(state);
+    gwy_unitool_compute_formats(state);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         gwy_unitool_dialog_set_visible(state, TRUE);
     if (reason == GWY_TOOL_SWITCH_WINDOW)
@@ -187,10 +187,10 @@ gwy_unitool_dialog_abandon(GwyUnitoolState *state)
             state->func_slots->dialog_abandon(state);
         gtk_widget_destroy(state->dialog);
     }
-    g_free(state->coord_units);
-    g_free(state->value_units);
-    state->coord_units = NULL;
-    state->value_units = NULL;
+    g_free(state->coord_format);
+    g_free(state->value_format);
+    state->coord_format = NULL;
+    state->value_format = NULL;
     state->layer = NULL;
     state->dialog = NULL;
     state->windowname = NULL;
@@ -199,38 +199,17 @@ gwy_unitool_dialog_abandon(GwyUnitoolState *state)
 }
 
 static void
-gwy_unitool_compute_units(GwyUnitoolState *state)
+gwy_unitool_compute_formats(GwyUnitoolState *state)
 {
     GwyContainer *data;
     GwyDataField *dfield;
-    GwySIUnit *siunits;
-    GwySIValueFormat *cunits;
-    gdouble xreal, yreal, max, min, unit;
-
-    /* TODO remove once GwySIUnit works... */
-    if (!state->coord_units)
-        state->coord_units = g_new(GwySIValueFormat, 1);
-    if (!state->value_units)
-        state->value_units = g_new(GwySIValueFormat, 1);
 
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    cunits = state->coord_units;
-    siunits = gwy_data_field_get_si_unit_xy(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-    max = MAX(xreal, yreal);
-    unit = MIN(xreal/gwy_data_field_get_xres(dfield),
-               yreal/gwy_data_field_get_yres(dfield));
-    gwy_si_unit_get_format_with_resolution(siunits, max, unit, cunits);
-
-    cunits = state->value_units;
-    siunits = gwy_data_field_get_si_unit_z(dfield);
-    max = gwy_data_field_get_max(dfield);
-    min = gwy_data_field_get_min(dfield);
-    max = MAX(fabs(max), fabs(min));
-    gwy_si_unit_get_format(siunits, max, cunits);
+    state->coord_format
+        = gwy_data_field_get_value_format_xy(dfield, state->coord_format);
+    state->value_format
+        = gwy_data_field_get_value_format_xy(dfield, state->value_format);
 }
 
 /*
