@@ -51,6 +51,13 @@ struct _Gwy3DWindow {
     GtkWidget *material_menu;
     GtkWidget *material_label;
 
+    GtkWidget *labels_menu;
+    GtkWidget *labels_text;
+    GtkWidget *labels_delta_x;
+    GtkWidget *labels_delta_y;
+    GtkWidget *labels_size;
+    GtkWidget *labels_rotation; /* to be implemented */
+
     GtkWidget *notebook;
     GtkWidget *vbox;
     GtkWidget *actions;

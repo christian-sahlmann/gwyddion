@@ -30,18 +30,6 @@
 #include <libgwyddion/gwysiunit.h>
 
 G_BEGIN_DECLS
-#define GWY_TYPE_3D_LABEL_DESCRIPTION              \
-    (gwy_3d_label_description_get_type())
-#define GWY_3D_LABEL_DESCRIPTION(obj)              \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_3D_LABEL_DESCRIPTION, Gwy3DLabelDescription))
-#define GWY_3D_LABEL_DESCRIPTION_CLASS(klass)      \
-    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_3D_LABEL_DESCRIPTION, Gwy3DLabelDescriptionClass))
-#define GWY_IS_3D_LABEL_DESCRIPTION(obj)           \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_3D_LABEL_DESCRIPTION))
-#define GWY_IS_3D_LABEL_DESCRIPTION_CLASS(klass)   \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_3D_LABEL_DESCRIPTION))
-#define GWY_3D_LABEL_DESCRIPTION_GET_CLASS(obj)    \
-    (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_3D_LABEL_DESCRIPTION, Gwy3DLabelDescriptionClass))
 
 #define GWY_TYPE_3D_LABELS              \
     (gwy_3d_labels_get_type())
@@ -71,19 +59,14 @@ typedef enum {
 } Gwy3DLabelName;
 
 struct _Gwy3DLabelDescription {
-    GObject parent;
 
-    gchar            text[100];
+    gchar          * text;
     GtkAdjustment  * delta_x;
     GtkAdjustment  * delta_y;
     GtkAdjustment  * rotation;
     GtkAdjustment  * size;
 } ;
 
-struct _Gwy3DLabelDescriptionClass {
-    GObjectClass parent_class;
-
-};
 
 struct _Gwy3DLabels {
     GObject parent;
@@ -94,28 +77,34 @@ struct _Gwy3DLabels {
     gchar ** values;
     guint variables_count;
     gchar *  text;
+
+    gpointer reserved1;
+    gpointer reserved2;
 } ;
 
 struct _Gwy3DLabelsClass {
     GObjectClass parent_class;
 
+    void (* label_changed) (Gwy3DLabels *labels);
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
-GType                   gwy_3d_label_description_get_type  (void) G_GNUC_CONST;
 GType                   gwy_3d_labels_get_type             (void) G_GNUC_CONST;
 
-Gwy3DLabelDescription * gwy_3d_labels_get_description(Gwy3DLabels * gwy3dlabels,
-                                                      Gwy3DLabelName label_name);
 Gwy3DLabels            * gwy_3d_labels_new            (void);
 void                     gwy_3d_labels_update         (Gwy3DLabels * labels,
                                                        GwyContainer * container,
                                                        GwySIUnit * si_unit);
-gchar                  * gwy_3d_labels_get_text       (Gwy3DLabels * labels,
+gchar                  * gwy_3d_labels_format_text    (Gwy3DLabels * labels,
                                                        Gwy3DLabelName label_name);
-void                     gwy_3d_labels_connect_signal (Gwy3DLabels * labels,
-                                                       gchar * signal_name,
-                                                       GCallback handler,
-                                                       gpointer user_data);
+
+Gwy3DLabelDescription  * gwy_3d_labels_get_description(Gwy3DLabels * gwy3dlabels,
+                                                      Gwy3DLabelName label_name);
+
+void    gwy_3d_label_description_set_text(Gwy3DLabelDescription * label_description,
+                                          const gchar* text);
 
 #define gwy_3d_labels_get_delta_x(labels, name) \
             (gwy_3d_labels_get_description(labels, name)->delta_x->value)

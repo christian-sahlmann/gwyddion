@@ -43,8 +43,8 @@
 #define GWY_3D_VIEW_TYPE_NAME "Gwy3DView"
 
 #define BITS_PER_SAMPLE 8
-#define GWY_3D_VIEW_DEFAULT_SIZE_X 257
-#define GWY_3D_VIEW_DEFAULT_SIZE_Y 257
+#define GWY_3D_VIEW_DEFAULT_SIZE_X 260
+#define GWY_3D_VIEW_DEFAULT_SIZE_Y 260
 #define GWY_3D_SHAPE_AFM     0
 #define GWY_3D_SHAPE_REDUCED 1
 
@@ -95,6 +95,8 @@ static GtkAdjustment* gwy_3d_view_create_adjustment (Gwy3DView *gwy3dview,
                                                      gdouble step,
                                                      gdouble page);
 static void     gwy_3d_adjustment_value_changed (GtkAdjustment* adjustment,
+                                                 gpointer user_data);
+static void     gwy_3d_labels_value_changed     (Gwy3DLabels* labels,
                                                  gpointer user_data);
 static void          gwy_3d_timeout_start       (Gwy3DView * gwy3dview,
                                                  gboolean immediate,
@@ -354,9 +356,8 @@ gwy_3d_view_new(GwyContainer *data)
 
     gwy3dview->si_unit = (GwySIUnit*) gwy_si_unit_new("m");
     gwy3dview->labels = gwy_3d_labels_new();
-    gwy_3d_labels_connect_signal(gwy3dview->labels, "value-changed",
-                                 G_CALLBACK(gwy_3d_adjustment_value_changed),
-                                 (gpointer)gwy3dview);
+    g_signal_connect(gwy3dview->labels, "label_changed",
+                     G_CALLBACK(gwy_3d_labels_value_changed), gwy3dview);
     gwy_3d_labels_update(gwy3dview->labels, gwy3dview->container, gwy3dview->si_unit);
     gwy_debug("labels:%p",gwy3dview->labels);
     return widget;
@@ -1319,6 +1320,18 @@ gwy_3d_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_data)
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
+static void
+gwy_3d_labels_value_changed(Gwy3DLabels* labels, gpointer user_data)
+{
+    Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
+
+    gwy_debug(" ");
+    g_return_if_fail(GWY_IS_3D_LABELS(labels));
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+
+    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+}
+
 
 static void
 gwy_3d_view_realize(GtkWidget *widget)
@@ -1917,40 +1930,45 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
 #else
             guint view_size;
             gint size;
-
-
+            guint label;
 
             view_size = GTK_WIDGET(widget)->allocation.width
                    < GTK_WIDGET(widget)->allocation.height
                    ? GTK_WIDGET(widget)->allocation.width
                    : GTK_WIDGET(widget)->allocation.height;
             size = (gint) (sqrt(view_size)*0.8);
+            if (yfirst)
+               label = GWY_3D_VIEW_LABEL_Y;
+            else
+               label = GWY_3D_VIEW_LABEL_X;
             gwy_3d_print_text(widget,
-                              gwy_3d_labels_get_text(widget->labels,
-                                                     GWY_3D_VIEW_LABEL_X),
+                              gwy_3d_labels_format_text(widget->labels,label),
                               (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
                               (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f,
                               gwy_3d_labels_user_size(widget->labels,
-                                                      GWY_3D_VIEW_LABEL_X,
+                                                      label,
                                                       size),
                               1, 1,
-                              gwy_3d_labels_get_delta_x(widget->labels, GWY_3D_VIEW_LABEL_X),
-                              gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_X),
-                              gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_X));
+                              gwy_3d_labels_get_delta_x(widget->labels, label),
+                              gwy_3d_labels_get_delta_y(widget->labels, label),
+                              gwy_3d_labels_get_rotation(widget->labels, label));
+            if (yfirst)
+               label = GWY_3D_VIEW_LABEL_X;
+            else
+               label = GWY_3D_VIEW_LABEL_Y;
             gwy_3d_print_text(widget,
-                              gwy_3d_labels_get_text(widget->labels,
-                                                     GWY_3D_VIEW_LABEL_Y),
+                              gwy_3d_labels_format_text(widget->labels,label),
                               (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
                               (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f,
                               gwy_3d_labels_user_size(widget->labels,
-                                                      GWY_3D_VIEW_LABEL_Y,
+                                                      label,
                                                       size),
                               1, -1,
-                              gwy_3d_labels_get_delta_x(widget->labels, GWY_3D_VIEW_LABEL_Y),
-                              gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_Y),
-                              gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_Y));
+                              gwy_3d_labels_get_delta_x(widget->labels, label),
+                              gwy_3d_labels_get_delta_y(widget->labels, label),
+                              gwy_3d_labels_get_rotation(widget->labels, label));
             gwy_3d_print_text(widget,
-                              gwy_3d_labels_get_text(widget->labels,
+                              gwy_3d_labels_format_text(widget->labels,
                                                      GWY_3D_VIEW_LABEL_MAX),
                               Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
                               (widget->data_max - widget->data_min),
@@ -1962,7 +1980,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                               gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_MAX),
                               gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_MAX));
             gwy_3d_print_text(widget,
-                              gwy_3d_labels_get_text(widget->labels,
+                              gwy_3d_labels_format_text(widget->labels,
                                                      GWY_3D_VIEW_LABEL_MIN),
                               Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, 0.0f,
                               gwy_3d_labels_user_size(widget->labels,
