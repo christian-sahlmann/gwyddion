@@ -24,6 +24,7 @@
 #include <libgwymodule/gwymoduleloader.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwymodule/gwymodule-graph.h>
+#include <libgwymodule/gwymodule-layer.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libgwymodule/gwymodulebrowser.h>
