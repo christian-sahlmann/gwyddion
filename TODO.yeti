@@ -1,9 +1,3 @@
-GWYDDION-1
-- Convert metadata read from files from Latin1 to UTF-8
-- Check whether imports don't leak objects, namely with data choices
-- Add Ranjan to credits
-- Fix Calibrate for data with different real/pixel ratios
-
 MAIN
 - Fix enum documentation after rename, write missing
 - Canny seems to be broken by datafield caching
