@@ -14,6 +14,12 @@ gwysiunit
 
 </para>
 
+<!-- ##### TYPEDEF GwySIValueFormat ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_si_unit_new ##### -->
 <para>
 
@@ -41,36 +47,38 @@ gwysiunit
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_si_unit_get_prefix ##### -->
+<!-- ##### FUNCTION gwy_si_unit_get_format ##### -->
 <para>
 
 </para>
 
 @siunit: 
 @value: 
-@precision: 
-@prefix: 
-@power: 
+@format: 
+@Returns: 
 
 
-<!-- ##### FUNCTION gwy_si_unit_get_prefixed ##### -->
+<!-- ##### FUNCTION gwy_si_unit_get_format_with_resolution ##### -->
 <para>
 
 </para>
 
 @siunit: 
-@value: 
-@precision: 
-@prefix: 
-@power: 
+@maximum: 
+@resolution: 
+@format: 
+@Returns: 
 
 
-<!-- ##### FUNCTION gwy_si_unit_copy ##### -->
+<!-- ##### FUNCTION gwy_si_unit_get_format_with_digits ##### -->
 <para>
 
 </para>
 
-@target: 
-@example: 
+@siunit: 
+@maximum: 
+@sdigits: 
+@format: 
+@Returns: 
 
 

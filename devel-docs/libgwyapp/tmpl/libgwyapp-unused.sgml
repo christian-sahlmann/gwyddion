@@ -106,6 +106,12 @@ toolbox
 @flags: 
 @set_to: 
 
+<!-- ##### TYPEDEF GwyUnitoolUnits ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_app_about ##### -->
 <para>
 

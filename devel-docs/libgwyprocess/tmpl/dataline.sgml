@@ -27,6 +27,16 @@ GwyDataLine
 @GWY_SF_OUTPUT_HHCF: 
 @GWY_SF_OUTPUT_PSDF: 
 
+<!-- ##### ENUM GwyFitLineType ##### -->
+<para>
+
+</para>
+
+@GWY_FIT_POLY_0: 
+@GWY_FIT_POLY_1: 
+@GWY_FIT_POLY_2: 
+@GWY_FIT_POLY_3: 
+
 <!-- ##### STRUCT GwyDataLine ##### -->
 <para>
 
@@ -546,5 +556,51 @@ GwyDataLine
 @target_line: 
 @windowing: 
 @interpolation: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_fit_polynom ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@n: 
+@coeffs: 
+@from: 
+@to: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_line_fit_polynom ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@n: 
+@coeffs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_subtract_polynom ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@n: 
+@coeffs: 
+@from: 
+@to: 
+
+
+<!-- ##### FUNCTION gwy_data_line_subtract_polynom ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@n: 
+@coeffs: 
 
 

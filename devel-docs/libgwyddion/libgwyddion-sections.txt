@@ -1,12 +1,13 @@
 <SECTION>
 <FILE>gwysiunit</FILE>
+GwySIValueFormat
 <TITLE>GwySIUnit</TITLE>
 gwy_si_unit_new
 gwy_si_unit_set_unit_string
 gwy_si_unit_get_unit_string
-gwy_si_unit_get_prefix
-gwy_si_unit_get_prefixed
-gwy_si_unit_copy
+gwy_si_unit_get_format
+gwy_si_unit_get_format_with_resolution
+gwy_si_unit_get_format_with_digits
 <SUBSECTION Standard>
 GWY_SI_UNIT
 GWY_IS_SI_UNIT
@@ -138,6 +139,8 @@ gwy_math_SI_prefix
 gwy_math_humanize_numbers
 gwy_math_find_nearest_line
 gwy_math_find_nearest_point
+gwy_math_lin_solve
+gwy_math_lin_solve_rewrite
 </SECTION>
 
 <SECTION>

@@ -1,6 +1,7 @@
 <SECTION>
 <FILE>datafield</FILE>
 GwyFilterType
+GwyMergeType
 <TITLE>GwyDataField</TITLE>
 GwyDataField
 gwy_data_field_new
@@ -20,6 +21,8 @@ gwy_data_field_get_si_unit_xy
 gwy_data_field_get_si_unit_z
 gwy_data_field_set_si_unit_xy
 gwy_data_field_set_si_unit_z
+gwy_data_field_get_value_format_xy
+gwy_data_field_get_value_format_z
 gwy_data_field_itor
 gwy_data_field_jtor
 gwy_data_field_rtoi
@@ -84,6 +87,17 @@ gwy_data_field_filter_laplacian
 gwy_data_field_filter_sobel
 gwy_data_field_filter_prewitt
 gwy_data_field_convolve
+gwy_data_field_grains_mark_local_maxima
+gwy_data_field_grains_mark_height
+gwy_data_field_grains_mark_slope
+gwy_data_field_grains_mark_curvature
+gwy_data_field_grains_mark_watershed
+gwy_data_field_grains_remove_manually
+gwy_data_field_grains_remove_by_size
+gwy_data_field_grains_remove_by_height
+gwy_data_field_grains_get_average
+gwy_data_field_grains_get_distribution
+gwy_data_field_fit_lines
 <SUBSECTION Standard>
 GWY_DATA_FIELD
 GWY_IS_DATA_FIELD
@@ -97,6 +111,7 @@ GWY_DATA_FIELD_GET_CLASS
 <SECTION>
 <FILE>dataline</FILE>
 GwySFOutputType
+GwyFitLineType
 <TITLE>GwyDataLine</TITLE>
 GwyDataLine
 gwy_data_line_new
@@ -148,6 +163,10 @@ gwy_data_line_cda
 gwy_data_line_acf
 gwy_data_line_hhcf
 gwy_data_line_psdf
+gwy_data_line_part_fit_polynom
+gwy_data_line_fit_polynom
+gwy_data_line_part_subtract_polynom
+gwy_data_line_subtract_polynom
 <SUBSECTION Standard>
 GWY_DATA_LINE
 GWY_IS_DATA_LINE

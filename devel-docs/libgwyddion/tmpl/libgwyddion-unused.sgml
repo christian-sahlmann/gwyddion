@@ -35,9 +35,40 @@ Emitted when value changes.
 @user_data: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_si_unit_copy ##### -->
+<para>
+
+</para>
+
+@target: 
+@example: 
+
 <!-- ##### FUNCTION gwy_si_unit_free ##### -->
 <para>
 
 </para>
 
+
+<!-- ##### FUNCTION gwy_si_unit_get_prefix ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@value: 
+@prefix: 
+@power: 
+@precision: 
+
+<!-- ##### FUNCTION gwy_si_unit_get_prefixed ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@value: 
+@prefixed: 
+@power: 
+@precision: 
+@prefix: 
 

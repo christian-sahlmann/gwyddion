@@ -26,6 +26,14 @@ GwyDataField
 @GWY_FILTER_SOBEL: 
 @GWY_FILTER_PREWITT: 
 
+<!-- ##### ENUM GwyMergeType ##### -->
+<para>
+
+</para>
+
+@GWY_MERGE_UNION: 
+@GWY_MERGE_INTERSECTION: 
+
 <!-- ##### STRUCT GwyDataField ##### -->
 <para>
 
@@ -199,6 +207,26 @@ GwyDataField
 
 @a: 
 @si_unit: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_value_format_xy ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@format: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_value_format_z ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@format: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_itor ##### -->
@@ -971,5 +999,128 @@ GwyDataField
 @ulrow: 
 @brcol: 
 @brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_local_maxima ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_height ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@threshval: 
+@dir: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_slope ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@threshval: 
+@dir: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_curvature ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@threshval: 
+@dir: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_watershed ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@locate_steps: 
+@locate_thresh: 
+@locate_dropsize: 
+@wshed_steps: 
+@wshed_dropsize: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_remove_manually ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@col: 
+@row: 
+<!-- # Unused Parameters # -->
+@data_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_remove_by_size ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@size: 
+<!-- # Unused Parameters # -->
+@data_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_remove_by_height ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@threshval: 
+@direction: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_get_average ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_get_distribution ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@distribution: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fit_lines ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@fit_type: 
+@exclude: 
+@orientation: 
 
 

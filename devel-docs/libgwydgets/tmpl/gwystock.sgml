@@ -206,6 +206,14 @@ The "Pointer-Measure" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_POLYNOM_REMOVE ##### -->
+<para>
+The "Polynom-Remove" stock icon.
+<inlinegraphic fileref="gwy_polynom_remove-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_PROFILE ##### -->
 <para>
 The "Profile" stock icon.

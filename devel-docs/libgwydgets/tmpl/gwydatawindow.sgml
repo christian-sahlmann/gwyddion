@@ -105,24 +105,6 @@ Data display window
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_data_window_set_units ##### -->
-<para>
-
-</para>
-
-@data_window: 
-@units: 
-
-
-<!-- ##### FUNCTION gwy_data_window_get_units ##### -->
-<para>
-
-</para>
-
-@data_window: 
-@Returns: 
-
-
 <!-- ##### SIGNAL GwyDataWindow::title-changed ##### -->
 <para>
 

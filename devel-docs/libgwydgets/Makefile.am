@@ -66,6 +66,7 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_none-24.png \
 	$(top_srcdir)/pixmaps/gwy_pointer-24.png \
 	$(top_srcdir)/pixmaps/gwy_pointer_measure-24.png \
+	$(top_srcdir)/pixmaps/gwy_polynom_remove-24.png \
 	$(top_srcdir)/pixmaps/gwy_profile-24.png \
 	$(top_srcdir)/pixmaps/gwy_rotate-24.png \
 	$(top_srcdir)/pixmaps/gwy_scale-24.png \

@@ -68,3 +68,27 @@ gwymath
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_math_lin_solve ##### -->
+<para>
+
+</para>
+
+@n: 
+@matrix: 
+@rhs: 
+@result: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_lin_solve_rewrite ##### -->
+<para>
+
+</para>
+
+@n: 
+@matrix: 
+@rhs: 
+@result: 
+@Returns: 
+
+

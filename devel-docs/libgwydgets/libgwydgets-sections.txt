@@ -283,8 +283,6 @@ gwy_data_window_set_zoom_mode
 gwy_data_window_get_zoom_mode
 gwy_data_window_update_title
 gwy_data_window_get_base_name
-gwy_data_window_set_units
-gwy_data_window_get_units
 <SUBSECTION Standard>
 GWY_DATA_WINDOW
 GWY_IS_DATA_WINDOW
@@ -507,6 +505,7 @@ GWY_STOCK_ITALIC
 GWY_STOCK_NONE
 GWY_STOCK_POINTER
 GWY_STOCK_POINTER_MEASURE
+GWY_STOCK_POLYNOM_REMOVE
 GWY_STOCK_PROFILE
 GWY_STOCK_ROTATE
 GWY_STOCK_SCALE
@@ -534,6 +533,8 @@ gwy_option_menu_fft_output
 gwy_option_menu_sfunctions_output
 gwy_option_menu_direction
 gwy_option_menu_filter
+gwy_option_menu_mergegrain
+gwy_option_menu_fit_line
 gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history

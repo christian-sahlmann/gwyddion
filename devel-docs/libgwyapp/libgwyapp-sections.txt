@@ -31,7 +31,6 @@ gwy_app_clean_up_data
 GWY_UNITOOL_RESPONSE_UNSELECT
 GwyUnitoolUpdateType
 GwyUnitoolSlots
-GwyUnitoolUnits
 GwyUnitoolState
 GwyUnitoolFunc
 GwyUnitoolCreateFunc

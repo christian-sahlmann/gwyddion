@@ -333,6 +333,22 @@ gwymodulemenus
 @data_window: 
 @zoom_mode: 
 
+<!-- ##### FUNCTION gwy_data_window_get_units ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_data_window_set_units ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@units: 
+
 <!-- ##### FUNCTION gwy_fft_output_menu ##### -->
 <para>
 
