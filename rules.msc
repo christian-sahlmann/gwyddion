@@ -22,7 +22,7 @@ install-lib: lib "$(TOP_SRCDIR)\inst.stamp"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).dll "$(DEST_DIR)"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).lib "$(DEST_DIR)\lib"
 	$(INSTALL) $(LIBRARY)-$(LIB_VER).def "$(DEST_DIR)\lib"
-	for %h in ($(LIB_HEADERS)) do $(INSTALL) %h "$(DEST_DIR)\include\$(XLIBRARY)"
+	$(INSTALL) *.h "$(DEST_DIR)\include\$(XLIBRARY)"
 
 !IFDEF MOD_TYPE
 MOD_DIR = \$(MOD_TYPE)
@@ -30,7 +30,7 @@ MOD_DIR = \$(MOD_TYPE)
 MOD_DIR =
 !ENDIF
 
-# The *.something is conceptually broken, but considering copy's unability
+# XXX: The *.something is conceptually broken, but considering copy's unability
 # to copy more files and DOS max. line length...
 install-mod: mod "$(TOP_SRCDIR)\inst.stamp"
 	$(INSTALL) *.dll "$(DEST_DIR)\modules$(MOD_DIR)"
@@ -41,6 +41,9 @@ install-plugin: plugin "$(TOP_SRCDIR)\inst.stamp"
 install-pixmap: pixmap "$(TOP_SRCDIR)\inst.stamp"
 	$(INSTALL) *.png "$(DEST_DIR)\pixmaps"
 	$(INSTALL) *.ico "$(DEST_DIR)\pixmaps"
+
+install-dev-doc: all
+	$(INSTALL) html\*.* "$(DEST_DIR)\devel-docs\$(LIBRARY)"
 
 # recursion
 sub-all:

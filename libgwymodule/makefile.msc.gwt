@@ -34,7 +34,9 @@ all: lib
 
 lib: $(LIBRARY)-$(LIB_VER).dll
 
+# Install install every .h file
 install: install-lib
+	del "$(DEST_DIR)\include\$(XLIBRARY)\gwymoduleinternal.h"
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 

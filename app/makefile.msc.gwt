@@ -65,7 +65,10 @@ lib: $(LIBRARY)-$(LIB_VER).dll
 
 prg: $(PROGRAM).exe
 
+# Install install every .h file
 install: install-lib install-prg
+	del "$(DEST_DIR)\include\$(XLIBRARY)\gwyddion.h"
+	del "$(DEST_DIR)\include\$(XLIBRARY)\gwyappinternal.h"
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 

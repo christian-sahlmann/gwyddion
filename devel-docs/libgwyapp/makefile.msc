@@ -1,5 +1,6 @@
 
 TOP_SRCDIR = ..\..
+LIBRARY = libgwyapp
 
 !include $(TOP_SRCDIR)\make.msc
 
@@ -7,7 +8,6 @@ all:
 
 !include $(TOP_SRCDIR)\rules.msc
 
-install:
-	$(INSTALL) html\*.* "$(DEST_DIR)\devel-docs\libgwyapp"
+install: install-dev-doc
 
 # vim: ft=make
