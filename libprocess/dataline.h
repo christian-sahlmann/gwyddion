@@ -3,21 +3,21 @@
 #define __GWY_DATALINE_H__
 #include <glib-object.h>
 
-#include "gwywatchable.h"
-#include "gwyserializable.h"
-#include "simplefft.h"
-#include "interpolation.h"
+#include <libprocess/simplefft.h>
+#include <libprocess/interpolation.h>
+#include <libgwyddion/gwywatchable.h>
+#include <libgwyddion/gwyserializable.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
     
-#define GWY_TYPE_DATALINE                  (gwy_data_line_get_type())
-#define GWY_DATALINE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATALINE, GwyDataLine))
-#define GWY_DATALINE_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_DATALINE, GwyDataLine))
-#define GWY_IS_DATALINE(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_DATALINE))
-#define GWY_IS_DATALINE_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATALINE))
-#define GWY_DATALINE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATALINE, GwyDataLine))
+#define GWY_TYPE_DATA_LINE                  (gwy_data_line_get_type())
+#define GWY_DATA_LINE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_LINE, GwyDataLine))
+#define GWY_DATA_LINE_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_DATA_LINE, GwyDataLine))
+#define GWY_IS_DATA_LINE(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_DATA_LINE))
+#define GWY_IS_DATA_LINE_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_LINE))
+#define GWY_DATA_LINE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_LINE, GwyDataLine))
     
 
 /*provisory struct for field (for function arguments simplification)*/

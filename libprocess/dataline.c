@@ -12,7 +12,7 @@
     } while (0)
 
 
-#define GWY_DATALINE_TYPE_NAME "GwyDataLine"
+#define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
 
 static void  gwy_data_line_class_init        (GwyDataLineClass *klass);
 static void  gwy_data_line_init              (GwyDataLine *data_line);
@@ -56,7 +56,7 @@ gwy_data_line_get_type(void)
 
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
         gwy_data_line_type = g_type_register_static(G_TYPE_OBJECT,
-                                                   GWY_DATALINE_TYPE_NAME,
+                                                   GWY_DATA_LINE_TYPE_NAME,
                                                    &gwy_data_line_info,
                                                    0);
         g_type_add_interface_static(gwy_data_line_type,
@@ -143,7 +143,7 @@ gwy_data_line_new(gint res, gdouble real, gboolean nullme)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    data_line = g_object_new(GWY_TYPE_DATALINE, NULL);
+    data_line = g_object_new(GWY_TYPE_DATA_LINE, NULL);
 
     gwy_data_line_initialize(data_line, res, real, nullme);
 
@@ -161,11 +161,11 @@ gwy_data_line_serialize(GObject *obj,
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_return_val_if_fail(GWY_IS_DATALINE(obj), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(obj), NULL);
 
-    data_line = GWY_DATALINE(obj);
+    data_line = GWY_DATA_LINE(obj);
     return gwy_serialize_pack(buffer, size, "sidD",
-                              GWY_DATALINE_TYPE_NAME,
+                              GWY_DATA_LINE_TYPE_NAME,
                               data_line->res,
                               data_line->real,
 			      data_line->res,
@@ -189,7 +189,7 @@ gwy_data_line_deserialize(const guchar *stream,
     g_return_val_if_fail(stream, NULL);
 
     pos = gwy_serialize_check_string(stream, size, *position,
-                                     GWY_DATALINE_TYPE_NAME);
+                                     GWY_DATA_LINE_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
 
@@ -213,7 +213,7 @@ gwy_data_line_value_changed(GObject *data_line)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "signal: GwyDataLine changed");
     #endif
-    g_signal_emit_by_name(GWY_DATALINE(data_line), "value_changed", NULL);
+    g_signal_emit_by_name(GWY_DATA_LINE(data_line), "value_changed", NULL);
 }
 
 

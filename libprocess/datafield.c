@@ -11,7 +11,7 @@
     y = safe ## x ## y; \
     } while (0)
 
-#define GWY_DATAFIELD_TYPE_NAME "GwyDataField"
+#define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
 static void  gwy_data_field_class_init        (GwyDataFieldClass *klass);
 static void  gwy_data_field_init              (GwyDataField *data_field);
@@ -55,7 +55,7 @@ gwy_data_field_get_type(void)
 
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
         gwy_data_field_type = g_type_register_static(G_TYPE_OBJECT,
-                                                   GWY_DATAFIELD_TYPE_NAME,
+                                                   GWY_DATA_FIELD_TYPE_NAME,
                                                    &gwy_data_field_info,
                                                    0);
         g_type_add_interface_static(gwy_data_field_type,
@@ -142,7 +142,7 @@ gwy_data_field_new(gint xres, gint yres, gdouble xreal, gdouble yreal, gboolean 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    data_field = g_object_new(GWY_TYPE_DATAFIELD, NULL);
+    data_field = g_object_new(GWY_TYPE_DATA_FIELD, NULL);
 
     gwy_data_field_initialize(data_field, xres, yres, xreal, yreal, nullme);
 
@@ -159,11 +159,11 @@ gwy_data_field_serialize(GObject *obj,
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_return_val_if_fail(GWY_IS_DATAFIELD(obj), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), NULL);
 
-    data_field = GWY_DATAFIELD(obj);
+    data_field = GWY_DATA_FIELD(obj);
     return gwy_serialize_pack(buffer, size, "siiddD",
-                              GWY_DATAFIELD_TYPE_NAME,
+                              GWY_DATA_FIELD_TYPE_NAME,
                               data_field->xres,
 			      data_field->yres,
                               data_field->xreal,
@@ -189,7 +189,7 @@ gwy_data_field_deserialize(const guchar *stream,
     g_return_val_if_fail(stream, NULL);
 
     pos = gwy_serialize_check_string(stream, size, *position,
-                                     GWY_DATAFIELD_TYPE_NAME);
+                                     GWY_DATA_FIELD_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
 
@@ -214,7 +214,7 @@ gwy_data_field_value_changed(GObject *data_field)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "signal: GwyGwyDataLine changed");
     #endif
-    g_signal_emit_by_name(GWY_DATAFIELD(data_field), "value_changed", NULL);
+    g_signal_emit_by_name(GWY_DATA_FIELD(data_field), "value_changed", NULL);
 }
 
 

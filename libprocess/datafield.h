@@ -2,21 +2,21 @@
 #ifndef __GWY_DATAFIELD_H__
 #define __GWY_DATAFIELD_H__
 #include <glib.h>
-#include "interpolation.h"
-#include "dataline.h"
-#include "gwywatchable.h"
-#include "gwyserializable.h"
+#include <libprocess/interpolation.h>
+#include <libprocess/dataline.h>
+#include <libgwyddion/gwywatchable.h>
+#include <libgwyddion/gwyserializable.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#define GWY_TYPE_DATAFIELD                  (gwy_data_field_get_type())
-#define GWY_DATAFIELD(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATAFIELD, GwyDataField))
-#define GWY_DATAFIELD_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_DATAFIELD, GwyDataField))
-#define GWY_IS_DATAFIELD(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_DATAFIELD))
-#define GWY_IS_DATAFIELD_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATAFIELD))
-#define GWY_DATAFIELD_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATAFIELD, GwyDataField))
+#define GWY_TYPE_DATA_FIELD                  (gwy_data_field_get_type())
+#define GWY_DATA_FIELD(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_FIELD, GwyDataField))
+#define GWY_DATA_FIELD_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_DATA_FIELD, GwyDataField))
+#define GWY_IS_DATA_FIELD(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_DATA_FIELD))
+#define GWY_IS_DATA_FIELD_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_FIELD))
+#define GWY_DATA_FIELD_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_FIELD, GwyDataField))
 
 
 /*provisory struct for field (for function arguments simplification)*/

@@ -23,7 +23,7 @@ test_SOURCES = \
 	test.c
 test_LDADD = libprocess.la ../libgwyddion/libgwyddion.la
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/libgwyddion
+INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Process\"
 gwyddionincludedir = $(includedir)/gwyddion/libprocess
 
