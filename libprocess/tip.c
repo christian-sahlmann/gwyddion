@@ -126,12 +126,15 @@ round_pyramide(GwyDataField *tip, gdouble angle, gdouble radius)
     {
         for (row=0; row<tip->yres; row++)
         {
-            dcol = gwy_data_field_rtoi(tip, col);
-            drow = gwy_data_field_rtoj(tip, row);
-            sphere = (radius*radius - (dcol-center_x)*(dcol-center_x)
-                          - (drow-center_y)*(drow-center_y));
-           /* if (tip->data[col + tip->xres*row] > sphere)*/
-                tip->data[col + tip->xres*row] = sphere;
+            if (tip->data[col + tip->xres*row] > center_z)
+            {
+                dcol = gwy_data_field_itor(tip, col);
+                drow = gwy_data_field_jtor(tip, row);
+                sphere = (radius*radius - (dcol-center_x)*(dcol-center_x)
+                              - (drow-center_y)*(drow-center_y));
+                if (sphere>0 && tip->data[col + tip->xres*row] > sqrt(sphere))
+                    tip->data[col + tip->xres*row] = sqrt(sphere);
+            }
         }
     }
 }
