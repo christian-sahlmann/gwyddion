@@ -19,11 +19,10 @@
  */
 
 #include <libgwymodule/gwymodule.h>
-#include "init.h"
-#include "file.h"
-#include "settings.h"
 #include "app.h"
-#include "toolbox.h"
+#include "settings.h"
+#include "file.h"
+#include "gwyddion.h"
 
 int
 main(int argc, char *argv[])
@@ -41,7 +40,7 @@ main(int argc, char *argv[])
     gtk_init(&argc, &argv);
     config_file = g_build_filename(g_get_home_dir(), ".gwyddion", "gwydrc",
                                    NULL);
-    gwy_app_type_init();
+    gwy_app_init();
     gwy_app_settings_load(config_file);
     gwy_app_settings_get();
     gwy_module_register_modules(module_dirs);

@@ -22,7 +22,6 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
-#include "about.h"
 #include "app.h"
 
 static void about_close (void);

@@ -16,11 +16,7 @@ libgwyappinclude_HEADERS = \
 	settings.h
 
 noinst_HEADERS = \
-	about.h \
-	arith.h \
-	init.h \
-	meta.h \
-	toolbox.h
+	gwyddion.h
 
 bin_PROGRAMS = gwyddion
 lib_LTLIBRARIES = libgwyapp.la

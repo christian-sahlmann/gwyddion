@@ -26,10 +26,7 @@
 #include "menu.h"
 #include "app.h"
 
-#include "meta.h"
-#include "about.h"
-#include "arith.h"
-#include "toolbox.h"
+#include "gwyddion.h"
 
 static GtkWidget* gwy_app_toolbar_append_func (GtkWidget *toolbar,
                                                const gchar *stock_id,

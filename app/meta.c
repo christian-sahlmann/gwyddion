@@ -29,8 +29,6 @@
 #include <gtk/gtktreeselection.h>
 #include <gtk/gtkcellrenderertext.h>
 
-#include "meta.h"
-
 /* XXX: This is completely static.  Ideally the browser would allow changing
  * the metadata.  However, now it can't even react properly to external
  * changes. */

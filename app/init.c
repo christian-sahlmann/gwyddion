@@ -33,7 +33,7 @@ static void ref_palette      (const gchar *name,
 static void unref_palettes   (void);
 
 /**
- * gwy_type_init:
+ * gwy_app_init:
  *
  * Initializes all Gwyddion data types, i.e. types that may appear in
  * serialized data. GObject has to know about them when g_type_from_name()
@@ -43,7 +43,7 @@ static void unref_palettes   (void);
  * palette presets, and similar things.
  **/
 void
-gwy_app_type_init(void)
+gwy_app_init(void)
 {
     g_assert(palettes == NULL);
 
