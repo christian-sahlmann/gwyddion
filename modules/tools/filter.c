@@ -62,6 +62,8 @@ static void       filter_changed_cb (GObject *item,
                                     ToolControls *controls);
 static void       update_changed_cb (GtkToggleButton *button,
                                     ToolControls *controls);
+static void       size_changed_cb   (GtkAdjustment *adjustment,
+                                     ToolControls *controls);
 
 static void       load_args        (GwyContainer *container,
                                     ToolControls *controls);
@@ -250,6 +252,9 @@ dialog_create(GwyUnitoolState *state)
     controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
     gwy_table_attach_spinbutton(table2, 3, "", "px", controls->size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);
+
+    g_signal_connect(controls->size, "value-changed",
+                     G_CALLBACK(size_changed_cb), controls);
     
     controls->update = gtk_check_button_new_with_label("update preview dynamically");
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->update,
@@ -503,6 +508,15 @@ update_changed_cb (GtkToggleButton *button, ToolControls *controls)
     controls->upd = gtk_toggle_button_get_active(button);
     state_changed = 1;
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+}
+
+static void       
+size_changed_cb(GtkAdjustment *adjustment, ToolControls *controls)
+{
+    gwy_debug("");
+    controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
+    if (controls->upd)
+        dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 
