@@ -261,6 +261,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
             wshed_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            g_object_unref(controls.mydata);
             return FALSE;
             break;
 
