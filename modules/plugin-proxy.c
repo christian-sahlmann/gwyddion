@@ -335,12 +335,14 @@ find_plugin_executables(const gchar *dir,
             continue;
         }
 #ifdef G_OS_WIN32
-        if (!g_str_has_suffix(filename, ".exe"))
+        if (!g_str_has_suffix(filename, ".exe")
+            && !g_str_has_suffix(filename, ".EXE"))
             gwy_debug("[Win32] Ignoring %s, is not .exe", filename);
             g_free(pluginname);
             continue;
         }
-        if (g_str_has_prefix(filename, "unins")) {
+        if (g_str_has_prefix(filename, "unins")
+            || g_str_has_prefix(filename, "UNINS")) {
             gwy_debug("[Win32] Ignoring %s, is uninstaller", filename);
             g_free(pluginname);
             continue;
