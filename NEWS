@@ -7,7 +7,7 @@ Application:
 - Splash no longer screens eventual initial file open dialogs.
 
 Modules:
-- Calibrate (new): FIXME
+- Calibrate (new): Change XYZ axis real dimensions
 - Graph CD (new): Critical dimension measurements.
 - SIS (new): SIS data file format import.
 - ASCII export (new): Simple export to ASCII data matrix.
@@ -28,7 +28,7 @@ Modules:
 - Grain mark, watershed, Spot remove: Memory leaks were fixed.
 
 Library:
-- libgwydgets: GwyValUnit FIXME
+- libgwydgets: GwyValUnit -- value with unit and selection of unit prefix
 - libprocess: gwy_data_line_get_modus() and gwy_data_line_part_get_modus()
               approximate modus functions.
 - libprocess: gwy_data_field_mark_scars() scar search function.
