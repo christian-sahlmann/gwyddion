@@ -610,6 +610,40 @@ gwy_3d_window_add_action_widget(Gwy3DWindow *gwy3dwindow,
                        FALSE, FALSE, 0);
 }
 
+/**
+ * gwy_3d_window_add_small_toolbar_button:
+ * @gwy3dwindow: A 3D data view window.
+ * @stock_id: Button pixmap stock id, like #GTK_STOCK_SAVE.
+ * @tooltip: Button tooltip.
+ * @callback: Callback action.
+ * @cbdata: Data to pass to @callback.
+ *
+ * Adds a button to small @gwy3dwindow toolbar.
+ *
+ * The small toolbar is those visible when full controls are hidden.  Due to
+ * space constraints the button must be contain only a pixmap.
+ *
+ * Since: 1.6
+ **/
+void
+gwy_3d_window_add_small_toolbar_button(Gwy3DWindow *gwy3dwindow,
+                                       const gchar *stock_id,
+                                       const gchar *tooltip,
+                                       GCallback callback,
+                                       gpointer cbdata)
+{
+    GtkWidget *button;
+
+    g_return_if_fail(GWY_IS_3D_WINDOW(gwy3dwindow));
+    g_return_if_fail(stock_id);
+
+    button = gwy_toolbox_append(GWY_TOOLBOX(gwy3dwindow->small_toolbar),
+                                GTK_TYPE_BUTTON,
+                                NULL, tooltip, NULL, stock_id,
+                                callback, cbdata);
+    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
+}
+
 static void
 gwy_3d_window_set_mode(gpointer userdata, GtkWidget *button)
 {

@@ -769,6 +769,11 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
 
     button = gwy_stock_like_button_new(_("Export"), GTK_STOCK_SAVE);
     gwy_3d_window_add_action_widget(GWY_3D_WINDOW(gwy3dwindow), button);
+    gwy_3d_window_add_small_toolbar_button(GWY_3D_WINDOW(gwy3dwindow),
+                                           GTK_STOCK_SAVE,
+                                           _("Export 3D view to PNG image"),
+                                           G_CALLBACK(gwy_app_3d_window_export),
+                                           gwy3dwindow);
 
     current_3d = g_list_append(current_3d, gwy3dwindow);
     /*
@@ -796,7 +801,7 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_window_export), gwy3dwindow);
 
-    gtk_widget_show(gwy3dwindow);
+    gtk_widget_show_all(gwy3dwindow);
     gtk_window_present(GTK_WINDOW(gwy3dwindow));
 
     return gwy3dwindow;
