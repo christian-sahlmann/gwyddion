@@ -292,7 +292,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox_small), button,
                        FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(button),
-                      gtk_image_new_from_stock(GWY_STOCK_MORE,
+                      gtk_image_new_from_stock(GWY_STOCK_LESS,
                                                GTK_ICON_SIZE_BUTTON));
     gtk_tooltips_set_tip(gwy3dwindow->tips, button,
                          _("Show full controls"), NULL);
@@ -317,7 +317,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     button = gtk_button_new();
     gtk_box_pack_end(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(button),
-                      gtk_image_new_from_stock(GWY_STOCK_LESS,
+                      gtk_image_new_from_stock(GWY_STOCK_MORE,
                                                GTK_ICON_SIZE_BUTTON));
     gtk_tooltips_set_tip(gwy3dwindow->tips, button,
                          _("Hide full controls"), NULL);
