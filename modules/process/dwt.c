@@ -78,7 +78,7 @@ static GwyModuleInfo module_info = {
     "dwt",
     N_("2D Discrete Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -125,12 +125,6 @@ dwt(GwyContainer *data, GwyRunType run)
     if (!ok)
         return FALSE;
 
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
@@ -139,11 +133,17 @@ dwt(GwyContainer *data, GwyRunType run)
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,
-             _("DWT: Data must be square."));
+             _("%s: Data must be square."), "DWT");
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return ok;
     }
+
+    data = gwy_container_duplicate_by_prefix(data,
+                                             "/0/data",
+                                             "/0/base/palette",
+                                             NULL);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     newsize = gwy_data_field_get_fft_res(xsize);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
@@ -154,19 +154,13 @@ dwt(GwyContainer *data, GwyRunType run)
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
     gwy_data_field_dwt(dfield, wtcoefs, 1, 4);
 
-    
-    if (args.preserve)
-    {
-        gwy_data_field_resample(dfield, xsize, ysize, args.interp);
-    }
 
-/*    gint k;
-    for (k=0; k<(dfield->xres*dfield->yres); k++) dfield->data[k] = fabs(dfield->data[k]);
-*/
+    if (args.preserve)
+        gwy_data_field_resample(dfield, xsize, ysize, args.interp);
+
     data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-				     "DWT");
-    
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), "DWT");
+
     g_object_unref(wtcoefs);
     return FALSE;
 }

@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     "dwt_correction",
     N_("2D Discrete Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -87,7 +87,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dwt_correction_func_info = {
         "dwt_correction",
-        N_("/_Integral Transforms/_DWT correction..."),
+        N_("/_Integral Transforms/_DWT Correction..."),
         (GwyProcessFunc)&dwt_correction,
         DWT_CORRECTION_RUN_MODES,
         0,
@@ -120,7 +120,7 @@ dwt_correction(GwyContainer *data, GwyRunType run)
     if (!ok)
         return FALSE;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));    
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
@@ -130,25 +130,16 @@ dwt_correction(GwyContainer *data, GwyRunType run)
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,
-             _("DWT_CORRECTION: Data must be square."));
+             _("%s: Data must be square."), _("DWT Correction"));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return ok;
     }
 
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
-	mask =  GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    }
-    else
-    {
-	mask = gwy_data_field_new(gwy_data_field_get_xres(dfield),
-				       gwy_data_field_get_yres(dfield),
-				       gwy_data_field_get_xreal(dfield),
-				       gwy_data_field_get_yreal(dfield),
-				       TRUE);
-	gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
-	g_object_unref(mask);
+    if (!gwy_container_gis_object_by_name(data, "/0/mask", (GObject*)&mask)) {
+        mask = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
+        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
+        g_object_unref(mask);
     }
 
     newsize = gwy_data_field_get_fft_res(xsize);
@@ -162,8 +153,7 @@ dwt_correction(GwyContainer *data, GwyRunType run)
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
     mask = gwy_data_field_dwt_correction(dfield, mask, wtcoefs);
-    
-    
+
     gwy_data_field_resample(mask, xsize, ysize,
                             GWY_INTERPOLATION_BILINEAR);
 

@@ -27,6 +27,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
+#include <app/undo.h>
 
 #define DWT_ANISOTROPY_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
@@ -56,7 +57,7 @@ static void        interp_changed_cb          (GObject *item,
 static void        wavelet_changed_cb          (GObject *item,
                                                DWTAnisotropyArgs *args);
 static void        ratio_changed_cb            (GtkAdjustment *adj,
-						                       DWTAnisotropyArgs *args);
+                                               DWTAnisotropyArgs *args);
 static void        lowlimit_changed_cb         (GtkAdjustment *adj,
                                                DWTAnisotropyArgs *args);
 static void        dwt_anisotropy_dialog_update          (DWTAnisotropyControls *controls,
@@ -82,7 +83,7 @@ static GwyModuleInfo module_info = {
     "dwt_anisotropy",
     N_("2D Discrete Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -96,7 +97,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dwt_anisotropy_func_info = {
         "dwt_anisotropy",
-        N_("/_Integral Transforms/_DWT anisotropy..."),
+        N_("/_Integral Transforms/_DWT Anisotropy..."),
         (GwyProcessFunc)&dwt_anisotropy,
         DWT_ANISOTROPY_RUN_MODES,
         0,
@@ -129,8 +130,6 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     if (!ok)
         return FALSE;
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));    
-
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
@@ -139,50 +138,44 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,
-             _("DWT_ANISOTROPY: Data must be square."));
+             _("%s: Data must be square."), _("DWT Anisotropy"));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
-        return ok;
+
+        return FALSE;
     }
 
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
-	mask =  GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    }
-    else
-    {
-	mask = GWY_DATA_FIELD(gwy_data_field_new(gwy_data_field_get_xres(dfield),
-				       gwy_data_field_get_yres(dfield),
-				       gwy_data_field_get_xreal(dfield),
-				       gwy_data_field_get_yreal(dfield),
-				       TRUE));
-	gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
-	g_object_unref(mask);
-    }
+    mask = NULL;
+    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+    gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&mask);
 
     newsize = gwy_data_field_get_fft_res(xsize);
+    dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(mask, newsize, newsize,
-                            GWY_INTERPOLATION_BILINEAR);
-
+    if (mask)
+        gwy_data_field_resample(mask, newsize, newsize,
+                                GWY_INTERPOLATION_BILINEAR);
+    else {
+        mask = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
+        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
+        g_object_unref(mask);
+    }
 
     wtcoefs = GWY_DATA_LINE(gwy_data_line_new(10, 10, TRUE));
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
-    
+
     /*justo for sure clamp the lowlimit again*/
     limit = pow(2, CLAMP(args.lowlimit, 1, 20));
-    mask = gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio, 
+    mask = gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio,
                                               limit);
-    
-   
-    gwy_data_field_resample(dfield, xsize, ysize,
-                            GWY_INTERPOLATION_BILINEAR);
+
     gwy_data_field_resample(mask, xsize, ysize,
                             GWY_INTERPOLATION_BILINEAR);
-
     g_object_unref(wtcoefs);
+    g_object_unref(dfield);
+
     return TRUE;
 }
 
@@ -222,24 +215,24 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
                          controls.wavelet);
 
     controls.ratio = gtk_adjustment_new(args->ratio,
-					0.0001, 10.0, 0.01, 0.1, 0);
+                    0.0001, 10.0, 0.01, 0.1, 0);
     spin = gwy_table_attach_spinbutton(table, 3,
-				       _("X/Y ratio threshold:"), NULL,
-				       controls.ratio);
+                       _("X/Y ratio threshold:"), NULL,
+                       controls.ratio);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect(controls.ratio, "value_changed",
-		     G_CALLBACK(ratio_changed_cb), args);
-    
+             G_CALLBACK(ratio_changed_cb), args);
+
     controls.lowlimit = gtk_adjustment_new(args->lowlimit,
-					1, 20, 1, 1, 0);
+                    1, 20, 1, 1, 0);
     spin = gwy_table_attach_spinbutton(table, 4,
-				       _("Low level exclude limit:"), NULL,
-				       controls.lowlimit);
+                       _("Low level exclude limit:"), NULL,
+                       controls.lowlimit);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     g_signal_connect(controls.lowlimit, "value_changed",
-		     G_CALLBACK(lowlimit_changed_cb), args);
-    
-     
+             G_CALLBACK(lowlimit_changed_cb), args);
+
+
 
     gtk_widget_show_all(dialog);
     do {
@@ -291,13 +284,13 @@ static void
 ratio_changed_cb(GtkAdjustment *adj, DWTAnisotropyArgs *args)
 {
     args->ratio = gtk_adjustment_get_value(adj);
-}    
+}
 
 static void
 lowlimit_changed_cb(GtkAdjustment *adj, DWTAnisotropyArgs *args)
 {
     args->lowlimit = gtk_adjustment_get_value(adj);
-} 
+}
 static void
 dwt_anisotropy_dialog_update(DWTAnisotropyControls *controls,
                      DWTAnisotropyArgs *args)

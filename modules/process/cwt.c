@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     "cwt",
     N_("2D Continuous Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -124,42 +124,43 @@ cwt(GwyContainer *data, GwyRunType run)
     ok = (run != GWY_RUN_MODAL) || cwt_dialog(&args);
     if (run == GWY_RUN_MODAL)
         cwt_save_args(gwy_app_settings_get(), &args);
-    if (ok) {
-        data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-        g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-        gwy_app_clean_up_data(data);
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
+    if (!ok)
+        return FALSE;
 
-        xsize = gwy_data_field_get_xres(dfield);
-        ysize = gwy_data_field_get_yres(dfield);
-        if (xsize != ysize) {
-            dialog = gtk_message_dialog_new
-                (GTK_WINDOW(gwy_app_data_window_get_for_data(data)),
-                 GTK_DIALOG_DESTROY_WITH_PARENT,
-                 GTK_MESSAGE_ERROR,
-                 GTK_BUTTONS_OK,
-                 _("CWT: Data must be square."));
-            gtk_dialog_run(GTK_DIALOG(dialog));
-            gtk_widget_destroy(dialog);
-            return ok;
-        }
-
-        newsize = gwy_data_field_get_fft_res(xsize);
-
-        gwy_data_field_resample(dfield, newsize, newsize, args.interp);
-
-        gwy_data_field_cwt(dfield,
-                           args.interp,
-                           args.scale,
-                           args.wavelet);
-
-        if (args.preserve)
-            gwy_data_field_resample(dfield, xsize, ysize, args.interp);
-
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    xsize = gwy_data_field_get_xres(dfield);
+    ysize = gwy_data_field_get_yres(dfield);
+    if (xsize != ysize) {
+        dialog = gtk_message_dialog_new
+            (GTK_WINDOW(gwy_app_data_window_get_for_data(data)),
+             GTK_DIALOG_DESTROY_WITH_PARENT,
+             GTK_MESSAGE_ERROR,
+             GTK_BUTTONS_OK,
+             _("%s: Data must be square."), "CWT");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return ok;
     }
+
+    data = gwy_container_duplicate_by_prefix(data,
+                                             "/0/data",
+                                             "/0/select",
+                                             "/0/base/palette",
+                                             NULL);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    newsize = gwy_data_field_get_fft_res(xsize);
+    gwy_data_field_resample(dfield, newsize, newsize, args.interp);
+
+    gwy_data_field_cwt(dfield,
+                       args.interp,
+                       args.scale,
+                       args.wavelet);
+
+    if (args.preserve)
+        gwy_data_field_resample(dfield, xsize, ysize, args.interp);
+
+    data_window = gwy_app_data_window_create(data);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
     return FALSE;
 }
