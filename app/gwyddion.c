@@ -215,8 +215,8 @@ print_help(void)
 "     --name=NAME            Set program name as used by the window manager.\n"
 "     --class=CLASS          Set program class as used by the window manager.\n"
 "     --gtk-module=MODULE    Load an additional Gtk module MODULE.\n"
-"They may be other Gtk+, Gdk, and GtkGLExt options, depending on platform,\n"
-"how it was compiled, and loaded modules.  Please see Gtk+ documentation.\n"
+"They may be other Gtk+, Gdk, and GtkGLExt options, depending on platform, on\n"
+"how it was compiled, and on loaded modules.  Please see Gtk+ documentation.\n"
         );
     puts("Please report bugs in Gwyddion bugzilla "
          "http://trific.ath.cx/bugzilla/");
