@@ -39,8 +39,6 @@ static gint thin_data_field(GwyDataField *data_field);
  * @height: Area height (number of rows).
  *
  * Convolves a rectangular part of a data field with given kernel.
- *
- * Since: 1.3
  **/
 void
 gwy_data_field_area_convolve(GwyDataField *data_field,
@@ -106,18 +104,11 @@ gwy_data_field_area_convolve(GwyDataField *data_field,
 
 void
 gwy_data_field_convolve(GwyDataField *data_field,
-                        GwyDataField *kernel_field,
-                        gint ulcol, gint ulrow,
-                        gint brcol, gint brrow)
+                        GwyDataField *kernel_field)
 {
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    gwy_data_field_area_convolve(data_field, kernel_field,
-                                 ulcol, ulrow,
-                                 brcol-ulcol, brrow-ulrow);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_convolve(data_field, kernel_field, 0, 0,
+                                 data_field->xres, data_field->yres);
 }
 
 /**
@@ -130,8 +121,6 @@ gwy_data_field_convolve(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with mean filter of size @size.
- *
- * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_mean(GwyDataField *data_field,
@@ -189,18 +178,11 @@ gwy_data_field_area_filter_mean(GwyDataField *data_field,
 
 void
 gwy_data_field_filter_mean(GwyDataField *data_field,
-                           gint size,
-                           gint ulcol, gint ulrow,
-                           gint brcol, gint brrow)
+                           gint size)
 {
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    gwy_data_field_area_filter_mean(data_field, size,
-                                    ulcol, ulrow,
-                                    brcol-ulcol, brrow-ulrow);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_mean(data_field, size, 0, 0,
+                                    data_field->xres, data_field->yres);
 }
 
 /**
@@ -215,8 +197,6 @@ gwy_data_field_filter_mean(GwyDataField *data_field,
  * Filters a rectangular part of a data field with RMS filter of size @size.
  *
  * RMS filter computes root mean square in given area.
- *
- * Since: 1.9
  **/
 void
 gwy_data_field_area_filter_rms(GwyDataField *data_field,
@@ -290,8 +270,6 @@ gwy_data_field_area_filter_rms(GwyDataField *data_field,
  * @size: Area size.
  *
  * Filters a data field with RMS filter.
- *
- * Since: 1.9
  **/
 void
 gwy_data_field_filter_rms(GwyDataField *data_field,
@@ -303,25 +281,15 @@ gwy_data_field_filter_rms(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_area_filter_canny:
+ * gwy_data_field_filter_canny:
  * @data_field: A data field to apply mean filter to.
  * @threshold: Slope detection threshold (range 0..1).
- * @col: Upper-left column coordinate.
- * @row: Upper-left row coordinate.
- * @width: Area width (number of columns).
- * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with canny edge detector filter.
- *
- * In version 1.6 this function filters whole data field.
- *
- * Since: 1.6
  **/
 void
-gwy_data_field_area_filter_canny(GwyDataField *data_field,
-                                 gdouble threshold,
-                                 gint col, gint row,
-                                 gint width, gint height)
+gwy_data_field_filter_canny(GwyDataField *data_field,
+                            gdouble threshold)
 {
     GwyDataField *sobel_horizontal;
     GwyDataField *sobel_vertical;
@@ -330,16 +298,11 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
     gboolean pass;
     gdouble *data;
 
-    sobel_horizontal = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                                         data_field->yres,
-                                                         data_field->xreal,
-                                                         data_field->yreal,
-                                                         FALSE));
-    sobel_vertical = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                                       data_field->yres,
-                                                       data_field->xreal,
-                                                       data_field->yreal,
-                                                       FALSE));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    sobel_horizontal = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field,
+                                                               FALSE));
+    sobel_vertical = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field,
+                                                             FALSE));
     gwy_data_field_area_copy(data_field, sobel_horizontal,
                              0, 0,
                              data_field->xres,
@@ -411,6 +374,9 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
     gwy_data_field_area_copy(sobel_horizontal, data_field,
                              0, 0, data_field->xres, data_field->yres, 0, 0);
 
+    g_object_unref(sobel_horizontal);
+    g_object_unref(sobel_vertical);
+
     /*thin the lines*/
     thin_data_field(data_field);
     gwy_data_field_invalidate(data_field);
@@ -426,46 +392,33 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with Laplacian filter.
- *
- * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_laplacian(GwyDataField *data_field,
                                      gint col, gint row,
                                      gint width, gint height)
 {
-    GwyDataField *kernel_df;
+    const gdouble laplace[] = {
+        0,  1, 0,
+        1, -4, 1,
+        0,  1, 0,
+    };
+    GwyDataField *kernel;
 
-    kernel_df = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
-    kernel_df->data[0] = 0;               /* 0 1 2*/
-    kernel_df->data[1] = 1;               /* 3 4 5*/
-    kernel_df->data[2] = 0;               /* 6 7 8*/
-    kernel_df->data[3] = 1;
-    kernel_df->data[4] = -4;
-    kernel_df->data[5] = 1;
-    kernel_df->data[6] = 0;
-    kernel_df->data[7] = 1;
-    kernel_df->data[8] = 0;
-
-    gwy_data_field_convolve(data_field, kernel_df, col, row, width, height);
-
-    g_object_unref(kernel_df);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    kernel = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
+    memcpy(kernel->data, laplace, sizeof(laplace));
+    gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
+    g_object_unref(kernel);
     gwy_data_field_invalidate(data_field);
 }
 
 void
-gwy_data_field_filter_laplacian(GwyDataField *data_field,
-                                gint ulcol, gint ulrow,
-                                gint brcol, gint brrow)
+gwy_data_field_filter_laplacian(GwyDataField *data_field)
 {
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    gwy_data_field_area_filter_laplacian(data_field,
-                                         ulcol, ulrow,
-                                         brcol-ulcol, brrow-ulrow);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_laplacian(data_field, 0, 0,
+                                         data_field->xres, data_field->yres);
 }
 
 /**
@@ -478,8 +431,6 @@ gwy_data_field_filter_laplacian(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with Laplacian filter.
- *
- * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_sobel(GwyDataField *data_field,
@@ -487,53 +438,37 @@ gwy_data_field_area_filter_sobel(GwyDataField *data_field,
                                  gint col, gint row,
                                  gint width, gint height)
 {
-    GwyDataField *kernel_df;
+    const gdouble hsobel[] = {
+        0.25, 0, -0.25,
+        0.5,  0, -0.5,
+        0.25, 0, -0.25,
+    };
+    const gdouble vsobel[] = {
+         0.25,  0.5,  0.25,
+         0,     0,    0,
+        -0.25, -0.5, -0.25,
+    };
+    GwyDataField *kernel;
 
-    gwy_debug("");
-    kernel_df = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
-
-    if (orientation == GTK_ORIENTATION_HORIZONTAL) {
-        kernel_df->data[0] = 0.25;
-        kernel_df->data[1] = 0;
-        kernel_df->data[2] = -0.25;
-        kernel_df->data[3] = 0.5;
-        kernel_df->data[4] = 0;
-        kernel_df->data[5] = -0.5;
-        kernel_df->data[6] = 0.25;
-        kernel_df->data[7] = 0;
-        kernel_df->data[8] = -0.25;
-    }
-    else {
-        kernel_df->data[0] = 0.25;
-        kernel_df->data[1] = 0.5;
-        kernel_df->data[2] = 0.25;
-        kernel_df->data[3] = 0;
-        kernel_df->data[4] = 0;
-        kernel_df->data[5] = 0;
-        kernel_df->data[6] = -0.25;
-        kernel_df->data[7] = -0.5;
-        kernel_df->data[8] = -0.25;
-    }
-    gwy_data_field_area_convolve(data_field, kernel_df,
-                                 col, row, width, height);
-    g_object_unref(kernel_df);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    kernel = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
+    if (orientation == GTK_ORIENTATION_HORIZONTAL)
+        memcpy(kernel->data, hsobel, sizeof(hsobel));
+    else
+        memcpy(kernel->data, vsobel, sizeof(vsobel));
+    gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
+    g_object_unref(kernel);
     gwy_data_field_invalidate(data_field);
 }
 
 void
 gwy_data_field_filter_sobel(GwyDataField *data_field,
-                            GtkOrientation orientation,
-                            gint ulcol, gint ulrow,
-                            gint brcol, gint brrow)
+                            GtkOrientation orientation)
 {
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_sobel(data_field, orientation, 0, 0,
+                                     data_field->xres, data_field->yres);
 
-    gwy_data_field_area_filter_sobel(data_field, orientation,
-                                     ulcol, ulrow,
-                                     brcol-ulcol, brrow-ulrow);
 }
 
 /**
@@ -546,8 +481,6 @@ gwy_data_field_filter_sobel(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with Prewitt filter.
- *
- * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
@@ -555,52 +488,36 @@ gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
                                    gint col, gint row,
                                    gint width, gint height)
 {
-    GwyDataField *kernel_df;
+    const gdouble hprewitt[] = {
+        1.0/3.0, 0, -1.0/3.0,
+        1.0/3.0, 0, -1.0/3.0,
+        1.0/3.0, 0, -1.0/3.0,
+    };
+    const gdouble vprewitt[] = {
+         1.0/3.0,  1.0/3.0,  1.0/3.0,
+         0,        0,        0,
+        -1.0/3.0, -1.0/3.0, -1.0/3.0,
+    };
+    GwyDataField *kernel;
 
-    gwy_debug("");
-    kernel_df = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
-
-    if (orientation == GTK_ORIENTATION_HORIZONTAL) {
-        kernel_df->data[0] = 1.0/3.0;
-        kernel_df->data[1] = 0;
-        kernel_df->data[2] = -1.0/3.0;
-        kernel_df->data[3] = 1.0/3.0;
-        kernel_df->data[4] = 0;
-        kernel_df->data[5] = -1.0/3.0;
-        kernel_df->data[6] = 1.0/3.0;
-        kernel_df->data[7] = 0;
-        kernel_df->data[8] = -1.0/3.0;
-    }
-    else {
-        kernel_df->data[0] = 1.0/3.0;
-        kernel_df->data[1] = 1.0/3.0;
-        kernel_df->data[2] = 1.0/3.0;
-        kernel_df->data[3] = 0;
-        kernel_df->data[4] = 0;
-        kernel_df->data[5] = 0;
-        kernel_df->data[6] = -1.0/3.0;
-        kernel_df->data[7] = -1.0/3.0;
-        kernel_df->data[8] = -1.0/3.0;
-    }
-    gwy_data_field_convolve(data_field, kernel_df, col, row, width, height);
-    g_object_unref(kernel_df);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    kernel = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
+    if (orientation == GTK_ORIENTATION_HORIZONTAL)
+        memcpy(kernel->data, hprewitt, sizeof(hprewitt));
+    else
+        memcpy(kernel->data, vprewitt, sizeof(vprewitt));
+    gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
+    g_object_unref(kernel);
     gwy_data_field_invalidate(data_field);
 }
 
 void
 gwy_data_field_filter_prewitt(GwyDataField *data_field,
-                              GtkOrientation orientation,
-                              gint ulcol, gint ulrow,
-                              gint brcol, gint brrow)
+                              GtkOrientation orientation)
 {
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    gwy_data_field_area_filter_prewitt(data_field, orientation,
-                                       ulcol, ulrow,
-                                       brcol-ulcol, brrow-ulrow);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_prewitt(data_field, orientation, 0, 0,
+                                       data_field->xres, data_field->yres);
 }
 
 /**
@@ -613,8 +530,6 @@ gwy_data_field_filter_prewitt(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with median filter.
- *
- * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_median(GwyDataField *data_field,
@@ -666,18 +581,11 @@ gwy_data_field_area_filter_median(GwyDataField *data_field,
 
 void
 gwy_data_field_filter_median(GwyDataField *data_field,
-                             gint size,
-                             gint ulcol, gint ulrow,
-                             gint brcol, gint brrow)
+                             gint size)
 {
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    gwy_data_field_area_filter_median(data_field, size,
-                                      ulcol, ulrow,
-                                      brcol-ulcol, brrow-ulrow);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_median(data_field, size, 0, 0,
+                                      data_field->xres, data_field->yres);
 }
 
 /**
@@ -690,8 +598,6 @@ gwy_data_field_filter_median(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with conservative denoise filter.
- *
- * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_conservative(GwyDataField *data_field,
@@ -763,18 +669,11 @@ gwy_data_field_area_filter_conservative(GwyDataField *data_field,
 
 void
 gwy_data_field_filter_conservative(GwyDataField *data_field,
-                                   gint size,
-                                   gint ulcol, gint ulrow, gint brcol,
-                                   gint brrow)
+                                   gint size)
 {
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    gwy_data_field_area_filter_conservative(data_field, size,
-                                            ulcol, ulrow,
-                                            brcol-ulcol, brrow-ulrow);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_conservative(data_field, size, 0, 0,
+                                            data_field->xres, data_field->yres);
 }
 
 
@@ -937,8 +836,6 @@ thin_data_field(GwyDataField *data_field)
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with minimum filter.
- *
- * Since: 1.8
  **/
 void
 gwy_data_field_area_filter_minimum(GwyDataField *data_field,
@@ -1066,8 +963,6 @@ gwy_data_field_area_filter_minimum(GwyDataField *data_field,
  * @size: Neighbourhood size for minimum search.
  *
  * Filters a data field with minimum filter.
- *
- * Since: 1.8
  **/
 void
 gwy_data_field_filter_minimum(GwyDataField *data_field,
@@ -1088,8 +983,6 @@ gwy_data_field_filter_minimum(GwyDataField *data_field,
  * @height: Area height (number of rows).
  *
  * Filters a rectangular part of a data field with maximum filter.
- *
- * Since: 1.8
  **/
 void
 gwy_data_field_area_filter_maximum(GwyDataField *data_field,

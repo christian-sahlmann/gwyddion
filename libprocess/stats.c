@@ -102,22 +102,6 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
     return max;
 }
 
-gdouble
-gwy_data_field_get_area_max(GwyDataField *a,
-                            gint ulcol,
-                            gint ulrow,
-                            gint brcol,
-                            gint brrow)
-{
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    return gwy_data_field_area_get_max(a, ulcol, ulrow,
-                                       brcol - ulcol, brrow - ulrow);
-}
-
 /**
  * gwy_data_field_get_min:
  * @data_field: A data field.
@@ -186,22 +170,6 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
     return min;
 }
 
-gdouble
-gwy_data_field_get_area_min(GwyDataField *a,
-                            gint ulcol,
-                            gint ulrow,
-                            gint brcol,
-                            gint brrow)
-{
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    return gwy_data_field_area_get_min(a, ulcol, ulrow,
-                                       brcol-ulcol, brrow-ulrow);
-}
-
 /**
  * gwy_data_field_get_sum:
  * @data_field: A data field.
@@ -263,22 +231,6 @@ gwy_data_field_area_get_sum(GwyDataField *dfield,
     return sum;
 }
 
-gdouble
-gwy_data_field_get_area_sum(GwyDataField *a,
-                            gint ulcol,
-                            gint ulrow,
-                            gint brcol,
-                            gint brrow)
-{
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    return gwy_data_field_area_get_sum(a, ulcol, ulrow,
-                                       brcol-ulcol, brrow-ulrow);
-}
-
 /**
  * gwy_data_field_get_avg:
  * @data_field: A data field
@@ -313,22 +265,6 @@ gwy_data_field_area_get_avg(GwyDataField *dfield,
 {
     return gwy_data_field_area_get_sum(dfield, col, row,
                                        width, height)/(width*height);
-}
-
-gdouble
-gwy_data_field_get_area_avg(GwyDataField *a,
-                            gint ulcol,
-                            gint ulrow,
-                            gint brcol,
-                            gint brrow)
-{
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    return gwy_data_field_area_get_avg(a, ulcol, ulrow,
-                                       brcol-ulcol, brrow-ulrow);
 }
 
 /**
@@ -408,23 +344,6 @@ gwy_data_field_area_get_rms(GwyDataField *dfield,
 
     return rms;
 }
-
-gdouble
-gwy_data_field_get_area_rms(GwyDataField *a,
-                            gint ulcol,
-                            gint ulrow,
-                            gint brcol,
-                            gint brrow)
-{
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    return gwy_data_field_area_get_rms(a, ulcol, ulrow,
-                                       brcol-ulcol, brrow-ulrow);
-}
-
 
 /**
  * gwy_data_field_get_stats:
@@ -548,29 +467,6 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
     if (rms)
         *rms = sqrt(myrms);
 }
-
-void
-gwy_data_field_get_area_stats(GwyDataField *data_field,
-                              gint ulcol,
-                              gint ulrow,
-                              gint brcol,
-                              gint brrow,
-                              gdouble *avg,
-                              gdouble *ra,
-                              gdouble *rms,
-                              gdouble *skew,
-                              gdouble *kurtosis)
-{
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    gwy_data_field_area_get_stats(data_field, ulcol, ulrow,
-                                  brcol-ulcol, brrow-ulrow,
-                                  avg, ra, rms, skew, kurtosis);
-}
-
 
 /* FIXME: fix return value to boolean */
 /**
@@ -865,24 +761,6 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
     }
 
     return sum;
-}
-
-gdouble
-gwy_data_field_get_area_surface_area(GwyDataField *a,
-                                     gint ulcol,
-                                     gint ulrow,
-                                     gint brcol,
-                                     gint brrow,
-                                     GwyInterpolationType interpolation)
-{
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    return gwy_data_field_area_get_surface_area(a, ulcol, ulrow,
-                                                brcol-ulcol, brrow-ulrow,
-                                                interpolation);
 }
 
 /**

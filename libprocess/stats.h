@@ -126,51 +126,6 @@ void   gwy_data_field_get_inclination       (GwyDataField *data_field,
 
 
 
-#ifndef GWY_DISABLE_DEPRECATED
-gdouble gwy_data_field_get_area_max(GwyDataField *data_field,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_get_area_min(GwyDataField *data_field,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_get_area_avg(GwyDataField *data_field,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_get_area_rms(GwyDataField *data_field,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_get_area_sum(GwyDataField *data_field,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_get_area_surface_area(GwyDataField *data_field,
-                                        gint ulcol,
-                                        gint ulrow,
-                                        gint brcol,
-                                        gint brrow,
-                                        GwyInterpolationType interpolation);
-
-void gwy_data_field_get_area_stats(GwyDataField *data_field,
-                                   gint ulcol,
-                                   gint ulrow,
-                                   gint brcol,
-                                   gint brrow,
-                                   gdouble *avg,
-                                   gdouble *ra,
-                                   gdouble *rms,
-                                   gdouble *skew,
-                                   gdouble *kurtosis);
-#endif
-
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_STATS_H__*/

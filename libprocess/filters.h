@@ -25,67 +25,62 @@
 
 G_BEGIN_DECLS
 
-/* XXX: This is not used for anything. Remove? */
-typedef enum {
-    GWY_FILTER_MEAN          = 0, /*mean value filter (averaging)*/
-    GWY_FILTER_MEDIAN        = 1, /*median value filter*/
-    GWY_FILTER_CONSERVATIVE  = 2, /*conservative denoising filter*/
-    GWY_FILTER_LAPLACIAN     = 3, /*Laplacian 2nd derivative filter*/
-    GWY_FILTER_SOBEL         = 4, /*Sobel gradient filter*/
-    GWY_FILTER_PREWITT       = 5, /*Prewitt gradient filter*/
-    GWY_FILTER_MINIMUM,
-    GWY_FILTER_MAXIMUM,
-    GWY_FILTER_KUWAHARA
-} GwyFilterType;
-
-/* new-style functions */
+void gwy_data_field_convolve                   (GwyDataField *data_field,
+                                                GwyDataField *kernel_field);
 void gwy_data_field_area_convolve              (GwyDataField *data_field,
                                                 GwyDataField *kernel_field,
                                                 gint col,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+void gwy_data_field_filter_median              (GwyDataField *data_field,
+                                                gint size);
 void gwy_data_field_area_filter_median         (GwyDataField *data_field,
                                                 gint size,
                                                 gint col,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+void gwy_data_field_filter_mean                (GwyDataField *data_field,
+                                                gint size);
 void gwy_data_field_area_filter_mean           (GwyDataField *data_field,
                                                 gint size,
                                                 gint col,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+void gwy_data_field_filter_conservative        (GwyDataField *data_field,
+                                                gint size);
 void gwy_data_field_area_filter_conservative   (GwyDataField *data_field,
                                                 gint size,
                                                 gint col,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+void gwy_data_field_filter_laplacian           (GwyDataField *data_field);
 void gwy_data_field_area_filter_laplacian      (GwyDataField *data_field,
                                                 gint col,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+void gwy_data_field_filter_sobel               (GwyDataField *data_field,
+                                                GtkOrientation orientation);
 void gwy_data_field_area_filter_sobel          (GwyDataField *data_field,
                                                 GtkOrientation orientation,
                                                 gint col,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+void gwy_data_field_filter_prewitt             (GwyDataField *data_field,
+                                                GtkOrientation orientation);
 void gwy_data_field_area_filter_prewitt        (GwyDataField *data_field,
                                                 GtkOrientation orientation,
                                                 gint col,
                                                 gint row,
                                                 gint width,
                                                 gint height);
-void gwy_data_field_area_filter_canny          (GwyDataField *data_field,
-                                                gdouble threshold,
-                                                gint col,
-                                                gint row,
-                                                gint width,
-                                                gint height);
+void gwy_data_field_filter_canny               (GwyDataField *data_field,
+                                                gdouble threshold);
 
 void gwy_data_field_filter_minimum             (GwyDataField *data_field,
                                                 gint size);
@@ -117,49 +112,6 @@ void gwy_data_field_area_filter_kuwahara       (GwyDataField *data_field,
                                                 gint row,
                                                 gint width,
                                                 gint height);
-
-/* old-style functions */
-void gwy_data_field_convolve                   (GwyDataField *data_field,
-                                                GwyDataField *kernel_field,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_median              (GwyDataField *data_field,
-                                                gint size,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_mean                (GwyDataField *data_field,
-                                                gint size,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_conservative        (GwyDataField *data_field,
-                                                gint size,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_laplacian           (GwyDataField *data_field,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_sobel               (GwyDataField *data_field,
-                                                GtkOrientation orientation,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
-void gwy_data_field_filter_prewitt             (GwyDataField *data_field,
-                                                GtkOrientation orientation,
-                                                gint ulcol,
-                                                gint ulrow,
-                                                gint brcol,
-                                                gint brrow);
 
 G_END_DECLS
 

@@ -217,7 +217,7 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
     if (below)
         gwy_data_field_multiply(mark_dfield, -1.0);
     if (prefilter)
-        gwy_data_field_filter_median(mark_dfield, 6, 0, 0, xres, yres);
+        gwy_data_field_filter_median(mark_dfield, 6);
 
     gwy_data_field_resample(grain_field, xres, yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_clear(grain_field);
@@ -283,8 +283,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
         if (below)
             gwy_data_field_multiply(status->mark_dfield, -1.0);
         if (prefilter)
-            gwy_data_field_filter_median(status->mark_dfield, 6, 0, 0,
-                                         data_field->xres, data_field->yres);
+            gwy_data_field_filter_median(status->mark_dfield, 6);
 
         gwy_data_field_resample(grain_field, data_field->xres, data_field->yres,
                                 GWY_INTERPOLATION_NONE);

@@ -114,7 +114,7 @@ laplacian(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *show;
     gdouble avg;
-    gint i, j;
+    gint xres, yres, i, j;
 
     g_assert(run & EDGE_RUN_MODES);
 
@@ -133,18 +133,12 @@ laplacian(GwyContainer *data, GwyRunType run)
         g_object_unref(show);
     }
 
-    gwy_data_field_area_copy(dfield, show,
-                             0, 0, gwy_data_field_get_xres(dfield),
-                             gwy_data_field_get_yres(dfield), 0, 0);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    gwy_data_field_area_copy(dfield, show, 0, 0, xres, yres, 0, 0);
 
-    gwy_data_field_area_filter_laplacian(show,
-                                         0, 0,
-                                         gwy_data_field_get_xres(dfield),
-                                         gwy_data_field_get_yres(dfield));
-
-    avg = gwy_data_field_get_area_avg(show, 1, 1,
-                                      gwy_data_field_get_xres(dfield)-1,
-                                      gwy_data_field_get_yres(dfield)-1);
+    gwy_data_field_filter_laplacian(show);
+    avg = gwy_data_field_area_get_avg(show, 1, 1, xres-2, yres-2);
 
     for (i = 0; i < dfield->yres; i++) {
         show->data[dfield->xres*i] = avg;
@@ -186,11 +180,8 @@ canny(GwyContainer *data, GwyRunType run)
 
     /*now we use fixed threshold, but in future, there could be API
      with some setting. We could also do smooting before apllying filter.*/
-    gwy_data_field_area_filter_canny(GWY_DATA_FIELD(show),
-                                     0.1,
-                                     0, 0,
-                                     gwy_data_field_get_xres(dfield),
-                                     gwy_data_field_get_yres(dfield));
+    gwy_data_field_filter_canny(GWY_DATA_FIELD(show), 0.1);
+
     return TRUE;
 }
 

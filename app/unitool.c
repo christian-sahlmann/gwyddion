@@ -540,10 +540,10 @@ gwy_unitool_get_z_average(GwyDataField *dfield,
     yres = gwy_data_field_get_yres(dfield);
     ulj = CLAMP(x - radius, 0, xres - 1);
     uli = CLAMP(y - radius, 0, yres - 1);
-    brj = CLAMP(x + radius, 0, xres - 1);
-    bri = CLAMP(y + radius, 0, yres - 1);
+    brj = CLAMP(x + radius + 1, 0, xres - 1);
+    bri = CLAMP(y + radius + 1, 0, yres - 1);
 
-    return gwy_data_field_get_area_avg(dfield, ulj, uli, brj, bri);
+    return gwy_data_field_area_get_avg(dfield, ulj, uli, brj - ulj, bri - uli);
 }
 
 /**

@@ -30,6 +30,17 @@
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
+/* Don't change filted id's for backward settings compatibility */
+typedef enum {
+    GWY_FILTER_MEAN          = 0,
+    GWY_FILTER_MEDIAN        = 1,
+    GWY_FILTER_CONSERVATIVE  = 2,
+    GWY_FILTER_LAPLACIAN     = 3,
+    GWY_FILTER_MINIMUM       = 6,
+    GWY_FILTER_MAXIMUM       = 7,
+    GWY_FILTER_KUWAHARA      = 8
+} GwyFilterType;
+
 typedef struct {
     GwyUnitoolRectLabels labels;
     GtkWidget *filter;
@@ -173,6 +184,14 @@ layer_setup(GwyUnitoolState *state)
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
+    static const GwyEnum entries[] = {
+        { N_("Mean value"),            GWY_FILTER_MEAN,  },
+        { N_("Median value"),          GWY_FILTER_MEDIAN, },
+        { N_("Conservative denoise"),  GWY_FILTER_CONSERVATIVE, },
+        { N_("Minimum"),               GWY_FILTER_MINIMUM, },
+        { N_("Maximum"),               GWY_FILTER_MAXIMUM, },
+        { N_("Kuwahara"),              GWY_FILTER_KUWAHARA, },
+    };
     ToolControls *controls;
     GwyContainer *settings;
     GtkWidget *dialog, *table, *table2, *label, *frame;
@@ -208,8 +227,10 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
-    controls->filter = gwy_option_menu_filter(G_CALLBACK(filter_changed_cb),
-                                              state, controls->fil);
+    controls->filter = gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                              "filter-type",
+                                              filter_changed_cb, state,
+                                              controls->fil);
     gwy_table_attach_hscale(table2, 1, _("_Type:"), NULL,
                             GTK_OBJECT(controls->filter), GWY_HSCALE_WIDGET);
 
