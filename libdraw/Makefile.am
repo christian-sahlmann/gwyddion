@@ -24,7 +24,7 @@ EXTRA_DIST = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwydraw_la_LDFLAGS = -version-info 1:0:0
+libgwydraw_la_LDFLAGS = -version-info 2:0:1
 libgwydraw_la_SOURCES = \
 	gwypalette.c \
 	gwypalettedef.c \
