@@ -346,6 +346,16 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
     if (gwy_container_gis_string_by_name(layer->data, "/0/base/palette",
                                          &gradient_name))
         gwy_layer_basic_set_gradient((GwyLayerBasic*)layer, gradient_name);
+    else {
+        /* FIXME: this is probably wrong, it should work with unset gradient
+         * and use default, but things depend on the fact /0/base/palette
+         * is set. */
+        gwy_layer_basic_set_gradient((GwyLayerBasic*)layer,
+                                     GWY_GRADIENT_DEFAULT);
+        gwy_container_set_string_by_name(GWY_DATA_VIEW_LAYER(layer)->data,
+                                         "/0/base/palette",
+                                         g_strdup(GWY_GRADIENT_DEFAULT));
+    }
 
     pixmap_layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
                                           BITS_PER_SAMPLE, width, height);
