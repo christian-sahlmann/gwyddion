@@ -107,6 +107,10 @@ static gint        normalize_data            (FitArgs *args,
                                               gint curve);
 static GtkWidget*  create_stocklike_button   (const gchar *label_text,
                                               const gchar *stock_id);
+static void        load_args                 (GwyContainer *container,
+                                              FitArgs *args);
+static void        save_args                 (GwyContainer *container,
+                                              FitArgs *args);
 static void        create_results_window     (FitArgs *args);
 static GString*    create_fit_report         (FitArgs *args);
 static void        destroy                   (FitArgs *args,
@@ -148,6 +152,7 @@ module_register(const gchar *name)
 static gboolean
 fit(GwyGraph *graph)
 {
+    GwyContainer *settings;
     gboolean ok;
     gint i;
     FitArgs args;
@@ -157,14 +162,18 @@ fit(GwyGraph *graph)
     args.from = 0;
     args.to = 0;
     args.parent_graph = graph;
-    for (i=0; i<MAX_PARAMS; i++) args.par_fix[i] = FALSE;
+    for (i = 0; i < MAX_PARAMS; i++)
+        args.par_fix[i] = FALSE;
     args.curve = 1;
     args.fitter = NULL;
     args.is_fitted = FALSE;
 
+    settings = gwy_app_settings_get();
+    load_args(settings, &args);
     get_data(&args);
 
-    ok = fit_dialog(&args);
+    if ((ok = fit_dialog(&args)))
+        save_args(settings, &args);
 
     return ok;
 }
@@ -313,25 +322,25 @@ fit_dialog(FitArgs *args)
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>initial  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Initial  </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>result  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Result  </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>error </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Error </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>fix  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Fix  </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
@@ -432,14 +441,15 @@ fit_dialog(FitArgs *args)
         = gtk_adjustment_new(args->curve, 1,
                              gwy_graph_get_number_of_curves(args->parent_graph),
                              1, 5, 0);
-    gwy_table_attach_spinbutton(table2, 1, _("graph data curve"), _(""),
+    gwy_table_attach_spinbutton(table2, 1, _("Graph data curve"), "",
                                 controls.data);
     gtk_container_add(GTK_CONTAINER(vbox), table2);
 
 
     hbox2 = gtk_hbox_new(FALSE, 0);
+    gtk_box_set_spacing(GTK_BOX(hbox2), 4);
 
-    label = gtk_label_new("from");
+    label = gtk_label_new("From");
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
     controls.from = gtk_entry_new_with_max_length(8);
@@ -672,10 +682,8 @@ recompute(FitArgs *args, FitControls *controls)
         gtk_label_set_markup(GTK_LABEL(controls->covar[0]), _("N. A."));
 
     for (i = 0; i < xdata->res; i++)
-    {
         ydata->data[i] = function->function(xdata->data[i], function->nparams,
                                             args->par_res, NULL, &ok);
-    }
 
     graph_update(controls, args);
 
@@ -773,7 +781,8 @@ guess(FitControls *controls, FitArgs *args)
         g_object_unref(ydata);
         return;
     }
-    function->function_guess(xdata->data, ydata->data, xdata->res, param, NULL, &ok);
+    function->function_guess(xdata->data, ydata->data, xdata->res,
+                             param, NULL, &ok);
 
     for (i=0; i<MAX_PARAMS; i++) args->par_init[i] = param[i];
 
@@ -788,7 +797,7 @@ graph_update(FitControls *controls, FitArgs *args)
 
     /*clear graph*/
     gwy_graph_clear(GWY_GRAPH(controls->graph));
-   
+
 
     /*add curves from parent graph*/
     for (i = 0; i < args->parent_nofcurves; i++) {
@@ -807,7 +816,7 @@ graph_update(FitControls *controls, FitArgs *args)
 static void
 graph_selected(GwyGraphArea *area, FitArgs *args)
 {
-    gchar buffer[20];
+    gchar buffer[24];
     gdouble xmin, xmax, ymin, ymax;
 
     if (area->seldata->data_start == area->seldata->data_end) {
@@ -883,6 +892,35 @@ create_stocklike_button(const gchar *label_text,
     return button;
 }
 
+static const gchar *preset_key = "/module/graph_fit/preset";
+
+static void
+load_args(GwyContainer *container,
+          FitArgs *args)
+{
+    const GwyNLFitPresetFunction *func;
+    static const guchar *preset;
+
+    if (gwy_container_gis_string_by_name(container, preset_key, &preset)) {
+        func = gwy_math_nlfit_get_preset_by_name((const gchar*)preset);
+        args->function_type = gwy_math_nlfit_get_preset_id(func);
+    }
+}
+
+static void
+save_args(GwyContainer *container,
+          FitArgs *args)
+{
+    const GwyNLFitPresetFunction *func;
+
+    func = gwy_math_nlfit_get_preset(args->function_type);
+    gwy_container_set_string_by_name
+        (container, preset_key,
+         g_strdup(gwy_math_nlfit_get_function_name(func)));
+}
+
+
+/************************* fit report *****************************/
 static void
 attach_label(GtkWidget *table, const gchar *text,
              gint row, gint col, gdouble halign)
@@ -1128,7 +1166,7 @@ create_fit_report(FitArgs *args)
                            args->parent_ns[curve]);
     g_string_append_printf(report, "X range:          %g to %g\n",
                            args->from, args->to);
-    g_string_append_printf(report, "Fitted function:  %s\n", 
+    g_string_append_printf(report, "Fitted function:  %s\n",
                            gwy_math_nlfit_get_function_name(args->fitfunc));
     g_string_append_printf(report, "\nResults\n");
     n = gwy_math_nlfit_get_function_nparams(args->fitfunc);
