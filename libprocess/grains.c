@@ -67,7 +67,7 @@ gint *gwy_data_field_fill_grain(GwyDataField *dfield,
  * gwy_data_field_grains_mark_height:
  * @data_field: Data to be used for marking.
  * @grain_field: Data field to store the resulting mask to.
- * @threshval: Relative height threshold, in range [0.0, 1.0].
+ * @threshval: Relative height threshold, in percents.
  * @below: If %TRUE, data below threshold are marked, otherwise data above
  *         threshold are marked.
  *
@@ -99,7 +99,7 @@ gwy_data_field_grains_mark_height(GwyDataField *data_field,
  * gwy_data_field_grains_mark_slope:
  * @data_field: Data to be used for marking.
  * @grain_field: Data field to store the resulting mask to.
- * @threshval: Relative slope threshold, in range [0.0, 1.0].
+ * @threshval: Relative slope threshold, in percents.
  * @below: If %TRUE, data below threshold are marked, otherwise data above
  *         threshold are marked.
  *
@@ -134,7 +134,7 @@ gwy_data_field_grains_mark_slope(GwyDataField *data_field,
  * gwy_data_field_grains_mark_curvature:
  * @data_field: Data to be used for marking.
  * @grain_field: Data field to store the resulting mask to.
- * @threshval: Relative curvature threshold, in range [0.0, 1.0].
+ * @threshval: Relative curvature threshold, in percents.
  * @below: If %TRUE, data below threshold are marked, otherwise data above
  *         threshold are marked.
  *
@@ -475,7 +475,7 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
  * gwy_data_field_grains_remove_by_height:
  * @data_field: Data to be used for marking
  * @grain_field: Field of marked grains (mask)
- * @threshval: Relative height threshold, in range [0.0, 1.0].
+ * @threshval: Relative height threshold, in percents.
  * @below: If %TRUE, grains below threshold are removed, otherwise grains above
  *         threshold are removed.
  *
