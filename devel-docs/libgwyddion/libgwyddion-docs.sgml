@@ -4,6 +4,7 @@
 <!ENTITY libgwyddion-GwyWatchable SYSTEM "xml/gwywatchable.xml">
 <!ENTITY libgwyddion-GwySerializable SYSTEM "xml/gwyserializable.xml">
 <!ENTITY libgwyddion-GwyContainer SYSTEM "xml/gwycontainer.xml">
+<!ENTITY libgwyddion-gwymacros SYSTEM "xml/gwymacros.xml">
 <!ENTITY libgwyddion-gwyentities SYSTEM "xml/gwyentities.xml">
 ]>
 <book id="index">
@@ -16,6 +17,7 @@
     &libgwyddion-GwyWatchable;
     &libgwyddion-GwySerializable;
     &libgwyddion-GwyContainer;
+    &libgwyddion-gwymacros;
     &libgwyddion-gwyentities;
   </chapter>
 </book>

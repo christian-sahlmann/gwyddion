@@ -1,38 +1,35 @@
-<!-- ##### FUNCTION gwy_container_delete ##### -->
+<!-- ##### FUNCTION gwy_container_foreach ##### -->
 <para>
 
 </para>
 
 @container: 
-@key: 
+@prefix: 
+@foo: 
 @Returns: 
 
-<!-- ##### MACRO gwy_container_delete_by_name ##### -->
+<!-- ##### FUNCTION gwy_container_freeze_watch ##### -->
 <para>
 
 </para>
 
-@c: 
-@n: 
+@container: 
+
+<!-- ##### FUNCTION gwy_container_thaw_watch ##### -->
+<para>
+
+</para>
+
+@container: 
+
+<!-- ##### FUNCTION gwy_container_watch ##### -->
+<para>
+
+</para>
+
+@container: 
+@path: 
+@callback: 
+@user_data: 
 @Returns: 
-@container: 
-@name: 
-
-<!-- ##### FUNCTION gwy_container_set_char ##### -->
-<para>
-
-</para>
-
-@container: 
-@key: 
-@value: 
-
-<!-- ##### MACRO gwy_container_set_char_by_name ##### -->
-<para>
-
-</para>
-
-@c: 
-@n: 
-@v: 
 

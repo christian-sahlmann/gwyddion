@@ -122,17 +122,6 @@ GwyContainer
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_container_foreach ##### -->
-<para>
-
-</para>
-
-@container: 
-@prefix: 
-@foo: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_container_set_boolean ##### -->
 <para>
 
@@ -163,7 +152,7 @@ GwyContainer
 @value: 
 
 
-<!-- ##### FUNCTION gwy_container_get_char ##### -->
+<!-- ##### FUNCTION gwy_container_get_uchar ##### -->
 <para>
 
 </para>
@@ -273,34 +262,6 @@ GwyContainer
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_container_watch ##### -->
-<para>
-
-</para>
-
-@container: 
-@path: 
-@callback: 
-@user_data: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_container_freeze_watch ##### -->
-<para>
-
-</para>
-
-@container: 
-
-
-<!-- ##### FUNCTION gwy_container_thaw_watch ##### -->
-<para>
-
-</para>
-
-@container: 
-
-
 <!-- ##### MACRO gwy_container_value_type_by_name ##### -->
 <para>
 
@@ -308,10 +269,6 @@ GwyContainer
 
 @c: 
 @n: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@container: 
-@name: 
 
 
 <!-- ##### MACRO gwy_container_contains_by_name ##### -->
@@ -381,7 +338,7 @@ GwyContainer
 @v: 
 
 
-<!-- ##### MACRO gwy_container_get_char_by_name ##### -->
+<!-- ##### MACRO gwy_container_get_uchar_by_name ##### -->
 <para>
 
 </para>
