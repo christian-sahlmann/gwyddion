@@ -579,8 +579,8 @@ gwy_math_sym_matrix_invert1(gint n, gdouble *a)
     return TRUE;
 }
 
-/*FIXME only for test*/
-gdouble
+
+static gdouble
 fit_gauss(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
@@ -596,8 +596,56 @@ fit_gauss(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
        return b[2] * exp(-c*c/2) + b[1];
 }
 
-/*FIXME only for test*/
-gdouble
+static gdouble
+fit_gauss_psdf(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+        gdouble c;
+
+            if (b[3] == 0) {
+            *fres = FALSE;
+            return 0;
+       }
+       *fres = TRUE;
+       c = x/b[1];
+
+       return b[0]*b[0]*b[1]/(2.0*sqrt(G_PI)) * exp(-c*c/4);
+}
+
+static gdouble
+fit_gauss_hhcf(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+        gdouble c;
+
+            if (b[1] == 0) {
+            *fres = FALSE;
+            return 0;
+       }
+       *fres = TRUE;
+       c = x/b[1];
+
+       return 2*b[0]*b[0] * (1 - exp(-c*c));
+}
+
+static gdouble
+fit_gauss_acf(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+        gdouble c;
+
+            if (b[1] == 0) {
+            *fres = FALSE;
+            return 0;
+       }
+       *fres = TRUE;
+       c = x/b[1];
+
+       return b[0]*b[0] * exp(-c*c);
+}
+
+
+static gdouble
 fit_exp(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
@@ -613,36 +661,96 @@ fit_exp(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
        return b[2] * exp(-c/2) + b[1];
 }
 
-/*FIXME only for test*/
-gdouble
+static gdouble
+fit_exp_psdf(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+        gdouble c;
+
+            if (b[3] == 0) {
+            *fres = FALSE;
+            return 0;
+       }
+       *fres = TRUE;
+       c = x*b[1];
+
+       return b[0]*b[0]*b[1]/(2.0*sqrt(G_PI)) / (1 + c*c);
+}
+
+static gdouble
+fit_exp_hhcf(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+        gdouble c;
+
+            if (b[1] == 0) {
+            *fres = FALSE;
+            return 0;
+       }
+       *fres = TRUE;
+       c = x/b[1];
+
+       return 2*b[0]*b[0] * (1 - exp(-c));
+}
+
+static gdouble
+fit_exp_acf(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+        gdouble c;
+
+            if (b[1] == 0) {
+            *fres = FALSE;
+            return 0;
+       }
+       *fres = TRUE;
+       c = x/b[1];
+
+       return b[0]*b[0] * exp(-c);
+}
+
+static gdouble
 fit_poly_0(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     return b[0];
 }
 
-/*FIXME only for test*/
-gdouble
+
+static gdouble
 fit_poly_1(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     return b[0] + b[1]*x;
 }
 
+static gdouble
+fit_poly_2(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+    return b[0] + b[1]*x + b[2]*x*x;
+}
 
-static const Param gauss_pars[]= {
+static gdouble
+fit_poly_3(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+            G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+    return b[0] + b[1]*x + b[2]*x*x + b[3]*x*x*x;
+}
+
+
+static const Param gaussexp_pars[]= {
    {"x<sub>0</sub>", " ", 1 },
    {"y<sub>0</sub>", " ", 2 },
    {"a", " ", 3 },
    {"b", " ", 4 },
 };
 
-static const Param exp_pars[]= {
-   {"x<sub>0</sub>", " ", 1 },
-   {"y<sub>0</sub>", " ", 2 },
-   {"a", " ", 3 },
-   {"b", " ", 4 },
+static const Param gaussexp_two_pars[]= {
+   {"\xcf\x83", " ", 1 },
+   {"T", " ", 2 },
 };
+
 
 static const Param poly0_pars[]= {
    {"a", " ", 1 },
@@ -661,7 +769,31 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        NULL,
        NULL,
        4,
-       gauss_pars
+       gaussexp_pars
+    },
+    { "Gaussian (PSDF)", 
+       "f(x) = (\xcf\x83<sup>2</sup>T)/(2)*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
+       &fit_gauss,
+       NULL,
+       NULL,
+       2,
+       gaussexp_two_pars
+    },
+    { "Gaussian (ACF)", 
+       "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
+       &fit_gauss,
+       NULL,
+       NULL,
+       2,
+       gaussexp_two_pars
+    },
+    { "Gaussian (HHCF)", 
+       "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
+       &fit_gauss,
+       NULL,
+       NULL,
+       2,
+       gaussexp_two_pars
     },
     { "Exponential", 
        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>)))",
@@ -669,7 +801,7 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        NULL,
        NULL,
        4,
-       exp_pars
+       gaussexp_pars
     },
     { "Polynom (order 0)", 
        "f(x) = a",
