@@ -1431,7 +1431,7 @@ gwy_math_nlfit_get_preset(GwyNLFitPresetType type)
 }
 
 gdouble
-gwy_math_nlfit_get_function_value(GwyNLFitPresetFunction* function,
+gwy_math_nlfit_get_function_value(const GwyNLFitPresetFunction* function,
                                   gdouble *params, gdouble x)
 {
     gboolean res;
@@ -1439,19 +1439,20 @@ gwy_math_nlfit_get_function_value(GwyNLFitPresetFunction* function,
 }
 
 gchar*
-gwy_math_nlfit_get_function_name(GwyNLFitPresetFunction* function)
+gwy_math_nlfit_get_function_name(const GwyNLFitPresetFunction* function)
 {
     return g_strdup(function->function_name);
 }
 
 gchar*
-gwy_math_nlfit_get_function_equation(GwyNLFitPresetFunction* function)
+gwy_math_nlfit_get_function_equation(const GwyNLFitPresetFunction* function)
 {
     return g_strdup(function->function_equation);
 }
 
 gchar*
-gwy_math_nlfit_get_function_param_name(GwyNLFitPresetFunction* function, gint param)
+gwy_math_nlfit_get_function_param_name(const GwyNLFitPresetFunction* function,
+                                       gint param)
 {
     const GwyNLFitParam *par;
 
@@ -1460,7 +1461,8 @@ gwy_math_nlfit_get_function_param_name(GwyNLFitPresetFunction* function, gint pa
 }
 
 gdouble
-gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* function, gint param)
+gwy_math_nlfit_get_function_param_default(const GwyNLFitPresetFunction* function,
+                                          gint param)
 {
     const GwyNLFitParam *par;
 
@@ -1469,13 +1471,13 @@ gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* function, gint
 }
 
 gint
-gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function)
+gwy_math_nlfit_get_function_nparams(const GwyNLFitPresetFunction* function)
 {
     return function->nparams;
 }
 
 GwyNLFitter*
-gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
+gwy_math_nlfit_fit_preset(const GwyNLFitPresetFunction* function,
                           gint n_dat, const gdouble *x, const gdouble *y,
                           gint n_param,
                           gdouble *param, gdouble *err,
