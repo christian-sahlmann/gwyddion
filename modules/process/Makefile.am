@@ -19,7 +19,8 @@ process_PROGRAMS = \
 	scale.so \
 	shade.so \
 	slope_dist.so \
-	fractal.so
+	fractal.so \
+	laplace.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -68,6 +69,9 @@ angle_dist_so_LDFLAGS = $(module_ldflags),angle_dist.so
 
 fractal_so_SOURCES = fractal.c
 fractal_so_LDFLAGS = $(module_ldflags),fractal.so
+
+laplace_so_SOURCES = laplace.c
+laplace_so_LDFLAGS = $(module_ldflags),laplace.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
