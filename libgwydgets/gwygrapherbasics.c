@@ -279,6 +279,9 @@ void gwy_grapher_draw_selection_areas(GdkDrawable *drawable,
 
     for (i = 0; i<n_of_areas; i++)
     {
+        printf("drawable: %d  gc: %d  real: %g - %g, pixel: %d - %d\n", drawable, gc, data_areas[i].xmin, data_areas[i].xmax,
+               x_data_to_pixel(specs, data_areas[i].xmin),
+               x_data_to_pixel(specs, data_areas[i].xmax));
         xmin = x_data_to_pixel(specs, data_areas[i].xmin);
         xmax = x_data_to_pixel(specs, data_areas[i].xmax);
         ymin = y_data_to_pixel(specs, data_areas[i].ymin);

@@ -257,11 +257,13 @@ gwy_grapher_model_add_curve(GwyGrapherModel *gmodel, GwyGrapherCurveModel *curve
     
     for (i = 0; i < gmodel->ncurves; i++)
     {
-        newcurves[i] = gmodel->curves[i];
+        newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
+        g_object_unref(gmodel->curves[i]);
     }
     newcurves[i] = gwy_serializable_duplicate(curve);
-  
+ 
     gmodel->curves = newcurves;
+    
     gmodel->ncurves++;
    
     g_object_notify(gmodel, "n");

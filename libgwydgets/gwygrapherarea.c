@@ -476,7 +476,6 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     dy = scr_to_data_y(widget, y);
 
     gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
-
     child = gwy_grapher_area_find_child(area, x, y);
     if (child) {
         if (event->type == GDK_2BUTTON_PRESS)
