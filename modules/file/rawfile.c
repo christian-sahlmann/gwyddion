@@ -207,7 +207,7 @@ static GwyModuleInfo module_info = {
     "rawfile",
     "Read raw data according to user-specified format.",
     "Yeti <yeti@gwyddion.net>",
-    "0.99.5",
+    "0.99.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -438,7 +438,6 @@ rawfile_dialog(RawFileArgs *args,
     RawFileControls controls;
     GwyDataField *dfield = NULL;
     GtkWidget *dialog, *vbox, *label, *notebook;
-    GSList *group;
     GtkAdjustment *adj2;
     gint response;
 
@@ -496,12 +495,6 @@ rawfile_dialog(RawFileArgs *args,
     adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.yreal));
     g_signal_connect(adj2, "value_changed",
                      G_CALLBACK(xyreal_changed_cb), &controls);
-
-    /* text/binary */
-    for (group = controls.format; group; group = g_slist_next(group)) {
-        g_signal_connect(group->data, "toggled",
-                         G_CALLBACK(bintext_changed_cb), &controls);
-    }
 
     /* presets */
     g_signal_connect_swapped(G_OBJECT(controls.presetlist), "cursor-changed",
@@ -685,6 +678,10 @@ static GtkWidget*
 rawfile_dialog_format_page(RawFileArgs *args,
                            RawFileControls *controls)
 {
+    static const GwyEnum formats[] = {
+        { "_Binary data", RAW_BINARY },
+        { "_Text data",   RAW_TEXT },
+    };
     GtkWidget *vbox, *label, *table, *button, *entry, *omenu;
     GtkObject *adj;
     gint row;
@@ -697,9 +694,14 @@ rawfile_dialog_format_page(RawFileArgs *args,
     gtk_table_set_col_spacings(GTK_TABLE(table), 2);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
 
-    button = gtk_radio_button_new_with_mnemonic(NULL, _("_Text data"));
-    g_object_set_data(G_OBJECT(button), "format", GINT_TO_POINTER(RAW_TEXT));
-    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    controls->format = gwy_radio_buttons_create(formats, G_N_ELEMENTS(formats),
+                                                "format",
+                                                G_CALLBACK(bintext_changed_cb),
+                                                controls,
+                                                args->format);
+    gtk_table_attach_defaults(GTK_TABLE(table),
+                              GTK_WIDGET(controls->format->data),
+                              0, 3, row, row+1);
     row++;
 
     adj = gtk_adjustment_new(args->lineoffset, 0, 1 << 30, 1, 10, 10);
@@ -728,12 +730,9 @@ rawfile_dialog_format_page(RawFileArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
     row++;
 
-    button
-        = gtk_radio_button_new_with_mnemonic_from_widget(GTK_RADIO_BUTTON(button),
-                                                         _("_Binary data"));
-    g_object_set_data(G_OBJECT(button), "format", GINT_TO_POINTER(RAW_BINARY));
-    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 1, row, row+1);
-    controls->format = gtk_radio_button_get_group(GTK_RADIO_BUTTON(button));
+    gtk_table_attach_defaults(GTK_TABLE(table),
+                              GTK_WIDGET(controls->format->next->data),
+                              0, 1, row, row+1);
 
     omenu = gwy_option_menu_create(builtin_menu, G_N_ELEMENTS(builtin_menu),
                                    "builtin",
@@ -1150,17 +1149,10 @@ xymeasureeq_changed_cb(RawFileControls *controls)
 }
 
 static void
-bintext_changed_cb(GtkWidget *button,
+bintext_changed_cb(G_GNUC_UNUSED GtkWidget *button,
                    RawFileControls *controls)
 {
-    gint format;
-
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
-        return;
-
     update_dialog_values(controls);
-    format = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "format"));
-    controls->args->format = format;
     update_dialog_controls(controls);
 }
 
@@ -1358,7 +1350,6 @@ static void
 update_dialog_controls(RawFileControls *controls)
 {
     RawFileArgs *args;
-    GSList *group;
     GtkAdjustment *adj;
     gchar buf[16];
     RawFileBuiltin builtin;
@@ -1410,20 +1401,8 @@ update_dialog_controls(RawFileControls *controls)
     g_snprintf(buf, sizeof(buf), "%u", args->byteswap);
     gtk_entry_set_text(GTK_ENTRY(controls->byteswap), buf);
 
-    gwy_option_menu_set_history(controls->builtin, "builtin",
-                                args->builtin);
-
-    for (group = controls->format; group; group = g_slist_next(group)) {
-        GObject *button = G_OBJECT(group->data);
-        gint format;
-
-        format = GPOINTER_TO_INT(g_object_get_data(button, "format"));
-        if (format == args->format
-            && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
-            break;
-        }
-    }
+    gwy_option_menu_set_history(controls->builtin, "builtin", args->builtin);
+    gwy_radio_buttons_set_current(controls->format, "format", args->format);
 
     /* TODO: set selected preset */
 
@@ -1477,8 +1456,8 @@ static void
 update_dialog_values(RawFileControls *controls)
 {
     RawFileArgs *args;
-    GSList *group;
 
+    gwy_debug("controls %p", controls);
     args = controls->args;
     g_free(args->delimiter);
 
@@ -1529,15 +1508,7 @@ update_dialog_values(RawFileControls *controls)
     gwy_debug("byteswap = %u", args->byteswap);
 
     args->builtin = gwy_option_menu_get_history(controls->builtin, "builtin");
-
-    for (group = controls->format; group; group = g_slist_next(group)) {
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(group->data))) {
-            args->format
-                = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(group->data),
-                                                    "format"));
-            break;
-        }
-    }
+    args->format = gwy_radio_buttons_get_current(controls->format, "format");
 
     rawfile_santinize_args(args);
 }
