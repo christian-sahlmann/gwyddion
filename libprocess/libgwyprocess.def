@@ -1,4 +1,5 @@
 EXPORTS
+	gwy_cwt_wfunc_2d
 	gwy_data_field_2dfft
 	gwy_data_field_2dfft_real
 	gwy_data_field_2dffthumanize

@@ -43,7 +43,7 @@ static GObject* gwy_data_field_duplicate         (GObject *object);
 static void     gwy_data_field_value_changed     (GObject *GwyDataField);
 
 /*local functions*/
-static void     gwy_data_field_mult_wav          (GwyDataField *real_field, 
+static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
                                                   GwyDataField *imag_field,
                                                   gdouble scale,
                                                   Gwy2DCWTWaveletType wtype);
@@ -478,7 +478,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 
     if (x<0 && x>-0.1) x = 0;
     if (y<0 && x>-0.1) y = 0;
-    
+
     if (!(x >= 0 && y >= 0 && y < a->yres && x < a->xres))
         printf("GRRRRRRRRRRRR: %f %f\n", x, y);
     g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres,
@@ -1140,7 +1140,7 @@ gwy_data_field_get_area_min(GwyDataField *a,
         GWY_SWAP(gint, ulrow, brrow);
 
     g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres, 0);
-    
+
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1394,9 +1394,9 @@ gwy_data_field_area_clamp(GwyDataField *a,
             else if (*row > top) {
                 *row = top;
                 tot++;
-            } 
+            }
         }
-         
+
     }
     return tot;
 }
@@ -1514,7 +1514,7 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
 
     size = sqrt((ulcol - brcol)*(ulcol - brcol) + (ulrow - brrow)*(ulrow - brrow));
     if (res<=0) res = (gint)size;
-    
+
     cosa = (gdouble)(brcol - ulcol)/(res - 1);
     sina = (gdouble)(brrow - ulrow)/(res - 1);
 
@@ -1524,7 +1524,7 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
                                              interpolation);
 
     b->real = size*a->xreal/a->xres;
-    
+
     return TRUE;
 }
 
@@ -1763,7 +1763,7 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
  * @ra: Real input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @fft: 1D FFT algorithm 
+ * @fft: 1D FFT algorithm
  * @windowing: windowing type
  * @direction: FFT direction (1 or -1)
  * @interpolation: interpolation type
@@ -1807,7 +1807,7 @@ gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
  *
  * Returns: 2^N good for FFT.
  **/
-gint 
+gint
 gwy_data_field_get_fft_res(gint data_res)
 {
     return (gint) pow (2,((gint) floor(log ((gdouble)data_res)/log (2.0)+0.5)));
@@ -1859,7 +1859,7 @@ gwy_data_field_2dffthumanize(GwyDataField *a)
  *
  * Transform all rows in the data field using 1D algorithm
  * and other parameters specified.
- * 
+ *
  **/
 void
 gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
@@ -1881,14 +1881,14 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     gwy_data_field_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
 
     for (k = 0; k < ra->yres; k++) {
-        gwy_data_field_get_row(ra, &rin, k);  
-        gwy_data_field_get_row(ia, &iin, k); 
-        
+        gwy_data_field_get_row(ra, &rin, k);
+        gwy_data_field_get_row(ia, &iin, k);
+
         gwy_data_line_fft(&rin, &iin, &rout, &iout, fft,
                           windowing, direction, interpolation,
                           preserverms, level);
-        
-        gwy_data_field_set_row(rb, &rout, k); 
+
+        gwy_data_field_set_row(rb, &rout, k);
         gwy_data_field_set_row(ib, &iout, k);
     }
 
@@ -1913,7 +1913,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
  *
  * Transform all columns in the data field using 1D algorithm
  * and other parameters specified.
- * 
+ *
  **/
 void
 gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
@@ -1965,7 +1965,7 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
  * Transform all rows in the data field using 1D algorithm
  * and other parameters specified. Only real input field
  * is used, so computation can be faster.
- * 
+ *
  **/
 void
 gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
@@ -2051,8 +2051,8 @@ edist(gint x1, gint y1, gint x2, gint y2)
  * multiply a complex data field (real and imaginary)
  * with complex FT of spoecified wavelet at given scale.
  **/
-static void  
-gwy_data_field_mult_wav(GwyDataField *real_field, 
+static void
+gwy_data_field_mult_wav(GwyDataField *real_field,
                         GwyDataField *imag_field,
                         gdouble scale,
                         Gwy2DCWTWaveletType wtype)
@@ -2060,12 +2060,12 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
     gint xres, yres, xresh, yresh;
     gint i, j;
     gdouble mval, val;
-    
+
     xres = real_field->xres;
     yres = real_field->yres;
     xresh = xres/2;
     yresh = yres/2;
-   
+
 
     for (i=0; i<xres; i++)
     {
@@ -2082,8 +2082,8 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
                 if (j<yresh) mval = edist(xres,0,i,j);
                 else mval = edist(xres, yres, i, j);
             }
-            val = wfunc_2d(scale, mval, xres, wtype);
-        
+            val = gwy_cwt_wfunc_2d(scale, mval, xres, wtype);
+
 
             real_field->data[i + j*xres] *= val;
             imag_field->data[i + j*xres] *= val;
@@ -2102,7 +2102,7 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
  * Compute a continuous wavelet transform at given
  * scale and using given wavelet.
  **/
-void 
+void
 gwy_data_field_cwt(GwyDataField *data_field,
                         GwyInterpolationType interpolation,
                         gdouble scale,
@@ -2130,7 +2130,7 @@ gwy_data_field_cwt(GwyDataField *data_field,
                         1,
                         0);
    gwy_data_field_mult_wav(&hlp_r, &hlp_i, scale, wtype);
-   
+
    gwy_data_field_2dfft(&hlp_r,
                         &hlp_i,
                         data_field,
@@ -2141,11 +2141,11 @@ gwy_data_field_cwt(GwyDataField *data_field,
                         interpolation,
                         1,
                         0);
- 
-                       
+
+
    gwy_data_field_free(&hlp_r);
    gwy_data_field_free(&hlp_i);
-   gwy_data_field_free(&imag_field); 
+   gwy_data_field_free(&imag_field);
 }
 
 /**
@@ -2158,20 +2158,20 @@ gwy_data_field_cwt(GwyDataField *data_field,
  * Creates a shaded data field. Target field should
  * be allready allocated.
  **/
-void 
+void
 gwy_data_field_shade(GwyDataField *data_field, GwyDataField *target_field,
                                                     gdouble theta, gdouble phi)
 {
-    gint i, j; 
+    gint i, j;
     gwy_data_field_resample(target_field, data_field->xres, data_field->yres, GWY_INTERPOLATION_NONE);
-    for (i = 0; i < data_field->yres; i++) 
+    for (i = 0; i < data_field->yres; i++)
     {
-        
-        for (j = 0; j < data_field->xres; j++) 
+
+        for (j = 0; j < data_field->xres; j++)
         {
             target_field->data[j + data_field->xres*i] = gwy_data_field_get_angder(data_field, j, i, theta);
         }
-    }     
+    }
 }
 
 

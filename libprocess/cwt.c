@@ -1,5 +1,5 @@
 /*
-
+ *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
@@ -20,18 +20,26 @@
 #include <math.h>
 #include "cwt.h"
 
-gdouble 
-wfunc_2d(gdouble scale, gdouble mval, gint xres, Gwy2DCWTWaveletType wtype)
+gdouble
+gwy_cwt_wfunc_2d(gdouble scale,
+                 gdouble mval,
+                 gint xres,
+                 Gwy2DCWTWaveletType wtype)
 {
-    gdouble dat2x, cur;
-    
-    dat2x=4.0/(gdouble)xres;
-    cur=mval*dat2x;
+    gdouble dat2x, cur, scale2, cur2;
 
-    if (wtype==GWY_2DCWT_GAUSS) return exp(-(scale*scale*cur*cur)/2)*2*G_PI*scale*scale*2*G_PI*scale;
-    else if (wtype==GWY_2DCWT_HAT) return (scale*scale*cur*cur)*exp(-(scale*scale*cur*cur)/2)*2*G_PI*scale*scale;
-    else return 1;
-    
+    dat2x = 4.0/(gdouble)xres;
+    cur = mval*dat2x;
+    cur2 = cur*cur;
+    scale2 = scale*scale;
+
+    if (wtype == GWY_2DCWT_GAUSS)
+        return exp(-(scale2*cur2)/2)*2*G_PI*scale2*2*G_PI*scale;
+    else if (wtype == GWY_2DCWT_HAT)
+        return (scale2*cur2)*exp(-(scale2*cur2)/2)*2*G_PI*scale2;
+    else
+        return 1;
+
 
 }
 

@@ -40,7 +40,11 @@ typedef enum {
 } GwyCWTWaveletType;
 
 
-gdouble wfunc_2d(gdouble scale, gdouble mval, gint xres, Gwy2DCWTWaveletType wtype);
+gdouble
+gwy_cwt_wfunc_2d(gdouble scale,
+                 gdouble mval,
+                 gint xres,
+                 Gwy2DCWTWaveletType wtype);
 
 
 #ifdef __cplusplus
