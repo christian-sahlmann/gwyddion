@@ -38,7 +38,6 @@ static GObject* gwy_palette_def_deserialize       (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
 static GObject* gwy_palette_def_duplicate         (GObject *object);
-static void     gwy_palette_def_value_changed     (GObject *GwyPaletteDef);
 static gint     gwy_palette_def_entry_compare     (GwyPaletteDefEntry *a,
                                                    GwyPaletteDefEntry *b);
 static gchar*   gwy_palette_def_invent_name       (GHashTable *palettes,
@@ -427,24 +426,11 @@ gwy_palette_def_set_name(GwyPaletteDef *palette_def,
     palette_def->name = g_strdup(name);
     g_hash_table_insert(klass->palettes, palette_def->name, palette_def);
     g_free(oldname);
-    gwy_palette_def_value_changed(G_OBJECT(palette_def));
+    gwy_watchable_value_changed(G_OBJECT(palette_def));
 
     return TRUE;
 }
 
-
-/**
- * gwy_palette_def_value_changed:
- * @palette_def: A #GwyPaletteDef.
- *
- * Emits a "value_changed" signal on a palette definition @palette_def.
- **/
-static void
-gwy_palette_def_value_changed(GObject *palette_def)
-{
-    gwy_debug("signal: GwyPaletteDef changed");
-    g_signal_emit_by_name(GWY_PALETTE_DEF(palette_def), "value_changed", NULL);
-}
 
 /**
  * gwy_palette_def_get_color:
@@ -534,7 +520,7 @@ gwy_palette_def_set_color(GwyPaletteDef *palette_def,
     palette_def->data = g_array_append_val(palette_def->data, *val);
     g_array_sort(palette_def->data,
                  (GCompareFunc)gwy_palette_def_entry_compare);
-    gwy_palette_def_value_changed(G_OBJECT(palette_def));
+    gwy_watchable_value_changed(G_OBJECT(palette_def));
 }
 
 static gint
@@ -859,7 +845,7 @@ gwy_palette_def_set_from_samples(GwyPaletteDef *palette_def,
         pd.color = samples[nsamples-1];
         palette_def->data = g_array_append_val(palette_def->data, pd);
     }
-    gwy_palette_def_value_changed(G_OBJECT(palette_def));
+    gwy_watchable_value_changed(G_OBJECT(palette_def));
 }
 
 /**

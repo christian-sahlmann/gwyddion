@@ -49,7 +49,6 @@ static GObject* gwy_palette_deserialize           (const guchar *buffer,
 static GObject* gwy_palette_duplicate             (GObject *object);
 static void     gwy_palette_real_set_palette_def  (GwyPalette *palette,
                                                    GwyPaletteDef* palette_def);
-static void     gwy_palette_value_changed         (GObject *GwyPalette);
 static void     gwy_palette_recompute_samples     (GwyPaletteDef *palette_def,
                                                    GwyPaletteSamples *samples);
 static void     gwy_palette_update                (GwyPalette *palette);
@@ -158,7 +157,7 @@ gwy_palette_finalize(GwyPalette *palette)
 
     g_signal_handlers_disconnect_matched(palette->def, G_SIGNAL_MATCH_FUNC,
                                          0, 0, NULL,
-                                         gwy_palette_value_changed, NULL);
+                                         gwy_watchable_value_changed, NULL);
     gwy_palette_samples_maybe_free(palette->def);
     g_object_unref(palette->def);
 }
@@ -249,12 +248,12 @@ gwy_palette_set_palette_def(GwyPalette *palette,
     olddef = palette->def;
     g_signal_handlers_disconnect_matched(olddef, G_SIGNAL_MATCH_FUNC,
                                          0, 0, NULL,
-                                         gwy_palette_value_changed, NULL);
+                                         gwy_watchable_value_changed, NULL);
     g_object_ref(palette_def);
     gwy_palette_real_set_palette_def(palette, palette_def);
     gwy_palette_samples_maybe_free(olddef);
     g_object_unref(olddef);
-    gwy_palette_value_changed(G_OBJECT(palette));
+    gwy_watchable_value_changed(G_OBJECT(palette));
 }
 
 static void
@@ -276,7 +275,7 @@ gwy_palette_real_set_palette_def(GwyPalette *palette,
                                 G_CALLBACK(gwy_palette_update), palette);
     }
     g_signal_connect_swapped(palette_def, "value_changed",
-                             G_CALLBACK(gwy_palette_value_changed), palette);
+                             G_CALLBACK(gwy_watchable_value_changed), palette);
 }
 
 static void
@@ -351,20 +350,6 @@ gwy_palette_duplicate(GObject *object)
     g_return_val_if_fail(GWY_IS_PALETTE(object), NULL);
     return gwy_palette_new(GWY_PALETTE(object)->def);
 }
-
-/**
- * gwy_palette_value_changed:
- * @palette: A #GwyPalette.
- *
- * Emits a "value_changed" signal on a palette @palette.
- **/
-static void
-gwy_palette_value_changed(GObject *palette)
-{
-    gwy_debug("signal: GwyPalette changed");
-    g_signal_emit_by_name(GWY_PALETTE(palette), "value_changed", NULL);
-}
-
 
 /**
  * gwy_palette_get_palette_def:
