@@ -702,11 +702,13 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
         base = tick_info[scale_depth].base;
         step = steps[scale];
         first = floor(lower/mag / (base*step))*base*step;
+        gwy_debug("scale=%d, base=%g, step=%g, first=%g",
+                  scale, base, step, first);
         for (i = 0; ; i++) {
             gint pos;
             gdouble val;
 
-            val = i*step*base + first;
+            val = (i + 0.000001)*step*base + first;
             pos = floor((val - lower/mag)/measure);
             if (pos >= pixelsize)
                 break;
