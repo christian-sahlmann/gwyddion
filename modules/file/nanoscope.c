@@ -240,6 +240,21 @@ hash_to_data_field(GHashTable *hash,
         g_warning("Cannot parse `Scan size': <%s>", s);
         return NULL;
     }
+    if (strcmp(un, "nm") == 0) {
+        xreal /= 1e9;
+        yreal /= 1e9;
+    }
+    else if (strcmp(un, "~m") == 0 || strcmp(un, "um") == 0) {
+        xreal /= 1e6;
+        yreal /= 1e6;
+    }
+    else {
+        g_warning("Cannot understand size units: <%s>", un);
+        xreal /= 1e9;
+        yreal /= 1e9;
+    }
+    un[0] = 'm';
+    un[1] = '\0';
 
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_BIN) {
