@@ -44,6 +44,7 @@ int unlink(const char *name);
 
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwydgets/gwystock.h>
 #include "app.h"
@@ -73,6 +74,7 @@ main(int argc, char *argv[])
     gwy_find_self_set_argv0(argv[0]);
 #endif
 
+    gwy_debug_objects_enable(TRUE);
     process_preinit_options(&argc, &argv);
     gwy_app_settings_create_config_dir();
 #ifdef G_OS_WIN32
@@ -120,6 +122,8 @@ main(int argc, char *argv[])
     }
     gwy_app_settings_free();
     g_free(config_file);
+    gwy_debug_objects_dump_to_file(stdout);
+    gwy_debug_objects_clear();
 
     return 0;
 }
