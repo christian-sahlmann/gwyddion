@@ -58,6 +58,14 @@ Tools
   otherwise it hides it
 - Undo works, namely in connection to previews and duplication
 
+File import/export
+- Sizes, values, and units are correct
+- Works on systems with distinguishing between binary and text files[4]
+- Works on systems with various notions what an end of line is[4]
+- Works on 32bit, 64bit platforms[4]
+- Works on little, big endian platforms[4]
+- Is not affected by locale settings
+
 GUI
 - Dialog titles are correct (e.g., not describing another module, etc.)
 - Labels are comprehensible
@@ -75,7 +83,7 @@ GUI
 
 Translateability
 - There should be no English string in Czech GUI, including in window titles,
-  etc.[4]
+  etc.[5]
 
 Packaging, installation
 - Gwyddion installs itself correctly on Win32
@@ -104,8 +112,8 @@ Object leaking
 Valgrinding
 - Does not work on Win32
 - Run Gwyddion as
-  valgrind --tool=memcheck --num-callers=12 --suppressions=...[5] gwyddion
-- It should print no errors[6]
+  valgrind --tool=memcheck --num-callers=12 --suppressions=...[6] gwyddion
+- It should print no errors[7]
 - Ideally, all testing should be done with addrcheck at least (instead of
   memcheck which makes the program too slow and memory-hungry)
 
@@ -115,9 +123,11 @@ Footnotes
 [2] There's a known problem with graphs, they rarely handle complex units
     correctly.
 [3] May need to prepare some specific testing data
-[4] Except perhaps in too new modules that have not been translated yet
-[5] Suppressions for Gdk and libpng problems are listed below
-[6] 3D view is known to cause ***lots*** of errors
+[4] Requires access to various systems and platforms, so at least what is
+    available should be tested
+[5] Except perhaps in too new modules that have not been translated yet
+[6] Suppressions for Gdk and libpng problems are listed below
+[7] 3D view is known to cause ***lots*** of errors
 
 Addendum: Valgrind suppressions (for FC3)
 <<<<< gdk_display.supp <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
