@@ -51,7 +51,8 @@ static gboolean   use                 (GwyDataWindow *data_window,
                                        GwyToolSwitchEvent reason);
 static void       layer_setup         (GwyUnitoolState *state);
 static GtkWidget* dialog_create       (GwyUnitoolState *state);
-static void       dialog_update       (GwyUnitoolState *state);
+static void       dialog_update       (GwyUnitoolState *state,
+                                       GwyUnitoolUpdateType reason);
 static void       dialog_abandon      (GwyUnitoolState *state);
 static void       apply               (GwyUnitoolState *state);
 static void       interp_changed_cb   (GObject *item,
@@ -279,7 +280,8 @@ update_labels(GwyUnitoolState *state)
 }
 
 static void
-dialog_update(GwyUnitoolState *state)
+dialog_update(GwyUnitoolState *state,
+              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     ToolControls *controls;
     GwyUnitoolUnits *units;
@@ -433,7 +435,7 @@ interp_changed_cb(GObject *item, ToolControls *controls)
         = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
 
     gwy_debug("Interpolation set to %d\n", controls->interp);
-    dialog_update(controls->state);
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void

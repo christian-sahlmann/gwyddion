@@ -51,7 +51,8 @@ static gboolean   use                  (GwyDataWindow *data_window,
                                         GwyToolSwitchEvent reason);
 static void       layer_setup          (GwyUnitoolState *state);
 static GtkWidget* dialog_create        (GwyUnitoolState *state);
-static void       dialog_update        (GwyUnitoolState *state);
+static void       dialog_update        (GwyUnitoolState *state,
+                                        GwyUnitoolUpdateType reason);
 static void       dialog_abandon       (GwyUnitoolState *state);
 static void       apply                (GwyUnitoolState *state);
 static void       interp_changed_cb    (GObject *item,
@@ -286,7 +287,8 @@ update_labels(GwyUnitoolState *state)
 }
 
 static void
-dialog_update(GwyUnitoolState *state)
+dialog_update(GwyUnitoolState *state,
+              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     ToolControls *controls;
     GwyContainer *data;
@@ -411,7 +413,7 @@ interp_changed_cb(GObject *item, ToolControls *controls)
     gwy_debug("");
     controls->interp
         = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
-    dialog_update(controls->state);
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
@@ -420,7 +422,7 @@ output_changed_cb(GObject *item, ToolControls *controls)
     gwy_debug("");
     controls->out = GPOINTER_TO_INT(g_object_get_data(item, "sf-output-type"));
     printf("controls->out = %d\n", controls->out);
-    dialog_update(controls->state);
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
@@ -428,7 +430,7 @@ direction_changed_cb(GObject *item, ToolControls *controls)
 {
     gwy_debug("");
     controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
-    dialog_update(controls->state);
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 

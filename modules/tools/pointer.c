@@ -42,7 +42,8 @@ static gboolean   module_register  (const gchar *name);
 static gboolean   use              (GwyDataWindow *data_window,
                                     GwyToolSwitchEvent reason);
 static GtkWidget* dialog_create    (GwyUnitoolState *state);
-static void       dialog_update    (GwyUnitoolState *state);
+static void       dialog_update    (GwyUnitoolState *state,
+                                    GwyUnitoolUpdateType reason);
 static void       dialog_abandon   (GwyUnitoolState *state);
 
 static const gchar *radius_key = "/tool/pointer/radius";
@@ -184,7 +185,8 @@ update_value_label(GtkWidget *label, gdouble value)
 }
 
 static void
-dialog_update(GwyUnitoolState *state)
+dialog_update(GwyUnitoolState *state,
+              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     GwyContainer *data;
     GwyDataField *dfield;

@@ -43,7 +43,8 @@ static gboolean   use              (GwyDataWindow *data_window,
                                     GwyToolSwitchEvent reason);
 static void       layer_setup      (GwyUnitoolState *state);
 static GtkWidget* dialog_create    (GwyUnitoolState *state);
-static void       dialog_update    (GwyUnitoolState *state);
+static void       dialog_update    (GwyUnitoolState *state,
+                                    GwyUnitoolUpdateType reason);
 static void       dialog_abandon   (GwyUnitoolState *state);
 static void       apply            (GwyUnitoolState *state);
 
@@ -205,7 +206,8 @@ update_value_label(GtkWidget *label, gdouble value)
 }
 
 static void
-dialog_update(GwyUnitoolState *state)
+dialog_update(GwyUnitoolState *state,
+              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     GwyUnitoolUnits *units;
     ToolControls *controls;

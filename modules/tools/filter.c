@@ -53,7 +53,8 @@ static gboolean   use              (GwyDataWindow *data_window,
                                     GwyToolSwitchEvent reason);
 static void       layer_setup      (GwyUnitoolState *state);
 static GtkWidget* dialog_create    (GwyUnitoolState *state);
-static void       dialog_update    (GwyUnitoolState *state);
+static void       dialog_update    (GwyUnitoolState *state,
+                                    GwyUnitoolUpdateType reason);
 static void       dialog_abandon   (GwyUnitoolState *state);
 static void       apply            (GwyUnitoolState *state);
 
@@ -345,7 +346,8 @@ apply(GwyUnitoolState *state)
 }
 
 static void
-dialog_update(GwyUnitoolState *state)
+dialog_update(GwyUnitoolState *state,
+              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     GwyUnitoolUnits *units;
     ToolControls *controls;
@@ -354,7 +356,6 @@ dialog_update(GwyUnitoolState *state)
     GwyDataViewLayer *layer;
     gdouble xy[4];
     gboolean is_visible, is_selected;
-    gchar buffer[16];
     gint ulcol, brcol, ulrow, brrow;
 
     gwy_debug("");
@@ -493,7 +494,7 @@ direction_changed_cb (GObject *item, ToolControls *controls)
     gwy_debug("");
     controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
     state_changed = 1;
-    dialog_update(controls->state);
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
@@ -502,7 +503,7 @@ filter_changed_cb (GObject *item, ToolControls *controls)
     gwy_debug("");
     controls->fil = GPOINTER_TO_INT(g_object_get_data(item, "filter-type"));
     state_changed = 1;
-    dialog_update(controls->state);
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }    
 
 static void
@@ -511,7 +512,7 @@ update_changed_cb (GtkToggleButton *button, ToolControls *controls)
     gwy_debug("");
     controls->upd = gtk_toggle_button_get_active(button);
     state_changed = 1;
-    dialog_update(controls->state);
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 
