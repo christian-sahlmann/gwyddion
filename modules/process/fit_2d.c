@@ -164,7 +164,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo fit_2d_func_info = {
         "fit_2d",
-        N_("/_Level/_Fit sphere..."),
+        N_("/_Level/_Fit Sphere..."),
         (GwyProcessFunc)&fit_2d,
         FIT_2D_RUN_MODES,
         0,
