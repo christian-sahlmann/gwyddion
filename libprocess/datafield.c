@@ -186,6 +186,8 @@ gwy_data_field_serialize(GObject *obj,
             { 'i', "yres", &data_field->yres, NULL, },
             { 'd', "xreal", &data_field->xreal, NULL, },
             { 'd', "yreal", &data_field->yreal, NULL, },
+            { 'o', "si_unit_xy", &data_field->si_unit_xy, NULL, },
+            { 'o', "si_unit_z", &data_field->si_unit_z, NULL, },
             { 'D', "data", &data_field->data, &datasize, },
         };
         return gwy_serialize_pack_object_struct(buffer, size,
@@ -202,28 +204,39 @@ gwy_data_field_deserialize(const guchar *buffer,
     gsize fsize;
     gint xres, yres;
     gdouble xreal, yreal, *data = NULL;
+    GwySIUnit *si_unit_xy, *si_unit_z;
     GwyDataField *data_field;
     GwySerializeSpec spec[] = {
         { 'i', "xres", &xres, NULL, },
         { 'i', "yres", &yres, NULL, },
         { 'd', "xreal", &xreal, NULL, },
         { 'd', "yreal", &yreal, NULL, },
+        { 'o', "si_unit_xy", si_unit_xy, NULL, },
+        { 'o', "si_unit_z", si_unit_z, NULL, },                      
         { 'D', "data", &data, &fsize, },
     };
 
     gwy_debug("");
+
+    si_unit_z = NULL;
+    si_unit_xy = NULL;
+    
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                             GWY_DATA_FIELD_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
         g_free(data);
+        g_object_unref(si_unit_xy);
+        g_object_unref(si_unit_z);
         return NULL;
     }
     if (fsize != (gsize)(xres*yres)) {
         g_critical("Serialized %s size mismatch %u != %u",
               GWY_DATA_FIELD_TYPE_NAME, fsize, xres*yres);
         g_free(data);
+        g_object_unref(si_unit_xy);
+        g_object_unref(si_unit_z);
         return NULL;
     }
 
@@ -233,6 +246,9 @@ gwy_data_field_deserialize(const guchar *buffer,
     data_field->data = data;
     data_field->xres = xres;
     data_field->yres = yres;
+    if (si_unit_z != NULL) data_field->si_unit_z = si_unit_z;
+    if (si_unit_xy != NULL) data_field->si_unit_xy = si_unit_xy;
+    
 
     return (GObject*)data_field;
 }
