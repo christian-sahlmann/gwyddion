@@ -125,7 +125,7 @@ dialog_create(GwyUnitoolState *state)
     GwyContainer *settings;
     GtkWidget *dialog, *table, *label, *frame;
     gint radius;
-    guchar *buffer;
+    GString *str;
     gint i;
 
     gwy_debug("");
@@ -144,22 +144,28 @@ dialog_create(GwyUnitoolState *state)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
+    str = g_string_new("");
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>X</b>"));
+    g_string_printf(str, _("<b>X</b> [%s]"), state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
+
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Y</b>"));
+    g_string_printf(str, _("<b>Y</b> [%s]"), state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
+
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Value</b>"));
+    g_string_printf(str, _("<b>Value</b> [%s]"), state->value_format->units);
+    gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1, GTK_FILL, 0, 2, 2);
+
     for (i = 0; i < 3; i++) {
         label = gtk_label_new(NULL);
-        buffer = g_strdup_printf(_("<b>%d</b>"), i+1);
+        g_string_printf(str, _("<b>%d</b>"), i+1);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_label_set_markup(GTK_LABEL(label), buffer);
-        g_free(buffer);
+        gtk_label_set_markup(GTK_LABEL(label), str->str);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+1, i+2, 0, 0, 2, 2);
         label = controls->coords[2*i] = gtk_label_new("");
@@ -175,6 +181,7 @@ dialog_create(GwyUnitoolState *state)
         gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+1, i+2,
                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
     }
+    g_string_free(str, TRUE);
 
     table = gtk_table_new(1, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -222,13 +229,13 @@ dialog_update(GwyUnitoolState *state,
 
     for (i = 0; i < 6; i++) {
         if (i < 2*nselected) {
-            gwy_unitool_update_label(state->coord_format,
-                                     controls->coords[i], points[i]);
+            gwy_unitool_update_label_no_units(state->coord_format,
+                                              controls->coords[i], points[i]);
             if (i%2 == 0) {
                 val = gwy_unitool_get_z_average(dfield, points[i], points[i+1],
                                                 radius);
-                gwy_unitool_update_label(state->value_format,
-                                         controls->values[i/2], val);
+                gwy_unitool_update_label_no_units(state->value_format,
+                                                  controls->values[i/2], val);
             }
         }
         else {
