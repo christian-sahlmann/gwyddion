@@ -69,9 +69,9 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
             }
         }
         xresult->data[l] = log(rp);
-        yresult->data[l] =
-            log(yresult->data[l] /
-                (((buffer->xres - 1)/rp - 1) * ((buffer->yres - 1)/rp - 1)));
+        yresult->data[l]
+            = log(yresult->data[l]
+                  /(((buffer->xres - 1)/rp - 1) * ((buffer->yres - 1)/rp - 1)));
 
     }
     g_object_unref(buffer);
@@ -93,7 +93,6 @@ get_area_rms_nomask(GwyDataField *dfield,
     if (width == 0 || height == 0)
         return rms;
 
-    /*printf("col: %d, row: %d, height=%d, width=%d, xres+%d, yres=%d\n", col, row, height, width, dfield->xres, dfield->yres);*/
      g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms);
      g_return_val_if_fail(col >= 0 && row >= 0
                           && width >= 0 && height >= 0
@@ -103,13 +102,12 @@ get_area_rms_nomask(GwyDataField *dfield,
      if (!width || !height)
          return rms;
 
-     n=0;
+     n = 0;
      datapos = dfield->data + row*dfield->xres + col;
      for (i = 0; i < height; i++) {
           gdouble *drow = datapos + i*dfield->xres;
           for (j = 0; j < width; j++) {
-              if (mask->data[j + i*mask->xres] != 0)
-              {
+              if (mask->data[j + i*mask->xres] != 0) {
                   sum2 += (*drow) * (*drow);
                   sum += *drow;
                   n++;
@@ -136,7 +134,8 @@ fractal_partitioning_nomask(GwyDataField *data_field, GwyDataField *mask_field,
     xnewres = (gint)pow(2, dimexp) + 1;
 
     buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
-    maskbuffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(mask_field)));
+    maskbuffer = GWY_DATA_FIELD(gwy_serializable_duplicate
+                                                       (G_OBJECT(mask_field)));
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
     gwy_data_field_resample(maskbuffer, xnewres, xnewres,
                             GWY_INTERPOLATION_ROUND);
@@ -148,20 +147,21 @@ fractal_partitioning_nomask(GwyDataField *data_field, GwyDataField *mask_field,
         rp = ROUND(pow(2, l));
         for (i = 0; i < ((buffer->xres - 1)/rp - 1); i++) {
             for (j = 0; j < ((buffer->yres - 1)/rp - 1); j++) {
-/*                rms = get_area_rms_nomask(buffer, maskbuffer, i * (rp), j * (rp),
+                /*
+                rms = get_area_rms_nomask(buffer, maskbuffer, i*rp, j*rp,
                                                   (i + 1) * (rp) + 1,
                                                   (j + 1) * (rp) + 1);
                                                   */
-                rms = gwy_data_field_get_area_rms(buffer, i * (rp), j * (rp),
-                                                  (i + 1) * (rp) + 1,
-                                                  (j + 1) * (rp) + 1);
+                rms = gwy_data_field_get_area_rms(buffer, i*rp, j*rp,
+                                                  (i + 1)*rp + 1,
+                                                  (j + 1)*rp + 1);
                 yresult->data[l] += rms * rms;
             }
         }
         xresult->data[l] = log(rp);
-        yresult->data[l] =
-            log(yresult->data[l] /
-                (((buffer->xres - 1)/rp - 1) * ((buffer->yres - 1)/rp - 1)));
+        yresult->data[l]
+            = log(yresult->data[l]
+              /(((buffer->xres - 1)/rp - 1) * ((buffer->yres - 1)/rp - 1)));
 
     }
     g_object_unref(buffer);
@@ -214,9 +214,8 @@ gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
                 min = G_MAXDOUBLE;
                 for (m = 0; m <= rp2; m++) {
                     for (n = 0; n <= rp2; n++) {
-                        hlp =
-                            buffer->data[(i * rp2 + m) +
-                                         buffer->xres * (j * rp2 + n)] - imin;
+                        hlp = buffer->data[(i * rp2 + m)
+                              + buffer->xres * (j * rp2 + n)] - imin;
                         if (hlp > max)
                             max = hlp;
                         if (hlp < min)
@@ -281,8 +280,8 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field,
                 z1 = buffer->data[(i * rp2) + buffer->xres * (j * rp2)];
                 z2 = buffer->data[((i + 1) * rp2) + buffer->xres * (j * rp2)];
                 z3 = buffer->data[(i * rp2) + buffer->xres * ((j + 1) * rp2)];
-                z4 = buffer->data[((i + 1) * rp2) +
-                                  buffer->xres * ((j + 1) * rp2)];
+                z4 = buffer->data[((i + 1) * rp2)
+                     + buffer->xres * ((j + 1) * rp2)];
 
                 a = sqrt(rp2 * rp2 + dil * (z1 - z2) * (z1 - z2));
                 b = sqrt(rp2 * rp2 + dil * (z1 - z3) * (z1 - z3));
@@ -292,8 +291,8 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field,
 
                 s1 = (a + b + e)/2;
                 s2 = (c + d + e)/2;
-                s = sqrt(s1 * (s1 - a) * (s1 - b) * (s1 - e)) +
-                    sqrt(s2 * (s2 - c) * (s2 - d) * (s2 - e));
+                s = sqrt(s1 * (s1 - a) * (s1 - b) * (s1 - e))
+                    + sqrt(s2 * (s2 - c) * (s2 - d) * (s2 - e));
 
                 yresult->data[l] += s;
             }
@@ -305,6 +304,7 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field,
     }
     g_object_unref(buffer);
 }
+
 /*
  * @data_field: A data field.
  * @xresult: X-values for log-log plot.
@@ -509,9 +509,13 @@ gaussian_random_number(GRand *rng)
     return (x + 1.0/4294967295.0*y)*w;
 }
 
-/*data repair tool using succesive random additional midpoint displacement method.
-Uses fields of size 2^k+1, *vars - y result field of gwy_data_field_fractal_partitioning(),
-*mask to specify which points to correct and *z data*/
+/*
+ * data repair tool using succesive random additional midpoint displacement
+ * method.
+ * Uses fields of size 2^k+1, *vars - y result field of
+ * gwy_data_field_fractal_partitioning(), *mask to specify which points to
+ * correct and *z data
+ */
 static gboolean
 fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
 {
@@ -528,9 +532,8 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
         pp = (gint)ceil(pow(2, l));
         p = (gint)ceil(pow(2, k - 1 - l));
         n = (z->xres + 1) / pp;
-        sg = sqrt((4 * n * n  - 6 * n + 2) /
-                  ((2 + sqrt(2)) * n * n - (4+sqrt(2)) * n + 2) *
-                  exp(vars->data[k - 1 - l]));
+        sg = sqrt((4*n*n  - 6*n + 2)/((2 + G_SQRT2)*n*n - (4 + G_SQRT2)*n + 2)
+                  * exp(vars->data[k - 1 - l]));
 
         for (i = 0; i < pp; i++)
             for (j = 0; j < pp; j++) {
@@ -541,11 +544,11 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                     if (l == 0)
                         z->data[ii * xres + jj] = avh;
                     else
-                        z->data[ii * xres + jj] =
-                        (z->data[(ii - p) * xres + (jj - p)] +
-                         z->data[(ii - p) * xres + (jj + p)]
-                         + z->data[(ii + p) * xres + (jj - p)] +
-                         z->data[(ii + p) * xres + (jj + p)])/4 + r;
+                        z->data[ii * xres + jj]
+                        = (z->data[(ii - p) * xres + (jj - p)]
+                         + z->data[(ii - p) * xres + (jj + p)]
+                         + z->data[(ii + p) * xres + (jj - p)]
+                         + z->data[(ii + p) * xres + (jj + p)])/4 + r;
                 }
             }
 
@@ -557,31 +560,31 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                     if ((ii + p) == n - 1) {
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii + p) * xres + (jj + p)] != 0)
-                            z->data[(ii + p) * xres + (jj + p)] =
-                                z->data[(ii + p) * xres + (jj + p)] + r;
+                            z->data[(ii + p) * xres + (jj + p)]
+                                = z->data[(ii + p) * xres + (jj + p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii + p) * xres + (jj - p)] != 0)
-                            z->data[(ii + p) * xres + (jj - p)] =
-                                z->data[(ii + p) * xres + (jj - p)] + r;
+                            z->data[(ii + p) * xres + (jj - p)]
+                                = z->data[(ii + p) * xres + (jj - p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj + p)] != 0)
-                            z->data[(ii - p) * xres + (jj + p)] =
-                                z->data[(ii - p) * xres + (jj + p)] + r;
+                            z->data[(ii - p) * xres + (jj + p)]
+                                = z->data[(ii - p) * xres + (jj + p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
-                            z->data[(ii - p) * xres + (jj - p)] =
-                                z->data[(ii - p) * xres + (jj - p)] + r;
+                            z->data[(ii - p) * xres + (jj - p)]
+                                = z->data[(ii - p) * xres + (jj - p)] + r;
                     }
                     else {
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj + p)] != 0) {
-                            z->data[(ii - p) * xres + (jj + p)] =
-                                z->data[(ii - p) * xres + (jj + p)] + r;
+                            z->data[(ii - p) * xres + (jj + p)]
+                                = z->data[(ii - p) * xres + (jj + p)] + r;
                         }
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0) {
-                            z->data[(ii - p) * xres + (jj - p)] =
-                                z->data[(ii - p) * xres + (jj - p)] + r;
+                            z->data[(ii - p) * xres + (jj - p)]
+                                = z->data[(ii - p) * xres + (jj - p)] + r;
                         }
                     }
                 }
@@ -589,235 +592,259 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                     if ((ii + p) == n - 1) {
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii + p) * xres + (jj - p)] != 0) {
-                            z->data[(ii + p) * xres + (jj - p)] =
-                                z->data[(ii + p) * xres + (jj - p)] + r;
+                            z->data[(ii + p) * xres + (jj - p)]
+                                = z->data[(ii + p) * xres + (jj - p)] + r;
                         }
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0) {
-                            z->data[(ii - p) * xres + (jj - p)] =
-                                z->data[(ii - p) * xres + (jj - p)] + r;
+                            z->data[(ii - p) * xres + (jj - p)]
+                                = z->data[(ii - p) * xres + (jj - p)] + r;
                         }
                     }
                     else {
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0) {
-                            z->data[(ii - p) * xres + (jj - p)] =
-                                z->data[(ii - p) * xres + (jj - p)] + r;
+                            z->data[(ii - p) * xres + (jj - p)]
+                                = z->data[(ii - p) * xres + (jj - p)] + r;
                         }
                     }
                 }
             }
 
-        sg=sg / sqrt(2);
+        sg /= G_SQRT2;
         for (i = 0; i < pp; i++)
             for (j = 0; j < pp; j++) {
-                ii = (2 * i + 1) * p;
-                jj = (2 * j + 1) * p;
+                ii = (2*i + 1) * p;
+                jj = (2*j + 1) * p;
                 if (l == 0) {
                     r = sg * gaussian_random_number(rng);
                     if (mask->data[ii * xres + (jj - p)] != 0)
-                        z->data[ii * xres + (jj - p)] =
-                            (z->data[(ii - p) * xres + (jj - p)] +
-                             z->data[(ii + p) * xres + (jj - p)] +
-                             z->data[ii * xres + jj])/3 + r;
+                        z->data[ii * xres + (jj - p)]
+                            = (z->data[(ii - p) * xres + (jj - p)]
+                               + z->data[(ii + p) * xres + (jj - p)]
+                               + z->data[ii * xres + jj])/3 + r;
                     r = sg * gaussian_random_number(rng);
                     if (mask->data[ii * xres + (jj + p)] != 0)
-                        z->data[ii * xres + (jj + p)] =
-                            (z->data[(ii - p) * xres + (jj + p)] +
-                             z->data[(ii + p) * xres + (jj + p)] +
-                             z->data[ii * xres + jj])/3 + r;
+                        z->data[ii * xres + (jj + p)]
+                            = (z->data[(ii - p) * xres + (jj + p)]
+                               + z->data[(ii + p) * xres + (jj + p)]
+                               + z->data[ii * xres + jj])/3 + r;
                     r = sg * gaussian_random_number(rng);
                     if (mask->data[(ii - p) * xres + jj] != 0)
-                        z->data[(ii - p) * xres + jj] =
-                            (z->data[(ii - p) * xres + (jj - p)] +
-                             z->data[(ii - p) * xres + (jj + p)] +
-                             z->data[ii * xres + jj])/3 + r;
+                        z->data[(ii - p) * xres + jj]
+                            = (z->data[(ii - p) * xres + (jj - p)]
+                               + z->data[(ii - p) * xres + (jj + p)]
+                               + z->data[ii * xres + jj])/3 + r;
                     r = sg * gaussian_random_number(rng);
                     if (mask->data[(ii + p) * xres + jj] != 0)
-                        z->data[(ii + p) * xres + jj] =
-                            (z->data[(ii + p) * xres + (jj - p)] +
-                             z->data[(ii + p) * xres + (jj + p)] +
-                             z->data[ii * xres + jj])/3 + r;
+                        z->data[(ii + p) * xres + jj]
+                            = (z->data[(ii + p) * xres + (jj - p)]
+                               + z->data[(ii + p) * xres + (jj + p)]
+                               + z->data[ii * xres + jj])/3 + r;
                 }
                 else {
                     if ((jj + p) == n - 1) {
                         if ((ii + p) == n - 1) {
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii + p) * xres + jj] != 0)
-                                z->data[(ii + p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii + p) * xres + (jj + p)] +
-                                     z->data[(ii + p) * xres + (jj - p)])/3 + r;
+                                z->data[(ii + p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii + p) * xres + (jj + p)]
+                                       + z->data[(ii + p) * xres + (jj - p)])/3
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj + p)] != 0)
-                                z->data[ii * xres + (jj + p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii + p) * xres + (jj + p)] +
-                                     z->data[(ii - p) * xres + (jj + p)])/3 + r;
+                                z->data[ii * xres + (jj + p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii + p) * xres + (jj + p)]
+                                       + z->data[(ii - p) * xres + (jj + p)])/3
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii - p) * xres + jj] != 0)
-                                z->data[(ii - p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii - 2 * p) * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj - p)])/4 + r;
+                                z->data[(ii - p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii - 2 * p) * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj - p)])/4
+                                      + r;
                         }
                         if ((ii + p) != n && (ii - p) != 1) {
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj + p)] != 0)
-                                z->data[ii * xres + (jj + p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii + p) * xres + (jj + p)] +
-                                     z->data[(ii - p) * xres + (jj + p)])/3 + r;
+                                z->data[ii * xres + (jj + p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii + p) * xres + (jj + p)]
+                                       + z->data[(ii - p) * xres + (jj + p)])/3
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii - p) * xres + jj] != 0)
-                                z->data[(ii - p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii - 2 * p) * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj - p)])/4 + r;
+                                z->data[(ii - p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii - 2 * p) * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj - p)])/4
+                                      + r;
                         }
                         if ((ii - p) == 0) {
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj + p)] != 0)
-                                z->data[ii * xres + (jj + p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii + p) * xres + (jj + p)])/3 + r;
+                                z->data[ii * xres + (jj + p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii + p) * xres + (jj + p)])/3
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii - p) * xres + jj] != 0)
-                                z->data[(ii - p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj - p)] +
-                                     z->data[(ii - p) * xres + (jj + p)])/3 + r;
+                                z->data[(ii - p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj - p)]
+                                       + z->data[(ii - p) * xres + (jj + p)])/3
+                                      + r;
                         }
                     }
                     if ((jj + p) != (n - 1) && (jj - p) != 0) {
                         if ((ii + p) == n - 1) {
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii + p) * xres + jj] != 0)
-                                z->data[(ii + p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii + p) * xres + (jj - p)] +
-                                     z->data[(ii + p) * xres + (jj + p)])/3 + r;
+                                z->data[(ii + p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii + p) * xres + (jj - p)]
+                                       + z->data[(ii + p) * xres + (jj + p)])/3
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj + p)] != 0)
-                                z->data[ii * xres + (jj + p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[ii * xres + jj + 2 * p] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii + p) * xres + (jj + p)])/4 + r;
+                                z->data[ii * xres + (jj + p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[ii * xres + jj + 2 * p]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii + p) * xres + (jj + p)])/4
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii - p) * xres + jj] != 0)
-                                z->data[(ii - p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - 2 * p) * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii - p) * xres + (jj - p)])/4 + r;
+                                z->data[(ii - p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - 2 * p) * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii - p) * xres + (jj - p)])/4
+                                      + r;
                         }
                         if ((ii + p) != n - 1 && (ii - p) != 0) {
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj + p)] != 0)
-                                z->data[ii * xres + (jj + p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[ii * xres + jj + 2 * p] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii + p) * xres + (jj + p)])/4 + r;
+                                z->data[ii * xres + (jj + p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[ii * xres + jj + 2 * p]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii + p) * xres + (jj + p)])/4
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii - p) * xres + jj] != 0)
-                                z->data[(ii - p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - 2 * p) * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii - p) * xres + (jj - p)])/4 + r;
+                                z->data[(ii - p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - 2 * p) * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii - p) * xres + (jj - p)])/4
+                                      + r;
                         }
                         if ((ii - p) == 0) {
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj + p)] != 0)
-                                z->data[ii * xres + (jj + p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[ii * xres + jj + 2 * p] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii + p) * xres + (jj + p)])/4 + r;
+                                z->data[ii * xres + (jj + p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[ii * xres + jj + 2 * p]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii + p) * xres + (jj + p)])/4
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii - p) * xres + jj] != 0)
-                                z->data[(ii - p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii - p) * xres + (jj - p)])/3 + r;
+                                z->data[(ii - p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii - p) * xres + (jj - p)])/3
+                                      + r;
                         }
                     }
                     if ((jj - p) == 0) {
                         if ((ii + p) == n - 1) {
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii + p) * xres + jj] != 0)
-                                z->data[(ii + p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii + p) * xres + (jj - p)] +
-                                     z->data[(ii + p) * xres + (jj + p)])/3 + r;
+                                z->data[(ii + p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii + p) * xres + (jj - p)]
+                                       + z->data[(ii + p) * xres + (jj + p)])/3
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj + p)] != 0)
-                                z->data[ii * xres + (jj + p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[ii * xres + jj + 2 * p] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii + p) * xres + (jj + p)])/4 + r;
+                                z->data[ii * xres + (jj + p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[ii * xres + jj + 2 * p]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii + p) * xres + (jj + p)])/4
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii - p) * xres + jj] != 0)
-                                z->data[(ii - p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - 2 * p) * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii - p) * xres + (jj - p)])/4 + r;
+                                z->data[(ii - p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - 2 * p) * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii - p) * xres + (jj - p)])/4
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj - p)] != 0)
-                                z->data[ii * xres + (jj - p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj - p)] +
-                                     z->data[(ii + p) * xres + (jj - p)])/3 + r;
+                                z->data[ii * xres + (jj - p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj - p)]
+                                       + z->data[(ii + p) * xres + (jj - p)])/3
+                                      + r;
                         }
                         if ((ii + p) != n - 1 && (ii - p) != 0) {
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj + p)] != 0)
-                                z->data[ii * xres + (jj + p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[ii * xres + jj + 2 * p] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii + p) * xres + (jj + p)])/4 + r;
+                                z->data[ii * xres + (jj + p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[ii * xres + jj + 2 * p]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii + p) * xres + (jj + p)])/4
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii - p) * xres + jj] != 0)
-                                z->data[(ii - p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - 2 * p) * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii - p) * xres + (jj - p)])/4 + r;
+                                z->data[(ii - p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - 2 * p) * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii - p) * xres + (jj - p)])/4
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj - p)] != 0)
-                                z->data[ii * xres + (jj - p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj - p)] +
-                                     z->data[(ii + p) * xres + (jj - p)])/3 + r;
+                                z->data[ii * xres + (jj - p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj - p)]
+                                       + z->data[(ii + p) * xres + (jj - p)])/3
+                                      + r;
                         }
                         if ((ii - p) == 0) {
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj + p)] != 0)
-                                z->data[ii * xres + (jj + p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[ii * xres + jj + 2 * p] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii + p) * xres + (jj + p)])/4 + r;
+                                z->data[ii * xres + (jj + p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[ii * xres + jj + 2 * p]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii + p) * xres + (jj + p)])/4
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[(ii - p) * xres + jj] != 0)
-                                z->data[(ii - p) * xres + jj] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj + p)] +
-                                     z->data[(ii - p) * xres + (jj - p)])/3 + r;
+                                z->data[(ii - p) * xres + jj]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj + p)]
+                                       + z->data[(ii - p) * xres + (jj - p)])/3
+                                      + r;
                             r = sg * gaussian_random_number(rng);
                             if (mask->data[ii * xres + (jj - p)] != 0)
-                                z->data[ii * xres + (jj - p)] =
-                                    (z->data[ii * xres + jj] +
-                                     z->data[(ii - p) * xres + (jj - p)] +
-                                     z->data[(ii + p) * xres + (jj - p)])/3 + r;
+                                z->data[ii * xres + (jj - p)]
+                                    = (z->data[ii * xres + jj]
+                                       + z->data[(ii - p) * xres + (jj - p)]
+                                       + z->data[(ii + p) * xres + (jj - p)])/3
+                                      + r;
                         }
                     }
                 }
@@ -825,70 +852,70 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
 
         for (i = 0; i < pp; i++)
             for (j = 0; j < pp; j++) {
-                ii = (2 * i + 1) * p;
-                jj = (2 * j + 1) * p;
+                ii = (2*i + 1) * p;
+                jj = (2*j + 1) * p;
                 if ((jj + p) == n - 1) {
                     if ((ii + p) == n - 1) {
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii + p) * xres + (jj + p)] != 0)
-                            z->data[(ii + p) * xres + (jj + p)] =
-                                z->data[(ii + p) * xres + (jj + p)] + r;
+                            z->data[(ii + p) * xres + (jj + p)]
+                                = z->data[(ii + p) * xres + (jj + p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii + p) * xres + (jj - p)] != 0)
-                            z->data[(ii + p) * xres + (jj - p)] =
-                                z->data[(ii + p) * xres + (jj - p)] + r;
+                            z->data[(ii + p) * xres + (jj - p)]
+                                = z->data[(ii + p) * xres + (jj - p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj + p)] != 0)
-                            z->data[(ii - p) * xres + (jj + p)] =
-                                z->data[(ii - p) * xres + (jj + p)] + r;
+                            z->data[(ii - p) * xres + (jj + p)]
+                                = z->data[(ii - p) * xres + (jj + p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
-                            z->data[(ii - p) * xres + (jj - p)] =
-                                z->data[(ii - p) * xres + (jj - p)] + r;
+                            z->data[(ii - p) * xres + (jj - p)]
+                                = z->data[(ii - p) * xres + (jj - p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[ii * xres + jj] != 0)
-                            z->data[ii * xres + jj] =
-                                z->data[ii * xres + jj] + r;
+                            z->data[ii * xres + jj]
+                                = z->data[ii * xres + jj] + r;
                     }
                     else {
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj + p)] != 0)
-                            z->data[(ii - p) * xres + (jj + p)] =
-                                z->data[(ii - p) * xres + (jj + p)] + r;
+                            z->data[(ii - p) * xres + (jj + p)]
+                                = z->data[(ii - p) * xres + (jj + p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
-                            z->data[(ii - p) * xres + (jj - p)] =
-                                z->data[(ii - p) * xres + (jj - p)] + r;
+                            z->data[(ii - p) * xres + (jj - p)]
+                                = z->data[(ii - p) * xres + (jj - p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[ii * xres + jj] != 0)
-                            z->data[ii * xres + jj] =
-                                z->data[ii * xres + jj] + r;
+                            z->data[ii * xres + jj]
+                                = z->data[ii * xres + jj] + r;
                     }
                 }
                 else {
                     if ((ii + p) == n - 1) {
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii + p) * xres + (jj - p)] != 0)
-                            z->data[(ii + p) * xres + (jj - p)] =
-                                z->data[(ii + p) * xres + (jj - p)] + r;
+                            z->data[(ii + p) * xres + (jj - p)]
+                                = z->data[(ii + p) * xres + (jj - p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
-                            z->data[(ii - p) * xres + (jj - p)] =
-                                z->data[(ii - p) * xres + (jj - p)] + r;
+                            z->data[(ii - p) * xres + (jj - p)]
+                                = z->data[(ii - p) * xres + (jj - p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[ii * xres + jj] != 0)
-                            z->data[ii * xres + jj] =
-                                z->data[ii * xres + jj] + r;
+                            z->data[ii * xres + jj]
+                                = z->data[ii * xres + jj] + r;
                     }
                     else {
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[(ii - p) * xres + (jj - p)] != 0)
-                            z->data[(ii - p) * xres + (jj - p)] =
-                                z->data[(ii - p) * xres + (jj - p)] + r;
+                            z->data[(ii - p) * xres + (jj - p)]
+                                = z->data[(ii - p) * xres + (jj - p)] + r;
                         r = sg * gaussian_random_number(rng);
                         if (mask->data[ii * xres + jj] != 0)
-                            z->data[ii * xres + jj] =
-                                z->data[ii * xres + jj] + r;
+                            z->data[ii * xres + jj]
+                                = z->data[ii * xres + jj] + r;
                     }
                 }
             }
