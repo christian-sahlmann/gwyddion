@@ -59,6 +59,8 @@ static GwyDataField*  hash_to_data_field  (GHashTable *hash,
                                            NanoscopeFileType file_type,
                                            gsize bufsize,
                                            gchar *buffer,
+                                           gdouble zscale,
+                                           gdouble curscale,
                                            gchar **p);
 static NanoscopeData* select_which_data   (GList *list);
 static gboolean       read_ascii_data     (gint n,
@@ -72,6 +74,9 @@ static gboolean       read_binary_data    (gint n,
 static GHashTable*    read_hash           (gchar **buffer);
 static gchar*         next_line           (gchar **buffer);
 
+static void           get_value_scales    (GHashTable *hash,
+                                           gdouble *zscale,
+                                           gdouble *curscale);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -80,7 +85,7 @@ static GwyModuleInfo module_info = {
     "nanoscope",
     "Load Nanoscope data.",
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -140,6 +145,9 @@ nanoscope_load(const gchar *filename)
     NanoscopeData *ndata;
     GHashTable *hash;
     GList *l, *list = NULL;
+    /* FIXME defaults */
+    gdouble zscale = 9.583688e-9;
+    gdouble curscale = 10.0e-9;
     gboolean ok;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
@@ -173,14 +181,20 @@ nanoscope_load(const gchar *filename)
     for (l = list; ok && l; l = g_list_next(l)) {
         ndata = (NanoscopeData*)l->data;
         hash = ndata->hash;
+        if (strcmp(g_hash_table_lookup(hash, "#self"), "Scanner list") == 0) {
+            get_value_scales(hash, &zscale, &curscale);
+            continue;
+        }
         if (strcmp(g_hash_table_lookup(hash, "#self"), "Ciao image list"))
             continue;
 
         ndata->data_field = hash_to_data_field(hash, file_type,
-                                               size, buffer, &p);
+                                               size, buffer,
+                                               zscale, curscale, &p);
         ok = ok && ndata->data_field;
     }
 
+    /* select (let user select) which data to load */
     ndata = ok ? select_which_data(list) : NULL;
     if (ndata) {
         object = gwy_container_new();
@@ -188,6 +202,8 @@ nanoscope_load(const gchar *filename)
                                          G_OBJECT(ndata->data_field));
     }
 
+    /* unref all data fields, the container already keeps a reference to the
+     * right one */
     g_free(buffer);
     for (l = list; l; l = g_list_next(l)) {
         ndata = (NanoscopeData*)l->data;
@@ -200,19 +216,78 @@ nanoscope_load(const gchar *filename)
     return (GwyContainer*)object;
 }
 
+static void
+get_value_scales(GHashTable *hash,
+                 gdouble *zscale,
+                 gdouble *curscale)
+{
+    gchar *s, un[6];
+
+    /* z sensitivity */
+    if (!(s = g_hash_table_lookup(hash, "@Sens. Zscan"))) {
+        g_warning("`@Sens. Zscan' not found");
+        return;
+    }
+    if (s[0] != 'V' || s[1] != ' '
+        || sscanf(s+2, "%lf %5s", zscale, un) != 2) {
+        g_warning("Cannot parse `@Sens. Zscan': <%s>", s+2);
+        return;
+    }
+    if (strcmp(un, "nm/V") == 0)
+        *zscale /= 1e9;
+    else if (strcmp(un, "~m/V") == 0 || strcmp(un, "um/V") == 0)
+        *zscale /= 1e6;
+    else {
+        g_warning("Cannot understand z units: <%s>", un);
+        *zscale /= 1e9;
+    }
+
+    /* current sensitivity */
+    if (!(s = g_hash_table_lookup(hash, "@Sens. Current"))) {
+        g_warning("`@Sens. Current' not found");
+        return;
+    }
+    if (s[0] != 'V' || s[1] != ' '
+        || sscanf(s+2, "%lf %5s", curscale, un) != 2) {
+        g_warning("Cannot parse `@Sens. Current': <%s>", s+2);
+        return;
+    }
+    if (strcmp(un, "pA/V") == 0)
+        *curscale /= 1e12;
+    if (strcmp(un, "nA/V") == 0)
+        *curscale /= 1e9;
+    else if (strcmp(un, "~A/V") == 0 || strcmp(un, "uA/V") == 0)
+        *curscale /= 1e6;
+    else {
+        g_warning("Cannot understand z units: <%s>", un);
+        *curscale /= 1e9;
+    }
+}
+
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
                    NanoscopeFileType file_type,
                    gsize bufsize,
                    gchar *buffer,
+                   gdouble zscale,
+                   gdouble curscale,
                    gchar **p)
 {
     GwyDataField *dfield;
     const gchar *s;
+    gchar *t;
     gchar un[5];
     gint xres, yres, bpp, offset, size;
-    gdouble xreal, yreal;
+    gdouble xreal, yreal, q, zmagnify = 1.0, zscalesens = 1.0;
     gdouble *data;
+    gboolean is_current;  /* assume height if not current */
+
+    if (!(s = g_hash_table_lookup(hash, "@2:Image Data"))) {
+        g_warning("No `@2 Image Data' found");
+        return NULL;
+    }
+    is_current = strstr(s, "[Current]") || strstr(s, "\"Current\"");
+    gwy_debug("is current = %d", is_current);
 
     if (!(s = g_hash_table_lookup(hash, "Samps/line"))) {
         g_warning("`Samps/line' not found");
@@ -232,6 +307,7 @@ hash_to_data_field(GHashTable *hash,
     }
     bpp = atoi(s);
 
+    /* scan size */
     if (!(s = g_hash_table_lookup(hash, "Scan size"))) {
         g_warning("`Scan size' not found");
         return NULL;
@@ -253,8 +329,6 @@ hash_to_data_field(GHashTable *hash,
         xreal /= 1e9;
         yreal /= 1e9;
     }
-    un[0] = 'm';
-    un[1] = '\0';
 
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_BIN) {
@@ -280,6 +354,35 @@ hash_to_data_field(GHashTable *hash,
         }
     }
 
+    /* XXX: now ignored */
+    if (!(t = g_hash_table_lookup(hash, "@Z magnify")))
+        g_warning("`@Z magnify' not found");
+    else {
+        if (!(s = strchr(t, ']')))
+            g_warning("Cannot parse `@Z magnify': <%s>", t);
+        else {
+            zmagnify = strtod(s+1, &t);
+            if (t == s+1) {
+                g_warning("Cannot parse `@Z magnify' value: <%s>", s+1);
+                zmagnify = 1.0;
+            }
+        }
+    }
+
+    if (!(t = g_hash_table_lookup(hash, "@2:Z scale")))
+        g_warning("`@2:Z scale' not found");
+    else {
+        if (!(s = strchr(t, '(')))
+            g_warning("Cannot parse `@2:Z scale': <%s>", t);
+        else {
+            zscalesens = strtod(s+1, &t);
+            if (t == s+1) {
+                g_warning("Cannot parse `@2:Z scale' value: <%s>", s+1);
+                zscalesens = 1.0;
+            }
+        }
+    }
+
     dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
                                                FALSE));
     data = gwy_data_field_get_data(dfield);
@@ -302,7 +405,15 @@ hash_to_data_field(GHashTable *hash,
         g_assert_not_reached();
         break;
     }
-    gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(gwy_si_unit_new(un)));
+    /*q = (is_current ? curscale : zscale) * zscalesens/zmagnify*10;*/
+    q = (is_current ? curscale : zscale) * zscalesens*10;
+    gwy_debug("curscale = %fe-9, zscale = %fe-9, zscalesens = %f, zmagnify = %f",
+              curscale*1e9, zscale*1e9, zscalesens, zmagnify);
+    gwy_data_field_multiply(dfield, q);
+    gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(gwy_si_unit_new("m")));
+    gwy_data_field_set_si_unit_z(dfield,
+                                 GWY_SI_UNIT(gwy_si_unit_new(is_current
+                                                             ? "A" : "m")));
 
     return dfield;
 }
@@ -409,16 +520,24 @@ read_ascii_data(gint n, gdouble *data,
     gint i;
     gdouble q;
     gchar *end;
+    long l, min, max;
 
-    q = 1.0/(1 << 8*bpp);
+    q = 1.0/(1 << (8*bpp));
+    min = 10000000;
+    max = -10000000;
     for (i = 0; i < n; i++) {
-        data[i] = q*strtol(*buffer, &end, 10);
+        /*data[i] = q*strtol(*buffer, &end, 10);*/
+        l = strtol(*buffer, &end, 10);
+        min = MIN(l, min);
+        max = MAX(l, max);
+        data[i] = q*l;
         if (end == *buffer) {
             g_warning("Garbage after data sample #%d", i);
             return FALSE;
         }
         *buffer = end;
     }
+    gwy_debug("min = %ld, max = %ld", min, max);
     return TRUE;
 }
 
@@ -430,7 +549,7 @@ read_binary_data(gint n, gdouble *data,
     gint i;
     gdouble q;
 
-    q = 1.0/(1 << 8*bpp);
+    q = 1.0/(1 << (8*bpp));
     switch (bpp) {
         case 1:
         for (i = 0; i < n; i++)
