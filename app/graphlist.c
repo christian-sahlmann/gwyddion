@@ -144,7 +144,7 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
 }
 
 GtkWidget*
-gwy_app_graph_list(GwyDataWindow *data_window)
+gwy_app_graph_list_new(GwyDataWindow *data_window)
 {
     GtkWidget *window, *vbox, *buttonbox, *list;
     Controls *controls;

@@ -28,9 +28,9 @@
 
 G_BEGIN_DECLS
 
+GtkWidget* gwy_app_graph_list_new     (GwyDataWindow *data_window);
 void       gwy_app_graph_list_add     (GwyDataWindow *data_window,
                                        GwyGraph *graph);
-GtkWidget* gwy_app_graph_list         (GwyDataWindow *data_window);
 
 G_END_DECLS
 #endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */

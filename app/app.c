@@ -344,7 +344,7 @@ gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
         return;
     }
 
-    graph_view = gwy_app_graph_list(data_window);
+    graph_view = gwy_app_graph_list_new(data_window);
     g_signal_connect_swapped(graph_view, "delete_event",
                              G_CALLBACK(gwy_app_graph_list_delete_cb), toggle);
     gtk_window_set_transient_for(GTK_WINDOW(graph_view),
