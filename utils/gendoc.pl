@@ -42,6 +42,7 @@ foreach my $dir (glob "*") {
     chdir $dir;
     my $ok = 0;
     foreach my $f (glob "html/*.html") {
+        print "$dir/$f\n";
         $ok = 1;
         $_ = qx(cat $f | sed -e 's:</*gtkdoc[^>]*>::gi' | tidy -asxhtml -q 2>/dev/null);
         s#((?:class|rel)=".*?")#\L$1\E#sg;
