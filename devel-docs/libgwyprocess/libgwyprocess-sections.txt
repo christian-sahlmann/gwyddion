@@ -244,16 +244,24 @@ gwy_data_field_yfft
 gwy_data_field_xfft_real
 gwy_data_field_yfft_real
 gwy_data_field_cwt
+gwy_data_field_fft_filter_1d
 </SECTION>
 
 <SECTION>
 <FILE>level</FILE>
+GwyPlaneFitQuantity
 gwy_data_field_area_fit_plane
 gwy_data_field_plane_coeffs
 gwy_data_field_plane_level
 gwy_data_field_plane_rotate
+gwy_data_field_fit_polynom
 gwy_data_field_area_fit_polynom
+gwy_data_field_subtract_polynom
 gwy_data_field_area_subtract_polynom
+gwy_data_field_area_fit_local_planes
+gwy_data_field_area_local_plane_quantity
+gwy_data_field_fit_local_planes
+gwy_data_field_local_plane_quantity
 </SECTION>
 
 <SECTION>
@@ -271,6 +279,10 @@ gwy_data_field_filter_minimum
 gwy_data_field_area_filter_minimum
 gwy_data_field_filter_maximum
 gwy_data_field_area_filter_maximum
+gwy_data_field_filter_rms
+gwy_data_field_area_filter_rms
+gwy_data_field_filter_kuwahara
+gwy_data_field_area_filter_kuwahara
 gwy_data_field_convolve
 gwy_data_field_filter_median
 gwy_data_field_filter_mean
@@ -300,6 +312,10 @@ gwy_data_field_get_stats
 gwy_data_field_area_get_stats
 gwy_data_field_get_line_stat_function
 gwy_data_field_slope_distribution
+gwy_data_field_get_normal_coeffs
+gwy_data_field_area_get_normal_coeffs
+gwy_data_field_area_get_inclination
+gwy_data_field_get_inclination
 gwy_data_field_get_area_max
 gwy_data_field_get_area_min
 gwy_data_field_get_area_avg

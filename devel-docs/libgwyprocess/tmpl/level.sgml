@@ -14,6 +14,19 @@ Plane and rotation leveling
 
 </para>
 
+<!-- ##### ENUM GwyPlaneFitQuantity ##### -->
+<para>
+
+</para>
+
+@GWY_PLANE_FIT_A: 
+@GWY_PLANE_FIT_BX: 
+@GWY_PLANE_FIT_BY: 
+@GWY_PLANE_FIT_ANGLE: 
+@GWY_PLANE_FIT_SLOPE: 
+@GWY_PLANE_FIT_S0: 
+@GWY_PLANE_FIT_S0_REDUCED: 
+
 <!-- ##### FUNCTION gwy_data_field_area_fit_plane ##### -->
 <para>
 
@@ -75,6 +88,18 @@ Plane and rotation leveling
 @a: 
 
 
+<!-- ##### FUNCTION gwy_data_field_fit_polynom ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@col_degree: 
+@row_degree: 
+@coeffs: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_field_area_fit_polynom ##### -->
 <para>
 
@@ -93,6 +118,17 @@ Plane and rotation leveling
 @dfield: 
 
 
+<!-- ##### FUNCTION gwy_data_field_subtract_polynom ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@col_degree: 
+@row_degree: 
+@coeffs: 
+
+
 <!-- ##### FUNCTION gwy_data_field_area_subtract_polynom ##### -->
 <para>
 
@@ -108,5 +144,63 @@ Plane and rotation leveling
 @coeffs: 
 <!-- # Unused Parameters # -->
 @dfield: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_fit_local_planes ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@col: 
+@row: 
+@width: 
+@height: 
+@nresults: 
+@types: 
+@results: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_local_plane_quantity ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@col: 
+@row: 
+@width: 
+@height: 
+@type: 
+@result: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fit_local_planes ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@nresults: 
+@types: 
+@results: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_local_plane_quantity ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@type: 
+@result: 
+@Returns: 
 
 

@@ -295,6 +295,72 @@ stats
 @dfield: 
 
 
+<!-- ##### FUNCTION gwy_data_field_get_normal_coeffs ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@nx: 
+@ny: 
+@nz: 
+@normalize1: 
+<!-- # Unused Parameters # -->
+@a: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_get_normal_coeffs ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@col: 
+@row: 
+@width: 
+@height: 
+@nx: 
+@ny: 
+@nz: 
+@normalize1: 
+<!-- # Unused Parameters # -->
+@a: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_get_inclination ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@col: 
+@row: 
+@width: 
+@height: 
+@theta: 
+@phi: 
+<!-- # Unused Parameters # -->
+@thetadeg: 
+@phideg: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_inclination ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@theta: 
+@phi: 
+<!-- # Unused Parameters # -->
+@thetadeg: 
+@phideg: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_field_get_area_max ##### -->
 <para>
 

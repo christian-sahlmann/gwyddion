@@ -28,6 +28,7 @@ and directional filters.
 @GWY_FILTER_PREWITT: 
 @GWY_FILTER_MINIMUM: 
 @GWY_FILTER_MAXIMUM: 
+@GWY_FILTER_KUWAHARA: 
 
 <!-- ##### FUNCTION gwy_data_field_area_convolve ##### -->
 <para>
@@ -170,6 +171,48 @@ and directional filters.
 
 @data_field: 
 @size: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_rms ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_rms ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_kuwahara ##### -->
+<para>
+
+</para>
+
+@data_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_kuwahara ##### -->
+<para>
+
+</para>
+
+@data_field: 
 @col: 
 @row: 
 @width: 
