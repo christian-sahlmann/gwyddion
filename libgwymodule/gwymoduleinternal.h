@@ -35,17 +35,18 @@ G_BEGIN_DECLS
 /* internal module info */
 typedef struct {
     GwyModuleInfo *mod_info;
+    gchar *name;
     gchar *file;
     gboolean loaded;
     GSList *funcs;
 } _GwyModuleInfoInternal;
 
-_GwyModuleInfoInternal* gwy_module_get_module_info  (const gchar *name);
-gboolean                gwy_file_func_remove        (const gchar *name);
-gboolean                gwy_process_func_remove     (const gchar *name);
-gboolean                gwy_tool_func_remove        (const gchar *name);
-gboolean                gwy_graph_func_remove       (const gchar *name);
-gboolean                gwy_layer_func_remove       (const gchar *name);
+_GwyModuleInfoInternal* _gwy_module_get_module_info  (const gchar *name);
+gboolean                _gwy_file_func_remove        (const gchar *name);
+gboolean                _gwy_process_func_remove     (const gchar *name);
+gboolean                _gwy_tool_func_remove        (const gchar *name);
+gboolean                _gwy_graph_func_remove       (const gchar *name);
+gboolean                _gwy_layer_func_remove       (const gchar *name);
 
 void  _gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname));
 void  _gwy_process_func_set_register_callback(void (*callback)(const gchar *fullname));

@@ -144,7 +144,6 @@ static GwyContainer*   text_dump_import          (GwyContainer *old_data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "plugin-proxy",
     N_("Plug-in proxy is a module capable of querying, registering, and "
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),

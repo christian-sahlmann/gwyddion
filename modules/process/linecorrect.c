@@ -54,7 +54,6 @@ static gdouble     sum_of_abs_diff            (gdouble shift,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "line_correct",
     N_("Corrects line defects (mostly experimental algorithms)."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",

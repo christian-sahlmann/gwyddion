@@ -41,7 +41,6 @@ static gboolean    zero_mean                  (GwyContainer *data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "level",
     N_("Levels data by simple plane subtraction or by rotation, "
        "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",

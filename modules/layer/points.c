@@ -119,7 +119,6 @@ static GtkObjectClass *parent_class = NULL;
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "layer-points",
     N_("Layer allowing selection of several points, displayed as crosses."),
     "Yeti <yeti@gwyddion.net>",
     "1.2",

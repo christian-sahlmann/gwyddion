@@ -65,7 +65,6 @@ static gboolean      read_binary_data      (guint res,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "assing_afm",
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.3",

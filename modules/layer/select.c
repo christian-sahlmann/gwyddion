@@ -118,7 +118,6 @@ static gint       gwy_layer_select_near_point        (GwyLayerSelect *layer,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "layer-select",
     N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",

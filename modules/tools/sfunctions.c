@@ -73,7 +73,6 @@ static const gchar *dir_key = "/tool/sfunctions/dir";
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "sfunctions",
     N_("Statistical function tool, calculates one-dimensional statistical "
        "functions (height distribution, correlations, PSDF) of selected part "
        "of data."),

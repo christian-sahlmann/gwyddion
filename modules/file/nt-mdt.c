@@ -301,7 +301,6 @@ static const GwyEnum mdt_units[] = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "mdtfile",
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",

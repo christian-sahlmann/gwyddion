@@ -67,7 +67,6 @@ static void       save_args           (GwyContainer *container,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "polynom",
     N_("Polynom fit tool, fits polynoms to X or Y profiles and subtracts "
        "them."),
     "Petr Klapetek <klapetek@gwyddion.net>",

@@ -70,7 +70,6 @@ DWTCorrectionArgs dwt_correction_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "dwt_correction",
     N_("2D Discrete Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",

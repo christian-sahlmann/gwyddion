@@ -55,7 +55,6 @@ static const TipDilationArgs tip_dilation_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "tip_dilation",
     N_("Dilates data with given tip."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",

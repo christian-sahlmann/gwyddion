@@ -101,7 +101,6 @@ static void     gwy_layer_pointer_restore         (GwyLayerPointer *layer);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "layer-pointer",
     N_("Layer allowing selection of a single point, more precisely "
        "just reading pointer coordinates."),
     "Yeti <yeti@gwyddion.net>",

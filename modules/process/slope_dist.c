@@ -102,7 +102,6 @@ SlopeArgs slope_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "slope_dist",
     N_("Calculates two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",

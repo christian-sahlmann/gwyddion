@@ -101,7 +101,6 @@ AngleArgs angle_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "angle_dist",
     N_("Calculates two-dimensional distribution of angles, "
        "that is projections of slopes to all directions."),
     "Yeti <yeti@gwyddion.net>",

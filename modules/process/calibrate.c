@@ -118,7 +118,6 @@ CalibrateArgs calibrate_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "calibrate",
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "2.0",

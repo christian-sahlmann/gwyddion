@@ -123,7 +123,6 @@ static void        graph_selected            (GwyGraphArea *area,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "fftf_1d",
     N_("FFT filtering"),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.0",

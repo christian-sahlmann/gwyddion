@@ -75,7 +75,6 @@ DWTArgs dwt_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "dwt",
     N_("Two-dimensional DWT (Discrete Wavelet Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",

@@ -103,7 +103,6 @@ FFTArgs fft_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "fft",
     N_("Two-dimensional FFT (Fast Fourier Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",

@@ -62,7 +62,7 @@ gwy_layer_func_register(const gchar *modname,
                                             NULL, gwy_layer_func_info_free);
     }
 
-    iinfo = gwy_module_get_module_info(modname);
+    iinfo = _gwy_module_get_module_info(modname);
     g_return_val_if_fail(iinfo, FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
     g_return_val_if_fail(func_info->type, FALSE);
@@ -99,7 +99,7 @@ gwy_layer_func_info_free(gpointer data)
 }
 
 gboolean
-gwy_layer_func_remove(const gchar *name)
+_gwy_layer_func_remove(const gchar *name)
 {
     gwy_debug("%s", name);
     if (!g_hash_table_remove(layer_funcs, name)) {

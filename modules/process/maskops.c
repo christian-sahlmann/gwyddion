@@ -38,7 +38,6 @@ static gboolean    mask_extract               (GwyContainer *data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "maskops",
     N_("Basic operations with mask: inversion, removal, extraction."),
     "Yeti <yeti@gwyddion.net>",
     "1.0.1",

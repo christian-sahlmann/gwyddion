@@ -81,7 +81,6 @@ MedianBgArgs median_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "median_bg",
     N_("Subtracts background using a rank-based algorithm."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",

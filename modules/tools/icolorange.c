@@ -92,7 +92,6 @@ static void       save_args                   (GwyContainer *container,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "icolorange",
     N_("Interactive color range tool, allows to select data range false "
        "color scale should map to, either on data or on height distribution "
        "histogram."),

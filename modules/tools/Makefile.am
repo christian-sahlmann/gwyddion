@@ -12,9 +12,9 @@ tools_PROGRAMS = \
 	icolorange.so \
 	level3.so \
 	maskedit.so \
-	pointer.so \
 	polynom.so \
 	profile.so \
+	readvalue.so \
 	sfunctions.so \
 	spotremove.so \
 	stats.so
@@ -48,14 +48,14 @@ level3_so_LDFLAGS = $(module_ldflags),level3.so
 maskedit_so_SOURCES = maskedit.c
 maskedit_so_LDFLAGS = $(module_ldflags),maskedit.so
 
-pointer_so_SOURCES = pointer.c
-pointer_so_LDFLAGS = $(module_ldflags),pointer.so
-
 polynom_so_SOURCES = polynom.c
 polynom_so_LDFLAGS = $(module_ldflags),polynom.so
 
 profile_so_SOURCES = profile.c
 profile_so_LDFLAGS = $(module_ldflags),profile.so
+
+readvalue_so_SOURCES = readvalue.c
+readvalue_so_LDFLAGS = $(module_ldflags),readvalue.so
 
 stats_so_SOURCES = stats.c
 stats_so_LDFLAGS = $(module_ldflags),stats.so

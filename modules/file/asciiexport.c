@@ -43,7 +43,6 @@ static gboolean      asciiexport_save    (GwyContainer *data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "asciiexport",
     N_("Exports data as simple ASCII matrix."),
     "Yeti <yeti@gwyddion.net>",
     "0.1.1",

@@ -49,7 +49,6 @@ static void       apply            (GwyUnitoolState *state);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "crop",
     N_("Crop tool, crops data to smaller size."),
     "Yeti <yeti@gwyddion.net>",
     "1.5",

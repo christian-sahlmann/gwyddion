@@ -83,7 +83,6 @@ PolyLevelArgs poly_level_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "poly_level",
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",

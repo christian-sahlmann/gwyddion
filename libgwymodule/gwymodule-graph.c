@@ -71,7 +71,7 @@ gwy_graph_func_register(const gchar *modname,
                                             NULL, gwy_graph_func_info_free);
     }
 
-    iinfo = gwy_module_get_module_info(modname);
+    iinfo = _gwy_module_get_module_info(modname);
     g_return_val_if_fail(iinfo, FALSE);
     g_return_val_if_fail(func_info->graph, FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
@@ -296,7 +296,7 @@ gwy_graph_func_get_menu_path(const gchar *name)
 }
 
 gboolean
-gwy_graph_func_remove(const gchar *name)
+_gwy_graph_func_remove(const gchar *name)
 {
     gwy_debug("%s", name);
     if (!g_hash_table_remove(graph_funcs, name)) {

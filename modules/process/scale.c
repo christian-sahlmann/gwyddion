@@ -79,7 +79,6 @@ ScaleArgs scale_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "scale",
     N_("Scales data by arbitrary factor."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",

@@ -270,7 +270,6 @@ static const PixmapLoadArgs pixmap_load_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "pixmap",
     N_("Exports data as as pixmap images and imports data from pixmap images. "
        "Supports following image formats for export: "
        "PNG, "

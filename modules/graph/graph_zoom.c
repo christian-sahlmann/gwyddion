@@ -35,7 +35,6 @@ static gboolean    zoom                       (GwyGraph *graph);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "graph_zoom",
     N_("Zoom graph by mouse"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0.1",

@@ -67,7 +67,6 @@ MaskGrowArgs mask_grow_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "mask_grow_shrink",
     N_("Grows and shrinks masks."),
     "Yeti <yeti@gwyddion.net>",
     "1.4",

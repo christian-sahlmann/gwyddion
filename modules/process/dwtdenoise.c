@@ -82,7 +82,6 @@ DWTDenoiseArgs dwt_denoise_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "dwt_denoise",
     N_("2D DWT denoising module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",

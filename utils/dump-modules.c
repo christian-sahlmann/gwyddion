@@ -26,6 +26,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct {
+    const gchar *name;
+    const GwyModuleInfo *info;
+} ModInfo;
+
 static GHashTable *user_guide = NULL;
 static GSList *tag_stack = NULL;
 
@@ -52,15 +57,15 @@ read_user_guide(const gchar *filename)
 static gint
 compare_modules(gconstpointer a, gconstpointer b)
 {
-    return strcmp(((const GwyModuleInfo*)a)->name,
-                  ((const GwyModuleInfo*)b)->name);
+    return strcmp(((const ModInfo*)a)->name,
+                  ((const ModInfo*)b)->name);
 }
 
 /* For finding module of given name */
 static gint
 find_module(gconstpointer a, gconstpointer b)
 {
-    return strcmp(((const GwyModuleInfo*)a)->name, (const gchar*)b);
+    return strcmp(((const ModInfo*)a)->name, (const gchar*)b);
 }
 
 /* Print a single tag with content, handling sensitive characters */
@@ -151,6 +156,19 @@ kill_mail(const gchar *authors)
     return s;
 }
 
+static void
+add_info(const gchar *name,
+         const GwyModuleInfo *info,
+         GSList **list)
+{
+    ModInfo *i;
+
+    i = g_new(ModInfo, 1);
+    i->name = name;
+    i->info = info;
+    *list = g_slist_prepend(*list, i);
+}
+
 /* Main */
 int
 main(G_GNUC_UNUSED int argc,
@@ -174,7 +192,7 @@ main(G_GNUC_UNUSED int argc,
 
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
-    gwy_module_foreach(gwy_hash_table_to_slist_cb, &modules);
+    gwy_module_foreach((GHFunc)add_info, &modules);
     modules = g_slist_sort(modules, &compare_modules);
 
     for (i = 0; i < G_N_ELEMENTS(filter_modules); i++) {
@@ -187,23 +205,23 @@ main(G_GNUC_UNUSED int argc,
     puts("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
     tag_open("modulelist");
     for (m = modules; m; m = g_slist_next(m)) {
-        const GwyModuleInfo *mod_info = (const GwyModuleInfo*)m->data;
-        GSList *f = gwy_module_get_functions(mod_info->name);
+        ModInfo *info = (ModInfo*)m->data;
+        GSList *f = gwy_module_get_functions(info->name);
         gchar *s;
 
         tag_open("module");
-        tag_print("name", mod_info->name);
-        tag_print("version", mod_info->version);
-        s = kill_mail(mod_info->author);
+        tag_print("name", info->name);
+        tag_print("version", info->info->version);
+        s = kill_mail(info->info->author);
         tag_print("author", s);
         g_free(s);
-        tag_print("copyright", mod_info->copyright);
-        tag_print("date", mod_info->date);
-        if ((s = g_hash_table_lookup(user_guide, mod_info->name)))
+        tag_print("copyright", info->info->copyright);
+        tag_print("date", info->info->date);
+        if ((s = g_hash_table_lookup(user_guide, info->name)))
             tag_print("userguide", s);
-        tag_print("description", mod_info->blurb);
+        tag_print("description", info->info->blurb);
         /* don't print plugin-proxy's stolen functions (XXX: hack) */
-        if (!strcmp(mod_info->name, "plugin-proxy")) {
+        if (!strcmp(info->name, "plugin-proxy")) {
             tag_print("funclist", NULL);
             tag_close();
             continue;

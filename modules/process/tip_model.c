@@ -114,7 +114,6 @@ TipModelControls *pcontrols;
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "tip_model",
     N_("Models SPM tip."),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.1",

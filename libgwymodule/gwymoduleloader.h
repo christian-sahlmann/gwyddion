@@ -25,7 +25,7 @@
 
 G_BEGIN_DECLS
 
-#define GWY_MODULE_ABI_VERSION 0
+#define GWY_MODULE_ABI_VERSION 1
 
 #define _GWY_MODULE_QUERY _gwy_module_query
 #define GWY_MODULE_QUERY(mod_info) \
@@ -40,7 +40,6 @@ typedef GwyModuleInfo* (*GwyModuleQueryFunc)    (void);
 struct _GwyModuleInfo {
     guint32 abi_version;
     GwyModuleRegisterFunc register_func;
-    const gchar *name;
     const gchar *blurb;
     const gchar *author;
     const gchar *version;

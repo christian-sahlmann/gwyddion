@@ -63,7 +63,6 @@ static void       dialog_abandon   (GwyUnitoolState *state);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "stats",
     N_("Statistical quantities tool, calculates various statistical "
        "characteristics (mean, median, RMS, skew, kurtosis, inclination, "
        "area, projected area) of selected part of data."),

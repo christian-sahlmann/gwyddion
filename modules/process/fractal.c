@@ -142,7 +142,6 @@ static const FractalDimFunc dim_funcs[] = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "fractal",
     N_("Calculates fractal dimension using several methods "
        "(partitioning, box counting, triangulation, power spectrum)."),
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",

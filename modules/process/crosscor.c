@@ -105,7 +105,6 @@ static const CrosscorArgs crosscor_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "crosscor",
     N_("Calculates cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.2",

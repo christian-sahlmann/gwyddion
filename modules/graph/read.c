@@ -52,7 +52,6 @@ static gulong selection_id = 0;
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "read",
     N_("Read graph values."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1.1",

@@ -79,7 +79,6 @@ static const MaskcorArgs maskcor_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "maskcor",
     N_("Creates mask by correlation with another data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.3",

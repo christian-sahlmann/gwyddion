@@ -144,7 +144,6 @@ static GwyNLFitter*	gwy_math_nlfit_fit_2d   (GwyNLFitFunc ff,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "fit_2d",
     N_("2D fitting"),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.1",

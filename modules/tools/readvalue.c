@@ -55,7 +55,6 @@ static const gchar *radius_key = "/tool/pointer/radius";
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "pointer",
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
     "1.1.1",

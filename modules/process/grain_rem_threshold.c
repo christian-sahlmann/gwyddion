@@ -100,7 +100,6 @@ RemoveArgs remove_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "remove_threshold",
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.6",

@@ -48,7 +48,6 @@ static gboolean    prewitt_vertical             (GwyContainer *data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "gradient",
     N_("Creates presentations with various gradients "
        "(Sobel, Prewitt)."),
     "Petr Klapetek <klapetek@gwyddion.net>",

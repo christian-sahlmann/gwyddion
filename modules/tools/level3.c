@@ -55,7 +55,6 @@ static const gchar *radius_key = "/tool/level3/radius";
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "level3",
     N_("Three-point level tool, levels data by subtracting a plane fitted "
        "through three selected points."),
     "Yeti <yeti@gwyddion.net>",

@@ -42,7 +42,6 @@ static gboolean    fraccor                    (GwyContainer *data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "fraccor",
     N_("Removes data under mask using fractal interpolation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",

@@ -353,7 +353,6 @@ static gboolean       sis_real_load       (const guchar *buffer,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "sisfile",
     N_("Imports SIS (Surface Imaging Systems) data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.11.1",

@@ -37,7 +37,6 @@ void create_file_selection (void);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "graph_ascii_export",
     N_("Export graph curves to ASCII file"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",

@@ -82,7 +82,6 @@ RotateArgs rotate_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "rotate",
     N_("Rotates data by arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
     "1.7",

@@ -251,7 +251,6 @@ static guint         rawfile_compute_required_size (RawFileArgs *args);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "rawfile",
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",

@@ -65,7 +65,7 @@ gwy_tool_func_register(const gchar *modname,
                                            NULL, gwy_tool_func_info_free);
     }
 
-    iinfo = gwy_module_get_module_info(modname);
+    iinfo = _gwy_module_get_module_info(modname);
     g_return_val_if_fail(iinfo, FALSE);
     g_return_val_if_fail(func_info->use, FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
@@ -203,7 +203,7 @@ tool_toolbox_item_compare(GwyToolFuncInfo *a,
 }
 
 gboolean
-gwy_tool_func_remove(const gchar *name)
+_gwy_tool_func_remove(const gchar *name)
 {
     gwy_debug("%s", name);
     if (!g_hash_table_remove(tool_funcs, name)) {

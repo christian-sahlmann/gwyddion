@@ -73,7 +73,6 @@ static void       save_args             (GwyContainer *container,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "grain_remove_manually",
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",

@@ -50,7 +50,6 @@ static GObject*      gwy_container_deserialize_old (const guchar *buffer,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "gwyfile",
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
     "0.6",

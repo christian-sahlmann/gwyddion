@@ -105,7 +105,6 @@ WshedArgs wshed_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "wshed_threshold",
     N_("Marks grains by watershed algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.7",

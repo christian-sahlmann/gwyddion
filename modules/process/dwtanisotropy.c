@@ -80,7 +80,6 @@ DWTAnisotropyArgs dwt_anisotropy_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "dwt_anisotropy",
     N_("2D DWT anisotropy detection based on X/Y components ratio."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",

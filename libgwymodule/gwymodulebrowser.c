@@ -34,8 +34,6 @@ static void       attach_info_line                (GtkWidget *table,
                                                    const gchar *key);
 static void       update_module_info_cb           (GtkWidget *tree,
                                                    GtkWidget *parent);
-static gint       module_name_compare_cb          (const GwyModuleInfo *a,
-                                                   const GwyModuleInfo *b);
 
 enum {
     MODULE_NAME,
@@ -83,6 +81,21 @@ gwy_module_browser(void)
     gtk_widget_show_all(window);
 }
 
+static void
+gwy_module_browser_store_module(const gchar *name,
+                                GwyModuleInfo *mod_info,
+                                GtkListStore *store)
+{
+    GtkTreeIter iter;
+
+    gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter,
+                       MODULE_NAME, name,
+                       MODULE_VERSION, mod_info->version,
+                       MODULE_AUTHOR, mod_info->author,
+                       -1);
+}
+
 static GtkWidget*
 gwy_module_browser_construct(GtkWidget *parent)
 {
@@ -101,27 +114,15 @@ gwy_module_browser_construct(GtkWidget *parent)
     GtkTreeSelection *selection;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
-    GSList *l, *list = NULL;
-    GtkTreeIter iter;
     gsize i;
 
     store = gtk_list_store_new(MODULE_LAST,
                                G_TYPE_STRING,
                                G_TYPE_STRING,
                                G_TYPE_STRING);
-    gwy_module_foreach(gwy_hash_table_to_slist_cb, &list);
-    list = g_slist_sort(list, (GCompareFunc)module_name_compare_cb);
-    for (l = list; l; l = g_slist_next(l)) {
-        const GwyModuleInfo *mod_info = (const GwyModuleInfo*)l->data;
-
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter,
-                           MODULE_NAME, mod_info->name,
-                           MODULE_VERSION, mod_info->version,
-                           MODULE_AUTHOR, mod_info->author,
-                           -1);
-    }
-    g_slist_free(list);
+    gwy_module_foreach((GHFunc)gwy_module_browser_store_module, store);
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
+                                         MODULE_NAME, GTK_SORT_ASCENDING);
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
@@ -192,7 +193,7 @@ update_module_info_cb(GtkWidget *tree,
     gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, MODULE_NAME, &name, -1);
     mod_info = gwy_module_lookup(name);
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "name-version"));
-    s = g_strconcat(mod_info->name, "-", mod_info->version, NULL);
+    s = g_strconcat(name, "-", mod_info->version, NULL);
     gtk_label_set_text(label, s);
     g_free(s);
 
@@ -255,13 +256,6 @@ attach_info_line(GtkWidget *table,
         gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
 
     g_object_set_data(G_OBJECT(parent), key, label);
-}
-
-static gint
-module_name_compare_cb(const GwyModuleInfo *a,
-                       const GwyModuleInfo *b)
-{
-    return strcmp(a->name, b->name);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -77,7 +77,6 @@ CWTArgs cwt_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "cwt",
     N_("Two-dimensional CWT (Continuous Wavelet Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.3",

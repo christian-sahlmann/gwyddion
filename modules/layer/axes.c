@@ -121,7 +121,6 @@ static gint       gwy_layer_axes_near_point      (GwyLayerAxes *layer,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "layer-axes",
     N_("Layer allowing selection of horizontal or vertical lines."),
     "Yeti <yeti@gwyddion.net>",
     "1.2",

@@ -35,7 +35,6 @@ static gboolean    unzoom                       (GwyGraph *graph);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "graph_unzoom",
     N_("Zoom out"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0.1",

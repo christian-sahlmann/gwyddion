@@ -40,7 +40,6 @@ static gboolean    outliers                   (GwyContainer *data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "outliers",
     N_("Creates mask of outliers."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1.1",

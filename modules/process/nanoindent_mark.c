@@ -42,7 +42,6 @@ static void        mask_nanoindent             (GwyDataField *dfield,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "nanoindent_mark",
     N_("Creates mask of nanoindentation hole."),
     "Pavel Stratil <stratil@gwyddion.net>",
     "1.1.1",

@@ -64,7 +64,6 @@ static gint NMAX = 10;
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "graph_points",
     N_("Measure distances between points"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1.1",

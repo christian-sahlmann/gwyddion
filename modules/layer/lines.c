@@ -135,7 +135,6 @@ static gint       gwy_layer_lines_near_point      (GwyLayerLines *layer,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "layer-lines",
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",

@@ -98,7 +98,6 @@ static const ScarsArgs scars_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "scars",
     N_("Marks and/or removes scars (horizontal linear artefacts)."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",

@@ -58,7 +58,6 @@ static void store_metadata                    (GwyContainer *data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "createc",
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
     "0.3",

@@ -116,7 +116,6 @@ MarkArgs mark_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "mark_threshold",
     N_("Marks grains by thresholding (height, slope, curvature)."),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.6",

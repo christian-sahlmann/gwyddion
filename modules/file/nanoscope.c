@@ -124,7 +124,6 @@ static gboolean        require_keys        (GHashTable *hash,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "nanoscope",
     N_("Imports Veeco Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.9.1",

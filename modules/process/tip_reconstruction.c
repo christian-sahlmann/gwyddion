@@ -55,7 +55,6 @@ static const TipReconstructionArgs tip_reconstruction_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "tip_reconstruction",
     N_("Reconstructs surface assuming specified tip."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",

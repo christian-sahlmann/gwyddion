@@ -57,7 +57,6 @@ static void       dialog_abandon      (GwyUnitoolState *state);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "distance",
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic _at_ biochem.mpg.de>",
     "1.1",

@@ -66,7 +66,6 @@ static void       save_args             (GwyContainer *container,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "maskedit",
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",

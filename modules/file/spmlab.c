@@ -46,7 +46,6 @@ static GwyDataField* read_data_field    (const guchar *buffer,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "spmlab",
     N_("Imports Thermicroscopes SpmLab R4 and R5 data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",

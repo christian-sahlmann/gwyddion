@@ -41,7 +41,6 @@ static gboolean    laplace                        (GwyContainer *data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "laplace",
     N_("Removes data under mask, "
        "interpolating them with Laplace equation solution."),
     "Petr Klapetek <klapetek@gwyddion.net>",

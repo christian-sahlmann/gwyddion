@@ -123,7 +123,6 @@ FitControls *pcontrols;
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "graph_fit",
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1.2",
