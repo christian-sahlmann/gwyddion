@@ -1,5 +1,10 @@
 /* @(#) $Id$ */
 
+/* XXX: ,safe` for Unix, but probably broken for Win32
+ * It always creates the temporary file, keeps it open all the time during
+ * plug-in runs, then unlinks it and closes at last.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -38,6 +43,8 @@ static void           dump_export_data_field     (GwyDataField *dfield,
 static GwyContainer*  text_dump_import           (GwyContainer *old_data,
                                                   gchar *buffer,
                                                   gsize size);
+static PluginInfo*    find_plugin                (const gchar *name,
+                                                  GwyRunType run);
 static GwyRunType     str_to_run_modes           (const gchar *str);
 static const char*    run_mode_to_str            (GwyRunType run);
 static gchar*         next_line                  (gchar **buffer);
@@ -153,8 +160,8 @@ register_plugins(GList *plugins,
             info->func.process = plugin_proxy;
             info->func.run = run;
             if (gwy_process_func_register(name, &info->func)) {
-                plugins = g_list_prepend(plugins, info);
                 info->file = g_strdup(file);
+                plugins = g_list_prepend(plugins, info);
             }
             else {
                 g_free((gpointer)info->func.name);
@@ -179,30 +186,17 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
     gint exit_status;
     gsize size = 0;
     FILE *fh;
-    GList *l;
     gchar *args[] = { NULL, "run", NULL, NULL, NULL };
     gboolean ok;
 
-    g_return_val_if_fail(run & PLUGIN_PROXY_RUN_MODES, FALSE);
     gwy_debug("%s: called as %s with run mode %d", __FUNCTION__, name, run);
-
-    for (l = plugins; l; l = g_list_next(l)) {
-        info = (PluginInfo*)l->data;
-        if (strcmp(info->func.name, name) == 0)
-            break;
-    }
-    if (!l) {
-        g_critical("Don't know anything about plug-in `%s'.", name);
+    if (!(info = find_plugin(name, run)))
         return FALSE;
-    }
-    g_return_val_if_fail(run & info->func.run, FALSE);
-    /* keep the file open
-     * FIXME: who knows what it causes on MS Windows, we definitely can't
-     * unlink it before close, and maybe even not overwrite it */
+
     fh = text_dump_export(data, &filename);
     g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
-    args[2] = run_mode_to_str(run);
+    args[2] = g_strdup(run_mode_to_str(run));
     args[3] = filename;
     gwy_debug("%s: %s %s %s %s", __FUNCTION__,
               args[0], args[1], args[2], args[3]);
@@ -215,18 +209,9 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
     gwy_debug("%s: ok = %d, exit_status = %d, err = %p", __FUNCTION__,
               ok, exit_status, err);
     ok &= !exit_status;
-    if (ok) {
-        data = text_dump_import(data, buffer, size);
-        if (data) {
-            data_window = gwy_app_data_window_create(data);
-            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
-        }
-        else {
-            g_warning("Cannot run plug-in %s: %s",
-                      info->file,
-                      err ? err->message : "it returned garbage.");
-            ok = FALSE;
-        }
+    if (ok && (data = text_dump_import(data, buffer, size))) {
+        data_window = gwy_app_data_window_create(data);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
     }
     else {
         g_warning("Cannot run plug-in %s: %s",
@@ -234,6 +219,7 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
                     err ? err->message : "it returned garbage.");
         ok = FALSE;
     }
+    g_free(args[2]);
     g_clear_error(&err);
     g_free(buffer);
     g_free(filename);
@@ -395,6 +381,30 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
 fail:
     gwy_container_remove_by_prefix(data, NULL);
     return NULL;
+}
+
+static PluginInfo*
+find_plugin(const gchar *name,
+            GwyRunType run)
+{
+    PluginInfo *info;
+    GList *l;
+
+    for (l = plugins; l; l = g_list_next(l)) {
+        info = (PluginInfo*)l->data;
+        if (strcmp(info->func.name, name) == 0)
+            break;
+    }
+    if (!l) {
+        g_critical("Don't know anything about plug-in `%s'.", name);
+        return NULL;
+    }
+    if (!(info->func.run & run)) {
+        g_critical("Plug-in `%s' doesn't suport this run mode.", name);
+        return NULL;
+    }
+
+    return info;
 }
 
 static GwyRunType
