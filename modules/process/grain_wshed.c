@@ -125,20 +125,18 @@ static gboolean
 wshed(GwyContainer *data, GwyRunType run)
 {
     WshedArgs args;
-    gboolean ook;
+    gboolean ook = FALSE;
 
     g_assert(run & WSHED_RUN_MODES);
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = wshed_defaults;
     else
         wshed_load_args(gwy_app_settings_get(), &args);
-    if (run == GWY_RUN_NONINTERACTIVE || run == GWY_RUN_WITH_DEFAULTS)
-    {
+    if (run == GWY_RUN_NONINTERACTIVE || run == GWY_RUN_WITH_DEFAULTS) {
         run_noninteractive(&args, data);
         ook = TRUE;
     }
-    else if (run == GWY_RUN_MODAL)
-    {
+    else if (run == GWY_RUN_MODAL) {
         ook = wshed_dialog(&args, data);
     }
     if (ook) {
