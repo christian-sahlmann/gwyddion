@@ -328,7 +328,6 @@ dialog_update(GwyUnitoolState *state,
             lineres = ROUND(sqrt((xl1 - xl2)*(xl1 - xl2)
                                  + (yl1 - yl2)*(yl1 - yl2)));
             lineres = MAX(lineres, 10);
-            printf("interp: %d\n", controls->interp);
             if (!gwy_data_field_get_data_line(dfield, controls->dtl->pdata[i],
                                               xl1, yl1, xl2, yl2, lineres,
                                               controls->interp))

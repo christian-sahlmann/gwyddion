@@ -411,7 +411,6 @@ dialog_update(GwyUnitoolState *state,
     {
        if (gwy_container_contains_by_name(data, "/0/show"))
        {
-          printf("Presentation found\n");
           shadefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                "/0/show"));
           gwy_data_field_resample(shadefield,
@@ -422,7 +421,6 @@ dialog_update(GwyUnitoolState *state,
        }
        else
        {
-          printf("Presentation not found\n");
           shadefield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
           gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
        }

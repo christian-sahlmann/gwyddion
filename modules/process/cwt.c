@@ -244,7 +244,6 @@ wavelet_changed_cb(GObject *item,
 {
     args->wavelet = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "2dcwt-wavelet-type"));
-    printf("Wavelet changed to %d\n", (gint)args->wavelet);
 }
 
 static void

@@ -446,7 +446,6 @@ gwy_data_field_resample(GwyDataField *a,
             xpos = (gdouble)j*xratio;
             if (xpos > (b.xres-1))
                 xpos = (b.xres-1);
-            /*printf("(%d, %d), -> %f, %f\n",i, j, xpos, ypos);*/
             *row = gwy_data_field_get_dval(&b, xpos, ypos, interpolation);
         }
     }
@@ -534,7 +533,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
     if (x<0 && x>-0.1) x = 0;
     if (y<0 && x>-0.1) y = 0;
     if (!(x >= 0 && y >= 0 && y < a->yres && x < a->xres))
-        printf("GRRRRRRRRRRRR: %f %f\n", x, y);
+        g_warning("Bad dval request: %f %f", x, y);
     g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres,
                          0.0);
     switch (interpolation) {

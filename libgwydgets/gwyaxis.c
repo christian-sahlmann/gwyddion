@@ -882,7 +882,6 @@ gwy_axis_normalscale(GwyAxis *a)
     if (range > 1e40 || range < -1e40)
     {
         g_warning("Axis with extreme range (>1e40)!");
-        printf("max=%f, min=%f\n", a->reqmax, a->reqmin);
         a->reqmax = 100; a->reqmin = 0;
     }
     

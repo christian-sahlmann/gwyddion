@@ -1161,7 +1161,6 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
         as = atan(a->data[i]/((double)i*ratio));
         radius = sqrt(((double)i*ratio)*((double)i*ratio)
                       + a->data[i]*a->data[i]);
-        /*printf("i=%f, radius=%f\n", i*ratio, radius);*/
         dx.data[i] = radius*cos((as+angle));
         dy.data[i] = radius*sin((as+angle));
     }

@@ -118,7 +118,6 @@ shade(GwyContainer *data, GwyRunType run)
 
        /* gwy_app_undo_checkpoint(data, "/0/show");*/
         if (gwy_container_contains_by_name(data, "/0/show")) {
-            printf("Presentation found\n");
             shadefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                          "/0/show"));
             gwy_data_field_resample(shadefield,
@@ -128,7 +127,6 @@ shade(GwyContainer *data, GwyRunType run)
         }
         else
         {
-            printf("Presentation not found\n");
             shadefield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
             gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
         }
@@ -136,7 +134,6 @@ shade(GwyContainer *data, GwyRunType run)
         gwy_data_field_shade(dfield, shadefield,
                              args.theta*180/G_PI, args.phi*180/G_PI);
 
-        printf("Shading was done.\n");
 
         if (run != GWY_RUN_WITH_DEFAULTS)
             shade_save_args(gwy_app_settings_get(), &args);
@@ -225,7 +222,6 @@ shade_changed_cb(GwyVectorShade *gradsphere,
     args->phi = gwy_sphere_coords_get_phi(coords);
 
 
-    printf("Value was changed to (%f, %f)\n", args->theta, args->phi);
 }
 
 static const gchar *theta_key = "/module/shade/theta";

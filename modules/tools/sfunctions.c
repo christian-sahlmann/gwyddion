@@ -414,7 +414,6 @@ output_changed_cb(GObject *item, ToolControls *controls)
 {
     gwy_debug("");
     controls->out = GPOINTER_TO_INT(g_object_get_data(item, "sf-output-type"));
-    printf("controls->out = %d\n", controls->out);
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 

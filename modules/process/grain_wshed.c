@@ -432,23 +432,23 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, Wsh
         
         if (status.state == GWY_WSHED_MIN) {
             gwy_app_wait_set_message("Finding minima...");
-            gwy_app_wait_set_fraction(0.0);
+            if (!gwy_app_wait_set_fraction(0.0)) break;
         }
         else if (status.state == GWY_WSHED_LOCATE) {
             gwy_app_wait_set_message("Location...");
-            gwy_app_wait_set_fraction((gdouble)status.internal_i/(gdouble)args->locate_steps);
+            if (!gwy_app_wait_set_fraction((gdouble)status.internal_i/(gdouble)args->locate_steps)) break;
         }
         else if (status.state == GWY_WSHED_WSHED) {
             gwy_app_wait_set_message("Watershed...");
-            gwy_app_wait_set_fraction((gdouble)status.internal_i/(gdouble)args->wshed_steps);
+            if (!gwy_app_wait_set_fraction((gdouble)status.internal_i/(gdouble)args->wshed_steps)) break;
         }
         else if (status.state == GWY_WSHED_MARK) {
             gwy_app_wait_set_message("Marking boundaries...");
-            gwy_app_wait_set_fraction(0.0);
+            if (!gwy_app_wait_set_fraction(0.0)) break;
         }
         else {
             gwy_app_wait_set_message("Finished.");
-            gwy_app_wait_set_fraction(0.0);
+            if (!gwy_app_wait_set_fraction(0.0)) break;
         }
         
             

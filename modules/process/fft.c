@@ -175,7 +175,6 @@ fft(GwyContainer *data, GwyRunType run)
         gwy_data_field_fill(ipout,0);
         gwy_data_field_fill(imin,0);
 
-        printf("Running FFT with win=%d, interp=%d, out=%d\n", args.window, args.interp, args.out);
         gwy_data_field_2dfft(dfield, imin,
                                  raout,
                                  ipout,
@@ -396,7 +395,6 @@ interp_changed_cb(GObject *item,
 {
     args->interp = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "interpolation-type"));
-    printf("Interp set to %d\n", args->interp);
 }
 
 static void
@@ -405,7 +403,6 @@ out_changed_cb(GObject *item,
 {
     args->out = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "fft-output-type"));
-    printf("Out set to %d\n", args->out);
 }
 
 static void
@@ -414,7 +411,6 @@ window_changed_cb(GObject *item,
 {
     args->window = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "windowing-type"));
-    printf("Win set to %d\n", args->window);
 }
 
 static void
