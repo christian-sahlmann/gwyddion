@@ -28,6 +28,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
+#include <app/wait.h>
 
 #define ANGLE_DIST_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
@@ -61,7 +62,7 @@ static void          save_args                (GwyContainer *container,
 static gdouble       compute_slopes           (GwyDataField *dfield,
                                                gdouble *xder,
                                                gdouble *yder);
-static void          count_angles             (gint n,
+static gboolean      count_angles             (gint n,
                                                gdouble *xder,
                                                gdouble *yder,
                                                gdouble max,
@@ -114,13 +115,12 @@ static gboolean
 angle_dist(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GwyDataField *dfield;
+    GwyDataField *dfield = NULL;
     AngleArgs args;
-    const gchar *pal;
+    const gchar *pal = NULL;
     gboolean ok;
 
     g_return_val_if_fail(run & ANGLE_DIST_RUN_MODES, FALSE);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = angle_defaults;
     else
@@ -130,7 +130,12 @@ angle_dist(GwyContainer *data, GwyRunType run)
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
         pal = gwy_container_get_string_by_name(data, "/0/base/palette");
+        gwy_app_wait_start(gwy_app_main_window_get(),  /* XXX: dirty */
+                           _("Computing angle distribution"));
         dfield = angle_do(dfield, &args);
+        gwy_app_wait_finish();
+    }
+    if (dfield) {
         data = GWY_CONTAINER(gwy_container_new());
         gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
         gwy_container_set_string_by_name(data, "/0/base/palette",
@@ -237,6 +242,7 @@ angle_do(GwyDataField *dfield,
     gdouble max;
     gint xres, yres;
     gulong *count;
+    gboolean ok;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -245,10 +251,14 @@ angle_do(GwyDataField *dfield,
     yder = g_new(gdouble, xres*yres);
     max = compute_slopes(dfield, xder, yder);
     count = g_new0(gulong, args->size*args->size);
-    count_angles((xres - 2)*(yres - 2), xder, yder, max, args->size, count,
-                 args->steps);
+    ok = count_angles((xres - 2)*(yres - 2), xder, yder,
+                      max, args->size, count, args->steps);
     g_free(yder);
     g_free(xder);
+    if (!ok) {
+        g_free(count);
+        return NULL;
+    }
 
     return make_datafield(args->size, count, 2.0*G_PI, args->logscale);
 }
@@ -286,7 +296,7 @@ compute_slopes(GwyDataField *dfield,
     return max;
 }
 
-static void
+static gboolean
 count_angles(gint n, gdouble *xder, gdouble *yder,
              gdouble max,
              gint size, gulong *count,
@@ -295,6 +305,7 @@ count_angles(gint n, gdouble *xder, gdouble *yder,
     gint xider, yider, i, j;
     gdouble *ct, *st;
     gdouble d, phi;
+    gboolean ok = TRUE;
 
     max = atan(sqrt(max));
     gwy_debug("max = %g", max);
@@ -324,10 +335,18 @@ count_angles(gint n, gdouble *xder, gdouble *yder,
 
             count[yider*size + xider]++;
         }
+        if (i % 4096 == 0) {
+            if (!gwy_app_wait_set_fraction((gdouble)i/n)) {
+                ok = FALSE;
+                break;
+            }
+        }
     }
 
     g_free(ct);
     g_free(st);
+
+    return ok;
 }
 
 static GwyDataField*
