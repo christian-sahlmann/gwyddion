@@ -850,3 +850,33 @@ GwyDataField
 @phi: 
 
 
+<!-- ##### FUNCTION gwy_data_field_get_stats ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@avg: 
+@ra: 
+@rms: 
+@skew: 
+@kurtosis: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_area_stats ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@avg: 
+@ra: 
+@rms: 
+@skew: 
+@kurtosis: 
+
+

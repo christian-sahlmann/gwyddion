@@ -16,20 +16,24 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_BOLD ##### -->
 <para>
-
+The "Bold" stock icon.
+<inlinegraphic fileref="gwy_bold-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_CROP ##### -->
 <para>
-
+The "Crop" stock icon.
+<inlinegraphic fileref="gwy_crop-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_FIT_PLANE ##### -->
 <para>
+The "Fit-Plane" stock icon.
+<inlinegraphic fileref="gwy_fit_plane-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -37,6 +41,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_FIT_TRIANGLE ##### -->
 <para>
+The "Fit-Triangle" stock icon.
+<inlinegraphic fileref="gwy_fit_triangle-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -44,6 +50,26 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_GRAPH ##### -->
 <para>
+The "Graph" stock icon.
+<inlinegraphic fileref="gwy_graph-24.png" format="PNG"></inlinegraphic>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH_GAUSS ##### -->
+<para>
+The "Graph-Gauss" stock icon.
+<inlinegraphic fileref="gwy_graph_gauss-24.png" format="PNG"></inlinegraphic>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH_HALFGAUSS ##### -->
+<para>
+The "Graph-Halfgauss" stock icon.
+<inlinegraphic fileref="gwy_graph_halfgauss-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -51,6 +77,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_GWYDDION ##### -->
 <para>
+The "Gwyddion" stock icon.
+<inlinegraphic fileref="gwy_gwyddion-60.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -58,6 +86,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_ITALIC ##### -->
 <para>
+The "Italic" stock icon.
+<inlinegraphic fileref="gwy_italic-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -65,6 +95,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_NONE ##### -->
 <para>
+The "None" stock icon.
+<inlinegraphic fileref="gwy_none-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -72,6 +104,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_POINTER ##### -->
 <para>
+The "Pointer" stock icon.
+<inlinegraphic fileref="gwy_pointer-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -79,6 +113,17 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_POINTER_MEASURE ##### -->
 <para>
+The "Pointer-Measure" stock icon.
+<inlinegraphic fileref="gwy_pointer_measure-24.png" format="PNG"></inlinegraphic>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_PROFILE ##### -->
+<para>
+The "Profile" stock icon.
+<inlinegraphic fileref="gwy_profile-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -86,6 +131,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_ROTATE ##### -->
 <para>
+The "Rotate" stock icon.
+<inlinegraphic fileref="gwy_rotate-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -93,6 +140,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_SCALE ##### -->
 <para>
+The "Scale" stock icon.
+<inlinegraphic fileref="gwy_scale-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -100,6 +149,17 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_SHADER ##### -->
 <para>
+The "Shader" stock icon.
+<inlinegraphic fileref="gwy_shader-24.png" format="PNG"></inlinegraphic>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_STAT_QUANTITIES ##### -->
+<para>
+The "Stat-Quantities" stock icon.
+<inlinegraphic fileref="gwy_stat_quantities-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -107,6 +167,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_SUBSCRIPT ##### -->
 <para>
+The "Subscript" stock icon.
+<inlinegraphic fileref="gwy_subscript-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -114,6 +176,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_SUPERSCRIPT ##### -->
 <para>
+The "Superscript" stock icon.
+<inlinegraphic fileref="gwy_superscript-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -121,6 +185,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_1_1 ##### -->
 <para>
+The "Zoom-1:1" stock icon.
+<inlinegraphic fileref="gwy_zoom_1_1-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -128,6 +194,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_FIT ##### -->
 <para>
+The "Zoom-Fit" stock icon.
+<inlinegraphic fileref="gwy_zoom_fit-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -135,6 +203,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_IN ##### -->
 <para>
+The "Zoom-In" stock icon.
+<inlinegraphic fileref="gwy_zoom_in-24.png" format="PNG"></inlinegraphic>
 
 </para>
 
@@ -142,6 +212,8 @@ gwystock
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_OUT ##### -->
 <para>
+The "Zoom-Out" stock icon.
+<inlinegraphic fileref="gwy_zoom_out-24.png" format="PNG"></inlinegraphic>
 
 </para>
 

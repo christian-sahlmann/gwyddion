@@ -41,7 +41,31 @@ CFILE_GLOB = $(DOC_SOURCE_DIR)/*.c
 IGNORE_HFILES =
 
 # Images to copy into HTML directory.
-HTML_IMAGES =
+HTML_IMAGES = \
+	$(top_srcdir)/pixmaps/gwy_bold-24.png \
+	$(top_srcdir)/pixmaps/gwy_crop-24.png \
+	$(top_srcdir)/pixmaps/gwy_fit_plane-24.png \
+	$(top_srcdir)/pixmaps/gwy_fit_triangle-24.png \
+	$(top_srcdir)/pixmaps/gwy_graph-24.png \
+	$(top_srcdir)/pixmaps/gwy_graph_gauss-24.png \
+	$(top_srcdir)/pixmaps/gwy_graph_halfgauss-24.png \
+	$(top_srcdir)/pixmaps/gwy_gwyddion-48.old.png \
+	$(top_srcdir)/pixmaps/gwy_gwyddion-60.png \
+	$(top_srcdir)/pixmaps/gwy_italic-24.png \
+	$(top_srcdir)/pixmaps/gwy_none-24.png \
+	$(top_srcdir)/pixmaps/gwy_pointer-24.png \
+	$(top_srcdir)/pixmaps/gwy_pointer_measure-24.png \
+	$(top_srcdir)/pixmaps/gwy_profile-24.png \
+	$(top_srcdir)/pixmaps/gwy_rotate-24.png \
+	$(top_srcdir)/pixmaps/gwy_scale-24.png \
+	$(top_srcdir)/pixmaps/gwy_shader-24.png \
+	$(top_srcdir)/pixmaps/gwy_stat_quantities-24.png \
+	$(top_srcdir)/pixmaps/gwy_subscript-24.png \
+	$(top_srcdir)/pixmaps/gwy_superscript-24.png \
+	$(top_srcdir)/pixmaps/gwy_zoom_1_1-24.png \
+	$(top_srcdir)/pixmaps/gwy_zoom_fit-24.png \
+	$(top_srcdir)/pixmaps/gwy_zoom_in-24.png \
+	$(top_srcdir)/pixmaps/gwy_zoom_out-24.png
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 content_files =

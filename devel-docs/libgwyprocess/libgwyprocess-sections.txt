@@ -67,6 +67,8 @@ gwy_data_field_xfft_real
 gwy_data_field_yfft_real
 gwy_data_field_cwt
 gwy_data_field_shade
+gwy_data_field_get_stats
+gwy_data_field_get_area_stats
 <SUBSECTION Standard>
 GWY_DATA_FIELD
 GWY_IS_DATA_FIELD

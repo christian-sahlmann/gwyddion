@@ -30,6 +30,7 @@ gwymodule-tool
 @name: 
 @stock_id: 
 @tooltip: 
+@toolbar_position: 
 @use: 
 
 <!-- ##### USER_FUNCTION GwyToolUseFunc ##### -->
@@ -74,6 +75,7 @@ gwymodule-tool
 </para>
 
 @item_callback: 
+@first_tool: 
 @Returns: 
 
 

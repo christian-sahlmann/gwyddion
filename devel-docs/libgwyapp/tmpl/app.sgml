@@ -158,8 +158,10 @@ app
 
 </para>
 
-@unused: 
+@button: 
 @toolname: 
+<!-- # Unused Parameters # -->
+@unused: 
 
 
 <!-- ##### FUNCTION gwy_app_zoom_set_cb ##### -->
