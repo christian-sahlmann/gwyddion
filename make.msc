@@ -1,12 +1,7 @@
-!IFNDEF GTK_TOP
-!MESSAGE GTK_TOP not set, using default...
+# XXX: set following to your Gtk+-Development and MSVC paths
 GTK_TOP = C:\Dev-C++
-!ENDIF
-
-!IFNDEF MSC_TOP
-!MESSAGE MSC_TOP not set, using default...
 MSC_TOP = C:\Program Files\Microsoft Visual Studio\VC98
-!ENDIF
+
 
 !IFNDEF DEST_DIR
 DEST_DIR = $(TOP_SRCDIR)/inst
