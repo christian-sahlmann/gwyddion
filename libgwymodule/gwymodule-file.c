@@ -420,6 +420,7 @@ gwy_file_func_get_operations(const gchar *name)
 gboolean
 gwy_file_func_remove(const gchar *name)
 {
+    gwy_debug("%s", name);
     if (!g_hash_table_remove(file_funcs, name)) {
         g_warning("Cannot remove function %s", name);
         return FALSE;

@@ -316,6 +316,7 @@ gwy_process_func_get_menu_path(const gchar *name)
 gboolean
 gwy_process_func_remove(const gchar *name)
 {
+    gwy_debug("%s", name);
     if (!g_hash_table_remove(process_funcs, name)) {
         g_warning("Cannot remove function %s", name);
         return FALSE;

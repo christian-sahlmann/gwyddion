@@ -177,6 +177,7 @@ tool_toolbox_item_compare(GwyToolFuncInfo *a,
 gboolean
 gwy_tool_func_remove(const gchar *name)
 {
+    gwy_debug("%s", name);
     if (!g_hash_table_remove(tool_funcs, name)) {
         g_warning("Cannot remove function %s", name);
         return FALSE;

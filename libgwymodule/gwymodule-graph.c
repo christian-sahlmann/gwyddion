@@ -272,6 +272,7 @@ gwy_graph_func_get_menu_path(const gchar *name)
 gboolean
 gwy_graph_func_remove(const gchar *name)
 {
+    gwy_debug("%s", name);
     if (!g_hash_table_remove(graph_funcs, name)) {
         g_warning("Cannot remove function %s", name);
         return FALSE;

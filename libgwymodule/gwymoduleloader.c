@@ -236,8 +236,20 @@ gwy_load_modules_in_dir(GDir *gdir,
 static void
 gwy_module_get_rid_of(const gchar *modname)
 {
+    static const struct {
+        const gchar *prefix;
+        gboolean (*func)(const gchar*);
+    }
+    gro_funcs[] = {
+        { GWY_MODULE_PREFIX_PROC,  gwy_process_func_remove },
+        { GWY_MODULE_PREFIX_FILE,  gwy_file_func_remove },
+        { GWY_MODULE_PREFIX_GRAPH, gwy_graph_func_remove },
+        { GWY_MODULE_PREFIX_TOOL,  gwy_tool_func_remove },
+    };
+
     _GwyModuleInfoInternal *iinfo;
     GSList *l;
+    gsize i;
 
     iinfo = g_hash_table_lookup(modules, modname);
     g_return_if_fail(iinfo);
@@ -246,15 +258,12 @@ gwy_module_get_rid_of(const gchar *modname)
     for (l = iinfo->funcs; l; l = g_slist_next(l)) {
         gchar *canon_name = (gchar*)iinfo->funcs->data;
 
-        if (g_str_has_prefix(canon_name, GWY_MODULE_PREFIX_PROC))
-            gwy_file_func_remove(canon_name + strlen(GWY_MODULE_PREFIX_PROC));
-        else if (g_str_has_prefix(canon_name, GWY_MODULE_PREFIX_FILE))
-            gwy_file_func_remove(canon_name + strlen(GWY_MODULE_PREFIX_FILE));
-        else if (g_str_has_prefix(canon_name, GWY_MODULE_PREFIX_GRAPH))
-            gwy_file_func_remove(canon_name + strlen(GWY_MODULE_PREFIX_GRAPH));
-        else if (g_str_has_prefix(canon_name, GWY_MODULE_PREFIX_TOOL))
-            gwy_file_func_remove(canon_name + strlen(GWY_MODULE_PREFIX_TOOL));
-        else {
+        for (i = 0; i < G_N_ELEMENTS(gro_funcs); i++) {
+            if (g_str_has_prefix(canon_name, gro_funcs[i].prefix)
+                && gro_funcs[i].func(canon_name + strlen(gro_funcs[i].prefix)))
+                break;
+        }
+        if (i == G_N_ELEMENTS(gro_funcs)) {
             g_critical("Unable to find out %s function type", canon_name);
         }
         g_free(canon_name);
