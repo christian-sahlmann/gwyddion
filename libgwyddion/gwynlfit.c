@@ -75,6 +75,8 @@ static gdouble gwy_math_nlfit_residua(GwyNLFitter *nlfit,
  * Creates a new Marquardt-Levenberg nonlinear fitter for function @ff.
  *
  * Returns: The newly created fitter.
+ *
+ * Since: 1.1.
  **/
 GwyNLFitter*
 gwy_math_nlfit_new(GwyNLFitFunc ff, GwyNLFitDerFunc df)
@@ -101,6 +103,8 @@ gwy_math_nlfit_new(GwyNLFitFunc ff, GwyNLFitDerFunc df)
  * @nlfit: A Marquardt-Levenberg nonlinear fitter.
  *
  * Completely frees a Marquardt-Levenberg nonlinear fitter.
+ *
+ * Since: 1.1.
  **/
 void
 gwy_math_nlfit_free(GwyNLFitter *nlfit)
@@ -126,6 +130,8 @@ gwy_math_nlfit_free(GwyNLFitter *nlfit)
  * Performs a nonlinear fit of @nlfit function on (@x,@y) data.
  *
  * Returns: The final residual sum, a negative number in the case of failure.
+ *
+ * Since: 1.1.
  **/
 gdouble
 gwy_math_nlfit_fit(GwyNLFitter *nlfit,
@@ -317,7 +323,9 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
  * @deriv: Array where the put the result to.
  * @dres: Set to %TRUE if succeeds, %FALSE on failure.
  *
- * Numerically compute the partial derivations of @ff
+ * Numerically computes the partial derivations of @ff
+ *
+ * Since: 1.1.
  **/
 void
 gwy_math_nlfit_derive(gint i,
@@ -386,6 +394,8 @@ gwy_math_nlfit_residua(GwyNLFitter *nlfit,
  * Returns the maximum number of iterations of nonlinear fitter @nlfit.
  *
  * Returns: The maximum number of iterations.
+ *
+ * Since: 1.1.
  **/
 gint
 gwy_math_nlfit_get_max_iterations(GwyNLFitter *nlfit)
@@ -399,6 +409,8 @@ gwy_math_nlfit_get_max_iterations(GwyNLFitter *nlfit)
  * @maxiter: The maximum number of iterations.
  *
  * Sets the maximum number of iterations for nonlinear fitter @nlfit.
+ *
+ * Since: 1.1.
  **/
 void
 gwy_math_nlfit_set_max_iterations(GwyNLFitter *nlfit,
@@ -419,6 +431,8 @@ gwy_math_nlfit_set_max_iterations(GwyNLFitter *nlfit,
  * This function makes sense only after a successful fit.
  *
  * Returns: The SD of @par-th parameter.
+ *
+ * Since: 1.1.
  **/
 gdouble
 gwy_math_nlfit_get_sigma(GwyNLFitter *nlfit, gint par)
@@ -438,6 +452,8 @@ gwy_math_nlfit_get_sigma(GwyNLFitter *nlfit, gint par)
  * This function makes sense only after a successful fit.
  *
  * Returns: The dispersion.
+ *
+ * Since: 1.1.
  **/
 gdouble
 gwy_math_nlfit_get_dispersion(GwyNLFitter *nlfit)
@@ -457,6 +473,8 @@ gwy_math_nlfit_get_dispersion(GwyNLFitter *nlfit)
  * This function makes sense only after a successful fit.
  *
  * Returns: The correlation coefficient.
+ *
+ * Since: 1.1.
  **/
 gdouble
 gwy_math_nlfit_get_correlations(GwyNLFitter *nlfit, gint par1, gint par2)
