@@ -15,7 +15,6 @@ lib_LTLIBRARIES = libgwyddion.la
 
 EXTRA_DIST = libgwyddion.def
 
-#noinst_PROGRAMS = main
 noinst_HEADERS = gwytestser.h
 
 # In following order do:
@@ -32,6 +31,7 @@ libgwyddion_la_SOURCES = \
 	gwyutils.c \
 	gwywatchable.c
 
+#noinst_PROGRAMS = main
 #main_SOURCES = \
 #	main.c \
 #	gwytestser.c

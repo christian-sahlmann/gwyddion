@@ -84,7 +84,7 @@ gwy_string_to_enum(const gchar *str,
 {
     gint j;
 
-    for (j = 0; j < n && enum_table->name; j++, enum_table++) {
+    for (j = n; j && enum_table->name; j--, enum_table++) {
         if (strcmp(str, enum_table->name) == 0)
             return enum_table->value;
     }
@@ -113,7 +113,7 @@ gwy_enum_to_string(gint enumval,
 {
     gint j;
 
-    for (j = 0; j < n && enum_table->name; j++, enum_table++) {
+    for (j = n; j && enum_table->name; j--, enum_table++) {
         if (enumval == enum_table->value)
             return enum_table->name;
     }
@@ -150,7 +150,7 @@ gwy_string_to_flags(const gchar *str,
     for (i = 0; strings[i]; i++) {
         const GwyEnum *e = enum_table;
 
-        for (j = 0; j < n && e->name; j++) {
+        for (j = n; j && e->name; j--, e++) {
             if (strcmp(strings[i], e->name) == 0) {
                 enumval |= e->value;
                 break;
@@ -191,15 +191,13 @@ gwy_flags_to_string(gint enumval,
     if (!delimiter)
         delimiter = " ";
 
-    for (j = 0; j < n && enum_table[j].name; j++) {
-        const GwyEnum *e = enum_table;
-
-        if (enumval & e->value) {
+    for (j = n; j && enum_table->name; j--, enum_table++) {
+        if (enumval & enum_table->value) {
             if (!str)
-                str = g_string_new(e->name);
+                str = g_string_new(enum_table->name);
             else {
                 str = g_string_append(str, delimiter);
-                str = g_string_append(str, e->name);
+                str = g_string_append(str, enum_table->name);
             }
         }
     }

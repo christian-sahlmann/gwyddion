@@ -24,6 +24,7 @@
 #include "gwycontainer.h"
 #include "gwyentities.h"
 #include "gwytestser.h"
+#include "gwyutils.h"
 
 #define FILENAME "testser.object"
 
@@ -55,6 +56,37 @@ bar_callback(gpointer hkey, GValue *value, gchar *user_data)
               G_VALUE_TYPE_NAME(value),
               user_data);
 }
+
+typedef enum {
+    GWY_FILE_NONE   = 0,
+    GWY_FILE_LOAD   = 1 << 0,
+    GWY_FILE_SAVE   = 1 << 1,
+    GWY_FILE_DETECT = 1 << 2,
+    GWY_FILE_MASK   = 0x07
+} GwyFileOperation;
+
+typedef enum {
+    GWY_RUN_NONE           = 0,
+    GWY_RUN_WITH_DEFAULTS  = 1 << 0,
+    GWY_RUN_NONINTERACTIVE = 1 << 1,
+    GWY_RUN_MODAL          = 1 << 2,
+    GWY_RUN_INTERACTIVE    = 1 << 3,
+    GWY_RUN_MASK           = 0x0f
+} GwyRunType;
+
+static const GwyEnum run_mode_names[] = {
+    { "interactive",    GWY_RUN_INTERACTIVE },
+    { "noninteractive", GWY_RUN_NONINTERACTIVE },
+    { "modal",          GWY_RUN_MODAL },
+    { "with_defaults",  GWY_RUN_WITH_DEFAULTS },
+    { NULL,             -1 }
+};
+
+static const GwyEnum file_op_names[] = {
+    { "load", GWY_FILE_LOAD },
+    { "save", GWY_FILE_SAVE },
+    { NULL,   -1 }
+};
 
 int
 main(void)
@@ -232,6 +264,25 @@ main(void)
     pent(";&&");
     pent("&alphabeta;&alpha&beta;");
     pent("<a link=\"foo&lt;&quot;&gt;\">&amp;</a>");
+
+    g_message("====== ENUMS ======================");
+    g_message(gwy_enum_to_string(GWY_FILE_LOAD, file_op_names, -1));
+    g_message(gwy_enum_to_string(GWY_FILE_SAVE, file_op_names,
+                                 G_N_ELEMENTS(file_op_names)));
+    g_message(gwy_flags_to_string(GWY_RUN_INTERACTIVE | GWY_RUN_MODAL,
+                                  run_mode_names, -1, NULL));
+    g_message(gwy_flags_to_string(GWY_RUN_WITH_DEFAULTS | GWY_RUN_MODAL,
+                                  run_mode_names, G_N_ELEMENTS(run_mode_names),
+                                  " @@@ "));
+
+    g_message("%d", gwy_string_to_enum("with_defaults", run_mode_names, -1));
+    g_message("%d", gwy_string_to_enum("modal", run_mode_names,
+                                       G_N_ELEMENTS(run_mode_names)));
+    g_message("%d", gwy_string_to_flags("load save", file_op_names, -1, NULL));
+    g_message("%d", gwy_string_to_flags("load save", file_op_names,
+                                       G_N_ELEMENTS(file_op_names), NULL));
+    g_message("%d", gwy_string_to_flags("noninteractive-interactive",
+                                        run_mode_names, -1, "-"));
 
     return 0;
 }
