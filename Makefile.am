@@ -14,6 +14,7 @@ SUBDIRS = \
 	modules \
 	plugins \
 	pixmaps \
+	perl \
 	python \
 	devel-docs
 
