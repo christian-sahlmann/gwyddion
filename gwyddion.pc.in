@@ -3,9 +3,9 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-gwymoduledir=@gwymoduledir@
-gwyplugindir=@gwyplugindir@
-gwypixmapdir=@gwypixmapdir@
+gwymoduledir=@libdir@/@PACKAGE@/modules
+gwyplugindir=@libexecdir@/@PACKAGE@/modules
+gwypixmapdir=@datadir@/@PACKAGE@/pixmaps
 
 Name: Gwyddion
 Description: Gwyddion library
