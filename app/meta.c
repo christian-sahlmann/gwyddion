@@ -19,15 +19,11 @@
  */
 
 #include <string.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydatawindow.h>
-#include <gtk/gtkwindow.h>
-#include <gtk/gtktreeview.h>
-#include <gtk/gtkliststore.h>
-#include <gtk/gtktreeselection.h>
-#include <gtk/gtkcellrenderertext.h>
 
 /* XXX: This is completely static.  Ideally the browser would allow changing
  * the metadata.  However, now it can't even react properly to external
