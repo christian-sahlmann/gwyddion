@@ -23,6 +23,7 @@ static GdkPixbuf* gwy_layer_basic_paint             (GwyDataViewLayer *layer);
 static gboolean   gwy_layer_basic_wants_repaint     (GwyDataViewLayer *layer);
 static void       gwy_layer_basic_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_basic_unplugged         (GwyDataViewLayer *layer);
+static void       gwy_layer_basic_update            (GwyDataViewLayer *layer);
 
 /* Local data */
 
@@ -86,9 +87,11 @@ gwy_layer_basic_init(GwyLayerBasic *layer)
 static void
 gwy_layer_basic_finalize(GObject *object)
 {
+    GwyDataViewLayer *layer;
     gwy_debug("%s", __FUNCTION__);
 
     g_return_if_fail(GWY_IS_LAYER_BASIC(object));
+    layer = GWY_DATA_VIEW_LAYER(object);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -114,7 +117,11 @@ gwy_layer_basic_new(void)
     layer = (GwyDataViewLayer*)object;
 
     layer->palette = (GwyPalette*)(gwy_palette_new(NULL));
+    /*
     gwy_palette_set_by_name(layer->palette, GWY_PALETTE_GRAY);
+    g_signal_connect_swapped(layer->palette, "value_changed",
+                             G_CALLBACK(gwy_layer_basic_update), layer);
+                             */
 
     return object;
 }
@@ -170,8 +177,12 @@ gwy_layer_basic_set_palette(GwyDataViewLayer *layer,
     g_return_if_fail(GWY_IS_PALETTE(palette));
 
     oldpalette = layer->palette;
+    g_signal_handlers_disconnect_matched(layer->palette, G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, layer);
     g_object_ref(palette);
     layer->palette = palette;
+    g_signal_connect_swapped(layer->palette, "value_changed",
+                             G_CALLBACK(gwy_layer_basic_update), layer);
     palette_name = gwy_palette_def_get_name(gwy_palette_get_palette_def(palette));
     gwy_container_set_string_by_name(layer->data, "/0/base/palette",
                                      g_strdup(palette_name));
@@ -226,6 +237,8 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
         gwy_container_set_string_by_name(layer->data, "/0/base/palette",
                                          palette_name);
     }
+    g_signal_connect_swapped(layer->palette, "value_changed",
+                             G_CALLBACK(gwy_layer_basic_update), layer);
 
     layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
                                    BITS_PER_SAMPLE, width, height);
@@ -236,8 +249,17 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
 {
     g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
 
+    g_signal_handlers_disconnect_matched(layer->palette, G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, layer);
     gwy_object_unref(layer->pixbuf);
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
+}
+
+static void
+gwy_layer_basic_update(GwyDataViewLayer *layer)
+{
+    GWY_LAYER_BASIC(layer)->changed = TRUE;
+    gwy_data_view_layer_updated(layer);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

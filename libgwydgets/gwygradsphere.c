@@ -190,6 +190,8 @@ gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
 
     grad_sphere->palette = (GwyPalette*)(gwy_palette_new(NULL));
     gwy_palette_set_by_name(grad_sphere->palette, GWY_PALETTE_GRAY);
+    g_signal_connect_swapped(grad_sphere->palette, "value_changed",
+                             G_CALLBACK(gwy_grad_sphere_update), grad_sphere);
 
     return widget;
 }
@@ -209,7 +211,13 @@ gwy_grad_sphere_finalize(GObject *object)
 
     gwy_debug("    unreferencing child sphere_coords (refcount = %u)",
               G_OBJECT(grad_sphere->sphere_coords)->ref_count);
+    g_signal_handlers_disconnect_matched(grad_sphere->sphere_coords,
+                                         G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, grad_sphere);
     gwy_object_unref(grad_sphere->sphere_coords);
+    g_signal_handlers_disconnect_matched(grad_sphere->palette,
+                                         G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, grad_sphere);
     gwy_object_unref(grad_sphere->palette);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -356,7 +364,7 @@ gwy_grad_sphere_set_sphere_coords(GwyGradSphere *grad_sphere,
     old = grad_sphere->sphere_coords;
     if (old)
          g_signal_handlers_disconnect_matched(old, G_SIGNAL_MATCH_DATA,
-                                              0, 0, 0, 0, grad_sphere);
+                                              0, 0, NULL, NULL, grad_sphere);
     grad_sphere->sphere_coords = sphere_coords;
     g_object_ref(G_OBJECT(sphere_coords));
     gtk_object_sink(GTK_OBJECT(sphere_coords));
@@ -776,11 +784,19 @@ void
 gwy_grad_sphere_set_palette(GwyGradSphere *grad_sphere,
                             GwyPalette *palette)
 {
-    g_return_if_fail(grad_sphere);
+    GwyPalette *old;
 
+    g_return_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere));
+    g_return_if_fail(GWY_IS_PALETTE(palette));
+
+    old = grad_sphere->palette;
+    g_signal_handlers_disconnect_matched(old, G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, grad_sphere);
     g_object_ref(palette);
-    g_object_unref(grad_sphere->palette);
     grad_sphere->palette = palette;
+    g_signal_connect_swapped(grad_sphere->palette, "value_changed",
+                             G_CALLBACK(gwy_grad_sphere_update), grad_sphere);
+    g_object_unref(old);
 
     gwy_grad_sphere_update(grad_sphere);
 }
