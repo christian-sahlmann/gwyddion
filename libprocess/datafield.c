@@ -297,6 +297,8 @@ gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
     a->xres = xres;
     a->yres = yres;
     a->data = g_new(gdouble, a->xres*a->yres);
+    a->si_unit_xy = NULL;
+    a->si_unit_z = NULL;
 }
 
 /**
