@@ -68,7 +68,6 @@ gwy_unitool_use(GwyUnitoolState *state,
     GwyUnitoolSlots *slot;
     GwyVectorLayer *layer;
     GwyDataView *data_view;
-    gulong *thumbnail_id;
 
     gwy_debug("%p", data_window);
     g_return_val_if_fail(state, FALSE);
@@ -138,15 +137,10 @@ gwy_unitool_use(GwyUnitoolState *state,
                                    G_CALLBACK(gwy_unitool_dialog_response_cb),
                                    state);
 
-    /* FIXME: should be in state, but it would break binary compatibility */
-    thumbnail_id = g_new(gulong, 1);
-    *thumbnail_id = g_signal_connect_swapped
-                       (gwy_data_window_get_data_view(state->data_window),
-                        "redrawn",
-                        G_CALLBACK(gwy_unitool_update_thumbnail),
-                        state);
-    g_object_set_data(G_OBJECT(state->windowname),
-                      "gwy-unitool-thumbnail-id", thumbnail_id);
+    state->thumbnail_id
+        = g_signal_connect_swapped(data_view, "redrawn",
+                                   G_CALLBACK(gwy_unitool_update_thumbnail),
+                                   state);
 
     /* setup based on switch reason */
     if (reason == GWY_TOOL_SWITCH_TOOL)
@@ -194,27 +188,19 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
     if (state->data_window && state->windowname_id)
         g_signal_handler_disconnect(state->data_window, state->windowname_id);
 
+    if (state->thumbnail_id && state->data_window) {
+        GtkWidget *data_view;
+
+        gwy_debug("removing \"redrawn\" handler");
+        data_view = gwy_data_window_get_data_view(state->data_window);
+        g_signal_handler_disconnect(data_view, state->thumbnail_id);
+    }
+
     state->layer_updated_id = 0;
     state->data_updated_id = 0;
     state->response_id = 0;
     state->windowname_id = 0;
-
-    /* FIXME: should be in state, but it would break binary compatibility */
-    if (state->windowname) {
-        gulong *thumbnail_id;
-        GtkWidget *data_view;
-
-        thumbnail_id = g_object_get_data(G_OBJECT(state->windowname),
-                                         "gwy-unitool-thumbnail-id");
-        g_object_set_data(G_OBJECT(state->windowname),
-                          "gwy-unitool-thumbnail-id", NULL);
-        if (thumbnail_id && *thumbnail_id) {
-            gwy_debug("removing \"redrawn\" handler");
-            data_view = gwy_data_window_get_data_view(state->data_window);
-            g_signal_handler_disconnect(data_view, *thumbnail_id);
-        }
-        g_free(thumbnail_id);
-    }
+    state->thumbnail_id = 0;
 }
 
 static void
@@ -485,8 +471,7 @@ gwy_unitool_apply_set_sensitive(GwyUnitoolState *state,
 GtkWidget*
 gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
 {
-    GtkWidget *frame, *label, *image, *hbox;
-    gulong *thumbnail_id;
+    GtkWidget *frame, *label, *image, *hbox, *data_view;
 
     g_return_val_if_fail(state, NULL);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(state->data_window), NULL);
@@ -507,15 +492,11 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     state->windowname = label;
 
     gwy_unitool_update_thumbnail(state);
-    /* FIXME: should be in state, but it would break binary compatibility */
-    thumbnail_id = g_new(gulong, 1);
-    *thumbnail_id = g_signal_connect_swapped
-                       (gwy_data_window_get_data_view(state->data_window),
-                        "redrawn",
-                        G_CALLBACK(gwy_unitool_update_thumbnail),
-                        state);
-    g_object_set_data(G_OBJECT(state->windowname),
-                      "gwy-unitool-thumbnail-id", thumbnail_id);
+    data_view = gwy_data_window_get_data_view(state->data_window);
+    state->thumbnail_id
+        = g_signal_connect_swapped(data_view, "redrawn",
+                                   G_CALLBACK(gwy_unitool_update_thumbnail),
+                                   state);
 
     return frame;
     /*

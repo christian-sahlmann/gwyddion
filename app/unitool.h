@@ -61,6 +61,7 @@ typedef struct {
     gulong data_updated_id;
     gulong response_id;
     gulong windowname_id;
+    gulong thumbnail_id;
 } GwyUnitoolState;
 
 typedef void       (*GwyUnitoolFunc)         (GwyUnitoolState *state);
