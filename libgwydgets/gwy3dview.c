@@ -216,132 +216,96 @@ gwy_3d_view_new(GwyContainer *data)
     GdkGLConfig *glconfig;
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
-    const guchar * palette_name;
+    const guchar *palette_name, *material_name;
+    GwyPaletteDef *pdef;
+    gdouble x;
+    GObject *dfield;
 
     gwy_debug(" ");
 
     glconfig = gwy_widgets_get_gl_config();
     g_return_val_if_fail(glconfig, NULL);
 
-    if (data)
-        g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
-    else
-        return NULL;
-    g_object_ref(G_OBJECT(data));
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+    gwy_container_gis_object_by_name(data, "/0/data", &dfield);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+    g_object_ref(data);
+    g_object_ref(dfield);
 
-    gwy3dview = gtk_type_new(gwy_3d_view_get_type());
-    widget = GTK_WIDGET(gwy3dview);
+    widget = gtk_widget_new(GWY_TYPE_3D_VIEW, NULL);
+    gwy3dview = (Gwy3DView*)widget;
 
     gwy3dview->container = data;
+    gwy3dview->data = (GwyDataField*)dfield;
 
-    gwy3dview->rot_x         = gtk_adjustment_new(45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 5.0, 30.0, 0.0);
-    gwy3dview->rot_y         = gtk_adjustment_new(-45.0, -270.0, 180.0, 5.0, 15.0, 0.0);
-    gwy3dview->view_scale    = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.05, 0.5, 0.0);
-    gwy3dview->deformation_z = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.05, 0.5, 0.0);
-    gwy3dview->light_z       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0, 0.0);
-    gwy3dview->light_y       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0, 0.0);
+    gwy3dview->rot_x         = GTK_ADJUSTMENT(gtk_adjustment_new(45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 5.0, 30.0, 0.0));
+    gwy3dview->rot_y         = GTK_ADJUSTMENT(gtk_adjustment_new(-45.0, -270.0, 180.0, 5.0, 15.0, 0.0));
+    gwy3dview->view_scale    = GTK_ADJUSTMENT(gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.05, 0.5, 0.0));
+    gwy3dview->deformation_z = GTK_ADJUSTMENT(gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.05, 0.5, 0.0));
+    gwy3dview->light_z       = GTK_ADJUSTMENT(gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0, 0.0));
+    gwy3dview->light_y       = GTK_ADJUSTMENT(gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0, 0.0));
+
     gwy3dview->mat_current
              = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
-    gtk_object_ref(GTK_OBJECT(gwy3dview->rot_x));
+    g_object_ref(GTK_OBJECT(gwy3dview->rot_x));
     gtk_object_sink(GTK_OBJECT(gwy3dview->rot_x));
-    gtk_object_ref(GTK_OBJECT(gwy3dview->rot_y));
+    g_object_ref(GTK_OBJECT(gwy3dview->rot_y));
     gtk_object_sink(GTK_OBJECT(gwy3dview->rot_y));
-    gtk_object_ref(GTK_OBJECT(gwy3dview->view_scale));
+    g_object_ref(GTK_OBJECT(gwy3dview->view_scale));
     gtk_object_sink(GTK_OBJECT(gwy3dview->view_scale));
-    gtk_object_ref(GTK_OBJECT(gwy3dview->deformation_z));
+    g_object_ref(GTK_OBJECT(gwy3dview->deformation_z));
     gtk_object_sink(GTK_OBJECT(gwy3dview->deformation_z));
-    gtk_object_ref(GTK_OBJECT(gwy3dview->light_z));
+    g_object_ref(GTK_OBJECT(gwy3dview->light_z));
     gtk_object_sink(GTK_OBJECT(gwy3dview->light_z));
-    gtk_object_ref(GTK_OBJECT(gwy3dview->light_y));
+    g_object_ref(GTK_OBJECT(gwy3dview->light_y));
     gtk_object_sink(GTK_OBJECT(gwy3dview->light_y));
 
-    if (gwy_container_contains_by_name(data, "/0/data"))
-    {
-        gwy3dview->data = GWY_DATA_FIELD(
-            gwy_container_get_object_by_name(data, "/0/data"));
-        g_object_ref(G_OBJECT(gwy3dview->data));
-    }
-
-    if (gwy_container_contains_by_name(data, "/0/3d/palette"))
-    {    palette_name =
-             gwy_container_get_string_by_name(data, "/0/3d/palette");
-    }
-    else if (gwy_container_contains_by_name(data, "/0/base/palette"))
-    {
-        palette_name =
-            gwy_container_get_string_by_name(data, "/0/base/palette");
-        gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
+    if (!gwy_container_gis_string_by_name(data, "/0/3d/palette",
+                                          &palette_name)) {
+        if (!gwy_container_gis_string_by_name(data, "/0/base/palette",
+                                              &palette_name))
+            palette_name = GWY_PALETTE_GRAY;
+        gwy_container_set_string_by_name(data, "/0/3d/palette",
                                          g_strdup(palette_name));
     }
-    else
-    {
-        palette_name =  g_strdup(GWY_PALETTE_YELLOW);
-        gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
-                                         g_strdup(palette_name));
-    }
-    gwy3dview->palette = gwy_palette_new(gwy_palette_def_new(palette_name));
-    g_object_ref(G_OBJECT(gwy3dview->palette));
+    pdef = GWY_PALETTE_DEF(gwy_palette_def_new(palette_name));
+    gwy3dview->palette = GWY_PALETTE(gwy_palette_new(pdef));
+    g_object_ref(gwy3dview->palette);
 
-    if (gwy_container_contains_by_name(data, "/0/3d/reduced_size"))
-        gwy3dview->reduced_size = (guint)(
-            gwy_container_get_int32_by_name(gwy3dview->container,
-                                            "/0/3d/reduced_size"));
-    if (gwy_container_contains_by_name(data, "/0/3d/rot_x"))
-        gwy3dview->rot_x->value =
-            gwy_container_get_double_by_name(data,
-                                             "/0/3d/rot_x");
-    if (gwy_container_contains_by_name(data, "/0/3d/rot_y"))
-        gwy3dview->rot_y->value =
-            gwy_container_get_double_by_name(data,
-                                             "/0/3d/rot_y");
-    if (gwy_container_contains_by_name(data, "/0/3d/view_scale_max"))
-        gwy3dview->view_scale_max = (GLfloat)(
-            gwy_container_get_double_by_name(data,
-                                             "/0/3d/view_scale_max"));
-    if (gwy_container_contains_by_name(data, "/0/3d/view_scale_min"))
-        gwy3dview->view_scale_min = (GLfloat)(
-            gwy_container_get_double_by_name(data,
-                                             "/0/3d/view_scale_min"));
-    if (gwy_container_contains_by_name(data, "/0/3d/view_scale"))
-        gwy3dview->view_scale->value =
-            gwy_container_get_double_by_name(data,
-                                             "/0/3d/view_scale");
-    if (gwy_container_contains_by_name(data, "/0/3d/deformation_z"))
-        gwy3dview->deformation_z->value =
-            gwy_container_get_double_by_name(data,
-                                             "/0/3d/deformation_z");
-    if (gwy_container_contains_by_name(data, "/0/3d/light_z"))
-        gwy3dview->light_z->value =
-            gwy_container_get_double_by_name(data,
-                                             "/0/3d/light_z");
-    if (gwy_container_contains_by_name(data, "/0/3d/light_y"))
-        gwy3dview->light_y->value =
-            gwy_container_get_double_by_name(data,
-                                             "/0/3d/light_y");
-    if (gwy_container_contains_by_name(data, "/0/3d/ortho"))
-        gwy3dview->orthogonal_projection =
-            gwy_container_get_boolean_by_name(data,
-                                              "/0/3d/view_scale_max");
-    if (gwy_container_contains_by_name(data, "/0/3d/show_axes"))
-        gwy3dview->show_axes =
-            gwy_container_get_boolean_by_name(data,
-                                              "/0/3d/show_axes");
-    if (gwy_container_contains_by_name(data, "/0/3d/show_labels"))
-        gwy3dview->show_labels =
-            gwy_container_get_boolean_by_name(data,
-                                              "/0/3d/show_labels");
-    if (gwy_container_contains_by_name(data, "/0/3d/enable_lights"))
-        gwy3dview->enable_lights =
-            gwy_container_get_boolean_by_name(data,
-                                              "/0/3d/enable_lights");
-    if (gwy_container_contains_by_name(data, "/0/3d/material"))
-    {
-        gchar * material_name =
-            gwy_container_get_string_by_name(data,
-                                             "/0/3d/maetrial");
+    gwy_container_gis_int32_by_name(data, "/0/3d/reduced_size",
+                                    &gwy3dview->reduced_size);
+    gwy_container_gis_double_by_name(data, "/0/3d/rot_x",
+                                     &gwy3dview->rot_x->value);
+    gwy_container_gis_double_by_name(data, "/0/3d/rot_y",
+                                     &gwy3dview->rot_y->value);
+    if (gwy_container_gis_double_by_name(data, "/0/3d/view_scale_max", &x))
+        gwy3dview->view_scale_max = x;
+    if (gwy_container_gis_double_by_name(data, "/0/3d/view_scale_min", &x))
+        gwy3dview->view_scale_min = x;
+    gwy_container_gis_double_by_name(data, "/0/3d/view_scale",
+                                     &gwy3dview->view_scale->value);
+    gwy_container_gis_double_by_name(data, "/0/3d/deformation_z",
+                                     &gwy3dview->deformation_z->value);
+    gwy_container_gis_double_by_name(data, "/0/3d/light_z",
+                                     &gwy3dview->light_z->value);
+    gwy_container_gis_double_by_name(data, "/0/3d/light_y",
+                                     &gwy3dview->light_y->value);
+    gwy_container_gis_boolean_by_name(data, "/0/3d/orthogonal_projection",
+                                      &gwy3dview->orthogonal_projection);
+    gwy_container_gis_boolean_by_name(data, "/0/3d/show_axes",
+                                      &gwy3dview->show_axes);
+    gwy_container_gis_boolean_by_name(data, "/0/3d/show_labels",
+                                      &gwy3dview->show_labels);
+    gwy_container_gis_boolean_by_name(data, "/0/3d/enable_lights",
+                                      &gwy3dview->enable_lights);
+    if (gwy_container_gis_string_by_name(data, "/0/3d/material",
+                                         &material_name)) {
+        gwy_object_unref(gwy3dview->mat_current);
         gwy3dview->mat_current = gwy_gl_material_get_by_name(material_name);
     }
+
+    /* should be always true */
     if (gwy3dview->data != NULL)
     {
         guint rx, ry;
@@ -381,17 +345,18 @@ gwy_3d_view_new(GwyContainer *data)
                                  TRUE,
                                  GDK_GL_RGBA_TYPE);
     g_signal_connect(gwy3dview->rot_x, "value-changed",
-                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+                     G_CALLBACK(gwy_3d_adjustment_value_changed), gwy3dview);
     g_signal_connect(gwy3dview->rot_y, "value-changed",
-                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+                     G_CALLBACK(gwy_3d_adjustment_value_changed), gwy3dview);
     g_signal_connect(gwy3dview->view_scale, "value-changed",
-                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+                     G_CALLBACK(gwy_3d_adjustment_value_changed), gwy3dview);
     g_signal_connect(gwy3dview->deformation_z, "value-changed",
-                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+                     G_CALLBACK(gwy_3d_adjustment_value_changed), gwy3dview);
     g_signal_connect(gwy3dview->light_z, "value-changed",
-                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+                     G_CALLBACK(gwy_3d_adjustment_value_changed), gwy3dview);
     g_signal_connect(gwy3dview->light_y, "value-changed",
-                     gwy_3d_adjustment_value_changed, (gpointer)gwy3dview);
+                     G_CALLBACK(gwy_3d_adjustment_value_changed), gwy3dview);
+
     return widget;
 }
 
@@ -410,12 +375,12 @@ gwy_3d_view_finalize(GObject *object)
     gwy_object_unref(gwy3dview->data);
     gwy_object_unref(gwy3dview->downsampled);
     gwy_object_unref(gwy3dview->container);
-    gtk_object_unref(GTK_OBJECT(gwy3dview->rot_x));
-    gtk_object_unref(GTK_OBJECT(gwy3dview->rot_y));
-    gtk_object_unref(GTK_OBJECT(gwy3dview->view_scale));
-    gtk_object_unref(GTK_OBJECT(gwy3dview->deformation_z));
-    gtk_object_unref(GTK_OBJECT(gwy3dview->light_z));
-    gtk_object_unref(GTK_OBJECT(gwy3dview->light_y));
+    gwy_object_unref(gwy3dview->rot_x);
+    gwy_object_unref(gwy3dview->rot_y);
+    gwy_object_unref(gwy3dview->view_scale);
+    gwy_object_unref(gwy3dview->deformation_z);
+    gwy_object_unref(gwy3dview->light_z);
+    gwy_object_unref(gwy3dview->light_y);
 
     if (gwy3dview->shape_list_base >= 0)
     {
@@ -479,7 +444,7 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
 {
     gboolean update_data = FALSE;
     gboolean update_palette = FALSE;
-    const gchar * palette_name = NULL;
+    const guchar *palette_name = NULL;
 
     gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
@@ -495,38 +460,29 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
         {
             gwy_object_unref(gwy3dview->data);
             gwy3dview->data = data;
-            g_object_ref(G_OBJECT(gwy3dview->data));
+            g_object_ref(gwy3dview->data);
             update_data = TRUE;
         }
     }
 
-    if (gwy_container_contains_by_name(gwy3dview->container, "/0/3d/palette"))
-        palette_name = gwy_container_get_string_by_name(
-                            gwy3dview->container, "/0/3d/palette");
-    else if (gwy_container_contains_by_name(gwy3dview->container,
-                                            "/0/base/palette"))
-    {
-        palette_name = gwy_container_get_string_by_name(
-                            gwy3dview->container, "/0/base/palette");
-        gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
-                                         g_strdup(palette_name));
-    }
-    else
-    {
-        palette_name =  g_strdup(GWY_PALETTE_YELLOW);
+    if (!gwy_container_gis_string_by_name(gwy3dview->container, "/0/3d/palette",
+                                          &palette_name)) {
+        if (!gwy_container_gis_string_by_name(gwy3dview->container,
+                                              "/0/base/palette",
+                                              &palette_name))
+            palette_name = GWY_PALETTE_GRAY;
         gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
                                          g_strdup(palette_name));
     }
     if (strcmp(palette_name,
-               gwy_palette_def_get_name(gwy_palette_get_palette_def(gwy3dview->palette)))
-         == 0)
-    {
+               gwy_palette_def_get_name(gwy_palette_get_palette_def
+                                                      (gwy3dview->palette)))) {
         gwy_palette_set_by_name(gwy3dview->palette, palette_name);
         update_palette = TRUE;
     }
 
-    if (update_data == TRUE)
-    {   /* make the dowsampled preview */
+    if (update_data == TRUE) {
+        /* make the dowsampled preview */
         guint rx, ry;
 
         gwy_object_unref(gwy3dview->downsampled);
