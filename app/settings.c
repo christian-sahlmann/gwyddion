@@ -26,8 +26,6 @@
 #include <libgwyddion/gwyserializable.h>
 #include "settings.h"
 
-static void gwy_app_set_defaults (GwyContainer *settings);
-
 static GwyContainer *gwy_settings = NULL;
 
 GwyContainer*
@@ -37,7 +35,6 @@ gwy_app_settings_get(void)
         g_warning("No settings loaded, creating empty");
         gwy_settings = GWY_CONTAINER(gwy_container_new());
     }
-    gwy_app_set_defaults(gwy_settings);
 
     return gwy_settings;
 }
@@ -115,26 +112,8 @@ gwy_app_settings_load(const gchar *filename)
     }
     gwy_app_settings_free();
     gwy_settings = new_settings;
-    gwy_app_set_defaults(gwy_settings);
 
     return TRUE;
-}
-
-static void
-gwy_app_set_defaults(GwyContainer *settings)
-{
-    g_return_if_fail(GWY_IS_CONTAINER(settings));
-
-    if (!gwy_container_contains_by_name(settings, "/app/plugindir")) {
-        gchar *p;
-
-#ifdef G_OS_WIN32
-        p = gwy_find_self_dir("plugins");
-#else
-        p = g_strdup(GWY_PLUGIN_DIR);
-#endif
-        gwy_container_set_string_by_name(settings, "/app/plugindir", p);
-    }
 }
 
 gchar**

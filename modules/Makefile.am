@@ -19,7 +19,7 @@ plugin_proxy_so_SOURCES = plugin-proxy.c
 plugin_proxy_so_LDFLAGS = $(module_ldflags),plugin-proxy.so
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\" -DGWY_PLUGIN_DIR=\"$(gwyplugindir)\"
 
 clean-local:
 	rm -f core.* *~

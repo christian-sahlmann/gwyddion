@@ -59,7 +59,7 @@ gwyddion_LDADD = libgwyapp.la \
 	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\"  -DGWY_PLUGIN_DIR=\"$(gwyplugindir)\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\"
+AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\"
 
 clean-local:
 	rm -f core.* *~

@@ -36,7 +36,6 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
 #include <app/file.h>
 #include <app/app.h>
 
@@ -159,12 +158,14 @@ static const GwyEnum file_op_names[] = {
 static gboolean
 module_register(const gchar *name)
 {
-    GwyContainer *settings;
-    const gchar *plugin_path;
+    gchar *plugin_path;
     gchar *dir;
 
-    settings = gwy_app_settings_get();
-    plugin_path = gwy_container_get_string_by_name(settings, "/app/plugindir");
+#ifdef G_OS_WIN32
+    plugin_path = gwy_find_self_dir("plugins");
+#else
+    plugin_path = g_strdup(GWY_PLUGIN_DIR);
+#endif
     g_return_val_if_fail(plugin_path, FALSE);
     gwy_debug("plug-in path is: %s", plugin_path);
 
@@ -175,6 +176,8 @@ module_register(const gchar *name)
     dir = g_build_filename(plugin_path, "file", NULL);
     file_plugins = register_plugins(NULL, dir, name, file_register_plugins);
     g_free(dir);
+
+    g_free(plugin_path);
 
     return TRUE;
 }
