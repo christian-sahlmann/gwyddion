@@ -88,6 +88,16 @@ gwy_math_humanize_numbers(gdouble unit,
         *precision = (min < mag) ? (gint)ceil(mag - min) : 0;
     }
 
+    /* prefer unscaled numbers (mag = 0), if feasible */
+    if (mag < 0 && maximum >= 1.0) {
+        *precision += -mag;
+        mag = 0;
+    }
+    else if (mag > 0 && mag <= 3.0 && mag - *precision <= 0) {
+        *precision -= mag;
+        mag = 0;
+    }
+
     return exp(G_LN10*mag);
 }
 
