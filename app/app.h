@@ -32,12 +32,12 @@ extern "C" {
 
 GwyContainer*   gwy_app_get_current_data          (void);
 GwyDataWindow*  gwy_app_data_window_get_current   (void);
-void            gwy_app_data_window_set_current   (GwyDataWindow *data_window);
-void            gwy_app_data_window_remove        (GwyDataWindow *data_window);
+void            gwy_app_data_window_set_current   (GwyDataWindow *window);
+void            gwy_app_data_window_remove        (GwyDataWindow *window);
 void            gwy_app_data_window_foreach       (GFunc func,
                                                    gpointer user_data);
 GtkWidget*      gwy_app_data_window_create        (GwyContainer *data);
-gint            gwy_app_data_window_set_untitled  (GwyDataWindow *data_window,
+gint            gwy_app_data_window_set_untitled  (GwyDataWindow *window,
                                                    const gchar *templ);
 void            gwy_app_data_view_update          (GtkWidget *data_view);
 void            gwy_app_undo_checkpoint           (GwyContainer *data,

@@ -405,10 +405,10 @@ gwy_app_data_view_update(GtkWidget *data_view)
 
 /**
  * gwy_app_data_window_set_untitled:
- * @data_window: A data window.
+ * @window: A data window.
  * @templ: A title template string.
  *
- * Clears any file name for @data_window and sets its "/filename/untitled"
+ * Clears any file name for @window and sets its "/filename/untitled"
  * data.
  *
  * The template tring @templ can be either %NULL, the window then gets a
@@ -419,14 +419,14 @@ gwy_app_data_view_update(GtkWidget *data_view)
  * Returns: The number that will appear in the title (probably useless).
  **/
 gint
-gwy_app_data_window_set_untitled(GwyDataWindow *data_window,
+gwy_app_data_window_set_untitled(GwyDataWindow *window,
                                  const gchar *templ)
 {
     GtkWidget *data_view;
     GwyContainer *data;
     gchar *title, *p;
 
-    data_view = gwy_data_window_get_data_view(data_window);
+    data_view = gwy_data_window_get_data_view(window);
     data = GWY_CONTAINER(gwy_data_view_get_data(GWY_DATA_VIEW(data_view)));
     gwy_container_remove_by_prefix(data, "/filename");
     untitled_no++;
@@ -447,7 +447,7 @@ gwy_app_data_window_set_untitled(GwyDataWindow *data_window,
         }
     }
     gwy_container_set_string_by_name(data, "/filename/untitled", title);
-    gwy_data_window_update_title(data_window);
+    gwy_data_window_update_title(window);
 
     return untitled_no;
 }
