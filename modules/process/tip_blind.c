@@ -388,16 +388,41 @@ tip_blind_dialog_update_values(TipBlindControls *controls, TipBlindArgs *args)
 static void
 reset(TipBlindControls *controls, TipBlindArgs *args)
 {
+    GwyDataField *tipfield;
+    
+    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
+    gwy_data_field_fill(tipfield, 0);
+
+    tip_update(controls, args);
+    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
 static void
 partial(TipBlindControls *controls, TipBlindArgs *args)
 {
+    GwyDataField *tipfield, *surface;
+
+    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
+    surface = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->surface, "/0/data"));
+
+    tipfield = gwy_tip_estimate_partial(tipfield, surface, args->thresh, args->use_boundaries);
+
+    tip_update(controls, args);
+    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
 static void
 full(TipBlindControls *controls, TipBlindArgs *args)
 {
+    GwyDataField *tipfield, *surface;
+
+    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
+    surface = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->surface, "/0/data"));
+
+    tipfield = gwy_tip_estimate_full(tipfield, surface, args->thresh, args->use_boundaries);
+
+    tip_update(controls, args);
+    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
 static void
