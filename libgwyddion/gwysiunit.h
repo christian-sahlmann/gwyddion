@@ -21,11 +21,11 @@
 #ifndef __GWY_SI_UNIT_H__
 #define __GWY_SI_UNIT_H__
 
-G_BEGIN_DECLS
-
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwyserializable.h>
+
+G_BEGIN_DECLS
 
 #define GWY_TYPE_SI_UNIT                  (gwy_si_unit_get_type())
 #define GWY_SI_UNIT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SI_UNIT, GwySIUnit))
