@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -45,6 +46,10 @@
 static void       setup_sensitivity_keys       (void);
 static void       gwy_menu_set_flags_recursive (GtkWidget *widget,
                                                 GwyMenuSensitiveData *data);
+static void       gwy_menu_set_sensitive_array (GtkItemFactory *item_factory,
+                                                const gchar *root,
+                                                const gchar **items,
+                                                guint flags);
 static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 gint nitems,
                                                 const gchar *root_path,
@@ -111,10 +116,10 @@ gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
     static GtkItemFactoryEntry menu_items[] = {
         { "/E_xterns", NULL, NULL, 0, "<Branch>", NULL },
         { "/Externs/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/Externs/Module browser...", NULL, gwy_module_browser, 0, "<Item>", NULL },
-        { "/Externs/Metadata browser...", NULL, gwy_app_meta_browser, 0, "<Item>", NULL },
+        { "/Externs/Module browser", NULL, gwy_module_browser, 0, "<Item>", NULL },
+        { "/Externs/Metadata browser", NULL, gwy_app_meta_browser, 0, "<Item>", NULL },
         { "/Externs/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/Externs/About...", NULL, gwy_app_about, 0, "<Item>", NULL },
+        { "/Externs/About", NULL, gwy_app_about, 0, "<Item>", NULL },
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;
@@ -124,7 +129,7 @@ gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
     menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
                                         "<xtns>", accel_group, &item_factory);
     item = gtk_item_factory_get_item(item_factory,
-                                     "<xtns>/Externs/Metadata browser...");
+                                     "<xtns>/Externs/Metadata browser");
     set_sensitive(item, sens_data.flags);
     gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
@@ -137,16 +142,19 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     static GtkItemFactoryEntry menu_items1[] = {
         { "/_File", NULL, NULL, 0, "<Branch>", NULL },
         { "/File/---", NULL, NULL, 0, "<Tearoff>", NULL },
-        { "/File/_Open...", "<control>O", gwy_app_file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
+        { "/File/_Open", "<control>O", gwy_app_file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
         { "/File/_Save", "<control>S", gwy_app_file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
-        { "/File/Save _As...", "<control><shift>S", gwy_app_file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
+        { "/File/Save _As", "<control><shift>S", gwy_app_file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
     };
     static GtkItemFactoryEntry menu_items2[] = {
         { "/File/_Close", "<control>W", gwy_app_file_close_cb, 0, "<StockItem>", GTK_STOCK_CLOSE },
         { "/File/Open _Recent", NULL, NULL, 0, "<Branch>", NULL },
         { "/File/Open Recent/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/File/_Quit...", "<control>Q", destroy_app_window, 0, "<StockItem>", GTK_STOCK_QUIT },
+        { "/File/_Quit", "<control>Q", destroy_app_window, 0, "<StockItem>", GTK_STOCK_QUIT },
+    };
+    static const gchar *items_need_data[] = {
+        "/File/Save", "/File/Save As", "/File/Close", NULL
     };
     GtkItemFactory *item_factory;
     GtkWidget *alignment, *menu, *item;
@@ -168,16 +176,10 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
 
     /* set up sensitivity  */
     setup_sensitivity_keys();
-    item = gtk_item_factory_get_item(item_factory, "<file>/File/Save");
-    set_sensitive(item, sens_data.flags);
-    item = gtk_item_factory_get_item(item_factory, "<file>/File/Save As...");
-    set_sensitive(item, sens_data.flags);
-    item = gtk_item_factory_get_item(item_factory, "<file>/File/Close");
-    set_sensitive(item, sens_data.flags);
-
+    gwy_menu_set_sensitive_array(item_factory, "file", items_need_data,
+                                 sens_data.flags);
     item = gtk_item_factory_get_item(item_factory, "<file>/File/Export To");
     gwy_menu_set_flags_recursive(item, &sens_data);
-
     gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
     recent_files_menu = gtk_item_factory_get_widget(item_factory,
@@ -194,11 +196,17 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
         { "/Edit/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/Edit/_Undo", "<control>Z", gwy_app_undo_undo, 0, "<StockItem>", GTK_STOCK_UNDO },
         { "/Edit/_Redo", "<control>R", gwy_app_undo_redo, 0, "<StockItem>", GTK_STOCK_REDO },
-        { "/Edit/_Duplicate", "<control>D", gwy_app_file_duplicate_cb, 0, NULL, NULL },
+        { "/Edit/_Duplicate", "<control>D", gwy_app_file_duplicate_cb, 0, "<StockItem>", GTK_STOCK_COPY },
         { "/Edit/Data _Arithmetic", NULL, gwy_app_data_arith, 0, NULL, NULL },
         { "/Edit/---", NULL, NULL, 0, "<Separator>", NULL },
         { "/Edit/Remove _Mask", NULL, gwy_app_kill_mask_cb, 0, NULL, NULL },
         { "/Edit/Remove _Presentation", NULL, gwy_app_kill_show_cb, 0, NULL, NULL },
+        { "/Edit/Change Mask _Color", NULL, gwy_app_change_mask_color_cb, 0, NULL, NULL },
+    };
+    static const gchar *items_need_data[] = {
+        "/Edit/Duplicate", "/Edit/Data Arithmetic",
+        "/Edit/Remove Mask", "/Edit/Remove Presentation",
+        "/Edit/Change Mask Color", NULL
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;
@@ -209,14 +217,12 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
 
     /* set up sensitivity  */
     setup_sensitivity_keys();
-    item = gtk_item_factory_get_item(item_factory, "<edit>/Edit/Duplicate");
-    set_sensitive(item, GWY_MENU_FLAG_DATA);
     item = gtk_item_factory_get_item(item_factory, "<edit>/Edit/Undo");
     set_sensitive(item, GWY_MENU_FLAG_UNDO);
     item = gtk_item_factory_get_item(item_factory, "<edit>/Edit/Redo");
     set_sensitive(item, GWY_MENU_FLAG_REDO);
-    item = gtk_item_factory_get_item(item_factory, "<edit>/Edit/Data Arithmetic");
-    set_sensitive(item, GWY_MENU_FLAG_DATA);
+    gwy_menu_set_sensitive_array(item_factory, "edit", items_need_data,
+                                 GWY_MENU_FLAG_DATA);
     sens_data.flags = GWY_MENU_FLAG_DATA
                       | GWY_MENU_FLAG_REDO
                       | GWY_MENU_FLAG_UNDO;
@@ -224,6 +230,40 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
     gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
     return menu;
+}
+
+static void
+gwy_menu_set_sensitive_array(GtkItemFactory *item_factory,
+                             const gchar *root,
+                             const gchar **items,
+                             guint flags)
+{
+    GtkWidget *item;
+    gsize i, len, maxlen;
+    gchar *path;
+
+    g_return_if_fail(GTK_IS_ITEM_FACTORY(item_factory));
+    g_return_if_fail(root);
+    g_return_if_fail(items);
+
+    maxlen = 0;
+    for (i = 0; items[i]; i++) {
+        len = strlen(items[i]);
+        if (len > maxlen)
+            maxlen = len;
+    }
+
+    len = strlen(root);
+    path = g_new(gchar, maxlen + len + 3);
+    strcpy(path + 1, root);
+    path[0] = '<';
+    path[len+1] = '>';
+    for (i = 0; items[i]; i++) {
+        strcpy(path + len + 2, items[i]);
+        item = gtk_item_factory_get_item(item_factory, path);
+        set_sensitive(item, flags);
+    }
+    g_free(path);
 }
 
 void
@@ -407,7 +447,7 @@ gwy_app_kill_show_cb(void)
     if (gwy_container_contains_by_name(data, "/0/show")) {
         gwy_app_undo_checkpoint(data, "/0/show");
         gwy_container_remove_by_name(data, "/0/show");
-        gwy_data_view_update(data_view);
+        gwy_data_view_update(GWY_DATA_VIEW(data_view));
     }
 }
 

@@ -742,4 +742,9 @@ gwy_app_clean_up_data(GwyContainer *data)
     gwy_container_remove_by_prefix(data, "/0/select");
 }
 
+void
+gwy_app_change_mask_color_cb(void)
+{
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

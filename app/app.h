@@ -45,6 +45,7 @@ void            gwy_app_undo_checkpoint           (GwyContainer *data,
                                                    const gchar *what);
 void            gwy_app_undo_undo                 (void);
 void            gwy_app_undo_redo                 (void);
+void            gwy_app_change_mask_color_cb      (void);
 
 /* FIXME: ugly. to be moved somewhere? refactored? */
 void       gwy_app_clean_up_data            (GwyContainer *data);
