@@ -105,7 +105,7 @@ rotate_datafield(GwyDataField *dfield,
                  RotateArgs *args)
 {
     gint xres, yres, xborder, yborder;
-    gdouble xreal, yreal, phi;
+    gdouble xreal, yreal, phi, min;
     GwyDataField *df;
 
     if (!args->expand) {
@@ -117,13 +117,15 @@ rotate_datafield(GwyDataField *dfield,
     yres = gwy_data_field_get_yres(dfield);
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
+    min = gwy_data_field_get_min(dfield);
     phi = G_PI/180.0*args->angle;
     xborder = fabs(xres/2.0 * cos(phi)) + fabs(yres/2.0 * sin(phi));
     xborder -= xres/2;
     yborder = fabs(yres/2.0 * cos(phi)) + fabs(xres/2.0 * sin(phi));
     yborder -= yres/2;
     df = GWY_DATA_FIELD(gwy_data_field_new(xres + 2*xborder, yres + 2*yborder,
-                                           1.0, 1.0, TRUE));
+                                           1.0, 1.0, FALSE));
+    gwy_data_field_fill(df, min);
     gwy_data_field_area_copy(dfield, df, 0, 0, xres, yres, xborder, yborder);
     gwy_data_field_rotate(df, args->angle, args->interp);
     gwy_data_field_resample(dfield, xres + 2*xborder, yres + 2*yborder,
