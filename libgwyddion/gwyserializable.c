@@ -295,6 +295,9 @@ gwy_serializable_clone(GObject *source,
 
     g_return_if_fail(GWY_IS_SERIALIZABLE(source));
     g_return_if_fail(GWY_IS_SERIALIZABLE(copy));
+    if (source == copy)
+        return;
+
     source_type = G_TYPE_FROM_INSTANCE(source);
     copy_type = G_TYPE_FROM_INSTANCE(copy);
     g_return_if_fail(g_type_is_a(copy_type, source_type));
