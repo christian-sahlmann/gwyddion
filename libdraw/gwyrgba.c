@@ -137,7 +137,8 @@ gwy_rgba_from_gdk_color(GwyRGBA *rgba,
 /**
  * gwy_rgba_from_gdk_color_and_alpha:
  * @rgba: A #GwyRGBA.
- * @alpha: Gdk 16bit opacity value.
+ * @gdkcolor: A #GdkColor.
+ * @gdkalpha: Gdk 16bit opacity value.
  *
  * Converts a Gdk color plus an opacity value to a rgba.
  **/

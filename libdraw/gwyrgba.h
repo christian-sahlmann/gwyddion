@@ -38,8 +38,8 @@ struct _GwyRGBA {
 };
 
 GType         gwy_rgba_get_type                 (void) G_GNUC_CONST;
-GwyRGBA*      gwy_rgba_copy                     (const GwyRGBA *color);
-void          gwy_rgba_free                     (GwyRGBA *color);
+GwyRGBA*      gwy_rgba_copy                     (const GwyRGBA *rgba);
+void          gwy_rgba_free                     (GwyRGBA *rgba);
 void          gwy_rgba_to_gdk_color             (GwyRGBA *rgba,
                                                  GdkColor *gdkcolor);
 guint16       gwy_rgba_to_gdk_alpha             (GwyRGBA *rgba);
