@@ -24,6 +24,7 @@
 /* FIXME: memory.h???
  * probably should be replaced with string.h and/or stdlib.h */
 #include <memory.h>
+#include <math.h>
 #include "morph_lib.h"
 
 /* The following routines allow allocation and freeing of matrices */
@@ -313,8 +314,10 @@ itip_estimate_iter(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
 
     gint count = 0;             /* counts places where tip estimate is improved */
 
+    printf("opening...\n");
     open = iopen(image, im_xsiz, im_ysiz, tip0, tip_xsiz, tip_ysiz);
 
+    printf("iterating...\n");
     for (jxp = tip_ysiz - 1 - yc; jxp <= im_ysiz - 1 - yc; jxp++) {
          for (ixp = tip_xsiz - 1 - xc; ixp <= im_xsiz - 1 - xc; ixp++) {
             if (image[jxp][ixp] - open[jxp][ixp] > thresh)
@@ -322,7 +325,9 @@ itip_estimate_iter(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                     (ixp, jxp, image, im_xsiz, im_ysiz, tip_xsiz, tip_ysiz, xc,
                      yc, tip0, thresh, use_edges))
                     count++;
+            printf(".\f");
         }
+        printf("%d \% \n", (gint)(100*(jxp -  (tip_ysiz - 1 - yc))/(im_ysiz - 1 - yc)-(tip_ysiz - 1 - yc)));
     }
 
     freematrix(open, im_ysiz);
@@ -347,6 +352,7 @@ itip_estimate0(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     gint count;
     gint delta;      /* defines what is meant by near neighborhood for purposes
                         of point selection. */
+    gint maxcount = 20;
     /* 
        We need to create temporary arrays to hold a list of selected
        image coordinates.  The space needed depends upon the image. This
@@ -434,7 +440,7 @@ itip_estimate0(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
         printf
             ("Finished iteration #%d. %d image locations produced refinement.\n",
              iter, count);
-    } while (count);
+    } while (count && count>maxcount);
 
     /* free temporary space */
     g_free(x);
@@ -548,6 +554,7 @@ itip_estimate_point(gint ixp, gint jxp, gdouble **image,
 
     if (use_edges)
     {
+        printf("edgeeeees!\n");
         /* Now handle the edges */
         for (jx = 0; jx < tip_ysiz; jx++) {
             for (ix = 0; ix < tip_xsiz; ix++) {
