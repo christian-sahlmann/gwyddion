@@ -200,7 +200,98 @@ gwy_data_field_filter_mean(GwyDataField *data_field,
                                     brcol-ulcol, brrow-ulrow);
 }
 
-/**
+void
+gwy_data_field_area_filter_canny(GwyDataField *data_field,
+                                     gint col, gint row,
+                                     gint width, gint height)
+{
+    GwyDataField *sobel_horizontal;
+    GwyDataField *sobel_vertical;
+    gint i, j, k;
+    gdouble angle;
+    gboolean pass;
+    gdouble threshold = 0;
+
+    sobel_horizontal = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                          data_field->yres,
+                                          data_field->xreal,
+                                          data_field->yreal,
+                                          FALSE));
+    sobel_vertical = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                          data_field->yres,
+                                          data_field->xreal,
+                                          data_field->yreal,
+                                          FALSE));
+    gwy_data_field_area_copy(data_field, sobel_horizontal,
+                             0, 0,
+                             data_field->xres,
+                             data_field->yres,
+                             0, 0);
+    gwy_data_field_area_copy(data_field, sobel_vertical,
+                             0, 0,
+                             data_field->xres,
+                             data_field->yres,
+                             0, 0);
+
+    gwy_data_field_area_filter_sobel(sobel_horizontal,
+                                     GTK_ORIENTATION_HORIZONTAL,
+                                     0, 0,
+                                     data_field->xres,
+                                     data_field->yres);
+    
+    gwy_data_field_area_filter_sobel(sobel_vertical,
+                                     GTK_ORIENTATION_VERTICAL,
+                                     0, 0,
+                                     data_field->xres,
+                                     data_field->yres);
+
+    for (k = 0; k < (data_field->xres*data_field->yres); k++)
+        data_field->data[k] = fabs(sobel_horizontal->data[k]) + fabs(sobel_vertical->data[k]);
+        
+ 
+    threshold = gwy_data_field_get_max(data_field)/10;
+    
+    for (i = 0; i < data_field->yres; i++)
+    {
+        for (j = 0; j < data_field->xres; j++)
+        {
+            pass = FALSE;
+            if (data_field->data[j + data_field->xres*i] > threshold 
+                && i>0 && j>0 && i < (data_field->yres - 1) 
+                && j < (data_field->xres - 1))
+            {
+                angle = atan2(sobel_vertical->data[j + data_field->xres*i],
+                              sobel_horizontal->data[j + data_field->xres*i]);
+
+                if (angle < 0.3925 || angle > 5.8875 || (angle > 2.7475 && angle < 3.5325))
+                {
+                    if (data_field->data[j + 1 + data_field->xres*i]>threshold)
+                        pass = TRUE;
+                }
+                else if ((angle > 1.178 && angle < 1.9632) || (angle > 4.318 && angle < 5.1049))
+                {
+                    if (data_field->data[j + 1 + data_field->xres*(i + 1)]>threshold)
+                        pass = TRUE;
+                }
+                else
+                {
+                    if (data_field->data[j + data_field->xres*(i + 1)]>threshold)
+                        pass = TRUE;
+                }
+            }
+                /*we do not need sobel array more, so use sobel_horizontal to store data results*/
+            if (pass) sobel_horizontal->data[j + data_field->xres*i] = 1;
+            else sobel_horizontal->data[j + data_field->xres*i] = 0;
+        }
+    }
+    /*result is now in sobel_horizontal field*/
+    gwy_data_field_area_copy(sobel_horizontal, data_field, 0, 0, data_field->xres, data_field->yres, 0, 0);
+
+    /*finally, we should thin the lines, however we will not do it now*/
+}
+
+
+ /**
  * gwy_data_field_area_filter_laplacian:
  * @data_field: A data field to apply mean filter to.
  * @col: Upper-left column coordinate.
@@ -617,5 +708,9 @@ gwy_data_field_filter_conservative(GwyDataField *data_field,
                                             ulcol, ulrow,
                                             brcol-ulcol, brrow-ulrow);
 }
+
+
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

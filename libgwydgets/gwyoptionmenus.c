@@ -737,9 +737,6 @@ gwy_option_menu_filter(GCallback callback,
         { N_("Mean value"),            GWY_FILTER_MEAN,  },
         { N_("Median value"),          GWY_FILTER_MEDIAN, },
         { N_("Conservative denoise"),  GWY_FILTER_CONSERVATIVE, },
-        { N_("Laplacian"),             GWY_FILTER_LAPLACIAN, },
-        { N_("Sobel gradient"),        GWY_FILTER_SOBEL, },
-        { N_("Prewitt gradient"),      GWY_FILTER_PREWITT, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
