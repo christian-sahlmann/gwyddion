@@ -707,4 +707,47 @@ zoomed_cb(GtkWidget *widget)
     gtk_widget_queue_draw(GTK_WIDGET(graph));
 }
 
+/**
+ * gwy_graph_get_data:
+ * @graph: graph widget 
+ * @xval: x data points
+ * @yval: y data points
+ * @nofvals: number of data points
+ * @curve: curve to be extracted
+ *
+ * Extracts data of a curve.
+ **/
+void 
+gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curve)
+{
+    GwyGraphAreaCurve *pcurve;
+    gint i;
+    pcurve = g_ptr_array_index (graph->area->curves, curve);
+    
+    for (i=0; i<pcurve->data.N; i++)
+    {
+        xval[i] = pcurve->data.xvals[i];
+        yval[i] = pcurve->data.yvals[i];
+    }
+}
+
+gint
+gwy_graph_get_data_size(GwyGraph *graph, gint curve)
+{
+    GwyGraphAreaCurve *pcurve;
+    pcurve = g_ptr_array_index (graph->area->curves, curve);
+    return pcurve->data.N;
+}
+
+/**
+ * gwy_graph_get_number_of_curves:
+ * @graph: graph widget 
+ *
+ * Returns total number of curves within graph widget
+ **/
+gint
+gwy_graph_get_number_of_curves(GwyGraph *graph)
+{
+    return graph->n_of_curves;
+}
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

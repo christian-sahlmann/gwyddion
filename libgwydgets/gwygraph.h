@@ -135,6 +135,10 @@ void gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdo
 
 void gwy_graph_unzoom(GwyGraph *graph);
 
+void gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curve);
+gint gwy_graph_get_data_size(GwyGraph *graph, gint curve);
+gint gwy_graph_get_number_of_curves(GwyGraph *graph);
+
 G_END_DECLS
 
 #endif /* __GWY_GRADSPHERE_H__ */
