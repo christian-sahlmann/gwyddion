@@ -23,6 +23,16 @@
 #include <libgwydgets/gwystock.h>
 #include "app.h"
 
+static const gchar *core_developers[] = {
+    "David Nečas (Yeti)",
+    "Petr Klapetek",
+};
+
+static const gchar *developers[] = {
+    "Martin Šiler",
+    "Jindřich Bílek",
+};
+
 static void about_close    (void);
 
 static GtkWidget *about = NULL;
@@ -32,6 +42,8 @@ gwy_app_about(void)
 {
     GtkWidget *vbox, *hbox, *widget, *credits;
     gchar *s, *s2;
+    GString *str;
+    gint i;
 
     if (about) {
         gtk_window_present(GTK_WINDOW(about));
@@ -99,20 +111,23 @@ gwy_app_about(void)
     gtk_box_pack_start(GTK_BOX(vbox), credits, TRUE, TRUE, 0);
 
     widget = gtk_label_new(NULL);
-    s = g_strdup_printf(_("<b>Core developers</b>\n"
-                          "David Nečas (Yeti)\n"
-                          "Petr Klapetek\n"
-                          "\n"
-                          "<b>Developers</b>\n"
-                          "Martin Šiler\n"
-                          "Jindřich Bílek\n"
-                          "\n"
-                          "%s development is supported by "
+    str = g_string_new(_("<b>Core developers</b>\n"));
+    for (i = 0; i < G_N_ELEMENTS(core_developers); i++) {
+        g_string_append(str, core_developers[i]);
+        g_string_append_c(str, '\n');
+    }
+    g_string_append_c(str, '\n');
+    g_string_append(str, _("<b>Developers</b>\n"));
+    for (i = 0; i < G_N_ELEMENTS(developers); i++) {
+        g_string_append(str, developers[i]);
+        g_string_append_c(str, '\n');
+    }
+    g_string_append_c(str, '\n');
+    g_string_append(str, _("Development is supported by "
                           "the Czech Metrology Insitute "
-                          "(<i>http://www.cmi.cz/</i>).\n"),
-                          g_get_application_name());
-    gtk_label_set_markup(GTK_LABEL(widget), s);
-    g_free(s);
+                          "(<i>http://www.cmi.cz/</i>).\n"));
+    gtk_label_set_markup(GTK_LABEL(widget), str->str);
+    g_string_free(str, TRUE);
     gtk_label_set_line_wrap(GTK_LABEL(widget), TRUE);
     gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(credits),
