@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Type=MimeType
+Name=Gwyddion data
+#Icon=FIXME
+Comment=Gwyddion native data file
+MimeType=application/x-gwyddion
+Patterns=*.gwy
+DefaultApp=gwyddion

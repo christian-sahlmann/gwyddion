@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Type=Application
+Name=Gwyddion
+Comment=Gwyddion SPM data analysis
+TryExec=gwyddion
+Exec=gwyddion %F
+#Icon=FIXME
+MimeType=application/x-gwyddion
+Terminal=false
+Categories=Application;GTK;Physics;Science;
