@@ -481,7 +481,7 @@ gwy_palette_setup_predef(GwyPalette *a, gint pal)
 	gwy_palette_def_set_color(a->def, &cval);
     }
 
-    else if (pal == GWY_PALETTE_BW)
+    else if (pal == GWY_PALETTE_BW1)
     {
 	for (i=0; i<10; i++)
 	{
@@ -491,8 +491,31 @@ gwy_palette_setup_predef(GwyPalette *a, gint pal)
 	    gwy_palette_def_set_color(a->def, &cval);
 	}
     }
-
-    else if (pal == GWY_PALETTE_RAINBOW)
+    else if (pal == GWY_PALETTE_BW2)
+    {
+	for (i=0; i<10; i++)
+	{
+	    if (i%2==0) 
+	    {
+		cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255;
+		cval.x = (gdouble)i*(256/10.0);
+	        gwy_palette_def_set_color(a->def, &cval);
+		cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255;
+		cval.x = (gdouble)i*(256/10.0) + 0.1;
+		gwy_palette_def_set_color(a->def, &cval);
+	    }
+	    else 
+	    {
+		cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255;
+	        cval.x = (gdouble)i*(256/10.0);
+	        gwy_palette_def_set_color(a->def, &cval);
+		cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255;
+		cval.x = (gdouble)i*(256/10.0) + 0.1;
+		gwy_palette_def_set_color(a->def, &cval);
+	    }
+	}
+    }
+    else if (pal == GWY_PALETTE_RAINBOW1)
     {
 	cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 64;
 	gwy_palette_def_set_color(a->def, &cval);
@@ -510,8 +533,16 @@ gwy_palette_setup_predef(GwyPalette *a, gint pal)
 	gwy_palette_def_set_color(a->def, &cval);
  
     }
-
-
+    else if (pal == GWY_PALETTE_RAINBOW2)
+    {
+   	cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 128;
+	gwy_palette_def_set_color(a->def, &cval);
+	cval.color.r = 0; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 256;
+	gwy_palette_def_set_color(a->def, &cval);
+	cval.color.r = 0; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 384;
+	gwy_palette_def_set_color(a->def, &cval);
+ 
+    }
     else {g_warning("Palette not implemented yet."); return 1;}
    
     gwy_palette_def_sort(a->def);

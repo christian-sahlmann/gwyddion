@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
     g_message("preparing palette...");
   
-    gwy_palette_setup_predef(p, GWY_PALETTE_RAINBOW);
+    gwy_palette_setup_predef(p, GWY_PALETTE_BW2);
   
     /*gwy_palette_def_print(p->def);*/
    
@@ -43,15 +43,14 @@ int main(int argc, char *argv[])
     printf("%d %d %d %d\n", (gint32)p->ints[40], (gint32)p->ints[41], (gint32)p->ints[42], (gint32)p->ints[43]);
 
     /*plot a field in the given palette*/
-    a = (GwyDataField *) gwy_datafield_new(300, 300, 500, 500, 1);
+    a = (GwyDataField *) gwy_datafield_new(500, 250, 500, 500, 1);
     for (i=0; i<a->yres; i++)
     {
 	for (j=0; j<a->xres; j++)
 	{
-	    a->data[i + j*a->yres] = sin((gdouble)i*j*0.1/a->xres);
+	    a->data[i + j*a->yres] = sin((gdouble)i*i*0.08/a->xres) + cos((gdouble)j*j*0.07/a->xres);
 	}
     }
-    gwy_datafield_area_threshold(a, 150, 150, 200, 200, 0,  gwy_datafield_get_min(a), gwy_datafield_get_max(a));
     pxb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                   gwy_datafield_get_xres(a), gwy_datafield_get_yres(a));
  

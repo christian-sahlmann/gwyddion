@@ -15,8 +15,10 @@ extern "C" {
 #define GWY_PALETTE_YELLOW   4
 #define GWY_PALETTE_PINK     5
 #define GWY_PALETTE_OLIVE    6
-#define GWY_PALETTE_BW       7
-#define GWY_PALETTE_RAINBOW  8
+#define GWY_PALETTE_BW1      7
+#define GWY_PALETTE_BW2      8 
+#define GWY_PALETTE_RAINBOW1 9
+#define GWY_PALETTE_RAINBOW2 10
 
     
 #define GWY_TYPE_PALETTE                  (gwy_palette_get_type())
