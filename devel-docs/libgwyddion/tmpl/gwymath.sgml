@@ -126,3 +126,23 @@ fitter</link>
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_math_choleski_decompose ##### -->
+<para>
+
+</para>
+
+@n: 
+@matrix: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_choleski_solve ##### -->
+<para>
+
+</para>
+
+@n: 
+@decomp: 
+@rhs: 
+
+

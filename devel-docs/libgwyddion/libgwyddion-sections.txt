@@ -87,6 +87,7 @@ gwy_container_set_value
 gwy_container_set_value_by_name
 gwy_container_remove
 gwy_container_remove_by_prefix
+gwy_container_duplicate_by_prefix
 gwy_container_rename
 gwy_container_foreach
 gwy_container_set_boolean
@@ -173,6 +174,8 @@ gwy_math_find_nearest_point
 gwy_math_lin_solve
 gwy_math_lin_solve_rewrite
 gwy_math_fit_polynom
+gwy_math_choleski_decompose
+gwy_math_choleski_solve
 </SECTION>
 
 <SECTION>
@@ -193,6 +196,8 @@ gwy_find_self_set_argv0
 gwy_get_user_dir
 gwy_get_home_dir
 gwy_canonicalize_path
+gwy_sgettext
+gwy_setenv
 </SECTION>
 
 <SECTION>
@@ -262,6 +267,9 @@ gwy_math_nlfit_fit_preset
 
 <SECTION>
 <FILE>gwymacros</FILE>
+ENABLE_NLS
+gettext
+ngettext
 _
 N_
 gwy_object_unref

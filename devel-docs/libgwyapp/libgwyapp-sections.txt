@@ -40,6 +40,7 @@ gwy_app_clean_up_data
 GWY_UNITOOL_RESPONSE_UNSELECT
 GwyUnitoolUpdateType
 GwyUnitoolSlots
+GwyUnitoolRectLabels
 GwyUnitoolState
 GwyUnitoolFunc
 GwyUnitoolCreateFunc
@@ -55,6 +56,8 @@ gwy_unitool_get_z_average
 gwy_unitool_update_label
 gwy_unitool_update_label_no_units
 gwy_unitool_get_selection_or_all
+gwy_unitool_rect_info_table_setup
+gwy_unitool_rect_info_table_fill
 </SECTION>
 
 <SECTION>

@@ -177,6 +177,16 @@ thus has a string-key counterpart
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_duplicate_by_prefix ##### -->
+<para>
+
+</para>
+
+@container: 
+@Varargs: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_container_rename ##### -->
 <para>
 

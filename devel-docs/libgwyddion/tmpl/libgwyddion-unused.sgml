@@ -295,6 +295,13 @@ Emitted when value changes.
 
 @x: 
 
+<!-- ##### MACRO S_ ##### -->
+<para>
+
+</para>
+
+@x: 
+
 <!-- ##### USER_FUNCTION VYSTUP ##### -->
 <para>
 
@@ -661,6 +668,14 @@ Emitted when value changes.
 @n_par: 
 @b: 
 @run: 
+
+<!-- ##### FUNCTION sgettext ##### -->
+<para>
+
+</para>
+
+@msgid: 
+@Returns: 
 
 <!-- ##### VARIABLE sumr ##### -->
 <para>

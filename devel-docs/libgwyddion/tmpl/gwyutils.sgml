@@ -186,3 +186,23 @@ path manipulation
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_sgettext ##### -->
+<para>
+
+</para>
+
+@msgid: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_setenv ##### -->
+<para>
+
+</para>
+
+@variable: 
+@value: 
+@overwrite: 
+@Returns: 
+
+

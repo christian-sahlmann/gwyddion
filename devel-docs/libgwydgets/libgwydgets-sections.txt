@@ -602,6 +602,7 @@ GWY_3D_LABELS_CLASS
 GWY_IS_3D_LABELS_CLASS
 GWY_3D_LABELS_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwygradsphere</FILE>
 <TITLE>GwyGradSphere</TITLE>
@@ -692,6 +693,7 @@ GWY_VMENU_BAR_CLASS
 GWY_IS_VMENU_BAR_CLASS
 GWY_VMENU_BAR_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwygraph</FILE>
 GwyGraphAutoProperties
@@ -734,6 +736,7 @@ gwy_widgets_gl_init
 gwy_widgets_get_gl_config
 gwy_table_attach_spinbutton
 gwy_table_attach_row
+gwy_table_get_child_widget
 gwy_color_selector_for_mask
 gwy_dialog_prevent_delete_cb
 gwy_stock_like_button_new
@@ -780,7 +783,9 @@ GWY_STOCK_GRAPH_ZOOM_IN
 GWY_STOCK_GRAPH_ZOOM_OUT
 GWY_STOCK_GWYDDION
 GWY_STOCK_ITALIC
+GWY_STOCK_LESS
 GWY_STOCK_LIGHT_ROTATE
+GWY_STOCK_MORE
 GWY_STOCK_NONE
 GWY_STOCK_POINTER
 GWY_STOCK_POINTER_MEASURE

@@ -15,6 +15,21 @@ menu bar items are organized vertically.
 
 </para>
 
+<!-- ##### STRUCT GwyVMenuBar ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyVMenuBarClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_vmenu_bar_new ##### -->
 <para>
 

@@ -45,6 +45,29 @@ and $MAX). Other variables are ignored.
 @GWY_3D_VIEW_LABEL_MIN: 
 @GWY_3D_VIEW_LABEL_MAX: 
 
+<!-- ##### STRUCT Gwy3DLabels ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL Gwy3DLabels::label-changed ##### -->
+<para>
+
+</para>
+
+@gwy3dlabels: the object which received the signal.
+
+<!-- ##### STRUCT Gwy3DLabelsClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@label_changed: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_3d_labels_new ##### -->
 <para>
 

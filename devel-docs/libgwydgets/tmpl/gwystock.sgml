@@ -272,6 +272,18 @@ The "Italic" stock icon.
 <inlinegraphic fileref="gwy_italic-24.png" format="PNG"></inlinegraphic>
 </para>
 
+<para>
+Since: 1.6
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_LESS ##### -->
+<para>
+The "Less" stock icon.
+<inlinegraphic fileref="gwy_less-24.png" format="PNG"></inlinegraphic>
+</para>
+
 
 
 <!-- ##### MACRO GWY_STOCK_LIGHT_ROTATE ##### -->
@@ -282,6 +294,18 @@ The "Light-Rotate" stock icon.
 
 <para>
 Since: 1.5
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_MORE ##### -->
+<para>
+The "More" stock icon.
+<inlinegraphic fileref="gwy_more-24.png" format="PNG"></inlinegraphic>
+</para>
+
+<para>
+Since: 1.6
 </para>
 
 

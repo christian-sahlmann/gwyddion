@@ -43,6 +43,27 @@ Universal tool template.
 @apply: 
 @response: 
 
+<!-- ##### STRUCT GwyUnitoolRectLabels ##### -->
+<para>
+
+</para>
+
+@xreal: 
+@yreal: 
+@wreal: 
+@hreal: 
+@xpix: 
+@ypix: 
+@wpix: 
+@hpix: 
+@rwidget1: 
+@rwidget2: 
+@rwidget3: 
+@rwidget4: 
+@unselected_is_full: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### STRUCT GwyUnitoolState ##### -->
 <para>
 
@@ -193,5 +214,31 @@ Universal tool template.
 @xmax: 
 @ymax: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_unitool_rect_info_table_setup ##### -->
+<para>
+
+</para>
+
+@rinfo: 
+@table: 
+@col: 
+@row: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_unitool_rect_info_table_fill ##### -->
+<para>
+
+</para>
+
+@state: 
+@rinfo: 
+@selreal: 
+@selpix: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@unselected_is_full: 
 
 

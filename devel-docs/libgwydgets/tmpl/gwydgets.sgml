@@ -68,6 +68,17 @@ gwy_widgets_gl_init().
 @middle_widget: 
 
 
+<!-- ##### FUNCTION gwy_table_get_child_widget ##### -->
+<para>
+
+</para>
+
+@table: 
+@row: 
+@col: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_color_selector_for_mask ##### -->
 <para>
 
