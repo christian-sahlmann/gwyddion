@@ -318,7 +318,8 @@ gwy_sci_text_edited(GtkEntry *entry)
 
     gwy_debug("%s", __FUNCTION__);
 
-    sci_text = GWY_SCI_TEXT(gtk_widget_get_parent(GTK_WIDGET(entry)));
+    sci_text = GWY_SCI_TEXT(gtk_widget_get_ancestor(GTK_WIDGET(entry),
+                                                    GWY_TYPE_SCI_TEXT));
 
     utf8 = gwy_entities_text_to_utf8(gtk_entry_get_text(entry));
     if (pango_parse_markup(utf8, -1, 0, &attr_list, &text, NULL, &err))
@@ -337,8 +338,8 @@ gwy_sci_text_entity_selected(GtkEntry *entry)
     gint i, pos;
     gwy_debug("%s", __FUNCTION__);
 
-    sci_text = (GwySciText*)gtk_widget_get_parent(gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(entry))));
-    g_assert(GWY_IS_SCI_TEXT(sci_text));
+    sci_text = GWY_SCI_TEXT(gtk_widget_get_ancestor(GTK_WIDGET(entry),
+                                                    GWY_TYPE_SCI_TEXT));
 
     entity = g_string_new("");
 
@@ -367,7 +368,8 @@ gwy_sci_text_button_some_pressed(GtkButton *button, gpointer p)
 
     gwy_debug("%s: %p", __FUNCTION__, p);
     i = GPOINTER_TO_INT(p);
-    sci_text = (GwySciText*)gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(button)));
+    sci_text = GWY_SCI_TEXT(gtk_widget_get_ancestor(GTK_WIDGET(button),
+                                                    GWY_TYPE_SCI_TEXT));
     editable = GTK_EDITABLE(sci_text->entry);
     if (!gtk_editable_get_selection_bounds(editable, &start, &end)) {
         start = gtk_editable_get_position(editable);
