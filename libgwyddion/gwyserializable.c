@@ -453,7 +453,7 @@ gwy_serialize_pack(GByteArray *buffer,
 
     va_start(ap, templ);
     for (i = 0; i < nargs; i++) {
-        gwy_debug("<%c> %lu", templ[i], buffer->len);
+        gwy_debug("<%c> %u", templ[i], buffer->len);
         switch (templ[i]) {
             case 'b': {
                 char value = va_arg(ap, gboolean);  /* store it as char */
@@ -598,6 +598,7 @@ gwy_serialize_pack(GByteArray *buffer,
                         g_byte_array_append(buffer, s, strlen(s) + 1);
                 }
             }
+            break;
 
             case 'o': {
                 GObject *value = va_arg(ap, GObject*);
@@ -628,6 +629,7 @@ gwy_serialize_pack(GByteArray *buffer,
                         gwy_serializable_serialize(obj, buffer);
                 }
             }
+            break;
 
             default:
             g_error("wrong spec <%c> in templare <%s>", templ[i], templ);
@@ -651,13 +653,13 @@ gwy_serialize_pack_object_struct(GByteArray *buffer,
 {
     gsize before_obj;
 
-    gwy_debug("init size: %lu, buffer = %p", buffer ? buffer->len : 0, buffer);
+    gwy_debug("init size: %u, buffer = %p", buffer ? buffer->len : 0, buffer);
     buffer = gwy_serialize_pack(buffer, "si", object_name, 0);
     before_obj = buffer->len;
-    gwy_debug("+head size: %lu", buffer->len);
+    gwy_debug("+head size: %u", buffer->len);
 
     gwy_serialize_pack_struct(buffer, nspec, spec);
-    gwy_debug("+body size: %lu", buffer->len);
+    gwy_debug("+body size: %u", buffer->len);
     gwy_serialize_store_int32(buffer, before_obj - sizeof(guint32),
                               buffer->len - before_obj);
     return buffer;
@@ -689,7 +691,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
     gsize i, j;
 
     g_return_val_if_fail(spec, buffer);
-    gwy_debug("nspec = %d, buffer = %p", nspec, buffer);
+    gwy_debug("nspec = %d, buffer = %p, len = %u", nspec, buffer, buffer->len);
     if (!nspec)
         return buffer;
 
@@ -713,7 +715,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
         }
         g_byte_array_append(buffer, sp->name, strlen(sp->name) + 1);
         g_byte_array_append(buffer, &sp->ctype, 1);
-        gwy_debug("%d <%s> <%c> %lu", i, sp->name, sp->ctype, buffer->len);
+        gwy_debug("%d <%s> <%c> %u", i, sp->name, sp->ctype, buffer->len);
         switch (sp->ctype) {
             case 'b': {
                 /* store it as char */
@@ -819,6 +821,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
                         g_byte_array_append(buffer, value, strlen(value) + 1);
                 }
             }
+            break;
 
             case 'o': {
                 GObject *value = *(GObject**)sp->value;
@@ -830,6 +833,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
                 else
                     gwy_serializable_serialize(value, buffer);
             }
+            break;
 
             case 'O': {
                 g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
@@ -851,6 +855,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
             return buffer;
             break;
         }
+        gwy_debug("after: %u", buffer->len);
     }
 
     return buffer;
@@ -1861,7 +1866,8 @@ gwy_serialize_check_string(const guchar *buffer,
     const guchar *p;
 
     gwy_debug("<%s> buf = %p, size = %u, pos = %u",
-              compare_to ? compare_to : "(null)", buffer, size, position);
+              compare_to ? compare_to : (const guchar*)"(null)",
+              buffer, size, position);
     g_assert(buffer);
     g_assert(size > 0);
     g_return_val_if_fail(position < size, 0);
