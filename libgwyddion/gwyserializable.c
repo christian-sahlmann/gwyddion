@@ -864,6 +864,8 @@ gwy_serialize_unpack_struct(const guchar *buffer,
         a = sp->array_size;
         switch (ctype) {
             case 'o':
+            if (*(GObject**)p)
+                g_object_unref(*(GObject**)p);
             *(GObject**)p = gwy_serializable_deserialize(buffer, size,
                                                          &position);
             break;
@@ -947,13 +949,14 @@ gwy_serialize_unpack_boolean(const guchar *buffer,
 {
     gboolean value;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(guchar) <= size);
     value = buffer[*position];
     *position += sizeof(guchar);
 
+    gwy_debug("value = <%s>", value ? "TRUE" : "FALSE");
     return value;
 }
 
@@ -976,13 +979,14 @@ gwy_serialize_unpack_char(const guchar *buffer,
 {
     guchar value;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(guchar) <= size);
     value = buffer[*position];
     *position += sizeof(guchar);
 
+    gwy_debug("value = <%c>", value);
     return value;
 }
 
@@ -1007,13 +1011,14 @@ gwy_serialize_unpack_char_array(const guchar *buffer,
 {
     guchar *value;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(guchar) <= size);
     value = g_memdup(buffer + *position, *asize*sizeof(guchar));
     *position += *asize*sizeof(guchar);
 
+    gwy_debug("|value| = ", asize);
     return value;
 }
 
@@ -1036,13 +1041,14 @@ gwy_serialize_unpack_int32(const guchar *buffer,
 {
     gint32 value;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(gint32) <= size);
     memcpy(&value, buffer + *position, sizeof(gint32));
     *position += sizeof(gint32);
 
+    gwy_debug("value = <%d>", value);
     return value;
 }
 
@@ -1067,13 +1073,14 @@ gwy_serialize_unpack_int32_array(const guchar *buffer,
 {
     gint32 *value;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gint32) <= size);
     value = g_memdup(buffer + *position, *asize*sizeof(gint32));
     *position += *asize*sizeof(gint32);
 
+    gwy_debug("|value| = ", asize);
     return value;
 }
 
@@ -1096,13 +1103,14 @@ gwy_serialize_unpack_int64(const guchar *buffer,
 {
     gint64 value;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(gint64) <= size);
     memcpy(&value, buffer + *position, sizeof(gint64));
     *position += sizeof(gint64);
 
+    gwy_debug("value = <%lld>", value);
     return value;
 }
 
@@ -1127,13 +1135,14 @@ gwy_serialize_unpack_int64_array(const guchar *buffer,
 {
     gint64 *value;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gint64) <= size);
     value = g_memdup(buffer + *position, *asize*sizeof(gint64));
     *position += *asize*sizeof(gint64);
 
+    gwy_debug("|value| = ", asize);
     return value;
 }
 
@@ -1156,13 +1165,14 @@ gwy_serialize_unpack_double(const guchar *buffer,
 {
     gdouble value;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(gdouble) <= size);
     memcpy(&value, buffer + *position, sizeof(gdouble));
     *position += sizeof(gdouble);
 
+    gwy_debug("value = <%g>", value);
     return value;
 }
 
@@ -1187,13 +1197,14 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
 {
     gdouble *value;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gdouble) <= size);
     value = g_memdup(buffer + *position, *asize*sizeof(gdouble));
     *position += *asize*sizeof(gdouble);
 
+    gwy_debug("|value| = ", asize);
     return value;
 }
 
@@ -1217,7 +1228,7 @@ gwy_serialize_unpack_string(const guchar *buffer,
     guchar *value;
     const guchar *p;
 
-    gwy_debug("");
+    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position < size);
@@ -1226,6 +1237,7 @@ gwy_serialize_unpack_string(const guchar *buffer,
     value = g_strdup(buffer + *position);
     *position += (p - buffer) - *position + 1;
 
+    gwy_debug("value = <%s>", value);
     return value;
 }
 
@@ -1253,7 +1265,8 @@ gwy_serialize_check_string(const guchar *buffer,
 {
     const guchar *p;
 
-    gwy_debug("");
+    gwy_debug("<%s> buf = %p, size = %u, pos = %u",
+              compare_to, buffer, size, position);
     g_assert(buffer);
     g_assert(size > 0);
     g_assert(position < size);
@@ -1311,19 +1324,6 @@ gwy_serialize_check_string(const guchar *buffer,
  *
  * A structure containing information for one object/struct component
  * serialization or deserialization.
- **/
-
-/**
- * GWY_CONTAINER_PATHSEP:
- *
- * Path separator to be used for hierarchical structures in the container.
- **/
-
-/**
- * GWY_CONTAINER_PATHSEP_STR:
- *
- * Path separator to be used for hierarchical structures in the container,
- * as a string.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

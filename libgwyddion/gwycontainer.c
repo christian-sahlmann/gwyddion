@@ -1888,4 +1888,19 @@ value_changed(G_GNUC_UNUSED GwyContainer *container,
     gwy_debug("[%p] %s", container, g_quark_to_string(key));
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * GWY_CONTAINER_PATHSEP:
+ *
+ * Path separator to be used for hierarchical structures in the container.
+ **/
+
+/**
+ * GWY_CONTAINER_PATHSEP_STR:
+ *
+ * Path separator to be used for hierarchical structures in the container,
+ * as a string.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
