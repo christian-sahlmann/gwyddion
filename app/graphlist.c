@@ -20,6 +20,7 @@
 
 #define DEBUG 1
 #include <string.h>
+#include <stdlib.h>
 
 #include <libgwyddion/gwyddion.h>
 #include <libgwydgets/gwydgets.h>
@@ -31,6 +32,7 @@ enum {
     GRAPHLIST_VISIBLE,
     GRAPHLIST_TITLE,
     GRAPHLIST_NCURVES,
+    GRAPHLIST_ID,
     GRAPHLIST_LAST
 };
 
@@ -53,8 +55,10 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
                        GwyGraph *graph)
 {
     GwyContainer *data;
+    GtkListStore *store;
+    GtkTreeIter iter;
     GObject *gmodel;
-    GtkWidget *graph_view;
+    GtkWidget *graph_view, *list;
     gint32 lastid;
     gchar key[24];
 
@@ -80,10 +84,18 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
     gwy_container_set_object_by_name(data, key, gmodel);
     g_object_unref(gmodel);
 
-    if ((graph_view = g_object_get_data(G_OBJECT(data_window),
-                                        "gwy-app-graph-list-window"))) {
-        /* TODO: update the view */
-    }
+    if (!(graph_view = g_object_get_data(G_OBJECT(data_window),
+                                        "gwy-app-graph-list-window")))
+        return;
+
+    list = g_object_get_data(G_OBJECT(graph_view), "gwy-app-graph-list-view");
+    g_assert(list);
+    store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(list)));
+
+    gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter,
+                       GRAPHLIST_GMODEL, gmodel,
+                       -1);
 }
 
 GtkWidget*
@@ -93,6 +105,7 @@ gwy_app_graph_list(GwyDataWindow *data_window)
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Graph list for FIXME");
+    gtk_window_set_default_size(GTK_WINDOW(window), -1, 180);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
@@ -100,17 +113,18 @@ gwy_app_graph_list(GwyDataWindow *data_window)
     list = gwy_graph_list_construct(gwy_data_window_get_data(data_window));
     gtk_box_pack_start(GTK_BOX(vbox), list, TRUE, TRUE, 0);
 
-    buttonbox = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), buttonbox, TRUE, TRUE, 0);
+    buttonbox = gtk_hbox_new(TRUE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(buttonbox), 2);
+    gtk_box_pack_start(GTK_BOX(vbox), buttonbox, FALSE, FALSE, 0);
 
     button = gtk_button_new_with_mnemonic(_("_Delete"));
-    gtk_box_pack_start(GTK_BOX(buttonbox), button, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
     button = gtk_button_new_with_mnemonic(_("Delete _All"));
-    gtk_box_pack_start(GTK_BOX(buttonbox), button, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
     button = gtk_button_new_with_mnemonic(_("_Show All"));
-    gtk_box_pack_start(GTK_BOX(buttonbox), button, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
     button = gtk_button_new_with_mnemonic(_("_Hide All"));
-    gtk_box_pack_start(GTK_BOX(buttonbox), button, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
 
     g_object_set_data(G_OBJECT(data_window), "gwy-app-graph-list-window",
                       window);
@@ -129,14 +143,15 @@ gwy_graph_list_construct(GwyContainer *data)
         const guint id;
     }
     columns[] = {
-        { "Shown", GRAPHLIST_VISIBLE },
+        { "Vis.", GRAPHLIST_VISIBLE },
         { "Title", GRAPHLIST_TITLE },
         { "Curves", GRAPHLIST_NCURVES },
+        { "Id", GRAPHLIST_ID },   /* FIXME: debug only */
     };
 
     GtkWidget *tree;
     GtkListStore *store;
-    GtkTreeSelection *select;
+    GtkTreeSelection *selection;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
     gsize i;
@@ -178,8 +193,8 @@ gwy_graph_list_construct(GwyContainer *data)
         gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
     }
 
-    select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
-    gtk_tree_selection_set_mode(select, GTK_SELECTION_NONE);
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
     return tree;
 }
@@ -213,6 +228,13 @@ gwy_graph_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
         g_object_set(cell, "text", s, NULL);
         break;
 
+        case GRAPHLIST_ID:
+        g_snprintf(s, sizeof(s), "%d",
+                   GPOINTER_TO_INT(g_object_get_data(G_OBJECT(gmodel),
+                                                     "gwy-app-graph-list-id")));
+        g_object_set(cell, "text", s, NULL);
+        break;
+
         default:
         g_assert_not_reached();
         break;
@@ -220,16 +242,33 @@ gwy_graph_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-gwy_graph_list_add_line(G_GNUC_UNUSED gpointer hkey,
+gwy_graph_list_add_line(gpointer hkey,
                         GValue *value,
                         GtkListStore *store)
 {
-    GwyGraphModel *gmodel;
+    GObject *gmodel;
     GtkTreeIter iter;
 
     g_return_if_fail(G_VALUE_HOLDS_OBJECT(value));
-    gmodel = (GwyGraphModel*)g_value_get_object(value);
+    gmodel = g_value_get_object(value);
     g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
+
+    if (!g_object_get_data(gmodel, "gwy-app-graph-list-id")) {
+        GQuark quark;
+        const gchar *key;
+        gint32 id;
+
+        quark = GPOINTER_TO_INT(hkey);
+        key = g_quark_to_string(quark);
+        g_return_if_fail(key);
+        key = strrchr(key, '/');
+        g_return_if_fail(key);
+        key++;
+        id = atoi(key);
+        g_return_if_fail(id);
+        g_object_set_data(gmodel, "gwy-app-graph-list-id",
+                          GINT_TO_POINTER(id));
+    }
 
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
@@ -252,7 +291,14 @@ gwy_graph_list_sort_func(GtkTreeModel *model,
     x = GPOINTER_TO_INT(g_object_get_data(p, "gwy-app-graph-list-id"));
     y = GPOINTER_TO_INT(g_object_get_data(q, "gwy-app-graph-list-id"));
 
-    return (y > x) ? 1 : ((x > y) ? -1 : 0);
+    gwy_debug("x = %d, y = %d", x, y);
+
+    if (y > x)
+        return -1;
+    else if (x > y)
+        return 1;
+    else
+        return 0;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
