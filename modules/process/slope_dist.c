@@ -35,10 +35,12 @@
 /* Data for this function. */
 typedef struct {
     gint size;
+    gboolean logscale;
 } SlopeDistArgs;
 
 typedef struct {
     GtkObject *size;
+    GtkWidget *logscale;
     gboolean in_update;
 } SlopeDistControls;
 
@@ -62,6 +64,7 @@ static gdouble       compute_slopes             (GwyDataField *dfield,
 
 SlopeDistArgs slope_dist_defaults = {
     200,
+    FALSE,
 };
 
 /* The module info. */
@@ -148,17 +151,24 @@ slope_dist_dialog(SlopeDistArgs *args)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    table = gtk_table_new(1, 3, FALSE);
+    table = gtk_table_new(2, 3, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
     controls.size = gtk_adjustment_new(args->size, 10, 1000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 0, _("Output size:"), "",
+    spin = gwy_table_attach_spinbutton(table, 0, _("Output size:"), "samples",
                                        controls.size);
     g_object_set_data(G_OBJECT(controls.size), "controls", &controls);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     g_signal_connect(controls.size, "value_changed",
                      G_CALLBACK(size_changed_cb), args);
+
+    controls.logscale
+        = gtk_check_button_new_with_mnemonic(_("_Logarithmic value scale"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.logscale),
+                                 args->logscale);
+    gtk_table_attach(GTK_TABLE(table), controls.logscale,
+                     0, 3, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     controls.in_update = FALSE;
 
@@ -188,6 +198,8 @@ slope_dist_dialog(SlopeDistArgs *args)
     } while (response != GTK_RESPONSE_OK);
 
     args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.size));
+    args->logscale
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls.logscale));
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -254,8 +266,14 @@ slope_dist_do(GwyDataField *dfield,
     g_object_unref(zunit);
 
     d = gwy_data_field_get_data(dfield);
-    for (i = 0; i < args->size*args->size; i++)
-        d[i] = count[i];
+    if (args->logscale) {
+        for (i = 0; i < args->size*args->size; i++)
+            d[i] = count[i] ? log((gdouble)count[i]) + 1.0 : 0.0;
+    }
+    else {
+        for (i = 0; i < args->size*args->size; i++)
+            d[i] = count[i];
+    }
     g_free(count);
 
     return dfield;
