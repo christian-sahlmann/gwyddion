@@ -948,6 +948,8 @@ gwy_3d_view_get_material(Gwy3DView *gwy3dview)
  * If any other material is the the lights are turned on and the surface
  * is rendered using this material.
  *
+ * This function does NOT take reference on material.
+ *
  * Since: 1.5
  **/
 void

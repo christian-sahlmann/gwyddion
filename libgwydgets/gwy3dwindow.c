@@ -560,13 +560,11 @@ gwy_3d_window_set_material(GtkWidget *item,
                            Gwy3DWindow *gwy3dwindow)
 {
     gchar *material_name;
-    GObject *material;
+    GwyGLMaterial *material;
 
     material_name = g_object_get_data(G_OBJECT(item), "material-name");
-    material = gwy_gl_material_new(material_name);
-    gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
-                             GWY_GL_MATERIAL(material));
-    g_object_unref(material);
+    material = gwy_gl_material_get_by_name(material_name);
+    gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview), material);
 }
 
 static void
@@ -627,6 +625,11 @@ gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
                                    Gwy3DWindow *window)
 {
     gboolean lights_on;
+    GwyGLMaterial *material;
+    GtkWidget *menu, *item;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(radio)))
+        return;
 
     lights_on
         = gwy_radio_buttons_get_current(gtk_radio_button_get_group(radio),
@@ -639,6 +642,18 @@ gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
     gtk_widget_set_sensitive(window->lights_spin1, lights_on);
     gtk_widget_set_sensitive(window->lights_spin2, lights_on);
     gtk_widget_set_sensitive(window->move_light_button, lights_on);
+    if (lights_on) {
+        material = gwy_3d_view_get_material(GWY_3D_VIEW(window->gwy3dview));
+        /* FIXME: A hack. Maybe should GLMaterial set default different from
+         * None? */
+        if (strcmp(gwy_gl_material_get_name(material), GWY_GL_MATERIAL_NONE)
+            == 0) {
+            menu = gtk_option_menu_get_menu
+                                 (GTK_OPTION_MENU(window->material_menu));
+            item = gtk_menu_get_active(GTK_MENU(menu));
+            gwy_3d_window_set_material(item, window);
+        }
+    }
 }
 
 static void
