@@ -44,7 +44,7 @@ typedef struct {
 
     GwyUnitoolSlots *func_slots;
     GwyDataWindow *data_window;
-    GwyDataViewLayer *layer;
+    GwyVectorLayer *layer;
     gboolean is_visible;  /* GTK_WIDGET_VISIBLE() returns BS... */
 
     GtkWidget *windowname;

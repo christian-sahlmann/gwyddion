@@ -70,7 +70,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
     layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && (GwyDataViewLayer*)layer == state->layer) {
+    if (layer && layer == state->layer) {
         g_assert(state->data_window == data_window);
         if (reason == GWY_TOOL_SWITCH_TOOL)
             gwy_unitool_dialog_set_visible(state, TRUE);
@@ -84,15 +84,15 @@ gwy_unitool_use(GwyUnitoolState *state,
     /* create or set-up the layer */
     slot = state->func_slots;
     if (layer && G_TYPE_CHECK_INSTANCE_TYPE(layer, slot->layer_type)) {
-        state->layer = GWY_DATA_VIEW_LAYER(layer);
+        state->layer = layer;
         if (slot->layer_setup)
             slot->layer_setup(state);
     }
     else {
-        state->layer = (GwyDataViewLayer*)slot->layer_constructor();
+        state->layer = GWY_VECTOR_LAYER(slot->layer_constructor());
         if (slot->layer_setup)
             slot->layer_setup(state);
-        gwy_data_view_set_top_layer(data_view, GWY_VECTOR_LAYER(state->layer));
+        gwy_data_view_set_top_layer(data_view, state->layer);
     }
 
     /* create dialog */
@@ -150,19 +150,19 @@ static void
 gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
 {
     if (state->layer) {
-        gwy_debug("1");
+        GwyDataViewLayer *layer = GWY_DATA_VIEW_LAYER(state->layer);
+
+        gwy_debug("removing \"layer_updated\" handler");
         if (state->layer_updated_id)
-            g_signal_handler_disconnect(state->layer,
-                                        state->layer_updated_id);
-        gwy_debug("2");
-        if (state->layer->parent && state->data_updated_id)
-            g_signal_handler_disconnect(state->layer->parent,
-                                        state->data_updated_id);
+            g_signal_handler_disconnect(state->layer, state->layer_updated_id);
+        gwy_debug("removing \"data_updated\" handler");
+        if (layer->parent && state->data_updated_id)
+            g_signal_handler_disconnect(layer->parent, state->data_updated_id);
     }
-    gwy_debug("3");
+    gwy_debug("removing \"response\" handler");
     if (state->dialog && state->response_id)
         g_signal_handler_disconnect(state->dialog, state->response_id);
-    gwy_debug("4");
+    gwy_debug("removing \"title_changed\" handler");
     if (state->data_window && state->windowname_id)
         g_signal_handler_disconnect(state->data_window, state->windowname_id);
 
@@ -219,7 +219,7 @@ gwy_unitool_selection_updated_cb(GwyUnitoolState *state)
     gint nselected;
 
     gwy_debug("");
-    nselected = gwy_vector_layer_get_nselected(GWY_VECTOR_LAYER(state->layer));
+    nselected = gwy_vector_layer_get_nselected(state->layer);
     if (state->func_slots->dialog_update)
         state->func_slots->dialog_update(state);
     if (nselected && !state->is_visible)
@@ -258,7 +258,7 @@ gwy_unitool_dialog_response_cb(GwyUnitoolState *state,
         break;
 
         case GWY_UNITOOL_RESPONSE_UNSELECT:
-        gwy_vector_layer_unselect(GWY_VECTOR_LAYER(state->layer));
+        gwy_vector_layer_unselect(state->layer);
         break;
 
         default:
