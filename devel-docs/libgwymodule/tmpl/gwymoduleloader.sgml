@@ -2,7 +2,7 @@
 gwymoduleloader
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Basic module loader interface
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
