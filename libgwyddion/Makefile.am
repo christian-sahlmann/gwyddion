@@ -4,14 +4,15 @@ libgwyddionincludedir = $(includedir)/gwyddion/libgwyddion
 libgwyddioninclude_HEADERS = \
 	gwycontainer.h \
 	gwyddion.h \
+	gwyentities.h \
 	gwymacros.h \
 	gwyserializable.h \
-	gwytestser.h \
 	gwywatchable.h
 
 lib_LTLIBRARIES = libgwyddion.la
 
 noinst_PROGRAMS = main
+noinst_HEADERS = gwytestser.h
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -21,6 +22,7 @@ noinst_PROGRAMS = main
 libgwyddion_la_LDFLAGS = -version-info 0:0:0
 libgwyddion_la_SOURCES = \
 	gwycontainer.c \
+	gwyentities.c \
 	gwyserializable.c \
 	gwywatchable.c
 

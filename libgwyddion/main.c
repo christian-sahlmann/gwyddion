@@ -4,6 +4,7 @@
 #include <string.h>
 #include "gwyserializable.h"
 #include "gwycontainer.h"
+#include "gwyentities.h"
 #include "gwytestser.h"
 
 #define FILENAME "testser.object"
@@ -15,6 +16,12 @@
               gwy_test_ser_get_radius(GWY_TEST_SER(obj))); \
     gwy_test_ser_print_history(GWY_TEST_SER(obj))
 
+#define pent(txt) \
+    { \
+        gchar *_t = gwy_entities_text_to_utf8(txt); \
+        printf("%s-Message: `%s' -> `%s'\n", G_LOG_DOMAIN, txt, _t); \
+        g_free(_t); \
+    }
 
 void
 foo_callback(gpointer obj, gpointer data __attribute__((unused)))
@@ -158,7 +165,6 @@ main(int argc, char *argv[])
 
     ser = gwy_container_get_object_by_name(GWY_CONTAINER(container), "ser");
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 2.2);
-    g_object_unref(ser);
     g_assert(ser->ref_count == 1);
 
     g_object_unref(container);
@@ -166,6 +172,15 @@ main(int argc, char *argv[])
     container = gwy_serializable_deserialize(buffer, size, &pos);
 
     g_object_unref(container);
+
+    g_message("====== ENTITIES ======================");
+    pent("foo");
+    pent("&alpha;");
+    pent("&alpha;&beta;");
+    pent("&&&;&&:;7&:&;7&:&&;;;;&;&;7&:;");
+    pent(";&&");
+    pent("&alphabeta;&alpha&beta;");
+    pent("<a link=\"foo&lt;&quot;&gt;\">&amp;</a>");
 
     return 0;
 }

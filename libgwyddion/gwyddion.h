@@ -7,6 +7,7 @@
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libgwyddion/gwyentities.h>
 
 #ifdef __cplusplus
 extern "C" {
