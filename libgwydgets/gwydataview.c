@@ -41,11 +41,10 @@ static void     gwy_data_view_size_request         (GtkWidget *widget,
                                                     GtkRequisition *requisition);
 static void     gwy_data_view_size_allocate        (GtkWidget *widget,
                                                     GtkAllocation *allocation);
-static gboolean gwy_data_view_paint_layer          (GwyDataView *data_view,
-                                                    GwyDataViewLayer *layer,
-                                                    gboolean to_base,
-                                                    gboolean is_base,
-                                                    gboolean is_top);
+static void     simple_gdk_pixbuf_composite        (GdkPixbuf *source,
+                                                    GdkPixbuf *dest);
+static void     simple_gdk_pixbuf_scale_or_copy    (GdkPixbuf *source,
+                                                    GdkPixbuf *dest);
 static void     gwy_data_view_make_pixmap          (GwyDataView *data_view);
 static void     gwy_data_view_paint                (GwyDataView *data_view);
 static gboolean gwy_data_view_expose               (GtkWidget *widget,
@@ -410,124 +409,76 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     }
 }
 
-static gboolean
-gwy_data_view_paint_layer(GwyDataView *data_view,
-                          GwyDataViewLayer *layer,
-                          gboolean to_base,
-                          gboolean is_base,
-                          gboolean is_top)
+static void
+simple_gdk_pixbuf_scale_or_copy(GdkPixbuf *source, GdkPixbuf *dest)
 {
     gint height, width, src_height, src_width;
-    GdkPixbuf *pixbuf, *src_pixbuf;
-    gboolean copy_base_to_top = FALSE;
-    gboolean is_vector = FALSE;
-    GTimer *timer = NULL;
 
-    if (is_base)
-        g_assert(layer);
+    src_height = gdk_pixbuf_get_height(source);
+    src_width = gdk_pixbuf_get_height(source);
+    height = gdk_pixbuf_get_height(dest);
+    width = gdk_pixbuf_get_height(dest);
 
-    if (!layer) {
-        if (is_top && to_base)
-            copy_base_to_top = TRUE;
-        else
-            return to_base;
-    }
-    else {
-        is_vector = gwy_data_view_layer_is_vector(layer);
-        g_assert(!is_base || !is_vector);
-        if (is_vector && to_base)
-            copy_base_to_top = TRUE;
-    }
-
-    pixbuf = data_view->pixbuf;
-    /* we have to rescale base to final pixbuf once, at least at the end */
-    if (copy_base_to_top) {
-        timer = g_timer_new();
-        src_pixbuf = data_view->base_pixbuf;
-        src_width = gdk_pixbuf_get_width(src_pixbuf);
-        src_height = gdk_pixbuf_get_height(src_pixbuf);
-        width = gdk_pixbuf_get_width(pixbuf);
-        height = gdk_pixbuf_get_height(pixbuf);
-        gdk_pixbuf_scale(src_pixbuf, pixbuf,
-                         0, 0, width, height,
-                         0.0, 0.0,
-                         (double)width/src_width, (double)height/src_height,
+    if (src_width == width && src_height == height)
+        gdk_pixbuf_copy_area(source, 0, 0, src_width, src_height,
+                             dest, 0, 0);
+    else
+        gdk_pixbuf_scale(source, dest, 0, 0, width, height, 0.0, 0.0,
+                         (gdouble)width/src_width, (gdouble)height/src_height,
                          GDK_INTERP_TILES);
-        g_message("%s: b->t %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-        g_timer_destroy(timer);
-    }
-    if (!layer)
-        return FALSE;
+}
 
-    /* layer draws on existing pixbufs */
-    if (is_vector) {
-        /* FIXME: wrong */
-        gwy_data_view_layer_draw(layer, pixbuf);
-        return FALSE;
-    }
+static void
+simple_gdk_pixbuf_composite(GdkPixbuf *source, GdkPixbuf *dest)
+{
+    gint height, width, src_height, src_width;
 
-    /* layer paints pixbufs */
-    src_pixbuf = gwy_data_view_layer_paint(layer);
-    src_width = gdk_pixbuf_get_width(src_pixbuf);
-    src_height = gdk_pixbuf_get_height(src_pixbuf);
-    if (to_base) {
-        timer = g_timer_new();
-        /* compose to base, no need for scaling */
-        pixbuf = data_view->base_pixbuf;
-        width = gdk_pixbuf_get_width(pixbuf);
-        g_assert(width == src_width);
-        height = gdk_pixbuf_get_height(pixbuf);
-        g_assert(height == src_height);
-        if (is_base)
-            gdk_pixbuf_copy_area(src_pixbuf, 0, 0, src_width, src_height,
-                                 pixbuf, 0, 0);
-        else
-            gdk_pixbuf_composite(src_pixbuf, pixbuf,
-                                 0, 0, width, height,
-                                 0.0, 0.0,
-                                 1.0, 1.0,
-                                 GDK_INTERP_TILES, 0x255);
-        g_message("%s: %s %gs",
-                  __FUNCTION__, is_base ? "copy" : "b1:1",
-                  g_timer_elapsed(timer, NULL));
-        g_timer_destroy(timer);
-        return TRUE;
-    }
-    /* compose to scaled */
-    g_assert(!is_base);
-    timer = g_timer_new();
-    pixbuf = data_view->pixbuf;
-    width = gdk_pixbuf_get_width(pixbuf);
-    height = gdk_pixbuf_get_height(pixbuf);
-    gdk_pixbuf_composite(src_pixbuf, pixbuf,
-                         0, 0, width, height,
-                         0.0, 0.0,
-                         (double)width/src_width, (double)height/src_height,
+    src_height = gdk_pixbuf_get_height(source);
+    src_width = gdk_pixbuf_get_height(source);
+    height = gdk_pixbuf_get_height(dest);
+    width = gdk_pixbuf_get_height(dest);
+
+    gdk_pixbuf_composite(source, dest, 0, 0, width, height, 0.0, 0.0,
+                         (gdouble)width/src_width, (gdouble)height/src_height,
                          GDK_INTERP_TILES, 0x255);
-    g_message("%s: sZ:Z %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-    g_timer_destroy(timer);
-    return FALSE;
 }
 
 static void
 gwy_data_view_paint(GwyDataView *data_view)
 {
-    gboolean to_base = TRUE;
+    GdkPixbuf *src_pixbuf;
     GTimer *timer = NULL;
 
+    g_return_if_fail(data_view->base_layer);
     timer = g_timer_new();
-    to_base = gwy_data_view_paint_layer(data_view, data_view->base_layer,
-                                        to_base, TRUE, FALSE);
-    g_message("%s: base %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-    g_timer_reset(timer);
-    /* there could be any number of these */
-    to_base = gwy_data_view_paint_layer(data_view, data_view->alpha_layer,
-                                        to_base, FALSE, FALSE);
-    g_message("%s: alpha %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-    g_timer_reset(timer);
-    to_base = gwy_data_view_paint_layer(data_view, data_view->top_layer,
-                                        to_base, FALSE, TRUE);
-    g_message("%s: top %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+
+    /* base layer is always present
+     * top layer is always vector, if any
+     */
+    if (!data_view->alpha_layer) {
+        /* scale base directly to final pixbuf */
+        src_pixbuf = gwy_data_view_layer_paint(data_view->base_layer);
+        simple_gdk_pixbuf_scale_or_copy(src_pixbuf, data_view->pixbuf);
+        g_message("%s: BASE %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+    }
+    else {
+        /* base */
+        src_pixbuf = gwy_data_view_layer_paint(data_view->base_layer);
+        simple_gdk_pixbuf_scale_or_copy(src_pixbuf, data_view->base_pixbuf);
+        g_message("%s: base %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+        g_timer_reset(timer);
+
+        /* composite with alpha */
+        src_pixbuf = gwy_data_view_layer_paint(data_view->alpha_layer);
+        simple_gdk_pixbuf_composite(src_pixbuf, data_view->base_pixbuf);
+        g_message("%s: alpha %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+        g_timer_reset(timer);
+
+        /* scale both */
+        simple_gdk_pixbuf_scale_or_copy(data_view->pixbuf,
+                                        data_view->base_pixbuf);
+        g_message("%s: BOTH %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+    }
     g_timer_destroy(timer);
 }
 
@@ -568,6 +519,10 @@ gwy_data_view_expose(GtkWidget *widget,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
     g_message("%s: buf->map %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+    g_timer_reset(timer);
+    if (data_view->top_layer)
+        gwy_data_view_layer_draw(data_view->top_layer, widget->window);
+    g_message("%s: DRAW %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
     g_timer_destroy(timer);
 
     return FALSE;
@@ -696,7 +651,6 @@ gwy_data_view_set_layer(GwyDataView *data_view,
                         GwyDataViewLayer *layer)
 {
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
 
     if (layer == *which)
         return;
@@ -717,6 +671,8 @@ void
 gwy_data_view_set_base_layer(GwyDataView *data_view,
                              GwyDataViewLayer *layer)
 {
+    g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
+    g_return_if_fail(!gwy_data_view_layer_is_vector(layer));
     gwy_data_view_set_layer(data_view, &data_view->base_layer, layer);
 }
 
@@ -724,6 +680,8 @@ void
 gwy_data_view_set_alpha_layer(GwyDataView *data_view,
                               GwyDataViewLayer *layer)
 {
+    g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
+    g_return_if_fail(!gwy_data_view_layer_is_vector(layer));
     gwy_data_view_set_layer(data_view, &data_view->alpha_layer, layer);
 }
 
@@ -731,6 +689,8 @@ void
 gwy_data_view_set_top_layer(GwyDataView *data_view,
                             GwyDataViewLayer *layer)
 {
+    g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
+    g_return_if_fail(gwy_data_view_layer_is_vector(layer));
     gwy_data_view_set_layer(data_view, &data_view->top_layer, layer);
 }
 
