@@ -212,6 +212,16 @@ gint gwy_data_field_area_threshold(GwyDataField *a,
                                    gdouble threshval,
                                    gdouble bottom,
                                    gdouble top);
+gint gwy_data_field_clamp(GwyDataField *a,
+                          gdouble bottom,
+                          gdouble top);
+gint gwy_data_field_area_clamp(GwyDataField *a,
+                               gint uli,
+                               gint ulj,
+                               gint bri,
+                               gint brj,
+                               gdouble bottom,
+                               gdouble top);
 
 /*data_line extraction*/
 gboolean gwy_data_field_get_data_line(GwyDataField *a,

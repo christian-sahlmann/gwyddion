@@ -192,7 +192,7 @@ gwy_data_field_deserialize(const guchar *buffer,
         g_free(data);
         return NULL;
     }
-    if (fsize != xres*yres) {
+    if (fsize != (gsize)(xres*yres)) {
         g_critical("Serialized %s size mismatch %u != %u",
               GWY_DATA_FIELD_TYPE_NAME, fsize, xres*yres);
         g_free(data);
@@ -325,6 +325,7 @@ gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
  *
  * Resamples GwyDataField using given interpolation method
  **/
+/* XY: yeti */
 void
 gwy_data_field_resample(GwyDataField *a,
                         gint xres, gint yres,
@@ -336,32 +337,37 @@ gwy_data_field_resample(GwyDataField *a,
 
     if (a->xres == xres && a->yres == yres)
         return;
-    gwy_data_field_alloc(&b, a->xres, a->yres);
-    gwy_data_field_copy(a, &b);
+
+    if (interpolation != GWY_INTERPOLATION_NONE) {
+        gwy_data_field_alloc(&b, a->xres, a->yres);
+        gwy_data_field_copy(a, &b);
+    }
 
     a->xres = xres;
     a->yres = yres;
     a->data = g_renew(gdouble, a->data, a->xres*a->yres);
 
-    if (interpolation != GWY_INTERPOLATION_NONE) {
-        xratio = (gdouble)(b.xres-1)/(gdouble)(a->xres-1);
-        yratio = (gdouble)(b.yres-1)/(gdouble)(a->yres-1);
+    if (interpolation == GWY_INTERPOLATION_NONE)
+        return;
 
-        for (i = 0; i < a->yres; i++) {
-            for (j = 0; j < a->xres; j++) {
-                xpos = (gdouble)i*yratio;
-                if (xpos>(b.yres-1))
-                    xpos=(b.yres-1);
-                ypos = (gdouble)j*xratio;
-                if (ypos>(b.xres-1))
-                    ypos=(b.xres-1);
-                /*printf("(%d, %d), -> %f, %f\n",i, j, xpos, ypos);*/
-                a->data[i + a->yres*j] = gwy_data_field_get_dval(&b, xpos, ypos,
-                                                                 interpolation);
-            }
+    xratio = (gdouble)(b.xres-1)/(gdouble)(a->xres-1);
+    yratio = (gdouble)(b.yres-1)/(gdouble)(a->yres-1);
+
+    for (i = 0; i < a->yres; i++) {
+        gdouble *row = a->data + i*a->xres;
+
+        ypos = (gdouble)i*yratio;
+        if (ypos > (b.yres-1))
+            ypos = (b.yres-1);
+
+        for (j = 0; j < a->xres; j++, row++) {
+            xpos = (gdouble)j*xratio;
+            if (xpos > (b.xres-1))
+                xpos = (b.xres-1);
+            /*printf("(%d, %d), -> %f, %f\n",i, j, xpos, ypos);*/
+            *row = gwy_data_field_get_dval(&b, xpos, ypos, interpolation);
         }
     }
-
     gwy_data_field_free(&b);
 }
 
@@ -389,11 +395,12 @@ gwy_data_field_confirmsize(GwyDataField *a, gint xres, gint yres)
  *
  * Returns:%TRUE at success
  **/
+/* XY: yeti */
 gboolean
 gwy_data_field_resize(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 {
     GwyDataField b;
-    gint i, j, xres, yres;
+    gint i, xres, yres;
 
     if (uli > bri)
         GWY_SWAP(gint, uli, bri);
@@ -405,18 +412,16 @@ gwy_data_field_resize(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 
     yres = bri - uli;
     xres = brj - ulj;
-
-    gwy_data_field_alloc(&b, a->xres, a->yres);
-    gwy_data_field_copy(a, &b);
-
-    a->xres = xres;
-    a->yres = yres;
-    a->data = g_renew(gdouble, a->data, a->xres*a->yres);
+    gwy_data_field_alloc(&b, xres, yres);
 
     for (i = uli; i < bri; i++) {
-        for (j = ulj; j < brj; j++)
-            a->data[i-uli + (j-ulj)*a->yres] = b.data[i + j*b.yres];
+        memcpy(b.data + (i-uli)*xres,
+               a->data + i*a->xres + ulj,
+               xres*sizeof(gdouble));
     }
+    a->xres = xres;
+    a->yres = yres;
+    GWY_SWAP(gdouble*, a->data, b.data);
 
     gwy_data_field_free(&b);
     return TRUE;
@@ -433,6 +438,7 @@ gwy_data_field_resize(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
  *
  * Returns: value at the position (x,y).
  **/
+/* XY: yeti */
 gdouble
 gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
                         GwyInterpolationType interpolation)
@@ -446,13 +452,12 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
-        /* XXX: WTF? why is this different from ROUND? */
         return 0.0;
 
         case GWY_INTERPOLATION_ROUND:
         ix = (gint)(x + 0.5);
         iy = (gint)(y + 0.5);
-        return a->data[ix + a->yres*iy];
+        return a->data[ix + a->xres*iy];
 
         case GWY_INTERPOLATION_BILINEAR:
         floorx = (gint)floor(x);
@@ -461,22 +466,22 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
         resty = y - (gdouble)floory;
 
         if (restx != 0)
-            valpx = restx*(1 - resty)*a->data[floorx + 1 + a->yres*floory];
+            valpx = restx*(1 - resty)*a->data[floorx + 1 + a->xres*floory];
         else
             valpx = 0;
 
         if (resty != 0)
-            valxp = resty*(1 - restx)*a->data[floorx + a->yres*(floory + 1)];
+            valxp = resty*(1 - restx)*a->data[floorx + a->xres*(floory + 1)];
         else
             valxp = 0;
 
         if (restx != 0 && resty != 0)
-            valpp = restx*resty*a->data[floorx + 1 + a->yres*(floory + 1)];
+            valpp = restx*resty*a->data[floorx + 1 + a->xres*(floory + 1)];
         else
             valpp = 0;
 
         return valpx + valxp + valpp
-               + (1 - restx)*(1 - resty)*a->data[floorx + a->yres*floory];
+               + (1 - restx)*(1 - resty)*a->data[floorx + a->xres*floory];
         break;
 
         default:
@@ -553,7 +558,7 @@ gwy_data_field_get_yreal(GwyDataField *a)
 void
 gwy_data_field_set_xreal(GwyDataField *a, gdouble xreal)
 {
-    a->xreal=xreal;
+    a->xreal = xreal;
 }
 
 /**
@@ -566,7 +571,7 @@ gwy_data_field_set_xreal(GwyDataField *a, gdouble xreal)
 void
 gwy_data_field_set_yreal(GwyDataField *a, gdouble yreal)
 {
-    a->yreal=yreal;
+    a->yreal = yreal;
 }
 
 /**
@@ -655,11 +660,12 @@ gwy_data_field_inside(GwyDataField *a, gint i, gint j)
  *
  * Returns: value at (i, j)
  **/
+/* XY: yeti */
 gdouble
 gwy_data_field_get_val(GwyDataField *a, gint i, gint j)
 {
     g_return_val_if_fail(gwy_data_field_inside(a, i, j), 0.0);
-    return a->data[i + a->yres*j];
+    return a->data[j + a->xres*i];
 }
 
 /**
@@ -671,11 +677,12 @@ gwy_data_field_get_val(GwyDataField *a, gint i, gint j)
  *
  * Set @value at given pixel
  **/
+/* XY: yeti */
 void
 gwy_data_field_set_val(GwyDataField *a, gint i, gint j, gdouble value)
 {
     g_return_if_fail(gwy_data_field_inside(a, i, j));
-    a->data[i + a->yres*j] = value;
+    a->data[j + a->xres*i] = value;
 }
 
 /**
@@ -713,6 +720,7 @@ gwy_data_field_get_dval_real(GwyDataField *a, gdouble x, gdouble y,
  * The values that will be outside of square after rotation will
  * be lost. The new unknown values will be set to field minimum value.
  **/
+/* XY: wrong XXX */
 void
 gwy_data_field_rotate(GwyDataField *a, gdouble angle,
                       GwyInterpolationType interpolation)
@@ -764,11 +772,11 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
         for (j = 0; j < a->xres; j++) {
             ir = a->yres-i-icor;
             jr = j-jcor;
+            /* XXX: cosinus should not have minus!? */
             inew = -ir*cs + jr*sn;
             jnew = ir*sn + jr*cs;
-            if (inew > a->yres || jnew > a->xres || inew < -1 || jnew < -1) {
-                a->data[i + a->yres*j] = val;
-            }
+            if (inew > a->yres || jnew > a->xres || inew < -1 || jnew < -1)
+                a->data[j + a->xres*i] = val;
             else {
                 if (inew > (a->yres - 1))
                     inew = a->yres-1;
@@ -776,7 +784,7 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
                     jnew = a->xres-1;
                 if (inew < 0) inew = 0;
                 if (jnew < 0) jnew = 0;
-                a->data[i + a->yres*j] = gwy_data_field_get_dval(&b, inew, jnew,
+                a->data[j + a->xres*i] = gwy_data_field_get_dval(&b, inew, jnew,
                                                                  interpolation);
             }
         }
@@ -795,6 +803,7 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
  *
  * Make requested inversion(s).
  **/
+/* XY: yeti */
 void
 gwy_data_field_invert(GwyDataField *a,
                       gboolean x,
@@ -857,9 +866,10 @@ void
 gwy_data_field_fill(GwyDataField *a, gdouble value)
 {
     gint i;
+    gdouble *p = a->data;
 
-    for (i = 0; i < (a->xres * a->yres); i++)
-        a->data[i] = value;
+    for (i = a->xres * a->yres; i; i--, p++)
+        *p = value;
 }
 
 /**
@@ -873,9 +883,10 @@ void
 gwy_data_field_multiply(GwyDataField *a, gdouble value)
 {
     gint i;
+    gdouble *p = a->data;
 
-    for (i = 0; i < (a->xres * a->yres); i++)
-        a->data[i] *= value;
+    for (i = a->xres * a->yres; i; i--, p++)
+        *p *= value;
 }
 
 /**
@@ -889,9 +900,10 @@ void
 gwy_data_field_add(GwyDataField *a, gdouble value)
 {
     gint i;
+    gdouble *p = a->data;
 
-    for (i = 0; i < (a->xres * a->yres); i++)
-        a->data[i] += value;
+    for (i = a->xres * a->yres; i; i--, p++)
+        *p += value;
 }
 
 /**
@@ -905,6 +917,7 @@ gwy_data_field_add(GwyDataField *a, gdouble value)
  *
  * Fill a specified part of the field witha given  value
  **/
+/* XY: yeti */
 void
 gwy_data_field_area_fill(GwyDataField *a,
                          gint uli, gint ulj, gint bri, gint brj,
@@ -920,8 +933,10 @@ gwy_data_field_area_fill(GwyDataField *a,
     g_return_if_fail(uli >= 0 && ulj >= 0 && bri < a->yres && brj < a->xres);
 
     for (i = uli; i < bri; i++) {
-        for (j = ulj; j < brj; j++)
-            a->data[i + j*a->yres] = value;
+        gdouble *row = a->data + i*a->xres + ulj;
+
+        for (j = 0; j < brj - ulj; j++)
+            *(row++) = value;
     }
 }
 
@@ -936,6 +951,7 @@ gwy_data_field_area_fill(GwyDataField *a,
  *
  * Add the given value to a specified part of the field
  **/
+/* XY: yeti */
 void
 gwy_data_field_area_add(GwyDataField *a,
                         gint uli, gint ulj, gint bri, gint brj,
@@ -951,8 +967,10 @@ gwy_data_field_area_add(GwyDataField *a,
     g_return_if_fail(uli >= 0 && ulj >= 0 && bri < a->yres && brj < a->xres);
 
     for (i = uli; i < bri; i++) {
+        gdouble *row = a->data + i*a->xres + ulj;
+
         for (j = ulj; j < brj; j++)
-            a->data[i + j*a->yres] += value;
+            *(row++) += value;
     }
 }
 
@@ -967,6 +985,7 @@ gwy_data_field_area_add(GwyDataField *a,
  *
  * Multiply a specified part of the field by the given value
  **/
+/* XY: yeti */
 void
 gwy_data_field_area_multiply(GwyDataField *a,
                              gint uli, gint ulj, gint bri, gint brj,
@@ -982,8 +1001,10 @@ gwy_data_field_area_multiply(GwyDataField *a,
     g_return_if_fail(uli >= 0 && ulj >= 0 && bri < a->yres && brj < a->xres);
 
     for (i = uli; i < bri; i++) {
+        gdouble *row = a->data + i*a->xres + ulj;
+
         for (j = ulj; j < brj; j++)
-            a->data[i + j*a->yres] *= value;
+            *(row++) *= value;
     }
 }
 
@@ -1000,10 +1021,11 @@ gwy_data_field_get_max(GwyDataField *a)
 {
     gint i;
     gdouble max = a->data[0];
+    gdouble *p = a->data;
 
-    for (i = 1; i < (a->xres * a->yres); i++) {
-        if (max < a->data[i])
-            max = a->data[i];
+    for (i = a->xres * a->yres; i; i--, p++) {
+        if (max < *p)
+            max = *p;
     }
     return max;
 }
@@ -1021,10 +1043,11 @@ gwy_data_field_get_min(GwyDataField *a)
 {
     gint i;
     gdouble min = a->data[0];
+    gdouble *p = a->data;
 
-    for (i = 1; i < (a->xres * a->yres); i++) {
-        if (min > a->data[i])
-            min = a->data[i];
+    for (i = a->xres * a->yres; i; i--, p++) {
+        if (min > *p)
+            min = *p;
     }
     return min;
 }
@@ -1043,17 +1066,30 @@ gwy_data_field_get_avg(GwyDataField *a)
     return gwy_data_field_get_sum(a)/((gdouble)(a->xres * a->yres));
 }
 
+/**
+ * gwy_data_field_get_rms:
+ * @a: 
+ *
+ * 
+ *
+ * Returns:
+ **/
+/* XY: yeti */
 gdouble
 gwy_data_field_get_rms(GwyDataField *a)
 {
-    gint i;
-    gdouble rms = 0;
-    gdouble avg = gwy_data_field_get_avg(a);
+    gint i, n;
+    gdouble rms, sum2 = 0;
+    gdouble sum = gwy_data_field_get_sum(a);
+    gdouble *p = a->data;
 
-    for (i = 0; i < (a->xres * a->yres); i++)
-        rms += (a->data[i]-avg)*(a->data[i]-avg);
+    for (i = a->xres * a->yres; i; i--, p++)
+        sum2 += (*p)*(*p);
 
-    return sqrt(rms)/((gdouble)(a->xres * a->yres));
+    n = a->xres * a->yres;
+    rms = sqrt(fabs(sum2 - sum*sum/n))/n;
+
+    return rms;
 }
 
 gdouble
@@ -1061,14 +1097,16 @@ gwy_data_field_get_sum(GwyDataField *a)
 {
     gint i;
     gdouble sum = 0;
+    gdouble *p = a->data;
 
-    for (i = 0; i < (a->xres * a->yres); i++)
-        sum += a->data[i];
+    for (i = a->xres * a->yres; i; i--, p++)
+        sum += *p;
 
     return sum;
 }
 
 
+/* XY: yeti */
 gdouble
 gwy_data_field_get_area_max(GwyDataField *a,
                             gint uli, gint ulj, gint bri, gint brj)
@@ -1085,14 +1123,17 @@ gwy_data_field_get_area_max(GwyDataField *a,
                          max);
 
     for (i = uli; i < bri; i++) {
-        for (j = ulj; j < brj; j++) {
-            if (max < a->data[i + j*a->yres])
-                max = a->data[i + j*a->yres];
+        gdouble *row = a->data + i*a->xres + ulj;
+
+        for (j = ulj; j < brj; j++, row++) {
+            if (max < *row)
+                max = *row;
         }
     }
     return max;
 }
 
+/* XY: yeti */
 gdouble
 gwy_data_field_get_area_min(GwyDataField *a,
                             gint uli, gint ulj, gint bri, gint brj)
@@ -1109,9 +1150,11 @@ gwy_data_field_get_area_min(GwyDataField *a,
                          min);
 
     for (i = uli; i < bri; i++) {
-        for (j = ulj; j < brj; j++) {
-            if (min > a->data[i + j*a->yres])
-                min = a->data[i + j*a->yres];
+        gdouble *row = a->data + i*a->xres + ulj;
+
+        for (j = ulj; j < brj; j++, row++) {
+            if (min > *row)
+                min = *row;
         }
     }
     return min;
@@ -1125,6 +1168,7 @@ gwy_data_field_get_area_avg(GwyDataField *a,
            /((gdouble)(bri-uli)*(brj-ulj));
 }
 
+/* XY: yeti */
 gdouble
 gwy_data_field_get_area_sum(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 {
@@ -1140,19 +1184,21 @@ gwy_data_field_get_area_sum(GwyDataField *a, gint uli, gint ulj, gint bri, gint 
                          sum);
 
     for (i = uli; i < bri; i++) {
-        for (j = ulj; j < brj; j++) {
-            sum += a->data[i + j*a->yres];
-        }
+        gdouble *row = a->data + i*a->xres + ulj;
+
+        for (j = ulj; j < brj; j++)
+            sum += *(row++);
     }
     return sum;
 }
 
+/* XY: yeti */
 gdouble
 gwy_data_field_get_area_rms(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
 {
-    gint i, j;
-    gdouble rms = 0;
-    gdouble avg = gwy_data_field_get_area_avg(a, uli, ulj, bri, brj);
+    gint i, j, n;
+    gdouble rms = 0, sum2 = 0;
+    gdouble sum = gwy_data_field_get_area_sum(a, uli, ulj, bri, brj);
 
     if (uli > bri)
         GWY_SWAP(gint, uli, bri);
@@ -1163,30 +1209,39 @@ gwy_data_field_get_area_rms(GwyDataField *a, gint uli, gint ulj, gint bri, gint 
                          rms);
 
     for (i = uli; i < bri; i++) {
-        for (j = ulj; j < brj; j++) {
-            rms += (avg - a->data[i + j*a->yres])*(avg - a->data[i + j*a->yres]);
-        }
+        gdouble *row = a->data + i*a->xres + ulj;
+
+        for (j = ulj; j < brj; j++, row++)
+            sum2 += (*row)*(*row);
     }
-    return sqrt(rms)/((gdouble)(bri-uli)*(brj-ulj));
+
+    n = (bri-uli)*(brj-ulj);
+    rms = sqrt(fabs(sum2 - sum*sum/n))/n;
+
+    return rms;
 }
 
+/* XY: yeti */
 gint
 gwy_data_field_threshold(GwyDataField *a,
                          gdouble threshval, gdouble bottom, gdouble top)
 {
     gint i, tot = 0;
+    gdouble *p = a->data;
 
-    for (i = 0; i < (a->xres * a->yres); i++) {
-        if (a->data[i] < threshval)
-            a->data[i] = bottom;
+    for (i = a->xres * a->yres; i; i--, p++) {
+        if (*p < threshval)
+            *p = bottom;
         else {
-            a->data[i] = top;
+            *p = top;
             tot++;
         }
     }
+
     return tot;
 }
 
+/* XY: yeti */
 gint
 gwy_data_field_area_threshold(GwyDataField *a,
                               gint uli, gint ulj, gint bri, gint brj,
@@ -1203,72 +1258,136 @@ gwy_data_field_area_threshold(GwyDataField *a,
                          -1);
 
     for (i = uli; i < bri; i++) {
-        for (j = ulj; j < brj; j++) {
-            if (a->data[i + j*a->yres] < threshval)
-                a->data[i + j*a->yres] = bottom;
+        gdouble *row = a->data + i*a->xres + ulj;
+
+        for (j = ulj; j < brj; j++, row++) {
+            if (*row < threshval)
+                *row = bottom;
             else {
-                a->data[i + j*a->yres] = top;
+                *row = top;
                 tot++;
             }
         }
     }
+
     return tot;
 }
 
 
+/* XY: yeti */
+gint
+gwy_data_field_clamp(GwyDataField *a,
+                     gdouble bottom, gdouble top)
+{
+    gint i, tot = 0;
+    gdouble *p = a->data;
+
+    for (i = a->xres * a->yres; i; i--, p++) {
+        if (*p < bottom) {
+            *p = bottom;
+            tot++;
+        }
+        else if (*p > top) {
+            *p = top;
+            tot++;
+        }
+    }
+
+    return tot;
+}
+
+/* XY: yeti */
+gint
+gwy_data_field_area_clamp(GwyDataField *a,
+                          gint uli, gint ulj, gint bri, gint brj,
+                          gdouble bottom, gdouble top)
+{
+    gint i, j, tot = 0;
+
+    if (uli > bri)
+        GWY_SWAP(gint, uli, bri);
+    if (ulj > brj)
+        GWY_SWAP(gint, ulj, brj);
+
+    g_return_val_if_fail(uli >= 0 && ulj >= 0 && bri < a->yres && brj < a->xres,
+                         -1);
+
+    for (i = uli; i < bri; i++) {
+        gdouble *row = a->data + i*a->xres + ulj;
+
+        for (j = ulj; j < brj; j++, row++) {
+            if (*row < bottom) {
+                *row = bottom;
+                tot++;
+            }
+            else if (*row > top) {
+                *row = top;
+                tot++;
+            }
+        }
+    }
+
+    return tot;
+}
+
+/* XY: yeti */
 void
 gwy_data_field_get_row(GwyDataField *a, GwyDataLine* b, gint i)
 {
-    gint k;
-
     g_return_if_fail(i >= 0 && i < a->yres);
 
     gwy_data_line_resample(b, a->xres, GWY_INTERPOLATION_NONE);
-    for (k = 0; k < a->xres; k++)
-        b->data[k] = a->data[i + k*a->yres];
+    memcpy(b->data, a->data + i*a->xres, a->xres*sizeof(gdouble));
 }
 
+/* XY: yeti */
 void
 gwy_data_field_get_column(GwyDataField *a, GwyDataLine* b, gint j)
 {
     gint k;
+    gdouble *p;
 
     g_return_if_fail(j >= 0 && j < a->xres);
 
     gwy_data_line_resample(b, a->yres, GWY_INTERPOLATION_NONE);
+    p = a->data + j;
     for (k = 0; k < a->yres; k++)
-        b->data[k] = a->data[k + j*a->yres];
+        b->data[k] = p[k*a->xres];
 }
 
+/* XY: yeti */
 void
 gwy_data_field_set_row(GwyDataField *a, GwyDataLine* b, gint i)
 {
-    gint k;
-
     g_return_if_fail(i >= 0 && i < a->yres);
+    g_return_if_fail(a->xres == b->res);
 
-    for (k = 0; k < a->xres; k++)
-        a->data[i + k*a->yres] = b->data[k];
+    memcpy(a->data + i*a->xres, b->data, a->xres*sizeof(gdouble));
 }
 
+/* XY: yeti */
 void
 gwy_data_field_set_column(GwyDataField *a, GwyDataLine* b, gint j)
 {
     gint k;
+    gdouble *p;
 
     g_return_if_fail(j >= 0 && j < a->xres);
+    g_return_if_fail(a->yres == b->res);
 
+    p = a->data + j;
     for (k = 0; k < a->yres; k++)
-        a->data[k + j*a->yres] = b->data[k];
+        p[k*a->xres] = b->data[k];
 }
 
+/* XY: yeti */
 gboolean
 gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
                              gint uli, gint ulj, gint bri, gint brj,
                              gint res, GwyInterpolationType interpolation)
 {
     gint k;
-    gdouble length, alpha, cosa, sina;
+    gdouble cosa, sina;
 
     if (uli > bri)
         GWY_SWAP(gint, uli, bri);
@@ -1278,23 +1397,22 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
     g_return_val_if_fail(uli >= 0 && ulj >= 0 && bri < a->yres && brj < a->xres,
                          FALSE);
 
-    length = sqrt((bri - uli)*(bri - uli) + (brj - ulj)*(brj - ulj));
-    alpha = atan((brj - ulj)/(bri - uli));
-    cosa = cos(alpha)*length/res;
-    sina = sin(alpha)*length/res;
+    cosa = (gdouble)(brj - ulj)/(res - 1);
+    sina = (gdouble)(bri - uli)/(res - 1);
 
     gwy_data_line_resample(b, res, GWY_INTERPOLATION_NONE);
     for (k = 0; k < res; k++)
-        b->data[k] = gwy_data_field_get_dval(a, k*cosa, k*sina, interpolation);
+        b->data[k] = gwy_data_field_get_dval(a, ulj + k*cosa, uli + k*sina,
+                                             interpolation);
 
     return TRUE;
 }
 
+/* XY: yeti */
 void
 gwy_data_field_plane_coeffs(GwyDataField *a,
                            gdouble *ap, gdouble *bp, gdouble *cp)
 {
-    gdouble val;
     gdouble sumxi, sumxixi, sumyi, sumyiyi;
     gdouble sumsi = 0.0;
     gdouble sumsixi = 0.0;
@@ -1334,6 +1452,7 @@ gwy_data_field_plane_coeffs(GwyDataField *a,
 }
 
 
+/* XY: yeti */
 void
 gwy_data_field_plane_level(GwyDataField *a, gdouble ap, gdouble bp, gdouble cp)
 {
@@ -1343,9 +1462,10 @@ gwy_data_field_plane_level(GwyDataField *a, gdouble ap, gdouble bp, gdouble cp)
 
     for (i = 0; i < a->yres; i++) {
         gdouble *row = a->data + i*a->xres;
-        for (j = 0; j < a->xres; j++) {
-            row[j] -= ap + cpix*i + bpix*j;
-        }
+        gdouble rb = ap + cpix*i;
+
+        for (j = 0; j < a->xres; j++, row++)
+            *row -= rb + bpix*j;
     }
 }
 
@@ -1375,32 +1495,38 @@ gwy_data_field_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle,
     gwy_data_line_free(&l);
 }
 
+/* XY: yeti */
 gdouble
 gwy_data_field_get_xder(GwyDataField *a, gint i, gint j)
 {
-   g_return_val_if_fail(gwy_data_field_inside(a, i, j), 0.0);
+    gdouble *p;
 
-   if (j == 0)
-       return (a->data[i + a->yres] - a->data[i])*a->yres/a->yreal;
-   if (j == a->xres-1)
-       return (a->data[i + a->yres*j] - a->data[i + a->yres*(j-1)])
-              * a->yres/a->yreal;
-   return (a->data[i + a->yres*(j+1)] - a->data[i + a->yres*(j-1)])
-          * a->yres/a->yreal/2;
+    g_return_val_if_fail(gwy_data_field_inside(a, i, j), 0.0);
+
+    p = a->data + i*a->xres + j;
+    if (j == 0)
+        return (*(p+1) - *p) * a->xres/a->xreal;
+    if (j == a->xres-1)
+        return (*p - *(p-1)) * a->xres/a->xreal;
+    return (*(p+1) - *(p-1)) * a->xres/a->xreal/2;
 }
 
+/* XY: yeti */
 gdouble
 gwy_data_field_get_yder(GwyDataField *a, gint i, gint j)
 {
-   g_return_val_if_fail(gwy_data_field_inside(a, i, j), 0.0);
+    gdouble *p;
+    gint xres;
 
-   if (i == 0)
-       return (a->data[1 + a->yres*j] - a->data[a->yres*j])*a->xres/a->xreal;
-   if (i == a->yres-1)
-       return (a->data[i + a->yres*j] - a->data[i - 1 + a->yres*j])
-              * a->xres/a->xreal;
-   return (a->data[i + 1 + a->yres*j] - a->data[i - 1 + a->yres*j])
-          * a->xres/a->xreal/2;
+    g_return_val_if_fail(gwy_data_field_inside(a, i, j), 0.0);
+
+    xres = a->xres;
+    p = a->data + i*xres + j;
+    if (i == 0)
+        return (*(p+xres) - *p) * a->yres/a->yreal;
+    if (i == a->yres-1)
+        return (*p - *(p-xres)) * a->yres/a->yreal;
+    return (*(p+xres) - *(p-xres)) * a->yres/a->yreal/2;
 }
 
 gdouble
@@ -1462,10 +1588,11 @@ gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
 }
 
 
+/* XY: yeti (I hope) */
 void
 gwy_data_field_2dffthumanize(GwyDataField *a)
 {
-    gint i, j, im, jm;
+    gint i, j, im, jm, xres;
     GwyDataField b;
 
     gwy_data_field_initialize(&b, a->xres, a->yres, a->xreal, a->yreal, FALSE);
@@ -1473,12 +1600,13 @@ gwy_data_field_2dffthumanize(GwyDataField *a)
 
     im = a->yres/2;
     jm = a->xres/2;
+    xres = a->xres;
     for (i = 0; i < im; i++) {
         for (j = 0; j < jm; j++) {
-            a->data[(i + im) + (j + jm)*a->yres] = b.data[i + j*a->yres];
-            a->data[(i + im) + j*a->yres] = b.data[i + (j + jm)*a->yres];
-            a->data[i + (j + jm)*a->yres] = b.data[(i + im) + j*a->yres];
-            a->data[i + j*a->yres] = b.data[(i + im) + (j + jm)*a->yres];
+            a->data[(j + jm) + (i + im)*xres] = b.data[j + i*xres];
+            a->data[(j + jm) + i*xres] = b.data[j + (i + im)*xres];
+            a->data[j + (i + im)*xres] = b.data[(j + jm) + i*xres];
+            a->data[j + i*xres] = b.data[(j + jm) + (i + im)*xres];
         }
     }
     gwy_data_field_free(&b);
