@@ -26,7 +26,9 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libprocess/datafield.h>
 #include <libdraw/gwypalette.h>
+#include <libdraw/gwygradient.h>
 
+#ifndef GWY_DISABLE_DEPRECATED
 void     gwy_pixfield_do            (GdkPixbuf *pixbuf,
                                      GwyDataField *data_field,
                                      GwyPalette *palette);
@@ -38,6 +40,22 @@ void     gwy_pixfield_do_with_range (GdkPixbuf *pixbuf,
 void     gwy_pixfield_do_mask       (GdkPixbuf *pixbuf,
                                      GwyDataField *data_field,
                                      GwyRGBA *color);
+#endif
 
+void gwy_pixbuf_draw_data_field            (GdkPixbuf *pixbuf,
+                                            GwyDataField *data_field,
+                                            GwyGradient *gradient);
+void gwy_pixbuf_draw_data_field_with_range (GdkPixbuf *pixbuf,
+                                            GwyDataField *data_field,
+                                            GwyGradient *gradient,
+                                            gdouble minimum,
+                                            gdouble maximum);
+void gwy_pixbuf_draw_data_field_with_rms   (GdkPixbuf *pixbuf,
+                                            GwyDataField *data_field,
+                                            GwyGradient *gradient,
+                                            gdouble rmsrange);
+void gwy_pixbuf_draw_data_field_as_mask    (GdkPixbuf *pixbuf,
+                                            GwyDataField *data_field,
+                                            GwyRGBA *color);
 
 #endif /*__GWY_PIXFIELD__*/
