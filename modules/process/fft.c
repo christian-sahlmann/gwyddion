@@ -129,9 +129,11 @@ fft(GwyContainer *data, GwyRunType run)
     GtkWidget *data_window;
     GwyDataField *dfield;
     GwyDataField *raout, *ipout, *imin;
+    GwySIUnit *xyunit, *zunit;
     FFTArgs args;
     gboolean ok; gint i;
     gint xsize, ysize, newsize;
+    gdouble newreals;
 
     g_assert(run & FFT_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -188,6 +190,9 @@ fft(GwyContainer *data, GwyRunType run)
         gwy_data_field_2dffthumanize(raout);
         gwy_data_field_2dffthumanize(ipout);
 
+        xyunit = (GwySIUnit *)gwy_si_unit_new("m<sup>-1</sup>");
+        zunit = (GwySIUnit *)gwy_si_unit_new("m");
+        newreals = ((gdouble)gwy_data_field_get_xres(dfield))/gwy_data_field_get_xreal(dfield);
 
         if (args.preserve)
         {
@@ -199,6 +204,11 @@ fft(GwyContainer *data, GwyRunType run)
         if (args.out == GWY_FFT_OUTPUT_REAL_IMG || args.out == GWY_FFT_OUTPUT_REAL)
         {
             set_dfield_real(raout, ipout, dfield);
+            gwy_data_field_set_si_unit_xy(dfield, xyunit);
+            gwy_data_field_set_si_unit_z(dfield, zunit);
+            gwy_data_field_set_xreal(dfield, newreals);
+            gwy_data_field_set_yreal(dfield, newreals);
+
 
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
@@ -213,6 +223,11 @@ fft(GwyContainer *data, GwyRunType run)
                                                                  "/0/data"));
             }
             set_dfield_imaginary(raout, ipout, dfield);
+            gwy_data_field_set_si_unit_xy(dfield, xyunit);
+            gwy_data_field_set_si_unit_z(dfield, zunit);
+            gwy_data_field_set_xreal(dfield, newreals);
+            gwy_data_field_set_yreal(dfield, newreals);
+
 
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
@@ -221,7 +236,12 @@ fft(GwyContainer *data, GwyRunType run)
         if (args.out == GWY_FFT_OUTPUT_MOD_PHASE || args.out == GWY_FFT_OUTPUT_MOD)
         {
             set_dfield_module(raout, ipout, dfield);
+            gwy_data_field_set_si_unit_xy(dfield, xyunit);
+            gwy_data_field_set_si_unit_z(dfield, zunit);
+            gwy_data_field_set_xreal(dfield, newreals);
+            gwy_data_field_set_yreal(dfield, newreals);
 
+            
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                              "FFT Modulus");
@@ -235,6 +255,10 @@ fft(GwyContainer *data, GwyRunType run)
                                                                  "/0/data"));
             }
             set_dfield_phase(raout, ipout, dfield);
+            gwy_data_field_set_si_unit_xy(dfield, xyunit);
+            gwy_data_field_set_si_unit_xy(dfield, zunit);
+            gwy_data_field_set_xreal(dfield, newreals);
+            gwy_data_field_set_yreal(dfield, newreals);
 
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
