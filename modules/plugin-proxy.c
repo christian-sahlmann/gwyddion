@@ -877,7 +877,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             continue;
         }
         if ((gsize)(val - buffer) + 1 > size) {
-            g_critical("Unexpected end of file (value expected).");
+            g_warning("Unexpected end of file (value expected).");
             goto fail;
         }
         *val = '\0';
@@ -892,7 +892,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         }
 
         if (!pos || *pos != '[') {
-            g_critical("Unexpected end of file (datafield expected).");
+            g_warning("Unexpected end of file (datafield expected).");
             goto fail;
         }
         pos++;
@@ -910,7 +910,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         else if (dfield)
             xres = gwy_data_field_get_xres(dfield);
         else {
-            g_critical("Broken dump doesn't specify data field width.");
+            g_warning("Broken dump doesn't specify data field width.");
             goto fail;
         }
         g_free(key);
@@ -921,7 +921,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         else if (dfield)
             yres = gwy_data_field_get_yres(dfield);
         else {
-            g_critical("Broken dump doesn't specify data field height.");
+            g_warning("Broken dump doesn't specify data field height.");
             goto fail;
         }
         g_free(key);
@@ -933,7 +933,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         else if (dfield)
             xreal = gwy_data_field_get_xreal(dfield);
         else {
-            g_critical("Broken dump doesn't specify real data field width.");
+            g_warning("Broken dump doesn't specify real data field width.");
             xreal = 1;   /* 0 could cause troubles */
         }
         g_free(key);
@@ -945,19 +945,19 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         else if (dfield)
             yreal = gwy_data_field_get_yreal(dfield);
         else {
-            g_critical("Broken dump doesn't specify real data field height.");
+            g_warning("Broken dump doesn't specify real data field height.");
             yreal = 1;   /* 0 could cause troubles */
         }
         g_free(key);
 
         if (!(xres > 0 && yres > 0 && xreal > 0 && yreal > 0)) {
-            g_critical("Broken dump has nonpositive data field dimensions");
+            g_warning("Broken dump has nonpositive data field dimensions");
             goto fail;
         }
 
         n = xres*yres*sizeof(gdouble);
         if ((gsize)(pos - buffer) + n + 3 > size) {
-            g_critical("Unexpected end of file (truncated datafield).");
+            g_warning("Unexpected end of file (truncated datafield).");
             goto fail;
         }
         dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
@@ -966,7 +966,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         pos += n;
         val = next_line(&pos);
         if (strcmp(val, "]]") != 0) {
-            g_critical("Missed end of data field.");
+            g_warning("Missed end of data field.");
             gwy_object_unref(dfield);
             goto fail;
         }
