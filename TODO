@@ -58,6 +58,7 @@ Release checklist:
 - must build on Linux _from tarballs_
 - must build on Windows
 - check NEWS, generate HTML version
+- make sure devel-docs/libfoo/libfoo.types loads all new types
 - generate stable API docs for gwyddion.net and upload them
 - tag CVS
 - build and upload packages
