@@ -1002,8 +1002,8 @@ fail:
  *
  * Extracts a next line from @buffer.
  *
- * @buffer is updated to point after the end of the line and the "\n" is
- * replaced with "\0", if present.
+ * @buffer is updated to point after the end of the line and the "\n" 
+ * (or "\r\n") is replaced with "\0", if present.
  *
  * Returns: The start of the line.  %NULL if the buffer is empty or %NULL.
  *          The line is not duplicated, the returned pointer points somewhere
@@ -1020,6 +1020,8 @@ next_line(gchar **buffer)
     q = *buffer;
     p = strchr(*buffer, '\n');
     if (p) {
+        if (p > buffer && *(p-1) == '\r')
+            *(p-1) = '\0';
         *buffer = p+1;
         *p = '\0';
     }
