@@ -42,7 +42,7 @@ static gboolean   gwy_data_arith_do                (void);
 
 static void       gwy_data_field_add2              (GwyDataField *dfield1,
                                                     GwyDataField *dfield2);
-static void       gwy_data_field_substract2        (GwyDataField *dfield1,
+static void       gwy_data_field_subtract2         (GwyDataField *dfield1,
                                                     GwyDataField *dfield2);
 static void       gwy_data_field_multiply2         (GwyDataField *dfield1,
                                                     GwyDataField *dfield2);
@@ -65,7 +65,7 @@ typedef enum {
 
 static const GwyEnum operations[] = {
     { "Add",       GWY_ARITH_ADD },
-    { "Substract", GWY_ARITH_SUBSTRACT },
+    { "Subtract",  GWY_ARITH_SUBSTRACT },
     { "Multiply",  GWY_ARITH_MULTIPLY },
     { "Divide",    GWY_ARITH_DIVIDE },
     { "Minimum",   GWY_ARITH_MINIMUM },
@@ -470,7 +470,7 @@ gwy_data_arith_do(void)
             break;
 
             case GWY_ARITH_SUBSTRACT:
-            gwy_data_field_substract2(dfield, dfield2);
+            gwy_data_field_subtract2(dfield, dfield2);
             break;
 
             case GWY_ARITH_MULTIPLY:
@@ -527,8 +527,8 @@ gwy_data_field_add2(GwyDataField *dfield1,
 }
 
 static void
-gwy_data_field_substract2(GwyDataField *dfield1,
-                          GwyDataField *dfield2)
+gwy_data_field_subtract2(GwyDataField *dfield1,
+                         GwyDataField *dfield2)
 {
     gdouble *p, *q;
     gint xres, yres, i;
