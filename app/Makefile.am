@@ -22,6 +22,7 @@ libgwyappinclude_HEADERS = \
 	wait.h
 
 noinst_HEADERS = \
+	authors.h \
 	gwyappinternal.h \
 	gwyddion.h
 
@@ -31,8 +32,10 @@ lib_LTLIBRARIES = libgwyapp.la
 EXTRA_DIST = \
 	makefile.msc \
 	libgwyapp.def \
-	authors.h \
 	README.objdata
+
+BUILT_SOURCES = \
+	authors.h
 
 # In following order do:
 # Any code change     C:   R++: A
