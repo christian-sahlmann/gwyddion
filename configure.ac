@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.5cvs20041008, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.5cvs20041009, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -27,6 +27,7 @@ AC_CONFIG_FILES(\
   po/Makefile.in \
   perl/Makefile \
   python/Makefile \
+  ruby/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyapp/Makefile \
   devel-docs/libgwyddion/Makefile \
@@ -63,16 +64,51 @@ AC_PROG_LIBTOOL
 AM_PROG_CC_STDC
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_CHECK_PROGS([SED],[sed])
 AC_CHECK_PROGS([STRIP],[strip])
 AM_PATH_PYTHON(2.2,,:)
-AC_PATH_PROGS(PERL,perl5 perl,:)
-AC_PATH_PROGS(POD2MAN,pod2man,:)
 gtk_CHECK_GTK_DOC
-AC_PATH_PROGS(PASCAL,fpc,:)
 
-# Check Pascal version
+# Check Perl presence and paths
+AC_PATH_PROGS(PERL,perl5 perl,:)
+if test "$PERL" != :; then
+  AC_MSG_CHECKING([for perl site module directory])
+  eval `$PERL -V:installsitelib | sed -e 's/^/perl/'`
+  eval `$PERL -V:installprefix | sed -e 's/^/perl/'`
+  PERL_SITE_LIB=`echo $perlinstallsitelib | sed -e "s#^$perlinstallprefix##"`
+  AC_MSG_RESULT([\${prefix}$PERL_SITE_LIB])
+  AC_PATH_PROGS(POD2MAN,pod2man,:)
+fi
+
+# Check Ruby presence, version and paths
+# The outer [] are necessary to quote the inner [] inside Ruby
+AC_PATH_PROGS(RUBY,ruby,:)
+if test "$RUBY" != :; then
+  AC_MSG_CHECKING([if ruby version >= 1.8])
+  if $RUBY -e ["
+require 'rbconfig'
+c = Config::CONFIG
+if c['MAJOR'] > '1' || c['MAJOR'] == '1' && c['MINOR'] >= '8'
+  exit 0
+end
+exit 1"]; then
+    ruby_version_ok=yes
+  else
+    ruby_version_ok=no
+    RUBY=:
+  fi
+  AC_MSG_RESULT([$ruby_version_ok])
+  if test "$RUBY" != :; then
+    AC_MSG_CHECKING([for ruby site module directory])
+    [rubysitelib=`$RUBY -rrbconfig -e "puts Config::CONFIG['sitelibdir']"`]
+    [rubyprefix=`$RUBY -rrbconfig -e "puts Config::CONFIG['prefix']"`]
+    RUBY_SITE_LIB=`echo $rubysitelib | sed -e "s#^$rubyprefix##"`
+    AC_MSG_RESULT([\${prefix}$RUBY_SITE_LIB])
+  fi
+fi
+
+# Check Pascal presence and version
 # The outer [] are necessary to quote the inner [] inside sed expressions
+AC_PATH_PROGS(PASCAL,fpc,:)
 if test "$PASCAL" != :; then
   AC_MSG_CHECKING([if fpc version >= 1.9])
   fpc_version=`$PASCAL -iV`
@@ -94,12 +130,7 @@ fi
 AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
 AM_CONDITIONAL([HAVE_PERL], [test "$PERL" != :])
 AM_CONDITIONAL([HAVE_PASCAL], [test "$PASCAL" != :])
-
-if test "$PERL" != :; then
-  eval `$PERL -V:installsitelib | sed -e 's/^/perl/'`
-  eval `$PERL -V:installprefix | sed -e 's/^/perl/'`
-  PERL_SITE_LIB=`echo $perlinstallsitelib | sed -e "s#^$perlinstallprefix##"`
-fi
+AM_CONDITIONAL([HAVE_RUBY], [test "$RUBY" != :])
 
 dnl With GCC, be paranoiac.  It should compile really cleanly.
 if test "$GCC" = yes; then
@@ -177,16 +208,9 @@ LIBS="$LIBS $INTLLIBS"
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Gettext package name])
 AC_SUBST(GETTEXT_PACKAGE)
 
-#AM_GLIB_DEFINE_LOCALEDIR(GWY_LOCALEDIR)
-
 dnl RPM
 RPM_RELEASE=1
 RPM_VERSION=`echo AC_PACKAGE_VERSION`
-
-dnl What were you smoking?  Why EXEEXT contains the dot while OBJEXT doesn't?
-#if test "x$OBJEXT" != "x"; then
-#  OBJEXT=".$OBJEXT";
-#fi
 
 CFLAGS="$TARGET_CFLAGS $WARNING_CFLAGS $PACKAGE_CFLAGS $CFLAGS"
 LDFLAGS="$TARGET_LDFLAGS $PACKAGE_LIBS $LDFLAGS"
@@ -194,6 +218,7 @@ LDFLAGS="$TARGET_LDFLAGS $PACKAGE_LIBS $LDFLAGS"
 AC_SUBST(RPM_RELEASE)
 AC_SUBST(RPM_VERSION)
 AC_SUBST(PERL_SITE_LIB)
+AC_SUBST(RUBY_SITE_LIB)
 AC_SUBST(PACKAGE_URL)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
           [Define to package home page, as a string.])

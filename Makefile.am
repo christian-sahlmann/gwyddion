@@ -24,6 +24,7 @@ SUBDIRS = \
 	pixmaps \
 	perl \
 	python \
+	ruby \
 	devel-docs
 
 EXTRA_DIST = \
