@@ -79,6 +79,7 @@ gwy_watchable_base_finalize(GwyWatchableClass *klass)
          * FIXME: but how?
          */
     }
+    klass = klass;
 }
 
 /**

@@ -9,8 +9,8 @@
 
 #define GWY_SERIALIZABLE_TYPE_NAME "GwySerializable"
 
-static void    gwy_serializable_base_init     (GwySerializableClass *klass);
-static void    gwy_serializable_base_finalize (GwySerializableClass *klass);
+static void    gwy_serializable_base_init     (void);
+static void    gwy_serializable_base_finalize (void);
 
 static inline gsize ctype_size     (guchar ctype);
 
@@ -47,7 +47,7 @@ gwy_serializable_get_type(void)
 static guint gwy_serializable_base_init_count = 0;
 
 static void
-gwy_serializable_base_init(GwySerializableClass *klass)
+gwy_serializable_base_init(void)
 {
     gwy_serializable_base_init_count++;
     gwy_debug("%s (base init count = %d)",
@@ -58,7 +58,7 @@ gwy_serializable_base_init(GwySerializableClass *klass)
 }
 
 static void
-gwy_serializable_base_finalize(GwySerializableClass *klass)
+gwy_serializable_base_finalize(void)
 {
     gwy_serializable_base_init_count--;
     gwy_debug("%s (base init count = %d)",
@@ -462,7 +462,7 @@ gwy_serialize_pack_struct(guchar *buffer,
 {
     const GwySerializeSpec *sp;
     gsize i, pos;
-    guint32 asize;
+    guint32 asize = 0;
     guchar *p = NULL;
     gboolean do_copy = FALSE;
     gboolean did_copy = FALSE;
@@ -483,7 +483,7 @@ gwy_serialize_pack_struct(guchar *buffer,
         nobjs = 0;
         pos = 0;
 
-        for (sp = spec; sp - spec < nspec; sp++) {
+        for (sp = spec; (gsize)(sp - spec) < nspec; sp++) {
             g_assert(sp->value);
             if (g_ascii_isupper(sp->ctype)) {
                 g_assert(sp->array_size);
@@ -800,14 +800,14 @@ gwy_serialize_unpack_struct(const guchar *buffer,
             return FALSE;
         }
 
-        for (sp = spec; sp - spec < nspec; sp++) {
+        for (sp = spec; (gsize)(sp - spec) < nspec; sp++) {
             if (strcmp(sp->name, buffer + position) == 0)
                 break;
         }
         name = buffer + position;
         position += nlen;
         ctype = gwy_serialize_unpack_char(buffer, size, &position);
-        if (sp - spec == nspec) {
+        if ((gsize)(sp - spec) == nspec) {
             g_warning("Extra component %s of type `%c'", name, ctype);
             gwy_serialize_skip_type(buffer, size, &position, ctype);
             continue;
