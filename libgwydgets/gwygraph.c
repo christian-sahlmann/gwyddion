@@ -480,4 +480,46 @@ gwy_graph_get_status_data(GwyGraph *graph, GwyGraphStatusType status)
     return NULL;
 }
 
+void 
+gwy_graph_get_boundaries(GwyGraph *graph, gdouble *x_min, gdouble *x_max, gdouble *y_min, gdouble *y_max)
+{
+    *x_min = graph->x_min;
+    *x_max = graph->x_max;
+    *y_min = graph->y_min;
+    *y_max = graph->y_max;
+}
+
+void 
+gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max)
+{
+    /*set the graph requisition*/
+    graph->x_reqmin = x_min;
+    graph->x_reqmax = x_max;
+    graph->y_reqmin = y_min;
+    graph->y_reqmax = y_max;
+  
+    /*ask axis, what does she thinks about the requisitions*/
+    gwy_axis_set_req(graph->axis_top, graph->x_reqmin, graph->x_reqmax);
+    gwy_axis_set_req(graph->axis_bottom, graph->x_reqmin, graph->x_reqmax);
+    gwy_axis_set_req(graph->axis_left, graph->y_reqmin, graph->y_reqmax);
+    gwy_axis_set_req(graph->axis_right, graph->y_reqmin, graph->y_reqmax);
+
+    /*of course, axis is never satisfied..*/
+    graph->x_max = gwy_axis_get_maximum(graph->axis_bottom);
+    graph->x_min = gwy_axis_get_minimum(graph->axis_bottom);
+    graph->y_max = gwy_axis_get_maximum(graph->axis_left);
+    graph->y_min = gwy_axis_get_minimum(graph->axis_left);
+    graph->x_reqmax = gwy_axis_get_reqmaximum(graph->axis_bottom);
+    graph->x_reqmin = gwy_axis_get_reqminimum(graph->axis_bottom);
+    graph->y_reqmax = gwy_axis_get_reqmaximum(graph->axis_left);
+    graph->y_reqmin = gwy_axis_get_reqminimum(graph->axis_left);
+    
+    /*refresh graph*/
+    gwy_graph_area_set_boundaries(graph->area, graph->x_min,
+                     graph->x_max, graph->y_min, graph->y_max);
+
+  
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
