@@ -7,6 +7,7 @@
    Optional:
    Inno Setup: http://www.jrsoftware.org/isdl.php
 
+
 1. Installation.
    Note: the order is very important.
 
@@ -29,6 +30,7 @@
    Optional:
    Install Inno Setup.
 
+
 2. Setup
 
    For some strange reason, libraries have to be in PATH too.
@@ -36,4 +38,12 @@
        /c/Program Files/Common Files/GTK/2.0/lib
    to PATH in c:/msys/1.0/etc/profile.  Don't forget the trailing lib.
 
-   Add /c/Dev-C++/bin to PATH in c:/msys/1.0/etc/profile too.
+   Add /c/Dev-C++/bin to PATH in c:/msys/1.0/etc/profile too so that
+   pkg-config et. al. is found.
+
+
+3. Gwyddion compilation.
+
+   Run MSYS, unpack the source tarball, cd to the created directory
+   and run ./configure --enable-static (FIXME: WHY???).
+
