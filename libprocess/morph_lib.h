@@ -25,19 +25,20 @@ gdouble **iopen(gdouble **image, gint im_xsiz, gint im_ysiz, gdouble **tip, gint
 
 void itip_estimate(gdouble **image, gint im_xsiz, gint im_ysiz,
 		   gint tip_xsiz, gint tip_ysiz, gint xc, gint yc, gdouble **tip0,
-		   gdouble thresh);
+		   gdouble thresh, gboolean use_edges);
 
 gint itip_estimate_iter(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-   gint xc, gint yc, gdouble **tip0, gdouble thresh);
+   gint xc, gint yc, gdouble **tip0, gdouble thresh, gboolean use_edges);
 
 void itip_estimate0(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-   gint xc, gint yc, gdouble **tip0, gdouble thresh);
+   gint xc, gint yc, gdouble **tip0, gdouble thresh, gboolean use_edges);
 
 gint useit(gint x, gint y, gdouble **image, gint sx, gint sy, gint delta);
 
 gint itip_estimate_point(gint ixp, gint jxp, gdouble **image, 
 			 gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-			 gint xc, gint yc, gdouble **tip0, gdouble thresh);
+			 gint xc, gint yc, gdouble **tip0, gdouble thresh,
+             gboolean use_edges);
 
 
 #endif

@@ -18,6 +18,7 @@
    listed below.
 */
 
+
 #include <glib.h>
 #include <stdio.h>
 /* FIXME: memory.h???
@@ -25,12 +26,7 @@
 #include <memory.h>
 #include "morph_lib.h"
 
-/* FIXME: already defined in GLib */
-#define MIN(a,b) ((a)<(b)?a:b)
-#define MAX(a,b) ((a)>(b)?a:b)
-
 /* The following routines allow allocation and freeing of matrices */
-
 gdouble**
 allocmatrix(gint ysiz, gint xsiz)
 /* 
@@ -43,7 +39,7 @@ allocmatrix(gint ysiz, gint xsiz)
     gint i;                     /* counter */
 
     /* Allocate pointers to rows */
-    mptr = (gdouble **)malloc(ysiz * sizeof(gdouble *));
+    mptr = (gdouble **)g_malloc(ysiz * sizeof(gdouble *));
     if (mptr == NULL) {
         printf("Error: Allocation of mptr failed in allocmatrix\n");
         return NULL;
@@ -52,9 +48,9 @@ allocmatrix(gint ysiz, gint xsiz)
 
     /* Allocate rows */
     for (i = 0; i < ysiz; i++) {
-        mptr[i] = (gdouble *)malloc(xsiz * sizeof(gdouble));
+        mptr[i] = (gdouble *)g_malloc(xsiz * sizeof(gdouble));
         if (mptr[i] == NULL) {
-            printf("Error: Allocation of mptr[%ld] failed in allocmatrix\n", i);
+            printf("Error: Allocation of mptr[%d] failed in allocmatrix\n", i);
             return NULL;
         }
     }
@@ -70,8 +66,8 @@ freematrix(gdouble **mptr, gint ysiz)
     gint i;
 
     for (i = 0; i < ysiz; i++)
-        free(mptr[i]);
-    free(mptr);
+        g_free(mptr[i]);
+    g_free(mptr);
 }
 
 /* The following routine performs reflection of integer arrays. The integers
@@ -180,7 +176,7 @@ icmap(gdouble **image, gint im_xsiz, gint im_ysiz,
     gint tpxmin, tpxmax, tpymin, tpymax;
     gint count;
     gint rxc, ryc;              /* center coordinates of reflected tip */
-    gint x, y;
+    gint x=0, y=0;
 
     rxc = tip_xsiz - 1 - xc;
     ryc = tip_ysiz - 1 - yc;
@@ -242,7 +238,7 @@ iopen(gdouble **image, gint im_xsiz, gint im_ysiz, gdouble **tip, gint tip_xsiz,
 void
 itip_estimate(gdouble **image, gint im_xsiz, gint im_ysiz,
               gint tip_xsiz, gint tip_ysiz, gint xc, gint yc, gdouble **tip0,
-              gdouble thresh)
+              gdouble thresh, gboolean use_edges)
 {
     gint iter = 0;
     gint count = 1;
@@ -250,9 +246,10 @@ itip_estimate(gdouble **image, gint im_xsiz, gint im_ysiz,
     while (count) {
         iter++;
         count = itip_estimate_iter(image, im_xsiz, im_ysiz,
-                                   tip_xsiz, tip_ysiz, xc, yc, tip0, thresh);
-        printf("Finished iteration #%ld. ", iter);
-        printf("%ld image locations produced refinement.\n", count);
+                                   tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
+                                   use_edges);
+        printf("Finished iteration #%d. ", iter);
+        printf("%d image locations produced refinement.\n", count);
     }
 }
 
@@ -271,10 +268,6 @@ itip_estimate(gdouble **image, gint im_xsiz, gint im_ysiz,
    replace those in tip0, and the number of pixels where the value was
    changed is returned.
    */
-
-/* FIXME: use GLib macros for __floating point__ numbers */
-#define MINUS_INF -2147483648L  /* smallest integer */
-#define INFINITY 2147483647L    /* largest integer */
 /* The interior of the image is easier (and safer) to use in calculating
    the tip estimate. At the edges part of the tip extends beyond the
    edge where the image values are unknown. It is possible to handle
@@ -293,7 +286,8 @@ itip_estimate(gdouble **image, gint im_xsiz, gint im_ysiz,
 
 gint
 itip_estimate_iter(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
-                   gint tip_ysiz, gint xc, gint yc, gdouble **tip0, gdouble thresh)
+                   gint tip_ysiz, gint xc, gint yc, gdouble **tip0, gdouble thresh,
+                   gboolean use_edges)
 {
     gint ixp, jxp;              /* index into the image (x') */
     gdouble **open;
@@ -303,11 +297,11 @@ itip_estimate_iter(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     open = iopen(image, im_xsiz, im_ysiz, tip0, tip_xsiz, tip_ysiz);
 
     for (jxp = tip_ysiz - 1 - yc; jxp <= im_ysiz - 1 - yc; jxp++) {
-        for (ixp = tip_xsiz - 1 - xc; ixp <= im_xsiz - 1 - xc; ixp++) {
+         for (ixp = tip_xsiz - 1 - xc; ixp <= im_xsiz - 1 - xc; ixp++) {
             if (image[jxp][ixp] - open[jxp][ixp] > thresh)
                 if (itip_estimate_point
                     (ixp, jxp, image, im_xsiz, im_ysiz, tip_xsiz, tip_ysiz, xc,
-                     yc, tip0, thresh))
+                     yc, tip0, thresh, use_edges))
                     count++;
         }
     }
@@ -324,7 +318,8 @@ itip_estimate_iter(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
 */
 void
 itip_estimate0(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
-               gint tip_ysiz, gint xc, gint yc, gdouble **tip0, gdouble thresh)
+               gint tip_ysiz, gint xc, gint yc, gdouble **tip0, gdouble thresh,
+               gboolean use_edges)
 {
     gint i, j, n;
     gint arraysize;  /* size of array allocated to store list of image maxima */
@@ -349,15 +344,15 @@ itip_estimate0(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
      */
     arraysize = 300;
     /* FIXME: replace stuff like this with g_new() */
-    x = (gdouble *)malloc(arraysize * sizeof(gdouble));
+    x = (gdouble *)g_malloc(arraysize * sizeof(gdouble));
     if (x == NULL) {
         printf("Unable to allocate x array in itip_estimate0 routine.\n");
         return;
     }
-    y = (gdouble *)malloc(arraysize * sizeof(gdouble));
+    y = (gdouble *)g_malloc(arraysize * sizeof(gdouble));
     if (y == NULL) {
         printf("Unable to allocate y array in itip_estimate0 routine.\n");
-        free(x);
+        g_free(x);
         return;
     }
 
@@ -384,14 +379,14 @@ itip_estimate0(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
             if (useit(i, j, image, im_xsiz, im_ysiz, delta)) {
                 if (n == arraysize) {   /* need more room in temporary arrays */
                     arraysize *= 2;     /* increase array size by factor of 2 */
-                    x = (gdouble *)realloc(x, arraysize * sizeof(gdouble));
+                    x = (gdouble *)g_realloc(x, arraysize * sizeof(gdouble));
                     if (x == NULL) {
                         printf
                             ("Unable to realloc x array in itip_estimate0.\n");
                         free(y);
                         return;
                     }
-                    y = (gdouble *)realloc(y, arraysize * sizeof(gdouble));
+                    y = (gdouble *)g_realloc(y, arraysize * sizeof(gdouble));
                     if (y == NULL) {
                         printf
                             ("Unable to realloc y array in itip_estimate0.\n");
@@ -405,25 +400,26 @@ itip_estimate0(gdouble **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
             }
         }
     }
-    printf("Found %ld internal local maxima\n", n);
+    printf("Found %d internal local maxima\n", n);
 
-
+   
     /* Now refine tip at these coordinates recursively until no more change */
     do {
         count = 0;
         iter++;
         for (i = 0; i < n; i++)
             if (itip_estimate_point(x[i], y[i], image, im_xsiz, im_ysiz,
-                                    tip_xsiz, tip_ysiz, xc, yc, tip0, thresh))
+                                    tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
+                                    use_edges))
                 count++;
         printf
-            ("Finished iteration #%ld. %ld image locations produced refinement.\n",
+            ("Finished iteration #%d. %d image locations produced refinement.\n",
              iter, count);
     } while (count);
 
     /* free temporary space */
-    free(x);
-    free(y);
+    g_free(x);
+    g_free(y);
 }
 
 /* 
@@ -482,13 +478,11 @@ useit(gint x, gint y, gdouble **image, gint sx, gint sy, gint delta)
    of the edge, set USE_EDGES to 0 on the next line.   
 */
 
-/* FIXME: should be runtime option, two functions, etc. */
-#define USE_EDGES 1             /* set to 1 to include edges */
-
 gint
 itip_estimate_point(gint ixp, gint jxp, gdouble **image,
                     gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-                    gint xc, gint yc, gdouble **tip0, gdouble thresh)
+                    gint xc, gint yc, gdouble **tip0, gdouble thresh, 
+                    gboolean use_edges)
 {
     gint ix, jx,                /* index into the output tip array (x) */
       id, jd;                   /* index into p' (d) */
@@ -511,7 +505,7 @@ itip_estimate_point(gint ixp, gint jxp, gdouble **image,
                    away, we can leave out the overhead of checking for them
                    in this section. */
                 imagep = image[jxp][ixp];
-                dil = MINUS_INF;        /* initialize maximum to -infinity */
+                dil = -G_MAXDOUBLE;        /* initialize maximum to -infinity */
                 for (jd = 0; jd < tip_ysiz; jd++) {
                     for (id = 0; id < tip_xsiz; id++) {
                         if (imagep - image[jxp + yc - jd][ixp + xc - id] >
@@ -523,7 +517,7 @@ itip_estimate_point(gint ixp, gint jxp, gdouble **image,
                         dil = MAX(dil, temp);
                     }           /* end for id */
                 }               /* end for jd */
-                if (dil == MINUS_INF)
+                if (dil == -G_MAXDOUBLE)
                     continue;
                 tip0[jx][ix] =
                     dil < tip0[jx][ix] - thresh ? (count++,
@@ -532,66 +526,68 @@ itip_estimate_point(gint ixp, gint jxp, gdouble **image,
         }                       /* end for jx */
         return (count);
     }                           /* endif */
-#if USE_EDGES
-    /* Now handle the edges */
-    for (jx = 0; jx < tip_ysiz; jx++) {
-        for (ix = 0; ix < tip_xsiz; ix++) {
-            imagep = image[jxp][ixp];
-            dil = MINUS_INF;    /* initialize maximum to -infinity */
-            for (jd = 0; jd <= tip_ysiz - 1 && dil < INFINITY; jd++) {
-                for (id = 0; id <= tip_xsiz - 1; id++) {
-                    /* Determine whether the tip apex at (xc,yc) lies within
-                       the domain of the translated image, and if so, if it
-                       is inside (i.e. below or on the surface of) the image. */
-                    apexstate = outside;        /* initialize */
-                    if (jxp + yc - jd < 0 || jxp + yc - jd >= im_ysiz ||
-                        ixp + xc - id < 0 || ixp + xc - id >= im_xsiz)
-                        apexstate = inside;
-                    else if (imagep - image[jxp + yc - jd][ixp + xc - id] <=
-                             tip0[jd][id])
-                        apexstate = inside;
-                    /* Determine whether the point (ix,jx) under consideration
-                       lies within the domain of the translated image */
-                    if (jxp + jx - jd < 0 || jxp + jx - jd >= im_ysiz ||
-                        ixp + ix - id < 0 || ixp + ix - id >= im_xsiz)
-                        xstate = outside;
-                    else
-                        xstate = inside;
 
-                    /* There are 3 actions we might take, depending upon
-                       which of 4 states (2 apexstate possibilities times 2 
-                       xstate ones) we are in. */
+    if (use_edges)
+    {
+        /* Now handle the edges */
+        for (jx = 0; jx < tip_ysiz; jx++) {
+            for (ix = 0; ix < tip_xsiz; ix++) {
+                imagep = image[jxp][ixp];
+                dil = -G_MAXDOUBLE;    /* initialize maximum to -infinity */
+                for (jd = 0; jd <= tip_ysiz - 1 && dil < G_MAXDOUBLE; jd++) {
+                    for (id = 0; id <= tip_xsiz - 1; id++) {
+                        /* Determine whether the tip apex at (xc,yc) lies within
+                           the domain of the translated image, and if so, if it
+                           is inside (i.e. below or on the surface of) the image. */
+                        apexstate = outside;        /* initialize */
+                        if (jxp + yc - jd < 0 || jxp + yc - jd >= im_ysiz ||
+                            ixp + xc - id < 0 || ixp + xc - id >= im_xsiz)
+                            apexstate = inside;
+                        else if (imagep - image[jxp + yc - jd][ixp + xc - id] <=
+                                 tip0[jd][id])
+                            apexstate = inside;
+                        /* Determine whether the point (ix,jx) under consideration
+                           lies within the domain of the translated image */
+                        if (jxp + jx - jd < 0 || jxp + jx - jd >= im_ysiz ||
+                            ixp + ix - id < 0 || ixp + ix - id >= im_xsiz)
+                            xstate = outside;
+                        else
+                            xstate = inside;
+    
+                        /* There are 3 actions we might take, depending upon
+                           which of 4 states (2 apexstate possibilities times 2 
+                           xstate ones) we are in. */
 
-                    /* If apex is outside and x is either in or out no change
-                       is made for this (id,jd) */
-                    if (apexstate == outside)
-                        continue;
+                        /* If apex is outside and x is either in or out no change
+                           is made for this (id,jd) */
+                        if (apexstate == outside)
+                            continue;
 
-                    /* If apex is inside and x is outside
-                       worst case is translated image value -> INFINITY.
-                       This would result in no change for ANY (id,jd). We
-                       therefore abort the loop and go to next (ix,jx) value */
-                    if (xstate == outside)
-                        goto nextx;
+                        /* If apex is inside and x is outside
+                           worst case is translated image value -> G_MAXDOUBLE.
+                           This would result in no change for ANY (id,jd). We
+                           therefore abort the loop and go to next (ix,jx) value */
+                        if (xstate == outside)
+                            goto nextx;
 
-                    /* The only remaining possibility is x and apex both inside. 
-                       This is the same case we treated in the interior. */
-                    temp =
-                        image[jx + jxp - jd][ix + ixp - id] + tip0[jd][id] -
-                        imagep;
-                    dil = MAX(dil, temp);
-                }               /* end for id */
-            }                   /* end for jd */
-            if (dil == MINUS_INF)
-                continue;
+                        /* The only remaining possibility is x and apex both inside. 
+                           This is the same case we treated in the interior. */
+                        temp =
+                            image[jx + jxp - jd][ix + ixp - id] + tip0[jd][id] -
+                            imagep;
+                        dil = MAX(dil, temp);
+                    }               /* end for id */
+                }                   /* end for jd */
+                if (dil == -G_MAXDOUBLE)
+                    continue;
 
-            tip0[jx][ix] =
-                dil < tip0[jx][ix] - thresh ? (count++,
-                                               dil + thresh) : tip0[jx][ix];
-          nextx:;
-        }                       /* end for ix */
-    }                           /* end for jx */
-#endif
+                tip0[jx][ix] =
+                    dil < tip0[jx][ix] - thresh ? (count++,
+                                                   dil + thresh) : tip0[jx][ix];
+              nextx:;
+            }                       /* end for ix */
+        }                           /* end for jx */
+    }
 
     return (count);
 }
