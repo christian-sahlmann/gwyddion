@@ -26,7 +26,7 @@ Source: "include\libprocess\*.*"; DestDir: "{app}\include\libprocess"
 Source: "include\libdraw\*.*"; DestDir: "{app}\include\libdraw"
 Source: "include\libgwydgets\*.*"; DestDir: "{app}\include\libgwydgets"
 Source: "include\libgwymodule\*.*"; DestDir: "{app}\include\libgwymodule"
-Source: "include\libgwyapp\*.*"; DestDir: "{app}\include\libgwyapp"
+Source: "include\app\*.*"; DestDir: "{app}\include\app"
 Source: "COPYING.wri"; DestDir: "{app}"
 
 [Icons]
