@@ -120,8 +120,8 @@ use(GwyDataWindow *data_window,
         func_slots.layer_type = GWY_TYPE_LAYER_LINES;
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
-        ((ToolControls*)state->user_data)->state = state;
     }
+    ((ToolControls*)state->user_data)->state = state;
     gwy_unitool_use(state, data_window, reason);
 }
 
@@ -425,7 +425,6 @@ dialog_abandon(GwyUnitoolState *state)
 static void
 interp_changed_cb(GObject *item, ToolControls *controls)
 {
-    gwy_debug("");
     controls->interp
         = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
 

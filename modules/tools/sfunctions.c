@@ -137,8 +137,8 @@ use(GwyDataWindow *data_window,
         func_slots.layer_type = GWY_TYPE_LAYER_SELECT;
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
-        ((ToolControls*)state->user_data)->state = state;
     }
+    ((ToolControls*)state->user_data)->state = state;
     gwy_unitool_use(state, data_window, reason);
 }
 
