@@ -17,7 +17,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
 #include <string.h>
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
@@ -89,6 +88,23 @@ toolbox_append_graph_func(GtkWidget *toolbox,
                               (gpointer)name);
 }
 
+static GSList*
+toolbox_add_menubar(GtkWidget *container,
+                    GtkWidget *menu,
+                    const gchar *item_label,
+                    GSList *menus)
+{
+    GtkWidget *item;
+
+    item = gtk_menu_item_new_with_mnemonic(item_label);
+    gtk_menu_shell_append(GTK_MENU_SHELL(container), item);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
+    if (!menus)
+        menus = g_slist_append(menus, container);
+
+    return menus;
+}
+
 GtkWidget*
 gwy_app_toolbox_create(void)
 {
@@ -101,8 +117,7 @@ gwy_app_toolbox_create(void)
             | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         0
     };
-    GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *vmenubar,
-              *item;
+    GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *vmenubar;
     GtkAccelGroup *accel_group;
     GList *list;
     GSList *labels = NULL, *l;
@@ -126,36 +141,22 @@ gwy_app_toolbox_create(void)
 
     vmenubar = gwy_vmenu_bar_new();
     gtk_box_pack_start(GTK_BOX(vbox), vmenubar, FALSE, FALSE, 0);
-    menus = g_slist_append(menus, vmenubar);
 
-    gtk_menu_shell_append(GTK_MENU_SHELL(vmenubar),
-                          item = gtk_menu_item_new_with_mnemonic(_("_File")));
-    menu = gwy_app_menu_create_file_menu(accel_group);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
-
-    gtk_menu_shell_append(GTK_MENU_SHELL(vmenubar),
-                          item = gtk_menu_item_new_with_mnemonic(_("_Edit")));
-    menu = gwy_app_menu_create_edit_menu(accel_group);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
-
-    gtk_menu_shell_append(GTK_MENU_SHELL(vmenubar),
-                          item = gtk_menu_item_new_with_mnemonic(_("_Data "
-                                                                   "Process")));
+    menus = toolbox_add_menubar(vmenubar,
+                                gwy_app_menu_create_file_menu(accel_group),
+                                _("_File"), menus);
+    menus = toolbox_add_menubar(vmenubar,
+                                gwy_app_menu_create_edit_menu(accel_group),
+                                _("_Edit"), menus);
     menu = gwy_app_menu_create_proc_menu(accel_group);
-    gwy_app_menu_set_sensitive_both(item, GWY_MENU_FLAG_DATA, 0);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
     g_object_set_data(G_OBJECT(toolbox), "<proc>", menu);     /* XXX */
-
-    gtk_menu_shell_append(GTK_MENU_SHELL(vmenubar),
-                          item = gtk_menu_item_new_with_mnemonic(_("_Graph")));
-    menu = gwy_app_menu_create_graph_menu(accel_group);
-    gwy_app_menu_set_sensitive_both(item, GWY_MENU_FLAG_GRAPH, 0);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
-
-    gtk_menu_shell_append(GTK_MENU_SHELL(vmenubar),
-                          item = gtk_menu_item_new_with_mnemonic(_("_Meta")));
-    menu = gwy_app_menu_create_meta_menu(accel_group);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
+    menus = toolbox_add_menubar(vmenubar, menu, _("_Data Process"), menus);
+    menus = toolbox_add_menubar(vmenubar,
+                                gwy_app_menu_create_graph_menu(accel_group),
+                                _("_Graph"), menus);
+    menus = toolbox_add_menubar(vmenubar,
+                                gwy_app_menu_create_meta_menu(accel_group),
+                                _("_Meta"), menus);
 
     gwy_app_menu_set_sensitive_recursive(vmenubar, &sens_data_all);
 
