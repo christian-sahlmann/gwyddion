@@ -39,8 +39,8 @@ typedef struct {
     GtkWidget *fitting;
     GtkWidget *direction;
     GtkWidget *exclude;
-    gint fit;
-    gint dir;
+    GwyFitLineType fit;
+    GtkOrientation dir;
     gboolean exc;
 } ToolControls;
 
@@ -392,36 +392,27 @@ static const gchar *dir_key = "/tool/polynom/direction";
 static void
 save_args(GwyContainer *container, ToolControls *controls)
 {
-    gwy_container_set_boolean_by_name(container, exc_key,
-                                      controls->exc);
-    gwy_container_set_int32_by_name(container, fit_key,
-                                    controls->fit);
-    gwy_container_set_int32_by_name(container, dir_key,
-                                    controls->dir);
+    gwy_container_set_boolean_by_name(container, exc_key, controls->exc);
+    gwy_container_set_enum_by_name(container, fit_key, controls->fit);
+    gwy_container_set_enum_by_name(container, dir_key, controls->dir);
 }
 
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
-    if (gwy_container_contains_by_name(container, exc_key))
-        controls->exc = gwy_container_get_boolean_by_name(container,
-                                                               exc_key);
-    else
-        controls->exc = FALSE;
+    controls->exc = FALSE;
+    controls->fit = GWY_FIT_POLY_1;
+    controls->dir = GTK_ORIENTATION_HORIZONTAL;
 
-    if (gwy_container_contains_by_name(container, fit_key))
-        controls->fit = gwy_container_get_int32_by_name(container,
-                                                          fit_key);
-    else
-        controls->fit = GWY_FIT_POLY_1;
+    gwy_container_gis_boolean_by_name(container, exc_key, &controls->exc);
+    gwy_container_gis_enum_by_name(container, fit_key, &controls->fit);
+    gwy_container_gis_enum_by_name(container, dir_key, &controls->dir);
 
-    if (gwy_container_contains_by_name(container, dir_key))
-        controls->dir = gwy_container_get_int32_by_name(container,
-                                                          dir_key);
-    else
-        controls->dir = 0;
-
+    /* sanitize */
+    controls->exc = !!controls->exc;
+    controls->fit = MIN(controls->fit, GWY_FIT_POLY_3);
+    controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
     /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
