@@ -28,6 +28,16 @@ gwy_app_file_open_cb(void)
 }
 
 void
+gwy_app_file_close_cb(void)
+{
+    GwyDataWindow *data_window;
+
+    data_window = gwy_app_get_current_data_window();
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    gtk_widget_destroy(GTK_WIDGET(data_window));
+}
+
+void
 gwy_app_file_save_as_cb(void)
 {
     GtkFileSelection *selector;

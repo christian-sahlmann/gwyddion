@@ -117,8 +117,9 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
         { "/File/_Open...", "<control>O", gwy_app_file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
         { "/File/_Save", "<control>S", gwy_app_file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
         { "/File/Save _As...", "<control><shift>S", gwy_app_file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
+        { "/File/_Close", "<control>W", gwy_app_file_close_cb, 0, "<StockItem>", GTK_STOCK_CLOSE },
         { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/File/_Quit...", "<control>Q", gtk_main_quit, 0, "<StockItem>", GTK_STOCK_QUIT },
+        { "/File/_Quit...", "<control>Q", gwy_app_quit, 0, "<StockItem>", GTK_STOCK_QUIT },
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;
@@ -132,6 +133,8 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     item = gtk_item_factory_get_item(item_factory, "<file>/File/Save");
     set_sensitive(item, GWY_MENU_FLAG_DATA);
     item = gtk_item_factory_get_item(item_factory, "<file>/File/Save As...");
+    set_sensitive(item, GWY_MENU_FLAG_DATA);
+    item = gtk_item_factory_get_item(item_factory, "<file>/File/Close");
     set_sensitive(item, GWY_MENU_FLAG_DATA);
     sens_data.flags = GWY_MENU_FLAG_DATA;
     sens_data.set_to = 0;

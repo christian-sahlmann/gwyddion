@@ -17,11 +17,12 @@ static const gchar *menu_list[] = {
     "<file>", "<proc>", "<xtns>", "<edit>",
 };
 
-static void
+void
 gwy_app_quit(void)
 {
     GwyDataWindow *data_window;
 
+    gwy_debug("%s", __FUNCTION__);
     while ((data_window = gwy_app_get_current_data_window()))
         gtk_widget_destroy(GTK_WIDGET(data_window));
 
