@@ -94,7 +94,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo icolorange_func_info = {
         "icolorange",
-        "gwy_graph_palette",  /* FIXME */
+        "gwy_color_range",
         "Stretch color range to part of data.",
         130,
         &use,
@@ -359,7 +359,7 @@ save_args(GwyContainer *container, ToolControls *controls)
 static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
-    controls->do_preview = FALSE;
+    controls->do_preview = TRUE;
 
     gwy_container_gis_boolean_by_name(container, do_preview_key,
                                       &controls->do_preview);
