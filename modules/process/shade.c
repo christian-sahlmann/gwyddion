@@ -112,11 +112,6 @@ shade(GwyContainer *data, GwyRunType run)
         shade_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || shade_dialog(&args);
     if (ok) {
-        data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-        g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-        gwy_app_clean_up_data(data);
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
 
        /* gwy_app_undo_checkpoint(data, "/0/show");*/
         if (gwy_container_contains_by_name(data, "/0/show")) {
