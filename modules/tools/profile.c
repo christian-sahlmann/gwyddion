@@ -401,7 +401,7 @@ update_labels()
     n_of_lines = gwy_layer_lines_get_lines(select_layer, lines);
 
     j=0;
-    printf("%d lines.\n", n_of_lines);
+    gwy_debug("%d lines.\n", n_of_lines);
     for (i=0; i<(2*(MAX_N_OF_PROFILES)); i++)
     {
         if (i<(2*n_of_lines))
