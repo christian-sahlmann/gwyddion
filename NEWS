@@ -1,12 +1,16 @@
-1.1cvs20040419
+1.1cvs20040423
 
 1.2
 Application:
 - Reacts to --version and --help options.
 - Data window zoom is keyboard controlable (+, =, -, z).
+- Settings are finaly stored in a human readable text file, conversion from
+  the binary dump should be automatic and smooth
 
 Modules:
 - Unrotate (new): Automagically correct rotation in xy plane.
+- Graph fit (new): Fit common functions to graph data.
+- Basic mask operations (new): invert, extract, grow, shrink masks.
 - Data arithmetic, Cross-correlation, and Mask by correlation are regular
   modules now.
 - Slope distribution: Optionally can use local plane fitting for slopes,
@@ -16,7 +20,14 @@ Modules:
 Library:
 - libgwyapp: Option menu of data windows.
 - libprocess: Several area functions were given more logical names and `cros'
-  was corrected to `cross' in names; old function names still work.
+  was corrected to `cross' in names; old function names will continue to
+  work.
+- libgwydgets: Radio button group constructor from GwyEnum.
+- libgwyddion: Text dump/restore of GwyContainer
+- libgwyddion: Presets for common fitting functions for GwyNLFitter
+
+Other:
+- Several new palettes.
 
 
 1.1
