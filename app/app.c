@@ -744,7 +744,8 @@ gwy_app_clean_up_data(GwyContainer *data)
 }
 
 void
-gwy_app_change_mask_color_cb(gpointer user_data)
+gwy_app_change_mask_color_cb(gpointer unused,
+                             gboolean defaultc)
 {
     static const gdouble default_mask_color[4] = { 1.0, 0.0, 0.0, 0.5 };
     static const gchar *keys[] = {
@@ -758,9 +759,6 @@ gwy_app_change_mask_color_cb(gpointer user_data)
     guint16 gdkalpha;
     gdouble p[4];
     gint i, response;
-    gboolean defaultc;
-
-    defaultc = GPOINTER_TO_INT(user_data);
 
     if (!defaultc) {
         data_window = gwy_app_data_window_get_current();

@@ -143,13 +143,13 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
         { "/_File", NULL, NULL, 0, "<Branch>", NULL },
         { "/File/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/File/_Open", "<control>O", gwy_app_file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
+        { "/File/Open _Recent", NULL, NULL, 0, "<Branch>", NULL },
+        { "/File/Open Recent/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/File/_Save", "<control>S", gwy_app_file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
         { "/File/Save _As", "<control><shift>S", gwy_app_file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
     };
     static GtkItemFactoryEntry menu_items2[] = {
         { "/File/_Close", "<control>W", gwy_app_file_close_cb, 0, "<StockItem>", GTK_STOCK_CLOSE },
-        { "/File/Open _Recent", NULL, NULL, 0, "<Branch>", NULL },
-        { "/File/Open Recent/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
         { "/File/_Quit", "<control>Q", destroy_app_window, 0, "<StockItem>", GTK_STOCK_QUIT },
     };
@@ -202,6 +202,7 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
         { "/Edit/Remove _Mask", NULL, gwy_app_kill_mask_cb, 0, NULL, NULL },
         { "/Edit/Remove _Presentation", NULL, gwy_app_kill_show_cb, 0, NULL, NULL },
         { "/Edit/Change Mask _Color", NULL, gwy_app_change_mask_color_cb, 0, NULL, NULL },
+        { "/Edit/Change Default Mask _Color", NULL, gwy_app_change_mask_color_cb, 1, NULL, NULL },
     };
     static const gchar *items_need_data[] = {
         "/Edit/Duplicate", "/Edit/Data Arithmetic",
