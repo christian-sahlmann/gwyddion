@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="plugin-proxy-rgi" revision="@(#) $Id$">
+  <refmeta>
+    <refentrytitle>RGI Registration Method</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>Gwyddion</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>RGI Registration Method</refname>
+    <refpurpose>
+      Alternate plug-in registration method using RGI files
+    </refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Overview</title>
+    <para>
+      The original and standard plug-in registration procedure consists of
+      querying (i.e., running) each plug-in by plug-in proxy on Gwyddion
+      start-up.  The queried plug-in prints its registration information
+      to standard output and plug-in proxy captures and parses it.
+    </para>
+    <para>
+      The standard method has two problems:
+      <itemizedlist>
+        <listitem>
+          On some systems (particularly various MS Windows versions) there
+          are troubles with capturing standard otuput of some programs
+          (particularly those compiled by Pascal/Delphi compilers).
+          It is not clear, why it doesn't work, but it simply doesn't
+          (any insight would be highly appreciated).
+        </listitem>
+        <listitem>
+          It is slow, namely on systems with expensive process creation,
+          like MS Windows.
+        </listitem>
+      </itemizedlist>
+    </para>
+    <para>
+      Thus an alternate plug-in registration method was implemented, using
+      RGI (ReGistration Information) files.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>RGI registration</title>
+    <para>
+      When plug-in proxy finds an executable plug-in, let's call it
+      <filename>foo.exe</filename>, before trying to run it it looks for
+      following files (in this order):
+      <simplelist>
+        <member><filename>foo.exe.rgi</filename></member>
+        <member><filename>foo.exe.RGI</filename></member>
+        <member><filename>foo.rgi</filename></member>
+        <member><filename>foo.RGI</filename></member>
+      </simplelist>
+      If the plug-in filename has no extension, only the first two are
+      tried.  If it has more extensions, only the last one is replaced.
+    </para>
+    <para>
+      The first file found (if any) is used instead of the standard output
+      of <filename>foo.exe</filename>, i.e., as its registration data.
+      If none of them is present, the registration continues as usual by
+      running <filename>foo.exe</filename> with a <option>register</option>
+      argument.
+    </para>
+    <para>
+      After a successfull registration, there's no difference in actual
+      execution of plug-ins registered by running them or using a RGI file.
+    </para>
+    <para>
+      The easiest way to create a RGI file for an existing plug in
+      is to make it dump the registration information to a file:
+      <informalexample>
+        <programlisting>foo.exe register &gt;foo.exe.rgi</programlisting>
+      </informalexample>
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Problems</title>
+    <para>
+      The main problem is that the contents of a RGI file must be kept up to
+      date with corresponding plug-in, if its specification changes.
+    </para>
+    <para>
+      The RGI method also allows to register a plug-in that is not possible to
+      actually execute on a given system, and thus confusing the user.
+      For example, it's possible to register a Python plug-in where
+      Python interpeter is not available, or executables for a different
+      operating system.
+    </para>
+  </refsect1>
+</refentry>
+

@@ -51,6 +51,13 @@
           arguments and a very simple data file format used for data
             exchange.
         </listitem>
+        <listitem>
+          Testing.  While module unloading and reloading is theoretically
+          possible, it is not implemented.  Thus one has to quit and restart
+          Gwyddion for changes in a module to take effect.  Plug-ins are
+          separate programs, so they are run in whatever state they currently
+          are each time they are used.
+        </listitem>
       </itemizedlist>
     </para>
   </refsect1>

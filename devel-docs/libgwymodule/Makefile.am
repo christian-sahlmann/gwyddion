@@ -52,8 +52,9 @@ content_files = \
 	module-tutorial-install.sgml \
 	plugin-proxy-overview.sgml \
 	plugin-proxy-dump.sgml \
+	plugin-proxy-file.sgml \
 	plugin-proxy-process.sgml \
-	plugin-proxy-file.sgml
+	plugin-proxy-rgi.sgml
 
 # Other files to distribute.
 extra_files = makefile.msc

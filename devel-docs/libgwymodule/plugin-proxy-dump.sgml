@@ -150,16 +150,28 @@
     <formalpara>
       <title>Perl</title>
       <para>
-        A sample Perl data-processing plug-in is included in the source
-        distribution: <filename>plugins/process/cutoff.pl</filename>.
+        A Perl module Gwyddion::dump handling reading and writing dump files
+        is distributed as a part of Gwyddion since version 1.4.
+        This module is in the public domain.
+      </para>
+      <para>
+        A sample Perl data-processing plug-in using Gwyddion::dump is included
+        in the source distribution:
+        <filename>plugins/process/invert_perl.pl</filename>.
         This script is in the public domain.
       </para>
     </formalpara>
     <formalpara>
       <title>Python</title>
       <para>
-        A sample Python data-processing plug-in is included in the source
-        distribution: <filename>plugins/process/divide_by_2.py</filename>.
+        A Python module Gwyddion.dump handling reading and writing dump files
+        is distributed as a part of Gwyddion since version 1.4.
+        This module is in the public domain.
+      </para>
+      <para>
+        A sample Python data-processing plug-in using Gwyddion.dump is included
+        in the source distribution:
+        <filename>plugins/process/invert_python.py</filename>.
         This script is in the public domain.
       </para>
     </formalpara>
