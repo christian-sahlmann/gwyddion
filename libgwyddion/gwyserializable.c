@@ -266,6 +266,118 @@ gwy_serializable_duplicate_hard_way(GObject *object)
 }
 
 /**
+ * gwy_byteswapped_copy:
+ * @source: Pointer to memory to copy.
+ * @dest: Pointer where to copy @src to.
+ * @size: Size of one item, must be a power of 2.
+ * @len: Number of items to copy.
+ * @byteswap: Byte swapping pattern -- if a bit is set, blocks of
+ *            corresponding size are swapped.  For byte order reversion,
+ *            @byteswap must be equal to 2^@size-1.
+ *
+ * Copies memory, byte swapping meanwhile.
+ *
+ * This function is not very fast, but neither assumes any memory alignment
+ * nor alocates any temporary buffers.
+ **/
+static inline void
+gwy_byteswapped_copy(const guint8 *source,
+                     guint8 *dest,
+                     gsize size,
+                     gsize len,
+                     gsize byteswap)
+{
+    gsize i, k;
+
+    if (!byteswap) {
+        memcpy(dest, source, size*len);
+        return;
+    }
+
+    for (i = 0; i < len; i++) {
+        guint8 *b = dest + i*size;
+
+        for (k = 0; k < size; k++)
+            b[k ^ byteswap] = *(source++);
+    }
+}
+
+/**
+ * gwy_byteswapped_append:
+ * @source: Pointer to memory to copy.
+ * @dest: #GByteArray to copy the memory to.
+ * @size: Size of one item, must be a power of 2.
+ * @len: Number of items to copy.
+ * @byteswap: Byte swapping pattern -- if a bit is set, blocks of
+ *            corresponding size are swapped.  For byte order reversion,
+ *            @byteswap must be equal to 2^@size-1.
+ *
+ * Appends memory to a byte array, byte swapping meanwhile.
+ *
+ * This function is not very fast, but neither assumes any memory alignment
+ * nor alocates any temporary buffers.
+ **/
+static inline void
+gwy_byteswapped_append(guint8 *source,
+                       GByteArray *dest,
+                       gsize size,
+                       gsize len,
+                       gsize byteswap)
+{
+    gsize i, k;
+    guint8 *buffer;
+
+    if (!byteswap) {
+        g_byte_array_append(dest, source, size*len);
+        return;
+    }
+
+    buffer = dest->data + dest->len;
+    g_byte_array_set_size(dest, dest->len + size*len);
+    for (i = 0; i < len; i++) {
+        guint8 *b = buffer + i*size;
+
+        for (k = 0; k < size; k++)
+            b[k ^ byteswap] = *(source++);
+    }
+}
+
+/**
+ * ctype_size:
+ * @ctype: Component type, as in gwy_serialize_pack().
+ *
+ * Compute type size based on type letter.
+ *
+ * Returns: Size in bytes.
+ **/
+static inline gsize G_GNUC_CONST
+ctype_size(guchar ctype)
+{
+    switch (ctype) {
+        case 'c':
+        case 'b':
+        return sizeof(guchar);
+        break;
+
+        case 'i':
+        return sizeof(gint);
+        break;
+
+        case 'q':
+        return sizeof(gint64);
+        break;
+
+        case 'd':
+        return sizeof(gdouble);
+        break;
+
+        default:
+        return 0;
+        break;
+    }
+}
+
+/**
  * gwy_serialize_store_int32:
  * @buffer: A buffer to which the value should be stored.
  * @position: Position in the buffer to store @value to.
@@ -294,11 +406,11 @@ gwy_serialize_store_int32(GByteArray *buffer,
  * The @templ string can contain following characters:
  *
  * 'b' for a a boolean, 'c' for a character, 'i' for a 32bit integer,
- * 'q' for a 64bit integer, 'd' for a double, 's' for a null-terminated string.
+ * 'q' for a 64bit integer, 'd' for a gdouble, 's' for a null-terminated string.
  *
  * 'C' for a character array (a #gsize length followed by a pointer to the
  * array), 'I' for a 32bit integer array, 'Q' for a 64bit integer array,
- * 'D' for a double array.
+ * 'D' for a gdouble array.
  *
  * 'o' for a serializable object.
  *
@@ -330,38 +442,32 @@ gwy_serialize_pack(GByteArray *buffer,
     for (i = 0; i < nargs; i++) {
         gwy_debug("<%c> %lu", templ[i], buffer->len);
         switch (templ[i]) {
-            case 'b':
-            {
+            case 'b': {
                 char value = va_arg(ap, gboolean);  /* store it as char */
 
+                value = !!value;
                 g_byte_array_append(buffer, &value, 1);
             }
             break;
 
-            case 'c':
-            {
+            case 'c': {
                 char value = va_arg(ap, int);
 
                 g_byte_array_append(buffer, &value, 1);
             }
             break;
 
-            case 'C':
-            {
+            case 'C': {
                 gint32 alen = va_arg(ap, gsize);
-                guchar *value = va_arg(ap, guchar*);
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                g_byte_array_append(buffer, (guint8*)&alen, sizeof(gint32));
-#else
                 gint32 lealen = GINT32_TO_LE(alen);
+                guchar *value = va_arg(ap, guchar*);
+
                 g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-#endif
                 g_byte_array_append(buffer, value, alen*sizeof(char));
             }
             break;
 
-            case 'i':
-            {
+            case 'i': {
                 gint32 value = va_arg(ap, gint32);
 
                 value = GINT32_TO_LE(value);
@@ -369,31 +475,21 @@ gwy_serialize_pack(GByteArray *buffer,
             }
             break;
 
-            case 'I':
-            {
+            case 'I': {
                 guint32 alen = va_arg(ap, gsize);
+                guint32 lealen = GINT32_TO_LE(alen);
                 gint32 *value = va_arg(ap, gint32*);
+
+                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                /* optimize for the common case */
-                g_byte_array_append(buffer, (guint8*)&alen, sizeof(gint32));
                 g_byte_array_append(buffer, (guint8*)value,
                                     alen*sizeof(gint32));
 #else
-#warning FIXME
-                /* we can't operate on value in-place as it may be read-only
-                 * we can't simply operate on buffer, as it may not be
-                 * aligned
-                 * is there anything better than a copy? */
-                guint32 lealen = GINT32_TO_LE(alen);
-                gint32 *levalue = g_new(gint32, alen);
-                gsize j;
-
-                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-                for (j = 0; j < alen; j++)
-                    levalue[j] = GINT32_TO_LE(value[j]);
-                g_byte_array_append(buffer, (guint8*)levalue,
-                                    alen*sizeof(gint32));
-                g_free(levalue);
+                gwy_byteswapped_append((guint8*)value,
+                                       buffer,
+                                       sizeof(gint32),
+                                       alen,
+                                       (1 << sizeof(gint32)) - 1);
 #endif
             }
             break;
@@ -402,81 +498,65 @@ gwy_serialize_pack(GByteArray *buffer,
             {
                 gint64 value = va_arg(ap, gint64);
 
+                value = GINT64_TO_LE(value);
                 g_byte_array_append(buffer, (guint8*)&value, sizeof(gint64));
             }
             break;
 
-            case 'Q':
-            {
+            case 'Q': {
                 guint32 alen = va_arg(ap, gsize);
+                guint32 lealen = GUINT32_TO_LE(alen);
                 gint64 *value = va_arg(ap, gint64*);
+
+                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                /* optimize for the common case */
-                g_byte_array_append(buffer, (guint8*)&alen, sizeof(gint32));
                 g_byte_array_append(buffer, (guint8*)value,
                                     alen*sizeof(gint64));
 #else
-#warning FIXME
-                /* we can't operate on value in-place as it may be read-only
-                 * we can't simply operate on buffer, as it may not be
-                 * aligned
-                 * is there anything better than a copy? */
-                guint32 lealen = GUINT32_TO_LE(alen);
-                gint64 *levalue = g_new(gint64, alen);
-                gsize j;
-
-                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-                for (j = 0; j < alen; j++)
-                    levalue[j] = GINT64_TO_LE(value[j]);
-                g_byte_array_append(buffer, (guint8*)levalue,
-                                    alen*sizeof(gint64));
-                g_free(levalue);
+                gwy_byteswapped_append((guint8*)value,
+                                       buffer,
+                                       sizeof(gint64),
+                                       alen,
+                                       (1 << sizeof(gint64)) - 1);
 #endif
             }
             break;
 
-            case 'd':
-            {
-                double value = va_arg(ap, double);
+            case 'd': {
+                gdouble value = va_arg(ap, double);
 
-                g_byte_array_append(buffer, (guint8*)&value, sizeof(double));
-            }
-            break;
-
-            case 'D':
-            {
-                guint32 alen = va_arg(ap, gsize);
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                double *value = va_arg(ap, double*);
-                /* optimize for the common case */
-                g_byte_array_append(buffer, (guint8*)&alen, sizeof(gint32));
-                g_byte_array_append(buffer, (guint8*)value,
-                                    alen*sizeof(double));
+                g_byte_array_append(buffer, (guint8*)&value, sizeof(gdouble));
 #else
-#warning FIXME FIXME FIXME
-                /* we can't operate on value in-place as it may be read-only
-                 * we can't simply operate on buffer, as it may not be
-                 * aligned
-                 * is there anything better than a copy? */
-                /* XXX: we swap bytes like it was a gint64, since it should
-                 * not matter (one octuple like another), but who knows... */
-                gint64 *value = va_arg(ap, gint64*);
-                guint32 lealen = GUINT32_TO_LE(alen);
-                gint64 *levalue = g_new(gint64, alen);
-                gsize j;
-
-                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-                for (j = 0; j < alen; j++)
-                    levalue[j] = GINT64_TO_LE(value[j]);
-                g_byte_array_append(buffer, (guint8*)levalue,
-                                    alen*sizeof(gint64));
-                g_free(levalue);
+                gwy_byteswapped_append((guint8*)&value,
+                                       buffer,
+                                       sizeof(gdouble),
+                                       1,
+                                       (1 << sizeof(gdouble)) - 1);
 #endif
             }
             break;
 
-            case 's':
-            {
+            case 'D': {
+                guint32 alen = va_arg(ap, gsize);
+                guint32 lealen = GUINT32_TO_LE(alen);
+                gdouble *value = va_arg(ap, double*);
+
+                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+                g_byte_array_append(buffer, (guint8*)value,
+                                    alen*sizeof(gdouble));
+#else
+                gwy_byteswapped_append((guint8*)value,
+                                       buffer,
+                                       sizeof(gdouble),
+                                       alen,
+                                       (1 << sizeof(gdouble)) - 1);
+#endif
+            }
+            break;
+
+            case 's': {
                 guchar *value = va_arg(ap, guchar*);
 
                 if (!value) {
@@ -488,8 +568,7 @@ gwy_serialize_pack(GByteArray *buffer,
             }
             break;
 
-            case 'o':
-            {
+            case 'o': {
                 GObject *value = va_arg(ap, GObject*);
 
                 g_assert(value);
@@ -552,7 +631,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
                           const GwySerializeSpec *spec)
 {
     const GwySerializeSpec *sp;
-    guint32 asize = 0;
+    guint32 leasize, asize = 0;
     guint8 *arr = NULL;
     gsize i;
 
@@ -572,147 +651,93 @@ gwy_serialize_pack_struct(GByteArray *buffer,
             g_assert(sp->array_size);
             g_assert(*(gpointer*)sp->value);
             asize = *sp->array_size;
+            leasize = GINT32_TO_LE(asize);
             arr = *(guint8**)sp->value;
         }
         g_byte_array_append(buffer, sp->name, strlen(sp->name) + 1);
         g_byte_array_append(buffer, &sp->ctype, 1);
         gwy_debug("%d <%s> <%c> %lu", i, sp->name, sp->ctype, buffer->len);
         switch (sp->ctype) {
-            case 'b':
-            {
+            case 'b': {
                 /* store it as char */
                 char value = *(gboolean*)sp->value;
 
+                value = !!value;
                 g_byte_array_append(buffer, &value, 1);
             }
             break;
 
-            case 'c':
-            {
+            case 'c': {
                 g_byte_array_append(buffer, sp->value, 1);
             }
             break;
 
-            case 'C':
-            {
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                g_byte_array_append(buffer, (guint8*)sp->array_size,
-                                    sizeof(gint32));
-#else
-#warning FIXME
-                guint32 leasize = GUINT32_TO_LE(sp->array_size);
-                g_byte_array_append(buffer, (guint8*)leasize, sizeof(gint32));
-#endif
+            case 'C': {
+                g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
                 g_byte_array_append(buffer, arr, asize*sizeof(char));
             }
             break;
 
-            case 'i':
-            {
-                g_byte_array_append(buffer, sp->value, sizeof(gint32));
+            case 'i': {
+                gint32 value = *(gint32*)sp->value;
+
+                value = GINT32_TO_LE(value);
+                g_byte_array_append(buffer, (guint8*)&value, sizeof(gint32));
             }
             break;
 
-            case 'I':
-            {
+            case 'I': {
+                g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                /* optimize for the common case */
-                g_byte_array_append(buffer, (guint8*)sp->array_size,
-                                    sizeof(gint32));
                 g_byte_array_append(buffer, arr, asize*sizeof(gint32));
 #else
-#warning FIXME
-                /* we can't operate on value in-place as it may be read-only
-                 * we can't simply operate on buffer, as it may not be
-                 * aligned
-                 * is there anything better than a copy? */
-                guint32 leasize = GINT32_TO_LE(sp->array_size);
-                gint32 *plarr = (gint32*)arr;
-                gint32 *learr = g_new(gint32, sp->array_size);
-                gsize j;
-
-                g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
-                for (j = 0; j < sp->array_size; j++)
-                    learr[j] = GINT32_TO_LE(plarr[j]);
-                g_byte_array_append(buffer, (guint8*)learr,
-                                    sp->array_size*sizeof(gint32));
-                g_free(learr);
+                gwy_byteswapped_append(arr, buffer, sizeof(gint32), asize,
+                                       (1 << sizeof(gint32)) - 1);
 #endif
             }
             break;
 
-            case 'q':
-            {
-                g_byte_array_append(buffer, sp->value, sizeof(gint64));
+            case 'q': {
+                gint64 value = *(gint64*)sp->value;
+
+                value = GINT64_TO_LE(value);
+                g_byte_array_append(buffer, (guint8*)&value, sizeof(gint64));
             }
             break;
 
-            case 'Q':
-            {
+            case 'Q': {
+                g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                /* optimize for the common case */
-                g_byte_array_append(buffer, (guint8*)sp->array_size,
-                                    sizeof(gint32));
                 g_byte_array_append(buffer, arr, asize*sizeof(gint64));
 #else
-#warning FIXME
-                /* we can't operate on value in-place as it may be read-only
-                 * we can't simply operate on buffer, as it may not be
-                 * aligned
-                 * is there anything better than a copy? */
-                guint32 leasize = GINT32_TO_LE(sp->array_size);
-                gint64 *plarr = (gint64*)arr;
-                gint64 *learr = g_new(gint64, sp->array_size);
-                gsize j;
-
-                g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
-                for (j = 0; j < sp->array_size; j++)
-                    learr[j] = GINT64_TO_LE(plarr[j]);
-                g_byte_array_append(buffer, (guint8*)learr,
-                                    sp->array_size*sizeof(gint64));
-                g_free(learr);
+                gwy_byteswapped_append(arr, buffer, sizeof(gint64), asize,
+                                       (1 << sizeof(gint64)) - 1);
 #endif
             }
             break;
 
-            case 'd':
-            {
-                g_byte_array_append(buffer, sp->value, sizeof(double));
-            }
-            break;
-
-            case 'D':
-            {
+            case 'd': {
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                /* optimize for the common case */
-                g_byte_array_append(buffer, (guint8*)sp->array_size,
-                                    sizeof(gint32));
-                g_byte_array_append(buffer, arr, asize*sizeof(double));
+                g_byte_array_append(buffer, sp->value, sizeof(gdouble));
 #else
-#warning FIXME FIXME FIXME
-                /* we can't operate on value in-place as it may be read-only
-                 * we can't simply operate on buffer, as it may not be
-                 * aligned
-                 * is there anything better than a copy? */
-                /* XXX: we swap bytes like it was a gint64, since it should
-                 * not matter (one octuple like another), but who knows... */
-                guint32 leasize = GINT32_TO_LE(sp->array_size);
-                gint64 *plarr = (gint64*)arr;
-                gint64 *learr = g_new(gint64, sp->array_size);
-                gsize j;
-
-                g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
-                for (j = 0; j < sp->array_size; j++)
-                    learr[j] = GINT64_TO_LE(plarr[j]);
-                g_byte_array_append(buffer, (guint8*)learr,
-                                    sp->array_size*sizeof(gint64));
-                g_free(learr);
+                gwy_byteswapped_append(sp->value, buffer, sizeof(gdouble), 1,
+                                       (1 << sizeof(gdouble)) - 1);
 #endif
             }
             break;
 
-            case 's':
-            {
+            case 'D': {
+                g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+                g_byte_array_append(buffer, arr, asize*sizeof(gdouble));
+#else
+                gwy_byteswapped_append(arr, buffer, sizeof(gdouble), asize,
+                                       (1 << sizeof(gdouble)) - 1);
+#endif
+            }
+            break;
+
+            case 's': {
                 guchar *value = *(guchar**)sp->value;
 
                 if (!value) {
@@ -724,8 +749,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
             }
             break;
 
-            case 'o':
-            {
+            case 'o': {
                 GObject *value = *(GObject**)sp->value;
 
                 g_assert(value);
@@ -742,33 +766,6 @@ gwy_serialize_pack_struct(GByteArray *buffer,
     }
 
     return buffer;
-}
-
-static inline gsize G_GNUC_CONST
-ctype_size(guchar ctype)
-{
-    switch (ctype) {
-        case 'c':
-        case 'b':
-        return sizeof(guchar);
-        break;
-
-        case 'i':
-        return sizeof(gint);
-        break;
-
-        case 'q':
-        return sizeof(gint64);
-        break;
-
-        case 'd':
-        return sizeof(gdouble);
-        break;
-
-        default:
-        return 0;
-        break;
-    }
 }
 
 void
@@ -1065,7 +1062,7 @@ gwy_serialize_unpack_boolean(const guchar *buffer,
     g_assert(buffer);
     g_assert(position);
     g_return_val_if_fail(*position + sizeof(guchar) <= size, FALSE);
-    value = buffer[*position];
+    value = !!buffer[*position];
     *position += sizeof(guchar);
 
     gwy_debug("value = <%s>", value ? "TRUE" : "FALSE");
@@ -1192,7 +1189,13 @@ gwy_serialize_unpack_int32_array(const guchar *buffer,
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_return_val_if_fail(*position + *asize*sizeof(gint32) <= size, NULL);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, *asize*sizeof(gint32));
+#else
+    value = g_new(gint32, *asize);
+    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
+                         sizeof(gint32), *asize, (1 << sizeof(gint32)) - 1);
+#endif
     *position += *asize*sizeof(gint32);
 
     gwy_debug("|value| = %u", *asize);
@@ -1223,6 +1226,7 @@ gwy_serialize_unpack_int64(const guchar *buffer,
     g_assert(position);
     g_return_val_if_fail(*position + sizeof(gint64) <= size, 0);
     memcpy(&value, buffer + *position, sizeof(gint64));
+    value = GINT64_FROM_LE(value);
     *position += sizeof(gint64);
 
     gwy_debug("value = <%lld>", value);
@@ -1255,7 +1259,13 @@ gwy_serialize_unpack_int64_array(const guchar *buffer,
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_return_val_if_fail(*position + *asize*sizeof(gint64) <= size, NULL);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, *asize*sizeof(gint64));
+#else
+    value = g_new(gint64, *asize);
+    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
+                         sizeof(gint64), *asize, (1 << sizeof(gint64)) - 1);
+#endif
     *position += *asize*sizeof(gint64);
 
     gwy_debug("|value| = %u", *asize);
@@ -1264,13 +1274,13 @@ gwy_serialize_unpack_int64_array(const guchar *buffer,
 
 /**
  * gwy_serialize_unpack_double:
- * @buffer: A memory location containing a serialized double at position
+ * @buffer: A memory location containing a serialized gdouble at position
  *          @position.
  * @size: The size of @buffer.
  * @position: The position of the integer in @buffer, it's updated to
  *            point after it.
  *
- * Deserializes a one double.
+ * Deserializes a one gdouble.
  *
  * Returns: The integer as gdouble.
  **/
@@ -1285,7 +1295,12 @@ gwy_serialize_unpack_double(const guchar *buffer,
     g_assert(buffer);
     g_assert(position);
     g_return_val_if_fail(*position + sizeof(gdouble) <= size, 0.0);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     memcpy(&value, buffer + *position, sizeof(gdouble));
+#else
+    gwy_byteswapped_copy(buffer + *position, (guint8*)&value,
+                         sizeof(gdouble), 1, (1 << sizeof(gdouble)) - 1);
+#endif
     *position += sizeof(gdouble);
 
     gwy_debug("value = <%g>", value);
@@ -1294,16 +1309,16 @@ gwy_serialize_unpack_double(const guchar *buffer,
 
 /**
  * gwy_serialize_unpack_double_array:
- * @buffer: A memory location containing a serialized double array at
+ * @buffer: A memory location containing a serialized gdouble array at
  *          position @position.
  * @size: The size of @buffer.
  * @position: The position of the array in @buffer, it's updated to
  *            point after it.
  * @asize: Where the size of the array is to be returned.
  *
- * Deserializes an double array.
+ * Deserializes an gdouble array.
  *
- * Returns: The unpacked double array (newly allocated).
+ * Returns: The unpacked gdouble array (newly allocated).
  **/
 gdouble*
 gwy_serialize_unpack_double_array(const guchar *buffer,
@@ -1318,7 +1333,13 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_return_val_if_fail(*position + *asize*sizeof(gdouble) <= size, NULL);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, *asize*sizeof(gdouble));
+#else
+    value = g_new(gdouble, *asize);
+    gwy_byteswapped_copy(buffer + *position, (guint8*)value,
+                         sizeof(gdouble), *asize, (1 << sizeof(gdouble)) - 1);
+#endif
     *position += *asize*sizeof(gdouble);
 
     gwy_debug("|value| = %u", *asize);
