@@ -150,7 +150,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.0.1",
+    "3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
