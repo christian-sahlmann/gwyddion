@@ -741,7 +741,7 @@ pixmap_do_write_targa(const gchar *filename,
      0,           /* image descriptor */
     };
     guchar *pixels, *buffer = NULL;
-    gsize rowstride, i, j, width, height;
+    gsize targarowstride, rowstride, i, j, width, height;
     gboolean ok = FALSE;
     FILE *fh;
 
@@ -749,13 +749,14 @@ pixmap_do_write_targa(const gchar *filename,
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
+    targarowstride = 3*((width + 3) >> 2 << 2);
 
     if (height > 65535 || width > 65535) {
         g_warning("Image too large to be stored as TARGA");
         return FALSE;
     }
-    targa_head[12] = (width) & 0xff;
-    targa_head[13] = (width >> 8) & 0xff;
+    targa_head[12] = (targarowstride/3) & 0xff;
+    targa_head[13] = (targarowstride/3 >> 8) & 0xff;
     targa_head[14] = (height) & 0xff;
     targa_head[15] = (height >> 8) & 0xff;
 
@@ -770,7 +771,7 @@ pixmap_do_write_targa(const gchar *filename,
 
     /* The ugly part: TARGA uses BGR instead of RGB and is written upside down,
      * it's really strange it wasn't invented by MS... */
-    buffer = g_new(guchar, rowstride);
+    buffer = g_new(guchar, targarowstride);
     for (i = 0; i < height; i++) {
         guchar *p = pixels + (height - 1 - i)*rowstride;
         guchar *q = buffer;
@@ -780,7 +781,7 @@ pixmap_do_write_targa(const gchar *filename,
             *(q + 1) = *(p + 1);
             *(q + 2) = *p;
         }
-        if (fwrite(buffer, 1, rowstride, fh) != rowstride)
+        if (fwrite(buffer, 1, targarowstride, fh) != targarowstride)
             goto end;
     }
 
@@ -1079,8 +1080,8 @@ prepare_layout(gdouble zoom)
     PangoLayout *layout;
 
     context = gdk_pango_context_get();
-    fontdesc = pango_font_description_from_string("Helvetica 11");
-    pango_font_description_set_size(fontdesc, 11*PANGO_SCALE*zoom);
+    fontdesc = pango_font_description_from_string("Helvetica 12");
+    pango_font_description_set_size(fontdesc, 12*PANGO_SCALE*zoom);
     pango_context_set_font_description(context, fontdesc);
     layout = pango_layout_new(context);
     g_object_unref(context);
