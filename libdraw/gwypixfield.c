@@ -235,8 +235,8 @@ gwy_pixbuf_draw_data_field_with_range(GdkPixbuf *pixbuf,
     yres = gwy_data_field_get_yres(data_field);
     data = gwy_data_field_get_data_const(data_field);
 
-    g_return_if_fail(xres != gdk_pixbuf_get_width(pixbuf));
-    g_return_if_fail(yres != gdk_pixbuf_get_height(pixbuf));
+    g_return_if_fail(xres == gdk_pixbuf_get_width(pixbuf));
+    g_return_if_fail(yres == gdk_pixbuf_get_height(pixbuf));
 
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
@@ -291,8 +291,8 @@ gwy_pixbuf_draw_data_field(GdkPixbuf *pixbuf,
     yres = gwy_data_field_get_yres(data_field);
     data = gwy_data_field_get_data_const(data_field);
 
-    g_return_if_fail(xres != gdk_pixbuf_get_width(pixbuf));
-    g_return_if_fail(yres != gdk_pixbuf_get_height(pixbuf));
+    g_return_if_fail(xres == gdk_pixbuf_get_width(pixbuf));
+    g_return_if_fail(yres == gdk_pixbuf_get_height(pixbuf));
 
     maximum = gwy_data_field_get_max(data_field);
     minimum = gwy_data_field_get_min(data_field);
@@ -394,8 +394,8 @@ gwy_pixbuf_draw_data_field_as_mask(GdkPixbuf *pixbuf,
     yres = gwy_data_field_get_yres(data_field);
     data = gwy_data_field_get_data_const(data_field);
 
-    g_return_if_fail(xres != gdk_pixbuf_get_width(pixbuf));
-    g_return_if_fail(yres != gdk_pixbuf_get_height(pixbuf));
+    g_return_if_fail(xres == gdk_pixbuf_get_width(pixbuf));
+    g_return_if_fail(yres == gdk_pixbuf_get_height(pixbuf));
 
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
