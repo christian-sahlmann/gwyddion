@@ -44,8 +44,8 @@ typedef enum {
   GWY_SF_OUTPUT_DA    = 2,  /*distribution of angles*/
   GWY_SF_OUTPUT_CDA   = 3,  /*cumulative distribution of angles*/
   GWY_SF_OUTPUT_ACF   = 4,  /*autocorrelation fucntions*/
-  GWY_SF_OUTPUT_HHCF  = 5,   /*height-height correlation function*/
-  GWY_SF_OUTPUT_PSDF  = 6,   /*power spectral density fucntion*/
+  GWY_SF_OUTPUT_HHCF  = 5,  /*height-height correlation function*/
+  GWY_SF_OUTPUT_PSDF  = 6   /*power spectral density fucntion*/
 } GwySFOutputType;
 
 
