@@ -24,7 +24,7 @@
 #include <gwymath.h>
 #include "gwynlfit.h"
 
-/* Konstanta pro vypocet kroku stranou pri derivovani ve funkce marq_deriv
+/* Side step constant for numerical differentiation in gwy_math_nlfit_derive()
  */
 #define FitSqrtMachEps  1e-4
 
@@ -37,28 +37,28 @@
 /* i MUST be greater or equal than j */
 #define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
 
-/* XXX: brain damage:
- * all the functions whose names end with `1' use 1-based arrays since they
- * were originally written in Pascal (!)
- * never expose then to outer world, we must pretend everything is 0-based
- * eventually everything will be rewritten to base 0 */
-static gboolean gwy_math_sym_matrix_invert1(gint n,
-                                            gdouble *a);
-
 static gboolean gwy_math_choleski_decompose (gint dim,
                                              gdouble *a);
 static void     gwy_math_choleski_solve     (gint dim,
                                              gdouble *a,
                                              gdouble *b);
-static gdouble gwy_math_nlfit_residua(GwyNLFitter *nlfit,
-                                      gint n_dat,
-                                      gdouble *x,
-                                      gdouble *y,
-                                      gdouble *weight,
-                                      gint n_par,
-                                      gdouble *param,
-                                      gpointer user_data,
-                                      gdouble *resid);
+static gdouble  gwy_math_nlfit_residua      (GwyNLFitter *nlfit,
+                                             gint n_dat,
+                                             gdouble *x,
+                                             gdouble *y,
+                                             gdouble *weight,
+                                             gint n_par,
+                                             gdouble *param,
+                                             gpointer user_data,
+                                             gdouble *resid);
+
+/* XXX: brain damage:
+ * all the functions whose names end with `1' use 1-based arrays since they
+ * were originally written in Pascal (!)
+ * never expose then to outer world, we must pretend everything is 0-based
+ * eventually everything will be actually rewritten to base 0 */
+static gboolean gwy_math_sym_matrix_invert1(gint n,
+                                            gdouble *a);
 
 
 /**
@@ -141,26 +141,23 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
 {
 
     gdouble mlambda = 1e-4;
-
     gdouble sumr = G_MAXDOUBLE;
-
-    gint covar_size = n_par*(n_par + 1)/2;
-
+    gdouble sumr1;
     gdouble *der;
     gdouble *v;
     gdouble *xr;
     gdouble *saveparam;
     gdouble *resid;
-
     gdouble *a;
     gdouble *save_a;
+    gint covar_size = n_par*(n_par + 1)/2;
+    gint i, j, k;
+    gint miter = 0;
     gboolean step1 = TRUE;
     gboolean end = FALSE;
 
-    gint i, j, k;
-
-    gdouble sumr1;
-    gint miter = 0;
+    g_free(nlfit->covar);
+    nlfit->covar = NULL;
 
     resid = g_new(gdouble, n_dat);
     sumr1 = gwy_math_nlfit_residua(nlfit, n_dat, x, y, weight,
@@ -180,9 +177,9 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
     a = g_new(gdouble, covar_size);
     save_a = g_new(gdouble, covar_size);
 
-    do {                    /* Hlavni iteracni cyklus*/
-        gboolean posdef = FALSE;
-        gboolean first = TRUE;      /*  first indikuje 1.pruchod*/
+    do {
+        gboolean is_pos_def = FALSE;
+        gboolean first_pass = TRUE;
         gint count = 0;
 
         if (step1) {
@@ -194,20 +191,19 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
             for (i = 0; i < n_par; i++)
                 v[i] = 0;
 
-            /* Vypocet J'J a J'r*/
+            /* J'J and J'r computation */
             for (i = 0; i < n_dat; i++) {
-                /* XXX: has to shift things back */
                 nlfit->dmarq(i, x, n_par, param, nlfit->fmarq,
                             user_data, der, &nlfit->eval);
                 if (!nlfit->eval)
                     break;
                 for (j = 0; j < n_par; j++) {
-                    gint q = j*(j + 1)/2;
+                    gint diag = j*(j + 1)/2;
 
-                    /* Do vypoctu J'r*/
+                    /* for J'r */
                     v[j] += weight[i]* der[j] * resid[i];
-                    for (k = 0; k <= j; k++)    /* Do vypoctu J'J*/
-                        a[q + k] += weight[i] * der[j] * der[k];
+                    for (k = 0; k <= j; k++)    /* for J'J */
+                        a[diag + k] += weight[i] * der[j] * der[k];
                 }
             }
             if (nlfit->eval) {
@@ -217,22 +213,22 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
             else
                 break;
         }
-        while (!posdef) {
-            if (!first)
+        while (!is_pos_def) {
+            if (!first_pass)
                 memcpy(a, save_a, covar_size*sizeof(gdouble));
             else
-                first = FALSE;
+                first_pass = FALSE;
 
             for (j = 0; j < n_par; j++) {
                 /* Doplneni diagonalnich prvku */
-                gint q = j*(j + 3)/2;        /* Index diag.prvku*/
+                gint diag = j*(j + 3)/2;
 
-                a[q] = save_a[q]*(1.0 + mlambda) + nlfit->mfi * mlambda;
+                a[diag] = save_a[diag]*(1.0 + mlambda) + nlfit->mfi*mlambda;
                 xr[j] = -v[j];
             }
             /* Choleskeho rozklad J'J v A*/
-            posdef = gwy_math_choleski_decompose(n_par, a);
-            if (!posdef) {
+            is_pos_def = gwy_math_choleski_decompose(n_par, a);
+            if (!is_pos_def) {
                 /* Provede zvetseni "lambda"*/
                 mlambda *= nlfit->minc;
                 if (mlambda == 0.0)
@@ -271,9 +267,6 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
     } while (!end);
 
     sumr1 = sumr;
-
-    g_free(nlfit->covar);
-    nlfit->covar = NULL;
 
     if (nlfit->eval) {
         if (gwy_math_sym_matrix_invert1(n_par, save_a-1)) {
@@ -344,7 +337,6 @@ gwy_math_nlfit_derive(gint i,
         deriv[j] = (right - left)/2/hj;
         param[j] = save_par_j;
     }
-
 }
 
 static gdouble
@@ -497,7 +489,6 @@ gwy_math_choleski_decompose(gint dim, gdouble *a)
     gint i, j, k;
     gdouble s, r;
 
-    /* first index is always larger */
     for (k = 0; k < dim; k++) {
         /* diagonal element */
         s = SLi(a, k, k);
@@ -609,8 +600,8 @@ gwy_math_sym_matrix_invert1(gint n, gdouble *a)
  * @x: x-data as passed to gwy_math_nlfit_fit().
  * @n_par: The number of parameters (size of @param).
  * @param: Parameters.
- * @deriv: Where the @n_par partial derivations by each parameter are to be
- *         stored.
+ * @deriv: Array where the @n_par partial derivations by each parameter are
+ *         to be stored.
  * @fmarq: The fitting function.
  * @user_data: User data as passed to gwy_math_nlfit_fit().
  * @dres: Set to %TRUE if succeeds, %FALSE on failure.
