@@ -37,6 +37,10 @@ typedef enum {
     USE_HISTOGRAM
 } IColorRangeSource;
 
+enum {
+    HIST_RES = 220    /* histogram resolution */
+};
+
 typedef struct {
     GwyUnitoolRectLabels labels;
     GtkWidget *cdo_preview;
@@ -51,6 +55,7 @@ typedef struct {
     gdouble max;
     gdouble datamin;
     gdouble datamax;
+    GwyDataLine *heightdist;
     /* storable state */
     GQuark key_min;
     GQuark key_max;
@@ -74,6 +79,9 @@ static void       do_preview_updated          (GtkWidget *toggle,
 static void       histogram_selection_changed (GwyUnitoolState *state);
 static void       update_percentages          (ToolControls *controls);
 static void       update_graph_selection      (ToolControls *controls);
+static void       gwy_data_field_dh           (GwyDataField *dfield,
+                                               GwyDataLine *dh,
+                                               gint nsteps);
 static void       load_args                   (GwyContainer *container,
                                                ToolControls *controls);
 static void       save_args                   (GwyContainer *container,
@@ -286,36 +294,15 @@ dialog_update(GwyUnitoolState *state,
     }
 
     if (reason == GWY_UNITOOL_UPDATED_DATA || controls->initial_use) {
-        GwyGraphAutoProperties prop;
-        GwyDataLine *dataline;
-        GString *graph_title;
-
         controls->datamin = gwy_data_field_get_min(dfield);
         controls->datamax = gwy_data_field_get_max(dfield);
 
-        /* Update the curve even if not visible to get graph ranges right */
-        gwy_graph_clear(graph);
-        gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
-        prop.is_point = 0;
-        prop.is_line = 1;
-        gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
+        if (!controls->heightdist)
+            controls->heightdist = GWY_DATA_LINE(gwy_data_line_new(HIST_RES,
+                                                                   1.0,
+                                                                   TRUE));
 
-        dataline = GWY_DATA_LINE(gwy_data_line_new(1, 1.0, FALSE));
-        if (gwy_data_field_get_line_stat_function(dfield, dataline,
-                                                0, 0,
-                                                gwy_data_field_get_xres(dfield),
-                                                gwy_data_field_get_yres(dfield),
-                                                GWY_SF_OUTPUT_DH,
-                                                0, 0,
-                                                GWY_WINDOWING_HANN,
-                                                220)) {
-            /* XXX */
-            graph_title = g_string_new("");
-            gwy_graph_add_dataline(GWY_GRAPH(controls->histogram), dataline,
-                                0, graph_title, NULL);
-            g_string_free(graph_title, TRUE);
-        }
-        g_object_unref(dataline);
+        gwy_data_field_dh(dfield, controls->heightdist, HIST_RES);
     }
 
     switch (reason) {
@@ -417,6 +404,7 @@ dialog_abandon(GwyUnitoolState *state)
     settings = gwy_app_settings_get();
     controls = (ToolControls*)state->user_data;
     save_args(settings, controls);
+    gwy_object_unref(controls->heightdist);
 
     memset(state->user_data, 0, sizeof(ToolControls));
 }
@@ -489,9 +477,24 @@ static void
 update_graph_selection(ToolControls *controls)
 {
     GwyGraph *graph;
+    GwyGraphAutoProperties prop;
+    GString *graph_title;
     gdouble graph_min, graph_max, graph_range;
 
     graph = GWY_GRAPH(controls->histogram);
+
+    /* Update the curve even if not visible to get graph ranges right */
+    gwy_graph_clear(graph);
+    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
+    prop.is_point = 0;
+    prop.is_line = 1;
+    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
+
+    /* XXX */
+    graph_title = g_string_new("");
+    gwy_graph_add_dataline(GWY_GRAPH(controls->histogram), controls->heightdist,
+                           0, graph_title, NULL);
+    g_string_free(graph_title, TRUE);
 
     /* XXX */
     if (controls->rel_min == 0.0 && controls->rel_max == 1.0)
@@ -504,6 +507,26 @@ update_graph_selection(ToolControls *controls)
         graph_max = controls->rel_max*graph_range + graph->area->x_min;
         gwy_graph_area_set_selection(graph->area, graph_min, graph_max);
     }
+}
+
+static void
+gwy_data_field_dh(GwyDataField *dfield,
+                  GwyDataLine *dh,
+                  gint nsteps)
+{
+    /* XXX */
+    GwyDataLine *dirty_trick;
+    gdouble *orig_data;
+
+    dirty_trick = GWY_DATA_LINE(gwy_data_line_new(1, 1.0, FALSE));
+    dirty_trick->res = gwy_data_field_get_xres(dfield)
+                       * gwy_data_field_get_yres(dfield);
+    orig_data = dirty_trick->data;
+    dirty_trick->data = dfield->data;
+    gwy_data_line_dh(dirty_trick, dh, 0, 0, nsteps);
+    dirty_trick->data = orig_data;
+    dirty_trick->res = 1;
+    g_object_unref(dirty_trick);
 }
 
 static const gchar *range_source_key = "/tool/icolorange/range_source";
