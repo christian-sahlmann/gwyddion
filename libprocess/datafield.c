@@ -414,8 +414,8 @@ gwy_data_field_confirmsize(GwyDataField *a, gint xres, gint yres)
  * @a: A data field to be resized
  * @ulcol: upper-left column coordinate
  * @ulrow: upper-left row coordinate
- * @brcol: bottom-right column coordinate
- * @brrow: bottom-right row coordinate
+ * @brcol: bottom-right column coordinate (exclusive)
+ * @brrow: bottom-right row coordinate (exclusive)
  *
  * Resizes (crops) the GwyDataField.
  *
@@ -426,7 +426,8 @@ gwy_data_field_confirmsize(GwyDataField *a, gint xres, gint yres)
  **/
 /* XY: yeti */
 gboolean
-gwy_data_field_resize(GwyDataField *a, gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_resize(GwyDataField *a,
+                      gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
     GwyDataField b;
     gint i, xres, yres;
@@ -436,7 +437,8 @@ gwy_data_field_resize(GwyDataField *a, gint ulcol, gint ulrow, gint brcol, gint 
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres,
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
+                         && brcol <= a->xres && brrow <= a->yres,
                          FALSE);
 
     yres = brrow - ulrow;
