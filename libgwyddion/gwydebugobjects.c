@@ -70,11 +70,12 @@ debug_objects_set_time(gpointer data, G_GNUC_UNUSED GObject *exobject)
  * time, but can be in fact called anytime in object existence.
  *
  * There are two possible uses: In class implementation, where it should be
- * put into instance init function (constructors are less suited for that,
+ * put into instance init function.  Constructors are less suited for that,
  * as there can be more than one, there can be deserializators, duplicators,
- * etc., and you want to hook them all). Or on the side of object user who
- * is concerned with object lifetime rules, he then calls it just after
- * object creation.
+ * etc., and you usually want to catch all possible means of object creation.
+ *
+ * Or it can be used on the side of object user who is concerned with lifetime
+ * rules of a particular object, he then calls it just after object creation.
  *
  * Since: 1.4.
  **/
@@ -112,6 +113,7 @@ gwy_debug_objects_creation(GObject *object)
 /**
  * gwy_debug_objects_dump_to_file:
  * @filehandle: A filehandle open for writing.
+ * @flags: Dump option flags.
  *
  * Dumps all recorded objects to a file.
  *
@@ -177,5 +179,15 @@ gwy_debug_objects_clear(void)
     debug_objects = NULL;
     debug_objects_timer = NULL;
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * GwyDebugObjectsDumpFlags:
+ * @GWY_DEBUG_OBJECTS_DUMP_ONLY_ALIVE: Dump only objects that are still
+ *                                     alive.
+ *
+ * Option flags for gwy_debug_objects_dump_to_file().
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
