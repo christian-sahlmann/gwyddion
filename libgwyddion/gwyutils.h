@@ -57,6 +57,8 @@ gchar*   gwy_strreplace             (const gchar *haystack,
                                      const gchar *needle,
                                      const gchar *replacement,
                                      gsize maxrepl);
+gint     gwy_strdiffpos             (const gchar *s1,
+                                     const gchar *s2);
 gboolean gwy_file_get_contents      (const gchar *filename,
                                      guchar **buffer,
                                      gsize *size,

@@ -326,6 +326,35 @@ gwy_strreplace(const gchar *haystack,
 }
 
 /**
+ * gwy_strdiffpos:
+ * @s1: A string.
+ * @s2: A string.
+ *
+ * Finds position where two strings differ.
+ *
+ * Returns: The last position where the strings do not differ yet.
+ *          Particularly, -1 is returned if either string is %NULL,
+ *          zero-length, or they differ in the very first character.
+ *
+ * Since: 1.9
+ **/
+gint
+gwy_strdiffpos(const gchar *s1, const gchar *s2)
+{
+    const gchar *ss = s1;
+
+    if (!s1 || !s2)
+        return -1;
+
+    while (*s1 && *s1 && *s1 == *s2) {
+        s1++;
+        s2++;
+    }
+
+    return (s1 - ss) - 1;
+}
+
+/**
  * gwy_file_get_contents:
  * @filename: A file to read contents of.
  * @buffer: Buffer to store the file contents.
