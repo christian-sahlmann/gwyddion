@@ -12,6 +12,10 @@
 GtkWidget *gwy_app_main_window = NULL;
 static GSList *current_data = NULL;
 
+static const gchar *menu_list[] = {
+    "<file>", "<proc>", "<xtns>", "<edit>",
+};
+
 static void
 gwy_app_quit(void)
 {
@@ -132,7 +136,8 @@ gwy_app_get_current_data(void)
 void
 gwy_app_set_current_data_window(GwyDataWindow *window)
 {
-    GtkWidget *data_process_menu;
+    GwyMenuSensitiveData sens_data;
+    gsize i;
     gboolean update_state;
 
     if (window) {
@@ -146,15 +151,17 @@ gwy_app_set_current_data_window(GwyDataWindow *window)
         current_data = g_slist_remove(current_data, current_data->data);
     }
 
-    data_process_menu = g_object_get_data(G_OBJECT(gwy_app_main_window),
-                                          "<proc>");
-    if (update_state) {
-        GwyMenuSensitiveData sens_data;
+    if (!update_state)
+        return;
 
-        sens_data.flags = GWY_MENU_FLAG_DATA;
-        sens_data.set_to = current_data ? GWY_MENU_FLAG_DATA : 0;
+    sens_data.flags = GWY_MENU_FLAG_DATA;
+    sens_data.set_to = current_data ? GWY_MENU_FLAG_DATA : 0;
+    for (i = 0; i < G_N_ELEMENTS(menu_list); i++) {
+        GtkWidget *menu = g_object_get_data(G_OBJECT(gwy_app_main_window),
+                                            menu_list[i]);
 
-        gtk_container_foreach(GTK_CONTAINER(data_process_menu),
+        g_assert(menu);
+        gtk_container_foreach(GTK_CONTAINER(menu),
                               (GtkCallback)gwy_menu_set_sensitive_recursive,
                               &sens_data);
     }

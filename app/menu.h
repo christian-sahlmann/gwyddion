@@ -19,8 +19,8 @@ enum {
 typedef struct _GwyMenuSensitiveData GwyMenuSensitiveData;
 
 struct _GwyMenuSensitiveData {
-    guint set_to;
     guint flags;
+    guint set_to;
 };
 
 GtkWidget* gwy_menu_create_xtns_menu         (GtkAccelGroup *accel_group);

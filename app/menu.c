@@ -88,6 +88,7 @@ gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
     /* set up sensitivity: all items need an active data window */
     setup_sensitivity_keys();
     gwy_menu_set_flags_recursive(widget, &sens_data);
+    gwy_menu_set_sensitive_recursive(widget, &sens_data);
 
     return alignment;
 }
@@ -97,7 +98,8 @@ gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/E_xterns", NULL, NULL, 0, "<Branch>", NULL },
-        { "/E_xterns/Module browser", NULL, gwy_module_browser, 0, "<Item>", NULL },
+        { "/Externs/---", NULL, NULL, 0, "<Tearoff>", NULL },
+        { "/Externs/Module browser", NULL, gwy_module_browser, 0, "<Item>", NULL },
     };
 
     setup_sensitivity_keys();
@@ -110,6 +112,7 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_File", NULL, NULL, 0, "<Branch>", NULL },
+        { "/File/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/File/_Open...", "<control>O", gwy_app_file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
         { "/File/_Save", "<control>S", gwy_app_file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
         { "/File/Save _As...", "<control><shift>S", gwy_app_file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
@@ -118,15 +121,20 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;
+    GwyMenuSensitiveData sens_data;
 
     menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
                                         "<file>", accel_group, &item_factory);
 
+    /* set up sensitivity  */
     setup_sensitivity_keys();
-    item = gtk_item_factory_get_item(item_factory, "<file>/_File/_Save");
-    set_sensitive_both(item, GWY_MENU_FLAG_DATA, 0);
-    item = gtk_item_factory_get_item(item_factory, "<file>/_File/Save _As...");
-    set_sensitive_both(item, GWY_MENU_FLAG_DATA, 0);
+    item = gtk_item_factory_get_item(item_factory, "<file>/File/Save");
+    set_sensitive(item, GWY_MENU_FLAG_DATA);
+    item = gtk_item_factory_get_item(item_factory, "<file>/File/Save As...");
+    set_sensitive(item, GWY_MENU_FLAG_DATA);
+    sens_data.flags = GWY_MENU_FLAG_DATA;
+    sens_data.set_to = 0;
+    gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
     return menu;
 }
@@ -136,23 +144,31 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_Edit", NULL, NULL, 0, "<Branch>", NULL },
+        { "/Edit/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/Edit/_Undo", "<control>Z", NULL, 0, "<StockItem>", GTK_STOCK_UNDO },
         { "/Edit/_Redo", "<control>Y", NULL, 0, "<StockItem>", GTK_STOCK_REDO },
         { "/Edit/_Duplicate", "<control>D", NULL, 0, NULL, NULL },
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;
+    GwyMenuSensitiveData sens_data;
 
     menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
                                         "<edit>", accel_group, &item_factory);
 
+    /* set up sensitivity  */
     setup_sensitivity_keys();
-    item = gtk_item_factory_get_item(item_factory, "<edit>/_Edit/_Duplicate");
-    set_sensitive_both(item, GWY_MENU_FLAG_DATA, 0);
-    item = gtk_item_factory_get_item(item_factory, "<edit>/_Edit/_Undo");
-    set_sensitive_both(item, GWY_MENU_FLAG_UNDO, 0);
-    item = gtk_item_factory_get_item(item_factory, "<edit>/_Edit/_Redo");
-    set_sensitive_both(item, GWY_MENU_FLAG_REDO, 0);
+    item = gtk_item_factory_get_item(item_factory, "<edit>/Edit/Duplicate");
+    set_sensitive(item, GWY_MENU_FLAG_DATA);
+    item = gtk_item_factory_get_item(item_factory, "<edit>/Edit/Undo");
+    set_sensitive(item, GWY_MENU_FLAG_UNDO);
+    item = gtk_item_factory_get_item(item_factory, "<edit>/Edit/Redo");
+    set_sensitive(item, GWY_MENU_FLAG_REDO);
+    sens_data.flags = GWY_MENU_FLAG_DATA
+                      | GWY_MENU_FLAG_REDO
+                      | GWY_MENU_FLAG_UNDO;
+    sens_data.set_to = 0;
+    gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
     return menu;
 }
@@ -172,7 +188,8 @@ gwy_menu_set_sensitive_recursive(GtkWidget *widget,
         set_sensitive_state(obj, j);
         gtk_widget_set_sensitive(widget, (j & i) == i);
     }
-    if (GTK_IS_MENU_BAR(widget)) {
+    if (GTK_IS_ALIGNMENT(widget)
+        || GTK_IS_MENU_BAR(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
                               (GtkCallback)gwy_menu_set_sensitive_recursive,
                               data);
@@ -191,7 +208,8 @@ gwy_menu_set_flags_recursive(GtkWidget *widget,
 {
     set_sensitive_both(widget, data->flags, data->set_to);
 
-    if (GTK_IS_MENU_BAR(widget)) {
+    if (GTK_IS_ALIGNMENT(widget)
+        || GTK_IS_MENU_BAR(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
                               (GtkCallback)gwy_menu_set_flags_recursive,
                               data);
