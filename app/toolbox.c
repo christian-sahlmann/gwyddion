@@ -226,7 +226,7 @@ gwy_app_toolbox_create(void)
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     toolbox_append_proc_func(toolbar, _("Fix minimum value to zero"),
-                             GWY_STOCK_FIX_ZERO, "fixzero");
+                             GWY_STOCK_FIX_ZERO, "fix_zero");
     toolbox_append_proc_func(toolbar, _("Scale data"),
                              GWY_STOCK_SCALE, "scale");
     toolbox_append_proc_func(toolbar, _("Rotate by arbitrary angle"),
