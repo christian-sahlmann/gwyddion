@@ -29,8 +29,8 @@
 #include <libgwyddion/gwysiunit.h>
 #include <libprocess/cwt.h>
 
-/* FIXME */
 #define GWY_ENABLE_DEPRECATED
+/*#warning GWY_ENABLE_DEPRECATED*/
 
 G_BEGIN_DECLS
 
@@ -53,10 +53,13 @@ typedef enum {
       GWY_FILTER_PREWITT       = 5  /*Prewitt gradient filter*/
 } GwyFilterType;
 
+#ifdef GWY_ENABLE_DEPRECATED
+/* XXX: never used in libprocess itself */
 typedef enum {
     GWY_MERGE_UNION        = 0, /*union of all found grains*/
     GWY_MERGE_INTERSECTION = 1  /*intersection of grains found by different methods*/
 } GwyMergeType;
+#endif
 
 typedef enum {
     GWY_WSHED_INIT         = 0, /*start initializations*/
@@ -73,12 +76,16 @@ typedef enum {
     GWY_COMP_FINISHED     = 2
 } GwyComputationStateType;
 
+#ifdef GWY_ENABLE_DEPRECATED
+/* XXX: this is not *fractal* *type* at all */
+/* XXX: never used in libprocess itself */
 typedef enum {
     GWY_FRACTAL_PARTITIONING  = 0,
     GWY_FRACTAL_CUBECOUNTING  = 1,
     GWY_FRACTAL_TRIANGULATION = 2,
     GWY_FRACTAL_PSDF          = 3
 } GwyFractalType;
+#endif
 
 typedef struct {
     GwyWatershedStateType state;
@@ -105,7 +112,7 @@ struct _GwyDataField {
 };
 
 struct _GwyDataFieldClass {
-        GObjectClass parent_class;
+    GObjectClass parent_class;
 };
 
 
@@ -117,19 +124,17 @@ GObject* gwy_data_field_new(gint xres,
                             gdouble yreal,
                             gboolean nullme);
 
-/*allocation*/
+#ifdef GWY_ENABLE_DEPRECATED
 void gwy_data_field_alloc(GwyDataField *a,
                           gint xres,
                           gint yres);
-
-/*allocate data field,
-  set its size and null all values (or not)*/
 void gwy_data_field_initialize(GwyDataField *a,
                                gint xres,
                                gint yres,
                                gdouble xreal,
                                gdouble yreal,
                                gboolean nullme);
+#endif
 
 /*resample data field (change resolution)*/
 void gwy_data_field_resample(GwyDataField *a,

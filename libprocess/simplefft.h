@@ -23,6 +23,9 @@
 
 #include <glib.h>
 
+#define GWY_ENABLE_DEPRECATED
+/*#warning GWY_ENABLE_DEPRECATED*/
+
 G_BEGIN_DECLS
 
 typedef enum {
@@ -35,6 +38,8 @@ typedef enum {
   GWY_WINDOWING_RECT       = 6
 } GwyWindowingType;
 
+#ifdef GWY_ENABLE_DEPRECATED
+/* XXX: never used in libprocess itself */
 typedef enum {
   GWY_FFT_OUTPUT_REAL_IMG   = 0,
   GWY_FFT_OUTPUT_MOD_PHASE  = 1,
@@ -43,8 +48,7 @@ typedef enum {
   GWY_FFT_OUTPUT_MOD        = 4,
   GWY_FFT_OUTPUT_PHASE      = 5
 } GwyFFTOutputType;
-  
-  
+#endif
 
 /*2^N fft algorithm*/
 gint gwy_fft_hum(gint dir, gdouble *re_in, gdouble *im_in,

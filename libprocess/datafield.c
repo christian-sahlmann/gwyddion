@@ -286,11 +286,17 @@ gwy_data_field_value_changed(GObject *object)
 
 /**
  * gwy_data_field_alloc:
- * @a: pointer fo field to be allocated
+ * @a: pointer to data field structure to be allocated.
  * @xres: X resolution
  * @yres: Y resolution
  *
- * Allocates GwyDataField
+ * Allocates GwyDataField.
+ *
+ * Note this function doesn't create an object, just allocates some fields,
+ * it doesn't make @a usable in functions expecting a datafield.  There is
+ * NO function to safely free it later.
+ *
+ * In other words, don't use it, it appeared in the public API by mistake.
  **/
 void
 gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
@@ -306,7 +312,7 @@ gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
 
 /**
  * gwy_data_field_initialize:
- * @a: A data field to be initialized
+ * @a: A data field structure to be initialized
  * @xres: X resolution
  * @yres: Y resolution
  * @xreal: X real dimension of the field
@@ -314,6 +320,12 @@ gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
  * @nullme: true if field should be filled with zeros
  *
  * Allocates and initializes GwyDataField.
+ *
+ * Note this function doesn't create an object, just allocates some fields,
+ * it doesn't make @a usable in functions expecting a datafield.  There is
+ * NO function to safely free it later.
+ *
+ * In other words, don't use it, it appeared in the public API by mistake.
  **/
 void
 gwy_data_field_initialize(GwyDataField *a,
@@ -504,7 +516,7 @@ gwy_data_field_confirmsize(GwyDataField *a, gint xres, gint yres)
  * Extracts part of the GwyDataField.between
  * upper-left and bottom-right points.
  *
- * Returns:%TRUE at success
+ * Returns: %TRUE on success.
  **/
 gboolean
 gwy_data_field_resize(GwyDataField *a,

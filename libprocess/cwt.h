@@ -24,6 +24,9 @@
 #include <glib.h>
 #include <stdio.h>
 
+#define GWY_ENABLE_DEPRECATED
+/*#warning GWY_ENABLE_DEPRECATED*/
+
 G_BEGIN_DECLS
 
 typedef enum {
@@ -31,12 +34,14 @@ typedef enum {
   GWY_2DCWT_HAT         = 1
 } Gwy2DCWTWaveletType;
 
+#ifdef GWY_ENABLE_DEPRECATED
+/* XXX: never used in libprocess itself */
 typedef enum {
   GWY_CWT_GAUSS       = 0,
   GWY_CWT_HAT         = 1,
   GWY_CWT_MORLET      = 2
 } GwyCWTWaveletType;
-
+#endif
 
 gdouble
 gwy_cwt_wfunc_2d(gdouble scale,
