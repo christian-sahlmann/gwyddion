@@ -491,6 +491,7 @@ rawfile_dialog(RawFileArgs *args,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     controls.dialog = dialog;
     controls.args = args;
     controls.file = file;
