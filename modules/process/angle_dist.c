@@ -130,7 +130,7 @@ angle_dist(GwyContainer *data, GwyRunType run)
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
         pal = gwy_container_get_string_by_name(data, "/0/base/palette");
-        gwy_app_wait_start(gwy_app_main_window_get(),  /* XXX: dirty */
+        gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
                            _("Computing angle distribution"));
         dfield = angle_do(dfield, &args);
         gwy_app_wait_finish();
