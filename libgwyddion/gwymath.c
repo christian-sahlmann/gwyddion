@@ -18,9 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
-
-#include <libgwyddion/gwymacros.h>
+#include <string.h>
+#include "gwymacros.h"
 #include "gwymath.h"
 
 /* Lower symmetric part indexing */
@@ -333,18 +332,18 @@ gdouble*
 gwy_math_fit_polynom(gint ndata, gdouble *xdata, gdouble *ydata,
                      gint n, gdouble *coeffs)
 {
-    gdouble *sumx, *sumy, *m;
+    gdouble *sumx, *m;
     gint i, j;
 
     g_return_val_if_fail(ndata >= 0, NULL);
     g_return_val_if_fail(n >= 0, NULL);
 
-    sumx = g_new(gdouble, 2*n+1);
-    for (j = 0; j <= 2*n; j++)
-        sumx[j] = 0.0;
-    sumy = g_new(gdouble, n+1);
-    for (j = 0; j <= n; j++)
-        sumy[j] = 0.0;
+    sumx = g_new0(gdouble, 2*n+1);
+
+    if (!coeffs)
+        coeffs = g_new0(gdouble, n+1);
+    else
+        memset(coeffs, 0, (n+1)*sizeof(gdouble));
 
     for (i = 0; i < ndata; i++) {
         gdouble x = xdata[i];
@@ -354,7 +353,7 @@ gwy_math_fit_polynom(gint ndata, gdouble *xdata, gdouble *ydata,
         xp = 1.0;
         for (j = 0; j <= n; j++) {
             sumx[j] += xp;
-            sumy[j] += xp*y;
+            coeffs[j] += xp*y;
             xp *= x;
         }
         for (j = n+1; j <= 2*n; j++) {
@@ -363,17 +362,20 @@ gwy_math_fit_polynom(gint ndata, gdouble *xdata, gdouble *ydata,
         }
     }
 
-    m = g_new(gdouble, (n+1)*(n+1));
+    m = g_new(gdouble, (n+1)*(n+2)/2);
     for (i = 0; i <= n; i++) {
-        gdouble *row = m + i*(n+1);
+        gdouble *row = m + i*(i+1)/2;
 
-        for (j = 0; j <= n; j++)
+        for (j = 0; j <= i; j++)
             row[j] = sumx[i+j];
     }
-    coeffs = gwy_math_lin_solve(n+1, m, sumy, coeffs);
+    if (!gwy_math_choleski_decompose(n+1, m))
+        memset(coeffs, 0, (n+1)*sizeof(gdouble));
+    else
+        gwy_math_choleski_solve(n+1, m, coeffs);
+
     g_free(m);
     g_free(sumx);
-    g_free(sumy);
 
     return coeffs;
 }

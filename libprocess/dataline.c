@@ -1356,7 +1356,7 @@ gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
                                gint n, gdouble *coeffs,
                                gint from, gint to)
 {
-    gdouble *sumx, *sumy, *m;
+    gdouble *sumx, *m;
     gint i, j;
     gdouble *data;
 
@@ -1367,12 +1367,11 @@ gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    sumx = g_new(gdouble, 2*n+1);
-    for (j = 0; j <= 2*n; j++)
-        sumx[j] = 0.0;
-    sumy = g_new(gdouble, n+1);
-    for (j = 0; j <= n; j++)
-        sumy[j] = 0.0;
+    sumx = g_new0(gdouble, 2*n+1);
+    if (!coeffs)
+        coeffs = g_new0(gdouble, n+1);
+    else
+        memset(coeffs, 0, (n+1)*sizeof(gdouble));
 
     for (i = from; i < to; i++) {
         gdouble x = i;
@@ -1382,7 +1381,7 @@ gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
         xp = 1.0;
         for (j = 0; j <= n; j++) {
             sumx[j] += xp;
-            sumy[j] += xp*y;
+            coeffs[j] += xp*y;
             xp *= x;
         }
         for (j = n+1; j <= 2*n; j++) {
@@ -1391,17 +1390,20 @@ gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
         }
     }
 
-    m = g_new(gdouble, (n+1)*(n+1));
+    m = g_new(gdouble, (n+1)*(n+2)/2);
     for (i = 0; i <= n; i++) {
-        gdouble *row = m + i*(n+1);
+        gdouble *row = m + i*(i+1)/2;
 
-        for (j = 0; j <= n; j++)
+        for (j = 0; j <= i; j++)
             row[j] = sumx[i+j];
     }
-    coeffs = gwy_math_lin_solve(n+1, m, sumy, coeffs);
+    if (!gwy_math_choleski_decompose(n+1, m))
+        memset(coeffs, 0, (n+1)*sizeof(gdouble));
+    else
+        gwy_math_choleski_solve(n+1, m, coeffs);
+
     g_free(m);
     g_free(sumx);
-    g_free(sumy);
 
     return coeffs;
 }
