@@ -99,7 +99,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dwt_denoise_func_info = {
         "dwt_denoise",
-        N_("/_Integral Transforms/_DWT Denoise..."),
+        N_("/_Integral Transforms/DWT De_noise..."),
         (GwyProcessFunc)&dwt_denoise,
         DWT_DENOISE_RUN_MODES,
         0,

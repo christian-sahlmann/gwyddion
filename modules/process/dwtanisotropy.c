@@ -97,7 +97,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dwt_anisotropy_func_info = {
         "dwt_anisotropy",
-        N_("/_Integral Transforms/_DWT Anisotropy..."),
+        N_("/_Integral Transforms/DWT _Anisotropy..."),
         (GwyProcessFunc)&dwt_anisotropy,
         DWT_ANISOTROPY_RUN_MODES,
         0,
