@@ -207,6 +207,8 @@ dialog_create(GwyUnitoolState *state)
 
     controls->cdo_preview
         = gtk_check_button_new_with_mnemonic(_("_Instant apply"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->cdo_preview),
+                                 controls->do_preview);
     g_signal_connect(controls->cdo_preview, "toggled",
                      G_CALLBACK(do_preview_updated), state);
     gtk_table_attach(GTK_TABLE(table), controls->cdo_preview, 0, 3, 6, 7,
