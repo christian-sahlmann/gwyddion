@@ -231,7 +231,7 @@ dialog_create(GwyUnitoolState *state)
 
     dfield = gwy_data_field_new(MAX_SIZE, MAX_SIZE, 1.0, 1.0, FALSE);
     data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+    gwy_container_set_object_by_name(data, "/0/data", dfield);
     gwy_container_set_double_by_name(data, "/0/base/min", min);
     gwy_container_set_double_by_name(data, "/0/base/max", max);
     gwy_container_set_string_by_name(data, "/0/base/palette",

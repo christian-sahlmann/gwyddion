@@ -634,7 +634,7 @@ pixmap_load(const gchar *filename,
     gwy_data_field_multiply(dfield,
                             args.zreal*exp(G_LN10*args.zexponent));
     data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+    gwy_container_set_object_by_name(data, "/0/data", dfield);
     g_object_unref(dfield);
 
     return data;

@@ -350,8 +350,7 @@ dialog_update(GwyUnitoolState *state,
         }
         else {
             shadefield = gwy_data_field_duplicate(dfield);
-            gwy_container_set_object_by_name(data, "/0/show",
-                                             G_OBJECT(shadefield));
+            gwy_container_set_object_by_name(data, "/0/show", shadefield);
             g_object_unref(shadefield);
 
             g_assert(!controls->last_preview);

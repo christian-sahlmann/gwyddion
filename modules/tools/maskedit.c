@@ -277,7 +277,7 @@ selection_finished_cb(GwyUnitoolState *state)
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&mask);
+    gwy_container_gis_object_by_name(data, "/0/mask", &mask);
     gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
 
     switch (controls->mode) {
@@ -285,10 +285,10 @@ selection_finished_cb(GwyUnitoolState *state)
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         if (!mask) {
             mask = gwy_data_field_duplicate(dfield);
-            siunit = GWY_SI_UNIT(gwy_si_unit_new(""));
+            siunit = gwy_si_unit_new("");
             gwy_data_field_set_si_unit_z(mask, siunit);
             g_object_unref(siunit);
-            gwy_container_set_object_by_name(data, "/0/mask", (GObject*)mask);
+            gwy_container_set_object_by_name(data, "/0/mask", mask);
             g_object_unref(mask);
         }
         gwy_data_field_fill(mask, 0.0);
@@ -300,10 +300,10 @@ selection_finished_cb(GwyUnitoolState *state)
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         if (!mask) {
             mask = gwy_data_field_duplicate(dfield);
-            siunit = GWY_SI_UNIT(gwy_si_unit_new(""));
+            siunit = gwy_si_unit_new("");
             gwy_data_field_set_si_unit_z(mask, siunit);
             g_object_unref(siunit);
-            gwy_container_set_object_by_name(data, "/0/mask", (GObject*)mask);
+            gwy_container_set_object_by_name(data, "/0/mask", mask);
             g_object_unref(mask);
             gwy_data_field_fill(mask, 0.0);
         }

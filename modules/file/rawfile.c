@@ -452,7 +452,7 @@ rawfile_load(const gchar *filename)
     GwyContainer *settings, *data;
     GwyDataField *dfield;
     GError *err = NULL;
-    guint size = 0;
+    gsize size = 0;
 
     args = g_new0(RawFileArgs, 1);
     settings = gwy_app_settings_get();
@@ -469,7 +469,7 @@ rawfile_load(const gchar *filename)
     file.filesize = size;
     if ((dfield = rawfile_dialog(args, &file))) {
         data = GWY_CONTAINER(gwy_container_new());
-        gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+        gwy_container_set_object_by_name(data, "/0/data", dfield);
         g_object_unref(dfield);
     }
     rawfile_save_args(settings, args);

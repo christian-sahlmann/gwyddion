@@ -1121,16 +1121,16 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
     GwyDataField *dfield;
     gdouble xreal, yreal;
     gint xres, yres;
-    GObject *uxy, *uz;
+    GwySIUnit *uxy, *uz;
     const guchar *s;
     gsize n;
 
     if (old_data) {
-        data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(old_data)));
+        data = gwy_container_duplicate(old_data);
         gwy_app_clean_up_data(data);
     }
     else
-        data = GWY_CONTAINER(gwy_container_new());
+        data = gwy_container_new();
 
     pos = buffer;
     while ((line = gwy_str_next_line(&pos)) && *line) {
@@ -1157,7 +1157,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         g_assert(pos && *pos == '[');
         pos++;
         dfield = NULL;
-        gwy_container_gis_object_by_name(data, line, (GObject**)&dfield);
+        gwy_container_gis_object_by_name(data, line, &dfield);
 
         /* get datafield parameters from already read values, failing back
          * to values of original data field */
@@ -1214,8 +1214,8 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         if (gwy_container_gis_string_by_name(data, key, &s))
             uxy = gwy_si_unit_new((const gchar*)s);
         else if (dfield) {
-            uxy = G_OBJECT(gwy_data_field_get_si_unit_xy(dfield));
-            uxy = gwy_serializable_duplicate(uxy);
+            uxy = gwy_data_field_get_si_unit_xy(dfield);
+            uxy = gwy_si_unit_duplicate(uxy);
         }
         else {
             g_warning("Broken dump doesn't specify lateral units.");
@@ -1227,8 +1227,8 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         if (gwy_container_gis_string_by_name(data, key, &s))
             uz = gwy_si_unit_new((const gchar*)s);
         else if (dfield) {
-            uz = G_OBJECT(gwy_data_field_get_si_unit_z(dfield));
-            uz = gwy_serializable_duplicate(uz);
+            uz = gwy_data_field_get_si_unit_z(dfield);
+            uz = gwy_si_unit_duplicate(uz);
         }
         else {
             g_warning("Broken dump doesn't specify value units.");
@@ -1256,7 +1256,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             goto fail;
         }
         gwy_container_remove_by_prefix(data, line);
-        gwy_container_set_object_by_name(data, line, G_OBJECT(dfield));
+        gwy_container_set_object_by_name(data, line, dfield);
         g_object_unref(dfield);
     }
     return data;

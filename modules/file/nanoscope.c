@@ -177,11 +177,11 @@ nanoscope_detect(const gchar *filename,
 static GwyContainer*
 nanoscope_load(const gchar *filename)
 {
-    GObject *object = NULL;
+    GwyContainer *container = NULL;
     GError *err = NULL;
     gchar *buffer = NULL;
     gchar *p;
-    guint size = 0;
+    gsize size = 0;
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
     NanoscopeValue *val;
@@ -242,15 +242,14 @@ nanoscope_load(const gchar *filename)
     /* select (let user select) which data to load */
     ndata = ok ? select_which_data(list) : NULL;
     if (ndata) {
-        object = gwy_container_new();
-        gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
-                                         G_OBJECT(ndata->data_field));
+        container = gwy_container_new();
+        gwy_container_set_object_by_name(container, "/0/data",
+                                         ndata->data_field);
         if ((val = g_hash_table_lookup(ndata->hash, "@2:Image Data"))
             && val->soft_scale)
-            gwy_container_set_string_by_name(GWY_CONTAINER(object),
-                                             "/filename/title",
+            gwy_container_set_string_by_name(container, "/filename/title",
                                              g_strdup(val->soft_scale));
-        fill_metadata(GWY_CONTAINER(object), ndata->hash, list);
+        fill_metadata(container, ndata->hash, list);
     }
 
     /* unref all data fields, the container already keeps a reference to the
@@ -264,7 +263,7 @@ nanoscope_load(const gchar *filename)
     }
     g_list_free(list);
 
-    return (GwyContainer*)object;
+    return container;
 }
 
 static void
@@ -393,7 +392,7 @@ hash_to_data_field(GHashTable *hash,
         g_warning("Cannot parse <Scan size>: <%s>", s);
         return NULL;
     }
-    unitxy = GWY_SI_UNIT(gwy_si_unit_new_parse(un, &power10));
+    unitxy = gwy_si_unit_new_parse(un, &power10);
     q = exp(G_LN10*power10);
     xreal *= q;
     yreal *= q;
@@ -490,20 +489,20 @@ get_physical_scale(GHashTable *hash,
         g_free(key);
         /* XXX */
         *scale = val->hard_value;
-        return GWY_SI_UNIT(gwy_si_unit_new(""));
+        return gwy_si_unit_new("");
     }
 
     *scale = val->hard_value*sval->hard_value;
 
     if (!sval->hard_value_units || !*sval->hard_value_units) {
         if (strcmp(val->soft_scale, "Sens. Phase") == 0)
-            siunit = GWY_SI_UNIT(gwy_si_unit_new("deg"));
+            siunit = gwy_si_unit_new("deg");
         else
-            siunit = GWY_SI_UNIT(gwy_si_unit_new("V"));
+            siunit = gwy_si_unit_new("V");
     }
     else {
-        siunit = GWY_SI_UNIT(gwy_si_unit_new_parse(sval->hard_value_units, &q));
-        siunit2 = GWY_SI_UNIT(gwy_si_unit_new("V"));
+        siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
+        siunit2 = gwy_si_unit_new("V");
         gwy_si_unit_multiply(siunit, siunit2, siunit);
         gwy_debug("Scale1 = %g V/LSB", val->hard_value);
         gwy_debug("Scale2 = %g %s", sval->hard_value, sval->hard_value_units);

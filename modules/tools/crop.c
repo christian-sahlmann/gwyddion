@@ -180,11 +180,10 @@ apply(GwyUnitoolState *state)
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(state->layer)->parent);
     data = gwy_data_view_get_data(data_view);
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    data = gwy_container_duplicate(data);
     gwy_app_clean_up_data(data);
     for (i = 0; i < G_N_ELEMENTS(field_names); i++) {
-        if (!gwy_container_gis_object_by_name(data, field_names[i],
-                                              (GObject**)&dfield))
+        if (!gwy_container_gis_object_by_name(data, field_names[i], &dfield))
             continue;
         ximin = gwy_data_field_rtoj(dfield, sel[0]);
         yimin = gwy_data_field_rtoi(dfield, sel[1]);

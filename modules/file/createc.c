@@ -109,7 +109,7 @@ createc_detect(const gchar *filename,
 static GwyContainer*
 createc_load(const gchar *filename)
 {
-    GObject *object = NULL;
+    GwyContainer *container = NULL;
     gchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -132,17 +132,16 @@ createc_load(const gchar *filename)
     dfield = hash_to_data_field(hash, buffer);
 
     if (dfield) {
-      object = gwy_container_new();
-      gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
-                                       G_OBJECT(dfield));
+      container = gwy_container_new();
+      gwy_container_set_object_by_name(container, "/0/data", dfield);
       g_object_unref(dfield);
 
-      store_metadata(GWY_CONTAINER(object), hash);
+      store_metadata(container, hash);
 
       g_hash_table_destroy(hash);
       g_free(buffer);
 
-      return (GwyContainer*)object;
+      return container;
     } else {
       g_hash_table_destroy(hash);
       g_free(buffer);

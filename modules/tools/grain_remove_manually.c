@@ -290,7 +290,7 @@ selection_finished_cb(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    if (!gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&mask)) {
+    if (!gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
         gwy_debug("No mask");
         return;
     }

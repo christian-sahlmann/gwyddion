@@ -408,7 +408,7 @@ static GwyContainer*
 sis_load(const gchar *filename)
 {
     guchar *buffer;
-    guint size;
+    gsize size;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     GwyContainer *data = NULL;
@@ -451,8 +451,7 @@ sis_load(const gchar *filename)
             dfield = extract_data(&sisfile, i/1024, i % 1024);
             if (dfield) {
                 data = GWY_CONTAINER(gwy_container_new());
-                gwy_container_set_object_by_name(data, "/0/data",
-                                                 G_OBJECT(dfield));
+                gwy_container_set_object_by_name(data, "/0/data", dfield);
                 g_object_unref(dfield);
                 add_metadata(&sisfile, i/1024, i %1024, data);
             }
@@ -484,8 +483,7 @@ selection_changed(GtkWidget *button,
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     g_assert(i != (guint)-1);
     dfield = extract_data(controls->sisfile, i/1024, i % 1024);
-    gwy_container_set_object_by_name(controls->data, "/0/data",
-                                     G_OBJECT(dfield));
+    gwy_container_set_object_by_name(controls->data, "/0/data", dfield);
     g_object_unref(dfield);
     gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
@@ -547,8 +545,7 @@ select_which_data(SISFile *sisfile,
     i = choices[0].value;
     dfield = extract_data(sisfile, i/1024, i % 1024);
     controls.data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(controls.data, "/0/data",
-                                     G_OBJECT(dfield));
+    gwy_container_set_object_by_name(controls.data, "/0/data", dfield);
     g_object_unref(dfield);
     add_metadata(sisfile, i/1024, i %1024, controls.data);
     xres = gwy_data_field_get_xres(dfield);

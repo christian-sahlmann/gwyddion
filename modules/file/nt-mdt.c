@@ -356,7 +356,7 @@ static GwyContainer*
 mdt_load(const gchar *filename)
 {
     guchar *buffer;
-    guint size;
+    gsize size;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     GwyContainer *data = NULL;
@@ -833,13 +833,13 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
         g_warning("Different x and y units, using x for both (incorrect).");
     unit = gwy_enum_to_string(dataframe->x_scale.unit,
                               mdt_units, G_N_ELEMENTS(mdt_units));
-    siunitxy = GWY_SI_UNIT(gwy_si_unit_new_parse(unit, &power10xy));
+    siunitxy = gwy_si_unit_new_parse(unit, &power10xy);
     xreal = dataframe->fm_xres*exp(G_LN10*power10xy)*dataframe->x_scale.step;
     yreal = dataframe->fm_yres*exp(G_LN10*power10xy)*dataframe->y_scale.step;
 
     unit = gwy_enum_to_string(dataframe->z_scale.unit,
                               mdt_units, G_N_ELEMENTS(mdt_units));
-    siunitz = GWY_SI_UNIT(gwy_si_unit_new_parse(unit, &power10z));
+    siunitz = gwy_si_unit_new_parse(unit, &power10z);
     zscale = exp(G_LN10*power10z)*dataframe->z_scale.step;
 
     dfield = gwy_data_field_new(dataframe->fm_xres, dataframe->fm_yres,

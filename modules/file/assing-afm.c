@@ -168,7 +168,7 @@ aafm_load(const gchar *filename)
     g_object_unref(unit);
 
     container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", G_OBJECT(dfield));
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
 
     gwy_file_abandon_contents(buffer, size, &err);
     g_clear_error(&err);

@@ -118,7 +118,7 @@ spmlab_detect(const gchar *filename, gboolean only_name)
 static GwyContainer*
 spmlab_load(const gchar *filename)
 {
-    GObject *object = NULL;
+    GwyContainer *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -152,11 +152,10 @@ spmlab_load(const gchar *filename)
     if (!dfield)
         return NULL;
 
-    object = gwy_container_new();
-    gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
-                                     G_OBJECT(dfield));
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
 
-    return (GwyContainer*)object;
+    return container;
 }
 
 static GwyDataField*

@@ -445,9 +445,9 @@ store_metadata(GwyContainer *data)
 static GwyContainer*
 stmprg_load(const gchar *filename)
 {
-    GObject *object = NULL;
+    GwyContainer *container = NULL;
     gchar *buffer = NULL;
-    guint size = 0;
+    gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield;
     char *filename_ta, *ptr;
@@ -490,17 +490,16 @@ stmprg_load(const gchar *filename)
         return NULL;
     }
 
-    object = gwy_container_new();
-    gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
-                                     G_OBJECT(dfield));
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
-    store_metadata(GWY_CONTAINER(object));
+    store_metadata(container);
 
     g_free(filename_ta);
     g_free(buffer);
 
-    return (GwyContainer *)object;
+    return container;
 }
 
 /*
