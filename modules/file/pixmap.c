@@ -857,6 +857,7 @@ pixmap_load_create_preview(PixmapLoadArgs *args,
     pixbuf = gdk_pixbuf_scale_simple(args->pixbuf,
                                      zoom*width, zoom*height,
                                      GDK_INTERP_TILES);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
 
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
@@ -1385,6 +1386,7 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     if (args->otype == PIXMAP_RAW_DATA) {
         pixbuf = gdk_pixbuf_scale_simple(datapixbuf, zwidth, zheight,
                                          GDK_INTERP_TILES);
+        gwy_debug_objects_creation(G_OBJECT(pixbuf));
         return pixbuf;
     }
 
