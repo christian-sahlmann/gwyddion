@@ -8,6 +8,7 @@
 
 #include <glib-object.h>
 
+#include <libgwyddion/gwymacros.h>
 #include "gwygraphcorner.h"
 
 #define GWY_GRAPH_CORNER_TYPE_NAME "GwyGraphCorner"
@@ -53,9 +54,7 @@ gwy_graph_corner_get_type(void)
             (GInstanceInitFunc)gwy_graph_corner_init,
             NULL,
         };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_graph_corner_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                       GWY_GRAPH_CORNER_TYPE_NAME,
                                                       &gwy_graph_corner_info,
@@ -72,9 +71,7 @@ gwy_graph_corner_class_init(GwyGraphCornerClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -96,9 +93,7 @@ gwy_graph_corner_class_init(GwyGraphCornerClass *klass)
 static void
 gwy_graph_corner_init(GwyGraphCorner *graph_corner)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
 }
 
@@ -107,12 +102,10 @@ gwy_graph_corner_new()
 {
     GwyGraphCorner *graph_corner;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     graph_corner = gtk_type_new (gwy_graph_corner_get_type ());
-    
+
      return GTK_WIDGET(graph_corner);
 }
 
@@ -121,11 +114,7 @@ gwy_graph_corner_finalize(GObject *object)
 {
     GwyGraphCorner *graph_corner;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "finalizing a GwyGraphCorner (refcount = %u)",
-          object->ref_count);
-    #endif
+    gwy_debug("finalizing a GwyGraphCorner (refcount = %u)", object->ref_count);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_GRAPH_CORNER(object));
@@ -155,12 +144,9 @@ gwy_graph_corner_realize(GtkWidget *widget)
     GdkWindowAttr attributes;
     gint attributes_mask;
     GtkStyle *s;
-    
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "realizing a GwyGraphCorner (%ux%u)",
-          widget->allocation.x, widget->allocation.height);
-    #endif
+
+    gwy_debug("realizing a GwyGraphCorner (%ux%u)",
+              widget->allocation.x, widget->allocation.height);
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_GRAPH_CORNER(widget));
@@ -189,20 +175,20 @@ gwy_graph_corner_realize(GtkWidget *widget)
     gdk_window_set_user_data(widget->window, widget);
 
     widget->style = gtk_style_attach(widget->style, widget->window);
-    
+
     /*set backgroun for white forever*/
     s = gtk_style_copy(widget->style);
-    s->bg_gc[0] = 
-	s->bg_gc[1] =
-	s->bg_gc[2] =
-	s->bg_gc[3] =
- 	s->bg_gc[4] = widget->style->white_gc;
+    s->bg_gc[0] =
+        s->bg_gc[1] =
+        s->bg_gc[2] =
+        s->bg_gc[3] =
+        s->bg_gc[4] = widget->style->white_gc;
     s->bg[0] =
-	s->bg[1] =
-	s->bg[2] =
-	s->bg[3] =
-	s->bg[4] = widget->style->white;
-     
+        s->bg[1] =
+        s->bg[2] =
+        s->bg[3] =
+        s->bg[4] = widget->style->white;
+
     gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
 
 }
@@ -212,12 +198,10 @@ gwy_graph_corner_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
     GwyGraphCorner *graph_corner;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     graph_corner = GWY_GRAPH_CORNER(widget);
-    
+
     requisition->width = 10;
     requisition->height = 10;
 }
@@ -228,9 +212,7 @@ gwy_graph_corner_size_allocate(GtkWidget *widget,
 {
     GwyGraphCorner *graph_corner;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_GRAPH_CORNER(widget));
@@ -244,7 +226,7 @@ gwy_graph_corner_size_allocate(GtkWidget *widget,
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
-        
+
     }
 }
 
@@ -256,7 +238,7 @@ gwy_graph_corner_expose(GtkWidget *widget,
     GwyGraphCorner *graph_corner;
     gint xc, yc;
     GdkPoint ps[4];
-    
+
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
@@ -270,7 +252,7 @@ gwy_graph_corner_expose(GtkWidget *widget,
                           0, 0,
                           widget->allocation.width,
                           widget->allocation.height);
-    
+
     return FALSE;
 }
 
@@ -282,10 +264,8 @@ gwy_graph_corner_button_press(GtkWidget *widget,
     GwyGraphCorner *graph_corner;
     double x, y;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-	    g_return_val_if_fail(widget != NULL, FALSE);
+    gwy_debug("%s", __FUNCTION__);
+            g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
@@ -302,11 +282,9 @@ gwy_graph_corner_button_release(GtkWidget *widget,
     GwyGraphCorner *graph_corner;
     gdouble x, y;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-	
-    
+    gwy_debug("%s", __FUNCTION__);
+
+
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);

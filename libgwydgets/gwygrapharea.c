@@ -7,6 +7,7 @@
 #include <gtk/gtk.h>
 
 #include <glib-object.h>
+#include <libgwyddion/gwymacros.h>
 #include "gwygrapharea.h"
 #include "gwygraphlabel.h"
 
@@ -76,9 +77,7 @@ gwy_graph_area_get_type(void)
             (GInstanceInitFunc)gwy_graph_area_init,
             NULL,
         };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_graph_area_type = g_type_register_static(GTK_TYPE_LAYOUT,
                                                       GWY_GRAPH_AREA_TYPE_NAME,
                                                       &gwy_graph_area_info,
@@ -93,11 +92,9 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class;
-  
-    
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+
+
+    gwy_debug("%s", __FUNCTION__);
 
     widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
@@ -107,7 +104,7 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     widget_class->unrealize = gwy_graph_area_unrealize;
     widget_class->expose_event = gwy_graph_area_expose;
     widget_class->size_allocate = gwy_graph_area_size_allocate;
-    
+
     widget_class->button_press_event = gwy_graph_area_button_press;
     widget_class->button_release_event = gwy_graph_area_button_release;
     widget_class->motion_notify_event = gwy_graph_area_motion_notify;
@@ -116,9 +113,7 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 static void
 gwy_graph_area_init(GwyGraphArea *area)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     area->gc = NULL;
     area->active = NULL;
     area->x_min = 0;
@@ -127,9 +122,9 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->y_max = 0;
     area->old_width = 0;
     area->old_height = 0;
-     
+
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
-    gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90); 
+    gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
 
 }
 
@@ -137,21 +132,19 @@ GtkWidget*
 gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
 {
     GwyGraphArea *area;
-    
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+
+    gwy_debug("%s", __FUNCTION__);
 
     area = (GwyGraphArea*)gtk_widget_new(GWY_TYPE_GRAPH_AREA, "hadjustment", hadjustment,
                                          "vadjustment", vadjustment, NULL);
-    
-    gtk_widget_add_events(GTK_WIDGET(area), GDK_BUTTON_PRESS_MASK 
+
+    gtk_widget_add_events(GTK_WIDGET(area), GDK_BUTTON_PRESS_MASK
                           | GDK_BUTTON_RELEASE_MASK
                           | GDK_BUTTON_MOTION_MASK);
-    
+
     area->curves = g_ptr_array_new();
 
-    
+
     return GTK_WIDGET(area);
 }
 
@@ -160,11 +153,7 @@ gwy_graph_area_finalize(GObject *object)
 {
     GwyGraphArea *area;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "finalizing a GwyGraphArea (refcount = %u)",
-          object->ref_count);
-    #endif
+    gwy_debug("finalizing a GwyGraphArea (refcount = %u)", object->ref_count);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_GRAPH_AREA(object));
@@ -180,18 +169,16 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     GwyGraphArea *area;
     GtkAllocation *lab_alloc;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     area = GWY_GRAPH_AREA(widget);
     lab_alloc = &GTK_WIDGET(area->lab)->allocation;
 
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
-    if ((area->old_width != widget->allocation.width || area->old_height != widget->allocation.height) && 
+    if ((area->old_width != widget->allocation.width || area->old_height != widget->allocation.height) &&
         (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
         || lab_alloc->y != 5))
-        gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 
+        gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                         widget->allocation.width - lab_alloc->width - 5, 5);
     gwy_graph_area_plot_refresh(area);
 
@@ -204,17 +191,17 @@ gwy_graph_area_realize(GtkWidget *widget)
 {
     GdkColor fg, bg;
     GwyGraphArea *area;
-    
+
     if (GTK_WIDGET_CLASS(parent_class)->realize)
         GTK_WIDGET_CLASS(parent_class)->realize(widget);
-    
+
     area = GWY_GRAPH_AREA(widget);
     area->gc = gdk_gc_new(GTK_LAYOUT(widget)->bin_window);
     bg.pixel = 0xFFFFFFFF;
     fg.pixel = 0x00000000;
     gdk_gc_set_foreground(area->gc, &fg);
     gdk_gc_set_background(area->gc, &bg);
-    
+
 }
 
 static void
@@ -222,10 +209,10 @@ gwy_graph_area_unrealize(GtkWidget *widget)
 {
     GwyGraphArea *area;
     area = GWY_GRAPH_AREA(widget);
-    
+
     if (area->gc) g_object_unref(area->gc);
-        
-    
+
+
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
 }
@@ -239,23 +226,21 @@ gwy_graph_area_expose(GtkWidget *widget,
     GwyGraphArea *area;
     gint xc, yc;
     GdkPoint ps[4];
-   
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
 
-    
+    gwy_debug("%s", __FUNCTION__);
+
+
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     area = GWY_GRAPH_AREA(widget);
-    
+
     gdk_window_clear_area(GTK_LAYOUT (widget)->bin_window,
                           0, 0,
                           widget->allocation.width,
                           widget->allocation.height);
-    
+
     gwy_graph_area_draw_curves(widget);
     gwy_graph_area_draw_area(widget);
 
@@ -267,22 +252,22 @@ gwy_graph_area_expose(GtkWidget *widget,
 void gwy_graph_area_draw_area(GtkWidget *widget)
 {
     GwyGraphArea *area;
-    
+
     area = GWY_GRAPH_AREA(widget);
-     
+
     /*plot boundary*/
     gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
                  0, 0, 0, widget->allocation.height-1);
     gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
                  0, 0, widget->allocation.width-1, 0);
     gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                 widget->allocation.width-1, 0, widget->allocation.width-1, 
+                 widget->allocation.width-1, 0, widget->allocation.width-1,
                  widget->allocation.height-1);
     gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                 0, widget->allocation.height-1, widget->allocation.width-1, 
+                 0, widget->allocation.height-1, widget->allocation.width-1,
                  widget->allocation.height-1);
-     
-}    
+
+}
 
 void gwy_graph_area_draw_curves(GtkWidget *widget)
 {
@@ -290,16 +275,16 @@ void gwy_graph_area_draw_curves(GtkWidget *widget)
     GwyGraphAreaCurve *pcurve;
     GdkColor fg;
     guint i, j;
-    
+
     area = GWY_GRAPH_AREA(widget);
-    
+
     fg.pixel = 0x00000000;
-    
+
     for (i=0; i<area->curves->len; i++)
     {
-        pcurve = g_ptr_array_index (area->curves, i); 
+        pcurve = g_ptr_array_index (area->curves, i);
         gdk_gc_set_foreground(area->gc, &(pcurve->params.color));
-        
+
         if (pcurve->params.is_line)
         {
             gdk_gc_set_line_attributes (area->gc, pcurve->params.line_size,
@@ -311,11 +296,11 @@ void gwy_graph_area_draw_curves(GtkWidget *widget)
         {
             for (j=0; j<pcurve->data.N; j++)
             {
-                gwy_graph_draw_point(GTK_LAYOUT(widget)->bin_window, area->gc, 
-                                          pcurve->points[j].x, 
-                                          pcurve->points[j].y, 
-                                          pcurve->params.point_type, 
-                                          pcurve->params.point_size, 
+                gwy_graph_draw_point(GTK_LAYOUT(widget)->bin_window, area->gc,
+                                          pcurve->points[j].x,
+                                          pcurve->points[j].y,
+                                          pcurve->params.point_type,
+                                          pcurve->params.point_size,
                                           &(pcurve->params.color),
                                           pcurve->params.is_line);
             }
@@ -333,16 +318,14 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     GtkLayoutChild *child;
     gint x, y;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_GRAPH_AREA(widget));
-    
+
     area = GWY_GRAPH_AREA(widget);
     gdk_window_get_position(event->window, &x, &y);
     x += (gint)event->x;
     y += (gint)event->y;
-   
+
     child = gwy_graph_area_find_child(area, x, y);
     if (child) { printf("Child found.\n");
         area->active = child->widget;
@@ -361,9 +344,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     GwyGraphArea *area;
     gint x, y;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     area = GWY_GRAPH_AREA(widget);
     if (!area->active)
         return FALSE;
@@ -373,7 +354,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     gdk_window_get_position(event->window, &x, &y);
     x += (gint)event->x;
     y += (gint)event->y;
-    
+
     gwy_graph_area_clamp_coords_for_child(area, &x, &y);
     if (x != area->x0 || y != area->y0) {
         x -= area->x0 - area->active->allocation.x;
@@ -397,16 +378,14 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     if (!area->active)
         return FALSE;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
- 
+    gwy_debug("%s", __FUNCTION__);
+
     gdk_window_get_position(event->window, &x, &y);
     x += (gint)event->x;
     y += (gint)event->y;
     gwy_graph_area_clamp_coords_for_child(area, &x, &y);
     /* don't draw when we can't move */
-    
+
     if (x - area->x0 == area->xoff
         && y - area->y0 == area->yoff)
         return FALSE;
@@ -480,13 +459,11 @@ gwy_graph_area_draw_child_rectangle(GwyGraphArea *area)
     gdk_gc_set_function(area->gc, GDK_COPY);
 }
 
-void 
+void
 gwy_graph_area_set_boundaries(GwyGraphArea *area, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-	area->x_min = x_min;
+    gwy_debug("%s", __FUNCTION__);
+        area->x_min = x_min;
     area->y_min = y_min;
     area->x_max = x_max;
     area->y_max = y_max;
@@ -496,22 +473,20 @@ gwy_graph_area_set_boundaries(GwyGraphArea *area, gdouble x_min, gdouble x_max, 
 void
 gwy_graph_area_plot_refresh(GwyGraphArea *area)
 {
-    guint i; 
+    guint i;
     gint j;
     GwyGraphAreaCurve *pcurve;
     GtkWidget *widget;
-    
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-	
+
+    gwy_debug("%s", __FUNCTION__);
+
     widget = GTK_WIDGET(area);
     /*recompute all data to be plotted according to window size*/
     area->x_shift = area->x_min;
     area->y_shift = area->y_min ;
     area->x_multiply = widget->allocation.width/(area->x_max - area->x_min);
     area->y_multiply = widget->allocation.height/(area->y_max - area->y_min);
-  
+
     for (i=0; i<area->curves->len; i++)
     {
         pcurve = g_ptr_array_index (area->curves, i);
@@ -523,23 +498,21 @@ gwy_graph_area_plot_refresh(GwyGraphArea *area)
     }
 }
 
-void 
+void
 gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve)
 {
     gint i;
-   
-    GwyGraphAreaCurve *pcurve; 
-    
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-	    /*alloc one element, make deep copy and add it to array*/
-   
+
+    GwyGraphAreaCurve *pcurve;
+
+    gwy_debug("%s", __FUNCTION__);
+            /*alloc one element, make deep copy and add it to array*/
+
     pcurve = g_new(GwyGraphAreaCurve, 1);
     pcurve->data.xvals = (gdouble *) g_try_malloc(curve->data.N*sizeof(gdouble));
     pcurve->data.yvals = (gdouble *) g_try_malloc(curve->data.N*sizeof(gdouble));
     pcurve->points = (GdkPoint *) g_try_malloc(curve->data.N*sizeof(GdkPoint));
-    
+
     pcurve->params.is_line = curve->params.is_line;
     pcurve->params.is_point = curve->params.is_point;
     pcurve->params.line_style = curve->params.line_style;
@@ -548,7 +521,7 @@ gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve)
     pcurve->params.point_size = curve->params.point_size;
     pcurve->params.color = curve->params.color;
     pcurve->params.description = g_string_new(curve->params.description->str);
-     
+
     pcurve->data.N = curve->data.N;
     for (i=0; i<curve->data.N; i++)
     {
@@ -557,22 +530,20 @@ gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve)
         pcurve->points[i].x = 0;
         pcurve->points[i].y = 0;
     }
-    
+
     g_ptr_array_add(area->curves, (gpointer)(pcurve));
     gwy_graph_label_add_curve(area->lab, &(pcurve->params));
-    
+
 }
 
-void 
+void
 gwy_graph_area_clear(GwyGraphArea *area)
 {
     guint i;
     GwyGraphAreaCurve *pcurve;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-	    /*dealloc everything*/
+    gwy_debug("%s", __FUNCTION__);
+            /*dealloc everything*/
     for (i=0; i<area->curves->len; i++)
     {
         pcurve = g_ptr_array_index (area->curves, i);
@@ -583,9 +554,9 @@ gwy_graph_area_clear(GwyGraphArea *area)
     }
 
     gwy_graph_label_clear(area->lab);
-    
+
     g_ptr_array_free(area->curves, 1);
-    area->curves = g_ptr_array_new();        
+    area->curves = g_ptr_array_new();
 }
 
 

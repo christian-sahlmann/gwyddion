@@ -84,7 +84,7 @@ create_data_LDADD = \
 #	$(libgwydraw)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\" -DGWY_LOG_DOMAIN=G_LOG_DOMAIN
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\"
 
 clean-local:
 	rm -f core.* *~

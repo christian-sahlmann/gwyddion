@@ -7,6 +7,7 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
+#include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
 
 #define GWY_GRAPH_TYPE_NAME "GwyGraph"
@@ -15,7 +16,7 @@ static void     gwy_graph_class_init           (GwyGraphClass *klass);
 static void     gwy_graph_init                 (GwyGraph *graph);
 static void     gwy_graph_finalize             (GObject *object);
 static void     gwy_graph_size_request         (GtkWidget *widget,
-						GtkRequisition *requisition);
+                                                GtkRequisition *requisition);
 static void     gwy_graph_size_allocate        (GtkWidget *widget,
                                                 GtkAllocation *allocation);
 
@@ -28,28 +29,26 @@ gwy_graph_get_type(void)
 {
     static GType gwy_graph_type = 0;
     if (!gwy_graph_type) {
-	static const GTypeInfo gwy_graph_info = {
-	 sizeof(GwyGraphClass),
-	 NULL,
-	 NULL,
-	 (GClassInitFunc)gwy_graph_class_init,
-	 NULL,
-	 NULL,
-	 sizeof(GwyGraph),
-	 0,
-	 (GInstanceInitFunc)gwy_graph_init,
-	 NULL,
+        static const GTypeInfo gwy_graph_info = {
+         sizeof(GwyGraphClass),
+         NULL,
+         NULL,
+         (GClassInitFunc)gwy_graph_class_init,
+         NULL,
+         NULL,
+         sizeof(GwyGraph),
+         0,
+         (GInstanceInitFunc)gwy_graph_init,
+         NULL,
          };
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
-	gwy_graph_type = g_type_register_static (GTK_TYPE_TABLE, 
-						 GWY_GRAPH_TYPE_NAME, 
-						 &gwy_graph_info, 
-						 0);
-		
+        gwy_debug("%s", __FUNCTION__);
+        gwy_graph_type = g_type_register_static (GTK_TYPE_TABLE,
+                                                 GWY_GRAPH_TYPE_NAME,
+                                                 &gwy_graph_info,
+                                                 0);
+
     }
-	
+
     return gwy_graph_type;
 }
 
@@ -57,14 +56,12 @@ static void
 gwy_graph_class_init(GwyGraphClass *klass)
 {
     GtkWidgetClass *widget_class;
-    
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+
+    gwy_debug("%s", __FUNCTION__);
 
     widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
-    
+
     widget_class->size_request = gwy_graph_size_request;
     widget_class->size_allocate = gwy_graph_size_allocate;
 }
@@ -73,10 +70,10 @@ gwy_graph_class_init(GwyGraphClass *klass)
 static void
 gwy_graph_size_request(GtkWidget *widget, GtkRequisition *requisition)
 {
-    GTK_WIDGET_CLASS(parent_class)->size_request(widget, requisition); 
+    GTK_WIDGET_CLASS(parent_class)->size_request(widget, requisition);
     requisition->width = 500;
     requisition->height = 400;
-    
+
     gwy_graph_synchronize(GWY_GRAPH(widget));
 }
 
@@ -84,13 +81,11 @@ static void
 gwy_graph_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     GwyGraph *graph;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     graph = GWY_GRAPH(widget);
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
-    
+
     /*synchronize axis and area (axis range can change)*/
     gwy_graph_synchronize(graph);
 }
@@ -102,17 +97,15 @@ gwy_graph_synchronize(GwyGraph *graph)
     graph->x_min = gwy_axis_get_minimum(graph->axis_bottom);
     graph->y_max = gwy_axis_get_maximum(graph->axis_left);
     graph->y_min = gwy_axis_get_minimum(graph->axis_left);
-    gwy_graph_area_set_boundaries(graph->area, graph->x_min, 
+    gwy_graph_area_set_boundaries(graph->area, graph->x_min,
                                   graph->x_max, graph->y_min, graph->y_max);
 }
 
 static void
 gwy_graph_init(GwyGraph *graph)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-    
+    gwy_debug("%s", __FUNCTION__);
+
     graph->n_of_curves = 0;
     graph->n_of_autocurves = 0;
 
@@ -120,7 +113,7 @@ gwy_graph_init(GwyGraph *graph)
     graph->autoproperties.is_point = 1;
     graph->autoproperties.point_size = 8;
     graph->autoproperties.line_size = 1;
-    
+
     gtk_table_resize (GTK_TABLE (graph), 3, 3);
     gtk_table_set_homogeneous (GTK_TABLE (graph), FALSE);
     gtk_table_set_row_spacings (GTK_TABLE (graph), 0);
@@ -132,13 +125,13 @@ gwy_graph_init(GwyGraph *graph)
     graph->axis_right =  GWY_AXIS (gwy_axis_new(GWY_AXIS_WEST, 100, 500, "blu "));
 
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->axis_top), 1, 2, 0, 1,
-		     GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);  
+                     GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->axis_bottom), 1, 2, 2, 3,
-		     GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0); 
+                     GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->axis_left), 2, 3, 1, 2,
-		     GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0); 
+                     GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->axis_right), 0, 1, 1, 2,
-		     GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0); 
+                     GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
     gtk_widget_show(GTK_WIDGET(graph->axis_top));
     gtk_widget_show(GTK_WIDGET(graph->axis_bottom));
     gtk_widget_show(GTK_WIDGET(graph->axis_left));
@@ -151,19 +144,19 @@ gwy_graph_init(GwyGraph *graph)
 
 
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->corner_tl), 0, 1, 0, 1,
-		     GTK_FILL, GTK_FILL, 0, 0);
+                     GTK_FILL, GTK_FILL, 0, 0);
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->corner_bl), 2, 3, 0, 1,
-		     GTK_FILL, GTK_FILL , 0, 0);
+                     GTK_FILL, GTK_FILL , 0, 0);
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->corner_tr), 0, 1, 2, 3,
-		     GTK_FILL, GTK_FILL, 0, 0);
+                     GTK_FILL, GTK_FILL, 0, 0);
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->corner_br), 2, 3, 2, 3,
-		     GTK_FILL, GTK_FILL, 0, 0);
+                     GTK_FILL, GTK_FILL, 0, 0);
 
     gtk_widget_show(GTK_WIDGET(graph->corner_tl));
     gtk_widget_show(GTK_WIDGET(graph->corner_bl));
-    gtk_widget_show(GTK_WIDGET(graph->corner_tr)); 
+    gtk_widget_show(GTK_WIDGET(graph->corner_tr));
     gtk_widget_show(GTK_WIDGET(graph->corner_br));
-    
+
     graph->area = GWY_GRAPH_AREA(gwy_graph_area_new(NULL,NULL));
     graph->x_max = 0;
     graph->y_max = 0;
@@ -173,73 +166,67 @@ gwy_graph_init(GwyGraph *graph)
     graph->y_reqmax = G_MINDOUBLE;
     graph->x_reqmin = G_MAXDOUBLE;
     graph->x_reqmin = G_MAXDOUBLE;
-    
-    gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->area), 1, 2, 1, 2, 
-		     GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
+
+    gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->area), 1, 2, 1, 2,
+                     GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
     gtk_widget_show_all(GTK_WIDGET(graph->area));
-    
+
 }
 
 GtkWidget *
 gwy_graph_new()
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
      return GTK_WIDGET (g_object_new (gwy_graph_get_type (), NULL));
 }
 
 
-void 
-gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline, 
+void
+gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
                        gdouble shift, GString *label, GwyGraphAreaCurveParams *params)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-    
+    gwy_debug("%s", __FUNCTION__);
+
 
 }
 
 void
-gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals, 
+gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
                          gint n, GString *label, GwyGraphAreaCurveParams *params)
 {
     gint i, isdiff;
     GwyGraphAreaCurve curve;
-    
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-     
+
+    gwy_debug("%s", __FUNCTION__);
+
     /*look whether label maximum or minium will be changed*/
     isdiff=0;
     for (i=0; i<n; i++)
     {
-       if (xvals[i] > graph->x_reqmax) 
+       if (xvals[i] > graph->x_reqmax)
        {
           graph->x_reqmax = xvals[i];
           isdiff=1;
        }
-       if (xvals[i] < graph->x_reqmin) 
+       if (xvals[i] < graph->x_reqmin)
        {
           graph->x_reqmin = xvals[i]; printf("New x minimum at %f (index %d)\n", xvals[i], i);
           isdiff=1;
        }
-       if (yvals[i] > graph->y_reqmax) 
+       if (yvals[i] > graph->y_reqmax)
        {
           graph->y_reqmax = yvals[i];
           isdiff=1;
        }
-       if (yvals[i] < graph->y_reqmin) 
+       if (yvals[i] < graph->y_reqmin)
        {
           graph->y_reqmin = yvals[i];
           isdiff=1;
        }
     }
-    if (isdiff == 1) 
+    if (isdiff == 1)
     {
-	printf("x requirement changed: %f, %f\n", graph->x_reqmin, graph->x_reqmax);
+        printf("x requirement changed: %f, %f\n", graph->x_reqmin, graph->x_reqmax);
        gwy_axis_set_req(graph->axis_top, graph->x_reqmin, graph->x_reqmax);
        gwy_axis_set_req(graph->axis_bottom, graph->x_reqmin, graph->x_reqmax);
        gwy_axis_set_req(graph->axis_left, graph->y_reqmin, graph->y_reqmax);
@@ -257,7 +244,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
 
     /*make curve (precompute screeni coordinates of points)*/
     gwy_graph_make_curve_data(graph, &curve, xvals, yvals, n);
-    
+
     /*configure curve plot properties*/
     if (params == NULL)
     {
@@ -265,10 +252,10 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
       curve.params.is_point = graph->autoproperties.is_point;
       curve.params.point_size = graph->autoproperties.point_size;
       curve.params.line_size = graph->autoproperties.line_size;
-      curve.params.line_style = GDK_LINE_SOLID;    
+      curve.params.line_style = GDK_LINE_SOLID;
       curve.params.description = g_string_new(label->str);
       /***** PROVISORY ***************/
-      if (graph->n_of_autocurves == 0) {curve.params.color.pixel = 0x00000000; 
+      if (graph->n_of_autocurves == 0) {curve.params.color.pixel = 0x00000000;
        curve.params.point_type = GWY_GRAPH_POINT_TRIANGLE_UP;}
       if (graph->n_of_autocurves == 1) {curve.params.color.pixel = 0x00990099;
         curve.params.point_type = GWY_GRAPH_POINT_TRIANGLE_DOWN;}
@@ -291,12 +278,12 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
       curve.params.point_type = params->point_type;
       curve.params.color = params->color;
     }
-    
+
     /*put curve and (new) boundaries into the plotter*/
     gwy_graph_area_add_curve(graph->area, &curve);
-    gwy_graph_area_set_boundaries(graph->area, graph->x_min, 
+    gwy_graph_area_set_boundaries(graph->area, graph->x_min,
                                   graph->x_max, graph->y_min, graph->y_max);
-    
+
     g_free(curve.data.xvals);
     g_free(curve.data.yvals);
 
@@ -304,7 +291,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
     if (params == NULL) graph->n_of_autocurves++;
 }
 
-static void 
+static void
 gwy_graph_make_curve_data(GwyGraph *graph, GwyGraphAreaCurve *curve, gdouble *xvals, gdouble *yvals, gint n)
 {
     gint i;
@@ -337,3 +324,4 @@ gwy_graph_get_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproper
   *autoproperties = graph->autoproperties;
 }
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
