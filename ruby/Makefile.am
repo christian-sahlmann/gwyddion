@@ -5,9 +5,9 @@ Gwyddion_RUBY = \
 
 EXTRA_DIST = $(Gwyddion_RUBY)
 
-if HAVE_RUBY
-rubylibdir = $(gwypluginlibdir)/ruby/gwyddion
+rubylibdir = $(pkglibdir)/ruby/gwyddion
 
+if HAVE_RUBY
 rubylib_DATA = $(Gwyddion_RUBY)
 endif
 

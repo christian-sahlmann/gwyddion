@@ -5,8 +5,9 @@ Gwyddion_PERL = \
 
 EXTRA_DIST = $(Gwyddion_PERL)
 
+perllibdir = $(pkglibdir)/perl/Gwyddion
+
 if HAVE_PERL
-perllibdir = $(gwypluginlibdir)/perl/Gwyddion
 man3dir = $(mandir)/man3
 POD2MAN_FLAGS = --center=$(PACKAGE)
 
