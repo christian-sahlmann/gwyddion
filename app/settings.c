@@ -28,6 +28,17 @@
 
 static GwyContainer *gwy_settings = NULL;
 
+/**
+ * gwy_app_settings_get:
+ *
+ * Gets the gwyddion settings.
+ *
+ * The settings are a #GwyContainer automatically loaded at program startup
+ * and saved ad its exit.  For storing persistent module data you should
+ * use "/mod/YOUR_MODULE_NAME/" prefix.
+ *
+ * Returns: The settings as a #GwyContainer.
+ **/
 GwyContainer*
 gwy_app_settings_get(void)
 {
@@ -45,6 +56,16 @@ gwy_app_settings_free(void)
     gwy_object_unref(gwy_settings);
 }
 
+/**
+ * gwy_app_settings_save:
+ * @filename: A filename to save the settings to.
+ *
+ * Saves the settings.
+ *
+ * Probably useful only in the application.
+ *
+ * Returns: Whether it succeeded.
+ **/
 gboolean
 gwy_app_settings_save(const gchar *filename)
 {
@@ -72,6 +93,18 @@ gwy_app_settings_save(const gchar *filename)
     return TRUE;
 }
 
+/**
+ * gwy_app_settings_load:
+ * @filename: A filename to read the settings from.
+ *
+ * Loads the settings.
+ *
+ * Probably useful only in the application.
+ *
+ * Returns: Whether it succeeded.  In any case you can call
+ * gwy_app_settings_get() then to obtain either the loaded settings or the
+ * old ones (if failed), or an empty #GwyContainer.
+ **/
 gboolean
 gwy_app_settings_load(const gchar *filename)
 {
@@ -116,6 +149,15 @@ gwy_app_settings_load(const gchar *filename)
     return TRUE;
 }
 
+/**
+ * gwy_app_settings_get_module_dirs:
+ *
+ * Returns a list of directories to search modules in.
+ *
+ * Returns: The list of module directories as a newly allocated array of
+ *          newly allocated strings, to be freed with g_str_freev() when
+ *          not longer needed.
+ **/
 gchar**
 gwy_app_settings_get_module_dirs(void)
 {
@@ -138,6 +180,13 @@ gwy_app_settings_get_module_dirs(void)
     return module_dirs;
 }
 
+/**
+ * gwy_app_settings_get_config_filename:
+ *
+ * Returns a suitable configuration file name.
+ *
+ * Returns: The file name as a newly allocated string.
+ **/
 gchar*
 gwy_app_settings_get_config_filename(void)
 {

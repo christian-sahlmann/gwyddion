@@ -33,6 +33,15 @@ static GtkWidget *label = NULL;
 static gchar *message_prefix = NULL;
 static gboolean canceled = FALSE;
 
+/**
+ * gwy_app_wait_start:
+ * @window: A window.
+ * @message: A message to show in the wait dialog.
+ *
+ * Starts waiting for a window @window, creating a dialog with a progress bar.
+ *
+ * Waiting is global, there can be only one at a time.
+ **/
 void
 gwy_app_wait_start(GtkWidget *window,
                    const gchar *message)
@@ -52,6 +61,15 @@ gwy_app_wait_start(GtkWidget *window,
     wait_widget = window;
 }
 
+/**
+ * gwy_app_wait_finish:
+ *
+ * Finishes waiting, closing the dialog.
+ *
+ * No function like gwy_app_wait_set_message() should be call after that.
+ *
+ * This function must be called even if user cancelled the operation.
+ **/
 void
 gwy_app_wait_finish(void)
 {
@@ -100,6 +118,18 @@ gwy_app_wait_create_dialog(GtkWidget *window,
         gtk_main_iteration();
 }
 
+/**
+ * gwy_app_wait_switch_widget:
+ * @window: A window.
+ * @message: A mesage to show now (%NULL for keep the present one).
+ *
+ * Switches the waiting window.
+ *
+ * FIXME: This is probably both broken and nonsense.
+ *
+ * Returns: %TRUE if the operation can continue, %FALSE if user cancelled it
+ *          meanwhile.
+ **/
 gboolean
 gwy_app_wait_switch_widget(GtkWidget *window,
                            const gchar *message)
@@ -119,6 +149,18 @@ gwy_app_wait_switch_widget(GtkWidget *window,
     return canceled;
 }
 
+/**
+ * gwy_app_wait_set_message:
+ * @message: A mesage to show in the progress dialog.
+ *
+ * Sets the message shown on the progress dialog.
+ *
+ * See also gwy_app_wait_set_message_prefix() which makes this function more
+ * usable directly as a callback.
+ *
+ * Returns: %TRUE if the operation can continue, %FALSE if user cancelled it
+ *          meanwhile.
+ **/
 gboolean
 gwy_app_wait_set_message(const gchar *message)
 {
@@ -142,6 +184,17 @@ gwy_app_wait_set_message(const gchar *message)
     return !canceled;
 }
 
+/**
+ * gwy_app_wait_set_message_prefix:
+ * @prefix: The prefix for new messages.
+ *
+ * Sets prefix for the messages shown in the progress dialog.
+ *
+ * The prefix will take effect in the next gwy_app_wait_set_message() call.
+ *
+ * Returns: %TRUE if the operation can continue, %FALSE if user cancelled it
+ *          meanwhile.
+ **/
 gboolean
 gwy_app_wait_set_message_prefix(const gchar *prefix)
 {
@@ -158,6 +211,15 @@ gwy_app_wait_set_message_prefix(const gchar *prefix)
     return !canceled;
 }
 
+/**
+ * gwy_app_wait_set_fraction:
+ * @fraction: The progress of the operation, as a number from 0 to 1.
+ *
+ * Sets the amount of progress the progress bar on the dialog displays.
+ *
+ * Returns: %TRUE if the operation can continue, %FALSE if user cancelled it
+ *          meanwhile.
+ **/
 gboolean
 gwy_app_wait_set_fraction(gdouble fraction)
 {

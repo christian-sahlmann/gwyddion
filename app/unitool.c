@@ -38,6 +38,19 @@ static void gwy_unitool_dialog_set_visible   (GwyUnitoolState *state,
 
 /***** Public ***************************************************************/
 
+/**
+ * gwy_unitool_use:
+ * @state: Tool state.
+ * @data_window: A data window, as obtained in tool switch module method.
+ * @reason: Tool switch reason, as obtained in tool switch module method.
+ *
+ * Switches a tool.
+ *
+ * This function is to be called from a tool module @use method. It does all
+ * the hard work of changing the layer, connecting or disconnecting callbacks,
+ * and showing or hiding the dialog; making all tools using it to behave
+ * more-or-less consistently.
+ **/
 void
 gwy_unitool_use(GwyUnitoolState *state,
                 GwyDataWindow *data_window,
@@ -274,6 +287,17 @@ gwy_unitool_dialog_set_visible(GwyUnitoolState *state,
 
 /***** Helpers *************************************************************/
 
+/**
+ * gwy_unitool_windowname_frame_create:
+ * @state: Tool state.
+ *
+ * Creates a frame displaying the name of currently active data window.
+ *
+ * The displayed name automatically changes on tool switch or when the file
+ * name changes.
+ *
+ * Returns: The name-displaying frame as a #GtkWidget.
+ **/
 GtkWidget*
 gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
 {
@@ -294,6 +318,20 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     return frame;
 }
 
+/**
+ * gwy_unitool_get_z_average:
+ * @dfield: A data field.
+ * @xreal: X-coordinate of area center in physical units.
+ * @yreal: Y-coordinate of area center in physical units.
+ * @radius: Area radius in pixels.
+ *
+ * Computes average value over a part of data field @dfield.
+ *
+ * The area is (currently) square with side of 2@radius+1.  If part of it lies
+ * outside the data field borders, it's simply not counted in.
+ *
+ * Returns: The average value.
+ **/
 gdouble
 gwy_unitool_get_z_average(GwyDataField *dfield,
                           gdouble xreal,
@@ -318,6 +356,14 @@ gwy_unitool_get_z_average(GwyDataField *dfield,
     return gwy_data_field_get_area_avg(dfield, ulj, uli, brj, bri);
 }
 
+/**
+ * gwy_unitool_update_label:
+ * @units: Units specification.
+ * @label: A label to update (a #GtkLabel).
+ * @value: A value to show.
+ *
+ * Sets the text of a label to display @value according to @units.
+ **/
 void
 gwy_unitool_update_label(GwyUnitoolUnits *units,
                          GtkWidget *label, gdouble value)
@@ -334,3 +380,51 @@ gwy_unitool_update_label(GwyUnitoolUnits *units,
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
+/***** Documentation *******************************************************/
+
+/**
+ * GwyUnitoolSlots:
+ * @layer_type:
+ * @layer_constructor:
+ * @layer_setup:
+ * @dialog_create:
+ * @dialog_update:
+ * @dialog_abandon:
+ * @apply:
+ * @response:
+ *
+ * The custom functions constituting a particular tool, called by universal
+ * tool on various occasions.
+ **/
+
+/**
+ * GwyUnitoolState:
+ * @func_slots: Function slots.
+ * @data_window: The data window the tool is active for.
+ * @layer: The layer the tool is using.
+ * @is_visible: %TRUE if the dialog is visible, %FALSE if it't hidden.
+ * @layer_updated_id:
+ * @data_updated_id:
+ * @response_id:
+ * @windowname_id:
+ * @windowname:
+ * @dialog:
+ * @coord_units:
+ * @user_data:
+ *
+ * Universal tool state.
+ *
+ * You should put pointer to particular tool state to the @user_data member.
+ **/
+
+/**
+ * GwyUnitoolUnits:
+ * @mag: Magnitude, should be a power of 1000.
+ * @precision: Number of decimal places.
+ * @units: Units (meters, seconds, etc.).
+ *
+ * Units specification for gwy_unitool_update_label().
+ *
+ * The values @mag and @precision should be probably obtained from a
+ * gwy_math_humanize_numbmers() call.
+ **/
