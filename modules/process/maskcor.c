@@ -43,7 +43,7 @@ typedef struct {
 } MaskcorArgs;
 
 typedef struct {
-    GtkWidget *threshold;
+    GtkObject *threshold;
     MaskcorArgs *args;
 } MaskcorControls;
 
@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     "maskcor",
     N_("Create mask by correlation with another data field."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2.1",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -163,30 +163,22 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(2, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
 
     /* Operands */
     omenu = maskcor_data_option_menu(&args->win1);
-    gwy_table_attach_row(table, 0, _("_Data to modify:"), NULL, omenu);
+    gwy_table_attach_hscale(table, 0, _("_Data to modify:"), NULL,
+                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
 
     omenu = maskcor_data_option_menu(&args->win2);
-    gwy_table_attach_row(table, 1, _("_Correlation kernel:"), NULL, omenu);
-
-    /**** Parameters ********/
-    adj = gtk_adjustment_new(args->threshold, -1.0, 1.0, 0.01, 0.1, 0.1);
-    spin = gwy_table_attach_spinbutton(table, 2, _("_Threshold:"), NULL, adj);
-    controls->threshold = spin;
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
-    gtk_widget_set_sensitive(spin, args->result != GWY_MASKCOR_SCORE);
-    g_signal_connect(adj, "value_changed",
-                     G_CALLBACK(maskcor_threshold_cb),
-                     &args->threshold);
+    gwy_table_attach_hscale(table, 1, _("_Correlation kernel:"), NULL,
+                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
 
     /***** Result *****/
     omenu = gwy_option_menu_create(results, G_N_ELEMENTS(results),
@@ -194,7 +186,18 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
                                    G_CALLBACK(maskcor_operation_cb),
                                    controls,
                                    args->result);
-    gwy_table_attach_row(table, 3, _("_Output type:"), NULL, omenu);
+    gwy_table_attach_hscale(table, 2, _("_Output type:"), NULL,
+                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
+
+    /**** Parameters ********/
+    adj = gtk_adjustment_new(args->threshold, -1.0, 1.0, 0.01, 0.1, 0);
+    controls->threshold = adj;
+    spin = gwy_table_attach_hscale(table, 3, _("_Threshold:"), NULL, adj, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+    gwy_table_hscale_set_sensitive(adj, args->result != GWY_MASKCOR_SCORE);
+    g_signal_connect(adj, "value_changed",
+                     G_CALLBACK(maskcor_threshold_cb),
+                     &args->threshold);
 
     gtk_widget_show_all(dialog);
 
@@ -219,8 +222,8 @@ maskcor_operation_cb(GtkWidget *item, MaskcorControls *controls)
 {
     controls->args->result
         = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "operation"));
-    gtk_widget_set_sensitive(controls->threshold,
-                             controls->args->result != GWY_MASKCOR_SCORE);
+    gwy_table_hscale_set_sensitive(controls->threshold,
+                                   controls->args->result != GWY_MASKCOR_SCORE);
 }
 
 static void

@@ -21,6 +21,7 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libprocess/tip.h>
@@ -32,7 +33,7 @@
 
 enum {
     MIN_RES = 3,
-    MAX_RES = 5000
+    MAX_RES = 128
 };
 
 /* Data for this function. */
@@ -119,7 +120,7 @@ static GwyModuleInfo module_info = {
     "tip_blind",
     N_("Blind estimation of SPM tip using Villarubia's algorithm"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -162,7 +163,7 @@ tip_blind(GwyContainer *data, GwyRunType run)
 static gboolean
 tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *hbox, *spin;
+    GtkWidget *dialog, *table, *hbox;
     TipBlindControls controls;
     enum {
         RESPONSE_RESET = 1,
@@ -191,7 +192,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
                                       controls.good_tip);
 
-    hbox = gtk_hbox_new(FALSE, 3);
+    hbox = gtk_hbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
@@ -226,7 +227,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     /*set up tip estimation controls*/
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(5, 3, FALSE);
+    table = gtk_table_new(7, 4, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     row = 0;
 
@@ -235,40 +236,35 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     controls.data
         = gwy_option_menu_data_window(G_CALLBACK(data_window_cb), &controls,
                                       NULL, GTK_WIDGET(controls.data_window));
-    gwy_table_attach_row(table, row, _("Related _data:"), NULL, controls.data);
+    gwy_table_attach_hscale(table, row, _("Related _data:"), NULL,
+                            GTK_OBJECT(controls.data), GWY_HSCALE_WIDGET);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("Estimated Tip Size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
                      GTK_FILL, 0, 2, 2);
     row++;
 
     controls.xres = gtk_adjustment_new(args->xres, MIN_RES, MAX_RES, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Width:"), _("px"),
-                                       controls.xres);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
+    gwy_table_attach_hscale(table, row, _("_Width:"), "px", controls.xres, 0);
     g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
     g_signal_connect(controls.xres, "value_changed",
                      G_CALLBACK(width_changed_cb), &controls);
     row++;
 
     controls.yres = gtk_adjustment_new(args->yres, MIN_RES, MAX_RES, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Height:"), _("px"),
-                                       controls.yres);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
+    gwy_table_attach_hscale(table, row, _("_Height:"), "px", controls.yres, 0);
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
     g_signal_connect(controls.yres, "value_changed",
                      G_CALLBACK(height_changed_cb), &controls);
     row++;
 
     controls.same_resolution
-        = gtk_check_button_new_with_mnemonic(N_("_Same resolution"));
+        = gtk_check_button_new_with_mnemonic(_("_Same resolution"));
     gtk_table_attach(GTK_TABLE(table), controls.same_resolution,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.same_resolution),
                                  args->same_resolution);
     g_signal_connect(controls.same_resolution, "toggled",
@@ -276,6 +272,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
+    /* FIXME: get rid of valunit */
     controls.threshold = gwy_val_unit_new(_("_Threshold:"),
                                           gwy_data_field_get_si_unit_z(dfield));
     gtk_table_attach(GTK_TABLE(table), controls.threshold,
@@ -288,7 +285,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     controls.boundaries
                 = gtk_check_button_new_with_mnemonic(_("Use _boundaries"));
     gtk_table_attach(GTK_TABLE(table), controls.boundaries,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.boundaries),
                                                  args->use_boundaries);
     g_signal_connect(controls.boundaries, "toggled",
@@ -351,15 +348,17 @@ width_changed_cb(GtkAdjustment *adj,
                  TipBlindControls *controls)
 {
     TipBlindArgs *args;
+    gdouble v;
 
     args = controls->args;
-    args->xres = gtk_adjustment_get_value(adj);
+    v = gtk_adjustment_get_value(adj);
+    args->xres = ROUND(v);
     if (controls->in_update)
         return;
 
     if (args->same_resolution) {
         controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yres), args->xres);
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yres), v);
         controls->in_update = FALSE;
     }
 
@@ -371,15 +370,17 @@ height_changed_cb(GtkAdjustment *adj,
                   TipBlindControls *controls)
 {
     TipBlindArgs *args;
+    gdouble v;
 
     args = controls->args;
-    args->yres = gtk_adjustment_get_value(adj);
+    v = gtk_adjustment_get_value(adj);
+    args->yres = ROUND(v);
     if (controls->in_update)
         return;
 
     if (args->same_resolution) {
         controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xres), args->yres);
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xres), v);
         controls->in_update = FALSE;
     }
 

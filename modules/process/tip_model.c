@@ -58,9 +58,6 @@ typedef struct {
     GtkObject *nsides;
     GtkWidget *labsize;
     GtkObject *slope;
-    GtkWidget *spin_angle;
-    GtkWidget *spin_theta;
-    GtkWidget *spin_nsides;
     GwyContainer *tip;
     GwyContainer *vtip;
     gint vxres;
@@ -120,7 +117,7 @@ static GwyModuleInfo module_info = {
     "tip_model",
     N_("Model SPM tip"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -168,7 +165,7 @@ tip_model(GwyContainer *data, GwyRunType run)
 static gboolean
 tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *hbox;
+    GtkWidget *dialog, *table, *hbox, *spin;
     TipModelControls controls;
     enum {
         RESPONSE_RESET = 1,
@@ -184,6 +181,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 3);
@@ -220,7 +218,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     /* set up tip model controls */
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(5, 3, FALSE);
+    table = gtk_table_new(7, 4, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     row = 0;
 
@@ -228,34 +226,31 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     controls.data
         = gwy_option_menu_data_window(G_CALLBACK(data_window_cb), &controls,
                                       NULL, GTK_WIDGET(controls.data_window));
-    gwy_table_attach_row(table, row, _("Related _data:"), NULL, controls.data);
+    gwy_table_attach_hscale(table, row, _("Related _data:"), NULL,
+                            GTK_OBJECT(controls.data), GWY_HSCALE_WIDGET);
     row++;
 
     controls.type = create_preset_menu(G_CALLBACK(tip_type_cb),
                                        args, args->type);
-    gwy_table_attach_row(table, row, _("Tip _type:"), NULL, controls.type);
+    gwy_table_attach_hscale(table, row, _("Tip _type:"), NULL,
+                            GTK_OBJECT(controls.type), GWY_HSCALE_WIDGET);
     row++;
 
-    controls.nsides = gtk_adjustment_new(args->nsides,
-                                         3, 100, 1, 5, 0);
-    controls.spin_nsides
-        = gwy_table_attach_spinbutton(table, row, _("_Number of sides:"), " ",
-                                      controls.nsides);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.spin_nsides), 0);
+    controls.nsides = gtk_adjustment_new(args->nsides, 3, 24, 1, 5, 0);
+    gwy_table_attach_hscale(table, row, _("_Number of sides:"), NULL,
+                            controls.nsides, 0);
     row++;
 
     controls.angle = gtk_adjustment_new(args->angle, 0.1, 89.9, 0.1, 1, 0);
-    controls.spin_angle
-        = gwy_table_attach_spinbutton(table, row, _("Tip _slope:"), _("deg"),
-                                      controls.angle);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.spin_angle), 2);
+    spin = gwy_table_attach_hscale(table, row, _("Tip _slope:"), _("deg"),
+                                   controls.angle, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     row++;
 
     controls.theta = gtk_adjustment_new(args->theta, 0, 360, 0.1, 1, 0);
-    controls.spin_theta
-        = gwy_table_attach_spinbutton(table, row, _("Tip _rotation:"), _("deg"),
-                                      controls.theta);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.spin_theta), 2);
+    spin = gwy_table_attach_hscale(table, row, _("Tip _rotation:"), _("deg"),
+                                   controls.theta, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     row++;
 
     controls.radius = gwy_val_unit_new(_("Tip _apex radius:"),
@@ -382,27 +377,22 @@ tip_model_dialog_update_controls(TipModelControls *controls,
     switch (args->type)
     {
         case GWY_TIP_PYRAMIDE:
-        gtk_widget_set_sensitive(controls->spin_angle, TRUE);
-        gtk_widget_set_sensitive(controls->spin_theta, TRUE);
-        gtk_widget_set_sensitive(controls->spin_nsides, TRUE);
+        gwy_table_hscale_set_sensitive(controls->angle, TRUE);
+        gwy_table_hscale_set_sensitive(controls->theta, TRUE);
+        gwy_table_hscale_set_sensitive(controls->nsides, TRUE);
         break;
 
         case GWY_TIP_CONTACT:
-        gtk_widget_set_sensitive(controls->spin_angle, FALSE);
-        gtk_widget_set_sensitive(controls->spin_theta, TRUE);
-        gtk_widget_set_sensitive(controls->spin_nsides, FALSE);
-        break;
-
         case GWY_TIP_NONCONTACT:
-        gtk_widget_set_sensitive(controls->spin_angle, FALSE);
-        gtk_widget_set_sensitive(controls->spin_theta, TRUE);
-        gtk_widget_set_sensitive(controls->spin_nsides, FALSE);
+        gwy_table_hscale_set_sensitive(controls->angle, FALSE);
+        gwy_table_hscale_set_sensitive(controls->theta, TRUE);
+        gwy_table_hscale_set_sensitive(controls->nsides, FALSE);
         break;
 
         case GWY_TIP_DELTA:
-        gtk_widget_set_sensitive(controls->spin_angle, FALSE);
-        gtk_widget_set_sensitive(controls->spin_theta, FALSE);
-        gtk_widget_set_sensitive(controls->spin_nsides, FALSE);
+        gwy_table_hscale_set_sensitive(controls->angle, FALSE);
+        gwy_table_hscale_set_sensitive(controls->theta, FALSE);
+        gwy_table_hscale_set_sensitive(controls->nsides, FALSE);
         break;
 
         default:
@@ -413,7 +403,7 @@ tip_model_dialog_update_controls(TipModelControls *controls,
 static void
 tip_model_dialog_update_values(TipModelControls *controls, TipModelArgs *args)
 {
-    args->nsides = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->nsides));
+    args->nsides = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->nsides));
     args->angle = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->angle));
     args->theta = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->theta));
     args->data = gwy_data_window_get_data(controls->data_window);
