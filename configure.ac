@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 0.20031222, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
+AC_INIT(Gwyddion, 0.20031225, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -90,6 +90,7 @@ PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
 AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_LIB([jpeg],[jpeg_abort])
+AC_CHECK_LIB([tiff],[TIFFOpen])
 PACKAGE_LIBS="$PACKAGE_LIBS $LIBS"
 
 dnl Checks for header files.
@@ -97,6 +98,7 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS( \
   jpeglib.h \
+  tiffio.h \
   time.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.

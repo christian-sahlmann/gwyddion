@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <png.h>
 #include <jpeglib.h>
+#include <tiffio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -48,6 +49,12 @@
 #define GWY_JPEG_MAGIC "\xff\xd8\xff\xe0\x00\x10JFIF"
 #define GWY_JPEG_MAGIC_SIZE (sizeof(GWY_JPEG_MAGIC)-1)
 
+/* this is broken, but we never read TIFFs anyway, only export */
+#define GWY_TIFF_EXTENSIONS ".tif,.tiff"
+#define GWY_TIFF_MAGIC "II\x2a\x00"
+/*#define GWY_TIFF_MAGIC "MM\x00\x2a"*/
+#define GWY_TIFF_MAGIC_SIZE (sizeof(GWY_TIFF_MAGIC)-1)
+
 #define GWY_PPM_EXTENSIONS ".ppm,.pnm"
 #define GWY_PPM_MAGIC "P6"
 #define GWY_PPM_MAGIC_SIZE (sizeof(GWY_PPM_MAGIC)-1)
@@ -64,12 +71,19 @@ static gboolean      pixmap_save          (GwyContainer *data,
                                            const gchar *filename,
                                            const gchar *name);
 static gboolean      pixmap_do_write_png  (FILE *fh,
+                                           const gchar *filename,
                                            GdkPixbuf *pixbuf);
 static gboolean      pixmap_do_write_jpeg (FILE *fh,
+                                           const gchar *filename,
+                                           GdkPixbuf *pixbuf);
+static gboolean      pixmap_do_write_tiff (FILE *fh,
+                                           const gchar *filename,
                                            GdkPixbuf *pixbuf);
 static gboolean      pixmap_do_write_ppm  (FILE *fh,
+                                           const gchar *filename,
                                            GdkPixbuf *pixbuf);
 static gboolean      pixmap_do_write_bmp  (FILE *fh,
+                                           const gchar *filename,
                                            GdkPixbuf *pixbuf);
 static gsize         find_format          (const gchar *name);
 
@@ -78,7 +92,7 @@ static struct {
     const gchar *extensions;
     const gchar *magic;
     gsize magic_size;
-    gboolean (*do_write)(FILE*, GdkPixbuf*);
+    gboolean (*do_write)(FILE*, const gchar*, GdkPixbuf*);
 }
 const pixmap_formats[] = {
     {
@@ -90,6 +104,11 @@ const pixmap_formats[] = {
         "jpeg",
         GWY_JPEG_EXTENSIONS, GWY_JPEG_MAGIC, GWY_JPEG_MAGIC_SIZE,
         &pixmap_do_write_jpeg,
+    },
+    {
+        "tiff",
+        GWY_TIFF_EXTENSIONS, GWY_TIFF_MAGIC, GWY_TIFF_MAGIC_SIZE,
+        &pixmap_do_write_tiff,
     },
     {
         "ppm",
@@ -111,10 +130,11 @@ static GwyModuleInfo module_info = {
     "Exports data as as pixmap images.  Supports following image formats: "
         "PNG (Portable Network Graphics), "
         "JPEG (Joint Photographic Experts Group), "
+        "TIFF (Tag Image File Format), "
         "PPM (Portable Pixmap), "
         "BMP (Windows or OS2 Bitmap).",
     "Yeti <yeti@physics.muni.cz>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -140,6 +160,13 @@ module_register(const gchar *name)
         NULL,
         (GwyFileSaveFunc)&pixmap_save,
     };
+    static GwyFileFuncInfo gwytiff_func_info = {
+        "tiff",
+        "TIFF (" GWY_TIFF_EXTENSIONS ")",
+        (GwyFileDetectFunc)&pixmap_detect,
+        NULL,
+        (GwyFileSaveFunc)&pixmap_save,
+    };
     static GwyFileFuncInfo gwyppm_func_info = {
         "ppm",
         "Portable Pixmap (" GWY_PPM_EXTENSIONS ")",
@@ -157,6 +184,7 @@ module_register(const gchar *name)
 
     gwy_file_func_register(name, &gwypng_func_info);
     gwy_file_func_register(name, &gwyjpeg_func_info);
+    gwy_file_func_register(name, &gwytiff_func_info);
     gwy_file_func_register(name, &gwyppm_func_info);
     gwy_file_func_register(name, &gwybmp_func_info);
 
@@ -233,24 +261,24 @@ pixmap_save(GwyContainer *data,
     pixbuf = gwy_data_view_layer_paint(layer);
 
     layer = gwy_data_view_get_alpha_layer(data_view);
-    if (layer) {
+    if (layer)
         g_warning("Cannot handle mask layers (yet)");
-    }
 
     if (!(fh = fopen(filename, "wb")))
         return FALSE;
-    ok = pixmap_formats[i].do_write(fh, pixbuf);
+    ok = pixmap_formats[i].do_write(fh, filename, pixbuf);
     if (!ok)
         unlink(filename);
-    fclose(fh);
-
-    /* TODO: free stuff */
+    /* XXX: @#$%! libtiff can't let us close files normally... */
+    if (strcmp(name, "tiff") != 0)
+        fclose(fh);
 
     return ok;
 }
 
 static gboolean
 pixmap_do_write_png(FILE *fh,
+                    const gchar *filename,
                     GdkPixbuf *pixbuf)
 {
     png_bytepp rowptr_png = NULL;
@@ -277,7 +305,7 @@ pixmap_do_write_png(FILE *fh,
 
     /* error handling */
     if (setjmp(png_jmpbuf(png_ptr))) {
-        g_warning("PNG write failed!");
+        g_warning("PNG `%s' write failed!", filename);
         ok = FALSE;
         goto end;
     }
@@ -298,6 +326,7 @@ end:
 
 static gboolean
 pixmap_do_write_jpeg(FILE *fh,
+                     G_GNUC_UNUSED const gchar *filename,
                      GdkPixbuf *pixbuf)
 {
     JSAMPROW *rowptr_jpeg = NULL;
@@ -339,8 +368,49 @@ pixmap_do_write_jpeg(FILE *fh,
 }
 
 static gboolean
-pixmap_do_write_ppm(FILE *fh,
+pixmap_do_write_tiff(FILE *fh,
+                     const gchar *filename,
                      GdkPixbuf *pixbuf)
+{
+    TIFF *out;
+    guchar *pixels = NULL;
+    gsize rowstride, i, width, height;
+    /* TODO: error handling */
+    gboolean ok = TRUE;
+
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    width = gdk_pixbuf_get_width(pixbuf);
+    height = gdk_pixbuf_get_height(pixbuf);
+
+    out = TIFFFdOpen(fileno(fh), filename, "w");
+
+    TIFFSetField(out, TIFFTAG_IMAGEWIDTH, width);
+    TIFFSetField(out, TIFFTAG_IMAGELENGTH, height);
+    TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 3);
+    TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
+    TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+    TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+    TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
+
+    g_assert(TIFFScanlineSize(out) <= (glong)rowstride);
+    TIFFSetField(out, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(out, 3*width));
+    for (i = 0; i < height; i++) {
+        if (TIFFWriteScanline(out, pixels + i*rowstride, i, 0) < 0) {
+            g_warning("TIFF `%s' write failed!", filename);
+            ok = FALSE;
+            break;
+        }
+    }
+    TIFFClose(out);
+
+    return ok;
+}
+
+static gboolean
+pixmap_do_write_ppm(FILE *fh,
+                    G_GNUC_UNUSED const gchar *filename,
+                    GdkPixbuf *pixbuf)
 {
     static const gchar *ppm_header = "P6\n%u\n%u\n255\n";
     guchar *pixels = NULL;
@@ -373,7 +443,8 @@ end:
 
 static gboolean
 pixmap_do_write_bmp(FILE *fh,
-                     GdkPixbuf *pixbuf)
+                    G_GNUC_UNUSED const gchar *filename,
+                    GdkPixbuf *pixbuf)
 {
     static guchar bmp_head[] = {
         'B', 'M',    /* magic */
