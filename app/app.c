@@ -915,6 +915,7 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
                                     text);
     g_free(text);
 
+    gtk_window_present(GTK_WINDOW(dialog));
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
 
