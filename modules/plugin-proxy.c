@@ -157,7 +157,7 @@ static GwyModuleInfo module_info = {
         "external programs (plug-ins) on data pretending they are data "
         "processing or file loading/saving modules.",
     "Yeti <yeti@gwyddion.net>",
-    "3.0",
+    "3.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1139,7 +1139,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         }
         *val = '\0';
         val++;
-        if (strcmp(val, "[") != 0) {
+        if (strcmp(val, "[") != 0 || !pos || *pos != '[') {
             gwy_debug("<%s>=<%s>", line, val);
             if (*val)
                 gwy_container_set_string_by_name(data, line, g_strdup(val));
@@ -1148,10 +1148,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             continue;
         }
 
-        if (!pos || *pos != '[') {
-            g_warning("Unexpected end of file (datafield expected).");
-            goto fail;
-        }
+        g_assert(pos && *pos == '[');
         pos++;
         dfield = NULL;
         gwy_container_gis_object_by_name(data, line, (GObject**)&dfield);
