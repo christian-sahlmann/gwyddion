@@ -77,13 +77,42 @@ Basic module loader interface
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_module_get_filename ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_module_get_functions ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_module_foreach ##### -->
+<para>
+
+</para>
+
+@function: 
+@data: 
+
+
 <!-- ##### FUNCTION gwy_module_register_module ##### -->
 <para>
 
 </para>
 
-@modulename: 
+@name: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@modulename: 
 
 
 <!-- ##### FUNCTION gwy_module_set_register_callback ##### -->

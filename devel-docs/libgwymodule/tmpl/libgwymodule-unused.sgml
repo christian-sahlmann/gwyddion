@@ -74,14 +74,6 @@
 
 @modules: 
 
-<!-- ##### FUNCTION gwy_module_foreach ##### -->
-<para>
-
-</para>
-
-@function: 
-@data: 
-
 <!-- ##### FUNCTION gwy_module_get_module_info ##### -->
 <para>
 

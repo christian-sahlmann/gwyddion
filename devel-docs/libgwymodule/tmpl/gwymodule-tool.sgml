@@ -76,6 +76,15 @@ It is bets to implement interactive tools with the
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_tool_func_get_tooltip ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_tool_func_exists ##### -->
 <para>
 

@@ -10,6 +10,7 @@ GwyToolUseFunc
 gwy_tool_func_register
 gwy_tool_func_use
 gwy_tool_func_build_toolbox
+gwy_tool_func_get_tooltip
 gwy_tool_func_exists
 </SECTION>
 
@@ -33,6 +34,9 @@ GwyModuleRegisterFunc
 GwyModuleQueryFunc
 gwy_module_register_modules
 gwy_module_lookup
+gwy_module_get_filename
+gwy_module_get_functions
+gwy_module_foreach
 gwy_module_register_module
 gwy_module_set_register_callback
 </SECTION>
@@ -73,6 +77,7 @@ gwy_file_func_run_detect
 gwy_file_func_run_load
 gwy_file_func_run_save
 gwy_file_func_get_operations
+gwy_file_func_get_description
 gwy_file_detect
 gwy_file_load
 gwy_file_save
