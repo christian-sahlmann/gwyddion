@@ -73,6 +73,7 @@ gchar*   gwy_get_user_dir           (void);
 G_CONST_RETURN
 gchar*   gwy_get_home_dir           (void);
 gchar*   gwy_canonicalize_path      (const gchar *path);
+gchar*   gwy_sgettext               (const gchar *msgid);
 
 G_END_DECLS
 

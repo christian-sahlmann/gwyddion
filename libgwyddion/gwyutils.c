@@ -442,7 +442,7 @@ gwy_debug_gnu(const gchar *domain,
 }
 
 /**
- * sgettext:
+ * gwy_sgettext:
  * @msgid: Message id to translate.  It MUST contain at least one `|'.
  *
  * Translate a message id containing disambiguating prefix ending with `|'.
@@ -453,7 +453,7 @@ gwy_debug_gnu(const gchar *domain,
  * Since: 1.6
  **/
 gchar*
-sgettext(const gchar *msgid)
+gwy_sgettext(const gchar *msgid)
 {
     char *msgstr;
 

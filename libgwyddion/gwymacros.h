@@ -40,13 +40,12 @@
 
 #if ENABLE_NLS
 #include <libintl.h>
-gchar *sgettext(const gchar *msgid);
 #else
 #define gettext(x) (x)
 #define ngettext(sing, plur, n) ((n) == 1 ? (sing) : (plur))
-#define sgettext(x) (strrchr((x), '|') + 1)
 #endif
 #define _(x) gettext(x)
+#define S_(x) gwy_sgettext(x)
 
 #ifdef gettext_noop
 #define N_(x) gettext_noop(x)
