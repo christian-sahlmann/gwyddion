@@ -139,11 +139,10 @@ void           gwy_math_nlfit_derive             (gint i,
 
 gint gwy_math_nlfit_get_npresets(void)
     G_GNUC_CONST;
-
 const GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(gint preset_id)
     G_GNUC_CONST;
-
 const GwyNLFitPresetFunction* gwy_math_nlfit_get_preset_by_name(const gchar *name);
+gint gwy_math_nlfit_get_preset_id(const GwyNLFitPresetFunction* function);
 
 gdouble gwy_math_nlfit_get_function_value(const GwyNLFitPresetFunction* function,
                                           gdouble *params,

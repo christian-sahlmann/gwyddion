@@ -1451,6 +1451,13 @@ gwy_math_nlfit_get_preset_by_name(const gchar *name)
     return NULL;
 }
 
+gint
+gwy_math_nlfit_get_preset_id(const GwyNLFitPresetFunction* function)
+{
+    /* XXX: some sanity check? */
+    return function - fitting_presets;
+}
+
 gdouble
 gwy_math_nlfit_get_function_value(const GwyNLFitPresetFunction* function,
                                   gdouble *params, gdouble x)
