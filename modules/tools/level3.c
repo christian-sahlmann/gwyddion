@@ -32,6 +32,7 @@ typedef struct {
     gboolean is_visible;  /* XXX: GTK_WIDGET_VISIBLE() returns BS? */
     GtkWidget *coords[6];
     GtkWidget *values[3];
+    GtkWidget *windowname;
     GtkObject *radius;
     gdouble mag;
     gint precision;
@@ -41,13 +42,13 @@ typedef struct {
 static gboolean   module_register               (const gchar *name);
 static void       level3_use                    (GwyDataWindow *data_window,
                                                  GwyToolSwitchEvent reason);
-static GtkWidget* level3_dialog_create          (GwyDataView *data_view);
+static GtkWidget* level3_dialog_create          (GwyDataWindow *data_window);
 static void       level3_do                     (void);
 static gdouble    level3_get_z_average          (GwyDataField *dfield,
                                                  gdouble xreal,
                                                  gdouble yreal,
                                                  gint radius);
-static void       level3_selection_updated_cb  (void);
+static void       level3_selection_updated_cb   (void);
 static void       level3_dialog_response_cb     (gpointer unused,
                                                  gint response);
 static void       level3_dialog_abandon         (void);
@@ -125,13 +126,17 @@ level3_use(GwyDataWindow *data_window,
         gwy_data_view_set_top_layer(data_view, points_layer);
     }
     if (!level3_dialog)
-        level3_dialog = level3_dialog_create(data_view);
+        level3_dialog = level3_dialog_create(data_window);
 
     updated_id = g_signal_connect(points_layer, "updated",
                                    G_CALLBACK(level3_selection_updated_cb),
                                    NULL);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         level3_dialog_set_visible(TRUE);
+    /* FIXME: window name can change also when saving under different name */
+    if (reason == GWY_TOOL_SWITCH_WINDOW)
+        gtk_label_set_text(GTK_LABEL(controls.windowname),
+                           gwy_data_window_get_base_name(data_window));
     if (controls.is_visible)
         level3_selection_updated_cb();
 }
@@ -214,6 +219,7 @@ level3_get_z_average(GwyDataField *dfield,
     uli = CLAMP(y - radius, 0, yres - 1);
     brj = CLAMP(x + radius, 0, xres - 1);
     bri = CLAMP(y + radius, 0, yres - 1);
+
     return gwy_data_field_get_area_avg(dfield, ulj, uli, brj, bri);
 }
 
@@ -242,18 +248,18 @@ level3_dialog_abandon(void)
 }
 
 static GtkWidget*
-level3_dialog_create(GwyDataView *data_view)
+level3_dialog_create(GwyDataWindow *data_window)
 {
     GwyContainer *data, *settings;
     GwyDataField *dfield;
-    GtkWidget *dialog, *table, *label;
+    GtkWidget *dialog, *table, *label, *frame;
     gdouble xreal, yreal, max, unit;
     gint radius;
     guchar *buffer;
     gint i;
 
     gwy_debug("");
-    data = gwy_data_view_get_data(data_view);
+    data = gwy_data_window_get_data(data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
@@ -273,10 +279,21 @@ level3_dialog_create(GwyDataView *data_view)
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     response_id = g_signal_connect(dialog, "response",
                                    G_CALLBACK(level3_dialog_response_cb), NULL);
-    table = gtk_table_new(4, 3, FALSE);
+
+    frame = gtk_frame_new(NULL);
+    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
+                       FALSE, FALSE, 0);
+    label = gtk_label_new(gwy_data_window_get_base_name(data_window));
+    controls.windowname = label;
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_padding(GTK_MISC(label), 4, 2);
+    gtk_container_add(GTK_CONTAINER(frame), label);
+
+    table = gtk_table_new(4, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, 0, TRUE, TRUE);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>X</b>"));
@@ -306,11 +323,10 @@ level3_dialog_create(GwyDataView *data_view)
         gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+1, i+2,
                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
     }
-    gtk_widget_show_all(table);
 
     table = gtk_table_new(1, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, 0, TRUE, TRUE);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
 
     settings = gwy_app_settings_get();
     if (gwy_container_contains_by_name(settings, radius_key))
@@ -322,7 +338,7 @@ level3_dialog_create(GwyDataView *data_view)
                                 controls.radius);
     g_signal_connect(controls.radius, "value_changed",
                      G_CALLBACK(level3_selection_updated_cb), NULL);
-    gtk_widget_show_all(table);
+    gtk_widget_show_all(GTK_DIALOG(dialog)->vbox);
     controls.is_visible = FALSE;
 
     return dialog;
@@ -343,7 +359,7 @@ update_value_label(GtkWidget *label, gdouble value)
 {
     gchar buffer[16];
 
-    g_snprintf(buffer, sizeof(buffer), "%.3g FIXME", value);
+    g_snprintf(buffer, sizeof(buffer), "%g", value);
     gtk_label_set_text(GTK_LABEL(label), buffer);
 }
 
@@ -354,8 +370,8 @@ level3_selection_updated_cb(void)
     GwyDataField *dfield;
     gdouble points[6];
     gboolean is_visible;
-    gdouble radius, val;
-    gint nselected, i;
+    gdouble val;
+    gint nselected, i, radius;
 
     gwy_debug("");
 
@@ -363,8 +379,6 @@ level3_selection_updated_cb(void)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
 
-    /*XXX: seems broken
-     * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
     is_visible = controls.is_visible;
     nselected = gwy_layer_points_get_points(points_layer, points);
     if (!is_visible && !nselected)
