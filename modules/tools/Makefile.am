@@ -13,8 +13,7 @@ tools_PROGRAMS = \
 	sfunctions.so
 
 EXTRA_DIST = \
-	makefile.msc \
-	README
+	makefile.msc
 
 crop_so_SOURCES = crop.c
 crop_so_LDFLAGS = $(module_ldflags),crop.so
