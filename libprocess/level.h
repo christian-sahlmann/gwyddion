@@ -25,6 +25,16 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+    GWY_PLANE_FIT_A = 1,
+    GWY_PLANE_FIT_BX,
+    GWY_PLANE_FIT_BY,
+    GWY_PLANE_FIT_ANGLE,
+    GWY_PLANE_FIT_SLOPE,
+    GWY_PLANE_FIT_S0,
+    GWY_PLANE_FIT_S0_REDUCED
+} GwyPlaneFitQuantity;
+
 void gwy_data_field_area_fit_plane        (GwyDataField *data_field,
                                            gint col,
                                            gint row,
@@ -74,6 +84,19 @@ void gwy_data_field_area_subtract_polynom (GwyDataField *data_field,
                                            gint col_degree,
                                            gint row_degree,
                                            const gdouble *coeffs);
+
+GwyDataField** gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
+                                                    gint size,
+                                                    gint col, gint row,
+                                                    gint width, gint height,
+                                                    gint nresults,
+                                                    const GwyPlaneFitQuantity *types,
+                                                    GwyDataField **results);
+GwyDataField** gwy_data_field_fit_local_planes(GwyDataField *data_field,
+                                               gint size,
+                                               gint nresults,
+                                               const GwyPlaneFitQuantity *types,
+                                               GwyDataField **results);
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_LEVEL_H__*/

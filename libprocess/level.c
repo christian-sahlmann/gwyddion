@@ -23,6 +23,10 @@
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
 
+#ifndef HAVE_HYPOT
+#define hypot(x,y) sqrt((x)*(x) + (y)*(y))
+#endif
+
 /* Private DataLine functions */
 void            _gwy_data_line_initialize        (GwyDataLine *a,
                                                   gint res, gdouble real,
@@ -453,6 +457,202 @@ gwy_data_field_subtract_polynom(GwyDataField *data_field,
                                          0, 0,
                                          data_field->xres, data_field->yres,
                                          col_degree, row_degree, coeffs);
+}
+
+/**
+ * gwy_data_field_area_fit_local_planes:
+ * @data_field: A data field.
+ * @size: Neighbourhood size (must be at least 2).  It is centered around
+ *        each pixel, unless @size is even when it stick to the right.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nresults: The number of requested quantities.
+ * @types: The types of requested quantities.
+ * @results: An array to store quantities to, may be %NULL to allocate a new
+ *           one which must be freed by caller then.  If any item is %NULL,
+ *           a new data field is allocated for it, existing data fields
+ *           are resized to @width x @height.
+ *
+ * Fits a plane through neighbourhood of each sample in a rectangular part
+ * of a data field.
+ *
+ * Returns: An array of data fields with requested quantities, that is
+ *          @results unless it was %NULL and a new array was allocated.
+ *
+ * Since: 1.9
+ **/
+GwyDataField**
+gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
+                                     gint size,
+                                     gint col, gint row,
+                                     gint width, gint height,
+                                     gint nresults,
+                                     const GwyPlaneFitQuantity *types,
+                                     GwyDataField **results)
+{
+    gdouble coeffs[GWY_PLANE_FIT_S0_REDUCED + 1];
+    gdouble xreal, yreal;
+    gint xres, yres, ri, i, j, ii, jj;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    g_return_val_if_fail(coeffs, NULL);
+    g_return_val_if_fail(size > 1, NULL);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres, NULL);
+    if (!nresults)
+        return NULL;
+    g_return_val_if_fail(types, NULL);
+    for (ri = 0; ri < nresults; ri++) {
+        g_return_val_if_fail(types[ri] >= GWY_PLANE_FIT_A
+                             && types[ri] <= GWY_PLANE_FIT_S0_REDUCED,
+                             NULL);
+        g_return_val_if_fail(!results
+                             || !results[ri]
+                             || GWY_IS_DATA_FIELD(results[ri]),
+                             NULL);
+    }
+    if (!results)
+        results = g_new0(GwyDataField*, nresults);
+
+    /* Allocate output data fields or fix their dimensions */
+    xres = data_field->xres;
+    yres = data_field->yres;
+    xreal = data_field->xreal * (gdouble)width/xres;
+    yreal = data_field->yreal * (gdouble)height/yres;
+    for (ri = 0; ri < nresults; ri++) {
+        if (!results[ri])
+            results[ri] = GWY_DATA_FIELD(gwy_data_field_new(width, height,
+                                                            xreal, yreal,
+                                                            FALSE));
+        else {
+            gwy_data_field_resample(results[ri], width, height,
+                                    GWY_INTERPOLATION_NONE);
+            gwy_data_field_set_xreal(results[ri], xreal);
+            gwy_data_field_set_yreal(results[ri], yreal);
+        }
+    }
+
+    /* Fit local planes */
+    for (i = row; i < row + height; i++) {
+        gint ifrom = MAX(0, i - (size-1)/2);
+        gint ito = MIN(yres-1, i + size/2);
+
+        /* Prevent fitting plane through just one pixel on bottom edge when
+         * size == 2 */
+        if (G_UNLIKELY(ifrom == ito) && ifrom)
+            ifrom--;
+
+        for (j = col; j < col + width; j++) {
+            gint jfrom = MAX(0, j - (size-1)/2);
+            gint jto = MIN(xres-1, j + size/2);
+            gdouble *drect;
+            gdouble sumz, sumzx, sumzy, sumzz, sumx, sumy, sumxx, sumxy, sumyy;
+            gdouble n, bx, by, s0, det, shift;
+
+            /* Prevent fitting plane through just one pixel on right edge when
+             * size == 2 */
+            if (G_UNLIKELY(jfrom == jto) && jfrom)
+                jfrom--;
+
+            drect = data_field->data + ifrom*xres + jfrom;
+            /* Compute sums with origin in top left corner */
+            sumz = sumzx = sumzy = sumzz = 0.0;
+            for (ii = 0; ii <= ito - ifrom; ii++) {
+                gdouble *drow = drect + xres*ii;
+
+                for (jj = 0; jj <= jto - jfrom; jj++) {
+                    sumz += drow[jj];
+                    sumzx += drow[jj]*jj;
+                    sumzy += drow[jj]*ii;
+                    sumzz += drow[jj]*drow[jj];
+                }
+            }
+            n = (ito - ifrom + 1)*(jto - jfrom + 1);
+            sumx = n*(jto - jfrom)/2.0;
+            sumy = n*(ito - ifrom)/2.0;
+            sumxx = sumx*(2*(jto - jfrom) + 1)/3.0;
+            sumyy = sumy*(2*(ito - ifrom) + 1)/3.0;
+            sumxy = sumx*sumy/n;
+
+            /* Move origin to pixel, including in z coordinate, remembering
+             * average z value in shift */
+            shift = ifrom - i;
+            sumxy += shift*sumx;
+            sumyy += shift*(2*sumy - n);
+            sumzy += shift*sumz;
+            sumy += n*shift;
+
+            shift = jfrom - j;
+            sumxx += shift*(2*sumx - n);
+            sumxy += shift*sumy;
+            sumzx += shift*sumz;
+            sumx += n*shift;
+
+            shift = -sumz/n;
+            sumzx += shift*sumx;
+            sumzy += shift*sumy;
+            sumzz += shift*(2*sumz - n);
+            sumz = 0.0;
+
+            /* Compute coefficients */
+            det = sumxx*sumyy - sumxy*sumxy;
+            bx = (sumzx*sumyy - sumxy*sumzy)/det;
+            by = (sumzy*sumxx - sumxy*sumzx)/det;
+            s0 = sumzz - bx*sumzx - by*sumzy;
+
+            coeffs[GWY_PLANE_FIT_A] = -shift;
+            coeffs[GWY_PLANE_FIT_BX] = bx;
+            coeffs[GWY_PLANE_FIT_BY] = by;
+            coeffs[GWY_PLANE_FIT_ANGLE] = atan2(by, bx);
+            coeffs[GWY_PLANE_FIT_SLOPE] = hypot(bx, by);
+            coeffs[GWY_PLANE_FIT_S0] = s0;
+            coeffs[GWY_PLANE_FIT_S0_REDUCED] = s0/(1.0 + bx*bx + by*by);
+
+            for (ri = 0; ri < nresults; ri++)
+                results[ri]->data[width*(i - row) + (j - col)]
+                    = coeffs[types[ri]];
+        }
+    }
+
+    for (ri = 0; ri < nresults; ri++)
+        gwy_data_field_invalidate(results[ri]);
+
+    return results;
+}
+
+/**
+ * gwy_data_field_fit_local_planes:
+ * @data_field: A data field.
+ * @size: Neighbourhood size.
+ * @nresults: The number of requested quantities.
+ * @types: The types of requested quantities.
+ * @results: An array to store quantities to.
+ *
+ * Fits a plane through neighbourhood of each sample in a data field.
+ *
+ * See gwy_data_field_area_fit_local_planes() for details.
+ *
+ * Returns: An array of data fields with requested quantities.
+ *
+ * Since: 1.9
+ **/
+GwyDataField**
+gwy_data_field_fit_local_planes(GwyDataField *data_field,
+                                gint size,
+                                gint nresults,
+                                const GwyPlaneFitQuantity *types,
+                                GwyDataField **results)
+{
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    return gwy_data_field_area_fit_local_planes(data_field, size,
+                                                0, 0,
+                                                data_field->xres,
+                                                data_field->yres,
+                                                nresults, types, results);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
