@@ -301,8 +301,15 @@ plugin_proxy_detect(const gchar *filename,
                     gboolean only_name,
                     const gchar *name)
 {
+    PluginInfo *info;
+
     gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
-    return 0;
+    if (!(info = find_plugin(name, PLUGIN_ANY)))
+        return 0;
+    if (!g_pattern_match_string(info->pattern, filename))
+        return 0;
+
+    return CLAMP(info->specificity, 1, 15);
 }
 
 static FILE*
@@ -488,7 +495,62 @@ find_plugin(const gchar *name,
 static glong
 pattern_specificity(const gchar *pattern)
 {
-    return strlen(pattern);
+    glong psp = 0;
+    gboolean changed;
+    gchar *pat, *end, *p;
+
+    g_return_val_if_fail(pattern && *pattern, 0);
+
+    pat = g_strdup(pattern);
+    end = pat + strlen(pat) - 1;
+    /* change all '?' next to a '*' to '*' */
+    do {
+        changed = FALSE;
+        for (p = pat; p < end; p++) {
+            if (*p == '*' && *(p+1) == '?') {
+                *(p+1) = '*';
+                changed = TRUE;
+            }
+        }
+        for (p = end; p > pat; p--) {
+            if (*p == '*' && *(p-1) == '?') {
+                *(p-1) = '*';
+                changed = TRUE;
+            }
+        }
+    } while (changed);
+
+    end = p = pat;
+    while (*p) {
+        *end = *p;
+        if (*p == '*') {
+            while (*p == '*')
+                p++;
+        }
+        else
+            p++;
+        end++;
+    }
+    *end = '\0';
+
+    for (p = pat; *p; p++) {
+        switch (*p) {
+            case '*':
+            psp -= 2;
+            break;
+
+            case '?':
+            psp += 1;
+            break;
+
+            default:
+            psp += 3;
+            break;
+        }
+    }
+    g_free(pat);
+
+    return psp;
 }
 
 static GwyLoadSave
