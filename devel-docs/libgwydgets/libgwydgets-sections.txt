@@ -301,6 +301,7 @@ gwy_data_window_set_zoom
 gwy_data_window_set_zoom_mode
 gwy_data_window_get_zoom_mode
 gwy_data_window_update_title
+gwy_data_window_get_base_name
 gwy_data_window_set_units
 gwy_data_window_get_units
 <SUBSECTION Standard>

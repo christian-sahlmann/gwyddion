@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GwyDataWindow
+GwyDataWindow – Data display window
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -88,6 +88,15 @@ GwyDataWindow
 </para>
 
 @data_window: 
+
+
+<!-- ##### FUNCTION gwy_data_window_get_base_name ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_window_set_units ##### -->

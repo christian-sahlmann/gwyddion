@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GwyDataViewLayer
+GwyDataViewLayer – A one GwyDataView layer
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -150,32 +150,4 @@ GwyDataViewLayer
 
 @cursor: 
 
-
-<!-- ##### SIGNAL GwyDataViewLayer::finished ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::plugged ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::unplugged ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::updated ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
 

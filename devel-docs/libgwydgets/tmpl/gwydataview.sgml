@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GwyDataView
+GwyDataView – Data field displaying area
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -191,11 +191,4 @@ GwyDataView
 
 @data_view: 
 
-
-<!-- ##### SIGNAL GwyDataView::updated ##### -->
-<para>
-
-</para>
-
-@gwydataview: the object which received the signal.
 

@@ -42,34 +42,6 @@ GwyAxis
 
 
 
-<!-- ##### MACRO GWY_AXIS_FLOAT ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_AXIS_EXP ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_AXIS_INT ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_AXIS_AUTO ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### TYPEDEF GwyTick ##### -->
 <para>
 
