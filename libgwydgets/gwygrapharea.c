@@ -324,13 +324,19 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
 {
     GwyGraphArea *area;
     GtkLayoutChild *child;
+    gint x, y;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
     g_return_if_fail(GWY_IS_GRAPH_AREA(widget));
+    
     area = GWY_GRAPH_AREA(widget);
-    child = gwy_graph_area_find_child(area, event->x, event->y);
+    gdk_window_get_position(event->window, &x, &y);
+    x += (gint)event->x;
+    y += (gint)event->y;
+   
+    child = gwy_graph_area_find_child(area, x, y);
     if (child) { printf("Child found.\n");
         area->active = child->widget;
         area->x0 = (gint)event->x;
@@ -357,8 +363,9 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
 
     gwy_graph_area_draw_child_rectangle(area);
 
-    x = (gint)event->x;
-    y = (gint)event->y;
+    gdk_window_get_position(event->window, &x, &y);
+    x += (gint)event->x;
+    y += (gint)event->y;
     gwy_graph_area_clamp_coords_for_child(area, &x, &y);
     if (x != area->x0 || y != area->y0) {
         x -= area->x0 - area->active->allocation.x;
@@ -385,8 +392,9 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
  
-    x = (gint)event->x;
-    y = (gint)event->y;
+    gdk_window_get_position(event->window, &x, &y);
+    x += (gint)event->x;
+    y += (gint)event->y;
     gwy_graph_area_clamp_coords_for_child(area, &x, &y);
     /* don't draw when we can't move */
     if (x - area->x0 == area->xoff
