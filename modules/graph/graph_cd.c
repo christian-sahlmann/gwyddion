@@ -122,7 +122,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "graph_cd",
-    "Critical dimension measurements",
+    N_("Critical dimension measurements"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -138,7 +138,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo fit_func_info = {
         "graph_cd",
-        "/_Critical dimension",
+        N_("/_Critical dimension"),
         (GwyGraphFunc)&fit,
     };
 
@@ -258,10 +258,7 @@ fit_dialog(FitArgs *args)
     };
 
     pcontrols = &controls;
-    dialog = gtk_dialog_new_with_buttons(_("Fit graph"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Fit graph"), NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Fit"),
                                                            GTK_STOCK_EXECUTE),
@@ -286,7 +283,7 @@ fit_dialog(FitArgs *args)
 
     /*fit equation*/
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Function definition:</b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Function definition:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
@@ -305,7 +302,7 @@ fit_dialog(FitArgs *args)
 
     /*fit parameters*/
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Fitting parameters:</b>");
+    gtk_label_set_markup(GTK_LABEL(label), N_("<b>Fitting parameters</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
@@ -317,25 +314,25 @@ fit_dialog(FitArgs *args)
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     /*label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Initial  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Initial</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     */
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Result  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Result</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Error </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Error</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     /*label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Fix  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Fix</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
@@ -884,11 +881,10 @@ save_report_cb(GtkWidget *button, GString *report)
     }
 
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, 0, 0, NULL);
-    dialog = gtk_message_dialog_new(NULL,
-                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+    dialog = gtk_message_dialog_new(NULL, 0,
                                     GTK_MESSAGE_ERROR,
                                     GTK_BUTTONS_OK,
-                                    "Cannot save report to %s.\n%s\n",
+                                    N_("Cannot save report to %s.\n%s\n"),
                                     filename_utf8,
                                     g_strerror(errno));
     gtk_dialog_run(GTK_DIALOG(dialog));
@@ -1079,19 +1075,19 @@ create_fit_report(FitArgs *args)
     report = g_string_new("");
 
     curve = args->curve - 1;
-    g_string_append_printf(report, "\n===== Fit Results =====\n");
+    g_string_append_printf(report, _("\n===== Fit Results =====\n"));
 
     str = gwy_graph_get_label(GWY_GRAPH(args->parent_graph), curve);
-    g_string_append_printf(report, "Data: %s\n", str->str);
+    g_string_append_printf(report, _("Data: %s\n"), str->str);
     str = g_string_new("");
-    g_string_append_printf(report, "Number of points: %d of %d\n",
+    g_string_append_printf(report, _("Number of points: %d of %d\n"),
                            count_really_fitted_points(args),
                            args->parent_ns[curve]);
-    g_string_append_printf(report, "X range:          %g to %g\n",
+    g_string_append_printf(report, _("X range:          %g to %g\n"),
                            args->from, args->to);
-    g_string_append_printf(report, "Fitted function:  %s\n",
+    g_string_append_printf(report, _("Fitted function:  %s\n"),
                            gwy_cdline_get_preset_name(args->fitfunc));
-    g_string_append_printf(report, "\nResults\n");
+    g_string_append_printf(report, _("\nResults\n"));
     n = gwy_cdline_get_preset_nparams(args->fitfunc);
     for (i = 0; i < n; i++) {
         /* FIXME: how to do this better? use pango_parse_markup()? */

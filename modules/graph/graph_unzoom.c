@@ -36,7 +36,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "graph_unzoom",
-    "Zoom out",
+    N_("Zoom out"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -52,7 +52,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
         "graph_unzoom",
-        "/Zoom _Out",
+        N_("/Zoom _Out"),
         (GwyGraphFunc)&unzoom,
     };
 

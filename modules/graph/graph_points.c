@@ -65,7 +65,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "graph_points",
-    "Measure distances between points",
+    N_("Measure distances between points"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -81,7 +81,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo points_func_info = {
         "graph_points",
-        "/_Measure Distances",
+        N_("/_Measure Distances"),
         (GwyGraphFunc)&points,
     };
 

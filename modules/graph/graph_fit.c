@@ -124,7 +124,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "graph_fit",
-    "Fit graph with function",
+    N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -140,7 +140,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo fit_func_info = {
         "graph_fit",
-        "/_Fit Graph",
+        N_("/_Fit Graph"),
         (GwyGraphFunc)&fit,
     };
 
@@ -269,10 +269,7 @@ fit_dialog(FitArgs *args)
     };
 
     pcontrols = &controls;
-    dialog = gtk_dialog_new_with_buttons(_("Fit graph"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Fit graph"), NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Fit"),
                                                            GTK_STOCK_EXECUTE),
@@ -296,7 +293,7 @@ fit_dialog(FitArgs *args)
 
     /*fit equation*/
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Function definition:</b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Function definition:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
@@ -310,7 +307,7 @@ fit_dialog(FitArgs *args)
 
     /*fit parameters*/
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Fitting parameters:</b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fitting parameters:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
@@ -322,25 +319,25 @@ fit_dialog(FitArgs *args)
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Initial  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Initial</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Result  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Result</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Error </b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Error</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Fix  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fix</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
@@ -403,7 +400,7 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Correlation matrix:</b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Correlation matrix:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
@@ -421,7 +418,7 @@ fit_dialog(FitArgs *args)
 
     hbox2 = gtk_hbox_new(FALSE, 0);
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Chi-square result:</b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Chi-square result:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
@@ -433,7 +430,7 @@ fit_dialog(FitArgs *args)
 
     /*FIt area*/
     label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Fit area</b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fit area</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
@@ -450,7 +447,7 @@ fit_dialog(FitArgs *args)
     hbox2 = gtk_hbox_new(FALSE, 0);
     gtk_box_set_spacing(GTK_BOX(hbox2), 4);
 
-    label = gtk_label_new("From");
+    label = gtk_label_new(_("From"));
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
     controls.from = gtk_entry_new();
@@ -461,7 +458,7 @@ fit_dialog(FitArgs *args)
                       G_CALLBACK(from_changed_cb), args);
 
 
-    label = gtk_label_new("to");
+    label = gtk_label_new(_("To"));
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
     controls.to = gtk_entry_new();
@@ -966,7 +963,7 @@ save_report_cb(GtkWidget *button, GString *report)
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_ERROR,
                                     GTK_BUTTONS_OK,
-                                    "Cannot save report to %s.\n%s\n",
+                                    _("Cannot save report to %s.\n%s\n"),
                                     filename_utf8,
                                     g_strerror(errno));
     gtk_dialog_run(GTK_DIALOG(dialog));
@@ -1059,7 +1056,7 @@ create_results_window(FitArgs *args)
     row = 0;
     curve = args->curve - 1;
 
-    attach_label(table, _("<b>Data:</b>"), row, 0, 0.0);
+    attach_label(table, _(_("<b>Data:</b>")), row, 0, 0.0);
     str = gwy_graph_get_label(GWY_GRAPH(args->parent_graph), curve);
     attach_label(table, str->str, row, 1, 0.0);
     row++;
@@ -1162,19 +1159,19 @@ create_fit_report(FitArgs *args)
     report = g_string_new("");
 
     curve = args->curve - 1;
-    g_string_append_printf(report, "\n===== Fit Results =====\n");
+    g_string_append_printf(report, _("\n===== Fit Results =====\n"));
 
     str = gwy_graph_get_label(GWY_GRAPH(args->parent_graph), curve);
-    g_string_append_printf(report, "Data: %s\n", str->str);
+    g_string_append_printf(report, _("Data: %s\n"), str->str);
     str = g_string_new("");
-    g_string_append_printf(report, "Number of points: %d of %d\n",
+    g_string_append_printf(report, _("Number of points: %d of %d\n"),
                            count_really_fitted_points(args),
                            args->parent_ns[curve]);
-    g_string_append_printf(report, "X range:          %g to %g\n",
+    g_string_append_printf(report, _("X range:          %g to %g\n"),
                            args->from, args->to);
-    g_string_append_printf(report, "Fitted function:  %s\n",
+    g_string_append_printf(report, _("Fitted function:  %s\n"),
                            gwy_math_nlfit_get_preset_name(args->fitfunc));
-    g_string_append_printf(report, "\nResults\n");
+    g_string_append_printf(report, _("\nResults\n"));
     n = gwy_math_nlfit_get_preset_nparams(args->fitfunc);
     for (i = 0; i < n; i++) {
         /* FIXME: how to do this better? use pango_parse_markup()? */
@@ -1187,9 +1184,9 @@ create_fit_report(FitArgs *args)
         g_free(s2);
         g_free(s);
     }
-    g_string_append_printf(report, "\nResidual sum:   %g\n",
+    g_string_append_printf(report, _("\nResidual sum:   %g\n"),
                            gwy_math_nlfit_get_dispersion(args->fitter));
-    g_string_append_printf(report, "\nCorrelation matrix\n");
+    g_string_append_printf(report, _("\nCorrelation matrix\n"));
     for (i = 0; i < n; i++) {
         for (j = 0; j <= i; j++) {
             g_string_append_printf

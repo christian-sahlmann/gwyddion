@@ -53,7 +53,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "read",
-    "Read graph value module",
+    N_("Read graph value module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -69,7 +69,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
         "read",
-        "/_Read Values",
+        N_("/_Read Values"),
         (GwyGraphFunc)&read,
     };
 

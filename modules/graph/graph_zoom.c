@@ -36,7 +36,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "graph_zoom",
-    "Zoom graph by mouse",
+    N_("Zoom graph by mouse"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -52,7 +52,7 @@ module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
         "graph_zoom",
-        "/_Zoom In",
+        N_("/_Zoom In"),
         (GwyGraphFunc)&zoom,
     };
 
