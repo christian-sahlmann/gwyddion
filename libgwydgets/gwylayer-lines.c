@@ -35,11 +35,25 @@
 
 #define BITS_PER_SAMPLE 8
 
+enum {
+    PROP_0,
+    PROP_MAX_LINES,
+    PROP_LAST
+};
+
 /* Forward declarations */
 
 static void       gwy_layer_lines_class_init      (GwyLayerLinesClass *klass);
 static void       gwy_layer_lines_init            (GwyLayerLines *layer);
 static void       gwy_layer_lines_finalize        (GObject *object);
+static void       gwy_layer_lines_set_property    (GObject *object,
+                                                   guint prop_id,
+                                                   const GValue *value,
+                                                   GParamSpec *pspec);
+static void       gwy_layer_lines_get_property    (GObject*object,
+                                                   guint prop_id,
+                                                   GValue *value,
+                                                   GParamSpec *pspec);
 static void       gwy_layer_lines_draw            (GwyVectorLayer *layer,
                                                    GdkDrawable *drawable);
 static void       gwy_layer_lines_draw_line       (GwyLayerLines *layer,
@@ -114,6 +128,8 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_layer_lines_finalize;
+    gobject_class->set_property = gwy_layer_lines_set_property;
+    gobject_class->get_property = gwy_layer_lines_get_property;
 
     layer_class->plugged = gwy_layer_lines_plugged;
     layer_class->unplugged = gwy_layer_lines_unplugged;
@@ -128,6 +144,15 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
     klass->near_cursor = NULL;
     klass->nearline_cursor = NULL;
     klass->move_cursor = NULL;
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_MAX_LINES,
+        g_param_spec_int("max_lines",
+                         _("Maximum number of lines"),
+                         _("The maximum number of lines that can be selected"),
+                         1, 1024, 3,
+                         G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
@@ -168,6 +193,44 @@ gwy_layer_lines_finalize(GObject *object)
     g_free(layer->lines);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void
+gwy_layer_lines_set_property(GObject *object,
+                             guint prop_id,
+                             const GValue *value,
+                             GParamSpec *pspec)
+{
+    GwyLayerLines *layer = GWY_LAYER_LINES(object);
+
+    switch (prop_id) {
+        case PROP_MAX_LINES:
+        gwy_layer_lines_set_max_lines(layer, g_value_get_int(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_layer_lines_get_property(GObject*object,
+                             guint prop_id,
+                             GValue *value,
+                             GParamSpec *pspec)
+{
+    GwyLayerLines *layer = GWY_LAYER_LINES(object);
+
+    switch (prop_id) {
+        case PROP_MAX_LINES:
+        g_value_set_int(value, layer->nlines);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
@@ -325,7 +388,7 @@ gwy_layer_lines_motion_notify(GwyVectorLayer *layer,
     lines_layer->lines[2*i + 1] = yreal;
     gwy_layer_lines_save(lines_layer, i/2);
     gwy_layer_lines_draw_line(lines_layer, window, i/2);
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+    gwy_vector_layer_updated(layer);
 
     return FALSE;
 }
@@ -382,7 +445,7 @@ gwy_layer_lines_do_move_line(GwyLayerLines *layer,
     memcpy(line, coords, 4*sizeof(gdouble));
     gwy_layer_lines_save(layer, i);
     gwy_layer_lines_draw_line(layer, window, i);
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+    gwy_vector_layer_updated(GWY_VECTOR_LAYER(layer));
 
     return FALSE;
 }

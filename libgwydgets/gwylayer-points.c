@@ -34,11 +34,25 @@
 
 #define BITS_PER_SAMPLE 8
 
+enum {
+    PROP_0,
+    PROP_MAX_POINTS,
+    PROP_LAST
+};
+
 /* Forward declarations */
 
 static void       gwy_layer_points_class_init      (GwyLayerPointsClass *klass);
 static void       gwy_layer_points_init            (GwyLayerPoints *layer);
 static void       gwy_layer_points_finalize        (GObject *object);
+static void       gwy_layer_points_set_property    (GObject *object,
+                                                    guint prop_id,
+                                                    const GValue *value,
+                                                    GParamSpec *pspec);
+static void       gwy_layer_points_get_property    (GObject*object,
+                                                    guint prop_id,
+                                                    GValue *value,
+                                                    GParamSpec *pspec);
 static void       gwy_layer_points_draw            (GwyVectorLayer *layer,
                                                     GdkDrawable *drawable);
 static void       gwy_layer_points_draw_point      (GwyLayerPoints *layer,
@@ -107,6 +121,8 @@ gwy_layer_points_class_init(GwyLayerPointsClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_layer_points_finalize;
+    gobject_class->set_property = gwy_layer_points_set_property;
+    gobject_class->get_property = gwy_layer_points_get_property;
 
     layer_class->plugged = gwy_layer_points_plugged;
     layer_class->unplugged = gwy_layer_points_unplugged;
@@ -120,6 +136,15 @@ gwy_layer_points_class_init(GwyLayerPointsClass *klass)
 
     klass->near_cursor = NULL;
     klass->move_cursor = NULL;
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_MAX_POINTS,
+        g_param_spec_int("max_points",
+                         _("Maximum number of points"),
+                         _("The maximum number of points that can be selected"),
+                         1, 1024, 3,
+                         G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
@@ -158,6 +183,44 @@ gwy_layer_points_finalize(GObject *object)
     g_free(layer->points);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void
+gwy_layer_points_set_property(GObject *object,
+                              guint prop_id,
+                              const GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyLayerPoints *layer = GWY_LAYER_POINTS(object);
+
+    switch (prop_id) {
+        case PROP_MAX_POINTS:
+        gwy_layer_points_set_max_points(layer, g_value_get_int(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_layer_points_get_property(GObject*object,
+                              guint prop_id,
+                              GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyLayerPoints *layer = GWY_LAYER_POINTS(object);
+
+    switch (prop_id) {
+        case PROP_MAX_POINTS:
+        g_value_set_int(value, layer->npoints);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
@@ -308,7 +371,7 @@ gwy_layer_points_motion_notify(GwyVectorLayer *layer,
     points_layer->points[2*i + 1] = yreal;
     gwy_layer_points_save(points_layer, i);
 
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+    gwy_vector_layer_updated(layer);
 
     return FALSE;
 }

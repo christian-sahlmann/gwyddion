@@ -44,6 +44,14 @@ enum {
 static void       gwy_layer_select_class_init        (GwyLayerSelectClass *klass);
 static void       gwy_layer_select_init              (GwyLayerSelect *layer);
 static void       gwy_layer_select_finalize          (GObject *object);
+static void       gwy_layer_select_set_property      (GObject *object,
+                                                      guint prop_id,
+                                                      const GValue *value,
+                                                      GParamSpec *pspec);
+static void       gwy_layer_select_get_property      (GObject*object,
+                                                      guint prop_id,
+                                                      GValue *value,
+                                                      GParamSpec *pspec);
 static void       gwy_layer_select_draw              (GwyVectorLayer *layer,
                                                       GdkDrawable *drawable);
 static gboolean   gwy_layer_select_motion_notify     (GwyVectorLayer *layer,
@@ -107,6 +115,8 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_layer_select_finalize;
+    gobject_class->set_property = gwy_layer_select_set_property;
+    gobject_class->get_property = gwy_layer_select_get_property;
 
     layer_class->plugged = gwy_layer_select_plugged;
     layer_class->unplugged = gwy_layer_select_unplugged;
@@ -120,6 +130,16 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
 
     memset(klass->corner_cursor, 0, 4*sizeof(GdkCursor*));
     klass->resize_cursor = NULL;
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_IS_CROP,
+        g_param_spec_boolean("is_crop",
+                             _("Crop style"),
+                             _("Whether the selection is crop-style instead of "
+                               "plain rectangle"),
+                             FALSE,
+                             G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
@@ -155,6 +175,44 @@ gwy_layer_select_finalize(GObject *object)
         gwy_vector_layer_cursor_free_or_unref(&klass->corner_cursor[i]);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void
+gwy_layer_select_set_property(GObject *object,
+                              guint prop_id,
+                              const GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyLayerSelect *layer = GWY_LAYER_SELECT(object);
+
+    switch (prop_id) {
+        case PROP_IS_CROP:
+        gwy_layer_select_set_is_crop(layer, g_value_get_boolean(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_layer_select_get_property(GObject*object,
+                              guint prop_id,
+                              GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyLayerSelect *layer = GWY_LAYER_SELECT(object);
+
+    switch (prop_id) {
+        case PROP_IS_CROP:
+        g_value_set_boolean(value, layer->is_crop);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
@@ -268,7 +326,7 @@ gwy_layer_select_motion_notify(GwyVectorLayer *layer,
 
     gwy_layer_select_save(select_layer);
     gwy_layer_select_draw(layer, window);
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+    gwy_vector_layer_updated(layer);
 
     return FALSE;
 }

@@ -196,7 +196,7 @@ gwy_layer_pointer_motion_notify(GwyVectorLayer *layer,
     pointer_layer->x = xreal;
     pointer_layer->y = yreal;
     gwy_layer_pointer_save(pointer_layer);
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+    gwy_vector_layer_updated(layer);
 
     return FALSE;
 }

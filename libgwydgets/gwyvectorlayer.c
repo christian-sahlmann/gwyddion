@@ -35,11 +35,25 @@ enum {
     LAST_SIGNAL
 };
 
+enum {
+    PROP_0,
+    PROP_UPDATE_POLICY,
+    PROP_LAST
+};
+
 /* Forward declarations */
 
 static void     gwy_vector_layer_class_init   (GwyVectorLayerClass *klass);
 static void     gwy_vector_layer_init         (GwyVectorLayer *layer);
 static void     gwy_vector_layer_finalize     (GObject *object);
+static void     gwy_vector_layer_set_property (GObject *object,
+                                               guint prop_id,
+                                               const GValue *value,
+                                               GParamSpec *pspec);
+static void     gwy_vector_layer_get_property (GObject*object,
+                                               guint prop_id,
+                                               GValue *value,
+                                               GParamSpec *pspec);
 static void     gwy_vector_layer_plugged      (GwyDataViewLayer *layer);
 static void     gwy_vector_layer_unplugged    (GwyDataViewLayer *layer);
 static void     gwy_vector_layer_real_updated (GwyDataViewLayer *layer);
@@ -92,6 +106,8 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_vector_layer_finalize;
+    gobject_class->set_property = gwy_vector_layer_set_property;
+    gobject_class->get_property = gwy_vector_layer_get_property;
 
     layer_class->plugged = gwy_vector_layer_plugged;
     layer_class->unplugged = gwy_vector_layer_unplugged;
@@ -118,6 +134,16 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_UPDATE_POLICY,
+        g_param_spec_enum("update_policy",
+                          _("Update Policy"),
+                          _("When value changed causes signal emission"),
+                          GTK_TYPE_UPDATE_TYPE,
+                          GTK_UPDATE_CONTINUOUS,
+                          G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
@@ -147,6 +173,44 @@ gwy_vector_layer_finalize(GObject *object)
     gwy_object_unref(layer->layout);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void
+gwy_vector_layer_set_property(GObject *object,
+                              guint prop_id,
+                              const GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyVectorLayer *layer = GWY_VECTOR_LAYER(object);
+
+    switch (prop_id) {
+        case PROP_UPDATE_POLICY:
+        gwy_vector_layer_set_update_policy(layer, g_value_get_enum(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_vector_layer_get_property(GObject*object,
+                              guint prop_id,
+                              GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyVectorLayer *layer = GWY_VECTOR_LAYER(object);
+
+    switch (prop_id) {
+        case PROP_UPDATE_POLICY:
+        g_value_set_enum(value, layer->update_policy);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
