@@ -9,7 +9,7 @@ $(LIBRARY)-$(LIB_VER).def: $(LIBRARY).def
 	copy $(LIBRARY).def $(LIBRARY)-$(LIB_VER).def
 
 $(PROGRAM).exe: $(PRG_OBJECTS)
-	$(LINK32) $(PRG_OBJECTS) $(PRG_LINK) $(WIN32LIBS) $(LDFLAGS) /subsystem:windows /out:$(PROGRAM).exe
+	$(LINK32) $(PRG_OBJECTS) $(PRG_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$(PROGRAM).exe
 
 .obj.dll:
 	$(LINK32) $< $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$<.dll /dll /implib:$<.lib
