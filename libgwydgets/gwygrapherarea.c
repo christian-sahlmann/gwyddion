@@ -444,6 +444,8 @@ gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     fg.blue = 0;
     gdk_colormap_alloc_color(cmap, &fg, TRUE, TRUE);
     gdk_gc_set_foreground(gc, &fg);
+    gdk_gc_set_line_attributes(gc, 1,
+                                GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
     gdk_draw_line(drawable, gc, 0, 0, width-1, 0);
     gdk_draw_line(drawable, gc, width-1, 0, width-1, height-1);
     gdk_draw_line(drawable, gc, width-1, height-1, 0, height-1);
