@@ -70,20 +70,13 @@ foo_cb(GwyShader *c, gpointer p)
     gint i;
     gdouble theta, phi;
 
-    /*
     for (i = 0; i < N; i++)
-        g_signal_handler_block(G_OBJECT(coords[i]), hid[i]);
-    theta = gwy_sphere_coords_get_theta(c);
-    phi = gwy_sphere_coords_get_phi(c);
-    i = (n + 1)%N;
-    gwy_sphere_coords_set_value(coords[i],
-                                gwy_sphere_coords_get_theta(coords[i]), phi);
-    i = (n + N-1)%N;
-    gwy_sphere_coords_set_value(coords[i],
-                                theta, gwy_sphere_coords_get_phi(coords[i]));
+        g_signal_handler_block(G_OBJECT(shade[i]), hid[i]);
+    theta = gwy_shader_get_theta(c);
+    gwy_shader_set_phi(GWY_SHADER(shade[(n+N-1) % N]), gwy_shader_get_phi(c));
+    gwy_shader_set_theta(GWY_SHADER(shade[(n+1) % N]), gwy_shader_get_theta(c));
     for (i = 0; i < N; i++)
-        g_signal_handler_unblock(G_OBJECT(coords[i]), hid[i]);
-        */
+        g_signal_handler_unblock(G_OBJECT(shade[i]), hid[i]);
 }
 
 static void
@@ -101,6 +94,8 @@ test(void)
     for (i = 0; i < N; i++) {
         pal = palettes[g_random_int_range(0, G_N_ELEMENTS(palettes))];
         shade[i] = gwy_shader_new(pal);
+        gwy_shader_set_update_policy(GWY_SHADER(shade[i]),
+                                     GTK_UPDATE_DELAYED);
         gtk_box_pack_start(GTK_BOX(box), shade[i], TRUE, TRUE, 0);
         hid[i] = g_signal_connect(shade[i], "angle_changed",
                                   G_CALLBACK(foo_cb), GINT_TO_POINTER(i));
