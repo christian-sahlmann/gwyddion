@@ -104,20 +104,11 @@ gwy_layer_select_init(GwyLayerSelect *layer)
     gwy_debug("%s", __FUNCTION__);
 
     klass = GWY_LAYER_SELECT_GET_CLASS(layer);
-    if (!klass->resize_cursor) {
-        klass->corner_cursor[0] = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
-        klass->corner_cursor[1] = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
-        klass->corner_cursor[2] = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
-        klass->corner_cursor[3] = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
-        klass->resize_cursor = gdk_cursor_new(GDK_SIZING);
-    }
-    else {
-        gint i;
-
-        for (i = 0; i < 4; i++)
-            gdk_cursor_ref(klass->corner_cursor[i]);
-        gdk_cursor_ref(klass->resize_cursor);
-    }
+    gwy_layer_cursor_new_or_ref(&klass->resize_cursor, GDK_CROSS);
+    gwy_layer_cursor_new_or_ref(&klass->corner_cursor[0], GDK_UL_ANGLE);
+    gwy_layer_cursor_new_or_ref(&klass->corner_cursor[1], GDK_LL_ANGLE);
+    gwy_layer_cursor_new_or_ref(&klass->corner_cursor[2], GDK_UR_ANGLE);
+    gwy_layer_cursor_new_or_ref(&klass->corner_cursor[3], GDK_LR_ANGLE);
     layer->selected = FALSE;
 }
 
@@ -125,23 +116,16 @@ static void
 gwy_layer_select_finalize(GObject *object)
 {
     GwyLayerSelectClass *klass;
-    gint i, refcount;
+    gint i;
 
     gwy_debug("%s", __FUNCTION__);
 
     g_return_if_fail(GWY_IS_LAYER_SELECT(object));
 
     klass = GWY_LAYER_SELECT_GET_CLASS(object);
-    for (i = 0; i < 4; i++) {
-        refcount = klass->corner_cursor[i]->ref_count - 1;
-        gdk_cursor_unref(klass->corner_cursor[i]);
-        if (!refcount)
-            klass->corner_cursor[i] = NULL;
-    }
-    refcount = klass->resize_cursor->ref_count - 1;
-    gdk_cursor_unref(klass->resize_cursor);
-    if (!refcount)
-        klass->resize_cursor = NULL;
+    gwy_layer_cursor_free_or_unref(&klass->resize_cursor);
+    for (i = 0; i < 4; i++)
+        gwy_layer_cursor_free_or_unref(&klass->corner_cursor[i]);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -229,7 +213,7 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
 {
     GwyLayerSelectClass *klass;
     GwyLayerSelect *select_layer;
-    gint x, y;
+    gint x, y, i;
     gdouble oldx, oldy, xreal, yreal;
 
     select_layer = (GwyLayerSelect*)layer;
@@ -245,13 +229,10 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
 
     klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
     if (!select_layer->button) {
-        gint i = gwy_layer_select_near_point(select_layer, xreal, yreal);
-
-        if (select_layer->near != i) {
-            select_layer->near = i;
-            gdk_window_set_cursor(layer->parent->window,
-                                  i == -1 ? NULL : klass->corner_cursor[i]);
-        }
+        i = gwy_layer_select_near_point(select_layer, xreal, yreal);
+        select_layer->near = i;
+        gdk_window_set_cursor(layer->parent->window,
+                              i == -1 ? NULL : klass->corner_cursor[i]);
         return FALSE;
     }
 
@@ -310,9 +291,6 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
                 select_layer->y0 = MIN(select_layer->y0, select_layer->y1);
             else
                 select_layer->y0 = MAX(select_layer->y0, select_layer->y1);
-
-            gdk_window_set_cursor(layer->parent->window,
-                                  klass->resize_cursor);
         }
     }
     select_layer->button = event->button;
@@ -329,7 +307,8 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
               select_layer->x0, select_layer->y0,
               select_layer->x1, select_layer->y1);
     select_layer->selected = TRUE;
-    gwy_debug("selected == %d", select_layer->selected);
+
+    gdk_window_set_cursor(layer->parent->window, klass->resize_cursor);
 
     return FALSE;
 }
@@ -499,6 +478,9 @@ gwy_layer_select_near_point(GwyLayerSelect *layer,
     GwyDataViewLayer *dlayer;
     gdouble coords[8], d2min;
     gint i;
+
+    if (!layer->selected)
+        return -1;
 
     coords[0] = coords[2] = layer->x0;
     coords[1] = coords[5] = layer->y0;

@@ -109,14 +109,8 @@ gwy_layer_points_init(GwyLayerPoints *layer)
     gwy_debug("%s", __FUNCTION__);
 
     klass = GWY_LAYER_POINTS_GET_CLASS(layer);
-    if (!klass->move_cursor) {
-        klass->near_cursor = gdk_cursor_new(GDK_FLEUR);
-        klass->move_cursor = gdk_cursor_new(GDK_TCROSS);
-    }
-    else {
-        gdk_cursor_ref(klass->near_cursor);
-        gdk_cursor_ref(klass->move_cursor);
-    }
+    gwy_layer_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
+    gwy_layer_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
 
     layer->npoints = 3;
     layer->nselected = 0;
@@ -129,7 +123,6 @@ gwy_layer_points_finalize(GObject *object)
 {
     GwyLayerPointsClass *klass;
     GwyLayerPoints *layer;
-    gint refcount;
 
     gwy_debug("%s", __FUNCTION__);
 
@@ -138,14 +131,8 @@ gwy_layer_points_finalize(GObject *object)
 
     layer = (GwyLayerPoints*)object;
     klass = GWY_LAYER_POINTS_GET_CLASS(object);
-    refcount = klass->near_cursor->ref_count - 1;
-    gdk_cursor_unref(klass->near_cursor);
-    if (!refcount)
-        klass->near_cursor = NULL;
-    refcount = klass->move_cursor->ref_count - 1;
-    gdk_cursor_unref(klass->move_cursor);
-    if (!refcount)
-        klass->move_cursor = NULL;
+    gwy_layer_cursor_free_or_unref(&klass->near_cursor);
+    gwy_layer_cursor_free_or_unref(&klass->move_cursor);
 
     g_free(layer->points);
 
@@ -155,7 +142,9 @@ gwy_layer_points_finalize(GObject *object)
 /**
  * gwy_layer_points_new:
  *
- * Creates a new rectangular pointsion layer.
+ * Creates a new point selection layer.
+ *
+ * The default number of points to select is three.
  *
  * Container keys: "/0/points/0/x", "/0/points/0/y", "/0/points/1/x",
  * "/0/points/1/y", etc., and "/0/points/nselected".
@@ -287,7 +276,6 @@ gwy_layer_points_motion_notify(GwyDataViewLayer *layer,
     GwyLayerPoints *points_layer;
     gint x, y, i;
     gdouble xreal, yreal;
-    gchar key[64];
 
     points_layer = (GwyLayerPoints*)layer;
     i = points_layer->near;
@@ -376,7 +364,6 @@ gwy_layer_points_button_released(GwyDataViewLayer *layer,
     GwyLayerPoints *points_layer;
     gint x, y, i;
     gdouble xreal, yreal;
-    gchar key[64];
     gboolean outside;
 
     points_layer = (GwyLayerPoints*)layer;
@@ -403,9 +390,6 @@ gwy_layer_points_button_released(GwyDataViewLayer *layer,
     i = gwy_layer_points_near_point(points_layer, xreal, yreal);
     gdk_window_set_cursor(layer->parent->window,
                           (i == -1 || outside) ? NULL : klass->near_cursor);
-
-    /* XXX: this assures no artifacts ...  */
-    gtk_widget_queue_draw(layer->parent);
 
     return FALSE;
 }
@@ -543,7 +527,7 @@ gwy_layer_points_near_point(GwyLayerPoints *layer,
     gint i;
 
     if (!layer->nselected)
-        return  -1;
+        return -1;
 
     i = gwy_math_find_nearest_point(xreal, yreal, &d2min,
                                     layer->nselected, layer->points);

@@ -81,6 +81,10 @@ void             gwy_data_view_layer_unplugged       (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_updated         (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_finished        (GwyDataViewLayer *layer);
 
+void             gwy_layer_cursor_new_or_ref         (GdkCursor **cursor,
+                                                      GdkCursorType type);
+void             gwy_layer_cursor_free_or_unref      (GdkCursor **cursor);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

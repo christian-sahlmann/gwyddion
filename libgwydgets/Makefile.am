@@ -19,6 +19,7 @@ libgwydgetsinclude_HEADERS = \
 	gwyhruler.h \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
+	gwylayer-lines.h \
 	gwylayer-points.h \
 	gwylayer-select.h \
 	gwyruler.h \
@@ -48,6 +49,7 @@ libgwydgets_la_SOURCES = \
 	gwyhruler.c \
 	gwylayer-basic.c \
 	gwylayer-mask.c \
+	gwylayer-lines.c \
 	gwylayer-points.c \
 	gwylayer-select.c \
 	gwyruler.c \
