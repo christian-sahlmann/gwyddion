@@ -38,33 +38,82 @@ typedef struct _GwyCDLineParam {
 
 
 /*********************** gaussian *****************************/
-
+#include <stdio.h>
 static void
 cd_stepheight(gdouble *x,
             gdouble *y,
             gint n_dat,
             gdouble *param,
+            gdouble *err,
             G_GNUC_UNUSED gpointer user_data,
             gboolean *fres)
 {
+    gint i;
+    gint nstep;
+    gdouble max, min, val;
+    gint imax, imin;
 
-    param[0] = param[1] = 0;
+
+    nstep = n_dat/20;
+    if (nstep<1) nstep = 1;
+    
+    max = -G_MAXDOUBLE;
+    min = G_MAXDOUBLE;
+    for (i=0; i<(n_dat - nstep); i++)
+    {
+        val = ((y[i+nstep] - y[i])/(x[i+nstep] - x[i]));
+        if (min > val) {
+            min = val;
+            imin = i;
+            param[4] = (x[i+nstep] + x[i])/2.0;
+        }
+        if (max < val) {
+            max = val;
+            imax = i + nstep;
+            param[3] = (x[i+nstep] + x[i])/2.0;
+        }
+    }
+   
+    param[1] = param[2] = 0;
+    for (i=0; i<n_dat; i++)
+    {
+        if (i>imax && i<imin)
+        {
+            param[2] += y[i]/((double)imin - (double)imax);
+        }
+        else
+        {
+            param[1] += y[i]/((double)n_dat - (imin - imax));
+        }
+    }
+
+    param[0] = param[2] - param[1];
+   
+    err[0] = err[1] = err[2] = err[3] = err[4] = 0;
     *fres = TRUE;
+
 }
 
-static void
+static gdouble
 func_stepheight(gdouble x, gint n_param, gdouble *param, gpointer user_data, gboolean *fres)
 {
-    return 0;
+    if (x>param[3] && x<param[4]) return param[2];
+    else return param[1];
 }
 
 /************************** presets ****************************/
 
+static const GwyCDLineParam lineheight_pars[]= {
+   {"h", " ", 1 },
+   {"y<sub>1</sub>", " ", 2 },
+   {"y<sub>2</sub>", " ", 2 },
+   {"x<sub>1</sub>", " ", 3 },
+   {"x<sub>2</sub>", " ", 4 },
+};
+
 static const GwyCDLineParam stepheight_pars[]= {
-   {"x<sub>0</sub>", " ", 1 },
-   {"y<sub>0</sub>", " ", 2 },
-   {"a", " ", 3 },
-   {"b", " ", 4 },
+   {"h", " ", 1 },
+   {"x", " ", 2 },
 };
 
 
@@ -72,11 +121,21 @@ static const GwyCDLinePreset fitting_presets[] = {
     {
         "Step height",
         "Step",
-        "/home/klapetek/gwyddion/pixmaps/cd_line.png",
+        "cd_step.png",
         &func_stepheight,
         &cd_stepheight,
-        4,
+        2,
         stepheight_pars,
+        NULL
+    },
+    {
+        "Line height",
+        "Line",
+        "cd_line.png",
+        &func_stepheight,
+        &cd_stepheight,
+        5,
+        lineheight_pars,
         NULL
     },
 };
@@ -286,6 +345,9 @@ gwy_cdline_fit_preset(const GwyCDLinePreset* preset,
                           const gboolean *fixed_param,
                           gpointer user_data)
 {
+    gboolean fres;
+    fres = TRUE;
+    preset->function_fit(x, y, n_dat, param, err, user_data, &fres);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

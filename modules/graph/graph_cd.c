@@ -31,7 +31,7 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-#define MAX_PARAMS 4
+#define MAX_PARAMS 5
 
 /* Data for this function.*/
 
@@ -115,6 +115,7 @@ static void        create_results_window     (FitArgs *args);
 static GString*    create_fit_report         (FitArgs *args);
 static void        destroy                   (FitArgs *args,
                                               FitControls *controls);
+
 
 FitControls *pcontrols;
 
@@ -268,10 +269,11 @@ fit_dialog(FitArgs *args)
                                  create_stocklike_button(_("_Fit"),
                                                          GTK_STOCK_EXECUTE),
                                  RESPONSE_FIT);
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
+/*    gtk_dialog_add_button(GTK_DIALOG(dialog),
                           _("_Reset inits"), RESPONSE_RESET);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           _("_Plot inits"), RESPONSE_PLOT);
+                          */
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -296,8 +298,10 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), controls.selector);
 
     p = gwy_find_self_dir("pixmaps");
-    filename = g_build_filename(p, "cd_line.png");
+    args->fitfunc = gwy_cdline_get_preset(args->function_type);
+    filename = g_build_filename(p, gwy_cdline_get_preset_formula(args->fitfunc), NULL);
     g_free(p);
+    
     controls.image = gtk_image_new_from_file(filename);
     gtk_container_add(GTK_CONTAINER(vbox), controls.image);
     g_free(filename);
@@ -308,37 +312,38 @@ fit_dialog(FitArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
-    table = gtk_table_new(4, 6, FALSE);
+    table = gtk_table_new(MAX_PARAMS, 4, FALSE);
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), " ");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
+    /*label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), "<b>Initial  </b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+    */
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Result  </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Result  </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Error </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Error </b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-
-    label = gtk_label_new(NULL);
+    /*label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), "<b>Fix  </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-
+    */
+    
     controls.param_des = g_new(GtkWidget*, MAX_PARAMS);
     for (i=0; i<MAX_PARAMS; i++)
     {
@@ -349,7 +354,7 @@ fit_dialog(FitArgs *args)
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.param_init = g_new(GtkWidget*, MAX_PARAMS);
+    /*controls.param_init = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++)
     {
         controls.param_init[i] = gtk_entry_new();
@@ -361,14 +366,14 @@ fit_dialog(FitArgs *args)
         gtk_table_attach(GTK_TABLE(table), controls.param_init[i],
                          1, 2, i+1, i+2,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    }
+    }*/
 
     controls.param_res = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++)
     {
         controls.param_res[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_res[i],
-                         2, 3, i+1, i+2,
+                         1, 2, i+1, i+2,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     }
@@ -378,11 +383,12 @@ fit_dialog(FitArgs *args)
     {
         controls.param_err[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_err[i],
-                         3, 4, i+1, i+2,
+                         2, 3, i+1, i+2,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     }
 
+    /*
     controls.param_fit = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++)
     {
@@ -392,7 +398,7 @@ fit_dialog(FitArgs *args)
         gtk_table_attach(GTK_TABLE(table), controls.param_fit[i],
                          4, 5, i+1, i+2,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    }
+    }*/
 
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
@@ -504,9 +510,9 @@ fit_dialog(FitArgs *args)
 static void
 destroy(FitArgs *args, FitControls *controls)
 {
-    g_free(controls->param_init);
+    /*g_free(controls->param_init);*/
     g_free(controls->param_res);
-    g_free(controls->param_fit);
+    /*g_free(controls->param_fit);*/
     g_free(controls->param_err);
 }
 
@@ -579,7 +585,7 @@ recompute(FitArgs *args, FitControls *controls)
     GwyDataLine *xdata;
     GwyDataLine *ydata;
     const GwyCDLinePreset *function;
-    gboolean fixed[4];
+    gboolean fixed[MAX_PARAMS];
     gchar buffer[64];
     gboolean ok;
     gint i, j, nparams;
@@ -616,6 +622,11 @@ recompute(FitArgs *args, FitControls *controls)
         g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par_res[i]);
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), buffer);
     }
+    for (i = 0; i < nparams; i++) {
+        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->err[i]);
+        gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), buffer);
+    }
+
 
 
     for (i = 0; i < xdata->res; i++)
@@ -659,10 +670,11 @@ type_changed_cb(GObject *item, FitArgs *args)
         GPOINTER_TO_INT(g_object_get_data(item, "cdline-preset"));
 
     args->fitfunc = gwy_cdline_get_preset(args->function_type);
-    
+  
     p = gwy_find_self_dir("pixmaps");
-    filename = g_build_filename(p, "cd_line.png" /*gwy_cdline_get_preset_formula(args->fitfunc)*/);
+    filename = g_build_filename(p, gwy_cdline_get_preset_formula(args->fitfunc), NULL);
     g_free(p);
+    
     gtk_image_set_from_file(pcontrols->image, filename);
     
     dialog_update(pcontrols, args);
@@ -687,16 +699,17 @@ dialog_update(FitControls *controls, FitArgs *args)
             gtk_label_set_markup(GTK_LABEL(controls->param_des[i]),
                       gwy_cdline_get_preset_param_name(args->fitfunc, i));
 
-            gtk_widget_set_sensitive(controls->param_init[i], TRUE);
+        /*    gtk_widget_set_sensitive(controls->param_init[i], TRUE);
             gtk_widget_set_sensitive(controls->param_fit[i], TRUE);
             g_snprintf(buffer, sizeof(buffer), "%.3g", args->par_init[i]);
             gtk_entry_set_text(GTK_ENTRY(controls->param_init[i]), buffer);
+            */
         }
         else {
             gtk_widget_set_sensitive(controls->param_des[i], FALSE);
-            gtk_widget_set_sensitive(controls->param_init[i], FALSE);
-            gtk_widget_set_sensitive(controls->param_fit[i], FALSE);
-            gtk_entry_set_text(GTK_ENTRY(controls->param_init[i]), " ");
+            /*gtk_widget_set_sensitive(controls->param_init[i], FALSE);
+            gtk_widget_set_sensitive(controls->param_fit[i], FALSE);*/
+            /*gtk_entry_set_text(GTK_ENTRY(controls->param_init[i]), " ");*/
         }
     }
 

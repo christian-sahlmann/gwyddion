@@ -53,6 +53,7 @@ typedef void (*GwyCDLineCDFunc)(gdouble *x,
                                   gdouble *y,
                                   gint n_dat,
                                   gdouble *param,
+                                  gdouble *err,
                                   gpointer user_data,
                                   gboolean *fres);
 
@@ -64,7 +65,7 @@ struct _GwyCDLinePreset {
     const gchar *group_name;
     const gchar *function_formula;
     GwyCDLineFitFunc function;
-    GwyCDLineCDFunc function_guess;
+    GwyCDLineCDFunc function_fit;
     gint nparams;
     const GwyCDLineParam *param;
     gpointer _reserved1;

@@ -48,7 +48,9 @@ pixmapdata_DATA = \
 	gwy_zoom_in-24.png \
 	gwy_zoom_out-24.png \
 	gwyddion.ico \
-	splash.png
+	splash.png \
+	cd_line.png \
+	cd_step.png
 
 EXTRA_DIST = \
 	makefile.msc \
