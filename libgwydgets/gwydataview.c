@@ -251,6 +251,8 @@ gwy_data_view_finalize(GObject *object)
     gwy_object_unref(data_view->top_layer);
     gwy_debug("    child data ref count %d", G_OBJECT(data_view->data)->ref_count);
     gwy_object_unref(data_view->data);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void

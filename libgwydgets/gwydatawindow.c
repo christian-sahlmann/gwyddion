@@ -150,6 +150,8 @@ gwy_data_window_finalize(GObject *object)
     data_window = GWY_DATA_WINDOW(object);
     g_free(data_window->coord_format);
     g_free(data_window->value_format);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 /**
