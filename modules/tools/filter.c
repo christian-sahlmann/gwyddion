@@ -57,8 +57,15 @@ static void       direction_changed_cb (GObject *item,
                                         ToolControls *controls);
 static void       filter_changed_cb (GObject *item,
                                     ToolControls *controls);
+static void       my_undo_save (GwyDataField *dfield);
+static void       my_undo_load (GwyDataField *dfield);
 
-
+GwyDataField *undo_dfield = NULL;
+gint old_ulcol = 0;
+gint old_ulrow = 0;
+gint old_brcol = 0;
+gint old_brrow = 0;
+gint unchanged = 1;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -231,7 +238,8 @@ dialog_create(GwyUnitoolState *state)
    
     controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
     gwy_table_attach_spinbutton(table2, 3, "", "px", controls->size);
-    
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);    
     
     
     return dialog;
@@ -273,7 +281,9 @@ apply(GwyUnitoolState *state)
         brcol = gwy_data_field_get_xres(dfield);
         brrow = gwy_data_field_get_yres(dfield);
     }
-    
+  
+    my_undo_load(dfield);
+    gwy_app_undo_checkpoint(data, "/0/data");
     switch (controls->fil){
         case GWY_FILTER_MEAN:
         gwy_data_field_filter_mean(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
@@ -303,6 +313,8 @@ apply(GwyUnitoolState *state)
         g_assert_not_reached();
         break;
     }
+
+   gwy_vector_layer_unselect(state->layer);
    gwy_data_view_update(GWY_DATA_VIEW(layer->parent)); 
 }
 
@@ -317,6 +329,7 @@ dialog_update(GwyUnitoolState *state)
     gdouble xy[4];
     gboolean is_visible, is_selected;
     gchar buffer[16];
+    gint ulcol, brcol, ulrow, brrow;
 
     gwy_debug("");
     is_visible = state->is_visible;
@@ -346,12 +359,67 @@ dialog_update(GwyUnitoolState *state)
         gwy_unitool_update_label(units, controls->h,
                                  gwy_data_field_get_yreal(dfield));
     }
+
+    controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
+
+    ulcol = (gint)gwy_data_field_rtoi(dfield, MIN(xy[0], xy[2]));
+    ulrow = (gint)gwy_data_field_rtoj(dfield, MIN(xy[1], xy[3]));
+    brcol = (gint)gwy_data_field_rtoi(dfield, MAX(xy[0], xy[2]));
+    brrow = (gint)gwy_data_field_rtoj(dfield, MAX(xy[1], xy[3]));
+   
+    if (unchanged) {my_undo_save(dfield); unchanged = 0;}
+    
+    if (is_selected && ((old_ulcol != ulcol) || (old_ulrow != ulrow) || (old_brcol != brcol) || (old_brrow != brrow))) 
+    {
+        my_undo_load(dfield);
+        
+        old_ulcol = ulcol;
+        old_ulrow = ulrow;
+        old_brcol = brcol;
+        old_brrow = brrow;
+   
+    switch (controls->fil){
+        case GWY_FILTER_MEAN:
+        gwy_data_field_filter_mean(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        break;
+
+        case GWY_FILTER_MEDIAN:
+        gwy_data_field_filter_median(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        break;
+
+        case GWY_FILTER_CONSERVATIVE:
+        gwy_data_field_filter_conservative(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        break;
+
+        case GWY_FILTER_LAPLACIAN:
+        gwy_data_field_filter_laplacian(dfield, ulcol, ulrow, brcol, brrow); 
+        break;
+
+        case GWY_FILTER_SOBEL:
+        gwy_data_field_filter_sobel(dfield, controls->dir, ulcol, ulrow, brcol, brrow); 
+        break;
+
+        case GWY_FILTER_PREWITT:
+        gwy_data_field_filter_prewitt(dfield, controls->dir, ulcol, ulrow, brcol, brrow); 
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+       gwy_data_view_update(GWY_DATA_VIEW(layer->parent)); 
+    }
 }
 
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
     memset(state->user_data, 0, sizeof(ToolControls));
+    if (undo_dfield)
+    {
+        g_object_unref(undo_dfield);
+        undo_dfield = NULL;
+    }
 }
 
 static void       
@@ -367,6 +435,28 @@ filter_changed_cb (GObject *item, ToolControls *controls)
     gwy_debug("");
     controls->fil = GPOINTER_TO_INT(g_object_get_data(item, "filter-type"));
 }    
+
+static void
+my_undo_save(GwyDataField *dfield)
+{
+    if (undo_dfield==NULL)
+    {
+        undo_dfield = (GwyDataField *)gwy_data_field_new(gwy_data_field_get_xres(dfield),
+                                                         gwy_data_field_get_yres(dfield),
+                                                         gwy_data_field_get_xreal(dfield),
+                                                         gwy_data_field_get_yreal(dfield),
+                                                         FALSE);   
+    }
+    gwy_data_field_copy(dfield, undo_dfield);
+
+}
+
+static void
+my_undo_load(GwyDataField *dfield)
+{
+    if (undo_dfield==NULL) return;
+    gwy_data_field_copy(undo_dfield, dfield);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
