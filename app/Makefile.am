@@ -9,11 +9,17 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 bin_PROGRAMS = gwyddion
 
 noinst_HEADERS = \
-	init.h
+	init.h \
+	file.h \
+	menu.h \
+	app.h
 
 gwyddion_SOURCES = \
 	init.c \
-	gwyddion.c
+	file.c \
+	menu.c \
+	app.c
+
 gwyddion_LDADD = \
 	$(libgwyddion) \
 	$(libgwymodule) \
