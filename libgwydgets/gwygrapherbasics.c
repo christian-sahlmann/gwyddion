@@ -235,9 +235,9 @@ void gwy_grapher_draw_selection_points(GdkDrawable *drawable,
     gint i, size;
     GwyRGBA color;
     
-    color.r = 0.8;
-    color.g = 0.8;
-    color.b = 0.8;
+    color.r = 0.4;
+    color.g = 0.4;
+    color.b = 0.4;
     color.a = 1;
     size = 6;
     
