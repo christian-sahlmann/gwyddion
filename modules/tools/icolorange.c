@@ -147,11 +147,12 @@ use(GwyDataWindow *data_window,
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
         state->apply_doesnt_close = TRUE;
-        controls = (ToolControls*)state->user_data;
-        controls->key_min = g_quark_from_string("/0/base/min");
-        controls->key_max = g_quark_from_string("/0/base/max");
     }
-    ((ToolControls*)state->user_data)->initial_use = TRUE;
+    controls = (ToolControls*)state->user_data;
+    controls->key_min = g_quark_from_string("/0/base/min");
+    controls->key_max = g_quark_from_string("/0/base/max");
+    controls->initial_use = TRUE;
+
     return gwy_unitool_use(state, data_window, reason);
 }
 
@@ -267,12 +268,11 @@ dialog_update(GwyUnitoolState *state,
     ToolControls *controls;
     gint isel[4];
 
-    gwy_debug("%d", reason);
-
     controls = (ToolControls*)state->user_data;
     if (controls->in_update)
         return;
 
+    gwy_debug("%d (initial: %d)", reason, controls->initial_use);
     controls->in_update = TRUE;
     is_visible = state->is_visible;
 
@@ -362,13 +362,21 @@ dialog_update(GwyUnitoolState *state,
                                                         isel[2] - isel[0],
                                                         isel[3] - isel[1]);
         }
+        else {
+            controls->min = controls->datamin;
+            controls->max = controls->datamax;
+        }
         update_percentages(controls);
         update_graph_selection(controls);
     }
 
     if (controls->range_source == USE_HISTOGRAM && !controls->initial_use) {
         if (reason == GWY_UNITOOL_UPDATED_DATA) {
-            if (controls->rel_min != 0.0 || controls->rel_max != 1.0) {
+            if (controls->rel_min == 0.0 || controls->rel_max == 1.0) {
+                controls->min = controls->datamin;
+                controls->max = controls->datamax;
+            }
+            else {
                 gdouble range;
 
                 range = controls->datamax - controls->datamin;
