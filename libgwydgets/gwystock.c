@@ -10,6 +10,13 @@ static void   register_toolbox_icons (const gchar *pixmap_path,
                                       GtkIconFactory *icon_factory);
 static gchar* guess_pixmap_path      (void);
 
+/**
+ * gwy_stock_register_stock_items:
+ *
+ * Registers stock items.
+ *
+ * This function must be called before any stock items are used.
+ **/
 void
 gwy_stock_register_stock_items(void)
 {

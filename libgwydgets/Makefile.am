@@ -62,7 +62,6 @@ libgwydgets_la_SOURCES = \
 	gwystock.c \
 	gwyvectorshade.c \
 	gwyvruler.c
-#	mylayout.c
 
 # Note these are test programs not to be included in the distro
 #noinst_PROGRAMS = main test create-data layout
@@ -84,12 +83,6 @@ create_data_SOURCES = create-data.c
 create_data_LDADD = \
 	$(libgwyddion) \
 	$(libgwyprocess)
-
-#layout_SOURCES = layout.c
-#layout_LDADD = libgwydgets.la \
-#	$(libgwyddion) \
-#	$(libgwyprocess) \
-#	$(libgwydraw)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\"

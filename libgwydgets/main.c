@@ -15,8 +15,9 @@
 #define TEST_VECTOR_SHADE 0
 #define TEST_DATA_VIEW 1
 #define TEST_OPTION_MENUS 2
+#define TEST_GTKDOC_INFO 3
 
-#define TEST_WHAT TEST_OPTION_MENUS
+#define TEST_WHAT TEST_GTKDOC_INFO
 
 /***** VECTOR SHADE [[[ *****************************************************/
 #if (TEST_WHAT == TEST_VECTOR_SHADE)
@@ -219,6 +220,24 @@ test(void)
 #endif
 /***** ]]] MENUS ************************************************************/
 
+/***** GTKDOC INFO [[[ ******************************************************/
+#if (TEST_WHAT == TEST_GTKDOC_INFO)
+static void
+test(void)
+{
+    GType type;
+    guint n;
+    guint *signals;
+
+    type = GWY_TYPE_DATA_VIEW_LAYER;
+    g_message("G_TYPE_IS_CLASSED(type) = %d", G_TYPE_IS_CLASSED(type));
+    g_type_class_ref(type);
+    signals = g_signal_list_ids(type, &n);
+    g_message("n of signals = %u", n);
+}
+#endif
+/***** ]]] GTKDOC INFO ******************************************************/
+
 int
 main(int argc, char *argv[])
 {
@@ -232,6 +251,7 @@ main(int argc, char *argv[])
 
     gtk_init(&argc, &argv);
     gwy_palette_def_setup_presets();
+    gwy_stock_register_stock_items();
     test();
     gtk_main();
 
