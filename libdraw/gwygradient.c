@@ -1206,7 +1206,7 @@ _gwy_gradients_setup_presets(void)
     GwyGradientPoint *pd2;
     guint i;
 
-    gwy_gradient_preset(GWY_PALETTE_GRAY, G_N_ELEMENTS(gray), gray);
+    gwy_gradient_preset(GWY_GRADIENT_DEFAULT, G_N_ELEMENTS(gray), gray);
     gwy_gradient_preset(GWY_PALETTE_RAINBOW1, G_N_ELEMENTS(rainbow1), rainbow1),
     gwy_gradient_preset(GWY_PALETTE_RAINBOW2, G_N_ELEMENTS(rainbow2), rainbow2);
     gwy_gradient_preset(GWY_PALETTE_GOLD, G_N_ELEMENTS(gold), gold);
@@ -1655,6 +1655,17 @@ fail:
  *
  * It is called for each gradient in sequence and must not delete or create
  * gradients.
+ *
+ * Since: 1.8
+ **/
+
+/**
+ * GWY_GRADIENT_DEFAULT:
+ *
+ * Default gradient name.
+ *
+ * The default grayscale gradient is guaranteed to always exist (once
+ * libgwydraw was initialized with gwy_draw_type_init(), that is).
  *
  * Since: 1.8
  **/

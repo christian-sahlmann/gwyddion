@@ -35,6 +35,8 @@ G_BEGIN_DECLS
 #define GWY_IS_GRADIENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRADIENT))
 #define GWY_GRADIENT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRADIENT, GwyGradientClass))
 
+#define GWY_GRADIENT_DEFAULT "Gray"
+
 typedef struct _GwyGradient      GwyGradient;
 typedef struct _GwyGradientClass GwyGradientClass;
 
