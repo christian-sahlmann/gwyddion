@@ -33,14 +33,14 @@
 #include <libgwydgets/gwystock.h>
 #include "app.h"
 
-static void about_close (void);
+static void about_close    (void);
 
 static GtkWidget *about = NULL;
 
 void
 gwy_app_about(void)
 {
-    GtkWidget *vbox, *hbox, *widget;
+    GtkWidget *vbox, *hbox, *widget, *credits;
     gchar *s;
 
     if (about) {
@@ -74,19 +74,63 @@ gwy_app_about(void)
     gtk_box_pack_start(GTK_BOX(hbox), widget, FALSE, FALSE, 0);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.5, 0.0);
 
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
+
     widget = gtk_label_new(NULL);
-    gtk_box_pack_start(GTK_BOX(hbox), widget, TRUE, TRUE, 0);
+    gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
+    s = g_strdup_printf(_("<big><b>%s</b> %s</big>\n"
+                          "An SPM data analysis framework."),
+                          g_get_application_name(),
+                          PACKAGE_VERSION);
+    gtk_label_set_markup(GTK_LABEL(widget), s);
+    g_free(s);
+
+    widget = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
+    gtk_misc_set_padding(GTK_MISC(widget), 2, 8);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
+    s = g_strdup_printf("<i>%s</i>", PACKAGE_URL);
+    gtk_label_set_markup(GTK_LABEL(widget), s);
+    g_free(s);
+    gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
+
+    widget = gtk_label_new(_("Credits"));
+    gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
+
+    credits = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(credits),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_widget_set_size_request(credits, -1, 120);
+    gtk_box_pack_start(GTK_BOX(vbox), credits, TRUE, TRUE, 0);
+
+    widget = gtk_label_new(NULL);
+    s = g_strdup_printf(_("<b>Core developers</b>\n"
+                          "David Nečas (Yeti)\n"
+                          "Petr Klapetek\n"
+                          "\n"
+                          "<b>Contributors</b>\n"
+                          "Martin Šiler\n"
+                          "Jindřich Bílek\n"
+                          "\n"
+                          "%s development was funded by "
+                          "the Czech Metrology Insitute "
+                          "(<i>http://www.cmi.cz/</i>).\n"),
+                          g_get_application_name());
+    gtk_label_set_markup(GTK_LABEL(widget), s);
+    g_free(s);
+    gtk_label_set_line_wrap(GTK_LABEL(widget), TRUE);
+    gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
+    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(credits),
+                                          widget);
+
+    widget = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
     s = g_strdup_printf(
-            _("<big><b>%s</b> %s</big>\n"
-              "An SPM data analysis framework.\n"
-              "\n"
-              "Copyright © 2003,2004 David Nečas (Yeti) and Petr Klapetek.\n"
-              "E-mail: <i>%s</i>\n"
-              "Web: <i>%s</i>\n"
-              "\n"
-              "%s development was funded by the Czech Metrology Insitute "
-              "(<i>http://www.cmi.cz/</i>).\n"
-              "\n"
+            _("\n"
               "<small>%s is free software; "
               "you can redistribute it and/or modify it "
               "under the terms of the GNU General Public License "
@@ -94,11 +138,6 @@ gwy_app_about(void)
               "either version 2 of the License, or (at your option) "
               "any later version. For full license text see file COPYING "
               "included in the source tarball.</small>"),
-            g_get_application_name(),
-            PACKAGE_VERSION,
-            PACKAGE_BUGREPORT,
-            PACKAGE_URL,
-            g_get_application_name(),
             g_get_application_name());
     gtk_label_set_markup(GTK_LABEL(widget), s);
     g_free(s);
