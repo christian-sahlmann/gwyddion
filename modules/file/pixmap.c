@@ -101,6 +101,13 @@ typedef struct {
 } PixmapLoadArgs;
 
 typedef struct {
+    GSList *group;
+    GtkWidget *image;
+    GwyContainer *data;
+    PixmapSaveArgs *args;
+} PixmapSaveControls;
+
+typedef struct {
     GtkWidget *xreal;
     GtkWidget *yreal;
     GtkWidget *xyexponent;
@@ -141,7 +148,10 @@ static GtkWidget*        table_attach_heading      (GtkWidget *table,
                                                     gint row);
 static GdkPixbuf*        pixmap_draw_pixbuf        (GwyContainer *data,
                                                     const gchar *format_name);
-static gboolean          pixmap_save_dialog        (PixmapSaveArgs *args,
+static GdkPixbuf*        pixmap_real_draw_pixbuf   (GwyContainer *data,
+                                                    PixmapSaveArgs *args);
+static gboolean          pixmap_save_dialog        (GwyContainer *data,
+                                                    PixmapSaveArgs *args,
                                                     const gchar *name);
 static gboolean          pixmap_save_png           (GwyContainer *data,
                                                     const gchar *filename);
@@ -267,7 +277,7 @@ static GwyModuleInfo module_info = {
         "TARGA. "
         "Import support relies on GDK and thus may be installation-dependent.",
     "Yeti <yeti@gwyddion.net>",
-    "4.1.2",
+    "4.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1206,6 +1216,26 @@ static GdkPixbuf*
 pixmap_draw_pixbuf(GwyContainer *data,
                    const gchar *format_name)
 {
+    GdkPixbuf *pixbuf;
+    GwyContainer *settings;
+    PixmapSaveArgs args;
+
+    settings = gwy_app_settings_get();
+    pixmap_save_load_args(settings, &args);
+    if (!pixmap_save_dialog(data, &args, format_name)) {
+        pixmap_save_save_args(settings, &args);
+        return NULL;
+    }
+    pixbuf = pixmap_real_draw_pixbuf(data, &args);
+    pixmap_save_save_args(settings, &args);
+
+    return pixbuf;
+}
+
+static GdkPixbuf*
+pixmap_real_draw_pixbuf(GwyContainer *data,
+                        PixmapSaveArgs *args)
+{
     GwyDataWindow *data_window;
     GwyDataView *data_view;
     GwyDataField *dfield;
@@ -1213,9 +1243,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
     GwyPalette *palette;
     GdkPixbuf *pixbuf, *hrpixbuf, *vrpixbuf, *datapixbuf, *tmpixbuf;
     GdkPixbuf *scalepixbuf = NULL;
-    GwyContainer *settings;
     GwySIUnit *siunit_xy, *siunit_z;
-    PixmapSaveArgs args;
     const guchar *samples;
     guchar *pixels;
     gpointer p[2];
@@ -1237,13 +1265,6 @@ pixmap_draw_pixbuf(GwyContainer *data,
     siunit_xy = gwy_data_field_get_si_unit_xy(dfield);
     siunit_z = gwy_data_field_get_si_unit_z(dfield);
 
-    settings = gwy_app_settings_get();
-    pixmap_save_load_args(settings, &args);
-    if (!pixmap_save_dialog(&args, format_name)) {
-        pixmap_save_save_args(settings, &args);
-        return NULL;
-    }
-
     layer = gwy_data_view_get_base_layer(data_view);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
     palette = gwy_layer_basic_get_palette(GWY_LAYER_BASIC(layer));
@@ -1261,29 +1282,29 @@ pixmap_draw_pixbuf(GwyContainer *data,
                              GDK_INTERP_NEAREST, 0xff);
     }
 
-    zwidth = args.zoom*width;
-    zheight = args.zoom*height;
-    if (args.otype == PIXMAP_RAW_DATA) {
+    zwidth = args->zoom*width;
+    zheight = args->zoom*height;
+    if (args->otype == PIXMAP_RAW_DATA) {
         pixbuf = gdk_pixbuf_scale_simple(datapixbuf, zwidth, zheight,
                                          GDK_INTERP_TILES);
         return pixbuf;
     }
 
-    gap *= args.zoom;
-    fmw *= args.zoom;
-    lw = ZOOM2LW(args.zoom);
+    gap *= args->zoom;
+    fmw *= args->zoom;
+    lw = ZOOM2LW(args->zoom);
 
     hrpixbuf = hruler(zwidth + 2*lw, border, gwy_data_field_get_xreal(dfield),
-                      args.zoom, siunit_xy);
+                      args->zoom, siunit_xy);
     hrh = gdk_pixbuf_get_height(hrpixbuf);
     vrpixbuf = vruler(zheight + 2*lw, border, gwy_data_field_get_yreal(dfield),
-                      args.zoom, siunit_xy);
+                      args->zoom, siunit_xy);
     vrw = gdk_pixbuf_get_width(vrpixbuf);
-    if (args.otype == PIXMAP_EVERYTHING) {
+    if (args->otype == PIXMAP_EVERYTHING) {
         scalepixbuf = fmscale(zheight + 2*lw,
                             gwy_data_field_get_min(dfield),
                             gwy_data_field_get_max(dfield),
-                            args.zoom, siunit_z);
+                            args->zoom, siunit_z);
         scw = gdk_pixbuf_get_width(scalepixbuf);
     }
     else {
@@ -1301,7 +1322,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
                      vrw + lw + border, hrh + lw + border,
                      zwidth, zheight,
                      vrw + lw + border, hrh + lw + border,
-                     args.zoom, args.zoom,
+                     args->zoom, args->zoom,
                      GDK_INTERP_TILES);
     g_object_unref(datapixbuf);
     gdk_pixbuf_copy_area(hrpixbuf,
@@ -1316,7 +1337,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
                          pixbuf,
                          border, hrh + border);
     g_object_unref(vrpixbuf);
-    if (args.otype == PIXMAP_EVERYTHING) {
+    if (args->otype == PIXMAP_EVERYTHING) {
         gdk_pixbuf_copy_area(scalepixbuf,
                             0, 0,
                             scw, zheight + 2*lw,
@@ -1333,7 +1354,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
             row = pixels
                 + gdk_pixbuf_get_rowstride(pixbuf)*(border + hrh + lw + y)
                 + 3*(int)(border + vrw + zwidth + 2*lw + gap + lw);
-            k = nsamp-1 - floor(nsamp*y/args.zoom/height);
+            k = nsamp-1 - floor(nsamp*y/args->zoom/height);
             for (j = 0; j < fmw; j++) {
                 row[3*j] = samples[4*k];
                 row[3*j + 1] = samples[4*k + 1];
@@ -1349,7 +1370,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
     gdk_pixbuf_fill(tmpixbuf, 0x000000);
     gdk_pixbuf_copy_area(tmpixbuf, 0, 0, lw, zheight + 2*lw,
                          pixbuf, vrw + border + zwidth + lw, hrh + border);
-    if (args.otype == PIXMAP_EVERYTHING) {
+    if (args->otype == PIXMAP_EVERYTHING) {
         gdk_pixbuf_copy_area(tmpixbuf, 0, 0, lw, zheight + lw,
                             pixbuf,
                             vrw + border + zwidth + 2*lw + gap,
@@ -1367,7 +1388,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
     gdk_pixbuf_fill(tmpixbuf, 0x000000);
     gdk_pixbuf_copy_area(tmpixbuf, 0, 0, zwidth + 2*lw, lw,
                          pixbuf, vrw + border, hrh + border + zheight + lw);
-    if (args.otype == PIXMAP_EVERYTHING) {
+    if (args->otype == PIXMAP_EVERYTHING) {
         gdk_pixbuf_copy_area(tmpixbuf, 0, 0, fmw + 2*lw, lw,
                             pixbuf,
                             vrw + border + zwidth + 2*lw + gap,
@@ -1379,28 +1400,49 @@ pixmap_draw_pixbuf(GwyContainer *data,
     }
     g_object_unref(tmpixbuf);
 
-    pixmap_save_save_args(settings, &args);
-
     return pixbuf;
 }
 
+static void
+save_type_changed(GtkWidget *button,
+                  PixmapSaveControls *controls)
+{
+    GdkPixbuf *pixbuf;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+        return;
+
+    controls->args->otype = gwy_radio_buttons_get_current(controls->group,
+                                                          "output-format");
+    pixbuf = pixmap_real_draw_pixbuf(controls->data, controls->args);
+    gtk_image_set_from_pixbuf(GTK_IMAGE(controls->image), pixbuf);
+    g_object_unref(pixbuf);
+}
+
 static gboolean
-pixmap_save_dialog(PixmapSaveArgs *args,
+pixmap_save_dialog(GwyContainer *data,
+                   PixmapSaveArgs *args,
                    const gchar *name)
 {
+    enum { RESPONSE_RESET = 1 };
     static const GwyEnum output_formats[] = {
         { "Data alone",    PIXMAP_RAW_DATA },
         { "Data + rulers", PIXMAP_RULERS },
         { "Everything",    PIXMAP_EVERYTHING },
     };
 
-    enum { RESPONSE_RESET = 1 };
     GtkObject *zoom;
-    GtkWidget *dialog, *table, *spin, *label;
-    GSList *group, *l;
+    PixmapSaveControls controls;
+    GtkWidget *dialog, *table, *spin, *label, *hbox, *align;
+    GwyDataField *dfield;
+    GdkPixbuf *pixbuf;
+    GSList *l;
     gint response;
     gchar *s, *title;
     gint row;
+
+    controls.data = data;
+    controls.args = args;
 
     s = g_ascii_strup(name, -1);
     title = g_strconcat(_("Export "), s, NULL);
@@ -1413,9 +1455,15 @@ pixmap_save_dialog(PixmapSaveArgs *args,
                                          NULL);
     g_free(title);
 
+    hbox = gtk_hbox_new(FALSE, 20);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
+
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
+
     table = gtk_table_new(2 + G_N_ELEMENTS(output_formats), 3, FALSE);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
-                       FALSE, FALSE, 4);
+    gtk_container_add(GTK_CONTAINER(align), table);
     row = 0;
 
     zoom = gtk_adjustment_new(args->zoom, 0.06, 16.0, 0.1, 1.0, 0);
@@ -1429,15 +1477,32 @@ pixmap_save_dialog(PixmapSaveArgs *args,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    group = gwy_radio_buttons_create(output_formats,
-                                     G_N_ELEMENTS(output_formats),
-                                     "output-format", NULL, NULL, args->otype);
-    for (l = group; l; l = g_slist_next(l)) {
+    controls.group = gwy_radio_buttons_create(output_formats,
+                                              G_N_ELEMENTS(output_formats),
+                                              "output-format",
+                                              G_CALLBACK(save_type_changed),
+                                              &controls,
+                                              args->otype);
+    for (l = controls.group; l; l = g_slist_next(l)) {
         gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(l->data),
                          0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
         row++;
 
     }
+
+    /* preview */
+    align = gtk_alignment_new(0.5, 0.5, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
+
+    controls.image = gtk_image_new();
+    gtk_container_add(GTK_CONTAINER(align), controls.image);
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    args->zoom = 120.0/MAX(gwy_data_field_get_xres(dfield),
+                           gwy_data_field_get_yres(dfield));
+    pixbuf = pixmap_real_draw_pixbuf(data, args);
+    gtk_image_set_from_pixbuf(GTK_IMAGE(controls.image), pixbuf);
+    g_object_unref(pixbuf);
 
     gtk_widget_show_all(dialog);
     do {
@@ -1446,7 +1511,6 @@ pixmap_save_dialog(PixmapSaveArgs *args,
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             args->zoom = gtk_adjustment_get_value(GTK_ADJUSTMENT(zoom));
-            args->otype = gwy_radio_buttons_get_current(group, "output-format");
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
@@ -1458,7 +1522,8 @@ pixmap_save_dialog(PixmapSaveArgs *args,
             case RESPONSE_RESET:
             *args = pixmap_save_defaults;
             gtk_adjustment_set_value(GTK_ADJUSTMENT(zoom), args->zoom);
-            gwy_radio_buttons_set_current(group, "output-format", args->otype);
+            gwy_radio_buttons_set_current(controls.group,
+                                          "output-format", args->otype);
             break;
 
             default:
@@ -1468,7 +1533,6 @@ pixmap_save_dialog(PixmapSaveArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     args->zoom = gtk_adjustment_get_value(GTK_ADJUSTMENT(zoom));
-    args->otype = gwy_radio_buttons_get_current(group, "output-format");
     gtk_widget_destroy(dialog);
 
     return TRUE;
