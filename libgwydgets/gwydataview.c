@@ -877,8 +877,10 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
                        gdouble zoom)
 {
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    /* XXX: what was this meant for?
     if (!data_view->pixbuf || !data_view->base_pixbuf)
         return;
+        */
 
     gwy_debug("zoom = %g, new = %g", data_view->newzoom, zoom);
     if (fabs(log(data_view->newzoom/zoom)) < 0.001)
