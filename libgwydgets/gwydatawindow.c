@@ -80,12 +80,6 @@ gwy_data_window_init(GwyDataWindow *data_window)
     data_window->sidebuttons = NULL;
 }
 
-static void
-focus_in_callback(gpointer obj)
-{
-    gwy_debug("GwyDataWindow %p should become current data window.", obj);
-}
-
 /**
  * gwy_data_window_new:
  * @data_view: A #GwyDataView containing the data-displaying widget to show.
@@ -116,10 +110,6 @@ gwy_data_window_new(GwyDataView *data_view)
                                   GTK_WIDGET(data_view),
                                   &geom,
                                   GDK_HINT_MIN_SIZE);
-
-    /* XXX: just for testing */
-    g_signal_connect(data_window, "focus-in-event",
-                     G_CALLBACK(focus_in_callback), NULL);
 
     data_window->data_view = (GtkWidget*)data_view;
 
