@@ -270,16 +270,28 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     /*result fields - after computation result should be at dfield */
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+    {
+        printf("mask found\n");
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
+    }
+    else
+    {
+        dfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield2)));
+        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(dfield));
+        g_object_unref(dfield);
+    }
+
+    dfield = gwy_tip_cmap(dfield1, dfield2, dfield);
 
 
+    /*
     iteration = 0;
     state = GWY_COMP_INIT;
     gwy_app_wait_start(GTK_WIDGET(args->win1),
                        "Initializing...");
     do {
-        /*iteration*/
+      
         state = GWY_COMP_FINISHED;
         gwy_app_wait_set_message("Certainty map computation...");
         if (!gwy_app_wait_set_fraction
@@ -291,10 +303,10 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
 
     } while (state != GWY_COMP_FINISHED);
     gwy_app_wait_finish();
+    */
     /*set right output */
 
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    
 
     return TRUE;
 }

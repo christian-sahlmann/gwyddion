@@ -46,6 +46,8 @@ typedef struct {
     gdouble radius;
     GwyTipType type;
     GwyDataWindow *win;
+    GwyContainer *tip;
+    GwyContainer *surface;
 } TipModelArgs;
 
 typedef struct {
@@ -54,8 +56,6 @@ typedef struct {
     GtkWidget *type;
     GtkWidget *radius;
     GtkObject *slope;
-    GwyContainer *tip;
-    GwyContainer *surface;
 } TipModelControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -68,8 +68,8 @@ static void        tip_model_dialog_update_values  (TipModelControls *controls,
                                                TipModelArgs *args);
 static void        preview                    (TipModelControls *controls,
                                                TipModelArgs *args);
-static void        tip_model_do                (TipModelControls *controls, TipModelArgs *args);
-static void        tip_process                 (TipModelControls *controls, TipModelArgs *args); 
+static void        tip_model_do                (TipModelArgs *args, GwyContainer *data);
+static void        tip_process                 (TipModelArgs *args); 
 static void        tip_model_load_args              (GwyContainer *container,
                                                TipModelArgs *args);
 static void        tip_model_save_args              (GwyContainer *container,
@@ -179,12 +179,12 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.surface = data;    
-    controls.tip = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.tip, "/0/data"));
+    args->surface = data;    
+    args->tip = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->tip, "/0/data"));
     gwy_data_field_fill(dfield, 0);
 
-    controls.view = gwy_data_view_new(controls.tip);
+    controls.view = gwy_data_view_new(args->tip);
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
@@ -334,34 +334,39 @@ tip_model_dialog_update_values(TipModelControls *controls, TipModelArgs *args)
 static void
 preview(TipModelControls *controls, TipModelArgs *args)
 {
-    tip_process(controls, args);
+    tip_process(args);
 
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
 static void
-tip_model_do(TipModelControls *controls, TipModelArgs *args)
+tip_model_do(TipModelArgs *args, GwyContainer *data)
 {
-    
-    tip_process(controls, args);
+    GtkWidget *data_window;
+    tip_process(args);
+
+    data_window = gwy_app_data_window_create(args->tip);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 }
 
 static void
-tip_process(TipModelControls *controls, TipModelArgs *args)
+tip_process(TipModelArgs *args)
 {
     GwyTipModelPreset *preset;
     GwyDataField *dfield;
+    GwyDataField *sfield;
     gint xres, yres;
 
     preset = gwy_tip_model_get_preset(args->type);
     if (preset == NULL) return;
     
     /*guess x and y size*/
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->tip, "/0/data"));
+    sfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->surface, "/0/data"));
 
     printf("preset: %d\n", args->type);
     
-    preset->guess(dfield, gwy_data_field_get_max(dfield), args->radius, NULL, &xres, &yres);
+    preset->guess(dfield, gwy_data_field_get_max(sfield), args->radius, NULL, &xres, &yres);
     printf("guess: %d x %d\n", xres, yres);
     
     /*process tip*/
@@ -373,7 +378,7 @@ tip_process(TipModelControls *controls, TipModelArgs *args)
     
 /*    gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);*/
     
-    preset->func(dfield, gwy_data_field_get_max(dfield), args->radius, NULL);
+    preset->func(dfield, gwy_data_field_get_max(sfield), args->radius, NULL);
 }
 
 static const gchar *mergetype_key = "/module/tip_model_height/merge_type";

@@ -271,15 +271,21 @@ tip_dilation_do(TipDilationArgs *args)
 
     /*result fields - after computation result should be at dfield */
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    if (gwy_container_contains_by_name(data, "/0/mask")) {
+        gwy_container_remove_by_name(data, "/0/mask");
+    }
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
 
+    dfield = gwy_tip_dilation(dfield1, dfield2, dfield);
+    
+/*
     iteration = 0;
     state = GWY_COMP_INIT;
     gwy_app_wait_start(GTK_WIDGET(args->win1),
                        "Initializing...");
     do {
-        /*iteration*/
+       
         state = GWY_COMP_FINISHED;
         gwy_app_wait_set_message("Dilating...");
         if (!gwy_app_wait_set_fraction
@@ -291,8 +297,9 @@ tip_dilation_do(TipDilationArgs *args)
 
     } while (state != GWY_COMP_FINISHED);
     gwy_app_wait_finish();
+    */
     /*set right output */
-
+    
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
@@ -311,9 +318,6 @@ static void
 tip_dilation_load_args(GwyContainer *settings,
                    TipDilationArgs *args)
 {
-    /* TODO: remove this someday (old keys we used as  */
-    gwy_container_remove_by_prefix(settings, "/app/croscor");
-
     *args = tip_dilation_defaults;
     /*
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);

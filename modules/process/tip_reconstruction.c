@@ -271,15 +271,20 @@ tip_reconstruction_do(TipReconstructionArgs *args)
 
     /*result fields - after computation result should be at dfield */
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    if (gwy_container_contains_by_name(data, "/0/mask")) {
+        gwy_container_remove_by_name(data, "/0/mask");
+    }
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
+    dfield = gwy_tip_erosion(dfield1, dfield2, dfield);
 
+    /*
     iteration = 0;
     state = GWY_COMP_INIT;
     gwy_app_wait_start(GTK_WIDGET(args->win1),
                        "Initializing...");
     do {
-        /*iteration*/
+        
         state = GWY_COMP_FINISHED;
         gwy_app_wait_set_message("Reconstruction...");
         if (!gwy_app_wait_set_fraction
@@ -291,6 +296,7 @@ tip_reconstruction_do(TipReconstructionArgs *args)
 
     } while (state != GWY_COMP_FINISHED);
     gwy_app_wait_finish();
+    */
     /*set right output */
 
     data_window = gwy_app_data_window_create(data);
