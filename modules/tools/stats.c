@@ -209,6 +209,7 @@ dialog_update(GwyUnitoolState *state,
     gdouble avg, ra, rms, skew, kurtosis, min, max, median;
     gdouble projarea, area;
     gchar buffer[30];
+    gchar *s;
 
     gwy_debug("");
     is_visible = state->is_visible;
@@ -231,6 +232,7 @@ dialog_update(GwyUnitoolState *state,
     min = gwy_data_field_area_get_min(dfield, isel[0], isel[1], w, h);
     max = gwy_data_field_area_get_max(dfield, isel[0], isel[1], w, h);
     median = gwy_data_field_area_get_median(dfield, isel[0], isel[1], w, h);
+    g_printerr("median = %g\n", median);
     area = gwy_data_field_area_get_surface_area(dfield, isel[0], isel[1], w, h,
                                                 GWY_INTERPOLATION_BILINEAR);
     projarea
@@ -252,12 +254,12 @@ dialog_update(GwyUnitoolState *state,
     gwy_unitool_update_label(state->value_format, controls->max, max);
     gwy_unitool_update_label(state->value_format, controls->median, median);
 
-    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>",
-               projarea, gwy_si_unit_get_unit_string(dfield->si_unit_z));
+    s = gwy_si_unit_get_unit_string(dfield->si_unit_xy);
+    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>", projarea, s);
     gtk_label_set_markup(GTK_LABEL(controls->projarea), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>",
-               area, gwy_si_unit_get_unit_string(dfield->si_unit_z));
+    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>", area, s);
     gtk_label_set_markup(GTK_LABEL(controls->area), buffer);
+    g_free(s);
 }
 
 static void
