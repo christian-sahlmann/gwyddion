@@ -21,7 +21,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwycontainer.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
 #include "app.h"
 #include "unitool.h"

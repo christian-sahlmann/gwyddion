@@ -20,6 +20,7 @@
 
 #ifndef __GWY_DATALINE_H__
 #define __GWY_DATALINE_H__
+
 #include <glib-object.h>
 
 #include <libprocess/simplefft.h>
@@ -70,13 +71,6 @@ struct _GwyDataLine {
 struct _GwyDataLineClass {
     GObjectClass parent_class;
 };
-
-G_END_DECLS
-
-/* FIXME: Remove in 2.0 */
-#include <libprocess/linestats.h>
-
-G_BEGIN_DECLS
 
 #define gwy_data_line_duplicate(data_line) ((GwyDataField*)gwy_serializable_duplicate(G_OBJECT(data_line)))
 

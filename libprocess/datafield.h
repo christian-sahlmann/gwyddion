@@ -22,13 +22,30 @@
 #define __GWY_DATAFIELD_H__
 
 #include <glib.h>
-/* XXX: GtkOrientation */
-#include <gtk/gtkenums.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/dataline.h>
 #include <libgwyddion/gwysiunit.h>
 
 G_BEGIN_DECLS
+
+typedef enum {
+    GWY_COMP_INIT         = 0, /*start initializations*/
+    GWY_COMP_ITERATE      = 1, /*locate steps*/
+    GWY_COMP_FINISHED     = 2
+} GwyComputationStateType;
+
+typedef enum {
+    GWY_ORIENTATION_HORIZONTAL,
+    GWY_ORIENTATION_VERTICAL
+} GwyOrientation;
+
+typedef enum {
+    GWY_DATA_FIELD_MIN = 0,
+    GWY_DATA_FIELD_MAX,
+    GWY_DATA_FIELD_AVG,
+    GWY_DATA_FIELD_RMS,
+    GWY_DATA_FIELD_CACHE_SIZE = 8
+} GwyDataFieldCached;
 
 #define GWY_TYPE_DATA_FIELD                  (gwy_data_field_get_type())
 #define GWY_DATA_FIELD(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_FIELD, GwyDataField))
@@ -48,54 +65,32 @@ struct _GwyDataField {
     gdouble xreal;
     gdouble yreal;
     gdouble *data;
-    gint N;  /* FIXME: remove, not used, not even updated */
+
     GwySIUnit *si_unit_xy;
     GwySIUnit *si_unit_z;
+
+    GwyDataFieldCached cached;
+    gdouble cache[GWY_DATA_FIELD_CACHE_SIZE];
 };
 
 struct _GwyDataFieldClass {
     GObjectClass parent_class;
 };
 
-typedef enum {
-    GWY_COMP_INIT         = 0, /*start initializations*/
-    GWY_COMP_ITERATE      = 1, /*locate steps*/
-    GWY_COMP_FINISHED     = 2
-} GwyComputationStateType;
-
-G_END_DECLS
-
-/* XXX: This is here to allow people #include just datafield.h and get all
- * datafield-related functions as before, will be removed in 2.0.
- * Do NOT add new headers here! Add them to gwyprocess.h. */
-#include <libprocess/correct.h>
-#include <libprocess/correlation.h>
-#include <libprocess/cwt.h>
-#include <libprocess/fractals.h>
-#include <libprocess/filters.h>
-#include <libprocess/grains.h>
-#include <libprocess/inttrans.h>
-#include <libprocess/level.h>
-#include <libprocess/stats.h>
-
-G_BEGIN_DECLS
 
 GType gwy_data_field_get_type  (void) G_GNUC_CONST;
 
-/* FIXME: in 2.0 it should actually invalidate cached statistics.
- * Valid cached values will be probably bits in a bit field, so it will
- * simply expand to data_field->valid = 0 to clear them all. */
-#define gwy_data_field_invalidate(data_field) /* */
+#define gwy_data_field_invalidate(data_field) data_field->cached = 0
 
 #define gwy_data_field_duplicate(data_field) ((GwyDataField*)gwy_serializable_duplicate(G_OBJECT(data_field)))
 
-GObject*          gwy_data_field_new                  (gint xres,
-                                                       gint yres,
-                                                       gdouble xreal,
-                                                       gdouble yreal,
-                                                       gboolean nullme);
-GObject*          gwy_data_field_new_alike            (GwyDataField *model,
-                                                       gboolean nullme);
+GwyDataField*     gwy_data_field_new                 (gint xres,
+                                                      gint yres,
+                                                      gdouble xreal,
+                                                      gdouble yreal,
+                                                      gboolean nullme);
+GwyDataField*     gwy_data_field_new_alike           (GwyDataField *model,
+                                                      gboolean nullme);
 void              gwy_data_field_resample  (GwyDataField *data_field,
                                             gint xres,
                                             gint yres,
@@ -282,10 +277,6 @@ gdouble  gwy_data_field_get_angder         (GwyDataField *data_field,
                                             gint col,
                                             gint row,
                                             gdouble theta);
-void     gwy_data_field_shade              (GwyDataField *data_field,
-                                            GwyDataField *target_field,
-                                            gdouble theta,
-                                            gdouble phi);
 void     gwy_data_field_fit_lines          (GwyDataField *data_field,
                                             gint ulcol,
                                             gint ulrow,
@@ -293,7 +284,7 @@ void     gwy_data_field_fit_lines          (GwyDataField *data_field,
                                             gint brrow,
                                             GwyFitLineType fit_type,
                                             gboolean exclude,
-                                            GtkOrientation orientation);
+                                            GwyOrientation orientation);
 
 G_END_DECLS
 

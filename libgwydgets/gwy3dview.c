@@ -42,6 +42,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
+#include <libprocess/stats.h>
 #include "gwydgets.h"
 
 #define DIG_2_RAD (G_PI / 180.0)

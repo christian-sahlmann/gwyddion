@@ -23,7 +23,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/fractals.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwyoptionmenus.h>

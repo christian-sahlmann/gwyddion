@@ -21,6 +21,8 @@
 #ifndef __GWY_PROCESS_GRAINS_H__
 #define __GWY_PROCESS_GRAINS_H__
 
+#include <libprocess/datafield.h>
+
 G_BEGIN_DECLS
 
 /* XXX: never used in libprocess itself, there should be probably some header

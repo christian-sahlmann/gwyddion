@@ -22,6 +22,7 @@
 #define __GWY_PROCESS_INTTRANS_H__
 
 #include <libprocess/datafield.h>
+#include <libprocess/cwt.h>
 
 G_BEGIN_DECLS
 
@@ -101,7 +102,7 @@ void gwy_data_field_cwt(GwyDataField *data_field,
 void gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                                   GwyDataField *result_field,
                                   GwyDataLine *weights,
-                                  GtkOrientation orientation,
+                                  GwyOrientation orientation,
                                   GwyInterpolationType interpolation);
 
 

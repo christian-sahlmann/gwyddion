@@ -21,7 +21,7 @@
 #include <math.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/level.h>
 #include <app/gwyapp.h>
 
 #define LEVEL_RUN_MODES \

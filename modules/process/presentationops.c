@@ -20,7 +20,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <app/gwyapp.h>
 
 #define PRESENTATIONOPS_RUN_MODES \

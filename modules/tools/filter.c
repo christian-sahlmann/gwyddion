@@ -23,7 +23,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/filters.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 

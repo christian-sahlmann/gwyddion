@@ -18,12 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <string.h>
-#include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
-#include <stdio.h>
+#include "stats.h"
+#include "correct.h"
 
 static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   guint m,
@@ -42,8 +41,6 @@ static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
  * iterative method similar to solving heat flux equation.
  *
  * Use this function repeatedly until reasonable @error is reached.
- *
- * Since: 1.1
  **/
 void
 gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
@@ -126,8 +123,6 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
  * Sigma denotes root-mean square deviation
  * of heights. This criterium corresponds
  * to usual Gaussian distribution outliers detection for @thresh = 3.
- *
- * Since: 1.1
  **/
 void
 gwy_data_field_mask_outliers(GwyDataField *data_field,
@@ -161,8 +156,6 @@ gwy_data_field_mask_outliers(GwyDataField *data_field,
  * Simply puts average value of all the @data_field values into
  * points in @data_field lying under points where @mask_field values
  * are nonzero.
- *
- * Since: 1.2
  **/
 void
 gwy_data_field_correct_average(GwyDataField *data_field,
@@ -178,6 +171,7 @@ gwy_data_field_correct_average(GwyDataField *data_field,
             data_field->data[i] = avg;
     }
 
+    gwy_data_field_invalidate(mask_field);
 }
 
 /**
@@ -194,8 +188,6 @@ gwy_data_field_correct_average(GwyDataField *data_field,
  * In addition an estimate is made about the prevalent one.
  *
  * Returns: The estimate type of prevalent symmetry.
- *
- * Since: 1.4
  **/
 GwyPlaneSymmetry
 gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,

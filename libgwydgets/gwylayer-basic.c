@@ -20,6 +20,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
 #include "gwylayer-basic.h"
 

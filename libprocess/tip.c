@@ -19,11 +19,10 @@
  */
 
 #include <string.h>
-#include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "filters.h"
-#include "datafield.h"
+#include "stats.h"
 #include "morph_lib.h"
 
 static void
@@ -253,8 +252,6 @@ static const GwyTipModelPreset tip_presets[] = {
  * Find number of actual tip model presets.
  *
  * Returns: Number of presets.
- *
- * Since: 1.6
  **/
 gint
 gwy_tip_model_get_npresets(void)
@@ -269,8 +266,6 @@ gwy_tip_model_get_npresets(void)
  * Get data related to tip preset.
  *
  * Returns: Chosen preset data.
- *
- * Since: 1.6
  **/
 G_CONST_RETURN GwyTipModelPreset*
 gwy_tip_model_get_preset(gint preset_id)
@@ -289,8 +284,6 @@ gwy_tip_model_get_preset(gint preset_id)
  * Get data related to preset with specified name.
  *
  * Returns: Chosen preset data.
- *
- * Since: 1.6
  **/
 G_CONST_RETURN GwyTipModelPreset*
 gwy_tip_model_get_preset_by_name(const gchar *name)
@@ -311,8 +304,6 @@ gwy_tip_model_get_preset_by_name(const gchar *name)
  * Get preset identifier within all presets.
  *
  * Returns: Preset id.
- *
- * Since: 1.6
  **/
 gint
 gwy_tip_model_get_preset_id(const GwyTipModelPreset* preset)
@@ -327,8 +318,6 @@ gwy_tip_model_get_preset_id(const GwyTipModelPreset* preset)
  * Get name of the preset (e. g. "contact").
  *
  * Returns: Preset name.
- *
- * Since: 1.6
  **/
 G_CONST_RETURN gchar*
 gwy_tip_model_get_preset_tip_name(const GwyTipModelPreset* preset)
@@ -343,8 +332,6 @@ gwy_tip_model_get_preset_tip_name(const GwyTipModelPreset* preset)
  * Get group name of preset (e. g. "analytical".)
  *
  * Returns: Preset group name.
- *
- * Since: 1.6
  **/
 G_CONST_RETURN gchar*
 gwy_tip_model_get_preset_group_name(const GwyTipModelPreset* preset)
@@ -359,8 +346,6 @@ gwy_tip_model_get_preset_group_name(const GwyTipModelPreset* preset)
  * Get number of tip preset parameters.
  *
  * Returns: Number of parameters.
- *
- * Since: 1.6
  **/
 gint
 gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset)
@@ -556,8 +541,6 @@ get_right_tip_field(GwyDataField *tip,
  *
  * Returns: Dilated surface data, i.e. @result, on success.  May return %NULL
  *          if aborted.
- *
- * Since: 1.6
  **/
 GwyDataField*
 gwy_tip_dilation(GwyDataField *tip,
@@ -622,8 +605,6 @@ gwy_tip_dilation(GwyDataField *tip,
  *
  * Returns: Reconstructed (eroded) surface, i.e. @result, on success.  May
  *          return %NULL if aborted.
- *
- * Since: 1.6
  **/
 GwyDataField*
 gwy_tip_erosion(GwyDataField *tip,
@@ -691,8 +672,6 @@ gwy_tip_erosion(GwyDataField *tip,
  *
  * Returns: Certainty map, i.e. @result, on success.  May return %NULL if
  *          aborted.
- *
- * Since: 1.6
  **/
 GwyDataField*
 gwy_tip_cmap(GwyDataField *tip,
@@ -793,8 +772,6 @@ gwy_tip_cmap(GwyDataField *tip,
  * threshold and increase it slowly to observe changes and choose right value.
  *
  * Returns: Estimated tip.  May return %NULL if aborted.
- *
- * Since: 1.6
  **/
 GwyDataField*
 gwy_tip_estimate_partial(GwyDataField *tip,
@@ -872,8 +849,6 @@ gwy_tip_estimate_partial(GwyDataField *tip,
  * threshold and increase it slowly to observe changes and choose right value.
  *
  * Returns: Estimated tip.  May return %NULL if aborted.
- *
- * Since: 1.6
  **/
 GwyDataField*
 gwy_tip_estimate_full(GwyDataField *tip,

@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include "datafield.h"
+#include "stats.h"
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
@@ -170,9 +171,9 @@ gwy_data_field_finalize(GObject *object)
  *
  * Creates a new data field.
  *
- * Returns: A newly created data field, as a #GObject.
+ * Returns: A newly created data field.
  **/
-GObject*
+GwyDataField*
 gwy_data_field_new(gint xres, gint yres,
                    gdouble xreal, gdouble yreal,
                    gboolean nullme)
@@ -183,7 +184,7 @@ gwy_data_field_new(gint xres, gint yres,
 
     _gwy_data_field_initialize(data_field, xres, yres, xreal, yreal, nullme);
 
-    return (GObject*)(data_field);
+    return data_field;
 }
 
 /**
@@ -197,11 +198,9 @@ gwy_data_field_new(gint xres, gint yres,
  * Use gwy_data_field_duplicate() if you want to copy a data field including
  * data.
  *
- * Returns: A newly created data field, as a #GObject.
- *
- * Since: 1.8
+ * Returns: A newly created data field.
  **/
-GObject*
+GwyDataField*
 gwy_data_field_new_alike(GwyDataField *model,
                          gboolean nullme)
 {
@@ -224,7 +223,7 @@ gwy_data_field_new_alike(GwyDataField *model,
     if (model->si_unit_z)
         data_field->si_unit_z = gwy_si_unit_duplicate(model->si_unit_z);
 
-    return (GObject*)(data_field);
+    return data_field;
 }
 
 static GByteArray*
@@ -323,16 +322,15 @@ gwy_data_field_deserialize(const guchar *buffer,
 static GObject*
 gwy_data_field_duplicate_real(GObject *object)
 {
-    GwyDataField *data_field;
-    GObject *duplicate;
+    GwyDataField *data_field, *duplicate;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(object), NULL);
     data_field = GWY_DATA_FIELD(object);
     duplicate = gwy_data_field_new_alike(data_field, FALSE);
-    memcpy(((GwyDataField*)duplicate)->data, data_field->data,
+    memcpy(duplicate->data, data_field->data,
            data_field->xres*data_field->yres*sizeof(gdouble));
 
-    return duplicate;
+    return (GObject*)duplicate;
 }
 
 /*
@@ -1349,7 +1347,7 @@ gwy_data_field_clear(GwyDataField *data_field)
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     memset(data_field->data, 0,
            data_field->xres*data_field->yres*sizeof(gdouble));
-    gwy_data_field_invalidate(a);
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
@@ -2095,45 +2093,6 @@ gwy_data_field_get_angder(GwyDataField *a, gint col, gint row, gdouble theta)
 }
 
 /**
- * gwy_data_field_shade:
- * @data_field: A data field.
- * @target_field: A data field to put the shade to.  It will be resized to
- *                match @data_field.
- * @theta: Shading angle (in degrees, from north pole).
- * @phi: Shade orientation in xy plane (in degrees, CCW).
- *
- * Shades a data field.
- **/
-void
-gwy_data_field_shade(GwyDataField *data_field,
-                     GwyDataField *target_field,
-                     gdouble theta, gdouble phi)
-{
-    gint i, j;
-    gdouble max, maxval;
-
-    gwy_data_field_resample(target_field, data_field->xres, data_field->yres,
-                            GWY_INTERPOLATION_NONE);
-
-    max = -G_MAXDOUBLE;
-    for (i = 0; i < data_field->yres; i++) {
-
-        for (j = 0; j < data_field->xres; j++) {
-            target_field->data[j + data_field->xres*i]
-                = -gwy_data_field_get_angder(data_field, j, i, phi);
-
-            if (max < target_field->data[j + data_field->xres*i])
-                max = target_field->data[j + data_field->xres*i];
-        }
-    }
-
-    maxval = G_PI*theta/180.0*max;
-    for (i = 0; i < data_field->xres*data_field->yres; i++)
-        target_field->data[i] = max - fabs(maxval-target_field->data[i]);
-}
-
-
-/**
  * gwy_data_field_fit_lines:
  * @data_field: A data field.
  * @ulcol: Upper-left column coordinate.
@@ -2159,7 +2118,7 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
                          gint brcol, gint brrow,
                          GwyFitLineType fit_type,
                          gboolean exclude,
-                         GtkOrientation orientation)
+                         GwyOrientation orientation)
 {
 
     gint i, j, xres, yres, res, n;
@@ -2170,8 +2129,8 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
 
     xres = data_field->xres;
     yres = data_field->yres;
-    res = (orientation == GTK_ORIENTATION_HORIZONTAL) ? xres : yres;
-    real = (orientation == GTK_ORIENTATION_HORIZONTAL)
+    res = (orientation == GWY_ORIENTATION_HORIZONTAL) ? xres : yres;
+    real = (orientation == GWY_ORIENTATION_HORIZONTAL)
            ? data_field->xreal : data_field->yreal;
     hlp = (GwyDataLine*)gwy_data_line_new(res, real, FALSE);
     if (exclude) {
@@ -2186,7 +2145,7 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
 
     n = (gint)fit_type;
 
-    if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+    if (orientation == GWY_ORIENTATION_HORIZONTAL) {
         if (exclude) {
             for (i = j = 0; i < xres; i++) {
                 if (i < ulcol || i >= brcol)
@@ -2213,7 +2172,7 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
             gwy_data_field_set_row(data_field, hlp, i);
         }
     }
-    else if (orientation == GTK_ORIENTATION_VERTICAL) {
+    else if (orientation == GWY_ORIENTATION_VERTICAL) {
         if (exclude) {
             for (i = j = 0; i < yres; i++) {
                 if (i < ulrow || i >= brrow)

@@ -18,12 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <string.h>
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
-#include <math.h>
+#include "stats.h"
 
 /*
  * @data_field: A data field.
@@ -37,7 +36,8 @@
  */
 void
 gwy_data_field_fractal_partitioning(GwyDataField *data_field,
-                                    GwyDataLine *xresult, GwyDataLine *yresult,
+                                    GwyDataLine *xresult,
+                                    GwyDataLine *yresult,
                                     GwyInterpolationType interpolation)
 {
     GwyDataField *buffer;
@@ -48,7 +48,7 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
     dimexp = (gint)floor(log((gdouble)data_field->xres)/log(2.0) + 0.5);
     xnewres = (gint)pow(2, dimexp) + 1;
 
-    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+    buffer = gwy_data_field_duplicate(data_field);
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
     gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
@@ -63,15 +63,14 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
             }
         }
         xresult->data[l] = log(rp);
-        yresult->data[l]
-            = log(yresult->data[l]
-                  /(((buffer->xres - 1)/rp - 1) * ((buffer->yres - 1)/rp - 1)));
+        yresult->data[l] = log(yresult->data[l]
+                           /(((xnewres - 1)/rp - 1) * ((xnewres - 1)/rp - 1)));
 
     }
     g_object_unref(buffer);
 }
 
-G_GNUC_UNUSED static gdouble
+static gdouble
 get_area_rms_nomask(GwyDataField *dfield,
                     GwyDataField *mask,
                     gint col,
@@ -115,9 +114,11 @@ get_area_rms_nomask(GwyDataField *dfield,
 }
 
 static void
-fractal_partitioning_nomask(GwyDataField *data_field, GwyDataField *mask_field,
-                                    GwyDataLine *xresult, GwyDataLine *yresult,
-                                    GwyInterpolationType interpolation)
+fractal_partitioning_nomask(GwyDataField *data_field,
+                            GwyDataField *mask_field,
+                            GwyDataLine *xresult,
+                            GwyDataLine *yresult,
+                            GwyInterpolationType interpolation)
 {
     GwyDataField *buffer, *maskbuffer;
     gint i, j, l, rp, dimexp, xnewres;
@@ -127,9 +128,8 @@ fractal_partitioning_nomask(GwyDataField *data_field, GwyDataField *mask_field,
     dimexp = (gint)floor(log((gdouble)data_field->xres)/log(2.0) + 0.5);
     xnewres = (gint)pow(2, dimexp) + 1;
 
-    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
-    maskbuffer = GWY_DATA_FIELD(gwy_serializable_duplicate
-                                                       (G_OBJECT(mask_field)));
+    buffer = gwy_data_field_duplicate(data_field);
+    maskbuffer = gwy_data_field_duplicate(mask_field);
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
     gwy_data_field_resample(maskbuffer, xnewres, xnewres,
                             GWY_INTERPOLATION_ROUND);
@@ -176,7 +176,8 @@ fractal_partitioning_nomask(GwyDataField *data_field, GwyDataField *mask_field,
  */
 void
 gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
-                                    GwyDataLine *xresult, GwyDataLine *yresult,
+                                    GwyDataLine *xresult,
+                                    GwyDataLine *yresult,
                                     GwyInterpolationType interpolation)
 {
     GwyDataField *buffer;
@@ -187,7 +188,7 @@ gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
     dimexp = (gint)floor(log((gdouble)data_field->xres)/log(2.0) + 0.5);
     xnewres = (gint)pow(2, dimexp) + 1;
 
-    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+    buffer = gwy_data_field_duplicate(data_field);
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
     gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
@@ -327,7 +328,7 @@ gwy_data_field_fractal_psdf(GwyDataField *data_field,
                                           data_field->xres,
                                           data_field->yres,
                                           GWY_SF_OUTPUT_PSDF,
-                                          GTK_ORIENTATION_HORIZONTAL,
+                                          GWY_ORIENTATION_HORIZONTAL,
                                           interpolation,
                                           GWY_WINDOWING_HANN, yresult->res);
 
@@ -914,7 +915,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
     }
 
     g_rand_free(rng);
-    gwy_data_field_invalidate(dfield);
+    gwy_data_field_invalidate(z);
 
     return TRUE;
 }
@@ -948,9 +949,8 @@ gwy_data_field_fractal_correction(GwyDataField *data_field,
     dimexp = (gint)floor(log((gdouble)data_field->xres)/log(2.0) + 0.5);
     xnewres = (gint)pow(2, dimexp) + 1;
 
-    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
-    maskbuffer =
-        GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(mask_field)));
+    buffer = gwy_data_field_duplicate(data_field);
+    maskbuffer = gwy_data_field_duplicate(mask_field);
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
     gwy_data_field_resample(maskbuffer, xnewres, xnewres, interpolation);
 

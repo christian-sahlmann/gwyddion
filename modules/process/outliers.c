@@ -22,7 +22,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/correct.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
@@ -79,11 +79,7 @@ outliers(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (!gwy_container_gis_object_by_name(data, "/0/mask", &maskfield)) {
-        maskfield = gwy_data_field_new(gwy_data_field_get_xres(dfield),
-                                       gwy_data_field_get_yres(dfield),
-                                       gwy_data_field_get_xreal(dfield),
-                                       gwy_data_field_get_yreal(dfield),
-                                       TRUE);
+        maskfield = gwy_data_field_new_alike(dfield, TRUE);
         gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         g_object_unref(maskfield);
     }

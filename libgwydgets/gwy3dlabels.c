@@ -22,7 +22,7 @@
 
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include "gwy3dlabels.h"
 
 #define GWY_3D_LABELS_TYPE_NAME "Gwy3DLabels"

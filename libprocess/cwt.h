@@ -30,19 +30,10 @@ typedef enum {
   GWY_2DCWT_HAT         = 1
 } Gwy2DCWTWaveletType;
 
-/* XXX: never used in libprocess itself */
-typedef enum {
-  GWY_CWT_GAUSS       = 0,
-  GWY_CWT_HAT         = 1,
-  GWY_CWT_MORLET      = 2
-} GwyCWTWaveletType;
-
-gdouble
-gwy_cwt_wfunc_2d(gdouble scale,
-                 gdouble mval,
-                 gint xres,
-                 Gwy2DCWTWaveletType wtype);
-
+gdouble gwy_cwt_wfunc_2d(gdouble scale,
+                         gdouble mval,
+                         gint xres,
+                         Gwy2DCWTWaveletType wtype);
 
 G_END_DECLS
 

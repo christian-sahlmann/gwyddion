@@ -19,11 +19,12 @@
  */
 
 #include <string.h>
-#include <stdlib.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
+#include "filters.h"
+#include "stats.h"
 
 static gint thin_data_field(GwyDataField *data_field);
 
@@ -67,10 +68,7 @@ gwy_data_field_area_convolve(GwyDataField *data_field,
         return;
     }
 
-    hlp_df =
-        (GwyDataField *) gwy_data_field_new(xres, yres, data_field->xreal,
-                                            data_field->yreal, TRUE);
-
+    hlp_df = gwy_data_field_new_alike(data_field, TRUE);
     avgval = gwy_data_field_area_get_avg(data_field, col, row, width, height);
 
     for (i = row; i < row + height; i++) {   /*0-yres */
@@ -299,10 +297,8 @@ gwy_data_field_filter_canny(GwyDataField *data_field,
     gdouble *data;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    sobel_horizontal = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field,
-                                                               FALSE));
-    sobel_vertical = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field,
-                                                             FALSE));
+    sobel_horizontal = gwy_data_field_new_alike(data_field, FALSE);
+    sobel_vertical = gwy_data_field_new_alike(data_field, FALSE);
     gwy_data_field_area_copy(data_field, sobel_horizontal,
                              0, 0,
                              data_field->xres,
@@ -315,13 +311,13 @@ gwy_data_field_filter_canny(GwyDataField *data_field,
                              0, 0);
 
     gwy_data_field_area_filter_sobel(sobel_horizontal,
-                                     GTK_ORIENTATION_HORIZONTAL,
+                                     GWY_ORIENTATION_HORIZONTAL,
                                      0, 0,
                                      data_field->xres,
                                      data_field->yres);
 
     gwy_data_field_area_filter_sobel(sobel_vertical,
-                                     GTK_ORIENTATION_VERTICAL,
+                                     GWY_ORIENTATION_VERTICAL,
                                      0, 0,
                                      data_field->xres,
                                      data_field->yres);
@@ -406,11 +402,10 @@ gwy_data_field_area_filter_laplacian(GwyDataField *data_field,
     GwyDataField *kernel;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    kernel = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
+    kernel = gwy_data_field_new(3, 3, 3, 3, FALSE);
     memcpy(kernel->data, laplace, sizeof(laplace));
     gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
     g_object_unref(kernel);
-    gwy_data_field_invalidate(data_field);
 }
 
 void
@@ -434,7 +429,7 @@ gwy_data_field_filter_laplacian(GwyDataField *data_field)
  **/
 void
 gwy_data_field_area_filter_sobel(GwyDataField *data_field,
-                                 GtkOrientation orientation,
+                                 GwyOrientation orientation,
                                  gint col, gint row,
                                  gint width, gint height)
 {
@@ -451,19 +446,18 @@ gwy_data_field_area_filter_sobel(GwyDataField *data_field,
     GwyDataField *kernel;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    kernel = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
-    if (orientation == GTK_ORIENTATION_HORIZONTAL)
+    kernel = gwy_data_field_new(3, 3, 3, 3, FALSE);
+    if (orientation == GWY_ORIENTATION_HORIZONTAL)
         memcpy(kernel->data, hsobel, sizeof(hsobel));
     else
         memcpy(kernel->data, vsobel, sizeof(vsobel));
     gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
     g_object_unref(kernel);
-    gwy_data_field_invalidate(data_field);
 }
 
 void
 gwy_data_field_filter_sobel(GwyDataField *data_field,
-                            GtkOrientation orientation)
+                            GwyOrientation orientation)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_filter_sobel(data_field, orientation, 0, 0,
@@ -484,7 +478,7 @@ gwy_data_field_filter_sobel(GwyDataField *data_field,
  **/
 void
 gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
-                                   GtkOrientation orientation,
+                                   GwyOrientation orientation,
                                    gint col, gint row,
                                    gint width, gint height)
 {
@@ -501,19 +495,18 @@ gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
     GwyDataField *kernel;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    kernel = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
-    if (orientation == GTK_ORIENTATION_HORIZONTAL)
+    kernel = gwy_data_field_new(3, 3, 3, 3, FALSE);
+    if (orientation == GWY_ORIENTATION_HORIZONTAL)
         memcpy(kernel->data, hprewitt, sizeof(hprewitt));
     else
         memcpy(kernel->data, vprewitt, sizeof(vprewitt));
     gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
     g_object_unref(kernel);
-    gwy_data_field_invalidate(data_field);
 }
 
 void
 gwy_data_field_filter_prewitt(GwyDataField *data_field,
-                              GtkOrientation orientation)
+                              GwyOrientation orientation)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_filter_prewitt(data_field, orientation, 0, 0,
@@ -626,7 +619,7 @@ gwy_data_field_area_filter_conservative(GwyDataField *data_field,
         return;
     }
 
-    hlp_df = GWY_DATA_FIELD(gwy_data_field_new(width, height, 1.0, 1.0, FALSE));
+    hlp_df = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
 
     data = data_field->data;
     for (i = 0; i < height; i++) {
@@ -786,10 +779,7 @@ thinstep(GwyDataField *data_field)
     GwyDataField *hlp;
     gint i, j, ch;
 
-    hlp = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                            data_field->yres,
-                                            data_field->xreal,
-                                            data_field->yreal, TRUE));
+    hlp = gwy_data_field_new_alike(data_field, TRUE);
 
     ch = 0;
     for (i = 2; i < (data_field->yres - 1); i++) {
@@ -808,6 +798,7 @@ thinstep(GwyDataField *data_field)
         }
     }
 
+    g_object_unref(hlp);
     gwy_data_field_invalidate(data_field);
 
     return ch;
@@ -867,8 +858,8 @@ gwy_data_field_area_filter_minimum(GwyDataField *data_field,
     }
 
     data = data_field->data;
-    buffer = (GwyDataField*)gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
-    buffer2 = (GwyDataField*)gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    buffer = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    buffer2 = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
     buf = buffer->data;
     buf2 = buffer2->data;
 
@@ -1014,8 +1005,8 @@ gwy_data_field_area_filter_maximum(GwyDataField *data_field,
     }
 
     data = data_field->data;
-    buffer = (GwyDataField*)gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
-    buffer2 = (GwyDataField*)gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    buffer = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    buffer2 = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
     buf = buffer->data;
     buf2 = buffer2->data;
 
@@ -1110,8 +1101,6 @@ gwy_data_field_area_filter_maximum(GwyDataField *data_field,
  * @size: Neighbourhood size for maximum search.
  *
  * Filters a data field with maximum filter.
- *
- * Since: 1.8
  **/
 void
 gwy_data_field_filter_maximum(GwyDataField *data_field,
@@ -1182,8 +1171,6 @@ kuwahara_block(const gdouble *a)
  *
  * Filters a rectangular part of a data field with a Kuwahara
  * (edge-preserving smoothing) filter.
- *
- * Since: 1.9
  **/
 void
 gwy_data_field_area_filter_kuwahara(GwyDataField *data_field,
@@ -1232,8 +1219,6 @@ gwy_data_field_area_filter_kuwahara(GwyDataField *data_field,
  * @data_field: A data field to apply Kuwahara filter to.
  *
  * Filters a data field with Kuwahara filter.
- *
- * Since: 1.9
  **/
 void
 gwy_data_field_filter_kuwahara(GwyDataField *data_field)
@@ -1243,5 +1228,42 @@ gwy_data_field_filter_kuwahara(GwyDataField *data_field)
                                         data_field->xres, data_field->yres);
 }
 
+/**
+ * gwy_data_field_shade:
+ * @data_field: A data field.
+ * @target_field: A data field to put the shade to.  It will be resized to
+ *                match @data_field.
+ * @theta: Shading angle (in degrees, from north pole).
+ * @phi: Shade orientation in xy plane (in degrees, CCW).
+ *
+ * Shades a data field.
+ **/
+void
+gwy_data_field_shade(GwyDataField *data_field,
+                     GwyDataField *target_field,
+                     gdouble theta, gdouble phi)
+{
+    gint i, j;
+    gdouble max, maxval;
+
+    gwy_data_field_resample(target_field, data_field->xres, data_field->yres,
+                            GWY_INTERPOLATION_NONE);
+
+    max = -G_MAXDOUBLE;
+    for (i = 0; i < data_field->yres; i++) {
+
+        for (j = 0; j < data_field->xres; j++) {
+            target_field->data[j + data_field->xres*i]
+                = -gwy_data_field_get_angder(data_field, j, i, phi);
+
+            if (max < target_field->data[j + data_field->xres*i])
+                max = target_field->data[j + data_field->xres*i];
+        }
+    }
+
+    maxval = G_PI*theta/180.0*max;
+    for (i = 0; i < data_field->xres*data_field->yres; i++)
+        target_field->data[i] = max - fabs(maxval-target_field->data[i]);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

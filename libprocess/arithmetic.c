@@ -18,7 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include "datafield.h"
+#include "arithmetic.h"
 
 /**
  * gwy_data_field_sum_fields:
@@ -28,8 +28,6 @@
  * @operand2: Second data field operand.
  *
  * Sums two data fields.
- *
- * Since: 1.7
  **/
 void
 gwy_data_field_sum_fields(GwyDataField *result,
@@ -66,8 +64,6 @@ gwy_data_field_sum_fields(GwyDataField *result,
  * @operand2: Second data field operand.
  *
  * Subtracts one data field from another.
- *
- * Since: 1.7
  **/
 void
 gwy_data_field_subtract_fields(GwyDataField *result,
@@ -104,8 +100,6 @@ gwy_data_field_subtract_fields(GwyDataField *result,
  * @operand2: Second data field operand.
  *
  * Multiplies two data fields.
- *
- * Since: 1.7
  **/
 void
 gwy_data_field_multiply_fields(GwyDataField *result,
@@ -142,8 +136,6 @@ gwy_data_field_multiply_fields(GwyDataField *result,
  * @operand2: Second data field operand.
  *
  * Divides one data field with another.
- *
- * Since: 1.7
  **/
 void
 gwy_data_field_divide_fields(GwyDataField *result,
@@ -180,8 +172,6 @@ gwy_data_field_divide_fields(GwyDataField *result,
  * @operand2: Second data field operand.
  *
  * Finds point-wise maxima of two data fields.
- *
- * Since: 1.7
  **/
 void
 gwy_data_field_min_of_fields(GwyDataField *result,
@@ -218,8 +208,6 @@ gwy_data_field_min_of_fields(GwyDataField *result,
  * @operand2: Second data field operand.
  *
  * Finds point-wise minima of two data fields.
- *
- * Since: 1.7
  **/
 void
 gwy_data_field_max_of_fields(GwyDataField *result,

@@ -23,7 +23,10 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/grains.h>
+#include <libprocess/fractals.h>
+#include <libprocess/correct.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/unitool.h>

@@ -25,43 +25,36 @@
 
 G_BEGIN_DECLS
 
-/*distribution of heights*/
 void gwy_data_line_dh(GwyDataLine *data_line,
                       GwyDataLine *target_line,
                       gdouble ymin,
                       gdouble ymax,
                       gint nsteps);
 
-/*cumulative distribution of heights*/
 void gwy_data_line_cdh(GwyDataLine *data_line,
                       GwyDataLine *target_line,
                       gdouble ymin,
                       gdouble ymax,
                       gint nsteps);
 
-/*distribution of slopes*/
 void gwy_data_line_da(GwyDataLine *data_line,
                       GwyDataLine *target_line,
                       gdouble ymin,
                       gdouble ymax,
                       gint nsteps);
 
-/*cumulative distribution of slopes*/
 void gwy_data_line_cda(GwyDataLine *data_line,
                       GwyDataLine *target_line,
                       gdouble ymin,
                       gdouble ymax,
                       gint nsteps);
 
-/*autocorrelation function*/
 void gwy_data_line_acf(GwyDataLine *data_line,
                       GwyDataLine *target_line);
 
-/*height-height correlation function*/
 void gwy_data_line_hhcf(GwyDataLine *data_line,
                       GwyDataLine *target_line);
 
-/*power spectral density function*/
 void gwy_data_line_psdf(GwyDataLine *data_line,
                       GwyDataLine *target_line,
                       gint windowing,

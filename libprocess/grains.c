@@ -18,13 +18,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <string.h>
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "filters.h"
 #include "arithmetic.h"
-#include "datafield.h"
+#include "stats.h"
+#include "grains.h"
 
 /*local functions*/
 static gint step_by_one                   (GwyDataField *data_field,
@@ -71,10 +71,14 @@ static gint gwy_data_field_fill_one_grain (GwyDataField *dfield,
  **/
 void
 gwy_data_field_grains_mark_height(GwyDataField *data_field,
-                                  GwyDataField *grain_field, gdouble threshval,
+                                  GwyDataField *grain_field,
+                                  gdouble threshval,
                                   gboolean below)
 {
     gdouble min, max;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
 
     gwy_data_field_area_copy(data_field, grain_field,
                              0, 0, data_field->xres, data_field->yres, 0, 0);
@@ -102,10 +106,14 @@ gwy_data_field_grains_mark_height(GwyDataField *data_field,
  **/
 void
 gwy_data_field_grains_mark_slope(GwyDataField *data_field,
-                                 GwyDataField *grain_field, gdouble threshval,
+                                 GwyDataField *grain_field,
+                                 gdouble threshval,
                                  gboolean below)
 {
     gdouble min, max;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
 
     gwy_data_field_area_copy(data_field, grain_field,
                              0, 0, data_field->xres, data_field->yres, 0, 0);
@@ -145,19 +153,17 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
     gint i;
     gdouble xres, yres, min, max;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
+
     xres = data_field->xres;
     yres = data_field->yres;
 
-    masky = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
-                                              data_field->xreal,
-                                              data_field->yreal,
-                                              FALSE));
-
+    masky = gwy_data_field_duplicate(data_field);
     gwy_data_field_area_copy(data_field, grain_field, 0, 0, xres, yres, 0, 0);
-    gwy_data_field_area_copy(data_field, masky, 0, 0, xres, yres, 0, 0);
-    gwy_data_field_area_filter_sobel(grain_field, GTK_ORIENTATION_HORIZONTAL,
+    gwy_data_field_area_filter_sobel(grain_field, GWY_ORIENTATION_HORIZONTAL,
                                      0, 0, xres, yres);
-    gwy_data_field_area_filter_sobel(masky, GTK_ORIENTATION_HORIZONTAL,
+    gwy_data_field_area_filter_sobel(masky, GWY_ORIENTATION_HORIZONTAL,
                                      0, 0, xres, yres);
 
     gdata = grain_field->data;
@@ -194,25 +200,25 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
 void
 gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                      GwyDataField *grain_field,
-                                     gint locate_steps, gint locate_thresh,
-                                     gdouble locate_dropsize, gint wshed_steps,
-                                     gdouble wshed_dropsize, gboolean prefilter,
+                                     gint locate_steps,
+                                     gint locate_thresh,
+                                     gdouble locate_dropsize,
+                                     gint wshed_steps,
+                                     gdouble wshed_dropsize,
+                                     gboolean prefilter,
                                      gboolean below)
 {
     GwyDataField *min, *water, *mark_dfield;
     gint xres, yres, i;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
+
     xres = data_field->xres;
     yres = data_field->yres;
 
-    min = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
-                                            data_field->xreal,
-                                            data_field->yreal,
-                                            TRUE));
-    water = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
-                                              data_field->xreal,
-                                              data_field->yreal,
-                                              TRUE));
+    min = gwy_data_field_new_alike(data_field, TRUE);
+    water = gwy_data_field_new_alike(data_field, TRUE);
     mark_dfield = gwy_data_field_duplicate(data_field);
     if (below)
         gwy_data_field_multiply(mark_dfield, -1.0);
@@ -269,16 +275,8 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                           gboolean below)
 {
     if (status->state == GWY_WSHED_INIT) {
-        status->min = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                                        data_field->yres,
-                                                        data_field->xreal,
-                                                        data_field->yreal,
-                                                        TRUE));
-        status->water = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                                          data_field->yres,
-                                                          data_field->xreal,
-                                                          data_field->yreal,
-                                                          TRUE));
+        status->min = gwy_data_field_new_alike(data_field->xres, TRUE);
+        status->water = gwy_data_field_new_alike(data_field, TRUE);
         status->mark_dfield = gwy_data_field_duplicate(data_field);
         if (below)
             gwy_data_field_multiply(status->mark_dfield, -1.0);
@@ -433,12 +431,15 @@ gwy_data_field_grains_extract_grain(GwyDataField *grain_field,
  * Removes all grain below specified area.
  **/
 void
-gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
+gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
+                                     gint size)
 {
     gint i, xres, yres, ngrains;
     gdouble *data;
     gint *grain_size;
     gint *grains;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
 
     xres = grain_field->xres;
     yres = grain_field->yres;
@@ -489,6 +490,9 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
     gdouble *data;
     gboolean *grain_kill;
     gint *grains;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
 
     xres = grain_field->xres;
     yres = grain_field->yres;
@@ -552,6 +556,8 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
     gint *grains;
     gdouble s, sigma;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
+
     xres = grain_field->xres;
     yres = grain_field->yres;
 
@@ -560,8 +566,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
     if (!ngrains) {
         gwy_data_line_resample(distribution, 2, GWY_INTERPOLATION_NONE);
         gwy_data_line_fill(distribution, 0);
-        gwy_data_line_set_real(distribution,
-                               gwy_data_field_get_xres(grain_field));
+        gwy_data_line_set_real(distribution, xres);
         return;
     }
 
@@ -851,10 +856,7 @@ mark_grain_boundaries(GwyDataField *grain_field)
 
     xres = grain_field->xres;
     yres = grain_field->yres;
-    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
-                                               grain_field->xreal,
-                                               grain_field->yreal,
-                                               FALSE));
+    buffer = gwy_data_field_duplicate(grain_field);
     gwy_data_field_copy(grain_field, buffer);
     data = buffer->data;
 

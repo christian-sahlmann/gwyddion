@@ -22,7 +22,8 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/inttrans.h>
+#include <libprocess/cwt.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
@@ -37,7 +38,7 @@ typedef struct {
     gboolean preserve;
     gdouble scale;
     GwyInterpolationType interp;
-    GwyCWTWaveletType wavelet;
+    Gwy2DCWTWaveletType wavelet;
 } CWTArgs;
 
 typedef struct {
@@ -210,7 +211,7 @@ cwt_dialog(CWTArgs *args)
                          controls.interp);
     controls.wavelet
         = gwy_option_menu_2dcwt(G_CALLBACK(wavelet_changed_cb),
-                                        args, args->wavelet);
+                                args, args->wavelet);
     gwy_table_attach_row(table, 3, _("_Wavelet type:"), "",
                          controls.wavelet);
 
@@ -293,7 +294,7 @@ cwt_sanitize_args(CWTArgs *args)
     args->preserve = !!args->preserve;
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-    args->wavelet = MIN(args->wavelet, GWY_CWT_MORLET);
+    args->wavelet = MIN(args->wavelet, GWY_2DCWT_HAT);
     args->scale = CLAMP(args->scale, 0.0, 1000.0);
 }
 

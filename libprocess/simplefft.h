@@ -35,13 +35,16 @@ typedef enum {
   GWY_WINDOWING_RECT       = 6
 } GwyWindowingType;
 
-/*2^N fft algorithm*/
-gint gwy_fft_hum(gint dir, gdouble *re_in, gdouble *im_in,
-                 gdouble *re_out, gdouble *im_out, gint n);
+gint gwy_fft_hum(gint dir,
+                 gdouble *re_in,
+                 gdouble *im_in,
+                 gdouble *re_out,
+                 gdouble *im_out,
+                 gint n);
 
-/*apply windowing*/
-void gwy_fft_window(gdouble *data, gint n, GwyWindowingType windowing);
-
+void gwy_fft_window(gdouble *data,
+                    gint n,
+                    GwyWindowingType windowing);
 
 G_END_DECLS
 

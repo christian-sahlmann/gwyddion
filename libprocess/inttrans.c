@@ -18,21 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <string.h>
-#include <stdlib.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "datafield.h"
-
-/* Private DataField functions */
-void           _gwy_data_field_initialize        (GwyDataField *a,
-                                                  gint xres,
-                                                  gint yres,
-                                                  gdouble xreal,
-                                                  gdouble yreal,
-                                                  gboolean nullme);
-void           _gwy_data_field_free              (GwyDataField *a);
+#include "inttrans.h"
+#include "cwt.h"
 
 static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
                                                   GwyDataField *imag_field,
@@ -68,21 +57,19 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
                      GwyInterpolationType interpolation,
                      gboolean preserverms, gboolean level)
 {
-    GwyDataField rh, ih;
+    GwyDataField *rh, *ih;
 
-    _gwy_data_field_initialize(&rh, ra->xres, ra->yres,
-                               ra->xreal, ra->yreal, FALSE);
-    _gwy_data_field_initialize(&ih, ra->xres, ra->yres,
-                               ra->xreal, ra->yreal, FALSE);
-    gwy_data_field_xfft(ra, ia, &rh, &ih, fft,
+    rh = gwy_data_field_new_alike(ra, FALSE);
+    ih = gwy_data_field_new_alike(ra, FALSE);
+    gwy_data_field_xfft(ra, ia, rh, ih, fft,
                         windowing, direction, interpolation,
                         preserverms, level);
-    gwy_data_field_yfft(&rh, &ih, rb, ib, fft,
+    gwy_data_field_yfft(rh, ih, rb, ib, fft,
                         windowing, direction, interpolation,
                         preserverms, level);
 
-    _gwy_data_field_free(&rh);
-    _gwy_data_field_free(&ih);
+    g_object_unref(rh);
+    g_object_unref(ih);
 
     gwy_data_field_invalidate(rb);
     gwy_data_field_invalidate(ib);
@@ -111,21 +98,19 @@ gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
                           GwyInterpolationType interpolation,
                           gboolean preserverms, gboolean level)
 {
-    GwyDataField rh, ih;
+    GwyDataField *rh, *ih;
 
-    _gwy_data_field_initialize(&rh, ra->xres, ra->yres,
-                               ra->xreal, ra->yreal, FALSE);
-    _gwy_data_field_initialize(&ih, ra->xres, ra->yres,
-                               ra->xreal, ra->yreal, FALSE);
-    gwy_data_field_xfft_real(ra, &rh, &ih, fft,
+    rh = gwy_data_field_new_alike(ra, FALSE);
+    ih = gwy_data_field_new_alike(ra, FALSE);
+    gwy_data_field_xfft_real(ra, rh, ih, fft,
                              windowing, direction, interpolation,
                              preserverms, level);
-    gwy_data_field_yfft(&rh, &ih, rb, ib, fft,
+    gwy_data_field_yfft(rh, ih, rb, ib, fft,
                         windowing, direction, interpolation,
                         preserverms, level);
 
-    _gwy_data_field_free(&rh);
-    _gwy_data_field_free(&ih);
+    g_object_unref(rh);
+    g_object_unref(ih);
 
     gwy_data_field_invalidate(rb);
     gwy_data_field_invalidate(ib);
@@ -143,7 +128,7 @@ gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
 gint
 gwy_data_field_get_fft_res(gint data_res)
 {
-    return (gint) pow (2,((gint) floor(log ((gdouble)data_res)/log (2.0)+0.5)));
+    return (gint)pow(2, ((gint)floor(log((gdouble)data_res)/log(2.0) + 0.5)));
 }
 
 
@@ -158,23 +143,21 @@ void
 gwy_data_field_2dffthumanize(GwyDataField *a)
 {
     gint i, j, im, jm, xres;
-    GwyDataField b;
+    GwyDataField *b;
 
-    _gwy_data_field_initialize(&b, a->xres, a->yres, a->xreal, a->yreal, FALSE);
-    gwy_data_field_copy(a, &b);
-
+    b = gwy_data_field_duplicate(a);
     im = a->yres/2;
     jm = a->xres/2;
     xres = a->xres;
     for (i = 0; i < im; i++) {
         for (j = 0; j < jm; j++) {
-            a->data[(j + jm) + (i + im)*xres] = b.data[j + i*xres];
-            a->data[(j + jm) + i*xres] = b.data[j + (i + im)*xres];
-            a->data[j + (i + im)*xres] = b.data[(j + jm) + i*xres];
-            a->data[j + i*xres] = b.data[(j + jm) + (i + im)*xres];
+            a->data[(j + jm) + (i + im)*xres] = b->data[j + i*xres];
+            a->data[(j + jm) + i*xres] = b->data[j + (i + im)*xres];
+            a->data[j + (i + im)*xres] = b->data[(j + jm) + i*xres];
+            a->data[j + i*xres] = b->data[(j + jm) + (i + im)*xres];
         }
     }
-    _gwy_data_field_free(&b);
+    g_object_unref(b);
 }
 
 /**
@@ -452,103 +435,101 @@ gwy_data_field_cwt(GwyDataField *data_field,
                    gdouble scale,
                    Gwy2DCWTWaveletType wtype)
 {
-   GwyDataField hlp_r;
-   GwyDataField hlp_i;
-   GwyDataField imag_field;
+    GwyDataField *hlp_r, *hlp_i, *imag_field;
 
-   _gwy_data_field_initialize(&hlp_r, data_field->xres, data_field->yres,
-                              data_field->xreal, data_field->yreal, FALSE);
-   _gwy_data_field_initialize(&hlp_i, data_field->xres, data_field->yres,
-                              data_field->xreal, data_field->yreal, FALSE);
-   _gwy_data_field_initialize(&imag_field, data_field->xres, data_field->yres,
-                              data_field->xreal, data_field->yreal, TRUE);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
-   gwy_data_field_2dfft(data_field,
-                        &imag_field,
-                        &hlp_r,
-                        &hlp_i,
-                        gwy_data_line_fft_hum,
-                        GWY_WINDOWING_RECT,
-                        1,
-                        interpolation,
-                        FALSE,
-                        FALSE);
-   gwy_data_field_mult_wav(&hlp_r, &hlp_i, scale, wtype);
+    hlp_r = gwy_data_field_new_alike(data_field, FALSE);
+    hlp_i = gwy_data_field_new_alike(data_field, FALSE);
+    imag_field = gwy_data_field_new_alike(data_field, TRUE);
 
-   gwy_data_field_2dfft(&hlp_r,
-                        &hlp_i,
-                        data_field,
-                        &imag_field,
-                        gwy_data_line_fft_hum,
-                        GWY_WINDOWING_RECT,
-                        -1,
-                        interpolation,
-                        FALSE,
-                        FALSE);
+    gwy_data_field_2dfft(data_field,
+                         imag_field,
+                         hlp_r,
+                         hlp_i,
+                         gwy_data_line_fft_hum,
+                         GWY_WINDOWING_RECT,
+                         1,
+                         interpolation,
+                         FALSE,
+                         FALSE);
+    gwy_data_field_mult_wav(hlp_r, hlp_i, scale, wtype);
 
-   _gwy_data_field_free(&hlp_r);
-   _gwy_data_field_free(&hlp_i);
-   _gwy_data_field_free(&imag_field);
+    gwy_data_field_2dfft(hlp_r,
+                         hlp_i,
+                         data_field,
+                         imag_field,
+                         gwy_data_line_fft_hum,
+                         GWY_WINDOWING_RECT,
+                         -1,
+                         interpolation,
+                         FALSE,
+                         FALSE);
+
+    g_object_unref(hlp_r);
+    g_object_unref(hlp_i);
+    g_object_unref(imag_field);
 
     gwy_data_field_invalidate(data_field);
 }
 
-void 
-gwy_data_field_fft_filter_1d(GwyDataField *data_field, 
+void
+gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                              GwyDataField *result_field,
-                                  GwyDataLine *weights,
-                                  GtkOrientation orientation,
-                                  GwyInterpolationType interpolation)
+                             GwyDataLine *weights,
+                             GwyOrientation orientation,
+                             GwyInterpolationType interpolation)
 {
     gint i, j;
     GwyDataField *idata_field, *hlp_dfield, *hlp_idfield, *iresult_field;
     GwyDataLine *dline;
-    
-    idata_field = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field, TRUE));
-    hlp_dfield = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field, TRUE));
-    hlp_idfield = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field, TRUE));
-    iresult_field = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field, TRUE));
-     
-    dline = GWY_DATA_LINE(gwy_data_line_new(data_field->xres, data_field->xres, FALSE));
-   
-    if (orientation == GTK_ORIENTATION_VERTICAL) gwy_data_field_rotate(data_field, 90, interpolation);
-    
+
+    idata_field = gwy_data_field_new_alike(data_field, TRUE);
+    hlp_dfield = gwy_data_field_new_alike(data_field, TRUE);
+    hlp_idfield = gwy_data_field_new_alike(data_field, TRUE);
+    iresult_field = gwy_data_field_new_alike(data_field, TRUE);
+
+    dline = GWY_DATA_LINE(gwy_data_line_new(data_field->xres, data_field->xres,
+                                            FALSE));
+
+    if (orientation == GWY_ORIENTATION_VERTICAL)
+        gwy_data_field_rotate(data_field, 90, interpolation);
+
     gwy_data_field_xfft(data_field, result_field,
                     hlp_dfield, hlp_idfield,
                     gwy_data_line_fft_hum, GWY_WINDOWING_NONE,
                     1, interpolation,
                     FALSE, FALSE);
 
-    if (orientation == GTK_ORIENTATION_VERTICAL) gwy_data_field_rotate(data_field, -90, interpolation);
-    
+    if (orientation == GWY_ORIENTATION_VERTICAL)
+        gwy_data_field_rotate(data_field, -90, interpolation);
+
     gwy_data_line_resample(weights, hlp_dfield->xres/2, interpolation);
-    for (i=0; i<hlp_dfield->yres; i++)
-    {
+    for (i = 0; i < hlp_dfield->yres; i++) {
         gwy_data_field_get_row(hlp_dfield, dline, i);
-        for (j=0; j<weights->res; j++)
-        {
+        for (j = 0; j < weights->res; j++) {
             dline->data[j] *= weights->data[j];
             dline->data[dline->res - j - 1] *= weights->data[j];
         }
         gwy_data_field_set_row(hlp_dfield, dline, i);
 
         gwy_data_field_get_row(hlp_idfield, dline, i);
-        for (j=0; j<weights->res; j++)
-        {
+        for (j = 0; j < weights->res; j++) {
             dline->data[j] *= weights->data[j];
             dline->data[dline->res - j - 1] *= weights->data[j];
         }
         gwy_data_field_set_row(hlp_idfield, dline, i);
     }
-   
+
     gwy_data_field_xfft(hlp_dfield, hlp_idfield,
                     result_field, iresult_field,
                     gwy_data_line_fft_hum, GWY_WINDOWING_NONE,
                     -1, interpolation,
                     FALSE, FALSE);
-    
-    if (orientation == GTK_ORIENTATION_VERTICAL) gwy_data_field_rotate(result_field, -90, interpolation);
-    
+
+    if (orientation == GWY_ORIENTATION_VERTICAL)
+        gwy_data_field_rotate(result_field, -90, interpolation);
+
     g_object_unref(idata_field);
     g_object_unref(hlp_dfield);
     g_object_unref(hlp_idfield);

@@ -92,7 +92,7 @@ gint   gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                                              gint brcol,
                                              gint brrow,
                                              GwySFOutputType type,
-                                             GtkOrientation orientation,
+                                             GwyOrientation orientation,
                                              GwyInterpolationType interpolation,
                                              GwyWindowingType windowing,
                                              gint nstats);

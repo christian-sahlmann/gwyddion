@@ -18,12 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <string.h>
-#include <stdlib.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
+#include "stats.h"
 
 /**
  * gwy_data_field_get_correlation_score:

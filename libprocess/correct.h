@@ -35,27 +35,16 @@ typedef enum {
     GWY_SYMMETRY_LAST
 } GwyPlaneSymmetry;
 
-void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
-                                              GwyDataField *mask_field,
-                                              GwyDataField *buffer_field,
-                                              gdouble *error,
-                                              gdouble *corfactor);
-
-void gwy_data_field_correct_average(GwyDataField *data_field,
-                                    GwyDataField *mask_field);
-
-void gwy_data_field_mask_outliers(GwyDataField *data_field,
-                                  GwyDataField *mask_field,
-                                  gdouble thresh);
-
-/*
-void gwy_data_field_mark_scars(GwyDataField *data_field,
-                               GwyDataField *scar_field,
-                               gdouble threshold_high,
-                               gdouble threshold_low,
-                               gdouble min_scar_len,
-                               gdouble max_scar_width);
-*/
+void gwy_data_field_correct_laplace_iteration (GwyDataField *data_field,
+                                               GwyDataField *mask_field,
+                                               GwyDataField *buffer_field,
+                                               gdouble *error,
+                                               gdouble *corfactor);
+void gwy_data_field_correct_average           (GwyDataField *data_field,
+                                               GwyDataField *mask_field);
+void gwy_data_field_mask_outliers             (GwyDataField *data_field,
+                                               GwyDataField *mask_field,
+                                               gdouble thresh);
 
 GwyPlaneSymmetry gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
                                                           gdouble *correction);

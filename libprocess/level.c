@@ -22,6 +22,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
+#include "level.h"
 
 #ifndef HAVE_HYPOT
 #define hypot(x,y) sqrt((x)*(x) + (y)*(y))

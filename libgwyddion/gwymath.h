@@ -21,6 +21,7 @@
 #ifndef __GWY_MATH_H__
 #define __GWY_MATH_H__
 
+#include <glib.h>
 #include <math.h>
 
 G_BEGIN_DECLS

@@ -64,24 +64,21 @@ void gwy_data_field_area_filter_laplacian      (GwyDataField *data_field,
                                                 gint width,
                                                 gint height);
 void gwy_data_field_filter_sobel               (GwyDataField *data_field,
-                                                GtkOrientation orientation);
+                                                GwyOrientation orientation);
 void gwy_data_field_area_filter_sobel          (GwyDataField *data_field,
-                                                GtkOrientation orientation,
+                                                GwyOrientation orientation,
                                                 gint col,
                                                 gint row,
                                                 gint width,
                                                 gint height);
 void gwy_data_field_filter_prewitt             (GwyDataField *data_field,
-                                                GtkOrientation orientation);
+                                                GwyOrientation orientation);
 void gwy_data_field_area_filter_prewitt        (GwyDataField *data_field,
-                                                GtkOrientation orientation,
+                                                GwyOrientation orientation,
                                                 gint col,
                                                 gint row,
                                                 gint width,
                                                 gint height);
-void gwy_data_field_filter_canny               (GwyDataField *data_field,
-                                                gdouble threshold);
-
 void gwy_data_field_filter_minimum             (GwyDataField *data_field,
                                                 gint size);
 void gwy_data_field_area_filter_minimum        (GwyDataField *data_field,
@@ -112,6 +109,13 @@ void gwy_data_field_area_filter_kuwahara       (GwyDataField *data_field,
                                                 gint row,
                                                 gint width,
                                                 gint height);
+
+void gwy_data_field_filter_canny               (GwyDataField *data_field,
+                                                gdouble threshold);
+void gwy_data_field_shade                      (GwyDataField *data_field,
+                                                GwyDataField *target_field,
+                                                gdouble theta,
+                                                gdouble phi);
 
 G_END_DECLS
 

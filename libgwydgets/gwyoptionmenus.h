@@ -27,6 +27,8 @@
 #include <libgwyddion/gwynlfit.h>
 #include <libprocess/datafield.h>
 #include <libprocess/dwt.h>
+#include <libprocess/cwt.h>
+#include <libprocess/grains.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwyglmaterial.h>
 

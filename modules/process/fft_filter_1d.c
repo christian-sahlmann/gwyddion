@@ -24,10 +24,10 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/inttrans.h>
+#include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgets.h>
-#include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygrapher.h>
 #include <app/gwyapp.h>
 

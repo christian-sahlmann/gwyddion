@@ -19,10 +19,9 @@
  */
 
 #include <string.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "dataline.h"
+#include "linestats.h"
 
 /**
  * gwy_data_line_acf:

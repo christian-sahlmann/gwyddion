@@ -20,13 +20,19 @@
 
 #include <libgwyddion/gwymacros.h>
 
-#include <glib.h>
+#include <string.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 
-#include <libprocess/datafield.h>
 #include <libgwyddion/gwymath.h>
-#include "gwydgets.h"
+#include <libprocess/stats.h>
+#include "gwydatawindow.h"
+#include "gwystatusbar.h"
+#include "gwylayer-basic.h"
+#include "gwyhruler.h"
+#include "gwyvruler.h"
+#include "gwycoloraxis.h"
+#include "gwyoptionmenus.h"
 
 #define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
 

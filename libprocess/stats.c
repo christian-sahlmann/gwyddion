@@ -23,6 +23,9 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
+#include "level.h"
+#include "stats.h"
+#include "linestats.h"
 
 /* Private DataLine functions */
 void            _gwy_data_line_initialize        (GwyDataLine *a,
@@ -68,8 +71,6 @@ gwy_data_field_get_max(GwyDataField *a)
  * Finds maximum value in a rectangular part of a data field.
  *
  * Returns: The maximum value.
- *
- * Since: 1.2:
  **/
 gdouble
 gwy_data_field_area_get_max(GwyDataField *dfield,
@@ -136,8 +137,6 @@ gwy_data_field_get_min(GwyDataField *a)
  * Finds minimum value in a rectangular part of a data field.
  *
  * Returns: The minimum value.
- *
- * Since: 1.2
  **/
 gdouble
 gwy_data_field_area_get_min(GwyDataField *dfield,
@@ -202,8 +201,6 @@ gwy_data_field_get_sum(GwyDataField *a)
  * Sums values of a rectangular part of a data field.
  *
  * Returns: The sum of all values inside area.
- *
- * Since: 1.2
  **/
 gdouble
 gwy_data_field_area_get_sum(GwyDataField *dfield,
@@ -256,8 +253,6 @@ gwy_data_field_get_avg(GwyDataField *a)
  * Computes average value of a rectangular part of a data field.
  *
  * Returns: The average value.
- *
- * Since: 1.2.
  **/
 gdouble
 gwy_data_field_area_get_avg(GwyDataField *dfield,
@@ -304,8 +299,6 @@ gwy_data_field_get_rms(GwyDataField *a)
  * Computes root mean square value of a rectangular part of a data field.
  *
  * Returns: The root mean square value.
- *
- * Since: 1.2.
  **/
 gdouble
 gwy_data_field_area_get_rms(GwyDataField *dfield,
@@ -496,7 +489,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                                       gint ulcol, gint ulrow,
                                       gint brcol, gint brrow,
                                       GwySFOutputType type,
-                                      GtkOrientation orientation,
+                                      GwyOrientation orientation,
                                       GwyInterpolationType interpolation,
                                       GwyWindowingType windowing, gint nstats)
 {
@@ -521,7 +514,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                                           brcol-ulcol, brrow-ulrow);
     }
     else if (type == GWY_SF_OUTPUT_DA || type == GWY_SF_OUTPUT_CDA) {
-        if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+        if (orientation == GWY_ORIENTATION_HORIZONTAL) {
             for (i = ulcol; i < brcol; i++)
                 for (j = ulrow; j < brrow; j++) {
                     val = gwy_data_field_get_xder(data_field, i, j);
@@ -531,7 +524,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                         max = val;
                 }
         }
-        else if (orientation == GTK_ORIENTATION_VERTICAL) {
+        else if (orientation == GWY_ORIENTATION_VERTICAL) {
             for (i = ulcol; i < brcol; i++) {
                 for (j = ulrow; j < brrow; j++) {
                     val = gwy_data_field_get_yder(data_field, i, j);
@@ -545,7 +538,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     }
 
     /*average over profiles*/
-    if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+    if (orientation == GWY_ORIENTATION_HORIZONTAL) {
         size = brcol-ulcol;
         if (size < 10) {
             g_warning("Field too small");
@@ -621,7 +614,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
         g_object_unref(hlp_tarline);
 
     }
-    else if (orientation == GTK_ORIENTATION_VERTICAL) {
+    else if (orientation == GWY_ORIENTATION_VERTICAL) {
         size = brrow-ulrow;
         if (size < 10) {
             g_warning("Field too small");
@@ -733,8 +726,6 @@ gwy_data_field_get_surface_area(GwyDataField *a,
  * Computes surface area of a rectangular part of a data field.
  *
  * Returns: The surface area.
- *
- * Since: 1.2.
  **/
 gdouble
 gwy_data_field_area_get_surface_area(GwyDataField *dfield,
@@ -774,8 +765,6 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
  * Computes surface area of a rectangular part of a data field.
  *
  * Returns: Surface area (in real units).
- *
- * Since: 1.1
  **/
 static gdouble
 square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
@@ -826,8 +815,6 @@ square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
  *               will be used.
  *
  * Computes angular slope distribution.
- *
- * Since: 1.4.
  **/
 void
 gwy_data_field_slope_distribution(GwyDataField *dfield,
@@ -886,8 +873,6 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
  * Computes median value of a data field area.
  *
  * Returns: The median value.
- *
- * Since: 1.7
  **/
 gdouble
 gwy_data_field_area_get_median(GwyDataField *dfield,
@@ -928,8 +913,6 @@ gwy_data_field_area_get_median(GwyDataField *dfield,
  * Computes median value of a data field.
  *
  * Returns: The median value.
- *
- * Since: 1.7
  **/
 gdouble
 gwy_data_field_get_median(GwyDataField *dfield)
@@ -953,8 +936,6 @@ gwy_data_field_get_median(GwyDataField *dfield)
  *              the vector so that z-component is 1.
  *
  * Computes average normal vector of an area of a data field.
- *
- * Since: 1.9
  **/
 void
 gwy_data_field_area_get_normal_coeffs(GwyDataField *data_field,
@@ -1035,8 +1016,6 @@ gwy_data_field_area_get_normal_coeffs(GwyDataField *data_field,
  *              the vector so that z-component is 1.
  *
  * Computes average normal vector of a data field.
- *
- * Since: 1.9
  **/
 void
 gwy_data_field_get_normal_coeffs(GwyDataField *data_field,
@@ -1062,8 +1041,6 @@ gwy_data_field_get_normal_coeffs(GwyDataField *data_field,
  * @phi: Where phi angle (in radians) should be stored, or %NULL.
  *
  * Calculates the inclination of the image (polar and azimuth angle).
- *
- * Since: 1.9
  **/
 void
 gwy_data_field_area_get_inclination(GwyDataField *data_field,
@@ -1098,8 +1075,6 @@ gwy_data_field_area_get_inclination(GwyDataField *data_field,
  * @phi: Where phi angle (in radians) should be stored, or %NULL.
  *
  * Calculates the inclination of the image (polar and azimuth angle).
- *
- * Since: 1.9
  **/
 void
 gwy_data_field_get_inclination(GwyDataField *data_field,

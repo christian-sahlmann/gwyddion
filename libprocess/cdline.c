@@ -19,7 +19,6 @@
  */
 
 #include <string.h>
-#include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "dataline.h"

@@ -22,7 +22,8 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/inttrans.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
@@ -182,9 +183,9 @@ fft(GwyContainer *data, GwyRunType run)
     newsize = gwy_data_field_get_fft_res(xsize);
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
-    raout = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
-    ipout = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
-    imin = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
+    raout = gwy_data_field_new_alike(dfield, TRUE);
+    ipout = gwy_data_field_new_alike(dfield, TRUE);
+    imin = gwy_data_field_new_alike(dfield, TRUE);
 
     gwy_data_field_multiply(dfield, 1.0
                             /(gwy_data_field_get_max(dfield)
