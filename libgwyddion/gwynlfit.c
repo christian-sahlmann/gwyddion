@@ -1346,7 +1346,7 @@ fit_square(gdouble x,
     gint i;
     gdouble val, amplitude, shift; 
 
-    amplitude = 1.25*(b[3]-b[2])/2.0;
+    amplitude = (b[3]-b[2])/1.6;
     shift = b[2];
     val = 0;
     for (i=1; i<20; )
@@ -1356,7 +1356,7 @@ fit_square(gdouble x,
         i+=2;
     }
 
-    return amplitude*val + amplitude + shift;
+    return amplitude*val + (b[3]-b[2])/2 + shift;
 }
 
 static void
