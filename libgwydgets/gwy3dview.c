@@ -33,7 +33,7 @@
 #include <gtk/gtkgl.h>
 
 #include <libgwyddion/gwymacros.h>
-#include "gwy3dview.h"
+#include "gwydgets.h"
 
 #define DIG_2_RAD (G_PI / 180.0)
 #define RAD_2_DIG (180.0 / G_PI)
@@ -157,33 +157,6 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     widget_class->button_press_event = gwy_3d_view_button_press;
     widget_class->button_release_event = gwy_3d_view_button_release;
     widget_class->motion_notify_event = gwy_3d_view_motion_notify;
-
-    /*
-     * Configure OpenGL-capable visual.
-     */
-
-    /* Try double-buffered visual */
-    klass->glconfig = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB
-                                        | GDK_GL_MODE_DEPTH
-                                        | GDK_GL_MODE_DOUBLE);
-    if (klass->glconfig == NULL)
-    {
-        gwy_debug("*** Cannot find the double-buffered visual.\n");
-        gwy_debug("*** Trying single-buffered visual.\n");
-
-        /* Try single-buffered visual */
-        klass->glconfig = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB
-                                                     | GDK_GL_MODE_DEPTH);
-        if (klass->glconfig == NULL)
-        {
-            gwy_debug("*** No appropriate OpenGL-capable visual found.\n");
-            /*
-              TODO: solve the situation without 3D driver in another way
-            */
-            exit(1);
-        }
-    }
-
 }
 
 static void
@@ -240,12 +213,16 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
 GtkWidget*
 gwy_3d_view_new(GwyContainer *data)
 {
+    GdkGLConfig *glconfig;
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
     Gwy3DViewClass * klass;
     const guchar * palette_name;
 
     gwy_debug("");
+
+    glconfig = gwy_widgets_get_gl_config();
+    g_return_val_if_fail(glconfig, NULL);
 
     if (data)
         g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
@@ -389,7 +366,7 @@ gwy_3d_view_new(GwyContainer *data)
     }
     klass = GWY_3D_VIEW_GET_CLASS(gwy3dview);
     gtk_widget_set_gl_capability(GTK_WIDGET(gwy3dview),
-                                 klass->glconfig,
+                                 glconfig,
                                  NULL,
                                  TRUE,
                                  GDK_GL_RGBA_TYPE);

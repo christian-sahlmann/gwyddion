@@ -102,13 +102,14 @@ struct _Gwy3DView {
     guint timeout_id;               /* Timeout id */
 
     gpointer reserved1;
+    gpointer reserved2;
 };
 
 struct _Gwy3DViewClass {
     GtkDrawingAreaClass parent_class;
 
-    GdkGLConfig * glconfig;
     gpointer reserved1;
+    gpointer reserved2;
 };
 
 GtkWidget*       gwy_3d_view_new               (GwyContainer * data);
