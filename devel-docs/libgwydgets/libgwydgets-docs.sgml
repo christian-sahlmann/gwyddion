@@ -7,6 +7,9 @@
 <!ENTITY libgwydgets-GwyDataViewLayer SYSTEM "sgml/gwydataviewlayer.sgml">
 <!ENTITY libgwydgets-GwyLayerBasic SYSTEM "sgml/gwylayer-basic.sgml">
 <!ENTITY libgwydgets-GwyLayerSelect SYSTEM "sgml/gwylayer-select.sgml">
+<!ENTITY libgwydgets-GwyRuler SYSTEM "sgml/gwyruler.sgml">
+<!ENTITY libgwydgets-GwyHRuler SYSTEM "sgml/gwyhruler.sgml">
+<!ENTITY libgwydgets-GwyVRuler SYSTEM "sgml/gwyvruler.sgml">
 ]>
 <book id="index">
   <bookinfo>
@@ -23,5 +26,8 @@
     &libgwydgets-GwyDataViewLayer;
     &libgwydgets-GwyLayerBasic;
     &libgwydgets-GwyLayerSelect;
+    &libgwydgets-GwyRuler;
+    &libgwydgets-GwyHRuler;
+    &libgwydgets-GwyVRuler;
   </chapter>
 </book>

@@ -1,0 +1,134 @@
+<!-- ##### SECTION Title ##### -->
+GwyDataViewLayer
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_data_view_layer_is_vector ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_wants_repaint ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_draw ##### -->
+<para>
+
+</para>
+
+@layer: 
+@drawable: 
+<!-- # Unused Parameters # -->
+@pixbuf: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_paint ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_button_press ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_button_release ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_motion_notify ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_key_press ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_key_release ##### -->
+<para>
+
+</para>
+
+@layer: 
+@event: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_plugged ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_unplugged ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+
+<!-- ##### SIGNAL GwyDataViewLayer::plugged ##### -->
+<para>
+
+</para>
+
+@gwydataviewlayer: the object which received the signal.
+
+<!-- ##### SIGNAL GwyDataViewLayer::unplugged ##### -->
+<para>
+
+</para>
+
+@gwydataviewlayer: the object which received the signal.
+

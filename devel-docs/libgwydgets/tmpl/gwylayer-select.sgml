@@ -1,0 +1,37 @@
+<!-- ##### SECTION Title ##### -->
+GwyLayerSelect
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_layer_select_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_select_get_selection ##### -->
+<para>
+
+</para>
+
+@layer: 
+@xmin: 
+@ymin: 
+@xmax: 
+@ymax: 
+@Returns: 
+
+

@@ -1,0 +1,25 @@
+<!-- ##### SECTION Title ##### -->
+GwyDataWindow
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_data_window_new ##### -->
+<para>
+
+</para>
+
+@data_view: 
+@Returns: 
+
+

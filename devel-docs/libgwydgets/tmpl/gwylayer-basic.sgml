@@ -1,0 +1,44 @@
+<!-- ##### SECTION Title ##### -->
+GwyLayerBasic
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_layer_basic_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+<!-- # Unused Parameters # -->
+@data: 
+
+
+<!-- ##### FUNCTION gwy_layer_basic_set_palette ##### -->
+<para>
+
+</para>
+
+@layer: 
+@palette: 
+
+
+<!-- ##### FUNCTION gwy_layer_basic_get_palette ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+

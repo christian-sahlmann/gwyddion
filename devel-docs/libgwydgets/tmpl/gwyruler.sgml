@@ -1,0 +1,82 @@
+<!-- ##### SECTION Title ##### -->
+GwyRuler
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyUnitsPlacement ##### -->
+<para>
+
+</para>
+
+@GWY_UNITS_PLACEMENT_NONE: 
+@GWY_UNITS_PLACEMENT_AT_ZERO: 
+
+<!-- ##### FUNCTION gwy_ruler_set_range ##### -->
+<para>
+
+</para>
+
+@ruler: 
+@lower: 
+@upper: 
+@position: 
+@max_size: 
+
+
+<!-- ##### FUNCTION gwy_ruler_draw_ticks ##### -->
+<para>
+
+</para>
+
+@ruler: 
+
+
+<!-- ##### FUNCTION gwy_ruler_draw_pos ##### -->
+<para>
+
+</para>
+
+@ruler: 
+
+
+<!-- ##### FUNCTION gwy_ruler_get_range ##### -->
+<para>
+
+</para>
+
+@ruler: 
+@lower: 
+@upper: 
+@position: 
+@max_size: 
+
+
+<!-- ##### FUNCTION gwy_ruler_get_units_placement ##### -->
+<para>
+
+</para>
+
+@ruler: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_ruler_set_units_placement ##### -->
+<para>
+
+</para>
+
+@ruler: 
+@placement: 
+
+
