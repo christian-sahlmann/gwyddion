@@ -5,6 +5,7 @@
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
+#include <gtk/gtkwindow.h>
 
 #ifndef GWY_TYPE_SPHERE_COORDS
 #  include <libgwydgets/gwydataview.h>
