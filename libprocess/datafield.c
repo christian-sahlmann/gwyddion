@@ -716,6 +716,8 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
  * This function invalidates any cached information, use
  * gwy_data_field_get_data_const() if you are not going to change the data.
  *
+ * See gwy_data_field_invalidate() for some discussion.
+ *
  * Returns: The data field as a pointer to an array of
  *          gwy_data_field_get_xres()*gwy_data_field_get_yres() #gdouble's,
  *          ordered by lines.  I.e., they are to be accessed as
@@ -735,6 +737,8 @@ gwy_data_field_get_data(GwyDataField *data_field)
  * Gets the data of a data field, read-only.
  *
  * Use gwy_data_field_get_data() if you want to change the data.
+ *
+ * See gwy_data_field_invalidate() for some discussion.
  *
  * Returns: The data field as a pointer to an array of
  *          gwy_data_field_get_xres()*gwy_data_field_get_yres() #gdouble's,
@@ -2150,6 +2154,33 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  *
  * The #GwyDataField struct contains private data only and should be accessed
  * using the functions below.
+ **/
+
+/**
+ * GwyDataFieldClass:
+ *
+ * The #GwyDataFieldClass struct contains private data only.
+ **/
+
+/**
+ * gwy_data_field_invalidate:
+ * @data_field: A data field to invalidate.
+ *
+ * Invalidates cached data field stats.
+ *
+ * User code should rarely need this macro, as all #GwyDataField methods do
+ * proper invalidation when they change data, as well as
+ * gwy_data_field_get_data() does.
+ *
+ * However, if you get raw data with gwy_data_field_get_data() and then mix
+ * direct changes to it with calls to methods like gwy_data_field_get_max(),
+ * you may need to explicitely invalidate cached values to let
+ * gwy_data_field_get_max() know it has to recompute the maximum.
+ *
+ * Note, no stats are actually cached in Gwyddion 1.x, but they will be cached
+ * in 2.x.
+ *
+ * Since: 1.7
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

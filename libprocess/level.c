@@ -31,39 +31,41 @@ void            _gwy_data_line_free              (GwyDataLine *a);
 
 /**
  * gwy_data_field_plane_coeffs:
- * @a: A data field
- * @ap: Constant coefficient.
- * @bp: X coefficient.
- * @cp: Y coefficient.
+ * @data_field: A data field.
+ * @pa: Where constant coefficient should be stored (or %NULL).
+ * @pbx: Where x plane coefficient should be stored (or %NULL).
+ * @pby: Where y plane coefficient should be stored (or %NULL).
  *
- * Evaluates coefficients of plane fit of data field.
+ * Fits a plane through a data field.
+ *
+ * Returned coefficients are in real (physical) units.
  **/
 void
-gwy_data_field_plane_coeffs(GwyDataField *a,
-                            gdouble *ap, gdouble *bp, gdouble *cp)
+gwy_data_field_plane_coeffs(GwyDataField *data_field,
+                            gdouble *pa, gdouble *pbx, gdouble *pby)
 {
     gdouble sumxi, sumxixi, sumyi, sumyiyi;
     gdouble sumsi = 0.0;
     gdouble sumsixi = 0.0;
     gdouble sumsiyi = 0.0;
-    gdouble nx = a->xres;
-    gdouble ny = a->yres;
+    gdouble nx = data_field->xres;
+    gdouble ny = data_field->yres;
     gdouble bx, by;
     gdouble *pdata;
     gint i;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
     sumxi = (nx-1)/2;
     sumxixi = (2*nx-1)*(nx-1)/6;
     sumyi = (ny-1)/2;
     sumyiyi = (2*ny-1)*(ny-1)/6;
 
-    pdata = a->data;
-    for (i = 0; i < a->xres*a->yres; i++) {
+    pdata = data_field->data;
+    for (i = 0; i < data_field->xres*data_field->yres; i++) {
         sumsi += *pdata;
-        sumsixi += *pdata * (i%a->xres);
-        sumsiyi += *pdata * (i/a->xres);
+        sumsixi += *pdata * (i%data_field->xres);
+        sumsiyi += *pdata * (i/data_field->xres);
         *pdata++;
     }
     sumsi /= nx*ny;
@@ -72,17 +74,17 @@ gwy_data_field_plane_coeffs(GwyDataField *a,
 
     bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
     by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
-    if (bp)
-        *bp = bx*nx/a->xreal;
-    if (cp)
-        *cp = by*ny/a->yreal;
-    if (ap)
-        *ap = sumsi - bx*sumxi - by*sumyi;
+    if (pbx)
+        *pbx = bx*nx/data_field->xreal;
+    if (pby)
+        *pby = by*ny/data_field->yreal;
+    if (pa)
+        *pa = sumsi - bx*sumxi - by*sumyi;
 }
 
 /**
  * gwy_data_field_area_fit_plane:
- * @dfield: A data field
+ * @data_field: A data field
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -93,10 +95,12 @@ gwy_data_field_plane_coeffs(GwyDataField *a,
  *
  * Fits a plane through a rectangular part of a data field.
  *
+ * Returned coefficients are in real (physical) units.
+ *
  * Since: 1.2.
  **/
 void
-gwy_data_field_area_fit_plane(GwyDataField *dfield,
+gwy_data_field_area_fit_plane(GwyDataField *data_field,
                               gint col, gint row, gint width, gint height,
                               gdouble *pa, gdouble *pbx, gdouble *pby)
 {
@@ -108,17 +112,17 @@ gwy_data_field_area_fit_plane(GwyDataField *dfield,
     gdouble *datapos;
     gint i, j;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 0 && height >= 0
-                     && col + width <= dfield->xres
-                     && row + height <= dfield->yres);
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
     /* try to return something reasonable even in degenerate cases */
     if (!width || !height)
         a = bx = by = 0.0;
     else if (height == 1 && width == 1) {
-        a = dfield->data[row*dfield->xres + col];
+        a = data_field->data[row*data_field->xres + col];
         bx = by = 0.0;
     }
     else {
@@ -127,9 +131,9 @@ gwy_data_field_area_fit_plane(GwyDataField *dfield,
         sumxixi = (2.0*width - 1.0)*(width - 1.0)/6;
         sumyiyi = (2.0*height - 1.0)*(height - 1.0)/6;
 
-        datapos = dfield->data + row*dfield->xres + col;
+        datapos = data_field->data + row*data_field->xres + col;
         for (i = 0; i < height; i++) {
-            gdouble *drow = datapos + i*dfield->xres;
+            gdouble *drow = datapos + i*data_field->xres;
 
             for (j = 0; j < width; j++) {
                 sumsi += drow[j];
@@ -152,8 +156,8 @@ gwy_data_field_area_fit_plane(GwyDataField *dfield,
             by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
 
         a = sumsi - bx*sumxi - by*sumyi;
-        bx *= width/dfield->xreal;
-        by *= height/dfield->yreal;
+        bx *= width/data_field->xreal;
+        by *= height/data_field->yreal;
     }
 
     if (pa)
@@ -166,70 +170,79 @@ gwy_data_field_area_fit_plane(GwyDataField *dfield,
 
 /**
  * gwy_data_field_plane_level:
- * @a: A data field
- * @ap: Constant coefficient.
- * @bp: X coefficient.
- * @cp: Y coefficient.
+ * @data_field: A data field.
+ * @a: Constant coefficient.
+ * @bx: X coefficient.
+ * @by: Y coefficient.
  *
- * Plane leveling.
+ * Subtracts plane from a data field..
+ *
+ * Coefficients should be in real (physical) units.
  **/
 void
-gwy_data_field_plane_level(GwyDataField *a, gdouble ap, gdouble bp, gdouble cp)
+gwy_data_field_plane_level(GwyDataField *data_field,
+                           gdouble a, gdouble bx, gdouble by)
 {
     gint i, j;
-    gdouble bpix = bp/a->xres*a->xreal;
-    gdouble cpix = cp/a->yres*a->yreal;
+    gdouble bpix = bx/data_field->xres*data_field->xreal;
+    gdouble cpix = by/data_field->yres*data_field->yreal;
 
-    for (i = 0; i < a->yres; i++) {
-        gdouble *row = a->data + i*a->xres;
-        gdouble rb = ap + cpix*i;
+    for (i = 0; i < data_field->yres; i++) {
+        gdouble *row = data_field->data + i*data_field->xres;
+        gdouble rb = a + cpix*i;
 
-        for (j = 0; j < a->xres; j++, row++)
+        for (j = 0; j < data_field->xres; j++, row++)
             *row -= rb + bpix*j;
     }
+
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
  * gwy_data_field_plane_rotate:
- * @a: A data field
- * @xangle: rotation angle in x direction (rotation along y axis)
- * @yangle: rotation angle in y direction (rotation along x axis)
- * @interpolation: interpolation type
+ * @data_field: A data field.
+ * @xangle: Rotation angle in x direction (rotation along y axis).
+ * @yangle: Rotation angle in y direction (rotation along x axis).
+ * @interpolation: Interpolation type.
  *
  * Performs rotation of plane along x and y axis.
  **/
 void
-gwy_data_field_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle,
+gwy_data_field_plane_rotate(GwyDataField *data_field,
+                            gdouble xangle,
+                            gdouble yangle,
                             GwyInterpolationType interpolation)
 {
     int k;
     GwyDataLine l;
 
     if (xangle != 0) {
-        _gwy_data_line_initialize(&l, a->xres, a->xreal, 0);
-        for (k = 0; k < a->yres; k++) {
-            gwy_data_field_get_row(a, &l, k);
+        _gwy_data_line_initialize(&l, data_field->xres, data_field->xreal, 0);
+        for (k = 0; k < data_field->yres; k++) {
+            gwy_data_field_get_row(data_field, &l, k);
             gwy_data_line_line_rotate(&l, -xangle, interpolation);
-            gwy_data_field_set_row(a, &l, k);
+            gwy_data_field_set_row(data_field, &l, k);
         }
         _gwy_data_line_free(&l);
     }
 
 
     if (yangle != 0) {
-        _gwy_data_line_initialize(&l, a->yres, a->yreal, 0);
-        for (k = 0; k < a->xres; k++) {
-            gwy_data_field_get_column(a, &l, k);
+        _gwy_data_line_initialize(&l, data_field->yres, data_field->yreal, 0);
+        for (k = 0; k < data_field->xres; k++) {
+            gwy_data_field_get_column(data_field, &l, k);
             gwy_data_line_line_rotate(&l, -yangle, interpolation);
-            gwy_data_field_set_column(a, &l, k);
+            gwy_data_field_set_column(data_field, &l, k);
         }
         _gwy_data_line_free(&l);
     }
+
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
  * gwy_data_field_area_fit_polynom:
- * @dfield: A data field
+ * @data_field: A data field
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -248,7 +261,7 @@ gwy_data_field_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle,
  * Since: 1.6
  **/
 gdouble*
-gwy_data_field_area_fit_polynom(GwyDataField *dfield,
+gwy_data_field_area_fit_polynom(GwyDataField *data_field,
                                 gint col, gint row,
                                 gint width, gint height,
                                 gint col_degree, gint row_degree,
@@ -257,17 +270,17 @@ gwy_data_field_area_fit_polynom(GwyDataField *dfield,
     gint r, c, i, j, size, xres, yres;
     gdouble *data, *sums, *m;
 
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     g_return_val_if_fail(row_degree >= 0 && col_degree >= 0, NULL);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width > 0 && height > 0
-                         && col + width <= dfield->xres
-                         && row + height <= dfield->yres,
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
                          NULL);
 
-    data = dfield->data;
-    xres = dfield->xres;
-    yres = dfield->yres;
+    data = data_field->data;
+    xres = data_field->xres;
+    yres = data_field->yres;
     size = (row_degree+1)*(col_degree+1);
     if (!coeffs)
         coeffs = g_new0(gdouble, size);
@@ -329,7 +342,7 @@ gwy_data_field_area_fit_polynom(GwyDataField *dfield,
 
 /**
  * gwy_data_field_area_subtract_polynom:
- * @dfield: A data field
+ * @data_field: A data field
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -344,7 +357,7 @@ gwy_data_field_area_fit_polynom(GwyDataField *dfield,
  * Since: 1.6
  **/
 void
-gwy_data_field_area_subtract_polynom(GwyDataField *dfield,
+gwy_data_field_area_subtract_polynom(GwyDataField *data_field,
                                      gint col, gint row,
                                      gint width, gint height,
                                      gint col_degree, gint row_degree,
@@ -353,17 +366,17 @@ gwy_data_field_area_subtract_polynom(GwyDataField *dfield,
     gint r, c, i, j, size, xres, yres;
     gdouble *data;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(coeffs);
     g_return_if_fail(row_degree >= 0 && col_degree >= 0);
     g_return_if_fail(col >= 0 && row >= 0
                      && width > 0 && height > 0
-                     && col + width <= dfield->xres
-                     && row + height <= dfield->yres);
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
-    data = dfield->data;
-    xres = dfield->xres;
-    yres = dfield->yres;
+    data = data_field->data;
+    xres = data_field->xres;
+    yres = data_field->yres;
     size = (row_degree+1)*(col_degree+1);
 
     for (r = row; r < row + height; r++) {
@@ -385,6 +398,8 @@ gwy_data_field_area_subtract_polynom(GwyDataField *dfield,
             data[r*xres + c] = z;
         }
     }
+
+    gwy_data_field_invalidate(data_field);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -129,6 +129,8 @@ create_pyramide(GwyDataField *tip, gdouble alpha, gint n, gdouble theta)
                 = height*(1 + vm/(radius*cos(G_PI/n)));
         }
     }
+
+    gwy_data_field_invalidate(tip);
 }
 
 static void
@@ -164,6 +166,8 @@ round_pyramide(GwyDataField *tip, gdouble angle, gint n, gdouble ballradius)
             }
         }
     }
+
+    gwy_data_field_invalidate(tip);
 }
 
 static void
@@ -365,7 +369,7 @@ gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset)
 }
 
 
-static gdouble **
+static gdouble**
 datafield_to_field(GwyDataField *datafield, gboolean maxzero)
 {
     gdouble **ret;
@@ -392,10 +396,12 @@ field_to_datafield(gdouble **field, GwyDataField *ret)
             ret->data[col  + ret->xres*row] = field[col][row];
         }
     }
+
+    gwy_data_field_invalidate(ret);
     return ret;
 }
 
-static gint **
+static gint**
 i_datafield_to_field(GwyDataField *datafield,
                      gboolean maxzero,
                      gdouble min,
@@ -431,6 +437,8 @@ i_field_to_datafield(gint **field,
                                              + min;
         }
     }
+
+    gwy_data_field_invalidate(ret);
     return ret;
 }
 
@@ -443,25 +451,30 @@ i_datafield_to_largefield(GwyDataField *datafield,
     gint **ret;
     gint col, row;
     gint xnew, ynew;
+    gint txr2, tyr2;
     gint minimum;
 
     minimum = (gint)((gwy_data_field_get_min(datafield) - min)/step);
     xnew = datafield->xres + tipfield->xres;
     ynew = datafield->yres + tipfield->yres;
+    txr2 = tipfield->xres/2;
+    tyr2 = tipfield->yres/2;
 
     ret = _gwy_morph_lib_iallocmatrix(xnew, ynew);
     for (col = 0; col < xnew; col++) {
         for (row = 0; row < ynew; row++) {
-            if (col >= tipfield->xres/2
-                && col < (datafield->xres + tipfield->xres/2)
-                && row >= tipfield->yres/2
-                && row < (datafield->yres + tipfield->yres/2))
-            ret[col][row] = (gint)(((datafield->data[col - tipfield->xres/2
-                + datafield->xres*(row - tipfield->yres/2)]) - min)/step);
+            if (col >= txr2
+                && col < (datafield->xres + txr2)
+                && row >= tyr2
+                && row < (datafield->yres + tyr2))
+            ret[col][row] = (gint)(((datafield->data[col - txr2
+                                     + datafield->xres*(row - tyr2)]) - min)
+                                   /step);
             else
                 ret[col][row] = minimum;
         }
     }
+
     return ret;
 }
 
@@ -474,21 +487,26 @@ i_largefield_to_datafield(gint **field,
 {
     gint col, row;
     gint xnew, ynew;
+    gint txr2, tyr2;
 
     xnew = ret->xres + tipfield->xres;
     ynew = ret->yres + tipfield->yres;
+    txr2 = tipfield->xres/2;
+    tyr2 = tipfield->yres/2;
 
     for (col = 0; col < xnew; col++) {
         for (row = 0; row < ynew; row++) {
-            if (col >= tipfield->xres/2
-                && col < (ret->xres + tipfield->xres/2)
-                && row >= tipfield->yres/2
-                && row < (ret->yres + tipfield->yres/2)) {
-                ret->data[col - tipfield->xres/2 + ret->xres*(row - tipfield->yres/2)]
+            if (col >= txr2
+                && col < (ret->xres + txr2)
+                && row >= tyr2
+                && row < (ret->yres + tyr2)) {
+                ret->data[col - txr2 + ret->xres*(row - tyr2)]
                     = field[col][row]*step + min;
             }
         }
     }
+
+    gwy_data_field_invalidate(ret);
     return ret;
 }
 
@@ -579,7 +597,8 @@ gwy_tip_dilation(GwyDataField *tip,
     /*free auxiliary data arrays*/
     _gwy_morph_lib_dfreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_dfreematrix(fsurface, surface->xres);
-    if (fresult) _gwy_morph_lib_dfreematrix(fresult, result->xres);
+    if (fresult)
+        _gwy_morph_lib_dfreematrix(fresult, result->xres);
     if (freetip)
         g_object_unref(buffertip);
     else
@@ -645,7 +664,8 @@ gwy_tip_erosion(GwyDataField *tip,
     /*free auxiliary data arrays*/
     _gwy_morph_lib_dfreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_dfreematrix(fsurface, surface->xres);
-    if (fresult) _gwy_morph_lib_dfreematrix(fresult, result->xres);
+    if (fresult)
+        _gwy_morph_lib_dfreematrix(fresult, result->xres);
     if (freetip)
         g_object_unref(buffertip);
     else
@@ -675,8 +695,11 @@ gwy_tip_erosion(GwyDataField *tip,
  * Since: 1.6
  **/
 GwyDataField*
-gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-              GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
+gwy_tip_cmap(GwyDataField *tip,
+             GwyDataField *surface,
+             GwyDataField *result,
+             GwySetFractionFunc set_fraction,
+             GwySetMessageFunc set_message)
 {
     gint **ftip;
     gint **fsurface;

@@ -922,6 +922,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
     }
 
     g_rand_free(rng);
+    gwy_data_field_invalidate(dfield);
 
     return TRUE;
 }
