@@ -1,12 +1,9 @@
 # @(#) $Id$
-#: libgwydgets/gwygrapherareadialog.c:206
-#: libgwydgets/gwygrapherareadialog.c:221
-#: libgwydgets/gwygrapherlabeldialog.c:116
 msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2005-01-24 20:13+0100\n"
+"POT-Creation-Date: 2005-01-24 20:24+0100\n"
 "PO-Revision-Date: 2005-01-24 20:21+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -261,11 +258,11 @@ msgstr ""
 msgid "Point size:"
 msgstr ""
 
-#: libgwydgets/gwygrapherareadialog.c:215
+#: libgwydgets/gwygrapherareadialog.c:214
 msgid "Line type:"
 msgstr ""
 
-#: libgwydgets/gwygrapherareadialog.c:220
+#: libgwydgets/gwygrapherareadialog.c:219
 msgid "Line thickness:"
 msgstr ""
 
@@ -273,7 +270,7 @@ msgstr ""
 msgid "Frame thickness:"
 msgstr ""
 
-#: libgwydgets/gwygrapherlabeldialog.c:126
+#: libgwydgets/gwygrapherlabeldialog.c:125
 msgid "_reversed"
 msgstr ""
 
