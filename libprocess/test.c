@@ -6,7 +6,6 @@
 #include <gtk/gtk.h>
 #include "dataline.h"
 #include "datafield.h"
-#include "pixfield.h"
 #include "simplefft.h"
 
 void make_test_image(GwyDataField *a)
@@ -38,7 +37,6 @@ void make_test_line(GwyDataLine *a)
 int main(int argc, char *argv[])
 {
     GdkPixbuf *pxb;
-    PixPalette pal;
     GError *error=NULL;
     guchar *buffer;
     gsize size, pos;
@@ -84,16 +82,6 @@ int main(int argc, char *argv[])
     d = (GwyDataLine *) gwy_serializable_deserialize(buffer, size, &pos);
       
 
-    /*output deserialized datafield*/
-    g_message("drawing datafield...");
-    gwy_pixfield_presetpal(&pal, GWY_PAL_OLIVE);
-  
-    
-    pxb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 
-			 gwy_datafield_get_xres(b), gwy_datafield_get_yres(b));
-    gwy_pixfield_do(pxb, b, &pal); 
-    gdk_pixbuf_save(pxb, "xout.jpg", "jpeg", &error, "quality", "100", NULL);
-    
     g_message("outputting dataline to xline.dat...");
     fh = fopen("xline.dat", "w");
     for (i=0; i<d->res; i++) fprintf(fh, "%d  %f\n", i, d->data[i]);

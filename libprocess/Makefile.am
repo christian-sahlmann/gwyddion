@@ -2,7 +2,6 @@ include_HEADERS = \
 	datafield.h \
 	dataline.h \
 	interpolation.h \
-	pixfield.h \
 	simplefft.h
 lib_LTLIBRARIES = libprocess.la
 
@@ -18,7 +17,6 @@ libprocess_la_SOURCES = \
 	datafield.c \
 	dataline.c \
 	interpolation.c \
-	pixfield.c \
 	simplefft.c
 
 test_SOURCES = \
