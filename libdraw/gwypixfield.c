@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#define DEBUG 1
 #include <libgwyddion/gwymacros.h>
 #include "gwypixfield.h"
 
