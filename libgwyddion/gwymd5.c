@@ -21,7 +21,6 @@
  * Modified October 1995 by Erik Troan for RPM
  */
 
-#include "config.h"
 #include <string.h>
 #include <glib.h>
 #include "gwymd5.h"
