@@ -53,7 +53,7 @@ gwy_app_file_open_cb(void)
 {
     GtkFileSelection *selector;
 
-    selector = create_open_dialog(_("Open file"),
+    selector = create_open_dialog(_("Open File"),
                                   G_CALLBACK(file_open_ok_cb));
     gtk_widget_show_all(GTK_WIDGET(selector));
 }
