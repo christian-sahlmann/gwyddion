@@ -8,7 +8,8 @@ graph_PROGRAMS = \
 	read.so \
 	graph_export_ascii.so \
 	graph_zoom.so \
-	graph_unzoom.so
+	graph_unzoom.so \
+        graph_points.so
  
 
 EXTRA_DIST = \
@@ -25,6 +26,9 @@ graph_zoom_so_LDFLAGS = $(module_ldflags),graph_zoom.so
 
 graph_unzoom_so_SOURCES = graph_unzoom.c
 graph_unzoom_so_LDFLAGS = $(module_ldflags),graph_unzoom.so
+
+graph_points_so_SOURCES = graph_points.c
+graph_points_so_LDFLAGS = $(module_ldflags),graph_points.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"

@@ -80,6 +80,8 @@ typedef struct {
 } GwyGraphStatus_SelData;
 
 typedef struct {
+   GwyGraphScrPoint actual_scr_point;
+   GwyGraphDataPoint actual_data_point;
    GArray *scr_points;
    GArray *data_points;
    gint n;

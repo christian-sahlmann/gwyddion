@@ -212,7 +212,7 @@ gwy_graph_area_init(GwyGraphArea *area)
 
     klass = GWY_GRAPH_AREA_GET_CLASS(area);
     klass->cross_cursor = gdk_cursor_new(GDK_CROSS);
-    klass->arrow_cursor = gdk_cursor_new(GDK_ARROW);
+    klass->arrow_cursor = gdk_cursor_new(GDK_LEFT_PTR);
 
 }
 
@@ -705,7 +705,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         
     
     /*cursor position*/
-    if (area->status == GWY_GRAPH_STATUS_CURSOR)
+    if (area->status == GWY_GRAPH_STATUS_CURSOR || area->status == GWY_GRAPH_STATUS_POINTS)
     {
         if (!ispos)
         {
@@ -714,11 +714,21 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             y += (gint)event->y;
             ispos = 1;
         }
-        area->cursordata->scr_point.i = x;
-        area->cursordata->scr_point.j = y;
-        area->cursordata->data_point.x = scr_to_data_x(widget, x);
-        area->cursordata->data_point.y = scr_to_data_y(widget, y);
-        gwy_graph_area_signal_selected(area);
+        if (area->status == GWY_GRAPH_STATUS_CURSOR)
+        {
+            area->cursordata->scr_point.i = x;
+            area->cursordata->scr_point.j = y;
+            area->cursordata->data_point.x = scr_to_data_x(widget, x);
+            area->cursordata->data_point.y = scr_to_data_y(widget, y);
+        }
+        else
+        {
+            area->pointsdata->actual_scr_point.i = x;
+            area->pointsdata->actual_scr_point.j = y;
+            area->pointsdata->actual_data_point.x = scr_to_data_x(widget, x);
+            area->pointsdata->actual_data_point.y = scr_to_data_y(widget, y);    
+        }
+            gwy_graph_area_signal_selected(area);
     }
 
     if ((area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL) && area->selecting==1)
