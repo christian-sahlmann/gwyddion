@@ -536,6 +536,7 @@ gwy_app_menu_set_recent_files_menu(GtkWidget *menu)
     g_return_if_fail(!recent_files_menu);
 
     recent_files_menu = menu;
+    g_object_add_weak_pointer(G_OBJECT(menu), (gpointer*)&recent_files_menu);
 }
 
 /**
