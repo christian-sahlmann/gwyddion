@@ -186,7 +186,7 @@ static void          rawfile_read_bits             (RawFileArgs *args,
 static gboolean      rawfile_read_ascii            (RawFileArgs *args,
                                                     guchar *buffer,
                                                     gdouble *data);
-static void          rawfile_santinize_args        (RawFileArgs *args);
+static void          rawfile_sanitize_args         (RawFileArgs *args);
 static void          rawfile_load_args             (GwyContainer *settings,
                                                     RawFileArgs *args);
 static void          rawfile_load_preset           (GwyContainer *settings,
@@ -1033,7 +1033,7 @@ builtin_changed_cb(GtkWidget *item,
     builtin = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "builtin"));
     update_dialog_values(controls);
     if (builtin) {
-        rawfile_santinize_args(controls->args);
+        rawfile_sanitize_args(controls->args);
 
         adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->size));
         adj->upper = 64.0;
@@ -1510,7 +1510,7 @@ update_dialog_values(RawFileControls *controls)
     args->builtin = gwy_option_menu_get_history(controls->builtin, "builtin");
     args->format = gwy_radio_buttons_get_current(controls->format, "format");
 
-    rawfile_santinize_args(args);
+    rawfile_sanitize_args(args);
 }
 
 static GtkWidget*
@@ -1849,7 +1849,7 @@ rawfile_read_ascii(RawFileArgs *args,
 }
 
 static void
-rawfile_santinize_args(RawFileArgs *args)
+rawfile_sanitize_args(RawFileArgs *args)
 {
     if (!args->delimiter)
         args->delimiter = g_strdup("");
@@ -1974,7 +1974,7 @@ rawfile_load_preset(GwyContainer *settings,
 
     args->delimiter = g_strdup(args->delimiter);
     args->presetname = g_strdup(args->presetname);
-    rawfile_santinize_args(args);
+    rawfile_sanitize_args(args);
 }
 
 static void
@@ -1989,7 +1989,7 @@ rawfile_save_preset(GwyContainer *settings,
                     const gchar *presetname,
                     RawFileArgs *args)
 {
-    rawfile_santinize_args(args);
+    rawfile_sanitize_args(args);
 
     sset(format, presetname, int32);
     sset(builtin, presetname, enum);

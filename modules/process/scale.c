@@ -62,7 +62,7 @@ static void        height_changed_cb         (GtkAdjustment *adj,
                                               ScaleArgs *args);
 static void        scale_dialog_update       (ScaleControls *controls,
                                               ScaleArgs *args);
-static void        scale_santinize_args      (ScaleArgs *args);
+static void        scale_sanitize_args       (ScaleArgs *args);
 static void        scale_load_args           (GwyContainer *container,
                                               ScaleArgs *args);
 static void        scale_save_args           (GwyContainer *container,
@@ -313,7 +313,7 @@ static const gchar *ratio_key = "/module/scale/ratio";
 static const gchar *interp_key = "/module/scale/interp";
 
 static void
-scale_santinize_args(ScaleArgs *args)
+scale_sanitize_args(ScaleArgs *args)
 {
     args->ratio = CLAMP(args->ratio, 0.01, 100.0);
     args->interp = CLAMP(args->interp,
@@ -328,7 +328,7 @@ scale_load_args(GwyContainer *container,
 
     gwy_container_gis_double_by_name(container, ratio_key, &args->ratio);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
-    scale_santinize_args(args);
+    scale_sanitize_args(args);
 }
 
 static void

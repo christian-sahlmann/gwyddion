@@ -60,7 +60,7 @@ typedef struct {
 static gboolean   module_register             (const gchar *name);
 static gboolean   arithmetic                  (GwyContainer *data,
                                                GwyRunType run);
-static void       arithmetic_santinize_args   (ArithmeticArgs *args);
+static void       arithmetic_sanitize_args    (ArithmeticArgs *args);
 static void       arithmetic_load_args        (GwyContainer *settings,
                                                ArithmeticArgs *args);
 static void       arithmetic_save_args        (GwyContainer *settings,
@@ -597,7 +597,7 @@ static const gchar *scalar_is1_key = "/module/arithmetic/scalar_is1";
 static const gchar *scalar_is2_key = "/module/arithmetic/scalar_is2";
 
 static void
-arithmetic_santinize_args(ArithmeticArgs *args)
+arithmetic_sanitize_args(ArithmeticArgs *args)
 {
     args->operation = MIN(args->operation, GWY_ARITH_LAST-1);
 }
@@ -624,7 +624,7 @@ arithmetic_load_args(GwyContainer *settings,
     gwy_container_gis_boolean_by_name(settings, scalar_is2_key, &b);
     if (!b)
         args->win2 = win2;
-    arithmetic_santinize_args(args);
+    arithmetic_sanitize_args(args);
 }
 
 static void

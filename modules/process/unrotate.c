@@ -82,7 +82,7 @@ static void             load_args                (GwyContainer *container,
                                                   UnrotateArgs *args);
 static void             save_args                (GwyContainer *container,
                                                   UnrotateArgs *args);
-static void             santinize_args           (UnrotateArgs *args);
+static void             sanitize_args            (UnrotateArgs *args);
 
 GwyEnum unrotate_symmetry[] = {
     { "Detected",   UNROTATE_DETECT     },
@@ -526,7 +526,7 @@ static const gchar *interp_key = "/module/unrotate/interp";
 static const gchar *symmetry_key = "/module/unrotate/symmetry";
 
 static void
-santinize_args(UnrotateArgs *args)
+sanitize_args(UnrotateArgs *args)
 {
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
@@ -541,7 +541,7 @@ load_args(GwyContainer *container,
 
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, symmetry_key, &args->symmetry);
-    santinize_args(args);
+    sanitize_args(args);
 }
 
 static void

@@ -85,7 +85,7 @@ static void          load_args                    (GwyContainer *container,
                                                    SlopeArgs *args);
 static void          save_args                    (GwyContainer *container,
                                                    SlopeArgs *args);
-static void          santinize_args               (SlopeArgs *args);
+static void          sanitize_args                (SlopeArgs *args);
 
 SlopeArgs slope_defaults = {
     SLOPE_DIST_2D_DIST,
@@ -529,7 +529,7 @@ static const gchar *fit_plane_key = "/module/slope_dist/fit_plane";
 static const gchar *kernel_size_key = "/module/slope_dist/kernel_size";
 
 static void
-santinize_args(SlopeArgs *args)
+sanitize_args(SlopeArgs *args)
 {
     args->output_type = MIN(args->output_type, SLOPE_DIST_LAST-1);
     args->size = CLAMP(args->size, 1, 16384);
@@ -552,7 +552,7 @@ load_args(GwyContainer *container,
                                       &args->fit_plane);
     gwy_container_gis_int32_by_name(container, kernel_size_key,
                                     &args->kernel_size);
-    santinize_args(args);
+    sanitize_args(args);
 }
 
 static void

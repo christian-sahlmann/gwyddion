@@ -84,7 +84,7 @@ static void          load_args                    (GwyContainer *container,
                                                    AngleArgs *args);
 static void          save_args                    (GwyContainer *container,
                                                    AngleArgs *args);
-static void          santinize_args               (AngleArgs *args);
+static void          sanitize_args                (AngleArgs *args);
 
 AngleArgs angle_defaults = {
     200,
@@ -467,7 +467,7 @@ static const gchar *fit_plane_key = "/module/angle_dist/fit_plane";
 static const gchar *kernel_size_key = "/module/angle_dist/kernel_size";
 
 static void
-santinize_args(AngleArgs *args)
+sanitize_args(AngleArgs *args)
 {
     args->size = CLAMP(args->size, 1, 16384);
     args->steps = CLAMP(args->steps, 1, 16384);
@@ -489,7 +489,7 @@ load_args(GwyContainer *container,
                                       &args->fit_plane);
     gwy_container_gis_int32_by_name(container, kernel_size_key,
                                     &args->kernel_size);
-    santinize_args(args);
+    sanitize_args(args);
 }
 
 static void

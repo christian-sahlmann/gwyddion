@@ -50,7 +50,7 @@ static void        interp_changed_cb          (GObject *item,
                                                RotateArgs *args);
 static void        rotate_dialog_update       (RotateControls *controls,
                                                RotateArgs *args);
-static void        rotate_santinize_args      (RotateArgs *args);
+static void        rotate_sanitize_args       (RotateArgs *args);
 static void        rotate_load_args           (GwyContainer *container,
                                                RotateArgs *args);
 static void        rotate_save_args           (GwyContainer *container,
@@ -199,7 +199,7 @@ static const gchar *angle_key = "/module/rotate/angle";
 static const gchar *interp_key = "/module/rotate/interp";
 
 static void
-rotate_santinize_args(RotateArgs *args)
+rotate_sanitize_args(RotateArgs *args)
 {
     args->angle = fmod(args->angle, 360.0);
     args->interp = CLAMP(args->interp,
@@ -216,7 +216,7 @@ rotate_load_args(GwyContainer *container,
         args->angle = gwy_container_get_double_by_name(container, angle_key);
     if (gwy_container_contains_by_name(container, interp_key))
         args->interp = gwy_container_get_int32_by_name(container, interp_key);
-    rotate_santinize_args(args);
+    rotate_sanitize_args(args);
 }
 
 static void
