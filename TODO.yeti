@@ -1,13 +1,16 @@
 - Generate module browser-like info for gwyddion.net
+- Add preview to: artithmetic
 - Kill WIN32-LEAN-AND-MEAN-CAPS
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
 - Convert Logarithmic scale value to logarithmic presentation
+- Do something reasonable with results of pow10, hypot, etc. detection
 - Rework Scars
 - Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
 - Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
   as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere
+- Swap undo levels to disk
 - Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
 - Do nightly CVS build from a clean checkout, this will also stop the silly
