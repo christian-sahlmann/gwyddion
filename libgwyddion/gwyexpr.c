@@ -1359,7 +1359,7 @@ gwy_expr_get_variables(GwyExpr *expr,
  *
  * Finds positions of variables in an expression.
  *
- * Returns: The number of remaining undefined variables in @expr.
+ * Returns: The number of remaining (not asked for) variables in @expr.
  *
  * Since: 1.9
  **/
@@ -1369,26 +1369,32 @@ gwy_expr_resolve_variables(GwyExpr *expr,
                            gchar * const *names,
                            guint *indices)
 {
-    guint i, j, unresolved;
+    guint i, j;
+    gboolean *requested;
 
     g_return_val_if_fail(expr, 0);
     g_return_val_if_fail(expr->in, 0);
     g_return_val_if_fail(!n || (names && indices), 0);
 
+    requested = g_newa(gboolean, expr->identifiers->len);
+    memset(requested, 0, expr->identifiers->len*sizeof(gboolean*));
     memset(indices, 0, n*sizeof(guint*));
-    unresolved = n;
     for (i = 0; i < n; i++) {
         for (j = 1; j < expr->identifiers->len; j++) {
             if (!strcmp(names[i],
                         (gchar*)g_ptr_array_index(expr->identifiers, j))) {
                 indices[i] = j;
-                unresolved--;
+                requested[j] = TRUE;
                 break;
             }
         }
     }
 
-    return unresolved;
+    i = 0;
+    for (j = 1; j < expr->identifiers->len; j++)
+        i += !requested[j];
+
+    return i;
 }
 
 /**
