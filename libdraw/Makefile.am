@@ -5,9 +5,11 @@ libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 
 libgwydrawincludedir = $(includedir)/gwyddion/libdraw
 libgwydrawinclude_HEADERS = \
+	gwydraw.h \
 	gwypalette.h \
 	gwypalettedef.h \
-	gwypixfield.h
+	gwypixfield.h \
+	gwyrgba.h
 
 lib_LTLIBRARIES = libgwydraw.la
 
@@ -26,7 +28,8 @@ libgwydraw_la_LDFLAGS = -version-info 0:0:0
 libgwydraw_la_SOURCES = \
 	gwypalette.c \
 	gwypalettedef.c \
-	gwypixfield.c
+	gwypixfield.c \
+	gwyrgba.c
 
 #test_SOURCES = \
 #	test.c
