@@ -156,7 +156,11 @@ foo(void)
 int
 main(int argc, char *argv[])
 {
-    const gchar *module_dirs[] = { GWY_MODULE_DIR, NULL };
+    const gchar *module_dirs[] = {
+        GWY_MODULE_DIR "/file",
+        GWY_MODULE_DIR "/process",
+        NULL
+    };
     GwyContainer *data;
     gchar *filename_utf8;
     gchar *config_file;
