@@ -830,6 +830,19 @@ thin_data_field(GwyDataField *data_field)
     return k;
 }
 
+/**
+ * gwy_data_field_area_filter_minimum:
+ * @data_field: A data field to apply minimum filter to.
+ * @size: Neighbourhood size for minimum search.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with minimum filter.
+ *
+ * Since: 1.8
+ **/
 void
 gwy_data_field_area_filter_minimum(GwyDataField *data_field,
                                    gint size,
@@ -950,6 +963,15 @@ gwy_data_field_area_filter_minimum(GwyDataField *data_field,
     g_object_unref(buffer);
 }
 
+/**
+ * gwy_data_field_filter_minimum:
+ * @data_field: A data field to apply minimum filter to.
+ * @size: Neighbourhood size for minimum search.
+ *
+ * Filters a data field with minimum filter.
+ *
+ * Since: 1.8
+ **/
 void
 gwy_data_field_filter_minimum(GwyDataField *data_field,
                               gint size)
@@ -959,6 +981,19 @@ gwy_data_field_filter_minimum(GwyDataField *data_field,
                                        data_field->xres, data_field->yres);
 }
 
+/**
+ * gwy_data_field_area_filter_maximum:
+ * @data_field: A data field to apply maximum filter to.
+ * @size: Neighbourhood size for maximum search.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with maximum filter.
+ *
+ * Since: 1.8
+ **/
 void
 gwy_data_field_area_filter_maximum(GwyDataField *data_field,
                                    gint size,
@@ -1079,6 +1114,15 @@ gwy_data_field_area_filter_maximum(GwyDataField *data_field,
     g_object_unref(buffer);
 }
 
+/**
+ * gwy_data_field_filter_maximum:
+ * @data_field: A data field to apply maximum filter to.
+ * @size: Neighbourhood size for maximum search.
+ *
+ * Filters a data field with maximum filter.
+ *
+ * Since: 1.8
+ **/
 void
 gwy_data_field_filter_maximum(GwyDataField *data_field,
                               gint size)
