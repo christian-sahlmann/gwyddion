@@ -29,7 +29,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#ifndef G_OS_WIN32
 #include <unistd.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
