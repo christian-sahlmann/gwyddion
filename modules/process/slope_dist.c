@@ -34,7 +34,8 @@
 
 typedef enum {
     SLOPE_DIST_2D_DIST,
-    SLOPE_DIST_GRAPH
+    SLOPE_DIST_GRAPH,
+    SLOPE_DIST_LAST
 } SlopeOutput;
 
 /* Data for this function. */
@@ -71,10 +72,6 @@ static GwyDataField* slope_do                     (GwyDataField *dfield,
                                                    SlopeArgs *args);
 static GtkWidget*    slope_do_graph               (GwyDataField *dfield,
                                                    SlopeArgs *args);
-static void          load_args                    (GwyContainer *container,
-                                                   SlopeArgs *args);
-static void          save_args                    (GwyContainer *container,
-                                                   SlopeArgs *args);
 static gdouble       compute_slopes               (GwyDataField *dfield,
                                                    gint kernel_size,
                                                    gdouble *xder,
@@ -84,6 +81,11 @@ static GwyDataField* make_datafield               (GwyDataField *old,
                                                    gulong *count,
                                                    gdouble real,
                                                    gboolean logscale);
+static void          load_args                    (GwyContainer *container,
+                                                   SlopeArgs *args);
+static void          save_args                    (GwyContainer *container,
+                                                   SlopeArgs *args);
+static void          santinize_args               (SlopeArgs *args);
 
 SlopeArgs slope_defaults = {
     SLOPE_DIST_2D_DIST,
@@ -100,7 +102,7 @@ static GwyModuleInfo module_info = {
     "slope_dist",
     "Slope distribution.",
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -527,6 +529,16 @@ static const gchar *fit_plane_key = "/module/slope_dist/fit_plane";
 static const gchar *kernel_size_key = "/module/slope_dist/kernel_size";
 
 static void
+santinize_args(SlopeArgs *args)
+{
+    args->output_type = MIN(args->output_type, SLOPE_DIST_LAST-1);
+    args->size = CLAMP(args->size, 1, 16384);
+    args->kernel_size = CLAMP(args->kernel_size, 2, 16);
+    args->logscale = !!args->logscale;
+    args->fit_plane = !!args->fit_plane;
+}
+
+static void
 load_args(GwyContainer *container,
           SlopeArgs *args)
 {
@@ -535,13 +547,12 @@ load_args(GwyContainer *container,
     gwy_container_gis_enum_by_name(container, output_type_key,
                                    &args->output_type);
     gwy_container_gis_int32_by_name(container, size_key, &args->size);
-    args->size = CLAMP(args->size, 1, 16384);
     gwy_container_gis_boolean_by_name(container, logscale_key, &args->logscale);
     gwy_container_gis_boolean_by_name(container, fit_plane_key,
                                       &args->fit_plane);
     gwy_container_gis_int32_by_name(container, kernel_size_key,
                                     &args->kernel_size);
-    args->kernel_size = CLAMP(args->kernel_size, 2, 16);
+    santinize_args(args);
 }
 
 static void

@@ -60,11 +60,12 @@ static void        width_changed_cb          (GtkAdjustment *adj,
                                               ScaleArgs *args);
 static void        height_changed_cb         (GtkAdjustment *adj,
                                               ScaleArgs *args);
+static void        scale_dialog_update       (ScaleControls *controls,
+                                              ScaleArgs *args);
+static void        scale_santinize_args      (ScaleArgs *args);
 static void        scale_load_args           (GwyContainer *container,
                                               ScaleArgs *args);
 static void        scale_save_args           (GwyContainer *container,
-                                              ScaleArgs *args);
-static void        scale_dialog_update       (ScaleControls *controls,
                                               ScaleArgs *args);
 
 ScaleArgs scale_defaults = {
@@ -81,7 +82,7 @@ static GwyModuleInfo module_info = {
     "scale",
     "Scale data by an arbitrary factor.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -312,6 +313,14 @@ static const gchar *ratio_key = "/module/scale/ratio";
 static const gchar *interp_key = "/module/scale/interp";
 
 static void
+scale_santinize_args(ScaleArgs *args)
+{
+    args->ratio = CLAMP(args->ratio, 0.01, 100.0);
+    args->interp = CLAMP(args->interp,
+                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+}
+
+static void
 scale_load_args(GwyContainer *container,
                 ScaleArgs *args)
 {
@@ -319,6 +328,7 @@ scale_load_args(GwyContainer *container,
 
     gwy_container_gis_double_by_name(container, ratio_key, &args->ratio);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
+    scale_santinize_args(args);
 }
 
 static void

@@ -60,6 +60,7 @@ typedef struct {
 static gboolean   module_register             (const gchar *name);
 static gboolean   arithmetic                  (GwyContainer *data,
                                                GwyRunType run);
+static void       arithmetic_santinize_args   (ArithmeticArgs *args);
 static void       arithmetic_load_args        (GwyContainer *settings,
                                                ArithmeticArgs *args);
 static void       arithmetic_save_args        (GwyContainer *settings,
@@ -111,7 +112,7 @@ static GwyModuleInfo module_info = {
     "arithmetic",
     "Simple arithmetic with two data fields (or a data field and a scalar).",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -589,6 +590,56 @@ arithmetic_do(ArithmeticArgs *args)
     return FALSE;
 }
 
+static const gchar *operation_key = "/module/arithmetic/operation";
+static const gchar *scalar1_key = "/module/arithmetic/scalar1";
+static const gchar *scalar2_key = "/module/arithmetic/scalar2";
+static const gchar *scalar_is1_key = "/module/arithmetic/scalar_is1";
+static const gchar *scalar_is2_key = "/module/arithmetic/scalar_is2";
+
+static void
+arithmetic_santinize_args(ArithmeticArgs *args)
+{
+    args->operation = MIN(args->operation, GWY_ARITH_LAST-1);
+}
+
+static void
+arithmetic_load_args(GwyContainer *settings,
+                     ArithmeticArgs *args)
+{
+    gboolean b = FALSE;
+    GwyDataWindow *win1, *win2;
+
+    /* TODO: remove this someday */
+    gwy_container_remove_by_prefix(settings, "/app/arith");
+
+    win1 = args->win1;
+    win2 = args->win2;
+    *args = arithmetic_defaults;
+    gwy_container_gis_enum_by_name(settings, operation_key, &args->operation);
+    gwy_container_gis_double_by_name(settings, scalar1_key, &args->scalar1);
+    gwy_container_gis_double_by_name(settings, scalar2_key, &args->scalar2);
+    gwy_container_gis_boolean_by_name(settings, scalar_is1_key, &b);
+    if (!b)
+        args->win1 = win1;
+    gwy_container_gis_boolean_by_name(settings, scalar_is2_key, &b);
+    if (!b)
+        args->win2 = win2;
+    arithmetic_santinize_args(args);
+}
+
+static void
+arithmetic_save_args(GwyContainer *settings,
+                     ArithmeticArgs *args)
+{
+    gwy_container_set_enum_by_name(settings, operation_key, args->operation);
+    gwy_container_set_double_by_name(settings, scalar1_key, args->scalar1);
+    gwy_container_set_double_by_name(settings, scalar2_key, args->scalar2);
+    gwy_container_set_boolean_by_name(settings, scalar_is1_key,
+                                      args->win1 == NULL);
+    gwy_container_set_boolean_by_name(settings, scalar_is2_key,
+                                      args->win2 == NULL);
+}
+
 /************************ Datafield arithmetic ***************************/
 /* XXX: move to libprocess/datafield.c? */
 
@@ -728,49 +779,6 @@ gwy_data_field_maximum2(GwyDataField *dfield1,
     for (i = xres*yres; i; i--, p++, q++)
         if (*p < *q)
             *p = *q;
-}
-
-static const gchar *operation_key = "/module/arithmetic/operation";
-static const gchar *scalar1_key = "/module/arithmetic/scalar1";
-static const gchar *scalar2_key = "/module/arithmetic/scalar2";
-static const gchar *scalar_is1_key = "/module/arithmetic/scalar_is1";
-static const gchar *scalar_is2_key = "/module/arithmetic/scalar_is2";
-
-static void
-arithmetic_load_args(GwyContainer *settings,
-                     ArithmeticArgs *args)
-{
-    gboolean b = FALSE;
-    GwyDataWindow *win1, *win2;
-
-    /* TODO: remove this someday */
-    gwy_container_remove_by_prefix(settings, "/app/arith");
-
-    win1 = args->win1;
-    win2 = args->win2;
-    *args = arithmetic_defaults;
-    gwy_container_gis_enum_by_name(settings, operation_key, &args->operation);
-    gwy_container_gis_double_by_name(settings, scalar1_key, &args->scalar1);
-    gwy_container_gis_double_by_name(settings, scalar2_key, &args->scalar2);
-    gwy_container_gis_boolean_by_name(settings, scalar_is1_key, &b);
-    if (!b)
-        args->win1 = win1;
-    gwy_container_gis_boolean_by_name(settings, scalar_is2_key, &b);
-    if (!b)
-        args->win2 = win2;
-}
-
-static void
-arithmetic_save_args(GwyContainer *settings,
-                     ArithmeticArgs *args)
-{
-    gwy_container_set_enum_by_name(settings, operation_key, args->operation);
-    gwy_container_set_double_by_name(settings, scalar1_key, args->scalar1);
-    gwy_container_set_double_by_name(settings, scalar2_key, args->scalar2);
-    gwy_container_set_boolean_by_name(settings, scalar_is1_key,
-                                      args->win1 == NULL);
-    gwy_container_set_boolean_by_name(settings, scalar_is2_key,
-                                      args->win2 == NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

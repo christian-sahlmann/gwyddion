@@ -64,10 +64,6 @@ static void          angle_fit_plane_cb           (GtkToggleButton *check,
                                                    AngleControls *controls);
 static GwyDataField* angle_do                     (GwyDataField *dfield,
                                                    AngleArgs *args);
-static void          load_args                    (GwyContainer *container,
-                                                   AngleArgs *args);
-static void          save_args                    (GwyContainer *container,
-                                                   AngleArgs *args);
 static gdouble       compute_slopes               (GwyDataField *dfield,
                                                    gint kernel_size,
                                                    gdouble *xder,
@@ -84,6 +80,11 @@ static GwyDataField* make_datafield               (GwyDataField *old,
                                                    gulong *count,
                                                    gdouble real,
                                                    gboolean logscale);
+static void          load_args                    (GwyContainer *container,
+                                                   AngleArgs *args);
+static void          save_args                    (GwyContainer *container,
+                                                   AngleArgs *args);
+static void          santinize_args               (AngleArgs *args);
 
 AngleArgs angle_defaults = {
     200,
@@ -100,7 +101,7 @@ static GwyModuleInfo module_info = {
     "angle_dist",
     "Angle distribution.",
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -466,21 +467,29 @@ static const gchar *fit_plane_key = "/module/angle_dist/fit_plane";
 static const gchar *kernel_size_key = "/module/angle_dist/kernel_size";
 
 static void
+santinize_args(AngleArgs *args)
+{
+    args->size = CLAMP(args->size, 1, 16384);
+    args->steps = CLAMP(args->steps, 1, 16384);
+    args->kernel_size = CLAMP(args->kernel_size, 2, 16);
+    args->logscale = !!args->logscale;
+    args->fit_plane = !!args->fit_plane;
+}
+
+static void
 load_args(GwyContainer *container,
           AngleArgs *args)
 {
     *args = angle_defaults;
 
     gwy_container_gis_int32_by_name(container, size_key, &args->size);
-    args->size = CLAMP(args->size, 1, 16384);
     gwy_container_gis_int32_by_name(container, steps_key, &args->steps);
-    args->steps = CLAMP(args->steps, 1, 16384);
     gwy_container_gis_boolean_by_name(container, logscale_key, &args->logscale);
     gwy_container_gis_boolean_by_name(container, fit_plane_key,
                                       &args->fit_plane);
     gwy_container_gis_int32_by_name(container, kernel_size_key,
                                     &args->kernel_size);
-    args->kernel_size = CLAMP(args->kernel_size, 2, 16);
+    santinize_args(args);
 }
 
 static void

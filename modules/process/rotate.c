@@ -48,11 +48,12 @@ static gboolean    rotate                     (GwyContainer *data,
 static gboolean    rotate_dialog              (RotateArgs *args);
 static void        interp_changed_cb          (GObject *item,
                                                RotateArgs *args);
+static void        rotate_dialog_update       (RotateControls *controls,
+                                               RotateArgs *args);
+static void        rotate_santinize_args      (RotateArgs *args);
 static void        rotate_load_args           (GwyContainer *container,
                                                RotateArgs *args);
 static void        rotate_save_args           (GwyContainer *container,
-                                               RotateArgs *args);
-static void        rotate_dialog_update       (RotateControls *controls,
                                                RotateArgs *args);
 
 RotateArgs rotate_defaults = {
@@ -67,7 +68,7 @@ static GwyModuleInfo module_info = {
     "rotate",
     "Rotation by an arbitrary angle.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -198,6 +199,14 @@ static const gchar *angle_key = "/module/rotate/angle";
 static const gchar *interp_key = "/module/rotate/interp";
 
 static void
+rotate_santinize_args(RotateArgs *args)
+{
+    args->angle = fmod(args->angle, 360.0);
+    args->interp = CLAMP(args->interp,
+                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+}
+
+static void
 rotate_load_args(GwyContainer *container,
                  RotateArgs *args)
 {
@@ -207,6 +216,7 @@ rotate_load_args(GwyContainer *container,
         args->angle = gwy_container_get_double_by_name(container, angle_key);
     if (gwy_container_contains_by_name(container, interp_key))
         args->interp = gwy_container_get_int32_by_name(container, interp_key);
+    rotate_santinize_args(args);
 }
 
 static void

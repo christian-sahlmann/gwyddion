@@ -82,6 +82,7 @@ static void             load_args                (GwyContainer *container,
                                                   UnrotateArgs *args);
 static void             save_args                (GwyContainer *container,
                                                   UnrotateArgs *args);
+static void             santinize_args           (UnrotateArgs *args);
 
 GwyEnum unrotate_symmetry[] = {
     { "Detected",   UNROTATE_DETECT     },
@@ -417,11 +418,11 @@ unrotate_dialog(UnrotateArgs *args,
                                  G_N_ELEMENTS(unrotate_symmetry), "symmetry",
                                  G_CALLBACK(unrotate_symmetry_cb), &controls,
                                  args->symmetry);
-    gwy_table_attach_row(table, row, _("Dominant _structure:"), "",
+    gwy_table_attach_row(table, row, _("Assume _structure:"), "",
                          controls.symmetry);
     row++;
 
-    label = gtk_label_new(_("Assume structure:"));
+    label = gtk_label_new(_("Detected structure:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -525,6 +526,14 @@ static const gchar *interp_key = "/module/unrotate/interp";
 static const gchar *symmetry_key = "/module/unrotate/symmetry";
 
 static void
+santinize_args(UnrotateArgs *args)
+{
+    args->interp = CLAMP(args->interp,
+                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+    args->symmetry = MIN(args->symmetry, UNROTATE_LAST-1);
+}
+
+static void
 load_args(GwyContainer *container,
           UnrotateArgs *args)
 {
@@ -532,7 +541,7 @@ load_args(GwyContainer *container,
 
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, symmetry_key, &args->symmetry);
-    args->symmetry = MIN(args->symmetry, UNROTATE_LAST-1);
+    santinize_args(args);
 }
 
 static void
