@@ -1,3 +1,26 @@
+1.3cvs20040629
+
+1.4
+Application:
+- Tools now show a thumbnail of active data window beside its name.
+
+Modules:
+- Calibrate (new): FIXME
+- Graph CD (new): Critical dimension measurements.
+- Line correct (new): Line corrections, currently featuring modus based step
+  correction.
+- ASCII export (new): Simple export to ASCII data matrix.
+- Plug-in proxy: Random insensitive plug-in menu items were fixed.
+- Plug-in proxy: Alternate plug-in registration method without running all
+                 the plug-ins.
+
+Library:
+- Gwyddion::dump (Perl) and Gwyddion.dump (Python) modules implementing
+  plug-in proxy dump format.
+
+Other:
+- New example plug-ins.
+
 
 1.3
 This version is binary and source incompatbile with previous ones.  Modules
