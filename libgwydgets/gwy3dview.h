@@ -30,6 +30,7 @@
 #include <gtk/gtkadjustment.h>
 #include <pango/pangoft2.h>
 
+/* FIXME: see below */
 #include <gtk/gtkgl.h>
 
 #ifdef G_OS_WIN32
@@ -37,6 +38,7 @@
 #include <windows.h>
 #endif
 
+/* FIXME: see below */
 #include <GL/gl.h>
 #include <GL/glu.h>
 
@@ -84,6 +86,9 @@ struct _Gwy3DView {
 
     Gwy3DMovement movement_status;  /* What to do, if mouse is moving */
 
+    /* FIXME: try to get rid of these, user code should NOT care about GL
+     * at all if it doesn't really want to.  Use gfloats instead, and convert
+     * when needed. */
     GLint shape_list_base;          /* Base index of scene display lists */
     GLuint shape_current;           /* Actually shown shape in the scene (full or reduced data) */
 
@@ -96,6 +101,9 @@ struct _Gwy3DView {
     GtkAdjustment *deformation_z;   /* Deformation of the z axis within the scene */
     GtkAdjustment *light_z;         /* First angle describing position of light */
     GtkAdjustment *light_y;         /* Second angle describing position of light */
+    /* FIXME: try to get rid of these, user code should NOT care about GL
+     * at all if it doesn't really want to.  Use gfloats instead, and convert
+     * when needed. */
     GLfloat view_scale_max;         /* Maximum zoom of the scene */
     GLfloat view_scale_min;         /* Minimum zoom of the scene */
 

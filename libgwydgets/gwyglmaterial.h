@@ -22,6 +22,8 @@
 #define __GWY_GLMATERIAL_H__
 
 #include <glib-object.h>
+
+/* FIXME: see below */
 #include <gtk/gtkgl.h>
 
 #ifdef G_OS_WIN32
@@ -29,6 +31,7 @@
 #include <windows.h>
 #endif
 
+/* FIXME: see below */
 #include <GL/gl.h>
 #include <GL/glu.h>
 
@@ -68,6 +71,9 @@ struct _GwyGLMaterial
 
     gchar *name;
 
+    /* FIXME: try to get rid of these, user code should NOT care about GL
+     * at all if it doesn't really want to.  Use gfloats instead, and convert
+     * when needed. */
     GLfloat ambient[4];
     GLfloat diffuse[4];
     GLfloat specular[4];
