@@ -314,6 +314,7 @@ module_register(const gchar *name)
              * arbitrary binary data, prints error messages, and it's silly
              * to load WMF to Gwyddion anyway */
             || strcmp(fmtname, "wmf") == 0
+            || strcmp(fmtname, "xbm") == 0
             || strcmp(fmtname, "svg") == 0) {
             g_free(fmtname);
             continue;
