@@ -92,16 +92,31 @@ static void  gwy_app_recent_file_list_prune          (Controls *controls);
 static void  gwy_app_recent_file_list_open           (GtkWidget *list);
 static void  gwy_app_recent_file_list_update_menu    (Controls *controls);
 
+static void  free_recent_file_record                 (RecentFile *rf);
+
 static guint remember_recent_files = 256;
 
 static Controls gcontrols = { NULL, NULL, NULL, NULL, NULL, NULL };
 
+/**
+ * gwy_app_recent_file_list_new:
+ *
+ * Creates document history browser.
+ *
+ * There should be at most one document history browser, so this function
+ * fails if it already exists.
+ *
+ * Returns: The newly created document history browser window.
+ *
+ * Since: 1.5
+ **/
 GtkWidget*
 gwy_app_recent_file_list_new(void)
 {
     GtkWidget *vbox, *buttonbox, *list, *scroll;
     GtkTreeSelection *selection;
 
+    g_return_val_if_fail(gcontrols.store, gcontrols.window);
     g_return_val_if_fail(gcontrols.window == NULL, gcontrols.window);
 
     gcontrols.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -267,6 +282,7 @@ gwy_app_recent_file_list_prune(Controls *controls)
 {
     GtkTreeIter iter;
     RecentFile *rf;
+    gboolean ok;
 
     g_return_if_fail(controls->store);
 
@@ -276,14 +292,15 @@ gwy_app_recent_file_list_prune(Controls *controls)
     do {
         gtk_tree_model_get(GTK_TREE_MODEL(controls->store), &iter,
                            FILELIST_RAW, &rf, -1);
+        g_printerr("<%s>\n", rf->filename_utf8);
         if (!g_file_test(rf->filename_utf8, G_FILE_TEST_IS_REGULAR)) {
-            /* the remove moves to the next row itself */
-            if (gtk_list_store_remove(controls->store, &iter))
-                continue;
-            else
-                break;
+            free_recent_file_record(rf);
+            ok = gtk_list_store_remove(controls->store, &iter);
         }
-    } while (gtk_tree_model_iter_next(GTK_TREE_MODEL(controls->store), &iter));
+        else
+            ok = gtk_tree_model_iter_next(GTK_TREE_MODEL(controls->store),
+                                          &iter);
+    } while (ok);
 
     gwy_app_recent_file_list_update_menu(controls);
 }
@@ -372,6 +389,20 @@ gwy_app_recent_file_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
     }
 }
 
+/**
+ * gwy_app_recent_file_list_load:
+ * @filename: Name of file containing list of recently open files.
+ *
+ * Loads list of recently open files from @filename.
+ *
+ * Cannot be called more than once (at least not without doing
+ * gwy_app_recent_file_list_free() first).  Must be called before any other
+ * document history function can be used, even if on a nonexistent file.
+ *
+ * Returns: %TRUE if the file was read successfully, %FALSE otherwise.
+ *
+ * Since: 1.5
+ **/
 gboolean
 gwy_app_recent_file_list_load(const gchar *filename)
 {
@@ -382,7 +413,6 @@ gwy_app_recent_file_list_load(const gchar *filename)
     gchar **files;
     guint n;
 
-    /* TODO: do something with existing stuff? */
     g_return_val_if_fail(gcontrols.store == NULL, FALSE);
     gcontrols.store = gtk_list_store_new(1, G_TYPE_POINTER);
 
@@ -422,6 +452,16 @@ gwy_app_recent_file_list_load(const gchar *filename)
 }
 
 
+/**
+ * gwy_app_recent_file_list_save:
+ * @filename: Name of file to save the list of recently open files to.
+ *
+ * Saves list of recently open files to @filename.
+ *
+ * Returns: %TRUE if the file was written successfully, %FALSE otherwise.
+ *
+ * Since: 1.5
+ **/
 gboolean
 gwy_app_recent_file_list_save(const gchar *filename)
 {
@@ -452,7 +492,15 @@ gwy_app_recent_file_list_save(const gchar *filename)
     return TRUE;
 }
 
-/* Do NOT call this function when the recent file menu can still exist! */
+/**
+ * gwy_app_recent_file_list_free:
+ *
+ * Frees all memory taken by recent file list.
+ *
+ * Should not be called while the recent file menu still exists.
+ *
+ * Since: 1.5
+ **/
 void
 gwy_app_recent_file_list_free(void)
 {
@@ -461,24 +509,35 @@ gwy_app_recent_file_list_free(void)
 
     if (!gcontrols.store)
         return;
+
     if (gcontrols.window)
         gtk_widget_destroy(gcontrols.window);
 
-    while (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(gcontrols.store),
-                                         &iter)) {
-        gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
-                           FILELIST_RAW, &rf, -1);
-        g_free(rf->filename_utf8);
-        g_free(rf->thumbnail_filename);
-        g_free(rf);
-        gtk_list_store_remove(gcontrols.store, &iter);
+    if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(gcontrols.store),
+                                      &iter)) {
+        do {
+            gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
+                               FILELIST_RAW, &rf, -1);
+            free_recent_file_record(rf);
+        } while (gtk_list_store_remove(gcontrols.store, &iter));
     }
     gcontrols.store = NULL;
 
     g_list_free(gcontrols.recent_file_list);
     gcontrols.recent_file_list = NULL;
+    gwy_app_recent_file_list_update_menu(&gcontrols);
 }
 
+/**
+ * gwy_app_recent_file_list_update:
+ * @filename_utf8: A recent file to insert or move to the first position in
+ *                 document history, in UTF-8 (not system encoding).
+ *
+ * Moves @filename_utf8 to the first position in document history, eventually
+ * adding it if not present yet.
+ *
+ * Since: 1.5
+ **/
 void
 gwy_app_recent_file_list_update(const gchar *filename_utf8)
 {
@@ -558,6 +617,14 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
         g_list_free(l);
     }
     gwy_app_menu_recent_files_update(controls->recent_file_list);
+}
+
+static void
+free_recent_file_record(RecentFile *rf)
+{
+    g_free(rf->filename_utf8);
+    g_free(rf->thumbnail_filename);
+    g_free(rf);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
