@@ -209,6 +209,41 @@ gwy_flags_to_string(gint enumval,
     return result;
 }
 
+/**
+ * gwy_strkill:
+ * @s: A NUL-terminated string.
+ * @killchars: A string containing characters to kill.
+ *
+ * Removes characters in @killchars from string @s, modifying it in place.
+ *
+ * Use gwy_strkill(g_strdup(@s), @killchars) to get a modified copy.
+ *
+ * Returns: @s itself, the return value is to allow function call nesting.
+ **/
+gchar*
+gwy_strkill(gchar *s,
+            const gchar *killchars)
+{
+    gchar *p, *q;
+    gchar killc;
+
+    if (!killchars || !*killchars)
+        return s;
+    killc = *killchars;
+    if (killchars[1])
+        g_strdelimit(s, killchars, killc);
+    if ((p = strchr(s, killc))) {
+        for (q = p; *p; p++) {
+            if (*p != killc) {
+                *q = *p;
+                q++;
+            }
+        }
+        *q = '\0';
+    }
+
+    return s;
+}
 
 /* A debugging message helper */
 void

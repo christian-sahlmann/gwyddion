@@ -51,6 +51,8 @@ gchar* gwy_flags_to_string        (gint enumval,
                                    const GwyEnum *enum_table,
                                    gint n,
                                    const gchar *glue);
+gchar* gwy_strkill                (gchar *s,
+                                   const gchar *killchars);
 gchar* gwy_find_self_dir          (const gchar *dirname);
 #ifdef G_OS_WIN32
 void   gwy_find_self_set_argv0    (const gchar *argv0);
