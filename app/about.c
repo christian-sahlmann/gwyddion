@@ -75,6 +75,9 @@ gwy_app_about(void)
               "E-mail: <i>%s</i>\n"
               "Web: <i>%s</i>\n"
               "\n"
+              "%s development was funded by the Czech Metrology Insitute "
+              "(<i>http://www.cmi.cz/</i>).\n"
+              "\n"
               "<small>%s is free software; "
               "you can redistribute it and/or modify it "
               "under the terms of the GNU General Public License "
@@ -86,6 +89,7 @@ gwy_app_about(void)
             PACKAGE_VERSION,
             PACKAGE_BUGREPORT,
             PACKAGE_URL,
+            g_get_application_name(),
             g_get_application_name());
     gtk_label_set_markup(GTK_LABEL(widget), s);
     g_free(s);
