@@ -32,9 +32,7 @@ extern "C" {
 #define GWY_PALETTE_RAINBOW1  "Rainbow1"
 #define GWY_PALETTE_RAINBOW2  "Rainbow2"
 
-/*Palette entry (red/green/blue) in range of 0-255*/
-/* XXX: this is wrong, the doubles should be in the range 0.0-1.0, only
- * rendered colors should have output bit depth */
+/* Palette entry (red/green/blue/opacity) in range of 0.0-1.0 */
 typedef struct {
     gdouble r;
     gdouble g;
@@ -73,7 +71,7 @@ gboolean      gwy_palette_def_set_name         (GwyPaletteDef *palette_def,
 gboolean      gwy_palette_def_exists           (const gchar *name);
 GwyRGBA       gwy_palette_def_get_color        (GwyPaletteDef *palette_def,
                                                 gdouble x,
-                                                gint interpolation);
+                                                GwyInterpolationType interpolation);
 void          gwy_palette_def_set_color        (GwyPaletteDef *palette_def,
                                                 GwyPaletteDefEntry *val);
 void          gwy_palette_def_set_from_samples (GwyPaletteDef *palette_def,

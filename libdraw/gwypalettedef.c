@@ -416,7 +416,7 @@ gwy_palette_def_value_changed(GObject *palette_def)
 
 /**
  * gwy_palette_def_get_color:
- * @a: palette definition of interest
+ * @palette_def: palette definition of interest
  * @x: position (0-N)
  * @interpolation: interpolation method
  *
@@ -425,10 +425,12 @@ gwy_palette_def_value_changed(GObject *palette_def)
  * Interpolates between palette definition entries closest to @x
  * and returns the resulting color.
  *
- * Returns: color found
+ * Returns: the color sample.
  **/
 GwyRGBA
-gwy_palette_def_get_color(GwyPaletteDef *a, gdouble x, gint interpolation)
+gwy_palette_def_get_color(GwyPaletteDef *palette_def,
+                          gdouble x,
+                          GwyInterpolationType interpolation)
 {
     GwyRGBA ret;
     GwyPaletteDefEntry pe, pf;
@@ -443,10 +445,10 @@ gwy_palette_def_get_color(GwyPaletteDef *a, gdouble x, gint interpolation)
     }
 
     /*find the closest color index*/
-    for (i = 0; i < (a->data->len-1); i++)
+    for (i = 0; i < palette_def->data->len-1; i++)
     {
-        pe = g_array_index(a->data, GwyPaletteDefEntry, i);
-        pf = g_array_index(a->data, GwyPaletteDefEntry, i+1);
+        pe = g_array_index(palette_def->data, GwyPaletteDefEntry, i);
+        pf = g_array_index(palette_def->data, GwyPaletteDefEntry, i+1);
         if (pe.x == x) {
             ret.r = pe.color.r;
             ret.g = pe.color.g;
@@ -680,7 +682,8 @@ gwy_palette_is_big_slope_change(GwyRGBA a,
 /**
  * gwy_palette_def_set_from_samples:
  * @palette_def: A #GwyPaletteDef to be computed.
- * @palette: A palette with the color data.
+ * @samples: Color data to ctreate the definition from.
+ * @nsamples: The number of samples in @samples.
  * @istep: Maximum distance of definition entries, 0 means unlimited.
  *
  * Fits the palette definition to given color samples.
