@@ -37,21 +37,23 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_data_window_class_init     (GwyDataWindowClass *klass);
-static void     gwy_data_window_init           (GwyDataWindow *data_window);
-static void     gwy_data_window_finalize       (GObject *object);
-static void     measure_changed                (GwyDataWindow *data_window);
-static void     lame_window_resize             (GwyDataWindow *data_window);
-static void     gwy_data_window_update_units   (GwyDataWindow *data_window);
-static gboolean gwy_data_view_update_statusbar (GwyDataView *data_view,
-                                                GdkEventMotion *event,
-                                                GwyDataWindow *data_window);
-static void     zoom_changed_cb                (GwyDataWindow *data_window);
-static gboolean color_axis_clicked_cb          (GtkWidget *data_window,
-                                                GdkEventButton *event);
-static void     palette_selected_cb            (GtkWidget *item,
-                                                GwyDataWindow *data_window);
-static void     data_view_updated_cb           (GwyDataWindow *data_window);
+static void     gwy_data_window_class_init        (GwyDataWindowClass *klass);
+static void     gwy_data_window_init              (GwyDataWindow *data_window);
+static void     gwy_data_window_finalize          (GObject *object);
+static void     gwy_data_window_measure_changed   (GwyDataWindow *data_window);
+static void     gwy_data_window_lame_resize       (GwyDataWindow *data_window);
+static void     gwy_data_window_update_units      (GwyDataWindow *data_window);
+static gboolean gwy_data_view_update_statusbar    (GwyDataView *data_view,
+                                                   GdkEventMotion *event,
+                                                   GwyDataWindow *data_window);
+static void     gwy_data_window_zoom_changed      (GwyDataWindow *data_window);
+static gboolean gwy_data_window_key_pressed       (GtkWidget *data_window,
+                                                   GdkEventKey *event);
+static gboolean gwy_data_window_color_axis_clicked(GtkWidget *data_window,
+                                                   GdkEventButton *event);
+static void     gwy_data_window_palette_selected  (GtkWidget *item,
+                                                   GwyDataWindow *data_window);
+static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
 
 /* Local data */
 
@@ -154,6 +156,9 @@ gwy_data_window_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
+#define class_motion_notify_callback(x) \
+    G_CALLBACK(GTK_WIDGET_GET_CLASS(x)->motion_notify_event)
+
 /**
  * gwy_data_window_new:
  * @data_view: A #GwyDataView containing the data-displaying widget to show.
@@ -192,10 +197,12 @@ gwy_data_window_new(GwyDataView *data_view)
     /***** data view *****/
     data_window->data_view = (GtkWidget*)data_view;
     g_signal_connect_data(data_view, "size_allocate",
-                           G_CALLBACK(zoom_changed_cb), data_window,
+                           G_CALLBACK(gwy_data_window_zoom_changed),
+                           data_window,
                            NULL, G_CONNECT_AFTER | G_CONNECT_SWAPPED);
     g_signal_connect_swapped(data_view, "updated",
-                             G_CALLBACK(data_view_updated_cb), data_window);
+                             G_CALLBACK(gwy_data_window_data_view_updated),
+                             data_window);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(data_window), vbox);
@@ -234,14 +241,14 @@ gwy_data_window_new(GwyDataView *data_view)
                      1, 2, 0, 1,
                      GTK_EXPAND | GTK_SHRINK | GTK_FILL, GTK_FILL, 0, 0);
     g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
-                             G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->hruler)->motion_notify_event),
+                             class_motion_notify_callback(data_window->hruler),
                              data_window->hruler);
 
     data_window->vruler = gwy_vruler_new();
     gwy_ruler_set_units_placement(GWY_RULER(data_window->vruler),
                                   GWY_UNITS_PLACEMENT_NONE);
     g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
-                             G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->vruler)->motion_notify_event),
+                             class_motion_notify_callback(data_window->vruler),
                              data_window->vruler);
     gtk_table_attach(GTK_TABLE(data_window->table), data_window->vruler,
                      0, 1, 1, 2,
@@ -253,11 +260,12 @@ gwy_data_window_new(GwyDataView *data_view)
     palette = gwy_layer_basic_get_palette(GWY_LAYER_BASIC(layer));
     data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL,
                                                 0, 1, palette);
-    data_view_updated_cb(data_window);
+    gwy_data_window_data_view_updated(data_window);
     gtk_box_pack_start(GTK_BOX(hbox), data_window->coloraxis,
                        FALSE, FALSE, 0);
     g_signal_connect_swapped(data_window->coloraxis, "button_press_event",
-                             G_CALLBACK(color_axis_clicked_cb), data_window);
+                             G_CALLBACK(gwy_data_window_color_axis_clicked),
+                             data_window);
 
     /* show everything except the table */
     gwy_data_window_update_units(data_window);
@@ -266,7 +274,9 @@ gwy_data_window_new(GwyDataView *data_view)
     gtk_widget_show_all(vbox);
 
     g_signal_connect(data_window, "size-allocate",
-                     G_CALLBACK(measure_changed), NULL);
+                     G_CALLBACK(gwy_data_window_measure_changed), NULL);
+    g_signal_connect(data_window, "key-press-event",
+                     G_CALLBACK(gwy_data_window_key_pressed), NULL);
 
     return GTK_WIDGET(data_window);
 }
@@ -305,7 +315,7 @@ gwy_data_window_get_data(GwyDataWindow *data_window)
 }
 
 static void
-measure_changed(GwyDataWindow *data_window)
+gwy_data_window_measure_changed(GwyDataWindow *data_window)
 {
     gdouble excess, pos, real;
     GwyDataView *data_view;
@@ -340,7 +350,7 @@ measure_changed(GwyDataWindow *data_window)
 }
 
 static void
-lame_window_resize(GwyDataWindow *data_window)
+gwy_data_window_lame_resize(GwyDataWindow *data_window)
 {
     GtkRequisition hruler_req, vruler_req, statusbar_req, coloraxis_req,
                    view_req;
@@ -423,7 +433,7 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
     }
     rzoom = CLAMP(rzoom, 1/8.0, 8.0);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(data_window->data_view), rzoom);
-    lame_window_resize(data_window);
+    gwy_data_window_lame_resize(data_window);
 }
 
 /**
@@ -620,7 +630,7 @@ gwy_data_window_get_base_name(GwyDataWindow *data_window)
 }
 
 static void
-zoom_changed_cb(GwyDataWindow *data_window)
+gwy_data_window_zoom_changed(GwyDataWindow *data_window)
 {
     gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
@@ -628,15 +638,24 @@ zoom_changed_cb(GwyDataWindow *data_window)
 }
 
 static gboolean
-color_axis_clicked_cb(GtkWidget *data_window,
-                      GdkEventButton *event)
+gwy_data_window_key_pressed(GtkWidget *data_window,
+                            GdkEventKey *event)
+{
+    gwy_debug("state = %u, keyval = %u", event->state, event->keyval);
+    return FALSE;
+}
+
+static gboolean
+gwy_data_window_color_axis_clicked(GtkWidget *data_window,
+                                   GdkEventButton *event)
 {
     GtkWidget *menu;
 
     if (event->button != 3)
         return FALSE;
 
-    menu = gwy_menu_palette(G_CALLBACK(palette_selected_cb), data_window);
+    menu = gwy_menu_palette(G_CALLBACK(gwy_data_window_palette_selected),
+                            data_window);
     gtk_widget_show_all(menu);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
@@ -644,8 +663,8 @@ color_axis_clicked_cb(GtkWidget *data_window,
 }
 
 static void
-palette_selected_cb(GtkWidget *item,
-                    GwyDataWindow *data_window)
+gwy_data_window_palette_selected(GtkWidget *item,
+                                 GwyDataWindow *data_window)
 {
     GwyPixmapLayer *layer;
     GwyPalette *palette;
@@ -664,7 +683,7 @@ palette_selected_cb(GtkWidget *item,
 }
 
 static void
-data_view_updated_cb(GwyDataWindow *data_window)
+gwy_data_window_data_view_updated(GwyDataWindow *data_window)
 {
     GwyContainer *data;
     GwyDataField *dfield;
