@@ -260,10 +260,10 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
     /* TODO: meaningful description, don't access 3DView fields directly! */
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Rot__x"), _("deg"),
+               (table, row++, _("Phi"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_rot_x_adjustment(gwy3dview));
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Rot__y"), _("deg"),
+               (table, row++, _("Theta"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_rot_y_adjustment(gwy3dview));
     spin = gwy_table_attach_spinbutton
                (table, row++, _("Scale"), "",
@@ -274,10 +274,10 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                 (GtkObject*)gwy_3d_view_get_z_deformation_adjustment(gwy3dview));
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Light__z"), _("deg"),
+               (table, row++, _("Light phi"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_light_z_adjustment(gwy3dview));
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("Light__y"), _("deg"),
+               (table, row++, _("Light theta"), _("deg"),
                 (GtkObject*)gwy_3d_view_get_light_y_adjustment(gwy3dview));
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
