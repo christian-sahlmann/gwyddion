@@ -14,6 +14,7 @@ Modules:
   io_tm_common provides better support than this rudimentary reverse-engineered
   module.
 - Local contrast enhancement display module (new).
+- Fit sphere module (new).
 - Blind tip estimate: Insensitive OK button when full estimate was run without
   partial estimate first was fixed.
 - DWT Anisotropy: Undo and data corruption were fixed.
