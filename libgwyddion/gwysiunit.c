@@ -574,27 +574,27 @@ static const gchar *known_units[] = {
     "deg", "Pa",
 };
 
-static GwySIUnit2* gwy_si_unit_parse(const gchar *string);
-static GwySIUnit2* gwy_si_unit_power_multiply(GwySIUnit2 *siunit1,
+GwySIUnit2* gwy_si_unit2_parse(const gchar *string);
+static GwySIUnit2* gwy_si_unit2_power_multiply(GwySIUnit2 *siunit1,
                                               gint power1,
                                               GwySIUnit2 *siunit2,
                                               gint power2);
-static GwySIUnit2* gwy_si_unit_power(GwySIUnit2 *siunit1,
+static GwySIUnit2* gwy_si_unit2_power(GwySIUnit2 *siunit1,
                                      gint power1);
-static void gwy_si_unit_free(GwySIUnit2* siunit);
-static GwySIUnit2* gwy_si_unit_canonicalize(GwySIUnit2 *siunit);
-static void gwy_si_unit_print(GwySIUnit2 *siunit);
+static void gwy_si_unit2_free(GwySIUnit2* siunit);
+static GwySIUnit2* gwy_si_unit2_canonicalize(GwySIUnit2 *siunit);
+static void gwy_si_unit2_print(GwySIUnit2 *siunit);
 
 static void
-gwy_si_unit_free(GwySIUnit2* siunit)
+gwy_si_unit2_free(GwySIUnit2* siunit)
 {
     g_free(siunit->origstr);
     g_array_free(siunit->units, TRUE);
     g_free(siunit);
 }
 
-static GwySIUnit2*
-gwy_si_unit_parse(const gchar *string)
+GwySIUnit2*
+gwy_si_unit2_parse(const gchar *string)
 {
     GwySIUnit2 *siunit;
     GwySimpleUnit unit;
@@ -635,6 +635,7 @@ gwy_si_unit_parse(const gchar *string)
             siunit->power10 = 0;
         }
         else if (g_str_has_prefix(string, "<sup>")) {
+            string += strlen("<sup>");
             n = strtol(string, (gchar**)&end, 10);
             if (end == string)
                 g_warning("Bad exponent %s", string);
@@ -645,6 +646,7 @@ gwy_si_unit_parse(const gchar *string)
             string = end;
         }
         else if (string[0] == '^') {
+            string++;
             n = strtol(string, (gchar**)&end, 10);
             if (end == string)
                 g_warning("Bad exponent %s", string);
@@ -653,6 +655,8 @@ gwy_si_unit_parse(const gchar *string)
             string = end;
         }
     }
+    while (g_ascii_isspace(*string))
+        string++;
 
     buf = g_string_new("");
 
@@ -678,14 +682,14 @@ gwy_si_unit_parse(const gchar *string)
         /* TODO: scan known obscure units */
         unit.traits = 0;
 
-        /* get prefix */
+        /* get prefix, but be careful not to split units like Pa to Peta-a */
         pfpower = 0;
         for (i = 0; i < G_N_ELEMENTS(known_units); i++) {
             if (g_str_has_prefix(buf->str, known_units[i])
                 && !g_ascii_isalpha(buf->str[strlen(known_units[i])]))
                 break;
         }
-        if (i < G_N_ELEMENTS(known_units) && strlen(buf->str) > 1) {
+        if (i == G_N_ELEMENTS(known_units) && strlen(buf->str) > 1) {
             for (i = 0; i < G_N_ELEMENTS(SI_prefixes); i++) {
                 const gchar *pfx = SI_prefixes[i].prefix;
 
@@ -773,14 +777,14 @@ gwy_si_unit_parse(const gchar *string)
         string = end;
     }
 
-    gwy_si_unit_canonicalize(siunit);
-    gwy_si_unit_print(siunit);
+    gwy_si_unit2_canonicalize(siunit);
+    gwy_si_unit2_print(siunit);
 
     return siunit;
 }
 
 static GwySIUnit2*
-gwy_si_unit_power_multiply(GwySIUnit2 *siunit1,
+gwy_si_unit2_power_multiply(GwySIUnit2 *siunit1,
                            gint power1,
                            GwySIUnit2 *siunit2,
                            gint power2)
@@ -793,7 +797,7 @@ gwy_si_unit_power_multiply(GwySIUnit2 *siunit1,
         GWY_SWAP(GwySIUnit2*, siunit1, siunit2);
         GWY_SWAP(gint, power1, power2);
     }
-    siunit = gwy_si_unit_power(siunit1, power1);
+    siunit = gwy_si_unit2_power(siunit1, power1);
     siunit->power10 += power2*siunit2->power10;
 
     for (i = 0; i < siunit2->units->len; i++) {
@@ -814,7 +818,7 @@ gwy_si_unit_power_multiply(GwySIUnit2 *siunit1,
 }
 
 static GwySIUnit2*
-gwy_si_unit_power(GwySIUnit2 *siunit1,
+gwy_si_unit2_power(GwySIUnit2 *siunit1,
                   gint power1)
 {
     GwySimpleUnit *unit1;
@@ -836,7 +840,7 @@ gwy_si_unit_power(GwySIUnit2 *siunit1,
 }
 
 static GwySIUnit2*
-gwy_si_unit_canonicalize(GwySIUnit2 *siunit)
+gwy_si_unit2_canonicalize(GwySIUnit2 *siunit)
 {
     GwySimpleUnit *dst, *src;
     gboolean kill_origstr = FALSE;
@@ -845,10 +849,10 @@ gwy_si_unit_canonicalize(GwySIUnit2 *siunit)
     /* consolidate multiple occurences of the same unit */
     i = 0;
     while (i < siunit->units->len) {
-        dst = &g_array_index(siunit->units, GwySimpleUnit, i);
+        src = &g_array_index(siunit->units, GwySimpleUnit, i);
 
         for (j = 0; j < i; j++) {
-            src = &g_array_index(siunit->units, GwySimpleUnit, j);
+            dst = &g_array_index(siunit->units, GwySimpleUnit, j);
             if (src->unit == dst->unit) {
                 dst->power += src->power;
                 g_array_remove_index(siunit->units, i);
@@ -881,19 +885,20 @@ gwy_si_unit_canonicalize(GwySIUnit2 *siunit)
 }
 
 static void
-gwy_si_unit_print(GwySIUnit2 *siunit)
+gwy_si_unit2_print(GwySIUnit2 *siunit)
 {
     gint i;
 
-    g_print("power: 10^%d\n", siunit->power10);
+    g_print("10^%d", siunit->power10);
 
     for (i = 0; i < siunit->units->len; i++) {
         GwySimpleUnit *unit;
 
         unit = &g_array_index(siunit->units, GwySimpleUnit, i);
-        g_print("[%d]: %s^%d {%d}\n",
-                i, g_quark_to_string(unit->unit), unit->power, unit->traits);
+        g_print(" %s^%d",
+                g_quark_to_string(unit->unit), unit->power);
     }
+    g_print("\n");
 }
 
 /************************** Documentation ****************************/
