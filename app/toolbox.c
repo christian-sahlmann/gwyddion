@@ -50,7 +50,7 @@ gwy_app_toolbox_create(void)
 {
     GwyMenuSensData sens_data_data = { GWY_MENU_FLAG_DATA, 0 };
     GwyMenuSensData sens_data_graph = { GWY_MENU_FLAG_GRAPH, 0 };
-    GtkWidget *toolbox, *vbox, *toolbar, *menu, *label;
+    GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button;
     GtkAccelGroup *accel_group;
     GList *list;
     GSList *labels = NULL, *l;
@@ -159,16 +159,18 @@ gwy_app_toolbox_create(void)
                        GWY_STOCK_GRAINS_WATER,
                        G_CALLBACK(gwy_app_run_process_func_cb),
                        "wshed_threshold");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Remove Grains By Threshold"), NULL,
-                       GWY_STOCK_GRAINS_REMOVE,
-                       G_CALLBACK(gwy_app_run_process_func_cb),
-                       "remove_threshold");
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Grain distribution"), NULL,
-                       GWY_STOCK_GRAINS_GRAPH,
-                       G_CALLBACK(gwy_app_run_process_func_cb),
-                       "grain_dist");
+    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                                _("Remove Grains By Threshold"), NULL,
+                                GWY_STOCK_GRAINS_REMOVE,
+                                G_CALLBACK(gwy_app_run_process_func_cb),
+                                "remove_threshold");
+    gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
+    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                                _("Grain distribution"), NULL,
+                                GWY_STOCK_GRAINS_GRAPH,
+                                G_CALLBACK(gwy_app_run_process_func_cb),
+                                "grain_dist");
+    gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Fractal dimension"), NULL,
                        GWY_STOCK_FRACTAL,
