@@ -158,6 +158,7 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     GwyLayerBasic *basic_layer;
     GwyContainer *data;
     gdouble min = 0.0, max = 0.0;
+    gboolean fixedmin, fixedmax;
     gboolean fixedrange = FALSE;
 
     gwy_debug("");
@@ -166,18 +167,19 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     data = GWY_DATA_VIEW_LAYER(layer)->data;
 
     /* TODO Container */
-    if (gwy_container_contains_by_name(data, "/0/show"))
-        data_field
-            = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
-    else
+    if (!gwy_container_gis_object_by_name(data, "/0/show",
+                                          (GObject**)&data_field))
         data_field
             = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     g_return_val_if_fail(data_field, layer->pixbuf);
-    if (gwy_container_contains_by_name(data, "/0/base/min")
-        && gwy_container_contains_by_name(data, "/0/base/max")) {
-        min = gwy_container_get_double_by_name(data, "/0/base/min");
-        max = gwy_container_get_double_by_name(data, "/0/base/max");
+    fixedmin = gwy_container_gis_double_by_name(data, "/0/base/min", &min);
+    fixedmax = gwy_container_gis_double_by_name(data, "/0/base/max", &max);
+    if (fixedmin || fixedmax) {
         fixedrange = TRUE;
+        if (!fixedmin)
+            min = gwy_data_field_get_min(data_field);
+        if (!fixedmax)
+            max = gwy_data_field_get_max(data_field);
     }
     /* XXX */
     /*if (GWY_LAYER_BASIC(layer)->changed)*/ {
