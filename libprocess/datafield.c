@@ -2157,12 +2157,6 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  **/
 
 /**
- * GwyDataFieldClass:
- *
- * The #GwyDataFieldClass struct contains private data only.
- **/
-
-/**
  * gwy_data_field_invalidate:
  * @data_field: A data field to invalidate.
  *
