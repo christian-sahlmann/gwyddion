@@ -91,6 +91,7 @@ FFTArgs fft_defaults = {
     0,
     GWY_INTERPOLATION_BILINEAR,
     GWY_WINDOWING_HANN,
+    GWY_FFT_OUTPUT_MOD,
 };
 
 /* The module info. */
@@ -407,7 +408,7 @@ fft_load_args(GwyContainer *container,
     if (gwy_container_contains_by_name(container, interp_key))
         args->interp = gwy_container_get_int32_by_name(container, interp_key);
     if (gwy_container_contains_by_name(container, window_key))
-        args->interp = gwy_container_get_int32_by_name(container, window_key);
+        args->window = gwy_container_get_int32_by_name(container, window_key);
     if (gwy_container_contains_by_name(container, out_key))
         args->out = gwy_container_get_int32_by_name(container, out_key);
 }
