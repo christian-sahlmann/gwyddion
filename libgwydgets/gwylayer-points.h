@@ -61,11 +61,6 @@ struct _GwyLayerPointsClass {
 
 GType            gwy_layer_points_get_type        (void) G_GNUC_CONST;
 GtkObject*       gwy_layer_points_new             (void);
-void             gwy_layer_points_set_max_points  (GwyLayerPoints *layer,
-                                                   gint npoints);
-gint             gwy_layer_points_get_max_points  (GwyLayerPoints *layer);
-gint             gwy_layer_points_get_points      (GwyLayerPoints *layer,
-                                                   gdouble *points);
 
 #ifdef __cplusplus
 }

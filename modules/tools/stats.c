@@ -29,6 +29,9 @@
 #include <app/app.h>
 #include <app/unitool.h>
 
+#define CHECK_LAYER_TYPE(l) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
+
 typedef struct {
     GtkWidget *x;
     GtkWidget *y;
@@ -96,11 +99,16 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
+    static const gchar *layer_name = "GwyLayerSelect";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
+        func_slots.layer_type = g_type_from_name(layer_name);
+        if (!func_slots.layer_type) {
+            g_warning("Layer type `%s' not available", layer_name);
+            return FALSE;
+        }
         state = g_new0(GwyUnitoolState, 1);
-        func_slots.layer_type = GWY_TYPE_LAYER_SELECT;
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
@@ -110,7 +118,7 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
-    g_assert(GWY_IS_LAYER_SELECT(state->layer));
+    g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer, "is_crop", FALSE, NULL);
 }
 
@@ -235,7 +243,7 @@ apply(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
-    gdouble xmin, ymin, xmax, ymax;
+    gdouble xy[4];
     gdouble avg, ra, rms, skew, kurtosis;
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
@@ -243,21 +251,15 @@ apply(GwyUnitoolState *state)
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-
-    if (gwy_layer_select_get_selection(GWY_LAYER_SELECT(state->layer),
-                                       &xmin, &ymin, &xmax, &ymax)) {
-        gwy_data_field_get_area_stats(dfield, gwy_data_field_rtoj(dfield, xmin),
-                                      gwy_data_field_rtoj(dfield, ymin),
-                                      gwy_data_field_rtoj(dfield, xmax),
-                                      gwy_data_field_rtoj(dfield, ymax),
+    if (gwy_vector_layer_get_selection(state->layer, xy))
+        gwy_data_field_get_area_stats(dfield,
+                                      gwy_data_field_rtoj(dfield, xy[0]),
+                                      gwy_data_field_rtoi(dfield, xy[1]),
+                                      gwy_data_field_rtoj(dfield, xy[2]),
+                                      gwy_data_field_rtoi(dfield, xy[3]),
                                       &avg, &ra, &rms, &skew, &kurtosis);
-    }
-    else {
+    else
         gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
-        xmin = ymin = 0;
-        xmax = gwy_data_field_get_xreal(dfield);
-        ymax = gwy_data_field_get_yreal(dfield);
-    }
 }
 
 static void
@@ -268,7 +270,7 @@ dialog_update(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
-    gdouble xmin, ymin, xmax, ymax;
+    gdouble xy[4];
     gboolean is_visible, is_selected;
     gdouble avg, ra, rms, skew, kurtosis;
     gchar buffer[16];
@@ -282,14 +284,13 @@ dialog_update(GwyUnitoolState *state)
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    is_selected = gwy_layer_select_get_selection(GWY_LAYER_SELECT(state->layer),
-                                                 &xmin, &ymin, &xmax, &ymax);
+    is_selected = gwy_vector_layer_get_selection(state->layer, xy);
     if (is_selected)
         gwy_data_field_get_area_stats(dfield,
-                                      gwy_data_field_rtoj(dfield, xmin),
-                                      gwy_data_field_rtoj(dfield, ymin),
-                                      gwy_data_field_rtoj(dfield, xmax),
-                                      gwy_data_field_rtoj(dfield, ymax),
+                                      gwy_data_field_rtoj(dfield, xy[0]),
+                                      gwy_data_field_rtoj(dfield, xy[1]),
+                                      gwy_data_field_rtoj(dfield, xy[2]),
+                                      gwy_data_field_rtoj(dfield, xy[3]),
                                       &avg, &ra, &rms, &skew, &kurtosis);
     else
         gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
@@ -309,10 +310,10 @@ dialog_update(GwyUnitoolState *state)
     if (!is_visible && !is_selected)
         return;
     if (is_selected) {
-        gwy_unitool_update_label(units, controls->x, MIN(xmin, xmax));
-        gwy_unitool_update_label(units, controls->y, MIN(ymin, ymax));
-        gwy_unitool_update_label(units, controls->w, fabs(xmax - xmin));
-        gwy_unitool_update_label(units, controls->h, fabs(ymax - ymin));
+        gwy_unitool_update_label(units, controls->x, MIN(xy[0], xy[2]));
+        gwy_unitool_update_label(units, controls->y, MIN(xy[1], xy[3]));
+        gwy_unitool_update_label(units, controls->w, fabs(xy[2] - xy[0]));
+        gwy_unitool_update_label(units, controls->h, fabs(xy[3] - xy[1]));
     }
     else {
         gwy_unitool_update_label(units, controls->x, 0);

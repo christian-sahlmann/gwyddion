@@ -60,9 +60,10 @@ static gboolean   gwy_layer_select_button_pressed    (GwyVectorLayer *layer,
                                                       GdkEventButton *event);
 static gboolean   gwy_layer_select_button_released   (GwyVectorLayer *layer,
                                                       GdkEventButton *event);
-static gint       gwy_layer_select_get_nselected     (GwyVectorLayer *layer);
-static gboolean   gwy_layer_select_get_selection2    (GwyLayerSelect *layer,
+static gboolean   gwy_layer_select_get_selection     (GwyVectorLayer *layer,
                                                       gdouble *selection);
+static void       gwy_layer_select_set_is_crop       (GwyLayerSelect *layer,
+                                                      gboolean is_crop);
 static void       gwy_layer_select_unselect          (GwyVectorLayer *layer);
 static void       gwy_layer_select_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_select_unplugged         (GwyDataViewLayer *layer);
@@ -127,8 +128,7 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     vector_class->motion_notify = gwy_layer_select_motion_notify;
     vector_class->button_press = gwy_layer_select_button_pressed;
     vector_class->button_release = gwy_layer_select_button_released;
-    vector_class->get_nselected = gwy_layer_select_get_nselected;
-    vector_class->get_selection = gwy_layer_select_get_selection2;
+    vector_class->get_selection = gwy_layer_select_get_selection;
     vector_class->unselect = gwy_layer_select_unselect;
 
     memset(klass->corner_cursor, 0, 4*sizeof(GdkCursor*));
@@ -225,6 +225,9 @@ gwy_layer_select_get_property(GObject*object,
  *
  * Container keys: "/0/select/rect/x0", "/0/select/x1", "/0/select/y0",
  * "/0/select/rect/y1", and "/0/select/selected".
+ *
+ * The selection (as returned by gwy_vector_layer_get_selection()) consists
+ * of list of four coordinates: xmin, ymin, xmax, ymax.
  *
  * Returns: The newly created layer.
  **/
@@ -451,68 +454,26 @@ gwy_layer_select_button_released(GwyVectorLayer *layer,
     return FALSE;
 }
 
-/**
- * gwy_layer_select_get_selection:
- * @layer: A #GwyLayerSelect.
- * @xmin: Where the upper left corner x-coordinate should be stored.
- * @ymin: Where the upper left corner y-coordinate should be stored.
- * @xmax: Where the lower right corner x-coordinate should be stored.
- * @ymax: Where the lower right corner x-coordinate should be stored.
- *
- * Obtains the selected rectangle in real (i.e., physical) coordinates.
- *
- * The @xmin, @ymin, @xmax, @ymax arguments can be NULL if you are not
- * interested in the particular coordinates.
- *
- * Returns: %TRUE when there is some selection present (and some values were
- *          stored), %FALSE
- **/
-gboolean
-gwy_layer_select_get_selection(GwyLayerSelect *layer,
-                               gdouble *xmin, gdouble *ymin,
-                               gdouble *xmax, gdouble *ymax)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_SELECT(layer), FALSE);
-
-    if (!layer->selected)
-        return FALSE;
-
-    if (xmin)
-        *xmin = layer->x0;
-    if (ymin)
-        *ymin = layer->y0;
-    if (xmax)
-        *xmax = layer->x1;
-    if (ymax)
-        *ymax = layer->y1;
-
-    return TRUE;
-}
-
 static gboolean
-gwy_layer_select_get_selection2(GwyLayerSelect *layer,
-                                gdouble *selection)
+gwy_layer_select_get_selection(GwyVectorLayer *layer,
+                               gdouble *selection)
 {
-    g_return_val_if_fail(GWY_IS_LAYER_SELECT(layer), FALSE);
+    GwyLayerSelect *select_layer;
 
-    if (!layer->selected)
+    g_return_val_if_fail(GWY_IS_LAYER_SELECT(layer), FALSE);
+    select_layer = GWY_LAYER_SELECT(layer);
+
+    if (!select_layer->selected)
         return FALSE;
 
     if (selection) {
-        selection[0] = layer->x0;
-        selection[1] = layer->y0;
-        selection[2] = layer->x1;
-        selection[3] = layer->y1;
+        selection[0] = select_layer->x0;
+        selection[1] = select_layer->y0;
+        selection[2] = select_layer->x1;
+        selection[3] = select_layer->y1;
     }
 
     return TRUE;
-}
-
-static gint
-gwy_layer_select_get_nselected(GwyVectorLayer *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_SELECT(layer), 0);
-    return GWY_LAYER_SELECT(layer)->selected;
 }
 
 static void
@@ -535,14 +496,7 @@ gwy_layer_select_unselect(GwyVectorLayer *layer)
     gwy_layer_select_save(select_layer);
 }
 
-/**
- * gwy_layer_select_set_is_crop:
- * @layer: A #GwyLayerSelect.
- * @is_crop: %TRUE if @layer should be crop-style, %FALSE for select-style.
- *
- * Sets crop-style (lines) or select-style (rectangle) of @layer.
- **/
-void
+static void
 gwy_layer_select_set_is_crop(GwyLayerSelect *layer,
                              gboolean is_crop)
 {
@@ -561,22 +515,6 @@ gwy_layer_select_set_is_crop(GwyLayerSelect *layer,
     layer->is_crop = is_crop;
     if (parent)
         gwy_layer_select_draw(vector_layer, parent->window);
-}
-
-/**
- * gwy_layer_select_get_is_crop:
- * @layer: A #GwyLayerSelect.
- *
- * Returns whether @layer style is crop (lines) or select (rectange).
- *
- * Returns: %TRUE when @layer is crop-style, %FALSE when @layer is
- *          select-style.
- **/
-gboolean
-gwy_layer_select_get_is_crop(GwyLayerSelect *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_SELECT(layer), FALSE);
-    return layer->is_crop;
 }
 
 static void

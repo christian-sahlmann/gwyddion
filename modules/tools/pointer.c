@@ -29,6 +29,9 @@
 #include <app/settings.h>
 #include <app/unitool.h>
 
+#define CHECK_LAYER_TYPE(l) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
+
 typedef struct {
     GtkWidget *x;
     GtkWidget *y;
@@ -90,11 +93,16 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
+    static const gchar *layer_name = "GwyLayerPointer";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
+        func_slots.layer_type = g_type_from_name(layer_name);
+        if (!func_slots.layer_type) {
+            g_warning("Layer type `%s' not available", layer_name);
+            return FALSE;
+        }
         state = g_new0(GwyUnitoolState, 1);
-        func_slots.layer_type = GWY_TYPE_LAYER_POINTER;
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
@@ -183,7 +191,7 @@ dialog_update(GwyUnitoolState *state)
     ToolControls *controls;
     GwyUnitoolUnits *units;
     GwyDataViewLayer *layer;
-    gdouble x, y, value;
+    gdouble x, y, value, xy[2];
     gboolean is_visible, is_selected;
     gint radius;
 
@@ -198,12 +206,13 @@ dialog_update(GwyUnitoolState *state)
     radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
 
     is_visible = state->is_visible;
-    is_selected = gwy_layer_pointer_get_point(GWY_DATA_VIEW_LAYER(state->layer),
-                                              &x, &y);
+    is_selected = gwy_vector_layer_get_selection(state->layer, xy);
     if (!is_visible && !is_selected)
         return;
 
     if (is_selected) {
+        x = xy[0];
+        y = xy[1];
         gwy_unitool_update_label(units, controls->x, x);
         gwy_unitool_update_label(units, controls->y, y);
         value = gwy_unitool_get_z_average(dfield, x, y, radius);

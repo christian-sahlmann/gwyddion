@@ -31,6 +31,9 @@
 #include <app/app.h>
 #include <app/unitool.h>
 
+#define CHECK_LAYER_TYPE(l) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
+
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
 typedef struct {
@@ -129,11 +132,16 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
+    static const gchar *layer_name = "GwyLayerSelect";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
+        func_slots.layer_type = g_type_from_name(layer_name);
+        if (!func_slots.layer_type) {
+            g_warning("Layer type `%s' not available", layer_name);
+            return FALSE;
+        }
         state = g_new0(GwyUnitoolState, 1);
-        func_slots.layer_type = GWY_TYPE_LAYER_SELECT;
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
@@ -144,7 +152,7 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
-    g_assert(GWY_IS_LAYER_SELECT(state->layer));
+    g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer, "is_crop", FALSE, NULL);
 }
 
@@ -462,11 +470,18 @@ get_selection_or_all(GwyDataField *dfield,
                      gdouble *xmin, gdouble *ymin,
                      gdouble *xmax, gdouble *ymax)
 {
+    gdouble xy[4];
     gboolean is_selected;
 
-    is_selected = gwy_layer_select_get_selection(GWY_LAYER_SELECT(layer),
-                                                 xmin, ymin, xmax, ymax);
-    if (!is_selected) {
+    is_selected = gwy_vector_layer_get_selection(layer, xy);
+
+    if (is_selected) {
+        *xmin = xy[0];
+        *ymin = xy[1];
+        *xmax = xy[2];
+        *ymax = xy[3];
+    }
+    else {
         *xmin = 0;
         *ymin = 0;
         *xmax = gwy_data_field_get_xreal(dfield);

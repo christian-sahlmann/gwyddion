@@ -55,6 +55,10 @@ static void       gwy_layer_axes_get_property    (GObject*object,
                                                   guint prop_id,
                                                   GValue *value,
                                                   GParamSpec *pspec);
+static void       gwy_layer_axes_set_max_axes    (GwyLayerAxes *layer,
+                                                  gint naxes);
+static void       gwy_layer_axes_set_orientation (GwyLayerAxes *layer,
+                                                  GtkOrientation orientation);
 static void       gwy_layer_axes_draw            (GwyVectorLayer *layer,
                                                   GdkDrawable *drawable);
 static void       gwy_layer_axes_draw_line       (GwyLayerAxes *layer,
@@ -68,7 +72,8 @@ static gboolean   gwy_layer_axes_button_released (GwyVectorLayer *layer,
                                                   GdkEventButton *event);
 static void       gwy_layer_axes_plugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_axes_unplugged       (GwyDataViewLayer *layer);
-static gint       gwy_layer_axes_get_nselected   (GwyVectorLayer *layer);
+static gint       gwy_layer_axes_get_selection   (GwyVectorLayer *layer,
+                                                  gdouble *selection);
 static void       gwy_layer_axes_unselect        (GwyVectorLayer *layer);
 static void       gwy_layer_axes_save            (GwyLayerAxes *layer,
                                                   gint i);
@@ -133,7 +138,7 @@ gwy_layer_axes_class_init(GwyLayerAxesClass *klass)
     vector_class->motion_notify = gwy_layer_axes_motion_notify;
     vector_class->button_press = gwy_layer_axes_button_pressed;
     vector_class->button_release = gwy_layer_axes_button_released;
-    vector_class->get_nselected = gwy_layer_axes_get_nselected;
+    vector_class->get_selection = gwy_layer_axes_get_selection;
     vector_class->unselect = gwy_layer_axes_unselect;
 
     klass->near_cursor = NULL;
@@ -254,6 +259,10 @@ gwy_layer_axes_get_property(GObject*object,
  * "/0/select/axes/1/x", "/0/select/axes/1/y", etc.,
  * and "/0/select/axes/nselected".
  *
+ * The selection (obtained from gwy_vector_layer_get_selection()) consists
+ * of a list of x-coordinates alone (for vertical lines) or y-coordinates
+ * alone (for horizontal lines).
+ *
  * Returns: The newly created layer.
  **/
 GtkObject*
@@ -267,17 +276,7 @@ gwy_layer_axes_new(void)
     return object;
 }
 
-/**
- * gwy_layer_axes_set_max_axes:
- * @layer: A #GwyLayerAxes.
- * @naxes: The number of axes to select.
- *
- * Sets the number of axes to @naxes.
- *
- * This is the maximum number of axes user can select and also the number of
- * axes to be selected to emit the "finished" signal.
- **/
-void
+static void
 gwy_layer_axes_set_max_axes(GwyLayerAxes *layer,
                             gint naxes)
 {
@@ -291,32 +290,7 @@ gwy_layer_axes_set_max_axes(GwyLayerAxes *layer,
     layer->axes = g_renew(gdouble, layer->axes, 2*layer->naxes);
 }
 
-/**
- * gwy_layer_axes_get_max_axes:
- * @layer: A #GwyLayerAxes.
- *
- * Returns the number of selection axes for this layer.
- *
- * Returns: The number of axes to select.
- **/
-gint
-gwy_layer_axes_get_max_axes(GwyLayerAxes *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_AXES(layer), 0);
-
-    return layer->naxes;
-}
-
-/**
- * gwy_layer_axes_set_orientation:
- * @layer: A #GwyLayerAxes.
- * @orientation: The orientation @layer should use.
- *
- * Sets the orientation of lines in an axis layer @layer.
- *
- * If the orientation differs from current, the selection is cleared.
- **/
-void
+static void
 gwy_layer_axes_set_orientation(GwyLayerAxes *layer,
                                GtkOrientation orientation)
 {
@@ -329,21 +303,6 @@ gwy_layer_axes_set_orientation(GwyLayerAxes *layer,
     if (layer->nselected)
         gwy_layer_axes_unselect(GWY_VECTOR_LAYER(layer));
     layer->orientation = orientation;
-}
-
-/**
- * gwy_layer_axes_get_orientation:
- * @layer: A #GwyLayerAxes.
- *
- * Returns the orientation of lines in an axis layer @layer.
- *
- * Returns: The orientation.
- **/
-GtkOrientation
-gwy_layer_axes_get_orientation (GwyLayerAxes *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_AXES(layer), 0);
-    return layer->orientation;
 }
 
 static void
@@ -537,36 +496,23 @@ gwy_layer_axes_button_released(GwyVectorLayer *layer,
     return FALSE;
 }
 
-/**
- * gwy_layer_axes_get_axes:
- * @layer: A #GwyLayerAxes.
- * @axes: Where the line coordinates should be stored in, or NULL (to get
- *        only the number of selected lines).
- *
- * Obtains the selected lines.
- *
- * The @axes array should be of the same size as
- * gwy_layer_axes_get_max_axes(), only the relevant coordinates are stored
- * (i.e., x-coordinates for vertical lines and y-coordinates for horizontal
- * line).
- * If less than gwy_layer_axes_get_max_axes() axes are actually selected
- * the remaining items will not have meaningful values.
- *
- * Returns: The number of actually selected lines.
- **/
-gint
-gwy_layer_axes_get_axes(GwyLayerAxes *layer,
-                        gdouble *axes)
+static gint
+gwy_layer_axes_get_selection(GwyVectorLayer *layer,
+                             gdouble *selection)
 {
+    GwyLayerAxes *axes_layer;
+
     g_return_val_if_fail(GWY_IS_LAYER_AXES(layer), 0);
+    axes_layer = GWY_LAYER_AXES(layer);
 
-    if (axes && layer->nselected)
-        memcpy(axes, layer->axes, layer->nselected*sizeof(gdouble));
+    if (selection && axes_layer->nselected)
+        memcpy(selection,
+               axes_layer->axes, axes_layer->nselected*sizeof(gdouble));
 
-    return layer->nselected;
+    return axes_layer->nselected;
 }
 
-void
+static void
 gwy_layer_axes_unselect(GwyVectorLayer *layer)
 {
     GwyLayerAxes *axes_layer;
@@ -584,13 +530,6 @@ gwy_layer_axes_unselect(GwyVectorLayer *layer)
         gwy_layer_axes_draw(layer, parent->window);
     axes_layer->nselected = 0;
     gwy_layer_axes_save(axes_layer, -1);
-}
-
-gint
-gwy_layer_axes_get_nselected(GwyVectorLayer *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_AXES(layer), 0);
-    return GWY_LAYER_AXES(layer)->nselected;
 }
 
 static void

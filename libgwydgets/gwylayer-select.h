@@ -64,14 +64,6 @@ struct _GwyLayerSelectClass {
 
 GType            gwy_layer_select_get_type        (void) G_GNUC_CONST;
 GtkObject*       gwy_layer_select_new             (void);
-gboolean         gwy_layer_select_get_selection   (GwyLayerSelect *layer,
-                                                   gdouble *xmin,
-                                                   gdouble *ymin,
-                                                   gdouble *xmax,
-                                                   gdouble *ymax);
-gboolean         gwy_layer_select_get_is_crop     (GwyLayerSelect *layer);
-void             gwy_layer_select_set_is_crop     (GwyLayerSelect *layer,
-                                                   gboolean is_crop);
 
 #ifdef __cplusplus
 }

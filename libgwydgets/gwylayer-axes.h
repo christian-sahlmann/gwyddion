@@ -62,14 +62,6 @@ struct _GwyLayerAxesClass {
 
 GType            gwy_layer_axes_get_type        (void) G_GNUC_CONST;
 GtkObject*       gwy_layer_axes_new             (void);
-void             gwy_layer_axes_set_max_axes    (GwyLayerAxes *layer,
-                                                 gint naxes);
-gint             gwy_layer_axes_get_max_axes    (GwyLayerAxes *layer);
-void             gwy_layer_axes_set_orientation (GwyLayerAxes *layer,
-                                                 GtkOrientation orientation);
-GtkOrientation   gwy_layer_axes_get_orientation (GwyLayerAxes *layer);
-gint             gwy_layer_axes_get_axes        (GwyLayerAxes *layer,
-                                                 gdouble *axes);
 
 #ifdef __cplusplus
 }

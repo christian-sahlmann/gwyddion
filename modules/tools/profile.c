@@ -30,6 +30,9 @@
 #include <app/app.h>
 #include <app/unitool.h>
 
+#define CHECK_LAYER_TYPE(l) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
+
 #define NPROFILE 3
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
@@ -112,11 +115,16 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
+    static const gchar *layer_name = "GwyLayerLines";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
+        func_slots.layer_type = g_type_from_name(layer_name);
+        if (!func_slots.layer_type) {
+            g_warning("Layer type `%s' not available", layer_name);
+            return FALSE;
+        }
         state = g_new0(GwyUnitoolState, 1);
-        func_slots.layer_type = GWY_TYPE_LAYER_LINES;
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
@@ -127,7 +135,7 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
-    g_assert(GWY_IS_LAYER_LINES(state->layer));
+    g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer, "max_lines", NPROFILE, NULL);
 }
 
@@ -245,7 +253,7 @@ update_labels(GwyUnitoolState *state)
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    nselected = gwy_layer_lines_get_lines(GWY_LAYER_LINES(state->layer), lines);
+    nselected = gwy_vector_layer_get_selection(state->layer, lines);
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -294,7 +302,7 @@ dialog_update(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     units = &state->coord_units;
     is_visible = state->is_visible;
-    nselected = gwy_layer_lines_get_lines(GWY_LAYER_LINES(state->layer), lines);
+    nselected = gwy_vector_layer_get_selection(state->layer, lines);
     if (!is_visible && !nselected)
         return;
 
@@ -357,7 +365,7 @@ apply(GwyUnitoolState *state)
 
     controls = (ToolControls*)state->user_data;
     units = &state->coord_units;
-    nselected = gwy_layer_lines_get_lines(GWY_LAYER_LINES(state->layer), lines);
+    nselected = gwy_vector_layer_get_selection(state->layer, lines);
     if (!nselected)
         return;
 

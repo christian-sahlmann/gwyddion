@@ -45,7 +45,8 @@ static gboolean gwy_layer_pointer_button_pressed  (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
 static gboolean gwy_layer_pointer_button_released (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
-static gint     gwy_layer_pointer_get_nselected   (GwyVectorLayer *layer);
+static gint     gwy_layer_pointer_get_selection   (GwyVectorLayer *layer,
+                                                   gdouble *selection);
 static void     gwy_layer_pointer_unselect        (GwyVectorLayer *layer);
 static void     gwy_layer_pointer_plugged         (GwyDataViewLayer *layer);
 static void     gwy_layer_pointer_unplugged       (GwyDataViewLayer *layer);
@@ -106,7 +107,7 @@ gwy_layer_pointer_class_init(GwyLayerPointerClass *klass)
     vector_class->button_press = gwy_layer_pointer_button_pressed;
     vector_class->button_release = gwy_layer_pointer_button_released;
     vector_class->unselect = gwy_layer_pointer_unselect;
-    vector_class->get_nselected = gwy_layer_pointer_get_nselected;
+    vector_class->get_selection = gwy_layer_pointer_get_selection;
 
     klass->point_cursor = NULL;
 }
@@ -146,6 +147,9 @@ gwy_layer_pointer_finalize(GObject *object)
  * Creates a new pointer layer.
  *
  * Container keys: "/0/select/pointer/x", "/0/select/pointer/y".
+ *
+ * The selection (as returned by gwy_vector_layer_get_selection()) consists
+ * of a couple (array of size two) points: x and y.
  *
  * Returns: The newly created layer.
  **/
@@ -267,44 +271,24 @@ gwy_layer_pointer_button_released(GwyVectorLayer *layer,
     return FALSE;
 }
 
-/**
- * gwy_layer_pointer_get_point:
- * @layer: A #GwyLayerPointer.
- * @x: Where the x-coordinate should be stored.
- * @y: Where the y-coordinate should be stored.
- *
- * Obtains the point in real (i.e., physical) coordinates.
- *
- * The @x and @y arguments can be NULL if you are not interested in the
- * particular coordinate.
- *
- * Returns: %TRUE when there is some selection present (and some values were
- *          stored), %FALSE
- **/
-gboolean
-gwy_layer_pointer_get_point(GwyDataViewLayer *layer,
-                            gdouble *x,
-                            gdouble *y)
+static gboolean
+gwy_layer_pointer_get_selection(GwyVectorLayer *layer,
+                                gdouble *selection)
 {
     GwyLayerPointer *pointer_layer;
 
     g_return_val_if_fail(GWY_IS_LAYER_POINTER(layer), FALSE);
     pointer_layer = GWY_LAYER_POINTER(layer);
+
     if (!pointer_layer->selected)
         return FALSE;
 
-    if (x)
-        *x = pointer_layer->x;
-    if (y)
-        *y = pointer_layer->y;
-    return TRUE;
-}
+    if (selection) {
+        selection[0] = pointer_layer->x;
+        selection[1] = pointer_layer->y;
+    }
 
-static gint
-gwy_layer_pointer_get_nselected(GwyVectorLayer *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_POINTER(layer), 0);
-    return GWY_LAYER_POINTER(layer)->selected;
+    return TRUE;
 }
 
 static void

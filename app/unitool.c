@@ -224,7 +224,7 @@ gwy_unitool_selection_updated_cb(GwyUnitoolState *state)
     gint nselected;
 
     gwy_debug("");
-    nselected = gwy_vector_layer_get_nselected(state->layer);
+    nselected = gwy_vector_layer_get_selection(state->layer, NULL);
     if (state->func_slots->dialog_update)
         state->func_slots->dialog_update(state);
     if (nselected && !state->is_visible)

@@ -123,7 +123,6 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     klass->key_release = NULL;
 
     klass->selection_finished = NULL;
-    klass->get_nselected = NULL;
     klass->get_selection = NULL;
     klass->unselect = NULL;
 
@@ -334,28 +333,6 @@ gwy_vector_layer_key_release(GwyVectorLayer *layer,
     g_assert(layer_class);
     if (layer_class->key_release)
         return layer_class->key_release(layer, event);
-    return FALSE;
-}
-
-/**
- * gwy_vector_layer_get_nselected:
- * @layer: A vector data view layer.
- *
- * Returns the number of selected objects in @layer.
- *
- * Returns: The number of selected objects. Depending on the particular layer,
- *          this may be an actual count or just a %TRUE/%FALSE. In all cases
- *          nonzero means something is selected, zero means there's nothing
- *          selected.
- **/
-gint
-gwy_vector_layer_get_nselected(GwyVectorLayer *layer)
-{
-    GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
-
-    g_assert(layer_class);
-    if (layer_class->get_nselected)
-        return layer_class->get_nselected(layer);
     return FALSE;
 }
 

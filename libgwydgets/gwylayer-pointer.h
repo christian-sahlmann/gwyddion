@@ -59,9 +59,6 @@ struct _GwyLayerPointerClass {
 
 GType            gwy_layer_pointer_get_type       (void) G_GNUC_CONST;
 GtkObject*       gwy_layer_pointer_new            (void);
-gboolean         gwy_layer_pointer_get_point      (GwyDataViewLayer *layer,
-                                                   gdouble *x,
-                                                   gdouble *y);
 
 #ifdef __cplusplus
 }

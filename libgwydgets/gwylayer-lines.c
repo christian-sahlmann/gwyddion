@@ -68,7 +68,10 @@ static gboolean   gwy_layer_lines_button_pressed  (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
 static gboolean   gwy_layer_lines_button_released (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
-static gint       gwy_layer_lines_get_nselected   (GwyVectorLayer *layer);
+static void       gwy_layer_lines_set_max_lines   (GwyLayerLines *layer,
+                                                   gint nlines);
+static gint       gwy_layer_lines_get_selection   (GwyVectorLayer *layer,
+                                                   gdouble *selection);
 static void       gwy_layer_lines_unselect        (GwyVectorLayer *layer);
 static void       gwy_layer_lines_plugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_lines_unplugged       (GwyDataViewLayer *layer);
@@ -138,7 +141,7 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
     vector_class->motion_notify = gwy_layer_lines_motion_notify;
     vector_class->button_press = gwy_layer_lines_button_pressed;
     vector_class->button_release = gwy_layer_lines_button_released;
-    vector_class->get_nselected = gwy_layer_lines_get_nselected;
+    vector_class->get_selection = gwy_layer_lines_get_selection;
     vector_class->unselect = gwy_layer_lines_unselect;
 
     klass->near_cursor = NULL;
@@ -243,6 +246,9 @@ gwy_layer_lines_get_property(GObject*object,
  * "/0/select/lines/0/x1", "/0/select/lines/0/y1", "/0/select/lines/1/x0",
  * "/0/select/lines/1/y0", etc., and "/0/select/lines/nselected".
  *
+ * The selection (as returned by gwy_vector_layer_get_selection()) consists
+ * of quadruples of line coordinates x0, y0, x1, y1.
+ *
  * Returns: The newly created layer.
  **/
 GtkObject*
@@ -256,17 +262,7 @@ gwy_layer_lines_new(void)
     return object;
 }
 
-/**
- * gwy_layer_lines_set_max_lines:
- * @layer: A #GwyLayerLines.
- * @nlines: The number of lines to select.
- *
- * Sets the number of lines to @nlines.
- *
- * This is the maximum number of lines user can select and also the number of
- * lines to be selected to emit the "finished" signal.
- **/
-void
+static void
 gwy_layer_lines_set_max_lines(GwyLayerLines *layer,
                               gint nlines)
 {
@@ -278,22 +274,6 @@ gwy_layer_lines_set_max_lines(GwyLayerLines *layer,
     if (layer->inear >= nlines)
         layer->inear = -1;
     layer->lines = g_renew(gdouble, layer->lines, 4*layer->nlines);
-}
-
-/**
- * gwy_layer_lines_get_max_lines:
- * @layer: A #GwyLayerLines.
- *
- * Returns the number of selection lines for this layer.
- *
- * Returns: The number of lines to select.
- **/
-gint
-gwy_layer_lines_get_max_lines(GwyLayerLines *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_LINES(layer), 0);
-
-    return layer->nlines;
 }
 
 static void
@@ -569,38 +549,20 @@ gwy_layer_lines_button_released(GwyVectorLayer *layer,
     return FALSE;
 }
 
-/**
- * gwy_layer_lines_get_lines:
- * @layer: A #GwyLayerLines.
- * @lines: Where the point coordinates should be stored in, or NULL (to get
- *         only the number of selected lines).
- *
- * Obtains the selected lines.
- *
- * The @lines array should be four times the size of
- * gwy_layer_lines_get_max_lines(), lines are stored as x0, y0, x1, y1.
- * If less than gwy_layer_lines_get_max_lines() lines are actually selected
- * the remaining items will not have meaningful values.
- *
- * Returns: The number of actually selected lines.
- **/
-gint
-gwy_layer_lines_get_lines(GwyLayerLines *layer,
-                          gdouble *lines)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_LINES(layer), 0);
-
-    if (lines && layer->nselected)
-        memcpy(lines, layer->lines, 4*layer->nselected*sizeof(gdouble));
-
-    return layer->nselected;
-}
-
 static gint
-gwy_layer_lines_get_nselected(GwyVectorLayer *layer)
+gwy_layer_lines_get_selection(GwyVectorLayer *layer,
+                              gdouble *selection)
 {
+    GwyLayerLines *lines_layer;
+
     g_return_val_if_fail(GWY_IS_LAYER_LINES(layer), 0);
-    return GWY_LAYER_LINES(layer)->nselected;
+    lines_layer = GWY_LAYER_LINES(layer);
+
+    if (selection && lines_layer->nselected)
+        memcpy(selection,
+               lines_layer->lines, 4*lines_layer->nselected*sizeof(gdouble));
+
+    return lines_layer->nselected;
 }
 
 static void

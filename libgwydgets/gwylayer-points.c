@@ -66,7 +66,10 @@ static gboolean   gwy_layer_points_button_released (GwyVectorLayer *layer,
                                                     GdkEventButton *event);
 static void       gwy_layer_points_plugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_points_unplugged       (GwyDataViewLayer *layer);
-static gint       gwy_layer_points_get_nselected   (GwyVectorLayer *layer);
+static void       gwy_layer_points_set_max_points  (GwyLayerPoints *layer,
+                                                    gint npoints);
+static gint       gwy_layer_points_get_selection   (GwyVectorLayer *layer,
+                                                    gdouble *points);
 static void       gwy_layer_points_unselect        (GwyVectorLayer *layer);
 static void       gwy_layer_points_save            (GwyLayerPoints *layer,
                                                     gint i);
@@ -131,7 +134,7 @@ gwy_layer_points_class_init(GwyLayerPointsClass *klass)
     vector_class->motion_notify = gwy_layer_points_motion_notify;
     vector_class->button_press = gwy_layer_points_button_pressed;
     vector_class->button_release = gwy_layer_points_button_released;
-    vector_class->get_nselected = gwy_layer_points_get_nselected;
+    vector_class->get_selection = gwy_layer_points_get_selection;
     vector_class->unselect = gwy_layer_points_unselect;
 
     klass->near_cursor = NULL;
@@ -233,6 +236,9 @@ gwy_layer_points_get_property(GObject*object,
  * "/0/select/points/1/x", "/0/select/points/1/y", etc.,
  * and "/0/select/points/nselected".
  *
+ * The selection (as returned by gwy_vector_layer_get_selection()) consists
+ * of array of coordinate couples x, y.
+ *
  * Returns: The newly created layer.
  **/
 GtkObject*
@@ -246,17 +252,7 @@ gwy_layer_points_new(void)
     return object;
 }
 
-/**
- * gwy_layer_points_set_max_points:
- * @layer: A #GwyLayerPoints.
- * @npoints: The number of points to select.
- *
- * Sets the number of points to @npoints.
- *
- * This is the maximum number of points user can select and also the number of
- * points to be selected to emit the "finished" signal.
- **/
-void
+static void
 gwy_layer_points_set_max_points(GwyLayerPoints *layer,
                                 gint npoints)
 {
@@ -268,22 +264,6 @@ gwy_layer_points_set_max_points(GwyLayerPoints *layer,
     if (layer->inear >= npoints)
         layer->inear = -1;
     layer->points = g_renew(gdouble, layer->points, 2*layer->npoints);
-}
-
-/**
- * gwy_layer_points_get_max_points:
- * @layer: A #GwyLayerPoints.
- *
- * Returns the number of selection points for this layer.
- *
- * Returns: The number of points to select.
- **/
-gint
-gwy_layer_points_get_max_points(GwyLayerPoints *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_POINTS(layer), 0);
-
-    return layer->npoints;
 }
 
 static void
@@ -464,34 +444,23 @@ gwy_layer_points_button_released(GwyVectorLayer *layer,
     return FALSE;
 }
 
-/**
- * gwy_layer_points_get_points:
- * @layer: A #GwyLayerPoints.
- * @points: Where the point coordinates should be stored in, or NULL (to get
- *          only the number of selected points).
- *
- * Obtains the selected points.
- *
- * The @points array should be twice the size of
- * gwy_layer_points_get_max_points(), points are stored as x, y.
- * If less than gwy_layer_points_get_max_points() points are actually selected
- * the remaining items will not have meaningful values.
- *
- * Returns: The number of actually selected points.
- **/
-gint
-gwy_layer_points_get_points(GwyLayerPoints *layer,
-                            gdouble *points)
+static gint
+gwy_layer_points_get_selection(GwyVectorLayer *layer,
+                               gdouble *selection)
 {
+    GwyLayerPoints *points_layer;
+
     g_return_val_if_fail(GWY_IS_LAYER_POINTS(layer), 0);
+    points_layer = GWY_LAYER_POINTS(layer);
 
-    if (points && layer->nselected)
-        memcpy(points, layer->points, 2*layer->nselected*sizeof(gdouble));
+    if (selection && points_layer->nselected)
+        memcpy(selection,
+               points_layer->points, 2*points_layer->nselected*sizeof(gdouble));
 
-    return layer->nselected;
+    return points_layer->nselected;
 }
 
-void
+static void
 gwy_layer_points_unselect(GwyVectorLayer *layer)
 {
     GwyLayerPoints *points_layer;
@@ -509,13 +478,6 @@ gwy_layer_points_unselect(GwyVectorLayer *layer)
         gwy_layer_points_draw(layer, parent->window);
     points_layer->nselected = 0;
     gwy_layer_points_save(points_layer, -1);
-}
-
-gint
-gwy_layer_points_get_nselected(GwyVectorLayer *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_POINTS(layer), 0);
-    return GWY_LAYER_POINTS(layer)->nselected;
 }
 
 static void

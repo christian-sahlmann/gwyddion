@@ -30,6 +30,9 @@
 #include <app/app.h>
 #include <app/unitool.h>
 
+#define CHECK_LAYER_TYPE(l) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
+
 typedef struct {
     GtkWidget *coords[6];
     GtkWidget *values[3];
@@ -94,11 +97,16 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
+    static const gchar *layer_name = "GwyLayerPoints";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
+        func_slots.layer_type = g_type_from_name(layer_name);
+        if (!func_slots.layer_type) {
+            g_warning("Layer type `%s' not available", layer_name);
+            return FALSE;
+        }
         state = g_new0(GwyUnitoolState, 1);
-        func_slots.layer_type = GWY_TYPE_LAYER_POINTS;
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
@@ -108,7 +116,7 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
-    g_assert(GWY_IS_LAYER_POINTS(state->layer));
+    g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer, "max_points", 3, NULL);
 }
 
@@ -220,8 +228,7 @@ dialog_update(GwyUnitoolState *state)
     radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
 
     is_visible = state->is_visible;
-    nselected = gwy_layer_points_get_points(GWY_LAYER_POINTS(state->layer),
-                                            points);
+    nselected = gwy_vector_layer_get_selection(state->layer, points);
     if (!is_visible && !nselected)
         return;
 
@@ -270,7 +277,7 @@ apply(GwyUnitoolState *state)
     gdouble bx, by, c, det;
     gint i, radius;
 
-    if (gwy_layer_points_get_points(GWY_LAYER_POINTS(state->layer), points) < 3)
+    if (gwy_vector_layer_get_selection(state->layer, points) < 3)
         return;
 
     controls = (ToolControls*)state->user_data;
