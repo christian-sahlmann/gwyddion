@@ -1,6 +1,11 @@
+- Make things actually compile with --disable-gl, also improve GL/gl.h,
+  GL/glu.h checking
 - Generate module browser-like info for gwyddion.net
 - Add preview to: artithmetic
-- Kill WIN32-LEAN-AND-MEAN-CAPS
+- Find out why rectangular selections sometimes leaves a dot, and fix it
+- Kill WIN32-LEAN-AND-MEAN-CAPS: postponed to 2.0, where we can break binary
+  compatibility and get rid of GL types in headers, thus we can also get rid
+  of GL header inclusion in public headers, thus the problems solves itself
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
 - Convert Logarithmic scale value to logarithmic presentation
