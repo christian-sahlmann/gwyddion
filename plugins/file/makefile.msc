@@ -6,8 +6,7 @@ PLUGINS = \
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
-# lib, because .c.obj rule uses LIB_CFLAGS...
-LIB_CFLAGS = \
+PLUGIN_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(PRG_CRUNTIME)
 
 PLUGIN_LINK = \
@@ -24,8 +23,12 @@ install: install-plugin
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
-.obj.exe:
-	$(LINK32) $< $(PLUGIN_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$@
+# I'm never able to get pattern rules and inference work together in nmake...
+dump.obj: dump.c
+	$(CC) $(CFLAGS) -GD -c $(PLUGIN_CFLAGS) dump.c
+
+dump.exe: dump.obj
+	$(LINK32) dump.obj $(PLUGIN_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$@
 
 # vim: ft=make
 
