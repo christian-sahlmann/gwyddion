@@ -28,7 +28,8 @@ process_PROGRAMS = \
 	scale.so \
 	shade.so \
 	slope_dist.so \
-	unrotate.so
+	unrotate.so \
+	calibrate.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -104,6 +105,10 @@ slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
 
 unrotate_so_SOURCES = unrotate.c
 unrotate_so_LDFLAGS = $(module_ldflags),unrotate.so
+
+calibrate_so_SOURCES = calibrate.c
+calibrate_so_LDFLAGS = $(module_ldflags),calibrate.so
+
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
