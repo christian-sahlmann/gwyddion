@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+html
+sgml
+libgwyddion-decl-list.txt
+libgwyddion-decl.txt
+libgwyddion.args
+libgwyddion.hierarchy
+libgwyddion.interfaces
+libgwyddion.prerequisites
+libgwyddion.signals

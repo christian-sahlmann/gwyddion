@@ -19,7 +19,8 @@ DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
 SCANOBJ_FILES = 		\
 	$(DOC_MODULE).args 	\
 	$(DOC_MODULE).hierarchy \
-	$(DOC_MODULE).signals
+	$(DOC_MODULE).signals \
+	$(DOC_MODULE).intefraces
 
 if ENABLE_GTK_DOC
 if MAINTAINER_MODE

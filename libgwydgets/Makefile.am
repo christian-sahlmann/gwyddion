@@ -9,7 +9,7 @@ include_HEADERS = \
 	gwyvectorshade.h
 lib_LTLIBRARIES = libgwydgets.la
 
-noinst_PROGRAMS = main
+noinst_PROGRAMS = main create-data
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -26,9 +26,10 @@ libgwydgets_la_SOURCES = \
 	gwyspherecoords.c \
 	gwyvectorshade.c
 
-main_SOURCES = \
-	main.c
+main_SOURCES = main.c
+create_data_SOURCES = create-data.c
 main_LDADD = libgwydgets.la ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la ../libdraw/libdraw.la
+create_data_LDADD = ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\"

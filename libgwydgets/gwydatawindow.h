@@ -1,5 +1,5 @@
-#ifndef __GWY_GRADSPHERE_H__
-#define __GWY_GRADSPHERE_H__
+#ifndef __GWY_DATAWINDOW_H__
+#define __GWY_DATAWINDOW_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
@@ -29,10 +29,12 @@ struct _GwyDataWindow {
     GtkWidget *data_view;
     GtkWidget *hruler;
     GtkWidget *vruler;
+    GtkWidget *statusbar;
+    GtkWidget *notebook;
 };
 
 struct _GwyDataWindowClass {
-    GtkWidgetClass parent_class;
+    GtkWindowClass parent_class;
 };
 
 GtkWidget*       gwy_data_window_new               (GwyDataView *data_view);
@@ -42,6 +44,6 @@ GType            gwy_data_window_get_type          (void) G_GNUC_CONST;
 }
 #endif /* __cplusplus */
 
-#endif /* __GWY_GRADSPHERE_H__ */
+#endif /* __GWY_DATAWINDOW_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -1,8 +1,28 @@
 <SECTION>
+<FILE>gwydataviewlayer</FILE>
+<TITLE>GwyDataViewLayer</TITLE>
+gwy_data_view_layer_is_vector
+gwy_data_view_layer_draw
+gwy_data_view_layer_paint
+gwy_data_view_layer_button_press
+gwy_data_view_layer_button_release
+gwy_data_view_layer_motion_notify
+gwy_data_view_layer_key_press
+gwy_data_view_layer_key_release
+<SUBSECTION Standard>
+GWY_DATA_VIEW_LAYER
+GWY_IS_DATA_VIEW_LAYER
+GWY_TYPE_DATA_VIEW_LAYER
+gwy_data_view_layer_get_type
+GWY_DATA_VIEW_LAYER_CLASS
+GWY_IS_DATA_VIEW_LAYER_CLASS
+GWY_DATA_VIEW_LAYER_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwyspherecoords</FILE>
 <TITLE>GwySphereCoords</TITLE>
 gwy_sphere_coords_new
-gwy_sphere_coords_value_changed
 gwy_sphere_coords_get_theta
 gwy_sphere_coords_get_phi
 gwy_sphere_coords_set_value
@@ -14,6 +34,20 @@ gwy_sphere_coords_get_type
 GWY_SPHERE_COORDS_CLASS
 GWY_IS_SPHERE_COORDS_CLASS
 GWY_SPHERE_COORDS_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwylayer-basic</FILE>
+<TITLE>GwyLayerBasic</TITLE>
+gwy_layer_basic_new
+<SUBSECTION Standard>
+GWY_LAYER_BASIC
+GWY_IS_LAYER_BASIC
+GWY_TYPE_LAYER_BASIC
+gwy_layer_basic_get_type
+GWY_LAYER_BASIC_CLASS
+GWY_IS_LAYER_BASIC_CLASS
+GWY_LAYER_BASIC_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -34,11 +68,47 @@ GWY_VECTOR_SHADE_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwydatawindow</FILE>
+<TITLE>GwyDataWindow</TITLE>
+gwy_data_window_new
+<SUBSECTION Standard>
+GWY_DATA_WINDOW
+GWY_IS_DATA_WINDOW
+GWY_TYPE_DATA_WINDOW
+gwy_data_window_get_type
+GWY_DATA_WINDOW_CLASS
+GWY_IS_DATA_WINDOW_CLASS
+GWY_DATA_WINDOW_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwydataview</FILE>
+<TITLE>GwyDataView</TITLE>
+gwy_data_view_new
+gwy_data_view_get_base_layer
+gwy_data_view_get_alpha_layer
+gwy_data_view_get_top_layer
+gwy_data_view_set_base_layer
+gwy_data_view_set_alpha_layer
+gwy_data_view_set_top_layer
+<SUBSECTION Standard>
+GWY_DATA_VIEW
+GWY_IS_DATA_VIEW
+GWY_TYPE_DATA_VIEW
+gwy_data_view_get_type
+GWY_DATA_VIEW_CLASS
+GWY_IS_DATA_VIEW_CLASS
+GWY_DATA_VIEW_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwygradsphere</FILE>
 <TITLE>GwyGradSphere</TITLE>
 gwy_grad_sphere_new
 gwy_grad_sphere_get_sphere_coords
 gwy_grad_sphere_set_sphere_coords
+gwy_grad_sphere_get_palette
+gwy_grad_sphere_set_palette
 gwy_grad_sphere_get_update_policy
 gwy_grad_sphere_set_update_policy
 <SUBSECTION Standard>

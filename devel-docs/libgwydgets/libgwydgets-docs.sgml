@@ -2,6 +2,10 @@
 <!ENTITY libgwydgets-GwySphereCoords SYSTEM "sgml/gwyspherecoords.sgml">
 <!ENTITY libgwydgets-GwyVectorShade SYSTEM "sgml/gwyvectorshade.sgml">
 <!ENTITY libgwydgets-GwyGradSphere SYSTEM "sgml/gwygradsphere.sgml">
+<!ENTITY libgwydgets-GwyDataWindow SYSTEM "sgml/gwydatawindow.sgml">
+<!ENTITY libgwydgets-GwyDataView SYSTEM "sgml/gwydataview.sgml">
+<!ENTITY libgwydgets-GwyDataViewLayer SYSTEM "sgml/gwydataviewlayer.sgml">
+<!ENTITY libgwydgets-GwyLayerBasic SYSTEM "sgml/gwylayer-basic.sgml">
 ]>
 <book id="index">
   <bookinfo>
@@ -13,5 +17,9 @@
     &libgwydgets-GwySphereCoords;
     &libgwydgets-GwyVectorShade;
     &libgwydgets-GwyGradSphere;
+    &libgwydgets-GwyDataWindow;
+    &libgwydgets-GwyDataView;
+    &libgwydgets-GwyDataViewLayer;
+    &libgwydgets-GwyLayerBasic;
   </chapter>
 </book>

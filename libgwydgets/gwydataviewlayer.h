@@ -27,7 +27,7 @@ typedef struct _GwyDataViewLayer      GwyDataViewLayer;
 typedef struct _GwyDataViewLayerClass GwyDataViewLayerClass;
 
 struct _GwyDataViewLayer {
-    GtkObject *parent_instance;
+    GtkObject parent_instance;
 
     GtkWidget *parent;
     GwyContainer *data;

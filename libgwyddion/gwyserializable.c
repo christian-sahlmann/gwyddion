@@ -121,13 +121,11 @@ gwy_serializable_deserialize(const guchar *buffer,
                              gsize size,
                              gsize *position)
 {
-    gsize namelen;
     GType type;
     GwyDeserializeFunc deserialize_method;
 
     g_return_val_if_fail(buffer, NULL);
-    if (!(namelen = gwy_serialize_check_string(buffer, size, *position,
-                                               NULL))) {
+    if (!gwy_serialize_check_string(buffer, size, *position, NULL)) {
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
               "memory contents at %p doesn't look as an serialized object",
               buffer);

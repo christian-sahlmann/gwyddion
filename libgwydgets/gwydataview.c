@@ -205,8 +205,14 @@ gwy_data_view_finalize(GObject *object)
         g_object_unref(data_view->alpha_layer);
     if (data_view->top_layer)
         g_object_unref(data_view->top_layer);
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+          "    child data ref count %d", G_OBJECT(data_view->data)->ref_count);
     if (data_view->data)
         g_object_unref(data_view->data);
+    data_view->alpha_layer = NULL;
+    data_view->top_layer = NULL;
+    data_view->base_layer = NULL;
+    data_view->data = NULL;
 }
 
 static void
@@ -216,9 +222,9 @@ gwy_data_view_unrealize(GtkWidget *widget)
 
     if (data_view->pixbuf)
         g_object_unref(data_view->pixbuf);
-    data_view->pixbuf = NULL;
     if (data_view->base_pixbuf)
         g_object_unref(data_view->base_pixbuf);
+    data_view->pixbuf = NULL;
     data_view->base_pixbuf = NULL;
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
@@ -264,7 +270,7 @@ gwy_data_view_realize(GtkWidget *widget)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
           "realizing a GwyDataView (%ux%u)",
-          widget->allocation.x, widget->allocation.height);
+          widget->allocation.width, widget->allocation.height);
     #endif
 
     g_return_if_fail(widget != NULL);
@@ -356,6 +362,21 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     GtkWidget *widget;
     gint width, height;
 
+    if (!data_view->base_pixbuf) {
+        GwyDataField *data_field;
+        gint width, height;
+
+        data_field = GWY_DATA_FIELD(
+                         gwy_container_get_object_by_name(data_view->data,
+                                                          "/0/data"));
+        width = gwy_data_field_get_xres(data_field);
+        height = gwy_data_field_get_yres(data_field);
+        data_view->base_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
+                                                FALSE,
+                                                BITS_PER_SAMPLE,
+                                                width, height);
+    }
+
     if (data_view->pixbuf) {
         width = gdk_pixbuf_get_width(data_view->pixbuf);
         height = gdk_pixbuf_get_height(data_view->pixbuf);
@@ -418,7 +439,7 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
                          0, 0, width, height,
                          0.0, 0.0,
                          (double)width/src_width, (double)height/src_height,
-                         GDK_INTERP_BILINEAR);
+                         GDK_INTERP_TILES);
     }
     if (!layer)
         return FALSE;
@@ -448,7 +469,7 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
                                  0, 0, width, height,
                                  0.0, 0.0,
                                  1.0, 1.0,
-                                 GDK_INTERP_BILINEAR, 0x255);
+                                 GDK_INTERP_TILES, 0x255);
         return TRUE;
     }
     /* compose to scaled */
@@ -460,7 +481,7 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
                          0, 0, width, height,
                          0.0, 0.0,
                          (double)width/src_width, (double)height/src_height,
-                         GDK_INTERP_BILINEAR, 0x255);
+                         GDK_INTERP_TILES, 0x255);
     return FALSE;
 }
 

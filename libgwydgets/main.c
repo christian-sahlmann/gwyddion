@@ -5,8 +5,10 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
-#include "gwyvectorshade.h"
+#include <libgwydgets/gwydgets.h>
+#include <libgwyddion/gwycontainer.h>
 #include <libdraw/gwypalette.h>
+#include <libprocess/datafield.h>
 
 /***** VECTOR SHADE [[[ *****************************************************/
 #define N 4
@@ -65,6 +67,44 @@ vector_shade_test(void)
 }
 /***** ]]] VECTOR SHADE *****************************************************/
 
+/***** DATA VIEW [[[ ********************************************************/
+#define FILENAME "data_field.object"
+
+static void
+data_view_test(void)
+{
+    GwyContainer *data;
+    GtkWidget *window, *view;
+    GObject *data_field;
+    GwyDataViewLayer *layer;
+    gchar *buffer = NULL;
+    gsize size = 0;
+    gsize pos = 0;
+    GError *err = NULL;
+
+    /* FIXME: this is necessary to initialize the object system */
+    g_type_class_ref(gwy_data_field_get_type());
+
+    g_file_get_contents(FILENAME, &buffer, &size, &err);
+    g_assert(!err);
+    data_field = gwy_serializable_deserialize(buffer, size, &pos);
+
+    data = (GwyContainer*)gwy_container_new();
+    gwy_container_set_object_by_name(data, "/0/data", data_field);
+
+    view = gwy_data_view_new(data);
+    layer = (GwyDataViewLayer*)gwy_layer_basic_new(data);
+    gwy_data_view_set_base_layer(view, layer);
+    g_object_unref(data);
+    g_object_unref(data_field);
+
+    window = gwy_data_window_new(GWY_DATA_VIEW(view));
+
+    gtk_widget_show_all(window);
+    g_signal_connect(G_OBJECT(window), "destroy", gtk_main_quit, NULL);
+}
+/***** ]]] DATA VIEW ********************************************************/
+
 int
 main(int argc, char *argv[])
 {
@@ -77,7 +117,9 @@ main(int argc, char *argv[])
     g_random_set_seed(seed);
 
     gtk_init(&argc, &argv);
-    vector_shade_test();
+
+    /*vector_shade_test();*/
+    data_view_test();
     gtk_main();
 
     return 0;

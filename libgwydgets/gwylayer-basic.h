@@ -27,11 +27,11 @@ typedef struct _GwyLayerBasic      GwyLayerBasic;
 typedef struct _GwyLayerBasicClass GwyLayerBasicClass;
 
 struct _GwyLayerBasic {
-    GwyDataViewLayer *parent_instance;
+    GwyDataViewLayer parent_instance;
 };
 
 struct _GwyLayerBasicClass {
-    GtkObjectClass parent_class;
+    GwyDataViewLayerClass parent_class;
 };
 
 GType            gwy_layer_basic_get_type        (void) G_GNUC_CONST;

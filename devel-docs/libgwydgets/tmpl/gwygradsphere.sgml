@@ -41,6 +41,24 @@ GwyGradSphere
 @sphere_coords: 
 
 
+<!-- ##### FUNCTION gwy_grad_sphere_get_palette ##### -->
+<para>
+
+</para>
+
+@grad_sphere: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_grad_sphere_set_palette ##### -->
+<para>
+
+</para>
+
+@grad_sphere: 
+@palette: 
+
+
 <!-- ##### FUNCTION gwy_grad_sphere_get_update_policy ##### -->
 <para>
 

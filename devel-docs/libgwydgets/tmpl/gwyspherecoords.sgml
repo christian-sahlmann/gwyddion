@@ -24,14 +24,6 @@ GwySphereCoords
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_sphere_coords_value_changed ##### -->
-<para>
-
-</para>
-
-@sphere_coords: 
-
-
 <!-- ##### FUNCTION gwy_sphere_coords_get_theta ##### -->
 <para>
 
@@ -59,11 +51,4 @@ GwySphereCoords
 @theta: 
 @phi: 
 
-
-<!-- ##### SIGNAL GwySphereCoords::value-changed ##### -->
-<para>
-
-</para>
-
-@gwyspherecoords: the object which received the signal.
 

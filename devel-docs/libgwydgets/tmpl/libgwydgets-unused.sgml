@@ -1,0 +1,14 @@
+<!-- ##### SIGNAL GwySphereCoords::value-changed ##### -->
+<para>
+
+</para>
+
+@gwyspherecoords: the object which received the signal.
+
+<!-- ##### FUNCTION gwy_sphere_coords_value_changed ##### -->
+<para>
+
+</para>
+
+@sphere_coords: 
+

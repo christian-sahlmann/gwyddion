@@ -1,3 +1,23 @@
+<!-- ##### FUNCTION gwy_container_delete ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@Returns: 
+
+<!-- ##### MACRO gwy_container_delete_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@Returns: 
+@container: 
+@name: 
+
 <!-- ##### FUNCTION gwy_container_set_char ##### -->
 <para>
 

@@ -19,7 +19,7 @@ static guchar*  gwy_sphere_coords_serialize         (GObject *obj,
 static GObject* gwy_sphere_coords_deserialize       (const guchar *buffer,
                                                      gsize size,
                                                      gsize *position);
-
+void puts(const char*);
 GType
 gwy_sphere_coords_get_type(void)
 {

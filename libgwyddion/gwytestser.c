@@ -39,14 +39,10 @@ gwy_test_ser_get_type(void)
         };
 
         GInterfaceInfo gwy_serializable_info = {
-            (GInterfaceInitFunc)gwy_test_ser_serializable_init,
-            NULL,
-            GUINT_TO_POINTER(42)
+            (GInterfaceInitFunc)gwy_test_ser_serializable_init, NULL, 0
         };
         GInterfaceInfo gwy_watchable_info = {
-            (GInterfaceInitFunc)gwy_test_ser_watchable_init,
-            NULL,
-            GUINT_TO_POINTER(37)
+            (GInterfaceInitFunc)gwy_test_ser_watchable_init, NULL, 0
         };
 
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -91,7 +87,7 @@ gwy_test_ser_watchable_init(gpointer giface)
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     /* initialize stuff */
-    iface->value_changed = NULL; /*gwy_test_ser_value_changed;*/
+    iface->value_changed = NULL;
 }
 
 static void

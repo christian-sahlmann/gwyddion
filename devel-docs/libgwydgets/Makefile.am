@@ -47,7 +47,7 @@ extra_files = $(DOC_MODULE).types
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = -I${top_srcdir} @CFLAGS@
-GTKDOC_LIBS = ${top_srcdir}/$(DOC_MODULE)/$(DOC_MODULE).la @LDFLAGS@
+GTKDOC_LIBS = ${top_srcdir}/$(DOC_MODULE)/$(DOC_MODULE).la ${top_srcdir}/libgwyddion/libgwyddion.la ${top_srcdir}/libdraw/libdraw.la ${top_srcdir}/libprocess/libprocess.la @LDFLAGS@
 
 GTKDOC_CC = $(LIBTOOL) --mode=compile $(CC)
 GTKDOC_LD = $(LIBTOOL) --mode=link $(CC)

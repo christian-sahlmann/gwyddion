@@ -111,10 +111,19 @@ gwy_data_view_layer_finalize(GObject *object)
         g_object_unref(layer->layout);
     if (layer->palette)
         g_object_unref(layer->palette);
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+          "    child pixbuf ref count %d", G_OBJECT(layer->pixbuf)->ref_count);
     if (layer->pixbuf)
         g_object_unref(layer->pixbuf);
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+          "    child data ref count %d", G_OBJECT(layer->data)->ref_count);
     if (layer->data)
         g_object_unref(layer->data);
+    layer->gc = NULL;
+    layer->layout = NULL;
+    layer->palette = NULL;
+    layer->pixbuf = NULL;
+    layer->data = NULL;
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }

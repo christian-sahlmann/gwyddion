@@ -90,16 +90,6 @@ GwyContainer
 @Varargs: 
 
 
-<!-- ##### FUNCTION gwy_container_delete ##### -->
-<para>
-
-</para>
-
-@container: 
-@key: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_container_foreach ##### -->
 <para>
 
@@ -280,19 +270,6 @@ GwyContainer
 
 @c: 
 @n: 
-
-
-<!-- ##### MACRO gwy_container_delete_by_name ##### -->
-<para>
-
-</para>
-
-@c: 
-@n: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@container: 
-@name: 
 
 
 <!-- ##### MACRO gwy_container_set_boolean_by_name ##### -->
