@@ -83,7 +83,7 @@ static GwyModuleInfo module_info = {
     "filter",
     N_("Basic filtering procedures."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -229,7 +229,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_widget_set_sensitive(controls->direction, FALSE);
     gtk_widget_set_sensitive(label, FALSE);
 
-    controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
+    controls->size = gtk_adjustment_new(controls->siz, 2, 20, 1, 5, 0);
     gwy_table_attach_hscale(table2, 3, _("Si_ze:"), "px",
                             controls->size, 0);
     g_signal_connect_swapped(controls->size, "value-changed",
@@ -543,7 +543,7 @@ load_args(GwyContainer *container, ToolControls *controls)
     /* sanitize */
     controls->upd = !!controls->upd;
     controls->old_upd = controls->upd;
-    controls->siz = CLAMP(controls->siz, 1, 20);
+    controls->siz = CLAMP(controls->siz, 2, 20);
     controls->fil = MIN(controls->fil, GWY_FILTER_MAXIMUM);
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
