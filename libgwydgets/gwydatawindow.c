@@ -18,7 +18,6 @@
 
 static void     gwy_data_window_class_init     (GwyDataWindowClass *klass);
 static void     gwy_data_window_init           (GwyDataWindow *data_window);
-GtkWidget*      gwy_data_window_new            (GwyDataView *data_view);
 
 static void     measure_changed                (GwyDataWindow *data_window,
                                                 GtkAllocation *allocation,
@@ -27,6 +26,8 @@ static void     lame_window_resize             (GwyDataWindow *data_window);
 static void     zoom_set                       (GtkWidget *button,
                                                 gpointer user_data);
 /* Local data */
+
+static GtkWidgetClass *parent_class = NULL;
 
 GType
 gwy_data_window_get_type(void)
@@ -64,6 +65,8 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
+
+    parent_class = g_type_class_peek_parent(klass);
 }
 
 static void

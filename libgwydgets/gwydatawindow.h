@@ -4,7 +4,6 @@
 #define __GWY_DATAWINDOW_H__
 
 #include <gdk/gdk.h>
-#include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 
 #ifndef GWY_TYPE_SPHERE_COORDS
