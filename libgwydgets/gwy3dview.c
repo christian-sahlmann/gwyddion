@@ -965,6 +965,24 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview,
 }
 
 /**
+ * gwy_3d_view_get_data:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Returns the data container this 3D view displays.
+ *
+ * Returns: The container as a #GwyContainer.
+ *
+ * Since: 1.5
+ **/
+GwyContainer*
+gwy_3d_view_get_data(Gwy3DView *gwy3dview)
+{
+    g_return_val_if_fail(GTK_WIDGET_REALIZED(gwy3dview), NULL);
+
+    return gwy3dview->container;
+}
+
+/**
  * gwy_3d_view_reset_view:
  * @gwy3dview: A 3D data view widget.
  *

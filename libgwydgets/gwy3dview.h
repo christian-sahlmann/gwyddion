@@ -155,18 +155,20 @@ GwyGLMaterial*   gwy_3d_view_get_material      (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
                                                 GwyGLMaterial *material);
 
-GdkPixbuf *      gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview,
+GdkPixbuf*       gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview,
                                                 guint xres,
                                                 guint yres);
 
+GwyContainer*    gwy_3d_view_get_data          (Gwy3DView *gwy3dview);
+
 void             gwy_3d_view_reset_view        (Gwy3DView *gwy3dview);
 
-GtkAdjustment *  gwy_3d_view_get_rot_x_adjustment          (Gwy3DView *gwy3dview);
-GtkAdjustment *  gwy_3d_view_get_rot_y_adjustment          (Gwy3DView *gwy3dview);
-GtkAdjustment *  gwy_3d_view_get_view_scale_adjustment     (Gwy3DView *gwy3dview);
-GtkAdjustment *  gwy_3d_view_get_z_deformation_adjustment  (Gwy3DView *gwy3dview);
-GtkAdjustment *  gwy_3d_view_get_light_z_adjustment        (Gwy3DView *gwy3dview);
-GtkAdjustment *  gwy_3d_view_get_light_y_adjustment        (Gwy3DView *gwy3dview);
+GtkAdjustment*   gwy_3d_view_get_rot_x_adjustment          (Gwy3DView *gwy3dview);
+GtkAdjustment*   gwy_3d_view_get_rot_y_adjustment          (Gwy3DView *gwy3dview);
+GtkAdjustment*   gwy_3d_view_get_view_scale_adjustment     (Gwy3DView *gwy3dview);
+GtkAdjustment*   gwy_3d_view_get_z_deformation_adjustment  (Gwy3DView *gwy3dview);
+GtkAdjustment*   gwy_3d_view_get_light_z_adjustment        (Gwy3DView *gwy3dview);
+GtkAdjustment*   gwy_3d_view_get_light_y_adjustment        (Gwy3DView *gwy3dview);
 
 gdouble          gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview);
 gdouble          gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview);
