@@ -50,10 +50,6 @@ typedef struct {
 static gboolean   module_register          (const gchar *name);
 static gboolean   maskcor                  (GwyContainer *data,
                                             GwyRunType run);
-static void       maskcor_load_args        (GwyContainer *settings,
-                                            MaskcorArgs *args);
-static void       maskcor_save_args        (GwyContainer *settings,
-                                            MaskcorArgs *args);
 static GtkWidget* maskcor_window_construct (MaskcorArgs *args);
 static GtkWidget* maskcor_data_option_menu (GwyDataWindow **operand);
 static void       maskcor_operation_cb     (GtkWidget *item,
@@ -62,7 +58,11 @@ static void       maskcor_threshold_cb     (GtkAdjustment *adj,
                                             gdouble *value);
 static void       maskcor_data_cb          (GtkWidget *item);
 static gboolean   maskcor_do               (MaskcorArgs *args);
-
+static void       maskcor_load_args        (GwyContainer *settings,
+                                            MaskcorArgs *args);
+static void       maskcor_save_args        (GwyContainer *settings,
+                                            MaskcorArgs *args);
+static void       maskcor_sanitize_args    (MaskcorArgs *args);
 
 static const GwyEnum results[] = {
     { "Objects marked",     GWY_MASKCOR_OBJECTS },
@@ -358,6 +358,13 @@ static const gchar *result_key = "/module/maskcor/result";
 static const gchar *threshold_key = "/module/maskcor/threshold";
 
 static void
+maskcor_sanitize_args(MaskcorArgs *args)
+{
+    args->result = MIN(args->result, GWY_MASKCOR_LAST-1);
+    args->threshold = CLAMP(args->threshold, -1.0, 1.0);
+}
+
+static void
 maskcor_load_args(GwyContainer *settings,
                   MaskcorArgs *args)
 {
@@ -367,6 +374,7 @@ maskcor_load_args(GwyContainer *settings,
     *args = maskcor_defaults;
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
+    maskcor_sanitize_args(args);
 }
 
 static void

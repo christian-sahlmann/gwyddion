@@ -30,13 +30,13 @@
     (GWY_RUN_INTERACTIVE)
 
 typedef enum {
-    GWY_CROSCOR_ABS,
-    GWY_CROSCOR_X,
-    GWY_CROSCOR_Y,
-    GWY_CROSCOR_DIR,
-    GWY_CROSCOR_ANG,
-    GWY_CROSCOR_SCORE,
-    GWY_CROSCOR_LAST
+    GWY_CROSSCOR_ABS,
+    GWY_CROSSCOR_X,
+    GWY_CROSSCOR_Y,
+    GWY_CROSSCOR_DIR,
+    GWY_CROSSCOR_ANG,
+    GWY_CROSSCOR_SCORE,
+    GWY_CROSSCOR_LAST
 } CrosscorResult;
 
 typedef struct {
@@ -69,10 +69,6 @@ typedef struct {
 static gboolean   module_register             (const gchar *name);
 static gboolean   crosscor                    (GwyContainer *data,
                                                GwyRunType run);
-static void       crosscor_load_args          (GwyContainer *settings,
-                                               CrosscorArgs *args);
-static void       crosscor_save_args          (GwyContainer *settings,
-                                               CrosscorArgs *args);
 static GtkWidget* crosscor_window_construct   (CrosscorArgs *args,
                                                CrosscorControls *controls);
 static GtkWidget* crosscor_data_option_menu   (GwyDataWindow **operand);
@@ -84,17 +80,22 @@ static void       crosscor_update_values      (CrosscorControls *controls,
 static gboolean   crosscor_check              (CrosscorArgs *args,
                                                GtkWidget *crosscor_window);
 static gboolean   crosscor_do                 (CrosscorArgs *args);
+static void       crosscor_load_args          (GwyContainer *settings,
+                                               CrosscorArgs *args);
+static void       crosscor_save_args          (GwyContainer *settings,
+                                               CrosscorArgs *args);
+static void       crosscor_sanitize_args      (CrosscorArgs *args);
 
 
 static const GwyEnum results[] = {
-    { "Absolute",    GWY_CROSCOR_ABS },
-    { "X distance",  GWY_CROSCOR_X },
-    { "Y distance",  GWY_CROSCOR_Y },
-    { "Angle",       GWY_CROSCOR_DIR },
+    { "Absolute",    GWY_CROSSCOR_ABS },
+    { "X distance",  GWY_CROSSCOR_X },
+    { "Y distance",  GWY_CROSSCOR_Y },
+    { "Angle",       GWY_CROSSCOR_DIR },
 };
 
 static const CrosscorArgs crosscor_defaults = {
-    GWY_CROSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, NULL, NULL, 1, 0.95
+    GWY_CROSSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, NULL, NULL, 1, 0.95
 };
 
 /* The module info. */
@@ -440,13 +441,13 @@ crosscor_do(CrosscorArgs *args)
     gwy_app_wait_finish();
     /*set right output */
 
-    if (args->result == GWY_CROSCOR_ABS) {
+    if (args->result == GWY_CROSSCOR_ABS) {
         abs_field(dfieldx, dfieldy);
     }
-    else if (args->result == GWY_CROSCOR_Y) {
+    else if (args->result == GWY_CROSSCOR_Y) {
         gwy_data_field_copy(dfieldy, dfieldx);
     }
-    else if (args->result == GWY_CROSCOR_DIR) {
+    else if (args->result == GWY_CROSSCOR_DIR) {
         dir_field(dfieldx, dfieldy);
     }
 
@@ -471,8 +472,19 @@ static const gchar *search_x_key = "/module/crosscor/search_x";
 static const gchar *search_y_key = "/module/crosscor/search_y";
 static const gchar *window_x_key = "/module/crosscor/window_x";
 static const gchar *window_y_key = "/module/crosscor/window_y";
+#warning WFT is rot_pos, rot_neg?
 static const gchar *rot_pos_key = "/module/crosscor/rot_pos";
 static const gchar *rot_neg_key = "/module/crosscor/rot_neg";
+
+static void
+crosscor_sanitize_args(CrosscorArgs *args)
+{
+    args->result = MIN(args->result, GWY_CROSSCOR_LAST-1);
+    args->search_x = CLAMP(args->search_x, 0, 100);
+    args->search_y = CLAMP(args->search_y, 0, 100);
+    args->window_x = CLAMP(args->window_x, 0, 100);
+    args->window_y = CLAMP(args->window_y, 0, 100);
+}
 
 static void
 crosscor_load_args(GwyContainer *settings,
@@ -489,6 +501,7 @@ crosscor_load_args(GwyContainer *settings,
     gwy_container_gis_int32_by_name(settings, window_y_key, &args->window_y);
     gwy_container_gis_double_by_name(settings, rot_pos_key, &args->rot_pos);
     gwy_container_gis_double_by_name(settings, rot_neg_key, &args->rot_neg);
+    crosscor_sanitize_args(args);
 }
 
 static void
