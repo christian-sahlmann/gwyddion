@@ -6,6 +6,7 @@
 <!ENTITY libgwyddion-GwyContainer SYSTEM "xml/gwycontainer.xml">
 <!ENTITY libgwyddion-gwymacros SYSTEM "xml/gwymacros.xml">
 <!ENTITY libgwyddion-gwyentities SYSTEM "xml/gwyentities.xml">
+<!ENTITY libgwyddion-gwymath SYSTEM "xml/gwymath.xml">
 ]>
 <book id="index">
   <bookinfo>
@@ -19,5 +20,6 @@
     &libgwyddion-GwyContainer;
     &libgwyddion-gwymacros;
     &libgwyddion-gwyentities;
+    &libgwyddion-gwymath;
   </chapter>
 </book>
