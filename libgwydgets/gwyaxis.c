@@ -28,6 +28,10 @@
 
 #define GWY_AXIS_TYPE_NAME "GwyAxis"
 
+enum {
+    LABEL_UPDATED,
+    LAST_SIGNAL
+};
 
 /* Forward declarations - widget related*/
 static void     gwy_axis_class_init           (GwyAxisClass *klass);
@@ -74,6 +78,8 @@ static void     gwy_axis_entry                (GwyAxisDialog *dialog,
 /* Local data */
 
 static GtkWidgetClass *parent_class = NULL;
+
+static guint axis_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gwy_axis_get_type(void)
@@ -127,6 +133,16 @@ gwy_axis_class_init(GwyAxisClass *klass)
     widget_class->button_press_event = gwy_axis_button_press;
     widget_class->button_release_event = gwy_axis_button_release;
 
+    klass->label_updated = NULL;
+
+    axis_signals[LABEL_UPDATED] =
+        g_signal_new("label_updated",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyAxisClass, label_updated),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
 }
 
 static void
@@ -212,6 +228,8 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
     pango_font_description_set_size(axis->par.label_font, 12*PANGO_SCALE);
 
     axis->dialog = gwy_axis_dialog_new();
+
+    /* FIXME: emits a spurious label_updated? */
     g_signal_connect(axis->dialog, "response",
                      G_CALLBACK(gwy_axis_entry), axis);
     gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
@@ -819,6 +837,7 @@ gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
         text = gwy_sci_text_get_text(GWY_SCI_TEXT(dialog->sci_text));
         g_string_assign(axis->label_text, text);
         g_free(text);
+        g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
         gtk_widget_queue_draw(GTK_WIDGET(axis));
     }
     else if (arg1 == GTK_RESPONSE_CLOSE) {
@@ -1264,6 +1283,7 @@ gwy_axis_set_label(GwyAxis *axis, GString *label_text)
     g_string_assign(axis->label_text, label_text->str);
     gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
                           label_text->str);
+    g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
     gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 

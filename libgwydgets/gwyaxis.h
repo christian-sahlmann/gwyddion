@@ -114,10 +114,10 @@ struct _GwyAxis {
 struct _GwyAxisClass {
     GtkWidgetClass parent_class;
 
+    void (*label_updated)(GwyAxis *axis);
+
     gpointer reserved1;
     gpointer reserved2;
-
-    void (*selected)(GwyAxis *axis);
 };
 
 
@@ -146,9 +146,9 @@ void        gwy_axis_set_label          (GwyAxis *axis,
 GString*    gwy_axis_get_label          (GwyAxis *axis);
 void        gwy_axis_set_unit           (GwyAxis *axis,
                                          char *unit);
-
 void        gwy_axis_enable_label_edit  (GwyAxis *axis,
                                          gboolean enable);
+
 G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/
