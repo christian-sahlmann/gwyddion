@@ -150,7 +150,7 @@ gwy_palette_def_serialize(GObject *obj,
     GwyPaletteDef *palette_def;
     GwyPaletteDefEntry *pe;
     GArray *pd;
-    gdouble *rdat, *gdat, *bdat, *xdat;
+    gdouble *rdat, *gdat, *bdat, *adat, *xdat;
     guint ndat, i;
 
     #ifdef DEBUG
@@ -165,6 +165,7 @@ gwy_palette_def_serialize(GObject *obj,
     rdat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
     gdat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
     bdat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
+    adat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
     xdat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
     
     for (i=0; i<ndat; i++)
@@ -173,16 +174,19 @@ gwy_palette_def_serialize(GObject *obj,
 	rdat[i] = pe->color.r;
 	gdat[i] = pe->color.g;
 	bdat[i] = pe->color.b;
+	adat[i] = pe->color.a;
 	xdat[i] = pe->x;
     }
     
-    return gwy_serialize_pack(buffer, size, "sdiDDDD",
+    return gwy_serialize_pack(buffer, size, "sdiiDDDDD",
                               GWY_PALETTEDEF_TYPE_NAME,
 			      palette_def->n,
+			      palette_def->has_alpha,
 			      ndat,
 			      ndat, rdat,
 			      ndat, gdat,
 			      ndat, bdat,
+			      ndat, adat,
 			      ndat, xdat
                               );
 
@@ -198,7 +202,8 @@ gwy_palette_def_deserialize(const guchar *stream,
     GwyPaletteDef *palette_def;
     GwyPaletteDefEntry pe;
     GArray *pd;
-    gdouble *rdat, *gdat, *bdat, *xdat, n;
+    gdouble *rdat, *gdat, *bdat, *adat, *xdat, n;
+    gint alpha;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -211,16 +216,18 @@ gwy_palette_def_deserialize(const guchar *stream,
     *position += pos;
 
     n =  gwy_serialize_unpack_double(stream, size, position);
+    alpha = gwy_serialize_unpack_int32(stream, size, position);
     ndat = gwy_serialize_unpack_int32(stream, size, position);
     rdat = gwy_serialize_unpack_double_array(stream, size, position, &fsize);
     gdat = gwy_serialize_unpack_double_array(stream, size, position, &fsize);
     bdat = gwy_serialize_unpack_double_array(stream, size, position, &fsize);
+    adat = gwy_serialize_unpack_double_array(stream, size, position, &fsize);
     xdat = gwy_serialize_unpack_double_array(stream, size, position, &fsize);
 
     palette_def = (GwyPaletteDef*)gwy_palette_def_new(n);
     for (i=0; i<ndat; i++)
     {
-	pe.color.r = rdat[i]; pe.color.g = gdat[i]; pe.color.b = bdat[i];
+	pe.color.r = rdat[i]; pe.color.g = gdat[i]; pe.color.b = bdat[i]; pe.color.a = adat[i];
 	pe.x = xdat[i];
 	g_array_append_val(palette_def->data, pe);
     }
@@ -243,7 +250,7 @@ void
 gwy_palette_def_copy(GwyPaletteDef *a, GwyPaletteDef *b)
 {
     guint i;
-    GwyPaletteDefEntry *pe;
+    GwyPaletteDefEntry pe;
     guint ndat = a->data->len;
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -255,7 +262,7 @@ gwy_palette_def_copy(GwyPaletteDef *a, GwyPaletteDef *b)
     /*make a deep copy*/
     for (i=0; i<ndat; i++)
     {
-	pe = &g_array_index (a->data, GwyPaletteDefEntry, i);
+	pe = g_array_index (a->data, GwyPaletteDefEntry, i);
 	g_array_append_val(b->data, pe);
     }
 }
@@ -269,37 +276,41 @@ gwy_palette_def_get_n(GwyPaletteDef *a)
 GwyPaletteEntry gwy_palette_def_get_color(GwyPaletteDef *a, gdouble x, gint interpolation)
 {
     GwyPaletteEntry ret;
-    GwyPaletteDefEntry *pe, *pf;
+    GwyPaletteDefEntry pe, pf;
     guint i;
-    gdouble rlow, rhigh, blow, bhigh, glow, ghigh, xlow, xhigh;
+    gdouble rlow, rhigh, blow, bhigh, glow, ghigh, alow, ahigh, xlow, xhigh;
 
     if (x<0 || x>a->n) {g_warning("Trying t oreach value outside of palette."); return ret;}
-    
+   
     /*find the closest color index*/
-    for (i=0; i<(a->data->len - 1); i++)
+    for (i=0; i<(a->data->len-1); i++)
     {
-	pe = &g_array_index (a->data, GwyPaletteDefEntry, i);
-	pf = &g_array_index (a->data, GwyPaletteDefEntry, i+1);
-	if (pe->x == x) 
+	pe = g_array_index (a->data, GwyPaletteDefEntry, i);
+	pf = g_array_index (a->data, GwyPaletteDefEntry, i+1);
+	if (pe.x == x) 
 	{
-	    ret.r = pe->color.r;
-	    ret.g = pe->color.g;
-	    ret.b = pe->color.b;
+	    ret.r = pe.color.r;
+	    ret.g = pe.color.g;
+	    ret.b = pe.color.b;
+	    ret.a = pe.color.a;
 	    return ret;
 	}
-	else if (pf->x == x)
+	else if (pf.x == x)
 	{
-	    ret.r = pf->color.r;
-	    ret.g = pf->color.g;
-	    ret.b = pf->color.b;
+	    ret.r = pf.color.r;
+	    ret.g = pf.color.g;
+	    ret.b = pf.color.b;
+	    ret.a = pf.color.a;
 	    return ret;
 	}
-	else if (pe->x < x && pf->x > x)
+	else if (pe.x < x && pf.x > x)
 	{
-	    rlow = pe->color.r; rhigh = pf->color.r;
-	    glow = pe->color.g; ghigh = pf->color.g;
-	    blow = pe->color.b; bhigh = pf->color.b;
-	    xlow = pe->x; xhigh = pf->x;
+	    rlow = pe.color.r; rhigh = pf.color.r;
+	    glow = pe.color.g; ghigh = pf.color.g;
+	    blow = pe.color.b; bhigh = pf.color.b;
+	    alow = pe.color.a; ahigh = pf.color.a;
+	    xlow = pe.x; xhigh = pf.x;
+	    break;
 	}
     }
 
@@ -307,6 +318,7 @@ GwyPaletteEntry gwy_palette_def_get_color(GwyPaletteDef *a, gdouble x, gint inte
     ret.r = gwy_interpolation_get_dval(x, xlow, rlow, xhigh, rhigh, interpolation);
     ret.g = gwy_interpolation_get_dval(x, xlow, glow, xhigh, ghigh, interpolation);
     ret.b = gwy_interpolation_get_dval(x, xlow, blow, xhigh, bhigh, interpolation);
+    ret.a = gwy_interpolation_get_dval(x, xlow, alow, xhigh, ahigh, interpolation);
     
     return ret;
 }
@@ -360,7 +372,7 @@ gwy_palette_def_print(GwyPaletteDef *a)
     for (i=0; i<ndat; i++)
     {
 	pe = &g_array_index (pd, GwyPaletteDefEntry, i);
-	printf("Palette entry %d: (%f %f %f) at %f\n", i, pe->color.r, pe->color.g, pe->color.b, pe->x);
+	printf("Palette entry %d: (%f %f %f %f) at %f\n", i, pe->color.r, pe->color.g, pe->color.b, pe->color.a, pe->x);
     }
     printf("############################################\n");
     

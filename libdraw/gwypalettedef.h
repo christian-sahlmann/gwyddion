@@ -24,6 +24,7 @@ typedef struct{
     gdouble r;
     gdouble g;
     gdouble b;
+    gdouble a;
 } GwyPaletteEntry;
 
 typedef struct{
@@ -37,6 +38,7 @@ typedef struct{
 
     GArray *data;                  /*color data*/
     gdouble n;                     /*maximum possible n*/
+    gint has_alpha;		   /*has alpha chanel?*/
 } GwyPaletteDef;
 
 typedef struct{

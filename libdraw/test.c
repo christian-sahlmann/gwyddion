@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     GwyPalette *p;
     GwyPaletteDef *pal, *pap, *paz;
     GwyPaletteDefEntry cval, dval;
+    GwyPaletteEntry pec;
     GArray *ble;
     gint n, i;
 
@@ -30,16 +31,27 @@ int main(int argc, char *argv[])
     g_message("preparing palette...");
    
     paz = (GwyPaletteDef*)gwy_palette_def_new(512);
-    cval.color.r=0; cval.color.g=255; cval.color.b=255; cval.x=0;
+    cval.color.r=0; cval.color.g=255; cval.color.b=255; cval.color.a=255; cval.x=0; 
     gwy_palette_def_set_color(paz, &cval);
-    cval.color.r=255; cval.color.g=255; cval.color.b=255; cval.x=512;
+    cval.color.r=255; cval.color.g=255; cval.color.b=255; cval.color.a=0; cval.x=511;
     gwy_palette_def_set_color(paz, &cval);
     
     gwy_palette_def_print(paz);
-    gwy_palette_set_def(p, paz);
+    gwy_palette_setup(p, paz);
+    gwy_palette_def_print(p->def);
+    /*gwy_palette_print(p);*/
+  
+    pec.r=10, pec.g=20; pec.b=30; pec.a=0;
+    gwy_palette_set_color(p, &pec, 500);
+    gwy_palette_recompute_palette(p,600);
+    gwy_palette_def_print(p->def);
+
     gwy_palette_recompute_table(p);
-   
-    gwy_palette_print(p);
+    gwy_palette_recompute_palette(p,500);
+    gwy_palette_def_print(p->def);
+    
+    printf("%d %d %d %d\n%d %d %d %d\n", (gint)p->ints[0], (gint)p->ints[1], (gint)p->ints[2], (gint)p->ints[3],
+	   (gint)p->ints[40], (gint)p->ints[41], (gint)p->ints[42], (gint)p->ints[43]);
 
     g_object_unref((GObject *)p);
     return 0;

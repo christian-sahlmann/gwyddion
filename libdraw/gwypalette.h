@@ -23,6 +23,7 @@ typedef struct{
     
     GwyPaletteEntry *color;
     GwyPaletteDef *def;
+    guchar *ints;
     gint nofvals;
 } GwyPalette;
 
@@ -44,20 +45,21 @@ gint gwy_palette_setup(GwyPalette *a, GwyPaletteDef *pdef);
 /*set palette definition*/
 void gwy_palette_set_def(GwyPalette *a, GwyPaletteDef* b);
 
-/*get palette definition*/
-GwyPaletteDef* gwy_palette_get_def(GwyPalette *a);
-
 /*recompute table according to definition*/
 gint gwy_palette_recompute_table(GwyPalette *a);
 
 /*recompute definition according to table*/
-gint gwy_palette_recompute_palette(GwyPalette *a);
+gint gwy_palette_recompute_palette(GwyPalette *a, gint istep);
 
 /*get palette entry (usually direct access to entries will be preferred)*/
 GwyPaletteEntry* gwy_palette_get_color(GwyPalette *a, gint i);
 
 /*set palette entry*/
 gint gwy_palette_set_color(GwyPalette *a, GwyPaletteEntry *val, gint i); 
+
+/*render Pixmap like palette for quick acces*/
+guchar* gwy_palette_int32_render(GwyPalette *a, guchar *oldpal);
+
 
 /*output to stdout (for debgging namely)*/
 void gwy_palette_print(GwyPalette *a);
