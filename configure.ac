@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.8cvs20050224, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.8cvs20050306, [http://trific.ath.cx/bugzilla/])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -210,6 +210,8 @@ PACKAGE_CFLAGS="-DGWYDDION_COMPILATION $PACKAGE_CFLAGS $GTK_CFLAGS $GTKGLEXT_CFL
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
+AC_MSG_CHECKING([for anyone actually reading this nonsense])
+AC_MSG_RESULT([no])
 AC_CHECK_HEADERS( \
   GL/gl.h \
   tiffio.h \
@@ -237,7 +239,6 @@ AC_CHECK_FUNCS([pow10])
 
 dnl I18n stuff
 GETTEXT_PACKAGE=$PACKAGE_TARNAME
-ALL_LINGUAS=cs
 AM_GNU_GETTEXT([external])
 LIBS="$LIBS $INTLLIBS"
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Gettext package name])
