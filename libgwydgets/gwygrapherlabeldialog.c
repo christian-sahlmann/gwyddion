@@ -111,7 +111,7 @@ gwy_grapher_label_dialog_init(GwyGrapherLabelDialog *dialog)
 
     table = gtk_table_new(2, 8, FALSE);
    
-    dialog->linesize = gtk_adjustment_new(1, 1, 20, 1, 5, 0);
+    dialog->linesize = gtk_adjustment_new(1, 0, 6, 1, 5, 0);
     gwy_table_attach_spinbutton(table, row, _("Frame thickness:"),
                                 _(""),
                                 dialog->linesize);

@@ -295,7 +295,7 @@ gwy_grapher_label_expose(GtkWidget *widget,
 
 void gwy_grapher_label_draw_label(GtkWidget *widget)
 {
-    gint ypos, winheight, winwidth, windepth, winx, winy;
+    gint ypos, winheight, winwidth, windepth, winx, winy, frame_off;
     gint i;
     GwyGrapherLabel *label;
     GwyGrapherCurveModel *curvemodel;
@@ -316,7 +316,8 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
 
     cmap = gdk_colormap_get_system();
    
-    ypos = 5;
+    frame_off = model->label_frame_thickness/2;
+    ypos = 5 + frame_off;
     fg.red = 0;
     fg.green = 0;
     fg.blue = 0;
@@ -332,9 +333,9 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
         pango_layout_get_pixel_extents(layout, NULL, &rect);
         
         if (model->label_reverse)
-            gdk_draw_layout(widget->window, mygc, winwidth - rect.width - 25, ypos, layout);
+            gdk_draw_layout(widget->window, mygc, winwidth - rect.width - 25 - frame_off, ypos, layout);
         else
-            gdk_draw_layout(widget->window, mygc, 25, ypos, layout);
+            gdk_draw_layout(widget->window, mygc, 25 + frame_off, ypos, layout);
         
         label->samplepos[i] = ypos;
 
@@ -342,12 +343,12 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
         {
             if (model->label_reverse)
                 gwy_grapher_draw_line(widget->window, mygc, 
-                                      winwidth - 20, ypos + rect.height/2, winwidth - 5, ypos + rect.height/2,
+                                      winwidth - 20 - frame_off, ypos + rect.height/2, winwidth - 5, ypos + rect.height/2,
                                       curvemodel->line_style, curvemodel->line_size,
                                       &(curvemodel->color));
             else
                 gwy_grapher_draw_line(widget->window, mygc, 
-                                      5, ypos + rect.height/2, 20, ypos + rect.height/2,
+                                      5 + frame_off, ypos + rect.height/2, 20 + frame_off, ypos + rect.height/2,
                                       curvemodel->line_style, curvemodel->line_size,
                                       &(curvemodel->color));
         }
@@ -355,12 +356,12 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
         {
             if (model->label_reverse)
                 gwy_grapher_draw_point (widget->window, mygc, 
-                                     winwidth - 13, ypos + rect.height/2,
+                                     winwidth - 13 - frame_off, ypos + rect.height/2,
                                    curvemodel->point_type, curvemodel->point_size,
                                    &(curvemodel->color), FALSE); 
             else
                 gwy_grapher_draw_point (widget->window, mygc, 
-                                     12, ypos + rect.height/2,
+                                     12 + frame_off, ypos + rect.height/2,
                                    curvemodel->point_type, curvemodel->point_size,
                                    &(curvemodel->color), FALSE);
         }
@@ -403,29 +404,32 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
     }
 
     */
-    gdk_gc_set_line_attributes (mygc, model->label_frame_thickness,
-                  GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
+    if ( model->label_frame_thickness > 0)
+    {
+        gdk_gc_set_line_attributes (mygc, model->label_frame_thickness,
+                      GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
 
-    gdk_draw_line(widget->window, mygc,
-                  model->label_frame_thickness/2,
-                  model->label_frame_thickness/2,
-                  widget->allocation.width - model->label_frame_thickness/2 - 1,
-                  model->label_frame_thickness/2);
-    gdk_draw_line(widget->window, mygc,
-                  model->label_frame_thickness/2,
-                  widget->allocation.height - model->label_frame_thickness/2 - 1,
-                  widget->allocation.width - model->label_frame_thickness/2 - 1,
-                  widget->allocation.height - model->label_frame_thickness/2 - 1);
-    gdk_draw_line(widget->window, mygc,
-                  model->label_frame_thickness/2,
-                  model->label_frame_thickness/2,
-                  model->label_frame_thickness/2,
-                  widget->allocation.height - model->label_frame_thickness/2 - 1);
-    gdk_draw_line(widget->window, mygc,
-                  widget->allocation.width - model->label_frame_thickness/2 - 1,
-                  model->label_frame_thickness/2,
-                  widget->allocation.width - model->label_frame_thickness/2 - 1,
-                  widget->allocation.height - model->label_frame_thickness/2 - 1);
+        gdk_draw_line(widget->window, mygc,
+                      model->label_frame_thickness/2,
+                      model->label_frame_thickness/2,
+                      widget->allocation.width - model->label_frame_thickness/2 - 1,
+                      model->label_frame_thickness/2);
+        gdk_draw_line(widget->window, mygc,
+                      model->label_frame_thickness/2,
+                      widget->allocation.height - model->label_frame_thickness/2 - 1,
+                      widget->allocation.width - model->label_frame_thickness/2 - 1,
+                      widget->allocation.height - model->label_frame_thickness/2 - 1);
+        gdk_draw_line(widget->window, mygc,
+                      model->label_frame_thickness/2,
+                      model->label_frame_thickness/2,
+                      model->label_frame_thickness/2,
+                      widget->allocation.height - model->label_frame_thickness/2 - 1);
+        gdk_draw_line(widget->window, mygc,
+                      widget->allocation.width - model->label_frame_thickness/2 - 1,
+                      model->label_frame_thickness/2,
+                      widget->allocation.width - model->label_frame_thickness/2 - 1,
+                      widget->allocation.height - model->label_frame_thickness/2 - 1);
+    }
     g_object_unref((GObject *)mygc);
     
 }
@@ -563,8 +567,8 @@ set_requised_size(GwyGrapherLabel *label)
         pango_layout_set_text(layout, curvemodel->description->str, curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
 
-        if (label->reqwidth < rect.width) label->reqwidth = rect.width + 30;
-        label->reqheight += rect.height + 5;
+        if (label->reqwidth < rect.width) label->reqwidth = rect.width + 30 + model->label_frame_thickness;
+        label->reqheight += rect.height + 5 + model->label_frame_thickness;
     } 
 }
 

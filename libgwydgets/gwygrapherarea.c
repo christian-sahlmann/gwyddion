@@ -266,6 +266,15 @@ gwy_grapher_area_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
+static void
+gwy_grapher_area_adjust_label(GwyGrapherArea *area)
+{
+    GtkAllocation *lab_alloc;
+    lab_alloc = &GTK_WIDGET(area->lab)->allocation;
+     
+    gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
+                        GTK_WIDGET(area)->allocation.width - lab_alloc->width - 5, 5);
+}
 
 static void
 gwy_grapher_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
@@ -283,16 +292,13 @@ gwy_grapher_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
          || area->newline == 1)
         && (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
             || lab_alloc->y != 5)) {
-        gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
-                        widget->allocation.width - lab_alloc->width - 5, 5);
+        gwy_grapher_area_adjust_label(area);
         area->newline = 0;
     }
     gwy_grapher_area_plot_refresh(area);
 
-    
     area->old_width = widget->allocation.width;
-    area->old_height = widget->allocation.height;
-    
+    area->old_height = widget->allocation.height;    
 }
 
 static void
@@ -1173,11 +1179,15 @@ gwy_grapher_area_set_selection(GwyGrapherArea *area, gdouble from, gdouble to)
 void 
 gwy_grapher_area_refresh(GwyGrapherArea *area)
 {
-    /*recompute curve points and repaint them*/
+    /*recompute curve points*/
     
     /*refresh label*/
     gwy_grapher_label_refresh(area->lab);
+    /*re-adjust label position*/
+    gwy_grapher_area_adjust_label(area);
 
+    /*repaint area data*/
+    gwy_grapher_area_plot_refresh(area);
 }
 
 void
