@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
 "POT-Creation-Date: 2005-03-03 04:14+0100\n"
-"PO-Revision-Date: 2005-03-03 17:27+0100\n"
+"PO-Revision-Date: 2005-03-03 22:00+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -2186,6 +2186,8 @@ msgid ""
 "Automatic facet-orientation based levelling. Levels data to make facets "
 "point up."
 msgstr ""
+"Automatické vyrovnání podle plošek. Vyrovná data tak, aby byly plošky "
+"orientovány vzhůru."
 
 #: modules/process/facet-level.c:58
 msgid "/_Level/_Facet Level"
@@ -2197,7 +2199,7 @@ msgstr "Vyrovnávám podle plošek"
 
 #: modules/process/fft.c:107
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
-msgstr ""
+msgstr "Dvourozměrná FFT (rychlá Fourierova transformace)."
 
 #: modules/process/fft.c:123
 msgid "/_Integral Transforms/_2D FFT..."
@@ -2253,7 +2255,7 @@ msgstr ""
 
 #: modules/process/fft_filter_1d.c:147
 msgid "/_Correct Data/1D _FFT filtering..."
-msgstr ""
+msgstr "/_Korekce dat/1D _FFT filtrování..."
 
 #: modules/process/fft_filter_1d.c:194
 msgid "1D FFT filter"
@@ -2363,7 +2365,7 @@ msgstr ""
 
 #: modules/process/fraccor.c:46
 msgid "Removes data under mask using fractal interpolation."
-msgstr ""
+msgstr "Odstraňuje data pod maskou pomocí fraktální interpolace."
 
 #: modules/process/fraccor.c:62
 msgid "/_Correct Data/_Fractal correction"
@@ -2390,6 +2392,8 @@ msgid ""
 "Calculates fractal dimension using several methods (partitioning, box "
 "counting, triangulation, power spectrum)."
 msgstr ""
+"Počítá fraktální dimenzi několika metodami (rozdělování, počítání boxů, "
+"triangulace, ze spektrální hustoty)."
 
 #: modules/process/fractal.c:163
 msgid "/_Statistics/_Fractal Dimension..."
@@ -2427,7 +2431,7 @@ msgstr "Proložená přímka"
 
 #: modules/process/gradient.c:52
 msgid "Creates presentations with various gradients (Sobel, Prewitt)."
-msgstr ""
+msgstr "Vytváří presentace s různými gradienty (Sobel, Prewitt)."
 
 #: modules/process/gradient.c:69
 msgid "/_Display/_Gradient/_Sobel (horizontal)"
@@ -2447,7 +2451,7 @@ msgstr "/_Zobrazení/_Gradient/_Prewitt (svislý)"
 
 #: modules/process/grain_dist.c:42
 msgid "Evaluates distribution of grains (continuous parts of mask)."
-msgstr ""
+msgstr "Počítá rozdělení zrn (spojitých částí masky)."
 
 #: modules/process/grain_dist.c:58
 msgid "/_Grains/_Size Distribution"
@@ -2459,7 +2463,7 @@ msgstr "Histogram rozdělení velikostí zrn"
 
 #: modules/process/grain_mark.c:120
 msgid "Marks grains by thresholding (height, slope, curvature)."
-msgstr ""
+msgstr "Označuje zrna podle prahu (výšky, sklonu, křivosti)."
 
 #: modules/process/grain_mark.c:136
 msgid "/_Grains/_Mark by Threshold..."
@@ -2508,7 +2512,7 @@ msgstr "Barva _masky"
 
 #: modules/process/grain_rem_threshold.c:104
 msgid "Removes grains by thresholding (height, size)."
-msgstr ""
+msgstr "Odstraňuje zrna podle prahu (výšky, velikosti)."
 
 #: modules/process/grain_rem_threshold.c:120
 msgid "/_Grains/_Remove by Threshold..."
@@ -2528,7 +2532,7 @@ msgstr "Způsob výběru:"
 
 #: modules/process/grain_wshed.c:109
 msgid "Marks grains by watershed algorithm."
-msgstr ""
+msgstr "Označuje zrna metodou stékání."
 
 #: modules/process/grain_wshed.c:125
 msgid "/_Grains/Mark by _Watershed..."
@@ -2578,6 +2582,7 @@ msgstr "Označuji hranice"
 msgid ""
 "Removes data under mask, interpolating them with Laplace equation solution."
 msgstr ""
+"Odstraňuje data pod maskou, interpoluje je řešním Laplaceovy rovnice."
 
 #: modules/process/laplace.c:62
 msgid "/_Correct Data/_Remove Data Under Mask"
@@ -2596,6 +2601,8 @@ msgid ""
 "Levels data by simple plane subtraction or by rotation, and fixes minimal or "
 "mean value to zero."
 msgstr ""
+"Vyrovnává data data jednoduchým odečtením roviny nebo rotací, srovnává "
+"minimální či střední hodnotu na nulu."
 
 #: modules/process/level.c:62
 msgid "/_Level/_Level"
@@ -2615,7 +2622,7 @@ msgstr "/_Vyrovnání/Vynulování _střední hodnoty"
 
 #: modules/process/linecorrect.c:41
 msgid "Corrects line defects (mostly experimental algorithms)."
-msgstr ""
+msgstr "Opravuje řádkové defekty (převážně experimentální algoritmy)."
 
 #: modules/process/linecorrect.c:57
 msgid "/_Correct Data/_Modus Line Correction"
@@ -2623,7 +2630,7 @@ msgstr "/_Korekce dat/_Odstranění chyb v řádcích"
 
 #: modules/process/local_contrast.c:77
 msgid "Maximizes local contrast."
-msgstr ""
+msgstr "Maximalizuje lokální kontrast."
 
 #: modules/process/local_contrast.c:93
 msgid "/_Display/_Local Contrast..."
@@ -2687,7 +2694,7 @@ msgstr "Výsledek korelace"
 
 #: modules/process/maskcor.c:83
 msgid "Creates mask by correlation with another data."
-msgstr ""
+msgstr "Vytváří masku z korelace s jinými daty."
 
 #: modules/process/maskcor.c:99
 msgid "/M_ultidata/_Mask by Correlation..."
@@ -2707,7 +2714,7 @@ msgstr "_Jádro korelace:"
 
 #: modules/process/maskops.c:42
 msgid "Basic operations with mask: inversion, removal, extraction."
-msgstr ""
+msgstr "Základní operace s maskou: inverze, odstranění, extrakce."
 
 #: modules/process/maskops.c:58
 msgid "/_Mask/_Remove Mask"
@@ -2723,7 +2730,7 @@ msgstr "/_Maska/_Extrahovat masku"
 
 #: modules/process/median-bg.c:85
 msgid "Subtracts background using a rank-based algorithm."
-msgstr ""
+msgstr "Odečítá pozadí kvantilovou metodou."
 
 #: modules/process/median-bg.c:101
 msgid "/_Level/_Median Level..."
@@ -2798,7 +2805,7 @@ msgstr ""
 
 #: modules/process/outliers.c:44
 msgid "Creates mask of outliers."
-msgstr ""
+msgstr "Vytváří masku z vybočujících hodnot."
 
 #: modules/process/outliers.c:60
 msgid "/_Correct Data/_Mask of Outliers"
@@ -2806,7 +2813,7 @@ msgstr "/_Korekce dat/Maska vybočujících hodnot"
 
 #: modules/process/polylevel.c:87
 msgid "Subtracts polynomial background."
-msgstr ""
+msgstr "Odečítá polynomiální pozadí."
 
 #: modules/process/polylevel.c:103
 msgid "/_Level/_Polynomial Background..."
@@ -2834,7 +2841,7 @@ msgstr "S_tejné stupně"
 
 #: modules/process/presentationops.c:40
 msgid "Basic operations with presentation: extraction, removal."
-msgstr ""
+msgstr "Základní operace s presentacemi: extrakce, odstranění."
 
 #: modules/process/presentationops.c:56
 msgid "/_Display/_Remove Presentation"
@@ -2842,11 +2849,11 @@ msgstr "/_Zobrazení/Odst_ranit presentaci"
 
 #: modules/process/presentationops.c:63
 msgid "/_Display/E_xtract Presentation"
-msgstr ""
+msgstr "/_Zobrazení/_Extrahovat presentaci"
 
 #: modules/process/rotate.c:86
 msgid "Rotates data by arbitrary angle."
-msgstr ""
+msgstr "Rotuje data o libovolný úhel."
 
 #: modules/process/rotate.c:102
 msgid "/_Basic Operations/Rotate by _Angle..."
@@ -2866,7 +2873,7 @@ msgstr "_Rozšířit výsledek, aby se vešla celá data"
 
 #: modules/process/scale.c:83
 msgid "Scales data by arbitrary factor."
-msgstr ""
+msgstr "Škáluje data o libovolný faktor."
 
 #: modules/process/scale.c:99
 msgid "/_Basic Operations/Scale..."
@@ -2890,7 +2897,7 @@ msgstr "Nová _výška:"
 
 #: modules/process/scars.c:102
 msgid "Marks and/or removes scars (horizontal linear artefacts)."
-msgstr ""
+msgstr "Označuje a/nebo odstraňuje šrámy (vodorovné lineární defekty)."
 
 #: modules/process/scars.c:118
 msgid "/_Correct Data/M_ark Scars..."
@@ -2930,11 +2937,11 @@ msgstr "_Měkký práh:"
 
 #: modules/process/scars.c:467
 msgid "_Negative"
-msgstr ""
+msgstr "_Záporné"
 
 #: modules/process/shade.c:83
 msgid "Creates a shaded presentation of data."
-msgstr ""
+msgstr "Vytváří vystínovanou presentaci dat."
 
 #: modules/process/shade.c:99
 msgid "/_Display/_Shading..."
@@ -2949,6 +2956,8 @@ msgid ""
 "Calculates two-dimensional distribution of slopes or graph of their angular "
 "distribution."
 msgstr ""
+"Počítá dvourozměrné rozdělení sklonů, případně graf jejich úhlového "
+"rozdělení."
 
 #: modules/process/slope_dist.c:123
 msgid "/_Statistics/_Slope Distribution..."
@@ -2980,7 +2989,7 @@ msgstr "Úhlové rozdělení sklonu"
 
 #: modules/process/sphere-revolve.c:98
 msgid "Subtracts background by arc or sphere revolution."
-msgstr ""
+msgstr "Odečítá pozadí pomocí valení oblouku či sféry."
 
 #: modules/process/sphere-revolve.c:114
 msgid "/_Level/Revolve _Arc..."
@@ -3004,7 +3013,7 @@ msgstr "Valení oblouku"
 
 #: modules/process/tip_blind.c:121
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
-msgstr ""
+msgstr "Slepý odhad tvaru SPM hrotu Villarubiovou metodou."
 
 #: modules/process/tip_blind.c:137
 msgid "/_Tip/_Blind estimation..."
@@ -3044,7 +3053,7 @@ msgstr "Použít _okraje"
 
 #: modules/process/tip_dilation.c:59
 msgid "Dilates data with given tip."
-msgstr ""
+msgstr "Konvolvuje data s daným hrotem."
 
 #: modules/process/tip_dilation.c:75
 msgid "/_Tip/_Dilation..."
@@ -3065,7 +3074,7 @@ msgstr "Konvolvovat _povrch:"
 
 #: modules/process/tip_map.c:59
 msgid "Computes tip certainty map."
-msgstr ""
+msgstr "Počítá mapu spolehlivosti hrotu."
 
 #: modules/process/tip_map.c:75
 msgid "/_Tip/_Certainty Map..."
@@ -3097,7 +3106,7 @@ msgstr "Delta funkce"
 
 #: modules/process/tip_model.c:118
 msgid "Models SPM tip."
-msgstr ""
+msgstr "Moduluje SPM hrot."
 
 #: modules/process/tip_model.c:134
 msgid "/_Tip/_Model Tip..."
@@ -3138,7 +3147,7 @@ msgstr "Rozlišení: %d x %d pixelů"
 
 #: modules/process/tip_reconstruction.c:59
 msgid "Reconstructs surface assuming specified tip."
-msgstr ""
+msgstr "Rekonstruuje povrch předpokládaje předepsaný hrot."
 
 #: modules/process/tip_reconstruction.c:75
 msgid "/_Tip/_Surface Reconstruction..."
@@ -3180,6 +3189,7 @@ msgstr "Hexagonální"
 msgid ""
 "Rotates data to make characteristic directions parallel with x or y axis."
 msgstr ""
+"Rotuje data, aby sronval charakteristické směry s osou x či y."
 
 #: modules/process/unrotate.c:110
 msgid "/_Correct Data/_Unrotate..."
@@ -3207,7 +3217,7 @@ msgstr "Korekce:"
 
 #: modules/tools/crop.c:53
 msgid "Crop tool, crops data to smaller size."
-msgstr ""
+msgstr "Nástroj ořez, ořezává data na menší velikost."
 
 #: modules/tools/crop.c:80
 msgid "Crop data"
@@ -3219,7 +3229,7 @@ msgstr "Ořez"
 
 #: modules/tools/distance.c:61
 msgid "Distance measurement tool, measures distances and angles."
-msgstr ""
+msgstr "Nástroj měření vzdálenosti, měří vzdálenosti a úhly."
 
 #: modules/tools/distance.c:88
 msgid "Measure distances between points."
@@ -3238,6 +3248,8 @@ msgid ""
 "Filter tool, processes selected part of data with a filter (conservative "
 "denoise, mean, median. Kuwahara, minimum, maximum)."
 msgstr ""
+"Nástroj filtr, zpracovává vybranou část dat filtrem (konzervativní "
+"odšumění, střední hodnota, medián, Kuwahara, minimum, maximum)."
 
 #: modules/tools/filter.c:112
 msgid "Basic filters"
@@ -3263,6 +3275,8 @@ msgstr "_Automaticky aktualizuj náhled"
 msgid ""
 "Grain removal tool, removes continuous parts of mask and/or underlying data."
 msgstr ""
+"Nástroj odstraňování zrn, odstraňuje souvislé části masky a/nebo data "
+"ležící pod ní."
 
 #: modules/tools/grain_remove_manually.c:96
 msgid "_Mask"
@@ -3305,6 +3319,8 @@ msgid ""
 "Interactive color range tool, allows to select data range false color scale "
 "should map to, either on data or on height distribution histogram."
 msgstr ""
+"Nástroj interaktivní nastavení barevného rozsahu, umožňuje vybrat rozsah, "
+"na nějž se mapuje barevá škála, na datech či histogramu rozdělení výšky."
 
 #: modules/tools/icolorange.c:125
 msgid "Stretch color range to part of data."
@@ -3331,6 +3347,8 @@ msgid ""
 "Three-point level tool, levels data by subtracting a plane fitted through "
 "three selected points."
 msgstr ""
+"Nástroj tříbodové vyrovnání, vyrovnává data odečtením roviny proložené "
+"třemi vybranými body."
 
 #: modules/tools/level3.c:87
 msgid "Level data using three points."
@@ -3347,6 +3365,8 @@ msgstr "_Poloměr oblasti průměrování:"
 #: modules/tools/maskedit.c:70
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr ""
+"Nástroj editor masky, umožňuje interaktivně přidávat či odstraňovat části "
+"masky."
 
 #: modules/tools/maskedit.c:98
 msgid "Edit mask"
@@ -3378,7 +3398,7 @@ msgstr "Mód:"
 
 #: modules/tools/pointer.c:59
 msgid "Pointer tool, reads value under pointer."
-msgstr ""
+msgstr "Nástroj ukazatel, čte hodnotu pod ukazatelem myši."
 
 #: modules/tools/pointer.c:86
 msgid "Read value under mouse cursor."
@@ -3391,10 +3411,11 @@ msgstr "Čtení hodnot"
 #: modules/tools/polynom.c:71
 msgid "Polynom fit tool, fits polynoms to X or Y profiles and subtracts them."
 msgstr ""
+"Nástroj prokládání polynomů, prokládá a odečítá polynomy ve směru x či y."
 
 #: modules/tools/polynom.c:99
 msgid "Fit X or Y profiles by polynom"
-msgstr ""
+msgstr "Prokládání x či y profilů polynomem"
 
 #: modules/tools/polynom.c:159
 msgid "X/Y Profile Level"
@@ -3414,7 +3435,7 @@ msgstr "(jinak bude použit jen výběr)"
 
 #: modules/tools/profile.c:79
 msgid "Profile tool, creates profile graphs from selected lines."
-msgstr ""
+msgstr "Nástroj profil, vytváří grafy profilů z vybraných úseček."
 
 #: modules/tools/profile.c:106
 msgid "Extract profiles from data."
@@ -3450,6 +3471,8 @@ msgid ""
 "Statistical function tool, calculates one-dimensional statistical functions "
 "(height distribution, correlations, PSDF) of selected part of data."
 msgstr ""
+"Nástroj statistické funkce, počítá jednorozměrné statistické funkce "
+"(rozdělení výšek, korelace, spektrální hustotu) vybrané části dat."
 
 #: modules/tools/sfunctions.c:97
 msgid "Height distribution"
@@ -3500,6 +3523,8 @@ msgid ""
 "Spot removal tool, interpolates small parts of data (displayed on a zoomed "
 "view) using selected algorithm."
 msgstr ""
+"Nástroj odstranění skvrn, interpoluje malé části dat (zobrazené na zvětšeném "
+"pohledu) vybraným algoritmem."
 
 #: modules/tools/spotremove.c:128
 msgid "Hyperbolic flatten"
@@ -3527,6 +3552,9 @@ msgid ""
 "(mean, median, RMS, skew, kurtosis, inclination, area, projected area) of "
 "selected part of data."
 msgstr ""
+"Nástroj statistické veličiny, počítá různé statistické charakteristiky "
+"(střední hodnota, medián, RMS, šikmost, špičatost, sklon, plocha, "
+"projektovaná plocha) vybrané části dat."
 
 #: modules/tools/stats.c:96
 msgid "Statistical quantities"
@@ -3566,11 +3594,11 @@ msgstr "Plocha"
 
 #: modules/tools/stats.c:188
 msgid "Inclination theta"
-msgstr ""
+msgstr "Théta sklonu"
 
 #: modules/tools/stats.c:189
 msgid "Inclination phi"
-msgstr ""
+msgstr "Fí sklonu"
 
 #: modules/tools/stats.c:201
 msgid "Statistical Quantities"
