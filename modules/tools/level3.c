@@ -16,7 +16,7 @@ typedef struct {
     gdouble mag;
     gint precision;
     gchar *units;
-} CropControls;
+} Level3Controls;
 
 static GtkWidget* level3_dialog_create            (GwyDataView *data_view);
 static void       level3_do                       (void);
@@ -33,7 +33,7 @@ static void       level3_dialog_set_visible       (gboolean visible);
 static const gchar *radius_key = "/tool/level3/radius";
 
 static GtkWidget *dialog;
-static CropControls controls;
+static Level3Controls controls;
 static gulong finished_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *points_layer = NULL;
@@ -184,7 +184,7 @@ level3_dialog_create(GwyDataView *data_view)
     controls.mag = gwy_math_humanize_numbers(unit, max, &controls.precision);
     controls.units = g_strconcat(gwy_math_SI_prefix(controls.mag), "m", NULL);
 
-    dialog = gtk_dialog_new_with_buttons(_("Crop"),
+    dialog = gtk_dialog_new_with_buttons(_("Level"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
