@@ -32,11 +32,22 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
+/* Palettes are deprecated. */
 GtkWidget* gwy_menu_palette                  (GCallback callback,
+                                              gpointer cbdata);
+#endif
+GtkWidget* gwy_menu_gradient                 (GCallback callback,
                                               gpointer cbdata);
 GtkWidget* gwy_menu_gl_material              (GCallback callback,
                                               gpointer cbdata);
+#ifndef GWY_DISABLE_DEPRECATED
+/* Palettes are deprecated. */
 GtkWidget* gwy_option_menu_palette           (GCallback callback,
+                                              gpointer cbdata,
+                                              const gchar *current);
+#endif
+GtkWidget* gwy_option_menu_gradient          (GCallback callback,
                                               gpointer cbdata,
                                               const gchar *current);
 GtkWidget* gwy_option_menu_gl_material       (GCallback callback,
@@ -48,9 +59,12 @@ GtkWidget* gwy_option_menu_interpolation     (GCallback callback,
 GtkWidget* gwy_option_menu_windowing         (GCallback callback,
                                               gpointer cbdata,
                                               GwyWindowingType current);
+#ifndef GWY_DISABLE_DEPRECATED
+/* Zoom mode is nowhere used anyway. */
 GtkWidget* gwy_option_menu_zoom_mode         (GCallback callback,
                                               gpointer cbdata,
                                               GwyZoomMode current);
+#endif
 GtkWidget* gwy_option_menu_2dcwt             (GCallback callback,
                                               gpointer cbdata,
                                               Gwy2DCWTWaveletType current);
@@ -61,20 +75,23 @@ GtkWidget* gwy_option_menu_sfunctions_output (GCallback callback,
                                               gpointer cbdata,
                                               GwySFOutputType current);
 #ifndef GWY_DISABLE_DEPRECATED
+/* This should not use GtkOrientation, but GwyDirection (new type) */
 GtkWidget* gwy_option_menu_direction         (GCallback callback,
                                               gpointer cbdata,
                                               GtkOrientation current);
+/* The GwyFilterType itself is broken and should not exist. */
 GtkWidget* gwy_option_menu_filter            (GCallback callback,
                                               gpointer cbdata,
                                               GwyFilterType current);
-/* option menus for enums that should not be public at the first place */
+/* Option menus for enums that should not be public at the first place */
 GtkWidget* gwy_option_menu_mergegrain        (GCallback callback,
                                               gpointer cbdata,
                                               GwyMergeType current);
-#endif
+/* This is silly and there's no reason for making it public. */
 GtkWidget* gwy_option_menu_fit_line          (GCallback callback,
                                               gpointer cbdata,
                                               GwyFitLineType current);
+#endif
 GtkWidget* gwy_option_menu_metric_unit       (GCallback callback,
                                               gpointer cbdata,
                                               gint from,

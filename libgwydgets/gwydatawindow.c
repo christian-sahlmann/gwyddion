@@ -55,7 +55,7 @@ static gboolean gwy_data_window_key_pressed       (GwyDataWindow *data_window,
                                                    GdkEventKey *event);
 static gboolean gwy_data_window_color_axis_clicked(GtkWidget *data_window,
                                                    GdkEventButton *event);
-static void     gwy_data_window_palette_selected  (GtkWidget *item,
+static void     gwy_data_window_gradient_selected (GtkWidget *item,
                                                    GwyDataWindow *data_window);
 static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
 
@@ -757,8 +757,8 @@ gwy_data_window_color_axis_clicked(GtkWidget *data_window,
     if (event->button != 3)
         return FALSE;
 
-    menu = gwy_menu_palette(G_CALLBACK(gwy_data_window_palette_selected),
-                            data_window);
+    menu = gwy_menu_gradient(G_CALLBACK(gwy_data_window_gradient_selected),
+                             data_window);
     gtk_widget_show_all(menu);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
@@ -766,13 +766,13 @@ gwy_data_window_color_axis_clicked(GtkWidget *data_window,
 }
 
 static void
-gwy_data_window_palette_selected(GtkWidget *item,
-                                 GwyDataWindow *data_window)
+gwy_data_window_gradient_selected(GtkWidget *item,
+                                  GwyDataWindow *data_window)
 {
     GwyPixmapLayer *layer;
     const gchar *name;
 
-    name = g_object_get_data(G_OBJECT(item), "palette-name");
+    name = g_object_get_data(G_OBJECT(item), "gradient-name");
     gwy_debug("%s", name);
 
     layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));

@@ -27,17 +27,33 @@
 
 #include <libgwyddion/gwyddion.h>
 #include <libdraw/gwypalette.h>
+#include <libdraw/gwygradient.h>
 #include "gwyoptionmenus.h"
 
 #define BITS_PER_SAMPLE 8
-#define PALETTE_SAMPLE_HEIGHT 16
-#define PALETTE_SAMPLE_WIDTH 80
+
+enum {
+    SAMPLE_HEIGHT = 16,
+    SAMPLE_WIDTH = 80
+};
+
+/* TODO: when rewriting with GtkComboBox, factor out common stuff of
+ * gradient and material list constructors -- they differ only in sorting
+ * and rendering functions;
+ * Actually, something like GwyResource would be useful, with generic
+ * interface and namely with signals emitted not only when a particular
+ * resource changes, but when some is created or deleted */
 
 static GtkWidget* gwy_palette_menu_create        (const gchar *current,
                                                   gint *current_idx);
 static GtkWidget* gwy_sample_palette_to_gtkimage (GwyPaletteDef *palette_def);
 static gint       palette_def_compare            (GwyPaletteDef *a,
                                                   GwyPaletteDef *b);
+static GtkWidget* gwy_gradient_menu_create       (const gchar *current,
+                                                  gint *current_idx);
+static GtkWidget* gwy_sample_gradient_to_gtkimage(GwyGradient *gradient);
+static gint       gradient_compare               (GwyGradient *a,
+                                                  GwyGradient *b);
 static GtkWidget* gwy_sample_gl_material_to_gtkimage(GwyGLMaterial *material);
 static gint       gl_material_compare            (GwyGLMaterial *a,
                                                   GwyGLMaterial *b);
@@ -50,7 +66,177 @@ static GtkWidget* gwy_option_menu_create_real    (const GwyEnum *entries,
                                                   gboolean do_translate);
 static void       gwy_option_menu_metric_unit_destroyed (GwyEnum *entries);
 
+/************************** Gradient menu ****************************/
+/* XXX: deprecated */
+
+static GtkWidget*
+gwy_gradient_menu_create(const gchar *current,
+                         gint *current_idx)
+{
+    GSList *l, *entries = NULL;
+    GtkWidget *menu, *image, *item, *hbox, *label;
+    gint i, idx;
+
+    gwy_gradients_foreach((GwyGradientFunc)gwy_hash_table_to_slist_cb,
+                          &entries);
+    entries = g_slist_sort(entries, (GCompareFunc)gradient_compare);
+
+    menu = gtk_menu_new();
+
+    idx = -1;
+    i = 0;
+    for (l = entries; l; l = g_slist_next(l)) {
+        GwyGradient *gradient = (GwyGradient*)l->data;
+        const gchar *name = gwy_gradient_get_name(gradient);
+
+        image = gwy_sample_gradient_to_gtkimage(gradient);
+        item = gtk_menu_item_new();
+        hbox = gtk_hbox_new(FALSE, 6);
+        label = gtk_label_new(name);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+        gtk_container_add(GTK_CONTAINER(item), hbox);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_object_set_data(G_OBJECT(item), "gradient-name", (gpointer)name);
+        if (current && strcmp(current, name) == 0)
+            idx = i;
+        i++;
+    }
+    g_slist_free(entries);
+
+    if (current_idx && idx != -1)
+        *current_idx = idx;
+
+    return menu;
+}
+
+/**
+ * gwy_menu_gradient:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ *
+ * Creates a pop-up gradient menu.
+ *
+ * Returns: The newly created pop-up menu as #GtkWidget.
+ *
+ * Since: 1.8
+ **/
+GtkWidget*
+gwy_menu_gradient(GCallback callback,
+                  gpointer cbdata)
+{
+    GtkWidget *menu;
+    GList *c;
+
+    menu = gwy_gradient_menu_create(NULL, NULL);
+    if (callback) {
+        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
+            g_signal_connect(c->data, "activate", callback, cbdata);
+    }
+
+    return menu;
+}
+
+/**
+ * gwy_option_menu_gradient:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ * @current: Gradient name to be shown as currently selected
+ *           (or %NULL to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of gradients,
+ * alphabetically sorted, with names and small sample images.
+ *
+ * It sets object data "gradient-name" to gradient definition name for each
+ * menu item.
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ *
+ * Since: 1.8
+ **/
+GtkWidget*
+gwy_option_menu_gradient(GCallback callback,
+                         gpointer cbdata,
+                         const gchar *current)
+{
+    GtkWidget *omenu, *menu;
+    GList *c;
+    gint idx;
+
+    idx = -1;
+    omenu = gtk_option_menu_new();
+    g_object_set_data(G_OBJECT(omenu), "gwy-option-menu",
+                      GINT_TO_POINTER(TRUE));
+    menu = gwy_gradient_menu_create(current, &idx);
+    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
+    if (idx != -1)
+        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), idx);
+
+    if (callback) {
+        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
+            g_signal_connect(c->data, "activate", callback, cbdata);
+    }
+
+    return omenu;
+}
+
+static GtkWidget*
+gwy_sample_gradient_to_gtkimage(GwyGradient *gradient)
+{
+    GdkPixbuf *pixbuf;
+    const guchar *samples;
+    GtkWidget *image;
+    guint rowstride;
+    guchar *data;
+    guint tmp[4];
+    gint i, j, k, n;
+
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
+                            SAMPLE_WIDTH, SAMPLE_HEIGHT);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    data = gdk_pixbuf_get_pixels(pixbuf);
+
+    samples = gwy_gradient_get_samples(gradient, &n);
+    g_assert(n >= SAMPLE_WIDTH);
+
+    /* average pixels, but don't bother with subpixel interpolation */
+    for (i = 0; i < SAMPLE_WIDTH; i++) {
+        memset(tmp, 0, 4*sizeof(guint));
+        k = (i + 1)*n/SAMPLE_WIDTH - i*n/SAMPLE_WIDTH;
+        for (j = i*n/SAMPLE_WIDTH; j < (i + 1)*n/SAMPLE_WIDTH; j++) {
+            const guchar *sam = samples + 4*j;
+
+            tmp[0] += sam[0];
+            tmp[1] += sam[1];
+            tmp[2] += sam[2];
+        }
+        data[3*i    ] = (tmp[0] + k/2)/k;
+        data[3*i + 1] = (tmp[1] + k/2)/k;
+        data[3*i + 2] = (tmp[2] + k/2)/k;
+    }
+    for (i = 1; i < SAMPLE_HEIGHT; i++)
+        memcpy(data + i*rowstride, data, 3*SAMPLE_WIDTH);
+
+    image = gtk_image_new_from_pixbuf(pixbuf);
+    g_object_unref(pixbuf);
+
+    return image;
+}
+
+static gint
+gradient_compare(GwyGradient *a,
+                 GwyGradient *b)
+{
+    return strcmp(gwy_gradient_get_name(a), gwy_gradient_get_name(b));
+}
+
+
 /************************** Palette menu ****************************/
+/* XXX: deprecated */
 
 static GtkWidget*
 gwy_palette_menu_create(const gchar *current,
@@ -184,7 +370,7 @@ gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
     }
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
-                            PALETTE_SAMPLE_WIDTH, PALETTE_SAMPLE_HEIGHT);
+                            SAMPLE_WIDTH, SAMPLE_HEIGHT);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     data = gdk_pixbuf_get_pixels(pixbuf);
@@ -194,16 +380,16 @@ gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
     else
         gwy_palette_set_palette_def(palette, palette_def);
 
-    samples = gwy_palette_sample(palette, 4*PALETTE_SAMPLE_WIDTH, samples);
-    for (i = 0; i < PALETTE_SAMPLE_WIDTH; i++) {
+    samples = gwy_palette_sample(palette, 4*SAMPLE_WIDTH, samples);
+    for (i = 0; i < SAMPLE_WIDTH; i++) {
         guchar *sam = samples + 4*4*i;
 
         data[3*i] = ((guint)sam[0] + sam[4] + sam[8] + sam[12])/4;
         data[3*i + 1] = ((guint)sam[1] + sam[5] + sam[9] + sam[13])/4;
         data[3*i + 2] = ((guint)sam[2] + sam[6] + sam[10] + sam[14])/4;
     }
-    for (i = 1; i < PALETTE_SAMPLE_HEIGHT; i++)
-        memcpy(data + i*rowstride, data, 3*PALETTE_SAMPLE_WIDTH);
+    for (i = 1; i < SAMPLE_HEIGHT; i++)
+        memcpy(data + i*rowstride, data, 3*SAMPLE_WIDTH);
     gwy_object_unref(palette);
 
     image = gtk_image_new_from_pixbuf(pixbuf);
@@ -358,14 +544,14 @@ gwy_sample_gl_material_to_gtkimage(GwyGLMaterial *material)
     }
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, BITS_PER_SAMPLE,
-                            PALETTE_SAMPLE_WIDTH, PALETTE_SAMPLE_HEIGHT);
+                            SAMPLE_WIDTH, SAMPLE_HEIGHT);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     data = gdk_pixbuf_get_pixels(pixbuf);
 
-    samples = gwy_gl_material_sample(material, PALETTE_SAMPLE_WIDTH, samples);
-    for (i = 0; i < PALETTE_SAMPLE_HEIGHT; i++)
-        memcpy(data + i*rowstride, samples, 4*PALETTE_SAMPLE_WIDTH);
+    samples = gwy_gl_material_sample(material, SAMPLE_WIDTH, samples);
+    for (i = 0; i < SAMPLE_HEIGHT; i++)
+        memcpy(data + i*rowstride, samples, 4*SAMPLE_WIDTH);
 
     image = gtk_image_new_from_pixbuf(pixbuf);
     g_object_unref(pixbuf);

@@ -455,8 +455,8 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     row++;
 
     name = gwy_3d_view_get_gradient(gwy3dview);
-    omenu = gwy_option_menu_palette(G_CALLBACK(gwy_3d_window_set_gradient),
-                                    gwy3dwindow, name);
+    omenu = gwy_option_menu_gradient(G_CALLBACK(gwy_3d_window_set_gradient),
+                                     gwy3dwindow, name);
     gtk_widget_set_sensitive(omenu, !lights_on);
     gwy3dwindow->palette_menu = omenu;
     gtk_table_attach(GTK_TABLE(table), omenu,
@@ -702,7 +702,7 @@ gwy_3d_window_set_gradient(GtkWidget *item,
 {
     gwy_3d_view_set_gradient(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
                              (gchar*)g_object_get_data(G_OBJECT(item),
-                                                       "palette-name"));
+                                                       "gradient-name"));
 }
 
 static void
