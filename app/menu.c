@@ -95,16 +95,14 @@ gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;
-    GwyMenuSensitiveData sens_data;
+    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     setup_sensitivity_keys();
     menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
                                         "<xtns>", accel_group, &item_factory);
     item = gtk_item_factory_get_item(item_factory,
-                                     "<file>/Externs/Metadata browser...");
-    set_sensitive(item, GWY_MENU_FLAG_DATA);
-    sens_data.flags = GWY_MENU_FLAG_DATA;
-    sens_data.set_to = 0;
+                                     "<xtns>/Externs/Metadata browser...");
+    set_sensitive(item, sens_data.flags);
     gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
     return menu;
@@ -127,7 +125,7 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     };
     GtkItemFactory *item_factory;
     GtkWidget *alignment, *menu, *item;
-    GwyMenuSensitiveData sens_data;
+    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<file>",
                                         accel_group);
@@ -146,13 +144,15 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     /* set up sensitivity  */
     setup_sensitivity_keys();
     item = gtk_item_factory_get_item(item_factory, "<file>/File/Save");
-    set_sensitive(item, GWY_MENU_FLAG_DATA);
+    set_sensitive(item, sens_data.flags);
     item = gtk_item_factory_get_item(item_factory, "<file>/File/Save As...");
-    set_sensitive(item, GWY_MENU_FLAG_DATA);
+    set_sensitive(item, sens_data.flags);
     item = gtk_item_factory_get_item(item_factory, "<file>/File/Close");
-    set_sensitive(item, GWY_MENU_FLAG_DATA);
-    sens_data.flags = GWY_MENU_FLAG_DATA;
-    sens_data.set_to = 0;
+    set_sensitive(item, sens_data.flags);
+
+    item = gtk_item_factory_get_item(item_factory, "<file>/File/Export To");
+    gwy_menu_set_flags_recursive(item, &sens_data);
+
     gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
     return alignment;
