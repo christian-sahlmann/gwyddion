@@ -143,7 +143,8 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->x_unit = gwy_si_unit_new("");
     gmodel->y_unit = gwy_si_unit_new("");
 
-    gmodel->title = g_string_new("Graph"); /* XXX: GwyGraph has no such thing */
+    /* XXX: GwyGraph has no such thing */
+    gmodel->title = g_string_new("Fix bug #23!");
     gmodel->top_label = g_string_new("");
     gmodel->bottom_label = g_string_new("");
     gmodel->left_label = g_string_new("");
