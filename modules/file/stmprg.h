@@ -1,15 +1,41 @@
-/* $Id$
- * Copyright (C) 2004 Rok Zitko
- * E-mail: rok.zitko@ijs.si
+/*
+ *  @(#) $Id$
+ *  Copyright (C) 2004 Rok Zitko
+ *  E-mail: rok.zitko@ijs.si
  *
- * Information on the format was published in the manual
- * for STMPRG, Copyright (C) 1989-1992 Omicron.
+ *  Information on the format was published in the manual
+ *  for STMPRG, Copyright (C) 1989-1992 Omicron.
+ *
+ *  Based on nanoscope.c, Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* FIXME: this was originaly here, but me thinks if someone wants 16bit
+ * integers she should use 16bit integers... */
+/*
 #define INT16 short
 #define UINT16 unsigned short
 #define INT32 int
 #define UINT32 unsigned int
+*/
+#define INT16 gint16
+#define UINT16 guint16
+#define INT32 gint32
+#define UINT32 guint32
 
 struct STMPRG_MAINFIELD
 {
@@ -144,3 +170,5 @@ struct STMPRG_OTHER_CTRL
 #define STMPRG_SPECTRO_CHANNEL_ext1I0 5
 
 #define L_SIZE (L_MAINFIELD + L_CONTROL + L_OTHER_CTRL + 4)
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
