@@ -57,7 +57,7 @@ gwy_app_splash_create(void)
     filename = g_build_filename(p, "splash.png", NULL);
     g_free(p);
 
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    window = gtk_window_new(GTK_WINDOW_POPUP);
     p = g_strconcat(_("Starting "), g_get_application_name(), NULL);
     gtk_window_set_title(GTK_WINDOW(window), p);
     gtk_window_set_wmclass(GTK_WINDOW(window), "splash",
@@ -74,24 +74,28 @@ gwy_app_splash_create(void)
     gtk_window_set_auto_startup_notification(FALSE);
     g_signal_connect(window, "map", G_CALLBACK(splash_map), NULL);
 
+    frame = gtk_frame_new(NULL);
+    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_ETCHED_OUT);
+    gtk_container_add(GTK_CONTAINER(window), frame);
+
     vbox = gtk_vbox_new(FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(window), vbox);
+    gtk_container_add(GTK_CONTAINER(frame), vbox);
+    gtk_container_set_border_width(GTK_CONTAINER(vbox), 2);
 
     image = gtk_image_new_from_file(filename);
     gtk_box_pack_start(GTK_BOX(vbox), image, FALSE, FALSE, 0);
 
-    frame = gtk_frame_new(NULL);
-    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
-    gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
-
     label = gtk_label_new(p);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(label), 6, 4);
-    gtk_container_add(GTK_CONTAINER(frame), label);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
     g_free(p);
 
+    lab = gtk_hseparator_new();
+    gtk_box_pack_start(GTK_BOX(vbox), lab, FALSE, FALSE, 0);
+
     p = g_strconcat("<small>", PACKAGE_NAME,
-                    _(" is free software released under GNU GPL"), "</small>",
+                    _(" is free software released under GNU GPL."), "</small>",
                     NULL);
     lab = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(lab), p);
