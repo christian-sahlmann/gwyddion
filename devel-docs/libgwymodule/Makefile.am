@@ -56,7 +56,7 @@ content_files = \
 	plugin-proxy-file.sgml
 
 # Other files to distribute.
-extra_files =
+extra_files = makefile.msc
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.

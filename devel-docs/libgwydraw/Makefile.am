@@ -46,7 +46,7 @@ HTML_IMAGES =
 content_files =
 
 # Other files to distribute.
-extra_files = $(DOC_MODULE).types
+extra_files = $(DOC_MODULE).types makefile.msc
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.

@@ -10,6 +10,7 @@ SUBDIRS = \
 
 EXTRA_DIST = \
 	README \
+	makefile.msc \
 	add-objects.py \
 	gtk-doc.mk
 

@@ -88,29 +88,6 @@ Core application interface.
 @data_view: 
 
 
-<!-- ##### FUNCTION gwy_app_undo_checkpoint ##### -->
-<para>
-
-</para>
-
-@data: 
-@what: 
-
-
-<!-- ##### FUNCTION gwy_app_undo_undo ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### FUNCTION gwy_app_undo_redo ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### FUNCTION gwy_app_change_mask_color_cb ##### -->
 <para>
 
