@@ -2164,15 +2164,24 @@ gwy_data_field_shade(GwyDataField *data_field, GwyDataField *target_field,
                                                     gdouble theta, gdouble phi)
 {
     gint i, j;
+    gdouble max, maxval;
+    
     gwy_data_field_resample(target_field, data_field->xres, data_field->yres, GWY_INTERPOLATION_NONE);
+
+    max = -G_MAXDOUBLE;
     for (i = 0; i < data_field->yres; i++)
     {
 
         for (j = 0; j < data_field->xres; j++)
         {
             target_field->data[j + data_field->xres*i] = - gwy_data_field_get_angder(data_field, j, i, phi);
+            
+            if (max < target_field->data[j + data_field->xres*i]) max = target_field->data[j + data_field->xres*i];
         }
     }
+
+    maxval = G_PI*theta/180.0*max;
+    for (i = 0; i < data_field->xres*data_field->yres; i++) target_field->data[i] = max-fabs(maxval-target_field->data[i]);
 }
 
 
