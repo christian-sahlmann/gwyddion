@@ -11,7 +11,6 @@ libgwydgetsinclude_HEADERS = \
 	gwy3dview.h \
 	gwy3dwindow.h \
 	gwyaxis.h \
-	gwyaxiser.h \
 	gwyaxisdialog.h \
 	gwycoloraxis.h \
 	gwycolorbutton.h \
@@ -63,7 +62,6 @@ libgwydgets_la_SOURCES = \
 	gwy3dview.c \
 	gwy3dwindow.c \
 	gwyaxis.c \
-	gwyaxiser.c \
 	gwyaxisdialog.c \
 	gwycoloraxis.c \
 	gwycolorbutton.c \
