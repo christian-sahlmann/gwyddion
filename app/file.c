@@ -10,8 +10,6 @@
 
 static void file_open_ok_cb                  (GtkFileSelection *selector);
 static void file_save_as_ok_cb               (GtkFileSelection *selector);
-static void gwy_app_update_data_window_title (GtkWindow *window,
-                                              GwyContainer *data);
 
 void
 gwy_app_file_open_cb(void)
@@ -141,7 +139,7 @@ gwy_app_create_data_window(GwyContainer *data)
                              G_CALLBACK(g_object_unref), data);
 
     gtk_widget_show_all(data_window);
-    gwy_app_update_data_window_title(GTK_WINDOW(data_window), data);
+    gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
     gwy_tools_crop_use(data_window);
 }
 
@@ -175,32 +173,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
 
     gwy_container_set_string_by_name(data, "/filename", filename_utf8);
     gtk_widget_destroy(GTK_WIDGET(selector));
-    gwy_app_update_data_window_title(data_window, data);
-}
-
-static void
-gwy_app_update_data_window_title(GtkWindow *window,
-                                 GwyContainer *data)
-{
-    gchar *window_title, *filename;
-
-    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
-
-    if (!data)
-        data = gwy_data_view_get_data(GWY_DATA_VIEW(
-                   gwy_data_window_get_data_view(GWY_DATA_WINDOW(window))));
-    g_return_if_fail(GWY_IS_CONTAINER(data));
-
-    if (gwy_container_contains_by_name(data, "/filename"))
-        filename = g_path_get_basename(
-                       gwy_container_get_string_by_name(data, "/filename"));
-    else
-        filename = g_strdup(_("Untitled"));
-
-    window_title = g_strdup_printf("%s (Gwyddion)", filename);
-    gtk_window_set_title(window, window_title);
-    g_free(window_title);
-    g_free(filename);
+    gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
