@@ -537,13 +537,12 @@ gwy_option_menu_interpolation(GCallback callback,
                               GwyInterpolationType current)
 {
     static const GwyEnum entries[] = {
-      /*{ "None",     GWY_INTERPOLATION_NONE,     },*/
-        { "Round",    GWY_INTERPOLATION_ROUND,    },
-        { "Bilinear", GWY_INTERPOLATION_BILINEAR, },
-        { "Key",      GWY_INTERPOLATION_KEY,      },
-        { "BSpline",  GWY_INTERPOLATION_BSPLINE,  },
-        { "OMOMS",    GWY_INTERPOLATION_OMOMS,    },
-        { "NNA",      GWY_INTERPOLATION_NNA,      },
+        { N_("Round"),    GWY_INTERPOLATION_ROUND,    },
+        { N_("Bilinear"), GWY_INTERPOLATION_BILINEAR, },
+        { N_("Key"),      GWY_INTERPOLATION_KEY,      },
+        { N_("BSpline"),  GWY_INTERPOLATION_BSPLINE,  },
+        { N_("OMOMS"),    GWY_INTERPOLATION_OMOMS,    },
+        { N_("NNA"),      GWY_INTERPOLATION_NNA,      },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -573,13 +572,13 @@ gwy_option_menu_windowing(GCallback callback,
                               GwyWindowingType current)
 {
     static const GwyEnum entries[] = {
-        { "None",     GWY_WINDOWING_NONE      },
-        { "Hann",     GWY_WINDOWING_HANN      },
-        { "Hamming",  GWY_WINDOWING_HAMMING   },
-        { "Blackman", GWY_WINDOWING_BLACKMANN },
-        { "Lanzcos",  GWY_WINDOWING_LANCZOS   },
-        { "Welch",    GWY_WINDOWING_WELCH     },
-        { "Rect",     GWY_WINDOWING_RECT      },
+        { N_("None"),     GWY_WINDOWING_NONE      },
+        { N_("Hann"),     GWY_WINDOWING_HANN      },
+        { N_("Hamming"),  GWY_WINDOWING_HAMMING   },
+        { N_("Blackman"), GWY_WINDOWING_BLACKMANN },
+        { N_("Lanzcos"),  GWY_WINDOWING_LANCZOS   },
+        { N_("Welch"),    GWY_WINDOWING_WELCH     },
+        { N_("Rect"),     GWY_WINDOWING_RECT      },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -609,10 +608,10 @@ gwy_option_menu_zoom_mode(GCallback callback,
                           GwyZoomMode current)
 {
     static const GwyEnum entries[] = {
-        { "By square root of 2",     GWY_ZOOM_MODE_SQRT2      },
-        { "By cubic root of 2",      GWY_ZOOM_MODE_CBRT2      },
-        { "Integer zooms",           GWY_ZOOM_MODE_PIX4PIX    },
-        { "Half-integer zooms",      GWY_ZOOM_MODE_HALFPIX    },
+        { N_("By square root of 2"),     GWY_ZOOM_MODE_SQRT2      },
+        { N_("By cubic root of 2"),      GWY_ZOOM_MODE_CBRT2      },
+        { N_("Integer zooms"),           GWY_ZOOM_MODE_PIX4PIX    },
+        { N_("Half-integer zooms"),      GWY_ZOOM_MODE_HALFPIX    },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -641,8 +640,8 @@ gwy_option_menu_2dcwt(GCallback callback,
                       Gwy2DCWTWaveletType current)
 {
     static const GwyEnum entries[] = {
-        { "Gaussian",          GWY_2DCWT_GAUSS      },
-        { "Hat",               GWY_2DCWT_HAT        },
+        { N_("Gaussian"),          GWY_2DCWT_GAUSS      },
+        { N_("Hat"),               GWY_2DCWT_HAT        },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -671,13 +670,13 @@ gwy_option_menu_sfunctions_output(GCallback callback,
                            GwySFOutputType current)
 {
     static const GwyEnum entries[] = {
-        { "Dist. of heights",  GWY_SF_OUTPUT_DH,  },
-        { "Cum. dist. of heights",  GWY_SF_OUTPUT_CDH, },
-        { "Dist. of angles",  GWY_SF_OUTPUT_DA,      },
-        { "Cum. dist. of angles",  GWY_SF_OUTPUT_CDA,       },
-        { "Autocorrelation",  GWY_SF_OUTPUT_ACF,       },
-        { "Height-height cor.",  GWY_SF_OUTPUT_HHCF,     },
-        { "Power spectral density",  GWY_SF_OUTPUT_PSDF,     },
+        { N_("Dist. of heights"),       GWY_SF_OUTPUT_DH,   },
+        { N_("Cum. dist. of heights"),  GWY_SF_OUTPUT_CDH,  },
+        { N_("Dist. of angles"),        GWY_SF_OUTPUT_DA,   },
+        { N_("Cum. dist. of angles"),   GWY_SF_OUTPUT_CDA,  },
+        { N_("Autocorrelation"),        GWY_SF_OUTPUT_ACF,  },
+        { N_("Height-height cor."),     GWY_SF_OUTPUT_HHCF, },
+        { N_("Power spectral density"), GWY_SF_OUTPUT_PSDF, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -705,8 +704,8 @@ gwy_option_menu_direction(GCallback callback,
                            GtkOrientation current)
 {
     static const GwyEnum entries[] = {
-        { "Horizontal",  GTK_ORIENTATION_HORIZONTAL,  },
-        { "Vertical",  GTK_ORIENTATION_VERTICAL, },
+        { N_("Horizontal"),  GTK_ORIENTATION_HORIZONTAL,  },
+        { N_("Vertical"),  GTK_ORIENTATION_VERTICAL, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -735,12 +734,12 @@ gwy_option_menu_filter(GCallback callback,
                        GwyFilterType current)
 {
     static const GwyEnum entries[] = {
-        { "Mean value",            GWY_FILTER_MEAN,  },
-        { "Median value",          GWY_FILTER_MEDIAN, },
-        { "Conservative denoise",  GWY_FILTER_CONSERVATIVE, },
-        { "Laplacian",             GWY_FILTER_LAPLACIAN, },
-        { "Sobel gradient",        GWY_FILTER_SOBEL, },
-        { "Prewitt gradient",      GWY_FILTER_PREWITT, },
+        { N_("Mean value"),            GWY_FILTER_MEAN,  },
+        { N_("Median value"),          GWY_FILTER_MEDIAN, },
+        { N_("Conservative denoise"),  GWY_FILTER_CONSERVATIVE, },
+        { N_("Laplacian"),             GWY_FILTER_LAPLACIAN, },
+        { N_("Sobel gradient"),        GWY_FILTER_SOBEL, },
+        { N_("Prewitt gradient"),      GWY_FILTER_PREWITT, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -768,8 +767,8 @@ gwy_option_menu_mergegrain(GCallback callback,
                        GwyFilterType current)
 {
     static const GwyEnum entries[] = {
-        { "Union",            GWY_MERGE_UNION,  },
-        { "Intersection",     GWY_MERGE_INTERSECTION, },
+        { N_("Union"),            GWY_MERGE_UNION,  },
+        { N_("Intersection"),     GWY_MERGE_INTERSECTION, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -797,10 +796,10 @@ gwy_option_menu_fit_line(GCallback callback,
                        GwyFitLineType current)
 {
     static const GwyEnum entries[] = {
-        { "Fit height",    GWY_FIT_POLY_0, },
-        { "Fit linear",    GWY_FIT_POLY_1, },
-        { "Fit quadratic", GWY_FIT_POLY_2, },
-        { "Fit cubic",     GWY_FIT_POLY_3, },
+        { N_("Fit height"),    GWY_FIT_POLY_0, },
+        { N_("Fit linear"),    GWY_FIT_POLY_1, },
+        { N_("Fit quadratic"), GWY_FIT_POLY_2, },
+        { N_("Fit cubic"),     GWY_FIT_POLY_3, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
