@@ -11,6 +11,9 @@ Modules:
 - Simple mask editor (new).
 - Background removal by arc revolution (new).
 - Median based background removal (new).
+- Discrete wavelet transform module (new)
+- Wavelet based denoising module (new)
+- Wavelet based anisotropy detection module (new)
 - Nanoscope: Import was significantly improved, most files should be read
   with correct value ranges now (bug #16).
 - Pixmap: `Same resolution' option really works and its value is remembered.
@@ -27,6 +30,7 @@ Modules:
 Library:
 - libgwyddion, libgwyprocess: Median calculation functions.
 - libgwyprocess: Data field arithmetic functions.
+- libgwyprocess: vaious functions related with discrete wavelet transform.
 - libgwyprocess: Speed of most grain methods was considerably improved.
 - libgwydgets: 3D View light position marker was fixed to reflect actual light
                position

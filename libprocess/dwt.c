@@ -367,7 +367,7 @@ gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint
 * gwy_data_field_dwt_denoise:
 * @dfield: datafield to be transformed (square)
 * @wt_coefs: dataline where wavelet transfor coefficients are stored.
-* @hart: whether to apply hard thresholding
+* @hard: whether to apply hard thresholding
 * @multiple_threshold: multiply it by value different from zero to change threshold
 * @type: type of thresholding
 *
@@ -585,7 +585,8 @@ GwyDataField *gwy_data_field_dwt_correction(GwyDataField *dfield, GwyDataField *
 		}
 	        gwy_data_field_resample(maskbuffer, dfield->xres, dfield->xres, GWY_INTERPOLATION_NONE);
 	    }
-	   
+	  rt
+
 	    
 	    printf("iteration %d: %d removed\n", i, count);
 	    dfield = gwy_data_field_dwt(dfield, wt_coefs, -1, 4);
