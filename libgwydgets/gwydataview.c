@@ -764,8 +764,10 @@ void
 gwy_data_view_set_base_layer(GwyDataView *data_view,
                              GwyDataViewLayer *layer)
 {
-    g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
-    g_return_if_fail(!gwy_data_view_layer_is_vector(layer));
+    if (layer) {
+        g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
+        g_return_if_fail(!gwy_data_view_layer_is_vector(layer));
+    }
     gwy_data_view_set_layer(data_view, &data_view->base_layer, layer);
     gwy_data_view_update(data_view);
 }
@@ -786,8 +788,10 @@ void
 gwy_data_view_set_alpha_layer(GwyDataView *data_view,
                               GwyDataViewLayer *layer)
 {
-    g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
-    g_return_if_fail(!gwy_data_view_layer_is_vector(layer));
+    if (layer) {
+        g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
+        g_return_if_fail(!gwy_data_view_layer_is_vector(layer));
+    }
     gwy_data_view_set_layer(data_view, &data_view->alpha_layer, layer);
     gwy_data_view_update(data_view);
 }
@@ -808,8 +812,10 @@ void
 gwy_data_view_set_top_layer(GwyDataView *data_view,
                             GwyDataViewLayer *layer)
 {
-    g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
-    g_return_if_fail(gwy_data_view_layer_is_vector(layer));
+    if (layer) {
+        g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
+        g_return_if_fail(gwy_data_view_layer_is_vector(layer));
+    }
     gwy_data_view_set_layer(data_view, &data_view->top_layer, layer);
     gwy_data_view_update(data_view);
 }
