@@ -279,9 +279,9 @@ fit_dialog(FitArgs *args)
     dialog = gtk_dialog_new_with_buttons(_("Fit graph"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          _("Fit"), RESPONSE_FIT,
                                          _("Reset inits"), RESPONSE_RESET,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
