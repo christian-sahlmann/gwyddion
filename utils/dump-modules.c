@@ -131,6 +131,7 @@ main(G_GNUC_UNUSED int argc,
         /* don't print plugin-proxy's stolen functions (XXX: hack) */
         if (!strcmp(mod_info->name, "plugin-proxy")) {
             tag_print("funclist", NULL);
+            tag_close();
             continue;
         }
 
