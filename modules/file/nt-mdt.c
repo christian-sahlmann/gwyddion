@@ -39,6 +39,8 @@
 
 #define EXTENSION ".mdt"
 
+#define Angstrom (1e-10)
+
 typedef enum {
     MDT_FRAME_SCANNED      = 0,
     MDT_FRAME_SPECTROSCOPY = 1,
@@ -137,9 +139,16 @@ typedef struct {
     guint adt;    /* s_adt */
     guint adc_gain_amp_log10;    /* s_adc_a */
     guint adc_index;    /* s_a12 */
-    guint version;    /* s_8xx */    /* alt: MDTInputSignal smp_in; s_smp_in */
-    guint pass_num;    /* z_03 */    /* alt: guint subtr_order; s_spl */
-    guint scan_dir;    /* s_xy */
+    /* XXX: Some fields have different meaning in different versions */
+    union {
+        guint input_signal;    /* MDTInputSignal smp_in; s_smp_in */
+        guint version;    /* s_8xx */
+    } s16;
+    union {
+        guint substr_plane_order;    /* s_spl */
+        guint pass_num;    /* z_03 */
+    } s17;
+    guint scan_dir;    /* s_xy TODO: interpretation */
     gboolean power_of_2;    /* s_2n */
     gdouble velocity;    /* s_vel (Angstrom/second) */
     gdouble setpoint;    /* s_i0 */
@@ -154,7 +163,16 @@ typedef struct {
     gint dac_scale;    /* s_s */
     /* XXX: some ABCD scan stuff here */
     gint overscan;    /* s_xov (in %) */
-} MDTDataFrame;
+
+    /* Frame mode stuff */
+    guint fm_mode;    /* m_mode */
+    guint fm_xres;    /* m_nx */
+    guint fm_yres;    /* m_ny */
+    guint fm_ndots;    /* m_nd */
+
+    const guchar *dots;
+    const guchar *image;
+} MDTScannedDataFrame;
 
 typedef struct {
     gsize size;     /* h_sz */
@@ -196,6 +214,7 @@ static void           add_metadata        (MDTFile *mdtfile,
 static gboolean       mdt_real_load       (const guchar *buffer,
                                            gsize size,
                                            MDTFile *mdtfile);
+GwyDataField*         extract_scanned_data(MDTScannedDataFrame *dataframe);
 
 static const GwyEnum frame_types[] = {
     { "Scanned",      MDT_FRAME_SCANNED },
@@ -267,7 +286,7 @@ static GwyModuleInfo module_info = {
     N_("Load NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
-    "David Neačs (Yeti) & Petr Klapetek",
+    "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
@@ -340,6 +359,18 @@ mdt_load(const gchar *filename)
     }
     memset(&mdtfile, 0, sizeof(mdtfile));
     if (mdt_real_load(buffer, size, &mdtfile)) {
+        for (i = 0; i <= mdtfile.last_frame; i++) {
+            if (mdtfile.frames[i].type == MDT_FRAME_SCANNED) {
+                MDTScannedDataFrame *sdframe;
+
+                sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
+                data = GWY_CONTAINER(gwy_container_new());
+                dfield = extract_scanned_data(sdframe);
+                gwy_container_set_object_by_name(data, "/0/data",
+                                                 G_OBJECT(dfield));
+                return data;
+            }
+        }
         /*
         n = 0;
         for (i = 0; i < mdtfile.nchannels; i++) {
@@ -701,12 +732,71 @@ get_DOUBLE(const guchar **p)
 }
 
 static gboolean
+mdt_load_data_frame(const guchar *p,
+                    MDTScannedDataFrame *frame)
+{
+    frame->x_scale.offset = get_FLOAT(&p);
+    frame->x_scale.step = get_FLOAT(&p);
+    frame->x_scale.unit = get_WORD(&p);
+    gwy_debug("x: *%g +%g [%d:%s]",
+              frame->x_scale.step, frame->x_scale.offset, frame->x_scale.unit,
+              gwy_enum_to_string(frame->x_scale.unit,
+                                 mdt_units, G_N_ELEMENTS(mdt_units)));
+    frame->y_scale.offset = get_FLOAT(&p);
+    frame->y_scale.step = get_FLOAT(&p);
+    frame->y_scale.unit = get_WORD(&p);
+    gwy_debug("y: *%g +%g [%d:%s]",
+              frame->y_scale.step, frame->y_scale.offset, frame->y_scale.unit,
+              gwy_enum_to_string(frame->y_scale.unit,
+                                 mdt_units, G_N_ELEMENTS(mdt_units)));
+    frame->z_scale.offset = get_FLOAT(&p);
+    frame->z_scale.step = get_FLOAT(&p);
+    frame->z_scale.unit = get_WORD(&p);
+    gwy_debug("z: *%g +%g [%d:%s]",
+              frame->z_scale.step, frame->z_scale.offset, frame->z_scale.unit,
+              gwy_enum_to_string(frame->z_scale.unit,
+                                 mdt_units, G_N_ELEMENTS(mdt_units)));
+
+    frame->channel_index = (gint)(*p++);
+    frame->mode = (gint)(*p++);
+    frame->xres = get_WORD(&p);
+    frame->yres = get_WORD(&p);
+    gwy_debug("channel_index = %d, mode = %d, xres = %d, yres = %d",
+              frame->channel_index, frame->mode, frame->xres, frame->yres);
+    frame->ndacq = get_WORD(&p);
+    frame->step_length = Angstrom*get_FLOAT(&p);
+    frame->adt = get_WORD(&p);
+    frame->adc_gain_amp_log10 = (guint)(*p++);
+    frame->adc_index = (guint)(*p++);
+    frame->s16.version = (guint)(*p++);
+    frame->s17.pass_num = (guint)(*p++);
+    frame->scan_dir = (guint)(*p++);
+    frame->power_of_2 = (gboolean)(*p++);
+    frame->velocity = Angstrom*get_FLOAT(&p);
+    frame->setpoint = get_FLOAT(&p);
+    frame->bias_voltage = get_FLOAT(&p);
+    frame->draw = (gboolean)(*p++);
+    p++;
+    frame->xoff = get_DWORD(&p);  /* FIXME: sign? */
+    frame->yoff = get_DWORD(&p);  /* FIXME: sign? */
+    frame->nl_corr = (gboolean)(*p++);
+
+    return TRUE;
+}
+
+static gboolean
 mdt_real_load(const guchar *buffer,
               gsize size,
               MDTFile *mdtfile)
 {
+    enum {
+        FRAME_HEADER_SIZE = 22,
+        AXIS_SCALES_SIZE = 30,
+        SCAN_VARS_MIN_SIZE = 77
+    };
     gsize start, id, i, j, len;
     const guchar *p, *fstart;
+    MDTScannedDataFrame *dataframe;
     gpointer idp;
     gdouble d;
 
@@ -738,7 +828,7 @@ mdt_real_load(const guchar *buffer,
         MDTFrame *frame = mdtfile->frames + i;
 
         fstart = p;
-        if ((gsize)(p - buffer) + 22 > size) {
+        if ((gsize)(p - buffer) + FRAME_HEADER_SIZE > size) {
             gwy_debug("FAILED: File truncated in frame header #%u", i);
             return FALSE;
         }
@@ -767,11 +857,95 @@ mdt_real_load(const guchar *buffer,
                   i, frame->year, frame->month, frame->day,
                   frame->hour, frame->min, frame->sec);
         frame->var_size = get_WORD(&p);
+        gwy_debug("Frame #%u var size: %u", i, frame->var_size);
+        if (frame->var_size + FRAME_HEADER_SIZE > frame->size) {
+            gwy_debug("FAILED: header + var size %u > %u frame size",
+                      frame->var_size + FRAME_HEADER_SIZE, frame->size);
+            return FALSE;
+        }
+
+        switch (frame->type) {
+            case MDT_FRAME_SCANNED:
+            if (frame->var_size < AXIS_SCALES_SIZE + SCAN_VARS_MIN_SIZE) {
+                gwy_debug("FAILED: Frame #%u too short for scanned data header",
+                          i);
+                return FALSE;
+            }
+            dataframe = g_new0(MDTScannedDataFrame, 1);
+            mdt_load_data_frame(p, dataframe);
+            frame->frame_data = dataframe;
+
+            /* TODO: check size */
+            p = fstart + FRAME_HEADER_SIZE + frame->var_size;
+            dataframe->fm_mode = get_WORD(&p);
+            dataframe->fm_xres = get_WORD(&p);
+            dataframe->fm_yres = get_WORD(&p);
+            dataframe->fm_ndots = get_WORD(&p);
+            gwy_debug("mode = %u, xres = %u, yres = %u, ndots = %u",
+                      dataframe->fm_mode,
+                      dataframe->fm_xres,
+                      dataframe->fm_yres,
+                      dataframe->fm_ndots);
+
+            if ((gsize)(p - fstart)
+                + sizeof(gint16)*(2*dataframe->fm_ndots
+                                  + dataframe->fm_xres * dataframe->fm_yres)
+                > frame->size) {
+                gwy_debug("FAILED: Frame #%u too short for dots or data", i);
+                return FALSE;
+            }
+            if (dataframe->fm_ndots) {
+                dataframe->dots = p;
+                p += sizeof(gint16)*2*dataframe->fm_ndots;
+            }
+            if (dataframe->fm_xres * dataframe->fm_yres) {
+                dataframe->image = p;
+            }
+            break;
+
+            case MDT_FRAME_SPECTROSCOPY:
+            break;
+
+            case MDT_FRAME_TEXT:
+            break;
+
+            case MDT_FRAME_OLD_MDA:
+            break;
+
+            case MDT_FRAME_MDA:
+            break;
+
+            case MDT_FRAME_PALETTE:
+            break;
+
+            default:
+            g_warning("Unknown frame type %d", frame->type);
+            break;
+        }
 
         p = fstart + frame->size;
     }
 
-    return FALSE;
+    return TRUE;
+}
+
+GwyDataField*
+extract_scanned_data(MDTScannedDataFrame *dataframe)
+{
+    GwyDataField *dfield;
+    gsize i;
+    gdouble *data;
+    const guchar *p;
+
+    dfield = GWY_DATA_FIELD(gwy_data_field_new(dataframe->fm_xres,
+                                               dataframe->fm_yres,
+                                               1.0, 1.0, FALSE));
+    data = gwy_data_field_get_data(dfield);
+    p = dataframe->image;
+    for (i = 0; i < dataframe->fm_yres*dataframe->fm_yres; i++)
+        data[i] = (p[2*i] + 256.0*p[2*i + 1])/65535.0;
+
+    return dfield;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
