@@ -676,7 +676,7 @@ recompute(FitArgs *args, FitControls *controls)
          }
     }
     else
-        gtk_label_set_markup(GTK_LABEL(controls->covar[0]), _("N. A."));
+        gtk_label_set_markup(GTK_LABEL(controls->covar[0]), _("N.A."));
 
     for (i = 0; i < xdata->res; i++)
         ydata->data[i] = function->function(xdata->data[i], function->nparams,
