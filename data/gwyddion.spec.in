@@ -115,7 +115,8 @@ update-mime-database %{_datadir}/mime
 
 %files devel
 %defattr(-,root,root)
-%doc CODING-STANDARDS
+%doc devel-docs/CODING-STANDARDS
+%doc devel-docs/README.QA
 %{_includedir}/%{name}/app/*.h
 %{_includedir}/%{name}/libdraw/*.h
 %{_includedir}/%{name}/libprocess/*.h
