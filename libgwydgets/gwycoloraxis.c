@@ -704,7 +704,7 @@ gwy_color_axis_update(GwyColorAxis *axis)
 void
 gwy_color_axis_set_unit(GwyColorAxis *axis, GwySIUnit *unit)
 {
-/*    axis->siunit = unit;*/
+    if (axis->siunit != NULL) g_object_unref(axis->siunit);
     axis->siunit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
 }
 

@@ -170,6 +170,7 @@ gwy_val_unit_finalize(GObject *object)
               (gint*)object, object->ref_count);
 
     g_return_if_fail(GWY_IS_VAL_UNIT(object));
+    g_object_unref(GWY_VAL_UNIT(object)->base_si_unit);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
