@@ -27,14 +27,7 @@
 int
 main(int argc, char *argv[])
 {
-    const gchar *module_dirs[] = {
-        GWY_MODULE_DIR ,
-        GWY_MODULE_DIR "/file",
-        GWY_MODULE_DIR "/process",
-        GWY_MODULE_DIR "/tool",
-        GWY_MODULE_DIR "/graph",
-        NULL
-    };
+    gchar **module_dirs;
     gchar *config_file;
 
     gtk_init(&argc, &argv);
@@ -43,6 +36,7 @@ main(int argc, char *argv[])
     gwy_app_init();
     gwy_app_settings_load(config_file);
     gwy_app_settings_get();
+    module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules(module_dirs);
     gwy_app_toolbox_create();
     gwy_app_file_open_initial(argv + 1, argc - 1);

@@ -54,6 +54,10 @@ gchar* gwy_flags_to_string        (gint enumval,
                                    gint n,
                                    const gchar *glue);
 
+#ifdef G_OS_WIN32
+gchar* gwy_find_self_dir          (const gchar *dirname);
+#endif /* G_OS_WIN32 */
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

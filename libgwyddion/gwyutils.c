@@ -223,6 +223,45 @@ gwy_debug_gnu(const gchar *domain,
     g_free(fmt2);
 }
 
+/**
+ * gwy_find_self_dir:
+ * @dirname: A gwyddion directory name like "pixmaps" or "modules".
+ *
+ * Finds some gwyddion directory.
+ *
+ * This function is useful only on Win32, on sane systems the installation
+ * path is known and thus use GWY_PIXMAP_DIR, etc. instead.  Moreover, the
+ * directory layout is different on *nix anyway.
+ *
+ * The returned value is not actually tested for existence, it's up to caller.
+ *
+ * Returns: The path as a newly allocated string.
+ **/
+gchar*
+gwy_find_self_dir(const gchar *dirname)
+{
+    gchar *p, *q, *b;
+
+    /* TODO: to be sure, we should put the path to the registry, too */
+    /* argv[0] */
+    p = g_strdup(g_get_prgname());
+    if (!g_path_is_absolute(p)) {
+        b = g_get_current_dir();
+        q = g_build_filename(b, p, NULL);
+        g_free(p);
+        g_free(b);
+        p = q;
+    }
+    /* now p contains an absolute path, the dir should be there */
+    gwy_debug("gwyddion full path seems to be `%s'", p);
+    q = g_path_get_dirname(p);
+    g_free(p);
+    p = q;
+    q = g_build_filename(p, dirname, NULL);
+    g_free(p);
+
+    return q;
+}
 
 /************************** Documentation ****************************/
 /* NB: gwymacros.h documentation is also here. */

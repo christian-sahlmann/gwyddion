@@ -24,13 +24,12 @@
 #include <gtk/gtkiconfactory.h>
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include "gwystock.h"
 
 static void           register_toolbox_icons    (const gchar *pixmap_path,
                                                  GtkIconFactory *icon_factory);
 static gchar*         guess_pixmap_path         (void);
-static gchar*         mangle_pixmap_path        (const gchar *path,
-                                                 gsize strip);
 static void           slurp_icon_directory      (const gchar *path,
                                                  GHashTable *icons);
 static void           register_icon_set_list_cb (const gchar *id,
@@ -82,83 +81,23 @@ register_toolbox_icons(const gchar *pixmap_path,
 static gchar*
 guess_pixmap_path(void)
 {
-    gchar *b, *p;
+    gchar *p;
 
-    /* try argv[0], for uninstalled version */
-    p = g_strdup(g_get_prgname());
-    if (!g_path_is_absolute(p)) {
-        gchar *q;
-
-        b = g_get_current_dir();
-        q = g_build_filename(b, p, NULL);
-        g_free(p);
-        g_free(b);
-        p = q;
-    }
-    /* now p contains an absolute path */
-    b = mangle_pixmap_path(p, 2);
-    g_free(p);
-    gwy_debug("Trying pixmap path: %s", b);
-    if (g_path_is_absolute(b) && g_file_test(b, G_FILE_TEST_IS_DIR)) {
-        gwy_debug("Icon path (from argv[0]): %s", p);
-        return b;
-    }
-    g_free(b);
-
-    /* try to find program in path, this is namely for windows, because
-     * unix has different directory structure */
-    p = g_find_program_in_path(g_get_prgname());
-    if (p && g_path_is_absolute(p)) {
-        b = mangle_pixmap_path(p, 1);
-        gwy_debug("Trying pixmap path: %s", b);
-        if (g_path_is_absolute(b) && g_file_test(p, G_FILE_TEST_IS_DIR)) {
-            gwy_debug("Icon path (from $PATH): %s", p);
-            g_free(p);
-            return b;
-        }
-        g_free(b);
-    }
-    g_free(p);
-
-#ifndef G_OS_WIN32
+#ifdef G_OS_WIN32
+    /* try find self from argv[0] and possibly from registry (once
+     * gwy_find_self_dir() implements it) */
+    p = gwy_find_self_dir("pixmaps");
+#else /* G_OS_WIN32 */
     /* try GWY_PIXMAP_DIR, try it after the previous ones, so an uninstalled
      * version gets its own directory, not the system one */
-    gwy_debug("Trying pixmap path: %s", GWY_PIXMAP_DIR);
-    if (g_file_test(GWY_PIXMAP_DIR, G_FILE_TEST_IS_DIR)) {
-        gwy_debug("Icon path (from GWY_PIXMAP_DIR): %s", GWY_PIXMAP_DIR);
-        return g_strdup(GWY_PIXMAP_DIR);
-    }
-#endif /* no G_OS_WIN32 */
-
-    /* as last resort, try current directory */
-    p = g_get_current_dir();
-    b = mangle_pixmap_path(p, 0);
-    g_free(p);
-    gwy_debug("Trying pixmap path: %s", b);
-    if (g_file_test(b, G_FILE_TEST_IS_DIR)) {
-        gwy_debug("Icon path (from cwd): %s", b);
-        return b;
+    p = g_strdup(GWY_PIXMAP_DIR);
+#endif /* G_OS_WIN32 */
+    if (g_file_test(p, G_FILE_TEST_IS_DIR)) {
+        gwy_debug("Icon path: %s", p);
+        return p;
     }
 
     return NULL;
-}
-
-static gchar*
-mangle_pixmap_path(const gchar *path,
-                   gsize strip)
-{
-    gchar *p, *q;
-
-    p = g_strdup(path);
-    while (strip--) {
-        q = g_path_get_dirname(p);
-        g_free(p);
-        p = q;
-    }
-    q = g_build_filename(p, "pixmaps", NULL);
-    g_free(p);
-
-    return q;
 }
 
 /* XXX: not only registers the icons but also frees the list */

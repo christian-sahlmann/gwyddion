@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwyserializable.h>
 #include "settings.h"
 
@@ -124,9 +125,38 @@ gwy_app_set_defaults(GwyContainer *settings)
 {
     g_return_if_fail(GWY_IS_CONTAINER(settings));
 
-    if (!gwy_container_contains_by_name(settings, "/app/plugindir"))
-        gwy_container_set_string_by_name(settings, "/app/plugindir",
-                                         g_strdup(GWY_PLUGIN_DIR));
+    if (!gwy_container_contains_by_name(settings, "/app/plugindir")) {
+        gchar *p;
+
+#ifdef G_OS_WIN32
+        p = gwy_find_self_dir("plugins");
+#else
+        p = g_strdup(GWY_PLUGIN_DIR);
+#endif
+        gwy_container_set_string_by_name(settings, "/app/plugindir", p);
+    }
+}
+
+gchar**
+gwy_app_settings_get_module_dirs(void)
+{
+    const gchar *module_types[] = { "file", "process", "graph", "tool" };
+    gchar **module_dirs;
+    gchar *p;
+    gsize i;
+
+    module_dirs = g_new(gchar*, G_N_ELEMENTS(module_types)+2);
+#ifdef G_OS_WIN32
+    p = gwy_find_self_dir("modules");
+#else
+    p = g_strdup(GWY_MODULE_DIR);
+#endif
+    for (i = 0; i < G_N_ELEMENTS(module_types); i++)
+        module_dirs[i] = g_build_filename(p, module_types[i], NULL);
+    module_dirs[i++] = p;
+    module_dirs[i] = NULL;
+
+    return module_dirs;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -32,6 +32,8 @@ void          gwy_app_settings_free (void);
 gboolean      gwy_app_settings_save (const gchar *filename);
 gboolean      gwy_app_settings_load (const gchar *filename);
 
+gchar**       gwy_app_settings_get_module_dirs (void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
