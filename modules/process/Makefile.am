@@ -130,6 +130,10 @@ grain_wshed_so_LDFLAGS = $(module_ldflags),grain_wshed.so
 grain_dist_so_SOURCES = grain_dist.c
 grain_dist_so_LDFLAGS = $(module_ldflags),grain_dist.so
 
+indent_analyze_so_SOURCES = indent_analyze.c
+indent_analyze_so_LDFLAGS = $(module_ldflags),indent_analyze.so
+
+
 laplace_so_SOURCES = laplace.c
 laplace_so_LDFLAGS = $(module_ldflags),laplace.so
 
