@@ -171,11 +171,13 @@ gwy_table_attach_row(GtkWidget *table,
     g_return_if_fail(GTK_IS_TABLE(table));
     g_return_if_fail(GTK_IS_WIDGET(middle_widget));
 
-    label = gtk_label_new(units);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     2, 3, row, row+1, GTK_FILL, 0, 2, 2);
-    gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+    if (units) {
+        label = gtk_label_new(units);
+        gtk_table_attach(GTK_TABLE(table), label,
+                        2, 3, row, row+1, GTK_FILL, 0, 2, 2);
+        gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
+        gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+    }
 
     label = gtk_label_new_with_mnemonic(name);
     gtk_table_attach(GTK_TABLE(table), label,
