@@ -29,15 +29,6 @@
 
 #define _(x) (x)
 
-/**
- * gwy_object_unref:
- * @obj: A pointer to #GObject or %NULL.
- *
- * If @obj is not %NULL, unreferences @obj.  In all cases sets @obj to %NULL.
- *
- * If the object reference count is greater than one, assure it't referenced
- * elsewhere.
- **/
 #define gwy_object_unref(obj) \
     do { \
     if (obj) \
@@ -54,15 +45,6 @@
     y = safe ## x ## y; \
     } while (0)
 */
-/**
- * GWY_SWAP:
- * @t: A C type.
- * @x: A variable of type @t to swap with @x.
- * @y: A variable of type @t to swap with @y.
- *
- * Swaps two variables (more precisely lhs and rhs expressions) of type @t
- * in a single statement.
- */
 #define GWY_SWAP(t, x, y) \
     do { \
     t __unsafe_swap; \
@@ -75,25 +57,17 @@
 extern "C" {
 #endif /* __cplusplus */
 
-/**
- * gwy_debug:
- * @format...: A format string followed by stuff to print.
- *
- * Prints a debugging message.
- *
- * Does nothing if compiled without DEBUG defined.
- **/
 #ifdef G_HAVE_GNUC_VARARGS
 #  ifdef DEBUG
 #    define gwy_debug(format...) \
-            _gwy_debug_gnu(G_LOG_DOMAIN, __FUNCTION__, format)
+            gwy_debug_gnu(G_LOG_DOMAIN, __FUNCTION__, format)
 #  else
 #    define gwy_debug(format...) /* */
 #  endif
 #elif defined(G_HAVE_ISO_VARARGS)
 #  ifdef DEBUG
 #    define gwy_debug(...) \
-            _gwy_debug_gnu(G_LOG_DOMAIN, __FILE__, __VA_ARGS__)
+            gwy_debug_gnu(G_LOG_DOMAIN, __FILE__, __VA_ARGS__)
 #  else
 #    define gwy_debug(...) /* */
 #  endif
@@ -115,9 +89,10 @@ gwy_debug(const gchar *format, ...)
 #  endif
 #endif /* varargs macros */
 
-void _gwy_debug_gnu(const gchar *domain,
-                    const gchar *funcname,
-                    const gchar *format, ...);
+void gwy_debug_gnu(const gchar *domain,
+                   const gchar *funcname,
+                   const gchar *format,
+                   ...);
 
 #ifdef __cplusplus
 }
