@@ -459,6 +459,7 @@ gwy_data_view_paint_layer(GwyDataView *data_view,
 
     /* layer draws on existing pixbufs */
     if (is_vector) {
+        /* FIXME: wrong */
         gwy_data_view_layer_draw(layer, pixbuf);
         return FALSE;
     }
@@ -775,6 +776,13 @@ gwy_data_view_get_zoom(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), 1.0);
     return data_view->zoom;
+}
+
+GwyContainer*
+gwy_data_view_get_data(GwyDataView *data_view)
+{
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
+    return data_view->data;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

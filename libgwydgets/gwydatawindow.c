@@ -2,6 +2,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
+#include <libprocess/datafield.h>
 #include "gwydatawindow.h"
 #include "gwyhruler.h"
 #include "gwyvruler.h"
@@ -22,7 +23,7 @@ static void     measure_changed                (GwyDataWindow *data_window,
                                                 gpointer data);
 static void     lame_window_resize             (GwyDataWindow *data_window);
 static void     zoom_set                       (GtkWidget *button,
-                                                gpointer data);
+                                                gpointer user_data);
 /* Local data */
 
 GType
@@ -198,15 +199,21 @@ gwy_data_window_new(GwyDataView *data_view)
 static void
 measure_changed(GwyDataWindow *data_window,
                 GtkAllocation *allocation,
-                gpointer data)
+                gpointer user_data)
 {
     gdouble excess, pos, real;
     GwyDataView *data_view;
+    GwyContainer *data;
+    GwyDataField *dfield;
 
-    /* TODO: connect to real data coords */
-    real = 71e-9;
     data_view = GWY_DATA_VIEW(data_window->data_view);
+    data = gwy_data_view_get_data(data_view);
+    /* TODO Container */
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    g_return_if_fail(dfield);
+
     /* horizontal */
+    real =  gwy_data_field_get_xreal(dfield);
     excess = real * gwy_data_view_get_hexcess(data_view)/2.0;
     gwy_ruler_get_range(GWY_RULER(data_window->hruler),
                         NULL, NULL, &pos, NULL);
@@ -214,6 +221,7 @@ measure_changed(GwyDataWindow *data_window,
                         -excess, real + excess, pos, real);
 
     /* vertical */
+    real = gwy_data_field_get_yreal(dfield);
     excess = real * gwy_data_view_get_vexcess(data_view)/2.0;
     gwy_ruler_get_range(GWY_RULER(data_window->vruler),
                         NULL, NULL, &pos, NULL);
