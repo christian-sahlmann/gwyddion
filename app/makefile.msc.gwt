@@ -9,20 +9,17 @@ PROGRAM = gwyddion
 
 LIB_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(LIB_CRUNTIME) \
-	$(GTK_CFLAGS) \
-	$(GDK_PIXBUF_CFLAGS) \
+	$(APP_CFLAGS) \
 	-DG_LOG_DOMAIN=\"GwyApp\"
 
 PRG_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(PRG_CRUNTIME) \
-	$(GTK_CFLAGS) \
-	$(GDK_PIXBUF_CFLAGS) \
+	$(APP_CFLAGS) \
 	-UG_LOG_DOMAIN
 
 LIB_LINK = \
 	$(COMMON_LDFLAGS) \
-	$(GTK_LIBS) \
-	$(GDK_PIXBUF_LIBS) \
+	$(APP_LIBS) \
 	/libpath:$(TOP_SRCDIR)\libgwyddion \
 	/libpath:$(TOP_SRCDIR)\libprocess \
 	/libpath:$(TOP_SRCDIR)\libdraw \
@@ -36,8 +33,7 @@ LIB_LINK = \
 
 PRG_LINK = \
 	$(COMMON_LDFLAGS) \
-	$(GTK_LIBS) \
-	$(GDK_PIXBUF_LIBS) \
+	$(APP_LIBS) \
 	/libpath:$(TOP_SRCDIR)\libgwyddion \
 	/libpath:$(TOP_SRCDIR)\libprocess \
 	/libpath:$(TOP_SRCDIR)\libdraw \

@@ -8,8 +8,7 @@ MOD_TYPE = graph
 # NOT MOD_CFLAGS!
 LIB_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
-	$(GTK_CFLAGS) \
-	$(GDK_PIXBUF_CFLAGS) \
+	$(APP_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
 
 ## targets

@@ -42,6 +42,10 @@ Name: "{userdesktop}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"; I
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletekeyifempty
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueData: "{app}\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueName: "Path"; ValueData: "{app};{code:GetGtkPath}\lib;{code:GetGtkPath}\bin"; Flags: uninsdeletevalue
+; Add GtkGLExt libraries to @PACKAGE_TARNAME@.exe's path
+Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletekeyifempty
+Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueData: "{app}\@PACKAGE_TARNAME@.exe"; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\@PACKAGE_TARNAME@.exe"; ValueType: string; ValueName: "Path"; ValueData: "{app};{code:GetGtkGLExtPath}\lib;{code:GetGtkGLExtPath}\bin"; Flags: uninsdeletevalue
 ; Add @PACKAGE_NAME@ paths to the registry
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@"; Flags: uninsdeletekeyifempty
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; Flags: uninsdeletekey
@@ -62,6 +66,7 @@ Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\shell\open\command"; ValueType: s
 var
   Exists: Boolean;
   GtkPath: String;
+  GtkGLExtPath: String;
 
 function GetGtkInstalled (): Boolean;
 begin
@@ -77,11 +82,30 @@ begin
     Result := GtkPath;
 end;
 
+function GetGtkGLExtInstalled (): Boolean;
+begin
+  Exists := RegQueryStringValue (HKLM, 'Software\GtkGLExt\2.0\Runtime', 'Path', GtkGLExtPath);
+  if not Exists then begin
+    Exists := RegQueryStringValue (HKCU, 'Software\GtkGLExt\2.0\Runtime', 'Path', GtkGLExtPath);
+  end;
+  Result := Exists
+end;
+
+function GetGtkGLExtPath (S: String): String;
+begin
+    Result := GtkGLExtPath;
+end;
+
 function InitializeSetup(): Boolean;
 begin
   Result := GetGtkInstalled ();
   if not Result then begin
-    MsgBox ('Please install the GTK+ 2.0 Runtime Environment before installing @PACKAGE_NAME@.  You can obtain GTK+ from http://www.dropline.net/gtk.', mbError, MB_OK);
+    MsgBox ('Please install the GTK+ 2.0 Runtime Environment before installing @PACKAGE_NAME@.  You can obtain GTK+ from http://www.gimp.org/~tml/gimp/win32/.', mbError, MB_OK);
+  end else begin
+    Result := GetGtkGLextInstalled ();
+    if not Result then begin
+      MsgBox ('Please install the GtkGLExt+ 1.0 before installing @PACKAGE_NAME@.  You can obtain GtkGLExt from http://gtkglext.sourceforge.net/.', mbError, MB_OK);
+    end;
   end;
 end;
 
