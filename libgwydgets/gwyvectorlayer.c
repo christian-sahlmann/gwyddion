@@ -553,6 +553,7 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
                                          0, 0, NULL,
                                          gwy_vector_layer_update_context,
                                          layer);
+    gwy_object_unref(vector_layer->layout);
 
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
