@@ -32,14 +32,18 @@
 
 #define EXTENSION ".gwy"
 #define MAGIC "GWYO"
+#define MAGIC2 "GWYP"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
-static gboolean      module_register     (const gchar *name);
-static gint          gwyfile_detect      (const gchar *filename,
-                                          gboolean only_name);
-static GwyContainer* gwyfile_load        (const gchar *filename);
-static gboolean      gwyfile_save        (GwyContainer *data,
-                                          const gchar *filename);
+static gboolean      module_register            (const gchar *name);
+static gint          gwyfile_detect             (const gchar *filename,
+                                                 gboolean only_name);
+static GwyContainer* gwyfile_load               (const gchar *filename);
+static gboolean      gwyfile_save               (GwyContainer *data,
+                                                 const gchar *filename);
+static GObject*      gwy_container_deserialize2 (const guchar *buffer,
+                                                 gsize size,
+                                                 gsize *position);
 
 
 /* The module info. */
@@ -49,7 +53,7 @@ static GwyModuleInfo module_info = {
     "gwyfile",
     N_("Load and save Gwyddion native serialized objects."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3.1",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -89,7 +93,8 @@ gwyfile_detect(const gchar *filename,
         return 0;
     score = 0;
     if (fread(magic, 1, MAGIC_SIZE, fh) == MAGIC_SIZE
-        && memcmp(magic, MAGIC, MAGIC_SIZE) == 0)
+        && (memcmp(magic, MAGIC, MAGIC_SIZE) == 0
+            || memcmp(magic, MAGIC2, MAGIC_SIZE) == 0))
         score = 100;
     fclose(fh);
 
@@ -111,7 +116,8 @@ gwyfile_load(const gchar *filename)
         return NULL;
     }
     if (size < MAGIC_SIZE
-        || memcmp(buffer, MAGIC, MAGIC_SIZE)) {
+        || (memcmp(buffer, MAGIC, MAGIC_SIZE)
+            && memcmp(buffer, MAGIC2, MAGIC_SIZE))) {
         g_warning("File %s doesn't seem to be a .gwy file", filename);
         if (!gwy_file_abandon_contents(buffer, size, &err)) {
             g_critical("%s", err->message);
@@ -120,8 +126,13 @@ gwyfile_load(const gchar *filename)
         return NULL;
     }
 
-    object = gwy_serializable_deserialize(buffer + MAGIC_SIZE,
-                                          size - MAGIC_SIZE, &pos);
+    if (!memcmp(buffer, MAGIC, MAGIC_SIZE))
+        object = gwy_serializable_deserialize(buffer + MAGIC_SIZE,
+                                              size - MAGIC_SIZE, &pos);
+    else
+        object = gwy_container_deserialize2(buffer + MAGIC_SIZE,
+                                            size - MAGIC_SIZE, &pos);
+
     if (!gwy_file_abandon_contents(buffer, size, &err)) {
         g_critical("%s", err->message);
         g_clear_error(&err);
@@ -165,6 +176,70 @@ gwyfile_save(GwyContainer *data,
     g_byte_array_free(buffer, TRUE);
 
     return ok;
+}
+
+/* XXX: New style deserialization.  In 1.x it's here to load 2.x files. In
+ * 2.x it will be replaced by old style deserialization to load 1.x files. */
+static GObject*
+gwy_container_deserialize2(const guchar *buffer,
+                           gsize size,
+                           gsize *position)
+{
+    GwySerializeItem *items, *it;
+    GwyContainer *container;
+    GQuark key;
+    gsize i, nitems = 0;
+
+    gwy_debug("");
+    g_return_val_if_fail(buffer, NULL);
+    items = gwy_deserialize_object_hash(buffer, size, position,
+                                        g_type_name(GWY_TYPE_CONTAINER),
+                                        &nitems);
+    g_return_val_if_fail(items, NULL);
+
+    container = (GwyContainer*)gwy_container_new();
+    for (i = 0; i < nitems; i++) {
+        it = items + i;
+        gwy_debug("value: #%u: <%s> of <%c>", i, it->name, it->ctype);
+        key = g_quark_from_string(it->name);
+        switch (it->ctype) {
+            case 'b':
+            gwy_container_set_boolean(container, key, it->value.v_boolean);
+            break;
+
+            case 'c':
+            gwy_container_set_uchar(container, key, it->value.v_char);
+            break;
+
+            case 'i':
+            gwy_container_set_int32(container, key, it->value.v_int32);
+            break;
+
+            case 'q':
+            gwy_container_set_int64(container, key, it->value.v_int64);
+            break;
+
+            case 'd':
+            gwy_container_set_double(container, key, it->value.v_double);
+            break;
+
+            case 's':
+            gwy_container_set_string(container, key, it->value.v_string);
+            break;
+
+            case 'o':
+            gwy_container_set_object(container, key, it->value.v_object);
+            g_object_unref(it->value.v_object);
+            break;
+
+            default:
+            g_critical("Container doesn't support type <%c>", it->ctype);
+            break;
+        }
+    }
+    g_free(items);
+
+    return (GObject*)container;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
