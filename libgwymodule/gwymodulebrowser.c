@@ -100,7 +100,7 @@ gwy_module_browser_construct(GtkWidget *parent)
     }
     columns[] = {
         { N_("Module"), MODULE_NAME },
-        { N_("Loaded?"), MODULE_LOADED },
+        /*{ N_("Loaded?"), MODULE_LOADED },*/
         { N_("Version"), MODULE_VERSION },
         { N_("Author"), MODULE_AUTHOR },
     };
