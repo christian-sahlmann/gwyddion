@@ -1,5 +1,6 @@
 
 TOP_SRCDIR = ..
+MOD_TYPE =
 MODULES = \
 	plugin-proxy.dll
 SUBDIRS = file graph process
