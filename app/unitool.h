@@ -42,22 +42,23 @@ typedef struct {
 } GwyUnitoolUnits;
 
 typedef struct {
+    gpointer user_data;
+
     GwyUnitoolSlots *func_slots;
     GwyDataWindow *data_window;
     GwyDataViewLayer *layer;
     gboolean is_visible;  /* GTK_WIDGET_VISIBLE() returns BS... */
-
-    gulong layer_updated_id;
-    gulong data_updated_id;
-    gulong response_id;
-    gulong windowname_id;
 
     GtkWidget *windowname;
     GtkWidget *dialog;
 
     GwyUnitoolUnits coord_units;
 
-    gpointer user_data;
+    /*< private >*/
+    gulong layer_updated_id;
+    gulong data_updated_id;
+    gulong response_id;
+    gulong windowname_id;
 } GwyUnitoolState;
 
 struct _GwyUnitoolSlots {

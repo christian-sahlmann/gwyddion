@@ -327,8 +327,9 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
  *
  * Computes average value over a part of data field @dfield.
  *
- * The area is (currently) square with side of 2@radius+1.  If part of it lies
- * outside the data field borders, it's simply not counted in.
+ * The area is (currently) square with side of 2@radius+1.  It's not an error
+ * if part of it lies outside the data field borders, it's simply not counted
+ * in.
  *
  * Returns: The average value.
  **/
@@ -378,43 +379,53 @@ gwy_unitool_update_label(GwyUnitoolUnits *units,
     gtk_label_set_text(GTK_LABEL(label), buffer);
 }
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
 /***** Documentation *******************************************************/
 
 /**
  * GwyUnitoolSlots:
- * @layer_type:
- * @layer_constructor:
- * @layer_setup:
- * @dialog_create:
- * @dialog_update:
- * @dialog_abandon:
- * @apply:
- * @response:
+ * @layer_type: The type of the active layer this particular tool uses, like
+ *              %GWY_LAYER_SELECT.
+ * @layer_constructor: The constructor of the layer.  It must have the same
+ *                     function signature.
+ * @layer_setup: Function called when the active layer is created or changed
+ *               to tune its properties.
+ * @dialog_create: Function creating the tool dialog.
+ * @dialog_update: Function called when "updated" signal is received from
+ *                 the layer and the tool dialog should be updated.
+ * @dialog_abandon: Function called when the tool is abadoned.  It should
+ *                  namely take care of the @user_data field of tool state.
+ * @apply: Function called when user presses the OK button on the dialog.
+ *         It should do whatever the tool is supposed to do but don't touch
+ *         the dialog itself.
+ * @response: A function handling nonstandard dialog responses, i.e. others
+ *            than %GTK_RESPONSE_CLOSE, %GTK_RESPONSE_APPLY,
+ *            %GTK_RESPONSE_DELETE_EVENT and %GWY_UNITOOL_RESPONSE_UNSELECT,
+ *            that are handled by universal tool itself.  It gets the response
+ *            id as its second argument.
  *
  * The custom functions constituting a particular tool, called by universal
  * tool on various occasions.
+ *
+ * Most of the slots (FIXME: all?) can be %NULL.
  **/
 
 /**
  * GwyUnitoolState:
- * @func_slots: Function slots.
+ * @user_data: Where you should pointer to particular tool state data.
+ * @func_slots: Pointer to function slots for the particular tool.
  * @data_window: The data window the tool is active for.
  * @layer: The layer the tool is using.
- * @is_visible: %TRUE if the dialog is visible, %FALSE if it't hidden.
- * @layer_updated_id:
- * @data_updated_id:
- * @response_id:
- * @windowname_id:
- * @windowname:
- * @dialog:
- * @coord_units:
- * @user_data:
+ * @is_visible: %TRUE if the dialog is visible, %FALSE if it's hidden.
+ * @windowname: The name of @data_window.
+ * @dialog: The tool dialog.
+ * @coord_units: Units specification good for coordinate representation
+ *               (to be used in gwy_unitool_update_label() for coordinates).
  *
  * Universal tool state.
  *
- * You should put pointer to particular tool state to the @user_data member.
+ * You should put pointer to particular tool state to the @user_data member
+ * and pointer to function slots to @func_slots when creating it and otherwise
+ * consider it read-only.
  **/
 
 /**
@@ -428,3 +439,13 @@ gwy_unitool_update_label(GwyUnitoolUnits *units,
  * The values @mag and @precision should be probably obtained from a
  * gwy_math_humanize_numbmers() call.
  **/
+
+/**
+ * GWY_UNITOOL_RESPONSE_UNSELECT:
+ *
+ * Response id you should use for "Clear selection" button, if the tool has
+ * any.  Universal tool can than handle it itself.
+ **/
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+
