@@ -161,14 +161,14 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
  * main Gtk+ loop, so if you want to e.g. actualize a thumbnail, connect
  * to ::redrawn instead.
  */
-    data_view_signals[UPDATED] =
-        g_signal_new("updated",
-                     G_OBJECT_CLASS_TYPE(object_class),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(GwyDataViewClass, updated),
-                     NULL, NULL,
-                     g_cclosure_marshal_VOID__VOID,
-                     G_TYPE_NONE, 0);
+    data_view_signals[UPDATED]
+        = g_signal_new("updated",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyDataViewClass, updated),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 
 /**
  * GwyDataView::redrawn:
@@ -178,14 +178,14 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
  * The ::redrawn signal is emitted when #GwyDataView actually redraws itself
  * after an update.
  */
-    data_view_signals[REDRAWN] =
-        g_signal_new("redrawn",
-                     G_OBJECT_CLASS_TYPE(object_class),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(GwyDataViewClass, redrawn),
-                     NULL, NULL,
-                     g_cclosure_marshal_VOID__VOID,
-                     G_TYPE_NONE, 0);
+    data_view_signals[REDRAWN]
+        = g_signal_new("redrawn",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyDataViewClass, redrawn),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -193,18 +193,10 @@ gwy_data_view_init(GwyDataView *data_view)
 {
     gwy_debug(" ");
 
-    data_view->data = NULL;
-    data_view->top_layer = NULL;
-    data_view->alpha_layer = NULL;
-    data_view->base_layer = NULL;
-    data_view->pixbuf = NULL;
-    data_view->base_pixbuf = NULL;
     data_view->zoom = 1.0;
     data_view->newzoom = 1.0;
     data_view->xmeasure = -1.0;
     data_view->ymeasure = -1.0;
-    data_view->xoff = 0;
-    data_view->yoff = 0;
     data_view->force_update = TRUE;
 }
 
