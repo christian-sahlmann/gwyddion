@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -50,6 +50,8 @@ static void       stats_use                     (GwyDataWindow *data_window,
 static GtkWidget* stats_dialog_create           (GwyDataWindow *data_window);
 static void       stats_do                      (void);
 static void       stats_selection_updated_cb    (void);
+static void       stats_data_updated_cb         (void);
+static void       stats_update_view             (void);
 static void       stats_dialog_response_cb      (gpointer unused,
                                                  gint response);
 static void       stats_dialog_abandon          (void);
@@ -57,7 +59,8 @@ static void       stats_dialog_set_visible      (gboolean visible);
 
 static GtkWidget *stats_dialog = NULL;
 static StatsControls controls;
-static gulong updated_id = 0;
+static gulong layer_updated_id = 0;
+static gulong data_updated_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *select_layer = NULL;
 
@@ -111,8 +114,12 @@ stats_use(GwyDataWindow *data_window,
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == select_layer)
         return;
-    if (select_layer && updated_id)
-        g_signal_handler_disconnect(select_layer, updated_id);
+    if (select_layer) {
+        if (layer_updated_id)
+        g_signal_handler_disconnect(select_layer, layer_updated_id);
+        if (select_layer->parent && data_updated_id)
+            g_signal_handler_disconnect(select_layer->parent, data_updated_id);
+    }
 
     if (layer && GWY_IS_LAYER_SELECT(layer))
         select_layer = layer;
@@ -124,9 +131,12 @@ stats_use(GwyDataWindow *data_window,
     if (!stats_dialog)
         stats_dialog = stats_dialog_create(data_window);
 
-    updated_id = g_signal_connect(select_layer, "updated",
-                                   G_CALLBACK(stats_selection_updated_cb),
-                                   NULL);
+    layer_updated_id = g_signal_connect(select_layer, "updated",
+                                        G_CALLBACK(stats_selection_updated_cb),
+                                        NULL);
+    data_updated_id = g_signal_connect(data_view, "updated",
+                                       G_CALLBACK(stats_data_updated_cb),
+                                       NULL);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         stats_dialog_set_visible(TRUE);
     /* FIXME: window name can change also when saving under different name */
@@ -174,9 +184,14 @@ static void
 stats_dialog_abandon(void)
 {
     gwy_debug("");
-    if (select_layer && updated_id)
-        g_signal_handler_disconnect(select_layer, updated_id);
-    updated_id = 0;
+    if (select_layer) {
+        if (layer_updated_id)
+        g_signal_handler_disconnect(select_layer, layer_updated_id);
+        if (select_layer->parent && data_updated_id)
+            g_signal_handler_disconnect(select_layer->parent, data_updated_id);
+    }
+    layer_updated_id = 0;
+    data_updated_id = 0;
     select_layer = NULL;
     if (stats_dialog) {
         g_signal_handler_disconnect(stats_dialog, response_id);
@@ -326,6 +341,26 @@ update_label(GtkWidget *label, gdouble value)
 static void
 stats_selection_updated_cb(void)
 {
+    gboolean is_selected;
+
+    gwy_debug("");
+    is_selected = gwy_layer_select_get_selection(select_layer,
+                                                 NULL, NULL, NULL, NULL);
+    stats_update_view();
+    if (is_selected && !controls.is_visible)
+        stats_dialog_set_visible(TRUE);
+}
+
+static void
+stats_data_updated_cb(void)
+{
+    gwy_debug("");
+    stats_update_view();
+}
+
+static void
+stats_update_view(void)
+{
     GwyContainer *data;
     GwyDataField *dfield;
     gdouble xmin, ymin, xmax, ymax;
@@ -363,8 +398,8 @@ stats_selection_updated_cb(void)
     gtk_label_set_text(GTK_LABEL(controls.avg), buffer);
 
 
- /*   if (!is_visible && !is_selected)
-        return;*/
+    if (!is_visible && !is_selected)
+        return;
     if (is_selected) {
         update_label(controls.x, MIN(xmin, xmax));
         update_label(controls.y, MIN(ymin, ymax));
@@ -377,8 +412,6 @@ stats_selection_updated_cb(void)
         update_label(controls.w, gwy_data_field_get_xreal(dfield));
         update_label(controls.h, gwy_data_field_get_yreal(dfield));
     }
-    if (!is_visible)
-        stats_dialog_set_visible(TRUE);
 }
 
 static void

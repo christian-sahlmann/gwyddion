@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,6 +44,8 @@ static void       profile_use                   (GwyDataWindow *data_window,
 static GtkWidget* profile_dialog_create         (GwyDataView *data_view);
 static void       profile_do                    (void);
 static void       profile_selection_updated_cb  (void);
+static void       profile_data_updated_cb       (void);
+static void       profile_update_view           (void);
 static void       profile_dialog_response_cb    (gpointer unused,
                                                  gint response);
 static void       profile_dialog_abandon        (void);
@@ -60,7 +62,8 @@ static void       profile_save_args             (GwyContainer *container,
 
 static GtkWidget *profile_dialog = NULL;
 static ProfileControls controls;
-static gulong updated_id = 0;
+static gulong layer_updated_id = 0;
+static gulong data_updated_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *lines_layer = NULL;
 static GPtrArray *dtl = NULL;
@@ -120,13 +123,15 @@ profile_use(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(data_view);
-
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == lines_layer)
         return;
-
-    if (lines_layer && updated_id)
-        g_signal_handler_disconnect(lines_layer, updated_id);
+    if (lines_layer) {
+        if (layer_updated_id)
+        g_signal_handler_disconnect(lines_layer, layer_updated_id);
+        if (lines_layer->parent && data_updated_id)
+            g_signal_handler_disconnect(lines_layer->parent, data_updated_id);
+    }
 
     if (layer && GWY_IS_LAYER_LINES(layer))
         lines_layer = layer;
@@ -140,7 +145,6 @@ profile_use(GwyDataWindow *data_window,
 
     if (!profile_dialog)
         profile_dialog = profile_dialog_create(data_view);
-
 
     if (!dtl) {
         dtl = g_ptr_array_new();
@@ -157,9 +161,12 @@ profile_use(GwyDataWindow *data_window,
 
     }
 
-    updated_id = g_signal_connect(lines_layer, "updated",
-                                   G_CALLBACK(profile_selection_updated_cb),
-                                   NULL);
+    layer_updated_id = g_signal_connect(lines_layer, "updated",
+                                        G_CALLBACK(profile_selection_updated_cb),
+                                        NULL);
+    data_updated_id = g_signal_connect(data_view, "updated",
+                                       G_CALLBACK(profile_data_updated_cb),
+                                       NULL);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         profile_dialog_set_visible(TRUE);
     if (controls.is_visible)
@@ -244,9 +251,14 @@ static void
 profile_dialog_abandon(void)
 {
     gwy_debug("");
-    if (lines_layer && updated_id)
-        g_signal_handler_disconnect(lines_layer, updated_id);
-    updated_id = 0;
+    if (lines_layer) {
+        if (layer_updated_id)
+        g_signal_handler_disconnect(lines_layer, layer_updated_id);
+        if (lines_layer->parent && data_updated_id)
+            g_signal_handler_disconnect(lines_layer->parent, data_updated_id);
+    }
+    layer_updated_id = 0;
+    data_updated_id = 0;
     lines_layer = NULL;
     if (profile_dialog) {
         g_signal_handler_disconnect(profile_dialog, response_id);
@@ -436,9 +448,27 @@ update_labels()
      }
 }
 
-
 static void
 profile_selection_updated_cb(void)
+{
+    gint nselected;
+
+    gwy_debug("");
+    nselected = gwy_layer_lines_get_lines(lines_layer, NULL);
+    profile_update_view();
+    if (nselected && !controls.is_visible)
+        profile_dialog_set_visible(TRUE);
+}
+
+static void
+profile_data_updated_cb(void)
+{
+    gwy_debug("");
+    profile_update_view();
+}
+
+static void
+profile_update_view(void)
 {
     GwyContainer *data;
     GwyDataField *datafield;
@@ -457,7 +487,6 @@ profile_selection_updated_cb(void)
 
     is_visible = controls.is_visible;
     is_selected = gwy_layer_lines_get_lines(lines_layer, lines);
-
     if (!is_visible && !is_selected)
         return;
 
@@ -516,10 +545,6 @@ profile_selection_updated_cb(void)
         g_free(x_unit);
         g_free(z_unit);
     }
-
-    if (!is_visible)
-        profile_dialog_set_visible(TRUE);
-
 }
 
 static void

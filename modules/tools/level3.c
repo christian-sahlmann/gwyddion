@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -49,6 +49,8 @@ static gdouble    level3_get_z_average          (GwyDataField *dfield,
                                                  gdouble yreal,
                                                  gint radius);
 static void       level3_selection_updated_cb   (void);
+static void       level3_data_updated_cb        (void);
+static void       level3_update_view            (void);
 static void       level3_dialog_response_cb     (gpointer unused,
                                                  gint response);
 static void       level3_dialog_abandon         (void);
@@ -58,7 +60,8 @@ static const gchar *radius_key = "/tool/level3/radius";
 
 static GtkWidget *level3_dialog = NULL;
 static Level3Controls controls;
-static gulong updated_id = 0;
+static gulong layer_updated_id = 0;
+static gulong data_updated_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *points_layer = NULL;
 
@@ -113,8 +116,12 @@ level3_use(GwyDataWindow *data_window,
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == points_layer)
         return;
-    if (points_layer && updated_id)
-        g_signal_handler_disconnect(points_layer, updated_id);
+    if (points_layer) {
+        if (layer_updated_id)
+        g_signal_handler_disconnect(points_layer, layer_updated_id);
+        if (points_layer->parent && data_updated_id)
+            g_signal_handler_disconnect(points_layer->parent, data_updated_id);
+    }
 
     if (layer && GWY_IS_LAYER_POINTS(layer)) {
         points_layer = layer;
@@ -128,9 +135,12 @@ level3_use(GwyDataWindow *data_window,
     if (!level3_dialog)
         level3_dialog = level3_dialog_create(data_window);
 
-    updated_id = g_signal_connect(points_layer, "updated",
-                                   G_CALLBACK(level3_selection_updated_cb),
-                                   NULL);
+    layer_updated_id = g_signal_connect(points_layer, "updated",
+                                        G_CALLBACK(level3_selection_updated_cb),
+                                        NULL);
+    data_updated_id = g_signal_connect(data_view, "updated",
+                                       G_CALLBACK(level3_data_updated_cb),
+                                       NULL);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         level3_dialog_set_visible(TRUE);
     /* FIXME: window name can change also when saving under different name */
@@ -229,9 +239,14 @@ level3_dialog_abandon(void)
     GwyContainer *settings;
     gint radius;
 
-    if (points_layer && updated_id)
-        g_signal_handler_disconnect(points_layer, updated_id);
-    updated_id = 0;
+    if (points_layer) {
+        if (layer_updated_id)
+        g_signal_handler_disconnect(points_layer, layer_updated_id);
+        if (points_layer->parent && data_updated_id)
+            g_signal_handler_disconnect(points_layer->parent, data_updated_id);
+    }
+    layer_updated_id = 0;
+    data_updated_id = 0;
     points_layer = NULL;
     if (level3_dialog) {
         radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
@@ -366,6 +381,25 @@ update_value_label(GtkWidget *label, gdouble value)
 static void
 level3_selection_updated_cb(void)
 {
+    gint nselected;
+
+    gwy_debug("");
+    nselected = gwy_layer_points_get_points(points_layer, NULL);
+    level3_update_view();
+    if (nselected && !controls.is_visible)
+        level3_dialog_set_visible(TRUE);
+}
+
+static void
+level3_data_updated_cb(void)
+{
+    gwy_debug("");
+    level3_update_view();
+}
+
+static void
+level3_update_view(void)
+{
     GwyContainer *data;
     GwyDataField *dfield;
     gdouble points[6];
@@ -398,8 +432,6 @@ level3_selection_updated_cb(void)
                 gtk_label_set_text(GTK_LABEL(controls.values[i/2]), "");
         }
     }
-    if (!is_visible)
-        level3_dialog_set_visible(TRUE);
 }
 
 static void

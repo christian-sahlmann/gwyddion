@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,6 +44,8 @@ static void       pointer_use                    (GwyDataWindow *data_window,
                                                   GwyToolSwitchEvent reason);
 static GtkWidget* pointer_dialog_create          (GwyDataWindow *data_window);
 static void       pointer_selection_updated_cb   (void);
+static void       pointer_data_updated_cb        (void);
+static void       pointer_update_view            (void);
 static void       pointer_dialog_response_cb     (gpointer unused,
                                                   gint response);
 static gdouble    pointer_get_z_average          (GwyDataField *dfield,
@@ -57,7 +59,8 @@ static const gchar *radius_key = "/tool/pointer/radius";
 
 static GtkWidget *pointer_dialog = NULL;
 static PointerControls controls;
-static gulong updated_id = 0;
+static gulong layer_updated_id = 0;
+static gulong data_updated_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *pointer_layer = NULL;
 
@@ -111,8 +114,12 @@ pointer_use(GwyDataWindow *data_window,
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == pointer_layer)
         return;
-    if (pointer_layer && updated_id)
-        g_signal_handler_disconnect(pointer_layer, updated_id);
+    if (pointer_layer) {
+        if (layer_updated_id)
+        g_signal_handler_disconnect(pointer_layer, layer_updated_id);
+        if (pointer_layer->parent && data_updated_id)
+            g_signal_handler_disconnect(pointer_layer->parent, data_updated_id);
+    }
 
     if (layer && GWY_IS_LAYER_POINTER(layer))
         pointer_layer = layer;
@@ -123,9 +130,12 @@ pointer_use(GwyDataWindow *data_window,
     if (!pointer_dialog)
         pointer_dialog = pointer_dialog_create(data_window);
 
-    updated_id = g_signal_connect(pointer_layer, "updated",
-                                   G_CALLBACK(pointer_selection_updated_cb),
-                                   NULL);
+    layer_updated_id = g_signal_connect(pointer_layer, "updated",
+                                        G_CALLBACK(pointer_selection_updated_cb),
+                                        NULL);
+    data_updated_id = g_signal_connect(data_view, "updated",
+                                       G_CALLBACK(pointer_data_updated_cb),
+                                       NULL);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         pointer_dialog_set_visible(TRUE);
     /* FIXME: window name can change also when saving under different name */
@@ -166,9 +176,14 @@ pointer_dialog_abandon(void)
     GwyContainer *settings;
     gint radius;
 
-    if (pointer_layer && updated_id)
-        g_signal_handler_disconnect(pointer_layer, updated_id);
-    updated_id = 0;
+    if (pointer_layer) {
+        if (layer_updated_id)
+        g_signal_handler_disconnect(pointer_layer, layer_updated_id);
+        if (pointer_layer->parent && data_updated_id)
+            g_signal_handler_disconnect(pointer_layer->parent, data_updated_id);
+    }
+    layer_updated_id = 0;
+    data_updated_id = 0;
     pointer_layer = NULL;
     if (pointer_dialog) {
         radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
@@ -293,6 +308,25 @@ update_value_label(GtkWidget *label, gdouble value)
 static void
 pointer_selection_updated_cb(void)
 {
+    gboolean is_selected;
+
+    gwy_debug("");
+    is_selected = gwy_layer_pointer_get_point(pointer_layer, NULL, NULL);
+    pointer_update_view();
+    if (is_selected && !controls.is_visible)
+        pointer_dialog_set_visible(TRUE);
+}
+
+static void
+pointer_data_updated_cb(void)
+{
+    gwy_debug("");
+    pointer_update_view();
+}
+
+static void
+pointer_update_view(void)
+{
     GwyContainer *data;
     GwyDataField *dfield;
     gdouble x, y, value;
@@ -320,8 +354,6 @@ pointer_selection_updated_cb(void)
         gtk_label_set_text(GTK_LABEL(controls.y), "");
         gtk_label_set_text(GTK_LABEL(controls.val), "");
     }
-    if (!is_visible)
-        pointer_dialog_set_visible(TRUE);
 }
 
 static void
