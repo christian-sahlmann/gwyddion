@@ -391,7 +391,7 @@ gwy_app_recent_file_list_prune(Controls *controls)
     do {
         gtk_tree_model_get(GTK_TREE_MODEL(controls->store), &iter,
                            FILELIST_RAW, &rf, -1);
-        gwy_debug("<%s>\n", rf->file_utf8);
+        gwy_debug("<%s>", rf->file_utf8);
         if (!g_file_test(rf->file_utf8, G_FILE_TEST_IS_REGULAR)) {
             if (rf->thumb_sys && rf->thumb_state != FILE_STATE_FAILED)
                 unlink(rf->thumb_sys);
@@ -875,7 +875,7 @@ recent_file_try_load_thumbnail(GwyRecentFile *rf)
 
     option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_URI);
     gwy_debug("uri = <%s>", rf->file_uri);
-    if (strcmp(option, rf->file_uri)) {
+    if (!option || strcmp(option, rf->file_uri)) {
         g_warning("URI <%s> from thumb doesn't match <%s>. "
                   "If this isn't an MD5 collision, it's an implementation bug",
                   option, rf->file_uri);
