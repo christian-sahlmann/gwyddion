@@ -8,7 +8,7 @@ libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
-libgwyappincludedir = $(includedir)/gwyddion/libgwyapp
+libgwyappincludedir = $(includedir)/gwyddion/app
 libgwyappinclude_HEADERS = \
 	about.h \
 	app.h \
