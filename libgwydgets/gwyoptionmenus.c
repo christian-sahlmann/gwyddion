@@ -199,6 +199,8 @@ gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
     gwy_object_unref(palette);
 
     image = gtk_image_new_from_pixbuf(pixbuf);
+    g_object_unref(pixbuf);
+
     return image;
 }
 
