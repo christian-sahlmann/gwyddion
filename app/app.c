@@ -781,6 +781,7 @@ gwy_app_confirm_quit(void)
         return TRUE;
     ok = gwy_app_confirm_quit_dialog(unsaved);
     g_slist_free(unsaved);
+
     return ok;
 }
 
@@ -791,28 +792,24 @@ gather_unsaved_cb(GwyDataWindow *data_window,
     GwyContainer *data = gwy_data_window_get_data(data_window);
 
     if (g_object_get_data(G_OBJECT(data), "modified"))
-        *unsaved = g_slist_prepend(*unsaved, data);
+        *unsaved = g_slist_prepend(*unsaved, data_window);
 }
 
 static gboolean
 gwy_app_confirm_quit_dialog(GSList *unsaved)
 {
     GtkWidget *dialog;
-    const gchar *filename;
     gchar *text;
     gint response;
 
     text = NULL;
     while (unsaved) {
-        GwyContainer *data = GWY_CONTAINER(unsaved->data);
+        GwyDataWindow *data_window = GWY_DATA_WINDOW(unsaved->data);
+        gchar *filename = gwy_data_window_get_base_name(data_window);
 
-        if (gwy_container_contains_by_name(data, "/filename"))
-            filename = gwy_container_get_string_by_name(data, "/filename");
-        else
-            filename = gwy_container_get_string_by_name(data,
-                                                        "/filename/untitled");
         text = g_strconcat(filename, "\n", text, NULL);
         unsaved = g_slist_next(unsaved);
+        g_free(filename);
     }
     dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_main_window_get()),
                                     GTK_DIALOG_MODAL,

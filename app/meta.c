@@ -64,22 +64,12 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
     GtkWidget *window, *browser;
     GwyContainer *data;
     gchar *filename, *title;
-    const gchar *fnm;
 
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    /* FIXME: this duplicates code from GwyDataWindow */
-    if (gwy_container_contains_by_name(data, "/filename")) {
-        fnm = gwy_container_get_string_by_name(data, "/filename");
-        filename = g_path_get_basename(fnm);
-    }
-    else {
-        fnm = gwy_container_get_string_by_name(data, "/filename/untitled");
-        filename = g_strdup(fnm);
-    }
-
+    filename = gwy_data_window_get_base_name(data_window);
     title = g_strdup_printf("%s Metadata %s", g_get_application_name(),
                             filename);
     gtk_window_set_title(GTK_WINDOW(window), title);

@@ -206,23 +206,13 @@ static void
 gwy_data_arith_append_line(GwyDataWindow *data_window,
                            GtkWidget *menu)
 {
-    GwyContainer *data;
     GtkWidget *item, *data_view, *image;
     GdkPixbuf *pixbuf;
     const gchar *fnm;
     gchar *filename;
 
-    data = gwy_data_window_get_data(data_window);
     data_view = gwy_data_window_get_data_view(data_window);
-
-    if (gwy_container_contains_by_name(data, "/filename")) {
-        fnm = gwy_container_get_string_by_name(data, "/filename");
-        filename = g_path_get_basename(fnm);
-    }
-    else {
-        fnm = gwy_container_get_string_by_name(data, "/filename/untitled");
-        filename = g_strdup(fnm);
-    }
+    filename = gwy_data_window_get_base_name(data_window);
 
     pixbuf = gwy_data_view_get_thumbnail(GWY_DATA_VIEW(data_view),
                                          THUMBNAIL_SIZE);
