@@ -12,7 +12,8 @@
     Global module info (like the upper part of module browser).
   -->
   <table>
-    <thead><th>Name</th><th>Version</th><th>Authors</th></thead>
+    <thead><tr><th>Name</th><th>Version</th><th>Authors</th></tr></thead>
+    <tbody>
     <xsl:for-each select="module">
     <tr>
       <td><a>
@@ -23,6 +24,7 @@
       <td><xsl:value-of select="author"/></td>
     </tr>
     </xsl:for-each>
+    </tbody>
   </table>
 
   <!--
@@ -45,17 +47,23 @@
     <p>
       <b>Description: </b><xsl:apply-templates select="description"/>
     </p>
-    <p>
-      <b>Functions: </b>
+    <xsl:if test="count(child::funclist/func) > 0">
+    <table>
+      <thead>
+        <tr><th colspan="3">Functions</th></tr>
+        <tr><th>Type</th><th>Name</th><th>Information</th></tr>
+      </thead>
+      <tbody>
       <xsl:for-each select="funclist/func">
-        <xsl:if test="position() > 1">
-          <xsl:text>, </xsl:text>
-        </xsl:if>
-        <xsl:value-of select="class"/>
-        <xsl:text>::</xsl:text>
-        <xsl:value-of select="name"/>
+        <tr>
+          <td><xsl:value-of select="class"/></td>
+          <td><xsl:value-of select="name"/></td>
+          <td><xsl:value-of select="info"/></td>
+        </tr>
       </xsl:for-each>
-    </p>
+      </tbody>
+    </table>
+    </xsl:if>
   </xsl:for-each>
 </xsl:template>
 

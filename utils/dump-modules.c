@@ -83,6 +83,23 @@ tag_close(void)
     g_free(s);
 }
 
+static void
+menu_path_print(const gchar *path, const gchar *tag)
+{
+    gchar *s;
+    gint i;
+
+    s = gwy_strkill(gwy_strreplace(path + (path[0] == '/'),
+                                   "/", " → ", -1), "_");
+    i = strlen(s);
+    do {
+        s[i] = '\0';
+        i--;
+    } while (s[i] == '.');
+    tag_print(tag, s);
+    g_free(s);
+}
+
 /* Main */
 int
 main(G_GNUC_UNUSED int argc,
@@ -149,30 +166,14 @@ main(G_GNUC_UNUSED int argc,
             tag_print("name", name);
 
             /* dig more info about particular function types */
-            if (!strcmp(class, "proc")) {
-                gchar *s = (gchar*)gwy_process_func_get_menu_path(name);
-
-                s = gwy_strkill(gwy_strreplace(s+1, "/", " → ", -1), "_");
-                i = strlen(s);
-                do {
-                    s[i] = '\0';
-                    i--;
-                } while (s[i] == '.');
-                tag_print("info", s);
-                g_free(s);
-            }
-            else if (!strcmp(class, "graph")) {
-                gchar *s = (gchar*)gwy_graph_func_get_menu_path(name);
-
-                s = gwy_strkill(gwy_strreplace(s+1, "/", " → ", -1), "_");
-                i = strlen(s);
-                do {
-                    s[i] = '\0';
-                    i--;
-                } while (s[i] == '.');
-                tag_print("info", s);
-                g_free(s);
-            }
+            if (!strcmp(class, "proc"))
+                menu_path_print(gwy_process_func_get_menu_path(name), "info");
+            else if (!strcmp(class, "graph"))
+                menu_path_print(gwy_graph_func_get_menu_path(name), "info");
+            else if (!strcmp(class, "file"))
+                menu_path_print(gwy_file_func_get_description(name), "info");
+            else if (!strcmp(class, "tool"))
+                tag_print("info", gwy_tool_func_get_tooltip(name));
 
             g_free(class);
             tag_close();
