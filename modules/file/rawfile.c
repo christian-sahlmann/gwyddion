@@ -490,7 +490,7 @@ rawfile_dialog(RawFileArgs *args,
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_MODAL
                                          | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -632,7 +632,7 @@ rawfile_dialog_preview_box(RawFileControls *controls)
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
     g_object_unref(pixbuf);
 
-    controls->do_preview = gtk_button_new_with_label(_("Update"));
+    controls->do_preview = gtk_button_new_with_label(_("_Update"));
     gtk_box_pack_start(GTK_BOX(vbox), controls->do_preview, FALSE, FALSE, 4);
 
     return align;
@@ -683,14 +683,14 @@ rawfile_dialog_info_page(RawFileArgs *args,
 
     adj = gtk_adjustment_new(args->xres, 0, 16384, 1, 10, 100);
     controls->xres = gwy_table_attach_spinbutton(table, row,
-                                                 _("_Horizontal size"),
+                                                 _("_Horizontal size:"),
                                                  _("data samples"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->xres), 0);
     row++;
 
     adj = gtk_adjustment_new(args->yres, 0, 16384, 1, 10, 100);
     controls->yres = gwy_table_attach_spinbutton(table, row,
-                                                 _("_Vertical size"),
+                                                 _("_Vertical size:"),
                                                  _("data samples"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->yres), 0);
     row++;
@@ -710,7 +710,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls->xreal,
                      1, 2, row, row+1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(_("_Width"));
+    label = gtk_label_new_with_mnemonic(_("_Width:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->xreal);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -731,7 +731,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls->yreal,
                      1, 2, row, row+1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(_("H_eight"));
+    label = gtk_label_new_with_mnemonic(_("H_eight:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->yreal);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -750,7 +750,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls->zscale,
                      1, 2, row, row+1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(_("_Z-scale"));
+    label = gtk_label_new_with_mnemonic(_("_Z-scale:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->zscale);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -806,19 +806,19 @@ rawfile_dialog_format_page(RawFileArgs *args,
 
     adj = gtk_adjustment_new(args->lineoffset, 0, 1 << 30, 1, 10, 10);
     controls->lineoffset = gwy_table_attach_spinbutton(table, row,
-                                                       _("Start from _line"),
+                                                       _("Start from _line:"),
                                                        "", adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->lineoffset), 0);
     row++;
 
     adj = gtk_adjustment_new(args->skipfields, 0, 1 << 30, 1, 10, 10);
     controls->skipfields = gwy_table_attach_spinbutton(table, row,
-                                                       _("E_ach row skip"),
+                                                       _("E_ach row skip:"),
                                                        "fields", adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->skipfields), 0);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("_Field delimiter"));
+    label = gtk_label_new_with_mnemonic(_("_Field delimiter:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
@@ -864,7 +864,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     controls->builtin = omenu;
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("Byte s_wap pattern"));
+    label = gtk_label_new_with_mnemonic(_("Byte s_wap pattern:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
@@ -878,14 +878,14 @@ rawfile_dialog_format_page(RawFileArgs *args,
 
     adj = gtk_adjustment_new(args->offset, 0, 1 << 30, 16, 1024, 1024);
     controls->offset = gwy_table_attach_spinbutton(table, row,
-                                                   _("Start at _offset"),
+                                                   _("Start at _offset:"),
                                                    "bytes", adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->offset), 0);
     row++;
 
     adj = gtk_adjustment_new(args->size, 1, 24, 1, 8, 8);
     controls->size = gwy_table_attach_spinbutton(table, row,
-                                                 _("_Sample size"),
+                                                 _("_Sample size:"),
                                                  "bits", adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->size), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(controls->size), TRUE);
@@ -893,7 +893,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
 
     adj = gtk_adjustment_new(args->skip, 0, 1 << 30, 1, 8, 8);
     controls->skip = gwy_table_attach_spinbutton(table, row,
-                                                 _("After each sample s_kip"),
+                                                 _("After each sample s_kip:"),
                                                  "bits", adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->skip), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(controls->skip), TRUE);
@@ -901,7 +901,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
 
     adj = gtk_adjustment_new(args->rowskip, 0, 1 << 30, 1, 8, 8);
     controls->rowskip = gwy_table_attach_spinbutton(table, row,
-                                                    _("After each _row skip"),
+                                                    _("After each _row skip:"),
                                                     "bits", adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->rowskip), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(controls->rowskip), TRUE);
