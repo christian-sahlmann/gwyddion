@@ -47,6 +47,7 @@ typedef struct {
 
 typedef struct {
     TipBlindArgs *args;
+    GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *data;
     GwyDataWindow *data_window;
@@ -60,6 +61,7 @@ typedef struct {
     gint vxres;
     gint vyres;
     gboolean tipdone;
+    gboolean good_tip;
     GtkWidget *same_resolution;
     gboolean in_update;
 } TipBlindControls;
@@ -189,6 +191,10 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 
     controls.args = args;
     controls.in_update = TRUE;
+    controls.good_tip = FALSE;
+    controls.dialog = dialog;
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
+                                      controls.good_tip);
 
     hbox = gtk_hbox_new(FALSE, 3);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -436,6 +442,9 @@ reset(TipBlindControls *controls, TipBlindArgs *args)
     tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
                                                                "/0/data"));
     gwy_data_field_fill(tipfield, 0);
+    controls->good_tip = FALSE;
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK, controls->good_tip);
 
     tip_update(controls, args);
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
@@ -483,7 +492,7 @@ tip_blind_run(TipBlindControls *controls,
     GwyContainer *data;
     GwyPixmapLayer *layer;
     const guchar *name;
-    gint count;
+    gint count = -1;
     GwyPalette *palette;
 
     data = args->data;
@@ -510,7 +519,11 @@ tip_blind_run(TipBlindControls *controls,
                                             &count,
                                             gwy_app_wait_set_fraction,
                                             gwy_app_wait_set_message);
+        controls->good_tip = (tipfield != NULL && count > 0);
     }
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK, controls->good_tip);
+    gwy_debug("count = %d", count);
 
     gwy_app_wait_finish();
     tip_update(controls, args);
