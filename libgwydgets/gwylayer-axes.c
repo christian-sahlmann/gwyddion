@@ -307,17 +307,43 @@ gwy_layer_axes_get_max_axes(GwyLayerAxes *layer)
     return layer->naxes;
 }
 
+/**
+ * gwy_layer_axes_set_orientation:
+ * @layer: A #GwyLayerAxes.
+ * @orientation: The orientation @layer should use.
+ *
+ * Sets the orientation of lines in an axis layer @layer.
+ *
+ * If the orientation differs from current, the selection is cleared.
+ **/
 void
 gwy_layer_axes_set_orientation(GwyLayerAxes *layer,
                                GtkOrientation orientation)
 {
-    /* TODO */
+    g_return_if_fail(GWY_IS_LAYER_AXES(layer));
+    g_return_if_fail(orientation == GTK_ORIENTATION_HORIZONTAL
+                     || orientation == GTK_ORIENTATION_VERTICAL);
+    if (orientation == layer->orientation)
+        return;
+
+    if (layer->nselected)
+        gwy_layer_axes_unselect(GWY_VECTOR_LAYER(layer));
+    layer->orientation = orientation;
 }
 
+/**
+ * gwy_layer_axes_get_orientation:
+ * @layer: A #GwyLayerAxes.
+ *
+ * Returns the orientation of lines in an axis layer @layer.
+ *
+ * Returns: The orientation.
+ **/
 GtkOrientation
 gwy_layer_axes_get_orientation (GwyLayerAxes *layer)
 {
-    /* TODO */
+    g_return_val_if_fail(GWY_IS_LAYER_AXES(layer), 0);
+    return layer->orientation;
 }
 
 static void
