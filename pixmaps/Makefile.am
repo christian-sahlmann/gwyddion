@@ -20,3 +20,4 @@ data_DATA = \
 	gwy_superscript-24.png \
 	gwy_pointer-24.png
 
+EXTRA_DIST = $(data_DATA)
