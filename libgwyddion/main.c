@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define _GWY_TEST_TO_TEXT
 #include "gwyddion.h"
 #include "gwytestser.h"
 
@@ -209,6 +210,8 @@ main(void)
     g_message("restoring the second one");
     ser = gwy_serializable_deserialize(buffer, size, &pos);
     print(ser, "restored");
+
+    gwy_serializable_serialize_to_text(ser);
 
     g_message("===== WATCHABLE INTERFACE ===========================");
     id = g_signal_connect(ser, "value_changed", G_CALLBACK(foo_callback), NULL);

@@ -52,10 +52,11 @@ gwy_serializable_get_type(void)
             NULL,
         };
 
-        gwy_serializable_type = g_type_register_static(G_TYPE_INTERFACE,
-                                                       GWY_SERIALIZABLE_TYPE_NAME,
-                                                       &gwy_serializable_info,
-                                                       0);
+        gwy_serializable_type
+            = g_type_register_static(G_TYPE_INTERFACE,
+                                     GWY_SERIALIZABLE_TYPE_NAME,
+                                     &gwy_serializable_info,
+                                     0);
         g_type_interface_add_prerequisite(gwy_serializable_type, G_TYPE_OBJECT);
     }
 
@@ -417,7 +418,8 @@ gwy_serialize_pack(guchar *buffer,
                     guchar *value = va_arg(ap, guchar*);
 
                     if (!value) {
-                        g_warning("representing NULL string as an empty string");
+                        g_warning("representing NULL string "
+                                  "as an empty string");
                         if (do_copy)
                             p[pos] = '\0';
                         p++;
@@ -653,7 +655,8 @@ gwy_serialize_pack_struct(guchar *buffer,
                     guchar *value = *(guchar**)sp->value;
 
                     if (!value) {
-                        g_warning("representing NULL string as an empty string");
+                        g_warning("representing NULL string "
+                                  "as an empty string");
                         if (do_copy)
                             p[pos] = '\0';
                         p++;
@@ -773,6 +776,7 @@ gwy_serialize_skip_type(const guchar *buffer,
         ctype = g_ascii_tolower(ctype);
         tsize = gwy_serialize_unpack_int32(buffer, size, position);
         position += tsize*ctype_size(ctype);
+        return;
     }
 
     g_assert_not_reached();
@@ -921,8 +925,9 @@ gwy_serialize_unpack_struct(const guchar *buffer,
             break;
 
             default:
-            g_error("Type `%c' of %s is unknown (though known to application?!)",
-                  ctype, name);
+            g_error("Type `%c' of %s is unknown "
+                    "(though known to application?!)",
+                    ctype, name);
             return FALSE;
             break;
         }
@@ -1276,6 +1281,167 @@ gwy_serialize_check_string(const guchar *buffer,
 
     return (p - buffer) + 1 - position;
 }
+
+#if 0
+guchar*
+gwy_serializable_serialize_to_text(GObject *serializable)
+{
+    guchar *buffer;
+    gsize bufsize, size, position, nlen;
+    const guchar *name;
+    guchar ctype, c, *ac;
+    gdouble *ad;
+    gint32 *ai;
+    gint64 *aq;
+    char *s, *sesc;
+    gsize i, n;
+
+    bufsize = 0;
+    buffer = gwy_serializable_serialize(serializable, NULL, &bufsize);
+
+    position = 0;
+    size = gwy_serialize_check_string(buffer, bufsize, position, NULL);
+    g_return_val_if_fail(size, FALSE);
+    g_message("OBJECT<%s> {", buffer);
+    position += size;
+
+    size = gwy_serialize_unpack_int32(buffer, bufsize, &position);
+    while (position < size) {
+        nlen = gwy_serialize_check_string(buffer, size, position, NULL);
+        if (!nlen) {
+            g_error("Expected a component name to deserialize, got garbage");
+            return FALSE;
+        }
+
+        /*
+        for (sp = spec; (gsize)(sp - spec) < nspec; sp++) {
+            if (strcmp(sp->name, buffer + position) == 0)
+                break;
+        }
+        */
+        name = buffer + position;
+        g_message("COMPONENT<%s> {", name);
+        position += nlen;
+        ctype = gwy_serialize_unpack_char(buffer, size, &position);
+        /*
+        if ((gsize)(sp - spec) == nspec) {
+            g_warning("Extra component %s of type `%c'", name, ctype);
+            gwy_serialize_skip_type(buffer, size, &position, ctype);
+            continue;
+        }
+
+        if (ctype != sp->ctype) {
+            g_warning("Bad or unknown type `%c' of %s (expected `%c')",
+                      ctype, name, sp->ctype);
+            return FALSE;
+        }
+
+        p = sp->value;
+        a = sp->array_size;
+        */
+        switch (ctype) {
+            case 'o':
+            g_critical("Object unimplemented");
+            gwy_serialize_skip_type(buffer, size, &position, ctype);
+            /*
+            if (*(GObject**)p)
+                g_object_unref(*(GObject**)p);
+            *(GObject**)p = gwy_serializable_deserialize(buffer, size,
+                                                         &position);
+                                                         */
+            break;
+
+            case 'b':
+            g_message("boolean %d",
+                      gwy_serialize_unpack_boolean(buffer, size, &position));
+            break;
+
+            case 'c':
+            c = gwy_serialize_unpack_char(buffer, size, &position);
+            if (g_ascii_isprint(c))
+                g_message("char %c", c);
+            else
+                g_message("char 0x%02x", c);
+            break;
+
+            case 'i':
+            g_message("int32 %d",
+                      gwy_serialize_unpack_int32(buffer, size, &position));
+            break;
+
+            case 'q':
+            g_message("int64 %lld",
+                      gwy_serialize_unpack_int64(buffer, size, &position));
+            break;
+
+            case 'd':
+            g_message("double %.18g",
+                      gwy_serialize_unpack_double(buffer, size, &position));
+            break;
+
+            case 's':
+            s = gwy_serialize_unpack_string(buffer, size, &position);
+            sesc = g_strescape(s, NULL);
+            g_message("string \"%s\"", sesc);
+            g_free(sesc);
+            g_free(s);
+            break;
+
+            case 'C':
+            ac = gwy_serialize_unpack_char_array(buffer, size, &position, &n);
+            g_message("char[%u]", n);
+            for (i = 0; i < n; i++) {
+                if (g_ascii_isprint(ac[i]))
+                    g_message(" %c", ac[i]);
+                else
+                    g_message(" 0x%02x", ac[i]);
+            }
+            g_free(ac);
+            break;
+
+            case 'I':
+            ai = gwy_serialize_unpack_int32_array(buffer, size, &position, &n);
+            g_message("int32[%u]", n);
+            for (i = 0; i < n; i++)
+                g_message(" %d", ai[i]);
+            g_free(ai);
+            break;
+
+            case 'Q':
+            aq = gwy_serialize_unpack_int64_array(buffer, size, &position, &n);
+            g_message("int64[%u]", n);
+            for (i = 0; i < n; i++)
+                g_message(" %lld", aq[i]);
+            g_free(aq);
+            break;
+
+            case 'D':
+            ad = gwy_serialize_unpack_double_array(buffer, size, &position, &n);
+            g_message("double[%u]", n);
+            for (i = 0; i < n; i++)
+                g_message(" %.18g", ad[i]);
+            g_free(ad);
+            break;
+
+            default:
+            g_error("Type `%c' of %s is unknown "
+                    "(though known to application?!)",
+                    ctype, name);
+            return FALSE;
+            break;
+        }
+        g_message("}");
+    }
+    g_message("}");
+    /*
+    ok = gwy_serialize_unpack_struct(buffer + *position, mysize, nspec, spec);
+    *position += mysize;
+    */
+    g_free(buffer);
+
+    return NULL;
+}
+#endif
 
 /************************** Documentation ****************************/
 
