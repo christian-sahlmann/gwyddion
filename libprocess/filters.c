@@ -117,6 +117,7 @@ gwy_data_field_convolve(GwyDataField *data_field,
                                  brcol-ulcol, brrow-ulrow);
 }
 
+#include <stdio.h>
 /**
  * gwy_data_field_area_filter_mean:
  * @data_field: A data field to apply mean filter to.
@@ -153,7 +154,7 @@ gwy_data_field_area_filter_mean(GwyDataField *data_field,
     buffer = g_new(gdouble, width*height);
     rowstride = data_field->xres;
     data = data_field->data + rowstride*row + col;
-
+/*printf("%d %d, %dx%d\n", col, row, width, height);*/
     /* vertical pass */
     for (j = 0; j < width; j++) {
         for (i = 0; i < height; i++) {

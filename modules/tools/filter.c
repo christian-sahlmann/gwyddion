@@ -226,10 +226,13 @@ dialog_create(GwyUnitoolState *state)
     controls->direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
                                     state, controls->dir);
+    
+    /* TODO uncomment this when some directional filter is avalilable
     if (controls->fil == GWY_FILTER_SOBEL || controls->fil == GWY_FILTER_PREWITT)
         gtk_widget_set_sensitive(controls->direction, TRUE);
     else
-        gtk_widget_set_sensitive(controls->direction, FALSE);
+    */
+    gtk_widget_set_sensitive(controls->direction, FALSE);
 
     gtk_table_attach(GTK_TABLE(table2), controls->direction,
                      1, 2, 2, 3, GTK_FILL, 0, 2, 2);
@@ -314,6 +317,7 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
+   printf("%d, %d, %d, %d : wxh=%d, %d\n", isel[0], isel[1], isel[2], isel[3], isel[1]-isel[0], isel[3]-isel[2]);
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 
     for (i = 0; i < 4; i++) {
@@ -377,35 +381,27 @@ do_apply(GwyDataField *dfield,
          gint direction,
          gint *isel)
 {
+   
+    printf("%d, %d, %d, %d : wxh=%d, %d\n", isel[0], isel[1], isel[2], isel[3], isel[1]-isel[0], isel[3]-isel[2]);
     switch (filter_type) {
         case GWY_FILTER_MEAN:
-        gwy_data_field_filter_mean(dfield, size,
-                                   isel[0], isel[1], isel[2], isel[3]);
+        gwy_data_field_area_filter_mean(dfield, size,
+                                   isel[0], isel[2], isel[1]-isel[0], isel[3]-isel[2]);
         break;
 
         case GWY_FILTER_MEDIAN:
-        gwy_data_field_filter_median(dfield, size,
-                                     isel[0], isel[1], isel[2], isel[3]);
+        gwy_data_field_area_filter_median(dfield, size,
+                                     isel[0], isel[2], isel[1]-isel[0], isel[3]-isel[2]);
         break;
 
         case GWY_FILTER_CONSERVATIVE:
-        gwy_data_field_filter_conservative(dfield, size,
-                                           isel[0], isel[1], isel[2], isel[3]);
+        gwy_data_field_area_filter_conservative(dfield, size,
+                                           isel[0], isel[2], isel[1]-isel[0], isel[3]-isel[2]);
         break;
 
         case GWY_FILTER_LAPLACIAN:
-        gwy_data_field_filter_laplacian(dfield,
-                                        isel[0], isel[1], isel[2], isel[3]);
-        break;
-
-        case GWY_FILTER_SOBEL:
-        gwy_data_field_filter_sobel(dfield, direction,
-                                    isel[0], isel[1], isel[2], isel[3]);
-        break;
-
-        case GWY_FILTER_PREWITT:
-        gwy_data_field_filter_prewitt(dfield, direction,
-                                      isel[0], isel[1], isel[2], isel[3]);
+        gwy_data_field_area_filter_laplacian(dfield,
+                                        isel[0], isel[2], isel[1]-isel[0], isel[3]-isel[2]);
         break;
 
         default:
@@ -466,11 +462,12 @@ filter_changed_cb(GObject *item, GwyUnitoolState *state)
         case GWY_FILTER_LAPLACIAN:
         break;
 
-        case GWY_FILTER_SOBEL:
+        /*TODO put here directional filters, if there are any*/
+/*        case GWY_FILTER_SOBEL:
         case GWY_FILTER_PREWITT:
         direction_sensitive = TRUE;
         break;
-
+*/
         case GWY_FILTER_MEAN:
         case GWY_FILTER_MEDIAN:
         case GWY_FILTER_CONSERVATIVE:
@@ -549,7 +546,7 @@ load_args(GwyContainer *container, ToolControls *controls)
     /* sanitize */
     controls->upd = !!controls->upd;
     controls->siz = CLAMP(controls->siz, 1, 20);
-    controls->fil = MIN(controls->fil, GWY_FILTER_PREWITT);
+    controls->fil = MIN(controls->fil, GWY_FILTER_LAPLACIAN);
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
 
