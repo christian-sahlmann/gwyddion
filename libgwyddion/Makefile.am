@@ -34,7 +34,7 @@ main_SOURCES = \
 main_LDADD = libgwyddion.la
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwyddion\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\"
 
 clean-local:
 	rm -f core.* *~ testser.object
