@@ -294,13 +294,12 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
                                               gint x, gint y, gint width, gint height,
                                               GwyGrapherLabel *label)
 {
-    gint ypos, winheight, winwidth, windepth, winx, winy, frame_off;
+    gint ypos, winheight, winwidth, winx, winy, frame_off;
     gint i;
     GwyGrapherCurveModel *curvemodel;
     GwyGrapherModel *model;
     PangoRectangle rect;
     GdkColor fg;
-    GdkColor curve_color;
     GdkColormap* cmap;
     
     model = GWY_GRAPHER_MODEL(label->grapher_model);
@@ -362,8 +361,7 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
         
         gdk_gc_set_foreground(gc, &fg);
         
-        ypos += rect.height + 5;
-         
+        ypos += rect.height + 5;     
     }
     
     if ( model->label_frame_thickness > 0)
@@ -397,7 +395,7 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
 
 void gwy_grapher_label_draw_label(GtkWidget *widget)
 {
-    gint winheight, winwidth, windepth, winx, winy, frame_off;
+    gint winheight, winwidth, windepth, winx, winy;
     GwyGrapherLabel *label;
     PangoLayout *layout;
     GdkGC *mygc;

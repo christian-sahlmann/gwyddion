@@ -26,6 +26,8 @@
 
 #include <libgwyddion/gwymacros.h>
 #include "gwygrapher.h"
+#include "gwygraphermodel.h"
+#include "gwygraphercurvemodel.h"
 
 #define GWY_GRAPHER_TYPE_NAME "GwyGrapher"
 
@@ -606,8 +608,38 @@ gwy_grapher_enable_axis_label_edit(GwyGrapher *grapher, gboolean enable)
 void       
 gwy_grapher_refresh(GwyGrapher *grapher)
 {
-    /*refresh axis and reset axis requirements*/
+    GwyGrapherModel *model;
+    GwyGrapherCurveModel *curvemodel;
+    gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
+    gint i, j;
     
+    if (grapher->grapher_model == NULL) return;
+    model = GWY_GRAPHER_MODEL(grapher->grapher_model);
+    
+    /*refresh axis and reset axis requirements*/
+    x_reqmin = y_reqmin = G_MAXDOUBLE;
+    x_reqmax = y_reqmax = -G_MAXDOUBLE;
+    for (i=0; i<model->ncurves; i++)
+    {
+        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+        for (j=0; j<curvemodel->n; j++)
+        {
+            if (x_reqmin > curvemodel->xdata[j]) x_reqmin = curvemodel->xdata[j];
+            if (y_reqmin > curvemodel->ydata[j]) y_reqmin = curvemodel->ydata[j];
+            if (x_reqmax < curvemodel->xdata[j]) x_reqmax = curvemodel->xdata[j];
+            if (y_reqmax < curvemodel->ydata[j]) y_reqmax = curvemodel->ydata[j];
+        }
+    }
+    gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
+    gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
+    gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);
+    gwy_axiser_set_req(grapher->axis_right, y_reqmin, y_reqmax);
+
+    model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
+    model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
+    model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
+    model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
+
     /*refresh widgets*/
     gwy_grapher_area_refresh(grapher->area);
     

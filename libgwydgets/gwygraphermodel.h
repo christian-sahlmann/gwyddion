@@ -50,10 +50,10 @@ struct _GwyGrapherModel {
 
     GString *title;    /* XXX: GwyGrapher has no such thing */
 
-    gdouble x_reqmax;
-    gdouble x_reqmin;
-    gdouble y_reqmax;
-    gdouble y_reqmin;
+    gdouble x_max;    /*former "req" members, now real axis results*/
+    gdouble x_min;
+    gdouble y_max;
+    gdouble y_min;
 
     gboolean has_x_unit;
     gboolean has_y_unit;

@@ -131,10 +131,10 @@ gwy_grapher_model_init(GwyGrapherModel *gmodel)
     gmodel->ncurves = 0;
     gmodel->curves = NULL;
 
-    gmodel->x_reqmin = 0.0;
-    gmodel->x_reqmax = 0.0;
-    gmodel->y_reqmin = 0.0;
-    gmodel->y_reqmax = 0.0;
+    gmodel->x_min = 0.0;
+    gmodel->x_max = 0.0;
+    gmodel->y_min = 0.0;
+    gmodel->y_max = 0.0;
 
     gmodel->has_x_unit = FALSE;
     gmodel->has_y_unit = FALSE;
@@ -433,10 +433,10 @@ gwy_grapher_model_serialize(GObject *obj,
             { 's', "bottom_label", &gmodel->bottom_label->str, NULL },
             { 's', "left_label", &gmodel->left_label->str, NULL },
             { 's', "right_label", &gmodel->right_label->str, NULL },
-            { 'd', "x_reqmin", &gmodel->x_reqmin, NULL },
-            { 'd', "y_reqmin", &gmodel->y_reqmin, NULL },
-            { 'd', "x_reqmax", &gmodel->x_reqmax, NULL },
-            { 'd', "y_reqmax", &gmodel->y_reqmax, NULL },
+            { 'd', "x_reqmin", &gmodel->x_min, NULL },
+            { 'd', "y_reqmin", &gmodel->y_min, NULL },
+            { 'd', "x_reqmax", &gmodel->x_max, NULL },
+            { 'd', "y_reqmax", &gmodel->y_max, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
@@ -472,10 +472,10 @@ gwy_grapher_model_deserialize(const guchar *buffer,
             { 's', "bottom_label", &bottom_label, NULL },
             { 's', "left_label", &left_label, NULL },
             { 's', "right_label", &right_label, NULL },
-            { 'd', "x_reqmin", &gmodel->x_reqmin, NULL },
-            { 'd', "y_reqmin", &gmodel->y_reqmin, NULL },
-            { 'd', "x_reqmax", &gmodel->x_reqmax, NULL },
-            { 'd', "y_reqmax", &gmodel->y_reqmax, NULL },
+            { 'd', "x_reqmin", &gmodel->x_min, NULL },
+            { 'd', "y_reqmin", &gmodel->y_min, NULL },
+            { 'd', "x_reqmax", &gmodel->x_max, NULL },
+            { 'd', "y_reqmax", &gmodel->y_max, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
@@ -540,10 +540,10 @@ gwy_grapher_model_duplicate(GObject *object)
     duplicate->title = g_string_new(gmodel->title->str);;
     duplicate->has_x_unit = gmodel->has_x_unit;
     duplicate->has_y_unit = gmodel->has_y_unit;
-    duplicate->x_reqmin = gmodel->x_reqmin;
-    duplicate->y_reqmin = gmodel->y_reqmin;
-    duplicate->x_reqmax = gmodel->x_reqmax;
-    duplicate->y_reqmax = gmodel->y_reqmax;
+    duplicate->x_min = gmodel->x_min;
+    duplicate->y_min = gmodel->y_min;
+    duplicate->x_max = gmodel->x_max;
+    duplicate->y_max = gmodel->y_max;
     duplicate->label_position = gmodel->label_position;
     duplicate->label_has_frame = gmodel->label_has_frame;
     duplicate->label_frame_thickness = gmodel->label_frame_thickness;

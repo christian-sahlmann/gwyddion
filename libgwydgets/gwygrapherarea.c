@@ -62,15 +62,10 @@ static gboolean gwy_grapher_area_button_press         (GtkWidget *widget,
                                                       GdkEventButton *event);
 static gboolean gwy_grapher_area_button_release       (GtkWidget *widget,
                                                       GdkEventButton *event);
+static gint     gwy_grapher_area_find_curve           (GwyGrapherArea *area, 
+                                                      gdouble x, gdouble y);
 
 /* Forward declarations - area related*/
-static void     gwy_grapher_area_draw_area            (GtkWidget *widget);
-static void     gwy_grapher_area_draw_curves          (GtkWidget *widget);
-static void     gwy_grapher_area_draw_selection       (GtkWidget *widget);
-static void     gwy_grapher_area_draw_selection_points(GtkWidget *widget);
-static void     gwy_grapher_area_draw_zoom            (GtkWidget *widget);
-static void     gwy_grapher_area_plot_refresh         (GwyGrapherArea *area);
-
 static gdouble  scr_to_data_x                       (GtkWidget *widget, gint scr);
 static gdouble  scr_to_data_y                       (GtkWidget *widget, gint scr);
 static gint     data_to_scr_x                       (GtkWidget *widget, gdouble data);
@@ -296,7 +291,6 @@ gwy_grapher_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
         gwy_grapher_area_adjust_label(area);
         area->newline = 0;
     }
-    gwy_grapher_area_plot_refresh(area);
 
     area->old_width = widget->allocation.width;
     area->old_height = widget->allocation.height;    
@@ -377,11 +371,9 @@ gwy_grapher_area_expose(GtkWidget *widget,
                           widget->allocation.width,
                           widget->allocation.height);
 
-    gwy_grapher_area_draw_selection(widget);
-    gwy_grapher_area_draw_curves(widget);
-    gwy_grapher_area_draw_selection_points(widget);
-    gwy_grapher_area_draw_zoom(widget);
-    gwy_grapher_area_draw_area(widget);
+    gwy_grapher_area_draw_area_on_drawable(GTK_LAYOUT (widget)->bin_window, area->gc,
+                                           0, 0, widget->allocation.width, widget->allocation.height,
+                                           area);
 
     gtk_widget_queue_draw(GTK_WIDGET(area->lab));
 
@@ -389,177 +381,65 @@ gwy_grapher_area_expose(GtkWidget *widget,
     return FALSE;
 }
 
-
-static void
-gwy_grapher_area_draw_area(GtkWidget *widget)
+void
+gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
+                                       gint x, gint y, gint width, gint height,
+                                       GwyGrapherArea *area)
 {
-    GwyGrapherArea *area;
+    gint i;
+    GwyGrapherActiveAreaSpecs specs;
+    GwyGrapherCurveModel *curvemodel;
+    GwyGrapherModel *model;
+    GdkColor fg;
+    GdkColormap* cmap;
 
-    area = GWY_GRAPHER_AREA(widget);
+    model = GWY_GRAPHER_MODEL(area->grapher_model);
+    cmap = gdk_colormap_get_system();
 
-    /*plot boundary*/
-    gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                  0, 0, 0, widget->allocation.height-1);
-    gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                  0, 0, widget->allocation.width-1, 0);
-    gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                  widget->allocation.width-1, 0, widget->allocation.width-1,
-                  widget->allocation.height-1);
-    gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                  0, widget->allocation.height-1, widget->allocation.width-1,
-                  widget->allocation.height-1);
-
-}
-
-static void
-gwy_grapher_area_draw_curves(GtkWidget *widget)
-{
-    GwyGrapherArea *area;
-    GwyGrapherAreaCurve *pcurve;
-    guint i;
-    gint j;
-
-    area = GWY_GRAPHER_AREA(widget);
-/*
-    for (i = 0; i < area->curves->len; i++) {
-        pcurve = g_ptr_array_index (area->curves, i);
-        gdk_gc_set_foreground(area->gc, &(pcurve->params.color));
-
-        if (pcurve->params.is_line) {
-            gdk_gc_set_line_attributes(area->gc, pcurve->params.line_size,
-                                       pcurve->params.line_style,
-                                       GDK_CAP_ROUND, GDK_JOIN_MITER);
-            gdk_draw_lines(GTK_LAYOUT (widget)->bin_window, area->gc,
-                           pcurve->points, pcurve->data.N);
-        }
-        if (pcurve->params.is_point) {
-            for (j = 0; j < pcurve->data.N; j++) {
-                gwy_grapher_draw_point(GTK_LAYOUT(widget)->bin_window, area->gc,
-                                     pcurve->points[j].x,
-                                     pcurve->points[j].y,
-                                     pcurve->params.point_type,
-                                     pcurve->params.point_size,
-                                     &(pcurve->params.color),
-                                     pcurve->params.is_line);
-            }
-        }
+    /*draw continuous selection*/
+    if (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL)
+        gwy_grapher_draw_selection_areas(drawable,
+                                         gc, &specs,
+                                         (GwyGrapherDataArea *)area->areasdata->data_areas->data, 
+                                         area->areasdata->data_areas->len);
+    
+    /*draw curves*/
+    specs.xmin = 0;
+    specs.ymin = 0;
+    specs.height = height;
+    specs.width = width;
+    specs.real_xmin = model->x_min;
+    specs.real_ymin = model->y_min;
+    specs.real_width = model->x_max - model->x_min;
+    specs.real_height = model->y_max - model->y_min;
+    specs.log_x = specs.log_y = FALSE;
+   
+    for (i=0; i<model->ncurves; i++)
+    {
+        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+        gwy_grapher_draw_curve (drawable, gc,
+                                &specs, G_OBJECT(curvemodel));
     }
-    gdk_gc_set_line_attributes(area->gc, 1,
-                               GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
-    gdk_gc_set_foreground(area->gc, area->colors + COLOR_FG);
-*/
-}
 
-
-static void
-gwy_grapher_area_draw_selection(GtkWidget *widget)
-{
-    GwyGrapherArea *area;
-    gint start, end;
-
-    area = GWY_GRAPHER_AREA(widget);
-
-    /*
-    if (area->status == GWY_GRAPHER_STATUS_XSEL
-        || area->status == GWY_GRAPHER_STATUS_YSEL) {
-        if (area->status == GWY_GRAPHER_STATUS_XSEL) {
-            area->seldata->scr_start = data_to_scr_x(widget, area->seldata->data_start);
-            area->seldata->scr_end = data_to_scr_x(widget, area->seldata->data_end);
-        }
-        else if (area->status == GWY_GRAPHER_STATUS_YSEL) {
-            area->seldata->scr_start = data_to_scr_y(widget, area->seldata->data_start);
-            area->seldata->scr_end = data_to_scr_y(widget, area->seldata->data_end);
-        }
-        start = area->seldata->scr_start;
-        end = area->seldata->scr_end;
-        if (start > end)
-            GWY_SWAP(gint, start, end);
-        else if (start == end)
-            return;
-
-        gdk_gc_set_foreground(area->gc, area->colors + COLOR_SELECTION);
-        if (area->status == GWY_GRAPHER_STATUS_XSEL) {
-            gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc, TRUE,
-                               start, 0,
-                               end-start, widget->allocation.height-1);
-        }
-        else if (area->status == GWY_GRAPHER_STATUS_YSEL) {
-            gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc, TRUE,
-                               0, start,
-                               widget->allocation.width-1, end-start);
-        }
-        gdk_gc_set_foreground(area->gc, area->colors + COLOR_FG);
-    }
-    */
-
-}
-
-static void
-gwy_grapher_area_draw_selection_points(GtkWidget *widget)
-{
-    GwyGrapherArea *area;
-    GwyGrapherDataPoint datpnt;
-    guint n;
-
-    area = GWY_GRAPHER_AREA(widget);
-
-    /*
-    if (area->status == GWY_GRAPHER_STATUS_POINTS) {
-        gdk_gc_set_foreground(area->gc, area->colors + COLOR_SELECTION);
-
-        for (n = 0; n < area->pointsdata->data_points->len; n++) {
-            datpnt = g_array_index(area->pointsdata->data_points,
-                                   GwyGrapherDataPoint, n);
-            scrpnt.i = data_to_scr_x(widget, datpnt.x);
-            scrpnt.j = data_to_scr_y(widget, datpnt.y);
-            gdk_draw_line(GTK_LAYOUT(widget)->bin_window, area->gc,
-                          scrpnt.i-5,
-                          scrpnt.j,
-                          scrpnt.i+5,
-                          scrpnt.j);
-            gdk_draw_line(GTK_LAYOUT(widget)->bin_window, area->gc,
-                          scrpnt.i,
-                          scrpnt.j-5,
-                          scrpnt.i,
-                          scrpnt.j+5);
-        }
-        gdk_gc_set_foreground(area->gc, area->colors + COLOR_FG);
-    }
-    */
-}
-
-static void
-gwy_grapher_area_draw_zoom(GtkWidget *widget)
-{
-    GwyGrapherArea *area;
-
-    gint x, y;
-    area = GWY_GRAPHER_AREA(widget);
-
-    /*
-    if (area->status == GWY_GRAPHER_STATUS_ZOOM
-        && area->zoomdata->width != 0
-        && area->zoomdata->height != 0) {
-        gdk_gc_set_function(area->gc, GDK_INVERT);
-
-        if (area->zoomdata->width < 0)
-            x = area->zoomdata->x + area->zoomdata->width;
-        else
-            x = area->zoomdata->x;
-
-        if (area->zoomdata->height < 0)
-            y = area->zoomdata->y + area->zoomdata->height;
-        else
-            y = area->zoomdata->y;
-
-        gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc, 0,
-                           x,
-                           y,
-                           fabs(area->zoomdata->width),
-                           fabs(area->zoomdata->height));
-        gdk_gc_set_function(area->gc, GDK_COPY);
-    }
-    */
+    /*draw discrete selection (points)*/
+    if (area->status == GWY_GRAPHER_STATUS_POINTS)
+        gwy_grapher_draw_selection_points(drawable,
+                                         gc, &specs,
+                                         (GwyGrapherDataPoint *)area->pointsdata->data_points->data, 
+                                         area->pointsdata->data_points->len);
+         
+ 
+    /*draw area boundaries*/
+    fg.red = 0;
+    fg.green = 0;
+    fg.blue = 0;
+    gdk_colormap_alloc_color(cmap, &fg, TRUE, TRUE);
+    gdk_gc_set_foreground(gc, &fg);
+    gdk_draw_line(drawable, gc, 0, 0, width-1, 0);
+    gdk_draw_line(drawable, gc, width-1, 0, width-1, height-1);
+    gdk_draw_line(drawable, gc, width-1, height-1, 0, height-1);
+    gdk_draw_line(drawable, gc, 0, height-1, 0, 0);
+                
 }
 
 
@@ -570,7 +450,8 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     GwyGrapherModel *gmodel;
     GtkLayoutChild *child;
     GwyGrapherDataPoint datpnt;
-    gint x, y;
+    gint x, y, curve;
+    gdouble dx, dy;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPHER_AREA(widget), FALSE);
@@ -579,6 +460,8 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     gdk_window_get_position(event->window, &x, &y);
     x += (gint)event->x;
     y += (gint)event->y;
+    dx = scr_to_data_x(widget, x);
+    dy = scr_to_data_y(widget, y);
 
     gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
 
@@ -603,8 +486,12 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
 
     if (gmodel->ncurves > 0)
     {
-       gwy_grapher_area_dialog_set_curve_data(area->area_dialog, gmodel->curves[0]);
-       gtk_widget_show_all(area->area_dialog);
+        curve = gwy_grapher_area_find_curve(area, dx, dy);
+        if (curve >= 0)
+        {
+            gwy_grapher_area_dialog_set_curve_data(area->area_dialog, gmodel->curves[curve]);
+            gtk_widget_show_all(area->area_dialog);
+        }
     }
  
 
@@ -860,6 +747,41 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     return FALSE;
 }
 
+static gint
+gwy_grapher_area_find_curve(GwyGrapherArea *area, gdouble x, gdouble y)
+{
+    gdouble dx, dy;
+    gint i, j;
+    gint closestid;
+    gdouble closestdistance, distance=0;
+    GwyGrapherCurveModel *curvemodel;
+    GwyGrapherModel *model;
+ 
+    closestdistance = G_MAXDOUBLE;
+    model = GWY_GRAPHER_MODEL(area->grapher_model);
+    for (i=0; i<model->ncurves; i++)
+    {
+        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+        for (j=0; j<(curvemodel->n - 1); j++)
+        {
+            if (curvemodel->xdata[j] <= x && curvemodel->xdata[j + 1] >= x)
+            {
+                distance = fabs(y - (x - curvemodel->xdata[j + 1])*
+                                (curvemodel->ydata[j + 1] - curvemodel->ydata[j])/
+                                (curvemodel->xdata[j + 1] - curvemodel->xdata[j]));
+                if (distance < closestdistance) {
+                    closestdistance = distance;
+                    closestid = i;
+                }
+                break;
+            }
+        }
+        printf("curve %d: dist = %g\n", i, distance);
+    }
+    if (data_to_scr_y(area, closestdistance) < 20) return closestid;
+    else return -1;
+}
+
 static GtkLayoutChild*
 gwy_grapher_area_find_child(GwyGrapherArea *area, gint x, gint y)
 {
@@ -918,175 +840,46 @@ gwy_grapher_area_draw_child_rectangle(GwyGrapherArea *area)
     gdk_gc_set_function(area->gc, GDK_COPY);
 }
 
-/**
- * gwy_grapher_area_set_boundaries:
- * @area: grapher area
- * @x_min: x minimum
- * @x_max: x maximum
- * @y_min: y minimim
- * @y_max: y maximum
- *
- * Sets the boudaries of grapher area and calls for recomputation of
- * actual curve screen representation and its redrawing. used for example by
- * zoom to change curve screen representation.
- **/
-void
-gwy_grapher_area_set_boundaries(GwyGrapherArea *area, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max)
-{
-    gwy_debug("");
-    
-    area->x_min = x_min;
-    area->y_min = y_min;
-    area->x_max = x_max;
-    area->y_max = y_max;
-    gwy_grapher_area_plot_refresh(area);
-    gtk_widget_queue_draw(GTK_WIDGET(area));
-}
-
-/**
- * gwy_grapher_area_plot_refresh:
- * @area: grapher area
- *
- * Recomputes all data corresponding to actual curve screen representation
- * to be plotted according to window size.
- **/
-static void
-gwy_grapher_area_plot_refresh(GwyGrapherArea *area)
-{
-    guint i;
-    gint j;
-    GwyGrapherAreaCurve *pcurve;
-    GtkWidget *widget;
-
-    gwy_debug("");
-
-    widget = GTK_WIDGET(area);
-    /*recompute all data to be plotted according to window size*/
-    /*
-    area->x_shift = area->x_min;
-    area->y_shift = area->y_min ;
-    area->x_multiply = widget->allocation.width/(area->x_max - area->x_min);
-    area->y_multiply = widget->allocation.height/(area->y_max - area->y_min);
-
-    for (i=0; i<area->curves->len; i++)
-    {
-        pcurve = g_ptr_array_index (area->curves, i);
-        for (j=0; j<pcurve->data.N; j++)
-        {
-            pcurve->points[j].x = (pcurve->data.xvals[j] - area->x_shift)*area->x_multiply;
-            pcurve->points[j].y = widget->allocation.height - 1 - (pcurve->data.yvals[j] - area->y_shift)*area->y_multiply;
-        }
-    }
-    */
-}
-
-/**
- * gwy_grapher_area_add_curve:
- * @area: grapher area
- * @curve: curve to be added
- *
- * Adds a curve to grapher. Adds the curve data values, but the recomputation
- * of actual screen points representing curve must be called after
- * setting the boundaries of the grapher area (and complete grapher).
- **/
-void
-gwy_grapher_area_add_curve(GwyGrapherArea *area, GwyGrapherAreaCurve *curve)
-{
-    gint i;
-
-    GwyGrapherAreaCurve *pcurve;
-
-    gwy_debug("");
-    /*alloc one element, make deep copy and add it to array*/
-    /*
-    pcurve = g_new(GwyGrapherAreaCurve, 1);
-    pcurve->data.xvals = (gdouble *) g_try_malloc(curve->data.N*sizeof(gdouble));
-    pcurve->data.yvals = (gdouble *) g_try_malloc(curve->data.N*sizeof(gdouble));
-    pcurve->points = (GdkPoint *) g_try_malloc(curve->data.N*sizeof(GdkPoint));
-
-    pcurve->params.is_line = curve->params.is_line;
-    pcurve->params.is_point = curve->params.is_point;
-    pcurve->params.line_style = curve->params.line_style;
-    pcurve->params.line_size = curve->params.line_size;
-    pcurve->params.point_type = curve->params.point_type;
-    pcurve->params.point_size = curve->params.point_size;
-    pcurve->params.color = curve->params.color;
-    pcurve->params.description = g_string_new(curve->params.description->str);
-
-    pcurve->data.N = curve->data.N;
-    for (i=0; i<curve->data.N; i++)
-    {
-        pcurve->data.xvals[i] = curve->data.xvals[i];
-        pcurve->data.yvals[i] = curve->data.yvals[i];
-        pcurve->points[i].x = 0;
-        pcurve->points[i].y = 0;
-    }
-
-    g_ptr_array_add(area->curves, (gpointer)(pcurve));
-    gwy_grapher_label_add_curve(area->lab, &(pcurve->params));
-    area->newline = 1;
-    */
-}
-
-/**
- * gwy_grapher_area_clear:
- * @area: grapher area
- *
- * clear grapher area
- **/
-void
-gwy_grapher_area_clear(GwyGrapherArea *area)
-{
-    guint i;
-    GwyGrapherAreaCurve *pcurve;
-
-    gwy_debug("");
-            /*dealloc everything
-    for (i = 0; i < area->curves->len; i++) {
-        pcurve = g_ptr_array_index (area->curves, i);
-        g_free(pcurve->data.xvals);
-        g_free(pcurve->data.yvals);
-        g_free(pcurve->points);
-        g_string_free(pcurve->params.description, TRUE);
-    }
-
-    gwy_grapher_label_clear(area->lab);
-
-    g_ptr_array_free(area->curves, 1);
-    area->curves = g_ptr_array_new();
-    */
-}
 
 static gdouble
 scr_to_data_x(GtkWidget *widget, gint scr)
 {
     GwyGrapherArea *area;
+    GwyGrapherModel *model;
+ 
     area = GWY_GRAPHER_AREA(widget);
+    model = GWY_GRAPHER_MODEL(area->grapher_model);
 
     scr = CLAMP(scr, 0, widget->allocation.width-1);
-    return area->x_min
-           + scr*(area->x_max - area->x_min)/(widget->allocation.width-1);
+    return model->x_min
+           + scr*(model->x_max - model->x_min)/(widget->allocation.width-1);
 }
 
 static gint
 data_to_scr_x(GtkWidget *widget, gdouble data)
 {
     GwyGrapherArea *area;
+    GwyGrapherModel *model;
+ 
     area = GWY_GRAPHER_AREA(widget);
+    model = GWY_GRAPHER_MODEL(area->grapher_model);
 
-    return (data - area->x_min)
-           /((area->x_max - area->x_min)/(widget->allocation.width-1));
+    return (data - model->x_min)
+           /((model->x_max - model->x_min)/(widget->allocation.width-1));
 }
 
 static gdouble
 scr_to_data_y(GtkWidget *widget, gint scr)
 {
     GwyGrapherArea *area;
+    GwyGrapherModel *model;
+ 
     area = GWY_GRAPHER_AREA(widget);
+    model = GWY_GRAPHER_MODEL(area->grapher_model);
 
     scr = CLAMP(scr, 0, widget->allocation.height-1);
-    return area->y_min
-           + (widget->allocation.height - scr)*(area->y_max - area->y_min)
+    return model->y_min
+           + (widget->allocation.height - scr)*(model->y_max - model->y_min)
              /(widget->allocation.height-1);
 }
 
@@ -1094,11 +887,14 @@ static gint
 data_to_scr_y(GtkWidget *widget, gdouble data)
 {
     GwyGrapherArea *area;
+    GwyGrapherModel *model;
+ 
     area = GWY_GRAPHER_AREA(widget);
+    model = GWY_GRAPHER_MODEL(area->grapher_model);
 
     return widget->allocation.height
-           - (data - area->y_min)
-             /((area->y_max - area->y_min)/(widget->allocation.height-1));
+           - (data - model->y_min)
+             /((model->y_max - model->y_min)/(widget->allocation.height-1));
 }
 
 /**
@@ -1188,7 +984,7 @@ gwy_grapher_area_refresh(GwyGrapherArea *area)
     gwy_grapher_area_adjust_label(area);
 
     /*repaint area data*/
-    gwy_grapher_area_plot_refresh(area);
+    gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 void

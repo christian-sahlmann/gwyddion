@@ -166,6 +166,11 @@ void gwy_grapher_area_set_selection(GwyGrapherArea *area, GwyGrapherStatusType *
 
 void gwy_grapher_area_change_model(GwyGrapherArea *area, gpointer gmodel);
 
+void gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
+                                            gint x, gint y, gint width, gint height,
+                                            GwyGrapherArea *area);
+
+
 G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/
