@@ -1,4 +1,4 @@
-1.8cvs20050226
+1.8cvs20050304
 
 1.9
 Application:
@@ -13,8 +13,10 @@ Modules:
 - Presentation operations: Extract presentation was added.
 - Filter: Kuwahara filter was added.
 - Stats: Displays inclination angles too.
+- Createc: Supports more format versions.
 - Rawfile: Warning message when adding a new preset was fixed, shows only
            file basename in Info tab.
+- Line correct: Another experimental Median line correct method.
 
 Library:
 - libgwymodule: Public functions for obtaining module list and detailed module
@@ -22,9 +24,11 @@ Library:
 - libgwyprocess: Local rms filter, Kuwahara filter, local plane fitting
   functions.
 - libgwydgets: Shader can focus and is keyboard-controllable.
+- libgwyddion: Simple arithmetic expression evaluator.
 
 Other:
-- Build system fixes and clean-up
+- Build system fixes and clean-up.
+- Compilation and run-time problems on AMD64 were fixed.
 
 
 1.8
