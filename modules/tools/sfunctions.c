@@ -33,14 +33,12 @@ typedef struct {
     GtkWidget *graph;
     GtkWidget *interpolation;
     GtkWidget *output;
-    GtkWidget *separation;
     GtkWidget *direction;
     GtkWidget *xy;
     GtkWidget *wh;
     gint interp;
     gint out;
     gint dir;
-    gboolean separate;
     gdouble mag;
     gint precision;
     gchar *units;
@@ -61,8 +59,6 @@ static void       interp_changed_cb             (GObject *item,
 static void       output_changed_cb             (GObject *item,
                                                  SFunctionsControls *controls);
 static void       direction_changed_cb          (GObject *item,
-                                                 SFunctionsControls *controls);
-static void       separate_changed_cb           (GtkToggleButton *button,
                                                  SFunctionsControls *controls);
 static void       sfunctions_load_args             (GwyContainer *container,
                                                  SFunctionsControls *controls);
@@ -162,12 +158,10 @@ sfunctions_use(GwyDataWindow *data_window,
 static void
 sfunctions_do(void)
 {
-    GtkWidget *data_window;
     GtkWidget *window, *graph;
     GwyContainer *data;
     GwyDataField *datafield;
-    gdouble lines[12];
-    gint i, j, is_selected;
+    gint is_selected;
     gdouble xmin, ymin, xmax, ymax;
     gchar *x_unit, *z_unit;
     gdouble x_mag, z_mag;
@@ -205,10 +199,10 @@ sfunctions_do(void)
 
 
     graph = gwy_graph_new();
-    gwy_graph_get_autoproperties(graph, &prop);
+    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
     prop.is_point = 0;
     prop.is_line = 1;
-    gwy_graph_set_autoproperties(graph, &prop);
+    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
 
     x1 = gwy_data_field_rtoj(datafield, xmin);
     y1 = gwy_data_field_rtoj(datafield, ymin);
@@ -222,7 +216,7 @@ sfunctions_do(void)
                                x_unit,
                                z_unit
                                );*/
-    window = gwy_app_graph_window_create((GwyGraph *)graph);
+    window = gwy_app_graph_window_create(GWY_GRAPH(graph));
         
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
 }
@@ -230,8 +224,6 @@ sfunctions_do(void)
 static void
 sfunctions_dialog_abandon(void)
 {
-    guint i;
-
     gwy_debug("");
     if (select_layer && updated_id)
         g_signal_handler_disconnect(select_layer, updated_id);
@@ -254,7 +246,6 @@ sfunctions_dialog_create(GwyDataView *data_view)
     GwyDataField *datafield;
     GtkWidget *dialog, *table, *label, *vbox;
     gdouble xreal, yreal, max, unit;
-    gint i;
 
     gwy_debug("");
     data = gwy_data_view_get_data(data_view);
@@ -281,7 +272,7 @@ sfunctions_dialog_create(GwyDataView *data_view)
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
 
 
-    gtk_dialog_add_button(dialog, "Clear selection", 1);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), "Clear selection", 1);
 
     response_id = g_signal_connect(dialog, "response",
                       G_CALLBACK(sfunctions_dialog_response_cb), NULL);
@@ -297,70 +288,63 @@ sfunctions_dialog_create(GwyDataView *data_view)
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Area of computation</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 0);
     
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Origin: (x, y)"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 0);
 
     controls.xy = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.xy), 1.0, 0.5);
-    gtk_box_pack_start(vbox, controls.xy, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.xy, 0, 0, 0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Size: (w x h)"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 0);
 
     controls.wh = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.wh), 1.0, 0.5);
-    gtk_box_pack_start(vbox, controls.wh, 0, 0, 0);    
+    gtk_box_pack_start(GTK_BOX(vbox), controls.wh, 0, 0, 0);    
 
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Module parameters</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 10);
-
-    /*controls.separation = gtk_check_button_new_with_label("separate sfunctionss");
-    gtk_box_pack_start(vbox, controls.separation, 0, 0, 0);
-    gtk_toggle_button_set_active(controls.separation, controls.separate);
-    g_signal_connect(controls.separation, "toggled",
-                     G_CALLBACK(separate_changed_cb), &controls);
-    */
+    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 10);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Output type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 2);
 
     controls.output
         = gwy_option_menu_sfunctions_output(G_CALLBACK(output_changed_cb),
                                         &controls, controls.out);
-    gtk_box_pack_start(vbox, controls.output, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.output, 0, 0, 2);
 
     
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Computation direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 2);
 
     controls.direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
                                         &controls, controls.dir);
-    gtk_box_pack_start(vbox, controls.direction, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.direction, 0, 0, 2);
 
     
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(vbox, label, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 2);
 
     controls.interpolation
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         &controls, controls.interp);
-    gtk_box_pack_start(vbox, controls.interpolation, 0, 0, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.interpolation, 0, 0, 2);
 
 
     gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
@@ -420,11 +404,9 @@ sfunctions_selection_updated_cb(void)
     GwyContainer *data;
     GwyDataField *datafield;
     gboolean is_visible, is_selected;
-    GString *lab1, *lab2, *lab3;
-    gint i, xres, j;
+    gint j;
     gint x1, x2, y1, y2;
     GwyGraphAutoProperties prop;
-    GwyGraph *gr;
     gchar *x_unit, *z_unit;
     gdouble x_mag, z_mag;
     gdouble xreal, yreal, x_max, unit;
@@ -455,10 +437,10 @@ sfunctions_selection_updated_cb(void)
     if (!is_visible)
         return;
 
-    gwy_graph_get_autoproperties(controls.graph, &prop);
+    gwy_graph_get_autoproperties(GWY_GRAPH(controls.graph), &prop);
     prop.is_point = 0;
     prop.is_line = 1;
-    gwy_graph_set_autoproperties(controls.graph, &prop);
+    gwy_graph_set_autoproperties(GWY_GRAPH(controls.graph), &prop);
 
 
     gwy_graph_clear(controls.graph);
@@ -506,7 +488,7 @@ static void
 sfunctions_clear(void)
 {
     gwy_layer_select_unselect(select_layer);
-    gwy_graph_clear(controls.graph);
+    gwy_graph_clear(GWY_GRAPH(controls.graph));
     gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
     update_labels();
     sfunctions_save_args(gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent)),
@@ -564,7 +546,6 @@ interp_changed_cb(GObject *item, SFunctionsControls *controls)
     gwy_debug("");
     controls->interp = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
 
-    printf("Interpolation set to %d\n", controls->interp);
 }
 
 static void
@@ -573,7 +554,6 @@ output_changed_cb(GObject *item, SFunctionsControls *controls)
     gwy_debug("");
     controls->out = GPOINTER_TO_INT(g_object_get_data(item, "sf-output-type"));
 
-    printf("Output set to %d\n", controls->out);
 }
 
 static void
@@ -582,26 +562,26 @@ direction_changed_cb(GObject *item, SFunctionsControls *controls)
     gwy_debug("");
     controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
 
-    printf("Dir set to %d\n", controls->dir);
 }
 
-static void
-separate_changed_cb(GtkToggleButton *button, SFunctionsControls *controls)
-{
-    controls->separate = gtk_toggle_button_get_active(button);
-}
 
-static const gchar *separate_key = "/tool/sfunctions/separate";
 static const gchar *interp_key = "/tool/sfunctions/interp";
+static const gchar *out_key = "/tool/sfunctions/out";
+static const gchar *dir_key = "/tool/sfunctions/dir";
+
 
 
 static void
 sfunctions_load_args(GwyContainer *container, SFunctionsControls *controls)
 {
     gwy_debug("");
-    if (gwy_container_contains_by_name(container, separate_key))
-        controls->separate = gwy_container_get_boolean_by_name(container, separate_key);
-    else controls->separate = 0;
+    if (gwy_container_contains_by_name(container, dir_key))
+        controls->dir = gwy_container_get_int32_by_name(container, dir_key);
+    else controls->dir = 0;
+
+    if (gwy_container_contains_by_name(container, out_key))
+        controls->out = gwy_container_get_int32_by_name(container, out_key);
+    else controls->out = 0;
 
     if (gwy_container_contains_by_name(container, interp_key))
         controls->interp = gwy_container_get_int32_by_name(container, interp_key);
@@ -611,8 +591,10 @@ sfunctions_load_args(GwyContainer *container, SFunctionsControls *controls)
 static void
 sfunctions_save_args(GwyContainer *container, SFunctionsControls *controls)
 {
-    gwy_container_set_boolean_by_name(container, separate_key, controls->separate);
     gwy_container_set_int32_by_name(container, interp_key, controls->interp);
+    gwy_container_set_int32_by_name(container, dir_key, controls->dir);
+    gwy_container_set_int32_by_name(container, out_key, controls->out);
+    
 }
 
 
