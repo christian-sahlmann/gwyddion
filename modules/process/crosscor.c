@@ -105,7 +105,7 @@ static GwyModuleInfo module_info = {
     "crosscor",
     N_("Cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -192,7 +192,7 @@ crosscor_window_construct(CrosscorArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(2, 10, FALSE);
+    table = gtk_table_new(10, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
@@ -200,61 +200,62 @@ crosscor_window_construct(CrosscorArgs *args,
 
     /***** First operand *****/
     omenu = crosscor_data_option_menu(&args->win1);
-    gwy_table_attach_row(table, row, _("_First operand:"), NULL, omenu);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
+    gwy_table_attach_hscale(table, row, _("_First operand:"), NULL,
+                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
     row++;
 
     /***** Second operand *****/
     omenu = crosscor_data_option_menu(&args->win2);
-    gwy_table_attach_row(table, row, _("_Second operand:"), NULL, omenu);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
+    gwy_table_attach_hscale(table, row, _("_Second operand:"), NULL,
+                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     /**** Parameters ********/
     /*search size*/
     label = gtk_label_new(_("Search size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     controls->search_area_x = gtk_adjustment_new(args->search_x,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("_Width:"), _("pixels"),
-                                controls->search_area_x);
+    gwy_table_attach_hscale(table, row, _("_Width:"), "px",
+                            controls->search_area_x, 0);
     row++;
 
     controls->search_area_y = gtk_adjustment_new(args->search_y,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("_Height:"), _("pixels"),
-                                controls->search_area_y);
+    gwy_table_attach_hscale(table, row, _("_Height:"), "px",
+                            controls->search_area_y, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     /*window size*/
     label = gtk_label_new(_("Window size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     controls->window_area_x = gtk_adjustment_new(args->window_x,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("_Width:"), _("pixels"),
-                                controls->window_area_x);
+    gwy_table_attach_hscale(table, row, _("_Width:"), "px",
+                            controls->window_area_x, 0);
     row++;
 
     controls->window_area_y = gtk_adjustment_new(args->window_y,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("_Height:"), _("pixels"),
-                                controls->window_area_y);
+    gwy_table_attach_hscale(table, row, _("_Height:"), "px",
+                            controls->window_area_y, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     /*do mask of thresholds*/
     controls->add_ls_mask = gtk_check_button_new_with_mnemonic
                                 (_("Add _low score results mask"));
-    gtk_table_attach(GTK_TABLE(table), controls->add_ls_mask, 0, 3, row, row+1,
+    gtk_table_attach(GTK_TABLE(table), controls->add_ls_mask, 0, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->add_ls_mask),
                                  args->add_ls_mask);
@@ -262,8 +263,8 @@ crosscor_window_construct(CrosscorArgs *args,
 
     controls->threshold = gtk_adjustment_new(args->threshold,
                                              -1, 1, 0.005, 0.05, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Threshold:"), "",
-                                       controls->threshold);
+    spin = gwy_table_attach_hscale(table, row, _("_Threshold:"), NULL,
+                                   controls->threshold, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     row++;
 
@@ -273,7 +274,8 @@ crosscor_window_construct(CrosscorArgs *args,
                                    G_CALLBACK(crosscor_operation_cb),
                                    args,
                                    args->result);
-    gwy_table_attach_row(table, row, _("_Output type:"), "", omenu);
+    gwy_table_attach_hscale(table, row, _("_Output type:"), NULL,
+                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
 
     gtk_widget_show_all(dialog);
 
@@ -340,14 +342,10 @@ static void
 crosscor_update_values(CrosscorControls *controls,
                        CrosscorArgs *args)
 {
-    args->search_x =
-        gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->search_area_x));
-    args->search_y =
-        gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->search_area_y));
-    args->window_x =
-        gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_x));
-    args->window_y =
-        gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_y));
+    args->search_x = gwy_adjustment_get_int(controls->search_area_x);
+    args->search_y = gwy_adjustment_get_int(controls->search_area_y);
+    args->window_x = gwy_adjustment_get_int(controls->window_area_x);
+    args->window_y = gwy_adjustment_get_int(controls->window_area_y);
     args->threshold =
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold));
     args->add_ls_mask =
