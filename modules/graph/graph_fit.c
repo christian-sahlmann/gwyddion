@@ -258,6 +258,10 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
 static gboolean
 fit_dialog(FitArgs *args)
 {
+    enum {
+        RESPONSE_RESET = 1,
+        RESPONSE_FIT = 2
+    };
     GtkWidget *label;
     GtkWidget *table;
     GtkWidget *dialog;
@@ -270,10 +274,7 @@ fit_dialog(FitArgs *args)
     gint response;
 
     pcontrols = &controls;
-    enum { RESPONSE_RESET = 1,
-        RESPONSE_FIT = 2
-    };
-    
+
     dialog = gtk_dialog_new_with_buttons(_("Fit graph"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
