@@ -21,6 +21,12 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sys/stat.h>
+
+#ifdef _MSC_VER
+#include <direct.h>
+#define mkdir(dir, mode) _mkdir(dir)
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwyserializable.h>
