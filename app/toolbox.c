@@ -162,7 +162,7 @@ gwy_app_toolbox_create(void)
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Read coordinates"), NULL, GWY_STOCK_GRAPH_MEASURE,
+                       _("Read coordinates"), NULL, GWY_STOCK_GRAPH_POINTER,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "read");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Zoom in"), NULL, GWY_STOCK_GRAPH_ZOOM_IN,
@@ -170,6 +170,9 @@ gwy_app_toolbox_create(void)
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Unzoom"), NULL, GWY_STOCK_GRAPH_ZOOM_FIT,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "graph_unzoom");
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Read coordinates"), NULL, GWY_STOCK_GRAPH_MEASURE,
+                       G_CALLBACK(gwy_app_run_graph_func_cb), "read");
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_graph);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_graph);
