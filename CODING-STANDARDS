@@ -249,3 +249,69 @@ or case values in switch statements:
 
   case GTK_FOOBAR:
 
+===== Documentation ==================================================
+
+Each public function implementation is preceeded with a comment with its
+documentation in gtk-doc format.  This is also the prefered format of
+private function documentation when a longer description is needed.
+
+Other public symbols that have no implementation are documented at the end
+of a source file corresponding to the header file they are declared in.
+
+References to other symbols:
+- Functions and function-like macros are written with () after their name
+  so that gtk-doc turns them into hyperlinks: some_function().
+- Type (struct, enum, object) names are written with # before name so that
+  gtk-doc turns them into hyperlinks: #GwyContainer, #GwyInterpolationType.
+- Constants and parameterless macros are written with % before name so that
+  gtk-doc turns them into hyperlinks: %TRUE.
+- Argument names are written with @ before name.
+
+Body:
+- Function documentation starts with a short (usually one-line) summary of
+  its purpose.  It is written in third person, i.e. `Does something', not
+  `Do something'.  For simple functions this summary is sufficient.
+- The rest of documentation follows as separate paragraph[s], describing
+  details, side-effects, warnings, etc.
+
+Arguments:
+- Argument descriptions are sentences, start with a capital and end with
+  a full stop.
+- Objects in the role of `self' are usually described as `A something'.
+- Argument names themselves are descriptive, it is an error to name arguments
+  `a' and `b' when they represent source and destination.
+- Input parameters are normally constant; if a function can change them or
+  takes their ownership, this fact is explicitely mentioned even if it's
+  deducible from function signature.  (An exception are `self'-like object
+  arguments whose modification is clear from function purpose.)
+- Argument description contains not only parameter meaning, but also its
+  interpretation if it is necessary to supply meaningful values without
+  looking at function source code, e.g.:
+  - if an argument is an angle, its description mentions whether in radians
+    or degrees, and if it's measured clockwise or counterclockwise, and from
+    what,
+  - if an argument is a color [component], its description mentions the range
+    representing [black,white], it may be [0,1], [0,255], [0,256], [0,65535],
+    etc.,
+  - if an argument is other ranged value or dimensionless parameter, the
+    range of valid or reasonable values is specified,
+  - if an argument is boolean, its description explicitely mentions what
+    %TRUE and %FALSE mean (or at least one of them), instead of just
+    `switch foo on/off'.
+
+Return value:
+- Eventual return value is described in a Returns block after description
+  body.
+- Returns value has no default const/newly allocated convention, description
+  of nonatomic values thus always specifies whether it's newly allocated, or
+  should be treated as constant, and eventual ownership and lifetime rules
+  (i.e., if return value is a static buffer that can be changed by another
+  call, this must be mentioned).
+
+Since:
+- Each symbol lists Gwyddion version it was introduced in a line in form
+  Since: 1.6
+  as the very last paragraph of its documentation.
+
+
+
