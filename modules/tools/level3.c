@@ -126,7 +126,7 @@ level3_use(GwyDataWindow *data_window,
     if (!level3_dialog)
         level3_dialog = level3_dialog_create(data_view);
 
-    finished_id = g_signal_connect(points_layer, "finished",
+    finished_id = g_signal_connect(points_layer, "updated",
                                    G_CALLBACK(level3_selection_finished_cb),
                                    NULL);
     level3_selection_finished_cb();

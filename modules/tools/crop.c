@@ -117,7 +117,7 @@ crop_use(GwyDataWindow *data_window,
     if (!crop_dialog)
         crop_dialog = crop_dialog_create(data_view);
 
-    finished_id = g_signal_connect(select_layer, "finished",
+    finished_id = g_signal_connect(select_layer, "updated",
                                    G_CALLBACK(crop_selection_finished_cb),
                                    NULL);
     crop_selection_finished_cb();
