@@ -28,6 +28,7 @@ G_BEGIN_DECLS
 
 GtkWidget* gwy_app_toolbox_create            (void);
 void       gwy_app_data_arith                (void);
+void       gwy_app_data_croscor              (void);
 void       gwy_app_about                     (void);
 void       gwy_app_metadata_browser          (GwyDataWindow *data_window);
 void       gwy_app_init                      (void);

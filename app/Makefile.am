@@ -51,7 +51,8 @@ gwyddion_SOURCES = \
 	init.c \
 	meta.c \
 	splash.c \
-	toolbox.c
+	toolbox.c \
+	croscor.c
 
 gwyddion_LDADD = libgwyapp.la \
 	$(libgwymodule) \
