@@ -36,16 +36,18 @@ extern "C" {
 #define GWY_IS_SI_UNIT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SI_UNIT))
 #define GWY_SI_UNIT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SI_UNIT, GwySIUnitClass))
 
+typedef struct _GwySIUnit GwySIUnit;
+typedef struct _GwySIUnitClass GwySIUnitClass;
 
-typedef struct{
+struct _GwySIUnit {
     GObject parent_instance;
 
     gchar *unitstr;
-} GwySIUnit;
+};
 
-typedef struct{
+struct _GwySIUnitClass {
     GObjectClass parent_class;
-} GwySIUnitClass;
+};
 
 GType gwy_si_unit_get_type  (void) G_GNUC_CONST;
 
