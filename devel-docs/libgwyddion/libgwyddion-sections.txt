@@ -36,8 +36,10 @@ GWY_TEST_SER_GET_CLASS
 GwySerializeFunc
 GwyDeserializeFunc
 <TITLE>GwySerializable</TITLE>
+GwySerializeSpec
 gwy_serializable_serialize
 gwy_serializable_deserialize
+gwy_serialize_store_int32
 gwy_serialize_pack
 gwy_serialize_unpack_boolean
 gwy_serialize_unpack_char
@@ -50,6 +52,10 @@ gwy_serialize_unpack_double
 gwy_serialize_unpack_double_array
 gwy_serialize_unpack_string
 gwy_serialize_check_string
+gwy_serialize_pack_struct
+gwy_serialize_unpack_struct
+gwy_serialize_pack_object_struct
+gwy_serialize_unpack_object_struct
 <SUBSECTION Standard>
 GWY_SERIALIZABLE
 GWY_IS_SERIALIZABLE
@@ -64,6 +70,7 @@ GWY_SERIALIZABLE_GET_CLASS
 <FILE>gwycontainer</FILE>
 GWY_CONTAINER_PATHSEP
 GWY_CONTAINER_PATHSEP_STR
+GwyContainerNotifyFunc
 GwyKeyVal
 <TITLE>GwyContainer</TITLE>
 gwy_container_new
@@ -72,7 +79,7 @@ gwy_container_contains
 gwy_container_get_value
 gwy_container_set_value
 gwy_container_set_value_by_name
-gwy_container_delete
+gwy_container_remove
 gwy_container_foreach
 gwy_container_set_boolean
 gwy_container_get_boolean
@@ -88,10 +95,13 @@ gwy_container_set_string
 gwy_container_get_string
 gwy_container_set_object
 gwy_container_get_object
+gwy_container_watch
+gwy_container_freeze_watch
+gwy_container_thaw_watch
 gwy_container_value_type_by_name
 gwy_container_contains_by_name
 gwy_container_get_value_by_name
-gwy_container_delete_by_name
+gwy_container_remove_by_name
 gwy_container_set_boolean_by_name
 gwy_container_get_boolean_by_name
 gwy_container_set_uchar_by_name

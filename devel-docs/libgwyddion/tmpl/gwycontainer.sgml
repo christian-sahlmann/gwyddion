@@ -28,6 +28,16 @@ GwyContainer
 
 
 
+<!-- ##### USER_FUNCTION GwyContainerNotifyFunc ##### -->
+<para>
+
+</para>
+
+@container: 
+@path: 
+@user_data: 
+
+
 <!-- ##### TYPEDEF GwyKeyVal ##### -->
 <para>
 
@@ -88,6 +98,16 @@ GwyContainer
 
 @container: 
 @Varargs: 
+
+
+<!-- ##### FUNCTION gwy_container_remove ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_container_foreach ##### -->
@@ -241,6 +261,34 @@ GwyContainer
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_watch ##### -->
+<para>
+
+</para>
+
+@container: 
+@path: 
+@callback: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_container_freeze_watch ##### -->
+<para>
+
+</para>
+
+@container: 
+
+
+<!-- ##### FUNCTION gwy_container_thaw_watch ##### -->
+<para>
+
+</para>
+
+@container: 
+
+
 <!-- ##### MACRO gwy_container_value_type_by_name ##### -->
 <para>
 
@@ -264,6 +312,15 @@ GwyContainer
 
 
 <!-- ##### MACRO gwy_container_get_value_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+
+
+<!-- ##### MACRO gwy_container_remove_by_name ##### -->
 <para>
 
 </para>
