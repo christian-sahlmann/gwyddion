@@ -330,6 +330,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
     gint i;
     gboolean isdiff;
     GwyGraphAreaCurve curve;
+    GdkColormap *cmap;
 
     gwy_debug("");
 
@@ -392,26 +393,39 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
       curve.params.line_style = GDK_LINE_SOLID;
       curve.params.description = g_string_new(label->str);
       /***** FIXME PROVISORY ***************/
+      cmap =  gdk_colormap_get_system();
       if (graph->n_of_autocurves == 0) {
-          curve.params.color.pixel = 0x00000000;
+	  
+          curve.params.color.red = 0x0000;
+	  curve.params.color.green = 0x0000;
+	  curve.params.color.blue = 0x0000;
           curve.params.point_type = GWY_GRAPH_POINT_TRIANGLE_UP;
       }
       if (graph->n_of_autocurves == 1) {
-          curve.params.color.pixel = 0x00990099;
+          curve.params.color.red = 0xaaaa;
+	  curve.params.color.green = 0x0000;
+	  curve.params.color.blue = 0x0000;
           curve.params.point_type = GWY_GRAPH_POINT_TRIANGLE_DOWN;
       }
       if (graph->n_of_autocurves == 2) {
-          curve.params.color.pixel = 0x09909900;
+          curve.params.color.red = 0x0000;
+	  curve.params.color.green = 0xaaaa;
+	  curve.params.color.blue = 0x0000;
           curve.params.point_type = GWY_GRAPH_POINT_CIRCLE;
       }
       if (graph->n_of_autocurves == 3) {
-          curve.params.color.pixel = 0x000ddd00;
-          curve.params.point_type = GWY_GRAPH_POINT_DIAMOND;
+          curve.params.color.red = 0x0000;
+	  curve.params.color.green = 0x0000;
+	  curve.params.color.blue = 0xaaaa;
+           curve.params.point_type = GWY_GRAPH_POINT_DIAMOND;
       }
       if (graph->n_of_autocurves == 4) {
-          curve.params.color.pixel = 0x00ff0055;
+          curve.params.color.red = 0x8888;
+	  curve.params.color.green = 0x0000;
+	  curve.params.color.blue = 0x8888;
           curve.params.point_type = GWY_GRAPH_POINT_TIMES;
       }
+       gdk_colormap_alloc_color(cmap, &curve.params.color, FALSE, TRUE);
       /**** END OF PROVISORY ******/
     }
     else {
