@@ -40,7 +40,7 @@ void
 gwy_app_splash_create(void)
 {
     GwyContainer *settings;
-    GtkWidget *image, *vbox, *frame;
+    GtkWidget *image, *vbox, *frame, *lab;
     char *p, *filename;
 
     gwy_debug("");
@@ -87,11 +87,21 @@ gwy_app_splash_create(void)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(label), 6, 4);
     gtk_container_add(GTK_CONTAINER(frame), label);
+    g_free(p);
+
+    p = g_strconcat("<small>", PACKAGE_NAME,
+                    _(" is free software released under GNU GPL"), "</small>",
+                    NULL);
+    lab = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(lab), p);
+    gtk_misc_set_alignment(GTK_MISC(lab), 0.0, 0.5);
+    gtk_misc_set_padding(GTK_MISC(lab), 5, 3);
+    gtk_box_pack_start(GTK_BOX(vbox), lab, FALSE, FALSE, 0);
+    g_free(p);
 
     gtk_widget_show_all(window);
 
     g_free(filename);
-    g_free(p);
 
     while (gtk_events_pending())
         gtk_main_iteration();
@@ -127,6 +137,9 @@ void
 gwy_app_splash_set_message(const gchar *message)
 {
     g_return_if_fail(window);
+
+    while (gtk_events_pending())
+        gtk_main_iteration();
 
     if (message_prefix) {
         gchar *s = g_strconcat(message_prefix, message, NULL);
