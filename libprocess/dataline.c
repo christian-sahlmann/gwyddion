@@ -1048,7 +1048,7 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
 }
 
 void
-gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, guint nsteps)
+gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
 {
     gint i, n, val, imin;
     gdouble step, nstep;
@@ -1071,7 +1071,7 @@ gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
         val = (gint)(data_line->data[i]/step) - imin; 
         if (val<0 || val>= nsteps) 
         {
-            printf("GRRRR, %f, %d,  val=%d\n", step, imin, val);
+            printf("GRRRR, %f, %d,  val=%d, (ymax=%g, ymin=%g, nsteps=%d)\n", step, imin, val, ymax, ymin, nsteps);
             val = 0;
         }
         target_line->data[val] += 1.0;
@@ -1082,7 +1082,7 @@ gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
 }
 
 void
-gwy_data_line_cdh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, guint nsteps)
+gwy_data_line_cdh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
 {
     gint i;
     gdouble sum=0;
@@ -1096,7 +1096,7 @@ gwy_data_line_cdh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin
 }
 
 void
-gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, guint nsteps)
+gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
 {
     /*not yet...*/
     gint i, n, val, imin;
@@ -1132,7 +1132,7 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
 }
 
 void
-gwy_data_line_cda(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, guint nsteps)
+gwy_data_line_cda(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
 {
     gint i;
     gdouble sum=0;
