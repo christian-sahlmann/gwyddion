@@ -110,15 +110,28 @@ sh utils/update-potfiles.sh
 dir=.
 test -z "$QUIET" && echo processing $dir
 (cd $dir && \
-  eval $QUIET libtoolize --force --copy && \
+  eval $QUIET libtoolize --force && \
   eval $QUIET aclocal $ACLOCAL_FLAGS && \
   eval $QUIET autoheader && \
   eval $QUIET automake --add-missing $am_opt && \
   eval $QUIET autoconf) || {
     echo "**ERROR**: Re-generating failed.  You are allowed to shoot $PROJECT maintainer."
-    echo "(BTW, why are you re-generating everything? Have you read README.devel?)"
+    echo "(BTW, why are you re-generating everything?)"
     exit 1
   }
+
+# Automake-1.8 and newer don't add mkinstalldirs, but automake-1.6 doesn't
+# define mkdir_p, so we still use mkinstalldirs.  Try to add it when missing.
+if ! test -f mkinstalldirs; then
+  am_dir=`readlink install-sh`
+  am_dir=`dirname $am_dir`
+  if test -f $am_dir/mkinstalldirs; then
+    ln -s $am_dir/mkinstalldirs .
+  else
+    echo "**Warning**: Cannot find \`mkinstalldirs'.  Either you have too new automake"
+    echo "or whatever.  Please add it manually, otherwise \`make install' will fail."
+  fi
+fi
 
 if test -z "$*"; then
   echo "**Warning**: I am going to run \`configure' with $CONF_FLAGS."
