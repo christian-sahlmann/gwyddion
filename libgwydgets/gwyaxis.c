@@ -854,15 +854,16 @@ gwy_axis_normalscale(GwyAxis *a)
     gint i;
     GwyTick mit;
     GwyLabeledTick mjt;
+    gdouble range, tickstep, majorbase, minortickstep, minorbase;
 
     if (a->reqmax == a->reqmin) {g_warning("Axis with zero range!"); a->reqmax = a->reqmin+1;}
         
     /*printf("reqmin=%f, reqmax=%f\n", a->reqmin, a->reqmax);*/
-    gdouble range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
-    gdouble tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
-    gdouble majorbase = ceil(a->reqmin/tickstep)*tickstep; /*starting value*/
-    gdouble minortickstep = tickstep/(gdouble)a->par.minor_division;
-    gdouble minorbase = ceil(a->reqmin/minortickstep)*minortickstep;
+    range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
+    tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
+    majorbase = ceil(a->reqmin/tickstep)*tickstep; /*starting value*/
+    minortickstep = tickstep/(gdouble)a->par.minor_division;
+    minorbase = ceil(a->reqmin/minortickstep)*minortickstep;
 
     /*printf("rng=%f, tst=%f, mjb=%f, mnts=%f, mnb=%f\n",
        range, tickstep, majorbase, minortickstep, minorbase);*/
