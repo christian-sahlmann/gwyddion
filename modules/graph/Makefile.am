@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-graphdir = $(gwymoduledir)/graph
+graphdir = $(pkglibdir)/modules/graph
 
 module_ldflags = -shared -Wl,-soname
 

@@ -3,7 +3,8 @@
 libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
 libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 
-libgwyprocessincludedir = $(includedir)/gwyddion/libprocess
+libgwyprocessincludedir = $(pkgincludedir)/libprocess
+
 libgwyprocessinclude_HEADERS = \
 	cdline.h \
 	correct.h \

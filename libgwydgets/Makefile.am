@@ -4,7 +4,8 @@ libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
 libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 
-libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
+libgwydgetsincludedir = $(pkgincludedir)/libgwydgets
+
 libgwydgetsinclude_HEADERS = \
 	gwy3dlabels.h \
 	gwy3dview.h \

@@ -3,7 +3,8 @@
 libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
 libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 
-libgwydrawincludedir = $(includedir)/gwyddion/libdraw
+libgwydrawincludedir = $(pkgincludedir)/libdraw
+
 libgwydrawinclude_HEADERS = \
 	gwydraw.h \
 	gwypalette.h \

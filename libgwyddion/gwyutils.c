@@ -511,7 +511,6 @@ gwy_find_self_dir(const gchar *dirname)
         { "modules",   GWY_MODULE_DIR },
         { "pixmaps",   GWY_PIXMAP_DIR },
         { "plugins",   GWY_PLUGIN_DIR },
-        { "pluginlib", GWY_PLUGINLIB_DIR },
     };
     gsize i;
 

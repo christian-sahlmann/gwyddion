@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-processdir = $(gwyplugindir)/process
+processdir = $(libexecdir)/@PACKAGE@/plugins/process
 
 perl_plugins = invert_perl.pl
 if HAVE_PERL

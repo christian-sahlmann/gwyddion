@@ -62,12 +62,7 @@ your own plug-ins.
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
-%makeinstall \
-  gwymoduledir=$RPM_BUILD_ROOT%{_libdir}/%{name}/modules \
-  gwypixmapdir=$RPM_BUILD_ROOT%{_datadir}/%{name}/pixmaps \
-  gwyplugindir=$RPM_BUILD_ROOT%{_libexecdir}/%{name}/plugins \
-  gwypluginlibdir=$RPM_BUILD_ROOT%{_libdir}/%{name}/pluginlib \
-  HTML_DIR=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
+%makeinstall HTML_DIR=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
 %__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/*/*.so
 %__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/*.so
 
@@ -142,16 +137,15 @@ desktop-file-install --vendor= --delete-original  \
 %dir %{_datadir}/gtk-doc/html/libgwydgets
 %dir %{_datadir}/gtk-doc/html/libgwymodule
 %dir %{_datadir}/gtk-doc/html
-%{_libdir}/%{name}/pluginlib/perl/Gwyddion/*
-%{_libdir}/%{name}/pluginlib/python/Gwyddion/*
-%{_libdir}/%{name}/pluginlib/ruby/gwyddion/*
-%dir %{_libdir}/%{name}/pluginlib/perl/Gwyddion
-%dir %{_libdir}/%{name}/pluginlib/perl
-%dir %{_libdir}/%{name}/pluginlib/python/Gwyddion
-%dir %{_libdir}/%{name}/pluginlib/python
-%dir %{_libdir}/%{name}/pluginlib/ruby/gwyddion
-%dir %{_libdir}/%{name}/pluginlib/ruby
-%dir %{_libdir}/%{name}/pluginlib
+%{_libdir}/%{name}/perl/Gwyddion/*
+%{_libdir}/%{name}/python/Gwyddion/*
+%{_libdir}/%{name}/ruby/gwyddion/*
+%dir %{_libdir}/%{name}/perl/Gwyddion
+%dir %{_libdir}/%{name}/perl
+%dir %{_libdir}/%{name}/python/Gwyddion
+%dir %{_libdir}/%{name}/python
+%dir %{_libdir}/%{name}/ruby/gwyddion
+%dir %{_libdir}/%{name}/ruby
 %doc %{_mandir}/man3/*
 %doc %dir %{_mandir}/man3
 %{_libdir}/pkgconfig/%{name}.pc

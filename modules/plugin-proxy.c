@@ -180,8 +180,16 @@ static const GwyEnum file_op_names[] = {
 static gboolean
 module_register(const gchar *name)
 {
-    gchar *plugin_path;
+    gchar *plugin_path, *libpath;
     gchar *dir;
+
+    dir = gwy_find_self_dir("modules");
+    g_return_val_if_fail(dir, FALSE);
+    libpath = g_path_get_dirname(dir);
+    g_free(dir);
+    gwy_debug("plug-in library path is: %s", libpath);
+    gwy_setenv("GWYPLUGINLIB", libpath, TRUE);
+    /* Don't free(libpath), some systems don't like it. */
 
     plugin_path = gwy_find_self_dir("plugins");
     g_return_val_if_fail(plugin_path, FALSE);

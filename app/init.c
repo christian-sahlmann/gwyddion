@@ -84,8 +84,6 @@ gwy_app_init(void)
     if (!bind_textdomain_codeset(PACKAGE, "UTF-8"))
         g_critical("Cannot bind gettext `%s' codeset to UTF-8", PACKAGE);
 #endif
-
-    gwy_setenv("GWYPLUGINLIB", gwy_find_self_dir("pluginlib"), TRUE);
 }
 
 static void

@@ -4,7 +4,7 @@
 # Written by Yeti <yeti@gwyddion.net>.  Public domain.
 use warnings;
 use strict;
-push @INC, $ENV{ 'GWYPLUGINLIB' } . '/perl';
+BEGIN { push @INC, $ENV{ 'GWYPLUGINLIB' } . '/perl'; }
 use Gwyddion::dump;
 
 # Plug-in information.

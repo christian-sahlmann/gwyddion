@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.5cvs20041013, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.5cvs20041014, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -209,19 +209,8 @@ LDFLAGS="$TARGET_LDFLAGS $PACKAGE_LIBS $LDFLAGS"
 
 AC_SUBST(RPM_RELEASE)
 AC_SUBST(RPM_VERSION)
-AC_SUBST(PERL_SITE_LIB)
-AC_SUBST(RUBY_SITE_LIB)
 AC_SUBST(PACKAGE_URL)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
           [Define to package home page, as a string.])
-
-gwymoduledir=$libdir/gwyddion/modules
-gwypixmapdir=$datadir/gwyddion/pixmaps
-gwyplugindir=$libexecdir/gwyddion/plugins
-gwypluginlibdir=$libdir/gwyddion/pluginlib
-AC_SUBST(gwymoduledir)
-AC_SUBST(gwypixmapdir)
-AC_SUBST(gwyplugindir)
-AC_SUBST(gwypluginlibdir)
 
 AC_OUTPUT

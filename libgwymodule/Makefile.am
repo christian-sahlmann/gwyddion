@@ -2,7 +2,8 @@
 
 libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
 
-libgwymoduleincludedir = $(includedir)/gwyddion/libgwymodule
+libgwymoduleincludedir = $(pkgincludedir)/libgwymodule
+
 libgwymoduleinclude_HEADERS = \
 	gwymodule.h \
 	gwymodule-file.h \

@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-processdir = $(gwymoduledir)/process
+processdir = $(pkglibdir)/modules/process
 
 module_ldflags = -shared -Wl,-soname
 

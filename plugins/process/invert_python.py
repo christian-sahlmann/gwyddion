@@ -3,7 +3,7 @@
 # A very simple Gwyddion plug-in example in Python.
 # Written by Yeti <yeti@gwyddion.net>.  Public domain.
 import sys, os
-sys.path.extend(os.path.join(os.environ['GWYPLUGINLIB'], 'python'))
+sys.path.append(os.path.join(os.environ['GWYPLUGINLIB'], 'python'))
 import Gwyddion
 
 # Plug-in information.

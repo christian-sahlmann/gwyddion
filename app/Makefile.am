@@ -8,7 +8,8 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
 localedir = $(datadir)/locale
 
-libgwyappincludedir = $(includedir)/gwyddion/app
+libgwyappincludedir = $(pkgincludedir)/app
+
 libgwyappinclude_HEADERS = \
 	app.h \
 	filelist.h \

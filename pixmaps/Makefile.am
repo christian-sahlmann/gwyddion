@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-pixmapdatadir = $(gwypixmapdir)
+pixmapdatadir = $(pkgdatadir)/pixmaps
 
 pixmapdata_DATA = \
 	gwy_3d_base-24.png \

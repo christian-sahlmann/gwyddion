@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-filedir = $(gwyplugindir)/file
+filedir = $(libexecdir)/@PACKAGE@/plugins/file
 
 file_PROGRAMS = \
 	dump

@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-moduledir = $(gwymoduledir)
+moduledir = $(pkglibdir)/modules
 
 module_ldflags = -shared -Wl,-soname
 
