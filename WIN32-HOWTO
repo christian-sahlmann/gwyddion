@@ -65,43 +65,92 @@
 MSVC:
 
 
-Inatall Gtk+ runtime library and developement library.
+Install Gtk+ runtime library and developement library.
 It might be usefull to recompile also these from source in
-dropline.net/gtk/ , but I didi not try this. If you recompile
+dropline.net/gtk/ , but I did not try this. If you recompile
 them you would have the debug information inside, which is not
 present there now.
 
-- create an empty project (Win32 application).
-- add all files from CVS, except test.c and main.c from any directory
-  and create-data.c from libgwydgets
 
-- now change the default project settings:
+1. libgwyddion.dll, libgwyddion.def
 
-C/C++    : add the /D /D /D /D /GZ 
-                   GWY_MODULE_DIR="\"d:\gtk\gwyddion\modules\"" 
-		   GWY_PIXMAP_DIR="\"d:\gtk\gwyddion\pixmaps\"" 
-		   GWY_PLUGIN_DIR="\"d:\gtk\gwyddion\plugins\"" /c
-		   which is strange but compiler did this from
-		   deparate preprocessor definitions of all the directiories
-		   
-	   add Preprocessor additional directories - gtk
-	     i. e. C:\Dev-C++\INCLUDE\GTK-2.0,
+- create an empty project (dynamic DLL).
+- add almost all *.h and *.c files from CVS, except test.c and main.c from any directory,
+  create-data.c from libgwydgets/, gwyddion.c from app/ and anything
+  from modules/ an plugins/ directories.
+  (Project -> Add To Project -> Files)
+
+- add .def file in the same way. Remove _gwy_debug from this file as it causes
+  problems (dont know why).
+    
+- add #define GWY_PIXMAP_DIR "d:\\gtk\\gwyddion\\pixmaps"
+  and corresponding definitions for GWY_PLUGIN_DIR and GWY_MODULE_DIR
+  to appropriate source files.
+  
+- now change the default project settings (Alt+F7):
+
+C/C++ tab: 
+             add General preprocessor definitions DEBUG is you want
+	     to see gwy-debug informations.
+	     
+             add Preprocessor additional include directories - gtk
+	     e. g. C:\Dev-C++\INCLUDE\GTK-2.0,
                    C:\Dev-C++\LIB\GTK-2.0\INCLUDE,
                    C: \Dev-C++\INCLUDE\GLIB-2.0,
 		   C:\Dev-C++\LIB\GLIB-2.0\INCLUDE,
                    C:\Dev-C++\INCLUDE\PANGO-1.0,
                    C:\Dev-C++\INCLUDE\ATK-1.0,
                    c:\Dev-C++\include,
-             and gwyddion      
+             and also gwyddion      
                    d:\gtk\gwyddion
+             depending on real paths on your system.
 
 
 Linker:    add Linker additional modules:
-                  glib-2.0.lib gtk-win32-2.0.lib gdk-win32-2.0.lib 
-		  gobject-2.0.lib gdk_pixbuf-2.0.lib gthread-2.0.lib 
-		  gmodule-2.0.lib pango-1.0.lib intl.lib 
+                  glib-2.0.lib 
+		  gtk-win32-2.0.lib 
+		  gdk-win32-2.0.lib 
+		  gobject-2.0.lib 
+		  gdk_pixbuf-2.0.lib 
+		  gthread-2.0.lib 
+		  gmodule-2.0.lib 
+		  pango-1.0.lib 
+		  intl.lib 
 
            add Linker additional library path
 	          C:\Dev-C++\lib,C:\Program Files\Common Files\GTK\2.0\lib
+           depending on your real paths on your system
+
+compile everything.
+	   
+
+2. gwyddion.exe
+
+- create empty project (Win32 application), or add this project into the libgwyddion one.
+
+- add only gwyddion.c into this project
+
+- set all the Settings same as for library above, adding also libgwyddion.lib 
+  for the Linker additional modules option and appropriate Linker addtitional library path 
+  to these files e. g. d:\gtk\gwyddion\Debug .
+
+compile it, and set Windows Registry path to Gtk+ libraries
+e. g. (HKEY_LOCAL_MACHINE->Software->Microsoft->Windows->Current Version->App Paths->Gwyddion.exe)
+    Path key to C:\Program Files\Common Files\GTK\2.0\lib 
+
+Put the libgwyddion.dll in the same directory as gwyddion.exe
+
+
+3. modules, plugins
+
+here, compilation of one module will be described, others can be complied as added to
+the same workspace or separately:
+
+- create empty project (dynamic DLL) and set everything as for libwyddion.dll. Add also
+  everything from settings of gwyddion.exe
+
+- add file corresponding to this module, e. g. level.c
+
+compile it and copy the .dll to gwyddion modules directory.
 
 
