@@ -1,0 +1,51 @@
+<!-- ##### SECTION Title ##### -->
+GwyGraph
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### TYPEDEF GwyGraphAutoProperties ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_graph_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_add_dataline ##### -->
+<para>
+
+</para>
+
+@graph: 
+@dataline: 
+@shift: 
+
+
+<!-- ##### FUNCTION gwy_graph_add_datavalues ##### -->
+<para>
+
+</para>
+
+@graph: 
+@xvals: 
+@yvals: 
+@n: 
+
+

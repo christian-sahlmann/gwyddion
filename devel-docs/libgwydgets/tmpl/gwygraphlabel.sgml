@@ -1,0 +1,99 @@
+<!-- ##### SECTION Title ##### -->
+GwyGraphLabel
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GWY_GRAPH_LABEL_NORTHEAST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_LABEL_NORTHWEST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_LABEL_SOUTHEAST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_LABEL_SOUTHWEST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### TYPEDEF GwyGraphAreaCurveParams ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyGraphLabelParams ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_graph_label_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_label_set_visible ##### -->
+<para>
+
+</para>
+
+@label: 
+@is_visible: 
+
+
+<!-- ##### FUNCTION gwy_graph_label_set_style ##### -->
+<para>
+
+</para>
+
+@label: 
+@style: 
+
+
+<!-- ##### FUNCTION gwy_graph_label_add_curve ##### -->
+<para>
+
+</para>
+
+@label: 
+@params: 
+
+
+<!-- ##### FUNCTION gwy_graph_label_clear ##### -->
+<para>
+
+</para>
+
+@label: 
+
+

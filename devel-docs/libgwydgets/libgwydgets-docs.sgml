@@ -10,6 +10,10 @@
 <!ENTITY libgwydgets-GwyRuler SYSTEM "sgml/gwyruler.sgml">
 <!ENTITY libgwydgets-GwyHRuler SYSTEM "sgml/gwyhruler.sgml">
 <!ENTITY libgwydgets-GwyVRuler SYSTEM "sgml/gwyvruler.sgml">
+<!ENTITY libgwydgets-GwyAxis SYSTEM "sgml/gwyaxis.sgml">
+<!ENTITY libgwydgets-GwyGraphCorner SYSTEM "sgml/gwygraphcorner.sgml">
+<!ENTITY libgwydgets-GwyGraphLabel SYSTEM "sgml/gwygraphlabel.sgml">
+<!ENTITY libgwydgets-GwyGraph SYSTEM "sgml/gwygraph.sgml">
 ]>
 <book id="index">
   <bookinfo>
@@ -29,5 +33,9 @@
     &libgwydgets-GwyRuler;
     &libgwydgets-GwyHRuler;
     &libgwydgets-GwyVRuler;
+    &libgwydgets-GwyAxis;
+    &libgwydgets-GwyGraphCorner;
+    &libgwydgets-GwyGraphLabel;
+    &libgwydgets-GwyGraph;
   </chapter>
 </book>

@@ -1,0 +1,166 @@
+<!-- ##### SECTION Title ##### -->
+GwyAxis
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GWY_AXIS_NORTH ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_AXIS_SOUTH ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_AXIS_EAST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_AXIS_WEST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_AXIS_FLOAT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_AXIS_EXP ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_AXIS_INT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_AXIS_AUTO ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### TYPEDEF GwyTick ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyLabeledTick ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyAxisParams ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_axis_new ##### -->
+<para>
+
+</para>
+
+@orientation: 
+@min: 
+@max: 
+@label: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_axis_set_logarithmic ##### -->
+<para>
+
+</para>
+
+@axis: 
+@is_logarithmic: 
+
+
+<!-- ##### FUNCTION gwy_axis_set_visible ##### -->
+<para>
+
+</para>
+
+@axis: 
+@is_visible: 
+
+
+<!-- ##### FUNCTION gwy_axis_set_auto ##### -->
+<para>
+
+</para>
+
+@axis: 
+@is_auto: 
+
+
+<!-- ##### FUNCTION gwy_axis_set_req ##### -->
+<para>
+
+</para>
+
+@axis: 
+@min: 
+@max: 
+
+
+<!-- ##### FUNCTION gwy_axis_set_style ##### -->
+<para>
+
+</para>
+
+@axis: 
+@style: 
+
+
+<!-- ##### FUNCTION gwy_axis_get_maximum ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_axis_get_minimum ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+

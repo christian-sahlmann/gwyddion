@@ -118,6 +118,14 @@ GwyDataViewLayer
 @layer: 
 
 
+<!-- ##### FUNCTION gwy_data_view_layer_updated ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+
 <!-- ##### SIGNAL GwyDataViewLayer::plugged ##### -->
 <para>
 
@@ -126,6 +134,13 @@ GwyDataViewLayer
 @gwydataviewlayer: the object which received the signal.
 
 <!-- ##### SIGNAL GwyDataViewLayer::unplugged ##### -->
+<para>
+
+</para>
+
+@gwydataviewlayer: the object which received the signal.
+
+<!-- ##### SIGNAL GwyDataViewLayer::updated ##### -->
 <para>
 
 </para>
