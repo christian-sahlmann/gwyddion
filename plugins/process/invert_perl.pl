@@ -4,8 +4,13 @@
 # Written by Yeti <yeti@gwyddion.net>.  Public domain.
 use warnings;
 use strict;
-BEGIN { push @INC, $ENV{ 'GWYPLUGINLIB' } . '/perl'; }
-use Gwyddion::dump;
+
+my $errmsg = "Plug-in has to be called from Gwyddion plugin-proxy.";
+push @INC, $ENV{ 'GWYPLUGINLIB' } . '/perl' if exists $ENV{ 'GWYPLUGINLIB' };
+{
+    local $SIG{ '__DIE__' } = sub { die "$errmsg\n" };
+    require "Gwyddion/dump.pm";
+}
 
 # Plug-in information.
 my %run_modes = ( 'noninteractive' => 1, 'with_defaults' => 1 );
@@ -41,8 +46,6 @@ sub run {
 
 my %functions = ( 'register' => \&register, 'run' => \&run );
 my $what = shift @ARGV;
-if ( not $what or not exists $functions{ $what } ) {
-    die "Plug-in has to be called from Gwyddion plugin-proxy.\n";
-}
+if ( not $what or not exists $functions{ $what } ) { die "$errmsg\n" }
 
 $functions{ $what }->( @ARGV );
