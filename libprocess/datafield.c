@@ -15,6 +15,7 @@
 
 static void  gwy_datafield_class_init        (GwyDataFieldClass *klass);
 static void  gwy_datafield_init              (GwyDataField *datafield);
+static void  gwy_datafield_finalize              (GwyDataField *datafield);
 static void  gwy_datafield_serializable_init (gpointer giface, gpointer iface_data);
 static void  gwy_datafield_watchable_init    (gpointer giface, gpointer iface_data);
 static guchar* gwy_datafield_serialize       (GObject *obj, guchar *buffer, gsize *size);
@@ -102,9 +103,13 @@ gwy_datafield_watchable_init(gpointer giface,
 static void
 gwy_datafield_class_init(GwyDataFieldClass *klass)
 {
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
+    
+    gobject_class->finalize = (GObjectFinalizeFunc)gwy_datafield_finalize;
 }
 
 static void
@@ -118,6 +123,15 @@ gwy_datafield_init(GwyDataField *datafield)
     datafield->yres = 0;
     datafield->xreal = 0.0;
     datafield->yreal = 0.0;
+}
+
+static void
+gwy_datafield_finalize(GwyDataField *datafield)
+{
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    gwy_datafield_free(datafield); 
 }
 
 GObject*
