@@ -36,6 +36,10 @@ typedef struct {
     GtkWidget *y;
     GtkWidget *w;
     GtkWidget *h;
+    GtkWidget *xp;
+    GtkWidget *yp;
+    GtkWidget *wp;
+    GtkWidget *hp;
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
@@ -55,7 +59,7 @@ static GwyModuleInfo module_info = {
     "crop",
     "Crop tool.",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -134,7 +138,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(6, 3, FALSE);
+    table = gtk_table_new(6, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
@@ -163,14 +167,26 @@ dialog_create(GwyUnitoolState *state)
     controls->y = gtk_label_new("");
     controls->w = gtk_label_new("");
     controls->h = gtk_label_new("");
+    controls->xp = gtk_label_new("");
+    controls->yp = gtk_label_new("");
+    controls->wp = gtk_label_new("");
+    controls->hp = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls->x), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->y), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->w), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->h), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->xp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->yp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->wp), 1.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(controls->hp), 1.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->x, 2, 3, 1, 2);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->y, 2, 3, 2, 3);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->w, 2, 3, 4, 5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->h, 2, 3, 5, 6);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->xp, 3, 4, 1, 2);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->yp, 3, 4, 2, 3);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->wp, 3, 4, 4, 5);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->hp, 3, 4, 5, 6);
 
     return dialog;
 }
@@ -182,12 +198,18 @@ dialog_update(GwyUnitoolState *state,
     gboolean is_visible, is_selected;
     ToolControls *controls;
     GwySIValueFormat *units;
+    gint ximin, yimin, ximax, yimax;
+    GwyContainer *data;
+    GwyDataField *dfield;
     gdouble sel[4];
+    gchar buf[16];
 
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
     units = state->coord_format;
+    data = gwy_data_window_get_data(state->data_window);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     is_visible = state->is_visible;
     is_selected = gwy_vector_layer_get_selection(state->layer, sel);
@@ -199,12 +221,28 @@ dialog_update(GwyUnitoolState *state,
         gwy_unitool_update_label(units, controls->y, sel[1]);
         gwy_unitool_update_label(units, controls->w, sel[2] - sel[0]);
         gwy_unitool_update_label(units, controls->h, sel[3] - sel[1]);
+        ximin = gwy_data_field_rtoj(dfield, sel[0]);
+        g_snprintf(buf, sizeof(buf), "%d px", ximin);
+        gtk_label_set_text(GTK_LABEL(controls->xp), buf);
+        yimin = gwy_data_field_rtoi(dfield, sel[1]);
+        g_snprintf(buf, sizeof(buf), "%d px", yimin);
+        gtk_label_set_text(GTK_LABEL(controls->yp), buf);
+        ximax = gwy_data_field_rtoj(dfield, sel[2]) + 1;
+        g_snprintf(buf, sizeof(buf), "%d px", ximax - ximin);
+        gtk_label_set_text(GTK_LABEL(controls->wp), buf);
+        yimax = gwy_data_field_rtoi(dfield, sel[3]) + 1;
+        g_snprintf(buf, sizeof(buf), "%d px", yimax - yimin);
+        gtk_label_set_text(GTK_LABEL(controls->hp), buf);
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls->x), "");
         gtk_label_set_text(GTK_LABEL(controls->y), "");
         gtk_label_set_text(GTK_LABEL(controls->w), "");
         gtk_label_set_text(GTK_LABEL(controls->h), "");
+        gtk_label_set_text(GTK_LABEL(controls->xp), "");
+        gtk_label_set_text(GTK_LABEL(controls->yp), "");
+        gtk_label_set_text(GTK_LABEL(controls->wp), "");
+        gtk_label_set_text(GTK_LABEL(controls->hp), "");
     }
     gwy_unitool_apply_set_sensitive(state, is_selected);
 }
