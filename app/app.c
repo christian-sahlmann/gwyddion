@@ -80,18 +80,18 @@ foo(void)
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ZOOM_IN,
                              "Zoom in", NULL,
                              GTK_SIGNAL_FUNC(zoom_set_cb),
-                             GINT_TO_POINTER(1), 0);
+                             GINT_TO_POINTER(1), -1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ZOOM_1_1,
                              "Zoom 1:1", NULL,
                              GTK_SIGNAL_FUNC(zoom_set_cb),
-                             GINT_TO_POINTER(10000), 1);
+                             GINT_TO_POINTER(10000), -1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ZOOM_OUT,
                              "Zoom out", NULL,
                              GTK_SIGNAL_FUNC(zoom_set_cb),
-                             GINT_TO_POINTER(-1), 2);
+                             GINT_TO_POINTER(-1), -1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ZOOM_FIT,
                              "Zoom to fit", NULL,
-                             NULL, NULL, 3);
+                             NULL, NULL, -1);
 
     /***************************************************************/
     toolbar = gtk_toolbar_new();
@@ -104,13 +104,13 @@ foo(void)
 
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_CROP,
                              "Crop", NULL,
-                             NULL, NULL, 0);
+                             NULL, NULL, -1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SCALE,
                              "Scale", NULL,
-                             NULL, NULL, 1);
+                             NULL, NULL, -1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ROTATE,
                              "Rotate", NULL,
-                             NULL, NULL, 2);
+                             NULL, NULL, -1);
 
     /***************************************************************/
     toolbar = gtk_toolbar_new();
@@ -123,13 +123,13 @@ foo(void)
 
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_FIT_PLANE,
                              "Fit plane", NULL,
-                             NULL, NULL, 0);
+                             NULL, NULL, -1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_FIT_TRIANGLE,
                              "Fit plane using three points", NULL,
-                             NULL, NULL, 1);
+                             NULL, NULL, -1);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_GRAPH,
                              "Graph", NULL,
-                             NULL, NULL, 2);
+                             NULL, NULL, -1);
 
     /***************************************************************/
     gtk_widget_show_all(window);
