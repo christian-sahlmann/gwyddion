@@ -3856,7 +3856,7 @@ gwy_data_field_area_filter_conservative(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_area_filter_prewitt:
+ * gwy_data_field_area_filter_conservative:
  * @data_field: A data field to apply mean filter to.
  * @size: Filtered area size.
  * @col: Upper-left column coordinate.
