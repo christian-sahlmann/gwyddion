@@ -5,7 +5,8 @@ processdir = $(pkglibdir)/modules/process
 module_ldflags = -shared -Wl,-soname
 
 process_PROGRAMS = \
-	angle_dist.so \
+	area.so \
+        angle_dist.so \
 	arithmetic.so \
 	basicops.so \
 	calibrate.so \
@@ -17,6 +18,7 @@ process_PROGRAMS = \
 	edge.so \
 	facet-level.so \
 	fft.so \
+	fft_filter_1d.so \
 	fit_2d.so \
 	fraccor.so \
 	fractal.so \
@@ -58,6 +60,9 @@ process_PROGRAMS = \
 EXTRA_DIST = \
 	makefile.msc
 
+area_so_SOURCES = area.c
+area_so_LDFLAGS = $(module_ldflags),area.so
+	
 angle_dist_so_SOURCES = angle_dist.c
 angle_dist_so_LDFLAGS = $(module_ldflags),angle_dist.so
 
@@ -84,6 +89,9 @@ dwtanisotropy_so_LDFLAGS = $(module_ldflags),dwtanisotropy.so
 
 #dwtcorrection_so_SOURCES = dwtcorrection.c
 #dwtcorrection_so_LDFLAGS = $(module_ldflags),dwtcorrection.so
+
+fft_filter_1d_so_SOURCES = fft_filter_1d.c
+fft_filter_1d_so_LDFLAGS = $(module_ldflags),fft_filter_1d.so 
 
 dwtdenoise_so_SOURCES = dwtdenoise.c
 dwtdenoise_so_LDFLAGS = $(module_ldflags),dwtdenoise.so
