@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.8cvs20050212, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.8cvs20050213, [http://trific.ath.cx/bugzilla/])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -170,7 +170,7 @@ case $target_os in
     #STRIP="echo"  FIXME: WTF?
     ;;
 esac
-TARGET_CFLAGS="$TARGET_CFLAGS -march=$target_cpu"
+TARGET_CFLAGS="$TARGET_CFLAGS"
 
 dnl Dirty path hack.  Helps some people with badly set up search paths.
 if test "$prefix" = "NONE"; then
