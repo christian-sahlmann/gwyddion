@@ -28,6 +28,9 @@ Processing
 - Works on square, tall, wide data
 - Works on data with size of 2^n, and with different sizes (namely FFT, CWT,
   DWT methods)
+- Works on data with different real/pixel ratios[3]; at least does not crash
+  and does something more or less reasonable, as some operations are
+  problematic on such data
 - Works on data with mask, without mask, with an empty mask, with presentation,
   without presentation, and undo work correctly in all cases
 - Does not copy mask and presentations with data on unrelated result
