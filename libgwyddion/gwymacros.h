@@ -11,19 +11,31 @@ extern "C" {
 #endif /* __cplusplus */
 
 #ifdef G_HAVE_ISO_VARARGS
-#define gwy_debug(...) g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#  ifdef DEBUG
+#    define gwy_debug(...) g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#  else
+#    define gwy_debug(...) /* */
+#  endif
 #elif defined(G_HAVE_GNUC_VARARGS)
-#define gwy_debug(format...) g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, format)
+#  ifdef DEBUG
+#    define gwy_debug(format...) g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, format)
+#  else
+#    define gwy_debug(format...) /* */
+#  endif
 #else /* no varargs macros */
-static void
-gwy_debug(const gchar *format,
-         ...)
+#  ifdef DEBUG
+G_INLINE_FUNC void gwy_debug(const gchar *format, ...)
 {
   va_list args;
   va_start(args, format);
   g_logv(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, format, args);
   va_end(args);
 }
+#  else
+G_INLINE_FUNC void gwy_debug(const gchar *format, ...)
+{
+}
+#  endif
 #endif /* varargs macros */
 
 #ifdef __cplusplus
