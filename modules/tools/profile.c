@@ -40,7 +40,7 @@ typedef struct {
 
 static GtkWidget* profile_dialog_create            (GwyDataView *data_view);
 static void       profile_do                       (void);
-static void       profile_selection_finished_cb    (void);
+static void       profile_selection_updated_cb    (void);
 static void       profile_dialog_response_cb       (gpointer unused,
                                                  gint response);
 static void       profile_dialog_abandon           (void);
@@ -48,7 +48,7 @@ static void       profile_dialog_set_visible       (gboolean visible);
 
 static GtkWidget *dialog = NULL;
 static ProfileControls controls;
-static gulong finished_id = 0;
+static gulong updated_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *select_layer = NULL;
 
@@ -69,22 +69,22 @@ gwy_tool_profile_use(GwyDataWindow *data_window)
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == select_layer)
         return;
-    if (select_layer && finished_id)
-        g_signal_handler_disconnect(select_layer, finished_id);
+    if (select_layer && updated_id)
+        g_signal_handler_disconnect(select_layer, updated_id);
 
     if (layer && GWY_IS_LAYER_SELECT(layer))
         select_layer = layer;
     else {
-        select_layer = (GwyDataViewLayer*)gwy_layer_select_new();
+        select_layer = (GwyDataViewLayer*)gwy_layer_lines_new();
         gwy_data_view_set_top_layer(data_view, select_layer);
     }
     if (!dialog)
         dialog = profile_dialog_create(data_view);
 
-    finished_id = g_signal_connect(select_layer, "finished",
-                                   G_CALLBACK(profile_selection_finished_cb),
+    updated_id = g_signal_connect(select_layer, "updated",
+                                   G_CALLBACK(profile_selection_updated_cb),
                                    NULL);
-    profile_selection_finished_cb();
+    profile_selection_updated_cb();
 }
 
 static void
@@ -93,22 +93,23 @@ profile_do(void)
     GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *dfield;
-    gdouble x0, y0, x1, y1;
+    gdouble mylines[12];
 
-    if (!gwy_layer_select_get_selection(select_layer, &x0, &y0, &x1, &y1))
+    if (!gwy_layer_lines_get_lines(select_layer, mylines))
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    /*
     x0 = gwy_data_field_rtoj(dfield, x0);
     y0 = gwy_data_field_rtoi(dfield, y0);
     x1 = gwy_data_field_rtoj(dfield, x1) + 1;
     y1 = gwy_data_field_rtoi(dfield, y1) + 1;
-    gwy_data_field_resize(dfield, y0, x0, y1, x1);
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    */
+    
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
     gwy_debug("%s: %d %d", __FUNCTION__,
               gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
@@ -117,9 +118,9 @@ profile_do(void)
 static void
 profile_dialog_abandon(void)
 {
-    if (select_layer && finished_id)
-        g_signal_handler_disconnect(select_layer, finished_id);
-    finished_id = 0;
+    if (select_layer && updated_id)
+        g_signal_handler_disconnect(select_layer, updated_id);
+    updated_id = 0;
     select_layer = NULL;
     if (dialog) {
         g_signal_handler_disconnect(dialog, response_id);
@@ -135,7 +136,7 @@ profile_dialog_create(GwyDataView *data_view)
 {
     GwyContainer *data;
     GwyDataField *dfield;
-    GtkWidget *dialog, *table, *label;
+    GtkWidget *dialog, *table, *label, *graph;
     gdouble xreal, yreal, max, unit;
 
     gwy_debug("%s", __FUNCTION__);
@@ -154,13 +155,20 @@ profile_dialog_create(GwyDataView *data_view)
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     response_id = g_signal_connect(dialog, "response",
                                    G_CALLBACK(profile_dialog_response_cb), NULL);
-    table = gtk_table_new(6, 3, FALSE);
+    table = gtk_table_new(2, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Profile position</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
+    
+    graph = gwy_graph_new();
+    gtk_table_attach(GTK_TABLE(table), graph, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
+    
+    
+    
     /*
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
     label = gtk_label_new(_("X"));
@@ -211,9 +219,9 @@ update_label(GtkWidget *label, gdouble value)
 }
 
 static void
-profile_selection_finished_cb(void)
+profile_selection_updated_cb(void)
 {
-    gdouble x0, y0, x1, y1;
+    gdouble lines[12];
     gboolean is_visible, is_selected;
 
     gwy_debug("%s", __FUNCTION__);
@@ -221,8 +229,7 @@ profile_selection_finished_cb(void)
      * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
     
     is_visible = controls.is_visible;
-    is_selected = gwy_layer_select_get_selection(select_layer,
-                                                 &x0, &y0, &x1, &y1);
+    is_selected = gwy_layer_lines_get_lines(select_layer, lines);
                                                  
     if (!is_visible && !is_selected)
         return;
