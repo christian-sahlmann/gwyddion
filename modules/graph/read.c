@@ -68,7 +68,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
-        "read values",
+        "read",
         "/_Read values",
         (GwyGraphFunc)&read,
     };
