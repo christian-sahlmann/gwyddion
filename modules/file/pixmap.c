@@ -1004,7 +1004,7 @@ fmscale(gint size,
     drawable = prepare_drawable(width, size, lw, &gc);
 
     g_snprintf(s, bufsize, "%.*f %s",
-               format->precision, top/format->magnitude, format->units);
+               format->precision, bot/format->magnitude, format->units);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical1);
     gdk_draw_layout(drawable, gc,
@@ -1014,7 +1014,7 @@ fmscale(gint size,
     gdk_draw_line(drawable, gc, 0, size - (lw + 1)/2, tick, size - (lw + 1)/2);
 
     g_snprintf(s, bufsize, "%.*f %s",
-               format->precision, bot/format->magnitude, format->units);
+               format->precision, top/format->magnitude, format->units);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical1);
     gdk_draw_layout(drawable, gc,
