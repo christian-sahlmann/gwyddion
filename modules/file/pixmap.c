@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <glib.h>
 #include <png.h>
 #include <jpeglib.h>
 #include <tiffio.h>
