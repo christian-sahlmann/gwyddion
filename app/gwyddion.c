@@ -6,7 +6,7 @@
 #include "init.h"
 
 /* TODO */
-static GwyContainer *current_data = NULL;
+static GSList *current_data = NULL;
 static GtkAccelGroup *gwy_app_accel_group = NULL;
 static GtkWidget *data_process_menu = NULL;
 
@@ -217,8 +217,9 @@ create_data_menu(GtkAccelGroup *accel_group)
     GtkItemFactory *item_factory;
     GtkWidget *widget, *alignment;
 
-    item_factory = GTK_ITEM_FACTORY(gwy_build_process_menu(accel_group,
-                                                           run_process_func_cb));
+    item_factory = GTK_ITEM_FACTORY(gwy_build_process_menu(
+                                        accel_group,
+                                        G_CALLBACK(run_process_func_cb)));
     widget = gtk_item_factory_get_widget(item_factory, "<data>");
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
     gtk_container_add(GTK_CONTAINER(alignment), widget);
@@ -290,7 +291,7 @@ main(int argc, char *argv[])
 GwyContainer*
 gwy_app_get_current_data(void)
 {
-    return current_data;
+    return current_data ? (GwyContainer*)current_data->data : NULL;
 }
 
 static void
@@ -317,16 +318,15 @@ gwy_app_set_current_data(GwyContainer *data)
     gboolean update_state;
 
     if (data) {
-        gwy_debug("%s: %s",
-                  __FUNCTION__, g_type_name(G_TYPE_FROM_INSTANCE(data)));
         g_return_if_fail(GWY_IS_CONTAINER(data));
         update_state = (current_data == NULL);
+        current_data = g_slist_remove(current_data, data);
+        current_data = g_slist_prepend(current_data, data);
     }
     else {
-        gwy_debug("%s: NULL", __FUNCTION__);
         update_state = (current_data != NULL);
+        current_data = g_slist_remove(current_data, current_data->data);
     }
-    current_data = data;
 
     if (update_state)
         gtk_container_foreach(GTK_CONTAINER(data_process_menu),
