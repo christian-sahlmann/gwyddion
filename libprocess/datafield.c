@@ -1320,40 +1320,41 @@ gwy_data_field_get_max(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_max:
- * @a: A data field
- * @ulcol: Upper-left column coordinate (inclusive).
- * @ulrow: Upper-left row coordinate (inclusive).
- * @brcol: Bottom-right column coordinate (exclusive).
- * @brrow: Bottom-right row coordinate (exclusive).
+ * @dfield: A data field
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  *
  * Finds maximum value in a rectangular part of a data field.
  *
  * Returns: The maximum value.
+ *
+ * Since: 1.2:
  **/
 gdouble
-gwy_data_field_area_get_max(GwyDataField *a,
-                            gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_area_get_max(GwyDataField *dfield,
+                            gint col, gint row, gint width, gint height)
 {
     gint i, j;
     gdouble max = -G_MAXDOUBLE;
-    gdouble *row;
+    gdouble *datapos;
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), max);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width > 0 && height > 0
+                         && col + width <= dfield->xres
+                         && row + height <= dfield->yres,
+                         max);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= a->xres && brrow <= a->yres, 0);
+    datapos = dfield->data + row*dfield->xres + col;
+    for (i = 0; i < height; i++) {
+        gdouble *drow = datapos + i*dfield->xres;
 
-    for (i = ulrow; i < brrow; i++) {
-        row = a->data + i*a->xres + ulcol;
-
-        for (j = 0; j < brcol - ulcol; j++)
-        {
-            if (max < *row)
-                max = *row;
-            row++;
+        for (j = 0; j < width; j++) {
+            if (max < *drow)
+                max = *drow;
+            drow++;
         }
     }
 
@@ -1367,7 +1368,13 @@ gwy_data_field_get_area_max(GwyDataField *a,
                             gint brcol,
                             gint brrow)
 {
-    return gwy_data_field_area_get_max(a, ulcol, ulrow, brcol, brrow);
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    return gwy_data_field_area_get_max(a, ulcol, ulrow,
+                                       brcol - ulcol, brrow - ulrow);
 }
 
 /**
@@ -1395,11 +1402,11 @@ gwy_data_field_get_min(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_min:
- * @a: A data field
- * @ulcol: Upper-left column coordinate (inclusive).
- * @ulrow: Upper-left row coordinate (inclusive).
- * @brcol: Bottom-right column coordinate (exclusive).
- * @brrow: Bottom-right row coordinate (exclusive).
+ * @dfield: A data field
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  *
  * Finds minimum value in a rectangular part of a data field.
  *
@@ -1408,30 +1415,28 @@ gwy_data_field_get_min(GwyDataField *a)
  * Since 1.2.
  **/
 gdouble
-gwy_data_field_area_get_min(GwyDataField *a,
-                            gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_area_get_min(GwyDataField *dfield,
+                            gint col, gint row, gint width, gint height)
 {
     gint i, j;
     gdouble min = G_MAXDOUBLE;
-    gdouble *row;
+    gdouble *datapos;
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), min);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width > 0 && height > 0
+                         && col + width <= dfield->xres
+                         && row + height <= dfield->yres,
+                         min);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= a->xres && brrow <= a->yres, 0);
+    datapos = dfield->data + row*dfield->xres + col;
+    for (i = 0; i < height; i++) {
+        gdouble *drow = datapos + i*dfield->xres;
 
-
-    for (i = ulrow; i < brrow; i++) {
-        row = a->data + i*a->xres + ulcol;
-
-        for (j = 0; j < brcol - ulcol; j++)
-        {
-            if (min > *row)
-                min = *row;
-            row++;
+        for (j = 0; j < width; j++) {
+            if (min > *drow)
+                min = *drow;
+            drow++;
         }
     }
 
@@ -1445,7 +1450,13 @@ gwy_data_field_get_area_min(GwyDataField *a,
                             gint brcol,
                             gint brrow)
 {
-    return gwy_data_field_area_get_min(a, ulcol, ulrow, brcol, brrow);
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    return gwy_data_field_area_get_min(a, ulcol, ulrow,
+                                       brcol-ulcol, brrow-ulrow);
 }
 
 /**
@@ -1471,11 +1482,11 @@ gwy_data_field_get_sum(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_sum:
- * @a: A data field
- * @ulcol: Upper-left column coordinate (inclusive).
- * @ulrow: Upper-left row coordinate (inclusive).
- * @brcol: Bottom-right column coordinate (exclusive).
- * @brrow: Bottom-right row coordinate (exclusive).
+ * @dfield: A data field
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  *
  * Sums values of a rectangular part of a data field.
  *
@@ -1484,26 +1495,26 @@ gwy_data_field_get_sum(GwyDataField *a)
  * Since 1.2.
  **/
 gdouble
-gwy_data_field_area_get_sum(GwyDataField *a,
-                            gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_area_get_sum(GwyDataField *dfield,
+                            gint col, gint row, gint width, gint height)
 {
     gint i, j;
     gdouble sum = 0;
-    gdouble *row;
+    gdouble *datapos;
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), sum);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width > 0 && height > 0
+                         && col + width <= dfield->xres
+                         && row + height <= dfield->yres,
+                         sum);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= a->xres && brrow <= a->yres, 0);
+    datapos = dfield->data + row*dfield->xres + col;
+    for (i = 0; i < height; i++) {
+        gdouble *drow = datapos + i*dfield->xres;
 
-    for (i = ulrow; i < brrow; i++) {
-        row = a->data + i*a->xres + ulcol;
-
-        for (j = 0; j < brcol - ulcol; j++)
-            sum += *(row++);
+        for (j = 0; j < width; j++)
+            sum += *(drow++);
     }
 
     return sum;
@@ -1516,7 +1527,13 @@ gwy_data_field_get_area_sum(GwyDataField *a,
                             gint brcol,
                             gint brrow)
 {
-    return gwy_data_field_area_get_sum(a, ulcol, ulrow, brcol, brrow);
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    return gwy_data_field_area_get_sum(a, ulcol, ulrow,
+                                       brcol-ulcol, brrow-ulrow);
 }
 
 /**
@@ -1535,11 +1552,11 @@ gwy_data_field_get_avg(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_avg:
- * @a: A data field
- * @ulcol: Upper-left column coordinate (inclusive).
- * @ulrow: Upper-left row coordinate (inclusive).
- * @brcol: Bottom-right column coordinate (exclusive).
- * @brrow: Bottom-right row coordinate (exclusive).
+ * @dfield: A data field
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  *
  * Averages values of a rectangular part of a data field.
  *
@@ -1548,11 +1565,11 @@ gwy_data_field_get_avg(GwyDataField *a)
  * Since 1.2.
  **/
 gdouble
-gwy_data_field_area_get_avg(GwyDataField *a,
-                            gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_area_get_avg(GwyDataField *dfield,
+                            gint col, gint row, gint width, gint height)
 {
-    return gwy_data_field_area_get_sum(a, ulcol, ulrow, brcol, brrow)
-           /((gdouble)(brcol-ulcol)*(brrow-ulrow));
+    return gwy_data_field_area_get_sum(dfield, col, row,
+                                       width, height)/(width*height);
 }
 
 gdouble
@@ -1562,7 +1579,13 @@ gwy_data_field_get_area_avg(GwyDataField *a,
                             gint brcol,
                             gint brrow)
 {
-    return gwy_data_field_area_get_avg(a, ulcol, ulrow, brcol, brrow);
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    return gwy_data_field_area_get_avg(a, ulcol, ulrow,
+                                       brcol-ulcol, brrow-ulrow);
 }
 
 /**
@@ -1590,12 +1613,12 @@ gwy_data_field_get_surface_area(GwyDataField *a,
 
 /**
  * gwy_data_field_area_get_surface_area:
- * @a: data field
- * @ulcol: Upper-left column coordinate (inclusive).
- * @ulrow: Upper-left row coordinate (inclusive).
- * @brcol: Bottom-right column coordinate (exclusive).
- * @brrow: Bottom-right row coordinate (exclusive).
- * @interpolation: interpolation method
+ * @dfield: A data field
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @interpolation: Interpolation method.
  *
  * Computes surface area of a rectangular part of a data field.
  *
@@ -1604,26 +1627,27 @@ gwy_data_field_get_surface_area(GwyDataField *a,
  * Since 1.2.
  **/
 gdouble
-gwy_data_field_area_get_surface_area(GwyDataField *a,
-                                     gint ulcol, gint ulrow,
-                                     gint brcol, gint brrow,
+gwy_data_field_area_get_surface_area(GwyDataField *dfield,
+                                     gint col, gint row,
+                                     gint width, gint height,
                                      GwyInterpolationType interpolation)
 {
     gint i, j;
-    gdouble sum;
+    gdouble sum = 0.0;
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    if (width == 0 || height == 0)
+        return sum;
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= a->xres && brrow <= a->yres, 0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), sum);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width > 1 && height > 1
+                         && col + width <= dfield->xres
+                         && row + height <= dfield->yres,
+                         sum);
 
-    sum = 0;
-    for (i = ulcol; i < (brcol - 1); i++) {
-        for (j = ulrow; j < (brrow - 1); j++)
-            sum += square_area(a, i, j, i + 1, j + 1);
+    for (i = 0; i < height-1; i++) {
+        for (j = 0; j < width-1; j++)
+            sum += square_area(dfield, col+j, row+i, col+j+1, row+i+1);
     }
 
     return sum;
@@ -1637,7 +1661,13 @@ gwy_data_field_get_area_surface_area(GwyDataField *a,
                                      gint brrow,
                                      GwyInterpolationType interpolation)
 {
-    return gwy_data_field_area_get_surface_area(a, ulcol, ulrow, brcol, brrow,
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    return gwy_data_field_area_get_surface_area(a, ulcol, ulrow,
+                                                brcol-ulcol, brrow-ulrow,
                                                 interpolation);
 }
 
@@ -1670,11 +1700,11 @@ gwy_data_field_get_rms(GwyDataField *a)
 
 /**
  * gwy_data_field_area_get_rms:
- * @a: A data field
- * @ulcol: Upper-left column coordinate (inclusive).
- * @ulrow: Upper-left row coordinate (inclusive).
- * @brcol: Bottom-right column coordinate (exclusive).
- * @brrow: Bottom-right row coordinate (exclusive).
+ * @dfield: A data field
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
  *
  * Computes root mean square value of a rectangular part of a data field.
  *
@@ -1683,35 +1713,36 @@ gwy_data_field_get_rms(GwyDataField *a)
  * Since: 1.2.
  **/
 gdouble
-gwy_data_field_area_get_rms(GwyDataField *a,
-                            gint ulcol,
-                            gint ulrow,
-                            gint brcol,
-                            gint brrow)
+gwy_data_field_area_get_rms(GwyDataField *dfield,
+                            gint col, gint row, gint width, gint height)
 {
     gint i, j, n;
-    gdouble rms = 0, sum2 = 0;
-    gdouble sum = gwy_data_field_area_get_sum(a, ulcol, ulrow, brcol, brrow);
-    gdouble *row;
+    gdouble rms = 0.0, sum2 = 0.0;
+    gdouble sum;
+    gdouble *datapos;
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    if (width == 0 || height == 0)
+        return rms;
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= a->xres && brrow <= a->yres, 0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width > 1 && height > 1
+                         && col + width <= dfield->xres
+                         && row + height <= dfield->yres,
+                         rms);
 
-    for (i = ulrow; i < brrow; i++) {
-        row = a->data + i * a->xres + ulcol;
+    sum = gwy_data_field_area_get_sum(dfield, col, row, width, height);
+    datapos = dfield->data + row*dfield->xres + col;
+    for (i = 0; i < height; i++) {
+        gdouble *drow = datapos + i*dfield->xres;
 
-        for (j = 0; j < brcol - ulcol; j++) {
-            sum2 += (*row) * (*row);
-            *row++;
+        for (j = 0; j < width; j++) {
+            sum2 += (*drow) * (*drow);
+            *drow++;
         }
     }
 
-    n = (brcol-ulcol)*(brrow-ulrow);
+    n = width*height;
     rms = sqrt(fabs(sum2 - sum*sum/n)/n);
 
     return rms;
@@ -1724,7 +1755,13 @@ gwy_data_field_get_area_rms(GwyDataField *a,
                             gint brcol,
                             gint brrow)
 {
-    return gwy_data_field_area_get_rms(a, ulcol, ulrow, brcol, brrow);
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    return gwy_data_field_area_get_rms(a, ulcol, ulrow,
+                                       brcol-ulcol, brrow-ulrow);
 }
 
 
@@ -2123,6 +2160,69 @@ gwy_data_field_plane_coeffs(GwyDataField *a,
         *ap = sumsi - bx*sumxi - by*sumyi;
 }
 
+/**
+ * gwy_data_field_area_fit_plane:
+ * @dfield: A data field
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @pa: Where constant coefficient should be stored (or %NULL).
+ * @pbx: Where x plane coefficient should be stored (or %NULL).
+ * @pby: Where y plane coefficient should be stored (or %NULL).
+ *
+ * Fits a plane through a rectangular part of a data field.
+ *
+ * Since: 1.2.
+ **/
+void
+gwy_data_field_area_fit_plane(GwyDataField *dfield,
+                              gint col, gint row, gint width, gint height,
+                              gdouble *pa, gdouble *pbx, gdouble *pby)
+{
+    gdouble sumxi, sumxixi, sumyi, sumyiyi;
+    gdouble sumsi = 0.0;
+    gdouble sumsixi = 0.0;
+    gdouble sumsiyi = 0.0;
+    gdouble bx, by;
+    gdouble *datapos;
+    gint i, j;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 1 && height > 1
+                     && col + width <= dfield->xres
+                     && row + height <= dfield->yres);
+
+    sumxi = (width - 1.0)/2;
+    sumyi = (height - 1.0)/2;
+    sumxixi = (2.0*width - 1.0)*(width - 1.0)/6;
+    sumyiyi = (2.0*height - 1.0)*(height - 1.0)/6;
+
+    datapos = dfield->data + row*dfield->xres + col;
+    for (i = 0; i < height; i++) {
+        gdouble *drow = datapos + i*dfield->xres;
+
+        for (j = 0; j < width; j++) {
+            sumsi += drow[j];
+            sumsixi += drow[j]*j;
+            sumsiyi += drow[j]*i;
+        }
+    }
+    sumsi /= width*height;
+    sumsixi /= width*height;
+    sumsiyi /= width*height;
+
+    bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
+    by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
+
+    if (pa)
+        *pa = sumsi - bx*sumxi - by*sumyi;
+    if (pbx)
+        *pbx = bx*width/dfield->xreal;
+    if (pby)
+        *pby = by*height/dfield->yreal;
+}
 
 /**
  * gwy_data_field_plane_level:
@@ -2785,11 +2885,8 @@ gwy_data_field_get_stats(GwyDataField *data_field,
 }
 
 void
-gwy_data_field_area_get_stats(GwyDataField *data_field,
-                              gint ulcol,
-                              gint ulrow,
-                              gint brcol,
-                              gint brrow,
+gwy_data_field_area_get_stats(GwyDataField *dfield,
+                              gint col, gint row, gint width, gint height,
                               gdouble *avg,
                               gdouble *ra,
                               gdouble *rms,
@@ -2797,36 +2894,29 @@ gwy_data_field_area_get_stats(GwyDataField *data_field,
                               gdouble *kurtosis)
 {
     gint i, j;
-    gdouble c_sz1, c_sz2, c_sz3, c_sz4, c_abs1;
+    gdouble /*c_sz1,*/ c_sz2, c_sz3, c_sz4, c_abs1;
     gdouble nn, dif;
+    gdouble *datapos;
 
-    gdouble *row;
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= dfield->xres
+                     && row + height <= dfield->yres);
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
+    nn = width*height;
+    /*c_sz1 =*/ c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0
-                     && brcol <= data_field->xres
-                     && brrow <= data_field->yres);
-    if (brcol == data_field->xres)
-        brcol = data_field->xres - 1;
-    if (brrow == data_field->yres)
-        brrow = data_field->yres - 1;
+    *avg = gwy_data_field_area_get_avg(dfield, col, row, width, height);
 
-    nn = (brcol-ulcol)*(brrow-ulrow);
-    c_sz1 = c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
+    datapos = dfield->data + row*dfield->xres + col;
+    for (i = 0; i < height; i++) {
+        gdouble *drow = datapos + i*dfield->xres;
 
-    *avg = gwy_data_field_area_get_avg(data_field, ulcol, ulrow, brcol, brrow);
-
-    for (i = ulrow; i < brrow; i++) {
-        row = data_field->data + i*data_field->xres + ulcol;
-
-        for (j = 0; j < brcol - ulcol; j++) {
-            dif = (*(row++) - *avg);
+        for (j = 0; j < width; j++) {
+            dif = (*(drow++) - *avg);
             c_abs1 += fabs(dif);
-            c_sz1 += dif;
+            /*c_sz1 += dif; XXX always zero */
             c_sz2 += dif*dif;
             c_sz3 += dif*dif*dif;
             c_sz4 += dif*dif*dif*dif;
@@ -2835,12 +2925,9 @@ gwy_data_field_area_get_stats(GwyDataField *data_field,
 
     *ra = c_abs1/nn;
     *rms = c_sz2/nn;
-    *skew = c_sz3/pow(*rms, 1.5)/nn;
-    /*(c_sz3/nn - 3*c_sz1*c_sz3/nn2 + 2*c_s3z/nn3)/pow((c_sz2/nn - c_s2z/nn2),1.5);*/
     *kurtosis = c_sz4/(*rms)/(*rms)/nn - 3;
-    /*(c_sz4/nn - 4*c_sz1*c_sz3/nn4 + 6*c_s2z*c_sz2/nn3 - 3*c_s4z/nn4 - 3)/pow((c_sz2/nn - c_s2z/nn2),2);*/
-
     *rms = sqrt(*rms);
+    *skew = c_sz3/(*rms)/(*rms)/(*rms)/nn;
 }
 
 void
@@ -2855,7 +2942,24 @@ gwy_data_field_get_area_stats(GwyDataField *data_field,
                               gdouble *skew,
                               gdouble *kurtosis)
 {
-    gwy_data_field_area_get_stats(data_field, ulcol, ulrow, brcol, brrow,
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    /* XXX: brain damage. but this is what the original does.
+     * warning added. */
+    if (brcol == data_field->xres) {
+        brcol = data_field->xres - 1;
+        g_warning("gwy_data_field_get_area_stats: brcol off by 1");
+    }
+    if (brrow == data_field->yres) {
+        brrow = data_field->yres - 1;
+        g_warning("gwy_data_field_get_area_stats: brrow off by 1");
+    }
+
+    gwy_data_field_area_get_stats(data_field, ulcol, ulrow,
+                                  brcol-ulcol, brrow-ulrow,
                                   avg, ra, rms, skew, kurtosis);
 }
 
@@ -2883,11 +2987,13 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
 
 
     /*precompute settings if necessary*/
-    if (type==GWY_SF_OUTPUT_DH || type==GWY_SF_OUTPUT_CDH) {
+    if (type == GWY_SF_OUTPUT_DH || type == GWY_SF_OUTPUT_CDH) {
         min = gwy_data_field_area_get_min(data_field,
-                                          ulcol, ulrow, brcol, brrow);
+                                          ulcol, ulrow,
+                                          brcol-ulcol, brrow-ulrow);
         max = gwy_data_field_area_get_max(data_field,
-                                          ulcol, ulrow, brcol, brrow);
+                                          ulcol, ulrow,
+                                          brcol-ulcol, brrow-ulrow);
     }
     else if (type==GWY_SF_OUTPUT_DA || type==GWY_SF_OUTPUT_CDA) {
         if (orientation == GTK_ORIENTATION_HORIZONTAL) {
@@ -3102,7 +3208,7 @@ gwy_data_field_convolve(GwyDataField *data_field, GwyDataField *kernel_field,
     xsize = brcol - ulcol;
     ysize = brrow - ulrow;
     avgval =
-        gwy_data_field_area_get_avg(data_field, ulcol, ulrow, brcol, brrow);
+        gwy_data_field_get_area_avg(data_field, ulcol, ulrow, brcol, brrow);
 
     if (kxres > xsize || kyres > ysize) {
         g_warning("Kernel size larger than field area size.");
@@ -3566,16 +3672,16 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
 /*    printf("kul: %d, %d,  kbr: %d, %d, ul: %d, %d\n", kernel_ulcol, kernel_ulrow, kernel_brcol, kernel_brrow,  ulcol, ulrow);*/
 
     avg1 =
-        gwy_data_field_area_get_avg(data_field, ulcol, ulrow, ulcol + kwidth,
+        gwy_data_field_get_area_avg(data_field, ulcol, ulrow, ulcol + kwidth,
                                     ulrow + kheight);
     avg2 =
-        gwy_data_field_area_get_avg(kernel_field, kernel_ulcol, kernel_ulrow,
+        gwy_data_field_get_area_avg(kernel_field, kernel_ulcol, kernel_ulrow,
                                     kernel_brcol, kernel_brrow);
     rms1 =
-        gwy_data_field_area_get_rms(data_field, ulcol, ulrow, ulcol + kwidth,
+        gwy_data_field_get_area_rms(data_field, ulcol, ulrow, ulcol + kwidth,
                                     ulrow + kheight);
     rms2 =
-        gwy_data_field_area_get_rms(kernel_field, kernel_ulcol, kernel_ulrow,
+        gwy_data_field_get_area_rms(kernel_field, kernel_ulcol, kernel_ulrow,
                                     kernel_brcol, kernel_brrow);
 
     score = 0;
@@ -3977,6 +4083,7 @@ square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
 {
     gdouble x, z1, z2, z3, z4, a, b, c, d, e, f, s1, s2, sa, sb, res;
 
+    /* FIXME: this does not work when x and y measures are different */
     x = data_field->xreal / data_field->xres;
 
     z1 = data_field->data[(ulcol) + data_field->xres * (ulrow)];

@@ -298,36 +298,36 @@ gdouble gwy_data_field_get_area_surface_area(GwyDataField *a,
                                         GwyInterpolationType interpolation);
 #endif
 
-gdouble gwy_data_field_area_get_max(GwyDataField *a,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_area_get_min(GwyDataField *a,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_area_get_avg(GwyDataField *a,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_area_get_rms(GwyDataField *a,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_area_get_sum(GwyDataField *a,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_area_get_surface_area(GwyDataField *a,
-                                        gint ulcol,
-                                        gint ulrow,
-                                        gint brcol,
-                                        gint brrow,
+gdouble gwy_data_field_area_get_max(GwyDataField *dfield,
+                                    gint col,
+                                    gint row,
+                                    gint width,
+                                    gint height);
+gdouble gwy_data_field_area_get_min(GwyDataField *dfield,
+                                    gint col,
+                                    gint row,
+                                    gint width,
+                                    gint height);
+gdouble gwy_data_field_area_get_avg(GwyDataField *dfield,
+                                    gint col,
+                                    gint row,
+                                    gint width,
+                                    gint height);
+gdouble gwy_data_field_area_get_rms(GwyDataField *dfield,
+                                    gint col,
+                                    gint row,
+                                    gint width,
+                                    gint height);
+gdouble gwy_data_field_area_get_sum(GwyDataField *dfield,
+                                    gint col,
+                                    gint row,
+                                    gint width,
+                                    gint height);
+gdouble gwy_data_field_area_get_surface_area(GwyDataField *dfield,
+                                        gint col,
+                                        gint row,
+                                        gint width,
+                                        gint height,
                                         GwyInterpolationType interpolation);
 
 /*threshold dividing at thresval and setting to top and bottom*/
@@ -389,6 +389,14 @@ void gwy_data_field_get_column_part(GwyDataField *a,
 
 
 
+void gwy_data_field_area_fit_plane(GwyDataField *dfield,
+                                   gint col,
+                                   gint row,
+                                   gint width,
+                                   gint height,
+                                   gdouble *pa,
+                                   gdouble *pbx,
+                                   gdouble *pby);
 
 /*get 1st order plane leveling coefficients*/
 void gwy_data_field_plane_coeffs(GwyDataField *a,
@@ -518,11 +526,11 @@ void gwy_data_field_get_area_stats(GwyDataField *data_field,
                                    gdouble *skew,
                                    gdouble *kurtosis);
 #endif
-void gwy_data_field_area_get_stats(GwyDataField *data_field,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow,
+void gwy_data_field_area_get_stats(GwyDataField *dfield,
+                                    gint col,
+                                    gint row,
+                                    gint width,
+                                    gint height,
                                     gdouble *avg,
                                     gdouble *ra,
                                     gdouble *rms,
