@@ -576,7 +576,7 @@ interp_changed_cb(GObject *item, SFunctionsControls *pcontrols)
     gwy_debug("");
     pcontrols->interp = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
     controls.interp = pcontrols->interp;
-
+    sfunctions_selection_updated_cb();
 }
 
 static void
@@ -586,6 +586,7 @@ output_changed_cb(GObject *item, SFunctionsControls *pcontrols)
     pcontrols->out = GPOINTER_TO_INT(g_object_get_data(item, "sf-output-type"));
     controls.out = pcontrols->out;
     printf("pc(c)ontrols.out = %d\n", controls.out);
+    sfunctions_selection_updated_cb();
 
 }
 
@@ -595,6 +596,7 @@ direction_changed_cb(GObject *item, SFunctionsControls *pcontrols)
     gwy_debug("");
     pcontrols->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
     controls.dir = pcontrols->dir;
+    sfunctions_selection_updated_cb();
 
 }
 
