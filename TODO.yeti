@@ -1,7 +1,12 @@
 - Kill WIN32-LEAN-AND-MEAN-CAPS
 - Speed up Document History
+- Add duplicate() macro for duplicable types
+- Add gwy_data_field_new_alike() or something like that
+- Add Invert option to grain modules
+- Rework Scars
 - Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
 - Test GwyGradient
+- Implement GwyGradientSphere and mark GradSphere stuff deprecated
 - Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
   as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere
