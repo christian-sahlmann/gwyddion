@@ -93,21 +93,50 @@ module_register(const gchar *name)
 static gboolean
 points(GwyGraph *graph)
 {
-
-
     if (!graph) {
-        if (dialog) gtk_widget_destroy(dialog);
+        if (dialog)
+            gtk_widget_destroy(dialog);
         dialog = NULL;
-        return 1;
+        return TRUE;
     }
 
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_POINTS);
-    if (!dialog) points_dialog(graph);
+    if (!dialog)
+        points_dialog(graph);
     gtk_widget_queue_draw(GTK_WIDGET(graph));
 
-    return 1;
+    return TRUE;
 }
 
+static void
+value_label(GtkWidget *label, gdouble value, GString *str)
+{
+    if ((fabs(value) <= 1e5 && fabs(value) > 1e-2) || fabs(value) == 0)
+        g_string_printf(str, "%.2f", value);
+    else
+        g_string_printf(str, "%.2e", value);
+
+    gtk_label_set_text(GTK_LABEL(label), str->str);
+}
+
+static void
+header_label(GtkWidget *table, gint row, gint col,
+             const gchar *header, const gchar *unit,
+             GString *str)
+{
+    GtkWidget *label;
+
+    label = gtk_label_new(NULL);
+    if (unit)
+        g_string_printf(str, "<b>%s</b> [%s]", header, unit);
+    else
+        g_string_printf(str, "<b>%s</b>", header);
+    gtk_label_set_markup(GTK_LABEL(label), str->str);
+
+    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, col, col+1, row, row+1,
+                     GTK_FILL | GTK_EXPAND, 0, 2, 2);
+}
 
 static gboolean
 points_dialog(GwyGraph *graph)
@@ -115,6 +144,7 @@ points_dialog(GwyGraph *graph)
     gint i;
     GtkWidget *label;
     GtkWidget *table;
+    GString *str;
 
     dialog = gtk_dialog_new_with_buttons(_("Measure distances"),
                                          NULL,
@@ -134,108 +164,92 @@ points_dialog(GwyGraph *graph)
     g_signal_connect_swapped(graph, "destroy",
                              G_CALLBACK(points_dialog_closed_cb), graph);
 
-    table = gtk_table_new(6, 13, FALSE);
-
-    controls.xlabel = gtk_label_new("x");
-    controls.ylabel = gtk_label_new("y");
-
-
-    gtk_table_attach(GTK_TABLE(table), controls.xlabel, 1, 2, 0, 1,
-                           GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
-
-    gtk_table_attach(GTK_TABLE(table), controls.ylabel, 2, 3, 0, 1,
-                           GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
-
-
-    selection_id = g_signal_connect_swapped(graph->area, "selected",
-                                            G_CALLBACK(selection_updated_cb),
-                                            graph);
-
     controls.labpoint = g_ptr_array_new();
     controls.pointx = g_ptr_array_new();
     controls.pointy = g_ptr_array_new();
     controls.distx = g_ptr_array_new();
     controls.disty = g_ptr_array_new();
     controls.slope = g_ptr_array_new();
+    str = g_string_new("");
 
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Mouse:</b>");
+    table = gtk_table_new(1, 3, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+
+    controls.xlabel = gtk_label_new("x");
+    gtk_misc_set_alignment(GTK_MISC(controls.xlabel), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.xlabel, 1, 2, 0, 1, 0, 0, 2, 2);
+
+    controls.ylabel = gtk_label_new("y");
+    gtk_misc_set_alignment(GTK_MISC(controls.ylabel), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.ylabel, 2, 3, 0, 1, 0, 0, 2, 2);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Mouse:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, 0, 0, 2, 2);
 
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Points:</b>");
+    /* big table */
+    table = gtk_table_new(6, 11, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Points</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
+                     GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), "<b>x</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), "<b>y</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), "<b>length</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), "<b>height</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 4, 5, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
-    label = gtk_label_new("");
-    gtk_label_set_markup(GTK_LABEL(label), "<b>angle</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 5, 6, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
+    header_label(table, 1, 1, "X", graph->x_unit, str);
+    header_label(table, 1, 2, "Y", graph->y_unit, str);
+    header_label(table, 1, 3, _("Length"), graph->x_unit, str);
+    header_label(table, 1, 4, _("Height"), graph->y_unit, str);
+    header_label(table, 1, 5, _("Angle"), "deg", str);
 
-    for (i=0; i<NMAX; i++)
-    {
-        label = gtk_label_new("");
+    for (i = 0; i < NMAX; i++) {
+        label = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
+                         GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(controls.labpoint, label);
 
-        label = gtk_label_new("");
+        label = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 1, 2, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
+                         GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(controls.pointx, label);
 
-        label = gtk_label_new("");
+        label = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 2, 3, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
+                         GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(controls.pointy, label);
 
-        label = gtk_label_new("");
+        label = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
+                         GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(controls.distx, label);
 
-        label = gtk_label_new("");
+        label = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 4, 5, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
+                         GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(controls.disty, label);
 
-        label = gtk_label_new("");
+        label = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 5, 6, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
+                         GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(controls.slope, label);
     }
+    g_string_free(str, TRUE);
 
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    selection_id = g_signal_connect_swapped(graph->area, "selected",
+                                            G_CALLBACK(selection_updated_cb),
+                                            graph);
 
     gtk_widget_show_all(dialog);
 
@@ -248,176 +262,156 @@ selection_updated_cb(gpointer data)
     GwyGraph *graph;
     GwyGraphStatus_PointsData *cd;
     GwyGraphDataPoint pnt, ppnt;
-    gchar buffer[50];
+    gchar buffer[64];
+    GtkWidget *label;
+    GString *str;
     gint i, n;
 
     graph = (GwyGraph *) data;
     g_return_if_fail(GWY_IS_GRAPH(graph));
+    g_return_if_fail(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS);
+    /*FIXME TODO XXX this must be changed XXX TODO FIXME */
 
-    if (gwy_graph_get_status(graph) != GWY_GRAPH_STATUS_POINTS) return;
-        /*FIXME TODO XXX this must be changed XXX TODO FIXME*/
-    g_assert(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS);
+    cd = (GwyGraphStatus_PointsData *) gwy_graph_get_status_data(graph);
 
-    cd = (GwyGraphStatus_PointsData*)gwy_graph_get_status_data(graph);
-
-    /*update mouse data*/
-    if (graph->x_unit != NULL)
-    {
-        if ((fabs(cd->actual_data_point.x)<=1e5 && fabs(cd->actual_data_point.x)>1e-2) || fabs(cd->actual_data_point.x)==0)
-            g_snprintf(buffer, sizeof(buffer), "x = %.3f %s ", cd->actual_data_point.x, graph->x_unit);
+    /*update mouse data */
+    if (graph->x_unit != NULL) {
+        if ((fabs(cd->actual_data_point.x) <= 1e5
+             && fabs(cd->actual_data_point.x) > 1e-2)
+            || fabs(cd->actual_data_point.x) == 0)
+            g_snprintf(buffer, sizeof(buffer), "x = %.3f %s ",
+                       cd->actual_data_point.x, graph->x_unit);
         else
-            g_snprintf(buffer, sizeof(buffer), "x = %.3e %s ", cd->actual_data_point.x, graph->x_unit);
+            g_snprintf(buffer, sizeof(buffer), "x = %.3e %s ",
+                       cd->actual_data_point.x, graph->x_unit);
 
     }
-    else
-    {
-        if ((fabs(cd->actual_data_point.x)<=1e5 && fabs(cd->actual_data_point.x)>1e-2) || fabs(cd->actual_data_point.x)==0)
-            g_snprintf(buffer, sizeof(buffer), "x = %.3f ", cd->actual_data_point.x);
+    else {
+        if ((fabs(cd->actual_data_point.x) <= 1e5
+             && fabs(cd->actual_data_point.x) > 1e-2)
+            || fabs(cd->actual_data_point.x) == 0)
+            g_snprintf(buffer, sizeof(buffer), "x = %.3f ",
+                       cd->actual_data_point.x);
         else
-            g_snprintf(buffer, sizeof(buffer), "x = %.3e ", cd->actual_data_point.x);
+            g_snprintf(buffer, sizeof(buffer), "x = %.3e ",
+                       cd->actual_data_point.x);
 
     }
 
     gtk_label_set_text(GTK_LABEL(controls.xlabel), buffer);
 
-    if (graph->y_unit != NULL)
-    {
-        if ((fabs(cd->actual_data_point.y)<=1e5 && fabs(cd->actual_data_point.y)>1e-2) || fabs(cd->actual_data_point.y)==0)
-            g_snprintf(buffer, sizeof(buffer), "y = %.3f %s", cd->actual_data_point.y, graph->y_unit);
+    if (graph->y_unit != NULL) {
+        if ((fabs(cd->actual_data_point.y) <= 1e5
+             && fabs(cd->actual_data_point.y) > 1e-2)
+            || fabs(cd->actual_data_point.y) == 0)
+            g_snprintf(buffer, sizeof(buffer), "y = %.3f %s",
+                       cd->actual_data_point.y, graph->y_unit);
         else
-            g_snprintf(buffer, sizeof(buffer), "y = %.3e %s", cd->actual_data_point.y, graph->y_unit);
+            g_snprintf(buffer, sizeof(buffer), "y = %.3e %s",
+                       cd->actual_data_point.y, graph->y_unit);
     }
-    else
-    {
-        if ((fabs(cd->actual_data_point.y)<=1e5 && fabs(cd->actual_data_point.y)>1e-2) || fabs(cd->actual_data_point.y)==0)
-            g_snprintf(buffer, sizeof(buffer), "y = %.3f ", cd->actual_data_point.y);
+    else {
+        if ((fabs(cd->actual_data_point.y) <= 1e5
+             && fabs(cd->actual_data_point.y) > 1e-2)
+            || fabs(cd->actual_data_point.y) == 0)
+            g_snprintf(buffer, sizeof(buffer), "y = %.3f ",
+                       cd->actual_data_point.y);
         else
-            g_snprintf(buffer, sizeof(buffer), "y = %.3e ", cd->actual_data_point.y);
+            g_snprintf(buffer, sizeof(buffer), "y = %.3e ",
+                       cd->actual_data_point.y);
     }
 
     gtk_label_set_text(GTK_LABEL(controls.ylabel), buffer);
 
-    /*update points data*/
+    /*update points data */
     n = cd->n;
-    for (i=0; i<NMAX; i++)
-    {
-        if (i<n)
-        {
+    str = g_string_new("");
+    for (i = 0; i < NMAX; i++) {
+        if (i < n) {
             pnt = g_array_index(cd->data_points, GwyGraphDataPoint, i);
-            if ((fabs(pnt.x)<=1e5 && fabs(pnt.x)>1e-2) || fabs(pnt.x)==0)
-            {
-                if (graph->x_unit != NULL)
-                    g_snprintf(buffer, sizeof(buffer), "%.3f %s ", pnt.x, graph->x_unit);
-                else
-                    g_snprintf(buffer, sizeof(buffer), "%.3f ", pnt.x);
-            }
+            label = g_ptr_array_index(controls.pointx, i);
+            value_label(label, pnt.x, str);
+
+            label = g_ptr_array_index(controls.pointy, i);
+            value_label(label, pnt.y, str);
+
+            if (!i)
+                continue;
+
+            ppnt = g_array_index(cd->data_points, GwyGraphDataPoint, i-1);
+            label = g_ptr_array_index(controls.distx, i);
+            value_label(label, pnt.x - ppnt.x, str);
+
+            label = g_ptr_array_index(controls.disty, i);
+            value_label(label, pnt.y - ppnt.y, str);
+
+            label = g_ptr_array_index(controls.slope, i);
+            if ((!graph->x_unit || !graph->y_unit)
+                || strstr(graph->x_unit, graph->y_unit) == graph->x_unit)
+                value_label(label,
+                            180.0/G_PI*atan2((pnt.y - ppnt.y),
+                                             (pnt.x - ppnt.x)),
+                            str);
             else
-            {
-                if (graph->x_unit != NULL)
-                    g_snprintf(buffer, sizeof(buffer), "%.3e %s ", pnt.x, graph->x_unit);
-                else
-                    g_snprintf(buffer, sizeof(buffer), "%.3e ", pnt.x);
-            }
-            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointx, i)), buffer);
-
-
-            if ((fabs(pnt.y)<=1e5 && fabs(pnt.y)>1e-2) || fabs(pnt.y)==0)
-            {
-                if (graph->y_unit != NULL)
-                    g_snprintf(buffer, sizeof(buffer), "%.3f %s ", pnt.y, graph->y_unit);
-                else
-                    g_snprintf(buffer, sizeof(buffer), "%.3f ", pnt.y);
-            }
-            else
-            {
-                if (graph->y_unit != NULL)
-                    g_snprintf(buffer, sizeof(buffer), "%.3e %s ", pnt.y, graph->y_unit);
-                else
-                    g_snprintf(buffer, sizeof(buffer), "%.3e ", pnt.y);
-            }
-            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointy, i)), buffer);
-
-            if (i>0)
-            {
-                ppnt = g_array_index(cd->data_points, GwyGraphDataPoint, i-1);
-                if ((fabs(pnt.x - ppnt.x)<=1e5 && fabs(pnt.x - ppnt.x)>1e-2) || fabs(pnt.x - ppnt.x)==0)
-                {
-                    if (graph->x_unit != NULL)
-                        g_snprintf(buffer, sizeof(buffer), "%.3f %s ", pnt.x - ppnt.x, graph->x_unit);
-                    else
-                        g_snprintf(buffer, sizeof(buffer), "%.3f ", pnt.x - ppnt.x);
-                }
-                else
-                {
-                    if (graph->x_unit != NULL)
-                        g_snprintf(buffer, sizeof(buffer), "%.3e %s ", pnt.x - ppnt.x, graph->x_unit);
-                    else
-                        g_snprintf(buffer, sizeof(buffer), "%.3e ", pnt.x - ppnt.x);
-                }
-                gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.distx, i)), buffer);
-
-                if ((fabs(pnt.y - ppnt.y)<=1e5 && fabs(pnt.y - ppnt.y)>1e-2) || fabs(pnt.y - ppnt.y)==0)
-                {
-                    if (graph->y_unit != NULL)
-                        g_snprintf(buffer, sizeof(buffer), "%.3f %s ", pnt.y - ppnt.y, graph->y_unit);
-                    else
-                        g_snprintf(buffer, sizeof(buffer), "%.3f ", pnt.y - ppnt.y);
-                }
-                else
-                {
-                    if (graph->y_unit != NULL)
-                        g_snprintf(buffer, sizeof(buffer), "%.3e %s ", pnt.y - ppnt.y, graph->y_unit);
-                    else
-                        g_snprintf(buffer, sizeof(buffer), "%.3e ", pnt.y - ppnt.y);
-                }
-                gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.disty, i)), buffer);
-
-                
-                if ((graph->x_unit==0 || graph->y_unit==0) || strstr(graph->x_unit, graph->y_unit)==graph->x_unit)
-                {
-                    g_snprintf(buffer, sizeof(buffer), "%.3f", 180.0*atan2((pnt.y - ppnt.y),(pnt.x - ppnt.x))/3.141592);
-                }
-                else
-                {
-                    g_snprintf(buffer, sizeof(buffer), "%.3f", 
-                           180.0*atan2((pnt.y - ppnt.y)*get_unit_multiplicator(graph->y_unit),
-                           (pnt.x - ppnt.x)*get_unit_multiplicator(graph->x_unit))/3.141592);
-                }
-                gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.slope, i)), buffer);
-             }
+                value_label(label,
+                            180.0/G_PI
+                            *atan2((pnt.y - ppnt.y)
+                                   *get_unit_multiplicator(graph->y_unit),
+                                   (pnt.x - ppnt.x)
+                                   *get_unit_multiplicator(graph->x_unit)),
+                            str);
         }
-        else
-        {
-            g_snprintf(buffer, sizeof(buffer), " ");
-            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointx, i)), buffer);
-            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointy, i)), buffer);
-            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.distx, i)), buffer);
-            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.disty, i)), buffer);
-            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.slope, i)), buffer);
+        else {
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointx, i)),
+                               "");
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointy, i)),
+                               "");
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.distx, i)),
+                               "");
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.disty, i)),
+                               "");
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.slope, i)),
+                               "");
         }
     }
-
+    g_string_free(str, TRUE);
 }
 
 static gdouble
 get_unit_multiplicator(gchar *unit)
 {
-    if (strstr(unit, "m") == unit) return 1.0e-3;
-    if (strstr(unit, "µ") == unit) return 1.0e-6;
-    if (strstr(unit, "n") == unit) return 1.0e-9;
-    if (strstr(unit, "p") == unit) return 1.0e-12;
-    if (strstr(unit, "f") == unit) return 1.0e-15;
-    if (strstr(unit, "a") == unit) return 1.0e-18;
-    if (strstr(unit, "z") == unit) return 1.0e-21;
-    if (strstr(unit, "y") == unit) return 1.0e-24;
-    if (strstr(unit, "k") == unit) return 1.0e3;
-    if (strstr(unit, "M") == unit) return 1.0e6;
-    if (strstr(unit, "G") == unit) return 1.0e9;
-    if (strstr(unit, "T") == unit) return 1.0e12;
-    if (strstr(unit, "P") == unit) return 1.0e15;
-    if (strstr(unit, "E") == unit) return 1.0e18;
-    if (strstr(unit, "Z") == unit) return 1.0e21;
-    if (strstr(unit, "Y") == unit) return 1.0e24;
+    if (g_str_has_prefix(unit, "m"))
+        return 1.0e-3;
+    if (g_str_has_prefix(unit, "µ"))
+        return 1.0e-6;
+    if (g_str_has_prefix(unit, "n"))
+        return 1.0e-9;
+    if (g_str_has_prefix(unit, "p"))
+        return 1.0e-12;
+    if (g_str_has_prefix(unit, "f"))
+        return 1.0e-15;
+    if (g_str_has_prefix(unit, "a"))
+        return 1.0e-18;
+    if (g_str_has_prefix(unit, "z"))
+        return 1.0e-21;
+    if (g_str_has_prefix(unit, "y"))
+        return 1.0e-24;
+    if (g_str_has_prefix(unit, "k"))
+        return 1.0e3;
+    if (g_str_has_prefix(unit, "M"))
+        return 1.0e6;
+    if (g_str_has_prefix(unit, "G"))
+        return 1.0e9;
+    if (g_str_has_prefix(unit, "T"))
+        return 1.0e12;
+    if (g_str_has_prefix(unit, "P"))
+        return 1.0e15;
+    if (g_str_has_prefix(unit, "E"))
+        return 1.0e18;
+    if (g_str_has_prefix(unit, "Z"))
+        return 1.0e21;
+    if (g_str_has_prefix(unit, "Y"))
+        return 1.0e24;
     return 1;
 }
 
@@ -425,13 +419,13 @@ static void
 points_dialog_closed_cb(gpointer data)
 {
     GwyGraph *graph;
+
     graph = (GwyGraph *) data;
 
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_PLAIN);
     gtk_widget_queue_draw(GTK_WIDGET(graph));
 
-    if (dialog)
-    {
+    if (dialog) {
         g_signal_handler_disconnect(dialog, response_id);
         g_signal_handler_disconnect(graph->area, selection_id);
         response_id = 0;
@@ -453,6 +447,7 @@ static void
 points_dialog_response_cb(gpointer data, gint response)
 {
     GwyGraph *graph;
+
     graph = (GwyGraph *) data;
 
     if (response == GTK_RESPONSE_REJECT) {
@@ -461,7 +456,7 @@ points_dialog_response_cb(gpointer data, gint response)
         selection_updated_cb(data);
     }
     else
-    points_dialog_closed_cb(data);
+        points_dialog_closed_cb(data);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
