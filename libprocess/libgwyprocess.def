@@ -44,6 +44,7 @@ EXPORTS
 	gwy_data_line_hhcf
 	gwy_data_line_get_sum
 	gwy_data_line_part_get_sum
+	gwy_data_field_get_row_part
 	gwy_data_line_invert
 	gwy_data_line_initialize
 	gwy_data_field_get_fft_res
@@ -80,6 +81,7 @@ EXPORTS
 	gwy_fft_window_welch
 	gwy_data_field_2dffthumanize
 	gwy_data_field_rtoi
+	gwy_data_field_get_column_part
 	gwy_data_field_resample
 	gwy_fft_window_lanczos
 	gwy_data_line_line_coeffs
@@ -129,5 +131,3 @@ EXPORTS
 	gwy_data_field_get_min
 	gwy_data_field_set_xreal
 	gwy_data_line_get_val
-	gwy_data_field_get_column_part
-	gwy_data_field_get_row_part
