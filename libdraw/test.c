@@ -14,34 +14,39 @@
 int main(int argc, char *argv[])
 {
     GError *error=NULL;
-    guchar *buffer;
+    const guchar *buffer;
     gsize size, pos;
     FILE *fh;
-		
+
     GwyPalette *p, *r;
-    GwyPaletteEntry pec;
+    GwyPaletteDef *pdef;
+    GwyRGBA pec;
 
     GwyDataField *a;
     GdkPixbuf *pxb;
-    
+
     gint i, j;
 
     g_type_init();
 
     /****************************************** palette test ********************************************/
-    
-    g_message("preparing palette...");
-    p = (GwyPalette*)gwy_palette_new(GWY_PALETTE_BW2);
 
-  
+    g_message("preparing palette...");
+    gwy_palette_def_setup_presets();
+    pdef = (GwyPaletteDef*)gwy_palette_def_new(GWY_PALETTE_RAINBOW2);
+    p = (GwyPalette*)gwy_palette_new(pdef);
+    g_object_unref(pdef);
+
     /*gwy_palette_def_print(p->def);*/
-   
+
     /*
     pec.r=10, pec.g=20; pec.b=30; pec.a=0;
     gwy_palette_set_color(p, &pec, 500);
     */
     buffer = gwy_palette_get_samples(p, &i);
-    printf("%d %d %d %d\n", (gint32)buffer[40], (gint32)buffer[41], (gint32)buffer[42], (gint32)buffer[43]);
+    printf("%d %d %d %d\n",
+           (gint32)256*buffer[40], (gint32)256*buffer[41],
+           (gint32)256*buffer[42], (gint32)256*buffer[43]);
 
     /*plot a field in the given palette*/
     a = (GwyDataField *) gwy_data_field_new(500, 250, 500, 500, 1);
@@ -54,7 +59,7 @@ int main(int argc, char *argv[])
     }
     pxb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                   gwy_data_field_get_xres(a), gwy_data_field_get_yres(a));
- 
+
     gwy_pixfield_do(pxb, a, p);
     gdk_pixbuf_save(pxb, "xout.jpg", "jpeg", &error, "quality", "100", NULL);
 
@@ -68,15 +73,17 @@ int main(int argc, char *argv[])
     fwrite(buffer, 1, size, fh);
     fclose(fh);
     g_object_unref((GObject *)p);
-    
+    /* XXX: get rid of the always present internal reference */
+    g_object_unref(pdef);
+
     g_message("deserializing palette...");
-    
+
     g_file_get_contents("test.palettedef", (gchar**)&buffer, &size, &error);
     pos = 0;
 
     r = (GwyPalette*) gwy_serializable_deserialize(buffer, size, &pos);
     /*gwy_palette_print(r);*/
-    
+
     g_object_unref((GObject *)r);
     return 0;
 }
