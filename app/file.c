@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -131,9 +131,12 @@ gwy_app_file_duplicate_cb(void)
     g_return_if_fail(GWY_IS_CONTAINER(data));
     duplicate = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     g_return_if_fail(GWY_IS_CONTAINER(duplicate));
-    if (gwy_container_gis_object_by_name(duplicate, "/0/show", &show)
-        && g_object_get_data(show, "is_preview"))
-        gwy_container_remove_by_name(duplicate, "/0/show");
+    if (gwy_container_gis_object_by_name(duplicate, "/0/show", &show)) {
+        gwy_debug(g_object_get_data(show, "is_preview")
+                  ? "preview" : "no preview");
+        if (g_object_get_data(show, "is_preview"))
+            gwy_container_remove_by_name(duplicate, "/0/show");
+    }
     data_window = gwy_app_data_window_create(duplicate);
     g_object_set_data(G_OBJECT(duplicate), "gwy-app-modified",
                       GINT_TO_POINTER(1));
