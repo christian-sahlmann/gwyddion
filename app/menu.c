@@ -471,12 +471,13 @@ gwy_app_rerun_process_func_cb(void)
 void
 gwy_app_run_graph_func_cb(gchar *name)
 {
-    GtkWidget *graph;
+    GtkWidget *graph_window, *graph;
 
     gwy_debug("%s: `%s'", __FUNCTION__, name);
-    graph = gwy_app_graph_window_get_current();
-    if (!graph)
+    graph_window = gwy_app_graph_window_get_current();
+    if (!graph_window)
         return;
+    graph = GTK_BIN(graph_window)->child;
     g_return_if_fail(GWY_IS_GRAPH(graph));
     gwy_graph_func_run(name, GWY_GRAPH(graph));
     /* FIXME TODO: some equivalent of this:
