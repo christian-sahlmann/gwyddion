@@ -485,9 +485,9 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
     gwy3dlabel = gwy_3d_view_get_label(gwy3dview, GWY_3D_VIEW_LABEL_X);
     entry = gtk_entry_new_with_max_length(100);
-    g_signal_connect (G_OBJECT (entry), "activate",
-                      G_CALLBACK (gwy_3d_window_labels_entry_activate),
-                      (gpointer) gwy3dwindow);
+    g_signal_connect (entry, "activate",
+                      G_CALLBACK(gwy_3d_window_labels_entry_activate),
+                      (gpointer)gwy3dwindow);
     gtk_entry_set_text(GTK_ENTRY(entry), gwy_3d_label_get_text(gwy3dlabel));
     gtk_editable_select_region(GTK_EDITABLE(entry),
                                0, GTK_ENTRY(entry)->text_length);
@@ -718,14 +718,14 @@ gwy_3d_window_set_labels(G_GNUC_UNUSED GtkWidget *item,
                                    gwy_3d_label_get_delta_y_adjustment(label));
     gtk_spin_button_set_adjustment(GTK_SPIN_BUTTON(gwy3dwindow->labels_size),
                                    gwy_3d_label_get_size_adjustment(label));
-    /*
-    gtk_spin_button_set_value
-        (GTK_SPIN_BUTTON(gwy3dwindow->labels_delta_x), ld->delta_x->value);
-    gtk_spin_button_set_value
-        (GTK_SPIN_BUTTON(gwy3dwindow->labels_delta_y), ld->delta_y->value);
-    gtk_spin_button_set_value
-        (GTK_SPIN_BUTTON(gwy3dwindow->labels_size),    ld->size->value);
-        */
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(gwy3dwindow->labels_delta_x),
+                              gwy_3d_label_get_delta_x_adjustment(label)
+                              ->value);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(gwy3dwindow->labels_delta_y),
+                              gwy_3d_label_get_delta_y_adjustment(label)
+                              ->value);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(gwy3dwindow->labels_size),
+                              gwy_3d_label_get_size_adjustment(label)->value);
     gtk_toggle_button_set_active
         (GTK_TOGGLE_BUTTON(gwy3dwindow->labels_autosize_check),
          !gwy_3d_label_get_fixed_size(label));

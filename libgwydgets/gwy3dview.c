@@ -1819,8 +1819,9 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
 
 
 
-static Gwy3DVector *
-gwy_3d_make_normals(GwyDataField *data, Gwy3DVector *normals)
+static Gwy3DVector*
+gwy_3d_make_normals(GwyDataField *data,
+                    Gwy3DVector *normals)
 {
    typedef struct { Gwy3DVector A, B; } RectangleNorm;
    gint i, j, xres, yres;
@@ -2143,7 +2144,8 @@ gwy_3d_draw_axes(Gwy3DView *widget)
    glPopMatrix();
 }
 
-static void gwy_3d_draw_light_position(Gwy3DView * widget)
+static void
+gwy_3d_draw_light_position(Gwy3DView *widget)
 {
     int i;
     GLfloat plane_z;
@@ -2235,7 +2237,8 @@ gwy_3d_view_realize_gl(Gwy3DView *widget)
   return;
 }
 
-static void gwy_3d_set_projection(Gwy3DView *widget)
+static void
+gwy_3d_set_projection(Gwy3DView *widget)
 {
     GLfloat w, h;
     GLfloat aspect;
@@ -2285,7 +2288,7 @@ static void gwy_3d_set_projection(Gwy3DView *widget)
 }
 
 static void
-gwy_3d_pango_ft2_render_layout (PangoLayout *layout)
+gwy_3d_pango_ft2_render_layout(PangoLayout *layout)
 {
     PangoRectangle logical_rect;
     FT_Bitmap bitmap;
