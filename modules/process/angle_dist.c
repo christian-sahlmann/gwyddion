@@ -29,42 +29,53 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-#define SLOPE_DIST_RUN_MODES \
+#define ANGLE_DIST_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 /* Data for this function. */
 typedef struct {
     gint size;
+    gint steps;
     gboolean logscale;
-} SlopeArgs;
+} AngleArgs;
 
 typedef struct {
     GtkObject *size;
+    GtkObject *steps;
     GtkWidget *logscale;
-} SlopeControls;
+    gboolean in_update;
+} AngleControls;
 
 static gboolean      module_register          (const gchar *name);
-static gboolean      slope_dist               (GwyContainer *data,
+static gboolean      angle_dist               (GwyContainer *data,
                                                GwyRunType run);
-static gboolean      slope_dialog             (SlopeArgs *args);
-static void          slope_dialog_update      (SlopeControls *controls,
-                                               SlopeArgs *args);
-static GwyDataField* slope_do                 (GwyDataField *dfield,
-                                               SlopeArgs *args);
+static gboolean      angle_dialog             (AngleArgs *args);
+static void          angle_dialog_update      (AngleControls *controls,
+                                               AngleArgs *args);
+static GwyDataField* angle_do                 (GwyDataField *dfield,
+                                               AngleArgs *args);
 static void          load_args                (GwyContainer *container,
-                                               SlopeArgs *args);
+                                               AngleArgs *args);
 static void          save_args                (GwyContainer *container,
-                                               SlopeArgs *args);
+                                               AngleArgs *args);
 static gdouble       compute_slopes           (GwyDataField *dfield,
                                                gdouble *xder,
                                                gdouble *yder);
+static void          count_angles             (gint n,
+                                               gdouble *xder,
+                                               gdouble *yder,
+                                               gdouble max,
+                                               gint size,
+                                               gulong *count,
+                                               gint steps);
 static GwyDataField* make_datafield           (gint res,
                                                gulong *count,
                                                gdouble real,
                                                gboolean logscale);
 
-SlopeArgs slope_defaults = {
-    120,
+AngleArgs angle_defaults = {
+    200,
+    360,
     FALSE,
 };
 
@@ -72,8 +83,8 @@ SlopeArgs slope_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "slope_dist",
-    "Slope distribution.",
+    "angle_dist",
+    "Angle distribution.",
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -87,39 +98,39 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo slope_dist_func_info = {
-        "slope_dist",
-        "/_Statistics/_Slope distribution",
-        (GwyProcessFunc)&slope_dist,
-        SLOPE_DIST_RUN_MODES,
+    static GwyProcessFuncInfo angle_dist_func_info = {
+        "angle_dist",
+        "/_Statistics/_Angle distribution",
+        (GwyProcessFunc)&angle_dist,
+        ANGLE_DIST_RUN_MODES,
     };
 
-    gwy_process_func_register(name, &slope_dist_func_info);
+    gwy_process_func_register(name, &angle_dist_func_info);
 
     return TRUE;
 }
 
 static gboolean
-slope_dist(GwyContainer *data, GwyRunType run)
+angle_dist(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
     GwyDataField *dfield;
-    SlopeArgs args;
+    AngleArgs args;
     const gchar *pal;
     gboolean ok;
 
-    g_return_val_if_fail(run & SLOPE_DIST_RUN_MODES, FALSE);
+    g_return_val_if_fail(run & ANGLE_DIST_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
-        args = slope_defaults;
+        args = angle_defaults;
     else
         load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || slope_dialog(&args);
+    ok = (run != GWY_RUN_MODAL) || angle_dialog(&args);
     if (ok) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
         pal = gwy_container_get_string_by_name(data, "/0/base/palette");
-        dfield = slope_do(dfield, &args);
+        dfield = angle_do(dfield, &args);
         data = GWY_CONTAINER(gwy_container_new());
         gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
         gwy_container_set_string_by_name(data, "/0/base/palette",
@@ -127,7 +138,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
 
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                         _("Slope"));
+                                         _("Angle"));
 
         if (run != GWY_RUN_WITH_DEFAULTS)
             save_args(gwy_app_settings_get(), &args);
@@ -137,21 +148,21 @@ slope_dist(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-slope_dialog(SlopeArgs *args)
+angle_dialog(AngleArgs *args)
 {
     GtkWidget *dialog, *table, *spin;
-    SlopeControls controls;
+    AngleControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(_("Slope Distribution"), NULL,
+    dialog = gtk_dialog_new_with_buttons(_("Angle Distribution"), NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          _("Reset"), RESPONSE_RESET,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    table = gtk_table_new(2, 3, FALSE);
+    table = gtk_table_new(3, 3, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
@@ -160,12 +171,17 @@ slope_dialog(SlopeArgs *args)
                                        controls.size);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
 
+    controls.steps = gtk_adjustment_new(args->steps, 6, 1000, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, 1, _("Number of steps:"), "",
+                                       controls.steps);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+
     controls.logscale
         = gtk_check_button_new_with_mnemonic(_("_Logarithmic value scale"));
     gtk_table_attach(GTK_TABLE(table), controls.logscale,
-                     0, 3, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 3, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    slope_dialog_update(&controls, args);
+    angle_dialog_update(&controls, args);
 
     gtk_widget_show_all(dialog);
     do {
@@ -182,8 +198,8 @@ slope_dialog(SlopeArgs *args)
             break;
 
             case RESPONSE_RESET:
-            *args = slope_defaults;
-            slope_dialog_update(&controls, args);
+            *args = angle_defaults;
+            angle_dialog_update(&controls, args);
             break;
 
             default:
@@ -193,6 +209,7 @@ slope_dialog(SlopeArgs *args)
     } while (response != GTK_RESPONSE_OK);
 
     args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.size));
+    args->steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.steps));
     args->logscale
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls.logscale));
     gtk_widget_destroy(dialog);
@@ -201,23 +218,24 @@ slope_dialog(SlopeArgs *args)
 }
 
 static void
-slope_dialog_update(SlopeControls *controls,
-                    SlopeArgs *args)
+angle_dialog_update(AngleControls *controls,
+                    AngleArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size),
                              args->size);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->steps),
+                             args->steps);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->logscale),
                                  args->logscale);
 }
 
 static GwyDataField*
-slope_do(GwyDataField *dfield,
-         SlopeArgs *args)
+angle_do(GwyDataField *dfield,
+         AngleArgs *args)
 {
     gdouble *xder, *yder;
     gdouble max;
     gint xres, yres;
-    gint xider, yider, i;
     gulong *count;
 
     xres = gwy_data_field_get_xres(dfield);
@@ -227,18 +245,12 @@ slope_do(GwyDataField *dfield,
     yder = g_new(gdouble, xres*yres);
     max = compute_slopes(dfield, xder, yder);
     count = g_new0(gulong, args->size*args->size);
-    for (i = 0; i < (xres - 2)*(yres - 2); i++) {
-        xider = args->size*(xder[i]/(2.0*max) + 0.5);
-        xider = CLAMP(xider, 0, args->size-1);
-        yider = args->size*(yder[i]/(2.0*max) + 0.5);
-        yider = CLAMP(yider, 0, args->size-1);
-
-        count[yider*args->size + xider]++;
-    }
+    count_angles((xres - 2)*(yres - 2), xder, yder, max, args->size, count,
+                 args->steps);
     g_free(yder);
     g_free(xder);
 
-    return make_datafield(args->size, count, 2.0*max, args->logscale);
+    return make_datafield(args->size, count, 2.0*G_PI, args->logscale);
 }
 
 static gdouble
@@ -248,7 +260,7 @@ compute_slopes(GwyDataField *dfield,
 {
     gdouble *data;
     gdouble qx, qy;
-    gdouble d, max;
+    gdouble dx, dy, max;
     gint xres, yres;
     gint col, row;
 
@@ -260,21 +272,62 @@ compute_slopes(GwyDataField *dfield,
     max = 0.0;
     for (row = 1; row + 1 < yres; row++) {
         for (col = 1; col + 1 < xres; col++) {
-            d = data[row*xres + col + 1] - data[row*xres + col - 1];
-            d *= qx;
-            *(xder++) = d;
-            d = fabs(d);
-            max = MAX(d, max);
-
-            d = data[row*xres + xres + col] - data[row*xres - xres + col];
-            d *= qy;
-            *(yder++) = d;
-            d = fabs(d);
-            max = MAX(d, max);
+            dx = data[row*xres + col + 1] - data[row*xres + col - 1];
+            dx *= qx;
+            *(xder++) = dx;
+            dy = data[row*xres + xres + col] - data[row*xres - xres + col];
+            dy *= qy;
+            *(yder++) = dy;
+            if (dx*dx + dy*dy > max)
+                max = dx*dx + dy*dy;
         }
     }
 
     return max;
+}
+
+static void
+count_angles(gint n, gdouble *xder, gdouble *yder,
+             gdouble max,
+             gint size, gulong *count,
+             gint steps)
+{
+    gint xider, yider, i, j;
+    gdouble *ct, *st;
+    gdouble d, phi;
+
+    max = atan(sqrt(max));
+    gwy_debug("max = %g", max);
+
+    ct = g_new(gdouble, steps);
+    st = g_new(gdouble, steps);
+    for (j = 0; j < steps; j++) {
+        gdouble theta = 2.0*G_PI*j/steps;
+
+        ct[j] = cos(theta);
+        st[j] = sin(theta);
+    }
+
+    for (i = 0; i < n; i++) {
+        gdouble xd = *(xder++);
+        gdouble yd = *(yder++);
+
+        d = atan(sqrt(xd*xd + yd*yd));    /* no hypot()... */
+        phi = atan2(yd, xd);
+        for (j = 0; j < steps; j++) {
+            gdouble v = d*cos(2.0*G_PI*j/steps - phi);
+
+            xider = size*(v*ct[j]/(2.0*max) + 0.5);
+            xider = CLAMP(xider, 0, size-1);
+            yider = size*(v*st[j]/(2.0*max) + 0.5);
+            yider = CLAMP(yider, 0, size-1);
+
+            count[yider*size + xider]++;
+        }
+    }
+
+    g_free(ct);
+    g_free(st);
 }
 
 static GwyDataField*
@@ -305,24 +358,27 @@ make_datafield(gint res, gulong *count,
     return dfield;
 }
 
-static const gchar *size_key = "/module/slope_dist/size";
-static const gchar *logscale_key = "/module/slope_dist/logscale";
+static const gchar *size_key = "/module/angle_dist/size";
+static const gchar *steps_key = "/module/angle_dist/steps";
+static const gchar *logscale_key = "/module/angle_dist/logscale";
 
 static void
 load_args(GwyContainer *container,
-          SlopeArgs *args)
+          AngleArgs *args)
 {
-    *args = slope_defaults;
+    *args = angle_defaults;
 
     gwy_container_gis_int32_by_name(container, size_key, &args->size);
+    gwy_container_gis_int32_by_name(container, steps_key, &args->steps);
     gwy_container_gis_boolean_by_name(container, logscale_key, &args->logscale);
 }
 
 static void
 save_args(GwyContainer *container,
-          SlopeArgs *args)
+          AngleArgs *args)
 {
     gwy_container_set_int32_by_name(container, size_key, args->size);
+    gwy_container_set_int32_by_name(container, steps_key, args->steps);
     gwy_container_set_boolean_by_name(container, logscale_key, args->logscale);
 }
 

@@ -5,6 +5,7 @@ processdir = $(gwymoduledir)/process
 module_ldflags = -shared -Wl,-soname
 
 process_PROGRAMS = \
+	angle_dist.so \
 	basicops.so \
 	cwt.so \
 	facet-level.so \
@@ -60,6 +61,9 @@ grain_dist_so_LDFLAGS = $(module_ldflags),grain_dist.so
 
 slope_dist_so_SOURCES = slope_dist.c
 slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
+
+angle_dist_so_SOURCES = angle_dist.c
+angle_dist_so_LDFLAGS = $(module_ldflags),angle_dist.so
 
 
 INCLUDES = -I$(top_srcdir)
