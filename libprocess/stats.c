@@ -1015,7 +1015,7 @@ gdouble
 gwy_data_field_area_get_median(GwyDataField *dfield,
                                gint col, gint row, gint width, gint height)
 {
-    gdouble median = 0.0/0.0;  /* NaN */
+    gdouble median = 0.0;
     gdouble *buffer, *datapos;
     gint i;
 
@@ -1056,7 +1056,7 @@ gwy_data_field_area_get_median(GwyDataField *dfield,
 gdouble
 gwy_data_field_get_median(GwyDataField *dfield)
 {
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), 0.0/0.0);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), 0.0);
     return gwy_data_field_area_get_median(dfield,
                                           0, 0, dfield->xres, dfield->yres);
 }
