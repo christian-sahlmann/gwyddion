@@ -37,12 +37,14 @@ typedef struct {
     gboolean preserve;
     GwyInterpolationType interp;
     GwyDWTType wavelet;
+    GwyDWTDenoiseType method;
 } DWTDenoiseArgs;
 
 typedef struct {
     GtkWidget *preserve;
     GtkWidget *wavelet;
     GtkWidget *interp;
+    GtkWidget *method;
 } DWTDenoiseControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -52,6 +54,8 @@ static gboolean    dwt_denoise_dialog                 (DWTDenoiseArgs *args);
 static void        interp_changed_cb          (GObject *item,
                                                DWTDenoiseArgs *args);
 static void        wavelet_changed_cb          (GObject *item,
+                                               DWTDenoiseArgs *args);
+static void        method_changed_cb          (GObject *item,
                                                DWTDenoiseArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
                                                DWTDenoiseArgs *args);
@@ -63,12 +67,15 @@ static void        dwt_denoise_save_args              (GwyContainer *container,
                                                DWTDenoiseArgs *args);
 static void        dwt_denoise_sanitize_args          (DWTDenoiseArgs *args);
 
-
+static GtkWidget*  menu_method                 (GCallback callback,
+						gpointer cbdata,
+						GwyDWTDenoiseType current);
 
 DWTDenoiseArgs dwt_denoise_defaults = {
     0,
     GWY_INTERPOLATION_BILINEAR,
     GWY_DWT_DAUB12,
+    GWY_DWT_DENOISE_SCALE_ADAPTIVE,
 };
 
 /* The module info. */
@@ -92,7 +99,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dwt_denoise_func_info = {
         "dwt_denoise",
-        N_("/_Integral Transforms/_2D DWT denoise..."),
+        N_("/_Integral Transforms/_DWT denoise..."),
         (GwyProcessFunc)&dwt_denoise,
         DWT_DENOISE_RUN_MODES,
         0,
@@ -152,7 +159,7 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
 
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
-    gwy_data_field_dwt_denoise(dfield, wtcoefs, TRUE, 1, GWY_DWT_DENOISE_SCALE_ADAPTIVE);
+    gwy_data_field_dwt_denoise(dfield, wtcoefs, TRUE, 1, args.method);
     
     
     if (args.preserve)
@@ -184,7 +191,7 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(2, 4, FALSE);
+    table = gtk_table_new(2, 5, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
@@ -212,6 +219,11 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
                          controls.wavelet);
 
+    controls.method
+	= menu_method(G_CALLBACK(method_changed_cb),
+		      args, args->method);
+    gwy_table_attach_row(table, 3, _("_Threshold:"), "",
+			 controls.method);
 
     gtk_widget_show_all(dialog);
     do {
@@ -243,6 +255,23 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
     return TRUE;
 }
 
+static GtkWidget*
+menu_method(GCallback callback,
+	    gpointer cbdata,
+	    GwyDWTDenoiseType current)
+{
+    static const GwyEnum entries[] = {
+	{ N_("Universal"),  GWY_DWT_DENOISE_UNIVERSAL,  },
+	{ N_("Scale adaptive"),  GWY_DWT_DENOISE_SCALE_ADAPTIVE,  },
+	{ N_("Scale and space adaptive"),  GWY_DWT_DENOISE_SPACE_ADAPTIVE,  },
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+				  "denoise-type", callback, cbdata,
+				  current);    
+	
+}
+
 static void
 interp_changed_cb(GObject *item,
                   DWTDenoiseArgs *args)
@@ -255,8 +284,17 @@ static void
 wavelet_changed_cb(GObject *item,
                   DWTDenoiseArgs *args)
 {
-    args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt_denoise-wavelet-type"));
+    args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt-wavelet-type"));
+    printf("wavelet: %d\n", args->wavelet);
 }
+
+static void
+method_changed_cb(GObject *item,
+                  DWTDenoiseArgs *args)
+{
+    args->method = GPOINTER_TO_INT(g_object_get_data(item, "denoise-type"));
+}
+
 
 static void
 preserve_changed_cb(GtkToggleButton *button, DWTDenoiseArgs *args)
@@ -274,14 +312,15 @@ dwt_denoise_dialog_update(DWTDenoiseControls *controls,
      */
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
-    gwy_option_menu_set_history(controls->wavelet, "dwt_denoise-wavelet-type",
+    gwy_option_menu_set_history(controls->wavelet, "dwt-wavelet-type",
                                 args->wavelet);
 }
 
 
 static const gchar *preserve_key = "/module/dwt_denoise/preserve";
 static const gchar *interp_key = "/module/dwt_denoise/interp";
-static const gchar *wavelet_key = "/module/dwt_denoise/window";
+static const gchar *wavelet_key = "/module/dwt_denoise/wavelet";
+static const gchar *method_key = "/module/dwt_denoise/method";
 
 static void
 dwt_denoise_sanitize_args(DWTDenoiseArgs *args)
@@ -290,6 +329,7 @@ dwt_denoise_sanitize_args(DWTDenoiseArgs *args)
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
     args->wavelet = CLAMP(args->wavelet, GWY_DWT_HAAR, GWY_DWT_DAUB20);
+    args->wavelet = CLAMP(args->wavelet, GWY_DWT_DENOISE_UNIVERSAL, GWY_DWT_DENOISE_SPACE_ADAPTIVE);
 }
 
 static void
@@ -301,6 +341,7 @@ dwt_denoise_load_args(GwyContainer *container,
     gwy_container_gis_boolean_by_name(container, preserve_key, &args->preserve);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, wavelet_key, &args->wavelet);
+    gwy_container_gis_enum_by_name(container, method_key, &args->method);
     dwt_denoise_sanitize_args(args);
 }
 
@@ -311,6 +352,7 @@ dwt_denoise_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_enum_by_name(container, wavelet_key, args->wavelet);
+    gwy_container_set_enum_by_name(container, method_key, args->method);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
