@@ -25,6 +25,7 @@
 #include <libgwydgets/gwydgets.h>
 #include "app.h"
 #include "unitool.h"
+#include "menu-windowlist.h"
 
 static void       gwy_unitool_name_changed_cb      (GwyUnitoolState *state);
 static void       gwy_unitool_disconnect_handlers  (GwyUnitoolState *state);
@@ -458,6 +459,12 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     state->windowname = label;
 
     return frame;
+    /*
+    g_return_val_if_fail(state, NULL);
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(state->data_window), NULL);
+    return gwy_option_menu_data_window(NULL, NULL, NULL,
+                                       GTK_WIDGET(state->data_window));
+    */
 }
 
 /**

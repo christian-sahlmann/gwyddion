@@ -25,13 +25,18 @@
 #include "app.h"
 #include "menu-windowlist.h"
 
+typedef struct {
+    gulong hook_id;
+    gchar *none_label;
+} MenuInfo;
+
 enum {
     THUMBNAIL_SIZE = 16
 };
 
 static GQuark omenu_data_window_key = 0;
 static GQuark omenu_data_window_id_key = 0;
-static GQuark omenu_data_window_hook_id_key = 0;
+static GQuark omenu_data_window_info_key = 0;
 
 static void       gwy_option_menu_data_window_append(GwyDataWindow *data_window,
                                                      GtkWidget *menu);
@@ -64,6 +69,7 @@ gwy_option_menu_data_window(GCallback callback,
                             GtkWidget *current)
 {
     GtkWidget *omenu, *menu, *item;
+    MenuInfo *info;
     gulong id;
     GList *c;
 
@@ -72,9 +78,9 @@ gwy_option_menu_data_window(GCallback callback,
     if (!omenu_data_window_id_key)
         omenu_data_window_id_key
             = g_quark_from_static_string("gwy-option-menu-data-window");
-    if (!omenu_data_window_hook_id_key)
-        omenu_data_window_hook_id_key
-            = g_quark_from_static_string("gwy-option-menu-data-window-hook-id");
+    if (!omenu_data_window_info_key)
+        omenu_data_window_info_key
+            = g_quark_from_static_string("gwy-option-menu-data-window-info");
 
     omenu = gtk_option_menu_new();
     g_object_set_qdata(G_OBJECT(omenu), omenu_data_window_id_key,
@@ -100,8 +106,10 @@ gwy_option_menu_data_window(GCallback callback,
     id = gwy_app_data_window_list_add_hook(gwy_option_menu_data_window_update,
                                            omenu);
     g_assert(id);
-    g_object_set_qdata(G_OBJECT(omenu), omenu_data_window_hook_id_key,
-                       GUINT_TO_POINTER(id));
+    info = g_new(MenuInfo, 1);
+    info->hook_id = id;
+    info->none_label = g_strdup(none_label);
+    g_object_set_qdata(G_OBJECT(omenu), omenu_data_window_info_key, info);
     g_signal_connect(omenu, "destroy",
                      G_CALLBACK(gwy_option_menu_data_window_destroy), NULL);
 
@@ -116,6 +124,7 @@ gwy_option_menu_data_window_append(GwyDataWindow *data_window,
     GdkPixbuf *pixbuf;
     gchar *filename;
 
+    gwy_debug("adding %p to %p", data_window, menu);
     data_view = gwy_data_window_get_data_view(data_window);
     filename = gwy_data_window_get_base_name(data_window);
 
@@ -210,18 +219,38 @@ gwy_option_menu_data_window_get_history(GtkWidget *option_menu)
 static void
 gwy_option_menu_data_window_update(GtkWidget *omenu)
 {
-    gwy_debug("would update: %p", omenu);
+    MenuInfo *info;
+    GtkWidget *menu, *item;
+
+    gwy_debug("updating option menu: %p", omenu);
+    info = g_object_get_qdata(G_OBJECT(omenu), omenu_data_window_info_key);
+    g_assert(info);
+
+    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
+    /*gtk_widget_destroy(GTK_WIDGET(GTK_MENU_SHELL(menu)->children->data));
+    item = gtk_menu_item_new_with_label("Foobar");
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);*/
+    item = gtk_menu_item_new_with_label("Quux");
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+    gwy_debug("%d", g_list_length(GTK_MENU_SHELL(menu)->children));
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL,
+                   NULL, NULL, 0, gtk_get_current_event_time());
 }
 
 static void
 gwy_option_menu_data_window_destroy(GtkWidget *omenu)
 {
-    gpointer id;
+    MenuInfo *info;
 
     gwy_debug("destroying: %p", omenu);
 
-    id = g_object_get_qdata(G_OBJECT(omenu), omenu_data_window_hook_id_key);
-    g_assert(id);
-    gwy_app_data_window_list_remove_hook(GPOINTER_TO_UINT(id));
+    info = (MenuInfo*)g_object_get_qdata(G_OBJECT(omenu),
+                                         omenu_data_window_info_key);
+    g_assert(info->hook_id);
+    gwy_app_data_window_list_remove_hook(GPOINTER_TO_UINT(info->hook_id));
+    g_free(info->none_label);
+    g_free(info);
 }
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

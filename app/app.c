@@ -22,7 +22,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define DEBUG 1
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
@@ -184,6 +183,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     };
     GList *item;
 
+    gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_WINDOW(window));
 
     item = g_list_find(current_data, window);
@@ -196,6 +196,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     current_data = g_list_delete_link(current_data, item);
     if (current_data) {
         gwy_app_data_window_set_current(GWY_DATA_WINDOW(current_data->data));
+        gwy_app_data_window_list_updated();
         return;
     }
 
