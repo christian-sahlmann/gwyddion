@@ -565,14 +565,18 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
 void
 gwy_data_window_update_title(GwyDataWindow *data_window)
 {
-    gchar *window_title, *filename, zoomstr[8];
+    gchar *window_title, *filename;
+    const gchar *data_title = NULL;
+    gchar zoomstr[8];
     GwyDataView *data_view;
+    GwyContainer *data;
     gdouble zoom;
     gint prec;
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = GWY_DATA_VIEW(data_window->data_view);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    data = gwy_data_view_get_data(data_view);
 
     filename = gwy_data_window_get_base_name(data_window);
 
@@ -582,8 +586,12 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     g_snprintf(zoomstr, sizeof(zoomstr), "%.*f",
                prec, zoom > 1.0 ? zoom : 1.0/zoom);
 
-    window_title = g_strdup_printf("%s %s:%s (%s)",
+    gwy_container_gis_string_by_name(data, "/filename/title", &data_title);
+    window_title = g_strdup_printf("%s %s%s%s %s:%s (%s)",
                                    filename,
+                                   data_title ? "[" : "",
+                                   data_title ? data_title : "",
+                                   data_title ? "]" : "",
                                    zoom > 1.0 ? zoomstr : "1",
                                    zoom > 1.0 ? "1" : zoomstr,
                                    g_get_application_name());
