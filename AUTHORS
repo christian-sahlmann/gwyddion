@@ -1,2 +1,16 @@
+
+=== Gwyddion authors ===
 David Necas (Yeti) <yeti@gwyddion.net>
 Petr Klapetek <klapetek@gwyddion.net>
+
+
+=== Contributions and copies ===
+- GwyColorButton was taken (backported) from Gtk+2.4 GtkColorButton.
+- GwyRuler, GwyHRuler, GwyVRuler originated as GtkRuler, GtkHRuler, and
+  GtkVRuler forks.
+All are by Peter Mattis, Spencer Kimball, Josh MacDonald, Federico Mena
+and the GTK+ Team, see the AUTHORS file in Gtk+ for complete list.
+
+- The splashscreen code was mostly copied from The GIMP by Spencer Kimball
+  and Peter Mattis and other people, see the AUTHORS file in The GIMP for
+  complete list.
