@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2005-03-05 04:14+0100\n"
-"PO-Revision-Date: 2005-03-07 20:23+0100\n"
+"POT-Creation-Date: 2005-03-08 04:19+0100\n"
+"PO-Revision-Date: 2005-03-09 09:09+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -532,6 +532,10 @@ msgid "<b>Developers</b>\n"
 msgstr "<b>Vývojáři</b>\n"
 
 #: app/about.c:120
+msgid "<b>Translators</b>\n"
+msgstr "<b>Překladatelé</b>\n"
+
+#: app/about.c:127
 msgid ""
 "Development is supported by the Czech Metrology Insitute (<i>http://www.cmi."
 "cz/</i>).\n"
@@ -539,7 +543,7 @@ msgstr ""
 "Vývoj programu podporuje Český metrologický institut (<i>http://www.cmi.cz/</"
 "i>).\n"
 
-#: app/about.c:133
+#: app/about.c:140
 #, c-format
 msgid ""
 "\n"
@@ -2062,7 +2066,7 @@ msgstr "Zachovej velikost (neškáluj na mocninu 2)"
 #: modules/process/cwt.c:210 modules/process/dwt.c:203
 #: modules/process/dwtanisotropy.c:209 modules/process/dwtcorrection.c:190
 #: modules/process/dwtdenoise.c:212 modules/process/fft.c:361
-#: modules/process/fft_filter_1d.c:337 modules/process/fractal.c:230
+#: modules/process/fft_filter_1d.c:339 modules/process/fractal.c:230
 #: modules/process/nanoindent_adjust.c:244 modules/process/rotate.c:247
 #: modules/process/scale.c:207 modules/process/unrotate.c:276
 #: modules/tools/profile.c:272
@@ -2271,43 +2275,47 @@ msgstr "_Filtrovat"
 msgid "_Restore PS"
 msgstr "Obnovit spekt_rum"
 
-#: modules/process/fft_filter_1d.c:279
+#: modules/process/fft_filter_1d.c:281
 msgid "<b>Power spectrum (select areas by mouse):</b>"
 msgstr "<b>Spektrum (vyberte oblasti myší)</b>"
 
-#: modules/process/fft_filter_1d.c:299
+#: modules/process/fft_filter_1d.c:301
 msgid "<b>Settings:</b>"
 msgstr "Nastavení"
 
-#: modules/process/fft_filter_1d.c:305
+#: modules/process/fft_filter_1d.c:307
 msgid "Suppress type:"
 msgstr "Typ potlačení"
 
-#: modules/process/fft_filter_1d.c:318 modules/process/fit_2d.c:288
+#: modules/process/fft_filter_1d.c:320 modules/process/fit_2d.c:288
 msgid "Preview type:"
 msgstr "Typ náhledu"
 
-#: modules/process/fft_filter_1d.c:344 modules/tools/filter.c:220
+#: modules/process/fft_filter_1d.c:346 modules/tools/filter.c:220
 msgid "_Direction:"
 msgstr "S_měr:"
 
-#: modules/process/fft_filter_1d.c:348
+#: modules/process/fft_filter_1d.c:350
 msgid "_Update dynamically"
 msgstr "_Dynamicky obnovovat"
 
-#: modules/process/fft_filter_1d.c:565
+#: modules/process/fft_filter_1d.c:567
+msgid "Filtered data"
+msgstr ""
+
+#: modules/process/fft_filter_1d.c:577
 msgid "Null"
 msgstr "nulovat"
 
-#: modules/process/fft_filter_1d.c:566
+#: modules/process/fft_filter_1d.c:578
 msgid "Suppress"
 msgstr "potlačit"
 
-#: modules/process/fft_filter_1d.c:578
+#: modules/process/fft_filter_1d.c:590
 msgid "Marked"
 msgstr "označené"
 
-#: modules/process/fft_filter_1d.c:579
+#: modules/process/fft_filter_1d.c:591
 msgid "Unmarked"
 msgstr "neoznačené"
 
@@ -3611,4 +3619,3 @@ msgstr "Statistické veličiny"
 #: modules/tools/stats.c:215
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametry</b>"
-
