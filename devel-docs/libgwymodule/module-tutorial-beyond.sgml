@@ -292,10 +292,10 @@ slope_dialog(gdouble *amount)
       There is no rocket science in here: the dialog is created with some
       standard buttons, a value entry with a description
       is placed there, range of allowed values is specified; then the dialog
-      is run, depending on user's action the value of
+      is run. Depending on user's action the value of
       <varname>amount</varname> is eventually updated, and
       <literal>TRUE</literal> or <literal>FALSE</literal> is returned to
-      the called to indicate user's action (we take everything as
+      the caller to indicate user's action (we take everything as
       cancellation, except pressing <guibutton>OK</guibutton>).
     </para>
     <para>
