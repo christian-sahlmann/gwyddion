@@ -94,7 +94,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo maskedit_func_info = {
         "maskedit",
         "gwy_none",
-        N_("MaskEdit data"),
+        N_("Edit mask"),
         150,
         &use,
     };
@@ -315,9 +315,11 @@ selection_finished_cb(GwyUnitoolState *state)
         case MASK_EDIT_INTERSECT:
         if (mask) {
             gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+            gwy_data_field_clamp(mask, 0.0, 1.0);
             gwy_data_field_area_add(mask, isel[0], isel[1], isel[2], isel[3],
                                     1.0);
-            gwy_data_field_threshold(mask, 1.5, 0.0, 1.0);
+            gwy_data_field_add(mask, -1.0);
+            gwy_data_field_clamp(mask, 0.0, 1.0);
         }
         break;
 
