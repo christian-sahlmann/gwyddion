@@ -4,6 +4,7 @@
 #include <glib-object.h>
 #include <glib/gutils.h>
 
+#include <libgwyddion/gwymacros.h>
 #include "gwyserializable.h"
 
 #define GWY_SERIALIZABLE_TYPE_NAME "GwySerializable"
@@ -49,10 +50,8 @@ static void
 gwy_serializable_base_init(GwySerializableClass *klass)
 {
     gwy_serializable_base_init_count++;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (base init count = %d)",
-          __FUNCTION__, gwy_serializable_base_init_count);
-    #endif
+    gwy_debug("%s (base init count = %d)",
+              __FUNCTION__, gwy_serializable_base_init_count);
     if (gwy_serializable_base_init_count == 1) {
         /* add signals... */
     }
@@ -62,10 +61,8 @@ static void
 gwy_serializable_base_finalize(GwySerializableClass *klass)
 {
     gwy_serializable_base_init_count--;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (base init count = %d)",
-          __FUNCTION__, gwy_serializable_base_init_count);
-    #endif
+    gwy_debug("%s (base init count = %d)",
+              __FUNCTION__, gwy_serializable_base_init_count);
     if (gwy_serializable_base_init_count == 0) {
         /* destroy signals... */
     }
@@ -91,16 +88,13 @@ gwy_serializable_serialize(GObject *serializable,
 
     g_return_val_if_fail(serializable, NULL);
     g_return_val_if_fail(GWY_IS_SERIALIZABLE(serializable), NULL);
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "serializing a %s",
-          g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
-    #endif
+    gwy_debug("serializing a %s",
+              g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
 
     serialize_method = GWY_SERIALIZABLE_GET_CLASS(serializable)->serialize;
     if (!serialize_method) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
-              "%s doesn't implement serialize()",
-              g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
+        g_error("%s doesn't implement serialize()",
+                g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
         return NULL;
     }
     return serialize_method(serializable, buffer, size);
@@ -132,18 +126,14 @@ gwy_serializable_deserialize(const guchar *buffer,
 
     g_return_val_if_fail(buffer, NULL);
     if (!gwy_serialize_check_string(buffer, size, *position, NULL)) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
-              "memory contents at %p doesn't look as an serialized object",
-              buffer);
+        g_error("memory contents at %p doesn't look as an serialized object",
+                buffer);
         return NULL;
     }
 
     type = g_type_from_name((gchar*)(buffer + *position));
     g_type_class_ref(type);
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "deserializing a %s",
-          g_type_name(type));
-    #endif
+    gwy_debug("deserializing a %s", g_type_name(type));
     g_return_val_if_fail(type, NULL);
     g_return_val_if_fail(G_TYPE_IS_INSTANTIATABLE(type), NULL);
     g_return_val_if_fail(g_type_is_a(type, GWY_TYPE_SERIALIZABLE), NULL);
@@ -156,18 +146,15 @@ gwy_serializable_deserialize(const guchar *buffer,
                 g_type_interface_peek(g_type_class_peek(type),
                                       GWY_TYPE_SERIALIZABLE))->deserialize;
     if (!deserialize_method) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
-              "%s doesn't implement deserialize()",
-              buffer);
+        g_error("%s doesn't implement deserialize()", buffer);
         return NULL;
     }
     object = deserialize_method(buffer, size, position);
     if (object)
         g_type_class_unref(G_OBJECT_GET_CLASS(object));
     else
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "Cannot unref class after failed %s deserialization",
-              g_type_name(type));
+        g_warning("Cannot unref class after failed %s deserialization",
+                  g_type_name(type));
     return object;
 }
 
@@ -228,10 +215,7 @@ gwy_serialize_pack(guchar *buffer,
     gsize nobjs;  /* number of items which are objects */
     struct o { gsize size; guchar *buffer; } *objects;  /* serialized objects */
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (templ: %s)",
-          __FUNCTION__, templ);
-    #endif
+    gwy_debug("%s (templ: %s)", __FUNCTION__, templ);
     nargs = strlen(templ);
     if (!nargs)
         return buffer;
@@ -360,8 +344,7 @@ gwy_serialize_pack(guchar *buffer,
                     guchar *value = va_arg(ap, guchar*);
 
                     if (!value) {
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-                              "representing NULL string as an empty string");
+                        g_warning("representing NULL string as an empty string");
                         if (do_copy)
                             p[pos] = '\0';
                         p++;
@@ -399,9 +382,7 @@ gwy_serialize_pack(guchar *buffer,
                 break;
 
                 default:
-                g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
-                      "wrong spec `%c' in templ `%s'",
-                      templ[i], templ);
+                g_error("wrong spec `%c' in templ `%s'", templ[i], templ);
                 g_assert(!do_copy);
                 g_free(p);
                 va_end(ap);
@@ -484,10 +465,7 @@ gwy_serialize_pack_struct(guchar *buffer,
     gsize nobjs;  /* number of items which are objects */
     struct o { gsize size; guchar *buffer; } *objects;  /* serialized objects */
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (nspec = %d)",
-          __FUNCTION__, nspec);
-    #endif
+    gwy_debug("%s (nspec = %d)", __FUNCTION__, nspec);
     if (!nspec)
         return buffer;
 
@@ -613,8 +591,7 @@ gwy_serialize_pack_struct(guchar *buffer,
                     guchar *value = *(guchar**)sp->value;
 
                     if (!value) {
-                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-                              "representing NULL string as an empty string");
+                        g_warning("representing NULL string as an empty string");
                         if (do_copy)
                             p[pos] = '\0';
                         p++;
@@ -651,8 +628,7 @@ gwy_serialize_pack_struct(guchar *buffer,
                 break;
 
                 default:
-                g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
-                      "wrong spec `%c' at pos %d", sp->ctype, sp - spec);
+                g_error("wrong spec `%c' at pos %d", sp->ctype, sp - spec);
                 g_assert(!do_copy);
                 g_free(p);
                 /* FIXME: we may leak some objects[] here */
@@ -816,8 +792,7 @@ gwy_serialize_unpack_struct(const guchar *buffer,
     while (position < size) {
         nlen = gwy_serialize_check_string(buffer, size, position, NULL);
         if (!nlen) {
-            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
-                  "Expected a component name to deserialize, got garbage");
+            g_error("Expected a component name to deserialize, got garbage");
             return FALSE;
         }
 
@@ -829,16 +804,14 @@ gwy_serialize_unpack_struct(const guchar *buffer,
         position += nlen;
         ctype = gwy_serialize_unpack_char(buffer, size, &position);
         if (sp - spec == nspec) {
-            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-                  "Extra component %s of type `%c'", name, ctype);
+            g_warning("Extra component %s of type `%c'", name, ctype);
             gwy_serialize_skip_type(buffer, size, &position, ctype);
             continue;
         }
 
         if (ctype != sp->ctype) {
-            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-                  "Bad or unknown type `%c' of %s (expected `%c')",
-                  ctype, name, sp->ctype);
+            g_warning("Bad or unknown type `%c' of %s (expected `%c')",
+                      ctype, name, sp->ctype);
             return FALSE;
         }
 
@@ -896,8 +869,7 @@ gwy_serialize_unpack_struct(const guchar *buffer,
             break;
 
             default:
-            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
-                  "Type `%c' of %s is unknown (though known to application?!)",
+            g_error("Type `%c' of %s is unknown (though known to application?!)",
                   ctype, name);
             return FALSE;
             break;
@@ -925,9 +897,7 @@ gwy_serialize_unpack_boolean(const guchar *buffer,
 {
     gboolean value;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(guchar) <= size);
@@ -956,9 +926,7 @@ gwy_serialize_unpack_char(const guchar *buffer,
 {
     guchar value;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(guchar) <= size);
@@ -989,9 +957,7 @@ gwy_serialize_unpack_char_array(const guchar *buffer,
 {
     guchar *value;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(guchar) <= size);
@@ -1020,9 +986,7 @@ gwy_serialize_unpack_int32(const guchar *buffer,
 {
     gint32 value;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(gint32) <= size);
@@ -1053,9 +1017,7 @@ gwy_serialize_unpack_int32_array(const guchar *buffer,
 {
     gint32 *value;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gint32) <= size);
@@ -1084,9 +1046,7 @@ gwy_serialize_unpack_int64(const guchar *buffer,
 {
     gint64 value;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(gint64) <= size);
@@ -1117,9 +1077,7 @@ gwy_serialize_unpack_int64_array(const guchar *buffer,
 {
     gint64 *value;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gint64) <= size);
@@ -1148,9 +1106,7 @@ gwy_serialize_unpack_double(const guchar *buffer,
 {
     gdouble value;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position + sizeof(gdouble) <= size);
@@ -1181,9 +1137,7 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
 {
     gdouble *value;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gdouble) <= size);
@@ -1213,9 +1167,7 @@ gwy_serialize_unpack_string(const guchar *buffer,
     guchar *value;
     const guchar *p;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(buffer);
     g_assert(position);
     g_assert(*position < size);
@@ -1251,9 +1203,7 @@ gwy_serialize_check_string(const guchar *buffer,
 {
     const guchar *p;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(buffer);
     g_assert(size > 0);
     g_assert(position < size);

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <glib-object.h>
 
+#include <libgwyddion/gwymacros.h>
 #include "gwywatchable.h"
 
 #define GWY_WATCHABLE_TYPE_NAME "GwyWatchable"
@@ -53,10 +54,8 @@ static void
 gwy_watchable_base_init(GwyWatchableClass *klass)
 {
     gwy_watchable_base_init_count++;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (base init count = %d)",
-          __FUNCTION__, gwy_watchable_base_init_count);
-    #endif
+    gwy_debug("%s (base init count = %d)",
+              __FUNCTION__, gwy_watchable_base_init_count);
     if (gwy_watchable_base_init_count == 1) {
         gwy_watchable_signals[VALUE_CHANGED] =
             g_signal_new("value_changed",
@@ -73,10 +72,8 @@ static void
 gwy_watchable_base_finalize(GwyWatchableClass *klass)
 {
     gwy_watchable_base_init_count--;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (base init count = %d)",
-          __FUNCTION__, gwy_watchable_base_init_count);
-    #endif
+    gwy_debug("%s (base init count = %d)",
+              __FUNCTION__, gwy_watchable_base_init_count);
     if (gwy_watchable_base_init_count == 0) {
         /* destroy signals...
          * FIXME: but how?
@@ -95,10 +92,8 @@ gwy_watchable_value_changed(GObject *watchable)
 {
     g_return_if_fail(watchable);
     g_return_if_fail(GWY_IS_WATCHABLE(watchable));
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "emitting value_changed on %s",
-          g_type_name(G_TYPE_FROM_INSTANCE(watchable)));
-    #endif
+    gwy_debug("emitting value_changed on %s",
+              g_type_name(G_TYPE_FROM_INSTANCE(watchable)));
 
     g_signal_emit(watchable, gwy_watchable_signals[VALUE_CHANGED], 0);
 }

@@ -4,6 +4,7 @@
 #include <glib.h>
 #include <gtk/gtkmarshal.h>
 
+#include <libgwyddion/gwymacros.h>
 #include "gwycontainer.h"
 #include "gwyserializable.h"
 #include "gwywatchable.h"
@@ -96,9 +97,7 @@ gwy_container_get_type(void)
             (GInterfaceInitFunc)gwy_container_serializable_init, NULL, 0
         };
 
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-        #endif
+        gwy_debug("%s", __FUNCTION__);
         gwy_container_type = g_type_register_static(G_TYPE_OBJECT,
                                                     GWY_CONTAINER_TYPE_NAME,
                                                     &gwy_container_info,
@@ -116,9 +115,7 @@ gwy_container_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -131,9 +128,7 @@ gwy_container_class_init(GwyContainerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     gobject_class->finalize = gwy_container_finalize;
 }
@@ -141,9 +136,7 @@ gwy_container_class_init(GwyContainerClass *klass)
 static void
 gwy_container_init(GwyContainer *container)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     container->values = NULL;
     container->watching = NULL;
     container->objects = NULL;
@@ -156,9 +149,7 @@ gwy_container_finalize(GObject *obj)
 {
     GwyContainer *container = (GwyContainer*)obj;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     /* FIXME: doens't free memory? */
     g_hash_table_destroy(container->watching);
@@ -181,9 +172,7 @@ gwy_container_new(void)
 {
     GwyContainer *container;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     container = g_object_new(GWY_TYPE_CONTAINER, NULL);
 
     /* assume GQuarks are good enough hash keys */
@@ -408,13 +397,11 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
     p = (GValue*)g_hash_table_lookup(container->values,
                                      GUINT_TO_POINTER(key));
     if (!p) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
+        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_BOOLEAN(p)) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: trying to get %s as boolean (key %u)",
+        g_warning("%s: trying to get %s as boolean (key %u)",
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
@@ -440,13 +427,11 @@ gwy_container_get_uchar(GwyContainer *container, GQuark key)
     p = (GValue*)g_hash_table_lookup(container->values,
                                      GUINT_TO_POINTER(key));
     if (!p) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
+        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_UCHAR(p)) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: trying to get %s as uchar (key %u)",
+        g_warning("%s: trying to get %s as uchar (key %u)",
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
@@ -472,13 +457,11 @@ gwy_container_get_int32(GwyContainer *container, GQuark key)
     p = (GValue*)g_hash_table_lookup(container->values,
                                      GUINT_TO_POINTER(key));
     if (!p) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
+        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_INT(p)) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: trying to get %s as int32 (key %u)",
+        g_warning("%s: trying to get %s as int32 (key %u)",
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
@@ -504,13 +487,11 @@ gwy_container_get_int64(GwyContainer *container, GQuark key)
     p = (GValue*)g_hash_table_lookup(container->values,
                                      GUINT_TO_POINTER(key));
     if (!p) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
+        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_INT64(p)) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: trying to get %s as int64 (key %u)",
+        g_warning("%s: trying to get %s as int64 (key %u)",
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
@@ -536,13 +517,11 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
     p = (GValue*)g_hash_table_lookup(container->values,
                                      GUINT_TO_POINTER(key));
     if (!p) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
+        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_DOUBLE(p)) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: trying to get %s as double (key %u)",
+        g_warning("%s: trying to get %s as double (key %u)",
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
@@ -571,13 +550,11 @@ gwy_container_get_string(GwyContainer *container, GQuark key)
     p = (GValue*)g_hash_table_lookup(container->values,
                                      GUINT_TO_POINTER(key));
     if (!p) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
+        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_STRING(p)) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: trying to get %s as string (key %u)",
+        g_warning("%s: trying to get %s as string (key %u)",
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
@@ -607,13 +584,11 @@ gwy_container_get_object(GwyContainer *container, GQuark key)
     p = (GValue*)g_hash_table_lookup(container->values,
                                      GUINT_TO_POINTER(key));
     if (!p) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
+        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_OBJECT(p)) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "%s: trying to get %s as object (key %u)",
+        g_warning("%s: trying to get %s as object (key %u)",
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
@@ -954,9 +929,7 @@ gwy_container_serialize(GObject *obj,
     GwyContainer *container;
     SerializeData sdata;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_CONTAINER(obj), NULL);
 
     container = GWY_CONTAINER(obj);
@@ -1019,8 +992,7 @@ hash_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
         break;
 
         default:
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
-              "Cannot pack GValue holding %s", g_type_name(type));
+        g_error("Cannot pack GValue holding %s", g_type_name(type));
         break;
     }
 }
@@ -1034,9 +1006,7 @@ gwy_container_deserialize(const guchar *buffer,
     gsize mysize, pos;
     const guchar *buf;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(buffer, NULL);
 
     pos = gwy_serialize_check_string(buffer, size, *position,
@@ -1055,11 +1025,8 @@ gwy_container_deserialize(const guchar *buffer,
 
         type = gwy_serialize_unpack_int32(buf, mysize, &pos);
         name = gwy_serialize_unpack_string(buf, mysize, &pos);
-        #ifdef DEBUG
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-              "deserializing %s => %s", __FUNCTION__, name, g_type_name(type));
-        #endif
-        key = g_quark_from_string(name);
+            gwy_debug("deserializing %s => %s", name, g_type_name(type));
+            key = g_quark_from_string(name);
         g_free(name);
 
         switch (type) {
@@ -1106,8 +1073,7 @@ gwy_container_deserialize(const guchar *buffer,
             break;
 
             default:
-            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-                "Cannot unpack GValue holding type #%d", (gint)type);
+            g_warning("Cannot unpack GValue holding type #%d", (gint)type);
             break;
         }
     }
@@ -1128,9 +1094,7 @@ gwy_container_deserialize(const guchar *buffer,
 void
 gwy_container_freeze_watch(GwyContainer *container)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_CONTAINER(container));
     g_assert(container->watch_freeze >= 0);
     container->watch_freeze++;
@@ -1151,9 +1115,7 @@ gwy_container_freeze_watch(GwyContainer *container)
 void
 gwy_container_thaw_watch(GwyContainer *container)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_CONTAINER(container));
     g_assert(container->watch_freeze > 0);
     if (container->watch_freeze) {
@@ -1174,9 +1136,7 @@ gwy_container_watch(GwyContainer *container,
     GQuark key;
     WatchData *wdata;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
     g_return_val_if_fail(path, 0);
     g_return_val_if_fail(callback, 0);
@@ -1200,10 +1160,7 @@ static void
 value_changed(GwyContainer *container,
               GQuark key)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s: [%p] %s",
-          __FUNCTION__, container, g_quark_to_string(key));
-    #endif
+    gwy_debug("%s: [%p] %s", __FUNCTION__, container, g_quark_to_string(key));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

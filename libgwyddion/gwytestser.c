@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <glib-object.h>
 
+#include <libgwyddion/gwymacros.h>
 #include "gwytestser.h"
 
 #define GWY_TEST_SER_TYPE_NAME "GwyTestSer"
@@ -47,7 +48,7 @@ gwy_test_ser_get_type(void)
             (GInterfaceInitFunc)gwy_test_ser_watchable_init, NULL, 0
         };
 
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+        gwy_debug("%s", __FUNCTION__);
         gwy_test_ser_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_TEST_SER_TYPE_NAME,
                                                    &gwy_test_ser_info,
@@ -68,9 +69,7 @@ gwy_test_ser_serializable_init(gpointer giface)
 {
     GwySerializableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -83,9 +82,7 @@ gwy_test_ser_watchable_init(gpointer giface)
 {
     GwyWatchableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     /* initialize stuff */
@@ -97,9 +94,7 @@ gwy_test_ser_class_init(GwyTestSerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     gobject_class->finalize = (GObjectFinalizeFunc)gwy_test_ser_finalize;
 }
@@ -107,9 +102,7 @@ gwy_test_ser_class_init(GwyTestSerClass *klass)
 static void
 gwy_test_ser_init(GwyTestSer *test_ser)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     test_ser->radius = NULL;
     test_ser->history_size = 0;
     test_ser->theta = 0.0;
@@ -118,9 +111,7 @@ gwy_test_ser_init(GwyTestSer *test_ser)
 static void
 gwy_test_ser_finalize(GwyTestSer *test_ser)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_free(test_ser->radius);
 }
 
@@ -130,9 +121,7 @@ gwy_test_ser_new(gdouble theta,
 {
     GwyTestSer *test_ser;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     test_ser = g_object_new(GWY_TYPE_TEST_SER, NULL);
 
     test_ser->theta = theta;
@@ -148,9 +137,7 @@ gwy_test_ser_serialize(GObject *obj,
 {
     GwyTestSer *test_ser;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_TEST_SER(obj), NULL);
 
     test_ser = GWY_TEST_SER(obj);
@@ -178,9 +165,7 @@ gwy_test_ser_deserialize(const guchar *buffer,
     };
     GwyTestSer *test_ser;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -202,9 +187,7 @@ void
 gwy_test_ser_set_radius(GwyTestSer *test_ser,
                         gdouble radius)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     if (!test_ser->history_size
         || radius != test_ser->radius[test_ser->history_size - 1]) {
@@ -221,9 +204,7 @@ void
 gwy_test_ser_set_theta(GwyTestSer *test_ser,
                        gdouble theta)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     if (theta != test_ser->theta) {
         test_ser->theta = theta;
@@ -235,9 +216,7 @@ gwy_test_ser_set_theta(GwyTestSer *test_ser,
 gdouble
 gwy_test_ser_get_radius(GwyTestSer *test_ser)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     return test_ser->radius[test_ser->history_size - 1];
 }
@@ -245,9 +224,7 @@ gwy_test_ser_get_radius(GwyTestSer *test_ser)
 gdouble
 gwy_test_ser_get_theta(GwyTestSer *test_ser)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     return test_ser->theta;
 }
@@ -255,9 +232,7 @@ gwy_test_ser_get_theta(GwyTestSer *test_ser)
 static void
 gwy_test_ser_value_changed(GObject *test_ser)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "signal: GwyTestSer changed");
-    #endif
+    gwy_debug("signal: GwyTestSer changed");
     g_signal_emit_by_name(GWY_TEST_SER(test_ser), "value_changed", NULL);
 }
 
@@ -266,9 +241,7 @@ gwy_test_ser_print_history(GwyTestSer *test_ser)
 {
     gsize i;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     fprintf(stderr, "** Message: radius history:");
     for (i = 0; i < test_ser->history_size; i++)

@@ -165,6 +165,8 @@ main(int argc, char *argv[])
     g_message("restoring the empty container");
     container = gwy_serializable_deserialize(buffer, size, &pos);
 
+    g_object_unref(container);
+
     return 0;
 }
 

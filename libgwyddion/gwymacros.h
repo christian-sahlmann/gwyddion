@@ -3,6 +3,8 @@
 #ifndef __GWY_GWYMACROS_H__
 #define __GWY_GWYMACROS_H__
 
+#include <glib/gmessages.h>
+
 #define _(x) (x)
 
 /* FIXME: doesn't behive as a single statement */
