@@ -149,7 +149,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -809,7 +809,7 @@ file_plugin_proxy_detect(const gchar *filename,
     if (max == G_MININT)
         return 0;
 
-    return CLAMP(max, 1, 20);
+    return CLAMP(max, 1, 40);
 }
 
 /**
@@ -958,7 +958,7 @@ file_pattern_specificity(const gchar *pattern)
     for (p = pat; *p; p++) {
         switch (*p) {
             case '*':
-            psp -= 2;
+            psp -= 4;
             break;
 
             case '?':
@@ -966,7 +966,7 @@ file_pattern_specificity(const gchar *pattern)
             break;
 
             default:
-            psp += 3;
+            psp += 6;
             break;
         }
     }
