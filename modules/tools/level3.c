@@ -136,7 +136,7 @@ dialog_create(GwyUnitoolState *state)
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         _("_Hide"), GTK_RESPONSE_CLOSE,
                                          NULL);
 
     frame = gwy_unitool_windowname_frame_create(state);

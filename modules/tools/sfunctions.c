@@ -171,7 +171,7 @@ dialog_create(GwyUnitoolState *state)
                                          GTK_STOCK_CLEAR,
                                          GWY_UNITOOL_RESPONSE_UNSELECT,
                                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         _("_Hide"), GTK_RESPONSE_CLOSE,
                                          NULL);
 
     table = gtk_table_new(2, 2, FALSE);
