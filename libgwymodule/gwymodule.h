@@ -4,6 +4,7 @@
 #define __GWY_MODULE_H__
 
 #include <gmodule.h>
+#include <gtk/gtkitemfactory.h>
 #include <libgwyddion/gwycontainer.h>
 
 #ifdef __cplusplus
@@ -57,9 +58,10 @@ struct _GwyProcessFuncInfo {
     const gchar *menu_path;
 };
 
-void       gwy_module_register_modules (const gchar **paths);
-gboolean   gwy_register_process_func   (const gchar *modname,
-                                        GwyProcessFuncInfo *func_info);
+void            gwy_module_register_modules (const gchar **paths);
+gboolean        gwy_register_process_func   (const gchar *modname,
+                                             GwyProcessFuncInfo *func_info);
+GtkItemFactory* gwy_build_process_menu      (void);
 
 #ifdef __cplusplus
 }

@@ -33,8 +33,15 @@ module_register(const gchar *name)
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
         "/_Trific/_Test"
     };
+   static GwyProcessFuncInfo test2_func_info = {
+        "test2_func",
+        &test_process_func,
+        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        "/_Foo/_Bar/_Baz/_Quux"
+    };
 
     gwy_register_process_func(name, &test_func_info);
+    gwy_register_process_func(name, &test2_func_info);
 
     return TRUE;
 }
@@ -44,6 +51,7 @@ test_process_func(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *df;
 
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     df = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(df), FALSE);
     gwy_debug("data real size: %gx%g",

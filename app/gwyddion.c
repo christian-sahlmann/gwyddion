@@ -53,15 +53,15 @@ create_view_menu(void)
 GtkWidget*
 create_data_menu(void)
 {
-    static GtkItemFactoryEntry menu_items[] = {
-        { "/_Data Process", NULL, NULL, 0, "<Branch>", NULL },
-        { "/_Data Process/Foo", NULL, NULL, 0, "<Item>", NULL },
-        { "/_Data Process/Bar", NULL, NULL, 0, "<Item>", NULL },
-        { "/_Data Process/Slow FT", NULL, NULL, 0, "<Item>", NULL },
-        { "/_Data Process/Whatever", NULL, NULL, 0, "<Item>", NULL },
-    };
+    GtkItemFactory *item_factory;
+    GtkWidget *widget, *alignment;
 
-    return create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items), "<data>");
+    item_factory = gwy_build_process_menu();
+    widget = gtk_item_factory_get_widget(item_factory, "<data>");
+    alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
+    gtk_container_add(GTK_CONTAINER(alignment), widget);
+
+    return alignment;
 }
 
 void
