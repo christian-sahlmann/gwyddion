@@ -143,7 +143,7 @@ createc_load(const gchar *filename)
     store_metadata(GWY_CONTAINER(object), hash);
 
     g_hash_table_destroy(hash);
-    gwy_file_abandon_contents(buffer, size, &err);
+    g_free(buffer);
 
     return (GwyContainer*)object;
 }
