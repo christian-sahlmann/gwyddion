@@ -13,8 +13,8 @@ cat >autostuff.ignore <<':'
 ^  run info '(automake)Extending aclocal'
 ^  or see http://sources\.redhat\.com/automake/automake.html#Extending%20aclocal
 ^  or see http://sources\.redhat\.com/automake/automake.html#Extending-aclocal
-:
 ':'
+:
 
 cat >build_documentation.ignore <<':'
 ^Writing .* for [^ ]\+(.*)
@@ -23,8 +23,10 @@ cat >build_documentation.ignore <<':'
 ^Computing chunks\.\.\.
 ^grep: \./libgwymodule\.types: No such file or directory
 ^grep: \./libgwyapp\.types: No such file or directory
-:
+^  These can be found in [a-z]\+-unused\.txt\.
+^  They should be added to [a-z]\+-sections\.txt in the appropriate place\.
 ':'
+:
 
 cat >make_dists.ignore <<':'
 ^+
@@ -34,14 +36,14 @@ cat >make_dists.ignore <<':'
 ^libtool: install: warning: remember to run `libtool --finish /usr/lib'
 \.\{6,\}
 ^[0-9]\+ blocks
-:
 ':'
+:
 
 cat >gnains_index.ignore <<':'
 *** gnains-mkindex-Warning: Cannot decide what to do with <.*>
 *** gnains-mkindex-Warning: Duplicit key <.*>
-:
 ':'
+:
 
 function printerr() {
   f=$1
@@ -71,7 +73,7 @@ function extract_build_documentation() {
   test -s $tmplog || echo "=====[ build_documentation ]====="
   logfile=build_documentation.log
   grep -P '^(WARNING|ERROR)\b.*(\n\s+.*)*|Entering directory|^\d+%' \
-    $logfile >$tmplog
+    $logfile | grep -v -f build_documentation.ignore >$tmplog
   libs=$(grep 'Entering directory' $logfile | sed -e 's#.*/##' -e 's/.$//')
   for x in $libs; do
     echo -n "$x: "
