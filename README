@@ -34,12 +34,30 @@ gwyddion and run update-msvc.py before creating tarballs.
 Subdir dependencies (fully resolved):
     libgwyddion:  (none)
     libprocess:   libgwyddion
-    libgwymodule: libgwyddion
     libdraw:      libgwyddion libprocess
     libgwydgets:  libgwyddion libprocess libdraw
+    libgwymodule: libgwyddion libprocess libdraw libgwydgets
     app:          libgwyddion libprocess libdraw libgwydgets libgwymodule
     modules:      libgwyddion libprocess libdraw libgwydgets libgwymodule app
-    plugins:      (none)
-    pixmaps:      (none)
     devel-docs:   libgwyddion libprocess libdraw libgwydgets libgwymodule
     po:           libdraw libgwydgets libgwymodule app modules
+    plugins:      (none)
+    pixmaps:      (none)
+    perl:         (none)
+    python:       (none)
+
+Subdir contents:
+    libgwyddion:  Gwyddion library
+    libprocess:   Gwyddion data processing library
+    libdraw:      Gwyddion drawing library
+    libgwydgets:  Gwyddion widget library
+    libgwymodule: Gwyddion module library
+    app:          Gwyddion application library (libgwyapp), main application
+    modules:      Standard modules (file, graph, layer, process, tool)
+    plugins:      Standard and sample plug-ins (file, process)
+    devel-docs:   Developer-documentation for each library
+    po:           Translations
+    pixmaps:      Stock icons and other graphics
+    perl:         Perl modules for plug-in development
+    python:       Python modules for plug-in development
+
