@@ -575,6 +575,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
         x = 0;
     if (y < 0 && x > -0.1)
         y = 0;
+
     if (!(x >= 0 && y >= 0 && y < a->yres && x < a->xres))
         g_warning("Bad dval request: %f %f", x, y);
     g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres, 0.0);
@@ -2189,10 +2190,8 @@ gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
             srrow = ulrow + k*sina;
             col = (srcol + j*sina);
             row = (srrow + j*cosa);
-            if (col >= 0 && col < a->xres && row >= 0 && row < a->yres)
+            if (col >= 0 && col < (a->xres-1) && row >= 0 && row < (a->yres-1))
             {
-                if (!(col >= 0 && row >= 0 && row < a->yres && col < a->xres)) printf("blbce!\n");
-                /*printf("%d x %d, col=%f, row=%f\n", a->xres, a->yres, col, row);*/
                 sum += gwy_data_field_get_dval(a, col, row, interpolation);
             }
             else
