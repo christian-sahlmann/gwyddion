@@ -213,11 +213,12 @@ void
 gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
                        gdouble shift, GString *label, GwyGraphAreaCurveParams *params)
 {
-    gwy_debug("");
+   
 
     gdouble *xdata, *ydata;
     gint n, i;
-    
+
+    gwy_debug("");
     n = gwy_data_line_get_res(dataline);
     
     xdata = (gdouble *) g_malloc(n*sizeof(gdouble));

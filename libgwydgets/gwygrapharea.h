@@ -97,7 +97,7 @@ typedef struct {
 
 /*overall properties of area*/
 typedef struct {
-    
+    int ble; 
 } GwyGraphAreaParams;
 
 /*graph area structure*/

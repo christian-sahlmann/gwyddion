@@ -2059,13 +2059,13 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
 {
     gint xres, yres, xresh, yresh;
     gint i, j;
+    gdouble mval, val;
     
     xres = real_field->xres;
     yres = real_field->yres;
     xresh = xres/2;
     yresh = yres/2;
    
-    gdouble mval, val;
 
     for (i=0; i<xres; i++)
     {

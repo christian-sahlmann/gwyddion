@@ -95,12 +95,13 @@ gwy_color_axis_get_type(void)
 static void
 gwy_color_axis_class_init(GwyColorAxisClass *klass)
 {
-    gwy_debug("");
+  
 
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
+    gwy_debug("");
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
 
