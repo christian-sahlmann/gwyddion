@@ -1264,47 +1264,47 @@ scale_poly_3(gdouble *param,
 /******************* square signal ********************************/
 static gdouble
 fit_square(gdouble x,
-               G_GNUC_UNUSED gint n_param,
-               const gdouble *b,
-               G_GNUC_UNUSED gpointer user_data,
-               gboolean *fres)
+           G_GNUC_UNUSED gint n_param,
+           const gdouble *b,
+           G_GNUC_UNUSED gpointer user_data,
+           G_GNUC_UNUSED gboolean *fres)
 {
     gint i;
-    gdouble val, amplitude, shift; 
+    gdouble val, amplitude, shift;
 
-    amplitude = (b[3]-b[2])/1.6;
+    amplitude = (b[3] - b[2])/1.6;
     shift = b[2];
     val = 0;
-    for (i=1; i<20; )
-    {
-        
-        val += (1.0/i) * sin(2.0*i*G_PI*(x-b[1])/b[0]);
-        i+=2;
+    for (i = 1; i < 20;) {
+
+        val += (1.0/i) * sin(2.0 * i * G_PI * (x - b[1])/b[0]);
+        i += 2;
     }
 
-    return amplitude*val + (b[3]-b[2])/2 + shift;
+    return amplitude * val + (b[3] - b[2])/2 + shift;
 }
 
 static void
 guess_square(gdouble *x,
-                 gdouble *y,
-                 gint n_dat,
-                 gdouble *param,
-                 G_GNUC_UNUSED gpointer user_data,
-                 gboolean *fres)
+             gdouble *y,
+             gint n_dat,
+             gdouble *param,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
 {
     gint i;
     gdouble min, max;
 
-    param[0] = fabs(x[n_dat-1] - x[0])/10.0;
+    param[0] = fabs(x[n_dat - 1] - x[0])/10.0;
     param[1] = 0;
-    
+
     min = G_MAXDOUBLE;
     max = -G_MAXDOUBLE;
-    for (i = 0; i < n_dat; i++)
-    {
-        if (min>y[i]) min = y[i];
-        if (max<y[i]) max = y[i];
+    for (i = 0; i < n_dat; i++) {
+        if (min > y[i])
+            min = y[i];
+        if (max < y[i])
+            max = y[i];
     }
     param[2] = min;
     param[3] = max;
@@ -1499,7 +1499,7 @@ static const GwyNLFitPreset fitting_presets[] = {
         gaussexp_two_pars,
         NULL
     },
-    { 
+    {
         "Exponential (HHCF)",
         "Exponential",
         "f(x) =  2*\xcf\x83<sup>2</sup>(1 - exp(-(x/T)))",
@@ -1780,17 +1780,17 @@ gwy_math_nlfit_get_preset_nparams(const GwyNLFitPreset* preset)
 
 /**
  * gwy_math_nlfit_fit_preset:
- * @preset: 
- * @n_dat: 
- * @x: 
- * @y: 
- * @n_param: 
- * @param: 
- * @err: 
- * @fixed_param: 
- * @user_data: 
+ * @preset:
+ * @n_dat:
+ * @x:
+ * @y:
+ * @n_param:
+ * @param:
+ * @err:
+ * @fixed_param:
+ * @user_data:
  *
- * 
+ *
  *
  * Returns:
  *
