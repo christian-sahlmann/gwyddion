@@ -756,7 +756,7 @@ get_DWORD(const guchar **p)
     return z;
 }
 
-static inline gsize
+static inline gdouble
 get_DOUBLE(const guchar **p)
 {
     union { guchar pp[8]; double d; } z;
@@ -764,14 +764,14 @@ get_DOUBLE(const guchar **p)
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     memcpy(z.pp, *p, sizeof(double));
 #else
-    z.pp[0] = *p[7];
-    z.pp[1] = *p[6];
-    z.pp[2] = *p[5];
-    z.pp[3] = *p[4];
-    z.pp[4] = *p[3];
-    z.pp[5] = *p[2];
-    z.pp[6] = *p[1];
-    z.pp[7] = *p[0];
+    z.pp[0] = (*p)[7];
+    z.pp[1] = (*p)[6];
+    z.pp[2] = (*p)[5];
+    z.pp[3] = (*p)[4];
+    z.pp[4] = (*p)[3];
+    z.pp[5] = (*p)[2];
+    z.pp[6] = (*p)[1];
+    z.pp[7] = (*p)[0];
 #endif
     *p += sizeof(double);
     return z.d;

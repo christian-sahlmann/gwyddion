@@ -17,8 +17,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-/* TODO: fix value scales, some metadata, at least */
-#define DEBUG 1
+/* TODO: some metadata, MDA, ... */
+
 #include <libgwyddion/gwymacros.h>
 
 #include <stdio.h>
@@ -605,7 +605,7 @@ get_DWORD(const guchar **p)
     return z;
 }
 
-static inline gsize
+static inline gfloat
 get_FLOAT(const guchar **p)
 {
     union { guchar pp[4]; float f; } z;
@@ -613,10 +613,10 @@ get_FLOAT(const guchar **p)
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     memcpy(z.pp, *p, sizeof(float));
 #else
-    z.pp[0] = *p[3];
-    z.pp[1] = *p[2];
-    z.pp[2] = *p[1];
-    z.pp[3] = *p[0];
+    z.pp[0] = (*p)[3];
+    z.pp[1] = (*p)[2];
+    z.pp[2] = (*p)[1];
+    z.pp[3] = (*p)[0];
 #endif
     *p += sizeof(float);
     return z.f;
@@ -891,7 +891,7 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
     data = gwy_data_field_get_data(dfield);
     p = dataframe->image;
     for (i = 0; i < dataframe->fm_yres*dataframe->fm_yres; i++)
-        data[i] = zscale*(p[2*i] + 256.0*p[2*i + 1])/65535.0;
+        data[i] = zscale*(p[2*i] + 256.0*p[2*i + 1]);
 
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
