@@ -193,7 +193,26 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
     return w1*data[l-1] + w2*data[l] + w3*data[l+1] + w4*data[l+2];
 }
 
-/*
+/***** Documentation *******************************************************/
+
+/**
+ * GwyInterpolationType:
+ * @GWY_INTERPOLATION_NONE: No interpolation at all, resulting values are not
+ *                          meaningful and should not be used (use for
+ *                          resize operations discarding original data).
+ * @GWY_INTERPOLATION_ROUND: Round interpolation (nearest neighbour
+ *                           interpolation).
+ * @GWY_INTERPOLATION_BILINEAR: Bilinear interpolation.
+ * @GWY_INTERPOLATION_KEY: Key interpolation.
+ * @GWY_INTERPOLATION_BSPLINE B-spline interpolation.
+ * @GWY_INTERPOLATION_OMOMS: Omoms interpolation
+ * @GWY_INTERPOLATION_NNA: Nearest neighbour approximation.
+ *
+ * Interpolation types.
+ **/
+
+/* Maple source of Hornerization.
+
 {VERSION 5 0 "IBM INTEL LINUX" "5.0" }
 {USTYLETAB {CSTYLE "Maple Input" -1 0 "Courier" 0 1 255 0 0 1 0 1 0 0 
 1 0 0 0 0 1 }{PSTYLE "Normal" -1 0 1 {CSTYLE "" -1 -1 "" 0 1 0 0 0 0 
