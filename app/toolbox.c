@@ -88,52 +88,6 @@ toolbox_append_graph_func(GtkWidget *toolbox,
                               (gpointer)name);
 }
 
-/* XXX XXX XXX */
-#include <libgwydgets/gwyvmenubar.h>
-static GtkWidget*
-gwy_app_menu_create_foo_menu(GtkAccelGroup *accel_group)
-{
-    GtkWidget *menubar, *menu, *item;
-
-    menubar = gwy_vmenu_bar_new();
-
-    gtk_menu_shell_append(GTK_MENU_SHELL(menubar),
-                          item = gtk_menu_item_new_with_mnemonic("F_irst"));
-    menu = gtk_menu_new();
-    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
-                          gtk_menu_item_new_with_label("Foo"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
-                          gtk_menu_item_new_with_label("Bar"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
-                          gtk_menu_item_new_with_label("Baz"));
-
-    gtk_menu_shell_append(GTK_MENU_SHELL(menubar),
-                          item = gtk_menu_item_new_with_mnemonic("S_econd"));
-    menu = gtk_menu_new();
-    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
-                          gtk_menu_item_new_with_label("Masculine"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
-                          gtk_menu_item_new_with_label("Feminine"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
-                          gtk_menu_item_new_with_label("Neuter"));
-
-    gtk_menu_shell_append(GTK_MENU_SHELL(menubar),
-                          item = gtk_menu_item_new_with_mnemonic("_Third"));
-    menu = gtk_menu_new();
-    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
-                          gtk_menu_item_new_with_label("Nothing special here"));
-
-    gtk_widget_show_all(menubar);
-
-    return menubar;
-}
-
 GtkWidget*
 gwy_app_toolbox_create(void)
 {
@@ -160,10 +114,6 @@ gwy_app_toolbox_create(void)
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(toolbox), vbox);
-
-    menu = gwy_app_menu_create_foo_menu(accel_group);
-    /*menus = g_slist_append(menus, menu);*/
-    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
 
     menu = gwy_app_menu_create_file_menu(accel_group);
     menus = g_slist_append(menus, menu);
