@@ -507,17 +507,17 @@ rawfile_dialog(RawFileArgs *args,
 
     /* Sample info */
     vbox = rawfile_dialog_info_page(args, file, &controls);
-    label = gtk_label_new_with_mnemonic(_("_Information"));
+    label = gtk_label_new(_("Information"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
 
     /* General data format */
     vbox = rawfile_dialog_format_page(args, &controls);
-    label = gtk_label_new_with_mnemonic(_("Data _Format"));
+    label = gtk_label_new(_("Data Format"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
 
     /* Presets */
     vbox = rawfile_dialog_preset_page(args, &controls);
-    label = gtk_label_new_with_mnemonic(_("_Presets"));
+    label = gtk_label_new(_("Presets"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
 
     gtk_box_pack_start(GTK_BOX(hbox), gtk_vseparator_new(), TRUE, TRUE, 0);
@@ -629,7 +629,7 @@ rawfile_dialog_preview_box(RawFileControls *controls)
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
     g_object_unref(pixbuf);
 
-    controls->do_preview = gtk_button_new_with_label(_("_Update"));
+    controls->do_preview = gtk_button_new_with_mnemonic(_("_Update"));
     gtk_box_pack_start(GTK_BOX(vbox), controls->do_preview, FALSE, FALSE, 4);
 
     return align;
@@ -830,7 +830,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
                      GTK_FILL, 0, 2, 2);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("_Other:"));
+    label = gtk_label_new_with_mnemonic(_("_Other delimiter:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
