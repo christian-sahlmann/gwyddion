@@ -16,11 +16,14 @@ selection.
 
 </para>
 
-<!-- ##### TYPEDEF GwySIValueFormat ##### -->
+<!-- ##### STRUCT GwySIValueFormat ##### -->
 <para>
 
 </para>
 
+@magnitude: 
+@precision: 
+@units: 
 
 <!-- ##### STRUCT GwySIUnit ##### -->
 <para>

@@ -2,7 +2,7 @@
 gwypixfield
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Draw GwyDataFields to GdkPixbufs
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

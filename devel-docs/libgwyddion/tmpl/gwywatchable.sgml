@@ -19,19 +19,19 @@ to programatically emit the signal.
 
 </para>
 
-<!-- ##### STRUCT GwyWatchable ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyWatchableClass ##### -->
+<!-- ##### STRUCT GwyWatchableIface ##### -->
 <para>
 
 </para>
 
 @parent_class: 
 @value_changed: 
+
+<!-- ##### STRUCT GwyWatchable ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gwy_watchable_value_changed ##### -->
 <para>

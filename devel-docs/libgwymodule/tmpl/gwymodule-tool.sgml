@@ -2,11 +2,12 @@
 gwymodule-tool
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Interactive tool modules
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+It is bets to implement interactive tools with the
+<link linkend="gwyapp-unitool">Unitool</link> tool helper.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

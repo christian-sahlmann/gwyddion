@@ -38,6 +38,7 @@ it or create a new data field from it.
 @menu_path: 
 @process: 
 @run: 
+@sens_flags: 
 
 <!-- ##### USER_FUNCTION GwyProcessFunc ##### -->
 <para>
@@ -98,15 +99,6 @@ it or create a new data field from it.
 @prefix: 
 @item_callback: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gwy_process_func_set_sensitivity_flags ##### -->
-<para>
-
-</para>
-
-@name: 
-@flags: 
 
 
 <!-- ##### FUNCTION gwy_process_func_get_sensitivity_flags ##### -->

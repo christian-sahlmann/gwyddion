@@ -2,7 +2,7 @@
 GwySciText
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Text entry with markup and special symbol entity helpers
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -14,11 +14,14 @@ GwySciText
 
 </para>
 
-<!-- ##### TYPEDEF GwySciTextParams ##### -->
+<!-- ##### STRUCT GwySciTextParams ##### -->
 <para>
 
 </para>
 
+@ent_text: 
+@utf_text: 
+@label_font: 
 
 <!-- ##### STRUCT GwySciText ##### -->
 <para>

@@ -63,34 +63,6 @@ Fit polynomial degree selection.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_data_line_alloc ##### -->
-<para>
-
-</para>
-
-@a: 
-@res: 
-
-
-<!-- ##### FUNCTION gwy_data_line_initialize ##### -->
-<para>
-
-</para>
-
-@a: 
-@res: 
-@real: 
-@nullme: 
-
-
-<!-- ##### FUNCTION gwy_data_line_free ##### -->
-<para>
-
-</para>
-
-@a: 
-
-
 <!-- ##### FUNCTION gwy_data_line_resample ##### -->
 <para>
 
@@ -119,6 +91,15 @@ Fit polynomial degree selection.
 
 @a: 
 @b: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_line_get_data ##### -->
+<para>
+
+</para>
+
+@a: 
 @Returns: 
 
 

@@ -26,7 +26,6 @@ GWY_PALETTE_RED_YELLOW
 GWY_PALETTE_SPECTRAL
 GWY_PALETTE_WARM
 GWY_PALETTE_YELLOW
-GwyRGBA
 GwyPaletteDefEntry
 <TITLE>GwyPaletteDef</TITLE>
 GwyPaletteDef
@@ -77,9 +76,28 @@ GWY_PALETTE_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyrgba</FILE>
+GWY_TYPE_RGBA
+GwyRGBA
+gwy_rgba_get_type
+gwy_rgba_copy
+gwy_rgba_free
+gwy_rgba_to_gdk_color
+gwy_rgba_to_gdk_alpha
+gwy_rgba_from_gdk_color
+gwy_rgba_from_gdk_color_and_alpha
+gwy_rgba_get_from_container
+gwy_rgba_store_to_container
+</SECTION>
+
+<SECTION>
 <FILE>gwypixfield</FILE>
 gwy_pixfield_do
 gwy_pixfield_do_with_range
 gwy_pixfield_do_mask
+</SECTION>
+
+<SECTION>
+<FILE>gwydraw</FILE>
 </SECTION>
 

@@ -23,28 +23,24 @@ GWY_SI_UNIT_GET_CLASS
 
 <SECTION>
 <FILE>gwywatchable</FILE>
-<TITLE>GwyWatchable</TITLE>
+GwyWatchableIface
 GwyWatchable
-GwyWatchableClass
 gwy_watchable_value_changed
 <SUBSECTION Standard>
 GWY_WATCHABLE
 GWY_IS_WATCHABLE
 GWY_TYPE_WATCHABLE
 gwy_watchable_get_type
-GWY_WATCHABLE_CLASS
-GWY_IS_WATCHABLE_CLASS
-GWY_WATCHABLE_GET_CLASS
+GWY_WATCHABLE_GET_IFACE
 </SECTION>
 
 <SECTION>
 <FILE>gwyserializable</FILE>
+GwySerializableIface
+GwySerializable
 GwySerializeFunc
 GwyDeserializeFunc
 GwyDuplicateFunc
-<TITLE>GwySerializable</TITLE>
-GwySerializable
-GwySerializableClass
 GwySerializeSpec
 gwy_serializable_serialize
 gwy_serializable_deserialize
@@ -71,9 +67,7 @@ GWY_SERIALIZABLE
 GWY_IS_SERIALIZABLE
 GWY_TYPE_SERIALIZABLE
 gwy_serializable_get_type
-GWY_SERIALIZABLE_CLASS
-GWY_IS_SERIALIZABLE_CLASS
-GWY_SERIALIZABLE_GET_CLASS
+GWY_SERIALIZABLE_GET_IFACE
 </SECTION>
 
 <SECTION>
@@ -187,6 +181,7 @@ gwy_file_get_contents
 gwy_file_abandon_contents
 gwy_find_self_dir
 gwy_find_self_set_argv0
+gwy_get_user_dir
 </SECTION>
 
 <SECTION>

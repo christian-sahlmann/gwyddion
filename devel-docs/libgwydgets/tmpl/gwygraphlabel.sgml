@@ -99,17 +99,33 @@ the GwyGraph widget. It plots a curves legend.
 
 
 
-<!-- ##### TYPEDEF GwyGraphAreaCurveParams ##### -->
+<!-- ##### STRUCT GwyGraphAreaCurveParams ##### -->
 <para>
 
 </para>
 
+@is_line: 
+@is_point: 
+@point_size: 
+@point_type: 
+@line_style: 
+@line_size: 
+@description: 
+@color: 
+@reserved1: 
+@reserved2: 
 
-<!-- ##### TYPEDEF GwyGraphLabelParams ##### -->
+<!-- ##### STRUCT GwyGraphLabelParams ##### -->
 <para>
 
 </para>
 
+@is_frame: 
+@frame_thickness: 
+@position: 
+@font: 
+@reserved1: 
+@reserved2: 
 
 <!-- ##### STRUCT GwyGraphLabel ##### -->
 <para>

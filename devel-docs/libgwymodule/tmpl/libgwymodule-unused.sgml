@@ -96,6 +96,14 @@
 </para>
 
 
+<!-- ##### FUNCTION gwy_process_func_set_sensitivity_flags ##### -->
+<para>
+
+</para>
+
+@name: 
+@flags: 
+
 <!-- ##### FUNCTION gwy_register_file_func ##### -->
 <para>
 

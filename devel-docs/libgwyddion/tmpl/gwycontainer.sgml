@@ -39,11 +39,14 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @user_data: 
 
 
-<!-- ##### TYPEDEF GwyKeyVal ##### -->
+<!-- ##### STRUCT GwyKeyVal ##### -->
 <para>
 
 </para>
 
+@key: 
+@value: 
+@changed: 
 
 <!-- ##### STRUCT GwyContainer ##### -->
 <para>

@@ -20,6 +20,13 @@ Data field displaying area
 </para>
 
 
+<!-- ##### SIGNAL GwyDataView::updated ##### -->
+<para>
+
+</para>
+
+@gwydataview: the object which received the signal.
+
 <!-- ##### STRUCT GwyDataViewClass ##### -->
 <para>
 
@@ -207,11 +214,4 @@ Data field displaying area
 
 @data_view: 
 
-
-<!-- ##### SIGNAL GwyDataView::updated ##### -->
-<para>
-
-</para>
-
-@gwydataview: the object which received the signal.
 

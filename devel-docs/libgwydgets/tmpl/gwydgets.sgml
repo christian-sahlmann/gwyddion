@@ -2,7 +2,7 @@
 gwydgets
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Miscellaneous utility functions
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -37,6 +37,18 @@ gwydgets
 @name: 
 @units: 
 @middle_widget: 
+
+
+<!-- ##### FUNCTION gwy_color_selector_for_mask ##### -->
+<para>
+
+</para>
+
+@dialog_title: 
+@data_view: 
+@color_button: 
+@container: 
+@prefix: 
 
 
 <!-- ##### FUNCTION gwy_dialog_prevent_delete_cb ##### -->

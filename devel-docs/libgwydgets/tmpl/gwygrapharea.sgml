@@ -17,11 +17,14 @@ a set of data curves with a given plot properties.
 
 </para>
 
-<!-- ##### TYPEDEF GwyGraphAreaCurvePoints ##### -->
+<!-- ##### STRUCT GwyGraphAreaCurvePoints ##### -->
 <para>
 
 </para>
 
+@xvals: 
+@yvals: 
+@N: 
 
 <!-- ##### ENUM GwyGraphStatusType ##### -->
 <para>
@@ -35,59 +38,103 @@ a set of data curves with a given plot properties.
 @GWY_GRAPH_STATUS_POINTS: 
 @GWY_GRAPH_STATUS_ZOOM: 
 
-<!-- ##### TYPEDEF GwyGraphDataPoint ##### -->
+<!-- ##### STRUCT GwyGraphDataPoint ##### -->
 <para>
 
 </para>
 
+@x: 
+@y: 
+@x_unit: 
+@y_unit: 
 
-<!-- ##### TYPEDEF GwyGraphScrPoint ##### -->
+<!-- ##### STRUCT GwyGraphScrPoint ##### -->
 <para>
 
 </para>
 
+@i: 
+@j: 
 
-<!-- ##### TYPEDEF GwyGraphStatus_CursorData ##### -->
+<!-- ##### STRUCT GwyGraphStatus_CursorData ##### -->
 <para>
 
 </para>
 
+@scr_point: 
+@data_point: 
 
-<!-- ##### TYPEDEF GwyGraphStatus_SelData ##### -->
+<!-- ##### STRUCT GwyGraphStatus_SelData ##### -->
 <para>
 
 </para>
 
+@scr_start: 
+@scr_end: 
+@data_start: 
+@data_end: 
 
-<!-- ##### TYPEDEF GwyGraphStatus_PointsData ##### -->
+<!-- ##### STRUCT GwyGraphStatus_PointsData ##### -->
 <para>
 
 </para>
 
+@actual_scr_point: 
+@actual_data_point: 
+@scr_points: 
+@data_points: 
+@n: 
 
-<!-- ##### TYPEDEF GwyGraphStatus_ZoomData ##### -->
+<!-- ##### STRUCT GwyGraphStatus_ZoomData ##### -->
 <para>
 
 </para>
 
+@x: 
+@y: 
+@width: 
+@height: 
+@xmin: 
+@xmax: 
+@ymin: 
+@ymax: 
 
-<!-- ##### TYPEDEF GwyGraphAreaCurve ##### -->
+<!-- ##### STRUCT GwyGraphAreaCurve ##### -->
 <para>
 
 </para>
 
+@data: 
+@params: 
+@points: 
+@reserved: 
 
-<!-- ##### TYPEDEF GwyGraphAreaParams ##### -->
+<!-- ##### STRUCT GwyGraphAreaParams ##### -->
 <para>
 
 </para>
 
+@ble: 
 
 <!-- ##### STRUCT GwyGraphArea ##### -->
 <para>
 
 </para>
 
+
+<!-- ##### SIGNAL GwyGraphArea::selected ##### -->
+<para>
+
+</para>
+
+@gwygrapharea: the object which received the signal.
+
+<!-- ##### SIGNAL GwyGraphArea::zoomed ##### -->
+<para>
+
+</para>
+
+@gwygrapharea: the object which received the signal.
 
 <!-- ##### STRUCT GwyGraphAreaClass ##### -->
 <para>
@@ -165,18 +212,4 @@ a set of data curves with a given plot properties.
 
 @area: 
 
-
-<!-- ##### SIGNAL GwyGraphArea::selected ##### -->
-<para>
-
-</para>
-
-@gwygrapharea: the object which received the signal.
-
-<!-- ##### SIGNAL GwyGraphArea::zoomed ##### -->
-<para>
-
-</para>
-
-@gwygrapharea: the object which received the signal.
 

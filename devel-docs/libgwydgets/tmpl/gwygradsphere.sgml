@@ -20,6 +20,16 @@ Rotary sphere with a color gradient
 </para>
 
 
+<!-- ##### ARG GwyGradSphere:sphere-coords ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyGradSphere:update-policy ##### -->
+<para>
+
+</para>
+
 <!-- ##### STRUCT GwyGradSphereClass ##### -->
 <para>
 
@@ -90,14 +100,4 @@ Rotary sphere with a color gradient
 @grad_sphere: 
 @update_policy: 
 
-
-<!-- ##### ARG GwyGradSphere:sphere-coords ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GwyGradSphere:update-policy ##### -->
-<para>
-
-</para>
 

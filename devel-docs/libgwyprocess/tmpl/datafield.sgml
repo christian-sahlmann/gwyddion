@@ -69,11 +69,18 @@ Mask processing merging (namely used in grain processing).
 @GWY_FRACTAL_TRIANGULATION: 
 @GWY_FRACTAL_PSDF: 
 
-<!-- ##### TYPEDEF GwyWatershedStatus ##### -->
+<!-- ##### STRUCT GwyWatershedStatus ##### -->
 <para>
 
 </para>
 
+@state: 
+@internal_i: 
+@min: 
+@water: 
+@mark_dfield: 
+@fraction: 
+@description: 
 
 <!-- ##### STRUCT GwyDataField ##### -->
 <para>
@@ -99,29 +106,6 @@ Mask processing merging (namely used in grain processing).
 @yreal: 
 @nullme: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gwy_data_field_alloc ##### -->
-<para>
-
-</para>
-
-@a: 
-@xres: 
-@yres: 
-
-
-<!-- ##### FUNCTION gwy_data_field_initialize ##### -->
-<para>
-
-</para>
-
-@a: 
-@xres: 
-@yres: 
-@xreal: 
-@yreal: 
-@nullme: 
 
 
 <!-- ##### FUNCTION gwy_data_field_resample ##### -->
@@ -1169,6 +1153,109 @@ Mask processing merging (namely used in grain processing).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_field_area_convolve ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@kernel_field: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_median ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_mean ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_conservative ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_laplacian ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_sobel ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@orientation: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_prewitt ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@orientation: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_convolve ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@kernel_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
 <!-- ##### FUNCTION gwy_data_field_filter_median ##### -->
 <para>
 
@@ -1240,19 +1327,6 @@ Mask processing merging (namely used in grain processing).
 
 @data_field: 
 @orientation: 
-@ulcol: 
-@ulrow: 
-@brcol: 
-@brrow: 
-
-
-<!-- ##### FUNCTION gwy_data_field_convolve ##### -->
-<para>
-
-</para>
-
-@data_field: 
-@kernel_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
@@ -1453,40 +1527,6 @@ Mask processing merging (namely used in grain processing).
 
 
 <!-- ##### FUNCTION gwy_data_field_crosscorrelate_iteration ##### -->
-<para>
-
-</para>
-
-@data_field1: 
-@data_field2: 
-@x_dist: 
-@y_dist: 
-@score: 
-@search_width: 
-@search_height: 
-@window_width: 
-@window_height: 
-@state: 
-@iteration: 
-
-
-<!-- ##### FUNCTION gwy_data_field_croscorrelate ##### -->
-<para>
-
-</para>
-
-@data_field1: 
-@data_field2: 
-@x_dist: 
-@y_dist: 
-@score: 
-@search_width: 
-@search_height: 
-@window_width: 
-@window_height: 
-
-
-<!-- ##### FUNCTION gwy_data_field_croscorrelate_iteration ##### -->
 <para>
 
 </para>

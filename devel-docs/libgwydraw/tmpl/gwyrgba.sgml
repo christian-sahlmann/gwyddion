@@ -1,0 +1,120 @@
+<!-- ##### SECTION Title ##### -->
+gwyrgba
+
+<!-- ##### SECTION Short_Description ##### -->
+Bit depth independet RGBA colors.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GWY_TYPE_RGBA ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### STRUCT GwyRGBA ##### -->
+<para>
+
+</para>
+
+@r: 
+@g: 
+@b: 
+@a: 
+
+<!-- ##### FUNCTION gwy_rgba_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_rgba_copy ##### -->
+<para>
+
+</para>
+
+@rgba: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@color: 
+
+
+<!-- ##### FUNCTION gwy_rgba_free ##### -->
+<para>
+
+</para>
+
+@rgba: 
+<!-- # Unused Parameters # -->
+@color: 
+
+
+<!-- ##### FUNCTION gwy_rgba_to_gdk_color ##### -->
+<para>
+
+</para>
+
+@rgba: 
+@gdkcolor: 
+
+
+<!-- ##### FUNCTION gwy_rgba_to_gdk_alpha ##### -->
+<para>
+
+</para>
+
+@rgba: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_rgba_from_gdk_color ##### -->
+<para>
+
+</para>
+
+@rgba: 
+@gdkcolor: 
+
+
+<!-- ##### FUNCTION gwy_rgba_from_gdk_color_and_alpha ##### -->
+<para>
+
+</para>
+
+@rgba: 
+@gdkcolor: 
+@gdkalpha: 
+
+
+<!-- ##### FUNCTION gwy_rgba_get_from_container ##### -->
+<para>
+
+</para>
+
+@rgba: 
+@container: 
+@prefix: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_rgba_store_to_container ##### -->
+<para>
+
+</para>
+
+@rgba: 
+@container: 
+@prefix: 
+
+

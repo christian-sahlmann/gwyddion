@@ -8,6 +8,7 @@
 
   <chapter>
     <title>Gwyddion Drawing Library</title>
+    <xi:include href="xml/gwyrgba.xml"/>
     <xi:include href="xml/gwypalette.xml"/>
     <xi:include href="xml/gwypalettedef.xml"/>
     <xi:include href="xml/gwypixfield.xml"/>

@@ -46,51 +46,6 @@ If there are no conditions defined, the widget is sensitive always.
 @flags: 
 @set_to: 
 
-<!-- ##### FUNCTION gwy_app_menu_create_meta_menu ##### -->
-<para>
-
-</para>
-
-@accel_group: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_app_menu_create_proc_menu ##### -->
-<para>
-
-</para>
-
-@accel_group: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_app_menu_create_graph_menu ##### -->
-<para>
-
-</para>
-
-@accel_group: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_app_menu_create_file_menu ##### -->
-<para>
-
-</para>
-
-@accel_group: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_app_menu_create_edit_menu ##### -->
-<para>
-
-</para>
-
-@accel_group: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_app_menu_set_sensitive_recursive ##### -->
 <para>
 
@@ -140,45 +95,11 @@ If there are no conditions defined, the widget is sensitive always.
 @sens: 
 
 
-<!-- ##### FUNCTION gwy_app_menu_set_recent_files_menu ##### -->
-<para>
-
-</para>
-
-@menu: 
-
-
 <!-- ##### FUNCTION gwy_app_toolbox_update_state ##### -->
 <para>
 
 </para>
 
 @sens_data: 
-
-
-<!-- ##### FUNCTION gwy_app_run_process_func_cb ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_app_run_process_func_in_mode ##### -->
-<para>
-
-</para>
-
-@name: 
-@run: 
-
-
-<!-- ##### FUNCTION gwy_app_run_graph_func_cb ##### -->
-<para>
-
-</para>
-
-@name: 
 
 

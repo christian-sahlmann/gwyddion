@@ -88,15 +88,6 @@ Core application interface.
 @data_view: 
 
 
-<!-- ##### FUNCTION gwy_app_change_mask_color_cb ##### -->
-<para>
-
-</para>
-
-@unused: 
-@defaultc: 
-
-
 <!-- ##### FUNCTION gwy_app_data_window_list_add_hook ##### -->
 <para>
 
@@ -149,53 +140,12 @@ Core application interface.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_app_tool_use_cb ##### -->
-<para>
-
-</para>
-
-@toolname: 
-@button: 
-<!-- # Unused Parameters # -->
-@unused: 
-
-
-<!-- ##### FUNCTION gwy_app_zoom_set_cb ##### -->
-<para>
-
-</para>
-
-@data: 
-
-
-<!-- ##### FUNCTION gwy_app_mask_kill_cb ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### FUNCTION gwy_app_show_kill_cb ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### FUNCTION gwy_app_main_window_get ##### -->
 <para>
 
 </para>
 
 @Returns: 
-
-
-<!-- ##### FUNCTION gwy_app_main_window_set ##### -->
-<para>
-
-</para>
-
-@window: 
 
 
 <!-- ##### FUNCTION gwy_app_quit ##### -->

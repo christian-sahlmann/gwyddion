@@ -4,12 +4,65 @@
 </para>
 
 
+<!-- ##### FUNCTION gwy_data_field_alloc ##### -->
+<para>
+
+</para>
+
+@a: 
+@xres: 
+@yres: 
+
+<!-- ##### FUNCTION gwy_data_field_croscorrelate ##### -->
+<para>
+
+</para>
+
+@data_field1: 
+@data_field2: 
+@x_dist: 
+@y_dist: 
+@score: 
+@search_width: 
+@search_height: 
+@window_width: 
+@window_height: 
+
+<!-- ##### FUNCTION gwy_data_field_croscorrelate_iteration ##### -->
+<para>
+
+</para>
+
+@data_field1: 
+@data_field2: 
+@x_dist: 
+@y_dist: 
+@score: 
+@search_width: 
+@search_height: 
+@window_width: 
+@window_height: 
+@state: 
+@iteration: 
+
 <!-- ##### FUNCTION gwy_data_field_free ##### -->
 <para>
 
 </para>
 
 @a: 
+
+<!-- ##### FUNCTION gwy_data_field_initialize ##### -->
+<para>
+
+</para>
+
+@a: 
+@xres: 
+@yres: 
+@xreal: 
+@yreal: 
+@nullme: 
 
 <!-- ##### FUNCTION gwy_data_field_plane_coefs ##### -->
 <para>
@@ -20,6 +73,14 @@
 @ap: 
 @bp: 
 @cp: 
+
+<!-- ##### FUNCTION gwy_data_line_alloc ##### -->
+<para>
+
+</para>
+
+@a: 
+@res: 
 
 <!-- ##### FUNCTION gwy_data_line_cds ##### -->
 <para>
@@ -42,6 +103,23 @@
 @ymin: 
 @ymax: 
 @nsteps: 
+
+<!-- ##### FUNCTION gwy_data_line_free ##### -->
+<para>
+
+</para>
+
+@a: 
+
+<!-- ##### FUNCTION gwy_data_line_initialize ##### -->
+<para>
+
+</para>
+
+@a: 
+@res: 
+@real: 
+@nullme: 
 
 <!-- ##### FUNCTION gwy_data_line_line_coefs ##### -->
 <para>

@@ -90,27 +90,22 @@ GWY_AXIS_DIALOG_GET_CLASS
 
 <SECTION>
 <FILE>gwycolorbutton</FILE>
-GwyColorButtonPrivate
 <TITLE>GwyColorButton</TITLE>
 GwyColorButton
 GwyColorButtonClass
 gwy_color_button_new
 gwy_color_button_new_with_color
 gwy_color_button_set_color
-gwy_color_button_set_alpha
 gwy_color_button_get_color
-gwy_color_button_get_alpha
 gwy_color_button_set_use_alpha
 gwy_color_button_get_use_alpha
-gwy_color_button_set_title
-gwy_color_button_get_title
 <SUBSECTION Standard>
 GWY_COLOR_BUTTON
-GTK_IS_COLOR_BUTTON
-GTK_TYPE_COLOR_BUTTON
+GWY_IS_COLOR_BUTTON
+GWY_TYPE_COLOR_BUTTON
 gwy_color_button_get_type
 GWY_COLOR_BUTTON_CLASS
-GTK_IS_COLOR_BUTTON_CLASS
+GWY_IS_COLOR_BUTTON_CLASS
 GWY_COLOR_BUTTON_GET_CLASS
 </SECTION>
 
@@ -547,6 +542,7 @@ GWY_GRAPH_GET_CLASS
 <FILE>gwydgets</FILE>
 gwy_table_attach_spinbutton
 gwy_table_attach_row
+gwy_color_selector_for_mask
 gwy_dialog_prevent_delete_cb
 </SECTION>
 

@@ -43,11 +43,21 @@ Universal tool template.
 @apply: 
 @response: 
 
-<!-- ##### TYPEDEF GwyUnitoolState ##### -->
+<!-- ##### STRUCT GwyUnitoolState ##### -->
 <para>
 
 </para>
 
+@user_data: 
+@func_slots: 
+@data_window: 
+@layer: 
+@is_visible: 
+@windowname: 
+@dialog: 
+@coord_format: 
+@value_format: 
+@apply_doesnt_close: 
 
 <!-- ##### USER_FUNCTION GwyUnitoolFunc ##### -->
 <para>

@@ -14,11 +14,13 @@ Transform SGML-like symbol entities to UTF-8 and back.
 
 </para>
 
-<!-- ##### TYPEDEF GwyTextEntity ##### -->
+<!-- ##### STRUCT GwyTextEntity ##### -->
 <para>
 
 </para>
 
+@entity: 
+@utf8: 
 
 <!-- ##### FUNCTION gwy_entities_entity_to_utf8 ##### -->
 <para>

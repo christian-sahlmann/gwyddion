@@ -14,11 +14,14 @@ Simple axis with a false color scale
 
 </para>
 
-<!-- ##### TYPEDEF GwyColorAxisParams ##### -->
+<!-- ##### STRUCT GwyColorAxisParams ##### -->
 <para>
 
 </para>
 
+@tick_length: 
+@textarea: 
+@font: 
 
 <!-- ##### STRUCT GwyColorAxis ##### -->
 <para>

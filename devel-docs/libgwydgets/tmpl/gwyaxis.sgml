@@ -55,23 +55,37 @@ with ranges in the requested interval.
 @GWY_AXIS_INT: 
 @GWY_AXIS_AUTO: 
 
-<!-- ##### TYPEDEF GwyTick ##### -->
+<!-- ##### STRUCT GwyTick ##### -->
 <para>
 
 </para>
 
+@value: 
+@scrpos: 
 
-<!-- ##### TYPEDEF GwyLabeledTick ##### -->
+<!-- ##### STRUCT GwyLabeledTick ##### -->
 <para>
 
 </para>
 
+@t: 
+@ttext: 
 
-<!-- ##### TYPEDEF GwyAxisParams ##### -->
+<!-- ##### STRUCT GwyAxisParams ##### -->
 <para>
 
 </para>
 
+@major_length: 
+@major_thickness: 
+@major_maxticks: 
+@major_printmode: 
+@minor_length: 
+@minor_thickness: 
+@minor_division: 
+@line_thickness: 
+@major_font: 
+@label_font: 
 
 <!-- ##### STRUCT GwyAxis ##### -->
 <para>

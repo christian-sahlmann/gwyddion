@@ -2,7 +2,7 @@
 GwyPaletteDef
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Palette definitions
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -196,17 +196,13 @@ GwyPaletteDef
 
 
 
-<!-- ##### TYPEDEF GwyRGBA ##### -->
+<!-- ##### STRUCT GwyPaletteDefEntry ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### TYPEDEF GwyPaletteDefEntry ##### -->
-<para>
-
-</para>
-
+@x: 
+@color: 
 
 <!-- ##### STRUCT GwyPaletteDef ##### -->
 <para>

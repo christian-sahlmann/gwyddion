@@ -162,6 +162,39 @@ gwymodulemenus
 </para>
 
 
+<!-- ##### SIGNAL GwyColorButton::color-set ##### -->
+<para>
+
+</para>
+
+@gwycolorbutton: the object which received the signal.
+
+<!-- ##### ARG GwyColorButton:alpha ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GwyColorButton:title ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyColorButtonPrivate ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@gc: 
+@drawing_area: 
+@cs_dialog: 
+@title: 
+@color: 
+@alpha: 
+@use_alpha: 
+
 <!-- ##### SIGNAL GwyDataViewLayer::finished ##### -->
 <para>
 
@@ -235,6 +268,38 @@ gwymodulemenus
 @cbdata: 
 @current: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_color_button_get_alpha ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_color_button_get_title ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_color_button_set_alpha ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@alpha: 
+
+<!-- ##### FUNCTION gwy_color_button_set_title ##### -->
+<para>
+
+</para>
+
+@color_button: 
+@title: 
 
 <!-- ##### FUNCTION gwy_data_view_get_zoom_mode ##### -->
 <para>

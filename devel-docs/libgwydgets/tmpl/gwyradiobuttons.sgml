@@ -2,7 +2,7 @@
 gwyradiobuttons
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Radio button constructors for enums
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

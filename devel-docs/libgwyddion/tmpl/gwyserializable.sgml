@@ -30,6 +30,22 @@ and
 
 </para>
 
+<!-- ##### STRUCT GwySerializableIface ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@serialize: 
+@deserialize: 
+@duplicate: 
+
+<!-- ##### STRUCT GwySerializable ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### USER_FUNCTION GwySerializeFunc ##### -->
 <para>
 
@@ -37,8 +53,9 @@ and
 
 @serializable: 
 @buffer: 
-@size: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@size: 
 
 
 <!-- ##### USER_FUNCTION GwyDeserializeFunc ##### -->
@@ -61,22 +78,6 @@ and
 @Returns: 
 
 
-<!-- ##### STRUCT GwySerializable ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwySerializableClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@serialize: 
-@deserialize: 
-@duplicate: 
-
 <!-- ##### STRUCT GwySerializeSpec ##### -->
 <para>
 
@@ -94,8 +95,9 @@ and
 
 @serializable: 
 @buffer: 
-@size: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@size: 
 
 
 <!-- ##### FUNCTION gwy_serializable_deserialize ##### -->
@@ -124,6 +126,7 @@ and
 </para>
 
 @buffer: 
+@position: 
 @value: 
 
 
@@ -133,10 +136,11 @@ and
 </para>
 
 @buffer: 
-@size: 
 @templ: 
 @Varargs: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@size: 
 
 
 <!-- ##### FUNCTION gwy_serialize_unpack_boolean ##### -->
@@ -271,10 +275,11 @@ and
 </para>
 
 @buffer: 
-@size: 
 @nspec: 
 @spec: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@size: 
 
 
 <!-- ##### FUNCTION gwy_serialize_unpack_struct ##### -->
@@ -322,11 +327,12 @@ my_object_serialize(GObject *obj,
 ]]></programlisting></informalexample>
 
 @buffer: A buffer to which the serialized components should be appended.
-@size: Current size of @buffer, new size is returned here.
 @object_name: The g_type_name() of the object.
 @nspec: The number of items in @spec.
 @spec: The components to serialize.
 @Returns: The buffer with serialization of @spec components appended.
+<!-- # Unused Parameters # -->
+@size: Current size of @buffer, new size is returned here.
 
 
 <!-- ##### FUNCTION gwy_serialize_unpack_object_struct ##### -->

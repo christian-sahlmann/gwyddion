@@ -16,11 +16,13 @@ Gwyddion application directories.
 
 </para>
 
-<!-- ##### TYPEDEF GwyEnum ##### -->
+<!-- ##### STRUCT GwyEnum ##### -->
 <para>
 
 </para>
 
+@name: 
+@value: 
 
 <!-- ##### FUNCTION gwy_hash_table_to_slist_cb ##### -->
 <para>
@@ -150,5 +152,13 @@ Gwyddion application directories.
 </para>
 
 @argv0: 
+
+
+<!-- ##### FUNCTION gwy_get_user_dir ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 

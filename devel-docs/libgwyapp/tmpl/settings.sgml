@@ -9,7 +9,7 @@ Module and application settings.
 All application and module settings are stored in a one big
 <link linkend="GwyContainer">GwyContainer</link>
 which can be obtained by
-<link linkend="gwy-app-setting-get">gwy_app_settings_get</link>.
+<link linkend="gwy-app-settings-get">gwy_app_settings_get()</link>.
 Then you can use <link linkend="GwyContainer">GwyContainer</link>
 functions to get and save settings.
 </para>

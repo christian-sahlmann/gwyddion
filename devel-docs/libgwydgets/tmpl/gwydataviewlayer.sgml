@@ -20,6 +20,27 @@ A one #GwyDataView layer
 </para>
 
 
+<!-- ##### SIGNAL GwyDataViewLayer::plugged ##### -->
+<para>
+
+</para>
+
+@gwydataviewlayer: the object which received the signal.
+
+<!-- ##### SIGNAL GwyDataViewLayer::unplugged ##### -->
+<para>
+
+</para>
+
+@gwydataviewlayer: the object which received the signal.
+
+<!-- ##### SIGNAL GwyDataViewLayer::updated ##### -->
+<para>
+
+</para>
+
+@gwydataviewlayer: the object which received the signal.
+
 <!-- ##### STRUCT GwyDataViewLayerClass ##### -->
 <para>
 
@@ -65,25 +86,4 @@ A one #GwyDataView layer
 
 @layer: 
 
-
-<!-- ##### SIGNAL GwyDataViewLayer::plugged ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::unplugged ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::updated ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
 

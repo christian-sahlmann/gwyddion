@@ -185,11 +185,29 @@ types
 @minc: 
 @mtol: 
 
+<!-- ##### STRUCT GwySerializableClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@serialize: 
+@deserialize: 
+@duplicate: 
+
 <!-- ##### SIGNAL GwyWatchable::value-changed ##### -->
 <para>
 Emitted when value changes.
 </para>
 
+
+<!-- ##### STRUCT GwyWatchableClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@value_changed: 
 
 <!-- ##### MACRO INCLAM ##### -->
 <para>
