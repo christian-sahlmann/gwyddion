@@ -44,6 +44,7 @@ typedef struct {
     GtkOrientation dir;
     gint siz;
     gboolean upd;
+    gboolean data_were_updated;
     gpointer last_preview;
 } ToolControls;
 
@@ -379,7 +380,7 @@ apply(GwyUnitoolState *state)
 
 static void
 dialog_update(GwyUnitoolState *state,
-              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
+              GwyUnitoolUpdateType reason)
 {
     GwySIValueFormat *units;
     ToolControls *controls;
@@ -400,7 +401,6 @@ dialog_update(GwyUnitoolState *state,
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
-
 
     if (!is_visible && !is_selected)
         return;
@@ -426,6 +426,13 @@ dialog_update(GwyUnitoolState *state,
         ulrow = (gint)gwy_data_field_rtoi(dfield, MIN(xy[1], xy[3]));
         brcol = (gint)gwy_data_field_rtoj(dfield, MAX(xy[0], xy[2]));
         brrow = (gint)gwy_data_field_rtoi(dfield, MAX(xy[1], xy[3]));
+        if ((brrow-ulrow)<=0 || (brcol-ulcol)<=0)
+        {
+            ulcol = 0;
+            ulrow = 0;
+            brcol = gwy_data_field_get_xres(dfield);
+            brrow = gwy_data_field_get_yres(dfield);
+        }
     }
     else {
         ulcol = 0;
@@ -446,6 +453,17 @@ dialog_update(GwyUnitoolState *state,
         old_brrow = brrow;
     }
 
+    if (reason == GWY_UNITOOL_UPDATED_DATA && controls->data_were_updated == FALSE)
+    {
+        state_changed = 1;
+        controls->data_were_updated = TRUE;
+    }
+    else
+    {
+        controls->data_were_updated = FALSE;
+    }
+    
+    
     if (state_changed) {
         if (gwy_container_contains_by_name(data, "/0/show")) {
             shadefield
