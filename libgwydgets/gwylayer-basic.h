@@ -44,9 +44,9 @@ struct _GwyLayerBasic {
 
     GwyGradient *gradient;
     gboolean changed;
+    gulong gradient_id;
 
     gpointer reserved2;
-    /* XXX: add a signal id here for direct disconnection */
 };
 
 struct _GwyLayerBasicClass {

@@ -120,8 +120,8 @@ gwy_layer_basic_destroy(GtkObject *object)
     GwyLayerBasic *layer;
 
     layer = (GwyLayerBasic*)object;
-    g_signal_handlers_disconnect_matched(layer->gradient, G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL, NULL, layer);
+    if (layer->gradient_id)
+        g_signal_handler_disconnect(layer->gradient, layer->gradient_id);
 
     GTK_OBJECT_CLASS(parent_class)->destroy(object);
 }
@@ -240,12 +240,13 @@ gwy_layer_basic_set_gradient(GwyLayerBasic *layer,
      * going to destroy */
     gradstr = g_strdup(gradient);
     old = layer->gradient;
-    g_signal_handlers_disconnect_matched(layer->gradient, G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL, NULL, layer);
+    if (layer->gradient_id)
+        g_signal_handler_disconnect(layer->gradient, layer->gradient_id);
     g_object_ref(grad);
     layer->gradient = grad;
-    g_signal_connect_swapped(layer->gradient, "value_changed",
-                             G_CALLBACK(gwy_layer_basic_update), layer);
+    layer->gradient_id
+        = g_signal_connect_swapped(layer->gradient, "value_changed",
+                                   G_CALLBACK(gwy_layer_basic_update), layer);
     gwy_container_set_string_by_name(GWY_DATA_VIEW_LAYER(layer)->data,
                                      "/0/base/palette", gradstr);
     g_object_unref(old);
