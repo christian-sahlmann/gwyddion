@@ -110,6 +110,9 @@ _gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname))
  * Value of @only_name should be %TRUE if the file doesn't exist (is to be
  * written) so its contents can't be used for file type detection.
  *
+ * This is a low-level function, consider using gwy_file_detect() if you
+ * simply want to detect a file type.
+ *
  * Returns: An integer score expressing the likehood of the file being
  *          loadable as this type. A basic scale is 20 for a good extension,
  *          100 for good magic header, more for more thorough tests.
@@ -135,6 +138,9 @@ gwy_file_func_run_detect(const gchar *name,
  * @filename: A file name to load data from.
  *
  * Runs a file load function identified by @name.
+ *
+ * This is a low-level function, consider using gwy_file_load() if you
+ * simply want to load a file.
  *
  * Returns: A new #GwyContainer with data from @filename, or %NULL.
  **/
@@ -162,6 +168,9 @@ gwy_file_func_run_load(const gchar *name,
  *
  * It guarantees the container lifetime spans through the actual file saving,
  * so the module function doesn't have to care about it.
+ *
+ * This is a low-level function, consider using gwy_file_save() if you
+ * simply want to save a file.
  *
  * Returns: %TRUE if file save succeeded, %FALSE otherwise.
  **/
@@ -218,6 +227,9 @@ file_detect_max_score_cb(const gchar *key,
 /**
  * gwy_file_detect:
  * @filename: A file name to detect type of.
+ * @only_name: Whether to use only file name for a guess, or try to actually
+ *             access the file.
+ * @operations: The file operations (all of them) the file type should support.
  *
  * Detects file type of file @filename.
  *
@@ -226,7 +238,9 @@ file_detect_max_score_cb(const gchar *key,
  *          or %NULL if there's no probable one.
  **/
 G_CONST_RETURN gchar*
-gwy_file_detect(const gchar *filename)
+gwy_file_detect(const gchar *filename,
+                gboolean only_name,
+                GwyFileOperation operations)
 {
     GwyFileDetectData ddata;
 
@@ -235,8 +249,8 @@ gwy_file_detect(const gchar *filename)
     ddata.filename = filename;
     ddata.winner = NULL;
     ddata.score = 0;
-    ddata.only_name = FALSE;
-    ddata.mode = GWY_FILE_LOAD;
+    ddata.only_name = only_name;
+    ddata.mode = operations;
     g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score_cb, &ddata);
 
     if (!ddata.score)
@@ -259,7 +273,7 @@ gwy_file_load(const gchar *filename)
 
     g_return_val_if_fail(file_funcs, NULL);
 
-    winner = gwy_file_detect(filename);
+    winner = gwy_file_detect(filename, FALSE, GWY_FILE_LOAD);
     if (!winner)
         return NULL;
 
