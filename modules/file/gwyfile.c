@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 
@@ -51,7 +52,7 @@ static GwyModuleInfo module_info = {
     "gwyfile",
     "Load and save Gwyddion native serialized objects.",
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -107,7 +108,7 @@ gwyfile_load(const gchar *filename)
     gsize size = 0;
     gsize pos = 0;
 
-    if (!g_file_get_contents(filename, (gchar**)&buffer, &size, &err)) {
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         g_warning("Cannot read file %s", filename);
         g_clear_error(&err);
         return NULL;
@@ -115,13 +116,19 @@ gwyfile_load(const gchar *filename)
     if (size < MAGIC_SIZE
         || memcmp(buffer, MAGIC, MAGIC_SIZE)) {
         g_warning("File %s doesn't seem to be a .gwy file", filename);
-        g_free(buffer);
+        if (!gwy_file_abandon_contents(buffer, size, &err)) {
+            g_critical("%s", err->message);
+            g_clear_error(&err);
+        }
         return NULL;
     }
 
     object = gwy_serializable_deserialize(buffer + MAGIC_SIZE,
                                           size - MAGIC_SIZE, &pos);
-    g_free(buffer);
+    if (!gwy_file_abandon_contents(buffer, size, &err)) {
+        g_critical("%s", err->message);
+        g_clear_error(&err);
+    }
     if (!object) {
         g_warning("File %s deserialization failed", filename);
         return NULL;
