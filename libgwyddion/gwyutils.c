@@ -539,22 +539,49 @@ gwy_get_user_dir(void)
 #else
         ".gwyddion";
 #endif
-    const gchar *homedir;
     static gchar *gwyhomedir = NULL;
 
     if (gwyhomedir)
         return gwyhomedir;
 
+    gwyhomedir = g_build_filename(gwy_get_home_dir(), gwydir, NULL);
+    return gwyhomedir;
+}
+
+/**
+ * gwy_get_home_dir:
+ *
+ * Returns home directory, or temporary directory as a fallback.
+ *
+ * Under normal circumstances the same string as g_get_home_dir() would return
+ * is returned.  But on MS Windows, something like "C:\Windows\Temp" can be
+ * returned too, as it is as good as anything else (we can write there).
+ *
+ * Returns: Something usable as user home directory.  It may be silly, but
+ *          never %NULL or empty.
+ *
+ * Since: 1.5
+ **/
+G_CONST_RETURN gchar*
+gwy_get_home_dir(void)
+{
+    const gchar *homedir = NULL;
+
+    if (homedir)
+        return homedir;
+
     homedir = g_get_home_dir();
-    if (!homedir)
+    if (!homedir || !*homedir)
         homedir = g_get_tmp_dir();
 #ifdef G_OS_WIN32
-    if (!homedir)
+    if (!homedir || !*homedir)
         homedir = "C:\\Windows";  /* XXX :-))) */
+#else
+    if (!homedir || !*homedir)
+        homedir = "/tmp";
 #endif
 
-    gwyhomedir = g_build_filename(homedir, gwydir, NULL);
-    return gwyhomedir;
+    return homedir;
 }
 
 /**
@@ -716,18 +743,7 @@ gwy_canonicalize_path(const gchar *path)
  * @mode: Permissions to set on @file.
  *
  * Macro usable as chmod() on Win32.
- * See its manual page for details.
- *
- * Since: 1.5
- **/
-
-/**
- * ftruncate:
- * @file: File name.
- * @size: Size to change @file to.
- *
- * Macro usable as ftruncate() on Win32.
- * See its manual page for details.
+ * See its Unix manual page for details.
  *
  * Since: 1.5
  **/
@@ -736,7 +752,7 @@ gwy_canonicalize_path(const gchar *path)
  * getpid:
  *
  * Macro usable as getpid() on Win32.
- * See its manual page for details.
+ * See its Unix manual page for details.
  *
  * Since: 1.5
  **/
@@ -757,7 +773,7 @@ gwy_canonicalize_path(const gchar *path)
  * @file: File name.
  *
  * Macro usable as unlink() on Win32.
- * See its manual page for details.
+ * See its Unix manual page for details.
  *
  * Since: 1.5
  **/
