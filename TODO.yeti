@@ -1,4 +1,5 @@
-- color range tool -- add histogram
+- Document GWYPLUGINLIB, add to NEWS
+- Color range tool -- add histogram
 - I18n under MS Windows
 - Fix creating temporary data by duplicating whole container!
 - Do nightly CVS build from a clean checkout, this will also stop the silly
@@ -10,7 +11,7 @@
 - Remember file open/save dialog size
 - Generate module list to docs, add at least short descriptions
 - Keep theme colors in GwyColorAxis and graph widgets
-  GwyGradSphere background is strangely shifted.
+  GwyGradSphere background is strangely shifted in pixmap themes
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Register application/x-gwyddion MIME types, on Win32 and Gnome
 - Finish Spot remove
