@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,11 @@ extern "C" {
 
 #define GWY_UNITOOL_RESPONSE_UNSELECT 255
 
+typedef enum {
+    GWY_UNITOOL_UPDATED_SELECTION,
+    GWY_UNITOOL_UPDATED_DATA
+} GwyUnitoolUpdateType;
+
 typedef struct _GwyUnitoolSlots GwyUnitoolSlots;
 
 typedef struct {
@@ -59,13 +64,15 @@ typedef struct {
     gulong windowname_id;
 } GwyUnitoolState;
 
+typedef void (*GwyUnitoolFunc)(GwyUnitoolState *state);
+
 struct _GwyUnitoolSlots {
     GType layer_type;
-    void (*layer_setup)(GwyUnitoolState *state);
+    GwyUnitoolFunc layer_setup;
     GtkWidget* (*dialog_create)(GwyUnitoolState *state);
-    void (*dialog_update)(GwyUnitoolState *state);
-    void (*dialog_abandon)(GwyUnitoolState *state);
-    void (*apply)(GwyUnitoolState *state);
+    void (*dialog_update)(GwyUnitoolState *state, GwyUnitoolUpdateType reason);
+    GwyUnitoolFunc dialog_abandon;
+    GwyUnitoolFunc apply;
     void (*response)(GwyUnitoolState *state, gint response);
 };
 

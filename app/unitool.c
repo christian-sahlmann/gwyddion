@@ -218,6 +218,9 @@ gwy_unitool_compute_coord_units(GwyUnitoolState *state)
     cunits->units = g_strconcat(gwy_math_SI_prefix(cunits->mag), "m", NULL);
 }
 
+/*
+ * Handle "updated" signal of layer, eventually calling tool's callback.
+ */
 static void
 gwy_unitool_selection_updated_cb(GwyUnitoolState *state)
 {
@@ -226,11 +229,14 @@ gwy_unitool_selection_updated_cb(GwyUnitoolState *state)
     gwy_debug("");
     nselected = gwy_vector_layer_get_selection(state->layer, NULL);
     if (state->func_slots->dialog_update)
-        state->func_slots->dialog_update(state);
+        state->func_slots->dialog_update(state, GWY_UNITOOL_UPDATED_SELECTION);
     if (nselected && !state->is_visible)
         gwy_unitool_dialog_set_visible(state, TRUE);
 }
 
+/*
+ * Handle "updated" signal of DataView, eventually calling tool's callback.
+ */
 static void
 gwy_unitool_data_updated_cb(GwyUnitoolState *state)
 {
@@ -238,9 +244,12 @@ gwy_unitool_data_updated_cb(GwyUnitoolState *state)
     if (!state->is_visible)
         return;
     if (state->func_slots->dialog_update)
-        state->func_slots->dialog_update(state);
+        state->func_slots->dialog_update(state, GWY_UNITOOL_UPDATED_DATA);
 }
 
+/*
+ * Handle standard dialog responses.
+ */
 static void
 gwy_unitool_dialog_response_cb(GwyUnitoolState *state,
                                gint response)
@@ -277,8 +286,7 @@ static void
 gwy_unitool_dialog_set_visible(GwyUnitoolState *state,
                                gboolean visible)
 {
-    gwy_debug("now %d, setting to %d",
-              state->is_visible, visible);
+    gwy_debug("now %d, setting to %d", state->is_visible, visible);
     if (state->is_visible == visible)
         return;
 
@@ -423,6 +431,7 @@ gwy_unitool_update_label(GwyUnitoolUnits *units,
  * @dialog: The tool dialog.
  * @coord_units: Units specification good for coordinate representation
  *               (to be used in gwy_unitool_update_label() for coordinates).
+ *               XXX: Deprecated, should use GwySIUnit instead.
  *
  * Universal tool state.
  *
@@ -441,6 +450,8 @@ gwy_unitool_update_label(GwyUnitoolUnits *units,
  *
  * The values @mag and @precision should be probably obtained from a
  * gwy_math_humanize_numbmers() call.
+ *
+ * XXX: Deprecated, should use GwySIUnit instead.
  **/
 
 /**
