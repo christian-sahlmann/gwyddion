@@ -248,7 +248,7 @@ static GwyModuleInfo module_info = {
     <para>
       A Gwyddion module is loaded in two stages.  First, it is queried,
       the module responds with its module info, Gwyddion checks whether it
-      looks good (e.g. whether module ABI version matches). If it is OK,
+      looks good (e.g., whether module ABI version matches). If it is OK,
       Gwyddion continues with registration of particular module features.
     </para>
     <para>
@@ -335,6 +335,9 @@ module_register(const gchar *name)
   </refsect1>
   <refsect1>
     <title>Executive</title>
+    <para>
+      Now, let's do the actuall data processing:
+    </para>
     <informalexample><programlisting><![CDATA[
 static gboolean
 my_invert_value(GwyContainer *data, GwyRunType run)
@@ -349,6 +352,48 @@ my_invert_value(GwyContainer *data, GwyRunType run)
     return TRUE;
 }
 ]]></programlisting></informalexample>
+   <para>
+     A few things can be seen here.  First, we check the run mode.  More
+     sofisticated modules with GUI and their own settings can do different
+     things based on the run mode, but we just check if it looks sane.
+   </para>
+   <para>
+     Next, we get a datafield from some container.
+     The <link linkend="GwyDataField">GwyDataField</link> object is the
+     basic data object representing one XXX how does one call this? XXX.
+     Quite a few datafield manipulating functions already exist in
+     <link linkend="libprocess">libprocess</link>, we use one of them
+     (<link linkend="gwy-data-field-invert">gwy_data_field_invert()</link>)
+     to perform the value inversion too.
+   </para>
+   <para>
+     The obscure part is getting the datafield out from some container that
+     was passed to our function.  Just take it as a fact the data are
+     called <literal>"/0/data"</literal>, it is probably equally good name
+     as anything else.  There are other strange things in the container
+     but you'd rather not want to know about them.
+   </para>
+   <para>
+     The
+     <link linkend="gwy-app-undo-checkpoint">gwy_app_undo_checkpoint()</link>
+     creates a point in the undo history we can return to later, call it
+     just before you start modifying the data.  Its second argument is
+     what is to be saved, so <literal>"/0/data"</literal> follows us here
+     too.
+   </para>
+   <para>
+     Then we finally invert the value with
+     <link linkend="gwy-data-field-invert">gwy_data_field_invert()</link>
+     and return <literal>TRUE</literal> since we modified the data.  If we
+     didn't modify them, we would have returned <literal>FALSE</literal>.
+   </para>
+  </refsect1>
+  <refsect1>
+   <title>Beyond The Minimal Module</title>
+   <para>
+     TODO: multiple modules, multiple functions, multifunctions;
+     settings, masks, presentations, GUI.
+   </para>
   </refsect1>
 </refentry>
 
