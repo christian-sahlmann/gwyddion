@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
@@ -274,6 +274,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     GwyContainer *data;
 
     gwy_debug("win = %p, tool = %p", window, current_tool);
+    gwy_app_set_current_window(GTK_WIDGET(window));
     if (already_current == window) {
         gwy_debug("window already current");
         g_assert(current_data && current_data->data == (gpointer)window);
@@ -302,7 +303,6 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 
     gwy_app_toolbox_update_state(&sens_data);
     already_current = window;
-    gwy_app_set_current_window(GTK_WIDGET(window));
 }
 
 /**

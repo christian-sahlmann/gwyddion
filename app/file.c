@@ -64,14 +64,19 @@ gwy_app_file_open_cb(void)
     gtk_widget_show_all(GTK_WIDGET(selector));
 }
 
+/* FIXME: I'd like to close Ctrl-W also other windows, but 3D View hangs
+ * (again), and sending "delete_event" signal does nothing. */
 void
 gwy_app_file_close_cb(void)
 {
-    GwyDataWindow *data_window;
+    GtkWidget *window;
 
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    gtk_widget_destroy(GTK_WIDGET(data_window));
+    window = gwy_app_get_current_window(GWY_APP_WINDOW_TYPE_ANY);
+    gwy_debug("current is %p: %s", window,
+              g_type_name(G_TYPE_FROM_INSTANCE(window)));
+    if (!GWY_IS_DATA_WINDOW(window))
+        return;
+    gtk_widget_destroy(window);
 }
 
 void
