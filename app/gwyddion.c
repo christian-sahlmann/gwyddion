@@ -104,7 +104,7 @@ main(int argc, char *argv[])
 
     /* TODO: remove sometime, but keep the gwy_app_settings_get(); */
     gwy_app_splash_set_message(_("Loading document history"));
-    gwy_container_remove_by_prefix(gwy_app_settings_get(), "/app/recent/");
+    gwy_container_remove_by_prefix(gwy_app_settings_get(), "/app/recent");
     recent_file_file = gwy_app_settings_get_recent_file_list_filename();
     gwy_app_recent_file_list_load(recent_file_file);
 

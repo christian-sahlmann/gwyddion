@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -25,10 +25,11 @@
 
 G_BEGIN_DECLS
 
-GtkWidget* gwy_app_recent_file_list_new     (void);   /* get settings */
+GtkWidget* gwy_app_recent_file_list_new     (void);
 void       gwy_app_recent_file_list_update  (const gchar *filename_utf8);
 gboolean   gwy_app_recent_file_list_load    (const gchar *filename);
 gboolean   gwy_app_recent_file_list_save    (const gchar *filename);
+void       gwy_app_recent_file_list_free    (void);
 
 G_END_DECLS
 
