@@ -354,7 +354,7 @@ static void
 mask_color_change_cb(GtkWidget *color_button,
                      MarkControls *controls)
 {
-    gwy_color_selector_for_mask(_("Change Preview Mask Color"),
+    gwy_color_selector_for_mask(NULL,
                                 GWY_DATA_VIEW(controls->view),
                                 GWY_COLOR_BUTTON(color_button),
                                 NULL, "/0/mask");
@@ -370,7 +370,6 @@ load_mask_color(GtkWidget *color_button,
 
     gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
     gwy_rgba_get_from_container(&rgba, data, "/0/mask");
-    gwy_debug("(%g, %g, %g, %g)", rgba.r, rgba.g, rgba.b, rgba.a);
     gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
 
@@ -381,7 +380,6 @@ save_mask_color(GtkWidget *color_button,
     GwyRGBA rgba;
 
     gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &rgba);
-    gwy_debug("(%u, %u, %u, %u)", rgba.r, rgba.g, rgba.b, rgba.a);
     gwy_rgba_store_to_container(&rgba, data, "/0/mask");
 }
 

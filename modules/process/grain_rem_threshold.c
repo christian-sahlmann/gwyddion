@@ -47,6 +47,7 @@ typedef struct {
     GtkObject *threshold_height;
     GtkObject *threshold_area;
     GtkWidget *merge;
+    GtkWidget *color_button;
     GwyContainer *mydata;
 } RemoveControls;
 
@@ -54,6 +55,12 @@ static gboolean    module_register               (const gchar *name);
 static gboolean    remove_th                     (GwyContainer *data,
                                                   GwyRunType run);
 static gboolean    remove_dialog                 (RemoveArgs *args,
+                                                  GwyContainer *data);
+static void        mask_color_change_cb          (GtkWidget *color_button,
+                                                  RemoveControls *controls);
+static void        load_mask_color               (GtkWidget *color_button,
+                                                  GwyContainer *data);
+static void        save_mask_color               (GtkWidget *color_button,
                                                   GwyContainer *data);
 static void        remove_dialog_update_controls (RemoveControls *controls,
                                                   RemoveArgs *args);
@@ -91,7 +98,7 @@ static GwyModuleInfo module_info = {
     "remove_threshold",
     "Remove grains by thresholding",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -226,6 +233,20 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), controls.merge,
                      0, 1, 8, 9, GTK_FILL, 0, 2, 2);
 
+    label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,  0, 1, 9, 10, GTK_FILL, 0, 2, 2);
+    controls.color_button = gwy_color_button_new();
+    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
+                                   TRUE);
+    load_mask_color(controls.color_button,
+                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
+    gtk_table_attach(GTK_TABLE(table), controls.color_button,
+                     1, 2, 9, 10, GTK_FILL, 0, 2, 2);
+
+    g_signal_connect(controls.color_button, "clicked",
+                     G_CALLBACK(mask_color_change_cb), &controls);
+
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -258,6 +279,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     } while (response != GTK_RESPONSE_OK);
 
     remove_dialog_update_args(&controls, args);
+    save_mask_color(controls.color_button, data);
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -293,6 +315,39 @@ remove_dialog_update_args(RemoveControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
     args->merge_type = gwy_option_menu_get_history(controls->merge,
                                                    "mergegrain-type");
+}
+
+static void
+mask_color_change_cb(GtkWidget *color_button,
+                     RemoveControls *controls)
+{
+    gwy_color_selector_for_mask(NULL,
+                                GWY_DATA_VIEW(controls->view),
+                                GWY_COLOR_BUTTON(color_button),
+                                NULL, "/0/mask");
+    load_mask_color(color_button,
+                    gwy_data_view_get_data(GWY_DATA_VIEW(controls->view)));
+}
+
+static void
+load_mask_color(GtkWidget *color_button,
+                GwyContainer *data)
+{
+    GwyRGBA rgba;
+
+    gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+    gwy_rgba_get_from_container(&rgba, data, "/0/mask");
+    gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
+}
+
+static void
+save_mask_color(GtkWidget *color_button,
+                GwyContainer *data)
+{
+    GwyRGBA rgba;
+
+    gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &rgba);
+    gwy_rgba_store_to_container(&rgba, data, "/0/mask");
 }
 
 static void
