@@ -23,7 +23,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
-/* XXX: nothing here yet */
+GtkWidget* gwy_palette_option_menu(GCallback callback,
+                                   gpointer cbdata,
+                                   const gchar *current);
 
 #ifdef __cplusplus
 }

@@ -6,23 +6,23 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 
 libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
 libgwydgetsinclude_HEADERS = \
-	gwydgets.h \
+	gwyaxis.h \
 	gwydataview.h \
 	gwydataviewlayer.h \
 	gwydatawindow.h \
+	gwydgets.h \
 	gwygradsphere.h \
+	gwygraph.h \
+	gwygrapharea.h \
+	gwygraphcorner.h \
+	gwygraphlabel.h \
 	gwyhruler.h \
 	gwylayer-basic.h \
 	gwylayer-select.h \
 	gwyruler.h \
 	gwyspherecoords.h \
 	gwyvectorshade.h \
-	gwyvruler.h \
-	gwygraph.h \
-	gwygrapharea.h \
-	gwygraphlabel.h \
-	gwygraphcorner.h \
-	gwyaxis.h
+	gwyvruler.h
 
 lib_LTLIBRARIES = libgwydgets.la
 
@@ -35,22 +35,23 @@ noinst_PROGRAMS = main test create-data
 # Chaning ifraces     C:   R:   0
 libgwydgets_la_LDFLAGS = -version-info 0:0:0
 libgwydgets_la_SOURCES = \
+	gwyaxis.c \
 	gwydataview.c \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
+	gwydgets.c \
 	gwygradsphere.c \
+	gwygraph.c \
+	gwygrapharea.c \
+	gwygraphcorner.c \
+	gwygraphlabel.c \
 	gwyhruler.c \
 	gwylayer-basic.c \
 	gwylayer-select.c \
 	gwyruler.c \
 	gwyspherecoords.c \
 	gwyvectorshade.c \
-	gwyvruler.c \
-	gwygraph.c \
-	gwygrapharea.c \
-	gwygraphlabel.c \
-	gwygraphcorner.c \
-	gwyaxis.c
+	gwyvruler.c
 
 main_SOURCES = main.c
 main_LDADD = libgwydgets.la \

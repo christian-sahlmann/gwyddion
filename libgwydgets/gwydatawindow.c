@@ -6,9 +6,7 @@
 
 #include <libprocess/datafield.h>
 #include <libgwyddion/gwymacros.h>
-#include "gwydatawindow.h"
-#include "gwyhruler.h"
-#include "gwyvruler.h"
+#include "gwydgets.h"
 
 #define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
 
