@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-10-26 22:20+0200\n"
-"PO-Revision-Date: 2004-10-26 12:30+0200\n"
+"POT-Creation-Date: 2004-11-07 05:32+0100\n"
+"PO-Revision-Date: 2004-11-07 12:21+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -206,14 +206,15 @@ msgstr "Veli_kost:"
 #: libgwydgets/gwy3dwindow.c:551 modules/file/pixmap.c:671
 #: modules/file/pixmap.c:1552 modules/file/rawfile.c:490
 #: modules/process/angle_dist.c:183 modules/process/calibrate.c:183
-#: modules/process/cwt.c:177 modules/process/fft.c:350
+#: modules/process/cwt.c:177 modules/process/dwt.c:181
+#: modules/process/dwtdenoise.c:188 modules/process/fft.c:350
 #: modules/process/fractal.c:205 modules/process/grain_mark.c:178
 #: modules/process/grain_rem_threshold.c:169 modules/process/grain_wshed.c:166
 #: modules/process/mask_grow_shrink.c:171 modules/process/polylevel.c:195
 #: modules/process/rotate.c:185 modules/process/scale.c:164
 #: modules/process/scars.c:379 modules/process/shade.c:180
-#: modules/process/slope_dist.c:195 modules/process/tip_model.c:183
-#: modules/process/unrotate.c:181
+#: modules/process/slope_dist.c:195 modules/process/sphere-revolve.c:170
+#: modules/process/tip_model.c:183 modules/process/unrotate.c:181
 msgid "_Reset"
 msgstr "_Obnovit"
 
@@ -298,74 +299,98 @@ msgid "Hat"
 msgstr "Hat"
 
 #: libgwydgets/gwyoptionmenus.c:697
+msgid "Haar"
+msgstr "Haar"
+
+#: libgwydgets/gwyoptionmenus.c:698
+msgid "Daubechies 4"
+msgstr "Daubechies 4"
+
+#: libgwydgets/gwyoptionmenus.c:699
+msgid "Daubechies 6"
+msgstr "Daubechies 6"
+
+#: libgwydgets/gwyoptionmenus.c:700
+msgid "Daubechies 8"
+msgstr "Daubechies 8"
+
+#: libgwydgets/gwyoptionmenus.c:701
+msgid "Daubechies 12"
+msgstr "Daubechies 12"
+
+#: libgwydgets/gwyoptionmenus.c:702
+msgid "Daubechies 20"
+msgstr "Daubechies 20"
+
+#: libgwydgets/gwyoptionmenus.c:731
 msgid "Dist. of heights"
 msgstr "Rozdělení výšek"
 
-#: libgwydgets/gwyoptionmenus.c:698
+#: libgwydgets/gwyoptionmenus.c:732
 msgid "Cum. dist. of heights"
 msgstr "Kumul. rozdělení výšek"
 
-#: libgwydgets/gwyoptionmenus.c:699
+#: libgwydgets/gwyoptionmenus.c:733
 msgid "Dist. of angles"
 msgstr "Rozdělení úhlů"
 
-#: libgwydgets/gwyoptionmenus.c:700
+#: libgwydgets/gwyoptionmenus.c:734
 msgid "Cum. dist. of angles"
 msgstr "Kumul. rozdělení úhlů"
 
-#: libgwydgets/gwyoptionmenus.c:701
+#: libgwydgets/gwyoptionmenus.c:735
 msgid "Autocorrelation"
 msgstr "Autokorelace"
 
-#: libgwydgets/gwyoptionmenus.c:702
+#: libgwydgets/gwyoptionmenus.c:736
 msgid "Height-height cor."
 msgstr "Korelace výška-výška"
 
-#: libgwydgets/gwyoptionmenus.c:703
+#: libgwydgets/gwyoptionmenus.c:737
 msgid "Power spectral density"
 msgstr ""
 
-#: libgwydgets/gwyoptionmenus.c:731
+#: libgwydgets/gwyoptionmenus.c:765
 msgid "Horizontal"
 msgstr "Vodorovný"
 
-#: libgwydgets/gwyoptionmenus.c:732
+#: libgwydgets/gwyoptionmenus.c:766
 msgid "Vertical"
 msgstr "Svislý"
 
-#: libgwydgets/gwyoptionmenus.c:761
+#: libgwydgets/gwyoptionmenus.c:795
 msgid "Mean value"
 msgstr "Střední hodnota"
 
-#: libgwydgets/gwyoptionmenus.c:762
+#: libgwydgets/gwyoptionmenus.c:796
 msgid "Median value"
 msgstr "Medián"
 
-#: libgwydgets/gwyoptionmenus.c:763
+#: libgwydgets/gwyoptionmenus.c:797
 msgid "Conservative denoise"
 msgstr "Konzervativní odšumění"
 
-#: libgwydgets/gwyoptionmenus.c:791
+#: libgwydgets/gwyoptionmenus.c:825
 msgid "Union"
 msgstr "Sjednocení"
 
-#: libgwydgets/gwyoptionmenus.c:792
+#: libgwydgets/gwyoptionmenus.c:826
 msgid "Intersection"
 msgstr "Průnik"
 
-#: libgwydgets/gwyoptionmenus.c:820
+#: libgwydgets/gwyoptionmenus.c:854
 msgid "Fit height"
 msgstr "Proložit konstantu"
 
-#: libgwydgets/gwyoptionmenus.c:821
+#: libgwydgets/gwyoptionmenus.c:855
 msgid "Fit linear"
 msgstr "Proložit přímku"
 
-#: libgwydgets/gwyoptionmenus.c:822
+#: libgwydgets/gwyoptionmenus.c:856
 msgid "Fit quadratic"
 msgstr "Proložit parabolu"
 
-#: libgwydgets/gwyoptionmenus.c:823
+#: libgwydgets/gwyoptionmenus.c:857
 msgid "Fit cubic"
 msgstr "Proložit kubiku"
 
@@ -637,11 +662,11 @@ msgstr "V %s nejsou žádná metadata."
 msgid "Metadata of %s (%s)"
 msgstr "Metadata %s (%s)"
 
-#: app/meta.c:133
+#: app/meta.c:137
 msgid "metadata|Key"
 msgstr "Klíč"
 
-#: app/meta.c:134 modules/tools/level3.c:163 modules/tools/level3.c:241
+#: app/meta.c:138 modules/tools/level3.c:163 modules/tools/level3.c:241
 #: modules/tools/pointer.c:152 modules/tools/pointer.c:222
 msgid "Value"
 msgstr "Hodnota"
@@ -888,9 +913,10 @@ msgstr "Výška"
 #: modules/process/mask_grow_shrink.c:184 modules/process/scale.c:186
 #: modules/process/scale.c:196 modules/process/scars.c:411
 #: modules/process/scars.c:417 modules/process/slope_dist.c:228
-#: modules/process/slope_dist.c:249 modules/process/tip_blind.c:254
-#: modules/process/tip_blind.c:264 modules/tools/level3.c:199
-#: modules/tools/pointer.c:180 modules/tools/profile.c:255
+#: modules/process/slope_dist.c:249 modules/process/sphere-revolve.c:201
+#: modules/process/tip_blind.c:254 modules/process/tip_blind.c:264
+#: modules/tools/level3.c:199 modules/tools/pointer.c:180
+#: modules/tools/profile.c:255
 msgid "px"
 msgstr "px"
 
@@ -914,19 +940,19 @@ msgstr "Načítá a ukládá přirozené serializované objekty Gwyddionu."
 msgid "Gwyddion native format (.gwy)"
 msgstr "Přirozený formát Gwyddionu (.gwy) "
 
-#: modules/file/nanoscope.c:95
+#: modules/file/nanoscope.c:99
 msgid "Load Nanoscope data files."
 msgstr "Načítá datové soubory Nanoscope."
 
-#: modules/file/nanoscope.c:111
+#: modules/file/nanoscope.c:115
 msgid "Nanoscope files"
 msgstr "Soubory Nanoscope"
 
-#: modules/file/nanoscope.c:587 modules/file/sis.c:510
+#: modules/file/nanoscope.c:608 modules/file/sis.c:510
 msgid "Select Data"
 msgstr "Vyber data"
 
-#: modules/file/nanoscope.c:603 modules/file/sis.c:526
+#: modules/file/nanoscope.c:624 modules/file/sis.c:526
 msgid "Data to load:"
 msgstr "Data k načtení:"
 
@@ -1849,8 +1875,9 @@ msgstr "Velikost okna"
 msgid "Add _low score results mask"
 msgstr "Přidat _masku s nízkým skóre"
 
-#: modules/process/crosscor.c:264 modules/process/grain_wshed.c:218
-#: modules/process/maskcor.c:183 modules/process/tip_blind.c:284
+#: modules/process/crosscor.c:264 modules/process/dwtdenoise.c:225
+#: modules/process/grain_wshed.c:218 modules/process/maskcor.c:183
+#: modules/process/tip_blind.c:284
 msgid "_Threshold:"
 msgstr "Prá_h: "
 
@@ -1880,20 +1907,63 @@ msgstr "CWT: Data musí být čtvercová."
 msgid "2D CWT"
 msgstr "2D CWT"
 
-#: modules/process/cwt.c:195 modules/process/fft.c:363
+#: modules/process/cwt.c:195 modules/process/dwt.c:194
+#: modules/process/dwtdenoise.c:201 modules/process/fft.c:363
 msgid "_Preserve size (don't resize to power of 2)"
 msgstr "Zachovej velikost (neškáluj na mocninu 2)"
 
-#: modules/process/cwt.c:207 modules/process/fft.c:375
+#: modules/process/cwt.c:207 modules/process/dwt.c:206
+#: modules/process/dwtdenoise.c:213 modules/process/fft.c:375
 #: modules/process/fractal.c:225 modules/process/rotate.c:207
 #: modules/process/scale.c:207 modules/process/unrotate.c:233
 #: modules/tools/profile.c:272
 msgid "_Interpolation type:"
 msgstr "Typ _interpolace:"
 
-#: modules/process/cwt.c:212
+#: modules/process/cwt.c:212 modules/process/dwt.c:212
+#: modules/process/dwtdenoise.c:219
 msgid "_Wavelet type:"
 msgstr "Typ _waveletu:"
+
+#: modules/process/dwt.c:79 modules/process/dwtdenoise.c:86
+msgid "2D Discrete Wavelet Transform module"
+msgstr ""
+
+#: modules/process/dwt.c:95
+msgid "/_Integral Transforms/_2D DWT..."
+msgstr ""
+
+#: modules/process/dwt.c:142
+msgid "DWT: Data must be square."
+msgstr ""
+
+#: modules/process/dwt.c:180
+msgid "2D DWT"
+msgstr ""
+
+#: modules/process/dwtdenoise.c:102
+msgid "/_Integral Transforms/_DWT denoise..."
+msgstr ""
+
+#: modules/process/dwtdenoise.c:149
+msgid "DWT_DENOISE: Data must be square."
+msgstr ""
+
+#: modules/process/dwtdenoise.c:187
+msgid "2D DWT_DENOISE"
+msgstr ""
+
+#: modules/process/dwtdenoise.c:264
+msgid "Universal"
+msgstr ""
+
+#: modules/process/dwtdenoise.c:265
+msgid "Scale adaptive"
+msgstr ""
+
+#: modules/process/dwtdenoise.c:266
+msgid "Scale and space adaptive"
+msgstr ""
 
 #: modules/process/edge.c:47
 msgid "Edge detection presentations"
@@ -2455,6 +2525,42 @@ msgstr "Typ výstupu"
 msgid "Angular slope distribution"
 msgstr "Úhlové rozdělení sklonu"
 
+#: modules/process/sphere-revolve.c:84
+msgid "Level data by revolving a sphere."
+msgstr "Vyrovnání dat valením koule."
+
+#: modules/process/sphere-revolve.c:100
+msgid "/_Level/Revolve _Sphere (1D)..."
+msgstr "/_Vyrovnání/Valení _Koule (1D)..."
+
+#: modules/process/sphere-revolve.c:159 modules/tools/polynom.c:140
+msgid "_Horizontal direction"
+msgstr "_Vodorovný směr"
+
+#: modules/process/sphere-revolve.c:160 modules/tools/polynom.c:141
+msgid "_Vertical direction"
+msgstr "_Svislý směr"
+
+#: modules/process/sphere-revolve.c:169
+msgid "Revolve Sphere (1D)"
+msgstr "Valení koule (1D)"
+
+#: modules/process/sphere-revolve.c:190
+msgid "Real _radius:"
+msgstr "_Skutečný poloměr:"
+
+#: modules/process/sphere-revolve.c:201
+msgid "_Pixel radius:"
+msgstr "Poloměr v _pixelech:"
+
+#: modules/process/sphere-revolve.c:220
+msgid ""
+"Warning: Value is a different physical quantity\n"
+"than latitude, sphere makes no sense."
+msgstr ""
+"Varování: Hodnota je jiná fyzikální veličina\n"
+"než rozměry, koule je nesmysl."
+
 #: modules/process/tip_blind.c:120
 msgid "Blind estimation of SPM tip using Villarubia's algorithm"
 msgstr "Slepý odhad tvaru SPM hrotu pomocí Villarubiova algoritmu"
@@ -2778,6 +2884,38 @@ msgstr "Vyrovnání"
 msgid "_Averaging radius:"
 msgstr "_Poloměr oblasti průměrování:"
 
+#: modules/tools/maskedit.c:70
+msgid "Mask Editor tool."
+msgstr "Nástroj editor masky"
+
+#: modules/tools/maskedit.c:97
+msgid "MaskEdit data"
+msgstr ""
+
+#: modules/tools/maskedit.c:161
+msgid "Set mask to selection"
+msgstr "Nastavení masky na výběr"
+
+#: modules/tools/maskedit.c:166
+msgid "Add selection to mask"
+msgstr "Přidávání výběru k masce"
+
+#: modules/tools/maskedit.c:171
+msgid "Subtract selection from mask"
+msgstr "Odebírání výběru od masky"
+
+#: modules/tools/maskedit.c:176
+msgid "Intersect selection with mask"
+msgstr "Průnik výběru s maskou"
+
+#: modules/tools/maskedit.c:187
+msgid "Mask Editor"
+msgstr "Editor masky"
+
+#: modules/tools/maskedit.c:203
+msgid "Mode:"
+msgstr "Mód:"
+
 #: modules/tools/pointer.c:59
 msgid "Pointer tool."
 msgstr "Nástroj Ukazatel."
@@ -2789,14 +2927,6 @@ msgstr "Čti hodnoty pod ukazatelem myši."
 #: modules/tools/pointer.c:128
 msgid "Read Value"
 msgstr "Čtení hodnot"
-
-#: modules/tools/polynom.c:140
-msgid "_Horizontal direction"
-msgstr "_Vodorovný směr"
-
-#: modules/tools/polynom.c:141
-msgid "_Vertical direction"
-msgstr "_Svislý směr"
 
 #: modules/tools/polynom.c:158
 msgid "X/Y Profile Level"
@@ -2943,47 +3073,46 @@ msgstr "Odstranění skvrn"
 msgid "Removal _method:"
 msgstr "_Metoda odstranění"
 
-#: modules/tools/stats.c:60
+#: modules/tools/stats.c:59
 msgid "Statistical quantities."
 msgstr "Statistické veličiny."
 
-#: modules/tools/stats.c:87
+#: modules/tools/stats.c:86
 msgid "Statistical quantities"
 msgstr "Statistické veličiny"
 
-#: modules/tools/stats.c:136
+#: modules/tools/stats.c:135
 msgid "Statistical Quantities"
 msgstr "Statistické veličiny"
 
-#: modules/tools/stats.c:151
+#: modules/tools/stats.c:149
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametry</b>"
 
-#: modules/tools/stats.c:155
+#: modules/tools/stats.c:153
 msgid "Ra"
 msgstr "Ra"
 
-#: modules/tools/stats.c:159
+#: modules/tools/stats.c:157
 msgid "Rms"
 msgstr "Rms"
 
-#: modules/tools/stats.c:163
+#: modules/tools/stats.c:161
 msgid "Skew"
 msgstr "Šikmost"
 
-#: modules/tools/stats.c:167
+#: modules/tools/stats.c:165
 msgid "Kurtosis"
 msgstr "Špičatost"
 
-#: modules/tools/stats.c:171
+#: modules/tools/stats.c:169
 msgid "Average height"
 msgstr "Průměrná výška"
 
-#: modules/tools/stats.c:175
+#: modules/tools/stats.c:173
 msgid "Projected area"
 msgstr "Projektovaná plocha"
 
-#: modules/tools/stats.c:179
+#: modules/tools/stats.c:177
 msgid "Area"
 msgstr "Plocha"
-
