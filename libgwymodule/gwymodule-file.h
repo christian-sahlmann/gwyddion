@@ -73,7 +73,7 @@ GwyContainer*   gwy_file_load               (const gchar *filename);
 gboolean        gwy_file_save               (GwyContainer *data,
                                              const gchar *filename);
 
-GtkObject*      gwy_build_file_menu         (GtkObject *item_factory,
+GtkObject*      gwy_file_func_build_menu    (GtkObject *item_factory,
                                              const gchar *prefix,
                                              GCallback item_callback,
                                              GwyFileOperation type);

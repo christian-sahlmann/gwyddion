@@ -56,7 +56,7 @@ gboolean     gwy_process_func_run           (const guchar *name,
                                              GwyContainer *data,
                                              GwyRunType run);
 GwyRunType   gwy_process_func_get_run_types (const gchar *name);
-GtkObject*   gwy_build_process_menu         (GtkObject *item_factory,
+GtkObject*   gwy_process_func_build_menu    (GtkObject *item_factory,
                                              const gchar *prefix,
                                              GCallback item_callback);
 

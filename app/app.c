@@ -184,7 +184,7 @@ gwy_app_create_toolbox(void)
                                 _("Shade data"), "shade");
 
     /***************************************************************/
-    toolbar = gwy_build_tool_toolbar(G_CALLBACK(gwy_app_use_tool_cb));
+    toolbar = gwy_tool_func_build_toolbar(G_CALLBACK(gwy_app_use_tool_cb));
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     /***************************************************************/

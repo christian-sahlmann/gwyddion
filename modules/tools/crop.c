@@ -152,6 +152,7 @@ crop_do(void)
 static void
 crop_dialog_abandon(void)
 {
+    gwy_debug("%s", __FUNCTION__);
     if (select_layer && finished_id)
         g_signal_handler_disconnect(select_layer, finished_id);
     finished_id = 0;

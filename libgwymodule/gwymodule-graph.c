@@ -104,7 +104,7 @@ gwy_graph_func_run(const guchar *name,
 }
 
 /**
- * gwy_build_graph_menu:
+ * gwy_graph_func_build_menu:
  * @item_factory: A #GtkItemFactory to add items to.
  * @prefix: Where to add the menu items to the factory.
  * @item_callback: A #GtkItemFactoryCallback1 called when an item from the
@@ -116,9 +116,9 @@ gwy_graph_func_run(const guchar *name,
  * Returns: The menu item factory as a #GtkObject.
  **/
 GtkObject*
-gwy_build_graph_menu(GtkObject *item_factory,
-                     const gchar *prefix,
-                     GCallback item_callback)
+gwy_graph_func_build_menu(GtkObject *item_factory,
+                          const gchar *prefix,
+                          GCallback item_callback)
 {
     GtkItemFactoryEntry branch = { NULL, NULL, NULL, 0, "<Branch>", NULL };
     GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };

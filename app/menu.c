@@ -97,8 +97,8 @@ gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<proc>",
                                         accel_group);
-    gwy_build_process_menu(GTK_OBJECT(item_factory), "/_Data Process",
-                           G_CALLBACK(gwy_app_run_process_func_cb));
+    gwy_process_func_build_menu(GTK_OBJECT(item_factory), "/_Data Process",
+                                G_CALLBACK(gwy_app_run_process_func_cb));
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
     menu = gtk_item_factory_get_widget(item_factory, "<proc>");
     gtk_container_add(GTK_CONTAINER(alignment), menu);
@@ -128,8 +128,8 @@ gwy_menu_create_graph_menu(GtkAccelGroup *accel_group)
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<graph>",
                                         accel_group);
-    gwy_build_graph_menu(GTK_OBJECT(item_factory), "/_Graph",
-                         G_CALLBACK(gwy_app_run_graph_func_cb));
+    gwy_graph_func_build_menu(GTK_OBJECT(item_factory), "/_Graph",
+                              G_CALLBACK(gwy_app_run_graph_func_cb));
     menu = gtk_item_factory_get_widget(item_factory, "<graph>");
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
     gtk_container_add(GTK_CONTAINER(alignment), menu);
@@ -196,10 +196,10 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
                                         accel_group);
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items1), menu_items1, NULL);
-    gwy_build_file_menu(GTK_OBJECT(item_factory), "/File/_Export To",
-                        G_CALLBACK(gwy_app_file_export_cb), GWY_FILE_SAVE);
-    gwy_build_file_menu(GTK_OBJECT(item_factory), "/File/_Import From",
-                        G_CALLBACK(gwy_app_file_import_cb), GWY_FILE_LOAD);
+    gwy_file_func_build_menu(GTK_OBJECT(item_factory), "/File/_Export To",
+                             G_CALLBACK(gwy_app_file_export_cb), GWY_FILE_SAVE);
+    gwy_file_func_build_menu(GTK_OBJECT(item_factory), "/File/_Import From",
+                             G_CALLBACK(gwy_app_file_import_cb), GWY_FILE_LOAD);
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items2), menu_items2, NULL);
     menu = gtk_item_factory_get_widget(item_factory, "<file>");

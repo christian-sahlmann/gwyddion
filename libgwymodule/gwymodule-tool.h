@@ -50,7 +50,7 @@ gboolean     gwy_tool_func_register      (const gchar *modname,
 void         gwy_tool_func_use           (const guchar *name,
                                           GwyDataWindow *data_window,
                                           GwyToolSwitchEvent event);
-GtkWidget*   gwy_build_tool_toolbar      (GCallback item_callback);
+GtkWidget*   gwy_tool_func_build_toolbar (GCallback item_callback);
 
 #ifdef __cplusplus
 }

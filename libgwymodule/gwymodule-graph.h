@@ -43,7 +43,7 @@ gboolean     gwy_graph_func_register      (const gchar *modname,
                                            GwyGraphFuncInfo *func_info);
 gboolean     gwy_graph_func_run           (const guchar *name,
                                            GwyGraph *data);
-GtkObject*   gwy_build_graph_menu         (GtkObject *item_factory,
+GtkObject*   gwy_graph_func_build_menu    (GtkObject *item_factory,
                                            const gchar *prefix,
                                            GCallback item_callback);
 

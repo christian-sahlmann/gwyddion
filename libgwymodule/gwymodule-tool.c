@@ -108,7 +108,7 @@ gwy_tool_func_use(const guchar *name,
 }
 
 /**
- * gwy_build_tool_toolbar:
+ * gwy_tool_func_build_toolbar:
  * @item_callback: A callback called when a tool from the toolbar is selected
  *                 with tool name as the user data.
  *
@@ -119,7 +119,7 @@ gwy_tool_func_use(const guchar *name,
 /* XXX: This is broken, because the toolbar may have more than one row.
  * But... */
 GtkWidget*
-gwy_build_tool_toolbar(GtkSignalFunc item_callback)
+gwy_tool_func_build_toolbar(GtkSignalFunc item_callback)
 {
     GtkWidget *toolbar, *group;
     GSList *l, *entries = NULL;
