@@ -216,6 +216,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
                                                      NULL);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
                                                              "/0/data"));
+    args->original_xres = dfield->xres;
+    args->original_yres = dfield->yres;
     newsize = gwy_data_field_get_fft_res(MAX(dfield->xres, dfield->yres));
     
     gwy_data_field_resample(dfield, newsize, newsize,
@@ -514,7 +516,7 @@ graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
                     gwy_data_line_part_fill(args->weights,
                                             MAX(0, args->weights->res*beg),
                                             MIN(args->weights->res, args->weights->res*end),
-                                            0.5);
+                                            0.3);
      
             }
             if (args->update) update_view(pcontrols, args);
@@ -540,7 +542,6 @@ graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
 }
 
 
-
 /*fit data*/
 static void
 fftf_1d_run(Fftf1dControls *controls,
@@ -554,7 +555,18 @@ static void
 fftf_1d_do(Fftf1dControls *controls,
              Fftf1dArgs *args)
 {
+    GtkWidget *data_window;
+    GwyDataField *rfield;
 
+    rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->result,
+                                                                "/0/data"));
+    gwy_data_field_resample(rfield, args->original_xres, args->original_yres,
+                            args->interpolation);
+    
+    data_window = gwy_app_data_window_create(args->result);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
+                                      _("Filtered data"));
+            
 }
 
 /*display mode menu*/
@@ -605,6 +617,7 @@ suppress_changed_cb(GObject *item, Fftf1dArgs *args)
     }
     else
         gtk_widget_set_sensitive(pcontrols->menu_view_type, TRUE);
+    graph_selected(GWY_GRAPHER(pcontrols->graph)->area, args);
     update_view(pcontrols, args);
 }
 
@@ -612,6 +625,7 @@ static void
 view_type_changed_cb(GObject *item, Fftf1dArgs *args)
 {
     args->view_type = GPOINTER_TO_INT(g_object_get_data(item, "view-type"));
+    graph_selected(GWY_GRAPHER(pcontrols->graph)->area, args);
     update_view(pcontrols, args);
 }
 
