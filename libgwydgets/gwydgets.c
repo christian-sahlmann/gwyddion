@@ -26,7 +26,10 @@
 #include <libdraw/gwydraw.h>
 #include "gwydgets.h"
 
+static GdkGLConfig *glconfig = NULL;
 static guint types_initialized = 0;
+
+/************************** Initialization ****************************/
 
 /**
  * gwy_widgets_type_init:
@@ -50,7 +53,64 @@ gwy_widgets_type_init(void)
     types_initialized += gwy_graph_curve_model_get_type();
     types_initialized += gwy_graph_model_get_type();
 #endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
+    /* not serializable (yet) */
+    types_initialized += gwy_gl_material_get_type();
     types_initialized |= 1;
+}
+
+/**
+ * gwy_widgets_gl_init:
+ *
+ * Configures an OpenGL-capable visual for 3D widgets.
+ *
+ * Use gwy_widgets_get_gl_config() to get the framebuffer configuration.
+ *
+ * This function must be called before OpenGL widgets can be used.
+ *
+ * Returns: %TRUE if an appropriate visual was found.
+ *
+ * Since: 1.5
+ **/
+gboolean
+gwy_widgets_gl_init(void)
+{
+    /* when called twice, fail but successfully :o) */
+    g_return_val_if_fail(glconfig != NULL, TRUE);
+
+    glconfig = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB
+                                         | GDK_GL_MODE_DEPTH
+                                         | GDK_GL_MODE_DOUBLE);
+    /* Try double-buffered visual */
+    if (!glconfig) {
+        g_warning("Cannot find a double-buffered OpenGL visual, "
+                  "Trying single-buffered visual.");
+
+        /* Try single-buffered visual */
+        glconfig = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB
+                                             | GDK_GL_MODE_DEPTH);
+        if (!glconfig) {
+            g_warning("No appropriate OpenGL-capable visual found.");
+        }
+    }
+
+    return glconfig != NULL;
+}
+
+/**
+ * gwy_widgets_get_gl_config:
+ *
+ * Returns OpenGL framebuffer configuration for 3D widgets.
+ *
+ * Call gwy_widgets_gl_init() first.
+ *
+ * Returns: The OpenGL framebuffer configuration.
+ *
+ * Since: 1.5
+ **/
+GdkGLConfig*
+gwy_widgets_get_gl_config(void)
+{
+    return glconfig;
 }
 
 /************************** Table attaching ****************************/
