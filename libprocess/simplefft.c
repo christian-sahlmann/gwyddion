@@ -21,6 +21,19 @@
 #include <math.h>
 #include "simplefft.h"
 
+/**
+ * gwy_fft_hum:
+ * @dir: direction (1/-1) 
+ * @re_in: real part of input data
+ * @im_in: imaginary part of input data
+ * @re_out: real part of output data
+ * @im_out: imaginary part of output data
+ * @n: number of data points
+ *
+ * Performs FST algorithm.
+ *
+ * Returns: zero at success.
+ **/
 gint
 gwy_fft_hum(gint dir, gdouble *re_in, gdouble *im_in,
             gdouble *re_out, gdouble *im_out, gint n)
@@ -127,6 +140,14 @@ gwy_fft_mult(gdouble *data, gint n, gdouble (*p_window)())
         data[i] *= (*p_window)(i, n);
 }
 
+/**
+ * gwy_fft_window:
+ * @data: data values
+ * @n: number of data values
+ * @windowing: method used for windowing
+ *
+ * Multiplies data by given window.
+ **/
 void
 gwy_fft_window(gdouble *data, gint n, GwyWindowingType windowing)
 {

@@ -42,6 +42,16 @@ typedef struct{
     gint row;
 } GrainPoint;
 
+/**
+ * gwy_data_field_grains_mark_height:
+ * @data_field: data to be used for marking 
+ * @grain_field: result of marking (mask)
+ * @threshval: height threshold
+ * @dir: marking direction
+ *
+ * Marks data that are above/below height threshold
+ * depending on @dir argument.
+ **/
 void
 gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
@@ -65,6 +75,16 @@ gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_
     g_object_unref(mask);
 }
 
+/**
+ * gwy_data_field_grains_mark_slope:
+ * @data_field: data to be used for marking 
+ * @grain_field: result of marking (mask)
+ * @threshval: slope threshold
+ * @dir: marking direction
+ *
+ * Marks data that are above/below slope threshold
+ * depending on @dir argument.
+ **/
 void
 gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
@@ -89,6 +109,16 @@ gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *grain_f
 
 }
 
+/**
+ * gwy_data_field_grains_mark_curvature:
+ * @data_field: data to be used for marking 
+ * @grain_field: result of marking (mask)
+ * @threshval: curvature threshold
+ * @dir: marking direction
+ *
+ * Marks data that are above/below curvature threshold
+ * depending on @dir argument.
+ **/
 void
 gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
@@ -121,6 +151,20 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField *gra
 
 }
 
+/**
+ * gwy_data_field_grains_mark_watershed:
+ * @data_field: data to be used for marking
+ * @grain_field: result of marking (mask)
+ * @locate_steps: locating algorithm steps
+ * @locate_thresh: locating algorithm threshold
+ * @locate_dropsize: locating drop size 
+ * @wshed_steps: watershed steps
+ * @wshed_dropsize: watershed drop size
+ * @prefilter: use prefiltering
+ * @dir: mark algorithm direction
+ *
+ * Performs watershed algorithm.
+ **/
 void
 gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *grain_field,
 					  gint locate_steps, gint locate_thresh, gdouble locate_dropsize,
@@ -164,6 +208,21 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
 
 }
 
+/**
+ * gwy_data_field_grains_watershed_iteration:
+ * @data_field: data to be used for marking
+ * @grain_field: result of marking (mask)
+ * @status : current status of the algorithm 
+ * @locate_steps: locating algorithm steps
+ * @locate_thresh: locating algorithm threshold
+ * @locate_dropsize: locating drop size 
+ * @wshed_steps: watershed steps
+ * @wshed_dropsize: watershed drop size
+ * @prefilter: use prefiltering
+ * @dir: mark algorithm direction
+ *
+ * Performs one iteration of the watershed algorithm.
+ **/
 void
 gwy_data_field_grains_watershed_iteration(GwyDataField *data_field, GwyDataField *grain_field,
                                           GwyWatershedStatus *status,
@@ -236,6 +295,13 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field, GwyDataField
 
 }
 
+/**
+ * gwy_data_field_grains_remove_manually:
+ * @grain_field: field of marked grains (mask) 
+ * @i: position of requested grain removal
+ *
+ * Removes one grain at given position.
+ **/
 void
 gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint i)
 {
@@ -258,6 +324,13 @@ gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint i)
     g_free(pnt);
 }
 
+/**
+ * gwy_data_field_grains_remove_by_size:
+ * @grain_field: field of marked grains (mask) 
+ * @size: size to be used as threshold
+ *
+ * Removes all grain below area @size (in square pixels);
+ **/
 void
 gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
 {
@@ -292,6 +365,15 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
 
 }
 
+/**
+ * gwy_data_field_grains_remove_by_height:
+ * @data_field: data to be used for marking 
+ * @grain_field: field of marked grains (mask) 
+ * @threshval: height threshold
+ * @direction: threshold grains above/below given height
+ *
+ * Thresolds grain that are higher/lower than given threshold value.
+ **/
 void
 gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint G_GNUC_UNUSED direction)
 {
@@ -320,6 +402,14 @@ gwy_data_field_grains_get_average(GwyDataField G_GNUC_UNUSED *grain_field)
     return 0;
 }
 
+/**
+ * gwy_data_field_grains_get_distribution:
+ * @grain_field:  field of marked grains (mask)
+ * @distribution: grain size distribution
+ *
+ * Computes grain size distribution - plot of
+ * number of grains vs. grain area (in real units).
+ **/
 void
 gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLine *distribution)
 {
@@ -358,6 +448,13 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLine *d
     g_object_unref(buffer);
 }
 
+/**
+ * gwy_data_field_grains_add:
+ * @grain_field: field of marked grains (mask) 
+ * @add_field: field of marked grains (mask) to be added
+ *
+ * Adds @add_field grains to @grain_field.
+ **/
 void
 gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
 {
@@ -379,6 +476,14 @@ gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
     g_object_unref(buffer);
 }
 
+/**
+ * gwy_data_field_grains_intersect:
+ * @grain_field:  field of marked grains (mask)
+ * @intersect_field: field of marked grains (mask)
+ *
+ * Performs intersection betweet two grain fields,
+ * result is stored in @grain_field.
+ **/
 void
 gwy_data_field_grains_intersect(GwyDataField *grain_field, GwyDataField *intersect_field)
 {
