@@ -37,7 +37,7 @@ typedef enum {
 
 GwyContainer*  gwy_app_get_current_data            (void);
 GwyDataWindow* gwy_app_data_window_get_current     (void);
-void           gwy_app_data_window_set_current     (GwyDataWindow *window);
+gboolean       gwy_app_data_window_set_current     (GwyDataWindow *window);
 void           gwy_app_data_window_remove          (GwyDataWindow *window);
 void           gwy_app_data_window_foreach         (GFunc func,
                                                     gpointer user_data);

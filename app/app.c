@@ -265,8 +265,10 @@ gwy_app_get_current_data(void)
  * Makes a data window current, including tool switch, etc.
  *
  * The window must be present in the list.
+ *
+ * Returns: Always FALSE, no matter what (to be usable as an event handler).
  **/
-void
+gboolean
 gwy_app_data_window_set_current(GwyDataWindow *window)
 {
     GwyMenuSensData sens_data = {
@@ -283,12 +285,12 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     if (already_current == window) {
         gwy_debug("window already current");
         g_assert(current_data && current_data->data == (gpointer)window);
-        return;
+        return FALSE;
     }
 
-    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(window), FALSE);
     item = g_list_find(current_data, window);
-    g_return_if_fail(item);
+    g_return_val_if_fail(item, FALSE);
     current_data = g_list_remove_link(current_data, item);
     current_data = g_list_concat(item, current_data);
 
@@ -308,6 +310,8 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 
     gwy_app_toolbox_update_state(&sens_data);
     already_current = window;
+
+    return FALSE;
 }
 
 /**
