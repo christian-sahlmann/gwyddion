@@ -480,6 +480,13 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
     return alignment;
 }
 
+/* XXX: temporary hack! */
+static void
+gwy_app_show_graph_list_cb(void)
+{
+    gtk_widget_show(gwy_app_graph_list(gwy_app_data_window_get_current()));
+}
+
 GtkWidget*
 gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 {
@@ -504,9 +511,15 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             gwy_app_change_mask_color_cb, 0, NULL, NULL },
         { "/Edit/Change Default Mask _Color", NULL,
             gwy_app_change_mask_color_cb, 1, NULL, NULL },
+        /* XXX: temporary hack! */
+        { "/Edit/---", NULL,
+            NULL, 0, "<Separator>", NULL },
+        { "/Edit/_Graph List", NULL,
+            gwy_app_show_graph_list_cb, 0, "<StockItem>", GWY_STOCK_GRAPH },
     };
     static const gchar *items_need_data[] = {
-        "/Edit/Duplicate", NULL
+        /* XXX: temporary hack! */
+        "/Edit/Duplicate", "/Edit/Graph List", NULL
     };
     static const gchar *items_need_data_mask[] = {
         "/Edit/Remove Mask", "/Edit/Change Mask Color", NULL

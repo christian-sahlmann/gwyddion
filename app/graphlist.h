@@ -26,9 +26,9 @@
 
 G_BEGIN_DECLS
 
-void
-gwy_app_graph_list_add(GwyDataWindow *data_window,
-                       GwyGraph *graph);
+void       gwy_app_graph_list_add     (GwyDataWindow *data_window,
+                                       GwyGraph *graph);
+GtkWidget* gwy_app_graph_list         (GwyDataWindow *data_window);
 
 G_END_DECLS
 
