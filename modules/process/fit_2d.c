@@ -779,7 +779,7 @@ fit_sphere_up(gdouble x,
     frow = row*yreal/yres;
     
     val = sqrt(param[0]*param[0] - (fcol - param[1])*(fcol - param[1])
-	       - (frow - param[2])*(frow - param[2])) - param[0] - param[3];
+	       - (frow - param[2])*(frow - param[2])) + param[3];
    
     *fres = TRUE;
     return val;
