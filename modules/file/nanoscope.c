@@ -81,6 +81,7 @@ static gboolean       read_binary_data    (gint n,
 static GHashTable*    read_hash           (gchar **buffer);
 static gchar*         next_line           (gchar **buffer);
 
+static gchar*         get_data_name        (GHashTable *hash);
 static void           get_value_scales    (GHashTable *hash,
                                            gdouble *zscale,
                                            gdouble *curscale);
@@ -92,7 +93,7 @@ static GwyModuleInfo module_info = {
     "nanoscope",
     "Load Nanoscope data.",
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -207,6 +208,9 @@ nanoscope_load(const gchar *filename)
         object = gwy_container_new();
         gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
                                          G_OBJECT(ndata->data_field));
+        if ((p = get_data_name(ndata->hash)))
+            gwy_container_set_string_by_name(GWY_CONTAINER(object),
+                                             "/filename/title", p);
     }
 
     /* unref all data fields, the container already keeps a reference to the
@@ -221,6 +225,24 @@ nanoscope_load(const gchar *filename)
     g_list_free(list);
 
     return (GwyContainer*)object;
+}
+
+static gchar*
+get_data_name(GHashTable *hash)
+{
+    gchar *name, *p1, *p2;
+
+    name = g_hash_table_lookup(hash, "@2:Image Data");
+    if (!name)
+        return NULL;
+
+    if ((p1 = strchr(name, '[')) && (p2 = strchr(p1+1, ']')))
+        return g_strndup(p1 + 1, p2 - p1 - 1);
+
+    if ((p1 = strchr(name, '"')) && (p2 = strchr(p1+1, '"')))
+        return g_strndup(p1 + 1, p2 - p1 - 1);
+
+    return NULL;
 }
 
 static void
