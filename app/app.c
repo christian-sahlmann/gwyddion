@@ -545,20 +545,15 @@ gwy_app_toolbar_append_tool(GtkWidget *toolbar,
                             GwyToolUseFunc tool_use_func)
 {
     GtkWidget *icon;
-    GtkStockItem stock_item;
 
     g_return_val_if_fail(GTK_IS_TOOLBAR(toolbar), NULL);
     g_return_val_if_fail(stock_id, NULL);
     g_return_val_if_fail(tooltip, NULL);
 
-    if (!gtk_stock_lookup(stock_id, &stock_item)) {
-        g_warning("Couldn't find item for stock id `%s'", stock_id);
-        stock_item.label = "???";
-    }
     icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
     return gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
                                       GTK_TOOLBAR_CHILD_RADIOBUTTON, radio,
-                                      stock_item.label, tooltip, NULL, icon,
+                                      stock_id, tooltip, NULL, icon,
                                       GTK_SIGNAL_FUNC(gwy_app_use_tool_cb),
                                       tool_use_func);
 }
@@ -570,20 +565,15 @@ gwy_app_toolbar_append_func(GtkWidget *toolbar,
                             const gchar *name)
 {
     GtkWidget *icon, *button;
-    GtkStockItem stock_item;
 
     g_return_val_if_fail(GTK_IS_TOOLBAR(toolbar), NULL);
     g_return_val_if_fail(stock_id, NULL);
     g_return_val_if_fail(tooltip, NULL);
 
-    if (!gtk_stock_lookup(stock_id, &stock_item)) {
-        g_warning("Couldn't find item for stock id `%s'", stock_id);
-        stock_item.label = "???";
-    }
     icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
     button = gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
                                         GTK_TOOLBAR_CHILD_BUTTON, NULL,
-                                        stock_item.label, tooltip, NULL, icon,
+                                        stock_id, tooltip, NULL, icon,
                                         NULL, NULL);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_run_process_func_cb),
@@ -598,20 +588,15 @@ gwy_app_toolbar_append_zoom(GtkWidget *toolbar,
                             gint izoom)
 {
     GtkWidget *icon, *button;
-    GtkStockItem stock_item;
 
     g_return_val_if_fail(GTK_IS_TOOLBAR(toolbar), NULL);
     g_return_val_if_fail(stock_id, NULL);
     g_return_val_if_fail(tooltip, NULL);
 
-    if (!gtk_stock_lookup(stock_id, &stock_item)) {
-        g_warning("Couldn't find item for stock id `%s'", stock_id);
-        stock_item.label = "???";
-    }
     icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
     button = gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
                                         GTK_TOOLBAR_CHILD_BUTTON, NULL,
-                                        stock_item.label, tooltip, NULL, icon,
+                                        stock_id, tooltip, NULL, icon,
                                         NULL, NULL);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_zoom_set_cb),
