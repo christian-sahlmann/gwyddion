@@ -403,9 +403,11 @@ gwy_table_attach_hscale(GtkWidget *table,
     if (base_style != GWY_HSCALE_WIDGET
         && base_style != GWY_HSCALE_WIDGET_NO_EXPAND) {
         spin = gtk_spin_button_new(adj, 1, 0);
+        u = adj->value;
         gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
         gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
         gtk_table_attach(tab, spin, 2, 3, row, row+1, GTK_FILL, 0, 2, 2);
+        gtk_adjustment_set_value(adj, u);
         middle_widget = spin;
 
         if (base_style == GWY_HSCALE_LOG) {
