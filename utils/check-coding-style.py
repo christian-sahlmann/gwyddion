@@ -40,6 +40,7 @@ def check_file(filename, lines):
         check_long_lines
     ]
     token_checks = [
+        check_double_semicolons,
         check_missing_spaces_around,
         check_missing_spaces_after,
         check_missing_spaces_before,
@@ -89,6 +90,16 @@ def check_tab_characters(lines, warnings):
         col = l.find('\t')
         if col > -1:
             warnings.append((i, 'Raw tab character (col %d)' % col))
+
+def check_double_semicolons(tokens, lines, warnings):
+    "Check for double semicolons"
+    for t in tokens:
+        if t.typ != Token.punct or t.string != ';':
+            continue
+        if t.prec.typ != Token.punct or t.prec.string != ';':
+            continue
+        w = 'Double semicolon (col %d): %s'
+        warnings.append((t.line, w % (t.col, lines[t.line])))
 
 def check_missing_spaces_around(tokens, lines, warnings):
     "Check for missing spaces around <, >, =, etc."
