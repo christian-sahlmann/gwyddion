@@ -113,11 +113,10 @@ facet_level_coeffs(GwyDataField *dfield, gdouble *bx, gdouble *by)
         for (j = 1; j < xres; j++) {
             vx = 0.5*(newrow[j] + row[j] - newrow[j-1] - row[j-1])/xr;
             vy = 0.5*(newrow[j-1] + newrow[j] - row[j-1] - row[j])/yr;
-            q = sqrt(1.0 + vx*vx + vy*vy);
             /* XXX: braindamaged heuristics; I thought q alone (i.e., normal
              * normalization) whould give nice facet leveling, but alas! the
              * higher norm values has to be suppressed much more -- it seems */
-            q *= exp(q*q);
+            q = exp(20.0*(vx*vx + vy*vy));
             sumvx += vx/q;
             sumvy += vy/q;
             sumvz -= 1.0/q;
