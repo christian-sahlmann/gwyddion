@@ -32,7 +32,7 @@ typedef void (*GwyToolUseFunc)(GwyDataWindow *data_window);
 void gwy_tool_crop_use    (GwyDataWindow *data_window);
 void gwy_tool_level3_use  (GwyDataWindow *data_window);
 void gwy_tool_pointer_use (GwyDataWindow *data_window);
-
+void gwy_tool_profile_use (GwyDataWindow *data_window);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -15,7 +15,8 @@ libtools_la_LDFLAGS = -static
 libtools_la_SOURCES = \
 	crop.c \
 	level3.c \
-	pointer.c
+	pointer.c \
+        profile.c
 
 libtools_la_LIBADD = \
 	$(libgwyddion) \

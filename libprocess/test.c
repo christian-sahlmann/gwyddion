@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	p->data[20 + 512*i]);
     }
 */
-
+/*
     gwy_palette_def_setup_presets();
     pal = (GwyPalette*) gwy_palette_new(NULL);
     gwy_palette_set_by_name(pal, GWY_PALETTE_OLIVE);
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     gdk_pixbuf_save(pxb, "c.jpg", "jpeg", &error, "quality", "100", NULL);
     gwy_pixfield_do(pxb, d, pal);
     gdk_pixbuf_save(pxb, "d.jpg", "jpeg", &error, "quality", "100", NULL);
-
+*/
 
 
 

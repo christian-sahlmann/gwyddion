@@ -209,15 +209,24 @@ gwy_app_create_toolbox(void)
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_CROP,
                                 _("Crop tooltip"),
                                 gwy_tool_crop_use);
-    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_SHADER,
+    
+    button = gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SHADER,
+                                      "Shade data", NULL,
+                                      NULL, NULL, -1);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_run_process_func_cb),
+                             "shade");
+ 
+    /*gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_SHADER,
                                 _("Shader tooltip"),
                                 NULL);
+                                */
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_FIT_TRIANGLE,
                                 _("Fit plane using three points"),
                                 gwy_tool_level3_use);
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_GRAPH,
-                                _("Graph tooltip"),
-                                NULL);
+                                _("Extract profile"),
+                                gwy_tool_profile_use);
 
     /***************************************************************/
     gtk_widget_show_all(window);

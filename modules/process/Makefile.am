@@ -11,7 +11,8 @@ process_PROGRAMS = \
 	rotate.so \
 	scale.so \
 	fft.so \
-        cwt.so
+        cwt.so \
+	shade.so
 
 basicops_so_SOURCES = basicops.c
 basicops_so_LDFLAGS = $(module_ldflags),basicops.so
@@ -33,6 +34,11 @@ fft_so_LDFLAGS = $(module_ldflags),fft.so
 
 cwt_so_SOURCES = cwt.c
 cwt_so_LDFLAGS = $(module_ldflags),cwt.so
+
+shade_so_SOURCES = shade.c
+shade_so_LDFLAGS = $(module_ldflags),shade.so
+
+
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"

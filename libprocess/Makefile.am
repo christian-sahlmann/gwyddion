@@ -32,7 +32,6 @@ libgwyprocess_la_SOURCES = \
 test_SOURCES = \
 	test.c
 test_LDADD = libgwyprocess.la \
-        $(libgwydraw) \
 	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
