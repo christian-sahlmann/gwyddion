@@ -162,11 +162,11 @@ pixmap_detect(const gchar *filename,
 
         extensions = g_strsplit(pixmap_formats[i].extensions, ",", 0);
         g_assert(extensions);
-        for (ext = 0; extensions[i]; i++) {
-            if (g_str_has_suffix(filename, extensions[i]))
+        for (ext = 0; extensions[ext]; ext++) {
+            if (g_str_has_suffix(filename, extensions[ext]))
                 break;
         }
-        score = extensions[i] ? 20 : 0;
+        score = extensions[ext] ? 20 : 0;
         g_strfreev(extensions);
 
         return score;
