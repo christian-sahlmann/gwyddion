@@ -1,0 +1,110 @@
+<!-- ##### SECTION Title ##### -->
+gwyexpr
+
+<!-- ##### SECTION Short_Description ##### -->
+Arithmetic expression parser and evaluator.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyExprError ##### -->
+<para>
+
+</para>
+
+@GWY_EXPR_ERROR_CLOSING_PAREN: 
+@GWY_EXPR_ERROR_EMPTY: 
+@GWY_EXPR_ERROR_EMPTY_PARENTHESES: 
+@GWY_EXPR_ERROR_GARBAGE: 
+@GWY_EXPR_ERROR_INVALID_ARGUMENT: 
+@GWY_EXPR_ERROR_INVALID_TOKEN: 
+@GWY_EXPR_ERROR_MISSING_ARGUMENT: 
+@GWY_EXPR_ERROR_NOT_EXECUTABLE: 
+@GWY_EXPR_ERROR_OPENING_PAREN: 
+@GWY_EXPR_ERROR_STRAY_COMMA: 
+@GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS: 
+
+<!-- ##### STRUCT GwyExpr ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_expr_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_expr_free ##### -->
+<para>
+
+</para>
+
+@expr: 
+
+
+<!-- ##### FUNCTION gwy_expr_evaluate ##### -->
+<para>
+
+</para>
+
+@expr: 
+@text: 
+@result: 
+@err: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_expr_compile ##### -->
+<para>
+
+</para>
+
+@expr: 
+@text: 
+@err: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_expr_resolve_variables ##### -->
+<para>
+
+</para>
+
+@expr: 
+@n: 
+@names: 
+@indices: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_expr_get_variables ##### -->
+<para>
+
+</para>
+
+@expr: 
+@names: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_expr_execute ##### -->
+<para>
+
+</para>
+
+@expr: 
+@values: 
+@Returns: 
+
+
