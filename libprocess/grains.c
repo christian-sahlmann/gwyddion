@@ -138,6 +138,7 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
     min = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
     water = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
     mark_dfield = gwy_serializable_duplicate(data_field);
+    gwy_data_field_fill(grain_field, 0);
 
     gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres, data_field->yres);
     /*odrop*/
@@ -145,21 +146,19 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
     {
 	    drop_step(mark_dfield, water, locate_dropsize);
     }
-    /*threshold_drops(water, locate_thresh);*/
-
     drop_minima(water, min, locate_thresh);
-    for (i=0; i<(data_field->xres*data_field->yres); i++) if (min->data[i]!=0) printf("i=%d\n",i);
 
     /*owatershed*/
-/*    gwy_data_field_copy(data_field, mark_dfield);
+    gwy_data_field_copy(data_field, mark_dfield);
     for (i=0; i<wshed_steps; i++)
     {
-	    wdrop_step(mark_dfield, min, water, grain_field, wshed_dropsize); 
+        wdrop_step(mark_dfield, min, water, grain_field, wshed_dropsize); 
     }
-  */  
+  
+    /*gwy_data_field_multiply(grain_field, 10.0/gwy_data_field_get_max(grain_field));*/
     /*mark_grain_boundaries(water_field, grain_field);*/
 
-    gwy_data_field_copy(min, grain_field);
+    /*gwy_data_field_copy(water, grain_field);*/
     
     g_object_unref(min);
     g_object_unref(water);
@@ -254,6 +253,39 @@ gwy_data_field_grains_get_average(GwyDataField *grain_field)
 void 
 gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLine *distribution)
 {
+    gint i, xres, yres, col, row;
+    gint *pnt, npnt, maxpnt;
+    GwyDataField *buffer;
+    
+    
+    xres = grain_field->xres;
+    yres = grain_field->yres;
+
+    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, grain_field->xreal, grain_field->yreal, FALSE);
+    gwy_data_field_copy(grain_field, buffer);
+
+    gwy_data_line_resample(distribution, sqrt(xres*yres)+1, GWY_INTERPOLATION_NONE);
+    gwy_data_line_fill(distribution, 0);
+   
+    maxpnt = 0;
+    for (i=0; i<(xres*yres); i++)
+    {
+        if (buffer->data[i]>0)
+        {
+            row = (gint)floor((gdouble)i/(gdouble)xres);
+            col = i - xres*row;
+            npnt = 0;
+            pnt = gwy_data_field_fill_grain(buffer, row, col, &npnt);
+            gwy_data_field_grains_remove_manually(buffer, i);
+            g_free(pnt);
+
+            if (maxpnt<npnt) maxpnt = npnt;
+            distribution->data[(gint)(sqrt(npnt))] += 1;
+        }
+    }
+    gwy_data_line_resize(distribution, 0, sqrt(maxpnt));
+    gwy_data_line_set_real(distribution, sqrt(maxpnt));
+    g_object_unref(buffer);
 }
 
 void 
@@ -402,7 +434,7 @@ drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize
 void 
 drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
 {
-    gint xres, yres, i, retval, global_row_value, global_col_value, global_number, npnt, *pnt;
+    gint xres, yres, i, retval, global_row_value, global_col_value, global_number, npnt, *pnt, cnt;
     gdouble col, row, global_maximum_value;
     GwyDataField *buffer;
     
@@ -411,6 +443,7 @@ drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
     buffer = (GwyDataField*)gwy_data_field_new(xres, yres, water_field->xreal, water_field->yreal, TRUE);
 
     global_number = 0;
+    cnt=0;
     for (i=0; i<(xres*yres); i++)
     {
 	    if (water_field->data[i]>0 && buffer->data[i]==0)
@@ -426,10 +459,11 @@ drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
             for (i=0; i<npnt; i++)
             {
                 if (global_maximum_value<water_field->data[pnt[i]])
-                global_maximum_value = water_field->data[pnt[i]];
-                
-                global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
-                global_col_value = i - xres*global_row_value;
+                {
+                    global_maximum_value = water_field->data[pnt[i]];            
+                    global_row_value = (gint)floor((gdouble)pnt[i]/(gdouble)xres);
+                    global_col_value = pnt[i] - xres*global_row_value;
+                }
 
                 buffer->data[pnt[i]] = global_number;
             }
@@ -438,10 +472,12 @@ drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
      	    if (npnt>threshval)
        	    {
       	        min_field->data[global_col_value + xres*global_row_value] = global_number;
+                cnt ++;
        	    }
 
     	}
     }
+    printf("%d of minima\n",cnt);
     g_object_unref(buffer); 
 }
 
@@ -472,13 +508,13 @@ wstep_by_one(GwyDataField *data_field, GwyDataField *grain_field, gint *rcol, gi
         d = data_field->data[*rcol + xres*(*rrow-1)]; 
     else d = -G_MAXDOUBLE;
 				    
-    v = data_field->data[(gint)(rcol + xres*(*rrow))];
+    v = data_field->data[(gint)(*rcol + xres*(*rrow))];
 
     if (v>=a && v>=b && v>=c && v>=d) {return 1;}
-    else if (a>=v && a>=b && a>=c && a>=d) {*rcol++; return 0;}
-    else if (b>=v && b>=a && b>=c && b>=d) {*rcol--; return 0;}
-    else if (c>=v && c>=b && c>=a && c>=d) {*rrow++; return 0;}
-    else {*rrow--; return 0;}
+    else if (a>=v && a>=b && a>=c && a>=d) {(*rcol) += 1; return 0;}
+    else if (b>=v && b>=a && b>=c && b>=d) {(*rcol) -= 1; return 0;}
+    else if (c>=v && c>=b && c>=a && c>=d) {(*rrow) += 1; return 0;}
+    else {(*rrow) -= 1; return 0;}
     
     
     
@@ -546,18 +582,28 @@ wdrop_step (GwyDataField *data_field,  GwyDataField *min_field,  GwyDataField *w
     {
         for (row=1; row<(yres-1); row++)
         {
-            if (min_field->data[col + xres*(row)]>0 && water_field->data[col + xres*(row)]==0) 
+/*            if (min_field->data[col + xres*(row)]>0 && water_field->data[col + xres*(row)]==0) */
+              if (min_field->data[col + xres*(row)]>0)
                 grain_field->data[col + xres*(row)] = grain++;
-
+              else grain_field->data[col + xres*(row)] = 0;
+        }                                   /*****************************************/
+    }
+    for (col=1; col<(xres-1); col++)
+    {
+        for (row=1; row<(yres-1); row++)
+        {
+                                            /******************************************/
             vcol = col; vrow = row;
+/*            printf("start: %d %d, ", col, row);*/
             retval = 0;
             do {
                 retval = step_by_one(data_field, &vcol, &vrow);
             } while (retval==0);
+/*            printf("stop: %d %d \n", vcol, vrow);*/
 
             /*now, distinguish what to change at point vi, vj*/
             process_mask(grain_field, vcol, vrow);
-            water_field->data[vcol + xres*(vrow)] += dropsize;
+            water_field->data[vcol + xres*(vrow)] += 1;
             data_field->data[vcol + xres*(vrow)] -= dropsize;
             
         }
@@ -579,6 +625,7 @@ mark_grain_boundaries (GwyDataField *grain_field, GwyDataField *mark_field)
             if (mark_field->data[col + xres*(row)] != mark_field->data[col+1 + xres*(row)]
                 || mark_field->data[col + xres*(row)] != mark_field->data[col + xres*(row+1)])
                 grain_field->data[col + xres*(row)] = 0;
+            else grain_field->data[col + xres*(row)] = 1;
         }
     }
 }

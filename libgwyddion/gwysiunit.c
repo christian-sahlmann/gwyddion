@@ -264,7 +264,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
     }
     format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
   
-    format->units = g_stpcpy(format->units, gwy_math_SI_prefix(format->magnitude));
+    format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
     format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
     format->precision = 2;
     return format;

@@ -75,26 +75,31 @@ dist(GwyContainer *data, GwyRunType run)
     GtkWidget *window, *graph;
     GwyGraphAutoProperties prop;
     GwyDataLine *dataline;
+    GwyDataField *dfield;
     gint i;
 
     g_assert(run & DIST_RUN_MODES);
     
-    /*udelat graf*/
-    graph = gwy_graph_new();
-    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
-    prop.is_point = 0;
-    prop.is_line = 1;
-    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+    {
+        graph = gwy_graph_new();
+        gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
+        prop.is_point = 0;
+        prop.is_line = 1;
+        gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
 
-    dataline = (GwyDataLine *)gwy_data_line_new(10, 10, 0);
-    for (i=0; i<10; i++) dataline->data[i]=i*i;
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
+        dataline = (GwyDataLine *)gwy_data_line_new(10, 10, TRUE);
+        /*for (i=0; i<10; i++) dataline->data[i] = i*i;*/
+        gwy_data_field_grains_get_distribution(dfield, dataline);
 
-    lab = g_string_new("Dist");
-    gwy_graph_add_dataline(GWY_GRAPH(graph), dataline, 0, lab, NULL);
+        lab = g_string_new("Dist");
+        gwy_graph_add_dataline(GWY_GRAPH(graph), dataline, 0, lab, NULL);
 
-    window = gwy_app_graph_window_create(graph);
-    g_string_free(lab, TRUE);
-    g_object_unref(dataline);
+        window = gwy_app_graph_window_create(graph);
+        g_string_free(lab, TRUE);
+        g_object_unref(dataline);
+    }
     return TRUE;
 }
 

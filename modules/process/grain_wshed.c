@@ -79,7 +79,7 @@ WshedArgs wshed_defaults = {
     10,
     3,
     10,
-    1,
+    10,
     1
 };
 
@@ -152,7 +152,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     GtkHBox *hbox;
     GwyDataField *dfield;
 
-    dialog = gtk_dialog_new_with_buttons(_("Wshed grains by threshold"),
+    dialog = gtk_dialog_new_with_buttons(_("Mark grains by watershed algorithm"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,

@@ -240,6 +240,7 @@ gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
         xdata[i] = i*gwy_data_line_get_real(dataline)/(gdouble)n;
     }
 
+
     gwy_graph_add_datavalues(graph, xdata, dataline->data,
                              n, label, NULL);
 
