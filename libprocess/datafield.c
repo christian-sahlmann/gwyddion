@@ -49,10 +49,6 @@ static GObject* gwy_data_field_deserialize       (const guchar *buffer,
 static GObject* gwy_data_field_duplicate_real    (GObject *object);
 /*static void     gwy_data_field_value_changed     (GObject *object);*/
 
-/*local functions*/
-static void     gwy_data_field_alloc             (GwyDataField *a,
-                                                  gint xres,
-                                                  gint yres);
 /* exported for other datafield function
  * XXX: this should rather not exist at all, use gwy_data_field_new()...  */
 void           _gwy_data_field_initialize        (GwyDataField *a,
@@ -343,29 +339,6 @@ gwy_data_field_value_changed(GObject *object)
 }
 */
 
-
-/**
- * gwy_data_field_alloc:
- * @data_field: pointer to data field structure to be allocated.
- * @xres: X resolution
- * @yres: Y resolution
- *
- * Allocates GwyDataField.
- *
- * Does NOT create an object!
- **/
-static void
-gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
-{
-    gwy_debug("");
-
-    a->xres = xres;
-    a->yres = yres;
-    a->data = g_new(gdouble, a->xres*a->yres);
-    a->si_unit_xy = NULL;
-    a->si_unit_z = NULL;
-}
-
 /**
  * _gwy_data_field_initialize:
  * @data_field: A data field structure to be initialized
@@ -420,14 +393,11 @@ _gwy_data_field_free(GwyDataField *a)
  *
  * Generally, use gwy_data_field_area_copy() if you want to be on the safe
  * side.
- *
- * Returns: Always %TURE.
  **/
-gboolean
+void
 gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
 {
-    if (a->xres != b->xres && a->yres != b->yres)
-        return FALSE;
+    g_return_if_fail(a->xres == b->xres && a->yres == b->yres);
 
     b->xreal = a->xreal;
     b->yreal = a->yreal;
@@ -437,8 +407,6 @@ gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
     b->si_unit_z = gwy_si_unit_duplicate(a->si_unit_z);
 
     memcpy(b->data, a->data, a->xres*a->yres*sizeof(gdouble));
-
-    return TRUE;
 }
 
 /* XXX: this docs actually lie, it DID copy the units between revisions
@@ -593,19 +561,17 @@ gwy_data_field_confirmsize(GwyDataField *a, gint xres, gint yres)
  * @brcol: Bottom-right column coordinate + 1.
  * @brrow: Bottom-right row coordinate + 1.
  *
- * Resizes (crops) the GwyDataField.
+ * Resizes (crops) a data field.
  *
- * Extracts part of the GwyDataField.between upper-left and bottom-right
- * points.
- *
- * Returns: Always %TRUE.  The return value should be ignored as it can
- *          be removed.
+ * Extracts rectangular part of the a data field.between upper-left and
+ * bottom-right points, recomputing real size.
  **/
-gboolean
+void
 gwy_data_field_resize(GwyDataField *a,
-                      gint ulcol, gint ulrow, gint brcol, gint brrow)
+                      gint ulcol, gint ulrow,
+                      gint brcol, gint brrow)
 {
-    GwyDataField b;
+    GwyDataField *b;
     gint i, xres, yres;
 
     if (ulcol > brcol)
@@ -613,26 +579,27 @@ gwy_data_field_resize(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol <= a->xres && brrow <= a->yres,
-                         FALSE);
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0
+                     && brcol <= a->xres && brrow <= a->yres);
 
     yres = brrow - ulrow;
     xres = brcol - ulcol;
-    gwy_data_field_alloc(&b, xres, yres);
+    /* FIXME: don't allocate second field, use memmove */
+    b = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
 
     for (i = ulrow; i < brrow; i++) {
-        memcpy(b.data + (i-ulrow)*xres,
+        memcpy(b->data + (i-ulrow)*xres,
                a->data + i*a->xres + ulcol,
                xres*sizeof(gdouble));
     }
     a->xres = xres;
     a->yres = yres;
-    GWY_SWAP(gdouble*, a->data, b.data);
-    gwy_data_field_invalidate(a);
+    GWY_SWAP(gdouble*, a->data, b->data);
+    g_object_unref(b);
+    a->xreal *= xres/a->xres;
+    a->yreal *= yres/a->yres;
 
-    _gwy_data_field_free(&b);
-    return TRUE;
+    gwy_data_field_invalidate(a);
 }
 
 /**
@@ -1896,11 +1863,8 @@ gwy_data_field_set_column(GwyDataField *a, GwyDataLine* b, gint col)
  * @interpolation: Interpolation type to use.
  *
  * Extracts a profile from a data field to a data line.
- *
- * Returns: Always %TRUE.  The return value should be ignored as it can
- *          be removed.
  **/
-gboolean
+void
 gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
                              gint ulcol, gint ulrow, gint brcol, gint brrow,
                              gint res, GwyInterpolationType interpolation)
@@ -1908,15 +1872,11 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
     gint k;
     gdouble cosa, sina, size;
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol >= 0 && brrow >= 0
-                         && ulrow <= a->yres && ulcol <= a->xres
-                         && brrow <= a->yres && brcol <= a->xres,
-                         FALSE);
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0
+                     && brcol >= 0 && brrow >= 0
+                     && ulrow <= a->yres && ulcol <= a->xres
+                     && brrow <= a->yres && brcol <= a->xres);
 
- /*   brcol -= 1;
-    brrow -= 1;
-*/
     size = sqrt((ulcol - brcol)*(ulcol - brcol)
                 + (ulrow - brrow)*(ulrow - brrow));
     if (res <= 0)
@@ -1931,8 +1891,6 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
                                              interpolation);
 
     b->real = size*a->xreal/a->xres;
-
-    return TRUE;
 }
 
 /**
@@ -1948,11 +1906,8 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
  * @interpolation: Interpolation type to use.
  *
  * Extracts an averaged profile from data field to a data line.
- *
- * Returns: Always %TRUE.  The return value should be ignored as it can
- *          be removed.
  **/
-gboolean
+void
 gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
                                       gint ulcol, gint ulrow,
                                       gint brcol, gint brrow,
@@ -1963,11 +1918,10 @@ gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
     gdouble cosa, sina, size, mid, sum;
     gdouble col, row, srcol, srrow;
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0
-                         && brcol >= 0 && brrow >= 0
-                         && ulrow <= a->yres && ulcol <= a->xres
-                         && brrow <= a->yres && brcol <= a->xres,
-                         FALSE);
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0
+                     && brcol >= 0 && brrow >= 0
+                     && ulrow <= a->yres && ulcol <= a->xres
+                     && brrow <= a->yres && brcol <= a->xres);
 
     size = sqrt((ulcol - brcol)*(ulcol - brcol)
                 + (ulrow - brrow)*(ulrow - brrow));
@@ -1985,7 +1939,7 @@ gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
     b->real = size*a->xreal/a->xres;
 
     if (thickness <= 1)
-        return TRUE;
+        return;
 
     /*add neighbour values to the line*/
     for (k = 0; k < res; k++) {
@@ -2005,8 +1959,6 @@ gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
         }
         b->data[k] = sum/(gdouble)thickness;
     }
-
-    return TRUE;
 }
 
 /**
