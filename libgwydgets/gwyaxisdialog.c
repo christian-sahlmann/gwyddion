@@ -33,7 +33,7 @@ static void     gwy_axis_dialog_finalize         (GObject *object);
 static gboolean gwy_axis_dialog_delete           (GtkWidget *widget,
                                                   GdkEventAny *event);
 
-static GtkWidgetClass *parent_class = NULL;
+static GtkDialogClass *parent_class = NULL;
 
 GType
 gwy_axis_dialog_get_type(void)

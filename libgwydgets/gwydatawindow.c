@@ -58,7 +58,7 @@ static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
 
 /* Local data */
 
-static GtkWidgetClass *parent_class = NULL;
+static GtkWindowClass *parent_class = NULL;
 
 static guint data_window_signals[LAST_SIGNAL] = { 0 };
 

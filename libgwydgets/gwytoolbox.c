@@ -36,7 +36,7 @@ static void     gwy_toolbox_init           (GwyToolbox *toolbox);
 
 /* Local data */
 
-static GtkObjectClass *parent_class = NULL;
+static GtkTableClass *parent_class = NULL;
 
 GType
 gwy_toolbox_get_type(void)

@@ -38,7 +38,7 @@ static void     gwy_pixmap_layer_unplugged    (GwyDataViewLayer *layer);
 
 /* Local data */
 
-static GtkObjectClass *parent_class = NULL;
+static GwyDataViewLayerClass *parent_class = NULL;
 
 GType
 gwy_pixmap_layer_get_type(void)

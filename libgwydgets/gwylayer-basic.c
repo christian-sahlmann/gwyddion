@@ -42,7 +42,7 @@ static void       gwy_layer_basic_update            (GwyDataViewLayer *layer);
 
 /* Local data */
 
-static GtkObjectClass *parent_class = NULL;
+static GwyPixmapLayerClass *parent_class = NULL;
 
 GType
 gwy_layer_basic_get_type(void)

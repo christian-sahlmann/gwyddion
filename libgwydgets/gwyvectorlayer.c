@@ -61,7 +61,7 @@ static gboolean gwy_vector_layer_timer        (GwyVectorLayer *layer);
 
 /* Local data */
 
-static GtkObjectClass *parent_class = NULL;
+static GwyDataViewLayerClass *parent_class = NULL;
 
 static guint vector_layer_signals[LAST_SIGNAL] = { 0 };
 

@@ -44,7 +44,7 @@ static void       gwy_layer_mask_restore           (GwyLayerMask *layer);
 
 /* Local data */
 
-static GtkObjectClass *parent_class = NULL;
+static GwyPixmapLayerClass *parent_class = NULL;
 
 GType
 gwy_layer_mask_get_type(void)
