@@ -15,89 +15,30 @@ the GwyGraph widget. It plots a curves legend.
 
 </para>
 
-<!-- ##### MACRO GWY_GRAPH_LABEL_NORTHEAST ##### -->
+<!-- ##### ENUM GwyGraphLabelPosition ##### -->
 <para>
 
 </para>
 
+@GWY_GRAPH_LABEL_NORTHEAST: 
+@GWY_GRAPH_LABEL_NORTHWEST: 
+@GWY_GRAPH_LABEL_SOUTHEAST: 
+@GWY_GRAPH_LABEL_SOUTHWEST: 
+@GWY_GRAPH_LABEL_USER: 
 
-
-<!-- ##### MACRO GWY_GRAPH_LABEL_NORTHWEST ##### -->
+<!-- ##### ENUM GwyGraphPointType ##### -->
 <para>
 
 </para>
 
-
-
-<!-- ##### MACRO GWY_GRAPH_LABEL_SOUTHEAST ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_GRAPH_LABEL_SOUTHWEST ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_GRAPH_POINT_SQUARE ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_GRAPH_POINT_CROSS ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_GRAPH_POINT_CIRCLE ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_GRAPH_POINT_STAR ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_GRAPH_POINT_TIMES ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_GRAPH_POINT_TRIANGLE_UP ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_GRAPH_POINT_TRIANGLE_DOWN ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_GRAPH_POINT_DIAMOND ##### -->
-<para>
-
-</para>
-
-
+@GWY_GRAPH_POINT_SQUARE: 
+@GWY_GRAPH_POINT_CROSS: 
+@GWY_GRAPH_POINT_CIRCLE: 
+@GWY_GRAPH_POINT_STAR: 
+@GWY_GRAPH_POINT_TIMES: 
+@GWY_GRAPH_POINT_TRIANGLE_UP: 
+@GWY_GRAPH_POINT_TRIANGLE_DOWN: 
+@GWY_GRAPH_POINT_DIAMOND: 
 
 <!-- ##### STRUCT GwyGraphAreaCurveParams ##### -->
 <para>

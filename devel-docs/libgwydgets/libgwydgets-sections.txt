@@ -164,18 +164,8 @@ GWY_LAYER_MASK_GET_CLASS
 
 <SECTION>
 <FILE>gwygraphlabel</FILE>
-GWY_GRAPH_LABEL_NORTHEAST
-GWY_GRAPH_LABEL_NORTHWEST
-GWY_GRAPH_LABEL_SOUTHEAST
-GWY_GRAPH_LABEL_SOUTHWEST
-GWY_GRAPH_POINT_SQUARE
-GWY_GRAPH_POINT_CROSS
-GWY_GRAPH_POINT_CIRCLE
-GWY_GRAPH_POINT_STAR
-GWY_GRAPH_POINT_TIMES
-GWY_GRAPH_POINT_TRIANGLE_UP
-GWY_GRAPH_POINT_TRIANGLE_DOWN
-GWY_GRAPH_POINT_DIAMOND
+GwyGraphLabelPosition
+GwyGraphPointType
 GwyGraphAreaCurveParams
 GwyGraphLabelParams
 <TITLE>GwyGraphLabel</TITLE>
@@ -322,6 +312,21 @@ GWY_LAYER_BASIC_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwygraphcurvemodel</FILE>
+<TITLE>GwyGraphCurveModel</TITLE>
+gwy_graph_curve_model_new
+gwy_graph_curve_model_save_curve
+gwy_graph_add_curve_from_model
+<SUBSECTION Standard>
+GWY_GRAPH_CURVE_MODEL
+GWY_IS_GRAPH_CURVE_MODEL
+GWY_TYPE_GRAPH_CURVE_MODEL
+gwy_graph_curve_model_get_type
+GWY_GRAPH_CURVE_MODEL_CLASS
+GWY_IS_GRAPH_CURVE_MODEL_CLASS
+GWY_GRAPH_CURVE_MODEL_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwyvectorshade</FILE>
 <TITLE>GwyVectorShade</TITLE>
 GwyVectorShade
@@ -354,6 +359,8 @@ gwy_data_window_set_zoom_mode
 gwy_data_window_get_zoom_mode
 gwy_data_window_update_title
 gwy_data_window_get_base_name
+gwy_data_window_get_ul_corner_widget
+gwy_data_window_set_ul_corner_widget
 <SUBSECTION Standard>
 GWY_DATA_WINDOW
 GWY_IS_DATA_WINDOW
@@ -380,6 +387,37 @@ GWY_IS_HRULER_CLASS
 GWY_HRULER_GET_CLASS
 </SECTION>
 
+<SECTION>
+<FILE>gwy3dview</FILE>
+Gwy3DMovement
+<TITLE>Gwy3DView</TITLE>
+gwy_3d_view_new
+gwy_3d_view_update
+gwy_3d_view_get_palette
+gwy_3d_view_set_palette
+gwy_3d_view_get_status
+gwy_3d_view_set_status
+gwy_3d_view_get_orthographic
+gwy_3d_view_set_orthographic
+gwy_3d_view_get_show_axes
+gwy_3d_view_set_show_axes
+gwy_3d_view_get_show_labels
+gwy_3d_view_set_show_labels
+gwy_3d_view_get_reduced_size
+gwy_3d_view_set_reduced_size
+gwy_3d_view_get_material
+gwy_3d_view_set_material
+gwy_3d_view_get_pixbuf
+gwy_3d_view_reset_view
+<SUBSECTION Standard>
+GWY_3D_VIEW
+GWY_IS_3D_VIEW
+GWY_TYPE_3D_VIEW
+gwy_3d_view_get_type
+GWY_3D_VIEW_CLASS
+GWY_IS_3D_VIEW_CLASS
+GWY_3D_VIEW_GET_CLASS
+</SECTION>
 <SECTION>
 <FILE>gwydataview</FILE>
 <TITLE>GwyDataView</TITLE>
@@ -414,6 +452,21 @@ GWY_IS_DATA_VIEW_CLASS
 GWY_DATA_VIEW_GET_CLASS
 </SECTION>
 
+<SECTION>
+<FILE>gwygraphmodel</FILE>
+<TITLE>GwyGraphModel</TITLE>
+gwy_graph_model_new
+gwy_graph_new_from_model
+gwy_graph_model_get_n_curves
+<SUBSECTION Standard>
+GWY_GRAPH_MODEL
+GWY_IS_GRAPH_MODEL
+GWY_TYPE_GRAPH_MODEL
+gwy_graph_model_get_type
+GWY_GRAPH_MODEL_CLASS
+GWY_IS_GRAPH_MODEL_CLASS
+GWY_GRAPH_MODEL_GET_CLASS
+</SECTION>
 <SECTION>
 <FILE>gwygrapharea</FILE>
 GwyGraphAreaCurvePoints
@@ -563,6 +616,7 @@ gwy_table_attach_spinbutton
 gwy_table_attach_row
 gwy_color_selector_for_mask
 gwy_dialog_prevent_delete_cb
+gwy_stock_like_button_new
 </SECTION>
 
 <SECTION>
@@ -641,5 +695,10 @@ gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history
 gwy_option_menu_get_history
+</SECTION>
+
+<SECTION>
+<FILE>gwyglmat</FILE>
+gwyGL_mat_none
 </SECTION>
 

@@ -93,15 +93,22 @@ with ranges in the requested interval.
 </para>
 
 
+<!-- ##### SIGNAL GwyAxis::label-updated ##### -->
+<para>
+
+</para>
+
+@gwyaxis: the object which received the signal.
+
 <!-- ##### STRUCT GwyAxisClass ##### -->
 <para>
 
 </para>
 
 @parent_class: 
+@label_updated: 
 @reserved1: 
 @reserved2: 
-@selected: 
 
 <!-- ##### FUNCTION gwy_axis_new ##### -->
 <para>

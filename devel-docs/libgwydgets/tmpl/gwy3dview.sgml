@@ -1,0 +1,224 @@
+<!-- ##### SECTION Title ##### -->
+Gwy3DView
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM Gwy3DMovement ##### -->
+<para>
+
+</para>
+
+@GWY_3D_ROTATION: 
+@GWY_3D_SCALE: 
+@GWY_3D_DEFORMATION: 
+@GWY_3D_LIGHTMOVEMENT: 
+
+<!-- ##### FUNCTION gwy_3d_view_new ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@container: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_update ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_palette ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_palette ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@palette: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_status ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_status ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@mv: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_orthographic ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_orthographic ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@orthographic: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_show_axes ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_show_axes ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@show_axes: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_show_labels ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_show_labels ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@show_labels: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_reduced_size ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_reduced_size ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@reduced_size: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_material ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_material ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@material: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_pixbuf ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@xres: 
+@yres: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@gwy3dwiew: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_reset_view ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+<!-- # Unused Parameters # -->
+@gwy3Dview: 
+
+

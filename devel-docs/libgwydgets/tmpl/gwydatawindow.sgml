@@ -122,3 +122,21 @@ Data display window
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_window_get_ul_corner_widget ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_window_set_ul_corner_widget ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@corner: 
+
+

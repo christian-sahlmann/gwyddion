@@ -66,3 +66,13 @@ Miscellaneous utility functions
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_stock_like_button_new ##### -->
+<para>
+
+</para>
+
+@label_text: 
+@stock_id: 
+@Returns: 
+
+

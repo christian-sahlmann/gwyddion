@@ -28,6 +28,11 @@
     <xi:include href="xml/gwygraph.xml"/>
   </chapter>
 
+  <chapter id="Widgets3D">
+    <title>3D Widgets</title>
+    <xi:include href="xml/gwy3dview.xml"/>
+  </chapter>
+
   <chapter id="GeneralWidgets">
     <title>General Widgets</title>
     <xi:include href="xml/gwycolorbutton.xml"/>
