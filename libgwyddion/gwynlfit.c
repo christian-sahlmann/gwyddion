@@ -37,10 +37,8 @@
  */
 #define EPS 1e-16
 
-/* index in lower triangular sym. matrix (FIXME: a matrix cannot be both
- * lower triangular and symmetric...) */
 #define IndexLongMat(i, j) \
-    ((j) > (i) ? (((j) - 1)*(j)/2 + (i)) : ((i) - 1)*(i)/2 + (j))
+    ((j) > (i) ? (((j) + 1)*(j)/2 + (i)) : ((i) + 1)*(i)/2 + (j))
 
 /* XXX: brain damage:
  * all the functions whose names end with `1' use 1-based arrays since they
@@ -148,7 +146,7 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
 
     gdouble sumr = G_MAXDOUBLE;
 
-    gint covar_size = n_par*(n_par + 1)/2 + 1;
+    gint covar_size = n_par*(n_par + 1)/2;
 
     gdouble *der;
     gdouble *v;
@@ -158,7 +156,7 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
 
     gdouble *a;
     gdouble *save_a;
-    gboolean Step1 = TRUE;
+    gboolean step1 = TRUE;
     gboolean end = FALSE;
 
     gint i, j, k;
@@ -166,15 +164,9 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
     gdouble sumr1;
     gint miter = 0;
 
-    /* XXX: brain damage:
-     * we have to shift the arrays by one to simulate 1-based indexing,
-     * param has to shifted back when passed back to user! */
-    param -= 1;
-
     resid = g_new(gdouble, n_dat);
     sumr1 = gwy_math_nlfit_residua(nlfit, n_dat, x, y, weight,
-                                   n_par, param+1,
-                                   user_data, resid);
+                                   n_par, param, user_data, resid);
     sumr = sumr1;
 
     if (!nlfit->eval) {
@@ -183,118 +175,111 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
         return -1;
     }
 
-    der = g_new(gdouble, n_par+1);
-    v = g_new(gdouble, n_par+1);
-    xr = g_new(gdouble, n_par+1);
-    saveparam = g_new(gdouble, n_par+1);
+    der = g_new(gdouble, n_par);
+    v = g_new(gdouble, n_par);
+    xr = g_new(gdouble, n_par);
+    saveparam = g_new(gdouble, n_par);
     a = g_new(gdouble, covar_size);
     save_a = g_new(gdouble, covar_size);
 
-    if (nlfit->eval) {
-        do {                    /* Hlavni iteracni cyklus*/
-            if (Step1) {
-                mlambda *= nlfit->mdec;
-                sumr = sumr1;
+    do {                    /* Hlavni iteracni cyklus*/
+        gboolean posdef = FALSE;
+        gboolean first = TRUE;      /*  first indikuje 1.pruchod*/
+        gint count = 0;
 
-                for (i = 0; i < covar_size; i++)
-                    a[i] = 0;
-                for (i = 0; i <= n_par; i++)
-                    v[i] = 0;
+        if (step1) {
+            mlambda *= nlfit->mdec;
+            sumr = sumr1;
 
-                /* Vypocet J'J a J'r*/
-                for (i = 0; i < n_dat; i++) {
-                    /* XXX: has to shift things back */
-                    nlfit->dmarq(i, x, n_par, param+1, nlfit->fmarq,
-                              user_data, der+1, &nlfit->eval);
-                    if (!nlfit->eval)
-                        break;
-                    for (j = 1; j <= n_par; j++) {
-                        gint q = j*(j - 1)/2;
+            for (i = 0; i < covar_size; i++)
+                a[i] = 0;
+            for (i = 0; i < n_par; i++)
+                v[i] = 0;
 
-                        /* Do vypoctu J'r*/
-                        v[j] += weight[i]* der[j] * resid[i];
-                        for (k = 1; k <= j; k++)    /* Do vypoctu J'J*/
-                            a[q + k] += weight[i] * der[j] * der[k];
-                    }
-                }
-                if (nlfit->eval) {
-                    memcpy(save_a, a, covar_size*sizeof(gdouble));
-                    memcpy(saveparam, param, (n_par+1)*sizeof(gdouble));
-                }
-                else
-                    end = TRUE;
-            }
-            if (!end) {
-                gboolean posdef = FALSE;
-                gboolean first = TRUE;      /*  first indikuje 1.pruchod*/
-                gint count = 0;
+            /* Vypocet J'J a J'r*/
+            for (i = 0; i < n_dat; i++) {
+                /* XXX: has to shift things back */
+                nlfit->dmarq(i, x, n_par, param, nlfit->fmarq,
+                            user_data, der, &nlfit->eval);
+                if (!nlfit->eval)
+                    break;
+                for (j = 0; j < n_par; j++) {
+                    gint q = j*(j + 1)/2;
 
-                while (!posdef) {
-                    if (!first)
-                        memcpy(a, save_a, covar_size*sizeof(gdouble));
-                    else
-                        first = FALSE;
-
-                    for (j = 1; j <= n_par; j++) {
-                        /* Doplneni diagonalnich prvku */
-                        gint q = j*(j + 1)/2;        /* Index diag.prvku*/
-
-                        a[q] = save_a[q] * (1.0 + mlambda) + nlfit->mfi * mlambda;
-                        xr[j] = -v[j];
-                    }
-                    /* Choleskeho rozklad J'J v A*/
-                    posdef = gwy_math_choleski_decompose1(n_par, a);
-                    if (!posdef) {
-                        /* Provede zvetseni "lambda"*/
-                        mlambda *= nlfit->minc;
-                        if (mlambda == 0.0)
-                            mlambda = nlfit->mtol;
-                    }
-                }
-                gwy_math_choleski_solve1(n_par, a, xr);
-
-                for (i = 1; i <= n_par; i++) {
-                    param[i] = saveparam[i] + xr[i];
-                    if (fabs(param[i] - saveparam[i]) == 0)
-                        count++;
-                }
-                if (count == n_par)
-                    end = TRUE;
-                else {
-                    sumr1 = gwy_math_nlfit_residua(nlfit, n_dat,
-                                                   x, y, weight,
-                                                   n_par, param+1,
-                                                   user_data, resid);
-                    if ((sumr1 == 0)
-                        || (miter > 2 && fabs((sumr - sumr1)/sumr1) < EPS))
-                        end = TRUE;
-                    if (!nlfit->eval || sumr1 >= sumr) {
-                        /* Provede zvetseni "lambda"*/
-                        mlambda *= nlfit->minc;
-                        if (mlambda == 0.0)
-                            mlambda = nlfit->mtol;
-                        Step1 = FALSE;
-                    }
-                    else
-                        Step1 = TRUE;
+                    /* Do vypoctu J'r*/
+                    v[j] += weight[i]* der[j] * resid[i];
+                    for (k = 0; k <= j; k++)    /* Do vypoctu J'J*/
+                        a[q + k] += weight[i] * der[j] * der[k];
                 }
             }
+            if (nlfit->eval) {
+                memcpy(save_a, a, covar_size*sizeof(gdouble));
+                memcpy(saveparam, param, n_par*sizeof(gdouble));
+            }
+            else
+                break;
+        }
+        while (!posdef) {
+            if (!first)
+                memcpy(a, save_a, covar_size*sizeof(gdouble));
+            else
+                first = FALSE;
 
-            if (++miter >= nlfit->maxiter)
-                end = TRUE;
-        } while (!end);
+            for (j = 0; j < n_par; j++) {
+                /* Doplneni diagonalnich prvku */
+                gint q = j*(j + 3)/2;        /* Index diag.prvku*/
 
-    }
+                a[q] = save_a[q]*(1.0 + mlambda) + nlfit->mfi * mlambda;
+                xr[j] = -v[j];
+            }
+            /* Choleskeho rozklad J'J v A*/
+            posdef = gwy_math_choleski_decompose1(n_par, a-1);
+            if (!posdef) {
+                /* Provede zvetseni "lambda"*/
+                mlambda *= nlfit->minc;
+                if (mlambda == 0.0)
+                    mlambda = nlfit->mtol;
+            }
+        }
+        gwy_math_choleski_solve1(n_par, a-1, xr-1);
+
+        for (i = 0; i < n_par; i++) {
+            param[i] = saveparam[i] + xr[i];
+            if (fabs(param[i] - saveparam[i]) == 0)
+                count++;
+        }
+        if (count == n_par)
+            break;
+
+        sumr1 = gwy_math_nlfit_residua(nlfit, n_dat,
+                                        x, y, weight,
+                                        n_par, param,
+                                        user_data, resid);
+        if ((sumr1 == 0)
+            || (miter > 2 && fabs((sumr - sumr1)/sumr1) < EPS))
+            end = TRUE;
+        if (!nlfit->eval || sumr1 >= sumr) {
+            /* Provede zvetseni "lambda"*/
+            mlambda *= nlfit->minc;
+            if (mlambda == 0.0)
+                mlambda = nlfit->mtol;
+            step1 = FALSE;
+        }
+        else
+            step1 = TRUE;
+
+        if (++miter >= nlfit->maxiter)
+            break;
+    } while (!end);
+
     sumr1 = sumr;
 
     g_free(nlfit->covar);
     nlfit->covar = NULL;
 
     if (nlfit->eval) {
-        if (gwy_math_sym_matrix_invert1(n_par, save_a)) {
-            nlfit->covar = g_new0(gdouble, covar_size);
-            for (i = 0; i < covar_size; i++)
-                nlfit->covar[i] = save_a[i];
+        if (gwy_math_sym_matrix_invert1(n_par, save_a-1)) {
+            nlfit->covar = g_memdup(save_a, covar_size*sizeof(gdouble));
             nlfit->dispersion = sumr/(n_dat - n_par);
         }
         /* XXX: else what? */
@@ -439,7 +424,6 @@ gwy_math_nlfit_get_sigma(GwyNLFitter *nlfit, gint par)
 {
     g_return_val_if_fail(nlfit->covar, G_MAXDOUBLE);
 
-    par++;
     return sqrt(nlfit->dispersion * nlfit->covar[IndexLongMat(par, par)]);
 }
 
@@ -486,8 +470,6 @@ gwy_math_nlfit_get_correlations(GwyNLFitter *nlfit, gint par1, gint par2)
     if (par1 == par2)
         return 1.0;
 
-    par1++;
-    par2++;
     Pom = nlfit->covar[IndexLongMat(par1, par1)]
           * nlfit->covar[IndexLongMat(par2, par2)];
     if (Pom == 0) {
