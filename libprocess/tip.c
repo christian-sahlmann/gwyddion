@@ -69,12 +69,12 @@ create_pyramide(GwyDataField *tip, gdouble height, gint n)
     gdouble r, phi, phic;
     gdouble vm, radius;
 
-    height = 10;
-    radius = tip->xres;
+    radius = sqrt(2)*tip->xres;
 
     scol = tip->xres/2;
     srow = tip->yres/2;
 
+    printf("height=%g\n", height);
     for (col=0; col<tip->xres; col++)
     {
         for (row=0; row<tip->yres; row++)
@@ -82,9 +82,9 @@ create_pyramide(GwyDataField *tip, gdouble height, gint n)
             rrow = row - srow;
             rcol = col - scol;
             phi = atan2(rrow, rcol) + G_PI;
-            phic = fmod(phi, 2*G_PI/n) + G_PI/n;
+            phic = floor(phi/(2*G_PI/n))*2*G_PI/n + G_PI/n;
             vm = rcol*cos(phic) + rrow*sin(phic);
-            tip->data[col + tip->xres*row] = height*(1 - vm/(radius*cos(G_PI/n)));
+            tip->data[col + tip->xres*row] = height*(1 + vm/(radius*cos(G_PI/n)));
         }
     }
 }
@@ -92,14 +92,14 @@ create_pyramide(GwyDataField *tip, gdouble height, gint n)
 static void
 contact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
-    create_pyramide(tip, height, 5);
+    create_pyramide(tip, height, 4);
     
 }
 
 static void
 noncontact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
-    tip->data[tip->xres*tip->yres/2] = 1;
+    create_pyramide(tip, height, 3);
 }
 
 static void
@@ -197,6 +197,115 @@ gint
 gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset)
 {
     return preset->nparams;
+}
+
+
+gdouble **
+datafield_to_field(GwyDataField *datafield, gboolean maxzero)
+{
+    gdouble **ret;
+    gint col, row;
+    gdouble max;
+    
+    if (maxzero) max = gwy_data_field_get_max(datafield);
+    else max = 0;
+    
+    ret = allocmatrix(datafield->xres, datafield->yres);
+    for (col=0; col<datafield->xres; col++)
+    {
+        for (row=0; row<datafield->yres; row++)
+        {
+            ret[col][row] = datafield->data[col + datafield->xres*row] - max;
+        }
+    }
+    return ret;
+}
+
+GwyDataField*
+field_to_datafield(gdouble **field, GwyDataField *ret)
+{
+    gint col, row;
+    for (col=0; col<ret->xres; col++)
+    {
+        for (row=0; row<ret->yres; row++)
+        {
+            ret->data[col + ret->xres*row] = field[col][row];
+        }
+    }    
+    return ret;
+}
+
+GwyDataField*   
+gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
+{
+    gdouble **ftip;
+    gdouble **fsurface;
+    gdouble **fresult;
+    gint k;
+   
+    ftip = datafield_to_field(tip, TRUE);    
+    fsurface = datafield_to_field(surface, FALSE);
+
+    fresult = idilation(fsurface, surface->yres, surface->xres,
+                        ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
+    
+    result = field_to_datafield(fresult, result);
+
+    freematrix(ftip, tip->xres);
+    freematrix(fsurface, surface->xres);
+    freematrix(fresult, result->xres);
+    return result;
+}
+
+GwyDataField*
+gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
+{
+    gdouble **ftip;
+    gdouble **fsurface;
+    gdouble **fresult;
+
+   
+    ftip = datafield_to_field(tip, TRUE);
+    fsurface = datafield_to_field(surface, FALSE);
+
+    fresult = ierosion(fsurface, surface->yres, surface->xres,
+                        ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
+    
+    result = field_to_datafield(fresult, result);
+
+    freematrix(ftip, tip->xres);
+    freematrix(fsurface, surface->xres);
+    freematrix(fresult, result->xres);
+    return result;
+    
+}
+
+GwyDataField*
+gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
+{
+    gdouble **ftip;
+    gdouble **fsurface;
+    gdouble **rsurface;
+    gdouble **fresult;
+
+   
+    ftip = datafield_to_field(tip, TRUE);
+    fsurface = datafield_to_field(surface, FALSE);
+    
+    rsurface = ierosion(fsurface, surface->yres, surface->xres,
+                        ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
+
+    fresult = icmap(fsurface, surface->yres, surface->xres,
+                        ftip, tip->yres, tip->xres, rsurface, tip->yres/2, tip->xres/2);
+    
+    result = field_to_datafield(fresult, result);
+
+    freematrix(ftip, tip->xres);
+    freematrix(fsurface, surface->xres);
+    freematrix(rsurface, surface->xres);
+    freematrix(fresult, result->xres);
+    return result;
+    
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -21,6 +21,8 @@
 #ifndef __GWY_PROCESS_TIP_H__
 #define __GWY_PROCESS_TIP_H__
 
+#include "morph_lib.h"
+
 G_BEGIN_DECLS
 
 /* XXX: never used in libprocess itself, there should be probably some header
@@ -76,8 +78,12 @@ gchar*          gwy_tip_model_get_preset_group_name   (const GwyTipModelPreset* 
 
 gint            gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset);
 
-	      
-	  
+
+GwyDataField*   gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result);
+
+GwyDataField*   gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result);
+
+GwyDataField*   gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result);
 
 #endif /*__GWY_PROCESS_GRAINS__*/
 
