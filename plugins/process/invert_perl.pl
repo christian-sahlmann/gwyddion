@@ -24,8 +24,8 @@ sub run {
 
     $data = Gwyddion::dump::read( $filename );
     $dfield = $data->{ '/0/data' };
-    $n = $dfield->{ 'xres' } * $dfield->{ 'yres' };
     $a = $dfield->{ 'data' };
+    $n = scalar @$a;
 
     $min = 1e38;
     $max = -1e38;
