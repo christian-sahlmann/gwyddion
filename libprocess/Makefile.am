@@ -33,7 +33,8 @@ libgwyprocess_la_SOURCES = \
 	interpolation.c \
 	simplefft.c \
 	grains.c \
-	fractals.c
+	fractals.c \
+	correct.c
 
 #test_SOURCES = \
 #	test.c

@@ -673,7 +673,11 @@ void gwy_data_field_fractal_triangulation(GwyDataField *data_field,
                                          GwyInterpolationType interpolation);
 
  
-
+void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
+                                    GwyDataField *mask_field,
+                                    GwyDataField *buffer_field, 
+                                    gdouble *error,
+                                    gdouble *corfactor);
 
 
 G_END_DECLS
