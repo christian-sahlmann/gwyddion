@@ -34,7 +34,7 @@ EXTRA_DIST = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwyapp_la_LDFLAGS = @GTK_LIBS@ -version-info 3:0:0
+libgwyapp_la_LDFLAGS = @GTKGLEXT_LIBS@ -version-info 3:0:0
 libgwyapp_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp_la_SOURCES = \
 	app.c \
@@ -54,7 +54,7 @@ gwyddion_SOURCES = \
 	splash.c \
 	toolbox.c
 
-gwyddion_LDADD = @GTK_LIBS@ \
+gwyddion_LDADD = @GTKGLEXT_LIBS@ \
 	libgwyapp.la \
 	$(libgwymodule) \
 	$(libgwydgets) \
