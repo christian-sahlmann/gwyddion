@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="gwymodule-tutorial-beyond" revision="@(#) $Id$">
+  <refmeta>
+    <refentrytitle>Beyond The Minimal Module</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>Gwyddion</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>Beyond The Minimal Module</refname>
+    <refpurpose>
+      Description of some common and useful module idioms.
+    </refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Multiple modules, multiple function, multifunctions</title>
+    <para>
+      Often one wants to implement a group of closely related functions that
+      could share quite a bit of code.  There are several posibilities how
+      to do it.
+    </para>
+    <para>
+      The naive approach would be to put the code of all the modules to
+      a one file and share what is shareable.  But alas! there can be only
+      one <link linkend="GWY-MODULE-QUERY-CAPS">GWY_MODULE_QUERY</link>,
+      thus a one file can register only a one module and this approach would
+      not work.
+    </para>
+    <para>
+      The prefered solution is to register more than function for the
+      module.  This is as simple as it sounds.  One just has to define more
+      <link linkend="GwyProcessFuncInfo">GwyProcessFuncInfo</link>s
+      (or other func infos) and register the functions one by one in
+      <symbol>module_register()</symbol>.  It is even
+      possible to register functions of different kind in a one module, but
+      usually you don't want to do this.
+    </para>
+    <informalexample><programlisting><![CDATA[
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyProcessFuncInfo foo_func_info = {
+        "foo",
+        "/_Basic Operations/Foo",
+        (GwyProcessFunc)&foo,
+        FOO_RUN_MODES,
+    };
+    static GwyProcessFuncInfo bar_func_info = {
+        "bar",
+        "/_Basic Operations/Bar",
+        (GwyProcessFunc)&bar,
+        BAR_RUN_MODES,
+    };
+
+    gwy_process_func_register(name, &foo_func_info);
+    gwy_process_func_register(name, &bar_func_info);
+
+    return TRUE;
+}
+]]></programlisting></informalexample>
+    <para>
+      The other posibility, generally not recommended but sometimes
+      useful, is to define more
+      <link linkend="GwyProcessFuncInfo">GwyProcessFuncInfo</link>s
+      like before, but make them all points to the same C function.
+      It can then determine from its last argument (<symbol>name</symbol>)
+      what function the caller thinks it is calling.
+      Incidentally, this is exactly how the plugin-proxy module works.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Settings</title>
+    <para>
+      The nice thing about Gwyddion module dialog boxes is that they show
+      the same parameter values as when you last opened them, and they
+      remember the settings even across sessions.  And you of course want
+      this feature in your modules too.
+    </para>
+    <para>
+      Saving and restoring settings usually has sense only for modules with
+      a GUI, simple noninteractive modules like value invert don't have any
+      settings to remember.  We will get to GUI later.
+    </para>
+    <para>
+      There is a one <link linkend="GwyContainer">GwyContainer</link> in
+      Gwyddion containing settings for all modules (and other creatures).
+      The function
+      <link linkend="gwy-app-settings-get">gwy_app_settings_get()</link>
+      will bring it to you.  It is loaded on startup and saved
+      on exit so you don't need to take care about this.
+      So the only thing you have to care about is to read the settings from
+      it when your module starts and store them there on exit.  OK, there
+      are in fact two things you have to care about.  There are no
+      limitations on who can access what in the container, so to avoid
+      surprises you should use only keys startings with
+      <literal>"/mod/my-module-name/"</literal>.
+    </para>
+    <para>
+      Loading settings could look (remember they may not always exist, for
+      instance when the function is run the first time):
+    </para>
+    <informalexample><programlisting><![CDATA[
+GwyContainer *settings;
+
+settings = gwy_app_settings_get();
+if (gwy_container_contains_by_name(settings, "/mod/my_module/ratio")
+    ratio = gwy_container_get_double_by_name(settings,
+                                             "/mod/my_module/ratio");
+]]></programlisting></informalexample>
+    <para>
+      And saving settings could look:
+    </para>
+    <informalexample><programlisting><![CDATA[
+GwyContainer *settings;
+
+settings = gwy_app_settings_get();
+gwy_container_set_double_by_name(settings,
+                                 "/mod/my_module/ratio",
+                                 ratio);
+]]></programlisting></informalexample>
+  </refsect1>
+  <refsect1>
+    <title>Creating new windows</title>
+    <para>
+      Not always one wants to modify the original data but prefers to create
+      a new data window for the result.  This primarily means one has to
+      clonine the data container.  Fortunately containers are
+      <link linkend="GwySerializable">GwySerializable</link>s so they can
+      be duplicated using
+      <link linkend="gwy-serializable-duplicate">gwy_serializable_duplicate()</link>.
+      We have to get our data field from the newly created container of
+      course, otherwise all the work would be vain.
+      A new gwyddion data window can be created with
+      <link linkend="gwy-app-data-window-create">gwy_app_data_window_create()</link>
+      then. Putting this all together we have:
+    </para>
+    <informalexample><programlisting><![CDATA[
+data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+gwy_app_clean_up_data(data);
+dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                         "/0/data"));
+do_something_with_data_filed(dfield);
+data_window = gwy_app_data_window_create(data);
+gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+]]></programlisting></informalexample>
+    <para>
+      There are still two things not mentioned before however.
+      First of them is the mysterious
+      <link linkend="gwy-app-clean-up-data">gwy_app_clean_up_data()</link>
+      call. It currently removes some stuff that should not be propagated
+      from the old data to the new one, it can also become no-op in the
+      future, but it does not any harm to use it.
+      The second one,
+      <link linkend="gwy-app-data-window-set-untitled">gwy_app_data_window_set_untitled()</link>
+      simply sets the title of the newly window to an unique
+      <quote>Untitled</quote>.
+      If you pass something else than <literal>NULL</literal> as the
+      second argument, you can create untitled windows of different titles
+      (an oxymoron?), please see
+      <link linkend="gwy-app-data-window-set-untitled">gwy_app_data_window_set_untitled()</link>
+      for details.
+    </para>
+    <para>
+      TODO: masks, presentations, file-type modules, GUI.
+    </para>
+  </refsect1>
+</refentry>
+
+

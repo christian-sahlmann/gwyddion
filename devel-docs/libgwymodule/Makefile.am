@@ -46,7 +46,9 @@ HTML_IMAGES =
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 content_files = \
-	module-tutorial.sgml
+	module-tutorial-overview.sgml \
+	module-tutorial-minimal.sgml \
+	module-tutorial-beyond.sgml
 
 # Other files to distribute.
 extra_files =

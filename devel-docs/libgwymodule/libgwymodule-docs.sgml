@@ -19,6 +19,8 @@
 
   <chapter>
     <title>Gwyddion Module Tutorial</title>
-    <xi:include href="module-tutorial.sgml"/>
+    <xi:include href="module-tutorial-overview.sgml"/>
+    <xi:include href="module-tutorial-minimal.sgml"/>
+    <xi:include href="module-tutorial-beyond.sgml"/>
   </chapter>
 </book>
