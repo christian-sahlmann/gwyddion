@@ -31,7 +31,7 @@ test_LDADD = libgwydraw.la \
 	$(libgwyprocess)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"GwyDraw\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyDraw\"
 
 clean-local:
 	rm -f core.* *~
