@@ -205,24 +205,18 @@ dialog_update(GwyUnitoolState *state,
     gdouble xy[4];
     gint isel[4];
     gint w, h;
-    gboolean is_visible, is_selected;
     gdouble avg, ra, rms, skew, kurtosis, min, max, median;
     gdouble projarea, area;
-    gchar buffer[30];
+    gchar buffer[48];
     gchar *s;
 
     gwy_debug("");
-    is_visible = state->is_visible;
 
     controls = (ToolControls*)state->user_data;
     units = state->coord_format;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
-    if (!is_visible && !is_selected)
-        return;
 
     gwy_unitool_rect_info_table_fill(state, &controls->labels, xy, isel);
     w = isel[2] - isel[0];
@@ -232,13 +226,12 @@ dialog_update(GwyUnitoolState *state,
     min = gwy_data_field_area_get_min(dfield, isel[0], isel[1], w, h);
     max = gwy_data_field_area_get_max(dfield, isel[0], isel[1], w, h);
     median = gwy_data_field_area_get_median(dfield, isel[0], isel[1], w, h);
-    g_printerr("median = %g\n", median);
     area = gwy_data_field_area_get_surface_area(dfield, isel[0], isel[1], w, h,
                                                 GWY_INTERPOLATION_BILINEAR);
     projarea
         = w*gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield)
           *h*gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
-    /*FIXME: this is to prevent rounding errors to produce nonreal 
+    /*FIXME: this is to prevent rounding errors to produce nonreal
      * results on very flat surfaces*/
     area = MAX(area, projarea);
 
