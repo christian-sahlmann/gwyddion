@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
@@ -38,9 +39,6 @@ typedef struct {
 static void file_detect_max_score_cb   (const gchar *key,
                                         GwyFileFuncInfo *func_info,
                                         GwyFileDetectData *ddata);
-static void gwy_hash_table_to_slist_cb (gpointer unused_key,
-                                        gpointer value,
-                                        gpointer user_data);
 static gint file_menu_entry_compare    (GwyFileFuncInfo *a,
                                         GwyFileFuncInfo *b);
 
@@ -347,16 +345,6 @@ gwy_build_file_menu(GtkObject *item_factory,
     g_slist_free(entries);
 
     return item_factory;
-}
-
-static void
-gwy_hash_table_to_slist_cb(gpointer unused_key,
-                           gpointer value,
-                           gpointer user_data)
-{
-    GSList **list = (GSList**)user_data;
-
-    *list = g_slist_prepend(*list, value);
 }
 
 static gint

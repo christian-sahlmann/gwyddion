@@ -23,6 +23,7 @@
 #include <gtk/gtkstock.h>
 #include <gtk/gtkimage.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 
@@ -33,9 +34,6 @@ static GtkWidget* tool_toolbar_append      (GtkWidget *toolbar,
                                             GtkWidget *radio,
                                             GwyToolFuncInfo *func_info,
                                             GtkSignalFunc callback);
-static void gwy_hash_table_to_slist_cb     (gpointer unused_key,
-                                            gpointer value,
-                                            gpointer user_data);
 static gint tool_toolbar_item_compare      (GwyToolFuncInfo *a,
                                             GwyToolFuncInfo *b);
 
@@ -182,16 +180,6 @@ tool_toolbar_item_compare(GwyToolFuncInfo *a,
                           GwyToolFuncInfo *b)
 {
     return strcmp(a->name, b->name);
-}
-
-static void
-gwy_hash_table_to_slist_cb(gpointer unused_key,
-                           gpointer value,
-                           gpointer user_data)
-{
-    GSList **list = (GSList**)user_data;
-
-    *list = g_slist_prepend(*list, value);
 }
 
 gboolean

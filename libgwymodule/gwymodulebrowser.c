@@ -19,8 +19,9 @@
  */
 
 #include <string.h>
-#include <libgwyddion/gwymacros.h>
 #include <gtk/gtk.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 
 #include "gwymoduleinternal.h"
 #include "gwymodulebrowser.h"
@@ -39,9 +40,6 @@ static void       attach_info_line                (GtkWidget *table,
                                                    const gchar *key);
 static void       update_module_info_cb           (GtkWidget *tree,
                                                    GtkWidget *parent);
-static void       gwy_hash_table_to_slist_cb      (gpointer key,
-                                                   gpointer value,
-                                                   gpointer user_data);
 static gint       module_name_compare_cb          (_GwyModuleInfoInternal *a,
                                                    _GwyModuleInfoInternal *b);
 
@@ -125,7 +123,7 @@ gwy_module_browser_construct(GtkWidget *parent)
                               );
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-    gwy_module_foreach((GHFunc)gwy_hash_table_to_slist_cb, &list);
+    gwy_module_foreach(gwy_hash_table_to_slist_cb, &list);
     list = g_slist_sort(list, (GCompareFunc)module_name_compare_cb);
     for (l = list; l; l = g_slist_next(l)) {
         gtk_list_store_append(store, &iter);
@@ -301,16 +299,6 @@ attach_info_line(GtkWidget *table,
         gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
 
     g_object_set_data(G_OBJECT(parent), key, label);
-}
-
-static void
-gwy_hash_table_to_slist_cb(gpointer key,
-                           gpointer value,
-                           gpointer user_data)
-{
-    GSList **list = (GSList**)user_data;
-
-    *list = g_slist_prepend(*list, value);
 }
 
 static gint

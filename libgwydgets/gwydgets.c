@@ -26,6 +26,7 @@
 #include <gtk/gtkimagemenuitem.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libdraw/gwypalette.h>
 #include "gwydgets.h"
 
@@ -38,9 +39,6 @@ static GtkWidget* gwy_palette_menu_create        (GCallback callback,
                                                   const gchar *current,
                                                   gint *current_index);
 static GtkWidget* gwy_sample_palette_to_gtkimage (GwyPaletteDef *palette_def);
-static void       gwy_hash_table_to_slist_cb     (gpointer key,
-                                                  gpointer value,
-                                                  gpointer user_data);
 static gint       palette_def_compare            (GwyPaletteDef *a,
                                                   GwyPaletteDef *b);
 
@@ -177,16 +175,6 @@ gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
 
     image = gtk_image_new_from_pixbuf(pixbuf);
     return image;
-}
-
-static void
-gwy_hash_table_to_slist_cb(gpointer key,
-                           gpointer value,
-                           gpointer user_data)
-{
-    GSList **list = (GSList**)user_data;
-
-    *list = g_slist_prepend(*list, value);
 }
 
 static gint
