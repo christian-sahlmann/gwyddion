@@ -80,6 +80,7 @@ EXTRA_DIST = 				\
 	$(HTML_IMAGES)			\
 	$(DOC_MAIN_SGML_FILE)		\
 	$(DOC_MODULE)-sections.txt	\
+	$(DOC_MODULE)-decl.txt	\
 	$(DOC_OVERRIDES)
 
 DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
