@@ -41,6 +41,13 @@ static gint       palette_def_compare            (GwyPaletteDef *a,
 static GtkWidget* gwy_sample_gl_material_to_gtkimage(GwyGLMaterial *material);
 static gint       gl_material_compare            (GwyGLMaterial *a,
                                                   GwyGLMaterial *b);
+static GtkWidget* gwy_option_menu_create_real    (const GwyEnum *entries,
+                                                  gint nentries,
+                                                  const gchar *key,
+                                                  GCallback callback,
+                                                  gpointer cbdata,
+                                                  gint current,
+                                                  gboolean do_translate);
 static void       gwy_option_menu_metric_unit_destroyed (GwyEnum *entries);
 
 /************************** Palette menu ****************************/
@@ -402,6 +409,20 @@ gwy_option_menu_create(const GwyEnum *entries,
                        gpointer cbdata,
                        gint current)
 {
+    return gwy_option_menu_create_real(entries, nentries, key,
+                                       callback, cbdata,
+                                       current, TRUE);
+}
+
+static GtkWidget*
+gwy_option_menu_create_real(const GwyEnum *entries,
+                            gint nentries,
+                            const gchar *key,
+                            GCallback callback,
+                            gpointer cbdata,
+                            gint current,
+                            gboolean do_translate)
+{
     GtkWidget *omenu, *menu, *item;
     GList *c;
     GQuark quark;
@@ -415,7 +436,10 @@ gwy_option_menu_create(const GwyEnum *entries,
 
     idx = -1;
     for (i = 0; i < nentries; i++) {
-        item = gtk_menu_item_new_with_label(_(entries[i].name));
+        if (do_translate)
+            item = gtk_menu_item_new_with_label(_(entries[i].name));
+        else
+            item = gtk_menu_item_new_with_label(entries[i].name);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_object_set_qdata(G_OBJECT(item), quark,
                            GINT_TO_POINTER(entries[i].value));
@@ -853,8 +877,9 @@ gwy_option_menu_metric_unit(GCallback callback,
     }
     entries[n].name = NULL;
 
-    omenu = gwy_option_menu_create(entries, n, "metric-unit", callback, cbdata,
-                                   current);
+    omenu = gwy_option_menu_create_real(entries, n, "metric-unit",
+                                        callback, cbdata,
+                                        current, FALSE);
     g_signal_connect_swapped(omenu, "destroy",
                              G_CALLBACK(gwy_option_menu_metric_unit_destroyed),
                              entries);
