@@ -61,7 +61,8 @@ enum {
 void
 gwy_app_metadata_browser(GwyDataWindow *data_window)
 {
-    GtkWidget *window, *browser;
+    GtkWidget *window, *browser, *scroll;
+    GtkRequisition request;
     GwyContainer *data;
     gchar *filename, *title;
 
@@ -75,10 +76,21 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
     gtk_window_set_title(GTK_WINDOW(window), title);
     g_free(title);
     g_free(filename);
+    /* XXX: WTF?
     gtk_window_set_wmclass(GTK_WINDOW(window), "toolbox",
-                           g_get_application_name());
+                           g_get_application_name());*/
     browser = gwy_meta_browser_construct(data);
-    gtk_container_add(GTK_CONTAINER(window), browser);
+    gtk_widget_size_request(browser, &request);
+    gtk_window_set_default_size(GTK_WINDOW(window),
+                                MIN(request.width, 2*gdk_screen_width()/3),
+                                MIN(request.height + 20,
+                                    3*gdk_screen_height()/4));
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                   GTK_POLICY_AUTOMATIC,
+                                   GTK_POLICY_AUTOMATIC);
+    gtk_container_add(GTK_CONTAINER(scroll), browser);
+    gtk_container_add(GTK_CONTAINER(window), scroll);
     g_signal_connect(window, "destroy", G_CALLBACK(gwy_meta_destroy), browser);
     gtk_widget_show_all(window);
 }
@@ -122,6 +134,8 @@ gwy_meta_browser_construct(GwyContainer *data)
                               );
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
+
     g_object_unref(store);
     g_object_set_data(G_OBJECT(store), "container", data);
     gwy_container_foreach(data, "/meta",
