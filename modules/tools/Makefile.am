@@ -14,6 +14,7 @@ noinst_HEADERS = \
 libtools_la_LDFLAGS = -static
 libtools_la_SOURCES = \
 	crop.c \
+	level3.c \
 	pointer.c
 
 libtools_la_LIBADD = \

@@ -133,11 +133,14 @@ foo(void)
                                 _("Crop tooltip"),
                                 gwy_tool_crop_use);
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_SHADER,
-                                _("Shader tooltip"), NULL);
+                                _("Shader tooltip"),
+                                NULL);
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_FIT_TRIANGLE,
-                                _("Fit plane using three points"), NULL);
+                                _("Fit plane using three points"),
+                                gwy_tool_level3_use);
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_GRAPH,
-                                _("Graph tooltip"), NULL);
+                                _("Graph tooltip"),
+                                NULL);
 
     /***************************************************************/
     gtk_widget_show_all(window);
