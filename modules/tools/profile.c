@@ -63,7 +63,6 @@ static ProfileControls controls;
 static gulong updated_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *lines_layer = NULL;
-static GwyDataField *datafield = NULL;
 static GPtrArray *dtl = NULL;
 static GPtrArray *str = NULL;
 
@@ -121,8 +120,6 @@ profile_use(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(data_view);
-    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                "/0/data"));
 
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == lines_layer)
@@ -174,7 +171,7 @@ profile_do(void)
 {
     GtkWidget *window, *graph;
     GwyContainer *data;
-    /*GwyDataField *datafield;*/
+    GwyDataField *datafield;
     gdouble lines[12];
     gint i, j, is_selected;
     gchar *x_unit, *z_unit;
@@ -188,10 +185,8 @@ profile_do(void)
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(lines_layer->parent));
-    /* the global one should be always the right on.  shoot me if not.
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                 "/0/data"));
-    */
 
     xreal = gwy_data_field_get_xreal(datafield);
     yreal = gwy_data_field_get_yreal(datafield);
@@ -274,6 +269,7 @@ static GtkWidget*
 profile_dialog_create(GwyDataView *data_view)
 {
     GwyContainer *data;
+    GwyDataField *datafield;
     GtkWidget *dialog, *table, *label, *vbox;
     gdouble xreal, yreal;
 
@@ -395,6 +391,8 @@ profile_dialog_create(GwyDataView *data_view)
 static void
 update_labels()
 {
+    GwyContainer *data;
+    GwyDataField *datafield;
     gdouble lines[12];
     gchar buffer[50];
     gint i, j;
@@ -402,6 +400,10 @@ update_labels()
 
     gwy_debug("");
     n_of_lines = gwy_layer_lines_get_lines(lines_layer, lines);
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(lines_layer->parent));
+    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                "/0/data"));
 
     j=0;
     gwy_debug("%d lines.\n", n_of_lines);
@@ -438,6 +440,8 @@ update_labels()
 static void
 profile_selection_updated_cb(void)
 {
+    GwyContainer *data;
+    GwyDataField *datafield;
     gdouble lines[12];
     gboolean is_visible, is_selected;
     gint i, j;
@@ -462,7 +466,9 @@ profile_selection_updated_cb(void)
     prop.is_line = 1;
     gwy_graph_set_autoproperties(GWY_GRAPH(controls.graph), &prop);
 
-
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(lines_layer->parent));
+    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                "/0/data"));
 
     if (is_selected) {
         gwy_graph_clear(GWY_GRAPH(controls.graph));
