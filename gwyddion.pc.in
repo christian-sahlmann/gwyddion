@@ -10,6 +10,6 @@ gwypixmapdir=@gwypixmapdir@
 Name: Gwyddion
 Description: Gwyddion library
 Version: @VERSION@
-Requires: glib-2.0 gtk+-2.0 >= 2.2.0
+Requires: glib-2.0 gtk+-2.0 >= 2.2.0 gtkglext-1.0
 Libs: -L${libdir} -lgwyapp -lgwymodule -lgwydgets -lgwydraw -lgwyprocess -lgwyddion
 Cflags: -I${includedir}/gwyddion
