@@ -216,34 +216,52 @@ gwy_sphere_coords_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_SPHERE_COORDS(obj), NULL);
 
     sphere_coords = GWY_SPHERE_COORDS(obj);
-    return gwy_serialize_pack(buffer, size, "sdd",
-                              GWY_SPHERE_COORDS_TYPE_NAME,
-                              sphere_coords->theta,
-                              sphere_coords->phi);
+    buffer = gwy_serialize_pack(buffer, size, "si",
+                                GWY_SPHERE_COORDS_TYPE_NAME, 0);
+    {
+        GwySerializeSpec spec[] = {
+            { 'd', "theta", &sphere_coords->theta, NULL },
+            { 'd', "phi", &sphere_coords->phi, NULL },
+        };
+        gsize oldsize = *size;
+
+        buffer = gwy_serialize_pack_struct(buffer, size,
+                                           G_N_ELEMENTS(spec), spec);
+        gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
+                                  *size - oldsize);
+    }
+    return buffer;
 
 }
 
 static GObject*
-gwy_sphere_coords_deserialize(const guchar *stream,
+gwy_sphere_coords_deserialize(const guchar *buffer,
                               gsize size,
                               gsize *position)
 {
-    gsize pos;
+    gdouble theta, phi;
+    gsize pos, mysize;
+    GwySerializeSpec spec[] = {
+        { 'd', "theta", &theta, NULL },
+        { 'd', "phi", &phi, NULL },
+    };
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_return_val_if_fail(stream, NULL);
+    g_return_val_if_fail(buffer, NULL);
 
-    pos = gwy_serialize_check_string(stream, size, *position,
+    pos = gwy_serialize_check_string(buffer, size, *position,
                                      GWY_SPHERE_COORDS_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
+    mysize = gwy_serialize_unpack_int32(buffer, size, position);
 
-    return (GObject*)gwy_sphere_coords_new(
-                         gwy_serialize_unpack_double(stream, size, position),
-                         gwy_serialize_unpack_double(stream, size, position)
-                     );
+    gwy_serialize_unpack_struct(buffer + *position, mysize,
+                                G_N_ELEMENTS(spec), spec);
+    position += mysize;
+
+    return (GObject*)gwy_sphere_coords_new(theta, phi);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

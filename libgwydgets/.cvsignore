@@ -2,8 +2,10 @@ Makefile
 Makefile.in
 main
 create-data
+test
 *.object
 *.lo
 *.la
 .libs
 .deps
+core.*
