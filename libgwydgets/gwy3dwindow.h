@@ -43,21 +43,26 @@ typedef struct _Gwy3DWindowClass Gwy3DWindowClass;
 struct _Gwy3DWindow {
     GtkWindow parent_instance;
 
-    GtkWidget *notebook;
+    GwyZoomMode zoom_mode;  /* reserved for future use */
+
     GtkWidget *gwy3dview;
-    GtkWidget *statusbar;
     GtkWidget *palette_menu;
     GtkWidget *palette_label;
     GtkWidget *material_menu;
     GtkWidget *material_label;
 
-    GwyZoomMode zoom_mode;  /* reserved for future use */
+    GtkWidget *notebook;
+    GtkWidget *widget1;
+    GtkWidget *widget2;
+    GtkWidget *widget3;
 
-    guint statusbar_context_id;
-    guint statusbar_message_id;
+    guint whatever1;
+    guint whatever2;
 
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 struct _Gwy3DWindowClass {
@@ -65,6 +70,8 @@ struct _Gwy3DWindowClass {
 
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 GtkWidget*    gwy_3d_window_new                  (Gwy3DView *gwy3dview);
