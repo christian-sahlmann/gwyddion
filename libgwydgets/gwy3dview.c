@@ -1452,7 +1452,7 @@ gwy_3d_view_configure(GtkWidget *widget,
 
 static void
 gwy_3d_view_size_request(GtkWidget *widget,
-                           GtkRequisition *requisition)
+                         GtkRequisition *requisition)
 {
     gwy_debug(" ");
     GTK_WIDGET_CLASS(parent_class)->size_request(widget, requisition);
@@ -1537,7 +1537,7 @@ gwy_3d_view_expose(GtkWidget *widget,
 
 static gboolean
 gwy_3d_view_button_press(GtkWidget *widget,
-                             GdkEventButton *event)
+                         GdkEventButton *event)
 {
     Gwy3DView *gwy3dview;
 
@@ -1560,7 +1560,7 @@ gwy_3d_view_button_press(GtkWidget *widget,
 
 static gboolean
 gwy_3d_view_button_release(GtkWidget *widget,
-                               GdkEventButton *event)
+                           GdkEventButton *event)
 {
     Gwy3DView *gwy3dview;
 
@@ -1576,7 +1576,7 @@ gwy_3d_view_button_release(GtkWidget *widget,
 
 static gboolean
 gwy_3d_view_motion_notify(GtkWidget *widget,
-                              GdkEventMotion *event)
+                          GdkEventMotion *event)
 {
     Gwy3DView *gwy3dview;
     float h = widget->allocation.height;
@@ -1608,18 +1608,23 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
 
             case GWY_3D_SCALE:
                 gtk_adjustment_set_value(gwy3dview->view_scale,
-                                        gwy3dview->view_scale->value
-                                        * (1.0 + (y - gwy3dview->mouse_begin_y) / h));
+                                         gwy3dview->view_scale->value
+                                         *(1.0
+                                           + (y - gwy3dview->mouse_begin_y)/h));
                 if (gwy3dview->view_scale->value > gwy3dview->view_scale_max)
-                    gtk_adjustment_set_value(gwy3dview->view_scale, gwy3dview->view_scale_max);
-                else if (gwy3dview->view_scale->value < gwy3dview->view_scale_min)
-                    gtk_adjustment_set_value(gwy3dview->view_scale, gwy3dview->view_scale_min);
+                    gtk_adjustment_set_value(gwy3dview->view_scale,
+                                             gwy3dview->view_scale_max);
+                else if (gwy3dview->view_scale->value
+                         < gwy3dview->view_scale_min)
+                    gtk_adjustment_set_value(gwy3dview->view_scale,
+                                             gwy3dview->view_scale_min);
                 break;
 
             case GWY_3D_DEFORMATION:
             {
-                register int i;
+                int i;
                 double dz = gwy3dview->deformation_z->value;
+
                 if (y - gwy3dview->mouse_begin_y > 0)
                     for (i = 0; i < y - gwy3dview->mouse_begin_y; i++)
                         dz /= GWY_3D_Z_DEFORMATION;
@@ -1799,23 +1804,26 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
       {
            /*TODO solve not enough momory problem*/
       }
-      for (j = 0; j < yres-1; j++)
-      {
+      for (j = 0; j < yres-1; j++) {
          glBegin(GL_TRIANGLE_STRIP);
-         for (i = 0; i < xres-1; i++)
-         {
+         for (i = 0; i < xres-1; i++) {
             double a, b;
             a = gwy_data_field_get_val(data, i, j);
             b = gwy_data_field_get_val(data, i, j+1);
-            glNormal3d(normals[j*xres+i].x, normals[j*xres+i].y, normals[j*xres+i].z);
+            glNormal3d(normals[j*xres+i].x,
+                       normals[j*xres+i].y,
+                       normals[j*xres+i].z);
             color = gwy_palette_def_get_color(pal_def,
-                         (a - gwy3D->data_min) * zdifr, GWY_INTERPOLATION_BILINEAR);
+                                              (a - gwy3D->data_min) * zdifr,
+                                              GWY_INTERPOLATION_BILINEAR);
             glColor3d(color.r , color.g, color.b);
             glVertex3d((double)i, (double)j, a);
-            glNormal3d(normals[(j+1)*xres+i].x, normals[(j+1)*xres+i].y,
+            glNormal3d(normals[(j+1)*xres+i].x,
+                       normals[(j+1)*xres+i].y,
                        normals[(j+1)*xres+i].z);
             color = gwy_palette_def_get_color(pal_def,
-                         (b - gwy3D->data_min) * zdifr, GWY_INTERPOLATION_BILINEAR);
+                                              (b - gwy3D->data_min) * zdifr,
+                                              GWY_INTERPOLATION_BILINEAR);
             glColor3d(color.r , color.g, color.b);
             glVertex3d((double)i, (double)(j+1), b);
          }
@@ -1829,13 +1837,14 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
 
 static void gwy_3d_draw_axes(Gwy3DView * widget)
 {
-    GLfloat rx = widget->rot_x->value - ((int)(widget->rot_x->value / 360.0)) * 360.0;
+    GLfloat rx = widget->rot_x->value
+                 - ((int)(widget->rot_x->value / 360.0)) * 360.0;
     GLfloat Ax, Ay, Bx, By, Cx, Cy;
     gboolean yfirst = TRUE;
 /*    gchar text[50];*/
     gint xres = gwy_data_field_get_xres(widget->data);
     gint yres = gwy_data_field_get_yres(widget->data);
-    GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
+    GwyGLMaterial *mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
     gwy_debug(" ");
 
@@ -1853,26 +1862,21 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
     glMaterialfv(GL_FRONT, GL_SPECULAR, mat_none->specular);
     glMaterialf(GL_FRONT, GL_SHININESS, mat_none->shininess * 128.0);
 
-    if (widget->show_axes == TRUE)
-    {
-        if (rx >= 0.0 && rx <= 90.0)
-        {
+    if (widget->show_axes) {
+        if (rx >= 0.0 && rx <= 90.0) {
             Ay = yres;
             Cx = xres;
             yfirst = TRUE;
-        } else if (rx > 90.0 && rx <= 180.0)
-        {
+        } else if (rx > 90.0 && rx <= 180.0) {
             Ax = xres; Ay = yres;
             By = xres;
             yfirst = FALSE;
-        } else if (rx > 180.0 && rx <= 270.0)
-        {
+        } else if (rx > 180.0 && rx <= 270.0) {
             Ax = xres;
             Bx = xres; By = yres;
             Cy = yres;
            yfirst = TRUE;
-        } else if (rx >= 270.0 && rx <= 360.0)
-        {
+        } else if (rx >= 270.0 && rx <= 360.0) {
             Bx = xres;
             Cx = xres; Cy = yres;
             yfirst = FALSE;
@@ -1920,7 +1924,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
         TODO: create bitmaps with labels in the beginning (possibly in init_gl)
               into display lists and draw here
         */
-        if (widget->show_labels == TRUE)
+        if (widget->show_labels)
         {
 #if 0
             gdouble xreal = gwy_data_field_get_xreal(widget->data);
@@ -2028,9 +2032,12 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                                                       GWY_3D_VIEW_LABEL_MAX,
                                                       size),
                               0, -1,
-                              gwy_3d_labels_get_delta_x(widget->labels, GWY_3D_VIEW_LABEL_MAX),
-                              gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_MAX),
-                              gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_MAX));
+                              gwy_3d_labels_get_delta_x(widget->labels,
+                                                        GWY_3D_VIEW_LABEL_MAX),
+                              gwy_3d_labels_get_delta_y(widget->labels,
+                                                        GWY_3D_VIEW_LABEL_MAX),
+                              gwy_3d_labels_get_rotation(widget->labels,
+                                                         GWY_3D_VIEW_LABEL_MAX));
             gwy_3d_print_text(widget,
                               gwy_3d_labels_expand_text(widget->labels,
                                                      GWY_3D_VIEW_LABEL_MIN),
@@ -2039,9 +2046,12 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                                                       GWY_3D_VIEW_LABEL_MIN,
                                                       size),
                               0, -1,
-                              gwy_3d_labels_get_delta_x(widget->labels, GWY_3D_VIEW_LABEL_MIN),
-                              gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_MIN),
-                              gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_MIN));
+                              gwy_3d_labels_get_delta_x(widget->labels,
+                                                        GWY_3D_VIEW_LABEL_MIN),
+                              gwy_3d_labels_get_delta_y(widget->labels,
+                                                        GWY_3D_VIEW_LABEL_MIN),
+                              gwy_3d_labels_get_rotation(widget->labels,
+                                                         GWY_3D_VIEW_LABEL_MIN));
 #endif
         }
     }
@@ -2053,7 +2063,7 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
 {
     int i;
     GLfloat plane_z;
-    GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
+    GwyGLMaterial *mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
     gwy_debug(" ");
 
@@ -2062,20 +2072,17 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
     glMaterialfv(GL_FRONT, GL_SPECULAR, mat_none->specular);
     glMaterialf(GL_FRONT, GL_SHININESS, mat_none->shininess * 128.0);
     glPushMatrix();
-    plane_z =   GWY_3D_Z_TRANSFORMATION
+    plane_z = GWY_3D_Z_TRANSFORMATION
               * (widget->data_mean - widget->data_min)
               / (widget->data_max  - widget->data_min)
               + GWY_3D_Z_DISPLACEMENT;
-    /*
-    FIXME: show light position does not show the real position of the light
-    */
+
     glTranslatef(0.0f, 0.0f, plane_z);
     glRotatef(widget->light_z->value, 0.0f, 0.0f, 1.0f);
-    glRotatef(widget->light_y->value, 0.0f, 1.0f, 0.0f);
+    glRotatef(-widget->light_y->value, 0.0f, 1.0f, 0.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUAD_STRIP);
-        for (i = -180; i <= 180; i += 5)
-        {
+        for (i = -180; i <= 180; i += 5) {
             GLfloat x = cos(i * DIG_2_RAD) * sqrt(2);
             GLfloat z = sin(i * DIG_2_RAD) * sqrt(2);
             glVertex3f( x, 0.05f, z);
@@ -2156,8 +2163,7 @@ static void gwy_3d_set_projection(Gwy3DView *widget)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    if (w > h)
-    {
+    if (w > h) {
         aspect = w / h;
         if (widget->orthogonal_projection == TRUE)
             glOrtho(-aspect * GWY_3D_ORTHO_CORRECTION,
@@ -2169,8 +2175,7 @@ static void gwy_3d_set_projection(Gwy3DView *widget)
         else
             glFrustum(-aspect, aspect, -1.0 , 1.0, 5.0, 60.0);
     }
-    else
-    {
+    else {
         aspect = h / w;
         if (widget->orthogonal_projection == TRUE)
             glOrtho( -1.0   * GWY_3D_ORTHO_CORRECTION,
