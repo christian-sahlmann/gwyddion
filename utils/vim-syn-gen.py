@@ -4,6 +4,9 @@
 # This file is in the public domain.
 import re, glob, time, sys, os, pwd
 
+# To find modules in directory it was symlinked to.
+sys.path.insert(0, os.path.dirname(sys.argv[0]))
+
 options = {
     'filter_regexp': r'^_',
 }
@@ -100,13 +103,15 @@ re_decl = re.compile(r'<(?P<type>' + r'|'.join(types.keys()) + r')>\n'
                      + r'(?P<body>.*?)'
                      + r'</(?P=type)>\n',
                      re.S)
-re_enum = re.compile(r'^\s+(?P<ident>[A-Z][A-Z0-9_]+)\s*=', re.M)
+re_enum = re.compile(r'^\s+(?P<ident>[A-Z][A-Z0-9_]+)\s*[=,]', re.M)
 re_param_macro = re.compile(r'^\s*#\s*define\s+\w+\(', re.M)
+re_ident_macro = re.compile(r'^\s*#\s*define\s+\w+\s+'
+                            + r'(?P<ident>[A-Za-z_]\w+)\s*$', re.M)
 re_filter = re.compile(options['filter_regexp'])
 
-def print_decls(decldict):
+def print_decls(decldict, value):
     for t, d in decldict.items():
-        d = d.keys()
+        d = [k for k, v in d.items() if v == value]
         if not d:
             continue
         d.sort()
@@ -124,7 +129,8 @@ def override(decldict, overides):
             decldict[v][o] = 1
 
 decls = dict([(x, {}) for x in types])
-depdecls = dict([(x, {}) for x in types])
+deprecated_found = False
+identdefs = {}
 for filename in glob.glob(options['file_glob']):
     fh = file(filename, 'r')
     text = fh.read()
@@ -135,25 +141,40 @@ for filename in glob.glob(options['file_glob']):
             continue
 
         if d['body'].find('<DEPRECATED/>') > -1:
-            insert_to = depdecls
+            value = 'deprecated'
+            deprecated_found = True
         else:
-            insert_to = decls
+            value = None
 
         if d['type'] == 'MACRO' and not re_param_macro.search(d['body']):
             d['type'] = 'DEFINE'
-        insert_to[d['type']][d['ident']] = 1
+            m = re_ident_macro.search(d['body'])
+            if m:
+                identdefs[d['ident']] = m.group('ident')
+
+        decls[d['type']][d['ident']] = value
         if d['type'] == 'ENUM':
             for e in re_enum.finditer(d['body']):
-                insert_to['CONSTANT'][e.group('ident')] = 1
+                decls['CONSTANT'][e.group('ident')] = value
+
+# FIXME: this is not recursive, and also doesn't catch defines to symbols
+# from other libraries -- how to handle that?
+for macro, body in identdefs.items():
+    for k, d in decls.items():
+        if not d.has_key(body):
+            continue
+        #sys.stderr.write('%s -> %s (%s)\n' % (macro, body, k))
+        if k == 'FUNCTION' or k == 'MACRO':
+            decls['MACRO'][macro] = decls['DEFINE'][macro]
+            del decls['DEFINE'][macro]
 
 if options.has_key('overide'):
     override(decls, options['override'])
-    override(depdecls, options['override'])
 
 print header
-print_decls(decls)
-if [x for x in depdecls.values() if x]:
+print_decls(decls, None)
+if deprecated_found:
     print 'if exists("%s_enable_deprecated")' % syntax_name
-    print_decls(depdecls)
+    print_decls(decls, 'deprecated')
     print 'endif'
 print footer
