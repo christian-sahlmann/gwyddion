@@ -1,0 +1,26 @@
+# @(#) $Id$
+
+include_HEADERS = \
+	gwymodule.h
+lib_LTLIBRARIES = libgwymodule.la
+
+#noinst_PROGRAMS = main create-data
+
+# In following order do:
+# Any code change     C:   R++: A
+# Any iface change    C++: 0:   A
+# Adding ifaces       C:   R:   A++
+# Chaning ifraces     C:   R:   0
+libgwymodule_la_LDFLAGS = @GMODULE_LIBS@ -version-info 0:0:0
+libgwymodule_la_SOURCES = \
+	gwymodule.c
+
+#main_SOURCES = main.c
+#main_LDADD = libgwymodule.la ../libgwyddion/libgwyddion.la
+
+INCLUDES = -I$(top_srcdir)
+AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\"
+libgwymoduleincludedir = $(includedir)/gwyddion/libgwymodule
+
+clean-local:
+	rm -f core.* *~

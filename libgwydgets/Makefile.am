@@ -37,13 +37,14 @@ libgwydgets_la_SOURCES = \
 	gwyvruler.c
 
 main_SOURCES = main.c
-create_data_SOURCES = create-data.c
 main_LDADD = libgwydgets.la ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la ../libdraw/libdraw.la
+
+create_data_SOURCES = create-data.c
 create_data_LDADD = ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\"
-gwyddionincludedir = $(includedir)/gwyddion/libgwydgets
+libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
 
 clean-local:
 	rm -f core.* *~

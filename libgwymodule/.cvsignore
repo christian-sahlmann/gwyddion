@@ -1,0 +1,9 @@
+Makefile
+Makefile.in
+main
+test
+*.lo
+*.la
+.libs
+.deps
+core.*

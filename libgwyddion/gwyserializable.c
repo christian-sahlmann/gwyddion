@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <glib-object.h>
+#include <glib/gutils.h>
 
 #include "gwyserializable.h"
 

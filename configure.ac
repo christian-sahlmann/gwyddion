@@ -10,6 +10,7 @@ AC_CONFIG_FILES(\
   libdraw/Makefile \
   libgwyddion/Makefile \
   libgwydgets/Makefile \
+  libgwymodule/Makefile \
   libprocess/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyddion/Makefile \
@@ -63,8 +64,8 @@ else
   CPPFLAGS="$CPPFLAGS -I$prefix/include"
 fi
 
-pkg_modules="gtk+-2.0 >= 2.2.0 libpng12"
-PKG_CHECK_MODULES(PACKAGE, [$pkg_modules])
+PKG_CHECK_MODULES(PACKAGE, [gtk+-2.0 >= 2.2.0 libpng12])
+PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
 AC_CHECK_LIB([m],[sqrt])
 PACKAGE_LIBS="$PACKAGE_LIBS $LIBS"

@@ -28,7 +28,7 @@ main_LDADD = libgwyddion.la
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwyddion\"
-gwyddionincludedir = $(includedir)/gwyddion/libgwyddion
+libgwyddionincludedir = $(includedir)/gwyddion/libgwyddion
 
 clean-local:
 	rm -f core.* *~ testser.object

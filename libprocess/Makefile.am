@@ -27,7 +27,7 @@ test_LDADD = libprocess.la ../libgwyddion/libgwyddion.la
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Process\"
-gwyddionincludedir = $(includedir)/gwyddion/libprocess
+libprocessincludedir = $(includedir)/gwyddion/libprocess
 
 clean-local:
 	rm -f core.* *~
