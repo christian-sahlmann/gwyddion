@@ -65,6 +65,7 @@ gwy_container_set_value_by_name
 gwy_container_remove
 gwy_container_remove_by_prefix
 gwy_container_rename
+gwy_container_foreach
 gwy_container_set_boolean
 gwy_container_get_boolean
 gwy_container_set_uchar

@@ -27,6 +27,18 @@ simplefft
 @GWY_WINDOWING_WELCH: 
 @GWY_WINDOWING_RECT: 
 
+<!-- ##### ENUM GwyFFTOutputType ##### -->
+<para>
+
+</para>
+
+@GWY_FFT_OUTPUT_REAL_IMG: 
+@GWY_FFT_OUTPUT_MOD_PHASE: 
+@GWY_FFT_OUTPUT_REAL: 
+@GWY_FFT_OUTPUT_IMG: 
+@GWY_FFT_OUTPUT_MOD: 
+@GWY_FFT_OUTPUT_PHASE: 
+
 <!-- ##### FUNCTION gwy_fft_hum ##### -->
 <para>
 

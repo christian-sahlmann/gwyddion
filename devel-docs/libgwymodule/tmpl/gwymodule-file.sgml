@@ -14,6 +14,17 @@ gwymodule-file
 
 </para>
 
+<!-- ##### ENUM GwyFileOperation ##### -->
+<para>
+
+</para>
+
+@GWY_FILE_NONE: 
+@GWY_FILE_LOAD: 
+@GWY_FILE_SAVE: 
+@GWY_FILE_DETECT: 
+@GWY_FILE_MASK: 
+
 <!-- ##### STRUCT GwyFileFuncInfo ##### -->
 <para>
 
@@ -124,6 +135,18 @@ gwymodule-file
 
 @data: 
 @filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_build_file_menu ##### -->
+<para>
+
+</para>
+
+@item_factory: 
+@prefix: 
+@item_callback: 
+@type: 
 @Returns: 
 
 

@@ -11,7 +11,6 @@ gwy_module_browser
 <FILE>gwymoduleloader</FILE>
 GWY_MODULE_ABI_VERSION
 GWY_MODULE_QUERY
-GwyRunType
 GwyModuleInfo
 GwyModuleInfoInternal
 GwyModuleRegisterFunc
@@ -24,6 +23,7 @@ gwy_module_foreach
 
 <SECTION>
 <FILE>gwymodule-process</FILE>
+GwyRunType
 GwyProcessFuncInfo
 GwyProcessFunc
 gwy_process_func_register
@@ -34,6 +34,7 @@ gwy_build_process_menu
 
 <SECTION>
 <FILE>gwymodule-file</FILE>
+GwyFileOperation
 GwyFileFuncInfo
 GwyFileDetectFunc
 GwyFileLoadFunc
@@ -45,5 +46,6 @@ gwy_file_func_run_save
 gwy_file_detect
 gwy_file_load
 gwy_file_save
+gwy_build_file_menu
 </SECTION>
 

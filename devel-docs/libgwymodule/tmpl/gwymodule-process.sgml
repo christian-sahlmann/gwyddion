@@ -14,6 +14,18 @@ gwymodule-process
 
 </para>
 
+<!-- ##### ENUM GwyRunType ##### -->
+<para>
+
+</para>
+
+@GWY_RUN_NONE: 
+@GWY_RUN_WITH_DEFAULTS: 
+@GWY_RUN_NONINTERACTIVE: 
+@GWY_RUN_MODAL: 
+@GWY_RUN_INTERACTIVE: 
+@GWY_RUN_MASK: 
+
 <!-- ##### STRUCT GwyProcessFuncInfo ##### -->
 <para>
 
@@ -70,8 +82,11 @@ gwymodule-process
 
 </para>
 
-@accel_group: 
+@item_factory: 
+@prefix: 
 @item_callback: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@accel_group: 
 
 

@@ -5,6 +5,7 @@
 <!ENTITY libgwyprocess-GwyDataLine SYSTEM "xml/dataline.xml">
 <!ENTITY libgwyprocess-interpolation SYSTEM "xml/interpolation.xml">
 <!ENTITY libgwyprocess-simplefft SYSTEM "xml/simplefft.xml">
+<!ENTITY libgwyprocess-cwt SYSTEM "xml/cwt.xml">
 ]>
 <book id="index">
   <bookinfo>
@@ -17,5 +18,6 @@
     &libgwyprocess-GwyDataLine;
     &libgwyprocess-interpolation;
     &libgwyprocess-simplefft;
+    &libgwyprocess-cwt;
   </chapter>
 </book>

@@ -4,16 +4,6 @@ Emitted when value changes.
 </para>
 
 
-<!-- ##### FUNCTION gwy_container_foreach ##### -->
-<para>
-
-</para>
-
-@container: 
-@prefix: 
-@foo: 
-@Returns: 
-
 <!-- ##### FUNCTION gwy_container_freeze_watch ##### -->
 <para>
 

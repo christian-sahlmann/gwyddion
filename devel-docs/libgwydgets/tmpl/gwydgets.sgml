@@ -74,6 +74,17 @@ gwydgets
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_2dcwt_option_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_option_menu_create ##### -->
 <para>
 

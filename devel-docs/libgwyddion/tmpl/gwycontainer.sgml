@@ -132,6 +132,20 @@ GwyContainer
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_foreach ##### -->
+<para>
+
+</para>
+
+@container: 
+@prefix: 
+@function: 
+@user_data: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@foo: 
+
+
 <!-- ##### FUNCTION gwy_container_set_boolean ##### -->
 <para>
 

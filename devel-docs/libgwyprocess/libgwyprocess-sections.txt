@@ -8,6 +8,7 @@ gwy_data_field_free
 gwy_data_field_resample
 gwy_data_field_resize
 gwy_data_field_copy
+gwy_data_field_get_data
 gwy_data_field_get_xres
 gwy_data_field_get_yres
 gwy_data_field_get_xreal
@@ -56,6 +57,7 @@ gwy_data_field_plane_rotate
 gwy_data_field_get_xder
 gwy_data_field_get_yder
 gwy_data_field_get_angder
+gwy_data_field_get_fft_res
 gwy_data_field_2dfft
 gwy_data_field_2dfft_real
 gwy_data_field_2dffthumanize
@@ -63,6 +65,7 @@ gwy_data_field_xfft
 gwy_data_field_yfft
 gwy_data_field_xfft_real
 gwy_data_field_yfft_real
+gwy_data_field_cwt
 <SUBSECTION Standard>
 GWY_DATA_FIELD
 GWY_IS_DATA_FIELD
@@ -135,8 +138,16 @@ gwy_interpolation_get_dval
 </SECTION>
 
 <SECTION>
+<FILE>cwt</FILE>
+Gwy2DCWTWaveletType
+GwyCWTWaveletType
+wfunc_2d
+</SECTION>
+
+<SECTION>
 <FILE>simplefft</FILE>
 GwyWindowingType
+GwyFFTOutputType
 gwy_fft_hum
 gwy_fft_window
 </SECTION>

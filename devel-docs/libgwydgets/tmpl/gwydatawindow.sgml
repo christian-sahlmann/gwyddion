@@ -44,6 +44,15 @@ GwyDataWindow
 @window: 
 
 
+<!-- ##### FUNCTION gwy_data_window_get_data ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_window_set_zoom ##### -->
 <para>
 

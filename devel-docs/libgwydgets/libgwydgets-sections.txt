@@ -281,6 +281,7 @@ GwyZoomMode
 <TITLE>GwyDataWindow</TITLE>
 gwy_data_window_new
 gwy_data_window_get_data_view
+gwy_data_window_get_data
 gwy_data_window_set_zoom
 gwy_data_view_set_zoom_mode
 gwy_data_view_get_zoom_mode
@@ -454,6 +455,11 @@ GWY_GRAPH_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwymodulemenus</FILE>
+gwy_fft_output_menu
+</SECTION>
+
+<SECTION>
 <FILE>gwydgets</FILE>
 GwyOptionMenuEntry
 gwy_palette_menu
@@ -461,6 +467,7 @@ gwy_palette_option_menu
 gwy_interpolation_option_menu
 gwy_windowing_option_menu
 gwy_zoom_mode_option_menu
+gwy_2dcwt_option_menu
 gwy_option_menu_create
 gwy_option_menu_set_history
 gwy_table_attach_spinbutton
@@ -477,6 +484,7 @@ GWY_STOCK_ZOOM_FIT
 GWY_STOCK_FIT_PLANE
 GWY_STOCK_FIT_TRIANGLE
 GWY_STOCK_GRAPH
+GWY_STOCK_GWYDDION
 GWY_STOCK_CROP
 GWY_STOCK_SCALE
 GWY_STOCK_ROTATE
