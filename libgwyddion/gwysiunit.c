@@ -253,20 +253,23 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
                        GwySIValueFormat *format)
 {
     gwy_debug("");
-    if (format==NULL) format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
-    if (format->units==NULL) 
-    {
-        format->units = (gchar*)g_malloc(10*sizeof(gchar));
+    printf("************************* get_format (format=%d)\n",(gint)siunit);
+    if (format==NULL) {
+        printf("************************* allocating format (format=%d)\n", (gint)siunit);
+        format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
+        format->units = NULL;
     }
-    else
-    {
-        g_free(format->units);
-        format->units = (gchar*)g_malloc(10*sizeof(gchar));
-    }
-  
-    
-    format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
 
+    format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
+    
+    if (format->units!=NULL)
+    {
+        printf("************************* freeing unit (format=%d)\n", (gint)siunit);
+        g_free(format->units);
+    }
+    printf("************************* allocating unit (format=%d)\n",(gint)siunit);
+    format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+1)*sizeof(gchar));
+  
     format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
     format->units = strcat(format->units, gwy_si_unit_get_unit_string(siunit));
     return format;
