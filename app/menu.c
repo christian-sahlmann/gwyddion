@@ -6,6 +6,7 @@
 #include <libgwymodule/gwymodulebrowser.h>
 #include "app.h"
 #include "file.h"
+#include "arith.h"
 #include "menu.h"
 
 static GQuark sensitive_key = 0;
@@ -136,6 +137,7 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
         { "/Edit/_Undo", "<control>Z", NULL, 0, "<StockItem>", GTK_STOCK_UNDO },
         { "/Edit/_Redo", "<control>Y", NULL, 0, "<StockItem>", GTK_STOCK_REDO },
         { "/Edit/_Duplicate", "<control>D", gwy_app_file_duplicate_cb, 0, NULL, NULL },
+        { "/Edit/Data _Arithmetic", NULL, gwy_app_data_arith, 0, NULL, NULL },
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;

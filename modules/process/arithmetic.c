@@ -22,17 +22,14 @@ enum {
 
 static GtkWidget *arith_window = NULL;
 
-GtkWidget*
-gwy_data_arith(void)
+void
+gwy_app_data_arith(void)
 {
-    if (arith_window) {
-        gtk_window_present(GTK_WINDOW(arith_window));
-        return arith_window;
-    }
+    if (!arith_window)
+        arith_window = gwy_data_arith_window_construct();
+    gtk_window_present(GTK_WINDOW(arith_window));
 
-    arith_window = gwy_data_arith_window_construct();
-
-    return arith_window;
+    /*return arith_window;*/
 }
 
 static GtkWidget*
