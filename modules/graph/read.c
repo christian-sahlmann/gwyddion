@@ -126,21 +126,17 @@ read_dialog(GwyGraph *graph)
 
     label = gtk_label_new("x");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, 0, 0, 2, 2);
 
     label = gtk_label_new("y");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, 0, 0, 2, 2);
 
     label = gtk_label_new("=");
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, 0, 0, 2, 2);
 
     label = gtk_label_new("=");
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, 0, 0, 2, 2);
 
     controls.xlabel = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.xlabel), 1.0, 0.5);
