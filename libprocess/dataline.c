@@ -14,7 +14,7 @@
 
 #define GWY_DATALINE_TYPE_NAME "GwyDataLine"
 
-static void  gwy_dataline_class_init        (GwySerializableClass *klass);
+static void  gwy_dataline_class_init        (GwyDataLineClass *klass);
 static void  gwy_dataline_init              (GwyDataLine *dataline);
 static void  gwy_dataline_serializable_init (gpointer giface, gpointer iface_data);
 static void  gwy_dataline_watchable_init    (gpointer giface, gpointer iface_data);
@@ -103,7 +103,7 @@ gwy_dataline_watchable_init(gpointer giface,
 }
 
 static void
-gwy_dataline_class_init(GwySerializableClass *klass)
+gwy_dataline_class_init(GwyDataLineClass *klass)
 {
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -172,7 +172,8 @@ gwy_dataline_deserialize(const guchar *stream,
     #endif
     g_return_val_if_fail(stream, NULL);
 
-    pos = gwy_serialize_check_string(stream, size, GWY_DATALINE_TYPE_NAME);
+    pos = gwy_serialize_check_string(stream, size, *position,
+                                     GWY_DATALINE_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
 

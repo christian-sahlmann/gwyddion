@@ -99,6 +99,7 @@ guchar*       gwy_serialize_unpack_string       (const guchar *buffer,
 
 gsize         gwy_serialize_check_string        (const guchar *buffer,
                                                  gsize size,
+                                                 gsize position,
                                                  const guchar *compare_to);
 
 #ifdef __cplusplus

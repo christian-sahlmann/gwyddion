@@ -44,10 +44,8 @@ int main(int argc, char *argv[])
     
     g_type_init();
   
-   
     a = gwy_datafield_new(500, 500, 500, 500, 1);
   
-    return 0;
     gwy_pixfield_presetpal(&pal, GWY_PAL_OLIVE);
     
     pxb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 

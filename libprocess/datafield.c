@@ -13,7 +13,7 @@
 
 #define GWY_DATAFIELD_TYPE_NAME "GwyDataField"
 
-static void  gwy_datafield_class_init        (GwySerializableClass *klass);
+static void  gwy_datafield_class_init        (GwyDataFieldClass *klass);
 static void  gwy_datafield_init              (GwyDataField *datafield);
 static void  gwy_datafield_serializable_init (gpointer giface, gpointer iface_data);
 static void  gwy_datafield_watchable_init    (gpointer giface, gpointer iface_data);
@@ -102,7 +102,7 @@ gwy_datafield_watchable_init(gpointer giface,
 }
 
 static void
-gwy_datafield_class_init(GwySerializableClass *klass)
+gwy_datafield_class_init(GwyDataFieldClass *klass)
 {
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -175,7 +175,8 @@ gwy_datafield_deserialize(const guchar *stream,
     #endif
     g_return_val_if_fail(stream, NULL);
 
-    pos = gwy_serialize_check_string(stream, size, GWY_DATAFIELD_TYPE_NAME);
+    pos = gwy_serialize_check_string(stream, size, *position,
+                                     GWY_DATAFIELD_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
 

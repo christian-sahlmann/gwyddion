@@ -137,6 +137,13 @@ gwy_container_finalize(GObject *obj)
     g_hash_table_destroy(container->watching);
 }
 
+/**
+ * gwy_container_new:
+ *
+ * Creates a new #GwyContainer.
+ *
+ * Returns: The container, as a #GObject.
+ **/
 GObject*
 gwy_container_new(void)
 {
@@ -164,6 +171,15 @@ value_destroy_func(gpointer data)
     g_free(val);
 }
 
+/**
+ * gwy_container_value_type:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the type of value in @container identified by @key.
+ *
+ * Returns: The value type as #GType.
+ **/
 GType
 gwy_container_value_type(GwyContainer *container, GQuark key)
 {
@@ -177,6 +193,33 @@ gwy_container_value_type(GwyContainer *container, GQuark key)
     return G_VALUE_TYPE(p);
 }
 
+/**
+ * gwy_container_contains:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns #TRUE if @container contains a value identified by @key.
+ *
+ * Returns: Whether @container contains something at @key.
+ **/
+gboolean
+gwy_container_contains(GwyContainer *container, GQuark key)
+{
+    g_return_val_if_fail(key, 0);
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
+    return g_hash_table_lookup(container->values,
+                               GUINT_TO_POINTER(key)) != NULL;
+}
+
+/**
+ * gwy_container_get_value:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the value in @container identified by @key.
+ *
+ * Returns: The value as a #GValue.
+ **/
 GValue
 gwy_container_get_value(GwyContainer *container, GQuark key)
 {
@@ -197,6 +240,15 @@ gwy_container_get_value(GwyContainer *container, GQuark key)
     return value;
 }
 
+/**
+ * gwy_container_get_boolean:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the boolean in @container identified by @key.
+ *
+ * Returns: The boolean as #gboolean.
+ **/
 gboolean
 gwy_container_get_boolean(GwyContainer *container, GQuark key)
 {
@@ -220,6 +272,15 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
     return g_value_get_int(p);
 }
 
+/**
+ * gwy_container_get_uchar:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the unsigned character in @container identified by @key.
+ *
+ * Returns: The character as #guchar.
+ **/
 guchar
 gwy_container_get_uchar(GwyContainer *container, GQuark key)
 {
@@ -243,6 +304,15 @@ gwy_container_get_uchar(GwyContainer *container, GQuark key)
     return g_value_get_uchar(p);
 }
 
+/**
+ * gwy_container_get_int32:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the 32bit integer in @container identified by @key.
+ *
+ * Returns: The integer as #guint32.
+ **/
 gint32
 gwy_container_get_int32(GwyContainer *container, GQuark key)
 {
@@ -266,6 +336,15 @@ gwy_container_get_int32(GwyContainer *container, GQuark key)
     return g_value_get_int(p);
 }
 
+/**
+ * gwy_container_get_int64:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the 64bit integer in @container identified by @key.
+ *
+ * Returns: The 64bit integer as #guint64.
+ **/
 gint64
 gwy_container_get_int64(GwyContainer *container, GQuark key)
 {
@@ -289,6 +368,15 @@ gwy_container_get_int64(GwyContainer *container, GQuark key)
     return g_value_get_int64(p);
 }
 
+/**
+ * gwy_container_get_double:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the double in @container identified by @key.
+ *
+ * Returns: The double as #gdouble.
+ **/
 gdouble
 gwy_container_get_double(GwyContainer *container, GQuark key)
 {
@@ -312,6 +400,18 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
     return g_value_get_double(p);
 }
 
+/**
+ * gwy_container_get_string:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the string in @container identified by @key.
+ *
+ * The returned string should be considered constant and shouldn't be freed
+ * or modified.
+ *
+ * Returns: The string.
+ **/
 G_CONST_RETURN guchar*
 gwy_container_get_string(GwyContainer *container, GQuark key)
 {
@@ -335,6 +435,19 @@ gwy_container_get_string(GwyContainer *container, GQuark key)
     return g_value_get_string(p);
 }
 
+/**
+ * gwy_container_get_object:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ *
+ * Returns the object in @container identified by @key.
+ *
+ * The returned object doesn't have it's reference count increased, use
+ * g_object_ref() if you want to access it even when @container may cease
+ * to exist.
+ *
+ * Returns: The object as #GObject.
+ **/
 GObject*
 gwy_container_get_object(GwyContainer *container, GQuark key)
 {
@@ -696,7 +809,7 @@ gwy_container_deserialize(const guchar *buffer,
     #endif
     g_return_val_if_fail(buffer, NULL);
 
-    pos = gwy_serialize_check_string(buffer + *position, size - *position,
+    pos = gwy_serialize_check_string(buffer, size, *position,
                                      GWY_CONTAINER_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
@@ -753,7 +866,7 @@ gwy_container_deserialize(const guchar *buffer,
 
             default:
             g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-                "Cannot unpack GValue holding type #%d", type);
+                "Cannot unpack GValue holding type #%d", (gint)type);
             break;
         }
         type = gwy_serialize_unpack_int32(buffer, size, position);

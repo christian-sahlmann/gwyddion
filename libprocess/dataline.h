@@ -31,6 +31,8 @@ extern "C" {
 
 /*provisory struct for field (for function arguments simplification)*/
 typedef struct{
+    GObject parent_instance;
+
     gint res;      /*X resolution*/
     gdouble real;  /*X real field size (in nanometers)*/
     gdouble *data; /*data field*/

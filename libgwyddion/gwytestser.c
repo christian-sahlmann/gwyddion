@@ -6,7 +6,7 @@
 
 #define GWY_TEST_SER_TYPE_NAME "GwyTestSer"
 
-static void       gwy_test_ser_class_init        (GwySerializableClass *klass);
+static void       gwy_test_ser_class_init        (GwyTestSerClass *klass);
 static void       gwy_test_ser_init              (GwyTestSer *test_ser);
 static void       gwy_test_ser_finalize          (GwyTestSer *test_ser);
 static void       gwy_test_ser_serializable_init (gpointer giface);
@@ -95,7 +95,7 @@ gwy_test_ser_watchable_init(gpointer giface)
 }
 
 static void
-gwy_test_ser_class_init(GwySerializableClass *klass)
+gwy_test_ser_class_init(GwyTestSerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
@@ -103,7 +103,7 @@ gwy_test_ser_class_init(GwySerializableClass *klass)
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
 
-    gobject_class->finalize = gwy_test_ser_finalize;
+    gobject_class->finalize = (GObjectFinalizeFunc)gwy_test_ser_finalize;
 }
 
 static void
@@ -138,7 +138,7 @@ gwy_test_ser_new(gdouble theta,
     test_ser = g_object_new(GWY_TYPE_TEST_SER, NULL);
 
     test_ser->theta = theta;
-    gwy_test_ser_set_radius(test_ser, 1.0);
+    gwy_test_ser_set_radius(test_ser, radius);
 
     return (GObject*)(test_ser);
 }
@@ -170,7 +170,7 @@ gwy_test_ser_deserialize(const guchar *stream,
                          gsize *position)
 {
     gsize pos, hsize;
-    double theta, phi, *radius;
+    double theta, *radius;
     GwyTestSer *test_ser;
 
     #ifdef DEBUG
@@ -178,7 +178,7 @@ gwy_test_ser_deserialize(const guchar *stream,
     #endif
     g_return_val_if_fail(stream, NULL);
 
-    pos = gwy_serialize_check_string(stream + *position, size - *position,
+    pos = gwy_serialize_check_string(stream, size, *position,
                                      GWY_TEST_SER_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;

@@ -1,4 +1,9 @@
 
+Sat Sep  6 20:56:56 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwyddion/gwyserializable.c (gwy_serialize_check_string):
+      changed arguments to include position as the _unpack functions,
+      all callers changed
+
 Sat Sep  6 19:04:41 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
     * libgwyddion/gwycontainer.c (gwy_container_set_object):
       fixed increasing refcount by 2 instead of 1

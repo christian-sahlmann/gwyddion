@@ -43,6 +43,8 @@ GType      gwy_container_get_type           (void) G_GNUC_CONST;
 GObject*   gwy_container_new                (void);
 GType      gwy_container_value_type         (GwyContainer *container,
                                              GQuark key);
+gboolean   gwy_container_contains           (GwyContainer *container,
+                                             GQuark key);
 GValue     gwy_container_get_value          (GwyContainer *container,
                                              GQuark key);
 void       gwy_container_set_value          (GwyContainer *container,
@@ -93,6 +95,7 @@ GObject*   gwy_container_get_object         (GwyContainer *container,
                                              GQuark key);
 
 #define gwy_container_value_type_by_name(c,n) gwy_container_value_type(c,g_quark_try_string(n))
+#define gwy_container_contains_by_name(c,n) gwy_container_contains(c,g_quark_try_string(n))
 #define gwy_container_get_value_by_name(c,n) gwy_container_get_value(c,g_quark_try_string(n))
 #define gwy_container_delete_by_name(c,n) gwy_container_delete(c,g_quark_try_string(n))
 #define gwy_container_set_boolean_by_name(c,n,v) gwy_container_set_boolean(c,g_quark_from_string(n),v)

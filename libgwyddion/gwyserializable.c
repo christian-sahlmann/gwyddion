@@ -7,7 +7,6 @@
 
 static void gwy_serializable_base_init     (GwySerializableClass *klass);
 static void gwy_serializable_base_finalize (GwySerializableClass *klass);
-static void gwy_serializable_class_init    (GwySerializableClass *klass);
 
 GType
 gwy_serializable_get_type(void)
@@ -127,8 +126,8 @@ gwy_serializable_deserialize(const guchar *buffer,
     GwyDeserializeFunc deserialize_method;
 
     g_return_val_if_fail(buffer, NULL);
-    if (!(namelen = gwy_serialize_check_string(buffer + *position,
-                                               size - *position, NULL))) {
+    if (!(namelen = gwy_serialize_check_string(buffer, size, *position,
+                                               NULL))) {
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
               "memory contents at %p doesn't look as an serialized object",
               buffer);
@@ -198,7 +197,7 @@ gwy_serialize_pack(guchar *buffer,
 {
     va_list ap;
     gsize nargs, i, pos;
-    guchar *p;
+    guchar *p = NULL;
     gboolean do_copy = FALSE;
     gboolean did_copy = FALSE;
     gsize nobjs;  /* number of items which are objects */
@@ -404,7 +403,7 @@ gwy_serialize_pack(guchar *buffer,
 /**
  * gwy_serialize_unpack_boolean:
  * @buffer: A memory location containing a serialized boolean at position
- *          @pos.
+ *          @position.
  * @size: The size of @buffer.
  * @position: The position of the character in @buffer, it's updated to
  *            point after it.
@@ -435,7 +434,7 @@ gwy_serialize_unpack_boolean(const guchar *buffer,
 /**
  * gwy_serialize_unpack_char:
  * @buffer: A memory location containing a serialized character at position
- *          @pos.
+ *          @position.
  * @size: The size of @buffer.
  * @position: The position of the character in @buffer, it's updated to
  *            point after it.
@@ -466,7 +465,7 @@ gwy_serialize_unpack_char(const guchar *buffer,
 /**
  * gwy_serialize_unpack_char_array:
  * @buffer: A memory location containing a serialized character array at
- *          position @pos.
+ *          position @position.
  * @size: The size of @buffer.
  * @position: The position of the array in @buffer, it's updated to
  *            point after it.
@@ -499,7 +498,7 @@ gwy_serialize_unpack_char_array(const guchar *buffer,
 /**
  * gwy_serialize_unpack_int32:
  * @buffer: A memory location containing a serialized 32bit integer at position
- *          @pos.
+ *          @position.
  * @size: The size of @buffer.
  * @position: The position of the integer in @buffer, it's updated to
  *            point after it.
@@ -530,7 +529,7 @@ gwy_serialize_unpack_int32(const guchar *buffer,
 /**
  * gwy_serialize_unpack_int32_array:
  * @buffer: A memory location containing a serialized int32 array at
- *          position @pos.
+ *          position @position.
  * @size: The size of @buffer.
  * @position: The position of the array in @buffer, it's updated to
  *            point after it.
@@ -563,7 +562,7 @@ gwy_serialize_unpack_int32_array(const guchar *buffer,
 /**
  * gwy_serialize_unpack_int64:
  * @buffer: A memory location containing a serialized 64bit integer at position
- *          @pos.
+ *          @position.
  * @size: The size of @buffer.
  * @position: The position of the integer in @buffer, it's updated to
  *            point after it.
@@ -594,7 +593,7 @@ gwy_serialize_unpack_int64(const guchar *buffer,
 /**
  * gwy_serialize_unpack_int64_array:
  * @buffer: A memory location containing a serialized int64 array at
- *          position @pos.
+ *          position @position.
  * @size: The size of @buffer.
  * @position: The position of the array in @buffer, it's updated to
  *            point after it.
@@ -627,7 +626,7 @@ gwy_serialize_unpack_int64_array(const guchar *buffer,
 /**
  * gwy_serialize_unpack_double:
  * @buffer: A memory location containing a serialized double at position
- *          @pos.
+ *          @position.
  * @size: The size of @buffer.
  * @position: The position of the integer in @buffer, it's updated to
  *            point after it.
@@ -658,7 +657,7 @@ gwy_serialize_unpack_double(const guchar *buffer,
 /**
  * gwy_serialize_unpack_double_array:
  * @buffer: A memory location containing a serialized double array at
- *          position @pos.
+ *          position @position.
  * @size: The size of @buffer.
  * @position: The position of the array in @buffer, it's updated to
  *            point after it.
@@ -691,7 +690,7 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
 /**
  * gwy_serialize_unpack_string:
  * @buffer: A memory location containing a serialized nul-terminated string at
- *          position @pos.
+ *          position @position.
  * @size: The size of @buffer.
  * @position: The position of the string in @buffer, it's updated to
  *            point after it.
@@ -724,12 +723,16 @@ gwy_serialize_unpack_string(const guchar *buffer,
 
 /**
  * gwy_serialize_check_string:
- * @buffer: A memory location starting with a nul-terminated string.
+ * @buffer: A memory location containing a nul-terminated string at position
+ *          @position.
  * @size: The size of @buffer.
+ * @position: The position of the string in @buffer.
  * @compare_to: String to compare @buffer to, or %NULL.
  *
  * Check whether @size bytes of memory in @buffer can be interpreted as a
  * nul-terminated string, and eventually whether it's equal to @compare_to.
+ *
+ * When @compare_to is %NULL, the comparsion is not performed.
  *
  * Returns: The length of the nul-terminated string including the nul
  * character; zero otherwise.
@@ -737,6 +740,7 @@ gwy_serialize_unpack_string(const guchar *buffer,
 gsize
 gwy_serialize_check_string(const guchar *buffer,
                            gsize size,
+                           gsize position,
                            const guchar *compare_to)
 {
     const guchar *p;
@@ -746,11 +750,12 @@ gwy_serialize_check_string(const guchar *buffer,
     #endif
     g_assert(buffer);
     g_assert(size > 0);
-    p = (guchar*)memchr(buffer, 0, size);
-    if (!p || (compare_to && strcmp(buffer, compare_to)))
+    g_assert(position < size);
+    p = (guchar*)memchr(buffer + position, 0, size - position);
+    if (!p || (compare_to && strcmp(buffer + position, compare_to)))
         return 0;
 
-    return (p - buffer) + 1;
+    return (p - buffer) + 1 - position;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

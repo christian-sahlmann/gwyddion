@@ -191,6 +191,7 @@ GwySerializable
 
 @buffer: 
 @size: 
+@position: 
 @compare_to: 
 @Returns: 
 

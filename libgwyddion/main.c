@@ -89,8 +89,6 @@ main(int argc, char *argv[])
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 33.4455);
     gwy_watchable_value_changed(ser);
     g_signal_handler_disconnect(ser, id);
-    /*g_object_unref(ser);*/
-    g_message("####### %d", G_OBJECT(ser)->ref_count);
 
     g_message("====== CONTAINER ====================================");
     container = gwy_container_new();
