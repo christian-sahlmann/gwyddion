@@ -173,9 +173,9 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     dialog = gtk_dialog_new_with_buttons(_("Fractal dimension"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          _("Recompute"), RESPONSE_RECOMPUTE,
                                          _("Reset"), RESPONSE_RESET,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
@@ -215,7 +215,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
 
     controls.from = gtk_label_new("minimum");
     gtk_misc_set_alignment(GTK_MISC(controls.from), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.from, 1, 2, 5, 6, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.from, 1, 2, 5, 6,
+                     GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("to:"));
@@ -224,7 +225,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
 
     controls.to = gtk_label_new("maxium");
     gtk_misc_set_alignment(GTK_MISC(controls.to), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.to, 1, 2, 6, 7, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.to, 1, 2, 6, 7,
+                     GTK_FILL, 0, 2, 2);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), 6, 15);
     /*results*/
@@ -243,7 +245,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     controls.res_partitioning = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.res_partitioning), 0.0, 0.5);
     gtk_label_set_selectable(GTK_LABEL(controls.res_partitioning), TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.res_partitioning, 1, 2, 8, 9, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.res_partitioning, 1, 2, 8, 9,
+                     GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("cube counting:"));
@@ -254,7 +257,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     controls.res_cubecounting = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.res_cubecounting), 0.0, 0.5);
     gtk_label_set_selectable(GTK_LABEL(controls.res_cubecounting), TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.res_cubecounting, 1, 2, 9, 10, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.res_cubecounting, 1, 2, 9, 10,
+                     GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("triangulation:"));
@@ -265,7 +269,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     controls.res_triangulation = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.res_triangulation), 0.0, 0.5);
     gtk_label_set_selectable(GTK_LABEL(controls.res_triangulation), TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.res_triangulation, 1, 2, 10, 11, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.res_triangulation, 1, 2, 10, 11,
+                     GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), _("power spectrum:"));
@@ -276,7 +281,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     controls.res_psdf = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.res_psdf), 0.0, 0.5);
     gtk_label_set_selectable(GTK_LABEL(controls.res_psdf), TRUE);
-    gtk_table_attach(GTK_TABLE(table), controls.res_psdf, 1, 2, 11, 12, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.res_psdf, 1, 2, 11, 12,
+                     GTK_FILL, 0, 2, 2);
 
     /*graph*/
     controls.graph = gwy_graph_new();
@@ -284,7 +290,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
                        FALSE, FALSE, 4);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
 
-    g_signal_connect(GWY_GRAPH(controls.graph)->area, "selected", G_CALLBACK(graph_selected), args);
+    g_signal_connect(GWY_GRAPH(controls.graph)->area,
+                     "selected", G_CALLBACK(graph_selected), args);
 
 
     global_controls = &controls;
@@ -329,7 +336,8 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
                 args->to_psdf = 0;
                 break;
             }
-            gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
+            gwy_graph_set_status(GWY_GRAPH(controls.graph),
+                                 GWY_GRAPH_STATUS_XSEL);
             fractal_dialog_update(&controls, args, data);
             break;
 

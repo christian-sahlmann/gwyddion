@@ -179,8 +179,8 @@ cwt_dialog(CWTArgs *args)
     dialog = gtk_dialog_new_with_buttons(_("2D CWT"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          _("Reset"), RESPONSE_RESET,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
@@ -199,7 +199,8 @@ cwt_dialog(CWTArgs *args)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
                                  args->preserve);
 
-    g_signal_connect(controls.preserve, "toggled", G_CALLBACK(preserve_changed_cb), args);
+    g_signal_connect(controls.preserve, "toggled",
+                     G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),

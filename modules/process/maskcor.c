@@ -131,7 +131,7 @@ maskcor(GwyContainer *data, GwyRunType run)
             ok = TRUE;
             break;
 
-            case GTK_RESPONSE_APPLY:
+            case GTK_RESPONSE_OK:
             gtk_widget_destroy(maskcor_window);
             maskcor_do(&args);
             maskcor_save_args(settings, &args);
@@ -157,7 +157,7 @@ maskcor_window_construct(MaskcorArgs *args)
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
 

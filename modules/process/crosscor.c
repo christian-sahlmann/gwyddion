@@ -156,7 +156,7 @@ crosscor(GwyContainer *data, GwyRunType run)
             ok = TRUE;
             break;
 
-            case GTK_RESPONSE_APPLY:
+            case GTK_RESPONSE_OK:
             crosscor_update_values(&controls, &args);
             ok = crosscor_check(&args, crosscor_window);
             if (ok) {
@@ -186,7 +186,7 @@ crosscor_window_construct(CrosscorArgs *args,
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
 

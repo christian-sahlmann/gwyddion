@@ -163,7 +163,7 @@ arithmetic(GwyContainer *data, GwyRunType run)
             ok = TRUE;
             break;
 
-            case GTK_RESPONSE_APPLY:
+            case GTK_RESPONSE_OK:
             ok = arithmetic_check(&args, arithmetic_window);
             if (ok) {
                 gtk_widget_destroy(arithmetic_window);
@@ -191,7 +191,7 @@ arithmetic_window_construct(ArithmeticArgs *args)
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
 
