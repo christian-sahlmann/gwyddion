@@ -524,6 +524,7 @@ file_plugin_proxy_load(const gchar *filename,
 {
     FilePluginInfo *info;
     GwyContainer *data = NULL;
+    GObject *dfield;
     gchar *tmpname = NULL, *buffer = NULL;
     GError *err = NULL;
     gint exit_status;
@@ -555,6 +556,12 @@ file_plugin_proxy_load(const gchar *filename,
         g_warning("Cannot run plug-in %s: %s",
                     info->file,
                     err ? err->message : "it returned garbage.");
+    }
+    if (!gwy_container_gis_object_by_name(data, "/0/data", &dfield)
+        || !GWY_IS_DATA_FIELD(dfield)) {
+        g_warning("Output from %s plug-in contains no \"/0/data\" data field",
+                  info->file);
+        gwy_object_unref(data);
     }
     g_free(args[1]);
     g_free(args[3]);
