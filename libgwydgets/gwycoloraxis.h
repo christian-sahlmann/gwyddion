@@ -13,9 +13,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define GWY_COLOR_AXIS_VERTICAL   0
-#define GWY_COLOR_AXIS_HORIZONTAL   1
-    
     
 #define GWY_TYPE_COLOR_AXIS            (gwy_color_axis_get_type())
 #define GWY_COLOR_AXIS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_COLOR_AXIS, GwyColorAxis))
@@ -40,7 +37,7 @@ typedef struct {
 
     GdkPixbuf *pixbuf;
     
-    gint orientation;		/*north, south, east, west*/
+    GtkOrientation orientation;		/*north, south, east, west*/
     gdouble min;
     gdouble max;
    
@@ -53,7 +50,7 @@ typedef struct {
 } GwyColorAxisClass;
 
 
-GtkWidget* gwy_color_axis_new(gint orientation, gdouble min, gdouble max, GwyPalette *pal);
+GtkWidget* gwy_color_axis_new(GtkOrientation orientation, gdouble min, gdouble max, GwyPalette *pal);
 
 GType gwy_color_axis_get_type(void) G_GNUC_CONST;
 

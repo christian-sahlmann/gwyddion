@@ -100,7 +100,7 @@ gwy_color_axis_init(GwyColorAxis *axis)
 {
     gwy_debug("%s", __FUNCTION__);
     
-    axis->orientation = GWY_COLOR_AXIS_VERTICAL;
+    axis->orientation = GTK_ORIENTATION_VERTICAL;
     axis->max = 0;
     axis->min = 0;
     axis->pixbuf = NULL;
@@ -108,7 +108,7 @@ gwy_color_axis_init(GwyColorAxis *axis)
 }
 
 GtkWidget*
-gwy_color_axis_new(gint orientation, gdouble min, gdouble max, GwyPalette *pal)
+gwy_color_axis_new(GtkOrientation orientation, gdouble min, gdouble max, GwyPalette *pal)
 {
     GwyColorAxis *axis;
 
@@ -117,7 +117,7 @@ gwy_color_axis_new(gint orientation, gdouble min, gdouble max, GwyPalette *pal)
 
     axis = gtk_type_new (gwy_color_axis_get_type ());
     axis->orientation = orientation;
-    if (orientation == GWY_COLOR_AXIS_VERTICAL) axis->par.textarea = 70;
+    if (orientation == GTK_ORIENTATION_VERTICAL) axis->par.textarea = 70;
     else axis->par.textarea = 20;
     axis->min = min;
     axis->max = max;
@@ -232,7 +232,7 @@ gwy_color_axis_size_request(GtkWidget *widget,
 
     gwy_debug("%s", __FUNCTION__);
     
-    if (axis->orientation == GWY_COLOR_AXIS_VERTICAL)
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL)
     {
         requisition->width = 80;
         requisition->height = 100;
@@ -294,7 +294,7 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
     rowstride = gdk_pixbuf_get_rowstride(axis->pixbuf);
     samples = gwy_palette_get_samples(axis->palette, &palsize);
     
-    if (axis->orientation == GWY_COLOR_AXIS_VERTICAL)
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL)
     {
         cor = (palsize-1.0)/height;
         for (i=0; i<height; i++)
@@ -310,7 +310,7 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
             }
         }
     }
-    if (axis->orientation == GWY_COLOR_AXIS_HORIZONTAL)
+    if (axis->orientation == GTK_ORIENTATION_HORIZONTAL)
     {
         cor = (palsize-1.0)/width;
         for (i=0; i<height; i++)
@@ -357,7 +357,7 @@ gwy_color_axis_expose(GtkWidget *widget,
   
     mygc = gdk_gc_new(widget->window);
     
-    if (axis->orientation == GWY_COLOR_AXIS_HORIZONTAL)
+    if (axis->orientation == GTK_ORIENTATION_HORIZONTAL)
         gdk_pixbuf_render_to_drawable(axis->pixbuf, widget->window, mygc, 0,
                                   0,
                                   0,
@@ -461,7 +461,7 @@ void gwy_color_axis_draw_label(GtkWidget *widget)
     }
 
     
-    if (axis->orientation == GWY_COLOR_AXIS_VERTICAL)
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL)
     {
         /*draw frame around axis*/
         gdk_draw_rectangle(widget->window, mygc, 0,
