@@ -76,6 +76,9 @@ static GList*          register_plugins          (GList *plugins,
                                                   const gchar *dir,
                                                   const gchar *name,
                                                   ProxyRegister register_func);
+static GSList*         find_plugin_executables   (const gchar *dir,
+                                                  GSList *list,
+                                                  gint level);
 
 /* process plug-in proxy */
 static GList*          proc_register_plugins     (GList *plugins,
@@ -131,9 +134,9 @@ static GwyModuleInfo module_info = {
         "external programs (plug-ins) on data pretending they are data "
         "processing or file loading/saving modules.",
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2004",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -200,31 +203,15 @@ register_plugins(GList *plugins,
                  ProxyRegister register_func)
 {
     gchar *args[] = { NULL, "register", NULL };
-    const gchar *filename;
     gchar *buffer, *pluginname;
-    GError *err = NULL;
     gint exit_status;
+    GError *err = NULL;
+    GSList *list, *l;
     gboolean ok;
-    GDir *gdir;
 
-    gdir = g_dir_open(dir, 0, &err);
-    if (err) {
-        g_warning("Cannot open plug-in directory %s: %s", dir, err->message);
-        g_clear_error(&err);
-        return plugins;
-    }
-    while ((filename = g_dir_read_name(gdir))) {
-        if (g_str_has_prefix(filename, ".")
-            || g_str_has_suffix(filename, "~")
-            || g_str_has_suffix(filename, ".BAK")
-            || g_str_has_suffix(filename, ".bak"))
-            continue;
-        pluginname = g_build_filename(dir, filename, NULL);
-        if (!g_file_test(pluginname, G_FILE_TEST_IS_EXECUTABLE)) {
-            g_free(pluginname);
-            continue;
-        }
-        gwy_debug("plug-in %s", filename);
+    list = find_plugin_executables(dir, NULL, 1);
+    for (l = list; l; l = g_slist_next(l)) {
+        pluginname = (gchar*)l->data;
         args[0] = pluginname;
         buffer = NULL;
         ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
@@ -234,15 +221,66 @@ register_plugins(GList *plugins,
             plugins = register_func(plugins, name, pluginname, buffer);
         else {
             g_warning("Cannot register plug-in %s: %s",
-                      filename, err ? err->message : "execution failed.");
+                      pluginname, err ? err->message : "execution failed.");
             g_clear_error(&err);
         }
         g_free(pluginname);
         g_free(buffer);
     }
-    g_dir_close(gdir);
+    g_slist_free(list);
 
     return plugins;
+}
+
+static GSList*
+find_plugin_executables(const gchar *dir,
+                        GSList *list,
+                        gint level)
+{
+    const gchar *filename;
+    gchar *pluginname;
+    GError *err = NULL;
+    GDir *gdir;
+
+    if (level-- < 0)
+        return list;
+
+    gdir = g_dir_open(dir, 0, &err);
+    if (err) {
+        g_warning("Cannot open plug-in directory %s: %s", dir, err->message);
+        g_clear_error(&err);
+        return NULL;
+    }
+    while ((filename = g_dir_read_name(gdir))) {
+        if (g_str_has_prefix(filename, ".")
+            || g_str_has_suffix(filename, "~")
+            || g_str_has_suffix(filename, ".BAK")
+            || g_str_has_suffix(filename, ".bak"))
+            continue;
+        pluginname = g_build_filename(dir, filename, NULL);
+        if (g_file_test(pluginname, G_FILE_TEST_IS_DIR)) {
+            list = find_plugin_executables(pluginname, list, level);
+            g_free(pluginname);
+            continue;
+        }
+        if (!g_file_test(pluginname, G_FILE_TEST_IS_EXECUTABLE)) {
+            g_free(pluginname);
+            continue;
+        }
+#ifdef G_OS_WIN32
+        if (!g_str_has_suffix(filename, ".exe")
+            || g_str_has_prefix(filename, "unins")) {
+            g_free(pluginname);
+            continue;
+        }
+#endif
+        gwy_debug("plug-in %s", filename);
+        list = g_slist_prepend(list, pluginname);
+    }
+
+    g_dir_close(gdir);
+
+    return list;
 }
 
 
