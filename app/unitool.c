@@ -544,13 +544,13 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
 
     if (!select_layer_type) {
         select_layer_type = g_type_from_name("GwyLayerSelect");
-        g_return_val_if_fail(select_layer_type, NULL);
+        g_return_val_if_fail(select_layer_type, FALSE);
     }
     g_return_val_if_fail(G_TYPE_CHECK_INSTANCE_TYPE((state->layer),
                                                     select_layer_type),
-                         NULL);
+                         FALSE);
 
-    is_selected = gwy_vector_layer_get_selection(layer, xy);
+    is_selected = gwy_vector_layer_get_selection(state->layer, xy);
 
     if (is_selected) {
         *xmin = xy[0];
@@ -559,6 +559,12 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
         *ymax = xy[3];
     }
     else {
+        GwyContainer *data;
+        GwyDataField *dfield;
+
+        data = gwy_data_window_get_data(state->data_window);
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
         *xmin = 0;
         *ymin = 0;
         *xmax = gwy_data_field_get_xreal(dfield);
