@@ -84,6 +84,11 @@ typedef struct {
     gdouble par4_res;
     gdouble crit; 
     GwyNLFitPresetFunction *fitfunc;
+    GwyGraph *parent_graph;
+    gdouble **parent_xs;
+    gdouble **parent_ys;
+    gint *parent_ns;
+    gint parent_nofcurves;
 } FitArgs;
 
 
@@ -118,6 +123,12 @@ static void        ch4_changed_cb            (GtkToggleButton *button,
                                               FitArgs *args);
 static void        dialog_update             (FitControls *controls, 
                                               FitArgs *args);
+static void        graph_update              (FitControls *controls,
+                                              FitArgs *args);
+static void        get_data                  (FitArgs *args);
+static void        graph_selected            (GwyGraphArea *area, 
+                                              FitArgs *args);
+
 FitControls *pcontrols;
 
 /* The module info. */
@@ -158,12 +169,36 @@ fit(GwyGraph *graph)
     args.fitfunc = NULL;
     args.function_type = 0;
     args.data=1;
+    args.parent_graph = graph;
+
+    get_data(&args);
 
     ok = fit_dialog(&args);
 
     return ok;
 }
 
+static void
+get_data(FitArgs *args)
+{
+    gint i;
+    
+    args->parent_nofcurves = gwy_graph_get_number_of_curves(args->parent_graph);
+    args->parent_xs = (gdouble **) g_malloc(args->parent_nofcurves*sizeof(gdouble*));
+    args->parent_ys = (gdouble **) g_malloc(args->parent_nofcurves*sizeof(gdouble*));
+    args->parent_ns = (gint *) g_malloc(args->parent_nofcurves*sizeof(gint));
+
+    for (i=0; i<args->parent_nofcurves; i++)
+    {
+        args->parent_ns[i] = gwy_graph_get_data_size(args->parent_graph, i);
+        args->parent_xs[i] = (gdouble *) g_malloc(args->parent_ns[i]*sizeof(gdouble));
+        args->parent_ys[i] = (gdouble *) g_malloc(args->parent_ns[i]*sizeof(gdouble));
+    
+        gwy_graph_get_data(args->parent_graph, 
+                           args->parent_xs[i], args->parent_ys[i], i);
+    }
+     
+}
 
 static gboolean
 fit_dialog(FitArgs *args)
@@ -177,6 +212,7 @@ fit_dialog(FitArgs *args)
     GtkWidget *table2;
     GtkWidget *vbox;
     FitControls controls;
+    GwyGraphAutoProperties prop;
     gint response;
 
     pcontrols = &controls;
@@ -267,7 +303,7 @@ fit_dialog(FitArgs *args)
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     controls.param1_init = gtk_entry_new_with_max_length(8);
-    gtk_entry_set_width_chars(controls.param1_init, 8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.param1_init), 8);
     g_signal_connect(controls.param1_init, "changed",
                      G_CALLBACK(par1_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param1_init, 1, 2, 1, 2,
@@ -275,21 +311,21 @@ fit_dialog(FitArgs *args)
     
     
     controls.param2_init = gtk_entry_new_with_max_length(8);
-    gtk_entry_set_width_chars(controls.param2_init, 8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.param2_init), 8);
     g_signal_connect(controls.param2_init, "changed",
                      G_CALLBACK(par2_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param2_init, 1, 2, 2, 3,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
      
     controls.param3_init = gtk_entry_new_with_max_length(8);
-    gtk_entry_set_width_chars(controls.param3_init, 8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.param3_init), 8);
     g_signal_connect(controls.param3_init, "changed",
                      G_CALLBACK(par3_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param3_init, 1, 2, 3, 4,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
      
     controls.param4_init = gtk_entry_new_with_max_length(8);
-    gtk_entry_set_width_chars(controls.param4_init, 8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.param4_init), 8);
     g_signal_connect(controls.param4_init, "changed",
                      G_CALLBACK(par4_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param4_init, 1, 2, 4, 5,
@@ -402,6 +438,12 @@ fit_dialog(FitArgs *args)
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
                        FALSE, FALSE, 4);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
+    gwy_graph_get_autoproperties(controls.graph, &prop);
+    prop.is_line = 0;
+    prop.point_size = 3;
+    gwy_graph_set_autoproperties(controls.graph, &prop);
+    g_signal_connect(GWY_GRAPH(controls.graph)->area, "selected", 
+                     G_CALLBACK(graph_selected), args);
     
 
     if (args->fitfunc != NULL) g_free(args->fitfunc);
@@ -409,6 +451,8 @@ fit_dialog(FitArgs *args)
 
     reset(args, &controls);
     dialog_update(&controls, args);
+    graph_update(&controls, args);
+        
     gtk_widget_show_all(dialog);
 
     do {
@@ -442,19 +486,6 @@ fit_dialog(FitArgs *args)
     return TRUE;
 }
 
-static void
-selection_updated_cb(gpointer data)
-{
-    GwyGraph *graph;
-    GwyGraphStatus_PointsData *cd;
-    GwyGraphDataPoint pnt, ppnt;
-    gchar buffer[50];
-    gint i, n;
-
-    graph = (GwyGraph *) data;
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-
-}
 
 static void        
 recompute(FitArgs *args, FitControls *controls)
@@ -516,7 +547,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param1_fit, TRUE);
         gtk_label_set_markup(GTK_LABEL(controls->param1_des), 
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 0));
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par1_init, 0);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par1_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param1_init), buffer);
     }
     else
@@ -532,7 +563,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param2_fit, TRUE);
         gtk_label_set_markup(GTK_LABEL(controls->param2_des), 
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 1));
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par2_init, 0);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par2_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param2_init), buffer);
      }
     else
@@ -549,7 +580,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param3_fit, TRUE);
         gtk_label_set_markup(GTK_LABEL(controls->param3_des), 
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 2));
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par3_init, 0);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par3_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param3_init), buffer);
      }
     else
@@ -566,7 +597,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param4_fit, TRUE);
         gtk_label_set_markup(GTK_LABEL(controls->param4_des), 
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 3));
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par4_init, 0);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par4_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param4_init), buffer);
      }
     else
@@ -576,6 +607,54 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param4_fit, FALSE);
     }
  }
+
+
+static void
+graph_update(FitControls *controls, FitArgs *args)
+{
+    gint i;
+    GString *label;
+    
+    /*clear graph*/
+    gwy_graph_clear(GWY_GRAPH(controls->graph));
+
+
+    label = g_string_new("data");
+    /*add curves from parent graph*/
+    for (i=0; i<args->parent_nofcurves; i++)
+    {
+        gwy_graph_add_datavalues(GWY_GRAPH(controls->graph), 
+                                 args->parent_xs[i], 
+                                 args->parent_ys[i],
+                                 args->parent_ns[i], 
+                                 label, NULL);    
+    }
+
+}
+
+static void
+graph_selected(GwyGraphArea *area, FitArgs *args)
+{
+ 
+    if (area->seldata->data_start == area->seldata->data_end)
+    {
+        args->from = 0;
+        args->to = 100;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->from), args->from);   
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->to), args->to);
+
+    }
+    else
+    {
+        args->from = area->seldata->data_start;
+        args->to = area->seldata->data_end;
+        if (args->from > args->to) GWY_SWAP(gdouble, args->from, args->to);
+
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->from), args->from);
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->to), args->to);
+    }
+        
+}
 
 static void
 par1_changed_cb(GtkWidget *entry, gpointer data)
