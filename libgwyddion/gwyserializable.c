@@ -797,8 +797,15 @@ gwy_serialize_unpack_object_struct(const guchar *buffer,
  * Deserializes a structure with named components packed by
  * gwy_serialize_pack_struct().
  *
- * Extra components are ignored, components of different type than expected
- * cause failure, missing components are not detected.
+ * Extra components are ignored (but cause a warning), components of different
+ * type than expected cause failure, missing components are not detected.
+ *
+ * It is safe to pass pointers to existing non-atomic objects (strings, arrays,
+ * objects) in @spec values, they will be dereferenced and freed as necessary
+ * when an unpacked value is about to replace them.
+ * For the same reason it is an error to pass pointers to unintialized memory
+ * there, always initialize non-atomic @spec values to %NULL pointers, at
+ * least.
  *
  * For object deserialization gwy_serialize_unpack_object_struct() should be
  * more convenient and less error prone.
