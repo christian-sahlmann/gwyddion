@@ -103,8 +103,6 @@ typedef struct {
     guchar *delimiter;  /* field delimiter (ASCII) */
     gsize skipfields;  /* skip this number of fields at line start (ASCII) */
 
-    const gchar *filename;
-    gsize filesize;
     gsize xres;
     gsize yres;
     gboolean xyreseq;
@@ -116,6 +114,12 @@ typedef struct {
     gint zexponent;
     gchar *presetname;
 } RawFileArgs;
+
+typedef struct {
+    const gchar *filename;
+    gsize filesize;
+    guchar *buffer;
+} RawFileFile;
 
 typedef struct {
     GtkWidget *dialog;
@@ -147,6 +151,7 @@ typedef struct {
     GtkWidget *preview;
     GtkWidget *do_preview;
     RawFileArgs *args;
+    RawFileFile *file;
 } RawFileControls;
 
 static gboolean      module_register               (const gchar *name);
@@ -154,9 +159,10 @@ static gint          rawfile_detect                (const gchar *filename,
                                                     gboolean only_name);
 static GwyContainer* rawfile_load                  (const gchar *filename);
 static GwyDataField* rawfile_dialog                (RawFileArgs *args,
-                                                    guchar *buffer);
+                                                    RawFileFile *file);
 static GtkWidget*    rawfile_dialog_preview_box    (RawFileControls *controls);
 static GtkWidget*    rawfile_dialog_info_page      (RawFileArgs *args,
+                                                    RawFileFile *file,
                                                     RawFileControls *controls);
 static GtkWidget*    rawfile_dialog_format_page    (RawFileArgs *args,
                                                     RawFileControls *controls);
@@ -164,12 +170,12 @@ static GtkWidget*    rawfile_dialog_preset_page    (RawFileArgs *args,
                                                     RawFileControls *controls);
 static GwyDataField* rawfile_read_data_field       (GtkWidget *parent,
                                                     RawFileArgs *args,
-                                                    guchar *buffer);
+                                                    RawFileFile *file);
 static void          rawfile_warn_too_short_file   (GtkWidget *parent,
-                                                    RawFileArgs *args,
+                                                    RawFileFile *file,
                                                     gsize reqsize);
 static void          rawfile_warn_parse_error      (GtkWidget *parent,
-                                                    RawFileArgs *args,
+                                                    RawFileFile *file,
                                                     GError *err);
 static void          builtin_changed_cb            (GtkWidget *item,
                                                     RawFileControls *controls);
@@ -379,7 +385,6 @@ static const RawFileArgs rawfile_defaults = {
     RAW_UNSIGNED_BYTE, 0, 8, 0, 0,  /* binary parameters */
     FALSE, FALSE, FALSE, 0,         /* binary options */
     0, NULL, 0,                     /* text parameters */
-    NULL, 0,                        /* file name and size */
     500, 500, TRUE,                 /* xres, yres */
     100.0, 100.0, TRUE, -6,         /* physical dimensions */
     1.0, -6,                        /* z-scale */
@@ -429,31 +434,32 @@ static GwyContainer*
 rawfile_load(const gchar *filename)
 {
     RawFileArgs *args;
+    RawFileFile file;
     GwyContainer *settings, *data;
     GwyDataField *dfield;
     GError *err = NULL;
-    guchar *buffer = NULL;
     gsize size = 0;
 
     args = g_new0(RawFileArgs, 1);
     settings = gwy_app_settings_get();
     /*gwy_container_remove_by_prefix(settings, "/module/rawfile/presets");*/
     rawfile_load_args(settings, args);
-    if (!g_file_get_contents(filename, (gchar**)&buffer, &size, &err)) {
+    file.buffer = NULL;
+    if (!g_file_get_contents(filename, (gchar**)&file.buffer, &size, &err)) {
         g_warning("Cannot read file %s", filename);
         g_clear_error(&err);
         return NULL;
     }
     data = NULL;
-    args->filename = filename;
-    args->filesize = size;
-    if ((dfield = rawfile_dialog(args, buffer))) {
+    file.filename = filename;
+    file.filesize = size;
+    if ((dfield = rawfile_dialog(args, &file))) {
         data = GWY_CONTAINER(gwy_container_new());
         gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
         g_object_unref(dfield);
     }
     rawfile_save_args(settings, args);
-    g_free(buffer);
+    g_free(file.buffer);
     g_free(args->delimiter);
     g_free(args->presetname);
     g_free(args);
@@ -463,7 +469,7 @@ rawfile_load(const gchar *filename)
 
 static GwyDataField*
 rawfile_dialog(RawFileArgs *args,
-               guchar *buffer)
+               RawFileFile *file)
 {
     RawFileControls controls;
     GwyDataField *dfield = NULL;
@@ -481,6 +487,7 @@ rawfile_dialog(RawFileArgs *args,
                                          NULL);
     controls.dialog = dialog;
     controls.args = args;
+    controls.file = file;
 
     vbox = GTK_DIALOG(dialog)->vbox;
 
@@ -492,7 +499,7 @@ rawfile_dialog(RawFileArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 0);
 
     /* Sample info */
-    vbox = rawfile_dialog_info_page(args, &controls);
+    vbox = rawfile_dialog_info_page(args, file, &controls);
     label = gtk_label_new_with_mnemonic(_("_Information"));
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, label);
 
@@ -559,20 +566,20 @@ rawfile_dialog(RawFileArgs *args,
             break;
 
             case GTK_RESPONSE_OK:
-            dfield = rawfile_read_data_field(dialog, args, buffer);
+            dfield = rawfile_read_data_field(dialog, args, file);
             if (!dfield)
                 response = GTK_RESPONSE_NONE;
             break;
 
             case RESPONSE_RESET:
             {
-                const gchar *filename = args->filename;
-                gsize filesize = args->filesize;
+                const gchar *filename = file->filename;
+                gsize filesize = file->filesize;
 
                 /* free delimiter and presetname */
                 *args = rawfile_defaults;
-                args->filename = filename;
-                args->filesize = filesize;
+                file->filename = filename;
+                file->filesize = filesize;
             }
             break;
 
@@ -620,6 +627,7 @@ rawfile_dialog_preview_box(RawFileControls *controls)
 
 static GtkWidget*
 rawfile_dialog_info_page(RawFileArgs *args,
+                         RawFileFile *file,
                          RawFileControls *controls)
 {
     GtkWidget *vbox, *label, *table, *button, *align;
@@ -641,14 +649,14 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, row, row+1);
     row++;
 
-    label = gtk_label_new(args->filename);
+    label = gtk_label_new(file->filename);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 2, row, row+1);
 
-    magnitude = gwy_math_humanize_numbers(0.004*args->filesize,
-                                          1.0*args->filesize,
+    magnitude = gwy_math_humanize_numbers(0.004*file->filesize,
+                                          1.0*file->filesize,
                                           &precision);
-    s = g_strdup_printf("(%.*f %sB)", precision, args->filesize/magnitude,
+    s = g_strdup_printf("(%.*f %sB)", precision, file->filesize/magnitude,
                         gwy_math_SI_prefix(magnitude));
     label = gtk_label_new(s);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -1110,7 +1118,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
 static GwyDataField*
 rawfile_read_data_field(GtkWidget *parent,
                         RawFileArgs *args,
-                        guchar *buffer)
+                        RawFileFile *file)
 {
     GwyDataField *dfield = NULL;
     GError *err = NULL;
@@ -1118,8 +1126,8 @@ rawfile_read_data_field(GtkWidget *parent,
     gdouble m;
 
     reqsize = rawfile_compute_required_size(args);
-    if (reqsize > args->filesize) {
-        rawfile_warn_too_short_file(parent, args, reqsize);
+    if (reqsize > file->filesize) {
+        rawfile_warn_too_short_file(parent, file, reqsize);
         return NULL;
     }
 
@@ -1131,10 +1139,10 @@ rawfile_read_data_field(GtkWidget *parent,
                                                    m*args->yreal,
                                                    FALSE));
         if (args->builtin)
-            rawfile_read_builtin(args, buffer,
+            rawfile_read_builtin(args, file->buffer,
                                  gwy_data_field_get_data(dfield));
         else
-            rawfile_read_bits(args, buffer,
+            rawfile_read_bits(args, file->buffer,
                               gwy_data_field_get_data(dfield));
         break;
 
@@ -1143,9 +1151,9 @@ rawfile_read_data_field(GtkWidget *parent,
                                                    m*args->xreal,
                                                    m*args->yreal,
                                                    FALSE));
-        if (!rawfile_read_ascii(args, buffer,
+        if (!rawfile_read_ascii(args, file->buffer,
                                 gwy_data_field_get_data(dfield), &err)) {
-            rawfile_warn_parse_error(parent, args, err);
+            rawfile_warn_parse_error(parent, file, err);
             g_object_unref(G_OBJECT(dfield));
             g_clear_error(&err);
             return NULL;
@@ -1163,7 +1171,7 @@ rawfile_read_data_field(GtkWidget *parent,
 
 static void
 rawfile_warn_too_short_file(GtkWidget *parent,
-                            RawFileArgs *args,
+                            RawFileFile *file,
                             gsize reqsize)
 {
     GtkWidget *dialog;
@@ -1177,14 +1185,14 @@ rawfile_warn_too_short_file(GtkWidget *parent,
                                       "long file (at least), "
                                       "but the length of `%s' "
                                       "is only %u bytes."),
-                                    reqsize, args->filename, args->filesize),
+                                    reqsize, file->filename, file->filesize),
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
 }
 
 static void
 rawfile_warn_parse_error(GtkWidget *parent,
-                         RawFileArgs *args,
+                         RawFileFile *file,
                          GError *err)
 {
     GtkWidget *dialog;
@@ -1196,7 +1204,7 @@ rawfile_warn_parse_error(GtkWidget *parent,
                                     GTK_BUTTONS_OK,
                                     _("Parsing of %s failed:\n"
                                       "%s."),
-                                     args->filename, err->message),
+                                     file->filename, err->message),
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
 }
@@ -1355,7 +1363,14 @@ bintext_changed_cb(G_GNUC_UNUSED GtkWidget *button,
 static void
 preview_cb(RawFileControls *controls)
 {
+    GwyDataField *dfield;
+
     update_dialog_values(controls);
+    if ((dfield = rawfile_read_data_field(controls->dialog,
+                                          controls->args,
+                                          controls->file))) {
+        g_object_unref(dfield);
+    }
 }
 
 static void
@@ -2192,12 +2207,6 @@ rawfile_load_preset(GwyContainer *settings,
                     const gchar *presetname,
                     RawFileArgs *args)
 {
-    const gchar *filename;
-    gsize filesize;
-
-    filename = args->filename;
-    filesize = args->filesize;
-
     g_free(args->delimiter);
     g_free(args->presetname);
     *args = rawfile_defaults;
@@ -2230,9 +2239,6 @@ rawfile_load_preset(GwyContainer *settings,
 
     args->delimiter = g_strdup(args->delimiter);
     args->presetname = g_strdup(args->presetname);
-
-    args->filename = filename;
-    args->filesize = filesize;
 
     rawfile_sanitize_args(args);
 }
