@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#define DEBUG
-
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -497,7 +495,7 @@ fit_dialog(FitArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            if (args->is_fitted)
+            if (args->is_fitted && args->fitter->covar)
                 create_results_window(args);
             gtk_widget_destroy(dialog);
             break;
@@ -940,7 +938,6 @@ results_window_response_cb(GtkWidget *window,
 {
     GtkWidget *dialog;
 
-    gwy_debug("%d", response);
     if (response == GTK_RESPONSE_CLOSE
         || response == GTK_RESPONSE_DELETE_EVENT
         || response == GTK_RESPONSE_NONE) {
@@ -981,21 +978,21 @@ create_results_window(FitArgs *args)
 {
     enum { RESPONSE_SAVE = 1 };
     GwyNLFitter *fitter = args->fitter;
-    GtkWidget *window, *tab, *table, *label, *button;
+    GtkWidget *window, *tab, *table, *label;
     gdouble mag, value, sigma;
     gint row, curve, n, i, j;
     gint precision;
     GString *str, *su;
     const gchar *s;
 
+    g_return_if_fail(args->is_fitted);
+    g_return_if_fail(fitter->covar);
+
     window = gtk_dialog_new_with_buttons(_("Fit results"), NULL, 0,
+                                         GTK_STOCK_SAVE, RESPONSE_SAVE,
+                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
     gtk_container_set_border_width(GTK_CONTAINER(window), 6);
-    button = gtk_dialog_add_button(GTK_DIALOG(window),
-                                   GTK_STOCK_SAVE, RESPONSE_SAVE);
-    gtk_widget_set_sensitive(button, fitter->covar != NULL);
-    gtk_dialog_add_button(GTK_DIALOG(window),
-                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
     table = gtk_table_new(9, 2, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(window)->vbox), table,
@@ -1063,39 +1060,31 @@ create_results_window(FitArgs *args)
     row++;
 
     attach_label(table, _("Residual sum:"), row, 0, 0.0);
-    if (fitter->covar) {
-        sigma = gwy_math_nlfit_get_dispersion(fitter);
-        mag = gwy_math_humanize_numbers(sigma/120, sigma, &precision);
-        g_string_printf(str, "%.*f %s",
-                        precision, sigma/mag, format_magnitude(su, mag));
-        attach_label(table, str->str, row, 1, 0.0);
-    }
-    else
-        attach_label(table, _("N. A."), row, 1, 0.0);
+    sigma = gwy_math_nlfit_get_dispersion(fitter);
+    mag = gwy_math_humanize_numbers(sigma/120, sigma, &precision);
+    g_string_printf(str, "%.*f %s",
+                    precision, sigma/mag, format_magnitude(su, mag));
+    attach_label(table, str->str, row, 1, 0.0);
     row++;
 
     attach_label(table, _("<b>Correlation matrix</b>"), row, 0, 0.0);
     row++;
 
-    if (fitter->covar) {
-        tab = gtk_table_new(n, n, TRUE);
-        for (i = 0; i < n; i++) {
-            for (j = 0; j <= i; j++) {
-                g_string_printf(str, "% .03f",
-                                gwy_math_nlfit_get_correlations(fitter, i, j));
-                attach_label(tab, str->str, i, j, 1.0);
-            }
+    tab = gtk_table_new(n, n, TRUE);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j <= i; j++) {
+            g_string_printf(str, "% .03f",
+                            gwy_math_nlfit_get_correlations(fitter, i, j));
+            attach_label(tab, str->str, i, j, 1.0);
         }
-        gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
     }
-    else
-        attach_label(table, _("N. A."), row, 0, 0.0);
+    gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     g_string_free(str, TRUE);
     g_string_free(su, TRUE);
-    str = fitter->covar ? create_fit_report(args) : NULL;
+    str = create_fit_report(args);
 
     g_signal_connect(window, "response",
                      G_CALLBACK(results_window_response_cb), str);
