@@ -24,11 +24,11 @@
          <para>
             Gwyddion can be currently used with Linux and Windows(TM) operating systems. Both
             families of systems can be used also for developement. For graphical interface,
-            Gtk+ (<ulink>www.gtk.org</ulink>) libraries are used, therefore it can be bacically
+            Gtk+ (<ulink url="http://www.gtk.org/">www.gtk.org</ulink>) libraries are used, therefore it can be bacically
             ported on any system that is supported by Gtk+.
          </para>
          <para>
-            Gwyddion core developement is currently funded by Czech Metrology Institute (<ulink>www.cmi.cz</ulink>).
+            Gwyddion core developement is currently funded by Czech Metrology Institute (<ulink url="http://www.cmi.cz/">www.cmi.cz</ulink>).
             The project started as a part of the Nanomet initiative in August, 2003. 
             It is supposed that more persons and institutions will participate on developement. 
             Project is open for anyone. Welcome...
@@ -159,7 +159,6 @@
             (e. g. Data arithmetic) and commands that change status of data window presentation or selection. Masks and presentations
             options can be also set here.
          </para>
-       </section> 
          <para>
             <menuchoice><guimenu>Data process</guimenu></menuchoice> menu is build automatically from all the modules available
             at the Gwyddion modules durectory (depending on operating system). Modules are responsible for all the data processing,
@@ -173,6 +172,7 @@
             <menuchoice><guimenu>Externs</guimenu></menuchoice> are commands that provide information about height field metadata
             (e. g. scanning speed, tip voltage, etc.) and information about the Gwyddion (About).
          </para>
+       </section>
        <section>
          <title>Managing files</title>
          <para>
