@@ -339,7 +339,6 @@ gwy_app_undo_or_redo(GwyContainer *data,
         dfapp = NULL;
         gwy_container_gis_object(data, quark, &dfapp);
         if (df && dfapp) {
-            dfapp = gwy_container_get_object(data, quark);
             g_object_ref(dfapp);
             gwy_container_set_object(data, quark, df);
             level->items[i].data = dfapp;
@@ -351,7 +350,7 @@ gwy_app_undo_or_redo(GwyContainer *data,
             g_object_unref(df);
         }
         else if (!df && dfapp) {
-            level->items[i].data = gwy_container_get_object(data, quark);
+            level->items[i].data = dfapp;
             g_object_ref(level->items[i].data);
             gwy_container_remove(data, quark);
         }
