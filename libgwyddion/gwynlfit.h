@@ -44,7 +44,7 @@ typedef enum {
     GWY_NLFIT_PRESET_POLY_2            = 10,
     GWY_NLFIT_PRESET_POLY_3            = 11
 } GwyNLFitPresetType;
-    
+
 
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
                                  gint n_par,
@@ -68,15 +68,15 @@ typedef void (*GwyNLFitGuessFunc)(gdouble *x,
                                   gboolean *fres
                                   );
 
-typedef struct { 
-    const char *name; 
+typedef struct {
+    const char *name;
     const char *unit;
-    double default_init; 
+    double default_init;
 } Param;
 
 typedef struct {
     gchar *function_name;
-    gchar *function_equation;    
+    gchar *function_equation;
     GwyNLFitFunc function;
     GwyNLFitDerFunc function_derivation;
     GwyNLFitGuessFunc function_guess;
@@ -141,18 +141,18 @@ void           gwy_math_nlfit_derive             (gint i,
 
 GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(GwyNLFitPresetType type);
 
-gdouble gwy_math_nlfit_get_function_value(GwyNLFitPresetFunction* function, 
-                                          gdouble *params, 
+gdouble gwy_math_nlfit_get_function_value(GwyNLFitPresetFunction* function,
+                                          gdouble *params,
                                           gdouble x);
 
 gchar *gwy_math_nlfit_get_function_name(GwyNLFitPresetFunction* function);
 
 gchar *gwy_math_nlfit_get_function_equation(GwyNLFitPresetFunction* function);
 
-gchar *gwy_math_nlfit_get_function_param_name(GwyNLFitPresetFunction* function, 
+gchar *gwy_math_nlfit_get_function_param_name(GwyNLFitPresetFunction* function,
                                               gint param);
 
-gdouble gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* function, 
+gdouble gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* function,
                                                   gint param);
 
 gint gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function);

@@ -28,7 +28,7 @@
  */
 #define FitSqrtMachEps  1e-4
 
-/* Konstanta pro rozhodnuti o ukonceni fitovaciho cyklu podle perlativniho rozdilu 
+/* Konstanta pro rozhodnuti o ukonceni fitovaciho cyklu podle perlativniho rozdilu
  * rezidualnilnich souctu mezi jednotlivymi kroky
  */
 #define EPS 1e-16
@@ -988,7 +988,7 @@ static const Param poly1_pars[]= {
 
 
 static const GwyNLFitPresetFunction fitting_presets[] = {
-    { "Gaussian", 
+    { "Gaussian",
        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
        &fit_gauss,
        NULL,
@@ -996,7 +996,7 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        4,
        gaussexp_pars
     },
-    { "Gaussian (PSDF)", 
+    { "Gaussian (PSDF)",
        "f(x) = (\xcf\x83<sup>2</sup>T)/(2)*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
        &fit_gauss,
        NULL,
@@ -1004,7 +1004,7 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        2,
        gaussexp_two_pars
     },
-    { "Gaussian (ACF)", 
+    { "Gaussian (ACF)",
        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
        &fit_gauss,
        NULL,
@@ -1012,7 +1012,7 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        2,
        gaussexp_two_pars
     },
-    { "Gaussian (HHCF)", 
+    { "Gaussian (HHCF)",
        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
        &fit_gauss,
        NULL,
@@ -1020,7 +1020,7 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        2,
        gaussexp_two_pars
     },
-    { "Exponential", 
+    { "Exponential",
        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>)))",
        &fit_exp,
        NULL,
@@ -1028,15 +1028,15 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        4,
        gaussexp_pars
     },
-    { "Polynom (order 0)", 
+    { "Polynom (order 0)",
        "f(x) = a",
        &fit_poly_0,
        NULL,
        NULL,
        1,
-       poly0_pars    
+       poly0_pars
     },
-    { "Polynom (order 1)", 
+    { "Polynom (order 1)",
        "f(x) = a + b*x",
        &fit_poly_1,
        NULL,
@@ -1077,8 +1077,8 @@ gchar *gwy_math_nlfit_get_function_param_name(GwyNLFitPresetFunction* function, 
 
 gdouble gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* function, gint param)
 {
-    Param *par; 
-    par = function->param + param;        
+    Param *par;
+    par = function->param + param;
     return par->default_init;
 }
 
