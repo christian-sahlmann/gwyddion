@@ -57,7 +57,8 @@ gwy_pixfield_do(GdkPixbuf *pixbuf,
     data = gwy_data_field_get_data(data_field);
     maximum = gwy_data_field_get_max(data_field);
     minimum = gwy_data_field_get_min(data_field);
-    g_return_if_fail(minimum != maximum);
+    if (minimum == maximum)
+        maximum = 1e100;
 
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
@@ -110,7 +111,8 @@ gwy_pixfield_do_with_range(GdkPixbuf *pixbuf,
     g_return_if_fail(GDK_IS_PIXBUF(pixbuf));
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_PALETTE(palette));
-    g_return_if_fail(minimum != maximum);
+    if (minimum == maximum)
+        maximum = 1e100;
 
     xres = gwy_data_field_get_xres(data_field);
     yres = gwy_data_field_get_yres(data_field);;
