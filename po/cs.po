@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-10-05 13:31+0200\n"
-"PO-Revision-Date: 2004-10-05 21:47+0200\n"
+"POT-Creation-Date: 2004-10-06 04:51+0200\n"
+"PO-Revision-Date: 2004-10-07 01:04+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -166,8 +166,8 @@ msgstr ""
 msgid "Size"
 msgstr "Velikost"
 
-#: libgwydgets/gwy3dwindow.c:466 modules/file/pixmap.c:676
-#: modules/file/pixmap.c:1557 modules/file/rawfile.c:496
+#: libgwydgets/gwy3dwindow.c:466 modules/file/pixmap.c:674
+#: modules/file/pixmap.c:1555 modules/file/rawfile.c:493
 #: modules/process/cwt.c:180 modules/process/fft.c:368
 #: modules/process/tip_model.c:177 modules/process/scale.c:166
 #: modules/process/scars.c:379 modules/process/angle_dist.c:182
@@ -179,6 +179,166 @@ msgstr "Velikost"
 #: modules/process/calibrate.c:187 modules/process/grain_mark.c:181
 msgid "Reset"
 msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:540
+msgid "Round"
+msgstr "Zaokrouhlení"
+
+#: libgwydgets/gwyoptionmenus.c:541
+msgid "Bilinear"
+msgstr "Bilineární"
+
+#: libgwydgets/gwyoptionmenus.c:542
+msgid "Key"
+msgstr "Key"
+
+#: libgwydgets/gwyoptionmenus.c:543
+msgid "BSpline"
+msgstr "BSpline"
+
+#: libgwydgets/gwyoptionmenus.c:544
+msgid "OMOMS"
+msgstr "OMOMS"
+
+#: libgwydgets/gwyoptionmenus.c:545
+msgid "NNA"
+msgstr "NNA"
+
+#: libgwydgets/gwyoptionmenus.c:575
+msgid "None"
+msgstr "Žádný"
+
+#: libgwydgets/gwyoptionmenus.c:576
+msgid "Hann"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:577
+msgid "Hamming"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:578
+msgid "Blackman"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:579
+msgid "Lanzcos"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:580
+msgid "Welch"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:581
+msgid "Rect"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:611
+msgid "By square root of 2"
+msgstr "Po odmocnině ze dvou"
+
+#: libgwydgets/gwyoptionmenus.c:612
+msgid "By cubic root of 2"
+msgstr "Po třetí odmocnině ze 2"
+
+#: libgwydgets/gwyoptionmenus.c:613
+msgid "Integer zooms"
+msgstr "Celočíselná zvětšní"
+
+#: libgwydgets/gwyoptionmenus.c:614
+msgid "Half-integer zooms"
+msgstr "Poločístelná zvětšní"
+
+#: libgwydgets/gwyoptionmenus.c:643
+msgid "Gaussian"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:644
+msgid "Hat"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:673
+msgid "Dist. of heights"
+msgstr "Rozdělení výšek"
+
+#: libgwydgets/gwyoptionmenus.c:674
+msgid "Cum. dist. of heights"
+msgstr "Kumul. rozdělení výšek"
+
+#: libgwydgets/gwyoptionmenus.c:675
+msgid "Dist. of angles"
+msgstr "Rozdělení úhlů"
+
+#: libgwydgets/gwyoptionmenus.c:676
+msgid "Cum. dist. of angles"
+msgstr "Kumul. rozdělení úhlů"
+
+#: libgwydgets/gwyoptionmenus.c:677
+msgid "Autocorrelation"
+msgstr "Autokorelace"
+
+#: libgwydgets/gwyoptionmenus.c:678
+msgid "Height-height cor."
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:679
+msgid "Power spectral density"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:707
+msgid "Horizontal"
+msgstr "Vodorovný"
+
+#: libgwydgets/gwyoptionmenus.c:708
+msgid "Vertical"
+msgstr "Svislý"
+
+#: libgwydgets/gwyoptionmenus.c:737
+msgid "Mean value"
+msgstr "Střední hodnota"
+
+#: libgwydgets/gwyoptionmenus.c:738
+msgid "Median value"
+msgstr "Medián"
+
+#: libgwydgets/gwyoptionmenus.c:739
+msgid "Conservative denoise"
+msgstr "Konzervativní odšumění"
+
+#: libgwydgets/gwyoptionmenus.c:740
+msgid "Laplacian"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:741
+msgid "Sobel gradient"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:742
+msgid "Prewitt gradient"
+msgstr ""
+
+#: libgwydgets/gwyoptionmenus.c:770
+msgid "Union"
+msgstr "Sjednocení"
+
+#: libgwydgets/gwyoptionmenus.c:771
+msgid "Intersection"
+msgstr "Průnik"
+
+#: libgwydgets/gwyoptionmenus.c:799
+msgid "Fit height"
+msgstr "Nafituj konstantu"
+
+#: libgwydgets/gwyoptionmenus.c:800
+msgid "Fit linear"
+msgstr "Nafituj přímku"
+
+#: libgwydgets/gwyoptionmenus.c:801
+msgid "Fit quadratic"
+msgstr "Nafituj parabolu"
+
+#: libgwydgets/gwyoptionmenus.c:802
+msgid "Fit cubic"
+msgstr "Nafituj kubiku"
 
 #: libgwymodule/gwymodulebrowser.c:200
 msgid "Name-Version:"
@@ -208,7 +368,7 @@ msgstr "Datum:"
 msgid "Description:"
 msgstr "Popis:"
 
-#: app/graphlist.c:174 modules/file/rawfile.c:1110
+#: app/graphlist.c:174 modules/file/rawfile.c:1107
 msgid "_Delete"
 msgstr "_Smaž"
 
@@ -330,11 +490,11 @@ msgstr "Spojitá waveletová transformace"
 
 #: app/toolbox.c:244 modules/process/grain_mark.c:177
 msgid "Mark grains by threshold"
-msgstr ""
+msgstr "Vyznač zrna podle prahu"
 
 #: app/toolbox.c:246
 msgid "Mark grains by watershed"
-msgstr ""
+msgstr "Vyznač zrna stékáním"
 
 #: app/toolbox.c:248 modules/process/grain_rem_threshold.c:167
 msgid "Remove grains by threshold"
@@ -342,19 +502,19 @@ msgstr ""
 
 #: app/toolbox.c:253
 msgid "Grain distribution"
-msgstr ""
+msgstr "Rozdělení velikosti zrn"
 
 #: app/toolbox.c:257
 msgid "Calculate fractal dimension"
-msgstr ""
+msgstr "Vypočítej fraktální dimenzi"
 
 #: app/toolbox.c:259
 msgid "Shade data"
-msgstr ""
+msgstr "Vystínuj data"
 
 #: app/toolbox.c:268
 msgid "Graph"
-msgstr ""
+msgstr "Graf"
 
 #: app/toolbox.c:276
 msgid "Read coordinates"
@@ -382,41 +542,41 @@ msgstr ""
 
 #: app/toolbox.c:295
 msgid "Tools"
-msgstr ""
+msgstr "Nástroje"
 
 #: app/toolbox.c:368
 msgid "Re-show Last"
-msgstr ""
+msgstr "Ukaž poslední"
 
 #: app/toolbox.c:381
 msgid "Repeat Last"
-msgstr ""
+msgstr "Opakuj poslední"
 
 #: app/splash.c:56
 msgid "Starting "
-msgstr ""
+msgstr "Spouštím "
 
 #: app/splash.c:93
 msgid " is free software released under GNU GPL."
-msgstr ""
+msgstr " je svobodný software uvolněný pod GNU GPL."
 
-#: app/gwyddion.c:106
+#: app/gwyddion.c:97
 msgid "Loading settings"
-msgstr ""
+msgstr "Načítám nastavení"
 
-#: app/gwyddion.c:114
+#: app/gwyddion.c:105
 msgid "Loading document history"
-msgstr ""
+msgstr "Načítám historii dokumentů"
 
-#: app/gwyddion.c:119
+#: app/gwyddion.c:110
 msgid "Registering "
-msgstr ""
+msgstr "Registruji "
 
-#: app/gwyddion.c:120
+#: app/gwyddion.c:111
 msgid "stock items"
-msgstr ""
+msgstr "standardní ikony"
 
-#: app/gwyddion.c:236
+#: app/gwyddion.c:227
 #, c-format
 msgid ""
 "Could not read settings file `%s'.\n"
@@ -430,7 +590,7 @@ msgstr ""
 
 #: app/unitool.c:719
 msgid "<b>Origin</b>"
-msgstr ""
+msgstr "<b>Počátek</b>"
 
 #: app/unitool.c:724
 msgid "X"
@@ -442,54 +602,54 @@ msgstr ""
 
 #: app/unitool.c:735
 msgid "<b>Size</b>"
-msgstr ""
+msgstr "<b>Rozměry</b>"
 
 #: app/unitool.c:740 modules/process/crosscor.c:235
 #: modules/process/crosscor.c:255
 msgid "Width"
-msgstr ""
+msgstr "Šířka"
 
 #: app/unitool.c:745 modules/process/crosscor.c:241
 #: modules/process/crosscor.c:261
 msgid "Height"
-msgstr ""
+msgstr "Výška"
 
-#: app/filelist.c:200
+#: app/filelist.c:196
 msgid "Document History"
-msgstr ""
+msgstr "Historie dokumentů"
+
+#: app/filelist.c:226
+msgid "_Prune"
+msgstr "_Pročisti"
 
 #: app/filelist.c:230
-msgid "_Prune"
-msgstr ""
-
-#: app/filelist.c:234
 msgid "Remove entries of files that no longer exist"
-msgstr ""
+msgstr "Odstraň položky souborů, které už neexistují"
 
-#: app/file.c:59
+#: app/file.c:56
 msgid "Open file"
-msgstr ""
+msgstr "Otevření souboru"
 
-#: app/file.c:84
+#: app/file.c:81
 msgid "Save File"
-msgstr ""
+msgstr "Uložení souboru"
 
-#: app/file.c:146
+#: app/file.c:143
 msgid "Export Data"
-msgstr ""
+msgstr "Export dat"
 
-#: app/file.c:160
+#: app/file.c:157
 msgid "Import Data"
-msgstr ""
+msgstr "Import dat"
 
-#: app/file.c:355
+#: app/file.c:352
 #, c-format
 msgid "File %s already exists. Overwrite?"
-msgstr ""
+msgstr "Soubor %s již existuje. Přepsat?"
 
-#: app/file.c:357
+#: app/file.c:354
 msgid "Overwrite?"
-msgstr ""
+msgstr "Přepsat?"
 
 #: app/menu.c:368
 msgid "Repeat"
@@ -501,27 +661,27 @@ msgstr ""
 
 #: app/menu.c:525
 msgid "_Document history"
-msgstr ""
+msgstr "_Historie dokumentů"
 
 #: app/meta.c:86
 #, c-format
 msgid "Metadata of %s (%s)"
 msgstr ""
 
-#: app/about.c:50
+#: app/about.c:40
 #, c-format
 msgid "About %s"
-msgstr ""
+msgstr "O programu %s"
 
-#: app/about.c:87
+#: app/about.c:77
 msgid "An SPM data analysis framework."
 msgstr ""
 
-#: app/about.c:101
+#: app/about.c:91
 msgid "Credits"
-msgstr ""
+msgstr "Zásluhy"
 
-#: app/about.c:112
+#: app/about.c:102
 #, c-format
 msgid ""
 "<b>Core developers</b>\n"
@@ -536,7 +696,7 @@ msgid ""
 "cmi.cz/</i>).\n"
 msgstr ""
 
-#: app/about.c:135
+#: app/about.c:125
 #, c-format
 msgid ""
 "\n"
@@ -553,208 +713,208 @@ msgstr ""
 
 #: app/wait.c:96
 msgid "Please wait"
-msgstr ""
+msgstr "Čekej, prosím"
 
-#: modules/file/nanoscope.c:590 modules/file/sis.c:513
+#: modules/file/nanoscope.c:587 modules/file/sis.c:510
 msgid "Select data"
 msgstr ""
 
-#: modules/file/nanoscope.c:605 modules/file/sis.c:527
+#: modules/file/nanoscope.c:602 modules/file/sis.c:524
 msgid "Data to load:"
 msgstr ""
 
-#: modules/file/pixmap.c:672
+#: modules/file/pixmap.c:670
 msgid "Import "
 msgstr ""
 
-#: modules/file/pixmap.c:693 modules/file/rawfile.c:684
+#: modules/file/pixmap.c:691 modules/file/rawfile.c:681
 msgid "<b>Resolution</b>"
 msgstr ""
 
-#: modules/file/pixmap.c:698
+#: modules/file/pixmap.c:696
 msgid "_Horizontal size:"
 msgstr ""
 
-#: modules/file/pixmap.c:705
+#: modules/file/pixmap.c:703
 msgid "_Vertical size:"
 msgstr ""
 
-#: modules/file/pixmap.c:721 modules/file/rawfile.c:707
+#: modules/file/pixmap.c:719 modules/file/rawfile.c:704
 msgid "<b>Physical dimensions</b>"
 msgstr ""
 
-#: modules/file/pixmap.c:729 modules/file/rawfile.c:716
+#: modules/file/pixmap.c:727 modules/file/rawfile.c:713
 msgid "_Width"
 msgstr ""
 
-#: modules/file/pixmap.c:750 modules/file/rawfile.c:737
+#: modules/file/pixmap.c:748 modules/file/rawfile.c:734
 msgid "H_eight"
 msgstr ""
 
-#: modules/file/pixmap.c:757 modules/file/rawfile.c:744
+#: modules/file/pixmap.c:755 modules/file/rawfile.c:741
 msgid "Identical _measures"
 msgstr ""
 
-#: modules/file/pixmap.c:769 modules/file/rawfile.c:756
+#: modules/file/pixmap.c:767 modules/file/rawfile.c:753
 msgid "_Z-scale"
 msgstr ""
 
-#: modules/file/pixmap.c:785
+#: modules/file/pixmap.c:783
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 
-#: modules/file/pixmap.c:800
+#: modules/file/pixmap.c:798
 msgid "Use"
 msgstr ""
 
-#: modules/file/pixmap.c:800
+#: modules/file/pixmap.c:798
 msgid "as data"
 msgstr ""
 
-#: modules/file/pixmap.c:1553
+#: modules/file/pixmap.c:1551
 msgid "Export "
 msgstr ""
 
-#: modules/file/pixmap.c:1575
+#: modules/file/pixmap.c:1573
 msgid "_Zoom:"
 msgstr ""
 
-#: modules/file/pixmap.c:1579
+#: modules/file/pixmap.c:1577
 msgid "Output:"
 msgstr ""
 
-#: modules/file/rawfile.c:492
+#: modules/file/rawfile.c:489
 msgid "Read Raw File"
 msgstr ""
 
-#: modules/file/rawfile.c:516
+#: modules/file/rawfile.c:513
 msgid "_Information"
 msgstr ""
 
-#: modules/file/rawfile.c:521
+#: modules/file/rawfile.c:518
 msgid "Data _Format"
 msgstr ""
 
-#: modules/file/rawfile.c:526
+#: modules/file/rawfile.c:523
 msgid "_Presets"
 msgstr ""
 
-#: modules/file/rawfile.c:625
+#: modules/file/rawfile.c:622
 msgid "Preview"
 msgstr ""
 
-#: modules/file/rawfile.c:638
+#: modules/file/rawfile.c:635
 msgid "Update"
 msgstr ""
 
-#: modules/file/rawfile.c:663
+#: modules/file/rawfile.c:660
 msgid "<b>File</b>"
 msgstr ""
 
-#: modules/file/rawfile.c:689
+#: modules/file/rawfile.c:686
 msgid "_Horizontal size"
 msgstr ""
 
-#: modules/file/rawfile.c:690 modules/file/rawfile.c:697
+#: modules/file/rawfile.c:687 modules/file/rawfile.c:694
 msgid "data samples"
 msgstr ""
 
-#: modules/file/rawfile.c:696
+#: modules/file/rawfile.c:693
 msgid "_Vertical size"
 msgstr ""
 
-#: modules/file/rawfile.c:701
+#: modules/file/rawfile.c:698
 msgid "S_quare sample"
 msgstr ""
 
-#: modules/file/rawfile.c:811
+#: modules/file/rawfile.c:808
 msgid "Start from _line"
 msgstr ""
 
-#: modules/file/rawfile.c:818
+#: modules/file/rawfile.c:815
 msgid "E_ach row skip"
 msgstr ""
 
-#: modules/file/rawfile.c:823
+#: modules/file/rawfile.c:820
 msgid "_Field delimiter"
 msgstr ""
 
-#: modules/file/rawfile.c:837
+#: modules/file/rawfile.c:834
 msgid "_Other:"
 msgstr ""
 
-#: modules/file/rawfile.c:848
+#: modules/file/rawfile.c:845
 msgid "_Decimal separator is comma"
 msgstr ""
 
-#: modules/file/rawfile.c:867
+#: modules/file/rawfile.c:864
 msgid "Byte s_wap pattern"
 msgstr ""
 
-#: modules/file/rawfile.c:880
+#: modules/file/rawfile.c:877
 msgid "Start at _offset"
 msgstr ""
 
-#: modules/file/rawfile.c:887
+#: modules/file/rawfile.c:884
 msgid "_Sample size"
 msgstr ""
 
-#: modules/file/rawfile.c:895
+#: modules/file/rawfile.c:892
 msgid "After each sample s_kip"
 msgstr ""
 
-#: modules/file/rawfile.c:903
+#: modules/file/rawfile.c:900
 msgid "After each _row skip"
 msgstr ""
 
-#: modules/file/rawfile.c:909
+#: modules/file/rawfile.c:906
 msgid "_Reverse bits in bytes"
 msgstr ""
 
-#: modules/file/rawfile.c:914
+#: modules/file/rawfile.c:911
 msgid "Reverse bi_ts in samples"
 msgstr ""
 
-#: modules/file/rawfile.c:919
+#: modules/file/rawfile.c:916
 msgid "Samples are si_gned"
 msgstr ""
 
-#: modules/file/rawfile.c:1037
+#: modules/file/rawfile.c:1034
 msgid "Preset l_ist"
 msgstr ""
 
-#: modules/file/rawfile.c:1095
+#: modules/file/rawfile.c:1092
 msgid "_Load"
 msgstr ""
 
-#: modules/file/rawfile.c:1100
+#: modules/file/rawfile.c:1097
 msgid "_Store"
 msgstr ""
 
-#: modules/file/rawfile.c:1105
+#: modules/file/rawfile.c:1102
 msgid "_Rename"
 msgstr ""
 
-#: modules/file/rawfile.c:1123
+#: modules/file/rawfile.c:1120
 msgid "Preset _name:"
 msgstr ""
 
-#: modules/file/rawfile.c:1197
+#: modules/file/rawfile.c:1194
 #, c-format
 msgid ""
 "The format would require %u bytes long file (at least), but the length of `%"
 "s' is only %u bytes."
 msgstr ""
 
-#: modules/file/rawfile.c:1218
+#: modules/file/rawfile.c:1215
 #, c-format
 msgid ""
 "Parsing of %s failed:\n"
 "%s."
 msgstr ""
 
-#: modules/file/rawfile.c:1557
+#: modules/file/rawfile.c:1554
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr ""
@@ -916,7 +1076,7 @@ msgid "<b>Module parameters</b>"
 msgstr ""
 
 #: modules/tools/sfunctions.c:210 modules/process/fft.c:400
-#: modules/process/slope_dist.c:204 modules/process/fractal.c:211
+#: modules/process/slope_dist.c:204
 msgid "Output type:"
 msgstr ""
 
@@ -927,7 +1087,6 @@ msgstr ""
 #: modules/tools/sfunctions.c:232 modules/tools/profile.c:226
 #: modules/process/cwt.c:206 modules/process/fft.c:389
 #: modules/process/scale.c:206 modules/process/rotate.c:204
-#: modules/process/fractal.c:204
 msgid "Interpolation type:"
 msgstr ""
 
@@ -1231,7 +1390,7 @@ msgstr ""
 msgid "Rotation correction:"
 msgstr ""
 
-#: modules/process/unrotate.c:231
+#: modules/process/unrotate.c:231 modules/process/fractal.c:201
 msgid "_Interpolation type:"
 msgstr ""
 
@@ -1414,36 +1573,48 @@ msgstr ""
 msgid "Recompute"
 msgstr ""
 
-#: modules/process/fractal.c:217
+#: modules/process/fractal.c:211
+msgid "_Output type:"
+msgstr ""
+
+#: modules/process/fractal.c:224
 msgid "<b>Fit area:</b>"
 msgstr ""
 
-#: modules/process/fractal.c:222
-msgid "from:"
+#: modules/process/fractal.c:229
+msgid "From:"
 msgstr ""
 
-#: modules/process/fractal.c:232
-msgid "to:"
+#: modules/process/fractal.c:233
+msgid "minimum"
 msgstr ""
 
-#: modules/process/fractal.c:245
+#: modules/process/fractal.c:239
+msgid "To:"
+msgstr ""
+
+#: modules/process/fractal.c:243
+msgid "maxium"
+msgstr ""
+
+#: modules/process/fractal.c:252
 msgid "<b>Result:</b>"
 msgstr ""
 
-#: modules/process/fractal.c:250
-msgid "partitioning:"
+#: modules/process/fractal.c:257
+msgid "Partitioning:"
 msgstr ""
 
-#: modules/process/fractal.c:262
-msgid "cube counting:"
+#: modules/process/fractal.c:269
+msgid "Cube counting:"
 msgstr ""
 
-#: modules/process/fractal.c:274
-msgid "triangulation:"
+#: modules/process/fractal.c:281
+msgid "Triangulation:"
 msgstr ""
 
-#: modules/process/fractal.c:286
-msgid "power spectrum:"
+#: modules/process/fractal.c:293
+msgid "Power spectrum:"
 msgstr ""
 
 #: modules/process/calibrate.c:184
