@@ -488,7 +488,50 @@ void gwy_data_field_convolve(GwyDataField *data_field,
                              gint brrow
                               );
 
-    
+   
+
+void gwy_data_field_grains_mark_local_maxima(GwyDataField *data_field, 
+                                             GwyDataField *grain_field);
+
+void gwy_data_field_grains_mark_height(GwyDataField *data_field, 
+                                       GwyDataField *grain_field, 
+                                       gdouble threshval);
+
+void gwy_data_field_grains_mark_slope(GwyDataField *data_field, 
+                                      GwyDataField *grain_field, 
+                                      gdouble threshval);
+
+void gwy_data_field_grains_mark_curvature(GwyDataField *data_field, 
+                                          GwyDataField *grain_field, 
+                                          gdouble threshval);
+
+void gwy_data_field_grains_mark_watershed(GwyDataField *data_field, 
+                                          GwyDataField *grain_field,
+                                          gint locate_steps,
+                                          gint locate_thresh,
+                                          gdouble locate_dropsize,
+                                          gint wshed_steps,
+                                          gdouble wshed_dropsize);
+
+void gwy_data_field_grains_remove_manually(GwyDataField *data_field, 
+                                           GwyDataField *grain_field, 
+                                           gint col, 
+                                           gint row);
+
+void gwy_data_field_grains_remove_by_size(GwyDataField *data_field, 
+                                          GwyDataField *grain_field, 
+                                          gdouble size);
+
+void gwy_data_field_grains_remove_by_height(GwyDataField *data_field, 
+                                            GwyDataField *grain_field, 
+                                            gdouble threshval, 
+                                            gint direction);
+
+gdouble gwy_data_field_grains_get_average(GwyDataField *grain_field);
+
+void gwy_data_field_grains_get_distribution(GwyDataField *grain_field, 
+                                            GwyDataLine *distribution);
+
 
 #ifdef __cplusplus
 }
