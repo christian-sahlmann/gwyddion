@@ -384,17 +384,21 @@ static void
 gwy_app_recent_file_list_prune(Controls *controls)
 {
     GtkTreeIter iter;
+    GtkTreeModel *model;
     GwyRecentFile *rf;
     gboolean ok;
 
     g_return_if_fail(controls->store);
 
-    if (!gtk_tree_model_get_iter_first(GTK_TREE_MODEL(controls->store), &iter))
+    model = GTK_TREE_MODEL(controls->store);
+    if (!gtk_tree_model_get_iter_first(model, &iter))
         return;
 
+    g_object_ref(model);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(controls->list), NULL);
+
     do {
-        gtk_tree_model_get(GTK_TREE_MODEL(controls->store), &iter,
-                           FILELIST_RAW, &rf, -1);
+        gtk_tree_model_get(model, &iter, FILELIST_RAW, &rf, -1);
         gwy_debug("<%s>", rf->file_utf8);
         if (!g_file_test(rf->file_utf8, G_FILE_TEST_IS_REGULAR)) {
             if (rf->thumb_sys && rf->thumb_state != FILE_STATE_FAILED)
@@ -403,9 +407,11 @@ gwy_app_recent_file_list_prune(Controls *controls)
             ok = gtk_list_store_remove(controls->store, &iter);
         }
         else
-            ok = gtk_tree_model_iter_next(GTK_TREE_MODEL(controls->store),
-                                          &iter);
+            ok = gtk_tree_model_iter_next(model, &iter);
     } while (ok);
+
+    gtk_tree_view_set_model(GTK_TREE_VIEW(controls->list), model);
+    g_object_unref(model);
 
     gwy_app_recent_file_list_update_menu(controls);
 }
@@ -941,7 +947,9 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     GdkPixbuf *pixbuf;
     struct stat st;
     gchar *fnm;
+    GwySIUnit *siunit;
     GwySIValueFormat *vf;
+    gdouble xreal, yreal;
     gchar str_mtime[22];
     gchar str_size[22];
     gchar str_width[22];
@@ -968,16 +976,18 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     rf->file_size = st.st_size;
     rf->image_width = gwy_data_field_get_xres(dfield);
     rf->image_height = gwy_data_field_get_yres(dfield);
-    vf = gwy_data_field_get_value_format_xy(dfield, NULL);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    siunit = gwy_data_field_get_si_unit_xy(dfield);
+    vf = gwy_si_unit_get_format(siunit, sqrt(xreal*yreal), NULL);
     g_free(rf->image_real_size);
     rf->image_real_size
         = g_strdup_printf("%.*f×%.*f%s%s",
-                          vf->precision,
-                          gwy_data_field_get_xreal(dfield)/vf->magnitude,
-                          vf->precision,
-                          gwy_data_field_get_yreal(dfield)/vf->magnitude,
+                          vf->precision, xreal/vf->magnitude,
+                          vf->precision, yreal/vf->magnitude,
                           (vf->units && *vf->units) ? " " : "", vf->units);
     rf->file_state = FILE_STATE_OK;
+    gwy_si_unit_value_format_free(vf);
 
     /* FIXME: bad test, must end with / or nothing! */
     if (g_str_has_prefix(rf->file_sys, gwy_recent_file_thumbnail_dir())) {
