@@ -26,7 +26,8 @@
 #include <locale.h>
 #include <errno.h>
 
-/* define GENRTABLE to create RTABLE generator */
+/* define GENRTABLE and compile as a standalone program to get a RTABLE
+ * generator */
 #ifndef GENRTABLE
 
 #ifdef HAVE_UNISTD_H
@@ -41,6 +42,10 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/app.h>
 #include <app/settings.h>
+
+#ifndef HAVE_POW10
+#define pow10(x) exp(G_LN10*(x))
+#endif
 
 /* Predefined common binary formats */
 typedef enum {
@@ -586,9 +591,12 @@ rawfile_dialog(RawFileArgs *args,
                 gsize filesize = file->filesize;
 
                 /* free delimiter and presetname */
+                g_free(args->delimiter);
+                g_free(args->presetname);
                 *args = rawfile_defaults;
                 file->filename = filename;
                 file->filesize = filesize;
+                rawfile_sanitize_args(args);
             }
             break;
 
@@ -1145,7 +1153,7 @@ rawfile_read_data_field(GtkWidget *parent,
         return NULL;
     }
 
-    m = exp(G_LN10*args->xyexponent);
+    m = pow10(args->xyexponent);
     switch (args->format) {
         case RAW_BINARY:
         dfield = GWY_DATA_FIELD(gwy_data_field_new(args->xres, args->yres,
@@ -1179,7 +1187,7 @@ rawfile_read_data_field(GtkWidget *parent,
         break;
     }
 
-    gwy_data_field_multiply(dfield, exp(G_LN10*args->zexponent)*args->zscale);
+    gwy_data_field_multiply(dfield, pow10(args->zexponent)*args->zscale);
     return dfield;
 }
 
