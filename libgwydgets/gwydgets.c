@@ -33,8 +33,14 @@ enum {
 static GdkGLConfig *glconfig = NULL;
 static guint types_initialized = 0;
 
-static void  gwy_hscale_update_log(GtkAdjustment *adj, GtkAdjustment *log_adj);
-static void  gwy_hscale_update_exp(GtkAdjustment *adj, GtkAdjustment *log_adj);
+static void  gwy_hscale_update_log  (GtkAdjustment *adj,
+                                     GtkAdjustment *slave);
+static void  gwy_hscale_update_exp  (GtkAdjustment *adj,
+                                     GtkAdjustment *slave);
+static void  gwy_hscale_update_sqrt (GtkAdjustment *adj,
+                                     GtkAdjustment *slave);
+static void  gwy_hscale_update_sq   (GtkAdjustment *adj,
+                                     GtkAdjustment *slave);
 
 /************************** Initialization ****************************/
 
@@ -234,33 +240,55 @@ gwy_table_get_child_widget(GtkWidget *table,
 /************************** Scale attaching ****************************/
 
 static void
-gwy_hscale_update_log(GtkAdjustment *adj, GtkAdjustment *log_adj)
+gwy_hscale_update_log(GtkAdjustment *adj, GtkAdjustment *slave)
 {
     gulong id;
 
-    id = g_signal_handler_find(log_adj,
+    id = g_signal_handler_find(slave,
                                G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA,
-                               0, 0, 0,
-                               gwy_hscale_update_exp,
-                               adj);
-    g_signal_handler_block(log_adj, id);
-    gtk_adjustment_set_value(log_adj, log(adj->value));
-    g_signal_handler_unblock(log_adj, id);
+                               0, 0, 0, gwy_hscale_update_exp, adj);
+    g_signal_handler_block(slave, id);
+    gtk_adjustment_set_value(slave, log(adj->value));
+    g_signal_handler_unblock(slave, id);
 }
 
 static void
-gwy_hscale_update_exp(GtkAdjustment *adj, GtkAdjustment *exp_adj)
+gwy_hscale_update_exp(GtkAdjustment *adj, GtkAdjustment *slave)
 {
     gulong id;
 
-    id = g_signal_handler_find(exp_adj,
+    id = g_signal_handler_find(slave,
                                G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA,
-                               0, 0, 0,
-                               gwy_hscale_update_log,
-                               adj);
-    g_signal_handler_block(exp_adj, id);
-    gtk_adjustment_set_value(exp_adj, exp(adj->value));
-    g_signal_handler_unblock(exp_adj, id);
+                               0, 0, 0, gwy_hscale_update_log, adj);
+    g_signal_handler_block(slave, id);
+    gtk_adjustment_set_value(slave, exp(adj->value));
+    g_signal_handler_unblock(slave, id);
+}
+
+static void
+gwy_hscale_update_sqrt(GtkAdjustment *adj, GtkAdjustment *slave)
+{
+    gulong id;
+
+    id = g_signal_handler_find(slave,
+                               G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA,
+                               0, 0, 0, gwy_hscale_update_sq, adj);
+    g_signal_handler_block(slave, id);
+    gtk_adjustment_set_value(slave, sqrt(adj->value));
+    g_signal_handler_unblock(slave, id);
+}
+
+static void
+gwy_hscale_update_sq(GtkAdjustment *adj, GtkAdjustment *slave)
+{
+    gulong id;
+
+    id = g_signal_handler_find(slave,
+                               G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA,
+                               0, 0, 0, gwy_hscale_update_sqrt, adj);
+    g_signal_handler_block(slave, id);
+    gtk_adjustment_set_value(slave, adj->value*adj->value);
+    g_signal_handler_unblock(slave, id);
 }
 
 static void
@@ -318,6 +346,7 @@ gwy_table_attach_hscale(GtkWidget *table,
     GtkAdjustment *scale_adj = NULL, *adj = NULL;
     GwyHScaleStyle base_style;
     GtkTable *tab;
+    gdouble u, l;
 
     g_return_val_if_fail(GTK_IS_TABLE(table), NULL);
     tab = GTK_TABLE(table);
@@ -327,13 +356,14 @@ gwy_table_attach_hscale(GtkWidget *table,
         case GWY_HSCALE_DEFAULT:
         case GWY_HSCALE_NO_SCALE:
         case GWY_HSCALE_LOG:
+        case GWY_HSCALE_SQRT:
         if (pivot) {
             g_return_val_if_fail(GTK_IS_ADJUSTMENT(pivot), NULL);
             adj = GTK_ADJUSTMENT(pivot);
         }
         else {
-            if (GWY_HSCALE_LOG)
-                g_warning("Log scale doesn't work with implicit adjusments.");
+            if (base_style == GWY_HSCALE_LOG || base_style == GWY_HSCALE_SQRT)
+                g_warning("Nonlinear scale doesn't work with implicit adj.");
             adj = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
         }
         break;
@@ -350,23 +380,37 @@ gwy_table_attach_hscale(GtkWidget *table,
     if (base_style != GWY_HSCALE_WIDGET) {
         spin = gtk_spin_button_new(adj, 1, 0);
         gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
+        gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
         gtk_table_attach(tab, spin, 2, 3, row, row+1, GTK_FILL, 0, 2, 2);
         middle_widget = spin;
 
         if (base_style == GWY_HSCALE_LOG) {
+            u = log(adj->upper);
+            l = log(adj->lower);
             scale_adj
                 = GTK_ADJUSTMENT(gtk_adjustment_new(log(adj->value),
-                                                    log(adj->lower),
-                                                    log(adj->upper),
-                                                    log(adj->upper/adj->lower)
-                                                    /GWY_HSCALE_WIDTH,
-                                                    log(adj->upper/adj->lower)
-                                                    /GWY_HSCALE_WIDTH*10.0,
+                                                    l, u,
+                                                    (u - l)/GWY_HSCALE_WIDTH,
+                                                    10*(u - l)/GWY_HSCALE_WIDTH,
                                                     0));
             g_signal_connect(adj, "value_changed",
                              G_CALLBACK(gwy_hscale_update_log), scale_adj);
             g_signal_connect(scale_adj, "value_changed",
                              G_CALLBACK(gwy_hscale_update_exp), adj);
+        }
+        else if (base_style == GWY_HSCALE_SQRT) {
+            u = sqrt(adj->upper);
+            l = sqrt(adj->lower);
+            scale_adj
+                = GTK_ADJUSTMENT(gtk_adjustment_new(sqrt(adj->value),
+                                                    l, u,
+                                                    (u - l)/GWY_HSCALE_WIDTH,
+                                                    10*(u - l)/GWY_HSCALE_WIDTH,
+                                                    0));
+            g_signal_connect(adj, "value_changed",
+                             G_CALLBACK(gwy_hscale_update_sqrt), scale_adj);
+            g_signal_connect(scale_adj, "value_changed",
+                             G_CALLBACK(gwy_hscale_update_sq), adj);
         }
         else
             scale_adj = adj;
@@ -378,7 +422,9 @@ gwy_table_attach_hscale(GtkWidget *table,
     }
     g_object_set_data(G_OBJECT(pivot), "middle_widget", middle_widget);
 
-    if (base_style == GWY_HSCALE_DEFAULT || base_style == GWY_HSCALE_LOG) {
+    if (base_style == GWY_HSCALE_DEFAULT
+        || base_style == GWY_HSCALE_LOG
+        || base_style == GWY_HSCALE_SQRT) {
         scale = gtk_hscale_new(scale_adj);
         gtk_scale_set_draw_value(GTK_SCALE(scale), FALSE);
         gtk_widget_set_size_request(scale, GWY_HSCALE_WIDTH, -1);
