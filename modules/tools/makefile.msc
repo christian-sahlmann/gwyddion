@@ -45,21 +45,21 @@ install: install-mod
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
 crop.dll: crop.obj
-	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:crop.dll /dll /implib:crop.lib
+	$(LINK32) crop.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:crop.dll /dll /implib:crop.lib
 
 level3.dll: level3.obj
-	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:level3.dll /dll /implib:level3.lib
+	$(LINK32) level3.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:level3.dll /dll /implib:level3.lib
 
 pointer.dll: pointer.obj
-	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:pointer.dll /dll /implib:pointer.lib
+	$(LINK32) pointer.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:pointer.dll /dll /implib:pointer.lib
 
 profile.dll: profile.obj
-	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:profile.dll /dll /implib:profile.lib
+	$(LINK32) profile.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:profile.dll /dll /implib:profile.lib
 
 sfunctions.dll: sfunctions.obj
-	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:sfunctions.dll /dll /implib:sfunctions.lib
+	$(LINK32) sfunctions.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:sfunctions.dll /dll /implib:sfunctions.lib
 
 stats.dll: stats.obj
-	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:stats.dll /dll /implib:stats.lib
+	$(LINK32) stats.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:stats.dll /dll /implib:stats.lib
 
 # vim: ft=make

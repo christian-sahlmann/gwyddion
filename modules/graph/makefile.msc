@@ -40,6 +40,6 @@ install: install-mod
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
 read.dll: read.obj
-	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:read.dll /dll /implib:read.lib
+	$(LINK32) read.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:read.dll /dll /implib:read.lib
 
 # vim: ft=make
