@@ -46,7 +46,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "asciiexport",
-    "Load and save Gwyddion native serialized objects.",
+    "Exports data as simple ASCII matrix",
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek",
