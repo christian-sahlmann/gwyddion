@@ -31,6 +31,8 @@
 #include <gdk/gdkevents.h>
 #include <glib-object.h>
 #include <gtk/gtkgl.h>
+#include <pango/pangoft2.h>
+
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -83,7 +85,6 @@ static void          gwy_3d_make_list           (Gwy3DView * gwy3D,
                                                  gint shape);
 static void          gwy_3d_draw_axes           (Gwy3DView *gwy3dview);
 static void          gwy_3d_draw_light_position (Gwy3DView *gwy3dview);
-static void          gwy_3d_init_font           (Gwy3DView *gwy3dview);
 static void          gwy_3d_set_projection      (Gwy3DView *gwy3dview,
                                                  GLfloat width,
                                                  GLfloat height);
@@ -101,6 +102,16 @@ static void          gwy_3d_timeout_start       (Gwy3DView * gwy3dview,
                                                  gboolean invalidate_now);
 static gboolean      gwy_3d_timeout_func        (gpointer user_data);
 
+static void          gl_pango_ft2_render_layout (PangoLayout *layout);
+static void          gwy_3d_print_text          (Gwy3DView      *gwy3dview,
+                                                 char           *text,
+                                                 GLfloat        raster_x,
+                                                 GLfloat        raster_y,
+                                                 GLfloat        raster_z,
+                                                 guint          size,
+                                                 gint           vjustify,
+                                                 gint           hjustify);
+
 
 /* Local data */
 
@@ -109,12 +120,6 @@ static GtkDrawingAreaClass *parent_class = NULL;
 static GQuark container_key_quark = 0;
 
 
-/* TODO: use Pango for font family selection */
-#ifdef WIN32
-static const gchar font_string[] = "arial 12";
-#else
-static const gchar font_string[] = "helvetica 12";
-#endif
 
 GType
 gwy_3d_view_get_type(void)
@@ -199,11 +204,11 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->enable_lights         = FALSE;
     gwy3dview->mat_current           = NULL;
     gwy3dview->shape_list_base       = -1;
-    gwy3dview->font_list_base        = -1;
-    gwy3dview->font_height           = 0;
     gwy3dview->shape_current         = 0;
     gwy3dview->mouse_begin_x         = 0.0;
     gwy3dview->mouse_begin_y         = 0.0;
+    gwy3dview->ft2_context           = NULL;
+    gwy3dview->si_unit               = NULL;
 }
 
 /**
@@ -343,6 +348,8 @@ gwy_3d_view_new(GwyContainer *data)
                                  TRUE,
                                  GDK_GL_RGBA_TYPE);
 
+    gwy3dview->si_unit = (GwySIUnit*) gwy_si_unit_new("m");
+
     return widget;
 }
 
@@ -396,13 +403,11 @@ gwy_3d_view_finalize(GObject *object)
     gwy_object_unref(gwy3dview->light_z);
     gwy_object_unref(gwy3dview->light_y);
 
+    gwy_object_unref(gwy3dview->si_unit);
+
     if (gwy3dview->shape_list_base >= 0) {
         glDeleteLists(gwy3dview->shape_list_base, 2);
         gwy3dview->shape_list_base = -1;
-    }
-    if (gwy3dview->font_list_base >= 0) {
-        glDeleteLists(gwy3dview->font_list_base, 128);
-        gwy3dview->font_list_base = -1;
     }
 
 
@@ -425,11 +430,9 @@ gwy_3d_view_unrealize(GtkWidget *widget)
         glDeleteLists(gwy3dview->shape_list_base, 2);
         gwy3dview->shape_list_base = -1;
     }
-    if (gwy3dview->font_list_base >= 0)
-    {
-        glDeleteLists(gwy3dview->font_list_base, 128);
-        gwy3dview->font_list_base = -1;
-    }
+
+    g_object_unref(G_OBJECT (gwy3dview->ft2_context));
+    pango_ft2_shutdown_display();
 
     /* TODO: save the current view settings into the contaier  */
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
@@ -1315,6 +1318,8 @@ gwy_3d_view_realize(GtkWidget *widget)
 
     gwy_3d_view_realize_gl(gwy3dview);
 
+   /* Get PangoFT2 context. */
+   gwy3dview->ft2_context = pango_ft2_get_context (72, 72);
 
 }
 
@@ -1733,130 +1738,144 @@ static void gwy_3d_make_list(Gwy3DView * gwy3D, GwyDataField * data, gint shape)
 
 static void gwy_3d_draw_axes(Gwy3DView * widget)
 {
-   GLfloat rx = widget->rot_x->value - ((int)(widget->rot_x->value / 360.0)) * 360.0;
-   GLfloat Ax, Ay, Bx, By, Cx, Cy;
-   gboolean yfirst = TRUE;
-   gchar text[30];
-   gint xres = gwy_data_field_get_xres(widget->data);
-   gint yres = gwy_data_field_get_yres(widget->data);
-   GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
+    GLfloat rx = widget->rot_x->value - ((int)(widget->rot_x->value / 360.0)) * 360.0;
+    GLfloat Ax, Ay, Bx, By, Cx, Cy;
+    gboolean yfirst = TRUE;
+    gchar text[50];
+    gint xres = gwy_data_field_get_xres(widget->data);
+    gint yres = gwy_data_field_get_yres(widget->data);
+    GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
-   gwy_debug(" ");
+    gwy_debug(" ");
 
-   if (rx < 0.0)
-       rx += 360.0;
-   Ax = Ay = Bx = By = Cx = Cy = 0.0f;
+    if (rx < 0.0)
+        rx += 360.0;
+    Ax = Ay = Bx = By = Cx = Cy = 0.0f;
 
-   glPushMatrix();
-   glTranslatef(-1.0, -1.0, GWY_3D_Z_DISPLACEMENT);
-   glScalef(2.0/ xres,
-            2.0/ yres,
-            GWY_3D_Z_TRANSFORMATION / (widget->data_max - widget->data_min));
-   glMaterialfv(GL_FRONT, GL_AMBIENT,  mat_none->ambient);
-   glMaterialfv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
-   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_none->specular);
-   glMaterialf(GL_FRONT, GL_SHININESS, mat_none->shininess * 128.0);
+    glPushMatrix();
+    glTranslatef(-1.0, -1.0, GWY_3D_Z_DISPLACEMENT);
+    glScalef(2.0/ xres,
+             2.0/ yres,
+             GWY_3D_Z_TRANSFORMATION / (widget->data_max - widget->data_min));
+    glMaterialfv(GL_FRONT, GL_AMBIENT,  mat_none->ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_none->specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, mat_none->shininess * 128.0);
 
-   if (widget->show_axes == TRUE)
-   {
-      if (rx >= 0.0 && rx <= 90.0)
-      {
-         Ay = yres;
-         Cx = xres;
-         yfirst = TRUE;
-      } else if (rx > 90.0 && rx <= 180.0)
-      {
-         Ax = xres; Ay = yres;
-         By = xres;
-         yfirst = FALSE;
-      } else if (rx > 180.0 && rx <= 270.0)
-      {
-         Ax = xres;
-         Bx = xres; By = yres;
-         Cy = yres;
-         yfirst = TRUE;
-      } else if (rx >= 270.0 && rx <= 360.0)
-      {
-         Bx = xres;
-         Cx = xres; Cy = yres;
-         yfirst = FALSE;
-      }
-      glBegin(GL_LINE_STRIP);
-         glColor3f(0.0, 0.0, 0.0);
-         glVertex3f(Ax, Ay, 0.0f);
-         glVertex3f(Bx, By, 0.0f);
-         glVertex3f(Cx, Cy, 0.0f);
-         glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
-      glEnd();
-      glBegin(GL_LINES);
-         glVertex3f(Ax, Ay, 0.0f);
-         glVertex3f(Ax - (Cx-Bx)*0.02, Ay - (Cy-By)*0.02, 0.0f );
-         glVertex3f((Ax+Bx) / 2, (Ay+By) / 2, 0.0f);
-         glVertex3f((Ax+Bx) / 2 - (Cx-Bx)*0.02,
-                    (Ay+By) / 2 - (Cy-By)*0.02, 0.0f );
-         glVertex3f(Bx , By, 0.0f);
-         glVertex3f(Bx - (Cx-Bx)*0.02, By - (Cy-By)*0.02, 0.0f );
-         glVertex3f(Bx, By, 0.0f);
-         glVertex3f(Bx - (Ax-Bx)*0.02, By - (Ay-By)*0.02, 0.0f );
-         glVertex3f((Cx+Bx) / 2, (Cy+By) / 2, 0.0f);
-         glVertex3f((Cx+Bx) / 2 - (Ax-Bx)*0.02,
-                    (Cy+By) / 2 - (Ay-By)*0.02, 0.0f );
-         glVertex3f(Cx , Cy, 0.0f);
-         glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02, 0.0f );
+    if (widget->show_axes == TRUE)
+    {
+        if (rx >= 0.0 && rx <= 90.0)
+        {
+            Ay = yres;
+            Cx = xres;
+            yfirst = TRUE;
+        } else if (rx > 90.0 && rx <= 180.0)
+        {
+            Ax = xres; Ay = yres;
+            By = xres;
+            yfirst = FALSE;
+        } else if (rx > 180.0 && rx <= 270.0)
+        {
+            Ax = xres;
+            Bx = xres; By = yres;
+            Cy = yres;
+           yfirst = TRUE;
+        } else if (rx >= 270.0 && rx <= 360.0)
+        {
+            Bx = xres;
+            Cx = xres; Cy = yres;
+            yfirst = FALSE;
+        }
+        glBegin(GL_LINE_STRIP);
+            glColor3f(0.0, 0.0, 0.0);
+            glVertex3f(Ax, Ay, 0.0f);
+            glVertex3f(Bx, By, 0.0f);
+            glVertex3f(Cx, Cy, 0.0f);
+            glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
+        glEnd();
+        glBegin(GL_LINES);
+            glVertex3f(Ax, Ay, 0.0f);
+            glVertex3f(Ax - (Cx-Bx)*0.02, Ay - (Cy-By)*0.02, 0.0f );
+            glVertex3f((Ax+Bx) / 2, (Ay+By) / 2, 0.0f);
+            glVertex3f((Ax+Bx) / 2 - (Cx-Bx)*0.02,
+                       (Ay+By) / 2 - (Cy-By)*0.02, 0.0f );
+            glVertex3f(Bx , By, 0.0f);
+            glVertex3f(Bx - (Cx-Bx)*0.02, By - (Cy-By)*0.02, 0.0f );
+            glVertex3f(Bx, By, 0.0f);
+            glVertex3f(Bx - (Ax-Bx)*0.02, By - (Ay-By)*0.02, 0.0f );
+            glVertex3f((Cx+Bx) / 2, (Cy+By) / 2, 0.0f);
+            glVertex3f((Cx+Bx) / 2 - (Ax-Bx)*0.02,
+                       (Cy+By) / 2 - (Ay-By)*0.02, 0.0f );
+            glVertex3f(Cx , Cy, 0.0f);
+            glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02, 0.0f );
 
-         glPushMatrix();
-         glTranslatef(Cx*cos(widget->rot_x->value * DIG_2_RAD)
-                      - Cy*sin(widget->rot_x->value * DIG_2_RAD),
-                      Cx*sin(widget->rot_x->value * DIG_2_RAD)
-                      + Cy*cos(widget->rot_x->value * DIG_2_RAD), 0.0f);
-         glRotatef(-widget->rot_x->value, 0.0f, 0.0f, 1.0f);
-         glTranslatef(-Cx, -Cy, 0.0f);
-         glVertex3f(Cx , Cy, widget->data_max - widget->data_min);
-         glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
+            glPushMatrix();
+            glTranslatef(Cx*cos(widget->rot_x->value * DIG_2_RAD)
+                         - Cy*sin(widget->rot_x->value * DIG_2_RAD),
+                         Cx*sin(widget->rot_x->value * DIG_2_RAD)
+                         + Cy*cos(widget->rot_x->value * DIG_2_RAD), 0.0f);
+            glRotatef(-widget->rot_x->value, 0.0f, 0.0f, 1.0f);
+            glTranslatef(-Cx, -Cy, 0.0f);
+            glVertex3f(Cx , Cy, widget->data_max - widget->data_min);
+            glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
                      widget->data_max - widget->data_min);
-         glVertex3f(Cx , Cy, (widget->data_max - widget->data_min)/2);
-         glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
-                    (widget->data_max-widget->data_min)/2);
-         glPopMatrix();
-      glEnd();
+            glVertex3f(Cx , Cy, (widget->data_max - widget->data_min)/2);
+            glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
+                       (widget->data_max-widget->data_min)/2);
+            glPopMatrix();
+        glEnd();
 
         /*
-        TODO: create mu symbol
-        TODO: solve the change of the size of the font
-        TODO: rework using GwySIUnit, create bitmaps in the beginning
-              using Pango, save and draw them using dislpay lists
+        TODO: create bitmaps with labels in the beginning (possibly in init_gl)
+              into display lists and draw here
         */
         if (widget->show_labels == TRUE)
         {
-            guint pom = 0;
-            gdouble xreal = gwy_data_field_get_xreal(widget->data) * 1e6;
-            gdouble yreal = gwy_data_field_get_yreal(widget->data) * 1e6;
+            gdouble xreal = gwy_data_field_get_xreal(widget->data);
+            gdouble yreal = gwy_data_field_get_yreal(widget->data);
+            GwySIValueFormat * format;
 
-            glListBase (widget->font_list_base);
-            if (yfirst)
-               g_snprintf(text, sizeof(text), "y:%1.1f um", yreal);
-            else
-               g_snprintf(text, sizeof(text), "x:%1.1f um", xreal);
-            glRasterPos3f((Ax+2*Bx)/3 - (Cx-Bx)*0.1,
-                          (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f );
-            glBitmap(0, 0, 0, 0, -100, 0, (GLubyte *)&pom);
-            glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
-            if (! yfirst)
-               g_snprintf(text, sizeof(text), "y:%1.1f um", yreal);
-            else
-               g_snprintf(text, sizeof(text), "x:%1.1f um", xreal);
-            glRasterPos3f((2*Bx+Cx)/3 - (Ax-Bx)*0.1,
-                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f );
-            glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
-   
-            g_snprintf(text, sizeof(text), "%1.1f nm", widget->data_max*1e9);
-            glRasterPos3f(Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                          (widget->data_max - widget->data_min));
-            glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
-   
-            g_snprintf(text, sizeof(text), "%1.1f nm", widget->data_min*1e9);
-            glRasterPos3f(Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, -0.0f);
-            glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
+            /*FIXME are the parameters all right?*/
+            format = gwy_si_unit_get_format_with_resolution(
+                         widget->si_unit,
+                         yfirst ? yreal : xreal,
+                         yfirst ? yreal : xreal,
+                         NULL);
+            g_snprintf(text, sizeof(text), "%c: %1.1f %s",
+                       yfirst ? 'y' : 'x',
+                       (yfirst ? yreal : xreal)/format->magnitude,
+                       format->units);
+            gwy_debug("label 1: %s", text);
+            gwy_3d_print_text(widget, text, (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
+                              (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f, 14,  1, 1);
+            gwy_si_unit_get_format_with_resolution(
+                widget->si_unit,
+                !yfirst ? yreal : xreal,
+                !yfirst ? yreal : xreal,
+                format);
+            g_snprintf(text, sizeof(text), "%c: %1.1f %s",
+                       !yfirst ? 'y' : 'x',
+                       (!yfirst ? yreal : xreal)/format->magnitude,
+                       format->units);
+            gwy_3d_print_text(widget, text, (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
+                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f, 14,  1, -1);
+            gwy_si_unit_get_format_with_resolution(
+                widget->si_unit, widget->data_max, widget->data_max, format);
+            g_snprintf(text, sizeof(text), "%1.0f %s",
+                       widget->data_max / format->magnitude,
+                       format->units);
+            gwy_3d_print_text(widget, text, Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
+                          (widget->data_max - widget->data_min), 12,  0, -1);
+            gwy_si_unit_get_format_with_resolution(
+                widget->si_unit, widget->data_min, widget->data_min, format);
+            g_snprintf(text, sizeof(text), "%1.0f %s",
+                       widget->data_min / format->magnitude,
+                       format->units);
+            gwy_3d_print_text(widget, text, Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
+                              -0.0f, 12,  0, -1);
+
+
+            gwy_si_unit_value_format_free(format);
         }
     }
 
@@ -1906,37 +1925,6 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
     glPopMatrix();
 }
 
-static void gwy_3d_init_font(Gwy3DView * widget)
-{
-    PangoFontDescription *font_desc;
-    PangoFont *font;
-    PangoFontMetrics *font_metrics;
-    /*
-     * Generate font display lists.
-     */
-
-    gwy_debug(" ");
-
-    widget->font_list_base = glGenLists(128);
-
-    font_desc = pango_font_description_from_string(font_string);
-
-    font = gdk_gl_font_use_pango_font(font_desc, 0, 128, widget->font_list_base);
-    if (font == NULL)
-    {
-        gwy_debug("*** Can't load font '%s'\n", font_string);
-        exit(1);
-    }
-
-    font_metrics = pango_font_get_metrics(font, NULL);
-
-    widget->font_height = pango_font_metrics_get_ascent(font_metrics)
-                + pango_font_metrics_get_descent(font_metrics);
-    widget->font_height = PANGO_PIXELS(widget->font_height);
-
-    pango_font_description_free(font_desc);
-    pango_font_metrics_unref(font_metrics);
-}
 
 static void
 gwy_3d_view_realize_gl (Gwy3DView *widget)
@@ -1982,7 +1970,6 @@ gwy_3d_view_realize_gl (Gwy3DView *widget)
     widget->shape_list_base = glGenLists(2);
     gwy_3d_make_list(widget, widget->data, GWY_3D_SHAPE_AFM);
     gwy_3d_make_list(widget, widget->downsampled, GWY_3D_SHAPE_REDUCED);
-    gwy_3d_init_font(widget);
 
     gdk_gl_drawable_gl_end(gldrawable);
     /*** OpenGL END ***/
@@ -2032,5 +2019,178 @@ static void gwy_3d_set_projection(Gwy3DView *widget, GLfloat width, GLfloat heig
     }
     glMatrixMode(GL_MODELVIEW);
 }
+
+static void
+gl_pango_ft2_render_layout (PangoLayout *layout)
+{
+  PangoRectangle logical_rect;
+  FT_Bitmap bitmap;
+  GLvoid *pixels;
+  guint32 *p;
+  GLfloat color[4];
+  guint32 rgb;
+  GLfloat a;
+  guint8 *row, *row_end;
+  int i;
+
+  pango_layout_get_extents (layout, NULL, &logical_rect);
+  if (logical_rect.width == 0 || logical_rect.height == 0)
+    return;
+
+  bitmap.rows = PANGO_PIXELS (logical_rect.height);
+  bitmap.width = PANGO_PIXELS (logical_rect.width);
+  bitmap.pitch = bitmap.width;
+  bitmap.buffer = g_malloc (bitmap.rows * bitmap.width);
+  bitmap.num_grays = 256;
+  bitmap.pixel_mode = ft_pixel_mode_grays;
+
+  memset (bitmap.buffer, 0, bitmap.rows * bitmap.width);
+  pango_ft2_render_layout (&bitmap, layout,
+                           PANGO_PIXELS (-logical_rect.x), 0);
+
+  pixels = g_malloc (bitmap.rows * bitmap.width * 4);
+  p = (guint32 *) pixels;
+
+  glGetFloatv (GL_CURRENT_COLOR, color);
+#if !defined(GL_VERSION_1_2) && G_BYTE_ORDER == G_LITTLE_ENDIAN
+  rgb =  ((guint32) (color[0] * 255.0))        |
+        (((guint32) (color[1] * 255.0)) << 8)  |
+        (((guint32) (color[2] * 255.0)) << 16);
+#else
+  rgb = (((guint32) (color[0] * 255.0)) << 24) |
+        (((guint32) (color[1] * 255.0)) << 16) |
+        (((guint32) (color[2] * 255.0)) << 8);
+#endif
+  a = color[3];
+
+  row = bitmap.buffer + bitmap.rows * bitmap.width; /* past-the-end */
+  row_end = bitmap.buffer;      /* beginning */
+
+  if (a == 1.0)
+    {
+      do
+        {
+          row -= bitmap.width;
+          for (i = 0; i < bitmap.width; i++)
+#if !defined(GL_VERSION_1_2) && G_BYTE_ORDER == G_LITTLE_ENDIAN
+            *p++ = rgb | (((guint32) row[i]) << 24);
+#else
+            *p++ = rgb | ((guint32) row[i]);
+#endif
+        }
+      while (row != row_end);
+    }
+  else
+    {
+      do
+        {
+          row -= bitmap.width;
+          for (i = 0; i < bitmap.width; i++)
+#if !defined(GL_VERSION_1_2) && G_BYTE_ORDER == G_LITTLE_ENDIAN
+            *p++ = rgb | (((guint32) (a * row[i])) << 24);
+#else
+            *p++ = rgb | ((guint32) (a * row[i]));
+#endif
+        }
+      while (row != row_end);
+    }
+
+  glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+#if !defined(GL_VERSION_1_2)
+  glDrawPixels (bitmap.width, bitmap.rows,
+                GL_RGBA, GL_UNSIGNED_BYTE,
+                pixels);
+#else
+  glDrawPixels (bitmap.width, bitmap.rows,
+                GL_RGBA, GL_UNSIGNED_INT_8_8_8_8,
+                pixels);
+#endif
+
+  glDisable (GL_BLEND);
+
+  g_free (bitmap.buffer);
+  g_free (pixels);
+}
+
+static void
+gwy_3d_print_text(Gwy3DView      *gwy3dview,
+                  char           *text,
+                  GLfloat        raster_x,
+                  GLfloat        raster_y,
+                  GLfloat        raster_z,
+                  guint          size,
+                  gint           vjustify,
+                  gint           hjustify)
+{
+    PangoContext *widget_context;
+    PangoFontDescription *font_desc;
+    PangoLayout *layout;
+    PangoRectangle logical_rect;
+    GLfloat text_w, text_h;
+    guint hlp = 0;
+
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    /* Font */
+    widget_context = gtk_widget_get_pango_context(GTK_WIDGET(gwy3dview));
+    font_desc = pango_context_get_font_description(widget_context);
+    pango_font_description_set_size(font_desc, size * PANGO_SCALE);
+    pango_context_set_font_description(gwy3dview->ft2_context, font_desc);
+
+    /* Text layout */
+    layout = pango_layout_new(gwy3dview->ft2_context);
+    pango_layout_set_width(layout, -1);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
+    pango_layout_set_text(layout, text, -1);
+
+    /* Text position */
+    pango_layout_get_extents (layout, NULL, &logical_rect);
+    text_w = PANGO_PIXELS (logical_rect.width);
+    text_h = PANGO_PIXELS (logical_rect.height);
+
+
+    glRasterPos3f(raster_x, raster_y, raster_z);
+    if (vjustify < 0)
+    {
+       /* vertically justified to the bottom */
+    }
+    else if (vjustify == 0)
+    {
+       /* vertically justified to the middle */
+       glBitmap(0, 0, 0, 0, 0, - text_h / 2, (GLubyte *)&hlp);
+    }
+    else
+    {
+       /* vertically justified to the top */
+       glBitmap(0, 0, 0, 0, 0, - text_h , (GLubyte *)&hlp);
+    }
+    if (hjustify < 0)
+    {
+       /* horizontally justified to the left */
+    }
+    else if (hjustify == 0)
+    {
+       /* horizontally justified to the middle */
+       glBitmap(0, 0, 0, 0, - text_w / 2, 0, (GLubyte *)&hlp);
+    }
+    else
+    {
+       /* horizontally justified to the right */
+       glBitmap(0, 0, 0, 0, - text_w , 0, (GLubyte *)&hlp);
+    }
+
+    /* Render text */
+    gl_pango_ft2_render_layout (layout);
+
+
+
+    g_object_unref (G_OBJECT (layout));
+
+    return ;
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -34,6 +34,7 @@
 
 #include <libprocess/datafield.h>
 #include <libdraw/gwypalette.h>
+#include <libgwyddion/gwysiunit.h>
 
 #include "gwyglmaterial.h"
 
@@ -72,8 +73,6 @@ struct _Gwy3DView {
     Gwy3DMovement movement_status;  /* What to do, if mouse is moving */
 
     GLint shape_list_base;          /* Base index of scene display lists */
-    GLint font_list_base;           /* Base index of font display lists */
-    gint font_height;               /* Font height in pixels */
     GLuint shape_current;           /* Actually shown shape in the scene (full or reduced data) */
 
 
@@ -100,6 +99,9 @@ struct _Gwy3DView {
 
     gboolean timeout;               /* Is running timeot for redrawing in full scale */
     guint timeout_id;               /* Timeout id */
+
+    PangoContext * ft2_context;     /* For text rendering */
+    GwySIUnit    * si_unit;         /* [m] for axis labels */
 
     gboolean b_reserved1;           /* resreved for thread creating of display-lists */
     gboolean b_reserved2;
