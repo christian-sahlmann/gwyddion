@@ -161,20 +161,22 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
 }
 
 void 
-gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint col, gint row)
+gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint i)
 {
-    GArray *listpnt;
     gint *pnt, npnt;
-    gint i;
+    gint row, col;
           
     npnt=0;       
     if (grain_field->data[i]==0) return;
+    
+    row = (gint)floor((gdouble)i/(gdouble)grain_field->xres);
+    col = i - grain_field->xres*row;            
     
     pnt = gwy_data_field_fill_grain(grain_field, row, col, &npnt);
                 
     for (i=0; i<npnt; i++)
     {
-        grain_field->data[i] = 0;
+        grain_field->data[pnt[i]] = 0;
     }
 
     g_free(pnt);
@@ -185,24 +187,32 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
 {
     gint i, xres, yres, col, row;
     gint *pnt, npnt;
+    GwyDataField *buffer;
+    
     
     xres = grain_field->xres;
     yres = grain_field->yres;
 
+    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, grain_field->xreal, grain_field->yreal, FALSE);
+    gwy_data_field_copy(grain_field, buffer);
+   
     for (i=0; i<(xres*yres); i++)
     {
-        if (grain_field->data[i]>0)
+        if (buffer->data[i]>0)
         {
-            pnt = gwy_data_field_fill_grain(grain_field, row, col, &npnt);
-            if (npnt > size)
+            row = (gint)floor((gdouble)i/(gdouble)xres);
+            col = i - xres*row;
+            npnt = 0;
+            pnt = gwy_data_field_fill_grain(buffer, row, col, &npnt);
+            if (npnt < size)
             {            
-                row = (gint)floor((gdouble)i/(gdouble)xres);
-                col = i - row;
-                gwy_data_field_grains_remove_manually(grain_field, col, row);                                                         
+                gwy_data_field_grains_remove_manually(grain_field, i);                                                         
             }
+            gwy_data_field_grains_remove_manually(buffer, i);
             g_free(pnt);
         }
     }
+    g_object_unref(buffer);
      
 }
 
@@ -219,8 +229,8 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *g
         if (grain_field->data[i]>0 && data_field->data[i]>threshval)
         {
             row = (gint)floor((gdouble)i/(gdouble)xres);
-            col = i - row;
-            gwy_data_field_grains_remove_manually(grain_field, col, row);                                                         
+            col = i - xres*row;
+            gwy_data_field_grains_remove_manually(grain_field, i);                                                         
         }
     }
     
@@ -367,7 +377,7 @@ drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize
     {
 	retval = 0;
 	row = (gint)floor((gdouble)i/(gdouble)xres); 
-	col = i - row;
+	col = i - xres*row;
 	do {
 	    retval = step_by_one(data_field, &col, &row);
 	} while (retval==0);
@@ -395,7 +405,7 @@ drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
     	{
     	    global_maximum_value = water_field->data[i];
     	    row = global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
-    	    col = global_col_value = i - row;
+    	    col = global_col_value = i - xres*row;
     	    global_number = 0;
     	    check_neighbours(water_field, buffer, col, row, 
     			     &global_number, &global_maximum_value, &global_col_value, &global_row_value);

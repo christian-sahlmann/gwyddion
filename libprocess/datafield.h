@@ -527,8 +527,7 @@ void gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
 
 void gwy_data_field_grains_remove_manually( 
                                            GwyDataField *grain_field, 
-                                           gint col, 
-                                           gint row);
+                                           gint i);
 
 void gwy_data_field_grains_remove_by_size( 
                                           GwyDataField *grain_field, 

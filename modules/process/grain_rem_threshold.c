@@ -69,7 +69,8 @@ static void        remove_save_args              (GwyContainer *container,
 static void        remove_dialog_update          (RemoveControls *controls,
                                                RemoveArgs *args);
 static void        preview                     (RemoveControls *controls,
-                                               RemoveArgs *args);
+                                               RemoveArgs *args,
+                                               GwyContainer *data);
 static void        ok                         (RemoveControls *controls,
                                                RemoveArgs *args,
                                                GwyContainer *data);
@@ -181,6 +182,10 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata, "/0/data"));
     zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
+
+    layer = gwy_layer_mask_new();
+    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view),
+                                 GWY_PIXMAP_LAYER(layer));
     
     gtk_box_pack_start(GTK_BOX(hbox), controls.view,
                        FALSE, FALSE, 4);    
@@ -242,7 +247,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
             break;
 
             case RESPONSE_PREVIEW:
-            preview(&controls, args);
+            preview(&controls, args, data);
             break;
 
             default:
@@ -324,40 +329,32 @@ remove_dialog_update(RemoveControls *controls,
 
 static void
 preview(RemoveControls *controls,
-        RemoveArgs *args)
+        RemoveArgs *args,
+        GwyContainer *data)
 {
     GwyDataField *maskfield, *dfield, *output_field;
     gboolean is_field;
     GwyPixmapLayer *layer;
    
-   printf("***preview\n"); 
+    printf("***preview\n"); 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
 
     /*set up the mask*/
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask"))
     {
-        printf("***mask found\n");
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+        
+        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                   "/0/mask"));
-        gwy_data_field_resample(maskfield,
-                               gwy_data_field_get_xres(dfield),
-                               gwy_data_field_get_yres(dfield),
-                               GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield);
+        mask_process(dfield, maskfield, args, controls);
+        
+        gwy_container_set_object_by_name(controls->mydata, "/0/mask", G_OBJECT(maskfield));
+        
     }
     else
     {
-        printf("***mask not found\n");
-        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(controls->mydata, "/0/mask", G_OBJECT(maskfield));
-        layer = gwy_layer_mask_new();
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                 GWY_PIXMAP_LAYER(layer));
-  
+        printf("No mask!\n");
+        
     }
-    
-    mask_process(dfield, maskfield, args, controls);
-
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
     
 }
@@ -378,21 +375,13 @@ ok(RemoveControls *controls,
     {
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                   "/0/mask"));
-        gwy_data_field_resample(maskfield,
-                               gwy_data_field_get_xres(dfield),
-                               gwy_data_field_get_yres(dfield),
-                               GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield);
+        mask_process(dfield, maskfield, args, controls);
     }
     else
     {
-        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
-
+        printf("No mask!\n");
     }
    
-    mask_process(dfield, maskfield, args, controls);
-    
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
@@ -417,21 +406,20 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, RemoveArgs *args, Re
                                                      gwy_data_field_get_xreal(dfield),
                                                      gwy_data_field_get_yreal(dfield),
                                                      FALSE);
-   /*
+
     args->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
-    args->slope = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_slope));
-    args->lap = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_lap));
+    args->area = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
     
-    args->inverted = 0;
+    
     if (args->is_height)
     {
-        gwy_data_field_grains_mark_height(dfield, maskfield, args->height, args->inverted);
+        gwy_data_field_grains_remove_by_height(dfield, maskfield, args->height, 0);
         is_field = TRUE;
     }
-    if (args->is_slope)
+    if (args->is_area)
     {
-        gwy_data_field_grains_mark_slope(dfield, output_field, args->slope, args->inverted); 
-        if (is_field)
+        gwy_data_field_grains_remove_by_size(maskfield, args->area);
+/*        if (is_field)
         {
             if (args->merge_type == GWY_MERGE_UNION)
                 gwy_data_field_grains_add(maskfield, output_field);
@@ -439,21 +427,8 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, RemoveArgs *args, Re
                 gwy_data_field_grains_intersect(maskfield, output_field);
         }
         else gwy_data_field_copy(output_field, maskfield);
-        is_field = TRUE;
+*/        is_field = TRUE;
     }
-    if (args->is_lap)
-    {
-        gwy_data_field_grains_mark_curvature(dfield, output_field, args->lap, args->inverted); 
-        if (is_field)
-        {
-            if (args->merge_type == GWY_MERGE_UNION)
-                gwy_data_field_grains_add(maskfield, output_field);
-            else if (args->merge_type == GWY_MERGE_INTERSECTION)
-                gwy_data_field_grains_intersect(maskfield, output_field);
-        }
-        else gwy_data_field_copy(output_field, maskfield);
-     }
-    */
     g_object_unref(output_field); 
 }
 
