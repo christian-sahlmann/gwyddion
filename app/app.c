@@ -74,12 +74,27 @@ gwy_app_quit(void)
     return FALSE;
 }
 
+/**
+ * gwy_app_data_window_get_current:
+ *
+ * Returns the currently active data window, may be %NULL if none is active.
+ *
+ * Returns: The active data window as a #GwyDataWindow.
+ **/
 GwyDataWindow*
 gwy_app_data_window_get_current(void)
 {
     return current_data ? (GwyDataWindow*)current_data->data : NULL;
 }
 
+/**
+ * gwy_app_get_current_data:
+ *
+ * Returns the data of currently active data window.
+ *
+ * Returns: The current data as a #GwyContainer.
+ *          May return %NULL if none is currently active.
+ **/
 GwyContainer*
 gwy_app_get_current_data(void)
 {
@@ -93,7 +108,13 @@ gwy_app_get_current_data(void)
 }
 
 /**
- * Add a data window and make it current data window.
+ * gwy_app_data_window_set_current:
+ * @window: A data window.
+ *
+ * Makes a data window active, including tool switch, etc.
+ *
+ * Eventually adds @window it to the data window list if it isn't present
+ * there.
  **/
 void
 gwy_app_data_window_set_current(GwyDataWindow *window)
@@ -123,6 +144,15 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
         gwy_app_toolbox_update_state(&sens_data);
 }
 
+/**
+ * gwy_app_data_window_remove:
+ * @window: A data window.
+ *
+ * Removes the data window @window from the list of data windows.
+ *
+ * All associated structures are freed, active tool gets switch to %NULL
+ * window.
+ **/
 void
 gwy_app_data_window_remove(GwyDataWindow *window)
 {
@@ -151,6 +181,12 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     gwy_app_toolbox_update_state(&sens_data);
 }
 
+/**
+ * gwy_app_toolbox_update_state:
+ * @sens_data: Menu sensitivity data.
+ *
+ * Updates menus and toolbox sensititivity to reflect @sens_data.
+ **/
 static void
 gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data)
 {
@@ -167,7 +203,16 @@ gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data)
     }
 }
 
-/* FIXME: to be moved somewhere? refactored? */
+/**
+ * gwy_app_data_window_create:
+ * @data: A data container.
+ *
+ * Creates a new data window showing @data and does some basic setup.
+ *
+ * Also calls gtk_window_present() on it.
+ *
+ * Returns: The newly created data window.
+ **/
 GtkWidget*
 gwy_app_data_window_create(GwyContainer *data)
 {
@@ -197,12 +242,29 @@ gwy_app_data_window_create(GwyContainer *data)
     return data_window;
 }
 
+/**
+ * gwy_app_graph_window_get_current:
+ *
+ * Returns the currently active graph window.
+ *
+ * Returns: The active graph window as a #GtkWidget.
+ *          May return %NULL if none is currently active.
+ **/
 GtkWidget*
 gwy_app_graph_window_get_current(void)
 {
     return current_graphs ? current_graphs->data : NULL;
 }
 
+/**
+ * gwy_app_graph_window_set_current:
+ * @window: A graph window.
+ * 
+ * Makes a graph window active.
+ *
+ * Eventually adds @window it to the graph window list if it isn't present
+ * there.
+ **/
 void
 gwy_app_graph_window_set_current(GtkWidget *window)
 {
@@ -212,8 +274,6 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     GList *item;
 
     gwy_debug("%p", window);
-
-    /*g_return_if_fail(GWY_IS_GRAPH(graph));*/
 
     item = g_list_find(current_graphs, window);
     if (item) {
@@ -226,6 +286,14 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     gwy_app_toolbox_update_state(&sens_data);
 }
 
+/**
+ * gwy_app_graph_window_remove:
+ * @window: A data window.
+ *
+ * Removes the graph window @window from the list of graph windows.
+ *
+ * All associated structures are freed.
+ **/
 void
 gwy_app_graph_window_remove(GtkWidget *window)
 {
@@ -249,6 +317,16 @@ gwy_app_graph_window_remove(GtkWidget *window)
         gwy_app_toolbox_update_state(&sens_data);
 }
 
+/**
+ * gwy_app_graph_window_create:
+ * @graph: A #GwyGraph;
+ *
+ * Creates a new graph window showing @data and does some basic setup.
+ *
+ * Also calls gtk_window_present() on it.
+ *
+ * Returns: The newly created graph window.
+ **/
 GtkWidget*
 gwy_app_graph_window_create(GtkWidget *graph)
 {
@@ -258,8 +336,8 @@ gwy_app_graph_window_create(GtkWidget *graph)
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_container_set_border_width (GTK_CONTAINER (window), 0);
 
-    if (graph == NULL) graph = gwy_graph_new();
-
+    if (graph == NULL)
+        graph = gwy_graph_new();
 
     g_signal_connect(window, "focus-in-event",
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
@@ -393,6 +471,15 @@ gwy_app_data_window_add(GwyDataWindow *window)
     current_data = g_list_append(current_data, window);
 }
 
+/**
+ * gwy_app_data_window_foreach:
+ * @func: A function to call on each data window.
+ * @user_data: Data to pass to @func.
+ *
+ * Calls @func on each data window, in no particular order.
+ *
+ * The function should not create or remove data windows.
+ **/
 void
 gwy_app_data_window_foreach(GFunc func,
                             gpointer user_data)
@@ -666,6 +753,15 @@ compare_data_window_data_cb(GwyDataWindow *window,
     return gwy_data_window_get_data(window) != data;
 }
 
+/**
+ * gwy_app_clean_up_data:
+ * @data: A data container.
+ *
+ * Cleans-up a data container.
+ *
+ * XXX: Generally, it should remove some things that you might not want to
+ * copy to the new data window.  Currently it removes selection.
+ **/
 void
 gwy_app_clean_up_data(GwyContainer *data)
 {
@@ -750,6 +846,13 @@ gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
 }
 
+/**
+ * gwy_app_main_window_get:
+ *
+ * Returns Gwyddion main application window (toolbox).
+ *
+ * Returns: The Gwyddion toolbox.
+ **/
 GtkWidget*
 gwy_app_main_window_get(void)
 {
@@ -758,6 +861,16 @@ gwy_app_main_window_get(void)
     return gwy_app_main_window;
 }
 
+/**
+ * gwy_app_main_window_set:
+ * @window: A window.
+ *
+ * Sets Gwyddion main application window (toolbox) for
+ * gwy_app_main_window_get().
+ *
+ * This function can be called only once and should be called at Gwyddion
+ * startup so, ignore it.
+ **/
 void
 gwy_app_main_window_set(GtkWidget *window)
 {
