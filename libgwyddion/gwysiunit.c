@@ -141,15 +141,14 @@ gwy_si_unit_serialize(GObject *obj,
 
 static GObject*
 gwy_si_unit_deserialize(const guchar *buffer,
-                           gsize size,
-                           gsize *position)
+                        gsize size,
+                        gsize *position)
 {
-    gchar *unitstr=NULL;
-
-    GwySIUnit *si_unit;
+    gchar *unitstr = NULL;
     GwySerializeSpec spec[] = {
         { 's', "unitstr", &unitstr, NULL, },
     };
+    GObject *si_unit;
 
     gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
@@ -160,15 +159,14 @@ gwy_si_unit_deserialize(const guchar *buffer,
         return NULL;
     }
 
-    /* don't allocate large amount of memory just to immediately free it */
-    si_unit = (GwySIUnit*)gwy_si_unit_new(unitstr);
+    si_unit = gwy_si_unit_new(unitstr);
 
-    return (GObject*)si_unit;
+    return si_unit;
 }
 
 
-static
-GObject* gwy_si_unit_duplicate (GObject *object)
+static GObject*
+gwy_si_unit_duplicate(GObject *object)
 {
     GwySIUnit *si_unit;
     GObject *duplicate;
