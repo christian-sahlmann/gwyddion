@@ -568,6 +568,16 @@ static void
 suppress_changed_cb(GObject *item, Fftf1dArgs *args)
 {
     args->suppress = GPOINTER_TO_INT(g_object_get_data(item, "suppress-type"));
+    if (args->suppress == GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD)
+    {
+        args->view_type = GWY_FFTF_1D_VIEW_UNMARKED; 
+        gwy_option_menu_set_history(pcontrols->menu_view_type,
+                                    "view-type",
+                                    args->view_type);
+        gtk_widget_set_sensitive(pcontrols->menu_view_type, FALSE);
+    }
+    else
+        gtk_widget_set_sensitive(pcontrols->menu_view_type, TRUE);
     update_view(pcontrols, args);
 }
 
@@ -608,6 +618,10 @@ fftf_1d_sanitize_args(Fftf1dArgs *args)
     args->direction = MIN(args->direction, GTK_ORIENTATION_VERTICAL);
     args->interpolation = MIN(args->interpolation, GWY_INTERPOLATION_NNA);
     args->update = !!args->update;
+
+    if (args->suppress == GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD)
+       args->view_type = GWY_FFTF_1D_VIEW_UNMARKED;
+                        
 }
 
 static void
