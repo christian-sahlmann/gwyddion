@@ -40,10 +40,14 @@ pixmapdata_DATA = \
 	gwy_less-24.png \
 	gwy_light_rotate-24.png \
 	gwy_line_correction-24.png \
+	gwy_mask_add-24.png \
 	gwy_mask_grow-24.png \
+	gwy_mask_intersect-24.png \
 	gwy_mask_invert-24.png \
 	gwy_mask_remove-24.png \
+	gwy_mask_set-24.png \
 	gwy_mask_shrink-24.png \
+	gwy_mask_subtract-24.png \
 	gwy_more-24.png \
 	gwy_none-24.png \
 	gwy_pointer-24.png \
