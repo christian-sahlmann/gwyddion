@@ -220,7 +220,9 @@ main(int argc, char *argv[])
     gwy_app_settings_get();
     gwy_module_register_modules(module_dirs);
     gwy_app_create_toolbox();
-    /* FIXME: this doesn't put files into the recent files list */
+    /* FIXME: this doesn't put files into the recent files list
+     * solution: move to file.c, and add initial recent-file menu creation
+     * there, too */
     for (i = 1; i < argc; i++) {
         if (!(data = gwy_file_load(argv[i])))
             continue;

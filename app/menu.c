@@ -30,9 +30,6 @@
 #include "about.h"
 #include "menu.h"
 
-static GQuark sensitive_key = 0;
-static GQuark sensitive_state_key = 0;
-
 #define set_sensitive(item, sens) \
     g_object_set_qdata(G_OBJECT(item), sensitive_key, \
                        GUINT_TO_POINTER(sens))
@@ -55,6 +52,11 @@ static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 GtkItemFactory **factory);
 static void       gwy_app_meta_browser         (void);
 static void       destroy_app_window           (void);
+
+static GQuark sensitive_key = 0;
+static GQuark sensitive_state_key = 0;
+
+static GtkWidget *recent_files_menu = NULL;
 
 static GtkWidget*
 gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
@@ -139,6 +141,8 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     };
     static GtkItemFactoryEntry menu_items2[] = {
         { "/File/_Close", "<control>W", gwy_app_file_close_cb, 0, "<StockItem>", GTK_STOCK_CLOSE },
+        { "/File/Open _Recent", NULL, NULL, 0, "<Branch>", NULL },
+        { "/File/Open Recent/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
         { "/File/_Quit...", "<control>Q", destroy_app_window, 0, "<StockItem>", GTK_STOCK_QUIT },
     };
@@ -173,6 +177,9 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     gwy_menu_set_flags_recursive(item, &sens_data);
 
     gwy_menu_set_sensitive_recursive(menu, &sens_data);
+
+    recent_files_menu = gtk_item_factory_get_widget(item_factory,
+                                                    "<file>/File/Open Recent");
 
     return alignment;
 }
@@ -308,6 +315,21 @@ gwy_app_run_process_func_cb(gchar *name)
 void
 gwy_menu_recent_files_update(GList *recent_files)
 {
+    GList *l, *c;
+    gchar *s;
+    gint i;
+
+    c = GTK_MENU_SHELL(recent_files_menu)->children;
+    while (c) {
+        gwy_debug("%s: %s", __FUNCTION__,
+                  g_type_name(G_TYPE_FROM_INSTANCE(c->data)));
+        c = g_list_next(c);
+    }
+    for (i = 0, l = recent_files;
+         l && i < gwy_app_n_recent_files;
+         l = g_list_next(l), i++) {
+
+    }
 }
 
 static void
