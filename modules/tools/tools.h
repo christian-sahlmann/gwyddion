@@ -22,18 +22,11 @@
 #define __GWY_TOOLS_H__
 
 #include <libgwydgets/gwydatawindow.h>
+#include <libgwymodule/gwymodule-tool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-typedef enum {
-    GWY_TOOL_SWITCH_WINDOW,
-    GWY_TOOL_SWITCH_TOOL
-} GwyToolSwitchEvent;
-
-typedef void (*GwyToolUseFunc)(GwyDataWindow *data_window,
-                               GwyToolSwitchEvent reason);
 
 void gwy_tool_crop_use    (GwyDataWindow *data_window,
                            GwyToolSwitchEvent reason);
