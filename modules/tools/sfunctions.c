@@ -167,13 +167,10 @@ dialog_create(GwyUnitoolState *state)
     load_args(settings, controls);
 
     dialog = gtk_dialog_new_with_buttons(_("Statistical functions"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CLEAR,
-                                         GWY_UNITOOL_RESPONSE_UNSELECT,
-                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
-                                         _("_Hide"), GTK_RESPONSE_CLOSE,
-                                         NULL);
+                                         NULL, 0, NULL);
+    gwy_unitool_dialog_add_button_clear(dialog);
+    gwy_unitool_dialog_add_button_hide(dialog);
+    gwy_unitool_dialog_add_button_apply(dialog);
 
     table = gtk_table_new(2, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);

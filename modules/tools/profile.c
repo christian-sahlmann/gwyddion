@@ -151,14 +151,10 @@ dialog_create(GwyUnitoolState *state)
     settings = gwy_app_settings_get();
     load_args(settings, controls);
 
-    dialog = gtk_dialog_new_with_buttons(_("Extract profile"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CLEAR,
-                                         GWY_UNITOOL_RESPONSE_UNSELECT,
-                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
-                                         _("_Hide"), GTK_RESPONSE_CLOSE,
-                                         NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Extract profile"), NULL, 0, NULL);
+    gwy_unitool_dialog_add_button_clear(dialog);
+    gwy_unitool_dialog_add_button_hide(dialog);
+    gwy_unitool_dialog_add_button_apply(dialog);
 
     table = gtk_table_new(2, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -314,6 +310,7 @@ dialog_update(GwyUnitoolState *state,
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
+    /* TODO: use Unitool's value format */
     z_max = gwy_data_field_get_max(dfield);
     z_mag = pow(10, 3*ROUND(((gint)(log10(fabs(z_max))))/3.0) - 3);
     z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
@@ -345,6 +342,7 @@ dialog_update(GwyUnitoolState *state,
     }
     update_labels(state);
     g_free(z_unit);
+    gwy_unitool_apply_set_sensitive(state, nselected);
 }
 
 static void

@@ -160,16 +160,13 @@ dialog_create(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
     load_args(settings, controls);
-    
+
     units = state->coord_format;
 
-    dialog = gtk_dialog_new_with_buttons(_("Filtering"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
-                                         _("_Hide"), GTK_RESPONSE_CLOSE,
-                                         NULL);
- 
+    dialog = gtk_dialog_new_with_buttons(_("Filters"), NULL, 0, NULL);
+    gwy_unitool_dialog_add_button_hide(dialog);
+    gwy_unitool_dialog_add_button_apply(dialog);
+
     frame = gwy_unitool_windowname_frame_create(state);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
@@ -226,45 +223,45 @@ dialog_create(GwyUnitoolState *state)
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Filter:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
- 
+
     label = gtk_label_new(_("type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
-  
+
     controls->filter
         = gwy_option_menu_filter(G_CALLBACK(filter_changed_cb),
                                     controls, controls->fil);
 
     gtk_table_attach(GTK_TABLE(table2), controls->filter, 1, 2, 1, 2, GTK_FILL, 0, 2, 2);
-    
+
     label = gtk_label_new(_("direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 2, 3, GTK_FILL, 0, 2, 2);
-     
+
     controls->direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
                                                  controls, controls->dir);
 
     gtk_table_attach(GTK_TABLE(table2), controls->direction, 1, 2, 2, 3, GTK_FILL, 0, 2, 2);
-    
+
     label = gtk_label_new(_("size:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
-   
-    controls->size = GTK_WIDGET(gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0));
-    gwy_table_attach_spinbutton(table2, 3, "", "px", controls->size);
 
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);    
-   
-    controls->update = gtk_check_button_new_with_label("update preview dynamically"); 
+    controls->size = GTK_WIDGET(gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0));
+    gwy_table_attach_spinbutton(table2, 3, "", "px", GTK_OBJECT(controls->size));
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);
+
+    controls->update = gtk_check_button_new_with_label("update preview dynamically");
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->update,
                        FALSE, FALSE, 0);
-    gtk_toggle_button_set_active(controls->update, controls->upd);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update), controls->upd);
     g_signal_connect(controls->update, "toggled", G_CALLBACK(update_changed_cb), controls);
 
- 
-    
-    
+
+
+
     return dialog;
 }
 
@@ -282,10 +279,10 @@ apply(GwyUnitoolState *state)
 
     gwy_debug("");
     layer = GWY_DATA_VIEW_LAYER(state->layer);
-    
+
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     gwy_container_remove_by_name(data, "/0/show");
-    
+
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
@@ -294,46 +291,44 @@ apply(GwyUnitoolState *state)
 
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 
-    if (is_selected) 
-    {
+    if (is_selected) {
         ulcol = (gint)gwy_data_field_rtoi(dfield, MIN(xy[0], xy[2]));
         ulrow = (gint)gwy_data_field_rtoj(dfield, MIN(xy[1], xy[3]));
         brcol = (gint)gwy_data_field_rtoi(dfield, MAX(xy[0], xy[2]));
         brrow = (gint)gwy_data_field_rtoj(dfield, MAX(xy[1], xy[3]));
     }
-    else
-    {
+    else {
         ulcol = 0;
         ulrow = 0;
         brcol = gwy_data_field_get_xres(dfield);
         brrow = gwy_data_field_get_yres(dfield);
     }
-  
+
     gwy_app_undo_checkpoint(data, "/0/data");
-    
+
     switch (controls->fil){
         case GWY_FILTER_MEAN:
-        gwy_data_field_filter_mean(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_mean(dfield, controls->siz, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_MEDIAN:
-        gwy_data_field_filter_median(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_median(dfield, controls->siz, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_CONSERVATIVE:
-        gwy_data_field_filter_conservative(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_conservative(dfield, controls->siz, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_LAPLACIAN:
-        gwy_data_field_filter_laplacian(dfield, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_laplacian(dfield, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_SOBEL:
-        gwy_data_field_filter_sobel(dfield, controls->dir, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_sobel(dfield, controls->dir, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_PREWITT:
-        gwy_data_field_filter_prewitt(dfield, controls->dir, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_prewitt(dfield, controls->dir, ulcol, ulrow, brcol, brrow);
         break;
 
         default:
@@ -342,7 +337,7 @@ apply(GwyUnitoolState *state)
     }
 
    gwy_vector_layer_unselect(state->layer);
-   gwy_data_view_update(GWY_DATA_VIEW(layer->parent)); 
+   gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
 }
 
 static void
@@ -389,21 +384,19 @@ dialog_update(GwyUnitoolState *state,
 
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 
-    if (is_selected) 
-    {
+    if (is_selected) {
         ulcol = (gint)gwy_data_field_rtoi(dfield, MIN(xy[0], xy[2]));
         ulrow = (gint)gwy_data_field_rtoj(dfield, MIN(xy[1], xy[3]));
         brcol = (gint)gwy_data_field_rtoi(dfield, MAX(xy[0], xy[2]));
         brrow = (gint)gwy_data_field_rtoj(dfield, MAX(xy[1], xy[3]));
     }
-    else
-    {
+    else {
         ulcol = 0;
         ulrow = 0;
         brcol = gwy_data_field_get_xres(dfield);
         brrow = gwy_data_field_get_yres(dfield);
     }
-   
+
 
     if ((old_ulcol != ulcol) || (old_ulrow != ulrow) || (old_brcol != brcol) || (old_brrow != brrow))
     {
@@ -413,10 +406,10 @@ dialog_update(GwyUnitoolState *state,
         old_brcol = brcol;
         old_brrow = brrow;
     }
-  
+
     if (state_changed)
     {
-       if (gwy_container_contains_by_name(data, "/0/show")) 
+       if (gwy_container_contains_by_name(data, "/0/show"))
        {
           printf("Presentation found\n");
           shadefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -435,27 +428,27 @@ dialog_update(GwyUnitoolState *state,
        }
      switch (controls->fil){
         case GWY_FILTER_MEAN:
-        gwy_data_field_filter_mean(shadefield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_mean(shadefield, controls->siz, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_MEDIAN:
-        gwy_data_field_filter_median(shadefield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_median(shadefield, controls->siz, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_CONSERVATIVE:
-        gwy_data_field_filter_conservative(shadefield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_conservative(shadefield, controls->siz, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_LAPLACIAN:
-        gwy_data_field_filter_laplacian(shadefield, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_laplacian(shadefield, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_SOBEL:
-        gwy_data_field_filter_sobel(shadefield, controls->dir, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_sobel(shadefield, controls->dir, ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_PREWITT:
-        gwy_data_field_filter_prewitt(shadefield, controls->dir, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_prewitt(shadefield, controls->dir, ulcol, ulrow, brcol, brrow);
         break;
 
         default:
@@ -475,20 +468,20 @@ dialog_abandon(GwyUnitoolState *state)
     GwyContainer *data;
     ToolControls *controls;
     GwyDataViewLayer *layer;
-   
+
     settings = gwy_app_settings_get();
-    
+
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-            
+
     save_args(settings, controls);
     gwy_container_remove_by_name(data, "/0/show");
-    
+
     memset(state->user_data, 0, sizeof(ToolControls));
 }
 
-static void       
+static void
 direction_changed_cb (GObject *item, ToolControls *controls)
 {
     gwy_debug("");
@@ -504,7 +497,7 @@ filter_changed_cb (GObject *item, ToolControls *controls)
     controls->fil = GPOINTER_TO_INT(g_object_get_data(item, "filter-type"));
     state_changed = 1;
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
-}    
+}
 
 static void
 update_changed_cb (GtkToggleButton *button, ToolControls *controls)
@@ -556,7 +549,7 @@ load_args(GwyContainer *container, ToolControls *controls)
                                                           fil_key);
     else
         controls->fil = GWY_FILTER_MEAN;
-    
+
     if (gwy_container_contains_by_name(container, dir_key))
         controls->dir = gwy_container_get_int32_by_name(container,
                                                           dir_key);

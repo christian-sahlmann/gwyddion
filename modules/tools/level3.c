@@ -133,12 +133,10 @@ dialog_create(GwyUnitoolState *state)
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
 
-    dialog = gtk_dialog_new_with_buttons(_("Level"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
-                                         _("_Hide"), GTK_RESPONSE_CLOSE,
-                                         NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Level"), NULL, 0, NULL);
+    gwy_unitool_dialog_add_button_clear(dialog);
+    gwy_unitool_dialog_add_button_hide(dialog);
+    gwy_unitool_dialog_add_button_apply(dialog);
 
     frame = gwy_unitool_windowname_frame_create(state);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
@@ -168,10 +166,12 @@ dialog_create(GwyUnitoolState *state)
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+1, i+2, 0, 0, 2, 2);
         label = controls->coords[2*i] = gtk_label_new("");
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 1, 2, i+1, i+2, 0, 0, 2, 2);
+        gtk_table_attach(GTK_TABLE(table), label, 1, 2, i+1, i+2,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
         label = controls->coords[2*i + 1] = gtk_label_new("");
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 2, 3, i+1, i+2, 0, 0, 2, 2);
+        gtk_table_attach(GTK_TABLE(table), label, 2, 3, i+1, i+2,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
         label = controls->values[i] = gtk_label_new("");
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+1, i+2,
@@ -239,6 +239,7 @@ dialog_update(GwyUnitoolState *state,
                 gtk_label_set_text(GTK_LABEL(controls->values[i/2]), "");
         }
     }
+    gwy_unitool_apply_set_sensitive(state, nselected == 3);
 }
 
 static void

@@ -121,12 +121,9 @@ dialog_create(GwyUnitoolState *state)
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
 
-    dialog = gtk_dialog_new_with_buttons(_("Show value"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("_Hide"), GTK_RESPONSE_CLOSE,
-                                         NULL);
- 
+    dialog = gtk_dialog_new_with_buttons(_("Show value"), NULL, 0, NULL);
+    gwy_unitool_dialog_add_button_hide(dialog);
+
     frame = gwy_unitool_windowname_frame_create(state);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
