@@ -20,10 +20,13 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+
+#ifndef G_OS_WIN32
+#include <unistd.h>
+#endif
 
 #define EXTENSION ".gwy"
 #define MAGIC "GWYO"

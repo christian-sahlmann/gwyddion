@@ -25,7 +25,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <png.h>
 #include <jpeglib.h>
 #include <tiffio.h>
@@ -37,6 +36,10 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
 #include <app/app.h>
+
+#ifndef G_OS_WIN32
+#include <unistd.h>
+#endif
 
 #define BITS_PER_SAMPLE 8
 
