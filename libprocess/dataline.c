@@ -273,7 +273,7 @@ gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
                                             interpolation);
     }
     gwy_data_line_free(&b);
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 
@@ -299,7 +299,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
     for (i = from; i < to; i++)
         a->data[i-from] = b.data[i];
     gwy_data_line_free(&b);
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 
     return TRUE;
 }
@@ -332,7 +332,7 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     gdouble w1, w2, w3, w4;
     gdouble rest = x - (gdouble)l;
 
-    gwy_debug("%s", __FUNCTION__);
+    /*gwy_debug("%s", __FUNCTION__);*/
     g_return_val_if_fail(x >= 0 && x < a->res, 0.0);
 
     /*simple (and fast) methods*/
@@ -411,7 +411,7 @@ gdouble gwy_data_line_get_real(GwyDataLine *a)
 void gwy_data_line_set_real(GwyDataLine *a, gdouble real)
 {
     a->real = real;
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 gdouble
@@ -440,7 +440,7 @@ gwy_data_line_set_val(GwyDataLine *a, gint i, gdouble value)
     g_return_val_if_fail(i >= 0 && i < a->res, FALSE);
 
     a->data[i] = value;
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 
     return TRUE;
 }
@@ -483,7 +483,7 @@ gwy_data_line_fill(GwyDataLine *a, gdouble value)
 
     for (i = 0; i < a->res; i++)
         a->data[i] = value;
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 void
@@ -493,7 +493,7 @@ gwy_data_line_add(GwyDataLine *a, gdouble value)
 
     for (i = 0; i < a->res; i++)
         a->data[i] += value;
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 void
@@ -503,7 +503,7 @@ gwy_data_line_multiply(GwyDataLine *a, gdouble value)
 
     for (i = 0; i < a->res; i++)
         a->data[i] *= value;
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 void
@@ -518,7 +518,7 @@ gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value)
 
     for (i = from; i < to; i++)
         a->data[i] = value;
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 void
@@ -533,7 +533,7 @@ gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value)
 
     for (i = from; i < to; i++)
         a->data[i] += value;
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 void
@@ -548,7 +548,7 @@ gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value)
 
     for (i = from; i < to; i++)
         a->data[i] *= value;
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 gdouble
@@ -708,7 +708,7 @@ gwy_data_line_threshold(GwyDataLine *a,
             tot++;
         }
     }
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
     return tot;
 }
 
@@ -732,21 +732,20 @@ gwy_data_line_part_threshold(GwyDataLine *a,
             tot++;
         }
     }
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
     return tot;
 }
 
 void
-gwy_data_line_line_coefs(GwyDataLine *a, gdouble *av, gdouble *bv)
+gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
 {
     gint i;
-    gdouble sumxixi=0;
-    gdouble sumxi=0;
-    gdouble sumsixi=0;
-    gdouble sumsi=0;
+    gdouble sumxixi = 0.0;
+    gdouble sumxi = 0.0;
+    gdouble sumsixi = 0.0;
+    gdouble sumsi = 0.0;
     gdouble dkap;
 
-    gwy_debug("%s", __FUNCTION__);
     for (i = 0; i < a->res; i++) {
         dkap = (i+1);
         sumsi += a->data[i];
@@ -754,8 +753,11 @@ gwy_data_line_line_coefs(GwyDataLine *a, gdouble *av, gdouble *bv)
         sumxixi += dkap*dkap;
         sumsixi += dkap*a->data[i];
     }
-    *bv = (sumsixi*a->res - sumsi*sumxi) / (sumxixi*a->res - sumxi*sumxi);
-    *av = (sumsi - (*bv)*sumxi)/a->res;
+
+    if (bv)
+        *bv = (sumsixi*a->res - sumsi*sumxi) / (sumxixi*a->res - sumxi*sumxi);
+    if (av)
+        *av = (sumsi - (*bv)*sumxi)/a->res;
 }
 
 void
@@ -766,7 +768,7 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
     gwy_debug("%s", __FUNCTION__);
     for (i = 0; i < a->res; i++)
         a->data[i] -= av + bv*(i+1);
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 void
@@ -830,7 +832,7 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
     /* XXX: where was this freed? */
     g_free(dx.data);
     g_free(dy.data);
-    gwy_data_line_value_changed(G_OBJECT(a));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 gdouble
@@ -901,9 +903,9 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         gwy_data_line_resample(ib, ra->res, GWY_INTERPOLATION_NONE);
 
     if (level == TRUE) {
-        gwy_data_line_line_coefs(ra, &av, &bv);
+        gwy_data_line_line_coeffs(ra, &av, &bv);
         gwy_data_line_line_level(ra, av, bv);
-        gwy_data_line_line_coefs(ia, &av, &bv);
+        gwy_data_line_line_coeffs(ia, &av, &bv);
         gwy_data_line_line_level(ia, av, bv);
     }
 
@@ -935,7 +937,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
 
         (*fft)(direction, ra, ia, rb, ib, ra->res, interpolation);
     }
-    gwy_data_line_value_changed(G_OBJECT(ra));
+    /* XXX: gwy_data_line_value_changed(G_OBJECT(ra));*/
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -236,10 +236,10 @@ void gwy_data_field_set_column(GwyDataField *a,
                                gint i);
 
 /*get 1st order plane leveling coefficients*/
-void gwy_data_field_plane_coefs(GwyDataField *a,
-                                gdouble *ap,
-                                gdouble *bp,
-                                gdouble *cp);
+void gwy_data_field_plane_coeffs(GwyDataField *a,
+                                 gdouble *ap,
+                                 gdouble *bp,
+                                 gdouble *cp);
 
 /*do 1st order plane leveling*/
 void gwy_data_field_plane_level(GwyDataField *a,

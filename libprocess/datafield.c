@@ -1290,30 +1290,40 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
 }
 
 void
-gwy_data_field_plane_coefs(GwyDataField *a,
+gwy_data_field_plane_coeffs(GwyDataField *a,
                            gdouble *ap, gdouble *bp, gdouble *cp)
 {
     gint k;
     GwyDataLine l;
-    gdouble val, buff;
+    gdouble val;
 
-    bp = cp = 0;
-
+    g_return_if_fail(GWY_IS_DATA_FIELD(a));
     gwy_data_line_alloc(&l, a->xres);
-    for (k = 0; k < a->yres; k++) {
-        gwy_data_field_get_row(a, &l, k);
-        gwy_data_line_line_coefs(&l, &buff, &val);
-        *bp += val;
-    }
-    for (k = 0; k < a->xres; k++) {
-        gwy_data_field_get_column(a, &l, k);
-        gwy_data_line_line_coefs(&l, &buff, &val);
-        *cp += val;
-    }
-    *cp /= a->xres;
-    *bp /= a->yres;
 
-    *ap = gwy_data_field_get_avg(a);
+    if (bp) {
+        gdouble b = 0.0;
+
+        for (k = 0; k < a->yres; k++) {
+            gwy_data_field_get_row(a, &l, k);
+            gwy_data_line_line_coeffs(&l, NULL, &val);
+            b += val;
+        }
+        *bp = b/a->yres;
+    }
+
+    if (cp) {
+        gdouble c = 0.0;
+
+        for (k = 0; k < a->xres; k++) {
+            gwy_data_field_get_column(a, &l, k);
+            gwy_data_line_line_coeffs(&l, NULL, &val);
+            c += val;
+        }
+        *cp = c/a->xres;
+    }
+
+    if (ap)
+        *ap = gwy_data_field_get_avg(a);
 
     gwy_data_line_free(&l);
 }

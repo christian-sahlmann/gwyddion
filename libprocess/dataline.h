@@ -111,8 +111,8 @@ gint gwy_data_line_threshold(GwyDataLine *a, gdouble threshval, gdouble bottom, 
 gint gwy_data_line_part_threshold(GwyDataLine *a, gint from, gint to, gdouble threshval, gdouble bottom, gdouble top);
 
 /*get 1st order line leveling coefficients*/
-void gwy_data_line_line_coefs(GwyDataLine *a, gdouble *av, gdouble *bv);
-void gwy_data_line_part_line_coefs(GwyDataLine *a, gint from, gint to, gdouble *av, gdouble *bv);
+void gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv);
+void gwy_data_line_part_line_coeffs(GwyDataLine *a, gint from, gint to, gdouble *av, gdouble *bv);
 
 /*do 1st order line leveling*/
 void gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv);
