@@ -20,6 +20,7 @@ BuildPrereq: gtk-doc >= 1.0
 BuildPrereq: python >= 2.2
 BuildPrereq: perl >= 5.005
 BuildPrereq: desktop-file-utils >= 0.3
+BuildPrereq: gettext
 
 %package devel
 Summary: Headers, libraries and tools for Gwyddion module development.
@@ -110,6 +111,7 @@ desktop-file-install --vendor= --delete-original  \
 %{_libdir}/libgwymodule.so.*
 %{_libdir}/libgwyprocess.so.*
 %{_datadir}/applications/*
+%{_datadir}/locale/*/LC_MESSAGES/*.mo
 
 %files devel
 %defattr(-,root,root)
