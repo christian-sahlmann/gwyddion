@@ -387,15 +387,10 @@ static GtkWidget*
 find_repeat_last_item(GtkWidget *menu,
                       const gchar *key)
 {
-    GtkWidget *item;
     GQuark quark;
     GList *l;
 
     quark = g_quark_from_string(key);
-    while (GTK_IS_BIN(menu))
-        menu = GTK_BIN(menu)->child;
-    item = GTK_WIDGET(GTK_MENU_SHELL(menu)->children->data);
-    menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(item));
     for (l = GTK_MENU_SHELL(menu)->children; l; l = g_list_next(l)) {
         if (g_object_get_qdata(G_OBJECT(l->data), quark))
             break;
