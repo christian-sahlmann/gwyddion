@@ -64,6 +64,12 @@ typedef enum {
     GWY_WSHED_FINISHED     = 5
 } GwyWatershedStateType;
 
+typedef enum {
+    GWY_COMP_INIT         = 0, /*start initializations*/
+    GWY_COMP_ITERATE      = 1, /*locate steps*/ 
+    GWY_COMP_FINISHED     = 2
+} GwyComputationStateType;
+
 typedef struct {
     GwyWatershedStateType state;
     gint internal_i;
@@ -621,6 +627,29 @@ void gwy_data_field_correlate(GwyDataField *data_field,
                                   GwyDataField *score);
 
 
+void gwy_data_field_correlate_iteration(GwyDataField *data_field,
+                                        GwyDataField *kernel_field,
+                                        GwyDataField *score,
+                                        GwyComputationStateType *state, 
+                                        gint iteration);
+                              
+
+void gwy_data_field_fractal_partitioning(GwyDataField *data_field, 
+                                         GwyDataLine *xresult, 
+                                         GwyDataLine *yresult, 
+                                         GwyInterpolationType interpolation);
+
+void gwy_data_field_fractal_cubecounting(GwyDataField *data_field, 
+                                         GwyDataLine *xresult, 
+                                         GwyDataLine *yresult, 
+                                         GwyInterpolationType interpolation);
+
+void gwy_data_field_fractal_triangulation(GwyDataField *data_field, 
+                                         GwyDataLine *xresult, 
+                                         GwyDataLine *yresult, 
+                                         GwyInterpolationType interpolation);
+
+ 
 
 
 
