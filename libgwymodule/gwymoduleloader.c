@@ -232,13 +232,21 @@ gwy_module_do_register_module(const gchar *filename,
     GwyModuleQueryFunc query;
     gchar *modname, *s;
 
-    modname = g_path_get_basename(filename);
+    s = g_path_get_basename(filename);
+    modname = g_ascii_strdown(s, -1);
+    g_free(s);
     /* FIXME: On normal platforms module names have an extension, but if
      * it doesn't, just get over it. */
     if ((s = strchr(modname, '.')))
         *s = '\0';
     if (!*modname) {
         g_warning("File `%s' has empty module name", filename);
+        g_free(modname);
+        return NULL;
+    }
+
+    if (g_hash_table_lookup(mods, modname)) {
+        g_warning("Ignoring duplicate module `%s' (`%s')", modname, filename);
         g_free(modname);
         return NULL;
     }
@@ -287,13 +295,6 @@ gwy_module_do_register_module(const gchar *filename,
         if (!ok)
             g_warning("Module `%s' info is invalid.",
                       filename);
-    }
-
-    if (ok) {
-        ok = !g_hash_table_lookup(mods, modname);
-        if (!ok)
-            g_warning("Duplicate module `%s', keeping only the first one",
-                      modname);
     }
 
     if (ok) {
