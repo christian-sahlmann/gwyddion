@@ -20,6 +20,19 @@ static void       gwy_data_arith_entry_cb          (GtkWidget *entry,
                                                     gpointer data);
 static gboolean   gwy_data_arith_do                (void);
 
+static void       gwy_data_field_add2              (GwyDataField *dfield1,
+                                                    GwyDataField *dfield2);
+static void       gwy_data_field_substract2        (GwyDataField *dfield1,
+                                                    GwyDataField *dfield2);
+static void       gwy_data_field_multiply2         (GwyDataField *dfield1,
+                                                    GwyDataField *dfield2);
+static void       gwy_data_field_divide2           (GwyDataField *dfield1,
+                                                    GwyDataField *dfield2);
+static void       gwy_data_field_minimum2          (GwyDataField *dfield1,
+                                                    GwyDataField *dfield2);
+static void       gwy_data_field_maximum2          (GwyDataField *dfield1,
+                                                    GwyDataField *dfield2);
+
 typedef enum {
     GWY_ARITH_ADD,
     GWY_ARITH_SUBSTRACT,
@@ -422,30 +435,45 @@ gwy_data_arith_do(void)
             gtk_widget_destroy(dialog);
             return FALSE;
         }
+        if ((gwy_data_field_get_xreal(dfield1)
+             != gwy_data_field_get_xreal(dfield2))
+            || (gwy_data_field_get_yreal(dfield1)
+                != gwy_data_field_get_yreal(dfield2))) {
+            dialog = gtk_message_dialog_new(GTK_WINDOW(arith_window),
+                                            GTK_DIALOG_DESTROY_WITH_PARENT,
+                                            GTK_MESSAGE_INFO,
+                                            GTK_BUTTONS_CLOSE,
+                                            _("The real dimensions differ.\n"));
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+            return FALSE;
+        }
         data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
         switch (operation) {
             case GWY_ARITH_ADD:
-            g_warning("Implement me!?");
+            gwy_data_field_add2(dfield, dfield2);
             break;
 
             case GWY_ARITH_SUBSTRACT:
-            g_warning("Implement me!?");
+            gwy_data_field_substract2(dfield, dfield2);
             break;
 
             case GWY_ARITH_MULTIPLY:
-            g_warning("Implement me!?");
+            gwy_data_field_multiply2(dfield, dfield2);
             break;
 
             case GWY_ARITH_DIVIDE:
-            g_warning("Implement me!?");
+            gwy_data_field_divide2(dfield, dfield2);
             break;
 
             case GWY_ARITH_MAXIMUM:
-            g_warning("Implement me!?");
+            gwy_data_field_maximum2(dfield, dfield2);
             break;
 
             case GWY_ARITH_MINIMUM:
-            g_warning("Implement me!?");
+            gwy_data_field_minimum2(dfield, dfield2);
             break;
 
             default:
@@ -460,6 +488,128 @@ gwy_data_arith_do(void)
 
     g_assert_not_reached();
     return FALSE;
+}
+
+static void
+gwy_data_field_add2(GwyDataField *dfield1,
+                    GwyDataField *dfield2)
+{
+    gdouble *p, *q;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield1));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield2));
+    xres = gwy_data_field_get_xres(dfield1);
+    yres = gwy_data_field_get_yres(dfield1);
+    g_return_if_fail(xres == gwy_data_field_get_xres(dfield2));
+    g_return_if_fail(yres == gwy_data_field_get_yres(dfield2));
+
+    p = dfield1->data;
+    q = dfield2->data;
+    for (i = xres*yres; i; i--, p++, q++)
+        *p += *q;
+}
+
+static void
+gwy_data_field_substract2(GwyDataField *dfield1,
+                          GwyDataField *dfield2)
+{
+    gdouble *p, *q;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield1));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield2));
+    xres = gwy_data_field_get_xres(dfield1);
+    yres = gwy_data_field_get_yres(dfield1);
+    g_return_if_fail(xres == gwy_data_field_get_xres(dfield2));
+    g_return_if_fail(yres == gwy_data_field_get_yres(dfield2));
+
+    p = dfield1->data;
+    q = dfield2->data;
+    for (i = xres*yres; i; i--, p++, q++)
+        *p -= *q;
+}
+
+static void
+gwy_data_field_multiply2(GwyDataField *dfield1,
+                         GwyDataField *dfield2)
+{
+    gdouble *p, *q;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield1));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield2));
+    xres = gwy_data_field_get_xres(dfield1);
+    yres = gwy_data_field_get_yres(dfield1);
+    g_return_if_fail(xres == gwy_data_field_get_xres(dfield2));
+    g_return_if_fail(yres == gwy_data_field_get_yres(dfield2));
+
+    p = dfield1->data;
+    q = dfield2->data;
+    for (i = xres*yres; i; i--, p++, q++)
+        *p *= *q;
+}
+
+static void
+gwy_data_field_divide2(GwyDataField *dfield1,
+                       GwyDataField *dfield2)
+{
+    gdouble *p, *q;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield1));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield2));
+    xres = gwy_data_field_get_xres(dfield1);
+    yres = gwy_data_field_get_yres(dfield1);
+    g_return_if_fail(xres == gwy_data_field_get_xres(dfield2));
+    g_return_if_fail(yres == gwy_data_field_get_yres(dfield2));
+
+    p = dfield1->data;
+    q = dfield2->data;
+    for (i = xres*yres; i; i--, p++, q++)
+        *p /= *q;
+}
+
+static void
+gwy_data_field_minimum2(GwyDataField *dfield1,
+                        GwyDataField *dfield2)
+{
+    gdouble *p, *q;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield1));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield2));
+    xres = gwy_data_field_get_xres(dfield1);
+    yres = gwy_data_field_get_yres(dfield1);
+    g_return_if_fail(xres == gwy_data_field_get_xres(dfield2));
+    g_return_if_fail(yres == gwy_data_field_get_yres(dfield2));
+
+    p = dfield1->data;
+    q = dfield2->data;
+    for (i = xres*yres; i; i--, p++, q++)
+        if (*p > *q)
+            *p = *q;
+}
+
+static void
+gwy_data_field_maximum2(GwyDataField *dfield1,
+                        GwyDataField *dfield2)
+{
+    gdouble *p, *q;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield1));
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield2));
+    xres = gwy_data_field_get_xres(dfield1);
+    yres = gwy_data_field_get_yres(dfield1);
+    g_return_if_fail(xres == gwy_data_field_get_xres(dfield2));
+    g_return_if_fail(yres == gwy_data_field_get_yres(dfield2));
+
+    p = dfield1->data;
+    q = dfield2->data;
+    for (i = xres*yres; i; i--, p++, q++)
+        if (*p < *q)
+            *p = *q;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
