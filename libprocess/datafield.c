@@ -2147,6 +2147,7 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
  * line is allready allocated.
  *
  * Returns: true at success
+ * Since 1.2 
  **/
 gboolean
 gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
@@ -4264,6 +4265,7 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
  * Computes surface area within given rectangle
  *
  * Returns: surface area (in real units)
+ * Since 1.1
  **/
 static gdouble
 square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
