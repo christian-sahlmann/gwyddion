@@ -18,12 +18,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <libgwyddion/gwymacros.h>
+
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 
 #include <libprocess/datafield.h>
-#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "gwydgets.h"
 
@@ -89,7 +90,7 @@ gwy_data_window_get_type(void)
             (GInstanceInitFunc)gwy_data_window_init,
             NULL,
         };
-        gwy_debug("");
+        gwy_debug(" ");
         gwy_data_window_type = g_type_register_static(GTK_TYPE_WINDOW,
                                                       GWY_DATA_WINDOW_TYPE_NAME,
                                                       &gwy_data_window_info,
@@ -105,7 +106,7 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     object_class = (GtkObjectClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
@@ -135,7 +136,7 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
 static void
 gwy_data_window_init(GwyDataWindow *data_window)
 {
-    gwy_debug("");
+    gwy_debug(" ");
 
     data_window->data_view = NULL;
     data_window->hruler = NULL;
@@ -162,8 +163,10 @@ gwy_data_window_finalize(GObject *object)
     g_return_if_fail(GWY_IS_DATA_WINDOW(object));
 
     data_window = GWY_DATA_WINDOW(object);
-    g_free(data_window->coord_format);
-    g_free(data_window->value_format);
+    if (data_window->coord_format)
+        gwy_si_unit_value_format_free(data_window->coord_format);
+    if (data_window->value_format)
+        gwy_si_unit_value_format_free(data_window->value_format);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -188,7 +191,7 @@ gwy_data_window_new(GwyDataView *data_view)
     GwyPalette *palette;
     GtkWidget *vbox, *hbox;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     data_window = (GwyDataWindow*)g_object_new(GWY_TYPE_DATA_WINDOW, NULL);
     gtk_window_set_wmclass(GTK_WINDOW(data_window), "data",
@@ -365,7 +368,7 @@ gwy_data_window_lame_resize(GwyDataWindow *data_window)
                    view_req;
     gint width, height;
 
-    gwy_debug("");
+    gwy_debug(" ");
     gtk_widget_get_child_requisition(data_window->hruler, &hruler_req);
     gtk_widget_get_child_requisition(data_window->vruler, &vruler_req);
     gtk_widget_get_child_requisition(data_window->statusbar, &statusbar_req);
@@ -508,7 +511,7 @@ gwy_data_window_update_units(GwyDataWindow *data_window)
     GwyDataField *dfield;
     GwyContainer *data;
 
-    gwy_debug("");
+    gwy_debug(" ");
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
@@ -560,14 +563,15 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
         gwy_debug("xreal = %g, yreal = %g, xr = %g, yr = %g, xi = %d, yi = %d",
-                gwy_data_field_get_xreal(dfield),
-                gwy_data_field_get_yreal(dfield),
-                xreal, yreal, x, y);
+                  gwy_data_field_get_xreal(dfield),
+                  gwy_data_field_get_yreal(dfield),
+                  xreal, yreal, x, y);
         value = gwy_data_field_get_dval_real(dfield, xreal, yreal,
-                                            GWY_INTERPOLATION_ROUND);
+                                             GWY_INTERPOLATION_ROUND);
     }
     else
         xreal = yreal = value = 0.0;
+
     g_snprintf(label, sizeof(label), "(%.*f%s%s, %.*f%s%s): %.*f%s%s",
                data_window->coord_format->precision,
                xreal/data_window->coord_format->magnitude,
@@ -726,7 +730,7 @@ gwy_data_window_set_ul_corner_widget(GwyDataWindow *data_window,
 static void
 gwy_data_window_zoom_changed(GwyDataWindow *data_window)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     gwy_data_window_update_title(data_window);
 }
@@ -798,6 +802,7 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     GwyDataField *dfield;
     gdouble min, max;
 
+    gwy_debug(" ");
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
