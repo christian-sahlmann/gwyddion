@@ -25,6 +25,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwysiunit.h>
 #include <libgwydgets/gwydgets.h>
 #include "gwyvalunit.h"
 
@@ -40,6 +41,10 @@ static void     gwy_val_unit_realize              (GtkWidget *widget);
 static void     gwy_val_unit_unrealize            (GtkWidget *widget);
 static void     gwy_val_unit_size_allocate        (GtkWidget *widget,
                                                    GtkAllocation *allocation);
+static void     gwy_val_unit_value_changed        (GtkSpinButton *spinbutton,
+                                                   GwyValUnit *val_unit);
+static void     gwy_val_unit_unit_changed         (GObject *item,
+                                                   GwyValUnit *val_unit);
 
 /* Local data */
 static GtkWidgetClass *parent_class = NULL;
@@ -102,77 +107,10 @@ gwy_val_unit_init(GwyValUnit *val_unit)
     gwy_debug("");
 
   
-    /*
-    frame = gtk_frame_new("Preview");
-    gtk_container_set_border_width(GTK_CONTAINER(frame), 4);
-    val_unit->entry = GTK_ENTRY(gtk_entry_new());
-    gtk_label_set_mnemonic_widget(GTK_LABEL(lab1), GTK_WIDGET(val_unit->entry));
-    val_unit->label = GTK_LABEL(gtk_label_new(" "));
-    val_unit->entities = GTK_COMBO(gtk_combo_new());
-    lower = gwy_image_button_new_from_stock(GWY_STOCK_SUBSCRIPT);
-    upper = gwy_image_button_new_from_stock(GWY_STOCK_SUPERSCRIPT);
-    bold = gwy_image_button_new_from_stock(GWY_STOCK_BOLD);
-    italic = gwy_image_button_new_from_stock(GWY_STOCK_ITALIC);
-    add = gtk_button_new_with_mnemonic("A_dd symbol");
-    hbox = gtk_hbox_new(FALSE, 0);
-
-    items = stupid_put_entities(NULL);
-    gtk_combo_set_popdown_strings(GTK_COMBO(val_unit->entities), items);
-
-    gtk_editable_set_editable(GTK_EDITABLE(val_unit->entities->entry), FALSE);
-
-    gtk_widget_show(lab1);
-    gtk_widget_show(frame);
-    gtk_widget_show(add);
-    gtk_widget_show(upper);
-    gtk_widget_show(lower);
-    gtk_widget_show(bold);
-    gtk_widget_show(italic);
-
-    gtk_widget_show(GTK_WIDGET(val_unit->entry));
-    gtk_widget_show(GTK_WIDGET(val_unit->label));
-    gtk_widget_show(GTK_WIDGET(val_unit->entities));
-
-    gtk_box_pack_start(GTK_BOX(val_unit), lab1, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(val_unit), GTK_WIDGET(val_unit->entry),
-                       FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(val_unit), hbox, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(val_unit), frame, TRUE, FALSE, 6);
-    gtk_container_add(GTK_CONTAINER(frame), GTK_WIDGET(val_unit->label));
-
-    gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(val_unit->entities),
-                       FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), add, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), bold, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), italic, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), lower, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), upper, FALSE, FALSE, 0);
-
-    gtk_widget_set_events(GTK_WIDGET(val_unit->entry), GDK_KEY_RELEASE_MASK);
-    gtk_widget_set_events(val_unit->entities->list, GDK_BUTTON_PRESS_MASK);
-
-    g_signal_connect(val_unit->entry, "changed",
-                     G_CALLBACK(gwy_val_unit_edited), NULL);
-    g_signal_connect_swapped(add, "clicked",
-                             G_CALLBACK(gwy_val_unit_entity_selected),
-                             val_unit);
-    g_signal_connect(bold, "clicked",
-                     G_CALLBACK(gwy_val_unit_button_some_pressed),
-                     GINT_TO_POINTER(GWY_VAL_UNIT_BOLD));
-    g_signal_connect(italic, "clicked",
-                     G_CALLBACK(gwy_val_unit_button_some_pressed),
-                     GINT_TO_POINTER(GWY_VAL_UNIT_ITALIC));
-    g_signal_connect(upper, "clicked",
-                     G_CALLBACK(gwy_val_unit_button_some_pressed),
-                     GINT_TO_POINTER(GWY_VAL_UNIT_SUPERSCRIPT));
-    g_signal_connect(lower, "clicked",
-                     G_CALLBACK(gwy_val_unit_button_some_pressed),
-                     GINT_TO_POINTER(GWY_VAL_UNIT_SUBSCRIPT));
-*/
 }
 
 GtkWidget*
-gwy_val_unit_new(gchar *label_text)
+gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
 {
     GwyValUnit *val_unit;
 
@@ -190,11 +128,19 @@ gwy_val_unit_new(gchar *label_text)
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(val_unit->spin), 3);
     gtk_box_pack_start(GTK_BOX(val_unit), val_unit->spin, FALSE, FALSE, 0);
    
-    val_unit->selection = gwy_option_menu_metric_unit(NULL, NULL,
-                                                      -12, 3, "m",
+    val_unit->selection = gwy_option_menu_metric_unit(G_CALLBACK(gwy_val_unit_unit_changed), 
+                                                      val_unit,
+                                                      -12, 6, 
+                                                      gwy_si_unit_get_unit_string(si_unit),
                                                       val_unit->unit);
     gtk_box_pack_start(GTK_BOX(val_unit), val_unit->selection, FALSE, FALSE, 0);
+
+    g_signal_connect(val_unit->spin, "value-changed", 
+                     G_CALLBACK(gwy_val_unit_value_changed), val_unit);
+    
  
+    val_unit->base_si_unit = gwy_si_unit_new(gwy_si_unit_get_unit_string(si_unit));
+        
     return GTK_WIDGET(val_unit);
 }
 
@@ -249,6 +195,36 @@ gwy_val_unit_size_allocate(GtkWidget *widget,
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
 
 }
+
+static void     
+gwy_val_unit_value_changed(GtkSpinButton *spinbutton, GwyValUnit *val_unit)
+{
+    val_unit->dival = gtk_spin_button_get_value(spinbutton);
+}
+
+static void     
+gwy_val_unit_unit_changed(GObject *item, GwyValUnit *val_unit)
+{
+    val_unit->unit = GPOINTER_TO_INT(g_object_get_data(item,
+                                                      "metric-unit"));
+}
+
+void       
+gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
+{
+    GwySIValueFormat *format;
+    format = gwy_si_unit_get_format(val_unit->base_si_unit, value, format);
+
+    val_unit->unit = floor(log(format->magnitude)/3.0);
+    val_unit->dival = value/pow(10, 3*val_unit->unit);
+}
+
+gdouble    
+gwy_val_unit_get_value(GwyValUnit *val_unit)
+{
+    return val_unit->dival * pow(10, 3*val_unit->unit);
+}
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

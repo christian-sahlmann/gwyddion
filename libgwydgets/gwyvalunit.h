@@ -24,6 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
+#include <libgwyddion/gwysiunit.h>
 
 
 G_BEGIN_DECLS
@@ -47,10 +48,9 @@ struct _GwyValUnit {
     GtkWidget *selection;
     GtkWidget *label;
 
-    gdouble value;
-    gdouble mag;
     gdouble dival;
     gint unit;
+    GwySIUnit *base_si_unit;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -64,8 +64,13 @@ struct _GwyValUnitClass {
 };
 
 
-GtkWidget* gwy_val_unit_new       (gchar *label_text);
+GtkWidget* gwy_val_unit_new       (gchar *label_text, GwySIUnit *unit);
 GType      gwy_val_unit_get_type  (void) G_GNUC_CONST;
+
+void       gwy_val_unit_set_value (GwyValUnit *val_unit, gdouble value);
+
+gdouble    gwy_val_unit_get_value (GwyValUnit *val_unit);
+
 
 G_END_DECLS
 

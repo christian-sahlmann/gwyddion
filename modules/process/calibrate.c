@@ -55,7 +55,7 @@ typedef struct {
 static gboolean    module_register           (const gchar *name);
 static gboolean    calibrate                     (GwyContainer *data,
                                               GwyRunType run);
-static gboolean    calibrate_dialog              (CalibrateArgs *args);
+static gboolean    calibrate_dialog              (CalibrateArgs *args, GwyContainer *data);
 static void        xcalibrate_changed_cb          (GtkAdjustment *adj,
                                               CalibrateArgs *args);
 static void        ycalibrate_changed_cb          (GtkAdjustment *adj,
@@ -138,7 +138,7 @@ calibrate(GwyContainer *data, GwyRunType run)
     args.yreal = gwy_data_field_get_yreal(GWY_DATA_FIELD(dfield));
     args.zmin = gwy_data_field_get_min(GWY_DATA_FIELD(dfield));
     args.zmax = gwy_data_field_get_max(GWY_DATA_FIELD(dfield));
-    ok = (run != GWY_RUN_MODAL) || calibrate_dialog(&args);
+    ok = (run != GWY_RUN_MODAL) || calibrate_dialog(&args, data);
     if (run == GWY_RUN_MODAL)
         calibrate_save_args(gwy_app_settings_get(), &args);
     if (!ok)
@@ -170,9 +170,10 @@ calibrate(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-calibrate_dialog(CalibrateArgs *args)
+calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 {
     GtkWidget *dialog, *table, *spin;
+    GwyDataField *dfield;
     CalibrateControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
@@ -185,7 +186,10 @@ calibrate_dialog(CalibrateArgs *args)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    controls.xratio = gwy_val_unit_new("X calibration factor: ");
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    
+    controls.xratio = gwy_val_unit_new("X calibration factor: ", 
+                                       gwy_data_field_get_si_unit_xy(dfield));
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xratio,
                        FALSE, FALSE, 4);
     
@@ -274,7 +278,7 @@ calibrate_dialog(CalibrateArgs *args)
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             args->xratio
-                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.xratio));
+                = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.xratio));
             args->yratio
                 = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.yratio));
             args->zmin
@@ -302,7 +306,7 @@ calibrate_dialog(CalibrateArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    args->xratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.xratio));
+    args->xratio = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.xratio));
     args->yratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.yratio));
     args->zmin = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zmin));
     args->zmax = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zmax));
