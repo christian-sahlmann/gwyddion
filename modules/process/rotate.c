@@ -127,7 +127,7 @@ rotate_datafield(GwyDataField *dfield,
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
     min = gwy_data_field_get_min(dfield);
-    phi = G_PI/180.0*args->angle;
+    phi = args->angle;
     xborder = fabs(xres/2.0 * cos(phi)) + fabs(yres/2.0 * sin(phi));
     xborder -= xres/2;
     yborder = fabs(yres/2.0 * cos(phi)) + fabs(xres/2.0 * sin(phi));
@@ -234,7 +234,8 @@ rotate_dialog(RotateArgs *args,
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
 
-    controls.angle = gtk_adjustment_new(args->angle, -360, 360, 1, 30, 0);
+    controls.angle = gtk_adjustment_new(args->angle*180.0/G_PI,
+                                        -360, 360, 1, 30, 0);
     gwy_table_attach_hscale(table, 0, _("Rotate by _angle:"), _("deg"),
                             controls.angle, 0);
     g_signal_connect(controls.angle, "value_changed",
@@ -322,7 +323,7 @@ angle_changed_cb(GtkObject *adj,
 {
     RotateArgs *args = controls->args;
 
-    args->angle = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
+    args->angle = G_PI/180.0*gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
     rotate_preview_draw(controls, args);
 }
 
@@ -333,7 +334,7 @@ static const gchar *expand_key = "/module/rotate/expand";
 static void
 rotate_sanitize_args(RotateArgs *args)
 {
-    args->angle = fmod(args->angle, 360.0);
+    args->angle = fmod(args->angle, 2*G_PI);
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
     args->expand = !!args->expand;
@@ -365,7 +366,7 @@ rotate_dialog_update(RotateControls *controls,
                      RotateArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
-                             args->angle);
+                             args->angle*180.0/G_PI);
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->expand),

@@ -56,10 +56,10 @@ struct _GwyDataLineClass {
 
 GType  gwy_data_line_get_type  (void) G_GNUC_CONST;
 
-GObject*       gwy_data_line_new                   (gint res,
+GwyDataLine*   gwy_data_line_new                   (gint res,
                                                     gdouble real,
                                                     gboolean nullme);
-GObject*       gwy_data_line_new_alike             (GwyDataLine *model,
+GwyDataLine*   gwy_data_line_new_alike             (GwyDataLine *model,
                                                     gboolean nullme);
 void           gwy_data_line_resample      (GwyDataLine *data_line,
                                             gint res,

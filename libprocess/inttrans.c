@@ -187,10 +187,10 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     gint k;
     GwyDataLine *rin, *iin, *rout, *iout;
 
-    rin = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->xreal, FALSE);
-    rout = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->xreal, FALSE);
-    iin = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->xreal, FALSE);
-    iout = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->xreal, FALSE);
+    rin = gwy_data_line_new(ra->xres, ra->xreal, FALSE);
+    rout = gwy_data_line_new(ra->xres, ra->xreal, FALSE);
+    iin = gwy_data_line_new(ra->xres, ra->xreal, FALSE);
+    iout = gwy_data_line_new(ra->xres, ra->xreal, FALSE);
 
     gwy_data_field_resample(ia, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
@@ -244,10 +244,10 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     gint k;
     GwyDataLine *rin, *iin, *rout, *iout;
 
-    rin = (GwyDataLine *)gwy_data_line_new(ra->yres, ra->yreal, FALSE);
-    rout = (GwyDataLine *)gwy_data_line_new(ra->yres, ra->yreal, FALSE);
-    iin = (GwyDataLine *)gwy_data_line_new(ra->yres, ra->yreal, FALSE);
-    iout = (GwyDataLine *)gwy_data_line_new(ra->yres, ra->yreal, FALSE);
+    rin = gwy_data_line_new(ra->yres, ra->yreal, FALSE);
+    rout = gwy_data_line_new(ra->yres, ra->yreal, FALSE);
+    iin = gwy_data_line_new(ra->yres, ra->yreal, FALSE);
+    iout = gwy_data_line_new(ra->yres, ra->yreal, FALSE);
 
     gwy_data_field_resample(ia, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
@@ -303,14 +303,14 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
     gwy_data_field_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_NONE);
 
-    rin = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->yreal, FALSE);
-    rout = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->yreal, FALSE);
-    iin = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->yreal, FALSE);
-    iout = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->yreal, FALSE);
-    rft1 = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->yreal, FALSE);
-    ift1 = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->yreal, FALSE);
-    rft2 = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->yreal, FALSE);
-    ift2 = (GwyDataLine *)gwy_data_line_new(ra->xres, ra->yreal, FALSE);
+    rin = gwy_data_line_new(ra->xres, ra->yreal, FALSE);
+    rout = gwy_data_line_new(ra->xres, ra->yreal, FALSE);
+    iin = gwy_data_line_new(ra->xres, ra->yreal, FALSE);
+    iout = gwy_data_line_new(ra->xres, ra->yreal, FALSE);
+    rft1 = gwy_data_line_new(ra->xres, ra->yreal, FALSE);
+    ift1 = gwy_data_line_new(ra->xres, ra->yreal, FALSE);
+    rft2 = gwy_data_line_new(ra->xres, ra->yreal, FALSE);
+    ift2 = gwy_data_line_new(ra->xres, ra->yreal, FALSE);
 
     /*we compute allways two FFTs simultaneously*/
     for (k = 0; k < ra->yres; k++) {
@@ -493,7 +493,7 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                                             FALSE));
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
-        gwy_data_field_rotate(data_field, 90, interpolation);
+        gwy_data_field_rotate(data_field, G_PI/2, interpolation);
 
     gwy_data_field_xfft(data_field, result_field,
                     hlp_dfield, hlp_idfield,
@@ -502,7 +502,7 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                     FALSE, FALSE);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
-        gwy_data_field_rotate(data_field, -90, interpolation);
+        gwy_data_field_rotate(data_field, -G_PI/2, interpolation);
 
     gwy_data_line_resample(weights, hlp_dfield->xres/2, interpolation);
     for (i = 0; i < hlp_dfield->yres; i++) {
@@ -528,7 +528,7 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                     FALSE, FALSE);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
-        gwy_data_field_rotate(result_field, -90, interpolation);
+        gwy_data_field_rotate(result_field, -G_PI/2, interpolation);
 
     g_object_unref(idata_field);
     g_object_unref(hlp_dfield);

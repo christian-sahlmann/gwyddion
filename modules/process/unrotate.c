@@ -150,7 +150,7 @@ unrotate(GwyContainer *data, GwyRunType run)
     if (ok) {
         if (args.symmetry)
             symm = args.symmetry;
-        phi = 180.0/G_PI*correction[symm];
+        phi = correction[symm];
         data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
         gwy_app_clean_up_data(data);
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -332,8 +332,8 @@ unrotate_dialog_update(UnrotateControls *controls,
                                 args->symmetry);
 
     symm = args->symmetry ? args->symmetry : controls->guess;
-    phi = 180.0/G_PI*controls->correction[symm];
-    lab = g_strdup_printf("%.2f %s", phi, _("deg"));
+    phi = controls->correction[symm];
+    lab = g_strdup_printf("%.2f %s", 180.0/G_PI*phi, _("deg"));
     gtk_label_set_text(GTK_LABEL(controls->corrlabel), lab);
     g_free(lab);
 

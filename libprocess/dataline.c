@@ -30,7 +30,7 @@
 #define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
 
 static void     gwy_data_line_class_init        (GwyDataLineClass *klass);
-static void     gwy_data_line_init              (GwyDataLine *data_line);
+static void     gwy_data_line_init              (GObject *object);
 static void     gwy_data_line_finalize          (GObject *object);
 static void     gwy_data_line_serializable_init (GwySerializableIface *iface);
 static void     gwy_data_line_watchable_init    (GwyWatchableIface *iface);
@@ -121,10 +121,10 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
 }
 
 static void
-gwy_data_line_init(GwyDataLine *data_line)
+gwy_data_line_init(GObject *object)
 {
     gwy_debug("");
-    gwy_debug_objects_creation((GObject*)data_line);
+    gwy_debug_objects_creation(object);
 }
 
 static void
@@ -138,7 +138,7 @@ gwy_data_line_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-GObject*
+GwyDataLine*
 gwy_data_line_new(gint res, gdouble real, gboolean nullme)
 {
     GwyDataLine *data_line;
@@ -148,10 +148,10 @@ gwy_data_line_new(gint res, gdouble real, gboolean nullme)
 
     _gwy_data_line_initialize(data_line, res, real, nullme);
 
-    return (GObject*)(data_line);
+    return data_line;
 }
 
-GObject*
+GwyDataLine*
 gwy_data_line_new_alike(GwyDataLine *model,
                         gboolean nullme)
 {
@@ -167,7 +167,7 @@ gwy_data_line_new_alike(GwyDataLine *model,
     else
         data_line->data = g_new(gdouble, data_line->res);
 
-    return (GObject*)(data_line);
+    return data_line;
 }
 
 
@@ -226,7 +226,7 @@ gwy_data_line_deserialize(const guchar *buffer,
     }
 
     /* don't allocate large amount of memory just to immediately free it */
-    data_line = (GwyDataLine*)gwy_data_line_new(1, real, 0);
+    data_line = gwy_data_line_new(1, real, 0);
     g_free(data_line->data);
     data_line->res = res;
     data_line->data = data;
@@ -237,16 +237,14 @@ gwy_data_line_deserialize(const guchar *buffer,
 static GObject*
 gwy_data_line_duplicate_real(GObject *object)
 {
-    GwyDataLine *data_line;
-    GObject *duplicate;
+    GwyDataLine *data_line, *duplicate;
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(object), NULL);
     data_line = GWY_DATA_LINE(object);
     duplicate = gwy_data_line_new_alike(data_line, FALSE);
-    memcpy(((GwyDataLine*)duplicate)->data, data_line->data,
-           data_line->res*sizeof(gdouble));
+    memcpy(duplicate->data, data_line->data, data_line->res*sizeof(gdouble));
 
-    return duplicate;
+    return (GObject*)duplicate;
 }
 
 /*
@@ -1145,7 +1143,7 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
 /**
  * gwy_data_line_line_rotate:
  * @data_line: A data line.
- * @angle: angle of rotation (in degrees)
+ * @angle: angle of rotation (in radians)
  * @interpolation: interpolation mode used
  *
  * Performs line rotation. This is operation similar
@@ -1167,7 +1165,6 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
     dx.data = g_new(gdouble, a->res);
     dy.data = g_new(gdouble, a->res);
 
-    angle *= G_PI/180;
     ratio = a->real/(double)a->res;
     dx.data[0] = 0;
     dy.data[0] = a->data[0];

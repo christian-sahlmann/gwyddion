@@ -491,7 +491,7 @@ gwy_nanoindent_adjust(GwyDataField *model, GwyDataField *sample,
         angle = get_rotation_angle(model, sample);
         printf("rotation angle: %g rad (%g deg)\n", angle, angle*180/G_PI);
 
-        gwy_data_field_rotate(sample, angle*G_PI/180, args->interp);
+        gwy_data_field_rotate(sample, angle, args->interp);
     }
         
     /*move if requested*/

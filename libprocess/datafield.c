@@ -37,7 +37,7 @@ void            _gwy_data_line_initialize        (GwyDataLine *a,
 void            _gwy_data_line_free              (GwyDataLine *a);
 
 static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
-static void     gwy_data_field_init              (GwyDataField *data_field);
+static void     gwy_data_field_init              (GObject *object);
 static void     gwy_data_field_finalize          (GObject *object);
 static void     gwy_data_field_serializable_init (GwySerializableIface *iface);
 static void     gwy_data_field_watchable_init    (GwyWatchableIface *iface);
@@ -142,10 +142,10 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
 }
 
 static void
-gwy_data_field_init(GwyDataField *data_field)
+gwy_data_field_init(GObject *object)
 {
     gwy_debug("");
-    gwy_debug_objects_creation((GObject*)data_field);
+    gwy_debug_objects_creation(object);
 }
 
 static void
@@ -300,7 +300,7 @@ gwy_data_field_deserialize(const guchar *buffer,
     }
 
     /* don't allocate large amount of memory just to immediately free it */
-    data_field = (GwyDataField*)gwy_data_field_new(1, 1, xreal, yreal, FALSE);
+    data_field = gwy_data_field_new(1, 1, xreal, yreal, FALSE);
     g_free(data_field->data);
     data_field->data = data;
     data_field->xres = xres;
@@ -396,8 +396,8 @@ _gwy_data_field_initialize(GwyDataField *a,
     else
         a->data = g_new(gdouble, a->xres*a->yres);
 
-    a->si_unit_xy = (GwySIUnit*)gwy_si_unit_new("m");
-    a->si_unit_z = (GwySIUnit*)gwy_si_unit_new("m");
+    a->si_unit_xy = gwy_si_unit_new("m");
+    a->si_unit_z = gwy_si_unit_new("m");
 }
 
 void
@@ -433,10 +433,8 @@ gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
     b->yreal = a->yreal;
     gwy_object_unref(b->si_unit_xy);
     gwy_object_unref(b->si_unit_z);
-    b->si_unit_xy
-        = (GwySIUnit*)gwy_serializable_duplicate(G_OBJECT(a->si_unit_xy));
-    b->si_unit_z
-        = (GwySIUnit*)gwy_serializable_duplicate(G_OBJECT(a->si_unit_z));
+    b->si_unit_xy = gwy_si_unit_duplicate(a->si_unit_xy);
+    b->si_unit_z = gwy_si_unit_duplicate(a->si_unit_z);
 
     memcpy(b->data, a->data, a->xres*a->yres*sizeof(gdouble));
 
@@ -1140,7 +1138,7 @@ gwy_data_field_get_dval_real(GwyDataField *a, gdouble x, gdouble y,
 /**
  * gwy_data_field_rotate:
  * @data_field: A data field.
- * @angle: Angle (in degrees).
+ * @angle: Angle (in radians).
  * @interpolation: Interpolation method to use.
  *
  * Rotates a data field by a given angle.
@@ -1153,47 +1151,48 @@ void
 gwy_data_field_rotate(GwyDataField *a, gdouble angle,
                       GwyInterpolationType interpolation)
 {
-    GwyDataField b;
+    GwyDataField *b;
     gdouble inew, jnew, ir, jr, ang, icor, jcor, sn, cs, val;
     gint i, j;
 
-    angle = fmod(angle, 360.0);
+    angle = fmod(angle, 2*G_PI);
     if (angle < 0.0)
-        angle += 360.0;
+        angle += 2*G_PI;
 
     if (angle == 0.0)
         return;
 
-    gwy_data_field_alloc(&b, a->xres, a->yres);
-    gwy_data_field_copy(a, &b);
+    b = gwy_data_field_duplicate(a);
 
     val = gwy_data_field_get_min(a);
-    ang = 3*G_PI/4 + angle*G_PI/180;
-    sn = sin(angle*G_PI/180);
-    cs = cos(angle*G_PI/180);
-    icor = (gdouble)a->yres/2
-            + G_SQRT2*(gdouble)a->yres/2*sin(ang)
-            - sn*(a->xres-a->yres)/2;
-    jcor = (gdouble)a->xres/2
-           + G_SQRT2*(gdouble)a->xres/2*cos(ang)
-           + sn*(a->xres-a->yres)/2;
-    if (angle == 90.0) {
+    ang = 3*G_PI/4 + angle;
+    if (fabs(angle - G_PI/2) < 1e-15) {
         sn = 1.0;
         cs = 0.0;
         icor = 1.0;
         jcor = 0.0;
     }
-    if (angle == 180.0) {
+    if (fabs(angle - G_PI) < 2e-15) {
         sn = 0.0;
         cs = -1.0;
         icor = 1.0;
         jcor = a->xres-1;
     }
-    if (angle == 270.0) {
+    if (fabs(angle - 3*G_PI/4) < 3e-15) {
         sn = -1.0;
         cs = 0.0;
         icor = a->yres;
         jcor = a->xres-1;
+    }
+    else {
+        sn = sin(angle);
+        cs = cos(angle);
+        icor = (gdouble)a->yres/2
+                + G_SQRT2*(gdouble)a->yres/2*sin(ang)
+                - sn*(a->xres-a->yres)/2;
+        jcor = (gdouble)a->xres/2
+               + G_SQRT2*(gdouble)a->xres/2*cos(ang)
+               + sn*(a->xres-a->yres)/2;
     }
 
     for (i = 0; i < a->yres; i++) { /*row*/
@@ -1207,13 +1206,13 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
             else {
                 inew = CLAMP(inew, 0, a->yres - 1);
                 jnew = CLAMP(jnew, 0, a->xres - 1);
-                a->data[j + a->xres*i] = gwy_data_field_get_dval(&b, jnew, inew,
+                a->data[j + a->xres*i] = gwy_data_field_get_dval(b, jnew, inew,
                                                                  interpolation);
             }
         }
     }
 
-    _gwy_data_field_free(&b);
+    g_object_unref(b);
     gwy_data_field_invalidate(a);
 }
 
@@ -2079,7 +2078,7 @@ gwy_data_field_get_yder(GwyDataField *a, gint col, gint row)
  * @data_field: A data field.
  * @col: Column index.
  * @row: Row index.
- * @theta: Angle defining the direction (in degrees, CCW).
+ * @theta: Angle defining the direction (in radians, counterclockwise).
  *
  * Computes derivative in direction specified by given angle.
  *
@@ -2089,8 +2088,8 @@ gdouble
 gwy_data_field_get_angder(GwyDataField *a, gint col, gint row, gdouble theta)
 {
     g_return_val_if_fail(gwy_data_field_inside(a, col, row), 0.0);
-    return gwy_data_field_get_xder(a, col, row)*cos(theta*G_PI/180)
-           + gwy_data_field_get_yder(a, col, row)*sin(theta*G_PI/180);
+    return gwy_data_field_get_xder(a, col, row)*cos(theta)
+           + gwy_data_field_get_yder(a, col, row)*sin(theta);
 }
 
 /**
@@ -2133,10 +2132,10 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
     res = (orientation == GWY_ORIENTATION_HORIZONTAL) ? xres : yres;
     real = (orientation == GWY_ORIENTATION_HORIZONTAL)
            ? data_field->xreal : data_field->yreal;
-    hlp = (GwyDataLine*)gwy_data_line_new(res, real, FALSE);
+    hlp = gwy_data_line_new(res, real, FALSE);
     if (exclude) {
-        xdata = (GwyDataLine*)gwy_data_line_new(res, real, FALSE);
-        ydata = (GwyDataLine*)gwy_data_line_new(res, real, FALSE);
+        xdata = gwy_data_line_new(res, real, FALSE);
+        ydata = gwy_data_line_new(res, real, FALSE);
     }
 
     if (ulcol > brcol)

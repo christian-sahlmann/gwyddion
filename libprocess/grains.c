@@ -275,7 +275,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                           gboolean below)
 {
     if (status->state == GWY_WATERSHED_STATE_INIT) {
-        status->min = gwy_data_field_new_alike(data_field->xres, TRUE);
+        status->min = gwy_data_field_new_alike(data_field, TRUE);
         status->water = gwy_data_field_new_alike(data_field, TRUE);
         status->mark_dfield = gwy_data_field_duplicate(data_field);
         if (below)

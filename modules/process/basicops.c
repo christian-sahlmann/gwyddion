@@ -285,13 +285,13 @@ rotate_180(GwyContainer *data, GwyRunType run)
         keys[n++] = "/0/show";
     gwy_app_undo_checkpointv(data, n, keys);
     dfield = gwy_container_get_object_by_name(data, "/0/data");
-    gwy_data_field_rotate(GWY_DATA_FIELD(dfield), 180,
+    gwy_data_field_rotate(GWY_DATA_FIELD(dfield), G_PI,
                           GWY_INTERPOLATION_ROUND);
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        gwy_data_field_rotate(GWY_DATA_FIELD(dfield), 180,
+        gwy_data_field_rotate(GWY_DATA_FIELD(dfield), G_PI,
                               GWY_INTERPOLATION_ROUND);
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        gwy_data_field_rotate(GWY_DATA_FIELD(dfield), 180,
+        gwy_data_field_rotate(GWY_DATA_FIELD(dfield), G_PI,
                               GWY_INTERPOLATION_ROUND);
 
     return TRUE;

@@ -121,9 +121,7 @@ level_rotate(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
-    gwy_data_field_plane_rotate(dfield,
-                                180/G_PI*atan2(b, 1),
-                                180/G_PI*atan2(c, 1),
+    gwy_data_field_plane_rotate(dfield, atan2(b, 1), atan2(c, 1),
                                 GWY_INTERPOLATION_BILINEAR);
     gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
               b, 180/G_PI*atan2(b, 1), c, 180/G_PI*atan2(c, 1));

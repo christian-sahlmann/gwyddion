@@ -1233,8 +1233,8 @@ gwy_data_field_filter_kuwahara(GwyDataField *data_field)
  * @data_field: A data field.
  * @target_field: A data field to put the shade to.  It will be resized to
  *                match @data_field.
- * @theta: Shading angle (in degrees, from north pole).
- * @phi: Shade orientation in xy plane (in degrees, CCW).
+ * @theta: Shading angle (in radians, from north pole).
+ * @phi: Shade orientation in xy plane (in radians, counterclockwise).
  *
  * Shades a data field.
  **/
@@ -1261,7 +1261,7 @@ gwy_data_field_shade(GwyDataField *data_field,
         }
     }
 
-    maxval = G_PI*theta/180.0*max;
+    maxval = theta/max;
     for (i = 0; i < data_field->xres*data_field->yres; i++)
         target_field->data[i] = max - fabs(maxval-target_field->data[i]);
 }

@@ -93,7 +93,10 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
  * @target_line.
  **/
 void
-gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint windowing, gint interpolation)
+gwy_data_line_psdf(GwyDataLine *data_line,
+                   GwyDataLine *target_line,
+                   gint windowing,
+                   gint interpolation)
 {
     GwyDataLine *iin, *rout, *iout;
     gint i, order, newres, oldres;
@@ -104,9 +107,9 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
     order = (gint) floor(log ((gdouble)data_line->res)/log (2.0)+0.5);
     newres = (gint) pow(2,order);
 
-    iin = (GwyDataLine *)gwy_data_line_new(newres, data_line->real, TRUE);
-    rout = (GwyDataLine *)gwy_data_line_new(newres, data_line->real, TRUE);
-    iout = (GwyDataLine *)gwy_data_line_new(newres, data_line->real, TRUE);
+    iin = gwy_data_line_new(newres, data_line->real, TRUE);
+    rout = gwy_data_line_new(newres, data_line->real, TRUE);
+    iout = gwy_data_line_new(newres, data_line->real, TRUE);
 
     /*resample to 2^N (this could be done within FFT, but with loss of precision)*/
     gwy_data_line_resample(data_line, newres, interpolation);

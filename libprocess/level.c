@@ -206,8 +206,8 @@ gwy_data_field_plane_level(GwyDataField *data_field,
 /**
  * gwy_data_field_plane_rotate:
  * @data_field: A data field.
- * @xangle: Rotation angle in x direction (rotation along y axis).
- * @yangle: Rotation angle in y direction (rotation along x axis).
+ * @xangle: Rotation angle in x direction (rotation along y axis, in radians).
+ * @yangle: Rotation angle in y direction (rotation along x axis, in radians).
  * @interpolation: Interpolation type.
  *
  * Performs rotation of plane along x and y axis.
@@ -219,28 +219,27 @@ gwy_data_field_plane_rotate(GwyDataField *data_field,
                             GwyInterpolationType interpolation)
 {
     int k;
-    GwyDataLine l;
+    GwyDataLine *l;
 
+    l = gwy_data_line_new(data_field->xres, data_field->xreal, FALSE);
     if (xangle != 0) {
-        _gwy_data_line_initialize(&l, data_field->xres, data_field->xreal, 0);
         for (k = 0; k < data_field->yres; k++) {
-            gwy_data_field_get_row(data_field, &l, k);
-            gwy_data_line_line_rotate(&l, -xangle, interpolation);
-            gwy_data_field_set_row(data_field, &l, k);
+            gwy_data_field_get_row(data_field, l, k);
+            gwy_data_line_line_rotate(l, -xangle, interpolation);
+            gwy_data_field_set_row(data_field, l, k);
         }
-        _gwy_data_line_free(&l);
     }
+    g_object_unref(l);
 
-
+    l = gwy_data_line_new(data_field->yres, data_field->yreal, FALSE);
     if (yangle != 0) {
-        _gwy_data_line_initialize(&l, data_field->yres, data_field->yreal, 0);
         for (k = 0; k < data_field->xres; k++) {
-            gwy_data_field_get_column(data_field, &l, k);
-            gwy_data_line_line_rotate(&l, -yangle, interpolation);
-            gwy_data_field_set_column(data_field, &l, k);
+            gwy_data_field_get_column(data_field, l, k);
+            gwy_data_line_line_rotate(l, -yangle, interpolation);
+            gwy_data_field_set_column(data_field, l, k);
         }
-        _gwy_data_line_free(&l);
     }
+    g_object_unref(l);
 
     gwy_data_field_invalidate(data_field);
 }

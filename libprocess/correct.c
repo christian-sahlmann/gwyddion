@@ -55,12 +55,9 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
     yres = data_field->yres;
 
     /*check buffer field */
-    if (buffer_field == NULL) {
-        buffer_field
-            = (GwyDataField *)gwy_data_field_new(xres, yres, data_field->xreal,
-                                                 data_field->yreal, TRUE);
-    }
-    if (buffer_field->xres != xres || buffer_field->yres != yres) {
+    if (!buffer_field)
+        buffer_field = gwy_data_field_new_alike(data_field, TRUE);
+    else if (buffer_field->xres != xres || buffer_field->yres != yres) {
         gwy_data_field_resample(buffer_field, xres, yres,
                                 GWY_INTERPOLATION_NONE);
     }
