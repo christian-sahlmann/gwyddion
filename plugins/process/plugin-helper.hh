@@ -11,14 +11,18 @@
 
 class PluginAction {
     public:
-    std::string name;
-    int arg_num;
-    bool (*action)(char *args[]);
+    std::string name;              /* action name: register, load, run, ... */
+    int arg_num;                   /* number of arguments NOT including
+                                      program name, nor action name */
+    bool (*action)(char *args[]);  /* action itself, will get array of
+                                      arg_num program argument, NOT including
+                                      program name, nor action name */
 
     bool check(int argc, char *argv[]) { return argc == arg_num + 2
                                                 && name.compare(argv[1]) == 0; }
 };
 
+/* Find action and run it */
 static bool
 run_action(int nactions, PluginAction *actions,
            int argc, char *argv[])
