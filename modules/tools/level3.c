@@ -53,8 +53,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "level3",
-    "Level tool.  Allows to level data by fitting a plane through three "
-        "selected points.",
+    N_("Level tool.  Allows to level data by fitting a plane through three "
+       "selected points."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -81,7 +81,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "level3",
         "gwy_fit_triangle",
-        "Level data using three points.",
+        N_("Level data using three points."),
         50,
         use,
     };
@@ -164,7 +164,7 @@ dialog_create(GwyUnitoolState *state)
 
     for (i = 0; i < 3; i++) {
         label = gtk_label_new(NULL);
-        g_string_printf(str, _("<b>%d</b>"), i+1);
+        g_string_printf(str, "<b>%d</b>", i+1);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_label_set_markup(GTK_LABEL(label), str->str);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -193,7 +193,7 @@ dialog_create(GwyUnitoolState *state)
     gwy_container_gis_int32_by_name(settings, radius_key, &radius);
     radius = CLAMP(radius, 1, 16);
     controls->radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
-    gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
+    gwy_table_attach_spinbutton(table, 9, _("Averaging radius"), _("px"),
                                 controls->radius);
     g_signal_connect_swapped(controls->radius, "value_changed",
                              G_CALLBACK(dialog_update), state);
