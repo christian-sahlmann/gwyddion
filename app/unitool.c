@@ -103,6 +103,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     }
 
     /* create dialog */
+    gwy_unitool_compute_formats(state);
     if (!state->dialog) {
         state->dialog = slot->dialog_create(state);
         g_signal_connect(state->dialog, "delete_event",
@@ -131,7 +132,6 @@ gwy_unitool_use(GwyUnitoolState *state,
                                    state);
 
     /* setup based on switch reason */
-    gwy_unitool_compute_formats(state);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         gwy_unitool_dialog_set_visible(state, TRUE);
     if (reason == GWY_TOOL_SWITCH_WINDOW)
@@ -515,6 +515,31 @@ gwy_unitool_update_label(GwySIValueFormat *units,
 
     g_snprintf(buffer, sizeof(buffer), "%.*f %s",
                units->precision, value/units->magnitude, units->units);
+    gtk_label_set_markup(GTK_LABEL(label), buffer);
+}
+
+/**
+ * gwy_unitool_update_label_no_units:
+ * @units: Units specification.
+ * @label: A label to update (a #GtkLabel).
+ * @value: A value to show.
+ *
+ * Sets the text of a label to display @value according to @units, but
+ * excludes units showing the number only.
+ *
+ * Since: 1.2.
+ **/
+void
+gwy_unitool_update_label_no_units(GwySIValueFormat *units,
+                                  GtkWidget *label, gdouble value)
+{
+    static gchar buffer[32];
+
+    g_return_if_fail(units);
+    g_return_if_fail(GTK_IS_LABEL(label));
+
+    g_snprintf(buffer, sizeof(buffer), "%.*f",
+               units->precision, value/units->magnitude);
     gtk_label_set_markup(GTK_LABEL(label), buffer);
 }
 
