@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#define DEBUG 1
+
 #ifdef _MSC_VER
 #include "version.h"
 #else
@@ -84,14 +86,19 @@ main(int argc, char *argv[])
     gtk_init(&argc, &argv);
     config_file = gwy_app_settings_get_config_filename();
     has_config = g_file_test(config_file, G_FILE_TEST_IS_REGULAR);
+    gwy_debug("Binary config file is `%s'. Do we have it: %s",
+              config_file, has_config ? "TRUE" : "FALSE");
     settings_file = gwy_app_settings_get_settings_filename();
     has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);
+    gwy_debug("Text settings file is `%s'. Do we have it: %s",
+              settings_file, has_settings ? "TRUE" : "FALSE");
     gwy_app_init();
 
     gwy_app_splash_create();
     gwy_app_splash_set_message(_("Loading settings"));
     if (has_settings)
         ok = gwy_app_settings_load(settings_file);
+    gwy_debug("Loading settings was: %s", ok ? "OK" : "Not OK");
     if (!ok && has_config)
         gwy_app_settings_load_bin(config_file);
     gwy_app_settings_get();
