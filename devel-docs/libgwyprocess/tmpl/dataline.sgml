@@ -517,3 +517,25 @@ Fit polynomial degree selection.
 @coeffs: 
 
 
+<!-- ##### FUNCTION gwy_data_line_get_modus ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@histogram_steps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_get_modus ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@from: 
+@to: 
+@histogram_steps: 
+@Returns: 
+
+

@@ -321,6 +321,25 @@ Palette definitions
 
 
 
+<!-- ##### FUNCTION gwy_palette_def_dump ##### -->
+<para>
+
+</para>
+
+@palette_def: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_palette_def_parse ##### -->
+<para>
+
+</para>
+
+@text: 
+@rename_on_clash: 
+@Returns: 
+
+
 <!-- ##### MACRO gwy_palette_def_is_set ##### -->
 <para>
 

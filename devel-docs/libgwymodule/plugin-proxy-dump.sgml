@@ -134,7 +134,7 @@
       A few sample dump format implementations are included in Gwyddion
       source distribution.
     </para>
-    <formalpara>
+    <sect2>
       <title>C/C++</title>
       <para>
         The plug-in proxy itself is always the most complete reference
@@ -146,8 +146,8 @@
         freely study it for the purpose of creation of Gwyddion plug-ins
         without becoming `tainted'.
       </para>
-    </formalpara>
-    <formalpara>
+    </sect2>
+    <sect2>
       <title>Perl</title>
       <para>
         A Perl module Gwyddion::dump handling reading and writing dump files
@@ -160,8 +160,8 @@
         <filename>plugins/process/invert_perl.pl</filename>.
         This script is in the public domain.
       </para>
-    </formalpara>
-    <formalpara>
+    </sect2>
+    <sect2>
       <title>Python</title>
       <para>
         A Python module Gwyddion.dump handling reading and writing dump files
@@ -174,7 +174,7 @@
         <filename>plugins/process/invert_python.py</filename>.
         This script is in the public domain.
       </para>
-    </formalpara>
+    </sect2>
   </refsect1>
 </refentry>
 

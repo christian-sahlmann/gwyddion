@@ -25,10 +25,13 @@
     <para>
       Generally it is preferable to extend Gwyddion functionality by
       modules, because modules are dynamic libraries linked directly
-      to Gwyddion in run-time allowing much more versatile interaction
+      to Gwyddion at run-time allowing much more versatile interaction
       with the application, and they are also faster (for the same reason).
-      Creation of modules is also no harder than creation of plug-ins,
-      maybe it is even easier.
+      For example, plug-ins generally cannot make use of existing Gwyddion
+      data processing functions and cannot modify data in-place, a new
+      window is always created for the result.
+      Programming of modules is also no harder than programming of plug-ins,
+      maybe it is even easier (assuming you know C).
     </para>
     <para>
       They are however two reasons to use plug-ins:
@@ -57,6 +60,13 @@
           Gwyddion for changes in a module to take effect.  Plug-ins are
           separate programs, so they are run in whatever state they currently
           are each time they are used.
+        </listitem>
+        <listitem>
+          Language issues.  Gwyddion currently has only C API.
+          If you already have your data processing routines written in
+          FORTRAN, Java, Ruby, Delphi, or whatever, you may find easy to make
+          a plug-in from them, while conversion to a module can require
+          substantial changes and/or rewrite to C.
         </listitem>
       </itemizedlist>
     </para>

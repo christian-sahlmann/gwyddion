@@ -41,6 +41,8 @@ gwy_palette_def_get_color
 gwy_palette_def_set_color
 gwy_palette_def_set_from_samples
 gwy_palette_def_setup_presets
+gwy_palette_def_dump
+gwy_palette_def_parse
 gwy_palette_def_is_set
 <SUBSECTION Standard>
 GWY_PALETTE_DEF

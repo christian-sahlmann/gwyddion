@@ -143,6 +143,8 @@ gwy_data_line_part_fit_polynom
 gwy_data_line_fit_polynom
 gwy_data_line_part_subtract_polynom
 gwy_data_line_subtract_polynom
+gwy_data_line_get_modus
+gwy_data_line_part_get_modus
 <SUBSECTION Standard>
 GWY_DATA_LINE
 GWY_IS_DATA_LINE
