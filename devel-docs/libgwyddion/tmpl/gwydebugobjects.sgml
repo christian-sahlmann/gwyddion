@@ -1,0 +1,55 @@
+<!-- ##### SECTION Title ##### -->
+gwydebugobjects
+
+<!-- ##### SECTION Short_Description ##### -->
+Helps chasing leaking objects (debug).
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyDebugObjectsDumpFlags ##### -->
+<para>
+
+</para>
+
+@GWY_DEBUG_OBJECTS_DUMP_ONLY_ALIVE: 
+
+<!-- ##### FUNCTION gwy_debug_objects_creation ##### -->
+<para>
+
+</para>
+
+@object: 
+
+
+<!-- ##### FUNCTION gwy_debug_objects_enable ##### -->
+<para>
+
+</para>
+
+@enable: 
+
+
+<!-- ##### FUNCTION gwy_debug_objects_dump_to_file ##### -->
+<para>
+
+</para>
+
+@filehandle: 
+@flags: 
+
+
+<!-- ##### FUNCTION gwy_debug_objects_clear ##### -->
+<para>
+
+</para>
+
+
+

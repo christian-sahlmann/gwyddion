@@ -155,6 +155,15 @@ GWY_CONTAINER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwydebugobjects</FILE>
+GwyDebugObjectsDumpFlags
+gwy_debug_objects_creation
+gwy_debug_objects_enable
+gwy_debug_objects_dump_to_file
+gwy_debug_objects_clear
+</SECTION>
+
+<SECTION>
 <FILE>gwymath</FILE>
 ROUND
 gwy_math_SI_prefix

@@ -19,4 +19,5 @@
   <xi:include href="xml/gwynlfit.xml"/>
   <xi:include href="xml/gwysiunit.xml"/>
   <xi:include href="xml/gwyutils.xml"/>
+  <xi:include href="xml/gwydebugobjects.xml"/>
 </book>
