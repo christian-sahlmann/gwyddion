@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 0.20031214, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
+AC_INIT(Gwyddion, 0.20031222, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -36,6 +36,7 @@ AM_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.6 gnits check-news dist-bzip2])
+AM_ACLOCAL_INCLUDE(m4)
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.
@@ -60,7 +61,7 @@ gtk_CHECK_GTK_DOC
 dnl With GCC, be paranoiac.  It should compile really cleanly.
 dnl Except -Wno-sign-compare, but older gcc's don't know it.
 if test "$GCC" = yes; then
-  WARNING_CFLAGS="-Wall -W -Wpointer-arith -Werror-implicit-function-declaration -Wno-system-headers"
+  WARNING_CFLAGS="-Wall -W -Wpointer-arith -Werror-implicit-function-declaration -Wno-system-headers -Wshadow -Wredundant-decls"
 fi
 
 case $target_os in

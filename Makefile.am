@@ -18,7 +18,8 @@ SUBDIRS = \
 
 M4TESTS = \
 	m4/gtk-doc.m4 \
-	m4/pkg.m4
+	m4/pkg.m4 \
+	m4/tools.m4
 
 EXTRA_DIST = \
 	CODING-STANDARDS \
@@ -28,3 +29,7 @@ EXTRA_DIST = \
 	gwyddion.pc.in \
 	$(M4TESTS)
 
+docs:
+	(cd devel-docs && $(MAKE) $(AM_MAKEFLAGS) docs)
+
+.PHONY: docs
