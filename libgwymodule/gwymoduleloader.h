@@ -54,6 +54,7 @@ typedef struct {
     GwyModuleInfo *mod_info;
     gchar *file;
     gboolean loaded;
+    GSList *funcs;
 } _GwyModuleInfoInternal;
 
 void                    gwy_modules_init            (void);

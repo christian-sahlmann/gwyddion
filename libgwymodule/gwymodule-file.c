@@ -83,6 +83,8 @@ gwy_file_func_register(const gchar *modname,
         return FALSE;
     }
     g_hash_table_insert(file_funcs, (gpointer)func_info->name, func_info);
+    iinfo->funcs = g_slist_append(iinfo->funcs, (gpointer)func_info->name);
+
     return TRUE;
 }
 
