@@ -81,6 +81,8 @@ static void        recompute                 (FitArgs *args,
                                               FitControls *controls);
 static void        reset                     (FitArgs *args,
                                               FitControls *controls);
+static void        plot_inits                (FitArgs *args,
+                                              FitControls *controls);
 static void        type_changed_cb           (GObject *item,
                                               FitArgs *args);
 static void        from_changed_cb           (GtkWidget *entry,
@@ -257,7 +259,8 @@ fit_dialog(FitArgs *args)
     gint response, i, j;
 
     enum { RESPONSE_RESET = 1,
-        RESPONSE_FIT = 2
+        RESPONSE_FIT = 2,
+        RESPONSE_PLOT = 3
     };
 
     pcontrols = &controls;
@@ -266,6 +269,7 @@ fit_dialog(FitArgs *args)
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          _("Fit"), RESPONSE_FIT,
                                          _("Reset inits"), RESPONSE_RESET,
+                                         _("Plot inits"), RESPONSE_PLOT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -500,6 +504,10 @@ fit_dialog(FitArgs *args)
             reset(args, &controls);
             break;
 
+            case RESPONSE_PLOT:
+            plot_inits(args, &controls);
+            break;
+
             case RESPONSE_FIT:
             recompute(args, &controls);
             break;
@@ -542,7 +550,59 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
     gtk_label_set_markup(GTK_LABEL(controls->chisq), " ");
 }
 
-/*recompute fit and update everything*/
+static void
+plot_inits(FitArgs *args, FitControls *controls)
+{
+    GwyDataLine *xdata;
+    GwyDataLine *ydata;
+    const GwyNLFitPresetFunction *function;
+    gboolean fixed[4];
+    gchar buffer[64];
+    gboolean ok;
+    gint i;
+    GString *label;
+    GwyGraphAreaCurveParams par;
+
+    xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+
+
+    args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
+    if (!normalize_data(args, xdata, ydata, args->curve - 1))
+    {
+        g_object_unref(xdata);
+        g_object_unref(ydata);
+        return;
+    }
+
+    function = gwy_math_nlfit_get_preset(args->function_type);
+
+    for (i=0; i<xdata->res; i++)
+    {
+        ydata->data[i] = function->function(xdata->data[i], function->nparams, args->par_init, NULL, &ok);
+    }
+
+    graph_update(controls, args);
+
+    label = g_string_new("fit");
+
+    par.is_line = 1;
+    par.is_point = 0;
+    par.line_style = GDK_LINE_SOLID;
+    par.line_size = 1;
+    par.color.pixel = 0x00000000;
+
+    gwy_graph_add_datavalues(GWY_GRAPH(controls->graph),
+                                 xdata->data,
+                                 ydata->data,
+                                 xdata->res,
+                                 label, &par);
+    g_object_unref(xdata);
+    g_object_unref(ydata);
+  
+}
+
+ /*recompute fit and update everything*/
 static void
 recompute(FitArgs *args, FitControls *controls)
 {
@@ -576,7 +636,7 @@ recompute(FitArgs *args, FitControls *controls)
         fixed[i] = args->par_fix[i];
         args->par_res[i] = args->par_init[i];
     }
-
+    
     if (args->fitter) gwy_math_nlfit_free(args->fitter);
     args->fitter = gwy_math_nlfit_fit_preset(function,
                                   xdata->res, xdata->data, ydata->data,
