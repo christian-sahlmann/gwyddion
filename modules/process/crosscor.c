@@ -428,7 +428,7 @@ crosscor_do(CrosscorArgs *args)
 
     iteration = 0;
     state = GWY_COMP_INIT;
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
+    gwy_app_wait_start(GTK_WIDGET(args->win1),
                        "Initializing...");
     do {
         gwy_data_field_crosscorrelate_iteration(dfield1, dfield2, dfieldx,
@@ -472,6 +472,7 @@ crosscor_do(CrosscorArgs *args)
     if (!args->add_ls_mask)
         g_object_unref(score);
     g_object_unref(dfieldy);
+
     return TRUE;
 }
 
