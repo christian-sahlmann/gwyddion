@@ -212,7 +212,7 @@ delta(GwyDataField *tip, gdouble height,
       G_GNUC_UNUSED gdouble rotation,
       G_GNUC_UNUSED gdouble *params)
 {
-    gwy_data_field_fill(tip, 0);
+    gwy_data_field_clear(tip);
     tip->data[tip->xres/2 + tip->xres*tip->yres/2] = height;
 }
 

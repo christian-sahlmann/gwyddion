@@ -173,6 +173,7 @@ void     gwy_data_field_invert             (GwyDataField *data_field,
                                             gboolean z);
 void     gwy_data_field_fill               (GwyDataField *data_field,
                                             gdouble value);
+void     gwy_data_field_clear              (GwyDataField *data_field);
 void     gwy_data_field_multiply           (GwyDataField *data_field,
                                             gdouble value);
 void     gwy_data_field_add                (GwyDataField *data_field,
@@ -183,6 +184,11 @@ void     gwy_data_field_area_fill          (GwyDataField *data_field,
                                             gint brcol,
                                             gint brrow,
                                             gdouble value);
+void     gwy_data_field_area_clear         (GwyDataField *data_field,
+                                            gint ulcol,
+                                            gint ulrow,
+                                            gint brcol,
+                                            gint brrow);
 void     gwy_data_field_area_multiply      (GwyDataField *data_field,
                                             gint ulcol,
                                             gint ulrow,

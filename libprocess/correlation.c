@@ -317,9 +317,9 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
 
     g_return_if_fail(xres == data_field2->xres && yres == data_field2->yres);
 
-    gwy_data_field_fill(x_dist, 0);
-    gwy_data_field_fill(y_dist, 0);
-    gwy_data_field_fill(score, 0);
+    gwy_data_field_clear(x_dist);
+    gwy_data_field_clear(y_dist);
+    gwy_data_field_clear(score);
 
     /*iterate over all the points */
     for (i = (search_width/2); i < (xres - search_height/2); i++) {
@@ -412,9 +412,9 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
     g_return_if_fail(xres == data_field2->xres && yres == data_field2->yres);
 
     if (*state == GWY_COMP_INIT) {
-        gwy_data_field_fill(x_dist, 0);
-        gwy_data_field_fill(y_dist, 0);
-        gwy_data_field_fill(score, 0);
+        gwy_data_field_clear(x_dist);
+        gwy_data_field_clear(y_dist);
+        gwy_data_field_clear(score);
         *state = GWY_COMP_ITERATE;
         *iteration = 0;
     }

@@ -1336,6 +1336,64 @@ gwy_data_field_area_fill(GwyDataField *a,
 }
 
 /**
+ * gwy_data_field_clear:
+ * @data_field: A data field.
+ *
+ * Fills a data field with zeroes.
+ *
+ * Since: 1.8
+ **/
+void
+gwy_data_field_clear(GwyDataField *data_field)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    memset(data_field->data, 0,
+           data_field->xres*data_field->yres*sizeof(gdouble));
+    gwy_data_field_invalidate(a);
+}
+
+/**
+ * gwy_data_field_area_clear:
+ * @data_field: A data field.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
+ *
+ * Fills a rectangular part of a data field with zeroes.
+ *
+ * Since: 1.8
+ **/
+void
+gwy_data_field_area_clear(GwyDataField *data_field,
+                          gint ulcol, gint ulrow, gint brcol, gint brrow)
+{
+    gint i;
+    gdouble *row;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0
+                     && brcol <= data_field->xres && brrow <= data_field->yres);
+
+    gwy_data_field_invalidate(data_field);
+    if (brrow - ulrow == 1 || (ulcol == 0 && brcol == data_field->xres)) {
+        memset(data_field->data + data_field->xres*ulrow + ulcol, 0,
+               (brcol - ulcol)*(brrow - ulrow)*sizeof(gdouble));
+        return;
+    }
+
+    for (i = ulrow; i < brrow; i++) {
+        row = data_field->data + i*data_field->xres + ulcol;
+        memset(row, 0, (brcol - ulcol)*sizeof(gdouble));
+    }
+}
+
+/**
  * gwy_data_field_multiply:
  * @data_field: A data field.
  * @value: Value to multiply @data_field with.

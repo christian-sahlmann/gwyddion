@@ -501,7 +501,7 @@ GwyDataField *gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield, GwyDataFi
 					       dfield->xreal, dfield->yreal,
 					       FALSE));
     gwy_data_field_copy(dfield, buffer);			        
-    gwy_data_field_fill(mask, 0);
+    gwy_data_field_clear(mask);
 
     gwy_data_field_dwt(buffer, wt_coefs, 1, lowlimit);
 

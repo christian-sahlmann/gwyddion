@@ -205,7 +205,6 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                      gdouble locate_dropsize, gint wshed_steps,
                                      gdouble wshed_dropsize, gboolean prefilter,
                                      /* FIXME: change to gboolean */
-                                     /* FIXME: implement or remove */
                                      gint below)
 {
     GwyDataField *min, *water, *mark_dfield;
@@ -222,15 +221,14 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                               data_field->xreal,
                                               data_field->yreal,
                                               TRUE));
-    mark_dfield =
-        GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+    mark_dfield = gwy_data_field_duplicate(data_field);
     if (below)
         gwy_data_field_multiply(mark_dfield, -1.0);
     if (prefilter)
         gwy_data_field_filter_median(mark_dfield, 6, 0, 0, xres, yres);
 
     gwy_data_field_resample(grain_field, xres, yres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_fill(grain_field, 0);
+    gwy_data_field_clear(grain_field);
 
     /* odrop */
     for (i = 0; i < locate_steps; i++)
@@ -290,8 +288,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                                           data_field->xreal,
                                                           data_field->yreal,
                                                           TRUE));
-        status->mark_dfield =
-            GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+        status->mark_dfield = gwy_data_field_duplicate(data_field);
         if (below)
             gwy_data_field_multiply(status->mark_dfield, -1.0);
         if (prefilter)
@@ -300,7 +297,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
 
         gwy_data_field_resample(grain_field, data_field->xres, data_field->yres,
                                 GWY_INTERPOLATION_NONE);
-        gwy_data_field_fill(grain_field, 0);
+        gwy_data_field_clear(grain_field);
 
 
         status->state = GWY_WSHED_LOCATE;
@@ -420,6 +417,50 @@ gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
     while (npoints) {
         npoints--;
         grain_field->data[points[npoints]] = 0.0;
+    }
+    g_free(points);
+    gwy_data_field_invalidate(grain_field);
+
+    return TRUE;
+}
+
+/**
+ * gwy_data_field_grains_extract_grain:
+ * @grain_field: Field of marked grains (mask).
+ * @col: Column inside a grain.
+ * @row: Row inside a grain.
+ *
+ * Removes all grains except that one at given position.
+ *
+ * If there is no grain at (@col, @row), all grains are removed.
+ *
+ * Returns: %TRUE if a grain remained (i.e., (@col,@row) was inside a grain).
+ *
+ * Since: 1.8
+ **/
+gboolean
+gwy_data_field_grains_extract_grain(GwyDataField *grain_field,
+                                    gint col,
+                                    gint row)
+{
+    gint *points;
+    gint npoints = 0;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(grain_field), FALSE);
+    g_return_val_if_fail(col >= 0 && col < grain_field->xres, FALSE);
+    g_return_val_if_fail(row >= 0 && row < grain_field->yres, FALSE);
+
+    if (!grain_field->data[grain_field->xres*row + col]) {
+        gwy_data_field_clear(grain_field);
+        return FALSE;
+    }
+
+    /* XXX: really row, col; not col, row */
+    points = gwy_data_field_fill_grain(grain_field, row, col, &npoints);
+    gwy_data_field_clear(grain_field);
+    while (npoints) {
+        npoints--;
+        grain_field->data[points[npoints]] = 1.0;
     }
     g_free(points);
     gwy_data_field_invalidate(grain_field);
