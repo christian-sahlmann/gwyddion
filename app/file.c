@@ -4,6 +4,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <gtk/gtkfilesel.h>
+#include <gtk/gtkmessagedialog.h>
 #include "app.h"
 #include "file.h"
 #include "tools/tools.h"
@@ -16,6 +17,8 @@ static GtkFileSelection* create_save_as_dialog (const gchar *title,
                                                 GCallback ok_callback);
 static GtkFileSelection* create_open_dialog    (const gchar *title,
                                                 GCallback ok_callback);
+static gboolean          confirm_overwrite     (GtkWindow *parent,
+                                                const gchar *filename);
 
 void
 gwy_app_file_open_cb(void)
@@ -268,10 +271,10 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
     if (g_file_test(filename_sys,
                      G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK)) {
-        g_warning("Won't overwrite `%s' (yet)", filename_utf8);
-        return;
+        if (!confirm_overwrite(GTK_WINDOW(selector), filename_utf8))
+            return;
     }
-    if (g_file_test(filename_sys, G_FILE_TEST_EXISTS)) {
+    else if (g_file_test(filename_sys, G_FILE_TEST_EXISTS)) {
         g_warning("Not a regular file `%s'", filename_utf8);
         return;
     }
@@ -287,6 +290,26 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     gwy_container_remove_by_name(data, "/filename/untitled");
     gtk_widget_destroy(GTK_WIDGET(selector));
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
+}
+
+static gboolean
+confirm_overwrite(GtkWindow *parent,
+                  const gchar *filename)
+{
+    GtkWidget *dialog;
+    gint response;
+
+    dialog = gtk_message_dialog_new(parent,
+                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_QUESTION,
+                                    GTK_BUTTONS_YES_NO,
+                                    _("File %s already exists. Overwrite?"),
+                                    filename);
+    gtk_window_set_title(GTK_WINDOW(dialog), _("Overwrite?"));
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+
+    return response == GTK_RESPONSE_YES;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
