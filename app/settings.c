@@ -42,8 +42,6 @@
 
 static gboolean create_config_dir_real         (const gchar *cfgdir);
 static void     gwy_app_settings_set_defaults  (GwyContainer *settings);
-static G_CONST_RETURN
-gchar*   gwy_app_settings_get_user_dir  (void);
 
 static const gchar *magic_header = "Gwyddion Settings 1.0\n";
 
@@ -338,7 +336,7 @@ gwy_app_settings_load(const gchar *filename)
 gboolean
 gwy_app_settings_create_config_dir(void)
 {
-    return create_config_dir_real(gwy_app_settings_get_user_dir());
+    return create_config_dir_real(gwy_get_user_dir());
 }
 
 static gboolean
@@ -403,7 +401,7 @@ gwy_app_settings_get_module_dirs(void)
         module_dirs[i] = g_build_filename(p, module_types[i], NULL);
     module_dirs[i++] = p;
 
-    p = gwy_app_settings_get_user_dir();
+    p = gwy_get_user_dir();
     for (i = 0; i < n; i++)
         module_dirs[n+1 + i] = g_build_filename(p, "modules", module_types[i],
                                                 NULL);
@@ -426,7 +424,7 @@ gwy_app_settings_get_module_dirs(void)
 gchar*
 gwy_app_settings_get_config_filename(void)
 {
-    return g_build_filename(gwy_app_settings_get_user_dir(), "gwydrc", NULL);
+    return g_build_filename(gwy_get_user_dir(), "gwydrc", NULL);
 }
 
 /**
@@ -441,7 +439,7 @@ gwy_app_settings_get_config_filename(void)
 gchar*
 gwy_app_settings_get_settings_filename(void)
 {
-    return g_build_filename(gwy_app_settings_get_user_dir(), "settings", NULL);
+    return g_build_filename(gwy_get_user_dir(), "settings", NULL);
 }
 
 /**
@@ -454,45 +452,7 @@ gwy_app_settings_get_settings_filename(void)
 gchar*
 gwy_app_settings_get_log_filename(void)
 {
-    return g_build_filename(gwy_app_settings_get_user_dir(), "gwyddion.log",
-                            NULL);
-}
-
-/**
- * gwy_app_settings_get_user_dir:
- *
- * Return directory where Gwyddion user settings and data should be stored.
- *
- * On silly platforms or silly occasions, silly locations can be returned
- * as fallback.
- *
- * Returns: The directory as a string that should not be freed.
- **/
-static G_CONST_RETURN gchar*
-gwy_app_settings_get_user_dir(void)
-{
-    const gchar *gwydir =
-#ifdef G_OS_WIN32
-        "gwyddion";
-#else
-        ".gwyddion";
-#endif
-    const gchar *homedir;
-    static gchar *gwyhomedir = NULL;
-
-    if (gwyhomedir)
-        return gwyhomedir;
-
-    homedir = g_get_home_dir();
-    if (!homedir)
-        homedir = g_get_tmp_dir();
-#ifdef G_OS_WIN32
-    if (!homedir)
-        homedir = "C:\\Windows";  /* XXX :-))) */
-#endif
-
-    gwyhomedir = g_build_filename(homedir, gwydir, NULL);
-    return gwyhomedir;
+    return g_build_filename(gwy_get_user_dir(), "gwyddion.log", NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -68,6 +68,8 @@ gchar*   gwy_find_self_dir          (const gchar *dirname);
 #ifdef G_OS_WIN32
 void     gwy_find_self_set_argv0    (const gchar *argv0);
 #endif /* G_OS_WIN32 */
+G_CONST_RETURN
+gchar*   gwy_get_user_dir           (void);
 
 G_END_DECLS
 

@@ -448,10 +448,11 @@ gwy_debug_gnu(const gchar *domain,
  * gwy_find_self_dir:
  * @dirname: A gwyddion directory name like "pixmaps" or "modules".
  *
- * Finds some gwyddion directory.
+ * Finds some [system] gwyddion directory.
  *
- * This function exists only because of insane Win32 instalation manners.
- * On sane systems is just returns a copy of GWY_PIXMAP_DIR, etc. instead.
+ * This function exists only because of insane Win32 instalation manners
+ * where user can decide to put precompiled binaries anywhere.
+ * On sane systems it just returns a copy of GWY_PIXMAP_DIR, etc. instead.
  *
  * The returned value is not actually tested for existence, it's up to caller.
  *
@@ -515,6 +516,45 @@ gwy_find_self_set_argv0(const gchar *argv0)
 {
     g_free(gwy_argv0);
     gwy_argv0 = g_strdup(argv0);
+}
+
+/**
+ * gwy_get_user_dir:
+ *
+ * Return directory where Gwyddion user settings and data should be stored.
+ *
+ * On Unix this is normally in home directory.  On silly platforms or silly
+ * occasions, silly locations can be returned as fallback.
+ *
+ * Returns: The directory as a string that should not be freed.
+ *
+ * Since: 1.3.
+ **/
+G_CONST_RETURN gchar*
+gwy_get_user_dir(void)
+{
+    const gchar *gwydir =
+#ifdef G_OS_WIN32
+        "gwyddion";
+#else
+        ".gwyddion";
+#endif
+    const gchar *homedir;
+    static gchar *gwyhomedir = NULL;
+
+    if (gwyhomedir)
+        return gwyhomedir;
+
+    homedir = g_get_home_dir();
+    if (!homedir)
+        homedir = g_get_tmp_dir();
+#ifdef G_OS_WIN32
+    if (!homedir)
+        homedir = "C:\\Windows";  /* XXX :-))) */
+#endif
+
+    gwyhomedir = g_build_filename(homedir, gwydir, NULL);
+    return gwyhomedir;
 }
 
 /************************** Documentation ****************************/

@@ -145,7 +145,7 @@ static GwyModuleInfo module_info = {
         "external programs (plug-ins) on data pretending they are data "
         "processing or file loading/saving modules.",
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -188,6 +188,16 @@ module_register(const gchar *name)
 
     dir = g_build_filename(plugin_path, "file", NULL);
     file_plugins = register_plugins(NULL, dir, name, file_register_plugins);
+    g_free(dir);
+
+    dir = g_build_filename(gwy_get_user_dir(), "plugins", "process", NULL);
+    proc_plugins = register_plugins(proc_plugins,
+                                    dir, name, proc_register_plugins);
+    g_free(dir);
+
+    dir = g_build_filename(gwy_get_user_dir(), "plugins", "file", NULL);
+    file_plugins = register_plugins(file_plugins,
+                                    dir, name, file_register_plugins);
     g_free(dir);
 
     g_free(plugin_path);
@@ -258,7 +268,7 @@ find_plugin_executables(const gchar *dir,
 
     gdir = g_dir_open(dir, 0, &err);
     if (err) {
-        g_warning("Cannot open plug-in directory %s: %s", dir, err->message);
+        gwy_debug("Cannot open plug-in directory %s: %s", dir, err->message);
         g_clear_error(&err);
         return NULL;
     }
