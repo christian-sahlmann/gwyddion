@@ -120,15 +120,14 @@ void
 gwy_app_data_window_set_current(GwyDataWindow *window)
 {
     GwyMenuSensitiveData sens_data = {
-        GWY_MENU_FLAG_DATA, GWY_MENU_FLAG_DATA
+        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_DATA
     };
-    gboolean update_state;
     GList *item;
 
     gwy_debug("%p", window);
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(window));
-    update_state = (current_data == NULL);
     item = g_list_find(current_data, window);
     if (item) {
         current_data = g_list_remove_link(current_data, item);
@@ -140,8 +139,13 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     if (current_tool)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
 
-    if (update_state)
-        gwy_app_toolbox_update_state(&sens_data);
+    /* XXX: GwyAppFuckingUndo */
+    if (g_object_get_data(G_OBJECT(window), "undo"))
+        sens_data.set_to |= GWY_MENU_FLAG_UNDO;
+    if (g_object_get_data(G_OBJECT(window), "redo"))
+        sens_data.set_to |= GWY_MENU_FLAG_REDO;
+
+    gwy_app_toolbox_update_state(&sens_data);
 }
 
 /**
@@ -191,6 +195,8 @@ static void
 gwy_app_toolbox_update_state(GwyMenuSensitiveData *sens_data)
 {
     gsize i;
+
+    gwy_debug("{%d, %d}", sens_data->flags, sens_data->set_to);
 
     for (i = 0; i < G_N_ELEMENTS(menu_list); i++) {
         GtkWidget *menu = g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
