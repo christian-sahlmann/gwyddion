@@ -163,8 +163,6 @@ gwy_data_field_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), NULL);
 
     data_field = GWY_DATA_FIELD(obj);
-    buffer = gwy_serialize_pack(buffer, size, "si",
-                                GWY_DATA_FIELD_TYPE_NAME, 0);
     datasize = data_field->xres*data_field->yres;
     {
         GwySerializeSpec spec[] = {
@@ -174,14 +172,10 @@ gwy_data_field_serialize(GObject *obj,
             { 'd', "yreal", &data_field->yreal, NULL, },
             { 'D', "data", &data_field->data, &datasize, },
         };
-        gsize oldsize = *size;
-
-        buffer = gwy_serialize_pack_struct(buffer, size,
-                                           G_N_ELEMENTS(spec), spec);
-        gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
-                                  *size - oldsize);
+        return gwy_serialize_pack_object_struct(buffer, size,
+                                                GWY_DATA_FIELD_TYPE_NAME,
+                                                G_N_ELEMENTS(spec), spec);
     }
-    return buffer;
 }
 
 static GObject*
@@ -189,9 +183,9 @@ gwy_data_field_deserialize(const guchar *buffer,
                            gsize size,
                            gsize *position)
 {
-    gsize pos, fsize, mysize;
+    gsize fsize;
     gint xres, yres;
-    gdouble xreal, yreal, *data;
+    gdouble xreal, yreal, *data = NULL;
     GwyDataField *data_field;
     GwySerializeSpec spec[] = {
         { 'i', "xres", &xres, NULL, },
@@ -206,15 +200,19 @@ gwy_data_field_deserialize(const guchar *buffer,
     #endif
     g_return_val_if_fail(buffer, NULL);
 
-    pos = gwy_serialize_check_string(buffer, size, *position,
-                                     GWY_DATA_FIELD_TYPE_NAME);
-    g_return_val_if_fail(pos, NULL);
-    *position += pos;
-    mysize = gwy_serialize_unpack_int32(buffer, size, position);
-
-    gwy_serialize_unpack_struct(buffer + *position, mysize,
-                                G_N_ELEMENTS(spec), spec);
-    *position += mysize;
+    if (!gwy_serialize_unpack_object_struct(buffer, size, position,
+                                            GWY_DATA_FIELD_TYPE_NAME,
+                                            G_N_ELEMENTS(spec), spec)) {
+        g_free(data);
+        return NULL;
+    }
+    if (fsize != xres*yres) {
+        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_CRITICAL,
+              "Serialized %s size mismatch %u != %u",
+              GWY_DATA_FIELD_TYPE_NAME, fsize, xres*yres);
+        g_free(data);
+        return NULL;
+    }
 
     /* don't allocate large amount of memory just to immediately free it */
     data_field = (GwyDataField*)gwy_data_field_new(1, 1, xreal, yreal, FALSE);
