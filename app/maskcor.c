@@ -50,13 +50,12 @@ static void       gwy_data_maskcor_load_args        (GwyContainer *settings,
 static void       gwy_data_maskcor_save_args        (GwyContainer *settings,
                                                      GwyMaskcorArgs *args);
 static GtkWidget* gwy_data_maskcor_window_construct (GwyMaskcorArgs *args);
-static GtkWidget* gwy_data_maskcor_data_option_menu (GtkWidget *entry,
-                                                     GwyDataWindow **operand);
+static GtkWidget* gwy_data_maskcor_data_option_menu (GwyDataWindow **operand);
 static void       gwy_data_maskcor_operation_cb     (GtkWidget *item,
                                                      GwyMaskcorArgs *args);
+static void       gwy_data_maskcor_threshold_cb     (GtkAdjustment *adj,
+                                                     gdouble *value);
 static void       gwy_data_maskcor_data_cb          (GtkWidget *item);
-static void       gwy_data_maskcor_entry_cb         (GtkWidget *entry,
-                                                     gpointer data);
 static gboolean   gwy_data_maskcor_do               (GwyMaskcorArgs *args,
                                                      GtkWidget *maskcor_window);
 
@@ -131,8 +130,8 @@ gwy_app_data_maskcor(void)
 static GtkWidget*
 gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
 {
-    GtkWidget *dialog, *table, *omenu, *entry, *label;
-    gchar *text;
+    GtkWidget *dialog, *table, *omenu, *label, *spin;
+    GtkObject *adj;
 
     dialog = gtk_dialog_new_with_buttons(_("Create mask by correlation"),
                                          GTK_WINDOW(gwy_app_main_window_get()),
@@ -152,8 +151,7 @@ gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 0, 1);
 
-    entry = gtk_entry_new();
-    omenu = gwy_data_maskcor_data_option_menu(entry, &args->win1);
+    omenu = gwy_data_maskcor_data_option_menu(&args->win1);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 0, 1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
 
@@ -164,27 +162,17 @@ gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 1, 2);
 
 
-    omenu = gwy_data_maskcor_data_option_menu(entry, &args->win2);
+    omenu = gwy_data_maskcor_data_option_menu(&args->win2);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 1, 2);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
 
     /**** Parameters ********/
-    /*threshold*/
-    label = gtk_label_new_with_mnemonic(_("T_hreshold"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 2, 3);
-
-    entry = gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 2, 2, 3);
-    gtk_entry_set_max_length(GTK_ENTRY(entry), 16);
-    gtk_entry_set_width_chars(GTK_ENTRY(entry), 16);
-    text = g_strdup_printf("%g", args->threshold);
-    gtk_entry_set_text(GTK_ENTRY(entry), text);
-    g_free(text);
-    g_object_set_data(G_OBJECT(entry), "scalar", &args->threshold);
-    g_signal_connect(entry, "changed",
-                     G_CALLBACK(gwy_data_maskcor_entry_cb), NULL);
-
+    adj = gtk_adjustment_new(args->threshold, -1.0, 1.0, 0.01, 0.1, 0.1);
+    spin = gwy_table_attach_spinbutton(table, 2, _("T_hreshold"), "", adj);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+    g_signal_connect(adj, "value_changed",
+                     G_CALLBACK(gwy_data_maskcor_threshold_cb),
+                     &args->threshold);
 
     /***** Result *****/
     label = gtk_label_new_with_mnemonic(_("_Result:"));
@@ -204,15 +192,13 @@ gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
 }
 
 GtkWidget*
-gwy_data_maskcor_data_option_menu(GtkWidget *entry,
-                                GwyDataWindow **operand)
+gwy_data_maskcor_data_option_menu(GwyDataWindow **operand)
 {
     GtkWidget *omenu, *menu;
 
     omenu = gwy_option_menu_data_window(G_CALLBACK(gwy_data_maskcor_data_cb),
                                         NULL, NULL, GTK_WIDGET(*operand));
     menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
-    g_object_set_data(G_OBJECT(menu), "entry", entry);
     g_object_set_data(G_OBJECT(menu), "operand", operand);
 
     return omenu;
@@ -226,62 +212,23 @@ gwy_data_maskcor_operation_cb(GtkWidget *item, GwyMaskcorArgs *args)
 }
 
 static void
-gwy_data_maskcor_data_cb(GtkWidget *item)
+gwy_data_maskcor_threshold_cb(GtkAdjustment *adj, gdouble *value)
 {
-    GtkWidget *menu, *entry;
-    gpointer p, *pp;
-
-    menu = gtk_widget_get_parent(item);
-    entry = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "entry"));
-
-    p = g_object_get_data(G_OBJECT(item), "data-window");
-    gtk_widget_set_sensitive(entry, p == NULL);
-    pp = (gpointer*)g_object_get_data(G_OBJECT(menu), "operand");
-    g_return_if_fail(pp);
-    *pp = p;
+    *value = gtk_adjustment_get_value(adj);
 }
 
 static void
-gwy_data_maskcor_entry_cb(GtkWidget *entry,
-                        gpointer data)
+gwy_data_maskcor_data_cb(GtkWidget *item)
 {
-    GtkEditable *editable;
-    gint pos;
-    gchar *s, *end;
-    gdouble *scalar;
+    GtkWidget *menu;
+    gpointer p, *pp;
 
-    scalar = (gdouble*)g_object_get_data(G_OBJECT(entry), "scalar");
-    editable = GTK_EDITABLE(entry);
-    /* validate whether it looks as a number of something like start of a
-     * number */
-    s = end = gtk_editable_get_chars(editable, 0, -1);
-    for (pos = 0; s[pos]; pos++)
-        s[pos] = g_ascii_tolower(s[pos]);
-    *scalar = strtod(s, &end);
-    if (*end == '-' && end == s)
-        end++;
-    else if (*end == 'e' && strchr(s, 'e') == end) {
-        end++;
-        if (*end == '-')
-            end++;
-    }
-    /*gwy_debug("<%s> <%s>", s, end);*/
-    if (!*end) {
-        g_free(s);
-        return;
-    }
+    menu = gtk_widget_get_parent(item);
 
-    g_signal_handlers_block_by_func(editable,
-                                    G_CALLBACK(gwy_data_maskcor_entry_cb),
-                                    data);
-    gtk_editable_delete_text(editable, 0, -1);
-    pos = 0;
-    gtk_editable_insert_text(editable, s, end - s, &pos);
-    g_signal_handlers_unblock_by_func(editable,
-                                      G_CALLBACK(gwy_data_maskcor_entry_cb),
-                                      data);
-    g_free(s);
-    g_signal_stop_emission_by_name(editable, "changed");
+    p = g_object_get_data(G_OBJECT(item), "data-window");
+    pp = (gpointer*)g_object_get_data(G_OBJECT(menu), "operand");
+    g_return_if_fail(pp);
+    *pp = p;
 }
 
 void
@@ -344,36 +291,36 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
                                                              "/0/data"));
 
     kernel = gwy_data_window_get_data(operand2);
-    kernelfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(kernel, "/0/data"));
+    kernelfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(kernel,
+                                                                  "/0/data"));
 
     state = GWY_COMP_INIT;
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
-    do
-    {
-        gwy_data_field_correlate_iteration(dfield, kernelfield, retfield, &state, &iteration);
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
+                       "Initializing...");
+    do {
+        gwy_data_field_correlate_iteration(dfield, kernelfield, retfield,
+                                           &state, &iteration);
         gwy_app_wait_set_message("Correlating...");
-        if (!gwy_app_wait_set_fraction(iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2))) return FALSE;
+        if (!gwy_app_wait_set_fraction(iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2)))
+            return FALSE;
 
     } while (state != GWY_COMP_FINISHED);
     gwy_app_wait_finish();
 
     /*score - do new data with score*/
-    if (args->result == GWY_MASKCOR_SCORE)
-    {
+    if (args->result == GWY_MASKCOR_SCORE) {
         if (gwy_container_contains_by_name(ret, "/0/mask"))
             gwy_container_remove_by_name(ret, "/0/mask");
 
         data_window = gwy_app_data_window_create(ret);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
-    else /*add mask*/
-    {
-        if (args->result == GWY_MASKCOR_OBJECTS)
-        {
-            plot_correlated(retfield, kernelfield->xres, kernelfield->yres, args->threshold);
+    else { /*add mask*/
+        if (args->result == GWY_MASKCOR_OBJECTS) {
+            plot_correlated(retfield, kernelfield->xres, kernelfield->yres,
+                            args->threshold);
         }
-        else if (args->result == GWY_MASKCOR_MAXIMA)
-        {
+        else if (args->result == GWY_MASKCOR_MAXIMA) {
             plot_maxima(retfield, args->threshold);
         }
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(retfield));
@@ -386,23 +333,13 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
 
 static const gchar *result_key = "/app/maskcor/result";
 static const gchar *threshold_key = "/app/maskcor/threshold";
-static const gchar *scalar_is1_key = "/app/maskcor/is1";
-static const gchar *scalar_is2_key = "/app/maskcor/is2";
 
 static void
 gwy_data_maskcor_load_args(GwyContainer *settings,
                          GwyMaskcorArgs *args)
 {
-    gboolean b;
-
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
-    gwy_container_gis_boolean_by_name(settings, scalar_is1_key, &b);
-    if (b)
-        args->win1 = NULL;
-    gwy_container_gis_boolean_by_name(settings, scalar_is2_key, &b);
-    if (b)
-        args->win2 = NULL;
 }
 
 static void
@@ -411,10 +348,6 @@ gwy_data_maskcor_save_args(GwyContainer *settings,
 {
     gwy_container_set_enum_by_name(settings, result_key, args->result);
     gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
-    gwy_container_set_boolean_by_name(settings, scalar_is1_key,
-                                      args->win1 == NULL);
-    gwy_container_set_boolean_by_name(settings, scalar_is2_key,
-                                      args->win2 == NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -70,8 +70,7 @@ static void       gwy_data_croscor_save_args       (GwyContainer *settings,
                                                     GwyCroscorArgs *args);
 static GtkWidget* gwy_data_croscor_window_construct(GwyCroscorArgs *args,
                                                     GwyCroscorControls *controls);
-static GtkWidget* gwy_data_croscor_data_option_menu(GtkWidget *entry,
-                                                    GwyDataWindow **operand);
+static GtkWidget* gwy_data_croscor_data_option_menu(GwyDataWindow **operand);
 static void       gwy_data_croscor_operation_cb    (GtkWidget *item,
                                                     GwyCroscorArgs *args);
 static void       gwy_data_croscor_data_cb         (GtkWidget *item);
@@ -157,7 +156,8 @@ static GtkWidget*
 gwy_data_croscor_window_construct(GwyCroscorArgs *args,
                                   GwyCroscorControls *controls)
 {
-    GtkWidget *dialog, *table, *omenu, *entry, *label, *spin;
+    GtkWidget *dialog, *table, *omenu, *label, *spin;
+    gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Data Croscorrelation"),
                                          GTK_WINDOW(gwy_app_main_window_get()),
@@ -169,85 +169,96 @@ gwy_data_croscor_window_construct(GwyCroscorArgs *args,
 
     table = gtk_table_new(2, 10, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
+    row = 0;
 
     /***** First operand *****/
     label = gtk_label_new_with_mnemonic(_("_First data field:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 0, 1);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    entry = gtk_entry_new();
-    omenu = gwy_data_croscor_data_option_menu(entry, &args->win1);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 0, 1);
+    omenu = gwy_data_croscor_data_option_menu(&args->win1);
+    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
+    row++;
 
     /***** Second operand *****/
     label = gtk_label_new_with_mnemonic(_("_Second data field:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 1, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-
-    omenu = gwy_data_croscor_data_option_menu(entry, &args->win2);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 1, 2);
+    omenu = gwy_data_croscor_data_option_menu(&args->win2);
+    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
     /**** Parameters ********/
     /*search size*/
-    label = gtk_label_new_with_mnemonic(_("_Search size [pixels]"));
+    label = gtk_label_new_with_mnemonic(_("_Search size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 2, 3);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls->search_area_x = gtk_adjustment_new(args->search_x,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 3, _("width"), _(""),
+    gwy_table_attach_spinbutton(table, row, _("Width"), _("pixels"),
                                 controls->search_area_x);
+    row++;
+
     controls->search_area_y = gtk_adjustment_new(args->search_y,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 4, _("height"), _(""),
+    gwy_table_attach_spinbutton(table, row, _("Height"), _("pixels"),
                                 controls->search_area_y);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
     /*window size*/
-    label = gtk_label_new_with_mnemonic(_("_Window size [pixels]"));
+    label = gtk_label_new_with_mnemonic(_("_Window size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 5, 6);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls->window_area_x = gtk_adjustment_new(args->window_x,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 6, _("width"), _(""),
+    gwy_table_attach_spinbutton(table, row, _("Width"), _("pixels"),
                                 controls->window_area_x);
+    row++;
+
     controls->window_area_y = gtk_adjustment_new(args->window_y,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 7, _("height"), _(""),
+    gwy_table_attach_spinbutton(table, row, _("Height"), _("pixels"),
                                 controls->window_area_y);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
     /*do mask of thresholds*/
-/*    label = gtk_label_new_with_mnemonic(_("_Low score results mask"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 8, 9);*/
-    controls->mask = gtk_check_button_new_with_label("add");
-    gwy_table_attach_row(table, 8, _("_Low score results mask:"), "",
-                         controls->mask);
+    controls->mask = gtk_check_button_new_with_mnemonic(_("Add _low score "
+                                                          "results mask"));
+    gtk_table_attach(GTK_TABLE(table), controls->mask, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->mask), args->mask);
+    row++;
 
     controls->threshold = gtk_adjustment_new(args->thresh,
                                              -1, 1, 0.005, 0.05, 0);
-    spin = gwy_table_attach_spinbutton(table, 9, _("threshold value"), _(""),
+    spin = gwy_table_attach_spinbutton(table, row, _("Threshold value"), _(""),
                                        controls->threshold);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+    row++;
 
     /***** Result *****/
-    label = gtk_label_new_with_mnemonic(_("_Result:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 10, 11);
-
     omenu = gwy_option_menu_create(results, G_N_ELEMENTS(results),
                                    "operation",
                                    G_CALLBACK(gwy_data_croscor_operation_cb),
                                    args,
                                    args->result);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 10, 11);
+    gwy_table_attach_row(table, row, _("_Result:"), "", omenu);
 
     gtk_widget_show_all(dialog);
 
@@ -255,15 +266,13 @@ gwy_data_croscor_window_construct(GwyCroscorArgs *args,
 }
 
 GtkWidget*
-gwy_data_croscor_data_option_menu(GtkWidget *entry,
-                                  GwyDataWindow **operand)
+gwy_data_croscor_data_option_menu(GwyDataWindow **operand)
 {
     GtkWidget *omenu, *menu;
 
     omenu = gwy_option_menu_data_window(G_CALLBACK(gwy_data_croscor_data_cb),
                                         NULL, NULL, GTK_WIDGET(*operand));
     menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
-    g_object_set_data(G_OBJECT(menu), "entry", entry);
     g_object_set_data(G_OBJECT(menu), "operand", operand);
 
     return omenu;
@@ -279,14 +288,12 @@ gwy_data_croscor_operation_cb(GtkWidget *item, GwyCroscorArgs *args)
 static void
 gwy_data_croscor_data_cb(GtkWidget *item)
 {
-    GtkWidget *menu, *entry;
+    GtkWidget *menu;
     gpointer p, *pp;
 
     menu = gtk_widget_get_parent(item);
-    entry = GTK_WIDGET(g_object_get_data(G_OBJECT(menu), "entry"));
 
     p = g_object_get_data(G_OBJECT(item), "data-window");
-    gtk_widget_set_sensitive(entry, p == NULL);
     pp = (gpointer*)g_object_get_data(G_OBJECT(menu), "operand");
     g_return_if_fail(pp);
     *pp = p;
@@ -422,15 +429,11 @@ static const gchar *window_x_key = "/app/croscor/window_x";
 static const gchar *window_y_key = "/app/croscor/window_y";
 static const gchar *rot_pos_key = "/app/croscor/rot_pos";
 static const gchar *rot_neg_key = "/app/croscor/rot_neg";
-static const gchar *scalar_is1_key = "/app/croscor/is1";
-static const gchar *scalar_is2_key = "/app/croscor/is2";
 
 static void
 gwy_data_croscor_load_args(GwyContainer *settings,
                          GwyCroscorArgs *args)
 {
-    gboolean b;
-
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_int32_by_name(settings, search_x_key, &args->search_x);
     gwy_container_gis_int32_by_name(settings, search_y_key, &args->search_y);
@@ -438,12 +441,6 @@ gwy_data_croscor_load_args(GwyContainer *settings,
     gwy_container_gis_int32_by_name(settings, window_y_key, &args->window_y);
     gwy_container_gis_double_by_name(settings, rot_pos_key, &args->rot_pos);
     gwy_container_gis_double_by_name(settings, rot_neg_key, &args->rot_neg);
-    gwy_container_gis_boolean_by_name(settings, scalar_is1_key, &b);
-    if (b)
-        args->win1 = NULL;
-    gwy_container_gis_boolean_by_name(settings, scalar_is2_key, &b);
-    if (b)
-        args->win2 = NULL;
 }
 
 static void
@@ -457,10 +454,6 @@ gwy_data_croscor_save_args(GwyContainer *settings,
     gwy_container_set_int32_by_name(settings, window_y_key, args->window_y);
     gwy_container_set_double_by_name(settings, rot_pos_key, args->rot_pos);
     gwy_container_set_double_by_name(settings, rot_neg_key, args->rot_neg);
-    gwy_container_set_boolean_by_name(settings, scalar_is1_key,
-                                      args->win1 == NULL);
-    gwy_container_set_boolean_by_name(settings, scalar_is2_key,
-                                      args->win2 == NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
