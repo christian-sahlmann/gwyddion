@@ -10,6 +10,7 @@ pixmapdata_DATA = \
 	gwy_graph-24.png \
 	gwy_gwyddion-60.png \
 	gwy_italic-24.png \
+	gwy_none-24.png \
 	gwy_pointer-24.png \
 	gwy_pointer_measure-24.png \
 	gwy_rotate-24.png \
