@@ -32,6 +32,7 @@ process_PROGRAMS = \
 	mask_grow_shrink.so \
 	maskcor.so \
 	maskops.so \
+	median-bg.so \
 	outliers.so \
 	polylevel.so \
 	presentationops.so \
@@ -137,6 +138,9 @@ maskcor_so_LDFLAGS = $(module_ldflags),maskcor.so
 
 maskops_so_SOURCES = maskops.c
 maskops_so_LDFLAGS = $(module_ldflags),maskops.so
+
+median_bg_so_SOURCES = median-bg.c
+median_bg_so_LDFLAGS = $(module_ldflags),median-bg.so
 
 outliers_so_SOURCES = outliers.c
 outliers_so_LDFLAGS = $(module_ldflags),outliers.so
