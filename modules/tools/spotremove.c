@@ -101,7 +101,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "spotremove",
-    "Removes spots.",
+    N_("Removes spots."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -126,10 +126,10 @@ enum {
 };
 
 static const GwyEnum algorithms[] = {
-    { "Hyperbolic flatten", SPOT_REMOVE_HYPER_FLATTEN },
-    { "Pseudo-Laplace",     SPOT_REMOVE_PSEUDO_LAPLACE },
-    { "Laplace solver",     SPOT_REMOVE_LAPLACE },
-    { "Fractal correction", SPOT_REMOVE_FRACTAL },
+    { N_("Hyperbolic flatten"), SPOT_REMOVE_HYPER_FLATTEN },
+    { N_("Pseudo-Laplace"),     SPOT_REMOVE_PSEUDO_LAPLACE },
+    { N_("Laplace solver"),     SPOT_REMOVE_LAPLACE },
+    { N_("Fractal correction"), SPOT_REMOVE_FRACTAL },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -142,7 +142,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "spotremove",
         GWY_STOCK_SPOT_REMOVE,
-        "Manually remove spots",
+        N_("Manually remove spots"),
         120,
         use,
     };
@@ -272,6 +272,7 @@ dialog_create(GwyUnitoolState *state)
                                    "algorithm",
                                    G_CALLBACK(algorithm_changed_cb), state,
                                    controls->algorithm);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
     gtk_table_attach(GTK_TABLE(table), omenu, 0, 4, row, row+1,
                      GTK_FILL, 0, 2, 2);
 

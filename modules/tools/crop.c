@@ -50,7 +50,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "crop",
-    "Crop tool.",
+    N_("Crop tool."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -77,7 +77,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo crop_func_info = {
         "crop",
         "gwy_crop",
-        "Crop data",
+        N_("Crop data"),
         20,
         &use,
     };

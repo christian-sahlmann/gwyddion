@@ -53,7 +53,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "pointer",
-    "Pointer tool.",
+    N_("Pointer tool."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -80,7 +80,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "pointer",
         "gwy_pointer_measure",
-        "Read value under mouse cursor.",
+        N_("Read value under mouse cursor."),
         0,
         &use,
     };
@@ -174,7 +174,7 @@ dialog_create(GwyUnitoolState *state)
     else
         radius = 1;
     controls->radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
-    gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
+    gwy_table_attach_spinbutton(table, 9, _("Averaging _radius"), _("px"),
                                 controls->radius);
     g_signal_connect_swapped(controls->radius, "value_changed",
                              G_CALLBACK(dialog_update), state);

@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "icolorange",
-    "Interactive color range tool.",
+    N_("Interactive color range tool."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -87,7 +87,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo icolorange_func_info = {
         "icolorange",
         "gwy_color_range",
-        "Stretch color range to part of data.",
+        N_("Stretch color range to part of data."),
         130,
         &use,
     };
