@@ -163,7 +163,6 @@ ierosion(gdouble **image, gint im_xsiz, gint im_ysiz,
             }
             result[j][i] = min;
         }
-        printf("rec: %d\n", j);
     }
     return (result);
 }
@@ -220,18 +219,19 @@ icmap(gdouble **image, gint im_xsiz, gint im_ysiz,
                         count++;        /* increment count */
                         x = tpx + imx - rxc;    /* remember coordinates */
                         y = tpy + imy - ryc;
-                        printf("#### ");
                     }
-                    
+                    /*
                     printf("tpy=%d, tpx=%d  img: %g, tip: %g,  rsurf: %g,  diff: %g\n", tpy, tpx, 
                            image[imy][imx], tip[tip_ysiz - 1 - tpy][tip_xsiz - 1 - tpx], 
                            rsurf[tpy + imy - ryc][tpx + imx - rxc], fabs(image[imy][imx] + tip[tip_ysiz - 1 - tpy][tip_xsiz - 1 - tpx] 
                                                                          - rsurf[tpy + imy - ryc][tpx + imx - rxc]));
-                                                                         
+                      */                                                  
                 }
             }
             if (count == 1)
+            {
                 cmap[y][x] = 1; /* 1 contact = good recon */
+            }
         }
     }
     return (cmap);

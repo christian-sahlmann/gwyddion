@@ -238,8 +238,8 @@ datafield_to_largefield(GwyDataField *datafield, GwyDataField *tipfield)
     {
         for (row=0; row<ynew; row++)
         {
-            if (col>=tipfield->xres/2 && col<(datafield->xres - tipfield->xres/2)
-                && row>=tipfield->yres/2 && row<(datafield->yres - tipfield->yres/2))
+            if (col>=tipfield->xres/2 && col<(datafield->xres + tipfield->xres/2)
+                && row>=tipfield->yres/2 && row<(datafield->yres + tipfield->yres/2))
             ret[col][row] = datafield->data[col - tipfield->xres/2 
                 + datafield->xres*(row - tipfield->yres/2)];
             else
@@ -262,9 +262,11 @@ largefield_to_datafield(gdouble **field, GwyDataField *ret, GwyDataField *tipfie
     {
         for (row=0; row<ynew; row++)
         {
-            if (col>=tipfield->xres/2 && col<(ret->xres - tipfield->xres/2)
-                && row>=tipfield->yres/2 && row<(ret->yres - tipfield->yres/2))
-            ret->data[col - tipfield->xres/2 + ret->xres*(row - tipfield->yres/2)] = field[col][row];
+            if (col>=tipfield->xres/2 && col<(ret->xres + tipfield->xres/2)
+                && row>=tipfield->yres/2 && row<(ret->yres + tipfield->yres/2))
+            {
+                ret->data[col - tipfield->xres/2 + ret->xres*(row - tipfield->yres/2)] = field[col][row];
+            }                        
         }
     }    
     return ret;
