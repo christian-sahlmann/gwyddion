@@ -25,8 +25,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
 #define MARK_RUN_MODES \
     (GWY_RUN_MODAL)
@@ -123,7 +122,7 @@ static GwyModuleInfo module_info = {
     "mark_threshold",
     "Mark grains by thresholding",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -503,6 +502,7 @@ ok(MarkControls *controls,
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
+    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (gwy_container_contains_by_name(data, "/0/mask")) {
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                   "/0/mask"));
@@ -513,9 +513,9 @@ ok(MarkControls *controls,
         gwy_data_field_copy(dfield, maskfield);
     }
     else {
-        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+        maskfield
+            = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
-
     }
 
     mask_process(dfield, maskfield, args, controls);

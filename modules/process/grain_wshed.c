@@ -25,9 +25,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/settings.h>
-#include <app/app.h>
-#include <app/wait.h>
+#include <app/gwyapp.h>
 
 #define WSHED_RUN_MODES \
     (GWY_RUN_MODAL)
@@ -99,7 +97,7 @@ static GwyModuleInfo module_info = {
     "wshed_threshold",
     "Mark grains by watershed algorithm",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -429,15 +427,15 @@ preview(WshedControls *controls,
 
 static void
 ok(WshedControls *controls,
-        WshedArgs *args,
-        GwyContainer *data)
+   WshedArgs *args,
+   GwyContainer *data)
 {
 
     GwyDataField *dfield, *maskfield;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-
+    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (gwy_container_contains_by_name(data, "/0/mask"))
     {
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,

@@ -27,7 +27,6 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
-
 #define REMOVE_RUN_MODES \
     (GWY_RUN_MODAL)
 
@@ -98,7 +97,7 @@ static GwyModuleInfo module_info = {
     "remove_threshold",
     "Remove grains by thresholding",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -213,7 +212,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     spin = gwy_table_attach_spinbutton(table, 2, _("Height value [fractile]"), _(""),
                                 controls.threshold_height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    
+
     controls.is_area = gtk_check_button_new_with_label("Threshold by area:");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area),
                                  args->is_area);
@@ -331,23 +330,19 @@ preview(RemoveControls *controls,
 
 static void
 ok(RemoveControls *controls,
-        RemoveArgs *args,
-        GwyContainer *data)
+   RemoveArgs *args,
+   GwyContainer *data)
 {
 
     GwyDataField *dfield, *maskfield;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
+    if (gwy_container_contains_by_name(data, "/0/mask")) {
+        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                   "/0/mask"));
         mask_process(dfield, maskfield, args, controls);
-    }
-    else
-    {
     }
 
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
