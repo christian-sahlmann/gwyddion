@@ -521,9 +521,9 @@ void gwy_data_field_grains_remove_manually(
                                            gint col, 
                                            gint row);
 
-void gwy_data_field_grains_remove_by_size(GwyDataField *data_field, 
+void gwy_data_field_grains_remove_by_size( 
                                           GwyDataField *grain_field, 
-                                          gdouble size);
+                                          gint size);
 
 void gwy_data_field_grains_remove_by_height(GwyDataField *data_field, 
                                             GwyDataField *grain_field, 

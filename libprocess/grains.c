@@ -165,12 +165,51 @@ void gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint col, 
     g_array_free(listpnt, TRUE);
 }
 
-void gwy_data_field_grains_remove_by_size(GwyDataField *data_field, GwyDataField *grain_field, gdouble size)
+void gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
 {
+    gint i, xres, yres, col, row;
+    GArray *listpnt;
+    GrainPoint pnt;
+    
+    
+    xres = grain_field->xres;
+    yres = grain_field->yres;
+
+    for (i=0; i<(xres*yres); i++)
+    {
+        if (grain_field->data[i]>0)
+        {
+            listpnt = g_array_new(TRUE, TRUE, sizeof(GrainPoint));
+            iterate(grain_field, listpnt, col, row);
+            if (listpnt->len > size)
+            {            
+                row = (gint)floor((gdouble)i/(gdouble)xres);
+                col = i - row;
+                gwy_data_field_grains_remove_manually(grain_field, col, row);                                                         
+            }
+            g_array_free(listpnt, TRUE);
+        }
+    }
+     
 }
 
 void gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint direction)
 {
+    gint i, xres, yres, col, row;
+    
+    xres = grain_field->xres;
+    yres = grain_field->yres;
+
+    for (i=0; i<(xres*yres); i++)
+    {
+        if (grain_field->data[i]>0 && data_field->data[i]>threshval)
+        {
+            row = (gint)floor((gdouble)i/(gdouble)xres);
+            col = i - row;
+            gwy_data_field_grains_remove_manually(grain_field, col, row);                                                         
+        }
+    }
+    
 }
 
 gdouble gwy_data_field_grains_get_average(GwyDataField *grain_field)
