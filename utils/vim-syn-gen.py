@@ -147,17 +147,32 @@ for filename in glob.glob(options['file_glob']):
         else:
             value = None
 
+        # Change parameterless macros to constants
         if d['type'] == 'MACRO' and not re_param_macro.search(d['body']):
             d['type'] = 'DEFINE'
             m = re_ident_macro.search(d['body'])
             if m:
                 identdefs[d['ident']] = m.group('ident')
 
+        # Find enum values and make them constants
         decls[d['type']][d['ident']] = value
         if d['type'] == 'ENUM':
             for e in re_enum.finditer(d['body']):
                 decls['CONSTANT'][e.group('ident')] = value
 
+# Kill macros if the same symbol also exists as a regular function
+# (this fixes things like g_file_test()).
+todelete = []
+for macro in identdefs.keys():
+    if decls['FUNCTION'].has_key(macro):
+        todelete.append(macro)
+
+for macro in todelete:
+    del decls['DEFINE'][macro]
+    del identdefs[macro]
+del todelete
+
+# Change macros defined to functions back to macros
 # FIXME: this is not recursive, and also doesn't catch defines to symbols
 # from other libraries -- how to handle that?
 for macro, body in identdefs.items():
