@@ -76,6 +76,7 @@ gint old_ulrow = 0;
 gint old_brcol = 0;
 gint old_brrow = 0;
 gint state_changed = 0;
+gpointer last_preview = NULL;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -144,8 +145,35 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
+    GwyContainer *data, *last_data;
+    GwyDataViewLayer *layer;
+    
     g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer, "is_crop", FALSE, NULL);
+
+    printf("last preview = %d\n", (gint) last_preview);
+    
+    if (last_preview != NULL)
+    {
+        printf("last preview found\n");
+        last_data = GWY_CONTAINER(last_preview);
+        g_object_remove_weak_pointer(G_OBJECT(last_data), &last_preview);
+        
+        gwy_container_remove_by_name(last_data, "/0/show");
+    }
+   
+    if (state->layer != NULL)
+    {
+        layer = GWY_DATA_VIEW_LAYER(state->layer);
+        if (GWY_IS_DATA_VIEW(layer->parent))
+        {
+            data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
+            printf("data = %d\n", (gint)data);
+            g_object_add_weak_pointer(G_OBJECT(data), &last_preview);
+            printf("preview set (%d)\n", (gint) last_preview);
+        }
+    }
+    
 }
 
 static GtkWidget*
