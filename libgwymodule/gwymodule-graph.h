@@ -41,6 +41,7 @@ gboolean     gwy_graph_func_register      (const gchar *modname,
                                            GwyGraphFuncInfo *func_info);
 gboolean     gwy_graph_func_run           (const guchar *name,
                                            GwyGraph *graph);
+gboolean     gwy_graph_func_exists        (const gchar *name);
 G_CONST_RETURN
 gchar*       gwy_graph_func_get_menu_path (const gchar *name);
 GtkObject*   gwy_graph_func_build_menu    (GtkObject *item_factory,

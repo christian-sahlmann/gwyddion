@@ -287,8 +287,8 @@ process_menu_entry_compare(GwyProcessFuncInfo *a,
  * Returns possible run modes for a data processing function identified by
  * @name.
  *
- * This function is suitable for testing whether a data processing function
- * exists, as function with no run modes cannot be registered.
+ * This function is the prefered one for testing whether a data processing
+ * function exists, as function with no run modes cannot be registered.
  *
  * Returns: The run mode bit mask, zero if the function does not exist.
  **/

@@ -190,6 +190,22 @@ gwy_tool_func_remove(const gchar *name)
     return TRUE;
 }
 
+/**
+ * gwy_tool_func_exists:
+ * @name: Graph function name.
+ *
+ * Returns whether tool function @name exists.
+ *
+ * Returns: %TRUE if @name exists, %FALSE otherwise.
+ *
+ * Since: 1.4.
+ **/
+gboolean
+gwy_tool_func_exists(const gchar *name)
+{
+    return g_hash_table_lookup(tool_funcs, name) != 0;
+}
+
 /************************** Documentation ****************************/
 
 /**

@@ -248,6 +248,22 @@ graph_menu_entry_compare(GwyGraphFuncInfo *a,
 }
 
 /**
+ * gwy_graph_func_exists:
+ * @name: Graph function name.
+ *
+ * Returns whether graph function @name exists.
+ *
+ * Returns: %TRUE if @name exists, %FALSE otherwise.
+ *
+ * Since: 1.4.
+ **/
+gboolean
+gwy_graph_func_exists(const gchar *name)
+{
+    return g_hash_table_lookup(graph_funcs, name) != 0;
+}
+
+/**
  * gwy_graph_func_get_menu_path:
  * @name: Graph function name.
  *
