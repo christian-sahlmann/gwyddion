@@ -1,5 +1,9 @@
 # @(#) $Id$
 
+pkgconfigdatadir = $(libdir)/pkgconfig
+
+pkgconfigdata_DATA = gwyddion.pc
+
 SUBDIRS = \
 	libgwyddion \
 	libprocess \
@@ -11,12 +15,16 @@ SUBDIRS = \
 	plugins \
 	pixmaps \
 	devel-docs
+
 M4TESTS = \
 	m4/gtk-doc.m4 \
 	m4/pkg.m4
+
 EXTRA_DIST = \
 	CODING-STANDARDS \
 	autogen.sh \
 	gwyddion.spec.in \
 	gwyddion.spec\
+	gwyddion.pc.in \
 	$(M4TESTS)
+

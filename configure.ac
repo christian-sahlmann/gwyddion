@@ -1,10 +1,10 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 0.20031123, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
+AC_INIT(Gwyddion, 0.20031129, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
-AC_CONFIG_SRCDIR(libgwydgets/gwyspherecoords.c)
+AC_CONFIG_SRCDIR(app/app.c)
 AC_CONFIG_FILES(\
   Makefile \
   app/Makefile \
@@ -28,15 +28,17 @@ AC_CONFIG_FILES(\
   devel-docs/libgwymodule/Makefile \
   devel-docs/libgwyprocess/Makefile \
   gwyddion.spec \
+  gwyddion.pc \
 )
 AM_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_TARGET
-dnl AM_INIT_AUTOMAKE([1.6 gnits check-news dist-bzip2])
-AM_INIT_AUTOMAKE([1.6 gnits dist-bzip2])
+AM_INIT_AUTOMAKE([1.6 gnits check-news dist-bzip2])
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.
+dnl FIXME: the tagnames= inhibits at least part of the Fortran and C++ brain
+dnl damage.
 tagnames=
 AC_PROG_AWK
 AC_PROG_CC
@@ -131,13 +133,3 @@ AC_SUBST(gwyplugindir)
 AC_SUBST(gwypixmapdir)
 
 AC_OUTPUT
-
-# XXX: An extremely ugly hack. Force libtool to pass --silent to ltmain.sh
-if test -f libtool; then
-  sed '
-/show=:$/a\
-    silent="--silent "
-s/$SHELL $0 --finish/$SHELL $0 $silent--finish/' libtool >.libtool-hack.$$
-  cat .libtool-hack.$$ >libtool
-  rm -f .libtool-hack.$$
-fi
