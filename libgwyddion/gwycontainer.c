@@ -1541,8 +1541,8 @@ gwy_container_watch(GwyContainer *container,
 }
 
 static void
-value_changed(GwyContainer *container,
-              GQuark key)
+value_changed(G_GNUC_UNUSED GwyContainer *container,
+              G_GNUC_UNUSED GQuark key)
 {
     gwy_debug("[%p] %s", container, g_quark_to_string(key));
 }
