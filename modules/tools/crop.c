@@ -55,7 +55,7 @@ static GwyModuleInfo module_info = {
     "crop",
     "Crop tool.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -218,12 +218,14 @@ dialog_abandon(GwyUnitoolState *state)
 static void
 apply(GwyUnitoolState *state)
 {
+    static const gchar *field_names[] = { "/0/data", "/0/mask", "/0/show" };
     GtkWidget *data_window;
     GwyDataView *data_view;
     GwyContainer *data;
     GwyDataField *dfield;
     gint ximin, yimin, ximax, yimax;
     gdouble sel[4];
+    gsize i;
 
     if (!gwy_vector_layer_get_selection(state->layer, sel))
         return;
@@ -232,20 +234,24 @@ apply(GwyUnitoolState *state)
     data = gwy_data_view_get_data(data_view);
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    ximin = gwy_data_field_rtoj(dfield, sel[0]);
-    yimin = gwy_data_field_rtoi(dfield, sel[1]);
-    ximax = gwy_data_field_rtoj(dfield, sel[2]) + 1;
-    yimax = gwy_data_field_rtoi(dfield, sel[3]) + 1;
-    gwy_data_field_set_xreal(dfield,
-                             (ximax - ximin + 1)
-                             *gwy_data_field_get_xreal(dfield)
-                             /gwy_data_field_get_xres(dfield));
-    gwy_data_field_set_yreal(dfield,
-                             (yimax - yimin + 1)
-                             *gwy_data_field_get_yreal(dfield)
-                             /gwy_data_field_get_yres(dfield));
-    gwy_data_field_resize(dfield, ximin, yimin, ximax, yimax);
+    for (i = 0; i < G_N_ELEMENTS(field_names); i++) {
+        if (!gwy_container_gis_object_by_name(data, field_names[i],
+                                              (GObject**)&dfield))
+            continue;
+        ximin = gwy_data_field_rtoj(dfield, sel[0]);
+        yimin = gwy_data_field_rtoi(dfield, sel[1]);
+        ximax = gwy_data_field_rtoj(dfield, sel[2]) + 1;
+        yimax = gwy_data_field_rtoi(dfield, sel[3]) + 1;
+        gwy_data_field_set_xreal(dfield,
+                                 (ximax - ximin + 1)
+                                 *gwy_data_field_get_xreal(dfield)
+                                 /gwy_data_field_get_xres(dfield));
+        gwy_data_field_set_yreal(dfield,
+                                 (yimax - yimin + 1)
+                                 *gwy_data_field_get_yreal(dfield)
+                                 /gwy_data_field_get_yres(dfield));
+        gwy_data_field_resize(dfield, ximin, yimin, ximax, yimax);
+    }
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     gwy_vector_layer_unselect(state->layer);
