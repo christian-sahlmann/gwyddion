@@ -110,6 +110,8 @@ gwy_tool_func_use(const guchar *name,
     g_return_val_if_fail(!data_window || GWY_IS_DATA_WINDOW(data_window),
                          FALSE);
 
+    gwy_debug("toolname = <%s>, data_window = %p, event = %d",
+              name, data_window, event);
     return func_info->use(data_window, event);
 }
 

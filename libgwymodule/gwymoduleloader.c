@@ -84,6 +84,7 @@ gwy_module_set_register_callback(void (*callback)(const gchar *fullname))
 {
     _gwy_file_func_set_register_callback(callback);
     _gwy_graph_func_set_register_callback(callback);
+    _gwy_layer_func_set_register_callback(callback);
     _gwy_process_func_set_register_callback(callback);
     _gwy_tool_func_set_register_callback(callback);
 }
