@@ -52,7 +52,7 @@ typedef struct {
 void gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
                                           GwyDataField *grain_field,
                                           gdouble threshval,
-                                          gint dir);
+                                          gint below);
 
 void gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                           GwyDataField *grain_field,
@@ -73,7 +73,7 @@ gboolean gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
                                             gint col,
                                             gint row);
 
-void gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
+gint gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
                                           gint size);
 
 void gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
@@ -98,12 +98,12 @@ void gwy_data_field_grains_mark_local_maxima(GwyDataField *data_field,
 void gwy_data_field_grains_mark_height(GwyDataField *data_field,
                                        GwyDataField *grain_field,
                                        gdouble threshval,
-                                       gint dir);
+                                       gint below);
 
 void gwy_data_field_grains_mark_slope(GwyDataField *data_field,
                                       GwyDataField *grain_field,
                                       gdouble threshval,
-                                      gint dir);
+                                      gint below);
 
 gdouble gwy_data_field_grains_get_average(GwyDataField *grain_field);
 

@@ -28,11 +28,6 @@
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
-/* FIXME: in 2.0 it should actually invalidate cached values.
- * Valid cached values will be probably bits in a bit field, so it will
- * simply expand to data_field->valid = 0 to clear them all. */
-#define gwy_data_field_invalidate(data_field) /* */
-
 /* Private DataLine functions */
 void            _gwy_data_line_initialize        (GwyDataLine *a,
                                                   gint res, gdouble real,

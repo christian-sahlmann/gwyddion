@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
 #include <stdio.h>
+
 static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   guint m,
                                                   gdouble phi);
@@ -66,7 +67,9 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
         gwy_data_field_resample(buffer_field, xres, yres,
                                 GWY_INTERPOLATION_NONE);
     }
-    gwy_data_field_area_copy(data_field, buffer_field, 0, 0, buffer_field->xres, buffer_field->yres,
+    gwy_data_field_area_copy(data_field, buffer_field,
+                             0, 0,
+                             buffer_field->xres, buffer_field->yres,
                              0, 0);
 
     /*set boundary condition for masked boundary data */
@@ -104,8 +107,10 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
         }
     }
 
-    gwy_data_field_area_copy(buffer_field, data_field, 0, 0, buffer_field->xres, buffer_field->yres,
-                                                          0, 0);
+    gwy_data_field_area_copy(buffer_field, data_field,
+                             0, 0,
+                             buffer_field->xres, buffer_field->yres,
+                             0, 0);
 
 }
 
@@ -143,6 +148,7 @@ gwy_data_field_mask_outliers(GwyDataField *data_field,
             mask_field->data[i] = 0;
     }
 
+    gwy_data_field_invalidate(mask_field);
 }
 
 /**
@@ -180,14 +186,16 @@ gwy_data_field_correct_average(GwyDataField *data_field,
  *           gwy_data_field_slope_distribution()).
  * @correction: Corrections for particular symmetry types will be stored
  *              here (indexed by GwyPlaneSymmetry). @correction[0] contains
- *              the most probable correction.  The angles are in radians.
+ *              the most probable correction.  All angles are in radians.
  *
- * Finds corrections for all possible symmetries and guess which one should
- * be used.
+ * Finds rotation corrections.
  *
- * Returns: The guessed type of symmetry.
+ * Rotation correction is computed for for all symmetry types.
+ * In addition an estimate is made about the prevalent one.
  *
- * Since: 1.4.
+ * Returns: The estimate type of prevalent symmetry.
+ *
+ * Since: 1.4
  **/
 GwyPlaneSymmetry
 gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
@@ -198,11 +206,11 @@ gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
     gint i, nder;
     gsize j, m;
     gdouble x, avg, max, total, phi;
-    gdouble *der;
+    const gdouble *der;
     gdouble sint[G_N_ELEMENTS(symm)], cost[G_N_ELEMENTS(symm)];
 
     nder = gwy_data_line_get_res(derdist);
-    der = gwy_data_line_get_data(derdist);
+    der = gwy_data_line_get_data_const(derdist);
     avg = gwy_data_line_get_avg(derdist);
     gwy_data_line_add(derdist, -avg);
 
@@ -318,11 +326,11 @@ unrotate_refine_correction(GwyDataLine *derdist,
                            guint m, gdouble phi)
 {
     gdouble sum, wsum;
-    gdouble *der;
+    const gdouble *der;
     guint i, j, nder;
 
     nder = gwy_data_line_get_res(derdist);
-    der = gwy_data_line_get_data(derdist);
+    der = gwy_data_line_get_data_const(derdist);
 
     phi -= floor(phi) + 1.0;
     sum = wsum = 0.0;

@@ -27,23 +27,29 @@
 
 /**
  * gwy_data_field_get_correlation_score:
- * @data_field: data field
- * @kernel_field: kernel to be correlated with data field
- * @ulcol: upper-left column position in the data field
- * @ulrow: upper-left row position in the data field
- * @kernel_ulcol: upper-left column position in kernel field
- * @kernel_ulrow: upper-left row position in kernel field
- * @kernel_brcol: bottom-right column position in kernel field
- * @kernel_brrow: bottom-right row position in kernel field
+ * @data_field: A data field.
+ * @kernel_field: Kernel to correlate data field with.
+ * @ulcol: Upper-left column position in the data field.
+ * @ulrow: Upper-left row position in the data field.
+ * @kernel_ulcol: Upper-left column position in kernel field.
+ * @kernel_ulrow: Upper-left row position in kernel field.
+ * @kernel_brcol: Bottom-right column position in kernel field.
+ * @kernel_brrow: Bottom-right row position in kernel field.
  *
- * Computes correlation score. Correlation window size is given
+ * Computes single correlation score.
+ *
+ * Correlation window size is given
  * by @kernel_ulcol, @kernel_ulrow, @kernel_brcol, @kernel_brrow,
  * postion of the correlation window on data is given by
- * @ulcol, @ulrow. If anything fails (data too close to boundary, etc.),
+ * @ulcol, @ulrow.
+ *
+ * If anything fails (data too close to boundary, etc.),
  * function returns -1 (none correlation).
  *
- * Returns: correlation score (between -1 and 1). Number 1 denotes
- * maximum correlation, -1 none correlation.
+ * Returns: Correlation score (between -1 and 1). Number 1 denotes
+ *          maximum correlation, -1 none correlation.
+ *
+ * Since: 1.2
  **/
 gdouble
 gwy_data_field_get_correlation_score(GwyDataField *data_field,
@@ -88,20 +94,14 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
         || (kernel_ulrow + kheight) > kyres)
         return -1;
 
-/*    printf("kul: %d, %d,  kbr: %d, %d, ul: %d, %d\n", kernel_ulcol, kernel_ulrow, kernel_brcol, kernel_brrow,  ulcol, ulrow);*/
-
-    avg1 =
-        gwy_data_field_get_area_avg(data_field, ulcol, ulrow, ulcol + kwidth,
-                                    ulrow + kheight);
-    avg2 =
-        gwy_data_field_get_area_avg(kernel_field, kernel_ulcol, kernel_ulrow,
-                                    kernel_brcol, kernel_brrow);
-    rms1 =
-        gwy_data_field_get_area_rms(data_field, ulcol, ulrow, ulcol + kwidth,
-                                    ulrow + kheight);
-    rms2 =
-        gwy_data_field_get_area_rms(kernel_field, kernel_ulcol, kernel_ulrow,
-                                    kernel_brcol, kernel_brrow);
+    avg1 = gwy_data_field_get_area_avg(data_field, ulcol, ulrow,
+                                       ulcol + kwidth, ulrow + kheight);
+    avg2 = gwy_data_field_get_area_avg(kernel_field, kernel_ulcol, kernel_ulrow,
+                                       kernel_brcol, kernel_brrow);
+    rms1 = gwy_data_field_get_area_rms(data_field, ulcol, ulrow,
+                                       ulcol + kwidth, ulrow + kheight);
+    rms2 = gwy_data_field_get_area_rms(kernel_field, kernel_ulcol, kernel_ulrow,
+                                       kernel_brcol, kernel_brrow);
 
     score = 0;
     sumpoints = kwidth * kheight;
@@ -120,12 +120,16 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
 
 /**
  * gwy_data_field_correlate:
- * @data_field: data field
- * @kernel_field: correlation kernel
- * @score: result scores
+ * @data_field: A data field.
+ * @kernel_field: Correlation kernel.
+ * @score: Data field to store correlation scores to.
  *
- * Computes correlation score for all the points in data field @data_field
+ * Computes correlation score for all positions in a data field.
+ *
+ * Correlation score is compute for all points in data field @data_field
  * and full size of correlation kernel @kernel_field.
+ *
+ * Since: 1.2
  **/
 void
 gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
@@ -161,23 +165,27 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
                                                      kyres);
         }
     }
+
+    gwy_data_field_invalidate(score);
 }
 
 /**
  * gwy_data_field_correlate_iteration:
- * @data_field: data field
- * @kernel_field: kernel to be correlated with data
- * @score: correlation scores
- * @state: state of iteration
- * @iteration: actual iteration row coordinate
+ * @data_field: A data field.
+ * @kernel_field: Kernel to correlate data field with.
+ * @score: Data field to store correlation scores to.
+ * @state: State of iteration.  It is updated to new state.
+ * @iteration: Actual iteration row coordinate.
  *
  * Performs one iteration of correlation.
+ *
+ * Since: 1.2
  **/
 void
 gwy_data_field_correlate_iteration(GwyDataField *data_field,
                                    GwyDataField *kernel_field,
                                    GwyDataField *score,
-                                   GwyComputationStateType * state,
+                                   GwyComputationStateType *state,
                                    gint *iteration)
 {
     gint xres, yres, kxres, kyres, i, j;
@@ -219,6 +227,8 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field,
         if (*iteration == (xres - kxres/2 - 1))
             *state = GWY_COMP_FINISHED;
     }
+
+    gwy_data_field_invalidate(score);
 }
 
 #if 0
@@ -267,15 +277,15 @@ gwy_data_field_crosscorrelate_iter(GwyDataField *data_field1,
 
 /**
  * gwy_data_field_crosscorrelate:
- * @data_field1: data field
- * @data_field2: data field
- * @x_dist: field of resulting x-distances
- * @y_dist: field of resulting y-distances
- * @search_width: search area width
- * @search_height: search area height
- * @window_width: correlation window width
- * @window_height: correlation window height
- * @score: correlation score result
+ * @data_field1: A data field.
+ * @data_field2: A data field.
+ * @x_dist: A data field to store x-distances to.
+ * @y_dist: A data field to store y-distances to.
+ * @score: Data field to store correlation scores to.
+ * @search_width: Search area width.
+ * @search_height: Search area height.
+ * @window_width: Correlation window width.
+ * @window_height: Correlation window height.
  *
  * Algorithm for matching two different images of the same object under changes.
  *
@@ -286,7 +296,7 @@ gwy_data_field_crosscorrelate_iter(GwyDataField *data_field1,
  * determine maimum area where to search for points. The area is cenetered
  * in the @data_field2 at former position of points at @data_field1.
  *
- * Since: 1.2.
+ * Since: 1.2
  **/
 void
 gwy_data_field_crosscorrelate(GwyDataField *data_field1,
@@ -329,7 +339,8 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                                                              m + search_width,
                                                              n + search_height);
 
-                    /*add a little to score at exactly same point - to prevent problems on flat data */
+                    /* add a little to score at exactly same point
+                     * - to prevent problems on flat data */
                     if (m == (i - search_width/2)
                         && n == (j - search_height/2))
                         lscore *= 1.0001;
@@ -346,21 +357,25 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
             y_dist->data[i + xres * j] = (gdouble)(jmax - j)*data_field1->yreal/(gdouble)data_field1->yres;
         }
     }
+
+    gwy_data_field_invalidate(score);
+    gwy_data_field_invalidate(x_dist);
+    gwy_data_field_invalidate(y_dist);
 }
 
 /**
  * gwy_data_field_crosscorrelate_iteration:
- * @data_field1: data field
- * @data_field2: data field
- * @x_dist: field of resulting x-distances
- * @y_dist: field of resulting y-distances
- * @score: correlation score
- * @search_width: search area width
- * @search_height: search area height
- * @window_width: correlation window width
- * @window_height: correlation window height
- * @state: state of computation
- * @iteration: iteration of computation loop (winthin GWY_COMP_ITERATE state)
+ * @data_field1: A data field.
+ * @data_field2: A data field.
+ * @x_dist: A data field to store x-distances to.
+ * @y_dist: A data field to store y-distances to.
+ * @score: Data field to store correlation scores to.
+ * @search_width: Search area width.
+ * @search_height: Search area height.
+ * @window_width: Correlation window width.
+ * @window_height: Correlation window height.
+ * @state: State of iteration.  It is updated to new state.
+ * @iteration: Iteration of computation loop (within GWY_COMP_ITERATE state).
  *
  * Algorithm for matching two different images of the same object under changes.
  *
@@ -425,7 +440,8 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
                                                              m + search_width,
                                                              n + search_height);
 
-                    /*add a little to score at exactly same point - to prevent problems on flat data */
+                    /* add a little to score at exactly same point
+                     * - to prevent problems on flat data */
                     if (m == (i - search_width/2)
                         && n == (j - search_height/2))
                         lscore *= 1.01;
@@ -439,14 +455,20 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
                 }
             }
             score->data[i + xres * j] = cormax;
-            x_dist->data[i + xres * j] = (gdouble)(imax - i)*data_field1->xreal/(gdouble)data_field1->xres;;
-            y_dist->data[i + xres * j] = (gdouble)(jmax - j)*data_field1->yreal/(gdouble)data_field1->yres;;
+            x_dist->data[i + xres * j]
+                = (gdouble)(imax - i)*data_field1->xreal/data_field1->xres;
+            y_dist->data[i + xres * j]
+                = (gdouble)(jmax - j)*data_field1->yreal/data_field1->yres;
 
         }
         *iteration = i + 1;
         if (*iteration == (xres - search_height/2))
             *state = GWY_COMP_FINISHED;
     }
+
+    gwy_data_field_invalidate(score);
+    gwy_data_field_invalidate(x_dist);
+    gwy_data_field_invalidate(y_dist);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

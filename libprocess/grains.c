@@ -58,100 +58,88 @@ gint *gwy_data_field_fill_grain(GwyDataField *dfield,
 /**
  * gwy_data_field_grains_mark_height:
  * @data_field: Data to be used for marking.
- * @grain_field: Result of marking (mask).
+ * @grain_field: Data field to store the resulting mask to.
  * @threshval: Height threshold.
- * @dir: Marking direction.
+ * @below: If %TRUE, data below threshold are marked, otherwise data above
+ *         threshold are marked.
  *
- * Marks data that are above/below height threshold
- * depending on @dir argument.
+ * Marks data that are above/below height threshold.
  **/
 void
 gwy_data_field_grains_mark_height(GwyDataField *data_field,
                                   GwyDataField *grain_field, gdouble threshval,
                                   /* FIXME: change to gboolean */
-                                  gint dir)
+                                  gint below)
 {
     GwyDataField *mask;
     gdouble min, max;
 
-    mask = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                             data_field->yres,
-                                             data_field->xreal,
-                                             data_field->yreal,
-                                             FALSE));
-
-    gwy_data_field_copy(data_field, mask);
-
+    mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
     min = gwy_data_field_get_min(mask);
     max = gwy_data_field_get_max(mask);
-    gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 0, 1);
-    /* FIXME: don't compare booleans */
-    if (dir == 1)
-        gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
+    if (below)
+        gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 1, 0);
+    else
+        gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 0, 1);
 
     number_grains(mask, grain_field);
 
     g_object_unref(mask);
+    gwy_data_field_invalidate(grain_field);
 }
 
 /**
  * gwy_data_field_grains_mark_slope:
  * @data_field: Data to be used for marking.
- * @grain_field: Result of marking (mask).
+ * @grain_field: Data field to store the resulting mask to.
  * @threshval: Slope threshold.
- * @dir: Marking direction.
+ * @below: If %TRUE, data below threshold are marked, otherwise data above
+ *         threshold are marked.
  *
- * Marks data that are above/below slope threshold
- * depending on @dir argument.
+ * Marks data that are above/below slope threshold.
  **/
 void
 gwy_data_field_grains_mark_slope(GwyDataField *data_field,
                                  GwyDataField *grain_field, gdouble threshval,
                                  /* FIXME: change to gboolean */
-                                 gint dir)
+                                 gint below)
 {
     GwyDataField *mask;
     gdouble min, max;
 
-    mask = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                             data_field->yres,
-                                             data_field->xreal,
-                                             data_field->yreal,
-                                             FALSE));
-
-    gwy_data_field_copy(data_field, mask);
+    mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
     gwy_data_field_filter_laplacian(mask, 0, 0, data_field->xres,
                                     data_field->yres);
 
     min = gwy_data_field_get_min(mask);
     max = gwy_data_field_get_max(mask);
-    gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 0, 1);
-    /* FIXME: don't compare booleans */
-    if (dir == 1)
-        gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
+    if (below)
+        gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 1, 0);
+    else
+        gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 0, 1);
 
     number_grains(mask, grain_field);
 
     g_object_unref(mask);
-
+    gwy_data_field_invalidate(grain_field);
 }
 
 /**
  * gwy_data_field_grains_mark_curvature:
  * @data_field: Data to be used for marking.
- * @grain_field: Result of marking (mask).
+ * @grain_field: Data field to store the resulting mask to.
  * @threshval: Curvature threshold.
- * @dir: Marking direction.
+ * @below: If %TRUE, data below threshold are marked, otherwise data above
+ *         threshold are marked.
  *
- * Marks data that are above/below curvature threshold
- * depending on @dir argument.
+ * Marks data that are above/below curvature threshold.
  **/
 void
 gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
                                      GwyDataField *grain_field,
                                      gdouble threshval,
                                      /* FIXME: change to gboolean */
-                                     gint dir)
+                                     gint below)
 {
     GwyDataField *maskx, *masky;
     gint i;
@@ -181,16 +169,18 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
 
     min = gwy_data_field_get_min(maskx);
     max = gwy_data_field_get_max(maskx);
-    gwy_data_field_threshold(maskx, min + threshval*(max - min)/100.0, 0, 1);
-    /* FIXME: don't compare booleans */
-    if (dir == 1)
-        gwy_data_field_invert(maskx, FALSE, FALSE, TRUE);
+    if (below)
+        gwy_data_field_threshold(maskx, min + threshval*(max - min)/100.0,
+                                 1, 0);
+    else
+        gwy_data_field_threshold(maskx, min + threshval*(max - min)/100.0,
+                                 0, 1);
 
     number_grains(maskx, grain_field);
 
     g_object_unref(maskx);
     g_object_unref(masky);
-
+    gwy_data_field_invalidate(grain_field);
 }
 
 /**
@@ -262,7 +252,7 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
     g_object_unref(min);
     g_object_unref(water);
     g_object_unref(mark_dfield);
-
+    gwy_data_field_invalidate(grain_field);
 }
 
 /**
@@ -361,7 +351,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
 
         status->state = GWY_WSHED_FINISHED;
     }
-
+    gwy_data_field_invalidate(grain_field);
 }
 
 /* FIXME: wrong name, wrong interface, kill in 2.0 */
@@ -392,6 +382,7 @@ gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint i)
     }
 
     g_free(pnt);
+    gwy_data_field_invalidate(grain_field);
 }
 
 /**
@@ -429,6 +420,7 @@ gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
         grain_field->data[points[npoints]] = 0.0;
     }
     g_free(points);
+    gwy_data_field_invalidate(grain_field);
 
     return TRUE;
 }
@@ -436,27 +428,24 @@ gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
 /**
  * gwy_data_field_grains_remove_by_size:
  * @grain_field: Field of marked grains (mask).
- * @size: Size to be used as threshold.
+ * @size: Grain area threshold, in square pixels.
  *
- * Removes all grain below area @size (in square pixels);
+ * Removes all grain below specified area.
+ *
+ * Returns: The number of grains removed (Since 1.7).
  **/
-void
+gint
 gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
 {
     gint i, xres, yres, col, row;
-    gint *pnt, npnt;
+    gint *pnt, npnt, nremoved;
     GwyDataField *buffer;
-
 
     xres = grain_field->xres;
     yres = grain_field->yres;
+    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(grain_field)));
 
-    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
-                                               grain_field->xreal,
-                                               grain_field->yreal,
-                                               FALSE));
-    gwy_data_field_copy(grain_field, buffer);
-
+    nremoved = 0;
     for (i = 0; i < xres*yres; i++) {
         if (buffer->data[i] > 0) {
             row = (gint)floor((gdouble)i/(gdouble)xres);
@@ -464,21 +453,27 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
             npnt = 0;
             pnt = gwy_data_field_fill_grain(buffer, row, col, &npnt);
             if (npnt < size) {
-                gwy_data_field_grains_remove_manually(grain_field, i);
+                gwy_data_field_grains_remove_grain(grain_field,
+                                                   i % xres, i/xres);
+                nremoved++;
             }
-            gwy_data_field_grains_remove_manually(buffer, i);
+            gwy_data_field_grains_remove_grain(buffer, i % xres, i/xres);
             g_free(pnt);
         }
     }
     g_object_unref(buffer);
+    if (nremoved) {
+        gwy_data_field_invalidate(grain_field);
+    }
 
+    return nremoved;
 }
 
 /**
  * gwy_data_field_grains_remove_by_height:
  * @data_field: Data to be used for marking
  * @grain_field: Field of marked grains (mask)
- * @threshval: Height threshold
+ * @threshval: Height threshold.
  * @direction: Threshold grains above/below given height
  *
  * Thresolds grain that are higher/lower than given threshold value.
@@ -491,7 +486,7 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                                        /* FIXME: implement or remove */
                                        gint G_GNUC_UNUSED direction)
 {
-    gint i, xres, yres, col, row;
+    gint i, xres, yres, col, row, nremoved;
 
     xres = grain_field->xres;
     yres = grain_field->yres;
@@ -500,12 +495,18 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                 + threshval*(gwy_data_field_get_max(data_field)
                              - gwy_data_field_get_min(data_field))/100.0;
 
+    nremoved = 0;
     for (i = 0; i < xres*yres; i++) {
         if (grain_field->data[i] > 0 && data_field->data[i] > threshval) {
             row = (gint)floor((gdouble)i/(gdouble)xres);
             col = i - xres*row;
-            gwy_data_field_grains_remove_manually(grain_field, i);
+            gwy_data_field_grains_remove_grain(grain_field, i % xres, i/xres);
+            nremoved++;
         }
+    }
+
+    if (nremoved) {
+        gwy_data_field_invalidate(grain_field);
     }
 }
 
@@ -518,11 +519,13 @@ gwy_data_field_grains_get_average(GwyDataField G_GNUC_UNUSED *grain_field)
 
 /**
  * gwy_data_field_grains_get_distribution:
- * @grain_field:  field of marked grains (mask).
+ * @grain_field: Data field of marked grains (mask).
  * @distribution: Grain size distribution.
  *
- * Computes grain size distribution - plot of
- * number of grains vs. grain area (in real units).
+ * Computes grain size distribution.
+ *
+ * Puts number of grains vs. grain area (in real units) data into
+ * @distribution.
  **/
 void
 gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
@@ -553,7 +556,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
             col = i - xres*row;
             npnt = 0;
             pnt = gwy_data_field_fill_grain(buffer, row, col, &npnt);
-            gwy_data_field_grains_remove_manually(buffer, i);
+            gwy_data_field_grains_remove_grain(buffer, i % xres, i/xres);
             g_free(pnt);
 
             if (maxpnt < npnt)
@@ -595,6 +598,7 @@ gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
     }
 
     number_grains(buffer, grain_field);
+    gwy_data_field_invalidate(grain_field);
 
     g_object_unref(buffer);
 }
@@ -629,6 +633,7 @@ gwy_data_field_grains_intersect(GwyDataField *grain_field,
     }
 
     number_grains(buffer, grain_field);
+    gwy_data_field_invalidate(grain_field);
 
     g_object_unref(buffer);
 }

@@ -82,6 +82,11 @@ G_BEGIN_DECLS
 
 GType gwy_data_field_get_type  (void) G_GNUC_CONST;
 
+/* FIXME: in 2.0 it should actually invalidate cached statistics.
+ * Valid cached values will be probably bits in a bit field, so it will
+ * simply expand to data_field->valid = 0 to clear them all. */
+#define gwy_data_field_invalidate(data_field) /* */
+
 GObject*         gwy_data_field_new                  (gint xres,
                                                       gint yres,
                                                       gdouble xreal,

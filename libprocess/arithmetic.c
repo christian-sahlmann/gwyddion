@@ -20,11 +20,6 @@
 
 #include "datafield.h"
 
-/* FIXME: in 2.0 it should actually invalidate cached values.
- * Valid cached values will be probably bits in a bit field, so it will
- * simply expand to data_field->valid = 0 to clear them all. */
-#define gwy_data_field_invalidate(data_field) /* */
-
 /**
  * gwy_data_field_sum_fields:
  * @result: A data field to put the result to.  May be one of @operand1,

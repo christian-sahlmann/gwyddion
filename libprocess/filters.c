@@ -40,7 +40,7 @@ static gint thin_data_field(GwyDataField *data_field);
  *
  * Convolves a rectangular part of a data field with given kernel.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_data_field_area_convolve(GwyDataField *data_field,
@@ -100,6 +100,8 @@ gwy_data_field_area_convolve(GwyDataField *data_field,
         }
     }
     g_object_unref(hlp_df);
+
+    gwy_data_field_invalidate(data_field);
 }
 
 void
@@ -129,7 +131,7 @@ gwy_data_field_convolve(GwyDataField *data_field,
  *
  * Filters a rectangular part of a data field with mean filter of size @size.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_mean(GwyDataField *data_field,
@@ -182,6 +184,7 @@ gwy_data_field_area_filter_mean(GwyDataField *data_field,
     }
 
     g_free(buffer);
+    gwy_data_field_invalidate(data_field);
 }
 
 void
@@ -204,18 +207,18 @@ gwy_data_field_filter_mean(GwyDataField *data_field,
 /**
  * gwy_data_field_area_filter_canny:
  * @data_field: A data field to apply mean filter to.
- * @threshold: slope detection threshold (range 0...1)
+ * @threshold: Slope detection threshold (range 0..1).
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Filters a rectangular part of a data field with canny edge detector filter of size @size.
+ * Filters a rectangular part of a data field with canny edge detector filter.
+ *
  * In version 1.6 this function filters whole data field.
  *
- * Since: 1.6.
+ * Since: 1.6
  **/
-
 void
 gwy_data_field_area_filter_canny(GwyDataField *data_field,
                                  gdouble threshold,
@@ -227,17 +230,18 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
     gint i, j, k;
     gdouble angle;
     gboolean pass;
+    gdouble *data;
 
     sobel_horizontal = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                          data_field->yres,
-                                          data_field->xreal,
-                                          data_field->yreal,
-                                          FALSE));
+                                                         data_field->yres,
+                                                         data_field->xreal,
+                                                         data_field->yreal,
+                                                         FALSE));
     sobel_vertical = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                          data_field->yres,
-                                          data_field->xreal,
-                                          data_field->yreal,
-                                          FALSE));
+                                                       data_field->yres,
+                                                       data_field->xreal,
+                                                       data_field->yreal,
+                                                       FALSE));
     gwy_data_field_area_copy(data_field, sobel_horizontal,
                              0, 0,
                              data_field->xres,
@@ -261,51 +265,57 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
                                      data_field->xres,
                                      data_field->yres);
 
+    data = data_field->data;
     for (k = 0; k < (data_field->xres*data_field->yres); k++)
-        data_field->data[k] = fabs(sobel_horizontal->data[k]) + fabs(sobel_vertical->data[k]);
+        data[k] = fabs(sobel_horizontal->data[k])
+                  + fabs(sobel_vertical->data[k]);
 
 
     threshold = gwy_data_field_get_min(data_field) +
-        (gwy_data_field_get_max(data_field)-gwy_data_field_get_min(data_field))*threshold;
+               (gwy_data_field_get_max(data_field)
+                - gwy_data_field_get_min(data_field))*threshold;
 
-    for (i = 0; i < data_field->yres; i++)
-    {
-        for (j = 0; j < data_field->xres; j++)
-        {
+    for (i = 0; i < data_field->yres; i++) {
+        for (j = 0; j < data_field->xres; j++) {
             pass = FALSE;
-            if (data_field->data[j + data_field->xres*i] > threshold
-                && i>0 && j>0 && i < (data_field->yres - 1)
+            if (data[j + data_field->xres*i] > threshold
+                && i > 0 && j > 0
+                && i < (data_field->yres - 1)
                 && j < (data_field->xres - 1))
             {
                 angle = atan2(sobel_vertical->data[j + data_field->xres*i],
                               sobel_horizontal->data[j + data_field->xres*i]);
 
-                if (angle < 0.3925 || angle > 5.8875 || (angle > 2.7475 && angle < 3.5325))
-                {
-                    if (data_field->data[j + 1 + data_field->xres*i]>threshold)
+                if (angle < 0.3925 || angle > 5.8875
+                    || (angle > 2.7475 && angle < 3.5325)) {
+                    if (data[j + 1 + data_field->xres*i] > threshold)
                         pass = TRUE;
                 }
-                else if ((angle > 1.178 && angle < 1.9632) || (angle > 4.318 && angle < 5.1049))
-                {
-                    if (data_field->data[j + 1 + data_field->xres*(i + 1)]>threshold)
+                else if ((angle > 1.178 && angle < 1.9632)
+                         || (angle > 4.318 && angle < 5.1049)) {
+                    if (data[j + 1 + data_field->xres*(i + 1)] > threshold)
                         pass = TRUE;
                 }
-                else
-                {
-                    if (data_field->data[j + data_field->xres*(i + 1)]>threshold)
+                else {
+                    if (data[j + data_field->xres*(i + 1)] > threshold)
                         pass = TRUE;
                 }
             }
-                /*we do not need sobel array more, so use sobel_horizontal to store data results*/
-            if (pass) sobel_horizontal->data[j + data_field->xres*i] = 1;
-            else sobel_horizontal->data[j + data_field->xres*i] = 0;
+            /*we do not need sobel array more,
+             * so use sobel_horizontal to store data results*/
+            if (pass)
+                sobel_horizontal->data[j + data_field->xres*i] = 1;
+            else
+                sobel_horizontal->data[j + data_field->xres*i] = 0;
         }
     }
     /*result is now in sobel_horizontal field*/
-    gwy_data_field_area_copy(sobel_horizontal, data_field, 0, 0, data_field->xres, data_field->yres, 0, 0);
+    gwy_data_field_area_copy(sobel_horizontal, data_field,
+                             0, 0, data_field->xres, data_field->yres, 0, 0);
 
     /*thin the lines*/
     thin_data_field(data_field);
+    gwy_data_field_invalidate(data_field);
 }
 
 
@@ -319,7 +329,7 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
  *
  * Filters a rectangular part of a data field with Laplacian filter.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_laplacian(GwyDataField *data_field,
@@ -342,6 +352,7 @@ gwy_data_field_area_filter_laplacian(GwyDataField *data_field,
     gwy_data_field_convolve(data_field, kernel_df, col, row, width, height);
 
     g_object_unref(kernel_df);
+    gwy_data_field_invalidate(data_field);
 }
 
 void
@@ -370,7 +381,7 @@ gwy_data_field_filter_laplacian(GwyDataField *data_field,
  *
  * Filters a rectangular part of a data field with Laplacian filter.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_sobel(GwyDataField *data_field,
@@ -408,6 +419,7 @@ gwy_data_field_area_filter_sobel(GwyDataField *data_field,
     gwy_data_field_area_convolve(data_field, kernel_df,
                                  col, row, width, height);
     g_object_unref(kernel_df);
+    gwy_data_field_invalidate(data_field);
 }
 
 void
@@ -437,7 +449,7 @@ gwy_data_field_filter_sobel(GwyDataField *data_field,
  *
  * Filters a rectangular part of a data field with Prewitt filter.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
@@ -474,6 +486,7 @@ gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
     }
     gwy_data_field_convolve(data_field, kernel_df, col, row, width, height);
     g_object_unref(kernel_df);
+    gwy_data_field_invalidate(data_field);
 }
 
 void
@@ -503,7 +516,7 @@ gwy_data_field_filter_prewitt(GwyDataField *data_field,
  *
  * Filters a rectangular part of a data field with median filter.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_data_field_area_filter_median(GwyDataField *data_field,
@@ -550,6 +563,7 @@ gwy_data_field_area_filter_median(GwyDataField *data_field,
     for (i = 0; i < height; i++)
         memcpy(data + i*rowstride, buffer + i*width, width*sizeof(gdouble));
     g_free(buffer);
+    gwy_data_field_invalidate(data_field);
 }
 
 void
@@ -634,7 +648,7 @@ gwy_data_field_area_filter_conservative(GwyDataField *data_field,
     }
 
     g_object_unref(hlp_df);
-
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
@@ -648,7 +662,7 @@ gwy_data_field_area_filter_conservative(GwyDataField *data_field,
  *
  * Filters a rectangular part of a data field with conservative denoise filter.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_data_field_filter_conservative(GwyDataField *data_field,
@@ -668,7 +682,7 @@ gwy_data_field_filter_conservative(GwyDataField *data_field,
 
 
 
-static gint
+static inline gint
 pixel_status(GwyDataField *data_field, gint i, gint j)
 {
     if (data_field->data[j + data_field->xres * i] == 0)
@@ -797,6 +811,8 @@ thinstep(GwyDataField *data_field)
                 data_field->data[j + data_field->xres * i] = 0;
         }
     }
+
+    gwy_data_field_invalidate(data_field);
 
     return ch;
 }
