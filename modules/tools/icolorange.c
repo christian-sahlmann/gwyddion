@@ -517,19 +517,26 @@ update_graph_selection(ToolControls *controls)
 {
     GwyGraph *graph;
     gdouble graph_min, graph_max, graph_range;
+    gdouble grel_min, grel_max;
 
     graph = GWY_GRAPH(controls->histogram);
     gwy_debug("%f %f", controls->rel_min, controls->rel_max);
 
-    /* XXX */
     if (controls->rel_min == 0.0 && controls->rel_max == 1.0)
         gwy_graph_area_set_selection(graph->area,
                                      graph->area->x_min,
                                      graph->area->x_min);
     else {
+        /* XXX */
+        grel_min = (controls->rel_min*(graph->x_reqmax - graph->x_reqmin)
+                    + graph->x_reqmin - graph->x_min)
+                   /(graph->x_max - graph->x_min);
+        grel_max = (controls->rel_max*(graph->x_reqmax - graph->x_reqmin)
+                    + graph->x_reqmin - graph->x_min)
+                   /(graph->x_max - graph->x_min);
         graph_range = graph->area->x_max - graph->area->x_min;
-        graph_min = controls->rel_min*graph_range + graph->area->x_min;
-        graph_max = controls->rel_max*graph_range + graph->area->x_min;
+        graph_min = grel_min*graph_range + graph->area->x_min;
+        graph_max = grel_max*graph_range + graph->area->x_min;
         gwy_graph_area_set_selection(graph->area, graph_min, graph_max);
     }
 }
