@@ -6,3 +6,7 @@
 #define PACKAGE_TARNAME "@PACKAGE_TARNAME@"
 #define PACKAGE_URL "@PACKAGE_URL@"
 #define PACKAGE_VERSION "@PACKAGE_VERSION@"
+
+#ifdef _MSC_VER
+#define ENABLE_NLS 1
+#endif

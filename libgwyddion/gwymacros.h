@@ -23,7 +23,6 @@
 
 #ifdef _MSC_VER
 #include "version.h"
-#undef ENABLE_NLS
 #else
 #ifdef HAVE_CONFIG_H
 #include "config.h"
