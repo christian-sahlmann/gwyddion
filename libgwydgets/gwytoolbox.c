@@ -162,7 +162,8 @@ gwy_toolbox_append(GwyToolbox *toolbox,
         else
             child = gtk_radio_button_new(NULL);
         gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(child), FALSE);
-        signame = "toggled";
+        /* XXX: tools need to know being clicked on even when already active */
+        signame = "clicked";
     }
     else {
         g_critical("Type %s not supported (yet)", g_type_name(type));
