@@ -751,3 +751,12 @@ gwy_graph_get_number_of_curves(GwyGraph *graph)
     return graph->n_of_curves;
 }
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+
+GString *
+gwy_graph_get_label(GwyGraph *graph, gint curve)
+{
+    GwyGraphAreaCurve *pcurve;
+    pcurve = g_ptr_array_index (graph->area->curves, curve);
+
+    return g_strdup(pcurve->params.description);
+}

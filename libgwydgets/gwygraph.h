@@ -139,6 +139,8 @@ void gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curv
 gint gwy_graph_get_data_size(GwyGraph *graph, gint curve);
 gint gwy_graph_get_number_of_curves(GwyGraph *graph);
 
+GString *gwy_graph_get_label(GwyGraph *graph, gint curve);
+    
 G_END_DECLS
 
 #endif /* __GWY_GRADSPHERE_H__ */

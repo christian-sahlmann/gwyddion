@@ -922,21 +922,18 @@ static void
 graph_update(FitControls *controls, FitArgs *args)
 {
     gint i;
-    GString *label;
     
     /*clear graph*/
     gwy_graph_clear(GWY_GRAPH(controls->graph));
 
-    label = g_string_new("");
     /*add curves from parent graph*/
     for (i=0; i<args->parent_nofcurves; i++)
     {
-        g_string_printf(label, "data %d", i+1);
         gwy_graph_add_datavalues(GWY_GRAPH(controls->graph), 
                                  args->parent_xs[i], 
                                  args->parent_ys[i],
                                  args->parent_ns[i], 
-                                 label, NULL);    
+                                 gwy_graph_get_label(args->parent_graph, i), NULL);    
     }
 
 }
