@@ -19,6 +19,7 @@
  */
 
 #include <string.h>
+#include <math.h>
 #include <gtk/gtkimage.h>
 #include <gtk/gtkmenu.h>
 #include <gtk/gtkmenuitem.h>
@@ -26,6 +27,7 @@
 #include <gtk/gtkimagemenuitem.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libdraw/gwypalette.h>
 #include "gwyoptionmenus.h"
@@ -41,6 +43,7 @@ static GtkWidget* gwy_palette_menu_create        (GCallback callback,
 static GtkWidget* gwy_sample_palette_to_gtkimage (GwyPaletteDef *palette_def);
 static gint       palette_def_compare            (GwyPaletteDef *a,
                                                   GwyPaletteDef *b);
+static void       gwy_option_menu_metric_unit_destroyed (GwyEnum *entries);
 
 /************************** Palette menu ****************************/
 
@@ -492,6 +495,7 @@ gwy_option_menu_fft_output(GCallback callback,
 /**
  * gwy_option_menu_sfunctions_output:
  * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
  * @cbdata: User data passed to the callback.
  * @current: Statistical function output type to be shown as currently selected
  *           (or -1 to use what happens to appear first).
@@ -543,8 +547,8 @@ gwy_option_menu_direction(GCallback callback,
                            GtkOrientation current)
 {
     static const GwyEnum entries[] = {
-        { "horizontal",  GTK_ORIENTATION_HORIZONTAL,  },
-        { "vertical",  GTK_ORIENTATION_VERTICAL, },
+        { "Horizontal",  GTK_ORIENTATION_HORIZONTAL,  },
+        { "Vertical",  GTK_ORIENTATION_VERTICAL, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -552,6 +556,73 @@ gwy_option_menu_direction(GCallback callback,
                                   current);
 }
 
+/**
+ * gwy_option_menu_metric_unit:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @from: The exponent of 10 the menu should start at (a multiple of 3, will
+ *        be rounded towards zero if isn't).
+ * @to: The exponent of 10 the menu should end at (a multiple of 3, will be
+ *      rounded towards zero if isn't).
+ * @unit: The unit to be prefixed.
+ * @current: Exponent of 10 selected (a multiple of 3)
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of units with SI prefixes in given range.
+ *
+ * It sets object data "metric-unit" to the exponents of 10
+ * for each menu item (use GPOINTER_TO_INT() when retrieving it).
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_metric_unit(GCallback callback,
+                            gpointer cbdata,
+                            gint from,
+                            gint to,
+                            const gchar *unit,
+                            gint current)
+{
+    static const gint min = -8;
+    static const gint max = 8;
 
+    GtkWidget *omenu;
+    GwyEnum *entries;
+    gchar *s;
+    gint i, n;
+
+    from = CLAMP(from/3, min, max);
+    to = CLAMP(to/3, min, max);
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    n = (to - from) + 1;
+    entries = g_new(GwyEnum, n + 1);
+    for (i = from; i <= to; i++) {
+        s = g_strconcat(gwy_math_SI_prefix(exp(G_LN10*3.0*i)), unit, NULL);
+        entries[i - from].name = s;
+        entries[i - from].value = 3*i;
+    }
+    entries[n].name = NULL;
+
+    omenu = gwy_option_menu_create(entries, n, "metric-unit", callback, cbdata,
+                                   current);
+    g_signal_connect_swapped(omenu, "destroy",
+                             G_CALLBACK(gwy_option_menu_metric_unit_destroyed),
+                             entries);
+    return omenu;
+}
+
+static void
+gwy_option_menu_metric_unit_destroyed(GwyEnum *entries)
+{
+    gsize i = 0;
+
+    while (entries[i].name) {
+        g_free((void*)entries[i].name);
+        i++;
+    }
+    g_free(entries);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

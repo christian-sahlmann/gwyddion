@@ -203,6 +203,12 @@ menu_callback(GObject *menu_item, const gchar *which_menu)
                                                     "zoom-mode")));
         return;
     }
+    if (strcmp(which_menu, "metric_unit") == 0) {
+        g_message("Metric unit: %d",
+                  GPOINTER_TO_INT(g_object_get_data(menu_item,
+                                                    "metric-unit")));
+        return;
+    }
     g_assert_not_reached();
 }
 
@@ -213,7 +219,7 @@ test(void)
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_container_set_border_width(GTK_CONTAINER(window), 4);
-    table = gtk_table_new(4, 2, FALSE);
+    table = gtk_table_new(5, 2, FALSE);
     gtk_container_add(GTK_CONTAINER(window), table);
 
     widget = gtk_label_new("Palettes: ");
@@ -243,6 +249,13 @@ test(void)
                                       "zoom_mode",
                                       GWY_ZOOM_MODE_CBRT2);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 3, 4);
+
+    widget = gtk_label_new("Metric units: ");
+    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 4, 5);
+    omenu = gwy_option_menu_metric_unit(G_CALLBACK(menu_callback),
+                                        "metric_unit",
+                                        -12, 3, "Hz", -6);
+    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 4, 5);
 
     gtk_widget_show_all(window);
     g_signal_connect(G_OBJECT(window), "destroy",
