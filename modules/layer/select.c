@@ -573,6 +573,7 @@ gwy_layer_select_set_selection(GwyVectorLayer *layer,
     GwyLayerSelect *select_layer;
     GtkWidget *parent;
 
+    gwy_debug("n = %d", n);
     if (!n)
         gwy_layer_select_unselect(layer);
     g_return_if_fail(selection);
@@ -585,9 +586,10 @@ gwy_layer_select_set_selection(GwyVectorLayer *layer,
     select_layer->x1 = MAX(selection[0], selection[2]);
     select_layer->y1 = MAX(selection[1], selection[3]);
     select_layer->selected = TRUE;
+    gwy_layer_select_save(select_layer);
 
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
-    if (parent)
+    if (parent) {
         gtk_widget_queue_draw(parent);
 
     gwy_vector_layer_selection_finished(layer);
