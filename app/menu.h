@@ -48,18 +48,18 @@ struct _GwyMenuSensData {
 };
 
 void       gwy_app_menu_set_sensitive_recursive   (GtkWidget *widget,
-                                                   GwyMenuSensData *data);
+                                                   const GwyMenuSensData *data);
 void       gwy_app_menu_recent_files_update       (GList *recent_files);
 void       gwy_app_menu_set_flags_recursive       (GtkWidget *widget,
-                                                   GwyMenuSensData *data);
+                                                   const GwyMenuSensData *data);
 void       gwy_app_menu_set_sensitive_array       (GtkItemFactory *item_factory,
                                                    const gchar *root,
                                                    const gchar **items,
-                                                   GwyMenuSensFlags flags);
+                                                   const GwyMenuSensFlags flags);
 void       gwy_app_menu_set_sensitive_both        (GtkWidget *item,
                                                    GwyMenuSensFlags flags,
                                                    GwyMenuSensFlags state);
-gboolean   gwy_app_toolbox_update_state           (GwyMenuSensData *sens_data);
+void       gwy_app_toolbox_update_state           (const GwyMenuSensData *sens_data);
 
 G_END_DECLS
 

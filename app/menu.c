@@ -139,7 +139,7 @@ gwy_app_menu_set_sensitive_array(GtkItemFactory *item_factory,
  **/
 void
 gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
-                                     GwyMenuSensData *data)
+                                     const GwyMenuSensData *data)
 {
     GObject *obj;
     guint i, j;
@@ -165,20 +165,20 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
         || GWY_IS_TOOLBOX(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
                               (GtkCallback)gwy_app_menu_set_sensitive_recursive,
-                              data);
+                              (gpointer)data);
     }
     else if (GTK_IS_MENU_ITEM(widget)
              && (widget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(widget))))
         gtk_container_foreach(GTK_CONTAINER(widget),
                               (GtkCallback)gwy_app_menu_set_sensitive_recursive,
-                              data);
+                              (gpointer)data);
 }
 
 /* Changed in rev 1.52: use logical OR with existing flags.  There is no
  * way to clear existing flags. */
 void
 gwy_app_menu_set_flags_recursive(GtkWidget *widget,
-                                 GwyMenuSensData *data)
+                                 const GwyMenuSensData *data)
 {
     setup_sensitivity_keys();
 
@@ -197,13 +197,13 @@ gwy_app_menu_set_flags_recursive(GtkWidget *widget,
         || GWY_IS_TOOLBOX(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
                               (GtkCallback)gwy_app_menu_set_flags_recursive,
-                              data);
+                              (gpointer)data);
     }
     else if (GTK_IS_MENU_ITEM(widget)) {
         if ((widget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(widget))))
             gtk_container_foreach(GTK_CONTAINER(widget),
                                   (GtkCallback)gwy_app_menu_set_flags_recursive,
-                                  data);
+                                  (gpointer)data);
     }
 }
 
@@ -543,11 +543,9 @@ gwy_app_menu_set_recent_files_menu(GtkWidget *menu)
  * @sens_data: Menu sensitivity data.
  *
  * Updates menus and toolbox sensititivity to reflect @sens_data.
- *
- * Returns: Always %FALSE.
  **/
-gboolean
-gwy_app_toolbox_update_state(GwyMenuSensData *sens_data)
+void
+gwy_app_toolbox_update_state(const GwyMenuSensData *sens_data)
 {
     GSList *l;
     GObject *obj;
@@ -564,7 +562,7 @@ gwy_app_toolbox_update_state(GwyMenuSensData *sens_data)
     for (l = g_object_get_data(obj, "menus"); l; l = g_slist_next(l))
         gtk_container_foreach(GTK_CONTAINER(l->data),
                               (GtkCallback)gwy_app_menu_set_sensitive_recursive,
-                              sens_data);
+                              (gpointer)sens_data);
 
     for (l = g_object_get_data(obj, "toolbars"); l; l = g_slist_next(l))
         gwy_app_menu_set_sensitive_recursive(GTK_WIDGET(l->data),

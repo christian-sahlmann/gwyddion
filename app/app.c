@@ -58,6 +58,8 @@ static void       gwy_app_graph_list_toggle_cb     (GtkWidget *toggle,
                                                     GwyDataWindow *data_window);
 static gboolean   gwy_app_graph_list_delete_cb     (GtkWidget *toggle);
 #endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
+static void       gwy_app_3d_window_orphaned       (GtkWidget *view,
+                                                    GtkWidget *gwy3dwindow);
 
 /*****************************************************************************
  *                                                                           *
@@ -261,7 +263,7 @@ gwy_app_get_current_data(void)
 void
 gwy_app_data_window_set_current(GwyDataWindow *window)
 {
-    static GwyMenuSensData sens_data = {
+    GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_DATA
@@ -297,7 +299,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     if (gwy_container_contains_by_name(data, "/0/show"))
         sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
 
-    g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);
+    gwy_app_toolbox_update_state(&sens_data);
     already_current = window;
     gwy_app_set_current_window(GTK_WIDGET(window));
 }
@@ -315,7 +317,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 void
 gwy_app_data_window_remove(GwyDataWindow *window)
 {
-    static GwyMenuSensData sens_data = {
+    static const GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         0
@@ -341,7 +343,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
 
     if (current_tool)
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_WINDOW);
-    g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);
+    gwy_app_toolbox_update_state(&sens_data);
 
     gwy_app_data_window_list_updated();
 }
@@ -554,7 +556,7 @@ gwy_app_graph_window_get_current(void)
 void
 gwy_app_graph_window_set_current(GtkWidget *window)
 {
-    static GwyMenuSensData sens_data = {
+    static const GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH
     };
     GList *item;
@@ -566,7 +568,7 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     current_graph = g_list_remove_link(current_graph, item);
     current_graph = g_list_concat(item, current_graph);
 
-    g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);
+    gwy_app_toolbox_update_state(&sens_data);
     gwy_app_set_current_window(window);
 }
 
@@ -582,7 +584,7 @@ gwy_app_graph_window_set_current(GtkWidget *window)
 void
 gwy_app_graph_window_remove(GtkWidget *window)
 {
-    static GwyMenuSensData sens_data = {
+    static const GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_GRAPH, 0
     };
     GList *item;
@@ -597,7 +599,7 @@ gwy_app_graph_window_remove(GtkWidget *window)
     if (current_graph)
         gwy_app_graph_window_set_current(current_graph->data);
     else
-        g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);
+        gwy_app_toolbox_update_state(&sens_data);
 }
 
 /**
@@ -616,8 +618,11 @@ gwy_app_graph_window_create(GtkWidget *graph)
 
     GtkWidget *window;
 
-    window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_container_set_border_width (GTK_CONTAINER (window), 0);
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_container_set_border_width(GTK_CONTAINER (window), 0);
+    gtk_window_add_accel_group
+        (GTK_WINDOW(window),
+         g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
 
     if (graph == NULL)
         graph = gwy_graph_new();
@@ -713,31 +718,50 @@ gwy_app_graph_list_delete_cb(GtkWidget *toggle)
 void
 gwy_app_3d_view_cb(void)
 {
-    gwy_app_3d_window_create(gwy_app_get_current_data());
+    gwy_app_3d_window_create(gwy_app_data_window_get_current());
 }
 
 /**
  * gwy_app_3d_window_create:
- * @data: A data container.
+ * @data_window: A data window to create associated 3D view for.
  *
- * Creates a new 3D view window showing @data and does some basic setup.
+ * Creates a new 3D view window showing the same data as @data_window.
  *
- * Also calls gtk_window_present() on it.
+ * Also does some housekeeping and calls gtk_window_present() on it.
  *
  * Returns: The newly created 3D view window.
  *
  * Since: 1.5
  **/
 GtkWidget*
-gwy_app_3d_window_create(GwyContainer *data)
+gwy_app_3d_window_create(GwyDataWindow *data_window)
 {
-    GtkWidget *gwy3dview, *gwy3dwindow;
+    GtkWidget *gwy3dview, *gwy3dwindow, *view;
+    GwyContainer *data;
+    gchar *name, *title;
 
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
+    view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(view));
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+
     gwy3dview = gwy_3d_view_new(data);
     gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
-    current_3d = g_list_append(current_3d, gwy3dwindow);
+    gtk_window_add_accel_group
+        (GTK_WINDOW(gwy3dwindow),
+         g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
 
+    name = gwy_data_window_get_base_name(data_window);
+    title = g_strconcat("3D ", name, NULL);
+    gtk_window_set_title(GTK_WINDOW(gwy3dwindow), title);
+    g_free(title);
+    g_free(name);
+
+    current_3d = g_list_append(current_3d, gwy3dwindow);
+    g_signal_connect_swapped(view, "updated",
+                             G_CALLBACK(gwy_3d_view_update), gwy3dview);
+    g_signal_connect(view, "destroy",
+                     G_CALLBACK(gwy_app_3d_window_orphaned), gwy3dwindow);
     g_signal_connect(gwy3dwindow, "focus-in-event",
                      G_CALLBACK(gwy_app_3d_window_set_current), NULL);
     g_signal_connect(gwy3dwindow, "destroy",
@@ -793,8 +817,8 @@ gwy_app_3d_window_set_current(GtkWidget *window)
     current_3d = g_list_remove_link(current_3d, item);
     current_3d = g_list_concat(item, current_3d);
 
-    /* FIXME: hangs
-     * g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);*/
+    /* FIXME: hangs.
+     * gwy_app_toolbox_update_state(&sens_data);*/
     gwy_app_set_current_window(window);
 }
 
@@ -834,6 +858,21 @@ gwy_app_3d_window_remove(GtkWidget *window)
     else
         gwy_app_toolbox_update_state(&sens_data);
         */
+}
+
+static void
+gwy_app_3d_window_orphaned(GtkWidget *view,
+                           GtkWidget *gwy3dwindow)
+{
+    GtkWidget *gwy3dview;
+
+    gwy3dview = gwy_3d_window_get_3d_view(GWY_3D_WINDOW(gwy3dwindow));
+    g_signal_handlers_disconnect_matched(view,
+                                         G_SIGNAL_MATCH_FUNC
+                                         | G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL,
+                                         gwy_3d_view_update,
+                                         gwy3dview);
 }
 
 /*****************************************************************************
