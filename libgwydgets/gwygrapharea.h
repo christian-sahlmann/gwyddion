@@ -156,6 +156,8 @@ typedef struct {
 typedef struct {
      GtkLayoutClass parent_class;
 
+     GdkCursor *cross_cursor;
+     GdkCursor *arrow_cursor;
      void (* selected) (GwyGraphArea *area);
      void (* zoomed) (GwyGraphArea *area);
 } GwyGraphAreaClass;

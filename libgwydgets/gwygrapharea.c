@@ -23,6 +23,7 @@
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 #include <glib-object.h>
 #include <libgwyddion/gwymacros.h>
@@ -146,6 +147,8 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 
     klass->selected = NULL;
     klass->zoomed = NULL;
+    klass->cross_cursor = NULL;
+    klass->arrow_cursor = NULL;
     gwygrapharea_signals[SELECTED_SIGNAL] = g_signal_new ("selected",
                                                           G_TYPE_FROM_CLASS (klass),
                                                           G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
@@ -170,6 +173,8 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 static void
 gwy_graph_area_init(GwyGraphArea *area)
 {
+    GwyGraphAreaClass *klass;
+    
     gwy_debug("");
     area->gc = NULL;
     area->active = NULL;
@@ -204,6 +209,10 @@ gwy_graph_area_init(GwyGraphArea *area)
 
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
+
+    klass = GWY_GRAPH_AREA_GET_CLASS(area);
+    klass->cross_cursor = gdk_cursor_new(GDK_CROSS);
+    klass->arrow_cursor = gdk_cursor_new(GDK_ARROW);
 
 }
 
@@ -679,12 +688,22 @@ static gboolean
 gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 {
     GwyGraphArea *area;
+    GwyGraphAreaClass *klass;
     gint x, y, ispos;
 
     area = GWY_GRAPH_AREA(widget);
 
     ispos = 0;
 
+    /*cursor shape*/
+    klass = GWY_GRAPH_AREA_GET_CLASS(area);
+    if (area->status == GWY_GRAPH_STATUS_ZOOM)
+    {
+        gdk_window_set_cursor(GTK_LAYOUT(area)->bin_window, klass->cross_cursor);
+    }
+    else gdk_window_set_cursor(GTK_LAYOUT(area)->bin_window, klass->arrow_cursor);
+        
+    
     /*cursor position*/
     if (area->status == GWY_GRAPH_STATUS_CURSOR)
     {
@@ -967,7 +986,7 @@ void
 zoom(GtkWidget *widget)
 {
     GwyGraphArea *area;
-    gdouble xmax, ymax, xmin, ymin, x, y;
+    gdouble xmax, ymax, xmin, ymin, x, y, swap;
     
     area = GWY_GRAPH_AREA(widget);
 
@@ -977,9 +996,10 @@ zoom(GtkWidget *widget)
     else y = area->zoomdata->y;
     
     area->zoomdata->xmin = scr_to_data_x(widget, x);
-    area->zoomdata->ymin = scr_to_data_y(widget, y) - scr_to_data_y(widget, fabs(area->zoomdata->height));
-    area->zoomdata->xmax = area->zoomdata->xmin + scr_to_data_x(widget, fabs(area->zoomdata->width));
-    area->zoomdata->ymax = scr_to_data_y(widget, y);
+    area->zoomdata->ymin = scr_to_data_y(widget, y);
+    area->zoomdata->xmax = scr_to_data_x(widget, x + fabs(area->zoomdata->width));
+    area->zoomdata->ymax = scr_to_data_y(widget, y + fabs(area->zoomdata->height));
+    swap = area->zoomdata->ymax; area->zoomdata->ymax = area->zoomdata->ymin; area->zoomdata->ymin = swap;
 
     printf("zoom: %f %f to %f %f\n", area->zoomdata->xmin,
            area->zoomdata->ymin,
