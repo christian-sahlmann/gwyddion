@@ -52,7 +52,7 @@ static void       gwy_app_update_last_process_func  (GtkWidget *menu,
                                                      const gchar *name);
 static void       setup_sensitivity_keys            (void);
 static gchar*     fix_recent_file_underscores       (gchar *s);
-static GtkWidget* find_label_of_repeat_last_item    (GtkWidget *menu,
+static GtkWidget* find_repeat_last_item             (GtkWidget *menu,
                                                      const gchar *key);
 
 static GQuark sensitive_key = 0;
@@ -306,18 +306,21 @@ static void
 gwy_app_update_last_process_func(GtkWidget *menu,
                                  const gchar *name)
 {
-    static GtkWidget *repeat_label = NULL;
-    static GtkWidget *reshow_label = NULL;
+    static GtkWidget *repeat_item = NULL;
+    static GtkWidget *reshow_item = NULL;
+    GtkWidget *label;
     const gchar *menu_path;
     gsize len;
+    guint sens;
     gchar *s, *mp;
 
     g_object_set_data(G_OBJECT(menu), "last-func", (gpointer)name);
-    if (!repeat_label)
-        repeat_label = find_label_of_repeat_last_item(menu, "run-last-item");
-    if (!reshow_label)
-        reshow_label = find_label_of_repeat_last_item(menu, "show-last-item");
+    if (!repeat_item)
+        repeat_item = find_repeat_last_item(menu, "run-last-item");
+    if (!reshow_item)
+        reshow_item = find_repeat_last_item(menu, "show-last-item");
 
+    sens = gwy_process_func_get_sensitivity_flags(name);
     menu_path = gwy_process_func_get_menu_path(name);
     menu_path = strrchr(menu_path, '/');
     g_assert(menu_path);
@@ -327,15 +330,19 @@ gwy_app_update_last_process_func(GtkWidget *menu,
         len -= 3;
     mp = gwy_strkill(g_strndup(menu_path, len), "_");
 
-    if (repeat_label) {
-        s = g_strconcat(_("Repeat Last"), " (", mp, ")", NULL);
-        gtk_label_set_text_with_mnemonic(GTK_LABEL(repeat_label), s);
+    if (repeat_item) {
+        label = GTK_BIN(repeat_item)->child;
+        s = g_strconcat(_("Repeat"), " (", mp, ")", NULL);
+        gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
+        set_sensitive(repeat_item, sens);
         g_free(s);
     }
 
-    if (reshow_label) {
-        s = g_strconcat(_("Re-show Last"), " (", mp, ")", NULL);
-        gtk_label_set_text_with_mnemonic(GTK_LABEL(reshow_label), s);
+    if (reshow_item) {
+        label = GTK_BIN(repeat_item)->child;
+        s = g_strconcat(_("Re-show"), " (", mp, ")", NULL);
+        gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
+        set_sensitive(reshow_item, sens);
         g_free(s);
     }
 
@@ -345,8 +352,8 @@ gwy_app_update_last_process_func(GtkWidget *menu,
 /* Find the "run-last-item" menu item
  * FIXME: this is fragile */
 static GtkWidget*
-find_label_of_repeat_last_item(GtkWidget *menu,
-                               const gchar *key)
+find_repeat_last_item(GtkWidget *menu,
+                      const gchar *key)
 {
     GtkWidget *item;
     GQuark quark;
@@ -366,8 +373,7 @@ find_label_of_repeat_last_item(GtkWidget *menu,
         return NULL;
     }
 
-    item = GTK_WIDGET(l->data);
-    return GTK_BIN(item)->child;
+    return GTK_WIDGET(l->data);
 }
 
 void
