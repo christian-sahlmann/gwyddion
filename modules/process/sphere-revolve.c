@@ -360,7 +360,7 @@ sphrev_do(SphrevArgs *args,
                                 args->direction == GTK_ORIENTATION_HORIZONTAL
                                 ? gwy_data_field_get_xres(dfield)
                                 : gwy_data_field_get_yres(dfield));
-    gwy_data_line_multiply(sphere, args->radius);
+    gwy_data_line_multiply(sphere, -args->radius);
     sphdata = gwy_data_line_get_data(sphere);
     size = gwy_data_line_get_res(sphere)/2;
 
@@ -378,13 +378,13 @@ sphrev_do(SphrevArgs *args,
                 min = G_MAXDOUBLE;
                 km = 0;
                 for (k = from; k <= to; k++) {
-                    if (sphdata[size+k] - row[k] < min) {
-                        min = sphdata[size+k] - row[k];
+                    if (-(sphdata[size+k] - row[k]) < min) {
+                        min = -(sphdata[size+k] - row[k]);
                         km = k;
                     }
                 }
                 /* FIXME */
-                rrow[j] = -min;
+                rrow[j] = row[0] - min;
             }
         }
     }
