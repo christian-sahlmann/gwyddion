@@ -108,6 +108,9 @@ gwy_layer_select_finalize(GObject *object)
  *
  * Creates a new rectangular selection layer.
  *
+ * Container keys: "/0/select/x0", "/0/select/x1", "/0/select/y0",
+ * "/0/select/y1", and "/0/select/selected".
+ *
  * Returns: The newly created layer.
  **/
 GtkObject*
@@ -193,6 +196,7 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
 {
     GwyLayerSelect *select_layer;
     gint x, y;
+    gdouble oldx, oldy;
 
     select_layer = (GwyLayerSelect*)layer;
     if (!select_layer->button)
@@ -200,6 +204,8 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
 
     gwy_layer_select_draw(layer, layer->parent->window);
 
+    oldx = select_layer->x1;
+    oldy = select_layer->y1;
     gwy_debug("motion: %g %g", event->x, event->y);
     x = event->x;
     y = event->y;
@@ -207,8 +213,21 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
     gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
                                     x, y,
                                     &select_layer->x1, &select_layer->y1);
+    if (select_layer->x1 == oldx && select_layer->y1 == oldy)
+        return FALSE;
+
+    /* TODO Container */
+    gwy_container_set_double_by_name(layer->data, "/0/select/x0",
+                                     select_layer->x0);
+    gwy_container_set_double_by_name(layer->data, "/0/select/y0",
+                                     select_layer->y0);
+    gwy_container_set_double_by_name(layer->data, "/0/select/x1",
+                                     select_layer->x1);
+    gwy_container_set_double_by_name(layer->data, "/0/select/y1",
+                                     select_layer->y1);
 
     gwy_layer_select_draw(layer, layer->parent->window);
+    gwy_data_view_layer_updated(layer);
 
     return FALSE;
 }
@@ -298,6 +317,7 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
     /* TODO Container */
     gwy_container_set_boolean_by_name(layer->data, "/0/select/selected",
                                       select_layer->selected);
+    gwy_data_view_layer_updated(layer);
 
     /* XXX: this assures no artefacts ...  */
     gtk_widget_queue_draw(layer->parent);
@@ -314,6 +334,8 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
  * @ymax: Where the lower right corner x-coordinate should be stored.
  *
  * Obtains the selected rectangle in real (i.e., physical) coordinates.
+ *
+ * FIXME: this should be done through container.
  *
  * Returns: %TRUE when there is some selection present (and some values were
  *          stored), %FALSE
@@ -369,6 +391,7 @@ gwy_layer_select_plugged(GwyDataViewLayer *layer)
                                                                 "/0/select/y1");
         }
     }
+    gwy_data_view_layer_updated(layer);
 }
 
 static void

@@ -17,6 +17,7 @@
 enum {
     PLUGGED,
     UNPLUGGED,
+    UPDATED,
     LAST_SIGNAL
 };
 
@@ -87,6 +88,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 
     klass->plugged = gwy_data_view_layer_real_plugged;
     klass->unplugged = gwy_data_view_layer_real_unplugged;
+    klass->updated = NULL;
 
     data_view_layer_signals[PLUGGED] =
         g_signal_new("plugged",
@@ -101,6 +103,14 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyDataViewLayerClass, unplugged),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
+    data_view_layer_signals[UPDATED] =
+        g_signal_new("updated",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyDataViewLayerClass, updated),
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
@@ -139,6 +149,14 @@ gwy_data_view_layer_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
+/**
+ * gwy_data_view_layer_is_vector:
+ * @layer: A data view layer.
+ *
+ * Tests whether a layer is a vector layer (otherwise it's a pixmap layer).
+ *
+ * Returns: %TRUE when @layer is a vector layer, %FALSE otherwise.
+ **/
 gboolean
 gwy_data_view_layer_is_vector(GwyDataViewLayer *layer)
 {
@@ -148,6 +166,16 @@ gwy_data_view_layer_is_vector(GwyDataViewLayer *layer)
     return !layer_class->paint;
 }
 
+/**
+ * gwy_data_view_layer_wants_repaint:
+ * @layer: A data view layer.
+ *
+ * Checks whether a layer wants repaint.
+ * FIXME FIXME FIXME  This is probably flawed and will be replaced by
+ * a signal.
+ *
+ * Returns: %TRUE if the the layer wants repaint itself, %FALSE otherwise.
+ **/
 gboolean
 gwy_data_view_layer_wants_repaint(GwyDataViewLayer *layer)
 {
@@ -164,6 +192,16 @@ gwy_data_view_layer_wants_repaint(GwyDataViewLayer *layer)
     return layer_class->wants_repaint(layer);
 }
 
+/**
+ * gwy_data_view_layer_draw:
+ * @layer: A data view layer.
+ * @drawable: A drawable to draw on.
+ *
+ * Draws @layer on given drawable (which should be a #GwyDataView window).
+ *
+ * The layer must be a vector layer.  Use gwy_data_view_layer_paint()
+ * for pixmap layers.
+ **/
 void
 gwy_data_view_layer_draw(GwyDataViewLayer *layer,
                          GdkDrawable *drawable)
@@ -174,6 +212,15 @@ gwy_data_view_layer_draw(GwyDataViewLayer *layer,
     layer_class->draw(layer, drawable);
 }
 
+/**
+ * gwy_data_view_layer_paint:
+ * @layer: A data view layer.
+ *
+ * Returns a pixbuf with painted pixmap layer @layer.
+ *
+ * Returns: The pixbuf.  It should not be modified or freed.  The layer must
+ * be a pixmap layer.  Use gwy_data_view_layer_draw() for vector layers.
+ **/
 GdkPixbuf*
 gwy_data_view_layer_paint(GwyDataViewLayer *layer)
 {
@@ -183,6 +230,15 @@ gwy_data_view_layer_paint(GwyDataViewLayer *layer)
     return layer_class->paint(layer);
 }
 
+/**
+ * gwy_data_view_layer_button_press:
+ * @layer: A data view layer.
+ * @event: A Gdk mouse button event.
+ *
+ * Sends a mouse button press event to a layer.
+ *
+ * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
+ **/
 gboolean
 gwy_data_view_layer_button_press(GwyDataViewLayer *layer,
                                  GdkEventButton *event)
@@ -195,6 +251,15 @@ gwy_data_view_layer_button_press(GwyDataViewLayer *layer,
     return FALSE;
 }
 
+/**
+ * gwy_data_view_layer_button_release:
+ * @layer: A data view layer.
+ * @event: A Gdk mouse button event.
+ *
+ * Sends a mouse button release event to a layer.
+ *
+ * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
+ **/
 gboolean
 gwy_data_view_layer_button_release(GwyDataViewLayer *layer,
                                    GdkEventButton *event)
@@ -206,6 +271,15 @@ gwy_data_view_layer_button_release(GwyDataViewLayer *layer,
     return FALSE;
 }
 
+/**
+ * gwy_data_view_layer_motion_notify:
+ * @layer: A data view layer.
+ * @event: A Gdk mouse pointer motion notification event.
+ *
+ * Sends a mouse pointer motion notification event to a layer.
+ *
+ * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
+ **/
 gboolean
 gwy_data_view_layer_motion_notify(GwyDataViewLayer *layer,
                                   GdkEventMotion *event)
@@ -217,6 +291,15 @@ gwy_data_view_layer_motion_notify(GwyDataViewLayer *layer,
     return FALSE;
 }
 
+/**
+ * gwy_data_view_layer_key_press:
+ * @layer: A data view layer.
+ * @event: A Gdk key event.
+ *
+ * Sends a key press event to a layer.
+ *
+ * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
+ **/
 gboolean
 gwy_data_view_layer_key_press(GwyDataViewLayer *layer,
                               GdkEventKey *event)
@@ -228,6 +311,15 @@ gwy_data_view_layer_key_press(GwyDataViewLayer *layer,
     return FALSE;
 }
 
+/**
+ * gwy_data_view_layer_key_press:
+ * @layer: A data view layer.
+ * @event: A Gdk key event.
+ *
+ * Sends a key release event to a layer.
+ *
+ * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
+ **/
 gboolean
 gwy_data_view_layer_key_release(GwyDataViewLayer *layer,
                                 GdkEventKey *event)
@@ -239,6 +331,12 @@ gwy_data_view_layer_key_release(GwyDataViewLayer *layer,
     return FALSE;
 }
 
+/**
+ * gwy_data_view_layer_plugged:
+ * @layer: A data view layer.
+ *
+ * Emits a "plugged" singal on a layer.
+ **/
 void
 gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
 {
@@ -247,12 +345,32 @@ gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
     g_signal_emit(layer, data_view_layer_signals[PLUGGED], 0);
 }
 
+/**
+ * gwy_data_view_layer_plugged:
+ * @layer: A data view layer.
+ *
+ * Emits a "unplugged" singal on a layer.
+ **/
 void
 gwy_data_view_layer_unplugged(GwyDataViewLayer *layer)
 {
     gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
     g_signal_emit(layer, data_view_layer_signals[UNPLUGGED], 0);
+}
+
+/**
+ * gwy_data_view_layer_plugged:
+ * @layer: A data view layer.
+ *
+ * Emits a "updated" singal on a layer.
+ **/
+void
+gwy_data_view_layer_updated(GwyDataViewLayer *layer)
+{
+    gwy_debug("%s", __FUNCTION__);
+    g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
+    g_signal_emit(layer, data_view_layer_signals[UPDATED], 0);
 }
 
 static void
