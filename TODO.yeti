@@ -1,10 +1,10 @@
-- Fix Createc warnings if Rok Zitko doesn't fix them
+- Clean up gwy3dlabels API and ugly ways of doing things
+- Reverse engineer and implement SPMLab6 import
+- Implement APE file format from Paolo Messina, at least import
+- Implement rhk spm32 (.sm2) file import
+- Pixmap export ignores explicite palete range (and presentations?)
 - Add preview to: artithmetic
 - Find out why rectangular selections sometimes leaves a dot, and fix it
-- Kill WIN32-LEAN-AND-MEAN-CAPS: postponed to 2.0, where we can break binary
-  compatibility and get rid of GL types in headers, thus we can also get rid
-  of GL header inclusion in public headers, thus the problems solves itself
-  Related:
 - Make things actually compile with --disable-gl, also improve GL/gl.h,
   GL/glu.h checking
 - Check or rework filename handling to work with Gtk+ 2.6
