@@ -378,6 +378,67 @@ preview(MarkControls *controls,
         MarkArgs *args,
         GwyContainer *data)
 {
+    GwyDataField *maskfield, *dfield, *output_field;
+    GwyDataViewLayer *layer;
+    GwyPixmapLayer *mask_layer;
+    gboolean is_field;
+    
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    /*set up the mask*/
+    if ((mask_layer=gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view)))==NULL)
+    {
+        mask_layer = gwy_layer_basic_new();
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
+                                 GWY_PIXMAP_LAYER(mask_layer));
+   
+    }
+
+    is_field = FALSE;
+    output_field = (GwyDataField*)gwy_data_field_new(gwy_data_field_get_xres(dfield), 
+                                                     gwy_data_field_get_yres(dfield),
+                                                     gwy_data_field_get_xreal(dfield),
+                                                     gwy_data_field_get_yreal(dfield),
+                                                     FALSE);
+   
+    args->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
+    args->slope = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_slope));
+    args->lap = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_lap));
+    
+    args->inverted = 0;
+    if (args->is_height)
+    {
+        gwy_data_field_grains_mark_height(dfield, maskfield, args->height, args->inverted);
+        is_field = TRUE;
+    }
+    if (args->is_slope)
+    {
+        gwy_data_field_grains_mark_slope(dfield, output_field, args->slope, args->inverted); 
+        if (is_field)
+        {
+            if (args->merge_type == GWY_MERGE_UNION)
+                gwy_data_field_grains_add(maskfield, output_field);
+            else if (args->merge_type == GWY_MERGE_INTERSECTION)
+                gwy_data_field_grains_intersect(maskfield, output_field);
+        }
+        else gwy_data_field_copy(output_field, maskfield);
+        is_field = TRUE;
+    }
+    if (args->is_lap)
+    {
+        gwy_data_field_grains_mark_curvature(dfield, output_field, args->lap, args->inverted); 
+        if (is_field)
+        {
+            if (args->merge_type == GWY_MERGE_UNION)
+                gwy_data_field_grains_add(maskfield, output_field);
+            else if (args->merge_type == GWY_MERGE_INTERSECTION)
+                gwy_data_field_grains_intersect(maskfield, output_field);
+        }
+        else gwy_data_field_copy(output_field, maskfield);
+     }
+    
+    g_object_unref(output_field); 
+    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
     
 }
 
@@ -461,8 +522,8 @@ static void
 merge_changed_cb(GObject *item, MarkArgs *args)
 {
     args->merge_type = GPOINTER_TO_INT(g_object_get_data(item,
-                                                        "merge-type"));
-    
+                                                        "mergegrain-type"));
+
 }
 
 
