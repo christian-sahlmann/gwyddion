@@ -26,6 +26,7 @@
 
 #define chmod(file, mode)     _chmod(file, mode)
 #define ftruncate(file, size) _chsize(file, size)
+#define getpid()              _getpid()
 #define mkdir(dir, mode)      _mkdir(dir)
 #define unlink(file)          _unlink(file)
 
