@@ -53,6 +53,10 @@ void            gwy_graph_area_draw_curves          (GtkWidget *widget);
 void            gwy_graph_area_draw_selection       (GtkWidget *widget);
 void            gwy_graph_area_draw_selection_points(GtkWidget *widget);
 void            gwy_graph_area_plot_refresh         (GwyGraphArea *area);
+
+gdouble         scr_to_data_x                       (GtkWidget *widget, gint scr);
+gdouble         scr_to_data_y                       (GtkWidget *widget, gint scr);
+
 /* Local data */
 
 
@@ -590,10 +594,8 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         }
         area->cursordata->scr_point.i = x;
         area->cursordata->scr_point.j = y;
-        area->cursordata->data_point.x = 
-            area->x_min + x*(area->x_max - area->x_min)/(widget->allocation.width-1);
-        area->cursordata->data_point.y = 
-            area->y_min + (widget->allocation.height-y)*(area->y_max - area->y_min)/(widget->allocation.height-1);
+        area->cursordata->data_point.x = scr_to_data_x(widget, x);
+        area->cursordata->data_point.y = scr_to_data_y(widget, y); 
         printf("%f, %f\n", area->cursordata->data_point.x, area->cursordata->data_point.y);
     }
     
@@ -806,6 +808,25 @@ gwy_graph_area_clear(GwyGraphArea *area)
     g_ptr_array_free(area->curves, 1);
     area->curves = g_ptr_array_new();
 }
+
+gdouble         
+scr_to_data_x(GtkWidget *widget, gint scr)
+{
+    GwyGraphArea *area;
+    area = GWY_GRAPH_AREA(widget);
+
+    return area->x_min + scr*(area->x_max - area->x_min)/(widget->allocation.width-1);    
+}
+
+gdouble
+scr_to_data_y(GtkWidget *widget, gint scr)
+{
+    GwyGraphArea *area;
+    area = GWY_GRAPH_AREA(widget);
+
+    return area->y_min + (widget->allocation.height - scr)*(area->y_max - area->y_min)/(widget->allocation.height-1);     
+}
+
 
 
 

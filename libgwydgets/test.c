@@ -146,7 +146,7 @@ main(int argc, char *argv[])
     gwy_graph_set_autoproperties(graph, &prop);
     gwy_graph_add_dataline(graph, dln, 0, str5, NULL);
     
-    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_POINTS);
+    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_CURSOR);
     
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show (graph);

@@ -217,7 +217,7 @@ gwy_axis_finalize(GObject *object)
     g_array_free(axis->mjticks, 0);
     g_array_free(axis->miticks, 0);
 
-/*    if (axis->dialog) gwy_object_unref(axis->dialog);*/
+    gtk_widget_destroy(axis->dialog);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
