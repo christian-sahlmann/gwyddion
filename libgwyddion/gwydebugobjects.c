@@ -35,6 +35,15 @@ static GTimer *debug_objects_timer = NULL;
 static GList *debug_objects = NULL;
 static gsize id = 0;
 
+/**
+ * gwy_debug_objects_enable:
+ * @enable: Whether object creation/destruction debugger should be enabled.
+ *
+ * Enables or disables the object creation/destruction debugger.
+ *
+ * When debugger is disabled, no new objects are noted, but destruction of
+ * already watched ones is still noted.
+ **/
 void
 gwy_debug_objects_enable(gboolean enable)
 {
@@ -49,6 +58,22 @@ debug_objects_set_time(gpointer data, G_GNUC_UNUSED GObject *exobject)
     *time = g_timer_elapsed(debug_objects_timer, NULL);
 }
 
+/**
+ * gwy_debug_objects_creation:
+ * @object: An object to watch.
+ *
+ * Notes down @object and sets up watch for its destruction.
+ *
+ * This function should be called on object creation to get accurate creation
+ * time, but can be in fact called anytime in object existence.
+ *
+ * There are two possible uses: In class implementation, where it should be
+ * put into instance init function (constructors are less suited for that,
+ * as there can be more than one, there can be deserializators, duplicators,
+ * etc., and you want to hook them all). Or on the side of object user who
+ * is concerned with object lifetime rules, he then calls it just after
+ * object creation.
+ **/
 void
 gwy_debug_objects_creation(GObject *object)
 {
@@ -77,6 +102,15 @@ gwy_debug_objects_creation(GObject *object)
     debug_objects = g_list_prepend(debug_objects, info);
 }
 
+/**
+ * gwy_debug_objects_dump_to_file:
+ * @filehandle: A filehandle open for writing.
+ *
+ * Dumps all recorded objects to a file.
+ *
+ * The format of each line is: object type name, object address, creation time,
+ * destruction time (or ALIVE! message with reference count).
+ **/
 void
 gwy_debug_objects_dump_to_file(FILE *filehandle)
 {
@@ -90,10 +124,19 @@ gwy_debug_objects_dump_to_file(FILE *filehandle)
         if (info->destroy_time > 0)
             fprintf(filehandle, "%.3f\n", info->destroy_time);
         else
-            fprintf(filehandle, "ALIVE!\n");
+            fprintf(filehandle, "ALIVE(%d)!\n",
+                    G_OBJECT(info->address)->ref_count);
     }
 }
 
+/**
+ * gwy_debug_objects_clear:
+ *
+ * Frees all memory taken by debugger.
+ *
+ * FIXME: It is not safe to call this function while there are ANY watched
+ * objects still alive.
+ **/
 void
 gwy_debug_objects_clear(void)
 {
