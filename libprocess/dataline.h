@@ -52,7 +52,7 @@ struct _GwyDataLineClass {
     GObjectClass parent_class;
 };
 
-#define gwy_data_line_duplicate(data_line) ((GwyDataField*)gwy_serializable_duplicate(G_OBJECT(data_line)))
+#define gwy_data_line_duplicate(data_line) ((GwyDataLine*)gwy_serializable_duplicate(G_OBJECT(data_line)))
 
 GType  gwy_data_line_get_type  (void) G_GNUC_CONST;
 
@@ -64,10 +64,10 @@ GwyDataLine*   gwy_data_line_new_alike             (GwyDataLine *model,
 void           gwy_data_line_resample      (GwyDataLine *data_line,
                                             gint res,
                                             GwyInterpolationType interpolation);
-gboolean       gwy_data_line_resize                (GwyDataLine *data_line,
+void           gwy_data_line_resize                (GwyDataLine *data_line,
                                                     gint from,
                                                     gint to);
-gboolean       gwy_data_line_copy                  (GwyDataLine *data_line,
+void           gwy_data_line_copy                  (GwyDataLine *data_line,
                                                     GwyDataLine *b);
 gdouble*       gwy_data_line_get_data              (GwyDataLine *data_line);
 const gdouble* gwy_data_line_get_data_const        (GwyDataLine *data_line);

@@ -40,10 +40,6 @@ static GObject* gwy_data_line_deserialize       (const guchar *buffer,
                                                  gsize size,
                                                  gsize *position);
 static GObject* gwy_data_line_duplicate_real    (GObject *object);
-void            _gwy_data_line_initialize       (GwyDataLine *a,
-                                                 gint res, gdouble real,
-                                                 gboolean nullme);
-void            _gwy_data_line_free             (GwyDataLine *a);
 /*static void     gwy_data_line_value_changed     (GObject *object);*/
 
 static GObjectClass *parent_class = NULL;
@@ -133,7 +129,7 @@ gwy_data_line_finalize(GObject *object)
     GwyDataLine *data_line = (GwyDataLine*)object;
 
     gwy_debug("");
-    _gwy_data_line_free(data_line);
+    g_free(data_line->data);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -146,7 +142,12 @@ gwy_data_line_new(gint res, gdouble real, gboolean nullme)
     gwy_debug("");
     data_line = g_object_new(GWY_TYPE_DATA_LINE, NULL);
 
-    _gwy_data_line_initialize(data_line, res, real, nullme);
+    data_line->res = res;
+    data_line->real = real;
+    if (nullme)
+        data_line->data = g_new0(gdouble, data_line->res);
+    else
+        data_line->data = g_new(gdouble, data_line->res);
 
     return data_line;
 }
@@ -256,45 +257,6 @@ gwy_data_line_value_changed(GObject *object)
 }
 */
 
-
-/**
- * gwy_data_line_initialize:
- * @data_line: A data line.
- * @res: resolution
- * @real: real size
- * @nullme: null values or not
- *
- * Allocates field in dataline and fills it with
- * zeros if requested. Also sets the range (real size).
- **/
-/* Exported for DataField. */
-void
-_gwy_data_line_initialize(GwyDataLine *a,
-                          gint res, gdouble real,
-                          gboolean nullme)
-{
-    gwy_debug("");
-    a->res = res;
-    a->real = real;
-    a->data = nullme ? g_new0(gdouble, a->res) : g_new(gdouble, a->res);
-}
-
-/**
- * gwy_data_line_free:
- * @data_line: A data line.
- *
- * Frees memory occupied by dataline.
- **/
-/* Exported for DataField. */
-void
-_gwy_data_line_free(GwyDataLine *a)
-{
-    gwy_debug("");
-    g_return_if_fail(a && a->data);
-    g_free(a->data);
-    a->data = NULL;
-}
-
 /**
  * gwy_data_line_resample:
  * @data_line: A data line.
@@ -347,38 +309,25 @@ gwy_data_line_resample(GwyDataLine *data_line,
  * gwy_data_line_resize:
  * @data_line: A data line.
  * @from: where to start
- * @to:  where to finish
+ * @to: where to finish
  *
  * Resamples data line to (@from - @to) and fills it
  * by appropriate original data line part.
- *
- * Returns: TRUE if there were no problems.
  **/
-gboolean
+void
 gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 {
-    gint i;
-    GwyDataLine b;
-
-        gwy_debug("");
+    gwy_debug("");
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_val_if_fail(from >= 0 && to <= a->res, FALSE);
+    g_return_if_fail(from >= 0 && to <= a->res);
 
-    b.res = a->res;
-    b.data = g_new(gdouble, a->res);
-    gwy_data_line_copy(a, &b);
-
-    a->res = to-from;
-    a->data = g_renew(gdouble, a->data, a->res);
-
-    for (i = from; i < to; i++)
-        a->data[i-from] = b.data[i];
-    _gwy_data_line_free(&b);
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
-
-    return TRUE;
+    /* FIXME: probably must fix callers:
+       a->real *= (to - from)/a->res; */
+    a->res = to - from;
+    memmove(a->data, a->data + from, a->res*sizeof(gdouble));
+    a->data = g_renew(gdouble, a->data, a->res*sizeof(gdouble));
 }
 
 /**
@@ -388,18 +337,14 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
  *
  * Copies the contents of a data line to another already allocated data line
  * of the same size.
- *
- * Returns: TRUE if there were no problems
  **/
-gboolean
+void
 gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 {
     gwy_debug("");
-    g_return_val_if_fail(a->res == b->res, FALSE);
+    g_return_if_fail(a->res == b->res);
 
     memcpy(b->data, a->data, a->res*sizeof(gdouble));
-
-    return TRUE;
 }
 
 /**
@@ -527,7 +472,6 @@ gwy_data_line_set_real(GwyDataLine *data_line, gdouble real)
 {
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     data_line->real = real;
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
@@ -593,7 +537,6 @@ gwy_data_line_set_val(GwyDataLine *data_line, gint i, gdouble value)
     g_return_val_if_fail(i >= 0 && i < data_line->res, FALSE);
 
     data_line->data[i] = value;
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 
     return TRUE;
 }
@@ -665,7 +608,6 @@ gwy_data_line_fill(GwyDataLine *a, gdouble value)
 
     for (i = 0; i < a->res; i++)
         a->data[i] = value;
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
@@ -682,7 +624,6 @@ gwy_data_line_add(GwyDataLine *a, gdouble value)
 
     for (i = 0; i < a->res; i++)
         a->data[i] += value;
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
@@ -699,7 +640,6 @@ gwy_data_line_multiply(GwyDataLine *a, gdouble value)
 
     for (i = 0; i < a->res; i++)
         a->data[i] *= value;
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
@@ -723,7 +663,6 @@ gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value)
 
     for (i = from; i < to; i++)
         a->data[i] = value;
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
@@ -747,7 +686,6 @@ gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value)
 
     for (i = from; i < to; i++)
         a->data[i] += value;
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
@@ -771,7 +709,6 @@ gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value)
 
     for (i = from; i < to; i++)
         a->data[i] *= value;
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
@@ -1034,7 +971,6 @@ gwy_data_line_threshold(GwyDataLine *a,
             tot++;
         }
     }
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
     return tot;
 }
 
@@ -1073,7 +1009,6 @@ gwy_data_line_part_threshold(GwyDataLine *a,
             tot++;
         }
     }
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
     return tot;
 }
 
@@ -1133,7 +1068,6 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
         gwy_debug("");
     for (i = 0; i < a->res; i++)
         a->data[i] -= av + bpix*i;
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
@@ -1207,7 +1141,6 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
     /* XXX: where was this freed? */
     g_free(dx.data);
     g_free(dy.data);
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
 /**
@@ -1317,7 +1250,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
 {
     gint i, n;
     gdouble rmsa, rmsb;
-    GwyDataLine multra, multia;
+    GwyDataLine *multra, *multia;
     gdouble coefs[4];
 
     g_return_if_fail(GWY_IS_DATA_LINE(ra));
@@ -1349,36 +1282,33 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
 
 
     if (preserverms == TRUE) {
-        _gwy_data_line_initialize(&multra, ra->res, ra->real, 0);
-        _gwy_data_line_initialize(&multia, ra->res, ra->real, 0);
-        gwy_data_line_copy(ra, &multra);
-        gwy_data_line_copy(ia, &multia);
+        multra = gwy_data_line_duplicate(ra);
+        multia = gwy_data_line_duplicate(ia);
 
-        rmsa = gwy_data_line_get_rms(&multra);
+        rmsa = gwy_data_line_get_rms(multra);
 
-        gwy_fft_window(multra.data, multra.res, windowing);
-        gwy_fft_window(multia.data, multia.res, windowing);
+        gwy_fft_window(multra->data, multra->res, windowing);
+        gwy_fft_window(multia->data, multia->res, windowing);
 
-        (*fft)(direction, &multra, &multia, rb, ib, interpolation); /*multra.res, interpolation*/
+        (*fft)(direction, multra, multia, rb, ib, interpolation);
 
-        rmsb=0;
-        for (i=0; i<(multra.res/2); i++) rmsb+=(rb->data[i]*rb->data[i]+ib->data[i]*ib->data[i])*2
-                                                /(ra->res*ra->res);
+        rmsb = 0;
+        for (i = 0; i < multra->res/2; i++)
+            rmsb += (rb->data[i]*rb->data[i] + ib->data[i]*ib->data[i])*2
+                    /(ra->res*ra->res);
         rmsb = sqrt(rmsb);
 
         gwy_data_line_multiply(rb, rmsa/rmsb);
         gwy_data_line_multiply(ib, rmsa/rmsb);
-        _gwy_data_line_free(&multra);
-        _gwy_data_line_free(&multia);
+        g_object_unref(multra);
+        g_object_unref(&multia);
     }
     else {
         gwy_fft_window(ra->data, ra->res, windowing);
         gwy_fft_window(ia->data, ra->res, windowing);
 
-        (*fft)(direction, ra, ia, rb, ib, interpolation); /*ra->res, interpolation*/
+        (*fft)(direction, ra, ia, rb, ib, interpolation);
     }
-
-    /* XXX: gwy_data_line_value_changed(G_OBJECT(ra));*/
 }
 
 /**

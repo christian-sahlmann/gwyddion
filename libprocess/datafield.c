@@ -30,12 +30,6 @@
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
-/* Private DataLine functions */
-void            _gwy_data_line_initialize        (GwyDataLine *a,
-                                                  gint res, gdouble real,
-                                                  gboolean nullme);
-void            _gwy_data_line_free              (GwyDataLine *a);
-
 static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
 static void     gwy_data_field_init              (GObject *object);
 static void     gwy_data_field_finalize          (GObject *object);
@@ -48,16 +42,6 @@ static GObject* gwy_data_field_deserialize       (const guchar *buffer,
                                                   gsize *position);
 static GObject* gwy_data_field_duplicate_real    (GObject *object);
 /*static void     gwy_data_field_value_changed     (GObject *object);*/
-
-/* exported for other datafield function
- * XXX: this should rather not exist at all, use gwy_data_field_new()...  */
-void           _gwy_data_field_initialize        (GwyDataField *a,
-                                                  gint xres,
-                                                  gint yres,
-                                                  gdouble xreal,
-                                                  gdouble yreal,
-                                                  gboolean nullme);
-void           _gwy_data_field_free              (GwyDataField *a);
 
 static GObjectClass *parent_class = NULL;
 
@@ -152,7 +136,7 @@ gwy_data_field_finalize(GObject *object)
     gwy_debug("%p is dying!", data_field);
     g_object_unref(data_field->si_unit_xy);
     g_object_unref(data_field->si_unit_z);
-    _gwy_data_field_free(data_field);
+    g_free(data_field->data);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -179,7 +163,17 @@ gwy_data_field_new(gint xres, gint yres,
 
     data_field = g_object_new(GWY_TYPE_DATA_FIELD, NULL);
 
-    _gwy_data_field_initialize(data_field, xres, yres, xreal, yreal, nullme);
+    data_field->xreal = xreal;
+    data_field->yreal = yreal;
+    data_field->xres = xres;
+    data_field->yres = yres;
+    if (nullme)
+        data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
+    else
+        data_field->data = g_new(gdouble, data_field->xres*data_field->yres);
+
+    data_field->si_unit_xy = gwy_si_unit_new("m");
+    data_field->si_unit_z = gwy_si_unit_new("m");
 
     return data_field;
 }
@@ -338,47 +332,6 @@ gwy_data_field_value_changed(GObject *object)
     g_signal_emit_by_name(GWY_DATA_FIELD(object), "value_changed", NULL);
 }
 */
-
-/**
- * _gwy_data_field_initialize:
- * @data_field: A data field structure to be initialized
- * @xres: X resolution
- * @yres: Y resolution
- * @xreal: X real dimension of the field
- * @yreal: Y real dimension of the field
- * @nullme: true if field should be filled with zeros
- *
- * Allocates and initializes GwyDataField.
- *
- * Does NOT create an object!
- **/
-void
-_gwy_data_field_initialize(GwyDataField *a,
-                           gint xres, gint yres,
-                           gdouble xreal, gdouble yreal,
-                           gboolean nullme)
-{
-    gwy_debug("(%dx%d)", xres, yres);
-
-    a->xreal = xreal;
-    a->yreal = yreal;
-    a->xres = xres;
-    a->yres = yres;
-    if (nullme)
-        a->data = g_new0(gdouble, a->xres*a->yres);
-    else
-        a->data = g_new(gdouble, a->xres*a->yres);
-
-    a->si_unit_xy = gwy_si_unit_new("m");
-    a->si_unit_z = gwy_si_unit_new("m");
-}
-
-void
-_gwy_data_field_free(GwyDataField *a)
-{
-    gwy_debug("");
-    g_free(a->data);
-}
 
 /**
  * gwy_data_field_copy:
@@ -542,15 +495,6 @@ gwy_data_field_resample(GwyDataField *data_field,
     data_field->data = bdata;
     data_field->xres = xres;
     data_field->yres = yres;
-}
-
-void
-gwy_data_field_confirmsize(GwyDataField *a, gint xres, gint yres)
-{
-    if (a->data == NULL)
-        _gwy_data_field_initialize(a, xres, yres, xres, yres, FALSE);
-    else if (a->xres != xres)
-        gwy_data_field_resample(a, xres, yres, GWY_INTERPOLATION_NONE);
 }
 
 /**

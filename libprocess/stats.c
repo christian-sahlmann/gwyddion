@@ -27,12 +27,6 @@
 #include "stats.h"
 #include "linestats.h"
 
-/* Private DataLine functions */
-void            _gwy_data_line_initialize        (GwyDataLine *a,
-                                                  gint res, gdouble real,
-                                                  gboolean nullme);
-void            _gwy_data_line_free              (GwyDataLine *a);
-
 static gdouble  square_area                      (GwyDataField *data_field,
                                                   gint ulcol, gint ulrow,
                                                   gint brcol, gint brrow);

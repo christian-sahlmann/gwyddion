@@ -28,12 +28,6 @@
 #define hypot(x,y) sqrt((x)*(x) + (y)*(y))
 #endif
 
-/* Private DataLine functions */
-void            _gwy_data_line_initialize        (GwyDataLine *a,
-                                                  gint res, gdouble real,
-                                                  gboolean nullme);
-void            _gwy_data_line_free              (GwyDataLine *a);
-
 /**
  * gwy_data_field_plane_coeffs:
  * @data_field: A data field.
