@@ -860,6 +860,7 @@ test_expr(void)
     printexpr("1+2*3");
     printexpr("1+2 3");
     printexpr("1^2^3");
+    printexpr("1/5 hypot 3,4");
 
     variables[0] = 1;  variables[1] = 2;  variables[2] = 3;
     printexprvar("x+y+z");
@@ -870,6 +871,8 @@ test_expr(void)
     variables[0] = 3;  variables[1] = 4;  variables[2] = 5;
     printexprvar("hypot hypot x, y, z");
     printexprvar("-x--y");
+    printexprvar("a+a-b+a-b");
+    printexprvar("1/a b");
     gwy_expr_free(expr);
 }
 

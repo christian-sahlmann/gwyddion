@@ -1333,7 +1333,6 @@ gwy_expr_get_variables(GwyExpr *expr,
                        gchar ***names)
 {
     g_return_val_if_fail(expr, -1);
-    g_return_val_if_fail(names, -1);
 
     if (!expr->in)
         return -1;
