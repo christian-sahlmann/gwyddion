@@ -220,9 +220,9 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
         gobject_class,
         PROP_IS_CROP,
         g_param_spec_boolean("is_crop",
-                             _("Crop style"),
-                             _("Whether the selection is crop-style instead of "
-                               "plain rectangle"),
+                             "Crop style",
+                             "Whether the selection is crop-style instead of "
+                             "plain rectangle",
                              FALSE,
                              G_PARAM_READABLE | G_PARAM_WRITABLE));
 }

@@ -221,8 +221,8 @@ gwy_layer_points_class_init(GwyLayerPointsClass *klass)
         gobject_class,
         PROP_MAX_POINTS,
         g_param_spec_int("max_points",
-                         _("Maximum number of points"),
-                         _("The maximum number of points that can be selected"),
+                         "Maximum number of points",
+                         "The maximum number of points that can be selected",
                          1, 1024, 3,
                          G_PARAM_READABLE | G_PARAM_WRITABLE));
 }

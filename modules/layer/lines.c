@@ -232,8 +232,8 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
         gobject_class,
         PROP_MAX_LINES,
         g_param_spec_int("max_lines",
-                         _("Maximum number of lines"),
-                         _("The maximum number of lines that can be selected"),
+                         "Maximum number of lines",
+                         "The maximum number of lines that can be selected",
                          1, 1024, 3,
                          G_PARAM_READABLE | G_PARAM_WRITABLE));
 }

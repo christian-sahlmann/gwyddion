@@ -226,16 +226,16 @@ gwy_layer_axes_class_init(GwyLayerAxesClass *klass)
         gobject_class,
         PROP_MAX_AXES,
         g_param_spec_int("max_axes",
-                         _("Maximum number of axes"),
-                         _("The maximum number of axes that can be selected"),
+                         "Maximum number of axes",
+                         "The maximum number of axes that can be selected",
                          1, 1024, 3,
                          G_PARAM_READABLE | G_PARAM_WRITABLE));
     g_object_class_install_property(
         gobject_class,
         PROP_ORIENTATION,
         g_param_spec_enum("orientation",
-                          _("Orientation"),
-                          _("Orientation of selected lines"),
+                          "Orientation",
+                          "Orientation of selected lines",
                           GTK_TYPE_ORIENTATION,
                           GTK_ORIENTATION_HORIZONTAL,
                           G_PARAM_READABLE | G_PARAM_WRITABLE));

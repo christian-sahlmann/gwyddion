@@ -140,8 +140,8 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
         gobject_class,
         PROP_UPDATE_POLICY,
         g_param_spec_enum("update_policy",
-                          _("Update Policy"),
-                          _("When value changed causes signal emission"),
+                          "Update Policy",
+                          "When value change causes signal emission",
                           GTK_TYPE_UPDATE_TYPE,
                           GTK_UPDATE_CONTINUOUS,
                           G_PARAM_READABLE | G_PARAM_WRITABLE));
