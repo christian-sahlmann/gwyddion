@@ -107,9 +107,13 @@ shade(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     if (run == GWY_RUN_WITH_DEFAULTS)
+    {
         args = shade_defaults;
+    }
     else
+    {
         shade_load_args(gwy_app_settings_get(), &args);
+    }
     ok = (run != GWY_RUN_MODAL) || shade_dialog(&args);
     if (ok) {
 
@@ -149,6 +153,7 @@ shade_dialog(ShadeArgs *args)
     GtkWidget *dialog;
     GObject *pal, *pdef;
     ShadeControls controls;
+    GwySphereCoords *gscoords;
     enum { RESPONSE_RESET = 1 };
     gint response;
 
@@ -160,12 +165,15 @@ shade_dialog(ShadeArgs *args)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    controls.gradsphere = gwy_vector_shade_new(NULL);
+    gscoords = gwy_sphere_coords_new(args->theta, args->phi);
+    controls.gradsphere = gwy_vector_shade_new(gscoords);
+    
     pdef = gwy_palette_def_new(GWY_PALETTE_GRAY);
     pal = gwy_palette_new(GWY_PALETTE_DEF(pdef));
     gwy_grad_sphere_set_palette(
               GWY_GRAD_SPHERE(gwy_vector_shade_get_grad_sphere(GWY_VECTOR_SHADE(controls.gradsphere))),
               GWY_PALETTE(pal));
+    
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.gradsphere,
                                               FALSE, FALSE, 4);
