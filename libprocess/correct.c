@@ -407,9 +407,7 @@ gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
     }
     gwy_data_line_add(derdist, avg);
     g_assert(guess != GWY_SYMMETRY_AUTO);
-    gwy_debug("SELECTED: %s",
-              gwy_enum_to_string(guess, unrotate_symmetry,
-                                 G_N_ELEMENTS(unrotate_symmetry)));
+    gwy_debug("SELECTED: %s", guess);
     correction[GWY_SYMMETRY_AUTO] = correction[guess];
 
     for (j = 0; j < GWY_SYMMETRY_LAST; j++)
