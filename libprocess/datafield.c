@@ -1720,7 +1720,7 @@ gwy_data_field_get_angder(GwyDataField *a, gint col, gint row, gdouble theta)
  * @ia: Imaginary input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @gint (*fft)(): 1D FFT algorithm
+ * @fft: 1D FFT algorithm
  * @windowing: windowing type
  * @direction: FFT direction (1 or -1)
  * @interpolation: interpolation type
@@ -1763,7 +1763,7 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
  * @ra: Real input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @gint (*fft)(): 1D FFT algorithm 
+ * @fft: 1D FFT algorithm 
  * @windowing: windowing type
  * @direction: FFT direction (1 or -1)
  * @interpolation: interpolation type
@@ -1850,7 +1850,7 @@ gwy_data_field_2dffthumanize(GwyDataField *a)
  * @ia: Imaginary input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @gint (*fft)(): 1D FFT algorithm
+ * @fft: 1D FFT algorithm
  * @windowing: windowing type
  * @direction: FFT direction (1 or -1)
  * @interpolation: interpolation type
@@ -1904,7 +1904,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
  * @ia: Imaginary input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @gint (*fft)(): 1D FFT algorithm
+ * @fft: 1D FFT algorithm
  * @windowing: windowing type
  * @direction: FFT direction (1 or -1)
  * @interpolation: interpolation type
@@ -1955,7 +1955,7 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
  * @ra: Real input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @gint (*fft)(): 1D FFT algorithm
+ * @fft: 1D FFT algorithm
  * @windowing: windowing type
  * @direction: FFT direction (1 or -1)
  * @interpolation: interpolation type
