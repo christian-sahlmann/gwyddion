@@ -68,6 +68,8 @@ GtkWidget* gwy_option_menu_create         (const GwyEnum *entries,
 gboolean   gwy_option_menu_set_history    (GtkWidget *option_menu,
                                            const gchar *key,
                                            gint current);
+gint       gwy_option_menu_get_history    (GtkWidget *option_menu,
+                                           const gchar *key);
 
 #ifdef __cplusplus
 }

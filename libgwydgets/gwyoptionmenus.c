@@ -186,7 +186,7 @@ palette_def_compare(GwyPaletteDef *a,
 }
 
 
-/************************** Enum menus ****************************/
+/************************** Enum option menu ****************************/
 
 /**
  * gwy_option_menu_create:
@@ -202,6 +202,7 @@ palette_def_compare(GwyPaletteDef *a,
  * Creates an option menu for an enum.
  *
  * It sets object data identified by @key for each menu item to its value.
+ * Try to avoid -1 as an enum value.
  *
  * Returns: The newly created option menu as #GtkWidget.
  **/
@@ -217,8 +218,10 @@ gwy_option_menu_create(const GwyEnum *entries,
     GQuark quark;
     gint i, idx;
 
-    quark = g_quark_from_static_string(key);
+    quark = g_quark_from_string(key);
     omenu = gtk_option_menu_new();
+    g_object_set_data(G_OBJECT(omenu), "gwy-option-menu",
+                      GINT_TO_POINTER(TRUE));
     menu = gtk_menu_new();
 
     idx = -1;
@@ -243,7 +246,9 @@ gwy_option_menu_create(const GwyEnum *entries,
 /**
  * gwy_option_menu_set_history:
  * @option_menu: An option menu created by gwy_option_menu_create().
- * @key: Value object data key.
+ * @key: Value object data key.  Either the key you specified when called
+ *       gwy_option_menu_create(), or the key listed in description of
+ *       particular option menu constructor.
  * @current: Value to be shown as currently selected.
  *
  * Sets option menu history based on integer item object data (as set by
@@ -262,8 +267,10 @@ gwy_option_menu_set_history(GtkWidget *option_menu,
     gint i;
 
     g_return_val_if_fail(GTK_IS_OPTION_MENU(option_menu), FALSE);
+    g_return_val_if_fail(g_object_get_data(G_OBJECT(option_menu),
+                                           "gwy-option-menu"), -1);
     menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(option_menu));
-    quark = g_quark_from_static_string(key);
+    quark = g_quark_from_string(key);
     i = 0;
     for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c)) {
         if (GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(c->data), quark))
@@ -274,6 +281,43 @@ gwy_option_menu_set_history(GtkWidget *option_menu,
     }
     return FALSE;
 }
+
+/**
+ * gwy_option_menu_get_history:
+ * @option_menu: An option menu created by gwy_option_menu_create().
+ * @key: Value object data key.  Either the key you specified when called
+ *       gwy_option_menu_create(), or the key listed in description of
+ *       particular option menu constructor.
+ *
+ * Gets the integer enum value corresponding to currently selected item.
+ *
+ * Returns: The enum value corresponding to currently selected item.  In
+ *          case of failure -1 is returned.
+ **/
+gint
+gwy_option_menu_get_history(GtkWidget *option_menu,
+                            const gchar *key)
+{
+    GQuark quark;
+    GtkWidget *menu, *item;
+    gint idx;
+
+    g_return_val_if_fail(GTK_IS_OPTION_MENU(option_menu), -1);
+    g_return_val_if_fail(g_object_get_data(G_OBJECT(option_menu),
+                                           "gwy-option-menu"), -1);
+
+    idx = gtk_option_menu_get_history(GTK_OPTION_MENU(option_menu));
+    if (idx < 0)
+        return -1;
+    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(option_menu));
+    quark = g_quark_from_string(key);
+    item = GTK_WIDGET(g_list_nth(GTK_MENU_SHELL(menu)->children, (guint)idx));
+    g_return_val_if_fail(item, FALSE);
+
+    return GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(item), quark));
+}
+
+/************************** Particular menus ****************************/
 
 /**
  * gwy_option_menu_interpolation:
@@ -463,13 +507,13 @@ gwy_option_menu_sfunctions_output(GCallback callback,
                            GwySFOutputType current)
 {
     static const GwyEnum entries[] = {
-        { "dist. of heights",  GWY_SF_OUTPUT_DH,  },
-        { "cum. dist. of heights",  GWY_SF_OUTPUT_CDH, },
-        { "dist. of angles",  GWY_SF_OUTPUT_DA,      },
-        { "cum. dist. of angles",  GWY_SF_OUTPUT_CDA,       },
-        { "autocorrelation",  GWY_SF_OUTPUT_ACF,       },
-        { "height-height cor.",  GWY_SF_OUTPUT_HHCF,     },
-        { "power spectral density",  GWY_SF_OUTPUT_PSDF,     },
+        { "Dist. of heights",  GWY_SF_OUTPUT_DH,  },
+        { "Cum. dist. of heights",  GWY_SF_OUTPUT_CDH, },
+        { "Dist. of angles",  GWY_SF_OUTPUT_DA,      },
+        { "Cum. dist. of angles",  GWY_SF_OUTPUT_CDA,       },
+        { "Autocorrelation",  GWY_SF_OUTPUT_ACF,       },
+        { "Height-height cor.",  GWY_SF_OUTPUT_HHCF,     },
+        { "Power spectral density",  GWY_SF_OUTPUT_PSDF,     },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -478,7 +522,7 @@ gwy_option_menu_sfunctions_output(GCallback callback,
 }
 
 /**
- * gwy_option_menu_sfunctions_output:
+ * gwy_option_menu_direction:
  * @callback: A callback called when a menu item is activated (or %NULL for
  * @cbdata: User data passed to the callback.
  * @current: Direction selected
@@ -486,8 +530,8 @@ gwy_option_menu_sfunctions_output(GCallback callback,
  *
  * Creates a #GtkOptionMenu of datafield computation directions available.
  *
- * It sets object data "direction-type" to statistical functions output type for each
- * menu item (use GPOINTER_TO_INT() when retrieving it).
+ * It sets object data "direction-type" to statistical functions output type
+ * for each menu item (use GPOINTER_TO_INT() when retrieving it).
  *
  * Returns: The newly created option menu as #GtkWidget.
  **/

@@ -135,6 +135,7 @@ EXPORTS
 	gwy_graph_add_dataline
 	gwy_graph_area_set_boundaries
 	gwy_vector_layer_button_press
+	gwy_option_menu_get_history
 	gwy_sci_text_new
 	gwy_data_view_get_xmeasure
 	gwy_layer_lines_set_max_lines

@@ -35,7 +35,7 @@
 #define TEST_OPTION_MENUS 2
 #define TEST_GTKDOC_INFO 3
 
-#define TEST_WHAT TEST_DATA_VIEW
+#define TEST_WHAT TEST_OPTION_MENUS
 
 /***** VECTOR SHADE [[[ *****************************************************/
 #if (TEST_WHAT == TEST_VECTOR_SHADE)
