@@ -118,6 +118,8 @@ static gint        normalize_data            (FitArgs *args,
                                               GwyDataLine *xdata,
                                               GwyDataLine *ydata,
                                               gint curve);
+static GtkWidget*  create_stocklike_button   (const gchar *label_text,
+                                              const gchar *stock_id);
 static void        create_results_window     (FitArgs *args);
 static void        destroy                   (FitArgs *args, 
                                               FitControls *controls);
@@ -258,7 +260,8 @@ fit_dialog(FitArgs *args)
     GwyGraphAutoProperties prop;
     gint response, i, j;
 
-    enum { RESPONSE_RESET = 1,
+    enum {
+        RESPONSE_RESET = 1,
         RESPONSE_FIT = 2,
         RESPONSE_PLOT = 3
     };
@@ -267,12 +270,19 @@ fit_dialog(FitArgs *args)
     dialog = gtk_dialog_new_with_buttons(_("Fit graph"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Fit"), RESPONSE_FIT,
-                                         _("Reset inits"), RESPONSE_RESET,
-                                         _("Plot inits"), RESPONSE_PLOT,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
+                                 create_stocklike_button(_("_Fit"),
+                                                         GTK_STOCK_EXECUTE),
+                                 RESPONSE_FIT);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          _("_Reset inits"), RESPONSE_RESET);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          _("_Plot inits"), RESPONSE_PLOT);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -896,6 +906,30 @@ static void
 ch4_changed_cb(GtkToggleButton *button, FitArgs *args)
 {
     args->par_fix[3] = gtk_toggle_button_get_active(button);
+}
+
+static GtkWidget*
+create_stocklike_button(const gchar *label_text,
+                        const gchar *stock_id)
+{
+    GtkWidget *button, *alignment, *hbox, *label, *image;
+
+    button = gtk_button_new();
+
+    alignment = gtk_alignment_new(0.5, 0.5, 0, 0);
+    gtk_container_add(GTK_CONTAINER(button), alignment);
+
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_container_add(GTK_CONTAINER(alignment), hbox);
+
+    image = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
+    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+
+    label = gtk_label_new_with_mnemonic(label_text);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
+
+    return button;
 }
 
 static void
