@@ -53,7 +53,7 @@ gwy_rgba_get_type (void)
  *
  * Returns: A copy of @rgba.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 GwyRGBA*
 gwy_rgba_copy(const GwyRGBA *rgba)
@@ -68,7 +68,7 @@ gwy_rgba_copy(const GwyRGBA *rgba)
  *
  * Frees an rgba structure created with gwy_rgba_copy().
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_rgba_free(GwyRGBA *rgba)
@@ -86,7 +86,7 @@ gwy_rgba_free(GwyRGBA *rgba)
  *
  * Note no allocation is performed, just channel value conversion.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_rgba_to_gdk_color(GwyRGBA *rgba,
@@ -106,7 +106,7 @@ gwy_rgba_to_gdk_color(GwyRGBA *rgba,
  *
  * Returns: The opacity value as a 16bit integer.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 guint16
 gwy_rgba_to_gdk_alpha(GwyRGBA *rgba)
@@ -123,7 +123,7 @@ gwy_rgba_to_gdk_alpha(GwyRGBA *rgba)
  *
  * The alpha value is unchanged, as #GdkColor has no opacity information.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_rgba_from_gdk_color(GwyRGBA *rgba,
@@ -141,6 +141,8 @@ gwy_rgba_from_gdk_color(GwyRGBA *rgba,
  * @gdkalpha: Gdk 16bit opacity value.
  *
  * Converts a Gdk color plus an opacity value to a rgba.
+ *
+ * Since: 1.3
  **/
 void
 gwy_rgba_from_gdk_color_and_alpha(GwyRGBA *rgba,
@@ -164,7 +166,7 @@ gwy_rgba_from_gdk_color_and_alpha(GwyRGBA *rgba,
  *
  * Returns: Whether all @rgba components were successfully found and set.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 gboolean
 gwy_rgba_get_from_container(GwyRGBA *rgba,
@@ -222,7 +224,7 @@ gwy_rgba_get_from_container(GwyRGBA *rgba,
  *
  * Stores RGBA color components to a container.
  *
- * Since: 1.3.
+ * Since: 1.3
  **/
 void
 gwy_rgba_store_to_container(GwyRGBA *rgba,
