@@ -30,22 +30,6 @@ G_BEGIN_DECLS
 
 #include <glib.h>
 
-typedef enum {
-    GWY_NLFIT_PRESET_GAUSSIAN          = 0,
-    GWY_NLFIT_PRESET_GAUSSIAN_PSDF     = 1,
-    GWY_NLFIT_PRESET_GAUSSIAN_ACF      = 2,
-    GWY_NLFIT_PRESET_GAUSSIAN_HHCF     = 3,
-    GWY_NLFIT_PRESET_EXPONENTIAL       = 4,
-    GWY_NLFIT_PRESET_EXPONENTIAL_PSDF  = 5,
-    GWY_NLFIT_PRESET_EXPONENTIAL_ACF   = 6,
-    GWY_NLFIT_PRESET_EXPONENTIAL_HHCF  = 7,
-    GWY_NLFIT_PRESET_POLY_0            = 8,
-    GWY_NLFIT_PRESET_POLY_1            = 9,
-    GWY_NLFIT_PRESET_POLY_2            = 10,
-    GWY_NLFIT_PRESET_POLY_3            = 11
-} GwyNLFitPresetType;
-
-
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
                                  gint n_param,
                                  const gdouble *param,
@@ -153,18 +137,23 @@ void           gwy_math_nlfit_derive             (gint i,
                                                   gdouble *deriv,
                                                   gboolean *dres);
 
-const GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(GwyNLFitPresetType type)
+gint gwy_math_nlfit_get_npresets(void)
     G_GNUC_CONST;
+
+const GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(gint preset_id)
+    G_GNUC_CONST;
+
+const GwyNLFitPresetFunction* gwy_math_nlfit_get_preset_by_name(const gchar *name);
 
 gdouble gwy_math_nlfit_get_function_value(const GwyNLFitPresetFunction* function,
                                           gdouble *params,
                                           gdouble x);
 
-gchar *gwy_math_nlfit_get_function_name(const GwyNLFitPresetFunction* function);
+const gchar *gwy_math_nlfit_get_function_name(const GwyNLFitPresetFunction* function);
 
-gchar *gwy_math_nlfit_get_function_equation(const GwyNLFitPresetFunction* function);
+const gchar *gwy_math_nlfit_get_function_equation(const GwyNLFitPresetFunction* function);
 
-gchar *gwy_math_nlfit_get_function_param_name(const GwyNLFitPresetFunction* function,
+const gchar *gwy_math_nlfit_get_function_param_name(const GwyNLFitPresetFunction* function,
                                               gint param);
 
 gdouble gwy_math_nlfit_get_function_param_default(const GwyNLFitPresetFunction* function,
@@ -181,7 +170,7 @@ GwyNLFitter* gwy_math_nlfit_fit_preset(const GwyNLFitPresetFunction* function,
                                gdouble *err,
                                const gboolean *fixed_param,
                                gpointer user_data);
-  
+
 #endif /* __GWY_NFLIT_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

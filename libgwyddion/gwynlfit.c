@@ -1423,11 +1423,32 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
     }
 };
 
-const GwyNLFitPresetFunction*
-gwy_math_nlfit_get_preset(GwyNLFitPresetType type)
+gint
+gwy_math_nlfit_get_npresets(void)
 {
+    return (gint)G_N_ELEMENTS(fitting_presets);
+}
 
-    return (fitting_presets + type);
+const GwyNLFitPresetFunction*
+gwy_math_nlfit_get_preset(gint preset_id)
+{
+    g_return_val_if_fail(preset_id >= 0
+                         && preset_id < (gint)G_N_ELEMENTS(fitting_presets),
+                         NULL);
+
+    return fitting_presets + preset_id;
+}
+
+const GwyNLFitPresetFunction*
+gwy_math_nlfit_get_preset_by_name(const gchar *name)
+{
+    gsize i;
+
+    for (i = 0; i < G_N_ELEMENTS(fitting_presets); i++) {
+        if (strcmp(name, fitting_presets[i].function_name) == 0)
+            return fitting_presets + i;
+    }
+    return NULL;
 }
 
 gdouble
@@ -1435,29 +1456,31 @@ gwy_math_nlfit_get_function_value(const GwyNLFitPresetFunction* function,
                                   gdouble *params, gdouble x)
 {
     gboolean res;
+
     return (function->function)(x, function->nparams, params, NULL, &res);
 }
 
-gchar*
+const gchar*
 gwy_math_nlfit_get_function_name(const GwyNLFitPresetFunction* function)
 {
-    return g_strdup(function->function_name);
+    return function->function_name;
 }
 
-gchar*
+const gchar*
 gwy_math_nlfit_get_function_equation(const GwyNLFitPresetFunction* function)
 {
-    return g_strdup(function->function_equation);
+    return function->function_equation;
 }
 
-gchar*
+const gchar*
 gwy_math_nlfit_get_function_param_name(const GwyNLFitPresetFunction* function,
                                        gint param)
 {
     const GwyNLFitParam *par;
 
     par = function->param + param;
-    return g_strdup(par->name);
+
+    return par->name;
 }
 
 gdouble
@@ -1538,7 +1561,6 @@ gwy_math_nlfit_fit_preset(const GwyNLFitPresetFunction* function,
 
     return fitter;
 }
-
 
 /************************** Documentation ****************************/
 
