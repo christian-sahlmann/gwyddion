@@ -88,7 +88,7 @@ struct _GwyGrapherClass {
     gpointer reserved2;
 };
 
-GtkWidget *gwy_grapher_new();
+GtkWidget *gwy_grapher_new(gpointer *gmodel);
 GType      gwy_grapher_get_type(void) G_GNUC_CONST;
 
 void       gwy_grapher_refresh(GwyGrapher *grapher);

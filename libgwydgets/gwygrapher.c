@@ -40,7 +40,9 @@ static void     gwy_grapher_size_allocate        (GtkWidget *widget,
                                                 GtkAllocation *allocation);
 static void     rescaled_cb                    (GtkWidget *widget,
                                                 GwyGrapher *grapher);
-
+static void     replot_cb                        (GObject *gobject, 
+                                                  GParamSpec *arg1, 
+                                                  GwyGrapher *grapher);
 static GtkWidgetClass *parent_class = NULL;
 
 
@@ -178,10 +180,14 @@ gwy_grapher_init(GwyGrapher *grapher)
 }
 
 GtkWidget*
-gwy_grapher_new()
+gwy_grapher_new(gpointer *gmodel)
 {
+    GtkWidget *grapher = GTK_WIDGET(g_object_new(gwy_grapher_get_type(), NULL));
     gwy_debug("");
-    return GTK_WIDGET(g_object_new(gwy_grapher_get_type(), NULL));
+
+    if (gmodel != NULL)
+       gwy_grapher_change_model(GWY_GRAPHER(grapher), gmodel);    
+    return grapher;
 }
 
 
@@ -249,11 +255,19 @@ gwy_grapher_refresh(GwyGrapher *grapher)
     
 }
 
+static void 
+replot_cb(GObject *gobject, GParamSpec *arg1, GwyGrapher *grapher)
+{
+    if (grapher == NULL || grapher->grapher_model == NULL) return;
+    gwy_grapher_refresh(grapher);
+}
 
 void
 gwy_grapher_change_model(GwyGrapher *grapher, gpointer *gmodel)
 {
     grapher->grapher_model = gmodel;
+
+    g_signal_connect(gmodel, "notify", G_CALLBACK(replot_cb), grapher);
     gwy_grapher_area_change_model(grapher->area, gmodel);
 }
 

@@ -103,8 +103,8 @@ main(int argc, char *argv[])
     str4 = g_string_new("cosi");
     str5 = g_string_new("jiny sinus");
 
-    graph = gwy_grapher_new();
-    gmodel = gwy_grapher_model_new(graph);
+    gmodel = gwy_grapher_model_new(NULL);
+    graph = gwy_grapher_new(gmodel);
     
     model = gwy_grapher_curve_model_new();
     model->xdata = xp;

@@ -226,19 +226,7 @@ gwy_grapher_model_new(GwyGrapher *grapher)
     gmodel = g_object_new(GWY_TYPE_GRAPHER_MODEL, NULL);
 
     gmodel->grapher = grapher;
-    if (grapher) {
-        g_assert(GWY_IS_GRAPHER(grapher));
-        window = gtk_widget_get_ancestor(GTK_WIDGET(grapher), GTK_TYPE_WINDOW);
-        if (window)
-            g_string_assign(gmodel->title,
-                            gtk_window_get_title(GTK_WINDOW(window)));
-        gmodel->grapher_destroy_hid
-            = g_signal_connect(grapher, "destroy",
-                               G_CALLBACK(gwy_grapher_model_grapher_destroyed),
-                               gmodel);
-    }
-
-    if (grapher) gwy_grapher_change_model(gmodel->grapher, gmodel);
+    
     return (GObject*)(gmodel);
 }
 
@@ -261,9 +249,7 @@ gwy_grapher_model_add_curve(GwyGrapherModel *gmodel, GwyGrapherCurveModel *curve
     gmodel->ncurves++;
    
     g_object_notify(gmodel, "n");
-    gwy_grapher_refresh(gmodel->grapher);
 }
-
 
 gint
 gwy_grapher_model_get_n_curves(GwyGrapherModel *gmodel)
@@ -412,9 +398,9 @@ gwy_grapher_new_from_model(GwyGrapherModel *gmodel)
     GwyGrapher *grapher;
     gint i;
 
-    g_return_val_if_fail(gmodel->grapher == NULL, gwy_grapher_new());
+    g_return_val_if_fail(gmodel->grapher == NULL, gwy_grapher_new(gmodel));
 
-    grapher_widget = gwy_grapher_new();
+    grapher_widget = gwy_grapher_new(gmodel);
     grapher = GWY_GRAPHER(grapher_widget);
 
     /*
