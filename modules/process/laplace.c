@@ -31,7 +31,7 @@
 #include <app/wait.h>
 
 #define LAPLACE_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE)
+    (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 
 static gboolean    module_register            (const gchar *name);
@@ -45,7 +45,7 @@ static GwyModuleInfo module_info = {
     "laplace",
     "Remove data under mask using laplace equation",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -82,26 +82,28 @@ laplace(GwyContainer *data, GwyRunType run)
 
     g_assert(run & LAPLACE_RUN_MODES);
 
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
+    if (gwy_container_contains_by_name(data, "/0/mask")) {
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
+        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                    "/0/mask"));
+        buffer = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres,
+                                                   dfield->xreal, dfield->yreal,
+                                                   TRUE));
 
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-        buffer = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres, dfield->xreal, dfield->yreal, TRUE));
-
-        gwy_app_undo_checkpoint(data, "/0/data", NULL);
+        gwy_app_undo_checkpoint(data, "/0/data", "/0/mask", NULL);
 
         cor = 0.2;
         error = 0;
         maxer = gwy_data_field_get_rms(dfield)/1.0e4;
-        gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
+        gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
+                           "Initializing...");
 
         gwy_data_field_correct_average(dfield, maskfield);
 
         lastfrac = 0;
         starter = 0;
-        for (i=0; i<5000; i++)
-        {
+        for (i = 0; i < 5000; i++) {
             gwy_data_field_correct_laplace_iteration(dfield, maskfield, buffer,
                                                      &error, &cor);
             if (error < maxer) break;
@@ -124,11 +126,13 @@ laplace(GwyContainer *data, GwyRunType run)
     }
     else
     {
-        dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_data_window_get_current()),
-                                        GTK_DIALOG_DESTROY_WITH_PARENT,
-                                        GTK_MESSAGE_INFO,
-                                        GTK_BUTTONS_CLOSE,
-                                        _("There is no mask to be used for computation."));
+        /* XXX: this should not happen in the first place! */
+        dialog = gtk_message_dialog_new
+            (GTK_WINDOW(gwy_app_data_window_get_current()),
+             GTK_DIALOG_DESTROY_WITH_PARENT,
+             GTK_MESSAGE_INFO,
+             GTK_BUTTONS_CLOSE,
+             _("There is no mask to be used for computation."));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return FALSE;
