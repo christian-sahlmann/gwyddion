@@ -20,6 +20,14 @@ Spherical coordinates
 </para>
 
 
+<!-- ##### STRUCT GwySphereCoordsClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@value_changed: 
+
 <!-- ##### FUNCTION gwy_sphere_coords_new ##### -->
 <para>
 

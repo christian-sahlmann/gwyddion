@@ -20,6 +20,16 @@ Data field displaying area
 </para>
 
 
+<!-- ##### STRUCT GwyDataViewClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@updated: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_data_view_new ##### -->
 <para>
 

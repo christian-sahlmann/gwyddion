@@ -20,6 +20,13 @@ Horizontal ruler, similar to #GtkRuler
 </para>
 
 
+<!-- ##### STRUCT GwyHRulerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
 <!-- ##### FUNCTION gwy_hruler_new ##### -->
 <para>
 

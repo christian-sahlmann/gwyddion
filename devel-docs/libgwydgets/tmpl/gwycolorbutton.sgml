@@ -35,6 +35,18 @@ at some unspecified point in the future when Gtk+-2.4 become common.
 </para>
 
 
+<!-- ##### STRUCT GwyColorButtonClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@color_set: 
+@_gtk_reserved1: 
+@_gtk_reserved2: 
+@_gtk_reserved3: 
+@_gtk_reserved4: 
+
 <!-- ##### FUNCTION gwy_color_button_new ##### -->
 <para>
 

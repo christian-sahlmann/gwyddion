@@ -20,6 +20,14 @@ GwyPalette
 </para>
 
 
+<!-- ##### STRUCT GwyPaletteClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@palettes: 
+
 <!-- ##### FUNCTION gwy_palette_new ##### -->
 <para>
 

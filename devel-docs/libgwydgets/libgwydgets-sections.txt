@@ -2,6 +2,7 @@
 <FILE>gwytoolbox</FILE>
 <TITLE>GwyToolbox</TITLE>
 GwyToolbox
+GwyToolboxClass
 gwy_toolbox_new
 gwy_toolbox_append
 <SUBSECTION Standard>
@@ -18,6 +19,7 @@ GWY_TOOLBOX_GET_CLASS
 <FILE>gwygraphcorner</FILE>
 <TITLE>GwyGraphCorner</TITLE>
 GwyGraphCorner
+GwyGraphCornerClass
 gwy_graph_corner_new
 <SUBSECTION Standard>
 GWY_GRAPH_CORNER
@@ -33,6 +35,7 @@ GWY_GRAPH_CORNER_GET_CLASS
 <FILE>gwydataviewlayer</FILE>
 <TITLE>GwyDataViewLayer</TITLE>
 GwyDataViewLayer
+GwyDataViewLayerClass
 gwy_data_view_layer_wants_repaint
 gwy_data_view_layer_plugged
 gwy_data_view_layer_unplugged
@@ -52,6 +55,7 @@ GWY_DATA_VIEW_LAYER_GET_CLASS
 GwyColorAxisParams
 <TITLE>GwyColorAxis</TITLE>
 GwyColorAxis
+GwyColorAxisClass
 gwy_color_axis_new
 gwy_color_axis_get_range
 gwy_color_axis_set_range
@@ -72,6 +76,7 @@ GWY_COLOR_AXIS_GET_CLASS
 <FILE>gwyaxisdialog</FILE>
 <TITLE>GwyAxisDialog</TITLE>
 GwyAxisDialog
+GwyAxisDialogClass
 gwy_axis_dialog_new
 <SUBSECTION Standard>
 GWY_AXIS_DIALOG
@@ -88,6 +93,7 @@ GWY_AXIS_DIALOG_GET_CLASS
 GwyColorButtonPrivate
 <TITLE>GwyColorButton</TITLE>
 GwyColorButton
+GwyColorButtonClass
 gwy_color_button_new
 gwy_color_button_new_with_color
 gwy_color_button_set_color
@@ -112,6 +118,7 @@ GWY_COLOR_BUTTON_GET_CLASS
 <FILE>gwyvruler</FILE>
 <TITLE>GwyVRuler</TITLE>
 GwyVRuler
+GwyVRulerClass
 gwy_vruler_new
 <SUBSECTION Standard>
 GWY_VRULER
@@ -127,6 +134,7 @@ GWY_VRULER_GET_CLASS
 <FILE>gwyspherecoords</FILE>
 <TITLE>GwySphereCoords</TITLE>
 GwySphereCoords
+GwySphereCoordsClass
 gwy_sphere_coords_new
 gwy_sphere_coords_get_theta
 gwy_sphere_coords_get_phi
@@ -145,6 +153,7 @@ GWY_SPHERE_COORDS_GET_CLASS
 <FILE>gwylayer-mask</FILE>
 <TITLE>GwyLayerMask</TITLE>
 GwyLayerMask
+GwyLayerMaskClass
 gwy_layer_mask_new
 gwy_layer_mask_set_color
 gwy_layer_mask_get_color
@@ -176,6 +185,7 @@ GwyGraphAreaCurveParams
 GwyGraphLabelParams
 <TITLE>GwyGraphLabel</TITLE>
 GwyGraphLabel
+GwyGraphLabelClass
 gwy_graph_label_new
 gwy_graph_label_set_visible
 gwy_graph_label_set_style
@@ -197,6 +207,7 @@ GWY_GRAPH_LABEL_GET_CLASS
 GwySciTextParams
 <TITLE>GwySciText</TITLE>
 GwySciText
+GwySciTextClass
 gwy_sci_text_new
 gwy_sci_text_get_text
 gwy_sci_text_set_text
@@ -214,6 +225,7 @@ GWY_SCI_TEXT_GET_CLASS
 <FILE>gwystatusbar</FILE>
 <TITLE>GwyStatusbar</TITLE>
 GwyStatusbar
+GwyStatusbarClass
 gwy_statusbar_new
 <SUBSECTION Standard>
 GWY_STATUSBAR
@@ -229,6 +241,7 @@ GWY_STATUSBAR_GET_CLASS
 <FILE>gwyvectorlayer</FILE>
 <TITLE>GwyVectorLayer</TITLE>
 GwyVectorLayer
+GwyVectorLayerClass
 gwy_vector_layer_draw
 gwy_vector_layer_button_press
 gwy_vector_layer_button_release
@@ -260,6 +273,7 @@ GWY_VECTOR_LAYER_GET_CLASS
 GwyUnitsPlacement
 <TITLE>GwyRuler</TITLE>
 GwyRuler
+GwyRulerClass
 gwy_ruler_set_range
 gwy_ruler_draw_ticks
 gwy_ruler_draw_pos
@@ -282,6 +296,7 @@ GWY_RULER_GET_CLASS
 <FILE>gwylayer-basic</FILE>
 <TITLE>GwyLayerBasic</TITLE>
 GwyLayerBasic
+GwyLayerBasicClass
 gwy_layer_basic_new
 gwy_layer_basic_set_palette
 gwy_layer_basic_get_palette
@@ -299,6 +314,7 @@ GWY_LAYER_BASIC_GET_CLASS
 <FILE>gwyvectorshade</FILE>
 <TITLE>GwyVectorShade</TITLE>
 GwyVectorShade
+GwyVectorShadeClass
 gwy_vector_shade_new
 gwy_vector_shade_get_grad_sphere
 gwy_vector_shade_get_sphere_coords
@@ -318,6 +334,7 @@ GWY_VECTOR_SHADE_GET_CLASS
 GwyZoomMode
 <TITLE>GwyDataWindow</TITLE>
 GwyDataWindow
+GwyDataWindowClass
 gwy_data_window_new
 gwy_data_window_get_data_view
 gwy_data_window_get_data
@@ -340,6 +357,7 @@ GWY_DATA_WINDOW_GET_CLASS
 <FILE>gwyhruler</FILE>
 <TITLE>GwyHRuler</TITLE>
 GwyHRuler
+GwyHRulerClass
 gwy_hruler_new
 <SUBSECTION Standard>
 GWY_HRULER
@@ -355,6 +373,7 @@ GWY_HRULER_GET_CLASS
 <FILE>gwydataview</FILE>
 <TITLE>GwyDataView</TITLE>
 GwyDataView
+GwyDataViewClass
 gwy_data_view_new
 gwy_data_view_get_base_layer
 gwy_data_view_get_alpha_layer
@@ -398,6 +417,7 @@ GwyGraphAreaCurve
 GwyGraphAreaParams
 <TITLE>GwyGraphArea</TITLE>
 GwyGraphArea
+GwyGraphAreaClass
 gwy_graph_area_new
 gwy_graph_area_set_style
 gwy_graph_area_set_boundaries
@@ -419,6 +439,7 @@ GWY_GRAPH_AREA_GET_CLASS
 <FILE>gwygradsphere</FILE>
 <TITLE>GwyGradSphere</TITLE>
 GwyGradSphere
+GwyGradSphereClass
 gwy_grad_sphere_new
 gwy_grad_sphere_get_sphere_coords
 gwy_grad_sphere_set_sphere_coords
@@ -440,6 +461,7 @@ GWY_GRAD_SPHERE_GET_CLASS
 <FILE>gwypixmaplayer</FILE>
 <TITLE>GwyPixmapLayer</TITLE>
 GwyPixmapLayer
+GwyPixmapLayerClass
 gwy_pixmap_layer_paint
 <SUBSECTION Standard>
 GWY_PIXMAP_LAYER
@@ -463,6 +485,7 @@ GwyLabeledTick
 GwyAxisParams
 <TITLE>GwyAxis</TITLE>
 GwyAxis
+GwyAxisClass
 gwy_axis_new
 gwy_axis_set_logarithmic
 gwy_axis_set_visible
@@ -491,6 +514,7 @@ GWY_AXIS_GET_CLASS
 GwyGraphAutoProperties
 <TITLE>GwyGraph</TITLE>
 GwyGraph
+GwyGraphClass
 gwy_graph_new
 gwy_graph_add_dataline_with_units
 gwy_graph_add_dataline

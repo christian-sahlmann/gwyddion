@@ -20,6 +20,15 @@ GwyStatusbar
 </para>
 
 
+<!-- ##### STRUCT GwyStatusbarClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_statusbar_new ##### -->
 <para>
 

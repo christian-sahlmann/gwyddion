@@ -6,6 +6,7 @@ GwyWatershedStateType
 GwyWatershedStatus
 <TITLE>GwyDataField</TITLE>
 GwyDataField
+GwyDataFieldClass
 gwy_data_field_new
 gwy_data_field_alloc
 gwy_data_field_initialize
@@ -120,6 +121,7 @@ GwySFOutputType
 GwyFitLineType
 <TITLE>GwyDataLine</TITLE>
 GwyDataLine
+GwyDataLineClass
 gwy_data_line_new
 gwy_data_line_alloc
 gwy_data_line_initialize

@@ -28,6 +28,17 @@ Base class for #GwyHRuler and #GwyVRuler
 </para>
 
 
+<!-- ##### STRUCT GwyRulerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@draw_ticks: 
+@draw_pos: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_ruler_set_range ##### -->
 <para>
 

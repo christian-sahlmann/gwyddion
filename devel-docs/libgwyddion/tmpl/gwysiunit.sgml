@@ -28,6 +28,15 @@ selection.
 </para>
 
 
+<!-- ##### STRUCT GwySIUnitClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_si_unit_new ##### -->
 <para>
 

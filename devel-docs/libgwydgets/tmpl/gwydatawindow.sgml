@@ -30,6 +30,16 @@ Data display window
 </para>
 
 
+<!-- ##### STRUCT GwyDataWindowClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@title_changed: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_data_window_new ##### -->
 <para>
 

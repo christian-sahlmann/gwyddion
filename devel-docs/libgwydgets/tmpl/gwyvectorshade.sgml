@@ -20,6 +20,16 @@ Gradient spehre with coordinates
 </para>
 
 
+<!-- ##### STRUCT GwyVectorShadeClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@vector_shade: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_vector_shade_new ##### -->
 <para>
 

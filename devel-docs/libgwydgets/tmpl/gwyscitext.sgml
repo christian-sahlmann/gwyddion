@@ -26,6 +26,15 @@ GwySciText
 </para>
 
 
+<!-- ##### STRUCT GwySciTextClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_sci_text_new ##### -->
 <para>
 

@@ -30,6 +30,7 @@ GwyRGBA
 GwyPaletteDefEntry
 <TITLE>GwyPaletteDef</TITLE>
 GwyPaletteDef
+GwyPaletteDefClass
 GwyPaletteDefFunc
 gwy_palette_def_new
 gwy_palette_def_new_as_copy
@@ -56,6 +57,7 @@ GWY_PALETTE_DEF_GET_CLASS
 <FILE>gwypalette</FILE>
 <TITLE>GwyPalette</TITLE>
 GwyPalette
+GwyPaletteClass
 gwy_palette_new
 gwy_palette_set_palette_def
 gwy_palette_get_palette_def

@@ -3,6 +3,7 @@
 GwySIValueFormat
 <TITLE>GwySIUnit</TITLE>
 GwySIUnit
+GwySIUnitClass
 gwy_si_unit_new
 gwy_si_unit_set_unit_string
 gwy_si_unit_get_unit_string
@@ -24,6 +25,7 @@ GWY_SI_UNIT_GET_CLASS
 <FILE>gwywatchable</FILE>
 <TITLE>GwyWatchable</TITLE>
 GwyWatchable
+GwyWatchableClass
 gwy_watchable_value_changed
 <SUBSECTION Standard>
 GWY_WATCHABLE
@@ -42,6 +44,7 @@ GwyDeserializeFunc
 GwyDuplicateFunc
 <TITLE>GwySerializable</TITLE>
 GwySerializable
+GwySerializableClass
 GwySerializeSpec
 gwy_serializable_serialize
 gwy_serializable_deserialize
@@ -81,6 +84,7 @@ GwyContainerNotifyFunc
 GwyKeyVal
 <TITLE>GwyContainer</TITLE>
 GwyContainer
+GwyContainerClass
 gwy_container_new
 gwy_container_value_type
 gwy_container_contains

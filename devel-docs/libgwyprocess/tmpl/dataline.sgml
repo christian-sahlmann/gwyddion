@@ -41,9 +41,16 @@ Fit polynomial degree selection.
 
 <!-- ##### STRUCT GwyDataLine ##### -->
 <para>
-Basic object for 1D data array representation.
+
 </para>
 
+
+<!-- ##### STRUCT GwyDataLineClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
 
 <!-- ##### FUNCTION gwy_data_line_new ##### -->
 <para>

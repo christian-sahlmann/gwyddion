@@ -58,9 +58,16 @@ Mask processing merging (namely used in grain processing).
 
 <!-- ##### STRUCT GwyDataField ##### -->
 <para>
-Basic object for working with 2D data arrays.
+
 </para>
 
+
+<!-- ##### STRUCT GwyDataFieldClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
 
 <!-- ##### FUNCTION gwy_data_field_new ##### -->
 <para>

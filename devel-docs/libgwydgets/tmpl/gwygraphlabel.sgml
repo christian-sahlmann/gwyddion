@@ -117,6 +117,16 @@ the GwyGraph widget. It plots a curves legend.
 </para>
 
 
+<!-- ##### STRUCT GwyGraphLabelClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@selected: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_graph_label_new ##### -->
 <para>
 

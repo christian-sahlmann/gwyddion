@@ -51,6 +51,13 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 </para>
 
 
+<!-- ##### STRUCT GwyContainerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
 <!-- ##### FUNCTION gwy_container_new ##### -->
 <para>
 

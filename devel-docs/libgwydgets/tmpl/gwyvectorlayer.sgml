@@ -20,6 +20,25 @@ Base class for #GwyDataView vector (interactive) layers
 </para>
 
 
+<!-- ##### STRUCT GwyVectorLayerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@draw: 
+@button_press: 
+@button_release: 
+@motion_notify: 
+@key_press: 
+@key_release: 
+@selection_finished: 
+@get_selection: 
+@set_selection: 
+@unselect: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_vector_layer_draw ##### -->
 <para>
 

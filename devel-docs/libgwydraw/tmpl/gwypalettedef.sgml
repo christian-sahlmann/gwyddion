@@ -214,6 +214,14 @@ GwyPaletteDef
 </para>
 
 
+<!-- ##### STRUCT GwyPaletteDefClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@palettes: 
+
 <!-- ##### USER_FUNCTION GwyPaletteDefFunc ##### -->
 <para>
 

@@ -26,6 +26,15 @@ Simple axis with a false color scale
 </para>
 
 
+<!-- ##### STRUCT GwyColorAxisClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_color_axis_new ##### -->
 <para>
 

@@ -79,6 +79,16 @@ with ranges in the requested interval.
 </para>
 
 
+<!-- ##### STRUCT GwyAxisClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+@selected: 
+
 <!-- ##### FUNCTION gwy_axis_new ##### -->
 <para>
 

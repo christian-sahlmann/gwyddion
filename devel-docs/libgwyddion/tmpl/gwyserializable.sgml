@@ -67,6 +67,16 @@ and
 </para>
 
 
+<!-- ##### STRUCT GwySerializableClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@serialize: 
+@deserialize: 
+@duplicate: 
+
 <!-- ##### STRUCT GwySerializeSpec ##### -->
 <para>
 

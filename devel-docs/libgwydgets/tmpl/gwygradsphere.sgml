@@ -20,6 +20,14 @@ Rotary sphere with a color gradient
 </para>
 
 
+<!-- ##### STRUCT GwyGradSphereClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+
 <!-- ##### FUNCTION gwy_grad_sphere_new ##### -->
 <para>
 

@@ -25,6 +25,14 @@ to programatically emit the signal.
 </para>
 
 
+<!-- ##### STRUCT GwyWatchableClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@value_changed: 
+
 <!-- ##### FUNCTION gwy_watchable_value_changed ##### -->
 <para>
 

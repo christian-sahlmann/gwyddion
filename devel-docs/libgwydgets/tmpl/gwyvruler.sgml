@@ -20,6 +20,13 @@ Vertical ruler, similar to #GtkRuler
 </para>
 
 
+<!-- ##### STRUCT GwyVRulerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
 <!-- ##### FUNCTION gwy_vruler_new ##### -->
 <para>
 

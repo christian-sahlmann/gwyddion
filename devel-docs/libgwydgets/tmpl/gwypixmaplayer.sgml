@@ -20,6 +20,16 @@ Base class for #GwyDataView pixmap layers
 </para>
 
 
+<!-- ##### STRUCT GwyPixmapLayerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@paint: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_pixmap_layer_paint ##### -->
 <para>
 

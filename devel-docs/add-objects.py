@@ -29,18 +29,19 @@ fh.close()
 
 fh = file(section_file, 'w')
 addme = ''
+added = False
 for i, l in enumerate(lines):
-    if l.strip() == addme.strip():
-        addme = ''
-    if addme:
-        fh.write(addme)
-        addme = ''
+    if l.strip() == addme or l.strip() == addme + 'Class':
+        l = ''
+    if addme and not added:
+        fh.write(addme + '\n')
+        fh.write(addme + 'Class\n')
+        added = True
     m = title_re.match(l)
     if m:
+        added = False
         addme = m.group('object')
         if not objects.has_key(addme):
             addme = ''
-        else:
-            addme += '\n'
     fh.write(l)
 fh.close()

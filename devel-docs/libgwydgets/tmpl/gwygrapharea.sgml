@@ -89,6 +89,19 @@ a set of data curves with a given plot properties.
 </para>
 
 
+<!-- ##### STRUCT GwyGraphAreaClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@cross_cursor: 
+@arrow_cursor: 
+@selected: 
+@zoomed: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_graph_area_new ##### -->
 <para>
 
