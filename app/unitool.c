@@ -699,65 +699,73 @@ gwy_unitool_rect_info_table_setup(GwyUnitoolRectLabels *rinfo,
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, col, col+1, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new("X");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, col, col+1, row+1, row+2,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new("Y");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, col, col+1, row+2, row+3,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, col, col+1, row+3, row+4,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(_("Width"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, col, col+1, row+4, row+5,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(_("Height"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, col, col+1, row+5, row+6,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     rinfo->xreal = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(rinfo->xreal), 1.0, 0.5);
-    gtk_table_attach_defaults(table, rinfo->xreal, col+1, col+2, row+1, row+2);
+    gtk_table_attach(table, rinfo->xreal, col+1, col+2, row+1, row+2,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     rinfo->yreal = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(rinfo->yreal), 1.0, 0.5);
-    gtk_table_attach_defaults(table, rinfo->yreal, col+1, col+2, row+2, row+3);
+    gtk_table_attach(table, rinfo->yreal, col+1, col+2, row+2, row+3,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     rinfo->wreal = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(rinfo->wreal), 1.0, 0.5);
-    gtk_table_attach_defaults(table, rinfo->wreal, col+1, col+2, row+4, row+5);
+    gtk_table_attach(table, rinfo->wreal, col+1, col+2, row+4, row+5,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     rinfo->hreal = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(rinfo->hreal), 1.0, 0.5);
-    gtk_table_attach_defaults(table, rinfo->hreal, col+1, col+2, row+5, row+6);
+    gtk_table_attach(table, rinfo->hreal, col+1, col+2, row+5, row+6,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     rinfo->xpix = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(rinfo->xpix), 1.0, 0.5);
-    gtk_table_attach_defaults(table, rinfo->xpix, col+2, col+3, row+1, row+2);
+    gtk_table_attach(table, rinfo->xpix, col+2, col+3, row+1, row+2,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     rinfo->ypix = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(rinfo->ypix), 1.0, 0.5);
-    gtk_table_attach_defaults(table, rinfo->ypix, col+2, col+3, row+2, row+3);
+    gtk_table_attach(table, rinfo->ypix, col+2, col+3, row+2, row+3,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     rinfo->wpix = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(rinfo->wpix), 1.0, 0.5);
-    gtk_table_attach_defaults(table, rinfo->wpix, col+2, col+3, row+4, row+5);
+    gtk_table_attach(table, rinfo->wpix, col+2, col+3, row+4, row+5,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     rinfo->hpix = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(rinfo->hpix), 1.0, 0.5);
-    gtk_table_attach_defaults(table, rinfo->hpix, col+2, col+3, row+5, row+6);
+    gtk_table_attach(table, rinfo->hpix, col+2, col+3, row+5, row+6,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     return 6;  /* the number of rows taken */
 }
