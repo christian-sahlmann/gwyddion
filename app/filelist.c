@@ -188,7 +188,7 @@ static Controls gcontrols = {
 GtkWidget*
 gwy_app_recent_file_list_new(void)
 {
-    GtkWidget *vbox, *buttonbox, *list, *scroll;
+    GtkWidget *vbox, *buttonbox, *list, *scroll, *button;
     GtkTreeSelection *selection;
 
     g_return_val_if_fail(gcontrols.store, gcontrols.window);
@@ -217,15 +217,6 @@ gwy_app_recent_file_list_new(void)
     gtk_container_set_border_width(GTK_CONTAINER(buttonbox), 2);
     gtk_box_pack_start(GTK_BOX(vbox), buttonbox, FALSE, FALSE, 0);
 
-    gcontrols.open = gtk_button_new_from_stock(GTK_STOCK_OPEN);
-    gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.open, TRUE, TRUE, 0);
-    g_signal_connect_swapped(gcontrols.open, "clicked",
-                             G_CALLBACK(gwy_app_recent_file_list_open), list);
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
-    gtk_widget_set_sensitive(gcontrols.open,
-                             gtk_tree_selection_get_selected(selection,
-                                                             NULL, NULL));
-
     gcontrols.prune = gwy_stock_like_button_new(_("_Prune"),
                                                 GTK_STOCK_FIND);
     gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.prune, TRUE, TRUE, 0);
@@ -235,6 +226,24 @@ gwy_app_recent_file_list_new(void)
     g_signal_connect_swapped(gcontrols.prune, "clicked",
                              G_CALLBACK(gwy_app_recent_file_list_prune),
                              &gcontrols);
+
+    button = gtk_button_new_from_stock(GTK_STOCK_CLOSE);
+    gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
+    gtk_tooltips_set_tip(gcontrols.tooltips, button,
+                         _("Close file list"), NULL);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gtk_widget_destroy), gcontrols.window);
+
+    gcontrols.open = gtk_button_new_from_stock(GTK_STOCK_OPEN);
+    gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.open, TRUE, TRUE, 0);
+    gtk_tooltips_set_tip(gcontrols.tooltips, gcontrols.open,
+                         _("Open selected file"), NULL);
+    g_signal_connect_swapped(gcontrols.open, "clicked",
+                             G_CALLBACK(gwy_app_recent_file_list_open), list);
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
+    gtk_widget_set_sensitive(gcontrols.open,
+                             gtk_tree_selection_get_selected(selection,
+                                                             NULL, NULL));
 
     g_signal_connect_swapped(gcontrols.window, "destroy",
                              G_CALLBACK(gwy_app_recent_file_list_destroyed),
