@@ -63,7 +63,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "assing_afm",
-    N_("Import Assing AFM data files."),
+    N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek",

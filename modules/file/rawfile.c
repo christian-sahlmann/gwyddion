@@ -252,7 +252,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "rawfile",
-    N_("Reads raw data files, both ASCII and binary, according to "
+    N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
     "1.5.2",

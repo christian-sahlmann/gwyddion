@@ -47,7 +47,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "spmlab",
-    N_("Import Thermicroscopes SpmLab R4 and R5 data files"),
+    N_("Imports Thermicroscopes SpmLab R4 and R5 data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek",

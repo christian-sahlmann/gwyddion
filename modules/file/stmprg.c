@@ -63,7 +63,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "stmprg",
-    N_("Import Omicron STMPRG data files (tp ta)"),
+    N_("Imports Omicron STMPRG data files (tp ta)."),
     "Rok Zitko <rok.zitko@ijs.si>",
     "0.2",
     "Rok Zitko",

@@ -125,7 +125,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "nanoscope",
-    N_("Load Nanoscope data files."),
+    N_("Imports Veeco Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.9.1",
     "David Nečas (Yeti) & Petr Klapetek",
