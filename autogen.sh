@@ -9,10 +9,16 @@ PROJECT=Gwyddion
 ACLOCAL_FLAGS="-I m4"
 # When runnig autogen.sh one normally wants this.
 CONF_FLAGS="--enable-maintainer-mode"
+AUTOCONF=autoconf
+LIBTOOL=libtool
+LIBTOOLIZE=libtoolize
+AUTOMAKE=automake
+ACLOCAL=aclocal
+AUTOHEADER=autoheader
 
 echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 
-(autoconf --version) < /dev/null > /dev/null 2>&1 || {
+($AUTOCONF --version) < /dev/null > /dev/null 2>&1 || {
   echo
   echo "**ERROR**: You must have \`autoconf' installed to re-generate"
   echo "all the $PROJECT Makefiles."
@@ -23,7 +29,7 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 }
 
 (grep "^AM_PROG_LIBTOOL" ./configure.ac >/dev/null) && {
-  (libtool --version) < /dev/null > /dev/null 2>&1 || {
+  ($LIBTOOL --version) < /dev/null > /dev/null 2>&1 || {
     echo
     echo "**Error**: You must have \`libtool' installed."
     echo "Get ftp://ftp.gnu.org/pub/gnu/libtool-1.4.tar.gz"
@@ -33,7 +39,7 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
   }
 }
 
-(automake --version) < /dev/null > /dev/null 2>&1 || {
+($AUTOMAKE --version) < /dev/null > /dev/null 2>&1 || {
   echo
   echo "**ERROR**: You must have \`automake' installed to re-generate"
   echo "all the $PROJECT Makefiles."
@@ -45,7 +51,7 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 
 # The world is cruel.
 if test -z "$NO_AUTOCONF"; then
-  AC_VERSION=`autoconf --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
+  AC_VERSION=`$AUTOCONF --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
   if test "$AC_VERSION" '<' "2.59"; then
     echo
     echo "**ERROR**: You need at least autoconf-2.59 installed to re-generate"
@@ -59,7 +65,7 @@ if test -z "$NO_AUTOCONF"; then
 fi
 
 if test -z "$NO_AUTOMAKE"; then
-  AM_VERSION=`automake --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
+  AM_VERSION=`$AUTOMAKE --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
   if test "$AM_VERSION" '<' "1.6"; then
     echo
     echo "**ERROR**: You need at least automake-1.6 installed to re-generate"
@@ -73,7 +79,7 @@ if test -z "$NO_AUTOMAKE"; then
 fi
 
 # if no automake, don't bother testing for aclocal
-test -n "$NO_AUTOMAKE" || (aclocal --version) < /dev/null > /dev/null 2>&1 || {
+test -n "$NO_AUTOMAKE" || ($ACLOCAL --version) < /dev/null > /dev/null 2>&1 || {
   echo
   echo "**ERROR**: Missing \`aclocal'.  The version of \`automake'"
   echo "installed doesn't appear recent enough."
@@ -83,7 +89,7 @@ test -n "$NO_AUTOMAKE" || (aclocal --version) < /dev/null > /dev/null 2>&1 || {
 }
 
 if test -z "$NO_LIBTOOL"; then
-  LT_VERSION=`libtool --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
+  LT_VERSION=`$LIBTOOL --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
   if test "$LT_VERSION" '<' "1.4"; then
     echo
     echo "**ERROR**: You need at least libtool-1.4 installed to re-generate"
@@ -110,11 +116,11 @@ sh utils/update-potfiles.sh
 dir=.
 test -z "$QUIET" && echo processing $dir
 (cd $dir && \
-  eval $QUIET libtoolize --force && \
-  eval $QUIET aclocal $ACLOCAL_FLAGS && \
-  eval $QUIET autoheader && \
-  eval $QUIET automake --add-missing $am_opt && \
-  eval $QUIET autoconf) || {
+  eval $QUIET $LIBTOOLIZE --force && \
+  eval $QUIET $ACLOCAL $ACLOCAL_FLAGS && \
+  eval $QUIET $AUTOHEADER && \
+  eval $QUIET $AUTOMAKE --add-missing $am_opt && \
+  eval $QUIET $AUTOCONF) || {
     echo "**ERROR**: Re-generating failed.  You are allowed to shoot $PROJECT maintainer."
     echo "(BTW, why are you re-generating everything?)"
     exit 1
