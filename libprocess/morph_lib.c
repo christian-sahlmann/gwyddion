@@ -28,14 +28,42 @@
 #include "morph_lib.h"
 
 
-/* The following routines allow allocation and freeing of matrices */
+/*static members forward declaration*/
+static gint
+itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
+                   gint tip_ysiz, gint xc, gint yc, gint **tip0, gint thresh,
+                   gboolean use_edges, gboolean (set_fraction)(gdouble),
+                   gboolean (set_message)(gchar *));
+
+static gint
+useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta);    
+
+static gint **
+iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz,
+      gint tip_ysiz);
+
+static gint
+itip_estimate_point(gint ixp, gint jxp, gint **image,
+                    gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
+                    gint xc, gint yc, gint **tip0, gint thresh, 
+                    gboolean use_edges);
+    
+/*end of forward declarations*/
+
+
+/**
+ * iallocmatrix: 
+ * @ysiz: rows number
+ * @xsiz: columns number
+ *
+ *  Allocates an integer matrix of dimension [ysiz][xsiz] using an array
+ *  of pointers to rows. ysiz is the number of rows. xsiz is the number
+ *  of columns. 
+ *  
+ * Returns: alocated matrix
+ **/
 gint**
 iallocmatrix(gint ysiz, gint xsiz)
-/* 
-   Allocates an integer matrix of dimension [ysiz][xsiz] using an array
-   of pointers to rows. ysiz is the number of rows. xsiz is the number
-   of columns.
- */
 {
     gint **mptr;                /* points to allocated matrix */
     gint i;                     /* counter */
@@ -43,7 +71,7 @@ iallocmatrix(gint ysiz, gint xsiz)
     /* Allocate pointers to rows */
     mptr = (gint **)g_malloc(ysiz * sizeof(gint *));
     if (mptr == NULL) {
-        printf("Error: Allocation of mptr failed in allocmatrix\n");
+        g_warning("Error: Allocation of mptr failed in allocmatrix");
         return NULL;
     }
 
@@ -52,7 +80,7 @@ iallocmatrix(gint ysiz, gint xsiz)
     for (i = 0; i < ysiz; i++) {
         mptr[i] = (gint *)g_malloc(xsiz * sizeof(gint));
         if (mptr[i] == NULL) {
-            printf("Error: Allocation of mptr[%d] failed in allocmatrix\n", i);
+            g_warning("Error: Allocation failed in allocmatrix");
             return NULL;
         }
     }
@@ -61,9 +89,15 @@ iallocmatrix(gint ysiz, gint xsiz)
     return mptr;
 }
 
+/**
+ * ifreematrix:
+ * @mptr: pointer to matrix
+ * @ysiz: number of rows
+ *
+ * Frees memory allocated with allocmatrix.
+ **/
 void
 ifreematrix(gint **mptr, gint ysiz)
-/* Frees memory allocated with allocmatrix */
 {
     gint i;
 
@@ -72,9 +106,17 @@ ifreematrix(gint **mptr, gint ysiz)
     g_free(mptr);
 }
 
-/* The following routine performs reflection of integer arrays. The integers
-   used are standard C integers, which PV-WAVE would call long integers. */
 
+/**
+ * ireflect:
+ * @surface: integer array to be reflected.
+ * @surf_xsiz: number of columns
+ * @surf_ysiz: number of rows
+ *
+ * Perform reflection of integer array.
+ *
+ * Returns: reflected array
+ **/
 gint **
 ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz)
 {
@@ -93,13 +135,29 @@ ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz)
 }
 
 
-/* The following routine performs dilation on integer arrays. The integers
-   used are standard C integers (for my compiler 4-byte), which PV-WAVE
-   would call long integers. */
 
+/**
+ * idilation:
+ * @surface: surface array
+ * @surf_xsiz: number of columns
+ * @surf_ysiz: number of rows
+ * @tip: tip array
+ * @tip_xsiz: number of columns
+ * @tip_ysiz: number of rows
+ * @xc: tip apex column coordinate
+ * @yc: tip apex row coordinate
+ * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
+ * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ *
+ * Performs dilation algorithm (for integer arrays).
+ *
+ * Returns: dilated data (newly allocated).
+ **/
 gint **
 idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
-          gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc)
+          gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
+          gboolean (set_fraction)(gdouble),
+          gboolean (set_message)(gchar *))
 {
     gint **result;
     gint i, j, px, py;          /* index */
@@ -109,7 +167,7 @@ idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
 
     /* create output array of appropriate size */
     result = iallocmatrix(surf_ysiz, surf_xsiz);
-
+    if (set_message!=NULL) set_message("Dilation...");
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -129,13 +187,36 @@ idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
             }
             result[j][i] = max;
         }
+        if (set_fraction!=NULL && set_fraction((gdouble)j/surf_ysiz)==FALSE)
+        {
+            return result;
+        }
     }
+    if (set_fraction!=NULL) set_fraction(0.0);
     return (result);
 }
 
+/**
+ * ierosion:
+ * @surface: surface array
+ * @surf_xsiz: number of columns
+ * @surf_ysiz: number of rows
+ * @tip: tip array
+ * @tip_xsiz: number of columns
+ * @tip_ysiz: number of rows
+ * @xc: tip apex column coordinate
+ * @yc: tip apex row coordinate
+ * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
+ * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ *
+ * Performs erosion algorithm (for integer arrays).
+ *
+ * Returns: eroded data (newly allocated).
+ **/
 gint **
 ierosion(gint **image, gint im_xsiz, gint im_ysiz,
-         gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc)
+         gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
+         gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
 {
     gint **result;
     gint i, j, px, py;          /* index */
@@ -145,7 +226,7 @@ ierosion(gint **image, gint im_xsiz, gint im_ysiz,
 
     /* create output array of appropriate size */
     result = iallocmatrix(im_ysiz, im_xsiz);
-
+    if (set_message!=NULL) set_message("Erosion..."); 
     for (j = 0; j < im_ysiz; j++) {     /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -165,13 +246,37 @@ ierosion(gint **image, gint im_xsiz, gint im_ysiz,
             }
             result[j][i] = min;
         }
+        if (set_fraction!=NULL && set_fraction((gdouble)j/im_ysiz)==FALSE)
+        {
+            return result;
+        }
     }
+    if (set_fraction!=NULL) set_fraction(0.0);
     return (result);
 }
 
+/**
+ * icmap:
+ * @image: image array
+ * @im_xsiz: number of columns
+ * @im_ysiz: number of rows
+ * @tip: tip array
+ * @tip_xsiz: number of columns
+ * @tip_ysiz: number of rows
+ * @rsurf: eroded surface array
+ * @xc: tip apex column coordinate
+ * @yc: tip apex row coordinate
+ * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
+ * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ *
+ * Performs the certainty map algorithm.
+ *
+ * Returns: certainty map (newly allocated).
+ **/
 gint **
 icmap(gint **image, gint im_xsiz, gint im_ysiz,
-      gint **tip, gint tip_xsiz, gint tip_ysiz, gint **rsurf, gint xc, gint yc)
+      gint **tip, gint tip_xsiz, gint tip_ysiz, gint **rsurf, gint xc, gint yc,
+      gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
 {
     gint **cmap;
     gint imx, imy, tpx, tpy;    /* index */
@@ -179,21 +284,16 @@ icmap(gint **image, gint im_xsiz, gint im_ysiz,
     gint count;
     gint rxc, ryc;              /* center coordinates of reflected tip */
     gint x=0, y=0;
-    gint min, max;
 
     rxc = tip_xsiz - 1 - xc;
     ryc = tip_ysiz - 1 - yc;
-
+    if (set_message!=NULL) set_message("Certainty map..."); 
     /* create output array of appropriate size */
-    min = G_MAXINT;
-    max = -G_MAXINT;
     cmap = iallocmatrix(im_ysiz, im_xsiz);
     for (imy = 0; imy < im_ysiz; imy++)
         for (imx = 0; imx < im_xsiz; imx++)
         {
             cmap[imy][imx] = 0;
-            if (min > image[imy][imx]) min = image[imy][imx];
-            if (max < image[imy][imx]) max = image[imy][imx];
         }
     
     /*
@@ -225,19 +325,29 @@ icmap(gint **image, gint im_xsiz, gint im_ysiz,
                 cmap[y][x] = 1; /* 1 contact = good recon */
             }
         }
+        if (set_fraction!=NULL && set_fraction((gdouble)imy/(im_ysiz+ryc-tip_ysiz))==FALSE)
+        {
+            return cmap;
+        }
     }
+    if (set_fraction!=NULL) set_fraction(0.0);
     return (cmap);
 }
 
 
-/* The following routines allow allocation and freeing of matrices */
+/**
+ * dallocmatrix: 
+ * @ysiz: rows number
+ * @xsiz: columns number
+ *
+ *  Allocates a double matrix of dimension [ysiz][xsiz] using an array
+ *  of pointers to rows. ysiz is the number of rows. xsiz is the number
+ *  of columns. 
+ *  
+ * Returns: alocated matrix
+ **/
 gdouble**
 dallocmatrix(gint ysiz, gint xsiz)
-/* 
-   Allocates an integer matrix of dimension [ysiz][xsiz] using an array
-   of pointers to rows. ysiz is the number of rows. xsiz is the number
-   of columns.
- */
 {
     gdouble **mptr;                /* points to allocated matrix */
     gint i;                     /* counter */
@@ -245,7 +355,7 @@ dallocmatrix(gint ysiz, gint xsiz)
     /* Allocate pointers to rows */
     mptr = (gdouble **)g_malloc(ysiz * sizeof(gdouble *));
     if (mptr == NULL) {
-        printf("Error: Allocation of mptr failed in allocmatrix\n");
+        g_warning("Allocation of mptr failed in allocmatrix\n");
         return NULL;
     }
 
@@ -254,7 +364,7 @@ dallocmatrix(gint ysiz, gint xsiz)
     for (i = 0; i < ysiz; i++) {
         mptr[i] = (gdouble *)g_malloc(xsiz * sizeof(gdouble));
         if (mptr[i] == NULL) {
-            printf("Error: Allocation of mptr[%d] failed in allocmatrix\n", i);
+            g_warning("Allocation failed in allocmatrix");
             return NULL;
         }
     }
@@ -263,9 +373,15 @@ dallocmatrix(gint ysiz, gint xsiz)
     return mptr;
 }
 
+/**
+ * dfreematrix:
+ * @mptr: pointer to matrix
+ * @ysiz: number of rows
+ *
+ * Frees memory allocated with dallocmatrix.
+ **/
 void
 dfreematrix(gdouble **mptr, gint ysiz)
-/* Frees memory allocated with allocmatrix */
 {
     gint i;
 
@@ -274,9 +390,16 @@ dfreematrix(gdouble **mptr, gint ysiz)
     g_free(mptr);
 }
 
-/* The following routine performs reflection of integer arrays. The integers
-   used are standard C integers, which PV-WAVE would call long integers. */
-
+/**
+ * dreflect:
+ * @surface: double array to be reflected.
+ * @surf_xsiz: number of columns
+ * @surf_ysiz: number of rows
+ *
+ * Perform reflection of double array.
+ *
+ * Returns: reflected array
+ **/
 gdouble **
 dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
 {
@@ -295,13 +418,28 @@ dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
 }
 
 
-/* The following routine performs dilation on integer arrays. The integers
-   used are standard C integers (for my compiler 4-byte), which PV-WAVE
-   would call long integers. */
-
+/**
+ * ddilation:
+ * @surface: surface array
+ * @surf_xsiz: number of columns
+ * @surf_ysiz: number of rows
+ * @tip: tip array
+ * @tip_xsiz: number of columns
+ * @tip_ysiz: number of rows
+ * @xc: tip apex column coordinate
+ * @yc: tip apex row coordinate
+ * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
+ * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ *
+ * Performs dilation algorithm (for double arrays).
+ *
+ * Returns: dilated data (newly allocated).
+ **/
 gdouble **
 ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
-          gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc)
+          gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
+          gboolean (set_fraction)(gdouble),
+          gboolean (set_message)(gchar *))
 {
     gdouble **result;
     gint i, j, px, py;          /* index */
@@ -311,7 +449,7 @@ ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
 
     /* create output array of appropriate size */
     result = dallocmatrix(surf_ysiz, surf_xsiz);
-
+    if (set_message!=NULL) set_message("Dilation...");
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -331,13 +469,37 @@ ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
             }
             result[j][i] = max;
         }
+        if (set_fraction!=NULL && set_fraction((gdouble)j/surf_ysiz)==FALSE)
+        {
+            return result;
+        }
     }
+    if (set_fraction!=NULL) set_fraction(0.0);
     return (result);
 }
 
+/**
+ * derosion:
+ * @surface: surface array
+ * @surf_xsiz: number of columns
+ * @surf_ysiz: number of rows
+ * @tip: tip array
+ * @tip_xsiz: number of columns
+ * @tip_ysiz: number of rows
+ * @xc: tip apex column coordinate
+ * @yc: tip apex row coordinate
+ * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
+ * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ *
+ * Performs erosion algorithm (for double arrays).
+ *
+ * Returns: eroded data (newly allocated).
+ **/
 gdouble **
 derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
-         gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc)
+         gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
+         gboolean (set_fraction)(gdouble),
+         gboolean (set_message)(gchar *))
 {
     gdouble **result;
     gint i, j, px, py;          /* index */
@@ -347,7 +509,7 @@ derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
 
     /* create output array of appropriate size */
     result = dallocmatrix(im_ysiz, im_xsiz);
-
+    if (set_message!=NULL) set_message("Erosion...");
     for (j = 0; j < im_ysiz; j++) {     /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -367,61 +529,88 @@ derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
             }
             result[j][i] = min;
         }
+        if (set_fraction!=NULL && set_fraction((gdouble)j/im_ysiz)==FALSE)
+        {
+            return result;
+        }
     }
+    if (set_fraction!=NULL) set_fraction(0.0);
     return (result);
 }
 
 
-gint **
+static gint **
 iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz,
       gint tip_ysiz)
 {
     gint **result, **eros;
 
     eros = ierosion(image, im_xsiz, im_ysiz, tip, tip_xsiz, tip_ysiz,
-                    tip_xsiz/2, tip_ysiz/2);
+                    tip_xsiz/2, tip_ysiz/2, NULL, NULL);
     result = idilation(eros, im_xsiz, im_ysiz, tip, tip_xsiz, tip_ysiz,
-                       tip_xsiz/2, tip_ysiz/2);
+                       tip_xsiz/2, tip_ysiz/2, NULL, NULL);
     ifreematrix(eros, im_ysiz);  /* free intermediate result */
     return (result);
 }
 
-/* The following routine estimates tip size by calling tip_estimate_iter
-   until it converges. */
-
+/**
+ * itip_estimate:
+ * @image: surface data
+ * @im_xsiz: number of columns
+ * @im_ysiz: number of rows
+ * @tip_xsiz: tip number of columns
+ * @tip_ysiz: tip numbe rof rows
+ * @xc: tip apex column coordinate
+ * @yc: tip apex row coordinate
+ * @tip0: tip data to be refined
+ * @thresh: threshold 
+ * @use_edges: whether to use also image edges
+ * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
+ * @gboolean (set_message)(gchar *): functon to output computation state message (or NULL)
+ *
+ * Performs tip estimation algorithm.
+ **/
 void
 itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
               gint tip_xsiz, gint tip_ysiz, gint xc, gint yc, gint **tip0,
-              gint thresh, gboolean use_edges)
+              gint thresh, gboolean use_edges, gboolean (set_fraction)(gdouble),
+              gboolean (set_message)(gchar *))
 {
     gint iter = 0;
     gint count = 1;
+    gchar buffer[100];
 
     while (count) {
         iter++;
+        g_snprintf
+            (buffer, 100, "Iterating estimate (iteration %d)...\n",
+             iter);
+        if (set_message!=NULL) set_message(buffer);
         count = itip_estimate_iter(image, im_xsiz, im_ysiz,
                                    tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
-                                   use_edges);
-        printf("Finished iteration #%d. ", iter);
-        printf("%d image locations produced refinement.\n", count);
+                                   use_edges, set_fraction, set_message);
+        g_snprintf
+            (buffer, 100, "%d image locations produced refinement.\n",
+             count);
+        if (set_message!=NULL) set_message(buffer);
     }
 }
 
 
-gint
+static gint
 itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                    gint tip_ysiz, gint xc, gint yc, gint **tip0, gint thresh,
-                   gboolean use_edges)
+                   gboolean use_edges, gboolean (set_fraction)(gdouble),
+                   gboolean (set_message)(gchar *))
 {
     gint ixp, jxp;              /* index into the image (x') */
     gint **open;
+    gdouble fraction;
 
     gint count = 0;             /* counts places where tip estimate is improved */
 
-    printf("opening...\n");
     open = iopen(image, im_xsiz, im_ysiz, tip0, tip_xsiz, tip_ysiz);
 
-    printf("iterating...\n");
     for (jxp = tip_ysiz - 1 - yc; jxp <= im_ysiz - 1 - yc; jxp++) {
          for (ixp = tip_xsiz - 1 - xc; ixp <= im_xsiz - 1 - xc; ixp++) {
             if (image[jxp][ixp] - open[jxp][ixp] > thresh)
@@ -429,26 +618,45 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                     (ixp, jxp, image, im_xsiz, im_ysiz, tip_xsiz, tip_ysiz, xc,
                      yc, tip0, thresh, use_edges))
                     count++;
+                if (set_fraction!=NULL)
+                {
+                    fraction = (gdouble)(jxp-(tip_ysiz - 1 - yc))/
+                        (gdouble)((im_ysiz - 1 - yc) - (tip_ysiz - 1 - yc));
+                    if (fraction<0) fraction = 0;
+                    if (set_fraction(fraction)==FALSE)
+                    {
+                        break;
+                    }
+                }
         }
-        printf("%d of %d\n", jxp, im_ysiz - 1 - yc);
     }
 
-    printf("free matrix...\n");
     ifreematrix(open, im_ysiz);
-    printf("return %d\n", count);
     return (count);
 }
 
-/* 
-   The following is a routine to do an initial estimate of the tip
-   shape by using only a few selected points within the image. If the
-   points are well-chosen this can produce most of the tip shape
-   refinement with a small fraction of the compute time.
-*/
+/**
+ * itip_estimate:
+ * @image: surface data
+ * @im_xsiz: number of columns
+ * @im_ysiz: number of rows
+ * @tip_xsiz: tip number of columns
+ * @tip_ysiz: tip numbe rof rows
+ * @xc: tip apex column coordinate
+ * @yc: tip apex row coordinate
+ * @tip0: tip data to be refined
+ * @thresh: threshold 
+ * @use_edges: whether to use also image edges
+ * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
+ * @gboolean (set_message)(gchar *): functon to output computation state message (or NULL)
+ *
+ * Performs partial tip estimation algorithm.
+ **/
 void
 itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                gint tip_ysiz, gint xc, gint yc, gint **tip0, gint thresh,
-               gboolean use_edges)
+               gboolean use_edges, gboolean (set_fraction)(gdouble),
+               gboolean (set_message)(gchar *))
 {
     gint i, j, n;
     gint arraysize;  /* size of array allocated to store list of image maxima */
@@ -458,50 +666,25 @@ itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     gint delta;      /* defines what is meant by near neighborhood for purposes
                         of point selection. */
     gint maxcount = 20;
-    /* 
-       We need to create temporary arrays to hold a list of selected
-       image coordinates.  The space needed depends upon the image. This
-       creates a memory management issue. We address it by allowing for
-       300 maxima--a good number (corresponding perhaps to a grainy
-       surface) which should be big enough for most images. Then we
-       monitor memory usage and reallocate a larger array if necessary.
+    gchar buffer[100];
 
-       Coordinates to be used are determined by the routine useit, below,
-       which returns either 1 (if the given coordinate is to be used) or
-       0 (if not). The user can substitute his own version of this routine
-       if he believes he has a more economical algorithm for choosing
-       points.
-     */
     arraysize = 300;
     /* FIXME: replace stuff like this with g_new() */
     x = (gint *)g_malloc(arraysize * sizeof(gint));
     if (x == NULL) {
-        printf("Unable to allocate x array in itip_estimate0 routine.\n");
+        g_warning("Unable to allocate x array in itip_estimate0 routine.");
         return;
     }
     y = (gint *)g_malloc(arraysize * sizeof(gint));
     if (y == NULL) {
-        printf("Unable to allocate y array in itip_estimate0 routine.\n");
+        g_warning("Unable to allocate y array in itip_estimate0 routine.");
         g_free(x);
         return;
     }
 
-    /* 
-       Now choose a nearest neighborhood size to send the useit routine.
-       The neighborhood should be at least equal to 1 (i.e. consider all
-       points with x,y within +/- 1 of the one under consideration).
-       Otherwise ALL points are used, equivalent to the full tip_estimate
-       routine, and no speed advantage is derived, which loses the whole
-       point of having a tip_estimate0. However, the size of the
-       neighborhood should in principle scale with the size of the tip. I
-       use a small fraction of tip size (1/10) because in practice the
-       routine seems to run acceptably quickly even at this
-       setting--there's no point in sacrificing performance for speed if
-       the present speed is acceptable.
-     */
-
     delta = MAX(MAX(tip_xsiz, tip_ysiz)/10, 1);
 
+    if (set_message!=NULL) set_message("Searching for local maxima...");
     /* Create a list of coordinates to use */
     n = 0;                      /* Number of image maxima found so far */
     for (j = tip_ysiz - 1 - yc; j <= im_ysiz - 1 - yc; j++) {
@@ -511,15 +694,15 @@ itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                     arraysize *= 2;     /* increase array size by factor of 2 */
                     x = (gint *)g_realloc(x, arraysize * sizeof(gint));
                     if (x == NULL) {
-                        printf
-                            ("Unable to realloc x array in itip_estimate0.\n");
+                        g_warning
+                            ("Unable to realloc x array in itip_estimate0.");
                         g_free(y);
                         return;
                     }
                     y = (gint *)g_realloc(y, arraysize * sizeof(gint));
                     if (y == NULL) {
-                        printf
-                            ("Unable to realloc y array in itip_estimate0.\n");
+                        g_warning
+                            ("Unable to realloc y array in itip_estimate0.");
                         g_free(x);
                         return;
                     }
@@ -530,23 +713,36 @@ itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
             }
         }
     }
-    printf("Found %d internal local maxima\n", n);
+    g_snprintf(buffer, 100, "Found %d internal local maxima\n", n);
+    if (set_message!=NULL) set_message(buffer);
 
-   
     /* Now refine tip at these coordinates recursively until no more change */
     do {
         count = 0;
         iter++;
+        g_snprintf
+            (buffer, 100, "Iterating estimate (iteration %d)...\n",
+             iter);
+        if (set_message!=NULL) set_message(buffer);
+
         for (i = 0; i < n; i++)
+        {
             if (itip_estimate_point(x[i], y[i], image, im_xsiz, im_ysiz,
                                     tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                     use_edges))
                 count++;
-        printf
-            ("Finished iteration #%d. %d image locations produced refinement.\n",
-             iter, count);
+                if (set_fraction!=NULL && set_fraction((gdouble)i/(gdouble)n)==FALSE)
+                {
+                    break;
+                }
+        }
+        g_snprintf
+            (buffer, 100, "%d image locations produced refinement.\n",
+             count);
+        if (set_message!=NULL) set_message(buffer);
     } while (count && count>maxcount);
-
+    if (set_fraction!=NULL) set_fraction(0.0);
+    
     /* free temporary space */
     g_free(x);
     g_free(y);
@@ -561,8 +757,7 @@ itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
    of its near neighbors, provided there are not too many near neighbors
    with values equal to the maximum (which indicates a flat).
 */
-
-gint
+static gint
 useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta)
 {
     gint xmin, xmax, ymin, ymax;        /* actual interval to search */
@@ -607,8 +802,7 @@ useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta)
    To compile codes which does not use parts of the image within a tipsize
    of the edge, set USE_EDGES to 0 on the next line.   
 */
-
-gint
+static gint
 itip_estimate_point(gint ixp, gint jxp, gint **image,
                     gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
                     gint xc, gint yc, gint **tip0, gint thresh, 
@@ -626,7 +820,6 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
     interior = jxp >= tip_ysiz - 1 && jxp <= im_ysiz - tip_ysiz
         && ixp >= tip_xsiz - 1 && ixp <= im_xsiz - tip_xsiz;
 
-
     if (interior) {
         for (jx = 0; jx < tip_ysiz; jx++) {
             for (ix = 0; ix < tip_xsiz; ix++) {
@@ -635,7 +828,7 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                    away, we can leave out the overhead of checking for them
                    in this section. */
                 imagep = image[jxp][ixp];
-                dil = -G_MAXDOUBLE;        /* initialize maximum to -infinity */
+                dil = -G_MAXINT;        /* initialize maximum to -infinity */
                 for (jd = 0; jd < tip_ysiz; jd++) {
                     for (id = 0; id < tip_xsiz; id++) {
                         if (imagep - image[jxp + yc - jd][ixp + xc - id] >
@@ -647,11 +840,13 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                         dil = MAX(dil, temp);
                     }           /* end for id */
                 }               /* end for jd */
-                if (dil == -G_MAXDOUBLE)
+                if (dil == -G_MAXINT)
                     continue;
-                tip0[jx][ix] =
-                    dil < tip0[jx][ix] - thresh ? (count++,
-                                                   dil + thresh) : tip0[jx][ix];
+                if (dil < tip0[jx][ix] - thresh) 
+                { 
+                    count++,
+                    tip0[jx][ix] = dil+thresh;
+                }
             }                   /* end for ix */
         }                       /* end for jx */
         return (count);
@@ -659,13 +854,12 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
 
     if (use_edges)
     {
-        printf("edgeeeees!\n");
         /* Now handle the edges */
         for (jx = 0; jx < tip_ysiz; jx++) {
             for (ix = 0; ix < tip_xsiz; ix++) {
                 imagep = image[jxp][ixp];
-                dil = -G_MAXDOUBLE;    /* initialize maximum to -infinity */
-                for (jd = 0; jd <= tip_ysiz - 1 && dil < G_MAXDOUBLE; jd++) {
+                dil = -G_MAXINT;    /* initialize maximum to -infinity */
+                for (jd = 0; jd <= tip_ysiz - 1 && dil < G_MAXINT; jd++) {
                     for (id = 0; id <= tip_xsiz - 1; id++) {
                         /* Determine whether the tip apex at (xc,yc) lies within
                            the domain of the translated image, and if so, if it
@@ -709,7 +903,7 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                         dil = MAX(dil, temp);
                     }               /* end for id */
                 }                   /* end for jd */
-                if (dil == -G_MAXDOUBLE)
+                if (dil == -G_MAXINT)
                     continue;
 
                 tip0[jx][ix] =

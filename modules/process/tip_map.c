@@ -49,11 +49,6 @@ static void       tip_certainty_map_data_cb            (GtkWidget *item);
 static gboolean   tip_certainty_map_check              (TipCertaintyMapArgs *args,
                                                GtkWidget *tip_certainty_map_window);
 static gboolean   tip_certainty_map_do                 (TipCertaintyMapArgs *args);
-static void       tip_certainty_map_load_args          (GwyContainer *settings,
-                                               TipCertaintyMapArgs *args);
-static void       tip_certainty_map_save_args          (GwyContainer *settings,
-                                               TipCertaintyMapArgs *args);
-static void       tip_certainty_map_sanitize_args      (TipCertaintyMapArgs *args);
 static GtkWidget * tip_certainty_map_data_option_menu(GwyDataWindow **operand);
 
 
@@ -105,7 +100,6 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & TIP_CERTAINTY_MAP_RUN_MODES, FALSE);
     settings = gwy_app_settings_get();
-    tip_certainty_map_load_args(settings, &args);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
     tip_certainty_map_window = tip_certainty_map_window_construct(&args, &controls);
@@ -115,7 +109,6 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
         switch (gtk_dialog_run(GTK_DIALOG(tip_certainty_map_window))) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            tip_certainty_map_save_args(settings, &args);
             case GTK_RESPONSE_NONE:
             gtk_widget_destroy(tip_certainty_map_window);
             ok = TRUE;
@@ -126,7 +119,6 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
             if (ok) {
                 gtk_widget_destroy(tip_certainty_map_window);
                 tip_certainty_map_do(&args);
-                tip_certainty_map_save_args(settings, &args);
             }
             break;
 
@@ -143,7 +135,7 @@ static GtkWidget*
 tip_certainty_map_window_construct(TipCertaintyMapArgs *args,
                           TipCertaintyMapControls *controls)
 {
-    GtkWidget *dialog, *table, *omenu, *label, *spin;
+    GtkWidget *dialog, *table, *omenu, *label;
     gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Certainty map analysis"),
@@ -237,8 +229,8 @@ tip_certainty_map_check(TipCertaintyMapArgs *args,
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    if ((dfield1->xreal/dfield1->xres) != (dfield2->xreal/dfield2->xres) 
-        || (dfield1->yreal/dfield1->yres) != (dfield2->yreal/dfield2->yres))
+    if (fabs((dfield1->xreal/dfield1->xres)/(dfield2->xreal/dfield2->xres) - 1)>0.01
+       || fabs((dfield1->yreal/dfield1->yres)/(dfield2->yreal/dfield2->yres) - 1)>0.01)
     {
         dialog = gtk_message_dialog_new(GTK_WINDOW(tip_certainty_map_window),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -254,12 +246,9 @@ tip_certainty_map_check(TipCertaintyMapArgs *args,
 static gboolean
 tip_certainty_map_do(TipCertaintyMapArgs *args)
 {
-    GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *dfield, *dfield1, *dfield2;
     GwyDataWindow *operand1, *operand2;
-    gint iteration = 0;
-    GwyComputationStateType state;
 
     operand1 = args->win1;
     operand2 = args->win2;
@@ -282,65 +271,16 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(dfield));
         g_object_unref(dfield);
     }
-
-    dfield = gwy_tip_cmap(dfield1, dfield2, dfield);
-
-
-    /*
-    iteration = 0;
-    state = GWY_COMP_INIT;
-    gwy_app_wait_start(GTK_WIDGET(args->win1),
-                       "Initializing...");
-    do {
-      
-        state = GWY_COMP_FINISHED;
-        gwy_app_wait_set_message("Certainty map computation...");
-        if (!gwy_app_wait_set_fraction
-                (iteration/(gdouble)(dfield2->xres)))
-        {
-            g_object_unref(dfield);
-            return FALSE;
-        }
-
-    } while (state != GWY_COMP_FINISHED);
+    gwy_app_wait_start(GTK_WIDGET(args->win1),"Initializing...");
+    dfield = gwy_tip_cmap(dfield1, dfield2, dfield, gwy_app_wait_set_fraction,
+                          gwy_app_wait_set_message);
     gwy_app_wait_finish();
-    */
     /*set right output */
 
     gwy_data_view_update(gwy_data_window_get_data_view(args->win2));
     return TRUE;
 }
 
-
-static const gchar *result_key = "/module/tip_certainty_map/result";
-
-static void
-tip_certainty_map_sanitize_args(TipCertaintyMapArgs *args)
-{
-}
-
-static void
-tip_certainty_map_load_args(GwyContainer *settings,
-                   TipCertaintyMapArgs *args)
-{
-    /* TODO: remove this someday (old keys we used as  */
-    gwy_container_remove_by_prefix(settings, "/app/croscor");
-
-    *args = tip_certainty_map_defaults;
-    /*
-    gwy_container_gis_enum_by_name(settings, result_key, &args->result);
-    */
-    tip_certainty_map_sanitize_args(args);
-}
-
-static void
-tip_certainty_map_save_args(GwyContainer *settings,
-                   TipCertaintyMapArgs *args)
-{
-    /*
-    gwy_container_set_enum_by_name(settings, result_key, args->result);
-    */
-}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

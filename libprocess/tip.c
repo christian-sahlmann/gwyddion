@@ -29,7 +29,23 @@
 #include <math.h>
 
 static void
-contact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
+pyramide_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
+               gint *xres, gint *yres)
+{
+    gdouble angle = params[1];
+    gdouble xreal = 2*(height+radius)/tan(angle);
+    gint xpix = gwy_data_field_rtoi(data, xreal);
+        
+    if (xpix<10) xpix=10;
+    if (xpix>500) xpix = 500;
+        
+    *xres = xpix;
+    *yres = xpix;
+}
+
+static void
+contact_guess (GwyDataField *data, gdouble height, gdouble radius, 
+               G_GNUC_UNUSED gdouble *params,
                gint *xres, gint *yres)
 {
     gdouble angle = atan(sqrt(2));
@@ -44,7 +60,8 @@ contact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *para
 
 }
 static void
-noncontact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
+noncontact_guess (GwyDataField *data, gdouble height, gdouble radius, 
+                  G_GNUC_UNUSED gdouble *params,
                gint *xres, gint *yres)
 {
     gdouble angle = 70*G_PI/180;
@@ -58,37 +75,38 @@ noncontact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *p
     *xres = xpix;
     *yres = xpix;
 }
-static void
-sharpened_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
-               gint *xres, gint *yres)
-{
-    *xres = 200;
-    *yres = 200;
 
-}
 static void
-delta_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
+delta_guess (G_GNUC_UNUSED GwyDataField *data, 
+             G_GNUC_UNUSED gdouble height, 
+             G_GNUC_UNUSED gdouble radius, 
+             G_GNUC_UNUSED gdouble *params,
                gint *xres, gint *yres)
 {
-    *xres = 50;
-    *yres = 50;
+    *xres = 20;
+    *yres = 20;
 
 }
 
 static void
-create_pyramide(GwyDataField *tip, gdouble height, gint n)
+create_pyramide(GwyDataField *tip, gdouble alpha, gint n, gdouble theta)
 {
     gint col, row;
     gdouble rcol, rrow;
     gdouble scol, srow;
     gdouble ccol, crow;
-    gdouble r, phi, phic;
+    gdouble phi, phic;
     gdouble vm, radius;
+    gdouble height;
+    gdouble nangle;
     gdouble add = G_PI/4;
     if (n==3) add = G_PI/6;
-
-    radius = sqrt(2)*tip->xres/2;
-
+    
+    add += theta;
+    radius = sqrt((tip->xres/2)*(tip->xres/2)+(tip->yres/2)*(tip->yres/2));
+    nangle = G_PI/n;
+    height = gwy_data_field_itor(tip, radius)*cos(nangle)/tan(alpha);
+    
     scol = tip->xres/2;
     srow = tip->yres/2;
 
@@ -109,72 +127,87 @@ create_pyramide(GwyDataField *tip, gdouble height, gint n)
 }
 
 static void
-round_pyramide(GwyDataField *tip, gdouble angle, gdouble radius)
+round_pyramide(GwyDataField *tip, gdouble angle, gint n, gdouble ballradius)
 {
     gdouble center_x, center_y, center_z;
-    gint icenter_x, icenter_y;
     gdouble height = gwy_data_field_get_max(tip);
     gint col, row;
     gdouble dcol, drow;
-    gdouble sphere;
-    
+    gdouble sphere, radius;
+    gdouble beta;
+
+    radius = sqrt((tip->xres/2)*(tip->xres/2)+(tip->yres/2)*(tip->yres/2));
+    beta = atan(gwy_data_field_itor(tip,radius)/height);
     center_x = tip->xreal/2;
     center_y = tip->yreal/2;
-    center_z = height - radius/sin(angle);
-
+    center_z = height - ballradius;//cos(beta);
+    printf("z:%g, height=%g, ballradius=%g, cosbeta=%g, beta=%g (%g deg of %g deg)\n", 
+       center_z, height, ballradius, cos(beta), beta, beta*180/G_PI, angle*180/G_PI);
     for (col=0; col<tip->xres; col++)
     {
         for (row=0; row<tip->yres; row++)
         {
-            if (tip->data[col + tip->xres*row] > center_z)
+            if (tip->data[col + tip->xres*row] > (center_z + ballradius*sin(beta)))
             {
                 dcol = gwy_data_field_itor(tip, col);
                 drow = gwy_data_field_jtor(tip, row);
-                sphere = (radius*radius - (dcol-center_x)*(dcol-center_x)
+                sphere = (ballradius*ballradius - (dcol-center_x)*(dcol-center_x)
                               - (drow-center_y)*(drow-center_y));
-                if (sphere>0 && tip->data[col + tip->xres*row] > sqrt(sphere))
-                    tip->data[col + tip->xres*row] = sqrt(sphere);
+                if (sphere>0 && tip->data[col + tip->xres*row]>(sqrt(sphere) + center_z))
+                    tip->data[col + tip->xres*row] = sqrt(sphere) + center_z;
             }
         }
     }
 }
 
 static void
-contact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
+pyramide (GwyDataField *tip, 
+          G_GNUC_UNUSED gdouble height, gdouble radius, gdouble rotation, gdouble *params)
 {
-    gdouble angle = atan(sqrt(2));
-    height = tip->xreal*tan(angle)/2;
-    
-    printf("radius=%g\n", radius);
-    
-    create_pyramide(tip, height, 4);
-    round_pyramide(tip, angle, radius);
+    /*params[0]..number of sides, params[1]..angle*/
+    create_pyramide(tip, params[1], params[0], rotation);
+    round_pyramide(tip, params[1], params[0], radius);
     
 }
 
 static void
-noncontact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
+contact (GwyDataField *tip, 
+         G_GNUC_UNUSED gdouble height, gdouble radius, gdouble rotation, 
+         G_GNUC_UNUSED gdouble *params)
 {
-    gdouble angle = 70*G_PI/180;
-    height = tip->xreal*tan(angle)/2;
-    
-    create_pyramide(tip, height, 3);
+    gdouble angle = G_PI/2 - atan(sqrt(2));
+    create_pyramide(tip, angle, 4, rotation);
+    round_pyramide(tip, angle, 4, radius);
 }
 
 static void
-sharpened (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
+noncontact (GwyDataField *tip, 
+            G_GNUC_UNUSED gdouble height, gdouble radius, gdouble rotation, 
+            G_GNUC_UNUSED gdouble *params)
 {
-    tip->data[tip->xres*tip->yres/2] = 1;
+    gdouble angle = G_PI/2 - atan(sqrt(2));
+    create_pyramide(tip, angle, 3, rotation);
+    round_pyramide(tip, angle, 3, radius);
 }
 
 static void
-delta (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
+delta (GwyDataField *tip, gdouble height, 
+       G_GNUC_UNUSED gdouble radius, 
+       G_GNUC_UNUSED gdouble rotation, 
+       G_GNUC_UNUSED gdouble *params)
 {
     gwy_data_field_fill(tip, 0);
-    tip->data[tip->xres*tip->yres/2] = height;
+    tip->data[tip->xres/2 + tip->xres*tip->yres/2] = height;
 }
 
 static const GwyTipModelPreset tip_presets[] = {
+    {
+        "Pyramide",
+        "Pyramidal",
+        &pyramide,
+        &pyramide_guess,
+        0
+    },
     {
         "Contact",
         "Pyramidal",
@@ -189,13 +222,6 @@ static const GwyTipModelPreset tip_presets[] = {
         &noncontact_guess,
         0
     },
-    {
-        "Sharpened",
-        "Pyramidal",
-        &sharpened,
-        &sharpened_guess,
-        0
-    },
      {
         "Delta function",
         "Analytical",
@@ -205,13 +231,27 @@ static const GwyTipModelPreset tip_presets[] = {
     },
 };
 
-
+/**
+ * gwy_tip_model_get_npresets:
+ *
+ * Find number of actual tip model presets. 
+ *
+ * Returns: number of presets
+ **/
 gint
 gwy_tip_model_get_npresets(void)
 {
     return (gint)G_N_ELEMENTS(tip_presets);
 }
 
+/**
+ * gwy_tip_model_get_preset:
+ * @preset_id: preset identifier
+ *
+ * Get data related to tip preset.
+ *
+ * Returns: chosen preset data.
+ **/
 G_CONST_RETURN GwyTipModelPreset*
 gwy_tip_model_get_preset(gint preset_id)
 {
@@ -222,6 +262,14 @@ gwy_tip_model_get_preset(gint preset_id)
     return tip_presets + preset_id;
 }
         
+/**
+ * gwy_tip_model_get_preset_by_name:
+ * @name: name of tip (e. g. "contact")
+ *
+ * Get data related to preset with specified name.
+ *
+ * Returns: chosen preset data.
+ **/
 G_CONST_RETURN GwyTipModelPreset*
 gwy_tip_model_get_preset_by_name(const gchar *name)
 {
@@ -234,24 +282,56 @@ gwy_tip_model_get_preset_by_name(const gchar *name)
     return NULL;
 }
 
+/**
+ * gwy_tip_model_get_preset_id:
+ * @preset: tip model preset
+ *
+ * Get preset identifier within all presets.
+ *
+ * Returns: preset id.
+ **/
 gint
 gwy_tip_model_get_preset_id(const GwyTipModelPreset* preset)
 {
     return preset - tip_presets;
 }
 
+/**
+ * gwy_tip_model_get_preset_tip_name:
+ * @preset: tip model preset
+ *
+ * Get name of the preset (e. g. "contact").
+ *
+ * Returns: preset name.
+ **/
 G_CONST_RETURN gchar*
 gwy_tip_model_get_preset_tip_name(const GwyTipModelPreset* preset)
 {
     return preset->tip_name;
 }
 
+/**
+ * gwy_tip_model_get_preset_group_name:
+ * @preset: tip model preset
+ *
+ * Get group name of preset (e. g. "analytical".)
+ *
+ * Returns: preset group name
+ **/
 G_CONST_RETURN gchar*
 gwy_tip_model_get_preset_group_name(const GwyTipModelPreset* preset)
 {
     return preset->group_name;
 }
 
+/**
+ * gwy_tip_model_get_preset_nparams:
+ * @preset: tip model preset
+ *
+ * Get number of tip preset parameters.
+ *
+ * Returns: number of parameters.
+ **/
 gint
 gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset)
 {
@@ -294,7 +374,7 @@ field_to_datafield(gdouble **field, GwyDataField *ret)
     return ret;
 }
 
-static gdouble **
+static gint **
 i_datafield_to_field(GwyDataField *datafield, gboolean maxzero, gdouble min, gdouble step)
 {
     gint **ret;
@@ -316,20 +396,20 @@ i_datafield_to_field(GwyDataField *datafield, gboolean maxzero, gdouble min, gdo
 }
 
 static GwyDataField*
-i_field_to_datafield(gdouble **field, GwyDataField *ret, gdouble min, gdouble step)
+i_field_to_datafield(gint **field, GwyDataField *ret, gdouble min, gdouble step)
 {
     gint col, row;
     for (col=0; col<ret->xres; col++)
     {
         for (row=0; row<ret->yres; row++)
         {
-            ret->data[col  + ret->xres*row] = field[col][row]*step + min;
+            ret->data[col  + ret->xres*row] = (gdouble)field[col][row]*step + min;
         }
     }    
     return ret;
 }
 
-static gdouble **
+static gint **
 i_datafield_to_largefield(GwyDataField *datafield, GwyDataField *tipfield, gdouble min, gdouble step)
 {
     gint **ret;
@@ -358,7 +438,7 @@ i_datafield_to_largefield(GwyDataField *datafield, GwyDataField *tipfield, gdoub
 }
 
 static GwyDataField*
-i_largefield_to_datafield(gdouble **field, GwyDataField *ret, GwyDataField *tipfield, gdouble min, gdouble step)
+i_largefield_to_datafield(gint **field, GwyDataField *ret, GwyDataField *tipfield, gdouble min, gdouble step)
 {
     gint col, row;
     gint xnew, ynew;
@@ -373,61 +453,164 @@ i_largefield_to_datafield(gdouble **field, GwyDataField *ret, GwyDataField *tipf
             if (col>=tipfield->xres/2 && col<(ret->xres + tipfield->xres/2)
                 && row>=tipfield->yres/2 && row<(ret->yres + tipfield->yres/2))
             {
-                ret->data[col - tipfield->xres/2 + ret->xres*(row - tipfield->yres/2)] = field[col][row]*step + min;
-            }                        
+                ret->data[col - tipfield->xres/2 + ret->xres*(row - tipfield->yres/2)] = 
+                    field[col][row]*step + min;
+            }
         }
     }    
     return ret;
 }
 
+static GwyDataField*
+get_right_tip_field(GwyDataField *tip, GwyDataField *surface, gboolean *freetip)
+{
+    GwyDataField *buffer;
+    gdouble tipxstep, tipystep;
+    gdouble surfxstep, surfystep;
 
+    *freetip = FALSE;
+    tipxstep = tip->xreal/tip->xres;
+    surfxstep = surface->xreal/surface->xres;
+    tipystep = tip->yreal/tip->yres;
+    surfystep = surface->yreal/surface->yres;
+
+    if (fabs(tipxstep/surfxstep - 1.0)>0.01 || 
+        fabs(tipystep/surfystep - 1.0)>0.01)
+    {
+        buffer = GWY_DATA_FIELD(gwy_data_field_new(tip->xres, tip->yres,
+                                                   tip->xreal, tip->yreal, 
+                                                   FALSE));
+        gwy_data_field_copy(tip, buffer);
+
+        gwy_data_field_resample(buffer, tip->xres/surfxstep*tipxstep,
+                                tip->yres/surfystep*tipystep, 
+                                GWY_INTERPOLATION_BILINEAR);
+        *freetip = TRUE;
+        return buffer;
+    }
+    else return tip;
+}
+
+/**
+ * gwy_tip_dilation:
+ * @tip: tip data
+ * @surface: surface data
+ * @result: pointer where to store dilated surface data (allocated GwyDataField)
+ * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
+ * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ *
+ * Performs tip convolution (dilation) algorithm published by Villarrubia. This function
+ * converts all fields into form requested by "morph_lib.c" library, that is almost
+ * identical with original Villarubia's library.
+ *
+ * Returns: dilated surface data.
+ **/
 GwyDataField*   
-gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
+gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
+                  gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
 {
     gdouble **ftip;
     gdouble **fsurface;
     gdouble **fresult;
-    gint k;
-   
-    ftip = datafield_to_field(tip, TRUE);    
+    GwyDataField *buffertip;
+    gboolean freetip;
+
+    /*if tip and surface have different spacings, make new, resampled tip*/
+    buffertip = get_right_tip_field(tip, surface, &freetip);
+    /*invert tip (as necessary by dilation algorithm)*/
+    gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
+
+    /*make auxiliary data arrays expected by Villarubia's algorithms*/
+    ftip = datafield_to_field(buffertip, TRUE);    
     fsurface = datafield_to_field(surface, FALSE);
 
     fresult = ddilation(fsurface, surface->yres, surface->xres,
-                        ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
-    
+                        ftip, buffertip->yres, buffertip->xres, 
+                        buffertip->yres/2, buffertip->xres/2,
+                        set_fraction, set_message);
+
+    /*convert result back from auxiliary array*/
     result = field_to_datafield(fresult, result);
 
-    dfreematrix(ftip, tip->xres);
+    /*free auxiliary data arrays*/
+    dfreematrix(ftip, buffertip->xres);
     dfreematrix(fsurface, surface->xres);
     dfreematrix(fresult, result->xres);
+    if (freetip) g_object_unref(buffertip);
+    else gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
+
     return result;
 }
 
+/**
+ * gwy_tip_erosion:
+ * @tip: tip data
+ * @surface: surface to be eroded
+ * @result: pointer where to store result data (allocated GwyDataField).
+ * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
+ * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ *
+ * Performs surface reconstruction (erosion) algorithm published by Villarrubia. This function
+ * converts all fields into form requested by "morph_lib.c" library, that is almost
+ * identical with original Villarubia's library.
+ *
+ * Returns: reconstructed (eroded) surface.
+ **/
 GwyDataField*
-gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
+gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
+                 gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
 {
     gdouble **ftip;
     gdouble **fsurface;
     gdouble **fresult;
+    GwyDataField *buffertip;
+    gboolean freetip;
 
-   
-    ftip = datafield_to_field(tip, TRUE);
+    /*if tip and surface have different spacings, make new, resampled tip*/
+    buffertip = get_right_tip_field(tip, surface, &freetip);
+    /*invert tip (as necessary by dilation algorithm)*/
+    gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
+
+    /*make auxiliary data arrays expected by Villarubia's algorithms*/
+    ftip = datafield_to_field(buffertip, TRUE);
     fsurface = datafield_to_field(surface, FALSE);
 
     fresult = derosion(fsurface, surface->yres, surface->xres,
-                        ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
-    
+                        ftip, buffertip->yres, buffertip->xres, 
+                        buffertip->yres/2, buffertip->xres/2,
+                        set_fraction, set_message);
+
+    /*convert result back from auxiliary array*/
     result = field_to_datafield(fresult, result);
 
-    dfreematrix(ftip, tip->xres);
+    /*free auxiliary data arrays*/
+    dfreematrix(ftip, buffertip->xres);
     dfreematrix(fsurface, surface->xres);
     dfreematrix(fresult, result->xres);
+    if (freetip) g_object_unref(buffertip);
+    else gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
+
     return result;
-    
 }
 
+/**
+ * gwy_tip_cmap:
+ * @tip: tip data
+ * @surface: surface data
+ * @result: pointer where to store result ceratainty map data (allocated GwyDataField)
+ * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
+ * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ *
+ * Performs certainty map algorithm published by Villarrubia. This function
+ * converts all fields into form requested by "morph_lib.c" library, that is almost
+ * identical with original Villarubia's library. Result certainty map can be used
+ * as a mask of points where tip did not directly touch the surface.
+ *
+ * Returns: certainty map 
+ **/
 GwyDataField*
-gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
+gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
+              gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
 {
     gint **ftip;
     gint **fsurface;
@@ -435,41 +618,84 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
     gint **fresult;
     gint newx, newy;
     gdouble tipmin, surfacemin, step;
+    GwyDataField *buffertip;
+    gboolean freetip;
 
     newx = surface->xres + tip->xres;
     newy = surface->yres + tip->yres;
    
-    tipmin = gwy_data_field_get_min(tip);
+    /*if tip and surface have different spacings, make new, resampled tip*/
+    buffertip = get_right_tip_field(tip, surface, &freetip);
+    /*invert tip (as necessary by dilation algorithm)*/
+    gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
+
+    /*convert fields to integer arrays*/
+    tipmin = gwy_data_field_get_min(buffertip);
     surfacemin = gwy_data_field_get_min(surface);
     step = (gwy_data_field_get_max(surface)-surfacemin)/10000;
     
-    ftip = i_datafield_to_field(tip, TRUE, tipmin, step);
-    fsurface = i_datafield_to_largefield(surface, tip, surfacemin, step);
+    ftip = i_datafield_to_field(buffertip, TRUE, tipmin, step);
+    fsurface = i_datafield_to_largefield(surface, buffertip, surfacemin, step);
     
+    /*perform erosion as it is necessary parameter of certainty map algorithm*/
     rsurface = ierosion(fsurface, newy, newx,
-                        ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
+                        ftip, buffertip->yres, buffertip->xres, 
+                        buffertip->yres/2, buffertip->xres/2,
+                        set_fraction, set_message);
 
+    /*find certanty map*/
     fresult = icmap(fsurface, newy, newx,
-                        ftip, tip->yres, tip->xres, rsurface, tip->yres/2, tip->xres/2);
-    
-    result = i_largefield_to_datafield(fresult, result, tip, surfacemin, step);
+                        ftip, buffertip->yres, buffertip->xres, rsurface, 
+                        buffertip->yres/2, buffertip->xres/2,
+                        set_fraction, set_message);
 
-    ifreematrix(ftip, tip->xres);
+    /*convert result back*/
+    result = i_largefield_to_datafield(fresult, result, buffertip, surfacemin, step);
+
+    ifreematrix(ftip, buffertip->xres);
     ifreematrix(fsurface, newx);
     ifreematrix(rsurface, newx);
     ifreematrix(fresult, result->xres);
-    return result;
+    if (freetip) g_object_unref(buffertip);
+    else gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
     
+    return result;
 }
 
+/**
+ * gwy_tip_estimate_partial:
+ * @tip: tip data to be refined (allocated)
+ * @surface: surface data
+ * @threshold: threshold for noise supression
+ * @use_edges: whether use also edges of image
+ * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
+ * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ *
+ * Performs partial blind estimation algorithm published by Villarrubia. This function
+ * converts all fields into form requested by "morph_lib.c" library, that is almost
+ * identical with original Villarubia's library. Note that the threshold value must
+ * be chosen sufficently high value to supress small fluctulations due to noise (that would lead
+ * to very sharp tip) but sufficiently low value to put algorithm at work. A value similar to
+ * 1/10000 of surface range can be good. Otherwise we recommend to start with zero
+ * threshold and increase it slowly to observe changes and choose right value.
+ *
+ * Returns: estimated tip.
+ **/
 GwyDataField*   
 gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-                                                                       gboolean use_edges)
+                 gboolean use_edges, gboolean (set_fraction)(gdouble), 
+                 gboolean (set_message)(gchar *))
 {
     gint **ftip;
     gint **fsurface;
     gdouble tipmin, surfacemin, step;
 
+    
+    if (set_message!=NULL) 
+    {
+        if (!set_message("Converting fields..."))
+        return NULL;
+    }
     tipmin = gwy_data_field_get_min(tip);
     surfacemin = gwy_data_field_get_min(surface);
     step = (gwy_data_field_get_max(surface)-surfacemin)/10000;
@@ -477,11 +703,23 @@ gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble thres
     ftip = i_datafield_to_field(tip, TRUE,  tipmin, step);    
     fsurface = i_datafield_to_field(surface, FALSE, surfacemin, step);
 
+    if (set_message!=NULL) 
+    {
+        if (!set_message("Starting partial estimation..."))
+        return NULL;
+    }
     itip_estimate0(fsurface, surface->yres, surface->xres,
                    tip->yres, tip->xres, tip->yres/2, tip->xres/2,
-                   ftip, threshold/step, use_edges);
+                   ftip, threshold/step, use_edges, set_fraction, set_message);
+    if (set_fraction!=NULL)
+    {
+        if (!set_fraction(0)) return NULL;
+    }
+    if (set_message!=NULL) set_message("Converting fields...");
 
     tip = i_field_to_datafield(ftip, tip, tipmin, step);
+    gwy_data_field_add(tip, -gwy_data_field_get_min(tip));
+    
 
     ifreematrix(ftip, tip->xres);
     ifreematrix(fsurface, surface->xres);
@@ -489,14 +727,37 @@ gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble thres
 }
 
 
-GwyDataField*   
+/**
+ * gwy_tip_estimate_full:
+ * @tip: tip data to be refined (allocated)
+ * @surface: surface data
+ * @threshold: threshold for noise supression
+ * @use_edges: whether use also edges of image
+ * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
+ * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ *
+ * Performs full blind estimation algorithm published by Villarrubia. This function
+ * converts all fields into form requested by "morph_lib.c" library, that is almost
+ * identical with original Villarubia's library. Note that the threshold value must
+ * be chosen sufficently high value to supress small fluctulations due to noise (that would lead
+ * to very sharp tip) but sufficiently low value to put algorithm at work. A value similar to
+ * 1/10000 of surface range can be good. Otherwise we recommend to start with zero
+ * threshold and increase it slowly to observe changes and choose right value.
+ *
+ * Returns: estimated tip.
+ **/GwyDataField*   
 gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-                                                                       gboolean use_edges)
+          gboolean use_edges, gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
 {
     gint **ftip;
     gint **fsurface;
     gdouble tipmin, surfacemin, step;
 
+    if (set_message!=NULL) 
+    {
+        if (!set_message("Converting fields..."))
+        return NULL;
+    }
     tipmin = gwy_data_field_get_min(tip);
     surfacemin = gwy_data_field_get_min(surface);
     step = (gwy_data_field_get_max(surface)-surfacemin)/10000;
@@ -504,11 +765,22 @@ gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshol
     ftip = i_datafield_to_field(tip, TRUE, tipmin, step);    
     fsurface = i_datafield_to_field(surface, FALSE,  surfacemin, step);
 
+    if (set_message!=NULL) 
+    {
+        if (!set_message("Starting full estimation..."))
+        return NULL;
+    }
     itip_estimate(fsurface, surface->yres, surface->xres,
                    tip->yres, tip->xres, tip->yres/2, tip->xres/2,
-                   ftip, threshold/step, use_edges);
+                   ftip, threshold/step, use_edges, set_fraction, set_message);
 
+    if (set_fraction!=NULL)
+    {
+        if (!set_fraction(0)) return NULL;
+    }
+    if (set_message!=NULL) set_message("Converting fields...");
     tip = i_field_to_datafield(ftip, tip, tipmin, step);
+    gwy_data_field_add(tip, -gwy_data_field_get_min(tip));
 
     ifreematrix(ftip, tip->xres);
     ifreematrix(fsurface, surface->xres);

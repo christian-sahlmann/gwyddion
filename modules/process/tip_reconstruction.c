@@ -45,20 +45,15 @@ static gboolean   tip_reconstruction                    (GwyContainer *data,
                                                GwyRunType run);
 static GtkWidget* tip_reconstruction_window_construct   (TipReconstructionArgs *args,
                                                TipReconstructionControls *controls);
-static void       tip_reconstruction_data_cb            (GtkWidget *item);
-static gboolean   tip_reconstruction_check              (TipReconstructionArgs *args,
+static void       tip_reconstruction_data_cb   (GtkWidget *item);
+static gboolean   tip_reconstruction_check     (TipReconstructionArgs *args,
                                                GtkWidget *tip_reconstruction_window);
-static gboolean   tip_reconstruction_do                 (TipReconstructionArgs *args);
-static void       tip_reconstruction_load_args          (GwyContainer *settings,
-                                               TipReconstructionArgs *args);
-static void       tip_reconstruction_save_args          (GwyContainer *settings,
-                                               TipReconstructionArgs *args);
-static void       tip_reconstruction_sanitize_args      (TipReconstructionArgs *args);
-static GtkWidget * tip_reconstruction_data_option_menu(GwyDataWindow **operand);
+static gboolean   tip_reconstruction_do        (TipReconstructionArgs *args);
+static GtkWidget *tip_reconstruction_data_option_menu(GwyDataWindow **operand);
 
 
 static const TipReconstructionArgs tip_reconstruction_defaults = {
-    NULL, NULL,    
+    NULL, NULL,
 };
 
 /* The module info. */
@@ -100,12 +95,9 @@ tip_reconstruction(GwyContainer *data, GwyRunType run)
     GtkWidget *tip_reconstruction_window;
     TipReconstructionArgs args;
     TipReconstructionControls controls;
-    GwyContainer *settings;
     gboolean ok = FALSE;
 
     g_return_val_if_fail(run & TIP_RECONSTRUCTION_RUN_MODES, FALSE);
-    settings = gwy_app_settings_get();
-    tip_reconstruction_load_args(settings, &args);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
     tip_reconstruction_window = tip_reconstruction_window_construct(&args, &controls);
@@ -115,7 +107,6 @@ tip_reconstruction(GwyContainer *data, GwyRunType run)
         switch (gtk_dialog_run(GTK_DIALOG(tip_reconstruction_window))) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            tip_reconstruction_save_args(settings, &args);
             case GTK_RESPONSE_NONE:
             gtk_widget_destroy(tip_reconstruction_window);
             ok = TRUE;
@@ -126,7 +117,6 @@ tip_reconstruction(GwyContainer *data, GwyRunType run)
             if (ok) {
                 gtk_widget_destroy(tip_reconstruction_window);
                 tip_reconstruction_do(&args);
-                tip_reconstruction_save_args(settings, &args);
             }
             break;
 
@@ -143,7 +133,7 @@ static GtkWidget*
 tip_reconstruction_window_construct(TipReconstructionArgs *args,
                           TipReconstructionControls *controls)
 {
-    GtkWidget *dialog, *table, *omenu, *label, *spin;
+    GtkWidget *dialog, *table, *omenu, *label;
     gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Surface reconstruction"),
@@ -237,8 +227,8 @@ tip_reconstruction_check(TipReconstructionArgs *args,
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    if ((dfield1->xreal/dfield1->xres) != (dfield2->xreal/dfield2->xres) 
-        || (dfield1->yreal/dfield1->yres) != (dfield2->yreal/dfield2->yres))
+    if (fabs((dfield1->xreal/dfield1->xres)/(dfield2->xreal/dfield2->xres) - 1)>0.01
+       || fabs((dfield1->yreal/dfield1->yres)/(dfield2->yreal/dfield2->yres) - 1)>0.01)
     {
         dialog = gtk_message_dialog_new(GTK_WINDOW(tip_reconstruction_window),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -258,8 +248,6 @@ tip_reconstruction_do(TipReconstructionArgs *args)
     GwyContainer *data;
     GwyDataField *dfield, *dfield1, *dfield2;
     GwyDataWindow *operand1, *operand2;
-    gint iteration = 0;
-    GwyComputationStateType state;
 
     operand1 = args->win1;
     operand2 = args->win2;
@@ -277,28 +265,11 @@ tip_reconstruction_do(TipReconstructionArgs *args)
     }
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    dfield = gwy_tip_erosion(dfield1, dfield2, dfield);
-
-    /*
-    iteration = 0;
-    state = GWY_COMP_INIT;
-    gwy_app_wait_start(GTK_WIDGET(args->win1),
-                       "Initializing...");
-    do {
-        
-        state = GWY_COMP_FINISHED;
-        gwy_app_wait_set_message("Reconstruction...");
-        if (!gwy_app_wait_set_fraction
-                (iteration/(gdouble)(dfield2->xres)))
-        {
-            g_object_unref(dfield);
-            return FALSE;
-        }
-
-    } while (state != GWY_COMP_FINISHED);
+    gwy_app_wait_start(GTK_WIDGET(args->win1), "Initializing...");
+    dfield = gwy_tip_erosion(dfield1, dfield2, dfield,
+                             gwy_app_wait_set_fraction,
+                             gwy_app_wait_set_message);
     gwy_app_wait_finish();
-    */
-    /*set right output */
 
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
@@ -307,35 +278,6 @@ tip_reconstruction_do(TipReconstructionArgs *args)
 }
 
 
-static const gchar *result_key = "/module/tip_reconstruction/result";
-
-static void
-tip_reconstruction_sanitize_args(TipReconstructionArgs *args)
-{
-}
-
-static void
-tip_reconstruction_load_args(GwyContainer *settings,
-                   TipReconstructionArgs *args)
-{
-    /* TODO: remove this someday (old keys we used as  */
-    gwy_container_remove_by_prefix(settings, "/app/croscor");
-
-    *args = tip_reconstruction_defaults;
-    /*
-    gwy_container_gis_enum_by_name(settings, result_key, &args->result);
-    */
-    tip_reconstruction_sanitize_args(args);
-}
-
-static void
-tip_reconstruction_save_args(GwyContainer *settings,
-                   TipReconstructionArgs *args)
-{
-    /*
-    gwy_container_set_enum_by_name(settings, result_key, args->result);
-    */
-}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

@@ -3,58 +3,61 @@
 #define TIP_MORPH
 
 
-/*simple routines - integer arithmetics*/
 gint **iallocmatrix(gint ysiz, gint xsiz);
 
 void ifreematrix(gint **mptr, gint ysiz);
+    
+gdouble **dallocmatrix(gint ysiz, gint xsiz);
+        
+void dfreematrix(gdouble **mptr, gint ysiz);
 
+/*simple routines - integer arithmetics*/
 gint **ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz);
 
 gint **idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
-	      gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc);
+	      gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
+          gboolean (set_fraction)(gdouble),
+          gboolean (set_message)(gchar *));
 
 gint **ierosion(gint **image, gint im_xsiz, gint im_ysiz,
 	      gint **tip, gint tip_xsiz, gint tip_ysiz,
-	      gint xc, gint yc);
+	      gint xc, gint yc,
+          gboolean (set_fraction)(gdouble),
+          gboolean (set_message)(gchar *));
 
 gint **icmap(gint **image, gint im_xsiz, gint im_ysiz,
 	      gint **tip, gint tip_xsiz, gint tip_ysiz,
               gint **rsurf,
-	      gint xc, gint yc);
+	      gint xc, gint yc,
+          gboolean (set_fraction)(gdouble),
+          gboolean (set_message)(gchar *));
 
 /*simple routines - double arithmetics (can be very slow)*/
-gdouble **dallocmatrix(gint ysiz, gint xsiz);
-
-void dfreematrix(gdouble **mptr, gint ysiz);
-
 gdouble **dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz);
 
 gdouble **ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
-	      gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc);
+	      gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
+          gboolean (set_fraction)(gdouble),
+          gboolean (set_message)(gchar *));
 
 gdouble **derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
 	      gdouble **tip, gint tip_xsiz, gint tip_ysiz,
-	      gint xc, gint yc);
+	      gint xc, gint yc,
+          gboolean (set_fraction)(gdouble),
+          gboolean (set_message)(gchar *));
 
 /*tip estimation routines - all in integer artithmetics*/
-gint **iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz, gint tip_ysiz);
-
 void itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
 		   gint tip_xsiz, gint tip_ysiz, gint xc, gint yc, gint **tip0,
-		   gint thresh, gboolean use_edges);
-
-gint itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-   gint xc, gint yc, gint **tip0, gint thresh, gboolean use_edges);
+		   gint thresh, gboolean use_edges,
+           gboolean (set_fraction)(gdouble),
+           gboolean (set_message)(gchar *));
 
 void itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-   gint xc, gint yc, gint **tip0, gint thresh, gboolean use_edges);
+   gint xc, gint yc, gint **tip0, gint thresh, gboolean use_edges,
+   gboolean (set_fraction)(gdouble),
+   gboolean (set_message)(gchar *));
 
-gint useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta);
-
-gint itip_estimate_point(gint ixp, gint jxp, gint **image, 
-			 gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
-			 gint xc, gint yc, gint **tip0, gint thresh,
-             gboolean use_edges);
 
 
 #endif

@@ -28,9 +28,9 @@ G_BEGIN_DECLS
 /* XXX: never used in libprocess itself, there should be probably some header
  * file with common enums... */
 typedef enum {
-    GWY_TIP_CONTACT        = 0, 
-    GWY_TIP_NONCONTACT     = 1,
-    GWY_TIP_SHARPENED      = 2,
+    GWY_TIP_PYRAMIDE       = 0, 
+    GWY_TIP_CONTACT        = 1,
+    GWY_TIP_NONCONTACT     = 2,
     GWY_TIP_DELTA          = 3
 } GwyTipType;
 
@@ -40,6 +40,7 @@ G_END_DECLS
 typedef void (*GwyTipModelFunc)(GwyDataField *tip,			
 				gdouble height,
 				gdouble radius,
+        gdouble rotation,
 				gdouble *params);
 
 typedef void (*GwyTipGuessFunc)(GwyDataField *data,
@@ -79,18 +80,22 @@ gchar*          gwy_tip_model_get_preset_group_name   (const GwyTipModelPreset* 
 gint            gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset);
 
 
-GwyDataField*   gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result);
+GwyDataField*   gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
+                                  gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *));
 
-GwyDataField*   gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result);
+GwyDataField*   gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
+                                 gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *));
 
-GwyDataField*   gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result);
+GwyDataField*   gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
+                             gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *));
 
 
 GwyDataField*   gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-					 gboolean use_edges);
+					 gboolean use_edges, gboolean (set_fraction)(gdouble),
+               gboolean (set_message)(gchar *));
 
 GwyDataField*   gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-					 gboolean use_edges);
+					 gboolean use_edges, gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *));
 
 
 
