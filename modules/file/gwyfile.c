@@ -8,6 +8,7 @@
 
 #define EXTENSION ".gwy"
 #define MAGIC "GWYO"
+#define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 static gboolean      module_register     (const gchar *name);
 static gint          gwyfile_detect      (const gchar *filename,
@@ -63,8 +64,8 @@ gwyfile_detect(const gchar *filename,
     if (!(fh = fopen(filename, "rb")))
         return 0;
     score = 0;
-    if (fread(magic, 1, strlen(MAGIC), fh) == strlen(MAGIC)
-        && memcmp(magic, MAGIC, strlen(MAGIC)) == 0)
+    if (fread(magic, 1, MAGIC_SIZE, fh) == MAGIC_SIZE
+        && memcmp(magic, MAGIC, MAGIC_SIZE) == 0)
         score = 100;
     fclose(fh);
 
@@ -81,20 +82,25 @@ gwyfile_load(const gchar *filename)
     gsize pos = 0;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+        g_warning("Cannot read file %s", filename);
         g_clear_error(&err);
         return NULL;
     }
     if (size < 4
-        || memcmp(buffer, MAGIC, strlen(MAGIC))) {
+        || memcmp(buffer, MAGIC, MAGIC_SIZE)) {
+        g_warning("File %s doesn't seem to be a .gwy file", filename);
         g_free(buffer);
         return NULL;
     }
 
-    object = gwy_serializable_deserialize(buffer, size, &pos);
+    object = gwy_serializable_deserialize(buffer + 4, size - 4, &pos);
     g_free(buffer);
-    if (!object)
+    if (!object) {
+        g_warning("File %s deserialization failed", filename);
         return NULL;
+    }
     if (!GWY_IS_CONTAINER(object)) {
+        g_warning("File %s contains some strange object", filename);
         g_object_unref(object);
         return NULL;
     }
@@ -113,7 +119,8 @@ gwyfile_save(GwyContainer *data,
     if (!(fh = fopen(filename, "wb")))
         return FALSE;
     buffer = gwy_serializable_serialize(G_OBJECT(data), buffer, &size);
-    if (fwrite(buffer, 1, size, fh) != size) {
+    if (fwrite(MAGIC, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
+        fwrite(buffer, 1, size, fh) != size) {
         fclose(fh);
         g_free(buffer);
         return FALSE;
