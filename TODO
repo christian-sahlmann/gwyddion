@@ -8,11 +8,9 @@ Particularly (overall app issues, module issues not listed):
 - Quite a large part of graph functionality
 - Printing
 - User documentation, even better, integrated help
-- Internationalization and localization
 - Proper associations and drag'n'drop support
-- Palette editor, explicite ranges for palettes
+- Palette editor
 - Editable metadata
-- Multiple data in one file
 - Use GtkAction (Gtk+ 2.4) for module actions
 - Sessions
 - ...
@@ -22,48 +20,46 @@ unstable version.
 
 ============================================================================
 Worst API bugs and otherwise things that will probably change in 2.0:
-- no one knows what parameters modules functions have and can't call them with
-  a particular settings
-- just about everything in graphs: not even slightly MVC, neverending copying
-  of data around, don't use GwySIUnit, ...
-- libgwymodule does GUI stuff
-- GwySerializable don't have free slots for text dump/restore
-- libgwyprocess depends on Gtk+ (GtkOrientation)
-- File module API does not allow to open more files, differentiate between
-  user cancel and failure, ...
-- Everything related to toolbar construction, but this will wait for
-  GtkActionization
 - Specifically, there's no tooltip entry in Process and Graph function info
   so they are hardcoded in the application
-- Interface methods should require generally arguments of that interface,
-  now they require a plain GObject which is wrong
-- There's no system in object constructor return type for non-widgets, some
-  return GObject, some return real type for no clear reason
 - GwyDataField function naming is a mess, some are functions don't have _area
   in name at all, some have it in silly places, there are two different
   area border conventions; GwyDataLine is not much better
-- GwyWatchable does not work -- either remove it, or make object actually
-  implement the notifications
 - gwy_ruler_draw_pos() and gwy_ruler_draw_ticks() got to the public API
   somehow, but they were never meant to
 - Unitool has no free slots to extend
 - Some things may benefit from being objects after all: e.g., modules
+Elaboration of 2.0 items started on http://gwyddion.net/gwyddion-2/.
+
+============================================================================
+Unimplemented stuff:
+- libprocess/correlation.c: @window_width and @window_height are unused in
+  gwy_data_field_crosscorrelate() and gwy_data_field_crosscorrelate_iteration()
+- libprocess/filters.c: gwy_data_field_area_filter_canny() always filters
+  entire data field
+- libprocess/grains.c: gwy_data_field_grains_get_average() is not implemented
+  at all
+- libgwydgets/gwy3dview.c: gwy_3d_view_get_pixbuf() does not implement
+  @xres, @yres
 
 ============================================================================
 Release checklist:
 - update splashscreen
-- update library versions, if interfaces changed
+- update translation(s)
+- make sure global library headers (libfoo.h) include all ohters
+- update library versions, if something changed
 - update version in configure.ac
-- update version in gwyddion-keep-up
-- must build on Linux _from tarballs_
+- update version in gwyddion-night-build
+- switch object leak debugging and segfault on critical messages off
+- must build on Linux from tarballs
 - must build on Windows
-- check NEWS, generate HTML version
+- check and update NEWS, generate HTML version
 - make sure devel-docs/libfoo/libfoo.types loads all new types
 - generate stable API docs for gwyddion.net and upload them
 - tag CVS
 - build and upload packages
 - sign packages and upload signatures
 - update gwyddion main page
-- publish on Freshmeat, GnomeFiles
+- publish files on Freshmeat, GnomeFiles, SourceForge
 - add the new version to bugzilla
 
