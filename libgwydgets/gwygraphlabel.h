@@ -41,7 +41,8 @@ typedef enum {
     GWY_GRAPH_LABEL_NORTHEAST = 0,
     GWY_GRAPH_LABEL_NORTHWEST = 1,
     GWY_GRAPH_LABEL_SOUTHEAST = 2,
-    GWY_GRAPH_LABEL_SOUTHWEST = 3
+    GWY_GRAPH_LABEL_SOUTHWEST = 3,
+    GWY_GRAPH_LABEL_USER      = 4
 } GwyGraphLabelPosition;
 
 typedef enum {

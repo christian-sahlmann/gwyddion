@@ -32,7 +32,7 @@
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygrapharea.h>
 #include <libgwydgets/gwygraphcorner.h>
-#include <libgwydgets/gwygraphepitome.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwyhruler.h>
 #include <libgwydgets/gwylayer-basic.h>

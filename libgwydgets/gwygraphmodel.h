@@ -68,6 +68,11 @@ struct _GwyGraphModel {
     GString *left_label;
     GString *right_label;
 
+    /* like GwyGraphLabelParams */
+    GwyGraphLabelPosition label_position;
+    gboolean label_has_frame;
+    gint label_frame_thickness;
+
     gint ncurves;
     GwyGraphModelCurve *curves;
 
