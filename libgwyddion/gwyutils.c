@@ -349,37 +349,6 @@ gwy_strdiffpos(const gchar *s1, const gchar *s2)
 }
 
 /**
- * gwy_str_has_suffix_nocase:
- * @s: A NUL-terminated string.
- * @suffix: A suffix to check presence of.
- *
- * Tests whether a string ends with given suffix, ignoring case.
- *
- * %NULL is assumed to be suffix of any string.
- *
- * Returns: %TRUE if @s has suffix @suffix.
- **/
-gboolean
-gwy_str_has_suffix_nocase(const gchar *s,
-                          const gchar *suffix)
-{
-    guint len, suffix_len;
-
-    if (!suffix || !*suffix)
-        return TRUE;
-
-    g_return_val_if_fail(s, FALSE);
-
-    len = strlen(s);
-    suffix_len = strlen(suffix);
-    if (len < suffix_len)
-        return FALSE;
-
-    return !g_ascii_strcasecmp(s + len - suffix_len, suffix);
-}
-
-
-/**
  * gwy_file_get_contents:
  * @filename: A file to read contents of.
  * @buffer: Buffer to store the file contents.
