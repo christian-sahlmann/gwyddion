@@ -15,6 +15,7 @@ GtkWidget *gwy_app_main_window = NULL;
 
 static GList *current_data = NULL;
 static GwyToolUseFunc current_tool_use_func = NULL;
+static gint untitled_no = 0;
 
 static const gchar *menu_list[] = {
     "<file>", "<proc>", "<xtns>", "<edit>",
@@ -289,6 +290,57 @@ gwy_app_update_toolbox_state(GwyMenuSensitiveData *sens_data)
                               (GtkCallback)gwy_menu_set_sensitive_recursive,
                               sens_data);
     }
+}
+
+/* FIXME: to be moved somewhere? refactored? */
+GtkWidget*
+gwy_app_data_window_create(GwyContainer *data)
+{
+    GtkWidget *data_window, *data_view;
+    GtkObject *layer;
+
+    data_view = gwy_data_view_new(data);
+    layer = gwy_layer_basic_new();
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view),
+                                 GWY_DATA_VIEW_LAYER(layer));
+    if (gwy_container_contains_by_name(data, "/0/mask")) {
+        layer = gwy_layer_mask_new();
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view),
+                                      GWY_DATA_VIEW_LAYER(layer));
+    }
+
+    data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
+    gtk_window_add_accel_group(GTK_WINDOW(data_window),
+                               g_object_get_data(G_OBJECT(gwy_app_main_window),
+                                                 "accel_group"));
+    g_signal_connect(data_window, "focus-in-event",
+                     G_CALLBACK(gwy_app_data_window_set_current), NULL);
+    g_signal_connect(data_window, "destroy",
+                     G_CALLBACK(gwy_app_data_window_remove), NULL);
+    g_signal_connect_swapped(data_window, "destroy",
+                             G_CALLBACK(g_object_unref), data);
+
+    gwy_data_window_set_units(GWY_DATA_WINDOW(data_window), "m");
+    gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
+    gtk_window_present(GTK_WINDOW(data_window));
+
+    return data_window;
+}
+
+gint
+gwy_app_data_window_set_untitled(GwyDataWindow *data_window)
+{
+    GtkWidget *data_view;
+    GwyContainer *data;
+
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = GWY_CONTAINER(gwy_data_view_get_data(GWY_DATA_VIEW(data_view)));
+    gwy_container_remove_by_prefix(data, "/filename");
+    untitled_no++;
+    gwy_container_set_int32_by_name(data, "/filename/untitled", untitled_no);
+    gwy_data_window_update_title(data_window);
+
+    return untitled_no;
 }
 
 /**

@@ -7,6 +7,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/file.h>
+#include <app/app.h>
 #include "tools.h"
 
 typedef struct {
