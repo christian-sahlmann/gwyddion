@@ -24,11 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyentities.h"
 
-static struct {
-    const gchar *entity;
-    const gchar *utf8;
-}
-const ENTITIES[] = {
+static const GwyTextEntity ENTITIES[] = {
     { "Alpha", "\xce\x91" },
     { "Beta", "\xce\x92" },
     { "Chi", "\xce\xa7" },
@@ -153,6 +149,7 @@ const ENTITIES[] = {
     { "xi", "\xce\xbe" },
     { "yen", "\xc2\xa5" },
     { "zeta", "\xce\xb6" },
+    { NULL, NULL }
 };
 
 /**
@@ -176,7 +173,7 @@ gwy_entities_entity_to_utf8(const gchar *entity)
     g_return_val_if_fail(entity, entity);
 
     min = 0;
-    max = G_N_ELEMENTS(ENTITIES) - 1;
+    max = G_N_ELEMENTS(ENTITIES) - 2;
 
     j = strcmp(entity, ENTITIES[min].entity);
     if (j < 0)
@@ -262,6 +259,12 @@ gwy_entities_text_to_utf8(const gchar *text)
 
     memcpy(pos, text, end - text + 1);
     return result;
+}
+
+G_CONST_RETURN GwyTextEntity*
+gwy_entities_get_entities(void)
+{
+    return ENTITIES;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

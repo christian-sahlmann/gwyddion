@@ -25,9 +25,16 @@
 extern "C" {
 #endif /* __cplusplus */
 
+typedef struct {
+    const gchar *entity;
+    const gchar *utf8;
+} GwyTextEntity;
+
 G_CONST_RETURN
-gchar*        gwy_entities_entity_to_utf8       (const gchar *entity);
-gchar*        gwy_entities_text_to_utf8         (const gchar *text);
+gchar*         gwy_entities_entity_to_utf8       (const gchar *entity);
+gchar*         gwy_entities_text_to_utf8         (const gchar *text);
+G_CONST_RETURN
+GwyTextEntity* gwy_entities_get_entities         (void);
 
 #ifdef __cplusplus
 }
