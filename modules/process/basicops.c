@@ -9,7 +9,7 @@ static gboolean    flip_horizontally          (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    flip_vertically            (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    invert                     (GwyContainer *data,
+static gboolean    invert_value               (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    rotate_clockwise_90        (GwyContainer *data,
                                                GwyRunType run);
@@ -49,10 +49,10 @@ module_register(const gchar *name)
         &flip_vertically,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
     };
-    static GwyProcessFuncInfo invert_func_info = {
-        "invert",
+    static GwyProcessFuncInfo invert_value_func_info = {
+        "invert_value",
         "/_Basic Operations/_Invert Value",
-        &invert,
+        &invert_value,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
     };
     static GwyProcessFuncInfo rotate_clockwise_90_func_info = {
@@ -76,7 +76,7 @@ module_register(const gchar *name)
 
     gwy_register_process_func(name, &flip_horizontally_func_info);
     gwy_register_process_func(name, &flip_vertically_func_info);
-    gwy_register_process_func(name, &invert_func_info);
+    gwy_register_process_func(name, &invert_value_func_info);
     gwy_register_process_func(name, &rotate_clockwise_90_func_info);
     gwy_register_process_func(name, &rotate_counterclockwise_90_func_info);
     gwy_register_process_func(name, &rotate_180_func_info);
@@ -117,7 +117,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-invert(GwyContainer *data, GwyRunType run)
+invert_value(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 

@@ -13,7 +13,8 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
 lib_LTLIBRARIES = \
 	libtestmodule.la \
-	libbasicops.la
+	libbasicops.la \
+	liblevel.la
 
 libtestmodule_la_SOURCES = testmodule.c
 libtestmodule_la_LDFLAGS = -avoid-version -module
@@ -22,6 +23,10 @@ libtestmodule_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 libbasicops_la_SOURCES = basicops.c
 libbasicops_la_LDFLAGS = -avoid-version -module
 libbasicops_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+
+liblevel_la_SOURCES = level.c
+liblevel_la_LDFLAGS = -avoid-version -module
+liblevel_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
