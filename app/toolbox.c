@@ -111,7 +111,7 @@ gwy_app_toolbox_create(void)
 
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Fix minimum value to zero"), NULL, GWY_STOCK_FIX_ZERO,
-                       G_CALLBACK(gwy_app_run_process_func_cb), "fix_zero");
+                       G_CALLBACK(gwy_app_run_process_func_cb), "fixzero");
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Automatically level data"), NULL, GWY_STOCK_FIT_PLANE,
                        G_CALLBACK(gwy_app_run_process_func_cb), "level");
