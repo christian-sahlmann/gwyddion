@@ -3,13 +3,15 @@
 #ifndef __GWY_MODULE_BROSWER_H__
 #define __GWY_MODULE_BROSWER_H__
 
-#include <gwymodule.h>
+#ifndef GWY_MODULE_ABI_VERSION
+#include <libgwymodule/gwymodule.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-void gwy_module_browser_run    (GHashTable *modules);
+void gwy_module_browser (void);
 
 #ifdef __cplusplus
 }

@@ -5,7 +5,10 @@ libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
 libgwymoduleincludedir = $(includedir)/gwyddion/libgwymodule
 libgwymoduleinclude_HEADERS = \
 	gwymodule.h \
-	gwymodulebrowser.h
+	gwymodule-file.h \
+	gwymodule-process.h \
+	gwymodulebrowser.h \
+	gwymoduleloader.h
 
 lib_LTLIBRARIES = libgwymodule.la
 
@@ -18,8 +21,10 @@ lib_LTLIBRARIES = libgwymodule.la
 # Chaning ifraces     C:   R:   0
 libgwymodule_la_LDFLAGS = @GMODULE_LIBS@ -version-info 0:0:0
 libgwymodule_la_SOURCES = \
-	gwymodule.c \
-	gwymodulebrowser.c
+	gwymodule-file.c \
+	gwymodule-process.c \
+	gwymodulebrowser.c \
+	gwymoduleloader.c
 
 #main_SOURCES = main.c
 #main_LDADD = libgwymodule.la ../libgwyddion/libgwyddion.la

@@ -17,7 +17,7 @@ static void      gwy_module_browser_cell_renderer (GtkTreeViewColumn *column,
 static void       gwy_module_browser_add_line     (guchar *name,
                                                    GwyModuleInfo *mod_info,
                                                    GtkListStore *store);
-static GtkWidget* gwy_module_browser_construct    (GHashTable *modules);
+static GtkWidget* gwy_module_browser_construct    (void);
 
 enum {
     MODULE_MOD_INFO,
@@ -32,20 +32,25 @@ enum {
 };
 
 
+/**
+ * gwy_module_browser:
+ *
+ * Shows a simple module browser.
+ **/
 void
-gwy_module_browser_run(GHashTable *modules)
+gwy_module_browser(void)
 {
     GtkWidget *window, *browser;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    browser = gwy_module_browser_construct(modules);
+    browser = gwy_module_browser_construct();
     gtk_container_add(GTK_CONTAINER(window), browser);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_widget_destroy), NULL);
     gtk_widget_show_all(window);
 }
 
 static GtkWidget*
-gwy_module_browser_construct(GHashTable *modules)
+gwy_module_browser_construct(void)
 {
     static const struct {
         const gchar *title;
@@ -81,7 +86,7 @@ gwy_module_browser_construct(GHashTable *modules)
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     g_object_unref(store);
-    g_hash_table_foreach(modules, (GHFunc)gwy_module_browser_add_line, store);
+    gwy_module_foreach((GHFunc)gwy_module_browser_add_line, store);
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
@@ -109,7 +114,7 @@ gwy_module_browser_cell_renderer(GtkTreeViewColumn *column,
                                  GtkTreeIter *piter,
                                  gpointer data)
 {
-    _GwyModuleInfoInternal *iinfo;
+    GwyModuleInfoInternal *iinfo;
     GwyModuleInfo *mod_info;
     gchar *s;
     gulong id;
