@@ -274,7 +274,7 @@ crosscor_window_construct(CrosscorArgs *args,
 
     controls->threshold = gtk_adjustment_new(args->threshold,
                                              -1, 1, 0.005, 0.05, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Threshold value"), _(""),
+    spin = gwy_table_attach_spinbutton(table, row, _("Threshold value"), "",
                                        controls->threshold);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     row++;
