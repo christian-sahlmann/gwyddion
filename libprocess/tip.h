@@ -85,5 +85,14 @@ GwyDataField*   gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDat
 
 GwyDataField*   gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result);
 
+
+GwyDataField*   gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
+					 gboolean use_edges);
+
+GwyDataField*   gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
+					 gboolean use_edges);
+
+
+
 #endif /*__GWY_PROCESS_GRAINS__*/
 
