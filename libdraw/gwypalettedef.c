@@ -144,8 +144,8 @@ gwy_palette_def_new(gdouble n)
 
 static guchar*
 gwy_palette_def_serialize(GObject *obj,
-                       guchar *buffer,
-                       gsize *size)
+                          guchar *buffer,
+                          gsize *size)
 {
     GwyPaletteDef *palette_def;
     GwyPaletteDefEntry *pe;
@@ -162,14 +162,13 @@ gwy_palette_def_serialize(GObject *obj,
     pd = palette_def->data;
 
     ndat = pd->len;
-    rdat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
-    gdat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
-    bdat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
-    adat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
-    xdat = (gdouble *) g_try_malloc(ndat*sizeof(gdouble));
+    rdat = g_new(gdouble, ndat);
+    gdat = g_new(gdouble, ndat);
+    bdat = g_new(gdouble, ndat);
+    adat = g_new(gdouble, ndat);
+    xdat = g_new(gdouble, ndat);
 
-    for (i = 0; i < ndat; i++)
-    {
+    for (i = 0; i < ndat; i++) {
         pe = &g_array_index(pd, GwyPaletteDefEntry, i);
         rdat[i] = pe->color.r;
         gdat[i] = pe->color.g;
@@ -178,8 +177,6 @@ gwy_palette_def_serialize(GObject *obj,
         xdat[i] = pe->x;
     }
 
-    buffer = gwy_serialize_pack(buffer, size, "si",
-                                GWY_PALETTEDEF_TYPE_NAME, 0);
     {
         GwySerializeSpec spec[] = {
             { 'd', "n", &palette_def->n, NULL, },
@@ -190,12 +187,9 @@ gwy_palette_def_serialize(GObject *obj,
             { 'D', "alpha", &adat, &ndat, },
             { 'D', "x", &xdat, &ndat, },
         };
-        gsize oldsize = *size;
-
-        buffer = gwy_serialize_pack_struct(buffer, size,
-                                           G_N_ELEMENTS(spec), spec);
-        gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
-                                  *size - oldsize);
+        buffer = gwy_serialize_pack_object_struct(buffer, size,
+                                                  GWY_PALETTEDEF_TYPE_NAME,
+                                                  G_N_ELEMENTS(spec), spec);
     }
 
     g_free(rdat);
@@ -212,12 +206,12 @@ gwy_palette_def_deserialize(const guchar *buffer,
                             gsize size,
                             gsize *position)
 {
-    gsize pos, mysize;
     gint ndat, i;
     GwyPaletteDef *palette_def;
     GwyPaletteDefEntry pe;
-    gdouble *rdat, *gdat, *bdat, *adat, *xdat, n;
-    gboolean has_alpha;
+    gdouble *rdat = NULL, *gdat = NULL, *bdat = NULL, *adat = NULL,
+            *xdat = NULL, n;
+    gboolean has_alpha = FALSE;
     GwySerializeSpec spec[] = {
       { 'd', "n", &n, NULL, },
       { 'b', "has_alpha", &has_alpha, NULL, },
@@ -233,15 +227,17 @@ gwy_palette_def_deserialize(const guchar *buffer,
     #endif
     g_return_val_if_fail(buffer, NULL);
 
-    pos = gwy_serialize_check_string(buffer, size, *position,
-                                     GWY_PALETTEDEF_TYPE_NAME);
-    g_return_val_if_fail(pos, NULL);
-    *position += pos;
-    mysize = gwy_serialize_unpack_int32(buffer, size, position);
-
-    gwy_serialize_unpack_struct(buffer + *position, mysize,
-                                G_N_ELEMENTS(spec), spec);
-    *position += mysize;
+    if (!gwy_serialize_unpack_object_struct(buffer, size, position,
+                                            GWY_PALETTEDEF_TYPE_NAME,
+                                            G_N_ELEMENTS(spec), spec)) {
+        g_free(rdat);
+        g_free(gdat);
+        g_free(bdat);
+        g_free(adat);
+        g_free(xdat);
+        return NULL;
+    }
+    /* FIXME: check whether the n's are the same */
 
     palette_def = (GwyPaletteDef*)gwy_palette_def_new(n);
     for (i = 0; i < ndat; i++) {

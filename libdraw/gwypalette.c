@@ -163,20 +163,14 @@ gwy_palette_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_PALETTE(obj), NULL);
 
     palette = GWY_PALETTE(obj);
-    buffer = gwy_serialize_pack(buffer, size, "si",
-                                GWY_PALETTE_TYPE_NAME, 0);
     {
         GwySerializeSpec spec[] = {
             { 'o', "pdef", &palette->def, NULL, },
         };
-        gsize oldsize = *size;
-
-        buffer = gwy_serialize_pack_struct(buffer, size,
-                                           G_N_ELEMENTS(spec), spec);
-        gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
-                                  *size - oldsize);
+        return gwy_serialize_pack_object_struct(buffer, size,
+                                                GWY_PALETTE_TYPE_NAME,
+                                                G_N_ELEMENTS(spec), spec);
     }
-    return buffer;
 }
 
 static GObject*
@@ -185,8 +179,7 @@ gwy_palette_deserialize(const guchar *buffer,
                          gsize *position)
 {
     GwyPalette *palette;
-    GwyPaletteDef *pdef;
-    gsize pos, mysize;
+    GwyPaletteDef *pdef = NULL;
     GwySerializeSpec spec[] = {
       { 'o', "pdef", &pdef, NULL, },
     };
@@ -196,15 +189,13 @@ gwy_palette_deserialize(const guchar *buffer,
     #endif
     g_return_val_if_fail(buffer, NULL);
 
-    pos = gwy_serialize_check_string(buffer, size, *position,
-                                     GWY_PALETTE_TYPE_NAME);
-    g_return_val_if_fail(pos, NULL);
-    *position += pos;
-    mysize = gwy_serialize_unpack_int32(buffer, size, position);
-
-    gwy_serialize_unpack_struct(buffer + *position, mysize,
-                                G_N_ELEMENTS(spec), spec);
-    *position += mysize;
+    if (!gwy_serialize_unpack_object_struct(buffer, size, position,
+                                            GWY_PALETTE_TYPE_NAME,
+                                            G_N_ELEMENTS(spec), spec)) {
+        if (pdef)
+            g_object_unref(pdef);
+        return NULL;
+    }
 
     palette = (GwyPalette*)gwy_palette_new((gint)pdef->n);
     g_array_free(palette->def->data, FALSE);
