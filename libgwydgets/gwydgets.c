@@ -75,7 +75,7 @@ gboolean
 gwy_widgets_gl_init(void)
 {
     /* when called twice, fail but successfully :o) */
-    g_return_val_if_fail(glconfig != NULL, TRUE);
+    g_return_val_if_fail(glconfig == NULL, TRUE);
 
     glconfig = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB
                                          | GDK_GL_MODE_DEPTH
