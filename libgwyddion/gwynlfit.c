@@ -139,152 +139,25 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
                    gdouble *param,
                    gpointer user_data)
 {
+    /* the compiler would initialize it with zeroes, but this looks better... */
+    static const gboolean fixed_fixed[] = {
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+    };
+    gboolean *fixed;
+    gdouble residua;
 
-    gdouble mlambda = 1e-4;
-    gdouble sumr = G_MAXDOUBLE;
-    gdouble sumr1;
-    gdouble *der;
-    gdouble *v;
-    gdouble *xr;
-    gdouble *saveparam;
-    gdouble *resid;
-    gdouble *a;
-    gdouble *save_a;
-    gint covar_size = n_param*(n_param + 1)/2;
-    gint i, j, k;
-    gint miter = 0;
-    gboolean step1 = TRUE;
-    gboolean end = FALSE;
+    if (n_param < G_N_ELEMENTS(fixed_fixed))
+        return gwy_math_nlfit_fit_with_fixed(nlfit, n_dat, x, y, weight,
+                                             n_param, param, fixed_fixed,
+                                             user_data);
 
-    g_free(nlfit->covar);
-    nlfit->covar = NULL;
+    fixed = g_new0(gboolean, n_param);
+    residua = gwy_math_nlfit_fit_with_fixed(nlfit, n_dat, x, y, weight,
+                                            n_param, param, fixed,
+                                            user_data);
+    g_free(fixed);
 
-    resid = g_new(gdouble, n_dat);
-    sumr1 = gwy_math_nlfit_residua(nlfit, n_dat, x, y, weight,
-                                   n_param, param, user_data, resid);
-    sumr = sumr1;
-
-    if (!nlfit->eval) {
-        g_warning("Initial residua evaluation failed");
-        g_free(resid);
-        return -1;
-    }
-
-    der = g_new(gdouble, n_param);
-    v = g_new(gdouble, n_param);
-    xr = g_new(gdouble, n_param);
-    saveparam = g_new(gdouble, n_param);
-    a = g_new(gdouble, covar_size);
-    save_a = g_new(gdouble, covar_size);
-
-    do {
-        gboolean is_pos_def = FALSE;
-        gboolean first_pass = TRUE;
-        gint count = 0;
-
-        if (step1) {
-            mlambda *= nlfit->mdec;
-            sumr = sumr1;
-
-            for (i = 0; i < covar_size; i++)
-                a[i] = 0;
-            for (i = 0; i < n_param; i++)
-                v[i] = 0;
-
-            /* J'J and J'r computation */
-            for (i = 0; i < n_dat; i++) {
-                nlfit->dmarq(i, x, n_param, param, nlfit->fmarq,
-                             user_data, der, &nlfit->eval);
-                if (!nlfit->eval)
-                    break;
-                for (j = 0; j < n_param; j++) {
-                    gint diag = j*(j + 1)/2;
-
-                    /* for J'r */
-                    v[j] += weight[i]* der[j] * resid[i];
-                    for (k = 0; k <= j; k++)    /* for J'J */
-                        a[diag + k] += weight[i] * der[j] * der[k];
-                }
-            }
-            if (nlfit->eval) {
-                memcpy(save_a, a, covar_size*sizeof(gdouble));
-                memcpy(saveparam, param, n_param*sizeof(gdouble));
-            }
-            else
-                break;
-        }
-        while (!is_pos_def) {
-            if (!first_pass)
-                memcpy(a, save_a, covar_size*sizeof(gdouble));
-            else
-                first_pass = FALSE;
-
-            for (j = 0; j < n_param; j++) {
-                /* Doplneni diagonalnich prvku */
-                gint diag = j*(j + 3)/2;
-
-                a[diag] = save_a[diag]*(1.0 + mlambda) + nlfit->mfi*mlambda;
-                xr[j] = -v[j];
-            }
-            /* Choleskeho rozklad J'J v A*/
-            is_pos_def = gwy_math_choleski_decompose(n_param, a);
-            if (!is_pos_def) {
-                /* Provede zvetseni "lambda"*/
-                mlambda *= nlfit->minc;
-                if (mlambda == 0.0)
-                    mlambda = nlfit->mtol;
-            }
-        }
-        gwy_math_choleski_solve(n_param, a, xr);
-
-        for (i = 0; i < n_param; i++) {
-            param[i] = saveparam[i] + xr[i];
-            if (fabs(param[i] - saveparam[i]) == 0)
-                count++;
-        }
-        if (count == n_param)
-            break;
-
-        sumr1 = gwy_math_nlfit_residua(nlfit, n_dat,
-                                        x, y, weight,
-                                        n_param, param,
-                                        user_data, resid);
-        if ((sumr1 == 0)
-            || (miter > 2 && fabs((sumr - sumr1)/sumr1) < EPS))
-            end = TRUE;
-        if (!nlfit->eval || sumr1 >= sumr) {
-            /* Provede zvetseni "lambda"*/
-            mlambda *= nlfit->minc;
-            if (mlambda == 0.0)
-                mlambda = nlfit->mtol;
-            step1 = FALSE;
-        }
-        else
-            step1 = TRUE;
-
-        if (++miter >= nlfit->maxiter)
-            break;
-    } while (!end);
-
-    sumr1 = sumr;
-
-    if (nlfit->eval) {
-        if (gwy_math_sym_matrix_invert1(n_param, save_a-1)) {
-            nlfit->covar = g_memdup(save_a, covar_size*sizeof(gdouble));
-            nlfit->dispersion = sumr/(n_dat - n_param);
-        }
-        /* XXX: else what? */
-    }
-
-    g_free(save_a);
-    g_free(a);
-    g_free(resid);
-    g_free(saveparam);
-    g_free(xr);
-    g_free(v);
-    g_free(der);
-
-    return sumr;
+    return residua;
 }
 
 /**
@@ -297,11 +170,15 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
  * @n_param: The nuber of parameters.
  * @param: Array of parameters (of size @n_param).  Note the parameters must
  *         be initialized to reasonably near values.
- * @fixed_param: Which parameters should be treated as fixed.
+ * @fixed_param: Which parameters should be treated as fixed (set corresponding
+ *               element to %TRUE for them).
  * @user_data: Any pointer that will be passed to the function and derivation
  *
  * Performs a nonlinear fit of @nlfit function on (@x,@y) data, allowing
- * some fixed parametrs.
+ * some fixed parameters.
+ *
+ * If no parameters are fixed, you should use gwy_math_nlfit_fit() which is
+ * simplies and thus faster.
  *
  * Returns: The final residual sum, a negative number in the case of failure.
  *
@@ -358,7 +235,6 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
         var_param_id[i] = fixed_param[i] ? -1 : n_var_param++;
 
     if (!n_var_param) {
-        g_warning("No parameter to variate");
         g_free(var_param_id);
         g_free(resid);
         return sumr;
@@ -385,8 +261,6 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
             memset(v, 0, n_var_param*sizeof(gdouble));
 
             /* J'J and J'r computation */
-            /* FIXME: this would be more efficient with 0..n_dat as the
-             * innermost cycle, not outermost */
             for (i = 0; i < n_dat; i++) {
                 /* FIXME: this unnecessarilly computes all derivations */
                 nlfit->dmarq(i, x, n_param, param, nlfit->fmarq,
@@ -503,11 +377,12 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
 
     g_free(save_a);
     g_free(a);
-    g_free(resid);
     g_free(saveparam);
     g_free(xr);
     g_free(v);
     g_free(der);
+    g_free(var_param_id);
+    g_free(resid);
 
     return sumr;
 }
