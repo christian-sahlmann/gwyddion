@@ -236,6 +236,9 @@ gwy_gl_material_menu_create(const gchar *current,
         GwyGLMaterial *gl_material = (GwyGLMaterial*)l->data;
         const gchar *name = gwy_gl_material_get_name(gl_material);
 
+        if (strcmp(name, GWY_GL_MATERIAL_NONE) == 0)
+            continue;
+
         image = gwy_sample_gl_material_to_gtkimage(gl_material);
         item = gtk_menu_item_new();
         hbox = gtk_hbox_new(FALSE, 6);
