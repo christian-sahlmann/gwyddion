@@ -793,7 +793,7 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_window_export), gwy3dwindow);
 
-    gtk_widget_show_all(gwy3dwindow);
+    gtk_widget_show(gwy3dwindow);
     gtk_window_present(GTK_WINDOW(gwy3dwindow));
 
     return gwy3dwindow;
