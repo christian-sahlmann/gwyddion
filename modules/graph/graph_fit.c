@@ -36,8 +36,8 @@
 
 typedef struct {
     GtkWidget *graph;
-    GtkObject *from;
-    GtkObject *to;
+    GtkWidget *from;
+    GtkWidget *to;
     GtkObject *data;
     GtkWidget *chisq;
     GtkWidget *selector;
@@ -183,7 +183,7 @@ fit(GwyGraph *graph)
     args.par2_fix = 0;
     args.par3_fix = 0;
     args.par4_fix = 0;
-    args.curve = 0;
+    args.curve = 1;
 
     get_data(&args);
 
@@ -219,10 +219,13 @@ static gint
 normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve)
 {
     gint i, j;
+   
+    if (curve >= args->parent_nofcurves) return 0;
     
     gwy_data_line_resample(xdata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(ydata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
 
+   
     j = 0;
     for (i=0; i<xdata->res; i++)
     {
@@ -460,28 +463,29 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), label);
   
     table2 = gtk_table_new(2, 2, FALSE);
-    controls.data = gtk_adjustment_new(args->data, 0.0, 10.0, 1, 5, 0); 
+    controls.data = gtk_adjustment_new(args->curve, 1, 
+                                       gwy_graph_get_number_of_curves(args->parent_graph), 
+                                       1, 5, 0); 
     gwy_table_attach_spinbutton(table2, 1, _("graph data curve"), _(""),
                                 controls.data);
     gtk_container_add(GTK_CONTAINER(vbox), table2);
     
     
     hbox2 = gtk_hbox_new(FALSE, 0);
-    table2 = gtk_table_new(2, 2, FALSE);  
+   
+    label = gtk_label_new("from");
+    gtk_container_add(GTK_CONTAINER(hbox2), label);
     
-    controls.from = gtk_adjustment_new(args->from, 0.0, 100.0, 1, 5, 0); 
-    spin = gwy_table_attach_spinbutton(table2, 1, _("from"), _(""),
-                                controls.from);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    gtk_container_add(GTK_CONTAINER(hbox2), table2);
+    controls.from = gtk_entry_new_with_max_length(8);
+    gtk_container_add(GTK_CONTAINER(hbox2), controls.from);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.from), 12);
     
-    table2 = gtk_table_new(2, 2, FALSE);
-    controls.to = gtk_adjustment_new(args->from, 0.0, 100.0, 1, 5, 0); 
-    spin = gwy_table_attach_spinbutton(table2, 1, _("to"), _(""),
-                                controls.to);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    label = gtk_label_new("to");
+    gtk_container_add(GTK_CONTAINER(hbox2), label);
 
-    gtk_container_add(GTK_CONTAINER(hbox2), table2);
+    controls.to = gtk_entry_new_with_max_length(8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.to), 12); 
+    gtk_container_add(GTK_CONTAINER(hbox2), controls.to);
  
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
@@ -558,7 +562,13 @@ recompute(FitArgs *args, FitControls *controls)
     ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
     
 
-    normalize_data(args, xdata, ydata, args->curve);
+    args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
+    if (!normalize_data(args, xdata, ydata, args->curve - 1)) 
+    {
+        g_object_unref(xdata);
+        g_object_unref(ydata);
+        return;
+    }
     
     function = gwy_math_nlfit_get_preset(args->function_type);
     
@@ -601,7 +611,6 @@ recompute(FitArgs *args, FitControls *controls)
     for (i=0; i<xdata->res; i++)
     {
         ydata->data[i] = function->function(xdata->data[i], function->nparams, param, NULL, &ok);
-        if (i<20) printf("%g  %g\n", xdata->data[i], ydata->data[i]);
     }
    
     graph_update(controls, args);
@@ -740,7 +749,13 @@ guess(FitControls *controls, FitArgs *args)
     xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
     ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
    
-    normalize_data(args, xdata, ydata, args->curve);
+    args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
+    if (!normalize_data(args, xdata, ydata, args->curve - 1)) 
+    {
+        g_object_unref(xdata);
+        g_object_unref(ydata);
+        return;
+    }
     
     function->function_guess(xdata->data, ydata->data, xdata->res, param, NULL, &ok);
     
@@ -780,23 +795,26 @@ graph_update(FitControls *controls, FitArgs *args)
 static void
 graph_selected(GwyGraphArea *area, FitArgs *args)
 {
+    gchar buffer[20];
  
     if (area->seldata->data_start == area->seldata->data_end)
     {
         args->from = 0;
-        args->to = 0; 
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->from), args->from);   
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->to), args->to);
-
+        args->to = 0;
+        g_snprintf(buffer, sizeof(buffer), "%.3g", args->from);
+        gtk_entry_set_text(GTK_ENTRY(pcontrols->from), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", args->to);
+        gtk_entry_set_text(GTK_ENTRY(pcontrols->to), buffer);
     }
     else
     {
         args->from = area->seldata->data_start;
         args->to = area->seldata->data_end;
         if (args->from > args->to) GWY_SWAP(gdouble, args->from, args->to);
-
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->from), args->from);
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->to), args->to);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", args->from);
+        gtk_entry_set_text(GTK_ENTRY(pcontrols->from), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%.3g", args->to);
+        gtk_entry_set_text(GTK_ENTRY(pcontrols->to), buffer);
     }
     dialog_update(pcontrols, args);    
 }

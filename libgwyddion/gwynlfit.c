@@ -1458,12 +1458,14 @@ gint gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
  
     }   
     function->parameter_scale(param, xscale, yscale, 1);
-    
+
+    /*use numerical derivation if necessary*/
     if (function->function_derivation == NULL)
         fitter = gwy_math_nlfit_new(function->function, gwy_math_nlfit_derive);
     else
         fitter = gwy_math_nlfit_new(function->function, function->function_derivation);
 
+    /*load default weights for given function type*/
     weight = (gdouble *)g_malloc(n_dat*sizeof(gdouble));
     function->set_default_weights(x, y, n_dat, weight, NULL);
     
@@ -1474,6 +1476,7 @@ gint gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
     /*recompute parameters to be scaled as original data*/
     function->parameter_scale(param, xscale, yscale, -1);
 
+    /*recompute data back to their former scale*/
     for (i=0; i<n_dat; i++)
     {
         x[i] *= xscale;
