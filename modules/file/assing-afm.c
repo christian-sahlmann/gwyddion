@@ -42,6 +42,8 @@
 #include <libprocess/datafield.h>
 #include "get.h"
 
+#define EXTENSION ".afm"
+
 #define Angstrom (1e-10)
 
 typedef struct {
@@ -100,11 +102,15 @@ aafm_detect(const gchar *filename,
     struct stat st;
     guchar buffer[2];
 
-    if (g_str_has_suffix(filename, ".afm"))
-        score += 15;
+    if (only_name) {
+        gchar *filename_lc;
 
-    if (only_name)
+        filename_lc = g_ascii_strdown(filename, -1);
+        score = g_str_has_suffix(filename_lc, EXTENSION) ? 17 : 0;
+        g_free(filename_lc);
+
         return score;
+    }
 
     if (stat(filename, &st))
         return 0;
@@ -114,7 +120,7 @@ aafm_detect(const gchar *filename,
 
     if (fread(buffer, sizeof(buffer), 1, fh) == 1
         && (res = ((guint)buffer[1] << 8 | buffer[0]))
-        && st.st_size == res*res + 10)
+        && st.st_size == 2*res*res + 10)
         score = 100;
     fclose(fh);
 
