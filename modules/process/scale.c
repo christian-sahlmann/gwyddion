@@ -294,29 +294,6 @@ height_changed_cb(GtkAdjustment *adj,
     controls->in_update = FALSE;
 }
 
-static const gchar *ratio_key = "/module/scale/ratio";
-static const gchar *interp_key = "/module/scale/interp";
-
-static void
-scale_load_args(GwyContainer *container,
-                ScaleArgs *args)
-{
-    *args = scale_defaults;
-
-    if (gwy_container_contains_by_name(container, ratio_key))
-        args->ratio = gwy_container_get_double_by_name(container, ratio_key);
-    if (gwy_container_contains_by_name(container, interp_key))
-        args->interp = gwy_container_get_int32_by_name(container, interp_key);
-}
-
-static void
-scale_save_args(GwyContainer *container,
-                ScaleArgs *args)
-{
-    gwy_container_set_double_by_name(container, ratio_key, args->ratio);
-    gwy_container_set_int32_by_name(container, interp_key, args->interp);
-}
-
 static void
 scale_dialog_update(ScaleControls *controls,
                     ScaleArgs *args)
@@ -329,6 +306,27 @@ scale_dialog_update(ScaleControls *controls,
                              ROUND(args->ratio*args->yres));
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
+}
+
+static const gchar *ratio_key = "/module/scale/ratio";
+static const gchar *interp_key = "/module/scale/interp";
+
+static void
+scale_load_args(GwyContainer *container,
+                ScaleArgs *args)
+{
+    *args = scale_defaults;
+
+    gwy_container_gis_double_by_name(container, ratio_key, &args->ratio);
+    gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
+}
+
+static void
+scale_save_args(GwyContainer *container,
+                ScaleArgs *args)
+{
+    gwy_container_set_double_by_name(container, ratio_key, args->ratio);
+    gwy_container_set_enum_by_name(container, interp_key, args->interp);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
