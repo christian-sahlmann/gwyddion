@@ -42,7 +42,7 @@ static GwyModuleInfo module_info = {
     "grain_dist",
     "Evaluate grain distribution",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.0",
+    "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -78,33 +78,33 @@ dist(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     GwySIValueFormat *units;
 
-    g_assert(run & DIST_RUN_MODES);
+    g_return_val_if_fail(run & DIST_RUN_MODES, FALSE);
+    g_return_val_if_fail(gwy_container_contains_by_name(data, "/0/mask"),
+                         FALSE);
 
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
-        graph = gwy_graph_new();
-        gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
-        prop.is_point = 0;
-        prop.is_line = 1;
-        gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
+    graph = gwy_graph_new();
+    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
+    prop.is_point = 0;
+    prop.is_line = 1;
+    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
 
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-        dataline = (GwyDataLine *)gwy_data_line_new(10, 10, TRUE);
-        /*for (i=0; i<10; i++) dataline->data[i] = i*i;*/
-        gwy_data_field_grains_get_distribution(dfield, dataline);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
+    dataline = (GwyDataLine *)gwy_data_line_new(10, 10, TRUE);
+    /*for (i=0; i<10; i++) dataline->data[i] = i*i;*/
+    gwy_data_field_grains_get_distribution(dfield, dataline);
 
-        lab = g_string_new("Grain size histogram");
-        units = gwy_si_unit_get_format(dfield->si_unit_xy, dataline->real, NULL);
-        gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
-                                          units->magnitude, 1, units->units, " ");
+    lab = g_string_new("Grain size histogram");
+    units = gwy_si_unit_get_format(dfield->si_unit_xy, dataline->real, NULL);
+    gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
+                                        units->magnitude, 1, units->units, " ");
 
-        window = gwy_app_graph_window_create(graph);
+    window = gwy_app_graph_window_create(graph);
 
-        g_string_free(lab, TRUE);
-        g_object_unref(dataline);
-        /*g_object_unref(units);*/
-    }
-    return TRUE;
+    g_string_free(lab, TRUE);
+    g_object_unref(dataline);
+    g_free(units);
+
+    return FALSE;
 }
 
 
