@@ -9,7 +9,8 @@ process_PROGRAMS = \
 	level.so \
 	plugin-proxy.so \
 	rotate.so \
-	scale.so
+	scale.so \
+	fft.so
 
 basicops_so_SOURCES = basicops.c
 basicops_so_LDFLAGS = $(module_ldflags),basicops.so
@@ -25,6 +26,9 @@ rotate_so_LDFLAGS = $(module_ldflags),rotate.so
 
 scale_so_SOURCES = scale.c
 scale_so_LDFLAGS = $(module_ldflags),scale.so
+
+fft_so_SOURCES = fft.c
+fft_so_LDFLAGS = $(module_ldflags),fft.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
