@@ -19,6 +19,7 @@
  */
 
 #include <math.h>
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwycontainer.h>
@@ -27,43 +28,24 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
+#include <app/unitool.h>
 
 typedef struct {
-    gboolean is_visible;  /* XXX: GTK_WIDGET_VISIBLE() returns BS? */
     GtkWidget *coords[6];
     GtkWidget *values[3];
-    GtkWidget *windowname;
     GtkObject *radius;
-    gdouble mag;
-    gint precision;
-    gchar *units;
-} Level3Controls;
+} ToolControls;
 
-static gboolean   module_register               (const gchar *name);
-static void       level3_use                    (GwyDataWindow *data_window,
-                                                 GwyToolSwitchEvent reason);
-static GtkWidget* level3_dialog_create          (GwyDataWindow *data_window);
-static void       level3_do                     (void);
-static gdouble    level3_get_z_average          (GwyDataField *dfield,
-                                                 gdouble xreal,
-                                                 gdouble yreal,
-                                                 gint radius);
-static void       level3_selection_updated_cb   (void);
-static void       level3_data_updated_cb        (void);
-static void       level3_update_view            (void);
-static void       level3_dialog_response_cb     (gpointer unused,
-                                                 gint response);
-static void       level3_dialog_abandon         (void);
-static void       level3_dialog_set_visible     (gboolean visible);
+static gboolean   module_register  (const gchar *name);
+static void       use              (GwyDataWindow *data_window,
+                                    GwyToolSwitchEvent reason);
+static void       layer_setup      (GwyUnitoolState *state);
+static GtkWidget* dialog_create    (GwyUnitoolState *state);
+static void       dialog_update    (GwyUnitoolState *state);
+static void       dialog_abandon   (GwyUnitoolState *state);
+static void       apply            (GwyUnitoolState *state);
 
 static const gchar *radius_key = "/tool/level3/radius";
-
-static GtkWidget *level3_dialog = NULL;
-static Level3Controls controls;
-static gulong layer_updated_id = 0;
-static gulong data_updated_id = 0;
-static gulong response_id = 0;
-static GwyDataViewLayer *points_layer = NULL;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -78,6 +60,17 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
+static GwyUnitoolSlots func_slots = {
+    0,                             /* layer type, must be set runtime */
+    gwy_layer_points_new,          /* layer object constructor */
+    layer_setup,                   /* layer setup func */
+    dialog_create,                 /* dialog constructor */
+    dialog_update,                 /* update view and controls */
+    dialog_abandon,                /* dialog abandon hook */
+    apply,                         /* apply action */
+    NULL,                          /* nonstandard response handler */
+};
+
 /* This is the ONLY exported symbol.  The argument is the module info.
  * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
@@ -85,93 +78,210 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyToolFuncInfo level3_func_info = {
+    static GwyToolFuncInfo func_info = {
         "level3",
         "gwy_fit_triangle",
         "Level data using three points.",
         50,
-        level3_use,
+        use,
     };
 
-    gwy_tool_func_register(name, &level3_func_info);
+    gwy_tool_func_register(name, &func_info);
 
     return TRUE;
 }
 
 static void
-level3_use(GwyDataWindow *data_window,
-           GwyToolSwitchEvent reason)
+use(GwyDataWindow *data_window,
+    GwyToolSwitchEvent reason)
 {
-    GwyVectorLayer *layer;
-    GwyDataView *data_view;
+    static GwyUnitoolState *state = NULL;
 
-    gwy_debug("%p", data_window);
-
-    if (!data_window) {
-        level3_dialog_abandon();
-        return;
+    if (!state) {
+        state = g_new0(GwyUnitoolState, 1);
+        func_slots.layer_type = GWY_TYPE_LAYER_POINTS;
+        state->func_slots = &func_slots;
+        state->user_data = g_new0(ToolControls, 1);
     }
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
-    layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && (GwyDataViewLayer*)layer == points_layer)
-        return;
-    if (points_layer) {
-        if (layer_updated_id)
-        g_signal_handler_disconnect(points_layer, layer_updated_id);
-        if (points_layer->parent && data_updated_id)
-            g_signal_handler_disconnect(points_layer->parent, data_updated_id);
-    }
-
-    if (layer && GWY_IS_LAYER_POINTS(layer)) {
-        points_layer = GWY_DATA_VIEW_LAYER(layer);
-        gwy_layer_points_set_max_points(GWY_LAYER_POINTS(layer), 3);
-    }
-    else {
-        points_layer = (GwyDataViewLayer*)gwy_layer_points_new();
-        gwy_layer_points_set_max_points(GWY_LAYER_POINTS(points_layer), 3);
-        gwy_data_view_set_top_layer(data_view, GWY_VECTOR_LAYER(points_layer));
-    }
-    if (!level3_dialog)
-        level3_dialog = level3_dialog_create(data_window);
-
-    layer_updated_id = g_signal_connect(points_layer, "updated",
-                                        G_CALLBACK(level3_selection_updated_cb),
-                                        NULL);
-    data_updated_id = g_signal_connect(data_view, "updated",
-                                       G_CALLBACK(level3_data_updated_cb),
-                                       NULL);
-    if (reason == GWY_TOOL_SWITCH_TOOL)
-        level3_dialog_set_visible(TRUE);
-    /* FIXME: window name can change also when saving under different name */
-    if (reason == GWY_TOOL_SWITCH_WINDOW)
-        gtk_label_set_text(GTK_LABEL(controls.windowname),
-                           gwy_data_window_get_base_name(data_window));
-    if (controls.is_visible)
-        level3_selection_updated_cb();
+    gwy_unitool_use(state, data_window, reason);
 }
 
 static void
-level3_do(void)
+layer_setup(GwyUnitoolState *state)
+{
+    g_assert(GWY_IS_LAYER_POINTS(state->layer));
+    gwy_layer_points_set_max_points(GWY_LAYER_POINTS(state->layer), 3);
+}
+
+static GtkWidget*
+dialog_create(GwyUnitoolState *state)
+{
+    ToolControls *controls;
+    GwyContainer *settings;
+    GtkWidget *dialog, *table, *label, *frame;
+    gint radius;
+    guchar *buffer;
+    gint i;
+
+    gwy_debug("");
+    controls = (ToolControls*)state->user_data;
+
+    dialog = gtk_dialog_new_with_buttons(_("Level"),
+                                         NULL,
+                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
+                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         NULL);
+
+    frame = gwy_unitool_windowname_frame_create(state);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
+                       FALSE, FALSE, 0);
+
+    table = gtk_table_new(4, 4, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>X</b>"));
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Y</b>"));
+    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Value</b>"));
+    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1, GTK_FILL, 0, 2, 2);
+    for (i = 0; i < 3; i++) {
+        label = gtk_label_new(NULL);
+        buffer = g_strdup_printf(_("<b>%d</b>"), i+1);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_label_set_markup(GTK_LABEL(label), buffer);
+        g_free(buffer);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+1, i+2, 0, 0, 2, 2);
+        label = controls->coords[2*i] = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 1, 2, i+1, i+2, 0, 0, 2, 2);
+        label = controls->coords[2*i + 1] = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 2, 3, i+1, i+2, 0, 0, 2, 2);
+        label = controls->values[i] = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+1, i+2,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    }
+
+    table = gtk_table_new(1, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
+
+    settings = gwy_app_settings_get();
+    if (gwy_container_contains_by_name(settings, radius_key))
+        radius = gwy_container_get_int32_by_name(settings, radius_key);
+    else
+        radius = 1;
+    controls->radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
+    gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
+                                controls->radius);
+    g_signal_connect_swapped(controls->radius, "value_changed",
+                             G_CALLBACK(dialog_update), state);
+
+    return dialog;
+}
+
+static void
+update_value_label(GtkWidget *label, gdouble value)
+{
+    gchar buffer[24];
+
+    g_snprintf(buffer, sizeof(buffer), "%g", value);
+    gtk_label_set_text(GTK_LABEL(label), buffer);
+}
+
+static void
+dialog_update(GwyUnitoolState *state)
+{
+    GwyUnitoolUnits *units;
+    ToolControls *controls;
+    GwyContainer *data;
+    GwyDataField *dfield;
+    gdouble points[6];
+    gboolean is_visible;
+    gdouble val;
+    gint nselected, i, radius;
+
+    gwy_debug("");
+
+    controls = (ToolControls*)state->user_data;
+    units = &state->coord_units;
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
+
+    is_visible = state->is_visible;
+    nselected = gwy_layer_points_get_points(GWY_LAYER_POINTS(state->layer),
+                                            points);
+    if (!is_visible && !nselected)
+        return;
+
+    for (i = 0; i < 6; i++) {
+        if (i < 2*nselected) {
+            gwy_unitool_update_label(units, controls->coords[i], points[i]);
+            if (i%2 == 0) {
+                val = gwy_unitool_get_z_average(dfield, points[i], points[i+1],
+                                                radius);
+                /* FIXME: get some units... */
+                update_value_label(controls->values[i/2], val);
+            }
+        }
+        else {
+            gtk_label_set_text(GTK_LABEL(controls->coords[i]), "");
+            if (i%2 == 0)
+                gtk_label_set_text(GTK_LABEL(controls->values[i/2]), "");
+        }
+    }
+}
+
+static void
+dialog_abandon(GwyUnitoolState *state)
+{
+    GwyContainer *settings;
+    ToolControls *controls;
+    gint radius;
+
+    controls = (ToolControls*)state->user_data;
+    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
+    radius = CLAMP(radius, 1, 16);
+    settings = gwy_app_settings_get();
+    gwy_container_set_int32_by_name(settings, radius_key, radius);
+
+    memset(state->user_data, 0, sizeof(ToolControls));
+}
+
+static void
+apply(GwyUnitoolState *state)
 {
     GwyContainer *data;
     GwyDataField *dfield;
+    ToolControls *controls;
     gdouble points[6], z[3];
     gdouble bx, by, c, det;
     gint i, radius;
 
-    if (gwy_layer_points_get_points(GWY_LAYER_POINTS(points_layer), points) < 3)
+    if (gwy_layer_points_get_points(GWY_LAYER_POINTS(state->layer), points) < 3)
         return;
 
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(points_layer->parent));
+    controls = (ToolControls*)state->user_data;
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
+    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
 
     /* find the plane levelling coeffs so that values in the three points
      * will be all zeroes */
     det = bx = by = c = 0;
     for (i = 0; i < 3; i++)
-        z[i] = level3_get_z_average(dfield, points[2*i], points[2*i+1], radius);
+        z[i] = gwy_unitool_get_z_average(dfield, points[2*i], points[2*i+1],
+                                         radius);
     det = points[0]*(points[3] - points[5])
           + points[2]*(points[5] - points[1])
           + points[4]*(points[1] - points[3]);
@@ -202,279 +312,12 @@ level3_do(void)
     gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_plane_level(dfield, c, bx, by);
     gwy_debug("zN[0] = %g, zN[1] = %g, zN[2] = %g",
-              level3_get_z_average(dfield, points[0], points[1], radius),
-              level3_get_z_average(dfield, points[2], points[3], radius),
-              level3_get_z_average(dfield, points[4], points[5], radius));
-    gwy_vector_layer_unselect(GWY_VECTOR_LAYER(points_layer));
-    gwy_data_view_update(GWY_DATA_VIEW(points_layer->parent));
-}
+              gwy_unitool_get_z_average(dfield, points[0], points[1], radius),
+              gwy_unitool_get_z_average(dfield, points[2], points[3], radius),
+              gwy_unitool_get_z_average(dfield, points[4], points[5], radius));
 
-static gdouble
-level3_get_z_average(GwyDataField *dfield,
-                     gdouble xreal,
-                     gdouble yreal,
-                     gint radius)
-{
-    gint x, y, xres, yres, uli, ulj, bri, brj;
-
-    if (radius < 1)
-        g_warning("Bad averaging radius %d, fixing to 1", radius);
-    x = gwy_data_field_rtoj(dfield, xreal);
-    y = gwy_data_field_rtoi(dfield, yreal);
-    if (radius < 2)
-        return gwy_data_field_get_val(dfield, x, y);
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    ulj = CLAMP(x - radius, 0, xres - 1);
-    uli = CLAMP(y - radius, 0, yres - 1);
-    brj = CLAMP(x + radius, 0, xres - 1);
-    bri = CLAMP(y + radius, 0, yres - 1);
-
-    return gwy_data_field_get_area_avg(dfield, ulj, uli, brj, bri);
-}
-
-static void
-level3_dialog_abandon(void)
-{
-    GwyContainer *settings;
-    gint radius;
-
-    if (points_layer) {
-        if (layer_updated_id)
-        g_signal_handler_disconnect(points_layer, layer_updated_id);
-        if (points_layer->parent && data_updated_id)
-            g_signal_handler_disconnect(points_layer->parent, data_updated_id);
-    }
-    layer_updated_id = 0;
-    data_updated_id = 0;
-    points_layer = NULL;
-    if (level3_dialog) {
-        radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
-        radius = CLAMP(radius, 1, 16);
-        settings = gwy_app_settings_get();
-        gwy_container_set_int32_by_name(settings, radius_key, radius);
-        g_signal_handler_disconnect(level3_dialog, response_id);
-        gtk_widget_destroy(level3_dialog);
-        level3_dialog = NULL;
-        response_id = 0;
-        g_free(controls.units);
-        controls.is_visible = FALSE;
-    }
-}
-
-static GtkWidget*
-level3_dialog_create(GwyDataWindow *data_window)
-{
-    GwyContainer *data, *settings;
-    GwyDataField *dfield;
-    GtkWidget *dialog, *table, *label, *frame;
-    gdouble xreal, yreal, max, unit;
-    gint radius;
-    guchar *buffer;
-    gint i;
-
-    gwy_debug("");
-    data = gwy_data_window_get_data(data_window);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-    max = MAX(xreal, yreal);
-    unit = MIN(xreal/gwy_data_field_get_xres(dfield),
-               yreal/gwy_data_field_get_yres(dfield));
-    controls.mag = gwy_math_humanize_numbers(unit, max, &controls.precision);
-    controls.units = g_strconcat(gwy_math_SI_prefix(controls.mag), "m", NULL);
-
-    dialog = gtk_dialog_new_with_buttons(_("Level"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                         NULL);
-    g_signal_connect(dialog, "delete_event",
-                     G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
-    response_id = g_signal_connect(dialog, "response",
-                                   G_CALLBACK(level3_dialog_response_cb), NULL);
-
-    frame = gtk_frame_new(NULL);
-    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
-                       FALSE, FALSE, 0);
-    label = gtk_label_new(gwy_data_window_get_base_name(data_window));
-    controls.windowname = label;
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_misc_set_padding(GTK_MISC(label), 4, 2);
-    gtk_container_add(GTK_CONTAINER(frame), label);
-
-    table = gtk_table_new(4, 4, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>X</b>"));
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Y</b>"));
-    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Value</b>"));
-    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1, GTK_FILL, 0, 2, 2);
-    for (i = 0; i < 3; i++) {
-        label = gtk_label_new(NULL);
-        buffer = g_strdup_printf(_("<b>%d</b>"), i+1);
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_label_set_markup(GTK_LABEL(label), buffer);
-        g_free(buffer);
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+1, i+2, 0, 0, 2, 2);
-        label = controls.coords[2*i] = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 1, 2, i+1, i+2, 0, 0, 2, 2);
-        label = controls.coords[2*i + 1] = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 2, 3, i+1, i+2, 0, 0, 2, 2);
-        label = controls.values[i] = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+1, i+2,
-                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    }
-
-    table = gtk_table_new(1, 3, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
-
-    settings = gwy_app_settings_get();
-    if (gwy_container_contains_by_name(settings, radius_key))
-        radius = gwy_container_get_int32_by_name(settings, radius_key);
-    else
-        radius = 1;
-    controls.radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
-    gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
-                                controls.radius);
-    g_signal_connect(controls.radius, "value_changed",
-                     G_CALLBACK(level3_selection_updated_cb), NULL);
-    gtk_widget_show_all(GTK_DIALOG(dialog)->vbox);
-    controls.is_visible = FALSE;
-
-    return dialog;
-}
-
-static void
-update_coord_label(GtkWidget *label, gdouble value)
-{
-    gchar buffer[16];
-
-    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
-               controls.precision, value/controls.mag, controls.units);
-    gtk_label_set_text(GTK_LABEL(label), buffer);
-}
-
-static void
-update_value_label(GtkWidget *label, gdouble value)
-{
-    gchar buffer[16];
-
-    g_snprintf(buffer, sizeof(buffer), "%g", value);
-    gtk_label_set_text(GTK_LABEL(label), buffer);
-}
-
-static void
-level3_selection_updated_cb(void)
-{
-    gint nselected;
-
-    gwy_debug("");
-    nselected = gwy_vector_layer_get_nselected(GWY_VECTOR_LAYER(points_layer));
-    level3_update_view();
-    if (nselected && !controls.is_visible)
-        level3_dialog_set_visible(TRUE);
-}
-
-static void
-level3_data_updated_cb(void)
-{
-    gwy_debug("");
-    level3_update_view();
-}
-
-static void
-level3_update_view(void)
-{
-    GwyContainer *data;
-    GwyDataField *dfield;
-    gdouble points[6];
-    gboolean is_visible;
-    gdouble val;
-    gint nselected, i, radius;
-
-    gwy_debug("");
-
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(points_layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
-
-    is_visible = controls.is_visible;
-    nselected = gwy_layer_points_get_points(GWY_LAYER_POINTS(points_layer),
-                                            points);
-    if (!is_visible && !nselected)
-        return;
-    for (i = 0; i < 6; i++) {
-        if (i < 2*nselected) {
-            update_coord_label(controls.coords[i], points[i]);
-            if (i%2 == 0) {
-                val = level3_get_z_average(dfield, points[i], points[i+1],
-                                           radius);
-                update_value_label(controls.values[i/2], val);
-            }
-        }
-        else {
-            gtk_label_set_text(GTK_LABEL(controls.coords[i]), "");
-            if (i%2 == 0)
-                gtk_label_set_text(GTK_LABEL(controls.values[i/2]), "");
-        }
-    }
-}
-
-static void
-level3_dialog_response_cb(G_GNUC_UNUSED gpointer unused,
-                          gint response)
-{
-    gwy_debug("response %d", response);
-    switch (response) {
-        case GTK_RESPONSE_CLOSE:
-        case GTK_RESPONSE_DELETE_EVENT:
-        level3_dialog_set_visible(FALSE);
-        break;
-
-        case GTK_RESPONSE_NONE:
-        g_warning("Tool dialog destroyed.");
-        level3_use(NULL, 0);
-        break;
-
-        case GTK_RESPONSE_APPLY:
-        level3_do();
-        level3_dialog_set_visible(FALSE);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-}
-
-static void
-level3_dialog_set_visible(gboolean visible)
-{
-    gwy_debug("now %d, setting to %d",
-              controls.is_visible, visible);
-    if (controls.is_visible == visible)
-        return;
-
-    controls.is_visible = visible;
-    if (visible)
-        gtk_window_present(GTK_WINDOW(level3_dialog));
-    else
-        gtk_widget_hide(level3_dialog);
+    gwy_vector_layer_unselect(GWY_VECTOR_LAYER(state->layer));
+    gwy_data_view_update(GWY_DATA_VIEW(state->layer->parent));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

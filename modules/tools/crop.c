@@ -180,14 +180,16 @@ dialog_update(GwyUnitoolState *state)
     GwyUnitoolUnits *units;
 
     gwy_debug("");
+
+    controls = (ToolControls*)state->user_data;
+    units = &state->coord_units;
+
     is_visible = state->is_visible;
     is_selected = gwy_layer_select_get_selection(GWY_LAYER_SELECT(state->layer),
                                                  &xmin, &ymin, &xmax, &ymax);
     if (!is_visible && !is_selected)
         return;
 
-    controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
     if (is_selected) {
         gwy_unitool_update_label(units, controls->x, MIN(xmin, xmax));
         gwy_unitool_update_label(units, controls->y, MIN(ymin, ymax));
