@@ -175,8 +175,8 @@ pointer_selection_updated_cb(void)
         update_label(controls.x, x);
         update_label(controls.y, y);
         {
-            gchar buffer[16];
-            gdouble value;
+            gchar buffer[116];
+            gdouble value, z;
             GwyContainer *data;
             GwyDataField *dfield;
 
@@ -185,7 +185,9 @@ pointer_selection_updated_cb(void)
                                                                      "/0/data"));
             value = gwy_data_field_get_dval_real(dfield, x, y,
                                                  GWY_INTERPOLATION_ROUND);
-            g_snprintf(buffer, sizeof(buffer), "%g", value);
+            z = dfield->data[(gint)(gwy_data_field_rtoi(dfield, y)*dfield->xres)
+                             + (gint)(gwy_data_field_rtoj(dfield, x))];
+            g_snprintf(buffer, sizeof(buffer), "%g vs. %g", value, z);
             gtk_label_set_text(GTK_LABEL(controls.val), buffer);
         }
     }
