@@ -132,9 +132,9 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items1), menu_items1, NULL);
     gwy_build_file_menu(GTK_OBJECT(item_factory), "/File/_Export To",
-                        G_CALLBACK(gwy_app_file_export_cb));
+                        G_CALLBACK(gwy_app_file_export_cb), GWY_FILE_SAVE);
     gwy_build_file_menu(GTK_OBJECT(item_factory), "/File/_Import From",
-                        G_CALLBACK(gwy_app_file_import_cb));
+                        G_CALLBACK(gwy_app_file_import_cb), GWY_FILE_LOAD);
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items2), menu_items2, NULL);
     menu = gtk_item_factory_get_widget(item_factory, "<file>");

@@ -269,6 +269,8 @@ gwy_file_save(GwyContainer *data,
  * @prefix: Where to add the menu items to the factory.
  * @item_callback: A #GtkItemFactoryCallback1 called when an item from the
  *                 menu is selected.
+ * @type: Only function providing this file operation are included in the
+ *        menu.
  *
  * Creates #GtkItemFactory for a file type menu with all registered file type
  * functions.
@@ -278,7 +280,8 @@ gwy_file_save(GwyContainer *data,
 GtkObject*
 gwy_build_file_menu(GtkObject *item_factory,
                     const gchar *prefix,
-                    GCallback item_callback)
+                    GCallback item_callback,
+                    GwyFileOperation type)
 {
     GtkItemFactoryEntry branch = { NULL, NULL, NULL, 0, "<Branch>", NULL };
     GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
@@ -309,6 +312,14 @@ gwy_build_file_menu(GtkObject *item_factory,
     item.path = path;
     for (l = entries; l; l = g_slist_next(l)) {
         GwyFileFuncInfo *func_info = (GwyFileFuncInfo*)l->data;
+        GwyFileOperation capable = 0;
+
+        capable |= func_info->load ? GWY_FILE_LOAD : 0;
+        capable |= func_info->save ? GWY_FILE_SAVE : 0;
+        capable |= func_info->detect ? GWY_FILE_DETECT : 0;
+        if (!(capable & type))
+            continue;
+
         g_strlcpy(path + dp_len+1, func_info->file_desc, bufsize - dp_len-1);
         gtk_item_factory_create_item(factory, &item, func_info->name, 1);
     }

@@ -11,6 +11,14 @@
 extern "C" {
 #endif /* __cplusplus */
 
+typedef enum {
+    GWY_FILE_NONE   = 0,
+    GWY_FILE_LOAD   = 1 << 0,
+    GWY_FILE_SAVE   = 1 << 1,
+    GWY_FILE_DETECT = 1 << 2,
+    GWY_FILE_MASK   = 0x07
+} GwyFileOperation;
+
 typedef struct _GwyFileFuncInfo GwyFileFuncInfo;
 
 typedef gint           (*GwyFileDetectFunc)     (const gchar *filename,
@@ -49,7 +57,8 @@ gboolean        gwy_file_save               (GwyContainer *data,
 
 GtkObject*      gwy_build_file_menu         (GtkObject *item_factory,
                                              const gchar *prefix,
-                                             GCallback item_callback);
+                                             GCallback item_callback,
+                                             GwyFileOperation type);
 
 #ifdef __cplusplus
 }
