@@ -37,6 +37,8 @@ typedef struct {
     gint value;
 } GwyOptionMenuEntry;
 
+GtkWidget* gwy_palette_menu               (GCallback callback,
+                                           gpointer cbdata);
 GtkWidget* gwy_palette_option_menu        (GCallback callback,
                                            gpointer cbdata,
                                            const gchar *current);

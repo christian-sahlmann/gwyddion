@@ -24,6 +24,66 @@ static gint       palette_def_compare            (GwyPaletteDef *a,
 
 /************************** Palette menu ****************************/
 
+static GtkWidget*
+gwy_palette_menu_create(GCallback callback,
+                        gpointer cbdata,
+                        const gchar *signal_id,
+                        const gchar *current,
+                        gint *current_index)
+{
+    GSList *l, *entries = NULL;
+    GtkWidget *menu, *image, *item;
+    gint i, index;
+
+    gwy_palette_def_foreach((GwyPaletteDefFunc)gwy_hash_table_to_slist_cb,
+                            &entries);
+    entries = g_slist_sort(entries, (GCompareFunc)palette_def_compare);
+
+    menu = gtk_menu_new();
+
+    index = -1;
+    i = 0;
+    for (l = entries; l; l = g_slist_next(l)) {
+        GwyPaletteDef *palette_def = (GwyPaletteDef*)l->data;
+        const gchar *name = gwy_palette_def_get_name(palette_def);
+
+        image = gwy_sample_palette_to_gtkimage(palette_def);
+        item = gtk_image_menu_item_new_with_label(name);
+        gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_object_set_data(G_OBJECT(item), "palette-name", (gpointer)name);
+        if (callback)
+            g_signal_connect(G_OBJECT(item), signal_id, callback, cbdata);
+        if (current && strcmp(current, name) == 0)
+            index = i;
+        i++;
+    }
+    gwy_sample_palette_to_gtkimage(NULL);
+    g_slist_free(entries);
+
+    if (current_index && index != -1)
+        *current_index = index;
+
+    return menu;
+}
+
+/**
+ * gwy_palette_menu:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ *
+ * Creates a pop-up palette menu.
+ *
+ * Returns: The newly created pop-up menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_palette_menu(GCallback callback,
+                 gpointer cbdata)
+{
+    return gwy_palette_menu_create(callback, cbdata, "activate", NULL, NULL);
+}
+
 /**
  * gwy_palette_option_menu:
  * @callback: A callback called when a menu item is activated (or %NULL for
@@ -45,36 +105,13 @@ gwy_palette_option_menu(GCallback callback,
                         gpointer cbdata,
                         const gchar *current)
 {
-    GSList *l, *entries = NULL;
-    GtkWidget *omenu, *menu, *image, *item;
-    gint i, index;
-
-    gwy_palette_def_foreach((GwyPaletteDefFunc)gwy_hash_table_to_slist_cb,
-                            &entries);
-    entries = g_slist_sort(entries, (GCompareFunc)palette_def_compare);
-
-    omenu = gtk_option_menu_new();
-    menu = gtk_menu_new();
+    GtkWidget *omenu, *menu;
+    gint index;
 
     index = -1;
-    i = 0;
-    for (l = entries; l; l = g_slist_next(l)) {
-        GwyPaletteDef *palette_def = (GwyPaletteDef*)l->data;
-        const gchar *name = gwy_palette_def_get_name(palette_def);
-
-        image = gwy_sample_palette_to_gtkimage(palette_def);
-        item = gtk_image_menu_item_new_with_label(name);
-        gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "palette-name", (gpointer)name);
-        if (callback)
-            g_signal_connect(G_OBJECT(item), "activate", callback, cbdata);
-        if (current && strcmp(current, name) == 0)
-            index = i;
-        i++;
-    }
-    gwy_sample_palette_to_gtkimage(NULL);
-    g_slist_free(entries);
+    omenu = gtk_option_menu_new();
+    menu = gwy_palette_menu_create(callback, cbdata, "activate",
+                                   current, &index);
 
     gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
     if (index != -1)
@@ -96,6 +133,7 @@ gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
 
     if (!palette_def) {
         g_free(samples);
+        samples = NULL;
         gwy_object_unref(palette);
         return NULL;
     }

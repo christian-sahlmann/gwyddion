@@ -27,6 +27,11 @@ static void     gwy_data_view_update_statusbar (GwyDataView *data_view,
 static void     zoom_changed_cb                (GtkWidget *data_view,
                                                 GtkAllocation *allocation,
                                                 GwyDataWindow *data_window);
+static void     color_axis_clicked_cb          (GtkWidget *coloraxis,
+                                                GdkEventButton *event,
+                                                GtkWidget *data_window);
+static void     palette_selected_cb            (GtkWidget *item,
+                                                GwyDataWindow *data_window);
 
 /* Local data */
 
@@ -193,6 +198,8 @@ gwy_data_window_new(GwyDataView *data_view)
     data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL,
                                                 0, 1, palette);
     gtk_container_add(GTK_CONTAINER(widget), data_window->coloraxis);
+    g_signal_connect(data_window->coloraxis, "button_press_event",
+                     G_CALLBACK(color_axis_clicked_cb), data_window);
 
     /* show everything except the table */
     gtk_widget_show_all(vbox);
@@ -480,5 +487,37 @@ zoom_changed_cb(GtkWidget *data_view,
     gwy_data_window_update_title(data_window);
 }
 
+static void
+color_axis_clicked_cb(GtkWidget *coloraxis,
+                      GdkEventButton *event,
+                      GtkWidget *data_window)
+{
+    GtkWidget *menu;
+
+    menu = gwy_palette_menu(G_CALLBACK(palette_selected_cb), data_window);
+    gtk_widget_show_all(menu);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+}
+
+static void
+palette_selected_cb(GtkWidget *item,
+                    GwyDataWindow *data_window)
+{
+    GwyDataViewLayer *layer;
+    GwyPalette *palette;
+    const gchar *name;
+
+    name = g_object_get_data(G_OBJECT(item), "palette-name");
+    gwy_debug("%s: %s", __FUNCTION__, name);
+    g_return_if_fail(gwy_palette_def_exists(name));
+
+    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
+    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
+    palette = gwy_layer_basic_get_palette(layer);
+    g_return_if_fail(GWY_IS_PALETTE(palette));
+    gwy_palette_set_by_name(palette, name);
+    gwy_data_view_update(GWY_DATA_VIEW(data_window->data_view));
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
