@@ -310,7 +310,13 @@ gwy_build_file_menu(GtkObject *item_factory,
     g_return_val_if_fail(GTK_IS_ITEM_FACTORY(item_factory), NULL);
     factory = GTK_ITEM_FACTORY(item_factory);
 
-    g_hash_table_foreach(file_funcs, gwy_hash_table_to_slist_cb, &entries);
+    if (!file_funcs) {
+        g_warning("No file function present to build menu of");
+        entries = NULL;
+    }
+    else
+        g_hash_table_foreach(file_funcs, gwy_hash_table_to_slist_cb,
+                             &entries);
     entries = g_slist_sort(entries, (GCompareFunc)file_menu_entry_compare);
 
     dp_len = strlen(prefix);

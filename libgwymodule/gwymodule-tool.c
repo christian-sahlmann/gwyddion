@@ -122,7 +122,13 @@ gwy_build_tool_toolbar(GtkSignalFunc item_callback)
     GtkWidget *toolbar, *group;
     GSList *l, *entries = NULL;
 
-    g_hash_table_foreach(tool_funcs, gwy_hash_table_to_slist_cb, &entries);
+    if (!tool_funcs) {
+        g_warning("No tool function present to build menu of");
+        entries = NULL;
+    }
+    else
+       g_hash_table_foreach(tool_funcs, gwy_hash_table_to_slist_cb,
+                            &entries);
     entries = g_slist_sort(entries, (GCompareFunc)tool_toolbar_item_compare);
 
     toolbar = gtk_toolbar_new();
