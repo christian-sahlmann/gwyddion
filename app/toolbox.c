@@ -481,7 +481,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             NULL, 0, "<Tearoff>", NULL },
         { "/Edit/_Undo", "<control>Z",
             gwy_app_undo_undo, 0, "<StockItem>", GTK_STOCK_UNDO },
-        { "/Edit/_Redo", "<control>R",
+        { "/Edit/_Redo", "<control>Y",
             gwy_app_undo_redo, 0, "<StockItem>", GTK_STOCK_REDO },
         { "/Edit/_Duplicate", "<control>D",
             gwy_app_file_duplicate_cb, 0, "<StockItem>", GTK_STOCK_COPY },
