@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <string.h>
 
 #include <libgwyddion/gwyddion.h>
@@ -205,6 +205,7 @@ static void
 gwy_graph_epitome_graph_destroyed(GwyGraph *graph,
                                   GwyGraphEpitome *gepitome)
 {
+    gwy_debug("");
     gwy_graph_epitome_save_graph(gepitome, graph);
     g_signal_handler_disconnect(gepitome->graph, gepitome->graph_destroy_hid);
     gepitome->graph_destroy_hid = 0;
@@ -315,11 +316,12 @@ gwy_graph_new_from_epitome(GwyGraphEpitome *gepitome)
     GwyGraph *graph;
     gint i;
 
-    g_return_val_if_fail(gepitome->graph != NULL, gwy_graph_new());
+    g_return_val_if_fail(gepitome->graph == NULL, gwy_graph_new());
 
     graph_widget = gwy_graph_new();
     graph = GWY_GRAPH(graph_widget);
 
+    gwy_debug("ncurves = %d", gepitome->ncurves);
     for (i = 0; i < gepitome->ncurves; i++) {
         GwyGraphEpitomeCurve *curve = gepitome->curves + i;
 
@@ -332,28 +334,26 @@ gwy_graph_new_from_epitome(GwyGraphEpitome *gepitome)
     gwy_axis_set_label(graph->axis_bottom, gepitome->bottom_label);
     gwy_axis_set_label(graph->axis_left, gepitome->left_label);
     gwy_axis_set_label(graph->axis_right, gepitome->right_label);
-    if (graph->has_x_unit) {
+    if (gepitome->has_x_unit) {
         BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
             = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gepitome->x_unit));
         gwy_axis_set_unit(graph->axis_top,
-                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
+                          g_strdup(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS));
         gwy_axis_set_unit(graph->axis_bottom,
                           BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
-        g_free(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
     }
-    if (graph->has_y_unit) {
+    if (gepitome->has_y_unit) {
         BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
             = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gepitome->y_unit));
         gwy_axis_set_unit(graph->axis_left,
-                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
+                          g_strdup(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS));
         gwy_axis_set_unit(graph->axis_right,
                           BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
-        g_free(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
     }
 
     gwy_graph_set_boundaries(graph,
                              gepitome->x_reqmin, gepitome->x_reqmax,
-                             gepitome->y_reqmax, gepitome->y_reqmax);
+                             gepitome->y_reqmin, gepitome->y_reqmax);
 
     return graph_widget;
 }
