@@ -414,11 +414,6 @@ dialog_abandon(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwyContainer *settings;
-    GwyDataViewLayer *layer;
-    GwyContainer *data;
-
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
 
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
