@@ -10,6 +10,7 @@ libgwyappincludedir = $(includedir)/gwyddion/app
 libgwyappinclude_HEADERS = \
 	app.h \
 	file.h \
+	gwyapp.h \
 	menu.h \
 	settings.h \
 	unitool.h \
