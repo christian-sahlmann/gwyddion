@@ -1,4 +1,4 @@
-SUBDIRS = libgwyddion libgwydgets devel-docs
+SUBDIRS = libgwyddion libprocess libdraw libgwydgets devel-docs
 M4TESTS = \
 	m4/gtk-doc.m4 \
 	m4/pkg.m4

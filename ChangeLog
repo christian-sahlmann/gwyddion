@@ -1,4 +1,8 @@
 
+Tue Sep  9 22:14:18 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * Makefile.am, libprocess/Makefile.am, libdraw/Makefile.am:
+      automakized libprocess and libdraw
+
 Tue Sep  9 21:22:30 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
     * libgwyddion/gwycontainer.c:
       partially implemented value change watching, no user callbacks are
