@@ -52,4 +52,8 @@ endif
 docs:
 	(cd devel-docs && $(MAKE) $(AM_MAKEFLAGS) docs)
 
+# FIXME: depdendencies?
+gwyddion.vim: devel-docs/*/*-decl.txt
+	./vim-syn-gen.py >$@
+
 .PHONY: docs
