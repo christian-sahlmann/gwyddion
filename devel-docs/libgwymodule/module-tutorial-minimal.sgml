@@ -54,6 +54,7 @@ module_register(const gchar *name)
         "/_Test/_Invert Value",
         (GwyProcessFunc)&my_invert_value,
         INVERT_VALUE_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &my_invert_value_func_info);
@@ -272,6 +273,7 @@ module_register(const gchar *name)
         "/_Test/My _Invert Value",
         (GwyProcessFunc)&my_invert_value,
         INVERT_VALUE_RUN_MODES,
+        0,
     };
 
     gwy_process_func_register(name, &my_invert_value_func_info);
