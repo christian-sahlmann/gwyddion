@@ -20,6 +20,8 @@ static GtkFileSelection* create_open_dialog    (const gchar *title,
                                                 GCallback ok_callback);
 static gboolean          confirm_overwrite     (GtkWindow *parent,
                                                 const gchar *filename);
+static void              remove_data_window_callback (GtkWidget *selector,
+                                                      GwyDataWindow *data_window);
 
 void
 gwy_app_file_open_cb(void)
@@ -98,6 +100,7 @@ gwy_app_file_export_cb(const gchar *name)
                                      G_CALLBACK(file_save_as_ok_cb));
     if (!selector)
         return;
+    gtk_file_selection_set_filename(selector, "");
     g_object_set_data(G_OBJECT(selector), "file-type", (gpointer)name);
     gtk_widget_show_all(GTK_WIDGET(selector));
 }
@@ -142,6 +145,8 @@ create_save_as_dialog(const gchar *title,
                              ok_callback, selector);
     g_signal_connect_swapped(selector->cancel_button, "clicked",
                              G_CALLBACK(gtk_widget_destroy), selector);
+    g_signal_connect(selector, "destroy",
+                     G_CALLBACK(remove_data_window_callback), data_window);
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(gtk_widget_destroy), selector);
 
@@ -266,12 +271,6 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     data_window = GTK_WINDOW(g_object_get_data(G_OBJECT(selector), "window"));
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
 
-    g_signal_handlers_disconnect_matched(data_window,
-                                         G_SIGNAL_MATCH_FUNC
-                                         | G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL,
-                                         gtk_widget_destroy, selector);
-
     name = (const gchar*)g_object_get_data(G_OBJECT(selector), "file-type");
 
     filename_sys = gtk_file_selection_get_filename(selector);
@@ -317,6 +316,25 @@ confirm_overwrite(GtkWindow *parent,
     gtk_widget_destroy(dialog);
 
     return response == GTK_RESPONSE_YES;
+}
+
+static void
+remove_data_window_callback(GtkWidget *selector,
+                            GwyDataWindow *data_window)
+{
+    g_signal_handlers_disconnect_matched(selector,
+                                         G_SIGNAL_MATCH_FUNC
+                                         | G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL,
+                                         remove_data_window_callback,
+                                         data_window);
+    g_signal_handlers_disconnect_matched(data_window,
+                                         G_SIGNAL_MATCH_FUNC
+                                         | G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL,
+                                         gtk_widget_destroy,
+                                         selector);
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
