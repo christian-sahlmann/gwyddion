@@ -64,7 +64,7 @@ static GwyModuleInfo module_info = {
     "assing_afm",
     N_("Import Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.0.1",
+    "0.0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -146,7 +146,6 @@ aafm_load(const gchar *filename)
     p = buffer;
     afmfile.res = get_WORD(&p);
     afmfile.real = Angstrom*get_FLOAT(&p);
-    get_WORD(&p);
     if (size < afmfile.res * afmfile.res + 10) {
         g_warning("Truncated file `%s'", filename);
         gwy_file_abandon_contents(buffer, size, &err);
