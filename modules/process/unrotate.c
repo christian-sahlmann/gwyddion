@@ -65,12 +65,12 @@ static void             save_args                (GwyContainer *container,
 static void             sanitize_args            (UnrotateArgs *args);
 
 GwyEnum unrotate_symmetry[] = {
-    { "Detected",   GWY_SYMMETRY_AUTO       },
-    { "Parallel",   GWY_SYMMETRY_PARALLEL   },
-    { "Triangular", GWY_SYMMETRY_TRIANGULAR },
-    { "Square",     GWY_SYMMETRY_SQUARE     },
-    { "Rhombic",    GWY_SYMMETRY_RHOMBIC    },
-    { "Hexagonal",  GWY_SYMMETRY_HEXAGONAL  },
+    { N_("Detected"),   GWY_SYMMETRY_AUTO       },
+    { N_("Parallel"),   GWY_SYMMETRY_PARALLEL   },
+    { N_("Triangular"), GWY_SYMMETRY_TRIANGULAR },
+    { N_("Square"),     GWY_SYMMETRY_SQUARE     },
+    { N_("Rhombic"),    GWY_SYMMETRY_RHOMBIC    },
+    { N_("Hexagonal"),  GWY_SYMMETRY_HEXAGONAL  },
 };
 
 UnrotateArgs unrotate_defaults = {
