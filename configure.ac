@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 0.20031122, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
+AC_INIT(Gwyddion, 0.20031123, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(libgwydgets/gwyspherecoords.c)
