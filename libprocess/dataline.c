@@ -326,7 +326,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_val_if_fail(from >= 0 && to < a->res, FALSE);
+    g_return_val_if_fail(from >= 0 && to <= a->res, FALSE);
 
     b.res = a->res;
     b.data = g_new(gdouble, a->res);
@@ -663,7 +663,7 @@ gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value)
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_if_fail(from >= 0 && to < a->res);
+    g_return_if_fail(from >= 0 && to <= a->res);
 
     for (i = from; i < to; i++)
         a->data[i] = value;
@@ -687,7 +687,7 @@ gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value)
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_if_fail(from >= 0 && to < a->res);
+    g_return_if_fail(from >= 0 && to <= a->res);
 
     for (i = from; i < to; i++)
         a->data[i] += value;
@@ -711,7 +711,7 @@ gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value)
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_if_fail(from >= 0 && to < a->res);
+    g_return_if_fail(from >= 0 && to <= a->res);
 
     for (i = from; i < to; i++)
         a->data[i] *= value;
@@ -841,7 +841,7 @@ gwy_data_line_part_get_max(GwyDataLine *a, gint from, gint to)
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_val_if_fail(from >= 0 && to < a->res, max);
+    g_return_val_if_fail(from >= 0 && to <= a->res, max);
 
     for (i = from; i < to; i++) {
         if (max < a->data[i])
@@ -869,7 +869,7 @@ gwy_data_line_part_get_min(GwyDataLine *a, gint from, gint to)
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_val_if_fail(from >= 0 && to < a->res, min);
+    g_return_val_if_fail(from >= 0 && to <= a->res, min);
 
     for (i = from; i < to; i++) {
         if (min > a->data[i])
@@ -915,7 +915,7 @@ gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_val_if_fail(from >= 0 && to < a->res, rms);
+    g_return_val_if_fail(from >= 0 && to <= a->res, rms);
 
     avg = gwy_data_line_part_get_avg(a, from, to);
     for (i = from; i < to; i++)
@@ -943,7 +943,7 @@ gwy_data_line_part_get_sum(GwyDataLine *a, gint from, gint to)
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_val_if_fail(from >= 0 && to < a->res, sum);
+    g_return_val_if_fail(from >= 0 && to <= a->res, sum);
 
     for (i = from; i < to; i++)
         sum += a->data[i];
@@ -1007,7 +1007,7 @@ gwy_data_line_part_threshold(GwyDataLine *a,
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_val_if_fail(from >= 0 && to < a->res, 0);
+    g_return_val_if_fail(from >= 0 && to <= a->res, 0);
 
     for (i = from; i < to; i++) {
         if (a->data[i] < threshval)
@@ -1446,11 +1446,115 @@ void gwy_data_line_part_subtract_polynom(GwyDataLine *data_line,
 
 }
 
-void gwy_data_line_subtract_polynom(GwyDataLine *data_line,
-                                         gint n, gdouble *coeffs)
+void
+gwy_data_line_subtract_polynom(GwyDataLine *data_line,
+                               gint n, gdouble *coeffs)
 {
     gwy_data_line_part_subtract_polynom(data_line, n, coeffs,
                                         0, gwy_data_line_get_res(data_line));
+}
+
+/**
+ * gwy_data_line_part_get_modus:
+ * @data_line: A data line.
+ * @from: The index in @data_line to start from (inclusive).
+ * @to: The index in @data_line to stop (noninclusive).
+ * @histogram_steps: Number of histogram steps used for modus searching,
+ *                   pass a nonpositive number to autosize.
+ *
+ * Finds approximate modus of a data line part.
+ *
+ * Returns: The modus.
+ *
+ * Since: 1.4.
+ **/
+gdouble
+gwy_data_line_part_get_modus(GwyDataLine *data_line,
+                             gint from, gint to,
+                             gint histogram_steps)
+{
+    gint *histogram;
+    gint n, i, j, m;
+    gdouble min, max, sum;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+    g_return_val_if_fail(from >= 0 && to <= data_line->res, 0);
+    g_return_val_if_fail(from != to, 0);
+
+    if (from > to)
+        GWY_SWAP(gint, from, to);
+    n = to - from;
+
+    if (n == 1)
+        return data_line->data[from];
+
+    if (histogram_steps < 1) {
+        /*
+        gdouble sigma = gwy_data_line_part_get_rms(data_line, from, to);
+        histogram_steps = floor(0.49*sigma*pow(n, 1.0/3.0) + 0.5);
+        */
+        histogram_steps = floor(3.49*pow(n, 1.0/3.0) + 0.5);
+        gwy_debug("histogram_steps = %d", histogram_steps);
+    }
+
+    min = gwy_data_line_part_get_min(data_line, from, to);
+    max = gwy_data_line_part_get_max(data_line, from, to);
+    if (min == max)
+        return min;
+
+    histogram = g_new0(gint, histogram_steps);
+    for (i = from; i < to; i++) {
+        j = (data_line->data[i] - min)/(max - min)*histogram_steps;
+        j = CLAMP(j, 0, histogram_steps-1);
+        histogram[j]++;
+    }
+
+    m = 0;
+    for (i = 1; i < histogram_steps; i++) {
+        if (histogram[i] > histogram[m])
+            m = i;
+    }
+
+    n = 0;
+    sum = 0.0;
+    for (i = from; i < to; i++) {
+        j = (data_line->data[i] - min)/(max - min)*histogram_steps;
+        j = CLAMP(j, 0, histogram_steps-1);
+        if (j == m) {
+            sum += data_line->data[i];
+            n++;
+        }
+    }
+
+    g_free(histogram);
+    gwy_debug("modus = %g", sum/n);
+
+    return sum/n;
+}
+
+/**
+ * gwy_data_line_get_modus:
+ * @data_line: A data line.
+ * @histogram_steps: Number of histogram steps used for modus searching,
+ *                   pass a nonpositive number to autosize.
+ *
+ * Finds approximate modus of a data line.
+ *
+ * As each number in the data line is usually unique, this function does not
+ * return modus of the data itself, but modus of a histogram.
+ *
+ * Returns: The modus.
+ *
+ * Since: 1.4.
+ **/
+gdouble
+gwy_data_line_get_modus(GwyDataLine *data_line,
+                        gint histogram_steps)
+{
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+
+    return gwy_data_line_part_get_modus(data_line, 0, data_line->res,
+                                        histogram_steps);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

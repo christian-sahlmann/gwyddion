@@ -187,6 +187,13 @@ void gwy_data_line_subtract_polynom(GwyDataLine *data_line,
                                     gint n,
                                     gdouble *coeffs);
 
+gdouble gwy_data_line_get_modus(GwyDataLine *data_line,
+                                gint histogram_steps);
+gdouble gwy_data_line_part_get_modus(GwyDataLine *data_line,
+                                     gint from,
+                                     gint to,
+                                     gint histogram_steps);
+
 G_END_DECLS
 
 #endif /*__GWY_DATALINE_H__*/
