@@ -2,6 +2,8 @@
 #ifndef TIP_MORPH
 #define TIP_MORPH
 
+typedef gboolean (*GwySetFractionFunc)(gdouble fraction);
+typedef gboolean (*GwySetMessageFunc)(gchar *message);
 
 gint **iallocmatrix(gint ysiz, gint xsiz);
 
@@ -16,47 +18,47 @@ gint **ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz);
 
 gint **idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
 	      gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-          gboolean (set_fraction)(gdouble),
-          gboolean (set_message)(gchar *));
+          GwySetFractionFunc set_fraction,
+          GwySetMessageFunc set_message);
 
 gint **ierosion(gint **image, gint im_xsiz, gint im_ysiz,
 	      gint **tip, gint tip_xsiz, gint tip_ysiz,
 	      gint xc, gint yc,
-          gboolean (set_fraction)(gdouble),
-          gboolean (set_message)(gchar *));
+          GwySetFractionFunc set_fraction,
+          GwySetMessageFunc set_message);
 
 gint **icmap(gint **image, gint im_xsiz, gint im_ysiz,
 	      gint **tip, gint tip_xsiz, gint tip_ysiz,
               gint **rsurf,
 	      gint xc, gint yc,
-          gboolean (set_fraction)(gdouble),
-          gboolean (set_message)(gchar *));
+          GwySetFractionFunc set_fraction,
+          GwySetMessageFunc set_message);
 
 /*simple routines - double arithmetics (can be very slow)*/
 gdouble **dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz);
 
 gdouble **ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
 	      gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-          gboolean (set_fraction)(gdouble),
-          gboolean (set_message)(gchar *));
+          GwySetFractionFunc set_fraction,
+          GwySetMessageFunc set_message);
 
 gdouble **derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
 	      gdouble **tip, gint tip_xsiz, gint tip_ysiz,
 	      gint xc, gint yc,
-          gboolean (set_fraction)(gdouble),
-          gboolean (set_message)(gchar *));
+          GwySetFractionFunc set_fraction,
+          GwySetMessageFunc set_message);
 
 /*tip estimation routines - all in integer artithmetics*/
 void itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
 		   gint tip_xsiz, gint tip_ysiz, gint xc, gint yc, gint **tip0,
 		   gint thresh, gboolean use_edges,
-           gboolean (set_fraction)(gdouble),
-           gboolean (set_message)(gchar *));
+           GwySetFractionFunc set_fraction,
+           GwySetMessageFunc set_message);
 
 void itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz, gint tip_ysiz,
    gint xc, gint yc, gint **tip0, gint thresh, gboolean use_edges,
-   gboolean (set_fraction)(gdouble),
-   gboolean (set_message)(gchar *));
+   GwySetFractionFunc set_fraction,
+   GwySetMessageFunc set_message);
 
 
 

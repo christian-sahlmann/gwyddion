@@ -497,8 +497,8 @@ get_right_tip_field(GwyDataField *tip, GwyDataField *surface, gboolean *freetip)
  * @tip: tip data
  * @surface: surface data
  * @result: pointer where to store dilated surface data (allocated GwyDataField)
- * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
- * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ * @set_fraction: function that sets fraction to output (or NULL)
+ * @set_message: function that sets message to output (of NULL)
  *
  * Performs tip convolution (dilation) algorithm published by Villarrubia. This function
  * converts all fields into form requested by "morph_lib.c" library, that is almost
@@ -508,7 +508,7 @@ get_right_tip_field(GwyDataField *tip, GwyDataField *surface, gboolean *freetip)
  **/
 GwyDataField*
 gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-                  gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
+                  GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     gdouble **ftip;
     gdouble **fsurface;
@@ -548,8 +548,8 @@ gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
  * @tip: tip data
  * @surface: surface to be eroded
  * @result: pointer where to store result data (allocated GwyDataField).
- * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
- * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ * @set_fraction: function that sets fraction to output (or NULL)
+ * @set_message: function that sets message to output (of NULL)
  *
  * Performs surface reconstruction (erosion) algorithm published by Villarrubia. This function
  * converts all fields into form requested by "morph_lib.c" library, that is almost
@@ -559,7 +559,7 @@ gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
  **/
 GwyDataField*
 gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-                 gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
+                GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     gdouble **ftip;
     gdouble **fsurface;
@@ -599,8 +599,8 @@ gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
  * @tip: tip data
  * @surface: surface data
  * @result: pointer where to store result ceratainty map data (allocated GwyDataField)
- * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
- * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ * @set_fraction: function that sets fraction to output (or NULL)
+ * @set_message: function that sets message to output (of NULL)
  *
  * Performs certainty map algorithm published by Villarrubia. This function
  * converts all fields into form requested by "morph_lib.c" library, that is almost
@@ -611,7 +611,7 @@ gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
  **/
 GwyDataField*
 gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-              gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
+              GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     gint **ftip;
     gint **fsurface;
@@ -673,8 +673,8 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
  * @surface: surface data
  * @threshold: threshold for noise supression
  * @use_edges: whether use also edges of image
- * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
- * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ * @set_fraction: function that sets fraction to output (or NULL)
+ * @set_message: function that sets message to output (of NULL)
  *
  * Performs partial blind estimation algorithm published by Villarrubia. This function
  * converts all fields into form requested by "morph_lib.c" library, that is almost
@@ -688,8 +688,8 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
  **/
 GwyDataField*
 gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-                 gboolean use_edges, gboolean (set_fraction)(gdouble),
-                 gboolean (set_message)(gchar *))
+                 gboolean use_edges, 
+                 GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     gint **ftip;
     gint **fsurface;
@@ -738,8 +738,8 @@ gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble thres
  * @surface: surface data
  * @threshold: threshold for noise supression
  * @use_edges: whether use also edges of image
- * @gboolean (set_fraction)(gdouble): function that sets fraction to output (or NULL)
- * @gboolean (set_message)(gchar *): function that sets message to output (of NULL)
+ * @set_fraction: function that sets fraction to output (or NULL)
+ * @set_message: function that sets message to output (of NULL)
  *
  * Performs full blind estimation algorithm published by Villarrubia. This function
  * converts all fields into form requested by "morph_lib.c" library, that is almost
@@ -752,7 +752,7 @@ gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble thres
  * Returns: estimated tip.
  **/GwyDataField*
 gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-          gboolean use_edges, gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
+          gboolean use_edges, GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     gint **ftip;
     gint **fsurface;

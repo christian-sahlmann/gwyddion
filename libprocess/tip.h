@@ -81,21 +81,22 @@ gint            gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset
 
 
 GwyDataField*   gwy_tip_dilation(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-                                  gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *));
+                                  GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
 
 GwyDataField*   gwy_tip_erosion(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-                                 gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *));
+                                 GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
 
 GwyDataField*   gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result,
-                             gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *));
+                             GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
 
 
 GwyDataField*   gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-					 gboolean use_edges, gboolean (set_fraction)(gdouble),
-               gboolean (set_message)(gchar *));
+					 gboolean use_edges, 
+					 GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
 
 GwyDataField*   gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
-					 gboolean use_edges, gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *));
+					 gboolean use_edges, 
+					 GwySetFractionFunc set_fraction, GwySetMessageFunc set_message);
 
 
 

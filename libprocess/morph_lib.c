@@ -32,8 +32,8 @@
 static gint
 itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                    gint tip_ysiz, gint xc, gint yc, gint **tip0, gint thresh,
-                   gboolean use_edges, gboolean (set_fraction)(gdouble),
-                   gboolean (set_message)(gchar *));
+                   gboolean use_edges, GwySetFractionFunc set_fraction,
+                   GwySetMessageFunc set_message);
 
 static gint
 useit(gint x, gint y, gint **image, gint sx, gint sy, gint delta);    
@@ -146,8 +146,8 @@ ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz)
  * @tip_ysiz: number of rows
  * @xc: tip apex column coordinate
  * @yc: tip apex row coordinate
- * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
- * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ * @set_fraction: function to output computation fraction (or NULL)
+ * @set_message: function to output computation state message (or NULL)
  *
  * Performs dilation algorithm (for integer arrays).
  *
@@ -156,8 +156,8 @@ ireflect(gint **surface, gint surf_xsiz, gint surf_ysiz)
 gint **
 idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
           gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-          gboolean (set_fraction)(gdouble),
-          gboolean (set_message)(gchar *))
+          GwySetFractionFunc set_fraction,
+          GwySetMessageFunc set_message)
 {
     gint **result;
     gint i, j, px, py;          /* index */
@@ -206,8 +206,8 @@ idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
  * @tip_ysiz: number of rows
  * @xc: tip apex column coordinate
  * @yc: tip apex row coordinate
- * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
- * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ * @set_fraction: function to output computation fraction (or NULL)
+ * @set_message: function to output computation state message (or NULL)
  *
  * Performs erosion algorithm (for integer arrays).
  *
@@ -216,7 +216,7 @@ idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
 gint **
 ierosion(gint **image, gint im_xsiz, gint im_ysiz,
          gint **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-         gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
+         GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     gint **result;
     gint i, j, px, py;          /* index */
@@ -266,8 +266,8 @@ ierosion(gint **image, gint im_xsiz, gint im_ysiz,
  * @rsurf: eroded surface array
  * @xc: tip apex column coordinate
  * @yc: tip apex row coordinate
- * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
- * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ * @set_fraction: function to output computation fraction (or NULL)
+ * @set_message: function to output computation state message (or NULL)
  *
  * Performs the certainty map algorithm.
  *
@@ -276,7 +276,7 @@ ierosion(gint **image, gint im_xsiz, gint im_ysiz,
 gint **
 icmap(gint **image, gint im_xsiz, gint im_ysiz,
       gint **tip, gint tip_xsiz, gint tip_ysiz, gint **rsurf, gint xc, gint yc,
-      gboolean (set_fraction)(gdouble), gboolean (set_message)(gchar *))
+      GwySetFractionFunc set_fraction, GwySetMessageFunc set_message)
 {
     gint **cmap;
     gint imx, imy, tpx, tpy;    /* index */
@@ -428,8 +428,8 @@ dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
  * @tip_ysiz: number of rows
  * @xc: tip apex column coordinate
  * @yc: tip apex row coordinate
- * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
- * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ * @set_fraction: function to output computation fraction (or NULL)
+ * @set_message: function to output computation state message (or NULL)
  *
  * Performs dilation algorithm (for double arrays).
  *
@@ -438,8 +438,8 @@ dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
 gdouble **
 ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
           gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-          gboolean (set_fraction)(gdouble),
-          gboolean (set_message)(gchar *))
+          GwySetFractionFunc set_fraction,
+          GwySetMessageFunc set_message)
 {
     gdouble **result;
     gint i, j, px, py;          /* index */
@@ -488,8 +488,8 @@ ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
  * @tip_ysiz: number of rows
  * @xc: tip apex column coordinate
  * @yc: tip apex row coordinate
- * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
- * @gboolean (set_message)(gchar *): function to output computation state message (or NULL)
+ * @set_fraction: function to output computation fraction (or NULL)
+ * @set_message: function to output computation state message (or NULL)
  *
  * Performs erosion algorithm (for double arrays).
  *
@@ -498,8 +498,8 @@ ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
 gdouble **
 derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
          gdouble **tip, gint tip_xsiz, gint tip_ysiz, gint xc, gint yc,
-         gboolean (set_fraction)(gdouble),
-         gboolean (set_message)(gchar *))
+         GwySetFractionFunc set_fraction,
+         GwySetMessageFunc set_message)
 {
     gdouble **result;
     gint i, j, px, py;          /* index */
@@ -565,16 +565,16 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip, gint tip_xsiz,
  * @tip0: tip data to be refined
  * @thresh: threshold 
  * @use_edges: whether to use also image edges
- * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
- * @gboolean (set_message)(gchar *): functon to output computation state message (or NULL)
+ * @set_fraction: function to output computation fraction (or NULL)
+ * @set_message: functon to output computation state message (or NULL)
  *
  * Performs tip estimation algorithm.
  **/
 void
 itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
               gint tip_xsiz, gint tip_ysiz, gint xc, gint yc, gint **tip0,
-              gint thresh, gboolean use_edges, gboolean (set_fraction)(gdouble),
-              gboolean (set_message)(gchar *))
+              gint thresh, gboolean use_edges, GwySetFractionFunc set_fraction,
+              GwySetMessageFunc set_message)
 {
     gint iter = 0;
     gint count = 1;
@@ -600,8 +600,8 @@ itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
 static gint
 itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                    gint tip_ysiz, gint xc, gint yc, gint **tip0, gint thresh,
-                   gboolean use_edges, gboolean (set_fraction)(gdouble),
-                   gboolean (set_message)(gchar *))
+                   gboolean use_edges, GwySetFractionFunc set_fraction,
+                   GwySetMessageFunc set_message)
 {
     gint ixp, jxp;              /* index into the image (x') */
     gint **open;
@@ -647,16 +647,16 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
  * @tip0: tip data to be refined
  * @thresh: threshold 
  * @use_edges: whether to use also image edges
- * @gboolean (set_fraction)(gdouble): function to output computation fraction (or NULL)
- * @gboolean (set_message)(gchar *): functon to output computation state message (or NULL)
+ * @set_fraction: function to output computation fraction (or NULL)
+ * @set_message: functon to output computation state message (or NULL)
  *
  * Performs partial tip estimation algorithm.
  **/
 void
 itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                gint tip_ysiz, gint xc, gint yc, gint **tip0, gint thresh,
-               gboolean use_edges, gboolean (set_fraction)(gdouble),
-               gboolean (set_message)(gchar *))
+               gboolean use_edges, GwySetFractionFunc set_fraction,
+               GwySetMessageFunc set_message)
 {
     gint i, j, n;
     gint arraysize;  /* size of array allocated to store list of image maxima */
