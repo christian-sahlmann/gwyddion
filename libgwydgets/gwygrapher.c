@@ -243,16 +243,11 @@ gwy_grapher_refresh(GwyGrapher *grapher)
                 if (y_reqmax < curvemodel->ydata[j]) y_reqmax = curvemodel->ydata[j];
             }
         }
-        printf("x:( %g, %g)  y:( %g, %g)\n",  x_reqmin, x_reqmax, y_reqmin, y_reqmax);
         gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);
         gwy_axiser_set_req(grapher->axis_right, y_reqmin, y_reqmax);
 
-        printf("ax: x:( %g, %g)  y:( %g, %g)\n", gwy_axiser_get_maximum(grapher->axis_bottom),
-               gwy_axiser_get_minimum(grapher->axis_bottom),
-               gwy_axiser_get_maximum(grapher->axis_left),
-               gwy_axiser_get_minimum(grapher->axis_left));
         model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
         model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
         model->y_max = gwy_axiser_get_maximum(grapher->axis_left);

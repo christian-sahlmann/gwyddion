@@ -415,7 +415,6 @@ gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     specs.real_height = model->y_max - model->y_min;
     specs.log_x = specs.log_y = FALSE;
 
-    /*printf("x axis: %g ... %g,    y axis: %g ... %g\n", model->x_min, model->x_max, model->y_min, model->y_max);*/
     /*draw continuous selection*/
     if (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL)
         gwy_grapher_draw_selection_areas(drawable,

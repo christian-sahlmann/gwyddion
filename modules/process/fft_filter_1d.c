@@ -59,6 +59,7 @@ typedef struct {
     GwyInterpolationType interpolation;
     GtkOrientation direction;
     gboolean update;
+    GwyDataLine *weights;
     gint original_xres;
     gint original_yres;
 } Fftf1dArgs;
@@ -397,6 +398,12 @@ fftf_1d_dialog_abandon(Fftf1dControls *controls, Fftf1dArgs *args)
 static void        
 update_view(Fftf1dControls *controls, Fftf1dArgs *args)
 {
+    GwyDataField *dfield;
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
+                                                             "/0/data"));
+    
+    gwy_data_field_fft_filter_1d(dfield, args->weights, args->direction,
+                                 args->interpolation);
 
     gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));
 }
@@ -408,6 +415,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     GwyDataLine *dline;
     GwyGrapherCurveModel *cmodel;
     gdouble xdata[200];
+    gdouble max;
     gint i, MAX_PREV = 200; /*move upwards*/
 
     dline = GWY_DATA_LINE(gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE));
@@ -421,7 +429,11 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
                                           GWY_WINDOWING_RECT,
                                           MAX_PREV);
 
-    for (i=0; i<MAX_PREV; i++) xdata[i] = dline->real*i/200.0;
+    gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
+    for (i=0; i<MAX_PREV; i++)
+    {
+        xdata[i] = i;
+    }
     
     cmodel = gwy_grapher_curve_model_new();
     cmodel->xdata = xdata;
