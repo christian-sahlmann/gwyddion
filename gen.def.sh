@@ -6,11 +6,9 @@ libraries=$(sed -n '/^lib_LTLIBRARIES *= *\\/,/[^\\]$/H;/^lib_LTLIBRARIES *= *[a
 for l in $libraries; do
   l=${l%.la}
   target=$l.def
+  test -f $target && mv -f $target $target~
   echo $target
-  if test -z "$force" -a -s $target; then
-    target=$target.new
-    echo "exists, creating as $target"
-  fi
   echo EXPORTS >$target
   nm .libs/$l.so | grep ' T ' | cut -d' ' -f3 | grep -v '^_' | sed -e 's/^/\t/' >>$target
+  test -f $target~ && diff $target~ $target
 done
