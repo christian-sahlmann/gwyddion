@@ -18,13 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*
- * TODO:
- * - use GwySIUnit
- */
-
-#define DEBUG
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -850,6 +843,7 @@ hruler(gint size,
     else {
         base *= 10;
         step = 1.0;
+        format->precision = MAX(format->precision - 1, 0);
     }
 
     tick = zoom*TICK_LENGTH;
@@ -931,6 +925,7 @@ vruler(gint size,
     else {
         base *= 10;
         step = 1.0;
+        format->precision = MAX(format->precision - 1, 0);
     }
 
     g_snprintf(s, bufsize, "%.*f", format->precision, real/format->magnitude);
@@ -949,7 +944,8 @@ vruler(gint size,
         ix = x/(real/format->magnitude)*size + lw/2;
         pango_layout_get_extents(layout, NULL, &logical1);
         if (ix + PANGO_PIXELS(logical1.height) <= size + extra/4)
-            gdk_draw_layout(drawable, gc, 1, ix+1, layout);
+            gdk_draw_layout(drawable, gc,
+                            l - PANGO_PIXELS(logical1.width) + 1, ix+1, layout);
         gdk_draw_line(drawable, gc, width-1, ix, width-1-tick, ix);
     }
 
