@@ -399,7 +399,7 @@ gwy_process_func_remove(const gchar *name)
  *             It must start with "/".
  * @process: The function itself.
  * @run: Possible run-modes for this function.
- * @sens: Sensitivity flags.  All data processing function have implied
+ * @sens_flags: Sensitivity flags.  All data processing function have implied
  *       %GWY_MENU_FLAG_DATA flag which cannot be removed.  You can specify
  *       additional flags here, the most common (and most useful) probably
  *       is %GWY_MENU_FLAG_DATA_MASK meaning the function requires a mask.
