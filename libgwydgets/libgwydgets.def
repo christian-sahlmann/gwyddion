@@ -57,6 +57,7 @@ EXPORTS
 	gwy_layer_lines_get_max_lines
 	gwy_sci_text_get_type
 	gwy_vector_layer_get_type
+	gwy_vector_layer_get_update_policy
 	gwy_ruler_draw_pos
 	gwy_data_view_get_thumbnail
 	gwy_axis_set_auto
@@ -79,6 +80,7 @@ EXPORTS
 	gwy_layer_select_get_selection
 	gwy_axis_get_maximum
 	gwy_ruler_get_type
+	gwy_vector_layer_updated
 	gwy_grad_sphere_new
 	gwy_layer_basic_get_palette
 	gwy_vector_layer_motion_notify
@@ -156,6 +158,7 @@ EXPORTS
 	gwy_sphere_coords_get_theta
 	gwy_layer_pointer_new
 	gwy_color_axis_set_range
+	gwy_vector_layer_set_update_policy
 	gwy_graph_area_clear
 	gwy_layer_points_get_type
 	gwy_layer_lines_new
