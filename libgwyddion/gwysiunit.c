@@ -119,11 +119,11 @@ SI_prefixes[] = {
     { "y",    -24 },
 };
 
-/* TODO: silly units we should probably support specially: kg, \AA, % */
+/* TODO: silly units we should probably support specially: kg */
 
 /* Units that can conflict with prefixes */
 static const gchar *known_units[] = {
-    "deg", "Pa", "cd", "mol", "cal"
+    "deg", "Pa", "cd", "mol", "cal", "px", "pt",
 };
 
 /* Unit formats */
@@ -608,11 +608,20 @@ gwy_si_unit_parse(const gchar *string)
         g_string_append_len(buf, string, end - string);
 
         /* fix sloppy notations */
-        if (!strcmp(buf->str, "\272") || !strcmp(buf->str, "°"))
+        if (buf->str[0] == '\272') {
+            if (!buf->str[1])
+                g_string_assign(buf, "deg");
+            else {
+                g_string_erase(buf, 0, 1);
+                g_string_prepend(buf, "°");
+            }
+        }
+        else if (!strcmp(buf->str, "°"))
             g_string_assign(buf, "deg");
-
-        /* TODO: scan known obscure units */
-        unit.traits = 0;
+        else if (buf->str[0] == '\305' && !buf->str[1])
+            g_string_assign(buf, "Å");
+        else if (!strcmp(buf->str, "Å"))
+            g_string_assign(buf, "Å");
 
         /* get prefix, but be careful not to split mol to mili-ol */
         pfpower = 0;
@@ -677,6 +686,16 @@ gwy_si_unit_parse(const gchar *string)
             }
         }
 
+        /* handle some ugly, but quite common units */
+        if (!strcmp(buf->str, "Å")) {
+            pfpower -= 10;
+            g_string_assign(buf, "m");
+        }
+        else if (!strcmp(buf->str, "%")) {
+            pfpower -= 2;
+            g_string_assign(buf, "");
+        }
+
         /* elementary sanity */
         if (!g_utf8_validate(buf->str, -1, (const gchar**)&p)) {
             g_warning("Unit string is not valid UTF-8");
@@ -694,6 +713,9 @@ gwy_si_unit_parse(const gchar *string)
             siunit->power10 += unit.power * pfpower;
             g_array_append_val(siunit->units, unit);
         }
+
+        /* TODO: scan known obscure units */
+        unit.traits = 0;
 
         /* get to the next token, looking for division */
         while (g_ascii_isspace(*end))
