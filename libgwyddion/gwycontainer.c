@@ -1238,7 +1238,7 @@ gwy_container_gis_object(GwyContainer *container,
         return FALSE;
     }
 
-    value = g_value_get_object(p);
+    *(GObject**)value = g_value_get_object(p);
     return TRUE;
 }
 
