@@ -18,6 +18,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * FIXME: the serialization should use something like GArray, or directly
+ * GString or GByteArray to avoid frequent reallocations.
+ * TODO: 2.0.
+ */
+
 #include <string.h>
 #include <glib-object.h>
 #include <glib/gutils.h>

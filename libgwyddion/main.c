@@ -184,6 +184,7 @@ static const gchar *serialized_text =
     "\"alice\" char 0x0d\n"
     "\"pdf/f\" double 1.4141999999999999\n"
     "\"yesno\" boolean True\n"
+    "\"ser\" object 4777795465737453657200260000007468657461006417d9cef753e3f93f72004402000000da12c1515555d53f9a99999999990140\n"
     "\"x64\" int64 64\n";
 
 static void

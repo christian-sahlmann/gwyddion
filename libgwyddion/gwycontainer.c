@@ -2036,12 +2036,15 @@ value_changed(G_GNUC_UNUSED GwyContainer *container,
 static void
 hash_text_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 {
+    static const guchar hexdigits[] = "0123456789abcdef";
+    static gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
     GQuark key = GPOINTER_TO_UINT(hkey);
     GValue *value = (GValue*)hvalue;
     GPtrArray *pa = (GPtrArray*)hdata;
     GType type = G_VALUE_TYPE(value);
-    gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
     gchar *k, *v, *s;
+    guchar *b;
+    gsize len, i, j;
     guchar c;
 
     k = g_strescape(g_quark_to_string(key), NULL);
@@ -2078,6 +2081,25 @@ hash_text_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
         s = g_strescape(g_value_get_string(value), NULL);
         v = g_strdup_printf("\"%s\" string \"%s\"", k, s);
         g_free(s);
+        break;
+
+        case G_TYPE_OBJECT:
+        g_warning("Forced to serialize object %s to text",
+                  g_type_name(G_TYPE_FROM_INSTANCE(g_value_get_object(value))));
+        len = 0;
+        b = gwy_serializable_serialize(g_value_get_object(value), NULL, &len);
+        g_assert(b);
+        j = strlen(k);
+        v = g_new(gchar, 1 + j + 2 + sizeof("object") + 2*len + 1);
+        v[0] = '"';
+        memcpy(v+1, k, j);
+        memcpy(v+j+1, "\" object ", sizeof("\" object ") - 1);
+        for (i = 0; i < len; i++) {
+            v[3 + j + sizeof("object") + 2*i] = hexdigits[b[i] >> 4];
+            v[4 + j + sizeof("object") + 2*i] = hexdigits[b[i] & 0xf];
+        }
+        v[3 + j + sizeof("object") + 2*len] = '\0';
+        g_free(b);
         break;
 
         default:
@@ -2165,7 +2187,7 @@ gwy_container_deserialize_from_text(const gchar *text)
 {
     GwyContainer *container;
     const gchar *tok, *type;
-    gchar *name;
+    gchar *name = NULL;
     guint len, namelen, typelen;
     GQuark key;
 
@@ -2175,7 +2197,6 @@ gwy_container_deserialize_from_text(const gchar *text)
         ;
     while ((len = token_length(tok))) {
         /* name */
-        name = NULL;
         if (len == (guint)-1)
             goto fail;
         namelen = tok[0] == '"' ? len - 2 : len;
@@ -2195,11 +2216,11 @@ gwy_container_deserialize_from_text(const gchar *text)
         /* value */
         for (tok = tok + len; g_ascii_isspace(*tok); tok++)
             ;
+        if (!(len = token_length(tok)) || len == (guint)-1)
+            goto fail;
         /* boolean */
         if (typelen+1 == sizeof("boolean") &&
             g_str_has_prefix(type, "boolean")) {
-            if (!(len = token_length(tok)) || len == (guint)-1)
-                goto fail;
             if (len == 4 && g_str_has_prefix(tok, "True"))
                 gwy_container_set_boolean(container, key, TRUE);
             else if (len == 5 && g_str_has_prefix(tok, "False"))
@@ -2212,8 +2233,6 @@ gwy_container_deserialize_from_text(const gchar *text)
                  && g_str_has_prefix(type, "char")) {
             guint c;
 
-            if (!(len = token_length(tok)) || len == (guint)-1)
-                goto fail;
             if (len == 1)
                 c = *tok;
             else {
@@ -2226,8 +2245,6 @@ gwy_container_deserialize_from_text(const gchar *text)
         /* int32 */
         else if (typelen+1 == sizeof("int32")
                  && g_str_has_prefix(type, "int32")) {
-            if (!(len = token_length(tok)) || len == (guint)-1)
-                goto fail;
             gwy_container_set_int32(container, key, strtol(tok, NULL, 0));
         }
         /* int64 */
@@ -2235,8 +2252,6 @@ gwy_container_deserialize_from_text(const gchar *text)
                  && g_str_has_prefix(type, "int64")) {
             gint64 i64;
 
-            if (!(len = token_length(tok)) || len == (guint)-1)
-                goto fail;
             /* FIXME: this probably fails on MS platforms */
             sscanf(tok, "%lld", &i64);
             gwy_container_set_int64(container, key, i64);
@@ -2244,21 +2259,51 @@ gwy_container_deserialize_from_text(const gchar *text)
         /* double */
         else if (typelen+1 == sizeof("double")
                  && g_str_has_prefix(type, "double")) {
-            if (!(len = token_length(tok)) || len == (guint)-1)
-                goto fail;
             gwy_container_set_double(container, key, g_ascii_strtod(tok, NULL));
         }
         /* string */
         else if (typelen+1 == sizeof("string")
                  && g_str_has_prefix(type, "string")) {
-            if (!(len = token_length(tok)) || len == (guint)-1)
-                goto fail;
             gwy_container_set_string(container, key, g_strndup(tok, len));
         }
+        /* object */
+        else if (typelen+1 == sizeof("object")
+                 && g_str_has_prefix(type, "object")) {
+            guchar *buf;
+            GObject *object;
+            gsize i, pos = 0;
+
+            if (len % 2)
+                goto fail;
+
+            buf = g_new(guchar, len/2);
+            for (i = 0; i < len/2; i++) {
+                guchar hi = g_ascii_xdigit_value(tok[2*i]);
+                guchar low = g_ascii_xdigit_value(tok[2*i + 1]);
+
+                if (hi == -1 || low == -1) {
+                    g_free(buf);
+                    tok += 2*i;
+                    goto fail;
+                }
+                buf[i] = (hi << 4) | low;
+            }
+            object = gwy_serializable_deserialize(buf, len/2, &pos);
+            g_free(buf);
+            if (object) {
+                gwy_container_set_object(container, key, object);
+                g_object_unref(object);
+            }
+            else
+                g_warning("cannot deserialize object %.*s", namelen, name);
+        }
+        /* UFO */
         else {
+            tok = type;  /* for warning */
             goto fail;
         }
         g_free(name);
+        name = NULL;
 
         /* skip space */
         for (tok = tok + len; g_ascii_isspace(*tok); tok++)
