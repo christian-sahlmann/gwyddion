@@ -13,7 +13,7 @@
 /* TODO */
 GtkWidget *gwy_app_main_window = NULL;
 
-static GSList *current_data = NULL;
+static GList *current_data = NULL;
 static GwyToolUseFunc current_tool_use_func = NULL;
 
 static const gchar *menu_list[] = {
@@ -27,6 +27,7 @@ static GtkWidget* gwy_app_toolbar_append_tool(GtkWidget *toolbar,
                                               GwyToolUseFunc tool_use_func);
 static void       gwy_app_use_tool_cb        (GtkWidget *unused,
                                               GwyToolUseFunc tool_use_func);
+static void      gwy_app_update_toolbox_state(GwyMenuSensitiveData *sens_data);
 
 void
 gwy_app_quit(void)
@@ -222,35 +223,65 @@ gwy_app_get_current_data(void)
     return gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
 }
 
+/**
+ * Add a data window and make it current data window.
+ **/
 void
 gwy_app_set_current_data_window(GwyDataWindow *window)
 {
-    GwyMenuSensitiveData sens_data;
-    gsize i;
+    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, GWY_MENU_FLAG_DATA };
     gboolean update_state;
+    GList *item;
 
     gwy_debug("%s: %p", __FUNCTION__, window);
-    if (window) {
-        g_return_if_fail(GWY_IS_DATA_WINDOW(window));
-        update_state = (current_data == NULL);
-        current_data = g_slist_remove(current_data, window);
-        current_data = g_slist_prepend(current_data, window);
+
+    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
+    update_state = (current_data == NULL);
+    item = g_list_find(current_data, window);
+    if (item) {
+        current_data = g_list_remove_link(current_data, item);
+        current_data = g_list_concat(item, current_data);
     }
-    else {
-        if (!current_data)
-            return;
-        update_state = TRUE;
-        current_data = g_slist_remove(current_data, current_data->data);
-    }
+    else
+        current_data = g_list_prepend(current_data, window);
     /* FIXME: this calls the use function a little bit too often */
     if (current_tool_use_func)
         current_tool_use_func(window);
 
-    if (!update_state)
-        return;
+    if (update_state)
+        gwy_app_update_toolbox_state(&sens_data);
+}
 
-    sens_data.flags = GWY_MENU_FLAG_DATA;
-    sens_data.set_to = current_data ? GWY_MENU_FLAG_DATA : 0;
+void
+gwy_app_remove_data_window(GwyDataWindow *window)
+{
+    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
+    GList *item;
+
+    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
+
+    item = g_list_find(current_data, window);
+    if (!item) {
+        g_critical("Trying to remove GwyDataWindow %p not present in the list",
+                   window);
+        return;
+    }
+    current_data = g_list_delete_link(current_data, item);
+    if (current_data) {
+        gwy_app_set_current_data_window(GWY_DATA_WINDOW(current_data->data));
+        return;
+    }
+
+    if (current_tool_use_func)
+        current_tool_use_func(NULL);
+    gwy_app_update_toolbox_state(&sens_data);
+}
+
+static void
+gwy_app_update_toolbox_state(GwyMenuSensitiveData *sens_data)
+{
+    gsize i;
+
     for (i = 0; i < G_N_ELEMENTS(menu_list); i++) {
         GtkWidget *menu = g_object_get_data(G_OBJECT(gwy_app_main_window),
                                             menu_list[i]);
@@ -258,8 +289,37 @@ gwy_app_set_current_data_window(GwyDataWindow *window)
         g_assert(menu);
         gtk_container_foreach(GTK_CONTAINER(menu),
                               (GtkCallback)gwy_menu_set_sensitive_recursive,
-                              &sens_data);
+                              sens_data);
     }
+}
+
+/**
+ * Assures @window is present in the data window list, but doesn't make
+ * it current.
+ *
+ * XXX: WTF?
+ **/
+void
+gwy_app_add_data_window(GwyDataWindow *window)
+{
+    gwy_debug("%s: %p", __FUNCTION__, window);
+
+    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
+
+    if (g_list_find(current_data, window))
+        return;
+
+    current_data = g_list_append(current_data, window);
+}
+
+void
+gwy_app_data_window_foreach(GFunc func,
+                            gpointer user_data)
+{
+    GList *l;
+
+    for (l = current_data; l; l = g_list_next(l))
+        func(l->data, user_data);
 }
 
 static GtkWidget*

@@ -13,10 +13,11 @@ extern "C" {
 
 GtkWidget *gwy_app_main_window;
 
-GwyDataWindow*  gwy_app_get_current_data_window  (void);
-GwyContainer*   gwy_app_get_current_data         (void);
-void            gwy_app_set_current_data_window  (GwyDataWindow *data_window);
-void            gwy_app_quit                     (void);
+GwyDataWindow*  gwy_app_get_current_data_window   (void);
+GwyContainer*   gwy_app_get_current_data          (void);
+void            gwy_app_set_current_data_window   (GwyDataWindow *data_window);
+void            gwy_app_remove_data_window        (GwyDataWindow *data_window);
+void            gwy_app_quit                      (void);
 
 
 #ifdef __cplusplus
