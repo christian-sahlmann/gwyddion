@@ -138,6 +138,7 @@ gwy_data_window_init(GwyDataWindow *data_window)
     data_window->statusbar_message_id = 0;
     data_window->coord_format = NULL;
     data_window->value_format = NULL;
+    data_window->ul_corner = NULL;
 }
 
 static void
@@ -174,7 +175,7 @@ gwy_data_window_new(GwyDataView *data_view)
     GwyDataWindow *data_window;
     GwyPixmapLayer *layer;
     GwyPalette *palette;
-    GtkWidget *vbox, *hbox, *widget;
+    GtkWidget *vbox, *hbox;
     GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
 
     gwy_debug("");
@@ -223,11 +224,6 @@ gwy_data_window_new(GwyDataView *data_view)
     /***** main table *****/
     data_window->table = gtk_table_new(2, 2, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), data_window->table, TRUE, TRUE, 0);
-
-    widget = gtk_arrow_new(GTK_ARROW_RIGHT, GTK_SHADOW_OUT);
-    gtk_table_attach(GTK_TABLE(data_window->table), widget,
-                     0, 1, 0, 1,
-                     GTK_FILL, GTK_FILL, 0, 0);
 
     gtk_table_attach(GTK_TABLE(data_window->table), data_window->data_view,
                      1, 2, 1, 2,
@@ -628,6 +624,50 @@ gwy_data_window_get_base_name(GwyDataWindow *data_window)
                                          (const guchar**)&fnm);
         return g_strdup(fnm);
     }
+}
+
+/**
+ * gwy_data_window_get_ul_corner_widget:
+ * @data_window: A data window.
+ *
+ * Returns the upper left corner widget of @data_window.
+ *
+ * Returns: The upper left corner widget as a #GtkWidget, %NULL if there is
+ *          no such widget.
+ *
+ * Since: 1.5.
+ **/
+GtkWidget*
+gwy_data_window_get_ul_corner_widget(GwyDataWindow *data_window)
+{
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
+    return data_window->ul_corner;
+}
+
+/**
+ * gwy_data_window_set_ul_corner_widget:
+ * @data_window: A data window.
+ * @corner: A widget to set as upper left corner widget, many be %NULL to
+ *          just remove any eventual existing one.
+ *
+ * Sets the widget in upper left corner of a data window to @corner.
+ *
+ * Since: 1.5.
+ **/
+void
+gwy_data_window_set_ul_corner_widget(GwyDataWindow *data_window,
+                                     GtkWidget *corner)
+{
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    g_return_if_fail(!corner || GTK_IS_WIDGET(corner));
+
+    if (data_window->ul_corner)
+        gtk_widget_unparent(data_window->ul_corner);
+
+    if (corner)
+        gtk_table_attach(GTK_TABLE(data_window->table), corner,
+                         0, 1, 0, 1,
+                         GTK_FILL, GTK_FILL, 0, 0);
 }
 
 static void
