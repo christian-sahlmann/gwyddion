@@ -43,7 +43,9 @@ typedef struct {
     GwyRGBA color;
 } GwyGradientPoint;
 
-typedef void (*GwyGradientFunc)(GwyGradient *gradient, gpointer user_data);
+typedef void (*GwyGradientFunc)(const gchar *name,
+                                GwyGradient *gradient,
+                                gpointer user_data);
 
 struct _GwyGradient {
     GObject parent_instance;

@@ -19,7 +19,7 @@
  */
 
 /* TODO:
- * - reduce the number of system palettes
+ * - reduce the number of system palettes -- in 2.0
  * - set from samples
  * - changes, signal emission
  * - fast get_color (with hinting)
@@ -35,6 +35,7 @@
 
 #define GWY_GRADIENT_TYPE_NAME "GwyGradient"
 
+/* Standard sample size, returned by gwy_gradient_get_samples() */
 enum {
     GWY_GRADIENT_DEFAULT_SIZE = 512
 };
@@ -1013,6 +1014,8 @@ gwy_gradients_rename_gradient(const gchar *name,
  *
  * Calls a function for each color gradient.
  *
+ * Note the function must not delete or create gradients.
+ *
  * Since: 1.8
  **/
 void
@@ -1628,6 +1631,32 @@ fail:
  *
  * The #GwyGradient struct contains private data only and should be accessed
  * using the functions below.
+ *
+ * Since: 1.8
+ **/
+
+/**
+ * GwyGradientPoint:
+ * @x: Color point position (in interval [0,1]).
+ * @color: The color at position @x.
+ *
+ * Gradient color point struct.
+ *
+ * Since: 1.8
+ **/
+
+/**
+ * GwyGradientFunc:
+ * @name: Gradient name.
+ * @gradient: Gradient.
+ * @user_data: User data passed to gwy_gradients_foreach().
+ *
+ * The type of function passed to gwy_gradients_foreach().
+ *
+ * It is called for each gradient in sequence and must not delete or create
+ * gradients.
+ *
+ * Since: 1.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
