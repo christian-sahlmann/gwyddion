@@ -327,6 +327,22 @@ gwy_strreplace(const gchar *haystack,
     return dest;
 }
 
+/**
+ * gwy_file_get_contents:
+ * @filename: A file to read contents of.
+ * @buffer: Buffer to store the file contents.
+ * @size: Location to store buffer (file) size.
+ * @error: Return location for a #GError.
+ *
+ * Reads or maps file @filename into memory.
+ *
+ * The buffer must be treated as read-only and must be freed with
+ * gwy_file_abandon_contents().  It is NOT guaranteed to be NUL-terminated,
+ * use @size to find its end.
+ *
+ * Returns: Whether it succeeded.  In case of failure @buffer and @size are
+ *          reset too.
+ **/
 gboolean
 gwy_file_get_contents(const gchar *filename,
                       guchar **buffer,
@@ -369,6 +385,16 @@ gwy_file_get_contents(const gchar *filename,
 #endif
 }
 
+/**
+ * gwy_file_abandon_contents:
+ * @buffer: Buffer with file contents as created by gwy_file_get_contents().
+ * @size: Buffer size.
+ * @error: Return location for a #GError.
+ *
+ * Frees or unmaps memory allocated by gwy_file_get_contents().
+ *
+ * Returns: Whether it succeeded.
+ **/
 gboolean
 gwy_file_abandon_contents(guchar *buffer,
                           G_GNUC_UNUSED gsize size,
