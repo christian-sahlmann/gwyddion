@@ -93,6 +93,7 @@ typedef struct {
     gdouble xreal;
     gdouble yreal;
     gint32 xyexponent;
+    gboolean xymeasureeq;
     gdouble zreal;
     gint32 zexponent;
     PixmapMapType maptype;
@@ -115,6 +116,8 @@ typedef struct {
     GtkWidget *zexponent;
     GtkWidget *maptype;
     GtkWidget *image;
+    gint xres;
+    gint yres;
     PixmapLoadArgs *args;
 } PixmapLoadControls;
 
@@ -262,7 +265,7 @@ static const PixmapSaveArgs pixmap_save_defaults = {
 };
 
 static const PixmapLoadArgs pixmap_load_defaults = {
-    100.0, 100.0, -6, 1.0, -6, PIXMAP_MAP_VALUE, NULL
+    100.0, 100.0, -6, TRUE, 1.0, -6, PIXMAP_MAP_VALUE, NULL
 };
 
 /* The module info. */
@@ -280,7 +283,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.4",
+    "4.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -663,6 +666,8 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gint row;
 
     controls.args = args;
+    controls.xres = xres;
+    controls.yres = yres;
 
     s = g_ascii_strup(name, -1);
     title = g_strconcat(_("Import "), s, NULL);
@@ -807,6 +812,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.yreal));
     g_signal_connect(adj2, "value_changed",
                      G_CALLBACK(xyreal_changed_cb), &controls);
+    pixmap_load_update_controls(&controls, args);
 
     gtk_widget_show_all(dialog);
     do {
@@ -918,7 +924,7 @@ pixmap_load_update_controls(PixmapLoadControls *controls,
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
     gtk_adjustment_set_value(adj, args->yreal);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq),
-                                 TRUE);
+                                 args->xymeasureeq);
     gwy_option_menu_set_history(controls->xyexponent, "metric-unit",
                                 args->xyexponent);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zreal));
@@ -968,9 +974,9 @@ xyreal_changed_cb(GtkAdjustment *adj,
     yadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
     in_update = TRUE;
     if (xadj == adj)
-        gtk_adjustment_set_value(yadj, value);
+        gtk_adjustment_set_value(yadj, value*controls->yres/controls->xres);
     else
-        gtk_adjustment_set_value(xadj, value);
+        gtk_adjustment_set_value(xadj, value*controls->xres/controls->yres);
     in_update = FALSE;
 }
 
@@ -984,7 +990,9 @@ xymeasureeq_changed_cb(PixmapLoadControls *controls)
 
     xadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
     yadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
-    gtk_adjustment_set_value(yadj, gtk_adjustment_get_value(xadj));
+    gtk_adjustment_set_value(yadj,
+                             gtk_adjustment_get_value(xadj)
+                             *controls->yres/controls->xres);
 }
 
 static GtkWidget*
@@ -1997,6 +2005,7 @@ pixmap_save_save_args(GwyContainer *container,
 static const gchar *xreal_key = "/module/pixmap/xreal";
 static const gchar *yreal_key = "/module/pixmap/yreal";
 static const gchar *xyexponent_key = "/module/pixmap/xyexponent";
+static const gchar *xymeasureeq_key = "/module/pixmap/xymeasureeq";
 static const gchar *zreal_key = "/module/pixmap/zreal";
 static const gchar *zexponent_key = "/module/pixmap/zexponent";
 static const gchar *maptype_key = "/module/pixmap/maptype";
@@ -2010,6 +2019,7 @@ pixmap_load_sanitize_args(PixmapLoadArgs *args)
     args->zreal = CLAMP(args->zreal, 0.01, 10000.0);
     args->xyexponent = CLAMP(args->xyexponent, -12, 3);
     args->zexponent = CLAMP(args->zexponent, -12, 3);
+    args->xymeasureeq = !!args->xymeasureeq;
 }
 
 static void
@@ -2026,6 +2036,8 @@ pixmap_load_load_args(GwyContainer *container,
     gwy_container_gis_int32_by_name(container, zexponent_key,
                                     &args->zexponent);
     gwy_container_gis_enum_by_name(container, maptype_key, &args->maptype);
+    gwy_container_gis_boolean_by_name(container, xymeasureeq_key,
+                                      &args->xymeasureeq);
     pixmap_load_sanitize_args(args);
 }
 
@@ -2041,6 +2053,8 @@ pixmap_load_save_args(GwyContainer *container,
     gwy_container_set_int32_by_name(container, zexponent_key,
                                     args->zexponent);
     gwy_container_set_enum_by_name(container, maptype_key, args->maptype);
+    gwy_container_set_boolean_by_name(container, xymeasureeq_key,
+                                      args->xymeasureeq);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
