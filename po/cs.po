@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-10-24 04:52+0200\n"
-"PO-Revision-Date: 2004-10-24 10:52+0200\n"
+"POT-Creation-Date: 2004-10-25 04:53+0200\n"
+"PO-Revision-Date: 2004-10-26 01:06+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -483,44 +483,48 @@ msgstr ""
 "%s\n"
 "Upravdu skončit?"
 
-#: app/app.c:767
+#: app/app.c:770
 msgid "Export"
 msgstr "Export"
 
-#: app/app.c:1091 app/app.c:1103
+#: app/app.c:774
+msgid "Export 3D view to PNG image"
+msgstr "Exportovat trojrozměrný pohled do PNG obrázku"
+
+#: app/app.c:1099 app/app.c:1111
 #, c-format
 msgid "Untitled %d"
 msgstr "Nepojmenovaný %d"
 
-#: app/app.c:1121 app/toolbox.c:641
+#: app/app.c:1129 app/toolbox.c:641
 msgid "/Remove _Mask"
 msgstr "/Odstranit _masku"
 
-#: app/app.c:1122 app/toolbox.c:657
+#: app/app.c:1130 app/toolbox.c:657
 msgid "/Mask _Color"
 msgstr "/_Barva masky"
 
-#: app/app.c:1123
+#: app/app.c:1131
 msgid "/Fix _Zero"
 msgstr "/Opravit _nulu"
 
-#: app/app.c:1124
+#: app/app.c:1132
 msgid "/Reset Color _Range"
 msgstr "/Srovnat _rozsah barev"
 
-#: app/app.c:1125
+#: app/app.c:1133
 msgid "/_Level"
 msgstr "/_Vyrovnat"
 
-#: app/app.c:1126
+#: app/app.c:1134
 msgid "/Zoom _1:1"
 msgstr "/Zvětšení _1:1"
 
-#: app/app.c:1310
+#: app/app.c:1318
 msgid "Export 3D View"
 msgstr "Exportovat trojrozměrný pohled"
 
-#: app/app.c:1337
+#: app/app.c:1345
 msgid "Change Default Mask Color"
 msgstr "Změnit předvolenou barvu masky"
 
@@ -875,7 +879,7 @@ msgstr "<b>Rozměry</b>"
 msgid "Width"
 msgstr "Šířka"
 
-#: app/unitool.c:721
+#: app/unitool.c:721 modules/graph/graph_points.c:208
 msgid "Height"
 msgstr "Výška"
 
@@ -1443,6 +1447,18 @@ msgstr ""
 "\n"
 "Výsledky\n"
 
+#: modules/graph/graph_export_ascii.c:41
+msgid "Export graph curves to ASCII file"
+msgstr "Exportuje křivky grafu do textových souborů"
+
+#: modules/graph/graph_export_ascii.c:57
+msgid "/_Export ASCII..."
+msgstr "/_Export ASCII..."
+
+#: modules/graph/graph_export_ascii.c:77
+msgid "Export Graph to File"
+msgstr "Exportovat graf do souboru"
+
 #: modules/graph/graph_fit.c:127
 msgid "Fit graph with function"
 msgstr "Proložení funkce grafem"
@@ -1536,9 +1552,26 @@ msgstr "Měření vzdáleností mezi body"
 msgid "/_Measure Distances"
 msgstr "/_Měřit vzdálenosti"
 
-#: modules/graph/graph_points.c:119
+#: modules/graph/graph_points.c:149
 msgid "Measure distances"
 msgstr "Měření vzdáleností"
+
+#: modules/graph/graph_points.c:189
+msgid "<b>Mouse:</b>"
+msgstr "<b>Myš:</b>"
+
+#: modules/graph/graph_points.c:200
+msgid "<b>Points</b>"
+msgstr "<b>Body</b>"
+
+#: modules/graph/graph_points.c:207
+msgid "Length"
+msgstr "Délka"
+
+#: modules/graph/graph_points.c:209 modules/process/angle_dist.c:166
+#: modules/process/crosscor.c:94
+msgid "Angle"
+msgstr "Úhel"
 
 #: modules/graph/graph_unzoom.c:55
 msgid "/Zoom _Out"
@@ -1546,23 +1579,23 @@ msgstr "/_Zmenšit"
 
 #: modules/graph/graph_zoom.c:39
 msgid "Zoom graph by mouse"
-msgstr ""
+msgstr "Zvětšit část grafu myší"
 
 #: modules/graph/graph_zoom.c:55
 msgid "/_Zoom In"
 msgstr "/Z_většit"
 
 #: modules/graph/read.c:56
-msgid "Read graph value module"
-msgstr ""
+msgid "Read graph values."
+msgstr "Odečítá hodnoty z grafu."
 
 #: modules/graph/read.c:72
 msgid "/_Read Values"
-msgstr "/Čtení _hodnot"
+msgstr "/Odečítání _hodnot"
 
-#: modules/graph/read.c:102
-msgid "Read graph values"
-msgstr "Odečítání hodnot"
+#: modules/graph/read.c:105
+msgid "Read Graph Values"
+msgstr "Odečítání hodnot z grafu"
 
 #: modules/layer/axes.c:125
 msgid "Layer allowing selection of horizontal or vertical lines."
@@ -1612,10 +1645,6 @@ msgstr "/_Statistika/Rozdělení ú_hlů..."
 #: modules/process/angle_dist.c:153
 msgid "Computing angle distribution"
 msgstr "Počítám rozdělení úhlů"
-
-#: modules/process/angle_dist.c:166 modules/process/crosscor.c:94
-msgid "Angle"
-msgstr "Úhel"
 
 #: modules/process/angle_dist.c:182
 msgid "Angle Distribution"
@@ -2832,12 +2861,12 @@ msgid "Cum. height distribution"
 msgstr "Kumul. rozdělení výšek"
 
 #: modules/tools/sfunctions.c:98
-msgid "Slope distribution"
-msgstr "Rozdělení sklonů"
+msgid "Distribution of angles"
+msgstr "Rozdělení úhlů"
 
 #: modules/tools/sfunctions.c:99
-msgid "Cum. slope distribution"
-msgstr "Kumul. rozdělení sklonů"
+msgid "Cum. distribution of angles"
+msgstr "Kumul. rozdělení úhlů"
 
 #: modules/tools/sfunctions.c:100
 msgid "ACF"
@@ -2955,3 +2984,11 @@ msgstr "Projektovaná plocha"
 msgid "Area"
 msgstr "Plocha"
 
+#~ msgid "Read graph values"
+#~ msgstr "Odečítání hodnot"
+
+#~ msgid "Slope distribution"
+#~ msgstr "Rozdělení sklonů"
+
+#~ msgid "Cum. slope distribution"
+#~ msgstr "Kumul. rozdělení sklonů"
