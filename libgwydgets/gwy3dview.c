@@ -248,12 +248,12 @@ gwy_3d_view_new(GwyContainer *data)
 
     gwy3dview->container = data;
 
-    gwy3dview->rot_x         = gtk_adjustment_new(45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 5.0, 45.0, 0.0);
+    gwy3dview->rot_x         = gtk_adjustment_new(45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 5.0, 30.0, 0.0);
     gwy3dview->rot_y         = gtk_adjustment_new(-45.0, -270.0, 180.0, 5.0, 15.0, 0.0);
-    gwy3dview->view_scale    = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.1, 0.0, 0.0);
-    gwy3dview->deformation_z = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.1, 0.0, 0.0);
-    gwy3dview->light_z       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 45.0, 0.0);
-    gwy3dview->light_y       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 45.0, 0.0);
+    gwy3dview->view_scale    = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.05, 0.5, 0.0);
+    gwy3dview->deformation_z = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.05, 0.5, 0.0);
+    gwy3dview->light_z       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0, 0.0);
+    gwy3dview->light_y       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0, 0.0);
     gwy3dview->mat_current
              = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 

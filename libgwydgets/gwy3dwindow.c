@@ -264,8 +264,10 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                                        (GtkObject*)gwy3dview->rot_y);
     spin = gwy_table_attach_spinbutton(table, row++, _("Scale"), "",
                                        (GtkObject*)gwy3dview->view_scale);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     spin = gwy_table_attach_spinbutton(table, row++, _("Value scale"), "",
                                        (GtkObject*)gwy3dview->deformation_z);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     spin = gwy_table_attach_spinbutton(table, row++, _("Light_z"), _("???"),
                                        (GtkObject*)gwy3dview->light_z);
     spin = gwy_table_attach_spinbutton(table, row++, _("Light_y"), _("???"),
