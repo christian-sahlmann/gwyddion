@@ -59,10 +59,22 @@ struct _GwySIUnitClass {
 
 GType gwy_si_unit_get_type  (void) G_GNUC_CONST;
 
-GObject* gwy_si_unit_new(const gchar *unit_string);
+GObject*          gwy_si_unit_new                   (const gchar *unit_string);
+GObject*          gwy_si_unit_new_parse             (const gchar *unit_string,
+                                                     gint *power10);
 
-void gwy_si_unit_set_unit_string(GwySIUnit *siunit, gchar *unit_string);
-gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit);
+void              gwy_si_unit_set_unit_string       (GwySIUnit *siunit,
+                                                     const gchar *unit_string);
+void              gwy_si_unit_set_unit_string_parse (GwySIUnit *siunit,
+                                                     const gchar *unit_string,
+                                                     gint *power10);
+gchar*            gwy_si_unit_get_unit_string       (GwySIUnit *siunit);
+GwySIUnit*        gwy_si_unit_multiply              (GwySIUnit *siunit1,
+                                                     GwySIUnit *siunit2,
+                                                     GwySIUnit *result);
+GwySIUnit*        gwy_si_unit_power                 (GwySIUnit *siunit,
+                                                     gint power,
+                                                     GwySIUnit *result);
 
 GwySIValueFormat* gwy_si_unit_get_format                (GwySIUnit *siunit,
                                                          gdouble value,

@@ -54,20 +54,20 @@ typedef struct {
     const gchar *power_unit_separator;
 } GwySIFormatStyle;
 
-static GwySIUnit2* gwy_si_unit_parse         (const gchar *string);
-static GwySIUnit2* gwy_si_unit_power_multiply(GwySIUnit2 *siunit1,
-                                              gint power1,
-                                              GwySIUnit2 *siunit2,
-                                              gint power2);
-static GwySIUnit2* gwy_si_unit_power         (GwySIUnit2 *siunit1,
-                                              gint power1);
-static void        gwy_si_unit_free          (GwySIUnit2* siunit);
-static GwySIUnit2* gwy_si_unit_canonicalize  (GwySIUnit2 *siunit);
-const gchar*       gwy_si_unit_prefix        (gint power);
-static gchar*  gwy_si_unit_format_as_plain_string(GwySIUnit2 *siunit,
-                                                  const GwySIFormatStyle *fs);
-static GString*    gwy_si_unit_format        (GwySIUnit2 *siunit,
-                                              const GwySIFormatStyle *fs);
+static GwySIUnit2* gwy_si_unit2_parse         (const gchar *string);
+static GwySIUnit2* gwy_si_unit2_power_multiply(GwySIUnit2 *siunit1,
+                                               gint power1,
+                                               GwySIUnit2 *siunit2,
+                                               gint power2);
+static GwySIUnit2* gwy_si_unit2_power         (GwySIUnit2 *siunit1,
+                                               gint power1);
+static void        gwy_si_unit2_free          (GwySIUnit2* siunit);
+static GwySIUnit2* gwy_si_unit2_canonicalize  (GwySIUnit2 *siunit);
+const gchar*       gwy_si_unit2_prefix        (gint power);
+static gchar*  gwy_si_unit2_format_as_plain_string(GwySIUnit2 *siunit,
+                                                   const GwySIFormatStyle *fs);
+static GString*    gwy_si_unit2_format        (GwySIUnit2 *siunit,
+                                               const GwySIFormatStyle *fs);
 
 
 static void        gwy_si_unit_class_init        (GwySIUnitClass *klass);
@@ -220,7 +220,7 @@ gwy_si_unit_finalize(GObject *object)
     GwySIUnit *si_unit = (GwySIUnit*)object;
 
     gwy_debug("");
-    gwy_si_unit_free(g_object_get_data(object, "gwy-si-unit2"));
+    gwy_si_unit2_free(g_object_get_data(object, "gwy-si-unit2"));
     g_free(si_unit->unitstr);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -293,27 +293,58 @@ gwy_si_unit_duplicate(GObject *object)
 
 /**
  * gwy_si_unit_new:
- * @unit_string: unit string
+ * @unit_string: Unit string.
  *
  * Unit string represents unit with no prefixes
  * (e. g. "m", "N", "A", etc.)
  *
- * Returns: a new GwySiUnit with a given string
+ * Returns: A new #GwySiUnit with a given string.
  **/
 GObject*
 gwy_si_unit_new(const char *unit_string)
 {
+    return gwy_si_unit_new_parse(unit_string, NULL);
+}
+
+/**
+ * gwy_si_unit_new_parse:
+ * @unit_string: Unit string.
+ * @power10: Where power of 10 should be stored (or %NULL).
+ *
+ * Creates a new SI unit from string representation.
+ *
+ * This is a more powerful version of gwy_si_unit_new(): @unit_string may
+ * be a relatively complex unit, with prefixes, like "pA/s" or "km^2".
+ * Beside conversion to a base SI unit like "A/s" or "m^2" it also computes
+ * the power of 10 one has to multiply the base unit with to get an equivalent
+ * of @unit_string.
+ *
+ * For example, for "pA/s" it will store -12 to @power10 because 1 pA/s is
+ * 1e-9 A/s, for "km^2" it will store 6 to @power10 because 1 km^2 is 1e6
+ * m^2.
+ *
+ * Returns: A new SI unit.
+ *
+ * Since: 1.8
+ **/
+GObject*
+gwy_si_unit_new_parse(const char *unit_string,
+                      gint *power10)
+{
     GwySIUnit *siunit;
+    GwySIUnit2 *siunit2;
 
     gwy_debug("");
-    siunit = g_object_new(GWY_TYPE_SI_UNIT, NULL); 
+    siunit = g_object_new(GWY_TYPE_SI_UNIT, NULL);
     if (unit_string == NULL || strcmp(unit_string, "") == 0)
         siunit->unitstr = NULL;
     else
         siunit->unitstr = g_strdup(unit_string);
 
-    g_object_set_data((GObject*)siunit, "gwy-si-unit2",
-                      gwy_si_unit_parse(unit_string));
+    siunit2 = gwy_si_unit2_parse(unit_string);
+    g_object_set_data((GObject*)siunit, "gwy-si-unit2", siunit2);
+    if (power10)
+        *power10 = siunit2->power10;
 
     return (GObject*)siunit;
 }
@@ -328,15 +359,41 @@ gwy_si_unit_new(const char *unit_string)
  * It must be base unit with no prefixes (e. g. "m", "N", "A", etc.).
  **/
 void
-gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
+gwy_si_unit_set_unit_string(GwySIUnit *siunit,
+                            const gchar *unit_string)
 {
+    gwy_si_unit_set_unit_string_parse(siunit, unit_string, NULL);
+}
+
+/**
+ * gwy_si_unit_set_unit_string_parse:
+ * @siunit: An SI unit.
+ * @unit_string: Unit string to be set.
+ * @power10: Where power of 10 should be stored (or %NULL).
+ *
+ * Changes an SI unit according to string representation.
+ *
+ * This is a more powerful version of gwy_si_unit_set_unit_string(), please
+ * see gwy_si_unit_new_parse() for some discussion.
+ *
+ * Since: 1.8
+ **/
+void
+gwy_si_unit_set_unit_string_parse(GwySIUnit *siunit,
+                                  const gchar *unit_string,
+                                  gint *power10)
+{
+    GwySIUnit2 *siunit2;
+
     gwy_debug("");
 
     g_free(siunit->unitstr);
     siunit->unitstr = g_strdup(unit_string);
-    gwy_si_unit_free(g_object_get_data((GObject*)siunit, "gwy-si-unit2"));
-    g_object_set_data((GObject*)siunit, "gwy-si-unit2",
-                      gwy_si_unit_parse(unit_string));
+    gwy_si_unit2_free(g_object_get_data((GObject*)siunit, "gwy-si-unit2"));
+    siunit2 = gwy_si_unit2_parse(unit_string);
+    g_object_set_data((GObject*)siunit, "gwy-si-unit2", siunit2);
+    if (power10)
+        *power10 = siunit2->power10;
 }
 
 /**
@@ -345,7 +402,7 @@ gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
  *
  * Obtains string representing a SI unit.
  *
- * Returns: String that represents unit (with no prefixes).
+ * Returns: String that represents base unit (with no prefixes).
  **/
 gchar*
 gwy_si_unit_get_unit_string(GwySIUnit *siunit)
@@ -353,6 +410,88 @@ gwy_si_unit_get_unit_string(GwySIUnit *siunit)
     gwy_debug("");
 
     return g_strdup(siunit->unitstr);
+}
+
+/**
+ * gwy_si_unit_multiply:
+ * @siunit1: An SI unit.
+ * @siunit2: An SI unit.
+ * @result:  An SI unit to set to product of @siunit1 and @siunit2.  It can be
+ *           one of @siunit1, @siunit2.
+ *
+ * Multiplies two SI units.
+ *
+ * Returns: @result, for convenience.
+ *
+ * Since: 1.8
+ **/
+GwySIUnit*
+gwy_si_unit_multiply(GwySIUnit *siunit1,
+                     GwySIUnit *siunit2,
+                     GwySIUnit *result)
+{
+    GwySIUnit2 *siunit12, *siunit22, *result2, *oldresult2;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit1), NULL);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit2), NULL);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(result), NULL);
+
+    siunit12 = (GwySIUnit2*)g_object_get_data((GObject*)siunit1,
+                                              "gwy-si-unit2");
+    siunit22 = (GwySIUnit2*)g_object_get_data((GObject*)siunit2,
+                                              "gwy-si-unit2");
+    result2 = (GwySIUnit2*)g_object_get_data((GObject*)result,
+                                              "gwy-si-unit2");
+    oldresult2 = result2;
+    g_free(result->unitstr);
+
+    result2 = gwy_si_unit2_power_multiply(siunit12, 1, siunit22, 1);
+    gwy_si_unit2_free(oldresult2);
+    result2->power10 = 0;
+    result->unitstr = gwy_si_unit2_format_as_plain_string(result2,
+                                                          &format_style_plain);
+    g_object_set_data((GObject*)result, "gwy-si-unit2", result2);
+
+    return result;
+}
+
+/**
+ * gwy_si_unit_multiply:
+ * @siunit: An SI unit.
+ * @power: Power to power @siunit to.
+ * @result:  An SI unit to set to power of @siunit.  It can be @siunit itself.
+ *
+ * Computes a power of an SI unit.
+ *
+ * Returns: @result, for convenience.
+ *
+ * Since: 1.8
+ **/
+GwySIUnit*
+gwy_si_unit_power(GwySIUnit *siunit,
+                  gint power,
+                  GwySIUnit *result)
+{
+    GwySIUnit2 *siunit2, *result2, *oldresult2;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(result), NULL);
+
+    siunit2 = (GwySIUnit2*)g_object_get_data((GObject*)siunit,
+                                             "gwy-si-unit2");
+    result2 = (GwySIUnit2*)g_object_get_data((GObject*)result,
+                                              "gwy-si-unit2");
+    oldresult2 = result2;
+    g_free(result->unitstr);
+
+    result2 = gwy_si_unit2_power(siunit2, power);
+    gwy_si_unit2_free(oldresult2);
+    result2->power10 = 0;
+    result->unitstr = gwy_si_unit2_format_as_plain_string(result2,
+                                                          &format_style_plain);
+    g_object_set_data((GObject*)result, "gwy-si-unit2", result2);
+
+    return result;
 }
 
 /**
@@ -393,8 +532,8 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
         format->magnitude = gwy_math_humanize_numbers(value/120, value,
                                                       &format->precision);
     siunit2->power10 = ROUND(log(format->magnitude)/G_LN10);
-    format->units = gwy_si_unit_format_as_plain_string(siunit2,
-                                                       &format_style_vfmarkup);
+    format->units = gwy_si_unit2_format_as_plain_string(siunit2,
+                                                        &format_style_vfmarkup);
 
     return format;
 }
@@ -444,8 +583,8 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
         format->magnitude = gwy_math_humanize_numbers(resolution, maximum,
                                                       &format->precision);
     siunit2->power10 = ROUND(log(format->magnitude)/G_LN10);
-    format->units = gwy_si_unit_format_as_plain_string(siunit2,
-                                                       &format_style_vfmarkup);
+    format->units = gwy_si_unit2_format_as_plain_string(siunit2,
+                                                        &format_style_vfmarkup);
 
     return format;
 }
@@ -494,8 +633,8 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
             = gwy_math_humanize_numbers(maximum/exp(G_LN10*sdigits),
                                         maximum, &format->precision);
     siunit2->power10 = ROUND(log(format->magnitude)/G_LN10);
-    format->units = gwy_si_unit_format_as_plain_string(siunit2,
-                                                       &format_style_vfmarkup);
+    format->units = gwy_si_unit2_format_as_plain_string(siunit2,
+                                                        &format_style_vfmarkup);
 
     return format;
 }
@@ -517,7 +656,7 @@ gwy_si_unit_value_format_free(GwySIValueFormat *format)
 /************************** GwySIUnit2 ***********************************/
 
 static void
-gwy_si_unit_free(GwySIUnit2* siunit)
+gwy_si_unit2_free(GwySIUnit2* siunit)
 {
     if (!siunit)
         return;
@@ -526,7 +665,7 @@ gwy_si_unit_free(GwySIUnit2* siunit)
 }
 
 static GwySIUnit2*
-gwy_si_unit_parse(const gchar *string)
+gwy_si_unit2_parse(const gchar *string)
 {
     GwySIUnit2 *siunit;
     GwySimpleUnit unit;
@@ -673,7 +812,7 @@ gwy_si_unit_parse(const gchar *string)
         else if (buf->len) {
             /* Are we really desperate?  Yes, we are! */
             i = buf->len;
-            while (i && (g_ascii_isdigit(buf->str[i-1]) 
+            while (i && (g_ascii_isdigit(buf->str[i-1])
                          || buf->str[i-1] == '-'))
                 i--;
             if (i != buf->len) {
@@ -731,16 +870,16 @@ gwy_si_unit_parse(const gchar *string)
         string = end;
     }
 
-    gwy_si_unit_canonicalize(siunit);
+    gwy_si_unit2_canonicalize(siunit);
 
     return siunit;
 }
 
 static GwySIUnit2*
-gwy_si_unit_power_multiply(GwySIUnit2 *siunit1,
-                           gint power1,
-                           GwySIUnit2 *siunit2,
-                           gint power2)
+gwy_si_unit2_power_multiply(GwySIUnit2 *siunit1,
+                            gint power1,
+                            GwySIUnit2 *siunit2,
+                            gint power2)
 {
     GwySimpleUnit *unit1, *unit2;
     GwySIUnit2 *siunit;
@@ -750,7 +889,7 @@ gwy_si_unit_power_multiply(GwySIUnit2 *siunit1,
         GWY_SWAP(GwySIUnit2*, siunit1, siunit2);
         GWY_SWAP(gint, power1, power2);
     }
-    siunit = gwy_si_unit_power(siunit1, power1);
+    siunit = gwy_si_unit2_power(siunit1, power1);
     siunit->power10 += power2*siunit2->power10;
 
     for (i = 0; i < siunit2->units->len; i++) {
@@ -766,14 +905,14 @@ gwy_si_unit_power_multiply(GwySIUnit2 *siunit1,
         if (j == siunit1->units->len)
             g_array_append_val(siunit1->units, *unit2);
     }
-    gwy_si_unit_canonicalize(siunit);
+    gwy_si_unit2_canonicalize(siunit);
 
     return siunit;
 }
 
 static GwySIUnit2*
-gwy_si_unit_power(GwySIUnit2 *siunit1,
-                  gint power1)
+gwy_si_unit2_power(GwySIUnit2 *siunit1,
+                   gint power1)
 {
     GwySimpleUnit *unit1;
     GwySIUnit2 *siunit;
@@ -796,7 +935,7 @@ gwy_si_unit_power(GwySIUnit2 *siunit1,
 }
 
 static GwySIUnit2*
-gwy_si_unit_canonicalize(GwySIUnit2 *siunit)
+gwy_si_unit2_canonicalize(GwySIUnit2 *siunit)
 {
     GwySimpleUnit *dst, *src;
     gint i, j;
@@ -833,13 +972,13 @@ gwy_si_unit_canonicalize(GwySIUnit2 *siunit)
 }
 
 static gchar*
-gwy_si_unit_format_as_plain_string(GwySIUnit2 *siunit,
-                                   const GwySIFormatStyle *fs)
+gwy_si_unit2_format_as_plain_string(GwySIUnit2 *siunit,
+                                    const GwySIFormatStyle *fs)
 {
     GString *string;
     gchar *s;
 
-    string = gwy_si_unit_format(siunit, fs);
+    string = gwy_si_unit2_format(siunit, fs);
     s = string->str;
     g_string_free(string, FALSE);
 
@@ -847,8 +986,8 @@ gwy_si_unit_format_as_plain_string(GwySIUnit2 *siunit,
 }
 
 static GString*
-gwy_si_unit_format(GwySIUnit2 *siunit,
-                   const GwySIFormatStyle *fs)
+gwy_si_unit2_format(GwySIUnit2 *siunit,
+                    const GwySIFormatStyle *fs)
 {
     GString *string;
     const gchar *prefix = "No GCC, this can't be used uninitialized";
@@ -894,7 +1033,7 @@ gwy_si_unit_format(GwySIUnit2 *siunit,
     /* check whether we are not out of prefix range */
     if (prefix_bearer >= 0) {
         unit = &g_array_index(siunit->units, GwySimpleUnit, prefix_bearer);
-        prefix = gwy_si_unit_prefix(siunit->power10/unit->power);
+        prefix = gwy_si_unit2_prefix(siunit->power10/unit->power);
         if (!prefix)
             prefix_bearer = -1;
     }
@@ -948,7 +1087,7 @@ gwy_si_unit_format(GwySIUnit2 *siunit,
 }
 
 const gchar*
-gwy_si_unit_prefix(gint power)
+gwy_si_unit2_prefix(gint power)
 {
     gint i;
 
