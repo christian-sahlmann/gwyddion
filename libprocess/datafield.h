@@ -21,6 +21,7 @@
 #ifndef __GWY_DATAFIELD_H__
 #define __GWY_DATAFIELD_H__
 #include <glib.h>
+#include <gtk/gtk.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/dataline.h>
 #include <libgwyddion/gwywatchable.h>
@@ -366,7 +367,7 @@ void gwy_data_field_yfft_real(GwyDataField *ra,
 
 void gwy_data_field_cwt(GwyDataField *data_field,
                         GwyInterpolationType interpolation,
-			gdouble scale,
+                        gdouble scale,
                         Gwy2DCWTWaveletType wtype);
 
 
@@ -385,15 +386,28 @@ void gwy_data_field_get_area_stats(GwyDataField *data_field,
                                     gint ulrow,
                                     gint brcol,
                                     gint brrow,
-   		                    gdouble *avg, 
-				    gdouble *ra,
-				    gdouble *rms, 
+                                    gdouble *avg, 
+                                    gdouble *ra,
+                                    gdouble *rms, 
                                     gdouble *skew, 
                                     gdouble *kurtosis);
+
+void gwy_data_field_get_line_stat_function(GwyDataField *data_field,
+                                           GwyDataLine *target_line,
+                                           gint ulcol,
+                                           gint ulrow,
+                                           gint brcol,
+                                           gint brrow,
+                                           GwySFOutputType type,
+                                           GtkOrientation orientation,
+                                           GwyInterpolationType interpolation, 
+                                           GwyWindowingType windowing,
+                                           gint nstats);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 
 #endif /*__GWY_DATAFIELD__*/
-
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

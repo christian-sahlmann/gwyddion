@@ -28,6 +28,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/app.h>
 
+
 typedef struct {
     gboolean is_visible;
     GtkWidget *graph;
@@ -403,6 +404,7 @@ sfunctions_selection_updated_cb(void)
 {
     GwyContainer *data;
     GwyDataField *datafield;
+    GwyDataLine dataline;
     gboolean is_visible, is_selected;
     gint j;
     gint x1, x2, y1, y2;
@@ -456,28 +458,40 @@ sfunctions_selection_updated_cb(void)
     z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
 
     j = 0;
-    x1 = gwy_data_field_rtoj(datafield, xmin);
-    y1 = gwy_data_field_rtoj(datafield, ymin);
-    x2 = gwy_data_field_rtoj(datafield, xmax);
-    y2 = gwy_data_field_rtoj(datafield, ymax);
-
-            /*gwy_graph_add_dataline_with_units(controls.graph, dtl->pdata[i],
-                               0, str->pdata[i], NULL,
-                               x_mag, z_mag,
-                               x_unit,
-                               z_unit
-                               );
-            */
-
-       
+    x1 = (gint)floor(gwy_data_field_rtoj(datafield, xmin)+0.5);
+    y1 = (gint)floor(gwy_data_field_rtoj(datafield, ymin)+0.5);
+    x2 = (gint)floor(gwy_data_field_rtoj(datafield, xmax)+0.5);
+    y2 = (gint)floor(gwy_data_field_rtoj(datafield, ymax)+0.5);
 
 
+    gwy_data_line_initialize(&dataline, 10, 10, 0);
+    
+    gwy_data_field_get_line_stat_function(datafield,
+                                          &dataline,
+                                          x1,
+                                          y1,
+                                          x2,
+                                          y2,
+                                          0,
+                                          0,
+                                          2,
+                                          GWY_WINDOWING_HANN,
+                                          100);
+   /* 
+    gwy_graph_add_dataline_with_units(controls.graph, &dataline,
+              0, "line", NULL,
+              x_mag, z_mag,
+              x_unit,
+              z_unit
+              );
+*/
 
     gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
     update_labels();
 
     g_free(x_unit);
     g_free(z_unit);
+    gwy_data_line_free(&dataline);
 
     if (!is_visible)
         sfunctions_dialog_set_visible(TRUE);

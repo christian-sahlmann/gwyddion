@@ -480,12 +480,10 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 
     if (x<0 && x>-0.1) x = 0;
     if (y<0 && x>-0.1) y = 0;
-
     if (!(x >= 0 && y >= 0 && y < a->yres && x < a->xres))
         printf("GRRRRRRRRRRRR: %f %f\n", x, y);
     g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres,
                          0.0);
-
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
         return 0.0;
@@ -944,7 +942,7 @@ gwy_data_field_area_fill(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres);
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -995,7 +993,7 @@ gwy_data_field_area_multiply(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres);
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1046,7 +1044,7 @@ gwy_data_field_area_add(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres);
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1092,7 +1090,7 @@ gwy_data_field_get_area_max(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1141,7 +1139,7 @@ gwy_data_field_get_area_min(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
 
 
     for (i = ulrow; i < brrow; i++) {
@@ -1189,7 +1187,7 @@ gwy_data_field_get_area_sum(GwyDataField *a, gint ulcol, gint ulrow, gint brcol,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1263,7 +1261,7 @@ gwy_data_field_get_area_rms(GwyDataField *a, gint ulcol, gint ulrow, gint brcol,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1326,7 +1324,7 @@ gwy_data_field_area_threshold(GwyDataField *a,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < a->xres && brrow < a->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= a->xres && brrow <= a->yres, 0);
 
     for (i = ulrow; i < brrow; i++) {
         row = a->data + i*a->xres + ulcol;
@@ -1511,9 +1509,12 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
     gdouble cosa, sina, size;
 
     g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol >= 0 && brrow >= 0
-                         && ulrow < a->yres && ulcol < a->xres && brrow < a->yres && brcol < a->xres,
+                         && ulrow <= a->yres && ulcol <= a->xres && brrow <= a->yres && brcol <= a->xres,
                          FALSE);
 
+ /*   brcol -= 1;
+    brrow -= 1;
+*/
     size = sqrt((ulcol - brcol)*(ulcol - brcol) + (ulrow - brrow)*(ulrow - brrow));
     if (res<=0) res = (gint)size;
 
@@ -2288,5 +2289,79 @@ gwy_data_field_get_area_stats(GwyDataField *data_field, gint ulcol, gint ulrow, 
     
 }
 
+
+void
+gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *target_line, 
+                                      gint ulcol, gint ulrow, gint brcol, gint brrow, GwySFOutputType type, GtkOrientation orientation,
+                                      GwyInterpolationType interpolation, GwyWindowingType windowing, gint nstats)
+{
+    gint k, j, size;
+    GwyDataLine hlp_line;
+    GwyDataLine hlp_tarline;
+    gdouble min, max;
+
+    gwy_debug("");
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    /*precompute settings if necessary*/
+    if (type==GWY_SF_OUTPUT_DH || type==GWY_SF_OUTPUT_CDH)
+    {
+        min = gwy_data_field_get_area_min(data_field, ulcol, ulrow, brcol, brrow);
+        max = gwy_data_field_get_area_max(data_field, ulcol, ulrow, brcol, brrow);
+    }
+    else if (type==GWY_SF_OUTPUT_DA || type==GWY_SF_OUTPUT_CDA)
+    {
+        min = -2;
+        max = 2;
+    }
+    
+   type = GWY_SF_OUTPUT_ACF;
+   
+    /*average over profiles*/
+    if (orientation == GTK_ORIENTATION_HORIZONTAL || orientation == GTK_ORIENTATION_VERTICAL)
+    {
+        size = brcol-ulcol;
+        gwy_data_line_initialize(&hlp_line, size, gwy_data_field_jtor(data_field, size), FALSE);
+        gwy_data_line_initialize(&hlp_tarline, size, gwy_data_field_jtor(data_field, size), FALSE);
+        
+        gwy_data_line_resample(target_line, size, interpolation);
+        gwy_data_line_fill(target_line, 0);
+
+        for (k = ulrow; k < brrow; k++) {
+            gwy_data_field_get_data_line(data_field, &hlp_line, k, ulcol, k, brcol-1, size, interpolation);
+
+            if (type==GWY_SF_OUTPUT_DH) 
+                gwy_data_line_dh(&hlp_line, &hlp_tarline, min, max, nstats);
+            else if (type==GWY_SF_OUTPUT_CDH)
+                gwy_data_line_cdh(&hlp_line, &hlp_tarline, min, max, nstats);
+            else if (type==GWY_SF_OUTPUT_DA)
+                gwy_data_line_da(&hlp_line, &hlp_tarline, min, max, nstats);
+            else if (type==GWY_SF_OUTPUT_CDA)
+                gwy_data_line_cda(&hlp_line, &hlp_tarline, min, max, nstats);
+            else if (type==GWY_SF_OUTPUT_ACF)
+                gwy_data_line_acf(&hlp_line, &hlp_tarline);
+            else if (type==GWY_SF_OUTPUT_HHCF)
+                gwy_data_line_hhcf(&hlp_line, &hlp_tarline);    
+            else if (type==GWY_SF_OUTPUT_PSDF)
+                gwy_data_line_psdf(&hlp_line, &hlp_tarline, windowing, interpolation);
+            
+            for (j=0; j<size; j++)
+            {
+                target_line->data[j] += hlp_tarline.data[j]/(brcol-ulcol);
+            }
+        }
+        gwy_data_line_free(&hlp_line);
+        gwy_data_line_free(&hlp_tarline);
+    }
+    else if (orientation == GTK_ORIENTATION_VERTICAL)
+    {
+    }
+
+    
+ 
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -178,14 +178,14 @@ void gwy_data_line_cdh(GwyDataLine *data_line,
                       guint nsteps);
 
 /*distribution of slopes*/
-void gwy_data_line_ds(GwyDataLine *data_line, 
+void gwy_data_line_da(GwyDataLine *data_line, 
                       GwyDataLine *target_line, 
                       gdouble ymin, 
                       gdouble ymax,
                       guint nsteps);
 
 /*cumulative distribution of slopes*/
-void gwy_data_line_cds(GwyDataLine *data_line, 
+void gwy_data_line_cda(GwyDataLine *data_line, 
                       GwyDataLine *target_line, 
                       gdouble ymin, 
                       gdouble ymax,
@@ -215,5 +215,5 @@ void gwy_data_line_psdf(GwyDataLine *data_line,
 #endif /*__GWY_DATALINE_H__*/
 
 
-
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

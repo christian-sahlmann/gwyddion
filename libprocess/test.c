@@ -25,7 +25,10 @@
 #include <math.h>
 #include <gtk/gtk.h>
 
-#include "libgwyprocess.h"
+#include "interpolation.h"
+#include "dataline.h"
+#include "simplefft.h"
+#include "datafield.h"
 #include <libdraw/gwypalette.h>
 #include <libdraw/gwypixfield.h>
 
@@ -84,6 +87,16 @@ int main(int argc, char *argv[])
     make_test_image(a);
     make_test_image(p);
 
+
+    gwy_data_field_get_line_stat_function(a, k,
+    0, 0, 300, 300, /*GwySFOutputType*/ 0, /*GtkOrientation*/ 0,
+    /*interpolation*/ 1, /*GwyWindowingType*/ 1, /*nstats*/ 200);
+
+    printf("Dataline:\n");
+    for (i=0; i<20; i++) printf("%d %f\n", i, k->data[i]);
+
+
+/*
     gwy_data_field_2dfft(a, b, c, d, gwy_data_line_fft_hum, GWY_WINDOWING_RECT, 1, GWY_INTERPOLATION_BILINEAR, 0, 0);
     gwy_data_field_copy(c, a);
     gwy_data_field_copy(d, b);
@@ -91,7 +104,7 @@ int main(int argc, char *argv[])
     gwy_data_field_fill(c, 0);
     gwy_data_field_fill(d, 0);
     gwy_data_field_2dfft(a, b, c, d, gwy_data_line_fft_hum, GWY_WINDOWING_RECT, -1, GWY_INTERPOLATION_BILINEAR, 0, 0);
-
+*/
 /*    for (i=0; i<512; i++) 
     {
        printf("%f  %f\n", a->data[20 + 512*i], //sqrt(a->data[20 + 512*i]*a->data[20 + 512*i]+ b->data[20 + 512*i]*b->data[20 + 512*i]), 

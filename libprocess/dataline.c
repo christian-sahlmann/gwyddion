@@ -987,7 +987,7 @@ gwy_data_line_acf(GwyDataLine *data_line, GwyDataLine *target_line)
         for (j=0; j<(n-i); j++)
         {
             val = data_line->data[n+i]*data_line->data[n];
-            target_line->data[i] += val*val;
+            target_line->data[i] += val*val; printf("val=%f\n", val);
         }
         target_line->data[i]/=(n-i);
     }
