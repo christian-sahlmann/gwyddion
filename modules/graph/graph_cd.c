@@ -623,7 +623,10 @@ recompute(FitArgs *args, FitControls *controls)
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), buffer);
     }
     for (i = 0; i < nparams; i++) {
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->err[i]);
+        if (args->err[i] == -1)
+            g_snprintf(buffer, sizeof(buffer), "-");
+        else
+            g_snprintf(buffer, sizeof(buffer), "%2.3g", args->err[i]);
         gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), buffer);
     }
 
@@ -706,6 +709,7 @@ dialog_update(FitControls *controls, FitArgs *args)
             */
         }
         else {
+            gtk_label_set_markup(GTK_LABEL(controls->param_des[i]), " ");
             gtk_widget_set_sensitive(controls->param_des[i], FALSE);
             /*gtk_widget_set_sensitive(controls->param_init[i], FALSE);
             gtk_widget_set_sensitive(controls->param_fit[i], FALSE);*/
@@ -1066,12 +1070,22 @@ create_results_window(FitArgs *args)
         attach_label(tab, s, i, 0, 0.0);
         value = args->par_res[i];
         sigma = args->err[i];
-        mag = gwy_math_humanize_numbers(sigma/12, fabs(value), &precision);
-        g_string_printf(str, "%.*f", precision, value/mag);
-        attach_label(tab, str->str, i, 2, 1.0);
-        g_string_printf(str, "%.*f", precision, sigma/mag);
-        attach_label(tab, str->str, i, 4, 1.0);
-        attach_label(tab, format_magnitude(su, mag), i, 5, 0.0);
+        if (sigma == -1)
+        {
+            g_string_printf(str, "%g", value);
+            attach_label(tab, str->str, i, 2, 1.0);
+            g_string_printf(str, "-");
+            attach_label(tab, str->str, i, 4, 1.0);
+        }
+        else
+        {
+            mag = gwy_math_humanize_numbers(sigma/12, fabs(value), &precision);
+            g_string_printf(str, "%.*f", precision, value/mag);
+            attach_label(tab, str->str, i, 2, 1.0);
+            g_string_printf(str, "%.*f", precision, sigma/mag);
+            attach_label(tab, str->str, i, 4, 1.0);
+            attach_label(tab, format_magnitude(su, mag), i, 5, 0.0);
+        }
     }
     row++;
 
