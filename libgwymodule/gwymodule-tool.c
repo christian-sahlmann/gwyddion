@@ -134,7 +134,7 @@ gwy_tool_func_build_toolbox(GtkSignalFunc item_callback,
     if (!entries)
         return toolbox;
 
-    for (l = entries->next; l; l = g_slist_next(l)) {
+    for (l = entries; l; l = g_slist_next(l)) {
         GwyToolFuncInfo *func_info = (GwyToolFuncInfo*)l->data;
 
         widget = gwy_toolbox_append(GWY_TOOLBOX(toolbox),
