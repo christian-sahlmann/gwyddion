@@ -43,7 +43,9 @@
         set_sensitive_state(item, state); \
     } while (0)
 
-static void       gwy_app_rerun_process_func_cb(void);
+static void       gwy_app_rerun_process_func_cb (void);
+static void       gwy_app_update_last_process_func (GtkWidget *menu,
+                                                    const gchar *name);
 static void       setup_sensitivity_keys       (void);
 static void       gwy_menu_set_flags_recursive (GtkWidget *widget,
                                                 GwyMenuSensitiveData *data);
@@ -109,8 +111,9 @@ gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
     gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
     /* re-run last item */
-    last = gtk_menu_item_new_with_mnemonic(_("_Last Used"));
     menu = gtk_item_factory_get_widget(item_factory, "<proc>/Data Process");
+    last = gtk_menu_item_new_with_mnemonic(_("_Last Used"));
+    g_object_set_data(G_OBJECT(last), "run-last-item", GINT_TO_POINTER(TRUE));
     gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
     set_sensitive_both(last, GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC, 0);
     g_signal_connect(last, "activate",
@@ -391,14 +394,64 @@ gwy_app_run_process_func_cb(gchar *name)
             gwy_app_data_view_update(data_view);
             menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window),
                                                 "<proc>"));
+            gwy_app_update_last_process_func(menu, name);
             gwy_menu_set_sensitive_recursive(menu, &sens_data);
-            /* TODO: Change menu item label to show what would be run */
-            g_object_set_data(G_OBJECT(menu), "last-func", name);
 
             return;
         }
     }
     g_critical("Trying to run `%s', but no run mode found (%d)", name, run);
+}
+
+static void
+gwy_app_update_last_process_func(GtkWidget *menu,
+                                 const gchar *name)
+{
+    static GtkWidget *label = NULL;
+    GtkWidget *item;
+    const gchar *menu_path;
+    gsize len, i, j;
+    gchar *s, *mp;
+    GList *l;
+
+    g_object_set_data(G_OBJECT(menu), "last-func", (gpointer)name);
+    /* Find the "run-last-item" menu item
+     * FIXME: this is very fragile */
+    if (!label) {
+        while (GTK_IS_BIN(menu))
+            menu = GTK_BIN(menu)->child;
+        item = GTK_WIDGET(GTK_MENU_SHELL(menu)->children->data);
+        menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(item));
+        for (l = GTK_MENU_SHELL(menu)->children; l; l = g_list_next(l)) {
+            if (g_object_get_data(G_OBJECT(l->data), "run-last-item"))
+                break;
+        }
+        if (!l) {
+            g_warning("Cannot find `Last Used' menu item");
+            return;
+        }
+        item = GTK_WIDGET(l->data);
+        label = GTK_BIN(item)->child;
+    }
+
+    menu_path = gwy_process_func_get_menu_path(name);
+    menu_path = strrchr(menu_path, '/');
+    g_assert(menu_path);
+    menu_path++;
+    len = strlen(menu_path);
+    if (g_str_has_suffix(menu_path, "..."))
+        len -= 3;
+    mp = g_new(gchar, len+1);
+    for (i = j = 0; i < len; i++) {
+        if (menu_path[i] != '_') {
+            mp[j++] = menu_path[i];
+        }
+    }
+    mp[j] = '\0';
+    s = g_strconcat(_("_Last Used"), " (", mp, ")", NULL);
+    gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
+    g_free(mp);
+    g_free(s);
 }
 
 static void
