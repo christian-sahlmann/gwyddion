@@ -18,19 +18,22 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#define DEBUG 1
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
 
-#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/file.h>
 #include <app/app.h>
 
+#define MAX_PARAMS 4
 
 /* Data for this function.*/
 
@@ -66,7 +69,7 @@ typedef struct {
     GtkWidget *param2_err;
     GtkWidget *param3_err;
     GtkWidget *param4_err;
-     GtkWidget *criterium;
+    GtkWidget *criterium;
 } FitControls;
 
 typedef struct {
@@ -82,12 +85,10 @@ typedef struct {
     gdouble par2_init;
     gdouble par3_init;
     gdouble par4_init;
-    gdouble par1_res;
-    gdouble par2_res;
-    gdouble par3_res;
-    gdouble par4_res;
-    gdouble crit; 
-    GwyNLFitPresetFunction *fitfunc;
+    gdouble par_res[MAX_PARAMS];
+    gdouble err[MAX_PARAMS];
+    gdouble crit;
+    const GwyNLFitPresetFunction *fitfunc;
     GwyGraph *parent_graph;
     gdouble **parent_xs;
     gdouble **parent_ys;
@@ -100,23 +101,23 @@ typedef struct {
 static gboolean    module_register           (const gchar *name);
 static gboolean    fit                       (GwyGraph *graph);
 static gboolean    fit_dialog                (FitArgs *args);
-static void        recompute                 (FitArgs *args, 
+static void        recompute                 (FitArgs *args,
                                               FitControls *controls);
-static void        reset                     (FitArgs *args, 
+static void        reset                     (FitArgs *args,
                                               FitControls *controls);
-static void        type_changed_cb           (GObject *item, 
+static void        type_changed_cb           (GObject *item,
                                               FitArgs *args);
-static void        from_changed_cb           (GtkWidget *entry, 
+static void        from_changed_cb           (GtkWidget *entry,
                                               FitArgs *args);
-static void        to_changed_cb             (GtkWidget *entry, 
+static void        to_changed_cb             (GtkWidget *entry,
                                               FitArgs *args);
-static void        par1_changed_cb           (GtkWidget *entry, 
+static void        par1_changed_cb           (GtkWidget *entry,
                                               FitArgs *args);
-static void        par2_changed_cb           (GtkWidget *entry, 
+static void        par2_changed_cb           (GtkWidget *entry,
                                               FitArgs *args);
-static void        par3_changed_cb           (GtkWidget *entry, 
+static void        par3_changed_cb           (GtkWidget *entry,
                                               FitArgs *args);
-static void        par4_changed_cb           (GtkWidget *entry, 
+static void        par4_changed_cb           (GtkWidget *entry,
                                               FitArgs *args);
 static void        ch1_changed_cb            (GtkToggleButton *button,
                                               FitArgs *args);
@@ -126,20 +127,20 @@ static void        ch3_changed_cb            (GtkToggleButton *button,
                                               FitArgs *args);
 static void        ch4_changed_cb            (GtkToggleButton *button,
                                               FitArgs *args);
-static void        dialog_update             (FitControls *controls, 
+static void        dialog_update             (FitControls *controls,
                                               FitArgs *args);
-static void        guess                     (FitControls *controls, 
+static void        guess                     (FitControls *controls,
                                               FitArgs *args);
 static void        graph_update              (FitControls *controls,
                                               FitArgs *args);
 static void        get_data                  (FitArgs *args);
-static void        graph_selected            (GwyGraphArea *area, 
+static void        graph_selected            (GwyGraphArea *area,
                                               FitArgs *args);
-static gint        normalize_data            (FitArgs *args, 
-                                              GwyDataLine *xdata, 
-                                              GwyDataLine *ydata, 
+static gint        normalize_data            (FitArgs *args,
+                                              GwyDataLine *xdata,
+                                              GwyDataLine *ydata,
                                               gint curve);
-static void        create_results_window     (GwyNLFitter *fitter);
+static void        create_results_window     (FitArgs *args);
 
 FitControls *pcontrols;
 
@@ -201,7 +202,7 @@ static void
 get_data(FitArgs *args)
 {
     gint i;
-    
+
     args->parent_nofcurves = gwy_graph_get_number_of_curves(args->parent_graph);
     args->parent_xs = (gdouble **) g_malloc(args->parent_nofcurves*sizeof(gdouble*));
     args->parent_ys = (gdouble **) g_malloc(args->parent_nofcurves*sizeof(gdouble*));
@@ -212,11 +213,11 @@ get_data(FitArgs *args)
         args->parent_ns[i] = gwy_graph_get_data_size(args->parent_graph, i);
         args->parent_xs[i] = (gdouble *) g_malloc(args->parent_ns[i]*sizeof(gdouble));
         args->parent_ys[i] = (gdouble *) g_malloc(args->parent_ns[i]*sizeof(gdouble));
-    
-        gwy_graph_get_data(args->parent_graph, 
+
+        gwy_graph_get_data(args->parent_graph,
                            args->parent_xs[i], args->parent_ys[i], i);
     }
-     
+
 }
 
 /*extract relevant part of data and normalize it to be fitable*/
@@ -224,35 +225,35 @@ static gint
 normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve)
 {
     gint i, j;
-   
+
     if (curve >= args->parent_nofcurves) return 0;
-    
+
     gwy_data_line_resample(xdata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(ydata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
 
-   
+
     j = 0;
     for (i=0; i<xdata->res; i++)
     {
         if ((args->parent_xs[curve][i] >= args->from && args->parent_xs[curve][i] <= args->to) || (args->from == args->to))
         {
             if (args->function_type == GWY_NLFIT_PRESET_GAUSSIAN_PSDF && i == 0) continue;
-            
+
             xdata->data[j] = args->parent_xs[curve][i];
             ydata->data[j] = args->parent_ys[curve][i];
             j++;
         }
     }
     if (j==0) return 0;
-   
-    
+
+
     if (j < xdata->res)
     {
         gwy_data_line_resize(xdata, 0, j);
         gwy_data_line_resize(ydata, 0, j);
     }
 
-    return j;    
+    return j;
 }
 
 
@@ -302,11 +303,11 @@ fit_dialog(FitArgs *args)
     controls.selector = gwy_option_menu_nlfitpreset(G_CALLBACK(type_changed_cb),
                                                     args, args->function_type);
     gtk_container_add(GTK_CONTAINER(vbox), controls.selector);
-       
+
     controls.equation = gtk_label_new("f(x) =");
     gtk_misc_set_alignment(GTK_MISC(controls.equation), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), controls.equation);
- 
+
     /*fit parameters*/
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), "<b>Fitting parameters:</b>");
@@ -319,19 +320,19 @@ fit_dialog(FitArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), "<b>initial  </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), "<b>result  </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
- 
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), "<b>error </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -343,22 +344,22 @@ fit_dialog(FitArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    
+
     controls.param1_des = gtk_label_new("a");
     gtk_misc_set_alignment(GTK_MISC(controls.param1_des), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.param1_des, 0, 1, 1, 2,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    
+
     controls.param2_des = gtk_label_new("c");
     gtk_misc_set_alignment(GTK_MISC(controls.param2_des), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.param2_des, 0, 1, 2, 3,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param3_des = gtk_label_new("b");
     gtk_misc_set_alignment(GTK_MISC(controls.param3_des), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.param3_des, 0, 1, 3, 4,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param4_des = gtk_label_new("d");
     gtk_misc_set_alignment(GTK_MISC(controls.param4_des), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.param4_des, 0, 1, 4, 5,
@@ -370,22 +371,22 @@ fit_dialog(FitArgs *args)
                      G_CALLBACK(par1_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param1_init, 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    
-    
+
+
     controls.param2_init = gtk_entry_new_with_max_length(12);
     gtk_entry_set_width_chars(GTK_ENTRY(controls.param2_init), 12);
     g_signal_connect(controls.param2_init, "changed",
                      G_CALLBACK(par2_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param2_init, 1, 2, 2, 3,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param3_init = gtk_entry_new_with_max_length(12);
     gtk_entry_set_width_chars(GTK_ENTRY(controls.param3_init), 12);
     g_signal_connect(controls.param3_init, "changed",
                      G_CALLBACK(par3_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param3_init, 1, 2, 3, 4,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param4_init = gtk_entry_new_with_max_length(12);
     gtk_entry_set_width_chars(GTK_ENTRY(controls.param4_init), 12);
     g_signal_connect(controls.param4_init, "changed",
@@ -396,15 +397,15 @@ fit_dialog(FitArgs *args)
     controls.param1_res = gtk_label_new("0.0");
     gtk_table_attach(GTK_TABLE(table), controls.param1_res, 2, 3, 1, 2,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    
+
     controls.param2_res = gtk_label_new("0.0");
     gtk_table_attach(GTK_TABLE(table), controls.param2_res, 2, 3, 2, 3,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param3_res = gtk_label_new("0.0");
     gtk_table_attach(GTK_TABLE(table), controls.param3_res, 2, 3, 3, 4,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param4_res = gtk_label_new("0.0");
     gtk_table_attach(GTK_TABLE(table), controls.param4_res, 2, 3, 4, 5,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
@@ -412,15 +413,15 @@ fit_dialog(FitArgs *args)
     controls.param1_err = gtk_label_new("0.0");
     gtk_table_attach(GTK_TABLE(table), controls.param1_err, 3, 4, 1, 2,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    
+
     controls.param2_err = gtk_label_new("0.0");
     gtk_table_attach(GTK_TABLE(table), controls.param2_err, 3, 4, 2, 3,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param3_err = gtk_label_new("0.0");
     gtk_table_attach(GTK_TABLE(table), controls.param3_err, 3, 4, 3, 4,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param4_err = gtk_label_new("0.0");
     gtk_table_attach(GTK_TABLE(table), controls.param4_err, 3, 4, 4, 5,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
@@ -430,31 +431,31 @@ fit_dialog(FitArgs *args)
                      G_CALLBACK(ch1_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param1_fit, 4, 5, 1, 2,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    
+
     controls.param2_fit = gtk_check_button_new();
     g_signal_connect(controls.param2_fit, "toggled",
                      G_CALLBACK(ch2_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param2_fit, 4, 5, 2, 3,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param3_fit = gtk_check_button_new();
     g_signal_connect(controls.param3_fit, "toggled",
                      G_CALLBACK(ch3_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param3_fit, 4, 5, 3, 4,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-     
+
     controls.param4_fit = gtk_check_button_new();
     g_signal_connect(controls.param4_fit, "toggled",
                      G_CALLBACK(ch4_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.param4_fit, 4, 5, 4, 5,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    
-    
+
+
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
-    
-    
+
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), "<b>Correlation matrix:</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -463,15 +464,15 @@ fit_dialog(FitArgs *args)
     controls.covar_row1 = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.covar_row1), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row1);
-    
+
     controls.covar_row2 = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.covar_row2), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row2);
-     
+
     controls.covar_row3 = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.covar_row3), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row3);
-     
+
     controls.covar_row4 = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.covar_row4), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row4);
@@ -487,46 +488,46 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(hbox2), controls.chisq);
 
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
- 
+
     /*FIt area*/
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), "<b>Fit area</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
-  
+
     table2 = gtk_table_new(2, 2, FALSE);
-    controls.data = gtk_adjustment_new(args->curve, 1, 
-                                       gwy_graph_get_number_of_curves(args->parent_graph), 
-                                       1, 5, 0); 
+    controls.data = gtk_adjustment_new(args->curve, 1,
+                                       gwy_graph_get_number_of_curves(args->parent_graph),
+                                       1, 5, 0);
     gwy_table_attach_spinbutton(table2, 1, _("graph data curve"), _(""),
                                 controls.data);
     gtk_container_add(GTK_CONTAINER(vbox), table2);
-    
-    
+
+
     hbox2 = gtk_hbox_new(FALSE, 0);
-   
+
     label = gtk_label_new("from");
     gtk_container_add(GTK_CONTAINER(hbox2), label);
-    
+
     controls.from = gtk_entry_new_with_max_length(8);
     gtk_container_add(GTK_CONTAINER(hbox2), controls.from);
     gtk_entry_set_width_chars(GTK_ENTRY(controls.from), 12);
     g_signal_connect(controls.from, "changed",
                       G_CALLBACK(from_changed_cb), args);
-    
-    
+
+
     label = gtk_label_new("to");
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
     controls.to = gtk_entry_new_with_max_length(8);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.to), 12); 
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.to), 12);
     gtk_container_add(GTK_CONTAINER(hbox2), controls.to);
     g_signal_connect(controls.to, "changed",
                       G_CALLBACK(to_changed_cb), args);
-  
+
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
- 
+
      /*graph*/
     controls.graph = gwy_graph_new();
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
@@ -536,18 +537,18 @@ fit_dialog(FitArgs *args)
     prop.is_line = 0;
     prop.point_size = 3;
     gwy_graph_set_autoproperties(GWY_GRAPH(controls.graph), &prop);
-    g_signal_connect(GWY_GRAPH(controls.graph)->area, "selected", 
+    g_signal_connect(GWY_GRAPH(controls.graph)->area, "selected",
                      G_CALLBACK(graph_selected), args);
-    
 
-    if (args->fitfunc != NULL) g_free(args->fitfunc);
+
+    /* XXX: WTF? if (args->fitfunc != NULL) g_free(args->fitfunc); */
     args->fitfunc = gwy_math_nlfit_get_preset(args->function_type);
 
     reset(args, &controls);
     dialog_update(&controls, args);
     graph_update(&controls, args);
     graph_selected(GWY_GRAPH(controls.graph)->area, args);
-        
+
     gtk_widget_show_all(dialog);
 
     do {
@@ -560,7 +561,7 @@ fit_dialog(FitArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            create_results_window(NULL);
+            create_results_window(args);
             gtk_widget_destroy(dialog);
             break;
 
@@ -577,13 +578,13 @@ fit_dialog(FitArgs *args)
             break;
         }
     } while (response != GTK_RESPONSE_OK);
-    
-    
+
+
     return TRUE;
 }
 
 static void
-clear(FitArgs *args, FitControls *controls)
+clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
     gtk_label_set_markup(GTK_LABEL(controls->param1_res), " ");
     gtk_label_set_markup(GTK_LABEL(controls->param2_res), " ");
@@ -599,21 +600,19 @@ clear(FitArgs *args, FitControls *controls)
     gtk_label_set_markup(GTK_LABEL(controls->covar_row2), " ");
     gtk_label_set_markup(GTK_LABEL(controls->covar_row3), " ");
     gtk_label_set_markup(GTK_LABEL(controls->covar_row4), " ");
-    
-    gtk_label_set_markup(GTK_LABEL(controls->chisq), " "); 
+
+    gtk_label_set_markup(GTK_LABEL(controls->chisq), " ");
 }
 
 /*recompute fit and update everything*/
-static void        
+static void
 recompute(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    GwyNLFitPresetFunction *function;
+    const GwyNLFitPresetFunction *function;
     gboolean fixed[4];
-    gdouble param[4];
-    gdouble err[4];
-    gchar buffer[50];
+    gchar buffer[64];
     gboolean ok;
     gint i;
     GString *label;
@@ -621,53 +620,53 @@ recompute(FitArgs *args, FitControls *controls)
 
     xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
     ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
-    
+
 
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
-    if (!normalize_data(args, xdata, ydata, args->curve - 1)) 
+    if (!normalize_data(args, xdata, ydata, args->curve - 1))
     {
         g_object_unref(xdata);
         g_object_unref(ydata);
         return;
     }
-    
+
     function = gwy_math_nlfit_get_preset(args->function_type);
-    
+
     fixed[0] = args->par1_fix;
     fixed[1] = args->par2_fix;
     fixed[2] = args->par3_fix;
     fixed[3] = args->par4_fix;
-    param[0] = args->par1_init;
-    param[1] = args->par2_init;
-    param[2] = args->par3_init;
-    param[3] = args->par4_init;
-   
+    args->par_res[0] = args->par1_init;
+    args->par_res[1] = args->par2_init;
+    args->par_res[2] = args->par3_init;
+    args->par_res[3] = args->par4_init;
+
     if (args->fitter) gwy_math_nlfit_free(args->fitter);
-    args->fitter = gwy_math_nlfit_fit_preset(function, 
+    args->fitter = gwy_math_nlfit_fit_preset(function,
                                   xdata->res, xdata->data, ydata->data,
                                   function->nparams,
-                                  param, err, fixed, NULL);
+                                  args->par_res, args->err, fixed, NULL);
 
-   
+
     if (function->nparams > 0)
     {
-       g_snprintf(buffer, sizeof(buffer), "%2.3g", param[0]);
-       gtk_label_set_markup(GTK_LABEL(controls->param1_res), buffer); 
+       g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par_res[0]);
+       gtk_label_set_markup(GTK_LABEL(controls->param1_res), buffer);
     }
     if (function->nparams > 1)
     {
-       g_snprintf(buffer, sizeof(buffer), "%2.3g", param[1]);
+       g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par_res[1]);
        gtk_label_set_markup(GTK_LABEL(controls->param2_res), buffer);
     }
     if (function->nparams > 2)
     {
-       g_snprintf(buffer, sizeof(buffer), "%2.3g", param[2]);
-       gtk_label_set_markup(GTK_LABEL(controls->param3_res), buffer); 
+       g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par_res[2]);
+       gtk_label_set_markup(GTK_LABEL(controls->param3_res), buffer);
     }
     if (function->nparams > 3)
     {
-        g_snprintf(buffer, sizeof(buffer), "%2.3g", param[3]);
-        gtk_label_set_markup(GTK_LABEL(controls->param4_res), buffer); 
+        g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par_res[3]);
+        gtk_label_set_markup(GTK_LABEL(controls->param4_res), buffer);
     }
 
     if (args->fitter->covar)
@@ -677,49 +676,49 @@ recompute(FitArgs *args, FitControls *controls)
 
         if (function->nparams > 0)
         {
-            g_snprintf(buffer, sizeof(buffer), "%2.3g", err[0]);
+            g_snprintf(buffer, sizeof(buffer), "%2.3g", args->err[0]);
             gtk_label_set_markup(GTK_LABEL(controls->param1_err), buffer);
         }
         if (function->nparams > 1)
         {
-            g_snprintf(buffer, sizeof(buffer), "%2.3g", err[1]);
+            g_snprintf(buffer, sizeof(buffer), "%2.3g", args->err[1]);
             gtk_label_set_markup(GTK_LABEL(controls->param2_err), buffer);
         }
          if (function->nparams > 2)
         {
-            g_snprintf(buffer, sizeof(buffer), "%2.3g", err[2]);
+            g_snprintf(buffer, sizeof(buffer), "%2.3g", args->err[2]);
             gtk_label_set_markup(GTK_LABEL(controls->param3_err), buffer);
         }
          if (function->nparams > 3)
         {
-            g_snprintf(buffer, sizeof(buffer), "%2.3g", err[3]);
+            g_snprintf(buffer, sizeof(buffer), "%2.3g", args->err[3]);
             gtk_label_set_markup(GTK_LABEL(controls->param4_err), buffer);
         }
-         
+
 
         if (function->nparams == 2)
         {
-            g_snprintf(buffer, sizeof(buffer), "%2.3f", 
+            g_snprintf(buffer, sizeof(buffer), "%2.3f",
                        gwy_math_nlfit_get_correlations(args->fitter, 0, 0));
             gtk_label_set_markup(GTK_LABEL(controls->covar_row1), buffer);
-    
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f", 
+
+            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f",
                        gwy_math_nlfit_get_correlations(args->fitter, 1, 0),
                        gwy_math_nlfit_get_correlations(args->fitter, 1, 1));
             gtk_label_set_markup(GTK_LABEL(controls->covar_row2), buffer);
         }
         if (function->nparams == 3)
         {
-            g_snprintf(buffer, sizeof(buffer), "%2.3f", 
+            g_snprintf(buffer, sizeof(buffer), "%2.3f",
                        gwy_math_nlfit_get_correlations(args->fitter, 0, 0));
             gtk_label_set_markup(GTK_LABEL(controls->covar_row1), buffer);
-        
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f", 
+
+            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f",
                        gwy_math_nlfit_get_correlations(args->fitter, 1, 0),
                        gwy_math_nlfit_get_correlations(args->fitter, 1, 1));
             gtk_label_set_markup(GTK_LABEL(controls->covar_row2), buffer);
-    
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f   %2.3f", 
+
+            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f   %2.3f",
                        gwy_math_nlfit_get_correlations(args->fitter, 2, 0),
                        gwy_math_nlfit_get_correlations(args->fitter, 2, 1),
                        gwy_math_nlfit_get_correlations(args->fitter, 2, 2));
@@ -728,22 +727,22 @@ recompute(FitArgs *args, FitControls *controls)
 
         if (function->nparams == 4)
         {
-            g_snprintf(buffer, sizeof(buffer), "%2.3f", 
+            g_snprintf(buffer, sizeof(buffer), "%2.3f",
                        gwy_math_nlfit_get_correlations(args->fitter, 0, 0));
             gtk_label_set_markup(GTK_LABEL(controls->covar_row1), buffer);
-    
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f", 
+
+            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f",
                        gwy_math_nlfit_get_correlations(args->fitter, 1, 0),
                        gwy_math_nlfit_get_correlations(args->fitter, 1, 1));
             gtk_label_set_markup(GTK_LABEL(controls->covar_row2), buffer);
 
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f   %2.3f", 
+            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f   %2.3f",
                        gwy_math_nlfit_get_correlations(args->fitter, 2, 0),
                        gwy_math_nlfit_get_correlations(args->fitter, 2, 1),
                        gwy_math_nlfit_get_correlations(args->fitter, 2, 2));
             gtk_label_set_markup(GTK_LABEL(controls->covar_row3), buffer);
-            
-            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f   %2.3f   %2.3f", 
+
+            g_snprintf(buffer, sizeof(buffer), "%2.3f   %2.3f   %2.3f   %2.3f",
                        gwy_math_nlfit_get_correlations(args->fitter, 3, 0),
                        gwy_math_nlfit_get_correlations(args->fitter, 3, 1),
                        gwy_math_nlfit_get_correlations(args->fitter, 3, 2),
@@ -761,30 +760,30 @@ recompute(FitArgs *args, FitControls *controls)
 
     for (i=0; i<xdata->res; i++)
     {
-        ydata->data[i] = function->function(xdata->data[i], function->nparams, param, NULL, &ok);
+        ydata->data[i] = function->function(xdata->data[i], function->nparams, args->par_res, NULL, &ok);
     }
-   
+
     graph_update(controls, args);
-    
+
     label = g_string_new("fit");
-    
+
     par.is_line = 1;
     par.is_point = 0;
     par.line_style = GDK_LINE_SOLID;
     par.line_size = 1;
     par.color.pixel = 0x00000000;
-    
-    gwy_graph_add_datavalues(GWY_GRAPH(controls->graph), 
-                                 xdata->data, 
+
+    gwy_graph_add_datavalues(GWY_GRAPH(controls->graph),
+                                 xdata->data,
                                  ydata->data,
-                                 xdata->res, 
-                                 label, &par);    
+                                 xdata->res,
+                                 label, &par);
     g_object_unref(xdata);
     g_object_unref(ydata);
 }
 
 /*get default parameters (guessed)*/
-static void        
+static void
 reset(FitArgs *args, FitControls *controls)
 {
     dialog_update(controls, args);
@@ -794,7 +793,7 @@ reset(FitArgs *args, FitControls *controls)
 static void
 type_changed_cb(GObject *item, FitArgs *args)
 {
-            
+
     args->function_type =
         GPOINTER_TO_INT(g_object_get_data(item,
                                             "fit-type"));
@@ -810,18 +809,18 @@ dialog_update(FitControls *controls, FitArgs *args)
 
     clear(args, controls);
     guess(controls, args);
-    
-    gtk_label_set_markup(GTK_LABEL(controls->equation), 
+
+    gtk_label_set_markup(GTK_LABEL(controls->equation),
                          gwy_math_nlfit_get_function_equation(args->fitfunc));
 
 
-    
+
     if (gwy_math_nlfit_get_function_nparams(args->fitfunc)>0)
     {
         gtk_widget_set_sensitive(controls->param1_des, TRUE);
         gtk_widget_set_sensitive(controls->param1_init, TRUE);
         gtk_widget_set_sensitive(controls->param1_fit, TRUE);
-        gtk_label_set_markup(GTK_LABEL(controls->param1_des), 
+        gtk_label_set_markup(GTK_LABEL(controls->param1_des),
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 0));
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->par1_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param1_init), buffer);
@@ -838,7 +837,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param2_des, TRUE);
         gtk_widget_set_sensitive(controls->param2_init, TRUE);
         gtk_widget_set_sensitive(controls->param2_fit, TRUE);
-        gtk_label_set_markup(GTK_LABEL(controls->param2_des), 
+        gtk_label_set_markup(GTK_LABEL(controls->param2_des),
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 1));
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->par2_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param2_init), buffer);
@@ -856,7 +855,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param3_des, TRUE);
         gtk_widget_set_sensitive(controls->param3_init, TRUE);
         gtk_widget_set_sensitive(controls->param3_fit, TRUE);
-        gtk_label_set_markup(GTK_LABEL(controls->param3_des), 
+        gtk_label_set_markup(GTK_LABEL(controls->param3_des),
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 2));
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->par3_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param3_init), buffer);
@@ -874,7 +873,7 @@ dialog_update(FitControls *controls, FitArgs *args)
         gtk_widget_set_sensitive(controls->param4_des, TRUE);
         gtk_widget_set_sensitive(controls->param4_init, TRUE);
         gtk_widget_set_sensitive(controls->param4_fit, TRUE);
-        gtk_label_set_markup(GTK_LABEL(controls->param4_des), 
+        gtk_label_set_markup(GTK_LABEL(controls->param4_des),
                          gwy_math_nlfit_get_function_param_name(args->fitfunc, 3));
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->par4_init);
         gtk_entry_set_text(GTK_ENTRY(controls->param4_init), buffer);
@@ -893,30 +892,30 @@ guess(FitControls *controls, FitArgs *args)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    GwyNLFitPresetFunction *function;
+    const GwyNLFitPresetFunction *function;
     gdouble param[4];
     gboolean ok;
 
     function = gwy_math_nlfit_get_preset(args->function_type);
     if (function->function_guess == NULL) return;
-    
+
     xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
     ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
-   
+
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
-    if (!normalize_data(args, xdata, ydata, args->curve - 1)) 
+    if (!normalize_data(args, xdata, ydata, args->curve - 1))
     {
         g_object_unref(xdata);
         g_object_unref(ydata);
         return;
     }
     function->function_guess(xdata->data, ydata->data, xdata->res, param, NULL, &ok);
-    
+
     args->par1_init = param[0];
     args->par2_init = param[1];
     args->par3_init = param[2];
     args->par4_init = param[3];
-    
+
     g_object_unref(xdata);
     g_object_unref(ydata);
 }
@@ -925,18 +924,18 @@ static void
 graph_update(FitControls *controls, FitArgs *args)
 {
     gint i;
-    
+
     /*clear graph*/
     gwy_graph_clear(GWY_GRAPH(controls->graph));
 
     /*add curves from parent graph*/
     for (i=0; i<args->parent_nofcurves; i++)
     {
-        gwy_graph_add_datavalues(GWY_GRAPH(controls->graph), 
-                                 args->parent_xs[i], 
+        gwy_graph_add_datavalues(GWY_GRAPH(controls->graph),
+                                 args->parent_xs[i],
                                  args->parent_ys[i],
-                                 args->parent_ns[i], 
-                                 gwy_graph_get_label(args->parent_graph, i), NULL);    
+                                 args->parent_ns[i],
+                                 gwy_graph_get_label(args->parent_graph, i), NULL);
     }
 
 }
@@ -946,11 +945,11 @@ graph_selected(GwyGraphArea *area, FitArgs *args)
 {
     gchar buffer[20];
     gdouble xmin, xmax, ymin, ymax;
- 
+
     if (area->seldata->data_start == area->seldata->data_end)
     {
         gwy_graph_get_boundaries(GWY_GRAPH(pcontrols->graph), &xmin, &xmax, &ymin, &ymax);
-        
+
         args->from = xmin;
         args->to = xmax;
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->from);
@@ -968,7 +967,7 @@ graph_selected(GwyGraphArea *area, FitArgs *args)
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->to);
         gtk_entry_set_text(GTK_ENTRY(pcontrols->to), buffer);
     }
-    dialog_update(pcontrols, args);    
+    dialog_update(pcontrols, args);
 }
 
 static void
@@ -1034,56 +1033,126 @@ ch4_changed_cb(GtkToggleButton *button, FitArgs *args)
 }
 
 static void
-create_results_window(GwyNLFitter *fitter)
+attach_label(GtkWidget *table, const gchar *text,
+             gint row, gint col, gdouble halign)
 {
-    GtkWidget *window, *view, *scroll;
-    GtkTextBuffer *buffer;
-    GtkTextIter iter;
-    GValue v;
-    gchar *s;
+    GtkWidget *label;
 
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), _("Fitting results"));
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), text);
+    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(label), halign, 0.5);
+
+    gtk_table_attach(GTK_TABLE(table), label,
+                     col, col+1, row, row+1, GTK_FILL, 0, 2, 2);
+}
+
+static void
+create_results_window(FitArgs *args)
+{
+    GwyNLFitter *fitter = args->fitter;
+    GtkWidget *window, *tab, *table;
+    gdouble mag, value, sigma;
+    gint row, curve, n, i, j;
+    gint precision;
+    GString *str, *su;
+    const gchar *s;
+
+    window = gtk_dialog_new_with_buttons(_("Fit results"), NULL,
+                                         GTK_DIALOG_NO_SEPARATOR,
+                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         NULL);
     gtk_container_set_border_width(GTK_CONTAINER(window), 6);
-    gtk_window_set_resizable(GTK_WINDOW(window), TRUE);
 
-    scroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_widget_set_size_request(scroll, 480, 300);
-    gtk_container_add(GTK_CONTAINER(window), scroll);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
-                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+    table = gtk_table_new(9, 2, FALSE);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(window)->vbox), table,
+                       FALSE, FALSE, 0);
+    row = 0;
+    curve = args->curve - 1;
 
-    view = gtk_text_view_new();
-    gtk_container_add(GTK_CONTAINER(scroll), view);
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scroll),
-                                        GTK_SHADOW_IN);
-    memset(&v, 0, sizeof(GValue));
-    g_value_init(&v, G_TYPE_BOOLEAN);
-    g_value_set_boolean(&v, FALSE);
-    g_object_set_property(G_OBJECT(view), "editable", &v);
-    g_object_set_property(G_OBJECT(view), "cursor-visible", &v);
-    g_value_unset(&v);
-    g_value_init(&v, G_TYPE_INT);
-    g_value_set_int(&v, GTK_WRAP_WORD);
-    g_object_set_property(G_OBJECT(view), "wrap-mode", &v);
-    g_value_unset(&v);
+    attach_label(table, _("<b>Data:</b>"), row, 0, 0.0);
+    str = gwy_graph_get_label(GWY_GRAPH(args->parent_graph), curve);
+    attach_label(table, str->str, row, 1, 0.0);
+    row++;
 
-    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
-    gtk_text_buffer_create_tag(buffer, "pre",
-                               "family", "monospace",
-                               "wrap_mode", GTK_WRAP_NONE,
-                               NULL);
-    gtk_text_buffer_get_end_iter(buffer, &iter);
-    gtk_text_buffer_insert_with_tags_by_name(buffer, &iter,
-                                             "Fitter not available.", -1,
-                                             "pre", NULL);
+    /* XXX: show fitted points only */
+    str = g_string_new("");
+    su = g_string_new("");
+    attach_label(table, _("Num of points:"), row, 0, 0.0);
+    g_string_printf(str, "%d", args->parent_ns[curve]);
+    attach_label(table, str->str, row, 1, 0.0);
+    row++;
 
-    gtk_text_buffer_get_start_iter(buffer, &iter);
-    gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(view), &iter,
-                                 0.0, FALSE, 0.0, 0.0);
+    attach_label(table, _("X range:"), row, 0, 0.0);
+    mag = gwy_math_humanize_numbers((args->to - args->from)/120,
+                                    MAX(fabs(args->from), fabs(args->to)),
+                                    &precision);
+    g_string_printf(su, "%sSU", gwy_math_SI_prefix(mag));
+    g_string_printf(str, "%.*f–%.*f %s",
+                    precision, args->from/mag,
+                    precision, args->to/mag,
+                    su->str);
+    attach_label(table, str->str, row, 1, 0.0);
+    row++;
 
-    g_signal_connect(window, "delete_event",
-                     G_CALLBACK(gtk_widget_destroy), NULL);
+    attach_label(table, _("<b>Function:</b>"), row, 0, 0.0);
+    /* XXX: memory leak now */
+    attach_label(table, gwy_math_nlfit_get_function_equation(args->fitfunc),
+                 row, 1, 0.0);
+    row++;
+
+    attach_label(table, _("<b>Results</b>"), row, 0, 0.0);
+    row++;
+
+    n = gwy_math_nlfit_get_function_nparams(args->fitfunc);
+    tab = gtk_table_new(n, 6, FALSE);
+    gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    for (i = 0; i < n; i++) {
+        attach_label(tab, "=", i, 1, 0.5);
+        attach_label(tab, "±", i, 3, 0.5);
+        /* XXX: memory leak now */
+        s = gwy_math_nlfit_get_function_param_name(args->fitfunc, i);
+        attach_label(tab, s, i, 0, 0.0);
+        value = args->par_res[i];
+        sigma = args->err[i];
+        mag = gwy_math_humanize_numbers(sigma/12, value, &precision);
+        g_string_printf(str, "%.*f", precision, value/mag);
+        attach_label(tab, str->str, i, 2, 1.0);
+        g_string_printf(str, "%.*f", precision, sigma/mag);
+        attach_label(tab, str->str, i, 4, 1.0);
+        g_string_printf(su, "%sSU", gwy_math_SI_prefix(mag));
+        attach_label(tab, su->str, i, 5, 0.0);
+    }
+    row++;
+
+    attach_label(table, _("Residual sum:"), row, 0, 0.0);
+    sigma = gwy_math_nlfit_get_dispersion(fitter);
+    mag = gwy_math_humanize_numbers(sigma/120, sigma, &precision);
+    g_string_printf(su, "%sSU", gwy_math_SI_prefix(mag));
+    g_string_printf(str, "%.*f %s", precision, sigma/mag, su->str);
+    attach_label(table, str->str, row, 1, 0.0);
+    row++;
+
+    attach_label(table, _("<b>Covariance matrix</b>"), row, 0, 0.0);
+    row++;
+
+    tab = gtk_table_new(n, n, TRUE);
+    gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j <= i; j++) {
+            g_string_printf(str, "% .03f",
+                            gwy_math_nlfit_get_correlations(fitter, i, j));
+            attach_label(tab, str->str, i, j, 1.0);
+        }
+    }
+    row++;
+
+    g_string_free(str, TRUE);
+    g_string_free(su, TRUE);
+
+    g_signal_connect(window, "response", G_CALLBACK(gtk_widget_destroy), NULL);
     gtk_widget_show_all(window);
 }
 
