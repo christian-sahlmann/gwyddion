@@ -22,7 +22,7 @@ DOC_SOURCE_DIR = ${top_srcdir}/$(DOC_DIRNAME)
 SCANOBJ_OPTIONS =
 
 # Extra options to supply to gtkdoc-scan.
-SCAN_OPTIONS =
+SCAN_OPTIONS =--deprecated-guards="GWY_DISABLE_DEPRECATED"
 
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS =
