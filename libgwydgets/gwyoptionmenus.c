@@ -157,6 +157,7 @@ gwy_option_menu_palette(GCallback callback,
     return omenu;
 }
 
+/* XXX: magic static variables */
 static GtkWidget*
 gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
 {
