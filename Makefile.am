@@ -14,6 +14,7 @@ SUBDIRS = \
 	modules \
 	plugins \
 	pixmaps \
+	python \
 	devel-docs
 
 M4TESTS = \

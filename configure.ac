@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.3, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.3cvs20040615, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -23,6 +23,7 @@ AC_CONFIG_FILES(\
   plugins/file/Makefile \
   plugins/process/Makefile \
   pixmaps/Makefile \
+  python/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyapp/Makefile \
   devel-docs/libgwyddion/Makefile \
@@ -60,7 +61,11 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_CHECK_PROGS([SED],[sed])
 AC_CHECK_PROGS([STRIP],[strip])
+AM_PATH_PYTHON(2.2,,:)
+AC_PATH_PROGS(PERL,perl5 perl,:)
 gtk_CHECK_GTK_DOC
+
+AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
 
 dnl With GCC, be paranoiac.  It should compile really cleanly.
 dnl Except -Wno-sign-compare, but older gcc's don't know it.
