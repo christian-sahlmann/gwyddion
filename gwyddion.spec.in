@@ -51,6 +51,7 @@ your own plug-ins.
   gwypixmapdir=$RPM_BUILD_ROOT%{_datadir}/%{name}/pixmaps \
   HTML_DIR=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
 %__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/*/*.so
+%__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/*.so
 %__strip $RPM_BUILD_ROOT%{_libdir}/libgwy*.so.*
 
 %clean
@@ -72,6 +73,7 @@ your own plug-ins.
 %{_libdir}/%{name}/modules/graph/*.so
 %{_libdir}/%{name}/modules/process/*.so
 %{_libdir}/%{name}/modules/tool/*.so
+%{_libdir}/%{name}/modules/*.so
 %dir %{_libdir}/%{name}/modules/file
 %dir %{_libdir}/%{name}/modules/graph
 %dir %{_libdir}/%{name}/modules/process
