@@ -432,22 +432,16 @@ mark_load_args(GwyContainer *container,
 {
     *args = mark_defaults;
 
-    if (gwy_container_contains_by_name(container, inverted_key))
-        args->inverted = gwy_container_get_boolean_by_name(container, inverted_key);
-    if (gwy_container_contains_by_name(container, isheight_key))
-        args->is_height = gwy_container_get_boolean_by_name(container, isheight_key);
-    if (gwy_container_contains_by_name(container, isslope_key))
-        args->is_slope = gwy_container_get_boolean_by_name(container, isslope_key);
-    if (gwy_container_contains_by_name(container, islap_key))
-        args->is_lap = gwy_container_get_boolean_by_name(container, islap_key);
-    if (gwy_container_contains_by_name(container, height_key))
-        args->height = gwy_container_get_double_by_name(container, height_key);
-    if (gwy_container_contains_by_name(container, slope_key))
-        args->slope = gwy_container_get_double_by_name(container, slope_key);
-    if (gwy_container_contains_by_name(container, lap_key))
-        args->lap = gwy_container_get_double_by_name(container, lap_key);
-    if (gwy_container_contains_by_name(container, mergetype_key))
-        args->merge_type = gwy_container_get_int32_by_name(container, mergetype_key);
+    gwy_container_gis_boolean_by_name(container, inverted_key, &args->inverted);
+    gwy_container_gis_boolean_by_name(container, isheight_key,
+                                      &args->is_height);
+    gwy_container_gis_boolean_by_name(container, isslope_key, &args->is_slope);
+    gwy_container_gis_boolean_by_name(container, islap_key, &args->is_lap);
+    gwy_container_gis_double_by_name(container, height_key, &args->height);
+    gwy_container_gis_double_by_name(container, slope_key, &args->slope);
+    gwy_container_gis_double_by_name(container, lap_key, &args->lap);
+    gwy_container_gis_int32_by_name(container, mergetype_key,
+                                    &args->merge_type);
 
 }
 
