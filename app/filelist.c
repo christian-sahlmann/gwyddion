@@ -167,7 +167,7 @@ static void  gwy_recent_file_free                    (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
 static G_CONST_RETURN gchar* gwy_recent_file_thumbnail_dir (void);
 
-static guint remember_recent_files = 256;
+static guint remember_recent_files = 512;
 
 static Controls gcontrols = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
@@ -517,6 +517,8 @@ cell_renderer_thumb(G_GNUC_UNUSED GtkTreeViewColumn *column,
     GwyRecentFile *rf;
     guint id;
 
+    if (!GTK_WIDGET_REALIZED(gcontrols.list))
+        return;
     id = GPOINTER_TO_UINT(userdata);
     g_return_if_fail(id == FILELIST_THUMB);
     gtk_tree_model_get(model, iter, FILELIST_RAW, &rf, -1);
