@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <libgwyddion/gwymacros.h>
 #include <string.h>
 #include <libgwyddion/gwymath.h>
@@ -45,15 +45,19 @@ typedef struct {
     GtkWidget *cmax;
     GtkWidget *cdatamin;
     GtkWidget *cdatamax;
-    gboolean do_preview;
     gboolean in_update;
-    IColorRangeSource range_source;
-    gdouble hmin;
-    gdouble hmax;
+    gboolean initial_use;
+    gdouble min;
+    gdouble max;
     gdouble datamin;
     gdouble datamax;
+    /* storable state */
     GQuark key_min;
     GQuark key_max;
+    gboolean do_preview;
+    IColorRangeSource range_source;
+    gdouble rel_min;
+    gdouble rel_max;
 } ToolControls;
 
 static gboolean   module_register             (const gchar *name);
@@ -68,6 +72,7 @@ static void       apply                       (GwyUnitoolState *state);
 static void       do_preview_updated          (GtkWidget *toggle,
                                                GwyUnitoolState *state);
 static void       histogram_selection_changed (GwyUnitoolState *state);
+static void       update_percentages          (ToolControls *controls);
 static void       load_args                   (GwyContainer *container,
                                                ToolControls *controls);
 static void       save_args                   (GwyContainer *container,
@@ -137,7 +142,7 @@ use(GwyDataWindow *data_window,
         controls->key_min = g_quark_from_string("/0/base/min");
         controls->key_max = g_quark_from_string("/0/base/max");
     }
-    /* TODO: setup initial state according to USE_SELECTION/USE_HISTOGRAM */
+    ((ToolControls*)state->user_data)->initial_use = TRUE;
     return gwy_unitool_use(state, data_window, reason);
 }
 
@@ -156,7 +161,7 @@ dialog_create(GwyUnitoolState *state)
     GtkWidget *dialog, *table, *frame, *label;
     gint row;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
@@ -205,14 +210,13 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(controls->cdatamin), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls->cdatamin, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gwy_unitool_update_label(state->value_format, controls->cdatamin,
+                             controls->datamin);
 
     controls->cdatamax = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls->cdatamax), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls->cdatamax, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
-    gwy_unitool_update_label(state->value_format, controls->cdatamin,
-                             controls->datamin);
     gwy_unitool_update_label(state->value_format, controls->cdatamax,
                              controls->datamax);
 
@@ -244,49 +248,48 @@ dialog_update(GwyUnitoolState *state,
               GwyUnitoolUpdateType reason)
 {
     GwyGraph *graph;
-    gboolean is_visible, is_selected;
+    gboolean is_visible;
     GwyContainer *data;
     GwyDataField *dfield;
     ToolControls *controls;
+    gint isel[4];
 
-    gwy_debug("");
+    gwy_debug("%d", reason);
 
     controls = (ToolControls*)state->user_data;
     if (controls->in_update)
         return;
 
-    controls->range_source = USE_HISTOGRAM;
+    controls->in_update = TRUE;
     is_visible = state->is_visible;
-    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
-    if (!is_visible && !is_selected) {
-        if (reason == GWY_UNITOOL_UPDATED_DATA)
-            apply(state);
-        return;
-    }
 
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
     graph = GWY_GRAPH(controls->histogram);
-    /* XXX */
-    gtk_widget_hide(GTK_WIDGET(graph->axis_top));
-    gtk_widget_hide(GTK_WIDGET(graph->axis_bottom));
-    gtk_widget_hide(GTK_WIDGET(graph->axis_left));
-    gtk_widget_hide(GTK_WIDGET(graph->axis_right));
-    gtk_widget_hide(GTK_WIDGET(graph->corner_tl));
-    gtk_widget_hide(GTK_WIDGET(graph->corner_bl));
-    gtk_widget_hide(GTK_WIDGET(graph->corner_tr));
-    gtk_widget_hide(GTK_WIDGET(graph->corner_br));
-    gtk_widget_hide(GTK_WIDGET(graph->area->lab));
 
-    if (reason == GWY_UNITOOL_UPDATED_DATA
-        || !gwy_graph_get_number_of_curves(graph)) {
+    /* XXX */
+    if (controls->initial_use) {
+        gtk_widget_hide(GTK_WIDGET(graph->axis_top));
+        gtk_widget_hide(GTK_WIDGET(graph->axis_bottom));
+        gtk_widget_hide(GTK_WIDGET(graph->axis_left));
+        gtk_widget_hide(GTK_WIDGET(graph->axis_right));
+        gtk_widget_hide(GTK_WIDGET(graph->corner_tl));
+        gtk_widget_hide(GTK_WIDGET(graph->corner_bl));
+        gtk_widget_hide(GTK_WIDGET(graph->corner_tr));
+        gtk_widget_hide(GTK_WIDGET(graph->corner_br));
+        gtk_widget_hide(GTK_WIDGET(graph->area->lab));
+    }
+
+    if (reason == GWY_UNITOOL_UPDATED_DATA || controls->initial_use) {
         GwyGraphAutoProperties prop;
         GwyDataLine *dataline;
         GString *graph_title;
 
-        gwy_graph_clear(graph);
+        controls->datamin = gwy_data_field_get_min(dfield);
+        controls->datamax = gwy_data_field_get_max(dfield);
 
+        /* Update the curve even if not visible to get graph ranges right */
+        gwy_graph_clear(graph);
         gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
         prop.is_point = 0;
         prop.is_line = 1;
@@ -310,7 +313,89 @@ dialog_update(GwyUnitoolState *state,
         g_object_unref(dataline);
     }
 
-    gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, NULL);
+    switch (reason) {
+        case GWY_UNITOOL_UPDATED_SELECTION:
+        if (!controls->initial_use)
+            controls->range_source = USE_SELECTION;
+        break;
+
+        case GWY_UNITOOL_UPDATED_CONTROLS:
+        controls->range_source = USE_HISTOGRAM;
+        break;
+
+        default:
+        /* data was updated, so keep whatever source is set */
+        break;
+    }
+
+    if (controls->range_source == USE_SELECTION) {
+        if (gwy_unitool_rect_info_table_fill(state, &controls->labels,
+                                             NULL, isel)) {
+            controls->min = gwy_data_field_area_get_min(dfield,
+                                                        isel[0], isel[1],
+                                                        isel[2] - isel[0],
+                                                        isel[3] - isel[1]);
+            controls->max = gwy_data_field_area_get_max(dfield,
+                                                        isel[0], isel[1],
+                                                        isel[2] - isel[0],
+                                                        isel[3] - isel[1]);
+        }
+        else {
+            controls->min = controls->datamin;
+            controls->max = controls->datamax;
+        }
+        update_percentages(controls);
+
+        /* XXX */
+        if (controls->rel_min == 0.0 && controls->rel_max == 1.0)
+            gwy_graph_area_set_selection(graph->area,
+                                         graph->area->x_min,
+                                         graph->area->x_min);
+        else {
+            gdouble graph_min, graph_max, graph_range;
+
+            graph_range = graph->area->x_max - graph->area->x_min;
+            graph_min = controls->rel_min*graph_range + graph->area->x_min;
+            graph_max = controls->rel_max*graph_range + graph->area->x_min;
+            gwy_graph_area_set_selection(graph->area,
+                                         graph_min, graph_max);
+        }
+    }
+
+    if (controls->range_source == USE_HISTOGRAM) {
+        GwyGraphStatus_SelData *fuck;
+
+        fuck = (GwyGraphStatus_SelData*)gwy_graph_get_status_data(graph);
+        gwy_debug("graph selection: [%d, %d]", fuck->scr_start, fuck->scr_end);
+        if (fuck->scr_start == fuck->scr_end) {
+            controls->min = controls->datamin;
+            controls->max = controls->datamax;
+            controls->rel_min = 0.0;
+            controls->rel_max = 1.0;
+        }
+        else {
+            controls->min = MIN(fuck->data_start, fuck->data_end);
+            controls->max = MAX(fuck->data_end, fuck->data_start);
+            controls->min += controls->datamin;
+            controls->max += controls->datamin;
+        }
+        update_percentages(controls);
+    }
+
+    if (is_visible) {
+        gwy_unitool_update_label(state->value_format, controls->cmin,
+                                 controls->min);
+        gwy_unitool_update_label(state->value_format, controls->cmax,
+                                 controls->max);
+        gwy_unitool_update_label(state->value_format, controls->cdatamin,
+                                 controls->datamin);
+        gwy_unitool_update_label(state->value_format, controls->cdatamax,
+                                 controls->datamax);
+    }
+
+    controls->initial_use = FALSE;
+    controls->in_update = FALSE;
+
     if (controls->do_preview)
         apply(state);
 }
@@ -333,9 +418,6 @@ apply(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwyContainer *data;
-    GwyDataField *dfield;
-    gint isel[4];
-    gdouble vmin, vmax;
 
     controls = (ToolControls*)state->user_data;
     if (controls->in_update)
@@ -343,39 +425,8 @@ apply(GwyUnitoolState *state)
 
     controls->in_update = TRUE;
     data = gwy_data_window_get_data(state->data_window);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    controls->datamin = gwy_data_field_get_min(dfield);
-    controls->datamax = gwy_data_field_get_max(dfield);
-
-    /* TODO: behave according to USE_HISTOGRAM/USE_SELECTION */
-    if (gwy_unitool_rect_info_table_fill(state, &controls->labels,
-                                         NULL, isel)) {
-        vmin = gwy_data_field_area_get_min(dfield, isel[0], isel[1],
-                                           isel[2] - isel[0],
-                                           isel[3] - isel[1]);
-        vmax = gwy_data_field_area_get_max(dfield, isel[0], isel[1],
-                                           isel[2] - isel[0],
-                                           isel[3] - isel[1]);
-        gwy_container_set_double(data, controls->key_min, vmin);
-        gwy_container_set_double(data, controls->key_max, vmax);
-        controls->hmin = vmin;
-        controls->hmax = vmax;
-    }
-    else {
-        gwy_container_remove(data, controls->key_min);
-        gwy_container_remove(data, controls->key_max);
-        controls->hmin = controls->datamin;
-        controls->hmax = controls->datamax;
-    }
-    gwy_unitool_update_label(state->value_format, controls->cmin,
-                             controls->hmin);
-    gwy_unitool_update_label(state->value_format, controls->cmax,
-                             controls->hmax);
-    gwy_unitool_update_label(state->value_format, controls->cdatamin,
-                             controls->datamin);
-    gwy_unitool_update_label(state->value_format, controls->cdatamax,
-                             controls->datamax);
+    gwy_container_set_double(data, controls->key_min, controls->min);
+    gwy_container_set_double(data, controls->key_max, controls->max);
 
     gwy_data_view_update
         (GWY_DATA_VIEW(gwy_data_window_get_data_view
@@ -399,57 +450,37 @@ static void
 histogram_selection_changed(GwyUnitoolState *state)
 {
     ToolControls *controls;
-    GwyContainer *data;
-    GwyGraph *graph;
-    GwyGraphStatus_SelData *fuck;
 
     controls = (ToolControls*)state->user_data;
     if (controls->in_update)
         return;
 
-    controls->in_update = TRUE;
-    controls->range_source = USE_HISTOGRAM;
+    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
+}
 
-    graph = GWY_GRAPH(controls->histogram);
-    /* XXX */
-    fuck = (GwyGraphStatus_SelData*)gwy_graph_get_status_data(graph);
-    data = gwy_data_window_get_data(state->data_window);
+static void
+update_percentages(ToolControls *controls)
+{
+    gdouble range;
 
-    if (fuck->scr_start == fuck->scr_end) {
-        controls->hmin = controls->datamin;
-        controls->hmax = controls->datamax;
+    range = controls->datamax - controls->datamin;
+    if (range == 0.0
+        || (controls->min == controls->datamin
+            && controls->max == controls->datamax)) {
+        controls->rel_min = 0.0;
+        controls->rel_max = 1.0;
     }
     else {
-        controls->hmin = MIN(fuck->data_start, fuck->data_end)
-                         + controls->datamin;
-        controls->hmax = MAX(fuck->data_end, fuck->data_start)
-                         + controls->datamin;
+        controls->rel_min = (controls->min - controls->datamin)/range;
+        controls->rel_max = (controls->max - controls->datamin)/range;
     }
-    gwy_unitool_update_label(state->value_format, controls->cmin,
-                             controls->hmin);
-    gwy_unitool_update_label(state->value_format, controls->cmax,
-                             controls->hmax);
-
-    if (controls->do_preview) {
-        if (fuck->scr_start == fuck->scr_end) {
-            gwy_container_remove(data, controls->key_min);
-            gwy_container_remove(data, controls->key_max);
-        }
-        else {
-            gwy_container_set_double(data, controls->key_min, controls->hmin);
-            gwy_container_set_double(data, controls->key_max, controls->hmax);
-        }
-
-        gwy_data_view_update
-            (GWY_DATA_VIEW(gwy_data_window_get_data_view
-                            (GWY_DATA_WINDOW(state->data_window))));
-    }
-
-    controls->in_update = FALSE;
+    gwy_debug("%f %f", controls->rel_min, controls->rel_max);
 }
 
 static const gchar *range_source_key = "/tool/icolorange/range_source";
 static const gchar *do_preview_key = "/tool/icolorange/do_preview";
+static const gchar *rel_min_key = "/tool/icolorange/rel_min";
+static const gchar *rel_max_key = "/tool/icolorange/rel_max";
 
 static void
 save_args(GwyContainer *container, ToolControls *controls)
@@ -458,6 +489,10 @@ save_args(GwyContainer *container, ToolControls *controls)
                                       controls->do_preview);
     gwy_container_set_enum_by_name(container, range_source_key,
                                    controls->range_source);
+    gwy_container_set_double_by_name(container, rel_min_key,
+                                     controls->rel_min);
+    gwy_container_set_double_by_name(container, rel_max_key,
+                                     controls->rel_max);
 }
 
 static void
@@ -465,16 +500,24 @@ load_args(GwyContainer *container, ToolControls *controls)
 {
     controls->do_preview = TRUE;
     controls->range_source = USE_SELECTION;
+    controls->rel_min = 0.0;
+    controls->rel_max = 1.0;
 
     gwy_container_gis_enum_by_name(container, range_source_key,
                                    &controls->range_source);
     gwy_container_gis_boolean_by_name(container, do_preview_key,
                                       &controls->do_preview);
+    gwy_container_gis_double_by_name(container, rel_min_key,
+                                     &controls->rel_min);
+    gwy_container_gis_double_by_name(container, rel_max_key,
+                                     &controls->rel_max);
 
     /* sanitize */
     controls->do_preview = !!controls->do_preview;
     controls->range_source = CLAMP(controls->range_source,
                                    USE_SELECTION, USE_HISTOGRAM);
+    controls->rel_min = CLAMP(controls->rel_min, 0.0, 1.0);
+    controls->rel_max = CLAMP(controls->rel_max, controls->rel_min, 1.0);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
