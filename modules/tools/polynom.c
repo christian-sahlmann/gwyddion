@@ -31,11 +31,7 @@
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 typedef struct {
-    GwyUnitoolState *state;
-    GtkWidget *x;
-    GtkWidget *y;
-    GtkWidget *w;
-    GtkWidget *h;
+    GwyUnitoolRectLabels labels;
     GtkWidget *fitting;
     GtkWidget *direction;
     GtkWidget *exclude;
@@ -44,27 +40,27 @@ typedef struct {
     gboolean exc;
 } ToolControls;
 
-static gboolean   module_register  (const gchar *name);
-static gboolean   use              (GwyDataWindow *data_window,
-                                    GwyToolSwitchEvent reason);
-static void       layer_setup      (GwyUnitoolState *state);
-static GtkWidget* dialog_create    (GwyUnitoolState *state);
-static void       dialog_update    (GwyUnitoolState *state,
-                                    GwyUnitoolUpdateType reason);
-static void       dialog_abandon   (GwyUnitoolState *state);
-static void       apply            (GwyUnitoolState *state);
+static gboolean   module_register     (const gchar *name);
+static gboolean   use                 (GwyDataWindow *data_window,
+                                       GwyToolSwitchEvent reason);
+static void       layer_setup         (GwyUnitoolState *state);
+static GtkWidget* dialog_create       (GwyUnitoolState *state);
+static void       dialog_update       (GwyUnitoolState *state,
+                                       GwyUnitoolUpdateType reason);
+static void       dialog_abandon      (GwyUnitoolState *state);
+static void       apply               (GwyUnitoolState *state);
 
-static void       direction_changed_cb (GObject *item,
-                                    ToolControls *controls);
-static void       fitting_changed_cb (GObject *item,
-                                    ToolControls *controls);
-static void       exclude_changed_cb (GtkToggleButton *button,
-                                    ToolControls *controls);
+static void       direction_changed_cb(GObject *item,
+                                       GwyUnitoolState *state);
+static void       fitting_changed_cb  (GObject *item,
+                                       GwyUnitoolState *state);
+static void       exclude_changed_cb  (GtkToggleButton *button,
+                                       GwyUnitoolState *state);
 
-static void       load_args        (GwyContainer *container,
-                                    ToolControls *controls);
-static void       save_args        (GwyContainer *container,
-                                    ToolControls *controls);
+static void       load_args           (GwyContainer *container,
+                                       ToolControls *controls);
+static void       save_args           (GwyContainer *container,
+                                       ToolControls *controls);
 
 
 /* The module info. */
@@ -74,7 +70,7 @@ static GwyModuleInfo module_info = {
     "polynom",
     "Fit X or Y profiles by polynom",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -126,7 +122,6 @@ use(GwyDataWindow *data_window,
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
-    ((ToolControls*)state->user_data)->state = state;
     return gwy_unitool_use(state, data_window, reason);
 }
 
@@ -161,48 +156,12 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(6, 3, FALSE);
-
+    table = gtk_table_new(6, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("X"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Y"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 2, 3, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Width"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 4, 5, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Height"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 5, 6, GTK_FILL, 0, 2, 2);
-
-    controls->x = gtk_label_new("");
-    controls->y = gtk_label_new("");
-    controls->w = gtk_label_new("");
-    controls->h = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->x), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->y), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->w), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->h), 1.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(controls->x), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->y), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->w), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->h), TRUE);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->x, 2, 3, 1, 2);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->y, 2, 3, 2, 3);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->w, 2, 3, 4, 5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->h, 2, 3, 5, 6);
+    gwy_unitool_rect_info_table_setup(&controls->labels,
+                                      GTK_TABLE(table), 0, 0);
+    controls->labels.unselected_is_full = TRUE;
 
     table2 = gtk_table_new(4, 2, FALSE);
 
@@ -214,37 +173,41 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(_("type:"));
+    label = gtk_label_new(_("Type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
     controls->fitting
         = gwy_option_menu_fit_line(G_CALLBACK(fitting_changed_cb),
-                                    controls, controls->fit);
+                                   state, controls->fit);
 
-    gtk_table_attach(GTK_TABLE(table2), controls->fitting, 1, 2, 1, 2, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table2), controls->fitting,
+                     1, 2, 1, 2, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(_("direction:"));
+    label = gtk_label_new(_("Direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 2, 3, GTK_FILL, 0, 2, 2);
 
     controls->direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
-                                                 controls, controls->dir);
+                                    state, controls->dir);
 
-    gtk_table_attach(GTK_TABLE(table2), controls->direction, 1, 2, 2, 3, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table2), controls->direction,
+                     1, 2, 2, 3, GTK_FILL, 0, 2, 2);
 
-    controls->exclude = gtk_check_button_new_with_label("exclude area if selected");
+    controls->exclude
+        = gtk_check_button_new_with_label(_("Exclude area if selected"));
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->exclude,
                        FALSE, FALSE, 0);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->exclude), controls->exc);
-    g_signal_connect(controls->exclude, "toggled", G_CALLBACK(exclude_changed_cb), controls);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->exclude),
+                                 controls->exc);
+    g_signal_connect(controls->exclude, "toggled",
+                     G_CALLBACK(exclude_changed_cb), state);
 
-    label = gtk_label_new("(otherwise will be used for fitting)");
+    label = gtk_label_new(_("(otherwise will be used for fitting)"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
                        FALSE, FALSE, 0);
-
 
     return dialog;
 }
@@ -257,9 +220,7 @@ apply(GwyUnitoolState *state)
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
     ToolControls *controls;
-    gboolean is_selected;
-    gdouble xy[4];
-    gdouble ulcol, brcol, ulrow, brrow;
+    gint isel[4];
 
     gwy_debug("");
     layer = GWY_DATA_VIEW_LAYER(state->layer);
@@ -271,72 +232,35 @@ apply(GwyUnitoolState *state)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     controls = (ToolControls*)state->user_data;
-    is_selected = gwy_vector_layer_get_selection(state->layer, xy);
-
-    if (is_selected)
-    {
-        ulcol = (gint)gwy_data_field_rtoi(dfield, MIN(xy[0], xy[2]));
-        ulrow = (gint)gwy_data_field_rtoj(dfield, MIN(xy[1], xy[3]));
-        brcol = (gint)gwy_data_field_rtoi(dfield, MAX(xy[0], xy[2]));
-        brrow = (gint)gwy_data_field_rtoj(dfield, MAX(xy[1], xy[3]));
-    }
-    else
-    {
-        ulcol = 0;
-        ulrow = 0;
-        brcol = gwy_data_field_get_xres(dfield);
-        brrow = gwy_data_field_get_yres(dfield);
-    }
+    gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
 
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
-    gwy_data_field_fit_lines(dfield, ulcol, ulrow, brcol, brrow,
+    gwy_data_field_fit_lines(dfield, isel[0], isel[1], isel[2], isel[3],
                              controls->fit, controls->exc, controls->dir);
 
-   gwy_vector_layer_unselect(state->layer);
-   gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
+    gwy_vector_layer_unselect(state->layer);
+    gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
 }
 
 static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
-    GwySIValueFormat *units;
     ToolControls *controls;
-    GwyContainer *data;
-    GwyDataField *dfield;
     GwyDataViewLayer *layer;
-    gdouble xy[4];
     gboolean is_visible, is_selected;
 
     gwy_debug("");
     is_visible = state->is_visible;
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_format;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    is_selected = gwy_vector_layer_get_selection(state->layer, xy);
-
-
+    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
     if (!is_visible && !is_selected)
         return;
-    if (is_selected) {
-        gwy_unitool_update_label(units, controls->x, MIN(xy[0], xy[2]));
-        gwy_unitool_update_label(units, controls->y, MIN(xy[1], xy[3]));
-        gwy_unitool_update_label(units, controls->w, fabs(xy[2] - xy[0]));
-        gwy_unitool_update_label(units, controls->h, fabs(xy[3] - xy[1]));
-    }
-    else {
-        gwy_unitool_update_label(units, controls->x, 0);
-        gwy_unitool_update_label(units, controls->y, 0);
-        gwy_unitool_update_label(units, controls->w,
-                                 gwy_data_field_get_xreal(dfield));
-        gwy_unitool_update_label(units, controls->h,
-                                 gwy_data_field_get_yreal(dfield));
-    }
+
+    gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, NULL);
 }
 
 static void
@@ -360,27 +284,36 @@ dialog_abandon(GwyUnitoolState *state)
 }
 
 static void
-direction_changed_cb (GObject *item, ToolControls *controls)
+direction_changed_cb(GObject *item, GwyUnitoolState *state)
 {
+    ToolControls *controls;
+
     gwy_debug("");
+    controls = (ToolControls*)state->user_data;
     controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-fitting_changed_cb (GObject *item, ToolControls *controls)
+fitting_changed_cb(GObject *item, GwyUnitoolState *state)
 {
+    ToolControls *controls;
+
     gwy_debug("");
+    controls = (ToolControls*)state->user_data;
     controls->fit = GPOINTER_TO_INT(g_object_get_data(item, "fit-type"));
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-exclude_changed_cb (GtkToggleButton *button, ToolControls *controls)
+exclude_changed_cb(GtkToggleButton *button, GwyUnitoolState *state)
 {
+    ToolControls *controls;
+
     gwy_debug("");
+    controls = (ToolControls*)state->user_data;
     controls->exc = gtk_toggle_button_get_active(button);
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 

@@ -32,10 +32,7 @@
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 typedef struct {
-    GtkWidget *x;
-    GtkWidget *y;
-    GtkWidget *w;
-    GtkWidget *h;
+    GwyUnitoolRectLabels labels;
     GtkWidget *ra;
     GtkWidget *rms;
     GtkWidget *skew;
@@ -62,7 +59,7 @@ static GwyModuleInfo module_info = {
     "stats",
     "Statistical quantities.",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -146,7 +143,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(14, 3, FALSE);
+    table = gtk_table_new(14, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
@@ -183,32 +180,10 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 7, 8, GTK_FILL, 0, 2, 2);
 
+    gwy_unitool_rect_info_table_setup(&controls->labels,
+                                      GTK_TABLE(table), 0, 8);
+    controls->labels.unselected_is_full = TRUE;
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 8, 9, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("X"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 9, 10, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Y"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 10, 11, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 11, 12, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Width"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 12, 13, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Height"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 13, 14, GTK_FILL, 0, 2, 2);
-
-    controls->x = gtk_label_new("");
-    controls->y = gtk_label_new("");
-    controls->w = gtk_label_new("");
-    controls->h = gtk_label_new("");
     controls->ra = gtk_label_new("");
     controls->rms = gtk_label_new("");
     controls->avg = gtk_label_new("");
@@ -216,10 +191,6 @@ dialog_create(GwyUnitoolState *state)
     controls->kurtosis = gtk_label_new("");
     controls->projarea = gtk_label_new("");
     controls->area = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->x), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->y), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->w), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->h), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->ra), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->rms), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->avg), 1.0, 0.5);
@@ -227,10 +198,6 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(controls->kurtosis), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->projarea), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls->area), 1.0, 0.5);
-    gtk_label_set_selectable(GTK_LABEL(controls->x), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->y), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->w), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(controls->h), TRUE);
     gtk_label_set_selectable(GTK_LABEL(controls->ra), TRUE);
     gtk_label_set_selectable(GTK_LABEL(controls->rms), TRUE);
     gtk_label_set_selectable(GTK_LABEL(controls->avg), TRUE);
@@ -238,18 +205,13 @@ dialog_create(GwyUnitoolState *state)
     gtk_label_set_selectable(GTK_LABEL(controls->kurtosis), TRUE);
     gtk_label_set_selectable(GTK_LABEL(controls->projarea), TRUE);
     gtk_label_set_selectable(GTK_LABEL(controls->area), TRUE);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->x, 2, 3, 9, 10);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->y, 2, 3, 10, 11);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->w, 2, 3, 12, 13);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->h, 2, 3, 13, 14);
-
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->ra, 2, 3, 1, 2);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->rms, 2, 3, 2, 3);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->skew, 2, 3, 3, 4);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->kurtosis, 2, 3, 4, 5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->avg, 2, 3, 5, 6);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->projarea, 2, 3, 6, 7);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->area, 2, 3, 7, 8);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->ra, 2, 4, 1, 2);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->rms, 2, 4, 2, 3);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->skew, 2, 4, 3, 4);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->kurtosis, 2, 4, 4, 5);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->avg, 2, 4, 5, 6);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->projarea, 2, 4, 6, 7);
+    gtk_table_attach_defaults(GTK_TABLE(table), controls->area, 2, 4, 7, 8);
 
     return dialog;
 }
@@ -290,6 +252,7 @@ dialog_update(GwyUnitoolState *state,
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
     gdouble xy[4];
+    gint isel[4];
     gboolean is_visible, is_selected;
     gdouble avg, ra, rms, skew, kurtosis;
     gdouble projarea, area;
@@ -304,37 +267,25 @@ dialog_update(GwyUnitoolState *state,
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    is_selected = gwy_vector_layer_get_selection(state->layer, xy);
-    if (is_selected)
-    {
-        gwy_data_field_get_area_stats(dfield,
-                                      gwy_data_field_rtoj(dfield, xy[0]),
-                                      gwy_data_field_rtoj(dfield, xy[1]),
-                                      gwy_data_field_rtoj(dfield, xy[2]),
-                                      gwy_data_field_rtoj(dfield, xy[3]),
-                                      &avg, &ra, &rms, &skew, &kurtosis);
-        area = gwy_data_field_get_area_surface_area(dfield, 
-                                                    gwy_data_field_rtoj(dfield, xy[0]),
-                                                    gwy_data_field_rtoj(dfield, xy[1]),
-                                                    gwy_data_field_rtoj(dfield, xy[2]),
-                                                    gwy_data_field_rtoj(dfield, xy[3]),
-                                                    GWY_INTERPOLATION_BILINEAR);
-        projarea = fabs((gwy_data_field_rtoj(dfield, xy[0]) - gwy_data_field_rtoj(dfield, xy[2])))
-            *fabs((gwy_data_field_rtoj(dfield, xy[1]) - gwy_data_field_rtoj(dfield, xy[3])))
-            *dfield->xreal*dfield->xreal/dfield->xres/dfield->xres;
+    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
+    if (!is_visible && !is_selected)
+        return;
 
-        /*FIXME: this is to prevent rounding errors to produce nonreal results on very flat surfaces*/
-        if (area < projarea) area = projarea;
-    }
-    else
-    {
-        gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
-        area = gwy_data_field_get_surface_area(dfield, GWY_INTERPOLATION_BILINEAR);
-        projarea = dfield->xreal*dfield->yreal;
-
-        /*FIXME: this is to prevent rounding errors to produce nonreal results on very flat surfaces*/
-        if (area < projarea) area = projarea;
-    }
+    gwy_unitool_rect_info_table_fill(state, &controls->labels, xy, isel);
+    gwy_data_field_get_area_stats(dfield, isel[0], isel[1], isel[2], isel[3],
+                                  &avg, &ra, &rms, &skew, &kurtosis);
+    area = gwy_data_field_get_area_surface_area(dfield,
+                                                isel[0], isel[1],
+                                                isel[2], isel[3],
+                                                GWY_INTERPOLATION_BILINEAR);
+    projarea = fabs((gwy_data_field_rtoj(dfield, xy[0])
+                     - gwy_data_field_rtoj(dfield, xy[2])))
+               * fabs((gwy_data_field_rtoj(dfield, xy[1])
+                       * - gwy_data_field_rtoj(dfield, xy[3])))
+               * dfield->xreal*dfield->xreal/dfield->xres/dfield->xres;
+    /*FIXME: this is to prevent rounding errors to produce nonreal 
+     * results on very flat surfaces*/
+    if (area < projarea) area = projarea;
 
     gwy_unitool_update_label(state->value_format, controls->ra, ra);
     gwy_unitool_update_label(state->value_format, controls->rms, rms);
@@ -344,27 +295,12 @@ dialog_update(GwyUnitoolState *state,
     gtk_label_set_text(GTK_LABEL(controls->kurtosis), buffer);
     gwy_unitool_update_label(state->value_format, controls->avg, avg);
 
-    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>", projarea, gwy_si_unit_get_unit_string(dfield->si_unit_z));
+    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>",
+               projarea, gwy_si_unit_get_unit_string(dfield->si_unit_z));
     gtk_label_set_markup(GTK_LABEL(controls->projarea), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>", area, gwy_si_unit_get_unit_string(dfield->si_unit_z));
+    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>",
+               area, gwy_si_unit_get_unit_string(dfield->si_unit_z));
     gtk_label_set_markup(GTK_LABEL(controls->area), buffer);
-
-    if (!is_visible && !is_selected)
-        return;
-    if (is_selected) {
-        gwy_unitool_update_label(units, controls->x, MIN(xy[0], xy[2]));
-        gwy_unitool_update_label(units, controls->y, MIN(xy[1], xy[3]));
-        gwy_unitool_update_label(units, controls->w, fabs(xy[2] - xy[0]));
-        gwy_unitool_update_label(units, controls->h, fabs(xy[3] - xy[1]));
-    }
-    else {
-        gwy_unitool_update_label(units, controls->x, 0);
-        gwy_unitool_update_label(units, controls->y, 0);
-        gwy_unitool_update_label(units, controls->w,
-                                 gwy_data_field_get_xreal(dfield));
-        gwy_unitool_update_label(units, controls->h,
-                                 gwy_data_field_get_yreal(dfield));
-    }
 }
 
 static void

@@ -33,15 +33,7 @@
 #define SCALE 4
 
 typedef struct {
-    GwyUnitoolState *state;
-    GtkWidget *x;
-    GtkWidget *y;
-    GtkWidget *w;
-    GtkWidget *h;
-    GtkWidget *xp;
-    GtkWidget *yp;
-    GtkWidget *wp;
-    GtkWidget *hp;
+    GwyUnitoolRectLabels labels;
     GtkWidget *view;
     gchar *pal;
     gint algorithm;
@@ -99,14 +91,8 @@ static void       pseudo_laplace_average(GwyDataField *dfield,
                                          gint yimin,
                                          gint ximax,
                                          gint yimax);
-static void       selection_to_rowcol  (GwyDataField *dfield,
-                                        gdouble *sel,
-                                        gint *ximin,
-                                        gint *yimin,
-                                        gint *ximax,
-                                        gint *yimax);
 static void       algorithm_changed_cb (GObject *item,
-                                        ToolControls *controls);
+                                        GwyUnitoolState *state);
 
 static const gchar *algorithm_key = "/tool/spotremove/algorithm";
 
@@ -186,7 +172,6 @@ use(GwyDataWindow *data_window,
         state->apply_doesnt_close = TRUE;
     }
     controls = (ToolControls*)state->user_data;
-    controls->state = state;
     if (controls->view && data_window) {
         GwyContainer *data, *mydata;
         GwyDataField *dfield;
@@ -221,6 +206,7 @@ dialog_create(GwyUnitoolState *state)
     GwyPixmapLayer *layer;
     GtkWidget *dialog, *table, *label, *frame, *vbox, *omenu;
     gdouble min, max;
+    gint row;
 
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
@@ -270,67 +256,24 @@ dialog_create(GwyUnitoolState *state)
 
     table = gtk_table_new(8, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_table_set_col_spacing(GTK_TABLE(table), 1, 12);
-    gtk_table_set_col_spacing(GTK_TABLE(table), 2, 12);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    row = gwy_unitool_rect_info_table_setup(&controls->labels,
+                                            GTK_TABLE(table), 0, 0);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("X"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Y"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 2, 3, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Width"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 4, 5, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Height"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 5, 6, GTK_FILL, 0, 2, 2);
-
-    controls->x = gtk_label_new("");
-    controls->y = gtk_label_new("");
-    controls->w = gtk_label_new("");
-    controls->h = gtk_label_new("");
-    controls->xp = gtk_label_new("");
-    controls->yp = gtk_label_new("");
-    controls->wp = gtk_label_new("");
-    controls->hp = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls->x), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->y), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->w), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->h), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->xp), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->yp), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->wp), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls->hp), 1.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->x, 2, 3, 1, 2);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->y, 2, 3, 2, 3);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->w, 2, 3, 4, 5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->h, 2, 3, 5, 6);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->xp, 3, 4, 1, 2);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->yp, 3, 4, 2, 3);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->wp, 3, 4, 4, 5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls->hp, 3, 4, 5, 6);
-
-    gtk_table_set_row_spacing(GTK_TABLE(table), 5, 8);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     label = gtk_label_new_with_mnemonic(_("Removal _method"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 4, 6, 7, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
+                     GTK_FILL, 0, 2, 2);
+    row++;
 
     omenu = gwy_option_menu_create(algorithms, G_N_ELEMENTS(algorithms),
                                    "algorithm",
-                                   G_CALLBACK(algorithm_changed_cb), controls,
+                                   G_CALLBACK(algorithm_changed_cb), state,
                                    controls->algorithm);
-    gtk_table_attach(GTK_TABLE(table), omenu, 0, 4, 7, 8, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), omenu, 0, 4, row, row+1,
+                     GTK_FILL, 0, 2, 2);
 
     return dialog;
 }
@@ -341,18 +284,16 @@ dialog_update(GwyUnitoolState *state,
 {
     gboolean is_visible, is_selected, is_ok;
     ToolControls *controls;
-    GwySIValueFormat *units;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyContainer *mydata;
     GwyDataField *mydfield;
-    gdouble sel[4];
+    gint isel[4];
     const gchar *pal;
 
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_format;
 
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -383,46 +324,21 @@ dialog_update(GwyUnitoolState *state,
     }
 
     is_visible = state->is_visible;
-    is_selected = gwy_vector_layer_get_selection(state->layer, sel);
+    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
     if (!is_visible && !is_selected)
         return;
 
-    if (is_selected) {
-        gint ximin, yimin, ximax, yimax;
-        gchar buf[16];
-
-        gwy_unitool_update_label(units, controls->x, sel[0]);
-        gwy_unitool_update_label(units, controls->y, sel[1]);
-        gwy_unitool_update_label(units, controls->w, sel[2] - sel[0]);
-        gwy_unitool_update_label(units, controls->h, sel[3] - sel[1]);
-
-        selection_to_rowcol(dfield, sel, &ximin, &yimin, &ximax, &yimax);
-        g_snprintf(buf, sizeof(buf), "%d px", ximin);
-        gtk_label_set_text(GTK_LABEL(controls->xp), buf);
-        g_snprintf(buf, sizeof(buf), "%d px", yimin);
-        gtk_label_set_text(GTK_LABEL(controls->yp), buf);
-        g_snprintf(buf, sizeof(buf), "%d px", ximax - ximin);
-        gtk_label_set_text(GTK_LABEL(controls->wp), buf);
-        g_snprintf(buf, sizeof(buf), "%d px", yimax - yimin);
-        gtk_label_set_text(GTK_LABEL(controls->hp), buf);
-
-        is_ok = ximin > 0
-                && yimin > 0
-                && ximax + 1 < gwy_data_field_get_xres(dfield)
-                && yimax + 1 < gwy_data_field_get_yres(dfield)
-                && ximax - ximin <= MAX_SIZE
-                && yimax - yimin <= MAX_SIZE;
-        draw_zoom(controls, dfield, ximin, yimin, ximax, yimax);
+    if (gwy_unitool_rect_info_table_fill(state, &controls->labels,
+                                         NULL, isel)) {
+        is_ok = isel[0] > 0
+                && isel[1] > 0
+                && isel[2] + 1 < gwy_data_field_get_xres(dfield)
+                && isel[3] + 1 < gwy_data_field_get_yres(dfield)
+                && isel[2] - isel[0] <= MAX_SIZE
+                && isel[3] - isel[1] <= MAX_SIZE;
+        draw_zoom(controls, dfield, isel[0], isel[1], isel[2], isel[3]);
     }
     else {
-        gtk_label_set_text(GTK_LABEL(controls->x), "");
-        gtk_label_set_text(GTK_LABEL(controls->y), "");
-        gtk_label_set_text(GTK_LABEL(controls->w), "");
-        gtk_label_set_text(GTK_LABEL(controls->h), "");
-        gtk_label_set_text(GTK_LABEL(controls->xp), "");
-        gtk_label_set_text(GTK_LABEL(controls->yp), "");
-        gtk_label_set_text(GTK_LABEL(controls->wp), "");
-        gtk_label_set_text(GTK_LABEL(controls->hp), "");
         is_ok = FALSE;
         draw_zoom(controls, NULL, -1, -1, -1, -1);
     }
@@ -451,32 +367,30 @@ apply(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
-    gint ximin, yimin, ximax, yimax;
-    gdouble sel[4];
+    gint isel[4];
 
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_vector_layer_get_selection(state->layer, sel);
-    selection_to_rowcol(dfield, sel, &ximin, &yimin, &ximax, &yimax);
+    gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
     switch (controls->algorithm) {
         case SPOT_REMOVE_HYPER_FLATTEN:
-        crisscross_average(dfield, ximin, yimin, ximax, yimax);
+        crisscross_average(dfield, isel[0], isel[1], isel[2], isel[3]);
         break;
 
         case SPOT_REMOVE_LAPLACE:
-        laplace_average(dfield, ximin, yimin, ximax, yimax);
+        laplace_average(dfield, isel[0], isel[1], isel[2], isel[3]);
         break;
 
         case SPOT_REMOVE_FRACTAL:
-        fractal_average(dfield, ximin, yimin, ximax, yimax);
+        fractal_average(dfield, isel[0], isel[1], isel[2], isel[3]);
         break;
 
         case SPOT_REMOVE_PSEUDO_LAPLACE:
-        pseudo_laplace_average(dfield, ximin, yimin, ximax, yimax);
+        pseudo_laplace_average(dfield, isel[0], isel[1], isel[2], isel[3]);
         break;
 
         default:
@@ -618,19 +532,6 @@ pseudo_laplace_average(GwyDataField *dfield,
 }
 
 static void
-selection_to_rowcol(GwyDataField *dfield,
-                    gdouble *sel,
-                    gint *ximin, gint *yimin,
-                    gint *ximax, gint *yimax)
-{
-    *ximin = gwy_data_field_rtoj(dfield, sel[0]);
-    *yimin = gwy_data_field_rtoi(dfield, sel[1]);
-    *ximax = gwy_data_field_rtoj(dfield, sel[2]) + 1;
-    *yimax = gwy_data_field_rtoi(dfield, sel[3]) + 1;
-
-}
-
-static void
 draw_zoom(ToolControls *controls,
           GwyDataField *dfield,
           gint ximin, gint yimin,
@@ -698,8 +599,11 @@ find_subrange(gint min, gint max, gint res, gint size,
 }
 
 static void
-algorithm_changed_cb(GObject *item, ToolControls *controls)
+algorithm_changed_cb(GObject *item, GwyUnitoolState *state)
 {
+    ToolControls *controls;
+
+    controls = (ToolControls*)state->user_data;
     controls->algorithm = GPOINTER_TO_INT(g_object_get_data(item, "algorithm"));
 }
 
