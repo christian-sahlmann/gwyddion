@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <math.h>
 #include "gwyserializable.h"
 #include "gwycontainer.h"
@@ -30,23 +31,28 @@
 #include "gwysiunit.h"
 
 int
-main(void)
+main(int argc, char * argv[])
 {
     GwySIUnit *si;
+    GwySIValueFormat *vformat, *dformat;
     gchar prefix[20];
     gdouble div;
     gdouble value;
-    
-    si = gwy_si_unit_new("Weber");
-    
-    value = 12e6;
-    gwy_si_unit_get_prefixed(si, value, 3, prefix, &div);
-    
-    printf("unit=%s, power=%f, 12e6 units = %f %s\n",
-           gwy_si_unit_get_unit_string(si), div,
-           (double)value/(double)div, prefix);
-    
 
+    g_type_init();
+    
+    si = gwy_si_unit_new("m");
+    
+    value = atof(argv[1]);
+   
+    vformat = gwy_si_unit_get_format_with_digits(si, value, 0, NULL);
+
+    printf("%.*f %s\n", vformat->precision, value/vformat->magnitude, vformat->units);
+
+    vformat = gwy_si_unit_get_format_with_resolution(si, value, 0.2, vformat);
+
+    printf("%.*f %s\n", vformat->precision, value/vformat->magnitude, vformat->units);
+  
     return 0;
 }
 

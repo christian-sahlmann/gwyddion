@@ -250,7 +250,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
                        gdouble value,
                        GwySIValueFormat *format)
 {
-    char num[20];
+    char num[23];
     
     gwy_debug("");
     if (format==NULL) {
@@ -275,8 +275,8 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
     {
         format->magnitude = pow(10, (gint)(log10(fabs(value)))-1);
         
-        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+20)*sizeof(gchar));
-        sprintf(num, "x 10<sup>%d</sup> ", (gint)(log10(fabs(value)))-1);
+        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
+        sprintf(num, "U+00D7 10<sup>%d</sup> ", (gint)(log10(fabs(value)))-1);
         format->units = strcpy(format->units, num);
         format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
         
@@ -309,10 +309,41 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
                                        gdouble resolution,
                                        GwySIValueFormat *format)
 {
+    gint prec;
+    char num[23];
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
 
-    return gwy_si_unit_get_format(siunit, maximum, format);
+    if (format==NULL) {
+        format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
+        format->units = NULL;
+    }
+    
+    if (format->units)
+    {
+        g_free(format->units);
+    }
+ 
+    format->magnitude = gwy_math_humanize_numbers(resolution, maximum, &prec);
+    format->precision = prec;
+       
+    if (strlen(siunit->unitstr)<2)
+    {
+        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
+        format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
+        format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+    }
+    else
+    {
+        
+        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
+        sprintf(num, "U+00D7 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
+        format->units = strcpy(format->units, num);
+        format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+        
+    }
+     
+    return format;
 }
 
 /**
@@ -338,10 +369,66 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
                                    gint sdigits,
                                    GwySIValueFormat *format)
 {
+    char num[23];
+    gdouble realmag;
+    
     gwy_debug("");
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+    if (format==NULL) {
+        format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
+        format->units = NULL;
+    }
+    
+    if (format->units)
+    {
+        g_free(format->units);
+    }
+   
+    if (strlen(siunit->unitstr)<2)
+    {
+        format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(maximum))))/3.0));
+        realmag = pow(10, (gint)(log10(fabs(maximum)))-1);
+        
+        if (ROUND((gdouble)format->magnitude/realmag)==10.0)
+        {
+            if (maximum/format->magnitude >= 1)
+               format->precision = sdigits-1;
+            else
+               format->precision = sdigits; 
+        }
+        else if (ROUND((gdouble)format->magnitude/realmag)==100.0)
+        {
+            if (maximum/format->magnitude >= 0.1)                
+                format->precision = sdigits;
+            else
+                format->precision = sdigits+1;
+        }
+         else if (ROUND((gdouble)format->magnitude/realmag)==1.0)
+        {
+            if (maximum/format->magnitude >= 10)            
+                format->precision = sdigits-2;
+            else
+                format->precision = sdigits-1;
+        }
+        else format->precision = sdigits+1;
 
-    gwy_si_unit_get_format(siunit, maximum, format);
+        if (format->precision < 0) format->precision = 0;
+
+        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
+  
+        format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
+        format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+    }
+    else
+    {
+        format->magnitude = pow(10, (gint)(log10(fabs(maximum)))-1);
+        
+        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
+        sprintf(num, "U+00D7 10<sup>%d</sup> ", (gint)(log10(fabs(maximum)))-1);
+        format->units = strcpy(format->units, num);
+        format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
+        format->precision = 2;
+        
+    }
     return format;
 }
 
