@@ -178,7 +178,7 @@ mark(GwyContainer *data, GwyRunType run)
     return ok;
 }
 
-GtkWidget*
+static GtkWidget*
 table_attach_threshold(GtkWidget *table,
                        GtkWidget *spin,
                        gint row,
