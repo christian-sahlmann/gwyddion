@@ -1,8 +1,14 @@
 # @(#) $Id$
 
 pkgconfigdatadir = $(libdir)/pkgconfig
+gwyddionappdir = $(datadir)/applications
 
-pkgconfigdata_DATA = gwyddion.pc
+pkgconfigdata_DATA =\
+	gwyddion.pc
+
+gwyddionapp_DATA = \
+	gwyddion.desktop \
+	x-gwyddion.desktop
 
 SUBDIRS = \
 	libgwyddion \
@@ -29,7 +35,6 @@ EXTRA_DIST = \
 	makefile.msc \
 	CODING-STANDARDS \
 	autogen.sh \
-	gwyddion.desktop \
 	gwyddion.spec.in \
 	gwyddion.spec\
 	gwyddion.iss.in \
@@ -43,7 +48,7 @@ EXTRA_DIST = \
 	utils/vim-syn-gen.py \
 	utils/gwyddion-cfg.py \
 	utils/gwyddion.vim \
-	x-gwyddion.desktop \
+	$(gwyddionapp_DATA) \
 	$(M4TESTS)
 
 if MAINTAINER_MODE

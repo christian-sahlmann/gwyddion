@@ -13,11 +13,13 @@ Prefix: %{_prefix}
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 Prereq: /sbin/ldconfig
 BuildPrereq: gtk2-devel >= 2.2
+BuildPrereq: gtkglext-devel >= 1.0
 BuildPrereq: libpng-devel
 BuildPrereq: libjpeg-devel
 BuildPrereq: gtk-doc >= 1.0
 BuildPrereq: python >= 2.2
 BuildPrereq: perl >= 5.005
+BuildPrereq: desktop-file-utils >= 0.3
 
 %package devel
 Summary: Headers, libraries and tools for Gwyddion module development.
@@ -32,8 +34,16 @@ Requires: %{name}
 Requires: %{name}-devel
 
 %description
-Gwyddion is a modular SPM (scanning probe microscope) data analysis framework.
-It uses Gtk+.
+Gwyddion is a modular SPM (Scanning Probe Microsope) data visualization and
+analysis tool written with Gtk+.
+
+It can be used for all most frequently used data processing operations
+including: leveling, false color plotting, shading, filtering, denoising, data
+editing, integral transforms, grain analysis, profile extraction, fractal
+analysis, and many more. The program is primarily focused on SPM data analysis
+(e.g. data obtained from AFM, STM, NSOM, and similar microscopes). However, it
+can also be used for analyzing SEM (scaning electron microscopy) data or any
+other 2D data.
 
 %description devel
 Header files, libraries and tools for Gwyddion module development.  This
@@ -59,7 +69,10 @@ your own plug-ins.
   HTML_DIR=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
 %__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/*/*.so
 %__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/*.so
-%__strip $RPM_BUILD_ROOT%{_libdir}/libgwy*.so.*
+
+desktop-file-install --vendor= --delete-original  \
+  --dir $RPM_BUILD_ROOT%{_datadir}/applications   \
+  $RPM_BUILD_ROOT%{_datadir}/applications/*
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
@@ -96,6 +109,7 @@ your own plug-ins.
 %{_libdir}/libgwydraw.so.*
 %{_libdir}/libgwymodule.so.*
 %{_libdir}/libgwyprocess.so.*
+%{_datadir}/applications/*
 
 %files devel
 %defattr(-,root,root)
