@@ -18,16 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifdef _MSC_VER
-#include "version.h"
-#else
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#else
-/* XXX: Invent some stuff... */
-#endif
-#endif
-
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>

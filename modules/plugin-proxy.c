@@ -41,9 +41,7 @@
  * XXX: Plug-ins cannot specify sens_flags.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include <libgwyddion/gwymacros.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -59,7 +57,6 @@
 #include <sys/stat.h>
 #endif
 
-#include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>

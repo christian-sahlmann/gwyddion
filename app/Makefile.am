@@ -6,6 +6,8 @@ libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
+localedir = $(datadir)/locale
+
 libgwyappincludedir = $(includedir)/gwyddion/app
 libgwyappinclude_HEADERS = \
 	app.h \
@@ -58,6 +60,7 @@ gwyddion_SOURCES = \
 	splash.c \
 	toolbox.c
 
+gwyddion_CFLAGS = -DLOCALEDIR=\"$(localedir)\"
 gwyddion_LDADD = @GTKGLEXT_LIBS@ \
 	libgwyapp.la \
 	$(libgwymodule) \
@@ -67,8 +70,6 @@ gwyddion_LDADD = @GTKGLEXT_LIBS@ \
 	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
-#AM_CPPFLAGS = -DDEBUG
-AM_CPPFLAGS =
 
 clean-local:
 	rm -f core.* *~

@@ -18,15 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifdef _MSC_VER
-#include "version.h"
-#else
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#else
-/* XXX: Invent some stuff... */
-#endif
-#endif  /* _MSC_VER */
+#include <libgwyddion/gwymacros.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +31,6 @@
 
 #include <gtk/gtkglinit.h>
 #include <libgwymodule/gwymodule.h>
-#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwydgets/gwystock.h>
@@ -90,6 +81,11 @@ main(int argc, char *argv[])
 #endif  /* LOG_TO_FILE */
 
     gtk_init(&argc, &argv);
+#ifdef ENABLE_NLS
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+#endif
+
     gwy_gl_ok = gtk_gl_init_check(&argc, &argv);
 
     config_file = gwy_app_settings_get_config_filename();

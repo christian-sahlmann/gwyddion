@@ -18,9 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "gwymacros.h"
 
 /* To be able to mmap() files.
  * On Linux we have all, on Win32 we have none, on others who knows */
@@ -38,7 +36,6 @@
 #endif
 
 #include <string.h>
-#include "gwymacros.h"
 #include "gwyutils.h"
 
 static gchar *gwy_argv0 = NULL;

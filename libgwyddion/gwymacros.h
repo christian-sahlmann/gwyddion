@@ -21,6 +21,16 @@
 #ifndef __GWY_GWYMACROS_H__
 #define __GWY_GWYMACROS_H__
 
+#ifdef _MSC_VER
+#include "version.h"
+#else
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#else
+/* XXX: whatever */
+#endif
+#endif
+
 #include <glibconfig.h>
 #include <glib/gmacros.h>
 #include <glib/gstrfuncs.h>
@@ -28,8 +38,19 @@
 #include <glib/gutils.h>
 #include <glib/gmessages.h>
 
-#define _(x) (x)
-#define N_(x) x
+#if ENABLE_NLS
+#include <libintl.h>
+#else
+#define gettext(x) (x)
+#define ngettext(sing, plur, n) ((n) == 1 ? (sing) : (plur))
+#endif
+#define _(x) gettext(x)
+
+#ifdef gettext_noop
+#define N_(x) gettext_noop(x)
+#else
+#define N_(x) (x)
+#endif
 
 #define gwy_object_unref(obj) \
     do { \
@@ -38,15 +59,6 @@
     (obj) = NULL; \
     } while (0)
 
-/* FIXME: this breaks on GWY_SWAP(int, a->foo, b->bar);
-#define GWY_SWAP(t, x, y) \
-    do { \
-    t safe ## x ## y; \
-    safe ## x ## y = x; \
-    x = y; \
-    y = safe ## x ## y; \
-    } while (0)
-*/
 #define GWY_SWAP(t, x, y) \
     do { \
     t __unsafe_swap; \
@@ -120,7 +132,7 @@ G_END_DECLS
 
 #ifdef _MSC_VER
 /* Make MSVC more pedantic, this is a recommended pragma list
- * from _Win32_Programming_ by Rector and Newcomer.
+ * from _Win32_Programming_ by Rector and Newcomer.  (Modified)
  */
 #pragma warning(error:4002) /* too many actual parameters for macro */
 #pragma warning(error:4003) /* not enough actual parameters for macro */

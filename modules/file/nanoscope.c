@@ -18,9 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include <libgwyddion/gwymacros.h>
 
 #include <stdio.h>
 #include <errno.h>
@@ -32,7 +30,6 @@
 #include <unistd.h>
 #endif
 
-#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
