@@ -62,6 +62,8 @@ static GObject* gwy_data_field_deserialize       (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
 static GObject* gwy_data_field_duplicate_real    (GObject *object);
+static void     gwy_data_field_clone_real        (GObject *source,
+                                                  GObject *copy);
 /*static void     gwy_data_field_value_changed     (GObject *object);*/
 
 static GObjectClass *parent_class = NULL;
@@ -120,6 +122,7 @@ gwy_data_field_serializable_init(GwySerializableIface *iface)
     iface->serialize = gwy_data_field_serialize;
     iface->deserialize = gwy_data_field_deserialize;
     iface->duplicate = gwy_data_field_duplicate_real;
+    iface->clone = gwy_data_field_clone_real;
 }
 
 static void
@@ -451,6 +454,50 @@ gwy_data_field_duplicate_real(GObject *object)
     return (GObject*)duplicate;
 }
 
+static void
+gwy_data_field_clone_real(GObject *source, GObject *copy)
+{
+    GwyDataField *data_field, *clone;
+    guint n;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(source));
+    g_return_if_fail(GWY_IS_DATA_FIELD(copy));
+
+    data_field = GWY_DATA_FIELD(source);
+    clone = GWY_DATA_FIELD(copy);
+
+    n = data_field->xres*data_field->yres;
+    if (clone->xres*clone->yres != data_field->xres*data_field->yres)
+        clone->data = g_renew(gdouble, clone->data, n);
+    clone->xres = data_field->xres;
+    clone->yres = data_field->yres;
+    memcpy(clone->data, data_field->data, n*sizeof(gdouble));
+
+    clone->cached = data_field->cached;
+    memcpy(clone->cache, data_field->cache,
+           GWY_DATA_FIELD_CACHE_SIZE*sizeof(gdouble));
+
+    g_object_freeze_notify(G_OBJECT(clone));
+    if (clone->xreal != data_field->xreal) {
+        clone->xreal = data_field->xreal;
+        g_object_notify(G_OBJECT(clone), "xreal");
+    }
+    if (clone->yreal != data_field->yreal) {
+        clone->yreal = data_field->yreal;
+        g_object_notify(G_OBJECT(clone), "yreal");
+    }
+
+    gwy_serializable_clone(G_OBJECT(data_field->si_unit_xy),
+                           G_OBJECT(clone->si_unit_xy));
+    g_object_notify(G_OBJECT(clone), "unit_xy");
+
+    gwy_serializable_clone(G_OBJECT(data_field->si_unit_z),
+                           G_OBJECT(clone->si_unit_z));
+    g_object_notify(G_OBJECT(clone), "unit_z");
+
+    g_object_thaw_notify(G_OBJECT(clone));
+}
+
 /*
 static void
 gwy_data_field_value_changed(GObject *object)
@@ -498,12 +545,12 @@ gwy_data_field_copy(GwyDataField *src,
         return;
     }
 
-    gwy_object_unref(dest->si_unit_xy);
-    dest->si_unit_xy = gwy_si_unit_duplicate(src->si_unit_xy);
+    gwy_serializable_clone(G_OBJECT(src->si_unit_xy),
+                           G_OBJECT(dest->si_unit_xy));
     g_object_notify(G_OBJECT(dest), "unit_xy");
 
-    gwy_object_unref(dest->si_unit_z);
-    dest->si_unit_z = gwy_si_unit_duplicate(src->si_unit_z);
+    gwy_serializable_clone(G_OBJECT(src->si_unit_z),
+                           G_OBJECT(dest->si_unit_z));
     g_object_notify(G_OBJECT(dest), "unit_z");
 
     g_object_thaw_notify(G_OBJECT(dest));

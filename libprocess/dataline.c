@@ -40,6 +40,8 @@ static GObject* gwy_data_line_deserialize       (const guchar *buffer,
                                                  gsize size,
                                                  gsize *position);
 static GObject* gwy_data_line_duplicate_real    (GObject *object);
+static void     gwy_data_line_clone_real        (GObject *source,
+                                                 GObject *copy);
 /*static void     gwy_data_line_value_changed     (GObject *object);*/
 
 static GObjectClass *parent_class = NULL;
@@ -94,6 +96,7 @@ gwy_data_line_serializable_init(GwySerializableIface *iface)
     iface->serialize = gwy_data_line_serialize;
     iface->deserialize = gwy_data_line_deserialize;
     iface->duplicate = gwy_data_line_duplicate_real;
+    iface->clone = gwy_data_line_clone_real;
 }
 
 static void
@@ -246,6 +249,25 @@ gwy_data_line_duplicate_real(GObject *object)
     memcpy(duplicate->data, data_line->data, data_line->res*sizeof(gdouble));
 
     return (GObject*)duplicate;
+}
+
+static void
+gwy_data_line_clone_real(GObject *source, GObject *copy)
+{
+    GwyDataLine *data_line, *clone;
+
+    g_return_if_fail(GWY_IS_DATA_LINE(source));
+    g_return_if_fail(GWY_IS_DATA_LINE(copy));
+
+    data_line = GWY_DATA_LINE(source);
+    clone = GWY_DATA_LINE(copy);
+
+    if (clone->res != data_line->res) {
+        clone->res = data_line->res;
+        clone->data = g_renew(gdouble, clone->data, clone->res);
+    }
+    clone->real = data_line->real;
+    memcpy(clone->data, data_line->data, data_line->res*sizeof(gdouble));
 }
 
 /*
