@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -120,9 +120,9 @@ gwy_3d_view_get_type(void)
         };
         gwy_debug("");
         gwy_3d_view_type = g_type_register_static(GTK_TYPE_DRAWING_AREA,
-                                                      GWY_3D_VIEW_TYPE_NAME,
-                                                      &gwy_3d_view_info,
-                                                      0);
+                                                  GWY_3D_VIEW_TYPE_NAME,
+                                                  &gwy_3d_view_info,
+                                                  0);
     }
 
     return gwy_3d_view_type;
@@ -249,7 +249,7 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->container = data;
 
     gwy3dview->rot_x         = gtk_adjustment_new(45.0, -G_MAXDOUBLE, G_MAXDOUBLE, 5.0, 45.0, 0.0);
-    gwy3dview->rot_y         = gtk_adjustment_new(-45.0, -90.0, 0.0, 5.0, 15.0, 0.0);
+    gwy3dview->rot_y         = gtk_adjustment_new(-45.0, -270.0, 180.0, 5.0, 15.0, 0.0);
     gwy3dview->view_scale    = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.1, 0.0, 0.0);
     gwy3dview->deformation_z = gtk_adjustment_new(1.0, 0.0, G_MAXDOUBLE, 0.1, 0.0, 0.0);
     gwy3dview->light_z       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 45.0, 0.0);
