@@ -98,7 +98,7 @@ stmprg_detect(const gchar *filename, gboolean only_name)
     gchar magic[MAGIC_SIZE];
 
     if (strstr(filename, "tp"))
-        score += 20;
+        score += 10;
 
     if (only_name)
         return score;
