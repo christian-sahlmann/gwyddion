@@ -19,7 +19,7 @@ RUN_MODES= 'noninteractive', 'with_defaults'
 PLUGIN_INFO= [ "invert_narray", "/_Test/Value Invert (Ruby+NArray)"]
 
 def register(args)
-	puts PLUGIN_INFO, RUN_MODES
+	puts PLUGIN_INFO, RUN_MODES.join(' ')
 end 
 
 def run( args)
