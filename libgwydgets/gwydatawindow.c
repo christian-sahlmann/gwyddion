@@ -39,7 +39,7 @@ enum {
 
 static void     gwy_data_window_class_init     (GwyDataWindowClass *klass);
 static void     gwy_data_window_init           (GwyDataWindow *data_window);
-
+static void     gwy_data_window_destroy        (GtkObject *object);
 static void     measure_changed                (GwyDataWindow *data_window);
 static void     lame_window_resize             (GwyDataWindow *data_window);
 static void     compute_statusbar_units        (GwyDataWindow *data_window);
@@ -104,6 +104,8 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
     object_class = (GtkObjectClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
+    object_class->destroy  = gwy_data_window_destroy;
+
     klass->title_changed = NULL;
 
     data_window_signals[TITLE_CHANGED] =
@@ -130,6 +132,26 @@ gwy_data_window_init(GwyDataWindow *data_window)
     data_window->zoom_mode = GWY_ZOOM_MODE_HALFPIX;
     data_window->statusbar_context_id = 0;
     data_window->statusbar_message_id = 0;
+    data_window->coord_format = NULL;
+    data_window->value_format = NULL;
+}
+
+static void
+gwy_data_window_destroy(GtkObject *object)
+{
+    GwyDataWindow *data_window;
+
+    gwy_debug("destroying a GwyDataWindow (refcount = %u)",
+              G_OBJECT(object)->ref_count);
+
+    g_return_if_fail(GWY_IS_DATA_WINDOW(object));
+
+    data_window = GWY_DATA_WINDOW(object);
+    g_free(data_window->coord_format);
+    g_free(data_window->value_format);
+
+    if (GTK_OBJECT_CLASS(parent_class)->destroy)
+        (*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
 }
 
 /**
@@ -442,14 +464,19 @@ compute_statusbar_units(GwyDataWindow *data_window)
     GwyDataField *dfield;
     GwyContainer *data;
 
+    gwy_debug("");
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_debug("before: coord_format = %p, value_format = %p",
+              data_window->coord_format, data_window->value_format);
     data_window->coord_format
         = gwy_data_field_get_value_format_xy(dfield, data_window->coord_format);
     data_window->value_format
         = gwy_data_field_get_value_format_z(dfield, data_window->value_format);
+    gwy_debug("after: coord_format = %p, value_format = %p",
+              data_window->coord_format, data_window->value_format);
 }
 
 static gboolean
@@ -463,7 +490,7 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
     guint id;
     gdouble xreal, yreal, value;
     gint x, y;
-    gchar label[100];
+    gchar label[128];
 
     x = event->x;
     y = event->y;
