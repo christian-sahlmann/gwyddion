@@ -59,9 +59,6 @@ static void     gwy_3d_window_show_labels_changed (GtkToggleButton *check,
                                                    Gwy3DWindow *window);
 static void     gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
                                                    Gwy3DWindow *window);
-static gboolean gwy_3d_window_labels_entry_key_pressed(GtkWidget *widget,
-                                                   GdkEventKey *event,
-                                                   Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_auto_scale_changed  (GtkToggleButton *check,
                                                    Gwy3DWindow *window);
 static void     gwy_3d_window_labels_entry_activate(GtkEntry *entry,
@@ -652,7 +649,7 @@ gwy_3d_window_auto_scale_changed(GtkToggleButton *check,
     gint idx = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
     gtk_widget_set_sensitive(window->labels_size, !active);
     gwy_3d_label_description_set_autoscale(
-        gwy_3d_view_get_label_description(window->gwy3dview, idx), active);
+        gwy_3d_view_get_label_description(GWY_3D_VIEW(window->gwy3dview), idx), active);
 }
 
 static void

@@ -100,9 +100,8 @@ GType                   gwy_3d_labels_get_type             (void) G_GNUC_CONST;
 
 Gwy3DLabels*            gwy_3d_labels_new            (GwyContainer *container);
 void                    gwy_3d_labels_update         (Gwy3DLabels *labels,
-                                                       GwyContainer *container,
                                                        GwySIUnit *si_unit);
-gchar*                  gwy_3d_labels_format_text    (Gwy3DLabels *labels,
+gchar*                  gwy_3d_labels_expand_text    (Gwy3DLabels *labels,
                                                        Gwy3DLabelName label_name);
 
 Gwy3DLabelDescription*  gwy_3d_labels_get_description(Gwy3DLabels *gwy3dlabels,

@@ -192,7 +192,7 @@ gwy_3d_label_description_new(gchar * text, const gchar* key,
     Gwy3DLabelDescription * desc;
     gchar * buffer;
     gchar * end;
-    gchar * ttext;
+    const guchar * ttext;
 
     gwy_debug(" ");
     desc = g_new(Gwy3DLabelDescription, 1);
@@ -258,7 +258,7 @@ gwy_3d_label_description_create_adjustment(Gwy3DLabels *gwy3dlabels,
 
 /**
  * gwy_3d_labels_new:
- * @container:
+ * @container: the settings of the labels are stored in this container
  *
  * Creates a new 3D label collection object.
  *
@@ -305,11 +305,12 @@ gwy_3d_labels_new(GwyContainer * container)
 
 /**
  * gwy_3d_labels_get_description:
- * @gwy3dlabels: 
- * @label_name: 
+ * @gwy3dlabels: 3D label collection object
+ * @label_name: identifier of the label
  *
  *
- * Returns: 
+ * Returns: a #Gwy3DLabelDescription structure identified by @name from the 
+ *          @gwy3dlabels
  *
  * Since: 1.5
  **/
@@ -326,15 +327,16 @@ gwy_3d_labels_get_description(Gwy3DLabels *gwy3dlabels,
 
 /**
  * gwy_3d_labels_get_update:
- * @labels: 
- * @container: 
- * @si_unit: 
+ * @labels: 3D label collection object
+ * @si_unit: SI Unit appended to the numerical values of variables in @text 
+ *          field of #Gwy3DLabelDescription
  *
- *
+ * Updates the numerical values of the variables in @text field of 
+ * #Gwy3DLabelDescription. Also appends the SI unit to this numerical values.
  *
  * Since: 1.5
  **/
-void gwy_3d_labels_update(Gwy3DLabels * labels, GwyContainer* container, GwySIUnit * si_unit)
+void gwy_3d_labels_update(Gwy3DLabels * labels, GwySIUnit * si_unit)
 {
     GwySIValueFormat * format;
     gchar buffer[50];
@@ -344,7 +346,8 @@ void gwy_3d_labels_update(Gwy3DLabels * labels, GwyContainer* container, GwySIUn
 
     gwy_debug(" ");
 
-    g_return_if_fail(gwy_container_gis_object_by_name(container, "/0/data", (GObject**)&data_field));
+    g_return_if_fail(gwy_container_gis_object_by_name(
+                         labels->container, "/0/data", (GObject**) &data_field));
 
     for (i = 0; i < labels->variables_count; i++)
        g_free(labels->values[i]);
@@ -399,17 +402,21 @@ void gwy_3d_labels_update(Gwy3DLabels * labels, GwyContainer* container, GwySIUn
 }
 
 /**
- * gwy_3d_labels_format_text:
- * @labels: A 3D labels object.
- * @label_name:
+ * gwy_3d_labels_expand_text:
+ * @labels: a 3D labels collection object.
+ * @label_name: identifier of the label
  *
+ * Expands the variables within @text field of #Gwy3DLabelDescription to 
+ * the numerical values. The LabelDescription is identified by @label_name.
  *
- *
- * Returns: 
+ * Returns: The @text field of #Gwy3DLabelDescription after expanding varibles 
+ *          to their numerical values. The returned string should not be modied,
+ *          freed of referenced. It is freed during next call of this function 
+ *          or during destroying @labels.            
  *
  * Since: 1.5
  **/
-gchar * gwy_3d_labels_format_text(Gwy3DLabels * labels, Gwy3DLabelName label_name)
+gchar * gwy_3d_labels_expand_text(Gwy3DLabels * labels, Gwy3DLabelName label_name)
 {
 #   define LABEL_BUFFER_SIZE 500
     gchar buffer[LABEL_BUFFER_SIZE];
@@ -460,9 +467,11 @@ gchar * gwy_3d_labels_format_text(Gwy3DLabels * labels, Gwy3DLabelName label_nam
 /**
  * gwy_3d_label_description_set_text:
  * @label_description: A label desctiption.
- * @text: 
+ * @text: new value of @text field
  *
- *
+ * Sets the @text field of @label_description to the value of %text.
+ *  
+ * Emits the "label_changed" signal. 
  *
  * Since: 1.5
  **/
@@ -489,7 +498,9 @@ gwy_3d_label_description_set_text(Gwy3DLabelDescription * ld,
  * gwy_3d_label_description_reset:
  * @label_description: A label desctiption.
  *
- *
+ * Resets the values of the @text, @delta_x, @delta_y, @size and @rotation 
+ * fields of @label_description to their default vaules. @uuto_scale field is 
+ * set to TRUE. 
  *
  * Since: 1.5
  **/
@@ -499,9 +510,10 @@ gwy_3d_label_description_reset(Gwy3DLabelDescription * label_description)
     gwy_debug(" ");
     gwy_3d_label_description_set_text(label_description,
                                       label_description->default_text);
+    gwy_3d_label_description_set_autoscale(label_description, TRUE); 
     gtk_adjustment_set_value(label_description->delta_x, 0);
     gtk_adjustment_set_value(label_description->delta_y, 0);
-    gtk_adjustment_set_value(label_description->size, -1);
+    gtk_adjustment_set_value(label_description->size, 14);
     gtk_adjustment_set_value(label_description->rotation, 0);
 }
 
@@ -524,13 +536,14 @@ gwy_3d_labels_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_
 
 /**
  * gwy_3d_labels_user_size:
- * @labels: A 3D labels object.
- * @name: 
- * @user_size: 
+ * @labels: a 3D labels collection object
+ * @name: identifier of the label
+ * @user_size: automatically calculated size of the text
  *
- * 
+ * According @auto_scale decides whether to use @user_size or @size->value
+ * size of the 3D View label text. 
  *
- * Returns:
+ * Returns: size of the label text in 3D View
  **/
 gdouble
 gwy_3d_labels_user_size(Gwy3DLabels *labels,
@@ -551,7 +564,7 @@ gwy_3d_labels_user_size(Gwy3DLabels *labels,
  * @label_description: A label desctiption.
  *
  *
- * Returns: 
+ * Returns: value of @auto_scale
  *
  * Since: 1.5
  **/
@@ -564,8 +577,12 @@ gwy_3d_label_description_get_autoscale(Gwy3DLabelDescription* label_description)
 /**
  * gwy_3d_label_description_set_autoscale:
  * @label_description: A label desctiption.
- * @autoscale: 
+ * @autoscale: new value of %auto_scale field
  *
+ * Sets whether use automatically calculated size of label text or whether  use
+ * value of @size->value. 
+ * 
+ * Emits "label_changed" signal.   
  *
  * Since: 1.5
  **/
@@ -586,3 +603,126 @@ gwy_3d_label_description_set_autoscale(Gwy3DLabelDescription * ld,
     g_free(buffer);
     g_signal_emit(ld->owner, labels_signals[LABEL_CHANGED], 0);
 }
+
+/************************** Documentation ****************************/
+/**
+ * Gwy3DLabelName:
+ * @GWY_3D_VIEW_LABEL_X: Identifier of the label describing x-axis
+ * @GWY_3D_VIEW_LABEL_Y: Identifier of the label describing y-axis
+ * @GWY_3D_VIEW_LABEL_MIN: Identifier of the label
+ *                         describing minimal z-value
+ * @GWY_3D_VIEW_LABEL_MAX: Identifier of the label
+ *                         describing maximal z-value
+ *
+ * Identifiers of the labels of the axes within 3D View.
+ *
+ * Since 1.5
+ **/
+
+/**
+ * Gwy3DLabelDescription:
+ * @base_key: Path to the node within GwyContainer storing the informations
+ *            about this LabelDescription. 
+ *            This field should be considered private and should not be modified.  
+ * @default_text: Value to which the text would be set after calling 
+ *                @gwy_3d_label_description_reset.
+ * @text: Text of the label. May contain names of the variables. Each word 
+ *        beginning with $ is considered to be a variable. Currently following 
+ *        variables can be used: %$X, %$Y, %$MIN and %$MAX. To set the value 
+ *        of @text use @gwy_3d_label_description_set_text.
+ * @auto_scale: Whether the size of text should be calculated automatically or
+ *              use the value obtained through @size field and 
+ *              @gwy_3d_labels_user_size mathod. To obratin this value it is 
+ *              possible to use @gwy_3d_label_description_get_autoscale method
+ *              and to set @auto_scale use 
+ *              @gwy_3d_label_description_set_autoscale method.
+ * @delta_x: Horizontal displacement of the label within 3DView. The label text 
+ *          is moved by  @delta_x->value pixels from the calculated point.
+ * @delta_y: Vertical displacement of the label within 3DView. The label text 
+ *          is moved by  @delta_y->value pixels from the calculated point.
+ * @rotation: Rotation of the label text within 3DView. The rotations are not
+ *           implemented yet. 
+ * @size: The size of the label text within 3DView (only if @auto_scale == %FALSE)
+ * @owner: A pointer to the Gwy3DLabels that created this description. 
+ *        This field should be considered private and should not be modified.  
+ *
+ * The structure contains informations about individual labels taking place in
+ * the 3DView.
+ *   
+ * This structure is created and owned by Gwy3DLabes class. 
+ * Note that some of the fields are considered as private and should not 
+ * be modified by user. Some other fields have the set methods which 
+ * should be used instead of direct settings 
+ * of values. Changes of @text, @auto_scale, @delta_x, @delta_x, @rotation or 
+ * @size field causes emitting the "label_cghanged" signal.
+ * 
+ * Since 1.5
+ **/
+
+/**
+ * Gwy3DLabels:
+ *
+ * The class stores the informations about individual labels taking place 
+ * within 3DView. The fields of this class should be considered private. 
+ * The class provides methods to obtain individual LabelDescriptions 
+ * (%gwy_3d_labels_get_description) and takes care of expanding the variables
+ * within @text filed of LabelDescriptions (@gwy_3d_labels_format_text method).
+ * Currently four variables are implemented and can be used (%$X, %$Y, %$MIN
+ * and %$MAX). Other variables are ignored. 
+ * 
+ *
+ * Since 1.5
+ **/
+
+/**
+ * gwy_3d_labels_get_delta_x:
+ * @labels: a 3D labels collection object
+ * @name: identifier of the label
+ * 
+ * Returns the value of %delta_x displacement (%delta_x->value) of the label 
+ * identified by %name. 
+ * 
+ * Returns: the value of the %delta_x displacement 
+ * 
+ * Since 1.5
+ **/   
+
+/**
+ * gwy_3d_labels_get_delta_y:
+ * @labels: a 3D labels collection object
+ * @name: identifier of the label
+ * 
+ * Returns the value of %delta_y displacement (%delta_y->value) of the label 
+ * identified by %name. 
+ * 
+ * Returns: the value of the %delta_y displacement 
+ * 
+ * Since 1.5
+ **/   
+
+/**
+ * gwy_3d_labels_get_rotation:
+ * @labels: a 3D labels collection object
+ * @name: identifier of the label
+ * 
+ * Returns the value of angle of rotation (%rotation->value) of the label 
+ * identified by %name. 
+ * 
+ * Returns: the value of the angle of the rotation
+ * 
+ * Since 1.5
+ **/   
+
+/**
+ * gwy_3d_labels_get_size:
+ * @labels: a 3D labels collection object
+ * @name: identifier of the label
+ * 
+ * Returns the value of label text size (%size->value) of the label 
+ * identified by %name. Does not take @auto_scale into account.
+ * 
+ * Returns: the value of the label text size
+ * 
+ * Since 1.5
+ **/   
+

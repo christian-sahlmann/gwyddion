@@ -358,7 +358,7 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->labels = gwy_3d_labels_new(gwy3dview->container);
     g_signal_connect(gwy3dview->labels, "label_changed",
                      G_CALLBACK(gwy_3d_labels_value_changed), gwy3dview);
-    gwy_3d_labels_update(gwy3dview->labels, gwy3dview->container, gwy3dview->si_unit);
+    gwy_3d_labels_update(gwy3dview->labels, gwy3dview->si_unit);
     gwy_debug("labels:%p",gwy3dview->labels);
     return widget;
 }
@@ -536,7 +536,7 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
 
         gwy3dview->data_min  = gwy_data_field_get_min(gwy3dview->data);
         gwy3dview->data_max  = gwy_data_field_get_max(gwy3dview->data);
-        gwy_3d_labels_update(gwy3dview->labels, gwy3dview->container, gwy3dview->si_unit);
+        gwy_3d_labels_update(gwy3dview->labels, gwy3dview->si_unit);
     }
 
     if ((update_data == TRUE || update_palette == TRUE)
@@ -1072,9 +1072,9 @@ gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
  * gwy_3d_view_get_rot_x_adjustment:
  * @gwy3dview: A 3D data view widget.
  *
+ * Returns a GtkAdjustment with settings of the Phi angle of rotation.
  *
- *
- * Returns:
+ * Returns: a GtkAdjustment with settings of the Phi angle of rotation
  *
  * Since: 1.5
  **/
@@ -1090,9 +1090,9 @@ gwy_3d_view_get_rot_x_adjustment(Gwy3DView *gwy3dview)
  * gwy_3d_view_get_rot_y_adjustment:
  * @gwy3dview: A 3D data view widget.
  *
+ * Returns a GtkAdjustment with settings of the Theta angle of rotation
  *
- *
- * Returns:
+ * Returns: a GtkAdjustment with settings of the Theta angle of rotation
  *
  * Since: 1.5
  **/
@@ -1108,9 +1108,9 @@ gwy_3d_view_get_rot_y_adjustment(Gwy3DView *gwy3dview)
  * gwy_3d_view_get_view_scale_adjustment:
  * @gwy3dview: A 3D data view widget.
  *
+ * Returns a GtkAdjustment with settings of the view zoom
  *
- *
- * Returns:
+ * Returns: a GtkAdjustment with settings of the view zoom
  *
  * Since: 1.5
  **/
@@ -1126,9 +1126,9 @@ gwy_3d_view_get_view_scale_adjustment(Gwy3DView *gwy3dview)
  * gwy_3d_view_get_z_deformation_adjustment:
  * @gwy3dview: A 3D data view widget.
  *
+ * Returns a GtkAdjustment with settings of the zoom of the z-axis
  *
- *
- * Returns:
+ * Returns: a GtkAdjustment with settings of the zoom of the z-axis
  *
  * Since: 1.5
  **/
@@ -1144,9 +1144,9 @@ gwy_3d_view_get_z_deformation_adjustment(Gwy3DView *gwy3dview)
  * gwy_3d_view_get_light_z_adjustment:
  * @gwy3dview: A 3D data view widget.
  *
+ * Returns a GtkAdjustment with settings of the Phi angle of light position.
  *
- *
- * Returns:
+ * Returns: a GtkAdjustment with settings of the Phi angle of light position
  *
  * Since: 1.5
  **/
@@ -1162,9 +1162,9 @@ gwy_3d_view_get_light_z_adjustment(Gwy3DView *gwy3dview)
  * gwy_3d_view_get_light_y_adjustment:
  * @gwy3dview: A 3D data view widget.
  *
+ * Returns a GtkAdjustment with settings of the Theta angle of light position.
  *
- *
- * Returns:
+ * Returns: a GtkAdjustment with settings of the Theta angle of light position
  *
  * Since: 1.5
  **/
@@ -1180,9 +1180,9 @@ gwy_3d_view_get_light_y_adjustment(Gwy3DView *gwy3dview)
  * gwy_3d_view_get_max_view_scale:
  * @gwy3dview: A 3D data view widget.
  *
+ * Returns the maximal zoom of the 3D data view
  *
- *
- * Returns:
+ * Returns: the maximal zoom of the 3D data view
  *
  * Since: 1.5
  **/
@@ -1198,9 +1198,9 @@ gwy_3d_view_get_max_view_scale(Gwy3DView *gwy3dview)
  * gwy_3d_view_get_min_view_scale:
  * @gwy3dview: A 3D data view widget.
  *
+ * Returns the minimal zoom of the 3D data view
  *
- *
- * Returns:
+ * Returns: the minimal zoom of the 3D data view
  *
  * Since: 1.5
  **/
@@ -1215,11 +1215,11 @@ gwy_3d_view_get_min_view_scale(Gwy3DView *gwy3dview)
 /**
  * gwy_3d_view_set_max_view_scale:
  * @gwy3dview: A 3D data view widget.
- * @new_max_scale:
+ * @new_max_scale: maximal zoom of the 3D data view
  *
+ * Sets the new maximal zoom of 3D data view. Recommended values are 0.5 - 5.0.
  *
- *
- * Returns:
+ * Returns: whether the function finished succesfully (allways)
  *
  * Since: 1.5
  **/
@@ -1251,10 +1251,11 @@ gwy_3d_view_set_max_view_scale(Gwy3DView *gwy3dview, gdouble new_max_scale)
 /**
  * gwy_3d_view_set_min_view_scale:
  * @gwy3dview: A 3D data view widget.
- * @new_min_scale:
+ * @new_min_scale: minimal zoom of the 3D data view
  *
+ * Sets the new manimal zoom of 3D data view. Recommended values are 0.5 - 5.0.
  *
- * Returns:
+ * Returns: whether the function finished succesfully (allways)
  *
  * Since: 1.5
  **/
@@ -1287,10 +1288,13 @@ gwy_3d_view_set_min_view_scale(Gwy3DView *gwy3dview, gdouble new_min_scale)
 /**
  * gwy_3d_view_get_label_description:
  * @gwy3dview: A 3D data view widget.
- * @label_name:
+ * @label_name: identifier of the label
  *
+ * Returns a #Gwy3DLabelDescription structure containing informations about
+ * labels shown within 3D data view. 
  *
- * Returns:
+ * Returns: a #Gwy3DLabelDescription structure containing informations about
+ *          labels shown within 3D data view. 
  *
  * Since: 1.5
  **/
@@ -1406,7 +1410,7 @@ gwy_3d_view_realize(GtkWidget *widget)
     gwy_3d_view_realize_gl(gwy3dview);
 
    /* Get PangoFT2 context. */
-   gwy3dview->ft2_font_map = pango_ft2_font_map_new();
+   gwy3dview->ft2_font_map = (PangoFT2FontMap*) pango_ft2_font_map_new();
    pango_ft2_font_map_set_resolution(gwy3dview->ft2_font_map, 72, 72);
    gwy3dview->ft2_context = pango_ft2_font_map_create_context(gwy3dview->ft2_font_map);
 
@@ -1573,7 +1577,6 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
                               GdkEventMotion *event)
 {
     Gwy3DView *gwy3dview;
-    float w = widget->allocation.width;
     float h = widget->allocation.height;
     float x = event->x;
     float y = event->y;
@@ -1989,7 +1992,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                 label = GWY_3D_VIEW_LABEL_X;
             glColor3f(0.0, 0.0, 0.0);
             gwy_3d_print_text(widget,
-                              gwy_3d_labels_format_text(widget->labels,label),
+                              gwy_3d_labels_expand_text(widget->labels,label),
                               (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
                               (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f,
                               gwy_3d_labels_user_size(widget->labels,
@@ -2004,7 +2007,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
             else
                label = GWY_3D_VIEW_LABEL_Y;
             gwy_3d_print_text(widget,
-                              gwy_3d_labels_format_text(widget->labels,label),
+                              gwy_3d_labels_expand_text(widget->labels,label),
                               (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
                               (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f,
                               gwy_3d_labels_user_size(widget->labels,
@@ -2015,7 +2018,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                               gwy_3d_labels_get_delta_y(widget->labels, label),
                               gwy_3d_labels_get_rotation(widget->labels, label));
             gwy_3d_print_text(widget,
-                              gwy_3d_labels_format_text(widget->labels,
+                              gwy_3d_labels_expand_text(widget->labels,
                                                      GWY_3D_VIEW_LABEL_MAX),
                               Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
                               (widget->data_max - widget->data_min),
@@ -2027,7 +2030,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                               gwy_3d_labels_get_delta_y(widget->labels, GWY_3D_VIEW_LABEL_MAX),
                               gwy_3d_labels_get_rotation(widget->labels, GWY_3D_VIEW_LABEL_MAX));
             gwy_3d_print_text(widget,
-                              gwy_3d_labels_format_text(widget->labels,
+                              gwy_3d_labels_expand_text(widget->labels,
                                                      GWY_3D_VIEW_LABEL_MIN),
                               Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, 0.0f,
                               gwy_3d_labels_user_size(widget->labels,
@@ -2287,7 +2290,7 @@ gwy_3d_print_text(Gwy3DView      *gwy3dview,
                   gint           hjustify,
                   gint           displacement_x,
                   gint           displacement_y,
-                  gfloat         rotation)
+                  G_GNUC_UNUSED gfloat         rotation)
 {
     PangoContext *widget_context;
     PangoFontDescription *font_desc;
