@@ -28,7 +28,6 @@
 
 enum {
     GRAPHLIST_GMODEL,
-    GRAPHLIST_EDITABLE,
     GRAPHLIST_VISIBLE,
     GRAPHLIST_TITLE,
     GRAPHLIST_NCURVES,
@@ -134,10 +133,7 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
     store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(list)));
 
     gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter,
-                       GRAPHLIST_GMODEL, gmodel,
-                       GRAPHLIST_EDITABLE, TRUE,
-                       -1);
+    gtk_list_store_set(store, &iter, GRAPHLIST_GMODEL, gmodel, -1);
 }
 
 GtkWidget*
@@ -245,13 +241,12 @@ gwy_app_graph_list_construct(GwyContainer *data,
 
     /* first column (toggle) is special, set up it separately */
     renderer = gtk_cell_renderer_toggle_new();
+    g_object_set(G_OBJECT(renderer), "activatable", TRUE, NULL);
     g_signal_connect(renderer, "toggled",
                      G_CALLBACK(gwy_app_graph_list_toggled), list);
     column = gtk_tree_view_column_new_with_attributes
                                               (gwy_sgettext(columns[0].title),
                                                renderer,
-                                               "activatable",
-                                               GRAPHLIST_EDITABLE,
                                                NULL);
     g_object_set(G_OBJECT(column), "expand", FALSE, NULL);
     gtk_tree_view_column_set_cell_data_func
@@ -550,10 +545,7 @@ gwy_app_graph_list_add_line(gpointer hkey,
     }
 
     gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter,
-                       GRAPHLIST_GMODEL, gmodel,
-                       GRAPHLIST_EDITABLE, TRUE,
-                       -1);
+    gtk_list_store_set(store, &iter, GRAPHLIST_GMODEL, gmodel, -1);
 }
 
 static gint
