@@ -29,15 +29,20 @@ static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   gdouble phi);
 /**
  * gwy_data_field_correct_laplace_iteration:
- * @data_field: data field to be corrected
- * @mask_field: mask of places to be corrected
- * @buffer_field: initialized to same size aa mask and data
- * @error: maximum change within last step
- * @corfactor: correction factor within step.
+ * @data_field: Data field to be corrected.
+ * @mask_field: Mask of places to be corrected.
+ * @buffer_field: Initialized to same size as mask and data.
+ * @error: Maximum change within last step.
+ * @corfactor: Correction factor within step.
+ *
+ * Performs one interation of Laplace data correction.
  *
  * Tries to remove all the points in mask off the data by using
  * iterative method similar to solving heat flux equation.
+ *
  * Use this function repeatedly until reasonable @error is reached.
+ *
+ * Since: 1.1
  **/
 void
 gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
@@ -104,14 +109,18 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
 
 /**
  * gwy_data_field_mask_outliers:
- * @data_field: data field
- * @mask_field: mask to be changed
- * @thresh: threshold value
+ * @data_field: A data field.
+ * @mask_field: A data field to be filled with mask.
+ * @thresh: Threshold value.
  *
- * Creates mask of data that are above or below
- * thresh*sigma from average height. Sigma denotes root-mean square deviation
+ * Creates mask of data that are above or below @thresh*sigma from average
+ * height.
+ *
+ * Sigma denotes root-mean square deviation
  * of heights. This criterium corresponds
- * to usual Gaussian distribution outliers detection for thresh = 3.
+ * to usual Gaussian distribution outliers detection for @thresh = 3.
+ *
+ * Since: 1.1
  **/
 void
 gwy_data_field_mask_outliers(GwyDataField *data_field,
@@ -136,12 +145,16 @@ gwy_data_field_mask_outliers(GwyDataField *data_field,
 
 /**
  * gwy_data_field_correct_average:
- * @data_field: data field
- * @mask_field: mask to be used for changes
+ * @data_field: A data field.
+ * @mask_field: Mask of places to be corrected.
  *
- * Function simply puts average value of all the @data_field into
+ * Fills data under mask with average value.
+ *
+ * Simply puts average value of all the @data_field values into
  * points in @data_field lying under points where @mask_field values
  * are nonzero.
+ *
+ * Since: 1.2
  **/
 void
 gwy_data_field_correct_average(GwyDataField *data_field,
