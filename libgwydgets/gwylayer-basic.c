@@ -151,9 +151,15 @@ gwy_layer_basic_paint(GwyDataViewLayer *layer)
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
 
     /* TODO Container */
-    data_field = GWY_DATA_FIELD(
-                     gwy_container_get_object_by_name(layer->data,
-                                                      "/0/data"));
+    /* XXX */
+    if (gwy_container_contains_by_name(layer->data, "/0/show"))
+        data_field = GWY_DATA_FIELD(
+                         gwy_container_get_object_by_name(layer->data,
+                                                          "/0/show"));
+    else
+        data_field = GWY_DATA_FIELD(
+                         gwy_container_get_object_by_name(layer->data,
+                                                          "/0/data"));
     g_return_val_if_fail(data_field, layer->pixbuf);
     /* FIXME FIXME FIXME */
     /*if (GWY_LAYER_BASIC(layer)->changed)*/ {
@@ -232,9 +238,15 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
 
     /* TODO Container */
-    data_field = GWY_DATA_FIELD(
-                     gwy_container_get_object_by_name(layer->data,
-                                                      "/0/data"));
+    /* XXX */
+    if (gwy_container_contains_by_name(layer->data, "/0/show"))
+        data_field = GWY_DATA_FIELD(
+                         gwy_container_get_object_by_name(layer->data,
+                                                          "/0/show"));
+    else
+        data_field = GWY_DATA_FIELD(
+                         gwy_container_get_object_by_name(layer->data,
+                                                          "/0/data"));
     g_return_if_fail(data_field);
     width = gwy_data_field_get_xres(data_field);
     height = gwy_data_field_get_yres(data_field);
