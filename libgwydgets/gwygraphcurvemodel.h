@@ -24,8 +24,6 @@
 #include <libgwydgets/gwygraph.h>
 #include <libdraw/gwyrgba.h>
 
-#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
-
 G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAPH_CURVE_MODEL                  (gwy_graph_curve_model_get_type())
@@ -91,7 +89,6 @@ void       gwy_graph_add_curve_from_model       (GwyGraph *graph,
                                                  GwyGraphCurveModel *gcmodel);
 
 G_END_DECLS
-#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 #endif /* __GWY_GRAPH_CURVE_MODEL_H__ */
 

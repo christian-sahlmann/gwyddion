@@ -26,8 +26,6 @@
 #include "gwyapp.h"
 #include "gwyappinternal.h"
 
-#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
-
 enum {
     GRAPHLIST_GMODEL,
     GRAPHLIST_EDITABLE,
@@ -380,9 +378,8 @@ gwy_app_graph_list_show_graph(GtkTreeModel *store,
                               GtkTreeIter *iter,
                               gpointer userdata)
 {
-    GtkWidget *graph;
+    GtkWidget *graph, *list, *window;
     GObject *gmodel;
-    GtkWidget *list;
 
     list = GTK_WIDGET(userdata);
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
@@ -397,7 +394,9 @@ gwy_app_graph_list_show_graph(GtkTreeModel *store,
      * fine-grained method should be probably used... */
     g_signal_connect_swapped(graph, "destroy",
                              G_CALLBACK(gtk_widget_queue_draw), list);
-    gwy_app_graph_window_create(graph);
+    window = gwy_app_graph_window_create(graph);
+    gtk_window_set_title(GTK_WINDOW(window),
+                         GWY_GRAPH_MODEL(gmodel)->title->str);
     g_object_unref(gmodel);
 
     return FALSE;
@@ -620,7 +619,5 @@ gwy_app_graph_list_orphaned(GtkWidget *graph_view)
     gtk_tree_model_foreach(store, gwy_app_graph_list_release_gmodel, list);
     gtk_widget_destroy(graph_view);
 }
-
-#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

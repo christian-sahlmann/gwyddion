@@ -23,8 +23,6 @@
 
 #include <libgwydgets/gwygraph.h>
 
-#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
-
 G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAPH_MODEL                  (gwy_graph_model_get_type())
@@ -99,7 +97,6 @@ GtkWidget* gwy_graph_new_from_model       (GwyGraphModel *gmodel);
 gint       gwy_graph_model_get_n_curves   (GwyGraphModel *gmodel);
 
 G_END_DECLS
-#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 #endif /* __GWY_GRAPH_MODEL_H__ */
 

@@ -25,9 +25,6 @@
 #include "gwygraphmodel.h"
 
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
-#define GRAPH_GLOBALS_FAKE_TYPE_NAME "GwyGraphModel-graph"
-
-#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
 
 static void   gwy_graph_model_class_init        (GwyGraphModelClass *klass);
 static void   gwy_graph_model_init              (GwyGraphModel *gmodel);
@@ -146,7 +143,7 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->y_unit = gwy_si_unit_new("");
 
     /* XXX: GwyGraph has no such thing */
-    gmodel->title = g_string_new("Fix bug #23!");
+    gmodel->title = g_string_new("There's no way to get the title!");
     gmodel->top_label = g_string_new("");
     gmodel->bottom_label = g_string_new("");
     gmodel->left_label = g_string_new("");
@@ -376,22 +373,16 @@ gwy_graph_new_from_model(GwyGraphModel *gmodel)
 
 static GByteArray*
 gwy_graph_model_serialize(GObject *obj,
-                            GByteArray*buffer)
+                          GByteArray*buffer)
 {
     GwyGraphModel *gmodel;
-    gsize before_obj;
-    gint i;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(obj), NULL);
 
-    buffer = gwy_serialize_pack(buffer, "si", GWY_GRAPH_MODEL_TYPE_NAME, 0);
-    before_obj = buffer->len;
-
     gmodel = GWY_GRAPH_MODEL(obj);
     if (gmodel->graph)
         gwy_graph_model_save_graph(gmodel, gmodel->graph);
-    /* Global data, serialized as a fake subobject GwyGraphModel-graph */
     {
         GwySerializeSpec spec[] = {
             { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
@@ -411,21 +402,14 @@ gwy_graph_model_serialize(GObject *obj,
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
-            { 'i', "ncurves", &gmodel->ncurves, NULL },
-            { 'i', "nautocurves", &gmodel->nautocurves, NULL },
+            /*{ 'i', "nautocurves", &gmodel->nautocurves, NULL },*/
+            { 'O', "curves", &gmodel->curves, &gmodel->ncurves },
         };
 
-        gwy_serialize_pack_object_struct(buffer,
-                                         GRAPH_GLOBALS_FAKE_TYPE_NAME,
-                                         G_N_ELEMENTS(spec), spec);
+        return gwy_serialize_pack_object_struct(buffer,
+                                                GWY_GRAPH_MODEL_TYPE_NAME,
+                                                G_N_ELEMENTS(spec), spec);
     }
-    /* Curves */
-    for (i = 0; i < gmodel->ncurves; i++)
-        gwy_serializable_serialize(G_OBJECT(gmodel->curves[i]), buffer);
-
-    gwy_serialize_store_int32(buffer, before_obj - sizeof(guint32),
-                              buffer->len - before_obj);
-    return buffer;
 }
 
 static GObject*
@@ -434,17 +418,9 @@ gwy_graph_model_deserialize(const guchar *buffer,
                             gsize *position)
 {
     GwyGraphModel *gmodel;
-    gsize mysize, pos;
-    gint i;
 
-    mysize = gwy_serialize_check_string(buffer, size, *position,
-                                        GWY_GRAPH_MODEL_TYPE_NAME);
-    g_return_val_if_fail(mysize, NULL);
-    *position += mysize;
-    mysize = gwy_serialize_unpack_int32(buffer, size, position);
+    g_return_val_if_fail(buffer, NULL);
 
-    /* Unpack the fake "GwyGraphModel-data" subobject */
-    pos = 0;
     gmodel = (GwyGraphModel*)gwy_graph_model_new(NULL);
     {
         gchar *top_label, *bottom_label, *left_label, *right_label, *title;
@@ -466,20 +442,20 @@ gwy_graph_model_deserialize(const guchar *buffer,
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
-            { 'i', "ncurves", &gmodel->ncurves, NULL },
-            { 'i', "nautocurves", &gmodel->nautocurves, NULL },
+            /*{ 'i', "nautocurves", &gmodel->nautocurves, NULL },*/
+            { 'O', "curves", &gmodel->curves, &gmodel->ncurves },
         };
 
         top_label = bottom_label = left_label = right_label = title = NULL;
-        if (!gwy_serialize_unpack_object_struct(buffer + *position,
-                                                mysize, &pos,
-                                                GRAPH_GLOBALS_FAKE_TYPE_NAME,
+        if (!gwy_serialize_unpack_object_struct(buffer, size, position,
+                                                GWY_GRAPH_MODEL_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec)) {
             g_free(top_label);
             g_free(bottom_label);
             g_free(left_label);
             g_free(right_label);
             g_free(title);
+            g_free(gmodel->curves);
             g_object_unref(gmodel);
             return NULL;
         }
@@ -506,19 +482,6 @@ gwy_graph_model_deserialize(const guchar *buffer,
         }
     }
 
-    /* Then unpack curves, they are real objects. */
-    gmodel->curves = g_new(GObject*, gmodel->ncurves);
-    for (i = 0; i < gmodel->ncurves; i++) {
-        gmodel->curves[i] = gwy_serializable_deserialize(buffer + *position,
-                                                         mysize, &pos);
-        if (!gmodel->curves[i]) {
-            gmodel->ncurves = i;    /* free only existing curves */
-            g_object_unref(gmodel);
-            return NULL;
-        }
-    }
-
-    *position += mysize;
     return (GObject*)gmodel;
 }
 
@@ -561,7 +524,5 @@ gwy_graph_model_duplicate(GObject *object)
 
     return (GObject*)duplicate;
 }
-
-#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
