@@ -459,6 +459,16 @@ selection_updated_cb(gpointer data)
 static void        
 recompute(FitArgs *args, FitControls *controls)
 {
+
+    /*select curve data and put int in x[], y[]
+     (allready in SI base units)*/
+    
+    /*recompute fields to be reasonably scaled,
+     save scaling coefficients*/
+
+    /*fit function though fields*/
+
+    /*rescale results and output them*/
 }
 
 static void        
