@@ -13,8 +13,9 @@ case "$1" in
     ;;
 
     run)
+    run=$2
     # We don't need to read the input when the output doesn't depend on it.
-    echo "/0/base/palette=Yellow"
+    echo "/0/base/palette=Yellow" >$3
     ;;
 
     *)

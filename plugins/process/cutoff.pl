@@ -4,8 +4,6 @@
 # modifying and outputting the data.
 # Written by Yeti <yeti@physics.muni.cz>.
 # Public domain.
-use open IN => ':bytes', OUT => ':bytes';
-use open ':std';
 use warnings;
 use strict;
 
@@ -36,7 +34,7 @@ sub dpop {
 }
 
 sub read_data {
-    open FH, $_[0];
+    open FH, '<:bytes', $_[0];
     my %data;
     while ( my $line = <FH> ) {
         if ( $line =~ m/$field_re/ ) {
@@ -66,31 +64,34 @@ sub read_data {
             die "Can't understand input\n";
         }
     }
+    close FH;
     return \%data;
 }
 
 sub print_data {
-    my $data = $_[0];
+    open FH, '>:bytes', $_[0];
+    my $data = $_[1];
     local $, = undef;
     local $\ = undef;
     for my $k ( keys %$data ) {
         my $v = $data->{ $k };
         next if ref $v;
-        print "$k=$v\n";
+        print FH "$k=$v\n";
     }
     for my $k ( keys %$data ) {
         my $v = $data->{ $k };
         next if not ref $v;
-        printf "$k/xres=\%d\n", $v->{ 'xres' };
-        printf "$k/yres=\%d\n", $v->{ 'yres' };
+        printf FH "$k/xres=\%d\n", $v->{ 'xres' };
+        printf FH "$k/yres=\%d\n", $v->{ 'yres' };
         my $n = $v->{ 'xres' }*$v->{ 'yres' };
-        printf "$k/xreal=\%g\n", $v->{ 'xreal' };
-        printf "$k/yreal=\%g\n", $v->{ 'yreal' };
-        print "$k=[\n[";
+        printf FH "$k/xreal=\%g\n", $v->{ 'xreal' };
+        printf FH "$k/yreal=\%g\n", $v->{ 'yreal' };
+        print FH "$k=[\n[";
         my $a = $v->{ 'data' };
         $a = pack( "d[$n]", @$a );
-        print "$a]]\n";
+        print FH "$a]]\n";
     }
+    close FH;
 }
 
 sub process_data {
@@ -129,6 +130,6 @@ elsif ( $what eq 'run' ) {
     my $filename = shift @ARGV;
     my $data = read_data $filename;
     process_data $data;
-    print_data $data;
+    print_data $filename, $data;
 }
 exit 0;

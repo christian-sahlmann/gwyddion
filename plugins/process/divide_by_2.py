@@ -4,7 +4,7 @@
 # modifying and outputting the data.
 # Written by Yeti <yeti@physics.muni.cz>.
 # Public domain.
-import sys, os, array, re, types
+import sys, array, re, types
 
 # Plug-in information.
 # Format is similar to GwyProcessFuncInfo:
@@ -21,9 +21,6 @@ valid_arguments = 'register', 'run'
 
 line_re = re.compile(r'^(?P<key>[^=]+)=(?P<val>.*)\n')
 field_re = re.compile(r'^(?P<key>[^=]+)=\[\n')
-
-stdout = os.fdopen(1, 'wb')
-stderr = os.fdopen(2, 'wb')
 
 def dpop(d, k):
     v = d[k]
@@ -58,21 +55,24 @@ def read_data(filename):
             data[m.group('key')] = m.group('val')
             continue
         raise 'Can\'t understand input'
+    fh.close()
     return data
 
-def print_data(data):
+def print_data(filename, data):
+    fh = file(filename, 'wb')
     for k, v in data.items():
         if type(v) == types.DictType: continue
-        stdout.write('%s=%s\n' % (k, v))
+        fh.write('%s=%s\n' % (k, v))
     for k, v in data.items():
         if type(v) != types.DictType: continue
-        stdout.write('%s/xres=%d\n' % (k, v['xres']))
-        stdout.write('%s/yres=%d\n' % (k, v['yres']))
-        stdout.write('%s/xreal=%g\n' % (k, v['xreal']))
-        stdout.write('%s/yreal=%g\n' % (k, v['yreal']))
-        stdout.write('%s=[\n[' % k)
-        v['data'].tofile(stdout)
-        stdout.write(']]\n')
+        fh.write('%s/xres=%d\n' % (k, v['xres']))
+        fh.write('%s/yres=%d\n' % (k, v['yres']))
+        fh.write('%s/xreal=%g\n' % (k, v['xreal']))
+        fh.write('%s/yreal=%g\n' % (k, v['yreal']))
+        fh.write('%s=[\n[' % k)
+        v['data'].tofile(fh)
+        fh.write(']]\n')
+    fh.close()
 
 def process_data(data):
     data['/meta/A subliminal message'] = 'Python rulez!'
@@ -93,5 +93,5 @@ elif what == 'run':
     filename = args.pop(0)
     data = read_data(filename)
     process_data(data)
-    print_data(data)
+    print_data(filename, data)
 sys.exit(0)
