@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <string.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -43,13 +43,25 @@ gdouble
 gwy_data_field_get_max(GwyDataField *a)
 {
     gint i;
-    gdouble max = a->data[0];
-    gdouble *p = a->data;
+    gdouble max;
+    gdouble *p;
 
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), -G_MAXDOUBLE);
+
+    gwy_debug("%s",
+              a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX) ? "cache" : "lame");
+    if (a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX))
+        return a->cache[GWY_DATA_FIELD_CACHE_MAX];
+
+    max = a->data[0];
+    p = a->data;
     for (i = a->xres * a->yres; i; i--, p++) {
-        if (max < *p)
+        if (G_UNLIKELY(max < *p))
             max = *p;
     }
+    a->cache[GWY_DATA_FIELD_CACHE_MAX] = max;
+    a->cached |= (1 << GWY_DATA_FIELD_CACHE_MAX);
+
     return max;
 }
 
@@ -88,7 +100,7 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
         gdouble *drow = datapos + i*dfield->xres;
 
         for (j = 0; j < width; j++) {
-            if (max < *drow)
+            if (G_UNLIKELY(max < *drow))
                 max = *drow;
             drow++;
         }
@@ -109,13 +121,25 @@ gdouble
 gwy_data_field_get_min(GwyDataField *a)
 {
     gint i;
-    gdouble min = a->data[0];
-    gdouble *p = a->data;
+    gdouble min;
+    gdouble *p;
 
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), G_MAXDOUBLE);
+
+    gwy_debug("%s",
+              a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX) ? "cache" : "lame");
+    if (a->cached & (1 << GWY_DATA_FIELD_CACHE_MIN))
+        return a->cache[GWY_DATA_FIELD_CACHE_MIN];
+
+    min = a->data[0];
+    p = a->data;
     for (i = a->xres * a->yres; i; i--, p++) {
-        if (min > *p)
+        if (G_UNLIKELY(min > *p))
             min = *p;
     }
+    a->cache[GWY_DATA_FIELD_CACHE_MIN] = min;
+    a->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN);
+
     return min;
 }
 
@@ -154,7 +178,7 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
         gdouble *drow = datapos + i*dfield->xres;
 
         for (j = 0; j < width; j++) {
-            if (min > *drow)
+            if (G_UNLIKELY(min > *drow))
                 min = *drow;
             drow++;
         }
@@ -176,10 +200,21 @@ gwy_data_field_get_sum(GwyDataField *a)
 {
     gint i;
     gdouble sum = 0;
-    gdouble *p = a->data;
+    gdouble *p;
 
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), sum);
+
+    gwy_debug("%s",
+              a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX) ? "cache" : "lame");
+    if (a->cached & (1 << GWY_DATA_FIELD_CACHE_SUM))
+        return a->cache[GWY_DATA_FIELD_CACHE_SUM];
+
+    p = a->data;
     for (i = a->xres * a->yres; i; i--, p++)
         sum += *p;
+
+    a->cache[GWY_DATA_FIELD_CACHE_SUM] = sum;
+    a->cached |= (1 << GWY_DATA_FIELD_CACHE_SUM);
 
     return sum;
 }
@@ -268,15 +303,27 @@ gdouble
 gwy_data_field_get_rms(GwyDataField *a)
 {
     gint i, n;
-    gdouble rms, sum2 = 0;
-    gdouble sum = gwy_data_field_get_sum(a);
-    gdouble *p = a->data;
+    gdouble rms = 0.0, sum, sum2;
+    gdouble *p;
 
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), rms);
+
+    gwy_debug("%s",
+              a->cached & (1 << GWY_DATA_FIELD_CACHE_MAX) ? "cache" : "lame");
+    if (a->cached & (1 << GWY_DATA_FIELD_CACHE_RMS))
+        return a->cache[GWY_DATA_FIELD_CACHE_RMS];
+
+    sum = gwy_data_field_get_sum(a);
+    sum2 = 0.0;
+    p = a->data;
     for (i = a->xres * a->yres; i; i--, p++)
         sum2 += (*p)*(*p);
 
     n = a->xres * a->yres;
     rms = sqrt(fabs(sum2 - sum*sum/n)/n);
+
+    a->cache[GWY_DATA_FIELD_CACHE_RMS] = rms;
+    a->cached |= (1 << GWY_DATA_FIELD_CACHE_RMS);
 
     return rms;
 }

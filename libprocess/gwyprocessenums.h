@@ -72,7 +72,7 @@ typedef enum {
 typedef enum {
     GWY_DATA_FIELD_CACHE_MIN = 0,
     GWY_DATA_FIELD_CACHE_MAX,
-    GWY_DATA_FIELD_CACHE_AVG,
+    GWY_DATA_FIELD_CACHE_SUM,
     GWY_DATA_FIELD_CACHE_RMS,
     GWY_DATA_FIELD_CACHE_SIZE = 8
 } GwyDataFieldCached;

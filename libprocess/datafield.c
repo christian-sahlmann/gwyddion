@@ -134,8 +134,8 @@ gwy_data_field_finalize(GObject *object)
     GwyDataField *data_field = (GwyDataField*)object;
 
     gwy_debug("%p is dying!", data_field);
-    g_object_unref(data_field->si_unit_xy);
-    g_object_unref(data_field->si_unit_z);
+    gwy_object_unref(data_field->si_unit_xy);
+    gwy_object_unref(data_field->si_unit_z);
     g_free(data_field->data);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -167,8 +167,18 @@ gwy_data_field_new(gint xres, gint yres,
     data_field->yreal = yreal;
     data_field->xres = xres;
     data_field->yres = yres;
-    if (nullme)
+    if (nullme) {
         data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
+        /* We can precompute stats */
+        data_field->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
+                              | (1 << GWY_DATA_FIELD_CACHE_MAX)
+                              | (1 << GWY_DATA_FIELD_CACHE_SUM)
+                              | (1 << GWY_DATA_FIELD_CACHE_RMS);
+        data_field->cache[GWY_DATA_FIELD_CACHE_MIN] = 0.0;
+        data_field->cache[GWY_DATA_FIELD_CACHE_MAX] = 0.0;
+        data_field->cache[GWY_DATA_FIELD_CACHE_SUM] = 0.0;
+        data_field->cache[GWY_DATA_FIELD_CACHE_RMS] = 0.0;
+    }
     else
         data_field->data = g_new(gdouble, data_field->xres*data_field->yres);
 
@@ -201,8 +211,18 @@ gwy_data_field_new_alike(GwyDataField *model,
     data_field->yreal = model->yreal;
     data_field->xres = model->xres;
     data_field->yres = model->yres;
-    if (nullme)
+    if (nullme) {
         data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
+        /* We can precompute stats */
+        data_field->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
+                              | (1 << GWY_DATA_FIELD_CACHE_MAX)
+                              | (1 << GWY_DATA_FIELD_CACHE_SUM)
+                              | (1 << GWY_DATA_FIELD_CACHE_RMS);
+        data_field->cache[GWY_DATA_FIELD_CACHE_MIN] = 0.0;
+        data_field->cache[GWY_DATA_FIELD_CACHE_MAX] = 0.0;
+        data_field->cache[GWY_DATA_FIELD_CACHE_SUM] = 0.0;
+        data_field->cache[GWY_DATA_FIELD_CACHE_RMS] = 0.0;
+    }
     else
         data_field->data = g_new(gdouble, data_field->xres*data_field->yres);
 
@@ -292,12 +312,12 @@ gwy_data_field_deserialize(const guchar *buffer,
     data_field->data = data;
     data_field->xres = xres;
     data_field->yres = yres;
-    if (si_unit_z != NULL) {
+    if (si_unit_z) {
         if (data_field->si_unit_z != NULL)
             gwy_object_unref(data_field->si_unit_z);
         data_field->si_unit_z = si_unit_z;
     }
-    if (si_unit_xy != NULL) {
+    if (si_unit_xy) {
         if (data_field->si_unit_xy != NULL)
             gwy_object_unref(data_field->si_unit_xy);
         data_field->si_unit_xy = si_unit_xy;
@@ -353,6 +373,8 @@ gwy_data_field_copy(GwyDataField *src,
     memcpy(dest->data, src->data, src->xres*src->yres*sizeof(gdouble));
     dest->xreal = src->xreal;
     dest->yreal = src->yreal;
+
+    /* TODO: cached stats */
 
     if (!nondata_too)
         return;
@@ -883,8 +905,9 @@ gwy_data_field_get_value_format_xy(GwyDataField *data_field,
     max = MAX(data_field->xreal, data_field->yreal);
     unit = MIN(data_field->xreal/data_field->xres,
                data_field->yreal/data_field->yres);
-    return gwy_si_unit_get_format_with_resolution(data_field->si_unit_xy,
-                                                  max, unit, format);
+    return gwy_si_unit_get_format_with_resolution
+                                   (gwy_data_field_get_si_unit_xy(data_field),
+                                    max, unit, format);
 }
 
 /**
@@ -909,7 +932,8 @@ gwy_data_field_get_value_format_z(GwyDataField *data_field,
     min = fabs(gwy_data_field_get_min(data_field));
     max = MAX(min, max);
 
-    return gwy_si_unit_get_format(data_field->si_unit_z, max, format);
+    return gwy_si_unit_get_format(gwy_data_field_get_si_unit_z(data_field),
+                                  max, format);
 }
 
 /**
@@ -1197,14 +1221,26 @@ gwy_data_field_invert(GwyDataField *a,
  * Fills a data field with given value.
  **/
 void
-gwy_data_field_fill(GwyDataField *a, gdouble value)
+gwy_data_field_fill(GwyDataField *data_field, gdouble value)
 {
     gint i;
-    gdouble *p = a->data;
+    gdouble *p = data_field->data;
 
-    for (i = a->xres * a->yres; i; i--, p++)
+    for (i = data_field->xres * data_field->yres; i; i--, p++)
         *p = value;
-    gwy_data_field_invalidate(a);
+    gwy_data_field_invalidate(data_field);
+
+    /* We can precompute stats */
+    data_field->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
+                          | (1 << GWY_DATA_FIELD_CACHE_MAX)
+                          | (1 << GWY_DATA_FIELD_CACHE_SUM)
+                          | (1 << GWY_DATA_FIELD_CACHE_RMS);
+    data_field->cache[GWY_DATA_FIELD_CACHE_MIN] = value;
+    data_field->cache[GWY_DATA_FIELD_CACHE_MAX] = value;
+    data_field->cache[GWY_DATA_FIELD_CACHE_SUM] = data_field->xres
+                                                  * data_field->yres
+                                                  * value;
+    data_field->cache[GWY_DATA_FIELD_CACHE_RMS] = 0.0;
 }
 
 /**
@@ -1256,6 +1292,16 @@ gwy_data_field_clear(GwyDataField *data_field)
     memset(data_field->data, 0,
            data_field->xres*data_field->yres*sizeof(gdouble));
     gwy_data_field_invalidate(data_field);
+
+    /* We can precompute stats */
+    data_field->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
+                          | (1 << GWY_DATA_FIELD_CACHE_MAX)
+                          | (1 << GWY_DATA_FIELD_CACHE_SUM)
+                          | (1 << GWY_DATA_FIELD_CACHE_RMS);
+    data_field->cache[GWY_DATA_FIELD_CACHE_MIN] = 0.0;
+    data_field->cache[GWY_DATA_FIELD_CACHE_MAX] = 0.0;
+    data_field->cache[GWY_DATA_FIELD_CACHE_SUM] = 0.0;
+    data_field->cache[GWY_DATA_FIELD_CACHE_RMS] = 0.0;
 }
 
 /**
@@ -1308,11 +1354,27 @@ void
 gwy_data_field_multiply(GwyDataField *a, gdouble value)
 {
     gint i;
-    gdouble *p = a->data;
+    gdouble *p;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+
+    p = a->data;
     for (i = a->xres * a->yres; i; i--, p++)
         *p *= value;
-    gwy_data_field_invalidate(a);
+
+    /* We can transform stats */
+    a->cached &= ~((1 << GWY_DATA_FIELD_CACHE_MIN)
+                   | (1 << GWY_DATA_FIELD_CACHE_MAX)
+                   | (1 << GWY_DATA_FIELD_CACHE_SUM)
+                   | (1 << GWY_DATA_FIELD_CACHE_RMS));
+    a->cache[GWY_DATA_FIELD_CACHE_MIN] *= value;
+    a->cache[GWY_DATA_FIELD_CACHE_MAX] *= value;
+    a->cache[GWY_DATA_FIELD_CACHE_SUM] *= value;
+    a->cache[GWY_DATA_FIELD_CACHE_RMS] *= value;
+    if (value < 0)
+        GWY_SWAP(gdouble,
+                 a->cache[GWY_DATA_FIELD_CACHE_MIN],
+                 a->cache[GWY_DATA_FIELD_CACHE_MAX]);
 }
 
 /**
@@ -1362,11 +1424,22 @@ void
 gwy_data_field_add(GwyDataField *a, gdouble value)
 {
     gint i;
-    gdouble *p = a->data;
+    gdouble *p;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+
+    p = a->data;
     for (i = a->xres * a->yres; i; i--, p++)
         *p += value;
-    gwy_data_field_invalidate(a);
+
+    /* We can transform stats */
+    a->cached &= ~((1 << GWY_DATA_FIELD_CACHE_MIN)
+                   | (1 << GWY_DATA_FIELD_CACHE_MAX)
+                   | (1 << GWY_DATA_FIELD_CACHE_SUM)
+                   | (1 << GWY_DATA_FIELD_CACHE_RMS));
+    a->cache[GWY_DATA_FIELD_CACHE_MIN] += value;
+    a->cache[GWY_DATA_FIELD_CACHE_MAX] += value;
+    a->cache[GWY_DATA_FIELD_CACHE_SUM] += a->xres * a->yres * value;
 }
 
 /**
@@ -1526,6 +1599,12 @@ gwy_data_field_clamp(GwyDataField *a,
     if (tot) {
         gwy_data_field_invalidate(a);
     }
+
+    /* We can precompute stats */
+    a->cached |= (1 << GWY_DATA_FIELD_CACHE_MIN)
+                 | (1 << GWY_DATA_FIELD_CACHE_MAX);
+    a->cache[GWY_DATA_FIELD_CACHE_MIN] = bottom;
+    a->cache[GWY_DATA_FIELD_CACHE_MAX] = top;
 
     return tot;
 }
