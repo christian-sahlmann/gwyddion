@@ -221,6 +221,8 @@ gwy_file_detect(const gchar *filename)
 {
     GwyFileDetectData ddata;
 
+    g_return_val_if_fail(file_funcs, NULL);
+
     ddata.filename = filename;
     ddata.winner = NULL;
     ddata.score = 0;
@@ -246,6 +248,8 @@ gwy_file_load(const gchar *filename)
 {
     const gchar *winner;
 
+    g_return_val_if_fail(file_funcs, NULL);
+
     winner = gwy_file_detect(filename);
     if (!winner)
         return NULL;
@@ -267,6 +271,8 @@ gwy_file_save(GwyContainer *data,
               const gchar *filename)
 {
     GwyFileDetectData ddata;
+
+    g_return_val_if_fail(file_funcs, FALSE);
 
     ddata.filename = filename;
     ddata.winner = NULL;
