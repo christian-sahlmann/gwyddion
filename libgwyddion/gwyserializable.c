@@ -316,7 +316,7 @@ gwy_serialize_pack(GByteArray *buffer,
     va_list ap;
     gsize nargs, i;
 
-    g_return_val_if_fail(buffer && templ, buffer);
+    g_return_val_if_fail(templ, buffer);
     gwy_debug("templ: %s", templ);
     nargs = strlen(templ);
     if (!nargs)
@@ -556,7 +556,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
     guint8 *arr = NULL;
     gsize i;
 
-    g_return_val_if_fail(buffer && spec, buffer);
+    g_return_val_if_fail(spec, buffer);
     gwy_debug("nspec = %d, buffer = %p", nspec, buffer);
     if (!nspec)
         return buffer;
