@@ -156,6 +156,7 @@ gwy_vector_layer_init(GwyVectorLayer *layer)
     layer->layout = NULL;
     layer->timer = 0;
     layer->update_policy = GTK_UPDATE_CONTINUOUS;
+    layer->in_selection = FALSE;
 }
 
 static void
@@ -376,6 +377,8 @@ gwy_vector_layer_get_selection(GwyVectorLayer *layer,
  *
  * Sets the selection.
  *
+ * Do not use this function while user is drawing a selection.
+ *
  * See gwy_vector_layer_get_selection() for some selection format discussion.
  **/
 void
@@ -386,6 +389,8 @@ gwy_vector_layer_set_selection(GwyVectorLayer *layer,
     GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
 
     g_assert(layer_class);
+    g_return_if_fail(!layer->in_selection);
+
     if (layer_class->set_selection)
         layer_class->set_selection(layer, nselected, selection);
     else
@@ -399,8 +404,7 @@ gwy_vector_layer_set_selection(GwyVectorLayer *layer,
  *
  * Clears the selection.
  *
- * Don't call this function while user is drawing a selection. The results
- * are unpredictable.
+ * Do not use this function while user is drawing a selection.
  **/
 void
 gwy_vector_layer_unselect(GwyVectorLayer *layer)
@@ -408,6 +412,8 @@ gwy_vector_layer_unselect(GwyVectorLayer *layer)
     GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
 
     g_assert(layer_class);
+    g_return_if_fail(!layer->in_selection);
+
     if (layer_class->unselect) {
         layer_class->unselect(layer);
         gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));

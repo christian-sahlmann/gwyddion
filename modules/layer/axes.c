@@ -459,6 +459,7 @@ gwy_layer_axes_button_pressed(GwyVectorLayer *layer,
                               GdkEventButton *event)
 {
     GwyDataView *data_view;
+    GwyLayerAxesClass *klass;
     GdkWindow *window;
     GwyLayerAxes *axes_layer;
     gint x, y, i;
@@ -496,8 +497,9 @@ gwy_layer_axes_button_pressed(GwyVectorLayer *layer,
                           ? xreal : yreal;
     gwy_layer_axes_draw_line(axes_layer, window, i);
 
-    gdk_window_set_cursor(window,
-                          GWY_LAYER_AXES_GET_CLASS(layer)->move_cursor);
+    layer->in_selection = TRUE;
+    klass = GWY_LAYER_AXES_GET_CLASS(axes_layer);
+    gdk_window_set_cursor(window, klass->move_cursor);
 
     return FALSE;
 }
@@ -537,6 +539,7 @@ gwy_layer_axes_button_released(GwyVectorLayer *layer,
     if (axes_layer->nselected == axes_layer->naxes)
         gwy_vector_layer_selection_finished(layer);
 
+    layer->in_selection = FALSE;
     klass = GWY_LAYER_AXES_GET_CLASS(axes_layer);
     i = gwy_layer_axes_near_point(axes_layer, xreal, yreal);
     gdk_window_set_cursor(window,

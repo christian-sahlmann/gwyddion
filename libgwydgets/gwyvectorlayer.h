@@ -49,6 +49,7 @@ struct _GwyVectorLayer {
     PangoLayout *layout;
     GtkUpdateType update_policy;
     guint timer;
+    gboolean in_selection;
 
     gpointer reserved1;
     gpointer reserved2;

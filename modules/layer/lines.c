@@ -540,6 +540,7 @@ gwy_layer_lines_button_pressed(GwyVectorLayer *layer,
     }
     lines_layer->button = event->button;
 
+    layer->in_selection = TRUE;
     gdk_window_set_cursor(window, klass->move_cursor);
 
     return FALSE;
@@ -591,6 +592,7 @@ gwy_layer_lines_button_released(GwyVectorLayer *layer,
     if (lines_layer->nselected == lines_layer->nlines)
         gwy_vector_layer_selection_finished(layer);
 
+    layer->in_selection = FALSE;
     klass = GWY_LAYER_LINES_GET_CLASS(lines_layer);
     j = gwy_layer_lines_near_line(lines_layer, xreal, yreal);
     i = gwy_layer_lines_near_point(lines_layer, xreal, yreal);

@@ -446,6 +446,7 @@ gwy_layer_points_button_pressed(GwyVectorLayer *layer,
     points_layer->points[2*i] = xreal;
     points_layer->points[2*i + 1] = yreal;
 
+    layer->in_selection = TRUE;
     gdk_window_set_cursor(window,
                           GWY_LAYER_POINTS_GET_CLASS(layer)->move_cursor);
 
@@ -486,6 +487,7 @@ gwy_layer_points_button_released(GwyVectorLayer *layer,
     if (points_layer->nselected == points_layer->npoints)
         gwy_vector_layer_selection_finished(layer);
 
+    layer->in_selection = FALSE;
     klass = GWY_LAYER_POINTS_GET_CLASS(points_layer);
     i = gwy_layer_points_near_point(points_layer, xreal, yreal);
     gdk_window_set_cursor(window,

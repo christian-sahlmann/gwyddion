@@ -282,6 +282,7 @@ gwy_layer_pointer_button_pressed(GwyVectorLayer *layer,
     pointer_layer->x = xreal;
     pointer_layer->y = yreal;
     pointer_layer->selected = TRUE;
+    layer->in_selection = TRUE;
     klass = GWY_LAYER_POINTER_GET_CLASS(layer);
     gdk_window_set_cursor(GTK_WIDGET(data_view)->window, klass->point_cursor);
 
@@ -315,6 +316,7 @@ gwy_layer_pointer_button_released(GwyVectorLayer *layer,
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
     gwy_vector_layer_selection_finished(layer);
 
+    layer->in_selection = FALSE;
     klass = GWY_LAYER_POINTER_GET_CLASS(pointer_layer);
     gdk_window_set_cursor(GTK_WIDGET(data_view)->window, NULL);
 

@@ -454,6 +454,7 @@ gwy_layer_select_button_pressed(GwyVectorLayer *layer,
               select_layer->x0, select_layer->y0,
               select_layer->x1, select_layer->y1);
 
+    layer->in_selection = TRUE;
     gdk_window_set_cursor(window, klass->resize_cursor);
 
     return FALSE;
@@ -498,6 +499,7 @@ gwy_layer_select_button_released(GwyVectorLayer *layer,
     if (select_layer->selected)
         gwy_vector_layer_selection_finished(layer);
 
+    layer->in_selection = FALSE;
     klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
     i = gwy_layer_select_near_point(select_layer, xreal, yreal);
     gdk_window_set_cursor(window, i == -1 ? NULL : klass->corner_cursor[i]);
