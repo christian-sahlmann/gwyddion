@@ -234,11 +234,11 @@ gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
                        gdouble shift, GString *label, GwyGraphAreaCurveParams *params,
                        gdouble x_order, gdouble y_order, char *x_unit, char *y_unit)
 {
-    gwy_debug("");
 
     gdouble *xdata, *ydata;
     gint n, i;
-    
+
+    gwy_debug("");
     n = gwy_data_line_get_res(dataline);
     
     /*prepare values (divide by orders)*/
