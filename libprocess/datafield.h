@@ -516,7 +516,7 @@ void gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                           gint wshed_steps,
                                           gdouble wshed_dropsize);
 
-void gwy_data_field_grains_remove_manually(GwyDataField *data_field, 
+void gwy_data_field_grains_remove_manually( 
                                            GwyDataField *grain_field, 
                                            gint col, 
                                            gint row);

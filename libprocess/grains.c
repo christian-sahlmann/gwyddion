@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 #include <string.h>
-
+#include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
@@ -38,8 +38,15 @@ gint wstep_by_one(GwyDataField *data_field, GwyDataField *grain_field, gint *rco
 void process_mask(GwyDataField *grain_field, gint col, gint row);
 void wdrop_step (GwyDataField *data_field,  GwyDataField *min_field,  GwyDataField *water_field, GwyDataField *grain_field, gdouble dropsize);
 void mark_grain_boundaries (GwyDataField *grain_field, GwyDataField *mark_field);
+void iterate(GwyDataField *mask_field, GArray *listpnt, gint col, gint row);
+void number_grains(GwyDataField *mask_field, GwyDataField *grain_field);
 
 /********************/
+
+typedef struct{
+    gint col;
+    gint row;
+} GrainPoint;
 
 void gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
@@ -54,7 +61,7 @@ void gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *g
         gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
     }
 
-    /*TODO: ocislovat zrna a oznacit hranice*/
+    number_grains(mask, grain_field);
     
     g_object_unref(mask);
 }
@@ -73,7 +80,7 @@ void gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *gr
         gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
     }
 
-    /*TODO: ocislovat zrna a oznacit hranice*/
+    number_grains(mask, grain_field);
 
     g_object_unref(mask);
     
@@ -100,7 +107,7 @@ void gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField
         gwy_data_field_invert(maskx, FALSE, FALSE, TRUE);
     }  
 
-    /*TODO: ocislovat zrna a oznacit hranice*/
+    number_grains(maskx, grain_field);
 
     g_object_unref(maskx);
     g_object_unref(masky);
@@ -139,8 +146,23 @@ void gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField
 
 }
 
-void gwy_data_field_grains_remove_manually(GwyDataField *data_field, GwyDataField *grain_field, gint col, gint row)
+void gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint col, gint row)
 {
+    GArray *listpnt;
+    GrainPoint pnt;
+    gint i;
+    
+    listpnt = g_array_new(TRUE, TRUE, sizeof(GrainPoint));
+           
+    iterate(grain_field, listpnt, col, row);
+                
+    for (i=0; i<listpnt->len; i++)
+    {
+        pnt = g_array_index (listpnt, GrainPoint, i);
+        grain_field->data[pnt.col + grain_field->xres*(pnt.row)] = 0;
+    }
+
+    g_array_free(listpnt, TRUE);
 }
 
 void gwy_data_field_grains_remove_by_size(GwyDataField *data_field, GwyDataField *grain_field, gdouble size)
@@ -420,5 +442,69 @@ void mark_grain_boundaries (GwyDataField *grain_field, GwyDataField *mark_field)
     }
 }
 
+void iterate(GwyDataField *mask_field, GArray *listpnt, gint col, gint row)
+{
+    GrainPoint gr;
+   
+    gint xres, yres;
+    xres = mask_field->xres; 
+    yres = mask_field->yres;
+    
+    if (mask_field->data != 0) 
+    {
+        gr.col = col; gr.row = row;
+        g_array_append_val(listpnt, gr);
+    }
+    else return;
+    
+    if (col<(xres-1))
+    	iterate(mask_field, listpnt, col+1, row);
+    if (col>0)
+    	iterate(mask_field, listpnt, col-1, row);
+    if (row<(yres-1))
+        iterate(mask_field, listpnt, col, row+1);
+    if (row>0)
+    	iterate(mask_field, listpnt, col, row-1);
+ 
+}
+
+
+
+void number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
+{
+    GArray *listpnt;
+    gint xres, yres, col, row, i, grain;
+    xres = mask_field->xres;
+    yres = mask_field->yres;
+    GrainPoint pnt;
+
+    grain = 0;
+    for (col=0; col<(xres); col++)
+    {   
+        for (row=0; row<(yres); row++)
+        {
+            if (mask_field->data[col + xres*(row)]!=0 && 
+                (col>0 && row>0 && col<(xres-1) && row<(yres-1)))
+            {
+                listpnt = g_array_new(TRUE, TRUE, sizeof(GrainPoint));
+            
+                iterate(mask_field, listpnt, col, row);
+                
+                grain++;
+                for (i=0; i<listpnt->len; i++)
+                {
+                    pnt = g_array_index (listpnt, GrainPoint, i);
+                    grain_field->data[pnt.col + xres*(pnt.row)] = grain;
+                }
+
+                g_array_free(listpnt, TRUE);
+            }
+            else
+            {
+                grain_field->data[col + xres*(row)] = 0;
+            }
+        }
+    } 
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
