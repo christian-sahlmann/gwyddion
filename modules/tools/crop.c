@@ -43,7 +43,7 @@ static void       crop_use                      (GwyDataWindow *data_window,
                                                  GwyToolSwitchEvent reason);
 static GtkWidget* crop_dialog_create            (GwyDataView *data_view);
 static void       crop_do                       (void);
-static void       crop_selection_finished_cb    (void);
+static void       crop_selection_updated_cb    (void);
 static void       crop_dialog_response_cb       (gpointer unused,
                                                  gint response);
 static void       crop_dialog_abandon           (void);
@@ -51,7 +51,7 @@ static void       crop_dialog_set_visible       (gboolean visible);
 
 static GtkWidget *crop_dialog = NULL;
 static CropControls controls;
-static gulong finished_id = 0;
+static gulong updated_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *select_layer = NULL;
 
@@ -89,7 +89,7 @@ module_register(const gchar *name)
 
 static void
 crop_use(GwyDataWindow *data_window,
-         G_GNUC_UNUSED GwyToolSwitchEvent reason)
+         GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -105,8 +105,8 @@ crop_use(GwyDataWindow *data_window,
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == select_layer)
         return;
-    if (select_layer && finished_id)
-        g_signal_handler_disconnect(select_layer, finished_id);
+    if (select_layer && updated_id)
+        g_signal_handler_disconnect(select_layer, updated_id);
 
     if (layer && GWY_IS_LAYER_SELECT(layer))
         select_layer = layer;
@@ -118,10 +118,13 @@ crop_use(GwyDataWindow *data_window,
     if (!crop_dialog)
         crop_dialog = crop_dialog_create(data_view);
 
-    finished_id = g_signal_connect(select_layer, "updated",
-                                   G_CALLBACK(crop_selection_finished_cb),
+    updated_id = g_signal_connect(select_layer, "updated",
+                                   G_CALLBACK(crop_selection_updated_cb),
                                    NULL);
-    crop_selection_finished_cb();
+    if (reason == GWY_TOOL_SWITCH_TOOL)
+        crop_dialog_set_visible(TRUE);
+    if (controls.is_visible)
+        crop_selection_updated_cb();
 }
 
 static void
@@ -158,9 +161,9 @@ static void
 crop_dialog_abandon(void)
 {
     gwy_debug("");
-    if (select_layer && finished_id)
-        g_signal_handler_disconnect(select_layer, finished_id);
-    finished_id = 0;
+    if (select_layer && updated_id)
+        g_signal_handler_disconnect(select_layer, updated_id);
+    updated_id = 0;
     select_layer = NULL;
     if (crop_dialog) {
         g_signal_handler_disconnect(crop_dialog, response_id);
@@ -255,7 +258,7 @@ update_label(GtkWidget *label, gdouble value)
 }
 
 static void
-crop_selection_finished_cb(void)
+crop_selection_updated_cb(void)
 {
     gdouble xmin, ymin, xmax, ymax;
     gboolean is_visible, is_selected;

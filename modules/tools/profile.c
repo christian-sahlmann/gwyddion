@@ -104,7 +104,7 @@ module_register(const gchar *name)
 
 static void
 profile_use(GwyDataWindow *data_window,
-            G_GNUC_UNUSED GwyToolSwitchEvent reason)
+            GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -163,7 +163,10 @@ profile_use(GwyDataWindow *data_window,
     updated_id = g_signal_connect(lines_layer, "updated",
                                    G_CALLBACK(profile_selection_updated_cb),
                                    NULL);
-    profile_selection_updated_cb();
+    if (reason == GWY_TOOL_SWITCH_TOOL)
+        profile_dialog_set_visible(TRUE);
+    if (controls.is_visible)
+        profile_selection_updated_cb();
 }
 
 static void

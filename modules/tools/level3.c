@@ -47,7 +47,7 @@ static gdouble    level3_get_z_average          (GwyDataField *dfield,
                                                  gdouble xreal,
                                                  gdouble yreal,
                                                  gint radius);
-static void       level3_selection_finished_cb  (void);
+static void       level3_selection_updated_cb  (void);
 static void       level3_dialog_response_cb     (gpointer unused,
                                                  gint response);
 static void       level3_dialog_abandon         (void);
@@ -57,7 +57,7 @@ static const gchar *radius_key = "/tool/level3/radius";
 
 static GtkWidget *level3_dialog = NULL;
 static Level3Controls controls;
-static gulong finished_id = 0;
+static gulong updated_id = 0;
 static gulong response_id = 0;
 static GwyDataViewLayer *points_layer = NULL;
 
@@ -96,7 +96,7 @@ module_register(const gchar *name)
 
 static void
 level3_use(GwyDataWindow *data_window,
-           G_GNUC_UNUSED GwyToolSwitchEvent reason)
+           GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -112,8 +112,8 @@ level3_use(GwyDataWindow *data_window,
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == points_layer)
         return;
-    if (points_layer && finished_id)
-        g_signal_handler_disconnect(points_layer, finished_id);
+    if (points_layer && updated_id)
+        g_signal_handler_disconnect(points_layer, updated_id);
 
     if (layer && GWY_IS_LAYER_POINTS(layer)) {
         points_layer = layer;
@@ -127,10 +127,13 @@ level3_use(GwyDataWindow *data_window,
     if (!level3_dialog)
         level3_dialog = level3_dialog_create(data_view);
 
-    finished_id = g_signal_connect(points_layer, "updated",
-                                   G_CALLBACK(level3_selection_finished_cb),
+    updated_id = g_signal_connect(points_layer, "updated",
+                                   G_CALLBACK(level3_selection_updated_cb),
                                    NULL);
-    level3_selection_finished_cb();
+    if (reason == GWY_TOOL_SWITCH_TOOL)
+        level3_dialog_set_visible(TRUE);
+    if (controls.is_visible)
+        level3_selection_updated_cb();
 }
 
 static void
@@ -211,9 +214,9 @@ level3_dialog_abandon(void)
     GwyContainer *settings;
     gint radius;
 
-    if (points_layer && finished_id)
-        g_signal_handler_disconnect(points_layer, finished_id);
-    finished_id = 0;
+    if (points_layer && updated_id)
+        g_signal_handler_disconnect(points_layer, updated_id);
+    updated_id = 0;
     points_layer = NULL;
     if (level3_dialog) {
         radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
@@ -309,7 +312,7 @@ level3_dialog_create(GwyDataView *data_view)
     gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
                                 controls.radius);
     g_signal_connect(controls.radius, "value_changed",
-                     G_CALLBACK(level3_selection_finished_cb), NULL);
+                     G_CALLBACK(level3_selection_updated_cb), NULL);
     gtk_widget_show_all(table);
     controls.is_visible = FALSE;
 
@@ -336,7 +339,7 @@ update_value_label(GtkWidget *label, gdouble value)
 }
 
 static void
-level3_selection_finished_cb(void)
+level3_selection_updated_cb(void)
 {
     GwyContainer *data;
     GwyDataField *dfield;
