@@ -52,7 +52,7 @@ typedef enum {
   GWY_GRAPH_STATUS_XSEL   = 2,
   GWY_GRAPH_STATUS_YSEL   = 3,
   GWY_GRAPH_STATUS_POINTS = 4,
-  GWY_GRAPH_STATUS_ZOOM   = 5,
+  GWY_GRAPH_STATUS_ZOOM   = 5
 } GwyGraphStatusType;
 
 typedef struct {
