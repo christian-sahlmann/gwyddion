@@ -431,6 +431,7 @@ gwy_graph_label_add_curve(GwyGraphLabel *label, GwyGraphAreaCurveParams *params)
     label->maxheight += rect.height + 5;
     g_ptr_array_add(label->curve_params, (gpointer)(cparams));
 
+    gtk_widget_queue_resize(GTK_WIDGET(label));
     gtk_widget_queue_draw(GTK_WIDGET(label));
 }
 
@@ -451,6 +452,9 @@ gwy_graph_label_clear(GwyGraphLabel *label)
     }
     g_ptr_array_free(label->curve_params, 1);
     label->curve_params = g_ptr_array_new();
+
+    gtk_widget_queue_resize(GTK_WIDGET(label));
+    gtk_widget_queue_draw(GTK_WIDGET(label));
 }
 
 

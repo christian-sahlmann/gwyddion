@@ -96,6 +96,13 @@ void       gwy_table_attach_row           (GtkWidget *table,
 
 gboolean   gwy_dialog_prevent_delete_cb   (void);
 
+
+GtkWidget* gwy_fft_output_menu  (GCallback callback,
+                                           gpointer cbdata,
+                                           GwyFFTOutputType current);
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

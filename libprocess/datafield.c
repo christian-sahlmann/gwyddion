@@ -50,6 +50,8 @@ static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
 
 gdouble         edist                             (gint x1, gint y1, gint x2, gint y2);
 
+#define ROUND(x) ((gint)floor((x) + 0.5))
+
 GType
 gwy_data_field_get_type(void)
 {
@@ -474,6 +476,11 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
     gint floorx, floory;
     gdouble restx, resty, valpx, valxp, valpp;
 
+    if (x<0 && x>-0.1) x = 0;
+    if (y<0 && x>-0.1) y = 0;
+    
+    if (!(x >= 0 && y >= 0 && y < a->yres && x < a->xres))
+        printf("GRRRRRRRRRRRR: %f %f\n", x, y);
     g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres,
                          0.0);
 

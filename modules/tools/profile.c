@@ -58,6 +58,8 @@ static GwyDataField *datafield = NULL;
 static GPtrArray *dtl = NULL;
 static GPtrArray *str = NULL;
 
+#define MAX_N_OF_PROFILES 3
+#define ROUND(x) ((gint)floor((x) + 0.5))
 
 void
 gwy_tool_profile_use(GwyDataWindow *data_window,
@@ -272,19 +274,29 @@ update_labels()
     
     j=0;
     printf("%d lines.\n", n_of_lines);
-    for (i=0; i<(2*n_of_lines); i++)
+    for (i=0; i<(2*(MAX_N_OF_PROFILES)); i++)
     {
-        g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
-               (gint)gwy_data_field_rtoj(datafield, lines[j++]),
-               (gint)gwy_data_field_rtoj(datafield, lines[j++])
-               );
-        gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i++]), buffer); 
+        if (i<(2*n_of_lines))
+        {
+            g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
+                   (gint)gwy_data_field_rtoj(datafield, lines[j++]),
+                   (gint)gwy_data_field_rtoj(datafield, lines[j++])
+                   ); 
+            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i++]), buffer);
 
-        g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
-               (gint)gwy_data_field_rtoj(datafield, lines[j++]),
-               (gint)gwy_data_field_rtoj(datafield, lines[j++])
-               );
-        gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]), buffer); 
+            g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
+                   (gint)gwy_data_field_rtoj(datafield, lines[j++]),
+                   (gint)gwy_data_field_rtoj(datafield, lines[j++])
+                   );
+            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]), buffer);
+        }
+        else
+        {
+            g_snprintf(buffer, sizeof(buffer), " ");
+            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i++]), buffer);
+            g_snprintf(buffer, sizeof(buffer), " ");
+            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]), buffer);
+        }
      }       
 }
 
@@ -299,6 +311,11 @@ profile_selection_updated_cb(void)
     gint x1, x2, y1, y2;
     GwyGraphAutoProperties prop;
     GwyGraph *gr;
+    gchar *x_unit, *z_unit;
+    gdouble x_mag, z_mag;
+    gdouble xreal, yreal, x_max, unit;
+    gdouble z_max;
+    gint precision;
 
     gwy_debug("%s", __FUNCTION__);
     
@@ -312,11 +329,25 @@ profile_selection_updated_cb(void)
     prop.is_point = 0;
     prop.is_line = 1;
     gwy_graph_set_autoproperties(controls.graph, &prop);
+
+    
    
     if (is_selected) {
 
         gwy_graph_clear(controls.graph);
 
+        xreal = gwy_data_field_get_xreal(datafield);
+        yreal = gwy_data_field_get_yreal(datafield);
+        x_max = MAX(xreal, yreal);
+        unit = MIN(xreal/gwy_data_field_get_xres(datafield),
+                   yreal/gwy_data_field_get_yres(datafield));
+        x_mag = gwy_math_humanize_numbers(unit, x_max, &precision); 
+        x_unit = g_strconcat(gwy_math_SI_prefix(x_mag), "m", NULL);
+
+        z_max = gwy_data_field_get_max(datafield);
+        z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
+        z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
+        
         j = 0;
         for (i=0; i<is_selected; i++)
         {
@@ -331,15 +362,22 @@ profile_selection_updated_cb(void)
                                      100,/*(gint)sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 -y2)), jak to, ze to s timhle pada?*/
                                      GWY_INTERPOLATION_BILINEAR
                                      )) continue;
-            gwy_graph_add_dataline(controls.graph, dtl->pdata[i],
-                               0, str->pdata[i], NULL);
+            gwy_graph_add_dataline_with_units(controls.graph, dtl->pdata[i],
+                               0, str->pdata[i], NULL,
+                               x_mag, z_mag, 
+                               x_unit,
+                               z_unit
+                               );
+           
         }
 
 
         
         gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
-        
         update_labels();
+
+        g_free(x_unit);
+        g_free(z_unit);
     }
     
     if (!is_visible)
@@ -351,6 +389,9 @@ static void
 profile_clear(void)
 {
     gwy_layer_lines_unselect(select_layer);
+    gwy_graph_clear(controls.graph);
+    gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
+    update_labels();
 }
 
 static void
@@ -360,6 +401,7 @@ profile_dialog_response_cb(gpointer unused, gint response)
     switch (response) {
         case GTK_RESPONSE_CLOSE:
         case GTK_RESPONSE_DELETE_EVENT:
+        profile_clear();
         profile_dialog_set_visible(FALSE);
         break;
 

@@ -30,8 +30,7 @@ libgwydgetsinclude_HEADERS = \
 	gwyspherecoords.h \
 	gwystock.h \
 	gwyvectorshade.h \
-	gwyvruler.h \
-	gwymodulemenus.h
+	gwyvruler.h 
 
 lib_LTLIBRARIES = libgwydgets.la
 
@@ -66,8 +65,7 @@ libgwydgets_la_SOURCES = \
 	gwyspherecoords.c \
 	gwystock.c \
 	gwyvectorshade.c \
-	gwyvruler.c \
-	gwymodulemenus.c
+	gwyvruler.c 
 
 # Note these are test programs not to be included in the distro
 #noinst_PROGRAMS = main test create-data layout

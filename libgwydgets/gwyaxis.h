@@ -85,6 +85,7 @@ typedef struct {
     gboolean is_logarithmic;
     gboolean is_auto;           /*affects: tick numbers and label positions.*/
     gboolean is_standalone;
+    gboolean has_unit;
     gint orientation;		/*north, south, east, west*/
    
     gdouble reqmin;
@@ -98,6 +99,8 @@ typedef struct {
     gint label_x_pos;		/*label position*/
     gint label_y_pos;
     GString *label_text;
+
+    gchar *unit;		/*axis unit (if any)*/
 
     GwyAxisDialog *dialog;      /*axis label and other properties dialog*/
     
@@ -129,6 +132,12 @@ gdouble gwy_axis_get_minimum(GwyAxis *axis);
 gdouble gwy_axis_get_reqmaximum(GwyAxis *axis);
 
 gdouble gwy_axis_get_reqminimum(GwyAxis *axis);
+
+void gwy_axis_set_label(GwyAxis *axis, GString *label_text);
+
+GString* gwy_axis_get_label(GwyAxis *axis);
+
+void gwy_axis_set_unit(GwyAxis *axis, char *unit);
 
 #ifdef __cplusplus
 }

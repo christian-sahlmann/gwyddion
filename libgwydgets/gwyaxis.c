@@ -20,6 +20,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <glib.h>
 #include <gtk/gtk.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
@@ -153,6 +154,9 @@ gwy_axis_init(GwyAxis *axis)
     axis->par.minor_thickness = 1;
     axis->par.minor_division = 10;
     axis->par.line_thickness = 1;
+
+    axis->has_unit = 0;
+    axis->unit = NULL;
 }
 
 GtkWidget*
@@ -345,7 +349,7 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
     {
         axis->label_y_pos = height/2;
         if (axis->orientation == GWY_AXIS_EAST) axis->label_x_pos = 40;
-        else axis->label_x_pos = width - 50;
+        else axis->label_x_pos = width - 40;
     }
 
 
@@ -636,17 +640,46 @@ void gwy_axis_draw_label(GtkWidget *widget)
     GwyAxis *axis;
     PangoLayout *layout;
     GdkGC *mygc;
+    PangoRectangle rect;
+    GString *plotlabel;
 
     mygc = gdk_gc_new(widget->window);
 
     axis = GWY_AXIS(widget);
     layout = gtk_widget_create_pango_layout(widget, "");
     pango_layout_set_font_description(layout, axis->par.major_font);
+    
+    plotlabel = g_string_new(axis->label_text->str);
 
-    pango_layout_set_markup(layout,  axis->label_text->str, axis->label_text->len);
+    if (axis->has_unit) 
+    {
+        g_string_append(plotlabel, " [");
+        g_string_append(plotlabel, axis->unit);
+        g_string_append(plotlabel, "]");
+    }
 
-    gdk_draw_layout(widget->window, mygc, axis->label_x_pos, axis->label_y_pos, layout);
+    pango_layout_set_markup(layout,  plotlabel->str, plotlabel->len);
+    pango_layout_get_pixel_extents(layout, NULL, &rect);
 
+    if (axis->orientation == GWY_AXIS_NORTH)
+    {
+        gdk_draw_layout(widget->window, mygc, axis->label_x_pos - rect.width/2, axis->label_y_pos, layout);
+    }
+    else if (axis->orientation == GWY_AXIS_SOUTH)
+    {
+        gdk_draw_layout(widget->window, mygc, axis->label_x_pos - rect.width/2, axis->label_y_pos, layout);
+    }
+    else if (axis->orientation == GWY_AXIS_EAST)
+    {
+        gdk_draw_layout(widget->window, mygc, axis->label_x_pos, axis->label_y_pos, layout);
+    }
+    else if (axis->orientation == GWY_AXIS_WEST)
+    {
+        gdk_draw_layout(widget->window, mygc, axis->label_x_pos - rect.width, axis->label_y_pos, layout);
+    }
+    
+
+/*    g_free(plotlabel);*/
     g_object_unref((GObject *)mygc);
 }
 
@@ -773,15 +806,15 @@ gwy_axis_normalscale(GwyAxis *a)
     GwyTick mit;
     GwyLabeledTick mjt;
 
-    printf("reqmin=%f, reqmax=%f\n", a->reqmin, a->reqmax);
+    /*printf("reqmin=%f, reqmax=%f\n", a->reqmin, a->reqmax);*/
     gdouble range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
     gdouble tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
     gdouble majorbase = ceil(a->reqmin/tickstep)*tickstep; /*starting value*/
     gdouble minortickstep = tickstep/(gdouble)a->par.minor_division;
     gdouble minorbase = ceil(a->reqmin/minortickstep)*minortickstep;
 
-    printf("rng=%f, tst=%f, mjb=%f, mnts=%f, mnb=%f\n",
-       range, tickstep, majorbase, minortickstep, minorbase);
+    /*printf("rng=%f, tst=%f, mjb=%f, mnts=%f, mnb=%f\n",
+       range, tickstep, majorbase, minortickstep, minorbase);*/
 
     if (majorbase > a->reqmin)
     {
@@ -791,7 +824,7 @@ gwy_axis_normalscale(GwyAxis *a)
     }
     else a->min = a->reqmin;
 
-    printf("majorbase = %f, reqmin=%f\n", majorbase, a->reqmin);
+    /*printf("majorbase = %f, reqmin=%f\n", majorbase, a->reqmin);*/
 
     /*major tics*/
     i=0;
@@ -1010,7 +1043,7 @@ gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
 void
 gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
 {
-    printf("reqmin set from %f to %f\n", axis->reqmin, min);
+    /*printf("reqmin set from %f to %f\n", axis->reqmin, min);*/
     axis->reqmin = min;
     axis->reqmax = max;
     gwy_axis_adjust(axis, (GTK_WIDGET(axis))->allocation.width, (GTK_WIDGET(axis))->allocation.height);
@@ -1042,6 +1075,26 @@ gwy_axis_get_reqmaximum(GwyAxis *axis)
 gdouble gwy_axis_get_reqminimum(GwyAxis *axis)
 {
     return axis->reqmin;
+}
+
+void 
+gwy_axis_set_label(GwyAxis *axis, GString *label_text)
+{
+    g_string_assign(axis->label_text, label_text->str);
+    gtk_widget_queue_draw(GTK_WIDGET(axis));
+}
+
+GString* 
+gwy_axis_get_label(GwyAxis *axis)
+{
+    return axis->label_text;
+}
+
+void 
+gwy_axis_set_unit(GwyAxis *axis, char *unit)
+{
+    axis->unit = unit;
+    axis->has_unit = 1;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

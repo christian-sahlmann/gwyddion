@@ -73,6 +73,11 @@ typedef struct {
    gdouble x_min, x_reqmin;
    gdouble y_max, y_reqmax;
    gdouble y_min, y_reqmin;
+
+   gboolean has_x_unit;
+   gboolean has_y_unit;
+   gchar *x_unit;
+   gchar *y_unit;
     
 } GwyGraph;
 
@@ -85,8 +90,13 @@ typedef struct {
 GtkWidget *gwy_graph_new();
 GType      gwy_graph_get_type(void) G_GNUC_CONST;
   
+void gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline, 
+                              gdouble shift, GString *label, GwyGraphAreaCurveParams *params, 
+			      gdouble x_order, gdouble y_order, char *x_unit, char *y_unit);
+
 void gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline, 
                               gdouble shift, GString *label, GwyGraphAreaCurveParams *params);
+
 void gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals, 
                               gint n, GString *label, GwyGraphAreaCurveParams *params);
 

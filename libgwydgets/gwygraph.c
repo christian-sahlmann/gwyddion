@@ -20,6 +20,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <glib.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
@@ -137,10 +138,10 @@ gwy_graph_init(GwyGraph *graph)
     gtk_table_set_row_spacings (GTK_TABLE (graph), 0);
     gtk_table_set_col_spacings (GTK_TABLE (graph), 0);
 
-    graph->axis_top = GWY_AXIS (gwy_axis_new(GWY_AXIS_SOUTH, 2.24, 5.21, "blo "));
-    graph->axis_bottom =  GWY_AXIS (gwy_axis_new(GWY_AXIS_NORTH, 2.24, 5.21, "ble"));
-    graph->axis_left =  GWY_AXIS (gwy_axis_new(GWY_AXIS_EAST, 100, 500, "bla"));
-    graph->axis_right =  GWY_AXIS (gwy_axis_new(GWY_AXIS_WEST, 100, 500, "blu "));
+    graph->axis_top = GWY_AXIS (gwy_axis_new(GWY_AXIS_SOUTH, 2.24, 5.21, "x"));
+    graph->axis_bottom =  GWY_AXIS (gwy_axis_new(GWY_AXIS_NORTH, 2.24, 5.21, "x"));
+    graph->axis_left =  GWY_AXIS (gwy_axis_new(GWY_AXIS_EAST, 100, 500, "y"));
+    graph->axis_right =  GWY_AXIS (gwy_axis_new(GWY_AXIS_WEST, 100, 500, "y"));
 
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->axis_top), 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
@@ -184,6 +185,10 @@ gwy_graph_init(GwyGraph *graph)
     graph->y_reqmax = G_MINDOUBLE;
     graph->x_reqmin = G_MAXDOUBLE;
     graph->x_reqmin = G_MAXDOUBLE;
+    graph->has_x_unit = 0;
+    graph->has_y_unit = 0;
+    graph->x_unit = NULL;
+    graph->y_unit = NULL;
 
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
@@ -220,6 +225,52 @@ gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
 }
 
 void
+gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
+                       gdouble shift, GString *label, GwyGraphAreaCurveParams *params,
+                       gdouble x_order, gdouble y_order, char *x_unit, char *y_unit)
+{
+    gwy_debug("%s", __FUNCTION__);
+
+    gdouble *xdata, *ydata;
+    gint n, i;
+    
+    n = gwy_data_line_get_res(dataline);
+    
+    /*prepare values (divide by orders)*/
+    xdata = (gdouble *) g_malloc(n*sizeof(gdouble));
+    ydata = (gdouble *) g_malloc(n*sizeof(gdouble));
+    for (i=0; i<n; i++) 
+    {
+        xdata[i] = (gdouble)i*gwy_data_line_get_real(dataline)/((gdouble)n)/x_order;
+        ydata[i] = gwy_data_line_get_val(dataline, i)/y_order;
+    }
+    
+    /*add values*/
+    gwy_graph_add_datavalues(graph, xdata, ydata,
+                             n, label, NULL);
+
+    /*add unit to graph axis*/
+    if (x_unit != NULL)
+    {
+        graph->x_unit = g_strdup(x_unit);
+        graph->has_x_unit = 1;
+
+        gwy_axis_set_unit(graph->axis_top, graph->x_unit);
+        gwy_axis_set_unit(graph->axis_bottom, graph->x_unit);
+    }
+    if (y_unit != NULL)
+    {
+        graph->y_unit = g_strdup(y_unit);
+        graph->has_y_unit = 1;
+        gwy_axis_set_unit(graph->axis_left, graph->y_unit);
+        gwy_axis_set_unit(graph->axis_right, graph->y_unit);
+    }
+    
+    g_free(xdata);
+    g_free(ydata);
+}
+
+void
 gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
                          gint n, GString *label, GwyGraphAreaCurveParams *params)
 {
@@ -239,7 +290,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
        }
        if (xvals[i] < graph->x_reqmin)
        {
-          graph->x_reqmin = xvals[i]; printf("New x minimum at %f (index %d)\n", xvals[i], i);
+          graph->x_reqmin = xvals[i]; /*printf("New x minimum at %f (index %d)\n", xvals[i], i);*/
           isdiff=1;
        }
        if (yvals[i] > graph->y_reqmax)
@@ -255,7 +306,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
     }
     if (isdiff == 1)
     {
-        printf("x requirement changed: %f, %f\n", graph->x_reqmin, graph->x_reqmax);
+      /*  printf("x requirement changed: %f, %f\n", graph->x_reqmin, graph->x_reqmax);*/
        gwy_axis_set_req(graph->axis_top, graph->x_reqmin, graph->x_reqmax);
        gwy_axis_set_req(graph->axis_bottom, graph->x_reqmin, graph->x_reqmax);
        gwy_axis_set_req(graph->axis_left, graph->y_reqmin, graph->y_reqmax);
@@ -341,6 +392,15 @@ gwy_graph_clear(GwyGraph *graph)
   gwy_graph_area_clear(graph->area);
   graph->n_of_autocurves = 0;
   graph->n_of_curves = 0;
+  graph->x_max = 0;
+  graph->y_max = 0;
+  graph->x_min = 0;
+  graph->x_min = 0;
+  graph->x_reqmax = G_MINDOUBLE;
+  graph->y_reqmax = G_MINDOUBLE;
+  graph->x_reqmin = G_MAXDOUBLE;
+  graph->x_reqmin = G_MAXDOUBLE;
+                                  
 }
 
 void
