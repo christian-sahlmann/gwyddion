@@ -248,7 +248,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     g_object_ref(gwy3dwindow->small_toolbar);
 
     button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON,
-                                group, _("Show full controls"),
+                                NULL, _("Show full controls"),
                                 NULL, GWY_STOCK_LESS,
                                 G_CALLBACK(gwy_3d_window_select_controls),
                                 GINT_TO_POINTER(TRUE));
@@ -331,7 +331,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_box_pack_end(GTK_BOX(hbox2), toolbar, FALSE, FALSE, 0);
 
     button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON,
-                                group, _("Hide full controls"),
+                                NULL, _("Hide full controls"),
                                 NULL, GWY_STOCK_MORE,
                                 G_CALLBACK(gwy_3d_window_select_controls),
                                 GINT_TO_POINTER(FALSE));
