@@ -285,7 +285,7 @@ gwy_option_menu_set_history(GtkWidget *option_menu,
 
     g_return_val_if_fail(GTK_IS_OPTION_MENU(option_menu), FALSE);
     g_return_val_if_fail(g_object_get_data(G_OBJECT(option_menu),
-                                           "gwy-option-menu"), -1);
+                                           "gwy-option-menu"), FALSE);
     menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(option_menu));
     quark = g_quark_from_string(key);
     i = 0;
