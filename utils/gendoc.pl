@@ -26,7 +26,7 @@ my $css =
 
 my $footer =
 "<p><small>See also:
-<a href=\"http://gwyddion.net/\">Gwyddion.net (official home page)</a>,
+<a href=\"http://gwyddion.net/\">Gwyddion, an SPM (AFM, MFM, STM, NSOM) data analysis framework</a>,
 <a href=\"http://trific.ath.cx/software/gwyddion/\">Gwyddion at trific.ath.cx</a>
 </small></p>
 ";
