@@ -11,6 +11,10 @@
   specific patterns on the surface, for example on interferometric grids.
 - Cross-correlation enabled. Matching between two slightly different images
   of the same feature can be found. 
+- Removal of data under mask (of any shape) enabled. It uses iterative method
+  similar to solving Laplace equation.
+- Creating mask by outliers detection enabled. It uses 3*sigma criterium
+  for searching an outlier.
 
 1.0
 - Data can be exported to bitmaps with rules, units, scale, etc.
