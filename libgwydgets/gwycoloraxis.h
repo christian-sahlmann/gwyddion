@@ -25,6 +25,7 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 #include <libdraw/gwypalette.h>
+#include <libgwyddion/gwysiunit.h>
 
 
 #ifdef __cplusplus
@@ -62,6 +63,7 @@ struct _GwyColorAxis {
     gdouble max;
 
     GString *label_text;
+    GwySIUnit *siunit;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -82,6 +84,8 @@ GType gwy_color_axis_get_type(void) G_GNUC_CONST;
 void gwy_color_axis_get_range(GwyColorAxis *axis, gdouble *min, gdouble *max);
 
 void gwy_color_axis_set_range(GwyColorAxis *axis, gdouble min, gdouble max);
+
+void gwy_color_axis_set_unit(GwyColorAxis *axis, GwySIUnit *unit);
 
 void gwy_color_axis_set_palette(GwyColorAxis *axis, GwyPalette *pal);
 

@@ -171,6 +171,7 @@ gwy_color_axis_new(GtkOrientation orientation,
     g_signal_connect_swapped(axis->palette, "value_changed",
                              G_CALLBACK(gwy_color_axis_update), axis);
 
+    axis->siunit = gwy_si_unit_new("m");
      return GTK_WIDGET(axis);
 }
 
@@ -191,6 +192,7 @@ gwy_color_axis_finalize(GObject *object)
                                          gwy_color_axis_update, axis);
     g_object_unref(axis->palette);
     gwy_object_unref(axis->pixbuf);
+    g_object_unref(axis->siunit);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -446,6 +448,7 @@ gwy_color_axis_draw_label(GtkWidget *widget)
 {
     GwyColorAxis *axis;
     PangoLayout *layout;
+    GwySIValueFormat *format;
     GString *strmin, *strmax;
     GdkGC *mygc;
     PangoRectangle rect;
@@ -465,18 +468,30 @@ gwy_color_axis_draw_label(GtkWidget *widget)
         if (axis->min == 0) g_string_printf(strmax, "0.0");
         else
         {
+            format = gwy_si_unit_get_format(axis->siunit, axis->max, NULL);
+            g_string_printf(strmax, "0.0 "); 
+            g_string_append(strmax, format->units);
+ 
+             /*
             prepare_number(axis->max, &power, &value);
             g_string_printf(strmax, "0.0 ");
             g_string_append(strmax, gwy_math_SI_prefix(power));
             g_string_append(strmax, "m");
+            */
         }
     }
     else
     {
+        format = gwy_si_unit_get_format(axis->siunit, axis->max, NULL);
+        g_string_printf(strmax, "%3.1f ", axis->max/format->magnitude); 
+        g_string_append(strmax, format->units);
+       
+        /*
         prepare_number(axis->max, &power, &value);
         g_string_printf(strmax, "%3.1f ", value);
         g_string_append(strmax, gwy_math_SI_prefix(power));
         g_string_append(strmax, "m");
+        */
     }
 
 
@@ -486,20 +501,31 @@ gwy_color_axis_draw_label(GtkWidget *widget)
         if (axis->max == 0) g_string_printf(strmin, "0.0");
         else
         {
-            prepare_number(axis->max, &power, &value);
+            format = gwy_si_unit_get_format(axis->siunit, axis->max, format);
+            g_string_printf(strmin, "0.0 "); 
+            g_string_append(strmin, format->units);
+          
+            /*
+             prepare_number(axis->max, &power, &value);
             g_string_printf(strmin, "0.0 ");
             g_string_append(strmin, gwy_math_SI_prefix(power));
             g_string_append(strmin, "m");
+            */
         }
     }
     else
     {
-        /*prepare_number(axis->min, &power, &value);*/
-        value = axis->min/power;
+        format = gwy_si_unit_get_format(axis->siunit, axis->max, format); /*yes, realy axis->max*/
+        g_string_printf(strmin, "%3.1f ", axis->min/format->magnitude); 
+        g_string_append(strmin, format->units);
+
+        /*value = axis->min/power;
         g_string_printf(strmin, "%3.1f ", value);
         g_string_append(strmin, gwy_math_SI_prefix(power));
         g_string_append(strmin, "m");
+        */
     }
+    
 
 
     if (axis->orientation == GTK_ORIENTATION_VERTICAL)
@@ -722,6 +748,12 @@ gwy_color_axis_update(GwyColorAxis *axis)
     gwy_color_axis_adjust(axis,
                           GTK_WIDGET(axis)->allocation.width,
                           GTK_WIDGET(axis)->allocation.height);
+}
+
+void
+gwy_color_axis_set_unit(GwyColorAxis *axis, GwySIUnit *unit)
+{
+    axis->siunit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
