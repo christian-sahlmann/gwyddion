@@ -29,7 +29,6 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymodule.h>
-#include "settings.h"
 
 static void splash_map(void);
 
@@ -40,14 +39,11 @@ gchar *message_prefix = NULL;
 void
 gwy_app_splash_create(void)
 {
-    GwyContainer *settings;
     GtkWidget *image, *vbox, *frame, *lab;
     char *p, *filename;
 
     gwy_debug("");
     g_return_if_fail(window == NULL);
-
-    settings = gwy_app_settings_get();
 
     p = gwy_find_self_dir("pixmaps");
     filename = g_build_filename(p, "splash.png", NULL);
