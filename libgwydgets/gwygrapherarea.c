@@ -274,6 +274,7 @@ gwy_grapher_area_adjust_label(GwyGrapherArea *area)
      
     gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                         GTK_WIDGET(area)->allocation.width - lab_alloc->width - 5, 5);
+    area->newline = 0;
 }
 
 static void

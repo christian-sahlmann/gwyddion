@@ -70,6 +70,11 @@ void gwy_grapher_label_refresh(GwyGrapherLabel *label);
 
 void gwy_grapher_label_change_model(GwyGrapherLabel *label, gpointer gmodel);
 
+void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, PangoLayout *layout,
+                                              gint x, gint y, gint width, gint height,
+                                              GwyGrapherLabel *label);
+
+
 G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/
