@@ -120,7 +120,7 @@ gwyfile_save(GwyContainer *data,
         return FALSE;
     buffer = gwy_serializable_serialize(G_OBJECT(data), buffer, &size);
     if (fwrite(MAGIC, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
-        fwrite(buffer, 1, size, fh) != size) {
+        || fwrite(buffer, 1, size, fh) != size) {
         fclose(fh);
         g_free(buffer);
         return FALSE;
