@@ -45,7 +45,14 @@ typedef enum {
     GWY_NLFIT_PRESET_POLY_3            = 11
 } GwyNLFitPresetType;
     
-    
+typedef struct {
+    gchar *function_name;
+    gchar *function_equation;
+    gchar **param_description;
+    gint nparams;
+    gdouble *defaults;   
+} GwyNLFitPresetFunction;
+
 
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
                                  gint n_par,
