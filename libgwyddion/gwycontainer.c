@@ -291,8 +291,9 @@ gwy_container_remove(GwyContainer *container, GQuark key)
 {
     GValue *value;
 
-    g_return_val_if_fail(key, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    if (!key)
+        return FALSE;
     /* TODO: notify */
 
     value = g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
