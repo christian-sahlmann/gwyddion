@@ -201,11 +201,13 @@ static const GwyExprFunction call_table[] = {
 static const GwyExprConstant constant_table[] = {
     { "Pi",      G_PI            },
     { "E",       G_E             },
+    /*
     { "c",       2.99792458e8    },
     { "h",       1.0545887e-34   },
     { "k",       1.380662e-23    },
     { "G",       6.672e-11       },
     { "e",       1.6021982e-19   },
+    */
 };
 
 static const GScannerConfig scanner_config = {
@@ -263,7 +265,7 @@ gwy_expr_check_call_table_sanity(void)
  *
  * No checking is done, use gwy_expr_stack_check_executability() beforehand.
  **/
-static void
+static inline void
 gwy_expr_stack_interpret(GwyExpr *expr)
 {
     guint i;
@@ -862,6 +864,8 @@ gwy_expr_transform_infix_ops(GwyExpr *expr,
     for (t = right_to_left ? gwy_expr_token_list_last(tokens) : tokens;
          t;
          t = right_to_left ? t->prev : t->next) {
+        if (t->rpn_block)
+            continue;
         for (i = 0; operators[i]; i++) {
             if (t->token == (guint)operators[i])
                 break;
@@ -891,7 +895,8 @@ gwy_expr_transform_infix_ops(GwyExpr *expr,
         prev->rpn_block = gwy_expr_token_list_concat(prev->rpn_block, code);
         prev->rpn_block = gwy_expr_token_list_concat(next->rpn_block,
                                                      prev->rpn_block);
-        t = t->prev;
+        prev->token = G_TOKEN_NONE;
+        t = prev;
         tokens = gwy_expr_token_list_delete_token(expr, tokens, t->next);
         tokens = gwy_expr_token_list_delete_token(expr, tokens, t->next);
     }
@@ -946,6 +951,7 @@ gwy_expr_transform_functions(GwyExpr *expr,
 
         for (i = 0; i < nargs; i++) {
             arg = t->next;
+            t->token = G_TOKEN_NONE;
             t->rpn_block = gwy_expr_token_list_concat(arg->rpn_block,
                                                       t->rpn_block);
             tokens = gwy_expr_token_list_delete_token(expr, tokens, arg);
@@ -979,12 +985,14 @@ gwy_expr_transform_to_rpn_real(GwyExpr *expr,
     GwyExprOpCode add_operators[] = {
         GWY_EXPR_CODE_ADD, GWY_EXPR_CODE_SUBTRACT,
     };
-    GwyExprToken *t, *subblock, *remainder_ = NULL;
+    GwyExprToken *t, *subblock, *remaindr = NULL;
+    static guint level = 0;
 
     if (!tokens) {
         g_warning("Empty token list");
         return NULL;
     }
+    level++;
 
     if (tokens->token != G_TOKEN_LEFT_PAREN) {
         g_set_error(err, error_domain, GWY_EXPR_ERROR_OPENING_PAREN,
@@ -998,8 +1006,8 @@ gwy_expr_transform_to_rpn_real(GwyExpr *expr,
         /* split rest of list to remainder */
         if (t->token == G_TOKEN_RIGHT_PAREN) {
             if (t->next) {
-                remainder_ = t->next;
-                remainder_->prev = NULL;
+                remaindr = t->next;
+                remaindr->prev = NULL;
                 t->next = NULL;
             }
             tokens = gwy_expr_token_list_delete_token(expr, tokens, t);
@@ -1088,12 +1096,14 @@ gwy_expr_transform_to_rpn_real(GwyExpr *expr,
         }
     }
 
-    tokens = gwy_expr_token_list_concat(tokens, remainder_);
+    tokens = gwy_expr_token_list_concat(tokens, remaindr);
+    level--;
     return tokens;
 
 FAIL:
     gwy_expr_token_list_delete(expr, tokens);
-    gwy_expr_token_list_delete(expr, remainder_);
+    gwy_expr_token_list_delete(expr, remaindr);
+    level--;
     return NULL;
 }
 
@@ -1179,6 +1189,7 @@ GwyExpr*
 gwy_expr_new(void)
 {
     GwyExpr *expr;
+    guint i;
 
     if (!error_domain)
         error_domain = g_quark_from_static_string("GWY_EXPR_ERROR");
@@ -1194,6 +1205,13 @@ gwy_expr_new(void)
                                         sizeof(GwyExprToken),
                                         32*sizeof(GwyExprToken),
                                         G_ALLOC_ONLY);
+
+    /* FIXME: manipulate constants through API */
+    expr->constants = g_hash_table_new(g_str_hash, g_str_equal);
+    for (i = 0; i < G_N_ELEMENTS(constant_table); i++)
+        g_hash_table_insert(expr->constants,
+                            (gpointer)constant_table[i].name,
+                            (gpointer)&constant_table[i].value);
 
     return expr;
 }

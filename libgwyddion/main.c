@@ -766,7 +766,7 @@ test_si_unit_format(void)
             str, gwy_si_unit_get_unit_string(siunit)); \
     if (power10) \
         fprintf(stderr, " x 10^%d", power10); \
-    fprintf(stderr, "\n");
+    fprintf(stderr, "\n")
 
 static void
 test_si_unit_parse(void)
@@ -792,6 +792,87 @@ test_si_unit_parse(void)
     siparsecompose("10 cm^2 km/m^3");
 }
 
+#define printexpr(str) \
+    if (gwy_expr_evaluate(expr, str, variables, &err)) \
+        fprintf(stderr, "<%s> = %g", str, variables[0]); \
+    else { \
+        fprintf(stderr, "<%s>: ERROR %s", str, err->message); \
+        g_clear_error(&err); \
+    } \
+    fprintf(stderr, "\n")
+
+#define printexprvar(str) \
+    if (gwy_expr_compile(expr, str, &err)) { \
+        nvars = gwy_expr_get_variables(expr, &varnames); \
+        for (i = 0; i < nvars; i++) \
+            fprintf(stderr, "%s=%g ", varnames[i], variables[i]); \
+        fprintf(stderr, "<%s> = %g", str, gwy_expr_execute(expr, variables)); \
+    } \
+    else { \
+        fprintf(stderr, "<%s>: ERROR %s", str, err->message); \
+        g_clear_error(&err); \
+    } \
+    fprintf(stderr, "\n")
+
+static void
+test_expr(void)
+{
+    gdouble variables[3];
+    gchar **varnames;
+    GError *err = NULL;
+    GwyExpr *expr;
+    gint nvars, i;
+
+    expr = gwy_expr_new();
+    printexpr("");
+    printexpr("-100");
+    printexpr("(-100)");
+    printexpr("1+1");
+    printexpr("(--10)--(-3)");
+    printexpr("-1--1");
+    printexpr("+1-+1");
+    printexpr(")");
+    printexpr("))");
+    printexpr("1)+(3");
+    printexpr("(");
+    printexpr("x");
+    printexpr("1+#");
+    printexpr("+");
+    printexpr("1*+2");
+    printexpr("1**2");
+    printexpr("1+");
+    printexpr("*1");
+    printexpr("1(^2)");
+    printexpr("1,2");
+    printexpr("sin 3");
+    printexpr("sin(3)");
+    printexpr("(sin 3)");
+    printexpr("(sin(3))");
+    printexpr("((sin 3))");
+    printexpr("sin Pi/2");
+    printexpr("(sin Pi)/2");
+    printexpr("sin(Pi/2)");
+    printexpr("sin(Pi)/2");
+    printexpr("sin(Pi)/(2)");
+    printexpr("hypot 3,4");
+    printexpr("ln 4/ln 2");
+    printexpr("hypot hypot 3,4,hypot 3,4");
+    printexpr("1+2*3");
+    printexpr("1+2 3");
+    printexpr("1^2^3");
+
+    variables[0] = 1;  variables[1] = 2;  variables[2] = 3;
+    printexprvar("x+y+z");
+    printexprvar("x^y^z");
+    printexprvar("2 a + b/c");
+    printexprvar("pepa z depa");
+    printexprvar("1 + x");
+    variables[0] = 3;  variables[1] = 4;  variables[2] = 5;
+    printexprvar("hypot hypot x, y, z");
+    printexprvar("-x--y");
+    gwy_expr_free(expr);
+}
+
 static void
 test_all(void)
 {
@@ -809,6 +890,7 @@ test_all(void)
     test_si_unit();
     test_si_unit_format();
     test_si_unit_parse();
+    test_expr();
 }
 
 static void
@@ -826,7 +908,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_si_unit();
+    test_expr();
 
     return 0;
 }
