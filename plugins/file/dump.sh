@@ -14,15 +14,15 @@ case "$1" in
     ;;
 
     load)
-    dumpfile=$2
-    externfile=$3
-    cat $externfile >$dumpfile
+    dumpfile="$2"
+    externfile="$3"
+    cat "$externfile" >"$dumpfile"
     ;;
 
     save)
-    dumpfile=$2
-    externfile=$3
-    cat $dumpfile >$externfile
+    dumpfile="$2"
+    externfile="$3"
+    cat "$dumpfile" >"$externfile"
     ;;
 
     *)
