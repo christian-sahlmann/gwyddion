@@ -33,8 +33,6 @@ typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
  * @n: Number of data points.
  *
  * Performs FST algorithm.
- *
- * Returns: zero at success.
  **/
 void
 gwy_fft_hum(GwyTransformDirection dir,
