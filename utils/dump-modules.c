@@ -111,6 +111,8 @@ kill_mail(const gchar *authors)
             break;
         }
         else {
+            while (a > authors && !g_ascii_isspace(*a))
+                a--;
             strncpy(p, authors, a - authors);
             p += a - authors;
             authors = strchr(a+1, '>');
