@@ -24,32 +24,33 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libprocess/tip.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
 #define TIP_MODEL_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
-typedef enum {
-    TIP_MODEL_CONTACT = 0,
-    TIP_MODEL_NONCONTACT  = 1,
-    TIP_MODEL_LAP    = 2
-} TipType;
+
+
+GwyEnum tip_type[] = {
+        { "Contact",   GWY_TIP_CONTACT        },
+        { "Noncontact",   GWY_TIP_NONCONTACT       },
+        { "Sharpened",   GWY_TIP_SHARPENED       },
+};
 
 /* Data for this function. */
 typedef struct {
     gdouble height;
-    TipType type;
+    GwyTipType type;
     GwyDataWindow *win;
 } TipModelArgs;
 
 typedef struct {
     GtkWidget *view;
     GtkWidget *data;
-    GwyValUnit *real;
-    GtkObject *res;
     GtkObject *type;
-    GtkObject *radius;
+    GtkWidget *radius;
     GtkObject *slope;
     GwyContainer *tip;
 } TipModelControls;
@@ -76,7 +77,9 @@ static void        tip_model_save_args              (GwyContainer *container,
 static void        tip_model_sanitize_args         (TipModelArgs *args);
 static GtkWidget*  tip_model_data_option_menu      (GwyDataWindow **operand);
 static void        tip_model_data_cb(GtkWidget *item);
-    
+
+static void        tip_type_cb     (GtkWidget *item,
+                                             TipModelArgs *args);
 
 
 TipModelArgs tip_model_defaults = {
@@ -144,7 +147,7 @@ tip_model(GwyContainer *data, GwyRunType run)
 static gboolean
 tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *spin, *omenu;
+    GtkWidget *dialog, *table, *spin, *omenu, *vbox;
     TipModelControls controls;
     enum { RESPONSE_RESET = 1,
            RESPONSE_PREVIEW = 2 };
@@ -166,7 +169,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 3);
 
-    table = gtk_table_new(10, 3, FALSE);
+    table = gtk_table_new(3, 3, FALSE);
     col = 0; 
     row = 0;
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -178,10 +181,16 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
 
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
 
-    label = gtk_label_new(_("Related data:"));
+    vbox = gtk_vbox_new(FALSE, 3);
+    
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
+
+    label = gtk_label_new(_("Related data (to pick resolution):"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
@@ -192,52 +201,15 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
     
-/*
-    controls.real = gtk_adjustment_new(args->real,
-                                                   0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("Height value"), "%",
-                                       controls.threshold_height);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    controls.type
+       = gwy_option_menu_create(tip_type, G_N_ELEMENTS(tip_type), "type", 
+                                G_CALLBACK(tip_type_cb), args,
+                                args->type);
 
-    controls.res = gtk_adjustment_new(args->slope,
-                                                  0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 4, _("Slope value"), "%",
-                                       controls.threshold_slope);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.type, FALSE, FALSE, 4);
 
-    controls.is_lap
-        = gtk_check_button_new_with_label(_("Threshold by curvature:"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap),
-                                 args->is_lap);
-    gtk_table_attach(GTK_TABLE(table), controls.is_lap,
-                     0, 1, 5, 6, GTK_FILL, 0, 2, 2);
-
-    controls.threshold_lap = gtk_adjustment_new(args->lap,
-                                                0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 6, _("Curvature value"), "%",
-                                       controls.threshold_lap);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-
-    label = gtk_label_new(_("Merge mode:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
-
-    controls.merge = gwy_option_menu_mergegrain(NULL, NULL, args->merge_type);
-    gtk_table_attach(GTK_TABLE(table), controls.merge,
-                     0, 1, 8, 9, GTK_FILL, 0, 2, 2);
-    gtk_table_set_row_spacing(GTK_TABLE(table), 9, 8);
-
-    label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,  0, 1, 9, 10, GTK_FILL, 0, 2, 2);
-    controls.color_button = gwy_color_button_new();
-    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
-                                   TRUE);
-    load_mask_color(controls.color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
-    gtk_table_attach(GTK_TABLE(table), controls.color_button,
-                     1, 2, 9, 10, GTK_FILL, 0, 2, 2);
-*/
+    controls.radius = gwy_val_unit_new("Tip apex radius: ", gwy_data_field_get_si_unit_xy(dfield));
+    gtk_box_pack_start(GTK_BOX(vbox), controls.radius, FALSE, FALSE, 4);                                                   
 
     gtk_widget_show_all(dialog);
     do {
@@ -304,6 +276,11 @@ tip_model_data_cb(GtkWidget *item)
     *pp = p;
 }
 
+static void        
+unrotate_symmetry_cb(GtkWidget *item,
+                           TipModelArgs *args)
+{
+}
 
 
 static void

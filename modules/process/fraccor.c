@@ -95,6 +95,8 @@ fraccor(GwyContainer *data, GwyRunType run)
 
         gwy_data_field_fractal_correction(dfield, maskfield, GWY_INTERPOLATION_BILINEAR);
 
+
+
         gwy_container_remove_by_name(data, "/0/mask");
         g_object_unref(buffer);
     }
