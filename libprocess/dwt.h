@@ -20,12 +20,52 @@
 
 #ifndef __GWY_PROCESS_DWT_H__
 #define __GWY_PROCESS_DWT_H__
-
 #include <glib.h>
+#include "dataline.h"
+#include "datafield.h"
+
+
+typedef enum {
+	GWY_DWT_HAAR,
+	GWY_DWT_DAUB4,
+	GWY_DWT_DAUB6,
+	GWY_DWT_DAUB8,
+	GWY_DWT_DAUB12,
+	GWY_DWT_DAUB20
+} GwyDWTCoefficientsType;
+
 
 G_BEGIN_DECLS
+
+/*load wavelet coeficients*/
+GwyDataLine *gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTCoefficientsType type);
+
+/*plot wavelet*/
+GwyDataLine *gwy_dwt_plot_wavelet(GwyDataLine *dline, GwyDataLine *wt_coefs);
+
+/*plot scaling function*/
+GwyDataLine *gwy_dwt_plot_scaling_function(GwyDataLine *dline, GwyDataLine *wt_coefs);
+
+/*compute full dwt pyramidal algorithm*/
+GwyDataLine * gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign);
+
+/*compute one step of pyramidal algorithm within specified data*/
+/*GwyDataLine * gwy_data_line_area_dwt_step(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign,
+						gint from, gint to);
+*/		
+/*compute full dwt pyramidal algorithm*/
+GwyDataField * gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign);
+GwyDataField * gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign);
+GwyDataField * gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign);
+
+/*compute one step of pyramidal algorithm within specified data*/
+/*GwyDataField * gwy_data_field_area_dwt_step(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign,
+						gint ulcol, gint ulrow, gint brcol, gint brrow);
+*/
 
 
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_DWT__*/
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+
