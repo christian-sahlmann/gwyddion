@@ -23,6 +23,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwysiunit.h>
 #include "gwytestser.h"
 
 #define GWY_TEST_SER_TYPE_NAME "GwyTestSer"
@@ -118,8 +119,6 @@ static void
 gwy_test_ser_init(GwyTestSer *test_ser)
 {
     gwy_debug("");
-    test_ser->radius = NULL;
-    test_ser->history_size = 0;
     test_ser->theta = 0.0;
 }
 
@@ -129,7 +128,12 @@ gwy_test_ser_finalize(GObject *object)
     GwyTestSer *test_ser = (GwyTestSer*)object;
 
     gwy_debug("");
-    g_free(test_ser->radius);
+    if (test_ser->radius)
+        g_array_free(test_ser->radius, TRUE);
+    if (test_ser->string)
+        g_array_free(test_ser->string, TRUE);
+    if (test_ser->unit)
+        g_array_free(test_ser->unit, TRUE);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -162,7 +166,9 @@ gwy_test_ser_serialize(GObject *obj,
     {
         GwySerializeSpec spec[] = {
             { 'd', "theta", &test_ser->theta, NULL, },
-            { 'D', "r", &test_ser->radius, &test_ser->history_size, },
+            { 'D', "radius", &test_ser->radius->data, &test_ser->radius->len, },
+            { 'S', "string", &test_ser->string->data, &test_ser->string->len, },
+            { 'O', "unit", &test_ser->unit->data, &test_ser->unit->len, },
         };
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_TEST_SER_TYPE_NAME,
@@ -176,10 +182,14 @@ gwy_test_ser_deserialize(const guchar *buffer,
                          gsize *position)
 {
     double theta, *radius = NULL;
-    gsize history_size;
+    gchar *string = NULL;
+    GObject *unit = NULL;
+    gsize rsize, ssize, usize;
     GwySerializeSpec spec[] = {
         { 'd', "theta", &theta, NULL, },
-        { 'D', "r", &radius, &history_size, },
+        { 'D', "radius", &radius, &rsize, },
+        { 'S', "string", &string, &ssize, },
+        { 'O', "unit", &unit, &usize, },
     };
     GwyTestSer *test_ser;
 
@@ -188,15 +198,26 @@ gwy_test_ser_deserialize(const guchar *buffer,
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                             GWY_TEST_SER_TYPE_NAME,
-                                            G_N_ELEMENTS(spec), spec)) {
+                                            G_N_ELEMENTS(spec), spec)
+        || !radius || !string || !unit
+        || rsize != ssize || rsize != usize) {
         g_free(radius);
+        g_free(string);
+        g_free(unit);
         return NULL;
     }
 
     test_ser = (GwyTestSer*)gwy_test_ser_new(theta, 0.0);
-    g_free(test_ser->radius);
-    test_ser->radius = radius;
-    test_ser->history_size = history_size;
+    g_array_set_size(test_ser->radius, 0);
+    g_array_set_size(test_ser->string, 0);
+    g_array_set_size(test_ser->unit, 0);
+    g_array_append_vals(test_ser->radius, radius, rsize);
+    g_array_append_vals(test_ser->string, string, ssize);
+    g_array_append_vals(test_ser->unit, unit, usize);
+
+    g_free(radius);
+    g_free(string);
+    g_free(unit);
 
     return (GObject*)test_ser;
 }
@@ -205,17 +226,24 @@ void
 gwy_test_ser_set_radius(GwyTestSer *test_ser,
                         gdouble radius)
 {
+    gchar *s;
+    GObject *u;
+
     gwy_debug("");
 
-    if (!test_ser->history_size
-        || radius != test_ser->radius[test_ser->history_size - 1]) {
-        test_ser->history_size++;
-        test_ser->radius = g_renew(gdouble, test_ser->radius,
-                                   test_ser->history_size);
-        test_ser->radius[test_ser->history_size - 1] = radius;
-
-        gwy_test_ser_value_changed(G_OBJECT(test_ser));
+    if (!test_ser->radius) {
+        test_ser->radius = g_array_new(FALSE, FALSE, sizeof(gdouble));
+        test_ser->string = g_array_new(FALSE, FALSE, sizeof(gchar*));
+        test_ser->unit = g_array_new(FALSE, FALSE, sizeof(GObject*));
     }
+
+    s = g_strdup_printf("%g", radius);
+    u = gwy_si_unit_new(s);   /* that's silly, get over it */
+    g_array_append_val(test_ser->radius, radius);
+    g_array_append_val(test_ser->string, s);
+    g_array_append_val(test_ser->unit, u);
+
+    gwy_test_ser_value_changed(G_OBJECT(test_ser));
 }
 
 void
@@ -236,7 +264,23 @@ gwy_test_ser_get_radius(GwyTestSer *test_ser)
 {
     gwy_debug("");
 
-    return test_ser->radius[test_ser->history_size - 1];
+    return g_array_index(test_ser->radius, gdouble, test_ser->radius->len - 1);
+}
+
+gchar*
+gwy_test_ser_get_string(GwyTestSer *test_ser)
+{
+    gwy_debug("");
+
+    return g_array_index(test_ser->string, gchar*, test_ser->string->len - 1);
+}
+
+GObject*
+gwy_test_ser_get_unit(GwyTestSer *test_ser)
+{
+    gwy_debug("");
+
+    return g_array_index(test_ser->unit, GObject*, test_ser->unit->len - 1);
 }
 
 gdouble
@@ -262,8 +306,18 @@ gwy_test_ser_print_history(GwyTestSer *test_ser)
     gwy_debug("");
 
     fprintf(stderr, "** Message: radius history:");
-    for (i = 0; i < test_ser->history_size; i++)
-        fprintf(stderr, " %g", test_ser->radius[i]);
+    for (i = 0; i < test_ser->radius->len; i++)
+        fprintf(stderr, " %g", g_array_index(test_ser->radius, gdouble, i));
+    fputs("\n", stderr);
+    fprintf(stderr, "** Message: string history:");
+    for (i = 0; i < test_ser->string->len; i++)
+        fprintf(stderr, " %s", g_array_index(test_ser->string, gchar*, i));
+    fputs("\n", stderr);
+    fprintf(stderr, "** Message: unit history:");
+    for (i = 0; i < test_ser->unit->len; i++)
+        fprintf(stderr, " %s",
+                gwy_si_unit_get_unit_string(g_array_index(test_ser->unit,
+                                                          GwySIUnit*, i)));
     fputs("\n", stderr);
 }
 

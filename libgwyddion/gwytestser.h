@@ -43,8 +43,9 @@ struct _GwyTestSer {
     GObject parent_instance;
 
     gdouble theta;
-    gdouble *radius;
-    gsize history_size;
+    GArray *radius;
+    GArray *string;
+    GArray *unit;
 };
 
 struct _GwyTestSerClass {
@@ -60,6 +61,8 @@ void       gwy_test_ser_set_radius     (GwyTestSer *test_ser,
 void       gwy_test_ser_set_theta      (GwyTestSer *test_ser,
                                         gdouble theta);
 gdouble    gwy_test_ser_get_radius     (GwyTestSer *test_ser);
+gchar*     gwy_test_ser_get_string     (GwyTestSer *test_ser);
+GObject*   gwy_test_ser_get_unit       (GwyTestSer *test_ser);
 gdouble    gwy_test_ser_get_theta      (GwyTestSer *test_ser);
 void       gwy_test_ser_print_history  (GwyTestSer *test_ser);
 

@@ -42,9 +42,6 @@ test_serializable_iface(void)
     GByteArray *array;
     FILE *fh;
     GError *err = NULL;
-    gint x[128];
-
-    memset(x, 0, 128*sizeof(gint));
 
     /* create, write and free an object */
     ser = gwy_test_ser_new(0.42, 1.001);
@@ -141,9 +138,7 @@ test_container(void)
     GwyContainer *container;
     GQuark q;
     gboolean ok;
-    gint x[128];
 
-    memset(x, 0, 128*sizeof(gint));
     g_message("====== CONTAINER ====================================");
 
     container = GWY_CONTAINER(gwy_container_new());
@@ -193,7 +188,7 @@ static const gchar *serialized_text =
     "\"alice\" char 0x0d\n"
     "\"pdf/f\" double 1.4141999999999999\n"
     "\"yesno\" boolean True\n"
-    "\"ser\" object 4777795465737453657200260000007468657461006417d9cef753e3f93f72004402000000da12c1515555d53f9a99999999990140\n"
+    "\"ser\" object 4777795465737453657200890000007468657461006417d9cef753e3f93f726164697573004402000000da12c1515555d53f9a99999999990140737472696e67005302000000302e33333333333300322e3200756e6974004f020000004777795349556e69740012000000756e69747374720073302e333333333333004777795349556e6974000d000000756e69747374720073322e3200\n"
     "\"x64\" int64 64\n";
 
 static void
@@ -768,7 +763,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_duplication();
+    test_all();
 
     return 0;
 }
