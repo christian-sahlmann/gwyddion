@@ -18,32 +18,36 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_SI_UNIT_H__
-#define __GWY_SI_UNIT_H__
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include "gwyserializable.h"
+#include "gwycontainer.h"
+#include "gwyentities.h"
+#include "gwytestser.h"
+#include "gwyutils.h"
+#include "gwymath.h"
+#include "gwysiunit.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+int
+main(void)
+{
+    GwySIUnit *si;
+    gchar prefix[20];
+    gdouble div;
+    gdouble value;
+    
+    si = gwy_si_unit_new("Weber");
+    
+    value = 12e6;
+    gwy_si_unit_get_prefixed(si, value, 3, prefix, &div);
+    
+    printf("unit=%s, power=%f, 12e6 units = %f %s\n",
+           gwy_si_unit_get_unit_string(si), div,
+           (double)value/(double)div, prefix);
+    
 
-typedef struct{
-   gchar *unitstr;
-} GwySIUnit;
-
-GwySIUnit* gwy_si_unit_new(gchar *unit_string);
-void gwy_si_unit_free();
-
-void gwy_si_unit_set_unit_string(GwySIUnit *siunit, gchar *unit_string);
-gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit);
-
-void gwy_si_unit_get_prefix(GwySIUnit *siunit, gdouble value, gint precision, gchar *prefix, gdouble *power);
-void gwy_si_unit_get_prefixed(GwySIUnit *siunit, gdouble value, gint precision, gchar *prefix, gdouble *power);
-
-
-
-#ifdef __cplusplus
+    return 0;
 }
-#endif /* __cplusplus */
-
-#endif /* __GWY_SI_UNIT_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -19,40 +19,70 @@
  */
 
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
-
+#include "gwymath.h"
 #include "gwysiunit.h"
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
-void gwy_si_unit_new(char *unit_string)
+GwySIUnit* gwy_si_unit_new(char *unit_string)
 {
+    GwySIUnit *siunit;
+    
     gwy_debug("");
+    siunit = g_new(GwySIUnit, 1);
+    if (unit_string != NULL) 
+    {
+        siunit->unitstr = (gchar *)g_malloc(sizeof(gchar)*strlen(unit_string));
+        strcpy(siunit->unitstr, unit_string);
+    }
+    else siunit->unitstr = NULL;
+    return siunit;
 }
 
-void gwy_si_unit_free()
+void gwy_si_unit_free(GwySIUnit *siunit)
 {
     gwy_debug("");
+    if (siunit->unitstr != NULL) g_free(siunit->unitstr);
 }
 
 void gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
 {
     gwy_debug("");
+    if (siunit->unitstr == NULL) 
+    {
+        siunit->unitstr = (gchar *)g_malloc(sizeof(gchar)*strlen(unit_string));
+    }
+    else if (strlen(unit_string) != strlen(siunit->unitstr))
+    {
+        siunit->unitstr = (gchar *)g_realloc(siunit->unitstr, sizeof(gchar)*strlen(unit_string));
+    }
+    strcpy(siunit->unitstr, unit_string);
+    
 }
 
-void gwy_si_unit_get_unit_string(GwySIUnit *siunit, char *unit_string)
+gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
     gwy_debug("");
+    return siunit->unitstr;
 }
 
 void gwy_si_unit_get_prefix(GwySIUnit *siunit, double value, gint precision, char *prefix, double *power)
 {
     gwy_debug("");
+    *power = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
+    strcpy(prefix, gwy_math_SI_prefix(*power));
 }
 
 void gwy_si_unit_get_prefixed(GwySIUnit *siunit, double value, gint precision, char *prefix, double *power)
 {
     gwy_debug("");
+    *power = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
+    printf("power = %f\n", *power);
+    strcpy(prefix, gwy_math_SI_prefix(*power));
+    strcat(prefix, siunit->unitstr);
 }
 
 
