@@ -6,7 +6,8 @@ Transform SGML-like symbol entities to UTF-8 and back.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-A subset of named SGML-like symbol entities (e.g. <literal>&amp;alpha;</literal>),
+A subset of named SGML-like symbol entities
+(e.g. <literal>&amp;alpha;</literal>),
 to be used namely in <link linkend="GwySciText">GwySciText</link>.
 </para>
 

@@ -1,0 +1,29 @@
+<!-- ##### SECTION Title ##### -->
+gwymd5
+
+<!-- ##### SECTION Short_Description ##### -->
+Compute MD5 digest
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+MD5 (<ulink url="http://www.faqs.org/rfcs/rfc1321.html">RFC1321</ulink>)
+is a reasonably fast digest function.  It can be used for hash key creation
+and fast data indexing, but should be no longer used for cryptographic and
+security purposes.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_md5_get_digest ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@buffer_size: 
+@digest: 
+
+

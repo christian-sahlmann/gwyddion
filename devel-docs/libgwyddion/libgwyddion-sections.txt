@@ -191,6 +191,26 @@ gwy_file_abandon_contents
 gwy_find_self_dir
 gwy_find_self_set_argv0
 gwy_get_user_dir
+gwy_canonicalize_path
+</SECTION>
+
+<SECTION>
+<FILE>gwywin32unistd</FILE>
+chmod
+getpid
+mkdir
+unlink
+S_ISREG
+S_ISDIR
+S_IRUSR
+S_IWUSR
+S_IXUSR
+W_OK
+</SECTION>
+
+<SECTION>
+<FILE>gwymd5</FILE>
+gwy_md5_get_digest
 </SECTION>
 
 <SECTION>

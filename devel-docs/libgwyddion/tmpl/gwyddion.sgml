@@ -6,12 +6,14 @@ Base functions
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Gwyddion classes has to be initialized before they can be safely
+deserialized. The function <link linkend="gwy-type-init">gwy_type_init()</link>
+provides this initialization.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+<link linkend="GwySerializable">GwySerializable</link>
 </para>
 
 <!-- ##### FUNCTION gwy_type_init ##### -->

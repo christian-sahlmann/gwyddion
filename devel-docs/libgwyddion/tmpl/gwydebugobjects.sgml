@@ -2,11 +2,25 @@
 gwydebugobjects
 
 <!-- ##### SECTION Short_Description ##### -->
-Helps chasing leaking objects (debug).
+Helps chasing leaking objects (debug)
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+If you wonder about some object lifetime rules, these functions can help you:
+<link linkend="gwy-debug-objects-creation">gwy_debug_objects_creation()</link>
+hooks object finalization so it is possible to tell later whether and when the
+object was destroyed -- use
+<link linkend="gwy-debug-objects-dump-to-file">gwy_debug_objects_dump_to_file()</link>
+to dump this information to a file.
+</para>
 
+<para>
+If debugging is not enabled with
+<link linkend="gwy-debug-objects-enable">gwy_debug_objects_enable()</link>
+these functions do nothing.  Note all Gwyddion data-like objects (i.e., not
+widgets) already call
+<link linkend="gwy-debug-objects-creation">gwy_debug_objects_creation()</link>
+so to debug their lifetime rules, just enable it.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

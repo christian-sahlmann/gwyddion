@@ -18,11 +18,16 @@ It is also posible it duplicate any such object with
 
 <para>
 There are quite a few helper functions available for implementation of
-serialization and deserialization in you classes, most high-level
+serialization and deserialization in your classes, most high-level
 (and thus probably most useful) are
 <link linkend="gwy-serialize-pack-object-struct">gwy_serialize_pack_object_struct()</link>
 and
-<link linkend="gwy-serialize-unpack-object-struct">gwy_serialize_unpack_object_struct()</link>.
+<link linkend="gwy-serialize-unpack-object-struct">gwy_serialize_unpack_object_struct()</link>
+that do all the hard work themselves and are sufficient for serialization of
+simple objects.
+Even if you don not use these functions, you should keep object name and
+serialized data length in the same format as they do in new objects, to allow
+old Gwyddion versions to safely ignore (skip) these new objects.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

@@ -6,9 +6,16 @@ Various utility functions
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Various utility functions: creating GLib lists from hash tables, converting
-between enums and flags and their string representations, protably finding
-Gwyddion application directories.
+Various utility functions: creating GLib lists from hash tables
+(<link linkend="gwy-hash-table-to-list-cb">gwy_hash_table_to_list_cb()</link>),
+converting between enums and flags and their string representations
+(<link linkend="gwy-string-to-enum">gwy_string_to_enum()</link>),
+protably finding Gwyddion application directories
+(<link linkend="gwy-find-self-dir">gwy_find_self_dir()</link>),
+string functions
+(<link linkend="gwy-strreplace">gwy_strreplace()</link>),
+path manipulation
+(<link linkend="gwy-canonicalize-path">gwy_canonicalize_path()</link>).
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -159,6 +166,15 @@ Gwyddion application directories.
 
 </para>
 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_canonicalize_path ##### -->
+<para>
+
+</para>
+
+@path: 
 @Returns: 
 
 

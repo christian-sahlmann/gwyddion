@@ -2,12 +2,12 @@
 GwyContainer
 
 <!-- ##### SECTION Short_Description ##### -->
-A container with items identified by a GQuark.
+A container with items identified by a GQuark
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 GwyContainer is a general-purpose container, it can hold atomic types,
-strings and objects. However objects must implement the
+strings and objects. However, objects must implement the
 <link linkend="GwySerializable">GwySerializable</link> interface, because
 the container itself is serializable.
 </para>
@@ -30,16 +30,21 @@ are available too.
 </para>
 
 <para>
-GwyContainer geneally takes ownership of stored non-atomic items, i.e. it
-holds a reference on stored objects and takes care of freeing of stored
-strings.  So you usually want to unref objects after storing them to
-a container.  Also remember static string cannot be stored there and must
-be duplicated first.
+GwyContainer takes ownership of stored non-atomic items.
+For strings, this means you cannot store static strings (use
+<link linkend="g-strdup">g_strdup()</link> to duplicate them), and must not
+free stored dynamic strings, as the container will free them itself when they
+are removed or when the container is finalized.
+For objects, this means it takes a reference on the object (released when
+the object is removed or the container is finalized), so you usually want
+to <link linkend="g-object-unref">g_object_unref()</link> objects after
+storing them to a container.
 </para>
 
-<para>Items in GwyContainer can be identified by a GQuark or the
-corresponding string.  While GQuarks are faster, they are less convenient for
-casual usage -- each GQuark-key function like
+<para>Items in GwyContainer can be identified by a
+<link linkend="GQuark">GQuark</link> or the
+corresponding string.  While GQuarks are atomic values and allow faster acces,
+they are less convenient for casual usage -- each GQuark-key function like
 <link linkend="gwy-container-set-double">gwy_container_set_double()</link>
 thus has a string-key counterpart
 <link linkend="gwy-container-set-double-by-name">gwy_container_set_double_by_name()</link>.

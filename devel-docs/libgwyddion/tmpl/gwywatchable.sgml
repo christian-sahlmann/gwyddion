@@ -2,7 +2,7 @@
 GwyWatchable
 
 <!-- ##### SECTION Short_Description ##### -->
-Abstract interface for a value-like object whose changes can be watched.
+Abstract interface for a value-like object whose changes can be watched
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -12,6 +12,13 @@ can be watched, i.e., they cause emission of a
 can use
 <link linkend="gwy-watchable-value-changed">gwy_watchable_value_changed()</link>
 to programatically emit the signal.
+</para>
+
+<para>
+Note this interface may be formally required on objects in some situations
+(namely to store them to <link linkend="GwyContainer">GwyContainer</link>),
+although in current stage it does not have to be meaningfully implemented.
+In Gwyddion 2.0 this interface may either become actually used, or be removed.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

@@ -397,6 +397,14 @@ Emitted when value changes.
 </para>
 
 
+<!-- ##### MACRO ftruncate ##### -->
+<para>
+
+</para>
+
+@file: 
+@size: 
+
 <!-- ##### TYPEDEF gdouble ##### -->
 <para>
 
