@@ -51,6 +51,7 @@ gwy_graph_func_register(const gchar *modname,
                         GwyGraphFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
+    gchar *canon_name;
 
     gwy_debug("%s", __FUNCTION__);
     gwy_debug("name = %s, menu path = %s, func = %p",
@@ -70,7 +71,8 @@ gwy_graph_func_register(const gchar *modname,
         return FALSE;
     }
     g_hash_table_insert(graph_funcs, (gpointer)func_info->name, func_info);
-    iinfo->funcs = g_slist_append(iinfo->funcs, (gpointer)func_info->name);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_GRAPH, func_info->name, NULL);
+    iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
 
     return TRUE;
 }
@@ -237,9 +239,13 @@ graph_menu_entry_compare(GwyGraphFuncInfo *a,
 }
 
 gboolean
-gwy_graph_func_try_remove(const gchar *name)
+gwy_graph_func_remove(const gchar *name)
 {
-    return g_hash_table_remove(graph_funcs, name);
+    if (!g_hash_table_remove(graph_funcs, name)) {
+        g_warning("Cannot remove function %s", name);
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /************************** Documentation ****************************/

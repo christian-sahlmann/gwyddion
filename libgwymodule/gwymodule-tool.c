@@ -57,6 +57,7 @@ gwy_tool_func_register(const gchar *modname,
                        GwyToolFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
+    gchar *canon_name;
 
     gwy_debug("%s", __FUNCTION__);
     gwy_debug("name = %s, stock id = %s, func = %p",
@@ -78,7 +79,8 @@ gwy_tool_func_register(const gchar *modname,
         return FALSE;
     }
     g_hash_table_insert(tool_funcs, (gpointer)func_info->name, func_info);
-    iinfo->funcs = g_slist_append(iinfo->funcs, (gpointer)func_info->name);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_TOOL, func_info->name, NULL);
+    iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
 
     return TRUE;
 }
@@ -189,9 +191,13 @@ tool_toolbar_item_compare(GwyToolFuncInfo *a,
 }
 
 gboolean
-gwy_tool_func_try_remove(const gchar *name)
+gwy_tool_func_remove(const gchar *name)
 {
-    return g_hash_table_remove(tool_funcs, name);
+    if (!g_hash_table_remove(tool_funcs, name)) {
+        g_warning("Cannot remove function %s", name);
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /************************** Documentation ****************************/

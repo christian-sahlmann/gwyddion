@@ -248,8 +248,20 @@ gwy_module_get_rid_of(const gchar *modname)
     /* FIXME: this is quite crude, it can remove functions of the same name
      * in different module type */
     for (l = iinfo->funcs; l; l = g_slist_next(l)) {
-        gwy_file_func_try_remove((gchar*)iinfo->funcs->data);
-        gwy_process_func_try_remove((gchar*)iinfo->funcs->data);
+        gchar *canon_name = (gchar*)iinfo->funcs->data;
+
+        if (g_str_has_prefix(canon_name, GWY_MODULE_PREFIX_PROC))
+            gwy_file_func_remove(canon_name + strlen(GWY_MODULE_PREFIX_PROC));
+        else if (g_str_has_prefix(canon_name, GWY_MODULE_PREFIX_FILE))
+            gwy_file_func_remove(canon_name + strlen(GWY_MODULE_PREFIX_FILE));
+        else if (g_str_has_prefix(canon_name, GWY_MODULE_PREFIX_GRAPH))
+            gwy_file_func_remove(canon_name + strlen(GWY_MODULE_PREFIX_GRAPH));
+        else if (g_str_has_prefix(canon_name, GWY_MODULE_PREFIX_TOOL))
+            gwy_file_func_remove(canon_name + strlen(GWY_MODULE_PREFIX_TOOL));
+        else {
+            g_critical("Unable to find out %s function type");
+        }
+        g_free(canon_name);
     }
     g_slist_free(iinfo->funcs);
     iinfo->funcs = NULL;

@@ -62,6 +62,7 @@ gwy_file_func_register(const gchar *modname,
                        GwyFileFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
+    gchar *canon_name;
 
     gwy_debug("%s", __FUNCTION__);
     gwy_debug("name = %s, file_desc = %s, detect = %p, load = %p, save = %p",
@@ -82,7 +83,8 @@ gwy_file_func_register(const gchar *modname,
         return FALSE;
     }
     g_hash_table_insert(file_funcs, (gpointer)func_info->name, func_info);
-    iinfo->funcs = g_slist_append(iinfo->funcs, (gpointer)func_info->name);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_FILE, func_info->name, NULL);
+    iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
 
     return TRUE;
 }
@@ -387,9 +389,13 @@ gwy_file_func_get_operations(const gchar *name)
 }
 
 gboolean
-gwy_file_func_try_remove(const gchar *name)
+gwy_file_func_remove(const gchar *name)
 {
-    return g_hash_table_remove(file_funcs, name);
+    if (!g_hash_table_remove(file_funcs, name)) {
+        g_warning("Cannot remove function %s", name);
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /************************** Documentation ****************************/

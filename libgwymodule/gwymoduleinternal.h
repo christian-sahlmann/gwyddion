@@ -27,6 +27,13 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/* prefixes for canonical function names */
+#define GWY_MODULE_PREFIX_PROC     "proc::"
+#define GWY_MODULE_PREFIX_FILE     "file::"
+#define GWY_MODULE_PREFIX_TOOL     "tool::"
+#define GWY_MODULE_PREFIX_GRAPH    "graph::"
+
+/* internal module info */
 typedef struct {
     GwyModuleInfo *mod_info;
     gchar *file;
@@ -37,10 +44,10 @@ typedef struct {
 _GwyModuleInfoInternal* gwy_module_get_module_info  (const gchar *name);
 void                    gwy_module_foreach          (GHFunc function,
                                                      gpointer data);
-gboolean                gwy_file_func_try_remove    (const gchar *name);
-gboolean                gwy_process_func_try_remove (const gchar *name);
-gboolean                gwy_tool_func_try_remove    (const gchar *name);
-gboolean                gwy_graph_func_try_remove   (const gchar *name);
+gboolean                gwy_file_func_remove        (const gchar *name);
+gboolean                gwy_process_func_remove     (const gchar *name);
+gboolean                gwy_tool_func_remove        (const gchar *name);
+gboolean                gwy_graph_func_remove       (const gchar *name);
 
 #ifdef __cplusplus
 }

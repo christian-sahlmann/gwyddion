@@ -62,7 +62,7 @@ static GtkWidget* window = NULL;
 void
 gwy_module_browser(void)
 {
-    GtkWidget *browser, *scroll, *vbox, *info;
+    GtkWidget *browser, *scroll, *paned, *info;
 
     if (window) {
         gtk_window_present(GTK_WINDOW(window));
@@ -70,20 +70,20 @@ gwy_module_browser(void)
     }
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(GTK_WINDOW(window), 480, 360);
+    gtk_window_set_default_size(GTK_WINDOW(window), 480, 480);
     gtk_window_set_title(GTK_WINDOW(window), "Gwyddion Module Browser");
     gtk_window_set_wmclass(GTK_WINDOW(window), "browser_module",
                            g_get_application_name());
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(window), vbox);
+    paned = gtk_vpaned_new();
+    gtk_container_add(GTK_CONTAINER(window), paned);
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
                                    GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
-    gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
+    gtk_paned_pack1(GTK_PANED(paned), scroll, TRUE, FALSE);
     browser = gwy_module_browser_construct(window);
     gtk_container_add(GTK_CONTAINER(scroll), browser);
     info = gwy_module_browser_info_table(window);
-    gtk_box_pack_start(GTK_BOX(vbox), info, FALSE, FALSE, 0);
+    gtk_paned_pack2(GTK_PANED(paned), info, FALSE, FALSE);
 
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_widget_destroy), NULL);
     g_signal_connect_swapped(window, "destroy",
@@ -269,7 +269,7 @@ update_module_info_cb(GtkWidget *tree,
         s = g_new(gchar, n);
         for (l = iinfo->funcs, p = s; l; l = g_slist_next(l)) {
             p = g_stpcpy(p, (gchar*)l->data);
-            *(p++) = ' ';
+            *(p++) = '\n';
         }
         *(--p) = '\0';
         gtk_label_set_text(label, s);
