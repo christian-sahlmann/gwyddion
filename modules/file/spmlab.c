@@ -34,7 +34,7 @@
 #include "get.h"
 
 static gboolean      module_register    (const gchar *name);
-static gint          spmlab_detect      (const gchar *filename,
+static gint          spmlab_detect      (const GwyFileDetectInfo *fileinfo,
                                          gboolean only_name);
 static GwyContainer* spmlab_load        (const gchar *filename);
 static GwyDataField* read_data_field    (const guchar *buffer,
@@ -48,7 +48,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Thermicroscopes SpmLab R4 and R5 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -74,26 +74,24 @@ module_register(const gchar *name)
 }
 
 static gint
-spmlab_detect(const gchar *filename, gboolean only_name)
+spmlab_detect(const GwyFileDetectInfo *fileinfo,
+              gboolean only_name)
 {
     gint score = 0;
-    FILE *fh;
-    gchar magic[12];
-    gchar *s;
 
     if (only_name) {
         guint len;
         gchar ext[3];
 
-        len = strlen(filename);
+        len = strlen(fileinfo->name_lowercase);
         if (len < 5)
             return 0;
 
         /* Match case insensitive *.[12zfls][fr][rp] */
-        ext[0] = g_ascii_tolower(filename[len-3]);
-        ext[1] = g_ascii_tolower(filename[len-2]);
-        ext[2] = g_ascii_tolower(filename[len-1]);
-        if (filename[len-4] == '.'
+        ext[0] = fileinfo->name_lowercase[len-3];
+        ext[1] = fileinfo->name_lowercase[len-2];
+        ext[2] = fileinfo->name_lowercase[len-1];
+        if (fileinfo->name_lowercase[len-4] == '.'
             && (ext[2] == 'r' || ext[2] == 'p')
             && (ext[1] == 'f' || ext[1] == 'r')
             && (ext[0] == '1' || ext[0] == '2' || ext[0] == 'z'
@@ -102,15 +100,13 @@ spmlab_detect(const gchar *filename, gboolean only_name)
         return score;
     }
 
-    if (!(fh = fopen(filename, "rb")))
-        return 0;
-    if (fread(magic, 1, sizeof(magic), fh) == sizeof(magic)
-        && magic[0] == '#'
-        && magic[1] == 'R'
-        && (s = memchr(magic+1, '#', sizeof(magic)-1))
-        && (magic[2] == '3' || magic[2] == '4' || magic[2] == '5'))
+    if (fileinfo->buffer_len >= 2048
+        && fileinfo->buffer[0] == '#'
+        && fileinfo->buffer[1] == 'R'
+        && fileinfo->buffer[2] >= '3'
+        && fileinfo->buffer[2] <= '5'
+        && memchr(fileinfo->buffer+1, '#', 11))
         score = 15;   /* XXX: must be below plug-in score to allow overriding */
-    fclose(fh);
 
     return score;
 }

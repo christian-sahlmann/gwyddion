@@ -221,7 +221,7 @@ typedef struct {
 } MDTDialogControls;
 
 static gboolean       module_register     (const gchar *name);
-static gint           mdt_detect          (const gchar *filename,
+static gint           mdt_detect          (const GwyFileDetectInfo *fileinfo,
                                            gboolean only_name);
 static GwyContainer*  mdt_load            (const gchar *filename);
 static guint          select_which_data   (MDTFile *mdtfile,
@@ -303,7 +303,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -329,25 +329,17 @@ module_register(const gchar *name)
 }
 
 static gint
-mdt_detect(const gchar *filename,
+mdt_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name)
 {
-    FILE *fh;
-    gchar magic[MAGIC_SIZE];
-    gint score;
+    gint score = 0;
 
-    gwy_debug("");
     if (only_name)
-        return gwy_str_has_suffix_nocase(filename, EXTENSION) ? 20 : 0;
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
-    if (!(fh = fopen(filename, "rb")))
-        return 0;
-
-    score = 0;
-    if (fread(magic, 1, MAGIC_SIZE, fh) == MAGIC_SIZE
-        && memcmp(magic, MAGIC, MAGIC_SIZE) == 0)
+    if (fileinfo->buffer_len > MAGIC_SIZE
+        && memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE) == 0)
         score = 100;
-    fclose(fh);
 
     return score;
 }

@@ -34,7 +34,7 @@
 #define EXTENSION ".txt"
 
 static gboolean      module_register     (const gchar *name);
-static gint          asciiexport_detect  (const gchar *filename,
+static gint          asciiexport_detect  (const GwyFileDetectInfo *fileinfo,
                                           gboolean only_name);
 static gboolean      asciiexport_save    (GwyContainer *data,
                                           const gchar *filename);
@@ -45,7 +45,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Exports data as simple ASCII matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -71,10 +71,10 @@ module_register(const gchar *name)
 }
 
 static gint
-asciiexport_detect(const gchar *filename,
+asciiexport_detect(const GwyFileDetectInfo *fileinfo,
                    G_GNUC_UNUSED gboolean only_name)
 {
-    return g_str_has_suffix(filename, EXTENSION) ? 20 : 0;
+    return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 }
 
 static gboolean

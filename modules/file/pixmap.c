@@ -61,10 +61,6 @@
 
 #define ZOOM2LW(x) ((x) > 1 ? ((x) + 0.4) : 1)
 
-enum { pixmap_ping_length = 4096 };
-
-static guchar pixmap_ping_buf[pixmap_ping_length];
-
 /* What is present on the exported image */
 typedef enum {
     PIXMAP_RAW_DATA,
@@ -130,9 +126,9 @@ typedef struct {
 } PixmapFormatInfo;
 
 static gboolean          module_register           (const gchar *name);
-static gint              pixmap_detect             (const gchar *filename,
-                                                    gboolean only_name,
-                                                    const gchar *name);
+static gint              pixmap_detect       (const GwyFileDetectInfo *fileinfo,
+                                              gboolean only_name,
+                                              const gchar *name);
 static GwyContainer*     pixmap_load               (const gchar *filename,
                                                     const gchar *name);
 static gboolean          pixmap_load_dialog        (PixmapLoadArgs *args,
@@ -280,7 +276,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.6.3",
+    "4.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -387,7 +383,7 @@ module_register(const gchar *name)
  ***************************************************************************/
 
 static gint
-pixmap_detect(const gchar *filename,
+pixmap_detect(const GwyFileDetectInfo *fileinfo,
               gboolean only_name,
               const gchar *name)
 {
@@ -395,8 +391,6 @@ pixmap_detect(const gchar *filename,
     GError *err = NULL;
     PixmapFormatInfo *format_info;
     gint score;
-    FILE *fh;
-    guint n;
     gchar **extensions;
     guint ext;
 
@@ -406,7 +400,7 @@ pixmap_detect(const gchar *filename,
     extensions = g_strsplit(format_info->extensions, ",", 0);
     g_assert(extensions);
     for (ext = 0; extensions[ext]; ext++) {
-        if (gwy_str_has_suffix_nocase(filename, extensions[ext]))
+        if (g_str_has_suffix(fileinfo->name_lowercase, extensions[ext]))
             break;
     }
     score = extensions[ext] ? 20 : 0;
@@ -414,48 +408,43 @@ pixmap_detect(const gchar *filename,
     if (only_name) /* || !score)*/
         return score;
 
-    if (!(fh = fopen(filename, "rb")))
-        return 0;
-    n = fread(pixmap_ping_buf, 1, pixmap_ping_length, fh);
-    fclose(fh);
-
     /* FIXME: this is incorrect, but no one is going to import data from such
      * a small valid image anyway */
-    if (n < 64)
+    if (fileinfo->buffer_len < 64)
         return 0;
 
     /* FIXME: GdkPixbuf doesn't good a good job regarding detection
      * we do some sanity check ourselves */
     if (strcmp(name, "png") == 0
-        && memcmp(pixmap_ping_buf, "\x89PNG\r\n\x1a\n", 8) != 0)
+        && memcmp(fileinfo->buffer, "\x89PNG\r\n\x1a\n", 8) != 0)
         return 0;
     if (strcmp(name, "bmp") == 0
-        && strncmp(pixmap_ping_buf, "BM", 2) != 0)
+        && strncmp(fileinfo->buffer, "BM", 2) != 0)
         return 0;
     if (strcmp(name, "pnm") == 0
-        && (pixmap_ping_buf[0] != 'P' || !isdigit(pixmap_ping_buf[1])))
+        && (fileinfo->buffer[0] != 'P' || !isdigit(fileinfo->buffer[1])))
         return 0;
     if (strcmp(name, "xpm") == 0
-        && strncmp(pixmap_ping_buf, "/* XPM */", 9) != 0)
+        && strncmp(fileinfo->buffer, "/* XPM */", 9) != 0)
         return 0;
     if (strcmp(name, "tiff") == 0
-        && memcmp(pixmap_ping_buf, "MM\x00\x2a", 4) != 0
-        && memcmp(pixmap_ping_buf, "II\x2a\x00", 4) != 0)
+        && memcmp(fileinfo->buffer, "MM\x00\x2a", 4) != 0
+        && memcmp(fileinfo->buffer, "II\x2a\x00", 4) != 0)
         return 0;
     if (strcmp(name, "jpeg") == 0
-        && memcmp(pixmap_ping_buf, "\xff\xd8", 2) != 0)
+        && memcmp(fileinfo->buffer, "\xff\xd8", 2) != 0)
         return 0;
     if (strcmp(name, "pcx") == 0
-        && (pixmap_ping_buf[0] != '\x0a' || pixmap_ping_buf[1] > 0x05))
+        && (fileinfo->buffer[0] != '\x0a' || fileinfo->buffer[1] > 0x05))
         return 0;
     if (strcmp(name, "gif") == 0
-        && strncmp(pixmap_ping_buf, "GIF8", 4) != 0)
+        && strncmp(fileinfo->buffer, "GIF8", 4) != 0)
         return 0;
     if (strcmp(name, "svg") == 0
-        && strncmp(pixmap_ping_buf, "<?xml", 5) != 0)
+        && strncmp(fileinfo->buffer, "<?xml", 5) != 0)
         return 0;
     if (strcmp(name, "ras") == 0
-        && memcmp(pixmap_ping_buf, "\x59\xa6\x6a\x95", 4) != 0)
+        && memcmp(fileinfo->buffer, "\x59\xa6\x6a\x95", 4) != 0)
         return 0;
     /* FIXME: cannot detect targa, must try loader */
 
@@ -463,7 +452,8 @@ pixmap_detect(const gchar *filename,
     if (!loader)
         return 0;
 
-    if (gdk_pixbuf_loader_write(loader, pixmap_ping_buf, n, &err))
+    if (gdk_pixbuf_loader_write(loader,
+                                fileinfo->buffer, fileinfo->buffer_len, &err))
         score = 100;
     else {
         gwy_debug("%s", err->message);
@@ -486,6 +476,8 @@ static GwyContainer*
 pixmap_load(const gchar *filename,
             const gchar *name)
 {
+    enum { buffer_length = 4096 };
+    guchar pixmap_buf[buffer_length];
     PixmapFormatInfo *format_info;
     GdkPixbufLoader *loader;
     GwyDataField *dfield;
@@ -516,15 +508,15 @@ pixmap_load(const gchar *filename,
     }
 
     do {
-        n = fread(pixmap_ping_buf, 1, pixmap_ping_length, fh);
+        n = fread(pixmap_buf, 1, buffer_length, fh);
         gwy_debug("loaded %u bytes", n);
-        if (!gdk_pixbuf_loader_write(loader, pixmap_ping_buf, n, &err)) {
+        if (!gdk_pixbuf_loader_write(loader, pixmap_buf, n, &err)) {
             g_warning("%s", err->message);
             g_clear_error(&err);
             g_object_unref(loader);
             return NULL;
         }
-    } while (n == pixmap_ping_length);
+    } while (n == buffer_length);
 
     if (!gdk_pixbuf_loader_close(loader, &err)) {
         g_warning("%s", err->message);

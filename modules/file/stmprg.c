@@ -46,11 +46,14 @@
 #define MAGIC_TXT "MPAR"
 #define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
 
-static gboolean module_register(const gchar *name);
-static gint stmprg_detect(const gchar *filename, gboolean only_name);
-static GwyContainer *stmprg_load(const gchar *filename);
-static gboolean read_binary_ubedata(gint n,
-                                    gdouble *data, guchar *buffer, gint bpp);
+static gboolean      module_register     (const gchar *name);
+static gint          stmprg_detect       (const GwyFileDetectInfo *fileinfo,
+                                          gboolean only_name);
+static GwyContainer* stmprg_load         (const gchar *filename);
+static gboolean      read_binary_ubedata (gint n,
+                                          gdouble *data,
+                                          guchar *buffer,
+                                          gint bpp);
 
 
 /* Parameters are stored in global variables */
@@ -64,7 +67,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron STMPRG data files (tp ta)."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.2",
+    "0.3",
     "Rok Zitko",
     "2004",
 };
@@ -79,8 +82,8 @@ module_register(const gchar *name)
     static GwyFileFuncInfo stmprg_func_info = {
         "stmprg",
         N_("Omicron STMPRG files (tp ta)"),
-        (GwyFileDetectFunc) & stmprg_detect,
-        (GwyFileLoadFunc) & stmprg_load,
+        (GwyFileDetectFunc)&stmprg_detect,
+        (GwyFileLoadFunc)&stmprg_load,
         NULL
     };
 
@@ -90,24 +93,17 @@ module_register(const gchar *name)
 }
 
 static gint
-stmprg_detect(const gchar *filename, gboolean only_name)
+stmprg_detect(const GwyFileDetectInfo *fileinfo,
+              gboolean only_name)
 {
     gint score = 0;
-    FILE *fh;
-    gchar magic[MAGIC_SIZE];
-
-    if (strstr(filename, "tp"))
-        score += 10;
 
     if (only_name)
-        return score;
+        return strstr(fileinfo->name, "tp") ? 10 : 0;
 
-    if (!(fh = fopen(filename, "rb")))
-        return 0;
-    if (fread(magic, 1, MAGIC_SIZE, fh) == MAGIC_SIZE
-        && memcmp(magic, MAGIC_TXT, MAGIC_SIZE) == 0)
+    if (fileinfo->buffer_len > MAGIC_SIZE
+        && memcmp(fileinfo->buffer, MAGIC_TXT, MAGIC_SIZE) == 0)
         score = 100;
-    fclose(fh);
 
     return score;
 }

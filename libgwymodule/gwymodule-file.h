@@ -27,16 +27,26 @@
 
 G_BEGIN_DECLS
 
+#define GWY_FILE_DETECT_BUFFER_SIZE 4096U
+
+typedef struct {
+    const gchar *name;
+    const gchar *name_lowercase;
+    gsize file_size;
+    guint buffer_len;
+    const guchar *buffer;
+} GwyFileDetectInfo;
+
 typedef struct _GwyFileFuncInfo GwyFileFuncInfo;
 
-typedef gint           (*GwyFileDetectFunc)     (const gchar *filename,
-                                                 gboolean only_name,
-                                                 const gchar *name);
-typedef GwyContainer*  (*GwyFileLoadFunc)       (const gchar *filename,
-                                                 const gchar *name);
-typedef gboolean       (*GwyFileSaveFunc)       (GwyContainer *data,
-                                                 const gchar *filename,
-                                                 const gchar *name);
+typedef gint           (*GwyFileDetectFunc) (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name,
+                                             const gchar *name);
+typedef GwyContainer*  (*GwyFileLoadFunc)   (const gchar *filename,
+                                             const gchar *name);
+typedef gboolean       (*GwyFileSaveFunc)   (GwyContainer *data,
+                                             const gchar *filename,
+                                             const gchar *name);
 
 struct _GwyFileFuncInfo {
     const gchar *name;

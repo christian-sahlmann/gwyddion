@@ -40,19 +40,19 @@
 #define MAGIC_TXT "[Parameter]"
 #define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
 
-static gboolean    module_register            (const gchar *name);
-static gint        createc_detect             (const gchar *filename,
-                                               gboolean only_name);
-static GwyContainer* createc_load             (const gchar *filename);
-static GHashTable* read_hash                  (gchar *buffer);
-static GwyDataField* hash_to_data_field       (GHashTable *hash,
-                                               gchar *buffer);
-static gboolean    read_binary_data           (gint n,
-                                               gdouble *data,
-                                               gchar *buffer,
-                                               gint bpp);
-static void store_metadata                    (GwyContainer *data,
-                                               GHashTable *hash);
+static gboolean      module_register      (const gchar *name);
+static gint          createc_detect       (const GwyFileDetectInfo *fileinfo,
+                                           gboolean only_name);
+static GwyContainer* createc_load         (const gchar *filename);
+static GHashTable*   read_hash            (gchar *buffer);
+static GwyDataField* hash_to_data_field   (GHashTable *hash,
+                                           gchar *buffer);
+static gboolean      read_binary_data     (gint n,
+                                           gdouble *data,
+                                           gchar *buffer,
+                                           gint bpp);
+static void          store_metadata       (GwyContainer *data,
+                                           GHashTable *hash);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.3.1",
+    "0.4",
     "Rok Zitko",
     "2004",
 };
@@ -86,22 +86,17 @@ module_register(const gchar *name)
 }
 
 static gint
-createc_detect(const gchar *filename,
+createc_detect(const GwyFileDetectInfo *fileinfo,
                gboolean only_name)
 {
     gint score = 0;
-    FILE *fh;
-    gchar magic[MAGIC_SIZE];
 
     if (only_name)
-        return gwy_str_has_suffix_nocase(filename, ".dat") ? 10 : 0;
+        return g_str_has_suffix(fileinfo->name_lowercase, ".dat") ? 10 : 0;
 
-    if (!(fh = fopen(filename, "rb")))
-        return 0;
-    if (fread(magic, 1, MAGIC_SIZE, fh) == MAGIC_SIZE
-        && memcmp(magic, MAGIC_TXT, MAGIC_SIZE) == 0)
+    if (fileinfo->buffer_len > MAGIC_SIZE
+        && memcmp(fileinfo->buffer, MAGIC_TXT, MAGIC_SIZE) == 0)
         score = 100;
-    fclose(fh);
 
     return score;
 }

@@ -167,8 +167,7 @@ typedef struct {
 } RawFileControls;
 
 static gboolean      module_register               (const gchar *name);
-static gint          rawfile_detect                (const gchar *filename,
-                                                    gboolean only_name);
+static gint          rawfile_detect                (void);
 static GwyContainer* rawfile_load                  (const gchar *filename);
 static GwyDataField* rawfile_dialog                (RawFileArgs *args,
                                                     RawFileFile *file);
@@ -254,7 +253,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5.2",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -429,18 +428,9 @@ module_register(const gchar *name)
 }
 
 static gint
-rawfile_detect(const gchar *filename,
-               gboolean only_name)
+rawfile_detect(void)
 {
-    FILE *fh;
-
-    if (only_name)
-        return 1;
-
-    if (!(fh = fopen(filename, "rb")))
-        return 0;
-    fclose(fh);
-
+    /* Claim ownership of anything, with lowest possible priority */
     return 1;
 }
 

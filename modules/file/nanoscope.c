@@ -82,7 +82,7 @@ typedef struct {
 } NanoscopeDialogControls;
 
 static gboolean        module_register     (const gchar *name);
-static gint            nanoscope_detect    (const gchar *filename,
+static gint            nanoscope_detect    (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
 static GwyContainer*   nanoscope_load      (const gchar *filename);
 static GwyDataField*   hash_to_data_field  (GHashTable *hash,
@@ -126,7 +126,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Veeco Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9.1",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -152,24 +152,18 @@ module_register(const gchar *name)
 }
 
 static gint
-nanoscope_detect(const gchar *filename,
+nanoscope_detect(const GwyFileDetectInfo *fileinfo,
                  gboolean only_name)
 {
-    FILE *fh;
-    gint score;
-    gchar magic[MAGIC_SIZE];
+    gint score = 0;
 
     if (only_name)
         return 0;
 
-    if (!(fh = fopen(filename, "rb")))
-        return 0;
-    score = 0;
-    if (fread(magic, 1, MAGIC_SIZE, fh) == MAGIC_SIZE
-        && (memcmp(magic, MAGIC_TXT, MAGIC_SIZE) == 0
-            || memcmp(magic, MAGIC_BIN, MAGIC_SIZE) == 0))
+    if (fileinfo->buffer_len > MAGIC_SIZE
+        && (memcmp(fileinfo->buffer, MAGIC_TXT, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->buffer, MAGIC_BIN, MAGIC_SIZE) == 0))
         score = 100;
-    fclose(fh);
 
     return score;
 }

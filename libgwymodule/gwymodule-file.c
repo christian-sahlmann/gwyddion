@@ -28,12 +28,26 @@
 #include "gwymoduleinternal.h"
 #include "gwymodule-file.h"
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <libgwyddion/gwywin32unistd.h>
+
+#if (defined(HAVE_SYS_STAT_H) || defined(_WIN32))
+#include <sys/stat.h>
+/* And now we are in a deep s... */
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
 typedef struct {
-    const gchar *filename;
     const gchar *winner;
     gint score;
     gboolean only_name;
     GwyFileOperation mode;
+    GwyFileDetectInfo *fileinfo;
 } FileDetectData;
 
 typedef struct {
@@ -42,12 +56,15 @@ typedef struct {
     gchar *menu_path_factory;
 } FileFuncInfo;
 
-static void gwy_file_func_info_free    (gpointer data);
-static void file_detect_max_score_cb   (const gchar *key,
-                                        FileFuncInfo *func_info,
-                                        FileDetectData *ddata);
-static gint file_menu_entry_compare    (FileFuncInfo *a,
-                                        FileFuncInfo *b);
+static void     gwy_file_func_info_free    (gpointer data);
+static gboolean gwy_file_detect_fill_info  (GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static void     gwy_file_detect_free_info  (GwyFileDetectInfo *fileinfo);
+static void     file_detect_max_score_cb   (const gchar *key,
+                                            FileFuncInfo *func_info,
+                                            FileDetectData *ddata);
+static gint     file_menu_entry_compare    (FileFuncInfo *a,
+                                            FileFuncInfo *b);
 
 static GHashTable *file_funcs = NULL;
 static void (*func_register_callback)(const gchar *fullname) = NULL;
@@ -150,13 +167,23 @@ gwy_file_func_run_detect(const gchar *name,
                          gboolean only_name)
 {
     FileFuncInfo *func_info;
+    GwyFileDetectInfo fileinfo;
+    gint score = 0;
 
     g_return_val_if_fail(filename, 0);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, 0);
     if (!func_info->info.detect)
         return 0;
-    return func_info->info.detect(filename, only_name, name);
+
+    fileinfo.name = filename;
+    /* File must exist if not only_name */
+    if (gwy_file_detect_fill_info(&fileinfo, only_name)) {
+        score = func_info->info.detect(&fileinfo, only_name, name);
+        gwy_file_detect_free_info(&fileinfo);
+    }
+
+    return score;
 }
 
 /**
@@ -215,7 +242,6 @@ gwy_file_func_run_save(const gchar *name,
     g_return_val_if_fail(func_info, FALSE);
     g_return_val_if_fail(func_info->info.save, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-    /* TODO: Container */
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
     g_object_ref(data);
@@ -243,7 +269,7 @@ file_detect_max_score_cb(const gchar *key,
     if ((ddata->mode & GWY_FILE_SAVE) && !func_info->info.save)
         return;
 
-    score = func_info->info.detect(ddata->filename, ddata->only_name,
+    score = func_info->info.detect(ddata->fileinfo, ddata->only_name,
                                    func_info->info.name);
     if (score > ddata->score) {
         ddata->winner = func_info->info.name;
@@ -270,19 +296,72 @@ gwy_file_detect(const gchar *filename,
                 GwyFileOperation operations)
 {
     FileDetectData ddata;
+    GwyFileDetectInfo fileinfo;
 
     g_return_val_if_fail(file_funcs, NULL);
 
-    ddata.filename = filename;
+    fileinfo.name = filename;
+    /* File must exist if not only_name */
+    if (!gwy_file_detect_fill_info(&fileinfo, only_name))
+        return NULL;
+
+    ddata.fileinfo = &fileinfo;
     ddata.winner = NULL;
     ddata.score = 0;
     ddata.only_name = only_name;
     ddata.mode = operations;
     g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score_cb, &ddata);
+    gwy_file_detect_free_info(&fileinfo);
 
     if (!ddata.score)
         return NULL;
     return ddata.winner;
+}
+
+static gboolean
+gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
+                          gboolean only_name)
+{
+    struct stat st;
+    FILE *fh;
+
+    g_return_val_if_fail(fileinfo && fileinfo->name, FALSE);
+
+    fileinfo->name_lowercase = g_ascii_strdown(fileinfo->name, -1);
+    fileinfo->file_size = 0;
+    fileinfo->buffer_len = 0;
+    fileinfo->buffer = NULL;
+    if (only_name)
+        return TRUE;
+
+    if (stat(fileinfo->name, &st) != 0) {
+        g_free((gpointer)fileinfo->name_lowercase);
+        return FALSE;
+    }
+    fileinfo->file_size = st.st_size;
+
+    if (!(fh = fopen(fileinfo->name, "rb"))) {
+        g_free((gpointer)fileinfo->name_lowercase);
+        return FALSE;
+    }
+
+    fileinfo->buffer = g_new0(guchar, GWY_FILE_DETECT_BUFFER_SIZE);
+    fileinfo->buffer_len = fread(fileinfo->buffer,
+                                 1, GWY_FILE_DETECT_BUFFER_SIZE, fh);
+    fclose(fh);
+
+    if (fileinfo->buffer_len)
+        return TRUE;
+
+    gwy_file_detect_free_info(fileinfo);
+    return FALSE;
+}
+
+static void
+gwy_file_detect_free_info(GwyFileDetectInfo *fileinfo)
+{
+    g_free((gpointer)fileinfo->name_lowercase);
+    g_free((gpointer)fileinfo->buffer);
 }
 
 /**
@@ -321,15 +400,20 @@ gwy_file_save(GwyContainer *data,
               const gchar *filename)
 {
     FileDetectData ddata;
+    GwyFileDetectInfo fileinfo;
 
     g_return_val_if_fail(file_funcs, FALSE);
 
-    ddata.filename = filename;
+    fileinfo.name = filename;
+    gwy_file_detect_fill_info(&fileinfo, TRUE);
+
+    ddata.fileinfo = &fileinfo;
     ddata.winner = NULL;
     ddata.score = 0;
     ddata.only_name = TRUE;
     ddata.mode = GWY_FILE_SAVE;
     g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score_cb, &ddata);
+    gwy_file_detect_free_info(&fileinfo);
 
     if (!ddata.winner)
         return FALSE;
@@ -543,6 +627,29 @@ _gwy_file_func_remove(const gchar *name)
  * @GWY_FILE_MASK: The mask for all the flags.
  *
  * File type function file operations (capabilities).
+ **/
+
+/**
+ * GwyFileDetectInfo:
+ * @name: File name.
+ * @name_lowercase: File name in lowercase (for eventual case-insensitive
+ *                  name check).
+ * @file_size: File size in bytes.  Unset if @only_name.
+ * @buffer_len: The size of @buffer in bytes.  Normally it's
+ *              @GWY_FILE_DETECT_BUFFER_SIZE except when file is shorter than
+ *              that.  Unset if @only_name.
+ * @buffer: Initial part of file.
+ *
+ * File detection data.
+ *
+ * It contains common information file type detection routines need to obtain.
+ **/
+
+/**
+ * GWY_FILE_DETECT_BUFFER_SIZE:
+ *
+ * The size of #GwyFileDetectInfo buffer for initial part of file.  It should
+ * be enough for any normal kind of magic header test.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

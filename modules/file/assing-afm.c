@@ -54,7 +54,7 @@ typedef struct {
 } AFMFile;
 
 static gboolean      module_register       (const gchar *name);
-static gint          aafm_detect           (const gchar *filename,
+static gint          aafm_detect           (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
 static GwyContainer* aafm_load             (const gchar *filename);
 static gboolean      read_binary_data      (guint res,
@@ -67,7 +67,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3.1",
+    "0.4.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -93,26 +93,19 @@ module_register(const gchar *name)
 }
 
 static gint
-aafm_detect(const gchar *filename,
+aafm_detect(const GwyFileDetectInfo *fileinfo,
             gboolean only_name)
 {
     gint score = 0;
     guint res;
-    FILE *fh;
-    struct stat st;
-    guchar buffer[2];
 
     if (only_name)
-        return gwy_str_has_suffix_nocase(filename, EXTENSION) ? 17 : 0;
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 17 : 0;
 
-    if (stat(filename, &st) || !(fh = fopen(filename, "rb")))
-        return 0;
-
-    if (fread(buffer, sizeof(buffer), 1, fh) == 1
-        && (res = ((guint)buffer[1] << 8 | buffer[0]))
-        && st.st_size == 2*res*res + 10)
-        score = 100;
-    fclose(fh);
+    if (fileinfo->buffer_len >= 12
+        && (res = ((guint)fileinfo->buffer[1] << 8 | fileinfo->buffer[0]))
+        && fileinfo->file_size == 2*res*res + 10)
+        score = 90;
 
     return score;
 }

@@ -35,12 +35,12 @@
 #define MAGIC2 "GWYP"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
-static gboolean      module_register               (const gchar *name);
-static gint          gwyfile_detect                (const gchar *filename,
-                                                    gboolean only_name);
-static GwyContainer* gwyfile_load                  (const gchar *filename);
-static gboolean      gwyfile_save                  (GwyContainer *data,
-                                                    const gchar *filename);
+static gboolean      module_register         (const gchar *name);
+static gint          gwyfile_detect          (const GwyFileDetectInfo *fileinfo,
+                                              gboolean only_name);
+static GwyContainer* gwyfile_load            (const gchar *filename);
+static gboolean      gwyfile_save            (GwyContainer *data,
+                                              const gchar *filename);
 static GObject*      gwy_container_deserialize_old (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position);
@@ -52,7 +52,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -78,24 +78,18 @@ module_register(const gchar *name)
 }
 
 static gint
-gwyfile_detect(const gchar *filename,
+gwyfile_detect(const GwyFileDetectInfo *fileinfo,
                gboolean only_name)
 {
-    FILE *fh;
-    gchar magic[MAGIC_SIZE];
-    gint score;
+    gint score = 0;
 
     if (only_name)
-        return gwy_str_has_suffix_nocase(filename, EXTENSION) ? 20 : 0;
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
-    if (!(fh = fopen(filename, "rb")))
-        return 0;
-    score = 0;
-    if (fread(magic, 1, MAGIC_SIZE, fh) == MAGIC_SIZE
-        && (memcmp(magic, MAGIC, MAGIC_SIZE) == 0
-            || memcmp(magic, MAGIC2, MAGIC_SIZE) == 0))
+    if (fileinfo->buffer_len > MAGIC_SIZE
+        && (memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->buffer, MAGIC2, MAGIC_SIZE) == 0))
         score = 100;
-    fclose(fh);
 
     return score;
 }
