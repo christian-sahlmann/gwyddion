@@ -20,18 +20,20 @@
 
 #include <string.h>
 #include <glib.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "filters.h"
 #include "datafield.h"
 #include "tip.h"
+#include <math.h>
 
 static void
 contact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
                gint *xres, gint *yres)
 {
     *xres = 200;
-    *yres = 200; printf("ddddd\n");
+    *yres = 200;;
 
 }
 static void
@@ -59,9 +61,39 @@ delta_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params
 }
 
 static void
+create_pyramide(GwyDataField *tip, gdouble height, gint n)
+{
+    gint col, row;
+    gdouble rcol, rrow;
+    gdouble scol, srow;
+    gdouble phi, phic;
+    gdouble vm, radius;
+
+    height = 10;
+    radius = tip->xres;
+
+    printf("xres=%d\n", tip->xres);
+    scol = tip->xres/2;
+    srow = tip->yres/2;
+
+    for (col=0; col<tip->xres; col++)
+    {
+        for (row=0; row<tip->yres; row++)
+        {
+            rrow = row - srow;
+            rcol = col - scol;
+            phi = atan2(rrow, rcol) + G_PI;
+            phic = fmod(phi, 2*G_PI/n) + G_PI/n;
+            vm = rcol*cos(phic) + rrow*sin(phic);
+            tip->data[col + tip->xres*row] = height*(1 - vm/(radius*cos(G_PI/n)));
+        }
+    }
+}
+
+static void
 contact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
-    tip->data[tip->xres*tip->yres/2] = 1;
+    create_pyramide(tip, height, 5);
     
 }
 
