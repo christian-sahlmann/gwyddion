@@ -103,7 +103,6 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 /**
  * GwyDataViewLayer::plugged:
  * @gwydataviewlayer: The #GwyDataViewLayer which received the signal.
- * @user_data: User data set when the signal handler was connected.
  *
  * The ::plugged signal is emitted when a #GwyDataViewLayer is plugged into
  * a #GwyDataView.
@@ -120,7 +119,6 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 /**
  * GwyDataViewLayer::unplugged:
  * @gwydataviewlayer: The #GwyDataViewLayer which received the signal.
- * @user_data: User data set when the signal handler was connected.
  *
  * The ::unplugged signal is emitted when a #GwyDataViewLayer is removed from
  * its #GwyDataView.
@@ -137,7 +135,6 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 /**
  * GwyDataViewLayer::updated:
  * @gwydataviewlayer: The #GwyDataViewLayer which received the signal.
- * @user_data: User data set when the signal handler was connected.
  *
  * The ::updated signal is emitted when a #GwyDataViewLayer is updated;
  * the exact means how a layer can be updated depends its type.

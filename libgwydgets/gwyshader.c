@@ -173,8 +173,7 @@ gwy_shader_class_init(GwyShaderClass *klass)
 
 /**
  * GwyShader::angle-changed:
- * @gwyshader: The shader which received the signal.
- * @user_data: User data set when the signal handler was connected.
+ * @gwyshader: The #GwyShader which received the signal.
  *
  * The ::angle_changed signal is emitted when the spherical angle changes.
  */

@@ -154,7 +154,6 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
 /**
  * GwyDataView::updated:
  * @gwydataview: The #GwyDataView which received the signal.
- * @user_data: User data set when the signal handler was connected.
  *
  * The ::updated signal is emitted when the displayed data, or the way they
  * are displayed, changes.  However, actual redraw takes place later in the
@@ -173,7 +172,6 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
 /**
  * GwyDataView::redrawn:
  * @gwydataview: The #GwyDataView which received the signal.
- * @user_data: User data set when the signal handler was connected.
  *
  * The ::redrawn signal is emitted when #GwyDataView actually redraws itself
  * after an update.

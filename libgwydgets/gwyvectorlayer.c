@@ -130,8 +130,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 
 /**
  * GwyVectorLayer::selection-finished:
- * @gwyvectorlayer: The vector layer which received the signal.
- * @user_data: User data set when the signal handler was connected.
+ * @gwyvectorlayer: The #GwyVectorLayer which received the signal.
  *
  * The ::selection_finished signal is emitted when user finishes a selection
  * (stops dragging, selects enough points, etc., the pecise meaning depends
