@@ -140,6 +140,8 @@ median(GwyContainer *data, GwyRunType run)
     if (!ok)
         return FALSE;
 
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
+                       _("Median-leveling"));
     background = median_background(ROUND(args.size), dfield);
     gwy_app_wait_finish();
     if (!background)
@@ -320,9 +322,6 @@ median_background(gint size,
     xres = gwy_data_field_get_xres(rfield);
     yres = gwy_data_field_get_yres(rfield);
     rdata = gwy_data_field_get_data(rfield);
-
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
-                       _("Median-leveling"));
 
     buflen = 0;
     circle = median_make_circle(size);

@@ -135,7 +135,7 @@ dwt(GwyContainer *data, GwyRunType run)
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
         dialog = gtk_message_dialog_new
-            (GTK_WINDOW(gwy_app_data_window_get_current()),
+            (GTK_WINDOW(gwy_app_data_window_get_for_data(data)),
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,

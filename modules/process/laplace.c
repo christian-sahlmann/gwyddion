@@ -94,8 +94,8 @@ laplace(GwyContainer *data, GwyRunType run)
         cor = 0.2;
         error = 0;
         maxer = gwy_data_field_get_rms(dfield)/1.0e4;
-        gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
-                           _("Initializing..."));
+        gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
+                           _("Laplace correction"));
 
         gwy_data_field_correct_average(dfield, maskfield);
 
@@ -104,17 +104,19 @@ laplace(GwyContainer *data, GwyRunType run)
         for (i = 0; i < 5000; i++) {
             gwy_data_field_correct_laplace_iteration(dfield, maskfield, buffer,
                                                      &error, &cor);
-            if (error < maxer) break;
-            if (i==0) starter = error;
-
-
-            gwy_app_wait_set_message(_("Iterating..."));
+            if (error < maxer)
+                break;
+            if (i==0)
+                starter = error;
 
             frac = log(error/starter)/log(maxer/starter);
-            if ((i/(gdouble)(5000)) > frac) frac = i/(gdouble)(5000);
-            if (lastfrac > frac) frac = lastfrac;
+            if ((i/(gdouble)(5000)) > frac)
+                frac = i/(gdouble)(5000);
+            if (lastfrac > frac)
+                frac = lastfrac;
 
-            if (!gwy_app_wait_set_fraction(frac)) break;
+            if (!gwy_app_wait_set_fraction(frac))
+                break;
             lastfrac = frac;
         }
         gwy_app_wait_finish();
@@ -126,7 +128,7 @@ laplace(GwyContainer *data, GwyRunType run)
     {
         /* XXX: this should not happen in the first place! */
         dialog = gtk_message_dialog_new
-            (GTK_WINDOW(gwy_app_data_window_get_current()),
+            (GTK_WINDOW(gwy_app_data_window_get_for_data(data)),
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_INFO,
              GTK_BUTTONS_CLOSE,

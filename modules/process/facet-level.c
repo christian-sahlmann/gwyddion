@@ -82,7 +82,7 @@ facet_level(GwyContainer *data, GwyRunType run)
      * FIXME: this can take a long time */
     i = 0;
     progress = 0.0;
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
                        _("Facet-levelling"));
     while (i < 100) {
         facet_level_coeffs(dfield, &bx, &by);
