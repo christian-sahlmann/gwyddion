@@ -68,7 +68,10 @@ static gboolean
 facet_level(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
-    gdouble c, bx, by;
+    gdouble c, bx, by, b2;
+    gdouble p, progress, maxb2 = 666, eps = 1e-8;
+    gint i;
+    gboolean canceled = FALSE;
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -76,14 +79,36 @@ facet_level(GwyContainer *data, GwyRunType run)
 
     /* converge
      * FIXME: this can take a long time */
-    do {
+    i = 0;
+    progress = 0.0;
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
+                       _("Facet-levelling"));
+    while (i < 100) {
         facet_level_coeffs(dfield, &bx, &by);
+        b2 = bx*bx + by*by;
+        if (!i)
+            maxb2 = MAX(b2, eps);
         c = -0.5*(bx*gwy_data_field_get_xreal(dfield)
                   + by*gwy_data_field_get_yreal(dfield));
         gwy_data_field_plane_level(dfield, c, bx, by);
-    } while (bx*bx + by*by > 1e-6);
+        if (b2 < eps)
+            break;
+        i++;
+        p = log(b2/maxb2)/log(eps/maxb2);
+        gwy_debug("progress = %f, p = %f, ip = %f", progress, p, i/100.0);
+        /* never decrease progress, that would look silly */
+        progress = MAX(progress, p);
+        progress = MAX(progress, i/100.0);
+        if (!gwy_app_wait_set_fraction(progress)) {
+            canceled = TRUE;
+            break;
+        }
+    };
+    gwy_app_wait_finish();
+    if (canceled)
+        gwy_app_undo_undo();
 
-    return TRUE;
+    return !canceled;
 }
 
 static void
