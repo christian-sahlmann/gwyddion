@@ -52,10 +52,10 @@ void gwy_data_line_free(GwyDataLine *a);
 void gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation);
 
 /*resize data line according to from-to*/
-gint gwy_data_line_resize(GwyDataLine *a, gint from, gint to);
+gboolean gwy_data_line_resize(GwyDataLine *a, gint from, gint to);
 
 /*copy everything to line (allrady allocated)*/
-gint gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b);
+gboolean gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b);
 
 
 /************************************************************/

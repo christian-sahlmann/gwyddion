@@ -1,6 +1,7 @@
 /* @(#) $Id$ */
 
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -8,14 +9,19 @@
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
-static void  gwy_data_field_class_init        (GwyDataFieldClass *klass);
-static void  gwy_data_field_init              (GwyDataField *data_field);
-static void  gwy_data_field_finalize              (GwyDataField *data_field);
-static void  gwy_data_field_serializable_init (gpointer giface);
-static void  gwy_data_field_watchable_init    (gpointer giface);
-static guchar* gwy_data_field_serialize       (GObject *obj, guchar *buffer, gsize *size);
-static GObject* gwy_data_field_deserialize    (const guchar *buffer, gsize size, gsize *position);
-static void  gwy_data_field_value_changed     (GObject *GwyDataField);
+static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
+static void     gwy_data_field_init              (GwyDataField *data_field);
+static void     gwy_data_field_finalize          (GwyDataField *data_field);
+static void     gwy_data_field_serializable_init (gpointer giface);
+static void     gwy_data_field_watchable_init    (gpointer giface);
+static guchar*  gwy_data_field_serialize         (GObject *obj,
+                                                  guchar *buffer,
+                                                  gsize *size);
+static GObject* gwy_data_field_deserialize       (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+static GObject* gwy_data_field_duplicate         (GObject *object);
+static void     gwy_data_field_value_changed     (GObject *GwyDataField);
 
 
 GType
@@ -75,6 +81,7 @@ gwy_data_field_serializable_init(gpointer giface)
     /* initialize stuff */
     iface->serialize = gwy_data_field_serialize;
     iface->deserialize = gwy_data_field_deserialize;
+    iface->duplicate = gwy_data_field_duplicate;
 }
 
 static void
@@ -202,7 +209,21 @@ gwy_data_field_deserialize(const guchar *buffer,
     return (GObject*)data_field;
 }
 
+static GObject*
+gwy_data_field_duplicate(GObject *object)
+{
+    GwyDataField *data_field;
+    GObject *duplicate;
 
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(object), NULL);
+    data_field = GWY_DATA_FIELD(object);
+    duplicate = gwy_data_field_new(data_field->xres, data_field->yres,
+                                   data_field->xreal, data_field->yreal,
+                                   FALSE);
+    gwy_data_field_copy(data_field, GWY_DATA_FIELD(duplicate));
+
+    return duplicate;
+}
 
 static void
 gwy_data_field_value_changed(GObject *data_field)
@@ -274,24 +295,22 @@ gwy_data_field_free(GwyDataField *a)
 
 /**
  * gwy_data_field_copy:
- * @a: source
- * @b: destination
+ * @a: source data field.
+ * @b: destination data field.
  *
- * Makes a deep copy of the GwyDataField
+ * Copies the contents of an already allocated data field to a data field
+ * of the same size.
  *
  * Returns:
  **/
 gboolean
 gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
 {
-    int i;
-
     g_return_val_if_fail(a->xres == b->xres && a->yres == b->yres, FALSE);
 
     b->xreal = a->xreal;
     b->yreal = a->yreal;
-    for (i = 0; i < (a->xres*a->yres); i++)
-        b->data[i] = a->data[i];
+    memcpy(b->data, a->data, a->xres*a->yres*sizeof(gdouble));
 
     return TRUE;
 }
@@ -458,6 +477,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 
         return valpx + valxp + valpp
                + (1 - restx)*(1 - resty)*a->data[floorx + a->yres*floory];
+        break;
 
         default:
         g_warning("Not supported interpolation type.\n");

@@ -70,15 +70,15 @@ void gwy_data_field_resample(GwyDataField *a,
 
 /*resize data field according to UL (upper left) and BR (bottom right) points 
   (crop and change resolution if necessary)*/
-gint gwy_data_field_resize(GwyDataField *a,
-                           gint uli,
-                           gint ulj,
-                           gint bri,
-                           gint brj);
+gboolean gwy_data_field_resize(GwyDataField *a,
+                               gint uli,
+                               gint ulj,
+                               gint bri,
+                               gint brj);
 
 /*copy everything to field (allrady allocated)*/
-gint gwy_data_field_copy(GwyDataField *a,
-                         GwyDataField *b);
+gboolean gwy_data_field_copy(GwyDataField *a,
+                             GwyDataField *b);
 
 
 /************************************************************/

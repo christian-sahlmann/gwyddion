@@ -1,6 +1,7 @@
 /* @(#) $Id$ */
 
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -8,18 +9,19 @@
 
 #define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
 
-static void  gwy_data_line_class_init        (GwyDataLineClass *klass);
-static void  gwy_data_line_init              (GwyDataLine *data_line);
-static void  gwy_data_line_finalize          (GwyDataLine *data_line);
-static void  gwy_data_line_serializable_init (gpointer giface);
-static void  gwy_data_line_watchable_init    (gpointer giface);
-static guchar* gwy_data_line_serialize       (GObject *obj,
-                                              guchar *buffer,
-                                              gsize *size);
-static GObject* gwy_data_line_deserialize    (const guchar *buffer,
-                                              gsize size,
-                                              gsize *position);
-static void  gwy_data_line_value_changed     (GObject *GwyDataLine);
+static void     gwy_data_line_class_init        (GwyDataLineClass *klass);
+static void     gwy_data_line_init              (GwyDataLine *data_line);
+static void     gwy_data_line_finalize          (GwyDataLine *data_line);
+static void     gwy_data_line_serializable_init (gpointer giface);
+static void     gwy_data_line_watchable_init    (gpointer giface);
+static guchar*  gwy_data_line_serialize         (GObject *obj,
+                                                 guchar *buffer,
+                                                 gsize *size);
+static GObject* gwy_data_line_deserialize       (const guchar *buffer,
+                                                 gsize size,
+                                                 gsize *position);
+static GObject* gwy_data_line_duplicate         (GObject *object);
+static void     gwy_data_line_value_changed     (GObject *GwyDataLine);
 
 
 GType
@@ -75,6 +77,7 @@ gwy_data_line_serializable_init(gpointer giface)
     /* initialize stuff */
     iface->serialize = gwy_data_line_serialize;
     iface->deserialize = gwy_data_line_deserialize;
+    iface->duplicate = gwy_data_line_duplicate;
 }
 
 static void
@@ -193,7 +196,19 @@ gwy_data_line_deserialize(const guchar *buffer,
     return (GObject*)data_line;
 }
 
+static GObject*
+gwy_data_line_duplicate(GObject *object)
+{
+    GwyDataLine *data_line;
+    GObject *duplicate;
 
+    g_return_val_if_fail(GWY_IS_DATA_LINE(object), NULL);
+    data_line = GWY_DATA_LINE(object);
+    duplicate = gwy_data_line_new(data_line->res, data_line->real, FALSE);
+    gwy_data_line_copy(data_line, GWY_DATA_LINE(duplicate));
+
+    return duplicate;
+}
 
 static void
 gwy_data_line_value_changed(GObject *data_line)
@@ -289,17 +304,25 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
     return TRUE;
 }
 
+/**
+ * gwy_data_line_copy:
+ * @a: Source data line.
+ * @b: Destination data line.
+ *
+ * Copies the contents of a data line to another already allocated data line
+ * of the same size.
+ *
+ * Returns:
+ **/
 gboolean
 gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 {
-    gint i;
-
     gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(a->res == b->res, FALSE);
 
-    for (i=0; i<a->res; i++)
-        b->data[i] = a->data[i];
-    return 0;
+    memcpy(b->data, a->data, a->res*sizeof(gdouble));
+
+    return TRUE;
 }
 
 gdouble
