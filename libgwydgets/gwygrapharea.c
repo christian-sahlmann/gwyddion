@@ -219,8 +219,6 @@ static void
 gwy_graph_area_finalize(GObject *object)
 {
     GwyGraphArea *area;
-    GwyGraphAreaCurve *pcurve;
-    guint i;
 
     gwy_debug("finalizing a GwyGraphArea (refcount = %u)", object->ref_count);
 
@@ -246,12 +244,11 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     lab_alloc = &GTK_WIDGET(area->lab)->allocation;
 
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
-    if (((area->old_width != widget->allocation.width || area->old_height != widget->allocation.height)
-         || area->newline == 1)&&
-        (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
-        || lab_alloc->y != 5))
-    {
-        
+    if (((area->old_width != widget->allocation.width
+          || area->old_height != widget->allocation.height)
+         || area->newline == 1)
+        && (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
+            || lab_alloc->y != 5)) {
         gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                         widget->allocation.width - lab_alloc->width - 5, 5);
         area->newline = 0;
@@ -297,11 +294,9 @@ gwy_graph_area_unrealize(GtkWidget *widget)
 
 static gboolean
 gwy_graph_area_expose(GtkWidget *widget,
-                       GdkEventExpose *event)
+                      GdkEventExpose *event)
 {
     GwyGraphArea *area;
-    gint xc, yc;
-    GdkPoint ps[4];
 
     gwy_debug("");
 
@@ -338,15 +333,15 @@ gwy_graph_area_draw_area(GtkWidget *widget)
 
     /*plot boundary*/
     gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                 0, 0, 0, widget->allocation.height-1);
+                  0, 0, 0, widget->allocation.height-1);
     gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                 0, 0, widget->allocation.width-1, 0);
+                  0, 0, widget->allocation.width-1, 0);
     gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                 widget->allocation.width-1, 0, widget->allocation.width-1,
-                 widget->allocation.height-1);
+                  widget->allocation.width-1, 0, widget->allocation.width-1,
+                  widget->allocation.height-1);
     gdk_draw_line(GTK_LAYOUT (widget)->bin_window, area->gc,
-                 0, widget->allocation.height-1, widget->allocation.width-1,
-                 widget->allocation.height-1);
+                  0, widget->allocation.height-1, widget->allocation.width-1,
+                  widget->allocation.height-1);
 
 }
 
@@ -362,34 +357,31 @@ gwy_graph_area_draw_curves(GtkWidget *widget)
 
     fg.pixel = 0x00000000;
 
-    for (i=0; i<area->curves->len; i++)
-    {
+    for (i = 0; i < area->curves->len; i++) {
         pcurve = g_ptr_array_index (area->curves, i);
         gdk_gc_set_foreground(area->gc, &(pcurve->params.color));
 
-        if (pcurve->params.is_line)
-        {
-            gdk_gc_set_line_attributes (area->gc, pcurve->params.line_size,
-                      pcurve->params.line_style, GDK_CAP_ROUND, GDK_JOIN_MITER);
+        if (pcurve->params.is_line) {
+            gdk_gc_set_line_attributes(area->gc, pcurve->params.line_size,
+                                       pcurve->params.line_style,
+                                       GDK_CAP_ROUND, GDK_JOIN_MITER);
             gdk_draw_lines(GTK_LAYOUT (widget)->bin_window, area->gc,
-                      pcurve->points, pcurve->data.N);
+                           pcurve->points, pcurve->data.N);
         }
-        if (pcurve->params.is_point)
-        {
-            for (j=0; j<pcurve->data.N; j++)
-            {
+        if (pcurve->params.is_point) {
+            for (j = 0; j < pcurve->data.N; j++) {
                 gwy_graph_draw_point(GTK_LAYOUT(widget)->bin_window, area->gc,
-                                          pcurve->points[j].x,
-                                          pcurve->points[j].y,
-                                          pcurve->params.point_type,
-                                          pcurve->params.point_size,
-                                          &(pcurve->params.color),
-                                          pcurve->params.is_line);
+                                     pcurve->points[j].x,
+                                     pcurve->points[j].y,
+                                     pcurve->params.point_type,
+                                     pcurve->params.point_size,
+                                     &(pcurve->params.color),
+                                     pcurve->params.is_line);
             }
         }
     }
-    gdk_gc_set_line_attributes (area->gc, 1,
-                  GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
+    gdk_gc_set_line_attributes(area->gc, 1,
+                               GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
     gdk_gc_set_foreground(area->gc, &fg);
 }
 
@@ -406,23 +398,23 @@ gwy_graph_area_draw_selection(GtkWidget *widget)
     fg.pixel = 0x00000000;
     sg.pixel = 0xFFAA55FF;
 
-    if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
-    {
+    if (area->status == GWY_GRAPH_STATUS_XSEL
+        || area->status == GWY_GRAPH_STATUS_YSEL) {
         start = area->seldata->scr_start;
         end = area->seldata->scr_end;
         if (start > end) GWY_SWAP(gint, start, end);
         else if (start == end) return;
 
         gdk_gc_set_foreground(area->gc, &sg);
-        if (area->status == GWY_GRAPH_STATUS_XSEL)
-        {
-            gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc,
-                               1, start, 0, end-start, widget->allocation.height-1);
+        if (area->status == GWY_GRAPH_STATUS_XSEL) {
+            gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc, TRUE,
+                               start, 0,
+                               end-start, widget->allocation.height-1);
         }
-        else if (area->status == GWY_GRAPH_STATUS_YSEL)
-        {
-            gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc,
-                               1, 0, start, widget->allocation.width-1, end-start);
+        else if (area->status == GWY_GRAPH_STATUS_YSEL) {
+            gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc, TRUE,
+                               0, start,
+                               widget->allocation.width-1, end-start);
         }
         gdk_gc_set_foreground(area->gc, &fg);
         printf("Sel started\n");
@@ -448,19 +440,19 @@ gwy_graph_area_draw_selection_points(GtkWidget *widget)
     {
         gdk_gc_set_foreground(area->gc, &sg);
 
-        for (n=0; n<area->pointsdata->scr_points->len; n++)
-        {
-            scrpnt = g_array_index(area->pointsdata->scr_points, GwyGraphScrPoint, n);
+        for (n = 0; n < area->pointsdata->scr_points->len; n++) {
+            scrpnt = g_array_index(area->pointsdata->scr_points,
+                                   GwyGraphScrPoint, n);
             gdk_draw_line(GTK_LAYOUT(widget)->bin_window, area->gc,
-                               scrpnt.i-5,
-                               scrpnt.j,
-                               scrpnt.i+5,
-                               scrpnt.j);
+                          scrpnt.i-5,
+                          scrpnt.j,
+                          scrpnt.i+5,
+                          scrpnt.j);
             gdk_draw_line(GTK_LAYOUT(widget)->bin_window, area->gc,
-                               scrpnt.i,
-                               scrpnt.j-5,
-                               scrpnt.i,
-                               scrpnt.j+5);
+                          scrpnt.i,
+                          scrpnt.j-5,
+                          scrpnt.i,
+                          scrpnt.j+5);
         }
         gdk_gc_set_foreground(area->gc, &fg);
     }
