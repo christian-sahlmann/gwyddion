@@ -214,10 +214,10 @@ gwy_app_graph_list_construct(GwyContainer *data,
         const guint id;
     }
     columns[] = {
-        { "Vis.", GRAPHLIST_VISIBLE },
-        { "Title", GRAPHLIST_TITLE },
-        { "Curves", GRAPHLIST_NCURVES },
-        { "Id", GRAPHLIST_ID },   /* FIXME: debug only */
+        { N_("Vis."),             GRAPHLIST_VISIBLE },
+        { N_("Title"),            GRAPHLIST_TITLE },
+        { N_("graphlist|Curves"), GRAPHLIST_NCURVES },
+        { N_("Id"),               GRAPHLIST_ID },   /* FIXME: debug only */
     };
 
     GtkWidget *list;
@@ -249,11 +249,12 @@ gwy_app_graph_list_construct(GwyContainer *data,
     renderer = gtk_cell_renderer_toggle_new();
     g_signal_connect(renderer, "toggled",
                      G_CALLBACK(gwy_app_graph_list_toggled), list);
-    column = gtk_tree_view_column_new_with_attributes(_(columns[0].title),
-                                                      renderer,
-                                                      "activatable",
-                                                      GRAPHLIST_EDITABLE,
-                                                      NULL);
+    column = gtk_tree_view_column_new_with_attributes
+                                              (gwy_sgettext(columns[0].title),
+                                               renderer,
+                                               "activatable",
+                                               GRAPHLIST_EDITABLE,
+                                               NULL);
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
          gwy_app_graph_list_cell_renderer,
@@ -264,9 +265,9 @@ gwy_app_graph_list_construct(GwyContainer *data,
     /* other columns */
     for (i = 1; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
-                                                          renderer,
-                                                          NULL);
+        column = gtk_tree_view_column_new_with_attributes
+                                              (gwy_sgettext(columns[i].title),
+                                               renderer, NULL);
         gtk_tree_view_column_set_cell_data_func
             (column, renderer,
              gwy_app_graph_list_cell_renderer,
