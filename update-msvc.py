@@ -15,6 +15,8 @@ mod_dll_rule = """\
 \t$(LINK32) %s.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:%s.dll /dll /implib:%s.lib
 """
 
+top_dir = os.getcwd()
+
 def backup(filename):
     try:
         shutil.copyfile(filename, filename + '~')
@@ -37,11 +39,15 @@ def write_file(filename, text):
     fh.write(t);
     fh.close()
 
+def print_filename(filename):
+    rcwd = os.getcwd()[len(top_dir)+1:]
+    print os.path.join(rcwd, filename)
+
 def backup_write_diff(filename, text):
     rundiff = backup(filename)
     write_file(filename, text)
     if rundiff:
-        print filename
+        print_filename(filename)
         os.system('diff %s~ %s' % (filename, filename))
 
 def get_list(text, name):
@@ -147,7 +153,6 @@ def process_one_dir(makefile):
 
 def recurse(each):
     cwd = os.getcwd()
-    #print cwd
     makefile = get_file('Makefile.am')
     each(makefile)
     subdirs = get_list(makefile, 'SUBDIRS')
