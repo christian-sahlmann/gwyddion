@@ -60,7 +60,7 @@ struct _GwyGraphEpitome {
 
     gboolean has_x_unit;
     gboolean has_y_unit;
-    GObject *x_unit;    /* NB: Graph itself doesn't use GwySIUnit... */
+    GObject *x_unit;    /* XXX: Silly graph doesn't use GwySIUnit itself */
     GObject *y_unit;
 
     GString *top_label;
@@ -77,12 +77,13 @@ struct _GwyGraphEpitome {
 struct _GwyGraphEpitomeClass {
     GObjectClass parent_class;
 
-    void (*value_changed)(GwyGraphEpitome *gepitome);
+    void (*value_changed)(GwyGraphEpitome *gepitome);  /* XXX: only formal */
 };
 
 
 GType      gwy_graph_epitome_get_type       (void) G_GNUC_CONST;
 GObject*   gwy_graph_epitome_new            (GwyGraph *graph);
+GtkWidget* gwy_graph_new_from_epitome       (GwyGraphEpitome *gepitome);
 
 G_END_DECLS
 

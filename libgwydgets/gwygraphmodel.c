@@ -307,6 +307,57 @@ gwy_graph_epitome_save_graph(GwyGraphEpitome *gepitome,
     gepitome->ncurves = nacurves;
 }
 
+GtkWidget*
+gwy_graph_new_from_epitome(GwyGraphEpitome *gepitome)
+{
+    GtkWidget *graph_widget;
+    gchar *BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS;
+    GwyGraph *graph;
+    gint i;
+
+    g_return_val_if_fail(gepitome->graph != NULL, gwy_graph_new());
+
+    graph_widget = gwy_graph_new();
+    graph = GWY_GRAPH(graph_widget);
+
+    for (i = 0; i < gepitome->ncurves; i++) {
+        GwyGraphEpitomeCurve *curve = gepitome->curves + i;
+
+        gwy_graph_add_datavalues(graph, curve->xdata, curve->ydata,
+                                 curve->n, curve->params->description,
+                                 curve->params);
+    }
+
+    gwy_axis_set_label(graph->axis_top, gepitome->top_label);
+    gwy_axis_set_label(graph->axis_bottom, gepitome->bottom_label);
+    gwy_axis_set_label(graph->axis_left, gepitome->left_label);
+    gwy_axis_set_label(graph->axis_right, gepitome->right_label);
+    if (graph->has_x_unit) {
+        BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
+            = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gepitome->x_unit));
+        gwy_axis_set_unit(graph->axis_top,
+                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
+        gwy_axis_set_unit(graph->axis_bottom,
+                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
+        g_free(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
+    }
+    if (graph->has_y_unit) {
+        BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
+            = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gepitome->y_unit));
+        gwy_axis_set_unit(graph->axis_left,
+                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
+        gwy_axis_set_unit(graph->axis_right,
+                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
+        g_free(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
+    }
+
+    gwy_graph_set_boundaries(graph,
+                             gepitome->x_reqmin, gepitome->x_reqmax,
+                             gepitome->y_reqmax, gepitome->y_reqmax);
+
+    return graph_widget;
+}
+
 static GByteArray*
 gwy_graph_epitome_serialize(GObject *obj,
                             GByteArray*buffer)
