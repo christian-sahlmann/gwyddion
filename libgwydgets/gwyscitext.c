@@ -363,6 +363,7 @@ gwy_sci_text_entity_selected(GwySciText *sci_text)
             g_string_prepend(entity, "&");
             gtk_editable_insert_text(editable, entity->str, entity->len, &pos);
             gtk_editable_set_position(editable, pos);
+            break;
         }
     }
     g_string_free(entity, TRUE);
