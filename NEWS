@@ -1,4 +1,4 @@
-1.0cvs20040328
+1.0cvs20040404
 
 1.1
 - Raw file import supports named presets of import parameters.
@@ -15,6 +15,7 @@
   similar to solving Laplace equation.
 - Creating mask by outliers detection enabled. It uses 3*sigma criterium
   for searching an outlier.
+- It is possible to import data from common bitmap image formats.
 
 1.0
 - Data can be exported to bitmaps with rules, units, scale, etc.
