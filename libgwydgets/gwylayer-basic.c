@@ -169,18 +169,23 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
 
     /* TODO Container */
     if (!gwy_container_gis_object_by_name(data, "/0/show",
-                                          (GObject**)&data_field))
+                                          (GObject**)&data_field)) {
         data_field
             = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), layer->pixbuf);
-    fixedmin = gwy_container_gis_double_by_name(data, "/0/base/min", &min);
-    fixedmax = gwy_container_gis_double_by_name(data, "/0/base/max", &max);
-    if (fixedmin || fixedmax) {
         fixedrange = TRUE;
-        if (!fixedmin)
-            min = gwy_data_field_get_min(data_field);
-        if (!fixedmax)
-            max = gwy_data_field_get_max(data_field);
+    }
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), layer->pixbuf);
+    if (fixedrange) {
+        fixedmin = gwy_container_gis_double_by_name(data, "/0/base/min", &min);
+        fixedmax = gwy_container_gis_double_by_name(data, "/0/base/max", &max);
+        if (fixedmin || fixedmax) {
+            if (!fixedmin)
+                min = gwy_data_field_get_min(data_field);
+            if (!fixedmax)
+                max = gwy_data_field_get_max(data_field);
+        }
+        else
+            fixedrange = FALSE;
     }
     /* XXX */
     /*if (GWY_LAYER_BASIC(layer)->changed)*/ {
