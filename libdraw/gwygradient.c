@@ -20,6 +20,7 @@
 
 /* TODO:
  * - reduce the number of system palettes -- in 2.0
+ * - replace get_samples with samples_ref, add samples_unref
  * - set from samples
  * - changes, signal emission
  * - fast get_color (with hinting)
@@ -317,8 +318,9 @@ gwy_gradient_sample(GwyGradient *gradient,
                     gint nsamples,
                     guchar *samples)
 {
-    gint i, k;
-    gdouble q;
+    GwyGradientPoint *pt, *pt2 = NULL;
+    gint i, j, k;
+    gdouble q, x;
     GwyRGBA color;
 
     g_return_val_if_fail(GWY_IS_GRADIENT(gradient), NULL);
@@ -327,10 +329,21 @@ gwy_gradient_sample(GwyGradient *gradient,
     samples = g_renew(guchar, samples, 4*nsamples);
 
     q = 1.0/(nsamples - 1.0);
-    for (i = k = 0; i < nsamples; i++) {
-        /* FIXME: this is slow for gradients with many colors.  Use hints
-         * to find the color faster */
-        gwy_gradient_get_color(gradient, i*q, &color);
+    pt = &g_array_index(gradient->points, GwyGradientPoint, 0);
+    for (i = j = k = 0; i < nsamples; i++) {
+        x = i*q;
+        while (G_UNLIKELY(x > pt->x)) {
+            j++;
+            pt2 = pt;
+            pt = &g_array_index(gradient->points, GwyGradientPoint, j);
+        }
+        if (G_UNLIKELY(x == pt->x))
+            color = pt->color;
+        else
+            gwy_rgba_interpolate(&pt2->color, &pt->color,
+                                 (x - pt2->x)/(pt->x - pt2->x),
+                                 &color);
+
         samples[k++] = (guchar)(gint32)(MAX_CVAL*color.r);
         samples[k++] = (guchar)(gint32)(MAX_CVAL*color.g);
         samples[k++] = (guchar)(gint32)(MAX_CVAL*color.b);
@@ -378,6 +391,14 @@ gwy_gradient_get_point(GwyGradient *gradient,
     return g_array_index(gradient->points, GwyGradientPoint, index_);
 }
 
+/**
+ * gwy_gradient_fix_rgba:
+ * @color: A color.
+ *
+ * Fixes color components to range 0..1.
+ *
+ * Returns: The fixed color.
+ **/
 static inline GwyRGBA
 gwy_gradient_fix_rgba(const GwyRGBA *color)
 {
@@ -396,6 +417,16 @@ gwy_gradient_fix_rgba(const GwyRGBA *color)
     return rgba;
 }
 
+/**
+ * gwy_gradient_fix_position:
+ * @points: Array of color points (gradient definition).
+ * @i: Index a point should be inserted.
+ * @pos: Position the point should be inserted to.
+ *
+ * Fixes position of a color point between neighbours and to range 0..1.
+ *
+ * Returns: Fixed position.
+ **/
 static inline gdouble
 gwy_gradient_fix_position(GArray *points,
                           gint i,
