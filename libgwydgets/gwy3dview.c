@@ -254,7 +254,7 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->light_z       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
     gwy3dview->light_y       = gtk_adjustment_new(0.0, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, 0.0, 0.0);
     gwy3dview->mat_current
-             = gwy_gl_material_get_by_name(GWY_GLMATERIAL_NONE);
+             = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
 
     if (gwy_container_contains_by_name(data, "/0/data"))
@@ -909,7 +909,7 @@ gwy_3d_view_get_material      (Gwy3DView *gwy3dview)
  * @gwy3dview: A 3D data view widget.
  * @material: A #GwyGLMaterial used to draw data with lights on.
  *
- * Sets the material of the surface. If the material is #GWY_GLMATERIAL_NONE
+ * Sets the material of the surface. If the material is #GWY_GL_MATERIAL_NONE
  * the surface is drawn using the colors obtained from the #palette.
  * If any other material is the the lights are turned on and the surface
  * is rendered using this material.
@@ -1116,7 +1116,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glScalef(1.0f, 1.0f, gwy3D->deformation_z->value);
 
     /* Render shape */
-    if (gwy3D->mat_current != gwy_gl_material_get_by_name(GWY_GLMATERIAL_NONE))
+    if (gwy3D->mat_current != gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE))
     {
         glEnable(GL_LIGHTING);
         glMaterialfv(GL_FRONT, GL_AMBIENT,   gwy3D->mat_current->ambient);
@@ -1458,7 +1458,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
    gchar text[30];
    gint xres = gwy_data_field_get_xres(widget->data);
    gint yres = gwy_data_field_get_yres(widget->data);
-   GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GLMATERIAL_NONE);
+   GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
    gwy_debug("");
 
@@ -1589,7 +1589,7 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
 {
     int i;
     GLfloat plane_z;
-    GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GLMATERIAL_NONE);
+    GwyGLMaterial * mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
     gwy_debug("");
 

@@ -25,7 +25,7 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyglmaterial.h"
 
-#define GWY_GLMATERIAL_TYPE_NAME "GwyGLMaterial"
+#define GWY_GL_MATERIAL_TYPE_NAME "GwyGLMaterial"
 
 typedef struct {
     GLfloat ambient[4];
@@ -66,9 +66,9 @@ gwy_gl_material_get_type(void)
 
         gwy_debug("");
         gwy_gl_material_type = g_type_register_static(G_TYPE_OBJECT,
-                                                   GWY_GLMATERIAL_TYPE_NAME,
-                                                   &gwy_gl_material_info,
-                                                   0);
+                                                      GWY_GL_MATERIAL_TYPE_NAME,
+                                                      &gwy_gl_material_info,
+                                                      0);
     }
 
     return gwy_gl_material_type;
@@ -119,7 +119,7 @@ gwy_gl_material_finalize(GObject *object)
 
     gwy_debug("%s", glmaterial->name);
 
-    klass = GWY_GLMATERIAL_GET_CLASS(glmaterial);
+    klass = GWY_GL_MATERIAL_GET_CLASS(glmaterial);
     removed = g_hash_table_remove(klass->materials, glmaterial->name);
     g_assert(removed);
     g_free(glmaterial->name);
@@ -156,16 +156,16 @@ gwy_gl_material_new(const gchar *name)
 
     /* when g_type_class_peek() returns NULL we are constructing the very
      * first Open GL material definition and thus no other can exist yet */
-    if ((klass = g_type_class_peek(GWY_TYPE_GLMATERIAL))
+    if ((klass = g_type_class_peek(GWY_TYPE_GL_MATERIAL))
         && name
         && (glmaterial = g_hash_table_lookup(klass->materials, name))) {
         g_object_ref(glmaterial);
         return (GObject*)glmaterial;
     }
 
-    glmaterial = g_object_new(GWY_TYPE_GLMATERIAL, NULL);
+    glmaterial = g_object_new(GWY_TYPE_GL_MATERIAL, NULL);
     /* now it has to be defined */
-    klass = g_type_class_peek(GWY_TYPE_GLMATERIAL);
+    klass = g_type_class_peek(GWY_TYPE_GL_MATERIAL);
     g_assert(klass);
     glmaterial->name = gwy_gl_material_invent_name(klass->materials, name);
     g_hash_table_insert(klass->materials, glmaterial->name, glmaterial);
@@ -193,7 +193,7 @@ gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
     guint i;
 
     gwy_debug("");
-    g_return_val_if_fail(GWY_IS_GLMATERIAL(src_glmaterial), NULL);
+    g_return_val_if_fail(GWY_IS_GL_MATERIAL(src_glmaterial), NULL);
 
     glmaterial = (GwyGLMaterial*)gwy_gl_material_new(src_glmaterial->name);
 
@@ -222,7 +222,7 @@ gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
 G_CONST_RETURN gchar*
 gwy_gl_material_get_name(GwyGLMaterial *glmaterial)
 {
-    g_return_val_if_fail(GWY_IS_GLMATERIAL(glmaterial), NULL);
+    g_return_val_if_fail(GWY_IS_GL_MATERIAL(glmaterial), NULL);
     return glmaterial->name;
 }
 
@@ -247,10 +247,10 @@ gwy_gl_material_set_name(GwyGLMaterial *glmaterial,
     GwyGLMaterialClass *klass;
     gchar *oldname;
 
-    g_return_val_if_fail(GWY_IS_GLMATERIAL(glmaterial), FALSE);
+    g_return_val_if_fail(GWY_IS_GL_MATERIAL(glmaterial), FALSE);
     g_return_val_if_fail(name, FALSE);
 
-    klass = GWY_GLMATERIAL_GET_CLASS(glmaterial);
+    klass = GWY_GL_MATERIAL_GET_CLASS(glmaterial);
     if (name == glmaterial->name)
         return TRUE;
     if (g_hash_table_lookup(klass->materials, name))
@@ -285,7 +285,7 @@ gwy_gl_material_get_by_name(const gchar *name)
 
     g_return_val_if_fail(name, NULL);
 
-    klass = g_type_class_peek(GWY_TYPE_GLMATERIAL);
+    klass = g_type_class_peek(GWY_TYPE_GL_MATERIAL);
     return g_hash_table_lookup(klass->materials, name);
 }
 
@@ -421,19 +421,19 @@ gwy_gl_material_setup_presets(void)
         0.0
     };
 
-    gwy_gl_material_create_preset(&mat_none,       GWY_GLMATERIAL_NONE     );
-    gwy_gl_material_create_preset(&mat_emerald,    GWY_GLMATERIAL_EMERALD  );
-    gwy_gl_material_create_preset(&mat_jade,       GWY_GLMATERIAL_JADE     );
-    gwy_gl_material_create_preset(&mat_obsidian,   GWY_GLMATERIAL_OBSIDIAN );
-    gwy_gl_material_create_preset(&mat_pearl,      GWY_GLMATERIAL_PEARL    );
-    gwy_gl_material_create_preset(&mat_ruby,       GWY_GLMATERIAL_RUBY     );
-    gwy_gl_material_create_preset(&mat_turquoise,  GWY_GLMATERIAL_TURQUOISE);
-    gwy_gl_material_create_preset(&mat_brass,      GWY_GLMATERIAL_BRASS    );
-    gwy_gl_material_create_preset(&mat_bronze,     GWY_GLMATERIAL_BRONZE   );
-    gwy_gl_material_create_preset(&mat_chrome,     GWY_GLMATERIAL_CHROME   );
-    gwy_gl_material_create_preset(&mat_copper,     GWY_GLMATERIAL_COPPER   );
-    gwy_gl_material_create_preset(&mat_gold,       GWY_GLMATERIAL_GOLD     );
-    gwy_gl_material_create_preset(&mat_silver,     GWY_GLMATERIAL_SILVER   );
+    gwy_gl_material_create_preset(&mat_none,       GWY_GL_MATERIAL_NONE     );
+    gwy_gl_material_create_preset(&mat_emerald,    GWY_GL_MATERIAL_EMERALD  );
+    gwy_gl_material_create_preset(&mat_jade,       GWY_GL_MATERIAL_JADE     );
+    gwy_gl_material_create_preset(&mat_obsidian,   GWY_GL_MATERIAL_OBSIDIAN );
+    gwy_gl_material_create_preset(&mat_pearl,      GWY_GL_MATERIAL_PEARL    );
+    gwy_gl_material_create_preset(&mat_ruby,       GWY_GL_MATERIAL_RUBY     );
+    gwy_gl_material_create_preset(&mat_turquoise,  GWY_GL_MATERIAL_TURQUOISE);
+    gwy_gl_material_create_preset(&mat_brass,      GWY_GL_MATERIAL_BRASS    );
+    gwy_gl_material_create_preset(&mat_bronze,     GWY_GL_MATERIAL_BRONZE   );
+    gwy_gl_material_create_preset(&mat_chrome,     GWY_GL_MATERIAL_CHROME   );
+    gwy_gl_material_create_preset(&mat_copper,     GWY_GL_MATERIAL_COPPER   );
+    gwy_gl_material_create_preset(&mat_gold,       GWY_GL_MATERIAL_GOLD     );
+    gwy_gl_material_create_preset(&mat_silver,     GWY_GL_MATERIAL_SILVER   );
 }
 
 
@@ -453,7 +453,7 @@ gwy_gl_material_exists(const gchar *name)
     GwyGLMaterialClass *klass;
 
     g_return_val_if_fail(name, FALSE);
-    klass = g_type_class_peek(GWY_TYPE_GLMATERIAL);
+    klass = g_type_class_peek(GWY_TYPE_GL_MATERIAL);
     g_return_val_if_fail(klass, FALSE);
     return g_hash_table_lookup(klass->materials, name) != 0;
 }
@@ -484,7 +484,7 @@ gwy_gl_material_foreach(GwyGLMaterialFunc callback,
 {
     GwyGLMaterialClass *klass;
 
-    klass = g_type_class_peek(GWY_TYPE_GLMATERIAL);
+    klass = g_type_class_peek(GWY_TYPE_GL_MATERIAL);
     g_hash_table_foreach(klass->materials, (GHFunc)callback, user_data);
 }
 
@@ -510,7 +510,7 @@ gwy_gl_material_foreach(GwyGLMaterialFunc callback,
 
 
 /**
- * GWY_GLMATERIAL_NONE:
+ * GWY_GL_MATERIAL_NONE:
  *
  * Black material independent on light settings.
  *
@@ -518,73 +518,73 @@ gwy_gl_material_foreach(GwyGLMaterialFunc callback,
  **/
 
 /**
- * GWY_GLMATERIAL_EMERALD:
+ * GWY_GL_MATERIAL_EMERALD:
  *
  * Emerald like mateial. Mainly light green.
  **/
 
 /**
- * GWY_GLMATERIAL_JADE:
+ * GWY_GL_MATERIAL_JADE:
  *
  * Jade
  **/
 
 /**
- * GWY_GLMATERIAL_OBSIDIAN:
+ * GWY_GL_MATERIAL_OBSIDIAN:
  *
  * Obsidian, very dark material.
  **/
 
 /**
- * GWY_GLMATERIAL_PEARL:
+ * GWY_GL_MATERIAL_PEARL:
  *
  * Pearl
  **/
 
 /**
- * GWY_GLMATERIAL_RUBY:
+ * GWY_GL_MATERIAL_RUBY:
  *
  * Ruby
  **/
 
 /**
- * GWY_GLMATERIAL_TURQUOISE:
+ * GWY_GL_MATERIAL_TURQUOISE:
  *
  * Turquoise
  **/
 
 /**
- * GWY_GLMATERIAL_BRASS:
+ * GWY_GL_MATERIAL_BRASS:
  *
  * Brass
  **/
 
 /**
- * GWY_GLMATERIAL_BRONZE:
+ * GWY_GL_MATERIAL_BRONZE:
  *
  * Bronze
  **/
 
 /**
- * GWY_GLMATERIAL_CHROME:
+ * GWY_GL_MATERIAL_CHROME:
  *
  * Chrome
  **/
 
 /**
- * GWY_GLMATERIAL_COPPER:
+ * GWY_GL_MATERIAL_COPPER:
  *
  * Copper
  **/
 
 /**
- * GWY_GLMATERIAL_GOLD:
+ * GWY_GL_MATERIAL_GOLD:
  *
  * Gold
  **/
 
 /**
- * GWY_GLMATERIAL_SILVER:
+ * GWY_GL_MATERIAL_SILVER:
  *
  * Silver
  **/
