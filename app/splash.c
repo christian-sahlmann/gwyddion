@@ -114,14 +114,20 @@ gwy_app_splash_close(void)
 void
 gwy_app_splash_set_message_prefix(const gchar *prefix)
 {
+    g_return_if_fail(window);
+
     g_free(message_prefix);
     message_prefix = g_strdup(prefix);
+
+    while (gtk_events_pending())
+        gtk_main_iteration();
 }
 
 void
 gwy_app_splash_set_message(const gchar *message)
 {
-    g_return_if_fail(label);
+    g_return_if_fail(window);
+
     if (message_prefix) {
         gchar *s = g_strconcat(message_prefix, message, NULL);
         gtk_label_set_markup(GTK_LABEL(label), s);

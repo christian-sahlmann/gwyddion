@@ -21,6 +21,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
+#include <libgwydgets/gwystock.h>
 #include "app.h"
 #include "settings.h"
 #include "file.h"
@@ -44,6 +45,8 @@ main(int argc, char *argv[])
 
     gwy_app_splash_create();
     gwy_app_splash_set_message_prefix(_("Registering "));
+    gwy_app_splash_set_message(_("stock items"));
+    gwy_stock_register_stock_items();
     gwy_module_set_register_callback(gwy_app_splash_set_message);
     gwy_module_register_modules((const gchar**)module_dirs);
     gwy_module_set_register_callback(NULL);

@@ -26,8 +26,8 @@
 
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
-#include <libgwydgets/gwydgets.h>
 #include <libprocess/libgwyprocess.h>
+#include <libgwydgets/gwydgets.h>
 
 static GType optimization_fooler = 0;
 static GSList *palettes = NULL;
@@ -58,12 +58,11 @@ gwy_app_init(void)
     optimization_fooler += gwy_palette_def_get_type();
     optimization_fooler += gwy_container_get_type();
 
+    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(_(PACKAGE_NAME));
     gwy_palette_def_setup_presets();
     gwy_palette_def_foreach((GwyPaletteDefFunc)ref_palette, NULL);
     g_atexit(unref_palettes);
-    gwy_stock_register_stock_items();
-    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
 }
 
 /* The purpose of this function is to instantiate all palettes and keep them
