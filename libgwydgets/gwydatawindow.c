@@ -81,11 +81,17 @@ gwy_data_window_new(GwyDataView *data_view)
 
     data_window = (GwyDataWindow*)g_object_new(GWY_TYPE_DATA_WINDOW, NULL);
     gtk_window_set_resizable(GTK_WINDOW(data_window), TRUE);
-    /* FIXME: it still affects the window, not data_view [Fvwm] */
+    /* FIXME: this affects the window, not data_view [Fvwm] */
+    /*
     gtk_window_set_geometry_hints(GTK_WINDOW(data_window),
                                   GTK_WIDGET(data_view),
                                   &geom,
                                   GDK_HINT_MIN_SIZE | GDK_HINT_ASPECT);
+    */
+    gtk_window_set_geometry_hints(GTK_WINDOW(data_window),
+                                  GTK_WIDGET(data_view),
+                                  &geom,
+                                  GDK_HINT_MIN_SIZE);
 
     data_window->data_view = (GtkWidget*)data_view;
 
@@ -122,7 +128,7 @@ gwy_data_window_new(GwyDataView *data_view)
     gtk_ruler_set_range(GTK_RULER(data_window->vruler),
                         0.0, 100.0, 0.0, 100.0);
     g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
-                             G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->hruler)->motion_notify_event),
+                             G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->vruler)->motion_notify_event),
                              data_window->vruler);
     gtk_table_attach(GTK_TABLE(table), data_window->vruler, 0, 1, 1, 2,
                      GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);

@@ -360,22 +360,21 @@ static void
 gwy_data_view_make_pixmap(GwyDataView *data_view)
 {
     GtkWidget *widget;
-    gint width, height;
+    GwyDataField *data_field;
+    gint width, height, scwidth, scheight, src_width, src_height;
+    gdouble zoom;
 
-    if (!data_view->base_pixbuf) {
-        GwyDataField *data_field;
-        gint width, height;
+    data_field = GWY_DATA_FIELD(
+                     gwy_container_get_object_by_name(data_view->data,
+                                                      "/0/data"));
+    src_width = gwy_data_field_get_xres(data_field);
+    src_height = gwy_data_field_get_yres(data_field);
 
-        data_field = GWY_DATA_FIELD(
-                         gwy_container_get_object_by_name(data_view->data,
-                                                          "/0/data"));
-        width = gwy_data_field_get_xres(data_field);
-        height = gwy_data_field_get_yres(data_field);
+    if (!data_view->base_pixbuf)
         data_view->base_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
                                                 FALSE,
                                                 BITS_PER_SAMPLE,
-                                                width, height);
-    }
+                                                src_width, src_height);
 
     if (data_view->pixbuf) {
         width = gdk_pixbuf_get_width(data_view->pixbuf);
@@ -385,15 +384,17 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
         width = height = -1;
 
     widget = GTK_WIDGET(data_view);
-    if (widget->allocation.width != width
-        || widget->allocation.height != height) {
+    zoom = MAX((gdouble)src_width/widget->allocation.width,
+               (gdouble)src_height/widget->allocation.height);
+    scwidth = floor(src_width/zoom + 0.000001);
+    scheight = floor(src_height/zoom + 0.000001);
+    if (scwidth != width || scheight != height) {
         if (data_view->pixbuf)
             g_object_unref(data_view->pixbuf);
         data_view->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
                                            TRUE,
                                            BITS_PER_SAMPLE,
-                                           widget->allocation.width,
-                                           widget->allocation.height);
+                                           scwidth, scheight);
         gdk_pixbuf_fill(data_view->pixbuf, 0x00000000);
         gwy_data_view_paint(data_view);
     }
@@ -504,6 +505,7 @@ gwy_data_view_expose(GtkWidget *widget,
                      GdkEventExpose *event)
 {
     GwyDataView *data_view;
+    gint xc, yc;
 
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
@@ -518,11 +520,15 @@ gwy_data_view_expose(GtkWidget *widget,
     /* FIXME: ask the layers, if they want to repaint themselves */
     gwy_data_view_paint(data_view);
 
+    xc = (widget->allocation.width
+          - gdk_pixbuf_get_width(data_view->pixbuf))/2;
+    yc = (widget->allocation.height
+          - gdk_pixbuf_get_height(data_view->pixbuf))/2;
     gdk_draw_pixbuf(widget->window,
                     NULL,
                     data_view->pixbuf,
                     0, 0,
-                    0, 0,
+                    xc, yc,
                     -1, -1,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
