@@ -207,7 +207,7 @@ static GwyModuleInfo module_info = {
     "rawfile",
     "Read raw data according to user-specified format.",
     "Yeti <yeti@gwyddion.net>",
-    "0.99.4",
+    "0.99.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

@@ -46,7 +46,7 @@ static GwyModuleInfo module_info = {
     "Petr Klapetek <petr@klapetek.cz>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2004",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.

@@ -113,9 +113,9 @@ static GwyModuleInfo module_info = {
     "fractal",
     "Fractal dimension evaluation",
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",
-    "2003",
+    "2004",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
