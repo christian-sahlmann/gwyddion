@@ -1,9 +1,10 @@
 - Kill WIN32-LEAN-AND-MEAN-CAPS
-- Make threshold-example use -MD
 - Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
+- RMS based autogrange in LayerBasic (a 2.0 thing?)
 - Test GwyGradient, mark #ifdef GWY_ENABLE_GWYDDION2
-- Do something with sphere-revolve
 - Callibrate forgets coefficients and shows inconsistent values
+- Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
+  as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere
 - Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
