@@ -204,6 +204,7 @@ gwy_data_field_filter_mean(GwyDataField *data_field,
 
 void
 gwy_data_field_area_filter_canny(GwyDataField *data_field,
+                                 gdouble threshold,
                                      gint col, gint row,
                                      gint width, gint height)
 {
@@ -212,7 +213,6 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
     gint i, j, k;
     gdouble angle;
     gboolean pass;
-    gdouble threshold = 0;
 
     sobel_horizontal = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
                                           data_field->yres,
@@ -251,7 +251,8 @@ gwy_data_field_area_filter_canny(GwyDataField *data_field,
         data_field->data[k] = fabs(sobel_horizontal->data[k]) + fabs(sobel_vertical->data[k]);
         
  
-    threshold = gwy_data_field_get_max(data_field)/10;
+    threshold = gwy_data_field_get_min(data_field) +
+        (gwy_data_field_get_max(data_field)-gwy_data_field_get_min(data_field))*threshold;
     
     for (i = 0; i < data_field->yres; i++)
     {

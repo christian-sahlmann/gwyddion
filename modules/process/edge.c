@@ -156,8 +156,11 @@ canny(GwyContainer *data, GwyRunType run)
     gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(shadefield), 
                              0, 0, gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield), 0, 0);
-    
-    gwy_data_field_area_filter_canny(GWY_DATA_FIELD(shadefield), 
+   
+    /*now we use fixed threshold, but in future, there could be API
+     with some setting. We could also do smooting before apllying filter.*/
+    gwy_data_field_area_filter_canny(GWY_DATA_FIELD(shadefield),
+                                     0.1,
                                      0, 0,
                                      gwy_data_field_get_xres(dfield),
                                      gwy_data_field_get_yres(dfield));
