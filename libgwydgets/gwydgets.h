@@ -5,6 +5,7 @@
 
 #include <libgwydgets/gwyaxis.h>
 #include <libgwydgets/gwyaxisdialog.h>
+#include <libgwydgets/gwycoloraxis.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydataviewlayer.h>
 #include <libgwydgets/gwydatawindow.h>

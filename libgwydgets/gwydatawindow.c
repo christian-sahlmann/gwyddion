@@ -85,7 +85,7 @@ gwy_data_window_init(GwyDataWindow *data_window)
     data_window->vruler = NULL;
     data_window->statusbar = NULL;
     data_window->table = NULL;
-    data_window->sidebox = NULL;
+    data_window->coloraxis = NULL;
     data_window->zoom_mode = GWY_ZOOM_MODE_HALFPIX;
     data_window->statusbar_context_id = 0;
     data_window->statusbar_message_id = 0;
@@ -103,6 +103,8 @@ GtkWidget*
 gwy_data_window_new(GwyDataView *data_view)
 {
     GwyDataWindow *data_window;
+    GwyDataViewLayer *layer;
+    GwyPalette *palette;
     GtkWidget *vbox, *hbox, *widget;
     GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
 
@@ -179,11 +181,16 @@ gwy_data_window_new(GwyDataView *data_view)
                      GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
     /***** rhs stuff TODO *****/
-    data_window->sidebox = gtk_vbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), data_window->sidebox, FALSE, FALSE, 0);
+    widget = gtk_vbox_new(TRUE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(widget), 6);
+    gtk_box_pack_start(GTK_BOX(hbox), widget, TRUE, TRUE, 0);
 
-    widget = gtk_label_new("Crash me!");
-    gtk_box_pack_start(GTK_BOX(data_window->sidebox), widget, FALSE, FALSE, 0);
+    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
+    g_assert(GWY_IS_LAYER_BASIC(layer));
+    palette = gwy_layer_basic_get_palette(layer);
+    data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL,
+                                                0, 1, palette);
+    gtk_container_add(GTK_CONTAINER(widget), data_window->coloraxis);
 
     /* show everything except the table */
     gtk_widget_show_all(vbox);
@@ -251,7 +258,7 @@ lame_window_resize(GwyDataWindow *data_window)
     gtk_widget_get_child_requisition(data_window->hruler, &hruler_req);
     gtk_widget_get_child_requisition(data_window->vruler, &vruler_req);
     gtk_widget_get_child_requisition(data_window->statusbar, &statusbar_req);
-    gtk_widget_size_request(data_window->sidebox, &sidebox_req);
+    gtk_widget_size_request(data_window->coloraxis, &sidebox_req);
     gtk_widget_size_request(data_window->data_view, &view_req);
 
     width = vruler_req.width + view_req.width + sidebox_req.width;

@@ -8,6 +8,7 @@ libgwydgetsincludedir = $(includedir)/gwyddion/libgwydgets
 libgwydgetsinclude_HEADERS = \
 	gwyaxis.h \
 	gwyaxisdialog.h \
+	gwycoloraxis.h \
 	gwydataview.h \
 	gwydataviewlayer.h \
 	gwydatawindow.h \
@@ -29,8 +30,7 @@ libgwydgetsinclude_HEADERS = \
 	gwyspherecoords.h \
 	gwystock.h \
 	gwyvectorshade.h \
-	gwyvruler.h \
-	gwycoloraxis.h
+	gwyvruler.h
 
 lib_LTLIBRARIES = libgwydgets.la
 
@@ -43,6 +43,7 @@ libgwydgets_la_LDFLAGS = -version-info 0:0:0
 libgwydgets_la_SOURCES = \
 	gwyaxis.c \
 	gwyaxisdialog.c \
+	gwycoloraxis.c \
 	gwydataview.c \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
@@ -64,8 +65,7 @@ libgwydgets_la_SOURCES = \
 	gwyspherecoords.c \
 	gwystock.c \
 	gwyvectorshade.c \
-	gwyvruler.c \
-	gwycoloraxis.c
+	gwyvruler.c
 
 # Note these are test programs not to be included in the distro
 #noinst_PROGRAMS = main test create-data layout

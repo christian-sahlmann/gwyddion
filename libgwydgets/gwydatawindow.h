@@ -40,7 +40,7 @@ struct _GwyDataWindow {
     GtkWidget *hruler;
     GtkWidget *vruler;
     GtkWidget *statusbar;
-    GtkWidget *sidebox;
+    GtkWidget *coloraxis;
 
     GwyZoomMode zoom_mode;  /* reserved for future use */
 
