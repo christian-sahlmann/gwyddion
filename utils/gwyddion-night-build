@@ -108,7 +108,8 @@ function make_dists() {
   done
 
   make dist
-  rpmbuild -ta --clean --target $arch $pkgname-$version.tar.bz2 \
+  test -s $pkgname-$version.tar.bz2 \
+    && rpmbuild -ta --clean --target $arch $pkgname-$version.tar.bz2 \
     && touch .releaseme
 }
 
