@@ -72,7 +72,7 @@ facet_level(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
     /* converge
      * FIXME: this can take a long time */

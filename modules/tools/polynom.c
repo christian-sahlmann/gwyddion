@@ -290,7 +290,7 @@ apply(GwyUnitoolState *state)
         brrow = gwy_data_field_get_yres(dfield);
     }
 
-    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
     gwy_data_field_fit_lines(dfield, ulcol, ulrow, brcol, brrow,
                              controls->fit, controls->exc, controls->dir);

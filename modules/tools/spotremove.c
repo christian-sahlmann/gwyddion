@@ -404,7 +404,7 @@ apply(GwyUnitoolState *state)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_vector_layer_get_selection(state->layer, sel);
     selection_to_rowcol(dfield, sel, &ximin, &yimin, &ximax, &yimax);
-    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
     crisscross_average(dfield, ximin, yimin, ximax, yimax);
     /*gwy_vector_layer_unselect(state->layer);*/
     gwy_data_view_update(GWY_DATA_VIEW(layer->parent));

@@ -301,7 +301,7 @@ apply(GwyUnitoolState *state)
      * be zero */
     coeffs[2] = -0.5*(coeffs[0]*gwy_data_field_get_xreal(dfield)
                       + coeffs[1]*gwy_data_field_get_yreal(dfield));
-    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_plane_level(dfield, coeffs[2], coeffs[0], coeffs[1]);
 
     gwy_vector_layer_unselect(state->layer);

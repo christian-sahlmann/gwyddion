@@ -304,7 +304,7 @@ apply(GwyUnitoolState *state)
         brrow = gwy_data_field_get_yres(dfield);
     }
 
-    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
     switch (controls->fil){
         case GWY_FILTER_MEAN:

@@ -39,7 +39,7 @@ typedef struct {
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
-static gboolean     use              (GwyDataWindow *data_window,
+static gboolean   use              (GwyDataWindow *data_window,
                                     GwyToolSwitchEvent reason);
 static void       layer_setup      (GwyUnitoolState *state);
 static GtkWidget* dialog_create    (GwyUnitoolState *state);
