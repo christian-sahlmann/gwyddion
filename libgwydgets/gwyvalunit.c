@@ -50,8 +50,8 @@ static void     gwy_val_unit_unit_changed         (GObject *item,
 static GtkWidgetClass *parent_class = NULL;
 
 enum {
-            VALUE_CHANGED_SIGNAL,
-            LAST_SIGNAL
+    VALUE_CHANGED_SIGNAL,
+    LAST_SIGNAL
 };
 
 static guint gwyvalunit_signals[LAST_SIGNAL] = { 0 };
@@ -74,11 +74,11 @@ gwy_val_unit_get_type(void)
             (GInstanceInitFunc)gwy_val_unit_init,
             NULL,
         };
-        gwy_debug("");
+        gwy_debug(" ");
         gwy_val_unit_type = g_type_register_static(GTK_TYPE_HBOX,
-                                                      GWY_VAL_UNIT_TYPE_NAME,
-                                                      &gwy_val_unit_info,
-                                                      0);
+                                                   GWY_VAL_UNIT_TYPE_NAME,
+                                                   &gwy_val_unit_info,
+                                                   0);
     }
 
     return gwy_val_unit_type;
@@ -91,7 +91,7 @@ gwy_val_unit_class_init(GwyValUnitClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
@@ -104,24 +104,21 @@ gwy_val_unit_class_init(GwyValUnitClass *klass)
     widget_class->unrealize = gwy_val_unit_unrealize;
     widget_class->size_allocate = gwy_val_unit_size_allocate;
 
-    gwyvalunit_signals[VALUE_CHANGED_SIGNAL] = g_signal_new ("value_changed",
-                                                               G_TYPE_FROM_CLASS (klass),
-                                                               G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                                                               G_STRUCT_OFFSET (GwyValUnitClass, value_changed),
-                                                               NULL,
-                                                               NULL,
-                                                               g_cclosure_marshal_VOID__VOID,
-                                                               G_TYPE_NONE, 0);
+    gwyvalunit_signals[VALUE_CHANGED_SIGNAL]
+        = g_signal_new("value_changed",
+                       G_TYPE_FROM_CLASS(klass),
+                       G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                       G_STRUCT_OFFSET(GwyValUnitClass, value_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 
 static void
 gwy_val_unit_init(GwyValUnit *val_unit)
 {
-
-    gwy_debug("");
-
-
+    gwy_debug(" ");
 }
 
 
@@ -142,7 +139,7 @@ gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
 {
     GwyValUnit *val_unit;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     val_unit = (GwyValUnit*)g_object_new(gwy_val_unit_get_type(),
                                          "spacing", 2,
@@ -152,24 +149,26 @@ gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
     gtk_box_pack_start(GTK_BOX(val_unit), val_unit->label, FALSE, FALSE, 2);
 
     val_unit->adjustment = gtk_adjustment_new(val_unit->dival,
-                                    -1e6, 1e6, 1, 10, 0);
-    val_unit->spin = gtk_spin_button_new(GTK_ADJUSTMENT(val_unit->adjustment), 1, 0);
+                                              -1e6, 1e6, 1, 10, 0);
+    val_unit->spin = gtk_spin_button_new(GTK_ADJUSTMENT(val_unit->adjustment),
+                                         1, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(val_unit->spin), 3);
     gtk_box_pack_start(GTK_BOX(val_unit), val_unit->spin, FALSE, FALSE, 2);
 
-    val_unit->selection = gwy_option_menu_metric_unit(G_CALLBACK(gwy_val_unit_unit_changed),
-                                                      val_unit,
-                                                      -12, 6,
-                                                      gwy_si_unit_get_unit_string(si_unit),
-                                                      val_unit->unit);
+    val_unit->selection
+        = gwy_option_menu_metric_unit(G_CALLBACK(gwy_val_unit_unit_changed),
+                                      val_unit,
+                                      -12, 6,
+                                      gwy_si_unit_get_unit_string(si_unit),
+                                      val_unit->unit);
     gtk_box_pack_start(GTK_BOX(val_unit), val_unit->selection, FALSE, FALSE, 2);
 
     g_signal_connect(val_unit->spin, "value-changed",
                      G_CALLBACK(gwy_val_unit_value_changed), val_unit);
 
 
-    val_unit->base_si_unit = gwy_si_unit_new(gwy_si_unit_get_unit_string(si_unit));
-
+    val_unit->base_si_unit
+        = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(si_unit)));
 
     return GTK_WIDGET(val_unit);
 }
@@ -198,7 +197,6 @@ gwy_val_unit_unrealize(GtkWidget *widget)
 }
 
 
-
 static void
 gwy_val_unit_realize(GtkWidget *widget)
 {
@@ -207,17 +205,15 @@ gwy_val_unit_realize(GtkWidget *widget)
               widget->allocation.x, widget->allocation.height);
 
     if (GTK_WIDGET_CLASS(parent_class)->realize)
-    GTK_WIDGET_CLASS(parent_class)->realize(widget);
-
+        GTK_WIDGET_CLASS(parent_class)->realize(widget);
 }
 
 
-/*not a commentary, only CVS test*/
 static void
 gwy_val_unit_size_allocate(GtkWidget *widget,
                            GtkAllocation *allocation)
 {
-    gwy_debug("");
+    gwy_debug(" ");
 
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_VAL_UNIT(widget));
@@ -225,7 +221,6 @@ gwy_val_unit_size_allocate(GtkWidget *widget,
 
     widget->allocation = *allocation;
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
-
 }
 
 static void
@@ -262,10 +257,10 @@ gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
     val_unit->unit = floor(log10(format->magnitude)); /* /3 */
     val_unit->dival = value/pow(10, val_unit->unit);  /*1000*/
 
-    gtk_spin_button_set_value(val_unit->spin, val_unit->dival);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(val_unit->spin), val_unit->dival);
 
-    gtk_option_menu_set_history(val_unit->selection, floor(val_unit->unit/3) + 4);
-
+    gtk_option_menu_set_history(GTK_OPTION_MENU(val_unit->selection),
+                                floor(val_unit->unit/3) + 4);
 }
 
 /**
@@ -281,15 +276,17 @@ gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
 gdouble
 gwy_val_unit_get_value(GwyValUnit *val_unit)
 {
-    val_unit->dival = gtk_spin_button_get_value(val_unit->spin);
+    val_unit->dival
+        = gtk_spin_button_get_value(GTK_SPIN_BUTTON(val_unit->spin));
 
-    return val_unit->dival * pow(10, val_unit->unit);  
+    return val_unit->dival * pow(10, val_unit->unit);
 }
 
 void
 gwy_val_unit_signal_value_changed(GwyValUnit *val_unit)
 {
-    g_signal_emit (G_OBJECT (val_unit), gwyvalunit_signals[VALUE_CHANGED_SIGNAL], 0);
+    g_signal_emit(G_OBJECT(val_unit), gwyvalunit_signals[VALUE_CHANGED_SIGNAL],
+                  0);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
