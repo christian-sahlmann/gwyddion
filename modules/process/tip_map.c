@@ -306,6 +306,7 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
     */
     /*set right output */
 
+    gwy_data_view_update(gwy_data_window_get_data_view(args->win2));
     return TRUE;
 }
 
