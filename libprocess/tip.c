@@ -362,4 +362,48 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
     
 }
 
+GwyDataField*   
+gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
+                                                                       gboolean use_edges)
+{
+    gdouble **ftip;
+    gdouble **fsurface;
+
+    ftip = datafield_to_field(tip, TRUE);    
+    fsurface = datafield_to_field(surface, FALSE);
+
+    itip_estimate0(fsurface, surface->yres, surface->xres,
+                   tip->yres, tip->xres, tip->yres/2, tip->xres/2,
+                   ftip, threshold, use_edges);
+
+    tip = field_to_datafield(ftip, tip);
+
+    freematrix(ftip, tip->xres);
+    freematrix(fsurface, surface->xres);
+    return tip;
+}
+
+
+GwyDataField*   
+gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshold,
+                                                                       gboolean use_edges)
+{
+    gdouble **ftip;
+    gdouble **fsurface;
+
+    ftip = datafield_to_field(tip, TRUE);    
+    fsurface = datafield_to_field(surface, FALSE);
+
+    itip_estimate(fsurface, surface->yres, surface->xres,
+                   tip->yres, tip->xres, tip->yres/2, tip->xres/2,
+                   ftip, threshold, use_edges);
+
+    tip = field_to_datafield(ftip, tip);
+
+    freematrix(ftip, tip->xres);
+    freematrix(fsurface, surface->xres);
+    return tip;    
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

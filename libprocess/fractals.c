@@ -77,7 +77,7 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
     g_object_unref(buffer);
 }
 
-gdouble
+static gdouble
 get_area_rms_nomask(GwyDataField *dfield, GwyDataField *mask, gint col, gint row, gint width, gint height)
 {
     gint i, j, n;
@@ -117,7 +117,7 @@ get_area_rms_nomask(GwyDataField *dfield, GwyDataField *mask, gint col, gint row
      return rms;                              
 }
 
-void
+static void
 fractal_partitioning_nomask(GwyDataField *data_field, GwyDataField *mask_field,
                                     GwyDataLine *xresult, GwyDataLine *yresult,
                                     GwyInterpolationType interpolation)
@@ -142,7 +142,11 @@ fractal_partitioning_nomask(GwyDataField *data_field, GwyDataField *mask_field,
         rp = ROUND(pow(2, l));
         for (i = 0; i < ((buffer->xres - 1)/rp - 1); i++) {
             for (j = 0; j < ((buffer->yres - 1)/rp - 1); j++) {
-                rms = get_area_rms_nomask(buffer, maskbuffer, i * (rp), j * (rp),
+/*                rms = get_area_rms_nomask(buffer, maskbuffer, i * (rp), j * (rp),
+                                                  (i + 1) * (rp) + 1,
+                                                  (j + 1) * (rp) + 1);
+                                                  */
+                rms = gwy_data_field_get_area_rms(buffer, i * (rp), j * (rp), 
                                                   (i + 1) * (rp) + 1,
                                                   (j + 1) * (rp) + 1);
                 yresult->data[l] += rms * rms;
