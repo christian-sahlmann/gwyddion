@@ -57,7 +57,7 @@ your own plug-ins.
 %setup -q
 
 %build
-%configure
+%configure --disable-desktop-file-update
 %__make
 
 %install

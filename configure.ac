@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.7, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.7cvs20041223, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -67,6 +67,20 @@ AC_PROG_LN_S
 AC_CHECK_PROGS([STRIP],[strip])
 AM_PATH_PYTHON(2.2,,:)
 gtk_CHECK_GTK_DOC
+
+# XDG stuff
+AC_CHECK_PROGS([UPDATE_DESKTOP_DATABASE],[update-desktop-database],:)
+AC_CHECK_PROGS([UPDATE_MIME_DATABASE],[update-mime-database],:)
+AC_ARG_ENABLE(desktop-file-update,
+  AS_HELP_STRING([--enable-desktop-file-update],
+                 [Update XDG databases (yes)]),
+  [case "${enableval}" in
+     yes) desktop_file_update=true ;;
+     no)  desktop_file_update=false ;;
+     *) AC_MSG_ERROR(bad value ${enableval} for --enable-desktop-file-update) ;;
+   esac],
+   [desktop_file_update=true])
+AM_CONDITIONAL([DESKTOP_FILE_UPDATE],[test "x$desktop_file_update" = "xtrue"])
 
 # Check for Perl
 AC_PATH_PROGS(PERL,perl5 perl,:)

@@ -75,4 +75,15 @@ gwyddion_vim_cfg = $(top_srcdir)/data/gwyddion-cfg.py
 data/gwyddion.vim: $(gwyddion_vim_sources) $(gwyddion_vim_cfg)
 	cd $(top_builddir) && $(PYTHON) $(top_srcdir)/utils/vim-syn-gen.py $(gwyddion_vim_cfg) >data/gwyddion.vim
 
+# Desktop files
+if DESKTOP_FILE_UPDATE
+install-data-hook:
+	$(UPDATE_DESKTOP_DATABASE) $(datadir)/applications
+	$(UPDATE_MIME_DATABASE) $(datadir)/mime
+
+uninstall-hook:
+	$(UPDATE_DESKTOP_DATABASE) $(datadir)/applications
+	$(UPDATE_MIME_DATABASE) $(datadir)/mime
+endif
+
 .PHONY: docs
