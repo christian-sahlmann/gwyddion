@@ -26,15 +26,16 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #define MAGIC "SIS&STB  SIScan"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
