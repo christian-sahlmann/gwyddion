@@ -789,7 +789,7 @@ gwy_option_menu_nlfitpreset(GCallback callback,
     static gint nentries = 0;
 
     if (!entries) {
-        const GwyNLFitPresetFunction *func;
+        const GwyNLFitPreset *func;
         gint i;
 
         nentries = gwy_math_nlfit_get_npresets();
@@ -797,7 +797,7 @@ gwy_option_menu_nlfitpreset(GCallback callback,
         for (i = 0; i < nentries; i++) {
             entries[i].value = i;
             func = gwy_math_nlfit_get_preset(i);
-            entries[i].name = gwy_math_nlfit_get_function_name(func);
+            entries[i].name = gwy_math_nlfit_get_preset_name(func);
         }
     }
 
