@@ -38,6 +38,7 @@ static GtkWidget* gwy_palette_menu_create        (const gchar *current,
 static GtkWidget* gwy_sample_palette_to_gtkimage (GwyPaletteDef *palette_def);
 static gint       palette_def_compare            (GwyPaletteDef *a,
                                                   GwyPaletteDef *b);
+static GtkWidget* gwy_sample_gl_material_to_gtkimage(GwyGLMaterial *material);
 static gint       gl_material_compare            (GwyGLMaterial *a,
                                                   GwyGLMaterial *b);
 static void       gwy_option_menu_metric_unit_destroyed (GwyEnum *entries);
@@ -175,7 +176,7 @@ gwy_sample_palette_to_gtkimage(GwyPaletteDef *palette_def)
         return NULL;
     }
 
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, BITS_PER_SAMPLE,
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
                             PALETTE_SAMPLE_WIDTH, PALETTE_SAMPLE_HEIGHT);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
@@ -220,7 +221,7 @@ gwy_gl_material_menu_create(const gchar *current,
                             gint *current_idx)
 {
     GSList *l, *entries = NULL;
-    GtkWidget *menu, *item;
+    GtkWidget *menu, *image, *item, *hbox, *label;
     gint i, idx;
 
     gwy_gl_material_foreach((GwyGLMaterialFunc)gwy_hash_table_to_slist_cb,
@@ -235,7 +236,14 @@ gwy_gl_material_menu_create(const gchar *current,
         GwyGLMaterial *gl_material = (GwyGLMaterial*)l->data;
         const gchar *name = gwy_gl_material_get_name(gl_material);
 
-        item = gtk_menu_item_new_with_label(_(name));
+        image = gwy_sample_gl_material_to_gtkimage(gl_material);
+        item = gtk_menu_item_new();
+        hbox = gtk_hbox_new(FALSE, 6);
+        label = gtk_label_new(name);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+        gtk_container_add(GTK_CONTAINER(item), hbox);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_object_set_data(G_OBJECT(item), "material-name", (gpointer)name);
         if (current && strcmp(current, name) == 0)
@@ -319,6 +327,40 @@ gwy_option_menu_gl_material(GCallback callback,
     }
 
     return omenu;
+}
+
+/* XXX: magic static variables */
+static GtkWidget*
+gwy_sample_gl_material_to_gtkimage(GwyGLMaterial *material)
+{
+    static guchar *samples = NULL;
+    GdkPixbuf *pixbuf;
+    GtkWidget *image;
+    guint rowstride;
+    guchar *data;
+    gint i;
+
+    /* clean up when called with NULL */
+    if (!material) {
+        g_free(samples);
+        samples = NULL;
+        return NULL;
+    }
+
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, BITS_PER_SAMPLE,
+                            PALETTE_SAMPLE_WIDTH, PALETTE_SAMPLE_HEIGHT);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    data = gdk_pixbuf_get_pixels(pixbuf);
+
+    samples = gwy_gl_material_sample(material, PALETTE_SAMPLE_WIDTH, samples);
+    for (i = 0; i < PALETTE_SAMPLE_HEIGHT; i++)
+        memcpy(data + i*rowstride, samples, 4*PALETTE_SAMPLE_WIDTH);
+
+    image = gtk_image_new_from_pixbuf(pixbuf);
+    g_object_unref(pixbuf);
+
+    return image;
 }
 
 static gint

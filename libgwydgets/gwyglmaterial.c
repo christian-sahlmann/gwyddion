@@ -491,6 +491,63 @@ gwy_gl_material_foreach(GwyGLMaterialFunc callback,
     g_hash_table_foreach(klass->materials, (GHFunc)callback, user_data);
 }
 
+/**
+ * gwy_gl_material_sample:
+ * @glmaterial: Open GL Material definition.
+ * @size: Required sample size.
+ * @oldsample: Pointer to array to be filled.
+ *
+ * Fills the GdkPixbuf-like field of RRGGBBAA integer values representing
+ * the material.
+ *
+ * If @oldsample is not %NULL, it's resized to 4*@size bytes, otherwise it's
+ * newly allocated.
+ *
+ * Returns: The sampled material.  The sample is somewhat arbitrary, as
+ *          lighting has more than one degree of freedom, but shows the
+ *          material from unlit to some `fully lit' state.
+ *
+ * Since: 1.5
+ **/
+guchar*
+gwy_gl_material_sample(GwyGLMaterial *glmaterial,
+                       gint size,
+                       guchar *oldsample)
+{
+    gint i, k;
+    gdouble cor;
+    guchar alpha;
+
+    g_return_val_if_fail(GWY_IS_GL_MATERIAL(material), NULL);
+    g_return_val_if_fail(size > 1, NULL);
+
+    oldsample = g_renew(guchar, oldsample, 4*size);
+
+    k = 0;
+    cor = 1.0/(size - 1.0);
+    if (strcmp(material->name, GWY_GL_MATERIAL_NONE) == 0)
+        alpha = 0;
+    else
+        alpha = 255;
+
+    for (i = 0; i < size; i++) {
+        gdouble NL = i*cor;
+        gdouble VR = 2.0*NL*NL - 1.0;
+        gdouble s = VR > 0.0 ? exp(log(VR)*128.0*material->shininess) : 0.0;
+
+        for (k = 0; k < 3; k++) {
+            gdouble v = material->ambient[k]*1.0
+                        + material->diffuse[k]*1.0*NL
+                        + material->specular[k]*1.0*s;
+            oldsample[4*i+k] = (guchar)CLAMP(255.999*v, 0.0, 255.0);
+        }
+        oldsample[4*i + 3] = alpha;
+    }
+
+    return oldsample;
+}
+
+
 /************************** Documentation ****************************/
 
 /**

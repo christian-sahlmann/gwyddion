@@ -99,6 +99,9 @@ gboolean          gwy_gl_material_exists           (const gchar *name);
 void              gwy_gl_material_foreach          (GwyGLMaterialFunc callback,
                                                     gpointer user_data);
 void              gwy_gl_material_setup_presets    (void);
+guchar*           gwy_gl_material_sample           (GwyGLMaterial *glmaterial,
+                                                    gint size,
+                                                    guchar *oldsample);
 
 G_END_DECLS
 
