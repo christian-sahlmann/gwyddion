@@ -126,6 +126,8 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->x_max = 0;
     area->y_min = 0;
     area->y_max = 0;
+    area->old_width = 0;
+    area->old_height = 0;
      
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90); 
@@ -189,11 +191,15 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     lab_alloc = &GTK_WIDGET(area->lab)->allocation;
 
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
-    if (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
-        || lab_alloc->y != 5)
+    if ((area->old_width != widget->allocation.width || area->old_height != widget->allocation.height) && 
+        (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
+        || lab_alloc->y != 5))
         gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 
                         widget->allocation.width - lab_alloc->width - 5, 5);
     gwy_graph_area_plot_refresh(area);
+
+    area->old_width = widget->allocation.width;
+    area->old_height = widget->allocation.height;
 }
 
 static void
@@ -467,12 +473,14 @@ gwy_graph_area_draw_child_rectangle(GwyGraphArea *area)
     if (!area->active)
         return;
 
+    gdk_gc_set_function(area->gc, GDK_INVERT);
     allocation = &area->active->allocation;
     gdk_draw_rectangle(GTK_LAYOUT(area)->bin_window, area->gc, FALSE,
                        allocation->x + area->xoff,
                        allocation->y + area->yoff,
                        allocation->width,
                        allocation->height);
+    gdk_gc_set_function(area->gc, GDK_COPY);
 }
 
 void 
