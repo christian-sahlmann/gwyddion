@@ -272,18 +272,23 @@ def check_boolean_comparisons(tokens, lines, warnings):
 def check_boolean_arguments(tokens, lines, warnings):
     "Check for boolean arguments passed as 0, 1."
     functions = {
+        'g_array_free': 2,
         'g_array_new': (1, 2),
         'g_array_sized_new': (1, 2),
-        'g_array_free': 2,
         'g_ptr_array_free': 2,
         'g_string_free': 2,
-        'gtk_hbox_new': 1,
         'gdk_draw_rectangle': 3,
-        'gtk_vbox_new': 1,
+        'gtk_box_pack_end': (3, 4),
         'gtk_box_pack_start': (3, 4),
+        'gtk_hbox_new': 1,
+        'gtk_spin_button_set_numeric': 2,
+        'gtk_table_new': 3,
+        'gtk_toggle_button_set_active': 2,
+        'gtk_vbox_new': 1,
+        'gtk_widget_set_sensitive': 2,
+        'gwy_data_field_invert': (2, 3, 4),
         'gwy_data_field_new': 5,
-        'gwy_data_line_new': 3,
-        'gwy_data_field_invert': (2, 3, 4)
+        'gwy_data_line_new': 3
     }
     for i, t in enumerate(tokens):
         if t.typ != Token.ident or t.string not in functions:
