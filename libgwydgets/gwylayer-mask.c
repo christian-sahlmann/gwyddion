@@ -39,6 +39,8 @@ static gboolean   gwy_layer_mask_wants_repaint     (GwyDataViewLayer *layer);
 static void       gwy_layer_mask_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_mask_unplugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_mask_update            (GwyDataViewLayer *layer);
+static void       gwy_layer_mask_save              (GwyDataViewLayer *layer);
+static void       gwy_layer_mask_restore           (GwyDataViewLayer *layer);
 
 /* Local data */
 
@@ -153,6 +155,7 @@ gwy_layer_mask_paint(GwyDataViewLayer *layer)
                      gwy_container_get_object_by_name(layer->data,
                                                       "/0/mask"));
     g_return_val_if_fail(data_field, layer->pixbuf);
+    gwy_layer_mask_restore(layer);
     /*if (GWY_LAYER_MASK(layer)->changed)*/ {
         gwy_pixfield_do_mask(layer->pixbuf, data_field, &mask_layer->color);
         GWY_LAYER_MASK(layer)->changed = FALSE;
@@ -187,10 +190,7 @@ gwy_layer_mask_set_color(GwyDataViewLayer *layer,
 
     mask_layer = (GwyLayerMask*)layer;
     memcpy(&mask_layer->color, color, sizeof(GwyRGBA));
-    gwy_container_set_double_by_name(layer->data, "/0/mask/red", color->r);
-    gwy_container_set_double_by_name(layer->data, "/0/mask/green", color->g);
-    gwy_container_set_double_by_name(layer->data, "/0/mask/blue", color->b);
-    gwy_container_set_double_by_name(layer->data, "/0/mask/alpha", color->a);
+    gwy_layer_mask_save(layer);
     gwy_layer_mask_update(layer);
 }
 
@@ -218,7 +218,6 @@ gwy_layer_mask_plugged(GwyDataViewLayer *layer)
     GwyDataField *data_field;
     GwyLayerMask *mask_layer;
     gint width, height;
-    GwyRGBA *c;
 
     gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_LAYER_MASK(layer));
@@ -234,16 +233,7 @@ gwy_layer_mask_plugged(GwyDataViewLayer *layer)
     g_return_if_fail(data_field);
     width = gwy_data_field_get_xres(data_field);
     height = gwy_data_field_get_yres(data_field);
-
-    c = &mask_layer->color;
-    if (gwy_container_contains_by_name(layer->data, "/0/mask/red"))
-        c->r = gwy_container_get_double_by_name(layer->data, "/0/mask/red");
-    if (gwy_container_contains_by_name(layer->data, "/0/mask/green"))
-        c->g = gwy_container_get_double_by_name(layer->data, "/0/mask/green");
-    if (gwy_container_contains_by_name(layer->data, "/0/mask/blue"))
-        c->b = gwy_container_get_double_by_name(layer->data, "/0/mask/blue");
-    if (gwy_container_contains_by_name(layer->data, "/0/mask/alpha"))
-        c->a = gwy_container_get_double_by_name(layer->data, "/0/mask/alpha");
+    gwy_layer_mask_restore(layer);
 
     layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE,
                                    BITS_PER_SAMPLE, width, height);
@@ -263,6 +253,40 @@ gwy_layer_mask_update(GwyDataViewLayer *layer)
 {
     GWY_LAYER_MASK(layer)->changed = TRUE;
     gwy_data_view_layer_updated(layer);
+}
+
+static void
+gwy_layer_mask_save(GwyDataViewLayer *layer)
+{
+    GwyLayerMask *mask_layer = GWY_LAYER_MASK(layer);
+    GwyRGBA *c;
+
+    c = &mask_layer->color;
+    /* TODO Container */
+    gwy_container_set_double_by_name(layer->data, "/0/mask/red", c->r);
+    gwy_container_set_double_by_name(layer->data, "/0/mask/green", c->g);
+    gwy_container_set_double_by_name(layer->data, "/0/mask/blue", c->b);
+    gwy_container_set_double_by_name(layer->data, "/0/mask/alpha", c->a);
+}
+
+static void
+gwy_layer_mask_restore(GwyDataViewLayer *layer)
+{
+    GwyLayerMask *mask_layer = GWY_LAYER_MASK(layer);
+    GwyRGBA *c;
+
+    c = &mask_layer->color;
+    /* TODO Container */
+    if (gwy_container_contains_by_name(layer->data, "/0/mask/red"))
+        c->r = gwy_container_get_double_by_name(layer->data, "/0/mask/red");
+    if (gwy_container_contains_by_name(layer->data, "/0/mask/green"))
+        c->g = gwy_container_get_double_by_name(layer->data, "/0/mask/green");
+    if (gwy_container_contains_by_name(layer->data, "/0/mask/blue"))
+        c->b = gwy_container_get_double_by_name(layer->data, "/0/mask/blue");
+    if (gwy_container_contains_by_name(layer->data, "/0/mask/alpha"))
+        c->a = gwy_container_get_double_by_name(layer->data, "/0/mask/alpha");
+    gwy_debug("%s: r = %f, g = %f, b = %f, a = %f", __FUNCTION__,
+              c->r, c->g, c->b, c->a);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
