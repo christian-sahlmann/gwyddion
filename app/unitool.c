@@ -380,6 +380,9 @@ gwy_unitool_update_thumbnail(GwyUnitoolState *state)
     GdkPixbuf *pixbuf;
     GList *children, *c;
 
+    if (!state->windowname)
+        return;
+
     box = gtk_widget_get_ancestor(state->windowname, GTK_TYPE_HBOX);
     c = children = gtk_container_get_children(GTK_CONTAINER(box));
     while (c) {
@@ -508,15 +511,15 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     frame = gtk_frame_new(NULL);
     gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
 
-    hbox = gtk_hbox_new(FALSE, 2);
+    hbox = gtk_hbox_new(FALSE, 4);
     gtk_container_add(GTK_CONTAINER(frame), hbox);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 2);
 
     image = gtk_image_new();
     gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
 
     label = gtk_label_new(gwy_data_window_get_base_name(state->data_window));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_misc_set_padding(GTK_MISC(label), 4, 2);
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
     state->windowname = label;
 
