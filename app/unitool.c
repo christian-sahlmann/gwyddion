@@ -27,20 +27,22 @@
 #include "unitool.h"
 #include "menu-windowlist.h"
 
-static void       gwy_unitool_name_changed_cb      (GwyUnitoolState *state);
-static void       gwy_unitool_disconnect_handlers  (GwyUnitoolState *state);
-static void       gwy_unitool_dialog_abandon       (GwyUnitoolState *state);
-static void       gwy_unitool_compute_formats      (GwyUnitoolState *state);
-static void       gwy_unitool_selection_updated_cb (GwyUnitoolState *state);
-static void       gwy_unitool_data_updated_cb      (GwyUnitoolState *state);
-static void       gwy_unitool_dialog_response_cb   (GwyUnitoolState *state,
-                                                    gint response);
-static void       gwy_unitool_dialog_set_visible   (GwyUnitoolState *state,
-                                                    gboolean visible);
-static GtkWidget* gwy_unitool_dialog_find_button   (GwyUnitoolState *state,
-                                                    gint response_id);
-static void       gwy_unitool_setup_accel_group    (GwyUnitoolState *state);
-static void       gwy_unitool_update_thumbnail     (GwyUnitoolState *state);
+static void       gwy_unitool_name_changed_cb        (GwyUnitoolState *state);
+static void       gwy_unitool_disconnect_handlers    (GwyUnitoolState *state);
+static void       gwy_unitool_dialog_abandon         (GwyUnitoolState *state);
+static void       gwy_unitool_compute_formats        (GwyUnitoolState *state);
+static void       gwy_unitool_selection_updated_cb   (GwyUnitoolState *state);
+static void       gwy_unitool_selection_updated_real (GwyUnitoolState *state,
+                                                      gboolean make_visible);
+static void       gwy_unitool_data_updated_cb        (GwyUnitoolState *state);
+static void       gwy_unitool_dialog_response_cb     (GwyUnitoolState *state,
+                                                      gint response);
+static void       gwy_unitool_dialog_set_visible     (GwyUnitoolState *state,
+                                                      gboolean visible);
+static GtkWidget* gwy_unitool_dialog_find_button     (GwyUnitoolState *state,
+                                                      gint response_id);
+static void       gwy_unitool_setup_accel_group      (GwyUnitoolState *state);
+static void       gwy_unitool_update_thumbnail       (GwyUnitoolState *state);
 
 /***** Public ***************************************************************/
 
@@ -152,8 +154,7 @@ gwy_unitool_use(GwyUnitoolState *state,
         gwy_unitool_update_thumbnail(state);
     }
 
-    if (state->is_visible)
-        gwy_unitool_selection_updated_cb(state);
+    gwy_unitool_selection_updated_real(state, FALSE);
 
     return TRUE;
 }
@@ -163,7 +164,7 @@ gwy_unitool_use(GwyUnitoolState *state,
 static void
 gwy_unitool_name_changed_cb(GwyUnitoolState *state)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     if (!state->windowname)
         return;
 
@@ -217,7 +218,7 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
 static void
 gwy_unitool_dialog_abandon(GwyUnitoolState *state)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     gwy_unitool_disconnect_handlers(state);
     if (state->dialog) {
         if (state->func_slots->dialog_abandon)
@@ -255,14 +256,21 @@ gwy_unitool_compute_formats(GwyUnitoolState *state)
 static void
 gwy_unitool_selection_updated_cb(GwyUnitoolState *state)
 {
+    gwy_debug(" ");
+    gwy_unitool_selection_updated_real(state, TRUE);
+}
+
+static void
+gwy_unitool_selection_updated_real(GwyUnitoolState *state,
+                                   gboolean make_visible)
+{
     gint nselected;
     GtkWidget *clear;
 
-    gwy_debug("");
     nselected = gwy_vector_layer_get_selection(state->layer, NULL);
     if (state->func_slots->dialog_update)
         state->func_slots->dialog_update(state, GWY_UNITOOL_UPDATED_SELECTION);
-    if (nselected && !state->is_visible)
+    if (make_visible && nselected && !state->is_visible)
         gwy_unitool_dialog_set_visible(state, TRUE);
     clear = gwy_unitool_dialog_find_button(state,
                                            GWY_UNITOOL_RESPONSE_UNSELECT);
@@ -276,7 +284,7 @@ gwy_unitool_selection_updated_cb(GwyUnitoolState *state)
 static void
 gwy_unitool_data_updated_cb(GwyUnitoolState *state)
 {
-    gwy_debug("");
+    gwy_debug(" ");
     if (!state->is_visible)
         return;
     if (state->func_slots->dialog_update)
