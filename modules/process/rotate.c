@@ -9,10 +9,12 @@
 #define GWY_RUN_ANY \
     (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+static const gchar *rotate_angle_key = "/mod/rotate/angle";
+
 static gboolean    module_register            (const gchar *name);
 static gboolean    rotate                     (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    rotate_dialog              (GwyContainer *data);
+static gboolean    rotate_dialog              (gdouble *angle);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -35,7 +37,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo rotate_func_info = {
         "rotate",
-        "/_Basic Operations/Rotate by _angle...",
+        "/_Basic Operations/Rotate By _Angle...",
         &rotate,
         GWY_RUN_ANY,
     };
@@ -49,29 +51,38 @@ static gboolean
 rotate(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
+    gdouble angle;
+    gboolean ok;
 
     gwy_debug("%s", __FUNCTION__);
     g_assert(run & (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE));
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+    g_object_ref(data);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
+    g_object_ref(dfield);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
 
+    ok = TRUE;
+    angle = gwy_container_get_double_by_name(data, rotate_angle_key);
     if (run == GWY_RUN_INTERACTIVE)
-        return rotate_dialog(data);
+        ok = rotate_dialog(&angle);
 
-    return TRUE;
+    if (ok) {
+       gwy_data_field_rotate(dfield, angle, GWY_INTERPOLATION_BILINEAR);
+       gwy_container_set_double_by_name(data, rotate_angle_key, angle);
+    }
+    g_object_unref(dfield);
+    g_object_unref(data);
+
+    return FALSE;
 }
 
 static gboolean
-rotate_dialog(GwyContainer *data)
+rotate_dialog(gdouble *angle)
 {
-    GwyDataField *dfield;
-    gpointer data_weak;
     GtkWidget *dialog, *hbox, *widget;
     GtkAdjustment *adj;
-    gdouble angle;
 
-    g_object_add_weak_pointer(G_OBJECT(data), &data_weak);
     dialog = gtk_dialog_new_with_buttons(_("Rotate"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -85,8 +96,7 @@ rotate_dialog(GwyContainer *data)
 
     widget = gtk_label_new(_("Rotate by angle"));
     gtk_box_pack_start(GTK_BOX(hbox),  widget, FALSE, FALSE, 0);
-    /* TODO: remember */
-    adj = GTK_ADJUSTMENT(gtk_adjustment_new(0, -360, 360, 5, 30, 0));
+    adj = GTK_ADJUSTMENT(gtk_adjustment_new(*angle, -360, 360, 5, 30, 0));
     widget = gtk_spin_button_new(adj, 1.0, 0);
     gtk_box_pack_start(GTK_BOX(hbox),  widget, FALSE, FALSE, 0);
     widget = gtk_label_new(_("deg (CCW)"));
@@ -109,14 +119,8 @@ rotate_dialog(GwyContainer *data)
         break;
     }
 
-    angle = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
+    *angle = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
     gtk_widget_destroy(dialog);
-    if (!data_weak)
-        return FALSE;
-    dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-    gwy_data_field_rotate(dfield, angle, GWY_INTERPOLATION_BILINEAR);
-    g_object_remove_weak_pointer(G_OBJECT(data), &data_weak);
 
     return TRUE;
 }
