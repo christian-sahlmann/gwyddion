@@ -1,4 +1,4 @@
-1.0cvs20040404
+1.0cvs20040406
 
 1.1
 - Raw file import supports named presets of import parameters.
@@ -16,6 +16,7 @@
 - Creating mask by outliers detection enabled. It uses 3*sigma criterium
   for searching an outlier.
 - It is possible to import data from common bitmap image formats.
+- Facet-level is cancelable.
 - Fractal dimension of the rough surface can be evaluated using partitioning,
   cube counting, traingulation and power spectrum method.
 
