@@ -48,7 +48,7 @@
  * Modified by Yeti 2003.  In fact, rewritten, except the skeleton
  * and a few drawing functions.
  */
-#define DEBUG 1
+
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>

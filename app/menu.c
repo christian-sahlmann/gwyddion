@@ -23,7 +23,7 @@
  * - the menu sensitivity stuff should be in libgwyapp
  * - last-run function stuff should be in ???
  */
-#define DEBUG 1
+
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
