@@ -19,8 +19,8 @@
     <title>Registration</title>
     <para>
       When the plug-in is called with <literal>register</literal> as
-      its first argument it should dump following information to standard
-      output (each on a separate line) and terminate:
+      its first argument it should dump following information about self to
+      standard output (each on a separate line) and terminate:
     </para>
     <itemizedlist>
       <listitem>plug-in name</listitem>
@@ -28,14 +28,37 @@
       <listitem>run modes</listitem>
     </itemizedlist>
     <para>
-      These information correspond to similar data process module
-      information.
+      This information correspond to similar
+      <link linkend="libgwymodule-gwymodule-process">data process module</link>
+      information.  All fields are case-sensitive.  The run modes line
+      consists of a space-separated list of run mode names:
+      <simplelist>
+        <member><literal>interactive</literal></member>
+        <member><literal>noninteractive</literal></member>
+        <member><literal>modal</literal></member>
+        <member><literal>with_defaults</literal></member>
+      </simplelist>
+      Note however, interactive plug-ins are not supported (yet), only modal
+      ones.
+    </para>
+    <para>
+      So the output of plugin <command>my_plugin</command> when run as
+      <command>my_plugin register</command> could look:
     </para>
     <screen><![CDATA[
 my_plugin
 /_Plug-ins/My Plug-in
 noninteractive with_defaults
 ]]></screen>
+  </refsect1>
+  <refsect1>
+    <title>Data Processing</title>
+    <para>
+      When the plug-in is called with <literal>run</literal> as its first
+      argument then the second argument is equal to actual run mode (one of
+      those it printed during registration) and the third one is a
+      <link linkend="plugin-proxy-dump">dump file</link> name to process.
+    </para>
   </refsect1>
 </refentry>
 

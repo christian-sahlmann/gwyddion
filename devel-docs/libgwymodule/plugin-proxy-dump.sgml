@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="plugin-proxy-dump" revision="@(#) $Id$">
+  <refmeta>
+    <refentrytitle>Dump Format</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>Gwyddion</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>Dump Format</refname>
+    <refpurpose>
+      XXX
+    </refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Overall structure</title>
+    <para>
+      The dump format consists of text lines, except for the actual data
+      samples which are for efficiency reasons stored as arrays of (binary)
+      IEEE double precision numbers.
+    </para>
+  </refsect1>
+</refentry>
+
+
+

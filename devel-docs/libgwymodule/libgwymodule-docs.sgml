@@ -29,5 +29,6 @@
     <xi:include href="plugin-proxy-overview.sgml"/>
     <xi:include href="plugin-proxy-process.sgml"/>
     <xi:include href="plugin-proxy-file.sgml"/>
+    <xi:include href="plugin-proxy-dump.sgml"/>
   </chapter>
 </book>
