@@ -41,8 +41,11 @@ gdouble gwy_interpolation_get_dval(gdouble x,
                                    gdouble y2_,
                                    GwyInterpolationType interpolation);
 
-/*NOTE: quick interpolation of equidistant values is implemented
- in dataline and datafield classes separately.*/
+gdouble
+gwy_interpolation_get_dval_of_equidists(gdouble x,
+                                        gdouble *data,
+                                        GwyInterpolationType interpolation);
+
 
 G_END_DECLS
 

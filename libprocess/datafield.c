@@ -558,9 +558,10 @@ gdouble
 gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
                         GwyInterpolationType interpolation)
 {
-    gint ix, iy;
+    gint ix, iy, i;
     gint floorx, floory;
-    gdouble restx, resty, valpx, valxp, valpp;
+    gdouble restx, resty, valpx, valxp, valpp, va, vb, vc, vd;
+    gdouble intline[4];
 
     if (x<0 && x>-0.1) x = 0;
     if (y<0 && x>-0.1) y = 0;
@@ -577,7 +578,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
         iy = (gint)(y + 0.5);
         return a->data[ix + a->xres*iy];
 
-        default:
+        case GWY_INTERPOLATION_BILINEAR: 
         floorx = (gint)floor(x);
         floory = (gint)floor(y);
         restx = x - (gdouble)floorx;
@@ -600,13 +601,38 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 
         return valpx + valxp + valpp
                + (1 - restx)*(1 - resty)*a->data[floorx + a->xres*floory];
-        break;
+        
 
-        /* TODO  other interpolations must be added
-        default:
-        g_warning("Not supported interpolation type.\n");
-        return 0.0;
-        */
+        default: 
+        floorx = (gint)floor(x);
+        floory = (gint)floor(y);
+        restx = x - (gdouble)floorx;
+        resty = y - (gdouble)floory;
+
+        /*return ROUND result if we have no space for interpolations*/
+        if (floorx < 1 || floory < 1 || floorx >= (a->xres-2) || floory >= (a->yres-2))
+        {
+            ix = (gint)(x + 0.5);
+            iy = (gint)(y + 0.5);
+            return a->data[ix + a->xres*iy];
+        }
+        
+        /*interpolation in x direction*/
+        for (i=0; i<4; i++) intline[i] = a->data[floorx - 1 + i + a->xres*(floory - 1)];
+        va = gwy_interpolation_get_dval_of_equidists(restx, intline, interpolation);
+        for (i=0; i<4; i++) intline[i] = a->data[floorx - 1 + i + a->xres*(floory)];
+        vb = gwy_interpolation_get_dval_of_equidists(restx, intline, interpolation);
+        for (i=0; i<4; i++) intline[i] = a->data[floorx - 1 + i + a->xres*(floory + 1)];
+        vc = gwy_interpolation_get_dval_of_equidists(restx, intline, interpolation);
+        for (i=0; i<4; i++) intline[i] = a->data[floorx - 1 + i + a->xres*(floory + 2)];
+        vd = gwy_interpolation_get_dval_of_equidists(restx, intline, interpolation);
+
+        /*interpolation in y direction*/
+        intline[0] = va;
+        intline[1] = vb;
+        intline[2] = vc;
+        intline[3] = vd;
+        return gwy_interpolation_get_dval_of_equidists(resty, intline, interpolation);
     }
 }
 
