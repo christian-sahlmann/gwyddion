@@ -19,6 +19,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -1618,7 +1619,7 @@ gwy_data_field_get_area_avg(GwyDataField *a,
  **/
 gdouble
 gwy_data_field_get_surface_area(GwyDataField *a,
-                                GwyInterpolationType interpolation)
+                                G_GNUC_UNUSED GwyInterpolationType interpolation)
 {
     gint i, j;
     gdouble sum = 0;
@@ -1649,7 +1650,7 @@ gdouble
 gwy_data_field_area_get_surface_area(GwyDataField *dfield,
                                      gint col, gint row,
                                      gint width, gint height,
-                                     GwyInterpolationType interpolation)
+                                     G_GNUC_UNUSED GwyInterpolationType interpolation)
 {
     gint i, j;
     gdouble sum = 0.0;
@@ -3512,24 +3513,64 @@ void gwy_data_field_filter_prewitt(GwyDataField *data_field,
     g_object_unref(kernel_df);
 }
 
-#warning bubble_sort still present
-void
-bubble_sort(gdouble *numbers, gdouble array_size)
+/* based on public domain code by Nicolas Devillard */
+static gdouble
+quick_select(gsize size, gdouble *array)
 {
-    gint i, j;
-    gdouble temp;
+    gsize lo, hi;
+    gsize median;
+    gsize middle, ll, hh;
 
-    for (i = (array_size - 1); i >= 0; i--)
-    {
-        for (j = 1; j <= i; j++)
-        {
-            if (numbers[j-1] > numbers[j])
-            {
-                temp = numbers[j-1];
-                numbers[j-1] = numbers[j];
-                numbers[j] = temp;
-            }
+    lo = 0;
+    hi = size - 1;
+    median = size/2;
+    while (TRUE) {
+        if (hi <= lo)        /* One element only */
+            return array[median];
+
+        if (hi == lo + 1) {  /* Two elements only */
+            if (array[lo] > array[hi])
+                GWY_SWAP(gdouble, array[lo], array[hi]);
+            return array[median];
         }
+
+        /* Find median of lo, middle and hi items; swap into position lo */
+        middle = (lo + hi)/2;
+        if (array[middle] > array[hi])
+            GWY_SWAP(gdouble, array[middle], array[hi]);
+        if (array[lo] > array[hi])
+            GWY_SWAP(gdouble, array[lo], array[hi]);
+        if (array[middle] > array[lo])
+            GWY_SWAP(gdouble, array[middle], array[lo]);
+
+        /* Swap low item (now in position middle) into position (lo+1) */
+        GWY_SWAP(gdouble, array[middle], array[lo + 1]);
+
+        /* Nibble from each end towards middle, swapping items when stuck */
+        ll = lo + 1;
+        hh = hi;
+        while (TRUE) {
+            do {
+                ll++;
+            } while (array[lo] > array[ll]);
+            do {
+                hh--;
+            } while (array[hh] > array[lo]);
+
+            if (hh < ll)
+                break;
+
+            GWY_SWAP(gdouble, array[ll], array[hh]);
+        }
+
+        /* Swap middle item (in position lo) back into correct position */
+        GWY_SWAP(gdouble, array[lo], array[hh]);
+
+        /* Re-set active partition */
+        if (hh <= median)
+            lo = ll;
+        if (hh >= median)
+            hi = hh - 1;
     }
 }
 
@@ -3538,67 +3579,47 @@ void
 gwy_data_field_filter_median(GwyDataField *data_field, gint size,
                              gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
-    gint xres, yres, kxres, kyres, i, j, m, n;
-    gint xsize, ysize, nb;
-    gdouble medval, *neighbours;
-    GwyDataField *hlp_df;
+
+    gint width, height, rowstride;
+    gint i, j, k, len;
+    gint xfrom, xto, yfrom, yto;
+    gdouble *buffer, *data, *kernel;
 
     gwy_debug("");
-    if (size <= 0) {
-        g_warning("Filter cannot have negative or null size");
-        return;
-    }
-    xres = data_field->xres;
-    yres = data_field->yres;
-    kxres = size;
-    kyres = size;
-    hlp_df =
-        (GwyDataField *) gwy_data_field_new(xres, yres, data_field->xreal,
-                                            data_field->yreal, TRUE);
-    neighbours = (gdouble *)g_malloc((size * size) * sizeof(gdouble));
+    g_return_if_fail(size > 0);
 
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
-
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
+    width = brcol - ulcol;
+    height = brrow - ulrow;
+    g_return_if_fail(width > 0 && height > 0);
 
-    xsize = brcol - ulcol;
-    ysize = brrow - ulrow;
+    buffer = g_new(gdouble, width*height);
+    kernel = g_new(gdouble, size*size);
+    rowstride = data_field->xres;
+    data = data_field->data + rowstride*ulrow + ulcol;
 
-    if (kxres > xsize || kyres > ysize) {
-        g_warning("Kernel size larger than field area size.");
-        return;
-    }
-
-    for (i = ulrow; i < brrow; i++) {
-        for (j = ulcol; j < brcol; j++) {
-            nb = 0;
-            for (m = (-kyres/2); m < (kyres - kyres/2); m++) {
-                for (n = (-kxres/2); n < (kxres - kxres/2); n++) {
-                    if (((j + n) < xres) && ((i + m) < yres) && ((j + n) >= 0)
-                        && ((i + m) >= 0)) {
-                        neighbours[nb] =
-                            data_field->data[(j + n) + xres * (i + m)];
-                        nb++;
-                    }
-                }
-            }
-            bubble_sort(neighbours, nb);
-            medval = neighbours[nb/2];
-            hlp_df->data[j + xres * i] = medval;
+    for (i = 0; i < height; i++) {
+        yfrom = MAX(0, i - (size-1)/2);
+        yto = MIN(height-1, i + size/2);
+        for (j = 0; j < width; j++) {
+            xfrom = MAX(0, j - (size-1)/2);
+            xto = MIN(width-1, j + size/2);
+            len = xto - xfrom + 1;
+            for (k = yfrom; k <= yto; k++)
+                memcpy(kernel + len*(k - yfrom),
+                       data + k*rowstride + xfrom,
+                       len*sizeof(gdouble));
+            buffer[i*width + j] = quick_select(len*(yto - yfrom + 1), kernel);
         }
     }
 
-    for (i = ulrow; i < brrow; i++) {
-        for (j = ulcol; j < brcol; j++) {
-            data_field->data[j + xres * i] = hlp_df->data[j + xres * i];
-        }
-    }
-
-    g_object_unref(hlp_df);
-    g_free(neighbours);
-
+    g_free(kernel);
+    for (i = 0; i < height; i++)
+        memcpy(data + i*rowstride, buffer + i*width, width*sizeof(gdouble));
+    g_free(buffer);
 }
 
 /* XXX: why this function does not have `area' in name? */
@@ -4038,7 +4059,8 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                               GwyDataField *data_field2, GwyDataField *x_dist,
                               GwyDataField *y_dist, GwyDataField *score,
                               gint search_width, gint search_height,
-                              gint window_width, gint window_height)
+                              G_GNUC_UNUSED gint window_width,
+                              G_GNUC_UNUSED gint window_height)
 {
     gint xres, yres, i, j, m, n;
     gint imax, jmax;
@@ -4141,9 +4163,10 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
                                         GwyDataField *data_field2,
                                         GwyDataField *x_dist,
                                         GwyDataField *y_dist,
-                                        GwyDataField *score, gint search_width,
-                                        gint search_height, gint window_width,
-                                        gint window_height,
+                                        GwyDataField *score,
+                                        gint search_width, gint search_height,
+                                        G_GNUC_UNUSED gint window_width,
+                                        G_GNUC_UNUSED gint window_height,
                                         GwyComputationStateType * state,
                                         gint *iteration)
 {
