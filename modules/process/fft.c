@@ -155,15 +155,10 @@ fft(GwyContainer *data, GwyRunType run)
     if (!ok)
         return FALSE;
 
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-    gwy_app_clean_up_data(data);
-
-    if (gwy_container_contains_by_name(data, "/0/show"))
-        gwy_container_remove_by_name(data, "/0/show");
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-        gwy_container_remove_by_name(data, "/0/mask");
-
+    data = gwy_container_duplicate_by_prefix(data,
+                                             "/0/data",
+                                             "/0/base/palette",
+                                             NULL);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     xsize = gwy_data_field_get_xres(dfield);
@@ -183,25 +178,22 @@ fft(GwyContainer *data, GwyRunType run)
     newsize = gwy_data_field_get_fft_res(xsize);
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
-    raout = GWY_DATA_FIELD(gwy_data_field_new(
-                                gwy_data_field_get_xres(dfield),
-                                gwy_data_field_get_yres(dfield),
-                                gwy_data_field_get_xreal(dfield),
-                                gwy_data_field_get_yreal(dfield),
-                                TRUE));
-    ipout = GWY_DATA_FIELD(gwy_data_field_new(
-                                gwy_data_field_get_xres(dfield),
-                                gwy_data_field_get_yres(dfield),
-                                gwy_data_field_get_xreal(dfield),
-                                gwy_data_field_get_yreal(dfield),
-                                TRUE));
+    raout = GWY_DATA_FIELD(gwy_data_field_new(gwy_data_field_get_xres(dfield),
+                                              gwy_data_field_get_yres(dfield),
+                                              gwy_data_field_get_xreal(dfield),
+                                              gwy_data_field_get_yreal(dfield),
+                                              TRUE));
+    ipout = GWY_DATA_FIELD(gwy_data_field_new(gwy_data_field_get_xres(dfield),
+                                              gwy_data_field_get_yres(dfield),
+                                              gwy_data_field_get_xreal(dfield),
+                                              gwy_data_field_get_yreal(dfield),
+                                              TRUE));
 
-    imin = GWY_DATA_FIELD(gwy_data_field_new(
-                                gwy_data_field_get_xres(dfield),
-                                gwy_data_field_get_yres(dfield),
-                                gwy_data_field_get_xreal(dfield),
-                                gwy_data_field_get_yreal(dfield),
-                                TRUE));
+    imin = GWY_DATA_FIELD(gwy_data_field_new(gwy_data_field_get_xres(dfield),
+                                             gwy_data_field_get_yres(dfield),
+                                             gwy_data_field_get_xreal(dfield),
+                                             gwy_data_field_get_yreal(dfield),
+                                             TRUE));
 
     gwy_data_field_multiply(dfield, 1e6);
     gwy_data_field_fill(raout,0);
@@ -243,15 +235,14 @@ fft(GwyContainer *data, GwyRunType run)
 
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                            "FFT Real");
+                                         "FFT Real");
     }
-    if (args.out == GWY_FFT_OUTPUT_REAL_IMG || args.out == GWY_FFT_OUTPUT_IMG)
-    {
-        if (args.out == GWY_FFT_OUTPUT_REAL_IMG)
-        {
+    if (args.out == GWY_FFT_OUTPUT_REAL_IMG
+        || args.out == GWY_FFT_OUTPUT_IMG) {
+        if (args.out == GWY_FFT_OUTPUT_REAL_IMG) {
             data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
             dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                "/0/data"));
+                                                                    "/0/data"));
         }
         set_dfield_imaginary(raout, ipout, dfield);
         gwy_data_field_set_si_unit_xy(dfield, xyunit);
@@ -262,10 +253,10 @@ fft(GwyContainer *data, GwyRunType run)
 
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                            "FFT Imag");
+                                         "FFT Imag");
     }
-    if (args.out == GWY_FFT_OUTPUT_MOD_PHASE || args.out == GWY_FFT_OUTPUT_MOD)
-    {
+    if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
+        || args.out == GWY_FFT_OUTPUT_MOD) {
         set_dfield_module(raout, ipout, dfield);
         gwy_data_field_set_si_unit_xy(dfield, xyunit);
         gwy_data_field_set_si_unit_z(dfield, zunit);
@@ -275,16 +266,14 @@ fft(GwyContainer *data, GwyRunType run)
 
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                            "FFT Modulus");
+                                         "FFT Modulus");
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
-        || args.out == GWY_FFT_OUTPUT_PHASE)
-    {
-        if (args.out == GWY_FFT_OUTPUT_MOD_PHASE)
-        {
+        || args.out == GWY_FFT_OUTPUT_PHASE) {
+        if (args.out == GWY_FFT_OUTPUT_MOD_PHASE) {
             data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
             dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                "/0/data"));
+                                                                    "/0/data"));
         }
         set_dfield_phase(raout, ipout, dfield);
         gwy_data_field_set_si_unit_xy(dfield, xyunit);
