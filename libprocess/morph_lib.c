@@ -157,7 +157,7 @@ _gwy_morph_lib_idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
 
     /* create output array of appropriate size */
     result = _gwy_morph_lib_iallocmatrix(surf_ysiz, surf_xsiz);
-    if (set_message != NULL)
+    if (set_message)
         set_message(N_("Dilation"));
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
@@ -178,13 +178,12 @@ _gwy_morph_lib_idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
             }
             result[j][i] = max;
         }
-        if (set_fraction != NULL && set_fraction((gdouble)j/surf_ysiz)==FALSE)
-        {
+        if (set_fraction && !set_fraction((gdouble)j/surf_ysiz))
             return result;
-        }
     }
-    if (set_fraction != NULL) set_fraction(0.0);
-    return (result);
+    if (set_fraction != NULL)
+        set_fraction(0.0);
+    return result;
 }
 
 /**
@@ -219,7 +218,7 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
 
     /* create output array of appropriate size */
     result = _gwy_morph_lib_iallocmatrix(im_ysiz, im_xsiz);
-    if (set_message != NULL)
+    if (set_message)
         set_message(N_("Erosion"));
     for (j = 0; j < im_ysiz; j++) {   /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
@@ -240,13 +239,12 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
             }
             result[j][i] = min;
         }
-        if (set_fraction != NULL && set_fraction((gdouble)j/im_ysiz)==FALSE)
-        {
+        if (set_fraction && !set_fraction((gdouble)j/im_ysiz))
             return result;
-        }
     }
-    if (set_fraction != NULL) set_fraction(0.0);
-    return (result);
+    if (set_fraction)
+        set_fraction(0.0);
+    return result;
 }
 
 /**
@@ -279,16 +277,16 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
     gint tpxmin, tpxmax, tpymin, tpymax;
     gint count;
     gint rxc, ryc;              /* center coordinates of reflected tip */
-    gint x=0, y=0;
+    gint x = 0, y = 0;
 
     rxc = tip_xsiz - 1 - xc;
     ryc = tip_ysiz - 1 - yc;
-    if (set_message != NULL) set_message(N_("Certainty map"));
+    if (set_message)
+        set_message(N_("Certainty map"));
     /* create output array of appropriate size */
     cmap = _gwy_morph_lib_iallocmatrix(im_ysiz, im_xsiz);
     for (imy = 0; imy < im_ysiz; imy++)
-        for (imx = 0; imx < im_xsiz; imx++)
-        {
+        for (imx = 0; imx < im_xsiz; imx++) {
             cmap[imy][imx] = 0;
         }
 
@@ -307,8 +305,8 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
             count = 0;
             for (tpy = tpymin; tpy <= tpymax && count < 2; tpy++) {
                 for (tpx = tpxmin; tpx <= tpxmax && count < 2; tpx++) {
-                    if (image[imy][imx]-tip[tip_ysiz-1-tpy][tip_xsiz-1-tpx] ==
-                        rsurf[tpy+imy-ryc][tpx+imx-rxc])
+                    if (image[imy][imx]-tip[tip_ysiz-1-tpy][tip_xsiz-1-tpx]
+                        == rsurf[tpy+imy-ryc][tpx+imx-rxc])
                     {
                         count++;        /* increment count */
                         x = tpx + imx - rxc;    /* remember coordinates */
@@ -317,18 +315,14 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
                 }
             }
             if (count == 1)
-            {
                 cmap[y][x] = 1; /* 1 contact = good recon */
-            }
         }
-        if (set_fraction != NULL
-            && set_fraction((gdouble)imy/(im_ysiz+ryc-tip_ysiz)) == FALSE) {
+        if (set_fraction && !set_fraction((gdouble)imy/(im_ysiz+ryc-tip_ysiz)))
             return cmap;
-        }
     }
-    if (set_fraction != NULL)
+    if (set_fraction)
         set_fraction(0.0);
-    return (cmap);
+    return cmap;
 }
 
 
@@ -401,7 +395,7 @@ _gwy_morph_lib_dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
             result[j][i] = -surface[surf_ysiz - 1 - j][surf_xsiz - 1 - i];
         }
     }
-    return (result);
+    return result;
 }
 
 
@@ -437,7 +431,7 @@ _gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
 
     /* create output array of appropriate size */
     result = _gwy_morph_lib_dallocmatrix(surf_ysiz, surf_xsiz);
-    if (set_message != NULL)
+    if (set_message)
         set_message(N_("Dilation"));
     for (j = 0; j < surf_ysiz; j++) { /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
@@ -458,13 +452,12 @@ _gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
             }
             result[j][i] = max;
         }
-        if (set_fraction != NULL && set_fraction((gdouble)j/surf_ysiz)==FALSE)
-        {
+        if (set_fraction && !set_fraction((gdouble)j/surf_ysiz))
             return result;
-        }
     }
-    if (set_fraction != NULL) set_fraction(0.0);
-    return (result);
+    if (set_fraction)
+        set_fraction(0.0);
+    return result;
 }
 
 /**
@@ -499,7 +492,7 @@ _gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
 
     /* create output array of appropriate size */
     result = _gwy_morph_lib_dallocmatrix(im_ysiz, im_xsiz);
-    if (set_message != NULL)
+    if (set_message)
         set_message(N_("Erosion"));
     for (j = 0; j < im_ysiz; j++) {   /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
@@ -520,13 +513,12 @@ _gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
             }
             result[j][i] = min;
         }
-        if (set_fraction != NULL && set_fraction((gdouble)j/im_ysiz)==FALSE)
-        {
+        if (set_fraction && !set_fraction((gdouble)j/im_ysiz))
             return result;
-        }
     }
-    if (set_fraction != NULL) set_fraction(0.0);
-    return (result);
+    if (set_fraction)
+        set_fraction(0.0);
+    return result;
 }
 
 
@@ -544,7 +536,7 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip,
                                       tip_xsiz/2, tip_ysiz/2, NULL, NULL);
     _gwy_morph_lib_ifreematrix(eros, im_ysiz);  /* free intermediate result */
 
-    return (result);
+    return result;
 }
 
 /**
@@ -580,14 +572,14 @@ _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
         iter++;
         g_snprintf(buffer, sizeof(buffer),
                    N_("Iterating estimate (iteration %d)"), iter);
-        if (set_message != NULL)
+        if (set_message)
             set_message(buffer);
         count = itip_estimate_iter(image, im_xsiz, im_ysiz,
                                    tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                    use_edges, set_fraction, set_message);
         g_snprintf(buffer, sizeof(buffer),
                    N_("%d image locations produced refinement"), count);
-        if (set_message != NULL)
+        if (set_message)
             set_message(buffer);
     }
 }
@@ -610,13 +602,14 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     for (jxp = tip_ysiz - 1 - yc; jxp <= im_ysiz - 1 - yc; jxp++) {
          for (ixp = tip_xsiz - 1 - xc; ixp <= im_xsiz - 1 - xc; ixp++) {
             if (image[jxp][ixp] - open[jxp][ixp] > thresh)
-                if (itip_estimate_point
-                    (ixp, jxp, image, im_xsiz, im_ysiz, tip_xsiz, tip_ysiz, xc,
-                     yc, tip0, thresh, use_edges))
+                if (itip_estimate_point(ixp, jxp, image,
+                                        im_xsiz, im_ysiz, tip_xsiz, tip_ysiz,
+                                        xc, yc, tip0, thresh, use_edges))
                     count++;
-                if (set_fraction != NULL) {
-                    fraction = (gdouble)(jxp-(tip_ysiz - 1 - yc))/
-                        (gdouble)((im_ysiz - 1 - yc) - (tip_ysiz - 1 - yc));
+                if (set_fraction) {
+                    fraction = (gdouble)(jxp-(tip_ysiz - 1 - yc))
+                               /(gdouble)((im_ysiz - 1 - yc)
+                                          - (tip_ysiz - 1 - yc));
                     fraction = MAX(fraction, 0);
                     if (!set_fraction(fraction))
                         break;
@@ -625,7 +618,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     }
 
     _gwy_morph_lib_ifreematrix(open, im_ysiz);
-    return (count);
+    return count;
 }
 
 /**
@@ -670,7 +663,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
 
     delta = MAX(MAX(tip_xsiz, tip_ysiz)/10, 1);
 
-    if (set_message != NULL)
+    if (set_message)
         set_message(N_("Searching for local maxima"));
     /* Create a list of coordinates to use */
     n = 0;                      /* Number of image maxima found so far */
@@ -690,7 +683,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     }
     g_snprintf(buffer, sizeof(buffer),
                N_("Found %d internal local maxima"), n);
-    if (set_message != NULL)
+    if (set_message)
         set_message(buffer);
 
     /* Now refine tip at these coordinates recursively until no more change */
@@ -699,25 +692,25 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
         iter++;
         g_snprintf(buffer, sizeof(buffer),
                    N_("Iterating estimate (iteration %d)"), iter);
-        if (set_message != NULL) set_message(buffer);
+        if (set_message)
+            set_message(buffer);
 
         for (i = 0; i < n; i++) {
             if (itip_estimate_point(x[i], y[i], image, im_xsiz, im_ysiz,
                                     tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                     use_edges))
                 count++;
-                if (set_fraction != NULL
-                    && !set_fraction((gdouble)i/(gdouble)n)) {
+                if (set_fraction && !set_fraction((gdouble)i/(gdouble)n)) {
                     break;
                 }
         }
         g_snprintf(buffer, sizeof(buffer),
                    N_("%d image locations produced refinement"), count);
-        if (set_message != NULL)
+        if (set_message)
             set_message(buffer);
     } while (count && count > maxcount);
 
-    if (set_fraction != NULL)
+    if (set_fraction)
         set_fraction(0.0);
 
     /* free temporary space */
@@ -810,12 +803,11 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                 dil = -G_MAXINT;        /* initialize maximum to -infinity */
                 for (jd = 0; jd < tip_ysiz; jd++) {
                     for (id = 0; id < tip_xsiz; id++) {
-                        if (imagep - image[jxp + yc - jd][ixp + xc - id] >
-                            tip0[jd][id])
+                        if (imagep - image[jxp + yc - jd][ixp + xc - id]
+                            > tip0[jd][id])
                             continue;
-                        temp =
-                            image[jx + jxp - jd][ix + ixp - id] + tip0[jd][id] -
-                            imagep;
+                        temp = image[jx + jxp - jd][ix + ixp - id]
+                               + tip0[jd][id] - imagep;
                         dil = MAX(dil, temp);
                     }           /* end for id */
                 }               /* end for jd */
@@ -827,7 +819,7 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                 }
             }                   /* end for ix */
         }                       /* end for jx */
-        return (count);
+        return count;
     }                           /* endif */
 
     if (use_edges) {
@@ -838,20 +830,26 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                 dil = -G_MAXINT;    /* initialize maximum to -infinity */
                 for (jd = 0; jd <= tip_ysiz - 1 && dil < G_MAXINT; jd++) {
                     for (id = 0; id <= tip_xsiz - 1; id++) {
-                        /* Determine whether the tip apex at (xc,yc) lies within
-                           the domain of the translated image, and if so, if it
-                           is inside (i.e. below or on the surface of) the image. */
+                        /* Determine whether the tip apex at (xc,yc) lies
+                         * within the domain of the translated image, and
+                         * if so, if it is inside (i.e. below or on the
+                         * surface of) the image. */
                         apexstate = outside;        /* initialize */
-                        if (jxp + yc - jd < 0 || jxp + yc - jd >= im_ysiz ||
-                            ixp + xc - id < 0 || ixp + xc - id >= im_xsiz)
+                        if (jxp + yc - jd < 0
+                            || jxp + yc - jd >= im_ysiz
+                            || ixp + xc - id < 0
+                            || ixp + xc - id >= im_xsiz)
                             apexstate = inside;
                         else if (imagep - image[jxp + yc - jd][ixp + xc - id]
                                  <= tip0[jd][id])
                             apexstate = inside;
-                        /* Determine whether the point (ix,jx) under consideration
-                           lies within the domain of the translated image */
-                        if (jxp + jx - jd < 0 || jxp + jx - jd >= im_ysiz ||
-                            ixp + ix - id < 0 || ixp + ix - id >= im_xsiz)
+                        /* Determine whether the point (ix,jx) under
+                         * consideration lies within the domain of the
+                         * translated image */
+                        if (jxp + jx - jd < 0
+                            || jxp + jx - jd >= im_ysiz
+                            || ixp + ix - id < 0
+                            || ixp + ix - id >= im_xsiz)
                             xstate = outside;
                         else
                             xstate = inside;
@@ -860,23 +858,24 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
                            which of 4 states (2 apexstate possibilities times 2
                            xstate ones) we are in. */
 
-                        /* If apex is outside and x is either in or out no change
-                           is made for this (id,jd) */
+                        /* If apex is outside and x is either in or out no
+                         * change is made for this (id,jd) */
                         if (apexstate == outside)
                             continue;
 
                         /* If apex is inside and x is outside
                            worst case is translated image value -> G_MAXDOUBLE.
-                           This would result in no change for ANY (id,jd). We
-                           therefore abort the loop and go to next (ix,jx) value */
+                           This would result in no change for ANY (id,jd).
+                           We therefore abort the loop and go to next (ix,jx)
+                           value */
                         if (xstate == outside)
                             goto nextx;
 
-                        /* The only remaining possibility is x and apex both inside.
-                           This is the same case we treated in the interior. */
-                        temp =
-                            image[jx + jxp - jd][ix + ixp - id] + tip0[jd][id] -
-                            imagep;
+                        /* The only remaining possibility is x and apex both
+                         * inside. This is the same case we treated in the
+                         * interior. */
+                        temp = image[jx + jxp - jd][ix + ixp - id]
+                               + tip0[jd][id] - imagep;
                         dil = MAX(dil, temp);
                     }               /* end for id */
                 }                   /* end for jd */
@@ -891,7 +890,7 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
         }                           /* end for jx */
     }
 
-    return (count);
+    return count;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
