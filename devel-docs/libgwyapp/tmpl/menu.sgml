@@ -1,0 +1,102 @@
+<!-- ##### SECTION Title ##### -->
+menu
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyMenuSensitiveData ##### -->
+<para>
+
+</para>
+
+@flags: 
+@set_to: 
+
+<!-- ##### FUNCTION gwy_app_menu_create_xtns_menu ##### -->
+<para>
+
+</para>
+
+@accel_group: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_menu_create_proc_menu ##### -->
+<para>
+
+</para>
+
+@accel_group: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_menu_create_graph_menu ##### -->
+<para>
+
+</para>
+
+@accel_group: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_menu_create_file_menu ##### -->
+<para>
+
+</para>
+
+@accel_group: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_menu_create_edit_menu ##### -->
+<para>
+
+</para>
+
+@accel_group: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_menu_set_sensitive_recursive ##### -->
+<para>
+
+</para>
+
+@widget: 
+@data: 
+
+
+<!-- ##### FUNCTION gwy_app_menu_recent_files_update ##### -->
+<para>
+
+</para>
+
+@recent_files: 
+
+
+<!-- ##### FUNCTION gwy_app_run_process_func_cb ##### -->
+<para>
+
+</para>
+
+@name: 
+
+
+<!-- ##### FUNCTION gwy_app_run_graph_func_cb ##### -->
+<para>
+
+</para>
+
+@name: 
+
+

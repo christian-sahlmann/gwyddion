@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book id="index" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <bookinfo>
+    <title>Gwyddion Application Library Reference Manual</title>
+  </bookinfo>
+
+  <chapter>
+    <title>Gwyddion Application Library</title>
+    <xi:include href="xml/app.xml"/>
+    <xi:include href="xml/file.xml"/>
+    <xi:include href="xml/settings.xml"/>
+    <xi:include href="xml/init.xml"/>
+    <xi:include href="xml/menu.xml"/>
+    <xi:include href="xml/meta.xml"/>
+    <xi:include href="xml/about.xml"/>
+    <xi:include href="xml/arith.xml"/>
+  </chapter>
+</book>

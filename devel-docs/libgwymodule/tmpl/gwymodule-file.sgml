@@ -147,7 +147,7 @@ gwymodule-file
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_build_file_menu ##### -->
+<!-- ##### FUNCTION gwy_file_func_build_menu ##### -->
 <para>
 
 </para>

@@ -20,7 +20,7 @@ gwyoptionmenus
 </para>
 
 
-<!-- ##### FUNCTION gwy_palette_menu ##### -->
+<!-- ##### FUNCTION gwy_menu_palette ##### -->
 <para>
 
 </para>
@@ -30,18 +30,7 @@ gwyoptionmenus
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_palette_option_menu ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_interpolation_option_menu ##### -->
+<!-- ##### FUNCTION gwy_option_menu_palette ##### -->
 <para>
 
 </para>
@@ -52,7 +41,7 @@ gwyoptionmenus
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_windowing_option_menu ##### -->
+<!-- ##### FUNCTION gwy_option_menu_interpolation ##### -->
 <para>
 
 </para>
@@ -63,7 +52,7 @@ gwyoptionmenus
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_zoom_mode_option_menu ##### -->
+<!-- ##### FUNCTION gwy_option_menu_windowing ##### -->
 <para>
 
 </para>
@@ -74,7 +63,7 @@ gwyoptionmenus
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_2dcwt_option_menu ##### -->
+<!-- ##### FUNCTION gwy_option_menu_zoom_mode ##### -->
 <para>
 
 </para>
@@ -85,7 +74,18 @@ gwyoptionmenus
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_fft_output_menu ##### -->
+<!-- ##### FUNCTION gwy_option_menu_2dcwt ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_fft_output ##### -->
 <para>
 
 </para>

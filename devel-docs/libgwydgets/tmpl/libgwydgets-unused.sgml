@@ -38,12 +38,29 @@ GwyLayerTriangle
 gwymodulemenus
 
 
+<!-- ##### SIGNAL GwyGraphArea::gwygrapharea-selected ##### -->
+<para>
+
+</para>
+
+@gwygrapharea: the object which received the signal.
+
 <!-- ##### SIGNAL GwySphereCoords::value-changed ##### -->
 <para>
 
 </para>
 
 @gwyspherecoords: the object which received the signal.
+
+<!-- ##### FUNCTION gwy_2dcwt_option_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
 
 <!-- ##### FUNCTION gwy_data_view_get_zoom_mode ##### -->
 <para>
@@ -60,6 +77,33 @@ gwymodulemenus
 
 @data_window: 
 @zoom_mode: 
+
+<!-- ##### FUNCTION gwy_fft_output_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_graph_signal_selected ##### -->
+<para>
+
+</para>
+
+@graph: 
+
+<!-- ##### FUNCTION gwy_interpolation_option_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
 
 <!-- ##### FUNCTION gwy_layer_triangle_get_selection ##### -->
 <para>
@@ -82,12 +126,51 @@ gwymodulemenus
 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_palette_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_palette_option_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_sphere_coords_value_changed ##### -->
 <para>
 
 </para>
 
 @sphere_coords: 
+
+<!-- ##### FUNCTION gwy_windowing_option_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_zoom_mode_option_menu ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
 
 <!-- ##### FUNCTION my_layout_new ##### -->
 <para>

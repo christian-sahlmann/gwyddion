@@ -142,7 +142,7 @@ gwy_interpolation_get_dval
 <FILE>cwt</FILE>
 Gwy2DCWTWaveletType
 GwyCWTWaveletType
-wfunc_2d
+gwy_cwt_wfunc_2d
 </SECTION>
 
 <SECTION>

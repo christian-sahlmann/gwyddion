@@ -1,19 +1,15 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
-               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY libgwydraw-GwyPalette SYSTEM "xml/gwypalette.xml">
-<!ENTITY libgwydraw-GwyPaletteDef SYSTEM "xml/gwypalettedef.xml">
-<!ENTITY libgwydraw-gwypixfield SYSTEM "xml/gwypixfield.xml">
-]>
-<book id="index">
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book id="index" xmlns:xi="http://www.w3.org/2001/XInclude">
   <bookinfo>
     <title>Gwyddion Drawing Library Reference Manual</title>
   </bookinfo>
 
   <chapter>
     <title>Gwyddion Drawing Library</title>
-    &libgwydraw-GwyPalette;
-    &libgwydraw-GwyPaletteDef;
-    &libgwydraw-gwypixfield;
+    <xi:include href="xml/gwypalette.xml"/>
+    <xi:include href="xml/gwypalettedef.xml"/>
+    <xi:include href="xml/gwypixfield.xml"/>
   </chapter>
 </book>

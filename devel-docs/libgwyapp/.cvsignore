@@ -1,0 +1,14 @@
+*.stamp
+Makefile
+Makefile.in
+html
+xml
+*-decl-list.txt
+*-undocumented.txt
+*-unused.txt
+*-decl.txt
+*.args
+*.hierarchy
+*.interfaces
+*.prerequisites
+*.signals

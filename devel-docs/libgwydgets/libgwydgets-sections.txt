@@ -347,6 +347,12 @@ GWY_DATA_VIEW_GET_CLASS
 <SECTION>
 <FILE>gwygrapharea</FILE>
 GwyGraphAreaCurvePoints
+GwyGraphStatusType
+GwyGraphDataPoint
+GwyGraphScrPoint
+GwyGraphStatus_CursorData
+GwyGraphStatus_SelData
+GwyGraphStatus_PointsData
 GwyGraphAreaCurve
 GwyGraphAreaParams
 <TITLE>GwyGraphArea</TITLE>
@@ -355,6 +361,7 @@ gwy_graph_area_set_style
 gwy_graph_area_set_boundaries
 gwy_graph_area_add_curve
 gwy_graph_area_clear
+gwy_graph_area_signal_selected
 <SUBSECTION Standard>
 GWY_GRAPH_AREA
 GWY_IS_GRAPH_AREA
@@ -449,6 +456,9 @@ gwy_graph_add_datavalues
 gwy_graph_clear
 gwy_graph_set_autoproperties
 gwy_graph_get_autoproperties
+gwy_graph_set_status
+gwy_graph_get_status
+gwy_graph_get_status_data
 <SUBSECTION Standard>
 GWY_GRAPH
 GWY_IS_GRAPH
@@ -494,13 +504,13 @@ gwy_stock_register_stock_items
 <SECTION>
 <FILE>gwyoptionmenus</FILE>
 GwyOptionMenuEntry
-gwy_palette_menu
-gwy_palette_option_menu
-gwy_interpolation_option_menu
-gwy_windowing_option_menu
-gwy_zoom_mode_option_menu
-gwy_2dcwt_option_menu
-gwy_fft_output_menu
+gwy_menu_palette
+gwy_option_menu_palette
+gwy_option_menu_interpolation
+gwy_option_menu_windowing
+gwy_option_menu_zoom_mode
+gwy_option_menu_2dcwt
+gwy_option_menu_fft_output
 gwy_option_menu_create
 gwy_option_menu_set_history
 </SECTION>

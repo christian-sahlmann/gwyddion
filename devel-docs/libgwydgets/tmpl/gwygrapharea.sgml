@@ -20,6 +20,47 @@ GwyGraphArea
 </para>
 
 
+<!-- ##### ENUM GwyGraphStatusType ##### -->
+<para>
+
+</para>
+
+@GWY_GRAPH_STATUS_PLAIN: 
+@GWY_GRAPH_STATUS_CURSOR: 
+@GWY_GRAPH_STATUS_XSEL: 
+@GWY_GRAPH_STATUS_YSEL: 
+@GWY_GRAPH_STATUS_POINTS: 
+
+<!-- ##### TYPEDEF GwyGraphDataPoint ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyGraphScrPoint ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyGraphStatus_CursorData ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyGraphStatus_SelData ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyGraphStatus_PointsData ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### TYPEDEF GwyGraphAreaCurve ##### -->
 <para>
 
@@ -79,4 +120,19 @@ GwyGraphArea
 
 @area: 
 
+
+<!-- ##### FUNCTION gwy_graph_area_signal_selected ##### -->
+<para>
+
+</para>
+
+@area: 
+
+
+<!-- ##### SIGNAL GwyGraphArea::selected ##### -->
+<para>
+
+</para>
+
+@gwygrapharea: the object which received the signal.
 

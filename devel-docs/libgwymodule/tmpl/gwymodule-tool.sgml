@@ -68,7 +68,7 @@ gwymodule-tool
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_build_tool_toolbar ##### -->
+<!-- ##### FUNCTION gwy_tool_func_build_toolbar ##### -->
 <para>
 
 </para>

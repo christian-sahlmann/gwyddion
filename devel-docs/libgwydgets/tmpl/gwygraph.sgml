@@ -95,3 +95,31 @@ GwyGraph
 @autoproperties: 
 
 
+<!-- ##### FUNCTION gwy_graph_set_status ##### -->
+<para>
+
+</para>
+
+@graph: 
+@status: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_status ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_status_data ##### -->
+<para>
+
+</para>
+
+@graph: 
+@status: 
+@Returns: 
+
+

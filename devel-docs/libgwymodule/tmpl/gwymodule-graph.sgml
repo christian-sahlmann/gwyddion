@@ -49,11 +49,22 @@ gwymodule-graph
 </para>
 
 @name: 
+@graph: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @data: 
+
+
+<!-- ##### FUNCTION gwy_graph_func_get_menu_path ##### -->
+<para>
+
+</para>
+
+@name: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_build_graph_menu ##### -->
+<!-- ##### FUNCTION gwy_graph_func_build_menu ##### -->
 <para>
 
 </para>

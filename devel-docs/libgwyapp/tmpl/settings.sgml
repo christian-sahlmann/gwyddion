@@ -1,0 +1,49 @@
+<!-- ##### SECTION Title ##### -->
+settings
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_app_settings_get ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_settings_free ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_app_settings_save ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_settings_load ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+

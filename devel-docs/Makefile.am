@@ -5,7 +5,9 @@ SUBDIRS = \
 	libgwyprocess \
 	libgwydraw \
 	libgwydgets \
-	libgwymodule
+	libgwymodule \
+	libgwyapp
+
 EXTRA_DIST = \
 	README \
 	gtk-doc.mk

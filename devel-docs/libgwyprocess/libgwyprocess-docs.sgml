@@ -1,23 +1,17 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
-               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY libgwyprocess-GwyDataField SYSTEM "xml/datafield.xml">
-<!ENTITY libgwyprocess-GwyDataLine SYSTEM "xml/dataline.xml">
-<!ENTITY libgwyprocess-interpolation SYSTEM "xml/interpolation.xml">
-<!ENTITY libgwyprocess-simplefft SYSTEM "xml/simplefft.xml">
-<!ENTITY libgwyprocess-cwt SYSTEM "xml/cwt.xml">
-]>
-<book id="index">
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book id="index" xmlns:xi="http://www.w3.org/2001/XInclude">
   <bookinfo>
     <title>Gwyddion Data Processing Library Reference Manual</title>
   </bookinfo>
 
   <chapter>
     <title>Gwyddion Data Processing Library</title>
-    &libgwyprocess-GwyDataField;
-    &libgwyprocess-GwyDataLine;
-    &libgwyprocess-interpolation;
-    &libgwyprocess-simplefft;
-    &libgwyprocess-cwt;
+    <xi:include href="xml/dataline.xml"/>
+    <xi:include href="xml/datafield.xml"/>
+    <xi:include href="xml/interpolation.xml"/>
+    <xi:include href="xml/simplefft.xml"/>
+    <xi:include href="xml/cwt.xml"/>
   </chapter>
 </book>

@@ -19,7 +19,47 @@
 </para>
 
 
+<!-- ##### FUNCTION gwy_build_file_menu ##### -->
+<para>
+
+</para>
+
+@item_factory: 
+@prefix: 
+@item_callback: 
+@type: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_build_graph_menu ##### -->
+<para>
+
+</para>
+
+@item_factory: 
+@prefix: 
+@item_callback: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_build_process_menu ##### -->
+<para>
+
+</para>
+
+@item_factory: 
+@prefix: 
+@item_callback: 
+@Returns: 
+@accel_group: 
+
 <!-- ##### FUNCTION gwy_build_tool_bar ##### -->
+<para>
+
+</para>
+
+@item_callback: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_build_tool_toolbar ##### -->
 <para>
 
 </para>
@@ -49,6 +89,12 @@
 
 @name: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_modules_init ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gwy_register_file_func ##### -->
 <para>

@@ -60,18 +60,20 @@ gwymoduleloader
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_modules_init ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### FUNCTION gwy_module_register_modules ##### -->
 <para>
 
 </para>
 
 @paths: 
+
+
+<!-- ##### FUNCTION gwy_module_lookup ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
 
 

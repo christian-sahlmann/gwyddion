@@ -1,27 +1,19 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
-               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY libgwyddion-GwyWatchable SYSTEM "xml/gwywatchable.xml">
-<!ENTITY libgwyddion-GwySerializable SYSTEM "xml/gwyserializable.xml">
-<!ENTITY libgwyddion-GwyContainer SYSTEM "xml/gwycontainer.xml">
-<!ENTITY libgwyddion-gwymacros SYSTEM "xml/gwymacros.xml">
-<!ENTITY libgwyddion-gwyentities SYSTEM "xml/gwyentities.xml">
-<!ENTITY libgwyddion-gwymath SYSTEM "xml/gwymath.xml">
-<!ENTITY libgwyddion-gwyutils SYSTEM "xml/gwyutils.xml">
-]>
-<book id="index">
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book id="index" xmlns:xi="http://www.w3.org/2001/XInclude">
   <bookinfo>
     <title>Gwyddion Library Reference Manual</title>
   </bookinfo>
 
   <chapter>
     <title>Gwyddion Library</title>
-    &libgwyddion-GwyWatchable;
-    &libgwyddion-GwySerializable;
-    &libgwyddion-GwyContainer;
-    &libgwyddion-gwymacros;
-    &libgwyddion-gwyentities;
-    &libgwyddion-gwymath;
-    &libgwyddion-gwyutils;
+    <xi:include href="xml/gwywatchable.xml"/>
+    <xi:include href="xml/gwyserializable.xml"/>
+    <xi:include href="xml/gwycontainer.xml"/>
+    <xi:include href="xml/gwymacros.xml"/>
+    <xi:include href="xml/gwyentities.xml"/>
+    <xi:include href="xml/gwymath.xml"/>
+    <xi:include href="xml/gwyutils.xml"/>
   </chapter>
 </book>

@@ -1,0 +1,164 @@
+<!-- ##### SECTION Title ##### -->
+app
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_app_toolbox_create ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_app_get_current_data ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_data_window_get_current ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_data_window_set_current ##### -->
+<para>
+
+</para>
+
+@data_window: 
+
+
+<!-- ##### FUNCTION gwy_app_data_window_remove ##### -->
+<para>
+
+</para>
+
+@data_window: 
+
+
+<!-- ##### FUNCTION gwy_app_data_window_foreach ##### -->
+<para>
+
+</para>
+
+@func: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gwy_app_data_window_create ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_data_window_set_untitled ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@templ: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_data_view_update ##### -->
+<para>
+
+</para>
+
+@data_view: 
+
+
+<!-- ##### FUNCTION gwy_app_undo_checkpoint ##### -->
+<para>
+
+</para>
+
+@data: 
+@what: 
+
+
+<!-- ##### FUNCTION gwy_app_undo_undo ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_app_undo_redo ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_app_change_mask_color_cb ##### -->
+<para>
+
+</para>
+
+@unused: 
+@defaultc: 
+
+
+<!-- ##### FUNCTION gwy_app_graph_window_get_current ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_graph_window_set_current ##### -->
+<para>
+
+</para>
+
+@window: 
+
+
+<!-- ##### FUNCTION gwy_app_graph_window_remove ##### -->
+<para>
+
+</para>
+
+@window: 
+
+
+<!-- ##### FUNCTION gwy_app_graph_window_create ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_clean_up_data ##### -->
+<para>
+
+</para>
+
+@data: 
+
+

@@ -1,79 +1,53 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
-               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY libgwydgets-GwySphereCoords SYSTEM "xml/gwyspherecoords.xml">
-<!ENTITY libgwydgets-GwyVectorShade SYSTEM "xml/gwyvectorshade.xml">
-<!ENTITY libgwydgets-GwyGradSphere SYSTEM "xml/gwygradsphere.xml">
-<!ENTITY libgwydgets-GwyDataWindow SYSTEM "xml/gwydatawindow.xml">
-<!ENTITY libgwydgets-GwyDataView SYSTEM "xml/gwydataview.xml">
-<!ENTITY libgwydgets-GwyDataViewLayer SYSTEM "xml/gwydataviewlayer.xml">
-<!ENTITY libgwydgets-GwyLayerBasic SYSTEM "xml/gwylayer-basic.xml">
-<!ENTITY libgwydgets-GwyLayerLines SYSTEM "xml/gwylayer-lines.xml">
-<!ENTITY libgwydgets-GwyLayerMask SYSTEM "xml/gwylayer-mask.xml">
-<!ENTITY libgwydgets-GwyLayerPointer SYSTEM "xml/gwylayer-pointer.xml">
-<!ENTITY libgwydgets-GwyLayerPoints SYSTEM "xml/gwylayer-points.xml">
-<!ENTITY libgwydgets-GwyLayerSelect SYSTEM "xml/gwylayer-select.xml">
-<!ENTITY libgwydgets-GwyRuler SYSTEM "xml/gwyruler.xml">
-<!ENTITY libgwydgets-GwyHRuler SYSTEM "xml/gwyhruler.xml">
-<!ENTITY libgwydgets-GwyVRuler SYSTEM "xml/gwyvruler.xml">
-<!ENTITY libgwydgets-GwySciText SYSTEM "xml/gwyscitext.xml">
-<!ENTITY libgwydgets-GwyAxis SYSTEM "xml/gwyaxis.xml">
-<!ENTITY libgwydgets-GwyGraphArea SYSTEM "xml/gwygrapharea.xml">
-<!ENTITY libgwydgets-GwyGraphCorner SYSTEM "xml/gwygraphcorner.xml">
-<!ENTITY libgwydgets-GwyGraphLabel SYSTEM "xml/gwygraphlabel.xml">
-<!ENTITY libgwydgets-GwyGraph SYSTEM "xml/gwygraph.xml">
-<!ENTITY libgwydgets-GwyColorAxis SYSTEM "xml/gwycoloraxis.xml">
-<!ENTITY libgwydgets-gwystock SYSTEM "xml/gwystock.xml">
-<!ENTITY libgwydgets-gwydgets SYSTEM "xml/gwydgets.xml">
-<!ENTITY libgwydgets-gwyoptionmenus SYSTEM "xml/gwyoptionmenus.xml">
-]>
-<book id="index">
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book id="index" xmlns:xi="http://www.w3.org/2001/XInclude">
   <bookinfo>
     <title>Gwyddion Widgets Library Reference Manual</title>
   </bookinfo>
 
   <chapter>
     <title>Data Window</title>
-    &libgwydgets-GwyDataWindow;
-    &libgwydgets-GwyDataView;
-    &libgwydgets-GwyDataViewLayer;
-    &libgwydgets-GwyLayerBasic;
-    &libgwydgets-GwyLayerLines;
-    &libgwydgets-GwyLayerMask;
-    &libgwydgets-GwyLayerPointer;
-    &libgwydgets-GwyLayerPoints;
-    &libgwydgets-GwyLayerSelect;
-    &libgwydgets-GwyColorAxis;
+    <xi:include href="xml/gwydatawindow.xml"/>
+    <xi:include href="xml/gwydataview.xml"/>
+    <xi:include href="xml/gwydataviewlayer.xml"/>
+    <xi:include href="xml/gwylayer-basic.xml"/>
+    <xi:include href="xml/gwylayer-lines.xml"/>
+    <xi:include href="xml/gwylayer-mask.xml"/>
+    <xi:include href="xml/gwylayer-pointer.xml"/>
+    <xi:include href="xml/gwylayer-points.xml"/>
+    <xi:include href="xml/gwylayer-select.xml"/>
+    <xi:include href="xml/gwycoloraxis.xml"/>
   </chapter>
 
   <chapter>
     <title>Graph</title>
-    &libgwydgets-GwyAxis;
-    &libgwydgets-GwyGraphArea;
-    &libgwydgets-GwyGraphCorner;
-    &libgwydgets-GwyGraphLabel;
-    &libgwydgets-GwyGraph;
+    <xi:include href="xml/gwyaxis.xml"/>
+    <xi:include href="xml/gwygrapharea.xml"/>
+    <xi:include href="xml/gwygraphcorner.xml"/>
+    <xi:include href="xml/gwygraphlabel.xml"/>
+    <xi:include href="xml/gwygraph.xml"/>
   </chapter>
 
   <chapter>
     <title>General Widgets</title>
-    &libgwydgets-GwyRuler;
-    &libgwydgets-GwyHRuler;
-    &libgwydgets-GwyVRuler;
-    &libgwydgets-GwySciText;
+    <xi:include href="xml/gwyruler.xml"/>
+    <xi:include href="xml/gwyhruler.xml"/>
+    <xi:include href="xml/gwyvruler.xml"/>
+    <xi:include href="xml/gwyscitext.xml"/>
   </chapter>
 
   <chapter>
     <title>Shader</title>
-    &libgwydgets-GwySphereCoords;
-    &libgwydgets-GwyVectorShade;
-    &libgwydgets-GwyGradSphere;
+    <xi:include href="xml/gwyvectorshade.xml"/>
+    <xi:include href="xml/gwygradsphere.xml"/>
+    <xi:include href="xml/gwyspherecoords.xml"/>
   </chapter>
 
   <chapter>
     <title>Widget Utilities</title>
-    &libgwydgets-gwystock;
-    &libgwydgets-gwyoptionmenus;
-    &libgwydgets-gwydgets;
+    <xi:include href="xml/gwystock.xml"/>
+    <xi:include href="xml/gwydgets.xml"/>
+    <xi:include href="xml/gwyoptionmenus.xml"/>
   </chapter>
 </book>

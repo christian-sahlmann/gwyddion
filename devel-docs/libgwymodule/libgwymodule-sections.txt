@@ -9,7 +9,7 @@ GwyToolFuncInfo
 GwyToolUseFunc
 gwy_tool_func_register
 gwy_tool_func_use
-gwy_build_tool_toolbar
+gwy_tool_func_build_toolbar
 </SECTION>
 
 <SECTION>
@@ -24,8 +24,8 @@ GWY_MODULE_QUERY
 GwyModuleInfo
 GwyModuleRegisterFunc
 GwyModuleQueryFunc
-gwy_modules_init
 gwy_module_register_modules
+gwy_module_lookup
 </SECTION>
 
 <SECTION>
@@ -34,7 +34,8 @@ GwyGraphFuncInfo
 GwyGraphFunc
 gwy_graph_func_register
 gwy_graph_func_run
-gwy_build_graph_menu
+gwy_graph_func_get_menu_path
+gwy_graph_func_build_menu
 </SECTION>
 
 <SECTION>
@@ -45,7 +46,8 @@ GwyProcessFunc
 gwy_process_func_register
 gwy_process_func_run
 gwy_process_func_get_run_types
-gwy_build_process_menu
+gwy_process_func_get_menu_path
+gwy_process_func_build_menu
 </SECTION>
 
 <SECTION>
@@ -63,6 +65,6 @@ gwy_file_func_get_operations
 gwy_file_detect
 gwy_file_load
 gwy_file_save
-gwy_build_file_menu
+gwy_file_func_build_menu
 </SECTION>
 

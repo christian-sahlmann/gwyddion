@@ -1,25 +1,18 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
-               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY gwymodule-loader SYSTEM "xml/gwymoduleloader.xml">
-<!ENTITY gwymodule-browser SYSTEM "xml/gwymodulebrowser.xml">
-<!ENTITY gwymodule-file SYSTEM "xml/gwymodule-file.xml">
-<!ENTITY gwymodule-process SYSTEM "xml/gwymodule-process.xml">
-<!ENTITY gwymodule-tool SYSTEM "xml/gwymodule-tool.xml">
-<!ENTITY gwymodule-graph SYSTEM "xml/gwymodule-graph.xml">
-]>
-<book id="index">
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book id="index" xmlns:xi="http://www.w3.org/2001/XInclude">
   <bookinfo>
     <title>Gwyddion Module Library Reference Manual</title>
   </bookinfo>
 
   <chapter>
     <title>Gwyddion Module Library</title>
-    &gwymodule-loader;
-    &gwymodule-browser;
-    &gwymodule-file;
-    &gwymodule-process;
-    &gwymodule-tool;
-    &gwymodule-graph;
+    <xi:include href="xml/gwymoduleloader.xml"/>
+    <xi:include href="xml/gwymodule-file.xml"/>
+    <xi:include href="xml/gwymodule-process.xml"/>
+    <xi:include href="xml/gwymodule-tool.xml"/>
+    <xi:include href="xml/gwymodule-graph.xml"/>
+    <xi:include href="xml/gwymodulebrowser.xml"/>
   </chapter>
 </book>

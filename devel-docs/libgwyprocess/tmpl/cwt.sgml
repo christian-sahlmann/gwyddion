@@ -31,7 +31,7 @@ cwt
 @GWY_CWT_HAT: 
 @GWY_CWT_MORLET: 
 
-<!-- ##### FUNCTION wfunc_2d ##### -->
+<!-- ##### FUNCTION gwy_cwt_wfunc_2d ##### -->
 <para>
 
 </para>
