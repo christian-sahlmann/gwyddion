@@ -16,6 +16,8 @@
    manner which substantially alters User's work, User agrees to
    acknowledge this by reference to Villarrubia's papers, which are
    listed below.
+
+    J. S. Villarubia: J. Res. Natl. Inst. Stand. Technol. 102  (1997) 425.
 */
 
 /* Technical and formal modification by Petr Klapetek and David Necas (Yeti),
