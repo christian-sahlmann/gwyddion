@@ -1,21 +1,14 @@
 # @(#) $Id$ */
 
-libdir = $(gwymoduledir)
+filedir = $(gwymoduledir)/file
 
-module_ldflags = -avoid-version -module
-module_libs = $(libgwymodule) @GMODULE_LIBS@
+module_ldflags = -shared -Wl,-soname
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
-libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
-libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
+file_PROGRAMS = \
+	gwyfile.so
 
-lib_LTLIBRARIES = libgwyfile.la
-
-libgwyfile_la_SOURCES = gwyfile.c
-libgwyfile_la_LDFLAGS = -avoid-version -module
-libgwyfile_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
-#libgwyfile_la_LDFLAGS = $(module_ldflags)
-#libgwyfile_la_LIBADD = $(module_libs)
+gwyfile_so_SOURCES = gwyfile.c
+gwyfile_so_LDFLAGS = $(module_ldflags),basicops.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"

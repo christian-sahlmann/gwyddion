@@ -1,32 +1,22 @@
 # @(#) $Id$
 
-libdir = $(gwymoduledir)
+processdir = $(gwymoduledir)/process
 
-module_ldflags = -avoid-version -module
-module_libs = $(libgwymodule) @GMODULE_LIBS@
+module_ldflags = -shared -Wl,-soname
 
-libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
-libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
-libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
-libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
-libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
+process_PROGRAMS = \
+	basicops.so \
+	level.so \
+	rotate.so
 
-lib_LTLIBRARIES = \
-	libbasicops.la \
-	liblevel.la \
-	librotate.la
+basicops_so_SOURCES = basicops.c
+basicops_so_LDFLAGS = $(module_ldflags),basicops.so
 
-libbasicops_la_SOURCES = basicops.c
-libbasicops_la_LDFLAGS = -avoid-version -module
-libbasicops_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+level_so_SOURCES = level.c
+level_so_LDFLAGS = $(module_ldflags),level.so
 
-liblevel_la_SOURCES = level.c
-liblevel_la_LDFLAGS = -avoid-version -module
-liblevel_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
-
-librotate_la_SOURCES = rotate.c
-librotate_la_LDFLAGS = -avoid-version -module
-librotate_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
+rotate_so_SOURCES = rotate.c
+rotate_so_LDFLAGS = $(module_ldflags),rotate.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
