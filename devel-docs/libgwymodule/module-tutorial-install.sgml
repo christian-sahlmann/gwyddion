@@ -22,6 +22,21 @@
       <ulink url="http://trific.ath.cx/software/gwyddion/">threshold-example</ulink>
       module how it copes with this issues.
     </para>
+    <para>
+      Some highlights: On Unix systems, Gwyddion installs a pkg-config file
+      with meta-information about the particular installation, so you can use
+      <command>pkg-config</command> to find compiler and linker options
+      and module installation directories.  See pkg-config documentation
+      for description of the standard options.  The directory to install
+      modules to can be obtained from
+      <command>pkg-config --variable gwymoduledir gwyddion</command>.
+    </para>
+    <para>
+      On Win32 systems, Gwyddion installs a registry entry
+      <literal>HKLM\Software\Gwyddion Development\1.0\Path</literal>
+      containing the base directory, where development libraries and header
+      files were installed.
+    </para>
   </refsect1>
 </refentry>
 
