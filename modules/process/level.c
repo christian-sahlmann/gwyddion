@@ -32,6 +32,8 @@ static gboolean    level                      (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    level_rotate               (GwyContainer *data,
                                                GwyRunType run);
+static gboolean    fixzero                    (GwyContainer *data,
+                                               GwyRunType run);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -40,7 +42,7 @@ static GwyModuleInfo module_info = {
     "level",
     "Simple automatic levelling.",
     "Yeti <yeti@physics.muni.cz>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -60,13 +62,20 @@ module_register(const gchar *name)
     };
     static GwyProcessFuncInfo level_rotate_func_info = {
         "level_rotate",
-        "/_Level/Level Rotate (BROKEN)",
+        "/_Level/Level Rotate",
         (GwyProcessFunc)&level_rotate,
+        LEVEL_RUN_MODES,
+    };
+    static GwyProcessFuncInfo fixzero_func_info = {
+        "fixzero",
+        "/_Level/Fix Zero",
+        (GwyProcessFunc)&fixzero,
         LEVEL_RUN_MODES,
     };
 
     gwy_process_func_register(name, &level_func_info);
     gwy_process_func_register(name, &level_rotate_func_info);
+    gwy_process_func_register(name, &fixzero_func_info);
 
     return TRUE;
 }
@@ -99,13 +108,25 @@ level_rotate(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
-    /* FIXME: what funny scale the b and c have? */
     gwy_data_field_plane_rotate(dfield,
                                 180/G_PI*atan2(b, 1),
                                 180/G_PI*atan2(c, 1),
                                 GWY_INTERPOLATION_BILINEAR);
     gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
               b, 180/G_PI*atan2(b, 1), c, 180/G_PI*atan2(c, 1));
+
+    return TRUE;
+}
+
+static gboolean
+fixzero(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield;
+
+    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_data_field_add(dfield, -gwy_data_field_get_min(dfield));
 
     return TRUE;
 }
