@@ -31,6 +31,7 @@
 typedef struct {
     gboolean is_visible;  /* XXX: GTK_WIDGET_VISIBLE() returns BS? */
     GtkWidget *coords[6];
+    GtkWidget *values[3];
     GtkObject *radius;
     gdouble mag;
     gint precision;
@@ -54,7 +55,7 @@ static void       level3_dialog_set_visible     (gboolean visible);
 
 static const gchar *radius_key = "/tool/level3/radius";
 
-static GtkWidget *dialog = NULL;
+static GtkWidget *level3_dialog = NULL;
 static Level3Controls controls;
 static gulong finished_id = 0;
 static gulong response_id = 0;
@@ -122,8 +123,8 @@ level3_use(GwyDataWindow *data_window,
         gwy_layer_points_set_max_points(points_layer, 3);
         gwy_data_view_set_top_layer(data_view, points_layer);
     }
-    if (!dialog)
-        dialog = level3_dialog_create(data_view);
+    if (!level3_dialog)
+        level3_dialog = level3_dialog_create(data_view);
 
     finished_id = g_signal_connect(points_layer, "finished",
                                    G_CALLBACK(level3_selection_finished_cb),
@@ -212,14 +213,14 @@ level3_dialog_abandon(void)
         g_signal_handler_disconnect(points_layer, finished_id);
     finished_id = 0;
     points_layer = NULL;
-    if (dialog) {
+    if (level3_dialog) {
         radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
         radius = CLAMP(radius, 1, 16);
         settings = gwy_app_settings_get();
         gwy_container_set_int32_by_name(settings, radius_key, radius);
-        g_signal_handler_disconnect(dialog, response_id);
-        gtk_widget_destroy(dialog);
-        dialog = NULL;
+        g_signal_handler_disconnect(level3_dialog, response_id);
+        gtk_widget_destroy(level3_dialog);
+        level3_dialog = NULL;
         response_id = 0;
         g_free(controls.units);
         controls.is_visible = FALSE;
@@ -258,35 +259,45 @@ level3_dialog_create(GwyDataView *data_view)
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     response_id = g_signal_connect(dialog, "response",
                                    G_CALLBACK(level3_dialog_response_cb), NULL);
-    table = gtk_table_new(10, 3, FALSE);
+    table = gtk_table_new(4, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, 0, TRUE, TRUE);
 
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>X</b>"));
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Y</b>"));
+    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Value</b>"));
+    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1, GTK_FILL, 0, 2, 2);
     for (i = 0; i < 3; i++) {
         label = gtk_label_new(NULL);
-        buffer = g_strdup_printf(_("<b>Point %d</b>"), i+1);
+        buffer = g_strdup_printf(_("<b>%d</b>"), i+1);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_label_set_markup(GTK_LABEL(label), buffer);
         g_free(buffer);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3*i, 3*i+1,
-                         GTK_FILL, 0, 2, 2);
-        label = gtk_label_new(_("X"));
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 1, 2, 3*i + 1, 3*i + 2,
-                         GTK_FILL, 0, 2, 2);
-        label = gtk_label_new(_("Y"));
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_table_attach(GTK_TABLE(table), label, 1, 2, 3*i + 2, 3*i + 3,
-                         GTK_FILL, 0, 2, 2);
+        gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+1, i+2, 0, 0, 2, 2);
         label = controls.coords[2*i] = gtk_label_new("");
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-        gtk_table_attach_defaults(GTK_TABLE(table), label,
-                                  2, 3, 3*i + 1, 3*i + 2);
+        gtk_table_attach(GTK_TABLE(table), label, 1, 2, i+1, i+2, 0, 0, 2, 2);
         label = controls.coords[2*i + 1] = gtk_label_new("");
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-        gtk_table_attach_defaults(GTK_TABLE(table), label,
-                                  2, 3, 3*i + 2, 3*i + 3);
+        gtk_table_attach(GTK_TABLE(table), label, 2, 3, i+1, i+2, 0, 0, 2, 2);
+        label = controls.values[i] = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+1, i+2,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
     }
+    gtk_widget_show_all(table);
+
+    table = gtk_table_new(1, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, 0, TRUE, TRUE);
+
     settings = gwy_app_settings_get();
     if (gwy_container_contains_by_name(settings, radius_key))
         radius = gwy_container_get_int32_by_name(settings, radius_key);
@@ -295,6 +306,8 @@ level3_dialog_create(GwyDataView *data_view)
     controls.radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
     gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
                                 controls.radius);
+    g_signal_connect(controls.radius, "value_changed",
+                     G_CALLBACK(level3_selection_finished_cb), NULL);
     gtk_widget_show_all(table);
     controls.is_visible = FALSE;
 
@@ -302,7 +315,7 @@ level3_dialog_create(GwyDataView *data_view)
 }
 
 static void
-update_label(GtkWidget *label, gdouble value)
+update_coord_label(GtkWidget *label, gdouble value)
 {
     gchar buffer[16];
 
@@ -312,13 +325,30 @@ update_label(GtkWidget *label, gdouble value)
 }
 
 static void
+update_value_label(GtkWidget *label, gdouble value)
+{
+    gchar buffer[16];
+
+    g_snprintf(buffer, sizeof(buffer), "%.3g FIXME", value);
+    gtk_label_set_text(GTK_LABEL(label), buffer);
+}
+
+static void
 level3_selection_finished_cb(void)
 {
+    GwyContainer *data;
+    GwyDataField *dfield;
     gdouble points[6];
     gboolean is_visible;
+    gdouble radius, val;
     gint nselected, i;
 
     gwy_debug("");
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(points_layer->parent));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
+
     /*XXX: seems broken
      * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
     is_visible = controls.is_visible;
@@ -326,10 +356,19 @@ level3_selection_finished_cb(void)
     if (!is_visible && !nselected)
         return;
     for (i = 0; i < 6; i++) {
-        if (i < 2*nselected)
-            update_label(controls.coords[i], points[i]);
-        else
+        if (i < 2*nselected) {
+            update_coord_label(controls.coords[i], points[i]);
+            if (i%2 == 0) {
+                val = level3_get_z_average(dfield, points[i], points[i+1],
+                                           radius);
+                update_value_label(controls.values[i/2], val);
+            }
+        }
+        else {
             gtk_label_set_text(GTK_LABEL(controls.coords[i]), "");
+            if (i%2 == 0)
+                gtk_label_set_text(GTK_LABEL(controls.values[i/2]), "");
+        }
     }
     if (!is_visible)
         level3_dialog_set_visible(TRUE);
@@ -370,9 +409,9 @@ level3_dialog_set_visible(gboolean visible)
 
     controls.is_visible = visible;
     if (visible)
-        gtk_window_present(GTK_WINDOW(dialog));
+        gtk_window_present(GTK_WINDOW(level3_dialog));
     else
-        gtk_widget_hide(dialog);
+        gtk_widget_hide(level3_dialog);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
