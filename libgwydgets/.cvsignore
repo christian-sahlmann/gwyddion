@@ -3,3 +3,7 @@ Makefile.in
 main
 create-data
 *.object
+*.lo
+*.la
+.libs
+.deps
