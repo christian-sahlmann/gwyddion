@@ -1397,13 +1397,15 @@ gwy_app_reset_color_range(void)
     GwyDataWindow *data_window;
     GtkWidget *data_view;
     GwyContainer *data;
+    gboolean min, max;
 
     data_window = gwy_app_data_window_get_current();
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
-    if (gwy_container_remove_by_name(data, "/0/base/min")
-        || gwy_container_remove_by_name(data, "/0/base/max"))
+    min = gwy_container_remove_by_name(data, "/0/base/min");
+    max = gwy_container_remove_by_name(data, "/0/base/max");
+    if (min || max)
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
 }
 
