@@ -119,7 +119,7 @@ SI_prefixes[] = {
     { "y",    -24 },
 };
 
-/* TODO: silly units we should probably support specially: kg, \AA */
+/* TODO: silly units we should probably support specially: kg, \AA, % */
 
 /* Units that can conflict with prefixes */
 static const gchar *known_units[] = {
@@ -604,7 +604,7 @@ gwy_si_unit_parse(const gchar *string)
         g_string_append_len(buf, string, end - string);
 
         /* fix sloppy notations */
-        if (!strcmp(buf->str, "\272"))
+        if (!strcmp(buf->str, "\272") || !strcmp(buf->str, "°"))
             g_string_assign(buf, "deg");
 
         /* TODO: scan known obscure units */
