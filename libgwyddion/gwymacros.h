@@ -113,7 +113,7 @@ void gwy_debug_gnu(const gchar *domain,
                    const gchar *fileline,
                    const gchar *funcname,
                    const gchar *format,
-                   ...);
+                   ...) G_GNUC_PRINTF(4, 5);
 
 G_END_DECLS
 
