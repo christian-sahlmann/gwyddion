@@ -2,13 +2,24 @@
 GwySIUnit
 
 <!-- ##### SECTION Short_Description ##### -->
-SI unit representation
+SI unit representation, physical quantitiy formatting
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-This object is used for representing SI unit
-(or any other unit). It is also responsible for prefixes
-selection.  
+GwySIUnit object represents a physical SI unit (or any other unit),
+it can be created from a unit string with
+<link linkend="gwy-si-unit-new">gwy_si_unit_new()</link>.
+</para>
+
+<para>
+GwySIUnit is also responsible for prefixes selection and generally formatting
+of physical quantities (see also <link linkend="libgwyddion-gwymath">gwymath</link>
+for pure number formatting functions).  There are several functions computing
+value format (as a <link linkend="GwySIValueFormat">GwySIValueFormat</link>
+structure) with given resolution --
+<link linkend="gwy-si-unit-get-format-with-resolution">gwy_si_unit_get_format_with_resolution()</link>,
+or number of significant digits --
+<link linkend="gwy-si-unit-get-format-with-digits">gwy_si_unit_get_format_with_digits()</link>.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

@@ -6,8 +6,43 @@ A container with items identified by a GQuark.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-A general-purpose container.  Items in GwyContainer are identified by a GQuark
-(or its string).
+GwyContainer is a general-purpose container, it can hold atomic types,
+strings and objects. However objects must implement the
+<link linkend="GwySerializable">GwySerializable</link> interface, because
+the container itself is serializable.
+</para>
+
+<para>
+A new container can be created with
+<link linkend="gwy-container-new">gwy_container_new()</link>, items can be
+stored with function like
+<link linkend="gwy-container-set-double">gwy_container_set_double()</link>,
+read with
+<link linkend="gwy-container-get-double">gwy_container_get_double()</link>,
+and removed with
+<link linkend="gwy-container-remove">gwy_container_remove()</link>
+or <link linkend="gwy-container-remove_by_prefix">gwy_container_remove_by_prefix()</link>.
+A presence of a value can be tested with
+<link linkend="gwy-container-contains">gwy_container_contains()</link>,
+convenience functions for reading (updating) a value only if it is present
+like <link linkend="gwy-container-gis-double">gwy_container_gis_double()</link>,
+are available too.
+</para>
+
+<para>
+GwyContainer geneally takes ownership of stored non-atomic items, i.e. it
+holds a reference on stored objects and takes care of freeing of stored
+strings.  So you usually want to unref objects after storing them to
+a container.  Also remember static string cannot be stored there and must
+be duplicated first.
+</para>
+
+<para>Items in GwyContainer can be identified by a GQuark or the
+corresponding string.  While GQuarks are faster, they are less convenient for
+casual usage -- each GQuark-key function like
+<link linkend="gwy-container-set-double">gwy_container_set_double()</link>
+thus has a string-key counterpart
+<link linkend="gwy-container-set-double-by-name">gwy_container_set_double_by_name()</link>.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

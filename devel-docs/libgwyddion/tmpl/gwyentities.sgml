@@ -6,7 +6,17 @@ Transform SGML-like symbol entities to UTF-8 and back.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+A subset of named SGML-like symbol entities (e.g. <literal>&amp;alpha;</literal>),
+to be used namely in <link linkend="GwySciText">GwySciText</link>.
+</para>
 
+<para>
+Function <link linkend="gwy-entities-entity-to-utf8">gwy_entities_entity_to_utf8()</link>
+converts a signle entity to UTF-8, function
+Function <link linkend="gwy-entities-text-to-utf8">gwy_entities_text_to_utf8()</link>
+converts a text containing entities to UTF-8. A list of all available
+entities can be obtained with
+<link linkend="gwy-entities-get-entities">gwy_entities_get_entities()</link>.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

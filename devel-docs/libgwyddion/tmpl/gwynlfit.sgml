@@ -6,7 +6,44 @@ Marquardt-Levenberg nonlinear least square fitter.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+A new Marquardt-Levenberg nonlinear least square fitter can be created with
+<link linkend="gwy-math-nlfit-new">gwy_math_nlfit_new()</link>,
+specifying the function to fit (as
+<link linkend="GwyNLFitFunc">GwyNLFitFunc</link>) and its derivation
+(as <link linkend="GwyNLFitDerFunc">GwyNLFitDerFunc</link>).
+For functions for whose analytic derivation is not available or very
+impractical,
+<link linkend="gwy-math-nlfit-derive">gwy_math_nlfit_derive()</link>
+(computing the derivation numerically) can be used instead.
+</para>
 
+<para>A fitter can be then repeatedly used on different data either
+in <link linkend="gwy-math-nlfit-fit">gwy_math_nlfit_fit()</link>,
+or <link linkend="gwy-math-nlfit-fit-with-fixed">gwy_math_nlfit_fit_with_fixed()</link>
+when there are some fixed parameters. Arbitrary additional (non-fitting)
+parameters can be passed to the fited function in
+<parameter>user_data</parameter>.</para>
+
+<para>
+After a successfull fit additional fit information can be obtained
+with <link linkend="gwy-math-nlfit-get-dispersion">gwy_math_nlfit_get_dispersion()</link>,
+<link linkend="gwy-math-nlfit-get-correlations">gwy_math_nlfit_get_correlations()</link>,
+<link linkend="gwy-math-nlfit-get-sigma">gwy_math_nlfit_get_sigma()</link>.
+Note these functions may be used only after a successfull fit.
+When a fitter is no longer needed, it should be freed with
+<link linkend="gwy-math-nlfit-free">gwy_math_nlfit_free()</link>.
+</para>
+
+<para>
+Several common functions are also available as fitting presets that can be
+fitted with
+<link linkend="gwy-math-nlfit-fit-preset">gwy_math_nlfit_fit_preset()</link>.
+Each one can be identified by a unique name or a numeric id (the latter one
+may however change between releases) the number of presets can be obtained
+with <link linkend="gwy-math-nlfit-get-npresets">gwy_math_nlfit_get_npresets()</link>.
+Preset properties can be obtained with functions like
+<link linkend="gwy-math-nlfit-get-preset-nparams">gwy_math_nlfit_get_preset_nparams()</link>
+or <link linkend="gwy-math-nlfit-get-preset-formula">gwy_math_nlfit_get_preset_formula()</link>.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
