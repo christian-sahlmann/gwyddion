@@ -724,10 +724,10 @@ gwy_grad_sphere_update_mouse(GwyGradSphere *grad_sphere, gint x, gint y)
 
     grad_sphere->phi = atan2(yc - y, x - xc);
     if (grad_sphere->phi < 0.0)
-        grad_sphere->phi += 2.0*M_PI;
+        grad_sphere->phi += 2.0*G_PI;
     r = hypot((double)y - yc, (double)x - xc)/grad_sphere->radius;
     if (r >= 1.0)
-        grad_sphere->theta = M_PI/2.0;
+        grad_sphere->theta = G_PI/2.0;
     else
         grad_sphere->theta = asin(r);
 

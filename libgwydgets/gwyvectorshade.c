@@ -108,8 +108,8 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
 
     vector_shade->grad_sphere = grad_sphere;
 
-    theta = 180.0/M_PI*gwy_sphere_coords_get_theta(sphere_coords);
-    phi = 180.0/M_PI*gwy_sphere_coords_get_phi(sphere_coords);
+    theta = 180.0/G_PI*gwy_sphere_coords_get_theta(sphere_coords);
+    phi = 180.0/G_PI*gwy_sphere_coords_get_phi(sphere_coords);
 
     vector_shade->adj_theta
         = GTK_ADJUSTMENT(gtk_adjustment_new(theta, 0.0, 90.0,
@@ -266,7 +266,7 @@ gwy_vector_shade_theta_update(GtkAdjustment *adj,
     #endif
 
     sphere_coords = gwy_vector_shade_get_sphere_coords(vector_shade);
-    theta = M_PI/180.0*gtk_adjustment_get_value(adj);
+    theta = G_PI/180.0*gtk_adjustment_get_value(adj);
     phi = gwy_sphere_coords_get_phi(sphere_coords);
 
     BLOCK_ALL;
@@ -287,7 +287,7 @@ gwy_vector_shade_phi_update(GtkAdjustment *adj,
     #endif
 
     sphere_coords = gwy_vector_shade_get_sphere_coords(vector_shade);
-    phi = M_PI/180.0*gtk_adjustment_get_value(adj);
+    phi = G_PI/180.0*gtk_adjustment_get_value(adj);
     theta = gwy_sphere_coords_get_theta(sphere_coords);
 
     BLOCK_ALL;
@@ -306,8 +306,8 @@ gwy_vector_shade_coords_update(GwySphereCoords *sphere_coords,
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GwyVectorShade coords update");
     #endif
 
-    theta = 180.0/M_PI*gwy_sphere_coords_get_theta(sphere_coords);
-    phi = 180.0/M_PI*gwy_sphere_coords_get_phi(sphere_coords);
+    theta = 180.0/G_PI*gwy_sphere_coords_get_theta(sphere_coords);
+    phi = 180.0/G_PI*gwy_sphere_coords_get_phi(sphere_coords);
 
     BLOCK_ALL;
     gtk_adjustment_set_value(vector_shade->adj_theta, theta);

@@ -23,16 +23,16 @@ main(int argc, char *argv[])
     gsize size = 0;
 
     g_type_init();
-    df = (GwyDataField*)gwy_data_field_new(N, N, M_PI, M_PI, FALSE);
+    df = (GwyDataField*)gwy_data_field_new(N, N, G_PI, G_PI, FALSE);
     data = df->data;
     for (i = 0; i < N; i++) {
       row = data + N*i;
-      y = 2*M_PI*(double)i/(N-1);
+      y = 2*G_PI*(double)i/(N-1);
       for (j = 0; j < N; j++) {
-        x = 2*M_PI*(double)j/(N-1);
+        x = 2*G_PI*(double)j/(N-1);
         row[j] = sin(x*y + x-3.0*y);
         if (row[j] < 0)
-          row[j] = (x+y)/M_PI/M_PI;
+          row[j] = (x+y)/G_PI/G_PI;
       }
     }
     gwy_data_field_set_xreal(df, 4.1e-8);

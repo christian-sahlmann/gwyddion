@@ -187,10 +187,10 @@ gwy_sphere_coords_set_value(GwySphereCoords *sphere_coords,
 {
     g_return_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords));
 
-    theta = CLAMP(theta, 0.0, M_PI);
-    phi = fmod(phi, 2.0*M_PI);
+    theta = CLAMP(theta, 0.0, G_PI);
+    phi = fmod(phi, 2.0*G_PI);
     if (phi < 0.0)
-        phi += 2.0*M_PI;
+        phi += 2.0*G_PI;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
