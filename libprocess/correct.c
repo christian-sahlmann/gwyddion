@@ -266,16 +266,22 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
             if (mrow[j] >= threshold_high) {
                 mrow[j] = 1.0;
                 k++;
+                continue;
             }
-            else if (k && k < min_scar_len) {
+            if (k && k < min_scar_len) {
                 while (k) {
                     mrow[j-k] = 0.0;
                     k--;
                 }
-                mrow[j] = 0.0;
             }
-            else
-                mrow[j] = 0.0;
+            mrow[j] = 0.0;
+            k = 0;
+        }
+        if (k && k < min_scar_len) {
+            while (k) {
+                mrow[j-k] = 0.0;
+                k--;
+            }
         }
     }
 }
