@@ -120,7 +120,7 @@ static GwyModuleInfo module_info = {
     "graph_cd",
     N_("Critical dimension measurements"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.1",
+    "1.1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -255,6 +255,7 @@ fit_dialog(FitArgs *args)
 
     pcontrols = &controls;
     dialog = gtk_dialog_new_with_buttons(_("Fit graph"), NULL, 0, NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Fit"),
                                                            GTK_STOCK_EXECUTE),

@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     "graph ascii export",
     N_("Export graph curves to ASCII file"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0.1",
+    "1.0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -74,7 +74,7 @@ ascii(GwyGraph *graph)
         return TRUE;
     }
 
-    dialog = gtk_file_selection_new(N_("Export Graph to File"));
+    dialog = gtk_file_selection_new(_("Export Graph to File"));
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     if (response == GTK_RESPONSE_OK) {
         selected_filename

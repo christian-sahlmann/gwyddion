@@ -67,7 +67,7 @@ static GwyModuleInfo module_info = {
     "graph_points",
     N_("Measure distances between points"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -152,6 +152,7 @@ points_dialog(GwyGraph *graph)
                                          GTK_STOCK_CLEAR, GTK_RESPONSE_REJECT,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
 
     g_signal_connect_swapped(dialog, "delete_event",
