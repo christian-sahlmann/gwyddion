@@ -156,7 +156,7 @@ gwy_app_toolbox_create(void)
                        G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(-1));
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Display a 3D view of data"), NULL, GWY_STOCK_3D_BASE,
-                       G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(10000));
+                       G_CALLBACK(gwy_app_3d_view_cb), NULL);
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);

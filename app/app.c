@@ -785,14 +785,32 @@ gwy_app_tool_use_cb(const gchar *toolname,
     g_signal_emit_by_name(old_button, "clicked");
 }
 
+/* FIXME: we should zoom whatever is currently active: datawindow, 3dwindow,
+ * graph */
 void
 gwy_app_zoom_set_cb(gpointer data)
 {
     GwyDataWindow *data_window;
 
     data_window = gwy_app_data_window_get_current();
-    if (data_window)
-        gwy_data_window_set_zoom(data_window, GPOINTER_TO_INT(data));
+    g_return_if_fail(data_window);
+    gwy_data_window_set_zoom(data_window, GPOINTER_TO_INT(data));
+}
+
+void
+gwy_app_3d_view_cb(void)
+{
+    GwyDataWindow *data_window;
+    GwyContainer *data;
+    GtkWidget *gwy3dview, *gwy3dwindow;
+
+    /* TODO */
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(data_window);
+    data = gwy_data_window_get_data(data_window);
+    gwy3dview = gwy_3d_view_new(data);
+    gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
+    gtk_widget_show_all(gwy3dwindow);
 }
 
 
