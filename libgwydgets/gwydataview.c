@@ -1031,4 +1031,44 @@ gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
         *yscr = floor(yreal/data_view->ymeasure + 0.5) + data_view->yoff;
 }
 
+/**
+ * gwy_data_view_get_thumbnail:
+ * @data_view: A #GwyDataView.
+ * @size: Requested thumbnail size.
+ *
+ * Creates and returns a thumbnail of the data view.
+ *
+ * If the data are not square, they are centered onto the pixbuf.
+ *
+ * Returns: The thumbnail as a newly create #GdkPixbuf, to be freed when no
+ * longer necessary.
+ **/
+GdkPixbuf*
+gwy_data_view_get_thumbnail(GwyDataView *data_view,
+                            gint size)
+{
+    GdkPixbuf *pixbuf;
+    gint width, height, width_scaled, height_scaled;
+    gdouble scale;
+
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
+    g_return_val_if_fail(data_view->pixbuf, NULL);
+    g_return_val_if_fail(size > 0, NULL);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE,
+                            BITS_PER_SAMPLE, size, size);
+    gdk_pixbuf_fill(pixbuf, 0x00000000);
+    width = gdk_pixbuf_get_width(data_view->pixbuf);
+    height = gdk_pixbuf_get_height(data_view->pixbuf);
+    scale = MIN((gdouble)size/width, (gdouble)size/height);
+    width_scaled = scale*width;
+    height_scaled = scale*height;
+    gdk_pixbuf_scale(data_view->pixbuf, pixbuf,
+                     (size - width_scaled)/2, (size - height_scaled)/2,
+                     width_scaled, height_scaled,
+                     (size - width_scaled)/2, (size - height_scaled)/2,
+                     scale, scale, GDK_INTERP_TILES);
+
+    return pixbuf;
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

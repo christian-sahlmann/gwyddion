@@ -109,6 +109,8 @@ void              gwy_data_view_coords_real_to_xy (GwyDataView *data_view,
                                                    gint *yscr);
 gdouble           gwy_data_view_get_xmeasure      (GwyDataView *data_view);
 gdouble           gwy_data_view_get_ymeasure      (GwyDataView *data_view);
+GdkPixbuf*        gwy_data_view_get_thumbnail     (GwyDataView *data_view,
+                                                   gint size);
 void              gwy_data_view_update            (GwyDataView *data_view);
 
 #ifdef __cplusplus
