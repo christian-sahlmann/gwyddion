@@ -2,11 +2,13 @@
 gwyutils
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Various utility functions
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Various utility functions: creating GLib lists from hash tables, converting
+between enums and flags and their string representations, protably finding
+Gwyddion application directories.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

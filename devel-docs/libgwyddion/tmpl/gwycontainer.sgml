@@ -2,11 +2,12 @@
 GwyContainer
 
 <!-- ##### SECTION Short_Description ##### -->
-
+A container with items identified by a GQuark.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+A general-purpose container.  Items in GwyContainer are identified by a GQuark
+(or its string).
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

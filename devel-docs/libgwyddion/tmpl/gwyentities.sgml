@@ -2,7 +2,7 @@
 gwyentities
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Transform SGML-like symbol entities to UTF-8 and back.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

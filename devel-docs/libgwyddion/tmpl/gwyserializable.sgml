@@ -2,11 +2,27 @@
 GwySerializable
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Abstract interface for serializable objects.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+GwySerializable is an abstract interface for value-like object that can be
+serialized and deserialized.  You can serialize any object implementing
+this interface with
+<link linkend="gwy-serializable-serialize">gwy_serializable_serialize()</link>
+and the restore (deserialize) it with
+<link linkend="gwy-serializable-deserialize">gwy_serializable_deserialize()</link>.
+It is also posible it duplicate any such object with
+<link linkend="gwy-serializable-duplicate">gwy_serializable_duplicate()</link>.
+</para>
 
+<para>
+There are quite a few helper functions available for implementation of
+serialization and deserialization in you classes, most high-level
+(and thus probably most useful) are
+<link linkend="gwy-serialize-pack-object-struct">gwy_serialize_pack_object_struct()</link>
+and
+<link linkend="gwy-serialize-unpack-object-struct">gwy_serialize_unpack_object_struct()</link>.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -265,8 +281,26 @@ GwySerializable
 
 <!-- ##### FUNCTION gwy_serialize_pack_object_struct ##### -->
 <para>
-
+Here's how a serialization method of a simple object whose state is described
+by a single real number <structfield>foo</structfield> could look (without
+error checking):
 </para>
+<informalexample><programlisting><![CDATA[
+static guchar*
+my_object_serialize(GObject *obj,
+                    guchar *buffer,
+                    gsize *size)
+{
+    MyObject *my_object = MY_OBJECT(obj);
+    GwySerializeSpec spec[] = {
+        { 'd', "foo", &my_object->foo, NULL, },
+    };
+
+    return gwy_serialize_pack_object_struct(buffer, size,
+                                            "MyObject",
+                                            G_N_ELEMENTS(spec), spec);
+}
+]]></programlisting></informalexample>
 
 @buffer: 
 @size: 
@@ -278,8 +312,28 @@ GwySerializable
 
 <!-- ##### FUNCTION gwy_serialize_unpack_object_struct ##### -->
 <para>
-
+Here's how a deserialization method of a simple object whose state is described
+by a single real number <structfield>foo</structfield> could look (without
+error checking):
 </para>
+<informalexample><programlisting><![CDATA[
+static GObject*
+my_object_deserialize(const guchar *buffer,
+                      gsize size,
+                      gsize *position)
+{
+    double foo = 1.0;
+    GwySerializeSpec spec[] = {
+        { 'd', "foo", &foo, NULL, },
+    };
+    MyObject *my_object;
+
+    gwy_serialize_unpack_object_struct(buffer, size, position,
+                                       "MyObject",
+                                       G_N_ELEMENTS(spec), spec);
+    return my_object_new(foo);
+}
+]]></programlisting></informalexample>
 
 @buffer: 
 @size: 
