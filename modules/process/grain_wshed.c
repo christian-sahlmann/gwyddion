@@ -170,7 +170,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    table = gtk_table_new(3, 9, FALSE);
+    table = gtk_table_new(9, 3, FALSE);
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(hbox),
                        FALSE, FALSE, 4);
