@@ -51,11 +51,17 @@ int main(int argc, char *argv[])
     g_message("preparing datafield...");
     a = (GwyDataField *) gwy_datafield_new(500, 500, 500, 500, 1);
     make_test_image(a);
-  
+    
+    /*test anything with the processing routines*/
+
+   
+
+    /*test serialization of the datafield*/
     size = 0;
     buffer = NULL;
     buffer = gwy_serializable_serialize((GObject *)a, buffer, &size);
-    
+   
+    printf("size is %d\n", size);
     g_message("writing datafield to test.datafield...");
     fh = fopen("test.datafield", "wb");
     fwrite(buffer, 1, size, fh);
@@ -67,13 +73,16 @@ int main(int argc, char *argv[])
     g_file_get_contents("test.datafield", (gchar**)&buffer, &size, &error);
     pos = 0;
     b = (GwyDataField *) gwy_serializable_deserialize(buffer, size, &pos);
-    
+      
+
+    /*output deserialized datafield*/
     g_message("drawing datafield...");
     gwy_pixfield_presetpal(&pal, GWY_PAL_OLIVE);
-   
+  
+    
     pxb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 
-			 gwy_datafield_get_xres(a), gwy_datafield_get_yres(a));
-    gwy_pixfield_do(pxb, a, &pal); 
+			 gwy_datafield_get_xres(b), gwy_datafield_get_yres(b));
+    gwy_pixfield_do(pxb, b, &pal); 
     gdk_pixbuf_save(pxb, "xout.jpg", "jpeg", &error, "quality", "100", NULL);
     
     gwy_datafield_free(b); 

@@ -58,6 +58,8 @@ void gwy_pixfield_do(GdkPixbuf *g, GwyDataField *f, PixPalette *pal)
     maximum=gwy_datafield_get_max(f); 
     minimum=gwy_datafield_get_min(f);
     kor=511.0/(maximum-minimum);
+   
+    /*printf("%f, %f, (%d, %d)\n", minimum, maximum, xres, yres);*/
     
     pixels = gdk_pixbuf_get_pixels(g);
     rowstride = gdk_pixbuf_get_rowstride(g);
