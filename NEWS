@@ -9,8 +9,11 @@ Modules:
 - Interactive color range change tool (new).
 - Distance and angle reading tool (new) (bug #32).
 - Polynomial background removal/extraction (new).
+- Tip convolution, deconvolution, modelling, blind tip estimation and certainty map
+  analysis modules added. All these modules are based on algorithms
+  published by J. Villarrubia.
 - Laplacian, Sobel, Prewitt were moved from Filters tool to separate display
-  modules, Canny added.
+  modules, Canny edge detector added.
 - Wrong selection boundaries in Filters tool was fixed (bug #35).
 - Pointer and Level3: Units in table header are updated on data update
   (bug #37).
@@ -28,7 +31,9 @@ Library:
   time no longer displays all-black data.
 - libgwydgets: Gwy3DWindow allows to switch between full and basic controls.
 - libgwyddion: Choleski decomposition and solution functions.
-- libgwyprocess: Two-dimensional polynom fitting.
+- libgwyprocess: Two-dimensional polynom fitting. 
+- libgwyprocess: tip convolution, deconvolution, certainty map analysis,
+  modelling and blind tip estimation routines added.
 - libgwyapp: Helper functions to manage rectangular selections in tools.
 - gwyddion/dump Ruby module implementing plug-in proxy dump format.
 - Installation paths of Gwyddion::dump, Gwyddion.dump, and gwyddion/dump were
