@@ -602,7 +602,10 @@ gwy_palette_def_setup_presets(void)
     GwyRGBA red = { 1, 0, 0, 1 };
     GwyRGBA green = { 0, 1, 0, 1 };
     GwyRGBA blue = { 0, 0, 1, 1 };
-    GwyRGBA yellow = { 0.8314, 0.71765, 0.16471, 1 };
+    GwyRGBA cyan = { 0, 1, 1, 1 };
+    GwyRGBA violet = { 1, 0, 1, 1 };
+    GwyRGBA yellow = { 1, 1, 0, 1 };
+    GwyRGBA xyellow = { 0.8314, 0.71765, 0.16471, 1 };
     GwyRGBA pink = { 1, 0.07843, 0.62745, 1 };
     GwyRGBA olive = { 0.36863, 0.69020, 0.45882, 1 };
     GwyPaletteDefEntry rainbow1[] = {
@@ -623,11 +626,30 @@ gwy_palette_def_setup_presets(void)
         { 0.75, { 0, 0, 1, 1 } },
         { 1.0,  { 1, 1, 1, 1 } },
     };
+    GwyPaletteDefEntry gold[] = {
+        { 0,        { 0, 0, 0, 1 } },
+        { 0.333333, { 0.345098, 0.109804, 0, 1 } },
+        { 0.666667, { 0.737255, 0.501961, 0, 1 } },
+        { 1,        { 0.988235, 0.988235, 0.501961, 1 } },
+    };
+    GwyPaletteDefEntry pm3d[] = {
+        { 0,        { 0,        0,        0,        1 } },
+        { 0.166667, { 0.265412, 0,        0.564000, 1 } },
+        { 0.333333, { 0.391234, 0,        0.831373, 1 } },
+        { 0.666667, { 0.764706, 0,        0.000000, 1 } },
+        { 1,        { 1.000000, 0.894118, 0.000000, 1 } },
+    };
 
     GwyPaletteDefEntry pd[] = {
         { 0.0, { 0, 0, 0, 1 } },
         { 0.5, { 0, 0, 0, 0 } },
         { 1.0, { 1, 1, 1, 1 } },
+    };
+    GwyPaletteDefEntry pd3[] = {
+        { 0.0,  { 0, 0, 0, 1 } },
+        { 0.33, { 0, 0, 0, 0 } },
+        { 0.67, { 0, 0, 0, 0 } },
+        { 1.0,  { 1, 1, 1, 1 } },
     };
     GwyPaletteDefEntry *pd2;
     gsize i;
@@ -637,24 +659,43 @@ gwy_palette_def_setup_presets(void)
                                   GWY_PALETTE_RAINBOW1);
     gwy_palette_def_create_preset(rainbow2, G_N_ELEMENTS(rainbow2),
                                   GWY_PALETTE_RAINBOW2);
+    gwy_palette_def_create_preset(gold, G_N_ELEMENTS(gold),
+                                  GWY_PALETTE_GOLD);
+    gwy_palette_def_create_preset(pm3d, G_N_ELEMENTS(pm3d),
+                                  GWY_PALETTE_PM3D);
 
     pd[1].color = red;
     gwy_palette_def_create_preset(pd, G_N_ELEMENTS(pd), GWY_PALETTE_RED);
-
     pd[1].color = green;
     gwy_palette_def_create_preset(pd, G_N_ELEMENTS(pd), GWY_PALETTE_GREEN);
-
     pd[1].color = blue;
     gwy_palette_def_create_preset(pd, G_N_ELEMENTS(pd), GWY_PALETTE_BLUE);
-
-    pd[1].color = yellow;
+    pd[1].color = xyellow;
     gwy_palette_def_create_preset(pd, G_N_ELEMENTS(pd), GWY_PALETTE_YELLOW);
-
     pd[1].color = pink;
     gwy_palette_def_create_preset(pd, G_N_ELEMENTS(pd), GWY_PALETTE_PINK);
-
     pd[1].color = olive;
     gwy_palette_def_create_preset(pd, G_N_ELEMENTS(pd), GWY_PALETTE_OLIVE);
+
+    pd3[1].color = red;
+    pd3[2].color = yellow;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_RED_YELLOW);
+    pd3[2].color = violet;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_RED_VIOLET);
+    pd3[1].color = blue;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_BLUE_VIOLET);
+    pd3[2].color = cyan;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_BLUE_CYAN);
+    pd3[1].color = green;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_GREEN_CYAN);
+    pd3[2].color = yellow;
+    gwy_palette_def_create_preset(pd3, G_N_ELEMENTS(pd3),
+                                  GWY_PALETTE_GREEN_YELLOW);
 
     pd2 = g_new(GwyPaletteDefEntry, 10);
     for (i = 0; i < 10; i++) {
