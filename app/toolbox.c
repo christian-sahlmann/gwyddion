@@ -304,7 +304,8 @@ gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
 
     last = gtk_menu_item_new_with_mnemonic(_("Re-show Last"));
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(last), reshow_accel_path);
-    gtk_accel_map_add_entry(reshow_accel_path, GDK_f, GDK_CONTROL_MASK);
+    gtk_accel_map_add_entry(reshow_accel_path, GDK_f,
+                            GDK_CONTROL_MASK | GDK_SHIFT_MASK);
     g_object_set_data(G_OBJECT(last), "show-last-item", GINT_TO_POINTER(TRUE));
     gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
     gwy_app_menu_set_sensitive_both(last,
@@ -317,7 +318,7 @@ gwy_app_menu_create_proc_menu(GtkAccelGroup *accel_group)
     last = gtk_menu_item_new_with_mnemonic(_("Repeat Last"));
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(last), repeat_accel_path);
     gtk_accel_map_add_entry(repeat_accel_path, GDK_f,
-                            GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+                            GDK_CONTROL_MASK);
     g_object_set_data(G_OBJECT(last), "run-last-item", GINT_TO_POINTER(TRUE));
     gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
     gwy_app_menu_set_sensitive_both(last,
