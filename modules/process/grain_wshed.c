@@ -76,11 +76,11 @@ static void        mask_process               (GwyDataField *dfield,
 
 
 WshedArgs wshed_defaults = {
-    100,
+    10,
     3,
-    100,
-    50,
-    50
+    10,
+    1,
+    1
 };
 
 /* The module info. */
@@ -392,23 +392,26 @@ ok(WshedControls *controls,
 
 static void
 mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, WshedControls *controls)
-{    
-    GwyDataField *output_field;
-    gboolean is_field;
+{
+    gdouble max, min;
+
+    max = gwy_data_field_get_max(dfield);
+    min = gwy_data_field_get_min(dfield);
     
-    is_field = FALSE;
-    output_field = (GwyDataField*)gwy_data_field_new(gwy_data_field_get_xres(dfield), 
-                                                     gwy_data_field_get_yres(dfield),
-                                                     gwy_data_field_get_xreal(dfield),
-                                                     gwy_data_field_get_yreal(dfield),
-                                                     FALSE);
     args->locate_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_steps));
     args->locate_thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_thresh));
     args->locate_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_dropsize));
     args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_steps));
     args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize));
-  
-    g_object_unref(output_field); 
+
+    printf("Uaaa!\n");
+    gwy_data_field_grains_mark_watershed(dfield, maskfield, 
+                                         args->locate_steps,
+                                         args->locate_thresh,
+                                         min + args->locate_dropsize*(max-min)/100.0,
+                                         args->wshed_steps,
+                                         min + args->wshed_dropsize*(max-min)/100.0);
+    printf("Uuuu!\n");
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
