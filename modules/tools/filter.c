@@ -283,6 +283,7 @@ apply(GwyUnitoolState *state)
     gdouble xy[4];
     gdouble ulcol, brcol, ulrow, brrow;
 
+    gwy_debug("");
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     gwy_app_clean_up_data(data);
@@ -308,8 +309,9 @@ apply(GwyUnitoolState *state)
         brrow = gwy_data_field_get_yres(dfield);
     }
   
-    my_undo_load(dfield);
+    my_undo_load(dfield);    
     gwy_app_undo_checkpoint(data, "/0/data");
+    
     switch (controls->fil){
         case GWY_FILTER_MEAN:
         gwy_data_field_filter_mean(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
@@ -388,10 +390,20 @@ dialog_update(GwyUnitoolState *state)
 
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 
-    ulcol = (gint)gwy_data_field_rtoi(dfield, MIN(xy[0], xy[2]));
-    ulrow = (gint)gwy_data_field_rtoj(dfield, MIN(xy[1], xy[3]));
-    brcol = (gint)gwy_data_field_rtoi(dfield, MAX(xy[0], xy[2]));
-    brrow = (gint)gwy_data_field_rtoj(dfield, MAX(xy[1], xy[3]));
+    if (is_selected) 
+    {
+        ulcol = (gint)gwy_data_field_rtoi(dfield, MIN(xy[0], xy[2]));
+        ulrow = (gint)gwy_data_field_rtoj(dfield, MIN(xy[1], xy[3]));
+        brcol = (gint)gwy_data_field_rtoi(dfield, MAX(xy[0], xy[2]));
+        brrow = (gint)gwy_data_field_rtoj(dfield, MAX(xy[1], xy[3]));
+    }
+    else
+    {
+        ulcol = 0;
+        ulrow = 0;
+        brcol = gwy_data_field_get_xres(dfield);
+        brrow = gwy_data_field_get_yres(dfield);
+    }
    
     if (unchanged) {my_undo_save(dfield); unchanged = 0;}
     
