@@ -66,6 +66,8 @@ gwy_app_init(void)
     g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
 }
 
+/* The purpose of this function is to instantiate all palettes and keep them
+ * existing all the time */
 static void
 ref_palette(G_GNUC_UNUSED const gchar *name,
             GwyPaletteDef *pdef)

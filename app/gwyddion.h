@@ -28,11 +28,16 @@
 extern "C" {
 #endif /* __cplusplus */
 
-GtkWidget* gwy_app_toolbox_create   (void);
-void       gwy_app_data_arith       (void);
-void       gwy_app_about            (void);
-void       gwy_app_metadata_browser (GwyDataWindow *data_window);
-void       gwy_app_init             (void);
+GtkWidget* gwy_app_toolbox_create            (void);
+void       gwy_app_data_arith                (void);
+void       gwy_app_about                     (void);
+void       gwy_app_metadata_browser          (GwyDataWindow *data_window);
+void       gwy_app_init                      (void);
+
+void       gwy_app_splash_create             (void);
+void       gwy_app_splash_close              (void);
+void       gwy_app_splash_set_message        (const gchar *message);
+void       gwy_app_splash_set_message_prefix (const gchar *prefix);
 
 #ifdef __cplusplus
 }

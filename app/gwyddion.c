@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,6 +19,7 @@
  */
 
 #include <libgwymodule/gwymodule.h>
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include "app.h"
 #include "settings.h"
@@ -40,7 +41,15 @@ main(int argc, char *argv[])
     gwy_app_settings_load(config_file);
     gwy_app_settings_get();
     module_dirs = gwy_app_settings_get_module_dirs();
+
+    gwy_app_splash_create();
+    gwy_app_splash_set_message_prefix(_("Registering "));
+    gwy_module_set_register_callback(gwy_app_splash_set_message);
     gwy_module_register_modules((const gchar**)module_dirs);
+    gwy_module_set_register_callback(NULL);
+    gwy_app_splash_set_message_prefix(NULL);
+    gwy_app_splash_close();
+
     gwy_app_toolbox_create();
     gwy_app_file_open_initial(argv + 1, argc - 1);
     gtk_main();

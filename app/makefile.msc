@@ -72,6 +72,7 @@ PRG_OBJECTS = \
 	gwyddion.obj \
 	init.obj \
 	meta.obj \
+	splash.obj \
 	toolbox.obj
 
 ## targets
@@ -104,6 +105,9 @@ init.obj: init.c
 
 meta.obj: meta.c
 	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) meta.c
+
+splash.obj: splash.c
+	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) splash.c
 
 toolbox.obj: toolbox.c
 	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) toolbox.c
