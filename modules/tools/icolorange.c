@@ -400,11 +400,11 @@ dialog_update(GwyUnitoolState *state,
 
             /* XXX */
             fuck = (GwyGraphStatus_SelData*)gwy_graph_get_status_data(graph);
-            gwy_debug("graph selection: [%d, %d]",
-                      fuck->scr_start, fuck->scr_end);
-            if (fuck->scr_start == fuck->scr_end) {
-                controls->rel_min = 0.0;
-                controls->rel_max = 1.0;
+            gwy_debug("graph selection: [%g, %g]",
+                      fuck->data_start, fuck->data_end);
+            if (fuck->data_start == fuck->data_end) {
+                controls->min = controls->datamin;
+                controls->max = controls->datamax;
             }
             else {
                 controls->min = MIN(fuck->data_start, fuck->data_end);
