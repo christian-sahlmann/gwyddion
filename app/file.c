@@ -363,13 +363,13 @@ recent_files_update(const gchar *filename_utf8)
     else
         recent_files = g_list_prepend(recent_files, g_strdup(filename_utf8));
 
+    recent_files_to_settings();
     gwy_app_menu_recent_files_update(recent_files);
 }
 
 static GList*
 recent_files_from_settings(void)
 {
-    static gulong cbid = 0;
     const gchar *prefix = "/app/recent";
     GwyContainer *settings;
     gchar buffer[16];
@@ -391,9 +391,6 @@ recent_files_from_settings(void)
         g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", i);
     }
     list = g_list_reverse(list);
-    if (!cbid && gwy_app_main_window)
-        cbid = g_signal_connect(gwy_app_main_window, "destroy",
-                                G_CALLBACK(recent_files_to_settings), NULL);
 
     return list;
 }
@@ -417,6 +414,7 @@ recent_files_to_settings(void)
     for (l = recent_files, i = 0;
          l && i < gwy_app_n_recent_files;
          l = g_list_next(l), i++) {
+        gwy_debug("storing %s", (gchar*)l->data);
         g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", i);
         gwy_container_set_string_by_name(settings, buffer,
                                          g_strdup((gchar*)l->data));
