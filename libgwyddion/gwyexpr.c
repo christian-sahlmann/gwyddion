@@ -112,19 +112,21 @@ struct _GwyExpr {
     /* Global context */
     GScanner *scanner;
     GHashTable *constants;
-    GPtrArray *identifiers;
+    /* Variables */
+    GPtrArray *identifiers;    /* variable names */
+    const gdouble *variables;    /* user-filled variable values */
     /* Tokens */
     GMemChunk *token_chunk;
     GwyExprToken *tokens;
-    GwyExprToken *reservoir;
+    GwyExprToken *reservoir;    /* deleted tokens accumulate here */
     /* Compiled RPN representation */
-    GwyExprCode *input;
-    guint in;
-    guint ilen;
+    GwyExprCode *input;    /* compiled expression */
+    guint in;    /* nonzero in is a mark of successful compilation */
+    guint ilen;    /* allocated size */
     /* Execution stack */
-    gdouble *stack;
-    gdouble *sp;
-    guint slen;
+    gdouble *stack;    /* stack */
+    gdouble *sp;    /* stack pointer */
+    guint slen;    /* allocated size */
 };
 
 #define make_function_1_1(name) \
@@ -253,22 +255,34 @@ gwy_expr_check_call_table_sanity(void)
  *
  ****************************************************************************/
 
+/**
+ * gwy_expr_stack_interpret:
+ * @expr: An expression.
+ *
+ * Runs code in @expr->input, at the end, result is in @expr->stack[0].
+ *
+ * No checking is done, use gwy_expr_stack_check_executability() beforehand.
+ **/
 static void
-gwy_expr_interpret(GwyExpr *expr)
+gwy_expr_stack_interpret(GwyExpr *expr)
 {
     guint i;
 
     expr->sp = expr->stack - 1;
     for (i = 0; i < expr->in; i++) {
-        if (expr->input[i].type == GWY_EXPR_CODE_CONSTANT)
-            *(++expr->sp) = expr->input[i].value;
-        else if (expr->input[i].type > 0)
-            call_table[expr->input[i].type].function(&expr->sp);
+        GwyExprCode *code = expr->input + i;
+
+        if (code->type == GWY_EXPR_CODE_CONSTANT)
+            *(++expr->sp) = code->value;
+        else if ((gint)code->type > 0)
+            call_table[code->type].function(&expr->sp);
+        else
+            *(++expr->sp) = expr->variables[-(gint)code->type];
     }
 }
 
 /**
- * gwy_expr_check_executability:
+ * gwy_expr_stack_check_executability:
  * @expr: An expression.
  *
  * Checks whether a stack is executable and assures it's large enough.
@@ -276,7 +290,7 @@ gwy_expr_interpret(GwyExpr *expr)
  * Returns: %TRUE if stack is executable, %FALSE if it isn't.
  **/
 static gboolean
-gwy_expr_check_executability(GwyExpr *expr)
+gwy_expr_stack_check_executability(GwyExpr *expr)
 {
     guint i;
     gint nval, max;
@@ -306,12 +320,41 @@ gwy_expr_check_executability(GwyExpr *expr)
     return TRUE;
 }
 
+G_GNUC_UNUSED static void
+gwy_expr_print_stack(GwyExpr *expr)
+{
+    guint i;
+    GwyExprCode *code;
+
+    for (i = 0; i < expr->in; i++) {
+        code = expr->input + i;
+        if ((gint)code->type > 0) {
+            g_print("Function %s\n",
+                    call_table[code->type].name);
+        }
+        else if ((gint)code->type < 0) {
+            g_print("Argument %s\n",
+                    (gchar*)g_ptr_array_index(expr->identifiers, -code->type));
+        }
+        else
+            g_print("Constant %g\n", code->value);
+    }
+}
+
 /****************************************************************************
  *
  *  Reimplementation of interesting parts of GList
  *
  ****************************************************************************/
 
+/**
+ * gwy_expr_token_list_last:
+ * @tokens: A list of tokens.
+ *
+ * Returns last token in list.
+ *
+ * Returns: The last token, %NULL if list is empty.
+ **/
 static inline GwyExprToken*
 gwy_expr_token_list_last(GwyExprToken *tokens)
 {
@@ -323,6 +366,15 @@ gwy_expr_token_list_last(GwyExprToken *tokens)
     return tokens;
 }
 
+/* XXX: used only once */
+/**
+ * gwy_expr_token_list_length:
+ * @tokens: A list of tokens.
+ *
+ * Counts tokens in a list.
+ *
+ * Returns: Token list length.
+ **/
 static inline guint
 gwy_expr_token_list_length(GwyExprToken *tokens)
 {
@@ -336,6 +388,15 @@ gwy_expr_token_list_length(GwyExprToken *tokens)
     return i;
 }
 
+/**
+ * gwy_expr_token_list_prepend:
+ * @tokens: A list of tokens.
+ * @token: A token.
+ *
+ * Prepends a token before a list.
+ *
+ * Returns: The new list head, that is @token.
+ **/
 static inline GwyExprToken*
 gwy_expr_token_list_prepend(GwyExprToken *tokens,
                             GwyExprToken *token)
@@ -347,6 +408,15 @@ gwy_expr_token_list_prepend(GwyExprToken *tokens,
     return token;
 }
 
+/* XXX: used only once */
+/**
+ * gwy_expr_token_list_reverse:
+ * @tokens: A list of tokens.
+ *
+ * Reverts the order in a token list.
+ *
+ * Returns: The new list head.
+ **/
 static inline GwyExprToken*
 gwy_expr_token_list_reverse(GwyExprToken *tokens)
 {
@@ -363,6 +433,15 @@ gwy_expr_token_list_reverse(GwyExprToken *tokens)
     return end;
 }
 
+/**
+ * gwy_expr_token_list_concat:
+ * @head: First token list.
+ * @tail: Second token list.
+ *
+ * Concatenates two token lists.
+ *
+ * Returns: The new list head.
+ **/
 static inline GwyExprToken*
 gwy_expr_token_list_concat(GwyExprToken *head,
                            GwyExprToken *tail)
@@ -380,14 +459,18 @@ gwy_expr_token_list_concat(GwyExprToken *head,
     return head;
 }
 
-static inline void
-gwy_expr_token_delete(GwyExpr *expr,
-                      GwyExprToken *token)
-{
-    token->prev = NULL;
-    expr->reservoir = gwy_expr_token_list_prepend(expr->reservoir, token);
-}
-
+/**
+ * gwy_expr_token_list_delete_token:
+ * @expr: An expression.
+ * @tokens: A list of tokens.
+ * @token: A token.
+ *
+ * Unlinks a token from list and deletes it.
+ *
+ * Note if token holds some data (including RPN block), it must be freed first.
+ *
+ * Returns: The new list head.
+ **/
 static inline GwyExprToken*
 gwy_expr_token_list_delete_token(GwyExpr *expr,
                                  GwyExprToken *tokens,
@@ -407,28 +490,16 @@ gwy_expr_token_list_delete_token(GwyExpr *expr,
     return tokens;
 }
 
-static inline GwyExprToken*
-gwy_expr_token_list_next_delete(GwyExpr *expr,
-                                GwyExprToken *tokens,
-                                GwyExprToken **token)
-{
-    GwyExprToken *t = *token;
-
-    *token = t->next;
-
-    return gwy_expr_token_list_delete_token(expr, tokens, t);
-}
-
-static inline void
-gwy_expr_token_list_delete(GwyExpr *expr,
-                           GwyExprToken *tokens)
-{
-    if (G_UNLIKELY(!tokens))
-        return;
-
-    expr->reservoir = gwy_expr_token_list_concat(tokens, expr->reservoir);
-}
-
+/**
+ * gwy_expr_token_list_insert:
+ * @tokens: A list of tokens.
+ * @before: A token to insert @token before.
+ * @token: Token to insert.
+ *
+ * Inserts a token into a token list before given token.
+ *
+ * Returns: The new list head.
+ **/
 static inline GwyExprToken*
 gwy_expr_token_list_insert(GwyExprToken *tokens,
                            GwyExprToken *before,
@@ -445,6 +516,14 @@ gwy_expr_token_list_insert(GwyExprToken *tokens,
     return tokens;
 }
 
+/**
+ * gwy_expr_token_new0:
+ * @expr: An expression.
+ *
+ * Allocates (or revives) and initialized a new token.
+ *
+ * Returns: A new token, initialized to zero/%NULL.
+ **/
 static inline GwyExprToken*
 gwy_expr_token_new0(GwyExpr *expr)
 {
@@ -462,31 +541,27 @@ gwy_expr_token_new0(GwyExpr *expr)
     return token;
 }
 
-/****************************************************************************
- *
- *  Infix -> RPN convertor, tokenizer
- *
- ****************************************************************************/
-
 /**
- * gwy_expr_scanner_values_free:
+ * gwy_expr_token_list_delete:
  * @expr: An expression.
- * @tokens: Transitional token list.
+ * @tokens: A token list.
  *
- * Frees token list.
+ * Actually frees token list.
  *
- * This function assumes each token is either unconverted scanner token, or
- * it has non-empty rpn_block.
+ * Assumes each token is either unconverted scanner token, or it has non-empty
+ * RPN block.  In either case it frees the RPN block, or strings of uncoverted
+ * scanner tokens.
  **/
 static void
-gwy_expr_scanner_values_free(GwyExpr *expr,
-                             GwyExprToken *tokens)
+gwy_expr_token_list_delete(GwyExpr *expr,
+                           GwyExprToken *tokens)
 {
     GwyExprToken *t;
 
     for (t = tokens; t; t = t->next) {
         if (t->rpn_block) {
-            gwy_expr_token_list_delete(expr, t->rpn_block);
+            expr->reservoir = gwy_expr_token_list_concat(t->rpn_block,
+                                                         expr->reservoir);
         }
         else {
             switch (t->token) {
@@ -503,8 +578,14 @@ gwy_expr_scanner_values_free(GwyExpr *expr,
             }
         }
     }
-    gwy_expr_token_list_delete(expr, tokens);
+    expr->reservoir = gwy_expr_token_list_concat(tokens, expr->reservoir);
 }
+
+/****************************************************************************
+ *
+ *  Infix -> RPN convertor, tokenizer
+ *
+ ****************************************************************************/
 
 /**
  * gwy_expr_scan_tokens:
@@ -523,7 +604,10 @@ gwy_expr_scan_tokens(GwyExpr *expr,
     GwyExprToken *tokens = NULL, *t;
     GTokenType token;
 
-    gwy_expr_token_list_delete(expr, expr->tokens);
+    if (expr->tokens) {
+        g_warning("Token list residua from last run");
+        gwy_expr_token_list_delete(expr, expr->tokens);
+    }
     expr->tokens = NULL;
 
     scanner = expr->scanner;
@@ -555,7 +639,7 @@ gwy_expr_scan_tokens(GwyExpr *expr,
             default:
             g_set_error(err, error_domain, GWY_EXPR_ERROR_INVALID_TOKEN,
                         "Invalid token");
-            gwy_expr_scanner_values_free(expr, tokens);
+            gwy_expr_token_list_delete(expr, tokens);
             return FALSE;
             break;
         }
@@ -570,6 +654,15 @@ gwy_expr_scan_tokens(GwyExpr *expr,
     return TRUE;
 }
 
+/**
+ * gwy_expr_rectify_token_list:
+ * @expr: An expression.
+ *
+ * Converts some human-style notations in @expr->tokens to stricter ones.
+ *
+ * Namely it: Removes unary +, changes unary - to ~ operator, adds
+ * multiplication operators between adjacent values, converts ~ to operator.
+ **/
 static void
 gwy_expr_rectify_token_list(GwyExpr *expr)
 {
@@ -595,9 +688,11 @@ gwy_expr_rectify_token_list(GwyExpr *expr)
             if (!prev || (prev->token != G_TOKEN_FLOAT
                           && prev->token != G_TOKEN_IDENTIFIER
                           && prev->token != G_TOKEN_RIGHT_PAREN)) {
-                expr->tokens = gwy_expr_token_list_next_delete(expr,
-                                                               expr->tokens,
-                                                               &t);
+                prev = t;
+                t = t->next;
+                expr->tokens = gwy_expr_token_list_delete_token(expr,
+                                                                expr->tokens,
+                                                                prev);
             }
             else
                 t = t->next;
@@ -608,7 +703,9 @@ gwy_expr_rectify_token_list(GwyExpr *expr)
             case G_TOKEN_FLOAT:
             case G_TOKEN_IDENTIFIER:
             case G_TOKEN_SYMBOL:
-            if (prev && prev->token == G_TOKEN_FLOAT) {
+            if (prev && (prev->token == G_TOKEN_FLOAT
+                         || prev->token == G_TOKEN_RIGHT_PAREN
+                         || prev->token == G_TOKEN_IDENTIFIER)) {
                 prev = gwy_expr_token_new0(expr);
                 prev->token = '*';
                 expr->tokens = gwy_expr_token_list_insert(expr->tokens,
@@ -632,10 +729,11 @@ gwy_expr_rectify_token_list(GwyExpr *expr)
 
 /**
  * gwy_expr_parse:
- * @text: Expression to parse.
+ * @expr: An expression.
+ * @text: String containing expression to parse.
  * @err: Location to store parsing error to
  *
- * Parses an expression to list of tokens.
+ * Parses an expression to list of tokens, filling @expr->tokens.
  *
  * Returns: A newly allocated token list, %NULL on failure.
  **/
@@ -672,18 +770,16 @@ gwy_expr_parse(GwyExpr *expr,
 
 /**
  * gwy_expr_transform_values:
- * @tokens: List of transitional tokens.
- * @constants: Hash table of constants (identifiers to transform to
- *             constants).  Keys are identifiers, values pointers to doubles.
- *             May be %NULL.
+ * @expr: An expression.
  *
  * Converts constants to single-items RPN lists and indexes identifiers.
  *
  * %G_TOKEN_IDENTIFIER strings are freed, they are converted to single-item
  * RPN lists too, with type as minus index in returned array of name.
  *
- * Returns: An array of unique identifiers names (first item is always unused
- *          because 0 is a reserved #GwyExprOpCode value).
+ * Modifies @expr->tokens and fills @expr->identifiers.
+ *
+ * Returns: %TRUE on success, %FALSE if transformation failed.
  **/
 static gboolean
 gwy_expr_transform_values(GwyExpr *expr)
@@ -738,6 +834,20 @@ gwy_expr_transform_values(GwyExpr *expr)
     return TRUE;
 }
 
+/**
+ * gwy_expr_transform_infix_ops:
+ * @expr: An expression.
+ * @tokens: A token list.
+ * @right_to_left: %TRUE to process operators right to left, %FALSE to
+ *                 left to right.
+ * @operators: String containing one-letter operators to convert.
+ * @codes: Opcodes corresponding to @operators.
+ * @err: Location to store conversion error to.
+ *
+ * Transforms a set of infix operators of equal priority to RPN blocks.
+ *
+ * Returns: Converted @tokens (it's changed in place), %NULL on failure.
+ **/
 static GwyExprToken*
 gwy_expr_transform_infix_ops(GwyExpr *expr,
                              GwyExprToken *tokens,
@@ -765,13 +875,13 @@ gwy_expr_transform_infix_ops(GwyExpr *expr,
         if (!next || !prev) {
             g_set_error(err, error_domain, GWY_EXPR_ERROR_MISSING_ARGUMENT,
                         "Missing operator %c argument", operators[i]);
-            gwy_expr_scanner_values_free(expr, tokens);
+            gwy_expr_token_list_delete(expr, tokens);
             return NULL;
         }
         if (!prev->rpn_block || !next->rpn_block) {
             g_set_error(err, error_domain, GWY_EXPR_ERROR_INVALID_ARGUMENT,
                         "Invalid operator %c argument", operators[i]);
-            gwy_expr_scanner_values_free(expr, tokens);
+            gwy_expr_token_list_delete(expr, tokens);
             return NULL;
         }
 
@@ -789,6 +899,16 @@ gwy_expr_transform_infix_ops(GwyExpr *expr,
     return tokens;
 }
 
+/**
+ * gwy_expr_transform_functions:
+ * @expr: An expression.
+ * @tokens: A token list.
+ * @err: Location to store conversion error to.
+ *
+ * Transforms function calls and unary operators to RPN blocks.
+ *
+ * Returns: Converted @tokens (it's changed in place), %NULL on failure.
+ **/
 static GwyExprToken*
 gwy_expr_transform_functions(GwyExpr *expr,
                              GwyExprToken *tokens,
@@ -808,13 +928,13 @@ gwy_expr_transform_functions(GwyExpr *expr,
             if (!arg) {
                 g_set_error(err, error_domain, GWY_EXPR_ERROR_MISSING_ARGUMENT,
                             "Missing %s argument", call_table[func].name);
-                gwy_expr_scanner_values_free(expr, tokens);
+                gwy_expr_token_list_delete(expr, tokens);
                 return NULL;
             }
             if (!arg->rpn_block) {
                 g_set_error(err, error_domain, GWY_EXPR_ERROR_INVALID_ARGUMENT,
                             "Invalid %s argument", call_table[func].name);
-                gwy_expr_scanner_values_free(expr, tokens);
+                gwy_expr_token_list_delete(expr, tokens);
                 return NULL;
             }
         }
@@ -836,14 +956,14 @@ gwy_expr_transform_functions(GwyExpr *expr,
 }
 
 /**
- * gwy_expr_transform_to_rpn:
+ * gwy_expr_transform_to_rpn_real:
+ * @expr: An expression.
  * @tokens: A parenthesized list of tokens.
  * @err: Location to store conversion error to
  *
- * Recursively converts infix list of tokens to RPN.
+ * Recursively converts list of tokens in human (infix) notation to RPN.
  *
- * Returns: Converted list (contents of @tokens is destroyed), %NULL on
- *          failure.
+ * Returns: Converted @tokens (it's changed in place), %NULL on failure.
  **/
 static GwyExprToken*
 gwy_expr_transform_to_rpn_real(GwyExpr *expr,
@@ -972,17 +1092,21 @@ gwy_expr_transform_to_rpn_real(GwyExpr *expr,
     return tokens;
 
 FAIL:
-    gwy_expr_scanner_values_free(expr, tokens);
-    gwy_expr_scanner_values_free(expr, remainder_);
+    gwy_expr_token_list_delete(expr, tokens);
+    gwy_expr_token_list_delete(expr, remainder_);
     return NULL;
 }
 
 /**
  * gwy_expr_transform_to_rpn:
- * @tokens: A list of tokens.
+ * @expr: An expression.
  * @err: Location to store conversion error to.
  *
- * Converts infix list of tokens to RPN stack.
+ * Converts list of tokens from parser to RPN stack.
+ *
+ * @expr->tokens is destroyed by the conversion and set to %NULL,
+ * @expr->input is filled with opcodes, stack is checked for executability
+ * and eventually resized.
  *
  * Returns: A newly created RPN stack, %NULL on failure.
  **/
@@ -1010,7 +1134,7 @@ gwy_expr_transform_to_rpn(GwyExpr *expr,
     if (expr->tokens->next) {
         g_set_error(err, error_domain, GWY_EXPR_ERROR_GARBAGE,
                     "Trailing garbage");
-        gwy_expr_scanner_values_free(expr, expr->tokens);
+        gwy_expr_token_list_delete(expr, expr->tokens);
         expr->tokens = NULL;
         return FALSE;
     }
@@ -1024,18 +1148,33 @@ gwy_expr_transform_to_rpn(GwyExpr *expr,
         expr->input[i].type = t->token;
         expr->input[i].value = t->value.v_float;
     }
-    gwy_expr_scanner_values_free(expr, expr->tokens);
+    gwy_expr_token_list_delete(expr, expr->tokens);
     expr->tokens = NULL;
+
+    if (!gwy_expr_stack_check_executability(expr)) {
+        g_set_error(err, error_domain, GWY_EXPR_ERROR_NOT_EXECUTABLE,
+                    "Stack not executable");
+        return FALSE;
+    }
 
     return TRUE;
 }
 
 /****************************************************************************
  *
- *  High level
+ *  High level, public API
  *
  ****************************************************************************/
 
+/**
+ * gwy_expr_new:
+ *
+ * Creates a new expression evaluator.
+ *
+ * Returns: A newly created expression evaluator.
+ *
+ * Since: 1.9
+ **/
 GwyExpr*
 gwy_expr_new(void)
 {
@@ -1059,10 +1198,18 @@ gwy_expr_new(void)
     return expr;
 }
 
+/**
+ * gwy_expr_free:
+ * @expr: An expression evaluator.
+ *
+ * Frees all memory used by and expression evaluator.
+ *
+ * Since: 1.9
+ **/
 void
 gwy_expr_free(GwyExpr *expr)
 {
-    gwy_expr_scanner_values_free(expr, expr->tokens);
+    gwy_expr_token_list_delete(expr, expr->tokens);
     g_mem_chunk_destroy(expr->token_chunk);
     if (expr->identifiers)
        g_ptr_array_free(expr->identifiers, TRUE);
@@ -1075,34 +1222,59 @@ gwy_expr_free(GwyExpr *expr)
     g_free(expr);
 }
 
-/*
-static void
-gwy_expr_print_stack(GwyExpr *expr)
-{
-    guint i;
-    GwyExprCode *code;
-
-    for (i = 0; i < expr->in; i++) {
-        code = expr->input + i;
-        if ((gint)code->type > 0) {
-            g_print("Function %s\n",
-                    call_table[code->type].name);
-        }
-        else if ((gint)code->type < 0) {
-            g_print("Argument %s\n",
-                    (gchar*)g_ptr_array_index(expr->identifiers, -code->type));
-        }
-        else
-            g_print("Constant %g\n", code->value);
-    }
-}
-*/
-
+/**
+ * gwy_expr_evaluate:
+ * @expr: An expression evaluator.
+ * @text: String containing expression to evaluate.
+ * @result: Location to store result to.
+ * @err: Location to store compilation error to.
+ *
+ * Evaulates an arithmetic expression.
+ *
+ * Returns: %TRUE on success, %FALSE if evaluation failed.
+ *
+ * Since: 1.9
+ **/
 gboolean
 gwy_expr_evaluate(GwyExpr *expr,
                   const gchar *text,
                   gdouble *result,
                   GError **err)
+{
+    if (!gwy_expr_compile(expr, text, err))
+        return FALSE;
+
+    if (expr->identifiers->len > 1) {
+        g_set_error(err, error_domain, GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS,
+                    "Unresolved identifiers");
+        return FALSE;
+    }
+
+    gwy_expr_stack_interpret(expr);
+    *result = *expr->stack;
+
+    return TRUE;
+}
+
+/**
+ * gwy_expr_compile:
+ * @expr: An expression evaluator.
+ * @text: String containing expression to compile.
+ * @err: Location to store compilation error to.
+ *
+ * Compiles an expression for later execution.
+ *
+ * This function is useful for expressions with variables.  For normal
+ * arithmetic expressions it's easier to use gwy_expr_evaluate().
+ *
+ * Returns: %TRUE on success, %FALSE if compilation failed.
+ *
+ * Since: 1.9
+ **/
+gboolean
+gwy_expr_compile(GwyExpr *expr,
+                 const gchar *text,
+                 GError **err)
 {
     g_return_val_if_fail(expr, FALSE);
     g_return_val_if_fail(text, FALSE);
@@ -1111,23 +1283,68 @@ gwy_expr_evaluate(GwyExpr *expr,
         || !gwy_expr_transform_values(expr)
         || !gwy_expr_transform_to_rpn(expr, err)) {
         g_assert(!err || *err);
+        expr->in = 0;
         return FALSE;
     }
-
-    if (expr->identifiers->len > 1) {
-        g_set_error(err, error_domain, GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS,
-                    "Unresolved identifiers");
-        return FALSE;
-    }
-    if (!gwy_expr_check_executability(expr)) {
-        g_set_error(err, error_domain, GWY_EXPR_ERROR_NOT_EXECUTABLE,
-                    "Stack not executable");
-        return FALSE;
-    }
-
-    gwy_expr_interpret(expr);
-    *result = *expr->stack;
 
     return TRUE;
 }
 
+/**
+ * gwy_expr_get_variables:
+ * @expr: An expression evaluator.
+ * @names: Location to store list of variable names to (may be also %NULL).
+ *         The string array returned in this argument in owned by @expr and
+ *         is valid only until next gwy_expr_compile(), gwy_expr_evaluate(),
+ *         eventually gwy_expr_free().
+ *
+ * Get the number, names, and indices of unresolved identifiers in @expr.
+ *
+ * It is an error to call this function after an unsuccessful compilation.
+ *
+ * The position of each variable in @names corresponds to value position in
+ * @values array in gwy_expr_execute() call.
+ *
+ * Returns: The number of unresolved identifiers, that is length of array
+ *          stored to @names.  On failure, -1 is returned.
+ *
+ * Since: 1.9
+ **/
+gint
+gwy_expr_get_variables(GwyExpr *expr,
+                       gchar ***names)
+{
+    g_return_val_if_fail(expr, -1);
+    g_return_val_if_fail(names, -1);
+
+    if (!expr->in)
+        return -1;
+
+    if (names)
+        *names = (gchar**)expr->identifiers->pdata + 1;
+
+    return expr->identifiers->len - 1;
+}
+
+/**
+ * gwy_expr_execute:
+ * @expr: An expression evaluator.
+ * @values: Array with variable values.  Variable list can be obtained
+ *          by gwy_expr_get_variables().
+ *
+ * Executes a compiled expression with variables, substituting given values.
+ *
+ * Returns: The result.
+ *
+ * Since: 1.9
+ **/
+gdouble
+gwy_expr_execute(GwyExpr *expr,
+                 const gdouble *values)
+{
+    expr->variables = values - 1;
+    gwy_expr_stack_interpret(expr);
+    return expr->stack[0];
+}
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -45,6 +45,13 @@ gboolean  gwy_expr_evaluate        (GwyExpr *expr,
                                     const gchar *text,
                                     gdouble *result,
                                     GError **err);
+gboolean  gwy_expr_compile         (GwyExpr *expr,
+                                    const gchar *text,
+                                    GError **err);
+gint      gwy_expr_get_variables   (GwyExpr *expr,
+                                    gchar ***names);
+gdouble   gwy_expr_execute         (GwyExpr *expr,
+                                    const gdouble *values);
 
 G_END_DECLS
 
