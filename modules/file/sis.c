@@ -511,7 +511,7 @@ select_which_data(SISFile *sisfile,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 12);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
 
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
