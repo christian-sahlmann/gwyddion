@@ -1,3 +1,4 @@
+/* @(#) $Id$ */
 
 #ifndef __GWY_AXIS_H__
 #define __GWY_AXIS_H__

@@ -1,3 +1,4 @@
+/* @(#) $Id$ */
 
 #include <math.h>
 #include <stdio.h>
@@ -148,13 +149,19 @@ static void
 gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     GwyGraphArea *area;
+    GtkAllocation *lab_alloc;
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
 
     area = GWY_GRAPH_AREA(widget);
+    lab_alloc = &GTK_WIDGET(area->lab)->allocation;
 
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
+    if (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
+        || lab_alloc->y != 5)
+        gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 
+                        widget->allocation.width - lab_alloc->width - 5, 5);
     gwy_graph_area_plot_refresh(area);
 }
 
@@ -209,8 +216,6 @@ gwy_graph_area_expose(GtkWidget *widget,
     g_return_val_if_fail(event != NULL, FALSE);
 
     area = GWY_GRAPH_AREA(widget);
-    gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 
-                    widget->allocation.width - GTK_WIDGET(area->lab)->allocation.width - 5, 5); 
     
     gdk_window_clear_area(GTK_LAYOUT (widget)->bin_window,
                           0, 0,

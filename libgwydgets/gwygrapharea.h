@@ -1,3 +1,4 @@
+/* @(#) $Id$ */
 
 #ifndef __GWY_GRAPH_AREA_H__
 #define __GWY_GRAPH_AREA_H__

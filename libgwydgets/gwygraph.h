@@ -1,3 +1,4 @@
+/* @(#) $Id$ */
 
 #ifndef __GTK_PLOT_H__
 #define __GTK_PLOT_H__
