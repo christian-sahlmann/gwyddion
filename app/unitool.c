@@ -335,6 +335,7 @@ gwy_unitool_dialog_set_visible(GwyUnitoolState *state,
         gtk_widget_hide(state->dialog);
 }
 
+/* FIXME: Why we don't use gtk_dialog_set_response_sensitive() ??? */
 static GtkWidget*
 gwy_unitool_dialog_find_button(GwyUnitoolState *state,
                                gint response_id)
@@ -459,8 +460,7 @@ gwy_unitool_dialog_add_button_hide(GtkWidget *dialog)
 {
     GtkWidget *button;
 
-    button = gtk_dialog_add_button(GTK_DIALOG(dialog),
-                                   _("_Hide"),
+    button = gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Hide"),
                                    GTK_RESPONSE_CLOSE);
     g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
                       GINT_TO_POINTER(GTK_RESPONSE_CLOSE));
@@ -825,25 +825,25 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
         gwy_unitool_update_label(units, rinfo->hreal, sel[3] - sel[1]);
 
         isel[0] = gwy_data_field_rtoj(dfield, sel[0]);
-        g_snprintf(buf, sizeof(buf), "%d px", isel[0]);
+        g_snprintf(buf, sizeof(buf), "%d %s", isel[0], _("px"));
         gtk_label_set_text(GTK_LABEL(rinfo->xpix), buf);
 
         isel[1] = gwy_data_field_rtoi(dfield, sel[1]);
-        g_snprintf(buf, sizeof(buf), "%d px", isel[1]);
+        g_snprintf(buf, sizeof(buf), "%d %s", isel[1], _("px"));
         gtk_label_set_text(GTK_LABEL(rinfo->ypix), buf);
 
         if (is_selected)
             isel[2] = gwy_data_field_rtoj(dfield, sel[2]) + 1;
         else
             isel[2] = gwy_data_field_get_xres(dfield);
-        g_snprintf(buf, sizeof(buf), "%d px", isel[2] - isel[0]);
+        g_snprintf(buf, sizeof(buf), "%d %s", isel[2] - isel[0], _("px"));
         gtk_label_set_text(GTK_LABEL(rinfo->wpix), buf);
 
         if (is_selected)
             isel[3] = gwy_data_field_rtoi(dfield, sel[3]) + 1;
         else
             isel[3] = gwy_data_field_get_yres(dfield);
-        g_snprintf(buf, sizeof(buf), "%d px", isel[3] - isel[1]);
+        g_snprintf(buf, sizeof(buf), "%d %s", isel[3] - isel[1], _("px"));
         gtk_label_set_text(GTK_LABEL(rinfo->hpix), buf);
 
         if (selreal)
