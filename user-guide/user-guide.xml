@@ -1,0 +1,175 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE book PUBLIC '-//OASIS//DTD DocBook XML V4.2//EN'
+               'http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd'>
+<book>
+   <section>
+      <title>Introduction</title>
+      <section>
+         <title>Motivation</title>
+         <para>
+            Gwyddion is a modular programme for SPM data analysis. Primarily it is 
+            supposed to be used for analysis of height fields obtained by means
+            of scanning probe microscopy techniques (AFM, MFM, STM, NSOM), but
+            generally it can be used for any other height field analysis or image analysis. 
+            Gwyddion is a free software, covered by Gnu General Public License (Gnu GPL).
+         </para>
+         <para>
+            The main idea behind Gwyddion developement is to provide modular programme
+            for 2D data analysis that could be easily extended by modules and plugins
+            with no need of core recompilation. Moreover, the status of free software
+            enables to provide source codes to developers and users, which makes the further
+            programme improvement easier.
+         </para>
+         <para>
+            Gwyddion core developement is currently funded by Czech Metrology Institute (www.cmi.cz).
+            However, it is supposed that more persons and institutions will participate on developement. 
+            Project is open for anyone. 
+         </para>
+       </section>
+      <section>
+         <title>Licensing</title>
+         <para>
+            Gwyddion is covered by Gnu General Public License (Gnu GPL). Netroufam si to popisovat...   
+         </para> 
+      </section>
+   </section>
+   <section>
+      <title>Installing Gwyddion</title>
+      <para>
+          Gwyddion source code and binaries can be downloaded from the web pages of the project
+          (http://gwyddion.net). The instalation sligtly varies depending on the operating system used.
+          However, basically it consist of two steps:
+          <itemizedlist>
+             <listitem>
+                <para>Installing the Gtk+ enviroment (if not allready done).</para>
+             </listitem>
+             <listitem>
+                <para>Installing Gwyddion</para>
+             </listitem>
+           </itemizedlist>
+           The first step is necessary namely on operating systems other than Linux at first Gwyddion installation.
+      </para>
+      <section>
+         <title>Linux version</title>
+         <para>
+            You can use RPMs or source tarballs as Gwyddion installation source. Then, install the RPM or compile
+            and install programme in a usual way.
+         </para>
+      </section>
+      <section>
+         <title>Windows version</title>
+         <para>
+            Download the Gtk+ runtime enviroment and install it (e. g. from http://www.dropline.net/gtk/download.php). 
+            Download Gwyddion installator and install Gwyddion. You should need no more steps for Gwyddion runtime installation.
+         </para>
+      </section>
+      <section>
+         <title>Linux version for developers</title>
+         <para>
+            Use source tarballs as Gwyddion installation source. Compile
+            and install programme in a usual way. 
+         </para>
+       </section>
+      <section>
+         <title>Windows version for developers</title>
+         <para>
+            If you want to become developer, you can also use Microsoft Visual C++ compiler to compile the application. 
+            Use source tarball in that case
+            and compile application using Nmake command. In this case you will need Gtk development enviromet installed on your system.
+            You can download this enviroment from http://www.dropline.net/gtk/download.php.
+            You will probably need to change paths to Gtk+ and MSVC toplevel directories in the make.msc file.
+            The default paths are (see first few lines of make.msc):
+            <programlisting>
+               # XXX: set following to your Gtk+-Development and MSVC paths
+               GTK_TOP = C:\Dev-C++
+               MSC_TOP = C:\Program Files\Microsoft Visual Studio\VC98
+            </programlisting>
+         </para>
+ 
+      </section>
+    </section>
+   <section>
+      <title>Getting started</title>
+      <section>
+         <title>Managing files</title>
+         <para>
+            Gwyddion uses its internal data format (.gwy) to store data. The main advantage of this format is fact, that it stores
+            complete state of processing of concrete data, including selections and other tool and processing
+            fucntion settings. Therefore we recommned to use this format for saving processed files.
+         </para>
+         <para>
+            Other data file formats can be handled with appropriate loading and saving modules or plugins. Currently, only simple
+            file formats can be used with Gwyddion. This means namely graphical file types (JPEG, PNG, PPM, TIFF, BMP) and raw binary
+            and ASCII data. With <programlisting>io_tm</programlisting> plugin (distributed separately) you can load data from
+            ThermoMicroscopes (Veeco) SpmLab #R4 and #R5 version binary files.
+         </para>
+         <para>
+            We expect that much more file IO modules and plugins will be wrtiien soon, depending on demands and file format
+            specifications available.
+         </para>
+       </section>
+      <section>
+         <title>Data windows</title>
+         <para>
+            Data window is used for 2D data presentation to user. It is the main widget used for working with Gwyddion.
+            The data are presented to user as a field of false colors correponding to heights. Color axis that represents mapping
+            the colors to real height values is also part of the data window. 
+         </para>
+         <para>
+            Graph window is used for 1D data processing. You can get it only by using appropriate tools or modules that
+            extract some graphs from height field data. Currently, it is not possible to load graphs into application as the main
+            intent of Gwyddion is to provide tools for analyzing height fields, not graphs.
+         </para>
+        </section>
+      <section>
+         <title>Modules and tools</title>
+         <para>
+            Modules are responsible for most of the Gwyddion features.             
+         </para>
+         <para>
+            Tools are a special kind of modules that can work with selections. 
+         </para>
+      </section>
+      <section>
+         <title>Presentations and masks</title>
+         <para>
+            Presentations can be used to show the height field in other way than as false colors map of heights.
+            Currently, only one presentation method - shading - is implemented.
+         </para>
+         <para>
+            Masks are used for displaying special areal selections (e. g. grains).
+         </para>
+      </section>
+      <section>
+         <title>Plugins</title>
+         <para>
+            Plugins are separate programmes that can communicate with gwyddion. From the point of user, the way of
+            using plugins is same as for modules. From the point of developer, plugins are programmes that can load or
+            save Gwyddion DUMB file format. They do not use any of Gwyddion libraries and therefore they are independent
+            on Gwyddion licensing.
+         </para>
+      </section>
+    </section>
+   <section>
+      <title>Developing Gwyddion</title>
+      <para>
+         You are encouraged to become a developer of Gwyddion.
+      </para>
+      <section>
+         <title>API References</title>
+         <para> 
+            There are many functions that can help you while developing your module. Please, see API reference. 
+         </para>
+      </section>
+      <section>
+         <title>Bug reports</title>
+         <para>
+            We will be very happy if you send as bug reports if you find errors in Gwyddion. For doing this,
+            please, specify as much as possible the situation which leaded to error, operating system and
+            Gwyddion version used. You can also send us the SPM data that were processed when problem was found,
+            this is necessary namely for reporting bugs in file loading/saving modules and plugins.
+         </para>
+      </section>
+    </section>
+</book>
+
