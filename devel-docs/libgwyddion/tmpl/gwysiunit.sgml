@@ -182,3 +182,13 @@ or number of significant digits --
 @format: 
 
 
+<!-- ##### FUNCTION gwy_si_unit_equal ##### -->
+<para>
+
+</para>
+
+@siunit1: 
+@siunit2: 
+@Returns: 
+
+

@@ -121,6 +121,16 @@ path manipulation
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_strdiffpos ##### -->
+<para>
+
+</para>
+
+@s1: 
+@s2: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_file_get_contents ##### -->
 <para>
 

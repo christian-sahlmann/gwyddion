@@ -508,6 +508,64 @@ Emitted when value changes.
 @user_data: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_inventory_is_constant ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_inventory_item_is_modifable ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_inventory_nth_item_is_modifable ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_inventory_ref_item ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@name: 
+
+<!-- ##### FUNCTION gwy_inventory_ref_nth_item ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@n: 
+
+<!-- ##### FUNCTION gwy_inventory_unref_item ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@name: 
+
+<!-- ##### FUNCTION gwy_inventory_unref_nth_item ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@n: 
+
 <!-- ##### FUNCTION gwy_math_nlfit_get_function_equation ##### -->
 <para>
 

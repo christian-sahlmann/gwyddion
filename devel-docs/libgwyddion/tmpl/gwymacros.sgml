@@ -75,6 +75,20 @@ Utility macros.
 
 
 
+<!-- ##### MACRO G_GINT64_MODIFIER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO G_GSIZE_FORMAT ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO gwy_debug ##### -->
 <para>
 

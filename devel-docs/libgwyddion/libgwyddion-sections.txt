@@ -17,6 +17,7 @@ gwy_si_unit_get_format
 gwy_si_unit_get_format_with_resolution
 gwy_si_unit_get_format_with_digits
 gwy_si_unit_value_format_free
+gwy_si_unit_equal
 <SUBSECTION Standard>
 GWY_SI_UNIT
 GWY_IS_SI_UNIT
@@ -40,6 +41,43 @@ gwy_watchable_get_type
 GWY_WATCHABLE_GET_IFACE
 </SECTION>
 
+<SECTION>
+<FILE>gwyinventory</FILE>
+GwyItemType
+<TITLE>GwyInventory</TITLE>
+gwy_inventory_new
+gwy_inventory_new_filled
+gwy_inventory_get_n_items
+gwy_inventory_can_make_copies
+gwy_inventory_get_item_type
+gwy_inventory_item_exists
+gwy_inventory_get_item
+gwy_inventory_get_item_or_default
+gwy_inventory_get_nth_item
+gwy_inventory_get_item_position
+gwy_inventory_foreach
+gwy_inventory_set_default_item
+gwy_inventory_get_default_item
+gwy_inventory_item_updated
+gwy_inventory_nth_item_updated
+gwy_inventory_restore_order
+gwy_inventory_forget_order
+gwy_inventory_insert_item
+gwy_inventory_insert_nth_item
+gwy_inventory_delete_item
+gwy_inventory_delete_nth_item
+gwy_inventory_rename_item
+gwy_inventory_new_item
+gwy_inventory_new_item_as_copy
+<SUBSECTION Standard>
+GWY_INVENTORY
+GWY_IS_INVENTORY
+GWY_TYPE_INVENTORY
+gwy_inventory_get_type
+GWY_INVENTORY_CLASS
+GWY_IS_INVENTORY_CLASS
+GWY_INVENTORY_GET_CLASS
+</SECTION>
 <SECTION>
 <FILE>gwyserializable</FILE>
 GwySerializableIface
@@ -78,7 +116,6 @@ GWY_TYPE_SERIALIZABLE
 gwy_serializable_get_type
 GWY_SERIALIZABLE_GET_IFACE
 </SECTION>
-
 <SECTION>
 <FILE>gwycontainer</FILE>
 GWY_CONTAINER_PATHSEP
@@ -200,6 +237,7 @@ gwy_string_to_flags
 gwy_flags_to_string
 gwy_strkill
 gwy_strreplace
+gwy_strdiffpos
 gwy_file_get_contents
 gwy_file_abandon_contents
 gwy_find_self_dir
@@ -278,6 +316,21 @@ gwy_math_nlfit_fit_preset
 </SECTION>
 
 <SECTION>
+<FILE>gwyexpr</FILE>
+GWY_EXPR_ERROR
+GwyExprError
+GwyExpr
+gwy_expr_error_quark
+gwy_expr_new
+gwy_expr_free
+gwy_expr_evaluate
+gwy_expr_compile
+gwy_expr_resolve_variables
+gwy_expr_get_variables
+gwy_expr_execute
+</SECTION>
+
+<SECTION>
 <FILE>gwymacros</FILE>
 gettext
 ngettext
@@ -286,6 +339,8 @@ N_
 gwy_object_unref
 GWY_SWAP
 G_STRFUNC
+G_GINT64_MODIFIER
+G_GSIZE_FORMAT
 gwy_debug
 gwy_debug_gnu
 </SECTION>
