@@ -126,11 +126,15 @@ static const gchar *known_units[] = {
     "deg", "Pa", "cd", "mol", "cal"
 };
 
+/* Unit formats */
 static const GwySIFormatStyle format_style_plain = {
     "10^", "^", NULL, " ", "/", " "
 };
 static const GwySIFormatStyle format_style_markup = {
     "10<sup>", "<sup>", "</sup>", " ", "/", " "
+};
+static const GwySIFormatStyle format_style_vfmarkup = {
+    "× 10<sup>", "<sup>", "</sup>", " ", "/", " "
 };
 static const GwySIFormatStyle format_style_backwoods = {
     "1e", NULL, NULL, " ", "/", " "
@@ -316,11 +320,12 @@ gwy_si_unit_new(const char *unit_string)
 
 /**
  * gwy_si_unit_set_unit_string:
- * @siunit: GwySiUnit
- * @unit_string: unit string to be set
+ * @siunit: An SI unit.
+ * @unit_string: Unit string to be set.
  *
- * Sets string that represents unit. It is the
- * unit with no prefixes (e. g. "m", "N", "A", etc.)
+ * Sets string that represents unit.
+ *
+ * It must be base unit with no prefixes (e. g. "m", "N", "A", etc.).
  **/
 void
 gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
@@ -336,26 +341,18 @@ gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
 
 /**
  * gwy_si_unit_get_unit_string:
- * @siunit: GwySiUnit
+ * @siunit: An SI unit.
  *
+ * Obtains string representing a SI unit.
  *
- *
- * Returns: string that represents unit (with no prefixes)
+ * Returns: String that represents unit (with no prefixes).
  **/
 gchar*
 gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
     gwy_debug("");
-    return g_strdup(siunit->unitstr);
-}
 
-static void
-format_regular(GwySIUnit *siunit, gdouble value, GwySIValueFormat *format)
-{
-   gwy_debug("");
-   format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
-   format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+1)*sizeof(gchar));
-   format->units = g_strconcat(gwy_math_SI_prefix(format->magnitude), siunit->unitstr, NULL);
+    return g_strdup(siunit->unitstr);
 }
 
 /**
@@ -366,7 +363,7 @@ format_regular(GwySIUnit *siunit, gdouble value, GwySIValueFormat *format)
  *
  * Finds reasonable representation for a number.
  * This means that number @value should
- * be written as @value / @number->magnitude [@number->units].
+ * be written as @value / @format->magnitude [@format->units].
  *
  * Returns: The value format.  If @format was %NULL, a newly allocated format
  *          is returned, otherwise (modified) @format itself is returned.
@@ -376,54 +373,28 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
                        gdouble value,
                        GwySIValueFormat *format)
 {
-    char num[23];
+    GwySIUnit2 *siunit2;
 
     gwy_debug("");
-    if (format==NULL) {
-        format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
-        format->units = NULL;
-    }
-
-    if (format->units)
+    if (!format)
+        format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
+    else
         g_free(format->units);
-   
-    if (siunit->unitstr!=NULL && (strlen(siunit->unitstr)<2 && strlen(siunit->unitstr)!=0))
-    {
-        format_regular(siunit, value, format);
+
+    siunit2 = (GwySIUnit2*)g_object_get_data((GObject*)siunit, "gwy-si-unit2");
+    g_assert(siunit2);
+
+    if (!value) {
+        format->magnitude = 1;
+        format->precision = 2;
     }
     else
-    {
-        if (value==0) format->magnitude = 1;
-//        else format->magnitude = pow(10, (gint)(log10(fabs(value))));
-	else format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0));
+        format->magnitude = gwy_math_humanize_numbers(value/120, value,
+                                                      &format->precision);
+    siunit2->power10 = ROUND(log(format->magnitude)/G_LN10);
+    format->units = gwy_si_unit_format_as_plain_string(siunit2,
+                                                       &format_style_vfmarkup);
 
-       if (siunit->unitstr!=NULL)
-            format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
-        else
-            format->units = (gchar*)g_malloc(23*sizeof(gchar));
-        
-        if (fabs((gint)(3*ROUND(((gint)(log10(fabs(value))))/3.0))) > 2)
-        {
-            sprintf(num, "× 10<sup>%d</sup> ", (gint)(3*ROUND(((gint)(log10(fabs(value))))/3.0)));
-            if (siunit->unitstr==NULL || strlen(siunit->unitstr)==0) 
-            {
-                format->units = strcpy(format->units, num);
-            }
-            else format->units = g_strconcat(num, siunit->unitstr, NULL);
-         }
-        else
-        {
-            if (siunit->unitstr==NULL)
-            {
-                format->units = strcpy(format->units, " ");
-            }
-            else
-                format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
-        }
-
-    }
-    format->precision = 2;
-    gwy_debug("unitstr = <%s>, units = <%s>", siunit->unitstr, format->units);
     return format;
 }
 
@@ -451,55 +422,28 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
                                        gdouble resolution,
                                        GwySIValueFormat *format)
 {
-    gint prec;
-    char num[23];
+    GwySIUnit2 *siunit2;
+
     gwy_debug("");
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
-
-    if (format==NULL) {
-        format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
-        format->units = NULL;
-    }
-
-    if (format->units)
-    {
+    if (!format)
+        format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
+    else
         g_free(format->units);
-    }
 
-    if (maximum == 0) format->magnitude = 1;
-    else format->magnitude = gwy_math_humanize_numbers(resolution, maximum, &prec);
-    format->precision = prec;
+    siunit2 = (GwySIUnit2*)g_object_get_data((GObject*)siunit, "gwy-si-unit2");
+    g_assert(siunit2);
 
-    if (siunit->unitstr!=NULL && (strlen(siunit->unitstr)<2 && strlen(siunit->unitstr)!=0))
-    {
-        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+strlen(gwy_math_SI_prefix(format->magnitude)))*sizeof(gchar));
-        format->units = g_strconcat(gwy_math_SI_prefix(format->magnitude), siunit->unitstr, NULL);
+    if (!maximum) {
+        format->magnitude = 1;
+        format->precision = 2;
     }
     else
-    {
-        if (siunit->unitstr!=NULL)
-            format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
-        else
-            format->units = (gchar*)g_malloc(23*sizeof(gchar));
-            
-        if ((gint)(log10(fabs(format->magnitude))) != 0)
-        {
-            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
-            if (siunit->unitstr==NULL || strlen(siunit->unitstr)==0) 
-                format->units = strcpy(format->units, num);
-            else format->units = g_strconcat(num, siunit->unitstr, NULL);
-        }
-        else
-        {
-            if (siunit->unitstr==NULL)
-                format->units = strcpy(format->units, " ");
-            else
-                format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
-        }
+        format->magnitude = gwy_math_humanize_numbers(resolution, maximum,
+                                                      &format->precision);
+    siunit2->power10 = ROUND(log(format->magnitude)/G_LN10);
+    format->units = gwy_si_unit_format_as_plain_string(siunit2,
+                                                       &format_style_vfmarkup);
 
-    }
-
-    gwy_debug("unitstr = <%s>, units = <%s>", siunit->unitstr, format->units);
     return format;
 }
 
@@ -526,85 +470,31 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
                                    gint sdigits,
                                    GwySIValueFormat *format)
 {
-    char num[23];
-    gdouble realmag;
+    GwySIUnit2 *siunit2;
 
     gwy_debug("");
-    if (format==NULL) {
-        format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
-        format->units = NULL;
-    }
-
-    if (format->units)
-    {
+    if (!format)
+        format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
+    else
         g_free(format->units);
-    }
 
-    if (siunit->unitstr!=NULL && (strlen(siunit->unitstr)<2 && strlen(siunit->unitstr)!=0))
-    {
-        format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(maximum))))/3.0));
-        realmag = pow(10, (gint)(log10(fabs(maximum)))-1);
+    siunit2 = (GwySIUnit2*)g_object_get_data((GObject*)siunit, "gwy-si-unit2");
+    g_assert(siunit2);
 
-        if (ROUND((gdouble)format->magnitude/realmag)==10.0)
-        {
-            if (maximum/format->magnitude >= 1)
-               format->precision = sdigits-1;
-            else
-               format->precision = sdigits;
-        }
-        else if (ROUND((gdouble)format->magnitude/realmag)==100.0)
-        {
-            if (maximum/format->magnitude >= 0.1)
-                format->precision = sdigits;
-            else
-                format->precision = sdigits+1;
-        }
-         else if (ROUND((gdouble)format->magnitude/realmag)==1.0)
-        {
-            if (maximum/format->magnitude >= 10)
-                format->precision = sdigits-2;
-            else
-                format->precision = sdigits-1;
-        }
-        else format->precision = sdigits+1;
-
-        if (format->precision < 0) format->precision = 0;
-
-        format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
-        format->units = g_strconcat(gwy_math_SI_prefix(format->magnitude), siunit->unitstr, NULL);
+    if (!maximum) {
+        format->magnitude = 1;
+        format->precision = sdigits;
     }
     else
-    {
-        format->magnitude = pow(10, (gint)(log10(fabs(maximum)))-1);
+        format->magnitude
+            = gwy_math_humanize_numbers(maximum/exp(G_LN10*sdigits),
+                                        maximum, &format->precision);
+    siunit2->power10 = ROUND(log(format->magnitude)/G_LN10);
+    format->units = gwy_si_unit_format_as_plain_string(siunit2,
+                                                       &format_style_vfmarkup);
 
-        if (siunit->unitstr!=NULL)
-            format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
-        else
-            format->units = (gchar*)g_malloc(23*sizeof(gchar));
-        
-        if ((gint)(log10(fabs(format->magnitude))) != 0)
-        {
-            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
-            if (siunit->unitstr==NULL || strlen(siunit->unitstr)==0) 
-                format->units = strcpy(format->units, num);
-            else format->units = g_strconcat(num, siunit->unitstr, NULL);
-        }
-        else
-        {
-            if (siunit->unitstr==NULL)
-            {
-                format->units = strcpy(format->units, " ");
-            }
-            else
-                format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
-        }
-        format->precision = 2;
-
-    }
-    gwy_debug("unitstr = <%s>, units = <%s>", siunit->unitstr, format->units);
     return format;
 }
-
 
 /**
  * gwy_si_unit_value_format_free:
@@ -1019,10 +909,10 @@ gwy_si_unit_format(GwySIUnit2 *siunit,
         if (move_me_to_end == prefix_bearer)
             g_string_append(string, prefix);
         g_string_append(string, g_quark_to_string(unit->unit));
-        if (unit->power != 1) {
+        if (unit->power != -1) {
             if (fs->power_prefix)
                 g_string_append(string, fs->power_prefix);
-            g_string_append_printf(string, "%d", unit->power);
+            g_string_append_printf(string, "%d", -unit->power);
             if (fs->power_suffix)
                 g_string_append(string, fs->power_suffix);
         }
