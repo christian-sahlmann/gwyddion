@@ -499,9 +499,9 @@ fft_save_args(GwyContainer *container,
               FFTArgs *args)
 {
     gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
-    gwy_container_set_int32_by_name(container, interp_key, args->interp);
-    gwy_container_set_int32_by_name(container, window_key, args->window);
-    gwy_container_set_int32_by_name(container, out_key, args->out);
+    gwy_container_set_enum_by_name(container, interp_key, args->interp);
+    gwy_container_set_enum_by_name(container, window_key, args->window);
+    gwy_container_set_enum_by_name(container, out_key, args->out);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -265,48 +265,54 @@ preserve_changed_cb(GtkToggleButton *button, CWTArgs *args)
     args->preserve = gtk_toggle_button_get_active(button);
 }
 
+static void
+cwt_dialog_update(CWTControls *controls,
+                  CWTArgs *args)
+{
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->scale),
+                             args->scale);
+    gwy_option_menu_set_history(controls->interp, "interpolation-type",
+                                args->interp);
+    gwy_option_menu_set_history(controls->wavelet, "2dcwt_wavelet-type",
+                                args->wavelet);
+}
+
 static const gchar *preserve_key = "/module/cwt/preserve";
 static const gchar *interp_key = "/module/cwt/interp";
 static const gchar *wavelet_key = "/module/cwt/wavelet";
 static const gchar *scale_key = "/module/cwt/scale";
 
 static void
+cwt_sanitize_args(CWTArgs *args)
+{
+    args->preserve = !!args->preserve;
+    args->interp = MIN(args->interp, GWY_INTERPOLATION_NNA);
+    args->wavelet = MIN(args->wavelet, GWY_CWT_MORLET);
+    args->scale = CLAMP(args->scale, 0.0, 1000.0);
+}
+
+static void
 cwt_load_args(GwyContainer *container,
-                 CWTArgs *args)
+              CWTArgs *args)
 {
     *args = cwt_defaults;
 
-    if (gwy_container_contains_by_name(container, preserve_key))
-        args->preserve = gwy_container_get_boolean_by_name(container, preserve_key);
-    if (gwy_container_contains_by_name(container, interp_key))
-        args->interp = gwy_container_get_int32_by_name(container, interp_key);
-    if (gwy_container_contains_by_name(container, wavelet_key))
-        args->wavelet = gwy_container_get_int32_by_name(container, wavelet_key);
-    if (gwy_container_contains_by_name(container, scale_key))
-        args->scale = gwy_container_get_double_by_name(container, scale_key);
+    gwy_container_gis_boolean_by_name(container, preserve_key, &args->preserve);
+    gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
+    gwy_container_gis_enum_by_name(container, wavelet_key, &args->wavelet);
+    gwy_container_gis_double_by_name(container, scale_key, &args->scale);
+    cwt_sanitize_args(args);
 }
 
 static void
 cwt_save_args(GwyContainer *container,
-                 CWTArgs *args)
+              CWTArgs *args)
 {
     gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
-    gwy_container_set_int32_by_name(container, interp_key, args->interp);
-    gwy_container_set_int32_by_name(container, wavelet_key, args->wavelet);
+    gwy_container_set_enum_by_name(container, interp_key, args->interp);
+    gwy_container_set_enum_by_name(container, wavelet_key, args->wavelet);
     gwy_container_set_double_by_name(container, scale_key, args->scale);
-}
-
-static void
-cwt_dialog_update(CWTControls *controls,
-                     CWTArgs *args)
-{
-
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->scale),
-                                args->scale);
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
-    gwy_option_menu_set_history(controls->wavelet, "2dcwt_wavelet-type",
-                                args->wavelet);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
