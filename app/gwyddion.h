@@ -35,6 +35,7 @@ void       gwy_app_splash_create             (void);
 void       gwy_app_splash_close              (void);
 void       gwy_app_splash_set_message        (const gchar *message);
 void       gwy_app_splash_set_message_prefix (const gchar *prefix);
+void       gwy_app_splash_enable             (gboolean enable);
 
 G_END_DECLS
 

@@ -62,8 +62,6 @@ static void print_help(void);
 static void process_preinit_options(int *argc,
                                     char ***argv);
 
-static gboolean show_splash = TRUE;
-
 int
 main(int argc, char *argv[])
 {
@@ -84,40 +82,30 @@ main(int argc, char *argv[])
     has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);
     gwy_app_init();
 
-    if (show_splash) {
-        gwy_app_splash_create();
-        gwy_app_splash_set_message(_("Loading settings"));
-    }
+    gwy_app_splash_create();
+    gwy_app_splash_set_message(_("Loading settings"));
     if (has_settings)
         ok = gwy_app_settings_load(settings_file);
     if (!ok && has_config)
         gwy_app_settings_load_bin(config_file);
     gwy_app_settings_get();
 
-    if (show_splash) {
-        gwy_app_splash_set_message_prefix(_("Registering "));
-        gwy_app_splash_set_message(_("stock items"));
-    }
+    gwy_app_splash_set_message_prefix(_("Registering "));
+    gwy_app_splash_set_message(_("stock items"));
     gwy_stock_register_stock_items();
 
-    if (show_splash)
-        gwy_module_set_register_callback(gwy_app_splash_set_message);
+    gwy_module_set_register_callback(gwy_app_splash_set_message);
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
-    if (show_splash) {
-        gwy_module_set_register_callback(NULL);
-        gwy_app_splash_set_message_prefix(NULL);
-    }
+    gwy_module_set_register_callback(NULL);
+    gwy_app_splash_set_message_prefix(NULL);
 
-    if (show_splash)
-        gwy_app_splash_set_message("Initializing GUI");
+    gwy_app_splash_set_message("Initializing GUI");
     gwy_app_toolbox_create();
 
-    if (show_splash)
-        gwy_app_splash_set_message("Loading files");
+    gwy_app_splash_set_message("Loading files");
     gwy_app_file_open_initial(argv + 1, argc - 1);
-    if (show_splash)
-        gwy_app_splash_close();
+    gwy_app_splash_close();
 
     gtk_main();
     if (gwy_app_settings_save(settings_file)) {
@@ -157,7 +145,7 @@ process_preinit_options(int *argc,
             break;
 
         if (!strcmp((*argv)[i], "--no-splash"))
-            show_splash = FALSE;
+            gwy_app_splash_enable(FALSE);
     }
 
     (*argv)[i-1] = (*argv)[0];

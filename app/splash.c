@@ -32,6 +32,7 @@
 
 static void splash_map(void);
 
+static gboolean enable_splash = TRUE;
 static GtkWidget *window = NULL;
 static GtkWidget *label = NULL;
 gchar *message_prefix = NULL;
@@ -44,6 +45,8 @@ gwy_app_splash_create(void)
 
     gwy_debug("");
     g_return_if_fail(window == NULL);
+    if (!enable_splash)
+        return;
 
     p = gwy_find_self_dir("pixmaps");
     filename = g_build_filename(p, "splash.png", NULL);
@@ -107,6 +110,8 @@ gwy_app_splash_create(void)
 void
 gwy_app_splash_close(void)
 {
+    if (!enable_splash)
+        return;
     g_return_if_fail(window);
     gtk_widget_destroy(window);
 
@@ -121,6 +126,8 @@ gwy_app_splash_close(void)
 void
 gwy_app_splash_set_message_prefix(const gchar *prefix)
 {
+    if (!enable_splash)
+        return;
     g_return_if_fail(window);
 
     g_free(message_prefix);
@@ -133,6 +140,8 @@ gwy_app_splash_set_message_prefix(const gchar *prefix)
 void
 gwy_app_splash_set_message(const gchar *message)
 {
+    if (!enable_splash)
+        return;
     g_return_if_fail(window);
 
     while (gtk_events_pending())
@@ -156,6 +165,13 @@ splash_map(void)
   /* Reenable startup notification after the splash has been shown
    * so that the next window that is mapped sends the notification. */
     gtk_window_set_auto_startup_notification(TRUE);
+}
+
+void
+gwy_app_splash_enable(gboolean enable)
+{
+    g_assert(!window);
+    enable_splash = !!enable;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
