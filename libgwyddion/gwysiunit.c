@@ -281,7 +281,7 @@ gwy_si_unit_duplicate_real(GObject *object)
 
     g_return_val_if_fail(GWY_IS_SI_UNIT(object), NULL);
     si_unit = GWY_SI_UNIT(object);
-    duplicate = g_object_new(GWY_TYPE_SI_UNIT, NULL);
+    duplicate = gwy_si_unit_new_parse("", NULL);
     duplicate->power10 = si_unit->power10;
     g_array_append_vals(duplicate->units,
                         si_unit->units->data, si_unit->units->len);
