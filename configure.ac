@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.2cvs20040524, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.2cvs20040528, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -65,8 +65,7 @@ gtk_CHECK_GTK_DOC
 dnl With GCC, be paranoiac.  It should compile really cleanly.
 dnl Except -Wno-sign-compare, but older gcc's don't know it.
 if test "$GCC" = yes; then
-  #WARNING_CFLAGS="-Wall -W -Wpointer-arith -Werror-implicit-function-declaration -Wno-system-headers -Wshadow -Wredundant-decls"
-  WARNING_CFLAGS="-Wall -W -Wpointer-arith -Werror-implicit-function-declaration -Wno-system-headers -Wredundant-decls"
+  WARNING_CFLAGS="-Wall -W -Wpointer-arith -Werror-implicit-function-declaration -Wno-system-headers -Wshadow -Wredundant-decls"
 fi
 
 case $target_os in
