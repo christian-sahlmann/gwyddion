@@ -28,7 +28,7 @@
 #include <app/app.h>
 #include <app/undo.h>
 
-#define UNROTATE_RUN_MODES \
+#define POLYLEVEL_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 enum {
@@ -102,7 +102,7 @@ module_register(const gchar *name)
         "poly_level",
         N_("/_Level/_Polynomial Background..."),
         (GwyProcessFunc)&poly_level,
-        UNROTATE_RUN_MODES,
+        POLYLEVEL_RUN_MODES,
         0,
     };
 
@@ -117,7 +117,7 @@ poly_level(GwyContainer *data, GwyRunType run)
     PolyLevelArgs args;
     gboolean ok;
 
-    g_return_val_if_fail(run & UNROTATE_RUN_MODES, FALSE);
+    g_return_val_if_fail(run & POLYLEVEL_RUN_MODES, FALSE);
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = poly_level_defaults;
     else
@@ -289,10 +289,8 @@ static void
 poly_level_update_values(PolyLevelControls *controls,
                          PolyLevelArgs *args)
 {
-    args->col_degree
-        = ROUND(gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->col_degree)));
-    args->row_degree
-        = ROUND(gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->row_degree)));
+    args->col_degree = gwy_adjustment_get_int(controls->col_degree);
+    args->row_degree = gwy_adjustment_get_int(controls->row_degree);
     args->do_extract
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->do_extract));
     args->same_degree
