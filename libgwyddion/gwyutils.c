@@ -163,7 +163,7 @@ gwy_string_to_flags(const gchar *str,
 }
 
 /**
- * gwy_enum_to_string:
+ * gwy_flags_to_string:
  * @enumval: Some ORed integer flags from @enum_table.
  * @enum_table: A table of corresponding string-integer pairs.
  * @n: The number of elements in @enum_table, may be -1 when @enum_table is
@@ -179,7 +179,7 @@ gchar*
 gwy_flags_to_string(gint enumval,
                     const GwyEnum *enum_table,
                     gint n,
-                    const gchar *delimiter)
+                    const gchar *glue)
 {
     gint j;
     GString *str = NULL;
@@ -188,15 +188,15 @@ gwy_flags_to_string(gint enumval,
     if (!enumval)
         return "";
 
-    if (!delimiter)
-        delimiter = " ";
+    if (!glue)
+        glue = " ";
 
     for (j = n; j && enum_table->name; j--, enum_table++) {
         if (enumval & enum_table->value) {
             if (!str)
                 str = g_string_new(enum_table->name);
             else {
-                str = g_string_append(str, delimiter);
+                str = g_string_append(str, glue);
                 str = g_string_append(str, enum_table->name);
             }
         }

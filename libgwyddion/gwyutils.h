@@ -52,7 +52,7 @@ gint   gwy_string_to_flags        (const gchar *str,
 gchar* gwy_flags_to_string        (gint enumval,
                                    const GwyEnum *enum_table,
                                    gint n,
-                                   const gchar *delimiter);
+                                   const gchar *glue);
 
 #ifdef __cplusplus
 }
