@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.8cvs20050213, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.8cvs20050217, [http://trific.ath.cx/bugzilla/])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -190,9 +190,11 @@ PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
 # GtkGlExt
+# FIXME: Doesn't work, must wait for 2.0
 GWY_WITH([gl],,[OpenGL 3D view widgets])
 if test "$enable_gl" != no; then
-  PKG_CHECK_MODULES(GTKGLEXT,[gtkglext-1.0],
+  # Repeat pangoft2 here to maintain assertion GTK flags are subset of GTKGLEXT
+  PKG_CHECK_MODULES(GTKGLEXT,[pangoft2 gtkglext-1.0],
                    [AC_DEFINE(HAVE_GTKGLEXT,1,
                               [Define if we have the GtkGLExt package.])],
                     [AC_MSG_WARN(GtkGLExt not found, 3D will not be built)])
