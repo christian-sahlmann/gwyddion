@@ -82,7 +82,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
         "pointer",
-        "gwy_pointer_measure",
+        GWY_STOCK_POINTER_MEASURE,
         N_("Read value under mouse cursor."),
         0,
         &use,

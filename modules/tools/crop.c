@@ -76,7 +76,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo crop_func_info = {
         "crop",
-        "gwy_crop",
+        GWY_STOCK_CROP,
         N_("Crop data"),
         20,
         &use,

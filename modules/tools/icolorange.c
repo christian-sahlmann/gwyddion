@@ -25,6 +25,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwystock.h>
 #include <app/app.h>
 #include <app/settings.h>
 #include <app/unitool.h>
@@ -118,7 +119,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo icolorange_func_info = {
         "icolorange",
-        "gwy_color_range",
+        GWY_STOCK_COLOR_RANGE,
         N_("Stretch color range to part of data."),
         130,
         &use,

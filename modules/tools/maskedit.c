@@ -93,7 +93,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo maskedit_func_info = {
         "maskedit",
-        "gwy_none",
+        GWY_STOCK_MASK_EDITOR,
         N_("Edit mask"),
         150,
         &use,
