@@ -26,26 +26,33 @@
 #include "datafield.h"
 
 /*local functions*/
-static gint step_by_one           (GwyDataField *data_field,
-                                   gint *rcol,
-                                   gint *rrow);
-static void drop_step             (GwyDataField *data_field,
-                                   GwyDataField *water_field,
-                                   gdouble dropsize);
-static void drop_minima           (GwyDataField *water_field,
-                                   GwyDataField *min_field,
-                                   gint threshval);
-static void process_mask          (GwyDataField *grain_field,
-                                   gint col,
-                                   gint row);
-static void wdrop_step            (GwyDataField *data_field,
-                                   GwyDataField *min_field,
-                                   GwyDataField *water_field,
-                                   GwyDataField *grain_field,
-                                   gdouble dropsize);
-static void mark_grain_boundaries (GwyDataField *grain_field);
-static void number_grains         (GwyDataField *mask_field,
-                                   GwyDataField *grain_field);
+static gint step_by_one                   (GwyDataField *data_field,
+                                           gint *rcol,
+                                           gint *rrow);
+static void drop_step                     (GwyDataField *data_field,
+                                           GwyDataField *water_field,
+                                           gdouble dropsize);
+static void drop_minima                   (GwyDataField *water_field,
+                                           GwyDataField *min_field,
+                                           gint threshval);
+static void process_mask                  (GwyDataField *grain_field,
+                                           gint col,
+                                           gint row);
+static void wdrop_step                    (GwyDataField *data_field,
+                                           GwyDataField *min_field,
+                                           GwyDataField *water_field,
+                                           GwyDataField *grain_field,
+                                           gdouble dropsize);
+static void mark_grain_boundaries         (GwyDataField *grain_field);
+static void number_grains                 (GwyDataField *mask_field,
+                                           GwyDataField *grain_field);
+static gint gwy_data_field_fill_one_grain (GwyDataField *dfield,
+                                           gint col,
+                                           gint row,
+                                           gint *visited,
+                                           gint grain_no,
+                                           gint *listv,
+                                           gint *listh);
 
 /* FIXME: is this function public or not? */
 gint *gwy_data_field_fill_grain(GwyDataField *dfield,
@@ -729,7 +736,8 @@ drop_minima(GwyDataField *water_field, GwyDataField *min_field, gint threshval)
     gint xres, yres, i;
     gint global_row_value, global_col_value, global_number, npnt, cnt;
     gint *pnt;
-    gdouble col, row, global_maximum_value;
+    gint col, row;
+    gdouble global_maximum_value;
     GwyDataField *buffer;
 
     xres = water_field->xres;
@@ -743,9 +751,13 @@ drop_minima(GwyDataField *water_field, GwyDataField *min_field, gint threshval)
     cnt = 0;
     for (i = 0; i < xres*yres; i++) {
         if (water_field->data[i] > 0 && buffer->data[i] == 0) {
+            g_print("%d %g\n", i, water_field->data[i]);
             global_maximum_value = water_field->data[i];
-            row = global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
-            col = global_col_value = i - xres*row;
+            /* WTF?
+             * row = global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
+             */
+            row = global_row_value = i/xres;
+            col = global_col_value = i % xres;
 
             npnt = 0;
             pnt = gwy_data_field_fill_grain(water_field, row, col, &npnt);
@@ -929,6 +941,7 @@ number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
 
 
 /* FIXME: has wrong order of col and row arguments! */
+/* FIXME: make static in 2.0 */
 /**
  * gwy_data_field_fill_grain:
  * @dfield: A data field with zeroes in empty space and nonzeroes in grains.
@@ -942,7 +955,7 @@ number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
  * Returns: A newly allocated array of indices of grain points in @dfield's
  *          data, the size of the list is returned in @nindices.
  **/
-gint *
+gint*
 gwy_data_field_fill_grain(GwyDataField *dfield,
                           gint row, gint col, gint *nindices)
 {
@@ -951,8 +964,7 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
     gint *indices;
     gint xres, yres, n, count;
     gint *listh, *listv;
-    gint nh, nv;
-    gint i, p, j;
+    gint i, j;
     gint initial;
 
     data = dfield->data;
@@ -976,16 +988,83 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
 
     n = xres*yres;
     visited = g_new0(gint, n);
+    listv = g_new(gint, n/2 + 2);
+    listh = g_new(gint, n/2 + 2);
+    count = gwy_data_field_fill_one_grain(dfield, col, row, visited, 1,
+                                          listv, listh);
+
+    g_free(listv);
+    g_free(listh);
+
+    indices = g_new(gint, count);
+
+    j = 0;
+    for (i = 0; i < n; i++) {
+        if (visited[i])
+            indices[j++] = i;
+    }
+    g_free(visited);
+
+    *nindices = count;
+    return indices;
+}
+
+/**
+ * gwy_data_field_fill_one_grain:
+ * @dfield: A data field with zeroes in empty space and nonzeroes in grains.
+ * @col: Column inside a grain.
+ * @row: Row inside a grain.
+ * @visited: An array @col x @row that contain zeroes in empty space and yet
+ *           unvisited grains.  Current grain will be filled with @grain_no.
+ * @grain_no: Value to fill current grain with.
+ * @listv: A working buffer of size at least @col x @row/2 + 2, its content is
+ *         owerwritten.
+ * @listh: A working buffer of size at least @col x @row/2 + 2, its content is
+ *         owerwritten.
+ *
+ * Internal function to fill/number a one grain.
+ *
+ * The @visited, @listv, and @listh buffers are recyclable between calls so
+ * they don't have to be allocated and freed for each grain, speeding up
+ * sequential grain processing.
+ *
+ * Returns: The number of pixels in the grain.
+ **/
+static gint
+gwy_data_field_fill_one_grain(GwyDataField *dfield,
+                              gint col, gint row,
+                              gint *visited,
+                              gint grain_no,
+                              gint *listv,
+                              gint *listh)
+{
+    gdouble *data;
+    gint xres, yres, n, count;
+    gint nh, nv;
+    gint i, p, j;
+    gint initial;
+
+    g_return_val_if_fail(grain_no, 0);
+    data = dfield->data;
+    xres = dfield->xres;
+    yres = dfield->yres;
+    initial = row*xres + col;
+    g_return_val_if_fail(data[initial], 0);
+
+    /* check for a single point */
     visited[initial] = 1;
     count = 1;
+    if ((!col || !data[initial - 1])
+        && (!row || !data[initial - xres])
+        && (col + 1 == xres || !data[initial + 1])
+        && (row + 1 == yres || !data[initial + xres])) {
 
-    listv = g_new(gint, n/2 + 2);
+        return count;
+    }
 
+    n = xres*yres;
     listv[0] = listv[1] = initial;
     nv = 2;
-
-    listh = g_new(gint, n/2 + 2);
-
     listh[0] = listh[1] = initial;
     nh = 2;
 
@@ -1001,7 +1080,7 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
                 for (j = start; j >= stop; j--) {
                     if (visited[j] || !data[j])
                         break;
-                    visited[j]++;
+                    visited[j] = grain_no;
                     count++;
                 }
                 if (j < start) {
@@ -1015,7 +1094,7 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
                 for (j = start; j < stop; j++) {
                     if (visited[j] || !data[j])
                         break;
-                    visited[j]++;
+                    visited[j] = grain_no;
                     count++;
                 }
                 if (j > start) {
@@ -1037,7 +1116,7 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
                 for (j = start; j >= stop; j -= xres) {
                     if (visited[j] || !data[j])
                         break;
-                    visited[j]++;
+                    visited[j] = grain_no;
                     count++;
                 }
                 if (j < start) {
@@ -1051,7 +1130,7 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
                 for (j = start; j < stop; j += xres) {
                     if (visited[j] || !data[j])
                         break;
-                    visited[j]++;
+                    visited[j] = grain_no;
                     count++;
                 }
                 if (j > start) {
@@ -1063,20 +1142,7 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
         nh = 0;
     }
 
-    g_free(listv);
-    g_free(listh);
-
-    indices = g_new(gint, count);
-
-    j = 0;
-    for (i = 0; i < n; i++) {
-        if (visited[i])
-            indices[j++] = i;
-    }
-    g_free(visited);
-
-    *nindices = count;
-    return indices;
+    return count;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
