@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include <libgwyddion/gwymacros.h>
 
 #include <stdio.h>
@@ -30,6 +30,7 @@
 #endif
 
 #include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
@@ -209,6 +210,12 @@ typedef struct {
     MDTFrame *frames;
 } MDTFile;
 
+typedef struct {
+    GtkWidget *data_view;
+    GwyContainer *data;
+    MDTFile *mdtfile;
+} MDTDialogControls;
+
 static gboolean       module_register     (const gchar *name);
 static gint           mdt_detect          (const gchar *filename,
                                            gboolean only_name);
@@ -216,12 +223,8 @@ static GwyContainer*  mdt_load            (const gchar *filename);
 static gsize          select_which_data   (MDTFile *mdtfile,
                                            GwyEnum *choices,
                                            gsize n);
-static GwyDataField*  extract_data        (MDTFile *mdtfile,
-                                           gsize ch,
-                                           gsize im);
 static void           add_metadata        (MDTFile *mdtfile,
-                                           gsize ch,
-                                           gsize im,
+                                           gsize i,
                                            GwyContainer *data);
 static gboolean       mdt_real_load       (const guchar *buffer,
                                            gsize size,
@@ -362,13 +365,14 @@ mdt_load(const gchar *filename)
     GwyContainer *data = NULL;
     MDTFile mdtfile;
     GwyEnum *choices = NULL;
-    gsize n, i, j;
+    gsize n, i;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         g_clear_error(&err);
         return NULL;
     }
+    n = 0;
     memset(&mdtfile, 0, sizeof(mdtfile));
     if (mdt_real_load(buffer, size, &mdtfile)) {
         for (i = 0; i <= mdtfile.last_frame; i++) {
@@ -376,58 +380,47 @@ mdt_load(const gchar *filename)
                 MDTScannedDataFrame *sdframe;
 
                 sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
-                data = GWY_CONTAINER(gwy_container_new());
-                dfield = extract_scanned_data(sdframe);
-                gwy_container_set_object_by_name(data, "/0/data",
-                                                 G_OBJECT(dfield));
-                return data;
-            }
-        }
-        /*
-        n = 0;
-        for (i = 0; i < mdtfile.nchannels; i++) {
-            for (j = 0; j < mdtfile.channels[i].nimages; j++) {
-                image = mdtfile.channels[i].images + j;
-                if (image->image_data) {
-                    n++;
-                    gwy_debug("Available data: Channel #%u image #%u",
-                              i+1, j+1);
-                    choices = g_renew(GwyEnum, choices, n);
-                    choices[n-1].value = 1024*i + j;
-                    choices[n-1].name = g_strdup_printf("Channel %u, image %u "
-                                                        "(%u×%u)",
-                                                        i+1, j+1,
-                                                        image->width,
-                                                        image->height);
-                }
+                n++;
+                choices = g_renew(GwyEnum, choices, n);
+                choices[n-1].value = i;
+                choices[n-1].name = g_strdup_printf("Frame %u"
+                                                    "(%u×%u)",
+                                                    i+1,
+                                                    sdframe->fm_xres,
+                                                    sdframe->fm_yres);
             }
         }
         i = select_which_data(&mdtfile, choices, n);
-        gwy_debug("Selected %u:%u", i/1024, i % 1024);
+        gwy_debug("Selected %u", i);
         if (i != (gsize)-1) {
-            dfield = extract_data(&mdtfile, i/1024, i % 1024);
+            MDTScannedDataFrame *sdframe;
+
+            sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
+            dfield = extract_scanned_data(sdframe);
             if (dfield) {
                 data = GWY_CONTAINER(gwy_container_new());
                 gwy_container_set_object_by_name(data, "/0/data",
                                                  G_OBJECT(dfield));
                 g_object_unref(dfield);
-                add_metadata(&mdtfile, i/1024, i %1024, data);
+                add_metadata(&mdtfile, i, data);
             }
         }
-        */
     }
 
     gwy_file_abandon_contents(buffer, size, NULL);
+    for (i = 0; i < n; i++)
+        g_free((gpointer)choices[i].name);
+    g_free(choices);
 
     return data;
 }
 
-#if 0
 static void
 selection_changed(GtkWidget *button,
                   MDTDialogControls *controls)
 {
     gsize i;
+    MDTScannedDataFrame *sdframe;
     GwyDataField *dfield;
 
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
@@ -435,7 +428,8 @@ selection_changed(GtkWidget *button,
 
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     g_assert(i != (gsize)-1);
-    dfield = extract_data(controls->mdtfile, i/1024, i % 1024);
+    sdframe = (MDTScannedDataFrame*)controls->mdtfile->frames[i].frame_data;
+    dfield = extract_scanned_data(sdframe);
     gwy_container_set_object_by_name(controls->data, "/0/data",
                                      G_OBJECT(dfield));
     g_object_unref(dfield);
@@ -448,6 +442,7 @@ select_which_data(MDTFile *mdtfile,
                   gsize n)
 {
     GtkWidget *dialog, *label, *vbox, *hbox, *align;
+    MDTScannedDataFrame *sdframe;
     MDTDialogControls controls;
     GwyDataField *dfield;
     gint xres, yres;
@@ -496,12 +491,13 @@ select_which_data(MDTFile *mdtfile,
     gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
 
     i = choices[0].value;
-    dfield = extract_data(mdtfile, i/1024, i % 1024);
+    sdframe = (MDTScannedDataFrame*)mdtfile->frames[i].frame_data;
+    dfield = extract_scanned_data(sdframe);
     controls.data = GWY_CONTAINER(gwy_container_new());
     gwy_container_set_object_by_name(controls.data, "/0/data",
                                      G_OBJECT(dfield));
     g_object_unref(dfield);
-    add_metadata(mdtfile, i/1024, i %1024, controls.data);
+    add_metadata(mdtfile, i, controls.data);
     xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
     yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
     zoomval = 120.0/MAX(xres, yres);
@@ -541,152 +537,12 @@ select_which_data(MDTFile *mdtfile,
     return i;
 }
 
-static GwyDataField*
-extract_data(MDTFile *mdtfile,
-             gsize ch,
-             gsize im)
-{
-    GwyDataField *dfield;
-    MDTChannel *channel;
-    MDTImage *image;
-    gdouble xreal, yreal, zreal;
-    gdouble *d;
-    gsize i;
-
-    channel = mdtfile->channels + ch;
-    image = channel->images + im;
-    if (image->bpp != 1 && image->bpp != 2 && image->bpp != 4) {
-        g_warning("Cannot extract image of bpp = %u", image->bpp);
-        return NULL;
-    }
-
-    xreal = yreal = 100e-9;    /* XXX: whatever */
-    zreal = 1e-9;
-    if ((d = g_hash_table_lookup(mdtfile->params, GUINT_TO_POINTER(2))))
-        xreal = *d * 1e-9;
-    if ((d = g_hash_table_lookup(mdtfile->params, GUINT_TO_POINTER(3))))
-        yreal = *d * 1e-9;
-    if ((d = g_hash_table_lookup(mdtfile->params, GUINT_TO_POINTER(4))))
-        zreal = *d * 1e-9;
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(image->width, image->height,
-                                               xreal, yreal, FALSE));
-
-    d = gwy_data_field_get_data(dfield);
-    switch (image->bpp) {
-        case 1:
-        for (i = 0; i < image->width*image->height; i++)
-            d[i] = image->image_data[i]/255.0;
-        break;
-
-        case 2:
-        for (i = 0; i < image->width*image->height; i++)
-            d[i] = (image->image_data[2*i]
-                    + 256.0*image->image_data[2*i + 1])/65535.0;
-        break;
-
-        case 4:
-        for (i = 0; i < image->width*image->height; i++)
-            d[i] = (image->image_data[4*i]
-                    + 256.0*(image->image_data[4*i + 1]
-                             + 256.0*(image->image_data[4*i + 2]
-                                      + 256.0*image->image_data[4*i + 3])))
-                    /4294967296.0;
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-    for (i = 0; i < image->width*image->height; i++)
-        d[i] *= zreal;
-
-    return dfield;
-}
-
 static void
 add_metadata(MDTFile *mdtfile,
-             gsize ch,
-             gsize im,
+             gsize i,
              GwyContainer *data)
 {
-    static const guint good_metadata[] = {
-        0, 1, 9, 10, 12, 13, 14, 15, 16, 18, 20, 21, 22, 23, 24, 25, 26, 27,
-    };
-    MDTChannel *channel;
-    MDTImage *image;
-    gsize i, j;
-    guchar *key, *value;
-    gpointer *p;
-
-    channel = mdtfile->channels + ch;
-    image = channel->images + im;
-    for (i = 0; i < G_N_ELEMENTS(good_metadata); i++) {
-        for (j = 0; j < G_N_ELEMENTS(mdt_parameters); j++) {
-            if (mdt_parameters[j].idx == good_metadata[i])
-                break;
-        }
-        g_assert(j < G_N_ELEMENTS(mdt_parameters));
-        p = g_hash_table_lookup(mdtfile->params, GUINT_TO_POINTER(j));
-        if (!p)
-            continue;
-
-        key = g_strdup_printf("/meta/%s", mdt_parameters[j].meta);
-        switch (mdt_parameters[j].type) {
-            case G_TYPE_STRING:
-            value = g_strdup((gchar*)p);
-            break;
-
-            case G_TYPE_INT:
-            if (mdt_parameters[j].units)
-                value = g_strdup_printf("%d %s",
-                                        *(gsize*)p, mdt_parameters[j].units);
-            else
-                value = g_strdup_printf("%d", *(gsize*)p);
-            break;
-
-            case G_TYPE_DOUBLE:
-            if (mdt_parameters[j].units)
-                value = g_strdup_printf("%.5g %s",
-                                        *(gdouble*)p, mdt_parameters[j].units);
-            else
-                value = g_strdup_printf("%.5g", *(gdouble*)p);
-            break;
-
-            default:
-            g_assert_not_reached();
-            value = NULL;
-            break;
-        }
-        gwy_container_set_string_by_name(data, key, value);
-        g_free(key);
-    }
-
-    /* Special metadata */
-    if ((p = g_hash_table_lookup(mdtfile->params, GUINT_TO_POINTER(28)))) {
-        value = g_strdup(gwy_enum_to_string(*(gsize*)p,
-                                            mdt_palettes,
-                                            G_N_ELEMENTS(mdt_palettes)));
-        gwy_container_set_string_by_name(data, "/0/base/palette", value);
-    }
-
-    if ((p = g_hash_table_lookup(mdtfile->params, GUINT_TO_POINTER(6)))) {
-        value = g_strdup(gwy_enum_to_string(*(gsize*)p,
-                                            mdt_aquisitions,
-                                            G_N_ELEMENTS(mdt_aquisitions)));
-        gwy_container_set_string_by_name(data, "/meta/Aqusition type", value);
-    }
-
-    value = g_strdup(gwy_enum_to_string(channel->data_type,
-                                        mdt_data_types,
-                                        G_N_ELEMENTS(mdt_data_types)));
-    gwy_container_set_string_by_name(data, "/meta/Data type", value);
-
-    value = g_strdup(gwy_enum_to_string(channel->signal_source,
-                                        mdt_signal_sources,
-                                        G_N_ELEMENTS(mdt_signal_sources)));
-    gwy_container_set_string_by_name(data, "/meta/Signal source", value);
 }
-#endif
 
 static inline gsize
 get_WORD(const guchar **p)
@@ -722,25 +578,47 @@ get_FLOAT(const guchar **p)
     return z.f;
 }
 
-static inline gsize
-get_DOUBLE(const guchar **p)
+static void
+mdt_read_axis_scales(const guchar *p,
+                     MDTAxisScale *x_scale,
+                     MDTAxisScale *y_scale,
+                     MDTAxisScale *z_scale)
 {
-    union { guchar pp[8]; double d; } z;
+    x_scale->offset = get_FLOAT(&p);
+    x_scale->step = get_FLOAT(&p);
+    x_scale->unit = get_WORD(&p);
+    gwy_debug("x: *%g +%g [%d:%s]",
+              x_scale->step, x_scale->offset, x_scale->unit,
+              gwy_enum_to_string(x_scale->unit,
+                                 mdt_units, G_N_ELEMENTS(mdt_units)));
+    if (!(x_scale->step > 0)) {
+        g_warning("x_scale.step == 0, changing to 1");
+        x_scale->step = 1.0;
+    }
 
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    memcpy(z.pp, *p, sizeof(double));
-#else
-    z.pp[0] = *p[7];
-    z.pp[1] = *p[6];
-    z.pp[2] = *p[5];
-    z.pp[3] = *p[4];
-    z.pp[4] = *p[3];
-    z.pp[5] = *p[2];
-    z.pp[6] = *p[1];
-    z.pp[7] = *p[0];
-#endif
-    *p += sizeof(double);
-    return z.d;
+    y_scale->offset = get_FLOAT(&p);
+    y_scale->step = get_FLOAT(&p);
+    y_scale->unit = get_WORD(&p);
+    gwy_debug("y: *%g +%g [%d:%s]",
+              y_scale->step, y_scale->offset, y_scale->unit,
+              gwy_enum_to_string(y_scale->unit,
+                                 mdt_units, G_N_ELEMENTS(mdt_units)));
+    if (!(y_scale->step > 0)) {
+        g_warning("y_scale.step == 0, changing to 1");
+        y_scale->step = 1.0;
+    }
+
+    z_scale->offset = get_FLOAT(&p);
+    z_scale->step = get_FLOAT(&p);
+    z_scale->unit = get_WORD(&p);
+    gwy_debug("z: *%g +%g [%d:%s]",
+              z_scale->step, z_scale->offset, z_scale->unit,
+              gwy_enum_to_string(z_scale->unit,
+                                 mdt_units, G_N_ELEMENTS(mdt_units)));
+    if (!(z_scale->step > 0)) {
+        g_warning("z_scale.step == 0, changing to 1");
+        z_scale->step = 1.0;
+    }
 }
 
 static gboolean
@@ -750,27 +628,8 @@ mdt_scanned_data_vars(const guchar *p,
                       gsize frame_size,
                       gsize vars_size)
 {
-    frame->x_scale.offset = get_FLOAT(&p);
-    frame->x_scale.step = get_FLOAT(&p);
-    frame->x_scale.unit = get_WORD(&p);
-    gwy_debug("x: *%g +%g [%d:%s]",
-              frame->x_scale.step, frame->x_scale.offset, frame->x_scale.unit,
-              gwy_enum_to_string(frame->x_scale.unit,
-                                 mdt_units, G_N_ELEMENTS(mdt_units)));
-    frame->y_scale.offset = get_FLOAT(&p);
-    frame->y_scale.step = get_FLOAT(&p);
-    frame->y_scale.unit = get_WORD(&p);
-    gwy_debug("y: *%g +%g [%d:%s]",
-              frame->y_scale.step, frame->y_scale.offset, frame->y_scale.unit,
-              gwy_enum_to_string(frame->y_scale.unit,
-                                 mdt_units, G_N_ELEMENTS(mdt_units)));
-    frame->z_scale.offset = get_FLOAT(&p);
-    frame->z_scale.step = get_FLOAT(&p);
-    frame->z_scale.unit = get_WORD(&p);
-    gwy_debug("z: *%g +%g [%d:%s]",
-              frame->z_scale.step, frame->z_scale.offset, frame->z_scale.unit,
-              gwy_enum_to_string(frame->z_scale.unit,
-                                 mdt_units, G_N_ELEMENTS(mdt_units)));
+    mdt_read_axis_scales(p, &frame->x_scale, &frame->y_scale, &frame->z_scale);
+    p += AXIS_SCALES_SIZE;
 
     frame->channel_index = (gint)(*p++);
     frame->mode = (gint)(*p++);
@@ -831,11 +690,9 @@ mdt_real_load(const guchar *buffer,
               gsize size,
               MDTFile *mdtfile)
 {
-    gsize start, id, i, j, len;
+    gsize i;
     const guchar *p, *fstart;
     MDTScannedDataFrame *scannedframe;
-    gpointer idp;
-    gdouble d;
 
     /* File Header */
     if (size < 32) {
@@ -958,17 +815,39 @@ GwyDataField*
 extract_scanned_data(MDTScannedDataFrame *dataframe)
 {
     GwyDataField *dfield;
+    GwySIUnit *siunitxy, *siunitz;
     gsize i;
     gdouble *data;
+    gdouble xreal, yreal, zscale;
+    gint power10xy, power10z;
     const guchar *p;
+    const gchar *unit;
+
+    if (dataframe->x_scale.unit != dataframe->y_scale.unit)
+        g_warning("Different x and y units, using x for both (incorrect).");
+    unit = gwy_enum_to_string(dataframe->x_scale.unit,
+                              mdt_units, G_N_ELEMENTS(mdt_units));
+    siunitxy = GWY_SI_UNIT(gwy_si_unit_new_parse(unit, &power10xy));
+    xreal = dataframe->fm_xres*exp(G_LN10*power10xy)*dataframe->x_scale.step;
+    yreal = dataframe->fm_yres*exp(G_LN10*power10xy)*dataframe->y_scale.step;
+
+    unit = gwy_enum_to_string(dataframe->z_scale.unit,
+                              mdt_units, G_N_ELEMENTS(mdt_units));
+    siunitz = GWY_SI_UNIT(gwy_si_unit_new_parse(unit, &power10z));
+    zscale = exp(G_LN10*power10z)*dataframe->z_scale.step;
 
     dfield = GWY_DATA_FIELD(gwy_data_field_new(dataframe->fm_xres,
                                                dataframe->fm_yres,
-                                               1.0, 1.0, FALSE));
+                                               xreal, yreal, FALSE));
+    gwy_data_field_set_si_unit_xy(dfield, siunitxy);
+    g_object_unref(siunitxy);
+    gwy_data_field_set_si_unit_z(dfield, siunitz);
+    g_object_unref(siunitz);
+
     data = gwy_data_field_get_data(dfield);
     p = dataframe->image;
     for (i = 0; i < dataframe->fm_yres*dataframe->fm_yres; i++)
-        data[i] = (p[2*i] + 256.0*p[2*i + 1])/65535.0;
+        data[i] = zscale*(p[2*i] + 256.0*p[2*i + 1])/65535.0;
 
     return dfield;
 }
