@@ -13,12 +13,10 @@ process_PROGRAMS = \
 	cwt.so \
 	dwt.so \
 	dwtanisotropy.so \
-#       dwtcorrection.so \
 	dwtdenoise.so \
 	edge.so \
 	facet-level.so \
 	fft.so \
-#	fit_2d.so \
 	fraccor.so \
 	fractal.so \
 	gradient.so \
