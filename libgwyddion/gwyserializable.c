@@ -77,13 +77,13 @@ gwy_serializable_base_init(G_GNUC_UNUSED gpointer g_class)
 /**
  * gwy_serializable_serialize:
  * @serializable: A #GObject implementing #GwySerializable interface.
- * @buffer: A buffer to which the serialized object should be appended.
- * @size: Current size of @buffer, new size is returned here.
+ * @buffer: A buffer to which the serialized object should be appended,
+ *          or %NULL.
  *
  * Serializes an object implementing #GwySerializable interface.
  *
- * Returns: A reallocated block of memory of size @size containing the
- *          current contents of @buffer with object representation appended.
+ * Returns: @buffer or a newly allocated #GBaseInitFunc with serialized
+ *          object appended.
  **/
 GByteArray*
 gwy_serializable_serialize(GObject *serializable,
@@ -233,14 +233,14 @@ gwy_serialize_store_int32(GByteArray *buffer,
                           gsize position,
                           guint32 value)
 {
-    /* TODO value = GINT32_TO_LE(value); */
+    /*value = GINT32_TO_LE(value);*/
     memcpy(buffer->data + position, &value, sizeof(guint32));
 }
 
 /**
  * gwy_serialize_pack:
- * @buffer: A buffer to which the serialized values should be appended.
- * @size: Current size of @buffer, new size is returned here.
+ * @buffer: A buffer to which the serialized values should be appended,
+ *          or %NULL.
  * @templ: A template string.
  * @...: A list of atomic values to serialize.
  *
@@ -257,15 +257,11 @@ gwy_serialize_store_int32(GByteArray *buffer,
  *
  * 'o' for a serializable object.
  *
- * The buffer @buffer may be %NULL (and @size should be zero then), or it
- * can contain some data.  In the former case a new one will be allocated,
- * in the latter case the existing buffer will be extended to be able to keep
- * both the old and the new data; @size will be updated.
- *
  * FIXME: this function currently doesn't create architecture-independent
  * representations, it just copies the memory.
  *
- * Returns: The buffer with serialization of given values appended.
+ * Returns: @buffer or a newly allocated #GByteArray with serialization of
+ *          given values appended.
  **/
 GByteArray*
 gwy_serialize_pack(GByteArray *buffer,
@@ -430,8 +426,8 @@ gwy_serialize_pack_object_struct(GByteArray *buffer,
 
 /**
  * gwy_serialize_pack_struct:
- * @buffer: A buffer to which the serialized components should be appended.
- * @size: Current size of @buffer, new size is returned here.
+ * @buffer: A buffer to which the serialized components should be appended,
+ *          or %NULL.
  * @nspec: The number of items in @spec.
  * @spec: The components to serialize.
  *
@@ -440,7 +436,8 @@ gwy_serialize_pack_object_struct(GByteArray *buffer,
  * For object serialization gwy_serialize_pack_object_struct() should be more
  * convenient and less error prone.
  *
- * Returns: The buffer with serialization of @spec components appended.
+ * Returns: @buffer or a newly allocated #GByteArray with serialization of
+ *          @spec components appended.
  **/
 GByteArray*
 gwy_serialize_pack_struct(GByteArray *buffer,
@@ -449,7 +446,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
 {
     const GwySerializeSpec *sp;
     guint32 asize = 0;
-    guint8 *arr;
+    guint8 *arr = NULL;
     gsize i;
 
     gwy_debug("nspec = %d, buffer = %p", nspec, buffer);
@@ -548,7 +545,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
                     g_byte_array_append(buffer, "", 1);
                 }
                 else
-                    g_byte_array_append(buffer, arr, strlen(sp->value) + 1);
+                    g_byte_array_append(buffer, value, strlen(value) + 1);
             }
             break;
 
@@ -1143,8 +1140,8 @@ gwy_serialize_check_string(const guchar *buffer,
 /**
  * GwySerializeFunc:
  * @serializable: An object to serialize.
- * @buffer: A buffer.
- * @size: The size of @buffer.
+ * @buffer: A buffer to append the representation to, may be %NULL indicating
+ *          a new one should be allocated.
  *
  * The type of serialization method, see gwy_serializable_serialize() for
  * description.
