@@ -133,7 +133,7 @@ static GwyModuleInfo module_info = {
     "layer-select",
     "Layer allowing selection of rectangular areas.",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
