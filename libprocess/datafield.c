@@ -2837,6 +2837,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
 
                 case GWY_SF_OUTPUT_PSDF:
                 gwy_data_line_psdf(hlp_line, hlp_tarline, windowing, interpolation);
+                gwy_data_line_resample(hlp_tarline, size, interpolation);
                 break;
 
                 default:
@@ -2847,6 +2848,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                 target_line->data[j] += hlp_tarline->data[j]
                                         /((gdouble)(brcol-ulcol));
             }
+            target_line->real = hlp_tarline->real;
         }
         gwy_data_line_free(hlp_line);
         gwy_data_line_free(hlp_tarline);
