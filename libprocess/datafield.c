@@ -154,7 +154,7 @@ gwy_datafield_serialize(GObject *obj,
 			      datafield->yres,
                               datafield->xreal,
 			      datafield->yreal,
-                              datafield->yreal*datafield->xreal,
+                              datafield->xres*datafield->yres,
 			      datafield->data);
 
 }
