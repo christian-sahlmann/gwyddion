@@ -447,6 +447,7 @@ gwy_vector_layer_set_update_policy(GwyVectorLayer *layer,
     g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
 
     layer->update_policy = policy;
+    g_object_notify(G_OBJECT(layer), "update_policy");
 }
 
 /**
