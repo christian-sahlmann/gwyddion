@@ -26,6 +26,8 @@
 #include "gwyapp.h"
 #include "gwyappinternal.h"
 
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
+
 enum {
     GRAPHLIST_GMODEL,
     GRAPHLIST_EDITABLE,
@@ -613,5 +615,7 @@ gwy_app_graph_list_orphaned(GtkWidget *graph_view)
     gtk_tree_model_foreach(store, gwy_app_graph_list_release_gmodel, list);
     gtk_widget_destroy(graph_view);
 }
+
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -24,6 +24,8 @@
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwygraph.h>
 
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
+
 G_BEGIN_DECLS
 
 void       gwy_app_graph_list_add     (GwyDataWindow *data_window,
@@ -31,6 +33,7 @@ void       gwy_app_graph_list_add     (GwyDataWindow *data_window,
 GtkWidget* gwy_app_graph_list         (GwyDataWindow *data_window);
 
 G_END_DECLS
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 #endif /* __GWY_APP_GRAPH_LIST_H__ */
 

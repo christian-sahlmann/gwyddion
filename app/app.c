@@ -46,9 +46,11 @@ static void       gwy_app_data_window_list_updated (void);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_data_popup_menu_popup    (GtkWidget *menu,
                                                     GdkEventButton *event);
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
 static void       gwy_app_graph_list_toggle_cb     (GtkWidget *toggle,
                                                     GwyDataWindow *data_window);
 static gboolean   gwy_app_graph_list_delete_cb     (GtkWidget *toggle);
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 gboolean
 gwy_app_quit(void)
@@ -262,6 +264,7 @@ gwy_app_data_window_create(GwyContainer *data)
         (GTK_WINDOW(data_window),
          g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
 
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
     corner = gtk_toggle_button_new();
     g_object_set(G_OBJECT(corner),
                  "can-default", FALSE,
@@ -275,6 +278,7 @@ gwy_app_data_window_create(GwyContainer *data)
     gtk_widget_show_all(corner);
     gwy_data_window_set_ul_corner_widget(GWY_DATA_WINDOW(data_window),
                                          corner);
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
     g_signal_connect(data_window, "focus-in-event",
                      G_CALLBACK(gwy_app_data_window_set_current), NULL);
@@ -282,8 +286,10 @@ gwy_app_data_window_create(GwyContainer *data)
                      G_CALLBACK(gwy_app_data_window_remove), NULL);
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(g_object_unref), data);
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
     g_signal_connect(corner, "toggled",
                      G_CALLBACK(gwy_app_graph_list_toggle_cb), data_window);
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
     current_data = g_list_append(current_data, data_window);
     g_signal_connect_swapped(data_view, "button_press_event",
@@ -299,6 +305,7 @@ gwy_app_data_window_create(GwyContainer *data)
     return data_window;
 }
 
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
 static void
 gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
                              GwyDataWindow *data_window)
@@ -352,6 +359,7 @@ gwy_app_graph_list_delete_cb(GtkWidget *toggle)
 
     return TRUE;
 }
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 static GtkWidget*
 gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
@@ -571,6 +579,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
     if (graph == NULL)
         graph = gwy_graph_new();
 
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
     /* TODO: this is broken because we do not actually know which data window
      * is the right one, but for GraphModel testing it doesn't matter much. */
     if (!g_object_get_data(G_OBJECT(graph), "graph-model"))
@@ -579,6 +588,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
          * obviously know its model... */
         gwy_app_graph_list_add(gwy_app_data_window_get_current(),
                                GWY_GRAPH(graph));
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
     g_signal_connect(window, "focus-in-event",
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
@@ -587,7 +597,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
 
     current_graphs = g_list_append(current_graphs, window);
 
-    gtk_container_add (GTK_CONTAINER (window), graph);
+    gtk_container_add(GTK_CONTAINER(window), graph);
     gtk_widget_show(graph);
     gtk_widget_show_all(window);
     gtk_window_present(GTK_WINDOW(window));
