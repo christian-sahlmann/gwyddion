@@ -60,10 +60,6 @@ static void        out_changed_cb             (GObject *item,
                                                FFTArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
                                                FFTArgs *args);
-static void        fft_load_args              (GwyContainer *container,
-                                               FFTArgs *args);
-static void        fft_save_args              (GwyContainer *container,
-                                               FFTArgs *args);
 static void        fft_dialog_update          (FFTControls *controls,
                                                FFTArgs *args);
 static void        set_dfield_module          (GwyDataField *re,
@@ -72,14 +68,17 @@ static void        set_dfield_module          (GwyDataField *re,
 static void        set_dfield_phase           (GwyDataField *re,
                                                GwyDataField *im,
                                                GwyDataField *target);
-
 static void        set_dfield_real            (GwyDataField *re,
                                                GwyDataField *im,
                                                GwyDataField *target);
-
 static void        set_dfield_imaginary       (GwyDataField *re,
                                                GwyDataField *im,
                                                GwyDataField *target);
+static void        fft_load_args              (GwyContainer *container,
+                                               FFTArgs *args);
+static void        fft_save_args              (GwyContainer *container,
+                                               FFTArgs *args);
+static void        fft_sanitize_args          (FFTArgs *args);
 
 
 
@@ -454,37 +453,6 @@ preserve_changed_cb(GtkToggleButton *button, FFTArgs *args)
     args->preserve = gtk_toggle_button_get_active(button);
 }
 
-static const gchar *preserve_key = "/module/fft/preserve";
-static const gchar *interp_key = "/module/fft/interp";
-static const gchar *window_key = "/module/fft/window";
-static const gchar *out_key = "/module/fft/out";
-
-static void
-fft_load_args(GwyContainer *container,
-                 FFTArgs *args)
-{
-    *args = fft_defaults;
-
-    if (gwy_container_contains_by_name(container, preserve_key))
-        args->preserve = gwy_container_get_boolean_by_name(container, preserve_key);
-    if (gwy_container_contains_by_name(container, interp_key))
-        args->interp = gwy_container_get_int32_by_name(container, interp_key);
-    if (gwy_container_contains_by_name(container, window_key))
-        args->window = gwy_container_get_int32_by_name(container, window_key);
-    if (gwy_container_contains_by_name(container, out_key))
-        args->out = gwy_container_get_int32_by_name(container, out_key);
-}
-
-static void
-fft_save_args(GwyContainer *container,
-                 FFTArgs *args)
-{
-    gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
-    gwy_container_set_int32_by_name(container, interp_key, args->interp);
-    gwy_container_set_int32_by_name(container, window_key, args->window);
-    gwy_container_set_int32_by_name(container, out_key, args->out);
-}
-
 static void
 fft_dialog_update(FFTControls *controls,
                      FFTArgs *args)
@@ -497,6 +465,43 @@ fft_dialog_update(FFTControls *controls,
                                 args->interp);
     gwy_option_menu_set_history(controls->window, "windowing-type",
                                 args->window);
+}
+
+static const gchar *preserve_key = "/module/fft/preserve";
+static const gchar *interp_key = "/module/fft/interp";
+static const gchar *window_key = "/module/fft/window";
+static const gchar *out_key = "/module/fft/out";
+
+static void
+fft_sanitize_args(FFTArgs *args)
+{
+    args->preserve = !!args->preserve;
+    args->interp = MIN(args->interp, GWY_INTERPOLATION_NNA);
+    args->window = MIN(args->window, GWY_WINDOWING_RECT);
+    args->out = MIN(args->out, GWY_FFT_OUTPUT_PHASE);
+}
+
+static void
+fft_load_args(GwyContainer *container,
+              FFTArgs *args)
+{
+    *args = fft_defaults;
+
+    gwy_container_gis_boolean_by_name(container, preserve_key, &args->preserve);
+    gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
+    gwy_container_gis_enum_by_name(container, window_key, &args->window);
+    gwy_container_gis_enum_by_name(container, out_key, &args->out);
+    fft_sanitize_args(args);
+}
+
+static void
+fft_save_args(GwyContainer *container,
+              FFTArgs *args)
+{
+    gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
+    gwy_container_set_int32_by_name(container, interp_key, args->interp);
+    gwy_container_set_int32_by_name(container, window_key, args->window);
+    gwy_container_set_int32_by_name(container, out_key, args->out);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
