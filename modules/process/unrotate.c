@@ -261,21 +261,44 @@ find_all_corrections(gint nder,
         phi /= 2*G_PI*m;
         phi = compute_correction(nder, der, m, phi);
         t = sizeof("Die, die GCC warning!");
+        /*
+         *             range from             smallest possible
+         *  symmetry   compute_correction()   range                ratio
+         *    m        -1/2m .. 1/2m
+         *
+         *    2        -1/4  .. 1/4           -1/8  .. 1/8         1/2
+         *    3        -1/6  .. 1/6           -1/12 .. 1/12        1/2
+         *    4        -1/8  .. 1/8           -1/8  .. 1/8 (*)     1
+         *    6        -1/12 .. 1/12          -1/12 .. 1/12        1
+         *
+         *  (*) not counting rhombic
+         */
         switch (m) {
             case 2:
             t = UNROTATE_PARALLEL;
+            /* align with any x or y */
+            if (phi >= 0.25/m)
+                phi -= 0.5/m;
+            else if (phi <= -0.25/m)
+                phi += 0.5/m;
             correction[t] = phi;
-            total /= 1.3;
+            total /= 1.25;
             break;
 
             case 3:
             t = UNROTATE_TRIANGULAR;
+            /* align with any x or y */
+            if (phi >= 0.125/m)
+                phi -= 0.25/m;
+            else if (phi <= -0.125/m)
+                phi += 0.25/m;
             correction[t] = phi;
             break;
 
             case 4:
             t = UNROTATE_SQUARE;
             correction[t] = phi;
+            /* decide square/rhombic */
             phi += 0.5/m;
             if (phi > 0.5/m)
                 phi -= 1.0/m;
@@ -394,11 +417,11 @@ unrotate_dialog(UnrotateArgs *args,
                                  G_N_ELEMENTS(unrotate_symmetry), "symmetry",
                                  G_CALLBACK(unrotate_symmetry_cb), &controls,
                                  args->symmetry);
-    gwy_table_attach_row(table, row, _("Dominant _symmetry:"), "",
+    gwy_table_attach_row(table, row, _("Dominant _structure:"), "",
                          controls.symmetry);
     row++;
 
-    label = gtk_label_new(_("Assume symmetry:"));
+    label = gtk_label_new(_("Assume structure:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
