@@ -102,7 +102,7 @@ static GwyModuleInfo module_info = {
     "slope_dist",
     "Slope distribution.",
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -141,6 +141,8 @@ slope_dist(GwyContainer *data, GwyRunType run)
     else
         load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || slope_dialog(&args);
+    if (run == GWY_RUN_MODAL)
+        save_args(gwy_app_settings_get(), &args);
     if (ok) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
@@ -167,9 +169,6 @@ slope_dist(GwyContainer *data, GwyRunType run)
             g_assert_not_reached();
             break;
         }
-
-        if (run != GWY_RUN_WITH_DEFAULTS)
-            save_args(gwy_app_settings_get(), &args);
     }
 
     return FALSE;
@@ -255,6 +254,7 @@ slope_dialog(SlopeArgs *args)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            slope_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;

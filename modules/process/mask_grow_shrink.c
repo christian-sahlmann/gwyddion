@@ -66,7 +66,7 @@ static GwyModuleInfo module_info = {
     "mask_grow_shrink",
     "Grows and shrinks masks.",
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -139,13 +139,13 @@ mask_grow(GwyContainer *data, GwyRunType run, const gchar *name)
     ok = (run != GWY_RUN_MODAL) || mask_grow_dialog(&args,
                                                     grow_shrink_meta[i].title,
                                                     grow_shrink_meta[i].desc);
+    if (run == GWY_RUN_MODAL)
+        mask_grow_save_args(settings, &args, name);
     if (!ok)
         return FALSE;
 
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     grow_shrink_meta[i].func(dfield, args.pixels);
-    if (run != GWY_RUN_WITH_DEFAULTS)
-        mask_grow_save_args(settings, &args, name);
 
     return TRUE;
 }
@@ -183,6 +183,9 @@ mask_grow_dialog(MaskGrowArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            args->pixels
+                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.pixels));
+            args->pixels = CLAMP(args->pixels, 1, 1024);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;

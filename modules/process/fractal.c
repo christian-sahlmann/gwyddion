@@ -115,7 +115,7 @@ static GwyModuleInfo module_info = {
     "fractal",
     "Fractal dimension evaluation",
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",
     "2004",
 };
@@ -153,8 +153,9 @@ fractal(GwyContainer *data, GwyRunType run)
     else
         fractal_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || fractal_dialog(&args, data);
+    if (run == GWY_RUN_MODAL)
+        fractal_save_args(data, &args);
 
-    fractal_save_args(data, &args);
     return ok;
 }
 

@@ -43,44 +43,46 @@ typedef struct {
 
 typedef struct {
     GtkWidget *view;
-    GtkObject *entry_locate_steps;
-    GtkObject *entry_locate_thresh;
-    GtkObject *entry_wshed_steps;
-    GtkObject *entry_locate_dropsize;
-    GtkObject *entry_wshed_dropsize;
+    GtkObject *locate_steps;
+    GtkObject *locate_thresh;
+    GtkObject *wshed_steps;
+    GtkObject *locate_dropsize;
+    GtkObject *wshed_dropsize;
     GtkWidget *color_button;
     GwyContainer *mydata;
     gboolean computed;
 } WshedControls;
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    wshed                      (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    wshed_dialog               (WshedArgs *args,
-                                               GwyContainer *data);
-static void        mask_color_changed_cb      (GtkWidget *color_button,
-                                               WshedControls *controls);
-static void        load_mask_color            (GtkWidget *color_button,
-                                               GwyContainer *data);
-static void        save_mask_color            (GtkWidget *color_button,
-                                               GwyContainer *data);
-static void        wshed_dialog_update        (WshedControls *controls,
-                                               WshedArgs *args);
-static void        preview                    (WshedControls *controls,
-                                               WshedArgs *args);
-static void        ok                         (WshedControls *controls,
-                                               WshedArgs *args,
-                                               GwyContainer *data);
-static void        mask_process               (GwyDataField *dfield,
-                                               GwyDataField *maskfield,
-                                               WshedArgs *args);
-static void        wshed_load_args            (GwyContainer *container,
-                                               WshedArgs *args);
-static void        wshed_save_args            (GwyContainer *container,
-                                               WshedArgs *args);
-static void        wshed_sanitize_args        (WshedArgs *args);
-static void        run_noninteractive         (WshedArgs *args,
-                                               GwyContainer *data);
+static gboolean    module_register              (const gchar *name);
+static gboolean    wshed                        (GwyContainer *data,
+                                                 GwyRunType run);
+static gboolean    wshed_dialog                 (WshedArgs *args,
+                                                 GwyContainer *data);
+static void        mask_color_changed_cb        (GtkWidget *color_button,
+                                                 WshedControls *controls);
+static void        load_mask_color              (GtkWidget *color_button,
+                                                 GwyContainer *data);
+static void        save_mask_color              (GtkWidget *color_button,
+                                                 GwyContainer *data);
+static void        wshed_dialog_update_controls (WshedControls *controls,
+                                                 WshedArgs *args);
+static void        wshed_dialog_update_values   (WshedControls *controls,
+                                                 WshedArgs *args);
+static void        preview                      (WshedControls *controls,
+                                                 WshedArgs *args);
+static void        ok                           (WshedControls *controls,
+                                                 WshedArgs *args,
+                                                 GwyContainer *data);
+static void        mask_process                 (GwyDataField *dfield,
+                                                 GwyDataField *maskfield,
+                                                 WshedArgs *args);
+static void        wshed_load_args              (GwyContainer *container,
+                                                 WshedArgs *args);
+static void        wshed_save_args              (GwyContainer *container,
+                                                 WshedArgs *args);
+static void        wshed_sanitize_args          (WshedArgs *args);
+static void        run_noninteractive           (WshedArgs *args,
+                                                 GwyContainer *data);
 
 WshedArgs wshed_defaults = {
     10,
@@ -97,7 +99,7 @@ static GwyModuleInfo module_info = {
     "wshed_threshold",
     "Mark grains by watershed algorithm",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -138,10 +140,7 @@ wshed(GwyContainer *data, GwyRunType run)
     }
     else if (run == GWY_RUN_MODAL) {
         ook = wshed_dialog(&args, data);
-    }
-    if (ook) {
-        if (run != GWY_RUN_WITH_DEFAULTS)
-            wshed_save_args(gwy_app_settings_get(), &args);
+        wshed_save_args(gwy_app_settings_get(), &args);
     }
 
     return ook;
@@ -204,28 +203,28 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
 
-    controls.entry_locate_steps = gtk_adjustment_new(args->locate_steps,
+    controls.locate_steps = gtk_adjustment_new(args->locate_steps,
                                                      0.0, 100.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 2, _("Number of steps"), "",
-                                controls.entry_locate_steps);
-    controls.entry_locate_dropsize = gtk_adjustment_new(args->locate_dropsize,
+                                controls.locate_steps);
+    controls.locate_dropsize = gtk_adjustment_new(args->locate_dropsize,
                                                         0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_spinbutton(table, 3, _("Drop size"), "%",
-                                controls.entry_locate_dropsize);
+                                controls.locate_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    controls.entry_locate_thresh = gtk_adjustment_new(args->locate_thresh,
+    controls.locate_thresh = gtk_adjustment_new(args->locate_thresh,
                                                       0.0, 100.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 4, _("Threshold"), _("pixels"),
-                                controls.entry_locate_thresh);
-    controls.entry_wshed_steps = gtk_adjustment_new(args->wshed_steps,
+                                controls.locate_thresh);
+    controls.wshed_steps = gtk_adjustment_new(args->wshed_steps,
                                                     0.0, 1000.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 6, _("Number of steps"), "",
-                                controls.entry_wshed_steps);
+                                controls.wshed_steps);
 
-    controls.entry_wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
+    controls.wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
                                                        0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_spinbutton(table, 7, _("Drop size"), "%",
-                                controls.entry_wshed_dropsize);
+                                controls.wshed_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     label = gtk_label_new(NULL);
@@ -256,6 +255,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            wshed_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
@@ -268,7 +268,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
 
             case RESPONSE_RESET:
             *args = wshed_defaults;
-            wshed_dialog_update(&controls, args);
+            wshed_dialog_update_controls(&controls, args);
             break;
 
             case RESPONSE_PREVIEW:
@@ -281,15 +281,43 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    args->locate_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.entry_locate_steps));
-    args->locate_thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.entry_locate_thresh));
-    args->locate_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.entry_locate_dropsize));
-    args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.entry_wshed_steps));
-    args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.entry_wshed_dropsize));
-
+    wshed_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
 
     return TRUE;
+}
+
+static void
+wshed_dialog_update_controls(WshedControls *controls,
+                             WshedArgs *args)
+{
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->wshed_dropsize),
+                             args->wshed_dropsize);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->locate_dropsize),
+                             args->locate_dropsize);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->locate_steps),
+                             args->locate_steps);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->wshed_steps),
+                             args->wshed_steps);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->locate_thresh),
+                             args->locate_thresh);
+}
+
+static void
+wshed_dialog_update_values(WshedControls *controls,
+                           WshedArgs *args)
+{
+    args->locate_steps
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_steps));
+    args->locate_thresh
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_thresh));
+    args->locate_dropsize
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_dropsize));
+    args->wshed_steps
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_steps));
+    args->wshed_dropsize
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_dropsize));
+
 }
 
 static void
@@ -371,23 +399,6 @@ save_mask_color(GtkWidget *color_button,
 
 
 static void
-wshed_dialog_update(WshedControls *controls,
-                     WshedArgs *args)
-{
-
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize),
-                             args->wshed_dropsize);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_locate_dropsize),
-                             args->locate_dropsize);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_locate_steps),
-                             args->locate_steps);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_wshed_steps),
-                             args->wshed_steps);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_locate_thresh),
-                             args->locate_thresh);
-}
-
-static void
 preview(WshedControls *controls,
         WshedArgs *args)
 {
@@ -425,11 +436,11 @@ preview(WshedControls *controls,
 
     }
 
-    args->locate_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_steps));
-    args->locate_thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_thresh));
-    args->locate_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_dropsize));
-    args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_steps));
-    args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize));
+    args->locate_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_steps));
+    args->locate_thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_thresh));
+    args->locate_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_dropsize));
+    args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_steps));
+    args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_dropsize));
 
 
     mask_process(dfield, maskfield, args);
@@ -469,14 +480,9 @@ ok(WshedControls *controls,
 
     if (controls->computed == FALSE)
     {
-            args->locate_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_steps));
-            args->locate_thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_thresh));
-            args->locate_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_locate_dropsize));
-            args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_steps));
-            args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize));
-
-            mask_process(dfield, maskfield, args);
-            controls->computed = TRUE;
+        wshed_dialog_update_values(controls, args);
+        mask_process(dfield, maskfield, args);
+        controls->computed = TRUE;
     }
     else
     {

@@ -101,7 +101,7 @@ static GwyModuleInfo module_info = {
     "angle_dist",
     "Angle distribution.",
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -140,6 +140,8 @@ angle_dist(GwyContainer *data, GwyRunType run)
     else
         load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || angle_dialog(&args);
+    if (run == GWY_RUN_MODAL)
+        save_args(gwy_app_settings_get(), &args);
     if (ok) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
@@ -160,8 +162,6 @@ angle_dist(GwyContainer *data, GwyRunType run)
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                          _("Angle"));
 
-        if (run != GWY_RUN_WITH_DEFAULTS)
-            save_args(gwy_app_settings_get(), &args);
     }
 
     return FALSE;
@@ -229,6 +229,7 @@ angle_dialog(AngleArgs *args)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            angle_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;

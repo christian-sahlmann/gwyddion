@@ -155,6 +155,8 @@ unrotate(GwyContainer *data, GwyRunType run)
     g_free(der);
 
     ok = (run != GWY_RUN_MODAL) || unrotate_dialog(&args, correction, symm);
+    if (run == GWY_RUN_MODAL)
+        save_args(gwy_app_settings_get(), &args);
     if (ok) {
         if (args.symmetry)
             symm = args.symmetry;
@@ -173,9 +175,6 @@ unrotate(GwyContainer *data, GwyRunType run)
             gwy_data_field_rotate(dfield, phi, args.interp);
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-
-        if (run != GWY_RUN_WITH_DEFAULTS)
-            save_args(gwy_app_settings_get(), &args);
     }
 
     return FALSE;

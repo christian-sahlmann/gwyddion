@@ -267,7 +267,7 @@ static GwyModuleInfo module_info = {
         "TARGA. "
         "Import support relies on GDK and thus may be installation-dependent.",
     "Yeti <yeti@gwyddion.net>",
-    "4.1.1",
+    "4.1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -477,7 +477,7 @@ pixmap_load(const gchar *filename,
     gsize n, bpp;
     guchar *pixels, *p;
     gint i, j, width, height, rowstride;
-    gboolean has_alpha, maptype_known;
+    gboolean has_alpha, maptype_known, ok;
     gint not_grayscale, any_red, any_green, any_blue;
     gdouble *val, *r;
     PixmapLoadArgs args;
@@ -560,15 +560,15 @@ pixmap_load(const gchar *filename,
     }
 
     /* ask user what she thinks */
-    if (!pixmap_load_dialog(&args, name, width, height, maptype_known)) {
+    ok = pixmap_load_dialog(&args, name, width, height, maptype_known);
+    pixmap_load_save_args(settings, &args);
+    if (!ok) {
         g_object_unref(pixbuf);
         return NULL;
     }
 
-    pixmap_load_save_args(settings, &args);
     dfield = GWY_DATA_FIELD(gwy_data_field_new(width, height,
-                                               args.xreal, args.yreal,
-                                               FALSE));
+                                               args.xreal, args.yreal, FALSE));
     val = gwy_data_field_get_data(dfield);
     for (i = 0; i < height; i++) {
         p = pixels + i*rowstride;
@@ -774,6 +774,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            pixmap_load_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
@@ -1238,8 +1239,10 @@ pixmap_draw_pixbuf(GwyContainer *data,
 
     settings = gwy_app_settings_get();
     pixmap_save_load_args(settings, &args);
-    if (!pixmap_save_dialog(&args, format_name))
+    if (!pixmap_save_dialog(&args, format_name)) {
+        pixmap_save_save_args(settings, &args);
         return NULL;
+    }
 
     layer = gwy_data_view_get_base_layer(data_view);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
@@ -1442,6 +1445,8 @@ pixmap_save_dialog(PixmapSaveArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            args->zoom = gtk_adjustment_get_value(GTK_ADJUSTMENT(zoom));
+            args->otype = gwy_radio_buttons_get_current(group, "output-format");
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;

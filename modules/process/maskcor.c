@@ -26,7 +26,7 @@
 #include <app/gwyapp.h>
 
 #define MASKCOR_RUN_MODES \
-    (GWY_RUN_INTERACTIVE)
+    (GWY_RUN_MODAL)
 
 typedef enum {
     GWY_MASKCOR_OBJECTS,
@@ -81,7 +81,7 @@ static GwyModuleInfo module_info = {
     "maskcor",
     "Create mask by correlation with another data field.",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -126,8 +126,9 @@ maskcor(GwyContainer *data, GwyRunType run)
         switch (gtk_dialog_run(GTK_DIALOG(maskcor_window))) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            case GTK_RESPONSE_NONE:
             gtk_widget_destroy(maskcor_window);
+            maskcor_save_args(settings, &args);
+            case GTK_RESPONSE_NONE:
             ok = TRUE;
             break;
 

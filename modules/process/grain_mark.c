@@ -111,7 +111,7 @@ static GwyModuleInfo module_info = {
     "mark_threshold",
     "Mark grains by thresholding",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -148,12 +148,12 @@ mark(GwyContainer *data, GwyRunType run)
         mark_load_args(gwy_app_settings_get(), &args);
 
     ok = (run != GWY_RUN_MODAL) || mark_dialog(&args, data);
+    if (run == GWY_RUN_MODAL)
+        mark_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
     mark_do(&args, data);
-    if (run != GWY_RUN_WITH_DEFAULTS)
-        mark_save_args(gwy_app_settings_get(), &args);
 
     return ok;
 }
@@ -277,6 +277,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            mark_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;

@@ -96,7 +96,7 @@ static GwyModuleInfo module_info = {
     "fft",
     "2D Fast Fourier Transform module",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -139,6 +139,8 @@ fft(GwyContainer *data, GwyRunType run)
     else
         fft_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || fft_dialog(&args);
+    if (run == GWY_RUN_MODAL)
+        fft_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
@@ -151,26 +153,22 @@ fft(GwyContainer *data, GwyRunType run)
     if (gwy_container_contains_by_name(data, "/0/mask"))
         gwy_container_remove_by_name(data, "/0/mask");
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                "/0/data"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    if (gwy_data_field_get_xres(dfield) != gwy_data_field_get_yres(dfield))
-    {
-        dialog
-            = gtk_message_dialog_new(GTK_WINDOW(gwy_app_data_window_get_current()),
-                                     GTK_DIALOG_DESTROY_WITH_PARENT,
-                                     GTK_MESSAGE_ERROR,
-                                     GTK_BUTTONS_CLOSE,
-                                     "FFT: data field must be rectangular.");
+    xsize = gwy_data_field_get_xres(dfield);
+    ysize = gwy_data_field_get_yres(dfield);
+    if (xsize != ysize) {
+        dialog = gtk_message_dialog_new
+            (GTK_WINDOW(gwy_app_data_window_get_current()),
+             GTK_DIALOG_DESTROY_WITH_PARENT,
+             GTK_MESSAGE_ERROR,
+             GTK_BUTTONS_OK,
+             _("FFT: Data field must be rectangular."));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return ok;
     }
-    g_assert(gwy_data_field_get_xres(dfield)
-             == gwy_data_field_get_yres(dfield));
 
-    xsize = gwy_data_field_get_xres(dfield);
-    ysize = gwy_data_field_get_yres(dfield);
     newsize = gwy_data_field_get_fft_res(xsize);
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
@@ -213,7 +211,8 @@ fft(GwyContainer *data, GwyRunType run)
 
     xyunit = (GwySIUnit*)gwy_si_unit_new("m<sup>-1</sup>");
     zunit = (GwySIUnit*)gwy_si_unit_new("m");
-    newreals = ((gdouble)gwy_data_field_get_xres(dfield))/gwy_data_field_get_xreal(dfield);
+    newreals = ((gdouble)gwy_data_field_get_xres(dfield))
+               /gwy_data_field_get_xreal(dfield);
 
     if (args.preserve)
     {
@@ -286,9 +285,6 @@ fft(GwyContainer *data, GwyRunType run)
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                             "FFT Phase");
     }
-
-    if (run != GWY_RUN_WITH_DEFAULTS)
-        fft_save_args(gwy_app_settings_get(), &args);
 
     g_object_unref(raout);
     g_object_unref(ipout);
@@ -417,7 +413,6 @@ fft_dialog(FFTArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    /*args->angle = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.angle));*/
     gtk_widget_destroy(dialog);
 
     return TRUE;

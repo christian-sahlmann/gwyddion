@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     "shade",
     "Shade module",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -98,7 +98,8 @@ module_register(const gchar *name)
 static gboolean
 shade(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *shadefield;
+    GObject *shadefield;
+    GwyDataField *dfield;
     ShadeArgs args;
     gboolean ok;
 
@@ -106,36 +107,28 @@ shade(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     if (run == GWY_RUN_WITH_DEFAULTS)
-    {
         args = shade_defaults;
-    }
     else
-    {
         shade_load_args(gwy_app_settings_get(), &args);
-    }
-    ok = (run != GWY_RUN_MODAL) || shade_dialog(&args);
-    if (ok) {
 
+    ok = (run != GWY_RUN_MODAL) || shade_dialog(&args);
+    if (run == GWY_RUN_MODAL)
+        shade_save_args(gwy_app_settings_get(), &args);
+    if (ok) {
         gwy_app_undo_checkpoint(data, "/0/show", NULL);
-        if (gwy_container_contains_by_name(data, "/0/show")) {
-            shadefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                         "/0/show"));
-            gwy_data_field_resample(shadefield,
+        if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
+            gwy_data_field_resample(GWY_DATA_FIELD(shadefield),
                                     gwy_data_field_get_xres(dfield),
                                     gwy_data_field_get_yres(dfield),
                                     GWY_INTERPOLATION_NONE);
         }
-        else
-        {
-            shadefield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-            gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
+        else {
+            shadefield = gwy_serializable_duplicate(G_OBJECT(dfield));
+            gwy_container_set_object_by_name(data, "/0/show", shadefield);
         }
 
-        gwy_data_field_shade(dfield, shadefield,
+        gwy_data_field_shade(dfield, GWY_DATA_FIELD(shadefield),
                              args.theta*180/G_PI, args.phi*180/G_PI);
-
-        if (run != GWY_RUN_WITH_DEFAULTS)
-            shade_save_args(gwy_app_settings_get(), &args);
     }
 
     return ok;
@@ -219,8 +212,6 @@ shade_changed_cb(ShadeArgs *args)
 {
     args->theta = gwy_sphere_coords_get_theta(coords);
     args->phi = gwy_sphere_coords_get_phi(coords);
-
-
 }
 
 static void

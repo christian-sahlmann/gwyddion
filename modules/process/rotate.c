@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -107,6 +107,8 @@ rotate(GwyContainer *data, GwyRunType run)
     else
         rotate_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || rotate_dialog(&args);
+    if (run == GWY_RUN_MODAL)
+        rotate_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
@@ -120,8 +122,6 @@ rotate(GwyContainer *data, GwyRunType run)
         gwy_data_field_rotate(GWY_DATA_FIELD(dfield), args.angle, args.interp);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    if (run != GWY_RUN_WITH_DEFAULTS)
-        rotate_save_args(gwy_app_settings_get(), &args);
 
     return FALSE;
 }
@@ -162,6 +162,8 @@ rotate_dialog(RotateArgs *args)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            args->angle
+                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.angle));
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;

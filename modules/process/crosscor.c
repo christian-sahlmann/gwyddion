@@ -27,7 +27,7 @@
 #include <app/gwyapp.h>
 
 #define CROSSCOR_RUN_MODES \
-    (GWY_RUN_INTERACTIVE)
+    (GWY_RUN_MODAL)
 
 typedef enum {
     GWY_CROSSCOR_ABS,
@@ -105,7 +105,7 @@ static GwyModuleInfo module_info = {
     "crosscor",
     "Cross-correlation of two data fields.",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -151,6 +151,8 @@ crosscor(GwyContainer *data, GwyRunType run)
         switch (gtk_dialog_run(GTK_DIALOG(crosscor_window))) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            crosscor_update_values(&controls, &args);
+            crosscor_save_args(settings, &args);
             case GTK_RESPONSE_NONE:
             gtk_widget_destroy(crosscor_window);
             ok = TRUE;

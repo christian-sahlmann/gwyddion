@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     "scale",
     "Scale data by an arbitrary factor.",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -123,6 +123,8 @@ scale(GwyContainer *data, GwyRunType run)
     args.xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
     args.yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
     ok = (run != GWY_RUN_MODAL) || scale_dialog(&args);
+    if (run == GWY_RUN_MODAL)
+        scale_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
@@ -145,8 +147,6 @@ scale(GwyContainer *data, GwyRunType run)
                                 args.interp);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    if (run != GWY_RUN_WITH_DEFAULTS)
-        scale_save_args(gwy_app_settings_get(), &args);
 
     return FALSE;
 }
@@ -213,6 +213,8 @@ scale_dialog(ScaleArgs *args)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            args->ratio
+                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.ratio));
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;

@@ -28,7 +28,7 @@
 #include <app/gwyapp.h>
 
 #define ARITH_RUN_MODES \
-    (GWY_RUN_INTERACTIVE)
+    (GWY_RUN_MODAL)
 
 typedef enum {
     GWY_ARITH_ADD,
@@ -112,7 +112,7 @@ static GwyModuleInfo module_info = {
     "arithmetic",
     "Simple arithmetic with two data fields (or a data field and a scalar).",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -158,8 +158,9 @@ arithmetic(GwyContainer *data, GwyRunType run)
         switch (gtk_dialog_run(GTK_DIALOG(arithmetic_window))) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            case GTK_RESPONSE_NONE:
+            arithmetic_save_args(settings, &args);
             gtk_widget_destroy(arithmetic_window);
+            case GTK_RESPONSE_NONE:
             ok = TRUE;
             break;
 

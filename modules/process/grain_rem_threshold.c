@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     "remove_threshold",
     "Remove grains by thresholding",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -133,12 +133,12 @@ remove_th(GwyContainer *data, GwyRunType run)
         return FALSE;
 
     ok = (run != GWY_RUN_MODAL) || remove_dialog(&args, data);
+    if (run == GWY_RUN_MODAL)
+        remove_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
     remove_th_do(&args, data);
-    if (run != GWY_RUN_WITH_DEFAULTS)
-        remove_save_args(gwy_app_settings_get(), &args);
 
     return ok;
 }
@@ -233,6 +233,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            remove_dialog_update_args(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
