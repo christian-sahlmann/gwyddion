@@ -26,6 +26,8 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
+
 #define GWY_TYPE_VMENU_BAR            (gwy_vmenu_bar_get_type())
 #define GWY_VMENU_BAR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_VMENU_BAR, GwyVMenuBar))
 #define GWY_VMENU_BAR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_VMENU_BAR, GwyVMenuBarClass))
@@ -50,6 +52,8 @@ struct _GwyVMenuBarClass {
 
 GType      gwy_vmenu_bar_get_type        (void) G_GNUC_CONST;
 GtkWidget* gwy_vmenu_bar_new             (void);
+
+#endif
 
 G_END_DECLS
 

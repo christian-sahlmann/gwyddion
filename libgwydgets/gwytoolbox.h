@@ -25,6 +25,8 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
+
 #define GWY_TYPE_TOOLBOX            (gwy_toolbox_get_type())
 #define GWY_TOOLBOX(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOLBOX, GwyToolbox))
 #define GWY_TOOLBOX_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_TOOLBOX, GwyToolboxClass))
@@ -64,6 +66,8 @@ GtkWidget*       gwy_toolbox_append         (GwyToolbox *toolbox,
                                              const gchar *stock_id,
                                              GtkSignalFunc callback,
                                              gpointer user_data);
+
+#endif
 
 G_END_DECLS
 
