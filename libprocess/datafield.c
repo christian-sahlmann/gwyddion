@@ -149,6 +149,8 @@ static void
 gwy_data_field_finalize(GwyDataField *data_field)
 {
     gwy_debug("");
+    g_object_unref(data_field->si_unit_xy);
+    g_object_unref(data_field->si_unit_z);
     gwy_data_field_free(data_field);
 }
 
@@ -212,7 +214,7 @@ gwy_data_field_deserialize(const guchar *buffer,
         { 'd', "xreal", &xreal, NULL, },
         { 'd', "yreal", &yreal, NULL, },
         { 'o', "si_unit_xy", &si_unit_xy, NULL, },
-        { 'o', "si_unit_z", &si_unit_z, NULL, },                      
+        { 'o', "si_unit_z", &si_unit_z, NULL, },
         { 'D', "data", &data, &fsize, },
     };
 
@@ -220,7 +222,7 @@ gwy_data_field_deserialize(const guchar *buffer,
 
     si_unit_z = NULL;
     si_unit_xy = NULL;
-    
+
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -248,7 +250,7 @@ gwy_data_field_deserialize(const guchar *buffer,
     data_field->yres = yres;
     if (si_unit_z != NULL) data_field->si_unit_z = si_unit_z;
     if (si_unit_xy != NULL) data_field->si_unit_xy = si_unit_xy;
-    
+
 
     return (GObject*)data_field;
 }
@@ -353,6 +355,8 @@ gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
 
     b->xreal = a->xreal;
     b->yreal = a->yreal;
+    gwy_object_unref(b->si_unit_xy);
+    gwy_object_unref(b->si_unit_z);
     b->si_unit_xy = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(a->si_unit_xy));
     b->si_unit_z = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(a->si_unit_z));
     
@@ -712,7 +716,10 @@ gwy_data_field_set_yreal(GwyDataField *a, gdouble yreal)
 GwySIUnit*
 gwy_data_field_get_si_unit_xy(GwyDataField *a)
 {
-    return (GwySIUnit*)gwy_si_unit_new(gwy_si_unit_get_unit_string(a->si_unit_xy));
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), NULL);
+
+    gwy_debug("xy unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_xy));
+    return a->si_unit_xy;
 }
 
 /**
@@ -726,7 +733,10 @@ gwy_data_field_get_si_unit_xy(GwyDataField *a)
 GwySIUnit*
 gwy_data_field_get_si_unit_z(GwyDataField *a)
 {
-    return (GwySIUnit*)gwy_si_unit_new(gwy_si_unit_get_unit_string(a->si_unit_z));
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(a), NULL);
+
+    gwy_debug("z unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_z));
+    return a->si_unit_z;
 }
 
 /**
@@ -739,7 +749,12 @@ gwy_data_field_get_si_unit_z(GwyDataField *a)
 void
 gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
 {
-    gwy_si_unit_set_unit_string(a->si_unit_xy, gwy_si_unit_get_unit_string(si_unit));
+    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+    g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
+    gwy_object_unref(a->si_unit_xy);
+    g_object_ref(si_unit);
+    a->si_unit_xy = si_unit;
+    gwy_debug("xy unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_xy));
 }
 
 /**
@@ -752,7 +767,12 @@ gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
 void
 gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit)
 {
-    gwy_si_unit_set_unit_string(a->si_unit_z, gwy_si_unit_get_unit_string(si_unit));
+    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+    g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
+    gwy_object_unref(a->si_unit_z);
+    g_object_ref(si_unit);
+    a->si_unit_z = si_unit;
+    gwy_debug("z unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_z));
 }
 
 /**
@@ -3079,8 +3099,8 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
- 
-    
+
+
     n = (gint)fit_type;
 
     if (exclude)
@@ -3093,7 +3113,7 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
             }
             else
             {
-                brcol = ulcol; ulcol = 0; 
+                brcol = ulcol; ulcol = 0;
             }
         }
         else if (orientation == GTK_ORIENTATION_VERTICAL)
@@ -3104,8 +3124,8 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
             }
             else
             {
-                brrow = ulrow; ulrow = 0; 
-            }             
+                brrow = ulrow; ulrow = 0;
+            }
         }
     }
 
