@@ -44,8 +44,6 @@
 #  undef HAVE_TIFF
 #endif
 
-#define DEBUG 1
-
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -78,7 +76,24 @@ typedef enum {
 typedef struct {
     gdouble zoom;
     PixmapOutput otype;
-} PixmapArgs;
+} PixmapSaveArgs;
+
+typedef struct {
+    gdouble xreal;
+    gdouble yreal;
+    gint32 xyexponent;
+    gdouble zreal;
+    gint32 zexponent;
+} PixmapLoadArgs;
+
+typedef struct {
+    GtkWidget *xreal;
+    GtkWidget *yreal;
+    GtkWidget *xyexponent;
+    GtkWidget *xymeasureeq;
+    GtkWidget *zreal;
+    GtkWidget *zexponent;
+} PixmapLoadControls;
 
 /* there is a information duplication here,
  * however, we may invent an export format GdkPixbuf cannot load */
@@ -94,9 +109,23 @@ static gint              pixmap_detect             (const gchar *filename,
                                                     const gchar *name);
 static GwyContainer*     pixmap_load               (const gchar *filename,
                                                     const gchar *name);
+static gboolean          pixmap_load_dialog        (PixmapLoadArgs *args,
+                                                    const gchar *name,
+                                                    gint xres,
+                                                    gint yres);
+static void              xyreal_changed_cb         (GtkAdjustment *adj,
+                                                    PixmapLoadControls *controls);
+static void              xymeasureeq_changed_cb    (PixmapLoadControls *controls);
+static void              pixmap_load_update_controls(PixmapLoadControls *controls,
+                                                    PixmapLoadArgs *args);
+static void              pixmap_load_update_values (PixmapLoadControls *controls,
+                                                    PixmapLoadArgs *args);
+static GtkWidget*        table_attach_heading      (GtkWidget *table,
+                                                    const gchar *text,
+                                                    gint row);
 static GdkPixbuf*        pixmap_draw_pixbuf        (GwyContainer *data,
                                                     const gchar *format_name);
-static gboolean          pixmap_dialog             (PixmapArgs *args,
+static gboolean          pixmap_save_dialog        (PixmapSaveArgs *args,
                                                     const gchar *name);
 static gboolean          pixmap_save_png           (GwyContainer *data,
                                                     const gchar *filename);
@@ -135,10 +164,14 @@ static PangoLayout*      prepare_layout            (gdouble zoom);
 static PixmapFormatInfo* find_format               (const gchar *name);
 static void              find_data_window_for_data (GwyDataWindow *window,
                                                     gpointer *p);
-static void              pixmap_load_args          (GwyContainer *container,
-                                                    PixmapArgs *args);
-static void              pixmap_save_args          (GwyContainer *container,
-                                                    PixmapArgs *args);
+static void              pixmap_save_load_args     (GwyContainer *container,
+                                                    PixmapSaveArgs *args);
+static void              pixmap_save_save_args     (GwyContainer *container,
+                                                    PixmapSaveArgs *args);
+static void              pixmap_load_load_args     (GwyContainer *container,
+                                                    PixmapLoadArgs *args);
+static void              pixmap_load_save_args     (GwyContainer *container,
+                                                    PixmapLoadArgs *args);
 
 static struct {
     const gchar *name;
@@ -197,8 +230,12 @@ static const GwyEnum output_formats[] = {
     { "Everything",    PIXMAP_EVERYTHING },
 };
 
-static const PixmapArgs pixmap_defaults = {
+static const PixmapSaveArgs pixmap_save_defaults = {
     1.0, PIXMAP_EVERYTHING
+};
+
+static const PixmapLoadArgs pixmap_load_defaults = {
+    100.0, 100.0, -6, 1.0, -6
 };
 
 /* The module info. */
@@ -389,6 +426,7 @@ pixmap_detect(const gchar *filename,
     if (strcmp(name, "ras") == 0
         && memcmp(pixmap_ping_buf, "\x59\xa6\x6a\x95", 4) != 0)
         return 0;
+    /* FIXME: cannot detect targa, must try loader */
 
     loader = gdk_pixbuf_loader_new_with_type(name, NULL);
     if (!loader)
@@ -397,7 +435,7 @@ pixmap_detect(const gchar *filename,
     if (gdk_pixbuf_loader_write(loader, pixmap_ping_buf, n, &err))
         score = 100;
     else {
-        g_warning("%s", err->message);
+        gwy_debug("%s", err->message);
         g_clear_error(&err);
         score = 0;
     }
@@ -417,10 +455,342 @@ static GwyContainer*
 pixmap_load(const gchar *filename,
             const gchar *name)
 {
-    gwy_debug("Loading <%s> as %s", filename, name);
-    g_warning("Implement me!");
+    PixmapFormatInfo *format_info;
+    GdkPixbufLoader *loader;
+    GwyDataField *dfield;
+    GwyContainer *data, *settings;
+    GdkPixbuf *pixbuf;
+    GError *err = NULL;
+    FILE *fh;
+    gsize n, bpp;
+    guchar *pixels, *p;
+    gint i, j, width, height, rowstride;
+    gboolean has_alpha;
+    gdouble *val, *r;
+    PixmapLoadArgs args;
 
-    return NULL;
+    gwy_debug("Loading <%s> as %s", filename, name);
+
+    format_info = find_format(name);
+    g_return_val_if_fail(format_info, 0);
+
+    if (!(fh = fopen(filename, "rb")))
+        return NULL;
+
+    loader = gdk_pixbuf_loader_new_with_type(name, NULL);
+    if (!loader) {
+        fclose(fh);
+        return NULL;
+    }
+
+    do {
+        n = fread(pixmap_ping_buf, 1, pixmap_ping_length, fh);
+        gwy_debug("loaded %u bytes", n);
+        if (!gdk_pixbuf_loader_write(loader, pixmap_ping_buf, n, &err)) {
+            g_warning("%s", err->message);
+            g_clear_error(&err);
+            gdk_pixbuf_loader_close(loader, NULL);
+            g_object_unref(loader);
+            return NULL;
+        }
+    } while (n == pixmap_ping_length);
+    if (!gdk_pixbuf_loader_close(loader, &err)) {
+        g_warning("%s", err->message);
+        g_clear_error(&err);
+        g_object_unref(loader);
+        return NULL;
+    }
+
+    pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+    g_assert(pixbuf);
+    g_object_ref(pixbuf);
+    g_object_unref(loader);
+
+    width = gdk_pixbuf_get_width(pixbuf);
+    height = gdk_pixbuf_get_height(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    has_alpha = gdk_pixbuf_get_has_alpha(pixbuf);
+    bpp = has_alpha ? 4 : 3;
+
+    settings = gwy_app_settings_get();
+    pixmap_load_load_args(settings, &args);
+    dfield = GWY_DATA_FIELD(gwy_data_field_new(width, height,
+                                               args.xreal, args.yreal,
+                                               FALSE));
+    val = gwy_data_field_get_data(dfield);
+    for (i = 0; i < height; i++) {
+        p = pixels + i*rowstride;
+        r = val + i*width;
+        for (j = 0; j < width; j++) {
+            guchar v = p[bpp*j] > p[bpp*j+1] ? p[bpp*j] : p[bpp*j+1];
+
+            if (p[bpp*j+2] > v)
+                v = p[bpp*j+2];
+
+            r[j] = v/255.0;
+        }
+    }
+    g_object_unref(pixbuf);
+
+    if (pixmap_load_dialog(&args, name, width, height)) {
+        pixmap_load_save_args(settings, &args);
+        gwy_data_field_set_xreal(dfield,
+                                 args.xreal*exp(G_LN10*args.xyexponent));
+        gwy_data_field_set_yreal(dfield,
+                                 args.yreal*exp(G_LN10*args.xyexponent));
+        gwy_data_field_multiply(dfield,
+                                args.zreal*exp(G_LN10*args.zexponent));
+        data = GWY_CONTAINER(gwy_container_new());
+        gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+    }
+    else
+        data = NULL;
+    g_object_unref(dfield);
+
+    return data;
+}
+
+static gboolean
+pixmap_load_dialog(PixmapLoadArgs *args,
+                   const gchar *name,
+                   gint xres,
+                   gint yres)
+{
+    PixmapLoadControls controls;
+    GtkObject *adj;
+    GtkAdjustment *adj2;
+    GtkWidget *dialog, *table, *label, *align, *button;
+    enum { RESPONSE_RESET = 1 };
+    gint response;
+    gchar *s, *title;
+    gchar buf[16];
+    gint row;
+
+    s = g_ascii_strup(name, -1);
+    title = g_strconcat(_("Import "), s, NULL);
+    g_free(s);
+    dialog = gtk_dialog_new_with_buttons(title, NULL,
+                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         _("Reset"), RESPONSE_RESET,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    g_free(title);
+
+    table = gtk_table_new(6, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 6);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       FALSE, FALSE, 4);
+    row = 0;
+    table_attach_heading(table, _("<b>Resolution</b>"), row++);
+
+    g_snprintf(buf, sizeof(buf), "%u", xres);
+    label = gtk_label_new(buf);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gwy_table_attach_row(table, row++, _("_Horizontal size:"), "samples",
+                         label);
+
+    g_snprintf(buf, sizeof(buf), "%u", yres);
+    label = gtk_label_new(buf);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    gwy_table_attach_row(table, row++, _("_Vertical size:"), "samples",
+                         label);
+
+    table_attach_heading(table, _("<b>Physical dimensions</b>"), row++);
+
+    adj = gtk_adjustment_new(args->xreal, 0.01, 10000, 1, 100, 100);
+    controls.xreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.xreal), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.xreal,
+                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new_with_mnemonic(_("_Width"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.xreal);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+
+    align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
+    controls.xyexponent = gwy_option_menu_metric_unit(NULL, NULL,
+                                                      -12, 3, "m",
+                                                      args->xyexponent);
+    gtk_container_add(GTK_CONTAINER(align), controls.xyexponent);
+    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+    row++;
+
+    adj = gtk_adjustment_new(args->yreal, 0.01, 10000, 1, 100, 100);
+    controls.yreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.yreal), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.yreal,
+                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new_with_mnemonic(_("H_eight"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.yreal);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("Identical _measures"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    controls.xymeasureeq = button;
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    adj = gtk_adjustment_new(args->zreal, 0.01, 10000, 1, 100, 100);
+    controls.zreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.zreal), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.zreal,
+                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+
+    label = gtk_label_new_with_mnemonic(_("_Z-scale"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.zreal);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+
+    align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
+    controls.zexponent = gwy_option_menu_metric_unit(NULL, NULL,
+                                                     -12, 3, "m/sample unit",
+                                                     args->zexponent);
+    gtk_container_add(GTK_CONTAINER(align), controls.zexponent);
+    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+    row++;
+
+    g_signal_connect_swapped(controls.xymeasureeq, "toggled",
+                             G_CALLBACK(xymeasureeq_changed_cb), &controls);
+    adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.xreal));
+    g_signal_connect(adj2, "value_changed",
+                     G_CALLBACK(xyreal_changed_cb), &controls);
+    adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.yreal));
+    g_signal_connect(adj2, "value_changed",
+                     G_CALLBACK(xyreal_changed_cb), &controls);
+
+    gtk_widget_show_all(dialog);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            case RESPONSE_RESET:
+            *args = pixmap_load_defaults;
+            pixmap_load_update_controls(&controls, args);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    pixmap_load_update_values(&controls, args);
+    gtk_widget_destroy(dialog);
+
+    return TRUE;
+}
+
+static void
+pixmap_load_update_controls(PixmapLoadControls *controls,
+                            PixmapLoadArgs *args)
+{
+    GtkAdjustment *adj;
+
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
+    gtk_adjustment_set_value(adj, args->xreal);
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
+    gtk_adjustment_set_value(adj, args->yreal);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq),
+                                 TRUE);
+    gwy_option_menu_set_history(controls->xyexponent, "metric-unit",
+                                args->xyexponent);
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zreal));
+    gtk_adjustment_set_value(adj, args->zreal);
+    gwy_option_menu_set_history(controls->zexponent, "metric-unit",
+                                args->zexponent);
+}
+
+static void
+pixmap_load_update_values(PixmapLoadControls *controls,
+                          PixmapLoadArgs *args)
+{
+    GtkAdjustment *adj;
+
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
+    args->xreal = gtk_adjustment_get_value(adj);
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
+    args->yreal = gtk_adjustment_get_value(adj);
+    args->xyexponent = gwy_option_menu_get_history(controls->xyexponent,
+                                                   "metric-unit");
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zreal));
+    args->zreal = gtk_adjustment_get_value(adj);
+    args->zexponent = gwy_option_menu_get_history(controls->zexponent,
+                                                  "metric-unit");
+}
+
+static void
+xyreal_changed_cb(GtkAdjustment *adj,
+                  PixmapLoadControls *controls)
+{
+    static gboolean in_update = FALSE;
+    GtkAdjustment *xadj, *yadj;
+    gdouble value;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq))
+        || in_update)
+        return;
+
+    value = gtk_adjustment_get_value(adj);
+    xadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
+    yadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
+    in_update = TRUE;
+    if (xadj == adj)
+        gtk_adjustment_set_value(yadj, value);
+    else
+        gtk_adjustment_set_value(xadj, value);
+    in_update = FALSE;
+}
+
+static void
+xymeasureeq_changed_cb(PixmapLoadControls *controls)
+{
+    GtkAdjustment *xadj, *yadj;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq)))
+        return;
+
+    xadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
+    yadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
+    gtk_adjustment_set_value(yadj, gtk_adjustment_get_value(xadj));
+}
+
+static GtkWidget*
+table_attach_heading(GtkWidget *table,
+                     const gchar *text,
+                     gint row)
+{
+    GtkWidget *label;
+    gchar *s;
+
+    s = g_strconcat("<b>", text, "</b>", NULL);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), s);
+    g_free(s);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, row, row+1);
+
+    return label;
 }
 
 /***************************************************************************
@@ -659,7 +1029,7 @@ pixmap_save_targa(GwyContainer *data,
      0, 0,        /* width */
      0, 0,        /* height */
      24,          /* bits per pixel */
-     0,           /* image descriptor */
+     0x20,        /* image descriptor flags: origin upper */
     };
     GdkPixbuf *pixbuf;
     guchar *pixels, *buffer = NULL;
@@ -696,12 +1066,11 @@ pixmap_save_targa(GwyContainer *data,
     if (fwrite(targa_head, 1, sizeof(targa_head), fh) != sizeof(targa_head))
         goto end;
 
-    /* The ugly part: TARGA uses BGR instead of RGB and is written upside down,
-     * it's really strange it wasn't invented by MS... */
+    /* The ugly part: TARGA uses BGR instead of RGB */
     buffer = g_new(guchar, targarowstride);
     memset(buffer, 0xff, sizeof(targarowstride));
     for (i = 0; i < height; i++) {
-        guchar *p = pixels + (height - 1 - i)*rowstride;
+        guchar *p = pixels + i*rowstride;
         guchar *q = buffer;
 
         for (j = width; j; j--, p += 3, q += 3) {
@@ -741,7 +1110,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
     GdkPixbuf *scalepixbuf = NULL;
     GwyContainer *settings;
     GwySIUnit *siunit_xy, *siunit_z;
-    PixmapArgs args;
+    PixmapSaveArgs args;
     const guchar *samples;
     guchar *pixels;
     gpointer p[2];
@@ -764,8 +1133,8 @@ pixmap_draw_pixbuf(GwyContainer *data,
     siunit_z = gwy_data_field_get_si_unit_z(dfield);
 
     settings = gwy_app_settings_get();
-    pixmap_load_args(settings, &args);
-    if (!pixmap_dialog(&args, format_name))
+    pixmap_save_load_args(settings, &args);
+    if (!pixmap_save_dialog(&args, format_name))
         return NULL;
 
     layer = gwy_data_view_get_base_layer(data_view);
@@ -903,14 +1272,14 @@ pixmap_draw_pixbuf(GwyContainer *data,
     }
     g_object_unref(tmpixbuf);
 
-    pixmap_save_args(settings, &args);
+    pixmap_save_save_args(settings, &args);
 
     return pixbuf;
 }
 
 static gboolean
-pixmap_dialog(PixmapArgs *args,
-              const gchar *name)
+pixmap_save_dialog(PixmapSaveArgs *args,
+                   const gchar *name)
 {
     GtkObject *zoom;
     GtkWidget *dialog, *table, *spin, *omenu;
@@ -956,7 +1325,7 @@ pixmap_dialog(PixmapArgs *args,
             break;
 
             case RESPONSE_RESET:
-            *args = pixmap_defaults;
+            *args = pixmap_save_defaults;
             gtk_adjustment_set_value(GTK_ADJUSTMENT(zoom), args->zoom);
             gwy_option_menu_set_history(omenu, "output-format", args->otype);
             break;
@@ -1303,22 +1672,55 @@ static const gchar *zoom_key = "/module/pixmap/zoom";
 static const gchar *otype_key = "/module/pixmap/otype";
 
 static void
-pixmap_load_args(GwyContainer *container,
-                 PixmapArgs *args)
+pixmap_save_load_args(GwyContainer *container,
+                      PixmapSaveArgs *args)
 {
-    *args = pixmap_defaults;
+    *args = pixmap_save_defaults;
 
     gwy_container_gis_double_by_name(container, zoom_key, &args->zoom);
     gwy_container_gis_int32_by_name(container, otype_key, &args->otype);
 }
 
 static void
-pixmap_save_args(GwyContainer *container,
-                 PixmapArgs *args)
+pixmap_save_save_args(GwyContainer *container,
+                      PixmapSaveArgs *args)
 {
     gwy_container_set_double_by_name(container, zoom_key, args->zoom);
     gwy_container_set_int32_by_name(container, otype_key, args->otype);
 }
 
+static const gchar *xreal_key = "/module/pixmap/xreal";
+static const gchar *yreal_key = "/module/pixmap/yreal";
+static const gchar *xyexponent_key = "/module/pixmap/xyexponent";
+static const gchar *zreal_key = "/module/pixmap/zreal";
+static const gchar *zexponent_key = "/module/pixmap/zexponent";
+
+static void
+pixmap_load_load_args(GwyContainer *container,
+                      PixmapLoadArgs *args)
+{
+    *args = pixmap_load_defaults;
+
+    gwy_container_gis_double_by_name(container, xreal_key, &args->xreal);
+    gwy_container_gis_double_by_name(container, yreal_key, &args->yreal);
+    gwy_container_gis_int32_by_name(container, xyexponent_key,
+                                    &args->xyexponent);
+    gwy_container_gis_double_by_name(container, zreal_key, &args->zreal);
+    gwy_container_gis_int32_by_name(container, zexponent_key,
+                                    &args->zexponent);
+}
+
+static void
+pixmap_load_save_args(GwyContainer *container,
+                      PixmapLoadArgs *args)
+{
+    gwy_container_set_double_by_name(container, xreal_key, args->xreal);
+    gwy_container_set_double_by_name(container, yreal_key, args->yreal);
+    gwy_container_set_int32_by_name(container, xyexponent_key,
+                                    args->xyexponent);
+    gwy_container_set_double_by_name(container, zreal_key, args->zreal);
+    gwy_container_set_int32_by_name(container, zexponent_key,
+                                    args->zexponent);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
