@@ -115,7 +115,7 @@ main(G_GNUC_UNUSED int argc,
         modules = g_slist_delete_link(modules, m);
     }
 
-    puts("<?xml version=\"1.0\"?>");
+    puts("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
     tag_open("modulelist");
     for (m = modules; m; m = g_slist_next(m)) {
         const GwyModuleInfo *mod_info = (const GwyModuleInfo*)m->data;
