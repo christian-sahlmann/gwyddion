@@ -67,7 +67,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "maskedit",
-    N_("Mask Editor tool."),
+    N_("Mask editor tool, allows to interactively add or remove parts "
+       "of mask."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",

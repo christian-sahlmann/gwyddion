@@ -76,7 +76,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "profile",
-    N_("Profile tool."),
+    N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",
     "David Nečas (Yeti) & Petr Klapetek",

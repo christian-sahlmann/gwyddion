@@ -68,7 +68,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "polynom",
-    "Fit X or Y profiles by polynom",
+    N_("Polynom fit tool, fits polynoms to X or Y profiles and subtracts "
+       "them."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -95,7 +96,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "polynom",
         GWY_STOCK_POLYNOM_REMOVE,
-        "Fit X or Y profiles by polynom",
+        N_("Fit X or Y profiles by polynom"),
         14,
         use,
     };

@@ -64,7 +64,9 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "stats",
-    N_("Statistical quantities."),
+    N_("Statistical quantities tool, calculates various statistical "
+       "characteristics (mean, median, RMS, skew, kurtosis, inclination, "
+       "area, projected area) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
