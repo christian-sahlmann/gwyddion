@@ -397,11 +397,6 @@ do_apply(GwyDataField *dfield,
                                            isel[0], isel[1], isel[2]-isel[0], isel[3]-isel[1]);
         break;
 
-        case GWY_FILTER_LAPLACIAN:
-        gwy_data_field_area_filter_laplacian(dfield,
-                                        isel[0], isel[1], isel[2]-isel[0], isel[3]-isel[1]);
-        break;
-
         default:
         g_assert_not_reached();
         break;
@@ -544,7 +539,7 @@ load_args(GwyContainer *container, ToolControls *controls)
     /* sanitize */
     controls->upd = !!controls->upd;
     controls->siz = CLAMP(controls->siz, 1, 20);
-    controls->fil = MIN(controls->fil, GWY_FILTER_LAPLACIAN);
+    controls->fil = MIN(controls->fil, GWY_FILTER_CONSERVATIVE);
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
 
