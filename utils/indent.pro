@@ -39,7 +39,13 @@
 -T gpointer
 -T GtkWidget
 -T GtkObject
+-T GdkPixbuf
 -T GObject
 -T GwyDataLine
 -T GwyDataField
 -T GwyContainer
+-T GwySIUnit
+-T GwySerializable
+-T GwyWatchable
+-T GwyGradient
+-T GwyGLMaterial
