@@ -422,8 +422,7 @@ static NanoscopeData*
 select_which_data(GList *list)
 {
     NanoscopeData *ndata, *ndata0;
-    GtkWidget *dialog, *omenu, *menu, *label, *table;
-    GObject *item;
+    GtkWidget *dialog, *omenu, *label, *table;
     GwyEnum *choices;
     GList *l;
     gint i, count, response;
@@ -498,9 +497,7 @@ select_which_data(GList *list)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
-    item = G_OBJECT(gtk_menu_get_active(GTK_MENU(menu)));
-    response = GPOINTER_TO_INT(g_object_get_data(item, "data"));
+    response = GPOINTER_TO_INT(gwy_option_menu_get_history(omenu, "data"));
     gtk_widget_destroy(dialog);
 
     l = g_list_nth(list, response);
