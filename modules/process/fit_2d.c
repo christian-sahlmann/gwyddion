@@ -856,7 +856,7 @@ fit_sphere_down(gdouble x,
     frow = row*yreal/yres;
 
     val = -sqrt(param[0]*param[0] - (fcol - param[1])*(fcol - param[1])
-	       - (frow - param[2])*(frow - param[2])) + param[3];
+          - (frow - param[2])*(frow - param[2])) + param[3];
 
     *fres = TRUE;
     return val;
@@ -866,13 +866,13 @@ fit_sphere_down(gdouble x,
 /*fitter construction*/
 static GwyNLFitter*
 gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
-		      GwyNLFitDerFunc df,
-		      GwyDataField *dfield,
-		      GwyDataField *weight,
-		      gint n_param,
-		      gdouble *param, gdouble *err,
-		      const gboolean *fixed_param,
-		      gpointer user_data)
+                      GwyNLFitDerFunc df,
+                      GwyDataField *dfield,
+                      GwyDataField *weight,
+                      gint n_param,
+                      gdouble *param, gdouble *err,
+                      const gboolean *fixed_param,
+                      gpointer user_data)
 {
     GwyNLFitter *fitter;
     GwyDataField *xsc;
@@ -883,20 +883,20 @@ gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
 
 
     if (df == NULL)
-	fitter = gwy_math_nlfit_new(ff,
-				    gwy_math_nlfit_derive);
+        fitter = gwy_math_nlfit_new(ff,
+                                    gwy_math_nlfit_derive);
     else
-	fitter = gwy_math_nlfit_new(ff, df);
+        fitter = gwy_math_nlfit_new(ff, df);
 
-    gwy_math_nlfit_fit_with_fixed(fitter, dfield->xres*dfield->yres,
-				  xsc->data, dfield->data, weight->data,
-				  n_param, param, fixed_param, user_data);
+    gwy_math_nlfit_fit_full(fitter, dfield->xres*dfield->yres,
+                            xsc->data, dfield->data, weight->data,
+                            n_param, param, fixed_param, NULL, user_data);
 
 
     if (fitter->covar)
     {
-	for (i = 0; i < n_param; i++)
-	    err[i] = gwy_math_nlfit_get_sigma(fitter, i);
+        for (i = 0; i < n_param; i++)
+            err[i] = gwy_math_nlfit_get_sigma(fitter, i);
     }
 
     g_object_unref(xsc);

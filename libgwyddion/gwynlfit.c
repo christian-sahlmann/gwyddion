@@ -26,7 +26,7 @@
 
 /* Side step constant for numerical differentiation in gwy_math_nlfit_derive()
  */
-#define FitSqrtMachEps  1e-4
+#define FitSqrtMachEps  1e-5
 
 /* Konstanta pro rozhodnuti o ukonceni fitovaciho cyklu podle perlativniho rozdilu
  * rezidualnilnich souctu mezi jednotlivymi kroky
@@ -107,11 +107,9 @@ gwy_math_nlfit_free(GwyNLFitter *nlfit)
 /**
  * gwy_math_nlfit_fit:
  * @nlfit: A Marquardt-Levenberg nonlinear fitter.
- * @n_dat: The number of data points in @x, @y, @w.
+ * @n_dat: The number of data points in @x, @y.
  * @x: Array of independent variable values.
  * @y: Array of dependent variable values.
- * @weight: Array of weights associated to each data point.  Since 1.2 it can
- *          be %NULL, weight of 1 is then used for all data.
  * @n_param: The nuber of parameters.
  * @param: Array of parameters (of size @n_param).  Note the parameters must
  *         be initialized to reasonably near values.
@@ -127,37 +125,18 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
                    gint n_dat,
                    const gdouble *x,
                    const gdouble *y,
-                   const gdouble *weight,
                    gint n_param,
                    gdouble *param,
                    gpointer user_data)
 {
-    /* the compiler would initialize it with zeroes, but this looks better... */
-    static const gboolean fixed_fixed[] = {
-        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
-    };
-    gboolean *fixed;
-    gdouble residua;
-
-    g_return_val_if_fail(n_param > 0, -1.0);
-    if ((guint)n_param < G_N_ELEMENTS(fixed_fixed))
-        return gwy_math_nlfit_fit_with_fixed(nlfit, n_dat, x, y, weight,
-                                             n_param, param, fixed_fixed,
-                                             user_data);
-
-    fixed = g_new0(gboolean, n_param);
-    residua = gwy_math_nlfit_fit_with_fixed(nlfit, n_dat, x, y, weight,
-                                            n_param, param, fixed,
-                                            user_data);
-    g_free(fixed);
-
-    return residua;
+    return gwy_math_nlfit_fit_full(nlfit, n_dat, x, y, NULL,
+                                   n_param, param, NULL, NULL, user_data);
 }
 
 /**
  * gwy_math_nlfit_fit_with_fixed:
  * @nlfit: A Marquardt-Levenberg nonlinear fitter.
- * @n_dat: The number of data points in @x, @y, @w.
+ * @n_dat: The number of data points in @x, @y, @weight.
  * @x: Array of independent variable values.
  * @y: Array of dependent variable values.
  * @weight: Array of weights associated to each data point.  Can be %NULL,
@@ -166,7 +145,11 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
  * @param: Array of parameters (of size @n_param).  Note the parameters must
  *         be initialized to reasonably near values.
  * @fixed_param: Which parameters should be treated as fixed (set corresponding
- *               element to %TRUE for them).
+ *               element to %TRUE for them).  May be %NULL if all parameters
+ *               are variable.
+ * @link_map: Map of linked parameters, values are indices of master parameters
+ *            a parameter is linked to.  May be %NULL if all parameter are
+ *            unique.
  * @user_data: Any pointer that will be passed to the function and derivation
  *
  * Performs a nonlinear fit of @nlfit function on (@x,@y) data, allowing
@@ -175,28 +158,23 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
  * Returns: The final residual sum, a negative number in the case of failure.
  **/
 gdouble
-gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
-                              gint n_dat,
-                              const gdouble *x,
-                              const gdouble *y,
-                              const gdouble *weight,
-                              gint n_param,
-                              gdouble *param,
-                              const gboolean *fixed_param,
-                              gpointer user_data)
+gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
+                        gint n_dat,
+                        const gdouble *x,
+                        const gdouble *y,
+                        const gdouble *weight,
+                        gint n_param,
+                        gdouble *param,
+                        const gboolean *fixed_param,
+                        const gint *link_map,
+                        gpointer user_data)
 {
 
     gdouble mlambda = 1e-4;
     gdouble sumr = G_MAXDOUBLE;
     gdouble sumr1;
-    gdouble *der;
-    gdouble *v;
-    gdouble *xr;
-    gdouble *saveparam;
-    gdouble *resid;
-    gdouble *a;
+    gdouble *der, *v, *xr, *saveparam, *resid, *a, *save_a;
     gdouble *w = NULL;
-    gdouble *save_a;
     gint *var_param_id;
     gint covar_size;
     gint i, j, k;
@@ -208,16 +186,25 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
     g_return_val_if_fail(nlfit, -1.0);
     g_return_val_if_fail(n_param > 0, -1.0);
     g_return_val_if_fail(n_dat > n_param, -1.0);
-    g_return_val_if_fail(x && y && param && fixed_param, -1.0);
+    g_return_val_if_fail(x && y && param, -1.0);
 
     g_free(nlfit->covar);
     nlfit->covar = NULL;
 
+    /* Use defaults for param specials, if not specified */
     if (!weight) {
         w = g_new(gdouble, n_dat);
         for (i = 0; i < n_dat; i++)
             w[i] = 1.0;
         weight = w;
+    }
+    if (!link_map) {
+        gint *l;
+
+        l = g_newa(gint, n_param);
+        for (i = 0; i < n_param; i++)
+            l[i] = i;
+        link_map = l;
     }
 
     resid = g_new(gdouble, n_dat);
@@ -236,13 +223,21 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
     n_var_param = 0;
     var_param_id = g_new(gint, n_param);
     for (i = 0; i < n_param; i++) {
-        if (fixed_param[i])
+        if (fixed_param && fixed_param[link_map[i]])
             var_param_id[i] = -1;
         else {
-            var_param_id[i] = n_var_param;
-            n_var_param++;
+            if (link_map[i] == i) {
+                var_param_id[i] = n_var_param;
+                n_var_param++;
+            }
         }
         gwy_debug("var_param_id[%d] = %d", i, var_param_id[i]);
+    }
+    /* assign master var_param_id to slaves in second pass, as it may have
+     * higher id than slave */
+    for (i = 0; i < n_param; i++) {
+        if (link_map[i] != i)
+            var_param_id[i] = var_param_id[link_map[i]];
     }
 
     if (!n_var_param) {
@@ -260,6 +255,7 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
     a = g_new(gdouble, covar_size);
     save_a = g_new(gdouble, covar_size);
 
+    /* The actual minizmation */
     do {
         gboolean is_pos_def = FALSE;
         gboolean first_pass = TRUE;
@@ -279,10 +275,18 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
                              user_data, der, &nlfit->eval);
                 if (!nlfit->eval)
                     break;
+
+                /* acummulate derivations by slave parameters in master */
+                for (j = 0; j < n_param; j++) {
+                    if (link_map[j] != j)
+                        der[link_map[j]] += der[j];
+                }
+
                 for (j = 0; j < n_param; j++) {
                     gint jid, diag;
 
-                    if ((jid = var_param_id[j]) < 0)
+                    /* Only variable master parameters matter */
+                    if ((jid = var_param_id[j]) < 0 || link_map[j] != j)
                         continue;
                     diag = jid*(jid + 1)/2;
 
@@ -327,25 +331,33 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
         }
         gwy_math_choleski_solve(n_var_param, a, xr);
 
+        /* Move master params along the solved gradient */
         for (i = 0; i < n_param; i++) {
-            if (var_param_id[i] < 0)
+            if (var_param_id[i] < 0 || link_map[i] != i)
                 continue;
             param[i] = saveparam[i] + xr[var_param_id[i]];
             if (fabs(param[i] - saveparam[i]) == 0)
                 count++;
         }
+        /* Sync slave params with master */
+        for (i = 0; i < n_param; i++) {
+            if (var_param_id[i] >= 0 && link_map[i] != i)
+                param[i] = param[link_map[i]];
+        }
         if (count == n_var_param)
             break;
 
+        /* See what the new residua is */
         sumr1 = gwy_math_nlfit_residua(nlfit, n_dat,
                                        x, y, weight,
                                        n_param, param,
                                        user_data, resid);
+        /* Good, we've finished */
         if ((sumr1 == 0)
             || (miter > 2 && fabs((sumr - sumr1)/sumr1) < EPS))
             end = TRUE;
+        /* Overshoot, increase lambda */
         if (!nlfit->eval || sumr1 >= sumr) {
-            /* Increase lambda */
             mlambda *= nlfit->minc;
             if (mlambda == 0.0)
                 mlambda = nlfit->mtol;
@@ -360,6 +372,7 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
 
     sumr1 = sumr;
 
+    /* Parameter errors computation */
     if (nlfit->eval) {
         if (gwy_math_sym_matrix_invert(n_var_param, save_a)) {
             /* stretch the matrix to span over fixed params too */
@@ -1806,8 +1819,8 @@ gwy_math_nlfit_fit_preset(const GwyNLFitPreset* preset,
     weight = (gdouble *)g_malloc(n_dat*sizeof(gdouble));
     preset->set_default_weights(xsc, ysc, n_dat, weight, NULL);
 
-    gwy_math_nlfit_fit_with_fixed(fitter, n_dat, xsc, ysc, weight,
-                                  n_param, param, fixed_param, user_data);
+    gwy_math_nlfit_fit_full(fitter, n_dat, xsc, ysc, weight,
+                            n_param, param, fixed_param, NULL, user_data);
 
     if (fitter->covar)
     {
