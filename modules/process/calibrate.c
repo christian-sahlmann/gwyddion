@@ -50,6 +50,8 @@ typedef struct {
     gdouble zorig;
     gint xyorigexp;
     gint zorigexp;
+    gint xres;
+    gint yres;
 } CalibrateArgs;
 
 typedef struct {
@@ -74,6 +76,8 @@ static gboolean    calibrate                 (GwyContainer *data,
                                               GwyRunType run);
 static gboolean    calibrate_dialog          (CalibrateArgs *args,
                                               GwyContainer *data);
+static void        dialog_reset              (CalibrateControls *controls,
+                                              CalibrateArgs *args);
 static void        xratio_changed_cb         (GtkAdjustment *adj,
                                               CalibrateControls *controls);
 static void        yratio_changed_cb         (GtkAdjustment *adj,
@@ -107,7 +111,7 @@ CalibrateArgs calibrate_defaults = {
     -6,
     -6,
     TRUE,
-    0, 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /* The module info. */
@@ -161,6 +165,8 @@ calibrate(GwyContainer *data, GwyRunType run)
     args.yorig = gwy_data_field_get_yreal(dfield);
     args.zorig = gwy_data_field_get_max(dfield)
                  - gwy_data_field_get_min(dfield);
+    args.xres = gwy_data_field_get_xres(dfield);
+    args.yres = gwy_data_field_get_yres(dfield);
     args.xyorigexp = 3*floor(log(args.xorig*args.yorig)/(6*G_LN10));
     args.zorigexp = 3*floor(log(args.zorig)/(3*G_LN10));
     args.xreal = args.xratio * args.xorig;
@@ -364,19 +370,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
             break;
 
             case RESPONSE_RESET:
-            gwy_option_menu_set_history(controls.xyexponent, "metric-unit",
-                                        args->xyorigexp);
-            args->xyexponent = args->xyorigexp;
-            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.yratio),
-                                     calibrate_defaults.yratio);
-            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.xratio),
-                                     calibrate_defaults.xratio);
-            gwy_option_menu_set_history(controls.zexponent, "metric-unit",
-                                        args->zorigexp);
-            args->zexponent = args->zorigexp;
-            gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.zratio),
-                                     calibrate_defaults.zratio);
-            calibrate_dialog_update(&controls, args);
+            dialog_reset(&controls, args);
             break;
 
             default:
@@ -390,6 +384,26 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     return TRUE;
 }
 
+static void
+dialog_reset(CalibrateControls *controls,
+             CalibrateArgs *args)
+{
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->square),
+                                 calibrate_defaults.square);
+    gwy_option_menu_set_history(controls->xyexponent, "metric-unit",
+                                args->xyorigexp);
+    args->xyexponent = args->xyorigexp;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yratio),
+                             calibrate_defaults.yratio);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xratio),
+                             calibrate_defaults.xratio);
+    gwy_option_menu_set_history(controls->zexponent, "metric-unit",
+                                args->zorigexp);
+    args->zexponent = args->zorigexp;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zratio),
+                             calibrate_defaults.zratio);
+    calibrate_dialog_update(controls, args);
+}
 
 static void
 xratio_changed_cb(GtkAdjustment *adj,
@@ -404,6 +418,10 @@ xratio_changed_cb(GtkAdjustment *adj,
     args->xratio = gtk_adjustment_get_value(adj)
                    * pow10(args->xyexponent - args->xyorigexp);
     args->xreal = args->xratio * args->xorig;
+    if (args->square) {
+        args->yreal = args->xreal/args->xres * args->yres;
+        args->yratio = args->yreal/args->yorig;
+    }
     calibrate_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -421,6 +439,10 @@ yratio_changed_cb(GtkAdjustment *adj,
     args->yratio = gtk_adjustment_get_value(adj)
                    * pow10(args->xyexponent - args->xyorigexp);
     args->yreal = args->yratio * args->yorig;
+    if (args->square) {
+        args->xreal = args->yreal/args->yres * args->xres;
+        args->xratio = args->xreal/args->xorig;
+    }
     calibrate_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -454,6 +476,10 @@ xreal_changed_cb(GtkAdjustment *adj,
     controls->in_update = TRUE;
     args->xreal = gtk_adjustment_get_value(adj) * pow10(args->xyexponent);
     args->xratio = args->xreal/args->xorig;
+    if (args->square) {
+        args->yreal = args->xreal/args->xres * args->yres;
+        args->yratio = args->yreal/args->yorig;
+    }
     calibrate_dialog_update(controls, args);
     controls->in_update = FALSE;
 
@@ -472,6 +498,10 @@ yreal_changed_cb(GtkAdjustment *adj,
 
     args->yreal = gtk_adjustment_get_value(adj) * pow10(args->xyexponent);
     args->yratio = args->yreal/args->yorig;
+    if (args->square) {
+        args->xreal = args->yreal/args->yres * args->xres;
+        args->xratio = args->xreal/args->xorig;
+    }
     calibrate_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -506,6 +536,10 @@ square_changed_cb(GtkWidget *check,
 
     args->square
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check));
+    if (args->square) {
+        args->yreal = args->xreal/args->xres * args->yres;
+        args->yratio = args->yreal/args->yorig;
+    }
     calibrate_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
