@@ -92,7 +92,7 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_assert(run & BASICOPS_RUN_MODES);
+    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
 
@@ -104,7 +104,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_assert(run & BASICOPS_RUN_MODES);
+    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
@@ -116,7 +116,7 @@ invert_value(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_assert(run & BASICOPS_RUN_MODES);
+    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
 
@@ -128,7 +128,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_assert(run & BASICOPS_RUN_MODES);
+    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_rotate(dfield, 270, GWY_INTERPOLATION_ROUND);
 
@@ -140,7 +140,7 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_assert(run & BASICOPS_RUN_MODES);
+    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_rotate(dfield, 90, GWY_INTERPOLATION_ROUND);
 
@@ -152,7 +152,7 @@ rotate_180(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    g_assert(run & BASICOPS_RUN_MODES);
+    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_rotate(dfield, 180, GWY_INTERPOLATION_ROUND);
 

@@ -81,7 +81,7 @@ rotate(GwyContainer *data, GwyRunType run)
     RotateArgs args;
     gboolean ok;
 
-    g_assert(run & ROTATE_RUN_MODES);
+    g_return_val_if_fail(run & ROTATE_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = rotate_defaults;

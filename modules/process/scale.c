@@ -98,7 +98,7 @@ scale(GwyContainer *data, GwyRunType run)
     ScaleArgs args;
     gboolean ok;
 
-    g_assert(run & SCALE_RUN_MODES);
+    g_return_val_if_fail(run & SCALE_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = scale_defaults;

@@ -1,17 +1,36 @@
 /* @(#) $Id$ */
 
+#include <string.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
+#include <app/file.h>
 
-#define BASICOPS_RUN_MODES \
+#define PLUGIN_PROXY_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    plugin_proxy               (GwyContainer *data,
-                                               GwyRunType run,
-                                               const gchar *name);
+typedef struct {
+    GwyProcessFuncInfo func;
+    gchar *file;
+} PluginInfo;
+
+static gboolean       module_register            (const gchar *name);
+static GList*         register_plugins           (GList *plugins,
+                                                  const gchar *name,
+                                                  const gchar *dir,
+                                                  gchar *buffer);
+static gboolean       plugin_proxy               (GwyContainer *data,
+                                                  GwyRunType run,
+                                                  const gchar *name);
+static FILE*          text_dump_export           (GwyContainer *data,
+                                                  gchar **filename);
+static GwyContainer*  text_dump_import           (gchar *buffer);
+static GwyRunType     str_to_run_modes           (const gchar *str);
+static const char*    run_mode_to_str            (GwyRunType run);
+static gchar*         next_line                  (gchar **buffer);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -30,37 +49,247 @@ static GwyModuleInfo module_info = {
  * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
 
+/* XXX: static data */
+static GList *plugins = NULL;
+
+static struct {
+    const gchar *str;
+    GwyRunType run;
+}
+const run_mode_names[] = {
+    { "interactive", GWY_RUN_INTERACTIVE },
+    { "noninteractive", GWY_RUN_NONINTERACTIVE },
+    { "modal", GWY_RUN_MODAL },
+    { "with_defaults", GWY_RUN_WITH_DEFAULTS },
+};
+
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo flip_horizontally_func_info = {
-        "flip_horizontally",
-        "/_Basic Operations/Flip _Horizontally",
-        &plugin_proxy,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
-    };
     GwyContainer *settings;
-    const gchar *plugin_path;
+    const gchar *plugin_path, *filename;
+    gchar *buffer, *pluginname, *dir;
+    gint exit_status;
+    GDir *gdir;
+    GError *err = NULL;
+    gchar *args[] = { NULL, "register", NULL };
+    gboolean ok;
 
-    /*gwy_process_func_register(name, &flip_horizontally_func_info);*/
     settings = gwy_app_settings_get();
     plugin_path = gwy_container_get_string_by_name(settings, "/app/plugindir");
     g_return_val_if_fail(plugin_path, FALSE);
     gwy_debug("%s: plug-in path is: %s", __FUNCTION__, plugin_path);
 
+    dir = g_build_filename(plugin_path, "process", NULL);
+    gdir = g_dir_open(dir, 0, &err);
+    if (err) {
+        g_warning("Cannot open plug-in directory %s: %s", dir, err->message);
+        g_clear_error(&err);
+        return FALSE;
+    }
+    while ((filename = g_dir_read_name(gdir))) {
+        if (g_str_has_prefix(filename, ".")
+            || g_str_has_suffix(filename, "~")
+            || g_str_has_suffix(filename, ".BAK")
+            || g_str_has_suffix(filename, ".bak"))
+            continue;
+        pluginname = g_build_filename(dir, filename, NULL);
+        if (!g_file_test(pluginname, G_FILE_TEST_IS_EXECUTABLE)) {
+            g_free(pluginname);
+            continue;
+        }
+        gwy_debug("%s: plug-in %s", __FUNCTION__, filename);
+        args[0] = pluginname;
+        buffer = NULL;
+        ok = g_spawn_sync(dir, args, NULL, 0, NULL, NULL,
+                          &buffer, NULL, &exit_status, &err);
+        ok &= !exit_status;
+        if (ok)
+            plugins = register_plugins(plugins, name, pluginname, buffer);
+        else {
+            g_warning("Cannot register plug-in %s: %s", filename, err->message);
+            g_clear_error(&err);
+        }
+        g_free(pluginname);
+        g_free(buffer);
+    }
+    g_dir_close(gdir);
+    g_free(dir);
+
     return TRUE;
+}
+
+static GList*
+register_plugins(GList *plugins,
+                 const gchar *name,
+                 const gchar *file,
+                 gchar *buffer)
+{
+    PluginInfo *info;
+    gchar *pname, *menu_path, *run_modes;
+    GwyRunType run;
+
+    while (buffer) {
+        if ((pname = next_line(&buffer))
+            && *pname
+            && (menu_path = next_line(&buffer))
+            && menu_path[0] == '/'
+            && (run_modes = next_line(&buffer))
+            && (run = str_to_run_modes(run_modes))) {
+            info = g_new(PluginInfo, 1);
+            info->func.name = g_strdup(pname);
+            info->func.menu_path = g_strconcat("/_Plug-Ins", menu_path, NULL);
+            info->func.process = plugin_proxy;
+            info->func.run = run;
+            info->file = g_strdup(file);
+            if (gwy_process_func_register(name, &info->func))
+                plugins = g_list_prepend(plugins, info);
+            else {
+                g_free((gpointer)info->func.name);
+                g_free((gpointer)info->func.menu_path);
+                g_free(info);
+            }
+        }
+        while (buffer && *buffer)
+            next_line(&buffer);
+    }
+
+    return plugins;
 }
 
 static gboolean
 plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
 {
+    GtkWidget *data_window;
+    PluginInfo *info;
+    gchar *filename, *buffer = NULL;
+    GError *err = NULL;
+    gint exit_status;
+    FILE *fh;
+    GList *l;
+    gchar *args[] = { NULL, "run", NULL, NULL, NULL };
+    gboolean ok;
+
+    g_return_val_if_fail(run & PLUGIN_PROXY_RUN_MODES, FALSE);
+    gwy_debug("%s: called as %s with run mode %d", __FUNCTION__, name, run);
+
+    for (l = plugins; l; l = g_list_next(l)) {
+        info = (PluginInfo*)l->data;
+        if (strcmp(info->func.name, name) == 0)
+            break;
+    }
+    if (!l) {
+        g_critical("Don't know anything about plug-in `%s'.", name);
+        return FALSE;
+    }
+    g_return_val_if_fail(run & info->func.run, FALSE);
+    /* keep the file open
+     * FIXME: who knows what it causes on MS Windows */
+    fh = text_dump_export(data, &filename);
+    g_return_val_if_fail(fh, FALSE);
+    args[0] = info->file;
+    args[2] = run_mode_to_str(run);
+    args[3] = filename;
+    ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
+                      &buffer, NULL, &exit_status, &err);
+    fclose(fh);
+    ok &= !exit_status;
+    if (ok) {
+        data = text_dump_import(buffer);
+        if (data) {
+            data_window = gwy_app_data_window_create(data);
+            gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
+        }
+        else {
+            g_warning("Cannot run plug-in %s: %s", info->file, err->message);
+            ok = FALSE;
+        }
+    }
+    g_clear_error(&err);
+    g_free(buffer);
+    g_free(filename);
+
+    return ok;
+}
+
+static FILE*
+text_dump_export(GwyContainer *data, gchar **filename)
+{
     GwyDataField *dfield;
 
-    g_assert(run & BASICOPS_RUN_MODES);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    gwy_debug("%s: called as %s with %d run mode", __FUNCTION__, name, run);
+    return NULL;
+}
 
-    return TRUE;
+static GwyContainer*
+text_dump_import(gchar *buffer)
+{
+    return NULL;
+}
+
+static GwyRunType
+str_to_run_modes(const gchar *str)
+{
+    gchar **modes;
+    GwyRunType run = 0;
+    gsize i, j;
+
+    modes = g_strsplit(str, " ", 0);
+    for (i = 0; modes[i]; i++) {
+        for (j = 0; j < G_N_ELEMENTS(run_mode_names); j++) {
+            if (strcmp(modes[i], run_mode_names[j].str) == 0) {
+                run |= run_mode_names[j].run;
+                break;
+            }
+        }
+    }
+    g_strfreev(modes);
+
+    return run;
+}
+
+static const char*
+run_mode_to_str(GwyRunType run)
+{
+    gsize j;
+
+    for (j = 0; j < G_N_ELEMENTS(run_mode_names); j++) {
+        if (run & run_mode_names[j].run)
+            return run_mode_names[j].str;
+    }
+
+    g_assert_not_reached();
+    return "";
+}
+
+static gchar*
+next_line(gchar **buffer)
+{
+    gchar *p, *q;
+
+    if (!buffer || !*buffer)
+        return NULL;
+
+    q = *buffer;
+    p = strchr(*buffer, '\n');
+    if (p) {
+        *buffer = p+1;
+        while (p > q) {
+            p--;
+            if (!g_ascii_isspace(*p)) {
+                p++;
+                break;
+            }
+        }
+        *p = '\0';
+    }
+    else
+        *buffer = NULL;
+
+    while (g_ascii_isspace(*q))
+        q++;
+
+    return q;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

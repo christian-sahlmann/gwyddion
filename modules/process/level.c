@@ -58,7 +58,7 @@ level(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     gdouble a, b, c;
 
-    g_assert(run & LEVEL_RUN_MODES);
+    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
     gwy_data_field_plane_level(dfield, a, b, c);
@@ -72,7 +72,7 @@ level_rotate(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     gdouble a, b, c;
 
-    g_assert(run & LEVEL_RUN_MODES);
+    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     g_warning("level_rotate is borken!");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
