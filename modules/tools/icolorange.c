@@ -276,7 +276,6 @@ dialog_update(GwyUnitoolState *state,
         gtk_label_set_text(GTK_LABEL(controls->wp), "");
         gtk_label_set_text(GTK_LABEL(controls->hp), "");
     }
-    gwy_unitool_apply_set_sensitive(state, is_selected);
 
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->cdo_preview)))
         apply(state);
