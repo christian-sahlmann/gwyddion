@@ -399,17 +399,17 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
 
         if (width < 150) {
             axis->par.major_thickness = 1;
-            axis->par.major_maxticks = 10;
+            axis->par.major_maxticks = 5;
             axis->par.minor_division = 5;
         }
         else if (width < 600) {
             axis->par.major_thickness = 1;
-            axis->par.major_maxticks = 20;
+            axis->par.major_maxticks = 7;
             axis->par.minor_division = 10;
         }
         else {
             axis->par.major_thickness = 1;
-            axis->par.major_maxticks = 25;
+            axis->par.major_maxticks = 18;
             axis->par.minor_division = 10;
         }
     }
