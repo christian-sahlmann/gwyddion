@@ -1432,7 +1432,7 @@ gint gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function)
     return function->nparams;
 }
 
-gint gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
+GwyNLFitter* gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
                                gint n_dat, const gdouble *x, const gdouble *y,
                                gint n_param,
                                gdouble *param, const gboolean *fixed_param,
@@ -1484,7 +1484,7 @@ gint gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
     }
     
     g_free(weight);
-    
+    return fitter;
 }
 
 

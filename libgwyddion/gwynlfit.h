@@ -171,7 +171,7 @@ gdouble gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* functi
 
 gint gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function);
 
-gint gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
+GwyNLFitter* gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
                                gint n_dat,
                                const gdouble *x,
                                const gdouble *y,

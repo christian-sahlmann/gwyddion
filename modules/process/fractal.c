@@ -468,7 +468,10 @@ fractal_dialog_update(FractalControls *controls,
         {
             xfit->data[i] = xnline->data[i];
             yfit->data[i] = xfit->data[i]*a + b;
+            /*printf("%g   %g\n", xnline->data[i], ynline->data[i]);*/
+            
         }
+        /*printf("\n");*/
 
         label = g_string_new("linear fit");
         gwy_graph_get_autoproperties(GWY_GRAPH(controls->graph), &prop);
