@@ -50,6 +50,13 @@ typedef struct {
     gulong hid;
 } ObjectWatch;
 
+typedef struct {
+    GwyContainer *container;
+    gint nprefixes;
+    const gchar **prefixes;
+    gsize *pfxlengths;
+} PrefixListData;
+
 static void     gwy_container_serializable_init  (GwySerializableIface *iface);
 static void     gwy_container_class_init         (GwyContainerClass *klass);
 static void     gwy_container_init               (GwyContainer *container);
@@ -89,6 +96,12 @@ static void     hash_foreach_func                (gpointer hkey,
                                                   gpointer hdata);
 static GObject* gwy_container_duplicate          (GObject *object);
 static void     hash_duplicate_func              (gpointer hkey,
+                                                  gpointer hvalue,
+                                                  gpointer hdata);
+static GwyContainer*
+              gwy_container_duplicate_by_prefix_valist(GwyContainer *container,
+                                                       va_list ap);
+static void     hash_prefix_duplicate_func       (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
 
@@ -1909,6 +1922,128 @@ hash_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
     GwyContainer *duplicate = (GwyContainer*)hdata;
     GType type = G_VALUE_TYPE(value);
     GObject *object;
+
+    switch (type) {
+        case G_TYPE_OBJECT:
+        /* objects have to be handled separately since we want a deep copy */
+        object = gwy_serializable_duplicate(g_value_get_object(value));
+        gwy_container_set_object(duplicate, key, object);
+        g_object_unref(object);
+        break;
+
+        case G_TYPE_STRING:
+        gwy_container_set_string(duplicate, key, g_value_dup_string(value));
+        break;
+
+        case G_TYPE_BOOLEAN:
+        case G_TYPE_UCHAR:
+        case G_TYPE_INT:
+        case G_TYPE_INT64:
+        case G_TYPE_DOUBLE:
+        gwy_container_set_value(duplicate, key, value, NULL);
+        break;
+
+        default:
+        g_warning("Cannot properly duplicate %s", g_type_name(type));
+        gwy_container_set_value(duplicate, key, value, NULL);
+        break;
+    }
+}
+
+/**
+ * gwy_container_duplicate_by_prefix:
+ * @container: A #GwyContainer.
+ * @...: A %NULL-terminated list of string keys.
+ *
+ * Duplicates a container keeping only values under given prefixes.
+ *
+ * Returns: A newly created container.
+ *
+ * Since: 1.6
+ **/
+GwyContainer*
+gwy_container_duplicate_by_prefix(GwyContainer *container,
+                                  ...)
+{
+    GwyContainer *duplicate;
+    va_list ap;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
+
+    va_start(ap, container);
+    duplicate = gwy_container_duplicate_by_prefix_valist(container, ap);
+    va_end(ap);
+
+    return duplicate;
+}
+
+static GwyContainer*
+gwy_container_duplicate_by_prefix_valist(GwyContainer *container,
+                                         va_list ap)
+{
+    GwyContainer *duplicate;
+    PrefixListData pfxlist;
+    const gchar *prefix;
+    gsize n;
+
+    gwy_debug("");
+
+    n = 16;
+    pfxlist.prefixes = g_new(const gchar*, n);
+    pfxlist.nprefixes = 0;
+    prefix = va_arg(ap, const gchar*);
+    while (prefix) {
+        if (pfxlist.nprefixes == n) {
+            n += 16;
+            pfxlist.prefixes = g_renew(const gchar*, pfxlist.prefixes, n);
+        }
+        pfxlist.nprefixes++;
+        prefix = va_arg(ap, const gchar*);
+    }
+    pfxlist.pfxlengths = g_new(gsize, n);
+    for (n = 0; n < pfxlist.nprefixes; n++)
+        pfxlist.pfxlengths[n] = strlen(pfxlist.prefixes[n]);
+
+    duplicate = (GwyContainer*)gwy_container_new();
+    pfxlist.container = duplicate;
+    g_hash_table_foreach(container->values,
+                         hash_prefix_duplicate_func, &pfxlist);
+
+    g_free(pfxlist.prefixes);
+    g_free(pfxlist.pfxlengths);
+
+    return duplicate;
+}
+
+static void
+hash_prefix_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
+{
+    GQuark key = GPOINTER_TO_UINT(hkey);
+    GValue *value = (GValue*)hvalue;
+    PrefixListData *pfxlist = (PrefixListData*)hdata;
+    GwyContainer *duplicate;
+    GType type = G_VALUE_TYPE(value);
+    GObject *object;
+    const gchar *name;
+    gsize n;
+    gboolean ok = FALSE;
+
+    duplicate = pfxlist->container;
+    name = g_quark_to_string(key);
+    if (!name)
+        return;
+
+    for (n = 0; n < pfxlist->nprefixes; n++) {
+        if (strncmp(name, pfxlist->prefixes[n], pfxlist->pfxlengths[n])
+            && (name[pfxlist->pfxlengths[n]] == '\0'
+                || name[pfxlist->pfxlengths[n]] == GWY_CONTAINER_PATHSEP)) {
+            ok = TRUE;
+            break;
+        }
+    }
+    if (!ok)
+        return;
 
     switch (type) {
         case G_TYPE_OBJECT:

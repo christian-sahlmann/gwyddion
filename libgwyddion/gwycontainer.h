@@ -79,6 +79,8 @@ gboolean      gwy_container_remove                (GwyContainer *container,
                                                    GQuark key);
 gsize         gwy_container_remove_by_prefix      (GwyContainer *container,
                                                    const gchar *prefix);
+GwyContainer* gwy_container_duplicate_by_prefix   (GwyContainer *container,
+                                                   ...);
 gboolean      gwy_container_rename                (GwyContainer *container,
                                                    GQuark key,
                                                    GQuark newkey,
