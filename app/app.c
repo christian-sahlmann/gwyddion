@@ -210,10 +210,12 @@ gwy_app_create_toolbox(void)
                               GTK_ICON_SIZE_BUTTON);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    grp = gwy_app_toolbar_append_tool(toolbar, NULL, GWY_STOCK_POINTER_MEASURE,
-                                      _("Read values under mouse cursor"),
-                                      gwy_tool_pointer_use);
-    current_tool_use_func = gwy_tool_pointer_use;
+    grp = gwy_app_toolbar_append_tool(toolbar, NULL, GWY_STOCK_NONE,
+                                      _("No tool"),
+                                      NULL);
+    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_POINTER_MEASURE,
+                                _("Read values under mouse cursor"),
+                                gwy_tool_pointer_use);
     gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_CROP,
                                 _("Crop data"),
                                 gwy_tool_crop_use);
