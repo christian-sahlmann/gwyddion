@@ -96,7 +96,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo maskcor_func_info = {
         "maskcor",
-        N_("/M_ultidata/_Mask by Correlation"),
+        N_("/M_ultidata/_Mask by Correlation..."),
         (GwyProcessFunc)&maskcor,
         MASKCOR_RUN_MODES,
         0,
@@ -159,40 +159,27 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
 
     controls->args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Mask by correlation"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Mask by Correlation"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
 
     table = gtk_table_new(2, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 4);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
 
-    /***** First operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Data field to modify:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 0, 1);
-
+    /* Operands */
     omenu = maskcor_data_option_menu(&args->win1);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 0, 1);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-
-
-    /***** Second operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Correlation kernel"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 1, 2);
-
+    gwy_table_attach_row(table, 0, _("_Data to modify:"), NULL, omenu);
 
     omenu = maskcor_data_option_menu(&args->win2);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 1, 2);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
+    gwy_table_attach_row(table, 1, _("_Correlation kernel:"), NULL, omenu);
 
     /**** Parameters ********/
     adj = gtk_adjustment_new(args->threshold, -1.0, 1.0, 0.01, 0.1, 0.1);
-    spin = gwy_table_attach_spinbutton(table, 2, _("T_hreshold"), "", adj);
+    spin = gwy_table_attach_spinbutton(table, 2, _("_Threshold"), NULL, adj);
     controls->threshold = spin;
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gtk_widget_set_sensitive(spin, args->result != GWY_MASKCOR_SCORE);
@@ -201,16 +188,12 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
                      &args->threshold);
 
     /***** Result *****/
-    label = gtk_label_new_with_mnemonic(_("_Result:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 3, 4);
-
     omenu = gwy_option_menu_create(results, G_N_ELEMENTS(results),
                                    "operation",
                                    G_CALLBACK(maskcor_operation_cb),
                                    controls,
                                    args->result);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 3, 4);
+    gwy_table_attach_row(table, 3, _("_Output type:"), NULL, omenu);
 
     gtk_widget_show_all(dialog);
 

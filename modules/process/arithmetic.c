@@ -190,15 +190,14 @@ arithmetic_window_construct(ArithmeticArgs *args)
     GtkWidget *dialog, *table, *omenu, *entry, *label;
     gchar *text;
 
-    dialog = gtk_dialog_new_with_buttons(_("Data Arithmetic"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Arithmetic"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
-
     table = gtk_table_new(3, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 4);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
 
     /***** First operand *****/

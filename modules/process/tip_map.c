@@ -143,10 +143,11 @@ tip_certainty_map_window_construct(TipCertaintyMapArgs *args,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
 
     table = gtk_table_new(2, 10, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 4);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
 
@@ -159,7 +160,6 @@ tip_certainty_map_window_construct(TipCertaintyMapArgs *args,
     omenu = tip_certainty_map_data_option_menu(&args->win1);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
 
     /***** Second operand *****/
@@ -171,7 +171,6 @@ tip_certainty_map_window_construct(TipCertaintyMapArgs *args,
     omenu = tip_certainty_map_data_option_menu(&args->win2);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     gtk_widget_show_all(dialog);

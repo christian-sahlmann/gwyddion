@@ -167,6 +167,8 @@ scale_dialog(ScaleArgs *args)
                                          NULL);
 
     table = gtk_table_new(4, 3, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 

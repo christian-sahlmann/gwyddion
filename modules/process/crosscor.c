@@ -119,7 +119,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo crosscor_func_info = {
         "crosscor",
-        N_("/M_ultidata/_Cross-Correlation"),
+        N_("/M_ultidata/_Cross-Correlation..."),
         (GwyProcessFunc)&crosscor,
         CROSSCOR_RUN_MODES,
         0,
@@ -185,39 +185,27 @@ crosscor_window_construct(CrosscorArgs *args,
     GtkWidget *dialog, *table, *omenu, *label, *spin;
     gint row;
 
-    dialog = gtk_dialog_new_with_buttons(_("Data Croscorrelation"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Cross-Correlation"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    gtk_container_set_border_width(GTK_CONTAINER(dialog), 8);
 
     table = gtk_table_new(2, 10, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
 
     /***** First operand *****/
-    label = gtk_label_new_with_mnemonic(_("_First data:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
     omenu = crosscor_data_option_menu(&args->win1);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
+    gwy_table_attach_row(table, row, _("_First operand:"), NULL, omenu);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
 
     /***** Second operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Second data:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
     omenu = crosscor_data_option_menu(&args->win2);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    gwy_table_attach_row(table, row, _("_Second operand:"), NULL, omenu);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
 
     /**** Parameters ********/
@@ -272,7 +260,7 @@ crosscor_window_construct(CrosscorArgs *args,
 
     controls->threshold = gtk_adjustment_new(args->threshold,
                                              -1, 1, 0.005, 0.05, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Threshold:"), "",
+    spin = gwy_table_attach_spinbutton(table, row, _("_Threshold:"), "",
                                        controls->threshold);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     row++;
@@ -283,7 +271,7 @@ crosscor_window_construct(CrosscorArgs *args,
                                    G_CALLBACK(crosscor_operation_cb),
                                    args,
                                    args->result);
-    gwy_table_attach_row(table, row, _("_Result:"), "", omenu);
+    gwy_table_attach_row(table, row, _("_Output type:"), "", omenu);
 
     gtk_widget_show_all(dialog);
 
