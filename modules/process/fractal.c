@@ -79,6 +79,9 @@ static void        out_changed_cb             (GObject *item,
 static void        fractal_dialog_update      (FractalControls *controls,
                                                FractalArgs *args,
                                                GwyContainer *data);
+static void        ok                         (FractalControls *controls,
+                                               FractalArgs *args,
+                                               GwyContainer *data);
 static void        fractal_dialog_recompute    (FractalControls *controls,
                                                FractalArgs *args,
                                                GwyContainer *data);
@@ -301,6 +304,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
             break;
 
             case GTK_RESPONSE_OK:
+            ok(&controls, args, data);
             break;
 
             case RESPONSE_RESET:
@@ -481,7 +485,107 @@ fractal_dialog_update(FractalControls *controls,
         gwy_graph_add_datavalues(GWY_GRAPH(controls->graph), xfit->data, yfit->data, xnline->res,
                                  label, NULL);
     }
+    g_string_free(label, TRUE);
+    g_object_unref(xline);
+    g_object_unref(yline);
+    g_object_unref(xnline);
+    g_object_unref(ynline);
 }
+
+
+static void
+ok(FractalControls *controls,
+                     FractalArgs *args, GwyContainer *data)
+{
+    GtkWidget *window, *graph;
+    GwyDataField *dfield;
+    GwyDataLine *xline, *yline, *xfit, *yfit, *xnline, *ynline;
+    GString *label;
+    GwyGraphAreaCurveParams *params;
+    GwyGraphAutoProperties prop;
+    gint i;
+    gboolean is_line;
+    gdouble a, b;
+
+ 
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
+
+    xline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    yline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    xnline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    ynline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+
+    if (args->out == GWY_FRACTAL_PARTITIONING)
+    {
+        gwy_data_field_fractal_partitioning(dfield, xline, yline, args->interp);
+        if ((is_line = remove_datapoints(xline, yline, xnline, ynline, args)) == TRUE)
+            args->result_partitioning = gwy_data_field_fractal_partitioning_dim(xnline, ynline, &a, &b);
+        label = g_string_new("Partitioning");
+    }
+    else if (args->out == GWY_FRACTAL_CUBECOUNTING)
+    {
+        gwy_data_field_fractal_cubecounting(dfield, xline, yline, args->interp);
+        if ((is_line = remove_datapoints(xline, yline, xnline, ynline, args)) == TRUE)
+            args->result_cubecounting = gwy_data_field_fractal_cubecounting_dim(xnline, ynline, &a, &b);
+        label = g_string_new("Cube counting");
+    }
+    else if (args->out == GWY_FRACTAL_TRIANGULATION)
+    {
+        gwy_data_field_fractal_triangulation(dfield, xline, yline, args->interp);
+        if ((is_line = remove_datapoints(xline, yline, xnline, ynline, args)) == TRUE)
+            args->result_triangulation = gwy_data_field_fractal_triangulation_dim(xnline, ynline, &a, &b);
+        label = g_string_new("Triangulation");
+    }
+    else if (args->out == GWY_FRACTAL_PSDF)
+    {
+        gwy_data_field_fractal_psdf(dfield, xline, yline, args->interp);
+        if ((is_line = remove_datapoints(xline, yline, xnline, ynline, args)) == TRUE)
+            args->result_psdf = gwy_data_field_fractal_psdf_dim(xnline, ynline, &a, &b);
+        label = g_string_new("Power spectrum");
+    }
+    else return;
+
+    params = g_new(GwyGraphAreaCurveParams, 1);
+    params->is_line = 0;
+    params->is_point = 1;
+    params->point_type = 0;
+    params->point_size = 8;
+    params->color.pixel = 0x00a50800;
+
+    graph = gwy_graph_new();
+    gwy_graph_add_datavalues(GWY_GRAPH(graph), xline->data, yline->data, xline->res,
+                             label, params);
+
+    if (is_line)
+    {
+        xfit = GWY_DATA_LINE(gwy_data_line_new(xnline->res, xnline->res, FALSE));
+        yfit = GWY_DATA_LINE(gwy_data_line_new(xnline->res, xnline->res, FALSE));
+        for (i=0; i<xnline->res; i++)
+        {
+            xfit->data[i] = xnline->data[i];
+            yfit->data[i] = xfit->data[i]*a + b;
+        }
+        /*printf("\n");*/
+
+        label = g_string_new("linear fit");
+        gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
+        prop.is_point = 0;
+        gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
+
+        gwy_graph_add_datavalues(GWY_GRAPH(graph), xfit->data, yfit->data, xnline->res,
+                                 label, NULL);
+    }
+
+    window = gwy_app_graph_window_create(graph);
+    g_string_free(label, TRUE);
+    g_object_unref(xline);
+    g_object_unref(yline);
+    g_object_unref(xnline);
+    g_object_unref(ynline);
+    
+}
+
 
 /*(re)compute data and dimension and fits*/
 static void

@@ -338,8 +338,6 @@ maskcor_do(MaskcorArgs *args)
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
     else { /*add mask*/
-        /* FIXME: this is probably a pure nonsense. the whole `ret' thing
-         * is only a leaked memory and user will never see it */
         if (args->result == GWY_MASKCOR_OBJECTS) {
             plot_correlated(retfield, kernelfield->xres, kernelfield->yres,
                             args->threshold);
@@ -347,7 +345,9 @@ maskcor_do(MaskcorArgs *args)
         else if (args->result == GWY_MASKCOR_MAXIMA) {
             plot_maxima(retfield, args->threshold);
         }
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(retfield));
+        gwy_container_set_object_by_name(data, "/0/mask", 
+                       gwy_serializable_duplicate(G_OBJECT(retfield)));
+        g_object_unref(ret);
     }
     gwy_app_data_view_update(gwy_data_window_get_data_view(operand1));
 

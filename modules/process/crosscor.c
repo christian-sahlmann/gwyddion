@@ -436,7 +436,12 @@ crosscor_do(CrosscorArgs *args)
         gwy_app_wait_set_message("Correlating...");
         if (!gwy_app_wait_set_fraction
                 (iteration/(gdouble)(dfield1->xres - (args->search_x)/2)))
+        {
+            g_object_unref(dfieldx);
+            g_object_unref(dfieldy);    
+            g_object_unref(score);    
             return FALSE;
+        }
 
     } while (state != GWY_COMP_FINISHED);
     gwy_app_wait_finish();
