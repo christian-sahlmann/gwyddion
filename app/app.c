@@ -29,23 +29,6 @@
 #include "gwyapp.h"
 #include "gwyappinternal.h"
 
-/* this is not used (yet), the GUI doesn't allow more levels */
-enum {
-    UNDO_LEVELS = 2
-};
-
-typedef struct {
-    GQuark key;
-    GObject *data;  /* TODO: keep references to the objects */
-} GwyAppUndoItem;
-
-typedef struct {
-    gulong id;
-    gint modif;
-    gsize nitems;
-    GwyAppUndoItem *items;
-} GwyAppUndoLevel;
-
 static GtkWidget *gwy_app_main_window = NULL;
 
 static GList *current_data = NULL;
