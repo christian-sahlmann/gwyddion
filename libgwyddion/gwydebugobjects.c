@@ -121,13 +121,18 @@ gwy_debug_objects_creation(GObject *object)
  * Since: 1.4.
  **/
 void
-gwy_debug_objects_dump_to_file(FILE *filehandle)
+gwy_debug_objects_dump_to_file(FILE *filehandle,
+                               GwyDebugObjectsDumpFlags flags)
 {
     GList *l;
     DebugObjectInfo *info;
 
     for (l = g_list_last(debug_objects); l; l = g_list_previous(l)) {
         info = (DebugObjectInfo*)l->data;
+        if ((flags & GWY_DEBUG_OBJECTS_DUMP_ONLY_ALIVE)
+            && info->destroy_time >= 0.0)
+            continue;
+
         fprintf(filehandle, "%s %p %.3f ",
                 g_type_name(info->type), info->address, info->create_time);
         if (info->destroy_time > 0)

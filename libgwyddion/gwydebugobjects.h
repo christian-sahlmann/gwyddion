@@ -27,10 +27,15 @@
 
 G_BEGIN_DECLS
 
-void gwy_debug_objects_creation(GObject *object);
-void gwy_debug_objects_enable(gboolean enable);
-void gwy_debug_objects_dump_to_file(FILE *filehandle);
-void gwy_debug_objects_clear(void);
+typedef enum {
+    GWY_DEBUG_OBJECTS_DUMP_ONLY_ALIVE = 1 << 0
+} GwyDebugObjectsDumpFlags;
+
+void gwy_debug_objects_creation          (GObject *object);
+void gwy_debug_objects_enable            (gboolean enable);
+void gwy_debug_objects_dump_to_file      (FILE *filehandle,
+                                          GwyDebugObjectsDumpFlags flags);
+void gwy_debug_objects_clear             (void);
 
 G_END_DECLS
 

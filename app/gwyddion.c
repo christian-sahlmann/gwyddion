@@ -122,7 +122,7 @@ main(int argc, char *argv[])
     }
     gwy_app_settings_free();
     g_free(config_file);
-    gwy_debug_objects_dump_to_file(stdout);
+    gwy_debug_objects_dump_to_file(stdout, 0);
     gwy_debug_objects_clear();
 
     return 0;
