@@ -268,17 +268,17 @@ fit_dialog(FitArgs *args)
     GwyGraphAutoProperties prop;
     gint response;
 
-    pcontrols = &controls;
     enum { RESPONSE_RESET = 1,
         RESPONSE_FIT = 2
     };
-    
+
+    pcontrols = &controls;
     dialog = gtk_dialog_new_with_buttons(_("Fit graph"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         _("Recompute"), RESPONSE_FIT,
-                                         _("Reset"), RESPONSE_RESET,
+                                         _("Fit"), RESPONSE_FIT,
+                                         _("Reset inits"), RESPONSE_RESET,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
