@@ -226,11 +226,9 @@ gwy_gradient_get_modifiable(GwyGradient *gradient)
  * gwy_gradient_get_color:
  * @gradient: A color gradient.
  * @x: Position in gradient, in range 0..1.
- * @color: Color to fill with color at position @x.
+ * @color: Color to fill with interpolated color at position @x.
  *
  * Computes color at given position of a color gradient.
- *
- * Returns: The interpolated color sample.
  *
  * Since: 1.8
  **/
