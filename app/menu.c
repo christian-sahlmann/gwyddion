@@ -154,6 +154,8 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
     set_sensitive(item, GWY_MENU_FLAG_UNDO);
     item = gtk_item_factory_get_item(item_factory, "<edit>/Edit/Redo");
     set_sensitive(item, GWY_MENU_FLAG_REDO);
+    item = gtk_item_factory_get_item(item_factory, "<edit>/Edit/Data Arithmetic");
+    set_sensitive(item, GWY_MENU_FLAG_DATA);
     sens_data.flags = GWY_MENU_FLAG_DATA
                       | GWY_MENU_FLAG_REDO
                       | GWY_MENU_FLAG_UNDO;
