@@ -639,7 +639,7 @@ gwy_color_axis_button_release(GtkWidget *widget,
  * @min: Where the range maximum should be stored (or %NULL).
  * @max: Where the range minimum should be stored (or %NULL).
  *
- * Returns the range of color axis @axis.
+ * Gets the range of color axis @axis.
  **/
 void
 gwy_color_axis_get_range(GwyColorAxis *axis,
