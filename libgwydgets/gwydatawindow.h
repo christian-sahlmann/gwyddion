@@ -22,6 +22,13 @@ extern "C" {
 #define GWY_IS_DATA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_WINDOW))
 #define GWY_DATA_WINDOW_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_WINDOW, GwyDataWindowClass))
 
+typedef enum {
+    GWY_ZOOM_MODE_SQRT2,
+    GWY_ZOOM_MODE_CBRT2,
+    GWY_ZOOM_MODE_PIX4PIX,
+    GWY_ZOOM_MODE_HALFPIX
+} GwyZoomMode;
+
 typedef struct _GwyDataWindow      GwyDataWindow;
 typedef struct _GwyDataWindowClass GwyDataWindowClass;
 
@@ -33,10 +40,9 @@ struct _GwyDataWindow {
     GtkWidget *hruler;
     GtkWidget *vruler;
     GtkWidget *statusbar;
-    GtkWidget *notebook;
     GtkWidget *sidebox;
 
-    gint zoom_mode;  /* reserved for future use */
+    GwyZoomMode zoom_mode;  /* reserved for future use */
 
     guint statusbar_context_id;
     guint statusbar_message_id;
@@ -54,6 +60,9 @@ GType            gwy_data_window_get_type         (void) G_GNUC_CONST;
 GtkWidget*       gwy_data_window_get_data_view    (GwyDataWindow *data_window);
 void             gwy_data_window_set_zoom         (GwyDataWindow *data_window,
                                                    gint izoom);
+void             gwy_data_view_set_zoom_mode      (GwyDataWindow *data_window,
+                                                   GwyZoomMode zoom_mode);
+GwyZoomMode      gwy_data_view_get_zoom_mode      (GwyDataWindow *data_window);
 void             gwy_data_window_update_title     (GwyDataWindow *data_window);
 
 #ifdef __cplusplus

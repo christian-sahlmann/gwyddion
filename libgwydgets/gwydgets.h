@@ -40,6 +40,9 @@ GtkWidget* gwy_interpolation_option_menu  (GCallback callback,
 GtkWidget* gwy_windowing_option_menu      (GCallback callback,
                                            gpointer cbdata,
                                            GwyWindowingType current);
+GtkWidget* gwy_zoom_mode_option_menu      (GCallback callback,
+                                           gpointer cbdata,
+                                           GwyZoomMode current);
 
 GtkWidget* gwy_table_attach_spinbutton    (GtkWidget *table,
                                            gint row,

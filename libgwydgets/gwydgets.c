@@ -262,6 +262,64 @@ gwy_windowing_option_menu(GCallback callback,
     return omenu;
 }
 
+/************************** Zoom mode menu ****************************/
+
+/**
+ * gwy_zoom_mode_option_menu:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ * @current: Zoom mode type to be shown as currently selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of zoom modes i.e., values of
+ * #GwyZoomMode.
+ *
+ * It sets object data "zoom-mode" to zoom mode for each
+ * menu item (use GPOINTER_TO_INT() when retrieving it)..
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_zoom_mode_option_menu(GCallback callback,
+                          gpointer cbdata,
+                          GwyZoomMode current)
+{
+    static struct {
+        const gchar *name;
+        GwyZoomMode zoom_mode;
+    }
+    const entries[] = {
+        { "By square root of 2",     GWY_ZOOM_MODE_SQRT2      },
+        { "By cubic root of 2",      GWY_ZOOM_MODE_CBRT2      },
+        { "Integer zooms",           GWY_ZOOM_MODE_PIX4PIX    },
+        { "Half-integer zooms",      GWY_ZOOM_MODE_HALFPIX    },
+    };
+    GtkWidget *omenu, *menu, *item;
+    gint i, index;
+
+    omenu = gtk_option_menu_new();
+    menu = gtk_menu_new();
+
+    index = -1;
+    for (i = 0; i < (gint)G_N_ELEMENTS(entries); i++) {
+        item = gtk_menu_item_new_with_label(entries[i].name);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_object_set_data(G_OBJECT(item), "zoom-mode",
+                          GINT_TO_POINTER(entries[i].zoom_mode));
+        if (callback)
+            g_signal_connect(G_OBJECT(item), "activate", callback, cbdata);
+        if (entries[i].zoom_mode == current)
+            index = i;
+    }
+
+    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
+    if (index != -1)
+        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), index);
+
+    return omenu;
+}
+
 /************************** Table attaching ****************************/
 
 /**

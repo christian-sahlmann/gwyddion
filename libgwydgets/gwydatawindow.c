@@ -11,8 +11,7 @@
 
 #define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
 
-/*#define ZOOM_FACTOR G_SQRT2*/
-#define ZOOM_FACTOR 1.259921049894873164767210607277
+#define CBRT2 1.259921049894873164767210607277
 
 /* Forward declarations */
 
@@ -30,6 +29,13 @@ static void     zoom_changed_cb                (GtkWidget *data_view,
                                                 GwyDataWindow *data_window);
 
 /* Local data */
+
+static const gdouble zoom_factors[] = {
+    G_SQRT2,
+    CBRT2,
+    1.0,
+    0.5,
+};
 
 static GtkWidgetClass *parent_class = NULL;
 
@@ -78,10 +84,9 @@ gwy_data_window_init(GwyDataWindow *data_window)
     data_window->hruler = NULL;
     data_window->vruler = NULL;
     data_window->statusbar = NULL;
-    data_window->notebook = NULL;
     data_window->table = NULL;
     data_window->sidebox = NULL;
-    data_window->zoom_mode = 0;
+    data_window->zoom_mode = GWY_ZOOM_MODE_HALFPIX;
     data_window->statusbar_context_id = 0;
     data_window->statusbar_message_id = 0;
 }
@@ -177,15 +182,8 @@ gwy_data_window_new(GwyDataView *data_view)
     data_window->sidebox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), data_window->sidebox, FALSE, FALSE, 0);
 
-    data_window->notebook = gtk_notebook_new();
-    gtk_box_pack_start(GTK_BOX(data_window->sidebox), data_window->notebook,
-                       TRUE, TRUE, 0);
     widget = gtk_label_new("Crash me!");
-    gtk_notebook_append_page(GTK_NOTEBOOK(data_window->notebook),
-                             widget, NULL);
-    widget = gtk_label_new("Crash me too!");
-    gtk_notebook_append_page(GTK_NOTEBOOK(data_window->notebook),
-                             widget, NULL);
+    gtk_box_pack_start(GTK_BOX(data_window->sidebox), widget, FALSE, FALSE, 0);
 
     /* show everything except the table */
     gtk_widget_show_all(vbox);
@@ -275,22 +273,49 @@ void
 gwy_data_window_set_zoom(GwyDataWindow *data_window,
                          gint izoom)
 {
-    gdouble rzoom;
+    gdouble rzoom, factor;
+    gint curzoom = 0;
 
     gwy_debug("%s: %d", __FUNCTION__, izoom);
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     g_return_if_fail(izoom == -1 || izoom == 1
                      || (izoom >= 625 && izoom <= 160000));
+    g_return_if_fail(data_window->zoom_mode <= GWY_ZOOM_MODE_HALFPIX);
 
+    rzoom = gwy_data_view_get_zoom(GWY_DATA_VIEW(data_window->data_view));
+    factor = zoom_factors[data_window->zoom_mode];
     switch (izoom) {
         case -1:
-        rzoom = gwy_data_view_get_zoom(GWY_DATA_VIEW(data_window->data_view))
-                / ZOOM_FACTOR;
-        break;
-
         case 1:
-        rzoom = gwy_data_view_get_zoom(GWY_DATA_VIEW(data_window->data_view))
-                * ZOOM_FACTOR;
+        switch (data_window->zoom_mode) {
+            case GWY_ZOOM_MODE_SQRT2:
+            case GWY_ZOOM_MODE_CBRT2:
+            curzoom = floor(log(rzoom)/log(factor) + 0.5);
+            break;
+
+            case GWY_ZOOM_MODE_PIX4PIX:
+            case GWY_ZOOM_MODE_HALFPIX:
+            if (rzoom >= 1)
+                curzoom = floor((rzoom - 1.0)/factor + 0.5);
+            else
+                curzoom = -floor((1.0/rzoom - 1.0)/factor + 0.5);
+            break;
+        }
+        curzoom += izoom;
+        switch (data_window->zoom_mode) {
+            case GWY_ZOOM_MODE_SQRT2:
+            case GWY_ZOOM_MODE_CBRT2:
+            rzoom = exp(log(factor)*curzoom);
+            break;
+
+            case GWY_ZOOM_MODE_PIX4PIX:
+            case GWY_ZOOM_MODE_HALFPIX:
+            if (curzoom >= 0)
+                rzoom = 1.0 + curzoom*factor;
+            else
+                rzoom = 1.0/(1.0 - curzoom*factor);
+            break;
+        }
         break;
 
         default:
@@ -298,9 +323,24 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
         break;
     }
     rzoom = CLAMP(rzoom, 1/8.0, 8.0);
-    rzoom = exp(log(ZOOM_FACTOR)*floor(log(rzoom)/log(ZOOM_FACTOR) + 0.5));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(data_window->data_view), rzoom);
     lame_window_resize(data_window);
+}
+
+void
+gwy_data_view_set_zoom_mode(GwyDataWindow *data_window,
+                            GwyZoomMode zoom_mode)
+{
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    g_return_if_fail(data_window->zoom_mode <= GWY_ZOOM_MODE_HALFPIX);
+    data_window->zoom_mode = zoom_mode;
+}
+
+GwyZoomMode
+gwy_data_view_get_zoom_mode(GwyDataWindow *data_window)
+{
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), 0);
+    return data_window->zoom_mode;
 }
 
 static void

@@ -17,7 +17,7 @@
 #define TEST_OPTION_MENUS 2
 #define TEST_GTKDOC_INFO 3
 
-#define TEST_WHAT TEST_GTKDOC_INFO
+#define TEST_WHAT TEST_OPTION_MENUS
 
 /***** VECTOR SHADE [[[ *****************************************************/
 #if (TEST_WHAT == TEST_VECTOR_SHADE)
@@ -179,6 +179,12 @@ menu_callback(GObject *menu_item, const gchar *which_menu)
                                                     "windowing-type")));
         return;
     }
+    if (strcmp(which_menu, "zoom_mode") == 0) {
+        g_message("Zoom mode: %d",
+                  GPOINTER_TO_INT(g_object_get_data(menu_item,
+                                                    "zoom-mode")));
+        return;
+    }
     g_assert_not_reached();
 }
 
@@ -189,7 +195,7 @@ test(void)
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_container_set_border_width(GTK_CONTAINER(window), 4);
-    table = gtk_table_new(3, 2, FALSE);
+    table = gtk_table_new(4, 2, FALSE);
     gtk_container_add(GTK_CONTAINER(window), table);
 
     widget = gtk_label_new("Palettes: ");
@@ -212,6 +218,13 @@ test(void)
                                       "windowing",
                                       GWY_WINDOWING_HAMMING);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 2, 3);
+
+    widget = gtk_label_new("Zoom modes: ");
+    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 3, 4);
+    omenu = gwy_zoom_mode_option_menu(G_CALLBACK(menu_callback),
+                                      "zoom_mode",
+                                      GWY_ZOOM_MODE_CBRT2);
+    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 3, 4);
 
     gtk_widget_show_all(window);
     g_signal_connect(G_OBJECT(window), "destroy",
