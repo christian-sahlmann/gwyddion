@@ -274,7 +274,7 @@ apply(GwyUnitoolState *state)
     GwyDataField *dfield;
     ToolControls *controls;
     GwyDataViewLayer *layer;
-    gdouble points[6], z[3];
+    gdouble points[9], z[3], coeffs[3];
     gdouble bx, by, c, det;
     gint i, radius;
 
@@ -288,44 +288,31 @@ apply(GwyUnitoolState *state)
     radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
 
     /* find the plane levelling coeffs so that values in the three points
-     * will be all zeroes */
-    det = bx = by = c = 0;
+     * will be all zeroes
+     *
+     *  /       \   /  \     /  \
+     * | x1 y1 1 | | bx |   | z1 |
+     * | x2 y2 1 | | by | = | z2 |
+     * | x3 y3 1 | | c  |   | z3 |
+     *  \       /   \  /     \  /
+     *
+     */
     for (i = 0; i < 3; i++)
         z[i] = gwy_unitool_get_z_average(dfield, points[2*i], points[2*i+1],
                                          radius);
-    det = points[0]*(points[3] - points[5])
-          + points[2]*(points[5] - points[1])
-          + points[4]*(points[1] - points[3]);
-    bx = z[0]*(points[3] - points[5])
-         + z[1]*(points[5] - points[1])
-         + z[2]*(points[1] - points[3]);
-    by = z[0]*(points[4] - points[2])
-         + z[1]*(points[0] - points[4])
-         + z[2]*(points[2] - points[0]);
-    c = z[0]*(points[2]*points[5] - points[3]*points[4])
-         + z[1]*(points[1]*points[4] - points[5]*points[0])
-         + z[2]*(points[0]*points[3] - points[1]*points[2]);
-    gwy_debug("bx = %g, by = %g, c = %g, det = %g", bx, by, c, det);
-    bx /= det;
-    by /= det;
-    c /= det;
+    points[7] = points[5];
+    points[6] = points[4];
+    points[4] = points[3];
+    points[3] = points[2];
+    points[2] = points[5] = points[8] = 1.0;
+    gwy_math_lin_solve_rewrite(3, points, z, coeffs);
     /* to keep mean value intact, the mean value of the plane we add to the
      * data has to be zero, i.e., in the center of the data the value must
      * be zero */
-    c = -0.5*(bx*gwy_data_field_get_xreal(dfield)
-              + by*gwy_data_field_get_yreal(dfield));
-    gwy_debug("bx = %g, by = %g, c = %g", bx, by, c);
-    gwy_debug("z[0] = %g, z[1] = %g, z[2] = %g", z[0], z[1], z[2]);
-    gwy_debug("zn[0] = %g, zn[1] = %g, zn[2] = %g",
-              z[0] - c - bx*points[0] - by*points[1],
-              z[1] - c - bx*points[2] - by*points[3],
-              z[2] - c - bx*points[4] - by*points[5]);
+    coeffs[2] = -0.5*(coeffs[0]*gwy_data_field_get_xreal(dfield)
+                      + coeffs[1]*gwy_data_field_get_yreal(dfield));
     gwy_app_undo_checkpoint(data, "/0/data");
-    gwy_data_field_plane_level(dfield, c, bx, by);
-    gwy_debug("zN[0] = %g, zN[1] = %g, zN[2] = %g",
-              gwy_unitool_get_z_average(dfield, points[0], points[1], radius),
-              gwy_unitool_get_z_average(dfield, points[2], points[3], radius),
-              gwy_unitool_get_z_average(dfield, points[4], points[5], radius));
+    gwy_data_field_plane_level(dfield, coeffs[2], coeffs[0], coeffs[1]);
 
     gwy_vector_layer_unselect(state->layer);
     gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
