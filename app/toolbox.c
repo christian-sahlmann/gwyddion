@@ -29,6 +29,9 @@
 #include "gwyappinternal.h"
 #include "gwyddion.h"
 
+enum {
+    DND_TARGET_STRING = 1,
+};
 
 static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 gint nitems,
@@ -40,8 +43,21 @@ static GtkWidget* gwy_app_toolbox_create_label (const gchar *text,
 static void       gwy_app_toolbox_showhide_cb  (GtkWidget *button,
                                                 GtkWidget *widget);
 static void       gwy_app_rerun_process_func_cb(gpointer user_data);
+static void       toolbox_dnd_data_received    (GtkWidget *widget,
+                                                GdkDragContext *context,
+                                                gint x,
+                                                gint y,
+                                                GtkSelectionData *data,
+                                                guint info,
+                                                guint time,
+                                                gpointer user_data);
 static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
+
+static GtkTargetEntry dnd_target_table[] = {
+  { "STRING",     0, DND_TARGET_STRING },
+  { "text/plain", 0, DND_TARGET_STRING },
+};
 
 GtkWidget*
 gwy_app_toolbox_create(void)
@@ -236,6 +252,13 @@ gwy_app_toolbox_create(void)
     gwy_app_tool_use_cb(first_tool, NULL);
     gwy_app_tool_use_cb(first_tool, list ? GTK_WIDGET(list->data) : NULL);
     g_list_free(list);
+
+    /***************************************************************/
+    gtk_drag_dest_set(toolbox, GTK_DEST_DEFAULT_ALL,
+                      dnd_target_table, G_N_ELEMENTS(dnd_target_table),
+                      GDK_ACTION_COPY);
+    g_signal_connect(toolbox, "drag_data_received",
+                     G_CALLBACK(toolbox_dnd_data_received), NULL);
 
     /***************************************************************/
     gtk_widget_show_all(toolbox);
@@ -615,6 +638,43 @@ gwy_app_rerun_process_func_cb(gpointer user_data)
         gwy_app_run_process_func_in_mode(name, run);
     else
         gwy_app_run_process_func_cb(name);
+}
+
+static void
+toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
+                          GdkDragContext *context,
+                          G_GNUC_UNUSED gint x,
+                          G_GNUC_UNUSED gint y,
+                          GtkSelectionData *data,
+                          G_GNUC_UNUSED guint info,
+                          guint time,
+                          G_GNUC_UNUSED gpointer user_data)
+{
+    gchar *filename;
+    GwyContainer *container;
+    GtkWidget *data_window;
+
+    if (data->length <= 0 || data->format != 8) {
+        gtk_drag_finish(context, FALSE, FALSE, time);
+        return;
+    }
+
+    filename = (gchar*)data->data;
+    if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR
+                               | G_FILE_TEST_IS_SYMLINK)) {
+        gtk_drag_finish(context, FALSE, FALSE, time);
+        return;
+    }
+
+    container = gwy_file_load(filename);
+    gtk_drag_finish(context, container != NULL, FALSE, time);
+
+    if (container) {
+        data_window = gwy_app_data_window_create(container);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    }
+
+    return;
 }
 
 static void
