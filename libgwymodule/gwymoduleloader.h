@@ -50,8 +50,9 @@ struct _GwyModuleInfo {
     const gchar *date;
 };
 
-void                    gwy_modules_init            (void);
 void                    gwy_module_register_modules (const gchar **paths);
+G_CONST_RETURN 
+GwyModuleInfo*          gwy_module_lookup           (const gchar *name);
 
 #ifdef __cplusplus
 }

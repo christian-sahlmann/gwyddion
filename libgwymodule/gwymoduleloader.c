@@ -29,33 +29,11 @@ static void gwy_load_modules_in_dir (GDir *gdir,
                                      const gchar *dirname,
                                      GHashTable *modules);
 static void gwy_module_get_rid_of   (const gchar *modname);
+static void gwy_module_init         (void);
 
 static GHashTable *modules;
 static gboolean modules_initialized = FALSE;
 
-
-/**
- * gwy_modules_init:
- *
- * Initializes the loadable module system, aborting if there's no support
- * for modules on the platform.
- *
- * Must be called at most once.  It's automatically called on first
- * gwy_module_register_modules() call.
- **/
-void
-gwy_modules_init(void)
-{
-    g_assert(!modules_initialized);
-
-    /* Check whether modules are supported. */
-    if (!g_module_supported()) {
-        g_error("Cannot initialize modules: not supported on this platform.");
-    }
-
-    modules = g_hash_table_new(g_str_hash, g_str_equal);
-    modules_initialized = TRUE;
-}
 
 /**
  * gwy_module_register_modules:
@@ -71,7 +49,7 @@ gwy_module_register_modules(const gchar **paths)
     const gchar *dir;
 
     if (!modules_initialized)
-        gwy_modules_init();
+        gwy_module_init();
     if (!paths)
         return;
 
@@ -267,6 +245,47 @@ gwy_module_get_rid_of(const gchar *modname)
     iinfo->funcs = NULL;
     g_hash_table_remove(modules, (gpointer)iinfo->mod_info->name);
     g_free(iinfo);
+}
+
+/**
+ * gwy_module_init:
+ *
+ * Initializes the loadable module system, aborting if there's no support
+ * for modules on the platform.
+ *
+ * Must be called at most once.  It's automatically called on first
+ * gwy_module_register_modules() call.
+ **/
+static void
+gwy_module_init(void)
+{
+    g_assert(!modules_initialized);
+
+    /* Check whether modules are supported. */
+    if (!g_module_supported()) {
+        g_error("Cannot initialize modules: not supported on this platform.");
+    }
+
+    modules = g_hash_table_new(g_str_hash, g_str_equal);
+    modules_initialized = TRUE;
+}
+
+/**
+ * gwy_module_lookup:
+ * @name: A module name.
+ *
+ * Returns information about one module.
+ *
+ * Returns: The module info, of %NULL if not found.  It must be considered
+ *          constant and never modified or freed.
+ **/
+G_CONST_RETURN GwyModuleInfo*
+gwy_module_lookup(const gchar *name)
+{
+    _GwyModuleInfoInternal *iinfo;
+
+    iinfo = gwy_module_get_module_info(name);
+    return ? iinfo : iinfo->mod_info : NULL
 }
 
 /************************** Documentation ****************************/
