@@ -38,7 +38,7 @@
 #include <glib/gutils.h>
 #include <glib/gmessages.h>
 
-#if ENABLE_NLS
+#ifdef ENABLE_NLS
 #include <libintl.h>
 #else
 #define gettext(x) (x)
