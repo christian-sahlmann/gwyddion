@@ -3052,6 +3052,13 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
     yres = data_field->yres;
     hlp =(GwyDataLine*) gwy_data_line_new(xres, data_field->xreal, 0);
 
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+ 
+    
     n = (gint)fit_type;
 
     if (exclude)
@@ -3071,7 +3078,7 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
         {
             if ((yres-brcol)>ulcol)
             {
-                ulcol = brcol; brcol = xres;
+                ulcol = brcol; brcol = yres;
             }
             else
             {
