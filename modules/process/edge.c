@@ -36,6 +36,8 @@ static gboolean    laplacian                    (GwyContainer *data,
                                                  GwyRunType run);
 static gboolean    canny                        (GwyContainer *data,
                                                  GwyRunType run);
+static gboolean    rms                          (GwyContainer *data,
+                                                 GwyRunType run);
 
 
 
@@ -46,7 +48,7 @@ static GwyModuleInfo module_info = {
     "edge",
     N_("Edge detection presentations"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -72,9 +74,17 @@ module_register(const gchar *name)
         EDGE_RUN_MODES,
         0,
     };
+    static GwyProcessFuncInfo rms_func_info = {
+        "rms",
+        N_("/_Display/_Edge detection/_RMS"),
+        (GwyProcessFunc)&rms,
+        EDGE_RUN_MODES,
+        0,
+    };
 
     gwy_process_func_register(name, &laplacian_func_info);
     gwy_process_func_register(name, &canny_func_info);
+    gwy_process_func_register(name, &rms_func_info);
 
     return TRUE;
 }
@@ -162,6 +172,36 @@ canny(GwyContainer *data, GwyRunType run)
                                      0, 0,
                                      gwy_data_field_get_xres(dfield),
                                      gwy_data_field_get_yres(dfield));
+    return TRUE;
+}
+
+static gboolean
+rms(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield, *shadefield;
+
+    g_assert(run & EDGE_RUN_MODES);
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/show", NULL);
+    if (gwy_container_gis_object_by_name(data, "/0/show",
+                                         (GObject**)&shadefield)) {
+        gwy_data_field_resample(shadefield,
+                                gwy_data_field_get_xres(dfield),
+                                gwy_data_field_get_yres(dfield),
+                                GWY_INTERPOLATION_NONE);
+        gwy_data_field_area_copy(dfield, shadefield,
+                                 0, 0, gwy_data_field_get_xres(dfield),
+                                 gwy_data_field_get_yres(dfield), 0, 0);
+    }
+    else {
+        shadefield = gwy_data_field_duplicate(dfield);
+        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
+        g_object_unref(shadefield);
+    }
+
+    gwy_data_field_filter_rms(shadefield, 5);
+
     return TRUE;
 }
 
