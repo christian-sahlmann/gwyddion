@@ -540,7 +540,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     row++;
 
     spin = gwy_table_attach_spinbutton
-               (table, row++, _("_Size:"), _("pixels"),
+               (table, row++, _("Si_ze:"), _("pixels"),
                 (GtkObject*)gwy_3d_view_get_label_description(
                     gwy3dview, GWY_3D_VIEW_LABEL_X)->size);
     gtk_widget_set_sensitive(spin,
