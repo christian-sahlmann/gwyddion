@@ -333,7 +333,8 @@ gwy_data_field_duplicate_real(GObject *object)
     memcpy(duplicate->data, data_field->data,
            data_field->xres*data_field->yres*sizeof(gdouble));
     duplicate->cached = data_field->cached;
-    memcpy(duplicate->cache, data_field->cache, GWY_DATA_FIELD_CACHE_SIZE);
+    memcpy(duplicate->cache, data_field->cache,
+           GWY_DATA_FIELD_CACHE_SIZE*sizeof(gdouble));
 
     return (GObject*)duplicate;
 }
@@ -370,7 +371,7 @@ gwy_data_field_copy(GwyDataField *src,
     dest->yreal = src->yreal;
 
     dest->cached = src->cached;
-    memcpy(dest->cache, src->cache, GWY_DATA_FIELD_CACHE_SIZE);
+    memcpy(dest->cache, src->cache, GWY_DATA_FIELD_CACHE_SIZE*sizeof(gdouble));
 
     if (!nondata_too)
         return;
