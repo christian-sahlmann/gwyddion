@@ -150,7 +150,7 @@ level3_dialog_abandon(void)
     points_layer = NULL;
     if (dialog) {
         radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
-        radius = CLAMP(radius, 1, 10);
+        radius = CLAMP(radius, 1, 16);
         settings = gwy_app_settings_get();
         gwy_container_set_int32_by_name(settings, radius_key, radius);
         g_signal_handler_disconnect(dialog, response_id);
@@ -228,7 +228,7 @@ level3_dialog_create(GwyDataView *data_view)
         radius = gwy_container_get_int32_by_name(settings, radius_key);
     else
         radius = 1;
-    controls.radius = gtk_adjustment_new((gdouble)radius, 1, 10, 1, 5, 10);
+    controls.radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
     gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
                                 controls.radius);
     gtk_widget_show_all(table);

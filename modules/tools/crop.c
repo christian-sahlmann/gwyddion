@@ -71,11 +71,23 @@ gwy_tool_crop_use(GwyDataWindow *data_window)
 static void
 crop_do(void)
 {
+    GwyContainer *data;
+    GwyDataField *dfield;
     gdouble x0, y0, x1, y1;
 
     if (!gwy_layer_select_get_selection(select_layer, &x0, &y0, &x1, &y1))
         return;
-    g_warning("Implement me!");
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    x0 = gwy_data_field_rtoj(dfield, x0);
+    y0 = gwy_data_field_rtoi(dfield, y0);
+    x1 = gwy_data_field_rtoj(dfield, x1) + 1;
+    y1 = gwy_data_field_rtoi(dfield, y1) + 1;
+    gwy_data_field_resize(dfield, x0, y0, x1, y1);
+    gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
+    gwy_debug("%s: %d %d", __FUNCTION__,
+              gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }
 
 static void
