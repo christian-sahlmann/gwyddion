@@ -263,6 +263,7 @@ proc_register_plugins(GList *plugins,
     gchar *pname = NULL, *menu_path = NULL, *run_modes = NULL;
     GwyRunType run;
 
+    gwy_debug("buffer: <<<%s>>>", buffer);
     while (buffer) {
         if ((pname = next_line(&buffer))
             && *pname
@@ -417,6 +418,7 @@ file_register_plugins(GList *plugins,
     gchar *pname = NULL, *file_desc = NULL, *run_modes = NULL, *glob = NULL;
     GwyFileOperation run;
 
+    gwy_debug("buffer: <<<%s>>>", buffer);
     while (buffer) {
         if ((pname = next_line(&buffer))
             && *pname
