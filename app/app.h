@@ -61,6 +61,7 @@ GtkWidget*      gwy_app_main_window_get           (void);
 void            gwy_app_main_window_set           (GtkWidget *window);
 gboolean        gwy_app_quit                      (void);
 
+
 /* FIXME: ugly. to be moved somewhere? refactored? */
 void       gwy_app_clean_up_data            (GwyContainer *data);
 

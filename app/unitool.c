@@ -268,7 +268,8 @@ gwy_unitool_dialog_response_cb(GwyUnitoolState *state,
         break;
 
         case GTK_RESPONSE_APPLY:
-        gwy_unitool_dialog_set_visible(state, FALSE);
+        if (!state->apply_doesnt_close)
+            gwy_unitool_dialog_set_visible(state, FALSE);
         state->func_slots->apply(state);
         break;
 
@@ -541,12 +542,17 @@ gwy_unitool_update_label(GwySIValueFormat *units,
  *               (to be used in gwy_unitool_update_label() for coordinates).
  * @value_format: Format good for value representation
  *               (to be used in gwy_unitool_update_label() for values).
+ * @apply_doesnt_close: When set to %TRUE "Apply" button doesn't close (hide)
+ *                      the tool dialog.
  *
  * Universal tool state.
  *
  * You should put pointer to particular tool state to the @user_data member
  * and pointer to function slots to @func_slots when creating it and otherwise
  * consider it read-only.
+ *
+ * Always use g_new0() or zero-fill the memory by other means when creating
+ * an unitialized state.
  **/
 
 /**

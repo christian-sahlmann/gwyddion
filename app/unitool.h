@@ -54,6 +54,8 @@ typedef struct {
     GwySIValueFormat *coord_format;
     GwySIValueFormat *value_format;
 
+    gboolean apply_doesnt_close;
+
     /*< private >*/
     gulong layer_updated_id;
     gulong data_updated_id;

@@ -864,7 +864,7 @@ gwy_app_main_window_set(GtkWidget *window)
     if (gwy_app_main_window && window != gwy_app_main_window)
         g_critical("Trying to change app main window");
     if (!GTK_IS_WINDOW(window))
-        g_warning("Setting app main window to a non-GtkWindow");
+        g_critical("Setting app main window to a non-GtkWindow");
     gwy_app_main_window = window;
 }
 
