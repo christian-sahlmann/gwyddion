@@ -120,7 +120,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     };
     GList *item;
 
-    gwy_debug("%p", window);
+    gwy_debug("win = %p, tool = %p", window, current_tool);
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(window));
     item = g_list_find(current_data, window);
@@ -477,6 +477,7 @@ gwy_app_tool_use_cb(const gchar *toolname,
     gwy_debug("%s", toolname ? toolname : "NONE");
     /* don't catch deactivations */
     if (button && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
+        gwy_debug("deactivation");
         old_button = button;
         return;
     }

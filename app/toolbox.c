@@ -199,6 +199,7 @@ gwy_app_toolbox_create(void)
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     list = gtk_container_get_children(GTK_CONTAINER(toolbar));
+    gwy_app_tool_use_cb(first_tool, NULL);
     gwy_app_tool_use_cb(first_tool, list ? GTK_WIDGET(list->data) : NULL);
     g_list_free(list);
 
