@@ -141,6 +141,20 @@ gwy_app_toolbox_create(void)
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     /***************************************************************/
+    label = gwy_app_toolbox_create_label(_("Graph"), "graph");
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+    labels = g_slist_append(labels, label);
+
+    toolbar = gwy_toolbox_new(4);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Read values from graph"), NULL, "gwy_graph_measure",
+                       G_CALLBACK(gwy_app_run_graph_func_cb), "read");
+
+    g_signal_connect(label, "clicked",
+                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
+
+    /***************************************************************/
     label = gwy_app_toolbox_create_label(_("Tools"), "tool");
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
     labels = g_slist_append(labels, label);
