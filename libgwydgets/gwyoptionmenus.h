@@ -66,6 +66,9 @@ GtkWidget* gwy_option_menu_filter          (GCallback callback,
 GtkWidget* gwy_option_menu_mergegrain      (GCallback callback,
                                             gpointer cbdata,
                                             GwyMergeType current);
+GtkWidget* gwy_option_menu_fit_line      (GCallback callback,
+                                            gpointer cbdata,
+                                            GwyFitLineType current);
 GtkWidget* gwy_option_menu_metric_unit    (GCallback callback,
                                            gpointer cbdata,
                                            gint from,
