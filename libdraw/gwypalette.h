@@ -23,10 +23,10 @@ extern "C" {
 typedef struct {
     GObject parent_instance;
 
-    GwyRGBA *color; /*generated table of doubles*/
-    GwyPaletteDef *def;     /*palette definition*/
-    guchar *samples;        /*generated table of int32s*/
-    gint nofvals;           /*maximum N (size of tables)*/
+    GwyRGBA *color;         /* generated table of doubles */
+    GwyPaletteDef *def;     /* palette definition */
+    guchar *samples;        /* generated table of int32s */
+    gint nofvals;           /* maximum N (size of tables) */
 } GwyPalette;
 
 typedef struct{

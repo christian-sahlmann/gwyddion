@@ -85,6 +85,8 @@ void          gwy_palette_def_setup_presets    (void);
 /*output (for debugging namely)*/
 void gwy_palette_def_print(GwyPaletteDef *a);
 
+#define gwy_palette_def_is_set(pd) (GWY_PALETTE_DEF(pd)->data->len)
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

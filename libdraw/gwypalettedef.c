@@ -20,7 +20,6 @@ static GObject* gwy_palette_def_deserialize       (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
 static void     gwy_palette_def_value_changed     (GObject *GwyPaletteDef);
-
 static gint     gwy_palette_def_entry_compare     (GwyPaletteDefEntry *a,
                                                    GwyPaletteDefEntry *b);
 static gchar*   gwy_palette_def_invent_name       (GHashTable *palettes,
@@ -150,8 +149,9 @@ gwy_palette_def_finalize(GwyPaletteDef *palette_def)
  *
  * Returns a palette definition called @name.
  *
- * Palette definitions are singletons, thus if a palette called @name already
- * exists, it is returned instead.
+ * Palette definitions of the same name are singletons, thus if a palette
+ * definitions called @name already exists, it is returned instead (with
+ * reference count incremented).
  *
  * @name can be %NULL, a new unique name is invented then.
  *
@@ -401,6 +401,12 @@ gwy_palette_def_set_name(GwyPaletteDef *palette_def,
 }
 
 
+/**
+ * gwy_palette_def_value_changed:
+ * @palette_def: A #GwyPaletteDef.
+ *
+ * Emits a "value_changed" signal on a palette definition @palette_def.
+ **/
 static void
 gwy_palette_def_value_changed(GObject *palette_def)
 {
@@ -483,7 +489,7 @@ gwy_palette_def_get_color(GwyPaletteDef *a, gdouble x, gint interpolation)
  * @palette_def: A palette definition to be changed.
  * @val: An entry to be added.
  *
- * Adds entry to palette definition and resorts this definiton.
+ * Adds an entry to palette definition.
  **/
 void
 gwy_palette_def_set_color(GwyPaletteDef *palette_def,
@@ -509,21 +515,6 @@ gwy_palette_def_entry_compare(GwyPaletteDefEntry *a,
     else
         return 1;
 }
-
-/**
- * gwy_palette_def_sort:
- * @a: palette definition to be resorted
- *
- * Resorts the palette definition.
- **/
-void
-gwy_palette_def_sort(GwyPaletteDef *a)
-{
-    gwy_debug("%s", __FUNCTION__);
-
-    g_array_sort(a->data, (GCompareFunc)gwy_palette_def_entry_compare);
-}
-
 
 static gchar*
 gwy_palette_def_invent_name(GHashTable *palettes,
@@ -687,20 +678,21 @@ gwy_palette_is_big_slope_change(GwyRGBA a,
 }
 
 /**
- * gwy_palette_def_set_from_palette:
+ * gwy_palette_def_set_from_samples:
  * @palette_def: A #GwyPaletteDef to be computed.
  * @palette: A palette with the color data.
  * @istep: Maximum distance of definition entries, 0 means unlimited.
  *
- * Fits the palette color tables with to obtain palette definition.
+ * Fits the palette definition to given color samples.
  *
- * The function does the reverse of gwy_palette_recompute_table().
  * It finds the extrema points inside palette color tables and
  * tries to setup the palette definition to fit the color tables.
  * This fucntion should be used only when there is a reason
  * for doing this, for example after some graphical entry
  * of palette color table values. Parameter @istep controls
  * the precision of the linear fit.
+ *
+ * However, the precise algorithm may change in the future.
  **/
 void
 gwy_palette_def_set_from_samples(GwyPaletteDef *palette_def,
