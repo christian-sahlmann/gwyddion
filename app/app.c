@@ -322,10 +322,6 @@ gwy_app_data_view_update(GtkWidget *data_view)
     else {
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
     }
-
-    layer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(data_view));
-    if (layer)
-        gwy_data_view_layer_updated(layer);
 }
 
 /**
