@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libprocess/tip.h>
@@ -366,7 +367,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
 
             case GTK_RESPONSE_OK:
             fit_2d_do(&controls, args);
-            if (args->fitter->covar)
+            if (args->fitter && args->fitter->covar)
                 create_results_window(args);
             break;
 
@@ -390,7 +391,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
 
     gtk_widget_destroy(dialog);
     fit_2d_dialog_abandon(&controls);
-    gwy_math_nlfit_free(args->fitter);
+    if (args->fitter) gwy_math_nlfit_free(args->fitter);
 
     return TRUE;
 }
@@ -556,10 +557,24 @@ guess_sphere(GwyDataField *dfield,
 	   G_GNUC_UNUSED gint n_param,
 	   gdouble *param)
 {
-    param[0] = 0;
+    gdouble t, v, avgcorner, avgtop;
+
+    avgcorner = gwy_data_field_area_get_avg(dfield, 0, 0, 10, 10);
+    avgcorner += gwy_data_field_area_get_avg(dfield, dfield->xres-10, 0, 10, 10);
+    avgcorner += gwy_data_field_area_get_avg(dfield, 0, dfield->yres-10, 10, 10);
+    avgcorner += gwy_data_field_area_get_avg(dfield, dfield->xres-10, dfield->yres-10, 10, 10);
+
+    avgtop = gwy_data_field_area_get_avg(dfield, dfield->xres/2-5, dfield->yres/2-5, 
+                                         10, 10);
+    
+    v = avgtop - avgcorner;
+    t = sqrt(dfield->xreal*dfield->xreal + dfield->yreal*dfield->yreal);
+    
+    param[0] = fabs(t*t - 2*v*v)/4/v;
     param[1] = dfield->xreal/2;
     param[2] = dfield->yreal/2;
-    param[3] = 0;
+    if (avgtop<avgcorner) param[3] = param[0];
+    else param[3] = -param[0];
     
 }
 
@@ -792,59 +807,34 @@ create_results_window(Fit2dArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(window)->vbox), table,
                        FALSE, FALSE, 0);
     row = 0;
-    //curve = args->curve - 1;
-/*
+
     attach_label(table, _(_("<b>Data:</b>")), row, 0, 0.0);
-    str = gwy_graph_get_label(GWY_GRAPH(args->parent_graph), curve);
-    attach_label(table, str->str, row, 1, 0.0);
-    row++;
-
-    str = g_string_new("");
+    str = g_string_new(gwy_data_window_get_base_name(gwy_app_data_window_get_for_data(args->original_data)));
     su = g_string_new("");
-    attach_label(table, _("Num of points:"), row, 0, 0.0);
-    g_string_printf(str, "%d of %d",
-                    count_really_fitted_points(args),
-                    args->parent_ns[curve]);
-    attach_label(table, str->str, row, 1, 0.0);
-    row++;
-
-    attach_label(table, _("X range:"), row, 0, 0.0);
-    mag = gwy_math_humanize_numbers((args->to - args->from)/120,
-                                    MAX(fabs(args->from), fabs(args->to)),
-                                    &precision);
-    g_string_printf(str, "%.*f–%.*f %s",
-                    precision, args->from/mag,
-                    precision, args->to/mag,
-                    format_magnitude(su, mag));
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
     attach_label(table, _("<b>Function:</b>"), row, 0, 0.0);
-    attach_label(table, gwy_math_nlfit_get_preset_name(args->fitfunc),
+    attach_label(table, "sphere",
                  row, 1, 0.0);
-    row++;
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label),
-                         gwy_math_nlfit_get_preset_formula(args->fitfunc));
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     attach_label(table, _("<b>Results</b>"), row, 0, 0.0);
     row++;
 
-    n = gwy_math_nlfit_get_preset_nparams(args->fitfunc);
+    n = 4;
     tab = gtk_table_new(n, 6, FALSE);
     gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     for (i = 0; i < n; i++) {
         attach_label(tab, "=", i, 1, 0.5);
         attach_label(tab, "±", i, 3, 0.5);
-        s = gwy_math_nlfit_get_preset_param_name(args->fitfunc, i);
-        attach_label(tab, s, i, 0, 0.0);
+        if (i==0) attach_label(tab, "radius", i, 0, 0.0);
+        if (i==1) attach_label(tab, "x center", i, 0, 0.0);
+        if (i==2) attach_label(tab, "y center", i, 0, 0.0);
+        if (i==3) attach_label(tab, "z center", i, 0, 0.0);
         value = args->par_res[i];
-        sigma = args->err[i];
+        sigma = args->par_err[i];
         mag = gwy_math_humanize_numbers(sigma/12, fabs(value), &precision);
         g_string_printf(str, "%.*f", precision, value/mag);
         attach_label(tab, str->str, i, 2, 1.0);
@@ -878,9 +868,9 @@ create_results_window(Fit2dArgs *args)
     row++;
 
     g_string_free(str, TRUE);
-    g_string_free(su, TRUE);
+
     str = create_fit_report(args);
-*/
+
     g_signal_connect(window, "response",
                      G_CALLBACK(results_window_response_cb), str);
     gtk_widget_show_all(window);
@@ -893,33 +883,27 @@ create_fit_report(Fit2dArgs *args)
     gchar *s, *s2;
     gint i, j, curve, n;
 
-    /*
+    
     g_assert(args->fitter->covar);
     report = g_string_new("");
 
-    curve = args->curve - 1;
     g_string_append_printf(report, _("\n===== Fit Results =====\n"));
 
-    str = gwy_graph_get_label(GWY_GRAPH(args->parent_graph), curve);
+    str = g_string_new(gwy_data_window_get_base_name(gwy_app_data_window_get_for_data(args->original_data)));
     g_string_append_printf(report, _("Data: %s\n"), str->str);
     str = g_string_new("");
-    g_string_append_printf(report, _("Number of points: %d of %d\n"),
-                           count_really_fitted_points(args),
-                           args->parent_ns[curve]);
-    g_string_append_printf(report, _("X range:          %g to %g\n"),
-                           args->from, args->to);
-    g_string_append_printf(report, _("Fitted function:  %s\n"),
-                           gwy_math_nlfit_get_preset_name(args->fitfunc));
+    g_string_append_printf(report, _("Fitted function: sphere\n"));
     g_string_append_printf(report, _("\nResults\n"));
-    n = gwy_math_nlfit_get_preset_nparams(args->fitfunc);
+    n = 4;
     for (i = 0; i < n; i++) {
         /* FIXME: how to do this better? use pango_parse_markup()? */
-   /*     s = gwy_strreplace(gwy_math_nlfit_get_preset_param_name(args->fitfunc,
-                                                                i),
-                           "<sub>", "", (gsize)-1);
+        if (i==0) s = gwy_strreplace("radius", "<sub>", "", (gsize)-1);
+        if (i==1) s = gwy_strreplace("x center", "<sub>", "", (gsize)-1);
+        if (i==2) s = gwy_strreplace("y center", "<sub>", "", (gsize)-1);
+        if (i==3) s = gwy_strreplace("z center", "<sub>", "", (gsize)-1);
         s2 = gwy_strreplace(s, "</sub>", "", (gsize)-1);
         g_string_append_printf(report, "%s = %g ± %g\n",
-                               s2, args->par_res[i], args->err[i]);
+                               s2, args->par_res[i], args->par_err[i]);
         g_free(s2);
         g_free(s);
     }
@@ -938,7 +922,7 @@ create_fit_report(Fit2dArgs *args)
     }
 
     g_string_free(str, TRUE);
-*/
+
     return report;
 }
 
@@ -947,4 +931,3 @@ create_fit_report(Fit2dArgs *args)
 
 
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
