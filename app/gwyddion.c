@@ -10,10 +10,11 @@ static GSList *current_data = NULL;
 static GtkAccelGroup *gwy_app_accel_group = NULL;
 static GtkWidget *data_process_menu = NULL;
 
-GwyContainer* gwy_app_get_current_data         (void);
-void          gwy_app_set_current_data         (GwyContainer *data);
-static void   gwy_menu_set_sensitive_recursive (GtkWidget *widget,
-                                                gpointer data);
+GwyDataWindow*  gwy_app_get_current_data_window  (void);
+GwyContainer*   gwy_app_get_current_data         (void);
+void            gwy_app_set_current_data_window  (GwyDataWindow *data_window);
+static void     gwy_menu_set_sensitive_recursive (GtkWidget *widget,
+                                                  gpointer data);
 
 void
 file_open_ok_cb(GtkFileSelection *selector)
@@ -43,10 +44,10 @@ file_open_ok_cb(GtkFileSelection *selector)
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
     gtk_window_add_accel_group(GTK_WINDOW(data_window), gwy_app_accel_group);
-    g_signal_connect_swapped(data_window, "focus-in-event",
-                             G_CALLBACK(gwy_app_set_current_data), data);
+    g_signal_connect(data_window, "focus-in-event",
+                     G_CALLBACK(gwy_app_set_current_data_window), NULL);
     g_signal_connect_swapped(data_window, "destroy",
-                             G_CALLBACK(gwy_app_set_current_data), NULL);
+                             G_CALLBACK(gwy_app_set_current_data_window), NULL);
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(g_object_unref), data);
     gtk_widget_show_all(data_window);
@@ -227,6 +228,26 @@ create_data_menu(GtkAccelGroup *accel_group)
     return alignment;
 }
 
+static void
+gwy_app_quit(void)
+{
+    GwyDataWindow *data_window;
+
+    while ((data_window = gwy_app_get_current_data_window()))
+        gtk_widget_destroy(GTK_WIDGET(data_window));
+
+    gtk_main_quit();
+}
+
+static void
+zoom_set_cb(GtkWidget *button, gpointer data)
+{
+    GwyDataWindow *data_window;
+
+    data_window = gwy_app_get_current_data_window();
+    gwy_data_window_set_zoom(data_window, GPOINTER_TO_INT(data));
+}
+
 void
 foo(void)
 {
@@ -257,13 +278,16 @@ foo(void)
 
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GTK_STOCK_ZOOM_IN,
                              "Zoom in", NULL,
-                             GTK_SIGNAL_FUNC(NULL), NULL, 0);
+                             GTK_SIGNAL_FUNC(zoom_set_cb),
+                             GINT_TO_POINTER(1), 0);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GTK_STOCK_ZOOM_100,
                              "Zoom 1:1", NULL,
-                             GTK_SIGNAL_FUNC(NULL), NULL, 0);
+                             GTK_SIGNAL_FUNC(zoom_set_cb),
+                             GINT_TO_POINTER(10000), 0);
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GTK_STOCK_ZOOM_OUT,
                              "Zoom out", NULL,
-                             GTK_SIGNAL_FUNC(NULL), NULL, 0);
+                             GTK_SIGNAL_FUNC(zoom_set_cb),
+                             GINT_TO_POINTER(-1), 0);
 
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
@@ -271,7 +295,7 @@ foo(void)
     gtk_window_add_accel_group(GTK_WINDOW(window), gwy_app_accel_group);
 
     /* XXX */
-    g_signal_connect(window, "destroy", gtk_main_quit, NULL);
+    g_signal_connect(window, "destroy", gwy_app_quit, NULL);
 }
 
 int
@@ -288,10 +312,27 @@ main(int argc, char *argv[])
     return 0;
 }
 
+GwyDataWindow*
+gwy_app_get_current_data_window(void)
+{
+    return current_data ? (GwyDataWindow*)current_data->data : NULL;
+}
+
 GwyContainer*
 gwy_app_get_current_data(void)
 {
-    return current_data ? (GwyContainer*)current_data->data : NULL;
+    GwyDataWindow *data_window;
+    GtkWidget *data_view;
+
+    data_window = gwy_app_get_current_data_window();
+    if (!data_window)
+        return NULL;
+
+    data_view = gwy_data_window_get_data_view(data_window);
+    if (!data_view)
+        return NULL;
+
+    return gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
 }
 
 static void
@@ -313,15 +354,15 @@ gwy_menu_set_sensitive_recursive(GtkWidget *widget,
 }
 
 void
-gwy_app_set_current_data(GwyContainer *data)
+gwy_app_set_current_data_window(GwyDataWindow *window)
 {
     gboolean update_state;
 
-    if (data) {
-        g_return_if_fail(GWY_IS_CONTAINER(data));
+    if (window) {
+        g_return_if_fail(GWY_IS_DATA_WINDOW(window));
         update_state = (current_data == NULL);
-        current_data = g_slist_remove(current_data, data);
-        current_data = g_slist_prepend(current_data, data);
+        current_data = g_slist_remove(current_data, window);
+        current_data = g_slist_prepend(current_data, window);
     }
     else {
         update_state = (current_data != NULL);
