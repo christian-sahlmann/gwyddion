@@ -20,7 +20,8 @@ Modules:
 - DWT Anisotropy: Undo and data corruption were fixed.
 - Nanoscope, Statistical quantities, FFT: SI unit handling improved.
 - FFT, CWT, DWT modules: Display non-square data error immediately.
-- FFT module: data are rescaled to unit range before fitting for more stable results.
+- FFT module: data are rescaled to unit range before fitting for more stable
+  results.
 - Unrotate, Rotate: have a preview now.
 - Profile: Corrupted graph titles for separate profiles were fixed.
 - Grain mark by threshold, watershed, and remove by threshold: Option to use
