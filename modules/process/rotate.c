@@ -54,25 +54,22 @@ rotate(GwyContainer *data, GwyRunType run)
     gdouble angle;
     gboolean ok;
 
-    gwy_debug("%s", __FUNCTION__);
-    g_assert(run & (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE));
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-    g_object_ref(data);
+    g_assert(run & GWY_RUN_ANY);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_object_ref(dfield);
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-
     ok = TRUE;
-    angle = gwy_container_get_double_by_name(data, rotate_angle_key);
+    if (gwy_container_contains_by_name(data, rotate_angle_key))
+        angle = gwy_container_get_double_by_name(data, rotate_angle_key);
+    else
+        angle = 0.0;
+
     if (run == GWY_RUN_INTERACTIVE)
         ok = rotate_dialog(&angle);
 
     if (ok) {
        gwy_data_field_rotate(dfield, angle, GWY_INTERPOLATION_BILINEAR);
-       gwy_container_set_double_by_name(data, rotate_angle_key, angle);
+       if (run != GWY_RUN_WITH_DEFAULTS)
+           gwy_container_set_double_by_name(data, rotate_angle_key, angle);
     }
-    g_object_unref(dfield);
-    g_object_unref(data);
 
     return FALSE;
 }

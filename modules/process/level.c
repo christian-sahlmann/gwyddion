@@ -58,12 +58,8 @@ level(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     gdouble a, b, c;
 
-    gwy_debug("%s", __FUNCTION__);
     g_assert(run & GWY_RUN_ANY);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
     gwy_data_field_plane_level(dfield, a, b, c);
 
@@ -76,12 +72,8 @@ level_rotate(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     gdouble a, b, c;
 
-    gwy_debug("%s", __FUNCTION__);
     g_assert(run & GWY_RUN_ANY);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
     /* FIXME: what funny scale the b and c have? */
     gwy_data_field_plane_rotate(dfield,

@@ -92,12 +92,8 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    gwy_debug("%s", __FUNCTION__);
     g_assert(run & GWY_RUN_ANY);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
     return TRUE;
@@ -108,12 +104,8 @@ flip_vertically(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    gwy_debug("%s", __FUNCTION__);
     g_assert(run & GWY_RUN_ANY);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-
     gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
 
     return TRUE;
@@ -124,12 +116,8 @@ invert_value(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    gwy_debug("%s", __FUNCTION__);
     g_assert(run & GWY_RUN_ANY);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-
     gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
 
     return TRUE;
@@ -140,12 +128,8 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    gwy_debug("%s", __FUNCTION__);
     g_assert(run & GWY_RUN_ANY);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-
     gwy_data_field_rotate(dfield, 270, GWY_INTERPOLATION_ROUND);
 
     return TRUE;
@@ -156,12 +140,8 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    gwy_debug("%s", __FUNCTION__);
     g_assert(run & GWY_RUN_ANY);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-
     gwy_data_field_rotate(dfield, 90, GWY_INTERPOLATION_ROUND);
 
     return TRUE;
@@ -172,12 +152,8 @@ rotate_180(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
-    gwy_debug("%s", __FUNCTION__);
     g_assert(run & GWY_RUN_ANY);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
-
     gwy_data_field_rotate(dfield, 180, GWY_INTERPOLATION_ROUND);
 
     return TRUE;
