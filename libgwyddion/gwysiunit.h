@@ -38,6 +38,13 @@ extern "C" {
 
 typedef struct _GwySIUnit GwySIUnit;
 typedef struct _GwySIUnitClass GwySIUnitClass;
+typedef struct _GwySINumber GwySINumber;
+
+struct _GwySINumber {
+    gchar *prefixed;
+    gdouble magnitude;
+    gint precision;
+};
 
 struct _GwySIUnit {
     GObject parent_instance;
@@ -56,8 +63,7 @@ GObject* gwy_si_unit_new(gchar *unit_string);
 void gwy_si_unit_set_unit_string(GwySIUnit *siunit, gchar *unit_string);
 gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit);
 
-void gwy_si_unit_get_prefix(GwySIUnit *siunit, gdouble value, gchar *prefix, gdouble *power);
-void gwy_si_unit_get_prefixed(GwySIUnit *siunit, gdouble value, gchar *prefixed, gdouble *power);
+void gwy_si_unit_get_prefixed(GwySIUnit *siunit, gdouble value, GwySINumber *number);
 
 void gwy_si_unit_copy(GwySIUnit *target, GwySIUnit *example);
 
