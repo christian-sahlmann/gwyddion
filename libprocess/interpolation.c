@@ -185,6 +185,8 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
                 + w3*data[l+1] + w4*data[l+2])/(w1 + w2 + w3 + w4);
 
         default:
+        g_assert_not_reached();
+        w1 = w2 = w3 = w4 = 0.0;
         break;
     }
 
