@@ -50,6 +50,7 @@ your own plug-ins.
   gwyplugindir=$RPM_BUILD_ROOT%{_libexecdir}/%{name}/plugins \
   gwypixmapdir=$RPM_BUILD_ROOT%{_datadir}/%{name}/pixmaps \
   HTML_DIR=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
+%__strip $RPM_BUILD_ROOT%{_libdir}/%{name}/modules/{file,process}/*.so
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
