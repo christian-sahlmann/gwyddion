@@ -30,8 +30,10 @@ Processing
   DWT methods)
 - Works on data with mask, without mask, with an empty mask, with presentation,
   without presentation, and undo work correctly in all cases
-- Does not copy mask and presentations with data
+- Does not copy mask and presentations with data on unrelated result
 - Works on data of various scales and z/xy (value/lateral) ratios[3]
+- If there are check boxes/radio buttons changing mode of operation, all
+  possibilities work
 - Selections are not copied to data in different coordinates (like FFT), but
   is copied/kept after operation like level
 - If an operation is not supposed to modify data (e.g. it should only add
