@@ -31,7 +31,7 @@
 
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    dist                        (GwyContainer *data,
+static gboolean    dist                       (GwyContainer *data,
                                                GwyRunType run);
 
 /* The module info. */
@@ -97,7 +97,7 @@ dist(GwyContainer *data, GwyRunType run)
                                         units->magnitude, 1, units->units, " ");
 
     window = gwy_app_graph_window_create(graph);
-    gtk_window_set_title(window, _("Grain size distribution"));
+    gtk_window_set_title(GTK_WINDOW(window), _("Grain size distribution"));
 
     g_string_free(lab, TRUE);
     g_object_unref(dataline);
