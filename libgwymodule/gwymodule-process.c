@@ -117,7 +117,7 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
 
     g_hash_table_foreach(process_funcs, gwy_hash_table_to_slist_cb, &entries);
     entries = g_slist_sort(entries, (GCompareFunc)process_menu_entry_compare);
-    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<data>",
+    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<proc>",
                                         accel_group);
 
     dp_str = "/_Data Process";
