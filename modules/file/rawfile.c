@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -41,6 +41,7 @@
 #include <app/app.h>
 #include <app/settings.h>
 
+/* Predefined common binary formats */
 typedef enum {
     RAW_NONE = 0,
     RAW_SIGNED_BYTE,
@@ -54,21 +55,24 @@ typedef enum {
     RAW_LAST
 } RawFileBuiltin;
 
+/* Text or binary data? */
 enum {
     RAW_BINARY,
     RAW_TEXT
 };
 
+/* Special-cased text data delimiters */
 enum {
     RAW_DELIM_ANY_WHITESPACE = -1,
     RAW_DELIM_OTHER          = -2,
-    RAW_DELIM_TAB            = 9,
+    RAW_DELIM_TAB            =  9,
 };
 
 enum {
     RESPONSE_RESET
 };
 
+/* Preset table columns */
 enum {
     RAW_PRESET_NAME = 0,
     RAW_PRESET_TYPE,
@@ -216,7 +220,7 @@ static GwyModuleInfo module_info = {
     "rawfile",
     "Read raw data according to user-specified format.",
     "Yeti <yeti@gwyddion.net>",
-    "0.99.6",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -418,8 +422,8 @@ rawfile_load(const gchar *filename)
         data = GWY_CONTAINER(gwy_container_new());
         gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
         g_object_unref(dfield);
-        rawfile_save_args(settings, args);
     }
+    rawfile_save_args(settings, args);
     g_free(buffer);
     g_free(args->delimiter);
     g_free(args->presetname);
@@ -506,6 +510,8 @@ rawfile_dialog(RawFileArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            rawfile_save_list_of_presets
+                (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
@@ -535,8 +541,8 @@ rawfile_dialog(RawFileArgs *args,
         }
         update_dialog_controls(&controls);
     } while (response != GTK_RESPONSE_OK);
-    rawfile_save_list_of_presets(gtk_tree_view_get_model(
-                                     GTK_TREE_VIEW(controls.presetlist)));
+    rawfile_save_list_of_presets
+        (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
     gtk_widget_destroy(dialog);
 
     return dfield;
@@ -1096,7 +1102,7 @@ delimiter_changed_cb(GtkWidget *item,
 {
     gint delim;
 
-    delim = gwy_option_menu_get_history(controls->delimmenu, "delimiter");
+    delim = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "delimiter"));
     gtk_widget_set_sensitive(controls->delimiter, delim == RAW_DELIM_OTHER);
     if (delim != RAW_DELIM_OTHER)
         g_free(controls->args->delimiter);
