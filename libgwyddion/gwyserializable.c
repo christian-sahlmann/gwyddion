@@ -224,6 +224,7 @@ gwy_serializable_duplicate_hard_way(GObject *object)
 /**
  * gwy_serialize_store_int32:
  * @buffer: A buffer to which the value should be stored.
+ * @position: Position in the buffer to store @value to.
  * @value: A 32bit integer.
  *
  * Stores a 32bit integer to a buffer.
