@@ -186,6 +186,8 @@ dialog_create(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     load_args(gwy_app_settings_get(), controls);
     controls->tooltips = gtk_tooltips_new();
+    g_object_ref(controls->tooltips);
+    gtk_object_sink(GTK_OBJECT(controls->tooltips));
 
     dialog = gtk_dialog_new_with_buttons(_("Mask Editor"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_hide(dialog);
