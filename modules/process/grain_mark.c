@@ -365,9 +365,8 @@ load_mask_color(GtkWidget *color_button,
 {
     GwyContainer *settings;
     GdkColor color;
-    /* FIXME: there should be always something in the container */
-    GwyRGBA rgba = { 1.0, 0.0, 0.0, 0.5 };
     guint16 alpha;
+    GwyRGBA rgba;
     const gdouble f = 65535.0;
 
     settings = gwy_app_settings_get();

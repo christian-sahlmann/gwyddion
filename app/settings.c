@@ -36,9 +36,11 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwyserializable.h>
+#include <libdraw/gwypalettedef.h>
 #include "settings.h"
 
-static gchar* get_gwyddion_dir (void);
+static void   gwy_app_settings_set_defaults (GwyContainer *settings);
+static gchar* get_gwyddion_dir              (void);
 
 static GwyContainer *gwy_settings = NULL;
 
@@ -59,6 +61,7 @@ gwy_app_settings_get(void)
     if (!gwy_settings) {
         g_warning("No settings loaded, creating empty");
         gwy_settings = GWY_CONTAINER(gwy_container_new());
+        gwy_app_settings_set_defaults(gwy_settings);
     }
 
     return gwy_settings;
@@ -159,8 +162,26 @@ gwy_app_settings_load(const gchar *filename)
     }
     gwy_app_settings_free();
     gwy_settings = new_settings;
+    gwy_app_settings_set_defaults(gwy_settings);
 
     return TRUE;
+}
+
+static void
+gwy_app_settings_set_defaults(GwyContainer *settings)
+{
+    static const GwyRGBA default_mask_color = { 1.0, 0.0, 0.0, 0.5 };
+
+    if (!gwy_container_contains_by_name(settings, "/mask/alpha")) {
+        gwy_container_set_double_by_name(settings, "/mask/red",
+                                        default_mask_color.r);
+        gwy_container_set_double_by_name(settings, "/mask/green",
+                                        default_mask_color.g);
+        gwy_container_set_double_by_name(settings, "/mask/blue",
+                                        default_mask_color.b);
+        gwy_container_set_double_by_name(settings, "/mask/alpha",
+                                        default_mask_color.a);
+    }
 }
 
 /**

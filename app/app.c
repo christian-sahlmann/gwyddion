@@ -761,7 +761,6 @@ void
 gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
                              gboolean defaultc)
 {
-    static const gdouble default_mask_color[4] = { 1.0, 0.0, 0.0, 0.5 };
     static const gchar *keys[] = {
         "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"
     };
@@ -785,12 +784,9 @@ gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
 
     settings = gwy_app_settings_get();
     for (i = 0; i < 4; i++) {
-        if (data && gwy_container_contains_by_name(data, keys[i]))
-            p[i] = gwy_container_get_double_by_name(data, keys[i]);
-        else if (gwy_container_contains_by_name(settings, keys[i] + 2))
-            p[i] = gwy_container_get_double_by_name(settings, keys[i] + 2);
-        else
-            p[i] = default_mask_color[i];
+        gwy_container_gis_double_by_name(settings, keys[i] + 2, p + i);
+        if (data)
+            gwy_container_gis_double_by_name(data, keys[i], p + i);
     }
 
     gdkcolor.red = (guint16)floor(p[0]*65535.999999);
