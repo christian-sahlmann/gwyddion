@@ -11,6 +11,8 @@ pixmapdata_DATA = \
 	gwy_fit_plane-24.png \
 	gwy_fit_triangle-24.png \
 	gwy_fix_zero-24.png \
+	gwy_flip_horizontally-24.png \
+	gwy_flip_vertically-24.png \
 	gwy_fft-24.png \
 	gwy_fractal-24.png \
 	gwy_grains-24.png \
@@ -30,20 +32,30 @@ pixmapdata_DATA = \
 	gwy_graph_zoom_out-24.png \
 	gwy_gwyddion-60.png \
 	gwy_gwyddion-32.png \
-	gwy_italic-24.png \
+	gwy_line_correction-24.png \
+	gwy_mask_grow-24.png \
+	gwy_mask_invert-24.png \
+	gwy_mask_remove-24.png \
+	gwy_mask_shrink-24.png \
 	gwy_none-24.png \
 	gwy_pointer-24.png \
 	gwy_pointer_measure-24.png \
 	gwy_polynom_remove-24.png \
 	gwy_profile-24.png \
 	gwy_rotate-24.png \
+	gwy_rotate_180-24.png \
+	gwy_rotate_90_ccw-24.png \
+	gwy_rotate_90_cw-24.png \
 	gwy_scale-24.png \
+	gwy_scars-24.png \
 	gwy_shader-24.png \
 	gwy_spot_remove-24.png \
 	gwy_stat_quantities-24.png \
 	gwy_subscript-24.png \
 	gwy_superscript-24.png \
 	gwy_unrotate-24.png \
+	gwy_value_invert-24.png \
+	gwy_window_measure-24.png \
 	gwy_zoom_1_1-24.png \
 	gwy_zoom_fit-24.png \
 	gwy_zoom_in-24.png \
