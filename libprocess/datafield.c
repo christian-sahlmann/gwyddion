@@ -467,7 +467,7 @@ gwy_data_field_area_copy(GwyDataField *src,
     /* make it as fast as gwy_data_field_copy() whenever possible (and maybe
      * faster, as we don't play with units */
     if (brrow - ulrow == 1
-        || (ulcol == 0 && brcol == src->xres && src->xres == src->yres)) {
+        || (ulcol == 0 && brcol == src->xres && src->xres == dest->xres)) {
         memcpy(dest->data + dest->xres*destrow + destcol,
                src->data + src->xres*ulrow + ulcol,
                (brcol - ulcol)*(brrow - ulrow)*sizeof(gdouble));
