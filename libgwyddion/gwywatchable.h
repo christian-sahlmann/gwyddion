@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_WATCHABLE_H__
 #define __GWY_WATCHABLE_H__
 

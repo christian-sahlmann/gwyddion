@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_SERIALIZABLE_H__
 #define __GWY_SERIALIZABLE_H__
 

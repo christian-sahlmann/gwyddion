@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #include <string.h>
 #include <glib-object.h>
 

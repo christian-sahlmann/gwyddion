@@ -1,3 +1,5 @@
+# @(#) $Id$
+
 include_HEADERS = \
 	gwycontainer.h \
 	gwyddion.h \

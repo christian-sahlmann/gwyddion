@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #include <math.h>
 
 #include <libgwyddion/gwywatchable.h>

@@ -1,3 +1,5 @@
+# @(#) $Id$
+
 include_HEADERS = \
 	datafield.h \
 	dataline.h \

@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_GWYDDION_H__
 #define __GWY_GWYDDION_H__
 

@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #include <math.h>
 #include <stdio.h>
 #include <gtk/gtkmain.h>

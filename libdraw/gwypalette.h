@@ -1,3 +1,4 @@
+/* @(#) $Id$ */
 
 #ifndef __GWY_PALETTE_H__
 #define __GWY_PALETTE_H__

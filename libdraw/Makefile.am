@@ -1,3 +1,5 @@
+# @(#) $Id$
+
 include_HEADERS = \
 	gwypalette.h \
 	gwypalettedef.h \

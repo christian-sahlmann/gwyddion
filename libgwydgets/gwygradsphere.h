@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_GRADSPHERE_H__
 #define __GWY_GRADSPHERE_H__
 

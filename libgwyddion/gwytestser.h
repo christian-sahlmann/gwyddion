@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_TEST_SER_H__
 #define __GWY_TEST_SER_H__
 

@@ -1,3 +1,4 @@
+/* @(#) $Id$ */
 
 #ifndef __GWY_DATALINE_H__
 #define __GWY_DATALINE_H__

@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_CONTAINER_H__
 #define __GWY_CONTAINER_H__
 

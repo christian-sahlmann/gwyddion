@@ -1,3 +1,4 @@
+/* @(#) $Id$ */
 
 #ifndef __GWY_SIMPLEFFT_H__
 #define __GWY_SIMPLEFFT_H__

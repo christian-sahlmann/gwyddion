@@ -1,3 +1,5 @@
+# @(#) $Id$
+
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(Gwyddion, 0.0.1, [David Necas (Yeti) <yeti@physics.muni.cz>])
 PACKAGE_URL="http://gwyddion.net/"

@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_DATAWINDOW_H__
 #define __GWY_DATAWINDOW_H__
 

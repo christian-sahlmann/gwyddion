@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_SPHERE_COORDS_H__
 #define __GWY_SPHERE_COORDS_H__
 

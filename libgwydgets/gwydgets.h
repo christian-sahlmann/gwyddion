@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_GWYDGETS_H__
 #define __GWY_GWYDGETS_H__
 

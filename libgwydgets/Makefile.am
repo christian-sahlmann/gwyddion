@@ -1,3 +1,5 @@
+# @(#) $Id$
+
 include_HEADERS = \
 	gwydgets.h \
 	gwydataview.h \

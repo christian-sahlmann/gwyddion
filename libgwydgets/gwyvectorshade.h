@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_VECTOR_SHADE_H__
 #define __GWY_VECTOR_SHADE_H__
 

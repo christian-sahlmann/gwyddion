@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_LAYER_BASIC_H__
 #define __GWY_LAYER_BASIC_H__
 

@@ -1,3 +1,4 @@
+/* @(#) $Id$ */
 
 #ifndef __GWY_INTERPOLATION_H__
 #define __GWY_INTERPOLATION_H__

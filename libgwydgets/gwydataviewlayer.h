@@ -1,3 +1,5 @@
+/* @(#) $Id$ */
+
 #ifndef __GWY_DATAVIEWLAYER_H__
 #define __GWY_DATAVIEWLAYER_H__
 
