@@ -37,7 +37,7 @@ get_DWORD(const guchar **p)
     return z;
 }
 
-static inline gfloat
+static inline gdouble
 get_FLOAT(const guchar **p)
 {
     union { guchar pp[4]; float f; } z;
