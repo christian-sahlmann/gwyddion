@@ -201,6 +201,7 @@ gwy_val_unit_realize(GtkWidget *widget)
 }
 
 
+/*not a commentary, only CVS test*/
 static void
 gwy_val_unit_size_allocate(GtkWidget *widget,
                            GtkAllocation *allocation)
