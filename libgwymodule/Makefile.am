@@ -19,7 +19,7 @@ libgwymodule_la_SOURCES = \
 #main_LDADD = libgwymodule.la ../libgwyddion/libgwyddion.la
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\"
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwymodule\"
 libgwymoduleincludedir = $(includedir)/gwyddion/libgwymodule
 
 clean-local:
