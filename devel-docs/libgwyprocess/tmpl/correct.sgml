@@ -14,19 +14,6 @@ Data correction
 
 </para>
 
-<!-- ##### ENUM GwyPlaneSymmetry ##### -->
-<para>
-
-</para>
-
-@GWY_SYMMETRY_AUTO: 
-@GWY_SYMMETRY_PARALLEL: 
-@GWY_SYMMETRY_TRIANGULAR: 
-@GWY_SYMMETRY_SQUARE: 
-@GWY_SYMMETRY_RHOMBIC: 
-@GWY_SYMMETRY_HEXAGONAL: 
-@GWY_SYMMETRY_LAST: 
-
 <!-- ##### FUNCTION gwy_data_field_correct_laplace_iteration ##### -->
 <para>
 

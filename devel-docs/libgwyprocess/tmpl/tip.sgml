@@ -14,16 +14,6 @@ SPM tip methods
 
 </para>
 
-<!-- ##### ENUM GwyTipType ##### -->
-<para>
-
-</para>
-
-@GWY_TIP_PYRAMIDE: 
-@GWY_TIP_CONTACT: 
-@GWY_TIP_NONCONTACT: 
-@GWY_TIP_DELTA: 
-
 <!-- ##### USER_FUNCTION GwySetFractionFunc ##### -->
 <para>
 

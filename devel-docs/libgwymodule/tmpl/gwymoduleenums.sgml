@@ -1,0 +1,47 @@
+<!-- ##### SECTION Title ##### -->
+gwymoduleenums
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyFileOperation ##### -->
+<para>
+
+</para>
+
+@GWY_FILE_NONE: 
+@GWY_FILE_LOAD: 
+@GWY_FILE_SAVE: 
+@GWY_FILE_DETECT: 
+@GWY_FILE_MASK: 
+
+<!-- ##### ENUM GwyToolSwitchEvent ##### -->
+<para>
+
+</para>
+
+@GWY_TOOL_SWITCH_WINDOW: 
+@GWY_TOOL_SWITCH_TOOL: 
+
+<!-- ##### ENUM GwyRunType ##### -->
+<para>
+
+</para>
+
+@GWY_RUN_NONE: 
+@GWY_RUN_WITH_DEFAULTS: 
+@GWY_RUN_NONINTERACTIVE: 
+@GWY_RUN_MODAL: 
+@GWY_RUN_INTERACTIVE: 
+@GWY_RUN_MASK: 
+

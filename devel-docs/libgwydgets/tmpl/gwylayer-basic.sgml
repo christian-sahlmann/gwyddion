@@ -14,6 +14,21 @@ Display data colored with a gradient
 
 </para>
 
+<!-- ##### STRUCT GwyLayerBasic ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyLayerBasicClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_layer_basic_new ##### -->
 <para>
 

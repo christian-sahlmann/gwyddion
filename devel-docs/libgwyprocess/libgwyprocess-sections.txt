@@ -3,7 +3,6 @@
 <TITLE>GwyDataField</TITLE>
 GwyDataField
 GwyDataFieldClass
-GwyComputationStateType
 gwy_data_field_invalidate
 gwy_data_field_duplicate
 gwy_data_field_new
@@ -62,7 +61,6 @@ gwy_data_field_set_column_part
 gwy_data_field_get_xder
 gwy_data_field_get_yder
 gwy_data_field_get_angder
-gwy_data_field_shade
 gwy_data_field_fit_lines
 <SUBSECTION Standard>
 GWY_DATA_FIELD
@@ -76,8 +74,6 @@ GWY_DATA_FIELD_GET_CLASS
 
 <SECTION>
 <FILE>dataline</FILE>
-GwySFOutputType
-GwyFitLineType
 <TITLE>GwyDataLine</TITLE>
 GwyDataLine
 GwyDataLineClass
@@ -152,25 +148,50 @@ gwy_data_field_max_of_fields
 
 <SECTION>
 <FILE>interpolation</FILE>
-GwyInterpolationType
 gwy_interpolation_get_dval
 gwy_interpolation_get_dval_of_equidists
 </SECTION>
 
 <SECTION>
+<FILE>gwyprocesstypes</FILE>
+gwy_sf_output_type_get_type
+GWY_TYPE_SF_OUTPUT_TYPE
+gwy_merge_type_get_type
+GWY_TYPE_MERGE_TYPE
+gwy_watershed_state_type_get_type
+GWY_TYPE_WATERSHED_STATE_TYPE
+gwy_plane_symmetry_get_type
+GWY_TYPE_PLANE_SYMMETRY
+gwy_2dcwt_wavelet_type_get_type
+GWY_TYPE_2DCWT_WAVELET_TYPE
+gwy_orientation_get_type
+GWY_TYPE_ORIENTATION
+gwy_data_field_cached_get_type
+GWY_TYPE_DATA_FIELD_CACHED
+gwy_computation_state_type_get_type
+GWY_TYPE_COMPUTATION_STATE_TYPE
+gwy_dwt_type_get_type
+GWY_TYPE_DWT_TYPE
+gwy_dwt_denoise_type_get_type
+GWY_TYPE_DWT_DENOISE_TYPE
+gwy_interpolation_type_get_type
+GWY_TYPE_INTERPOLATION_TYPE
+gwy_plane_fit_quantity_get_type
+GWY_TYPE_PLANE_FIT_QUANTITY
+gwy_windowing_type_get_type
+GWY_TYPE_WINDOWING_TYPE
+gwy_tip_type_get_type
+GWY_TYPE_TIP_TYPE
+</SECTION>
+
+<SECTION>
 <FILE>cwt</FILE>
-Gwy2DCWTWaveletType
-GwyCWTWaveletType
 gwy_cwt_wfunc_2d
 </SECTION>
 
 <SECTION>
 <FILE>dwt</FILE>
-GwyDWTType
-GwyDWTDenoiseType
 gwy_dwt_set_coefficients
-gwy_dwt_plot_wavelet
-gwy_dwt_plot_scaling_function
 gwy_data_line_dwt
 gwy_data_field_xdwt
 gwy_data_field_ydwt
@@ -182,12 +203,9 @@ gwy_data_field_dwt_correction
 
 <SECTION>
 <FILE>grains</FILE>
-GwyMergeType
-GwyWatershedStateType
 GwyWatershedStatus
 gwy_data_field_grains_mark_curvature
 gwy_data_field_grains_mark_watershed
-gwy_data_field_grains_remove_manually
 gwy_data_field_grains_remove_grain
 gwy_data_field_grains_extract_grain
 gwy_data_field_grains_remove_by_size
@@ -196,7 +214,6 @@ gwy_data_field_grains_watershed_iteration
 gwy_data_field_grains_mark_local_maxima
 gwy_data_field_grains_mark_height
 gwy_data_field_grains_mark_slope
-gwy_data_field_grains_get_average
 gwy_data_field_grains_get_distribution
 gwy_data_field_grains_add
 gwy_data_field_grains_intersect
@@ -204,7 +221,6 @@ gwy_data_field_grains_intersect
 
 <SECTION>
 <FILE>tip</FILE>
-GwyTipType
 GwySetFractionFunc
 GwySetMessageFunc
 GwyTipModelFunc
@@ -249,7 +265,6 @@ gwy_data_field_fft_filter_1d
 
 <SECTION>
 <FILE>level</FILE>
-GwyPlaneFitQuantity
 gwy_data_field_area_fit_plane
 gwy_data_field_plane_coeffs
 gwy_data_field_plane_level
@@ -266,15 +281,20 @@ gwy_data_field_local_plane_quantity
 
 <SECTION>
 <FILE>filters</FILE>
-GwyFilterType
+gwy_data_field_convolve
 gwy_data_field_area_convolve
+gwy_data_field_filter_median
 gwy_data_field_area_filter_median
+gwy_data_field_filter_mean
 gwy_data_field_area_filter_mean
+gwy_data_field_filter_conservative
 gwy_data_field_area_filter_conservative
+gwy_data_field_filter_laplacian
 gwy_data_field_area_filter_laplacian
+gwy_data_field_filter_sobel
 gwy_data_field_area_filter_sobel
+gwy_data_field_filter_prewitt
 gwy_data_field_area_filter_prewitt
-gwy_data_field_area_filter_canny
 gwy_data_field_filter_minimum
 gwy_data_field_area_filter_minimum
 gwy_data_field_filter_maximum
@@ -283,13 +303,12 @@ gwy_data_field_filter_rms
 gwy_data_field_area_filter_rms
 gwy_data_field_filter_kuwahara
 gwy_data_field_area_filter_kuwahara
-gwy_data_field_convolve
-gwy_data_field_filter_median
-gwy_data_field_filter_mean
-gwy_data_field_filter_conservative
-gwy_data_field_filter_laplacian
-gwy_data_field_filter_sobel
-gwy_data_field_filter_prewitt
+gwy_data_field_filter_canny
+gwy_data_field_shade
+</SECTION>
+
+<SECTION>
+<FILE>stamp-gwyprocesstypes</FILE>
 </SECTION>
 
 <SECTION>
@@ -316,13 +335,6 @@ gwy_data_field_get_normal_coeffs
 gwy_data_field_area_get_normal_coeffs
 gwy_data_field_area_get_inclination
 gwy_data_field_get_inclination
-gwy_data_field_get_area_max
-gwy_data_field_get_area_min
-gwy_data_field_get_area_avg
-gwy_data_field_get_area_rms
-gwy_data_field_get_area_sum
-gwy_data_field_get_area_surface_area
-gwy_data_field_get_area_stats
 </SECTION>
 
 <SECTION>
@@ -332,9 +344,26 @@ gwy_process_type_init
 
 <SECTION>
 <FILE>simplefft</FILE>
-GwyWindowingType
 gwy_fft_hum
 gwy_fft_window
+</SECTION>
+
+<SECTION>
+<FILE>gwyprocessenums</FILE>
+GwySFOutputType
+GwyMergeType
+GwyWatershedStateType
+GwyPlaneSymmetry
+Gwy2DCWTWaveletType
+GwyOrientation
+GwyDataFieldCached
+GwyComputationStateType
+GwyDWTType
+GwyDWTDenoiseType
+GwyInterpolationType
+GwyPlaneFitQuantity
+GwyWindowingType
+GwyTipType
 </SECTION>
 
 <SECTION>
@@ -382,7 +411,6 @@ gwy_data_field_fractal_correction
 
 <SECTION>
 <FILE>correct</FILE>
-GwyPlaneSymmetry
 gwy_data_field_correct_laplace_iteration
 gwy_data_field_correct_average
 gwy_data_field_mask_outliers

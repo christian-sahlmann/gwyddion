@@ -161,11 +161,6 @@ GWY_VRULER_GET_CLASS
 
 <SECTION>
 <FILE>gwyaxiser</FILE>
-GWY_AXISER_NORTH
-GWY_AXISER_SOUTH
-GWY_AXISER_EAST
-GWY_AXISER_WEST
-GwyAxiserScaleFormat
 GwyAxiserTick
 GwyAxiserLabeledTick
 GwyAxiserParams
@@ -227,7 +222,6 @@ GWY_LAYER_MASK_GET_CLASS
 
 <SECTION>
 <FILE>gwygrapherarea</FILE>
-GwyGrapherStatusType
 GwyGrapherStatus_PointData
 GwyGrapherStatus_CursorData
 GwyGrapherStatus_PointsData
@@ -289,8 +283,6 @@ GWY_GRAPHER_AREA_DIALOG_GET_CLASS
 </SECTION>
 <SECTION>
 <FILE>gwygraphlabel</FILE>
-GwyGraphLabelPosition
-GwyGraphPointType
 GwyGraphAreaCurveParams
 GwyGraphLabelParams
 <TITLE>GwyGraphLabel</TITLE>
@@ -366,6 +358,7 @@ gwy_3d_label_set_fixed_size
 gwy_3d_label_user_size
 gwy_3d_label_get_delta_x_adjustment
 gwy_3d_label_get_delta_y_adjustment
+gwy_3d_label_get_rotation_adjustment
 gwy_3d_label_get_size_adjustment
 <SUBSECTION Standard>
 GWY_3D_LABEL
@@ -440,7 +433,6 @@ GWY_VECTOR_LAYER_GET_CLASS
 
 <SECTION>
 <FILE>gwyruler</FILE>
-GwyUnitsPlacement
 <TITLE>GwyRuler</TITLE>
 GwyRuler
 GwyRulerClass
@@ -507,7 +499,6 @@ GWY_LAYER_BASIC_GET_CLASS
 
 <SECTION>
 <FILE>gwygraphcurvemodel</FILE>
-GwyGraphCurveType
 <TITLE>GwyGraphCurveModel</TITLE>
 GwyGraphCurveModel
 GwyGraphCurveModelClass
@@ -526,7 +517,6 @@ GWY_GRAPH_CURVE_MODEL_GET_CLASS
 
 <SECTION>
 <FILE>gwydatawindow</FILE>
-GwyZoomMode
 <TITLE>GwyDataWindow</TITLE>
 GwyDataWindow
 GwyDataWindowClass
@@ -568,9 +558,6 @@ GWY_HRULER_GET_CLASS
 
 <SECTION>
 <FILE>gwy3dview</FILE>
-Gwy3DMovement
-Gwy3DProjection
-Gwy3DViewLabel
 <TITLE>Gwy3DView</TITLE>
 Gwy3DView
 Gwy3DViewClass
@@ -578,16 +565,16 @@ gwy_3d_view_new
 gwy_3d_view_update
 gwy_3d_view_get_gradient
 gwy_3d_view_set_gradient
-gwy_3d_view_get_status
-gwy_3d_view_set_status
+gwy_3d_view_get_movement_type
+gwy_3d_view_set_movement_type
 gwy_3d_view_get_projection
 gwy_3d_view_set_projection
 gwy_3d_view_get_show_axes
 gwy_3d_view_set_show_axes
 gwy_3d_view_get_show_labels
 gwy_3d_view_set_show_labels
-gwy_3d_view_get_use_lights
-gwy_3d_view_set_use_lights
+gwy_3d_view_get_visualization
+gwy_3d_view_set_visualization
 gwy_3d_view_get_reduced_size
 gwy_3d_view_set_reduced_size
 gwy_3d_view_get_material
@@ -674,7 +661,6 @@ GWY_GRAPH_MODEL_GET_CLASS
 <SECTION>
 <FILE>gwygrapharea</FILE>
 GwyGraphAreaCurvePoints
-GwyGraphStatusType
 GwyGraphDataPoint
 GwyGraphScrPoint
 GwyGraphStatus_CursorData
@@ -724,21 +710,6 @@ GWY_3D_WINDOW_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gwy3dlabels</FILE>
-<TITLE>Gwy3DLabelGroup</TITLE>
-gwy_3d_label_group_new
-gwy_3d_label_group_update
-gwy_3d_label_group_expand_label
-<SUBSECTION Standard>
-GWY_3D_LABEL_GROUP
-GWY_IS_3D_LABEL_GROUP
-GWY_TYPE_3D_LABEL_GROUP
-gwy_3d_label_group_get_type
-GWY_3D_LABEL_GROUP_CLASS
-GWY_IS_3D_LABEL_GROUP_CLASS
-GWY_3D_LABEL_GROUP_GET_CLASS
-</SECTION>
-<SECTION>
 <FILE>gwypixmaplayer</FILE>
 <TITLE>GwyPixmapLayer</TITLE>
 GwyPixmapLayer
@@ -756,11 +727,6 @@ GWY_PIXMAP_LAYER_GET_CLASS
 
 <SECTION>
 <FILE>gwyaxis</FILE>
-GWY_AXIS_NORTH
-GWY_AXIS_SOUTH
-GWY_AXIS_EAST
-GWY_AXIS_WEST
-GwyAxisScaleFormat
 GwyTick
 GwyLabeledTick
 GwyAxisParams
@@ -827,20 +793,26 @@ GWY_GRAPH_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gwydgets</FILE>
-gwy_adjustment_get_int
+<FILE>gwydgetenums</FILE>
+GwyAxisScaleFormat
+Gwy3DMovement
+Gwy3DProjection
+Gwy3DVisualization
+Gwy3DViewLabel
+GwyUnitsPlacement
+GwyZoomMode
 GwyHScaleStyle
+GwyGraphStatusType
+GwyGraphPointType
+GwyGraphCurveType
+GwyGraphLabelPosition
+</SECTION>
+
+<SECTION>
+<FILE>gwydgets</FILE>
 gwy_widgets_type_init
 gwy_widgets_gl_init
 gwy_widgets_get_gl_config
-gwy_table_attach_spinbutton
-gwy_table_attach_row
-gwy_table_attach_hscale
-gwy_table_hscale_set_sensitive
-gwy_table_get_child_widget
-gwy_color_selector_for_mask
-gwy_dialog_prevent_delete_cb
-gwy_stock_like_button_new
 </SECTION>
 
 <SECTION>
@@ -853,10 +825,52 @@ gwy_radio_buttons_get_current_from_widget
 </SECTION>
 
 <SECTION>
+<FILE>gwydgettypes</FILE>
+gwy_axis_scale_format_get_type
+GWY_TYPE_AXIS_SCALE_FORMAT
+gwy_3d_movement_get_type
+GWY_TYPE_3D_MOVEMENT
+gwy_3d_projection_get_type
+GWY_TYPE_3D_PROJECTION
+gwy_3d_visualization_get_type
+GWY_TYPE_3D_VISUALIZATION
+gwy_3d_view_label_get_type
+GWY_TYPE_3D_VIEW_LABEL
+gwy_units_placement_get_type
+GWY_TYPE_UNITS_PLACEMENT
+gwy_zoom_mode_get_type
+GWY_TYPE_ZOOM_MODE
+gwy_hscale_style_get_type
+GWY_TYPE_HSCALE_STYLE
+gwy_graph_status_type_get_type
+GWY_TYPE_GRAPH_STATUS_TYPE
+gwy_graph_point_type_get_type
+GWY_TYPE_GRAPH_POINT_TYPE
+gwy_graph_curve_type_get_type
+GWY_TYPE_GRAPH_CURVE_TYPE
+gwy_graph_label_position_get_type
+GWY_TYPE_GRAPH_LABEL_POSITION
+</SECTION>
+
+<SECTION>
+<FILE>stamp-gwydgettypes</FILE>
+</SECTION>
+
+<SECTION>
+<FILE>gwydgetutils</FILE>
+gwy_adjustment_get_int
+gwy_table_attach_spinbutton
+gwy_table_attach_row
+gwy_table_attach_hscale
+gwy_table_hscale_set_sensitive
+gwy_table_get_child_widget
+gwy_color_selector_for_mask
+gwy_dialog_prevent_delete_cb
+gwy_stock_like_button_new
+</SECTION>
+
+<SECTION>
 <FILE>gwygrapherbasics</FILE>
-GwyGrapherPointType
-GwyGrapherCurveType
-GwyGrapherLabelPosition
 GwyGrapherDataPoint
 GwyGrapherDataArea
 GwyGrapherActiveAreaSpecs
@@ -942,12 +956,11 @@ gwy_option_menu_gradient
 gwy_option_menu_gl_material
 gwy_option_menu_interpolation
 gwy_option_menu_windowing
-gwy_option_menu_zoom_mode
 gwy_option_menu_2dcwt
 gwy_option_menu_dwt
 gwy_option_menu_sfunctions_output
-gwy_option_menu_direction
-gwy_option_menu_mergegrain
+gwy_option_menu_orientation
+gwy_option_menu_merge_type
 gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history

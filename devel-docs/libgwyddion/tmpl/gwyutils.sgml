@@ -131,6 +131,16 @@ path manipulation
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_str_has_suffix_nocase ##### -->
+<para>
+
+</para>
+
+@s: 
+@suffix: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_file_get_contents ##### -->
 <para>
 

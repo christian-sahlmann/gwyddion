@@ -19,13 +19,47 @@ gwy_ruler_set_units()).  It also better follows Gtk+ theme than #GtkRuler.
 #GwyVRuler, #GwyHRuler, #GwySIUnit.
 </para>
 
-<!-- ##### ENUM GwyUnitsPlacement ##### -->
+<!-- ##### STRUCT GwyRuler ##### -->
 <para>
 
 </para>
 
-@GWY_UNITS_PLACEMENT_NONE: 
-@GWY_UNITS_PLACEMENT_AT_ZERO: 
+
+<!-- ##### ARG GwyRuler:lower ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyRuler:max-size ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyRuler:position ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyRuler:units-placement ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyRuler:upper ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyRulerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@draw_ticks: 
+@draw_pos: 
+@reserved1: 
+@reserved2: 
 
 <!-- ##### FUNCTION gwy_ruler_set_range ##### -->
 <para>

@@ -26,17 +26,6 @@ and the signatures of particular file operations:
 
 </para>
 
-<!-- ##### ENUM GwyFileOperation ##### -->
-<para>
-
-</para>
-
-@GWY_FILE_NONE: 
-@GWY_FILE_LOAD: 
-@GWY_FILE_SAVE: 
-@GWY_FILE_DETECT: 
-@GWY_FILE_MASK: 
-
 <!-- ##### STRUCT GwyFileFuncInfo ##### -->
 <para>
 

@@ -14,27 +14,6 @@ Discrete Wavelet Transform
 
 </para>
 
-<!-- ##### ENUM GwyDWTType ##### -->
-<para>
-
-</para>
-
-@GWY_DWT_HAAR: 
-@GWY_DWT_DAUB4: 
-@GWY_DWT_DAUB6: 
-@GWY_DWT_DAUB8: 
-@GWY_DWT_DAUB12: 
-@GWY_DWT_DAUB20: 
-
-<!-- ##### ENUM GwyDWTDenoiseType ##### -->
-<para>
-
-</para>
-
-@GWY_DWT_DENOISE_UNIVERSAL: 
-@GWY_DWT_DENOISE_SCALE_ADAPTIVE: 
-@GWY_DWT_DENOISE_SPACE_ADAPTIVE: 
-
 <!-- ##### FUNCTION gwy_dwt_set_coefficients ##### -->
 <para>
 
@@ -42,26 +21,6 @@ Discrete Wavelet Transform
 
 @dline: 
 @type: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_dwt_plot_wavelet ##### -->
-<para>
-
-</para>
-
-@dline: 
-@wt_coefs: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_dwt_plot_scaling_function ##### -->
-<para>
-
-</para>
-
-@dline: 
-@wt_coefs: 
 @Returns: 
 
 

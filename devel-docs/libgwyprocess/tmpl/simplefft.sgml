@@ -14,19 +14,6 @@ Simple FFT algorithm
 
 </para>
 
-<!-- ##### ENUM GwyWindowingType ##### -->
-<para>
-Selection of windowing applied before FFT (if requested).
-</para>
-
-@GWY_WINDOWING_NONE: no windowing
-@GWY_WINDOWING_HANN: Hann windowing
-@GWY_WINDOWING_HAMMING: Hamming windowing
-@GWY_WINDOWING_BLACKMANN: Blackmann windowing
-@GWY_WINDOWING_LANCZOS: Lanczos windowing
-@GWY_WINDOWING_WELCH: Welch windowing
-@GWY_WINDOWING_RECT: Rectangular windowing
-
 <!-- ##### FUNCTION gwy_fft_hum ##### -->
 <para>
 

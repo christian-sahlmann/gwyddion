@@ -1,0 +1,168 @@
+<!-- ##### SECTION Title ##### -->
+gwyprocessenums
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwySFOutputType ##### -->
+<para>
+
+</para>
+
+@GWY_SF_OUTPUT_DH: 
+@GWY_SF_OUTPUT_CDH: 
+@GWY_SF_OUTPUT_DA: 
+@GWY_SF_OUTPUT_CDA: 
+@GWY_SF_OUTPUT_ACF: 
+@GWY_SF_OUTPUT_HHCF: 
+@GWY_SF_OUTPUT_PSDF: 
+
+<!-- ##### ENUM GwyMergeType ##### -->
+<para>
+Mask processing merging (namely used in grain processing).
+</para>
+
+@GWY_MERGE_UNION: 
+@GWY_MERGE_INTERSECTION: 
+
+<!-- ##### ENUM GwyWatershedStateType ##### -->
+<para>
+
+</para>
+
+@GWY_WATERSHED_STATE_INIT: 
+@GWY_WATERSHED_STATE_LOCATE: 
+@GWY_WATERSHED_STATE_MIN: 
+@GWY_WATERSHED_STATE_WATERSHED: 
+@GWY_WATERSHED_STATE_MARK: 
+@GWY_WATERSHED_STATE_FINISHED: 
+
+<!-- ##### ENUM GwyPlaneSymmetry ##### -->
+<para>
+
+</para>
+
+@GWY_SYMMETRY_AUTO: 
+@GWY_SYMMETRY_PARALLEL: 
+@GWY_SYMMETRY_TRIANGULAR: 
+@GWY_SYMMETRY_SQUARE: 
+@GWY_SYMMETRY_RHOMBIC: 
+@GWY_SYMMETRY_HEXAGONAL: 
+@GWY_SYMMETRY_LAST: 
+
+<!-- ##### ENUM Gwy2DCWTWaveletType ##### -->
+<para>
+
+</para>
+
+@GWY_2DCWT_GAUSS: 
+@GWY_2DCWT_HAT: 
+
+<!-- ##### ENUM GwyOrientation ##### -->
+<para>
+
+</para>
+
+@GWY_ORIENTATION_HORIZONTAL: 
+@GWY_ORIENTATION_VERTICAL: 
+
+<!-- ##### ENUM GwyDataFieldCached ##### -->
+<para>
+
+</para>
+
+@GWY_DATA_FIELD_CACHE_MIN: 
+@GWY_DATA_FIELD_CACHE_MAX: 
+@GWY_DATA_FIELD_CACHE_AVG: 
+@GWY_DATA_FIELD_CACHE_RMS: 
+@GWY_DATA_FIELD_CACHE_SIZE: 
+
+<!-- ##### ENUM GwyComputationStateType ##### -->
+<para>
+
+</para>
+
+@GWY_COMPUTATION_STATE_INIT: 
+@GWY_COMPUTATION_STATE_ITERATE: 
+@GWY_COMPUTATION_STATE_FINISHED: 
+
+<!-- ##### ENUM GwyDWTType ##### -->
+<para>
+
+</para>
+
+@GWY_DWT_HAAR: 
+@GWY_DWT_DAUB4: 
+@GWY_DWT_DAUB6: 
+@GWY_DWT_DAUB8: 
+@GWY_DWT_DAUB12: 
+@GWY_DWT_DAUB20: 
+
+<!-- ##### ENUM GwyDWTDenoiseType ##### -->
+<para>
+
+</para>
+
+@GWY_DWT_DENOISE_UNIVERSAL: 
+@GWY_DWT_DENOISE_SCALE_ADAPTIVE: 
+@GWY_DWT_DENOISE_SPACE_ADAPTIVE: 
+
+<!-- ##### ENUM GwyInterpolationType ##### -->
+<para>
+
+</para>
+
+@GWY_INTERPOLATION_NONE: 
+@GWY_INTERPOLATION_ROUND: 
+@GWY_INTERPOLATION_BILINEAR: 
+@GWY_INTERPOLATION_KEY: 
+@GWY_INTERPOLATION_BSPLINE: 
+@GWY_INTERPOLATION_OMOMS: 
+@GWY_INTERPOLATION_NNA: 
+
+<!-- ##### ENUM GwyPlaneFitQuantity ##### -->
+<para>
+
+</para>
+
+@GWY_PLANE_FIT_A: 
+@GWY_PLANE_FIT_BX: 
+@GWY_PLANE_FIT_BY: 
+@GWY_PLANE_FIT_ANGLE: 
+@GWY_PLANE_FIT_SLOPE: 
+@GWY_PLANE_FIT_S0: 
+@GWY_PLANE_FIT_S0_REDUCED: 
+
+<!-- ##### ENUM GwyWindowingType ##### -->
+<para>
+Selection of windowing applied before FFT (if requested).
+</para>
+
+@GWY_WINDOWING_NONE: no windowing
+@GWY_WINDOWING_HANN: Hann windowing
+@GWY_WINDOWING_HAMMING: Hamming windowing
+@GWY_WINDOWING_BLACKMANN: Blackmann windowing
+@GWY_WINDOWING_LANCZOS: Lanczos windowing
+@GWY_WINDOWING_WELCH: Welch windowing
+@GWY_WINDOWING_RECT: Rectangular windowing
+
+<!-- ##### ENUM GwyTipType ##### -->
+<para>
+
+</para>
+
+@GWY_TIP_PYRAMIDE: 
+@GWY_TIP_CONTACT: 
+@GWY_TIP_NONCONTACT: 
+@GWY_TIP_DELTA: 
+

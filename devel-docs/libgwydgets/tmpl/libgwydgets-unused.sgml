@@ -339,7 +339,37 @@ GwyVMenuBar
 
 @obj: 
 
+<!-- ##### MACRO GWY_AXISER_EAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_AXISER_NORTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_AXISER_SOUTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_AXISER_WEST ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GWY_AXIS_AUTO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_AXIS_EAST ##### -->
 <para>
 
 </para>
@@ -358,6 +388,24 @@ GwyVMenuBar
 
 
 <!-- ##### MACRO GWY_AXIS_INT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_AXIS_NORTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_AXIS_SOUTH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_AXIS_WEST ##### -->
 <para>
 
 </para>
@@ -578,92 +626,15 @@ GwyVMenuBar
 </para>
 
 
-<!-- ##### STRUCT Gwy3DView ##### -->
+<!-- ##### ENUM GwyAxiserScaleFormat ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### STRUCT Gwy3DViewClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-@reserved3: 
-@reserved4: 
-
-<!-- ##### STRUCT Gwy3DWindow ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT Gwy3DWindowClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-@reserved3: 
-@reserved4: 
-
-<!-- ##### STRUCT GwyAxis ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyAxis::label-updated ##### -->
-<para>
-
-</para>
-
-@gwyaxis: the object which received the signal.
-
-<!-- ##### STRUCT GwyAxisClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@label_updated: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyAxisDialog ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyAxisDialogClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyColorAxis ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyColorAxisClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
+@GWY_AXISER_FLOAT: 
+@GWY_AXISER_EXP: 
+@GWY_AXISER_INT: 
+@GWY_AXISER_AUTO: 
 
 <!-- ##### STRUCT GwyColorAxisParams ##### -->
 <para>
@@ -673,12 +644,6 @@ GwyVMenuBar
 @tick_length: 
 @textarea: 
 @font: 
-
-<!-- ##### STRUCT GwyColorButton ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### SIGNAL GwyColorButton::color-set ##### -->
 <para>
@@ -693,32 +658,11 @@ GwyVMenuBar
 </para>
 
 
-<!-- ##### ARG GwyColorButton:color ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### ARG GwyColorButton:title ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### ARG GwyColorButton:use-alpha ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyColorButtonClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
 
 <!-- ##### STRUCT GwyColorButtonPrivate ##### -->
 <para>
@@ -734,42 +678,6 @@ GwyVMenuBar
 @alpha: 
 @use_alpha: 
 
-<!-- ##### STRUCT GwyDataView ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyDataView::redrawn ##### -->
-<para>
-
-</para>
-
-@gwydataview: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataView::updated ##### -->
-<para>
-
-</para>
-
-@gwydataview: the object which received the signal.
-
-<!-- ##### STRUCT GwyDataViewClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@updated: 
-@redrawn: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyDataViewLayer ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### SIGNAL GwyDataViewLayer::finished ##### -->
 <para>
 
@@ -777,165 +685,12 @@ GwyVMenuBar
 
 @gwydataviewlayer: the object which received the signal.
 
-<!-- ##### SIGNAL GwyDataViewLayer::plugged ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::unplugged ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::updated ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### STRUCT GwyDataViewLayerClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@wants_repaint: 
-@plugged: 
-@unplugged: 
-@updated: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyDataWindow ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyDataWindow::title-changed ##### -->
-<para>
-
-</para>
-
-@gwydatawindow: the object which received the signal.
-
-<!-- ##### STRUCT GwyDataWindowClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@title_changed: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyGLMaterial ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyGLMaterialClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@materials: 
-
-<!-- ##### STRUCT GwyGraph ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyGraphArea ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### SIGNAL GwyGraphArea::gwygrapharea-selected ##### -->
 <para>
 
 </para>
 
 @gwygrapharea: the object which received the signal.
-
-<!-- ##### SIGNAL GwyGraphArea::selected ##### -->
-<para>
-
-</para>
-
-@gwygrapharea: the object which received the signal.
-
-<!-- ##### SIGNAL GwyGraphArea::zoomed ##### -->
-<para>
-
-</para>
-
-@gwygrapharea: the object which received the signal.
-
-<!-- ##### STRUCT GwyGraphAreaClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@cross_cursor: 
-@arrow_cursor: 
-@selected: 
-@zoomed: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyGraphClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@gwygraph: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyGraphCorner ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyGraphCornerClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@selected: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyGraphCurveModel ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyGraphCurveModelClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@value_changed: 
-@reserved1: 
-@reserved2: 
-@reserved3: 
 
 <!-- ##### STRUCT GwyGraphEpitomeCurve ##### -->
 <para>
@@ -947,65 +702,52 @@ GwyVMenuBar
 @ydata: 
 @params: 
 
-<!-- ##### STRUCT GwyGraphLabel ##### -->
+<!-- ##### ENUM GwyGrapherCurveType ##### -->
 <para>
 
 </para>
 
+@GWY_GRAPHER_CURVE_HIDDEN: 
+@GWY_GRAPHER_CURVE_POINTS: 
+@GWY_GRAPHER_CURVE_LINE: 
+@GWY_GRAPHER_CURVE_LINE_POINTS: 
 
-<!-- ##### STRUCT GwyGraphLabelClass ##### -->
+<!-- ##### ENUM GwyGrapherLabelPosition ##### -->
 <para>
 
 </para>
 
-@parent_class: 
-@selected: 
-@reserved1: 
-@reserved2: 
+@GWY_GRAPHER_LABEL_NORTHEAST: 
+@GWY_GRAPHER_LABEL_NORTHWEST: 
+@GWY_GRAPHER_LABEL_SOUTHEAST: 
+@GWY_GRAPHER_LABEL_SOUTHWEST: 
+@GWY_GRAPHER_LABEL_USER: 
 
-<!-- ##### STRUCT GwyGraphModel ##### -->
+<!-- ##### ENUM GwyGrapherPointType ##### -->
 <para>
 
 </para>
 
+@GWY_GRAPHER_POINT_SQUARE: 
+@GWY_GRAPHER_POINT_CROSS: 
+@GWY_GRAPHER_POINT_CIRCLE: 
+@GWY_GRAPHER_POINT_STAR: 
+@GWY_GRAPHER_POINT_TIMES: 
+@GWY_GRAPHER_POINT_TRIANGLE_UP: 
+@GWY_GRAPHER_POINT_TRIANGLE_DOWN: 
+@GWY_GRAPHER_POINT_DIAMOND: 
 
-<!-- ##### ARG GwyGraphModel:n ##### -->
+<!-- ##### ENUM GwyGrapherStatusType ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### ARG GwyGraphModel:title ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyGraphModelClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@value_changed: 
-@reserved1: 
-@reserved2: 
-@reserved3: 
-@reserved4: 
-@reserved5: 
-
-<!-- ##### STRUCT GwyHRuler ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyHRulerClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
+@GWY_GRAPHER_STATUS_PLAIN: 
+@GWY_GRAPHER_STATUS_CURSOR: 
+@GWY_GRAPHER_STATUS_XSEL: 
+@GWY_GRAPHER_STATUS_YSEL: 
+@GWY_GRAPHER_STATUS_POINTS: 
+@GWY_GRAPHER_STATUS_ZOOM: 
 
 <!-- ##### ARG GwyLayerAxes:max-axes ##### -->
 <para>
@@ -1019,41 +761,11 @@ GwyVMenuBar
 </para>
 
 
-<!-- ##### STRUCT GwyLayerBasic ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyLayerBasicClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-
 <!-- ##### ARG GwyLayerLines:max-lines ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### STRUCT GwyLayerMask ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyLayerMaskClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
 
 <!-- ##### ARG GwyLayerPoints:max-points ##### -->
 <para>
@@ -1073,213 +785,12 @@ GwyVMenuBar
 </para>
 
 
-<!-- ##### STRUCT GwyPixmapLayer ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyPixmapLayerClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@paint: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyRuler ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GwyRuler:lower ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GwyRuler:max-size ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GwyRuler:position ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GwyRuler:units-placement ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GwyRuler:upper ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyRulerClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@draw_ticks: 
-@draw_pos: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwySciText ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwySciTextClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyShader ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyShader::angle-changed ##### -->
-<para>
-
-</para>
-
-@gwyshader: the object which received the signal.
-
-<!-- ##### ARG GwyShader:gradient ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GwyShader:update-policy ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyShaderClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@angle_changed: 
-@reserved1: 
-
 <!-- ##### SIGNAL GwySphereCoords::value-changed ##### -->
 <para>
 
 </para>
 
 @gwyspherecoords: the object which received the signal.
-
-<!-- ##### STRUCT GwyStatusbar ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyStatusbarClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyVRuler ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyVRulerClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-
-<!-- ##### STRUCT GwyValUnit ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyValUnit::value-changed ##### -->
-<para>
-
-</para>
-
-@gwyvalunit: the object which received the signal.
-
-<!-- ##### STRUCT GwyValUnitClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@value_changed: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyVectorLayer ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyVectorLayer::selection-finished ##### -->
-<para>
-
-</para>
-
-@gwyvectorlayer: the object which received the signal.
-
-<!-- ##### ARG GwyVectorLayer:update-policy ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyVectorLayerClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@draw: 
-@button_press: 
-@button_release: 
-@motion_notify: 
-@key_press: 
-@key_release: 
-@selection_finished: 
-@get_selection: 
-@set_selection: 
-@unselect: 
-@reserved1: 
-@reserved2: 
 
 <!-- ##### MACRO P_ ##### -->
 <para>
@@ -1388,6 +899,23 @@ GwyVMenuBar
 @Returns: 
 @gwy3dwiew: 
 
+<!-- ##### FUNCTION gwy_3d_view_get_status ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+@gwy3dwiew: 
+
+<!-- ##### FUNCTION gwy_3d_view_get_use_lights ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_3d_view_set_lights ##### -->
 <para>
 
@@ -1413,6 +941,23 @@ GwyVMenuBar
 @gwy3dview: 
 @palette: 
 @gwy3dwiew: 
+
+<!-- ##### FUNCTION gwy_3d_view_set_status ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@mv: 
+@gwy3dwiew: 
+
+<!-- ##### FUNCTION gwy_3d_view_set_use_lights ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@use_lights: 
 
 <!-- ##### FUNCTION gwy_axis_enable_set_label ##### -->
 <para>
@@ -2058,6 +1603,16 @@ GwyVMenuBar
 @cbdata: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_option_menu_direction ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_option_menu_fft_output ##### -->
 <para>
 
@@ -2098,6 +1653,16 @@ GwyVMenuBar
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_option_menu_mergegrain ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_option_menu_nlfitpreset ##### -->
 <para>
 
@@ -2109,6 +1674,16 @@ GwyVMenuBar
 @Returns: 
 
 <!-- ##### FUNCTION gwy_option_menu_palette ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_zoom_mode ##### -->
 <para>
 
 </para>

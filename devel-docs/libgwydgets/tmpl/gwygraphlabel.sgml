@@ -15,31 +15,6 @@ the GwyGraph widget. It plots a curves legend.
 
 </para>
 
-<!-- ##### ENUM GwyGraphLabelPosition ##### -->
-<para>
-
-</para>
-
-@GWY_GRAPH_LABEL_NORTHEAST: 
-@GWY_GRAPH_LABEL_NORTHWEST: 
-@GWY_GRAPH_LABEL_SOUTHEAST: 
-@GWY_GRAPH_LABEL_SOUTHWEST: 
-@GWY_GRAPH_LABEL_USER: 
-
-<!-- ##### ENUM GwyGraphPointType ##### -->
-<para>
-
-</para>
-
-@GWY_GRAPH_POINT_SQUARE: 
-@GWY_GRAPH_POINT_CROSS: 
-@GWY_GRAPH_POINT_CIRCLE: 
-@GWY_GRAPH_POINT_STAR: 
-@GWY_GRAPH_POINT_TIMES: 
-@GWY_GRAPH_POINT_TRIANGLE_UP: 
-@GWY_GRAPH_POINT_TRIANGLE_DOWN: 
-@GWY_GRAPH_POINT_DIAMOND: 
-
 <!-- ##### STRUCT GwyGraphAreaCurveParams ##### -->
 <para>
 
@@ -65,6 +40,22 @@ the GwyGraph widget. It plots a curves legend.
 @frame_thickness: 
 @position: 
 @font: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### STRUCT GwyGraphLabel ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGraphLabelClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@selected: 
 @reserved1: 
 @reserved2: 
 

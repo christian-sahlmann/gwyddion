@@ -14,6 +14,29 @@ Value entry with unit and selection of unit prefix
 
 </para>
 
+<!-- ##### STRUCT GwyValUnit ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GwyValUnit::value-changed ##### -->
+<para>
+
+</para>
+
+@gwyvalunit: the object which received the signal.
+
+<!-- ##### STRUCT GwyValUnitClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@value_changed: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_val_unit_new ##### -->
 <para>
 

@@ -29,4 +29,5 @@
   <xi:include href="xml/stats.xml"/>
   <xi:include href="xml/tip.xml"/>
   <xi:include href="xml/gwyprocess.xml"/>
+  <xi:include href="xml/gwyprocessenums.xml"/>
 </book>

@@ -8,6 +8,7 @@
 
   <chapter id="ModuleLibrary">
     <title>Gwyddion Module Library</title>
+    <xi:include href="xml/gwymoduleenums.xml"/>
     <xi:include href="xml/gwymoduleloader.xml"/>
     <xi:include href="xml/gwymodule-file.xml"/>
     <xi:include href="xml/gwymodule-process.xml"/>

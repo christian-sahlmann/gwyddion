@@ -16,15 +16,22 @@ graph widgets and should be mostly ignored for now.
 
 </para>
 
-<!-- ##### ENUM GwyGraphCurveType ##### -->
+<!-- ##### STRUCT GwyGraphCurveModel ##### -->
 <para>
 
 </para>
 
-@GWY_GRAPH_CURVE_HIDDEN: 
-@GWY_GRAPH_CURVE_POINTS: 
-@GWY_GRAPH_CURVE_LINE: 
-@GWY_GRAPH_CURVE_LINE_POINTS: 
+
+<!-- ##### STRUCT GwyGraphCurveModelClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@value_changed: 
+@reserved1: 
+@reserved2: 
+@reserved3: 
 
 <!-- ##### FUNCTION gwy_graph_curve_model_new ##### -->
 <para>

@@ -14,26 +14,6 @@ Grain detection and processing
 
 </para>
 
-<!-- ##### ENUM GwyMergeType ##### -->
-<para>
-Mask processing merging (namely used in grain processing).
-</para>
-
-@GWY_MERGE_UNION: 
-@GWY_MERGE_INTERSECTION: 
-
-<!-- ##### ENUM GwyWatershedStateType ##### -->
-<para>
-
-</para>
-
-@GWY_WSHED_INIT: 
-@GWY_WSHED_LOCATE: 
-@GWY_WSHED_MIN: 
-@GWY_WSHED_WSHED: 
-@GWY_WSHED_MARK: 
-@GWY_WSHED_FINISHED: 
-
 <!-- ##### STRUCT GwyWatershedStatus ##### -->
 <para>
 
@@ -76,19 +56,6 @@ Mask processing merging (namely used in grain processing).
 @below: 
 <!-- # Unused Parameters # -->
 @dir: 
-
-
-<!-- ##### FUNCTION gwy_data_field_grains_remove_manually ##### -->
-<para>
-
-</para>
-
-@grain_field: 
-@i: 
-<!-- # Unused Parameters # -->
-@col: 
-@row: 
-@data_field: 
 
 
 <!-- ##### FUNCTION gwy_data_field_grains_remove_grain ##### -->
@@ -190,15 +157,6 @@ Mask processing merging (namely used in grain processing).
 @below: 
 <!-- # Unused Parameters # -->
 @dir: 
-
-
-<!-- ##### FUNCTION gwy_data_field_grains_get_average ##### -->
-<para>
-
-</para>
-
-@grain_field: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_data_field_grains_get_distribution ##### -->

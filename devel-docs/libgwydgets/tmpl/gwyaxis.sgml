@@ -17,44 +17,6 @@ with ranges in the requested interval.
 
 </para>
 
-<!-- ##### MACRO GWY_AXIS_NORTH ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_AXIS_SOUTH ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_AXIS_EAST ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GWY_AXIS_WEST ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### ENUM GwyAxisScaleFormat ##### -->
-<para>
-
-</para>
-
-@GWY_AXIS_FLOAT: 
-@GWY_AXIS_EXP: 
-@GWY_AXIS_INT: 
-@GWY_AXIS_AUTO: 
-
 <!-- ##### STRUCT GwyTick ##### -->
 <para>
 
@@ -86,6 +48,29 @@ with ranges in the requested interval.
 @line_thickness: 
 @major_font: 
 @label_font: 
+
+<!-- ##### STRUCT GwyAxis ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GwyAxis::label-updated ##### -->
+<para>
+
+</para>
+
+@gwyaxis: the object which received the signal.
+
+<!-- ##### STRUCT GwyAxisClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@label_updated: 
+@reserved1: 
+@reserved2: 
 
 <!-- ##### FUNCTION gwy_axis_new ##### -->
 <para>

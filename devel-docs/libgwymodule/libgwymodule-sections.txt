@@ -4,7 +4,6 @@
 
 <SECTION>
 <FILE>gwymodule-tool</FILE>
-GwyToolSwitchEvent
 GwyToolFuncInfo
 GwyToolUseFunc
 gwy_tool_func_register
@@ -12,6 +11,13 @@ gwy_tool_func_use
 gwy_tool_func_build_toolbox
 gwy_tool_func_get_tooltip
 gwy_tool_func_exists
+</SECTION>
+
+<SECTION>
+<FILE>gwymoduleenums</FILE>
+GwyFileOperation
+GwyToolSwitchEvent
+GwyRunType
 </SECTION>
 
 <SECTION>
@@ -54,7 +60,6 @@ gwy_graph_func_build_menu
 
 <SECTION>
 <FILE>gwymodule-process</FILE>
-GwyRunType
 GwyProcessFuncInfo
 GwyProcessFunc
 gwy_process_func_register
@@ -67,7 +72,6 @@ gwy_process_func_get_sensitivity_flags
 
 <SECTION>
 <FILE>gwymodule-file</FILE>
-GwyFileOperation
 GwyFileFuncInfo
 GwyFileDetectFunc
 GwyFileLoadFunc

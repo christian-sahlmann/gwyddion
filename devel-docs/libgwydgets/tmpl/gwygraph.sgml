@@ -37,6 +37,22 @@ are saved here.
 @point_size: 
 @color: 
 
+<!-- ##### STRUCT GwyGraph ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGraphClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@gwygraph: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_graph_new ##### -->
 <para>
 

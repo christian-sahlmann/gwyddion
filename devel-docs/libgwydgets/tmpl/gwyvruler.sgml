@@ -14,6 +14,19 @@ Please see #GwyRuler for differences from #GtkVRuler.
 
 </para>
 
+<!-- ##### STRUCT GwyVRuler ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyVRulerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
 <!-- ##### FUNCTION gwy_vruler_new ##### -->
 <para>
 

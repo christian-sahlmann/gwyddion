@@ -264,6 +264,45 @@ toolbox
 @name: 
 @run: 
 
+<!-- ##### FUNCTION gwy_app_settings_get_config_filename ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_app_settings_load_bin ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_app_settings_load_text ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_app_settings_save_bin ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_app_settings_save_text ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_app_show_kill_cb ##### -->
 <para>
 

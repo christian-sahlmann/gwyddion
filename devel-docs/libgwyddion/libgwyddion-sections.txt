@@ -13,11 +13,11 @@ gwy_si_unit_get_unit_string
 gwy_si_unit_multiply
 gwy_si_unit_divide
 gwy_si_unit_power
+gwy_si_unit_equal
 gwy_si_unit_get_format
 gwy_si_unit_get_format_with_resolution
 gwy_si_unit_get_format_with_digits
 gwy_si_unit_value_format_free
-gwy_si_unit_equal
 <SUBSECTION Standard>
 GWY_SI_UNIT
 GWY_IS_SI_UNIT
@@ -90,21 +90,6 @@ GwySerializeItem
 gwy_serializable_serialize
 gwy_serializable_deserialize
 gwy_serializable_duplicate
-gwy_serialize_pack
-gwy_serialize_store_int32
-gwy_serialize_unpack_boolean
-gwy_serialize_unpack_char
-gwy_serialize_unpack_char_array
-gwy_serialize_unpack_int32
-gwy_serialize_unpack_int32_array
-gwy_serialize_unpack_int64
-gwy_serialize_unpack_int64_array
-gwy_serialize_unpack_double
-gwy_serialize_unpack_double_array
-gwy_serialize_unpack_string
-gwy_serialize_check_string
-gwy_serialize_pack_struct
-gwy_serialize_unpack_struct
 gwy_serialize_pack_object_struct
 gwy_serialize_unpack_object_struct
 gwy_serialize_object_items
@@ -238,6 +223,7 @@ gwy_flags_to_string
 gwy_strkill
 gwy_strreplace
 gwy_strdiffpos
+gwy_str_has_suffix_nocase
 gwy_file_get_contents
 gwy_file_abandon_contents
 gwy_find_self_dir

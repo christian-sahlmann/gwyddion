@@ -15,14 +15,6 @@ It is bets to implement interactive tools with the
 
 </para>
 
-<!-- ##### ENUM GwyToolSwitchEvent ##### -->
-<para>
-
-</para>
-
-@GWY_TOOL_SWITCH_WINDOW: 
-@GWY_TOOL_SWITCH_TOOL: 
-
 <!-- ##### STRUCT GwyToolFuncInfo ##### -->
 <para>
 
@@ -72,6 +64,7 @@ It is bets to implement interactive tools with the
 
 @item_callback: 
 @max_width: 
+@tooltips: 
 @first_tool: 
 @Returns: 
 

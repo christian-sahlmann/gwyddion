@@ -40,34 +40,47 @@ the 3D view to update self, when data changes.
 <link linkend="GwyGLMaterial">GwyGLMaterial</link>
 </para>
 
-<!-- ##### ENUM Gwy3DMovement ##### -->
+<!-- ##### STRUCT Gwy3DView ##### -->
 <para>
 
 </para>
 
-@GWY_3D_NONE: 
-@GWY_3D_ROTATION: 
-@GWY_3D_SCALE: 
-@GWY_3D_DEFORMATION: 
-@GWY_3D_LIGHT_MOVEMENT: 
 
-<!-- ##### ENUM Gwy3DProjection ##### -->
+<!-- ##### ARG Gwy3DView:movement-type ##### -->
 <para>
 
 </para>
 
-@GWY_3D_ORTHOGRAPHIC: 
-@GWY_3D_PERSPECTIVE: 
-
-<!-- ##### ENUM Gwy3DViewLabel ##### -->
+<!-- ##### ARG Gwy3DView:projection ##### -->
 <para>
 
 </para>
 
-@GWY_3D_VIEW_LABEL_X: 
-@GWY_3D_VIEW_LABEL_Y: 
-@GWY_3D_VIEW_LABEL_MIN: 
-@GWY_3D_VIEW_LABEL_MAX: 
+<!-- ##### ARG Gwy3DView:reduced-size ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG Gwy3DView:show-axes ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG Gwy3DView:show-labels ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT Gwy3DViewClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+@reserved3: 
+@reserved4: 
 
 <!-- ##### FUNCTION gwy_3d_view_new ##### -->
 <para>
@@ -108,26 +121,22 @@ the 3D view to update self, when data changes.
 @gradient: 
 
 
-<!-- ##### FUNCTION gwy_3d_view_get_status ##### -->
+<!-- ##### FUNCTION gwy_3d_view_get_movement_type ##### -->
 <para>
 
 </para>
 
 @gwy3dview: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@gwy3dwiew: 
 
 
-<!-- ##### FUNCTION gwy_3d_view_set_status ##### -->
+<!-- ##### FUNCTION gwy_3d_view_set_movement_type ##### -->
 <para>
 
 </para>
 
 @gwy3dview: 
-@mv: 
-<!-- # Unused Parameters # -->
-@gwy3dwiew: 
+@movement: 
 
 
 <!-- ##### FUNCTION gwy_3d_view_get_projection ##### -->
@@ -192,7 +201,7 @@ the 3D view to update self, when data changes.
 @gwy3dwiew: 
 
 
-<!-- ##### FUNCTION gwy_3d_view_get_use_lights ##### -->
+<!-- ##### FUNCTION gwy_3d_view_get_visualization ##### -->
 <para>
 
 </para>
@@ -201,13 +210,13 @@ the 3D view to update self, when data changes.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_3d_view_set_use_lights ##### -->
+<!-- ##### FUNCTION gwy_3d_view_set_visualization ##### -->
 <para>
 
 </para>
 
 @gwy3dview: 
-@use_lights: 
+@visual: 
 
 
 <!-- ##### FUNCTION gwy_3d_view_get_reduced_size ##### -->

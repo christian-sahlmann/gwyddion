@@ -16,6 +16,22 @@ graph options quick accesibility.
 
 </para>
 
+<!-- ##### STRUCT GwyGraphCorner ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGraphCornerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@selected: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_graph_corner_new ##### -->
 <para>
 

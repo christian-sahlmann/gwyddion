@@ -14,42 +14,6 @@ Draw GwyDataFields to GdkPixbufs
 
 </para>
 
-<!-- ##### FUNCTION gwy_pixfield_do ##### -->
-<para>
-
-</para>
-
-@pixbuf: 
-@data_field: 
-@palette: 
-<!-- # Unused Parameters # -->
-@g: 
-@f: 
-@pal: 
-
-
-<!-- ##### FUNCTION gwy_pixfield_do_with_range ##### -->
-<para>
-
-</para>
-
-@pixbuf: 
-@data_field: 
-@palette: 
-@minimum: 
-@maximum: 
-
-
-<!-- ##### FUNCTION gwy_pixfield_do_mask ##### -->
-<para>
-
-</para>
-
-@pixbuf: 
-@data_field: 
-@color: 
-
-
 <!-- ##### FUNCTION gwy_pixbuf_draw_data_field ##### -->
 <para>
 

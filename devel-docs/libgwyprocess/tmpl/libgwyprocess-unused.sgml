@@ -44,6 +44,15 @@ morph_lib
 </para>
 
 
+<!-- ##### ENUM GwyCWTWaveletType ##### -->
+<para>
+
+</para>
+
+@GWY_CWT_GAUSS: 
+@GWY_CWT_HAT: 
+@GWY_CWT_MORLET: 
+
 <!-- ##### ENUM GwyFFTOutputType ##### -->
 <para>
 FFT output.
@@ -55,6 +64,32 @@ FFT output.
 @GWY_FFT_OUTPUT_IMG: imaginary
 @GWY_FFT_OUTPUT_MOD: module
 @GWY_FFT_OUTPUT_PHASE: phase
+
+<!-- ##### ENUM GwyFilterType ##### -->
+<para>
+Filtering type. Possibilities constist of simple statisical
+and directional filters. 
+</para>
+
+@GWY_FILTER_MEAN: 
+@GWY_FILTER_MEDIAN: 
+@GWY_FILTER_CONSERVATIVE: 
+@GWY_FILTER_LAPLACIAN: 
+@GWY_FILTER_SOBEL: 
+@GWY_FILTER_PREWITT: 
+@GWY_FILTER_MINIMUM: 
+@GWY_FILTER_MAXIMUM: 
+@GWY_FILTER_KUWAHARA: 
+
+<!-- ##### ENUM GwyFitLineType ##### -->
+<para>
+Fit polynomial degree selection.
+</para>
+
+@GWY_FIT_POLY_0: 
+@GWY_FIT_POLY_1: 
+@GWY_FIT_POLY_2: 
+@GWY_FIT_POLY_3: 
 
 <!-- ##### ENUM GwyFractalType ##### -->
 <para>
@@ -156,6 +191,18 @@ FFT output.
 @xres: 
 @yres: 
 
+<!-- ##### FUNCTION gwy_data_field_area_filter_canny ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@threshold: 
+@col: 
+@row: 
+@width: 
+@height: 
+
 <!-- ##### FUNCTION gwy_data_field_croscorrelate ##### -->
 <para>
 
@@ -194,6 +241,120 @@ FFT output.
 </para>
 
 @a: 
+
+<!-- ##### FUNCTION gwy_data_field_get_area_avg ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+@a: 
+
+<!-- ##### FUNCTION gwy_data_field_get_area_max ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+@a: 
+
+<!-- ##### FUNCTION gwy_data_field_get_area_min ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+@a: 
+
+<!-- ##### FUNCTION gwy_data_field_get_area_rms ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+@a: 
+
+<!-- ##### FUNCTION gwy_data_field_get_area_stats ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@avg: 
+@ra: 
+@rms: 
+@skew: 
+@kurtosis: 
+
+<!-- ##### FUNCTION gwy_data_field_get_area_sum ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@Returns: 
+@a: 
+
+<!-- ##### FUNCTION gwy_data_field_get_area_surface_area ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@interpolation: 
+@Returns: 
+@a: 
+
+<!-- ##### FUNCTION gwy_data_field_grains_get_average ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_data_field_grains_remove_manually ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@i: 
+@col: 
+@row: 
+@data_field: 
 
 <!-- ##### FUNCTION gwy_data_field_initialize ##### -->
 <para>
@@ -295,6 +456,24 @@ FFT output.
 @to: 
 @av: 
 @bv: 
+
+<!-- ##### FUNCTION gwy_dwt_plot_scaling_function ##### -->
+<para>
+
+</para>
+
+@dline: 
+@wt_coefs: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_dwt_plot_wavelet ##### -->
+<para>
+
+</para>
+
+@dline: 
+@wt_coefs: 
+@Returns: 
 
 <!-- ##### FUNCTION iallocmatrix ##### -->
 <para>

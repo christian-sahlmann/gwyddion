@@ -14,6 +14,19 @@ Please see #GwyRuler for differences from #GtkHRuler.
 
 </para>
 
+<!-- ##### STRUCT GwyHRuler ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyHRulerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
 <!-- ##### FUNCTION gwy_hruler_new ##### -->
 <para>
 

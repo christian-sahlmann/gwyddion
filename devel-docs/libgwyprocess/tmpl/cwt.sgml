@@ -14,23 +14,6 @@ Continuous Wavelet Transform
 
 </para>
 
-<!-- ##### ENUM Gwy2DCWTWaveletType ##### -->
-<para>
-
-</para>
-
-@GWY_2DCWT_GAUSS: 
-@GWY_2DCWT_HAT: 
-
-<!-- ##### ENUM GwyCWTWaveletType ##### -->
-<para>
-
-</para>
-
-@GWY_CWT_GAUSS: 
-@GWY_CWT_HAT: 
-@GWY_CWT_MORLET: 
-
 <!-- ##### FUNCTION gwy_cwt_wfunc_2d ##### -->
 <para>
 

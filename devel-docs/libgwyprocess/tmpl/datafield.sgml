@@ -30,15 +30,6 @@ as they are connected with GwyDataField.
 
 @parent_class: 
 
-<!-- ##### ENUM GwyComputationStateType ##### -->
-<para>
-
-</para>
-
-@GWY_COMP_INIT: 
-@GWY_COMP_ITERATE: 
-@GWY_COMP_FINISHED: 
-
 <!-- ##### MACRO gwy_data_field_invalidate ##### -->
 <para>
 
@@ -101,8 +92,8 @@ as they are connected with GwyDataField.
 @ulrow: 
 @brcol: 
 @brrow: 
-@Returns: 
 <!-- # Unused Parameters # -->
+@Returns: 
 @a: 
 
 
@@ -113,6 +104,7 @@ as they are connected with GwyDataField.
 
 @a: 
 @b: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 
@@ -599,8 +591,8 @@ as they are connected with GwyDataField.
 @brrow: 
 @res: 
 @interpolation: 
-@Returns: 
 <!-- # Unused Parameters # -->
+@Returns: 
 @a: 
 @b: 
 
@@ -619,8 +611,8 @@ as they are connected with GwyDataField.
 @res: 
 @thickness: 
 @interpolation: 
-@Returns: 
 <!-- # Unused Parameters # -->
+@Returns: 
 @a: 
 @b: 
 
@@ -777,17 +769,6 @@ as they are connected with GwyDataField.
 @a: 
 
 
-<!-- ##### FUNCTION gwy_data_field_shade ##### -->
-<para>
-
-</para>
-
-@data_field: 
-@target_field: 
-@theta: 
-@phi: 
-
-
 <!-- ##### FUNCTION gwy_data_field_fit_lines ##### -->
 <para>
 
@@ -798,8 +779,10 @@ as they are connected with GwyDataField.
 @ulrow: 
 @brcol: 
 @brrow: 
-@fit_type: 
+@degree: 
 @exclude: 
 @orientation: 
+<!-- # Unused Parameters # -->
+@fit_type: 
 
 

@@ -18,6 +18,31 @@ instead of Gdk colors.
 
 </para>
 
+<!-- ##### STRUCT GwyColorButton ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GwyColorButton:color ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyColorButton:use-alpha ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyColorButtonClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
 <!-- ##### FUNCTION gwy_color_button_new ##### -->
 <para>
 
