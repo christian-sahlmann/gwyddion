@@ -1,4 +1,4 @@
-1.5cvs20041020
+1.5cvs20041024
 
 1.6
 Application:
@@ -9,9 +9,9 @@ Modules:
 - Interactive color range change tool (new).
 - Distance and angle reading tool (new) (bug #32).
 - Polynomial background removal/extraction (new).
-- Tip convolution, deconvolution, modelling, blind tip estimation and certainty map
-  analysis modules added. All these modules are based on algorithms
-  published by J. Villarrubia.
+- Tip convolution, deconvolution, modelling, blind tip estimation and
+  certainty map analysis modules added. All these modules are based on
+  algorithms published by J. Villarrubia.
 - Laplacian, Sobel, Prewitt were moved from Filters tool to separate display
   modules, Canny edge detector added.
 - Wrong selection boundaries in Filters tool was fixed (bug #35).
@@ -22,17 +22,23 @@ Modules:
 - Crop, Filters, Polynom, Statistics, and Spot remove tools: Also display
   dimensions in pixels.
 - Unrotate: Fixed displayed rotations being 2Pi multiplies of the real ones.
+- Rotate: Fixed crashing on interpolation type change and wrong expanded
+  rotations.
 - Layers: Fixed not redrawing when number of objects (lines, points, etc.)
   property changes.
 - Lines layer: Identifies lines by numbers.
+- Statistical function, Profiles, Fractal, Grains size distribution, Slope
+  distribution: Graph windows are given meaningful titles (bug #23).
+- All modules: GUI unification and fixes.
 
 Library:
+- libgwyapp: Bug #7, Filters confused by tools switch, was fixed.
 - libgwydgets: Gwy3DWindow swtiching from palette to material for the first
   time no longer displays all-black data.
 - libgwydgets: Gwy3DWindow allows to switch between full and basic controls.
 - libgwyddion: Choleski decomposition and solution functions.
-- libgwyprocess: Two-dimensional polynom fitting. 
-- libgwyprocess: tip convolution, deconvolution, certainty map analysis,
+- libgwyprocess: Two-dimensional polynom fitting.
+- libgwyprocess: Tip convolution, deconvolution, certainty map analysis,
   modelling and blind tip estimation routines added.
 - libgwyapp: Helper functions to manage rectangular selections in tools.
 - gwyddion/dump Ruby module implementing plug-in proxy dump format.
