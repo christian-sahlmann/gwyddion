@@ -1,5 +1,6 @@
 /* @(#) $Id$ */
 
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -34,7 +35,8 @@ static void           dump_export_meta_cb        (gpointer hkey,
 static void           dump_export_data_field     (GwyDataField *dfield,
                                                   const gchar *name,
                                                   FILE *fh);
-static GwyContainer*  text_dump_import           (gchar *buffer);
+static GwyContainer*  text_dump_import           (GwyContainer *old_data,
+                                                  gchar *buffer);
 static GwyRunType     str_to_run_modes           (const gchar *str);
 static const char*    run_mode_to_str            (GwyRunType run);
 static gchar*         next_line                  (gchar **buffer);
@@ -108,7 +110,7 @@ module_register(const gchar *name)
         gwy_debug("%s: plug-in %s", __FUNCTION__, filename);
         args[0] = pluginname;
         buffer = NULL;
-        ok = g_spawn_sync(dir, args, NULL, 0, NULL, NULL,
+        ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                           &buffer, NULL, &exit_status, &err);
         ok &= !exit_status;
         if (ok)
@@ -208,7 +210,7 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
               ok, exit_status, err);
     ok &= !exit_status;
     if (ok) {
-        data = text_dump_import(buffer);
+        data = text_dump_import(data, buffer);
         if (data) {
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
@@ -219,6 +221,12 @@ plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
                       err ? err->message : "it returned garbage.");
             ok = FALSE;
         }
+    }
+    else {
+        g_warning("Cannot run plug-in %s: %s",
+                    info->file,
+                    err ? err->message : "it returned garbage.");
+        ok = FALSE;
     }
     g_clear_error(&err);
     g_free(buffer);
@@ -284,9 +292,86 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
 }
 
 static GwyContainer*
-text_dump_import(gchar *buffer)
+text_dump_import(GwyContainer *old_data, gchar *buffer)
 {
-    return NULL;
+    gchar *line, *pv, *key;
+    GwyContainer *data;
+    GwyDataField *dfield;
+    gdouble xreal, yreal;
+    gint xres, yres;
+
+    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(old_data)));
+    gwy_app_clean_up_data(data);
+    while ((line = next_line(&buffer)) && *line) {
+        pv = strchr(line, '=');
+        if (!pv || *line != '/') {
+            g_warning("Garbage line: %s", line);
+            continue;
+        }
+        *pv = '\0';
+        pv++;
+        if (strcmp(pv, "[") != 0) {
+            gwy_debug("%s: <%s>=<%s>", __FUNCTION__,
+                      line, pv);
+            gwy_container_set_string_by_name(data, line, g_strdup(pv));
+            continue;
+        }
+
+        if (!buffer || *buffer != '[') {
+            g_critical("Unexpected end of data");
+            gwy_container_remove_by_prefix(data, NULL);
+            return NULL;
+        }
+        buffer++;
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, line));
+
+        /* get datafield parameters from already read values, failing back
+         * to values of original data field */
+        key = g_strconcat(line, "/xres", NULL);
+        if (gwy_container_contains_by_name(data, key))
+            xres = atoi(gwy_container_get_string_by_name(data, key));
+        else
+            xres = gwy_data_field_get_xres(dfield);
+        g_free(key);
+
+        key = g_strconcat(line, "/yres", NULL);
+        if (gwy_container_contains_by_name(data, key))
+            yres = atoi(gwy_container_get_string_by_name(data, key));
+        else
+            yres = gwy_data_field_get_yres(dfield);
+        g_free(key);
+
+        key = g_strconcat(line, "/xreal", NULL);
+        if (gwy_container_contains_by_name(data, key))
+            xreal = g_ascii_strtod(gwy_container_get_string_by_name(data, key),
+                                   NULL);
+        else
+            xreal = gwy_data_field_get_xreal(dfield);
+        g_free(key);
+
+        key = g_strconcat(line, "/yreal", NULL);
+        if (gwy_container_contains_by_name(data, key))
+            yreal = g_ascii_strtod(gwy_container_get_string_by_name(data, key),
+                                   NULL);
+        else
+            yreal = gwy_data_field_get_yreal(dfield);
+        g_free(key);
+
+        dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
+                                                   FALSE));
+        /* XXX: this can segfault */
+        memcpy(dfield->data, buffer, xres*yres*sizeof(gdouble));
+        buffer += xres*yres*sizeof(gdouble);
+        pv = next_line(&buffer);
+        if (strcmp(pv, "]]") != 0) {
+            g_critical("Missed end of data");
+            gwy_container_remove_by_prefix(data, NULL);
+            return NULL;
+        }
+        gwy_container_remove_by_prefix(data, line);
+        gwy_container_set_object_by_name(data, line, G_OBJECT(dfield));
+    }
+    return data;
 }
 
 static GwyRunType
@@ -336,6 +421,7 @@ next_line(gchar **buffer)
     p = strchr(*buffer, '\n');
     if (p) {
         *buffer = p+1;
+        /*
         while (p > q) {
             p--;
             if (!g_ascii_isspace(*p)) {
@@ -343,13 +429,16 @@ next_line(gchar **buffer)
                 break;
             }
         }
+        */
         *p = '\0';
     }
     else
         *buffer = NULL;
 
+    /*
     while (g_ascii_isspace(*q))
         q++;
+    */
 
     return q;
 }
