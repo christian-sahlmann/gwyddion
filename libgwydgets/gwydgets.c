@@ -291,21 +291,43 @@ gwy_hscale_update_sq(GtkAdjustment *adj, GtkAdjustment *slave)
     g_signal_handler_unblock(slave, id);
 }
 
-static void
-gwy_hscale_checkbutton_cb(GtkToggleButton *check, GObject *pivot)
+/**
+ * gwy_table_hscale_set_sensitive:
+ * @pivot: The same object that was passed to gwy_table_attach_hscale() as
+ *         @pivot.
+ * @sensitive: %TRUE to make the row sensitive, %FALSE to insensitive.
+ *
+ * Sets sensitivity of a group of controls create by gwy_table_attach_hscale().
+ *
+ * Do not use with %GWY_HSCALE_CHECK, simply set state of the check button
+ * in such a case.
+ *
+ * Since: 1.8
+ **/
+void
+gwy_table_hscale_set_sensitive(GtkObject *pivot,
+                               gboolean sensitive)
 {
     GtkWidget *widget;
-    gboolean sensitive;
+    GObject *object;
 
-    sensitive = gtk_toggle_button_get_active(check);
-    if ((widget = g_object_get_data(pivot, "scale")))
+    object = G_OBJECT(pivot);
+
+    if ((widget = g_object_get_data(object, "scale")))
         gtk_widget_set_sensitive(widget, sensitive);
-    if ((widget = g_object_get_data(pivot, "middle_widget")))
+    if ((widget = g_object_get_data(object, "middle_widget")))
         gtk_widget_set_sensitive(widget, sensitive);
-    if ((widget = g_object_get_data(pivot, "label")))
+    if ((widget = g_object_get_data(object, "label")))
         gtk_widget_set_sensitive(widget, sensitive);
-    if ((widget = g_object_get_data(pivot, "units")))
+    if ((widget = g_object_get_data(object, "units")))
         gtk_widget_set_sensitive(widget, sensitive);
+}
+
+static void
+gwy_hscale_checkbutton_cb(GtkToggleButton *check,
+                          GtkObject *pivot)
+{
+    gwy_table_hscale_set_sensitive(pivot, gtk_toggle_button_get_active(check));
 }
 
 /**

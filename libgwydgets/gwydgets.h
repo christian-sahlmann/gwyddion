@@ -89,6 +89,8 @@ GtkWidget*   gwy_table_attach_hscale        (GtkWidget *table,
                                              const gchar *units,
                                              GtkObject *pivot,
                                              GwyHScaleStyle style);
+void         gwy_table_hscale_set_sensitive (GtkObject *pivot,
+                                             gboolean sensitive);
 GtkWidget*   gwy_table_get_child_widget     (GtkWidget *table,
                                              gint row,
                                              gint col);
