@@ -224,6 +224,9 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *g
     xres = grain_field->xres;
     yres = grain_field->yres;
 
+    threshval = gwy_data_field_get_min(data_field) + 
+        threshval*(gwy_data_field_get_max(data_field)-gwy_data_field_get_min(data_field))/100.0;
+
     for (i=0; i<(xres*yres); i++)
     {
         if (grain_field->data[i]>0 && data_field->data[i]>threshval)

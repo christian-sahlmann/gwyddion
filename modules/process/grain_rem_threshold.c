@@ -342,9 +342,10 @@ preview(RemoveControls *controls,
     /*set up the mask*/
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask"))
     {
+        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/mask"));
         
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                  "/0/mask"));
+        gwy_data_field_copy(GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                  "/0/mask")), maskfield);
         mask_process(dfield, maskfield, args, controls);
         
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", G_OBJECT(maskfield));
