@@ -154,7 +154,8 @@ struct _GwyGraphArea {
     gint xoff;
     gint yoff;
 
-    gpointer reserved1;
+    GdkColor *colors;
+
     gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
