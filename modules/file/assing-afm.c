@@ -103,7 +103,7 @@ aafm_detect(const gchar *filename,
     guchar buffer[2];
 
     if (only_name)
-        return gwy_str_has_suffix_nocase(filename_lc, EXTENSION) ? 17 : 0;
+        return gwy_str_has_suffix_nocase(filename, EXTENSION) ? 17 : 0;
 
     if (stat(filename, &st) || !(fh = fopen(filename, "rb")))
         return 0;
@@ -120,7 +120,8 @@ aafm_detect(const gchar *filename,
 static GwyContainer*
 aafm_load(const gchar *filename)
 {
-    GObject *unit, *object = NULL;
+    GwySIUnit *unit;
+    GwyContainer *container = NULL;
     guchar *buffer = NULL;
     const guchar *p;
     gsize size = 0;
@@ -161,21 +162,20 @@ aafm_load(const gchar *filename)
     gwy_data_field_multiply(dfield, Z_SCALE);
 
     unit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(unit));
+    gwy_data_field_set_si_unit_xy(dfield, unit);
     g_object_unref(unit);
 
-    unit = gwy_serializable_duplicate(unit);
-    gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(unit));
+    unit = gwy_si_unit_duplicate(unit);
+    gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
 
-    object = gwy_container_new();
-    gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
-                                     G_OBJECT(dfield));
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", G_OBJECT(dfield));
 
     gwy_file_abandon_contents(buffer, size, &err);
     g_clear_error(&err);
 
-    return (GwyContainer*)object;
+    return container;
 }
 
 static gboolean

@@ -139,7 +139,7 @@ read_datafield(gchar *buffer, guint size)
     gdouble xreal, yreal, q;
     GwyDataField *dfield;
     gdouble *data;
-    GObject *unit;
+    GwySIUnit *unit;
 
     bpp = 2;                    /* words, always */
 
@@ -166,7 +166,7 @@ read_datafield(gchar *buffer, guint size)
     gwy_data_field_multiply(dfield, q);
 
     unit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(unit));
+    gwy_data_field_set_si_unit_xy(dfield, unit);
     g_object_unref(unit);
 
     /* Assuming we are reading channel1... */
@@ -195,7 +195,7 @@ read_datafield(gchar *buffer, guint size)
         g_assert_not_reached();
         break;
     }
-    gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(unit));
+    gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
 
     return dfield;

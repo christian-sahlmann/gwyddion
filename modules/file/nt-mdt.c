@@ -338,7 +338,7 @@ mdt_detect(const gchar *filename,
 
     gwy_debug("");
     if (only_name)
-        return gwy_str_has_suffix_nocase(filename_lc, EXTENSION) ? 20 : 0;
+        return gwy_str_has_suffix_nocase(filename, EXTENSION) ? 20 : 0;
 
     if (!(fh = fopen(filename, "rb")))
         return 0;
