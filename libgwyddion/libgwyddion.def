@@ -32,6 +32,7 @@ EXPORTS
 	gwy_entities_get_entities
 	gwy_entities_text_to_utf8
 	gwy_enum_to_string
+	gwy_find_self_dir
 	gwy_flags_to_string
 	gwy_hash_table_to_list_cb
 	gwy_hash_table_to_slist_cb

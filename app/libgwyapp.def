@@ -35,6 +35,8 @@ EXPORTS
 	gwy_app_run_process_func_cb
 	gwy_app_settings_free
 	gwy_app_settings_get
+	gwy_app_settings_get_config_filename
+	gwy_app_settings_get_module_dirs
 	gwy_app_settings_load
 	gwy_app_settings_save
 	gwy_app_show_kill_cb
