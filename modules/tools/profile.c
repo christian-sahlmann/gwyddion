@@ -28,6 +28,10 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/app.h>
 
+enum {
+    PROFILE_RESPONSE_CLEAR = 1
+};
+
 typedef struct {
     gboolean is_visible;
     GPtrArray *positions;
@@ -295,19 +299,17 @@ profile_dialog_create(GwyDataView *data_view)
     dialog = gtk_dialog_new_with_buttons(_("Extract profile"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         _("Clear selection"),
+                                         PROFILE_RESPONSE_CLEAR,
                                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
     g_signal_connect(dialog, "delete_event",
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
 
-
-    gtk_dialog_add_button(GTK_DIALOG(dialog), "Clear selection", 1);
-
     response_id
         = g_signal_connect(GTK_DIALOG(dialog), "response",
                            G_CALLBACK(profile_dialog_response_cb), NULL);
-
 
 
     table = gtk_table_new(2, 2, FALSE);
@@ -578,7 +580,7 @@ profile_dialog_response_cb(G_GNUC_UNUSED gpointer unused, gint response)
         profile_do();
         break;
 
-        case 1:
+        case PROFILE_RESPONSE_CLEAR:
         profile_clear();
         break;
 
