@@ -18,7 +18,7 @@ EXTRA_DIST = \
 	makefile.msc \
 	libgwyprocess.def
 
-noinst_PROGRAMS = test
+#noinst_PROGRAMS = test
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -33,10 +33,10 @@ libgwyprocess_la_SOURCES = \
 	interpolation.c \
 	simplefft.c
 
-test_SOURCES = \
-	test.c
-test_LDADD = libgwyprocess.la \
-	$(libgwyddion)
+#test_SOURCES = \
+#	test.c
+#test_LDADD = libgwyprocess.la \
+#	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"GwyProcess\"

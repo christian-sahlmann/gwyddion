@@ -40,6 +40,9 @@ extern "C" {
 #define GWY_IS_DATA_FIELD_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_FIELD))
 #define GWY_DATA_FIELD_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_FIELD, GwyDataFieldClass))
 
+typedef struct _GwyDataField      GwyDataField;
+typedef struct _GwyDataFieldClass GwyDataFieldClass;
+
 typedef enum {
       GWY_FILTER_MEAN          = 0, /*mean value filter (averaging)*/
       GWY_FILTER_MEDIAN        = 1, /*median value filter*/
@@ -49,7 +52,7 @@ typedef enum {
       GWY_FILTER_PREWITT       = 5  /*Prewitt gradient filter*/
 } GwyFilterType;
 
-typedef struct{
+struct _GwyDataField {
     GObject parent_instance;
 
     gint xres;      /*X resolution*/
@@ -60,11 +63,11 @@ typedef struct{
     gint N;	    /*xres*yres*/
     GwySIUnit *si_unit_xy; /*SI unit corresponding to XY axis*/
     GwySIUnit *si_unit_z; /*SI unit corresponding to height (Z) axis*/
-} GwyDataField;
+};
 
-typedef struct{
+struct _GwyDataFieldClass {
         GObjectClass parent_class;
-} GwyDataFieldClass;
+};
 
 
 GType gwy_data_field_get_type  (void) G_GNUC_CONST;

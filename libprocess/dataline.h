@@ -38,6 +38,9 @@ extern "C" {
 #define GWY_IS_DATA_LINE_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_LINE))
 #define GWY_DATA_LINE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_LINE, GwyDataLineClass))
 
+typedef struct _GwyDataLine      GwyDataLine;
+typedef struct _GwyDataLineClass GwyDataLineClass;
+
 typedef enum {
   GWY_SF_OUTPUT_DH    = 0,  /*distribution of heights*/
   GWY_SF_OUTPUT_CDH   = 1,  /*cumulative distribution of heights*/
@@ -50,17 +53,17 @@ typedef enum {
 
 
 /*provisory struct for field (for function arguments simplification)*/
-typedef struct{
+struct _GwyDataLine {
     GObject parent_instance;
 
     gint res;      /*X resolution*/
     gdouble real;  /*X real field size (in nanometers)*/
     gdouble *data; /*data field*/
-} GwyDataLine;
+};
 
-typedef struct{
+struct _GwyDataLineClass {
     GObjectClass parent_class;
-} GwyDataLineClass;
+};
 
 
 GType gwy_data_line_get_type  (void) G_GNUC_CONST;
@@ -164,45 +167,45 @@ void gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia,
                            gint interpolation);
 
 /*distribution of heights*/
-void gwy_data_line_dh(GwyDataLine *data_line, 
-                      GwyDataLine *target_line, 
-                      gdouble ymin, 
+void gwy_data_line_dh(GwyDataLine *data_line,
+                      GwyDataLine *target_line,
+                      gdouble ymin,
                       gdouble ymax,
                       gint nsteps);
 
 /*cumulative distribution of heights*/
-void gwy_data_line_cdh(GwyDataLine *data_line, 
-                      GwyDataLine *target_line, 
-                      gdouble ymin, 
+void gwy_data_line_cdh(GwyDataLine *data_line,
+                      GwyDataLine *target_line,
+                      gdouble ymin,
                       gdouble ymax,
                       gint nsteps);
 
 /*distribution of slopes*/
-void gwy_data_line_da(GwyDataLine *data_line, 
-                      GwyDataLine *target_line, 
-                      gdouble ymin, 
+void gwy_data_line_da(GwyDataLine *data_line,
+                      GwyDataLine *target_line,
+                      gdouble ymin,
                       gdouble ymax,
                       gint nsteps);
 
 /*cumulative distribution of slopes*/
-void gwy_data_line_cda(GwyDataLine *data_line, 
-                      GwyDataLine *target_line, 
-                      gdouble ymin, 
+void gwy_data_line_cda(GwyDataLine *data_line,
+                      GwyDataLine *target_line,
+                      gdouble ymin,
                       gdouble ymax,
                       gint nsteps);
 
 /*autocorrelation function*/
-void gwy_data_line_acf(GwyDataLine *data_line, 
+void gwy_data_line_acf(GwyDataLine *data_line,
                       GwyDataLine *target_line);
 
 /*height-height correlation function*/
-void gwy_data_line_hhcf(GwyDataLine *data_line, 
+void gwy_data_line_hhcf(GwyDataLine *data_line,
                       GwyDataLine *target_line);
 
 /*power spectral density function*/
-void gwy_data_line_psdf(GwyDataLine *data_line, 
+void gwy_data_line_psdf(GwyDataLine *data_line,
                       GwyDataLine *target_line,
-		      gint windowing, 
+		      gint windowing,
                       gint interpolation);
 
 
