@@ -32,14 +32,14 @@ G_BEGIN_DECLS
 
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
                                  gint n_par,
-                                 gdouble *params,
+                                 gdouble *param,
                                  gpointer user_data,
                                  gboolean *fres);
 
 typedef  void (*GwyNLFitDerFunc)(gint i,
-                                 gdouble *dat_x,
+                                 gdouble *x,
                                  gint n_par,
-                                 gdouble *params,
+                                 gdouble *param,
                                  GwyNLFitFunc fmarq,
                                  gpointer user_data,
                                  gdouble *deriv,

@@ -585,7 +585,8 @@ gwy_math_sym_matrix_invert1(gint N, gdouble *A)
  * GwyNLFitFunc:
  * @x: hodnota, kde se pocita
  * @n_par: pocet parametru
- * @b: parametry, zacinaji od 1 do n_par vcetne
+ * @param: parametry, zacinaji od 1 do n_par vcetne
+ * @user_data:
  * @fres: uspesnost vypoctu.
  *
  * Fitting function type.
@@ -595,13 +596,14 @@ gwy_math_sym_matrix_invert1(gint N, gdouble *A)
 
 /**
  * GwyNLFitDerFunc:
- * i: index prvku ve kterem se derivace pocita
- * dat_x: pole s hodnotami x, pocitaji se derivace v x[i]
- * n_par: pocet parametru
- * b: parametry, zacinaji od 1 do n_par vcetne
- * d: vystupni pole s derivacemi podle jednotlivych parametru
- * fmarq: fitovaci funkce
- * dres: uspesnost vypoctu
+ * @i: index prvku ve kterem se derivace pocita
+ * @x: pole s hodnotami x, pocitaji se derivace v x[i]
+ * @n_par: pocet parametru
+ * @param: parametry, zacinaji od 1 do n_par vcetne
+ * @deriv: vystupni pole s derivacemi podle jednotlivych parametru
+ * @fmarq: fitovaci funkce
+ * @user_data:
+ * @dres: uspesnost vypoctu
  *
  * Fitting function partial derivation type.
  */
