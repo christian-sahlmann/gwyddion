@@ -32,7 +32,7 @@
  *   places
  * - Do NOT store thumbnails for anything in ~/.thumbnails
  */
-#define DEBUG 1
+
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwydgets.h>
@@ -1058,104 +1058,6 @@ gwy_recent_file_thumbnail_dir(void)
 
     thumbnail_dir = g_build_filename(g_get_home_dir(), ".thumbnails", NULL);
     return thumbnail_dir;
-}
-
-/* canonicalize a file path.
- * does NOT resolve symlinks, as TMS, and the less RFC2396, says nothing about
- * symlinks resolution */
-static gchar*
-gwy_canonicalize_path(const gchar *path)
-{
-    gchar *spath, *p0, *p, *last_slash;
-    gsize i;
-
-    g_return_val_if_fail(path, NULL);
-
-    /* absolutize */
-    if (!g_path_is_absolute(path)) {
-        p = g_get_current_dir();
-        spath = g_build_filename(p, path, NULL);
-        g_free(p);
-    }
-    else
-        spath = g_strdup(path);
-    p = spath;
-
-#ifdef G_OS_WIN32
-    /* convert backslashes to slashes so we know what to split on */
-    while (*p) {
-        if (*p == '\\')
-            *p = '/';
-        p++;
-    }
-    p = spath;
-
-    /* skip c:, //server */
-    if (g_ascii_isalpha(*p) && p[1] == ':')
-        p += 2;
-    else if (*p == '/' && p[1] == '/') {
-        p = strchr(p+2, '/');
-        /* silly, but better this than a coredump... */
-        if (!p)
-            return spath;
-    }
-    /* now p starts with the `root' / on all systems */
-#endif
-    g_return_val_if_fail(*p == '/', spath);
-
-    p0 = p;
-    while (*p) {
-        if (*p == '/') {
-            if (p[1] == '.') {
-                if (p[2] == '/' || !p[2]) {
-                    /* remove from p here */
-                    for (i = 0; p[i+2]; i++)
-                        p[i] = p[i+2];
-                    p[i] = '\0';
-                }
-                else if (p[2] == '.' && (p[3] == '/' || !p[3])) {
-                    /* remove from last_slash here */
-                    /* ignore if root element */
-                    if (p == p0) {
-                        for (i = 0; p[i+3]; i++)
-                            p[i] = p[i+3];
-                        p[i] = '\0';
-                    }
-                    else {
-                        for (last_slash = p-1; *last_slash != '/'; last_slash--)
-                          ;
-                        for (i = 0; p[i+3]; i++)
-                            last_slash[i] = p[i+3];
-                        last_slash[i] = '\0';
-                        p = last_slash;
-                    }
-                }
-                else
-                    p++;
-            }
-            else {
-                /* remove a continouos sequence of slashes */
-                for (last_slash = p; *last_slash == '/'; last_slash++)
-                    ;
-                last_slash--;
-                if (last_slash > p) {
-                    for (i = 0; last_slash[i]; i++)
-                        p[i] = last_slash[i];
-                    p[i] = '\0';
-                }
-                p++;
-            }
-        }
-        else
-            p++;
-    }
-    /* a final `..' could make us discard the starting slash */
-    if (!*p0) {
-      *p0 = '/';
-      p0[1] = '\0';
-    }
-
-    return spath;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -70,6 +70,7 @@ void     gwy_find_self_set_argv0    (const gchar *argv0);
 #endif /* G_OS_WIN32 */
 G_CONST_RETURN
 gchar*   gwy_get_user_dir           (void);
+gchar*   gwy_canonicalize_path      (const gchar *path);
 
 G_END_DECLS
 
