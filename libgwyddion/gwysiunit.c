@@ -250,7 +250,12 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
                        GwySIValueFormat *format)
 {
     gwy_debug("");
+    if (format==NULL) format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
+    if (format->units==NULL) format->units = (gchar*)g_malloc(10*sizeof(gchar));
+  
+    
     format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
+
     strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
     strcat(format->units, siunit->unitstr);
 }
@@ -281,6 +286,7 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
 {
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+
     gwy_si_unit_get_format(siunit, maximum, format);
     return format;
 }
