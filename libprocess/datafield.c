@@ -1318,6 +1318,18 @@ gwy_data_field_get_max(GwyDataField *a)
 }
 
 
+/**
+ * gwy_data_field_area_get_max:
+ * @a: A data field
+ * @ulcol: Upper-left column coordinate (inclusive).
+ * @ulrow: Upper-left row coordinate (inclusive).
+ * @brcol: Bottom-right column coordinate (exclusive).
+ * @brrow: Bottom-right row coordinate (exclusive).
+ *
+ * Finds maximum value in a rectangular part of a data field.
+ *
+ * Returns: The maximum value.
+ **/
 gdouble
 gwy_data_field_area_get_max(GwyDataField *a,
                             gint ulcol, gint ulrow, gint brcol, gint brrow)
@@ -1348,6 +1360,16 @@ gwy_data_field_area_get_max(GwyDataField *a,
     return max;
 }
 
+gdouble
+gwy_data_field_get_area_max(GwyDataField *a,
+                            gint ulcol,
+                            gint ulrow,
+                            gint brcol,
+                            gint brrow)
+{
+    return gwy_data_field_area_get_max(a, ulcol, ulrow, brcol, brrow);
+}
+
 /**
  * gwy_data_field_get_min:
  * @a: A data field
@@ -1371,6 +1393,20 @@ gwy_data_field_get_min(GwyDataField *a)
 }
 
 
+/**
+ * gwy_data_field_area_get_min:
+ * @a: A data field
+ * @ulcol: Upper-left column coordinate (inclusive).
+ * @ulrow: Upper-left row coordinate (inclusive).
+ * @brcol: Bottom-right column coordinate (exclusive).
+ * @brrow: Bottom-right row coordinate (exclusive).
+ *
+ * Finds minimum value in a rectangular part of a data field.
+ *
+ * Returns: The minimum value.
+ *
+ * Since 1.2.
+ **/
 gdouble
 gwy_data_field_area_get_min(GwyDataField *a,
                             gint ulcol, gint ulrow, gint brcol, gint brrow)
@@ -1402,6 +1438,16 @@ gwy_data_field_area_get_min(GwyDataField *a,
     return min;
 }
 
+gdouble
+gwy_data_field_get_area_min(GwyDataField *a,
+                            gint ulcol,
+                            gint ulrow,
+                            gint brcol,
+                            gint brrow)
+{
+    return gwy_data_field_area_get_min(a, ulcol, ulrow, brcol, brrow);
+}
+
 /**
  * gwy_data_field_get_sum:
  * @a: A data field
@@ -1423,6 +1469,20 @@ gwy_data_field_get_sum(GwyDataField *a)
     return sum;
 }
 
+/**
+ * gwy_data_field_area_get_sum:
+ * @a: A data field
+ * @ulcol: Upper-left column coordinate (inclusive).
+ * @ulrow: Upper-left row coordinate (inclusive).
+ * @brcol: Bottom-right column coordinate (exclusive).
+ * @brrow: Bottom-right row coordinate (exclusive).
+ *
+ * Sums values of a rectangular part of a data field.
+ *
+ * Returns: The value sum.
+ *
+ * Since 1.2.
+ **/
 gdouble
 gwy_data_field_area_get_sum(GwyDataField *a,
                             gint ulcol, gint ulrow, gint brcol, gint brrow)
@@ -1449,6 +1509,16 @@ gwy_data_field_area_get_sum(GwyDataField *a,
     return sum;
 }
 
+gdouble
+gwy_data_field_get_area_sum(GwyDataField *a,
+                            gint ulcol,
+                            gint ulrow,
+                            gint brcol,
+                            gint brrow)
+{
+    return gwy_data_field_area_get_sum(a, ulcol, ulrow, brcol, brrow);
+}
+
 /**
  * gwy_data_field_get_avg:
  * @a: A data field
@@ -1463,12 +1533,36 @@ gwy_data_field_get_avg(GwyDataField *a)
     return gwy_data_field_get_sum(a)/((gdouble)(a->xres * a->yres));
 }
 
+/**
+ * gwy_data_field_area_get_avg:
+ * @a: A data field
+ * @ulcol: Upper-left column coordinate (inclusive).
+ * @ulrow: Upper-left row coordinate (inclusive).
+ * @brcol: Bottom-right column coordinate (exclusive).
+ * @brrow: Bottom-right row coordinate (exclusive).
+ *
+ * Averages values of a rectangular part of a data field.
+ *
+ * Returns: The average value.
+ *
+ * Since 1.2.
+ **/
 gdouble
 gwy_data_field_area_get_avg(GwyDataField *a,
                             gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
     return gwy_data_field_area_get_sum(a, ulcol, ulrow, brcol, brrow)
            /((gdouble)(brcol-ulcol)*(brrow-ulrow));
+}
+
+gdouble
+gwy_data_field_get_area_avg(GwyDataField *a,
+                            gint ulcol,
+                            gint ulrow,
+                            gint brcol,
+                            gint brrow)
+{
+    return gwy_data_field_area_get_avg(a, ulcol, ulrow, brcol, brrow);
 }
 
 /**
@@ -1497,15 +1591,17 @@ gwy_data_field_get_surface_area(GwyDataField *a,
 /**
  * gwy_data_field_area_get_surface_area:
  * @a: data field
- * @ulcol: upper-left column coordinate
- * @ulrow: upper-left row coordinate
- * @brcol: bottom-right column coordinate
- * @brrow: bottom-right row coordinate
+ * @ulcol: Upper-left column coordinate (inclusive).
+ * @ulrow: Upper-left row coordinate (inclusive).
+ * @brcol: Bottom-right column coordinate (exclusive).
+ * @brrow: Bottom-right row coordinate (exclusive).
  * @interpolation: interpolation method
  *
- * Computes surface area of selected part of area.
+ * Computes surface area of a rectangular part of a data field.
  *
- * Returns:
+ * Returns: The surface area.
+ *
+ * Since 1.2.
  **/
 gdouble
 gwy_data_field_area_get_surface_area(GwyDataField *a,
@@ -1531,6 +1627,18 @@ gwy_data_field_area_get_surface_area(GwyDataField *a,
     }
 
     return sum;
+}
+
+gdouble
+gwy_data_field_get_area_surface_area(GwyDataField *a,
+                                     gint ulcol,
+                                     gint ulrow,
+                                     gint brcol,
+                                     gint brrow,
+                                     GwyInterpolationType interpolation)
+{
+    return gwy_data_field_area_get_surface_area(a, ulcol, ulrow, brcol, brrow,
+                                                interpolation);
 }
 
 /**
@@ -1560,6 +1668,20 @@ gwy_data_field_get_rms(GwyDataField *a)
 }
 
 
+/**
+ * gwy_data_field_area_get_rms:
+ * @a: A data field
+ * @ulcol: Upper-left column coordinate (inclusive).
+ * @ulrow: Upper-left row coordinate (inclusive).
+ * @brcol: Bottom-right column coordinate (exclusive).
+ * @brrow: Bottom-right row coordinate (exclusive).
+ *
+ * Computes root mean square value of a rectangular part of a data field.
+ *
+ * Returns: The root mean square value.
+ *
+ * Since: 1.2.
+ **/
 gdouble
 gwy_data_field_area_get_rms(GwyDataField *a,
                             gint ulcol,
@@ -1595,6 +1717,15 @@ gwy_data_field_area_get_rms(GwyDataField *a,
     return rms;
 }
 
+gdouble
+gwy_data_field_get_area_rms(GwyDataField *a,
+                            gint ulcol,
+                            gint ulrow,
+                            gint brcol,
+                            gint brrow)
+{
+    return gwy_data_field_area_get_rms(a, ulcol, ulrow, brcol, brrow);
+}
 
 
 /**
@@ -1665,6 +1796,16 @@ gwy_data_field_area_threshold(GwyDataField *a,
 
 
 
+/**
+ * gwy_data_field_clamp:
+ * @a: A data field
+ * @bottom: Lower limit value.
+ * @top: Upper limit value.
+ *
+ * Limits data field values to the range [@bottom, @top].
+ *
+ * Returns: The number of changed values.
+ **/
 gint
 gwy_data_field_clamp(GwyDataField *a,
                      gdouble bottom, gdouble top)
@@ -1687,10 +1828,29 @@ gwy_data_field_clamp(GwyDataField *a,
 }
 
 
+/**
+ * gwy_data_field_area_clamp:
+ * @a: A data field
+ * @ulcol: Upper-left column coordinate (inclusive).
+ * @ulrow: Upper-left row coordinate (inclusive).
+ * @brcol: Bottom-right column coordinate (exclusive).
+ * @brrow: Bottom-right row coordinate (exclusive).
+ * @bottom: Lower limit value.
+ * @top: Upper limit value.
+ *
+ * Limits values in a rectangular part of a data field to the range
+ * [@bottom, @top].
+ *
+ * Returns: The number of changed values.
+ **/
 gint
 gwy_data_field_area_clamp(GwyDataField *a,
-                          gint ulcol, gint ulrow, gint brcol, gint brrow,
-                          gdouble bottom, gdouble top)
+                          gint ulcol,
+                          gint ulrow,
+                          gint brcol,
+                          gint brrow,
+                          gdouble bottom,
+                          gdouble top)
 {
     gint i, j, tot = 0;
     gdouble *row;
@@ -2456,31 +2616,30 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
     yresh = yres/2;
 
 
-    for (i=0; i<xres; i++)
-    {
-        for (j=0; j<yres; j++)
-        {
+    for (i = 0; i < xres; i++) {
+        for (j = 0; j < yres; j++) {
             val = 1;
-            if (i<xresh)
-            {
-                if (j<yresh) mval = edist(0,0,i,j);
-                else mval = edist(0,yres,i,j);
+            if (i < xresh) {
+                if (j < yresh)
+                    mval = edist(0, 0, i, j);
+                else
+                    mval = edist(0, yres, i, j);
             }
-            else
-            {
-                if (j<yresh) mval = edist(xres,0,i,j);
-                else mval = edist(xres, yres, i, j);
+            else {
+                if (j < yresh)
+                    mval = edist(xres, 0, i, j);
+                else
+                    mval = edist(xres, yres, i, j);
             }
             val = gwy_cwt_wfunc_2d(scale, mval, xres, wtype);
 
 
-            real_field->data[i + j*xres] *= val;
-            imag_field->data[i + j*xres] *= val;
+            real_field->data[i + j * xres] *= val;
+            imag_field->data[i + j * xres] *= val;
         }
     }
 
 }
-
 
 /**
  * gwy_data_field_cwt:
@@ -2586,7 +2745,12 @@ gwy_data_field_shade(GwyDataField *data_field, GwyDataField *target_field,
  * in one interation over the datafield.
  **/
 void
-gwy_data_field_get_stats(GwyDataField *data_field, gdouble *avg, gdouble *ra, gdouble *rms, gdouble *skew, gdouble *kurtosis)
+gwy_data_field_get_stats(GwyDataField *data_field,
+                         gdouble *avg,
+                         gdouble *ra,
+                         gdouble *rms,
+                         gdouble *skew,
+                         gdouble *kurtosis)
 {
     gint i;
     gdouble c_sz1, c_sz2, c_sz3, c_sz4, c_abs1;
@@ -2622,9 +2786,15 @@ gwy_data_field_get_stats(GwyDataField *data_field, gdouble *avg, gdouble *ra, gd
 
 void
 gwy_data_field_area_get_stats(GwyDataField *data_field,
-                              gint ulcol, gint ulrow, gint brcol, gint brrow,
-                              gdouble *avg, gdouble *ra,
-                              gdouble *rms, gdouble *skew, gdouble *kurtosis)
+                              gint ulcol,
+                              gint ulrow,
+                              gint brcol,
+                              gint brrow,
+                              gdouble *avg,
+                              gdouble *ra,
+                              gdouble *rms,
+                              gdouble *skew,
+                              gdouble *kurtosis)
 {
     gint i, j;
     gdouble c_sz1, c_sz2, c_sz3, c_sz4, c_abs1;
@@ -2640,10 +2810,10 @@ gwy_data_field_area_get_stats(GwyDataField *data_field,
     g_return_if_fail(ulcol >= 0 && ulrow >= 0
                      && brcol <= data_field->xres
                      && brrow <= data_field->yres);
-    if (brcol==data_field->xres)
-        brcol = data_field->xres -1;
-    if (brrow==data_field->yres)
-        brrow = data_field->yres -1;
+    if (brcol == data_field->xres)
+        brcol = data_field->xres - 1;
+    if (brrow == data_field->yres)
+        brrow = data_field->yres - 1;
 
     nn = (brcol-ulcol)*(brrow-ulrow);
     c_sz1 = c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
@@ -2671,7 +2841,22 @@ gwy_data_field_area_get_stats(GwyDataField *data_field,
     /*(c_sz4/nn - 4*c_sz1*c_sz3/nn4 + 6*c_s2z*c_sz2/nn3 - 3*c_s4z/nn4 - 3)/pow((c_sz2/nn - c_s2z/nn2),2);*/
 
     *rms = sqrt(*rms);
+}
 
+void
+gwy_data_field_get_area_stats(GwyDataField *data_field,
+                              gint ulcol,
+                              gint ulrow,
+                              gint brcol,
+                              gint brrow,
+                              gdouble *avg,
+                              gdouble *ra,
+                              gdouble *rms,
+                              gdouble *skew,
+                              gdouble *kurtosis)
+{
+    gwy_data_field_area_get_stats(data_field, ulcol, ulrow, brcol, brrow,
+                                  avg, ra, rms, skew, kurtosis);
 }
 
 
@@ -3520,13 +3705,13 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field,
 #if 0
 /*iterate over search area in the second datafield */
 static void
-gwy_data_field_croscorrelate_iter(GwyDataField *data_field1,
-                                  GwyDataField *data_field2,
-                                  gint search_width,
-                                  gint search_height,
-                                  gint i, gint j,
-                                  gint *imax, gint *jmax,
-                                  gdouble *cormax)
+gwy_data_field_crosscorrelate_iter(GwyDataField *data_field1,
+                                   GwyDataField *data_field2,
+                                   gint search_width,
+                                   gint search_height,
+                                   gint i, gint j,
+                                   gint *imax, gint *jmax,
+                                   gdouble *cormax)
 {
     gint m, n;
     gdouble lscore;
@@ -3562,7 +3747,7 @@ gwy_data_field_croscorrelate_iter(GwyDataField *data_field1,
 #endif
 
 /**
- * gwy_data_field_croscorrelate:
+ * gwy_data_field_crosscorrelate:
  * @data_field1: data field
  * @data_field2: data field
  * @x_dist: field of resulting x-distances
@@ -3573,20 +3758,23 @@ gwy_data_field_croscorrelate_iter(GwyDataField *data_field1,
  * @window_height: correlation window height
  * @score: correlation score result
  *
- * Algotihm for matching two different images of the same
- * object under changes. It does not use any special features
+ * Algorithm for matching two different images of the same object under changes.
+ *
+ * It does not use any special features
  * for matching. It simply searches for all points (with their neighbourhood)
  * of @data_field1 within @data_field2. Parameters @search_width and
  * @search_height
  * determine maimum area where to search for points. The area is cenetered
  * in the @data_field2 at former position of points at @data_field1.
+ *
+ * Since: 1.2.
  **/
 void
-gwy_data_field_croscorrelate(GwyDataField *data_field1,
-                             GwyDataField *data_field2, GwyDataField *x_dist,
-                             GwyDataField *y_dist, GwyDataField *score,
-                             gint search_width, gint search_height,
-                             gint window_width, gint window_height)
+gwy_data_field_crosscorrelate(GwyDataField *data_field1,
+                              GwyDataField *data_field2, GwyDataField *x_dist,
+                              GwyDataField *y_dist, GwyDataField *score,
+                              gint search_width, gint search_height,
+                              gint window_width, gint window_height)
 {
     gint xres, yres, i, j, m, n;
     gint imax, jmax;
@@ -3646,8 +3834,21 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1,
     }
 }
 
+void
+gwy_data_field_croscorrelate(GwyDataField *data_field1,
+                             GwyDataField *data_field2, GwyDataField *x_dist,
+                             GwyDataField *y_dist, GwyDataField *score,
+                             gint search_width, gint search_height,
+                             gint window_width, gint window_height)
+{
+    gwy_data_field_crosscorrelate(data_field1, data_field2,
+                                  x_dist, y_dist, score,
+                                  search_width, search_height,
+                                  window_width, window_height);
+}
+
 /**
- * gwy_data_field_croscorrelate_iteration:
+ * gwy_data_field_crosscorrelate_iteration:
  * @data_field1: data field
  * @data_field2: data field
  * @x_dist: field of resulting x-distances
@@ -3660,24 +3861,27 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1,
  * @state: state of computation
  * @iteration: iteration of computation loop (winthin GWY_COMP_ITERATE state)
  *
- * Algotihm for matching two different images of the same
- * object under changes. It does not use any special features
+ * Algorithm for matching two different images of the same object under changes.
+ *
+ * It does not use any special features
  * for matching. It simply searches for all points (with their neighbourhood)
  * of @data_field1 within @data_field2. Parameters @search_width and
  * @search_height
  * determine maimum area where to search for points. The area is cenetered
  * in the @data_field2 at former position of points at @data_field1.
+ *
+ * Since: 1.2.
  **/
 void
-gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
-                                       GwyDataField *data_field2,
-                                       GwyDataField *x_dist,
-                                       GwyDataField *y_dist,
-                                       GwyDataField *score, gint search_width,
-                                       gint search_height, gint window_width,
-                                       gint window_height,
-                                       GwyComputationStateType * state,
-                                       gint *iteration)
+gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
+                                        GwyDataField *data_field2,
+                                        GwyDataField *x_dist,
+                                        GwyDataField *y_dist,
+                                        GwyDataField *score, gint search_width,
+                                        gint search_height, gint window_width,
+                                        gint window_height,
+                                        GwyComputationStateType * state,
+                                        gint *iteration)
 {
     gint xres, yres, i, j, m, n;
     gint imax, jmax;
@@ -3747,6 +3951,24 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
         if (*iteration == (xres - search_height/2))
             *state = GWY_COMP_FINISHED;
     }
+}
+
+void
+gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
+                                       GwyDataField *data_field2,
+                                       GwyDataField *x_dist,
+                                       GwyDataField *y_dist,
+                                       GwyDataField *score, gint search_width,
+                                       gint search_height, gint window_width,
+                                       gint window_height,
+                                       GwyComputationStateType * state,
+                                       gint *iteration)
+{
+    gwy_data_field_crosscorrelate_iteration(data_field1, data_field2,
+                                            x_dist, y_dist, score,
+                                            search_width, search_height,
+                                            window_width, window_height,
+                                            state, iteration);
 }
 
 static gdouble

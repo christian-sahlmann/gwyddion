@@ -29,6 +29,7 @@
 #include <libgwyddion/gwysiunit.h>
 #include <libprocess/cwt.h>
 
+/* FIXME */
 #define GWY_ENABLE_DEPRECATED
 
 G_BEGIN_DECLS
@@ -264,12 +265,37 @@ gdouble gwy_data_field_get_surface_area(GwyDataField *a,
                                         GwyInterpolationType interpolation);
 
 #ifdef GWY_ENABLE_DEPRECATED
-#define gwy_data_field_get_area_max gwy_data_field_area_get_max
-#define gwy_data_field_get_area_min gwy_data_field_area_get_min
-#define gwy_data_field_get_area_avg gwy_data_field_area_get_avg
-#define gwy_data_field_get_area_rms gwy_data_field_area_get_rms
-#define gwy_data_field_get_area_sum gwy_data_field_area_get_sum
-#define gwy_data_field_get_area_surface_area gwy_data_field_area_get_surface_area
+gdouble gwy_data_field_get_area_max(GwyDataField *a,
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
+gdouble gwy_data_field_get_area_min(GwyDataField *a,
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
+gdouble gwy_data_field_get_area_avg(GwyDataField *a,
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
+gdouble gwy_data_field_get_area_rms(GwyDataField *a,
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
+gdouble gwy_data_field_get_area_sum(GwyDataField *a,
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
+gdouble gwy_data_field_get_area_surface_area(GwyDataField *a,
+                                        gint ulcol,
+                                        gint ulrow,
+                                        gint brcol,
+                                        gint brrow,
+                                        GwyInterpolationType interpolation);
 #endif
 
 gdouble gwy_data_field_area_get_max(GwyDataField *a,
@@ -481,7 +507,16 @@ void gwy_data_field_get_stats(GwyDataField *data_field,
                               gdouble *kurtosis);
 
 #ifdef GWY_ENABLE_DEPRECATED
-#define gwy_data_field_get_area_stats gwy_data_field_area_get_stats
+void gwy_data_field_get_area_stats(GwyDataField *data_field,
+                                   gint ulcol,
+                                   gint ulrow,
+                                   gint brcol,
+                                   gint brrow,
+                                   gdouble *avg,
+                                   gdouble *ra,
+                                   gdouble *rms,
+                                   gdouble *skew,
+                                   gdouble *kurtosis);
 #endif
 void gwy_data_field_area_get_stats(GwyDataField *data_field,
                                     gint ulcol,
@@ -647,6 +682,27 @@ gdouble gwy_data_field_get_correlation_score(GwyDataField *data_field,
                                       gint kernel_brrow
                                      );
 
+void gwy_data_field_crosscorrelate(GwyDataField *data_field1,
+                                   GwyDataField *data_field2,
+                                   GwyDataField *x_dist,
+                                   GwyDataField *y_dist,
+                                   GwyDataField *score,
+                                   gint search_width,
+                                   gint search_height,
+                                   gint window_width,
+                                   gint window_height);
+void gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
+                                             GwyDataField *data_field2,
+                                             GwyDataField *x_dist,
+                                             GwyDataField *y_dist,
+                                             GwyDataField *score,
+                                             gint search_width,
+                                             gint search_height,
+                                             gint window_width,
+                                             gint window_height,
+                                             GwyComputationStateType *state,
+                                             gint *iteration);
+#ifdef GWY_ENABLE_DEPRECATED
 void gwy_data_field_croscorrelate(GwyDataField *data_field1,
                                   GwyDataField *data_field2,
                                   GwyDataField *x_dist,
@@ -656,20 +712,18 @@ void gwy_data_field_croscorrelate(GwyDataField *data_field1,
                                   gint search_height,
                                   gint window_width,
                                   gint window_height);
-
 void gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
-                                  GwyDataField *data_field2,
-                                  GwyDataField *x_dist,
-                                  GwyDataField *y_dist,
-                                  GwyDataField *score,
-                                  gint search_width,
-                                  gint search_height,
-                                  gint window_width,
-                                  gint window_height,
-                                  GwyComputationStateType *state,
-                                  gint *iteration);
-
-
+                                            GwyDataField *data_field2,
+                                            GwyDataField *x_dist,
+                                            GwyDataField *y_dist,
+                                            GwyDataField *score,
+                                            gint search_width,
+                                            gint search_height,
+                                            gint window_width,
+                                            gint window_height,
+                                            GwyComputationStateType *state,
+                                            gint *iteration);
+#endif
 
 void gwy_data_field_correlate(GwyDataField *data_field,
                                   GwyDataField *kernel_field,
@@ -743,5 +797,5 @@ gwy_data_field_mask_outliers(GwyDataField *data_field,
 G_END_DECLS
 
 
-#endif /*__GWY_DATAFIELD__*/
+#endif /*__GWY_DATAFIELD_H__*/
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
