@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -562,8 +562,7 @@ gwy_container_get_value(GwyContainer *container, GQuark key)
     memset(&value, 0, sizeof(value));
     g_return_val_if_fail(key, value);
     g_return_val_if_fail(GWY_IS_CONTAINER(container), value);
-    p = (GValue*)g_hash_table_lookup(container->values,
-                                     GUINT_TO_POINTER(key));
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     g_return_val_if_fail(p, value);
 
     g_assert(G_IS_VALUE(p));
@@ -597,18 +596,65 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
     g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values,
-                                     GUINT_TO_POINTER(key));
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!p) {
         g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_BOOLEAN(p)) {
         g_warning("%s: trying to get %s as boolean (key %u)",
-              GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
     return g_value_get_boolean(p);
+}
+
+/**
+ * gwy_container_gis_boolean_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: Pointer to the boolean to update.
+ *
+ * Get-if-set a boolean from @c.
+ *
+ * Returns: %TRUE if @v was actually updated, %FALSE when there is no
+ *          such boolean in the container.
+ **/
+
+/**
+ * gwy_container_gis_boolean:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: Pointer to the boolean to update.
+ *
+ * Get-if-set a boolean from @container.
+ *
+ * Returns: %TRUE if @value was actually updated, %FALSE when there is no
+ *          such boolean in the container.
+ **/
+gboolean
+gwy_container_gis_boolean(GwyContainer *container,
+                          GQuark key,
+                          gboolean *value)
+{
+    GValue *p;
+
+    if (!key)
+        return FALSE;
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    g_return_val_if_fail(value, FALSE);
+
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!p)
+        return FALSE;
+    if (!G_VALUE_HOLDS_BOOLEAN(p)) {
+        g_warning("%s: trying to get %s as boolean (key %u)",
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+        return FALSE;
+    }
+
+    *value = g_value_get_boolean(p);
+    return TRUE;
 }
 
 /**
@@ -643,10 +689,58 @@ gwy_container_get_uchar(GwyContainer *container, GQuark key)
     }
     if (!G_VALUE_HOLDS_UCHAR(p)) {
         g_warning("%s: trying to get %s as uchar (key %u)",
-              GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
     return g_value_get_uchar(p);
+}
+
+/**
+ * gwy_container_gis_uchar_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: Pointer to the unsigned char to update.
+ *
+ * Get-if-set an unsigned char from @c.
+ *
+ * Returns: %TRUE if @v was actually updated, %FALSE when there is no
+ *          such unsigned char in the container.
+ **/
+
+/**
+ * gwy_container_gis_uchar:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: Pointer to the unsigned char to update.
+ *
+ * Get-if-set an unsigned char from @container.
+ *
+ * Returns: %TRUE if @value was actually updated, %FALSE when there is no
+ *          such unsigned char in the container.
+ **/
+gboolean
+gwy_container_gis_uchar(GwyContainer *container,
+                        GQuark key,
+                        guchar *value)
+{
+    GValue *p;
+
+    if (!key)
+        return FALSE;
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    g_return_val_if_fail(value, FALSE);
+
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!p)
+        return FALSE;
+    if (!G_VALUE_HOLDS_UCHAR(p)) {
+        g_warning("%s: trying to get %s as uchar (key %u)",
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+        return FALSE;
+    }
+
+    *value = g_value_get_uchar(p);
+    return TRUE;
 }
 
 /**
@@ -673,18 +767,65 @@ gwy_container_get_int32(GwyContainer *container, GQuark key)
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
     g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values,
-                                     GUINT_TO_POINTER(key));
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!p) {
         g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_INT(p)) {
         g_warning("%s: trying to get %s as int32 (key %u)",
-              GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
     return g_value_get_int(p);
+}
+
+/**
+ * gwy_container_gis_int32_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: Pointer to the 32bit integer to update.
+ *
+ * Get-if-set a 32bit integer from @c.
+ *
+ * Returns: %TRUE if @v was actually updated, %FALSE when there is no
+ *          such 32bit integer in the container.
+ **/
+
+/**
+ * gwy_container_gis_int32:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: Pointer to the 32bit integer to update.
+ *
+ * Get-if-set a 32bit integer from @container.
+ *
+ * Returns: %TRUE if @value was actually updated, %FALSE when there is no
+ *          such 32bit integer in the container.
+ **/
+gboolean
+gwy_container_gis_int32(GwyContainer *container,
+                        GQuark key,
+                        gint32 *value)
+{
+    GValue *p;
+
+    if (!key)
+        return FALSE;
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    g_return_val_if_fail(value, FALSE);
+
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!p)
+        return FALSE;
+    if (!G_VALUE_HOLDS_INT(p)) {
+        g_warning("%s: trying to get %s as int32 (key %u)",
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+        return FALSE;
+    }
+
+    *value = g_value_get_int(p);
+    return TRUE;
 }
 
 /**
@@ -711,18 +852,65 @@ gwy_container_get_int64(GwyContainer *container, GQuark key)
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
     g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values,
-                                     GUINT_TO_POINTER(key));
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!p) {
         g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
     }
     if (!G_VALUE_HOLDS_INT64(p)) {
         g_warning("%s: trying to get %s as int64 (key %u)",
-              GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
         return 0;
     }
     return g_value_get_int64(p);
+}
+
+/**
+ * gwy_container_gis_int64_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: Pointer to the 64bit integer to update.
+ *
+ * Get-if-set a 64bit integer from @c.
+ *
+ * Returns: %TRUE if @v was actually updated, %FALSE when there is no
+ *          such 64bit integer in the container.
+ **/
+
+/**
+ * gwy_container_gis_int64:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: Pointer to the 64bit integer to update.
+ *
+ * Get-if-set a 64bit integer from @container.
+ *
+ * Returns: %TRUE if @value was actually updated, %FALSE when there is no
+ *          such 64bit integer in the container.
+ **/
+gboolean
+gwy_container_gis_int64(GwyContainer *container,
+                        GQuark key,
+                        gint64 *value)
+{
+    GValue *p;
+
+    if (!key)
+        return FALSE;
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    g_return_val_if_fail(value, FALSE);
+
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!p)
+        return FALSE;
+    if (!G_VALUE_HOLDS_INT64(p)) {
+        g_warning("%s: trying to get %s as int64 (key %u)",
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+        return FALSE;
+    }
+
+    *value = g_value_get_int64(p);
+    return TRUE;
 }
 
 /**
@@ -749,8 +937,7 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
     g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values,
-                                     GUINT_TO_POINTER(key));
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!p) {
         g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
         return 0;
@@ -764,14 +951,61 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
 }
 
 /**
+ * gwy_container_gis_double_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: Pointer to the double to update.
+ *
+ * Get-if-set a double from @c.
+ *
+ * Returns: %TRUE if @v was actually updated, %FALSE when there is no
+ *          such double in the container.
+ **/
+
+/**
+ * gwy_container_gis_double:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: Pointer to the double to update.
+ *
+ * Get-if-set a double from @container.
+ *
+ * Returns: %TRUE if @value was actually updated, %FALSE when there is no
+ *          such double in the container.
+ **/
+gboolean
+gwy_container_gis_double(GwyContainer *container,
+                        GQuark key,
+                        gdouble *value)
+{
+    GValue *p;
+
+    if (!key)
+        return FALSE;
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    g_return_val_if_fail(value, FALSE);
+
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!p)
+        return FALSE;
+    if (!G_VALUE_HOLDS_DOUBLE(p)) {
+        g_warning("%s: trying to get %s as double (key %u)",
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+        return FALSE;
+    }
+
+    *value = g_value_get_double(p);
+    return TRUE;
+}
+
+/**
  * gwy_container_get_string_by_name:
  * @c: A #GwyContainer.
  * @n: A nul-terminated name (id).
  *
  * Gets the string in container @c identified by name @n.
  *
- * The returned string should be considered constant and shouldn't be freed
- * or modified.
+ * The returned string must be treated as constant and never freed or modified.
  **/
 
 /**
@@ -781,8 +1015,7 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
  *
  * Returns the string in @container identified by @key.
  *
- * The returned string should be considered constant and shouldn't be freed
- * or modified.
+ * The returned string must be treated as constant and never freed or modified.
  *
  * Returns: The string.
  **/
@@ -791,20 +1024,73 @@ gwy_container_get_string(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values,
-                                     GUINT_TO_POINTER(key));
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
+    g_return_val_if_fail(key, NULL);
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!p) {
         g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
-        return 0;
+        return NULL;
     }
     if (!G_VALUE_HOLDS_STRING(p)) {
         g_warning("%s: trying to get %s as string (key %u)",
-              GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return 0;
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+        return NULL;
     }
     return g_value_get_string(p);
+}
+
+/**
+ * gwy_container_gis_string_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: Pointer to the string pointer to update.
+ *
+ * Get-if-set a string from @c.
+ *
+ * The string eventually stored in @v must be treated as constant and
+ * never freed or modified.
+ *
+ * Returns: %TRUE if @v was actually updated, %FALSE when there is no
+ *          such string in the container.
+ **/
+
+/**
+ * gwy_container_gis_string:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: Pointer to the string pointer to update.
+ *
+ * Get-if-set a string from @container.
+ *
+ * The string eventually stored in @value must be treated as constant and
+ * never freed or modified.
+ *
+ * Returns: %TRUE if @value was actually updated, %FALSE when there is no
+ *          such string in the container.
+ **/
+gboolean
+gwy_container_gis_string(GwyContainer *container,
+                         GQuark key,
+                         const guchar **value)
+{
+    GValue *p;
+
+    if (!key)
+        return FALSE;
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    g_return_val_if_fail(value, FALSE);
+
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!p)
+        return FALSE;
+    if (!G_VALUE_HOLDS_STRING(p)) {
+        g_warning("%s: trying to get %s as string (key %u)",
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+        return FALSE;
+    }
+
+    *value = g_value_get_string(p);
+    return TRUE;
 }
 
 /**
@@ -837,20 +1123,75 @@ gwy_container_get_object(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values,
-                                     GUINT_TO_POINTER(key));
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
+    g_return_val_if_fail(key, NULL);
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!p) {
         g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
-        return 0;
+        return NULL;
     }
     if (!G_VALUE_HOLDS_OBJECT(p)) {
         g_warning("%s: trying to get %s as object (key %u)",
               GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return 0;
+        return NULL;
     }
     return g_value_get_object(p);
+}
+
+/**
+ * gwy_container_gis_object_by_name:
+ * @c: A #GwyContainer.
+ * @n: A nul-terminated name (id).
+ * @v: Pointer to the object pointer to update.
+ *
+ * Get-if-set an object from @c.
+ *
+ * The object eventually stored in @value doesn't have its reference count
+ * increased, use g_object_ref() if you want to access it even when
+ * @container may cease to exist.
+ *
+ * Returns: %TRUE if @v was actually updated, %FALSE when there is no
+ *          such object in the container.
+ **/
+
+/**
+ * gwy_container_gis_object:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: Pointer to the object pointer to update.
+ *
+ * Get-if-set an object from @container.
+ *
+ * The object eventually stored in @value doesn't have its reference count
+ * increased, use g_object_ref() if you want to access it even when
+ * @container may cease to exist.
+ *
+ * Returns: %TRUE if @value was actually updated, %FALSE when there is no
+ *          such object in the container.
+ **/
+gboolean
+gwy_container_gis_object(GwyContainer *container,
+                         GQuark key,
+                         GObject **value)
+{
+    GValue *p;
+
+    if (!key)
+        return FALSE;
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    g_return_val_if_fail(value, FALSE);
+
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!p)
+        return FALSE;
+    if (!G_VALUE_HOLDS_OBJECT(p)) {
+        g_warning("%s: trying to get %s as object (key %u)",
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
+        return FALSE;
+    }
+
+    *value = g_value_get_object(p);
+    return TRUE;
 }
 
 static gboolean

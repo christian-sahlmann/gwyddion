@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -95,37 +95,58 @@ void       gwy_container_set_boolean        (GwyContainer *container,
                                              gboolean value);
 gboolean   gwy_container_get_boolean        (GwyContainer *container,
                                              GQuark key);
+gboolean   gwy_container_gis_boolean        (GwyContainer *container,
+                                             GQuark key,
+                                             gboolean *value);
 void       gwy_container_set_uchar          (GwyContainer *container,
                                              GQuark key,
                                              guchar value);
 guchar     gwy_container_get_uchar          (GwyContainer *container,
                                              GQuark key);
+gboolean   gwy_container_gis_uchar          (GwyContainer *container,
+                                             GQuark key,
+                                             guchar *value);
 void       gwy_container_set_int32          (GwyContainer *container,
                                              GQuark key,
                                              gint32 value);
 gint32     gwy_container_get_int32          (GwyContainer *container,
                                              GQuark key);
+gboolean   gwy_container_gis_int32          (GwyContainer *container,
+                                             GQuark key,
+                                             gint32 *value);
 void       gwy_container_set_int64          (GwyContainer *container,
                                              GQuark key,
                                              gint64 value);
 gint64     gwy_container_get_int64          (GwyContainer *container,
                                              GQuark key);
+gboolean   gwy_container_gis_int64          (GwyContainer *container,
+                                             GQuark key,
+                                             gint64 *value);
 void       gwy_container_set_double         (GwyContainer *container,
                                              GQuark key,
                                              gdouble value);
 gdouble    gwy_container_get_double         (GwyContainer *container,
                                              GQuark key);
+gboolean   gwy_container_gis_double         (GwyContainer *container,
+                                             GQuark key,
+                                             gdouble *value);
 void       gwy_container_set_string         (GwyContainer *container,
                                              GQuark key,
                                              const guchar *value);
 G_CONST_RETURN
 guchar*    gwy_container_get_string         (GwyContainer *container,
                                              GQuark key);
+gboolean   gwy_container_gis_string         (GwyContainer *container,
+                                             GQuark key,
+                                             const guchar **value);
 void       gwy_container_set_object         (GwyContainer *container,
                                              GQuark key,
                                              GObject *value);
 GObject*   gwy_container_get_object         (GwyContainer *container,
                                              GQuark key);
+gboolean   gwy_container_gis_object         (GwyContainer *container,
+                                             GQuark key,
+                                             GObject **value);
 
 /*
 gulong     gwy_container_watch              (GwyContainer *container,
@@ -143,18 +164,25 @@ void       gwy_container_thaw_watch         (GwyContainer *container);
 #define gwy_container_rename_by_name(c,n,nn,f) gwy_container_rename(c,g_quark_try_string(n),g_quark_from_string(nn),f)
 #define gwy_container_set_boolean_by_name(c,n,v) gwy_container_set_boolean(c,g_quark_from_string(n),v)
 #define gwy_container_get_boolean_by_name(c,n) gwy_container_get_boolean(c,g_quark_try_string(n))
+#define gwy_container_gis_boolean_by_name(c,n,v) gwy_container_gis_boolean(c,g_quark_from_string(n),v)
 #define gwy_container_set_uchar_by_name(c,n,v) gwy_container_set_uchar(c,g_quark_from_string(n),v)
 #define gwy_container_get_uchar_by_name(c,n) gwy_container_get_uchar(c,g_quark_try_string(n))
+#define gwy_container_gis_uchar_by_name(c,n,v) gwy_container_gis_uchar(c,g_quark_from_string(n),v)
 #define gwy_container_set_int32_by_name(c,n,v) gwy_container_set_int32(c,g_quark_from_string(n),v)
 #define gwy_container_get_int32_by_name(c,n) gwy_container_get_int32(c,g_quark_try_string(n))
+#define gwy_container_gis_int32_by_name(c,n,v) gwy_container_gis_int32(c,g_quark_from_string(n),v)
 #define gwy_container_set_int64_by_name(c,n,v) gwy_container_set_int64(c,g_quark_from_string(n),v)
 #define gwy_container_get_int64_by_name(c,n) gwy_container_get_int64(c,g_quark_try_string(n))
+#define gwy_container_gis_int64_by_name(c,n,v) gwy_container_gis_int64(c,g_quark_from_string(n),v)
 #define gwy_container_set_double_by_name(c,n,v) gwy_container_set_double(c,g_quark_from_string(n),v)
 #define gwy_container_get_double_by_name(c,n) gwy_container_get_double(c,g_quark_try_string(n))
+#define gwy_container_gis_double_by_name(c,n,v) gwy_container_gis_double(c,g_quark_from_string(n),v)
 #define gwy_container_set_string_by_name(c,n,v) gwy_container_set_string(c,g_quark_from_string(n),v)
 #define gwy_container_get_string_by_name(c,n) gwy_container_get_string(c,g_quark_try_string(n))
+#define gwy_container_gis_string_by_name(c,n,v) gwy_container_gis_string(c,g_quark_from_string(n),v)
 #define gwy_container_set_object_by_name(c,n,v) gwy_container_set_object(c,g_quark_from_string(n),v)
 #define gwy_container_get_object_by_name(c,n) gwy_container_get_object(c,g_quark_try_string(n))
+#define gwy_container_gis_object_by_name(c,n,v) gwy_container_gis_object(c,g_quark_from_string(n),v)
 
 #ifdef __cplusplus
 }

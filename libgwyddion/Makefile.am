@@ -42,6 +42,7 @@ libgwyddion_la_SOURCES = \
 #
 #main_LDADD = libgwyddion.la
 #
+#noinst_PROGRAMS = test
 #test_SOURCES = test.c
 #
 #test_LDADD = libgwyddion.la

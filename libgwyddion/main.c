@@ -118,6 +118,8 @@ main(void)
     GQuark q;
     gulong id;
     gdouble *x;
+    gdouble y;
+    gboolean ok;
 
     g_type_init();
 
@@ -197,6 +199,13 @@ main(void)
     gwy_container_set_double_by_name(container, "pdf", 0.5227);
     gwy_container_set_double_by_name(container, "pdf/f", 1.4142);
     gwy_container_set_double_by_name(container, "pdfoo", 7.76);
+
+    y = 0.1;
+    g_message("y = %g", y);
+    ok = gwy_container_gis_double_by_name(container, "pdf", &y);
+    g_message("gis 'pdf': y = %g (%s)", y, ok ? "OK" : "NO");
+    ok = gwy_container_gis_double_by_name(container, "no-such-double", &y);
+    g_message("gis 'no-such-double': y = %g (%s)", y, ok ? "OK" : "NO");
 
     gwy_container_foreach(container, NULL, (GHFunc)bar_callback, "bar bar bar");
 
