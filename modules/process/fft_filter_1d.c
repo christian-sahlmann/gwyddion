@@ -111,10 +111,13 @@ static void        direction_changed_cb      (GObject *item,
                                              Fftf1dArgs *args);
 static void        interpolation_changed_cb  (GObject *item,
                                              Fftf1dArgs *args);
-static void        update_changed_cb        (GtkToggleButton *button,
+static void        update_changed_cb         (GtkToggleButton *button,
 					                         Fftf1dArgs *args);
-static void        update_view              (Fftf1dControls *controls,
+static void        update_view               (Fftf1dControls *controls,
                                              Fftf1dArgs *args);
+static void        graph_selected            (GwyGraphArea *area,
+                                             Fftf1dArgs *args);
+
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -130,6 +133,7 @@ static GwyModuleInfo module_info = {
 
 
 Fftf1dControls *pcontrols;
+const gint MAX_PREV = 200;
 
 /* This is the ONLY exported symbol.  The argument is the module info.
  * NO semicolon after. */
@@ -245,6 +249,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
                             GWY_INTERPOLATION_ROUND);
 
+    args->weights = NULL;
 
     vbox = gtk_vbox_new(FALSE, 3);
     /*set up rescaled image of the surface*/
@@ -283,6 +288,10 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_right, FALSE);
     gwy_grapher_set_status(GWY_GRAPHER(controls.graph), GWY_GRAPHER_STATUS_XSEL); 
 
+    g_signal_connect(GWY_GRAPHER(controls.graph)->area, "selected",
+                               G_CALLBACK(graph_selected), args);
+    
+    
     gtk_box_pack_start(GTK_BOX(vbox), controls.graph, FALSE, FALSE, 4);
     
     
@@ -398,13 +407,24 @@ fftf_1d_dialog_abandon(Fftf1dControls *controls, Fftf1dArgs *args)
 static void        
 update_view(Fftf1dControls *controls, Fftf1dArgs *args)
 {
-    GwyDataField *dfield;
+    GwyDataField *dfield, *rfield, *rvfield;
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
                                                              "/0/data"));
+    rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->result,
+                                                             "/0/data"));
+    rvfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->result_vdata,
+                                                             "/0/data"));
+     
+    gwy_data_field_resample(rfield, dfield->xres, dfield->yres,
+                            args->interpolation);
     
-    gwy_data_field_fft_filter_1d(dfield, args->weights, args->direction,
+    gwy_data_field_fft_filter_1d(dfield, rfield, args->weights, args->direction,
                                  args->interpolation);
 
+    gwy_data_field_resample(rfield, rvfield->xres, rvfield->yres, 
+                            args->interpolation);
+    
+    gwy_data_field_copy(rfield, rvfield);
     gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));
 }
 
@@ -416,11 +436,12 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     GwyGrapherCurveModel *cmodel;
     gdouble xdata[200];
     gdouble max;
-    gint i, MAX_PREV = 200; /*move upwards*/
+    gint i;
 
     dline = GWY_DATA_LINE(gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
                                                              "/0/data"));
+    
     gwy_data_field_get_line_stat_function(dfield, dline,
                                           0, 0, dfield->xres, dfield->yres,
                                           GWY_SF_OUTPUT_PSDF,
@@ -429,10 +450,13 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
                                           GWY_WINDOWING_RECT,
                                           MAX_PREV);
 
+    if (args->weights == NULL) args->weights = gwy_data_line_new(dline->res, dline->res, FALSE);
+    gwy_data_line_fill(args->weights, 1);
+    
     gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
     for (i=0; i<MAX_PREV; i++)
     {
-        xdata[i] = i;
+        xdata[i] = ((gdouble)i)/MAX_PREV;
     }
     
     cmodel = gwy_grapher_curve_model_new();
@@ -443,9 +467,42 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 
     gwy_grapher_model_remove_all_curves(controls->gmodel);
     gwy_grapher_model_add_curve(controls->gmodel, cmodel);
-
+    gwy_grapher_clear_selection(controls->graph);
+   
+    update_view(controls, args);
     
     gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));
+}
+
+static void        
+graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
+{
+    gint i, j, nofselection;
+    gdouble beg, end;
+    gdouble *selection;
+
+    /*get graph selection*/
+    nofselection = gwy_grapher_get_selection_number(pcontrols->graph);
+    if (nofselection == 0) return;
+    
+    selection = (gdouble *)g_malloc(2*nofselection*sizeof(gdouble));
+    gwy_grapher_get_selection(pcontrols->graph, selection);
+
+    /*setup weights for inverse FFT computation*/
+    if (args->weights == NULL) args->weights = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
+    gwy_data_line_fill(args->weights, 0);
+
+    for (i = 0; i < 2*nofselection; i++)
+    {
+        beg = selection[i];
+        end = selection[i+1];
+        gwy_data_line_part_fill(args->weights, 
+                                    MAX(0, args->weights->res*beg),
+                                    MIN(args->weights->res, args->weights->res*end),
+                                    1);
+    }
+    
+    update_view(pcontrols, args);
 }
 
 
@@ -455,12 +512,6 @@ static void
 fftf_1d_run(Fftf1dControls *controls,
               Fftf1dArgs *args)
 {
-    GwyDataField *dfield;
-    
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
-							      "/0/data"));
-
-
     update_view(controls, args);
 }
 

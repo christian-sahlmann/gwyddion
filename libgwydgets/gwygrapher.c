@@ -295,4 +295,38 @@ gwy_grapher_set_status(GwyGrapher *grapher, GwyGrapherStatusType status)
     grapher->area->status = status;
 }
 
+gint       
+gwy_grapher_get_selection_number(GwyGrapher *grapher)
+{
+    if (grapher->area->status == GWY_GRAPHER_STATUS_XSEL)
+        return grapher->area->areasdata->data_areas->len;
+    else return 0;
+}
+
+void
+gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
+{
+    gint i;
+    GwyGrapherDataArea *data_area;
+    
+    if (selection == NULL) return;
+    if (grapher->area->status == GWY_GRAPHER_STATUS_XSEL)
+    {
+        for (i = 0; i < grapher->area->areasdata->data_areas->len; i++)
+        {
+            data_area = (GwyGrapherDataArea *)(grapher->area->areasdata->data_areas->data + i);
+            selection[2*i] = data_area->xmin;
+            selection[2*i + 1] = data_area->xmax;
+        }
+    }
+}
+
+void       
+gwy_grapher_clear_selection(GwyGrapher *grapher)
+{
+    gwy_grapher_area_clear_selection(grapher->area);
+}
+
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -541,6 +541,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
             }
             g_array_append_val(area->areasdata->data_areas, areadata);
             area->selecting = TRUE;
+            gwy_grapher_area_signal_selected(area);
         }
         else /*remove selection*/
         {
@@ -586,6 +587,7 @@ gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
             areadata->ymax = dy;
          area->selecting = FALSE;
          gtk_widget_queue_draw(GTK_WIDGET(area));
+         gwy_grapher_area_signal_selected(area);
     }
 
 
@@ -929,6 +931,17 @@ gwy_grapher_label_entry_cb(GwyGrapherLabelDialog *dialog, gint arg1, gpointer us
 }
 
 
+void 
+gwy_grapher_area_clear_selection(GwyGrapherArea *area)
+{
 
+    if (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL)
+    {
+        if (area->areasdata) g_array_free(area->areasdata->data_areas, TRUE);
+        area->areasdata->data_areas = g_array_new(FALSE, TRUE, sizeof(GwyGrapherDataArea));        
+    }
+
+    gtk_widget_queue_draw(GTK_WIDGET(area));
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

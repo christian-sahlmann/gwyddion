@@ -98,6 +98,12 @@ void       gwy_grapher_change_model(GwyGrapher *grapher,
 void       gwy_grapher_set_status(GwyGrapher *grapher,
                                   GwyGrapherStatusType status);
 
+gint       gwy_grapher_get_selection_number(GwyGrapher *grapher);
+void       gwy_grapher_get_selection(GwyGrapher *grapher,
+                                     gdouble *selection);
+
+void       gwy_grapher_clear_selection(GwyGrapher *grapher);
+
 G_END_DECLS
 
 #endif /* __GWY_GRADSPHERE_H__ */

@@ -493,14 +493,55 @@ gwy_data_field_cwt(GwyDataField *data_field,
     gwy_data_field_invalidate(data_field);
 }
 
-
 void 
 gwy_data_field_fft_filter_1d(GwyDataField *data_field, 
+                             GwyDataField *result_field,
                                   GwyDataLine *weights,
-                                  GtkOrientation *orientation,
+                                  GtkOrientation orientation,
                                   GwyInterpolationType interpolation)
 {
+    gint i, j;
+    GwyDataField *idata_field, *hlp_dfield, *hlp_idfield, *iresult_field;
+    GwyDataLine *dline;
     
+    idata_field = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field, TRUE));
+    hlp_dfield = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field, TRUE));
+    hlp_idfield = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field, TRUE));
+    iresult_field = GWY_DATA_FIELD(gwy_data_field_new_alike(data_field, TRUE));
+     
+    dline = GWY_DATA_LINE(gwy_data_line_new(data_field->xres, data_field->xres, FALSE));
+    
+    gwy_data_field_xfft(data_field, result_field,
+                    hlp_dfield, hlp_idfield,
+                    gwy_data_line_fft_hum, GWY_WINDOWING_RECT,
+                    1, interpolation,
+                    FALSE, FALSE);
+    
+    gwy_data_line_resample(weights, hlp_dfield->xres, interpolation);
+    for (i=0; i<hlp_dfield->yres; i++)
+    {
+        gwy_data_field_get_row(hlp_dfield, dline, i);
+        for (j=0; j<dline->res; j++)
+            dline->data[j] *= weights->data[j];
+        gwy_data_field_set_row(hlp_dfield, dline, i);
+
+        gwy_data_field_get_row(hlp_idfield, dline, i);
+        for (j=0; j<dline->res; j++)
+            dline->data[j] *= weights->data[j];
+        gwy_data_field_set_row(hlp_idfield, dline, i);
+    }
+   
+    gwy_data_field_xfft(hlp_dfield, hlp_idfield,
+                    result_field, iresult_field,
+                    gwy_data_line_fft_hum, GWY_WINDOWING_RECT,
+                    -1, interpolation,
+                    FALSE, FALSE);
+    
+    g_object_unref(idata_field);
+    g_object_unref(hlp_dfield);
+    g_object_unref(hlp_idfield);
+    g_object_unref(iresult_field);
+    g_object_unref(dline);
 }
 
 

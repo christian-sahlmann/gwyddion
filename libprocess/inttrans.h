@@ -99,8 +99,9 @@ void gwy_data_field_cwt(GwyDataField *data_field,
                         Gwy2DCWTWaveletType wtype);
 
 void gwy_data_field_fft_filter_1d(GwyDataField *data_field,
+                                  GwyDataField *result_field,
                                   GwyDataLine *weights,
-                                  GtkOrientation *orientation,
+                                  GtkOrientation orientation,
                                   GwyInterpolationType interpolation);
 
 
