@@ -172,7 +172,7 @@ mark(GwyContainer *data, GwyRunType run)
 static gboolean
 mark_dialog(MarkArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table;
+    GtkWidget *dialog, *table, *spin;
     MarkControls controls;
     enum { RESPONSE_RESET = 1,
            RESPONSE_PREVIEW = 2 };
@@ -230,8 +230,9 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    gwy_table_attach_spinbutton(table, 2, _("Height value [fractile]"), _(""),
+    spin = gwy_table_attach_spinbutton(table, 2, _("Height value [fractile]"), _(""),
                                 controls.threshold_height);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     controls.is_slope
         = gtk_check_button_new_with_label(_("Threshold by slope:"));
@@ -244,9 +245,10 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_slope = gtk_adjustment_new(args->slope,
                                                   0.0, 100.0, 0.1, 5, 0);
-    gwy_table_attach_spinbutton(table, 4, _("Slope value [fractile]"), _(""),
+    spin = gwy_table_attach_spinbutton(table, 4, _("Slope value [fractile]"), _(""),
                                 controls.threshold_slope);
-
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    
     controls.is_lap
         = gtk_check_button_new_with_label(_("Threshold by curvature:"));
     g_signal_connect(controls.is_lap, "toggled",
@@ -258,9 +260,9 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_lap = gtk_adjustment_new(args->lap,
                                                 0.0, 100.0, 0.1, 5, 0);
-    gwy_table_attach_spinbutton(table, 6, _("Curvature value [fractile]"), _(""),
+    spin = gwy_table_attach_spinbutton(table, 6, _("Curvature value [fractile]"), _(""),
                                 controls.threshold_lap);
-
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     label = gtk_label_new(_("Merge mode:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);

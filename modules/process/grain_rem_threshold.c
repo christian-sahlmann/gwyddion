@@ -152,7 +152,7 @@ remove_th(GwyContainer *data, GwyRunType run)
 static gboolean
 remove_dialog(RemoveArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table;
+    GtkWidget *dialog, *table, *spin;
     RemoveControls controls;
     enum { RESPONSE_RESET = 1,
            RESPONSE_PREVIEW = 2 };
@@ -210,9 +210,10 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    gwy_table_attach_spinbutton(table, 2, _("Height value [fractile]"), _(""),
+    spin = gwy_table_attach_spinbutton(table, 2, _("Height value [fractile]"), _(""),
                                 controls.threshold_height);
-
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    
     controls.is_area = gtk_check_button_new_with_label("Threshold by area:");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area),
                                  args->is_area);
@@ -222,7 +223,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                      0, 1, 3, 4, GTK_FILL, 0, 2, 2);
 
     controls.threshold_area = gtk_adjustment_new(args->area,
-                                                 0.0, 100.0, 0.1, 5, 0);
+                                                 0.0, 100.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 4, _("Area [pixels]"), _(""),
                                 controls.threshold_area);
 
