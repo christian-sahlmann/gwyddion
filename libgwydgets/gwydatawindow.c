@@ -20,6 +20,7 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 
 #include <libprocess/datafield.h>
 #include <libgwyddion/gwymacros.h>
@@ -47,7 +48,7 @@ static gboolean gwy_data_view_update_statusbar    (GwyDataView *data_view,
                                                    GdkEventMotion *event,
                                                    GwyDataWindow *data_window);
 static void     gwy_data_window_zoom_changed      (GwyDataWindow *data_window);
-static gboolean gwy_data_window_key_pressed       (GtkWidget *data_window,
+static gboolean gwy_data_window_key_pressed       (GwyDataWindow *data_window,
                                                    GdkEventKey *event);
 static gboolean gwy_data_window_color_axis_clicked(GtkWidget *data_window,
                                                    GdkEventButton *event);
@@ -376,7 +377,7 @@ gwy_data_window_lame_resize(GwyDataWindow *data_window)
  * Sets the zoom of a data window to @izoom.
  *
  * When @izoom is -1 it zooms out; when @izoom is 1 it zooms out.
- * Otherwise the new zoom value is set to @izoom/01000.
+ * Otherwise the new zoom value is set to @izoom/10000.
  **/
 void
 gwy_data_window_set_zoom(GwyDataWindow *data_window,
@@ -638,10 +639,25 @@ gwy_data_window_zoom_changed(GwyDataWindow *data_window)
 }
 
 static gboolean
-gwy_data_window_key_pressed(GtkWidget *data_window,
+gwy_data_window_key_pressed(GwyDataWindow *data_window,
                             GdkEventKey *event)
 {
+    enum {
+        important_mods = GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_RELEASE_MASK
+    };
+    guint state, key;
+
     gwy_debug("state = %u, keyval = %u", event->state, event->keyval);
+    state = event->state & important_mods;
+    key = event->keyval;
+    if (!state && (key == GDK_minus || key == GDK_KP_Subtract))
+        gwy_data_window_set_zoom(data_window, -1);
+    else if (!state && (key == GDK_equal || key == GDK_KP_Equal
+                        || key == GDK_plus || key == GDK_KP_Add))
+        gwy_data_window_set_zoom(data_window, 1);
+    else if (!state && (key == GDK_Z || key == GDK_z || key == GDK_KP_Divide))
+        gwy_data_window_set_zoom(data_window, 10000);
+
     return FALSE;
 }
 
