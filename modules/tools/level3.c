@@ -188,10 +188,9 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
 
     settings = gwy_app_settings_get();
-    if (gwy_container_contains_by_name(settings, radius_key))
-        radius = gwy_container_get_int32_by_name(settings, radius_key);
-    else
-        radius = 1;
+    radius = 1;
+    gwy_container_gis_int32_by_name(settings, radius_key, &radius);
+    radius = CLAMP(radius, 1, 16);
     controls->radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
     gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
                                 controls->radius);

@@ -429,30 +429,27 @@ direction_changed_cb(GObject *item, ToolControls *controls)
 static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
-    gwy_debug("");
-    if (gwy_container_contains_by_name(container, dir_key))
-        controls->dir = gwy_container_get_int32_by_name(container, dir_key);
-    else
-        controls->dir = GTK_ORIENTATION_HORIZONTAL;
+    controls->dir = GTK_ORIENTATION_HORIZONTAL;
+    controls->out = GWY_SF_OUTPUT_DH;
+    controls->interp = GWY_INTERPOLATION_BILINEAR;
 
-    if (gwy_container_contains_by_name(container, out_key))
-        controls->out = gwy_container_get_int32_by_name(container, out_key);
-    else
-        controls->out = GWY_SF_OUTPUT_DH;
+    gwy_container_gis_enum_by_name(container, dir_key, &controls->dir);
+    gwy_container_gis_enum_by_name(container, out_key, &controls->out);
+    gwy_container_gis_enum_by_name(container, interp_key, &controls->interp);
 
-    if (gwy_container_contains_by_name(container, interp_key))
-        controls->interp = gwy_container_get_int32_by_name(container,
-                                                           interp_key);
-    else
-        controls->interp = GWY_INTERPOLATION_BILINEAR;
+    /* sanitize */
+    controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
+    controls->out = MIN(controls->out, GWY_SF_OUTPUT_PSDF);
+    controls->interp = CLAMP(controls->interp,
+                             GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
 }
 
 static void
 save_args(GwyContainer *container, ToolControls *controls)
 {
-    gwy_container_set_int32_by_name(container, interp_key, controls->interp);
-    gwy_container_set_int32_by_name(container, dir_key, controls->dir);
-    gwy_container_set_int32_by_name(container, out_key, controls->out);
+    gwy_container_set_enum_by_name(container, interp_key, controls->interp);
+    gwy_container_set_enum_by_name(container, dir_key, controls->dir);
+    gwy_container_set_enum_by_name(container, out_key, controls->out);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -528,17 +528,20 @@ algorithm_changed_cb(GObject *item, ToolControls *controls)
 static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
-    gwy_debug("");
-    gwy_container_gis_int32_by_name(container, algorithm_key,
-                                    &controls->algorithm);
+    controls->algorithm = SPOT_REMOVE_HYPER_FLATTEN;
+
+    gwy_container_gis_enum_by_name(container, algorithm_key,
+                                   &controls->algorithm);
+
+    /* sanitize (there's only one option ;) */
+    controls->algorithm = SPOT_REMOVE_HYPER_FLATTEN;
 }
 
 static void
 save_args(GwyContainer *container, ToolControls *controls)
 {
-    gwy_debug("");
-    gwy_container_set_int32_by_name(container, algorithm_key,
-                                    controls->algorithm);
+    gwy_container_set_enum_by_name(container, algorithm_key,
+                                   controls->algorithm);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
