@@ -36,16 +36,15 @@ typedef struct {
     gchar *units;
 } PointerControls;
 
-static gboolean   module_register               (const gchar *name);
-/* TODO: remove gwy_, make it static */
-void              gwy_tool_pointer_use             (GwyDataWindow *data_window,
-                                                    GwyToolSwitchEvent reason);
-static GtkWidget* pointer_dialog_create            (GwyDataView *data_view);
-static void       pointer_selection_updated_cb     (void);
-static void       pointer_dialog_response_cb       (gpointer unused,
-                                                    gint response);
-static void       pointer_dialog_abandon           (void);
-static void       pointer_dialog_set_visible       (gboolean visible);
+static gboolean   module_register                (const gchar *name);
+static void       pointer_use                    (GwyDataWindow *data_window,
+                                                  GwyToolSwitchEvent reason);
+static GtkWidget* pointer_dialog_create          (GwyDataView *data_view);
+static void       pointer_selection_updated_cb   (void);
+static void       pointer_dialog_response_cb     (gpointer unused,
+                                                  gint response);
+static void       pointer_dialog_abandon         (void);
+static void       pointer_dialog_set_visible     (gboolean visible);
 
 static GtkWidget *dialog;
 static PointerControls controls;
@@ -76,7 +75,7 @@ module_register(const gchar *name)
         "pointer",
         "gwy_pointer_measure",
         "Read value under mouse cursor.",
-        gwy_tool_pointer_use,
+        &pointer_use,
     };
 
     gwy_tool_func_register(name, &pointer_func_info);
@@ -84,9 +83,9 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-void
-gwy_tool_pointer_use(GwyDataWindow *data_window,
-                     GwyToolSwitchEvent reason)
+static void
+pointer_use(GwyDataWindow *data_window,
+            GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -264,7 +263,7 @@ pointer_dialog_response_cb(gpointer unused, gint response)
 
         case GTK_RESPONSE_NONE:
         g_warning("Tool dialog destroyed.");
-        gwy_tool_pointer_use(NULL, 0);
+        pointer_use(NULL, 0);
         break;
 
         default:

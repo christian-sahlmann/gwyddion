@@ -39,8 +39,7 @@ typedef struct {
 } CropControls;
 
 static gboolean   module_register               (const gchar *name);
-/* TODO: remove gwy_, make it static */
-void              gwy_tool_crop_use             (GwyDataWindow *data_window,
+static void       crop_use                      (GwyDataWindow *data_window,
                                                  GwyToolSwitchEvent reason);
 static GtkWidget* crop_dialog_create            (GwyDataView *data_view);
 static void       crop_do                       (void);
@@ -79,7 +78,7 @@ module_register(const gchar *name)
         "crop",
         "gwy_crop",
         "Crop data",
-        gwy_tool_crop_use,
+        crop_use,
     };
 
     gwy_tool_func_register(name, &crop_func_info);
@@ -87,9 +86,9 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-void
-gwy_tool_crop_use(GwyDataWindow *data_window,
-                  GwyToolSwitchEvent reason)
+static void
+crop_use(GwyDataWindow *data_window,
+         GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -291,7 +290,7 @@ crop_dialog_response_cb(gpointer unused, gint response)
 
         case GTK_RESPONSE_NONE:
         g_warning("Tool dialog destroyed.");
-        gwy_tool_crop_use(NULL, 0);
+        crop_use(NULL, 0);
         break;
 
         case GTK_RESPONSE_APPLY:

@@ -38,20 +38,19 @@ typedef struct {
 } Level3Controls;
 
 static gboolean   module_register               (const gchar *name);
-/* TODO: remove gwy_, make it static */
-void              gwy_tool_level3_use             (GwyDataWindow *data_window,
-                                                   GwyToolSwitchEvent reason);
-static GtkWidget* level3_dialog_create            (GwyDataView *data_view);
-static void       level3_do                       (void);
-static gdouble    level3_get_z_average            (GwyDataField *dfield,
-                                                   gdouble xreal,
-                                                   gdouble yreal,
-                                                   gint radius);
-static void       level3_selection_finished_cb    (void);
-static void       level3_dialog_response_cb       (gpointer unused,
-                                                   gint response);
-static void       level3_dialog_abandon           (void);
-static void       level3_dialog_set_visible       (gboolean visible);
+static void       level3_use                    (GwyDataWindow *data_window,
+                                                 GwyToolSwitchEvent reason);
+static GtkWidget* level3_dialog_create          (GwyDataView *data_view);
+static void       level3_do                     (void);
+static gdouble    level3_get_z_average          (GwyDataField *dfield,
+                                                 gdouble xreal,
+                                                 gdouble yreal,
+                                                 gint radius);
+static void       level3_selection_finished_cb  (void);
+static void       level3_dialog_response_cb     (gpointer unused,
+                                                 gint response);
+static void       level3_dialog_abandon         (void);
+static void       level3_dialog_set_visible     (gboolean visible);
 
 static const gchar *radius_key = "/tool/level3/radius";
 
@@ -85,7 +84,7 @@ module_register(const gchar *name)
         "level3",
         "gwy_fit_triangle",
         "Level data using three points.",
-        gwy_tool_level3_use,
+        level3_use,
     };
 
     gwy_tool_func_register(name, &level3_func_info);
@@ -93,9 +92,9 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-void
-gwy_tool_level3_use(GwyDataWindow *data_window,
-                    GwyToolSwitchEvent reason)
+static void
+level3_use(GwyDataWindow *data_window,
+           GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -352,7 +351,7 @@ level3_dialog_response_cb(gpointer unused, gint response)
 
         case GTK_RESPONSE_NONE:
         g_warning("Tool dialog destroyed.");
-        gwy_tool_level3_use(NULL, 0);
+        level3_use(NULL, 0);
         break;
 
         case GTK_RESPONSE_APPLY:

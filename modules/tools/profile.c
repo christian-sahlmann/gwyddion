@@ -26,7 +26,6 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <app/file.h>
 #include <app/app.h>
 
 typedef struct {
@@ -40,24 +39,23 @@ typedef struct {
 } ProfileControls;
 
 static gboolean   module_register               (const gchar *name);
-/* TODO: remove gwy_, make it static */
-void              gwy_tool_profile_use            (GwyDataWindow *data_window,
-                                                   GwyToolSwitchEvent reason);
-static GtkWidget* profile_dialog_create            (GwyDataView *data_view);
-static void       profile_do                       (void);
-static void       profile_selection_updated_cb    (void);
-static void       profile_dialog_response_cb       (gpointer unused,
+static void       profile_use                   (GwyDataWindow *data_window,
+                                                 GwyToolSwitchEvent reason);
+static GtkWidget* profile_dialog_create         (GwyDataView *data_view);
+static void       profile_do                    (void);
+static void       profile_selection_updated_cb  (void);
+static void       profile_dialog_response_cb    (gpointer unused,
                                                  gint response);
-static void       profile_dialog_abandon           (void);
-static void       profile_dialog_set_visible       (gboolean visible);
-static void       interp_changed_cb                (GObject *item,
-                                                    ProfileControls *controls);
-static void       separate_changed_cb              (GtkToggleButton *button,
-                                                    ProfileControls *controls);
-static void       profile_load_args                (GwyContainer *container,
-                                                    ProfileControls *controls);
-static void       profile_save_args                (GwyContainer *container,
-                                                    ProfileControls *controls);
+static void       profile_dialog_abandon        (void);
+static void       profile_dialog_set_visible    (gboolean visible);
+static void       interp_changed_cb             (GObject *item,
+                                                 ProfileControls *controls);
+static void       separate_changed_cb           (GtkToggleButton *button,
+                                                 ProfileControls *controls);
+static void       profile_load_args             (GwyContainer *container,
+                                                 ProfileControls *controls);
+static void       profile_save_args             (GwyContainer *container,
+                                                 ProfileControls *controls);
 
 
 static GtkWidget *dialog = NULL;
@@ -95,7 +93,7 @@ module_register(const gchar *name)
         "profile",
         "gwy_graph",
         "Extract profiles from data.",
-        gwy_tool_profile_use,
+        profile_use,
     };
 
     gwy_tool_func_register(name, &profile_func_info);
@@ -103,9 +101,9 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-void
-gwy_tool_profile_use(GwyDataWindow *data_window,
-                     GwyToolSwitchEvent reason)
+static void
+profile_use(GwyDataWindow *data_window,
+            GwyToolSwitchEvent reason)
 {
     GwyDataViewLayer *layer;
     GwyDataView *data_view;
@@ -532,7 +530,7 @@ profile_dialog_response_cb(gpointer unused, gint response)
 
         case GTK_RESPONSE_NONE:
         g_warning("Tool dialog destroyed.");
-        gwy_tool_profile_use(NULL, 0);
+        profile_use(NULL, 0);
         break;
 
         case GTK_RESPONSE_APPLY:
