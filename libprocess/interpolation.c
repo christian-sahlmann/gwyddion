@@ -18,7 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <stdio.h>
 #include <math.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -57,8 +56,8 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
                                         gdouble *data,
                                         GwyInterpolationType interpolation)
 {
-    
-   
+
+
     gint l;
     gdouble w1, w2, w3, w4;
     gdouble rest;
@@ -66,7 +65,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
     x += 1.0;
     l = floor(x);
     rest = x - (gdouble)l;
-    
+
     g_return_val_if_fail(x >= 1 && x < 2, 0.0);
 
     if (rest == 0) return data[l];
@@ -90,6 +89,12 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
     w4 = 2 - rest;
     switch (interpolation) {
         case GWY_INTERPOLATION_KEY:
+        /* horner schema (by maple) 35 -> 21
+        w1 = (-0.5 + (1.0 - rest/2.0)*rest)*rest;
+        w2 = 1.0 + rest*rest*(2.5 + 1.5*rest);
+        w3 = (0.5 + (2.0 - 1.5*rest)*rest)*rest;
+        w4 = 8.0 + (-12.0 + (5.5 - rest/2.0)*rest)*rest;
+        */
         w1 = -0.5*w1*w1*w1 + 2.5*w1*w1 - 4*w1 + 2;
         w2 = 1.5*w2*w2*w2 - 2.5*w2*w2 + 1;
         w3 = 1.5*w3*w3*w3 - 2.5*w3*w3 + 1;
@@ -97,6 +102,12 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
         break;
 
         case GWY_INTERPOLATION_BSPLINE:
+        /* horner schema (by maple) 27 -> 20
+        w1 = (1.0 - rest)*(1.0 - rest)*(1.0 - rest)/6.0;
+        w2 = 2.0/3.0 - 0.5*rest*rest*(2.0 - rest);
+        w3 = 2.0/3.0 - 0.5*(1.0 - rest)*(1.0 - rest*rest);
+        w4 = rest*rest*rest/6.0;
+        */
         w1 = (2-w1)*(2-w1)*(2-w1)/6;
         w2 = 0.6666667-0.5*w2*w2*(2-w2);
         w3 = 0.6666667-0.5*w3*w3*(2-w3);
@@ -104,6 +115,12 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
         break;
 
         case GWY_INTERPOLATION_OMOMS:
+        /* horner schema (by maple) 37 -> 22
+        w1 = 4.0/21.0 + (11.0/21.0 + (0.5 + rest/6.0)*rest)*rest;
+        w2 = 13.0/21.0 + (1.0/14.0 + (-1.0 + rest/2.0)*rest)*rest;
+        w3 = 4.0/21.0 + (3.0/7.0 + (0.5 - rest/2.0)*rest)*rest;
+        w4 = (1.0/42.0 + rest*rest/6.0)*rest;
+        */
         w1 = -w1*w1*w1/6+w1*w1-85*w1/42+1.3809523;
         w2 = w2*w2*w2/2-w2*w2+w2/14+0.6190476;
         w3 = w3*w3*w3/2-w3*w3+w3/14+0.6190476;
@@ -121,6 +138,8 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 
     return w1*data[l-1] + w2*data[l] + w3*data[l+1] + w4*data[l+2];
 }
+
+/* XXX: ktery prase sem napsalo ten neukonceny komentar? */
 
 /**
 
