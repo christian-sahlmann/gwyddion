@@ -621,11 +621,11 @@ gwy_data_field_rtoi(GwyDataField *a, gdouble realval)
 
 
 /**
- * gwy_data_field_rtoi:
+ * gwy_data_field_rtoj:
  * @a: pointer to field
  * @realval:  value at real coordinates
  *
- * recomputes row real coordinate to pixel coordinate
+ * recomputes column real coordinate to pixel coordinate
  *
  * Returns: recomputed value
  **/
