@@ -1,8 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-GwyGradSphere – Rotary sphere with a color gradient
+GwyGradSphere
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Rotary sphere with a color gradient
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -76,4 +76,14 @@ GwyGradSphere – Rotary sphere with a color gradient
 @grad_sphere: 
 @update_policy: 
 
+
+<!-- ##### ARG GwyGradSphere:sphere-coords ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyGradSphere:update-policy ##### -->
+<para>
+
+</para>
 

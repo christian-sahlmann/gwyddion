@@ -42,6 +42,16 @@ GwyAxis
 
 
 
+<!-- ##### ENUM GwyAxisScaleFormat ##### -->
+<para>
+
+</para>
+
+@GWY_AXIS_FLOAT: 
+@GWY_AXIS_EXP: 
+@GWY_AXIS_INT: 
+@GWY_AXIS_AUTO: 
+
 <!-- ##### TYPEDEF GwyTick ##### -->
 <para>
 

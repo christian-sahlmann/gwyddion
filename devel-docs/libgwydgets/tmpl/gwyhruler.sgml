@@ -2,7 +2,7 @@
 GwyHRuler
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Horizontal ruler, similar to #GtkRuler
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

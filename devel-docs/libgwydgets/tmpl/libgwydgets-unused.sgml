@@ -62,53 +62,6 @@ gwymodulemenus
 </para>
 
 
-<!-- ##### SIGNAL GwyDataView::updated ##### -->
-<para>
-
-</para>
-
-@gwydataview: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::finished ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::plugged ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::unplugged ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### SIGNAL GwyDataViewLayer::updated ##### -->
-<para>
-
-</para>
-
-@gwydataviewlayer: the object which received the signal.
-
-<!-- ##### ARG GwyGradSphere:sphere-coords ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GwyGradSphere:update-policy ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### SIGNAL GwyGraphArea::gwygrapharea-selected ##### -->
 <para>
 

@@ -37,3 +37,12 @@ GwySciText
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_sci_text_set_text ##### -->
+<para>
+
+</para>
+
+@sci_text: 
+@new_text: 
+
+

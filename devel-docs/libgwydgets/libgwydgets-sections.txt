@@ -98,6 +98,7 @@ gwy_axis_dialog_new
 GWY_AXIS_DIALOG
 GWY_IS_AXIS_DIALOG
 GWY_TYPE_AXIS_DIALOG
+gwy_axis_dialog_get_type
 GWY_AXIS_DIALOG_CLASS
 GWY_IS_AXIS_DIALOG_CLASS
 GWY_AXIS_DIALOG_GET_CLASS
@@ -207,6 +208,7 @@ GwySciTextParams
 <TITLE>GwySciText</TITLE>
 gwy_sci_text_new
 gwy_sci_text_get_text
+gwy_sci_text_set_text
 <SUBSECTION Standard>
 GWY_SCI_TEXT
 GWY_IS_SCI_TEXT
@@ -432,10 +434,7 @@ GWY_AXIS_NORTH
 GWY_AXIS_SOUTH
 GWY_AXIS_EAST
 GWY_AXIS_WEST
-GWY_AXIS_FLOAT
-GWY_AXIS_EXP
-GWY_AXIS_INT
-GWY_AXIS_AUTO
+GwyAxisScaleFormat
 GwyTick
 GwyLabeledTick
 GwyAxisParams

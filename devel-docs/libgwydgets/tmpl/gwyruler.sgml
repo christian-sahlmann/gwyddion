@@ -2,7 +2,7 @@
 GwyRuler
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Base class for #GwyHRuler and #GwyVRuler
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

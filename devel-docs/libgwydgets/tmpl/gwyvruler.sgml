@@ -2,7 +2,7 @@
 GwyVRuler
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Vertical ruler, similar to #GtkRuler
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
