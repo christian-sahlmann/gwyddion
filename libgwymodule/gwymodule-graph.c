@@ -238,6 +238,28 @@ graph_menu_entry_compare(GwyGraphFuncInfo *a,
     return strcmp(p, q);
 }
 
+/**
+ * gwy_graph_func_get_menu_path:
+ * @name: Graph function name.
+ *
+ * Returns the menu path of a data graph identified by @name.
+ *
+ * The returned menu path is only the tail part registered by the function,
+ * i.e., without any leading "/Graph".
+ *
+ * Returns: The menu path.  The returned string must be treated as constant
+ *          and never modified or freed.
+ **/
+G_CONST_RETURN gchar*
+gwy_graph_func_get_menu_path(const gchar *name)
+{
+    GwyGraphFuncInfo *func_info;
+
+    func_info = g_hash_table_lookup(graph_funcs, name);
+    g_return_val_if_fail(func_info, 0);
+    return func_info->menu_path;
+}
+
 gboolean
 gwy_graph_func_remove(const gchar *name)
 {
