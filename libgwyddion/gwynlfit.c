@@ -880,6 +880,19 @@ static const Param poly1_pars[]= {
    {"b", " ", 2 },
 };
 
+static const Param poly2_pars[]= {
+   {"a", " ", 1 },
+   {"b", " ", 2 },
+   {"c", " ", 3 },
+};
+
+static const Param poly3_pars[]= {
+   {"a", " ", 1 },
+   {"b", " ", 2 },
+   {"c", " ", 3 },
+   {"d", " ", 4 },
+};
+
 
 static const GwyNLFitPresetFunction fitting_presets[] = {
     { "Gaussian",
@@ -891,24 +904,24 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        gaussexp_pars
     },
     { "Gaussian (PSDF)",
-       "f(x) = (\xcf\x83<sup>2</sup>T)/(2)*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
-       &fit_gauss,
+       "f(x) = (\xcf\x83<sup>2</sup>T)/(2)*exp(-(x*T/2)<sup>2</sup>)",
+       &fit_gauss_psdf,
        NULL,
        NULL,
        2,
        gaussexp_two_pars
     },
     { "Gaussian (ACF)",
-       "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
-       &fit_gauss,
+       "f(x) = \xcf\x83<sup>2</sup>exp(-(x/T)<sup>2</sup>)",
+       &fit_gauss_acf,
        NULL,
        NULL,
        2,
        gaussexp_two_pars
     },
     { "Gaussian (HHCF)",
-       "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
-       &fit_gauss,
+       "f(x) =  2*\xcf\x83<sup>2</sup>(1 - exp(-(x/T)<sup>2</sup>))",
+       &fit_gauss_hhcf,
        NULL,
        NULL,
        2,
@@ -922,7 +935,31 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        4,
        gaussexp_pars
     },
-    { "Polynom (order 0)",
+    { "Exponential (PSDF)",
+       "f(x) = (\xcf\x83<sup>2</sup>T)/(2)/(1+((x/T)<sup>2</sup>))))",
+       &fit_exp_psdf,
+       NULL,
+       NULL,
+       2,
+       gaussexp_two_pars
+    },
+    { "Exponential (ACF)",
+       "f(x) = \xcf\x83<sup>2</sup>exp(-(x/T))",
+       &fit_exp_acf,
+       NULL,
+       NULL,
+       2,
+       gaussexp_two_pars
+    },
+    { "Exponential (HHCF)",
+       "f(x) =  2*\xcf\x83<sup>2</sup>(1 - exp(-(x/T)))",
+       &fit_exp_hhcf,
+       NULL,
+       NULL,
+       2,
+       gaussexp_two_pars
+    },
+     { "Polynom (order 0)",
        "f(x) = a",
        &fit_poly_0,
        NULL,
@@ -937,6 +974,22 @@ static const GwyNLFitPresetFunction fitting_presets[] = {
        NULL,
        2,
        poly1_pars
+    },
+    { "Polynom (order 2)",
+       "f(x) = a + b*x + c*x<sup>2</sup>",
+       &fit_poly_2,
+       NULL,
+       NULL,
+       3,
+       poly2_pars
+    },
+    { "Polynom (order 3)",
+       "f(x) = a + b*x + c*x<sup>2</sup> + d*x<sup>3</sup>",
+       &fit_poly_3,
+       NULL,
+       NULL,
+       4,
+       poly3_pars
     }
 };
 

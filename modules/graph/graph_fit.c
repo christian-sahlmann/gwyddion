@@ -21,6 +21,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -70,10 +71,10 @@ typedef struct {
     gdouble from;
     gdouble to;
     gint data;
-    gboolean par1_fit;
-    gboolean par2_fit;
-    gboolean par3_fit;
-    gboolean par4_fit;
+    gboolean par1_fix;
+    gboolean par2_fix;
+    gboolean par3_fix;
+    gboolean par4_fix;
     gdouble par1_init;
     gdouble par2_init;
     gdouble par3_init;
@@ -102,17 +103,17 @@ static void        reset                     (FitArgs *args,
 static void        type_changed_cb           (GObject *item, 
                                               FitArgs *args);
 static void        from_changed_cb           (GtkWidget *entry, 
-                                              gpointer data);
+                                              FitArgs *args);
 static void        to_changed_cb             (GtkWidget *entry, 
-                                              gpointer data);
+                                              FitArgs *args);
 static void        par1_changed_cb           (GtkWidget *entry, 
-                                              gpointer data);
+                                              FitArgs *args);
 static void        par2_changed_cb           (GtkWidget *entry, 
-                                              gpointer data);
+                                              FitArgs *args);
 static void        par3_changed_cb           (GtkWidget *entry, 
-                                              gpointer data);
+                                              FitArgs *args);
 static void        par4_changed_cb           (GtkWidget *entry, 
-                                              gpointer data);
+                                              FitArgs *args);
 static void        ch1_changed_cb            (GtkToggleButton *button,
                                               FitArgs *args);
 static void        ch2_changed_cb            (GtkToggleButton *button,
@@ -128,6 +129,12 @@ static void        graph_update              (FitControls *controls,
 static void        get_data                  (FitArgs *args);
 static void        graph_selected            (GwyGraphArea *area, 
                                               FitArgs *args);
+static gint        normalize_data            (FitArgs *args, 
+                                              GwyDataLine *xdata, 
+                                              GwyDataLine *ydata, 
+                                              gdouble *xcoef, 
+                                              gdouble *ycoef, 
+                                              gint curve);
 
 FitControls *pcontrols;
 
@@ -168,7 +175,9 @@ fit(GwyGraph *graph)
     FitArgs args;
     args.fitfunc = NULL;
     args.function_type = 0;
-    args.data=1;
+    args.data = 1;
+    args.from = 0;
+    args.to = 0;
     args.parent_graph = graph;
 
     get_data(&args);
@@ -199,6 +208,45 @@ get_data(FitArgs *args)
     }
      
 }
+
+/*extract relevant part of data and normalize it to be fitable*/
+static gint
+normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gdouble *xcoef, gdouble *ycoef, gint curve)
+{
+    gint i, j;
+    
+    gwy_data_line_resample(xdata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(ydata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
+
+    j = 0;
+    for (i=0; i<xdata->res; i++)
+    {
+        if ((xdata->data[i] >= args->from && xdata->data[i] <= args->to) || (args->from == args->to))
+        {
+            xdata->data[j] = args->parent_xs[curve][i];
+            ydata->data[j] = args->parent_ys[curve][i];
+            j++;
+        }
+    }
+    if (j==0) return 0;
+   
+    if (j < xdata->res)
+    {
+        gwy_data_line_resize(xdata, 0, j);
+        gwy_data_line_resize(ydata, 0, j);
+    }
+
+    *xcoef = gwy_data_line_get_avg(xdata);
+    *ycoef = gwy_data_line_get_avg(ydata);
+    *ycoef = *xcoef; 
+    
+    gwy_data_line_multiply(xdata, 1.0/(*xcoef));
+    gwy_data_line_multiply(ydata, 1.0/(*ycoef));
+
+    return j;    
+}
+
+
 
 static gboolean
 fit_dialog(FitArgs *args)
@@ -490,16 +538,97 @@ fit_dialog(FitArgs *args)
 static void        
 recompute(FitArgs *args, FitControls *controls)
 {
+    gdouble xscale, yscale;
+    GwyDataLine *xdata;
+    GwyDataLine *ydata;
+    GwyDataLine *weights;
+    GwyNLFitter *fitter;
+    GwyNLFitPresetFunction *function;
+    gboolean fixed[4];
+    gdouble param[4];
+    gchar buffer[20];
+    gboolean ok;
+    gint i;
+    GString *label;
+
+    xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    
 
     /*select curve data and put int in x[], y[]
      (allready in SI base units)*/
-    
     /*recompute fields to be reasonably scaled,
      save scaling coefficients*/
-
+    
+    normalize_data(args, xdata, ydata, &xscale, &yscale, args->curve);
+    
+    weights = GWY_DATA_LINE(gwy_data_line_new(xdata->res, xdata->real, FALSE));
+    gwy_data_line_fill(weights, 1);
     /*fit function though fields*/
+    
+    function = gwy_math_nlfit_get_preset(args->function_type);
+    if (function->function_derivation == NULL)
+        fitter = gwy_math_nlfit_new(function->function, gwy_math_nlfit_derive);
+    else
+        fitter = gwy_math_nlfit_new(function->function, function->function_derivation);
+    
+    fixed[0] = args->par1_fix;
+    fixed[1] = args->par2_fix;
+    fixed[2] = args->par3_fix;
+    fixed[3] = args->par4_fix;
+    param[0] = args->par1_init/xscale;
+    param[1] = args->par2_init/xscale;
+    param[2] = args->par3_init/xscale;
+    param[3] = args->par4_init/xscale;
+    
+    gwy_math_nlfit_fit_with_fixed(fitter, 
+                                  xdata->res, xdata->data, ydata->data,
+                                  weights->data, function->nparams,
+                                  param, fixed, NULL);
 
+   
     /*rescale results and output them*/
+    param[0] *= xscale; 
+    param[1] *= xscale;
+    param[2] *= xscale;
+    param[3] *= xscale;
+   
+    if (function->nparams > 0)
+    {
+       g_snprintf(buffer, sizeof(buffer), "%2.3g", param[0]);
+       gtk_label_set_markup(controls->param1_res, buffer); 
+    }
+    if (function->nparams > 1)
+    {
+       g_snprintf(buffer, sizeof(buffer), "%2.3g", param[1]);
+       gtk_label_set_markup(controls->param2_res, buffer); 
+    }
+    if (function->nparams > 2)
+    {
+       g_snprintf(buffer, sizeof(buffer), "%2.3g", param[2]);
+       gtk_label_set_markup(controls->param3_res, buffer); 
+    }
+    if (function->nparams > 3)
+    {
+        g_snprintf(buffer, sizeof(buffer), "%2.3g", param[3]);
+        gtk_label_set_markup(controls->param4_res, buffer); 
+    }
+
+    for (i=0; i<xdata->res; i++)
+    {
+        xdata->data[i] *= xscale;
+        ydata->data[i] = function->function(xdata->data[i], function->nparams, param, NULL, &ok);
+    }
+   
+    graph_update(controls, args);
+    
+    label = g_string_new("fit");
+    gwy_graph_add_datavalues(GWY_GRAPH(controls->graph), 
+                                 xdata->data, 
+                                 ydata->data,
+                                 xdata->res, 
+                                 label, NULL);    
+     
 }
 
 static void        
@@ -619,10 +748,11 @@ graph_update(FitControls *controls, FitArgs *args)
     gwy_graph_clear(GWY_GRAPH(controls->graph));
 
 
-    label = g_string_new("data");
+    label = g_string_new("");
     /*add curves from parent graph*/
     for (i=0; i<args->parent_nofcurves; i++)
     {
+        g_string_printf(label, "data %d", i+1);
         gwy_graph_add_datavalues(GWY_GRAPH(controls->graph), 
                                  args->parent_xs[i], 
                                  args->parent_ys[i],
@@ -639,7 +769,7 @@ graph_selected(GwyGraphArea *area, FitArgs *args)
     if (area->seldata->data_start == area->seldata->data_end)
     {
         args->from = 0;
-        args->to = 100;
+        args->to = 0; 
         gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->from), args->from);   
         gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->to), args->to);
 
@@ -657,53 +787,63 @@ graph_selected(GwyGraphArea *area, FitArgs *args)
 }
 
 static void
-par1_changed_cb(GtkWidget *entry, gpointer data)
+par1_changed_cb(GtkWidget *entry, FitArgs *args)
 {
+    args->par1_init = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
 }
 
 static void
-par2_changed_cb(GtkWidget *entry, gpointer data)
+par2_changed_cb(GtkWidget *entry, FitArgs *args)
 {
+    args->par2_init = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
 }
 
 static void
-par3_changed_cb(GtkWidget *entry, gpointer data)
+par3_changed_cb(GtkWidget *entry, FitArgs *args)
 {
+    args->par3_init = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
 }
 
 static void
-par4_changed_cb(GtkWidget *entry, gpointer data)
+par4_changed_cb(GtkWidget *entry, FitArgs *args)
 {
+    args->par4_init = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
 }
 
 static void
-from_changed_cb(GtkWidget *entry, gpointer data)
+from_changed_cb(GtkWidget *entry, FitArgs *args)
 {
+    args->from = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
 }
 
 static void
-to_changed_cb(GtkWidget *entry, gpointer data)
+to_changed_cb(GtkWidget *entry, FitArgs *args)
 {
+    args->to = atof(gtk_entry_get_text(GTK_ENTRY(entry)));
 }
 
 static void
 ch1_changed_cb(GtkToggleButton *button, FitArgs *args)
 {
+    args->par1_fix = gtk_toggle_button_get_active(button);
 }
 
 static void
 ch2_changed_cb(GtkToggleButton *button, FitArgs *args)
 {
+    args->par2_fix = gtk_toggle_button_get_active(button);
 }
 
 static void
 ch3_changed_cb(GtkToggleButton *button, FitArgs *args)
 {
+    args->par3_fix = gtk_toggle_button_get_active(button);
 }
 
 static void
 ch4_changed_cb(GtkToggleButton *button, FitArgs *args)
 {
+    args->par4_fix = gtk_toggle_button_get_active(button);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
