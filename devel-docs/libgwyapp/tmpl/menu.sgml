@@ -36,6 +36,7 @@ If there are no conditions defined, the widget is sensitive always.
 @GWY_MENU_FLAG_LAST_GRAPH: 
 @GWY_MENU_FLAG_DATA_MASK: 
 @GWY_MENU_FLAG_DATA_SHOW: 
+@GWY_MENU_FLAG_GL_OK: 
 @GWY_MENU_FLAG_MASK: 
 
 <!-- ##### STRUCT GwyMenuSensData ##### -->

@@ -14,6 +14,16 @@ Core application interface.
 
 </para>
 
+<!-- ##### ENUM GwyAppWindowType ##### -->
+<para>
+
+</para>
+
+@GWY_APP_WINDOW_TYPE_DATA: 
+@GWY_APP_WINDOW_TYPE_GRAPH: 
+@GWY_APP_WINDOW_TYPE_3D: 
+@GWY_APP_WINDOW_TYPE_ANY: 
+
 <!-- ##### FUNCTION gwy_app_get_current_data ##### -->
 <para>
 
@@ -68,26 +78,6 @@ Core application interface.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_app_data_window_set_untitled ##### -->
-<para>
-
-</para>
-
-@window: 
-@templ: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@data_window: 
-
-
-<!-- ##### FUNCTION gwy_app_data_view_update ##### -->
-<para>
-
-</para>
-
-@data_view: 
-
-
 <!-- ##### FUNCTION gwy_app_data_window_list_add_hook ##### -->
 <para>
 
@@ -107,6 +97,23 @@ Core application interface.
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_app_graph_window_create ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_graph_window_remove ##### -->
+<para>
+
+</para>
+
+@window: 
+
+
 <!-- ##### FUNCTION gwy_app_graph_window_get_current ##### -->
 <para>
 
@@ -123,7 +130,16 @@ Core application interface.
 @window: 
 
 
-<!-- ##### FUNCTION gwy_app_graph_window_remove ##### -->
+<!-- ##### FUNCTION gwy_app_3d_window_create ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_3d_window_remove ##### -->
 <para>
 
 </para>
@@ -131,13 +147,49 @@ Core application interface.
 @window: 
 
 
-<!-- ##### FUNCTION gwy_app_graph_window_create ##### -->
+<!-- ##### FUNCTION gwy_app_3d_window_get_current ##### -->
 <para>
 
 </para>
 
-@graph: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_3d_window_set_current ##### -->
+<para>
+
+</para>
+
+@window: 
+
+
+<!-- ##### FUNCTION gwy_app_get_current_window ##### -->
+<para>
+
+</para>
+
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_data_window_set_untitled ##### -->
+<para>
+
+</para>
+
+@window: 
+@templ: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@data_window: 
+
+
+<!-- ##### FUNCTION gwy_app_data_view_update ##### -->
+<para>
+
+</para>
+
+@data_view: 
 
 
 <!-- ##### FUNCTION gwy_app_main_window_get ##### -->

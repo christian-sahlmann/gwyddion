@@ -132,6 +132,14 @@ toolbox
 </para>
 
 
+<!-- ##### FUNCTION gwy_app_graph_list ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
 <!-- ##### VARIABLE gwy_app_main_window ##### -->
 <para>
 

@@ -8,6 +8,7 @@
 
   <xi:include href="xml/app.xml"/>
   <xi:include href="xml/settings.xml"/>
+  <xi:include href="xml/filelist.xml"/>
   <xi:include href="xml/menu.xml"/>
   <xi:include href="xml/menu-windowlist.xml"/>
   <xi:include href="xml/undo.xml"/>

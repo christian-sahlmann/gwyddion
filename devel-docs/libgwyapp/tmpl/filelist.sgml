@@ -1,0 +1,59 @@
+<!-- ##### SECTION Title ##### -->
+filelist
+
+<!-- ##### SECTION Short_Description ##### -->
+Document history manipulation and GUI
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_app_recent_file_list_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_recent_file_list_update ##### -->
+<para>
+
+</para>
+
+@filename_utf8: 
+<!-- # Unused Parameters # -->
+@filelist: 
+
+
+<!-- ##### FUNCTION gwy_app_recent_file_list_load ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_recent_file_list_save ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_recent_file_list_free ##### -->
+<para>
+
+</para>
+
+
+
