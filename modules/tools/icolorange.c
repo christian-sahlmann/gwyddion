@@ -35,25 +35,31 @@
 typedef struct {
     GwyUnitoolRectLabels labels;
     GtkWidget *cdo_preview;
+    GtkWidget *histogram;
+    GtkWidget *cmin;
+    GtkWidget *cmax;
     gboolean do_preview;
     gboolean in_update;
+    gdouble hmin;
+    gdouble hmax;
 } ToolControls;
 
-static gboolean   module_register    (const gchar *name);
-static gboolean   use                (GwyDataWindow *data_window,
-                                      GwyToolSwitchEvent reason);
-static void       layer_setup        (GwyUnitoolState *state);
-static GtkWidget* dialog_create      (GwyUnitoolState *state);
-static void       dialog_update      (GwyUnitoolState *state,
-                                      GwyUnitoolUpdateType reason);
-static void       dialog_abandon     (GwyUnitoolState *state);
-static void       apply              (GwyUnitoolState *state);
-static void       do_preview_updated (GtkWidget *toggle,
-                                      GwyUnitoolState *state);
-static void       load_args          (GwyContainer *container,
-                                      ToolControls *controls);
-static void       save_args          (GwyContainer *container,
-                                      ToolControls *controls);
+static gboolean   module_register             (const gchar *name);
+static gboolean   use                         (GwyDataWindow *data_window,
+                                               GwyToolSwitchEvent reason);
+static void       layer_setup                 (GwyUnitoolState *state);
+static GtkWidget* dialog_create               (GwyUnitoolState *state);
+static void       dialog_update               (GwyUnitoolState *state,
+                                               GwyUnitoolUpdateType reason);
+static void       dialog_abandon              (GwyUnitoolState *state);
+static void       apply                       (GwyUnitoolState *state);
+static void       do_preview_updated          (GtkWidget *toggle,
+                                               GwyUnitoolState *state);
+static void       histogram_selection_changed (GwyUnitoolState *state);
+static void       load_args                   (GwyContainer *container,
+                                               ToolControls *controls);
+static void       save_args                   (GwyContainer *container,
+                                               ToolControls *controls);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -147,7 +153,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(7, 4, FALSE);
+    table = gtk_table_new(9, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     row = gwy_unitool_rect_info_table_setup(&controls->labels,
@@ -162,6 +168,25 @@ dialog_create(GwyUnitoolState *state)
                      G_CALLBACK(do_preview_updated), state);
     gtk_table_attach(GTK_TABLE(table), controls->cdo_preview, 0, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
+    controls->histogram = gwy_graph_new();
+    /* XXX */
+    gtk_widget_set_size_request(controls->histogram, 240, 160);
+    gtk_table_attach(GTK_TABLE(table), controls->histogram, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gwy_graph_set_status(GWY_GRAPH(controls->histogram),
+                         GWY_GRAPH_STATUS_XSEL);
+    g_signal_connect_swapped(GWY_GRAPH(controls->histogram)->area, "selected",
+                             G_CALLBACK(histogram_selection_changed), state);
+    row++;
+
+    controls->cmin = gtk_label_new("");
+    gtk_table_attach(GTK_TABLE(table), controls->cmin, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    controls->cmax = gtk_label_new("");
+    gtk_table_attach(GTK_TABLE(table), controls->cmax, 2, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     return dialog;
 }
@@ -170,8 +195,14 @@ static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
+    GwyGraph *graph;
     gboolean is_visible, is_selected;
+    GwyGraphAutoProperties prop;
+    GwyContainer *data;
+    GwyDataField *dfield;
+    GwyDataLine *dataline;
     ToolControls *controls;
+    GString *graph_title;
 
     gwy_debug("");
 
@@ -186,6 +217,45 @@ dialog_update(GwyUnitoolState *state,
             apply(state);
         return;
     }
+
+    data = gwy_data_window_get_data(state->data_window);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    graph = GWY_GRAPH(controls->histogram);
+    gwy_graph_clear(graph);
+    /* XXX */
+    gtk_widget_hide(GTK_WIDGET(graph->axis_top));
+    gtk_widget_hide(GTK_WIDGET(graph->axis_bottom));
+    gtk_widget_hide(GTK_WIDGET(graph->axis_left));
+    gtk_widget_hide(GTK_WIDGET(graph->axis_right));
+    gtk_widget_hide(GTK_WIDGET(graph->corner_tl));
+    gtk_widget_hide(GTK_WIDGET(graph->corner_bl));
+    gtk_widget_hide(GTK_WIDGET(graph->corner_tr));
+    gtk_widget_hide(GTK_WIDGET(graph->corner_br));
+
+    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
+    prop.is_point = 0;
+    prop.is_line = 1;
+    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
+
+    dataline = GWY_DATA_LINE(gwy_data_line_new(1, 1.0, FALSE));
+    if (gwy_data_field_get_line_stat_function(dfield, dataline,
+                                              0, 0,
+                                              gwy_data_field_get_xres(dfield),
+                                              gwy_data_field_get_yres(dfield),
+                                              GWY_SF_OUTPUT_DH,
+                                              0, 0,
+                                              GWY_WINDOWING_HANN,
+                                              220)) {
+        /* XXX */
+        graph_title = g_string_new("");
+        gwy_graph_add_dataline(GWY_GRAPH(controls->histogram), dataline,
+                               0, graph_title, NULL);
+        /* XXX */
+        gtk_widget_hide(GTK_WIDGET(graph->area->lab));
+        g_string_free(graph_title, TRUE);
+    }
+    g_object_unref(dataline);
 
     gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, NULL);
     if (controls->do_preview)
@@ -232,11 +302,20 @@ apply(GwyUnitoolState *state)
                                            isel[3] - isel[1]);
         gwy_container_set_double_by_name(data, "/0/base/min", vmin);
         gwy_container_set_double_by_name(data, "/0/base/max", vmax);
+        controls->hmin = vmin;
+        controls->hmax = vmax;
     }
     else {
         gwy_container_remove_by_name(data, "/0/base/min");
         gwy_container_remove_by_name(data, "/0/base/max");
+        controls->hmin = gwy_data_field_get_min(dfield);
+        controls->hmax = gwy_data_field_get_max(dfield);
     }
+    gwy_unitool_update_label(state->value_format, controls->cmin,
+                             controls->hmin);
+    gwy_unitool_update_label(state->value_format, controls->cmax,
+                             controls->hmax);
+
     gwy_data_view_update
         (GWY_DATA_VIEW(gwy_data_window_get_data_view
                            (GWY_DATA_WINDOW(state->data_window))));
@@ -253,6 +332,40 @@ do_preview_updated(GtkWidget *toggle, GwyUnitoolState *state)
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
     if (controls->do_preview)
         apply(state);
+}
+
+static void
+histogram_selection_changed(GwyUnitoolState *state)
+{
+    ToolControls *controls;
+    GwyContainer *data;
+    GwyGraph *graph;
+    GwyGraphStatus_SelData *fuck;
+
+    controls = (ToolControls*)state->user_data;
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+
+    graph = GWY_GRAPH(controls->histogram);
+    /* XXX */
+    fuck = (GwyGraphStatus_SelData*)gwy_graph_get_status_data(graph);
+    data = gwy_data_window_get_data(state->data_window);
+
+    controls->hmin = fuck->data_start;
+    controls->hmax = fuck->data_end;
+    gwy_unitool_update_label(state->value_format, controls->cmin,
+                             controls->hmin);
+    gwy_unitool_update_label(state->value_format, controls->cmax,
+                             controls->hmax);
+    gwy_container_set_double_by_name(data, "/0/base/min", controls->hmin);
+    gwy_container_set_double_by_name(data, "/0/base/max", controls->hmax);
+    gwy_data_view_update
+        (GWY_DATA_VIEW(gwy_data_window_get_data_view
+                           (GWY_DATA_WINDOW(state->data_window))));
+
+    controls->in_update = FALSE;
 }
 
 static const gchar *do_preview_key = "/tool/icolorange/do_preview";
