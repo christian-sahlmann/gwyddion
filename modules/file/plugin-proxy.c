@@ -298,7 +298,7 @@ plugin_proxy_detect(const gchar *filename,
     if (!g_pattern_match_string(info->pattern, filename))
         return 0;
 
-    return CLAMP(info->specificity, 1, 15);
+    return CLAMP(info->specificity, 1, 20);
 }
 
 static PluginInfo*

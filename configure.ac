@@ -80,12 +80,14 @@ PKG_CHECK_MODULES(PACKAGE, [gtk+-2.0 >= 2.2.0 libpng12])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
 AC_CHECK_LIB([m],[sqrt])
+AC_CHECK_LIB([jpeg],[jpeg_abort])
 PACKAGE_LIBS="$PACKAGE_LIBS $LIBS"
 
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS( \
+  jpeglib.h \
   time.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.

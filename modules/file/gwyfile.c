@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -115,19 +116,20 @@ gwyfile_save(GwyContainer *data,
     guchar *buffer = NULL;
     gsize size = 0;
     FILE *fh;
+    gboolean ok = TRUE;
 
     if (!(fh = fopen(filename, "wb")))
         return FALSE;
     buffer = gwy_serializable_serialize(G_OBJECT(data), buffer, &size);
     if (fwrite(MAGIC, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
         || fwrite(buffer, 1, size, fh) != size) {
-        fclose(fh);
-        g_free(buffer);
-        return FALSE;
+        ok = FALSE;
+        unlink(filename);
     }
     fclose(fh);
     g_free(buffer);
-    return TRUE;
+
+    return ok;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

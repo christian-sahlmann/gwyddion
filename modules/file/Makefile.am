@@ -6,8 +6,8 @@ module_ldflags = -shared -Wl,-soname
 
 file_PROGRAMS = \
 	gwyfile.so \
-	plugin-proxy.so \
-	png.so
+	pixmap.so \
+	plugin-proxy.so
 
 gwyfile_so_SOURCES = gwyfile.c
 gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
@@ -15,8 +15,8 @@ gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
 plugin_proxy_so_SOURCES = plugin-proxy.c
 plugin_proxy_so_LDFLAGS = $(module_ldflags),plugin-proxy.so
 
-png_so_SOURCES = png.c
-png_so_LDFLAGS = $(module_ldflags),png.so
+pixmap_so_SOURCES = pixmap.c
+pixmap_so_LDFLAGS = $(module_ldflags),pixmap.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
