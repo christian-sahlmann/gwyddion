@@ -52,6 +52,7 @@
 #include <libgwydgets/gwytoolbox.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwyvectorshade.h>
+#include <libgwydgets/gwyvmenubar.h>
 #include <libgwydgets/gwyvruler.h>
 #include <libgwydgets/gwyvalunit.h>
 
