@@ -368,10 +368,15 @@ gwy_app_data_window_create(GwyContainer *data)
 void
 gwy_app_data_view_update(GtkWidget *data_view)
 {
+    static const gchar *keys[] = {
+        "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"
+    };
     GwyDataViewLayer *layer;
-    GwyContainer *data;
+    GwyContainer *data, *settings;
     gboolean has_mask;
     gboolean has_alpha;
+    gdouble x;
+    gint i;
 
     gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
@@ -380,6 +385,16 @@ gwy_app_data_view_update(GtkWidget *data_view)
     has_alpha = gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(data_view)) != NULL;
 
     if (has_mask && !has_alpha) {
+        /* TODO: Container */
+        settings = gwy_app_settings_get();
+        for (i = 0; i < G_N_ELEMENTS(keys); i++) {
+            if (gwy_container_contains_by_name(data, keys[i])
+                && !gwy_container_contains_by_name(settings, keys[i] + 2))
+                continue;
+            x = gwy_container_get_double_by_name(settings, keys[i] + 2);
+            gwy_container_set_double_by_name(data, keys[i], x);
+        }
+
         layer = GWY_DATA_VIEW_LAYER(gwy_layer_mask_new());
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
     }
