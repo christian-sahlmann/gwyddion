@@ -43,8 +43,8 @@
           </div>
           <p><xsl:value-of select="name"/></p>
         </td>
-        <td><p><xsl:value-of select="version"/></p></td>
-        <td><p><xsl:value-of select="author"/></p></td>
+        <td><xsl:value-of select="version"/></td>
+        <td><xsl:value-of select="author"/></td>
       </tr>
     </xsl:for-each>
     </tbody>

@@ -15,7 +15,7 @@ EXTRA_DIST = \
 	vim-syn-gen.py
 
 if MAINTAINER_MODE
-all-local: modules.xml module-list.html
+all-local: modules.xml module-list.html module-list-nocss.html
 
 noinst_PROGRAMS = \
 	dump-modules
@@ -38,8 +38,11 @@ modules.xml: dump-modules $(moduledir)/*.c $(moduledir)/*/*.c
 
 module-list.html: modules.xml modules-web.xsl
 	$(XSLTPROC) modules-web.xsl modules.xml >module-list.html
+
+module-list-nocss.html: modules.xml modules-web-nocss.xsl
+	$(XSLTPROC) modules-web-nocss.xsl modules.xml >module-list-nocss.html
 endif
 
 clean-local:
 	rm -f core.* *~
-	rm -f modules.xml
+	rm -f modules.xml module-list.html module-list-nocss.html
