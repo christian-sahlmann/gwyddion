@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -154,7 +154,7 @@ dialog_create(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwyContainer *settings;
-    GtkWidget *dialog, *table, *label, *vbox;
+    GtkWidget *dialog, *table, *label, *vbox, *frame;
 
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
@@ -175,6 +175,9 @@ dialog_create(GwyUnitoolState *state)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
     vbox = gtk_vbox_new(FALSE, 0);
+
+    frame = gwy_unitool_windowname_frame_create(state);
+    gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Area of computation</b>"));
@@ -237,7 +240,8 @@ dialog_create(GwyUnitoolState *state)
                                         controls, controls->interp);
     gtk_box_pack_start(GTK_BOX(vbox), controls->interpolation, FALSE, FALSE, 2);
 
-    gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1,
+                     GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
 
     controls->graph = gwy_graph_new();
     gtk_table_attach(GTK_TABLE(table), controls->graph, 1, 2, 0, 1,
@@ -323,7 +327,6 @@ dialog_update(GwyUnitoolState *state)
                                               100)) {
         gwy_graph_add_dataline(GWY_GRAPH(controls->graph), dataline,
                                0, lab, NULL);
-        /* XXX: gtk_widget_queue_draw(GTK_WIDGET(controls->graph)); */
         update_labels(state);
     }
     g_string_free(lab, TRUE);
@@ -375,8 +378,6 @@ apply(GwyUnitoolState *state)
         gwy_graph_add_dataline(GWY_GRAPH(graph), dataline, 0, lab, NULL);
 
     window = gwy_app_graph_window_create(graph);
-
-    /* XXX: gwy_data_view_update(GWY_DATA_VIEW(state->layer->parent)); */
     g_string_free(lab, TRUE);
     g_object_unref(dataline);
 }
