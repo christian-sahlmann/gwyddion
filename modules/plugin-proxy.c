@@ -103,6 +103,7 @@ static GList*          register_plugins          (GList *plugins,
 static GSList*         find_plugin_executables   (const gchar *dir,
                                                   GSList *list,
                                                   gint level);
+static gchar**         construct_rgi_names       (const gchar *pluginname);
 
 /* process plug-in proxy */
 static GList*          proc_register_plugins     (GList *plugins,
@@ -158,7 +159,7 @@ static GwyModuleInfo module_info = {
         "external programs (plug-ins) on data pretending they are data "
         "processing or file loading/saving modules.",
     "Yeti <yeti@gwyddion.net>",
-    "2.6",
+    "3.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -220,6 +221,15 @@ module_register(const gchar *name)
     return TRUE;
 }
 
+/**
+ * create_user_plugin_dirs:
+ *
+ * Creates plug-in directory tree in user's home directory (or whereever is
+ * it on Win32).
+ *
+ * Returns: Whether all the directories either exists or were successfully
+ * created.
+ **/
 static gboolean
 create_user_plugin_dirs(void)
 {
@@ -265,8 +275,9 @@ register_plugins(GList *plugins,
                  ProxyRegister register_func)
 {
     gchar *args[] = { NULL, "register", NULL };
-    gchar *buffer, *pluginname;
-    gint exit_status;
+    gchar *buffer, *pluginname, *rginame;
+    gchar **rginames;
+    gint i, exit_status;
     GError *err = NULL;
     GSList *list, *l;
     gboolean ok;
@@ -274,8 +285,25 @@ register_plugins(GList *plugins,
     list = find_plugin_executables(dir, NULL, 1);
     for (l = list; l; l = g_slist_next(l)) {
         pluginname = (gchar*)l->data;
+        /* try rgi files first */
+        rginames = construct_rgi_names(pluginname);
+        for (i = 0; (rginame = rginames[i]); i++) {
+            if (g_file_get_contents(rginame, &buffer, NULL, NULL))
+                break;
+        }
+        if (rginame) {
+            gwy_debug("registering using %s data", rginame);
+            plugins = register_func(plugins, name, pluginname, buffer);
+            g_free(pluginname);
+            g_free(buffer);
+            g_strfreev(rginames);
+            continue;
+        }
+        g_strfreev(rginames);
+
         args[0] = pluginname;
         buffer = NULL;
+        gwy_debug("querying plug-in %s for registration info", pluginname);
         ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                           &buffer, NULL, &exit_status, &err);
         if (ok)
@@ -293,6 +321,51 @@ register_plugins(GList *plugins,
     return plugins;
 }
 
+/**
+ * construct_rgi_names:
+ * @pluginname: A file name.
+ *
+ * Construct list of possible .rgi file names if @pluginname is a plug-in
+ * executable file name.
+ *
+ * Returns: A %NULL-terminated list of strings, to be freed by caller.
+ **/
+static gchar**
+construct_rgi_names(const gchar *pluginname)
+{
+    gchar **rginames;;
+    gchar *pos;
+    gint len;
+
+    pos = strrchr(pluginname, '.');
+    rginames = g_new0(gchar*, pos ? 5 : 3);
+    rginames[0] = g_strconcat(pluginname, ".rgi", NULL);
+    rginames[1] = g_strconcat(pluginname, ".RGI", NULL);
+    if (pos) {
+        len = pos - pluginname;
+        rginames[2] = g_new(gchar, len + 4);
+        strncpy(rginames[2], pluginname, len + 1);
+        strncpy(rginames[2] + len + 1, "rgi", 4);
+        rginames[3] = g_new(gchar, len + 4);
+        strncpy(rginames[3], pluginname, len + 1);
+        strncpy(rginames[3] + len + 1, "RGI", 4);
+    }
+
+    return rginames;
+}
+
+/**
+ * find_plugin_executables:
+ * @dir: A directory to search in.
+ * @list: #GList of plug-in filenames to add filenames to.
+ * @level: Maximum search depth (0 means do not search at all).
+ *
+ * Scans a directory for executables, maybe recursively.
+ *
+ * A fixed depth must be specified to prevent loops.
+ *
+ * Returns: @list with newly found executables appended.
+ **/
 static GSList*
 find_plugin_executables(const gchar *dir,
                         GSList *list,
@@ -335,10 +408,8 @@ find_plugin_executables(const gchar *dir,
         }
 #ifdef G_OS_WIN32
         if (!g_str_has_suffix(filename, ".exe")
-            && !g_str_has_suffix(filename, ".bat")
-            && !g_str_has_suffix(filename, ".EXE")
-            && !g_str_has_suffix(filename, ".BAT")) {
-            gwy_debug("[Win32] Ignoring %s, is not .exe, .bat", filename);
+            && !g_str_has_suffix(filename, ".EXE")) {
+            gwy_debug("[Win32] Ignoring %s, is not .exe", filename);
             g_free(pluginname);
             continue;
         }
