@@ -1,6 +1,5 @@
 Makefile
 Makefile.in
-test
 *.lo
 *.la
 .libs
