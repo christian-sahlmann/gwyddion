@@ -62,7 +62,7 @@ typedef struct {
     gdouble par_res[MAX_PARAMS];
     gdouble err[MAX_PARAMS];
     gdouble crit;
-    const GwyNLFitPresetFunction *fitfunc;
+    const GwyNLFitPreset *fitfunc;
     GwyGraph *parent_graph;
     gdouble **parent_xs;
     gdouble **parent_ys;
@@ -214,7 +214,7 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
     gwy_data_line_resample(ydata, args->parent_ns[curve],
                            GWY_INTERPOLATION_NONE);
 
-    func_name = gwy_math_nlfit_get_function_name(args->fitfunc);
+    func_name = gwy_math_nlfit_get_preset_name(args->fitfunc);
     if (strcmp(func_name, "Gaussian (PSDF)") == 0)  /* || something */
         skip_first_point = TRUE;
 
@@ -566,7 +566,7 @@ plot_inits(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    const GwyNLFitPresetFunction *function;
+    const GwyNLFitPreset *function;
     gboolean ok;
     gint i;
     GString *label;
@@ -616,7 +616,7 @@ recompute(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    const GwyNLFitPresetFunction *function;
+    const GwyNLFitPreset *function;
     gboolean fixed[4];
     gchar buffer[64];
     gboolean ok;
@@ -637,7 +637,7 @@ recompute(FitArgs *args, FitControls *controls)
     }
 
     function = gwy_math_nlfit_get_preset(args->function_type);
-    nparams = gwy_math_nlfit_get_function_nparams(args->fitfunc);
+    nparams = gwy_math_nlfit_get_preset_nparams(args->fitfunc);
 
     for (i=0; i<MAX_PARAMS; i++)
     {
@@ -734,14 +734,14 @@ dialog_update(FitControls *controls, FitArgs *args)
     guess(controls, args);
 
     gtk_label_set_markup(GTK_LABEL(controls->equation),
-                         gwy_math_nlfit_get_function_equation(args->fitfunc));
+                         gwy_math_nlfit_get_preset_formula(args->fitfunc));
 
 
     for (i = 0; i < MAX_PARAMS; i++) {
-        if (i < gwy_math_nlfit_get_function_nparams(args->fitfunc)) {
+        if (i < gwy_math_nlfit_get_preset_nparams(args->fitfunc)) {
             gtk_widget_set_sensitive(controls->param_des[i], TRUE);
             gtk_label_set_markup(GTK_LABEL(controls->param_des[i]),
-                      gwy_math_nlfit_get_function_param_name(args->fitfunc, i));
+                      gwy_math_nlfit_get_preset_param_name(args->fitfunc, i));
 
             gtk_widget_set_sensitive(controls->param_init[i], TRUE);
             gtk_widget_set_sensitive(controls->param_fit[i], TRUE);
@@ -763,7 +763,7 @@ guess(FitControls *controls, FitArgs *args)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    const GwyNLFitPresetFunction *function;
+    const GwyNLFitPreset *function;
     gdouble param[4];
     gboolean ok;
     gint i;
@@ -898,7 +898,7 @@ static void
 load_args(GwyContainer *container,
           FitArgs *args)
 {
-    const GwyNLFitPresetFunction *func;
+    const GwyNLFitPreset *func;
     static const guchar *preset;
 
     if (gwy_container_gis_string_by_name(container, preset_key, &preset)) {
@@ -911,12 +911,12 @@ static void
 save_args(GwyContainer *container,
           FitArgs *args)
 {
-    const GwyNLFitPresetFunction *func;
+    const GwyNLFitPreset *func;
 
     func = gwy_math_nlfit_get_preset(args->function_type);
     gwy_container_set_string_by_name
         (container, preset_key,
-         g_strdup(gwy_math_nlfit_get_function_name(func)));
+         g_strdup(gwy_math_nlfit_get_preset_name(func)));
 }
 
 
@@ -1079,13 +1079,13 @@ create_results_window(FitArgs *args)
     row++;
 
     attach_label(table, _("<b>Function:</b>"), row, 0, 0.0);
-    attach_label(table, gwy_math_nlfit_get_function_name(args->fitfunc),
+    attach_label(table, gwy_math_nlfit_get_preset_name(args->fitfunc),
                  row, 1, 0.0);
     row++;
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label),
-                         gwy_math_nlfit_get_function_equation(args->fitfunc));
+                         gwy_math_nlfit_get_preset_formula(args->fitfunc));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
@@ -1093,14 +1093,14 @@ create_results_window(FitArgs *args)
     attach_label(table, _("<b>Results</b>"), row, 0, 0.0);
     row++;
 
-    n = gwy_math_nlfit_get_function_nparams(args->fitfunc);
+    n = gwy_math_nlfit_get_preset_nparams(args->fitfunc);
     tab = gtk_table_new(n, 6, FALSE);
     gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     for (i = 0; i < n; i++) {
         attach_label(tab, "=", i, 1, 0.5);
         attach_label(tab, "±", i, 3, 0.5);
-        s = gwy_math_nlfit_get_function_param_name(args->fitfunc, i);
+        s = gwy_math_nlfit_get_preset_param_name(args->fitfunc, i);
         attach_label(tab, s, i, 0, 0.0);
         value = args->par_res[i];
         sigma = args->err[i];
@@ -1167,13 +1167,13 @@ create_fit_report(FitArgs *args)
     g_string_append_printf(report, "X range:          %g to %g\n",
                            args->from, args->to);
     g_string_append_printf(report, "Fitted function:  %s\n",
-                           gwy_math_nlfit_get_function_name(args->fitfunc));
+                           gwy_math_nlfit_get_preset_name(args->fitfunc));
     g_string_append_printf(report, "\nResults\n");
-    n = gwy_math_nlfit_get_function_nparams(args->fitfunc);
+    n = gwy_math_nlfit_get_preset_nparams(args->fitfunc);
     for (i = 0; i < n; i++) {
         /* FIXME: how to do this better? use pango_parse_markup()? */
-        s = gwy_strreplace(gwy_math_nlfit_get_function_param_name(args->fitfunc,
-                                                                  i),
+        s = gwy_strreplace(gwy_math_nlfit_get_preset_param_name(args->fitfunc,
+                                                                i),
                            "<sub>", "", (gsize)-1);
         s2 = gwy_strreplace(s, "</sub>", "", (gsize)-1);
         g_string_append_printf(report, "%s = %g ± %g\n",
