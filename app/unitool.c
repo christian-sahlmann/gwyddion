@@ -421,6 +421,7 @@ gwy_unitool_dialog_add_button_apply(GtkWidget *dialog)
     button = gtk_dialog_add_button(GTK_DIALOG(dialog),
                                    GTK_STOCK_APPLY,
                                    GTK_RESPONSE_APPLY);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_APPLY);
     g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
                       GINT_TO_POINTER(GTK_RESPONSE_APPLY));
     return button;
@@ -462,6 +463,7 @@ gwy_unitool_dialog_add_button_hide(GtkWidget *dialog)
 
     button = gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Hide"),
                                    GTK_RESPONSE_CLOSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
     g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
                       GINT_TO_POINTER(GTK_RESPONSE_CLOSE));
     return button;
