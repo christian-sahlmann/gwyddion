@@ -1,3 +1,23 @@
+1.1cvs20040419
+
+1.2
+Application:
+- Reacts to --version and --help options.
+- Data window zoom is keyboard controlable (+, =, -, z).
+
+Modules:
+- Unrotate (new): Automagically correct rotation in xy plane.
+- Data arithmetic, Cross-correlation, and Mask by correlation are regular
+  modules now.
+- Slope distribution: Optionally can use local plane fitting for slopes,
+  can create graph of angular slope distribution.
+- Angle distribution: Optionally can use local plane fitting.
+
+Library:
+- libgwyapp: Option menu of data windows.
+- libprocess: Several area functions were given more logical names and `cros'
+  was corrected to `cross' in names; old function names still work.
+
 
 1.1
 Application:
@@ -25,7 +45,7 @@ Modules:
 - Rawfile: No longer resets text/binary parameters when switching to
   the other type.
 - Watershed: It is possible to change mask color.
-- Facet-level: shows progress bas and is cancelable.
+- Facet-level: shows progress bar and is cancelable.
 - Filters tool: Bug #7 (preview confused by tool switch) was mostly fixed.
 - Graph points: Bug #15 (bad value formatting) was mostly fixed.
 - Shade: Bug #11 (not undoable) was fixed.
