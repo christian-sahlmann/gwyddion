@@ -269,6 +269,7 @@ gwy_si_unit_deserialize(const guchar *buffer,
         unitstr = NULL;
     }
     si_unit = gwy_si_unit_new(unitstr);
+    g_free(unitstr);
 
     return (GObject*)si_unit;
 }
