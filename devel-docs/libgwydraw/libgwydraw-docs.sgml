@@ -6,11 +6,8 @@
     <title>Gwyddion Drawing Library Reference Manual</title>
   </bookinfo>
 
-  <chapter>
-    <title>Gwyddion Drawing Library</title>
-    <xi:include href="xml/gwyrgba.xml"/>
-    <xi:include href="xml/gwypalette.xml"/>
-    <xi:include href="xml/gwypalettedef.xml"/>
-    <xi:include href="xml/gwypixfield.xml"/>
-  </chapter>
+  <xi:include href="xml/gwyrgba.xml"/>
+  <xi:include href="xml/gwypalette.xml"/>
+  <xi:include href="xml/gwypalettedef.xml"/>
+  <xi:include href="xml/gwypixfield.xml"/>
 </book>

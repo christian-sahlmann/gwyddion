@@ -238,3 +238,12 @@ are saved here.
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_graph_enable_axis_label_update ##### -->
+<para>
+
+</para>
+
+@graph: 
+@enable: 
+
+

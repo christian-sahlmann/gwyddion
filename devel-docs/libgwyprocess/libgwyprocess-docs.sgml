@@ -6,12 +6,14 @@
     <title>Gwyddion Data Processing Library Reference Manual</title>
   </bookinfo>
 
-  <chapter>
-    <title>Gwyddion Data Processing Library</title>
-    <xi:include href="xml/dataline.xml"/>
-    <xi:include href="xml/datafield.xml"/>
-    <xi:include href="xml/interpolation.xml"/>
-    <xi:include href="xml/simplefft.xml"/>
-    <xi:include href="xml/cwt.xml"/>
-  </chapter>
+  <xi:include href="xml/dataline.xml"/>
+  <xi:include href="xml/datafield.xml"/>
+  <xi:include href="xml/correct.xml"/>
+  <xi:include href="xml/correlation.xml"/>
+  <xi:include href="xml/cwt.xml"/>
+  <xi:include href="xml/filters.xml"/>
+  <xi:include href="xml/fractals.xml"/>
+  <xi:include href="xml/grains.xml"/>
+  <xi:include href="xml/interpolation.xml"/>
+  <xi:include href="xml/simplefft.xml"/>
 </book>

@@ -224,3 +224,12 @@ with ranges in the requested interval.
 @unit: 
 
 
+<!-- ##### FUNCTION gwy_axis_enable_set_label ##### -->
+<para>
+
+</para>
+
+@axis: 
+@enable: 
+
+

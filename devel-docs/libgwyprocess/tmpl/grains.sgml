@@ -1,0 +1,195 @@
+<!-- ##### SECTION Title ##### -->
+grains
+
+<!-- ##### SECTION Short_Description ##### -->
+Grain detection and processing
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyMergeType ##### -->
+<para>
+Mask processing merging (namely used in grain processing).
+</para>
+
+@GWY_MERGE_UNION: 
+@GWY_MERGE_INTERSECTION: 
+
+<!-- ##### ENUM GwyWatershedStateType ##### -->
+<para>
+
+</para>
+
+@GWY_WSHED_INIT: 
+@GWY_WSHED_LOCATE: 
+@GWY_WSHED_MIN: 
+@GWY_WSHED_WSHED: 
+@GWY_WSHED_MARK: 
+@GWY_WSHED_FINISHED: 
+
+<!-- ##### STRUCT GwyWatershedStatus ##### -->
+<para>
+
+</para>
+
+@state: 
+@internal_i: 
+@min: 
+@water: 
+@mark_dfield: 
+@fraction: 
+@description: 
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_curvature ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@threshval: 
+@dir: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_watershed ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@locate_steps: 
+@locate_thresh: 
+@locate_dropsize: 
+@wshed_steps: 
+@wshed_dropsize: 
+@prefilter: 
+@dir: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_remove_manually ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@i: 
+<!-- # Unused Parameters # -->
+@col: 
+@row: 
+@data_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_remove_by_size ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@size: 
+<!-- # Unused Parameters # -->
+@data_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_remove_by_height ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@threshval: 
+@direction: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_watershed_iteration ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@status: 
+@locate_steps: 
+@locate_thresh: 
+@locate_dropsize: 
+@wshed_steps: 
+@wshed_dropsize: 
+@prefilter: 
+@dir: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_local_maxima ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_height ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@threshval: 
+@dir: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_mark_slope ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@threshval: 
+@dir: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_get_average ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_get_distribution ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@distribution: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_add ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@add_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_intersect ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@intersect_field: 
+
+

@@ -1,0 +1,209 @@
+<!-- ##### SECTION Title ##### -->
+filters
+
+<!-- ##### SECTION Short_Description ##### -->
+Convolution and other data filters
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyFilterType ##### -->
+<para>
+Filtering type. Possibilities constist of simple statisical
+and directional filters. 
+</para>
+
+@GWY_FILTER_MEAN: 
+@GWY_FILTER_MEDIAN: 
+@GWY_FILTER_CONSERVATIVE: 
+@GWY_FILTER_LAPLACIAN: 
+@GWY_FILTER_SOBEL: 
+@GWY_FILTER_PREWITT: 
+
+<!-- ##### FUNCTION gwy_data_field_area_convolve ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@kernel_field: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_median ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_mean ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_conservative ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_laplacian ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_sobel ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@orientation: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_filter_prewitt ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@orientation: 
+@col: 
+@row: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_convolve ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@kernel_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_median ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_mean ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_conservative ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@size: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_laplacian ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_sobel ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@orientation: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_filter_prewitt ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@orientation: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+

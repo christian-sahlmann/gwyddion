@@ -2,7 +2,7 @@
 GwyDataLine
 
 <!-- ##### SECTION Short_Description ##### -->
-array representing 1D data
+Array representing 1D data
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

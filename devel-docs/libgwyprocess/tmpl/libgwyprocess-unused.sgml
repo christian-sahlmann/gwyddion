@@ -1,8 +1,50 @@
+<!-- ##### SECTION ./tmpl/libgwyprocess.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/libgwyprocess.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/libgwyprocess.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/libgwyprocess.sgml:Title ##### -->
+libgwyprocess
+
+
 <!-- ##### MACRO GWY_ENABLE_DEPRECATED ##### -->
 <para>
 
 </para>
 
+
+<!-- ##### ENUM GwyFFTOutputType ##### -->
+<para>
+FFT output.
+</para>
+
+@GWY_FFT_OUTPUT_REAL_IMG: real and imaginary
+@GWY_FFT_OUTPUT_MOD_PHASE: module and phase
+@GWY_FFT_OUTPUT_REAL: real
+@GWY_FFT_OUTPUT_IMG: imaginary
+@GWY_FFT_OUTPUT_MOD: module
+@GWY_FFT_OUTPUT_PHASE: phase
+
+<!-- ##### ENUM GwyFractalType ##### -->
+<para>
+
+</para>
+
+@GWY_FRACTAL_PARTITIONING: 
+@GWY_FRACTAL_CUBECOUNTING: 
+@GWY_FRACTAL_TRIANGULATION: 
+@GWY_FRACTAL_PSDF: 
 
 <!-- ##### FUNCTION gwy_data_field_alloc ##### -->
 <para>

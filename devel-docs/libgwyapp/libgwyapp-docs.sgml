@@ -6,14 +6,11 @@
     <title>Gwyddion Application Library Reference Manual</title>
   </bookinfo>
 
-  <chapter>
-    <title>Gwyddion Application Library</title>
-    <xi:include href="xml/app.xml"/>
-    <xi:include href="xml/settings.xml"/>
-    <xi:include href="xml/menu.xml"/>
-    <xi:include href="xml/menu-windowlist.xml"/>
-    <xi:include href="xml/undo.xml"/>
-    <xi:include href="xml/unitool.xml"/>
-    <xi:include href="xml/wait.xml"/>
-  </chapter>
+  <xi:include href="xml/app.xml"/>
+  <xi:include href="xml/settings.xml"/>
+  <xi:include href="xml/menu.xml"/>
+  <xi:include href="xml/menu-windowlist.xml"/>
+  <xi:include href="xml/undo.xml"/>
+  <xi:include href="xml/unitool.xml"/>
+  <xi:include href="xml/wait.xml"/>
 </book>

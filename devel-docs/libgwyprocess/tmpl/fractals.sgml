@@ -1,0 +1,108 @@
+<!-- ##### SECTION Title ##### -->
+fractals
+
+<!-- ##### SECTION Short_Description ##### -->
+Fractal dimension calculation
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_data_field_fractal_partitioning ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@xresult: 
+@yresult: 
+@interpolation: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_cubecounting ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@xresult: 
+@yresult: 
+@interpolation: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_triangulation ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@xresult: 
+@yresult: 
+@interpolation: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_psdf ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@xresult: 
+@yresult: 
+@interpolation: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_cubecounting_dim ##### -->
+<para>
+
+</para>
+
+@xresult: 
+@yresult: 
+@a: 
+@b: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_triangulation_dim ##### -->
+<para>
+
+</para>
+
+@xresult: 
+@yresult: 
+@a: 
+@b: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_partitioning_dim ##### -->
+<para>
+
+</para>
+
+@xresult: 
+@yresult: 
+@a: 
+@b: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_psdf_dim ##### -->
+<para>
+
+</para>
+
+@xresult: 
+@yresult: 
+@a: 
+@b: 
+@Returns: 
+
+

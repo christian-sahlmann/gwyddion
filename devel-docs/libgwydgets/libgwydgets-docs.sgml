@@ -7,7 +7,7 @@
   </bookinfo>
 
   <chapter id="DataWindowWidgets">
-    <title>Data Window</title>
+    <title>Data Windows and Views</title>
     <xi:include href="xml/gwydatawindow.xml"/>
     <xi:include href="xml/gwydataview.xml"/>
     <xi:include href="xml/gwydataviewlayer.xml"/>

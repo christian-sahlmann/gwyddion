@@ -665,6 +665,26 @@ gwymodulemenus
 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_option_menu_fft_output ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_fractal ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_option_menu_nlfitpreset ##### -->
 <para>
 

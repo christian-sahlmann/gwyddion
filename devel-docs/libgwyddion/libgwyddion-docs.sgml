@@ -6,20 +6,17 @@
     <title>Gwyddion Library Reference Manual</title>
   </bookinfo>
 
-  <chapter>
-    <title>Gwyddion Library</title>
-    <para>
-      This library contains basic classes and interfaces not directly related
-      to GUI or data processing, and various utility functions.
-    </para>
-    <xi:include href="xml/gwywatchable.xml"/>
-    <xi:include href="xml/gwyserializable.xml"/>
-    <xi:include href="xml/gwycontainer.xml"/>
-    <xi:include href="xml/gwymacros.xml"/>
-    <xi:include href="xml/gwyentities.xml"/>
-    <xi:include href="xml/gwymath.xml"/>
-    <xi:include href="xml/gwynlfit.xml"/>
-    <xi:include href="xml/gwysiunit.xml"/>
-    <xi:include href="xml/gwyutils.xml"/>
-  </chapter>
+  <para>
+    This library contains basic classes and interfaces not directly related
+    to GUI or data processing, and various utility functions.
+  </para>
+  <xi:include href="xml/gwywatchable.xml"/>
+  <xi:include href="xml/gwyserializable.xml"/>
+  <xi:include href="xml/gwycontainer.xml"/>
+  <xi:include href="xml/gwymacros.xml"/>
+  <xi:include href="xml/gwyentities.xml"/>
+  <xi:include href="xml/gwymath.xml"/>
+  <xi:include href="xml/gwynlfit.xml"/>
+  <xi:include href="xml/gwysiunit.xml"/>
+  <xi:include href="xml/gwyutils.xml"/>
 </book>

@@ -2,7 +2,7 @@
 simplefft
 
 <!-- ##### SECTION Short_Description ##### -->
-simple FFT algorithm
+Simple FFT algorithm
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -26,18 +26,6 @@ Selection of windowing applied before FFT (if requested).
 @GWY_WINDOWING_LANCZOS: Lanczos windowing
 @GWY_WINDOWING_WELCH: Welch windowing
 @GWY_WINDOWING_RECT: Rectangular windowing
-
-<!-- ##### ENUM GwyFFTOutputType ##### -->
-<para>
-FFT output.
-</para>
-
-@GWY_FFT_OUTPUT_REAL_IMG: real and imaginary
-@GWY_FFT_OUTPUT_MOD_PHASE: module and phase
-@GWY_FFT_OUTPUT_REAL: real
-@GWY_FFT_OUTPUT_IMG: imaginary
-@GWY_FFT_OUTPUT_MOD: module
-@GWY_FFT_OUTPUT_PHASE: phase
 
 <!-- ##### FUNCTION gwy_fft_hum ##### -->
 <para>
