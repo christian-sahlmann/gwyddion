@@ -125,7 +125,6 @@ use(GwyDataWindow *data_window,
         GwyContainer *data;
         GwyDataField *dfield;
         GwySIUnit *siunitxy, *siunitz, *siunitdeg;
-        gchar *unitxy, *unitz;
         gdouble xreal, yreal, q;
 
         controls = (ToolControls*)state->user_data;
@@ -134,7 +133,7 @@ use(GwyDataWindow *data_window,
                                                                  "/0/data"));
         siunitxy = gwy_data_field_get_si_unit_xy(dfield);
         siunitz = gwy_data_field_get_si_unit_z(dfield);
-	controls->same_units = gwy_si_unit_equal(siunitxy, siunitz);
+        controls->same_units = gwy_si_unit_equal(siunitxy, siunitz);
 
         xreal = gwy_data_field_get_xreal(dfield);
         yreal = gwy_data_field_get_xreal(dfield);
@@ -148,12 +147,12 @@ use(GwyDataWindow *data_window,
                                                      controls->vform2);
         g_object_unref(siunitxy);
 
-	siunitdeg = (GwySIUnit*) gwy_si_unit_new("\xc2\xb0"); /* degree */
-	controls->vformdeg 
-	  = gwy_si_unit_get_format_with_resolution(siunitdeg,
-						   360, 0.01,
-						   controls->vformdeg);
-	g_object_unref(siunitdeg);
+        siunitdeg = (GwySIUnit*)gwy_si_unit_new("deg"); /* degree */
+        controls->vformdeg
+            = gwy_si_unit_get_format_with_resolution(siunitdeg,
+                                                     360, 0.01,
+                                                     controls->vformdeg);
+        g_object_unref(siunitdeg);
     }
 
     return gwy_unitool_use(state, data_window, reason);
@@ -206,7 +205,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(14, 4, FALSE);
+    table = gtk_table_new(16, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
@@ -281,8 +280,8 @@ dialog_update(GwyUnitoolState *state,
         /* prevent rounding errors to produce nonreal results on very flat
          * surfaces */
         area = MAX(area, projarea);
-	gwy_data_field_area_get_inclination(dfield, isel[0], isel[1], w, h,
-					    &theta, &phi);
+        gwy_data_field_area_get_inclination(dfield, isel[0], isel[1], w, h,
+                                            &theta, &phi);
     }
 
     state->value_format->precision = 2;
@@ -300,8 +299,10 @@ dialog_update(GwyUnitoolState *state,
     gwy_unitool_update_label(controls->vform2, controls->projarea, projarea);
     if (controls->same_units) {
         gwy_unitool_update_label(controls->vform2, controls->area, area);
-        gwy_unitool_update_label(controls->vformdeg, controls->theta, theta);
-        gwy_unitool_update_label(controls->vformdeg, controls->phi, phi);
+        gwy_unitool_update_label(controls->vformdeg, controls->theta,
+                                 180.0/G_PI * theta);
+        gwy_unitool_update_label(controls->vformdeg, controls->phi,
+                                 180.0/G_PI * phi);
     } else {
         gtk_label_set_text(GTK_LABEL(controls->area), _("N.A."));
         gtk_label_set_text(GTK_LABEL(controls->theta), _("N.A."));
