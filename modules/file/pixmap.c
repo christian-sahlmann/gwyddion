@@ -71,7 +71,8 @@ static guchar pixmap_ping_buf[pixmap_ping_length];
 typedef enum {
     PIXMAP_RAW_DATA,
     PIXMAP_RULERS,
-    PIXMAP_EVERYTHING
+    PIXMAP_EVERYTHING,
+    PIXMAP_LAST
 } PixmapOutput;
 
 /* What value is used when importing from image */
@@ -81,7 +82,8 @@ typedef enum {
     PIXMAP_MAP_GREEN,
     PIXMAP_MAP_BLUE,
     PIXMAP_MAP_VALUE,
-    PIXMAP_MAP_SUM
+    PIXMAP_MAP_SUM,
+    PIXMAP_MAP_LAST
 } PixmapMapType;
 
 typedef struct {
@@ -182,10 +184,12 @@ static void              pixmap_save_load_args     (GwyContainer *container,
                                                     PixmapSaveArgs *args);
 static void              pixmap_save_save_args     (GwyContainer *container,
                                                     PixmapSaveArgs *args);
+static void              pixmap_save_sanitize_args (PixmapSaveArgs *args);
 static void              pixmap_load_load_args     (GwyContainer *container,
                                                     PixmapLoadArgs *args);
 static void              pixmap_load_save_args     (GwyContainer *container,
                                                     PixmapLoadArgs *args);
+static void              pixmap_load_sanitize_args (PixmapLoadArgs *args);
 
 static struct {
     const gchar *name;
@@ -263,7 +267,7 @@ static GwyModuleInfo module_info = {
         "TARGA. "
         "Import support relies on GDK and thus may be installation-dependent.",
     "Yeti <yeti@gwyddion.net>",
-    "4.1",
+    "4.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -605,9 +609,9 @@ pixmap_load(const gchar *filename,
     g_object_unref(pixbuf);
 
     gwy_data_field_set_xreal(dfield,
-                                args.xreal*exp(G_LN10*args.xyexponent));
+                             args.xreal*exp(G_LN10*args.xyexponent));
     gwy_data_field_set_yreal(dfield,
-                                args.yreal*exp(G_LN10*args.xyexponent));
+                             args.yreal*exp(G_LN10*args.xyexponent));
     gwy_data_field_multiply(dfield,
                             args.zreal*exp(G_LN10*args.zexponent));
     data = GWY_CONTAINER(gwy_container_new());
@@ -1794,6 +1798,13 @@ static const gchar *zoom_key = "/module/pixmap/zoom";
 static const gchar *otype_key = "/module/pixmap/otype";
 
 static void
+pixmap_save_sanitize_args(PixmapSaveArgs *args)
+{
+    args->otype = MIN(args->otype, PIXMAP_LAST-1);
+    args->zoom = CLAMP(args->zoom, 0.06, 16.0);
+}
+
+static void
 pixmap_save_load_args(GwyContainer *container,
                       PixmapSaveArgs *args)
 {
@@ -1801,6 +1812,7 @@ pixmap_save_load_args(GwyContainer *container,
 
     gwy_container_gis_double_by_name(container, zoom_key, &args->zoom);
     gwy_container_gis_enum_by_name(container, otype_key, &args->otype);
+    pixmap_save_sanitize_args(args);
 }
 
 static void
@@ -1819,6 +1831,17 @@ static const gchar *zexponent_key = "/module/pixmap/zexponent";
 static const gchar *maptype_key = "/module/pixmap/maptype";
 
 static void
+pixmap_load_sanitize_args(PixmapLoadArgs *args)
+{
+    args->maptype = MIN(args->maptype, PIXMAP_MAP_LAST-1);
+    args->xreal = CLAMP(args->xreal, 0.01, 10000.0);
+    args->yreal = CLAMP(args->yreal, 0.01, 10000.0);
+    args->zreal = CLAMP(args->zreal, 0.01, 10000.0);
+    args->xyexponent = CLAMP(args->xyexponent, -12, 3);
+    args->zexponent = CLAMP(args->zexponent, -12, 3);
+}
+
+static void
 pixmap_load_load_args(GwyContainer *container,
                       PixmapLoadArgs *args)
 {
@@ -1832,6 +1855,7 @@ pixmap_load_load_args(GwyContainer *container,
     gwy_container_gis_int32_by_name(container, zexponent_key,
                                     &args->zexponent);
     gwy_container_gis_enum_by_name(container, maptype_key, &args->maptype);
+    pixmap_load_sanitize_args(args);
 }
 
 static void
