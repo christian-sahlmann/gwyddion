@@ -1836,9 +1836,10 @@ gwy_container_deserialize(const guchar *buffer,
 
         switch (type) {
             case G_TYPE_OBJECT:
-            object = gwy_serializable_deserialize(buf, mysize, &pos);
-            gwy_container_set_object(container, key, object);
-            g_object_unref(object);
+            if ((object = gwy_serializable_deserialize(buf, mysize, &pos))) {
+                gwy_container_set_object(container, key, object);
+                g_object_unref(object);
+            }
             break;
 
             case G_TYPE_BOOLEAN:
