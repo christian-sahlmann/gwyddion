@@ -43,6 +43,7 @@ typedef struct {
     GtkWidget *median;
     GtkWidget *projarea;
     GtkWidget *area;
+    GwySIValueFormat *vform2;
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
@@ -61,7 +62,7 @@ static GwyModuleInfo module_info = {
     "stats",
     N_("Statistical quantities."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -181,8 +182,8 @@ dialog_create(GwyUnitoolState *state)
         *plabel = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(*plabel), 1.0, 0.5);
         gtk_label_set_selectable(GTK_LABEL(*plabel), TRUE);
-        gtk_table_attach_defaults(GTK_TABLE(table), *plabel,
-                                  1, 3, i+1, i+2);
+        gtk_table_attach(GTK_TABLE(table), *plabel, 1, 3, i+1, i+2,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
     }
 
     gwy_unitool_rect_info_table_setup(&controls->labels,
@@ -199,16 +200,16 @@ dialog_update(GwyUnitoolState *state,
 {
     GwySIValueFormat *units;
     ToolControls *controls;
+    GwySIUnit *siunit;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
     gdouble xy[4];
     gint isel[4];
     gint w, h;
-    gdouble avg, ra, rms, skew, kurtosis, min, max, median;
+    gdouble avg, ra, rms, skew, kurtosis, min, max, median, q, xreal, yreal;
     gdouble projarea, area;
     gchar buffer[48];
-    gchar *s;
 
     gwy_debug("");
 
@@ -228,11 +229,13 @@ dialog_update(GwyUnitoolState *state,
     median = gwy_data_field_area_get_median(dfield, isel[0], isel[1], w, h);
     area = gwy_data_field_area_get_surface_area(dfield, isel[0], isel[1], w, h,
                                                 GWY_INTERPOLATION_BILINEAR);
-    projarea
-        = w*gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield)
-          *h*gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
-    /*FIXME: this is to prevent rounding errors to produce nonreal
-     * results on very flat surfaces*/
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    q = xreal/gwy_data_field_get_xres(dfield)
+        *yreal/gwy_data_field_get_yres(dfield);
+    projarea = w*h*q;
+    /* prevent rounding errors to produce nonreal results on very flat
+     * surfaces */
     area = MAX(area, projarea);
 
     state->value_format->precision = 2;
@@ -248,17 +251,26 @@ dialog_update(GwyUnitoolState *state,
     gwy_unitool_update_label(state->value_format, controls->max, max);
     gwy_unitool_update_label(state->value_format, controls->median, median);
 
-    s = gwy_si_unit_get_unit_string(dfield->si_unit_xy);
-    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>", projarea, s);
-    gtk_label_set_markup(GTK_LABEL(controls->projarea), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%2.3g %s<sup>2</sup>", area, s);
-    gtk_label_set_markup(GTK_LABEL(controls->area), buffer);
-    g_free(s);
+    if (!controls->vform2 || reason == GWY_UNITOOL_UPDATED_DATA) {
+        siunit = gwy_si_unit_duplicate(gwy_data_field_get_si_unit_xy(dfield));
+        gwy_si_unit_power(siunit, 2, siunit);
+        controls->vform2
+            = gwy_si_unit_get_format_with_resolution(siunit, xreal*yreal, q,
+                                                     controls->vform2);
+        g_object_unref(siunit);
+    }
+    gwy_unitool_update_label(controls->vform2, controls->projarea, projarea);
+    gwy_unitool_update_label(controls->vform2, controls->area, area);
 }
 
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
+    ToolControls *controls;
+
+    controls = (ToolControls*)state->user_data;
+    if (controls->vform2)
+        gwy_si_unit_value_format_free(controls->vform2);
     memset(state->user_data, 0, sizeof(ToolControls));
 }
 
