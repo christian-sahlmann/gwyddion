@@ -1,9 +1,7 @@
 - Kill WIN32-LEAN-AND-MEAN-CAPS
 - Speed up Document History
-- Callibrate forgets coefficients and shows inconsistent values
-- Fix overstretched graph selection
 - Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
-- Test GwyGradient, New SIUnit parser, mark them #ifdef GWY_ENABLE_GWYDDION2
+- Test GwyGradient
 - Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
   as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere
@@ -14,9 +12,7 @@
 - Make Ctrl-S save data associated with current window of whatever type, not
   with current data window -- or maybe better, switch data windows when other
   windows are switched
-- Use "row-changed" singal in graphlist instead of queue draw
 - Remember file open/save dialog size
-- Generate module list to docs, add at least short descriptions
 - GwyGradSphere background is strangely shifted in pixmap themes
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Register application/x-gwyddion MIME types, on Win32 and Gnome
