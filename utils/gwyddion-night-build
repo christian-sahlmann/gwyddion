@@ -159,7 +159,7 @@ function webify_api() {
   done
   for d in libgwydgets; do
     dir=Img/software/$pkgname/$d
-    sed -i 's#src="\(.*\)\.png"#src="/'$dir'/\1"#' $phpswroot/$pkgname/$d/*.xhtml
+    sed -i 's#src="\(.*\.png\)"#src="/'$dir'/\1"#' $phpswroot/$pkgname/$d/*.xhtml
     cp devel-docs/$d/html/*.png $HOME/$dir
     rsync --recursive --rsh=ssh $HOME/$dir $host:Img/software/$pkgname
   done
