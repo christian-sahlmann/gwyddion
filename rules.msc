@@ -30,14 +30,17 @@ MOD_DIR = \$(MOD_TYPE)
 MOD_DIR =
 !ENDIF
 
+# The *.something is conceptually broken, but considering copy's unability
+# to copy more files and DOS max. line length...
 install-mod: mod "$(TOP_SRCDIR)\inst.stamp"
-	for %m in ($(MODULES)) do $(INSTALL) %m "$(DEST_DIR)\modules$(MOD_DIR)"
+	$(INSTALL) *.dll "$(DEST_DIR)\modules$(MOD_DIR)"
 
 install-plugin: plugin "$(TOP_SRCDIR)\inst.stamp"
 	for %p in ($(PLUGINS)) do $(INSTALL) %p "$(DEST_DIR)\plugins\$(PLUGIN_TYPE)"
 
 install-pixmap: pixmap "$(TOP_SRCDIR)\inst.stamp"
-	for %p in ($(PIXMAPS)) do $(INSTALL) %p "$(DEST_DIR)\pixmaps"
+	$(INSTALL) *.png "$(DEST_DIR)\pixmaps"
+	$(INSTALL) *.ico "$(DEST_DIR)\pixmaps"
 
 # recursion
 sub-all:

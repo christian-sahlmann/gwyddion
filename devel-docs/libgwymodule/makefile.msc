@@ -8,6 +8,6 @@ all:
 !include $(TOP_SRCDIR)\rules.msc
 
 install:
-	for %d in (html\*.*) do $(INSTALL) %d "$(DEST_DIR)\devel-docs\libgwymodule"
+	$(INSTALL) html\*.* "$(DEST_DIR)\devel-docs\libgwymodule"
 
 # vim: ft=make
