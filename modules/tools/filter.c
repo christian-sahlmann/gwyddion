@@ -231,7 +231,7 @@ dialog_create(GwyUnitoolState *state)
 
     controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
     controls->size_spin = gwy_table_attach_spinbutton(table2, 3,
-                                                      _("Size:"), "px",
+                                                      _("Si_ze:"), "px",
                                                       controls->size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);
     g_signal_connect_swapped(controls->size, "value-changed",
