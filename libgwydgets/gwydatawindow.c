@@ -191,17 +191,14 @@ gwy_data_window_new(GwyDataView *data_view)
                      GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
     /***** rhs stuff *****/
-    widget = gtk_vbox_new(TRUE, 0);
-    gtk_container_set_border_width(GTK_CONTAINER(widget), 6);
-    gtk_box_pack_start(GTK_BOX(hbox), widget, TRUE, TRUE, 0);
-
     layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
     g_assert(GWY_IS_LAYER_BASIC(layer));
     palette = gwy_layer_basic_get_palette(layer);
     data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL,
                                                 0, 1, palette);
     data_view_updated_cb(data_window);
-    gtk_container_add(GTK_CONTAINER(widget), data_window->coloraxis);
+    gtk_box_pack_start(GTK_BOX(hbox), data_window->coloraxis,
+                       FALSE, FALSE, 0);
     g_signal_connect(data_window->coloraxis, "button_press_event",
                      G_CALLBACK(color_axis_clicked_cb), data_window);
 
@@ -264,17 +261,18 @@ measure_changed(GwyDataWindow *data_window)
 static void
 lame_window_resize(GwyDataWindow *data_window)
 {
-    GtkRequisition hruler_req, vruler_req, statusbar_req, sidebox_req,
+    GtkRequisition hruler_req, vruler_req, statusbar_req, coloraxis_req,
                    view_req;
     gint width, height;
 
+    gwy_debug("%s", __FUNCTION__);
     gtk_widget_get_child_requisition(data_window->hruler, &hruler_req);
     gtk_widget_get_child_requisition(data_window->vruler, &vruler_req);
     gtk_widget_get_child_requisition(data_window->statusbar, &statusbar_req);
-    gtk_widget_size_request(data_window->coloraxis, &sidebox_req);
+    gtk_widget_size_request(data_window->coloraxis, &coloraxis_req);
     gtk_widget_size_request(data_window->data_view, &view_req);
 
-    width = vruler_req.width + view_req.width + sidebox_req.width;
+    width = vruler_req.width + view_req.width + coloraxis_req.width;
     height = hruler_req.height + view_req.height + statusbar_req.height;
     gtk_window_resize(GTK_WINDOW(data_window), width, height);
 }
