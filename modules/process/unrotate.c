@@ -182,6 +182,7 @@ unrotate_dialog(UnrotateArgs *args,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(4, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);

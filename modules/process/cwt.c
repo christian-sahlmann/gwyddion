@@ -161,7 +161,7 @@ cwt(GwyContainer *data, GwyRunType run)
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
 
-    return ok;
+    return FALSE;
 }
 
 
@@ -178,6 +178,7 @@ cwt_dialog(CWTArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(2, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
@@ -241,7 +242,7 @@ cwt_dialog(CWTArgs *args)
     args->scale = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.scale));
     gtk_widget_destroy(dialog);
 
-    return FALSE;
+    return TRUE;
 }
 
 static void

@@ -301,7 +301,7 @@ fft(GwyContainer *data, GwyRunType run)
     g_object_unref(ipout);
     g_object_unref(imin);
 
-    return ok;
+    return FALSE;
 }
 
 static void
@@ -349,10 +349,6 @@ set_dfield_imaginary(G_GNUC_UNUSED GwyDataField *re, GwyDataField *im,
     gwy_data_field_copy(im, target);
 }
 
-
-
-
-
 static gboolean
 fft_dialog(FFTArgs *args)
 {
@@ -366,6 +362,7 @@ fft_dialog(FFTArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(2, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
@@ -427,7 +424,7 @@ fft_dialog(FFTArgs *args)
 
     gtk_widget_destroy(dialog);
 
-    return FALSE;
+    return TRUE;
 }
 
 static void
