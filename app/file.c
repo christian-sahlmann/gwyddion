@@ -145,7 +145,7 @@ gwy_app_data_window_create(GwyContainer *data)
                                g_object_get_data(G_OBJECT(gwy_app_main_window),
                                                  "accel_group"));
     g_signal_connect(data_window, "focus-in-event",
-                     G_CALLBACK(gwy_app_data_window_get_current), NULL);
+                     G_CALLBACK(gwy_app_data_window_set_current), NULL);
     g_signal_connect(data_window, "destroy",
                      G_CALLBACK(gwy_app_data_window_remove), NULL);
     g_signal_connect_swapped(data_window, "destroy",
