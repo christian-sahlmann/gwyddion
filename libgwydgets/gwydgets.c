@@ -187,6 +187,43 @@ gwy_table_attach_row(GtkWidget *table,
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), middle_widget);
 }
 
+/**
+ * gwy_table_get_child_widget:
+ * @table: A #GtkTable.
+ * @row: Row in @table.
+ * @col: Column in @table.
+ *
+ * Finds a widget in #GtkTable by its coordinates.
+ *
+ * By widget at (@col, @row) is meant a widget that either contains this
+ * corner or is attached by its left side, top side, or top left cornder to
+ * it.
+ *
+ * If there are multiple matches due to overlapping widgets, an arbitrary of
+ * them is returned.
+ *
+ * Returns: The widget at (@col, @row) or %NULL if there is no such widget.
+ *
+ * Since: 1.6
+ **/
+GtkWidget*
+gwy_table_get_child_widget(GtkWidget *table,
+                           gint row,
+                           gint col)
+{
+    GList *l;
+
+    g_return_val_if_fail(GTK_IS_TABLE(table), NULL);
+    for (l = GTK_TABLE(table)->children; l; l = g_list_next(l)) {
+        GtkTableChild *child = (GtkTableChild*)l->data;
+
+        if (child->left_attach <= col && child->right_attach > col
+            && child->top_attach <= row && child->bottom_attach > row)
+            return child->widget;
+    }
+    return NULL;
+}
+
 /************************** Mask colors ****************************/
 typedef struct {
     GwyDataView *data_view;

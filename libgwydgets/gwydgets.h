@@ -73,6 +73,9 @@ void         gwy_table_attach_row           (GtkWidget *table,
                                              const gchar *name,
                                              const gchar *units,
                                              GtkWidget *middle_widget);
+GtkWidget*   gwy_table_get_child_widget     (GtkWidget *table,
+                                             gint row,
+                                             gint col);
 void         gwy_color_selector_for_mask    (const gchar *dialog_title,
                                              GwyDataView *data_view,
                                              GwyColorButton *color_button,
