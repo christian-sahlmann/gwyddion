@@ -778,12 +778,12 @@ scale_gauss_psdf(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
 {
     if (dir == 1)
     {
-        param[0] /= yscale;
-        param[1] /= xscale;
+        param[0] /= yscale*xscale;
+        param[1] *= xscale;
     }
     else
     {
-        param[0] /= yscale;
+        param[0] *= yscale*xscale;
         param[1] /= xscale;
     }
 }
@@ -793,7 +793,7 @@ guess_gauss_psdf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     param[0] = y[1];
-    param[1] = x[n_dat-1]/50;
+    param[1] = 50/x[n_dat-1];
 }
 
 
