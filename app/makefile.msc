@@ -1,7 +1,7 @@
 
 TOP_SRCDIR = ..
 LIBRARY = libgwyapp
-XLIBRARY = $(LIBRARY)
+XLIBRARY = app
 LIB_VER = $(LIBGWYAPP_VER)
 PROGRAM = gwyddion
 SUBDIRS = tools
