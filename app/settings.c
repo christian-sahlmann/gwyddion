@@ -197,11 +197,6 @@ gwy_app_settings_load(const gchar *filename)
  *
  * Returns: Whether it succeeded (also returns %TRUE if the directory already
  * exists).
- *
- * Since 1.3 it also creates user module directories (that themselves exist
- * since 1.3).
- *
- * Since: 1.2.
  **/
 gboolean
 gwy_app_settings_create_config_dir(void)
@@ -312,8 +307,6 @@ gwy_app_settings_get_module_dirs(void)
  * Returns a suitable human-readable settings file name.
  *
  * Returns: The file name as a newly allocated string.
- *
- * Since: 1.2.
  **/
 gchar*
 gwy_app_settings_get_settings_filename(void)
@@ -340,8 +333,6 @@ gwy_app_settings_get_log_filename(void)
  * Returns a suitable recent file list file name.
  *
  * Returns: The file name as a newly allocated string.
- *
- * Since: 1.5.
  **/
 gchar*
 gwy_app_settings_get_recent_file_list_filename(void)

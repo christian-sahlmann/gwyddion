@@ -101,8 +101,6 @@ gwy_data_field_plane_coeffs(GwyDataField *data_field,
  * Fits a plane through a rectangular part of a data field.
  *
  * Returned coefficients are in real (physical) units.
- *
- * Since: 1.2.
  **/
 void
 gwy_data_field_area_fit_plane(GwyDataField *data_field,
@@ -263,8 +261,6 @@ gwy_data_field_plane_rotate(GwyDataField *data_field,
  *
  * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
  *          with coefficients.
- *
- * Since: 1.6
  **/
 gdouble*
 gwy_data_field_area_fit_polynom(GwyDataField *data_field,
@@ -359,8 +355,6 @@ gwy_data_field_area_fit_polynom(GwyDataField *data_field,
  *
  * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
  *          with coefficients.
- *
- * Since: 1.9
  **/
 gdouble*
 gwy_data_field_fit_polynom(GwyDataField *data_field,
@@ -386,8 +380,6 @@ gwy_data_field_fit_polynom(GwyDataField *data_field,
  *          see gwy_data_field_area_fit_polynom() for details.
  *
  * Subtracts a two-dimensional polynom from a rectangular part of a data field.
- *
- * Since: 1.6
  **/
 void
 gwy_data_field_area_subtract_polynom(GwyDataField *data_field,
@@ -444,8 +436,6 @@ gwy_data_field_area_subtract_polynom(GwyDataField *data_field,
  *          see gwy_data_field_area_fit_polynom() for details.
  *
  * Subtracts a two-dimensional polynom from a data field.
- *
- * Since: 1.9
  **/
 void
 gwy_data_field_subtract_polynom(GwyDataField *data_field,
@@ -485,8 +475,6 @@ gwy_data_field_subtract_polynom(GwyDataField *data_field,
  *
  * Returns: An array of data fields with requested quantities, that is
  *          @results unless it was %NULL and a new array was allocated.
- *
- * Since: 1.9
  **/
 GwyDataField**
 gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
@@ -644,8 +632,6 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
  * See gwy_data_field_area_fit_local_planes() for details.
  *
  * Returns: An array of data fields with requested quantities.
- *
- * Since: 1.9
  **/
 GwyDataField**
 gwy_data_field_fit_local_planes(GwyDataField *data_field,
@@ -677,8 +663,6 @@ gwy_data_field_fit_local_planes(GwyDataField *data_field,
  * gwy_data_field_area_fit_local_planes().
  *
  * Returns: @result if it isn't %NULL, otherwise a newly allocated data field.
- *
- * Since: 1.9
  **/
 GwyDataField*
 gwy_data_field_area_local_plane_quantity(GwyDataField *data_field,
@@ -705,8 +689,6 @@ gwy_data_field_area_local_plane_quantity(GwyDataField *data_field,
  * gwy_data_field_fit_local_planes().
  *
  * Returns: @result if it isn't %NULL, otherwise a newly allocated data field.
- *
- * Since: 1.9
  **/
 GwyDataField*
 gwy_data_field_local_plane_quantity(GwyDataField *data_field,
@@ -733,8 +715,6 @@ gwy_data_field_local_plane_quantity(GwyDataField *data_field,
  *
  * Quantity that can be requested from gwy_data_field_area_fit_local_planes()
  * et al.
- *
- * Since: 1.9
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -460,8 +460,6 @@ gwy_app_data_window_list_updated(void)
  * destroyed.
  *
  * Returns: Hook id to be used in gwy_app_data_window_list_remove_hook().
- *
- * Since: 1.2.
  **/
 gulong
 gwy_app_data_window_list_add_hook(gpointer func,
@@ -492,8 +490,6 @@ gwy_app_data_window_list_add_hook(gpointer func,
  * gwy_app_data_window_list_add_hook().
  *
  * Returns: Whether such a hook was found and removed.
- *
- * Since: 1.2.
  **/
 gboolean
 gwy_app_data_window_list_remove_hook(gulong hook_id)
@@ -550,8 +546,6 @@ gwy_app_data_window_foreach(GFunc func,
  *
  * Returns: Data window displaying given data, or %NULL if there is no such
  *          data window.
- *
- * Since: 1.7
  **/
 GwyDataWindow*
 gwy_app_data_window_get_for_data(GwyContainer *data)
@@ -672,8 +666,6 @@ gwy_app_graph_window_create(GtkWidget *graph)
  * it with a data window, and sets its title.
  *
  * Returns: The newly created graph window.
- *
- * Since: 1.7
  **/
 GtkWidget*
 gwy_app_graph_window_create_for_window(GwyGraph *graph,
@@ -791,8 +783,6 @@ gwy_app_3d_view_cb(void)
  * Also does some housekeeping and calls gtk_window_present() on it.
  *
  * Returns: The newly created 3D view window.
- *
- * Since: 1.5
  **/
 GtkWidget*
 gwy_app_3d_window_create(GwyDataWindow *data_window)
@@ -865,8 +855,6 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
  *
  * Returns: The active 3D view window as a #GtkWidget.
  *          May return %NULL if none is currently active.
- *
- * Since: 1.5
  **/
 GtkWidget*
 gwy_app_3d_window_get_current(void)
@@ -882,8 +870,6 @@ gwy_app_3d_window_get_current(void)
  *
  * Eventually adds @window it to the 3D view window list if it isn't present
  * there.
- *
- * Since: 1.5
  **/
 void
 gwy_app_3d_window_set_current(GtkWidget *window)
@@ -915,8 +901,6 @@ gwy_app_3d_window_set_current(GtkWidget *window)
  *
  * All associated structures are freed, but the widget itself is NOT destroyed
  * by this function.  It just makes the application `forget' about the window.
- *
- * Since: 1.5
  **/
 void
 gwy_app_3d_window_remove(GtkWidget *window)
@@ -1022,8 +1006,6 @@ gwy_app_set_current_window(GtkWidget *window)
  * Returns the currently active window of a given type.
  *
  * Returns: The window, or %NULL if there is no such window.
- *
- * Since: 1.5
  **/
 GtkWidget*
 gwy_app_get_current_window(GwyAppWindowType type)

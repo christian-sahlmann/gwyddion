@@ -285,8 +285,6 @@ gwy_app_run_process_func_cb(gchar *name)
  * @run: A run mode.
  *
  * Run a data processing function @name in mode @run.
- *
- * Since: 1.2.
  **/
 void
 gwy_app_run_process_func_in_mode(gchar *name,

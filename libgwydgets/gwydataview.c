@@ -1128,8 +1128,6 @@ gwy_data_view_get_thumbnail(GwyDataView *data_view,
  * Returns: The pixbuf as a newly created #GdkPixbuf, it should be freed
  *          when no longer needed.  It is never larger than the actual data
  *          size, as @max_width and @max_height are only upper limits.
- *
- * Since: 1.5
  **/
 GdkPixbuf*
 gwy_data_view_get_pixbuf(GwyDataView *data_view,

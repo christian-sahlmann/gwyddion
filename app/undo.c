@@ -213,8 +213,6 @@ gwy_app_undo_undo(void)
  * @data_window: A data window (with undo available).
  *
  * Performs undo for the data window @data_window.
- *
- * Since: 1.2.
  **/
 void
 gwy_app_undo_undo_window(GwyDataWindow *data_window)
@@ -268,8 +266,6 @@ gwy_app_undo_undo_window(GwyDataWindow *data_window)
  * @data_window: A data window (with redo available).
  *
  * Performs redo for the data window @data_window.
- *
- * Since: 1.2.
  **/
 void
 gwy_app_undo_redo_window(GwyDataWindow *data_window)

@@ -258,8 +258,6 @@ gwy_expr_check_call_table_sanity(void)
  * See and use %GWY_EXPR_ERROR.
  *
  * Returns: The error domain.
- *
- * Since: 1.9
  **/
 GQuark
 gwy_expr_error_quark(void)
@@ -1205,8 +1203,6 @@ gwy_expr_transform_to_rpn(GwyExpr *expr,
  * Creates a new expression evaluator.
  *
  * Returns: A newly created expression evaluator.
- *
- * Since: 1.9
  **/
 GwyExpr*
 gwy_expr_new(void)
@@ -1241,8 +1237,6 @@ gwy_expr_new(void)
  * @expr: An expression evaluator.
  *
  * Frees all memory used by and expression evaluator.
- *
- * Since: 1.9
  **/
 void
 gwy_expr_free(GwyExpr *expr)
@@ -1270,8 +1264,6 @@ gwy_expr_free(GwyExpr *expr)
  * Evaulates an arithmetic expression.
  *
  * Returns: %TRUE on success, %FALSE if evaluation failed.
- *
- * Since: 1.9
  **/
 gboolean
 gwy_expr_evaluate(GwyExpr *expr,
@@ -1306,8 +1298,6 @@ gwy_expr_evaluate(GwyExpr *expr,
  * arithmetic expressions it's easier to use gwy_expr_evaluate().
  *
  * Returns: %TRUE on success, %FALSE if compilation failed.
- *
- * Since: 1.9
  **/
 gboolean
 gwy_expr_compile(GwyExpr *expr,
@@ -1351,8 +1341,6 @@ gwy_expr_compile(GwyExpr *expr,
  * Returns: The length of array stored to @names.  This is the number of
  *          variables plus one (for the first reserved item).
  *          On failure, 0 is returned.
- *
- * Since: 1.9
  **/
 gint
 gwy_expr_get_variables(GwyExpr *expr,
@@ -1380,8 +1368,6 @@ gwy_expr_get_variables(GwyExpr *expr,
  * Finds positions of variables in an expression.
  *
  * Returns: The number of remaining (not asked for) variables in @expr.
- *
- * Since: 1.9
  **/
 gint
 gwy_expr_resolve_variables(GwyExpr *expr,
@@ -1426,8 +1412,6 @@ gwy_expr_resolve_variables(GwyExpr *expr,
  * Executes a compiled expression with variables, substituting given values.
  *
  * Returns: The result.
- *
- * Since: 1.9
  **/
 gdouble
 gwy_expr_execute(GwyExpr *expr,
@@ -1460,8 +1444,6 @@ gwy_expr_execute(GwyExpr *expr,
  *                                         identifiers.
  *
  * Error codes returned by expression parsing and execution.
- *
- * Since: 1.9
  **/
 
 /**
@@ -1470,8 +1452,6 @@ gwy_expr_execute(GwyExpr *expr,
  * Error domain for expression parsing and evaluation. Errors in this domain
  * will be from the #GwyExprError enumeration. See #GError for information on
  * error domains.
- *
- * Since: 1.9
  **/
 
 /**
@@ -1479,8 +1459,6 @@ gwy_expr_execute(GwyExpr *expr,
  *
  * #GwyExpr is an opaque data structure and should be only manipulated with the
  * functions below.
- *
- * Since: 1.9
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -376,8 +376,6 @@ static const GwyCDLinePreset fitting_presets[] = {
  * Returns the number of available critical dimension (CD)presets.
  *
  * Returns: The number of presets.
- *
- * Since: 1.4.
  **/
 gint
 gwy_cdline_get_npresets(void)
@@ -397,8 +395,6 @@ gwy_cdline_get_npresets(void)
  *
  * Returns: Preset number @preset_id.  Note the returned value must not be
  *          modified or freed.
- *
- * Since: 1.4.
  **/
 G_CONST_RETURN GwyCDLinePreset*
 gwy_cdline_get_preset(gint preset_id)
@@ -418,8 +414,6 @@ gwy_cdline_get_preset(gint preset_id)
  *
  * Returns: Preset @name, %NULL if not found.  Note the returned value must
  *          not be modified or freed.
- *
- * Since: 1.4.
  **/
 G_CONST_RETURN GwyCDLinePreset*
 gwy_cdline_get_preset_by_name(const gchar *name)
@@ -440,8 +434,6 @@ gwy_cdline_get_preset_by_name(const gchar *name)
  * Returns the id of a CD preset.
  *
  * Returns: The preset number.
- *
- * Since: 1.4.
  **/
 gint
 gwy_cdline_get_preset_id(const GwyCDLinePreset* preset)
@@ -458,8 +450,6 @@ gwy_cdline_get_preset_id(const GwyCDLinePreset* preset)
  * Return preset name (its unique identifier).
  *
  * Returns: The preset name.
- *
- * Since: 1.4.
  **/
 G_CONST_RETURN gchar*
 gwy_cdline_get_preset_name(const GwyCDLinePreset* preset)
@@ -474,8 +464,6 @@ gwy_cdline_get_preset_name(const GwyCDLinePreset* preset)
  * Returns function formula of @preset (with Pango markup).
  *
  * Returns: The preset function formula.
- *
- * Since: 1.4.
  **/
 G_CONST_RETURN gchar*
 gwy_cdline_get_preset_formula(const GwyCDLinePreset* preset)
@@ -493,8 +481,6 @@ gwy_cdline_get_preset_formula(const GwyCDLinePreset* preset)
  * The name may contain Pango markup.
  *
  * Returns: The name of parameter @param.
- *
- * Since: 1.4.
  **/
 G_CONST_RETURN gchar*
 gwy_cdline_get_preset_param_name(const GwyCDLinePreset* preset,
@@ -518,8 +504,6 @@ gwy_cdline_get_preset_param_name(const GwyCDLinePreset* preset,
  * It is usually better to do an educated guess of initial parameter value.
  *
  * Returns: The default parameter value.
- *
- * Since: 1.4.
  **/
 gdouble
 gwy_cdline_get_preset_param_default(const GwyCDLinePreset* preset,
@@ -540,8 +524,6 @@ gwy_cdline_get_preset_param_default(const GwyCDLinePreset* preset,
  * Return the number of parameters of @preset.
  *
  * Returns: The number of function parameters.
- *
- * Since: 1.4.
  **/
 gint
 gwy_cdline_get_preset_nparams(const GwyCDLinePreset* preset)
@@ -564,8 +546,6 @@ gwy_cdline_get_preset_nparams(const GwyCDLinePreset* preset)
  *
  *
  * Returns:
- *
- * Since: 1.4.
  **/
 void
 gwy_cdline_fit_preset(const GwyCDLinePreset* preset,

@@ -1359,8 +1359,6 @@ gwy_axiser_set_unit(GwyAxiser *axiser, char *unit)
  * @enable: enable/disable user to change axiser label
  *
  * Enables/disables user to change axiser label by clicking on axiser widget.
- *
- * Since: 1.3.
  **/
 void
 gwy_axiser_enable_label_edit(GwyAxiser *axiser, gboolean enable)

@@ -205,8 +205,6 @@ gwy_shader_init(GwyShader *shader)
  * The widget takes up all the space allocated for it.
  *
  * Returns: The new shader as a #GtkWidget.
- *
- * Since: 1.8
  **/
 GtkWidget*
 gwy_shader_new(const gchar *gradient)
@@ -318,8 +316,6 @@ gwy_shader_get_property(GObject*object,
  * Returns the update policy of a shader.
  *
  * Returns: The update policy.
- *
- * Since: 1.8
  **/
 GtkUpdateType
 gwy_shader_get_update_policy(GwyShader *shader)
@@ -337,8 +333,6 @@ gwy_shader_get_update_policy(GwyShader *shader)
  *
  * Returns: The theta coordinate, in radians.  Theta coordinate is angle from
  *          sphere's north pole.
- *
- * Since: 1.8
  **/
 gdouble
 gwy_shader_get_theta(GwyShader *shader)
@@ -356,8 +350,6 @@ gwy_shader_get_theta(GwyShader *shader)
  *
  * Returns: The phi coordinate, in radians.  Phi coordinate is orientation
  *          in horizontal plane, measured from x axis, counterclockwise.
- *
- * Since: 1.8
  **/
 gdouble
 gwy_shader_get_phi(GwyShader *shader)
@@ -377,8 +369,6 @@ gwy_shader_get_phi(GwyShader *shader)
  *          differ the name that was used on initialization or set with
  *          gwy_shader_set_gradient(), if the gradient didn't exist or
  *          was renamed meanwhile.
- *
- * Since: 1.8
  **/
 const gchar*
 gwy_shader_get_gradient(GwyShader *shader)
@@ -394,8 +384,6 @@ gwy_shader_get_gradient(GwyShader *shader)
  * @update_policy: The update policy @shader should use.
  *
  * Sets the update policy of a shader.
- *
- * Since: 1.8
  **/
 void
 gwy_shader_set_update_policy(GwyShader *shader,
@@ -417,8 +405,6 @@ gwy_shader_set_update_policy(GwyShader *shader,
  *         description.
  *
  * Sets the theta coordinate of a shader.
- *
- * Since: 1.8
  **/
 void
 gwy_shader_set_theta(GwyShader *shader,
@@ -442,8 +428,6 @@ gwy_shader_set_theta(GwyShader *shader,
  * @phi: The phi coordinate to set.  See gwy_shader_get_phi() for description.
  *
  * Sets the phi coordinate of a shader.
- *
- * Since: 1.8
  **/
 void
 gwy_shader_set_phi(GwyShader *shader,
@@ -472,8 +456,6 @@ gwy_shader_set_phi(GwyShader *shader,
  * @phi: The phi coordinate to set.  See gwy_shader_get_phi() for description.
  *
  * Sets the spherical angle of a shader.
- *
- * Since: 1.8
  **/
 void
 gwy_shader_set_angle(GwyShader *shader,
@@ -504,8 +486,6 @@ gwy_shader_set_angle(GwyShader *shader,
  * @gradient: Name of gradient @shader should use.  It should exist.
  *
  * Sets the gradient a shader uses.
- *
- * Since: 1.8
  **/
 void
 gwy_shader_set_gradient(GwyShader *shader,

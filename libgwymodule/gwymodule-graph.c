@@ -264,8 +264,6 @@ graph_menu_entry_compare(GraphFuncInfo *a,
  * Returns whether graph function @name exists.
  *
  * Returns: %TRUE if @name exists, %FALSE otherwise.
- *
- * Since: 1.4.
  **/
 gboolean
 gwy_graph_func_exists(const gchar *name)

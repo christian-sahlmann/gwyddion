@@ -686,8 +686,6 @@ gwy_data_window_get_base_name(GwyDataWindow *data_window)
  *
  * Returns: The upper left corner widget as a #GtkWidget, %NULL if there is
  *          no such widget.
- *
- * Since: 1.5.
  **/
 GtkWidget*
 gwy_data_window_get_ul_corner_widget(GwyDataWindow *data_window)
@@ -703,8 +701,6 @@ gwy_data_window_get_ul_corner_widget(GwyDataWindow *data_window)
  *          just remove any eventual existing one.
  *
  * Sets the widget in upper left corner of a data window to @corner.
- *
- * Since: 1.5.
  **/
 void
 gwy_data_window_set_ul_corner_widget(GwyDataWindow *data_window,

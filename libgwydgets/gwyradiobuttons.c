@@ -44,8 +44,6 @@
  * Returns: The newly created radio button group (a #GSList).  Iterate over
  *          the list and pack the widgets (the order is the same as in
  *          @entries).
- *
- * Since: 1.2.
  **/
 GSList*
 gwy_radio_buttons_create(const GwyEnum *entries,
@@ -99,8 +97,6 @@ gwy_radio_buttons_create(const GwyEnum *entries,
  * data (as set by gwy_radio_buttons_create()).
  *
  * Returns: %TRUE if current button was set, %FALSE if @current was not found.
- *
- * Since: 1.2.
  **/
 gboolean
 gwy_radio_buttons_set_current(GSList *group,
@@ -136,8 +132,6 @@ gwy_radio_buttons_set_current(GSList *group,
  * data (as set by gwy_radio_buttons_create()).
  *
  * Returns: %TRUE if current button was set, %FALSE if @current was not found.
- *
- * Since: 1.2.
  **/
 gboolean
 gwy_radio_buttons_set_current_from_widget(GtkWidget *widget,
@@ -159,8 +153,6 @@ gwy_radio_buttons_set_current_from_widget(GtkWidget *widget,
  *
  * Returns: The enum value corresponding to currently selected item.  In
  *          case of failure -1 is returned.
- *
- * Since: 1.2.
  **/
 gint
 gwy_radio_buttons_get_current(GSList *group,
@@ -192,8 +184,6 @@ gwy_radio_buttons_get_current(GSList *group,
  *
  * Returns: The enum value corresponding to currently selected item.  In
  *          case of failure -1 is returned.
- *
- * Since: 1.2.
  **/
 gint
 gwy_radio_buttons_get_current_from_widget(GtkWidget *widget,

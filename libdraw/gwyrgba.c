@@ -52,8 +52,6 @@ gwy_rgba_get_type (void)
  * XXX: Just kidding, we curently dont' use memchunks.
  *
  * Returns: A copy of @rgba.
- *
- * Since: 1.3
  **/
 GwyRGBA*
 gwy_rgba_copy(const GwyRGBA *rgba)
@@ -67,8 +65,6 @@ gwy_rgba_copy(const GwyRGBA *rgba)
  * @rgba: A #GwyRGBA.
  *
  * Frees an rgba structure created with gwy_rgba_copy().
- *
- * Since: 1.3
  **/
 void
 gwy_rgba_free(GwyRGBA *rgba)
@@ -85,8 +81,6 @@ gwy_rgba_free(GwyRGBA *rgba)
  * Converts a rgba to a Gdk color.
  *
  * Note no allocation is performed, just channel value conversion.
- *
- * Since: 1.3
  **/
 void
 gwy_rgba_to_gdk_color(const GwyRGBA *rgba,
@@ -105,8 +99,6 @@ gwy_rgba_to_gdk_color(const GwyRGBA *rgba,
  * Converts a rgba to a Gdk opacity value.
  *
  * Returns: The opacity value as a 16bit integer.
- *
- * Since: 1.3
  **/
 guint16
 gwy_rgba_to_gdk_alpha(const GwyRGBA *rgba)
@@ -122,8 +114,6 @@ gwy_rgba_to_gdk_alpha(const GwyRGBA *rgba)
  * Converts a Gdk color to a rgba.
  *
  * The alpha value is unchanged, as #GdkColor has no opacity information.
- *
- * Since: 1.3
  **/
 void
 gwy_rgba_from_gdk_color(GwyRGBA *rgba,
@@ -141,8 +131,6 @@ gwy_rgba_from_gdk_color(GwyRGBA *rgba,
  * @gdkalpha: Gdk 16bit opacity value.
  *
  * Converts a Gdk color plus an opacity value to a rgba.
- *
- * Since: 1.3
  **/
 void
 gwy_rgba_from_gdk_color_and_alpha(GwyRGBA *rgba,
@@ -166,8 +154,6 @@ gwy_rgba_from_gdk_color_and_alpha(GwyRGBA *rgba,
  *
  * Correct blending of two not fully opaque colors is tricky.  Always use
  * this function, not simple independent interpolation of r, g, b, and a.
- *
- * Since: 1.7
  **/
 void
 gwy_rgba_interpolate(const GwyRGBA *src1,
@@ -218,8 +204,6 @@ gwy_rgba_interpolate(const GwyRGBA *src1,
  * Gets RGBA color components from a container.
  *
  * Returns: Whether all @rgba components were successfully found and set.
- *
- * Since: 1.3
  **/
 gboolean
 gwy_rgba_get_from_container(GwyRGBA *rgba,
@@ -276,8 +260,6 @@ gwy_rgba_get_from_container(GwyRGBA *rgba,
  *          "/0/mask/red", "/0/mask/green", etc. then).
  *
  * Stores RGBA color components to a container.
- *
- * Since: 1.3
  **/
 void
 gwy_rgba_store_to_container(const GwyRGBA *rgba,

@@ -182,8 +182,6 @@ static Controls gcontrols = {
  * fails if it already exists.
  *
  * Returns: The newly created document history browser window.
- *
- * Since: 1.5
  **/
 GtkWidget*
 gwy_app_recent_file_list_new(void)
@@ -565,8 +563,6 @@ cell_renderer_thumb(G_GNUC_UNUSED GtkTreeViewColumn *column,
  * document history function can be used, even if on a nonexistent file.
  *
  * Returns: %TRUE if the file was read successfully, %FALSE otherwise.
- *
- * Since: 1.5
  **/
 gboolean
 gwy_app_recent_file_list_load(const gchar *filename)
@@ -624,8 +620,6 @@ gwy_app_recent_file_list_load(const gchar *filename)
  * Saves list of recently open files to @filename.
  *
  * Returns: %TRUE if the file was written successfully, %FALSE otherwise.
- *
- * Since: 1.5
  **/
 gboolean
 gwy_app_recent_file_list_save(const gchar *filename)
@@ -663,8 +657,6 @@ gwy_app_recent_file_list_save(const gchar *filename)
  * Frees all memory taken by recent file list.
  *
  * Should not be called while the recent file menu still exists.
- *
- * Since: 1.5
  **/
 void
 gwy_app_recent_file_list_free(void)
@@ -705,8 +697,6 @@ gwy_app_recent_file_list_free(void)
  * adding it if not present yet.
  *
  * At least one of @filename_utf8, @filename_sys should be set.
- *
- * Since: 1.5
  **/
 void
 gwy_app_recent_file_list_update(GwyDataWindow *data_window,

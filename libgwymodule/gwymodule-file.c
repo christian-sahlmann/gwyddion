@@ -457,8 +457,6 @@ gwy_file_func_get_operations(const gchar *name)
  * That is, the @file_desc field of #GwyFileFuncInfo.
  *
  * Returns: File function description, as a string owned by module loader.
- *
- * Since: 1.9
  **/
 const gchar*
 gwy_file_func_get_description(const gchar *name)

@@ -115,8 +115,6 @@ gwy_gradient_menu_create(const gchar *current,
  * Creates a pop-up gradient menu.
  *
  * Returns: The newly created pop-up menu as #GtkWidget.
- *
- * Since: 1.8
  **/
 GtkWidget*
 gwy_menu_gradient(GCallback callback,
@@ -149,8 +147,6 @@ gwy_menu_gradient(GCallback callback,
  * menu item.
  *
  * Returns: The newly created option menu as #GtkWidget.
- *
- * Since: 1.8
  **/
 GtkWidget*
 gwy_option_menu_gradient(GCallback callback,
@@ -286,8 +282,6 @@ gwy_gl_material_menu_create(const gchar *current,
  * Creates a pop-up OpenGL material menu.
  *
  * Returns: The newly created pop-up menu as #GtkWidget.
- *
- * Since: 1.5.
  **/
 GtkWidget*
 gwy_menu_gl_material(GCallback callback,
@@ -319,8 +313,6 @@ gwy_menu_gl_material(GCallback callback,
  * menu item.
  *
  * Returns: The newly created option menu as #GtkWidget.
- *
- * Since: 1.5.
  **/
 GtkWidget*
 gwy_option_menu_gl_material(GCallback callback,

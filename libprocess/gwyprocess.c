@@ -29,8 +29,6 @@ static guint types_initialized = 0;
  * Initializes libgwyprocess types, making their deserialization safe.
  *
  * Eventually calls gwy_type_init().
- *
- * Since: 1.4.
  **/
 void
 gwy_process_type_init(void)

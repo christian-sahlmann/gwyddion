@@ -171,8 +171,6 @@ fractal_partitioning_nomask(GwyDataField *data_field,
  * Returns two #GwyDataLines with same size.
  *
  * Returns: data for log-log plot obtained by partitioning
- *
- * Since: 1.1
  */
 void
 gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
@@ -238,8 +236,6 @@ gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
  * Returns two #GwyDataLines with same size.
  *
  * Returns: data for log-log plot obtained by partitioning
- *
- * Since: 1.1
  */
 void
 gwy_data_field_fractal_triangulation(GwyDataField *data_field,
@@ -309,8 +305,6 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field,
  * Returns two #GwyDataLines with same size.
  *
  * Returns: data for log-log plot obtained by partitioning
- *
- * Since: 1.1
  */
 void
 gwy_data_field_fractal_psdf(GwyDataField *data_field,
@@ -356,8 +350,6 @@ gwy_data_field_fractal_psdf(GwyDataField *data_field,
  * Currently simply fits results from the
  * gwy_data_field_fractal_partitioning and smilar functions
  * by straight line.
- *
- * Since: 1.1
  **/
 void
 gwy_data_field_fractal_fit(GwyDataLine *xresult, GwyDataLine *yresult,
@@ -390,8 +382,6 @@ gwy_data_field_fractal_fit(GwyDataLine *xresult, GwyDataLine *yresult,
  * method using preprocessed data.
  *
  * Returns: Fractal dimension.
- *
- * Since: 1.1
  **/
 gdouble
 gwy_data_field_fractal_cubecounting_dim(GwyDataLine *xresult,
@@ -414,8 +404,6 @@ gwy_data_field_fractal_cubecounting_dim(GwyDataLine *xresult,
  * method using preprocessed data.
  *
  * Returns: Fractal dimension.
- *
- * Since: 1.1
  **/
 gdouble
 gwy_data_field_fractal_triangulation_dim(GwyDataLine *xresult,
@@ -438,8 +426,6 @@ gwy_data_field_fractal_triangulation_dim(GwyDataLine *xresult,
  * method using preprocessed data.
  *
  * Returns: Fractal dimension.
- *
- * Since: 1.1
  **/
 gdouble
 gwy_data_field_fractal_partitioning_dim(GwyDataLine *xresult,
@@ -462,8 +448,6 @@ gwy_data_field_fractal_partitioning_dim(GwyDataLine *xresult,
  * method using preprocessed data.
  *
  * Returns: fractal dimension
- *
- * Since: 1.1
  **/
 gdouble
 gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult, GwyDataLine *yresult,
@@ -929,12 +913,8 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
  *
  * Replaces data under mask with interpolated values using fractal
  * interpolation.
- *
- * Returns: Always %TRUE.
- *
- * Since: 1.5
  **/
-gboolean
+void
 gwy_data_field_fractal_correction(GwyDataField *data_field,
                                   GwyDataField *mask_field,
                                   GwyInterpolationType interpolation)

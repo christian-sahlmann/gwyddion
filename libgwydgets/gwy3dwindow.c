@@ -237,8 +237,6 @@ gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
  * Creates a new OpenGL 3D data displaying window.
  *
  * Returns: A newly created widget, as #GtkWidget.
- *
- * Since: 1.5
  **/
 GtkWidget*
 gwy_3d_window_new(Gwy3DView *gwy3dview)
@@ -563,8 +561,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
  * Returns the #Gwy3DView widget this 3D window currently shows.
  *
  * Returns: The currently shown #GwyDataView.
- *
- * Since: 1.5
  **/
 GtkWidget*
 gwy_3d_window_get_3d_view(Gwy3DWindow *gwy3dwindow)
@@ -582,8 +578,6 @@ gwy_3d_window_get_3d_view(Gwy3DWindow *gwy3dwindow)
  * Adds a widget (usually a button) to 3D window action area.
  *
  * The action area is located under the parameter notebook.
- *
- * Since: 1.5
  **/
 void
 gwy_3d_window_add_action_widget(Gwy3DWindow *gwy3dwindow,
@@ -608,8 +602,6 @@ gwy_3d_window_add_action_widget(Gwy3DWindow *gwy3dwindow,
  *
  * The small toolbar is those visible when full controls are hidden.  Due to
  * space constraints the button must be contain only a pixmap.
- *
- * Since: 1.6
  **/
 void
 gwy_3d_window_add_small_toolbar_button(Gwy3DWindow *gwy3dwindow,

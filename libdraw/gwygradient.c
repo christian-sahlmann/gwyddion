@@ -846,8 +846,6 @@ gwy_gradients_get_gradient(const gchar *name)
  *
  * Returns: The newly created gradient.  Its name is guaranteed to be unique
  *          and thus may differ from @newname in the case of name clash.
- *
- * Since: 1.8
  **/
 GwyGradient*
 gwy_gradients_new_gradient(const gchar *newname)
@@ -875,8 +873,6 @@ gwy_gradients_new_gradient(const gchar *newname)
  *
  * Returns: The newly created gradient.  Its name is guaranteed to be unique
  *          and thus may differ from @newname in the case of name clash.
- *
- * Since: 1.8
  **/
 GwyGradient*
 gwy_gradients_new_gradient_as_copy(const gchar *name,
@@ -946,8 +942,6 @@ gwy_gradient_invent_name(GHashTable *gradients,
  * reused.  In other words, gradient deletion works like file deletion on Unix.
  *
  * Returns: %TRUE if there was such a gradient and was deleted.
- *
- * Since: 1.8
  **/
 gboolean
 gwy_gradients_delete_gradient(const gchar *name)
@@ -978,8 +972,6 @@ gwy_gradients_delete_gradient(const gchar *name)
  * rename a gradient to an already existing name.
  *
  * Returns: The renamed gradient, for convenience.
- *
- * Since: 1.8
  **/
 GwyGradient*
 gwy_gradients_rename_gradient(const gchar *name,
@@ -1015,8 +1007,6 @@ gwy_gradients_rename_gradient(const gchar *name,
  * Calls a function for each color gradient.
  *
  * Note the function must not delete or create gradients.
- *
- * Since: 1.8
  **/
 void
 gwy_gradients_foreach(GwyGradientFunc function,

@@ -59,8 +59,6 @@ static void gwy_md5_final     (GwyMD5Context *ctx,
  * The MD5 algorithm takes as input a message of arbitrary length and
  * produces as output a 128-bit "fingerprint" or "message digest" of
  * the input.  For more information see RFC 1321.
- *
- * Since: 1.5
  **/
 void
 gwy_md5_get_digest(const gchar *buffer,

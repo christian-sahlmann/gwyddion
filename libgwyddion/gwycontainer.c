@@ -815,8 +815,6 @@ gwy_container_gis_int32(GwyContainer *container,
  * Gets the enum in container @c identified by name @n.
  *
  * Note enums are treated as 32bit integers.
- *
- * Since: 1.1.
  **/
 
 /**
@@ -829,8 +827,6 @@ gwy_container_gis_int32(GwyContainer *container,
  * Note enums are treated as 32bit integers.
  *
  * Returns: The enum as #gint.
- *
- * Since: 1.1.
  **/
 guint
 gwy_container_get_enum(GwyContainer *container, GQuark key)
@@ -850,8 +846,6 @@ gwy_container_get_enum(GwyContainer *container, GQuark key)
  *
  * Expands to %TRUE if @value was actually updated, %FALSE when there is no
  * such enum in the container.
- *
- * Since: 1.1.
  **/
 
 /**
@@ -866,8 +860,6 @@ gwy_container_get_enum(GwyContainer *container, GQuark key)
  *
  * Returns: %TRUE if @v was actually updated, %FALSE when there is no
  *          such enum in the container.
- *
- * Since: 1.1.
  **/
 /* FIXME: this is probably wrong.  It's here to localize the problem with
  * enum/int/int32 exchanging in a one place. */
@@ -1517,8 +1509,6 @@ gwy_container_set_int32(GwyContainer *container,
  * Stores an enum into container @c, identified by name @n.
  *
  * Note enums are treated as 32bit integers.
- *
- * Since: 1.1.
  **/
 
 /**
@@ -1530,8 +1520,6 @@ gwy_container_set_int32(GwyContainer *container,
  * Stores an enum into @container, identified by @key.
  *
  * Note enums are treated as 32bit integers.
- *
- * Since: 1.1.
  **/
 void
 gwy_container_set_enum(GwyContainer *container,
@@ -1888,8 +1876,6 @@ hash_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
  * Duplicates a container keeping only values under given prefixes.
  *
  * Returns: A newly created container.
- *
- * Since: 1.6
  **/
 GwyContainer*
 gwy_container_duplicate_by_prefix(GwyContainer *container,
@@ -2151,8 +2137,6 @@ pstring_compare_callback(const void *p, const void *q)
  *
  * Returns: A pointer array, each item containing string with one container
  * item representation (name, type, value).  The array is sorted by name.
- *
- * Since: 1.2.
  **/
 GPtrArray*
 gwy_container_serialize_to_text(GwyContainer *container)
@@ -2219,8 +2203,6 @@ dequote_token(const gchar *tok, gsize *len)
  * Restores a container from is text representation.
  *
  * Returns: The restored container, or %NULL on failure.
- *
- * Since: 1.2.
  **/
 GwyContainer*
 gwy_container_deserialize_from_text(const gchar *text)
@@ -2390,8 +2372,6 @@ fail:
  *
  * Convenience macro doing gwy_serializable_duplicate() with all the necessary
  * typecasting.
- *
- * Since: 1.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

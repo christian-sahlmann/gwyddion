@@ -134,8 +134,6 @@ gwy_val_unit_init(GwyValUnit *val_unit)
  * set value with unit.
  *
  * Returns: new widget.
- *
- * Since: 1.4.
  **/
 GtkWidget*
 gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
@@ -247,8 +245,6 @@ gwy_val_unit_unit_changed(GObject *item, GwyValUnit *val_unit)
  *
  * sets value and automatically chooses its prefix to appear
  * in selection.
- *
- * Since: 1.4.
  **/
 void
 gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
@@ -272,8 +268,6 @@ gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
  * Computes actual value of adjustment and unit prefix.
  *
  * Returns: actual value
- *
- * Since: 1.4.
  **/
 gdouble
 gwy_val_unit_get_value(GwyValUnit *val_unit)

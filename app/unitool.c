@@ -577,8 +577,6 @@ gwy_unitool_update_label(GwySIValueFormat *units,
  *
  * Sets the text of a label to display @value according to @units, but
  * excludes units showing the number only.
- *
- * Since: 1.2.
  **/
 void
 gwy_unitool_update_label_no_units(GwySIValueFormat *units,
@@ -663,8 +661,6 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
  * must be used before gwy_unitool_rect_info_table_fill().
  *
  * Returns: The number of rows taken.
- *
- * Since: 1.6
  **/
 gint
 gwy_unitool_rect_info_table_setup(GwyUnitoolRectLabels *rinfo,
@@ -771,8 +767,6 @@ gwy_unitool_rect_info_table_setup(GwyUnitoolRectLabels *rinfo,
  * Updates rectangular selection info display.
  *
  * Returns: %TRUE if a selection is present, %FALSE otherwise.
- *
- * Since: 1.6
  **/
 gboolean
 gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
@@ -917,8 +911,6 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
  * Widgets and flags for rectangular selection display.
  *
  * You will probably ever need to access the flag fields only.
- *
- * Since: 1.6
  */
 
 /**

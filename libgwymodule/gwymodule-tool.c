@@ -234,8 +234,6 @@ _gwy_tool_func_remove(const gchar *name)
  * Returns whether tool function @name exists.
  *
  * Returns: %TRUE if @name exists, %FALSE otherwise.
- *
- * Since: 1.4.
  **/
 gboolean
 gwy_tool_func_exists(const gchar *name)
@@ -250,8 +248,6 @@ gwy_tool_func_exists(const gchar *name)
  * Gets tool function tooltip.
  *
  * Returns: The tooltip as a string owned by module loader.
- *
- * Since: 1.9
  **/
 const gchar*
 gwy_tool_func_get_tooltip(const gchar *name)

@@ -69,8 +69,6 @@ static gboolean gwy_math_sym_matrix_invert(gint n,
  * Creates a new Marquardt-Levenberg nonlinear fitter for function @ff.
  *
  * Returns: The newly created fitter.
- *
- * Since: 1.1.
  **/
 GwyNLFitter*
 gwy_math_nlfit_new(GwyNLFitFunc ff, GwyNLFitDerFunc df)
@@ -97,8 +95,6 @@ gwy_math_nlfit_new(GwyNLFitFunc ff, GwyNLFitDerFunc df)
  * @nlfit: A Marquardt-Levenberg nonlinear fitter.
  *
  * Completely frees a Marquardt-Levenberg nonlinear fitter.
- *
- * Since: 1.1.
  **/
 void
 gwy_math_nlfit_free(GwyNLFitter *nlfit)
@@ -125,8 +121,6 @@ gwy_math_nlfit_free(GwyNLFitter *nlfit)
  * Performs a nonlinear fit of @nlfit function on (@x,@y) data.
  *
  * Returns: The final residual sum, a negative number in the case of failure.
- *
- * Since: 1.1.
  **/
 gdouble
 gwy_math_nlfit_fit(GwyNLFitter *nlfit,
@@ -179,8 +173,6 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
  * some fixed parameters.
  *
  * Returns: The final residual sum, a negative number in the case of failure.
- *
- * Since: 1.2.
  **/
 gdouble
 gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
@@ -414,8 +406,6 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
  * @dres: Set to %TRUE if succeeds, %FALSE on failure.
  *
  * Numerically computes the partial derivations of @ff
- *
- * Since: 1.1.
  **/
 void
 gwy_math_nlfit_derive(gint i,
@@ -483,8 +473,6 @@ gwy_math_nlfit_residua(GwyNLFitter *nlfit,
  * Returns the maximum number of iterations of nonlinear fitter @nlfit.
  *
  * Returns: The maximum number of iterations.
- *
- * Since: 1.1.
  **/
 gint
 gwy_math_nlfit_get_max_iterations(GwyNLFitter *nlfit)
@@ -498,8 +486,6 @@ gwy_math_nlfit_get_max_iterations(GwyNLFitter *nlfit)
  * @maxiter: The maximum number of iterations.
  *
  * Sets the maximum number of iterations for nonlinear fitter @nlfit.
- *
- * Since: 1.1.
  **/
 void
 gwy_math_nlfit_set_max_iterations(GwyNLFitter *nlfit,
@@ -520,8 +506,6 @@ gwy_math_nlfit_set_max_iterations(GwyNLFitter *nlfit,
  * This function makes sense only after a successful fit.
  *
  * Returns: The SD of @par-th parameter.
- *
- * Since: 1.1.
  **/
 gdouble
 gwy_math_nlfit_get_sigma(GwyNLFitter *nlfit, gint par)
@@ -540,8 +524,6 @@ gwy_math_nlfit_get_sigma(GwyNLFitter *nlfit, gint par)
  * This function makes sense only after a successful fit.
  *
  * Returns: The dispersion.
- *
- * Since: 1.1.
  **/
 gdouble
 gwy_math_nlfit_get_dispersion(GwyNLFitter *nlfit)
@@ -561,8 +543,6 @@ gwy_math_nlfit_get_dispersion(GwyNLFitter *nlfit)
  * This function makes sense only after a successful fit.
  *
  * Returns: The correlation coefficient.
- *
- * Since: 1.1.
  **/
 gdouble
 gwy_math_nlfit_get_correlations(GwyNLFitter *nlfit, gint par1, gint par2)
@@ -1586,8 +1566,6 @@ static const GwyNLFitPreset fitting_presets[] = {
  * Returns the number of available NL fitter presets.
  *
  * Returns: The number of presets.
- *
- * Since: 1.2.
  **/
 gint
 gwy_math_nlfit_get_npresets(void)
@@ -1607,8 +1585,6 @@ gwy_math_nlfit_get_npresets(void)
  *
  * Returns: Preset number @preset_id.  Note the returned value must not be
  *          modified or freed.
- *
- * Since: 1.2.
  **/
 G_CONST_RETURN GwyNLFitPreset*
 gwy_math_nlfit_get_preset(gint preset_id)
@@ -1628,8 +1604,6 @@ gwy_math_nlfit_get_preset(gint preset_id)
  *
  * Returns: Preset @name, %NULL if not found.  Note the returned value must
  *          not be modified or freed.
- *
- * Since: 1.2.
  **/
 G_CONST_RETURN GwyNLFitPreset*
 gwy_math_nlfit_get_preset_by_name(const gchar *name)
@@ -1650,8 +1624,6 @@ gwy_math_nlfit_get_preset_by_name(const gchar *name)
  * Returns the id of a NL fitter preset.
  *
  * Returns: The preset number.
- *
- * Since: 1.2.
  **/
 gint
 gwy_math_nlfit_get_preset_id(const GwyNLFitPreset* preset)
@@ -1669,8 +1641,6 @@ gwy_math_nlfit_get_preset_id(const GwyNLFitPreset* preset)
  * Return preset function value in point @x with parameters @params.
  *
  * Returns: The function value.
- *
- * Since: 1.2.
  **/
 gdouble
 gwy_math_nlfit_get_preset_value(const GwyNLFitPreset* preset,
@@ -1688,8 +1658,6 @@ gwy_math_nlfit_get_preset_value(const GwyNLFitPreset* preset,
  * Return preset name (its unique identifier).
  *
  * Returns: The preset name.
- *
- * Since: 1.2.
  **/
 G_CONST_RETURN gchar*
 gwy_math_nlfit_get_preset_name(const GwyNLFitPreset* preset)
@@ -1704,8 +1672,6 @@ gwy_math_nlfit_get_preset_name(const GwyNLFitPreset* preset)
  * Returns function formula of @preset (with Pango markup).
  *
  * Returns: The preset function formula.
- *
- * Since: 1.2.
  **/
 G_CONST_RETURN gchar*
 gwy_math_nlfit_get_preset_formula(const GwyNLFitPreset* preset)
@@ -1723,8 +1689,6 @@ gwy_math_nlfit_get_preset_formula(const GwyNLFitPreset* preset)
  * The name may contain Pango markup.
  *
  * Returns: The name of parameter @param.
- *
- * Since: 1.2.
  **/
 G_CONST_RETURN gchar*
 gwy_math_nlfit_get_preset_param_name(const GwyNLFitPreset* preset,
@@ -1748,8 +1712,6 @@ gwy_math_nlfit_get_preset_param_name(const GwyNLFitPreset* preset,
  * It is usually better to do an educated guess of initial parameter value.
  *
  * Returns: The default parameter value.
- *
- * Since: 1.2.
  **/
 gdouble
 gwy_math_nlfit_get_preset_param_default(const GwyNLFitPreset* preset,
@@ -1770,8 +1732,6 @@ gwy_math_nlfit_get_preset_param_default(const GwyNLFitPreset* preset,
  * Return the number of parameters of @preset.
  *
  * Returns: The number of function parameters.
- *
- * Since: 1.2.
  **/
 gint
 gwy_math_nlfit_get_preset_nparams(const GwyNLFitPreset* preset)
@@ -1794,8 +1754,6 @@ gwy_math_nlfit_get_preset_nparams(const GwyNLFitPreset* preset)
  *
  *
  * Returns:
- *
- * Since: 1.2.
  **/
 GwyNLFitter*
 gwy_math_nlfit_fit_preset(const GwyNLFitPreset* preset,

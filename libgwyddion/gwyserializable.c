@@ -685,8 +685,6 @@ gwy_serialize_pack_object_struct(GByteArray *buffer,
  *
  * Returns: @buffer or a newly allocated #GByteArray with serialization of
  *          @items components appended.
- *
- * Since: 1.7
  **/
 GByteArray*
 gwy_serialize_object_items(GByteArray *buffer,
@@ -1216,8 +1214,6 @@ gwy_serialize_unpack_object_struct(const guchar *buffer,
  *          @name fields of #GwySerializeSpec's point to @buffer and thus are
  *          valid only as long as @buffer is; any arrays or strings are newly
  *          allocated and must be reused or freed by caller.
- *
- * Since: 1.7
  **/
 GwySerializeItem*
 gwy_deserialize_object_hash(const guchar *buffer,
@@ -1954,8 +1950,6 @@ gwy_serialize_check_string(const guchar *buffer,
  * This component information is used in gwy_serialize_object_items() and
  * gwy_deserialize_object_hash() suitable for (de)serialization of hash-like
  * objects.
- *
- * Since: 1.7
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

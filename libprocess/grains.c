@@ -351,8 +351,6 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
  *
  * Returns: %TRUE if a grain was actually removed (i.e., (@col,@row) was
  *          inside a grain).
- *
- * Since: 1.7
  **/
 gboolean
 gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
@@ -391,8 +389,6 @@ gwy_data_field_grains_remove_grain(GwyDataField *grain_field,
  * If there is no grain at (@col, @row), all grains are removed.
  *
  * Returns: %TRUE if a grain remained (i.e., (@col,@row) was inside a grain).
- *
- * Since: 1.8
  **/
 gboolean
 gwy_data_field_grains_extract_grain(GwyDataField *grain_field,

@@ -739,8 +739,6 @@ gwy_color_axis_update(GwyColorAxis *axis)
  * Returns the SI unit a color axis displays.
  *
  * Returns: The SI unit.
- *
- * Since: 1.8
  **/
 GwySIUnit*
 gwy_color_axis_get_si_unit(GwyColorAxis *axis)
@@ -756,8 +754,6 @@ gwy_color_axis_get_si_unit(GwyColorAxis *axis)
  * @unit: An SI unit.
  *
  * Sets the SI unit a color axis should display next to values.
- *
- * Since: 1.8
  **/
 void
 gwy_color_axis_set_unit(GwyColorAxis *axis,

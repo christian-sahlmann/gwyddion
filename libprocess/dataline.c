@@ -460,8 +460,6 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
  * gwy_data_line_get_data_const() if you are not going to change the data.
  *
  * Returns: The data as an array of doubles of length gwy_data_line_get_res().
- *
- * Since: 1.3
  **/
 gdouble*
 gwy_data_line_get_data(GwyDataLine *data_line)
@@ -479,8 +477,6 @@ gwy_data_line_get_data(GwyDataLine *data_line)
  * Use gwy_data_line_get_data() if you want to change the data.
  *
  * Returns: The data as an array of doubles of length gwy_data_line_get_res().
- *
- * Since: 1.7
  **/
 const gdouble*
 gwy_data_line_get_data_const(GwyDataLine *data_line)
@@ -1526,8 +1522,6 @@ gwy_data_line_subtract_polynom(GwyDataLine *data_line,
  * Finds approximate modus of a data line part.
  *
  * Returns: The modus.
- *
- * Since: 1.4.
  **/
 gdouble
 gwy_data_line_part_get_modus(GwyDataLine *data_line,
@@ -1605,8 +1599,6 @@ gwy_data_line_part_get_modus(GwyDataLine *data_line,
  * return modus of the data itself, but modus of a histogram.
  *
  * Returns: The modus.
- *
- * Since: 1.4.
  **/
 gdouble
 gwy_data_line_get_modus(GwyDataLine *data_line,
@@ -1646,8 +1638,6 @@ gwy_data_line_get_modus(GwyDataLine *data_line,
  *
  * Convenience macro doing gwy_serializable_duplicate() with all the necessary
  * typecasting.
- *
- * Since: 1.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

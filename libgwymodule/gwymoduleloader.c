@@ -133,8 +133,6 @@ gwy_module_foreach_one(const gchar *name,
  *
  * It passes module name as the key and pointer to module
  * info as the value. Neither should be modified.
- *
- * Since: 1.9
  **/
 void
 gwy_module_foreach(GHFunc function,
@@ -156,8 +154,6 @@ gwy_module_foreach(GHFunc function,
  * Returns full file name of a module.
  *
  * Returns: Module file name as a string that must be modified or freed.
- *
- * Since: 1.9
  **/
 const gchar*
 gwy_module_get_filename(const gchar *name)
@@ -183,8 +179,6 @@ gwy_module_get_filename(const gchar *name)
  *
  * Returns: List of module function names, as a #GSList that is owned by
  *          module loader and must not be modified or freed.
- *
- * Since: 1.9
  **/
 GSList*
 gwy_module_get_functions(const gchar *name)
@@ -209,8 +203,6 @@ gwy_module_get_functions(const gchar *name)
  * Loads a single module.
  *
  * Returns: Module info on success, %NULL on failure.
- *
- * Since: 1.4.
  **/
 G_CONST_RETURN GwyModuleInfo*
 gwy_module_register_module(const gchar *name)

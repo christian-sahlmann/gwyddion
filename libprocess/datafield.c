@@ -781,8 +781,6 @@ gwy_data_field_get_data(GwyDataField *data_field)
  *          gwy_data_field_get_xres()*gwy_data_field_get_yres() #gdouble's,
  *          ordered by lines.  I.e., they are to be accessed as
  *          data[row*xres + column].
- *
- * Since: 1.7
  **/
 const gdouble*
 gwy_data_field_get_data_const(GwyDataField *data_field)
@@ -1338,8 +1336,6 @@ gwy_data_field_area_fill(GwyDataField *a,
  * @data_field: A data field.
  *
  * Fills a data field with zeroes.
- *
- * Since: 1.8
  **/
 void
 gwy_data_field_clear(GwyDataField *data_field)
@@ -1359,8 +1355,6 @@ gwy_data_field_clear(GwyDataField *data_field)
  * @brrow: Bottom-right row coordinate + 1.
  *
  * Fills a rectangular part of a data field with zeroes.
- *
- * Since: 1.8
  **/
 void
 gwy_data_field_area_clear(GwyDataField *data_field,
@@ -1957,8 +1951,6 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
  *
  * Returns: Always %TRUE.  The return value should be ignored as it can
  *          be removed.
- *
- * Since: 1.2
  **/
 gboolean
 gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
@@ -2232,8 +2224,6 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  *
  * Note, no stats are actually cached in Gwyddion 1.x, but they will be cached
  * in 2.x.
- *
- * Since: 1.7
  **/
 
 /**
@@ -2245,8 +2235,6 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  *
  * Use gwy_data_field_new_alike() if you don't want to copy data, only
  * resolutions and units.
- *
- * Since: 1.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

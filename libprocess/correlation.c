@@ -46,8 +46,6 @@
  *
  * Returns: Correlation score (between -1 and 1). Number 1 denotes
  *          maximum correlation, -1 none correlation.
- *
- * Since: 1.2
  **/
 gdouble
 gwy_data_field_get_correlation_score(GwyDataField *data_field,
@@ -128,8 +126,6 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
  *
  * Correlation score is compute for all points in data field @data_field
  * and full size of correlation kernel @kernel_field.
- *
- * Since: 1.2
  **/
 void
 gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
@@ -178,8 +174,6 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
  * @iteration: Actual iteration row coordinate.
  *
  * Performs one iteration of correlation.
- *
- * Since: 1.2
  **/
 void
 gwy_data_field_correlate_iteration(GwyDataField *data_field,
@@ -295,8 +289,6 @@ gwy_data_field_crosscorrelate_iter(GwyDataField *data_field1,
  * @search_height
  * determine maimum area where to search for points. The area is cenetered
  * in the @data_field2 at former position of points at @data_field1.
- *
- * Since: 1.2
  **/
 void
 gwy_data_field_crosscorrelate(GwyDataField *data_field1,
@@ -385,8 +377,6 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
  * @search_height
  * determine maimum area where to search for points. The area is cenetered
  * in the @data_field2 at former position of points at @data_field1.
- *
- * Since: 1.2.
  **/
 void
 gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,

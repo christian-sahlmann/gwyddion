@@ -63,8 +63,6 @@ static void       gwy_option_menu_data_window_destroy(GtkWidget *omenu);
  * assupmtions.
  *
  * Returns: The newly created option menu as a #GtkWidget.
- *
- * Since: 1.2.
  **/
 GtkWidget*
 gwy_option_menu_data_window(GCallback callback,
@@ -156,8 +154,6 @@ gwy_option_menu_data_window_append(GwyDataWindow *data_window,
  * Sets data window option menu history to a specific data window.
  *
  * Returns: %TRUE if the history was set, %FALSE if @current was not found.
- *
- * Since: 1.2.
  **/
 gboolean
 gwy_option_menu_data_window_set_history(GtkWidget *option_menu,
@@ -196,8 +192,6 @@ gwy_option_menu_data_window_set_history(GtkWidget *option_menu,
  *
  * Returns: The currently selected data window (may be %NULL if `none' is
  *          selected).
- *
- * Since: 1.2.
  **/
 GtkWidget*
 gwy_option_menu_data_window_get_history(GtkWidget *option_menu)

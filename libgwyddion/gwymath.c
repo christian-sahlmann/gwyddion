@@ -391,8 +391,6 @@ gwy_math_fit_polynom(gint ndata, gdouble *xdata, gdouble *ydata,
  * Returns: Whether the matrix was really positive definite.  If %FALSE,
  *          the decomposition failed and @a does not contain any meaningful
  *          values.
- *
- * Since: 1.6
  **/
 gboolean
 gwy_math_choleski_decompose(gint dim, gdouble *a)
@@ -431,8 +429,6 @@ gwy_math_choleski_decompose(gint dim, gdouble *a)
  *
  * Solves a system of linear equations with predecomposed symmetric positive
  * definite matrix @a and right hand side @b.
- *
- * Since: 1.6
  **/
 void
 gwy_math_choleski_solve(gint dim, gdouble *a, gdouble *b)
@@ -465,8 +461,6 @@ gwy_math_choleski_solve(gint dim, gdouble *a, gdouble *b)
  * Finds median of an array of values using Quick select algorithm.
  *
  * Returns: The median value of @array.
- *
- * Since: 1.6
  **/
 gdouble
 gwy_math_median(gsize n, gdouble *array)

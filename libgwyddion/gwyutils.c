@@ -241,8 +241,6 @@ gwy_flags_to_string(gint enumval,
  * Use gwy_strkill(g_strdup(@s), @killchars) to get a modified copy.
  *
  * Returns: @s itself, the return value is to allow function call nesting.
- *
- * Since: 1.1.
  **/
 gchar*
 gwy_strkill(gchar *s,
@@ -506,8 +504,6 @@ gwy_debug_gnu(const gchar *domain,
  *
  * Returns: Translated message, or @msgid itself with all text up to the last
  *          `|' removed if there is no translation.
- *
- * Since: 1.6
  **/
 gchar*
 gwy_sgettext(const gchar *msgid)
@@ -606,8 +602,6 @@ gwy_find_self_set_argv0(const gchar *argv0)
  * occasions, silly locations can be returned as fallback.
  *
  * Returns: The directory as a string that should not be freed.
- *
- * Since: 1.3.
  **/
 G_CONST_RETURN gchar*
 gwy_get_user_dir(void)
@@ -638,8 +632,6 @@ gwy_get_user_dir(void)
  *
  * Returns: Something usable as user home directory.  It may be silly, but
  *          never %NULL or empty.
- *
- * Since: 1.5
  **/
 G_CONST_RETURN gchar*
 gwy_get_home_dir(void)
@@ -677,8 +669,6 @@ gwy_get_home_dir(void)
  * that.
  *
  * Returns: The canonical path, as a newly created string.
- *
- * Since: 1.5
  **/
 gchar*
 gwy_canonicalize_path(const gchar *path)
@@ -789,8 +779,6 @@ gwy_canonicalize_path(const gchar *path)
  * can't be reclaimed later.
  *
  * Returns: %FALSE if the environment variable couldn't be set.
- *
- * Since: 1.6
  */
 gboolean
 gwy_setenv(const gchar *variable,
@@ -831,8 +819,6 @@ gwy_setenv(const gchar *variable,
  *
  * Returns: The start of the line.  %NULL if the buffer is empty or %NULL.
  *          NOT a new string, the returned pointer points somewhere to @buffer.
- *
- * Since: 1.7
  **/
 gchar*
 gwy_str_next_line(gchar **buffer)
@@ -903,8 +889,6 @@ gwy_str_next_line(gchar **buffer)
  *
  * Macro usable as chmod() on Win32.
  * See its Unix manual page for details.
- *
- * Since: 1.5
  **/
 
 /**
@@ -912,8 +896,6 @@ gwy_str_next_line(gchar **buffer)
  *
  * Macro usable as getpid() on Win32.
  * See its Unix manual page for details.
- *
- * Since: 1.5
  **/
 
 /**
@@ -923,8 +905,6 @@ gwy_str_next_line(gchar **buffer)
  *
  * Macro usable as mkdir() on Win32.
  * See its manual page for details.
- *
- * Since: 1.5
  **/
 
 /**
@@ -933,8 +913,6 @@ gwy_str_next_line(gchar **buffer)
  *
  * Macro usable as unlink() on Win32.
  * See its Unix manual page for details.
- *
- * Since: 1.5
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

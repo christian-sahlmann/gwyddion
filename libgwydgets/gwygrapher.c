@@ -199,8 +199,6 @@ gwy_grapher_new(GwyGraphModel *gmodel)
  *
  * Enables/disables user to interact with grapher label by clickig on it and
  * changing text.
- *
- * Since: 1.3.
  **/
 void
 gwy_grapher_enable_axis_label_edit(GwyGrapher *grapher, gboolean enable)

@@ -1326,8 +1326,6 @@ gwy_axis_set_unit(GwyAxis *axis, char *unit)
  * @enable: enable/disable user to change axis label
  *
  * Enables/disables user to change axis label by clicking on axis widget.
- *
- * Since: 1.3.
  **/
 void
 gwy_axis_enable_label_edit(GwyAxis *axis, gboolean enable)

@@ -43,8 +43,6 @@ static gsize id = 0;
  *
  * When debugger is disabled, no new objects are noted, but destruction of
  * already watched ones is still noted.
- *
- * Since: 1.4.
  **/
 void
 gwy_debug_objects_enable(gboolean enable)
@@ -76,8 +74,6 @@ debug_objects_set_time(gpointer data, G_GNUC_UNUSED GObject *exobject)
  *
  * Or it can be used on the side of object user who is concerned with lifetime
  * rules of a particular object, he then calls it just after object creation.
- *
- * Since: 1.4.
  **/
 void
 gwy_debug_objects_creation(GObject *object)
@@ -119,8 +115,6 @@ gwy_debug_objects_creation(GObject *object)
  *
  * The format of each line is: object type name, object address, creation time,
  * destruction time (or ALIVE! message with reference count).
- *
- * Since: 1.4.
  **/
 void
 gwy_debug_objects_dump_to_file(FILE *filehandle,
@@ -152,8 +146,6 @@ gwy_debug_objects_dump_to_file(FILE *filehandle,
  *
  * Eventual following call to gwy_debug_objects_creation() will behave like
  * the very first one, including time counting reset.
- *
- * Since: 1.4.
  **/
 void
 gwy_debug_objects_clear(void)

@@ -740,8 +740,6 @@ zoomed_cb(GtkWidget *widget)
  * @curve: curve to be extracted
  *
  * Extracts data of a curve.
- *
- * Since: 1.2.
  **/
 void
 gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curve)
@@ -768,8 +766,6 @@ gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curve)
  *
  *
  * Returns:
- *
- * Since: 1.2.
  **/
 gint
 gwy_graph_get_data_size(GwyGraph *graph, gint curve)
@@ -790,8 +786,6 @@ gwy_graph_get_data_size(GwyGraph *graph, gint curve)
  * @graph: graph widget
  *
  * Returns total number of curves within graph widget
- *
- * Since: 1.2.
  **/
 gint
 gwy_graph_get_number_of_curves(GwyGraph *graph)
@@ -810,8 +804,6 @@ gwy_graph_get_number_of_curves(GwyGraph *graph)
  *
  * Returns: The label as a #GString.  Note the label itself is returned, not
  *          a copy, you should treat it as constat.
- *
- * Since: 1.2.
  **/
 GString*
 gwy_graph_get_label(GwyGraph *graph, gint curve)
@@ -837,8 +829,6 @@ gwy_graph_get_label(GwyGraph *graph, gint curve)
  *
  * Enables/disables user to interact with graph label by clickig on it and
  * changing text.
- *
- * Since: 1.3.
  **/
 void
 gwy_graph_enable_axis_label_edit(GwyGraph *graph, gboolean enable)

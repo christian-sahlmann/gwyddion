@@ -144,8 +144,6 @@ gwy_gl_material_finalize(GObject *object)
  * The graphical object is black independently of the light settings.
  *
  * Returns: The new Open GL material definition as a #GObject.
- *
- * Since: 1.5
  **/
 GObject*
 gwy_gl_material_new(const gchar *name)
@@ -184,8 +182,6 @@ gwy_gl_material_new(const gchar *name)
  * A new name is invented based on the existing one.
  *
  * Returns: The new Open GL material definition as a #GObject.
- *
- * Since: 1.5
  **/
 GObject*
 gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
@@ -219,8 +215,6 @@ gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
  *
  * Returns: The name. It should be considered constant and not modifier or
  *          freed.
- *
- * Since: 1.5
  **/
 G_CONST_RETURN gchar*
 gwy_gl_material_get_name(GwyGLMaterial *glmaterial)
@@ -240,8 +234,6 @@ gwy_gl_material_get_name(GwyGLMaterial *glmaterial)
  * exists.
  *
  * Returns: Whether the rename was successfull.
- *
- * Since: 1.5
  **/
 gboolean
 gwy_gl_material_set_name(GwyGLMaterial *glmaterial,
@@ -278,8 +270,6 @@ gwy_gl_material_set_name(GwyGLMaterial *glmaterial,
  *
  * Returns: Open GL material ginven by @name or %NULL if material
  * does not exists.
- *
- * Since: 1.5
  **/
 GwyGLMaterial*
 gwy_gl_material_get_by_name(const gchar *name)
@@ -339,8 +329,6 @@ gwy_gl_material_create_preset(GwyGLMaterialPreset *entry,
  *
  * Set up built-in Open GL material definitions.  To be used in Gwyddion initialization
  * and eventually replaced by loading Open GL material definitions from external files.
- *
- * Since: 1.5
  **/
 void
 gwy_gl_material_setup_presets(void)
@@ -480,8 +468,6 @@ gwy_gl_material_setup_presets(void)
  * Tests whether a Open GL material definition of given name exists.
  *
  * Returns: %TRUE if such a Open GL material definition exists, %FALSE otherwise.
- *
- * Since: 1.5
  **/
 gboolean
 gwy_gl_material_exists(const gchar *name)
@@ -501,8 +487,6 @@ gwy_gl_material_exists(const gchar *name)
  * @user_data: A user-specified pointer.
  *
  * Callback function type for gwy_gl_material_foreach().
- *
- * Since: 1.5
  **/
 
 /**
@@ -511,8 +495,6 @@ gwy_gl_material_exists(const gchar *name)
  * @user_data: User data passed to the callback.
  *
  * Runs @callback for each existing Open GL material definition.
- *
- * Since: 1.5
  **/
 void
 gwy_gl_material_foreach(GwyGLMaterialFunc callback,
@@ -539,8 +521,6 @@ gwy_gl_material_foreach(GwyGLMaterialFunc callback,
  * Returns: The sampled material.  The sample is somewhat arbitrary, as
  *          lighting has more than one degree of freedom, but shows the
  *          material from unlit to some `fully lit' state.
- *
- * Since: 1.5
  **/
 guchar*
 gwy_gl_material_sample(GwyGLMaterial *glmaterial,
@@ -597,8 +577,6 @@ gwy_gl_material_sample(GwyGLMaterial *glmaterial,
  * @specular: vector of the reflectivity of color components (RGBA) of specular light
  * @shininess: intrisic shininess of the material. Values should be in inteval 0-1. This
  * value is multiplied by factor 128 before passing to the glMaterialf function.
- *
- * Since: 1.5
  **/
 
 
