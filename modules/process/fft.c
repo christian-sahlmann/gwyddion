@@ -174,7 +174,7 @@ fft(GwyContainer *data, GwyRunType run)
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,
-             _("FFT: Data field must be rectangular."));
+             _("FFT: Data must be square."));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return ok;
@@ -368,15 +368,18 @@ fft_dialog(FFTArgs *args)
                                          NULL);
 
     table = gtk_table_new(2, 4, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-    controls.preserve = gtk_check_button_new_with_mnemonic("_Preserve size");
-    gwy_table_attach_row(table, 0, _("_Data size treatment:"), "",
-                         controls.preserve);
+    controls.preserve
+        = gtk_check_button_new_with_mnemonic(_("_Preserve size (don't "
+                                               "resize to power of 2)"));
+    gtk_table_attach(GTK_TABLE(table), controls.preserve, 0, 3, 0, 1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
                                  args->preserve);
-
     g_signal_connect(controls.preserve, "toggled",
                      G_CALLBACK(preserve_changed_cb), args);
 
@@ -424,7 +427,7 @@ fft_dialog(FFTArgs *args)
 
     gtk_widget_destroy(dialog);
 
-    return TRUE;
+    return FALSE;
 }
 
 static void
@@ -439,16 +442,14 @@ static void
 out_changed_cb(GObject *item,
                   FFTArgs *args)
 {
-    args->out = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "fft-output-type"));
+    args->out = GPOINTER_TO_INT(g_object_get_data(item, "fft-output-type"));
 }
 
 static void
 window_changed_cb(GObject *item,
                   FFTArgs *args)
 {
-    args->window = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "windowing-type"));
+    args->window = GPOINTER_TO_INT(g_object_get_data(item, "windowing-type"));
 }
 
 static void

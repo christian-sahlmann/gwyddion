@@ -107,7 +107,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo calibrate_func_info = {
         "calibrate",
-        N_("/_Basic Operations/Recalibrate..."),
+        N_("/_Basic Operations/_Recalibrate..."),
         (GwyProcessFunc)&calibrate,
         CALIBRATE_RUN_MODES,
         0,

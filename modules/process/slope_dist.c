@@ -54,6 +54,8 @@ typedef struct {
     GtkWidget *fit_plane;
     GtkObject *kernel_size;
     GtkWidget *kernel_size_spin;
+    GtkWidget *kernel_size_label;
+    GtkWidget *kernel_size_units;
 } SlopeControls;
 
 static gboolean      module_register              (const gchar *name);
@@ -246,6 +248,8 @@ slope_dialog(SlopeArgs *args)
     spin = gwy_table_attach_spinbutton(table, row, _("_Plane size:"), _("px"),
                                        controls.kernel_size);
     controls.kernel_size_spin = spin;
+    controls.kernel_size_label = gwy_table_get_child_widget(table, row, 0);
+    controls.kernel_size_units = gwy_table_get_child_widget(table, row, 2);
     row++;
 
     slope_dialog_update_controls(&controls, args);
@@ -295,6 +299,8 @@ slope_dialog_update_controls(SlopeControls *controls,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_plane),
                                  args->fit_plane);
     gtk_widget_set_sensitive(controls->kernel_size_spin, args->fit_plane);
+    gtk_widget_set_sensitive(controls->kernel_size_label, args->fit_plane);
+    gtk_widget_set_sensitive(controls->kernel_size_units, args->fit_plane);
     gtk_widget_set_sensitive(controls->logscale,
                              args->output_type != SLOPE_DIST_GRAPH);
     gwy_radio_buttons_set_current(controls->output_type_group,
@@ -321,8 +327,12 @@ static void
 slope_fit_plane_cb(GtkToggleButton *check,
                    SlopeControls *controls)
 {
-    gtk_widget_set_sensitive(controls->kernel_size_spin,
-                             gtk_toggle_button_get_active(check));
+    gboolean active;
+
+    active = gtk_toggle_button_get_active(check);
+    gtk_widget_set_sensitive(controls->kernel_size_spin, active);
+    gtk_widget_set_sensitive(controls->kernel_size_label, active);
+    gtk_widget_set_sensitive(controls->kernel_size_units, active);
 }
 
 static void

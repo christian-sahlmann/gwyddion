@@ -236,7 +236,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 
     label = gtk_label_new_with_mnemonic(_("Estimated Tip Size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
                      GTK_FILL, 0, 2, 2);
 
     controls.xres = gtk_adjustment_new(args->xres, 1, 10000, 1, 10, 0);

@@ -49,6 +49,8 @@ typedef struct {
     GtkWidget *fit_plane;
     GtkObject *kernel_size;
     GtkWidget *kernel_size_spin;
+    GtkWidget *kernel_size_label;
+    GtkWidget *kernel_size_units;
     gboolean in_update;
 } AngleControls;
 
@@ -221,6 +223,8 @@ angle_dialog(AngleArgs *args)
     spin = gwy_table_attach_spinbutton(table, row, _("_Plane size:"),
                                        _("px"), controls.kernel_size);
     controls.kernel_size_spin = spin;
+    controls.kernel_size_label = gwy_table_get_child_widget(table, row, 0);
+    controls.kernel_size_units = gwy_table_get_child_widget(table, row, 2);
     row++;
 
     angle_dialog_update_controls(&controls, args);
@@ -272,6 +276,8 @@ angle_dialog_update_controls(AngleControls *controls,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_plane),
                                  args->fit_plane);
     gtk_widget_set_sensitive(controls->kernel_size_spin, args->fit_plane);
+    gtk_widget_set_sensitive(controls->kernel_size_label, args->fit_plane);
+    gtk_widget_set_sensitive(controls->kernel_size_units, args->fit_plane);
 }
 
 static void
@@ -292,8 +298,12 @@ static void
 angle_fit_plane_cb(GtkToggleButton *check,
                    AngleControls *controls)
 {
-    gtk_widget_set_sensitive(controls->kernel_size_spin,
-                             gtk_toggle_button_get_active(check));
+    gboolean active;
+
+    active = gtk_toggle_button_get_active(check);
+    gtk_widget_set_sensitive(controls->kernel_size_spin, active);
+    gtk_widget_set_sensitive(controls->kernel_size_label, active);
+    gtk_widget_set_sensitive(controls->kernel_size_units, active);
 }
 
 static GwyDataField*

@@ -154,7 +154,7 @@ maskcor(GwyContainer *data, GwyRunType run)
 static GtkWidget*
 maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
 {
-    GtkWidget *dialog, *table, *omenu, *label, *spin;
+    GtkWidget *dialog, *table, *omenu, *spin;
     GtkObject *adj;
 
     controls->args = args;

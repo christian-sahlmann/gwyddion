@@ -131,9 +131,9 @@ tip_dilation(GwyContainer *data, GwyRunType run)
 
 static GtkWidget*
 tip_dilation_window_construct(TipDilationArgs *args,
-                          TipDilationControls *controls)
+                              G_GNUC_UNUSED TipDilationControls *controls)
 {
-    GtkWidget *dialog, *table, *omenu, *label, *spin;
+    GtkWidget *dialog, *table, *omenu, *label;
     gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Tip Dilation"), NULL, 0,
