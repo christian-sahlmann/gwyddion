@@ -114,14 +114,12 @@ gwy_table_attach_row(GtkWidget *table,
     label = gtk_label_new(units);
     gtk_table_attach(GTK_TABLE(table), label,
                      2, 3, row, row+1, GTK_FILL, 0, 2, 2);
-    gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
     gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
 
     label = gtk_label_new_with_mnemonic(name);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_FILL, 0, 2, 2);
-    gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
 
     gtk_table_attach(GTK_TABLE(table), middle_widget,
@@ -288,7 +286,6 @@ gwy_stock_like_button_new(const gchar *label_text,
 
     label = gtk_label_new_with_mnemonic(label_text);
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-    gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
 
     return button;
 }
