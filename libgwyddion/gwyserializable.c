@@ -316,6 +316,7 @@ gwy_serialize_pack(GByteArray *buffer,
     va_list ap;
     gsize nargs, i;
 
+    g_return_val_if_fail(buffer && templ, buffer);
     gwy_debug("templ: %s", templ);
     nargs = strlen(templ);
     if (!nargs)
@@ -555,6 +556,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
     guint8 *arr = NULL;
     gsize i;
 
+    g_return_val_if_fail(buffer && spec, buffer);
     gwy_debug("nspec = %d, buffer = %p", nspec, buffer);
     if (!nspec)
         return buffer;
@@ -1381,7 +1383,7 @@ gwy_serialize_check_string(const guchar *buffer,
     const guchar *p;
 
     gwy_debug("<%s> buf = %p, size = %u, pos = %u",
-              compare_to, buffer, size, position);
+              compare_to ? compare_to : "(null)", buffer, size, position);
     g_assert(buffer);
     g_assert(size > 0);
     g_return_val_if_fail(position < size, 0);
