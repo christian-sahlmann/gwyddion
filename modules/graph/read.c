@@ -111,6 +111,9 @@ read_dialog(GwyGraph *graph)
                      G_CALLBACK(read_dialog_closed_cb), graph);
     response_id = g_signal_connect(dialog, "response",
                      G_CALLBACK(read_dialog_response_cb), graph);
+
+    g_signal_connect(graph, "destroy",
+                     G_CALLBACK(read_dialog_closed_cb), graph);
     
     controls.xlabel = gtk_label_new("x");
     controls.ylabel = gtk_label_new("y");

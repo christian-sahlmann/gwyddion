@@ -399,17 +399,18 @@ update_labels()
     {
         if (i<(2*n_of_lines))
         {
-            g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
+            g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
                    (gint)gwy_data_field_rtoj(datafield, lines[j++]),
                    (gint)gwy_data_field_rtoj(datafield, lines[j++])
                    ); 
-            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i++]), buffer);
+            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i+1]), buffer);
 
-            g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
+            g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
                    (gint)gwy_data_field_rtoj(datafield, lines[j++]),
                    (gint)gwy_data_field_rtoj(datafield, lines[j++])
                    );
             gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]), buffer);
+            i++;
         }
         else
         {
@@ -472,10 +473,10 @@ profile_selection_updated_cb(void)
         j = 0;
         for (i=0; i<is_selected; i++)
         {
-            x1 = gwy_data_field_rtoj(datafield, lines[j++]);
-            y1 = gwy_data_field_rtoj(datafield, lines[j++]);
             x2 = gwy_data_field_rtoj(datafield, lines[j++]);
             y2 = gwy_data_field_rtoj(datafield, lines[j++]);
+            x1 = gwy_data_field_rtoj(datafield, lines[j++]);
+            y1 = gwy_data_field_rtoj(datafield, lines[j++]);
                                      
             if (!gwy_data_field_get_data_line(datafield, dtl->pdata[i], 
                                      x1, y1,
