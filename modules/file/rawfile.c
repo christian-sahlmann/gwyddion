@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* TODO: storeable named presets */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -105,6 +107,9 @@ typedef struct {
     GtkWidget *revbyte;
     GtkWidget *revsample;
     GtkWidget *byteswap;
+    GtkWidget *lineoffset;
+    GtkWidget *delimiter;
+    GtkWidget *skipfields;
     GtkWidget *xres;
     GtkWidget *yres;
     GtkWidget *xyreseq;
@@ -121,7 +126,11 @@ static gboolean      module_register               (const gchar *name);
 static gint          rawfile_detect                (const gchar *filename,
                                                     gboolean only_name);
 static GwyContainer* rawfile_load                  (const gchar *filename);
-static gboolean      rawfile_dialog                (RawFileArgs *args);
+static GwyDataField* rawfile_dialog                (RawFileArgs *args,
+                                                    guchar *buffer);
+static GwyDataField* rawfile_read_data_field       (GtkWidget *parent,
+                                                    RawFileArgs *args,
+                                                    guchar *buffer);
 static void          rawfile_warn_too_short_file   (GtkWidget *parent,
                                                     RawFileArgs *args,
                                                     gsize reqsize);
@@ -133,6 +142,8 @@ static void          xyreseq_changed_cb            (RawFileControls *controls);
 static void          xyreal_changed_cb             (GtkAdjustment *adj,
                                                     RawFileControls *controls);
 static void          xymeasureeq_changed_cb        (RawFileControls *controls);
+static void          bintext_changed_cb            (GtkWidget *button,
+                                                    RawFileControls *controls);
 static void          update_dialog_controls        (RawFileControls *controls);
 static void          update_dialog_values          (RawFileControls *controls);
 static GtkWidget*    table_attach_heading          (GtkWidget *table,
@@ -142,6 +153,9 @@ static void          rawfile_read_builtin          (RawFileArgs *args,
                                                     guchar *buffer,
                                                     gdouble *data);
 static void          rawfile_read_bits             (RawFileArgs *args,
+                                                    guchar *buffer,
+                                                    gdouble *data);
+static gboolean      rawfile_read_ascii            (RawFileArgs *args,
                                                     guchar *buffer,
                                                     gdouble *data);
 static void          rawfile_santinize_args        (RawFileArgs *args);
@@ -159,7 +173,7 @@ static GwyModuleInfo module_info = {
     "rawfile",
     "Read raw data according to user-specified format.",
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.99",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -303,7 +317,7 @@ static const RawFileArgs rawfile_defaults = {
     RAW_BINARY,                     /* format */
     RAW_UNSIGNED_BYTE, 0, 8, 0, 0,  /* binary parameters */
     FALSE, FALSE, FALSE, 0,         /* binary options */
-    0, " ", 0,                      /* text parameters */
+    0, "", 0,                       /* text parameters */
     NULL, 0,                        /* file name and size */
     500, 500, TRUE,                 /* xres, yres */
     10.0, 10.0, TRUE, -6,           /* physical dimensions */
@@ -355,7 +369,6 @@ rawfile_load(const gchar *filename)
     GError *err = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
-    gboolean ok;
 
     settings = gwy_app_settings_get();
     rawfile_load_args(settings, &args);
@@ -367,21 +380,7 @@ rawfile_load(const gchar *filename)
     data = NULL;
     args.filename = filename;
     args.filesize = size;
-    ok = rawfile_dialog(&args);
-    if (ok) {
-        gdouble m;
-
-        m = exp(G_LN10*args.xyexponent);
-        dfield = GWY_DATA_FIELD(gwy_data_field_new(args.xres, args.yres,
-                                                   m*args.xreal,
-                                                   m*args.yreal,
-                                                   FALSE));
-        if (args.builtin)
-            rawfile_read_builtin(&args, buffer,
-                                 gwy_data_field_get_data(dfield));
-        else
-            rawfile_read_bits(&args, buffer, gwy_data_field_get_data(dfield));
-        gwy_data_field_multiply(dfield, exp(G_LN10*args.zexponent)*args.zscale);
+    if ((dfield = rawfile_dialog(&args, buffer))) {
         data = GWY_CONTAINER(gwy_container_new());
         gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
         rawfile_save_args(settings, &args);
@@ -391,16 +390,18 @@ rawfile_load(const gchar *filename)
     return data;
 }
 
-static gboolean
-rawfile_dialog(RawFileArgs *args)
+static GwyDataField*
+rawfile_dialog(RawFileArgs *args,
+               guchar *buffer)
 {
     RawFileControls controls;
+    GwyDataField *dfield = NULL;
     GtkWidget *dialog, *vbox, *table, *label, *notebook, *button, *align;
     GtkWidget *omenu, *entry;
+    GSList *group;
     GtkObject *adj;
     GtkAdjustment *adj2;
     gint response, row, precision;
-    gsize reqsize;
     gdouble magnitude;
     gchar *s;
 
@@ -545,15 +546,38 @@ rawfile_dialog(RawFileArgs *args)
 
     table = gtk_table_new(14, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 2);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
 
-    label = table_attach_heading(table, _("<b>Format</b>"), row);
-    row++;
-
     button = gtk_radio_button_new_with_mnemonic(NULL, _("_Text data"));
-    gtk_widget_set_sensitive(button, FALSE);
     g_object_set_data(G_OBJECT(button), "format", GINT_TO_POINTER(RAW_TEXT));
     gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    row++;
+
+    adj = gtk_adjustment_new(args->lineoffset, 0, 1 << 30, 1, 10, 10);
+    controls.lineoffset = gwy_table_attach_spinbutton(table, row,
+                                                  _("Start from _line"),
+                                                    "", adj);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.lineoffset), 0);
+    row++;
+
+    adj = gtk_adjustment_new(args->skipfields, 0, 1 << 30, 1, 10, 10);
+    controls.skipfields = gwy_table_attach_spinbutton(table, row,
+                                                  _("E_ach row skip"),
+                                                    "fields", adj);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.skipfields), 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Field delimiter"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_FILL, 0, 2, 2);
+
+    controls.delimiter = entry = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
+    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row+1,
+                     GTK_FILL, 0, 2, 2);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
     row++;
 
     button
@@ -573,15 +597,13 @@ rawfile_dialog(RawFileArgs *args)
 
     label = gtk_label_new_with_mnemonic(_("Byte s_wap pattern"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, row, row+1);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_FILL, 0, 2, 2);
 
     controls.byteswap = entry = gtk_entry_new();
     gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 2, row, row+1);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    row++;
-
-    label = table_attach_heading(table, _("<b>Binary Parameters</b>"), row);
+    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row+1,
+                     GTK_FILL, 0, 2, 2);
     row++;
 
     adj = gtk_adjustment_new(args->offset, 0, 1 << 30, 16, 1024, 1024);
@@ -653,6 +675,12 @@ rawfile_dialog(RawFileArgs *args)
     g_signal_connect(adj2, "value_changed",
                      G_CALLBACK(xyreal_changed_cb), &controls);
 
+    /* text/binary */
+    for (group = controls.format; group; group = g_slist_next(group)) {
+        g_signal_connect(group->data, "toggled",
+                         G_CALLBACK(bintext_changed_cb), &controls);
+    }
+
     gtk_widget_show_all(dialog);
 
     do {
@@ -667,11 +695,9 @@ rawfile_dialog(RawFileArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            reqsize = rawfile_compute_required_size(args);
-            if (reqsize > args->filesize) {
-                rawfile_warn_too_short_file(dialog, args, reqsize);
+            dfield = rawfile_read_data_field(dialog, args, buffer);
+            if (!dfield)
                 response = GTK_RESPONSE_NONE;
-            }
             break;
 
             case RESPONSE_RESET:
@@ -693,7 +719,57 @@ rawfile_dialog(RawFileArgs *args)
     } while (response != GTK_RESPONSE_OK);
     gtk_widget_destroy(dialog);
 
-    return TRUE;
+    return dfield;
+}
+
+static GwyDataField*
+rawfile_read_data_field(GtkWidget *parent,
+                        RawFileArgs *args,
+                        guchar *buffer)
+{
+    GwyDataField *dfield = NULL;
+    gsize reqsize;
+    gdouble m;
+
+    m = exp(G_LN10*args->xyexponent);
+    switch (args->format) {
+        case RAW_BINARY:
+        reqsize = rawfile_compute_required_size(args);
+        if (reqsize > args->filesize) {
+            rawfile_warn_too_short_file(parent, args, reqsize);
+            return NULL;
+        }
+        dfield = GWY_DATA_FIELD(gwy_data_field_new(args->xres, args->yres,
+                                                   m*args->xreal,
+                                                   m*args->yreal,
+                                                   FALSE));
+        if (args->builtin)
+            rawfile_read_builtin(args, buffer,
+                                 gwy_data_field_get_data(dfield));
+        else
+            rawfile_read_bits(args, buffer,
+                              gwy_data_field_get_data(dfield));
+        break;
+
+        case RAW_TEXT:
+        dfield = GWY_DATA_FIELD(gwy_data_field_new(args->xres, args->yres,
+                                                   m*args->xreal,
+                                                   m*args->yreal,
+                                                   FALSE));
+        if (!rawfile_read_ascii(args, buffer,
+                                gwy_data_field_get_data(dfield))) {
+            g_object_unref(G_OBJECT(dfield));
+            return NULL;
+        }
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+
+    gwy_data_field_multiply(dfield, exp(G_LN10*args->zexponent)*args->zscale);
+    return dfield;
 }
 
 static void
@@ -842,6 +918,20 @@ xymeasureeq_changed_cb(RawFileControls *controls)
 }
 
 static void
+bintext_changed_cb(GtkWidget *button,
+                   RawFileControls *controls)
+{
+    gint format;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+        return;
+
+    format = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "format"));
+    controls->args->format = format;
+    update_dialog_controls(controls);
+}
+
+static void
 update_dialog_controls(RawFileControls *controls)
 {
     RawFileArgs *args;
@@ -895,21 +985,61 @@ update_dialog_controls(RawFileControls *controls)
                                 args->builtin);
 
     for (group = controls->format; group; group = g_slist_next(group)) {
-        if (GPOINTER_TO_INT(g_object_get_data(G_OBJECT(group->data), "format"))
-            == args->format) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(group->data), TRUE);
+        GObject *button = G_OBJECT(group->data);
+        gint format;
+
+        format = GPOINTER_TO_INT(g_object_get_data(button, "format"));
+        if (format == args->format
+            && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
             break;
         }
     }
 
     builtin = args->builtin;
-    gtk_widget_set_sensitive(controls->byteswap,
-                             builtin
-                             && builtin != RAW_UNSIGNED_BYTE
-                             && builtin != RAW_SIGNED_BYTE);
-    gtk_widget_set_sensitive(controls->size, !builtin);
-    gtk_widget_set_sensitive(controls->sign, !builtin);
-    gtk_widget_set_sensitive(controls->revsample, !builtin);
+    switch (args->format) {
+        case RAW_BINARY:
+        gtk_widget_set_sensitive(controls->lineoffset, FALSE);
+        gtk_widget_set_sensitive(controls->delimiter, FALSE);
+        gtk_widget_set_sensitive(controls->skipfields, FALSE);
+
+        gtk_widget_set_sensitive(controls->builtin, TRUE);
+        gtk_widget_set_sensitive(controls->offset, TRUE);
+        gtk_widget_set_sensitive(controls->skip, TRUE);
+        gtk_widget_set_sensitive(controls->rowskip, TRUE);
+        gtk_widget_set_sensitive(controls->revbyte, TRUE);
+        gtk_widget_set_sensitive(controls->byteswap, TRUE);
+
+        gtk_widget_set_sensitive(controls->byteswap,
+                                 builtin
+                                 && builtin != RAW_UNSIGNED_BYTE
+                                 && builtin != RAW_SIGNED_BYTE);
+        gtk_widget_set_sensitive(controls->size, !builtin);
+        gtk_widget_set_sensitive(controls->sign, !builtin);
+        gtk_widget_set_sensitive(controls->revsample, !builtin);
+        break;
+
+        case RAW_TEXT:
+        gtk_widget_set_sensitive(controls->lineoffset, TRUE);
+        gtk_widget_set_sensitive(controls->delimiter, TRUE);
+        gtk_widget_set_sensitive(controls->skipfields, TRUE);
+
+        gtk_widget_set_sensitive(controls->builtin, FALSE);
+        gtk_widget_set_sensitive(controls->offset, FALSE);
+        gtk_widget_set_sensitive(controls->skip, FALSE);
+        gtk_widget_set_sensitive(controls->rowskip, FALSE);
+        gtk_widget_set_sensitive(controls->revbyte, FALSE);
+        gtk_widget_set_sensitive(controls->byteswap, FALSE);
+        gtk_widget_set_sensitive(controls->byteswap, FALSE);
+        gtk_widget_set_sensitive(controls->size, FALSE);
+        gtk_widget_set_sensitive(controls->sign, FALSE);
+        gtk_widget_set_sensitive(controls->revsample, FALSE);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
 }
 
 static void
@@ -1172,6 +1302,88 @@ rawfile_read_builtin(RawFileArgs *args,
     }
 }
 
+static gboolean
+rawfile_read_ascii(RawFileArgs *args,
+                   guchar *buffer,
+                   gdouble *data)
+{
+    gsize i, j, n;
+    gint cdelim = '\0';
+    gint delimtype;
+    gdouble x;
+    guchar *end;
+
+    /* skip lines */
+    for (i = 0; i < args->lineoffset; i++) {
+        buffer = strchr(buffer, '\n');
+        if (!buffer) {
+            g_warning("Not enough lines for offset");
+            return FALSE;
+        }
+        buffer++;
+    }
+
+    if (!args->delimiter)
+        delimtype = 0;
+    else {
+        delimtype = strlen(args->delimiter);
+        cdelim = args->delimiter[0];
+    }
+
+    for (n = 0; n < args->yres; n++) {
+        /* skip fields */
+        switch (delimtype) {
+            case 0:
+            buffer += strspn(buffer, " \t\n\r");
+            for (i = 0; i < args->skipfields; i++) {
+                j = strcspn(buffer, " \t\n\r");
+                buffer += j;
+                j = strspn(buffer, " \t\n\r");
+                if (!j) {
+                    g_warning("Expected whitespace to skip more fields (%u)",
+                              n);
+                    return FALSE;
+                }
+            }
+            break;
+
+            case 1:
+            for (i = 0; i < args->skipfields; i++) {
+                buffer = strchr(buffer, cdelim);
+                if (!buffer) {
+                    g_warning("Expected `%c' to skip more fields (%u)",
+                              cdelim, n);
+                    return FALSE;
+                }
+            }
+            break;
+
+            default:
+            for (i = 0; i < args->skipfields; i++) {
+                buffer = strstr(buffer, args->delimiter);
+                if (!buffer) {
+                    g_warning("Expected `%s' to skip more fields (%u)",
+                              args->delimiter, n);
+                    return FALSE;
+                }
+            }
+            break;
+        }
+
+        /* read data */
+        for (i = 0; i < args->xres; i++) {
+            x = strtod(buffer, (char**)&end);
+            if (end == buffer) {
+                g_warning("Garbage at (%u, %u)", n, i);
+                return FALSE;
+            }
+            *(data++) = x;
+        }
+    }
+
+    return TRUE;
+}
+
 static void
 rawfile_santinize_args(RawFileArgs *args)
 {
@@ -1218,6 +1430,9 @@ static const gchar *sign_key =        "/module/rawfile/sign";
 static const gchar *revsample_key =   "/module/rawfile/revsample";
 static const gchar *revbyte_key =     "/module/rawfile/revbyte";
 static const gchar *byteswap_key =    "/module/rawfile/byteswap";
+static const gchar *lineoffset_key =  "/module/rawfile/lineoffset";
+static const gchar *delimiter_key =   "/module/rawfile/delimiter";
+static const gchar *skipfields_key =  "/module/rawfile/skipfields";
 static const gchar *xres_key =        "/module/rawfile/xres";
 static const gchar *yres_key =        "/module/rawfile/yres";
 static const gchar *xyreseq_key =     "/module/rawfile/xyreseq";
@@ -1247,6 +1462,16 @@ rawfile_load_args(GwyContainer *settings,
     if (gwy_container_contains_by_name(settings, byteswap_key))
         args->byteswap = gwy_container_get_int32_by_name(settings,
                                                          byteswap_key);
+    if (gwy_container_contains_by_name(settings, lineoffset_key))
+        args->lineoffset = gwy_container_get_int32_by_name(settings,
+                                                         lineoffset_key);
+    if (gwy_container_contains_by_name(settings, skipfields_key))
+        args->skipfields = gwy_container_get_int32_by_name(settings,
+                                                         skipfields_key);
+    if (gwy_container_contains_by_name(settings, delimiter_key))
+        args->delimiter
+            = g_strdup(gwy_container_get_string_by_name(settings,
+                                                        delimiter_key));
     if (gwy_container_contains_by_name(settings, sign_key))
         args->sign = gwy_container_get_boolean_by_name(settings, sign_key);
     if (gwy_container_contains_by_name(settings, revsample_key))
@@ -1296,6 +1521,9 @@ rawfile_save_args(GwyContainer *settings,
     gwy_container_set_int32_by_name(settings, skip_key, args->skip);
     gwy_container_set_int32_by_name(settings, rowskip_key, args->rowskip);
     gwy_container_set_int32_by_name(settings, byteswap_key, args->byteswap);
+    gwy_container_set_int32_by_name(settings, lineoffset_key, args->lineoffset);
+    gwy_container_set_int32_by_name(settings, skipfields_key, args->skipfields);
+    gwy_container_set_string_by_name(settings, delimiter_key, args->delimiter);
     gwy_container_set_boolean_by_name(settings, sign_key, args->sign);
     gwy_container_set_boolean_by_name(settings, revsample_key, args->revsample);
     gwy_container_set_boolean_by_name(settings, revbyte_key, args->revbyte);
