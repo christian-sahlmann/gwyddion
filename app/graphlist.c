@@ -32,7 +32,6 @@ enum {
     GRAPHLIST_VISIBLE,
     GRAPHLIST_TITLE,
     GRAPHLIST_NCURVES,
-    GRAPHLIST_ID,
     GRAPHLIST_LAST
 };
 
@@ -217,7 +216,6 @@ gwy_app_graph_list_construct(GwyContainer *data,
         { N_("Vis."),             GRAPHLIST_VISIBLE },
         { N_("Title"),            GRAPHLIST_TITLE },
         { N_("graphlist|Curves"), GRAPHLIST_NCURVES },
-        { N_("Id"),               GRAPHLIST_ID },   /* FIXME: debug only */
     };
 
     GtkWidget *list;
@@ -508,13 +506,6 @@ gwy_app_graph_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
 
         case GRAPHLIST_NCURVES:
         g_snprintf(s, sizeof(s), "%d", gwy_graph_model_get_n_curves(gmodel));
-        g_object_set(cell, "text", s, NULL);
-        break;
-
-        case GRAPHLIST_ID:
-        g_snprintf(s, sizeof(s), "%d",
-                   GPOINTER_TO_INT(g_object_get_data(G_OBJECT(gmodel),
-                                                     "gwy-app-graph-list-id")));
         g_object_set(cell, "text", s, NULL);
         break;
 
