@@ -227,7 +227,9 @@ update_module_info_cb(GtkWidget *tree,
     GtkTreeSelection *select;
     _GwyModuleInfoInternal *iinfo;
     GtkTreeIter iter;
+    GSList *l;
     gchar *s;
+    gsize n;
 
     select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
     g_return_if_fail(select);
@@ -255,6 +257,25 @@ update_module_info_cb(GtkWidget *tree,
 
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "desc"));
     gtk_label_set_text(label, iinfo->mod_info->blurb);
+
+    label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "funcs"));
+    n = 0;
+    for (l = iinfo->funcs; l; l = g_slist_next(l))
+        n += strlen((gchar*)l->data) + 1;
+    if (!n)
+        gtk_label_set_text(label, "");
+    else {
+        gchar *p;
+
+        s = g_new(gchar, n);
+        for (l = iinfo->funcs, p = s; l; l = g_slist_next(l)) {
+            p = g_stpcpy(p, (gchar*)l->data);
+            *(p++) = ' ';
+        }
+        *(--p) = '\0';
+        gtk_label_set_text(label, s);
+        g_free(s);
+    }
 }
 
 static void
@@ -265,18 +286,17 @@ attach_info_line(GtkWidget *table,
                  const gchar *key)
 {
     GtkWidget *label;
+    gboolean multiline;
 
+    multiline = (strcmp(key, "desc") == 0) || (strcmp(key, "funcs") == 0);
     label = gtk_label_new(name);
-    if (!strcmp(key, "desc"))
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
-    else
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, multiline ? 0.0 : 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, row, row+1);
 
-    label = gtk_label_new("FIXME");
+    label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 1, 2, row, row+1);
-    if (!strcmp(key, "desc"))
+    if (multiline)
         gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
 
     g_object_set_data(G_OBJECT(parent), key, label);
