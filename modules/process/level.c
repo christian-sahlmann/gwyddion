@@ -56,21 +56,21 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo level_func_info = {
         "level",
-        N_("/_Level/Level"),
+        N_("/_Level/_Level"),
         (GwyProcessFunc)&level,
         LEVEL_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo level_rotate_func_info = {
         "level_rotate",
-        N_("/_Level/Level Rotate"),
+        N_("/_Level/Level _Rotate"),
         (GwyProcessFunc)&level_rotate,
         LEVEL_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo fixzero_func_info = {
         "fixzero",
-        N_("/_Level/Fix Zero"),
+        N_("/_Level/Fix _Zero"),
         (GwyProcessFunc)&fixzero,
         LEVEL_RUN_MODES,
         0,
