@@ -124,7 +124,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             continue;
         }
         if ((gsize)(val - buffer) + 1 > size) {
-            g_critical("Unexpected end of file.");
+            g_critical("Unexpected end of file (value expected).");
             goto fail;
         }
         *val = '\0';
@@ -139,7 +139,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         }
 
         if (!pos || *pos != '[') {
-            g_critical("Unexpected end of file.");
+            g_critical("Unexpected end of file (datafield expected).");
             goto fail;
         }
         pos++;
@@ -202,7 +202,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
 
         n = xres*yres*sizeof(gdouble);
         if ((gsize)(pos - buffer) + n + 3 > size) {
-            g_critical("Unexpected end of file.");
+            g_critical("Unexpected end of file (truncated datafiled).");
             goto fail;
         }
         memcpy(dfield->data, pos, n);
