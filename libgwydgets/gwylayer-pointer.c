@@ -4,6 +4,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libprocess/datafield.h>
 #include "gwylayer-pointer.h"
 #include "gwydataview.h"
 
@@ -322,12 +323,23 @@ static void
 gwy_layer_pointer_restore(GwyDataViewLayer *layer)
 {
     GwyLayerPointer *s = GWY_LAYER_POINTER(layer);
+    GwyDataField *dfield;
+    gdouble xreal, yreal;
 
     /* TODO Container */
-    if (gwy_container_contains_by_name(layer->data, "/0/pointer/x"))
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
+                                                             "/0/data"));
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+
+    if (gwy_container_contains_by_name(layer->data, "/0/pointer/x")) {
         s->x = gwy_container_get_double_by_name(layer->data, "/0/pointer/x");
-    if (gwy_container_contains_by_name(layer->data, "/0/pointer/y"))
+        s->x = CLAMP(s->x, 0.0, xreal);
+    }
+    if (gwy_container_contains_by_name(layer->data, "/0/pointer/y")) {
         s->y = gwy_container_get_double_by_name(layer->data, "/0/pointer/y");
+        s->y = CLAMP(s->y, 0.0, yreal);
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

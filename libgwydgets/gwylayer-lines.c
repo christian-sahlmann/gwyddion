@@ -602,34 +602,33 @@ gwy_layer_lines_restore(GwyDataViewLayer *layer)
     GwyDataField *dfield;
     gchar key[24];
     gdouble xreal, yreal;
-    gint i, n;
+    gint i, n, nsel;
 
     /* TODO Container */
     if (!gwy_container_contains_by_name(layer->data, "/0/lines/nselected"))
         return;
 
-    l->nselected = gwy_container_get_int32_by_name(layer->data,
-                                                   "/0/lines/nselected");
-    l->nselected = MIN(l->nselected, l->nlines);
+    nsel = gwy_container_get_int32_by_name(layer->data, "/0/lines/nselected");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
                                                              "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
-    for (i = 0; i < l->nselected; i++) {
-        gdouble *coords = l->lines + 4*i;
+    for (i = l->nselected = 0; i < nsel && l->nselected < l->nlines; i++) {
+        gdouble *coords = l->lines + 4*l->nselected;
 
         n = g_snprintf(key, sizeof(key), "/0/lines/%d/x0", i);
         coords[0] = gwy_container_get_double_by_name(layer->data, key);
-        coords[0] = CLAMP(coords[0], 0.0, xreal);
         key[n-2] = 'y';
         coords[1] = gwy_container_get_double_by_name(layer->data, key);
-        coords[1] = CLAMP(coords[1], 0.0, yreal);
         key[n-1] = '1';
         coords[3] = gwy_container_get_double_by_name(layer->data, key);
-        coords[3] = CLAMP(coords[3], 0.0, yreal);
         key[n-2] = 'x';
         coords[2] = gwy_container_get_double_by_name(layer->data, key);
-        coords[2] = CLAMP(coords[2], 0.0, xreal);
+        if (coords[0] >= 0.0 && coords[0] <= xreal
+            && coords[1] >= 0.0 && coords[1] <= yreal
+            && coords[2] >= 0.0 && coords[2] <= xreal
+            && coords[3] >= 0.0 && coords[3] <= yreal)
+            l->nselected++;
     }
 }
 

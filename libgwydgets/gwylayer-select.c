@@ -477,6 +477,8 @@ gwy_layer_select_restore(GwyDataViewLayer *layer)
     s->x1 = CLAMP(s->x1, 0.0, xreal);
     s->y1 = gwy_container_get_double_by_name(layer->data, "/0/select/y1");
     s->y1 = CLAMP(s->y1, 0.0, yreal);
+    if (s->x0 == s->x1 || s->y0 == s->y1)
+        s->selected = FALSE;
 }
 
 static int
