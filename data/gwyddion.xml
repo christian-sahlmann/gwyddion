@@ -34,4 +34,68 @@
     <glob pattern="*.sis"/>
     <glob pattern="*.SIS"/>
   </mime-type>
+
+  <mime-type type="application/x-spmlab-spm">
+    <comment>SPMLab SPM data</comment>
+    <magic priority="50">
+      <match type="string" offset="0" value="#R3"/>
+      <match type="string" offset="0" value="#R4"/>
+      <match type="string" offset="0" value="#R5"/>
+    </magic>
+    <glob pattern="*.zfp"/>
+    <glob pattern="*.zrp"/>
+    <glob pattern="*.zfr"/>
+    <glob pattern="*.zrr"/>
+    <glob pattern="*.ffp"/>
+    <glob pattern="*.frp"/>
+    <glob pattern="*.ffr"/>
+    <glob pattern="*.frr"/>
+    <glob pattern="*.lfp"/>
+    <glob pattern="*.lrp"/>
+    <glob pattern="*.lfr"/>
+    <glob pattern="*.lrr"/>
+    <glob pattern="*.sfp"/>
+    <glob pattern="*.srp"/>
+    <glob pattern="*.sfr"/>
+    <glob pattern="*.srr"/>
+    <glob pattern="*.1fp"/>
+    <glob pattern="*.1rp"/>
+    <glob pattern="*.1fr"/>
+    <glob pattern="*.1rr"/>
+    <glob pattern="*.2fp"/>
+    <glob pattern="*.2rp"/>
+    <glob pattern="*.2fr"/>
+    <glob pattern="*.2rr"/>
+    <glob pattern="*.ZFP"/>
+    <glob pattern="*.ZRP"/>
+    <glob pattern="*.ZFR"/>
+    <glob pattern="*.ZRR"/>
+    <glob pattern="*.FFP"/>
+    <glob pattern="*.FRP"/>
+    <glob pattern="*.FFR"/>
+    <glob pattern="*.FRR"/>
+    <glob pattern="*.LFP"/>
+    <glob pattern="*.LRP"/>
+    <glob pattern="*.LFR"/>
+    <glob pattern="*.LRR"/>
+    <glob pattern="*.SFP"/>
+    <glob pattern="*.SRP"/>
+    <glob pattern="*.SFR"/>
+    <glob pattern="*.SRR"/>
+    <glob pattern="*.1FP"/>
+    <glob pattern="*.1RP"/>
+    <glob pattern="*.1FR"/>
+    <glob pattern="*.1RR"/>
+    <glob pattern="*.2FP"/>
+    <glob pattern="*.2RP"/>
+    <glob pattern="*.2FR"/>
+    <glob pattern="*.2RR"/>
+  </mime-type>
+
+  <mime-type type="application/x-createc-spm">
+    <comment>Createc SPM data</comment>
+    <magic priority="50">
+      <match type="string" offset="0" value="[Parameter]"/>
+    </magic>
+  </mime-type>
 </mime-info>
