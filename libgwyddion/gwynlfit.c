@@ -116,7 +116,8 @@ gwy_math_nlfit_free(GwyNLFitter *nlfit)
  * @n_dat: The number of data points in @x, @y, @w.
  * @x: Array of independent variable values.
  * @y: Array of dependent variable values.
- * @weight: Array of weights associated to each data point.
+ * @weight: Array of weights associated to each data point.  Since 1.2 it can
+ *          be %NULL, weight of 1 is then used for all data.
  * @n_param: The nuber of parameters.
  * @param: Array of parameters (of size @n_param).  Note the parameters must
  *         be initialized to reasonably near values.
@@ -146,7 +147,8 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
     gboolean *fixed;
     gdouble residua;
 
-    if (n_param < G_N_ELEMENTS(fixed_fixed))
+    g_return_val_if_fail(n_param > 0, -1.0);
+    if ((guint)n_param < G_N_ELEMENTS(fixed_fixed))
         return gwy_math_nlfit_fit_with_fixed(nlfit, n_dat, x, y, weight,
                                              n_param, param, fixed_fixed,
                                              user_data);
@@ -166,7 +168,8 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
  * @n_dat: The number of data points in @x, @y, @w.
  * @x: Array of independent variable values.
  * @y: Array of dependent variable values.
- * @weight: Array of weights associated to each data point.
+ * @weight: Array of weights associated to each data point.  Can be %NULL,
+ *          weight of 1 is then used for all data.
  * @n_param: The nuber of parameters.
  * @param: Array of parameters (of size @n_param).  Note the parameters must
  *         be initialized to reasonably near values.
@@ -205,6 +208,7 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
     gdouble *saveparam;
     gdouble *resid;
     gdouble *a;
+    gdouble *w = NULL;
     gdouble *save_a;
     gint *var_param_id;
     gint covar_size;
@@ -214,8 +218,20 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
     gboolean step1 = TRUE;
     gboolean end = FALSE;
 
+    g_return_val_if_fail(nlfit, -1.0);
+    g_return_val_if_fail(n_param > 0, -1.0);
+    g_return_val_if_fail(n_dat > n_param, -1.0);
+    g_return_val_if_fail(x && y && param && fixed_param, -1.0);
+
     g_free(nlfit->covar);
     nlfit->covar = NULL;
+
+    if (!weight) {
+        w = g_new(gdouble, n_dat);
+        for (i = 0; i < n_dat; i++)
+            w[i] = 1.0;
+        weight = w;
+    }
 
     resid = g_new(gdouble, n_dat);
     sumr1 = gwy_math_nlfit_residua(nlfit, n_dat, x, y, weight,
@@ -224,6 +240,7 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
 
     if (!nlfit->eval) {
         g_warning("Initial residua evaluation failed");
+        g_free(w);
         g_free(resid);
         return -1;
     }
@@ -235,6 +252,7 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
         var_param_id[i] = fixed_param[i] ? -1 : n_var_param++;
 
     if (!n_var_param) {
+        g_free(w);
         g_free(var_param_id);
         g_free(resid);
         return sumr;
@@ -383,6 +401,7 @@ gwy_math_nlfit_fit_with_fixed(GwyNLFitter *nlfit,
     g_free(der);
     g_free(var_param_id);
     g_free(resid);
+    g_free(w);
 
     return sumr;
 }

@@ -47,14 +47,14 @@ typedef enum {
 
 
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
-                                 gint n_par,
+                                 gint n_param,
                                  const gdouble *param,
                                  gpointer user_data,
                                  gboolean *fres);
 
 typedef  void (*GwyNLFitDerFunc)(gint i,
                                  const gdouble *x,
-                                 gint n_par,
+                                 gint n_param,
                                  gdouble *param,
                                  GwyNLFitFunc fmarq,
                                  gpointer user_data,
