@@ -120,6 +120,16 @@ crop_dialog_create(GwyDataView *data_view)
                                    G_CALLBACK(crop_dialog_response_cb), NULL);
     table = gtk_table_new(6, 3, FALSE);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
+
     controls.x = gtk_label_new("");
     controls.y = gtk_label_new("");
     controls.w = gtk_label_new("");
@@ -128,12 +138,8 @@ crop_dialog_create(GwyDataView *data_view)
     gtk_misc_set_alignment(GTK_MISC(controls.y), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls.w), 1.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls.h), 1.0, 0.5);
-    label = gtk_label_new("");
-    gwy_table_attach_row(table, 0, "Origin", "", label);
     gwy_table_attach_row(table, 1, "X", controls.units, controls.x);
     gwy_table_attach_row(table, 2, "Y", controls.units, controls.y);
-    label = gtk_label_new("");
-    gwy_table_attach_row(table, 3, "Size", "", label);
     gwy_table_attach_row(table, 4, "Width", controls.units, controls.w);
     gwy_table_attach_row(table, 5, "Height", controls.units, controls.h);
     gtk_widget_show_all(table);
