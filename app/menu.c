@@ -179,6 +179,7 @@ gwy_menu_set_sensitive_recursive(GtkWidget *widget,
         j = (j & ~data->flags) | (data->set_to & data->flags);
         set_sensitive_state(obj, j);
         gtk_widget_set_sensitive(widget, (j & i) == i);
+
     }
     if (GTK_IS_ALIGNMENT(widget)
         || GTK_IS_MENU_BAR(widget)) {
@@ -198,7 +199,8 @@ static void
 gwy_menu_set_flags_recursive(GtkWidget *widget,
                              GwyMenuSensitiveData *data)
 {
-    set_sensitive_both(widget, data->flags, data->set_to);
+    if (!GTK_IS_TEAROFF_MENU_ITEM(widget))
+        set_sensitive_both(widget, data->flags, data->set_to);
 
     if (GTK_IS_ALIGNMENT(widget)
         || GTK_IS_MENU_BAR(widget)) {
