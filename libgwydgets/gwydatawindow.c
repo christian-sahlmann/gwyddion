@@ -490,8 +490,6 @@ gwy_data_window_update_units(GwyDataWindow *data_window)
                         gwy_data_field_get_si_unit_xy(dfield));
     gwy_ruler_set_units(GWY_RULER(data_window->vruler),
                         gwy_data_field_get_si_unit_xy(dfield));
-    
-    
     gwy_color_axis_set_unit(GWY_COLOR_AXIS(data_window->coloraxis),
                             gwy_data_field_get_si_unit_z(dfield));
 }
