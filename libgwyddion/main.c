@@ -731,23 +731,27 @@ test_si_unit(void)
     gwy_si_unit_value_format_free(vformat);
 }
 
-void gwy_si_unit_parse(const gchar *string);
+void gwy_si_unit2_parse(const gchar *string);
 
 static void
 test_si_unit2(void)
 {
     g_message("====== SI UNIT 2 ======================");
-    gwy_si_unit_parse("m");
-    gwy_si_unit_parse("cm");
-    gwy_si_unit_parse("um/s");
-    gwy_si_unit_parse("deg");
-    gwy_si_unit_parse("kPa");
-    gwy_si_unit_parse("kHz/mV");
-    gwy_si_unit_parse("m^3 V^-2 s-2");
-    gwy_si_unit_parse("m s<sup>-1</sup>");
-    gwy_si_unit_parse("mm^4/ns^2");
-    gwy_si_unit_parse("uV/LSB");
-    gwy_si_unit_parse("m2");
+    gwy_si_unit2_parse("");
+    gwy_si_unit2_parse("100");
+    gwy_si_unit2_parse("m");
+    gwy_si_unit2_parse("0.1 cm");
+    gwy_si_unit2_parse("um/s");
+    gwy_si_unit2_parse("1e-2 deg");
+    gwy_si_unit2_parse("kPa");
+    gwy_si_unit2_parse("kHz/mV");
+    gwy_si_unit2_parse("m^3 V^-2 s-2");
+    gwy_si_unit2_parse("10^6 m s<sup>-2</sup>");
+    gwy_si_unit2_parse("mm^4/ns^2");
+    gwy_si_unit2_parse("uV/LSB");
+    gwy_si_unit2_parse("m2");
+    gwy_si_unit2_parse("m/m^2");
+    gwy_si_unit2_parse("10 cm^2 km/m^3");
 }
 
 static void
