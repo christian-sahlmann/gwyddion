@@ -19,6 +19,11 @@ extern "C" {
 #define GWY_STOCK_CROP           "gwy_crop"
 #define GWY_STOCK_SCALE          "gwy_scale"
 #define GWY_STOCK_ROTATE         "gwy_rotate"
+#define GWY_STOCK_SHADER         "gwy_shader"
+#define GWY_STOCK_BOLD           "gwy_bold"
+#define GWY_STOCK_ITALIC         "gwy_italic"
+#define GWY_STOCK_SUBSCRIPT      "gwy_subscript"
+#define GWY_STOCK_SUPERSCRIPT    "gwy_superscript"
 
 void gwy_app_register_stock_items(void);
 

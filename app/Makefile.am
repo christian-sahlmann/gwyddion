@@ -15,6 +15,7 @@ noinst_HEADERS = \
 	init.h \
 	file.h \
 	menu.h \
+	settings.h \
 	stock.h \
 	app.h
 
@@ -22,6 +23,7 @@ gwyddion_SOURCES = \
 	init.c \
 	file.c \
 	menu.c \
+	settings.c \
 	stock.c \
 	app.c
 

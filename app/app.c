@@ -6,6 +6,7 @@
 #include "init.h"
 #include "file.h"
 #include "menu.h"
+#include "settings.h"
 #include "stock.h"
 #include "app.h"
 
@@ -112,6 +113,9 @@ foo(void)
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ROTATE,
                              "Rotate", NULL,
                              NULL, NULL, -1);
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SHADER,
+                             "Shade", NULL,
+                             NULL, NULL, -1);
 
     /***************************************************************/
     toolbar = gtk_toolbar_new();
@@ -133,6 +137,28 @@ foo(void)
                              NULL, NULL, -1);
 
     /***************************************************************/
+    toolbar = gtk_toolbar_new();
+    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
+                                GTK_ORIENTATION_HORIZONTAL);
+    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
+                              GTK_ICON_SIZE_BUTTON);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_BOLD,
+                             "Bold", NULL,
+                             NULL, NULL, -1);
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ITALIC,
+                             "Italics", NULL,
+                             NULL, NULL, -1);
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SUBSCRIPT,
+                             "Subscript", NULL,
+                             NULL, NULL, -1);
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SUPERSCRIPT,
+                             "Superscript", NULL,
+                             NULL, NULL, -1);
+
+    /***************************************************************/
     gtk_widget_show_all(window);
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 
@@ -146,10 +172,13 @@ main(int argc, char *argv[])
     const gchar *module_dirs[] = { GWY_MODULE_DIR, NULL };
     GwyContainer *data;
     gchar *filename_utf8;
+    gchar *config_file;
     gint i;
 
     gtk_init(&argc, &argv);
+    config_file = g_build_filename(g_get_home_dir(), ".gwydrc", NULL);
     gwy_type_init();
+    gwy_app_settings_load(config_file);
     gwy_module_register_modules(module_dirs);
     foo();
     for (i = 1; i < argc; i++) {
@@ -160,6 +189,7 @@ main(int argc, char *argv[])
         gwy_app_create_data_window(data);
     }
     gtk_main();
+    gwy_app_settings_save(config_file);
 
     return 0;
 }
