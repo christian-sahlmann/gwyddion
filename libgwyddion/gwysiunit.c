@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -138,6 +138,7 @@ gwy_si_unit_serialize(GObject *obj,
         GwySerializeSpec spec[] = {
             { 's', "unitstr", &unitstr, NULL, },
         };
+        gwy_debug("unitstr = <%s>", unitstr);
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_SI_UNIT_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
@@ -164,7 +165,7 @@ gwy_si_unit_deserialize(const guchar *buffer,
         return NULL;
     }
 
-    if (unitstr && *unitstr) {
+    if (unitstr && !*unitstr) {
         g_free(unitstr);
         unitstr = NULL;
     }
