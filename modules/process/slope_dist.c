@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-#define LEVEL_RUN_MODES \
+#define SLOPE_DIST_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 /* Data for this function. */
@@ -44,26 +44,50 @@ typedef struct {
     gboolean in_update;
 } SlopeDistControls;
 
-static gboolean      module_register            (const gchar *name);
-static gboolean      slope_dist                 (GwyContainer *data,
-                                                 GwyRunType run);
-static gboolean      slope_dist_dialog          (SlopeDistArgs *args);
-static void          size_changed_cb            (GtkAdjustment *adj,
-                                                 SlopeDistArgs *args);
-static void          slope_dist_dialog_update   (SlopeDistControls *controls,
-                                                 SlopeDistArgs *args);
-static GwyDataField* slope_dist_do              (GwyDataField *dfield,
-                                                 SlopeDistArgs *args);
-static void          slope_dist_load_args       (GwyContainer *container,
-                                                 SlopeDistArgs *args);
-static void          slope_dist_save_args       (GwyContainer *container,
-                                                 SlopeDistArgs *args);
-static gdouble       compute_slopes             (GwyDataField *dfield,
-                                                 gdouble *xder,
-                                                 gdouble *yder);
+static gboolean      module_register          (const gchar *name);
+static gboolean      slope_dist               (GwyContainer *data,
+                                               GwyRunType run,
+                                               const gchar *name);
+static gboolean      angle_dist               (GwyContainer *data,
+                                               GwyRunType run,
+                                               const gchar *name);
+static void          mod_run                  (GwyContainer *data,
+                                               GwyRunType run,
+                                               const gchar *modname,
+                                               const gchar *dialog_title,
+                                               const gchar *data_title,
+                                               GwyDataField*
+                                                   (*do_func)(GwyDataField*,
+                                                              SlopeDistArgs*));
+static gboolean      mod_dialog               (SlopeDistArgs *args,
+                                               const gchar *title);
+static void          size_changed_cb          (GtkAdjustment *adj,
+                                               SlopeDistArgs *args);
+static void          slope_dist_dialog_update (SlopeDistControls *controls,
+                                               SlopeDistArgs *args);
+static GwyDataField* slope_dist_do            (GwyDataField *dfield,
+                                               SlopeDistArgs *args);
+static GwyDataField* angle_dist_do            (GwyDataField *dfield,
+                                               SlopeDistArgs *args);
+static void          load_args                (GwyContainer *container,
+                                               SlopeDistArgs *args,
+                                               const gchar *modname);
+static void          save_args                (GwyContainer *container,
+                                               SlopeDistArgs *args,
+                                               const gchar *modname);
+static gdouble       compute_slopes           (GwyDataField *dfield,
+                                               gdouble *xder,
+                                               gdouble *yder);
+static gdouble       compute_angles           (GwyDataField *dfield,
+                                               gdouble *der,
+                                               gdouble *phi);
+static GwyDataField* make_datafield           (gint res,
+                                               gulong *count,
+                                               gdouble real,
+                                               gboolean logscale);
 
 SlopeDistArgs slope_dist_defaults = {
-    200,
+    120,
     FALSE,
 };
 
@@ -72,11 +96,11 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "slope_dist",
-    "Slope distribution.",
+    "Slope and angluar distribution.",
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2004",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -90,16 +114,46 @@ module_register(const gchar *name)
         "slope_dist",
         "/_Statistics/_Slope distribution",
         (GwyProcessFunc)&slope_dist,
-        LEVEL_RUN_MODES,
+        SLOPE_DIST_RUN_MODES,
+    };
+    static GwyProcessFuncInfo angle_dist_func_info = {
+        "angle_dist",
+        "/_Statistics/_Angular distribution",
+        (GwyProcessFunc)&angle_dist,
+        SLOPE_DIST_RUN_MODES,
     };
 
     gwy_process_func_register(name, &slope_dist_func_info);
+    gwy_process_func_register(name, &angle_dist_func_info);
 
     return TRUE;
 }
 
 static gboolean
-slope_dist(GwyContainer *data, GwyRunType run)
+slope_dist(GwyContainer *data, GwyRunType run, const gchar *name)
+{
+    mod_run(data, run, name,
+            _("Slope Distribution"), _("Slope dist."),
+            &slope_dist_do);
+    return FALSE;
+}
+
+static gboolean
+angle_dist(GwyContainer *data, GwyRunType run, const gchar *name)
+{
+    mod_run(data, run, name,
+            _("Angular Distribution"), _("Angle dist."),
+            &angle_dist_do);
+    return FALSE;
+}
+
+static void
+mod_run(GwyContainer *data,
+        GwyRunType run,
+        const gchar *modname,
+        const gchar *dialog_title,
+        const gchar *data_title,
+        GwyDataField* (*do_func)(GwyDataField*, SlopeDistArgs*))
 {
     GtkWidget *data_window;
     GwyDataField *dfield;
@@ -107,18 +161,18 @@ slope_dist(GwyContainer *data, GwyRunType run)
     const gchar *pal;
     gboolean ok;
 
-    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
+    g_return_if_fail(run & SLOPE_DIST_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = slope_dist_defaults;
     else
-        slope_dist_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || slope_dist_dialog(&args);
+        load_args(gwy_app_settings_get(), &args, modname);
+    ok = (run != GWY_RUN_MODAL) || mod_dialog(&args, dialog_title);
     if (ok) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
         pal = gwy_container_get_string_by_name(data, "/0/base/palette");
-        dfield = slope_dist_do(dfield, &args);
+        dfield = do_func(dfield, &args);
         data = GWY_CONTAINER(gwy_container_new());
         gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
         gwy_container_set_string_by_name(data, "/0/base/palette",
@@ -126,25 +180,23 @@ slope_dist(GwyContainer *data, GwyRunType run)
 
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                         _("Slope. dist."));
+                                         data_title);
 
         if (run != GWY_RUN_WITH_DEFAULTS)
-            slope_dist_save_args(gwy_app_settings_get(), &args);
+            save_args(gwy_app_settings_get(), &args, modname);
     }
-
-    return FALSE;
 }
 
 static gboolean
-slope_dist_dialog(SlopeDistArgs *args)
+mod_dialog(SlopeDistArgs *args,
+           const gchar *title)
 {
     GtkWidget *dialog, *table, *spin;
     SlopeDistControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(_("Slope Distribution"),
-                                         NULL,
+    dialog = gtk_dialog_new_with_buttons(title, NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          _("Reset"), RESPONSE_RESET,
@@ -227,14 +279,15 @@ slope_dist_dialog_update(SlopeDistControls *controls,
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size),
                              args->size);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->logscale),
+                                 args->logscale);
 }
 
 static GwyDataField*
 slope_dist_do(GwyDataField *dfield,
               SlopeDistArgs *args)
 {
-    GwySIUnit *zunit;
-    gdouble *xder, *yder, *d;
+    gdouble *xder, *yder;
     gdouble max;
     gint xres, yres;
     gint xider, yider, i;
@@ -247,7 +300,7 @@ slope_dist_do(GwyDataField *dfield,
     yder = g_new(gdouble, xres*yres);
     max = compute_slopes(dfield, xder, yder);
     count = g_new0(gulong, args->size*args->size);
-    for (i = 0; i < xres*yres; i++) {
+    for (i = 0; i < (xres - 2)*(yres - 2); i++) {
         xider = args->size*(xder[i]/(2.0*max) + 0.5);
         xider = CLAMP(xider, 0, args->size-1);
         yider = args->size*(yder[i]/(2.0*max) + 0.5);
@@ -258,25 +311,7 @@ slope_dist_do(GwyDataField *dfield,
     g_free(yder);
     g_free(xder);
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(args->size, args->size,
-                                               2.0*max, 2.0*max,
-                                               FALSE));
-    zunit = GWY_SI_UNIT(gwy_si_unit_new(""));
-    gwy_data_field_set_si_unit_z(dfield, zunit);
-    g_object_unref(zunit);
-
-    d = gwy_data_field_get_data(dfield);
-    if (args->logscale) {
-        for (i = 0; i < args->size*args->size; i++)
-            d[i] = count[i] ? log((gdouble)count[i]) + 1.0 : 0.0;
-    }
-    else {
-        for (i = 0; i < args->size*args->size; i++)
-            d[i] = count[i];
-    }
-    g_free(count);
-
-    return dfield;
+    return make_datafield(args->size, count, 2.0*max, args->logscale);
 }
 
 static gdouble
@@ -284,22 +319,29 @@ compute_slopes(GwyDataField *dfield,
                gdouble *xder,
                gdouble *yder)
 {
+    gdouble *data;
+    gdouble qx, qy;
     gdouble d, max;
     gint xres, yres;
     gint col, row;
 
+    data = gwy_data_field_get_data(dfield);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
+    qx = xres/gwy_data_field_get_xreal(dfield);
+    qy = yres/gwy_data_field_get_yreal(dfield);
     max = 0.0;
-    for (row = 0; row < yres; row++) {
-        for (col = 0; col < xres; col++) {
-            d = gwy_data_field_get_xder(dfield, col, row);
-            xder[row*xres + col] = d;
+    for (row = 1; row + 1 < yres; row++) {
+        for (col = 1; col + 1 < xres; col++) {
+            d = data[row*xres + col + 1] - data[row*xres + col - 1];
+            d *= qx;
+            *(xder++) = d;
             d = fabs(d);
             max = MAX(d, max);
 
-            d = gwy_data_field_get_yder(dfield, col, row);
-            yder[row*xres + col] = d;
+            d = data[row*xres + xres + col] - data[row*xres - xres + col];
+            d *= qy;
+            *(yder++) = d;
             d = fabs(d);
             max = MAX(d, max);
         }
@@ -308,22 +350,128 @@ compute_slopes(GwyDataField *dfield,
     return max;
 }
 
-static const gchar *size_key = "/module/slope_dist/size";
+static GwyDataField*
+angle_dist_do(GwyDataField *dfield,
+              SlopeDistArgs *args)
+{
+    gdouble *der, *phi;
+    gdouble max;
+    gint xres, yres;
+    gint xider, yider, i;
+    gulong *count;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    der = g_new(gdouble, xres*yres);
+    phi = g_new(gdouble, xres*yres);
+    max = compute_angles(dfield, der, phi);
+    count = g_new0(gulong, args->size*args->size);
+    for (i = 0; i < (xres - 2)*(yres - 2); i++) {
+        xider = args->size*(der[i]/(2.0*max)*cos(phi[i]) + 0.5);
+        xider = CLAMP(xider, 0, args->size-1);
+        yider = args->size*(der[i]/(2.0*max)*sin(phi[i]) + 0.5);
+        yider = CLAMP(yider, 0, args->size-1);
+
+        count[yider*args->size + xider]++;
+    }
+    g_free(der);
+    g_free(phi);
+
+    return make_datafield(args->size, count, 2.0*max, args->logscale);
+}
+
+static gdouble
+compute_angles(GwyDataField *dfield,
+               gdouble *der,
+               gdouble *phi)
+{
+    gdouble *data;
+    gdouble qx, qy;
+    gdouble xd, yd, d, max;
+    gint xres, yres;
+    gint col, row;
+
+    data = gwy_data_field_get_data(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    qx = xres/gwy_data_field_get_xreal(dfield);
+    qy = yres/gwy_data_field_get_yreal(dfield);
+    max = 0.0;
+    for (row = 1; row + 1 < yres; row++) {
+        for (col = 1; col + 1 < xres; col++) {
+            xd = data[row*xres + col + 1] - data[row*xres + col - 1];
+            xd *= qx;
+            yd = data[row*xres + xres + col] - data[row*xres - xres + col];
+            yd *= qy;
+
+            d = atan(sqrt(xd*xd + yd*yd));    /* don't have hypot()... */
+            *(der++) = d;
+            *(phi++) = atan2(yd, xd);
+            max = MAX(d, max);
+        }
+    }
+
+    return max;
+}
+
+static GwyDataField*
+make_datafield(gint res, gulong *count,
+               gdouble real, gboolean logscale)
+{
+    GwyDataField *dfield;
+    GwySIUnit *zunit;
+    gdouble *d;
+    gint i;
+
+    dfield = GWY_DATA_FIELD(gwy_data_field_new(res, res, real, real, FALSE));
+    zunit = GWY_SI_UNIT(gwy_si_unit_new(""));
+    gwy_data_field_set_si_unit_z(dfield, zunit);
+    g_object_unref(zunit);
+
+    d = gwy_data_field_get_data(dfield);
+    if (logscale) {
+        for (i = 0; i < res*res; i++)
+            d[i] = count[i] ? log((gdouble)count[i]) + 1.0 : 0.0;
+    }
+    else {
+        for (i = 0; i < res*res; i++)
+            d[i] = count[i];
+    }
+    g_free(count);
+
+    return dfield;
+}
+
+static const gchar *size_key = "/module/%s/size";
+static const gchar *logscale_key = "/module/%s/logscale";
 
 static void
-slope_dist_load_args(GwyContainer *container,
-                     SlopeDistArgs *args)
+load_args(GwyContainer *container,
+          SlopeDistArgs *args,
+          const gchar *modname)
 {
+    gchar key[40];
+
     *args = slope_dist_defaults;
 
-    gwy_container_gis_int32_by_name(container, size_key, &args->size);
+    g_snprintf(key, sizeof(key), size_key, modname);
+    gwy_container_gis_int32_by_name(container, key, &args->size);
+    g_snprintf(key, sizeof(key), logscale_key, modname);
+    gwy_container_gis_boolean_by_name(container, key, &args->logscale);
 }
 
 static void
-slope_dist_save_args(GwyContainer *container,
-                     SlopeDistArgs *args)
+save_args(GwyContainer *container,
+          SlopeDistArgs *args,
+          const gchar *modname)
 {
-    gwy_container_set_int32_by_name(container, size_key, args->size);
+    gchar key[40];
+
+    g_snprintf(key, sizeof(key), size_key, modname);
+    gwy_container_set_int32_by_name(container, key, args->size);
+    g_snprintf(key, sizeof(key), logscale_key, modname);
+    gwy_container_set_boolean_by_name(container, key, args->logscale);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
