@@ -2029,13 +2029,78 @@ value_changed(G_GNUC_UNUSED GwyContainer *container,
     gwy_debug("[%p] %s", container, g_quark_to_string(key));
 }
 
+static void
+hash_text_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
+{
+    GQuark key = GPOINTER_TO_UINT(hkey);
+    GValue *value = (GValue*)hvalue;
+    GString *str = (GString*)hdata;
+    GType type = G_VALUE_TYPE(value);
+    gchar *s, *v;
+    gchar c;
+
+    switch (type) {
+        case G_TYPE_BOOLEAN:
+        c = 'b';
+        v = g_strdup(g_value_get_boolean(value) ? "True" : "False");
+        break;
+
+        case G_TYPE_UCHAR:
+        c = 'c';
+        if (g_ascii_isprint(c) && !g_ascii_isspace(c))
+            v = g_strdup_printf("'%c'", g_value_get_uchar(value));
+        else
+            v = g_strdup_printf("'\\x%02x'", g_value_get_uchar(value));
+        break;
+
+        case G_TYPE_INT:
+        c = 'i';
+        v = g_strdup_printf("%d", g_value_get_int(value));
+        break;
+
+        case G_TYPE_INT64:
+        c = 'q';
+        v = g_strdup_printf("%lld", g_value_get_int64(value));
+        break;
+
+        case G_TYPE_DOUBLE:
+        c = 'd';
+        v = g_strdup_printf("%.18g", g_value_get_double(value));
+        break;
+
+        case G_TYPE_STRING:
+        c = 's';
+        s = g_strescape(g_value_get_string(value), NULL);
+        v = g_strconcat("\"", s, "\"", NULL);
+        g_free(s);
+        break;
+
+        default:
+        g_warning("Cannot pack GValue holding %s", g_type_name(type));
+        c = '!';
+        v = g_strdup("NotImplemented");
+        break;
+    }
+    s = g_strescape(g_quark_to_string(key), NULL);
+    g_string_append_printf(str, "[%c]\"%s\" = %s\n", c, s, v);
+}
+
 guchar*
 gwy_container_serialize_to_text(GwyContainer *container)
 {
+    GString *str;
+    gchar *s;
+
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
 
-    return NULL;
+    str = g_string_new("");
+    g_hash_table_foreach(container->values, hash_text_serialize_func, str);
+
+    s = str->str;
+    g_string_free(str, FALSE);
+
+    return s;
 }
 
 /************************** Documentation ****************************/

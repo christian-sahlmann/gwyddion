@@ -37,12 +37,12 @@ libgwyddion_la_SOURCES = \
 	gwywatchable.c \
 	gwysiunit.c
 
-#noinst_PROGRAMS = main
-#main_SOURCES = \
-#	main.c \
-#	gwytestser.c
-#
-#main_LDADD = libgwyddion.la
+noinst_PROGRAMS = main
+main_SOURCES = \
+	main.c \
+	gwytestser.c
+
+main_LDADD = libgwyddion.la
 #
 #noinst_PROGRAMS = test
 #test_SOURCES = test.c
