@@ -477,6 +477,13 @@ compute_statusbar_units(GwyDataWindow *data_window)
         = gwy_data_field_get_value_format_z(dfield, data_window->value_format);
     gwy_debug("after: coord_format = %p, value_format = %p",
               data_window->coord_format, data_window->value_format);
+    gwy_debug("after: coord_format = {%d, %g, %s}, value_format = {%d, %g, %s}",
+              data_window->coord_format->precision,
+              data_window->coord_format->magnitude,
+              data_window->coord_format->units,
+              data_window->value_format->precision,
+              data_window->value_format->magnitude,
+              data_window->value_format->units);
 }
 
 static gboolean
