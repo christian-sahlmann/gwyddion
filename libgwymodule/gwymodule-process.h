@@ -30,7 +30,7 @@ gboolean     gwy_run_process_func       (const guchar *name,
                                          GwyContainer *data,
                                          GwyRunType run);
 GtkObject*   gwy_build_process_menu     (GtkAccelGroup *accel_group,
-                                         GCallback *item_callback);
+                                         GCallback item_callback);
 
 #ifdef __cplusplus
 }

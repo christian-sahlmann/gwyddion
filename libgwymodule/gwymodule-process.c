@@ -117,7 +117,7 @@ process_menu_entry_compare(GtkItemFactoryEntry *a,
  **/
 GtkObject*
 gwy_build_process_menu(GtkAccelGroup *accel_group,
-                       GCallback *item_callback)
+                       GCallback item_callback)
 {
     GtkItemFactory *item_factory;
     GtkItemFactoryEntry *menu_item;
