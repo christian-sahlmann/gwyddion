@@ -184,36 +184,54 @@ static gboolean
 rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GwyDataField *dfield, *old;
+    GObject *dfield, *old;
+    GwyContainer *newdata;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
-    old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    gwy_app_clean_up_data(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    flip_xy(old, dfield, FALSE);
-    data_window = gwy_app_data_window_create(data);
+    old = gwy_container_get_object_by_name(data, "/0/data");
+    newdata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    gwy_app_clean_up_data(newdata);
+    dfield = gwy_container_get_object_by_name(newdata, "/0/data");
+    flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), FALSE);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&old)) {
+        dfield = gwy_container_get_object_by_name(newdata, "/0/mask");
+        flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), FALSE);
+    }
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&old)) {
+        dfield = gwy_container_get_object_by_name(newdata, "/0/show");
+        flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), FALSE);
+    }
+    data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
-    return TRUE;
+    return FALSE;
 }
 
 static gboolean
 rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GwyDataField *dfield, *old;
+    GObject *dfield, *old;
+    GwyContainer *newdata;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
-    old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    gwy_app_clean_up_data(data);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    flip_xy(old, dfield, TRUE);
-    data_window = gwy_app_data_window_create(data);
+    old = gwy_container_get_object_by_name(data, "/0/data");
+    newdata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    gwy_app_clean_up_data(newdata);
+    dfield = gwy_container_get_object_by_name(newdata, "/0/data");
+    flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), TRUE);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&old)) {
+        dfield = gwy_container_get_object_by_name(newdata, "/0/mask");
+        flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), TRUE);
+    }
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&old)) {
+        dfield = gwy_container_get_object_by_name(newdata, "/0/show");
+        flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), TRUE);
+    }
+    data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
-    return TRUE;
+    return FALSE;
 }
 
 static void
