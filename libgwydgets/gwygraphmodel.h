@@ -36,15 +36,6 @@ G_BEGIN_DECLS
 typedef struct _GwyGraphModel GwyGraphModel;
 typedef struct _GwyGraphModelClass GwyGraphModelClass;
 
-typedef struct {
-    gint n;
-    gdouble *xdata;
-    gdouble *ydata;
-    GwyGraphAreaCurveParams *params;
-
-    /* TODO: add some reserved stuff */
-} GwyGraphModelCurve;
-
 /* XXX: really NEVER access these fields directly. They don't have to reflect
  * the graph values! */
 struct _GwyGraphModel {
@@ -52,6 +43,10 @@ struct _GwyGraphModel {
 
     GwyGraph *graph;
     gulong graph_destroy_hid;
+
+    gint ncurves;
+    gint nautocurves;
+    GObject **curves;
 
     gdouble x_reqmax;
     gdouble x_reqmin;
@@ -73,16 +68,24 @@ struct _GwyGraphModel {
     gboolean label_has_frame;
     gint label_frame_thickness;
 
-    gint ncurves;
-    GwyGraphModelCurve *curves;
-
-    /* TODO: add some reserved stuff */
+    /* reserved stuff */
+    gint int1;
+    gint int2;
+    GwyGraphPointType enum1;
+    GwyGraphPointType enum2;
+    gpointer reserved1;
+    gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 struct _GwyGraphModelClass {
     GObjectClass parent_class;
 
     void (*value_changed)(GwyGraphModel *gmodel);  /* XXX: only formal */
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 
