@@ -152,9 +152,10 @@ register_plugins(GList *plugins,
             info->func.menu_path = g_strconcat("/_Plug-Ins", menu_path, NULL);
             info->func.process = plugin_proxy;
             info->func.run = run;
-            info->file = g_strdup(file);
-            if (gwy_process_func_register(name, &info->func))
+            if (gwy_process_func_register(name, &info->func)) {
                 plugins = g_list_prepend(plugins, info);
+                info->file = g_strdup(file);
+            }
             else {
                 g_free((gpointer)info->func.name);
                 g_free((gpointer)info->func.menu_path);
