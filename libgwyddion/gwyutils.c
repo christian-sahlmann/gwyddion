@@ -558,7 +558,7 @@ gwy_get_user_dir(void)
 }
 
 /************************** Documentation ****************************/
-/* NB: gwymacros.h documentation is also here. */
+/* NB: gwymacros.h, gwywin32unistd.h documentation is also here. */
 
 /**
  * GwyEnum:
@@ -595,6 +595,48 @@ gwy_get_user_dir(void)
  *
  * If the object reference count is greater than one, assure it should be
  * referenced elsewhere, otherwise it leaks memory.
+ **/
+
+/**
+ * chmod:
+ * @file: File name.
+ * @mode: Permissions to set on @file.
+ *
+ * Macro usable as chmod() on Win32.
+ * See its manual page for details.
+ **/
+
+/**
+ * ftruncate:
+ * @file: File name.
+ * @size: Size to change @file to.
+ *
+ * Macro usable as ftruncate() on Win32.
+ * See its manual page for details.
+ **/
+
+/**
+ * getpid:
+ *
+ * Macro usable as getpid() on Win32.
+ * See its manual page for details.
+ **/
+
+/**
+ * mkdir:
+ * @dir: Directory name.
+ * @mode: Permissions of the newly created directory (ignored on Win32).
+ *
+ * Macro usable as mkdir() on Win32.
+ * See its manual page for details.
+ **/
+
+/**
+ * unlink:
+ * @file: File name.
+ *
+ * Macro usable as unlink() on Win32.
+ * See its manual page for details.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

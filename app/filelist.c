@@ -52,6 +52,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <libgwyddion/gwywin32unistd.h>
 
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -60,10 +61,6 @@
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
-
-#ifdef _MSC_VER
-#include <libgwyddion/gwywin32unistd.h>
 #endif
 
 /* PNG (additional in TMS) */

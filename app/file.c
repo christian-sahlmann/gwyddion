@@ -28,10 +28,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
-#ifdef _MSC_VER
 #include <libgwyddion/gwywin32unistd.h>
-#endif
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-file.h>

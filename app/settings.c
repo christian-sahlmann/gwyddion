@@ -29,10 +29,7 @@
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
-
-#ifdef _MSC_VER
 #include <libgwyddion/gwywin32unistd.h>
-#endif
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>

@@ -21,6 +21,9 @@
 #ifndef __GWY_WIN32_UNISTD_H__
 #define __GWY_WIN32_UNISTD_H__
 
+/* To be includable unconditionally, but do no harm on sane systems. */
+#ifdef _WIN32
+
 #include <io.h>
 #include <direct.h>
 
@@ -57,6 +60,8 @@
 #ifndef W_OK
 #define W_OK 2
 #endif
+
+#endif /* _WIN32 */
 
 #endif /* __GWY_WIN32_UNISTD_H__ */
 
