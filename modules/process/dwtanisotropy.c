@@ -37,12 +37,14 @@ typedef struct {
     GwyInterpolationType interp;
     GwyDWTType wavelet;
     gdouble ratio;
+    gint lowlimit;
 } DWTAnisotropyArgs;
 
 typedef struct {
     GtkWidget *wavelet;
     GtkWidget *interp;
     GtkObject *ratio;
+    GtkObject *lowlimit;
 } DWTAnisotropyControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -54,7 +56,9 @@ static void        interp_changed_cb          (GObject *item,
 static void        wavelet_changed_cb          (GObject *item,
                                                DWTAnisotropyArgs *args);
 static void        ratio_changed_cb            (GtkAdjustment *adj,
-						DWTAnisotropyArgs *args);
+						                       DWTAnisotropyArgs *args);
+static void        lowlimit_changed_cb         (GtkAdjustment *adj,
+                                               DWTAnisotropyArgs *args);
 static void        dwt_anisotropy_dialog_update          (DWTAnisotropyControls *controls,
                                                DWTAnisotropyArgs *args);
 static void        dwt_anisotropy_load_args              (GwyContainer *container,
@@ -67,6 +71,7 @@ static void        dwt_anisotropy_sanitize_args          (DWTAnisotropyArgs *arg
 DWTAnisotropyArgs dwt_anisotropy_defaults = {
     GWY_INTERPOLATION_BILINEAR,
     GWY_DWT_DAUB12,
+    0.2,
     4
 };
 
@@ -110,7 +115,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     GwyDataLine *wtcoefs;
     DWTAnisotropyArgs args;
     gboolean ok;
-    gint xsize, ysize, newsize;
+    gint xsize, ysize, newsize, limit;
 
     g_assert(run & DWT_ANISOTROPY_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -165,7 +170,11 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
 
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
-    mask = gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio, 16);
+    
+    /*justo for sure clamp the lowlimit again*/
+    limit = pow(2, CLAMP(args.lowlimit, 1, 20));
+    mask = gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio, 
+                                              limit);
     
    
     gwy_data_field_resample(dfield, xsize, ysize,
@@ -213,7 +222,7 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
                          controls.wavelet);
 
     controls.ratio = gtk_adjustment_new(args->ratio,
-					0.0001, 10000, 1, 10, 0);
+					0.0001, 10.0, 0.01, 0.1, 0);
     spin = gwy_table_attach_spinbutton(table, 3,
 				       _("X/Y ratio threshold:"), NULL,
 				       controls.ratio);
@@ -221,7 +230,16 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
     g_signal_connect(controls.ratio, "value_changed",
 		     G_CALLBACK(ratio_changed_cb), args);
     
+    controls.lowlimit = gtk_adjustment_new(args->lowlimit,
+					1, 20, 1, 1, 0);
+    spin = gwy_table_attach_spinbutton(table, 4,
+				       _("Low level exclude limit:"), NULL,
+				       controls.lowlimit);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    g_signal_connect(controls.lowlimit, "value_changed",
+		     G_CALLBACK(lowlimit_changed_cb), args);
     
+     
 
     gtk_widget_show_all(dialog);
     do {
@@ -276,13 +294,14 @@ ratio_changed_cb(GtkAdjustment *adj, DWTAnisotropyArgs *args)
 }    
 
 static void
+lowlimit_changed_cb(GtkAdjustment *adj, DWTAnisotropyArgs *args)
+{
+    args->lowlimit = gtk_adjustment_get_value(adj);
+} 
+static void
 dwt_anisotropy_dialog_update(DWTAnisotropyControls *controls,
                      DWTAnisotropyArgs *args)
 {
-    /*
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
-                             args->angle);
-     */
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
     gwy_option_menu_set_history(controls->wavelet, "dwt-wavelet-type",
@@ -293,6 +312,7 @@ dwt_anisotropy_dialog_update(DWTAnisotropyControls *controls,
 static const gchar *interp_key = "/module/dwt_anisotropy/interp";
 static const gchar *wavelet_key = "/module/dwt_anisotropy/wavelet";
 static const gchar *ratio_key = "/module/dwt_anisotropy/ratio";
+static const gchar *lowlimit_key = "/module/dwt_anisotropy/lowlimit";
 
 static void
 dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args)
@@ -300,6 +320,7 @@ dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args)
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
     args->wavelet = CLAMP(args->wavelet, GWY_DWT_HAAR, GWY_DWT_DAUB20);
+    args->lowlimit = CLAMP(args->lowlimit, 1, 20);
 }
 
 static void
@@ -311,6 +332,7 @@ dwt_anisotropy_load_args(GwyContainer *container,
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, wavelet_key, &args->wavelet);
     gwy_container_gis_double_by_name(container, ratio_key, &args->ratio);
+    gwy_container_gis_int32_by_name(container, lowlimit_key, &args->lowlimit);
     dwt_anisotropy_sanitize_args(args);
 }
 
@@ -321,6 +343,7 @@ dwt_anisotropy_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_enum_by_name(container, wavelet_key, args->wavelet);
     gwy_container_set_double_by_name(container, ratio_key, args->ratio);
+    gwy_container_set_int32_by_name(container, lowlimit_key, args->lowlimit);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

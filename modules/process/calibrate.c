@@ -132,10 +132,12 @@ calibrate(GwyContainer *data, GwyRunType run)
         args = calibrate_defaults;
     else
         calibrate_load_args(gwy_app_settings_get(), &args);
+    
     args.xreal = gwy_data_field_get_xreal(dfield);
     args.yreal = gwy_data_field_get_yreal(dfield);
     args.zreal = gwy_data_field_get_max(dfield)
         - gwy_data_field_get_min(dfield);
+    
     ok = (run != GWY_RUN_MODAL) || calibrate_dialog(&args, data);
     if (run == GWY_RUN_MODAL)
         calibrate_save_args(gwy_app_settings_get(), &args);

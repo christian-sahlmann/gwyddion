@@ -50,7 +50,7 @@ static gint remove_by_threshold_under_mask(GwyDataField *dfield,
 		                        gboolean hard, gdouble multiple_threshold, gdouble noise_variance);
 
 
-static gint find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdouble threshold, gint setsize);
+static gint find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdouble threshold, gdouble setsize);
 
 static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow);
 static void mask_grow_do(GwyDataField *dfield,
@@ -333,34 +333,34 @@ gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint
 
     if (isign >= 0)
     {
-	for (nn = dfield->xres; nn>=(2*minsize); nn>>=1)
+	    for (nn = dfield->xres; nn>=(2*minsize); nn>>=1)
         {
-	    for (k = 0; k < nn; k++) {
-		gwy_data_field_get_row_part(dfield, rin, k, 0, nn);
-		rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
-		gwy_data_field_set_row_part(dfield, rin, k, 0, nn);
+	        for (k = 0; k < nn; k++) {
+		        gwy_data_field_get_row_part(dfield, rin, k, 0, nn);
+		        rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
+		        gwy_data_field_set_row_part(dfield, rin, k, 0, nn);
+	        }
+	        for (k = 0; k < nn; k++) {
+		        gwy_data_field_get_column_part(dfield, rin, k, 0, nn);
+		        rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
+		        gwy_data_field_set_column_part(dfield, rin, k, 0, nn);
+	        }
 	    }
-	    for (k = 0; k < nn; k++) {
-		gwy_data_field_get_column_part(dfield, rin, k, 0, nn);
-		rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
-		gwy_data_field_set_column_part(dfield, rin, k, 0, nn);
-	    }
-	}
     }
     else {
-	for (nn = 2*minsize; nn<=dfield->xres; nn<<=1)
-	{
-	    for (k = 0; k < nn; k++) {
-		gwy_data_field_get_row_part(dfield, rin, k, 0, nn);
-		rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
-		gwy_data_field_set_row_part(dfield, rin, k, 0, nn);
+	    for (nn = 2*minsize; nn<=dfield->xres; nn<<=1)
+	    {
+	        for (k = 0; k < nn; k++) {
+		        gwy_data_field_get_row_part(dfield, rin, k, 0, nn);
+		        rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
+		        gwy_data_field_set_row_part(dfield, rin, k, 0, nn);
+	        }
+	        for (k = 0; k < nn; k++) {
+		        gwy_data_field_get_column_part(dfield, rin, k, 0, nn);
+		        rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
+		        gwy_data_field_set_column_part(dfield, rin, k, 0, nn);
+	        }
 	    }
-	    for (k = 0; k < nn; k++) {
-		gwy_data_field_get_column_part(dfield, rin, k, 0, nn);
-		rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
-		gwy_data_field_set_column_part(dfield, rin, k, 0, nn);
-	    }
-	}
     }
 
     g_object_unref(rin);	 
@@ -512,10 +512,8 @@ GwyDataField *gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield, GwyDataFi
 
     for (br = dfield->xres; br>lowlimit; br>>=1)
     {
-	ul = br/2;
-
-	count = find_anisotropy(buffer, mask, ul, br, ratio, 3);	
-	printf("Level %d: found %d anisotropy suspections.\n", br, count);
+	   ul = br/2;
+	   count = find_anisotropy(buffer, mask, ul, br, ratio, 3.5);	
     }
         
     g_object_unref(buffer);
@@ -683,7 +681,7 @@ wtset(GwyDataLine *wt_coefs)
     }
 
     /*FIXME none of the shifts centers wavelet well*/
-    wt->ioff = wt->joff = -(wt_coefs->res >> 1);
+    /*wt->ioff = wt->joff = -(wt_coefs->res >> 1);*/
     wt->ioff = 0;
     wt->joff = -wt->ncof;
     
@@ -858,10 +856,10 @@ remove_by_threshold_under_mask(GwyDataField *dfield, GwyDataField *mask, gint ul
 
 
 static gint
-find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdouble threshold, gint setsize)
+find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdouble threshold, gdouble setsize)
 {
     gdouble *brpos, *trpos, *blpos, *brdrow, *trdrow, *bldrow;
-    gdouble cor, rms;
+    gdouble cor, mcor, scor, rms;
     gint i, j, n, count, mincol, minrow, maxcol, maxrow;
 
     count = 0;
@@ -871,6 +869,9 @@ find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdou
 
     /*ratio between all field and its fraction*/
     cor = dfield->xres/(gdouble)(br-ul);
+    mcor = MIN(cor, 30);
+    scor = MAX(cor, mcor/3.5);
+    
     rms = gwy_data_field_area_get_rms(dfield, ul, ul, br-ul, br-ul);
     
     for (i = 0; i < (br - ul); i++) {
@@ -879,30 +880,33 @@ find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdou
 	trdrow = trpos + i*dfield->xres;
 	
 	for (j = 0; j < (br - ul); j++) {
-	   if (fabs(*trdrow)>(rms/2) && fabs(*bldrow)>(rms/2) && fabs(1-(*bldrow)/(*trdrow))>threshold)
-	   {
-	       if (fabs(*bldrow)>fabs(*trdrow))
-	       {
-		   mincol = MAX(j*cor - 1.0*(gdouble)setsize/2.0, 0);
-		   maxcol = MIN(j*cor + 1.0*(gdouble)setsize/2.0, mask->xres);
-		   minrow = MAX(i*cor - (gdouble)setsize/2.0, 0);
-		   maxrow = MIN(i*cor + (gdouble)setsize/2.0, mask->yres);		  
-	       }
-	       else
-	       {
-		   mincol = MAX(j*cor - 1.0*(gdouble)setsize/2.0, 0);
-		   maxcol = MIN(j*cor + 1.0*(gdouble)setsize/2.0, mask->xres);
-		   minrow = MAX(i*cor - (gdouble)setsize/2.0, 0);
-		   maxrow = MIN(i*cor + (gdouble)setsize/2.0, mask->yres);			   
-	       }
-	       if (minrow>maxrow) continue;
-	       gwy_data_field_area_fill(mask, mincol, minrow, maxcol, maxrow, 1);
-	       count++;
-	   }
+       if ((fabs(*bldrow) - fabs(*trdrow))>(rms/threshold))
+       {
+           /*note that we shift a little result neighbourhood. This is probably due to bad centering,
+            of scaling function, but it should be studied yet*/
+           mincol = MAX(j*cor - setsize/2.0, 0);
+           maxcol = MIN(j*cor + mcor*setsize, mask->xres);
+           minrow = MAX(i*cor - scor*setsize/2.0, 0);
+           maxrow = MIN(i*cor + scor*setsize/2.0, mask->yres);
+           count++;
+           gwy_data_field_area_fill(mask, mincol, minrow, maxcol, maxrow, 1);          
+       }
+       else if ((fabs(*trdrow) - fabs(*bldrow))>(rms/threshold))
+       {
+           /*note that we shift a little result neighbourhood. This is probably due to bad centering,
+            of scaling function, but it should be studied yet*/            
+           mincol = MAX(j*cor - scor*setsize/2.0, 0);
+           maxcol = MIN(j*cor + scor*setsize/2.0, mask->xres);
+           minrow = MAX(i*cor - setsize/2.0, 0);
+           maxrow = MIN(i*cor + mcor*setsize, mask->yres);
+           count++;
+           gwy_data_field_area_fill(mask, mincol, minrow, maxcol, maxrow, 1);
+       }
+       
 	   *brdrow++;
 	   *bldrow++;
 	   *trdrow++;
-	}
+	   }
     }  
     return count;
 }
@@ -920,9 +924,9 @@ gint dsort(const void *p_a, const void *p_b)
 static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow)
 {
    gint i, j, n, k;
-   gdouble *datapos, val;
+   gdouble *datapos, val, *buf;
    n = (brrow-ulrow)*(brcol-ulcol);
-   gdouble *buf= g_malloc( sizeof(double)*n);
+   buf = g_malloc( sizeof(double)*n);
    
 
    k = 0;

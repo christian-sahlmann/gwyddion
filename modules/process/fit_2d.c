@@ -66,6 +66,8 @@ static gboolean    fit_2d_dialog           (Fit2dArgs *args,
                                                GwyContainer *data);
 static void        reset                      (Fit2dControls *controls,
                                                Fit2dArgs *args);
+static void        guess                      (Fit2dControls *controls,
+                                               Fit2dArgs *args);
 static void        fit_2d_load_args        (GwyContainer *container,
                                                Fit2dArgs *args);
 static void        fit_2d_save_args        (GwyContainer *container,
@@ -157,8 +159,9 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
     GtkWidget *dialog, *table, *hbox, *vbox, *hbox2;
     Fit2dControls controls;
     enum {
-	RESPONSE_FIT = 1,
-        RESPONSE_RESET = 2
+	    RESPONSE_FIT = 1,
+        RESPONSE_RESET = 2,
+        RESPONSE_GUESS = 3
     };
     gint response, row, i, j;
     GtkObject *layer;
@@ -166,6 +169,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
     GtkWidget *label;
 
     dialog = gtk_dialog_new_with_buttons(_("2D fit"), NULL, 0,
+                                         _("_Guess"), RESPONSE_GUESS,
                                          _("_Fit"), RESPONSE_FIT,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -361,6 +365,10 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
             fit_2d_run(&controls, args);
             break;
 
+            case RESPONSE_GUESS:
+            guess(&controls, args);
+            break;
+
             default:
             g_assert_not_reached();
             break;
@@ -382,6 +390,12 @@ static void
 reset(Fit2dControls *controls, Fit2dArgs *args)
 {
 }
+
+static void
+guess(Fit2dControls *controls, Fit2dArgs *args)
+{
+}
+
 
 
 static void
