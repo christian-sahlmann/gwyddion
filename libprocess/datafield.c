@@ -204,15 +204,15 @@ gwy_data_field_deserialize(const guchar *buffer,
     gsize fsize;
     gint xres, yres;
     gdouble xreal, yreal, *data = NULL;
-    GwySIUnit *si_unit_xy, *si_unit_z;
+    GwySIUnit *si_unit_xy = NULL, *si_unit_z = NULL;
     GwyDataField *data_field;
     GwySerializeSpec spec[] = {
         { 'i', "xres", &xres, NULL, },
         { 'i', "yres", &yres, NULL, },
         { 'd', "xreal", &xreal, NULL, },
         { 'd', "yreal", &yreal, NULL, },
-        { 'o', "si_unit_xy", si_unit_xy, NULL, },
-        { 'o', "si_unit_z", si_unit_z, NULL, },                      
+        { 'o', "si_unit_xy", &si_unit_xy, NULL, },
+        { 'o', "si_unit_z", &si_unit_z, NULL, },                      
         { 'D', "data", &data, &fsize, },
     };
 
