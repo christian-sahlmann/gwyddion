@@ -353,6 +353,9 @@ gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
 
     b->xreal = a->xreal;
     b->yreal = a->yreal;
+    b->si_unit_xy = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(a->si_unit_xy));
+    b->si_unit_z = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(a->si_unit_z));
+    
     memcpy(b->data, a->data, a->xres*a->yres*sizeof(gdouble));
 
     return TRUE;
@@ -405,7 +408,10 @@ gwy_data_field_area_copy(GwyDataField *src,
         || destcol + brcol - ulcol > dest->xres
         || destrow + brrow - ulrow > dest->yres)
         return FALSE;
-
+    
+    dest->si_unit_xy = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(src->si_unit_xy));
+    dest->si_unit_z = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(src->si_unit_z));
+ 
     for (i = 0; i < brrow - ulrow; i++)
         memcpy(dest->data + dest->xres*(destrow + i) + destcol,
                src->data + src->xres*(ulrow + i) + ulcol,
