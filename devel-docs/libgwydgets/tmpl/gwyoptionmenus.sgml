@@ -24,7 +24,28 @@ Option menu constructors for enums
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_menu_gl_material ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_option_menu_palette ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_gl_material ##### -->
 <para>
 
 </para>

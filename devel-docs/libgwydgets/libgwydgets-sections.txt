@@ -32,6 +32,42 @@ GWY_GRAPH_CORNER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyglmaterial</FILE>
+GWY_GL_MATERIAL_NONE
+GWY_GL_MATERIAL_EMERALD
+GWY_GL_MATERIAL_JADE
+GWY_GL_MATERIAL_OBSIDIAN
+GWY_GL_MATERIAL_PEARL
+GWY_GL_MATERIAL_RUBY
+GWY_GL_MATERIAL_TURQUOISE
+GWY_GL_MATERIAL_BRASS
+GWY_GL_MATERIAL_BRONZE
+GWY_GL_MATERIAL_CHROME
+GWY_GL_MATERIAL_COPPER
+GWY_GL_MATERIAL_GOLD
+GWY_GL_MATERIAL_SILVER
+<TITLE>GwyGLMaterial</TITLE>
+GwyGLMaterial
+GwyGLMaterialClass
+GwyGLMaterialFunc
+gwy_gl_material_new
+gwy_gl_material_get_name
+gwy_gl_material_set_name
+gwy_gl_material_get_by_name
+gwy_gl_material_exists
+gwy_gl_material_foreach
+gwy_gl_material_setup_presets
+<SUBSECTION Standard>
+GWY_GL_MATERIAL
+GWY_IS_GL_MATERIAL
+GWY_TYPE_GL_MATERIAL
+gwy_gl_material_get_type
+GWY_GL_MATERIAL_CLASS
+GWY_IS_GL_MATERIAL_CLASS
+GWY_GL_MATERIAL_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwydataviewlayer</FILE>
 <TITLE>GwyDataViewLayer</TITLE>
 GwyDataViewLayer
@@ -190,6 +226,8 @@ GWY_GRAPH_LABEL_GET_CLASS
 <SECTION>
 <FILE>gwyvalunit</FILE>
 <TITLE>GwyValUnit</TITLE>
+GwyValUnit
+GwyValUnitClass
 gwy_val_unit_new
 gwy_val_unit_set_value
 gwy_val_unit_get_value
@@ -203,6 +241,7 @@ GWY_VAL_UNIT_CLASS
 GWY_IS_VAL_UNIT_CLASS
 GWY_VAL_UNIT_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwyscitext</FILE>
 GwySciTextParams
@@ -391,6 +430,8 @@ GWY_HRULER_GET_CLASS
 <FILE>gwy3dview</FILE>
 Gwy3DMovement
 <TITLE>Gwy3DView</TITLE>
+Gwy3DView
+Gwy3DViewClass
 gwy_3d_view_new
 gwy_3d_view_update
 gwy_3d_view_get_palette
@@ -409,6 +450,16 @@ gwy_3d_view_get_material
 gwy_3d_view_set_material
 gwy_3d_view_get_pixbuf
 gwy_3d_view_reset_view
+gwy_3d_view_get_rot_x_adjustment
+gwy_3d_view_get_rot_y_adjustment
+gwy_3d_view_get_view_scale_adjustment
+gwy_3d_view_get_z_deformation_adjustment
+gwy_3d_view_get_light_z_adjustment
+gwy_3d_view_get_light_y_adjustment
+gwy_3d_view_get_max_view_scale
+gwy_3d_view_get_min_view_scale
+gwy_3d_view_set_max_view_scale
+gwy_3d_view_set_min_view_scale
 <SUBSECTION Standard>
 GWY_3D_VIEW
 GWY_IS_3D_VIEW
@@ -418,6 +469,7 @@ GWY_3D_VIEW_CLASS
 GWY_IS_3D_VIEW_CLASS
 GWY_3D_VIEW_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwydataview</FILE>
 <TITLE>GwyDataView</TITLE>
@@ -497,6 +549,23 @@ gwy_graph_area_get_type
 GWY_GRAPH_AREA_CLASS
 GWY_IS_GRAPH_AREA_CLASS
 GWY_GRAPH_AREA_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwy3dwindow</FILE>
+<TITLE>Gwy3DWindow</TITLE>
+Gwy3DWindow
+Gwy3DWindowClass
+gwy_3d_window_new
+gwy_3d_window_get_3d_view
+<SUBSECTION Standard>
+GWY_3D_WINDOW
+GWY_IS_3D_WINDOW
+GWY_TYPE_3D_WINDOW
+gwy_3d_window_get_type
+GWY_3D_WINDOW_CLASS
+GWY_IS_3D_WINDOW_CLASS
+GWY_3D_WINDOW_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -612,6 +681,8 @@ GWY_GRAPH_GET_CLASS
 <SECTION>
 <FILE>gwydgets</FILE>
 gwy_widgets_type_init
+gwy_widgets_gl_init
+gwy_widgets_get_gl_config
 gwy_table_attach_spinbutton
 gwy_table_attach_row
 gwy_color_selector_for_mask
@@ -630,6 +701,7 @@ gwy_radio_buttons_get_current_from_widget
 
 <SECTION>
 <FILE>gwystock</FILE>
+GWY_STOCK_3D_BASE
 GWY_STOCK_BOLD
 GWY_STOCK_CROP
 GWY_STOCK_CWT
@@ -657,6 +729,7 @@ GWY_STOCK_GRAPH_ZOOM_IN
 GWY_STOCK_GRAPH_ZOOM_OUT
 GWY_STOCK_GWYDDION
 GWY_STOCK_ITALIC
+GWY_STOCK_LIGHT_ROTATE
 GWY_STOCK_NONE
 GWY_STOCK_POINTER
 GWY_STOCK_POINTER_MEASURE
@@ -670,6 +743,7 @@ GWY_STOCK_STAT_QUANTITIES
 GWY_STOCK_SUBSCRIPT
 GWY_STOCK_SUPERSCRIPT
 GWY_STOCK_UNROTATE
+GWY_STOCK_Z_SCALE
 GWY_STOCK_ZOOM_1_1
 GWY_STOCK_ZOOM_FIT
 GWY_STOCK_ZOOM_IN
@@ -681,7 +755,9 @@ gwy_stock_register_stock_items
 <SECTION>
 <FILE>gwyoptionmenus</FILE>
 gwy_menu_palette
+gwy_menu_gl_material
 gwy_option_menu_palette
+gwy_option_menu_gl_material
 gwy_option_menu_interpolation
 gwy_option_menu_windowing
 gwy_option_menu_zoom_mode
@@ -695,10 +771,5 @@ gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history
 gwy_option_menu_get_history
-</SECTION>
-
-<SECTION>
-<FILE>gwyglmat</FILE>
-gwyGL_mat_none
 </SECTION>
 

@@ -1,0 +1,49 @@
+<!-- ##### SECTION Title ##### -->
+Gwy3DWindow
+
+<!-- ##### SECTION Short_Description ##### -->
+3D data display window
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT Gwy3DWindow ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT Gwy3DWindowClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### FUNCTION gwy_3d_window_new ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_window_get_3d_view ##### -->
+<para>
+
+</para>
+
+@gwy3dwindow: 
+@Returns: 
+
+

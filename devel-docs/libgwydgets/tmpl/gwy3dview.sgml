@@ -2,7 +2,7 @@
 Gwy3DView
 
 <!-- ##### SECTION Short_Description ##### -->
-
+OpenGL 3D data display
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -22,7 +22,22 @@ Gwy3DView
 @GWY_3D_ROTATION: 
 @GWY_3D_SCALE: 
 @GWY_3D_DEFORMATION: 
-@GWY_3D_LIGHTMOVEMENT: 
+@GWY_3D_LIGHT_MOVEMENT: 
+
+<!-- ##### STRUCT Gwy3DView ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT Gwy3DViewClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
 
 <!-- ##### FUNCTION gwy_3d_view_new ##### -->
 <para>
@@ -220,5 +235,97 @@ Gwy3DView
 @gwy3dview: 
 <!-- # Unused Parameters # -->
 @gwy3Dview: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_rot_x_adjustment ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_rot_y_adjustment ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_view_scale_adjustment ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_z_deformation_adjustment ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_light_z_adjustment ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_light_y_adjustment ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_max_view_scale ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_get_min_view_scale ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_max_view_scale ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@new_max_scale: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_min_view_scale ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@new_min_scale: 
+@Returns: 
 
 

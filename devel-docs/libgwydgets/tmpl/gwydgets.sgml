@@ -21,6 +21,22 @@ Miscellaneous utility functions
 
 
 
+<!-- ##### FUNCTION gwy_widgets_gl_init ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_widgets_get_gl_config ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_table_attach_spinbutton ##### -->
 <para>
 

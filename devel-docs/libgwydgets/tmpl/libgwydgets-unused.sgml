@@ -1,3 +1,23 @@
+<!-- ##### SECTION ./tmpl/gwyglmat.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwyglmat.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwyglmat.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwyglmat.sgml:Title ##### -->
+gwyglmat
+
+
 <!-- ##### SECTION ./tmpl/gwygraphepitome.sgml:Long_Description ##### -->
 <para>
 
@@ -182,6 +202,84 @@ gwymodulemenus
 </para>
 
 
+<!-- ##### MACRO GWY_GLMATERIAL_BRASS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_BRONZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_CHROME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_COPPER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_EMERALD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_GOLD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_JADE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_NONE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_OBSIDIAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_PEARL ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_RUBY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_SILVER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GLMATERIAL_TURQUOISE ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GWY_GRAPH_LABEL_NORTHEAST ##### -->
 <para>
 
@@ -361,6 +459,12 @@ gwymodulemenus
 
 @x: 
 
+<!-- ##### VARIABLE gwyGL_mat_none ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_2dcwt_option_menu ##### -->
 <para>
 
@@ -529,6 +633,61 @@ gwymodulemenus
 @cbdata: 
 @current: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_glmaterial_exists ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_glmaterial_foreach ##### -->
+<para>
+
+</para>
+
+@callback: 
+@user_data: 
+
+<!-- ##### FUNCTION gwy_glmaterial_get_by_name ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_glmaterial_get_name ##### -->
+<para>
+
+</para>
+
+@glmaterial: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_glmaterial_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_glmaterial_set_name ##### -->
+<para>
+
+</para>
+
+@glmaterial: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_glmaterial_setup_presets ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gwy_graph_enable_axis_label_update ##### -->
 <para>
