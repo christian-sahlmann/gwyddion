@@ -26,49 +26,73 @@
 #include "datafield.h"
 
 /*local functions*/
-static gint step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow);
-static void drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize);
-static void drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval);
-static void process_mask(GwyDataField *grain_field, gint col, gint row);
-static void wdrop_step (GwyDataField *data_field,  GwyDataField *min_field,  GwyDataField *water_field, GwyDataField *grain_field, gdouble dropsize);
+static gint step_by_one           (GwyDataField *data_field,
+                                   gint *rcol,
+                                   gint *rrow);
+static void drop_step             (GwyDataField *data_field,
+                                   GwyDataField *water_field,
+                                   gdouble dropsize);
+static void drop_minima           (GwyDataField *water_field,
+                                   GwyDataField *min_field,
+                                   gint threshval);
+static void process_mask          (GwyDataField *grain_field,
+                                   gint col,
+                                   gint row);
+static void wdrop_step            (GwyDataField *data_field,
+                                   GwyDataField *min_field,
+                                   GwyDataField *water_field,
+                                   GwyDataField *grain_field,
+                                   gdouble dropsize);
 static void mark_grain_boundaries (GwyDataField *grain_field);
-static void number_grains(GwyDataField *mask_field, GwyDataField *grain_field);
-gint* gwy_data_field_fill_grain(GwyDataField *dfield, gint row, gint col, gint *nindices);
+static void number_grains         (GwyDataField *mask_field,
+                                   GwyDataField *grain_field);
+
+/* FIXME: is this function public or not? */
+gint *gwy_data_field_fill_grain(GwyDataField *dfield,
+                                gint row,
+                                gint col,
+                                gint *nindices);
 
 /********************/
 
-typedef struct{
+typedef struct {
     gint col;
     gint row;
 } GrainPoint;
 
 /**
  * gwy_data_field_grains_mark_height:
- * @data_field: data to be used for marking 
- * @grain_field: result of marking (mask)
- * @threshval: height threshold
- * @dir: marking direction
+ * @data_field: Data to be used for marking.
+ * @grain_field: Result of marking (mask).
+ * @threshval: Height threshold.
+ * @dir: Marking direction.
  *
  * Marks data that are above/below height threshold
  * depending on @dir argument.
  **/
 void
-gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
+gwy_data_field_grains_mark_height(GwyDataField *data_field,
+                                  GwyDataField *grain_field, gdouble threshval,
+                                  /* FIXME: change to gboolean */
+                                  gint dir)
 {
     GwyDataField *mask;
     gdouble min, max;
 
-    mask = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
+    mask = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                             data_field->yres,
+                                             data_field->xreal,
+                                             data_field->yreal,
+                                             FALSE));
 
     gwy_data_field_copy(data_field, mask);
 
     min = gwy_data_field_get_min(mask);
     max = gwy_data_field_get_max(mask);
-    gwy_data_field_threshold(mask, min + threshval*(max-min)/100.0, 0, 1);
+    gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 0, 1);
+    /* FIXME: don't compare booleans */
     if (dir == 1)
-    {
         gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
-    }
 
     number_grains(mask, grain_field);
 
@@ -77,31 +101,39 @@ gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_
 
 /**
  * gwy_data_field_grains_mark_slope:
- * @data_field: data to be used for marking 
- * @grain_field: result of marking (mask)
- * @threshval: slope threshold
- * @dir: marking direction
+ * @data_field: Data to be used for marking.
+ * @grain_field: Result of marking (mask).
+ * @threshval: Slope threshold.
+ * @dir: Marking direction.
  *
  * Marks data that are above/below slope threshold
  * depending on @dir argument.
  **/
 void
-gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
+gwy_data_field_grains_mark_slope(GwyDataField *data_field,
+                                 GwyDataField *grain_field, gdouble threshval,
+                                 /* FIXME: change to gboolean */
+                                 gint dir)
 {
     GwyDataField *mask;
     gdouble min, max;
-    mask = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
+
+    mask = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                             data_field->yres,
+                                             data_field->xreal,
+                                             data_field->yreal,
+                                             FALSE));
 
     gwy_data_field_copy(data_field, mask);
-    gwy_data_field_filter_laplacian(mask, 0, 0, data_field->xres, data_field->yres);
+    gwy_data_field_filter_laplacian(mask, 0, 0, data_field->xres,
+                                    data_field->yres);
 
     min = gwy_data_field_get_min(mask);
     max = gwy_data_field_get_max(mask);
-    gwy_data_field_threshold(mask, min + threshval*(max-min)/100.0, 0, 1);
-    if (dir==1)
-    {
+    gwy_data_field_threshold(mask, min + threshval*(max - min)/100.0, 0, 1);
+    /* FIXME: don't compare booleans */
+    if (dir == 1)
         gwy_data_field_invert(mask, FALSE, FALSE, TRUE);
-    }
 
     number_grains(mask, grain_field);
 
@@ -111,38 +143,53 @@ gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *grain_f
 
 /**
  * gwy_data_field_grains_mark_curvature:
- * @data_field: data to be used for marking 
- * @grain_field: result of marking (mask)
- * @threshval: curvature threshold
- * @dir: marking direction
+ * @data_field: Data to be used for marking.
+ * @grain_field: Result of marking (mask).
+ * @threshval: Curvature threshold.
+ * @dir: Marking direction.
  *
  * Marks data that are above/below curvature threshold
  * depending on @dir argument.
  **/
 void
-gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
+gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
+                                     GwyDataField *grain_field,
+                                     gdouble threshval,
+                                     /* FIXME: change to gboolean */
+                                     gint dir)
 {
     GwyDataField *maskx, *masky;
     gint i;
     gdouble min, max;
-    maskx = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
-    masky = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
+
+    maskx = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                              data_field->yres,
+                                              data_field->xreal,
+                                              data_field->yreal,
+                                              FALSE));
+    masky = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                              data_field->yres,
+                                              data_field->xreal,
+                                              data_field->yreal,
+                                              FALSE));
 
     gwy_data_field_copy(data_field, maskx);
     gwy_data_field_copy(data_field, masky);
-    gwy_data_field_filter_sobel(maskx, GTK_ORIENTATION_HORIZONTAL, 0, 0, data_field->xres, data_field->yres);
-    gwy_data_field_filter_sobel(masky, GTK_ORIENTATION_HORIZONTAL, 0, 0, data_field->xres, data_field->yres);
+    gwy_data_field_filter_sobel(maskx, GTK_ORIENTATION_HORIZONTAL, 0, 0,
+                                data_field->xres, data_field->yres);
+    gwy_data_field_filter_sobel(masky, GTK_ORIENTATION_HORIZONTAL, 0, 0,
+                                data_field->xres, data_field->yres);
 
-    for (i = 0; i < (data_field->xres*data_field->yres); i++)
-        maskx->data[i] = sqrt(maskx->data[i]*maskx->data[i] + masky->data[i]*masky->data[i]);
+    for (i = 0; i < data_field->xres * data_field->yres; i++)
+        maskx->data[i] = sqrt(maskx->data[i]*maskx->data[i]
+                              + masky->data[i]*masky->data[i]);
 
     min = gwy_data_field_get_min(maskx);
     max = gwy_data_field_get_max(maskx);
-    gwy_data_field_threshold(maskx, min + threshval*(max-min)/100.0, 0, 1);
+    gwy_data_field_threshold(maskx, min + threshval*(max - min)/100.0, 0, 1);
+    /* FIXME: don't compare booleans */
     if (dir == 1)
-    {
         gwy_data_field_invert(maskx, FALSE, FALSE, TRUE);
-    }
 
     number_grains(maskx, grain_field);
 
@@ -153,54 +200,69 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField *gra
 
 /**
  * gwy_data_field_grains_mark_watershed:
- * @data_field: data to be used for marking
- * @grain_field: result of marking (mask)
- * @locate_steps: locating algorithm steps
- * @locate_thresh: locating algorithm threshold
- * @locate_dropsize: locating drop size 
- * @wshed_steps: watershed steps
- * @wshed_dropsize: watershed drop size
- * @prefilter: use prefiltering
- * @dir: mark algorithm direction
+ * @data_field: Data to be used for marking.
+ * @grain_field: Result of marking (mask).
+ * @locate_steps: Locating algorithm steps.
+ * @locate_thresh: Locating algorithm threshold.
+ * @locate_dropsize: Locating drop size.
+ * @wshed_steps: Watershed steps.
+ * @wshed_dropsize: Watershed drop size.
+ * @prefilter: Use prefiltering.
+ * @dir: Mark algorithm direction.
  *
  * Performs watershed algorithm.
  **/
 void
-gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *grain_field,
-					  gint locate_steps, gint locate_thresh, gdouble locate_dropsize,
-					  gint wshed_steps, gdouble wshed_dropsize, gboolean prefilter, G_GNUC_UNUSED gint dir)
+gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
+                                     GwyDataField *grain_field,
+                                     gint locate_steps, gint locate_thresh,
+                                     gdouble locate_dropsize, gint wshed_steps,
+                                     gdouble wshed_dropsize, gboolean prefilter,
+                                     /* FIXME: change to gboolean */
+                                     /* FIXME: implement or remove */
+                                     G_GNUC_UNUSED gint dir)
 {
     GwyDataField *min, *water, *mark_dfield;
     gint i;
 
-    min = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
-    water = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
-    mark_dfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+    min = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                            data_field->yres,
+                                            data_field->xreal,
+                                            data_field->yreal,
+                                            TRUE));
+    water = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                              data_field->yres,
+                                              data_field->xreal,
+                                              data_field->yreal,
+                                              TRUE));
+    mark_dfield =
+        GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
 
-    gwy_data_field_resample(grain_field, data_field->xres, data_field->yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(grain_field, data_field->xres, data_field->yres,
+                            GWY_INTERPOLATION_NONE);
     gwy_data_field_fill(grain_field, 0);
 
-    if (prefilter) gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres, data_field->yres);
+    if (prefilter)
+        gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres,
+                                     data_field->yres);
 
-    /*odrop*/
-    for (i = 0; i < locate_steps; i++)
-    {
-	    drop_step(mark_dfield, water, locate_dropsize);
+    /* odrop */
+    for (i = 0; i < locate_steps; i++) {
+        drop_step(mark_dfield, water, locate_dropsize);
     }
     drop_minima(water, min, locate_thresh);
 
-    /*owatershed*/
+    /* owatershed */
     gwy_data_field_copy(data_field, mark_dfield);
-    /*gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres, data_field->yres);*/
-    for (i = 0; i < wshed_steps; i++)
-    {
+    /*gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres, data_field->yres); */
+    for (i = 0; i < wshed_steps; i++) {
         wdrop_step(mark_dfield, min, water, grain_field, wshed_dropsize);
     }
 
-    /*gwy_data_field_multiply(grain_field, 10.0/gwy_data_field_get_max(grain_field));*/
+    /*gwy_data_field_multiply(grain_field, 10.0/gwy_data_field_get_max(grain_field)); */
     mark_grain_boundaries(grain_field);
 
-    /*gwy_data_field_copy(water, grain_field);*/
+    /*gwy_data_field_copy(water, grain_field); */
 
     g_object_unref(min);
     g_object_unref(water);
@@ -210,80 +272,92 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
 
 /**
  * gwy_data_field_grains_watershed_iteration:
- * @data_field: data to be used for marking
- * @grain_field: result of marking (mask)
- * @status : current status of the algorithm 
- * @locate_steps: locating algorithm steps
- * @locate_thresh: locating algorithm threshold
- * @locate_dropsize: locating drop size 
- * @wshed_steps: watershed steps
- * @wshed_dropsize: watershed drop size
- * @prefilter: use prefiltering
- * @dir: mark algorithm direction
+ * @data_field: Data to be used for marking.
+ * @grain_field: Result of marking (mask).
+ * @status : current status of the algorithm.
+ * @locate_steps: Locating algorithm steps.
+ * @locate_thresh: Locating algorithm threshold.
+ * @locate_dropsize: Locating drop size.
+ * @wshed_steps: Watershed steps.
+ * @wshed_dropsize: Watershed drop size.
+ * @prefilter: Use prefiltering.
+ * @dir: Mark algorithm direction.
  *
  * Performs one iteration of the watershed algorithm.
  **/
 void
-gwy_data_field_grains_watershed_iteration(GwyDataField *data_field, GwyDataField *grain_field,
+gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
+                                          GwyDataField *grain_field,
                                           GwyWatershedStatus *status,
-                    					  gint locate_steps, gint locate_thresh, gdouble locate_dropsize,
-                    					  gint wshed_steps, gdouble wshed_dropsize, gboolean prefilter, G_GNUC_UNUSED gint dir)
+                                          gint locate_steps, gint locate_thresh,
+                                          gdouble locate_dropsize,
+                                          gint wshed_steps,
+                                          gdouble wshed_dropsize,
+                                          gboolean prefilter,
+                                          /* FIXME: change to gboolean */
+                                          /* FIXME: implement or remove */
+                                          G_GNUC_UNUSED gint dir)
 {
-    if (status->state == GWY_WSHED_INIT)
-    {
-        status->min = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
-        status->water = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
-        status->mark_dfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+    if (status->state == GWY_WSHED_INIT) {
+        status->min = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                                        data_field->yres,
+                                                        data_field->xreal,
+                                                        data_field->yreal,
+                                                        TRUE));
+        status->water = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
+                                                          data_field->yres,
+                                                          data_field->xreal,
+                                                          data_field->yreal,
+                                                          TRUE));
+        status->mark_dfield =
+            GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
 
-        gwy_data_field_resample(grain_field, data_field->xres, data_field->yres, GWY_INTERPOLATION_NONE);
+        gwy_data_field_resample(grain_field, data_field->xres, data_field->yres,
+                                GWY_INTERPOLATION_NONE);
         gwy_data_field_fill(grain_field, 0);
 
-        if (prefilter) gwy_data_field_filter_median(status->mark_dfield, 6, 0, 0, data_field->xres, data_field->yres);
+        if (prefilter)
+            gwy_data_field_filter_median(status->mark_dfield, 6, 0, 0,
+                                         data_field->xres, data_field->yres);
 
         status->state = GWY_WSHED_LOCATE;
         status->internal_i = 0;
     }
 
-    /*odrop*/
-    if (status->state == GWY_WSHED_LOCATE)
-    {
-        if (status->internal_i < locate_steps)
-        {
+    /* odrop */
+    if (status->state == GWY_WSHED_LOCATE) {
+        if (status->internal_i < locate_steps) {
             drop_step(status->mark_dfield, status->water, locate_dropsize);
             status->internal_i += 1;
         }
-        else
-        {
+        else {
             status->state = GWY_WSHED_MIN;
             status->internal_i = 0;
         }
     }
 
-    if (status->state == GWY_WSHED_MIN)
-    {
+    if (status->state == GWY_WSHED_MIN) {
         drop_minima(status->water, status->min, locate_thresh);
         status->state = GWY_WSHED_WSHED;
         status->internal_i = 0;
     }
 
 
-    if (status->state == GWY_WSHED_WSHED)
-    {
-        if (status->internal_i == 0) gwy_data_field_copy(data_field, status->mark_dfield);
-        if (status->internal_i < wshed_steps)
-        {
-            wdrop_step(status->mark_dfield, status->min, status->water, grain_field, wshed_dropsize);
+    if (status->state == GWY_WSHED_WSHED) {
+        if (status->internal_i == 0)
+            gwy_data_field_copy(data_field, status->mark_dfield);
+        if (status->internal_i < wshed_steps) {
+            wdrop_step(status->mark_dfield, status->min, status->water,
+                       grain_field, wshed_dropsize);
             status->internal_i += 1;
         }
-        else
-        {
+        else {
             status->state = GWY_WSHED_MARK;
             status->internal_i = 0;
         }
     }
 
-    if (status->state == GWY_WSHED_MARK)
-    {
+    if (status->state == GWY_WSHED_MARK) {
         mark_grain_boundaries(grain_field);
 
         g_object_unref(status->min);
@@ -295,10 +369,11 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field, GwyDataField
 
 }
 
+/* FIXME: wrong name, wrong interface, change in 2.0 */
 /**
  * gwy_data_field_grains_remove_manually:
- * @grain_field: field of marked grains (mask) 
- * @i: position of requested grain removal
+ * @grain_field: Field of marked grains (mask)
+ * @i: Position of requested grain removal
  *
  * Removes one grain at given position.
  **/
@@ -309,15 +384,15 @@ gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint i)
     gint row, col;
 
     npnt = 0;
-    if (grain_field->data[i]==0) return;
+    if (grain_field->data[i] == 0)
+        return;
 
     row = (gint)floor((gdouble)i/(gdouble)grain_field->xres);
     col = i - grain_field->xres*row;
 
     pnt = gwy_data_field_fill_grain(grain_field, row, col, &npnt);
 
-    for (i = 0; i < npnt; i++)
-    {
+    for (i = 0; i < npnt; i++) {
         grain_field->data[pnt[i]] = 0;
     }
 
@@ -326,8 +401,8 @@ gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint i)
 
 /**
  * gwy_data_field_grains_remove_by_size:
- * @grain_field: field of marked grains (mask) 
- * @size: size to be used as threshold
+ * @grain_field: Field of marked grains (mask).
+ * @size: Size to be used as threshold.
  *
  * Removes all grain below area @size (in square pixels);
  **/
@@ -342,19 +417,19 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
     xres = grain_field->xres;
     yres = grain_field->yres;
 
-    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, grain_field->xreal, grain_field->yreal, FALSE);
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
+                                               grain_field->xreal,
+                                               grain_field->yreal,
+                                               FALSE));
     gwy_data_field_copy(grain_field, buffer);
 
-    for (i = 0; i < (xres*yres); i++)
-    {
-        if (buffer->data[i]>0)
-        {
+    for (i = 0; i < xres*yres; i++) {
+        if (buffer->data[i] > 0) {
             row = (gint)floor((gdouble)i/(gdouble)xres);
             col = i - xres*row;
             npnt = 0;
             pnt = gwy_data_field_fill_grain(buffer, row, col, &npnt);
-            if (npnt < size)
-            {
+            if (npnt < size) {
                 gwy_data_field_grains_remove_manually(grain_field, i);
             }
             gwy_data_field_grains_remove_manually(buffer, i);
@@ -367,28 +442,32 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
 
 /**
  * gwy_data_field_grains_remove_by_height:
- * @data_field: data to be used for marking 
- * @grain_field: field of marked grains (mask) 
- * @threshval: height threshold
- * @direction: threshold grains above/below given height
+ * @data_field: Data to be used for marking
+ * @grain_field: Field of marked grains (mask)
+ * @threshval: Height threshold
+ * @direction: Threshold grains above/below given height
  *
  * Thresolds grain that are higher/lower than given threshold value.
  **/
 void
-gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint G_GNUC_UNUSED direction)
+gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
+                                       GwyDataField *grain_field,
+                                       gdouble threshval,
+                                       /* FIXME: change to gboolean */
+                                       /* FIXME: implement or remove */
+                                       gint G_GNUC_UNUSED direction)
 {
     gint i, xres, yres, col, row;
 
     xres = grain_field->xres;
     yres = grain_field->yres;
 
-    threshval = gwy_data_field_get_min(data_field) +
-        threshval*(gwy_data_field_get_max(data_field)-gwy_data_field_get_min(data_field))/100.0;
+    threshval = gwy_data_field_get_min(data_field)
+                + threshval*(gwy_data_field_get_max(data_field)
+                             - gwy_data_field_get_min(data_field))/100.0;
 
-    for (i = 0; i < (xres*yres); i++)
-    {
-        if (grain_field->data[i]>0 && data_field->data[i]>threshval)
-        {
+    for (i = 0; i < xres*yres; i++) {
+        if (grain_field->data[i] > 0 && data_field->data[i] > threshval) {
             row = (gint)floor((gdouble)i/(gdouble)xres);
             col = i - xres*row;
             gwy_data_field_grains_remove_manually(grain_field, i);
@@ -396,6 +475,7 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *g
     }
 }
 
+/* FIXME: WTF? Implement or remove. */
 gdouble
 gwy_data_field_grains_get_average(GwyDataField G_GNUC_UNUSED *grain_field)
 {
@@ -404,14 +484,15 @@ gwy_data_field_grains_get_average(GwyDataField G_GNUC_UNUSED *grain_field)
 
 /**
  * gwy_data_field_grains_get_distribution:
- * @grain_field:  field of marked grains (mask)
- * @distribution: grain size distribution
+ * @grain_field:  field of marked grains (mask).
+ * @distribution: Grain size distribution.
  *
  * Computes grain size distribution - plot of
  * number of grains vs. grain area (in real units).
  **/
 void
-gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLine *distribution)
+gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
+                                       GwyDataLine *distribution)
 {
     gint i, xres, yres, col, row;
     gint *pnt, npnt, maxpnt;
@@ -421,17 +502,19 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLine *d
     xres = grain_field->xres;
     yres = grain_field->yres;
 
-    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, grain_field->xreal, grain_field->yreal, FALSE);
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
+                                               grain_field->xreal,
+                                               grain_field->yreal,
+                                               FALSE));
     gwy_data_field_copy(grain_field, buffer);
 
-    gwy_data_line_resample(distribution, sqrt(xres*yres)+1, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(distribution, sqrt(xres*yres) + 1,
+                           GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(distribution, 0);
 
     maxpnt = 0;
-    for (i = 0; i < (xres*yres); i++)
-    {
-        if (buffer->data[i]>0)
-        {
+    for (i = 0; i < xres*yres; i++) {
+        if (buffer->data[i] > 0) {
             row = (gint)floor((gdouble)i/(gdouble)xres);
             col = i - xres*row;
             npnt = 0;
@@ -439,19 +522,21 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLine *d
             gwy_data_field_grains_remove_manually(buffer, i);
             g_free(pnt);
 
-            if (maxpnt < npnt) maxpnt = npnt;
+            if (maxpnt < npnt)
+                maxpnt = npnt;
             distribution->data[(gint)(sqrt(npnt))] += 1;
         }
     }
     gwy_data_line_resize(distribution, 0, sqrt(maxpnt));
-    gwy_data_line_set_real(distribution, gwy_data_field_itor(grain_field, sqrt(maxpnt)));
+    gwy_data_line_set_real(distribution,
+                           gwy_data_field_itor(grain_field, sqrt(maxpnt)));
     g_object_unref(buffer);
 }
 
 /**
  * gwy_data_field_grains_add:
- * @grain_field: field of marked grains (mask) 
- * @add_field: field of marked grains (mask) to be added
+ * @grain_field: Field of marked grains (mask).
+ * @add_field: Field of marked grains (mask) to be added.
  *
  * Adds @add_field grains to @grain_field.
  **/
@@ -463,12 +548,16 @@ gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
 
     xres = grain_field->xres;
     yres = grain_field->yres;
-    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, grain_field->xreal, grain_field->yreal, FALSE);
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
+                                               grain_field->xreal,
+                                               grain_field->yreal,
+                                               FALSE));
 
-    for (i = 0; i < (xres*yres); i++)
-    {
-        if (grain_field->data[i]>0 || add_field->data[i]>0) buffer->data[i]=1;
-        else buffer->data[i]=0;
+    for (i = 0; i < xres*yres; i++) {
+        if (grain_field->data[i] > 0 || add_field->data[i] > 0)
+            buffer->data[i] = 1;
+        else
+            buffer->data[i] = 0;
     }
 
     number_grains(buffer, grain_field);
@@ -478,26 +567,31 @@ gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
 
 /**
  * gwy_data_field_grains_intersect:
- * @grain_field:  field of marked grains (mask)
- * @intersect_field: field of marked grains (mask)
+ * @grain_field:  field of marked grains (mask).
+ * @intersect_field: Field of marked grains (mask).
  *
  * Performs intersection betweet two grain fields,
  * result is stored in @grain_field.
  **/
 void
-gwy_data_field_grains_intersect(GwyDataField *grain_field, GwyDataField *intersect_field)
+gwy_data_field_grains_intersect(GwyDataField *grain_field,
+                                GwyDataField *intersect_field)
 {
     gint i, xres, yres;
     GwyDataField *buffer;
 
     xres = grain_field->xres;
     yres = grain_field->yres;
-    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, grain_field->xreal, grain_field->yreal, FALSE);
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
+                                               grain_field->xreal,
+                                               grain_field->yreal,
+                                               FALSE));
 
-    for (i = 0; i < (xres*yres); i++)
-    {
-        if (grain_field->data[i]>0 && intersect_field->data[i]>0) buffer->data[i]=1;
-        else buffer->data[i]=0;
+    for (i = 0; i < xres*yres; i++) {
+        if (grain_field->data[i] > 0 && intersect_field->data[i] > 0)
+            buffer->data[i] = 1;
+        else
+            buffer->data[i] = 0;
     }
 
     number_grains(buffer, grain_field);
@@ -505,9 +599,10 @@ gwy_data_field_grains_intersect(GwyDataField *grain_field, GwyDataField *interse
     g_object_unref(buffer);
 }
 
-/***********************************************************************************************************************/
+/****************************************************************************/
 /*private functions*/
 
+/* FIXME: change to gboolean */
 static gint
 step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow)
 {
@@ -517,25 +612,54 @@ step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow)
     xres = data_field->xres;
     yres = data_field->yres;
 
-    if (*rcol < (xres-1)) a = data_field->data[*rcol+1 + xres*(*rrow)]; else a = -G_MAXDOUBLE;
-    if (*rcol > 0)        b = data_field->data[*rcol-1 + xres*(*rrow)]; else b = -G_MAXDOUBLE;
-    if (*rrow < (yres-1)) c = data_field->data[*rcol + xres*(*rrow+1)]; else c = -G_MAXDOUBLE;
-    if (*rrow > 0)        d = data_field->data[*rcol + xres*(*rrow-1)]; else d = -G_MAXDOUBLE;
+    if (*rcol < (xres - 1))
+        a = data_field->data[*rcol + 1 + xres*(*rrow)];
+    else
+        a = -G_MAXDOUBLE;
+
+    if (*rcol > 0)
+        b = data_field->data[*rcol - 1 + xres*(*rrow)];
+    else
+        b = -G_MAXDOUBLE;
+
+    if (*rrow < (yres - 1))
+        c = data_field->data[*rcol + xres*(*rrow + 1)];
+    else
+        c = -G_MAXDOUBLE;
+
+    if (*rrow > 0)
+        d = data_field->data[*rcol + xres*(*rrow - 1)];
+    else
+        d = -G_MAXDOUBLE;
 
     v = data_field->data[(gint)(*rcol + xres*(*rrow))];
 
-    if (v >= a && v >= b && v >= c && v >= d) {return 1;}
-    else if (a >= v && a >= b && a >= c && a >= d) {*rcol+=1; return 0;}
-    else if (b >= v && b >= a && b >= c && b >= d) {*rcol-=1; return 0;}
-    else if (c >= v && c >= b && c >= a && c >= d) {*rrow+=1; return 0;}
-    else {*rrow-=1; return 0;}
+    if (v >= a && v >= b && v >= c && v >= d) {
+        return 1;
+    }
+    else if (a >= v && a >= b && a >= c && a >= d) {
+        *rcol += 1;
+        return 0;
+    }
+    else if (b >= v && b >= a && b >= c && b >= d) {
+        *rcol -= 1;
+        return 0;
+    }
+    else if (c >= v && c >= b && c >= a && c >= d) {
+        *rrow += 1;
+        return 0;
+    }
+    else {
+        *rrow -= 1;
+        return 0;
+    }
 
     return 0;
 }
 
 
 static void
-drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize)
+drop_step(GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize)
 {
     gint xres, yres, i, retval;
     gint col, row;
@@ -543,54 +667,56 @@ drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize
     xres = data_field->xres;
     yres = data_field->yres;
 
-    for (i = 0; i < (xres*yres); i++)
-    {
-    	retval = 0;
-    	row = (gint)floor((gdouble)i/(gdouble)xres);
-    	col = i - xres*row;
-        if (col == 0 || row == 0 || col == (xres-1) || row == (yres-1)) continue;
+    for (i = 0; i < xres*yres; i++) {
+        retval = 0;
+        row = (gint)floor((gdouble)i/(gdouble)xres);
+        col = i - xres*row;
+        if (col == 0 || row == 0 || col == (xres - 1) || row == (yres - 1))
+            continue;
 
-    	do {
-    	    retval = step_by_one(data_field, &col, &row);
-    	} while (retval == 0);
+        do {
+            retval = step_by_one(data_field, &col, &row);
+        } while (retval == 0);
 
-    	water_field->data[col + xres*(row)] += 1;
-    	data_field->data[col + xres*(row)] -= dropsize;
+        water_field->data[col + xres*row] += 1;
+        data_field->data[col + xres*row] -= dropsize;
 
     }
 }
 
 static void
-drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
+drop_minima(GwyDataField *water_field, GwyDataField *min_field, gint threshval)
 {
-    gint xres, yres, i, global_row_value, global_col_value, global_number, npnt, *pnt, cnt;
+    gint xres, yres, i;
+    gint global_row_value, global_col_value, global_number, npnt, cnt;
+    gint *pnt;
     gdouble col, row, global_maximum_value;
     GwyDataField *buffer;
 
     xres = water_field->xres;
     yres = water_field->yres;
-    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, water_field->xreal, water_field->yreal, TRUE);
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
+                                               water_field->xreal,
+                                               water_field->yreal,
+                                               TRUE));
 
     global_number = 0;
     cnt = 0;
-    for (i = 0; i < (xres*yres); i++)
-    {
-	    if (water_field->data[i]>0 && buffer->data[i]==0)
-    	{
-    	    global_maximum_value = water_field->data[i];
-    	    row = global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
-    	    col = global_col_value = i - xres*row;
+    for (i = 0; i < xres*yres; i++) {
+        if (water_field->data[i] > 0 && buffer->data[i] == 0) {
+            global_maximum_value = water_field->data[i];
+            row = global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
+            col = global_col_value = i - xres*row;
 
             npnt = 0;
             pnt = gwy_data_field_fill_grain(water_field, row, col, &npnt);
 
             global_number += 1;
-            for (i = 0; i < npnt; i++)
-            {
-                if (global_maximum_value < water_field->data[pnt[i]])
-                {
+            for (i = 0; i < npnt; i++) {
+                if (global_maximum_value < water_field->data[pnt[i]]) {
                     global_maximum_value = water_field->data[pnt[i]];
-                    global_row_value = (gint)floor((gdouble)pnt[i]/(gdouble)xres);
+                    global_row_value =
+                        (gint)floor((gdouble)pnt[i]/(gdouble)xres);
                     global_col_value = pnt[i] - xres*global_row_value;
                 }
 
@@ -598,13 +724,13 @@ drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
             }
             g_free(pnt);
 
-     	    if (npnt > threshval)
-       	    {
-      	        min_field->data[global_col_value + xres*global_row_value] = global_number;
-                cnt ++;
-       	    }
+            if (npnt > threshval) {
+                min_field->data[global_col_value + xres*global_row_value]
+                    = global_number;
+                cnt++;
+            }
 
-    	}
+        }
     }
     g_object_unref(buffer);
 }
@@ -612,54 +738,63 @@ drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
 static void
 process_mask(GwyDataField *grain_field, gint col, gint row)
 {
-    gint xres, yres, ival[4], val, stat, i;
+    gint xres, yres, ival[4], val, stat, /* FIXME: change to boolean */ i;
+    gdouble *data;
 
     xres = grain_field->xres;
     yres = grain_field->yres;
+    data = grain_field->data;
 
-    if (col == 0 || row == 0 || col == (xres-1) || row == (yres-1))
-    {
-        grain_field->data[col + xres*(row)] = -1;
+    if (col == 0 || row == 0 || col == (xres - 1) || row == (yres - 1)) {
+        data[col + xres*row] = -1;
         return;
     }
 
-    /*if this is grain or boundary, keep it*/
-    if (grain_field->data[col + xres*(row)] != 0) return;
+    /*if this is grain or boundary, keep it */
+    if (data[col + xres*row] != 0)
+        return;
 
-    /*if there is nothing around, do nothing*/
-    if ((fabs(grain_field->data[col+1 + xres*(row)]) + fabs(grain_field->data[col-1 + xres*(row)])
-         + fabs(grain_field->data[col + xres*(row+1)]) + fabs(grain_field->data[col + xres*(row-1)]))==0) return;
+    /*if there is nothing around, do nothing */
+    if ((fabs(data[col + 1 + xres*row]) + fabs(data[col - 1 + xres*row])
+         + fabs(data[col + xres*(row + 1)]) + fabs(data[col + xres*(row - 1)]))
+        == 0)
+        return;
 
-    /*now count the grain values around*/
-    ival[0] = grain_field->data[col-1 + xres*(row)];
-    ival[1] = grain_field->data[col + xres*(row-1)];
-    ival[2] = grain_field->data[col+1 + xres*(row)];
-    ival[3] = grain_field->data[col + xres*(row+1)];
+    /*now count the grain values around */
+    ival[0] = data[col - 1 + xres*row];
+    ival[1] = data[col + xres*(row - 1)];
+    ival[2] = data[col + 1 + xres*row];
+    ival[3] = data[col + xres*(row + 1)];
 
     val = 0;
     stat = 0;
-    for (i = 0; i < 4; i++)
-    {
-        if (val > 0 && ival[i]>0 && ival[i]!=val)
-        {
-            /*if some value already was there and the now one is different*/
-            stat = 1; break;
+    for (i = 0; i < 4; i++) {
+        if (val > 0 && ival[i] > 0 && ival[i] != val) {
+            /*if some value already was there and the now one is different */
+            stat = 1;  /* FIXME: change to boolean */
+            break;
         }
-        else
-        {
-            /*ifthere is some value*/
-            if (ival[i]>0) {val = ival[i];}
+        else {
+            /*ifthere is some value */
+            if (ival[i] > 0) {
+                val = ival[i];
+            }
         }
     }
 
-    /*it will be boundary or grain*/
-    if (stat == 1) grain_field->data[col + xres*(row)] = -1;
-    else grain_field->data[col + xres*(row)] = val;
+    /*it will be boundary or grain */
+    /* FIXME: don't compare booleans */
+    if (stat == 1)
+        data[col + xres*row] = -1;
+    else
+        data[col + xres*row] = val;
 
 }
 
 static void
-wdrop_step (GwyDataField *data_field,  GwyDataField *min_field,  GwyDataField *water_field, GwyDataField *grain_field, gdouble dropsize)
+wdrop_step(GwyDataField *data_field, GwyDataField *min_field,
+           GwyDataField *water_field, GwyDataField *grain_field,
+           gdouble dropsize)
 {
     gint xres, yres, vcol, vrow, col, row, grain, retval;
 
@@ -667,26 +802,23 @@ wdrop_step (GwyDataField *data_field,  GwyDataField *min_field,  GwyDataField *w
     yres = data_field->yres;
 
     grain = 0;
-    for (col = 0; col < (xres); col++)
-    {
-        for (row = 0; row < (yres); row++)
-        {
-              if (min_field->data[col + xres*(row)]>0)
-                grain_field->data[col + xres*(row)] = grain++;
+    for (col = 0; col < xres; col++) {
+        for (row = 0; row < yres; row++) {
+            if (min_field->data[col + xres*row] > 0)
+                grain_field->data[col + xres*row] = grain++;
         }
     }
-    for (col = 1; col < (xres-1); col++)
-    {
-        for (row = 1; row < (yres-1); row++)
-        {
+    for (col = 1; col < (xres - 1); col++) {
+        for (row = 1; row < (yres - 1); row++) {
 
-            vcol = col; vrow = row;
+            vcol = col;
+            vrow = row;
             retval = 0;
             do {
                 retval = step_by_one(data_field, &vcol, &vrow);
             } while (retval == 0);
 
-            /*now, distinguish what to change at point vi, vj*/
+            /*now, distinguish what to change at point vi, vj */
             process_mask(grain_field, vcol, vrow);
             water_field->data[vcol + xres*(vrow)] += 1;
             data_field->data[vcol + xres*(vrow)] -= dropsize;
@@ -696,23 +828,26 @@ wdrop_step (GwyDataField *data_field,  GwyDataField *min_field,  GwyDataField *w
 }
 
 static void
-mark_grain_boundaries (GwyDataField *grain_field)
+mark_grain_boundaries(GwyDataField *grain_field)
 {
     gint xres, yres, col, row;
     GwyDataField *buffer;
+    gdouble *data;
 
     xres = grain_field->xres;
     yres = grain_field->yres;
-    buffer = (GwyDataField*)gwy_data_field_new(xres, yres, grain_field->xreal, grain_field->yreal, FALSE);
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
+                                               grain_field->xreal,
+                                               grain_field->yreal,
+                                               FALSE));
     gwy_data_field_copy(grain_field, buffer);
+    data = buffer->data;
 
-    for (col = 1; col < (xres-1); col++)
-    {
-        for (row = 1; row < (yres-1); row++)
-        {
-            if (buffer->data[col + xres*(row)] != buffer->data[col+1 + xres*(row)]
-                || buffer->data[col + xres*(row)] != buffer->data[col + xres*(row+1)])
-                grain_field->data[col + xres*(row)] = 0;
+    for (col = 1; col < (xres - 1); col++) {
+        for (row = 1; row < (yres - 1); row++) {
+            if (data[col + xres*row] != data[col + 1 + xres*row]
+                || data[col + xres*row] != data[col + xres*(row + 1)])
+                grain_field->data[col + xres*row] = 0;
         }
     }
     g_object_unref(buffer);
@@ -726,28 +861,23 @@ number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
     gint *pnt, npnt;
 
     gint xres, yres, col, row, i, grain;
+
     xres = mask_field->xres;
     yres = mask_field->yres;
 
     grain = 0;
     gwy_data_field_fill(grain_field, 0);
 
-
-    for (col = 0; col < (xres); col++)
-    {
-        for (row = 0; row < (yres); row++)
-        {
-            if (mask_field->data[col + xres*(row)]!=0 &&
-                (col > 0 && row > 0 && col < (xres-1) && row < (yres-1)))
-            {
+    for (col = 0; col < (xres); col++) {
+        for (row = 0; row < (yres); row++) {
+            if (mask_field->data[col + xres*row] != 0
+                && col > 0 && row > 0 && col < (xres - 1) && row < (yres - 1)) {
                 npnt = 0;
 
                 pnt = gwy_data_field_fill_grain(mask_field, row, col, &npnt);
 
-/*                printf("grain %d, (%d, %d), n = %d\n", grain, col, row, npnt);*/
                 grain++;
-                for (i = 0; i < npnt; i++)
-                {
+                for (i = 0; i < npnt; i++) {
                     grain_field->data[pnt[i]] = grain;
                     mask_field->data[pnt[i]] = 0;
                 }
@@ -772,10 +902,9 @@ number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
  * Returns: A newly allocated array of indices of grain points in @dfield's
  *          data, the size of the list is returned in @nindices.
  **/
-gint*
+gint *
 gwy_data_field_fill_grain(GwyDataField *dfield,
-                          gint row, gint col,
-                          gint *nindices)
+                          gint row, gint col, gint *nindices)
 {
     gdouble *data;
     gint *visited;
@@ -793,11 +922,12 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
     g_return_val_if_fail(data[initial], NULL);
 
     /* check for a single point */
-    if ((!col || !data[initial-1])
-        && (!row || !data[initial-xres])
-        && (col+1 == xres || !data[initial+1])
-        && (row+1 == yres || !data[initial+xres])) {
+    if ((!col || !data[initial - 1])
+        && (!row || !data[initial - xres])
+        && (col + 1 == xres || !data[initial + 1])
+        && (row + 1 == yres || !data[initial + xres])) {
         indices = g_new(gint, 1);
+
         indices[0] = initial;
         *nindices = 1;
 
@@ -809,18 +939,20 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
     visited[initial] = 1;
     count = 1;
 
-    listv = g_new(gint, n/2+2);
+    listv = g_new(gint, n/2 + 2);
+
     listv[0] = listv[1] = initial;
     nv = 2;
 
-    listh = g_new(gint, n/2+2);
+    listh = g_new(gint, n/2 + 2);
+
     listh[0] = listh[1] = initial;
     nh = 2;
 
     while (nv) {
         /* go through vertical lines and expand them horizontally */
         for (i = 0; i < nv; i += 2) {
-            for (p = listv[i]; p <= listv[i+1]; p += xres) {
+            for (p = listv[i]; p <= listv[i + 1]; p += xres) {
                 gint start, stop;
 
                 /* scan left */
@@ -856,7 +988,7 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
 
         /* go through horizontal lines and expand them vertically */
         for (i = 0; i < nh; i += 2) {
-            for (p = listh[i]; p <= listh[i+1]; p++) {
+            for (p = listh[i]; p <= listh[i + 1]; p++) {
                 gint start, stop;
 
                 /* scan up */
@@ -895,6 +1027,7 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
     g_free(listh);
 
     indices = g_new(gint, count);
+
     j = 0;
     for (i = 0; i < n; i++) {
         if (visited[i])
@@ -905,6 +1038,5 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
     *nindices = count;
     return indices;
 }
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
