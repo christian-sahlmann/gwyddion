@@ -37,7 +37,7 @@ static GwyModuleInfo module_info = {
     "presenationops",
     N_("Basic operations with presentation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

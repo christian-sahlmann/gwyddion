@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     "facet_level",
     N_("Automatic facet-orientation based levelling."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

@@ -66,7 +66,7 @@ static GwyModuleInfo module_info = {
     "mask_grow_shrink",
     N_("Grows and shrinks masks."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

@@ -76,7 +76,7 @@ static GwyModuleInfo module_info = {
     "rotate",
     N_("Rotation by an arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

@@ -41,7 +41,7 @@ static GwyModuleInfo module_info = {
     "grain_dist",
     N_("Evaluate grain distribution"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.0.1",
+    "1.0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     "unrotate",
     N_("Rotates data to make main directions parallel with x or y axis."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

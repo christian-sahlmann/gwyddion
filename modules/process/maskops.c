@@ -41,7 +41,7 @@ static GwyModuleInfo module_info = {
     "maskops",
     N_("Basic operations with mask."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

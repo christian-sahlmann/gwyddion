@@ -58,7 +58,7 @@ static GwyModuleInfo module_info = {
     "pointer",
     N_("Pointer tool."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

@@ -105,7 +105,7 @@ static GwyModuleInfo module_info = {
     "crosscor",
     N_("Cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

@@ -126,7 +126,7 @@ static GwyModuleInfo module_info = {
     "graph_fit",
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

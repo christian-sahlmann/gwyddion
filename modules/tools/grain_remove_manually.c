@@ -52,7 +52,7 @@ static GwyModuleInfo module_info = {
     "grain_remove_manually",
     N_("Grain (mask) removal tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

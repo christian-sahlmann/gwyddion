@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     "scale",
     N_("Scale data by an arbitrary factor."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

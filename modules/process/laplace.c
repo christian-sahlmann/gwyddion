@@ -44,7 +44,7 @@ static GwyModuleInfo module_info = {
     "laplace",
     N_("Remove data under mask using laplace equation"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

@@ -82,7 +82,7 @@ static GwyModuleInfo module_info = {
     "maskcor",
     N_("Create mask by correlation with another data field."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

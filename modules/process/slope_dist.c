@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     "slope_dist",
     N_("Slope distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.4.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

@@ -38,7 +38,7 @@ static GwyModuleInfo module_info = {
     "graph_zoom",
     N_("Zoom graph by mouse"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

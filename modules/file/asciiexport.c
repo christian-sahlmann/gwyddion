@@ -46,7 +46,7 @@ static GwyModuleInfo module_info = {
     "asciiexport",
     N_("Exports data as simple ASCII matrix"),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

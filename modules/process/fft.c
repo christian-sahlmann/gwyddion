@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     "fft",
     N_("2D Fast Fourier Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

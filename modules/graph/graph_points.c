@@ -67,7 +67,7 @@ static GwyModuleInfo module_info = {
     "graph_points",
     N_("Measure distances between points"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

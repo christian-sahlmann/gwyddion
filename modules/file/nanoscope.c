@@ -94,7 +94,7 @@ static GwyModuleInfo module_info = {
     "nanoscope",
     N_("Load Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.6.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

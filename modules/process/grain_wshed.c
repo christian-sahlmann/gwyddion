@@ -98,7 +98,7 @@ static GwyModuleInfo module_info = {
     "wshed_threshold",
     N_("Mark grains by watershed algorithm"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.4",
+    "1.4.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

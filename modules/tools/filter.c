@@ -83,7 +83,7 @@ static GwyModuleInfo module_info = {
     "filter",
     N_("Basic filtering procedures."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

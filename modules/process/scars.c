@@ -95,7 +95,7 @@ static GwyModuleInfo module_info = {
     "scars",
     N_("Scar detection and removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

@@ -70,7 +70,7 @@ static GwyModuleInfo module_info = {
     "polynom",
     "Fit X or Y profiles by polynom",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

@@ -77,7 +77,7 @@ static GwyModuleInfo module_info = {
     "sfunctions",
     N_("Statistical functions."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

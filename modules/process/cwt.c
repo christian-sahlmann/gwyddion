@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     "cwt",
     N_("2D Continuous Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

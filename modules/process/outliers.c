@@ -43,7 +43,7 @@ static GwyModuleInfo module_info = {
     "outliers",
     N_("Create mask of outliers"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

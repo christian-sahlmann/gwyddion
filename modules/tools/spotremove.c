@@ -103,7 +103,7 @@ static GwyModuleInfo module_info = {
     "spotremove",
     N_("Removes spots."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

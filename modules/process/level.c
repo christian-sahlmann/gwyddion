@@ -42,7 +42,7 @@ static GwyModuleInfo module_info = {
     "level",
     N_("Simple automatic levelling."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

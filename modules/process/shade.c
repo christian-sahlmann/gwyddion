@@ -72,7 +72,7 @@ static GwyModuleInfo module_info = {
     "shade",
     N_("Shade module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

@@ -49,7 +49,7 @@ static GwyModuleInfo module_info = {
     "gwyfile",
     N_("Load and save Gwyddion native serialized objects."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

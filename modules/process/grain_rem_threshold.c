@@ -97,7 +97,7 @@ static GwyModuleInfo module_info = {
     "remove_threshold",
     N_("Remove grains by thresholding"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.4",
+    "1.4.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

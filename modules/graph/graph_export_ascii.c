@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     "graph ascii export",
     N_("Export graph curves to ASCII file"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

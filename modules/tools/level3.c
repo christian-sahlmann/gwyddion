@@ -59,7 +59,7 @@ static GwyModuleInfo module_info = {
     N_("Level tool.  Allows to level data by fitting a plane through three "
        "selected points."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

@@ -52,7 +52,7 @@ static GwyModuleInfo module_info = {
     "crop",
     N_("Crop tool."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };

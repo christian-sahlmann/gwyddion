@@ -103,7 +103,7 @@ static GwyModuleInfo module_info = {
     "angle_dist",
     N_("Angle distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.4.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
