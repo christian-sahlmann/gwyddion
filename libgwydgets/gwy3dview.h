@@ -27,20 +27,7 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 #include <gtk/gtkdrawingarea.h>
-#include <gtk/gtkadjustment.h>
 #include <pango/pangoft2.h>
-
-/* FIXME: see below */
-#include <gtk/gtkgl.h>
-
-#ifdef G_OS_WIN32
-#define WIN32_LEAN_AND_MEAN 1
-#include <windows.h>
-#endif
-
-/* FIXME: see below */
-#include <GL/gl.h>
-#include <GL/glu.h>
 
 #include <libprocess/datafield.h>
 #include <libdraw/gwygradient.h>
@@ -84,11 +71,8 @@ struct _Gwy3DView {
 
     Gwy3DMovement movement_status;  /* What to do, if mouse is moving */
 
-    /* FIXME: try to get rid of these, user code should NOT care about GL
-     * at all if it doesn't really want to.  Use gfloats instead, and convert
-     * when needed. */
-    GLint shape_list_base;          /* Base index of scene display lists */
-    GLuint shape_current;           /* Actually shown shape in the scene (full or reduced data) */
+    gint shape_list_base;           /* Base index of scene display lists */
+    guint shape_current;            /* Actually shown shape in the scene (full or reduced data) */
 
 
     guint reduced_size;             /* Resolution of the surface while rotations etc. */
@@ -99,11 +83,8 @@ struct _Gwy3DView {
     GtkAdjustment *deformation_z;   /* Deformation of the z axis within the scene */
     GtkAdjustment *light_z;         /* First angle describing position of light */
     GtkAdjustment *light_y;         /* Second angle describing position of light */
-    /* FIXME: try to get rid of these, user code should NOT care about GL
-     * at all if it doesn't really want to.  Use gfloats instead, and convert
-     * when needed. */
-    GLfloat view_scale_max;         /* Maximum zoom of the scene */
-    GLfloat view_scale_min;         /* Minimum zoom of the scene */
+    gdouble view_scale_max;         /* Maximum zoom of the scene */
+    gdouble view_scale_min;         /* Minimum zoom of the scene */
 
     gboolean orthogonal_projection; /* Whether use orthographic or perspectine projection */
     gboolean show_axes;             /* Whether show axes wihin the scene */

@@ -28,10 +28,10 @@
 #define GWY_GL_MATERIAL_TYPE_NAME "GwyGLMaterial"
 
 typedef struct {
-    GLfloat ambient[4];
-    GLfloat diffuse[4];
-    GLfloat specular[4];
-    GLfloat shininess;
+    gdouble ambient[4];
+    gdouble diffuse[4];
+    gdouble specular[4];
+    gdouble shininess;
 } GwyGLMaterialPreset;
 
 static void     gwy_gl_material_class_init        (GwyGLMaterialClass *klass);
@@ -201,9 +201,9 @@ gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
     glmaterial->name = gwy_gl_material_invent_name(klass->materials,
                                                    src_glmaterial->name);
 
-    memcpy(glmaterial->ambient, src_glmaterial->ambient, 4*sizeof(GLfloat));
-    memcpy(glmaterial->diffuse, src_glmaterial->diffuse, 4*sizeof(GLfloat));
-    memcpy(glmaterial->specular, src_glmaterial->specular, 4*sizeof(GLfloat));
+    memcpy(glmaterial->ambient, src_glmaterial->ambient, 4*sizeof(gdouble));
+    memcpy(glmaterial->diffuse, src_glmaterial->diffuse, 4*sizeof(gdouble));
+    memcpy(glmaterial->specular, src_glmaterial->specular, 4*sizeof(gdouble));
     glmaterial->shininess = src_glmaterial->shininess;
     g_hash_table_insert(klass->materials, glmaterial->name, glmaterial);
 

@@ -23,18 +23,6 @@
 
 #include <glib-object.h>
 
-/* FIXME: see below */
-#include <gtk/gtkgl.h>
-
-#ifdef G_OS_WIN32
-#define WIN32_LEAN_AND_MEAN 1
-#include <windows.h>
-#endif
-
-/* FIXME: see below */
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 G_BEGIN_DECLS
 
 #define GWY_TYPE_GL_MATERIAL                (gwy_gl_material_get_type())
@@ -71,13 +59,10 @@ struct _GwyGLMaterial
 
     gchar *name;
 
-    /* FIXME: try to get rid of these, user code should NOT care about GL
-     * at all if it doesn't really want to.  Use gfloats instead, and convert
-     * when needed. */
-    GLfloat ambient[4];
-    GLfloat diffuse[4];
-    GLfloat specular[4];
-    GLfloat shininess;
+    gdouble ambient[4];
+    gdouble diffuse[4];
+    gdouble specular[4];
+    gdouble shininess;
 } ;
 
 

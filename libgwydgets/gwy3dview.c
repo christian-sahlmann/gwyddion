@@ -32,6 +32,13 @@
 #include <glib-object.h>
 #include <gtk/gtkgl.h>
 
+#ifdef G_OS_WIN32
+#define WIN32_LEAN_AND_MEAN 1
+#include <windows.h>
+#endif
+
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -399,7 +406,6 @@ gwy_3d_view_finalize(GObject *object)
         glDeleteLists(gwy3dview->shape_list_base, 2);
         gwy3dview->shape_list_base = -1;
     }
-
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 
@@ -1374,6 +1380,18 @@ gwy_3d_view_size_request(GtkWidget *widget,
     requisition->height = GWY_3D_VIEW_DEFAULT_SIZE_Y;
 }
 
+static void
+gwy_3d_view_glMaterialdv(GLenum face,
+                         GLenum pname,
+                         gdouble params[4])
+{
+    gfloat fparams[4];
+    guint i;
+
+    for (i = 0; i < 4; i++)
+        fparams[i] = params[i];
+    glMaterialfv(face, pname, fparams);
+}
 
 static gboolean
 gwy_3d_view_expose(GtkWidget *widget,
@@ -1415,10 +1433,14 @@ gwy_3d_view_expose(GtkWidget *widget,
     /* Render shape */
     if (gwy3D->enable_lights) {
         glEnable(GL_LIGHTING);
-        glMaterialfv(GL_FRONT, GL_AMBIENT,   gwy3D->mat_current->ambient);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE,   gwy3D->mat_current->diffuse);
-        glMaterialfv(GL_FRONT, GL_SPECULAR,  gwy3D->mat_current->specular);
-        glMaterialf(GL_FRONT, GL_SHININESS, gwy3D->mat_current->shininess*128);
+        gwy_3d_view_glMaterialdv(GL_FRONT, GL_AMBIENT,
+                                 gwy3D->mat_current->ambient);
+        gwy_3d_view_glMaterialdv(GL_FRONT, GL_DIFFUSE,
+                                 gwy3D->mat_current->diffuse);
+        gwy_3d_view_glMaterialdv(GL_FRONT, GL_SPECULAR,
+                                 gwy3D->mat_current->specular);
+        glMaterialf(GL_FRONT, GL_SHININESS,
+                    (GLfloat)gwy3D->mat_current->shininess * 128.0f);
         glPushMatrix();
         glRotatef(gwy3D->light_z->value, 0.0f, 0.0f, 1.0f);
         glRotatef(gwy3D->light_y->value, 0.0f, 1.0f, 0.0f);
@@ -1777,10 +1799,10 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
     glScalef(2.0/ res,
              2.0/ res,
              GWY_3D_Z_TRANSFORMATION / (widget->data_max - widget->data_min));
-    glMaterialfv(GL_FRONT, GL_AMBIENT,  mat_none->ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_none->specular);
-    glMaterialf(GL_FRONT, GL_SHININESS, mat_none->shininess * 128.0);
+    gwy_3d_view_glMaterialdv(GL_FRONT, GL_AMBIENT, mat_none->ambient);
+    gwy_3d_view_glMaterialdv(GL_FRONT, GL_DIFFUSE, mat_none->diffuse);
+    gwy_3d_view_glMaterialdv(GL_FRONT, GL_SPECULAR, mat_none->specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, (GLfloat)mat_none->shininess * 128.0f);
 
     if (widget->show_axes) {
         if (rx >= 0.0 && rx <= 90.0) {
@@ -1989,10 +2011,10 @@ static void gwy_3d_draw_light_position(Gwy3DView * widget)
 
     gwy_debug(" ");
 
-    glMaterialfv(GL_FRONT, GL_AMBIENT,  mat_none->ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_none->specular);
-    glMaterialf(GL_FRONT, GL_SHININESS, mat_none->shininess * 128.0);
+    gwy_3d_view_glMaterialdv(GL_FRONT, GL_AMBIENT, mat_none->ambient);
+    gwy_3d_view_glMaterialdv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
+    gwy_3d_view_glMaterialdv(GL_FRONT, GL_SPECULAR, mat_none->specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, (GLfloat)mat_none->shininess * 128.0f);
     glPushMatrix();
     plane_z = GWY_3D_Z_TRANSFORMATION
               * (widget->data_mean - widget->data_min)
