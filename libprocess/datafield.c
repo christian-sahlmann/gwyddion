@@ -28,6 +28,12 @@
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
+/* Private DataLine functions */
+void            _gwy_data_line_initialize        (GwyDataLine *a,
+                                                  gint res, gdouble real,
+                                                  gboolean nullme);
+void            _gwy_data_line_free              (GwyDataLine *a);
+
 static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
 static void     gwy_data_field_init              (GwyDataField *data_field);
 static void     gwy_data_field_finalize          (GwyDataField *data_field);
@@ -43,6 +49,15 @@ static GObject* gwy_data_field_duplicate         (GObject *object);
 /*static void     gwy_data_field_value_changed     (GObject *object);*/
 
 /*local functions*/
+static void     gwy_data_field_alloc             (GwyDataField *a,
+                                                  gint xres,
+                                                  gint yres);
+static void     gwy_data_field_initialize        (GwyDataField *a,
+                                                  gint xres,
+                                                  gint yres,
+                                                  gdouble xreal,
+                                                  gdouble yreal,
+                                                  gboolean nullme);
 static void     gwy_data_field_free              (GwyDataField *a);
 static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
                                                   GwyDataField *imag_field,
@@ -284,13 +299,9 @@ gwy_data_field_value_changed(GObject *object)
  *
  * Allocates GwyDataField.
  *
- * Note this function doesn't create an object, just allocates some fields,
- * it doesn't make @a usable in functions expecting a datafield.  There is
- * NO function to safely free it later.
- *
- * In other words, don't use it, it appeared in the public API by mistake.
+ * Does NOT create an object!
  **/
-void
+static void
 gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
 {
     gwy_debug("");
@@ -313,13 +324,9 @@ gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
  *
  * Allocates and initializes GwyDataField.
  *
- * Note this function doesn't create an object, just allocates some fields,
- * it doesn't make @a usable in functions expecting a datafield.  There is
- * NO function to safely free it later.
- *
- * In other words, don't use it, it appeared in the public API by mistake.
+ * Does NOT create an object!
  **/
-void
+static void
 gwy_data_field_initialize(GwyDataField *a,
                           gint xres, gint yres,
                           gdouble xreal, gdouble yreal,
@@ -2375,24 +2382,24 @@ gwy_data_field_plane_rotate(GwyDataField *a, gdouble xangle, gdouble yangle,
     GwyDataLine l;
 
     if (xangle != 0) {
-        gwy_data_line_initialize(&l, a->xres, a->xreal, 0);
+        _gwy_data_line_initialize(&l, a->xres, a->xreal, 0);
         for (k = 0; k < a->yres; k++) {
             gwy_data_field_get_row(a, &l, k);
             gwy_data_line_line_rotate(&l, -xangle, interpolation);
             gwy_data_field_set_row(a, &l, k);
         }
-        gwy_data_line_free(&l);
+        _gwy_data_line_free(&l);
     }
 
 
     if (yangle != 0) {
-        gwy_data_line_initialize(&l, a->yres, a->yreal, 0);
+        _gwy_data_line_initialize(&l, a->yres, a->yreal, 0);
         for (k = 0; k < a->xres; k++) {
             gwy_data_field_get_column(a, &l, k);
             gwy_data_line_line_rotate(&l, -yangle, interpolation);
             gwy_data_field_set_column(a, &l, k);
         }
-        gwy_data_line_free(&l);
+        _gwy_data_line_free(&l);
     }
 }
 
@@ -3204,8 +3211,8 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
             }
             target_line->real = hlp_tarline->real;
         }
-        gwy_data_line_free(hlp_line);
-        gwy_data_line_free(hlp_tarline);
+        _gwy_data_line_free(hlp_line);
+        _gwy_data_line_free(hlp_tarline);
 
     }
     else if (orientation == GTK_ORIENTATION_VERTICAL) {
@@ -3282,8 +3289,8 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
             }
             target_line->real = hlp_tarline->real;
         }
-        gwy_data_line_free(hlp_line);
-        gwy_data_line_free(hlp_tarline);
+        _gwy_data_line_free(hlp_line);
+        _gwy_data_line_free(hlp_tarline);
 
     }
     return 1;
@@ -4106,19 +4113,6 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
     }
 }
 
-void
-gwy_data_field_croscorrelate(GwyDataField *data_field1,
-                             GwyDataField *data_field2, GwyDataField *x_dist,
-                             GwyDataField *y_dist, GwyDataField *score,
-                             gint search_width, gint search_height,
-                             gint window_width, gint window_height)
-{
-    gwy_data_field_crosscorrelate(data_field1, data_field2,
-                                  x_dist, y_dist, score,
-                                  search_width, search_height,
-                                  window_width, window_height);
-}
-
 /**
  * gwy_data_field_crosscorrelate_iteration:
  * @data_field1: data field
@@ -4226,24 +4220,6 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
     }
 }
 
-
-void
-gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
-                                       GwyDataField *data_field2,
-                                       GwyDataField *x_dist,
-                                       GwyDataField *y_dist,
-                                       GwyDataField *score, gint search_width,
-                                       gint search_height, gint window_width,
-                                       gint window_height,
-                                       GwyComputationStateType * state,
-                                       gint *iteration)
-{
-    gwy_data_field_crosscorrelate_iteration(data_field1, data_field2,
-                                            x_dist, y_dist, score,
-                                            search_width, search_height,
-                                            window_width, window_height,
-                                            state, iteration);
-}
 
 /**
  * square_area:

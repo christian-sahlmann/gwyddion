@@ -38,6 +38,10 @@ static GObject* gwy_data_line_deserialize       (const guchar *buffer,
                                                  gsize size,
                                                  gsize *position);
 static GObject* gwy_data_line_duplicate         (GObject *object);
+void            _gwy_data_line_initialize       (GwyDataLine *a,
+                                                 gint res, gdouble real,
+                                                 gboolean nullme);
+void            _gwy_data_line_free             (GwyDataLine *a);
 /*static void     gwy_data_line_value_changed     (GObject *object);*/
 
 
@@ -124,7 +128,7 @@ static void
 gwy_data_line_finalize(GwyDataLine *data_line)
 {
     gwy_debug("");
-    gwy_data_line_free(data_line);
+    _gwy_data_line_free(data_line);
 }
 
 GObject*
@@ -135,7 +139,7 @@ gwy_data_line_new(gint res, gdouble real, gboolean nullme)
     gwy_debug("");
     data_line = g_object_new(GWY_TYPE_DATA_LINE, NULL);
 
-    gwy_data_line_initialize(data_line, res, real, nullme);
+    _gwy_data_line_initialize(data_line, res, real, nullme);
 
     return (GObject*)(data_line);
 }
@@ -230,24 +234,6 @@ gwy_data_line_value_changed(GObject *object)
 
 
 /**
- * gwy_data_line_alloc:
- * @a: data line to be allocated
- * @res: resolution (number ov values)
- *
- * Allocates field in dataline. Nothing else.
- * Use gwy_data_line_new for full dataline allocation.
- *
- **/
-void
-gwy_data_line_alloc(GwyDataLine *a, gint res)
-{
-    /*gwy_debug("");*/
-
-    a->res = res;
-    a->data = g_new(gdouble, a->res);
-}
-
-/**
  * gwy_data_line_initialize:
  * @a: data line
  * @res: resolution
@@ -257,21 +243,16 @@ gwy_data_line_alloc(GwyDataLine *a, gint res)
  * Allocates field in dataline and fills it with
  * zeros if requested. Also sets the range (real size).
  **/
+/* Exported for DataField. */
 void
-gwy_data_line_initialize(GwyDataLine *a,
-                         gint res, gdouble real,
-                         gboolean nullme)
+_gwy_data_line_initialize(GwyDataLine *a,
+                          gint res, gdouble real,
+                          gboolean nullme)
 {
-    int i;
-
-    /*gwy_debug("");*/
-    gwy_data_line_alloc(a, res);
-
+    gwy_debug("");
+    a->res = res;
     a->real = real;
-    if (nullme) {
-        for (i = 0; i < a->res; i++)
-            a->data[i] = 0;
-    }
+    a->data = nullme ? g_new0(gdouble, a->res) : g_new(gdouble, a-res);
 }
 
 /**
@@ -280,17 +261,14 @@ gwy_data_line_initialize(GwyDataLine *a,
  *
  * Frees memory occupied by dataline.
  **/
+/* Exported for DataField. */
 void
-gwy_data_line_free(GwyDataLine *a)
+_gwy_data_line_free(GwyDataLine *a)
 {
-/*    gwy_debug("");*/
-    if (a->data != NULL)
-    {
-        g_free(a->data);
-        a->data = NULL;
-    }
-    else {gwy_debug("Neco tady smrdi. Proc me podruhe uvolnujes?");}
-
+    gwy_debug("");
+    g_return_if_fail(a && a->data);
+    g_free(a->data);
+    a->data = NULL;
 }
 
 /**
@@ -310,21 +288,21 @@ gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
     gdouble ratio = ((gdouble)a->res - 1)/((gdouble)res - 1);
     GwyDataLine b;
 
-/*    gwy_debug("");*/
+    gwy_debug("");
     if (res == a->res)
         return;
 
-    b.res=a->res;
+    b.res = a->res;
     b.data = g_new(gdouble, a->res);
     gwy_data_line_copy(a, &b);
 
-    a->res=res;
+    a->res = res;
     a->data = g_renew(gdouble, a->data, a->res);
     for (i = 0; i < res; i++) {
         a->data[i] = gwy_data_line_get_dval(&b, (gdouble)i*ratio,
                                             interpolation);
     }
-    gwy_data_line_free(&b);
+    _gwy_data_line_free(&b);
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
@@ -346,7 +324,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
     gint i;
     GwyDataLine b;
 
-    /*gwy_debug("");*/
+        gwy_debug("");
     if (to < from)
         GWY_SWAP(gint, from, to);
 
@@ -361,7 +339,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 
     for (i = from; i < to; i++)
         a->data[i-from] = b.data[i];
-    gwy_data_line_free(&b);
+    _gwy_data_line_free(&b);
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 
     return TRUE;
@@ -380,7 +358,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 gboolean
 gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 {
-/*    gwy_debug("");*/
+    gwy_debug("");
     g_return_val_if_fail(a->res == b->res, FALSE);
 
     memcpy(b->data, a->data, a->res*sizeof(gdouble));
@@ -406,7 +384,7 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     gdouble rest = x - (gdouble)l;
     gdouble intline[4];
 
-    /*gwy_debug("");*/
+        gwy_debug("");
     g_return_val_if_fail(x >= 0 && x < (a->res), 0.0);
 
     if (rest == 0) return a->data[l];
@@ -1078,7 +1056,7 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
     gint i;
     gdouble bpix = bv/a->res*a->real;
 
-    /*gwy_debug("");*/
+        gwy_debug("");
     for (i = 0; i < a->res; i++)
         a->data[i] -= av + bpix*i;
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
@@ -1101,7 +1079,7 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
     gdouble ratio, x, as, radius, xl1, xl2, yl1, yl2;
     GwyDataLine dx, dy;
 
-    /*gwy_debug("");*/
+        gwy_debug("");
     if (angle == 0)
         return;
 
@@ -1274,7 +1252,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
     g_return_if_fail(GWY_IS_DATA_LINE(rb));
     g_return_if_fail(GWY_IS_DATA_LINE(ib));
     
-   /* gwy_debug("");*/
+    gwy_debug("");
     if (ia->res != ra->res)
     {
         gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
@@ -1298,8 +1276,8 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
 
 
     if (preserverms == TRUE) {
-        gwy_data_line_initialize(&multra, ra->res, ra->real, 0);
-        gwy_data_line_initialize(&multia, ra->res, ra->real, 0);
+        _gwy_data_line_initialize(&multra, ra->res, ra->real, 0);
+        _gwy_data_line_initialize(&multia, ra->res, ra->real, 0);
         gwy_data_line_copy(ra, &multra);
         gwy_data_line_copy(ia, &multia);
 
@@ -1317,8 +1295,8 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         
         gwy_data_line_multiply(rb, rmsa/rmsb);
         gwy_data_line_multiply(ib, rmsa/rmsb);
-        gwy_data_line_free(&multra);
-        gwy_data_line_free(&multia);
+        _gwy_data_line_free(&multra);
+        _gwy_data_line_free(&multia);
     }
     else {
         gwy_fft_window(ra->data, ra->res, windowing);

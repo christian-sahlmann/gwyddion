@@ -428,11 +428,11 @@ crosscor_do(CrosscorArgs *args)
     gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
                        "Initializing...");
     do {
-        gwy_data_field_croscorrelate_iteration(dfield1, dfield2, dfieldx,
-                                               dfieldy, score, args->search_x,
-                                               args->search_y, args->window_x,
-                                               args->window_y, &state,
-                                               &iteration);
+        gwy_data_field_crosscorrelate_iteration(dfield1, dfield2, dfieldx,
+                                                dfieldy, score, args->search_x,
+                                                args->search_y, args->window_x,
+                                                args->window_y, &state,
+                                                &iteration);
         gwy_app_wait_set_message("Correlating...");
         if (!gwy_app_wait_set_fraction
                 (iteration/(gdouble)(dfield1->xres - (args->search_x)/2)))

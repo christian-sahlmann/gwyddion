@@ -123,18 +123,6 @@ GObject* gwy_data_field_new(gint xres,
                             gdouble yreal,
                             gboolean nullme);
 
-#ifndef GWY_DISABLE_DEPRECATED
-void gwy_data_field_alloc(GwyDataField *a,
-                          gint xres,
-                          gint yres);
-void gwy_data_field_initialize(GwyDataField *a,
-                               gint xres,
-                               gint yres,
-                               gdouble xreal,
-                               gdouble yreal,
-                               gboolean nullme);
-#endif
-
 /*resample data field (change resolution)*/
 void gwy_data_field_resample(GwyDataField *a,
                              gint xres,
@@ -725,28 +713,6 @@ void gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
                                              gint window_height,
                                              GwyComputationStateType *state,
                                              gint *iteration);
-#ifndef GWY_DISABLE_DEPRECATED
-void gwy_data_field_croscorrelate(GwyDataField *data_field1,
-                                  GwyDataField *data_field2,
-                                  GwyDataField *x_dist,
-                                  GwyDataField *y_dist,
-                                  GwyDataField *score,
-                                  gint search_width,
-                                  gint search_height,
-                                  gint window_width,
-                                  gint window_height);
-void gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1,
-                                            GwyDataField *data_field2,
-                                            GwyDataField *x_dist,
-                                            GwyDataField *y_dist,
-                                            GwyDataField *score,
-                                            gint search_width,
-                                            gint search_height,
-                                            gint window_width,
-                                            gint window_height,
-                                            GwyComputationStateType *state,
-                                            gint *iteration);
-#endif
 
 void gwy_data_field_correlate(GwyDataField *data_field,
                                   GwyDataField *kernel_field,

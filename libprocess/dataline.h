@@ -75,15 +75,6 @@ GType gwy_data_line_get_type  (void) G_GNUC_CONST;
 
 GObject* gwy_data_line_new(gint res, gdouble real, gboolean nullme);
 
-/*allocate data line*/
-void gwy_data_line_alloc(GwyDataLine *a, gint res);
-
-/*allocate data line, set its size and null all values (or not)*/
-void gwy_data_line_initialize(GwyDataLine *a, gint res, gdouble real, gboolean nullme);
-
-/*free data line*/
-void gwy_data_line_free(GwyDataLine *a);
-
 /*resample data line (change resolution)*/
 void gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation);
 
