@@ -44,7 +44,6 @@ libgwydgetsinclude_HEADERS = \
 	gwyshader.h \
 	gwystatusbar.h \
 	gwystock.h \
-	gwytoolbox.h \
 	gwyvectorlayer.h \
 	gwyvruler.h \
 	gwyvalunit.h
@@ -100,7 +99,6 @@ libgwydgets_la_SOURCES = \
 	gwyshader.c \
 	gwystatusbar.c \
 	gwystock.c \
-	gwytoolbox.c \
 	gwyvectorlayer.c \
 	gwyvruler.c \
 	gwyvalunit.c

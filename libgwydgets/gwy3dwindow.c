@@ -39,15 +39,7 @@ enum {
 };
 
 enum {
-    BUTTON_ROTATE = 0,
-    BUTTON_SCALE,
-    BUTTON_Z_SCALE,
-    BUTTON_LIGHT,
-    BUTTON_ROTATE2,
-    BUTTON_SCALE2,
-    BUTTON_Z_SCALE2,
-    BUTTON_LIGHT2,
-    BUTTON_LAST
+    N_BUTTONS = GWY_3D_LIGHT_MOVEMENT+1
 };
 
 /* Forward declarations */
@@ -56,6 +48,9 @@ static void     gwy_3d_window_class_init          (Gwy3DWindowClass *klass);
 static void     gwy_3d_window_init                (Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_destroy             (GtkObject *object);
 static void     gwy_3d_window_finalize            (GObject *object);
+static void     gwy_3d_window_pack_buttons        (Gwy3DWindow *gwy3dwindow,
+                                                   guint offset,
+                                                   GtkBox *box);
 static void     gwy_3d_window_set_mode            (gpointer userdata,
                                                    GtkWidget *button);
 static void     gwy_3d_window_set_gradient        (GtkWidget *item,
@@ -179,8 +174,50 @@ gwy_3d_window_destroy(GtkObject *object)
     Gwy3DWindow *gwy3dwindow;
 
     gwy3dwindow = GWY_3D_WINDOW(object);
-    gwy_object_unref(gwy3dwindow->vbox);
-    gwy_object_unref(gwy3dwindow->small_toolbar);
+    g_free(gwy3dwindow->buttons);
+}
+
+static void
+gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
+                           guint offset,
+                           GtkBox *box)
+{
+    static struct {
+        Gwy3DMovement mode;
+        const gchar *stock_id;
+        const gchar *tooltip;
+    }
+    const buttons[] = {
+        { GWY_3D_ROTATION,    GWY_STOCK_ROTATE,  N_("Rotate view") },
+        { GWY_3D_SCALE,       GWY_STOCK_SCALE,   N_("Scale view as a whole") },
+        { GWY_3D_DEFORMATION, GWY_STOCK_Z_SCALE, N_("Scale value range") },
+        {
+            GWY_3D_LIGHT_MOVEMENT,
+            GWY_STOCK_LIGHT_ROTATE,
+            N_("Move light source")
+        },
+    };
+    GtkWidget *button;
+    GtkRadioButton *group = NULL;
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS(buttons); i++) {
+        button = gtk_radio_button_new_from_widget(group);
+        gtk_box_pack_start(GTK_BOX(box), button, FALSE, FALSE, 0);
+        g_object_set(G_OBJECT(button), "draw-indicator", FALSE, NULL);
+        gtk_container_add(GTK_CONTAINER(button),
+                          gtk_image_new_from_stock(buttons[i].stock_id,
+                                                   GTK_ICON_SIZE_BUTTON));
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(gwy_3d_window_set_mode),
+                                 GINT_TO_POINTER(buttons[i].mode));
+        g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
+        gtk_tooltips_set_tip(gwy3dwindow->tips, button,
+                             _(buttons[i].tooltip), NULL);
+        gwy3dwindow->buttons[offset + buttons[i].mode] = button;
+        if (!group)
+            group = GTK_RADIO_BUTTON(button);
+    }
 }
 
 /**
@@ -212,11 +249,11 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     GwyGLMaterial *material;
     GtkRequisition size_req;
     const gchar *name;
-    GtkWidget *vbox, *hbox, *table, *toolbar, *spin, *button, *omenu, *group,
-               *label, *check, *entry, *hbox2;
+    GtkWidget *vbox, *hbox, *hbox2, *table, *spin, *button, *omenu,
+              *label, *check, *entry;
     GSList *display_mode_group;
     gboolean lights_on;
-    gint row;
+    guint row;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
@@ -226,7 +263,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                            g_get_application_name());
     gtk_window_set_resizable(GTK_WINDOW(gwy3dwindow), TRUE);
 
-    gwy3dwindow->buttons = g_new0(GtkWidget*, BUTTON_LAST);
+    gwy3dwindow->buttons = g_new0(GtkWidget*, 2*N_BUTTONS);
     gwy3dwindow->in_update = FALSE;
 
     hbox = gtk_hbox_new(FALSE, 0);
@@ -235,109 +272,55 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gwy3dwindow->gwy3dview = (GtkWidget*)gwy3dview;
     gtk_box_pack_start(GTK_BOX(hbox), gwy3dwindow->gwy3dview, TRUE, TRUE, 0);
 
-    gwy3dwindow->vbox = gtk_vbox_new(FALSE, 4);
-    g_object_ref(gwy3dwindow->vbox);
-    gtk_container_set_border_width(GTK_CONTAINER(gwy3dwindow->vbox), 6);
+    gwy3dwindow->tips = gtk_tooltips_new();
 
     /* Small toolbar */
-    toolbar = gwy_toolbox_new(1);
-    gtk_container_set_border_width(GTK_CONTAINER(toolbar), 4);
-    gtk_box_pack_end(GTK_BOX(hbox), toolbar, FALSE, FALSE, 0);
-    gwy3dwindow->small_toolbar = toolbar;
-    g_object_ref(gwy3dwindow->small_toolbar);
+    gwy3dwindow->vbox_small = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_end(GTK_BOX(hbox), gwy3dwindow->vbox_small, FALSE, FALSE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(gwy3dwindow->vbox_small), 4);
 
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON,
-                                NULL, _("Show full controls"),
-                                NULL, GWY_STOCK_LESS,
-                                G_CALLBACK(gwy_3d_window_select_controls),
-                                GINT_TO_POINTER(TRUE));
+    button = gtk_button_new();
+    gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox_small), button,
+                       FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(GWY_STOCK_MORE,
+                                               GTK_ICON_SIZE_BUTTON));
+    gtk_tooltips_set_tip(gwy3dwindow->tips, button,
+                         _("Show full controls"), NULL);
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_3d_window_select_controls),
+                             GINT_TO_POINTER(FALSE));
 
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                NULL, _("Rotate view"),
-                                NULL, GWY_STOCK_ROTATE,
-                                G_CALLBACK(gwy_3d_window_set_mode),
-                                GINT_TO_POINTER(GWY_3D_ROTATION));
-    group = button;
-    gwy3dwindow->buttons[BUTTON_ROTATE2] = button;
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
+    gwy_3d_window_pack_buttons(gwy3dwindow, 0,
+                               GTK_BOX(gwy3dwindow->vbox_small));
 
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                group, _("Scale view as a whole"),
-                                NULL, GWY_STOCK_SCALE,
-                                G_CALLBACK(gwy_3d_window_set_mode),
-                                GINT_TO_POINTER(GWY_3D_SCALE));
-    gwy3dwindow->buttons[BUTTON_SCALE2] = button;
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
+    /* Large toolbar */
+    gwy3dwindow->vbox_large = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_end(GTK_BOX(hbox), gwy3dwindow->vbox_large, FALSE, FALSE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(gwy3dwindow->vbox_large), 4);
+    gtk_widget_set_no_show_all(gwy3dwindow->vbox_large, TRUE);
 
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                group, _("Scale value range"),
-                                NULL, GWY_STOCK_Z_SCALE,
-                                G_CALLBACK(gwy_3d_window_set_mode),
-                                GINT_TO_POINTER(GWY_3D_DEFORMATION));
-    gwy3dwindow->buttons[BUTTON_Z_SCALE2] = button;
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
-
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                group, _("Move light source"),
-                                NULL, GWY_STOCK_LIGHT_ROTATE,
-                                G_CALLBACK(gwy_3d_window_set_mode),
-                                GINT_TO_POINTER(GWY_3D_LIGHT_MOVEMENT));
-    gwy3dwindow->buttons[BUTTON_LIGHT2] = button;
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
-
-    /* Toolbar */
     hbox2 = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox), hbox2, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox_large), hbox2,
+                       FALSE, FALSE, 0);
 
-    toolbar = gwy_toolbox_new(4);
-    gtk_box_pack_start(GTK_BOX(hbox2), toolbar, FALSE, FALSE, 0);
-
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                NULL, _("Rotate view"),
-                                NULL, GWY_STOCK_ROTATE,
-                                G_CALLBACK(gwy_3d_window_set_mode),
-                                GINT_TO_POINTER(GWY_3D_ROTATION));
-    group = button;
-    gwy3dwindow->buttons[BUTTON_ROTATE] = button;
+    button = gtk_button_new();
+    gtk_box_pack_end(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(GWY_STOCK_LESS,
+                                               GTK_ICON_SIZE_BUTTON));
+    gtk_tooltips_set_tip(gwy3dwindow->tips, button,
+                         _("Hide full controls"), NULL);
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_3d_window_select_controls),
+                             GINT_TO_POINTER(TRUE));
 
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                group, _("Scale view as a whole"),
-                                NULL, GWY_STOCK_SCALE,
-                                G_CALLBACK(gwy_3d_window_set_mode),
-                                GINT_TO_POINTER(GWY_3D_SCALE));
-    gwy3dwindow->buttons[BUTTON_SCALE] = button;
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
-
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                group, _("Scale value range"),
-                                NULL, GWY_STOCK_Z_SCALE,
-                                G_CALLBACK(gwy_3d_window_set_mode),
-                                GINT_TO_POINTER(GWY_3D_DEFORMATION));
-    gwy3dwindow->buttons[BUTTON_Z_SCALE] = button;
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
-
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_RADIO_BUTTON,
-                                group, _("Move light source"),
-                                NULL, GWY_STOCK_LIGHT_ROTATE,
-                                G_CALLBACK(gwy_3d_window_set_mode),
-                                GINT_TO_POINTER(GWY_3D_LIGHT_MOVEMENT));
-    gwy3dwindow->buttons[BUTTON_LIGHT] = button;
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
-
-    toolbar = gwy_toolbox_new(1);
-    gtk_box_pack_end(GTK_BOX(hbox2), toolbar, FALSE, FALSE, 0);
-
-    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON,
-                                NULL, _("Hide full controls"),
-                                NULL, GWY_STOCK_MORE,
-                                G_CALLBACK(gwy_3d_window_select_controls),
-                                GINT_TO_POINTER(FALSE));
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
+    gwy_3d_window_pack_buttons(gwy3dwindow, N_BUTTONS, GTK_BOX(hbox2));
 
     gwy3dwindow->notebook = gtk_notebook_new();
-    gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox), gwy3dwindow->notebook,
+    gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox_large), gwy3dwindow->notebook,
                        TRUE, TRUE, 0);
 
     /* Basic table */
@@ -445,8 +428,11 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gwy3dwindow->lights_spin2 = spin;
     gtk_widget_set_sensitive(spin, lights_on);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 12);
-    gtk_widget_set_sensitive(gwy3dwindow->buttons[BUTTON_LIGHT], lights_on);
-    gtk_widget_set_sensitive(gwy3dwindow->buttons[BUTTON_LIGHT2], lights_on);
+    gtk_widget_set_sensitive(gwy3dwindow->buttons[GWY_3D_LIGHT_MOVEMENT],
+                             lights_on);
+    gtk_widget_set_sensitive(gwy3dwindow->buttons[N_BUTTONS
+                                                  + GWY_3D_LIGHT_MOVEMENT],
+                             lights_on);
     row++;
 
     gtk_table_attach(GTK_TABLE(table),
@@ -458,7 +444,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     omenu = gwy_option_menu_gradient(G_CALLBACK(gwy_3d_window_set_gradient),
                                      gwy3dwindow, name);
     gtk_widget_set_sensitive(omenu, !lights_on);
-    gwy3dwindow->palette_menu = omenu;
+    gwy3dwindow->gradient_menu = omenu;
     gtk_table_attach(GTK_TABLE(table), omenu,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -553,13 +539,13 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_table_attach(GTK_TABLE(table), button,
                      0, 1, row, row+1, GTK_FILL, 0, 2, 2);
     gwy3dwindow->actions = gtk_hbox_new(FALSE, 4);
-    gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox), gwy3dwindow->actions,
+    gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox_large), gwy3dwindow->actions,
                        FALSE, FALSE, 0);
 
     gtk_widget_show_all(hbox);
 
     /* make the 3D view at least DEFAULT_SIZE x DEFAULT_SIZE */
-    gtk_widget_size_request(gwy3dwindow->vbox, &size_req);
+    gtk_widget_size_request(gwy3dwindow->vbox_large, &size_req);
     size_req.height = MAX(size_req.height, DEFAULT_SIZE);
     gtk_window_set_default_size(GTK_WINDOW(gwy3dwindow),
                                 size_req.width/2 + size_req.height,
@@ -635,11 +621,14 @@ gwy_3d_window_add_small_toolbar_button(Gwy3DWindow *gwy3dwindow,
     g_return_if_fail(GWY_IS_3D_WINDOW(gwy3dwindow));
     g_return_if_fail(stock_id);
 
-    button = gwy_toolbox_append(GWY_TOOLBOX(gwy3dwindow->small_toolbar),
-                                GTK_TYPE_BUTTON,
-                                NULL, tooltip, NULL, stock_id,
-                                callback, cbdata);
+    button = gtk_button_new();
+    gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox_small), button,
+                       FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON));
+    gtk_tooltips_set_tip(gwy3dwindow->tips, button, tooltip, NULL);
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
+    g_signal_connect(button, "clicked", G_CALLBACK(callback), cbdata);
 }
 
 static void
@@ -659,39 +648,11 @@ gwy_3d_window_set_mode(gpointer userdata, GtkWidget *button)
 
     gwy3dwindow->in_update = TRUE;
     movement = GPOINTER_TO_INT(userdata);
-    switch (movement) {
-        case GWY_3D_ROTATION:
-        gtk_toggle_button_set_active
-            (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[BUTTON_ROTATE]), TRUE);
-        gtk_toggle_button_set_active
-            (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[BUTTON_ROTATE2]), TRUE);
-        break;
+    gtk_toggle_button_set_active
+        (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[movement]), TRUE);
+    gtk_toggle_button_set_active
+        (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[movement + N_BUTTONS]), TRUE);
 
-        case GWY_3D_SCALE:
-        gtk_toggle_button_set_active
-            (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[BUTTON_SCALE]), TRUE);
-        gtk_toggle_button_set_active
-            (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[BUTTON_SCALE2]), TRUE);
-        break;
-
-        case GWY_3D_DEFORMATION:
-        gtk_toggle_button_set_active
-            (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[BUTTON_Z_SCALE]), TRUE);
-        gtk_toggle_button_set_active
-            (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[BUTTON_Z_SCALE2]), TRUE);
-        break;
-
-        case GWY_3D_LIGHT_MOVEMENT:
-        gtk_toggle_button_set_active
-            (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[BUTTON_LIGHT]), TRUE);
-        gtk_toggle_button_set_active
-            (GTK_TOGGLE_BUTTON(gwy3dwindow->buttons[BUTTON_LIGHT]), TRUE);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
     gwy_3d_view_set_status(GWY_3D_VIEW(gwy3dwindow->gwy3dview), movement);
     gwy3dwindow->in_update = FALSE;
 }
@@ -721,25 +682,18 @@ static void
 gwy_3d_window_select_controls(gpointer data, GtkWidget *button)
 {
     Gwy3DWindow *gwy3dwindow;
-    GtkWidget *hbox;
+    GtkWidget *show, *hide;
 
     gwy3dwindow = (Gwy3DWindow*)g_object_get_data(G_OBJECT(button),
                                                   "gwy3dwindow");
     g_return_if_fail(GWY_IS_3D_WINDOW(gwy3dwindow));
 
-    hbox = GTK_BIN(gwy3dwindow)->child;
-    g_return_if_fail(GTK_IS_HBOX(GTK_BIN(gwy3dwindow)->child));
-    if (GPOINTER_TO_INT(data)) {
-        gtk_container_remove(GTK_CONTAINER(hbox), gwy3dwindow->small_toolbar);
-        gtk_box_pack_end(GTK_BOX(hbox), gwy3dwindow->vbox, FALSE, FALSE, 0);
-        gtk_widget_show_all(gwy3dwindow->vbox);
-    }
-    else {
-        gtk_container_remove(GTK_CONTAINER(hbox), gwy3dwindow->vbox);
-        gtk_box_pack_end(GTK_BOX(hbox), gwy3dwindow->small_toolbar,
-                         FALSE, FALSE, 0);
-        gtk_widget_show_all(gwy3dwindow->small_toolbar);
-    }
+    show = data ? gwy3dwindow->vbox_small : gwy3dwindow->vbox_large;
+    hide = data ? gwy3dwindow->vbox_large : gwy3dwindow->vbox_small;
+    gtk_widget_hide(hide);
+    gtk_widget_set_no_show_all(hide, TRUE);
+    gtk_widget_set_no_show_all(show, FALSE);
+    gtk_widget_show_all(show);
 }
 
 static void
@@ -812,11 +766,12 @@ gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
     gwy_3d_view_set_use_lights(GWY_3D_VIEW(window->gwy3dview), lights_on);
     gtk_widget_set_sensitive(window->material_menu, lights_on);
     gtk_widget_set_sensitive(window->material_label, lights_on);
-    gtk_widget_set_sensitive(window->palette_menu, !lights_on);
+    gtk_widget_set_sensitive(window->gradient_menu, !lights_on);
     gtk_widget_set_sensitive(window->lights_spin1, lights_on);
     gtk_widget_set_sensitive(window->lights_spin2, lights_on);
-    gtk_widget_set_sensitive(window->buttons[BUTTON_LIGHT], lights_on);
-    gtk_widget_set_sensitive(window->buttons[BUTTON_LIGHT2], lights_on);
+    gtk_widget_set_sensitive(window->buttons[GWY_3D_LIGHT_MOVEMENT], lights_on);
+    gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_LIGHT_MOVEMENT],
+                             lights_on);
     if (lights_on) {
         material = gwy_3d_view_get_material(GWY_3D_VIEW(window->gwy3dview));
         /* FIXME: A hack. Maybe should GLMaterial set default different from

@@ -22,6 +22,7 @@
 #define __GWY_MODULE_TOOL_H__
 
 #include <gtk/gtkwidget.h>
+#include <gtk/gtktooltips.h>
 #include <libgwydgets/gwydatawindow.h>
 
 G_BEGIN_DECLS
@@ -51,6 +52,7 @@ gboolean     gwy_tool_func_use           (const guchar *name,
                                           GwyToolSwitchEvent event);
 GtkWidget*   gwy_tool_func_build_toolbox (GCallback item_callback,
                                           gint max_width,
+                                          GtkTooltips *tooltips,
                                           const gchar **first_tool);
 const gchar* gwy_tool_func_get_tooltip   (const gchar *name);
 gboolean     gwy_tool_func_exists        (const gchar *name);

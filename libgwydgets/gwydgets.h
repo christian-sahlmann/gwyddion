@@ -49,7 +49,6 @@
 #include <libgwydgets/gwyshader.h>
 #include <libgwydgets/gwystatusbar.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwytoolbox.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwyvruler.h>
 #include <libgwydgets/gwyvalunit.h>

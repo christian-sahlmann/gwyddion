@@ -44,6 +44,7 @@ typedef struct {
     MaskEditMode mode;
     GwyUnitoolRectLabels labels;
     gulong finished_id;
+    GtkTooltips *tooltips;
 } ToolControls;
 
 static gboolean   module_register       (const gchar *name);
@@ -177,12 +178,14 @@ dialog_create(GwyUnitoolState *state)
         },
     };
     ToolControls *controls;
-    GtkWidget *dialog, *table, *frame, *toolbox, *button, *group, *hbox, *label;
+    GtkWidget *dialog, *table, *frame, *toolbox, *button, *hbox, *label;
+    GtkRadioButton *group = NULL;
     gint i, row;
 
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
     load_args(gwy_app_settings_get(), controls);
+    controls->tooltips = gtk_tooltips_new();
 
     dialog = gtk_dialog_new_with_buttons(_("Mask Editor"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_hide(dialog);
@@ -203,16 +206,21 @@ dialog_create(GwyUnitoolState *state)
     label = gtk_label_new(_("Mode:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 
-    toolbox = gwy_toolbox_new(G_N_ELEMENTS(modes));
-    group = NULL;
+    toolbox = gtk_table_new(1, G_N_ELEMENTS(modes), TRUE);
     for (i = 0; i < G_N_ELEMENTS(modes); i++) {
-        button = gwy_toolbox_append(GWY_TOOLBOX(toolbox),
-                                    GTK_TYPE_RADIO_BUTTON, group,
-                                    _(modes[i].tooltip), NULL,
-                                    modes[i].stock_id,
-                                    G_CALLBACK(mode_changed_cb), state);
+        button = gtk_radio_button_new_from_widget(group);
+        g_object_set(G_OBJECT(button), "draw-indicator", FALSE, NULL);
+        gtk_table_attach_defaults(GTK_TABLE(toolbox), button, i, i+1, 0, 1);
+        gtk_container_add(GTK_CONTAINER(button),
+                          gtk_image_new_from_stock(modes[i].stock_id,
+                                                   GTK_ICON_SIZE_BUTTON));
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(mode_changed_cb), state);
+        gtk_tooltips_set_tip(controls->tooltips, button,
+                             _(modes[i].tooltip), NULL);
+
         if (!group)
-            group = button;
+            group = GTK_RADIO_BUTTON(button);
         g_object_set_data(G_OBJECT(button), "select-mode",
                           GUINT_TO_POINTER(modes[i].mode));
         if (modes[i].mode == controls->mode)
@@ -336,6 +344,7 @@ dialog_abandon(GwyUnitoolState *state)
     ToolControls *controls;
 
     controls = (ToolControls*)state->user_data;
+    gwy_object_unref(controls->tooltips);
     if (controls->finished_id)
         g_signal_handler_disconnect(state->layer, controls->finished_id);
     save_args(gwy_app_settings_get(), controls);

@@ -24,6 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 #include <gtk/gtkwindow.h>
+#include <gtk/gtktooltips.h>
 
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwy3dview.h>
@@ -46,9 +47,7 @@ struct _Gwy3DWindow {
     GwyZoomMode zoom_mode;  /* reserved for future use */
 
     GtkWidget *gwy3dview;
-    /* XXX: rename to gradient... */
-    GtkWidget *palette_menu;
-    GtkWidget *palette_label;  /* no longer exists */
+    GtkWidget *gradient_menu;
     GtkWidget *material_menu;
     GtkWidget *material_label;
     GtkWidget *lights_spin1;
@@ -64,9 +63,11 @@ struct _Gwy3DWindow {
     GtkWidget *labels_autosize_check;
 
     GtkWidget *notebook;
-    GtkWidget *vbox;
     GtkWidget *actions;
-    GtkWidget *small_toolbar;
+    GtkWidget *vbox_small;
+    GtkWidget *vbox_large;
+    GtkTooltips *tips;
+
     GtkWidget *widget2;
     GtkWidget *widget3;
     GtkWidget *widget4;

@@ -21,7 +21,8 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwydgets/gwytoolbox.h>
+#include <gtk/gtkradiobutton.h>
+#include <gtk/gtktable.h>
 
 #include "gwymoduleinternal.h"
 #include "gwymodule-tool.h"
@@ -143,6 +144,7 @@ gwy_tool_func_use(const guchar *name,
  * @item_callback: A callback called when a tool from the toolbox is selected
  *                 with tool name as the user data.
  * @max_width: The number of columns.
+ * @tooltips: Tooltip group to add tooltips to.
  * @first_tool: Where name of the first tool in the toolbox should be stored.
  *
  * Creates a toolbox with the tools.
@@ -150,12 +152,15 @@ gwy_tool_func_use(const guchar *name,
  * Returns: The toolbox as a #GtkWidget.
  **/
 GtkWidget*
-gwy_tool_func_build_toolbox(GtkSignalFunc item_callback,
+gwy_tool_func_build_toolbox(GCallback item_callback,
                             gint max_width,
+                            GtkTooltips *tooltips,
                             const gchar **first_tool)
 {
-    GtkWidget *toolbox, *widget, *group = NULL;
+    GtkWidget *toolbox, *button;
+    GtkRadioButton *group = NULL;
     GSList *l, *entries = NULL;
+    guint i;
 
     if (!tool_funcs) {
         g_warning("No tool function present to build menu of");
@@ -167,22 +172,31 @@ gwy_tool_func_build_toolbox(GtkSignalFunc item_callback,
     entries = g_slist_sort(entries, (GCompareFunc)tool_toolbox_item_compare);
 
     *first_tool = NULL;
-    toolbox = gwy_toolbox_new(max_width);
+    toolbox = gtk_table_new(4, max_width, TRUE);
     if (!entries)
         return toolbox;
 
+    i = 0;
     for (l = entries; l; l = g_slist_next(l)) {
         GwyToolFuncInfo *func_info = (GwyToolFuncInfo*)l->data;
 
-        widget = gwy_toolbox_append(GWY_TOOLBOX(toolbox),
-                                    GTK_TYPE_RADIO_BUTTON, group,
-                                    func_info->tooltip, NULL,
-                                    func_info->stock_id,
-                                    item_callback, (gpointer)func_info->name);
+        button = gtk_radio_button_new_from_widget(group);
+        g_object_set(G_OBJECT(button), "draw-indicator", FALSE, NULL);
+        gtk_table_attach_defaults(GTK_TABLE(toolbox), button,
+                                  i%max_width, i%max_width + 1,
+                                  i/max_width, i/max_width + 1);
+        gtk_container_add(GTK_CONTAINER(button),
+                          gtk_image_new_from_stock(func_info->stock_id,
+                                                   GTK_ICON_SIZE_BUTTON));
+        g_signal_connect_swapped(button, "clicked",
+                                 item_callback, (gpointer)func_info->name);
+        gtk_tooltips_set_tip(tooltips, button, func_info->tooltip, NULL);
+
         if (!group) {
-            group = widget;
+            group = GTK_RADIO_BUTTON(button);
             *first_tool = func_info->name;
         }
+        i++;
     }
 
     g_slist_free(entries);

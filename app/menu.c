@@ -28,7 +28,6 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwydgets/gwytoolbox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwymodule/gwymodulebrowser.h>
@@ -164,7 +163,7 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
         || GTK_IS_MENU(widget)
         || GTK_IS_VBOX(widget)
         || GTK_IS_MENU_BAR(widget)
-        || GWY_IS_TOOLBOX(widget)) {
+        || GTK_IS_TABLE(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
                               (GtkCallback)gwy_app_menu_set_sensitive_recursive,
                               (gpointer)data);
@@ -207,7 +206,7 @@ gwy_app_menu_set_flags_recursive(GtkWidget *widget,
         || GTK_IS_MENU(widget)
         || GTK_IS_VBOX(widget)
         || GTK_IS_MENU_BAR(widget)
-        || GWY_IS_TOOLBOX(widget)) {
+        || GTK_IS_TABLE(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
                               (GtkCallback)gwy_app_menu_set_flags_recursive,
                               (gpointer)data);
