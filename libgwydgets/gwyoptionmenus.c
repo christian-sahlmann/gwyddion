@@ -202,8 +202,8 @@ palette_def_compare(GwyPaletteDef *a,
 
 /**
  * gwy_option_menu_create:
- * @entries: Option menu entries.
- * @nentries: The number of entries.
+ * @entries: Option menu items.
+ * @nentries: The number of items.
  * @key: Value object data key.
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            no callback).
@@ -598,7 +598,6 @@ gwy_option_menu_filter(GCallback callback,
         { "Laplacian",             GWY_FILTER_LAPLACIAN, },
         { "Sobel gradient",        GWY_FILTER_SOBEL, },
         { "Prewitt gradient",      GWY_FILTER_PREWITT, },
-        
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -628,7 +627,6 @@ gwy_option_menu_mergegrain(GCallback callback,
     static const GwyEnum entries[] = {
         { "Union",            GWY_MERGE_UNION,  },
         { "Intersection",     GWY_MERGE_INTERSECTION, },
-        
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -660,7 +658,6 @@ gwy_option_menu_fit_line(GCallback callback,
         { "Fit linear",    GWY_FIT_POLY_1, },
         { "Fit quadratic", GWY_FIT_POLY_2, },
         { "Fit cubic",     GWY_FIT_POLY_3, },
-        
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -691,7 +688,6 @@ gwy_option_menu_fractal(GCallback callback,
         { "Cube counting",      GWY_FRACTAL_CUBECOUNTING, },
         { "Triangulation",      GWY_FRACTAL_TRIANGULATION, },
         { "Power spectrum",     GWY_FRACTAL_PSDF, },
-        
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
@@ -727,10 +723,10 @@ gwy_option_menu_nlfitpreset(GCallback callback,
         { "Exponential (PSDF)",      GWY_NLFIT_PRESET_EXPONENTIAL_PSDF, },
         { "Exponential (ACF)",       GWY_NLFIT_PRESET_EXPONENTIAL_ACF, },
         { "Exponential (HHCF)",      GWY_NLFIT_PRESET_EXPONENTIAL_HHCF, },
-        { "Polynom (order 0)",       GWY_NLFIT_PRESET_POLY_0, },    
+        { "Polynom (order 0)",       GWY_NLFIT_PRESET_POLY_0, },
         { "Polynom (order 1)",       GWY_NLFIT_PRESET_POLY_1, },
         { "Polynom (order 2)",       GWY_NLFIT_PRESET_POLY_2, },
-        { "Polynom (order 3)",       GWY_NLFIT_PRESET_POLY_3, },    
+        { "Polynom (order 3)",       GWY_NLFIT_PRESET_POLY_3, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),

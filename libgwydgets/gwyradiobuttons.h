@@ -26,22 +26,22 @@
 
 G_BEGIN_DECLS
 
-GSList*    gwy_radio_buttons_create             (const GwyEnum *entries,
-                                                 gint nentries,
-                                                 const gchar *key,
-                                                 GCallback callback,
-                                                 gpointer cbdata,
-                                                 gint current);
-gboolean   gwy_radio_buttons_set_current        (GSList *group,
-                                                 const gchar *key,
-                                                 gint current);
-gint       gwy_radio_buttons_get_current        (GSList *group,
-                                                 const gchar *key);
-gboolean   gwy_radio_buttons_set_current_widget (GtkWidget *radio_button,
-                                                 const gchar *key,
-                                                 gint current);
-gint       gwy_radio_buttons_get_current_widget (GtkWidget *radio_button,
-                                                 const gchar *key);
+GSList*    gwy_radio_buttons_create                  (const GwyEnum *entries,
+                                                      gint nentries,
+                                                      const gchar *key,
+                                                      GCallback callback,
+                                                      gpointer cbdata,
+                                                      gint current);
+gboolean   gwy_radio_buttons_set_current             (GSList *group,
+                                                      const gchar *key,
+                                                      gint current);
+gint       gwy_radio_buttons_get_current             (GSList *group,
+                                                      const gchar *key);
+gboolean   gwy_radio_buttons_set_current_from_widget (GtkWidget *radio_button,
+                                                      const gchar *key,
+                                                      gint current);
+gint       gwy_radio_buttons_get_current_from_widget (GtkWidget *radio_button,
+                                                      const gchar *key);
 
 G_END_DECLS
 
