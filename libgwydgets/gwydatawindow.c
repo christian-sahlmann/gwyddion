@@ -507,7 +507,7 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
     y = event->y;
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     if (x != event->x || y != event->y)
-        return;
+        return FALSE;
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -604,7 +604,8 @@ gwy_data_window_get_base_name(GwyDataWindow *data_window)
         return g_path_get_basename(fnm);
     }
     else {
-        gwy_container_gis_string_by_name(data, "/filename/untitled", &fnm);
+        gwy_container_gis_string_by_name(data, "/filename/untitled",
+                                         (const guchar**)&fnm);
         return g_strdup(fnm);
     }
 }
