@@ -31,7 +31,11 @@ process_PROGRAMS = \
 	scars.so \
 	shade.so \
 	slope_dist.so \
-	unrotate.so
+	unrotate.so \
+	tip_dilation.so \
+	tip_reconstruction.so \
+	tip_map.so \
+	tip_model.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -116,6 +120,18 @@ slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
 
 unrotate_so_SOURCES = unrotate.c
 unrotate_so_LDFLAGS = $(module_ldflags),unrotate.so
+
+tip_dilation_so_SOURCES = tip_dilation.c
+tip_dilation_so_LDFLAGS = $(module_ldflags),tip_dilation.so
+
+tip_reconstruction_so_SOURCES = tip_reconstruction.c
+tip_reconstruction_so_LDFLAGS = $(module_ldflags),tip_reconstruction.so
+
+tip_map_so_SOURCES = tip_map.c
+tip_map_so_LDFLAGS = $(module_ldflags),tip_map.so
+
+tip_model_so_SOURCES = tip_model.c
+tip_model_so_LDFLAGS = $(module_ldflags),tip_model.so
 
 
 INCLUDES = -I$(top_srcdir)
