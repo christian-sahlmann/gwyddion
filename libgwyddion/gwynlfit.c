@@ -720,7 +720,7 @@ guess_gauss(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = G_MAXDOUBLE;
     param[2] = -G_MAXDOUBLE;
@@ -744,7 +744,7 @@ scale_gauss(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
         param[1] /= yscale;
         param[2] /= yscale;
         param[3] /= xscale;
-        
+
     }
     else
     {
@@ -753,7 +753,7 @@ scale_gauss(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
         param[2] *= yscale;
         param[3] *= xscale;
     }
-    
+
 }
 
 /******************** gaussian PSDF ***************************/
@@ -793,7 +793,7 @@ guess_gauss_psdf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     gint i;
-    
+
     param[1] = 50/x[n_dat-1];
 
     param[0] = 0;
@@ -914,7 +914,7 @@ guess_exp(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     gint i;
-    
+
     param[0] = 0;
     param[1] = G_MAXDOUBLE;
     param[2] = -G_MAXDOUBLE;
@@ -938,7 +938,7 @@ scale_exp(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
         param[1] /= yscale;
         param[2] /= yscale;
         param[3] /= xscale;
-        
+
     }
     else
     {
@@ -947,7 +947,7 @@ scale_exp(gdouble *param, gdouble xscale, gdouble yscale, gint dir)
         param[2] *= yscale;
         param[3] *= xscale;
     }
-    
+
 }
 
 /**************** exponential PSDF **************************/
@@ -987,7 +987,7 @@ guess_exp_psdf(gdouble *x, gdouble *y, gint n_dat, gdouble *param,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     gint i;
-    
+
     param[1] = 50/x[n_dat-1];
 
     param[0] = 0;
@@ -1432,62 +1432,66 @@ gint gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function)
     return function->nparams;
 }
 
-GwyNLFitter* gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
-                               gint n_dat, const gdouble *x, const gdouble *y,
-                               gint n_param,
-                               gdouble *param, gdouble *err, const gboolean *fixed_param,
-                               gpointer user_data)
+GwyNLFitter*
+gwy_math_nlfit_fit_preset(GwyNLFitPresetFunction* function,
+                          gint n_dat, const gdouble *x, const gdouble *y,
+                          gint n_param,
+                          gdouble *param, gdouble *err,
+                          const gboolean *fixed_param,
+                          gpointer user_data)
 {
     GwyNLFitter *fitter;
     gdouble xscale, yscale;
     gdouble *weight;
+    gdouble *xsc, *ysc;  /* rescaled x and y */
     gint i;
 
-    /*recompute data to be reasonably scaled*/
+    /* recompute data to be reasonably scaled */
     xscale = 0;
     yscale = 0;
-    for (i=0; i<n_dat; i++)
-    {
-        xscale += x[i]/(gdouble)n_dat;
-        yscale += y[i]/(gdouble)n_dat;
+    for (i = 0; i < n_dat; i++) {
+        xscale += fabs(x[i]);
+        yscale += fabs(y[i]);
     }
-    for (i=0; i<n_dat; i++)
-    {
-        x[i] /= xscale;
-        y[i] /= yscale;
- 
-    }   
+    xscale /= n_dat;
+    yscale /= n_dat;
+    xsc = g_new(gdouble, n_dat);
+    ysc = g_new(gdouble, n_dat);
+    for (i = 0; i < n_dat; i++) {
+        xsc[i] = x[i]/xscale;
+        ysc[i] = y[i]/yscale;
+
+    }
     function->parameter_scale(param, xscale, yscale, 1);
 
     /*use numerical derivation if necessary*/
     if (function->function_derivation == NULL)
-        fitter = gwy_math_nlfit_new(function->function, gwy_math_nlfit_derive);
+        fitter = gwy_math_nlfit_new(function->function,
+                                    gwy_math_nlfit_derive);
     else
-        fitter = gwy_math_nlfit_new(function->function, function->function_derivation);
+        fitter = gwy_math_nlfit_new(function->function,
+                                    function->function_derivation);
 
     /*load default weights for given function type*/
     weight = (gdouble *)g_malloc(n_dat*sizeof(gdouble));
-    function->set_default_weights(x, y, n_dat, weight, NULL);
-    
-    gwy_math_nlfit_fit_with_fixed(fitter, n_dat, x, y, weight, 
+    function->set_default_weights(xsc, ysc, n_dat, weight, NULL);
+
+    gwy_math_nlfit_fit_with_fixed(fitter, n_dat, xsc, ysc, weight,
                                   n_param, param, fixed_param, user_data);
 
     if (fitter->covar)
     {
-        for (i=0; i<n_param; i++) err[i] = gwy_math_nlfit_get_sigma(fitter, i);
+        for (i = 0; i < n_param; i++)
+            err[i] = gwy_math_nlfit_get_sigma(fitter, i);
     }
     /*recompute parameters to be scaled as original data*/
     function->parameter_scale(param, xscale, yscale, -1);
     if (fitter->covar) function->parameter_scale(err, xscale, yscale, -1);
-    
-    /*recompute data back to their former scale*/
-    for (i=0; i<n_dat; i++)
-    {
-        x[i] *= xscale;
-        y[i] *= yscale;
-    }
-    
+
+    g_free(ysc);
+    g_free(xsc);
     g_free(weight);
+
     return fitter;
 }
 
