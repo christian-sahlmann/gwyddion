@@ -32,16 +32,31 @@ static void
 contact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
                gint *xres, gint *yres)
 {
-    *xres = 200;
-    *yres = 200;;
+    gdouble angle = atan(sqrt(2));
+    gdouble xreal = 2*(height+radius)/tan(angle);
+    gint xpix = gwy_data_field_rtoi(data, xreal);
+        
+    if (xpix<10) xpix=10;
+    if (xpix>500) xpix = 500;
+        
+    *xres = xpix;
+    *yres = xpix;
 
 }
 static void
 noncontact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
                gint *xres, gint *yres)
 {
-    *xres = 200;
-    *yres = 200;
+    gdouble angle = 70*G_PI/180;
+
+    gdouble xreal = 2*(height+radius)/tan(angle);
+    gint xpix = gwy_data_field_rtoi(data, xreal);
+    
+    if (xpix<10) xpix=10;
+    if (xpix>500) xpix = 500;
+    
+    *xres = xpix;
+    *yres = xpix;
 }
 static void
 sharpened_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
@@ -55,8 +70,8 @@ static void
 delta_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
                gint *xres, gint *yres)
 {
-    *xres = 200;
-    *yres = 200;
+    *xres = 50;
+    *yres = 50;
 
 }
 
@@ -66,21 +81,25 @@ create_pyramide(GwyDataField *tip, gdouble height, gint n)
     gint col, row;
     gdouble rcol, rrow;
     gdouble scol, srow;
+    gdouble ccol, crow;
     gdouble r, phi, phic;
     gdouble vm, radius;
+    gdouble add = G_PI/4;
+    if (n==3) add = G_PI/6;
 
-    radius = sqrt(2)*tip->xres;
+    radius = sqrt(2)*tip->xres/2;
 
     scol = tip->xres/2;
     srow = tip->yres/2;
 
-    printf("height=%g\n", height);
     for (col=0; col<tip->xres; col++)
     {
         for (row=0; row<tip->yres; row++)
         {
-            rrow = row - srow;
-            rcol = col - scol;
+            ccol = col - scol;
+            crow = row - srow;
+            rcol = -ccol*cos(add) + crow*sin(add);
+            rrow = ccol*sin(add) + crow*cos(add);
             phi = atan2(rrow, rcol) + G_PI;
             phic = floor(phi/(2*G_PI/n))*2*G_PI/n + G_PI/n;
             vm = rcol*cos(phic) + rrow*sin(phic);
@@ -89,9 +108,13 @@ create_pyramide(GwyDataField *tip, gdouble height, gint n)
     }
 }
 
+
 static void
 contact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
+    gdouble angle = atan(sqrt(2));
+    height = tip->xreal*tan(angle)/2;
+        
     create_pyramide(tip, height, 4);
     
 }
@@ -99,6 +122,9 @@ contact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 static void
 noncontact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
+    gdouble angle = 70*G_PI/180;
+    height = tip->xreal*tan(angle)/2;
+    
     create_pyramide(tip, height, 3);
 }
 

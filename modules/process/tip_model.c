@@ -391,6 +391,7 @@ tip_process(TipModelArgs *args, TipModelControls *controls)
     GwyDataField *sfield;
     gchar label[40];
     gint xres, yres;
+    gdouble xstep, ystep;
 
     preset = gwy_tip_model_get_preset(args->type);
     if (preset == NULL) return;
@@ -399,7 +400,8 @@ tip_process(TipModelArgs *args, TipModelControls *controls)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
     sfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->surface, "/0/data"));
 
-    preset->guess(dfield, gwy_data_field_get_max(sfield), args->radius, NULL, &xres, &yres);
+    preset->guess(sfield, gwy_data_field_get_max(sfield) - gwy_data_field_get_min(sfield), 
+                           args->radius, NULL, &xres, &yres);
     
     g_sprintf(label, "Tip resolution: %d x %d pixels", xres, yres);
     gtk_label_set_text(controls->labsize, label);
@@ -411,9 +413,14 @@ tip_process(TipModelArgs *args, TipModelControls *controls)
     if (xres>1000) xres = 1000;
     if (yres>1000) yres = 1000;
     
-/*    gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);*/
+    xstep = dfield->xreal/dfield->xres;
+    ystep = dfield->yreal/dfield->yres;
+    gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_set_xreal(dfield, xstep*xres);
+    gwy_data_field_set_yreal(dfield, ystep*yres);
     
-    preset->func(dfield, gwy_data_field_get_max(sfield), args->radius, NULL);
+    preset->func(dfield, gwy_data_field_get_max(sfield) - gwy_data_field_get_min(sfield), args->radius, NULL);
+    tip_update(controls, args);
 }
 
 static const gchar *mergetype_key = "/module/tip_model_height/merge_type";
