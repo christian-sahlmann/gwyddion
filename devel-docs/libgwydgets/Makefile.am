@@ -50,6 +50,7 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_fit_triangle-24.png \
 	$(top_srcdir)/pixmaps/gwy_fix_zero-24.png \
 	$(top_srcdir)/pixmaps/gwy_fft-24.png \
+	$(top_srcdir)/pixmaps/gwy_grains-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_gauss-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_halfgauss-24.png \
