@@ -2,12 +2,14 @@
 #ifndef __GWY_PALETTE_H__
 #define __GWY_PALETTE_H__
 #include <glib.h>
-#include "gwypalettedef.h"
+#include <libdraw/gwypalettedef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+/* FIXME: either change these to enum, or to strings and refernece palettes
+ * by name instead of number */
 #define GWY_PALETTE_GRAY     0
 #define GWY_PALETTE_RED      1
 #define GWY_PALETTE_GREEN    2
@@ -49,8 +51,6 @@ GType gwy_palette_get_type  (void) G_GNUC_CONST;
 GObject* gwy_palette_new(gdouble nofvals);
 
 gint gwy_palette_alloc(GwyPalette *a);
-
-void gwy_palette_free(GwyPalette *a);
 
 /*fill the palette table using given definition*/
 gint gwy_palette_setup(GwyPalette *a, GwyPaletteDef *pdef);

@@ -7,7 +7,7 @@
 #include "gwypalettedef.h"
 #include "gwypalette.h"
 #include "gwypixfield.h"
-#include "datafield.h"
+#include <libprocess/datafield.h>
 
 int main(int argc, char *argv[])
 {

@@ -3,9 +3,9 @@
 #define __GWY_PALETTEDEF_H__
 #include <glib-object.h>
 
-#include "interpolation.h"
-#include "gwywatchable.h"
-#include "gwyserializable.h"
+#include <libprocess/interpolation.h>
+#include <libgwyddion/gwywatchable.h>
+#include <libgwyddion/gwyserializable.h>
 
 #ifdef __cplusplus
 extern "C" {
