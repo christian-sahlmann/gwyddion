@@ -71,6 +71,8 @@ struct _GwyDataWindow {
 
 struct _GwyDataWindowClass {
     GtkWindowClass parent_class;
+
+    void (*title_changed)(GwyDataWindow *data_window);
 };
 
 GtkWidget*       gwy_data_window_new              (GwyDataView *data_view);

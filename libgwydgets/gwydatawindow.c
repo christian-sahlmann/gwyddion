@@ -31,6 +31,11 @@
 
 #define CBRT2 1.259921049894873164767210607277
 
+enum {
+    TITLE_CHANGED,
+    LAST_SIGNAL
+};
+
 /* Forward declarations */
 
 static void     gwy_data_window_class_init     (GwyDataWindowClass *klass);
@@ -51,14 +56,16 @@ static void     data_view_updated_cb           (GwyDataWindow *data_window);
 
 /* Local data */
 
+static GtkWidgetClass *parent_class = NULL;
+
+static guint data_window_signals[LAST_SIGNAL] = { 0 };
+
 static const gdouble zoom_factors[] = {
     G_SQRT2,
     CBRT2,
     1.0,
     0.5,
 };
-
-static GtkWidgetClass *parent_class = NULL;
 
 GType
 gwy_data_window_get_type(void)
@@ -91,9 +98,23 @@ gwy_data_window_get_type(void)
 static void
 gwy_data_window_class_init(GwyDataWindowClass *klass)
 {
+    GtkObjectClass *object_class;
+
     gwy_debug("");
 
+    object_class = (GtkObjectClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
+
+    klass->title_changed = NULL;
+
+    data_window_signals[TITLE_CHANGED] =
+        g_signal_new("title_changed",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyDataWindowClass, title_changed),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
 }
 
 static void
@@ -481,7 +502,6 @@ void
 gwy_data_window_update_title(GwyDataWindow *data_window)
 {
     gchar *window_title, *filename, zoomstr[8];
-    const gchar *fnm;
     GwyDataView *data_view;
     gdouble zoom;
     gint prec;
@@ -506,6 +526,8 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     gtk_window_set_title(GTK_WINDOW(data_window), window_title);
     g_free(window_title);
     g_free(filename);
+
+    g_signal_emit(data_view, data_window_signals[TITLE_CHANGED], 0);
 }
 
 /**

@@ -625,6 +625,8 @@ gwy_data_view_key_release(GtkWidget *widget,
  *
  * Instructs a data view to update self and repaint.
  *
+ * It causes "updated" signal emission, among other things.
+ *
  * FIXME: This function exists because it's impossible [now?] to watch changes
  * of datafields (and other things) properly.  Call it when you changed data
  * and want the view to reflect the change.
