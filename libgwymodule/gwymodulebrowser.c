@@ -115,9 +115,6 @@ gwy_module_browser_construct(GtkWidget *parent)
     gsize i;
 
     store = gtk_list_store_new(1, G_TYPE_POINTER);
-
-    tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
     gwy_module_foreach(gwy_hash_table_to_slist_cb, &list);
     list = g_slist_sort(list, (GCompareFunc)module_name_compare_cb);
     for (l = list; l; l = g_slist_next(l)) {
@@ -125,6 +122,9 @@ gwy_module_browser_construct(GtkWidget *parent)
         gtk_list_store_set(store, &iter, MODULE_MOD_INFO, l->data, -1);
     }
     g_slist_free(list);
+
+    tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
     g_object_unref(store);
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
