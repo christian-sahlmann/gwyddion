@@ -46,8 +46,8 @@ def print_filename(filename):
 def backup_write_diff(filename, text):
     rundiff = backup(filename)
     write_file(filename, text)
+    print_filename(filename)
     if rundiff:
-        print_filename(filename)
         os.system('diff %s~ %s' % (filename, filename))
 
 def get_list(text, name):

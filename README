@@ -1,23 +1,26 @@
 This is more-or-less README-devel...
 
-run ./configure (or ./autogen) with --enable-maintainer-mode
+Run ./configure (or ./autogen) with --enable-maintainer-mode
 if you want to make docs or build tarballs
 
-run ./configure (or ./autogen) with --cache-file=config.cache
+Run ./configure (or ./autogen) with --cache-file=config.cache
 to speed up configure
 
-ideally, with both
+Ideally, with both.
 
-use ccache
+Use ccache.
 
-see devel-docs/README for HTML doc info
+See devel-docs/README for HTML doc info (make docs generates it).
 
-note stuff in the plugins/ directory is public domain.
+Note stuff in the plugins/ directory is public domain.
 
-note library sonames are kept constant in spite of their neverending changes
-till a official version is released
+Note library sonames are kept constant in spite of their neverending changes
+till a official version is released.
 
-subdir dependencies (fully resolved):
+If you change change public interfaces and/or add or remove files, compile
+gwyddion and run update-msvc.py before creating tarballs.
+
+Subdir dependencies (fully resolved):
     libgwyddion:  (none)
     libprocess:   libgwyddion
     libgwymodule: libgwyddion
