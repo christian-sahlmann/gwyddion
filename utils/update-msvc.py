@@ -5,7 +5,7 @@ import re, os, sys, shutil, glob
 re_listend = re.compile(r'\s*\\\n\s*')
 re_nm = re.compile(r'(?P<addr>[a-z0-9 ]+) (?P<type>[-A-Za-z?]) (?P<symbol>\w+)')
 re_template = re.compile(r'<\[\[:(?P<name>\w+):\]\]>')
-re_cvsid = re.compile(r'^# @\(#\) \$Id$', re.MULTILINE)
+re_cvsid = re.compile(r'^# @\(#\) \$(Id).*', re.MULTILINE)
 
 prg_object_rule = """\
 %s.obj: %s.c
