@@ -91,12 +91,12 @@ gwy_app_settings_save(const gchar *filename)
     gsize size = 0;
     FILE *fh;
 
-    gwy_debug("Saving settings to `%s'", filename);
+    gwy_debug("Saving binary settings to `%s'", filename);
     settings = gwy_app_settings_get();
     g_return_val_if_fail(GWY_IS_CONTAINER(settings), FALSE);
     fh = fopen(filename, "wb");
     if (!fh) {
-        g_warning("Cannot save settings to `%s': %s",
+        g_warning("Cannot save binary settings to `%s': %s",
                   filename, g_strerror(errno));
         return FALSE;
     }
@@ -108,6 +108,45 @@ gwy_app_settings_save(const gchar *filename)
     fclose(fh);
 
     return TRUE;
+}
+
+gboolean
+gwy_app_settings_save_text(const gchar *filename)
+{
+    GwyContainer *settings;
+    GPtrArray *pa;
+    guint i;
+    gboolean ok;
+    FILE *fh;
+
+    gwy_debug("Saving text settings to `%s'", filename);
+    settings = gwy_app_settings_get();
+    g_return_val_if_fail(GWY_IS_CONTAINER(settings), FALSE);
+    fh = fopen(filename, "w");
+    if (!fh) {
+        g_warning("Cannot save text settings to `%s': %s",
+                  filename, g_strerror(errno));
+        return FALSE;
+    }
+
+    ok = TRUE;
+    pa = gwy_container_serialize_to_text(settings);
+    for (i = 0; i < pa->len; i++) {
+        if (fputs((gchar*)pa->pdata[i], fh) == EOF) {
+            g_warning("Cannot save text settings to `%s': %s",
+                      filename, g_strerror(errno));
+            while (i < pa->len)
+                g_free(pa->pdata[i]);
+            ok = FALSE;
+            break;
+        }
+        fputc('\n', fh);
+        g_free(pa->pdata[i]);
+    }
+    g_ptr_array_free(pa, TRUE);
+    fclose(fh);
+
+    return ok;
 }
 
 /**

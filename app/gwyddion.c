@@ -80,6 +80,7 @@ main(int argc, char *argv[])
     gwy_app_file_open_initial(argv + 1, argc - 1);
     gtk_main();
     gwy_app_settings_save(config_file);
+    /*gwy_app_settings_save_text("/home/yeti/settings");*/
     gwy_app_settings_free();
     g_free(config_file);
 
