@@ -773,8 +773,8 @@ gwy_app_change_mask_color_cb(gpointer unused,
     for (i = 0; i < 4; i++) {
         if (data && gwy_container_contains_by_name(data, keys[i]))
             p[i] = gwy_container_get_double_by_name(data, keys[i]);
-        else if (gwy_container_contains_by_name(settings, keys[i]))
-            p[i] = gwy_container_get_double_by_name(settings, keys[i]);
+        else if (gwy_container_contains_by_name(settings, keys[i] + 2))
+            p[i] = gwy_container_get_double_by_name(settings, keys[i] + 2);
         else
             p[i] = default_mask_color[i];
     }
@@ -813,7 +813,8 @@ gwy_app_change_mask_color_cb(gpointer unused,
 
     for (i = 0; i < 4; i++)
         gwy_container_set_double_by_name(defaultc ? settings : data,
-                                         keys[i], p[i]);
+                                         keys[i] + (defaultc ? 2 : 0),
+                                         p[i]);
     if (!defaultc)
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
 }
