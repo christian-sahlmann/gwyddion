@@ -23,9 +23,6 @@
 
 #include <glib.h>
 
-#define GWY_ENABLE_DEPRECATED
-/*#warning GWY_ENABLE_DEPRECATED*/
-
 G_BEGIN_DECLS
 
 typedef enum {
@@ -38,7 +35,7 @@ typedef enum {
   GWY_WINDOWING_RECT       = 6
 } GwyWindowingType;
 
-#ifdef GWY_ENABLE_DEPRECATED
+#ifndef GWY_DISABLE_DEPRECATED
 /* XXX: never used in libprocess itself */
 typedef enum {
   GWY_FFT_OUTPUT_REAL_IMG   = 0,

@@ -29,9 +29,6 @@
 #include <libgwyddion/gwysiunit.h>
 #include <libprocess/cwt.h>
 
-#define GWY_ENABLE_DEPRECATED
-/*#warning GWY_ENABLE_DEPRECATED*/
-
 G_BEGIN_DECLS
 
 #define GWY_TYPE_DATA_FIELD                  (gwy_data_field_get_type())
@@ -53,7 +50,7 @@ typedef enum {
       GWY_FILTER_PREWITT       = 5  /*Prewitt gradient filter*/
 } GwyFilterType;
 
-#ifdef GWY_ENABLE_DEPRECATED
+#ifndef GWY_DISABLE_DEPRECATED
 /* XXX: never used in libprocess itself */
 typedef enum {
     GWY_MERGE_UNION        = 0, /*union of all found grains*/
@@ -76,7 +73,7 @@ typedef enum {
     GWY_COMP_FINISHED     = 2
 } GwyComputationStateType;
 
-#ifdef GWY_ENABLE_DEPRECATED
+#ifndef GWY_DISABLE_DEPRECATED
 /* XXX: this is not *fractal* *type* at all */
 /* XXX: never used in libprocess itself */
 typedef enum {
@@ -124,7 +121,7 @@ GObject* gwy_data_field_new(gint xres,
                             gdouble yreal,
                             gboolean nullme);
 
-#ifdef GWY_ENABLE_DEPRECATED
+#ifndef GWY_DISABLE_DEPRECATED
 void gwy_data_field_alloc(GwyDataField *a,
                           gint xres,
                           gint yres);
@@ -269,7 +266,7 @@ gdouble gwy_data_field_get_sum(GwyDataField *a);
 gdouble gwy_data_field_get_surface_area(GwyDataField *a,
                                         GwyInterpolationType interpolation);
 
-#ifdef GWY_ENABLE_DEPRECATED
+#ifndef GWY_DISABLE_DEPRECATED
 gdouble gwy_data_field_get_area_max(GwyDataField *a,
                                     gint ulcol,
                                     gint ulrow,
@@ -519,7 +516,7 @@ void gwy_data_field_get_stats(GwyDataField *data_field,
                               gdouble *skew,
                               gdouble *kurtosis);
 
-#ifdef GWY_ENABLE_DEPRECATED
+#ifndef GWY_DISABLE_DEPRECATED
 void gwy_data_field_get_area_stats(GwyDataField *data_field,
                                    gint ulcol,
                                    gint ulrow,
@@ -715,7 +712,7 @@ void gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
                                              gint window_height,
                                              GwyComputationStateType *state,
                                              gint *iteration);
-#ifdef GWY_ENABLE_DEPRECATED
+#ifndef GWY_DISABLE_DEPRECATED
 void gwy_data_field_croscorrelate(GwyDataField *data_field1,
                                   GwyDataField *data_field2,
                                   GwyDataField *x_dist,
