@@ -119,7 +119,7 @@ static GwyModuleInfo module_info = {
     "tip_blind",
     N_("Blind estimation of SPM tip using Villarubia's algorithm"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
