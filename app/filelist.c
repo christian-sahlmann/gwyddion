@@ -18,6 +18,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* TODO:
+ * - add some equivalent of file_real_open() to API and use it from the other
+ *   places
+ * - add thumbnails, see Thumbnail Managing Standard
+ *   http://triq.net/~jens/thumbnail-spec/index.html
+ */
+
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwydgets.h>
