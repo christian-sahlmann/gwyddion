@@ -27,15 +27,6 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphcurvemodel.h \
 	gwygraphmodel.h \
 	gwygraphlabel.h \
-	gwygrapher.h \
-	gwygrapherareadialog.h \
-	gwygrapherbasics.h \
-	gwygrapherarea.h \
-	gwygraphercorner.h \
-	gwygraphercurvemodel.h \
-	gwygraphermodel.h \
-	gwygrapherlabel.h \
-	gwygrapherlabeldialog.h \
 	gwyhruler.h \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
@@ -89,16 +80,6 @@ libgwydgets_la_SOURCES = \
 	gwygraphexport.c \
 	gwygraphcorner.c \
 	gwygraphlabel.c \
-	gwygrapher.c \
-	gwygrapherarea.c \
-	gwygrapherareadialog.c \
-	gwygrapherbasics.c \
-	gwygraphercurvemodel.c \
-	gwygraphermodel.c \
-	gwygrapherexport.c \
-	gwygraphercorner.c \
-	gwygrapherlabel.c \
-	gwygrapherlabeldialog.c \
 	gwyhruler.c \
 	gwylayer-basic.c \
 	gwylayer-mask.c \
@@ -119,7 +100,7 @@ libgwydgets_la_SOURCES = \
 	gwyvalunit.c
 
 # Note these are test programs not to be included in the distro
-noinst_PROGRAMS = test main
+noinst_PROGRAMS = main
 
 main_SOURCES = main.c
 main_LDADD = libgwydgets.la \

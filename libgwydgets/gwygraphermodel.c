@@ -401,11 +401,12 @@ gwy_grapher_new_from_model(GwyGrapherModel *gmodel)
     GwyGrapher *grapher;
     gint i;
 
+    /*
     g_return_val_if_fail(gmodel->grapher == NULL, gwy_grapher_new(gmodel));
 
     grapher_widget = gwy_grapher_new(gmodel);
     grapher = GWY_GRAPHER(grapher_widget);
-
+*/
     /*
     gmodel->grapher = grapher;
     gmodel->grapher_destroy_hid
