@@ -150,15 +150,6 @@ poly_level_do(GwyContainer *data,
                                              gwy_data_field_get_yres(dfield),
                                              args->col_degree, args->row_degree,
                                              NULL);
-
-    /* XXX */
-    if (args->col_degree == 2 && args->row_degree == 2) {
-        gdouble q;
-
-        q = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield);
-        g_print("R = %g m\n", q*q/(coeffs[2] + coeffs[6]));
-    }
-
     gwy_data_field_area_subtract_polynom(dfield, 0, 0,
                                          gwy_data_field_get_xres(dfield),
                                          gwy_data_field_get_yres(dfield),
