@@ -336,7 +336,7 @@ preview(TipModelControls *controls, TipModelArgs *args)
 {
     tip_process(controls, args);
 
-    /*gwy_data_view_update(GWY_DATA_VIEW(controls->view));*/
+    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
 static void
@@ -365,6 +365,15 @@ tip_process(TipModelControls *controls, TipModelArgs *args)
     printf("guess: %d x %d\n", xres, yres);
     
     /*process tip*/
+    /*FIXME this must be solved within guess functions*/
+    if (xres<50) xres = 50;
+    if (yres<50) yres = 50;
+    if (xres>1000) xres = 1000;
+    if (yres>1000) yres = 1000;
+    
+    gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
+    
+    preset->func(dfield, gwy_data_field_get_max(dfield), args->radius, NULL);
 }
 
 static const gchar *mergetype_key = "/module/tip_model_height/merge_type";
