@@ -30,6 +30,7 @@
 #include <libgwydgets/gwygrapharea.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwycoloraxis.h>
+#include <libgwydgets/gwystock.h>
 
 
 
@@ -86,6 +87,8 @@ main(int argc, char *argv[])
 
 
     gwy_palette_def_setup_presets();
+    gwy_stock_register_stock_items();
+    /*
     pal = (GwyPalette*) gwy_palette_new(NULL);
     gwy_palette_set_by_name(pal, GWY_PALETTE_OLIVE);
     
@@ -93,25 +96,23 @@ main(int argc, char *argv[])
     
     gtk_container_add (GTK_CONTAINER (window), axis);
     gtk_widget_show (axis);
-    
-    
+    */
+ 
     /*
     label = gwy_graph_label_new();
     gtk_container_add (GTK_CONTAINER (window), label);
     gtk_widget_show (label);
     */
 
-    /* 
+    /*
     area = gwy_graph_area_new(NULL,NULL);
     gtk_layout_set_size(GTK_LAYOUT(area), 320, 240);
     gtk_container_add (GTK_CONTAINER (window), area);
-    */
-    /*
+
     foo = gtk_label_new("Foo!");
     gtk_layout_put(GTK_LAYOUT(area), foo, 10, 20);
     */
 
-    /*
     str1 = g_string_new("parabola");
     str2 = g_string_new("kousek");
     str3 = g_string_new("sinus");
@@ -144,7 +145,7 @@ main(int argc, char *argv[])
     
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show (graph);
-    */
+
     gtk_widget_show_all(window);
     
     gtk_main();

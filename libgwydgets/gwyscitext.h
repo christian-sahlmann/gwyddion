@@ -40,9 +40,9 @@ extern "C" {
 typedef struct {
     GString *ent_text;
     GString *utf_text;
-    
+
     PangoFontDescription *label_font;
-    
+
 } GwySciTextParams;
 
 typedef struct {
@@ -54,7 +54,7 @@ typedef struct {
     GtkCombo *entities;
 
     GwySciTextParams par;
-    
+
 } GwySciText;
 
 typedef struct {
