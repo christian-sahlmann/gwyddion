@@ -81,14 +81,9 @@ APIENTRY WinMain(HINSTANCE hInstance,
                  LPSTR     lpCmdLine,
                  int       nCmdShow)
 {
-    /* FIXME: parse the command line
-     * XXX: file_real_open() now expects filenames in system encoding, not
-     * UTF-8, this is probably wrong on Windows */
-    int argc = 1;
-    char* prgname = "STREAM.exe";
-    char** argv=&prgname;
-
-    return main(argc, argv);
+    /* FIXME: file_real_open() now expects filenames in system encoding, not
+     * UTF-8, how this works on MS Windows? */
+    return main(_argc, _argv);
 
 }
 
