@@ -175,20 +175,18 @@ get_data(FitArgs *args)
     gint i;
 
     args->parent_nofcurves = gwy_graph_get_number_of_curves(args->parent_graph);
-    args->parent_xs = (gdouble **) g_malloc(args->parent_nofcurves*sizeof(gdouble*));
-    args->parent_ys = (gdouble **) g_malloc(args->parent_nofcurves*sizeof(gdouble*));
-    args->parent_ns = (gint *) g_malloc(args->parent_nofcurves*sizeof(gint));
+    args->parent_xs = g_new(gdouble*, args->parent_nofcurves);
+    args->parent_ys = g_new(gdouble*, args->parent_nofcurves);
+    args->parent_ns = g_new(gint, args->parent_nofcurves);
 
-    for (i=0; i<args->parent_nofcurves; i++)
-    {
+    for (i = 0; i < args->parent_nofcurves; i++) {
         args->parent_ns[i] = gwy_graph_get_data_size(args->parent_graph, i);
-        args->parent_xs[i] = (gdouble *) g_malloc(args->parent_ns[i]*sizeof(gdouble));
-        args->parent_ys[i] = (gdouble *) g_malloc(args->parent_ns[i]*sizeof(gdouble));
+        args->parent_xs[i] = g_new(gdouble, args->parent_ns[i]);
+        args->parent_ys[i] = g_new(gdouble, args->parent_ns[i]);
 
         gwy_graph_get_data(args->parent_graph,
                            args->parent_xs[i], args->parent_ys[i], i);
     }
-
 }
 
 /*extract relevant part of data and normalize it to be fitable*/
@@ -430,9 +428,10 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), label);
 
     table2 = gtk_table_new(2, 2, FALSE);
-    controls.data = gtk_adjustment_new(args->curve, 1,
-                                       gwy_graph_get_number_of_curves(args->parent_graph),
-                                       1, 5, 0);
+    controls.data
+        = gtk_adjustment_new(args->curve, 1,
+                             gwy_graph_get_number_of_curves(args->parent_graph),
+                             1, 5, 0);
     gwy_table_attach_spinbutton(table2, 1, _("graph data curve"), _(""),
                                 controls.data);
     gtk_container_add(GTK_CONTAINER(vbox), table2);
@@ -540,7 +539,7 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
     gint i, j;
 
     graph_update(controls, args);
-    
+
     for (i = 0; i < MAX_PARAMS; i++) {
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), " ");
         gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), " ");
@@ -577,10 +576,9 @@ plot_inits(FitArgs *args, FitControls *controls)
 
     function = gwy_math_nlfit_get_preset(args->function_type);
 
-    for (i=0; i<xdata->res; i++)
-    {
-        ydata->data[i] = function->function(xdata->data[i], function->nparams, args->par_init, NULL, &ok);
-    }
+    for (i = 0; i < xdata->res; i++)
+        ydata->data[i] = function->function(xdata->data[i], function->nparams,
+                                            args->par_init, NULL, &ok);
 
     graph_update(controls, args);
 
@@ -973,6 +971,23 @@ format_magnitude(GString *str,
     return str->str;
 }
 
+static gint
+count_really_fitted_points(FitArgs *args)
+{
+    gint i, n, curve;
+
+    curve = args->curve - 1;
+    n = 0;
+    for (i = 0; i < args->parent_ns[curve]; i++) {
+        if ((args->parent_xs[curve][i] >= args->from
+             && args->parent_xs[curve][i] <= args->to)
+            || (args->from == args->to))
+            n++;
+    }
+
+    return n;
+}
+
 static void
 create_results_window(FitArgs *args)
 {
@@ -1005,11 +1020,12 @@ create_results_window(FitArgs *args)
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
-    /* XXX: show fitted points only */
     str = g_string_new("");
     su = g_string_new("");
     attach_label(table, _("Num of points:"), row, 0, 0.0);
-    g_string_printf(str, "<b>FIXME</b> %d", args->parent_ns[curve]);
+    g_string_printf(str, "%d of %d",
+                    count_really_fitted_points(args),
+                    args->parent_ns[curve]);
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
@@ -1107,7 +1123,8 @@ create_fit_report(FitArgs *args)
     g_string_append_printf(report, "Data: %s\n", str->str);
     /* XXX: show fitted points only */
     str = g_string_new("");
-    g_string_append_printf(report, "Number of points: %d\n",
+    g_string_append_printf(report, "Number of points: %d of %d\n",
+                           count_really_fitted_points(args),
                            args->parent_ns[curve]);
     g_string_append_printf(report, "X range:          %g to %g\n",
                            args->from, args->to);
@@ -1121,7 +1138,7 @@ create_fit_report(FitArgs *args)
              gwy_math_nlfit_get_function_param_name(args->fitfunc, i),
              args->par_res[i], args->err[i]);
     }
-    g_string_append_printf(report, "\nResidual sum: %g\n",
+    g_string_append_printf(report, "\nResidual sum:   %g\n",
                            gwy_math_nlfit_get_dispersion(args->fitter));
     g_string_append_printf(report, "\nCorrelation matrix\n");
     for (i = 0; i < n; i++) {
