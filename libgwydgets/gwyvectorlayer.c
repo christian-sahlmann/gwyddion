@@ -124,6 +124,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 
     klass->selection_finished = NULL;
     klass->get_selection = NULL;
+    klass->set_selection = NULL;
     klass->unselect = NULL;
 
     vector_layer_signals[SELECTION_FINISHED] =
@@ -367,13 +368,39 @@ gwy_vector_layer_get_selection(GwyVectorLayer *layer,
 }
 
 /**
+ * gwy_vector_layer_set_selection:
+ * @layer: A vector data view layer.
+ * @nselected: The number of objects in @selection.
+ * @selection: An array with the selection coordinates. The number of objects
+ *             (not coordinates) there is @nselected.
+ *
+ * Sets the selection.
+ *
+ * See gwy_vector_layer_get_selection() for some selection format discussion.
+ **/
+void
+gwy_vector_layer_set_selection(GwyVectorLayer *layer,
+                               gint nselected,
+                               gdouble *selection)
+{
+    GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
+
+    g_assert(layer_class);
+    if (layer_class->set_selection)
+        layer_class->set_selection(layer, nselected, selection);
+    else
+        g_warning("%s doesn't support set_selection()",
+                  g_type_name(G_TYPE_FROM_INSTANCE(layer)));
+}
+
+/**
  * gwy_vector_layer_unselect:
  * @layer: A vector data view layer.
  *
  * Clears the selection.
  *
- * Note: may have hardly predictable consequences when called while user is
- * dragging some object.
+ * Don't call this function while user is drawing a selection. The results
+ * are unpredictable.
  **/
 void
 gwy_vector_layer_unselect(GwyVectorLayer *layer)
