@@ -408,6 +408,9 @@ gwy_layer_select_button_pressed(GwyVectorLayer *layer,
     gboolean keep_old = FALSE;
 
     gwy_debug("");
+    if (event->button != 1)
+        return FALSE;
+
     select_layer = GWY_LAYER_SELECT(layer);
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;

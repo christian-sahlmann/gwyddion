@@ -466,6 +466,9 @@ gwy_layer_axes_button_pressed(GwyVectorLayer *layer,
     gdouble xreal, yreal;
 
     gwy_debug("");
+    if (event->button != 1)
+        return FALSE;
+
     axes_layer = GWY_LAYER_AXES(layer);
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;

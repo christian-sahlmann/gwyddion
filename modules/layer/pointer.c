@@ -266,6 +266,9 @@ gwy_layer_pointer_button_pressed(GwyVectorLayer *layer,
     gdouble xreal, yreal;
 
     gwy_debug("");
+    if (event->button != 1)
+        return FALSE;
+
     pointer_layer = GWY_LAYER_POINTER(layer);
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
 
