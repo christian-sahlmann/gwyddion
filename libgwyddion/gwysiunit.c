@@ -239,7 +239,7 @@ gwy_si_unit_get_unit_string(GwySIUnit *siunit)
     return g_strdup(siunit->unitstr);
 }
 
-void
+static void
 format_regular(GwySIUnit *siunit, gdouble value, GwySIValueFormat *format)
 {
    gwy_debug("");
