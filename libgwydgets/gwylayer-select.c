@@ -33,6 +33,9 @@ static gboolean   gwy_layer_select_button_released   (GwyDataViewLayer *layer,
 static void       gwy_layer_select_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_select_unplugged         (GwyDataViewLayer *layer);
 
+static int        gwy_layer_select_near_point        (GwyLayerSelect *layer,
+                                                      gdouble xreal,
+                                                      gdouble yreal);
 static int        gwy_math_find_nearest_point        (gdouble x,
                                                       gdouble y,
                                                       gdouble *d2min,
@@ -90,6 +93,9 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     layer_class->button_release = gwy_layer_select_button_released;
     layer_class->plugged = gwy_layer_select_plugged;
     layer_class->unplugged = gwy_layer_select_unplugged;
+
+    klass->near_cursor = gdk_cursor_new(GDK_DOTBOX);
+    klass->resize_cursor = gdk_cursor_new(GDK_SIZING);
 }
 
 static void
@@ -97,6 +103,8 @@ gwy_layer_select_init(GwyLayerSelect *layer)
 {
     gwy_debug("%s", __FUNCTION__);
 
+    gdk_cursor_ref(GWY_LAYER_SELECT_GET_CLASS(layer)->near_cursor);
+    gdk_cursor_ref(GWY_LAYER_SELECT_GET_CLASS(layer)->resize_cursor);
     layer->selected = FALSE;
 }
 
@@ -107,6 +115,9 @@ gwy_layer_select_finalize(GObject *object)
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_LAYER_SELECT(object));
+
+    gdk_cursor_unref(GWY_LAYER_SELECT_GET_CLASS(object)->near_cursor);
+    gdk_cursor_unref(GWY_LAYER_SELECT_GET_CLASS(object)->resize_cursor);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -207,12 +218,8 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
     gdouble oldx, oldy, xreal, yreal;
 
     select_layer = (GwyLayerSelect*)layer;
-    if (!select_layer->button)
-        return FALSE;
-
     oldx = select_layer->x1;
     oldy = select_layer->y1;
-    gwy_debug("motion: %g %g", event->x, event->y);
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
@@ -220,6 +227,20 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
                                     x, y, &xreal, &yreal);
     if (xreal == oldx && yreal == oldy)
         return FALSE;
+
+    if (!select_layer->button) {
+        gint i = gwy_layer_select_near_point(select_layer, xreal, yreal);
+
+        if (select_layer->near != i) {
+            GwyLayerSelectClass *klass;
+
+            select_layer->near = i;
+            klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
+            gdk_window_set_cursor(GTK_WIDGET(layer->parent)->window,
+                                  i == -1 ? NULL : klass->near_cursor);
+        }
+        return FALSE;
+    }
 
     gwy_layer_select_draw(layer, layer->parent->window);
     select_layer->x1 = xreal;
@@ -268,19 +289,11 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
      * when we are near a corner, resize the existing one
      * otherwise forget it and start from scratch */
     if (select_layer->selected) {
-        gdouble coords[8], d2min;
         gint i;
 
         gwy_layer_select_draw(layer, layer->parent->window);
-        coords[0] = coords[2] = select_layer->x0;
-        coords[1] = coords[5] = select_layer->y0;
-        coords[4] = coords[6] = select_layer->x1;
-        coords[3] = coords[7] = select_layer->y1;
-        i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 4, coords);
-        /* FIXME: this is simply nonsense when x measure != y measure */
-        d2min /= gwy_data_view_get_xmeasure(GWY_DATA_VIEW(layer->parent))
-                 *gwy_data_view_get_ymeasure(GWY_DATA_VIEW(layer->parent));
-        if (d2min <= PROXIMITY_DISTANCE*PROXIMITY_DISTANCE) {
+        i = gwy_layer_select_near_point(select_layer, xreal, yreal);
+        if (i >= 0) {
             keep_old = TRUE;
             if (i/2)
                 select_layer->x0 = MIN(select_layer->x0, select_layer->x1);
@@ -308,6 +321,9 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
     select_layer->selected = TRUE;
     gwy_debug("selected == %d", select_layer->selected);
 
+    gdk_window_set_cursor(GTK_WIDGET(layer->parent)->window,
+                          GWY_LAYER_SELECT_GET_CLASS(layer)->resize_cursor);
+
     return FALSE;
 }
 
@@ -318,6 +334,7 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
     GwyLayerSelect *select_layer;
     gint x, y;
     gdouble tmp;
+    gboolean outside;
 
     select_layer = (GwyLayerSelect*)layer;
     if (!select_layer->button)
@@ -326,13 +343,14 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
+    outside = (x != event->x) || (y != event->y);
     gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
                                     x, y,
                                     &select_layer->x1, &select_layer->y1);
     gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
                                     select_layer->x0, select_layer->y0,
                                     &x, &y);
-    select_layer->selected = x != event->x && y != event->y;
+    select_layer->selected = (x != event->x) && (y != event->y);
     if (select_layer->selected) {
         if (select_layer->x1 < select_layer->x0) {
             tmp = select_layer->x1;
@@ -360,7 +378,11 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
                                       select_layer->selected);
     gwy_data_view_layer_updated(layer);
 
-    /* XXX: this assures no artefacts ...  */
+    gdk_window_set_cursor(GTK_WIDGET(layer->parent)->window,
+                          outside ? NULL
+                            : GWY_LAYER_SELECT_GET_CLASS(layer)->near_cursor);
+
+    /* XXX: this assures no artifacts ...  */
     gtk_widget_queue_draw(layer->parent);
 
     return FALSE;
@@ -443,6 +465,30 @@ gwy_layer_select_unplugged(GwyDataViewLayer *layer)
 
     GWY_LAYER_SELECT(layer)->selected = FALSE;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
+}
+
+static int
+gwy_layer_select_near_point(GwyLayerSelect *layer,
+                            gdouble xreal, gdouble yreal)
+{
+    GwyDataViewLayer *dlayer;
+    gdouble coords[8], d2min;
+    gint i;
+
+    coords[0] = coords[2] = layer->x0;
+    coords[1] = coords[5] = layer->y0;
+    coords[4] = coords[6] = layer->x1;
+    coords[3] = coords[7] = layer->y1;
+    i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 4, coords);
+
+    dlayer = (GwyDataViewLayer*)layer;
+    /* FIXME: this is simply nonsense when x measure != y measure */
+    d2min /= gwy_data_view_get_xmeasure(GWY_DATA_VIEW(dlayer->parent))
+             *gwy_data_view_get_ymeasure(GWY_DATA_VIEW(dlayer->parent));
+
+    if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
+        return -1;
+    return i;
 }
 
 /*********** FIXME: move it somewhere ************/

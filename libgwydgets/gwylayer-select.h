@@ -32,6 +32,7 @@ struct _GwyLayerSelect {
     GwyDataViewLayer parent_instance;
 
     gboolean selected;
+    gint near;
     guint button;
     gdouble x0;
     gdouble y0;
@@ -41,6 +42,9 @@ struct _GwyLayerSelect {
 
 struct _GwyLayerSelectClass {
     GwyDataViewLayerClass parent_class;
+
+    GdkCursor *near_cursor;
+    GdkCursor *resize_cursor;
 };
 
 GType            gwy_layer_select_get_type        (void) G_GNUC_CONST;
