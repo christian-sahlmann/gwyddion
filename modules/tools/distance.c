@@ -231,6 +231,15 @@ update_labels(GwyUnitoolState *state)
 
     str = g_string_new("");
 
+    g_string_printf(str, "<b>&#916;x</b> [%s]", state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(controls->units[0]), str->str);
+
+    g_string_printf(str, "<b>&#916;y</b> [%s]", state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(controls->units[1]), str->str);
+
+    g_string_printf(str, "<b>R</b> [%s]", state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(controls->units[3]), str->str);
+
     for (i = 0; i < NLINES; i++) {
         if (i < nselected) {
             gdouble dx, dy, r, a;

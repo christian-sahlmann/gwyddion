@@ -34,7 +34,10 @@
 typedef struct {
     GtkWidget *x;
     GtkWidget *y;
+    GtkWidget *xunits;
+    GtkWidget *yunits;
     GtkWidget *val;
+    GtkWidget *zunits;
     GtkObject *radius;
 } ToolControls;
 
@@ -55,7 +58,7 @@ static GwyModuleInfo module_info = {
     "pointer",
     N_("Pointer tool."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -135,17 +138,17 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
     str = g_string_new("");
 
-    label = gtk_label_new(NULL);
+    controls->xunits = label = gtk_label_new(NULL);
     g_string_printf(str, "<b>X</b> [%s]", state->coord_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(NULL);
+    controls->yunits = label = gtk_label_new(NULL);
     g_string_printf(str, "<b>Y</b> [%s]", state->coord_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(NULL);
+    controls->zunits = label = gtk_label_new(NULL);
     g_string_printf(str, "<b>%s</b> [%s]", _("Value"),
                     state->value_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
@@ -186,10 +189,11 @@ static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
+    ToolControls *controls;
     GwyContainer *data;
     GwyDataField *dfield;
-    ToolControls *controls;
     GwyDataViewLayer *layer;
+    GString *str;
     gdouble value, xy[2];
     gboolean is_visible, is_selected;
     gint radius;
@@ -207,6 +211,18 @@ dialog_update(GwyUnitoolState *state,
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
     if (!is_visible && !is_selected)
         return;
+
+    str = g_string_new("");
+    g_string_printf(str, "<b>X</b> [%s]", state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(controls->xunits), str->str);
+
+    g_string_printf(str, "<b>Y</b> [%s]", state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(controls->yunits), str->str);
+
+    g_string_printf(str, "<b>%s</b> [%s]", _("Value"),
+                    state->value_format->units);
+    gtk_label_set_markup(GTK_LABEL(controls->zunits), str->str);
+    g_string_free(str, TRUE);
 
     if (is_selected) {
         gwy_unitool_update_label_no_units(state->coord_format,

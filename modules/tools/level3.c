@@ -33,6 +33,9 @@
 typedef struct {
     GtkWidget *coords[6];
     GtkWidget *values[3];
+    GtkWidget *xunits;
+    GtkWidget *yunits;
+    GtkWidget *zunits;
     GtkObject *radius;
 } ToolControls;
 
@@ -56,7 +59,7 @@ static GwyModuleInfo module_info = {
     N_("Level tool.  Allows to level data by fitting a plane through three "
        "selected points."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -146,17 +149,17 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
     str = g_string_new("");
 
-    label = gtk_label_new(NULL);
+    controls->xunits = label = gtk_label_new(NULL);
     g_string_printf(str, "<b>X</b> [%s]", state->coord_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(NULL);
+    controls->yunits = label = gtk_label_new(NULL);
     g_string_printf(str, "<b>Y</b> [%s]", state->coord_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(NULL);
+    controls->zunits = label = gtk_label_new(NULL);
     g_string_printf(str, "<b>%s</b> [%s]", _("Value"),
                     state->value_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
@@ -209,6 +212,7 @@ dialog_update(GwyUnitoolState *state,
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
+    GString *str;
     gdouble points[6];
     gboolean is_visible;
     gdouble val;
@@ -226,6 +230,18 @@ dialog_update(GwyUnitoolState *state,
     nselected = gwy_vector_layer_get_selection(state->layer, points);
     if (!is_visible && !nselected)
         return;
+
+    str = g_string_new("");
+    g_string_printf(str, "<b>X</b> [%s]", state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(controls->xunits), str->str);
+
+    g_string_printf(str, "<b>Y</b> [%s]", state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(controls->yunits), str->str);
+
+    g_string_printf(str, "<b>%s</b> [%s]", _("Value"),
+                    state->value_format->units);
+    gtk_label_set_markup(GTK_LABEL(controls->zunits), str->str);
+    g_string_free(str, TRUE);
 
     for (i = 0; i < 6; i++) {
         if (i < 2*nselected) {
