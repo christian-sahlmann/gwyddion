@@ -40,19 +40,42 @@ int main(int argc, char *argv[])
     GdkPixbuf *pxb;
     PixPalette pal;
     GError *error=NULL;
-    GObject *a;
+    guchar *buffer;
+    gsize size, pos;
+    FILE *fh;
+ 
+    GwyDataField *a, *b;
     
     g_type_init();
   
-    a = gwy_datafield_new(500, 500, 500, 500, 1);
+    g_message("preparing datafield...");
+    a = (GwyDataField *) gwy_datafield_new(500, 500, 500, 500, 1);
+    make_test_image(a);
   
-    gwy_pixfield_presetpal(&pal, GWY_PAL_OLIVE);
+    size = 0;
+    buffer = NULL;
+    buffer = gwy_serializable_serialize((GObject *)a, buffer, &size);
     
+    g_message("writing datafield to test.datafield...");
+    fh = fopen("test.datafield", "wb");
+    fwrite(buffer, 1, size, fh);
+    fclose(fh);
+    gwy_datafield_free(a);
+    g_object_unref((GObject *)a);
+    
+    g_message("reading datafield from test.datafield...");
+    g_file_get_contents("test.datafield", (gchar**)&buffer, &size, &error);
+    pos = 0;
+    b = (GwyDataField *) gwy_serializable_deserialize(buffer, size, &pos);
+    
+    g_message("drawing datafield...");
+    gwy_pixfield_presetpal(&pal, GWY_PAL_OLIVE);
+   
     pxb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 
-			 gwy_datafield_get_xres((GwyDataField *)a), gwy_datafield_get_yres((GwyDataField *)a));
-    gwy_pixfield_do(pxb, (GwyDataField *)a, &pal); 
+			 gwy_datafield_get_xres(a), gwy_datafield_get_yres(a));
+    gwy_pixfield_do(pxb, a, &pal); 
     gdk_pixbuf_save(pxb, "xout.jpg", "jpeg", &error, "quality", "100", NULL);
- 
-    gwy_datafield_free((GwyDataField *)a); 
+    
+    gwy_datafield_free(b); 
     return 0;
 }
