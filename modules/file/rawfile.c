@@ -679,14 +679,14 @@ rawfile_dialog_info_page(RawFileArgs *args,
     table_attach_heading(table, _("<b>Resolution</b>"), row);
     row++;
 
-    adj = gtk_adjustment_new(args->xres, 0, 16384, 1, 10, 100);
+    adj = gtk_adjustment_new(args->xres, 1, 16384, 1, 10, 100);
     controls->xres = gwy_table_attach_spinbutton(table, row,
                                                  _("_Horizontal size:"),
                                                  _("data samples"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->xres), 0);
     row++;
 
-    adj = gtk_adjustment_new(args->yres, 0, 16384, 1, 10, 100);
+    adj = gtk_adjustment_new(args->yres, 1, 16384, 1, 10, 100);
     controls->yres = gwy_table_attach_spinbutton(table, row,
                                                  _("_Vertical size:"),
                                                  _("data samples"), adj);
@@ -706,13 +706,13 @@ rawfile_dialog_info_page(RawFileArgs *args,
     controls->xreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls->xreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->xreal,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new_with_mnemonic(_("_Width:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->xreal);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     controls->xyexponent = gwy_option_menu_metric_unit(NULL, NULL,
@@ -727,13 +727,13 @@ rawfile_dialog_info_page(RawFileArgs *args,
     controls->yreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls->yreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->yreal,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new_with_mnemonic(_("H_eight:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->yreal);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     button = gtk_check_button_new_with_mnemonic(_("Identical _measures"));
@@ -746,13 +746,13 @@ rawfile_dialog_info_page(RawFileArgs *args,
     controls->zscale = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls->zscale), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->zscale,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new_with_mnemonic(_("_Z-scale:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->zscale);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     controls->zexponent
@@ -819,7 +819,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     label = gtk_label_new_with_mnemonic(_("_Field delimiter:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     omenu = gwy_option_menu_create(delimiter_menu, G_N_ELEMENTS(delimiter_menu),
                                    "delimiter",
@@ -828,19 +828,19 @@ rawfile_dialog_format_page(RawFileArgs *args,
     controls->delimmenu = omenu;
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
     gtk_table_attach(GTK_TABLE(table), omenu, 1, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Other delimiter:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     controls->delimiter = entry = gtk_entry_new();
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
     gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
     gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     button = gtk_check_button_new_with_mnemonic(_("_Decimal separator "
@@ -865,13 +865,13 @@ rawfile_dialog_format_page(RawFileArgs *args,
     label = gtk_label_new_with_mnemonic(_("Byte s_wap pattern:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     controls->byteswap = entry = gtk_entry_new();
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
     gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
     gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row+1,
-                     GTK_FILL, 0, 2, 2);
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     adj = gtk_adjustment_new(args->offset, 0, 1 << 30, 16, 1024, 1024);
