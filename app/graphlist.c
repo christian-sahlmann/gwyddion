@@ -146,7 +146,7 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
 GtkWidget*
 gwy_app_graph_list_new(GwyDataWindow *data_window)
 {
-    GtkWidget *window, *vbox, *buttonbox, *list;
+    GtkWidget *window, *vbox, *buttonbox, *list, *scroll;
     Controls *controls;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -156,11 +156,16 @@ gwy_app_graph_list_new(GwyDataWindow *data_window)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+    gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
+
     controls = g_new(Controls, 1);
     list = gwy_app_graph_list_construct(gwy_data_window_get_data(data_window),
                                         controls);
     g_signal_connect_swapped(list, "destroy", G_CALLBACK(g_free), controls);
-    gtk_box_pack_start(GTK_BOX(vbox), list, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(scroll), list);
 
     buttonbox = gtk_hbox_new(TRUE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(buttonbox), 2);
