@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     printf("%d %d %d %d\n", (gint32)p->ints[40], (gint32)p->ints[41], (gint32)p->ints[42], (gint32)p->ints[43]);
 
     /*plot a field in the given palette*/
-    a = (GwyDataField *) gwy_datafield_new(500, 250, 500, 500, 1);
+    a = (GwyDataField *) gwy_data_field_new(500, 250, 500, 500, 1);
     for (i=0; i<a->yres; i++)
     {
 	for (j=0; j<a->xres; j++)
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	}
     }
     pxb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                  gwy_datafield_get_xres(a), gwy_datafield_get_yres(a));
+                  gwy_data_field_get_xres(a), gwy_data_field_get_yres(a));
  
     gwy_pixfield_do(pxb, a, p);
     gdk_pixbuf_save(pxb, "xout.jpg", "jpeg", &error, "quality", "100", NULL);

@@ -14,8 +14,8 @@ gwy_pixfield_do(GdkPixbuf *g, GwyDataField *f, GwyPalette *pal)
     gint rowstride, dval;
     gdouble maximum, minimum, kor;
 
-    maximum = gwy_datafield_get_max(f); 
-    minimum = gwy_datafield_get_min(f);
+    maximum = gwy_data_field_get_max(f); 
+    minimum = gwy_data_field_get_min(f);
     kor = (pal->nofvals-1)/(maximum-minimum);
    
     pixels = gdk_pixbuf_get_pixels(g);
