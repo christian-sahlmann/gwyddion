@@ -239,11 +239,16 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     lab_alloc = &GTK_WIDGET(area->lab)->allocation;
 
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
-    if ((area->old_width != widget->allocation.width || area->old_height != widget->allocation.height) &&
+    if (((area->old_width != widget->allocation.width || area->old_height != widget->allocation.height)
+         || area->newline == 1)&&
         (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
         || lab_alloc->y != 5))
+    {
+        
         gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                         widget->allocation.width - lab_alloc->width - 5, 5);
+        area->newline = 0;
+    }
     gwy_graph_area_plot_refresh(area);
 
     area->old_width = widget->allocation.width;
@@ -810,6 +815,7 @@ gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve)
 
     g_ptr_array_add(area->curves, (gpointer)(pcurve));
     gwy_graph_label_add_curve(area->lab, &(pcurve->params));
+    area->newline = 1;
 
 }
 

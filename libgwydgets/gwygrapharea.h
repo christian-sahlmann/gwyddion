@@ -125,6 +125,7 @@ typedef struct {
     gdouble x_min;
     gdouble y_max;
     gdouble y_min;
+    gint newline;
 
     gint old_width;
     gint old_height;
@@ -137,7 +138,8 @@ typedef struct {
     gint x0;
     gint y0;
     gint xoff;
-    gint yoff;    
+    gint yoff;   
+
 } GwyGraphArea;
 
 /*graph area class*/
