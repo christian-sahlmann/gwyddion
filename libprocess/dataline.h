@@ -70,6 +70,11 @@ struct _GwyDataLineClass {
     GObjectClass parent_class;
 };
 
+G_END_DECLS
+
+#include <libprocess/linestats.h>
+
+G_BEGIN_DECLS
 
 GType gwy_data_line_get_type  (void) G_GNUC_CONST;
 
@@ -162,48 +167,6 @@ void gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
 void gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia,
                            GwyDataLine *rb, GwyDataLine *ib,
                            gint interpolation);
-
-/*distribution of heights*/
-void gwy_data_line_dh(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-                      gdouble ymin,
-                      gdouble ymax,
-                      gint nsteps);
-
-/*cumulative distribution of heights*/
-void gwy_data_line_cdh(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-                      gdouble ymin,
-                      gdouble ymax,
-                      gint nsteps);
-
-/*distribution of slopes*/
-void gwy_data_line_da(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-                      gdouble ymin,
-                      gdouble ymax,
-                      gint nsteps);
-
-/*cumulative distribution of slopes*/
-void gwy_data_line_cda(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-                      gdouble ymin,
-                      gdouble ymax,
-                      gint nsteps);
-
-/*autocorrelation function*/
-void gwy_data_line_acf(GwyDataLine *data_line,
-                      GwyDataLine *target_line);
-
-/*height-height correlation function*/
-void gwy_data_line_hhcf(GwyDataLine *data_line,
-                      GwyDataLine *target_line);
-
-/*power spectral density function*/
-void gwy_data_line_psdf(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-		      gint windowing,
-                      gint interpolation);
 
 gdouble* gwy_data_line_part_fit_polynom (GwyDataLine *data_line,
                                          gint n,

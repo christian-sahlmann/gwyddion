@@ -15,6 +15,8 @@ libgwyprocessinclude_HEADERS = \
 	grains.h \
 	gwyprocess.h \
 	interpolation.h \
+	inttrans.h \
+	linestats.h \
 	simplefft.h
 
 lib_LTLIBRARIES = libgwyprocess.la
@@ -39,6 +41,8 @@ libgwyprocess_la_SOURCES = \
 	fractals.c \
 	grains.c \
 	interpolation.c \
+	inttrans.c \
+	linestats.c \
 	simplefft.c
 
 #noinst_PROGRAMS = test
