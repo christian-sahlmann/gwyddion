@@ -1,19 +1,23 @@
-1.7cvs20041221
+1.7cvs20050119
 
 1.8
 Application:
 - Option --no-splash recognized anywhere in command line, --debug-objects
   added.
-- Document history now displays physical dimensions too.
+- Document history now displays physical dimensions too, starts faster, and 
+  rememberes more files.
 
 Modules:
-- NT-MDT file format import module (new): roughly working.
+- NT-MDT file format import module (new).
 - CreaTec STM file format import module (new).
+- Omicron STMPRG file format import module (new).
+- Local contrast enhancement display module (new).
 - Blind tip estimate: Insensitive OK button when full estimate was run without
   partial estimate first was fixed.
 - DWT Anisotropy: Undo and data corruption were fixed.
 - Nanoscope, Statistical quantities, FFT: SI unit handling improved.
 - FFT, CWT, DWT modules: Display non-square data error immediately.
+- Unrotate: Has a preview now.
 - Profile: Corrupted graph titles for separate profiles were fixed.
 - Grain mark by threshold, watershed, and remove by threshold: Option to use
   inverted surface, GUI reworked.
@@ -21,6 +25,11 @@ Modules:
   now.
 - Mask grow, shrink: Always growing (shrinking) down (up) only one pixel was
   fixed.
+- Manual grain removal tool: Crash after switch to Pointer tool was fixed.
+- Rawfile: Crash after Reset was fixed.
+- Arithmetic: Not recalling that an operand is scalar was fixed.
+- Crop tool: Slightly skewed new physical dimensions were corrected.
+- All modules: GUI improvements, namely addition of scale controls.
 
 Libraries:
 - libgwyddion: Better SI unit parsing, multiplication, division and powers.
@@ -29,6 +38,14 @@ Libraries:
   of negative values to be displayed as (NaN, NaN) was fixed
 - libgwyddion, libgwyprocess: Convenience macros and methods for duplication,
   creation of similar data fields and lines.
+- libgwydraw: New GwyGradient class that will replace GwyPalette and
+  GwyPaletteDef.
+- libgwyprocess: Minumum and maximum filters.
+- libgwydgets: New GwyShader widget that will replace GwyGradSphere and
+  obsolete GwySphereCoords.
+
+Other:
+- Freedesktop compliance improvements, SPM data MIME type definitions.
 
 
 1.7
@@ -150,7 +167,7 @@ Library:
 - libgwydgets: GwyVMenuBar vertical menu widget.
 - libgwyddion: MD5 digest, file path canonicalization, and some unistd
   emulation on Win32 functions were added.
-- libprocess: Fractal interpolation added.
+- libgwyprocess: Fractal interpolation added.
 - libgwyddion: Deserialization made more robust with regard to future
   extensions and truncated files.
 
@@ -199,9 +216,9 @@ Modules:
 
 Library:
 - libgwydgets: GwyValUnit -- value with unit and selection of unit prefix
-- libprocess: gwy_data_line_get_modus() and gwy_data_line_part_get_modus()
+- libgwyprocess: gwy_data_line_get_modus() and gwy_data_line_part_get_modus()
   approximate modus functions.
-- libprocess: unrotate functionality available as a function
+- libgwyprocess: unrotate functionality available as a function
   gwy_data_field_unrotate_find_corrections()
 - all libraries: Explicite functions initializing deserializable classes.
 - libgwyddion: gwydebugobjects -- an aid in leaking objects debugging.
@@ -240,9 +257,9 @@ Library:
   fixed; GwySerializable uses GByteArray now.
 - libgwymodule: Processing modules sensitivity flags moved directly to
   GwyProcessFuncInfo.
-- libprocess, libgwyapp: Some functions with typos in names and functions that
-  should have never been public were removed from API.
-- libdraw: GwyRGBA conversion and container helper functions, it is registers
+- libgwyprocess, libgwyapp: Some functions with typos in names and functions
+  that should have never been public were removed from API.
+- libgwydraw: GwyRGBA conversion and container helper functions, it is registers
   as a GType type.
 - libgwydgets: GwyColorButton reduction to a simple dialogless button using
   GwyRGBA instead of Gdk colors.  Mask color selector helper
@@ -285,9 +302,9 @@ Modules:
 
 Library:
 - libgwyapp: Option menu of data windows.
-- libprocess: Several area functions were given more logical names and `cros'
-  was corrected to `cross' in names; old function names will continue to
-  work.
+- libgwyprocess: Several area functions were given more logical names and
+  `cros' was corrected to `cross' in names; old function names will continue
+  to work.
 - libgwydgets: Radio button group constructor from GwyEnum.
 - libgwyddion: Text dump/restore of GwyContainer.
 - libgwyddion: Presets for common fitting functions for GwyNLFitter, fitting
@@ -333,10 +350,10 @@ Modules:
 Library:
 - libgwyddion: Marquardt-Levenverg non-linear least square fitter was
   added (GwyNLFitter).
-- libprocess: Functions for computing fractal dimension and surface area
+- libgwyprocess: Functions for computing fractal dimension and surface area
   added. Functions for correlation, crosscorrelation, outlier detection
   and data correction by Laplace solver added.
-- libprocess: Vertical PSDF computation fixed. Some minor bugs having
+- libgwyprocess: Vertical PSDF computation fixed. Some minor bugs having
   no specific influence on results corrected and code cleaned.
 - libgwymodule: Data process modules can specify sensitivity of their
   menu entries.
