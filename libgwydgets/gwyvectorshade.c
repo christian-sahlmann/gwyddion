@@ -31,7 +31,6 @@
 
 static void     gwy_vector_shade_class_init     (void);
 static void     gwy_vector_shade_init           (GwyVectorShade *vector_shade);
-GtkWidget*      gwy_vector_shade_new            (GwySphereCoords *sphere_coords);
 static void     gwy_vector_shade_phi_update     (GtkAdjustment *adj,
                                                  GwyVectorShade *vector_shade);
 static void     gwy_vector_shade_theta_update   (GtkAdjustment *adj,

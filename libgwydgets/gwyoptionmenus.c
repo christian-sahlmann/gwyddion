@@ -37,7 +37,7 @@
 static GtkWidget* gwy_palette_menu_create        (GCallback callback,
                                                   gpointer cbdata,
                                                   const gchar *current,
-                                                  gint *current_index);
+                                                  gint *current_idx);
 static GtkWidget* gwy_sample_palette_to_gtkimage (GwyPaletteDef *palette_def);
 static gint       palette_def_compare            (GwyPaletteDef *a,
                                                   GwyPaletteDef *b);
@@ -48,11 +48,11 @@ static GtkWidget*
 gwy_palette_menu_create(GCallback callback,
                         gpointer cbdata,
                         const gchar *current,
-                        gint *current_index)
+                        gint *current_idx)
 {
     GSList *l, *entries = NULL;
     GtkWidget *menu, *image, *item;
-    gint i, index;
+    gint i, idx;
 
     gwy_palette_def_foreach((GwyPaletteDefFunc)gwy_hash_table_to_slist_cb,
                             &entries);
@@ -60,7 +60,7 @@ gwy_palette_menu_create(GCallback callback,
 
     menu = gtk_menu_new();
 
-    index = -1;
+    idx = -1;
     i = 0;
     for (l = entries; l; l = g_slist_next(l)) {
         GwyPaletteDef *palette_def = (GwyPaletteDef*)l->data;
@@ -74,14 +74,14 @@ gwy_palette_menu_create(GCallback callback,
         if (callback)
             g_signal_connect(item, "activate", callback, cbdata);
         if (current && strcmp(current, name) == 0)
-            index = i;
+            idx = i;
         i++;
     }
     gwy_sample_palette_to_gtkimage(NULL);
     g_slist_free(entries);
 
-    if (current_index && index != -1)
-        *current_index = index;
+    if (current_idx && idx != -1)
+        *current_idx = idx;
 
     return menu;
 }
@@ -125,15 +125,15 @@ gwy_option_menu_palette(GCallback callback,
                         const gchar *current)
 {
     GtkWidget *omenu, *menu;
-    gint index;
+    gint idx;
 
-    index = -1;
+    idx = -1;
     omenu = gtk_option_menu_new();
-    menu = gwy_palette_menu_create(callback, cbdata, current, &index);
+    menu = gwy_palette_menu_create(callback, cbdata, current, &idx);
 
     gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    if (index != -1)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), index);
+    if (idx != -1)
+        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), idx);
 
     return omenu;
 }
@@ -215,13 +215,13 @@ gwy_option_menu_create(const GwyEnum *entries,
 {
     GtkWidget *omenu, *menu, *item;
     GQuark quark;
-    gint i, index;
+    gint i, idx;
 
     quark = g_quark_from_static_string(key);
     omenu = gtk_option_menu_new();
     menu = gtk_menu_new();
 
-    index = -1;
+    idx = -1;
     for (i = 0; i < nentries; i++) {
         item = gtk_menu_item_new_with_label(_(entries[i].name));
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
@@ -230,12 +230,12 @@ gwy_option_menu_create(const GwyEnum *entries,
         if (callback)
             g_signal_connect(item, "activate", callback, cbdata);
         if (entries[i].value == current)
-            index = i;
+            idx = i;
     }
 
     gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    if (index != -1)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), index);
+    if (idx != -1)
+        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), idx);
 
     return omenu;
 }
