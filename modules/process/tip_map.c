@@ -53,7 +53,7 @@ static GtkWidget * tip_certainty_map_data_option_menu(GwyDataWindow **operand);
 
 
 static const TipCertaintyMapArgs tip_certainty_map_defaults = {
-    NULL, NULL,    
+    NULL, NULL,
 };
 
 /* The module info. */
@@ -63,7 +63,7 @@ static GwyModuleInfo module_info = {
     "tip_map",
     N_("Certainty Map."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -271,8 +271,9 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(dfield));
         g_object_unref(dfield);
     }
-    gwy_app_wait_start(GTK_WIDGET(args->win1), _("Initializing..."));
-    dfield = gwy_tip_cmap(dfield1, dfield2, dfield, gwy_app_wait_set_fraction,
+    gwy_app_wait_start(GTK_WIDGET(args->win2), _("Initializing..."));
+    dfield = gwy_tip_cmap(dfield1, dfield2, dfield,
+                          gwy_app_wait_set_fraction,
                           gwy_app_wait_set_message);
     gwy_app_wait_finish();
     /*set right output */

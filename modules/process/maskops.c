@@ -39,7 +39,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "maskops",
-    "Basic operations with mask.",
+    N_("Basic operations with mask."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -55,21 +55,21 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo mask_remove_func_info = {
         "mask_remove",
-        "/_Mask/_Remove Mask",
+        N_("/_Mask/_Remove Mask"),
         (GwyProcessFunc)&mask_remove,
         MASKOPS_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,
     };
     static GwyProcessFuncInfo mask_invert_func_info = {
         "mask_invert",
-        "/_Mask/_Invert Mask",
+        N_("/_Mask/_Invert Mask"),
         (GwyProcessFunc)&mask_invert,
         MASKOPS_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,
     };
     static GwyProcessFuncInfo mask_extract_func_info = {
         "mask_extract",
-        "/_Mask/_Extract Mask",
+        N_("/_Mask/_Extract Mask"),
         (GwyProcessFunc)&mask_extract,
         MASKOPS_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,

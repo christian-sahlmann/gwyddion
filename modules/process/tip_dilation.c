@@ -63,7 +63,7 @@ static GwyModuleInfo module_info = {
     "tip_dilation",
     N_("Tip Dilation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -262,8 +262,9 @@ tip_dilation_do(TipDilationArgs *args)
     }
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    gwy_app_wait_start(GTK_WIDGET(args->win1),"Initializing...");
-    dfield = gwy_tip_dilation(dfield1, dfield2, dfield, gwy_app_wait_set_fraction,
+    gwy_app_wait_start(GTK_WIDGET(args->win2), "Initializing...");
+    dfield = gwy_tip_dilation(dfield1, dfield2, dfield,
+                              gwy_app_wait_set_fraction,
                               gwy_app_wait_set_message);
     gwy_app_wait_finish();
     /*set right output */

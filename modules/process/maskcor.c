@@ -179,7 +179,7 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
 
     /**** Parameters ********/
     adj = gtk_adjustment_new(args->threshold, -1.0, 1.0, 0.01, 0.1, 0.1);
-    spin = gwy_table_attach_spinbutton(table, 2, _("_Threshold"), NULL, adj);
+    spin = gwy_table_attach_spinbutton(table, 2, _("_Threshold:"), NULL, adj);
     controls->threshold = spin;
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gtk_widget_set_sensitive(spin, args->result != GWY_MASKCOR_SCORE);

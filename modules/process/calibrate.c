@@ -196,7 +196,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
                        FALSE, FALSE, 4);
-    controls.xreal = gwy_val_unit_new(_("_X range: "),
+    controls.xreal = gwy_val_unit_new(_("_X range:"),
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.xreal), args->xreal);
     g_signal_connect(GWY_VAL_UNIT(controls.xreal), "value_changed",
@@ -204,7 +204,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xreal,
                        FALSE, FALSE, 4);
-    controls.yreal = gwy_val_unit_new(_("_Y range: "),
+    controls.yreal = gwy_val_unit_new(_("_Y range:"),
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.yreal), args->yreal);
     g_signal_connect(GWY_VAL_UNIT(controls.yreal), "value_changed",
@@ -212,7 +212,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.yreal,
                        FALSE, FALSE, 4);
-    controls.zreal = gwy_val_unit_new(_("_Z range: "),
+    controls.zreal = gwy_val_unit_new(_("_Z range:"),
                                        gwy_data_field_get_si_unit_z(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.zreal), args->zreal);
     g_signal_connect(GWY_VAL_UNIT(controls.zreal), "value_changed",
@@ -232,7 +232,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    label = gtk_label_new_with_mnemonic(_("X c_alibration factor:"));
+    label = gtk_label_new_with_mnemonic(_("_X calibration factor:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label,
                        FALSE, FALSE, 4);
@@ -253,7 +253,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    label = gtk_label_new_with_mnemonic(_("Y cali_bration factor:"));
+    label = gtk_label_new_with_mnemonic(_("_Y calibration factor:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label,
                        FALSE, FALSE, 4);
@@ -274,7 +274,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    label = gtk_label_new_with_mnemonic(_("Z calibration fac_tor:"));
+    label = gtk_label_new_with_mnemonic(_("_Z calibration factor:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label,
                        FALSE, FALSE, 4);
