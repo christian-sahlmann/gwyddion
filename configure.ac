@@ -81,7 +81,7 @@ if test "x$PASCAL" != "x"; then
       fpc_version_ok=yes
     else
       fpc_version_ok=no
-      PASCAL=
+      PASCAL=:
     fi
   fi
   AC_MSG_RESULT([$fpc_version_ok])
