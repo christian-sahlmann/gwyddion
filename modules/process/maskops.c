@@ -133,6 +133,7 @@ mask_extract(GwyContainer *data, GwyRunType run)
 
     data = GWY_CONTAINER(gwy_container_new());
     gwy_container_set_object_by_name(data, "/0/data", dfield);
+    g_object_unref(dfield);
     gwy_container_set_string_by_name(data, "/0/base/palette", g_strdup(pal));
 
     data_window = gwy_app_data_window_create(data);
