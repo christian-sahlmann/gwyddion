@@ -192,7 +192,6 @@ gwy_si_unit_duplicate(GObject *object)
  *
  * Returns: a new GwySiUnit with a given string
  **/
-#include <stdio.h>
 GObject*
 gwy_si_unit_new(const char *unit_string)
 {
@@ -200,8 +199,10 @@ gwy_si_unit_new(const char *unit_string)
 
     gwy_debug("");
     siunit = g_object_new(GWY_TYPE_SI_UNIT, NULL); 
-    if (unit_string == NULL || strcmp(unit_string, "")==0) siunit->unitstr = NULL;
-    else siunit->unitstr = g_strdup(unit_string);
+    if (unit_string == NULL || strcmp(unit_string, "") == 0)
+        siunit->unitstr = NULL;
+    else
+        siunit->unitstr = g_strdup(unit_string);
 
     return (GObject*)siunit;
 }
