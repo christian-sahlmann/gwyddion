@@ -129,7 +129,6 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->graph_destroy_hid = 0;
 
     gmodel->ncurves = 0;
-    gmodel->nautocurves = 0;
     gmodel->curves = NULL;
 
     gmodel->x_reqmin = 0.0;
@@ -293,7 +292,6 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
      * 3. replace already existing curves  <-- if lucky, only this happens
      * 4. fill new curves
      */
-    gmodel->nautocurves = graph->n_of_autocurves;
     nacurves = graph->area->curves->len;
     /* 1. clear */
     for (i = nacurves; i < gmodel->ncurves; i++)
@@ -336,8 +334,6 @@ gwy_graph_new_from_model(GwyGraphModel *gmodel)
     graph->area->lab->par.position = gmodel->label_position;
     graph->area->lab->par.is_frame = gmodel->label_has_frame;
     graph->area->lab->par.frame_thickness = gmodel->label_frame_thickness;
-
-    graph->n_of_autocurves = gmodel->nautocurves;
 
     for (i = 0; i < gmodel->ncurves; i++) {
         gcmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
@@ -407,7 +403,6 @@ gwy_graph_model_serialize(GObject *obj,
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
-            /*{ 'i', "nautocurves", &gmodel->nautocurves, NULL },*/
             { 'O', "curves", &gmodel->curves, &gmodel->ncurves },
         };
 
@@ -447,7 +442,6 @@ gwy_graph_model_deserialize(const guchar *buffer,
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
                 NULL },
-            /*{ 'i', "nautocurves", &gmodel->nautocurves, NULL },*/
             { 'O', "curves", &gmodel->curves, &gmodel->ncurves },
         };
 
@@ -522,7 +516,6 @@ gwy_graph_model_duplicate(GObject *object)
     duplicate->left_label = g_string_new(gmodel->left_label->str);
     duplicate->right_label = g_string_new(gmodel->right_label->str);
     duplicate->ncurves = gmodel->ncurves;
-    duplicate->nautocurves = gmodel->nautocurves;
     duplicate->curves = g_new(GObject*, gmodel->ncurves);
     for (i = 0; i < gmodel->ncurves; i++)
         duplicate->curves[i] = gwy_serializable_duplicate(gmodel->curves[i]);

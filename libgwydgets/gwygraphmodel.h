@@ -45,7 +45,6 @@ struct _GwyGraphModel {
     gulong graph_destroy_hid;
 
     gint ncurves;
-    gint nautocurves;
     GObject **curves;
 
     GString *title;    /* XXX: GwyGraph has no such thing */
