@@ -456,7 +456,7 @@ gwy_si_unit_multiply(GwySIUnit *siunit1,
 }
 
 /**
- * gwy_si_unit_multiply:
+ * gwy_si_unit_power:
  * @siunit: An SI unit.
  * @power: Power to power @siunit to.
  * @result:  An SI unit to set to power of @siunit.  It can be @siunit itself.
