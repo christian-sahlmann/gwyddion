@@ -31,6 +31,8 @@ EXTRA_DIST = \
 	gwyddion.spec\
 	gwyddion.iss.in \
 	gwyddion.iss \
+	gwyddion-devel.iss.in \
+	gwyddion-devel.iss \
 	gwyddion.pc.in \
 	version.h.in \
 	version.h \
