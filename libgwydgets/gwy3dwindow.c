@@ -58,7 +58,7 @@ static void     gwy_3d_window_destroy             (GtkObject *object);
 static void     gwy_3d_window_finalize            (GObject *object);
 static void     gwy_3d_window_set_mode            (gpointer userdata,
                                                    GtkWidget *button);
-static void     gwy_3d_window_set_palette         (GtkWidget *item,
+static void     gwy_3d_window_set_gradient        (GtkWidget *item,
                                                    Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_set_material        (GtkWidget *item,
                                                    Gwy3DWindow *gwy3dwindow);
@@ -209,7 +209,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
         { N_("P_alette"),     FALSE },
     };
     Gwy3DWindow *gwy3dwindow;
-    GwyPalette *palette;
     GwyGLMaterial *material;
     GtkRequisition size_req;
     const gchar *name;
@@ -455,9 +454,8 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
-    palette = gwy_3d_view_get_palette(gwy3dview);
-    name = gwy_palette_def_get_name(gwy_palette_get_palette_def(palette));
-    omenu = gwy_option_menu_palette(G_CALLBACK(gwy_3d_window_set_palette),
+    name = gwy_3d_view_get_gradient(gwy3dview);
+    omenu = gwy_option_menu_palette(G_CALLBACK(gwy_3d_window_set_gradient),
                                     gwy3dwindow, name);
     gtk_widget_set_sensitive(omenu, !lights_on);
     gwy3dwindow->palette_menu = omenu;
@@ -699,19 +697,12 @@ gwy_3d_window_set_mode(gpointer userdata, GtkWidget *button)
 }
 
 static void
-gwy_3d_window_set_palette(GtkWidget *item,
-                          Gwy3DWindow *gwy3dwindow)
+gwy_3d_window_set_gradient(GtkWidget *item,
+                           Gwy3DWindow *gwy3dwindow)
 {
-    gchar *palette_name;
-    GObject *palette;
-
-    /* FIXME: wouldn't it be better to allow a name in 3DView? */
-    palette_name = g_object_get_data(G_OBJECT(item), "palette-name");
-    palette = gwy_palette_new(NULL);
-    gwy_palette_set_by_name(GWY_PALETTE(palette), palette_name);
-    gwy_3d_view_set_palette(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
-                            GWY_PALETTE(palette));
-    g_object_unref(palette);
+    gwy_3d_view_set_gradient(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
+                             (gchar*)g_object_get_data(G_OBJECT(item),
+                                                       "palette-name"));
 }
 
 static void

@@ -46,6 +46,7 @@ struct _Gwy3DWindow {
     GwyZoomMode zoom_mode;  /* reserved for future use */
 
     GtkWidget *gwy3dview;
+    /* XXX: rename to gradient... */
     GtkWidget *palette_menu;
     GtkWidget *palette_label;  /* no longer exists */
     GtkWidget *material_menu;
