@@ -60,6 +60,12 @@ enum {
 };
 
 enum {
+    RAW_DELIM_ANY_WHITESPACE = -1,
+    RAW_DELIM_OTHER          = -2,
+    RAW_DELIM_TAB            = 9,
+};
+
+enum {
     RESPONSE_RESET
 };
 
@@ -114,6 +120,7 @@ typedef struct {
     GtkWidget *revsample;
     GtkWidget *byteswap;
     GtkWidget *lineoffset;
+    GtkWidget *delimmenu;
     GtkWidget *delimiter;
     GtkWidget *skipfields;
     GtkWidget *xres;
@@ -149,6 +156,8 @@ static void          rawfile_warn_too_short_file   (GtkWidget *parent,
                                                     RawFileArgs *args,
                                                     gsize reqsize);
 static void          builtin_changed_cb            (GtkWidget *item,
+                                                    RawFileControls *controls);
+static void          delimiter_changed_cb          (GtkWidget *item,
                                                     RawFileControls *controls);
 static void          xyres_changed_cb              (GtkAdjustment *adj,
                                                     RawFileControls *controls);
@@ -333,18 +342,6 @@ static const guint32 *const RTABLE[] = {
     RTABLE_6,
     RTABLE_7,
     RTABLE_8,
-};
-
-static const GwyEnum builtin_menu[] = {
-    { "User-specified",       RAW_NONE            },
-    { "Signed byte",          RAW_SIGNED_BYTE     },
-    { "Unsigned byte",        RAW_UNSIGNED_BYTE   },
-    { "Signed 16bit word",    RAW_SIGNED_WORD16   },
-    { "Unsigned 16bit word",  RAW_UNSIGNED_WORD16 },
-    { "Signed 32bit word",    RAW_SIGNED_WORD32   },
-    { "Unsigned 32bit word",  RAW_UNSIGNED_WORD32 },
-    { "IEEE single",          RAW_IEEE_FLOAT      },
-    { "IEEE double",          RAW_IEEE_DOUBLE     },
 };
 
 static const RawFileArgs rawfile_defaults = {
@@ -682,6 +679,22 @@ rawfile_dialog_format_page(RawFileArgs *args,
         { "_Text data",   RAW_TEXT },
         { "_Binary data", RAW_BINARY },
     };
+    static const GwyEnum builtin_menu[] = {
+        { "User-specified",       RAW_NONE            },
+        { "Signed byte",          RAW_SIGNED_BYTE     },
+        { "Unsigned byte",        RAW_UNSIGNED_BYTE   },
+        { "Signed 16bit word",    RAW_SIGNED_WORD16   },
+        { "Unsigned 16bit word",  RAW_UNSIGNED_WORD16 },
+        { "Signed 32bit word",    RAW_SIGNED_WORD32   },
+        { "Unsigned 32bit word",  RAW_UNSIGNED_WORD32 },
+        { "IEEE single",          RAW_IEEE_FLOAT      },
+        { "IEEE double",          RAW_IEEE_DOUBLE     },
+    };
+    static const GwyEnum delimiter_menu[] = {
+        { "Any whitespace",       RAW_DELIM_ANY_WHITESPACE  },
+        { "TAB character",        RAW_DELIM_TAB             },
+        { "Ohter character",      RAW_DELIM_OTHER           },
+    };
     GtkWidget *vbox, *label, *table, *button, *entry, *omenu;
     GtkObject *adj;
     gint row;
@@ -689,7 +702,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     row = 0;
     vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
 
-    table = gtk_table_new(14, 3, FALSE);
+    table = gtk_table_new(15, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_table_set_col_spacings(GTK_TABLE(table), 2);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
@@ -719,6 +732,20 @@ rawfile_dialog_format_page(RawFileArgs *args,
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Field delimiter"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_FILL, 0, 2, 2);
+
+    omenu = gwy_option_menu_create(delimiter_menu, G_N_ELEMENTS(delimiter_menu),
+                                   "delimiter",
+                                   G_CALLBACK(delimiter_changed_cb), controls,
+                                   -1);
+    controls->delimmenu = omenu;
+    gtk_table_attach(GTK_TABLE(table), omenu, 1, 2, row, row+1,
+                     GTK_FILL, 0, 2, 2);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Other:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
@@ -1064,6 +1091,24 @@ builtin_changed_cb(GtkWidget *item,
 }
 
 static void
+delimiter_changed_cb(GtkWidget *item,
+                     RawFileControls *controls)
+{
+    gint delim;
+
+    delim = gwy_option_menu_get_history(controls->delimmenu, "delimiter");
+    gtk_widget_set_sensitive(controls->delimiter, delim == RAW_DELIM_OTHER);
+    if (delim != RAW_DELIM_OTHER)
+        g_free(controls->args->delimiter);
+    if (delim == RAW_DELIM_TAB)
+        controls->args->delimiter = g_strdup("\t");
+    else if (delim == RAW_DELIM_ANY_WHITESPACE)
+        controls->args->delimiter = g_strdup("");
+    gtk_entry_set_text(GTK_ENTRY(controls->delimiter),
+                       controls->args->delimiter);
+}
+
+static void
 xyres_changed_cb(GtkAdjustment *adj,
                  RawFileControls *controls)
 {
@@ -1353,6 +1398,7 @@ update_dialog_controls(RawFileControls *controls)
     GtkAdjustment *adj;
     gchar buf[16];
     RawFileBuiltin builtin;
+    gboolean delim_other = FALSE;
 
     args = controls->args;
 
@@ -1389,7 +1435,19 @@ update_dialog_controls(RawFileControls *controls)
     gtk_adjustment_set_value(adj, args->lineoffset);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->skipfields));
     gtk_adjustment_set_value(adj, args->skipfields);
+
     gtk_entry_set_text(GTK_ENTRY(controls->delimiter), args->delimiter);
+    if (!args->delimiter || !*args->delimiter)
+        gwy_option_menu_set_history(controls->delimmenu, "delimiter",
+                                    RAW_DELIM_ANY_WHITESPACE);
+    else if (args->delimiter[0] == '\t' && args->delimiter[1] == '\0')
+        gwy_option_menu_set_history(controls->delimmenu, "delimiter",
+                                    RAW_DELIM_TAB);
+    else {
+        gwy_option_menu_set_history(controls->delimmenu, "delimiter",
+                                    RAW_DELIM_OTHER);
+        delim_other = TRUE;
+    }
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->sign),
                                  args->sign);
@@ -1411,6 +1469,7 @@ update_dialog_controls(RawFileControls *controls)
         case RAW_BINARY:
         gtk_widget_set_sensitive(controls->lineoffset, FALSE);
         gtk_widget_set_sensitive(controls->delimiter, FALSE);
+        gtk_widget_set_sensitive(controls->delimmenu, FALSE);
         gtk_widget_set_sensitive(controls->skipfields, FALSE);
 
         gtk_widget_set_sensitive(controls->builtin, TRUE);
@@ -1431,7 +1490,8 @@ update_dialog_controls(RawFileControls *controls)
 
         case RAW_TEXT:
         gtk_widget_set_sensitive(controls->lineoffset, TRUE);
-        gtk_widget_set_sensitive(controls->delimiter, TRUE);
+        gtk_widget_set_sensitive(controls->delimiter, delim_other);
+        gtk_widget_set_sensitive(controls->delimmenu, TRUE);
         gtk_widget_set_sensitive(controls->skipfields, TRUE);
 
         gtk_widget_set_sensitive(controls->builtin, FALSE);
