@@ -218,7 +218,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("Height value"), "",
+    spin = gwy_table_attach_spinbutton(table, 2, _("Height value"), "%",
                                        controls.threshold_height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
@@ -231,7 +231,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_slope = gtk_adjustment_new(args->slope,
                                                   0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 4, _("Slope value"), "",
+    spin = gwy_table_attach_spinbutton(table, 4, _("Slope value"), "%",
                                        controls.threshold_slope);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
@@ -244,7 +244,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_lap = gtk_adjustment_new(args->lap,
                                                 0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 6, _("Curvature value"), "",
+    spin = gwy_table_attach_spinbutton(table, 6, _("Curvature value"), "%",
                                        controls.threshold_lap);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
