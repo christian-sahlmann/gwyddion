@@ -323,8 +323,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 
     g_return_if_fail(from >= 0 && to <= a->res);
 
-    /* FIXME: probably must fix callers:
-       a->real *= (to - from)/a->res; */
+    a->real *= (to - from)/a->res;
     a->res = to - from;
     memmove(a->data, a->data + from, a->res*sizeof(gdouble));
     a->data = g_renew(gdouble, a->data, a->res*sizeof(gdouble));
@@ -1085,25 +1084,24 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
 {
     gint i, k, maxi, res;
     gdouble ratio, x, as, radius, xl1, xl2, yl1, yl2;
-    GwyDataLine dx, dy;
+    gdouble *dx, *dy;
 
-        gwy_debug("");
     if (angle == 0)
         return;
 
-    res = dx.res = dy.res = a->res;
-    dx.data = g_new(gdouble, a->res);
-    dy.data = g_new(gdouble, a->res);
+    res = a->res;
+    dx = g_new(gdouble, a->res);
+    dy = g_new(gdouble, a->res);
 
     ratio = a->real/(double)a->res;
-    dx.data[0] = 0;
-    dy.data[0] = a->data[0];
+    dx[0] = 0;
+    dy[0] = a->data[0];
     for (i = 1; i < a->res; i++) {
         as = atan(a->data[i]/((double)i*ratio));
         radius = sqrt(((double)i*ratio)*((double)i*ratio)
                       + a->data[i]*a->data[i]);
-        dx.data[i] = radius*cos((as+angle));
-        dy.data[i] = radius*sin((as+angle));
+        dx[i] = radius*cos((as + angle));
+        dy[i] = radius*sin((as + angle));
     }
 
     k = 0;
@@ -1116,14 +1114,14 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
         } while (dx.data[k] < x && k < a->res);
 
         if (k >= (a->res-1)) {
-            maxi=i;
+            maxi = i;
             break;
         }
 
-        xl1 = dx.data[k-1];
-        xl2 = dx.data[k];
-        yl1 = dy.data[k-1];
-        yl2 = dy.data[k];
+        xl1 = dx[k-1];
+        xl2 = dx[k];
+        yl1 = dy[k-1];
+        yl2 = dy[k];
 
 
         if (interpolation == GWY_INTERPOLATION_ROUND
@@ -1136,11 +1134,11 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
     if (maxi != 0)
         gwy_data_line_resize(a, 0, maxi);
 
-    if (a->res != res) gwy_data_line_resample(a, res, interpolation);
+    if (a->res != res)
+        gwy_data_line_resample(a, res, interpolation);
 
-    /* XXX: where was this freed? */
-    g_free(dx.data);
-    g_free(dy.data);
+    g_free(dx);
+    g_free(dy);
 }
 
 /**
