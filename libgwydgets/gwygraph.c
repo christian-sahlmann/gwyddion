@@ -391,17 +391,27 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
       curve.params.line_size = graph->autoproperties.line_size;
       curve.params.line_style = GDK_LINE_SOLID;
       curve.params.description = g_string_new(label->str);
-      /***** PROVISORY ***************/
-      if (graph->n_of_autocurves == 0) {curve.params.color.pixel = 0x00000000;
-       curve.params.point_type = GWY_GRAPH_POINT_TRIANGLE_UP;}
-      if (graph->n_of_autocurves == 1) {curve.params.color.pixel = 0x00990099;
-        curve.params.point_type = GWY_GRAPH_POINT_TRIANGLE_DOWN;}
-      if (graph->n_of_autocurves == 2) {curve.params.color.pixel = 0x09909900;
-      curve.params.point_type = GWY_GRAPH_POINT_CIRCLE;}
-      if (graph->n_of_autocurves == 3) {curve.params.color.pixel = 0x000ddd00;
-      curve.params.point_type = GWY_GRAPH_POINT_DIAMOND;}
-      if (graph->n_of_autocurves == 4) {curve.params.color.pixel = 0x00ff0055;
-        curve.params.point_type = GWY_GRAPH_POINT_TIMES;}
+      /***** FIXME PROVISORY ***************/
+      if (graph->n_of_autocurves == 0) {
+          curve.params.color.pixel = 0x00000000;
+          curve.params.point_type = GWY_GRAPH_POINT_TRIANGLE_UP;
+      }
+      if (graph->n_of_autocurves == 1) {
+          curve.params.color.pixel = 0x00990099;
+          curve.params.point_type = GWY_GRAPH_POINT_TRIANGLE_DOWN;
+      }
+      if (graph->n_of_autocurves == 2) {
+          curve.params.color.pixel = 0x09909900;
+          curve.params.point_type = GWY_GRAPH_POINT_CIRCLE;
+      }
+      if (graph->n_of_autocurves == 3) {
+          curve.params.color.pixel = 0x000ddd00;
+          curve.params.point_type = GWY_GRAPH_POINT_DIAMOND;
+      }
+      if (graph->n_of_autocurves == 4) {
+          curve.params.color.pixel = 0x00ff0055;
+          curve.params.point_type = GWY_GRAPH_POINT_TIMES;
+      }
       /**** END OF PROVISORY ******/
     }
     else {
@@ -436,15 +446,9 @@ gwy_graph_make_curve_data(G_GNUC_UNUSED GwyGraph *graph,
                           GwyGraphAreaCurve *curve,
                           gdouble *xvals, gdouble *yvals, gint n)
 {
-    gint i;
-
-    curve->data.xvals = (gdouble *) g_try_malloc(n*sizeof(gdouble));
-    curve->data.yvals = (gdouble *) g_try_malloc(n*sizeof(gdouble));
     curve->data.N = n;
-    for (i = 0; i < n; i++) {
-        curve->data.xvals[i] = xvals[i];
-        curve->data.yvals[i] = yvals[i];
-    }
+    curve->data.xvals = g_memdup(xvals, n*sizeof(gdouble));
+    curve->data.yvals = g_memdup(yvals, n*sizeof(gdouble));
 }
 
 /**
@@ -678,15 +682,17 @@ gwy_graph_unzoom(GwyGraph *graph)
     gwy_debug("");
 
     /*find extrema*/
-    for (i = 0; i < graph->area->curves->len; i++)
-    {
+    for (i = 0; i < graph->area->curves->len; i++) {
         pcurve = g_ptr_array_index(graph->area->curves, i);
-        for (j = 0; j < pcurve->data.N; j++)
-        {
-            if (pcurve->data.xvals[j] > xmax) xmax = pcurve->data.xvals[j];
-            if (pcurve->data.yvals[j] > ymax) ymax = pcurve->data.yvals[j];
-            if (pcurve->data.xvals[j] < xmin) xmin = pcurve->data.xvals[j];
-            if (pcurve->data.yvals[j] < ymin) ymin = pcurve->data.yvals[j];
+        for (j = 0; j < pcurve->data.N; j++) {
+            if (pcurve->data.xvals[j] > xmax)
+                xmax = pcurve->data.xvals[j];
+            if (pcurve->data.yvals[j] > ymax)
+                ymax = pcurve->data.yvals[j];
+            if (pcurve->data.xvals[j] < xmin)
+                xmin = pcurve->data.xvals[j];
+            if (pcurve->data.yvals[j] < ymin)
+                ymin = pcurve->data.yvals[j];
         }
     }
     gwy_graph_set_boundaries(graph, xmin, xmax, ymin, ymax);

@@ -25,6 +25,7 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 
+/* XXX XXX XXX this should be an enum! */
 #define GWY_GRAPH_LABEL_NORTHEAST 0
 #define GWY_GRAPH_LABEL_NORTHWEST 1
 #define GWY_GRAPH_LABEL_SOUTHEAST 2
