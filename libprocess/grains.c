@@ -138,7 +138,8 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
     min = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
     water = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
     mark_dfield = gwy_serializable_duplicate(data_field);
-    
+
+    gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres, data_field->yres);
     /*odrop*/
     for (i=0; i<locate_steps; i++)
     {
@@ -420,27 +421,25 @@ drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
 
             npnt = 0;
             pnt = gwy_data_field_fill_grain(water_field, row, col, &npnt);
-    
-            if (npnt>1) 
+   
+            global_number += 1;   
+            for (i=0; i<npnt; i++)
             {
-                global_number += 1;   
-                for (i=0; i<npnt; i++)
-                {
-                    if (global_maximum_value<water_field->data[pnt[i]])
-                    global_maximum_value = water_field->data[pnt[i]];
+                if (global_maximum_value<water_field->data[pnt[i]])
+                global_maximum_value = water_field->data[pnt[i]];
                 
-                    global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
-                    global_col_value = i - xres*global_row_value;
+                global_row_value = (gint)floor((gdouble)i/(gdouble)xres);
+                global_col_value = i - xres*global_row_value;
 
-                    buffer->data[pnt[i]] = global_number;
-                }
-                g_free(pnt);
-        
-        	    if (npnt>threshval)
-               	    {
-        	        min_field->data[global_col_value + xres*global_row_value] = global_number;
-        	    }
+                buffer->data[pnt[i]] = global_number;
             }
+            g_free(pnt);
+        
+     	    if (npnt>threshval)
+       	    {
+      	        min_field->data[global_col_value + xres*global_row_value] = global_number;
+       	    }
+
     	}
     }
     g_object_unref(buffer); 
