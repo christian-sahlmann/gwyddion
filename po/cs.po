@@ -244,35 +244,35 @@ msgstr "Popisek _křivky:"
 
 #: libgwydgets/gwygrapherareadialog.c:168
 msgid "_Plot style:"
-msgstr ""
+msgstr "Styl křivky"
 
 #: libgwydgets/gwygrapherareadialog.c:182
 msgid "P_lot color:"
-msgstr ""
+msgstr "Barva křivky"
 
 #: libgwydgets/gwygrapherareadialog.c:200
 msgid "Point type:"
-msgstr ""
+msgstr "Typ bodu"
 
 #: libgwydgets/gwygrapherareadialog.c:205
 msgid "Point size:"
-msgstr ""
+msgstr "Velikost bodu"
 
 #: libgwydgets/gwygrapherareadialog.c:214
 msgid "Line type:"
-msgstr ""
+msgstr "Typ čáry"
 
 #: libgwydgets/gwygrapherareadialog.c:219
 msgid "Line thickness:"
-msgstr ""
+msgstr "Tloušťka čáry"
 
 #: libgwydgets/gwygrapherlabeldialog.c:115
 msgid "Frame thickness:"
-msgstr ""
+msgstr "Tloušťka rámečku"
 
 #: libgwydgets/gwygrapherlabeldialog.c:125
 msgid "_reversed"
-msgstr ""
+msgstr "otočený"
 
 #: libgwydgets/gwyoptionmenus.c:750
 msgid "Round"
@@ -2253,7 +2253,7 @@ msgstr "Fáze"
 
 #: modules/process/fft_filter_1d.c:127
 msgid "FFT filtering"
-msgstr ""
+msgstr "Filtrování pomocí FFT"
 
 #: modules/process/fft_filter_1d.c:147
 msgid "/_Correct Data/1D _FFT filtering..."
@@ -2261,31 +2261,31 @@ msgstr "/_Korekce dat/1D _FFT filtrování..."
 
 #: modules/process/fft_filter_1d.c:194
 msgid "1D FFT filter"
-msgstr ""
+msgstr "1D FFT filtr"
 
 #: modules/process/fft_filter_1d.c:195
 msgid "_Run"
-msgstr ""
+msgstr "_Filtrovat"
 
 #: modules/process/fft_filter_1d.c:196
 msgid "_Restore PS"
-msgstr ""
+msgstr "Obnovit spekt_rum"
 
 #: modules/process/fft_filter_1d.c:279
 msgid "<b>Power spectrum (select areas by mouse):</b>"
-msgstr ""
+msgstr "<b>Spektrum (vyberte oblasti myší)</b>"
 
 #: modules/process/fft_filter_1d.c:299
 msgid "<b>Settings:</b>"
-msgstr ""
+msgstr "Nastavení"
 
 #: modules/process/fft_filter_1d.c:305
 msgid "Suppress type:"
-msgstr ""
+msgstr "Typ potlačení"
 
 #: modules/process/fft_filter_1d.c:318 modules/process/fit_2d.c:288
 msgid "Preview type:"
-msgstr ""
+msgstr "Typ náhledu"
 
 #: modules/process/fft_filter_1d.c:344 modules/tools/filter.c:220
 msgid "_Direction:"
@@ -2293,27 +2293,27 @@ msgstr "S_měr:"
 
 #: modules/process/fft_filter_1d.c:348
 msgid "_Update dynamically"
-msgstr ""
+msgstr "_Dynamicky obnovovat"
 
 #: modules/process/fft_filter_1d.c:565
 msgid "Null"
-msgstr ""
+msgstr "nulovat"
 
 #: modules/process/fft_filter_1d.c:566
 msgid "Suppress"
-msgstr ""
+msgstr "potlačit"
 
 #: modules/process/fft_filter_1d.c:578
 msgid "Marked"
-msgstr ""
+msgstr "označené"
 
 #: modules/process/fft_filter_1d.c:579
 msgid "Unmarked"
-msgstr ""
+msgstr "neoznačené"
 
 #: modules/process/fit_2d.c:148
 msgid "2D fitting"
-msgstr ""
+msgstr "2D fitování"
 
 #: modules/process/fit_2d.c:167
 msgid "/_Level/_Fit Sphere..."
@@ -2325,11 +2325,11 @@ msgstr "Proložení sféry"
 
 #: modules/process/fit_2d.c:219
 msgid "_Guess"
-msgstr ""
+msgstr "_Provést odhad"
 
 #: modules/process/fit_2d.c:275
 msgid "Function type:"
-msgstr ""
+msgstr "Typ funkce"
 
 #: modules/process/fit_2d.c:601 modules/process/grain_wshed.c:531
 #: modules/process/tip_blind.c:500 modules/process/tip_map.c:270
@@ -2339,7 +2339,7 @@ msgstr "Inicializace"
 
 #: modules/process/fit_2d.c:619
 msgid "Fitting"
-msgstr ""
+msgstr "Fitovat"
 
 #: modules/process/fit_2d.c:696
 msgid "Data"
@@ -2347,23 +2347,23 @@ msgstr "Data"
 
 #: modules/process/fit_2d.c:697
 msgid "Fit result"
-msgstr ""
+msgstr "Výsledek fitování"
 
 #: modules/process/fit_2d.c:698
 msgid "Difference"
-msgstr ""
+msgstr "Rozdíl"
 
 #: modules/process/fit_2d.c:710
 msgid "Sphere (up)"
-msgstr ""
+msgstr "Koule (horní část)"
 
 #: modules/process/fit_2d.c:711
 msgid "Sphere (down)"
-msgstr ""
+msgstr "Koule (dolní část)"
 
 #: modules/process/fit_2d.c:1136
 msgid "Fitted function: sphere\n"
-msgstr ""
+msgstr "Fitovaná funkce: koule"
 
 #: modules/process/fraccor.c:46
 msgid "Removes data under mask using fractal interpolation."
