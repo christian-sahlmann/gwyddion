@@ -52,6 +52,15 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
+#ifdef _MSC_VER
+#include <direct.h>
+#define mkdir(dir, mode) _mkdir(dir)
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -81,6 +90,7 @@ typedef GList* (*ProxyRegister)(GList *plugins,
                                 gchar *buffer);
 
 /* top-level */
+static gboolean        create_user_plugin_dirs   (void);
 static gboolean        module_register           (const gchar *name);
 static GList*          register_plugins          (GList *plugins,
                                                   const gchar *dir,
@@ -144,7 +154,7 @@ static GwyModuleInfo module_info = {
         "external programs (plug-ins) on data pretending they are data "
         "processing or file loading/saving modules.",
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -189,6 +199,8 @@ module_register(const gchar *name)
     file_plugins = register_plugins(NULL, dir, name, file_register_plugins);
     g_free(dir);
 
+    create_user_plugin_dirs();
+
     dir = g_build_filename(gwy_get_user_dir(), "plugins", "process", NULL);
     proc_plugins = register_plugins(proc_plugins,
                                     dir, name, proc_register_plugins);
@@ -202,6 +214,32 @@ module_register(const gchar *name)
     g_free(plugin_path);
 
     return TRUE;
+}
+
+static gboolean
+create_user_plugin_dirs(void)
+{
+    gchar *dir[3];
+    gsize i;
+    gboolean ok = TRUE;
+
+    dir[0] = g_build_filename(gwy_get_user_dir(), "plugins", NULL);
+    dir[1] = g_build_filename(gwy_get_user_dir(), "plugins", "process", NULL);
+    dir[2] = g_build_filename(gwy_get_user_dir(), "plugins", "file", NULL);
+
+    for (i = 0; i < G_N_ELEMENTS(dir); i++) {
+        if (!g_file_test(dir[i], G_FILE_TEST_IS_DIR)) {
+            gwy_debug("Trying to create user plugin directory %s", dir[i]);
+            if (mkdir(dir[i], 0700)) {
+                g_warning("Cannot create user plugin directory %s: %s",
+                        dir[i], g_strerror(errno));
+                ok = FALSE;
+            }
+        }
+        g_free(dir[i]);
+    }
+
+    return ok;
 }
 
 /**
