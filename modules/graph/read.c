@@ -47,6 +47,7 @@ static void        read_dialog_response_cb    (GtkWidget *widget, gint arg1, gpo
 static ReadControls controls;
 static GtkWidget *dialog = NULL;
 static gulong response_id = 0;
+static gulong selection_id = 0;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -81,18 +82,16 @@ module_register(const gchar *name)
 static gboolean
 read(GwyGraph *graph)
 {
-  
+
     if (!graph) {
         if (dialog) gtk_widget_destroy(dialog);
         dialog = NULL;    
         return 1;
     }
-  
+ 
+    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_CURSOR); 
     if (!dialog) read_dialog(graph);
-
-    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_CURSOR);
-    
-    
+  
     return 1;
 }
 
@@ -122,7 +121,7 @@ read_dialog(GwyGraph *graph)
                                                 FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.ylabel,
                                                 FALSE, FALSE, 4);
-    g_signal_connect(graph->area, "selected", G_CALLBACK(selection_updated_cb), graph); 
+    selection_id = g_signal_connect(graph->area, "selected", G_CALLBACK(selection_updated_cb), graph); 
    
     gtk_widget_show_all(dialog); 
     
@@ -170,7 +169,9 @@ read_dialog_closed_cb(GtkWidget *widget, gpointer data)
     if (dialog) 
     {
         g_signal_handler_disconnect(dialog, response_id);
+        g_signal_handler_disconnect(graph->area, selection_id);
         response_id = 0;
+        selection_id = 0;
         gtk_widget_destroy(dialog);
         dialog = NULL;
     }

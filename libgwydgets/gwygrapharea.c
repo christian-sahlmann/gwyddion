@@ -78,6 +78,8 @@ struct _GtkLayoutChild {
     gint y;
 };
 
+const gint N_MAX_POINTS = 10;
+
 static gboolean        gwy_graph_area_motion_notify     (GtkWidget *widget,
                                                         GdkEventMotion *event);
 static GtkLayoutChild* gwy_graph_area_find_child        (GwyGraphArea *area,
@@ -564,15 +566,20 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     {
         if (event->button==1)
         {
-            scrpnt.i = x;
-            scrpnt.j = y;
-            datpnt.x = scr_to_data_x(widget, x);
-            datpnt.y = scr_to_data_y(widget, y);
+            if (area->pointsdata->n < N_MAX_POINTS)
+            {
+                scrpnt.i = x;
+                scrpnt.j = y;
+                datpnt.x = scr_to_data_x(widget, x);
+                datpnt.y = scr_to_data_y(widget, y);
+                datpnt.x_unit = NULL;
+                datpnt.y_unit = NULL;
 
-            g_array_append_val(area->pointsdata->scr_points, scrpnt);
-            g_array_append_val(area->pointsdata->data_points, datpnt);
-            area->pointsdata->n++;
-            printf("Point added.\n");
+                g_array_append_val(area->pointsdata->scr_points, scrpnt);
+                g_array_append_val(area->pointsdata->data_points, datpnt);
+                area->pointsdata->n++;
+                printf("Point added.\n");
+            }
         }
         else
         {
@@ -720,6 +727,8 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             area->cursordata->scr_point.j = y;
             area->cursordata->data_point.x = scr_to_data_x(widget, x);
             area->cursordata->data_point.y = scr_to_data_y(widget, y);
+            area->cursordata->data_point.x_unit = NULL;
+            area->cursordata->data_point.y_unit = NULL;
         }
         else
         {
@@ -727,8 +736,10 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             area->pointsdata->actual_scr_point.j = y;
             area->pointsdata->actual_data_point.x = scr_to_data_x(widget, x);
             area->pointsdata->actual_data_point.y = scr_to_data_y(widget, y);    
+            area->pointsdata->actual_data_point.x_unit = NULL;
+            area->pointsdata->actual_data_point.y_unit = NULL;
         }
-            gwy_graph_area_signal_selected(area);
+        gwy_graph_area_signal_selected(area);
     }
 
     if ((area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL) && area->selecting==1)

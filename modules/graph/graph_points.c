@@ -21,6 +21,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <gtk/gtk.h>
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
@@ -34,6 +35,13 @@
 typedef struct {
     GtkWidget *xlabel;
     GtkWidget *ylabel;
+    GPtrArray *pointx;
+    GPtrArray *pointy;
+    GPtrArray *distx;
+    GPtrArray *disty;
+    GPtrArray *slope;
+    GPtrArray *labpoint;
+    gint n;
 } PointsControls;
 
 
@@ -47,6 +55,9 @@ static void        points_dialog_response_cb    (GtkWidget *widget, gint arg1, g
 static PointsControls controls;
 static GtkWidget *dialog = NULL;
 static gulong response_id = 0;
+static gulong selection_id = 0;
+
+static gint NMAX = 10;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -81,16 +92,16 @@ module_register(const gchar *name)
 static gboolean
 points(GwyGraph *graph)
 {
-  
+ 
+     
     if (!graph) {
         if (dialog) gtk_widget_destroy(dialog);
         dialog = NULL;    
         return 1;
     }
   
-    if (!dialog) points_dialog(graph);
-
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_POINTS);
+    if (!dialog) points_dialog(graph);
     
     
     return 1;
@@ -100,6 +111,9 @@ points(GwyGraph *graph)
 static gboolean
 points_dialog(GwyGraph *graph)
 {
+    gint i;
+    GtkWidget *label;
+    GtkWidget *table;
     
     dialog = gtk_dialog_new_with_buttons(_("Measure distances"),
                                          NULL,
@@ -115,15 +129,107 @@ points_dialog(GwyGraph *graph)
     g_signal_connect(graph, "destroy",
                      G_CALLBACK(points_dialog_closed_cb), graph);
     
+    table = gtk_table_new(6, 13, FALSE);
+    
     controls.xlabel = gtk_label_new("x");
     controls.ylabel = gtk_label_new("y");
 
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xlabel,
-                                                FALSE, FALSE, 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.ylabel,
-                                                FALSE, FALSE, 4);
-    g_signal_connect(graph->area, "selected", G_CALLBACK(selection_updated_cb), graph); 
-   
+
+    gtk_table_attach(GTK_TABLE(table), controls.xlabel, 1, 2, 0, 1,
+                           GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
+
+    gtk_table_attach(GTK_TABLE(table), controls.ylabel, 2, 3, 0, 1,
+                           GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
+
+    
+    selection_id = g_signal_connect(graph->area, "selected", G_CALLBACK(selection_updated_cb), graph); 
+
+    controls.labpoint = g_ptr_array_new();   
+    controls.pointx = g_ptr_array_new();
+    controls.pointy = g_ptr_array_new();
+    controls.distx = g_ptr_array_new();
+    controls.disty = g_ptr_array_new();
+    controls.slope = g_ptr_array_new();
+ 
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Mouse:</b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+    
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Points:</b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+     
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>x</b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2,
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>y</b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 1, 2,
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>length</b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 3, 4, 1, 2,
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>height</b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 4, 5, 1, 2,
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>angle</b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 5, 6, 1, 2,
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+     
+    for (i=0; i<NMAX; i++)
+    {
+        label = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+2, i+3,
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+        g_ptr_array_add(controls.labpoint, label);
+        
+        label = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 1, 2, i+2, i+3,
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+        g_ptr_array_add(controls.pointx, label);
+         
+        label = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 2, 3, i+2, i+3,
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+        g_ptr_array_add(controls.pointy, label);
+         
+        label = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+2, i+3,
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+        g_ptr_array_add(controls.distx, label);
+         
+        label = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 4, 5, i+2, i+3,
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+        g_ptr_array_add(controls.disty, label);
+         
+        label = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 5, 6, i+2, i+3,
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+        g_ptr_array_add(controls.slope, label);
+    }  
+ 
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);   
+  
     gtk_widget_show_all(dialog); 
     
     return TRUE;
@@ -133,30 +239,70 @@ static void
 selection_updated_cb(GtkWidget *widget, gpointer data)
 {
     GwyGraph *graph;
-    GwyGraphStatus_CursorData *cd;
+    GwyGraphStatus_PointsData *cd;
+    GwyGraphDataPoint pnt, ppnt;
     gchar buffer[50];
+    gint i, n;
     
     graph = (GwyGraph *) data;
     g_return_if_fail(GWY_IS_GRAPH(graph));    
 
     g_assert(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS);
     
-    cd = (GwyGraphStatus_CursorData*)gwy_graph_get_status_data(graph);
+    cd = (GwyGraphStatus_PointsData*)gwy_graph_get_status_data(graph);
 
-    if (cd->data_point.x_unit != NULL)
-        g_snprintf(buffer, sizeof(buffer), "x = %.3f %s", cd->data_point.x, cd->data_point.x_unit);
+    /*update mouse data*/
+    if (cd->actual_data_point.x_unit != NULL)
+        g_snprintf(buffer, sizeof(buffer), "x = %.3f %s", cd->actual_data_point.x, cd->actual_data_point.x_unit);
     else
-        g_snprintf(buffer, sizeof(buffer), "x = %.3f", cd->data_point.x);
+        g_snprintf(buffer, sizeof(buffer), "x = %.3f", cd->actual_data_point.x);
     
     gtk_label_set_text(GTK_LABEL(controls.xlabel), buffer);
 
-    if (cd->data_point.y_unit != NULL)
-        g_snprintf(buffer, sizeof(buffer), "y = %.3f %s", cd->data_point.y, cd->data_point.y_unit);
+    if (cd->actual_data_point.y_unit != NULL)
+        g_snprintf(buffer, sizeof(buffer), "y = %.3f %s", cd->actual_data_point.y, cd->actual_data_point.y_unit);
     else
-        g_snprintf(buffer, sizeof(buffer), "y = %.3f", cd->data_point.y);
+        g_snprintf(buffer, sizeof(buffer), "y = %.3f", cd->actual_data_point.y);
      
     gtk_label_set_text(GTK_LABEL(controls.ylabel), buffer);
-    
+
+    /*update points data*/
+    n = cd->n;
+    for (i=0; i<NMAX; i++)
+    {
+        if (i<n)
+        {
+            pnt = g_array_index(cd->data_points, GwyGraphDataPoint, i);
+            g_snprintf(buffer, sizeof(buffer), "%.3f", pnt.x);
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointx, i)), buffer);
+        
+            g_snprintf(buffer, sizeof(buffer), "%.3f", pnt.y);
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointy, i)), buffer);
+        
+            if (i>0)
+            {
+                ppnt = g_array_index(cd->data_points, GwyGraphDataPoint, i-1);
+                g_snprintf(buffer, sizeof(buffer), "%.3f", pnt.x - ppnt.x);
+                gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.distx, i)), buffer);
+            
+                g_snprintf(buffer, sizeof(buffer), "%.3f", pnt.y - ppnt.y);
+                gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.disty, i)), buffer);
+
+                g_snprintf(buffer, sizeof(buffer), "%.3f", 180.0*atan2((pnt.y - ppnt.y),(pnt.x - ppnt.x))/3.141592);
+                gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.slope, i)), buffer);
+             }
+        }
+        else
+        {
+            g_snprintf(buffer, sizeof(buffer), "", pnt.x);
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointx, i)), buffer);
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointy, i)), buffer);
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.distx, i)), buffer);
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.disty, i)), buffer);
+            gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.slope, i)), buffer);
+        }
+    }
+  
 }
 
 static void        
@@ -170,9 +316,18 @@ points_dialog_closed_cb(GtkWidget *widget, gpointer data)
     if (dialog) 
     {
         g_signal_handler_disconnect(dialog, response_id);
+        g_signal_handler_disconnect(graph->area, selection_id);
         response_id = 0;
+        selection_id = 0;
         gtk_widget_destroy(dialog);
         dialog = NULL;
+        g_ptr_array_free(controls.pointx, TRUE);
+        g_ptr_array_free(controls.pointy, TRUE);
+        g_ptr_array_free(controls.distx, TRUE);
+        g_ptr_array_free(controls.disty, TRUE);
+        g_ptr_array_free(controls.slope, TRUE);
+        g_ptr_array_free(controls.labpoint, TRUE);
+        
     }
 }
 
