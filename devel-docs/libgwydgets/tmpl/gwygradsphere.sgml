@@ -41,13 +41,22 @@ GwyGradSphere
 @sphere_coords: 
 
 
+<!-- ##### FUNCTION gwy_grad_sphere_get_update_policy ##### -->
+<para>
+
+</para>
+
+@grad_sphere: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_grad_sphere_set_update_policy ##### -->
 <para>
 
 </para>
 
 @grad_sphere: 
-@policy: 
+@update_policy: 
 
 
 <!-- ##### ARG GwyGradSphere:sphere-coords ##### -->

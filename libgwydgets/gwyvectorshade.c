@@ -59,8 +59,6 @@ gwy_vector_shade_class_init(GwyVectorShadeClass *klass)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-
-    /* FIXME: it seems there's nothing to do? */
 }
 
 static void
@@ -77,6 +75,17 @@ gwy_vector_shade_init(GwyVectorShade *vector_shade)
     vector_shade->adj_phi = NULL;
 }
 
+/**
+ * gwy_vector_shade_new:
+ * @sphere_coords: The spherical coordinates this #GwyVectorShade should use.
+ *
+ * Creates a new #GwyVectorShade.
+ *
+ * @sphere_coords can be %NULL, new spherical coordinates are allocated
+ * then.
+ *
+ * Returns: The new vector shade as a #GtkWidget.
+ **/
 GtkWidget*
 gwy_vector_shade_new(GwySphereCoords *sphere_coords)
 {
@@ -92,12 +101,10 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
     vector_shade
         = GWY_VECTOR_SHADE(gtk_widget_new(GWY_TYPE_VECTOR_SHADE, NULL));
 
-    if (sphere_coords)
-        g_return_val_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords), NULL);
-    else
-        sphere_coords = (GwySphereCoords*)gwy_sphere_coords_new(0.0, 0.0);
-
     grad_sphere = GWY_GRAD_SPHERE(gwy_grad_sphere_new(sphere_coords));
+    if (!sphere_coords)
+        sphere_coords = gwy_grad_sphere_get_sphere_coords(grad_sphere);
+
     vector_shade->grad_sphere = grad_sphere;
 
     theta = 180.0/M_PI*gwy_sphere_coords_get_theta(sphere_coords);
@@ -170,6 +177,31 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
     return GTK_WIDGET(vector_shade);
 }
 
+/**
+ * gwy_vector_shade_get_grad_sphere:
+ * @vector_shade: a #GwyVectorShade.
+ *
+ * Returns the gradient sphere widget this vector shade uses.
+ *
+ * Returns: The gradient sphere as a #GtkWidget.
+ **/
+GwyGradSphere*
+gwy_vector_shade_get_grad_sphere(GwyVectorShade *vector_shade)
+{
+    g_return_val_if_fail(vector_shade != NULL, NULL);
+    g_return_val_if_fail(GWY_IS_VECTOR_SHADE(vector_shade), NULL);
+
+    return (GtkWidget*)vector_shade->grad_sphere;
+}
+
+/**
+ * gwy_vector_shade_get_sphere_coords:
+ * @vector_shade: a #GwyVectorShade.
+ *
+ * Returns the spherical coordinates this vector shade uses.
+ *
+ * Returns: The coordinates.
+ **/
 GwySphereCoords*
 gwy_vector_shade_get_sphere_coords(GwyVectorShade *vector_shade)
 {
@@ -177,6 +209,26 @@ gwy_vector_shade_get_sphere_coords(GwyVectorShade *vector_shade)
     g_return_val_if_fail(GWY_IS_VECTOR_SHADE(vector_shade), NULL);
 
     return gwy_grad_sphere_get_sphere_coords(vector_shade->grad_sphere);
+}
+
+/**
+ * gwy_vector_shade_set_sphere_coords:
+ * @vector_shade: a #GwyVectorShade.
+ * @sphere_coords: the spherical coordinates this vector shade should use.
+ *
+ * Sets spherical coordinates for a vector shade.
+ **/
+void
+gwy_vector_shade_set_sphere_coords(GwyVectorShade *vector_shade,
+                                   GwySphereCoords *sphere_coords)
+{
+    g_return_if_fail(vector_shade != NULL);
+    g_return_if_fail(GWY_IS_VECTOR_SHADE(vector_shade));
+    g_return_if_fail(sphere_coords != NULL);
+    g_return_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords));
+
+    return gwy_grad_sphere_set_sphere_coords(vector_shade->grad_sphere,
+                                             sphere_coords);
 }
 
 #define BLOCK_ALL \

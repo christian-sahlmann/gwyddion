@@ -23,3 +23,30 @@ GwyVectorShade
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_vector_shade_get_grad_sphere ##### -->
+<para>
+
+</para>
+
+@vector_shade: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_vector_shade_get_sphere_coords ##### -->
+<para>
+
+</para>
+
+@vector_shade: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_vector_shade_set_sphere_coords ##### -->
+<para>
+
+</para>
+
+@vector_shade: 
+@sphere_coords: 
+
+

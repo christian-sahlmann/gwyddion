@@ -62,7 +62,7 @@ void       gwy_container_set_boolean        (GwyContainer *container,
                                              gboolean value);
 gboolean   gwy_container_get_boolean        (GwyContainer *container,
                                              GQuark key);
-void       gwy_container_set_char           (GwyContainer *container,
+void       gwy_container_set_uchar          (GwyContainer *container,
                                              GQuark key,
                                              guchar value);
 guchar     gwy_container_get_char           (GwyContainer *container,
@@ -100,7 +100,7 @@ GObject*   gwy_container_get_object         (GwyContainer *container,
 #define gwy_container_delete_by_name(c,n) gwy_container_delete(c,g_quark_try_string(n))
 #define gwy_container_set_boolean_by_name(c,n,v) gwy_container_set_boolean(c,g_quark_from_string(n),v)
 #define gwy_container_get_boolean_by_name(c,n) gwy_container_get_boolean(c,g_quark_try_string(n))
-#define gwy_container_set_char_by_name(c,n,v) gwy_container_set_char(c,g_quark_from_string(n),v)
+#define gwy_container_set_uchar_by_name(c,n,v) gwy_container_set_uchar(c,g_quark_from_string(n),v)
 #define gwy_container_get_char_by_name(c,n) gwy_container_get_char(c,g_quark_try_string(n))
 #define gwy_container_set_int32_by_name(c,n,v) gwy_container_set_int32(c,g_quark_from_string(n),v)
 #define gwy_container_get_int32_by_name(c,n) gwy_container_get_int32(c,g_quark_try_string(n))

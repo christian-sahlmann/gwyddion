@@ -65,8 +65,9 @@ GType            gwy_grad_sphere_get_type          (void) G_GNUC_CONST;
 GwySphereCoords* gwy_grad_sphere_get_sphere_coords (GwyGradSphere *grad_sphere);
 void             gwy_grad_sphere_set_sphere_coords (GwyGradSphere *grad_sphere,
                                                     GwySphereCoords *sphere_coords);
+GtkUpdateType    gwy_grad_sphere_get_update_policy (GwyGradSphere *grad_sphere);
 void             gwy_grad_sphere_set_update_policy (GwyGradSphere *grad_sphere,
-                                                    GtkUpdateType policy);
+                                                    GtkUpdateType update_policy);
 
 #ifdef __cplusplus
 }

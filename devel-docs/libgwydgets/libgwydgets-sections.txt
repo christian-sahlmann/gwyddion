@@ -20,6 +20,9 @@ GWY_SPHERE_COORDS_GET_CLASS
 <FILE>gwyvectorshade</FILE>
 <TITLE>GwyVectorShade</TITLE>
 gwy_vector_shade_new
+gwy_vector_shade_get_grad_sphere
+gwy_vector_shade_get_sphere_coords
+gwy_vector_shade_set_sphere_coords
 <SUBSECTION Standard>
 GWY_VECTOR_SHADE
 GWY_IS_VECTOR_SHADE
@@ -36,6 +39,7 @@ GWY_VECTOR_SHADE_GET_CLASS
 gwy_grad_sphere_new
 gwy_grad_sphere_get_sphere_coords
 gwy_grad_sphere_set_sphere_coords
+gwy_grad_sphere_get_update_policy
 gwy_grad_sphere_set_update_policy
 <SUBSECTION Standard>
 GWY_GRAD_SPHERE

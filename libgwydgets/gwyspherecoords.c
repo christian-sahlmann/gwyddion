@@ -76,6 +76,15 @@ gwy_sphere_coords_init(GwySphereCoords *sphere_coords)
     sphere_coords->phi = 0.0;
 }
 
+/**
+ * gwy_sphere_coords_new:
+ * @theta: The angle from sphere north pole, in radians.
+ * @phi: The angle from sphere zero meridian, in radians.
+ *
+ * Creates a new spherical coordinates.
+ *
+ * Returns: New spherical coordinates as a #GtkObject.
+ **/
 GtkObject*
 gwy_sphere_coords_new(gdouble theta,
                       gdouble phi)
@@ -93,6 +102,14 @@ gwy_sphere_coords_new(gdouble theta,
     return (GtkObject*)(sphere_coords);
 }
 
+/**
+ * gwy_sphere_coords_get_theta:
+ * @sphere_coords: A #GwySphereCoords.
+ *
+ * Returns the theta angle i.e., angle from sphere north pole, in radians.
+ *
+ * Returns: The theta angle.
+ **/
 gdouble
 gwy_sphere_coords_get_theta(GwySphereCoords *sphere_coords)
 {
@@ -101,6 +118,14 @@ gwy_sphere_coords_get_theta(GwySphereCoords *sphere_coords)
     return sphere_coords->theta;
 }
 
+/**
+ * gwy_sphere_coords_get_phi:
+ * @sphere_coords: A #GwySphereCoords.
+ *
+ * Returns the phi angle i.e., angle from sphere zero meridian, in radians.
+ *
+ * Returns: The phi angle.
+ **/
 gdouble
 gwy_sphere_coords_get_phi(GwySphereCoords *sphere_coords)
 {
@@ -109,6 +134,17 @@ gwy_sphere_coords_get_phi(GwySphereCoords *sphere_coords)
     return sphere_coords->phi;
 }
 
+/**
+ * gwy_sphere_coords_set_value:
+ * @sphere_coords: A #GwySphereCoords.
+ * @theta: The angle from sphere north pole, in radians.
+ * @phi: The angle from sphere zero meridian, in radians.
+ *
+ * Sets the spherical coordinates to specified values.
+ *
+ * Emits a "value_changed" signal on @sphere_coords if the coordinates
+ * actually changed.
+ **/
 void
 gwy_sphere_coords_set_value(GwySphereCoords *sphere_coords,
                             gdouble theta,
@@ -134,6 +170,12 @@ gwy_sphere_coords_set_value(GwySphereCoords *sphere_coords,
     }
 }
 
+/**
+ * gwy_sphere_coords_value_changed:
+ * @sphere_coords: A #GwySphereCoords.
+ *
+ * Emits a "value_changed" signal on @sphere_coords.
+ **/
 void
 gwy_sphere_coords_value_changed(GwySphereCoords *sphere_coords)
 {

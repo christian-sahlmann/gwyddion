@@ -52,17 +52,14 @@ GwyContainer
 @Returns: 
 
 
-<!-- ##### MACRO gwy_container_value_type_by_name ##### -->
+<!-- ##### FUNCTION gwy_container_contains ##### -->
 <para>
 
 </para>
 
-@c: 
-@n: 
-@Returns: 
-<!-- # Unused Parameters # -->
 @container: 
-@name: 
+@key: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_container_get_value ##### -->
@@ -103,19 +100,6 @@ GwyContainer
 @Returns: 
 
 
-<!-- ##### MACRO gwy_container_delete_by_name ##### -->
-<para>
-
-</para>
-
-@c: 
-@n: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@container: 
-@name: 
-
-
 <!-- ##### FUNCTION gwy_container_foreach ##### -->
 <para>
 
@@ -137,7 +121,17 @@ GwyContainer
 @value: 
 
 
-<!-- ##### FUNCTION gwy_container_set_char ##### -->
+<!-- ##### FUNCTION gwy_container_get_boolean ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_container_set_uchar ##### -->
 <para>
 
 </para>
@@ -145,6 +139,16 @@ GwyContainer
 @container: 
 @key: 
 @value: 
+
+
+<!-- ##### FUNCTION gwy_container_get_char ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_container_set_int32 ##### -->
@@ -157,6 +161,16 @@ GwyContainer
 @value: 
 
 
+<!-- ##### FUNCTION gwy_container_get_int32 ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_container_set_int64 ##### -->
 <para>
 
@@ -165,6 +179,16 @@ GwyContainer
 @container: 
 @key: 
 @value: 
+
+
+<!-- ##### FUNCTION gwy_container_get_int64 ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_container_set_double ##### -->
@@ -177,6 +201,78 @@ GwyContainer
 @value: 
 
 
+<!-- ##### FUNCTION gwy_container_get_double ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_container_set_string ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
+
+
+<!-- ##### FUNCTION gwy_container_get_string ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_container_set_object ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
+
+
+<!-- ##### FUNCTION gwy_container_get_object ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@Returns: 
+
+
+<!-- ##### MACRO gwy_container_value_type_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@container: 
+@name: 
+
+
+<!-- ##### MACRO gwy_container_contains_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+
+
 <!-- ##### MACRO gwy_container_get_value_by_name ##### -->
 <para>
 
@@ -184,6 +280,19 @@ GwyContainer
 
 @c: 
 @n: 
+
+
+<!-- ##### MACRO gwy_container_delete_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@container: 
+@name: 
 
 
 <!-- ##### MACRO gwy_container_set_boolean_by_name ##### -->
@@ -196,7 +305,16 @@ GwyContainer
 @v: 
 
 
-<!-- ##### MACRO gwy_container_set_char_by_name ##### -->
+<!-- ##### MACRO gwy_container_get_boolean_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+
+
+<!-- ##### MACRO gwy_container_set_uchar_by_name ##### -->
 <para>
 
 </para>
@@ -204,6 +322,15 @@ GwyContainer
 @c: 
 @n: 
 @v: 
+
+
+<!-- ##### MACRO gwy_container_get_char_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
 
 
 <!-- ##### MACRO gwy_container_set_int32_by_name ##### -->
@@ -216,6 +343,15 @@ GwyContainer
 @v: 
 
 
+<!-- ##### MACRO gwy_container_get_int32_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+
+
 <!-- ##### MACRO gwy_container_set_int64_by_name ##### -->
 <para>
 
@@ -226,6 +362,15 @@ GwyContainer
 @v: 
 
 
+<!-- ##### MACRO gwy_container_get_int64_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+
+
 <!-- ##### MACRO gwy_container_set_double_by_name ##### -->
 <para>
 
@@ -234,5 +379,52 @@ GwyContainer
 @c: 
 @n: 
 @v: 
+
+
+<!-- ##### MACRO gwy_container_get_double_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+
+
+<!-- ##### MACRO gwy_container_set_string_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
+
+
+<!-- ##### MACRO gwy_container_get_string_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+
+
+<!-- ##### MACRO gwy_container_set_object_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
+
+
+<!-- ##### MACRO gwy_container_get_object_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
 
 

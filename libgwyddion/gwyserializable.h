@@ -20,9 +20,14 @@ typedef struct _GwySerializableClass GwySerializableClass;
 
 /**
  * GwySerializeFunc:
+ * @serializable: The object.
+ * @buffer: The buffer.
+ * @size: The size of @buffer.
  *
- * A type of serialization method, see gwy_serializable_serialize() for
+ * The type of serialization method, see gwy_serializable_serialize() for
  * argument description.
+ *
+ * Returns: @buffer with serialized object appended.
  */
 typedef guchar* (*GwySerializeFunc)(GObject *serializable,
                                     guchar *buffer,
@@ -30,9 +35,14 @@ typedef guchar* (*GwySerializeFunc)(GObject *serializable,
 
 /**
  * GwyDeserializeFunc:
+ * @buffer: The buffer.
+ * @size: The size of @buffer.
+ * @position: The current position in @buffer.
  *
- * A type of deserialization method, see gwy_serializable_deserialize() for
+ * The type of deserialization method, see gwy_serializable_deserialize() for
  * argument description.
+ *
+ * Returns: A newly created (restored) object.
  */
 typedef GObject* (*GwyDeserializeFunc)(const guchar *buffer,
                                        gsize size,

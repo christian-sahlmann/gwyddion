@@ -166,14 +166,14 @@ gwy_grad_sphere_init(GwyGradSphere *grad_sphere)
 
 /**
  * gwy_grad_sphere_new:
- * @sphere_coords: the spherical coordinates this #GwyGradSphere should use
+ * @sphere_coords: The spherical coordinates this gradient sphere should use.
  *
  * Creates a new #GwyGradSphere.
  *
- * @sphere_coords can be #NULL, a new spherical coordinates are allocated
+ * @sphere_coords can be %NULL, new spherical coordinates are allocated
  * then.
  *
- * Returns: the new GwyGradSphere as a #GtkWidget.
+ * Returns: The new gradient sphere as a #GtkWidget.
  **/
 GtkWidget*
 gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
@@ -188,10 +188,13 @@ gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
         g_return_val_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords), NULL);
     else
         sphere_coords = (GwySphereCoords*)gwy_sphere_coords_new(0.0, 0.0);
+    g_object_ref(G_OBJECT(sphere_coords));
+    gtk_object_sink(GTK_OBJECT(sphere_coords));
 
     grad_sphere = gtk_widget_new(GWY_TYPE_GRAD_SPHERE,
                                  "sphere_coords", sphere_coords,
                                  NULL);
+    g_object_unref(G_OBJECT(sphere_coords));
 
     return grad_sphere;
 }
@@ -245,6 +248,11 @@ gwy_grad_sphere_finalize(GObject *object)
     #endif
     g_object_unref(grad_sphere->sphere_pixbuf);
 
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+          "    unreferencing child sphere_coords (refcount = %u)",
+          G_OBJECT(grad_sphere->sphere_coords)->ref_count);
+    #endif
     if (grad_sphere->sphere_coords)
         g_object_unref(G_OBJECT(grad_sphere->sphere_coords));
 
@@ -324,12 +332,29 @@ gwy_grad_sphere_get_property(GObject*object,
 }
 
 /**
+ * gwy_grad_sphere_get_update_policy:
+ * @grad_sphere: a #GwyGradSphere.
+ *
+ * Returns the update policy of this gradient spehere.
+ *
+ * Returns: The update policy.
+ **/
+GtkUpdateType
+gwy_grad_sphere_get_update_policy(GwyGradSphere *grad_sphere)
+{
+    g_return_val_if_fail(grad_sphere != NULL, GTK_UPDATE_CONTINUOUS);
+    g_return_val_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere), GTK_UPDATE_CONTINUOUS);
+
+    return grad_sphere->update_policy;
+}
+
+/**
  * gwy_grad_sphere_get_sphere_coords:
  * @grad_sphere: a #GwyGradSphere.
  *
  * Returns the spherical coordinates this gradient spehere uses.
  *
- * Returns: the #GwySphereCoords.
+ * Returns: The coordinates.
  **/
 GwySphereCoords*
 gwy_grad_sphere_get_sphere_coords(GwyGradSphere *grad_sphere)
@@ -368,20 +393,21 @@ void
 gwy_grad_sphere_set_sphere_coords(GwyGradSphere *grad_sphere,
                                   GwySphereCoords *sphere_coords)
 {
+    GwySphereCoords *old;
+
     g_return_if_fail(grad_sphere != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere));
     g_return_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords));
 
-    if (grad_sphere->sphere_coords) {
-         g_signal_handlers_disconnect_matched(sphere_coords,
-                                              G_SIGNAL_MATCH_DATA,
+    old = grad_sphere->sphere_coords;
+    if (old)
+         g_signal_handlers_disconnect_matched(old, G_SIGNAL_MATCH_DATA,
                                               0, 0, 0, 0, grad_sphere);
-         g_object_unref(G_OBJECT(grad_sphere->sphere_coords));
-    }
-
     grad_sphere->sphere_coords = sphere_coords;
     g_object_ref(G_OBJECT(sphere_coords));
     gtk_object_sink(GTK_OBJECT(sphere_coords));
+    if (old)
+         g_object_unref(G_OBJECT(old));
 
     g_signal_connect(G_OBJECT(sphere_coords), "value_changed",
                      G_CALLBACK(gwy_grad_sphere_coords_value_changed),

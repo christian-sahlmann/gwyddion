@@ -1,4 +1,14 @@
 
+Sun Sep  7 00:00:10 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwydgets/gwygradsphere.c (gwy_grad_sphere_get_update_policy): added
+    * libgwydgets/gwyvectorshade.c (gwy_vector_shade_get_sphere_coords,
+      gwy_vector_shade_get_grad_sphere): added
+    * libgwydgets/gwyvectorshade.c (gwy_vector_shade_new):
+      moved spherical coordinates ownership to GwyGradSphere
+    * libgwydgets/gwygradsphere.c (gwy_grad_sphere_finalize,
+      gwy_grad_sphere_new, gwy_grad_sphere_set_sphere_coords): fixed
+      spherical coordinates reference counting
+
 Sat Sep  6 20:56:56 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
     * libgwyddion/gwyserializable.c (gwy_serialize_check_string):
       changed arguments to include position as the _unpack functions,

@@ -571,6 +571,13 @@ gwy_container_try_set_valist(GwyContainer *container,
     g_free(values);
 }
 
+/**
+ * gwy_container_set_value:
+ * @container: A #GwyContainer.
+ * @...: A %NULL-terminated list of #GQuark keys and #GValue values.
+ *
+ * Inserts or updates several values in @container.
+ **/
 void
 gwy_container_set_value(GwyContainer *container,
                         ...)
@@ -613,6 +620,13 @@ gwy_container_set_by_name_valist(GwyContainer *container,
     g_free(values);
 }
 
+/**
+ * gwy_container_set_value_by_name:
+ * @container: A #GwyContainer.
+ * @...: A %NULL-terminated list of string keys and #GValue values.
+ *
+ * Inserts or updates several values in @container.
+ **/
 void
 gwy_container_set_value_by_name(GwyContainer *container,
                                 ...)
@@ -624,6 +638,14 @@ gwy_container_set_value_by_name(GwyContainer *container,
     va_end(ap);
 }
 
+/**
+ * gwy_container_set_boolean:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: A boolean.
+ *
+ * Stores a boolean into @container, identified by @key.
+ **/
 void
 gwy_container_set_boolean(GwyContainer *container,
                           GQuark key,
@@ -637,10 +659,18 @@ gwy_container_set_boolean(GwyContainer *container,
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
 
+/**
+ * gwy_container_set_uchar:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: An unsigned character.
+ *
+ * Stores an unsigned character into @container, identified by @key.
+ **/
 void
-gwy_container_set_char(GwyContainer *container,
-                       GQuark key,
-                       guchar value)
+gwy_container_set_uchar(GwyContainer *container,
+                        GQuark key,
+                        guchar value)
 {
     GValue gvalue;
 
@@ -650,6 +680,14 @@ gwy_container_set_char(GwyContainer *container,
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
 
+/**
+ * gwy_container_set_int32:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: A 32bit integer.
+ *
+ * Stores a 32bit integer into @container, identified by @key.
+ **/
 void
 gwy_container_set_int32(GwyContainer *container,
                         GQuark key,
@@ -663,6 +701,14 @@ gwy_container_set_int32(GwyContainer *container,
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
 
+/**
+ * gwy_container_set_int64:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: A 64bit integer.
+ *
+ * Stores a 64bit integer into @container, identified by @key.
+ **/
 void
 gwy_container_set_int64(GwyContainer *container,
                         GQuark key,
@@ -676,6 +722,14 @@ gwy_container_set_int64(GwyContainer *container,
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
 
+/**
+ * gwy_container_set_double:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: A double.
+ *
+ * Stores a double into @container, identified by @key.
+ **/
 void
 gwy_container_set_double(GwyContainer *container,
                          GQuark key,
@@ -689,6 +743,17 @@ gwy_container_set_double(GwyContainer *container,
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
 
+/**
+ * gwy_container_set_string:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: A string.
+ *
+ * Stores a string into @container, identified by @key.
+ *
+ * The container takes ownership of the string, so it can't be used on
+ * static strings, use g_strdup() to duplicate them first.
+ **/
 void
 gwy_container_set_string(GwyContainer *container,
                          GQuark key,
@@ -702,6 +767,18 @@ gwy_container_set_string(GwyContainer *container,
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
 
+/**
+ * gwy_container_set_object:
+ * @container: A #GwyContainer.
+ * @key: A #GQuark key.
+ * @value: An object as #GObject.
+ *
+ * Stores an object into @container, identified by @key.
+ *
+ * The object must implement #GwySerializable interface to allow serialization
+ * of the container.  It also has to implement #GwyWatchable interface to
+ * allow watching of value changes.
+ **/
 void
 gwy_container_set_object(GwyContainer *container,
                          GQuark key,
@@ -835,8 +912,8 @@ gwy_container_deserialize(const guchar *buffer,
             break;
 
             case G_TYPE_UCHAR:
-            gwy_container_set_char(container, key,
-                                   gwy_serialize_unpack_char(buffer, size,
+            gwy_container_set_uchar(container, key,
+                                    gwy_serialize_unpack_char(buffer, size,
                                                              position));
             break;
 

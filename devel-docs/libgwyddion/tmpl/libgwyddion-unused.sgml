@@ -1,0 +1,18 @@
+<!-- ##### FUNCTION gwy_container_set_char ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
+
+<!-- ##### MACRO gwy_container_set_char_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
+

@@ -41,7 +41,10 @@ struct _GwyVectorShadeClass {
 
 GType            gwy_vector_shade_get_type          (void) G_GNUC_CONST;
 GtkWidget*       gwy_vector_shade_new               (GwySphereCoords *sphere_coords);
+GwyGradSphere*   gwy_vector_shade_get_grad_sphere   (GwyVectorShade *vector_shade);
 GwySphereCoords* gwy_vector_shade_get_sphere_coords (GwyVectorShade *vector_shade);
+void             gwy_vector_shade_set_sphere_coords (GwyVectorShade *vector_shade,
+                                                     GwySphereCoords *sphere_coords);
 
 #ifdef __cplusplus
 }
