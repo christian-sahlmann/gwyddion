@@ -50,6 +50,25 @@ Mask processing merging (namely used in grain processing).
 @GWY_WSHED_MARK: 
 @GWY_WSHED_FINISHED: 
 
+<!-- ##### ENUM GwyComputationStateType ##### -->
+<para>
+
+</para>
+
+@GWY_COMP_INIT: 
+@GWY_COMP_ITERATE: 
+@GWY_COMP_FINISHED: 
+
+<!-- ##### ENUM GwyFractalType ##### -->
+<para>
+
+</para>
+
+@GWY_FRACTAL_PARTITIONING: 
+@GWY_FRACTAL_CUBECOUNTING: 
+@GWY_FRACTAL_TRIANGULATION: 
+@GWY_FRACTAL_PSDF: 
+
 <!-- ##### TYPEDEF GwyWatershedStatus ##### -->
 <para>
 
@@ -503,6 +522,16 @@ Mask processing merging (namely used in grain processing).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_field_get_surface_area ##### -->
+<para>
+
+</para>
+
+@a: 
+@interpolation: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_field_get_area_max ##### -->
 <para>
 
@@ -565,6 +594,20 @@ Mask processing merging (namely used in grain processing).
 @ulrow: 
 @brcol: 
 @brrow: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_area_surface_area ##### -->
+<para>
+
+</para>
+
+@a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@interpolation: 
 @Returns: 
 
 
@@ -1205,5 +1248,200 @@ Mask processing merging (namely used in grain processing).
 @fit_type: 
 @exclude: 
 @orientation: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_correlation_score ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@kernel_field: 
+@ulcol: 
+@ulrow: 
+@kernel_ulcol: 
+@kernel_ulrow: 
+@kernel_brcol: 
+@kernel_brrow: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_croscorrelate ##### -->
+<para>
+
+</para>
+
+@data_field1: 
+@data_field2: 
+@x_dist: 
+@y_dist: 
+@score: 
+@search_width: 
+@search_height: 
+@window_width: 
+@window_height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_croscorrelate_iteration ##### -->
+<para>
+
+</para>
+
+@data_field1: 
+@data_field2: 
+@x_dist: 
+@y_dist: 
+@score: 
+@search_width: 
+@search_height: 
+@window_width: 
+@window_height: 
+@state: 
+@iteration: 
+
+
+<!-- ##### FUNCTION gwy_data_field_correlate ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@kernel_field: 
+@score: 
+
+
+<!-- ##### FUNCTION gwy_data_field_correlate_iteration ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@kernel_field: 
+@score: 
+@state: 
+@iteration: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_partitioning ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@xresult: 
+@yresult: 
+@interpolation: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_cubecounting ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@xresult: 
+@yresult: 
+@interpolation: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_triangulation ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@xresult: 
+@yresult: 
+@interpolation: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_psdf ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@xresult: 
+@yresult: 
+@interpolation: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_cubecounting_dim ##### -->
+<para>
+
+</para>
+
+@xresult: 
+@yresult: 
+@a: 
+@b: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_triangulation_dim ##### -->
+<para>
+
+</para>
+
+@xresult: 
+@yresult: 
+@a: 
+@b: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_partitioning_dim ##### -->
+<para>
+
+</para>
+
+@xresult: 
+@yresult: 
+@a: 
+@b: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_fractal_psdf_dim ##### -->
+<para>
+
+</para>
+
+@xresult: 
+@yresult: 
+@a: 
+@b: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_correct_laplace_iteration ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@mask_field: 
+@buffer_field: 
+@error: 
+@corfactor: 
+
+
+<!-- ##### FUNCTION gwy_data_field_correct_average ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@mask_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_mask_outliers ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@mask_field: 
+@thresh: 
 
 

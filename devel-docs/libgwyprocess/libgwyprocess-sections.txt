@@ -3,6 +3,8 @@
 GwyFilterType
 GwyMergeType
 GwyWatershedStateType
+GwyComputationStateType
+GwyFractalType
 GwyWatershedStatus
 <TITLE>GwyDataField</TITLE>
 GwyDataField
@@ -49,11 +51,13 @@ gwy_data_field_get_min
 gwy_data_field_get_avg
 gwy_data_field_get_rms
 gwy_data_field_get_sum
+gwy_data_field_get_surface_area
 gwy_data_field_get_area_max
 gwy_data_field_get_area_min
 gwy_data_field_get_area_avg
 gwy_data_field_get_area_rms
 gwy_data_field_get_area_sum
+gwy_data_field_get_area_surface_area
 gwy_data_field_threshold
 gwy_data_field_area_threshold
 gwy_data_field_clamp
@@ -105,6 +109,22 @@ gwy_data_field_grains_get_distribution
 gwy_data_field_grains_add
 gwy_data_field_grains_intersect
 gwy_data_field_fit_lines
+gwy_data_field_get_correlation_score
+gwy_data_field_croscorrelate
+gwy_data_field_croscorrelate_iteration
+gwy_data_field_correlate
+gwy_data_field_correlate_iteration
+gwy_data_field_fractal_partitioning
+gwy_data_field_fractal_cubecounting
+gwy_data_field_fractal_triangulation
+gwy_data_field_fractal_psdf
+gwy_data_field_fractal_cubecounting_dim
+gwy_data_field_fractal_triangulation_dim
+gwy_data_field_fractal_partitioning_dim
+gwy_data_field_fractal_psdf_dim
+gwy_data_field_correct_laplace_iteration
+gwy_data_field_correct_average
+gwy_data_field_mask_outliers
 <SUBSECTION Standard>
 GWY_DATA_FIELD
 GWY_IS_DATA_FIELD
@@ -189,6 +209,7 @@ GWY_DATA_LINE_GET_CLASS
 <FILE>interpolation</FILE>
 GwyInterpolationType
 gwy_interpolation_get_dval
+gwy_interpolation_get_dval_of_equidists
 </SECTION>
 
 <SECTION>

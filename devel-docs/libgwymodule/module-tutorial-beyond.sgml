@@ -96,7 +96,7 @@ module_register(const gchar *name)
       are in fact two things you have to care about.  There are no
       limitations on who can access what in the settings, so to avoid
       surprises you should use only keys startings with
-      <literal>"/mod/<parameter>my-module-name</parameter>/"</literal>.
+      <literal>"/module/<parameter>my-module-name</parameter>/"</literal>.
     </para>
     <para>
       Loading settings could look (remember they may not always exist, for
@@ -108,7 +108,7 @@ GwyContainer *settings;
 settings = gwy_app_settings_get();
 ratio = 1.61803;
 gwy_container_gis_double_by_name(settings,
-                                 "/mod/my_module/ratio",
+                                 "/module/my_module/ratio",
                                  &ratio);
 ]]></programlisting></informalexample>
     <para>
@@ -124,7 +124,7 @@ GwyContainer *settings;
 
 settings = gwy_app_settings_get();
 gwy_container_set_double_by_name(settings,
-                                 "/mod/my_module/ratio",
+                                 "/module/my_module/ratio",
                                  ratio);
 ]]></programlisting></informalexample>
   </refsect1>

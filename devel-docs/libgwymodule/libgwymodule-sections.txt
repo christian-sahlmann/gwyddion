@@ -55,6 +55,7 @@ gwy_process_func_run
 gwy_process_func_get_run_types
 gwy_process_func_get_menu_path
 gwy_process_func_build_menu
+gwy_process_func_set_sensitivity_flags
 </SECTION>
 
 <SECTION>

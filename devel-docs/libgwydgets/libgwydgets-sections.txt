@@ -557,6 +557,7 @@ GWY_STOCK_FIT_PLANE
 GWY_STOCK_FIT_TRIANGLE
 GWY_STOCK_FIX_ZERO
 GWY_STOCK_FFT
+GWY_STOCK_FRACTAL
 GWY_STOCK_GRAINS
 GWY_STOCK_GRAINS_GRAPH
 GWY_STOCK_GRAINS_REMOVE
@@ -606,6 +607,7 @@ gwy_option_menu_direction
 gwy_option_menu_filter
 gwy_option_menu_mergegrain
 gwy_option_menu_fit_line
+gwy_option_menu_fractal
 gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history

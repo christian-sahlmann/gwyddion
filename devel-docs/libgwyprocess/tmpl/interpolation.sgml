@@ -41,3 +41,14 @@ Interpolation type selection.
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_interpolation_get_dval_of_equidists ##### -->
+<para>
+
+</para>
+
+@x: 
+@data: 
+@interpolation: 
+@Returns: 
+
+

@@ -104,6 +104,9 @@ gwy_container_gis_uchar
 gwy_container_set_int32
 gwy_container_get_int32
 gwy_container_gis_int32
+gwy_container_set_enum
+gwy_container_get_enum
+gwy_container_gis_enum
 gwy_container_set_int64
 gwy_container_get_int64
 gwy_container_gis_int64
@@ -130,6 +133,9 @@ gwy_container_gis_uchar_by_name
 gwy_container_set_int32_by_name
 gwy_container_get_int32_by_name
 gwy_container_gis_int32_by_name
+gwy_container_set_enum_by_name
+gwy_container_get_enum_by_name
+gwy_container_gis_enum_by_name
 gwy_container_set_int64_by_name
 gwy_container_get_int64_by_name
 gwy_container_gis_int64_by_name
@@ -172,6 +178,8 @@ gwy_string_to_enum
 gwy_enum_to_string
 gwy_string_to_flags
 gwy_flags_to_string
+gwy_strkill
+gwy_strreplace
 gwy_find_self_dir
 gwy_find_self_set_argv0
 </SECTION>

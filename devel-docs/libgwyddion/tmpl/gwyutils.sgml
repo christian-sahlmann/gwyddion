@@ -90,6 +90,28 @@ Gwyddion application directories.
 @delimiter: 
 
 
+<!-- ##### FUNCTION gwy_strkill ##### -->
+<para>
+
+</para>
+
+@s: 
+@killchars: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_strreplace ##### -->
+<para>
+
+</para>
+
+@haystack: 
+@needle: 
+@replacement: 
+@maxrepl: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_find_self_dir ##### -->
 <para>
 
