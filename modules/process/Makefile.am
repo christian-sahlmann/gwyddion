@@ -13,7 +13,9 @@ process_PROGRAMS = \
 	rotate.so \
 	scale.so \
 	shade.so \
-        grain_mark.so
+        grain_mark.so \
+	grain_rem_threshold.so \
+	grain_wshed.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -44,6 +46,12 @@ facet_level_so_LDFLAGS = $(module_ldflags),facet-level.so
 
 grain_mark_so_SOURCES = grain_mark.c
 grain_mark_so_LDFLAGS = $(module_ldflags),grain_mark.so
+
+grain_rem_threshold_so_SOURCES = grain_rem_threshold.c
+grain_rem_threshold_so_LDFLAGS = $(module_ldflags),grain_rem_threshold.so
+
+grain_wshed_so_SOURCES = grain_wshed.c
+grain_wshed_so_LDFLAGS = $(module_ldflags),grain_wshed.so
 
 
 
