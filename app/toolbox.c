@@ -50,6 +50,7 @@ gwy_app_toolbox_create(void)
     GwyMenuSensData sens_data_graph = { GWY_MENU_FLAG_GRAPH, 0 };
     GtkWidget *toolbox, *vbox, *toolbar, *menu, *label;
     GtkAccelGroup *accel_group;
+    GList *list;
     GSList *labels = NULL, *l;
     GSList *toolbars = NULL;    /* list of all toolbars for sensitivity */
     GSList *menus = NULL;    /* list of all menus for sensitivity */
@@ -194,7 +195,9 @@ gwy_app_toolbox_create(void)
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
-    gwy_app_tool_use_cb(first_tool, NULL);
+    list = gtk_container_get_children(GTK_CONTAINER(toolbar));
+    gwy_app_tool_use_cb(first_tool, list ? GTK_WIDGET(list->data) : NULL);
+    g_list_free(list);
 
     /***************************************************************/
     gtk_widget_show_all(toolbox);

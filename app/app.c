@@ -471,27 +471,31 @@ void
 gwy_app_tool_use_cb(const gchar *toolname,
                     GtkWidget *button)
 {
+    static GtkWidget *old_button = NULL;
     GwyDataWindow *data_window;
+    gboolean ok = TRUE;
 
     gwy_debug("%s", toolname ? toolname : "NONE");
     /* don't catch deactivations */
-    if (button && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+    if (button && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
+        old_button = button;
         return;
+    }
 
     if (current_tool && (!toolname || strcmp(current_tool, toolname)))
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_TOOL);
     if (toolname) {
         data_window = gwy_app_data_window_get_current();
-        if (data_window) {
-            if (gwy_tool_func_use(toolname, data_window, GWY_TOOL_SWITCH_TOOL))
-                current_tool = toolname;
-            else
-                gwy_tool_func_use(current_tool, data_window,
-                                  GWY_TOOL_SWITCH_TOOL);
-        }
+        if (data_window)
+            ok = gwy_tool_func_use(toolname, data_window, GWY_TOOL_SWITCH_TOOL);
     }
-    else
+    if (ok) {
         current_tool = toolname;
+        old_button = button;
+        return;
+    }
+    /* FIXME: this is really ugly */
+    g_signal_emit_by_name(old_button, "clicked");
 }
 
 void
