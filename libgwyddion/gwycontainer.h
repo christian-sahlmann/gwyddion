@@ -38,6 +38,7 @@ G_BEGIN_DECLS
 typedef struct _GwyContainer GwyContainer;
 typedef struct _GwyContainerClass GwyContainerClass;
 
+#ifndef GWY_DISABLE_DEPRECATED
 typedef void (*GwyContainerNotifyFunc)(GwyContainer *container,
                                        const guchar *path,
                                        gpointer user_data);
@@ -47,15 +48,16 @@ typedef struct {
     GValue *value;
     gboolean changed;
 } GwyKeyVal;
+#endif
 
 struct _GwyContainer {
     GObject parent_instance;
 
     GHashTable *values;
-    GHashTable *watching;
-    GHashTable *objects;
-    gint watch_freeze;
-    gulong last_wid;
+    GHashTable *watching;  /* FIXME: remove in 2.0 */
+    GHashTable *objects;  /* FIXME: remove in 2.0 */
+    gint watch_freeze;  /* FIXME: remove in 2.0 */
+    gulong last_wid;  /* FIXME: remove in 2.0 */
 };
 
 struct _GwyContainerClass {
@@ -158,7 +160,7 @@ gboolean      gwy_container_gis_object            (GwyContainer *container,
 GPtrArray*    gwy_container_serialize_to_text     (GwyContainer *container);
 GwyContainer* gwy_container_deserialize_from_text (const gchar *text);
 
-/*
+/* FIXME: remove in 2.0
 gulong     gwy_container_watch              (GwyContainer *container,
                                              const guchar *path,
                                              GwyContainerNotifyFunc callback,

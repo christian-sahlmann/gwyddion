@@ -39,18 +39,6 @@ typedef struct {
 } PrefixData;
 
 typedef struct {
-    gulong wid;
-    GwyContainerNotifyFunc callback;
-    gpointer user_data;
-} WatchData;
-
-typedef struct {
-    GwyContainer *container;
-    GQuark key;
-    gulong hid;
-} ObjectWatch;
-
-typedef struct {
     GwyContainer *container;
     gint nprefixes;
     const gchar **prefixes;
@@ -105,17 +93,6 @@ static void     hash_prefix_duplicate_func       (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
 
-static void     value_changed                    (GwyContainer *container,
-                                                  GQuark key);
-static void     remove_object_callback           (GwyContainer *container,
-                                                  GValue *value);
-static void     objects_remove_object_callback   (gpointer p,
-                                                  ObjectWatch *owatch);
-static void     setup_object_callback            (GwyContainer *container,
-                                                  GQuark key,
-                                                  GValue *value);
-static void     watchable_value_changed          (GObject *object,
-                                                  ObjectWatch *owatch);
 static int      pstring_compare_callback         (const void *p,
                                                   const void *q);
 static guint    token_length                     (const gchar *text);
@@ -202,12 +179,6 @@ gwy_container_finalize(GObject *object)
 
     gwy_debug("");
 
-    /* FIXME: doesn't free memory? */
-    g_hash_table_destroy(container->watching);
-    g_hash_table_foreach(container->objects,
-                         (GHFunc)objects_remove_object_callback,
-                         NULL);
-    g_hash_table_destroy(container->objects);
     g_hash_table_destroy(container->values);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -231,9 +202,6 @@ gwy_container_new(void)
     /* assume GQuarks are good enough hash keys */
     container->values = g_hash_table_new_full(NULL, NULL,
                                               NULL, value_destroy_func);
-    container->watching = g_hash_table_new_full(NULL, NULL, NULL, g_free);
-    /* the callback removal has to be done separately */
-    container->objects = g_hash_table_new_full(NULL, NULL, NULL, g_free);
 
     return (GObject*)(container);
 }
@@ -316,49 +284,6 @@ gwy_container_contains(GwyContainer *container, GQuark key)
                                   GUINT_TO_POINTER(key)) != NULL;
 }
 
-static void
-objects_remove_object_callback(gpointer p, ObjectWatch *owatch)
-{
-    g_signal_handler_disconnect(p, owatch->hid);
-}
-
-static void
-remove_object_callback(GwyContainer *container, GValue *value)
-{
-    gpointer p;
-    ObjectWatch *owatch;
-
-    p = g_value_peek_pointer(value);
-    owatch = (ObjectWatch*)g_hash_table_lookup(container->objects, p);
-    g_assert(owatch);
-    g_signal_handler_disconnect(p, owatch->hid);
-    g_hash_table_remove(container->objects, p);  /* also frees owatch */
-}
-
-static void
-watchable_value_changed(GObject *object, ObjectWatch *owatch)
-{
-    g_assert(g_hash_table_lookup(GWY_CONTAINER(owatch->container)->objects,
-                                 object));
-    value_changed(owatch->container, owatch->key);
-}
-
-static void
-setup_object_callback(GwyContainer *container, GQuark key, GValue *value)
-{
-    GObject *obj;
-    ObjectWatch *owatch;
-
-    obj = (GObject*)g_value_peek_pointer(value);
-    owatch = g_new(ObjectWatch, 1);
-    owatch->container = container;
-    owatch->key = key;
-    owatch->hid = g_signal_connect_data(obj, "value_changed",
-                                        G_CALLBACK(watchable_value_changed),
-                                        owatch, NULL, 0);
-    g_hash_table_insert(container->objects, obj, owatch);
-}
-
 /**
  * gwy_container_remove_by_name:
  * @c: A #GwyContainer.
@@ -397,9 +322,6 @@ gwy_container_remove(GwyContainer *container, GQuark key)
                   G_OBJECT(g_value_peek_pointer(value))->ref_count);
     }
 #endif
-
-    if (G_VALUE_HOLDS_OBJECT(value))
-        remove_object_callback(container, value);
 
 #ifdef DEBUG
     gwy_debug("holds object = %d", G_VALUE_HOLDS_OBJECT(value));
@@ -441,10 +363,11 @@ gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
 }
 
 static gboolean
-hash_remove_prefix_func(gpointer hkey, gpointer hvalue, gpointer hdata)
+hash_remove_prefix_func(gpointer hkey,
+                        G_GNUC_UNUSED gpointer hvalue,
+                        gpointer hdata)
 {
     GQuark key = GPOINTER_TO_UINT(hkey);
-    GValue *value = (GValue*)hvalue;
     PrefixData *pfdata = (PrefixData*)hdata;
     const gchar *name;
 
@@ -454,9 +377,6 @@ hash_remove_prefix_func(gpointer hkey, gpointer hvalue, gpointer hdata)
             || (name[pfdata->prefix_length] != '\0'
                 && name[pfdata->prefix_length] != GWY_CONTAINER_PATHSEP)))
         return FALSE;
-
-    if (G_VALUE_HOLDS_OBJECT(value))
-        remove_object_callback(pfdata->container, value);
 
     pfdata->count++;
     return TRUE;
@@ -1349,8 +1269,6 @@ gwy_container_try_set_one(GwyContainer *container,
         if (!do_replace)
             return FALSE;
         g_assert(G_IS_VALUE(old));
-        if (G_VALUE_HOLDS_OBJECT(old))
-            remove_object_callback(container, old);
         g_value_unset(old);
     }
     else {
@@ -1364,12 +1282,6 @@ gwy_container_try_set_one(GwyContainer *container,
         g_value_set_string_take_ownership(old, g_value_peek_pointer(value));
     else
         g_value_copy(value, old);
-
-    /* set up a watch for "value_changed" for objects */
-    if (G_VALUE_HOLDS_OBJECT(value))
-        setup_object_callback(container, key, value);
-
-    value_changed(container, key);
 
     return TRUE;
 }
@@ -2073,6 +1985,7 @@ hash_prefix_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
     }
 }
 
+/* FIXME: remove in 2.0 */
 /**
  * gwy_container_freeze_watch:
  * @container: A #GwyContainer.
@@ -2083,14 +1996,12 @@ hash_prefix_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
  * called the same number of times as gwy_container_freeze_watch()).
  **/
 void
-gwy_container_freeze_watch(GwyContainer *container)
+gwy_container_freeze_watch(G_GNUC_UNUSED GwyContainer *container)
 {
-    gwy_debug("");
-    g_return_if_fail(GWY_IS_CONTAINER(container));
-    g_assert(container->watch_freeze >= 0);
-    container->watch_freeze++;
+    g_warning("No one should call this method!");
 }
 
+/* FIXME: remove in 2.0 */
 /**
  * gwy_container_thaw_watch:
  * @container: A #GwyContainer.
@@ -2104,54 +2015,20 @@ gwy_container_freeze_watch(GwyContainer *container)
  * is performed after thawing @container.
  **/
 void
-gwy_container_thaw_watch(GwyContainer *container)
+gwy_container_thaw_watch(G_GNUC_UNUSED GwyContainer *container)
 {
-    gwy_debug("");
-    g_return_if_fail(GWY_IS_CONTAINER(container));
-    g_assert(container->watch_freeze > 0);
-    if (container->watch_freeze) {
-        container->watch_freeze--;
-        if (!container->watch_freeze) {
-            /* TODO: do the notifications */
-        }
-    }
+    g_warning("No one should call this method!");
 }
 
+/* FIXME: remove in 2.0 */
 gulong
-gwy_container_watch(GwyContainer *container,
-                    const guchar *path,
-                    GwyContainerNotifyFunc callback,
-                    gpointer user_data)
+gwy_container_watch(G_GNUC_UNUSED GwyContainer *container,
+                    G_GNUC_UNUSED const guchar *path,
+                    G_GNUC_UNUSED GwyContainerNotifyFunc callback,
+                    G_GNUC_UNUSED gpointer user_data)
 {
-    GList *callbacks;
-    GQuark key;
-    WatchData *wdata;
-
-    gwy_debug("");
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    g_return_val_if_fail(path, 0);
-    g_return_val_if_fail(callback, 0);
-
-    wdata = g_new(WatchData, 1);
-    wdata->wid = container->last_wid++;
-    wdata->callback = callback;
-    wdata->user_data = user_data;
-
-    key = g_quark_from_string(path);
-    /* FIXME: we may need _steal(), if we set up a value freeing function
-     * for container->watching */
-    callbacks = g_hash_table_lookup(container->watching, GUINT_TO_POINTER(key));
-    callbacks = g_list_append(callbacks, wdata);
-    g_hash_table_insert(container->watching, GUINT_TO_POINTER(key), callbacks);
-
-    return wdata->wid;
-}
-
-static void
-value_changed(G_GNUC_UNUSED GwyContainer *container,
-              G_GNUC_UNUSED GQuark key)
-{
-    gwy_debug("[%p] %s", container, g_quark_to_string(key));
+    g_warning("No one should call this method!");
+    return 0;
 }
 
 static void
