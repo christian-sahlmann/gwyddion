@@ -135,7 +135,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "layer-points",
-    "Layer allowing selection of horizontal or vertical lines.",
+    "Layer allowing selection of several points.",
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
