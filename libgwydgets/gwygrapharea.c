@@ -116,6 +116,7 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 static void
 gwy_graph_area_init(GwyGraphArea *area)
 {
+    GtkLabel *ble;
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
@@ -128,6 +129,9 @@ gwy_graph_area_init(GwyGraphArea *area)
      
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90); 
+
+    ble = gtk_label_new("ble");
+    gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(ble), 10, 10);
 }
 
 GtkWidget*
@@ -339,8 +343,8 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     child = gwy_graph_area_find_child(area, x, y);
     if (child) { printf("Child found.\n");
         area->active = child->widget;
-        area->x0 = (gint)event->x;
-        area->y0 = (gint)event->y;
+        area->x0 = x;
+        area->y0 = y;
         area->xoff = 0;
         area->yoff = 0;
         gwy_graph_area_draw_child_rectangle(area);
@@ -366,10 +370,12 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     gdk_window_get_position(event->window, &x, &y);
     x += (gint)event->x;
     y += (gint)event->y;
+    
     gwy_graph_area_clamp_coords_for_child(area, &x, &y);
     if (x != area->x0 || y != area->y0) {
         x -= area->x0 - area->active->allocation.x;
         y -= area->y0 - area->active->allocation.y;
+        printf("Moving from %d %d to %d %d\n", area->x0, area->y0,  x, y);
         gtk_layout_move(GTK_LAYOUT(area), area->active, x, y);
     }
 
@@ -397,6 +403,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     y += (gint)event->y;
     gwy_graph_area_clamp_coords_for_child(area, &x, &y);
     /* don't draw when we can't move */
+    
     if (x - area->x0 == area->xoff
         && y - area->y0 == area->yoff)
         return FALSE;
@@ -404,6 +411,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     gwy_graph_area_draw_child_rectangle(area);
     area->xoff = x - area->x0;
     area->yoff = y - area->y0;
+    printf("xoff=%d, yoff=%d\n", area->xoff, area->yoff);
     gwy_graph_area_draw_child_rectangle(area);
 
     return FALSE;
