@@ -78,7 +78,7 @@ static GwyModuleInfo module_info = {
     "profile",
     N_("Profile tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -440,9 +440,9 @@ apply(GwyUnitoolState *state)
                                               units->magnitude, z_mag,
                                               units->units, z_unit);
 
-            gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
-                                                   state->data_window,
-                                                   controls->str->pdata[i]);
+            gwy_app_graph_window_create_for_window
+                                    (GWY_GRAPH(graph), state->data_window,
+                                     ((GString*)controls->str->pdata[i])->str);
         }
     }
     else {
