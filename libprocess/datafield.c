@@ -256,12 +256,12 @@ gwy_data_field_deserialize(const guchar *buffer,
     data_field->data = data;
     data_field->xres = xres;
     data_field->yres = yres;
-    if (si_unit_z != NULL) 
+    if (si_unit_z != NULL)
     {
         if (data_field->si_unit_z!=NULL) g_object_unref(data_field->si_unit_z);
         data_field->si_unit_z = si_unit_z;
     }
-    if (si_unit_xy != NULL) 
+    if (si_unit_xy != NULL)
     {
         if (data_field->si_unit_xy!=NULL) g_object_unref(data_field->si_unit_xy);
         data_field->si_unit_xy = si_unit_xy;
@@ -334,9 +334,9 @@ gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
  **/
 void
 _gwy_data_field_initialize(GwyDataField *a,
-                          gint xres, gint yres,
-                          gdouble xreal, gdouble yreal,
-                          gboolean nullme)
+                           gint xres, gint yres,
+                           gdouble xreal, gdouble yreal,
+                           gboolean nullme)
 {
     int i;
 
@@ -368,25 +368,42 @@ _gwy_data_field_free(GwyDataField *a)
  * Copies the contents of an already allocated data field to a data field
  * of the same size.
  *
- * Returns:
+ * It also sets units of @b to units of @a, although it is not what one always
+ * wants.  Thus this behavious may change in the future and don't count on it.
+ *
+ * Generally, use gwy_data_field_area_copy() if you want to be on the safe
+ * side.
+ *
+ * Returns: Always %TURE.
  **/
 gboolean
 gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
 {
+    /* XXX: PK please read this:
+     * this is only a last resort, g_return_val_if_fail() is NOT a mean of
+     * indicating a problem, it may be set up to coredump or whatever on
+     * failure! */
     g_return_val_if_fail(a->xres == b->xres && a->yres == b->yres, FALSE);
 
     b->xreal = a->xreal;
     b->yreal = a->yreal;
     gwy_object_unref(b->si_unit_xy);
     gwy_object_unref(b->si_unit_z);
-    b->si_unit_xy = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(a->si_unit_xy));
-    b->si_unit_z = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(a->si_unit_z));
+    b->si_unit_xy
+        = (GwySIUnit*)gwy_serializable_duplicate(G_OBJECT(a->si_unit_xy));
+    b->si_unit_z
+        = (GwySIUnit*)gwy_serializable_duplicate(G_OBJECT(a->si_unit_z));
 
     memcpy(b->data, a->data, a->xres*a->yres*sizeof(gdouble));
 
     return TRUE;
 }
 
+/* XXX: this docs actually lie, it DID copy the units between revisions
+ * 1.92 (klapetek 08-Mar-04)
+ * and
+ * 1.138 (yeti 14-Aug-04)
+ * (i.e., until I noticed leaking SIUnits) */
 /**
  * gwy_data_field_area_copy:
  * @src: Source data field.
@@ -405,6 +422,9 @@ gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
  *
  * There must be enough room in the destination data field, areas sticking
  * out are rejected.  If @src is equal to @dest, the areas may not overlap.
+ *
+ * Unlike gwy_data_field_copy(), this function keeps destination data field
+ * units unchaged.
  *
  * Returns: Whether it succeeded (area sizes OK).
  **/
@@ -434,9 +454,6 @@ gwy_data_field_area_copy(GwyDataField *src,
         || destcol + brcol - ulcol > dest->xres
         || destrow + brrow - ulrow > dest->yres)
         return FALSE;
-
-    dest->si_unit_xy = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(src->si_unit_xy));
-    dest->si_unit_z = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(src->si_unit_z));
 
     for (i = 0; i < brrow - ulrow; i++)
         memcpy(dest->data + dest->xres*(destrow + i) + destcol,
@@ -1676,7 +1693,7 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
  *
  * Returns: %TRUE on success.
  *
- * Since: 1.2 
+ * Since: 1.2
  **/
 gboolean
 gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
@@ -1709,7 +1726,7 @@ gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
     b->real = size*a->xreal/a->xres;
 
     if (thickness <= 1) return TRUE;
-    
+
     /*add neighbour values to the line*/
     for (k = 0; k < res; k++)
     {
