@@ -42,7 +42,9 @@ AC_CONFIG_FILES(\
 AM_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([1.6 gnu check-news dist-bzip2])
+dnl F***ing automake requires the silly ABOUT-NLS file.  Use `foreign'
+dnl strictness level.
+AM_INIT_AUTOMAKE([1.6 foreign check-news dist-bzip2])
 AM_ACLOCAL_INCLUDE(m4)
 AM_MAINTAINER_MODE
 
@@ -167,15 +169,15 @@ AC_CHECK_FUNCS([getline])
 AC_CHECK_FUNCS([setenv])
 
 dnl I18n stuff
-GETTEXT_PACKAGE=gwyddion
-AM_GLIB_GNU_GETTEXT
-XGETTEXT="$XGETTEXT --from-code=UTF-8"
+GETTEXT_PACKAGE=$PACKAGE_TARNAME
+AM_GNU_GETTEXT([external])
+XGETTEXT="$XGETTEXT --foreign-user --from-code=UTF-8 --msgid-bugs-address='http://trific.ath.cx/bugzilla/'"
 LIBS="$LIBS $INTLLIBS"
 ALL_LINGUAS=
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Gettext package name])
 AC_SUBST(GETTEXT_PACKAGE)
 
-AM_GLIB_DEFINE_LOCALEDIR(GWY_LOCALEDIR)
+#AM_GLIB_DEFINE_LOCALEDIR(GWY_LOCALEDIR)
 
 dnl RPM
 RPM_RELEASE=1
