@@ -392,6 +392,7 @@ gchar*
 gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+    siunit->power10 = 0;
 
     return gwy_si_unit_format_as_plain_string(siunit, &format_style_plain);
 }
