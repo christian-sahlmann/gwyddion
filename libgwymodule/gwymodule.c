@@ -136,4 +136,13 @@ gwy_load_modules_in_dir(GDir *gdir, GHashTable *modules)
     }
 }
 
+/*
+gboolean
+gwy_module_register_process_func(GModule *mod,
+                                 GwyProcessFuncInfo *func_info)
+{
+    gwy_debug("%s", __FUNCTION__);
+}
+*/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
