@@ -31,7 +31,7 @@
       This information correspond to similar
       <link linkend="libgwymodule-gwymodule-process">data process module</link>
       information.  All fields are case-sensitive.  The run modes line
-      consists of a space-separated list of run mode names:
+      consists of a space-separated sublist of:
       <simplelist>
         <member><literal>interactive</literal></member>
         <member><literal>noninteractive</literal></member>
@@ -56,8 +56,21 @@ noninteractive with_defaults
     <para>
       When the plug-in is called with <literal>run</literal> as its first
       argument then the second argument is equal to actual run mode (one of
-      those it printed during registration) and the third one is a
-      <link linkend="plugin-proxy-dump">dump file</link> name to process.
+      those it printed during registration) and the third one is the name
+      of a <link linkend="plugin-proxy-dump">dump file</link> to process.
+    </para>
+    <para>
+      The plug-in reads the data from dump file, mangles them at its pleasure
+      and then overwrite the very same file with the result (do not forget to
+      use <function>ftruncate()</function> first or its Win32 equivalent to
+      avoid surprises).
+    </para>
+    <para>
+      The plug-in does not need to write back fields it didn't modify,
+      values from the original data are used then.
+      E.g., when the resolution does not change, it is enough to dump the
+      data alone.  This also means it can safely ignore anything it does
+      not understand in the dump file.
     </para>
   </refsect1>
 </refentry>

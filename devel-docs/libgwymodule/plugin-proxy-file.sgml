@@ -29,15 +29,46 @@
       <listitem>supported operations</listitem>
     </itemizedlist>
     <para>
-      These information correspond to similar data process module
-      information.
+      These information correspond to similar
+      <link linkend="libgwymodule-gwymodule-file">file module</link>
+      information.  All fields are case-sensitive.  The supported operations
+      line consists of a space-separated sublist from:
+      <simplelist>
+        <member><literal>load</literal></member>
+        <member><literal>save</literal></member>
+      </simplelist>
+      The file globs line consists of a space separated list of file globs
+      (not just extensions; note to Unix users: they are in fact GPatternSpec
+      globs, so character classes are not supported) of files the plug-in
+      claims it can read and/or
+      write.  Note the plug-in proxy has a notion of file glob specificity
+      and prefers to give chance to the plug-in whose file glob is the most
+      specific if more than one match.  So while it is possible to register
+      <filename>*.*</filename> the effect is quite the opposite of getting
+      all files Gwyddion tries to open or write.
+    </para>
+    <para>
+      So the output of plugin <command>acme_v5</command> when run as
+      <command>acme_v5 register</command> could look:
     </para>
     <screen><![CDATA[
-acme_file_v5
+acme_v5
 ACME AFM Data Format v5 (*.ac5)
-*.ac5
+*.ac5 *.acme5
 load save
 ]]></screen>
+  </refsect1>
+  <refsect1>
+    <title>Loading</title>
+    <para>
+      To be written.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Saving</title>
+    <para>
+      To be written.
+    </para>
   </refsect1>
 </refentry>
 
