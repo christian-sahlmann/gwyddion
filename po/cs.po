@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
 "POT-Creation-Date: 2004-10-11 14:04+0200\n"
-"PO-Revision-Date: 2004-10-11 14:06+0200\n"
+"PO-Revision-Date: 2004-10-11 15:41+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -667,7 +667,7 @@ msgstr "standardní ikony"
 
 #: app/gwyddion.c:120
 msgid "Initializing GUI"
-msgstr ""
+msgstr "Inicializuji GUI"
 
 #: app/gwyddion.c:227
 #, c-format
@@ -687,11 +687,11 @@ msgstr "<b>Počátek</b>"
 
 #: app/unitool.c:724
 msgid "X"
-msgstr ""
+msgstr "X"
 
 #: app/unitool.c:729
 msgid "Y"
-msgstr ""
+msgstr "Y"
 
 #: app/unitool.c:735
 msgid "<b>Size</b>"
@@ -1210,46 +1210,54 @@ msgstr "Jméno „%s“ je neplatné."
 #: modules/file/rawfile.c:2013
 #, c-format
 msgid "Not enough lines (%d) for offset (%d)"
-msgstr ""
+msgstr "Příliš málo řádků (%d), než aby šlo začít od pozice %d"
 
 #: modules/file/rawfile.c:2038
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
 msgstr ""
+"Čekal jsem bílé znaky, abych mohl přeskočit další pole v řádku %u, ale "
+"narazil jsem na „%.16s“"
 
 #: modules/file/rawfile.c:2051
 #, c-format
 msgid "Expected `%c' to skip more fields in row %u, got `%.16s'"
-msgstr ""
+msgstr "Čekal jsem „%c“, abych mohl přeskočit další pole v řádku %u, ale "
+"narazil jsem na „%.16s“"
 
 #: modules/file/rawfile.c:2065
 #, c-format
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
-msgstr ""
+msgstr "Čekal jsem „%s“, abych mohl přeskočit další pole v řádku %u, ale "
+"narazil jsem na „%.16s“"
 
 #: modules/file/rawfile.c:2082 modules/file/rawfile.c:2096
 #: modules/file/rawfile.c:2122
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
-msgstr ""
+msgstr "Nesmysly „%.16s“ v řádku %u, sloupci %u"
 
 #: modules/file/rawfile.c:2108
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
 msgstr ""
+"Čekal bych oddělovač „%c“ po datech v řádku %u, sloupci %u, ale narazil "
+"jsem na „%c“"
 
 #: modules/file/rawfile.c:2134
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
 msgstr ""
+"Čekal bych oddělovač „%s“ po datech v řádku %u, sloupci %u, ale narazil "
+"jsem na „%.16s“"
 
 #: modules/file/gwyfile.c:50
 msgid "Load and save Gwyddion native serialized objects."
-msgstr ""
+msgstr "Načítá a ukládá přirozené serializované objekty Gwyddionu."
 
 #: modules/file/gwyfile.c:66
-msgid "Gwyddion native serialized objects (.gwy)"
-msgstr ""
+msgid "Gwyddion native format (.gwy)"
+msgstr "Přirozený formát Gwyddionu (.gwy) "
 
 #: modules/graph/graph_points.c:119
 msgid "Measure distances"
@@ -1336,8 +1344,8 @@ msgid "Value"
 msgstr "Hodnota"
 
 #: modules/tools/pointer.c:177 modules/tools/level3.c:196
-msgid "Averaging _radius:"
-msgstr ""
+msgid "_Averaging radius:"
+msgstr "_Poloměr oblasti průměrování:"
 
 #: modules/tools/distance.c:138
 msgid "Distances"
@@ -1736,15 +1744,15 @@ msgstr ""
 #: modules/process/mask_grow_shrink.c:173 modules/process/slope_dist.c:194
 #: modules/process/rotate.c:186 modules/process/polylevel.c:181
 msgid "_Reset"
-msgstr ""
+msgstr "_Obnovit"
 
 #: modules/process/scale.c:176
 msgid "Scale by _ratio:"
-msgstr ""
+msgstr "Zvětšit/zmenšit v _poměru:"
 
 #: modules/process/scale.c:185
 msgid "New _width:"
-msgstr ""
+msgstr "Nová šířk_a:"
 
 #: modules/process/scale.c:195
 msgid "New _height:"
@@ -1752,39 +1760,39 @@ msgstr "Nová _výška:"
 
 #: modules/process/scars.c:96
 msgid "Scar detection and removal."
-msgstr ""
+msgstr "Detekce a odstranění šrámů."
 
 #: modules/process/scars.c:112
 msgid "/_Correct Data/M_ark Scars"
-msgstr ""
+msgstr "/_Korekce dat/O_znač šrámy"
 
 #: modules/process/scars.c:119
 msgid "/_Correct Data/Remove _Scars"
-msgstr ""
+msgstr "/_Korekce dat/_Odstraň šrámy"
 
 #: modules/process/scars.c:375
 msgid "Mark Scars"
-msgstr ""
+msgstr "Označení šrámů"
 
 #: modules/process/scars.c:378
 msgid "_Update preview"
-msgstr ""
+msgstr "A_ktualizuj náhled"
 
 #: modules/process/scars.c:409
 msgid "Maximum _width:"
-msgstr ""
+msgstr "Maximální šířk_a:"
 
 #: modules/process/scars.c:415
 msgid "Minimum _length:"
-msgstr ""
+msgstr "Minimální _délka:"
 
 #: modules/process/scars.c:421
 msgid "_Hard threshold:"
-msgstr ""
+msgstr "_Tvrdý práh:"
 
 #: modules/process/scars.c:430
 msgid "_Soft threshold:"
-msgstr ""
+msgstr "_Měkký práh:"
 
 #: modules/process/scars.c:439 modules/process/grain_wshed.c:237
 #: modules/process/grain_rem_threshold.c:237 modules/process/grain_mark.c:262
@@ -1793,11 +1801,11 @@ msgstr "Barva _masky v náhledu:"
 
 #: modules/process/angle_dist.c:102
 msgid "Angle distribution."
-msgstr ""
+msgstr "Rozdělení úhlů."
 
 #: modules/process/angle_dist.c:118
 msgid "/_Statistics/_Angle Distribution..."
-msgstr ""
+msgstr "/_Statistika/Rozdělení ú_hlů..."
 
 #: modules/process/angle_dist.c:151
 msgid "Computing angle distribution"
@@ -1813,11 +1821,11 @@ msgstr "Rozdělení úhlů"
 
 #: modules/process/angle_dist.c:193 modules/process/slope_dist.c:224
 msgid "Output _size:"
-msgstr ""
+msgstr "_Velikost výstupu:"
 
 #: modules/process/angle_dist.c:199
 msgid "_Number of steps:"
-msgstr ""
+msgstr "Počet _kroků:"
 
 #: modules/process/angle_dist.c:205 modules/process/slope_dist.c:230
 msgid "_Logarithmic value scale"
@@ -1833,7 +1841,7 @@ msgstr "Velikost _roviny:"
 
 #: modules/process/level.c:43
 msgid "Simple automatic levelling."
-msgstr ""
+msgstr "Jednoduché automatické vyrovnání."
 
 #: modules/process/level.c:59
 msgid "/_Level/_Level"
@@ -1849,7 +1857,7 @@ msgstr "/_Vyrovnání/Oprava _nuly"
 
 #: modules/process/shade.c:180
 msgid "Shading"
-msgstr ""
+msgstr "Stínování"
 
 #: modules/process/maskcor.c:162
 msgid "Mask by correlation"
@@ -1901,7 +1909,7 @@ msgstr "Hexagonální"
 
 #: modules/process/unrotate.c:86
 msgid "Rotates data to make main directions parallel with x or y axis."
-msgstr ""
+msgstr "Rotuje daty, aby zrovnoběžnil význačné směry s osou x či y."
 
 #: modules/process/unrotate.c:102
 msgid "/_Correct Data/_Unrotate..."
@@ -1925,31 +1933,31 @@ msgstr "Korekce rotace:"
 
 #: modules/process/mask_grow_shrink.c:67
 msgid "Grows and shrinks masks."
-msgstr ""
+msgstr "Rošiřuje a zmenšuje masky."
 
 #: modules/process/mask_grow_shrink.c:83
 msgid "/_Mask Operations/_Grow Mask..."
-msgstr ""
+msgstr "/_Maska/_Rozšíření masky..."
 
 #: modules/process/mask_grow_shrink.c:90
 msgid "/_Mask Operations/_Shrink Mask..."
-msgstr ""
+msgstr "/_Maska/_Zmenšení masky..."
 
 #: modules/process/mask_grow_shrink.c:114
 msgid "Grow Mask"
-msgstr ""
+msgstr "Rozšíření masky"
 
 #: modules/process/mask_grow_shrink.c:115
 msgid "Grow mask by:"
-msgstr ""
+msgstr "Rozšiř masku o:"
 
 #: modules/process/mask_grow_shrink.c:120
 msgid "Shrink Mask"
-msgstr ""
+msgstr "Zmenšení masky"
 
 #: modules/process/mask_grow_shrink.c:121
 msgid "Shrink mask by:"
-msgstr ""
+msgstr "Zmenši masku o:"
 
 #: modules/process/tip_blind.c:181
 msgid "Partial estimation"
@@ -1977,11 +1985,11 @@ msgstr ""
 
 #: modules/process/slope_dist.c:103
 msgid "Slope distribution."
-msgstr ""
+msgstr "Rozdělení sklonu."
 
 #: modules/process/slope_dist.c:119
 msgid "/_Statistics/_Slope Distribution..."
-msgstr ""
+msgstr "/_Statistika/Rozdělení _Sklonu"
 
 #: modules/process/slope_dist.c:162
 msgid "Slope"
@@ -1989,11 +1997,11 @@ msgstr "Sklon"
 
 #: modules/process/slope_dist.c:182
 msgid "_Two-dimensional distribution"
-msgstr ""
+msgstr "_Dvojrozměrné rozdělení"
 
 #: modules/process/slope_dist.c:183
 msgid "Per-angle _graph"
-msgstr ""
+msgstr "_Graf podle úhlu"
 
 #: modules/process/slope_dist.c:192
 msgid "Slope Distribution"
@@ -2048,31 +2056,31 @@ msgstr "_Rozšiř výsledek, aby se vešla celá data"
 
 #: modules/process/basicops.c:51
 msgid "Basic operations like inversion or flipping."
-msgstr ""
+msgstr "Základní operace jako inverze či překlopení."
 
 #: modules/process/basicops.c:67
 msgid "/_Basic Operations/Flip _Horizontally"
-msgstr ""
+msgstr "/_Jednoduché operace/_Vodorovné překlopení"
 
 #: modules/process/basicops.c:74
 msgid "/_Basic Operations/Flip _Vertically"
-msgstr ""
+msgstr "/_Jednoduché operace/_Svislé překlopení"
 
 #: modules/process/basicops.c:81
 msgid "/_Basic Operations/_Invert Value"
-msgstr ""
+msgstr "/_Jednoduché operations/_Inverze hodnoty"
 
 #: modules/process/basicops.c:88
 msgid "/_Basic Operations/_Rotate Clockwise"
-msgstr ""
+msgstr "/_Jednoduché operations/Rotace v _záporném smyslu"
 
 #: modules/process/basicops.c:95
 msgid "/_Basic Operations/Rotate _Counterclockwise"
-msgstr ""
+msgstr "/_Jednoduché operations/Rotace v _kladném smyslu"
 
 #: modules/process/basicops.c:102
 msgid "/_Basic Operations/Flip _Both"
-msgstr ""
+msgstr "/_Jednoduché operace/Překlopení v _obou směrech"
 
 #: modules/process/grain_wshed.c:164
 msgid "Mark grains by watershed algorithm"
@@ -2140,7 +2148,7 @@ msgstr ""
 
 #: modules/process/polylevel.c:74
 msgid "Subtract polynomial background."
-msgstr ""
+msgstr "Odečtení polynomiálního pozadí."
 
 #: modules/process/polylevel.c:90
 msgid "/_Level/_Polynomial Background..."
@@ -2274,35 +2282,3 @@ msgstr ""
 msgid "Merge mode:"
 msgstr ""
 
-#~ msgid "Show value"
-#~ msgstr "Zobrazení hodnoty"
-
-#~ msgid "Removal _method"
-#~ msgstr "_Metoda odstranění"
-
-#~ msgid "The dimensions differ.\n"
-#~ msgstr "Rozměry dat se liší.\n"
-
-#~ msgid "The real dimensions differ.\n"
-#~ msgstr "Fyzické rozměry dat se liší.\n"
-
-#~ msgid "Mark scars"
-#~ msgstr "Vyznačení šrámů"
-
-#~ msgid "Maximum width"
-#~ msgstr "Maximální šířka"
-
-#~ msgid "Minimum length"
-#~ msgstr "Maximální délka"
-
-#~ msgid "Hard threshold"
-#~ msgstr "Tvrdý práh"
-
-#~ msgid "Soft threshold"
-#~ msgstr "Měkký práh"
-
-#~ msgid "Output size:"
-#~ msgstr "_Velikost výstupu:"
-
-#~ msgid "Number of steps:"
-#~ msgstr "Počet _kroků:"
