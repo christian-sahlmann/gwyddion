@@ -543,8 +543,10 @@ gwy_app_menu_set_recent_files_menu(GtkWidget *menu)
  * @sens_data: Menu sensitivity data.
  *
  * Updates menus and toolbox sensititivity to reflect @sens_data.
+ *
+ * Returns: Always %FALSE.
  **/
-void
+gboolean
 gwy_app_toolbox_update_state(GwyMenuSensData *sens_data)
 {
     GSList *l;

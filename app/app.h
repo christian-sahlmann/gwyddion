@@ -27,6 +27,13 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+    GWY_APP_WINDOW_TYPE_DATA  = 1,
+    GWY_APP_WINDOW_TYPE_GRAPH = 2,
+    GWY_APP_WINDOW_TYPE_3D    = 4,
+    GWY_APP_WINDOW_TYPE_ANY   = 7
+} GwyAppWindowType;
+
 GwyContainer*   gwy_app_get_current_data             (void);
 GwyDataWindow*  gwy_app_data_window_get_current      (void);
 void            gwy_app_data_window_set_current      (GwyDataWindow *window);
@@ -34,18 +41,25 @@ void            gwy_app_data_window_remove           (GwyDataWindow *window);
 void            gwy_app_data_window_foreach          (GFunc func,
                                                       gpointer user_data);
 GtkWidget*      gwy_app_data_window_create           (GwyContainer *data);
-gint            gwy_app_data_window_set_untitled     (GwyDataWindow *window,
-                                                      const gchar *templ);
-void            gwy_app_data_view_update             (GtkWidget *data_view);
 gulong          gwy_app_data_window_list_add_hook    (gpointer func,
                                                       gpointer data);
 gboolean        gwy_app_data_window_list_remove_hook (gulong hook_id);
 
 
+GtkWidget*      gwy_app_graph_window_create          (GtkWidget *graph);
+void            gwy_app_graph_window_remove          (GtkWidget *window);
 GtkWidget*      gwy_app_graph_window_get_current     (void);
 void            gwy_app_graph_window_set_current     (GtkWidget *window);
-void            gwy_app_graph_window_remove          (GtkWidget *window);
-GtkWidget*      gwy_app_graph_window_create          (GtkWidget *graph);
+
+GtkWidget*      gwy_app_3d_window_create             (GwyContainer *data);
+void            gwy_app_3d_window_remove             (GtkWidget *window);
+GtkWidget*      gwy_app_3d_window_get_current        (void);
+void            gwy_app_3d_window_set_current        (GtkWidget *window);
+
+GtkWidget*      gwy_app_get_current_window           (GwyAppWindowType type);
+gint            gwy_app_data_window_set_untitled     (GwyDataWindow *window,
+                                                      const gchar *templ);
+void            gwy_app_data_view_update             (GtkWidget *data_view);
 GtkWidget*      gwy_app_main_window_get              (void);
 
 gboolean        gwy_app_quit                         (void);

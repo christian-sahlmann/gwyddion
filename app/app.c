@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
@@ -31,8 +31,14 @@
 
 static GtkWidget *gwy_app_main_window = NULL;
 
+/* list of existing windows of different kinds. FIXME: maybe some common
+ * management functions could be factored out? Unfortunately the data window
+ * managements logic differs slightly from the other two. */
 static GList *current_data = NULL;
-static GList *current_graphs = NULL;
+static GList *current_graph = NULL;
+static GList *current_3d = NULL;
+static GtkWidget *current_any = NULL;
+
 static const gchar* current_tool = NULL;
 static gint untitled_no = 0;
 
@@ -46,11 +52,18 @@ static void       gwy_app_data_window_list_updated (void);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_data_popup_menu_popup    (GtkWidget *menu,
                                                     GdkEventButton *event);
+static void       gwy_app_set_current_window       (GtkWidget *window);
 #ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
 static void       gwy_app_graph_list_toggle_cb     (GtkWidget *toggle,
                                                     GwyDataWindow *data_window);
 static gboolean   gwy_app_graph_list_delete_cb     (GtkWidget *toggle);
 #endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
+
+/*****************************************************************************
+ *                                                                           *
+ *     Main, toolbox                                                         *
+ *                                                                           *
+ *****************************************************************************/
 
 gboolean
 gwy_app_quit(void)
@@ -106,6 +119,105 @@ gwy_app_main_window_restore_position(void)
 }
 
 /**
+ * gwy_app_main_window_get:
+ *
+ * Returns Gwyddion main application window (toolbox).
+ *
+ * Returns: The Gwyddion toolbox.
+ **/
+GtkWidget*
+gwy_app_main_window_get(void)
+{
+    if (!gwy_app_main_window)
+        g_critical("Trying to access app main window before its creation");
+    return gwy_app_main_window;
+}
+
+/**
+ * gwy_app_main_window_set:
+ * @window: A window.
+ *
+ * Sets Gwyddion main application window (toolbox) for
+ * gwy_app_main_window_get().
+ *
+ * This function can be called only once and should be called at Gwyddion
+ * startup so, ignore it.
+ **/
+void
+gwy_app_main_window_set(GtkWidget *window)
+{
+    if (gwy_app_main_window && window != gwy_app_main_window)
+        g_critical("Trying to change app main window");
+    if (!GTK_IS_WINDOW(window))
+        g_critical("Setting app main window to a non-GtkWindow");
+    gwy_app_main_window = window;
+}
+
+static gboolean
+gwy_app_confirm_quit(void)
+{
+    GSList *unsaved = NULL;
+    gboolean ok;
+
+    gwy_app_data_window_foreach((GFunc)gather_unsaved_cb, &unsaved);
+    if (!unsaved)
+        return TRUE;
+    ok = gwy_app_confirm_quit_dialog(unsaved);
+    g_slist_free(unsaved);
+
+    return ok;
+}
+
+static void
+gather_unsaved_cb(GwyDataWindow *data_window,
+                  GSList **unsaved)
+{
+    GwyContainer *data = gwy_data_window_get_data(data_window);
+
+    if (g_object_get_data(G_OBJECT(data), "gwy-app-modified"))
+        *unsaved = g_slist_prepend(*unsaved, data_window);
+}
+
+static gboolean
+gwy_app_confirm_quit_dialog(GSList *unsaved)
+{
+    GtkWidget *dialog;
+    gchar *text;
+    gint response;
+
+    text = NULL;
+    while (unsaved) {
+        GwyDataWindow *data_window = GWY_DATA_WINDOW(unsaved->data);
+        gchar *filename = gwy_data_window_get_base_name(data_window);
+
+        text = g_strconcat(filename, "\n", text, NULL);
+        unsaved = g_slist_next(unsaved);
+        g_free(filename);
+    }
+    dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_main_window_get()),
+                                    GTK_DIALOG_MODAL,
+                                    GTK_MESSAGE_QUESTION,
+                                    GTK_BUTTONS_YES_NO,
+                                    _("Some data are unsaved:\n"
+                                      "%s\n"
+                                      "Really quit?"),
+                                    text);
+    g_free(text);
+
+    gtk_window_present(GTK_WINDOW(dialog));
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+
+    return response == GTK_RESPONSE_YES;
+}
+
+/*****************************************************************************
+ *                                                                           *
+ *     Data window list management                                           *
+ *                                                                           *
+ *****************************************************************************/
+
+/**
  * gwy_app_data_window_get_current:
  *
  * Returns the currently active data window, may be %NULL if none is active.
@@ -142,7 +254,7 @@ gwy_app_get_current_data(void)
  * gwy_app_data_window_set_current:
  * @window: A data window.
  *
- * Makes a data window active, including tool switch, etc.
+ * Makes a data window current, including tool switch, etc.
  *
  * The window must be present in the list.
  **/
@@ -167,7 +279,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(window));
     item = g_list_find(current_data, window);
-    g_assert(item);
+    g_return_if_fail(item);
     current_data = g_list_remove_link(current_data, item);
     current_data = g_list_concat(item, current_data);
 
@@ -187,6 +299,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 
     gwy_app_toolbox_update_state(&sens_data);
     already_current = window;
+    gwy_app_set_current_window(GTK_WIDGET(window));
 }
 
 /**
@@ -197,6 +310,7 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
  *
  * All associated structures are freed, active tool gets switched to %NULL
  * window.  But the widget itself is NOT destroyed by this function.
+ * It just makes the application `forget' about the window.
  **/
 void
 gwy_app_data_window_remove(GwyDataWindow *window)
@@ -250,6 +364,7 @@ gwy_app_data_window_create(GwyContainer *data)
     GtkWidget *data_window, *data_view, *corner;
     GtkObject *layer;
 
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     if (!popup_menu) {
         popup_menu = gwy_app_menu_data_popup_create(NULL);
         gtk_widget_show_all(popup_menu);
@@ -303,121 +418,6 @@ gwy_app_data_window_create(GwyContainer *data)
     gwy_app_data_window_list_updated();
 
     return data_window;
-}
-
-#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
-static void
-gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
-                             GwyDataWindow *data_window)
-{
-    GtkWidget *graph_view;
-    gint x, y;
-
-    graph_view = g_object_get_data(G_OBJECT(data_window),
-                                   "gwy-app-graph-list-window");
-
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle))) {
-        gtk_window_get_position(GTK_WINDOW(graph_view), &x, &y);
-        /* to store zero reliably */
-        x += 10000;
-        y += 10000;
-        g_object_set_data(G_OBJECT(graph_view), "window-position-x",
-                        GINT_TO_POINTER(x));
-        g_object_set_data(G_OBJECT(graph_view), "window-position-y",
-                        GINT_TO_POINTER(y));
-        gtk_widget_hide(graph_view);
-        return;
-    }
-
-    if (graph_view) {
-        x = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(graph_view),
-                                              "window-position-x"));
-        y = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(graph_view),
-                                              "window-position-y"));
-        /* XXX: move twice since most windowmanagers ignore the first, nicer
-         * one */
-        if (x > 0 && y > 0)
-            gtk_window_move(GTK_WINDOW(graph_view), x - 10000, y - 10000);
-        gtk_widget_show(graph_view);
-        if (x > 0 && y > 0)
-            gtk_window_move(GTK_WINDOW(graph_view), x - 10000, y - 10000);
-        return;
-    }
-
-    graph_view = gwy_app_graph_list_new(data_window);
-    g_signal_connect_swapped(graph_view, "delete_event",
-                             G_CALLBACK(gwy_app_graph_list_delete_cb), toggle);
-    gtk_window_set_transient_for(GTK_WINDOW(graph_view),
-                                 GTK_WINDOW(data_window));
-    gtk_window_present(GTK_WINDOW(graph_view));
-}
-
-static gboolean
-gwy_app_graph_list_delete_cb(GtkWidget *toggle)
-{
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(toggle), FALSE);
-
-    return TRUE;
-}
-#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
-
-static GtkWidget*
-gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
-{
-    static struct {
-        const gchar *path;
-        gpointer callback;
-        gpointer cbdata;
-    }
-    const menu_items[] = {
-        { "/_Remove Mask", gwy_app_mask_kill_cb, NULL },
-        { "/Mask _Color",  gwy_app_change_mask_color_cb, NULL },
-        { "/Fix _Zero", gwy_app_run_process_func_cb, "fixzero" },
-        { "/_Level", gwy_app_run_process_func_cb, "level" },
-        { "/Zoom _1:1", gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
-    };
-    static const gchar *items_need_data_mask[] = {
-        "/Remove Mask", "/Mask Color", NULL
-    };
-    GtkItemFactoryEntry entry = { NULL, NULL, NULL, 0, NULL, NULL };
-    GtkItemFactory *item_factory;
-    GtkWidget *menu;
-    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_MASK, 0 };
-    GList *menus;
-    gsize i;
-
-    /* XXX: it is probably wrong to use this accel group */
-    item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<data-popup>",
-                                        accel_group);
-    for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
-        entry.path = (gchar*)menu_items[i].path;
-        entry.callback = (GtkItemFactoryCallback)menu_items[i].callback;
-        gtk_item_factory_create_item(item_factory, &entry,
-                                     menu_items[i].cbdata, 1);
-    }
-    menu = gtk_item_factory_get_widget(item_factory, "<data-popup>");
-    gwy_app_menu_set_sensitive_array(item_factory, "data-popup",
-                                     items_need_data_mask, sens_data.flags);
-
-    /* XXX: assuming g_list_append() doesn't change nonempty list head */
-    menus = (GList*)g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
-                                      "menus");
-    g_assert(menus);
-    g_list_append(menus, menu);
-
-    return menu;
-}
-
-static gboolean
-gwy_app_data_popup_menu_popup(GtkWidget *menu,
-                              GdkEventButton *event)
-{
-    if (event->button != 3)
-        return FALSE;
-
-    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
-                   event->button, event->time);
-    return TRUE;
 }
 
 static void
@@ -484,6 +484,50 @@ gwy_app_data_window_list_remove_hook(gulong hook_id)
     return g_hook_destroy(&window_list_hook_list, hook_id);
 }
 
+/*
+ * Assures @window is present in the data window list, but doesn't make
+ * it current.
+ *
+ * XXX: WTF?
+ */
+void
+gwy_app_data_window_add(GwyDataWindow *window)
+{
+    gwy_debug("%p", window);
+
+    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
+
+    if (g_list_find(current_data, window))
+        return;
+
+    current_data = g_list_append(current_data, window);
+}
+
+/**
+ * gwy_app_data_window_foreach:
+ * @func: A function to call on each data window.
+ * @user_data: Data to pass to @func.
+ *
+ * Calls @func on each data window, in no particular order.
+ *
+ * The function should not create or remove data windows.
+ **/
+void
+gwy_app_data_window_foreach(GFunc func,
+                            gpointer user_data)
+{
+    GList *l;
+
+    for (l = current_data; l; l = g_list_next(l))
+        func(l->data, user_data);
+}
+
+/*****************************************************************************
+ *                                                                           *
+ *     Graph window list management                                          *
+ *                                                                           *
+ *****************************************************************************/
+
 /**
  * gwy_app_graph_window_get_current:
  *
@@ -495,14 +539,14 @@ gwy_app_data_window_list_remove_hook(gulong hook_id)
 GtkWidget*
 gwy_app_graph_window_get_current(void)
 {
-    return current_graphs ? current_graphs->data : NULL;
+    return current_graph ? current_graph->data : NULL;
 }
 
 /**
  * gwy_app_graph_window_set_current:
  * @window: A graph window.
  * 
- * Makes a graph window active.
+ * Makes a graph window current.
  *
  * Eventually adds @window it to the graph window list if it isn't present
  * there.
@@ -517,22 +561,23 @@ gwy_app_graph_window_set_current(GtkWidget *window)
 
     gwy_debug("%p", window);
 
-    item = g_list_find(current_graphs, window);
-    g_assert(item);
-    current_graphs = g_list_remove_link(current_graphs, item);
-    current_graphs = g_list_concat(item, current_graphs);
+    item = g_list_find(current_graph, window);
+    g_return_if_fail(item);
+    current_graph = g_list_remove_link(current_graph, item);
+    current_graph = g_list_concat(item, current_graph);
 
     gwy_app_toolbox_update_state(&sens_data);
+    gwy_app_set_current_window(window);
 }
 
 /**
  * gwy_app_graph_window_remove:
- * @window: A data window.
+ * @window: A graph window.
  *
  * Removes the graph window @window from the list of graph windows.
  *
  * All associated structures are freed, but the widget itself is NOT destroyed
- * by this function.
+ * by this function.  It just makes the application `forget' about the window.
  **/
 void
 gwy_app_graph_window_remove(GtkWidget *window)
@@ -542,17 +587,15 @@ gwy_app_graph_window_remove(GtkWidget *window)
     };
     GList *item;
 
-    /*g_return_if_fail(GWY_IS_GRAPH(graph));*/
-
-    item = g_list_find(current_graphs, window);
+    item = g_list_find(current_graph, window);
     if (!item) {
         g_critical("Trying to remove GwyGraph %p not present in the list",
                    window);
         return;
     }
-    current_graphs = g_list_delete_link(current_graphs, item);
-    if (current_graphs)
-        gwy_app_graph_window_set_current(current_graphs->data);
+    current_graph = g_list_delete_link(current_graph, item);
+    if (current_graph)
+        gwy_app_graph_window_set_current(current_graph->data);
     else
         gwy_app_toolbox_update_state(&sens_data);
 }
@@ -561,7 +604,7 @@ gwy_app_graph_window_remove(GtkWidget *window)
  * gwy_app_graph_window_create:
  * @graph: A #GwyGraph;
  *
- * Creates a new graph window showing @data and does some basic setup.
+ * Creates a new graph window showing @graph and does some basic setup.
  *
  * Also calls gtk_window_present() on it.
  *
@@ -595,7 +638,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
     g_signal_connect(window, "destroy",
                      G_CALLBACK(gwy_app_graph_window_remove), NULL);
 
-    current_graphs = g_list_append(current_graphs, window);
+    current_graph = g_list_append(current_graph, window);
 
     gtk_container_add(GTK_CONTAINER(window), graph);
     gtk_widget_show(graph);
@@ -604,6 +647,252 @@ gwy_app_graph_window_create(GtkWidget *graph)
 
     return window;
 }
+
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
+static void
+gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
+                             GwyDataWindow *data_window)
+{
+    GtkWidget *graph_view;
+    gint x, y;
+
+    graph_view = g_object_get_data(G_OBJECT(data_window),
+                                   "gwy-app-graph-list-window");
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle))) {
+        gtk_window_get_position(GTK_WINDOW(graph_view), &x, &y);
+        /* to store zero reliably */
+        x += 10000;
+        y += 10000;
+        g_object_set_data(G_OBJECT(graph_view), "window-position-x",
+                        GINT_TO_POINTER(x));
+        g_object_set_data(G_OBJECT(graph_view), "window-position-y",
+                        GINT_TO_POINTER(y));
+        gtk_widget_hide(graph_view);
+        return;
+    }
+
+    if (graph_view) {
+        x = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(graph_view),
+                                              "window-position-x"));
+        y = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(graph_view),
+                                              "window-position-y"));
+        /* XXX: move twice since most windowmanagers ignore the first, nicer
+         * one */
+        if (x > 0 && y > 0)
+            gtk_window_move(GTK_WINDOW(graph_view), x - 10000, y - 10000);
+        gtk_widget_show(graph_view);
+        if (x > 0 && y > 0)
+            gtk_window_move(GTK_WINDOW(graph_view), x - 10000, y - 10000);
+        return;
+    }
+
+    graph_view = gwy_app_graph_list_new(data_window);
+    g_signal_connect_swapped(graph_view, "delete_event",
+                             G_CALLBACK(gwy_app_graph_list_delete_cb), toggle);
+    gtk_window_set_transient_for(GTK_WINDOW(graph_view),
+                                 GTK_WINDOW(data_window));
+    gtk_window_present(GTK_WINDOW(graph_view));
+}
+
+static gboolean
+gwy_app_graph_list_delete_cb(GtkWidget *toggle)
+{
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(toggle), FALSE);
+
+    return TRUE;
+}
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
+
+/*****************************************************************************
+ *                                                                           *
+ *     3D window list management                                             *
+ *                                                                           *
+ *****************************************************************************/
+
+void
+gwy_app_3d_view_cb(void)
+{
+    gwy_app_3d_window_create(gwy_app_get_current_data());
+}
+
+/**
+ * gwy_app_3d_window_create:
+ * @data: A data container.
+ *
+ * Creates a new 3D view window showing @data and does some basic setup.
+ *
+ * Also calls gtk_window_present() on it.
+ *
+ * Returns: The newly created 3D view window.
+ *
+ * Since: 1.5
+ **/
+GtkWidget*
+gwy_app_3d_window_create(GwyContainer *data)
+{
+    GtkWidget *gwy3dview, *gwy3dwindow;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+    gwy3dview = gwy_3d_view_new(data);
+    gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
+    current_3d = g_list_append(current_3d, gwy3dwindow);
+
+    g_signal_connect(gwy3dwindow, "focus-in-event",
+                     G_CALLBACK(gwy_app_3d_window_set_current), NULL);
+    g_signal_connect(gwy3dwindow, "destroy",
+                     G_CALLBACK(gwy_app_3d_window_remove), NULL);
+
+    gtk_widget_show_all(gwy3dwindow);
+    gtk_window_present(GTK_WINDOW(gwy3dwindow));
+
+    return gwy3dwindow;
+}
+
+/**
+ * gwy_app_3d_window_get_current:
+ *
+ * Returns the currently active 3D view window.
+ *
+ * Returns: The active 3D view window as a #GtkWidget.
+ *          May return %NULL if none is currently active.
+ *
+ * Since: 1.5
+ **/
+GtkWidget*
+gwy_app_3d_window_get_current(void)
+{
+    return current_3d ? current_3d->data : NULL;
+}
+
+/**
+ * gwy_app_3d_window_set_current:
+ * @window: A 3D view window.
+ * 
+ * Makes a 3D view window current.
+ *
+ * Eventually adds @window it to the 3D view window list if it isn't present
+ * there.
+ *
+ * Since: 1.5
+ **/
+void
+gwy_app_3d_window_set_current(GtkWidget *window)
+{
+    /*
+    static const GwyMenuSensData sens_data = {
+        GWY_MENU_FLAG_3D, GWY_MENU_FLAG_3D
+    };
+    */
+    GList *item;
+
+    gwy_debug("%p", window);
+
+    item = g_list_find(current_3d, window);
+    g_return_if_fail(item);
+    current_3d = g_list_remove_link(current_3d, item);
+    current_3d = g_list_concat(item, current_3d);
+
+    /* FIXME: hangs
+     * g_idle_add((GSourceFunc)gwy_app_toolbox_update_state, &sens_data);*/
+    gwy_app_set_current_window(window);
+}
+
+/**
+ * gwy_app_3d_window_remove:
+ * @window: A 3D view window.
+ *
+ * Removes the 3D view window @window from the list of 3D view windows.
+ *
+ * All associated structures are freed, but the widget itself is NOT destroyed
+ * by this function.  It just makes the application `forget' about the window.
+ *
+ * Since: 1.5
+ **/
+void
+gwy_app_3d_window_remove(GtkWidget *window)
+{
+    /*
+    static const GwyMenuSensData sens_data = {
+        GWY_MENU_FLAG_3D, 0
+    };
+    */
+    GList *item;
+
+    g_return_if_fail(GWY_IS_3D_WINDOW(window));
+
+    item = g_list_find(current_3d, window);
+    if (!item) {
+        g_critical("Trying to remove 3D window %p not present in the list",
+                   window);
+        return;
+    }
+    current_3d = g_list_delete_link(current_3d, item);
+    if (current_3d)
+        gwy_app_3d_window_set_current(current_3d->data);
+    /* FIXME: hangs.
+    else
+        gwy_app_toolbox_update_state(&sens_data);
+        */
+}
+
+/*****************************************************************************
+ *                                                                           *
+ *     Any window list management                                            *
+ *                                                                           *
+ *****************************************************************************/
+
+static void
+gwy_app_set_current_window(GtkWidget *window)
+{
+    g_return_if_fail(GTK_IS_WINDOW(window));
+
+    current_any = window;
+}
+
+/**
+ * gwy_app_get_current_window:
+ * @type: Type of window to return.
+ *
+ * Returns the currently active window of a given type.
+ *
+ * Returns: The window, or %NULL if there is no such window.
+ *
+ * Since: 1.5
+ **/
+GtkWidget*
+gwy_app_get_current_window(GwyAppWindowType type)
+{
+    switch (type) {
+        case GWY_APP_WINDOW_TYPE_ANY:
+        return current_any;
+        break;
+
+        case GWY_APP_WINDOW_TYPE_DATA:
+        return current_data ? (GtkWidget*)current_data->data : NULL;
+        break;
+
+        case GWY_APP_WINDOW_TYPE_GRAPH:
+        return current_graph ? (GtkWidget*)current_graph->data : NULL;
+        break;
+
+        case GWY_APP_WINDOW_TYPE_3D:
+        return current_3d ? (GtkWidget*)current_3d->data : NULL;
+        break;
+
+        default:
+        g_assert_not_reached();
+        return NULL;
+        break;
+    }
+}
+
+/*****************************************************************************
+ *                                                                           *
+ *     Miscellaneous                                                         *
+ *                                                                           *
+ *****************************************************************************/
+
 
 /**
  * gwy_app_data_view_update:
@@ -715,42 +1004,63 @@ gwy_app_data_window_set_untitled(GwyDataWindow *window,
     return untitled_no;
 }
 
-/*
- * Assures @window is present in the data window list, but doesn't make
- * it current.
- *
- * XXX: WTF?
- */
-void
-gwy_app_data_window_add(GwyDataWindow *window)
+static GtkWidget*
+gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
 {
-    gwy_debug("%p", window);
+    static struct {
+        const gchar *path;
+        gpointer callback;
+        gpointer cbdata;
+    }
+    const menu_items[] = {
+        { "/_Remove Mask", gwy_app_mask_kill_cb, NULL },
+        { "/Mask _Color",  gwy_app_change_mask_color_cb, NULL },
+        { "/Fix _Zero", gwy_app_run_process_func_cb, "fixzero" },
+        { "/_Level", gwy_app_run_process_func_cb, "level" },
+        { "/Zoom _1:1", gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
+    };
+    static const gchar *items_need_data_mask[] = {
+        "/Remove Mask", "/Mask Color", NULL
+    };
+    GtkItemFactoryEntry entry = { NULL, NULL, NULL, 0, NULL, NULL };
+    GtkItemFactory *item_factory;
+    GtkWidget *menu;
+    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_MASK, 0 };
+    GList *menus;
+    gsize i;
 
-    g_return_if_fail(GWY_IS_DATA_WINDOW(window));
+    /* XXX: it is probably wrong to use this accel group */
+    item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<data-popup>",
+                                        accel_group);
+    for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
+        entry.path = (gchar*)menu_items[i].path;
+        entry.callback = (GtkItemFactoryCallback)menu_items[i].callback;
+        gtk_item_factory_create_item(item_factory, &entry,
+                                     menu_items[i].cbdata, 1);
+    }
+    menu = gtk_item_factory_get_widget(item_factory, "<data-popup>");
+    gwy_app_menu_set_sensitive_array(item_factory, "data-popup",
+                                     items_need_data_mask, sens_data.flags);
 
-    if (g_list_find(current_data, window))
-        return;
+    /* XXX: assuming g_list_append() doesn't change nonempty list head */
+    menus = (GList*)g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
+                                      "menus");
+    g_assert(menus);
+    g_list_append(menus, menu);
 
-    current_data = g_list_append(current_data, window);
+    return menu;
 }
 
-/**
- * gwy_app_data_window_foreach:
- * @func: A function to call on each data window.
- * @user_data: Data to pass to @func.
- *
- * Calls @func on each data window, in no particular order.
- *
- * The function should not create or remove data windows.
- **/
-void
-gwy_app_data_window_foreach(GFunc func,
-                            gpointer user_data)
+static gboolean
+gwy_app_data_popup_menu_popup(GtkWidget *menu,
+                              GdkEventButton *event)
 {
-    GList *l;
+    if (event->button != 3)
+        return FALSE;
 
-    for (l = current_data; l; l = g_list_next(l))
-        func(l->data, user_data);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+    return TRUE;
 }
 
 void
@@ -796,23 +1106,6 @@ gwy_app_zoom_set_cb(gpointer data)
     g_return_if_fail(data_window);
     gwy_data_window_set_zoom(data_window, GPOINTER_TO_INT(data));
 }
-
-void
-gwy_app_3d_view_cb(void)
-{
-    GwyDataWindow *data_window;
-    GwyContainer *data;
-    GtkWidget *gwy3dview, *gwy3dwindow;
-
-    /* TODO */
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(data_window);
-    data = gwy_data_window_get_data(data_window);
-    gwy3dview = gwy_3d_view_new(data);
-    gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
-    gtk_widget_show_all(gwy3dwindow);
-}
-
 
 /**
  * gwy_app_clean_up_data:
@@ -864,99 +1157,6 @@ gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
                                 "/0/mask");
 }
 
-/**
- * gwy_app_main_window_get:
- *
- * Returns Gwyddion main application window (toolbox).
- *
- * Returns: The Gwyddion toolbox.
- **/
-GtkWidget*
-gwy_app_main_window_get(void)
-{
-    if (!gwy_app_main_window)
-        g_critical("Trying to access app main window before its creation");
-    return gwy_app_main_window;
-}
-
-/**
- * gwy_app_main_window_set:
- * @window: A window.
- *
- * Sets Gwyddion main application window (toolbox) for
- * gwy_app_main_window_get().
- *
- * This function can be called only once and should be called at Gwyddion
- * startup so, ignore it.
- **/
-void
-gwy_app_main_window_set(GtkWidget *window)
-{
-    if (gwy_app_main_window && window != gwy_app_main_window)
-        g_critical("Trying to change app main window");
-    if (!GTK_IS_WINDOW(window))
-        g_critical("Setting app main window to a non-GtkWindow");
-    gwy_app_main_window = window;
-}
-
-static gboolean
-gwy_app_confirm_quit(void)
-{
-    GSList *unsaved = NULL;
-    gboolean ok;
-
-    gwy_app_data_window_foreach((GFunc)gather_unsaved_cb, &unsaved);
-    if (!unsaved)
-        return TRUE;
-    ok = gwy_app_confirm_quit_dialog(unsaved);
-    g_slist_free(unsaved);
-
-    return ok;
-}
-
-static void
-gather_unsaved_cb(GwyDataWindow *data_window,
-                  GSList **unsaved)
-{
-    GwyContainer *data = gwy_data_window_get_data(data_window);
-
-    if (g_object_get_data(G_OBJECT(data), "gwy-app-modified"))
-        *unsaved = g_slist_prepend(*unsaved, data_window);
-}
-
-static gboolean
-gwy_app_confirm_quit_dialog(GSList *unsaved)
-{
-    GtkWidget *dialog;
-    gchar *text;
-    gint response;
-
-    text = NULL;
-    while (unsaved) {
-        GwyDataWindow *data_window = GWY_DATA_WINDOW(unsaved->data);
-        gchar *filename = gwy_data_window_get_base_name(data_window);
-
-        text = g_strconcat(filename, "\n", text, NULL);
-        unsaved = g_slist_next(unsaved);
-        g_free(filename);
-    }
-    dialog = gtk_message_dialog_new(GTK_WINDOW(gwy_app_main_window_get()),
-                                    GTK_DIALOG_MODAL,
-                                    GTK_MESSAGE_QUESTION,
-                                    GTK_BUTTONS_YES_NO,
-                                    _("Some data are unsaved:\n"
-                                      "%s\n"
-                                      "Really quit?"),
-                                    text);
-    g_free(text);
-
-    gtk_window_present(GTK_WINDOW(dialog));
-    response = gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-
-    return response == GTK_RESPONSE_YES;
-}
-
 /* FIXME: this functionality is provided by modules now -- remove? */
 void
 gwy_app_mask_kill_cb(void)
@@ -993,5 +1193,17 @@ gwy_app_show_kill_cb(void)
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
     }
 }
+
+/***** Documentation *******************************************************/
+
+/**
+ * GwyAppWindowType:
+ * @GWY_APP_WINDOW_TYPE_DATA: Normal 2D data window.
+ * @GWY_APP_WINDOW_TYPE_GRAPH: Graph window.
+ * @GWY_APP_WINDOW_TYPE_3D: 3D view window.
+ * @GWY_APP_WINDOW_TYPE_ANY: Window of any type.
+ *
+ * Application window types..
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -36,6 +36,7 @@ typedef enum {
     GWY_MENU_FLAG_LAST_GRAPH = 1 << 5,
     GWY_MENU_FLAG_DATA_MASK  = 1 << 6,
     GWY_MENU_FLAG_DATA_SHOW  = 1 << 7,
+/*    GWY_MENU_FLAG_3D         = 1 << 8, */
     GWY_MENU_FLAG_MASK       = 0xff
 } GwyMenuSensFlags;
 
@@ -58,7 +59,7 @@ void       gwy_app_menu_set_sensitive_array       (GtkItemFactory *item_factory,
 void       gwy_app_menu_set_sensitive_both        (GtkWidget *item,
                                                    GwyMenuSensFlags flags,
                                                    GwyMenuSensFlags state);
-void       gwy_app_toolbox_update_state           (GwyMenuSensData *sens_data);
+gboolean   gwy_app_toolbox_update_state           (GwyMenuSensData *sens_data);
 
 G_END_DECLS
 
