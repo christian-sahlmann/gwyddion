@@ -22,6 +22,8 @@
 #include "gwymacros.h"
 #include "gwyutils.h"
 
+static gchar *gwy_argv0 = NULL;
+
 /**
  * gwy_hash_table_to_slist_cb:
  * @unused_key: Hash key (unused).
@@ -235,6 +237,8 @@ gwy_debug_gnu(const gchar *domain,
  *
  * The returned value is not actually tested for existence, it's up to caller.
  *
+ * gwy_find_self_set_argv0() must be called first.
+ *
  * Returns: The path as a newly allocated string.
  **/
 gchar*
@@ -244,7 +248,7 @@ gwy_find_self_dir(const gchar *dirname)
 
     /* TODO: to be sure, we should put the path to the registry, too */
     /* argv[0] */
-    p = g_strdup(g_get_prgname());
+    p = g_strdup(gwy_argv0);
     if (!g_path_is_absolute(p)) {
         b = g_get_current_dir();
         q = g_build_filename(b, p, NULL);
@@ -261,6 +265,19 @@ gwy_find_self_dir(const gchar *dirname)
     g_free(p);
 
     return q;
+}
+
+/**
+ * gwy_find_self_set_argv0:
+ * @argv0: Program's argv[0].
+ *
+ * Sets argv0 so that gwy_find_self_dir() can find self.
+ **/
+void
+gwy_find_self_set_argv0(const gchar *argv0)
+{
+    g_free(gwy_argv0);
+    gwy_argv0 = g_strdup(argv0);
 }
 
 /************************** Documentation ****************************/

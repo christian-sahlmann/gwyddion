@@ -19,6 +19,7 @@
  */
 
 #include <libgwymodule/gwymodule.h>
+#include <libgwyddion/gwyutils.h>
 #include "app.h"
 #include "settings.h"
 #include "file.h"
@@ -30,6 +31,9 @@ main(int argc, char *argv[])
     gchar **module_dirs;
     gchar *config_file;
 
+#ifdef G_OS_WIN32
+    gwy_find_self_set_argv0(argv[0]);
+#endif
     gtk_init(&argc, &argv);
     config_file = gwy_app_settings_get_config_filename();
     gwy_app_init();
