@@ -37,10 +37,10 @@ gboolean   gwy_radio_buttons_set_current             (GSList *group,
                                                       gint current);
 gint       gwy_radio_buttons_get_current             (GSList *group,
                                                       const gchar *key);
-gboolean   gwy_radio_buttons_set_current_from_widget (GtkWidget *radio_button,
+gboolean   gwy_radio_buttons_set_current_from_widget (GtkWidget *widget,
                                                       const gchar *key,
                                                       gint current);
-gint       gwy_radio_buttons_get_current_from_widget (GtkWidget *radio_button,
+gint       gwy_radio_buttons_get_current_from_widget (GtkWidget *widget,
                                                       const gchar *key);
 
 G_END_DECLS
