@@ -31,6 +31,7 @@ AC_CONFIG_FILES(\
   devel-docs/libgwyprocess/Makefile \
   gwyddion.spec \
   gwyddion.iss \
+  gwyddion-devel.iss \
   gwyddion.pc \
 )
 AM_CONFIG_HEADER(config.h)
