@@ -19,7 +19,7 @@ Plane and rotation leveling
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
@@ -27,6 +27,8 @@ Plane and rotation leveling
 @pa: 
 @pbx: 
 @pby: 
+<!-- # Unused Parameters # -->
+@dfield: 
 
 
 <!-- ##### FUNCTION gwy_data_field_plane_coeffs ##### -->
@@ -34,6 +36,11 @@ Plane and rotation leveling
 
 </para>
 
+@data_field: 
+@pa: 
+@pbx: 
+@pby: 
+<!-- # Unused Parameters # -->
 @a: 
 @ap: 
 @bp: 
@@ -45,7 +52,11 @@ Plane and rotation leveling
 
 </para>
 
+@data_field: 
 @a: 
+@bx: 
+@by: 
+<!-- # Unused Parameters # -->
 @ap: 
 @bp: 
 @cp: 
@@ -56,10 +67,12 @@ Plane and rotation leveling
 
 </para>
 
-@a: 
+@data_field: 
 @xangle: 
 @yangle: 
 @interpolation: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_fit_polynom ##### -->
@@ -67,7 +80,7 @@ Plane and rotation leveling
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
@@ -76,6 +89,8 @@ Plane and rotation leveling
 @row_degree: 
 @coeffs: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@dfield: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_subtract_polynom ##### -->
@@ -83,7 +98,7 @@ Plane and rotation leveling
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
@@ -91,5 +106,7 @@ Plane and rotation leveling
 @col_degree: 
 @row_degree: 
 @coeffs: 
+<!-- # Unused Parameters # -->
+@dfield: 
 
 

@@ -2,11 +2,13 @@
 GwyGraphCurveModel
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Representation of a one graph curve.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+#GwyGraphCurveModel represents information about a graph curve necessary to
+fully reconstruct it.  It will be meaningfully used by the new generation of
+graph widgets and should be mostly ignored for now.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

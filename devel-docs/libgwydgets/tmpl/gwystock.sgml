@@ -300,63 +300,108 @@ Since: 1.5
 
 <!-- ##### MACRO GWY_STOCK_MASK_ADD ##### -->
 <para>
+The "Mask-Add" stock icon.
+<inlinegraphic fileref="gwy_mask_add-24.png" format="PNG"></inlinegraphic>
+</para>
 
+<para>
+Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_GROW ##### -->
 <para>
+The "Mask-Grow" stock icon.
+<inlinegraphic fileref="gwy_mask_grow-24.png" format="PNG"></inlinegraphic>
+</para>
 
+<para>
+Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_EDITOR ##### -->
 <para>
+The "Mask-Editor" stock icon.
+<inlinegraphic fileref="gwy_mask_editor-24.png" format="PNG"></inlinegraphic>
+</para>
 
+<para>
+Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_INTERSECT ##### -->
 <para>
+The "Mask-Intersect" stock icon.
+<inlinegraphic fileref="gwy_mask_intersect-24.png" format="PNG"></inlinegraphic>
+</para>
 
+<para>
+Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_INVERT ##### -->
 <para>
+The "Mask-Invert" stock icon.
+<inlinegraphic fileref="gwy_mask_invert-24.png" format="PNG"></inlinegraphic>
+</para>
 
+<para>
+Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_REMOVE ##### -->
 <para>
+The "Mask-Remove" stock icon.
+<inlinegraphic fileref="gwy_mask_remove-24.png" format="PNG"></inlinegraphic>
+</para>
 
+<para>
+Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_SET ##### -->
 <para>
+The "Mask-Set" stock icon.
+<inlinegraphic fileref="gwy_mask_set-24.png" format="PNG"></inlinegraphic>
+</para>
 
+<para>
+Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_SHRINK ##### -->
 <para>
+The "Mask-Shrink" stock icon.
+<inlinegraphic fileref="gwy_mask_shrink-24.png" format="PNG"></inlinegraphic>
+</para>
 
+<para>
+Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_SUBTRACT ##### -->
 <para>
+The "Mask-Subtract" stock icon.
+<inlinegraphic fileref="gwy_mask_subtract-24.png" format="PNG"></inlinegraphic>
+</para>
 
+<para>
+Since: 1.7
 </para>
 
 
