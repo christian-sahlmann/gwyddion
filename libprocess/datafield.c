@@ -721,7 +721,11 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
     gdouble inew, jnew, ir, jr, ang, icor, jcor, sn, cs, val;
     gint i,j;
 
-    if (((gint)angle%360) == 0)
+    angle = fmod(angle, 360.0);
+    if (angle < 0.0)
+        angle += 360.0;
+
+    if (angle == 0.0)
         return;
 
     gwy_data_field_alloc(&b, a->xres, a->yres);
@@ -737,19 +741,19 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
     jcor = (gdouble)a->xres/2
            + G_SQRT2*(gdouble)a->xres/2*cos(ang)
            + sn*(a->xres-a->yres)/2;;
-    if (angle == 90) {
+    if (angle == 90.0) {
         sn = 1.0;
         cs = 0.0;
         icor = 1.0;
         jcor = 0.0;
     }
-    if (angle == 180) {
+    if (angle == 180.0) {
         sn = 0.0;
         cs = -1.0;
         icor = 1.0;
         jcor = a->xres-1;
     }
-    if (angle == 270) {
+    if (angle == 270.0) {
         sn = -1.0;
         cs = 0.0;
         icor = a->yres;
@@ -792,38 +796,54 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
  * Make requested inversion(s).
  **/
 void
-gwy_data_field_invert(GwyDataField *a, gboolean x, gboolean y, gboolean z)
+gwy_data_field_invert(GwyDataField *a,
+                      gboolean x,
+                      gboolean y,
+                      gboolean z)
 {
     gint i,j;
     gdouble avg;
-    GwyDataField b;
+    gdouble *line, *ap, *ap2;
+    gsize linelen;
+    gdouble *data;
 
-    if (!x && !y && !z)
+    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+    data = a->data;
+
+    if (z) {
+        avg = gwy_data_field_get_avg(a);
+        ap = data;
+        for (i = a->yres*a->xres; i; i--) {
+            *ap = 2*avg - *ap;
+            ap++;
+        }
+    }
+
+    if (!x && !y)
         return;
 
-    gwy_data_field_alloc(&b, a->xres, a->yres);
-
+    line = g_new(gdouble, a->xres);
+    linelen = a->xres*sizeof(gdouble);
     if (y) {
-        gwy_data_field_copy(a, &b);
         for (i = 0; i < a->yres; i++) {
+            ap = data + i*a->xres;
+            memcpy(line, ap, linelen);
             for (j = 0; j < a->xres; j++)
-                a->data[i + a->yres*j] = b.data[i + a->yres*(a->xres-j-1)];
+                ap[j] = line[a->xres-j-1];
         }
     }
     if (x) {
-        gwy_data_field_copy(a, &b);
-        for (i = 0; i < a->yres; i++) {
-            for (j = 0; j < a->xres; j++)
-                a->data[i + a->yres*j] = b.data[a->yres - i - 1 + a->yres*j];
+        /* What is lesser evil?
+         * allocating one extra datafield or doing 50% extra memcpy()s */
+        for (i = 0; i < a->yres/2; i++) {
+            ap = data + i*a->xres;
+            ap2 = data + (a->yres-i-1)*a->xres;
+            memcpy(line, ap, linelen);
+            memcpy(ap, ap2, linelen);
+            memcpy(ap2, line, linelen);
         }
     }
-    if (z) {
-        avg = gwy_data_field_get_avg(a);
-        for (i = 0; i < (a->yres*a->xres); i++)
-            a->data[i] = 2*avg - a->data[i];
-    }
-
-    gwy_data_field_free(&b);
+    g_free(line);
 }
 
 /**
