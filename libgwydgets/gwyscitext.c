@@ -425,10 +425,27 @@ stupid_put_entities(GList *items)
         stupid_put_entity(items, i);
 }
 
+/**
+ * gwy_sci_text_get_text:
+ * @sci_text: A science text widget.
+ *
+ * Returns the text.
+ *
+ * The text is already in UTF-8 with all entities converted.
+ *
+ * Returns: The text as a newly allocated string. It should be freed when no
+ *          longer used.
+ **/
 gchar*
 gwy_sci_text_get_text(GwySciText *sci_text)
 {
-    return gtk_editable_get_chars(GTK_EDITABLE(sci_text->entry), 0, -1);
+    gchar *text, *utf8;
+
+    text = gtk_editable_get_chars(GTK_EDITABLE(sci_text->entry), 0, -1);
+    utf8 = gwy_entities_text_to_utf8(text);
+    g_free(text);
+
+    return utf8;
 }
 
 static void

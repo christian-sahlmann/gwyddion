@@ -709,7 +709,11 @@ gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
      
     if (arg1 == GTK_RESPONSE_APPLY)
     {
-        g_string_assign(axis->label_text, gwy_sci_text_get_text(dialog->sci_text));
+        gchar *text;
+
+        text = gwy_sci_text_get_text(dialog->sci_text);
+        g_string_assign(axis->label_text, text);
+        g_free(text);
         gtk_widget_queue_draw(GTK_WIDGET(axis));
     }
     else if (arg1 == GTK_RESPONSE_CLOSE)
