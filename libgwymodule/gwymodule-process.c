@@ -275,6 +275,12 @@ gwy_process_func_get_run_types(const gchar *name)
     return func_info->run;
 }
 
+gboolean
+gwy_process_func_try_remove(const gchar *name)
+{
+    return g_hash_table_remove(process_funcs, name);
+}
+
 /************************** Documentation ****************************/
 
 /**

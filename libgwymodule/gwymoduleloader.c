@@ -25,9 +25,10 @@
 
 #define GWY_MODULE_QUERY_NAME G_STRINGIFY(_GWY_MODULE_QUERY)
 
-static void gwy_load_modules_in_dir(GDir *gdir,
-                                    const gchar *dirname,
-                                    GHashTable *modules);
+static void gwy_load_modules_in_dir (GDir *gdir,
+                                     const gchar *dirname,
+                                     GHashTable *modules);
+static void gwy_module_get_rid_of   (const gchar *modname);
 
 static GHashTable *modules;
 static gboolean modules_initialized = FALSE;
@@ -219,9 +220,7 @@ gwy_load_modules_in_dir(GDir *gdir,
             if (!ok) {
                 g_warning("Module %s feature registration failed",
                           mod_info->name);
-                /* TODO: clean up all possibly registered features */
-                g_hash_table_remove(modules, (gpointer)mod_info->name);
-                g_free(iinfo);
+                gwy_module_get_rid_of(mod_info->name);
             }
         }
 
@@ -236,6 +235,26 @@ gwy_load_modules_in_dir(GDir *gdir,
         }
 
     }
+}
+
+static void
+gwy_module_get_rid_of(const gchar *modname)
+{
+    _GwyModuleInfoInternal *iinfo;
+    GSList *l;
+
+    iinfo = g_hash_table_lookup(modules, modname);
+    g_return_if_fail(iinfo);
+    /* FIXME: this is quite crude, it can remove functions of the same name
+     * in different module type */
+    for (l = iinfo->funcs; l; l = g_slist_next(l)) {
+        gwy_file_func_try_remove((gchar*)iinfo->funcs->data);
+        gwy_process_func_try_remove((gchar*)iinfo->funcs->data);
+    }
+    g_slist_free(iinfo->funcs);
+    iinfo->funcs = NULL;
+    g_hash_table_remove(modules, (gpointer)iinfo->mod_info->name);
+    g_free(iinfo);
 }
 
 /************************** Documentation ****************************/

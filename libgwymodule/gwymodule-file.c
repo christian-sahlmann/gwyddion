@@ -391,6 +391,12 @@ gwy_file_func_get_operations(const gchar *name)
     return capable;
 }
 
+gboolean
+gwy_file_func_try_remove(const gchar *name)
+{
+    return g_hash_table_remove(file_funcs, name);
+}
+
 /************************** Documentation ****************************/
 
 /**
