@@ -41,7 +41,10 @@ gint            gwy_app_data_window_set_untitled  (GwyDataWindow *window,
                                                    const gchar *templ);
 void            gwy_app_data_view_update          (GtkWidget *data_view);
 void            gwy_app_undo_checkpoint           (GwyContainer *data,
-                                                   const gchar *what);
+                                                   ...);
+void            gwy_app_undo_checkpointv          (GwyContainer *data,
+                                                   gsize n,
+                                                   const gchar **keys);
 void            gwy_app_undo_undo                 (void);
 void            gwy_app_undo_redo                 (void);
 void            gwy_app_change_mask_color_cb      (gpointer unused,
