@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     "unrotate",
     N_("Rotates data to make main directions parallel with x or y axis."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2.1",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -182,6 +182,7 @@ unrotate_dialog(UnrotateArgs *args,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(4, 3, FALSE);

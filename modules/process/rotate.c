@@ -76,7 +76,7 @@ static GwyModuleInfo module_info = {
     "rotate",
     N_("Rotation by an arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -186,33 +186,33 @@ rotate_dialog(RotateArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(3, 3, FALSE);
+    table = gtk_table_new(3, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
     controls.angle = gtk_adjustment_new(args->angle, -360, 360, 5, 30, 0);
-    gwy_table_attach_spinbutton(table, 0, _("Rotate by _angle:"),
-                                _("deg (CCW)"),
-                                controls.angle);
+    gwy_table_attach_hscale(table, 0, _("Rotate by _angle:"), _("deg (CCW)"),
+                            controls.angle, 0);
     g_signal_connect(controls.angle, "value_changed",
                      G_CALLBACK(angle_changed_cb), args);
 
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         &controls, args->interp);
-    gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
-                         controls.interp);
+    gwy_table_attach_hscale(table, 1, _("_Interpolation type:"), NULL,
+                            GTK_OBJECT(controls.interp), GWY_HSCALE_WIDGET);
 
     controls.expand
         = gtk_check_button_new_with_mnemonic(_("E_xpand result to fit "
                                                "complete data"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.expand),
                                  args->expand);
-    gtk_table_attach(GTK_TABLE(table), controls.expand, 0, 3, 2, 3,
+    gtk_table_attach(GTK_TABLE(table), controls.expand, 0, 4, 2, 3,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.expand, "toggled",
                      G_CALLBACK(expand_changed_cb), args);

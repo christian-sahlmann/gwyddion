@@ -306,9 +306,9 @@ scale_dialog_update(ScaleControls *controls,
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ratio),
                              args->ratio);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xres),
-                             ROUND(args->ratio*args->xres));
+                             args->ratio*args->xres);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yres),
-                             ROUND(args->ratio*args->yres));
+                             args->ratio*args->yres);
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
 }

@@ -99,7 +99,7 @@ static GwyModuleInfo module_info = {
     "scars",
     N_("Scar detection and removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1.2",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -363,14 +363,15 @@ scars_mark_do(ScarsArgs *args, GwyContainer *data)
 static gboolean
 scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *spin;
+    GtkWidget *dialog, *table, *spin, *hbox, *align;
     ScarsControls controls;
-    enum { RESPONSE_RESET = 1,
-           RESPONSE_PREVIEW = 2 };
+    enum {
+        RESPONSE_RESET = 1,
+        RESPONSE_PREVIEW = 2
+    };
     gint response;
     gdouble zoomval;
     GtkObject *layer;
-    GtkWidget *hbox;
     GwyDataField *dfield;
     GtkWidget *label;
     gint row;
@@ -384,6 +385,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 2);
@@ -405,26 +407,24 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(10, 3, FALSE);
+    table = gtk_table_new(10, 4, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     row = 0;
 
     controls.max_width = gtk_adjustment_new(args->max_width,
                                             1.0, 16.0, 1, 3, 0);
-    spin = gwy_table_attach_spinbutton(table, row++, _("Maximum _width:"),
-                                       _("px"), controls.max_width);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    gwy_table_attach_hscale(table, row++, _("Maximum _width:"), "px",
+                            controls.max_width, 0);
 
     controls.min_len = gtk_adjustment_new(args->min_len,
                                           1.0, 1024.0, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row++, _("Minimum _length:"),
-                                       _("px"), controls.min_len);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    gwy_table_attach_hscale(table, row++, _("Minimum _length:"), "px",
+                            controls.min_len, 0);
 
     controls.threshold_high = gtk_adjustment_new(args->threshold_high,
                                                  0.0, 2.0, 0.01, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, row++, _("_Hard threshold:"),
-                                       "RMS", controls.threshold_high);
+    spin = gwy_table_attach_hscale(table, row++, _("_Hard threshold:"),
+                                   _("RMS"), controls.threshold_high, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect(controls.threshold_high, "value_changed",
                      G_CALLBACK(scars_mark_dialog_update_thresholds),
@@ -432,8 +432,8 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
 
     controls.threshold_low = gtk_adjustment_new(args->threshold_low,
                                                 0.0, 2.0, 0.01, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Soft threshold:"),
-                                       "RMS", controls.threshold_low);
+    spin = gwy_table_attach_hscale(table, row, _("_Soft threshold:"), _("RMS"),
+                                   controls.threshold_low, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect(controls.threshold_low, "value_changed",
                      G_CALLBACK(scars_mark_dialog_update_thresholds),
@@ -451,8 +451,10 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
                                    TRUE);
     load_mask_color(controls.color_button,
                     gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
-    gtk_table_attach(GTK_TABLE(table), controls.color_button,
-                     1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+    align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
+    gtk_container_add(GTK_CONTAINER(align), controls.color_button);
+    gtk_table_attach(GTK_TABLE(table), align, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);

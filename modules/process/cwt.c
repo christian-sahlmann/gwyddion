@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     "cwt",
     N_("2D Continuous Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -180,9 +180,10 @@ cwt_dialog(CWTArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(2, 4, FALSE);
+    table = gtk_table_new(4, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,

@@ -53,9 +53,6 @@ typedef struct {
     GtkWidget *logscale;
     GtkWidget *fit_plane;
     GtkObject *kernel_size;
-    GtkWidget *kernel_size_spin;
-    GtkWidget *kernel_size_label;
-    GtkWidget *kernel_size_units;
 } SlopeControls;
 
 static gboolean      module_register              (const gchar *name);
@@ -104,7 +101,7 @@ static GwyModuleInfo module_info = {
     "slope_dist",
     N_("Slope distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5.1",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -184,7 +181,7 @@ slope_dialog(SlopeArgs *args)
         { N_("_Two-dimensional distribution"), SLOPE_DIST_2D_DIST },
         { N_("Per-angle _graph"),              SLOPE_DIST_GRAPH },
     };
-    GtkWidget *dialog, *table, *spin, *label;
+    GtkWidget *dialog, *table, *label;
     GSList *group;
     SlopeControls controls;
     enum { RESPONSE_RESET = 1 };
@@ -196,9 +193,10 @@ slope_dialog(SlopeArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(7, 3, FALSE);
+    table = gtk_table_new(7, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
@@ -208,7 +206,7 @@ slope_dialog(SlopeArgs *args)
     label = gtk_label_new(_("Output type"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     group = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
@@ -219,38 +217,34 @@ slope_dialog(SlopeArgs *args)
     controls.output_type_group = group;
     while (group) {
         gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(group->data),
-                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                         0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
         row++;
         group = g_slist_next(group);
     }
 
-    controls.size = gtk_adjustment_new(args->size, 10, 16384, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Output _size:"), _("px"),
-                                       controls.size);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    controls.size = gtk_adjustment_new(args->size, 10, 1024, 1, 10, 0);
+    gwy_table_attach_hscale(table, row, _("Output _size:"), "px",
+                            controls.size, 0);
     row++;
 
     controls.logscale
         = gtk_check_button_new_with_mnemonic(_("_Logarithmic value scale"));
     gtk_table_attach(GTK_TABLE(table), controls.logscale,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     controls.fit_plane
         = gtk_check_button_new_with_mnemonic(_("Use local plane _fitting"));
     gtk_table_attach(GTK_TABLE(table), controls.fit_plane,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.fit_plane, "toggled",
                      G_CALLBACK(slope_fit_plane_cb), &controls);
     row++;
 
     controls.kernel_size = gtk_adjustment_new(args->kernel_size,
                                               2, 16, 1, 4, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Plane size:"), _("px"),
-                                       controls.kernel_size);
-    controls.kernel_size_spin = spin;
-    controls.kernel_size_label = gwy_table_get_child_widget(table, row, 0);
-    controls.kernel_size_units = gwy_table_get_child_widget(table, row, 2);
+    gwy_table_attach_hscale(table, row, _("_Plane size:"), "px",
+                            controls.kernel_size, 0);
     row++;
 
     slope_dialog_update_controls(&controls, args);
@@ -299,9 +293,7 @@ slope_dialog_update_controls(SlopeControls *controls,
                                  args->logscale);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_plane),
                                  args->fit_plane);
-    gtk_widget_set_sensitive(controls->kernel_size_spin, args->fit_plane);
-    gtk_widget_set_sensitive(controls->kernel_size_label, args->fit_plane);
-    gtk_widget_set_sensitive(controls->kernel_size_units, args->fit_plane);
+    gwy_table_hscale_set_sensitive(controls->kernel_size, args->fit_plane);
     gtk_widget_set_sensitive(controls->logscale,
                              args->output_type != SLOPE_DIST_GRAPH);
     gwy_radio_buttons_set_current(controls->output_type_group,
@@ -328,12 +320,8 @@ static void
 slope_fit_plane_cb(GtkToggleButton *check,
                    SlopeControls *controls)
 {
-    gboolean active;
-
-    active = gtk_toggle_button_get_active(check);
-    gtk_widget_set_sensitive(controls->kernel_size_spin, active);
-    gtk_widget_set_sensitive(controls->kernel_size_label, active);
-    gtk_widget_set_sensitive(controls->kernel_size_units, active);
+    gwy_table_hscale_set_sensitive(controls->kernel_size,
+                                   gtk_toggle_button_get_active(check));
 }
 
 static void
