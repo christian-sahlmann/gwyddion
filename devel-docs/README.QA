@@ -1,0 +1,114 @@
+
+=====[ Testing Gwyddion ]====================================================
+
+Basic behaviour
+- OK, Cancel buttons work
+- Reset button resets really everything and is idempotent
+- Clear button clears
+- Other action buttons do what they say
+- If a button can be pressed (is sensitive), does something reasonable, no
+  silly state of other controls makes it crash or produce some uninitialized
+  (unprocessed) or otherwise nonsense data
+- Ranges of spinbuttons and other range widgets are reasonable and don't allow
+  values that leads to clear nonsense
+- Settings and values are remembered both on OK and Cancel, and presented the
+  next time a dialog is run as if it was never closed[1]
+- If a dialog is shown for the first time (no module settings in settings),
+  it shows the same values as after Reset
+- Defaults, brought by Reset, are reasonable for the common case
+
+Processing
+- Operation does what expected, or at least something looking reasonably if
+  it cannot be checked exactly, and does it for wide ranges of arguments;
+  if it is described in User guide, it does what User guide says
+- Undo works
+- NaNs are not produced
+- If a time-consuming operation is cancellable, cancellation leads to a state
+  as if nothing happened (also wrt undo and redo)
+- Works on square, tall, wide data
+- Works on data with size of 2^n, and with different sizes (namely FFT, CWT,
+  DWT methods)
+- Works on data with mask, without mask, with an empty mask, with presentation,
+  without presentation, and undo work correctly in all cases
+- Does not copy mask and presentations with data
+- Works on data of various scales and z/xy (value/lateral) ratios[3]
+- Selections are not copied to data in different coordinates (like FFT), but
+  is copied/kept after operation like level
+- If an operation is not supposed to modify data (e.g. it should only add
+  a mask, must be deduced from context) it doesn't modify data
+- Units are handled correctly, even less common units like Volts, namely in
+  operations that change units (FFT, Slope distribution)[2][3]
+- Operations that take long time has a progress bar with a Cancel button
+
+Tools
+- Duplication (Ctrl-D) during tool usage cause no strange effects
+- Previes/instant apply works (if present) on data switch, tool swtich,
+  window closing, when all windows are closed and then a file open, when
+  hid/made visible
+- Present/instant apply reacts to parameter changes instantly
+- Selections survive switch to another tools (namely those with the same
+  selection type) and back unchanged
+- Apply is sensitive only when it does something [reasonable]
+- If one usually wants to repeat the operation, Apply doesn't hide dialog,
+  otherwise it hides it
+- Undo works, namely in connection to previews and duplication
+
+GUI
+- Dialog titles are correct (e.g., not describing another module, etc.)
+- Labels are comprehensible
+- Menu path ends with `...' if it brings a dialog, doesn't end with `...' if
+  it's a direct action
+- All buttons and other active controls have mnemonics
+- Mnemonic works (i.e., when Alt + mnemonic key is pressed, corresponding GUI
+  control gets focus/is activated, Gtk+ doesn't beep)
+- Controls that don't make sense (in a mode of operation, due to state
+  of other controls) and would only confuse user are insensitive
+- Previous point also applies to toolbox buttons and toolbox menu items
+- Nothing in toolbox menus causes a crash
+- There are no misaligned controls in dialogs
+- Capitalization rules: FIXME
+
+Translateability
+- There should be no English string in Czech GUI, including in window titles,
+  etc.[4]
+
+Packaging, installation
+- Gwyddion installs itself correctly on Win32
+- Gwyddion refuses to install when there's no Gtk+ on Win32
+- Gwyddion can be uninstalled
+- If Gwyddion user directory doesn't exist, it's created, settings are stored
+  there (remembered between runs)
+- Modules and plug-ins in user directory are found and work
+
+Object leaking
+- Does not work on Win32 (FIXME: it may work now, begin fixed by -MD, must
+  try)
+- Must be compiled with object debugging enabled
+  (gwy_debug_objects_enable(TRUE); in app/gwyddion.c)
+- When Gwyddion exits, it prints list of all allocated and freed objects,
+  with times of allocation and freeing
+- Objects still alive on exit have ALIVE(<ref_count>) in place of time of
+  freeing
+- If such objects appear, one can try to locate the operation that leaked
+  them by running Gwyddion, doing only the suspected operation, and quitting
+  it
+- Other things to look for are long rows of objects of the same type
+  allocated almost in the same instant, ususally indicating some very
+  inefficient algorithm
+
+Valgrinding
+- Does not work on Win32
+- Run gwyddion as
+  valgrind --tool=memcheck --num-callers=12 --suppressions=FIXME.supp gwyddion
+- It should print no errors[5]
+- Ideally, all testing should be done with addrcheck at least (instead of
+  memcheck which makes the program too slow and memory-hungry)
+
+Footnotes
+[1] There's a known common problem: State of no option menu offering list of
+    data windows is remembered in Gwyddion 1.x.
+[2] There's a known problem with graphs, they rarely handle complex units
+    correctly.
+[3] May need to prepare some specific testing data
+[4] Except perhaps in too new modules that have not been translated yet
+[5] 3D view is known to cause ***lots*** of errors
