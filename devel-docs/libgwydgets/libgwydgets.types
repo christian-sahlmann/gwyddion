@@ -17,6 +17,7 @@ gwy_layer_mask_get_type
 gwy_pixmap_layer_get_type
 gwy_ruler_get_type
 gwy_sci_text_get_type
+gwy_statusbar_get_type
 gwy_sphere_coords_get_type
 gwy_vector_layer_get_type
 gwy_vector_shade_get_type

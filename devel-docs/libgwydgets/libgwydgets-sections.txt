@@ -184,6 +184,21 @@ GWY_SCI_TEXT_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwystatusbar</FILE>
+<TITLE>GwyStatusbar</TITLE>
+GwyStatusbar
+gwy_statusbar_new
+<SUBSECTION Standard>
+GWY_STATUSBAR
+GWY_IS_STATUSBAR
+GWY_TYPE_STATUSBAR
+gwy_statusbar_get_type
+GWY_STATUSBAR_CLASS
+GWY_IS_STATUSBAR_CLASS
+GWY_STATUSBAR_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwyvectorlayer</FILE>
 <TITLE>GwyVectorLayer</TITLE>
 GwyVectorLayer
