@@ -1430,18 +1430,15 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
                              gint res, GwyInterpolationType interpolation)
 {
     gint k;
-    gdouble cosa, sina;
+    gdouble cosa, sina, size;
 
-    /*
-    if (uli > bri)
-        GWY_SWAP(gint, uli, bri);
-    if (ulj > brj)
-        GWY_SWAP(gint, ulj, brj);
-        */
-
-    g_return_val_if_fail(uli >= 0 && ulj >= 0 && bri < a->yres && brj < a->xres,
+    g_return_val_if_fail(uli >= 0 && ulj >= 0 && bri >= 0 && brj >= 0
+                         && uli < a->yres && ulj < a->xres && bri < a->yres && brj < a->xres,
                          FALSE);
 
+    size = sqrt((uli - bri)*(uli - bri) + (ulj - brj)*(ulj - brj));
+    if (res<=0) res = (gint)size;
+    
     cosa = (gdouble)(brj - ulj)/(res - 1);
     sina = (gdouble)(bri - uli)/(res - 1);
 
@@ -1450,6 +1447,8 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
         b->data[k] = gwy_data_field_get_dval(a, ulj + k*cosa, uli + k*sina,
                                              interpolation);
 
+    b->real = size*a->xreal/a->xres;
+    
     return TRUE;
 }
 

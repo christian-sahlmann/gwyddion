@@ -46,6 +46,8 @@ static void       profile_dialog_response_cb       (gpointer unused,
                                                  gint response);
 static void       profile_dialog_abandon           (void);
 static void       profile_dialog_set_visible       (gboolean visible);
+static void       interp_changed_cb                (GObject *item,
+                                                    ProfileControls *controls);
 
 static GtkWidget *dialog = NULL;
 static ProfileControls controls;
@@ -185,12 +187,12 @@ profile_dialog_create(GwyDataView *data_view)
    
     
     controls.positions = g_ptr_array_new();
-    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new("x1 = 0, y1 = 0"));
-    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new("x2 = 0, y2 = 0"));
-    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new("x1 = 0, y1 = 0"));
-    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new("x2 = 0, y2 = 0"));
-    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new("x1 = 0, y1 = 0"));
-    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new("x2 = 0, y2 = 0"));
+    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new(""));
+    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new(""));
+    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new(""));
+    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new(""));
+    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new(""));
+    g_ptr_array_add(controls.positions, (gpointer)gtk_label_new(""));
 
     gtk_misc_set_alignment(GTK_MISC(controls.positions->pdata[0]), 0.0, 0.5);
     gtk_misc_set_alignment(GTK_MISC(controls.positions->pdata[1]), 0.0, 0.5);
@@ -226,7 +228,16 @@ profile_dialog_create(GwyDataView *data_view)
     gtk_box_pack_start(vbox, label, 0, 0, 10);
 
     controls.separation = gtk_check_button_new_with_label("separate profiles");
-    controls.interpolation;
+    gtk_box_pack_start(vbox, controls.separation, 0, 0, 0);
+ 
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("Interpolation type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(vbox, label, 0, 0, 2);
+    
+    controls.interpolation = gwy_interpolation_option_menu(G_CALLBACK(interp_changed_cb),
+                                          &controls, controls.interp);
+    gtk_box_pack_start(vbox, controls.interpolation, 0, 0, 2);
     
   
     gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
@@ -234,38 +245,6 @@ profile_dialog_create(GwyDataView *data_view)
     controls.graph = gwy_graph_new();
     gtk_table_attach(GTK_TABLE(table), controls.graph, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
     
-    
-    /*
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("X"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Y"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 2, 3, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Size</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Width"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 4, 5, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Height"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 5, 6, GTK_FILL, 0, 2, 2);
-
-    controls.x = gtk_label_new("");
-    controls.y = gtk_label_new("");
-    controls.w = gtk_label_new("");
-    controls.h = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls.x), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls.y), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls.w), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls.h), 1.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.x, 2, 3, 1, 2);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.y, 2, 3, 2, 3);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.w, 2, 3, 4, 5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.h, 2, 3, 5, 6);*/
     gtk_widget_show_all(table);
     controls.is_visible = FALSE;
 
@@ -273,8 +252,33 @@ profile_dialog_create(GwyDataView *data_view)
 }
 
 static void
-update_label(GtkWidget *label, gdouble value)
+update_labels()
 {
+    gdouble lines[12];
+    gchar buffer[50];
+    gint i, j;
+    gint n_of_lines=0;
+
+    gwy_debug("%s", __FUNCTION__);
+    n_of_lines = gwy_layer_lines_get_lines(select_layer, lines);
+    
+    j=0;
+    printf("%d lines.\n", n_of_lines);
+    for (i=0; i<(2*n_of_lines); i++)
+    {
+        g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
+               (gint)gwy_data_field_rtoj(datafield, lines[j++]),
+               (gint)gwy_data_field_rtoj(datafield, lines[j++])
+               );
+        gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i++]), buffer); 
+
+        g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
+               (gint)gwy_data_field_rtoj(datafield, lines[j++]),
+               (gint)gwy_data_field_rtoj(datafield, lines[j++])
+               );
+        gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]), buffer); 
+     }       
+                
     /*
     gchar buffer[16];
 
@@ -284,20 +288,19 @@ update_label(GtkWidget *label, gdouble value)
     */
 }
 
+
 static void
 profile_selection_updated_cb(void)
 {
     gdouble lines[12];
     gboolean is_visible, is_selected;
-    gint ilines[12];
     GString *lab1, *lab2, *lab3;
     gint i, xres, j;
+    gint x1, x2, y1, y2;
     GwyGraphAutoProperties prop;
     GwyGraph *gr;
 
     gwy_debug("%s", __FUNCTION__);
-    /*XXX: seems broken
-     * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
     
     is_visible = controls.is_visible;
     is_selected = gwy_layer_lines_get_lines(select_layer, lines);
@@ -305,7 +308,6 @@ profile_selection_updated_cb(void)
     if (!is_visible && !is_selected)
         return;
 
-/*    for (i=0; i<300; i++) dtl->data[i]=3.0*sin(i/100);*/
     gwy_graph_get_autoproperties(controls.graph, &prop);
     prop.is_point = 0;
     prop.is_line = 1;
@@ -318,14 +320,17 @@ profile_selection_updated_cb(void)
         j = 0;
         for (i=0; i<is_selected; i++)
         {
-            gwy_data_field_get_data_line(datafield, dtl->pdata[i], 
-                                     (gint)(gwy_data_field_rtoj(datafield, lines[j++])),
-                                     (gint)(gwy_data_field_rtoj(datafield, lines[j++])),
-                                     (gint)(gwy_data_field_rtoj(datafield, lines[j++])),
-                                     (gint)(gwy_data_field_rtoj(datafield, lines[j++])),
-                                     100,
+            x1 = gwy_data_field_rtoj(datafield, lines[j++]);
+            y1 = gwy_data_field_rtoj(datafield, lines[j++]);
+            x2 = gwy_data_field_rtoj(datafield, lines[j++]);
+            y2 = gwy_data_field_rtoj(datafield, lines[j++]);
+                                     
+            if (!gwy_data_field_get_data_line(datafield, dtl->pdata[i], 
+                                     x1, y1,
+                                     x2, y2,
+                                     100,/*(gint)sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 -y2)), jak to, ze to s timhle pada?*/
                                      GWY_INTERPOLATION_BILINEAR
-                                      );
+                                     )) continue;
             gwy_graph_add_dataline(controls.graph, dtl->pdata[i],
                                0, str->pdata[i], NULL);
         }
@@ -334,10 +339,7 @@ profile_selection_updated_cb(void)
         
         gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
         
-/*        update_label(controls.x, MIN(x0, x1));
-        update_label(controls.y, MIN(y0, y1));
-        update_label(controls.w, fabs(x1 - x0));
-        update_label(controls.h, fabs(y1 - y0));*/
+        update_labels();
     }
     
     if (!is_visible)
@@ -383,6 +385,13 @@ profile_dialog_set_visible(gboolean visible)
     else
         gtk_widget_hide(dialog);
 }
+
+static void       
+interp_changed_cb(GObject *item, ProfileControls *controls)
+{
+    gwy_debug("%s", __FUNCTION__);
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
