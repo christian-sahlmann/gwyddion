@@ -133,10 +133,12 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
 
     gtk_table_resize(GTK_TABLE(vector_shade), 4, 4);
     gtk_table_set_homogeneous(GTK_TABLE(vector_shade), FALSE);
+    gtk_table_set_col_spacing(GTK_TABLE(vector_shade), 2, 6);
 
     gtk_table_attach_defaults(GTK_TABLE(vector_shade),
                               GTK_WIDGET(grad_sphere), 0, 1, 0, 4);
 
+    /* FIXME: this is ugly */
     label = gtk_label_new(" ");
     gtk_table_attach_defaults(GTK_TABLE(vector_shade), label, 1, 2, 0, 1);
     gtk_widget_show(label);
@@ -153,7 +155,7 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), vector_shade->spin_theta);
     gtk_widget_show(label);
 
-    label = gtk_label_new(_(" deg"));
+    label = gtk_label_new(_("deg"));
     gtk_table_attach_defaults(GTK_TABLE(vector_shade), label, 3, 4, 1, 2);
     gtk_widget_show(label);
 
@@ -166,7 +168,7 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), vector_shade->spin_phi);
     gtk_widget_show(label);
 
-    label = gtk_label_new(_(" deg"));
+    label = gtk_label_new(_("deg"));
     gtk_table_attach_defaults(GTK_TABLE(vector_shade), label, 3, 4, 2, 3);
     gtk_widget_show(label);
 
