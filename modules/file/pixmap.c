@@ -281,7 +281,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.5.2",
+    "4.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -309,8 +309,11 @@ module_register(const gchar *name)
         /* ignore some really silly formats */
         if (strcmp(fmtname, "ico") == 0
             || strcmp(fmtname, "ani") == 0
-            || strcmp(fmtname, "xbm") == 0
             || strcmp(fmtname, "wbmp") == 0
+            /* libwmf loader seems to try to claim ownership of almost
+             * arbitrary binary data, prints error messages, and it's silly
+             * to load WMF to Gwyddion anyway */
+            || strcmp(fmtname, "wmf") == 0
             || strcmp(fmtname, "svg") == 0) {
             g_free(fmtname);
             continue;
