@@ -186,7 +186,24 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field, GwyDataLine *xres
 void
 gwy_data_field_fractal_psdf(GwyDataField *data_field, GwyDataLine *xresult, GwyDataLine *yresult, GwyInterpolationType interpolation)
 {
-    gwy_data_field_fractal_triangulation(data_field, xresult, yresult, interpolation);
+    gint i;
+     
+    gwy_data_line_resample(yresult, data_field->xres, GWY_INTERPOLATION_NONE);
+
+    gwy_data_field_get_line_stat_function(data_field, yresult, 0, 0, data_field->xres, data_field->yres,
+                                          GWY_SF_OUTPUT_PSDF, GTK_ORIENTATION_HORIZONTAL, interpolation, GWY_WINDOWING_HANN,
+                                          yresult->res);
+   
+    gwy_data_line_resample(xresult, yresult->res, GWY_INTERPOLATION_NONE); 
+    
+    for (i=1; i<yresult->res; i++)
+    {
+        xresult->data[i-1] = log(i);
+        yresult->data[i-1] = log(yresult->data[i]);
+    }
+    gwy_data_line_resize(xresult, 0, yresult->res-1);
+    gwy_data_line_resize(yresult, 0, yresult->res-1);
+    
 }
 
 
@@ -205,7 +222,7 @@ gwy_data_field_fractal_fit(GwyDataLine *xresult, GwyDataLine *yresult, gdouble *
         sxy += xresult->data[i]*yresult->data[i];
     }
     *a = (sxy-sx*sy/size)/(sx2-sx*sx/size);
-    *b = (sx2*sy-sx*sxy)/(sx2*size-sx2*sx2);
+    *b = (sx2*sy-sx*sxy)/(sx2*size-sx*sx);
 }
 
 
@@ -239,7 +256,7 @@ gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult, GwyDataLine *yresult, gdou
 {     
     gwy_data_field_fractal_fit(xresult, yresult, a, b);
 
-    return 2 + (*a);
+    return 3.5 + (*a)/2;
 }
 
 

@@ -524,6 +524,14 @@ gwy_graph_set_status(GwyGraph *graph,
         graph->area->pointsdata->data_points = g_array_new(0, 1, sizeof(GwyGraphDataPoint));
         graph->area->pointsdata->n = 0;
     }
+    /*reset x selection if status changing*/
+    if (graph->area->status == GWY_GRAPH_STATUS_XSEL)
+    {
+        graph->area->seldata->scr_start = 0;
+        graph->area->seldata->scr_end = 0;
+        graph->area->seldata->data_start = 0;
+        graph->area->seldata->data_end = 0;
+    }
 
     graph->area->status = status;
 }
