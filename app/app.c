@@ -304,17 +304,36 @@ gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
                              GwyDataWindow *data_window)
 {
     GtkWidget *graph_view;
+    gint x, y;
 
     graph_view = g_object_get_data(G_OBJECT(data_window),
                                    "gwy-app-graph-list-window");
 
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle))) {
+        gtk_window_get_position(GTK_WINDOW(graph_view), &x, &y);
+        /* to store zero reliably */
+        x += 10000;
+        y += 10000;
+        g_object_set_data(G_OBJECT(graph_view), "window-position-x",
+                        GINT_TO_POINTER(x));
+        g_object_set_data(G_OBJECT(graph_view), "window-position-y",
+                        GINT_TO_POINTER(y));
         gtk_widget_hide(graph_view);
         return;
     }
 
     if (graph_view) {
+        x = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(graph_view),
+                                              "window-position-x"));
+        y = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(graph_view),
+                                              "window-position-y"));
+        /* XXX: move twice since most windowmanagers ignore the first, nicer
+         * one */
+        if (x > 0 && y > 0)
+            gtk_window_move(GTK_WINDOW(graph_view), x - 10000, y - 10000);
         gtk_widget_show(graph_view);
+        if (x > 0 && y > 0)
+            gtk_window_move(GTK_WINDOW(graph_view), x - 10000, y - 10000);
         return;
     }
 
@@ -330,6 +349,7 @@ static gboolean
 gwy_app_graph_list_delete_cb(GtkWidget *toggle)
 {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(toggle), FALSE);
+
     return TRUE;
 }
 
