@@ -22,8 +22,6 @@
 #include "config.h"
 #endif
 
-#define DEBUG 1
-
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -176,7 +174,7 @@ static const GwyEnum sis_aquisitions[] = {
 /* Map between SIS palettes and Gwyddion palettes */
 static const GwyEnum sis_palettes[] = {
     { "Gray",    SIS_PALETTE_GRAY    },
-    { "Warm",    SIS_PALETTE_GLOW    },
+    { "Sky",     SIS_PALETTE_GLOW    },
     { "Red",     SIS_PALETTE_RED     },
     { "Green",   SIS_PALETTE_GREEN   },
     { "Blue",    SIS_PALETTE_BLUE    },
@@ -358,7 +356,7 @@ static GwyModuleInfo module_info = {
     "sisfile",
     "Load SIS data.",
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.9",
     "David Neačs (Yeti) & Petr Klapetek",
     "2004",
 };
