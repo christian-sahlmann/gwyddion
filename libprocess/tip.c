@@ -28,22 +28,22 @@
 
 static void
 contact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
-               gdouble *xres, gdouble *yres)
+               gint *xres, gint *yres)
 {
     *xres = 200;
-    *yres = 200;
+    *yres = 200; printf("ddddd\n");
 
 }
 static void
 noncontact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
-               gdouble *xres, gdouble *yres)
+               gint *xres, gint *yres)
 {
     *xres = 200;
     *yres = 200;
 }
 static void
 sharpened_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
-               gdouble *xres, gdouble *yres)
+               gint *xres, gint *yres)
 {
     *xres = 200;
     *yres = 200;
@@ -51,7 +51,7 @@ sharpened_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *pa
 }
 static void
 delta_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
-               gdouble *xres, gdouble *yres)
+               gint *xres, gint *yres)
 {
     *xres = 200;
     *yres = 200;
@@ -61,25 +61,26 @@ delta_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params
 static void
 contact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
+    tip->data[tip->xres*tip->yres/2] = 1;
     
 }
 
 static void
 noncontact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
-    
+    tip->data[tip->xres*tip->yres/2] = 1;
 }
 
 static void
 sharpened (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
-    
+    tip->data[tip->xres*tip->yres/2] = 1;
 }
 
 static void
 delta (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
-    
+    tip->data[tip->xres*tip->yres/2] = 1;
 }
 
 static const GwyTipModelPreset tip_presets[] = {

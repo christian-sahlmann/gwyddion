@@ -44,8 +44,8 @@ typedef void (*GwyTipGuessFunc)(GwyDataField *data,
 				gdouble height,
 				gdouble radius,
 				gdouble *params,
-				gdouble *xres,
-				gdouble *yres);
+				gint *xres,
+				gint *yres);
 
 typedef struct _GwyTipModelPreset GwyTipModelPreset;
 
