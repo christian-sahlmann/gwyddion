@@ -80,14 +80,12 @@ gwy_math_humanize_numbers(gdouble unit,
  * @x: X-coordinate of the point to search.
  * @y: Y-coordinate of the point to search.
  * @d2min: Where to store the squared minimal distance, or %NULL.
- * @n: The size of @coords, NOT the number of points or lines, must be
- *     a multiple of 4.
+ * @n: The number of lines (i.e. @coords has 4@n items).
  * @coords: Line coordinates stored as x00, y00, x01, y01, x10, y10, etc.
  *
  * Find the line from @coords nearest to the point (@x, @y).
  *
- * Returns: The line number (i.e., the line starts at index equal to four
- *          times the return value). It may return -1 if (@x, @y) doesn't lie
+ * Returns: The line number. It may return -1 if (@x, @y) doesn't lie
  *          in the orthogonal stripe of any of the lines.
  **/
 gint
@@ -100,9 +98,6 @@ gwy_math_find_nearest_line(gdouble x, gdouble y,
 
     g_return_val_if_fail(n > 0, d2m);
     g_return_val_if_fail(coords, d2m);
-    g_assert(n % 4 == 0);
-    n >>= 2;
-    n <<= 2;
 
     m = -1;
     for (i = 0; i < n; i++) {
@@ -138,14 +133,12 @@ gwy_math_find_nearest_line(gdouble x, gdouble y,
  * @x: X-coordinate of the point to search.
  * @y: Y-coordinate of the point to search.
  * @d2min: Where to store the squared minimal distance, or %NULL.
- * @n: The size of @coords, NOT the number of points, must be
- *     a multiple of 2.
+ * @n: The number of points (i.e. @coords has 2@n items).
  * @coords: Point coordinates stored as x0, y0, x1, y1, x2, y2, etc.
  *
  * Find the point from @coords nearest to the point (@x, @y).
  *
- * Returns: The point number (i.e., the point starts at index equal to twice
- *          the return value).
+ * Returns: The point number.
  **/
 gint
 gwy_math_find_nearest_point(gdouble x, gdouble y,
@@ -157,9 +150,6 @@ gwy_math_find_nearest_point(gdouble x, gdouble y,
 
     g_return_val_if_fail(n > 0, d2m);
     g_return_val_if_fail(coords, d2m);
-    g_assert(n % 2 == 0);
-    n >>= 1;
-    n <<= 1;
 
     m = 0;
     for (i = 0; i < n; i++) {
