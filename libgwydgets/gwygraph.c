@@ -385,6 +385,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
     gwy_graph_make_curve_data(graph, &curve, xvals, yvals, n);
 
     /*configure curve plot properties*/
+    cmap =  gdk_colormap_get_system();
     if (params == NULL) {
       curve.params.is_line = graph->autoproperties.is_line;
       curve.params.is_point = graph->autoproperties.is_point;
@@ -392,8 +393,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
       curve.params.line_size = graph->autoproperties.line_size;
       curve.params.line_style = GDK_LINE_SOLID;
       curve.params.description = g_string_new(label->str);
-      /***** FIXME PROVISORY ***************/
-      cmap =  gdk_colormap_get_system();
+      /***** FIXME PROVISORY ***************/     
       if (graph->n_of_autocurves == 0) {
 	  
           curve.params.color.red = 0x0000;
@@ -438,6 +438,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
       curve.params.description = g_string_new(label->str);
       curve.params.point_type = params->point_type;
       curve.params.color = params->color;
+      gdk_colormap_alloc_color(cmap, &curve.params.color, FALSE, TRUE);
     }
 
     /*put curve and (new) boundaries into the plotter*/
