@@ -32,7 +32,9 @@
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
-#define NPROFILE 3
+enum {
+    NPROFILE = 4
+};
 
 typedef struct {
     GwyUnitoolState *state;
@@ -145,11 +147,18 @@ layer_setup(GwyUnitoolState *state)
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
+    const gchar *headers[] = {
+        "<b>x<sub>1</sub></b>",
+        "<b>y<sub>1</sub></b>",
+        "<b>x<sub>2</sub></b>",
+        "<b>y<sub>2</sub></b>",
+    };
     ToolControls *controls;
     GwyContainer *settings;
-    GtkWidget *dialog, *table, *label, *vbox, *frame, *table2;
-    GPtrArray *positions;
-    gint i;
+    GtkWidget *dialog, *table, *label, *hbox, *vbox, *frame;
+    GtkSizeGroup *sizegroup;
+    GString *str;
+    gint i, j, row;
 
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
@@ -161,87 +170,120 @@ dialog_create(GwyUnitoolState *state)
     gwy_unitool_dialog_add_button_hide(dialog);
     gwy_unitool_dialog_add_button_apply(dialog);
 
-    table = gtk_table_new(2, 2, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), hbox);
 
     vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
     frame = gwy_unitool_windowname_frame_create(state);
     gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
 
+    table = gtk_table_new(3 + NPROFILE, 5, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 0, 8);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 2, 8);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    row = 0;
+
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Profile positions</b>"));
+    gtk_label_set_markup(GTK_LABEL(label),
+                         _("<b>Profile Positions</b> [pixels]"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 5, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
+    sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
+    for (j = 0; j < 4; j++) {
+        label = gtk_label_new(NULL);
+        gtk_size_group_add_widget(sizegroup, label);
+        gtk_label_set_markup(GTK_LABEL(label), headers[j]);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, j+1, j+2, row, row+1,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    }
+    row++;
 
     controls->dtl = g_ptr_array_new();
     controls->str = g_ptr_array_new();
-    controls->positions = positions = g_ptr_array_new();
+    controls->positions = g_ptr_array_new();
     for (i = 0; i < NPROFILE; i++) {
-        GString *s = g_string_new("");
-        gchar *buf;
+        /* Don't free, graph eats them */
+        str = g_string_new("");
 
-        g_string_printf(s, _("Profile %d"), i+1);
-        g_ptr_array_add(controls->str, s);
+        g_string_printf(str, "<b>%d</b>", i+1);
+        label = gtk_label_new(NULL);
+        gtk_label_set_markup(GTK_LABEL(label), str->str);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 0, 1, row+i, row+i+1,
+                         0, 0, 2, 2);
 
+        for (j = 0; j < 4; j++) {
+            label = gtk_label_new(NULL);
+            gtk_size_group_add_widget(sizegroup, label);
+            gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+            gtk_table_attach(GTK_TABLE(table), label, j+1, j+2, row+i, row+i+1,
+                             GTK_EXPAND | GTK_FILL, 0, 2, 2);
+            g_ptr_array_add(controls->positions, label);
+        }
+
+        g_string_printf(str, _("Profile %d"), i+1);
+        g_ptr_array_add(controls->str, str);
         g_ptr_array_add(controls->dtl, gwy_data_line_new(10, 10, 0));
-
-        buf = g_strdup_printf(_("Profile %d:"), i+1);
-        label = gtk_label_new(buf);
-        g_free(buf);
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE,5);
-
-        label = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        g_ptr_array_add(positions, label);
-        gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE,0);
-
-        label = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        g_ptr_array_add(positions, label);
-        gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE,0);
     }
+    g_object_unref(sizegroup);
+    row += NPROFILE;
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+
+    table = gtk_table_new(3 + NPROFILE, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_table_set_col_spacing(GTK_TABLE(table), 2, 8);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    row = 0;
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Options</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 10);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
-    table2 = gtk_table_new(2, 2, FALSE);
     controls->linesize = gtk_adjustment_new(controls->size, 1, 20, 1, 5, 0);
-    gwy_table_attach_spinbutton(table2, 0, _("Thickness"), _("pixels"),
+    gwy_table_attach_spinbutton(table, row, _("Thickness:"), _("px"),
                                 controls->linesize);
-    gtk_box_pack_start(GTK_BOX(vbox), table2, FALSE, FALSE, 2);
-
     g_signal_connect_swapped(controls->linesize, "value-changed",
                              G_CALLBACK(size_changed_cb), controls);
+    row++;
 
     controls->separation
         = gtk_check_button_new_with_mnemonic(_("_Separate profiles"));
-    gtk_box_pack_start(GTK_BOX(vbox), controls->separation, FALSE, FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), controls->separation, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->separation),
                                  controls->separate);
     g_signal_connect(controls->separation, "toggled",
                      G_CALLBACK(separate_changed_cb), controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
+    row++;
 
     label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     controls->interpolation
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         controls, controls->interp);
-    gtk_box_pack_start(GTK_BOX(vbox), controls->interpolation, FALSE, FALSE,2);
-
-    gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1,
-                     GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls->interpolation,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     controls->graph = gwy_graph_new();
     gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls->graph), FALSE);
-    gtk_table_attach(GTK_TABLE(table), controls->graph, 1, 2, 0, 1,
-                     GTK_FILL, 0, 2, 2);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->graph, FALSE, FALSE, 0);
 
     return dialog;
 }
@@ -255,7 +297,7 @@ update_labels(GwyUnitoolState *state)
     GwyDataViewLayer *layer;
     gdouble lines[4*NPROFILE];
     GPtrArray *positions;
-    gchar buffer[64];
+    GString *str;
     gint i;
     gint nselected = 0;
 
@@ -269,24 +311,19 @@ update_labels(GwyUnitoolState *state)
     positions = controls->positions;
 
     gwy_debug("%d lines", nselected);
-    for (i = 0; i < NPROFILE; i++) {
-        if (i < nselected) {
-            g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
-                       (gint)gwy_data_field_rtoj(dfield, lines[4*i]),
-                       (gint)gwy_data_field_rtoi(dfield, lines[4*i+1]));
-            gtk_label_set_markup(GTK_LABEL(positions->pdata[2*i]), buffer);
-
-            g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
-                       (gint)gwy_data_field_rtoj(dfield, lines[4*i+2]),
-                       (gint)gwy_data_field_rtoi(dfield, lines[4*i+3]));
-            gtk_label_set_markup(GTK_LABEL(positions->pdata[2*i+1]), buffer);
+    str = g_string_new("");
+    for (i = 0; i < 4*NPROFILE; i++) {
+        if (i < 4*nselected) {
+            if (i % 2)
+                g_string_printf(str, "%d",
+                                (gint)gwy_data_field_rtoj(dfield, lines[i]));
+            else
+                g_string_printf(str, "%d",
+                                (gint)gwy_data_field_rtoi(dfield, lines[i]));
+            gtk_label_set_markup(GTK_LABEL(positions->pdata[i]), str->str);
         }
-        else {
-            g_snprintf(buffer, sizeof(buffer), " ");
-            gtk_label_set_markup(GTK_LABEL(positions->pdata[2*i]), buffer);
-            g_snprintf(buffer, sizeof(buffer), " ");
-            gtk_label_set_markup(GTK_LABEL(positions->pdata[2*i+1]), buffer);
-        }
+        else
+            gtk_label_set_markup(GTK_LABEL(positions->pdata[i]), "");
     }
 }
 
@@ -405,8 +442,7 @@ apply(GwyUnitoolState *state)
                                               units->units, z_unit);
 
             window = gwy_app_graph_window_create(graph);
-            g_snprintf(buf, sizeof(buf), _("Profile %d"), i+1);
-            gtk_window_set_title(GTK_WINDOW(window), buf);
+            gtk_window_set_title(GTK_WINDOW(window), controls->str->pdata[i]);
         }
     }
     else {
@@ -439,10 +475,8 @@ dialog_abandon(GwyUnitoolState *state)
     settings = gwy_app_settings_get();
     save_args(settings, controls);
 
-    for (i=0; i<NPROFILE; i++)
-    {
+    for (i = 0; i < NPROFILE; i++)
         g_object_unref(controls->dtl->pdata[i]);
-    }
 
     g_ptr_array_free(controls->dtl, TRUE);
     g_ptr_array_free(controls->str, TRUE);
@@ -471,7 +505,8 @@ separate_changed_cb(GtkToggleButton *button, ToolControls *controls)
 static void
 size_changed_cb(ToolControls *controls)
 {
-    controls->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->linesize));
+    controls->size
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->linesize));
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
