@@ -1,7 +1,8 @@
-1.3cvs20040705
+1.3cvs20040708
 
 1.4
 Application:
+- Rudimentary Drag'n'Drop support (drag a file to toolbox to load it).
 - Tools show a thumbnail of active data window beside its name.
 - Splash no longer screens eventual initial file open dialogs.
 
@@ -12,7 +13,9 @@ Modules:
 - Line correct (new): Line corrections, currently featuring modus based step
   correction.
 - ASCII export (new): Simple export to ASCII data matrix.
-- Nanoscope: Import dialog shows a preview.
+- Nanoscope, Pixmap, Rawfile, SIS: Import dialog shows a preview.
+- Pixmap: Export dialog shows a preview.
+- Rawfile: Fixed Load preset damaging file infomation.
 - Plug-in proxy: Random insensitive plug-in menu items were fixed.
 - Plug-in proxy: Alternate plug-in registration method using RGI files
   (without running the plug-ins).
@@ -27,7 +30,7 @@ Library:
   plug-in proxy dump format.
 
 Other:
-- New example plug-ins.
+- New example plug-ins using Gwyddion::dump, Gwyddion.dump.
 
 
 1.3
