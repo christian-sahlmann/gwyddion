@@ -79,7 +79,9 @@ static void        mask_process               (GwyDataField *dfield,
                                                GwyDataField *maskfield, 
                                                RemoveArgs *args, 
                                                RemoveControls *controls);
-
+static void        intersect_removes          (GwyDataField *mask_a, 
+                                               GwyDataField *mask_b, 
+                                               GwyDataField *mask);
 
 RemoveArgs remove_defaults = {
     50,
@@ -393,39 +395,54 @@ merge_changed_cb(GObject *item, RemoveArgs *args)
 static void
 mask_process(GwyDataField *dfield, GwyDataField *maskfield, RemoveArgs *args, RemoveControls *controls)
 {    
-    GwyDataField *output_field;
+    GwyDataField *output_field_a, *output_field_b;
     gboolean is_field;
     
-    is_field = FALSE;
-    output_field = (GwyDataField*)gwy_data_field_new(gwy_data_field_get_xres(dfield), 
-                                                     gwy_data_field_get_yres(dfield),
-                                                     gwy_data_field_get_xreal(dfield),
-                                                     gwy_data_field_get_yreal(dfield),
-                                                     FALSE);
 
     args->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
     args->area = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
     
     
-    if (args->is_height)
+    if (args->merge_type == GWY_MERGE_UNION || (args->is_height*args->is_area)==0)
     {
-        gwy_data_field_grains_remove_by_height(dfield, maskfield, args->height, 0);
-        is_field = TRUE;
-    }
-    if (args->is_area)
-    {
-        gwy_data_field_grains_remove_by_size(maskfield, args->area);
-/*        if (is_field)
+        if (args->is_height)
         {
-            if (args->merge_type == GWY_MERGE_UNION)
-                gwy_data_field_grains_add(maskfield, output_field);
-            else if (args->merge_type == GWY_MERGE_INTERSECTION)
-                gwy_data_field_grains_intersect(maskfield, output_field);
+            gwy_data_field_grains_remove_by_height(dfield, maskfield, args->height, 0);
         }
-        else gwy_data_field_copy(output_field, maskfield);
-*/        is_field = TRUE;
+        if (args->is_area)
+        {
+            gwy_data_field_grains_remove_by_size(maskfield, args->area);
+        }
     }
-    g_object_unref(output_field); 
+    else
+    {
+        output_field_a = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(maskfield)));
+        output_field_b = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(maskfield)));
+        
+         gwy_data_field_grains_remove_by_height(dfield, output_field_a, args->height, 0);
+         gwy_data_field_grains_remove_by_size(output_field_b, args->area);
+
+         intersect_removes(output_field_a, output_field_b, maskfield);
+         
+         g_object_unref(output_field_a);
+         g_object_unref(output_field_b);
+
+    }
+    
+}
+
+static void
+intersect_removes(GwyDataField *mask_a, GwyDataField *mask_b, GwyDataField *mask)
+{
+    gint i, xres, yres;
+    xres = mask->xres;
+    yres = mask->yres;
+        
+    for (i=0; i<(xres*yres); i++)
+    {
+        if (mask->data[i]>0 && mask_a->data[i]==0 && mask_b->data[i]==0)
+            gwy_data_field_grains_remove_manually(mask, i);
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
