@@ -38,6 +38,24 @@ Mask processing merging (namely used in grain processing).
 @GWY_MERGE_UNION: 
 @GWY_MERGE_INTERSECTION: 
 
+<!-- ##### ENUM GwyWatershedStateType ##### -->
+<para>
+
+</para>
+
+@GWY_WSHED_INIT: 
+@GWY_WSHED_LOCATE: 
+@GWY_WSHED_MIN: 
+@GWY_WSHED_WSHED: 
+@GWY_WSHED_MARK: 
+@GWY_WSHED_FINISHED: 
+
+<!-- ##### TYPEDEF GwyWatershedStatus ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### STRUCT GwyDataField ##### -->
 <para>
 Basic object for working with 2D data arrays.
@@ -111,6 +129,22 @@ Basic object for working with 2D data arrays.
 
 @a: 
 @b: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_copy ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+@destcol: 
+@destrow: 
 @Returns: 
 
 
@@ -1059,6 +1093,8 @@ Basic object for working with 2D data arrays.
 @locate_dropsize: 
 @wshed_steps: 
 @wshed_dropsize: 
+@prefilter: 
+@dir: 
 
 
 <!-- ##### FUNCTION gwy_data_field_grains_remove_manually ##### -->
@@ -1067,9 +1103,10 @@ Basic object for working with 2D data arrays.
 </para>
 
 @grain_field: 
+@i: 
+<!-- # Unused Parameters # -->
 @col: 
 @row: 
-<!-- # Unused Parameters # -->
 @data_field: 
 
 
@@ -1095,6 +1132,23 @@ Basic object for working with 2D data arrays.
 @direction: 
 
 
+<!-- ##### FUNCTION gwy_data_field_grains_watershed_iteration ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@status: 
+@locate_steps: 
+@locate_thresh: 
+@locate_dropsize: 
+@wshed_steps: 
+@wshed_dropsize: 
+@prefilter: 
+@dir: 
+
+
 <!-- ##### FUNCTION gwy_data_field_grains_get_average ##### -->
 <para>
 
@@ -1111,6 +1165,24 @@ Basic object for working with 2D data arrays.
 
 @grain_field: 
 @distribution: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_add ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@add_field: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_intersect ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@intersect_field: 
 
 
 <!-- ##### FUNCTION gwy_data_field_fit_lines ##### -->

@@ -96,14 +96,24 @@ The "Grains" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_GRAINS_GRAPH ##### -->
 <para>
+The "Grains-Graph" stock icon.
+<inlinegraphic fileref="gwy_grains_graph-24.png" format="PNG"></inlinegraphic>
+</para>
 
+
+
+<!-- ##### MACRO GWY_STOCK_GRAINS_REMOVE ##### -->
+<para>
+The "Grains-Remove" stock icon.
+<inlinegraphic fileref="gwy_grains_remove-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAINS_WATER ##### -->
 <para>
-
+The "Grains-Water" stock icon.
+<inlinegraphic fileref="gwy_grains_water-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
@@ -262,7 +272,8 @@ The "Shader" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_SPOT_REMOVE ##### -->
 <para>
-
+The "Spot-Remove" stock icon.
+<inlinegraphic fileref="gwy_spot_remove-24.png" format="PNG"></inlinegraphic>
 </para>
 
 

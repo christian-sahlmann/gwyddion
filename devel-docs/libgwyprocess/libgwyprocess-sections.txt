@@ -2,6 +2,8 @@
 <FILE>datafield</FILE>
 GwyFilterType
 GwyMergeType
+GwyWatershedStateType
+GwyWatershedStatus
 <TITLE>GwyDataField</TITLE>
 GwyDataField
 gwy_data_field_new
@@ -10,6 +12,7 @@ gwy_data_field_initialize
 gwy_data_field_resample
 gwy_data_field_resize
 gwy_data_field_copy
+gwy_data_field_area_copy
 gwy_data_field_get_data
 gwy_data_field_get_xres
 gwy_data_field_get_yres
@@ -95,8 +98,11 @@ gwy_data_field_grains_mark_watershed
 gwy_data_field_grains_remove_manually
 gwy_data_field_grains_remove_by_size
 gwy_data_field_grains_remove_by_height
+gwy_data_field_grains_watershed_iteration
 gwy_data_field_grains_get_average
 gwy_data_field_grains_get_distribution
+gwy_data_field_grains_add
+gwy_data_field_grains_intersect
 gwy_data_field_fit_lines
 <SUBSECTION Standard>
 GWY_DATA_FIELD

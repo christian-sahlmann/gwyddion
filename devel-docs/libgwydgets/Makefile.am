@@ -52,6 +52,9 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_fix_zero-24.png \
 	$(top_srcdir)/pixmaps/gwy_fft-24.png \
 	$(top_srcdir)/pixmaps/gwy_grains-24.png \
+	$(top_srcdir)/pixmaps/gwy_grains_graph-24.png \
+	$(top_srcdir)/pixmaps/gwy_grains_remove-24.png \
+	$(top_srcdir)/pixmaps/gwy_grains_water-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_gauss-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_halfgauss-24.png \
@@ -71,6 +74,7 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_rotate-24.png \
 	$(top_srcdir)/pixmaps/gwy_scale-24.png \
 	$(top_srcdir)/pixmaps/gwy_shader-24.png \
+	$(top_srcdir)/pixmaps/gwy_spot_remove-24.png \
 	$(top_srcdir)/pixmaps/gwy_stat_quantities-24.png \
 	$(top_srcdir)/pixmaps/gwy_subscript-24.png \
 	$(top_srcdir)/pixmaps/gwy_superscript-24.png \

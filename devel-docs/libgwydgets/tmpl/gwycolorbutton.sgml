@@ -15,14 +15,6 @@ at some unspecified point in the future when Gtk+-2.4 become common.
 
 </para>
 
-<!-- ##### MACRO P_ ##### -->
-<para>
-
-</para>
-
-@x: 
-
-
 <!-- ##### STRUCT GwyColorButtonPrivate ##### -->
 <para>
 
@@ -36,6 +28,12 @@ at some unspecified point in the future when Gtk+-2.4 become common.
 @color: 
 @alpha: 
 @use_alpha: 
+
+<!-- ##### STRUCT GwyColorButton ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gwy_color_button_new ##### -->
 <para>
@@ -125,4 +123,31 @@ at some unspecified point in the future when Gtk+-2.4 become common.
 @color_button: 
 @Returns: 
 
+
+<!-- ##### SIGNAL GwyColorButton::color-set ##### -->
+<para>
+
+</para>
+
+@gwycolorbutton: the object which received the signal.
+
+<!-- ##### ARG GwyColorButton:alpha ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyColorButton:color ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyColorButton:title ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyColorButton:use-alpha ##### -->
+<para>
+
+</para>
 

@@ -130,6 +130,14 @@ toolbox
 </para>
 
 
+<!-- ##### FUNCTION gwy_app_menu_create_xtns_menu ##### -->
+<para>
+
+</para>
+
+@accel_group: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_app_metadata_browser ##### -->
 <para>
 

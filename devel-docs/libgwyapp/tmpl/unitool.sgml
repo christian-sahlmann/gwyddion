@@ -95,6 +95,42 @@ Universal tool template.
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_unitool_dialog_add_button_apply ##### -->
+<para>
+
+</para>
+
+@dialog: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_unitool_dialog_add_button_clear ##### -->
+<para>
+
+</para>
+
+@dialog: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_unitool_dialog_add_button_hide ##### -->
+<para>
+
+</para>
+
+@dialog: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_unitool_apply_set_sensitive ##### -->
+<para>
+
+</para>
+
+@state: 
+@sensitive: 
+
+
 <!-- ##### FUNCTION gwy_unitool_windowname_frame_create ##### -->
 <para>
 
@@ -124,5 +160,18 @@ Universal tool template.
 @units: 
 @label: 
 @value: 
+
+
+<!-- ##### FUNCTION gwy_unitool_get_selection_or_all ##### -->
+<para>
+
+</para>
+
+@state: 
+@xmin: 
+@ymin: 
+@xmax: 
+@ymax: 
+@Returns: 
 
 

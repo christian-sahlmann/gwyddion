@@ -6,25 +6,7 @@
     <title>Gwyddion Module Library Reference Manual</title>
   </bookinfo>
 
-  <chapter>
-    <title>Gwyddion Module Tutorial</title>
-    <xi:include href="module-tutorial-overview.sgml"/>
-    <xi:include href="module-tutorial-minimal.sgml"/>
-    <xi:include href="module-tutorial-beyond.sgml"/>
-    <xi:include href="module-tutorial-install.sgml"/>
-  </chapter>
-
-  <chapter>
-    <title>Plug-in Proxy Reference</title>
-    <xi:include href="plugin-proxy-overview.sgml"/>
-    <xi:include href="plugin-proxy-process.sgml"/>
-    <xi:include href="plugin-proxy-file.sgml"/>
-    <xi:include href="plugin-proxy-dump.sgml"/>
-  </chapter>
-
-  <!-- FIXME: When I put this first, Module Tutorial gets ch01 too, when
-       it's last, the ch numbers are OK -->
-  <chapter>
+  <chapter id="ModuleLibrary">
     <title>Gwyddion Module Library</title>
     <xi:include href="xml/gwymoduleloader.xml"/>
     <xi:include href="xml/gwymodule-file.xml"/>
@@ -33,5 +15,21 @@
     <xi:include href="xml/gwymodule-graph.xml"/>
     <xi:include href="xml/gwymodule-layer.xml"/>
     <xi:include href="xml/gwymodulebrowser.xml"/>
+  </chapter>
+
+  <chapter id="ModuleTutorial">
+    <title>Gwyddion Module Tutorial</title>
+    <xi:include href="module-tutorial-overview.sgml"/>
+    <xi:include href="module-tutorial-minimal.sgml"/>
+    <xi:include href="module-tutorial-beyond.sgml"/>
+    <xi:include href="module-tutorial-install.sgml"/>
+  </chapter>
+
+  <chapter id="PluginProxyReference">
+    <title>Plug-in Proxy Reference</title>
+    <xi:include href="plugin-proxy-overview.sgml"/>
+    <xi:include href="plugin-proxy-process.sgml"/>
+    <xi:include href="plugin-proxy-file.sgml"/>
+    <xi:include href="plugin-proxy-dump.sgml"/>
   </chapter>
 </book>

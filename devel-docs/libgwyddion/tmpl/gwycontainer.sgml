@@ -173,6 +173,17 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_gis_boolean ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_container_set_uchar ##### -->
 <para>
 
@@ -190,6 +201,17 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 
 @container: 
 @key: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_container_gis_uchar ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
 @Returns: 
 
 
@@ -213,6 +235,17 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_gis_int32 ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_container_set_int64 ##### -->
 <para>
 
@@ -230,6 +263,17 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 
 @container: 
 @key: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_container_gis_int64 ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
 @Returns: 
 
 
@@ -253,6 +297,17 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_gis_double ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_container_set_string ##### -->
 <para>
 
@@ -273,6 +328,17 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_gis_string ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_container_set_object ##### -->
 <para>
 
@@ -290,6 +356,17 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 
 @container: 
 @key: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_container_gis_object ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
 @Returns: 
 
 
@@ -359,6 +436,16 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @n: 
 
 
+<!-- ##### MACRO gwy_container_gis_boolean_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
+
+
 <!-- ##### MACRO gwy_container_set_uchar_by_name ##### -->
 <para>
 
@@ -376,6 +463,16 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 
 @c: 
 @n: 
+
+
+<!-- ##### MACRO gwy_container_gis_uchar_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
 
 
 <!-- ##### MACRO gwy_container_set_int32_by_name ##### -->
@@ -397,6 +494,16 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @n: 
 
 
+<!-- ##### MACRO gwy_container_gis_int32_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
+
+
 <!-- ##### MACRO gwy_container_set_int64_by_name ##### -->
 <para>
 
@@ -414,6 +521,16 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 
 @c: 
 @n: 
+
+
+<!-- ##### MACRO gwy_container_gis_int64_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
 
 
 <!-- ##### MACRO gwy_container_set_double_by_name ##### -->
@@ -435,6 +552,16 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @n: 
 
 
+<!-- ##### MACRO gwy_container_gis_double_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
+
+
 <!-- ##### MACRO gwy_container_set_string_by_name ##### -->
 <para>
 
@@ -454,6 +581,16 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @n: 
 
 
+<!-- ##### MACRO gwy_container_gis_string_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
+
+
 <!-- ##### MACRO gwy_container_set_object_by_name ##### -->
 <para>
 
@@ -471,5 +608,15 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 
 @c: 
 @n: 
+
+
+<!-- ##### MACRO gwy_container_gis_object_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
 
 

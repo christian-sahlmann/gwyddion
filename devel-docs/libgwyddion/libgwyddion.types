@@ -3,3 +3,4 @@
 gwy_serializable_get_type
 gwy_watchable_get_type
 gwy_container_get_type
+gwy_si_unit_get_type

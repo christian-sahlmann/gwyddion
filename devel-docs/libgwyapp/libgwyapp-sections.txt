@@ -37,9 +37,14 @@ GwyUnitoolCreateFunc
 GwyUnitoolResponseFunc
 GwyUnitoolUpdateFunc
 gwy_unitool_use
+gwy_unitool_dialog_add_button_apply
+gwy_unitool_dialog_add_button_clear
+gwy_unitool_dialog_add_button_hide
+gwy_unitool_apply_set_sensitive
 gwy_unitool_windowname_frame_create
 gwy_unitool_get_z_average
 gwy_unitool_update_label
+gwy_unitool_get_selection_or_all
 </SECTION>
 
 <SECTION>
@@ -71,7 +76,7 @@ gwy_app_settings_get_log_filename
 <FILE>menu</FILE>
 GwyMenuSensFlags
 GwyMenuSensData
-gwy_app_menu_create_xtns_menu
+gwy_app_menu_create_meta_menu
 gwy_app_menu_create_proc_menu
 gwy_app_menu_create_graph_menu
 gwy_app_menu_create_file_menu

@@ -58,6 +58,15 @@ Simple axis with a false color scale
 @max: 
 
 
+<!-- ##### FUNCTION gwy_color_axis_set_unit ##### -->
+<para>
+
+</para>
+
+@axis: 
+@unit: 
+
+
 <!-- ##### FUNCTION gwy_color_axis_set_palette ##### -->
 <para>
 

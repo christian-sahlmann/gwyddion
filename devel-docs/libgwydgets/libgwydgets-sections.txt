@@ -1,6 +1,7 @@
 <SECTION>
 <FILE>gwytoolbox</FILE>
 <TITLE>GwyToolbox</TITLE>
+GwyToolbox
 gwy_toolbox_new
 gwy_toolbox_append
 <SUBSECTION Standard>
@@ -54,6 +55,7 @@ GwyColorAxis
 gwy_color_axis_new
 gwy_color_axis_get_range
 gwy_color_axis_set_range
+gwy_color_axis_set_unit
 gwy_color_axis_set_palette
 gwy_color_axis_get_palette
 <SUBSECTION Standard>
@@ -83,9 +85,9 @@ GWY_AXIS_DIALOG_GET_CLASS
 
 <SECTION>
 <FILE>gwycolorbutton</FILE>
-P_
 GwyColorButtonPrivate
 <TITLE>GwyColorButton</TITLE>
+GwyColorButton
 gwy_color_button_new
 gwy_color_button_new_with_color
 gwy_color_button_set_color
@@ -235,6 +237,7 @@ gwy_vector_layer_key_press
 gwy_vector_layer_key_release
 gwy_vector_layer_selection_finished
 gwy_vector_layer_get_selection
+gwy_vector_layer_set_selection
 gwy_vector_layer_unselect
 gwy_vector_layer_get_update_policy
 gwy_vector_layer_set_update_policy
@@ -532,6 +535,7 @@ GWY_STOCK_FIX_ZERO
 GWY_STOCK_FFT
 GWY_STOCK_GRAINS
 GWY_STOCK_GRAINS_GRAPH
+GWY_STOCK_GRAINS_REMOVE
 GWY_STOCK_GRAINS_WATER
 GWY_STOCK_GRAPH
 GWY_STOCK_GRAPH_GAUSS

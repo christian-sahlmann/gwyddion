@@ -219,16 +219,12 @@ gwymodulemenus
 
 @gwyspherecoords: the object which received the signal.
 
-<!-- ##### STRUCT GwyToolbox ##### -->
+<!-- ##### MACRO P_ ##### -->
 <para>
 
 </para>
 
-@table: 
-@tooltips: 
-@nstuff: 
-@stuff: 
-@max_width: 
+@x: 
 
 <!-- ##### FUNCTION gwy_2dcwt_option_menu ##### -->
 <para>
