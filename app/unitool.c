@@ -214,7 +214,7 @@ gwy_unitool_compute_formats(GwyUnitoolState *state)
     state->coord_format
         = gwy_data_field_get_value_format_xy(dfield, state->coord_format);
     state->value_format
-        = gwy_data_field_get_value_format_xy(dfield, state->value_format);
+        = gwy_data_field_get_value_format_z(dfield, state->value_format);
 }
 
 /*
