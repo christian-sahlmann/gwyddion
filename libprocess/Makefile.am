@@ -20,7 +20,8 @@ libgwyprocessinclude_HEADERS = \
 	level.h \
 	linestats.h \
 	simplefft.h \
-	stats.h
+	stats.h \
+	tip.h
 
 lib_LTLIBRARIES = libgwyprocess.la
 
@@ -50,7 +51,8 @@ libgwyprocess_la_SOURCES = \
 	level.c \
 	linestats.c \
 	simplefft.c \
-	stats.c
+	stats.c \
+	tip.c
 
 #noinst_PROGRAMS = test
 #
