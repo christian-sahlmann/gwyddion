@@ -51,7 +51,8 @@ gwy_app_about(void)
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
     widget = gtk_image_new_from_stock(GWY_STOCK_GWYDDION,
-                                      GTK_ICON_SIZE_DIALOG);
+                                      gtk_icon_size_from_name(
+                                                         GWY_ICON_SIZE_ABOUT));
 
     gtk_box_pack_start(GTK_BOX(hbox), widget, FALSE, FALSE, 0);
     gtk_misc_set_alignment(GTK_MISC(widget), 0.5, 0.0);
