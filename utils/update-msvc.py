@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import re, os, shutil, glob
+import re, os, sys, shutil, glob
 
 re_listend = re.compile(r'\s*\\\n\s*')
 re_nm = re.compile(r'(?P<addr>[a-z0-9 ]+) (?P<type>[-A-Za-z?]) (?P<symbol>\w+)')
@@ -16,6 +16,8 @@ mod_dll_rule = """\
 """
 
 top_dir = os.getcwd()
+
+quiet = len(sys.argv) > 1 and sys.argv[1] == '-q'
 
 def backup(filename):
     try:
@@ -46,9 +48,16 @@ def print_filename(filename):
 def backup_write_diff(filename, text):
     rundiff = backup(filename)
     write_file(filename, text)
-    print_filename(filename)
+    if not quiet:
+        print_filename(filename)
     if rundiff:
-        os.system('diff %s~ %s' % (filename, filename))
+        fh = os.popen('diff %s~ %s' % (filename, filename), 'r')
+        diff = fh.readlines()
+        fh.close()
+        if diff:
+            if quiet:
+                print_filename(filename)
+            sys.stdout.write(''.join(diff))
 
 def get_list(text, name):
     r = re.compile(r'^\s*%s\s*=\s*(?P<list>(?:.*\\\n)*.*)' % name, re.M)
