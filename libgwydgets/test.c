@@ -26,20 +26,35 @@ main(int argc, char *argv[])
     GtkWidget *axis, *label, *area, *graph, *foo;
     GError *err = NULL;
     gint i;
+    GString *str1, *str2, *str3, *str4, *str5;
+    GwyGraphAreaCurveParams par;
+    GwyGraphAutoProperties prop;
 
     double xs[100];
     double ys[100];
-    double xr[100];
-    double yr[100];
+    double xr[10];
+    double yr[10];
     double xp[100];
     double yp[100];
-    double xu[100];
-    double yu[100];
-    double xv[100];
-    double yv[100];
+    double xu[10];
+    double yu[10];
+    double xv[20];
+    double yv[20];
          
-    for (i=0; i<100; i++){xs[i]=xr[i]=xp[i]=xu[i]=xv[i]=i; ys[i]=i; yr[i]=(double)i*i/40; 
-        yp[i]=20*sin((double)i*15/100); yu[i]=50-(double)i/2; yv[i]=20*sin((double)i*15/100)-15*cos((double)(i-3)*15/100);}
+    for (i=0; i<100; i++){xs[i]=i; xp[i]=i; ys[i]=(double)i*i/40; 
+        yp[i]=20*sin((double)i*15/100);
+        
+        if (i<20) {
+            xv[i]=5.0*i + 12;
+            yv[i]=20*sin((double)i*5.0*15/100)-15*cos((double)(i*5.0-3)*15/100) - 30;
+           }
+        if (i<10) {
+            xr[i]=20+i*3;
+            yr[i]=150+4*i;
+            xu[i]=20+i*7;
+            yu[i]=50 - (double)i*4;
+           }
+        }
     
     gtk_init(&argc, &argv);
     
@@ -50,13 +65,12 @@ main(int argc, char *argv[])
     gtk_container_set_border_width (GTK_CONTAINER (window), 0);
 
     /* 
-    axis = gwy_axis_new(1, -0.1, 100, "ble");
-    gwy_axis_set_logarithmic(axis, 0);
+    axis = gwy_axis_new(1, 0, 112.00, "ble");
     
     gtk_container_add (GTK_CONTAINER (window), axis);
     gtk_widget_show (axis);
+    
     */
-
     /*
     label = gwy_graph_label_new();
     gtk_container_add (GTK_CONTAINER (window), label);
@@ -73,13 +87,34 @@ main(int argc, char *argv[])
     gtk_layout_put(GTK_LAYOUT(area), foo, 10, 20);
     */
 
+    str1 = g_string_new("parabola");
+    str2 = g_string_new("kousek");
+    str3 = g_string_new("sinus");
+    str4 = g_string_new("cosi");
+    str5 = g_string_new("jiny sinus");
+
+    par.is_line = 1;
+    par.is_point = 1;
+    par.line_style = GDK_LINE_SOLID;
+    par.line_size = 1;
+    par.point_type = 0;
+    par.point_size = 8;
+    par.color.pixel = 0x00000000;
     
     graph = gwy_graph_new();
-    gwy_graph_add_datavalues(graph, xs, ys, 100);
-    gwy_graph_add_datavalues(graph, xr, yr, 100);
-    gwy_graph_add_datavalues(graph, xp, yp, 100);
-    gwy_graph_add_datavalues(graph, xu, yu, 100);
-    gwy_graph_add_datavalues(graph, xv, yv, 100);
+    gwy_graph_get_autoproperties(graph, &prop);
+    prop.is_point = 0; 
+    gwy_graph_set_autoproperties(graph, &prop);
+
+    gwy_graph_add_datavalues(graph, xs, ys, 100, str1, NULL);
+    gwy_graph_add_datavalues(graph, xp, yp, 100, str3, NULL);
+    prop.is_point = 1;
+    gwy_graph_set_autoproperties(graph, &prop);
+    gwy_graph_add_datavalues(graph, xr, yr, 10, str2, NULL);
+    gwy_graph_add_datavalues(graph, xu, yu, 10, str4, &par);
+    prop.is_line = 0;
+    gwy_graph_set_autoproperties(graph, &prop);
+    gwy_graph_add_datavalues(graph, xv, yv, 20, str5, NULL);
     
     
     gtk_container_add (GTK_CONTAINER (window), graph);
