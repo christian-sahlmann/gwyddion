@@ -128,10 +128,10 @@ data_view_test(void)
     view = gwy_data_view_new(data);
     layer = (GwyDataViewLayer*)gwy_layer_basic_new();
     palette = (GwyPalette*)(gwy_palette_new(NULL));
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
     gwy_palette_set_by_name(palette, GWY_PALETTE_RAINBOW2);
     gwy_layer_basic_set_palette(layer, palette);
     g_object_unref(palette);
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
 
     layer = (GwyDataViewLayer*)gwy_layer_select_new();
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), layer);

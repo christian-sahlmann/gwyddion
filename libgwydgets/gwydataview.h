@@ -85,6 +85,8 @@ void              gwy_data_view_coords_real_to_xy (GwyDataView *data_view,
                                                    gdouble yreal,
                                                    gint *xscr,
                                                    gint *yscr);
+gdouble           gwy_data_view_get_xmeasure      (GwyDataView *data_view);
+gdouble           gwy_data_view_get_ymeasure      (GwyDataView *data_view);
 
 #ifdef __cplusplus
 }
