@@ -171,6 +171,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gint row;
 
     gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
 
     gwy3dwindow = (Gwy3DWindow*)g_object_new(GWY_TYPE_3D_WINDOW, NULL);
     gtk_window_set_wmclass(GTK_WINDOW(gwy3dwindow), "data",
