@@ -37,16 +37,18 @@ extern "C" {
 #define GWY_IS_GRAPH_CORNER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_CORNER))
 #define GWY_IS_GRAPH_CORNER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_CORNER))
 #define GWY_GRAPH_CORNER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_CORNER, GwyGraphCornerClass))
-    
 
-typedef struct {
+typedef struct _GwyGraphCorner      GwyGraphCorner;
+typedef struct _GwyGraphCornerClass GwyGraphCornerClass;
+
+struct _GwyGraphCorner {
     GtkWidget widget;
 
-} GwyGraphCorner;
+};
 
-typedef struct {
+struct _GwyGraphCornerClass {
      GtkWidgetClass parent_class;
-} GwyGraphCornerClass;
+};
 
 
 GtkWidget* gwy_graph_corner_new();

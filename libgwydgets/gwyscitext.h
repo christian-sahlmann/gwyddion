@@ -37,6 +37,9 @@ extern "C" {
 #define GWY_IS_SCI_TEXT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SCI_TEXT))
 #define GWY_SCI_TEXT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SCI_TEXT, GwySciTextClass))
 
+typedef struct _GwySciText      GwySciText;
+typedef struct _GwySciTextClass GwySciTextClass;
+
 typedef struct {
     GString *ent_text;
     GString *utf_text;
@@ -44,7 +47,7 @@ typedef struct {
     PangoFontDescription *label_font;
 } GwySciTextParams;
 
-typedef struct {
+struct _GwySciText {
     GtkVBox vbox;
 
     GdkGC *gc;
@@ -53,11 +56,11 @@ typedef struct {
     GtkCombo *entities;
 
     GwySciTextParams par;
-} GwySciText;
+};
 
-typedef struct {
+struct _GwySciTextClass {
      GtkVBoxClass parent_class;
-} GwySciTextClass;
+};
 
 
 GtkWidget* gwy_sci_text_new       ();

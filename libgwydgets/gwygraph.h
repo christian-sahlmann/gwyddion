@@ -25,10 +25,11 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtktable.h>
 
+#include <libprocess/dataline.h>
+
 #include "gwyaxis.h"
 #include "gwygrapharea.h"
 #include "gwygraphcorner.h"
-#include "../libprocess/dataline.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,6 +42,8 @@ extern "C" {
 #define GWY_IS_GRAPH_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH))
 #define GWY_GRAPH_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH, GwyGraphClass))
 
+typedef struct _GwyGraph      GwyGraph;
+typedef struct _GwyGraphClass GwyGraphClass;
 
 typedef struct {
    gboolean is_line;
@@ -51,9 +54,9 @@ typedef struct {
 } GwyGraphAutoProperties;
 
 
-typedef struct {
+struct _GwyGraph {
    GtkTable table;
-   
+
    GwyAxis *axis_top;
    GwyAxis *axis_left;
    GwyAxis *axis_right;
@@ -63,12 +66,12 @@ typedef struct {
    GwyGraphCorner *corner_bl;
    GwyGraphCorner *corner_tr;
    GwyGraphCorner *corner_br;
-   
+
    GwyGraphArea *area;
 
    gint n_of_curves;
    gint n_of_autocurves;
-  
+
    GwyGraphAutoProperties autoproperties;
 
    gdouble x_max, x_reqmax;
@@ -83,29 +86,29 @@ typedef struct {
 
    GwyGraphStatus_SelData seldata;
    GwyGraphStatus_PointsData pointsdata;
-    
-} GwyGraph;
 
-typedef struct {
+};
+
+struct _GwyGraphClass {
    GtkTableClass parent_class;
-   
-   void (* gwygraph) (GwyGraph *graph);
-} GwyGraphClass;
+
+   void (*gwygraph)(GwyGraph *graph);
+};
 
 GtkWidget *gwy_graph_new();
 GType      gwy_graph_get_type(void) G_GNUC_CONST;
-  
+
 
 /*basic interfaces*/
 
-void gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline, 
-                              gdouble shift, GString *label, GwyGraphAreaCurveParams *params, 
-			      gdouble x_order, gdouble y_order, char *x_unit, char *y_unit);
+void gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
+                              gdouble shift, GString *label, GwyGraphAreaCurveParams *params,
+            gdouble x_order, gdouble y_order, char *x_unit, char *y_unit);
 
-void gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline, 
+void gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
                               gdouble shift, GString *label, GwyGraphAreaCurveParams *params);
 
-void gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals, 
+void gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
                               gint n, GString *label, GwyGraphAreaCurveParams *params);
 
 void gwy_graph_clear(GwyGraph *graph);
@@ -116,8 +119,8 @@ void gwy_graph_export_ascii(GwyGraph *graph, char *filename);
 
 /*graph status (selections enabled) handling*/
 
-void               gwy_graph_set_status(GwyGraph *graph, 
-					GwyGraphStatusType status);
+void               gwy_graph_set_status(GwyGraph *graph,
+          GwyGraphStatusType status);
 
 GwyGraphStatusType gwy_graph_get_status(GwyGraph *graph);
 

@@ -50,6 +50,9 @@ extern "C" {
 #define GWY_IS_GRAPH_LABEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_LABEL))
 #define GWY_GRAPH_LABEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_LABEL, GwyGraphLabelClass))
 
+typedef struct _GwyGraphLabel      GwyGraphLabel;
+typedef struct _GwyGraphLabelClass GwyGraphLabelClass;
+
 /*single curve properties*/
 typedef struct {
     gint is_line;
@@ -64,7 +67,7 @@ typedef struct {
     GString *description;
     GdkColor color;
 } GwyGraphAreaCurveParams;
-    
+
 
 typedef struct {
     gboolean is_frame;
@@ -73,20 +76,20 @@ typedef struct {
     PangoFontDescription *font;
 } GwyGraphLabelParams;
 
-typedef struct {
+struct _GwyGraphLabel {
     GtkWidget widget;
 
-    GwyGraphLabelParams par; 
+    GwyGraphLabelParams par;
     gboolean is_visible;
     gint maxwidth;
     gint maxheight;
 
     GPtrArray *curve_params;
-} GwyGraphLabel;
+};
 
-typedef struct {
+struct _GwyGraphLabelClass {
      GtkWidgetClass parent_class;
-} GwyGraphLabelClass;
+};
 
 
 GtkWidget* gwy_graph_label_new();
@@ -101,8 +104,8 @@ void gwy_graph_label_add_curve(GwyGraphLabel *label, GwyGraphAreaCurveParams *pa
 
 void gwy_graph_label_clear(GwyGraphLabel *label);
 
-void  gwy_graph_draw_point (GdkWindow *window, 
-                            GdkGC *gc, gint i, gint j, 
+void  gwy_graph_draw_point (GdkWindow *window,
+                            GdkGC *gc, gint i, gint j,
                             gint type, gint size, GdkColor *color, gboolean clear);
 
 #ifdef __cplusplus

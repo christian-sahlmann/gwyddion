@@ -65,6 +65,9 @@ extern "C" {
 #define GWY_PALETTE_WARM         "Warm"
 #define GWY_PALETTE_YELLOW       "Yellow"
 
+typedef struct _GwyPaletteDef      GwyPaletteDef;
+typedef struct _GwyPaletteDefClass GwyPaletteDefClass;
+
 typedef struct {
     gdouble r;
     gdouble g;
@@ -77,19 +80,19 @@ typedef struct {
     GwyRGBA color;
 } GwyPaletteDefEntry;
 
-typedef struct{
+struct _GwyPaletteDef {
     GObject parent_instance;
 
     gchar *name;
     GArray *data;                  /*color data*/
     gboolean has_alpha;      /*has alpha chanel?*/
-} GwyPaletteDef;
+};
 
-typedef struct{
+struct _GwyPaletteDefClass {
     GObjectClass parent_class;
 
     GHashTable *palettes;
-} GwyPaletteDefClass;
+};
 
 typedef void (*GwyPaletteDefFunc)(const gchar *name,
                                   GwyPaletteDef *palette_def,
@@ -115,9 +118,6 @@ void          gwy_palette_def_set_from_samples (GwyPaletteDef *palette_def,
                                                 gint nsamples,
                                                 gint istep);
 void          gwy_palette_def_setup_presets    (void);
-
-/*output (for debugging namely)*/
-void gwy_palette_def_print(GwyPaletteDef *a);
 
 #define gwy_palette_def_is_set(pd) (GWY_PALETTE_DEF(pd)->data->len)
 

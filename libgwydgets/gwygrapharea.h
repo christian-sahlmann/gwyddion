@@ -38,6 +38,8 @@ extern "C" {
 #define GWY_IS_GRAPH_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_AREA))
 #define GWY_GRAPH_AREA_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_AREA, GwyGraphAreaClass))
 
+typedef struct _GwyGraphArea      GwyGraphArea;
+typedef struct _GwyGraphAreaClass GwyGraphAreaClass;
 
 /*single curve data*/
 typedef struct {
@@ -47,12 +49,12 @@ typedef struct {
 } GwyGraphAreaCurvePoints;
 
 typedef enum {
-  GWY_GRAPH_STATUS_PLAIN  = 0,
-  GWY_GRAPH_STATUS_CURSOR = 1,
-  GWY_GRAPH_STATUS_XSEL   = 2,
-  GWY_GRAPH_STATUS_YSEL   = 3,
-  GWY_GRAPH_STATUS_POINTS = 4,
-  GWY_GRAPH_STATUS_ZOOM   = 5
+    GWY_GRAPH_STATUS_PLAIN  = 0,
+    GWY_GRAPH_STATUS_CURSOR = 1,
+    GWY_GRAPH_STATUS_XSEL   = 2,
+    GWY_GRAPH_STATUS_YSEL   = 3,
+    GWY_GRAPH_STATUS_POINTS = 4,
+    GWY_GRAPH_STATUS_ZOOM   = 5
 } GwyGraphStatusType;
 
 typedef struct {
@@ -104,24 +106,24 @@ typedef struct {
 typedef struct {
     GwyGraphAreaCurvePoints data;       /*original data including its size*/
     GwyGraphAreaCurveParams params;     /*parameters of plot*/
-    GdkPoint *points;			/*points to be directly plotted*/
+    GdkPoint *points;           /*points to be directly plotted*/
 } GwyGraphAreaCurve;
 
 /*overall properties of area*/
 typedef struct {
-    int ble; 
+    int ble;
 } GwyGraphAreaParams;
 
 /*graph area structure*/
-typedef struct {
+struct _GwyGraphArea {
     GtkLayout parent_instance;
 
     GdkGC *gc;
-    				/*label*/
+                    /*label*/
     GwyGraphLabel *lab;
     GwyGraphAreaParams par;
 
-    GwyGraphStatusType status;         
+    GwyGraphStatusType status;
     GwyGraphStatus_SelData *seldata;
     GwyGraphStatus_PointsData *pointsdata;
     GwyGraphStatus_CursorData *cursordata;
@@ -141,28 +143,28 @@ typedef struct {
 
     gint old_width;
     gint old_height;
-   
+
     /*selection drawing*/
-    gboolean selecting; 
-    
+    gboolean selecting;
+
     /*label movement*/
     GtkWidget *active;
     gint x0;
     gint y0;
     gint xoff;
-    gint yoff;   
+    gint yoff;
 
-} GwyGraphArea;
+};
 
 /*graph area class*/
-typedef struct {
+struct _GwyGraphAreaClass {
      GtkLayoutClass parent_class;
 
      GdkCursor *cross_cursor;
      GdkCursor *arrow_cursor;
-     void (* selected) (GwyGraphArea *area);
-     void (* zoomed) (GwyGraphArea *area);
-} GwyGraphAreaClass;
+     void (*selected)(GwyGraphArea *area);
+     void (*zoomed)(GwyGraphArea *area);
+};
 
 
 GtkWidget* gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment);
@@ -186,3 +188,5 @@ void gwy_graph_area_signal_zoomed(GwyGraphArea *area);
 #endif /* __cplusplus */
 
 #endif /*__GWY_AXIS_H__*/
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

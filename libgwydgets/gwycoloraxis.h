@@ -31,41 +31,43 @@
 extern "C" {
 #endif /* __cplusplus */
 
-    
+
 #define GWY_TYPE_COLOR_AXIS            (gwy_color_axis_get_type())
 #define GWY_COLOR_AXIS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_COLOR_AXIS, GwyColorAxis))
 #define GWY_COLOR_AXIS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_COLOR_AXIS, GwyColorAxis))
 #define GWY_IS_COLOR_AXIS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_COLOR_AXIS))
 #define GWY_IS_COLOR_AXIS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_COLOR_AXIS))
-#define GWY_COLOR_AXIS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_COLOR_AXIS, GwyColorAxisClass))    
+#define GWY_COLOR_AXIS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_COLOR_AXIS, GwyColorAxisClass))
 
+typedef struct _GwyColorAxis      GwyColorAxis;
+typedef struct _GwyColorAxisClass GwyColorAxisClass;
 
 typedef struct {
     gint tick_length;
-    gint textarea;		/*text area width*/
+    gint textarea;    /*text area width*/
 
     PangoFontDescription *font;
 } GwyColorAxisParams;
 
-typedef struct {
+struct _GwyColorAxis {
     GtkWidget widget;
 
     GwyColorAxisParams par;
     GwyPalette *palette;
 
     GdkPixbuf *pixbuf;
-    
-    GtkOrientation orientation;		/*north, south, east, west*/
+
+    GtkOrientation orientation;   /*north, south, east, west*/
     gdouble min;
     gdouble max;
-   
-    GString *label_text;
-    
-} GwyColorAxis;
 
-typedef struct {
+    GString *label_text;
+
+};
+
+struct _GwyColorAxisClass {
      GtkWidgetClass parent_class;
-} GwyColorAxisClass;
+};
 
 
 GtkWidget* gwy_color_axis_new(GtkOrientation orientation, gdouble min, gdouble max, GwyPalette *pal);

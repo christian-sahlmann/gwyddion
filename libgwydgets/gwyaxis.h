@@ -44,6 +44,8 @@ extern "C" {
 #define GWY_IS_AXIS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_AXIS))
 #define GWY_AXIS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_AXIS, GwyAxisClass))
 
+typedef struct _GwyAxis      GwyAxis;
+typedef struct _GwyAxisClass GwyAxisClass;
 
 typedef enum {
     GWY_AXIS_FLOAT = 1,
@@ -78,7 +80,7 @@ typedef struct {
     PangoFontDescription *label_font;
 } GwyAxisParams;
 
-typedef struct {
+struct _GwyAxis {
     GtkWidget widget;
 
     GwyAxisParams par;
@@ -105,11 +107,11 @@ typedef struct {
     gchar *unit;                /*axis unit (if any)*/
 
     GtkWidget *dialog;      /*axis label and other properties dialog*/
-} GwyAxis;
+};
 
-typedef struct {
+struct _GwyAxisClass {
      GtkWidgetClass parent_class;
-} GwyAxisClass;
+};
 
 
 GType       gwy_axis_get_type           (void) G_GNUC_CONST;

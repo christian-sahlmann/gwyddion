@@ -35,18 +35,20 @@ extern "C" {
 #define GWY_IS_PALETTE_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_PALETTE))
 #define GWY_PALETTE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_PALETTE, GwyPaletteClass))
 
+typedef struct _GwyPalette      GwyPalette;
+typedef struct _GwyPaletteClass GwyPaletteClass;
 
-typedef struct {
+struct _GwyPalette {
     GObject parent_instance;
 
     GwyPaletteDef *def;     /* palette definition */
-} GwyPalette;
+};
 
-typedef struct{
+struct _GwyPaletteClass {
     GObjectClass parent_class;
 
     GHashTable *palettes;
-} GwyPaletteClass;
+};
 
 GType            gwy_palette_get_type             (void) G_GNUC_CONST;
 GObject*         gwy_palette_new                  (GwyPaletteDef *palette_def);

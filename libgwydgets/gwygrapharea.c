@@ -176,7 +176,7 @@ static void
 gwy_graph_area_init(GwyGraphArea *area)
 {
     GwyGraphAreaClass *klass;
-    
+
     gwy_debug("");
     area->gc = NULL;
     area->active = NULL;
@@ -207,7 +207,7 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->zoomdata->y = 0;
     area->zoomdata->width = 0;
     area->zoomdata->height = 0;
-    
+
 
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
@@ -492,7 +492,7 @@ gwy_graph_area_draw_zoom(GtkWidget *widget)
     area = GWY_GRAPH_AREA(widget);
 
     printf("x=%d, y=%d, w=%d, h=%d\n", area->zoomdata->x, area->zoomdata->y, area->zoomdata->width, area->zoomdata->height);
-    if (area->status == GWY_GRAPH_STATUS_ZOOM && 
+    if (area->status == GWY_GRAPH_STATUS_ZOOM &&
         area->zoomdata->width!=0 && area->zoomdata->height!=0)
     {
         gdk_gc_set_function(area->gc, GDK_INVERT);
@@ -501,9 +501,9 @@ gwy_graph_area_draw_zoom(GtkWidget *widget)
         else x = area->zoomdata->x;
         if (area->zoomdata->height<0) y = area->zoomdata->y + area->zoomdata->height;
         else y = area->zoomdata->y;
-                
-        gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc, 0, 
-                           x, 
+
+        gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc, 0,
+                           x,
                            y,
                            fabs(area->zoomdata->width),
                            fabs(area->zoomdata->height));
@@ -674,11 +674,11 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
             y += (gint)event->y;
             ispos = 1;
         }
-         /*TODO delete rectangle*/    
+         /*TODO delete rectangle*/
         area->zoomdata->width = x - area->zoomdata->x;
         area->zoomdata->height = y - area->zoomdata->y;
         zoom(widget);
-        
+
         area->zoomdata->x = 0;
         area->zoomdata->y = 0;
         area->zoomdata->width = 0;
@@ -709,8 +709,8 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         gdk_window_set_cursor(GTK_LAYOUT(area)->bin_window, klass->cross_cursor);
     }
     else gdk_window_set_cursor(GTK_LAYOUT(area)->bin_window, klass->arrow_cursor);
-        
-    
+
+
     /*cursor position*/
     if (area->status == GWY_GRAPH_STATUS_CURSOR || area->status == GWY_GRAPH_STATUS_POINTS)
     {
@@ -735,7 +735,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             area->pointsdata->actual_scr_point.i = x;
             area->pointsdata->actual_scr_point.j = y;
             area->pointsdata->actual_data_point.x = scr_to_data_x(widget, x);
-            area->pointsdata->actual_data_point.y = scr_to_data_y(widget, y);    
+            area->pointsdata->actual_data_point.y = scr_to_data_y(widget, y);
             area->pointsdata->actual_data_point.x_unit = NULL;
             area->pointsdata->actual_data_point.y_unit = NULL;
         }
@@ -777,8 +777,8 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
          /*TODO repaint rectangle...*/
         area->zoomdata->width = x - area->zoomdata->x;
         area->zoomdata->height = y - area->zoomdata->y;
-        
-       
+
+
         gtk_widget_queue_draw(widget);
      }
 
@@ -872,8 +872,8 @@ gwy_graph_area_draw_child_rectangle(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_set_boundaries:
- * @area: graph area 
- * @x_min: x minimum 
+ * @area: graph area
+ * @x_min: x minimum
  * @x_max: x maximum
  * @y_min: y minimim
  * @y_max: y maximum
@@ -896,9 +896,9 @@ gwy_graph_area_set_boundaries(GwyGraphArea *area, gdouble x_min, gdouble x_max, 
 
 /**
  * gwy_graph_area_plot_refresh:
- * @area: graph area 
+ * @area: graph area
  *
- * Recomputes all data corresponding to actual curve screen representation 
+ * Recomputes all data corresponding to actual curve screen representation
  * to be plotted according to window size.
  **/
 static void
@@ -931,7 +931,7 @@ gwy_graph_area_plot_refresh(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_add_curve:
- * @area: graph area 
+ * @area: graph area
  * @curve: curve to be added
  *
  * Adds a curve to graph. Adds the curve data values, but the recomputation
@@ -979,7 +979,7 @@ gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve)
 
 /**
  * gwy_graph_area_clear:
- * @area: graph area 
+ * @area: graph area
  *
  * clear graph area
  **/
@@ -1026,7 +1026,7 @@ scr_to_data_y(GtkWidget *widget, gint scr)
 
 /**
  * gwy_graph_area_signal_selected:
- * @area: graph area 
+ * @area: graph area
  *
  * emit signal that something was selected by mouse. "Something" depends on the
  * actual graph status (points, horizontal selection, etc.).
@@ -1039,9 +1039,9 @@ gwy_graph_area_signal_selected(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_signal_zoomed:
- * @area: graph area 
+ * @area: graph area
  *
- * emit signal that user finished drawing zoom rectangle by mouse. 
+ * emit signal that user finished drawing zoom rectangle by mouse.
  **/
 void
 gwy_graph_area_signal_zoomed(GwyGraphArea *area)
@@ -1055,14 +1055,14 @@ zoom(GtkWidget *widget)
 {
     GwyGraphArea *area;
     gdouble xmax, ymax, xmin, ymin, x, y, swap;
-    
+
     area = GWY_GRAPH_AREA(widget);
 
     if (area->zoomdata->width<0) x = area->zoomdata->x + area->zoomdata->width;
     else x = area->zoomdata->x;
     if (area->zoomdata->height<0) y = area->zoomdata->y + area->zoomdata->height;
     else y = area->zoomdata->y;
-    
+
     area->zoomdata->xmin = scr_to_data_x(widget, x);
     area->zoomdata->ymin = scr_to_data_y(widget, y);
     area->zoomdata->xmax = scr_to_data_x(widget, x + fabs(area->zoomdata->width));
