@@ -19,10 +19,12 @@
  */
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <glib.h>
 #include <gtk/gtkmarshal.h>
 
-/*#define DEBUG 1*/
+#define DEBUG 1
 
 #include <libgwyddion/gwymacros.h>
 #include "gwycontainer.h"
@@ -111,6 +113,8 @@ static void     setup_object_callback            (GwyContainer *container,
                                                   GValue *value);
 static void     watchable_value_changed          (GObject *object,
                                                   ObjectWatch *owatch);
+static int      pstring_compare_callback         (const void *p,
+                                                  const void *q);
 
 
 GType
@@ -2034,73 +2038,240 @@ hash_text_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 {
     GQuark key = GPOINTER_TO_UINT(hkey);
     GValue *value = (GValue*)hvalue;
-    GString *str = (GString*)hdata;
+    GPtrArray *pa = (GPtrArray*)hdata;
     GType type = G_VALUE_TYPE(value);
-    gchar *s, *v;
-    gchar c;
+    gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
+    gchar *k, *v, *s;
+    guchar c;
 
+    k = g_strescape(g_quark_to_string(key), NULL);
+    v = NULL;
     switch (type) {
         case G_TYPE_BOOLEAN:
-        c = 'b';
-        v = g_strdup(g_value_get_boolean(value) ? "True" : "False");
+        v = g_strdup_printf("\"%s\" boolean %s",
+                            k, g_value_get_boolean(value) ? "True" : "False");
         break;
 
         case G_TYPE_UCHAR:
-        c = 'c';
+        c = g_value_get_uchar(value);
         if (g_ascii_isprint(c) && !g_ascii_isspace(c))
-            v = g_strdup_printf("'%c'", g_value_get_uchar(value));
+            v = g_strdup_printf("\"%s\" char %c", k, c);
         else
-            v = g_strdup_printf("'\\x%02x'", g_value_get_uchar(value));
+            v = g_strdup_printf("\"%s\" char 0x%02x", k, c);
         break;
 
         case G_TYPE_INT:
-        c = 'i';
-        v = g_strdup_printf("%d", g_value_get_int(value));
+        v = g_strdup_printf("\"%s\" int32 %d", k, g_value_get_int(value));
         break;
 
         case G_TYPE_INT64:
-        c = 'q';
-        v = g_strdup_printf("%lld", g_value_get_int64(value));
+        /* FIXME: this probably fails on MS platforms */
+        v = g_strdup_printf("\"%s\" int64 %lld", k, g_value_get_int64(value));
         break;
 
         case G_TYPE_DOUBLE:
-        c = 'd';
-        v = g_strdup_printf("%.18g", g_value_get_double(value));
+        g_ascii_dtostr(buf, G_ASCII_DTOSTR_BUF_SIZE, g_value_get_double(value));
+        v = g_strdup_printf("\"%s\" double %s", k, buf);
         break;
 
         case G_TYPE_STRING:
-        c = 's';
         s = g_strescape(g_value_get_string(value), NULL);
-        v = g_strconcat("\"", s, "\"", NULL);
+        v = g_strdup_printf("\"%s\" string \"%s\"", k, s);
         g_free(s);
         break;
 
         default:
-        g_warning("Cannot pack GValue holding %s", g_type_name(type));
-        c = '!';
-        v = g_strdup("NotImplemented");
+        g_critical("Cannot pack GValue holding %s", g_type_name(type));
         break;
     }
-    s = g_strescape(g_quark_to_string(key), NULL);
-    g_string_append_printf(str, "[%c]\"%s\" = %s\n", c, s, v);
+    if (v)
+        g_ptr_array_add(pa, v);
+    g_free(k);
 }
 
-guchar*
+static int
+pstring_compare_callback(const void *p, const void *q)
+{
+    return strcmp(*(gchar**)p, *(gchar**)q);
+}
+
+/**
+ * gwy_container_serialize_to_text:
+ * @container: A #GwyContainer.
+ *
+ * Creates a text representation of @container contents.
+ *
+ * Note only simple data types are supported as serialization of compound
+ * objects is not controllable.
+ *
+ * Returns: A pointer array, each item containing string with one container
+ * item representation (name, type, value).  The array is sorted by name.
+ *
+ * Since: 1.2.
+ **/
+GPtrArray*
 gwy_container_serialize_to_text(GwyContainer *container)
 {
-    GString *str;
-    gchar *s;
+    GPtrArray *pa;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
 
-    str = g_string_new("");
-    g_hash_table_foreach(container->values, hash_text_serialize_func, str);
+    pa = g_ptr_array_new();
+    g_hash_table_foreach(container->values, hash_text_serialize_func, pa);
+    g_ptr_array_sort(pa, pstring_compare_callback);
 
-    s = str->str;
-    g_string_free(str, FALSE);
+    return pa;
+}
 
-    return s;
+static guint
+token_length(const gchar *text)
+{
+    guint i;
+
+    g_assert(!g_ascii_isspace(*text));
+    if (*text == '"') {
+        /* quoted string */
+        for (i = 1; text[i] != '"'; i++) {
+            if (text[i] == '\\') {
+               i++;
+               if (!text[i])
+                   return (guint)-1;
+            }
+        }
+        i++;
+    }
+    else {
+        /* normal token */
+        for (i = 0; text[i] && !g_ascii_isspace(text[i]); i++)
+            ;
+    }
+
+    return i;
+}
+
+/**
+ * gwy_container_deserialize_from_text:
+ * @text: 
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.2.
+ **/
+GwyContainer*
+gwy_container_deserialize_from_text(const gchar *text)
+{
+    GwyContainer *container;
+    const gchar *tok, *type;
+    gchar *name;
+    guint len, namelen, typelen;
+    GQuark key;
+
+    container = GWY_CONTAINER(gwy_container_new());
+
+    for (tok = text; g_ascii_isspace(*tok); tok++)
+        ;
+    while ((len = token_length(tok))) {
+        /* name */
+        name = NULL;
+        if (len == (guint)-1)
+            goto fail;
+        namelen = tok[0] == '"' ? len - 2 : len;
+        name = g_strndup(tok[0] == '"' ? tok+1 : tok, namelen);
+        key = g_quark_from_string(name);
+        gwy_debug("got name <%s>", name);
+
+        /* type */
+        for (tok = tok + len; g_ascii_isspace(*tok); tok++)
+            ;
+        if (!(len = token_length(tok)) || len == (guint)-1)
+            goto fail;
+        type = tok;
+        typelen = len;
+        gwy_debug("got type <%.*s>", typelen, type);
+
+        /* value */
+        for (tok = tok + len; g_ascii_isspace(*tok); tok++)
+            ;
+        /* boolean */
+        if (typelen+1 == sizeof("boolean") &&
+            g_str_has_prefix(type, "boolean")) {
+            if (!(len = token_length(tok)) || len == (guint)-1)
+                goto fail;
+            if (len == 4 && g_str_has_prefix(tok, "True"))
+                gwy_container_set_boolean(container, key, TRUE);
+            else if (len == 5 && g_str_has_prefix(tok, "False"))
+                gwy_container_set_boolean(container, key, FALSE);
+            else
+                goto fail;
+        }
+        /* char */
+        else if (typelen+1 == sizeof("char")
+                 && g_str_has_prefix(type, "char")) {
+            guint c;
+
+            if (!(len = token_length(tok)) || len == (guint)-1)
+                goto fail;
+            if (len == 1)
+                c = *tok;
+            else {
+                if (len != 4)
+                    goto fail;
+                sscanf(tok+2, "%x", &c);
+            }
+            gwy_container_set_uchar(container, key, (guchar)c);
+        }
+        /* int32 */
+        else if (typelen+1 == sizeof("int32")
+                 && g_str_has_prefix(type, "int32")) {
+            if (!(len = token_length(tok)) || len == (guint)-1)
+                goto fail;
+            gwy_container_set_int32(container, key, strtol(tok, NULL, 0));
+        }
+        /* int64 */
+        else if (typelen+1 == sizeof("int64")
+                 && g_str_has_prefix(type, "int64")) {
+            gint64 i64;
+
+            if (!(len = token_length(tok)) || len == (guint)-1)
+                goto fail;
+            /* FIXME: this probably fails on MS platforms */
+            sscanf(tok, "%lld", &i64);
+            gwy_container_set_int64(container, key, i64);
+        }
+        /* double */
+        else if (typelen+1 == sizeof("double")
+                 && g_str_has_prefix(type, "double")) {
+            if (!(len = token_length(tok)) || len == (guint)-1)
+                goto fail;
+            gwy_container_set_double(container, key, g_ascii_strtod(tok, NULL));
+        }
+        /* string */
+        else if (typelen+1 == sizeof("string")
+                 && g_str_has_prefix(type, "string")) {
+            if (!(len = token_length(tok)) || len == (guint)-1)
+                goto fail;
+            gwy_container_set_string(container, key, g_strndup(tok, len));
+        }
+        else {
+            goto fail;
+        }
+        g_free(name);
+
+        /* skip space */
+        for (tok = tok + len; g_ascii_isspace(*tok); tok++)
+            ;
+    }
+
+    return container;
+
+fail:
+    g_free(name);
+    g_warning("parsing failed at <%.18s...>", tok);
+    g_object_unref(container);
+    return NULL;
 }
 
 /************************** Documentation ****************************/

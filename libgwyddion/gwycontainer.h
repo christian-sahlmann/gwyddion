@@ -64,95 +64,98 @@ struct _GwyContainerClass {
 };
 
 
-GType      gwy_container_get_type           (void) G_GNUC_CONST;
-GObject*   gwy_container_new                (void);
-GType      gwy_container_value_type         (GwyContainer *container,
-                                             GQuark key);
-gboolean   gwy_container_contains           (GwyContainer *container,
-                                             GQuark key);
-GValue     gwy_container_get_value          (GwyContainer *container,
-                                             GQuark key);
-void       gwy_container_set_value          (GwyContainer *container,
-                                             ...);
-void       gwy_container_set_value_by_name  (GwyContainer *container,
-                                             ...);
-gboolean   gwy_container_remove             (GwyContainer *container,
-                                             GQuark key);
-gsize      gwy_container_remove_by_prefix   (GwyContainer *container,
-                                             const gchar *prefix);
-gboolean   gwy_container_rename             (GwyContainer *container,
-                                             GQuark key,
-                                             GQuark newkey,
-                                             gboolean force);
-gsize      gwy_container_foreach            (GwyContainer *container,
-                                             const gchar *prefix,
-                                             GHFunc function,
-                                             gpointer user_data);
-void       gwy_container_set_boolean        (GwyContainer *container,
-                                             GQuark key,
-                                             gboolean value);
-gboolean   gwy_container_get_boolean        (GwyContainer *container,
-                                             GQuark key);
-gboolean   gwy_container_gis_boolean        (GwyContainer *container,
-                                             GQuark key,
-                                             gboolean *value);
-void       gwy_container_set_uchar          (GwyContainer *container,
-                                             GQuark key,
-                                             guchar value);
-guchar     gwy_container_get_uchar          (GwyContainer *container,
-                                             GQuark key);
-gboolean   gwy_container_gis_uchar          (GwyContainer *container,
-                                             GQuark key,
-                                             guchar *value);
-void       gwy_container_set_int32          (GwyContainer *container,
-                                             GQuark key,
-                                             gint32 value);
-gint32     gwy_container_get_int32          (GwyContainer *container,
-                                             GQuark key);
-gboolean   gwy_container_gis_int32          (GwyContainer *container,
-                                             GQuark key,
-                                             gint32 *value);
-void       gwy_container_set_enum           (GwyContainer *container,
-                                             GQuark key,
-                                             guint value);
-guint      gwy_container_get_enum           (GwyContainer *container,
-                                             GQuark key);
-gboolean   gwy_container_gis_enum           (GwyContainer *container,
-                                             GQuark key,
-                                             guint *value);
-void       gwy_container_set_int64          (GwyContainer *container,
-                                             GQuark key,
-                                             gint64 value);
-gint64     gwy_container_get_int64          (GwyContainer *container,
-                                             GQuark key);
-gboolean   gwy_container_gis_int64          (GwyContainer *container,
-                                             GQuark key,
-                                             gint64 *value);
-void       gwy_container_set_double         (GwyContainer *container,
-                                             GQuark key,
-                                             gdouble value);
-gdouble    gwy_container_get_double         (GwyContainer *container,
-                                             GQuark key);
-gboolean   gwy_container_gis_double         (GwyContainer *container,
-                                             GQuark key,
-                                             gdouble *value);
-void       gwy_container_set_string         (GwyContainer *container,
-                                             GQuark key,
-                                             const guchar *value);
+GType         gwy_container_get_type              (void) G_GNUC_CONST;
+GObject*      gwy_container_new                   (void);
+GType         gwy_container_value_type            (GwyContainer *container,
+                                                   GQuark key);
+gboolean      gwy_container_contains              (GwyContainer *container,
+                                                   GQuark key);
+GValue        gwy_container_get_value             (GwyContainer *container,
+                                                   GQuark key);
+void          gwy_container_set_value             (GwyContainer *container,
+                                                   ...);
+void          gwy_container_set_value_by_name     (GwyContainer *container,
+                                                   ...);
+gboolean      gwy_container_remove                (GwyContainer *container,
+                                                   GQuark key);
+gsize         gwy_container_remove_by_prefix      (GwyContainer *container,
+                                                   const gchar *prefix);
+gboolean      gwy_container_rename                (GwyContainer *container,
+                                                   GQuark key,
+                                                   GQuark newkey,
+                                                   gboolean force);
+gsize         gwy_container_foreach               (GwyContainer *container,
+                                                   const gchar *prefix,
+                                                   GHFunc function,
+                                                   gpointer user_data);
+void          gwy_container_set_boolean           (GwyContainer *container,
+                                                   GQuark key,
+                                                   gboolean value);
+gboolean      gwy_container_get_boolean           (GwyContainer *container,
+                                                   GQuark key);
+gboolean      gwy_container_gis_boolean           (GwyContainer *container,
+                                                   GQuark key,
+                                                   gboolean *value);
+void          gwy_container_set_uchar             (GwyContainer *container,
+                                                   GQuark key,
+                                                   guchar value);
+guchar        gwy_container_get_uchar             (GwyContainer *container,
+                                                   GQuark key);
+gboolean      gwy_container_gis_uchar             (GwyContainer *container,
+                                                   GQuark key,
+                                                   guchar *value);
+void          gwy_container_set_int32             (GwyContainer *container,
+                                                   GQuark key,
+                                                   gint32 value);
+gint32        gwy_container_get_int32             (GwyContainer *container,
+                                                   GQuark key);
+gboolean      gwy_container_gis_int32             (GwyContainer *container,
+                                                   GQuark key,
+                                                   gint32 *value);
+void          gwy_container_set_enum              (GwyContainer *container,
+                                                   GQuark key,
+                                                   guint value);
+guint         gwy_container_get_enum              (GwyContainer *container,
+                                                   GQuark key);
+gboolean      gwy_container_gis_enum              (GwyContainer *container,
+                                                   GQuark key,
+                                                   guint *value);
+void          gwy_container_set_int64             (GwyContainer *container,
+                                                   GQuark key,
+                                                   gint64 value);
+gint64        gwy_container_get_int64             (GwyContainer *container,
+                                                   GQuark key);
+gboolean      gwy_container_gis_int64             (GwyContainer *container,
+                                                   GQuark key,
+                                                   gint64 *value);
+void          gwy_container_set_double            (GwyContainer *container,
+                                                   GQuark key,
+                                                   gdouble value);
+gdouble       gwy_container_get_double            (GwyContainer *container,
+                                                   GQuark key);
+gboolean      gwy_container_gis_double            (GwyContainer *container,
+                                                   GQuark key,
+                                                   gdouble *value);
+void          gwy_container_set_string            (GwyContainer *container,
+                                                   GQuark key,
+                                                   const guchar *value);
 G_CONST_RETURN
-guchar*    gwy_container_get_string         (GwyContainer *container,
-                                             GQuark key);
-gboolean   gwy_container_gis_string         (GwyContainer *container,
-                                             GQuark key,
-                                             const guchar **value);
-void       gwy_container_set_object         (GwyContainer *container,
-                                             GQuark key,
-                                             GObject *value);
-GObject*   gwy_container_get_object         (GwyContainer *container,
-                                             GQuark key);
-gboolean   gwy_container_gis_object         (GwyContainer *container,
-                                             GQuark key,
-                                             GObject **value);
+guchar*       gwy_container_get_string            (GwyContainer *container,
+                                                   GQuark key);
+gboolean      gwy_container_gis_string            (GwyContainer *container,
+                                                   GQuark key,
+                                                   const guchar **value);
+void          gwy_container_set_object            (GwyContainer *container,
+                                                   GQuark key,
+                                                   GObject *value);
+GObject*      gwy_container_get_object            (GwyContainer *container,
+                                                   GQuark key);
+gboolean      gwy_container_gis_object            (GwyContainer *container,
+                                                   GQuark key,
+                                                   GObject **value);
+
+GPtrArray*    gwy_container_serialize_to_text     (GwyContainer *container);
+GwyContainer* gwy_container_deserialize_from_text (const gchar *text);
 
 /*
 gulong     gwy_container_watch              (GwyContainer *container,

@@ -24,9 +24,6 @@
 #include "gwyddion.h"
 #include "gwytestser.h"
 
-guchar*
-gwy_container_serialize_to_text(GwyContainer *container);
-
 #define FILENAME "testser.object"
 
 #define print(obj,txt) \
@@ -180,6 +177,15 @@ test_container(void)
 
 }
 
+static const gchar *serialized_text =
+    "\"foobar\" int32 -100\n"
+    "\"pdf\" double 0.52270000000000005\n"
+    "\"alena\" char #\n"
+    "\"alice\" char 0x0d\n"
+    "\"pdf/f\" double 1.4141999999999999\n"
+    "\"yesno\" boolean True\n"
+    "\"x64\" int64 64\n";
+
 static void
 test_container_serialization(void)
 {
@@ -191,6 +197,8 @@ test_container_serialization(void)
     GwyContainer *container;
     FILE *fh;
     GError *err = NULL;
+    GPtrArray *pa;
+    guint i;
 
     g_message("====== CONTAINER SERIALIZATION ======================");
     ser = gwy_test_ser_new(1.618, 0.33333333);
@@ -247,12 +255,21 @@ test_container_serialization(void)
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 2.2);
     g_assert(ser->ref_count == 1);
 
-    g_message("serialized to text:\n%s",
-              gwy_container_serialize_to_text(container));
-
+    pa = gwy_container_serialize_to_text(container);
     g_object_unref(container);
+    g_message("serialized to text");
+    for (i = 0; i < pa->len; i++) {
+        g_message("%s", (gchar*)pa->pdata[i]);
+        g_free(pa->pdata[i]);
+    }
+    g_ptr_array_free(pa, TRUE);
+
     g_message("restoring the empty container");
     container = GWY_CONTAINER(gwy_serializable_deserialize(buffer, size, &pos));
+    g_object_unref(container);
+
+    container = gwy_container_deserialize_from_text(serialized_text);
+    g_object_unref(container);
 }
 
 static void
