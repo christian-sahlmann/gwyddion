@@ -31,7 +31,7 @@
 #define CWT_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
-    
+
 /* Data for this function.
  * (It looks a little bit silly with just one parameter.) */
 typedef struct {
@@ -111,7 +111,8 @@ cwt(GwyContainer *data, GwyRunType run)
     GtkWidget *data_window;
     GwyDataField *dfield;
     CWTArgs args;
-    gboolean ok; gint i;
+    gboolean ok;
+    gint i;
     gint xsize, ysize;
     gint newsize;
 
@@ -128,25 +129,25 @@ cwt(GwyContainer *data, GwyRunType run)
         gwy_app_clean_up_data(data);
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
-        
+
         g_assert(gwy_data_field_get_xres(dfield) == gwy_data_field_get_yres(dfield));
-        
+
         xsize = gwy_data_field_get_xres(dfield);
         ysize = gwy_data_field_get_yres(dfield);
 
         newsize = gwy_data_field_get_fft_res(xsize);
-        
+
         gwy_data_field_resample(dfield, newsize, newsize, args.interp);
-        
+
         gwy_data_field_cwt(dfield,
                            args.interp,
                            args.scale,
                            args.wavelet);
 
         if (args.preserve) gwy_data_field_resample(dfield, xsize, ysize, args.interp);
-        
+
         data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL); 
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
         if (run != GWY_RUN_WITH_DEFAULTS)
             cwt_save_args(gwy_app_settings_get(), &args);
@@ -180,7 +181,7 @@ cwt_dialog(CWTArgs *args)
     controls.scale = gtk_adjustment_new(args->scale, 0.0, 1000.0, 1, 10, 0);
     gwy_table_attach_spinbutton(table, 1, _("Scale:"), _("pixels"),
                                 controls.scale);
-    
+
     controls.preserve = gtk_check_button_new_with_label("preserve size");
     gwy_table_attach_row(table, 0, _("Data size treatment:"), "",
                          controls.preserve);
@@ -189,12 +190,12 @@ cwt_dialog(CWTArgs *args)
     g_signal_connect(controls.preserve, "toggled", G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
-        = gwy_interpolation_option_menu(G_CALLBACK(interp_changed_cb),
+        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
     gwy_table_attach_row(table, 2, _("Interpolation type:"), "",
                          controls.interp);
     controls.wavelet
-        = gwy_2dcwt_option_menu(G_CALLBACK(wavelet_changed_cb),
+        = gwy_option_menu_2dcwt(G_CALLBACK(wavelet_changed_cb),
                                         args, args->wavelet);
     gwy_table_attach_row(table, 3, _("Wavelet type:"), "",
                          controls.wavelet);
@@ -241,7 +242,7 @@ interp_changed_cb(GObject *item,
 static void
 wavelet_changed_cb(GObject *item,
                   CWTArgs *args)
-{ 
+{
     args->wavelet = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "2dcwt-wavelet-type"));
     printf("Wavelet changed to %d\n", (gint)args->wavelet);
@@ -288,9 +289,9 @@ static void
 cwt_dialog_update(CWTControls *controls,
                      CWTArgs *args)
 {
-    
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->scale),
-                                args->scale);  
+                                args->scale);
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
     gwy_option_menu_set_history(controls->wavelet, "2dcwt_wavelet-type",

@@ -31,7 +31,7 @@
 #define FFT_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
-    
+
 /* Data for this function.
  * (It looks a little bit silly with just one parameter.) */
 typedef struct {
@@ -68,18 +68,18 @@ static void        fft_save_args              (GwyContainer *container,
                                                FFTArgs *args);
 static void        fft_dialog_update          (FFTControls *controls,
                                                FFTArgs *args);
-static void        set_dfield_module          (GwyDataField *re, 
+static void        set_dfield_module          (GwyDataField *re,
                                                GwyDataField *im,
                                                GwyDataField *target);
-static void        set_dfield_phase           (GwyDataField *re, 
-                                               GwyDataField *im,
-                                               GwyDataField *target);
-
-static void        set_dfield_real            (GwyDataField *re, 
+static void        set_dfield_phase           (GwyDataField *re,
                                                GwyDataField *im,
                                                GwyDataField *target);
 
-static void        set_dfield_imaginary       (GwyDataField *re, 
+static void        set_dfield_real            (GwyDataField *re,
+                                               GwyDataField *im,
+                                               GwyDataField *target);
+
+static void        set_dfield_imaginary       (GwyDataField *re,
                                                GwyDataField *im,
                                                GwyDataField *target);
 
@@ -146,9 +146,9 @@ fft(GwyContainer *data, GwyRunType run)
         gwy_app_clean_up_data(data);
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
-        
+
         g_assert(gwy_data_field_get_xres(dfield) == gwy_data_field_get_yres(dfield));
-        
+
         xsize = gwy_data_field_get_xres(dfield);
         ysize = gwy_data_field_get_yres(dfield);
         newsize = gwy_data_field_get_fft_res(xsize);
@@ -169,7 +169,7 @@ fft(GwyContainer *data, GwyRunType run)
                                    gwy_data_field_get_xreal(dfield),
                                    gwy_data_field_get_yreal(dfield),
                                    1);
- 
+
         gwy_data_field_multiply(dfield, 1e6);
         gwy_data_field_fill(raout,0);
         gwy_data_field_fill(ipout,0);
@@ -186,19 +186,19 @@ fft(GwyContainer *data, GwyRunType run)
                                  0,
                                  0);
         gwy_data_field_2dffthumanize(raout);
-        gwy_data_field_2dffthumanize(ipout);        
- 
+        gwy_data_field_2dffthumanize(ipout);
+
 
         if (args.preserve)
         {
             gwy_data_field_resample(dfield, xsize, ysize, args.interp);
             gwy_data_field_resample(raout, xsize, ysize, args.interp);
-            gwy_data_field_resample(ipout, xsize, ysize, args.interp);        
+            gwy_data_field_resample(ipout, xsize, ysize, args.interp);
         }
 
         if (args.out == GWY_FFT_OUTPUT_REAL_IMG || args.out == GWY_FFT_OUTPUT_REAL)
-        {        
-            set_dfield_real(raout, ipout, dfield); 
+        {
+            set_dfield_real(raout, ipout, dfield);
 
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
@@ -212,15 +212,15 @@ fft(GwyContainer *data, GwyRunType run)
                 dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
             }
-            set_dfield_imaginary(raout, ipout, dfield); 
+            set_dfield_imaginary(raout, ipout, dfield);
 
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                             "FFT Imag"); 
+                                             "FFT Imag");
         }
         if (args.out == GWY_FFT_OUTPUT_MOD_PHASE || args.out == GWY_FFT_OUTPUT_MOD)
-        {   
-            set_dfield_module(raout, ipout, dfield); 
+        {
+            set_dfield_module(raout, ipout, dfield);
 
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
@@ -234,11 +234,11 @@ fft(GwyContainer *data, GwyRunType run)
                 dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
             }
-            set_dfield_phase(raout, ipout, dfield); 
+            set_dfield_phase(raout, ipout, dfield);
 
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                             "FFT Phase"); 
+                                             "FFT Phase");
         }
 
         if (run != GWY_RUN_WITH_DEFAULTS)
@@ -248,14 +248,14 @@ fft(GwyContainer *data, GwyRunType run)
     return ok;
 }
 
-static void        
+static void
 set_dfield_module(GwyDataField *re, GwyDataField *im, GwyDataField *target)
 {
     gint i, j;
     gdouble rval, ival;
     gint xres = gwy_data_field_get_xres(re);
     gint yres = gwy_data_field_get_xres(re);
-    
+
     for (i=0; i<xres; i++)
     {
         for (j=0; j<yres; j++)
@@ -267,23 +267,23 @@ set_dfield_module(GwyDataField *re, GwyDataField *im, GwyDataField *target)
     }
 }
 
-static void        
+static void
 set_dfield_phase(GwyDataField *re, GwyDataField *im, GwyDataField *target)
 {
     gint i;
     gint xres = gwy_data_field_get_xres(re);
     gint yres = gwy_data_field_get_xres(re);
-    
+
     for (i=0; i<(xres*yres); i++) target->data[i] = atan2(im->data[i], re->data[i]);
 }
 
-static void        
+static void
 set_dfield_real(GwyDataField *re, GwyDataField *im, GwyDataField *target)
 {
     gwy_data_field_copy(re, target);
 }
 
-static void        
+static void
 set_dfield_imaginary(GwyDataField *re, GwyDataField *im, GwyDataField *target)
 {
     gwy_data_field_copy(im, target);
@@ -322,19 +322,19 @@ fft_dialog(FFTArgs *args)
     g_signal_connect(controls.preserve, "toggled", G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
-        = gwy_interpolation_option_menu(G_CALLBACK(interp_changed_cb),
+        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
     gwy_table_attach_row(table, 1, _("Interpolation type:"), "",
                          controls.interp);
     controls.window
-        = gwy_windowing_option_menu(G_CALLBACK(window_changed_cb),
-                                        args, args->interp);
+        = gwy_option_menu_windowing(G_CALLBACK(window_changed_cb),
+                                    args, args->interp);
     gwy_table_attach_row(table, 2, _("Windowing type:"), "",
                          controls.window);
 
     controls.out
-        = gwy_fft_output_menu(G_CALLBACK(out_changed_cb),
-                                        args, args->out);
+        = gwy_option_menu_fft_output(G_CALLBACK(out_changed_cb),
+                                     args, args->out);
     gwy_table_attach_row(table, 3, _("Output type:"), "",
                          controls.out);
 

@@ -192,7 +192,7 @@ scale_dialog(ScaleArgs *args)
                      G_CALLBACK(height_changed_cb), args);
 
     controls.interp
-        = gwy_interpolation_option_menu(G_CALLBACK(interp_changed_cb),
+        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
     gwy_table_attach_row(table, 3, _("Interpolation type:"), "",
                          controls.interp);
