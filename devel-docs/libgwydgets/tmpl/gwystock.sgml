@@ -1,0 +1,128 @@
+<!-- ##### SECTION Title ##### -->
+gwystock
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GWY_STOCK_ZOOM_IN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_ZOOM_OUT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_ZOOM_1_1 ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_ZOOM_FIT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_FIT_PLANE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_FIT_TRIANGLE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_CROP ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_SCALE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_ROTATE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_SHADER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_BOLD ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_ITALIC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_SUBSCRIPT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_SUPERSCRIPT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_stock_register_stock_items ##### -->
+<para>
+
+</para>
+
+
+

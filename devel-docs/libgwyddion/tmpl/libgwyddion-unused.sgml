@@ -1,3 +1,9 @@
+<!-- ##### SIGNAL GwyWatchable::value-changed ##### -->
+<para>
+Emitted when value changes.
+</para>
+
+
 <!-- ##### FUNCTION gwy_container_foreach ##### -->
 <para>
 
