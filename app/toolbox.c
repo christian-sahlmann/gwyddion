@@ -34,6 +34,7 @@ static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 const gchar *root_path,
                                                 GtkAccelGroup *accel_group,
                                                 GtkItemFactory **factory);
+static GtkWidget* gwy_app_toolbox_create_label (const gchar *text);
 static void       gwy_app_rerun_process_func_cb (void);
 static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
@@ -41,7 +42,7 @@ static void       delete_app_window            (void);
 GtkWidget*
 gwy_app_toolbox_create(void)
 {
-    GtkWidget *toolbox, *vbox, *toolbar, *menu;
+    GtkWidget *toolbox, *vbox, *toolbar, *menu, *label;
     GtkAccelGroup *accel_group;
     const gchar *first_tool;
 
@@ -79,6 +80,9 @@ gwy_app_toolbox_create(void)
     g_object_set_data(G_OBJECT(toolbox), "<xtns>", menu);
 
     /***************************************************************/
+    label = gwy_app_toolbox_create_label(_("Zoom"));
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
     toolbar = gwy_toolbox_new(4);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
@@ -93,6 +97,9 @@ gwy_app_toolbox_create(void)
                        G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(-1));
 
     /***************************************************************/
+    label = gwy_app_toolbox_create_label(_("Data Process"));
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
     toolbar = gwy_toolbox_new(4);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
@@ -110,6 +117,9 @@ gwy_app_toolbox_create(void)
                        G_CALLBACK(gwy_app_run_process_func_cb), "shade");
 
     /***************************************************************/
+    label = gwy_app_toolbox_create_label(_("Tools"));
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
     toolbar = gwy_tool_func_build_toolbox(G_CALLBACK(gwy_app_tool_use_cb),
                                           4, &first_tool);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
@@ -330,6 +340,22 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
     return menu;
 }
 
+static GtkWidget*
+gwy_app_toolbox_create_label(const gchar *text)
+{
+    GtkWidget *label;
+    gchar *s;
+
+    s = g_strconcat("<small>", text, "</small>", NULL);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), s);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 1.0);
+    gtk_misc_set_padding(GTK_MISC(label), 2, 0);
+    g_free(s);
+
+    return label;
+}
+
 static void
 gwy_app_rerun_process_func_cb(void)
 {
@@ -359,3 +385,4 @@ delete_app_window(void)
                           NULL, &boo);
 }
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
