@@ -346,7 +346,7 @@ gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
 }
 
 /**
- * gwy_data_view_layer_plugged:
+ * gwy_data_view_layer_unplugged:
  * @layer: A data view layer.
  *
  * Emits a "unplugged" singal on a layer.
@@ -360,7 +360,7 @@ gwy_data_view_layer_unplugged(GwyDataViewLayer *layer)
 }
 
 /**
- * gwy_data_view_layer_plugged:
+ * gwy_data_view_layer_updated:
  * @layer: A data view layer.
  *
  * Emits a "updated" singal on a layer.
