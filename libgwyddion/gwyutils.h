@@ -77,6 +77,7 @@ gchar*   gwy_sgettext               (const gchar *msgid);
 gboolean gwy_setenv                 (const gchar *variable,
                                      const gchar *value,
                                      gboolean overwrite);
+gchar*   gwy_str_next_line          (gchar **buffer);
 
 G_END_DECLS
 

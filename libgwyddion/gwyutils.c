@@ -764,6 +764,42 @@ gwy_setenv(const gchar *variable,
     return result == 0;
 }
 
+/**
+ * gwy_str_next_line:
+ * @buffer: A character buffer containing some text.
+ *
+ * Extracts a next line from a character buffer, modifying it in place.
+ *
+ * @buffer is updated to point after the end of the line and the "\n"
+ * (or "\r\n") is replaced with "\0", if present.
+ *
+ * Returns: The start of the line.  %NULL if the buffer is empty or %NULL.
+ *          NOT a new string, the returned pointer points somewhere to @buffer.
+ *
+ * Since: 1.7
+ **/
+gchar*
+gwy_str_next_line(gchar **buffer)
+{
+    gchar *p, *q;
+
+    if (!buffer || !*buffer)
+        return NULL;
+
+    q = *buffer;
+    p = strchr(*buffer, '\n');
+    if (p) {
+        if (p > *buffer && *(p-1) == '\r')
+            *(p-1) = '\0';
+        *buffer = p+1;
+        *p = '\0';
+    }
+    else
+        *buffer = NULL;
+
+    return q;
+}
+
 /************************** Documentation ****************************/
 /* NB: gwymacros.h, gwywin32unistd.h documentation is also here. */
 
