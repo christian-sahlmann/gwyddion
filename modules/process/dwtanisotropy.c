@@ -156,7 +156,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
                             GWY_INTERPOLATION_BILINEAR);
     if (mask)
         gwy_data_field_resample(mask, newsize, newsize,
-                                GWY_INTERPOLATION_BILINEAR);
+                                GWY_INTERPOLATION_NONE);
     else {
         mask = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
