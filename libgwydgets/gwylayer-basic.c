@@ -153,6 +153,8 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     GwyDataField *data_field;
     GwyLayerBasic *basic_layer;
     GwyContainer *data;
+    gdouble min = 0.0, max = 0.0;
+    gboolean fixedrange = FALSE;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
@@ -167,9 +169,19 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
         data_field
             = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     g_return_val_if_fail(data_field, layer->pixbuf);
+    if (gwy_container_contains_by_name(data, "/0/base/min")
+        && gwy_container_contains_by_name(data, "/0/base/max")) {
+        min = gwy_container_get_double_by_name(data, "/0/base/min");
+        max = gwy_container_get_double_by_name(data, "/0/base/max");
+        fixedrange = TRUE;
+    }
     /* XXX */
     /*if (GWY_LAYER_BASIC(layer)->changed)*/ {
-        gwy_pixfield_do(layer->pixbuf, data_field, basic_layer->palette);
+        if (fixedrange)
+            gwy_pixfield_do_with_range(layer->pixbuf, data_field,
+                                       basic_layer->palette, min, max);
+        else
+            gwy_pixfield_do(layer->pixbuf, data_field, basic_layer->palette);
         basic_layer->changed = FALSE;
     }
 
