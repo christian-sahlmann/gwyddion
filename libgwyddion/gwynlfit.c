@@ -1335,6 +1335,78 @@ scale_poly_3(gdouble *param,
     }
 }
 
+/******************* square signal ********************************/
+static gdouble
+fit_square(gdouble x,
+               G_GNUC_UNUSED gint n_param,
+               const gdouble *b,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
+{
+    gint i;
+    gdouble val, amplitude, shift; 
+
+    amplitude = 1.25*(b[3]-b[2])/2.0;
+    shift = b[2];
+    val = 0;
+    for (i=1; i<20; )
+    {
+        
+        val += (1.0/i) * sin(2.0*i*G_PI*(x-b[1])/b[0]);
+        i+=2;
+    }
+
+    return amplitude*val + amplitude + shift;
+}
+
+static void
+guess_square(gdouble *x,
+                 gdouble *y,
+                 gint n_dat,
+                 gdouble *param,
+                 G_GNUC_UNUSED gpointer user_data,
+                 gboolean *fres)
+{
+    gint i;
+    gdouble min, max;
+
+    param[0] = fabs(x[n_dat-1] - x[0])/10.0;
+    param[1] = 0;
+    
+    min = G_MAXDOUBLE;
+    max = -G_MAXDOUBLE;
+    for (i = 0; i < n_dat; i++)
+    {
+        if (min>y[i]) min = y[i];
+        if (max<y[i]) max = y[i];
+    }
+    param[2] = min;
+    param[3] = max;
+
+    *fres = TRUE;
+}
+
+static void
+scale_square(gdouble *param,
+                 gdouble xscale,
+                 gdouble yscale,
+                 gint dir)
+{
+    if (dir == 1) {
+        param[0] /= xscale;
+        param[1] /= xscale;
+        param[2] /= yscale;
+        param[3] /= yscale;
+    }
+    else {
+        param[0] *= xscale;
+        param[1] *= xscale;
+        param[2] *= yscale;
+        param[3] *= yscale;
+    }
+}
+
+
 
 /******************** preset default weights *************************/
 
@@ -1402,6 +1474,12 @@ static const GwyNLFitParam poly3_pars[]= {
    {"d", " ", 4 },
 };
 
+static const GwyNLFitParam square_pars[] = {
+    {"T", " ", 1 },
+    {"s", " ", 1 },
+    {"y<sub>1</sub>", " ", 1 },
+    {"y<sub>2</sub>", " ", 1 },
+};
 
 static const GwyNLFitPreset fitting_presets[] = {
     {
@@ -1558,6 +1636,19 @@ static const GwyNLFitPreset fitting_presets[] = {
         &weights_constant,
         4,
         poly3_pars,
+        NULL
+    },
+    {
+        "Square wave",
+        "Wave",
+        "f(x) = sum{(1/i) * sin(2*Pi*(i+s)*/T)}",
+        &fit_square,
+        NULL,
+        &guess_square,
+        &scale_square,
+        &weights_constant,
+        4,
+        square_pars,
         NULL
     },
 };
