@@ -155,6 +155,9 @@ gwy_axis_init(GwyAxis *axis)
     axis->par.minor_division = 10;
     axis->par.line_thickness = 1;
 
+    axis->dialog = NULL;
+
+
     axis->has_unit = 0;
     axis->unit = NULL;
 }
@@ -213,6 +216,8 @@ gwy_axis_finalize(GObject *object)
     g_string_free(axis->label_text, 0);
     g_array_free(axis->mjticks, 0);
     g_array_free(axis->miticks, 0);
+
+/*    if (axis->dialog) gwy_object_unref(axis->dialog);*/
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }

@@ -179,14 +179,6 @@ gwy_graph_area_finalize(GObject *object)
     g_return_if_fail(GWY_IS_GRAPH_AREA(object));
 
     area = GWY_GRAPH_AREA(object);
-   
-    while (area->curves->len)
-    {
-        pcurve = g_ptr_array_index (area->curves, 0);    
-        g_free(pcurve->data.xvals);
-        g_free(pcurve->data.yvals);
-        g_free(pcurve->points);
-    };
     
     g_ptr_array_free(area->curves, 1);
 

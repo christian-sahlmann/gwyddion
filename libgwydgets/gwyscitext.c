@@ -117,8 +117,6 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
     gobject_class->finalize = gwy_sci_text_finalize;
 
     widget_class->realize = gwy_sci_text_realize;
-/*    widget_class->expose_event = gwy_sci_text_expose;*/
-/*    widget_class->size_request = gwy_sci_text_size_request;*/
     widget_class->unrealize = gwy_sci_text_unrealize;
     widget_class->size_allocate = gwy_sci_text_size_allocate;
 
@@ -244,7 +242,7 @@ gwy_sci_text_finalize(GObject *object)
 {
     GwySciText *sci_text;
 
-    gwy_debug("finalizing a GwySciText (refcount = %u)", object->ref_count);
+    gwy_debug("finalizing a GwySciText %d (refcount = %u)", (gint *)object, object->ref_count);
 
     g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_SCI_TEXT(object));
