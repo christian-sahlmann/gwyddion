@@ -37,6 +37,7 @@ typedef struct {
     GtkWidget *graph;
     GtkObject *from;
     GtkObject *to;
+    GtkObject *data;
     GtkWidget *chisq;
     GtkWidget *selector;
     GtkWidget *equation;
@@ -68,6 +69,7 @@ typedef struct {
     gint curve;
     gdouble from;
     gdouble to;
+    gint data;
     gboolean par1_fit;
     gboolean par2_fit;
     gboolean par3_fit;
@@ -155,6 +157,7 @@ fit(GwyGraph *graph)
     FitArgs args;
     args.fitfunc = NULL;
     args.function_type = 0;
+    args.data=1;
 
     ok = fit_dialog(&args);
 
@@ -370,7 +373,13 @@ fit_dialog(FitArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
   
-   
+    table2 = gtk_table_new(2, 2, FALSE);
+    controls.data = gtk_adjustment_new(args->data, 0.0, 10.0, 1, 5, 0); 
+    gwy_table_attach_spinbutton(table2, 1, _("graph data curve"), _(""),
+                                controls.data);
+    gtk_container_add(GTK_CONTAINER(vbox), table2);
+    
+    
     hbox2 = gtk_hbox_new(FALSE, 0);
     table2 = gtk_table_new(2, 2, FALSE);  
     
