@@ -87,12 +87,12 @@ rotate(GwyContainer *data, GwyRunType run)
         rotate_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_INTERACTIVE) || rotate_dialog(&args);
     if (ok) {
-       gwy_data_field_rotate(dfield, args.angle, args.interp);
-       if (run != GWY_RUN_WITH_DEFAULTS)
-           rotate_save_args(gwy_app_settings_get(), &args);
+        gwy_data_field_rotate(dfield, args.angle, args.interp);
+        if (run != GWY_RUN_WITH_DEFAULTS)
+            rotate_save_args(gwy_app_settings_get(), &args);
     }
 
-    return FALSE;
+    return ok;
 }
 
 static gboolean
