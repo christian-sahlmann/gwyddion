@@ -23,22 +23,19 @@ our @ISA = qw( Exporter );
 our @EXPORT_OK = qw( read write );
 our %EXPORT_TAGS = ( all => [ @EXPORT_OK ] );
 
-our $line_re = "^([^=]+)=(.*)\n";
-our $field_re = "^([^=]+)=\\[\n";
-
 # Sanity check
 our $sizeof_double = length pack 'd', 42;
 die if $sizeof_double != 8;
 
 sub _dmove {
-    my ( $hash1, $key1, $hash2, $key2 ) = @_;
+    my ( $hash1, $key1, $hash2, $key2, $type ) = @_;
 
     return if ! exists $hash1->{ $key1 };
     my $value = $hash1->{ $key1 };
-    if ( @_ ) {
-        if ( $_[ 0 ] eq 'int' ) { $value = int $value }
-        elsif ( $_[ 0 ] eq 'float' ) { $value = $value + 0.0 }
-        else { die "Internal error: Cannot convert to " . $_[ 0 ] }
+    if ( defined $type ) {
+        if ( $type eq 'int' ) { $value = int $value }
+        elsif ( $type eq 'float' ) { $value = $value + 0.0 }
+        else { die "Internal error: Cannot convert to " . $type }
     }
     $hash2->{ $key2 } = $value;
     delete $hash1->{ $key1 };
@@ -50,12 +47,12 @@ sub _read_dfield {
 
     $fh->read( $c, 1 );
     die if $c ne '[';
-    _dmove( $data, $base + '/xres', \%dfield, 'xres', 'int' );
-    _dmove( $data, $base + '/yres', \%dfield, 'yres', 'int' );
-    _dmove( $data, $base + '/xreal', \%dfield, 'xreal', 'float' );
-    _dmove( $data, $base + '/yreal', \%dfield, 'yreal', 'float' );
-    _dmove( $data, $base + '/unit-xy', \%dfield, 'unit-xy' );
-    _dmove( $data, $base + '/unit-z', \%dfield, 'unit-z' );
+    _dmove( $data, $base . '/xres', \%dfield, 'xres', 'int' );
+    _dmove( $data, $base . '/yres', \%dfield, 'yres', 'int' );
+    _dmove( $data, $base . '/xreal', \%dfield, 'xreal', 'float' );
+    _dmove( $data, $base . '/yreal', \%dfield, 'yreal', 'float' );
+    _dmove( $data, $base . '/unit-xy', \%dfield, 'unit-xy' );
+    _dmove( $data, $base . '/unit-z', \%dfield, 'unit-z' );
     $n = $dfield{ 'xres' } * $dfield{ 'yres' };
     $fh->read( $a, $n*$sizeof_double );
     @a = unpack( "d[$n]", $a );
@@ -90,6 +87,8 @@ caller to eventually handle them.
 =cut
 sub read {
     my $fh = new IO::File;
+    my $line_re = "^([^=]+)=(.*)\n";
+    my $field_re = "^([^=]+)=\\[\n";
     my %data;
 
     die if ! $fh->open( $_[0], '<:bytes' );

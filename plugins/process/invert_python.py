@@ -21,15 +21,13 @@ def run(args):
 
     filename = args.pop(0)
     data = Gwyddion.dump.read(filename)
-    dfield = data['/0/data']['data']
+    dfield = data['/0/data']
+    a = dfield['data']
 
-    mean_value = 0.0
-    n = len(dfield)
+    n = len(a)
+    mean_value = (min(a) + max(a))/2.0
     for i in range(n):
-        mean_value += dfield[i]
-    mean_value /= n
-    for i in range(n):
-        dfield[i] = mean_value - dfield[i]
+        a[i] = mean_value - a[i]
     Gwyddion.dump.write(data, filename)
 
 try:

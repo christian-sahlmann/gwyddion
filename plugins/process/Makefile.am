@@ -5,6 +5,7 @@ processdir = $(gwyplugindir)/process
 process_SCRIPTS = \
 	divide_by_2.py \
 	invert_python.py \
+	invert_perl.pl \
 	cutoff.pl \
 	yellow.sh
 
