@@ -37,6 +37,17 @@ GtkWidget* gwy_windowing_option_menu      (GCallback callback,
                                            gpointer cbdata,
                                            GwyWindowingType current);
 
+GtkWidget* gwy_table_attach_spinbutton    (GtkWidget *table,
+                                           gint row,
+                                           const gchar *name,
+                                           const gchar *units,
+                                           GtkObject *adj);
+void       gwy_table_attach_row           (GtkWidget *table,
+                                           gint row,
+                                           const gchar *name,
+                                           const gchar *units,
+                                           GtkWidget *middle_widget);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

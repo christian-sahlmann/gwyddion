@@ -49,6 +49,8 @@ static void     gwy_sci_text_button_lower_pressed (GtkButton *button);
 static void     gwy_sci_text_button_some_pressed  (GtkButton *button, gint i);
 static void     stupid_put_entities               (GList *items);
 static void     stupid_put_entity                 (GList *items, gint i);
+static void     gwy_sci_text_set_text             (GwySciText *sci_text,
+                                                   gchar *new_text);
 
 /* Local data */
 const gchar* SOME_ENTITIES[] = {

@@ -49,7 +49,6 @@ GtkWidget* gwy_sci_text_new();
 GType gwy_sci_text_get_type(void) G_GNUC_CONST;
 
 gchar* gwy_sci_text_get_text(GwySciText *sci_text);
-static void gwy_sci_text_set_text(GwySciText *sci_text, gchar *new_text);
 
 #ifdef __cplusplus
 }
