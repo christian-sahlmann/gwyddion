@@ -51,7 +51,7 @@ module_register(const gchar *name)
     };
     static GwyProcessFuncInfo invert_func_info = {
         "invert",
-        "/_Basic Operations/_Invert",
+        "/_Basic Operations/_Invert Value",
         &invert,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
     };
@@ -69,7 +69,7 @@ module_register(const gchar *name)
     };
     static GwyProcessFuncInfo rotate_180_func_info = {
         "rotate_180",
-        "/_Basic Operations/Rotate 180 degrees",
+        "/_Basic Operations/Rotate 1_80 degrees",
         &rotate_180,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
     };
