@@ -43,6 +43,13 @@ static GObject** gwy_serialize_unpack_object_array   (const guchar *buffer,
                                                       gsize size,
                                                       gsize *position,
                                                       gsize *asize);
+static gboolean  gwy_serialize_unpack_item_value     (const guchar *buffer,
+                                                      gsize size,
+                                                      gsize *position,
+                                                      GwySerializeSpec *sp);
+static GwySerializeSpec* gwy_serialize_unpack_object_all (const guchar *buffer,
+                                                          gsize size,
+                                                          gsize *nspec);
 
 static inline gsize ctype_size     (guchar ctype);
 
@@ -623,7 +630,7 @@ gwy_serialize_pack(GByteArray *buffer,
             }
 
             default:
-            g_error("wrong spec `%c' in templ `%s'", templ[i], templ);
+            g_error("wrong spec <%c> in templare <%s>", templ[i], templ);
             va_end(ap);
             return buffer;
             break;
@@ -635,6 +642,7 @@ gwy_serialize_pack(GByteArray *buffer,
     return buffer;
 }
 
+/* Documented in template */
 GByteArray*
 gwy_serialize_pack_object_struct(GByteArray *buffer,
                                  const guchar *object_name,
@@ -698,6 +706,10 @@ gwy_serialize_pack_struct(GByteArray *buffer,
             asize = *sp->array_size;
             leasize = GINT32_TO_LE(asize);
             arr = *(guint8**)sp->value;
+            if (!asize) {
+                g_warning("Ignoring zero-length array <%s>", sp->name);
+                continue;
+            }
         }
         g_byte_array_append(buffer, sp->name, strlen(sp->name) + 1);
         g_byte_array_append(buffer, &sp->ctype, 1);
@@ -863,14 +875,14 @@ gwy_serialize_skip_type(const guchar *buffer,
 {
     static const gchar *too_short_msg =
         "Truncated or corrupted buffer, need %u bytes "
-        "to skip `%c', but only %u bytes remain.";
+        "to skip <%c>, but only %u bytes remain.";
     static const gchar *no_string_msg =
         "Expected a string, trying to skip to end of [sub]buffer.";
 
     gsize tsize, alen;
 
     if (*position >= size) {
-        g_critical("Trying to skip `%c' after end of buffer?!", ctype);
+        g_critical("Trying to skip <%c> after end of buffer?!", ctype);
         return;
     }
 
@@ -1006,13 +1018,14 @@ gwy_serialize_skip_type(const guchar *buffer,
     *position = size;
 }
 
-
+/* Documented in template */
 gboolean
 gwy_serialize_unpack_object_struct(const guchar *buffer,
                                    gsize size,
                                    gsize *position,
                                    const guchar *object_name,
                                    gsize nspec,
+                                   /* FIXME: this should NOT be const */
                                    const GwySerializeSpec *spec)
 {
     gsize mysize;
@@ -1023,6 +1036,7 @@ gwy_serialize_unpack_object_struct(const guchar *buffer,
     *position += mysize;
 
     mysize = gwy_serialize_unpack_int32(buffer, size, position);
+    g_return_val_if_fail(mysize <= size - *position, FALSE);
     ok = gwy_serialize_unpack_struct(buffer + *position, mysize, nspec, spec);
     *position += mysize;
 
@@ -1049,6 +1063,9 @@ gwy_serialize_unpack_object_struct(const guchar *buffer,
  * there, always initialize non-atomic @spec values to %NULL pointers, at
  * least.
  *
+ * Caller is responsible for use/clean-up of these values if deserialization
+ * succeeds or not.
+ *
  * For object deserialization gwy_serialize_unpack_object_struct() should be
  * more convenient and less error prone.
  *
@@ -1059,13 +1076,12 @@ gboolean
 gwy_serialize_unpack_struct(const guchar *buffer,
                             gsize size,
                             gsize nspec,
+                            /* FIXME: this should NOT be const */
                             const GwySerializeSpec *spec)
 {
     gsize nlen, position;
     const GwySerializeSpec *sp;
     const guchar *name;
-    gpointer p;
-    gsize *a;
     guchar ctype;
 
     position = 0;
@@ -1084,7 +1100,6 @@ gwy_serialize_unpack_struct(const guchar *buffer,
         position += nlen;
         if (position >= size) {
             g_warning("Got past the end of truncated or corrupted buffer");
-            position = size;
             return FALSE;
         }
         ctype = gwy_serialize_unpack_char(buffer, size, &position);
@@ -1102,156 +1117,281 @@ gwy_serialize_unpack_struct(const guchar *buffer,
 
         if (position + ctype_size(ctype) > size) {
             g_warning("Got past the end of truncated or corrupted buffer");
-            position = size;
             return FALSE;
         }
 
-        p = sp->value;
-        a = sp->array_size;
-        switch (ctype) {
-            case 'o': {
-                GObject *val, *old = *(GObject**)p;
-
-                val = gwy_serializable_deserialize(buffer, size, &position);
-                if (val) {
-                    *(GObject**)p = val;
-                    gwy_object_unref(old);
-                }
-            }
-            break;
-
-            case 'b':
-            *(gboolean*)p = gwy_serialize_unpack_boolean(buffer, size,
-                                                         &position);
-            break;
-
-            case 'c':
-            *(guchar*)p = gwy_serialize_unpack_char(buffer, size, &position);
-            break;
-
-            case 'i':
-            *(gint32*)p = gwy_serialize_unpack_int32(buffer, size, &position);
-            break;
-
-            case 'q':
-            *(gint64*)p = gwy_serialize_unpack_int64(buffer, size, &position);
-            break;
-
-            case 'd':
-            *(gdouble*)p = gwy_serialize_unpack_double(buffer, size, &position);
-            break;
-
-            case 's': {
-                guchar *val, *old = *(guchar**)p;
-
-                val = gwy_serialize_unpack_string(buffer, size, &position);
-                if (val) {
-                    *(guchar**)p = val;
-                    g_free(old);
-                }
-            }
-            break;
-
-            case 'C': {
-                guchar *val, *old = *(guchar**)p;
-                gsize len;
-
-                val = gwy_serialize_unpack_char_array(buffer, size,
-                                                      &position, &len);
-                if (val) {
-                    *a = len;
-                    *(guchar**)p = val;
-                    g_free(old);
-                }
-            }
-            break;
-
-            case 'I': {
-                guint32 *val, *old = *(guint32**)p;
-                gsize len;
-
-                val = gwy_serialize_unpack_int32_array(buffer, size,
-                                                       &position, &len);
-                if (val) {
-                    *a = len;
-                    *(guint32**)p = val;
-                    g_free(old);
-                }
-            }
-            break;
-
-            case 'Q': {
-                guint64 *val, *old = *(guint64**)p;
-                gsize len;
-
-                val = gwy_serialize_unpack_int64_array(buffer, size,
-                                                       &position, &len);
-                if (val) {
-                    *a = len;
-                    *(guint64**)p = val;
-                    g_free(old);
-                }
-            }
-            break;
-
-            case 'D': {
-                gdouble *val, *old = *(gdouble**)p;
-                gsize len;
-
-                val = gwy_serialize_unpack_double_array(buffer, size,
-                                                        &position, &len);
-                if (val) {
-                    *a = len;
-                    *(gdouble**)p = val;
-                    g_free(old);
-                }
-            }
-            break;
-
-            case 'S': {
-                guchar **val, **old = *(guchar***)p;
-                gsize len, j, oldlen = *a;
-
-                val = gwy_serialize_unpack_string_array(buffer, size,
-                                                        &position, &len);
-                if (val) {
-                    *a = len;
-                    *(guchar***)p = val;
-                    if (old) {
-                        for (j = 0; j < oldlen; j++)
-                            g_free(old[j]);
-                        g_free(old);
-                    }
-                }
-            }
-            break;
-
-            case 'O': {
-                GObject **val, **old = *(GObject***)p;
-                gsize len, j, oldlen = *a;
-
-                val = gwy_serialize_unpack_object_array(buffer, size,
-                                                        &position, &len);
-                if (val) {
-                    *a = len;
-                    *(GObject***)p = val;
-                    if (old) {
-                        for (j = 0; j < oldlen; j++)
-                            gwy_object_unref(old[j]);
-                        g_free(old);
-                    }
-                }
-            }
-            break;
-
-            default:
-            g_critical("Type `%c' of %s is unknown "
-                       "(though known to caller?!)",
-                       ctype, name);
+        if (!gwy_serialize_unpack_item_value(buffer, size, &position,
+                                             /* FIXME */
+                                             (GwySerializeSpec*)sp))
             return FALSE;
-            break;
-        }
     }
+    return TRUE;
+}
+
+/**
+ * gwy_serialize_unpack_object:
+ * @buffer: A block of memory of size @size contaning object representation.
+ * @size: The size of @buffer.
+ * @position: Current position in buffer, will be updated to point after
+ *            object.
+ * @object_name: The g_type_name() of the object.
+ * @nspec: Where the number of deserialized components should be stored.
+ *
+ * Deserializes an object with arbitrary components.
+ *
+ * This function works like gwy_serialize_unpack_object_struct(), except that
+ * it does not use any a priori knowledge of what the object contains.  So
+ * instead of filling values in supplied #GwySerializeSpec's, it constructs
+ * them completely from what is found in @buffer.  It can do considerably less
+ * sanity checks and even allows several components of the same name.
+ *
+ * Returns: A newly allocated array of deserialized components.  Note the
+ *          @name fields of #GwySerializeSpec's point to @buffer and thus are
+ *          valid only as long as @buffer is; the @array_size fields are
+ *          pointers to newly allocated memory (for array coponents, for atomic
+ *          ones they are %NULL's) and must be freed.
+ *
+ * Since: 1.7
+ **/
+GwySerializeSpec*
+gwy_serialize_unpack_object(const guchar *buffer,
+                            gsize size,
+                            gsize *position,
+                            const guchar *object_name,
+                            gsize *nspec)
+{
+    gsize mysize;
+    GwySerializeSpec *spec;
+
+    mysize = gwy_serialize_check_string(buffer, size, *position, object_name);
+    g_return_val_if_fail(mysize, NULL);
+    *position += mysize;
+
+    mysize = gwy_serialize_unpack_int32(buffer, size, position);
+    g_return_val_if_fail(mysize <= size - *position, NULL);
+    spec = gwy_serialize_unpack_object_all(buffer + *position, mysize, nspec);
+    *position += mysize;
+
+    return spec;
+}
+
+static GwySerializeSpec*
+gwy_serialize_unpack_object_all(const guchar *buffer,
+                                gsize size,
+                                gsize *nspec)
+{
+    gsize nlen, position;
+    guint32 asize;
+    GArray *specs;
+    GwySerializeSpec sp, *psp;
+
+    specs = g_array_new(FALSE, FALSE, sizeof(GwySerializeSpec));
+    position = 0;
+    sp.array_size = &asize;
+    while (position < size) {
+        sp.value = NULL;
+        asize = 0;
+        nlen = gwy_serialize_check_string(buffer, size, position, NULL);
+        if (!nlen) {
+            g_warning("Expected a component name to deserialize, got garbage");
+            break;
+        }
+        sp.name = buffer + position;
+        position += nlen;
+        if (position >= size) {
+            g_warning("Got past the end of truncated or corrupted buffer");
+            break;
+        }
+        sp.ctype = gwy_serialize_unpack_char(buffer, size, &position);
+        if (position + ctype_size(sp.ctype) > size) {
+            g_warning("Got past the end of truncated or corrupted buffer");
+            break;
+        }
+        if (!gwy_serialize_unpack_item_value(buffer, size, &position, &sp))
+            break;
+
+        if (asize) {
+            sp.array_size = g_new(guint32, 1);
+            *sp.array_size = asize;
+        }
+        else
+            sp.array_size = NULL;
+        g_array_append_val(specs, sp);
+    }
+
+    *nspec = specs->len;
+    psp = (GwySerializeSpec*)specs->data;
+    g_array_free(specs, FALSE);
+
+    return psp;
+}
+
+/**
+ * gwy_serialize_unpack_item_value:
+ * @buffer: A memory location containing a serialized item value.
+ * @size: The size of @buffer.
+ * @position: Current position in buffer, will be updated to point after item.
+ * @sp: A single serialize spec with @ctype and @name already deserialized,
+ *      its @value and @array_size will be filled.
+ *
+ * Unpacks one serialized item value.
+ *
+ * Returns: %TRUE on success, %FALSE on failure.
+ **/
+static gboolean
+gwy_serialize_unpack_item_value(const guchar *buffer,
+                                gsize size,
+                                gsize *position,
+                                GwySerializeSpec *sp)
+{
+    gpointer p;
+    gsize *a;
+
+    p = sp->value;
+    a = sp->array_size;
+
+    switch (sp->ctype) {
+        case 'o': {
+            GObject *val, *old = *(GObject**)p;
+
+            val = gwy_serializable_deserialize(buffer, size, position);
+            if (val) {
+                *(GObject**)p = val;
+                gwy_object_unref(old);
+            }
+        }
+        break;
+
+        case 'b':
+        *(gboolean*)p = gwy_serialize_unpack_boolean(buffer, size, position);
+        break;
+
+        case 'c':
+        *(guchar*)p = gwy_serialize_unpack_char(buffer, size, position);
+        break;
+
+        case 'i':
+        *(gint32*)p = gwy_serialize_unpack_int32(buffer, size, position);
+        break;
+
+        case 'q':
+        *(gint64*)p = gwy_serialize_unpack_int64(buffer, size, position);
+        break;
+
+        case 'd':
+        *(gdouble*)p = gwy_serialize_unpack_double(buffer, size, position);
+        break;
+
+        case 's': {
+            guchar *val, *old = *(guchar**)p;
+
+            val = gwy_serialize_unpack_string(buffer, size, position);
+            if (val) {
+                *(guchar**)p = val;
+                g_free(old);
+            }
+        }
+        break;
+
+        case 'C': {
+            guchar *val, *old = *(guchar**)p;
+            gsize len;
+
+            val = gwy_serialize_unpack_char_array(buffer, size,
+                                                  position, &len);
+            if (val) {
+                *a = len;
+                *(guchar**)p = val;
+                g_free(old);
+            }
+        }
+        break;
+
+        case 'I': {
+            guint32 *val, *old = *(guint32**)p;
+            gsize len;
+
+            val = gwy_serialize_unpack_int32_array(buffer, size,
+                                                   position, &len);
+            if (val) {
+                *a = len;
+                *(guint32**)p = val;
+                g_free(old);
+            }
+        }
+        break;
+
+        case 'Q': {
+            guint64 *val, *old = *(guint64**)p;
+            gsize len;
+
+            val = gwy_serialize_unpack_int64_array(buffer, size,
+                                                   position, &len);
+            if (val) {
+                *a = len;
+                *(guint64**)p = val;
+                g_free(old);
+            }
+        }
+        break;
+
+        case 'D': {
+            gdouble *val, *old = *(gdouble**)p;
+            gsize len;
+
+            val = gwy_serialize_unpack_double_array(buffer, size,
+                                                    position, &len);
+            if (val) {
+                *a = len;
+                *(gdouble**)p = val;
+                g_free(old);
+            }
+        }
+        break;
+
+        case 'S': {
+            guchar **val, **old = *(guchar***)p;
+            gsize len, j, oldlen = *a;
+
+            val = gwy_serialize_unpack_string_array(buffer, size,
+                                                    position, &len);
+            if (val) {
+                *a = len;
+                *(guchar***)p = val;
+                if (old) {
+                    for (j = 0; j < oldlen; j++)
+                        g_free(old[j]);
+                    g_free(old);
+                }
+            }
+        }
+        break;
+
+        case 'O': {
+            GObject **val, **old = *(GObject***)p;
+            gsize len, j, oldlen = *a;
+
+            val = gwy_serialize_unpack_object_array(buffer, size,
+                                                    position, &len);
+            if (val) {
+                *a = len;
+                *(GObject***)p = val;
+                if (old) {
+                    for (j = 0; j < oldlen; j++)
+                        gwy_object_unref(old[j]);
+                    g_free(old);
+                }
+            }
+        }
+        break;
+
+        default:
+        g_critical("Type `%c' of %s is unknown (though known to caller?!)",
+                   sp->ctype, sp->name);
+        return FALSE;
+        break;
+    }
+
     return TRUE;
 }
 
@@ -1340,6 +1480,8 @@ gwy_serialize_unpack_char_array(const guchar *buffer,
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
+    if (!*asize)
+        return NULL;
     g_return_val_if_fail(*position + *asize*sizeof(guchar) <= size, NULL);
     value = g_memdup(buffer + *position, *asize*sizeof(guchar));
     *position += *asize*sizeof(guchar);
@@ -1404,6 +1546,8 @@ gwy_serialize_unpack_int32_array(const guchar *buffer,
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
+    if (!*asize)
+        return NULL;
     g_return_val_if_fail(*position + *asize*sizeof(gint32) <= size, NULL);
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, *asize*sizeof(gint32));
@@ -1474,6 +1618,8 @@ gwy_serialize_unpack_int64_array(const guchar *buffer,
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
+    if (!*asize)
+        return NULL;
     g_return_val_if_fail(*position + *asize*sizeof(gint64) <= size, NULL);
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, *asize*sizeof(gint64));
@@ -1548,6 +1694,8 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
+    if (!*asize)
+        return NULL;
     g_return_val_if_fail(*position + *asize*sizeof(gdouble) <= size, NULL);
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     value = g_memdup(buffer + *position, *asize*sizeof(gdouble));
@@ -1621,6 +1769,8 @@ gwy_serialize_unpack_string_array(const guchar *buffer,
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
+    if (!*asize)
+        return NULL;
     g_return_val_if_fail(*position + *asize*sizeof(guchar) <= size, NULL);
     value = g_new(guchar*, *asize);
     for (j = 0; j < *asize; j++) {
@@ -1666,6 +1816,8 @@ gwy_serialize_unpack_object_array(const guchar *buffer,
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     minsize = 2*sizeof(guchar) + sizeof(gint32);  /* Size of empty object */
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
+    if (!*asize)
+        return NULL;
     g_return_val_if_fail(*position + *asize*minsize <= size, NULL);
     value = g_new(GObject*, *asize);
     for (j = 0; j < *asize; j++) {

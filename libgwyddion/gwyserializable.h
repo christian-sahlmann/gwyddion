@@ -59,77 +59,82 @@ struct _GwySerializeSpec {
 };
 
 
-GType       gwy_serializable_get_type          (void) G_GNUC_CONST;
-GByteArray* gwy_serializable_serialize         (GObject *serializable,
-                                                GByteArray *buffer);
-GObject*    gwy_serializable_deserialize       (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position);
-GObject*    gwy_serializable_duplicate         (GObject *object);
+GType       gwy_serializable_get_type            (void) G_GNUC_CONST;
+GByteArray* gwy_serializable_serialize           (GObject *serializable,
+                                                  GByteArray *buffer);
+GObject*    gwy_serializable_deserialize         (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+GObject*    gwy_serializable_duplicate           (GObject *object);
 
 #ifndef GWY_DISABLE_DEPRECATED
-GByteArray* gwy_serialize_pack                 (GByteArray *buffer,
-                                                const gchar *templ,
-                                                ...);
-void        gwy_serialize_store_int32          (GByteArray *buffer,
-                                                gsize position,
-                                                guint32 value);
-gboolean    gwy_serialize_unpack_boolean       (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position);
-guchar      gwy_serialize_unpack_char          (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position);
-guchar*     gwy_serialize_unpack_char_array    (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position,
-                                                gsize *asize);
-gint32      gwy_serialize_unpack_int32         (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position);
-gint32*     gwy_serialize_unpack_int32_array   (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position,
-                                                gsize *asize);
-gint64      gwy_serialize_unpack_int64         (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position);
-gint64*     gwy_serialize_unpack_int64_array   (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position,
-                                                gsize *asize);
-gdouble     gwy_serialize_unpack_double        (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position);
-gdouble*    gwy_serialize_unpack_double_array  (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position,
-                                                gsize *asize);
-guchar*     gwy_serialize_unpack_string        (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position);
-gsize       gwy_serialize_check_string         (const guchar *buffer,
-                                                gsize size,
-                                                gsize position,
-                                                const guchar *compare_to);
+GByteArray* gwy_serialize_pack                   (GByteArray *buffer,
+                                                  const gchar *templ,
+                                                  ...);
+void        gwy_serialize_store_int32            (GByteArray *buffer,
+                                                  gsize position,
+                                                  guint32 value);
+gboolean    gwy_serialize_unpack_boolean         (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+guchar      gwy_serialize_unpack_char            (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+guchar*     gwy_serialize_unpack_char_array      (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position,
+                                                  gsize *asize);
+gint32      gwy_serialize_unpack_int32           (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+gint32*     gwy_serialize_unpack_int32_array     (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position,
+                                                  gsize *asize);
+gint64      gwy_serialize_unpack_int64           (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+gint64*     gwy_serialize_unpack_int64_array     (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position,
+                                                  gsize *asize);
+gdouble     gwy_serialize_unpack_double          (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+gdouble*    gwy_serialize_unpack_double_array    (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position,
+                                                  gsize *asize);
+guchar*     gwy_serialize_unpack_string          (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+gsize       gwy_serialize_check_string           (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize position,
+                                                  const guchar *compare_to);
+GByteArray* gwy_serialize_pack_struct            (GByteArray *buffer,
+                                                  gsize nspec,
+                                                  const GwySerializeSpec *spec);
+gboolean    gwy_serialize_unpack_struct          (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize nspec,
+                                                  const GwySerializeSpec *spec);
 #endif
-GByteArray* gwy_serialize_pack_struct          (GByteArray *buffer,
-                                                gsize nspec,
-                                                const GwySerializeSpec *spec);
-gboolean    gwy_serialize_unpack_struct        (const guchar *buffer,
-                                                gsize size,
-                                                gsize nspec,
-                                                const GwySerializeSpec *spec);
-GByteArray* gwy_serialize_pack_object_struct   (GByteArray *buffer,
-                                                const guchar *object_name,
-                                                gsize nspec,
-                                                const GwySerializeSpec *spec);
-gboolean    gwy_serialize_unpack_object_struct (const guchar *buffer,
-                                                gsize size,
-                                                gsize *position,
-                                                const guchar *object_name,
-                                                gsize nspec,
-                                                const GwySerializeSpec *spec);
+GByteArray* gwy_serialize_pack_object_struct     (GByteArray *buffer,
+                                                  const guchar *object_name,
+                                                  gsize nspec,
+                                                  const GwySerializeSpec *spec);
+gboolean    gwy_serialize_unpack_object_struct   (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position,
+                                                  const guchar *object_name,
+                                                  gsize nspec,
+                                                  const GwySerializeSpec *spec);
+GwySerializeSpec* gwy_serialize_unpack_object    (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position,
+                                                  const guchar *object_name,
+                                                  gsize *nspec);
 
 G_END_DECLS
 
