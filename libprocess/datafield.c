@@ -3049,7 +3049,33 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
     yres = data_field->yres;
     hlp =(GwyDataLine*) gwy_data_line_new(xres, data_field->xreal, 0);
 
-    n = (gint)fit_type;;
+    n = (gint)fit_type;
+
+    if (exclude)
+    {
+        if (orientation == GTK_ORIENTATION_HORIZONTAL)
+        {
+            if ((xres-brrow)>ulrow)
+            {
+                ulrow = brrow; brrow = xres;
+            }
+            else
+            {
+                brrow = ulrow; ulrow = 0; 
+            }
+        }
+        else if (orientation == GTK_ORIENTATION_VERTICAL)
+        {
+            if ((yres-brcol)>ulcol)
+            {
+                ulcol = brcol; brcol = xres;
+            }
+            else
+            {
+                brcol = ulcol; ulcol = 0; 
+            }             
+        }
+    }
 
     if (orientation == GTK_ORIENTATION_HORIZONTAL)
     {
