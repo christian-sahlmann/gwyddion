@@ -684,7 +684,7 @@ pixmap_do_write_bmp(const gchar *filename,
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
-    bmprowstride = 3*((width + 3) >> 2 << 2);
+    bmprowstride = 12*((width + 3)/4);
     bmplen = height*bmprowstride + sizeof(bmp_head);
 
     fh = fopen(filename, "wb");
@@ -694,7 +694,7 @@ pixmap_do_write_bmp(const gchar *filename,
     }
 
     *(guint32*)(bmp_head + 2) = GUINT32_TO_LE(bmplen);
-    *(guint32*)(bmp_head + 18) = GUINT32_TO_LE(width);
+    *(guint32*)(bmp_head + 18) = GUINT32_TO_LE(bmprowstride/3);
     *(guint32*)(bmp_head + 22) = GUINT32_TO_LE(height);
     *(guint32*)(bmp_head + 34) = GUINT32_TO_LE(height*bmprowstride);
     if (fwrite(bmp_head, 1, sizeof(bmp_head), fh) != sizeof(bmp_head))
@@ -703,6 +703,7 @@ pixmap_do_write_bmp(const gchar *filename,
     /* The ugly part: BMP uses BGR instead of RGB and is written upside down,
      * this silliness may originate nowhere else than in MS... */
     buffer = g_new(guchar, bmprowstride);
+    memset(buffer, 0xff, sizeof(bmprowstride));
     for (i = 0; i < height; i++) {
         guchar *p = pixels + (height - 1 - i)*rowstride;
         guchar *q = buffer;
@@ -749,7 +750,7 @@ pixmap_do_write_targa(const gchar *filename,
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
-    targarowstride = 3*((width + 3) >> 2 << 2);
+    targarowstride = 12*((width + 3)/4);
 
     if (height > 65535 || width > 65535) {
         g_warning("Image too large to be stored as TARGA");
@@ -772,6 +773,7 @@ pixmap_do_write_targa(const gchar *filename,
     /* The ugly part: TARGA uses BGR instead of RGB and is written upside down,
      * it's really strange it wasn't invented by MS... */
     buffer = g_new(guchar, targarowstride);
+    memset(buffer, 0xff, sizeof(targarowstride));
     for (i = 0; i < height; i++) {
         guchar *p = pixels + (height - 1 - i)*rowstride;
         guchar *q = buffer;
