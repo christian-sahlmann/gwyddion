@@ -91,8 +91,16 @@ function check_coding_style() {
   find -name \*.c | grep -Ev '/(main|test|wtest)\.c' \
     | xargs ./utils/check-coding-style.py \
     | cat --squeeze-blank >$logdir/coding-style.log
-  find -name \*.def \
-    | xargs sed -e $'/^\tgwy_\|^EXPORTS/d' -e 's/^/Evil symbol: /' 1>&2
+  find -name \*.def | while read lib; do
+    l=$(basename $lib .def)
+    sed -e $'/^\tgwy_\|^EXPORTS/d' -e 's/^/Evil symbol ('$l'): /' $lib 1>&2
+  done
+  find modules -name \*.so | while read mod; do
+    m=$(basename $mod .so)
+    nm $mod \
+      | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/Evil symbol ('$m'): \1/;t;d' \
+      | grep -Ev ' _(fini|init|gwy_module_query)$' 1>&2
+  done
 }
 
 function install_to_tmp() {
