@@ -203,7 +203,7 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
  * @wshed_steps: Watershed steps.
  * @wshed_dropsize: Watershed drop size.
  * @prefilter: Use prefiltering.
- * @dir: Mark algorithm direction.
+ * @below: If %TRUE, valleys are marked, otherwise mountains are marked.
  *
  * Performs watershed algorithm.
  **/
@@ -215,49 +215,45 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                      gdouble wshed_dropsize, gboolean prefilter,
                                      /* FIXME: change to gboolean */
                                      /* FIXME: implement or remove */
-                                     G_GNUC_UNUSED gint dir)
+                                     gint below)
 {
     GwyDataField *min, *water, *mark_dfield;
-    gint i;
+    gint xres, yres, i;
 
-    min = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                            data_field->yres,
+    xres = data_field->xres;
+    yres = data_field->yres;
+
+    min = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
                                             data_field->xreal,
                                             data_field->yreal,
                                             TRUE));
-    water = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
-                                              data_field->yres,
+    water = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
                                               data_field->xreal,
                                               data_field->yreal,
                                               TRUE));
     mark_dfield =
         GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+    if (below)
+        gwy_data_field_multiply(mark_dfield, -1.0);
+    if (prefilter)
+        gwy_data_field_filter_median(mark_dfield, 6, 0, 0, xres, yres);
 
-    gwy_data_field_resample(grain_field, data_field->xres, data_field->yres,
-                            GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(grain_field, xres, yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_fill(grain_field, 0);
 
-    if (prefilter)
-        gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres,
-                                     data_field->yres);
-
     /* odrop */
-    for (i = 0; i < locate_steps; i++) {
+    for (i = 0; i < locate_steps; i++)
         drop_step(mark_dfield, water, locate_dropsize);
-    }
     drop_minima(water, min, locate_thresh);
 
     /* owatershed */
-    gwy_data_field_copy(data_field, mark_dfield);
-    /*gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres, data_field->yres); */
-    for (i = 0; i < wshed_steps; i++) {
+    gwy_data_field_area_copy(data_field, mark_dfield, 0, 0, xres, yres, 0, 0);
+    if (below)
+        gwy_data_field_multiply(mark_dfield, -1.0);
+    for (i = 0; i < wshed_steps; i++)
         wdrop_step(mark_dfield, min, water, grain_field, wshed_dropsize);
-    }
 
-    /*gwy_data_field_multiply(grain_field, 10.0/gwy_data_field_get_max(grain_field)); */
     mark_grain_boundaries(grain_field);
-
-    /*gwy_data_field_copy(water, grain_field); */
 
     g_object_unref(min);
     g_object_unref(water);
@@ -276,7 +272,7 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
  * @wshed_steps: Watershed steps.
  * @wshed_dropsize: Watershed drop size.
  * @prefilter: Use prefiltering.
- * @dir: Mark algorithm direction.
+ * @below: If %TRUE, valleys are marked, otherwise mountains are marked.
  *
  * Performs one iteration of the watershed algorithm.
  **/
@@ -290,8 +286,7 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                           gdouble wshed_dropsize,
                                           gboolean prefilter,
                                           /* FIXME: change to gboolean */
-                                          /* FIXME: implement or remove */
-                                          G_GNUC_UNUSED gint dir)
+                                          gint below)
 {
     if (status->state == GWY_WSHED_INIT) {
         status->min = GWY_DATA_FIELD(gwy_data_field_new(data_field->xres,
@@ -306,14 +301,16 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                                           TRUE));
         status->mark_dfield =
             GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+        if (below)
+            gwy_data_field_multiply(status->mark_dfield, -1.0);
+        if (prefilter)
+            gwy_data_field_filter_median(status->mark_dfield, 6, 0, 0,
+                                         data_field->xres, data_field->yres);
 
         gwy_data_field_resample(grain_field, data_field->xres, data_field->yres,
                                 GWY_INTERPOLATION_NONE);
         gwy_data_field_fill(grain_field, 0);
 
-        if (prefilter)
-            gwy_data_field_filter_median(status->mark_dfield, 6, 0, 0,
-                                         data_field->xres, data_field->yres);
 
         status->state = GWY_WSHED_LOCATE;
         status->internal_i = 0;
@@ -339,8 +336,12 @@ gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
 
 
     if (status->state == GWY_WSHED_WSHED) {
-        if (status->internal_i == 0)
-            gwy_data_field_copy(data_field, status->mark_dfield);
+        if (status->internal_i == 0) {
+            gwy_data_field_area_copy(data_field, status->mark_dfield, 0, 0,
+                                     data_field->xres, data_field->yres, 0, 0);
+            if (below)
+                gwy_data_field_multiply(status->mark_dfield, -1.0);
+        }
         if (status->internal_i < wshed_steps) {
             wdrop_step(status->mark_dfield, status->min, status->water,
                        grain_field, wshed_dropsize);
@@ -484,17 +485,17 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
  * @data_field: Data to be used for marking
  * @grain_field: Field of marked grains (mask)
  * @threshval: Height threshold.
- * @direction: Threshold grains above/below given height
+ * @below: If %TRUE, grains below threshold are removed, otherwise grains above
+ *         threshold are removed.
  *
- * Thresolds grain that are higher/lower than given threshold value.
+ * Removes grains that are higher/lower than given threshold value.
  **/
 void
 gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                                        GwyDataField *grain_field,
                                        gdouble threshval,
                                        /* FIXME: change to gboolean */
-                                       /* FIXME: implement or remove */
-                                       gint G_GNUC_UNUSED direction)
+                                       gint below)
 {
     gint i, xres, yres, ngrains;
     gdouble *data;
@@ -514,9 +515,17 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
 
     /* find grains to remove */
     grain_kill = g_new0(gboolean, ngrains + 1);
-    for (i = 0; i < xres*yres; i++) {
-        if (grains[i] && data_field->data[i] > threshval)
-            grain_kill[grains[i]] = TRUE;
+    if (below) {
+        for (i = 0; i < xres*yres; i++) {
+            if (grains[i] && data_field->data[i] < threshval)
+                grain_kill[grains[i]] = TRUE;
+        }
+    }
+    else {
+        for (i = 0; i < xres*yres; i++) {
+            if (grains[i] && data_field->data[i] > threshval)
+                grain_kill[grains[i]] = TRUE;
+        }
     }
 
     /* remove them */
@@ -537,7 +546,7 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
 
 /* FIXME: WTF? Implement or remove. */
 gdouble
-gwy_data_field_grains_get_average(GwyDataField G_GNUC_UNUSED *grain_field)
+gwy_data_field_grains_get_average(GwyDataField *grain_field)
 {
     return 0;
 }
@@ -567,6 +576,13 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
 
     grains = g_new0(gint, xres*yres);
     ngrains = number_grains_int(grain_field, grains);
+    if (!ngrains) {
+        gwy_data_line_resample(distribution, 2, GWY_INTERPOLATION_NONE);
+        gwy_data_line_fill(distribution, 0);
+        gwy_data_line_set_real(distribution,
+                               gwy_data_field_get_xres(grain_field));
+        return;
+    }
 
     /* sum grain sizes */
     grain_size = g_new0(gint, ngrains + 1);

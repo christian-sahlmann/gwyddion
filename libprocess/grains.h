@@ -62,7 +62,7 @@ void gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                           gint wshed_steps,
                                           gdouble wshed_dropsize,
                                           gboolean prefilter,
-                                          gint dir);
+                                          gint below);
 
 #ifndef GWY_DISABLE_DEPRECATED
 void gwy_data_field_grains_remove_manually(GwyDataField *grain_field,
@@ -79,7 +79,7 @@ void gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
 void gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                                             GwyDataField *grain_field,
                                             gdouble threshval,
-                                            gint direction);
+                                            gint below);
 
 void gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                                GwyDataField *grain_field,
@@ -90,7 +90,7 @@ void gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                                gint wshed_steps,
                                                gdouble wshed_dropsize,
                                                gboolean prefilter,
-                                               gint dir);
+                                               gint below);
 
 void gwy_data_field_grains_mark_local_maxima(GwyDataField *data_field,
                                              GwyDataField *grain_field);
