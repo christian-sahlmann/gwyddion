@@ -483,7 +483,7 @@ gwy_grad_sphere_make_pixmap(GwyGradSphere *grad_sphere)
 
     widget = GTK_WIDGET(grad_sphere);
 
-    radius = 0.45 * MIN(widget->allocation.width, widget->allocation.height);
+    radius = (MIN(widget->allocation.width, widget->allocation.height) - 1)/2;
     if (radius != grad_sphere->radius) {
         grad_sphere->radius = radius;
         if (grad_sphere->sphere_pixbuf)
@@ -578,7 +578,7 @@ gwy_grad_sphere_expose(GtkWidget *widget,
                     grad_sphere->sphere_pixbuf,
                     xs, ys,
                     xc + xs, yc + ys,
-                    xe - xs, ye - ys,
+                    xe - xs + 1, ye - ys + 1,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
 
