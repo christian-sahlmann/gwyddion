@@ -572,7 +572,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
         format->precision = 2;
     }
     else
-        format->magnitude = gwy_math_humanize_numbers(value/120, value,
+        format->magnitude = gwy_math_humanize_numbers(value/12, value,
                                                       &format->precision);
     siunit2->power10 = ROUND(log(format->magnitude)/G_LN10);
     format->units = gwy_si_unit2_format_as_plain_string(siunit2,
