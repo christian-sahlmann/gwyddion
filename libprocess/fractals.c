@@ -88,7 +88,7 @@ get_area_rms_nomask(GwyDataField *dfield, GwyDataField *mask, gint col, gint row
     if (width == 0 || height == 0)
         return rms;
    
-    printf("col: %d, row: %d, height=%d, width=%d, xres+%d, yres=%d\n", col, row, height, width, dfield->xres, dfield->yres);
+    /*printf("col: %d, row: %d, height=%d, width=%d, xres+%d, yres=%d\n", col, row, height, width, dfield->xres, dfield->yres);*/
      g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms);
      g_return_val_if_fail(col >= 0 && row >= 0
                           && width >= 0 && height >= 0
