@@ -420,6 +420,7 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
       curve.params.point_size = params->point_size;
       curve.params.line_size = params->line_size;
       curve.params.line_style = params->line_style;
+      /* FIXME: why is params->description ignored??? */
       curve.params.description = g_string_new(label->str);
       curve.params.point_type = params->point_type;
       curve.params.color = params->color;

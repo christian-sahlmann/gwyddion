@@ -1301,6 +1301,8 @@ gwy_axis_get_label(GwyAxis *axis)
     return axis->label_text;
 }
 
+/* XXX: Fuck! There's NO way how the units could be unset! */
+/* XXX: DoubleFuck! The thing GOBBLES the passed string! */
 /**
  * gwy_axis_set_unit:
  * @axis: axis widget 
