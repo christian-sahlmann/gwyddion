@@ -42,6 +42,8 @@ typedef struct {
     GPtrArray *positions;
     GPtrArray *dtl;
     GPtrArray *str;
+    GtkObject *linesize;
+    gint size;
     gint interp;
     gboolean separate;
 } ToolControls;
@@ -59,10 +61,13 @@ static void       interp_changed_cb   (GObject *item,
                                        ToolControls *controls);
 static void       separate_changed_cb (GtkToggleButton *button,
                                        ToolControls *controls);
+static void       size_changed_cb     (ToolControls *controls);
 static void       load_args           (GwyContainer *container,
                                        ToolControls *controls);
 static void       save_args           (GwyContainer *container,
                                        ToolControls *controls);
+
+
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -139,7 +144,7 @@ dialog_create(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwyContainer *settings;
-    GtkWidget *dialog, *table, *label, *vbox, *frame;
+    GtkWidget *dialog, *table, *label, *vbox, *frame, *table2;
     GPtrArray *positions;
     gint i;
 
@@ -201,6 +206,15 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 10);
 
+    table2 = gtk_table_new(2, 2, FALSE);    
+    controls->linesize = gtk_adjustment_new(controls->size, 1, 20, 1, 5, 0);
+    gwy_table_attach_spinbutton(table2, 0, _("Thickness"), _("pixels"),
+                                controls->linesize);
+    gtk_box_pack_start(GTK_BOX(vbox), table2, FALSE, FALSE, 2);
+    
+    g_signal_connect_swapped(controls->linesize, "value-changed",
+                             G_CALLBACK(size_changed_cb), controls);
+    
     controls->separation = gtk_check_button_new_with_label("separate profiles");
     gtk_box_pack_start(GTK_BOX(vbox), controls->separation, FALSE, FALSE, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->separation),
@@ -325,8 +339,8 @@ dialog_update(GwyUnitoolState *state,
             lineres = ROUND(sqrt((xl1 - xl2)*(xl1 - xl2)
                                  + (yl1 - yl2)*(yl1 - yl2)));
             lineres = MAX(lineres, 10);
-            if (!gwy_data_field_get_data_line(dfield, controls->dtl->pdata[i],
-                                              xl1, yl1, xl2, yl2, lineres,
+            if (!gwy_data_field_get_data_line_averaged(dfield, controls->dtl->pdata[i],
+                                              xl1, yl1, xl2, yl2, lineres, controls->size,
                                               controls->interp))
                 continue;
             gwy_graph_add_dataline_with_units(GWY_GRAPH(controls->graph),
@@ -438,23 +452,35 @@ separate_changed_cb(GtkToggleButton *button, ToolControls *controls)
     controls->separate = gtk_toggle_button_get_active(button);
 }
 
+
+static void
+size_changed_cb(ToolControls *controls)
+{
+    controls->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->linesize));
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+}
+
 static const gchar *separate_key = "/tool/profile/separate";
 static const gchar *interp_key = "/tool/profile/interp";
+static const gchar *size_key = "/tool/profile/size";
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
     controls->separate = FALSE;
     controls->interp = GWY_INTERPOLATION_BILINEAR;
+    controls->size = 1;
 
     gwy_container_gis_boolean_by_name(container, separate_key,
                                       &controls->separate);
     gwy_container_gis_enum_by_name(container, interp_key, &controls->interp);
-
+    gwy_container_gis_int32_by_name(container, size_key, &controls->size);
     /* sanitize */
     controls->separate = !!controls->separate;
     controls->interp = CLAMP(controls->interp,
                              GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+    controls->size = CLAMP(controls->size, 1, 20);
+
 }
 
 static void
@@ -463,6 +489,7 @@ save_args(GwyContainer *container, ToolControls *controls)
     gwy_container_set_boolean_by_name(container, separate_key,
                                       controls->separate);
     gwy_container_set_enum_by_name(container, interp_key, controls->interp);
+    gwy_container_set_int32_by_name(container, size_key, controls->size);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
