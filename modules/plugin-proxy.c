@@ -333,7 +333,7 @@ register_plugins(GList *plugins,
 static gchar**
 construct_rgi_names(const gchar *pluginname)
 {
-    gchar **rginames;;
+    gchar **rginames;
     gchar *pos;
     gint len;
 
