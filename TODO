@@ -6,6 +6,7 @@ to locate them ;-)
 
 Particularly:
 - Some real Undo & Redo and revert to saved state
+- Printing
 - User documentation, even better, integrated help
 - Internationalization and localization
 - Palette editor
