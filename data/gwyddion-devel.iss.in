@@ -5,7 +5,7 @@ AppVersion=@PACKAGE_VERSION@
 AppVerName=@PACKAGE_NAME@ Development @PACKAGE_VERSION@
 AppPublisher=Trific soft.
 AppPublisherURL=@PACKAGE_URL@
-AppCopyright=Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek
+AppCopyright=Copyright (C) 2003-2005 David Necas (Yeti), Petr Klapetek
 DefaultDirName=C:\Dev-C++
 DefaultGroupName=@PACKAGE_NAME@
 DisableStartupPrompt=yes
@@ -13,7 +13,7 @@ WindowShowCaption=yes
 WindowVisible=no
 LicenseFile=COPYING.wri
 Compression=bzip/9
-SourceDir=inst
+SourceDir=.
 ; this means inst too
 OutputDir=.
 OutputBaseFilename=@PACKAGE_NAME@-Development-@PACKAGE_VERSION@
