@@ -112,6 +112,7 @@ gwy_unitool_use(GwyUnitoolState *state,
         g_signal_connect(state->dialog, "delete_event",
                          G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
         gwy_unitool_setup_accel_group(state);
+        gtk_window_set_position(GTK_WINDOW(state->dialog), GTK_WIN_POS_NONE);
         gtk_widget_show_all(GTK_DIALOG(state->dialog)->vbox);
         state->is_visible = FALSE;
     }
