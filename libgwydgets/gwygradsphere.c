@@ -650,8 +650,9 @@ gwy_grad_sphere_motion_notify(GtkWidget *widget,
     GdkModifierType mods;
     gint x, y, mask;
 
+    gwy_debug("motion event: (%f, %f)", event->x, event->y);
     g_return_val_if_fail(GWY_IS_GRAD_SPHERE(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(event, FALSE);
 
     grad_sphere = GWY_GRAD_SPHERE(widget);
 
@@ -707,6 +708,7 @@ gwy_grad_sphere_update_mouse(GwyGradSphere *grad_sphere, gint x, gint y)
     gint xc, yc;
     gdouble old_phi, old_theta, r;
 
+    gwy_debug("mouse update: (%f, %f)", x, y);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere));
 
     xc = GTK_WIDGET(grad_sphere)->allocation.width / 2;
