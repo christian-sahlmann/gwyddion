@@ -23,6 +23,7 @@
  *  E-mail: yeti@gwyddion.net.
  */
 
+#include <string.h>
 #include <gwymacros.h>
 #include <gwymath.h>
 #include "gwynlfit.h"
@@ -50,8 +51,8 @@ static void     gwy_math_choleski_solve1(gint dimA,
                                          gdouble *B);
 static gboolean gwy_math_choleski_decompose1(gint dimA,
                                              gdouble *A);
-static gboolean gwy_math_sym_matrix_invert1(gint N,
-                                            gdouble *A);
+static gboolean gwy_math_sym_matrix_invert1(gint n,
+                                            gdouble *a);
 
 static gdouble gwy_math_nlfit_residua(GwyNLFitter *nlfit,
                                       gint n_dat,
@@ -170,7 +171,7 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
                                    user_data, resid);
     sumr = sumr1;
 
-    if (nlfit->eval == FALSE) {
+    if (!nlfit->eval) {
         g_warning("Initial residua evaluation failed");
         g_free(resid);
         return -1;
@@ -211,10 +212,8 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
                     }
                 }
                 if (nlfit->eval) {
-                    for (i = 1; i < covar_size; i++)
-                        save_a[i] = a[i];
-                    for (i = 1; i <= n_par; i++)
-                        saveparam[i] = param[i];
+                    memcpy(save_a, a, covar_size*sizeof(gdouble));
+                    memcpy(saveparam, param, (n_par+1)*sizeof(gdouble));
                 }
                 else
                     end = TRUE;
@@ -226,10 +225,10 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
 
                 while (!posdef) {
                     if (!first)
-                        for (i = 0; i < covar_size; i++)
-                            a[i] = save_a[i];
+                        memcpy(a, save_a, covar_size*sizeof(gdouble));
                     else
                         first = FALSE;
+
                     for (j = 1; j <= n_par; j++) {
                         /* Doplneni diagonalnich prvku */
                         gint q = j*(j + 1)/2;        /* Index diag.prvku*/
@@ -542,38 +541,38 @@ gwy_math_choleski_solve1(gint dimA, gdouble *A, gdouble *B)
 
 /* inverze symetricke matice */
 static gboolean
-gwy_math_sym_matrix_invert1(gint N, gdouble *A)
+gwy_math_sym_matrix_invert1(gint n, gdouble *a)
 {
 
-    gint Q = 0, M;
-    gdouble S, T;
-    gdouble *X;
-    gint K, I, J;
+    gint q = 0, m;
+    gdouble s, t;
+    gdouble *x;
+    gint k, i, j;
 
-    X = g_new(gdouble, N*(N + 1)/2 + 2);
-    for (K = N; K >= 1; K--) {
-        S = A[1];
-        if (S <= 0) {
-            g_free(X);
+    x = g_new(gdouble, n*(n + 1)/2 + 2);
+    for (k = n; k >= 1; k--) {
+        s = a[1];
+        if (s <= 0) {
+            g_free(x);
             return FALSE;
         }
-        M = 1;
-        for (I = 2; I <= N; I++) {
-            Q = M;
-            M += I;
-            T = A[Q + 1];
-            X[I] = -T/S;      /* note use temporary X*/
-            if (I > K)
-                X[I] = -X[I];
-            for (J = Q + 2; J <= M; J++)
-                A[J - I] = A[J] + T * X[J - Q];
+        m = 1;
+        for (i = 2; i <= n; i++) {
+            q = m;
+            m += i;
+            t = a[q + 1];
+            x[i] = -t/s;      /* note use temporary x*/
+            if (i > k)
+                x[i] = -x[i];
+            for (j = q + 2; j <= m; j++)
+                a[j - i] = a[j] + t * x[j - q];
         }
-        Q--;
-        A[M] = 1.0/S;
-        for (I = 2; I <= N; I++)
-            A[Q + I] = X[I];
+        q--;
+        a[m] = 1.0/s;
+        for (i = 2; i <= n; i++)
+            a[q + i] = x[i];
     }
-    g_free(X);
+    g_free(x);
 
     return TRUE;
 }

@@ -137,7 +137,7 @@ static const GwyEnum file_op_names[] = {
 int
 main(void)
 {
-    enum { count = 50 };
+    enum { count = 24 };
     GObject *ser;
     gsize size, pos;
     guchar *buffer;
@@ -398,7 +398,7 @@ main(void)
     for (i = 0; i < count; i++)
         printf("%3d: %.4f\t%.4f\t%.4f\t%.4f\n",
                i, xmq[i], ymq[i], vmq[i], gauss(xmq[i], 3, param, NULL, &bb));
-    puts("");
+
     for (i = 0; i < 3; i++) {
         for (j = 0; j < i; j++)
             printf("%.4f\t", gwy_math_nlfit_get_correlations(ms, i, j));
