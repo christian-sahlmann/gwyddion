@@ -547,6 +547,15 @@ gwy_dialog_prevent_delete_cb
 </SECTION>
 
 <SECTION>
+<FILE>gwyradiobuttons</FILE>
+gwy_radio_buttons_create
+gwy_radio_buttons_set_current
+gwy_radio_buttons_get_current
+gwy_radio_buttons_set_current_widget
+gwy_radio_buttons_get_current_widget
+</SECTION>
+
+<SECTION>
 <FILE>gwystock</FILE>
 GWY_STOCK_BOLD
 GWY_STOCK_CROP
@@ -608,6 +617,7 @@ gwy_option_menu_filter
 gwy_option_menu_mergegrain
 gwy_option_menu_fit_line
 gwy_option_menu_fractal
+gwy_option_menu_nlfitpreset
 gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history

@@ -49,5 +49,6 @@
     <xi:include href="xml/gwystock.xml"/>
     <xi:include href="xml/gwydgets.xml"/>
     <xi:include href="xml/gwyoptionmenus.xml"/>
+    <xi:include href="xml/gwyradiobuttons.xml"/>
   </chapter>
 </book>

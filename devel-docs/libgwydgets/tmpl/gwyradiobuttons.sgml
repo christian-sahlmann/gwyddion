@@ -1,0 +1,72 @@
+<!-- ##### SECTION Title ##### -->
+gwyradiobuttons
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_radio_buttons_create ##### -->
+<para>
+
+</para>
+
+@entries: 
+@nentries: 
+@key: 
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_radio_buttons_set_current ##### -->
+<para>
+
+</para>
+
+@group: 
+@key: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_radio_buttons_get_current ##### -->
+<para>
+
+</para>
+
+@group: 
+@key: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_radio_buttons_set_current_widget ##### -->
+<para>
+
+</para>
+
+@radio_button: 
+@key: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_radio_buttons_get_current_widget ##### -->
+<para>
+
+</para>
+
+@radio_button: 
+@key: 
+@Returns: 
+
+
