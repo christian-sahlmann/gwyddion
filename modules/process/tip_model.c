@@ -96,7 +96,7 @@ static void        radius_changed_cb          (GwyValUnit *valunit,
 
 TipModelArgs tip_model_defaults = {
     0,
-    0,
+    200e-6,
     0,
     NULL,
 };
