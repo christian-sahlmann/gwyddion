@@ -158,7 +158,7 @@ wshed(GwyContainer *data, GwyRunType run)
 static gboolean
 wshed_dialog(WshedArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *label, *spin, *hbox, *align;
+    GtkWidget *dialog, *table, *label, *spin, *hbox;
     WshedControls controls;
     enum {
         RESPONSE_RESET = 1,
@@ -281,22 +281,16 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                      G_CALLBACK(wshed_invalidate), &controls);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("_Mask color:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
     load_mask_color(controls.color_button,
                     gwy_data_view_get_data(GWY_DATA_VIEW(controls.view)));
-    align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
-    gtk_container_add(GTK_CONTAINER(align), controls.color_button);
-    gtk_table_attach(GTK_TABLE(table), align, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gwy_table_attach_hscale(table, row++, _("_Mask color:"), NULL,
+                            GTK_OBJECT(controls.color_button),
+                            GWY_HSCALE_WIDGET_NO_EXPAND);
     g_signal_connect(controls.color_button, "clicked",
                      G_CALLBACK(mask_color_change_cb), &controls);
-    row++;
 
     controls.computed = FALSE;
 
