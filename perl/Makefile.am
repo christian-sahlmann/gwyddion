@@ -34,11 +34,11 @@ uninstall-local:
 	for i in $(Gwyddion_PERL); do \
 	    rm -f $(DESTDIR)$(PERL_TARGET_DIR)/$$i; \
 	done
-	rmdir -f $(DESTDIR)$(PERL_TARGET_DIR)
+	-rmdir $(DESTDIR)$(PERL_TARGET_DIR)
 	for i in $(man3_pages); do \
 	    rm -f $(DESTDIR)$(man3dir)/$$i; \
 	done
-	rmdir -f $(DESTDIR)$(man3dir)
+	-rmdir $(DESTDIR)$(man3dir)
 endif
 
 clean-local:
