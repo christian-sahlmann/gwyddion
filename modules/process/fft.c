@@ -25,7 +25,6 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include <libgwydgets/gwymodulemenus.h>
 #include <app/settings.h>
 #include <app/app.h>
 

@@ -46,6 +46,7 @@
 #include <libgwydgets/gwyvectorshade.h>
 #include <libgwydgets/gwyvruler.h>
 #include <libprocess/cwt.h>
+#include <libprocess/simplefft.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,6 +74,9 @@ GtkWidget* gwy_zoom_mode_option_menu      (GCallback callback,
 GtkWidget* gwy_2dcwt_option_menu          (GCallback callback,
                                            gpointer cbdata,
                                            Gwy2DCWTWaveletType current);
+GtkWidget* gwy_fft_output_menu            (GCallback callback,
+                                           gpointer cbdata,
+                                           GwyFFTOutputType current);
 GtkWidget* gwy_option_menu_create         (const GwyOptionMenuEntry *entries,
                                            gint nentries,
                                            const gchar *key,
@@ -95,11 +99,6 @@ void       gwy_table_attach_row           (GtkWidget *table,
                                            GtkWidget *middle_widget);
 
 gboolean   gwy_dialog_prevent_delete_cb   (void);
-
-
-GtkWidget* gwy_fft_output_menu  (GCallback callback,
-                                           gpointer cbdata,
-                                           GwyFFTOutputType current);
 
 
 

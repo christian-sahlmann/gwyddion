@@ -422,6 +422,25 @@ gwy_2dcwt_option_menu(GCallback callback,
                                   current);
 }
 
+GtkWidget*
+gwy_fft_output_menu(GCallback callback,
+                    gpointer cbdata,
+                    GwyFFTOutputType current)
+{
+    static const GwyOptionMenuEntry entries[] = {
+        { "Real + Imaginary",  GWY_FFT_OUTPUT_REAL_IMG,  },
+        { "Module + Phase",    GWY_FFT_OUTPUT_MOD_PHASE, },
+        { "Real",              GWY_FFT_OUTPUT_REAL,      },
+        { "Imaginary",         GWY_FFT_OUTPUT_IMG,       },
+        { "Module",            GWY_FFT_OUTPUT_MOD,       },
+        { "Phase",             GWY_FFT_OUTPUT_PHASE,     },
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "fft-output-type", callback, cbdata,
+                                  current);
+}
+
 
 /************************** Table attaching ****************************/
 
@@ -497,26 +516,6 @@ gwy_table_attach_row(GtkWidget *table,
     gtk_table_attach(GTK_TABLE(table), middle_widget,
                      1, 2, row, row+1, GTK_FILL, 0, 2, 2);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), middle_widget);
-}
-
-
-GtkWidget*
-gwy_fft_output_menu(GCallback callback,
-                              gpointer cbdata,
-                              GwyFFTOutputType current)
-{
-    static const GwyOptionMenuEntry entries[] = {
-        { "Real + Imaginary",  GWY_FFT_OUTPUT_REAL_IMG,  },
-        { "Module + Phase",    GWY_FFT_OUTPUT_MOD_PHASE, },
-        { "Real",              GWY_FFT_OUTPUT_REAL,      },
-        { "Imaginary",         GWY_FFT_OUTPUT_IMG,       },
-        { "Module",            GWY_FFT_OUTPUT_MOD,       },
-        { "Phase",             GWY_FFT_OUTPUT_PHASE,     },
-    };
-
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "fft-output-type", callback, cbdata,
-                                  current);
 }
 
 

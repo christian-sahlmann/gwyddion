@@ -32,8 +32,7 @@
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
+/* Data for this function. */
 typedef struct {
     gdouble ratio;
     GwyInterpolationType interp;
