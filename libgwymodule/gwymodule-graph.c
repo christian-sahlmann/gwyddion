@@ -48,7 +48,7 @@ static const gsize bufsize = 1024;
  **/
 gboolean
 gwy_graph_func_register(const gchar *modname,
-                          GwyGraphFuncInfo *func_info)
+                        GwyGraphFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
 
