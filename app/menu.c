@@ -60,6 +60,26 @@ static GQuark sensitive_state_key = 0;
 
 static GtkWidget *recent_files_menu = NULL;
 
+#ifdef DEBUG
+static gchar*
+debug_menu_sens_flags(guint flags)
+{
+    static const GwyEnum menu_enum[] = {
+        { "Data", GWY_MENU_FLAG_DATA },
+        { "Undo", GWY_MENU_FLAG_UNDO },
+        { "Redo", GWY_MENU_FLAG_REDO },
+        { "Graph", GWY_MENU_FLAG_GRAPH },
+        { "Last", GWY_MENU_FLAG_LAST_PROC },
+        { "LastG", GWY_MENU_FLAG_LAST_GRAPH },
+        { "Mask", GWY_MENU_FLAG_DATA_MASK },
+        { "Show", GWY_MENU_FLAG_DATA_SHOW },
+    };
+
+    /* this is going to leak some memory, but no one cares in debugging mode */
+    return gwy_flags_to_string(flags, menu_enum, G_N_ELEMENTS(menu_enum), NULL);
+}
+#endif
+
 /**
  * gwy_app_menu_set_sensitive_array:
  * @item_factory: A item factory to obtain menu items from.
@@ -320,7 +340,8 @@ gwy_app_update_last_process_func(GtkWidget *menu,
     if (!reshow_item)
         reshow_item = find_repeat_last_item(menu, "show-last-item");
 
-    sens = gwy_process_func_get_sensitivity_flags(name);
+    sens = gwy_process_func_get_sensitivity_flags(name)
+           | GWY_MENU_FLAG_DATA;
     menu_path = gwy_process_func_get_menu_path(name);
     menu_path = strrchr(menu_path, '/');
     g_assert(menu_path);
@@ -339,12 +360,13 @@ gwy_app_update_last_process_func(GtkWidget *menu,
     }
 
     if (reshow_item) {
-        label = GTK_BIN(repeat_item)->child;
+        label = GTK_BIN(reshow_item)->child;
         s = g_strconcat(_("Re-show"), " (", mp, ")", NULL);
         gtk_label_set_text_with_mnemonic(GTK_LABEL(label), s);
         set_sensitive(reshow_item, sens);
         g_free(s);
     }
+    gwy_debug("Repeat sens: %s", debug_menu_sens_flags(sens));
 
     g_free(mp);
 }
@@ -468,7 +490,9 @@ gwy_app_toolbox_update_state(GwyMenuSensData *sens_data)
     GSList *l;
     GObject *obj;
 
-    gwy_debug("{%d, %d}", sens_data->flags, sens_data->set_to);
+    gwy_debug("{%s, %s}",
+              debug_menu_sens_flags(sens_data->flags),
+              debug_menu_sens_flags(sens_data->set_to));
 
     /* FIXME: this actually belongs to toolbox.c; however
     * gwy_app_toolbox_update_state() is called from gwy_app_data_view_update()
