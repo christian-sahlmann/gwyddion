@@ -25,6 +25,10 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtkwindow.h>
 
+#ifndef GWY_TYPE_SI_UNIT
+#  include <libgwyddion/gwysiunit.h>
+#endif /* no GWY_TYPE_SI_UNIT */
+
 #ifndef GWY_TYPE_SPHERE_COORDS
 #  include <libgwydgets/gwydataview.h>
 #endif /* no GWY_TYPE_SPHERE_COORDS */
@@ -64,9 +68,8 @@ struct _GwyDataWindow {
 
     guint statusbar_context_id;
     guint statusbar_message_id;
-    gdouble statusbar_mag;
-    gint statusbar_prec;
-    const gchar *statusbar_SI_prefix;
+    GwySIValueFormat *coord_format;
+    GwySIValueFormat *value_format;
 };
 
 struct _GwyDataWindowClass {
@@ -86,10 +89,6 @@ void             gwy_data_window_set_zoom_mode    (GwyDataWindow *data_window,
 GwyZoomMode      gwy_data_window_get_zoom_mode    (GwyDataWindow *data_window);
 void             gwy_data_window_update_title     (GwyDataWindow *data_window);
 gchar*           gwy_data_window_get_base_name    (GwyDataWindow *data_window);
-void             gwy_data_window_set_units        (GwyDataWindow *data_window,
-                                                   const gchar *units);
-G_CONST_RETURN
-gchar*           gwy_data_window_get_units        (GwyDataWindow *data_window);
 
 #ifdef __cplusplus
 }

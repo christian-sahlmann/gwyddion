@@ -441,21 +441,15 @@ compute_statusbar_units(GwyDataWindow *data_window)
 {
     GwyDataField *dfield;
     GwyContainer *data;
-    gdouble max, unit, mag, xreal, yreal;
 
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-    max = MAX(xreal, yreal);
-    unit = MIN(xreal/gwy_data_field_get_xres(dfield),
-               yreal/gwy_data_field_get_yres(dfield));
-    mag = gwy_math_humanize_numbers(unit, max, &data_window->statusbar_prec);
-    gwy_debug("mag = %g", mag);
-    data_window->statusbar_mag = mag;
-    data_window->statusbar_SI_prefix = gwy_math_SI_prefix(mag);
+    data_window->coord_format
+        = gwy_data_field_get_value_format_xy(dfield, data_window->coord_format);
+    data_window->value_format
+        = gwy_data_field_get_value_format_z(dfield, data_window->value_format);
 }
 
 static gboolean
@@ -463,9 +457,11 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
                                GdkEventMotion *event,
                                GwyDataWindow *data_window)
 {
+    GwyContainer *data;
+    GwyDataField *dfield;
     GtkStatusbar *sbar = GTK_STATUSBAR(data_window->statusbar);
     guint id;
-    gdouble xreal, yreal;
+    gdouble xreal, yreal, value;
     gint x, y;
     gchar label[100];
 
@@ -473,13 +469,20 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
     y = event->y;
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    g_snprintf(label, sizeof(label), "%.*f %sm, %.*f %sm",
-               data_window->statusbar_prec,
-               xreal/data_window->statusbar_mag,
-               data_window->statusbar_SI_prefix,
-               data_window->statusbar_prec,
-               yreal/data_window->statusbar_mag,
-               data_window->statusbar_SI_prefix);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    value = gwy_data_field_get_dval_real(dfield, xreal, yreal,
+                                         GWY_INTERPOLATION_ROUND);
+    g_snprintf(label, sizeof(label), "(%.*f %s, %.*f %s): %.*f %s",
+               data_window->coord_format->precision,
+               xreal/data_window->coord_format->magnitude,
+               data_window->coord_format->units,
+               data_window->coord_format->precision,
+               yreal/data_window->coord_format->magnitude,
+               data_window->coord_format->units,
+               data_window->value_format->precision,
+               xreal/data_window->value_format->magnitude,
+               data_window->value_format->units);
     id = gtk_statusbar_push(sbar, data_window->statusbar_context_id, label);
     if (data_window->statusbar_message_id)
         gtk_statusbar_remove(sbar,
@@ -620,6 +623,7 @@ data_view_updated_cb(GwyDataWindow *data_window)
     min = gwy_data_field_get_min(dfield);
     max = gwy_data_field_get_max(dfield);
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
+    compute_statusbar_units(data_window);
 }
 
 void
