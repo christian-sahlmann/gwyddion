@@ -77,7 +77,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo tip_reconstruction_func_info = {
         "tip_reconstruction",
-        N_("/_Tip operations/_Surface Reconstruction"),
+        N_("/_Tip/_Surface Reconstruction..."),
         (GwyProcessFunc)&tip_reconstruction,
         TIP_RECONSTRUCTION_RUN_MODES,
         0,
@@ -100,7 +100,8 @@ tip_reconstruction(GwyContainer *data, GwyRunType run)
     g_return_val_if_fail(run & TIP_RECONSTRUCTION_RUN_MODES, FALSE);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
-    tip_reconstruction_window = tip_reconstruction_window_construct(&args, &controls);
+    tip_reconstruction_window
+        = tip_reconstruction_window_construct(&args, &controls);
     gtk_window_present(GTK_WINDOW(tip_reconstruction_window));
 
     do {
@@ -148,7 +149,7 @@ tip_reconstruction_window_construct(TipReconstructionArgs *args,
     row = 0;
 
     /***** First operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Tip Morphology:"));
+    label = gtk_label_new_with_mnemonic(_("_Tip morphology:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -160,7 +161,7 @@ tip_reconstruction_window_construct(TipReconstructionArgs *args,
     row++;
 
     /***** Second operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Surface to be Reconstructed:"));
+    label = gtk_label_new_with_mnemonic(_("_Surface to be reconstructed:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -225,14 +226,17 @@ tip_reconstruction_check(TipReconstructionArgs *args,
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    if (fabs((dfield1->xreal/dfield1->xres)/(dfield2->xreal/dfield2->xres) - 1)>0.01
-       || fabs((dfield1->yreal/dfield1->yres)/(dfield2->yreal/dfield2->yres) - 1)>0.01)
-    {
+    if (fabs((dfield1->xreal/dfield1->xres)
+             /(dfield2->xreal/dfield2->xres) - 1) > 0.01
+       || fabs((dfield1->yreal/dfield1->yres)
+               /(dfield2->yreal/dfield2->yres) - 1) > 0.01) {
         dialog = gtk_message_dialog_new(GTK_WINDOW(tip_reconstruction_window),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_INFO,
                                     GTK_BUTTONS_CLOSE,
-                                    _("Tip has different range/resolution ratio than image. Tip will be resampled."));
+                                    _("Tip has different range/resolution "
+                                      "ratio than image. Tip will be "
+                                      "resampled."));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
     }
@@ -263,7 +267,7 @@ tip_reconstruction_do(TipReconstructionArgs *args)
     }
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    gwy_app_wait_start(GTK_WIDGET(args->win1), "Initializing...");
+    gwy_app_wait_start(GTK_WIDGET(args->win1), _("Initializing"));
     dfield = gwy_tip_erosion(dfield1, dfield2, dfield,
                              gwy_app_wait_set_fraction,
                              gwy_app_wait_set_message);

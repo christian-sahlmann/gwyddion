@@ -19,7 +19,6 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>

@@ -19,7 +19,6 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
@@ -125,7 +124,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo tip_blind_func_info = {
         "tip_blind",
-        N_("/_Tip operations/_Blind estimation..."),
+        N_("/_Tip/_Blind estimation..."),
         (GwyProcessFunc)&tip_blind,
         TIP_BLIND_RUN_MODES,
         0,
@@ -195,14 +194,18 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 
     /*set initial tip properties*/
     controls.tip = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.tip, "/0/data"));
-    gwy_data_field_resample(dfield, args->xres, args->yres, GWY_INTERPOLATION_NONE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.tip,
+                                                             "/0/data"));
+    gwy_data_field_resample(dfield, args->xres, args->yres,
+                            GWY_INTERPOLATION_NONE);
     gwy_data_field_fill(dfield, 0);
 
     /*set up data of rescaled image of the tip*/
     controls.vtip = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(controls.tip)));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.vtip, "/0/data"));
-    gwy_data_field_resample(dfield, controls.vxres, controls.vyres, GWY_INTERPOLATION_ROUND);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.vtip,
+                                                             "/0/data"));
+    gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
+                            GWY_INTERPOLATION_ROUND);
 
     /*set up rescaled image of the tip*/
     controls.view = gwy_data_view_new(controls.vtip);
@@ -219,57 +222,58 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
 
-    label = gtk_label_new(_("Related Data:"));
+    label = gtk_label_new_with_mnemonic(_("Related _data:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
-
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_FILL, 0, 2, 2);
 
     omenu = tip_blind_data_option_menu(&args->win);
-    gtk_table_attach(GTK_TABLE(table), omenu, 1, 2, row, row+1, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), omenu, 1, 2, row, row+1,
+                     GTK_FILL, 0, 2, 2);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("_Estimated Tip Size"));
+    label = gtk_label_new_with_mnemonic(_("Estimated Tip Size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_FILL, 0, 2, 2);
 
-    controls.xres = gtk_adjustment_new(args->xres,
-                                                    1, 10000, 1, 10, 0);
+    controls.xres = gtk_adjustment_new(args->xres, 1, 10000, 1, 10, 0);
     g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
-    spin = gwy_table_attach_spinbutton(table, 2, _("Width:"), _("px"),
+    spin = gwy_table_attach_spinbutton(table, 2, _("_Width:"), _("px"),
                                                controls.xres);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
     g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
     g_signal_connect(controls.xres, "value_changed",
-                                     G_CALLBACK(width_changed_cb), args);
+                     G_CALLBACK(width_changed_cb), args);
 
     controls.yres = gtk_adjustment_new(args->yres,
                                         1, 10000, 1, 10, 0);
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
-    spin = gwy_table_attach_spinbutton(table, 3, _("Height:"), _("px"),
+    spin = gwy_table_attach_spinbutton(table, 3, _("_Height:"), _("px"),
                                             controls.yres);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
     g_signal_connect(controls.yres, "value_changed",
-                                          G_CALLBACK(height_changed_cb), args);
+                     G_CALLBACK(height_changed_cb), args);
 
-    controls.threshold = gwy_val_unit_new(_("Threshold: "),
-                                       gwy_data_field_get_si_unit_z(dfield));
+    controls.threshold = gwy_val_unit_new(_("_Threshold:"),
+                                          gwy_data_field_get_si_unit_z(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.threshold), args->thresh);
-             g_signal_connect(GWY_VAL_UNIT(controls.threshold), "value_changed",
-                                                   G_CALLBACK(thresh_changed_cb), args);
+    g_signal_connect(GWY_VAL_UNIT(controls.threshold), "value_changed",
+                     G_CALLBACK(thresh_changed_cb), args);
 
-    gtk_box_pack_start(GTK_BOX(vbox), controls.threshold,
-                                                      FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.threshold, FALSE, FALSE, 4);
 
     controls.boundaries
-                = gtk_check_button_new_with_label(_("Use Boundaries:"));
+                = gtk_check_button_new_with_mnemonic(_("Use _boundaries"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.boundaries),
                                                  args->use_boundaries);
-    g_signal_connect(controls.boundaries, "toggled", G_CALLBACK(bound_changed_cb), args);
+    g_signal_connect(controls.boundaries, "toggled",
+                     G_CALLBACK(bound_changed_cb), args);
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.boundaries,
                        FALSE, FALSE, 4);
@@ -396,7 +400,8 @@ reset(TipBlindControls *controls, TipBlindArgs *args)
 {
     GwyDataField *tipfield;
 
-    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
+    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
+                                                               "/0/data"));
     gwy_data_field_fill(tipfield, 0);
 
     tip_update(controls, args);
@@ -410,23 +415,26 @@ prepare_fields(GwyDataField *tipfield, GwyDataField *surface, gint xres, gint yr
 
     /*set real sizes corresponding to actual data*/
     gwy_data_field_set_xreal(tipfield,
-                             gwy_data_field_get_xreal(surface)/gwy_data_field_get_xres(surface)
+                             gwy_data_field_get_xreal(surface)
+                             /gwy_data_field_get_xres(surface)
                              *gwy_data_field_get_xres(tipfield));
     gwy_data_field_set_yreal(tipfield,
-                             gwy_data_field_get_yreal(surface)/gwy_data_field_get_yres(surface)
+                             gwy_data_field_get_yreal(surface)
+                             /gwy_data_field_get_yres(surface)
                              *gwy_data_field_get_yres(tipfield));
 
     /*if user has changed tip size, change it*/
-    if ((xres != tipfield->xres) || (yres != tipfield->yres))
-    {
+    if ((xres != tipfield->xres) || (yres != tipfield->yres)) {
         xoldres = gwy_data_field_get_xres(tipfield);
         yoldres = gwy_data_field_get_yres(tipfield);
         gwy_data_field_resample(tipfield, xres, yres,
                                 GWY_INTERPOLATION_NONE);
         gwy_data_field_set_xreal(tipfield,
-                                 gwy_data_field_get_xreal(tipfield)/xoldres*xres);
+                                 gwy_data_field_get_xreal(tipfield)
+                                 /xoldres*xres);
         gwy_data_field_set_yreal(tipfield,
-                                 gwy_data_field_get_yreal(tipfield)/yoldres*yres);
+                                 gwy_data_field_get_yreal(tipfield)
+                                 /yoldres*yres);
 
     }
 }
@@ -438,18 +446,21 @@ partial(TipBlindControls *controls, TipBlindArgs *args)
     GwyContainer *data;
 
     data = gwy_data_window_get_data(args->win);
-    surface = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,                                                                                        "/0/data"));
+    surface = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                              "/0/data"));
     tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
                                                                "/0/data"));
 
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
+                       _("Initializing"));
 
     /* control tip resolution and real/res ratio*/
     prepare_fields(tipfield, surface, args->xres, args->yres);
     gwy_data_field_fill(tipfield, 0);
 
 
-    tipfield = gwy_tip_estimate_partial(tipfield, surface, args->thresh, args->use_boundaries,
+    tipfield = gwy_tip_estimate_partial(tipfield, surface, args->thresh,
+                                        args->use_boundaries,
                                         gwy_app_wait_set_fraction,
                                         gwy_app_wait_set_message);
 
@@ -465,15 +476,19 @@ full(TipBlindControls *controls, TipBlindArgs *args)
     GwyContainer *data;
 
     data = gwy_data_window_get_data(args->win);
-    surface = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,                                                                                        "/0/data"));
-    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
+    surface = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                              "/0/data"));
+    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
+                                                               "/0/data"));
 
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
+                       _("Initializing"));
 
     /* control tip resolution and real/res ratio*/
     prepare_fields(tipfield, surface, args->xres, args->yres);
 
-    tipfield = gwy_tip_estimate_full(tipfield, surface, args->thresh, args->use_boundaries,
+    tipfield = gwy_tip_estimate_full(tipfield, surface, args->thresh,
+                                     args->use_boundaries,
                                      gwy_app_wait_set_fraction,
                                      gwy_app_wait_set_message);
     gwy_app_wait_finish();
@@ -487,9 +502,11 @@ tip_update(TipBlindControls *controls, TipBlindArgs *args)
 {
     GwyDataField *tipfield, *vtipfield, *buffer;
 
-    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
+    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
+                                                               "/0/data"));
     buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(tipfield)));
-    gwy_data_field_resample(buffer, controls->vxres, controls->vyres, GWY_INTERPOLATION_ROUND);
+    gwy_data_field_resample(buffer, controls->vxres, controls->vyres,
+                            GWY_INTERPOLATION_ROUND);
 
     vtipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->vtip, "/0/data"));
 
@@ -528,7 +545,8 @@ tip_blind_load_args(GwyContainer *container,
     gwy_container_gis_int32_by_name(container, xres_key, &args->xres);
     gwy_container_gis_int32_by_name(container, yres_key, &args->yres);
     gwy_container_gis_double_by_name(container, thresh_key, &args->thresh);
-    gwy_container_gis_boolean_by_name(container, use_boundaries_key, &args->use_boundaries);
+    gwy_container_gis_boolean_by_name(container, use_boundaries_key,
+                                      &args->use_boundaries);
     tip_blind_sanitize_args(args);
 }
 
@@ -539,7 +557,8 @@ tip_blind_save_args(GwyContainer *container,
     gwy_container_set_int32_by_name(container, xres_key, args->xres);
     gwy_container_set_int32_by_name(container, yres_key, args->yres);
     gwy_container_set_double_by_name(container, thresh_key, args->thresh);
-    gwy_container_set_boolean_by_name(container, use_boundaries_key, args->use_boundaries);
+    gwy_container_set_boolean_by_name(container, use_boundaries_key,
+                                      args->use_boundaries);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

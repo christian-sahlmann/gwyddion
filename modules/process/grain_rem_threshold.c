@@ -19,7 +19,6 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
@@ -164,7 +163,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     GwyDataField *dfield;
     GtkWidget *label;
 
-    dialog = gtk_dialog_new_with_buttons(_("Remove grains by threshold"),
+    dialog = gtk_dialog_new_with_buttons(_("Remove Grains by Threshold"),
                                          NULL, 0,
                                          _("_Update Preview"), RESPONSE_PREVIEW,
                                          _("_Reset"), RESPONSE_RESET,
@@ -202,7 +201,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
 
     controls.is_height
-        = gtk_check_button_new_with_mnemonic(_("Threshold by _Maximum:"));
+        = gtk_check_button_new_with_mnemonic(_("Threshold by _maximum"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
                                  args->is_height);
     gtk_table_attach(GTK_TABLE(table), controls.is_height,
@@ -210,11 +209,12 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("Height Value:"), "%",
+    spin = gwy_table_attach_spinbutton(table, 2, _("_Height:"), "%",
                                 controls.threshold_height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
-    controls.is_area = gtk_check_button_new_with_mnemonic(_("Threshold by _Area:"));
+    controls.is_area
+        = gtk_check_button_new_with_mnemonic(_("Thresh_old by area"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_area),
                                  args->is_area);
     gtk_table_attach(GTK_TABLE(table), controls.is_area,
@@ -222,10 +222,10 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
     controls.threshold_area = gtk_adjustment_new(args->area,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 4, _("Area:"), _("pixels"),
+    gwy_table_attach_spinbutton(table, 4, _("_Area:"), _("pixels"),
                                 controls.threshold_area);
 
-    label = gtk_label_new_with_mnemonic(_("_Selection Mode:"));
+    label = gtk_label_new_with_mnemonic(_("_Selection mode:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
 
@@ -233,7 +233,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), controls.merge,
                      0, 1, 8, 9, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(_("Preview _Mask Color:"));
+    label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,  0, 1, 9, 10, GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();

@@ -19,7 +19,6 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
@@ -161,7 +160,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     GtkWidget *hbox;
     GwyDataField *dfield;
 
-    dialog = gtk_dialog_new_with_buttons(_("Mark grains by watershed algorithm"),
+    dialog = gtk_dialog_new_with_buttons(_("Mark Grains by Watershed"),
                                          NULL, 0,
                                          _("_Update Preview"), RESPONSE_PREVIEW,
                                          _("_Reset"), RESPONSE_RESET,
@@ -206,34 +205,36 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
 
     controls.locate_steps = gtk_adjustment_new(args->locate_steps,
                                                      0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 2, _("Number of Steps:"), "",
+    gwy_table_attach_spinbutton(table, 2, _("_Number of steps:"), "",
                                 controls.locate_steps);
     controls.locate_dropsize = gtk_adjustment_new(args->locate_dropsize,
                                                         0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 3, _("Drop Size:"), "%",
+    spin = gwy_table_attach_spinbutton(table, 3, _("_Drop size:"), "%",
                                 controls.locate_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     controls.locate_thresh = gtk_adjustment_new(args->locate_thresh,
                                                       0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 4, _("Threshold"), _("pixels"),
+    gwy_table_attach_spinbutton(table, 4, _("_Threshold:"), _("pixels"),
                                 controls.locate_thresh);
-    controls.wshed_steps = gtk_adjustment_new(args->wshed_steps,
-                                                    0.0, 1000.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 6, _("Number of Steps"), "",
-                                controls.wshed_steps);
 
-    controls.wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
-                                                       0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 7, _("Drop Size"), "%",
-                                controls.wshed_dropsize);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-
+    gtk_table_set_row_spacing(GTK_TABLE(table), 4, 8);
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Segmentation</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
+    controls.wshed_steps = gtk_adjustment_new(args->wshed_steps,
+                                                    0.0, 1000.0, 1, 5, 0);
+    gwy_table_attach_spinbutton(table, 6, _("Num_ber of steps:"), "",
+                                controls.wshed_steps);
 
-    label = gtk_label_new_with_mnemonic(_("Preview _Mask Color:"));
+    controls.wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
+                                                       0.0, 100.0, 0.1, 5, 0);
+    spin = gwy_table_attach_spinbutton(table, 7, _("Dr_op size:"), "%",
+                                controls.wshed_dropsize);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_table_set_row_spacing(GTK_TABLE(table), 8, 8);
+
+    label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,  0, 1, 9, 10, GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();

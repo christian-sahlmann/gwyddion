@@ -77,7 +77,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo tip_dilation_func_info = {
         "tip_dilation",
-        N_("/_Tip operations/_Dilation"),
+        N_("/_Tip/_Dilation..."),
         (GwyProcessFunc)&tip_dilation,
         TIP_DILATION_RUN_MODES,
         0,
@@ -148,7 +148,7 @@ tip_dilation_window_construct(TipDilationArgs *args,
     row = 0;
 
     /***** First operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Tip Morphology:"));
+    label = gtk_label_new_with_mnemonic(_("_Tip morphology:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -160,7 +160,7 @@ tip_dilation_window_construct(TipDilationArgs *args,
     row++;
 
     /***** Second operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Surface to be Dilated:"));
+    label = gtk_label_new_with_mnemonic(_("_Surface to be dilated:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);

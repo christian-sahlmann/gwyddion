@@ -197,7 +197,7 @@ crosscor_window_construct(CrosscorArgs *args,
     row = 0;
 
     /***** First operand *****/
-    label = gtk_label_new_with_mnemonic(_("_First Data Field:"));
+    label = gtk_label_new_with_mnemonic(_("_First data:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -209,7 +209,7 @@ crosscor_window_construct(CrosscorArgs *args,
     row++;
 
     /***** Second operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Second Data Field:"));
+    label = gtk_label_new_with_mnemonic(_("_Second data:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -222,7 +222,7 @@ crosscor_window_construct(CrosscorArgs *args,
 
     /**** Parameters ********/
     /*search size*/
-    label = gtk_label_new_with_mnemonic(_("S_earch Size"));
+    label = gtk_label_new(_("Search size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -230,19 +230,19 @@ crosscor_window_construct(CrosscorArgs *args,
 
     controls->search_area_x = gtk_adjustment_new(args->search_x,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("Width"), _("pixels"),
+    gwy_table_attach_spinbutton(table, row, _("_Width:"), _("pixels"),
                                 controls->search_area_x);
     row++;
 
     controls->search_area_y = gtk_adjustment_new(args->search_y,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("Height"), _("pixels"),
+    gwy_table_attach_spinbutton(table, row, _("_Height:"), _("pixels"),
                                 controls->search_area_y);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     /*window size*/
-    label = gtk_label_new_with_mnemonic(_("_Window size"));
+    label = gtk_label_new(_("Window size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -250,13 +250,13 @@ crosscor_window_construct(CrosscorArgs *args,
 
     controls->window_area_x = gtk_adjustment_new(args->window_x,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("Width"), _("pixels"),
+    gwy_table_attach_spinbutton(table, row, _("_Width:"), _("pixels"),
                                 controls->window_area_x);
     row++;
 
     controls->window_area_y = gtk_adjustment_new(args->window_y,
                                                  0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("Height"), _("pixels"),
+    gwy_table_attach_spinbutton(table, row, _("_Height:"), _("pixels"),
                                 controls->window_area_y);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
@@ -272,7 +272,7 @@ crosscor_window_construct(CrosscorArgs *args,
 
     controls->threshold = gtk_adjustment_new(args->threshold,
                                              -1, 1, 0.005, 0.05, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Threshold value"), "",
+    spin = gwy_table_attach_spinbutton(table, row, _("Threshold:"), "",
                                        controls->threshold);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     row++;

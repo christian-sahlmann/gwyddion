@@ -61,7 +61,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "tip_map",
-    "Certainty Map.",
+    N_("Certainty Map."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -77,7 +77,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo tip_certainty_map_func_info = {
         "tip_map",
-        "/_Tip operations/_Certainty Map",
+        N_("/_Tip/_Certainty Map..."),
         (GwyProcessFunc)&tip_certainty_map,
         TIP_CERTAINTY_MAP_RUN_MODES,
         0,
@@ -102,7 +102,8 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
     settings = gwy_app_settings_get();
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
-    tip_certainty_map_window = tip_certainty_map_window_construct(&args, &controls);
+    tip_certainty_map_window
+        = tip_certainty_map_window_construct(&args, &controls);
     gtk_window_present(GTK_WINDOW(tip_certainty_map_window));
 
     do {
@@ -133,7 +134,7 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
 
 static GtkWidget*
 tip_certainty_map_window_construct(TipCertaintyMapArgs *args,
-                          TipCertaintyMapControls *controls)
+                                   TipCertaintyMapControls *controls)
 {
     GtkWidget *dialog, *table, *omenu, *label;
     gint row;
@@ -227,14 +228,17 @@ tip_certainty_map_check(TipCertaintyMapArgs *args,
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    if (fabs((dfield1->xreal/dfield1->xres)/(dfield2->xreal/dfield2->xres) - 1)>0.01
-       || fabs((dfield1->yreal/dfield1->yres)/(dfield2->yreal/dfield2->yres) - 1)>0.01)
-    {
+    if (fabs((dfield1->xreal/dfield1->xres)
+             /(dfield2->xreal/dfield2->xres) - 1) > 0.01
+       || fabs((dfield1->yreal/dfield1->yres)
+               /(dfield2->yreal/dfield2->yres) - 1) > 0.01) {
         dialog = gtk_message_dialog_new(GTK_WINDOW(tip_certainty_map_window),
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_INFO,
                                     GTK_BUTTONS_CLOSE,
-                                    _("Tip has different range/resolution ratio than image. Tip will be resampled."));
+                                    _("Tip has different range/resolution "
+                                      "ratio than image. Tip will be "
+                                      "resampled."));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
     }
@@ -258,18 +262,17 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     /*result fields - after computation result should be at dfield */
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
+    if (gwy_container_contains_by_name(data, "/0/mask")) {
         printf("mask found\n");
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/mask"));
     }
-    else
-    {
+    else {
         dfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield2)));
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(dfield));
         g_object_unref(dfield);
     }
-    gwy_app_wait_start(GTK_WIDGET(args->win1),"Initializing...");
+    gwy_app_wait_start(GTK_WIDGET(args->win1), _("Initializing..."));
     dfield = gwy_tip_cmap(dfield1, dfield2, dfield, gwy_app_wait_set_fraction,
                           gwy_app_wait_set_message);
     gwy_app_wait_finish();
