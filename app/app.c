@@ -648,7 +648,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
 }
 
 /**
- * gwy_app_graph_window_create:
+ * gwy_app_graph_window_create_for_window:
  * @graph: A graph widget;
  * @data_window: A data window to associate @graph with.
  * @title: Title of the new graph window.
