@@ -175,6 +175,7 @@ fft(GwyContainer *data, GwyRunType run)
         gwy_data_field_fill(ipout,0);
         gwy_data_field_fill(imin,0);
 
+        printf("Running FFT with win=%d, interp=%d, out=%d\n", args.window, args.interp, args.out);
         gwy_data_field_2dfft(dfield, imin,
                                  raout,
                                  ipout,
@@ -206,7 +207,11 @@ fft(GwyContainer *data, GwyRunType run)
         if (args.out == GWY_FFT_OUTPUT_REAL_IMG || args.out == GWY_FFT_OUTPUT_IMG)
         {
             if (args.out == GWY_FFT_OUTPUT_REAL_IMG)
+            {
                 data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+                dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
+            }
             set_dfield_imaginary(raout, ipout, dfield); 
 
             data_window = gwy_app_data_window_create(data);
@@ -224,7 +229,11 @@ fft(GwyContainer *data, GwyRunType run)
         if (args.out == GWY_FFT_OUTPUT_MOD_PHASE || args.out == GWY_FFT_OUTPUT_PHASE)
         {
             if (args.out == GWY_FFT_OUTPUT_MOD_PHASE)
+            {
                 data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+                dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
+            }
             set_dfield_phase(raout, ipout, dfield); 
 
             data_window = gwy_app_data_window_create(data);
@@ -366,6 +375,7 @@ interp_changed_cb(GObject *item,
 {
     args->interp = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "interpolation-type"));
+    printf("Interp set to %d\n", args->interp);
 }
 
 static void
@@ -374,6 +384,7 @@ out_changed_cb(GObject *item,
 {
     args->out = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "fft-output-type"));
+    printf("Out set to %d\n", args->out);
 }
 
 static void
@@ -382,6 +393,7 @@ window_changed_cb(GObject *item,
 {
     args->window = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "windowing-type"));
+    printf("Win set to %d\n", args->window);
 }
 
 static void
