@@ -46,14 +46,16 @@ static void gwy_app_graph_list_cell_renderer(GtkTreeViewColumn *column,
 static void gwy_app_graph_list_toggled(GtkCellRendererToggle *toggle,
                                        gchar *pathstring,
                                        GtkWidget *list);
-static void gwy_app_graph_list_kill_graph(GtkTreeModel *store,
-                                          GtkTreePath *path,
-                                          GtkTreeIter *iter,
-                                          GtkWidget *list);
-static void gwy_app_graph_list_revive_graph(GtkTreeModel *store,
-                                            GtkTreePath *path,
-                                            GtkTreeIter *iter,
-                                            GtkWidget *list);
+static gboolean gwy_app_graph_list_hide_graph(GtkTreeModel *store,
+                                              GtkTreePath *path,
+                                              GtkTreeIter *iter,
+                                              gpointer userdata);
+static gboolean gwy_app_graph_list_show_graph(GtkTreeModel *store,
+                                              GtkTreePath *path,
+                                              GtkTreeIter *iter,
+                                              gpointer userdata);
+static void gwy_app_graph_list_hide_all(GtkWidget *list);
+static void gwy_app_graph_list_show_all(GtkWidget *list);
 static void gwy_app_graph_list_add_line(gpointer hkey,
                                         GValue *value,
                                         GtkListStore *store);
@@ -96,12 +98,14 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
     g_object_set_data(gmodel, "gwy-app-graph-list-id", GINT_TO_POINTER(lastid));
     gwy_container_set_int32_by_name(data, "/0/graph/lastid", lastid);
     gwy_container_set_object_by_name(data, key, gmodel);
-    /* no unref, we keep one reference, released in
-     * gwy_app_graph_list_orphaned */
 
     if (!(graph_view = g_object_get_data(G_OBJECT(data_window),
-                                        "gwy-app-graph-list-window")))
+                                        "gwy-app-graph-list-window"))) {
+        /* unref only if there's no graph list;
+         * we keep one reference, released in gwy_app_graph_list_orphaned() */
+        g_object_unref(gmodel);
         return;
+    }
 
     list = g_object_get_data(G_OBJECT(graph_view), "gwy-app-graph-list-view");
     g_assert(list);
@@ -138,12 +142,19 @@ gwy_app_graph_list(GwyDataWindow *data_window)
 
     button = gtk_button_new_with_mnemonic(_("_Delete"));
     gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
+
     button = gtk_button_new_with_mnemonic(_("Delete _All"));
     gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
+
     button = gtk_button_new_with_mnemonic(_("_Show All"));
     gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_graph_list_show_all), list);
+
     button = gtk_button_new_with_mnemonic(_("_Hide All"));
     gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_app_graph_list_hide_all), list);
 
     g_object_set_data(G_OBJECT(data_window), "gwy-app-graph-list-window",
                       window);
@@ -154,61 +165,6 @@ gwy_app_graph_list(GwyDataWindow *data_window)
     gtk_widget_show_all(vbox);
 
     return window;
-}
-
-static void
-gwy_app_graph_list_toggled(GtkCellRendererToggle *toggle,
-                           gchar *pathstring,
-                           GtkWidget *list)
-{
-    GtkTreeModel *store;
-    GtkTreePath *path;
-    GtkTreeIter iter;
-    gboolean active;
-
-    active = gtk_cell_renderer_toggle_get_active(toggle);
-    path = gtk_tree_path_new_from_string(pathstring);
-    store = gtk_tree_view_get_model(GTK_TREE_VIEW(list));
-    gtk_tree_model_get_iter(store, &iter, path);
-    if (active)
-        gwy_app_graph_list_kill_graph(store, path, &iter, list);
-    else
-        gwy_app_graph_list_revive_graph(store, path, &iter, list);
-    gtk_tree_path_free(path);
-}
-
-static void
-gwy_app_graph_list_kill_graph(GtkTreeModel *store,
-                              G_GNUC_UNUSED GtkTreePath *path,
-                              GtkTreeIter *iter,
-                              G_GNUC_UNUSED GtkWidget *list)
-{
-    GtkWidget *graph;
-    GObject *gmodel;
-
-    gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
-    graph = GTK_WIDGET(GWY_GRAPH_MODEL(gmodel)->graph);
-    if (graph)
-        gtk_widget_destroy(gtk_widget_get_toplevel(graph));
-}
-
-static void
-gwy_app_graph_list_revive_graph(GtkTreeModel *store,
-                                G_GNUC_UNUSED GtkTreePath *path,
-                                GtkTreeIter *iter,
-                                GtkWidget *list)
-{
-    GtkWidget *graph;
-    GObject *gmodel;
-
-    gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
-    graph = gwy_graph_new_from_model(GWY_GRAPH_MODEL(gmodel));
-    g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
-    /* XXX: redraw assures the toggles get into a consistent state.  A more
-     * fine-grained method should be probably used... */
-    g_signal_connect_swapped(graph, "destroy",
-                             G_CALLBACK(gtk_widget_queue_draw), list);
-    gwy_app_graph_window_create(graph);
 }
 
 static GtkWidget*
@@ -283,6 +239,90 @@ gwy_app_graph_list_construct(GwyContainer *data)
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
     return list;
+}
+
+static void
+gwy_app_graph_list_toggled(GtkCellRendererToggle *toggle,
+                           gchar *pathstring,
+                           GtkWidget *list)
+{
+    GtkTreeModel *store;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    gboolean active;
+
+    active = gtk_cell_renderer_toggle_get_active(toggle);
+    path = gtk_tree_path_new_from_string(pathstring);
+    store = gtk_tree_view_get_model(GTK_TREE_VIEW(list));
+    gtk_tree_model_get_iter(store, &iter, path);
+    if (active)
+        gwy_app_graph_list_hide_graph(store, path, &iter, list);
+    else
+        gwy_app_graph_list_show_graph(store, path, &iter, list);
+    gtk_tree_path_free(path);
+}
+
+static gboolean
+gwy_app_graph_list_hide_graph(GtkTreeModel *store,
+                              G_GNUC_UNUSED GtkTreePath *path,
+                              GtkTreeIter *iter,
+                              G_GNUC_UNUSED gpointer userdata)
+{
+    GtkWidget *graph;
+    GObject *gmodel;
+
+    gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
+    graph = GTK_WIDGET(GWY_GRAPH_MODEL(gmodel)->graph);
+    if (graph)
+        gtk_widget_destroy(gtk_widget_get_toplevel(graph));
+
+    return FALSE;
+}
+
+static gboolean
+gwy_app_graph_list_show_graph(GtkTreeModel *store,
+                              G_GNUC_UNUSED GtkTreePath *path,
+                              GtkTreeIter *iter,
+                              gpointer userdata)
+{
+    GtkWidget *graph;
+    GObject *gmodel;
+    GtkWidget *list;
+
+    list = GTK_WIDGET(userdata);
+    gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
+    if (GWY_GRAPH_MODEL(gmodel)->graph)
+        return;
+
+    graph = gwy_graph_new_from_model(GWY_GRAPH_MODEL(gmodel));
+    g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
+    /* XXX: redraw assures the toggles get into a consistent state.  A more
+     * fine-grained method should be probably used... */
+    g_signal_connect_swapped(graph, "destroy",
+                             G_CALLBACK(gtk_widget_queue_draw), list);
+    gwy_app_graph_window_create(graph);
+
+    return FALSE;
+}
+
+static void
+gwy_app_graph_list_hide_all(GtkWidget *list)
+{
+    GtkTreeModel *store;
+
+    store = gtk_tree_view_get_model(GTK_TREE_VIEW(list));
+    gtk_tree_model_foreach(store, gwy_app_graph_list_hide_graph, list);
+    gtk_widget_queue_draw(list);
+}
+
+static void
+gwy_app_graph_list_show_all(GtkWidget *list)
+{
+    GtkTreeModel *store;
+
+    store = gtk_tree_view_get_model(GTK_TREE_VIEW(list));
+    gtk_tree_model_foreach(store, gwy_app_graph_list_show_graph, list);
+    gtk_widget_queue_draw(list);
 }
 
 static void
@@ -404,9 +444,7 @@ gwy_app_graph_list_unref_gmodel(GtkTreeModel *store,
         g_signal_handlers_disconnect_matched(graph,
                                              G_SIGNAL_MATCH_FUNC
                                              | G_SIGNAL_MATCH_DATA,
-                                             0,
-                                             0,
-                                             0,
+                                             0, 0, 0,
                                              gtk_widget_queue_draw,
                                              graph_view);
     g_object_unref(gmodel);
