@@ -390,8 +390,6 @@ gwy_palette_get_palette_def(GwyPalette *palette)
  *
  * Call this function if you changed the palette definition
  * directly or by calling gwy_palette_set_def().
- *
- * Returns: 0 at success
  **/
 static void
 gwy_palette_recompute_samples(GwyPaletteDef *palette_def,
@@ -427,8 +425,9 @@ gwy_palette_recompute_samples(GwyPaletteDef *palette_def,
  * If @oldsample is not %NULL, it's resized to 4*@size bytes, otherwise it's
  * newly allocated.
  *
- * If you don't have a reason for specific sample size (or are not going
- * to modify the samples), use gwy_palette_get_samples() instead.
+ * If you don't have a reason for specific sample size (and are not going
+ * to modify the samples or otherwise dislike the automatic resampling on
+ * palette definition change), use gwy_palette_get_samples() instead.
  *
  * Returns: The sampled palette.
  **/
@@ -467,6 +466,9 @@ gwy_palette_sample(GwyPalette *palette, gint size, guchar *oldsample)
  *
  * The returned samples should be considered constant and not modified or
  * freed.
+ *
+ * The returned samples will automatically change when the palette
+ * definition changes.
  *
  * Returns: The sampled palette.
  **/
