@@ -1,5 +1,7 @@
 include_HEADERS = \
 	gwydgets.h \
+	gwydataview.h \
+	gwydataviewlayer.h \
 	gwygradsphere.h \
 	gwyspherecoords.h \
 	gwyvectorshade.h
@@ -14,13 +16,15 @@ noinst_PROGRAMS = main
 # Chaning ifraces     C:   R:   0
 libgwydgets_la_LDFLAGS = -version-info 0:0:0
 libgwydgets_la_SOURCES = \
+	gwydataview.c \
+	gwydataviewlayer.c \
 	gwygradsphere.c \
 	gwyspherecoords.c \
 	gwyvectorshade.c
 
 main_SOURCES = \
 	main.c
-main_LDADD = libgwydgets.la
+main_LDADD = libgwydgets.la ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\"

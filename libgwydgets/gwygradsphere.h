@@ -6,7 +6,7 @@
 #include <gtk/gtkwidget.h>
 
 #ifndef GWY_TYPE_SPHERE_COORDS
-#  include "gwyspherecoords.h"
+#  include <libgwydgets/gwyspherecoords.h>
 #endif /* no GWY_TYPE_SPHERE_COORDS */
 
 #ifdef __cplusplus
@@ -17,8 +17,8 @@ extern "C" {
 #define GWY_GRAD_SPHERE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAD_SPHERE, GwyGradSphere))
 #define GWY_GRAD_SPHERE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAD_SPHERE, GwyGradSphereClass))
 #define GWY_IS_GRAD_SPHERE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAD_SPHERE))
-#define GWY_IS_GRAD_SPHERE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAD_SPHERE)
-#define GWY_GRAD_SPHERE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAD_SPHERE, GwyGradSphereClass)
+#define GWY_IS_GRAD_SPHERE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAD_SPHERE))
+#define GWY_GRAD_SPHERE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAD_SPHERE, GwyGradSphereClass))
 
 typedef struct _GwyGradSphere      GwyGradSphere;
 typedef struct _GwyGradSphereClass GwyGradSphereClass;

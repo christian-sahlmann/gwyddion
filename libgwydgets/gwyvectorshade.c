@@ -185,7 +185,7 @@ gwy_vector_shade_new(GwySphereCoords *sphere_coords)
  *
  * Returns: The gradient sphere as a #GtkWidget.
  **/
-GwyGradSphere*
+GtkWidget*
 gwy_vector_shade_get_grad_sphere(GwyVectorShade *vector_shade)
 {
     g_return_val_if_fail(vector_shade != NULL, NULL);

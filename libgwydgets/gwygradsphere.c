@@ -4,7 +4,6 @@
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
-#include "gwyspherecoords.h"
 #include "gwygradsphere.h"
 
 #define _(x) x
@@ -28,7 +27,6 @@ enum {
 static void     gwy_grad_sphere_class_init           (GwyGradSphereClass *klass);
 static void     gwy_grad_sphere_init                 (GwyGradSphere *grad_sphere);
 GtkWidget*      gwy_grad_sphere_new                  (GwySphereCoords *sphere_coords);
-static void     gwy_grad_sphere_destroy              (GtkObject *object);
 static void     gwy_grad_sphere_finalize             (GObject *object);
 static void     gwy_grad_sphere_set_property         (GObject *object,
                                                       guint prop_id,
@@ -40,12 +38,12 @@ static void     gwy_grad_sphere_get_property         (GObject*object,
                                                       GParamSpec *pspec);
 static void     gwy_grad_sphere_realize              (GtkWidget *widget);
 static void     gwy_grad_sphere_unrealize            (GtkWidget *widget);
-static void     gwy_grad_sphere_unmap                (GtkWidget *widget);
 static void     gwy_grad_sphere_size_request         (GtkWidget *widget,
                                                       GtkRequisition *requisition);
 static void     gwy_grad_sphere_size_allocate        (GtkWidget *widget,
                                                       GtkAllocation *allocation);
-static void     gwy_grad_sphere_paint_sphere         (GwyGradSphere *grad_sphere);
+static void     gwy_grad_sphere_make_pixmap          (GwyGradSphere *grad_sphere);
+static void     gwy_grad_sphere_paint                (GwyGradSphere *grad_sphere);
 static gboolean gwy_grad_sphere_expose               (GtkWidget *widget,
                                                       GdkEventExpose *event);
 static gboolean gwy_grad_sphere_button_press         (GtkWidget *widget,
@@ -115,13 +113,10 @@ gwy_grad_sphere_class_init(GwyGradSphereClass *klass)
     gobject_class->set_property = gwy_grad_sphere_set_property;
     gobject_class->get_property = gwy_grad_sphere_get_property;
 
-    object_class->destroy = gwy_grad_sphere_destroy;
-
     widget_class->realize = gwy_grad_sphere_realize;
     widget_class->expose_event = gwy_grad_sphere_expose;
     widget_class->size_request = gwy_grad_sphere_size_request;
     widget_class->unrealize = gwy_grad_sphere_unrealize;
-    widget_class->unmap = gwy_grad_sphere_unmap;
     widget_class->size_allocate = gwy_grad_sphere_size_allocate;
     widget_class->button_press_event = gwy_grad_sphere_button_press;
     widget_class->button_release_event = gwy_grad_sphere_button_release;
@@ -154,7 +149,7 @@ gwy_grad_sphere_init(GwyGradSphere *grad_sphere)
     grad_sphere->update_policy = GTK_UPDATE_CONTINUOUS;
     grad_sphere->button = 0;
     grad_sphere->timer = 0;
-    grad_sphere->radius = 0;
+    grad_sphere->radius = -1;
     grad_sphere->phi = 0.0;
     grad_sphere->theta = 0.0;
     grad_sphere->old_phi = 0.0;
@@ -194,35 +189,9 @@ gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
     grad_sphere = gtk_widget_new(GWY_TYPE_GRAD_SPHERE,
                                  "sphere_coords", sphere_coords,
                                  NULL);
-    g_object_unref(G_OBJECT(sphere_coords));
+    g_object_unref(sphere_coords);
 
     return grad_sphere;
-}
-
-static void
-gwy_grad_sphere_destroy(GtkObject *object)
-{
-    GwyGradSphere *grad_sphere;
-
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "destroying a GwyGradSphere (refcount = %u)",
-          G_OBJECT(object)->ref_count);
-    #endif
-
-    g_return_if_fail(object != NULL);
-    g_return_if_fail(GWY_IS_GRAD_SPHERE(object));
-
-    grad_sphere = GWY_GRAD_SPHERE(object);
-
-    if (GTK_OBJECT_CLASS(parent_class)->destroy)
-        (*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
-
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "    ... (refcount = %u)",
-          G_OBJECT(object)->ref_count);
-    #endif
 }
 
 static void
@@ -243,18 +212,11 @@ gwy_grad_sphere_finalize(GObject *object)
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "    unreferencing child pixbuf (refcount = %u)",
-          G_OBJECT(grad_sphere->sphere_pixbuf)->ref_count);
-    #endif
-    g_object_unref(grad_sphere->sphere_pixbuf);
-
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
           "    unreferencing child sphere_coords (refcount = %u)",
           G_OBJECT(grad_sphere->sphere_coords)->ref_count);
     #endif
     if (grad_sphere->sphere_coords)
-        g_object_unref(G_OBJECT(grad_sphere->sphere_coords));
+        g_object_unref(grad_sphere->sphere_coords);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 
@@ -266,15 +228,21 @@ gwy_grad_sphere_finalize(GObject *object)
 }
 
 static void
-gwy_grad_sphere_unmap(GtkWidget *widget)
-{
-    if (GTK_WIDGET_CLASS(parent_class)->unmap)
-        GTK_WIDGET_CLASS(parent_class)->unmap(widget);
-}
-
-static void
 gwy_grad_sphere_unrealize(GtkWidget *widget)
 {
+    GwyGradSphere *grad_sphere;
+
+    grad_sphere = GWY_GRAD_SPHERE(widget);
+
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
+          "    unreferencing child pixbuf (refcount = %u)",
+          G_OBJECT(grad_sphere->sphere_pixbuf)->ref_count);
+    #endif
+    g_object_unref(grad_sphere->sphere_pixbuf);
+    grad_sphere->sphere_pixbuf = NULL;
+    grad_sphere->radius = -1;
+
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
 }
@@ -407,7 +375,7 @@ gwy_grad_sphere_set_sphere_coords(GwyGradSphere *grad_sphere,
     g_object_ref(G_OBJECT(sphere_coords));
     gtk_object_sink(GTK_OBJECT(sphere_coords));
     if (old)
-         g_object_unref(G_OBJECT(old));
+         g_object_unref(old);
 
     g_signal_connect(G_OBJECT(sphere_coords), "value_changed",
                      G_CALLBACK(gwy_grad_sphere_coords_value_changed),
@@ -461,15 +429,7 @@ gwy_grad_sphere_realize(GtkWidget *widget)
     widget->style = gtk_style_attach(widget->style, widget->window);
     gtk_style_set_background(widget->style, widget->window, GTK_STATE_NORMAL);
 
-    grad_sphere->radius = 0.45 * MIN(widget->allocation.width,
-                                     widget->allocation.height);
-
-    grad_sphere->sphere_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE,
-                                         BITS_PER_SAMPLE,
-                                         2*grad_sphere->radius,
-                                         2*grad_sphere->radius);
-    gdk_pixbuf_fill(grad_sphere->sphere_pixbuf, 0x00000000);
-    gwy_grad_sphere_paint_sphere(grad_sphere);
+    gwy_grad_sphere_make_pixmap(grad_sphere);
 }
 
 static void
@@ -489,7 +449,6 @@ gwy_grad_sphere_size_allocate(GtkWidget *widget,
                               GtkAllocation *allocation)
 {
     GwyGradSphere *grad_sphere;
-    int radius;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -507,24 +466,36 @@ gwy_grad_sphere_size_allocate(GtkWidget *widget,
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
-
-        radius = 0.45 * MIN(allocation->width, allocation->height);
-        if (radius != grad_sphere->radius) {
-            grad_sphere->radius = radius;
-            g_object_unref(G_OBJECT(grad_sphere->sphere_pixbuf));
-            grad_sphere->sphere_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
-                                                        TRUE,
-                                                        BITS_PER_SAMPLE,
-                                                        2*radius + 1,
-                                                        2*radius + 1);
-            gdk_pixbuf_fill(grad_sphere->sphere_pixbuf, 0x00000000);
-            gwy_grad_sphere_paint_sphere(grad_sphere);
-        }
+        gwy_grad_sphere_make_pixmap(grad_sphere);
     }
 }
 
 static void
-gwy_grad_sphere_paint_sphere(GwyGradSphere *grad_sphere)
+gwy_grad_sphere_make_pixmap(GwyGradSphere *grad_sphere)
+{
+    GtkWidget *widget;
+    int radius;
+
+    widget = GTK_WIDGET(grad_sphere);
+
+    radius = 0.45 * MIN(widget->allocation.width, widget->allocation.height);
+    if (radius != grad_sphere->radius) {
+        grad_sphere->radius = radius;
+        if (grad_sphere->sphere_pixbuf)
+            g_object_unref(grad_sphere->sphere_pixbuf);
+        /* FIXME: using clipping would be better than alpha */
+        grad_sphere->sphere_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
+                                                    TRUE,
+                                                    BITS_PER_SAMPLE,
+                                                    2*radius + 1,
+                                                    2*radius + 1);
+        gdk_pixbuf_fill(grad_sphere->sphere_pixbuf, 0x00000000);
+        gwy_grad_sphere_paint(grad_sphere);
+    }
+}
+
+static void
+gwy_grad_sphere_paint(GwyGradSphere *grad_sphere)
 {
     gint i, j, r2;
     gint height, width;
@@ -590,7 +561,7 @@ gwy_grad_sphere_expose(GtkWidget *widget,
 
     if (grad_sphere->old_theta != grad_sphere->theta
         || grad_sphere->old_phi != grad_sphere->phi) {
-        gwy_grad_sphere_paint_sphere(grad_sphere);
+        gwy_grad_sphere_paint(grad_sphere);
         grad_sphere->old_theta = grad_sphere->theta;
         grad_sphere->old_theta = grad_sphere->phi;
     }
