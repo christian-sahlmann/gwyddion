@@ -27,6 +27,12 @@
 static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   guint m,
                                                   gdouble phi);
+static void         compute_fourier_coeffs       (gint nder,
+                                                  const gdouble *der,
+                                                  guint symmetry,
+                                                  gdouble *st,
+                                                  gdouble *ct);
+
 /**
  * gwy_data_field_correct_laplace_iteration:
  * @data_field: Data field to be corrected.
@@ -192,9 +198,9 @@ gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
 {
     static const guint symm[] = { 2, 3, 4, 6 };
     GwyPlaneSymmetry guess, t;
-    gint i, nder;
+    gint nder;
     gsize j, m;
-    gdouble x, avg, max, total, phi;
+    gdouble avg, max, total, phi;
     const gdouble *der;
     gdouble sint[G_N_ELEMENTS(symm)], cost[G_N_ELEMENTS(symm)];
 
@@ -207,14 +213,7 @@ gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
     max = -G_MAXDOUBLE;
     for (j = 0; j < G_N_ELEMENTS(symm); j++) {
         m = symm[j];
-        sint[j] = cost[j] = 0.0;
-        for (i = 0; i < nder; i++) {
-            x = 2*G_PI*(i + 0.5)/nder;
-
-            sint[j] += sin(m*x)*der[i];
-            cost[j] += cos(m*x)*der[i];
-        }
-
+        compute_fourier_coeffs(nder, der, m, sint+j, cost+j);
         phi = atan2(-sint[j], cost[j]);
         total = sqrt(sint[j]*sint[j] + cost[j]*cost[j]);
 
@@ -298,6 +297,30 @@ gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
     }
 
     return guess;
+}
+
+/* FIXME: The reason why this is a separate function is that either there's
+ * a devious bug in gwy_data_field_unrotate_find_corrections(), or MSVC
+ * mysteriously miscompiles it.  The effect is that bogus numbers appear
+ * in `total'.  Either way moving this code into a subroutine hides the
+ * problem. */
+static void
+compute_fourier_coeffs(gint nder, const gdouble *der,
+                       guint symmetry,
+                       gdouble *st, gdouble *ct)
+{
+    guint i;
+    gdouble q, sint, cost;
+
+    q = 2*G_PI/nder*symmetry;
+    sint = cost = 0.0;
+    for (i = 0; i < nder; i++) {
+        sint += sin(q*(i + 0.5))*der[i];
+        cost += cos(q*(i + 0.5))*der[i];
+    }
+
+    *st = sint;
+    *ct = cost;
 }
 
 /**
