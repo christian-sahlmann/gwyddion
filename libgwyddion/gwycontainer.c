@@ -22,7 +22,7 @@
 #include <glib.h>
 #include <gtk/gtkmarshal.h>
 
-#define DEBUG 1
+/*#define DEBUG 1*/
 
 #include <libgwyddion/gwymacros.h>
 #include "gwycontainer.h"
