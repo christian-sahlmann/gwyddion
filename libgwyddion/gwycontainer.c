@@ -899,7 +899,10 @@ gwy_container_try_set_one(GwyContainer *container,
         g_hash_table_insert(container->values, GINT_TO_POINTER(key), old);
     }
     g_value_init(old, G_VALUE_TYPE(value));
-    g_value_copy(value, old);
+    if (G_VALUE_HOLDS_STRING(value))
+        g_value_set_string_take_ownership(old, g_value_peek_pointer(value));
+    else
+        g_value_copy(value, old);
 
     /* set up a watch for "value_changed" for objects */
     if (G_VALUE_HOLDS_OBJECT(value))
