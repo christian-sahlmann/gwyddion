@@ -19,10 +19,7 @@
  */
 
 #include <string.h>
-#include <glib.h>
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwycontainer.h>
+#include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
@@ -44,6 +41,12 @@ typedef struct {
     gchar *pal;
     gint algorithm;
 } ToolControls;
+
+typedef void (*AverageFunc)(GwyDataField *dfield,
+                            gint ximin,
+                            gint yimin,
+                            gint ximax,
+                            gint yimax);
 
 static gboolean   module_register      (const gchar *name);
 static gboolean   use                  (GwyDataWindow *data_window,
@@ -76,6 +79,11 @@ static void       crisscross_average   (GwyDataField *dfield,
                                         gint yimin,
                                         gint ximax,
                                         gint yimax);
+static void       laplace_average      (GwyDataField *dfield,
+                                        gint ximin,
+                                        gint yimin,
+                                        gint ximax,
+                                        gint yimax);
 static void       selection_to_rowcol  (GwyDataField *dfield,
                                         gdouble *sel,
                                         gint *ximin,
@@ -94,7 +102,7 @@ static GwyModuleInfo module_info = {
     "spotremove",
     "Removes spots.",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -110,11 +118,13 @@ static GwyUnitoolSlots func_slots = {
 };
 
 enum {
-    SPOT_REMOVE_HYPER_FLATTEN
+    SPOT_REMOVE_HYPER_FLATTEN,
+    SPOT_REMOVE_LAPLACE
 };
 
 static const GwyEnum algorithms[] = {
     { "Hyperbolic flatten", SPOT_REMOVE_HYPER_FLATTEN },
+    { "Laplace solver", SPOT_REMOVE_LAPLACE },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -285,7 +295,7 @@ dialog_create(GwyUnitoolState *state)
 
     omenu = gwy_option_menu_create(algorithms, G_N_ELEMENTS(algorithms),
                                    "algorithm",
-                                   G_CALLBACK(algorithm_changed_cb), &controls,
+                                   G_CALLBACK(algorithm_changed_cb), controls,
                                    controls->algorithm);
     gtk_table_attach(GTK_TABLE(table), omenu, 0, 3, 7, 8, GTK_FILL, 0, 2, 2);
 
@@ -404,7 +414,20 @@ apply(GwyUnitoolState *state)
     gwy_vector_layer_get_selection(state->layer, sel);
     selection_to_rowcol(dfield, sel, &ximin, &yimin, &ximax, &yimax);
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
-    crisscross_average(dfield, ximin, yimin, ximax, yimax);
+
+    switch (controls->algorithm) {
+        case SPOT_REMOVE_HYPER_FLATTEN:
+        crisscross_average(dfield, ximin, yimin, ximax, yimax);
+        break;
+
+        case SPOT_REMOVE_LAPLACE:
+        laplace_average(dfield, ximin, yimin, ximax, yimax);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
     /*gwy_vector_layer_unselect(state->layer);*/
     gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
 }
@@ -417,7 +440,7 @@ crisscross_average(GwyDataField *dfield,
     gdouble *data;
     gint i, j, rowstride;
 
-    gwy_debug("(%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
+    gwy_debug("hyperbolic: (%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
     data = gwy_data_field_get_data(dfield);
     rowstride = gwy_data_field_get_xres(dfield);
 
@@ -438,6 +461,32 @@ crisscross_average(GwyDataField *dfield,
             data[i*rowstride + j] = (vx + vy)/(wx + wy);
         }
     }
+}
+
+static void
+laplace_average(GwyDataField *dfield,
+                gint ximin, gint yimin,
+                gint ximax, gint yimax)
+{
+    GwyDataField *mask, *buffer;
+    gdouble cor = 0.2, error, maxer;
+    gint i = 0;
+
+    gwy_debug("laplace: (%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
+    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    gwy_data_field_fill(mask, 0.0);
+    gwy_data_field_area_fill(mask, ximin, yimin, ximax, yimax, 1.0);
+
+    maxer = gwy_data_field_get_rms(dfield)/1.0e3;
+    do {
+        gwy_data_field_correct_laplace_iteration(dfield, mask, buffer,
+                                                 &error, &cor);
+        i++;
+    } while (error >= maxer && i < 1000);
+
+    g_object_unref(buffer);
+    g_object_unref(mask);
 }
 
 static void
@@ -534,8 +583,10 @@ load_args(GwyContainer *container, ToolControls *controls)
     gwy_container_gis_enum_by_name(container, algorithm_key,
                                    &controls->algorithm);
 
-    /* sanitize (there's only one option ;) */
-    controls->algorithm = SPOT_REMOVE_HYPER_FLATTEN;
+    /* sanitize */
+    controls->algorithm = CLAMP(controls->algorithm,
+                                SPOT_REMOVE_HYPER_FLATTEN,
+                                SPOT_REMOVE_LAPLACE);
 }
 
 static void
