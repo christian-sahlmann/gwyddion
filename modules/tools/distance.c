@@ -84,7 +84,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
         "distance",
-        "gwy_distance",
+        GWY_STOCK_DISTANCE,
         N_("Measure distances between points."),
         6,
         use,
