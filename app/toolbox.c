@@ -263,6 +263,13 @@ gwy_app_toolbox_create(void)
                      G_CALLBACK(toolbox_dnd_data_received), NULL);
 
     /***************************************************************/
+    /* XXX */
+    g_signal_connect(toolbox, "delete_event",
+                     G_CALLBACK(gwy_app_main_window_save_position), NULL);
+    g_signal_connect(toolbox, "delete_event", G_CALLBACK(gwy_app_quit), NULL);
+
+    gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
+
     gtk_widget_show_all(toolbox);
     gwy_app_main_window_restore_position();
     while (gtk_events_pending())
@@ -271,16 +278,11 @@ gwy_app_toolbox_create(void)
     for (l = labels; l; l = g_slist_next(l))
         g_signal_emit_by_name(l->data, "clicked");
     g_slist_free(labels);
-    gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
 
     g_object_set_data_full(G_OBJECT(toolbox), "toolbars", toolbars,
                            (GDestroyNotify)g_list_free);
     g_object_set_data_full(G_OBJECT(toolbox), "menus", menus,
                            (GDestroyNotify)g_list_free);
-    /* XXX */
-    g_signal_connect(toolbox, "delete_event",
-                     G_CALLBACK(gwy_app_main_window_save_position), NULL);
-    g_signal_connect(toolbox, "delete_event", G_CALLBACK(gwy_app_quit), NULL);
 
     return toolbox;
 }
