@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-10-13 16:26+0200\n"
+"POT-Creation-Date: 2004-10-14 00:19+0200\n"
 "PO-Revision-Date: 2004-10-13 16:26+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -169,7 +169,7 @@ msgstr "Velikost"
 
 #: libgwydgets/gwy3dwindow.c:466 modules/file/pixmap.c:672
 #: modules/file/pixmap.c:1553 modules/process/cwt.c:180
-#: modules/process/fft.c:368 modules/process/tip_model.c:190
+#: modules/process/fft.c:368 modules/process/tip_model.c:188
 #: modules/process/shade.c:183 modules/process/grain_wshed.c:168
 #: modules/process/grain_rem_threshold.c:171 modules/process/fractal.c:187
 #: modules/process/calibrate.c:187 modules/process/grain_mark.c:181
@@ -520,7 +520,7 @@ msgstr "Vyznačení zrn stékáním"
 msgid "Remove grains by threshold"
 msgstr "Odstraňení zrn podle prahu"
 
-#: app/toolbox.c:253
+#: app/toolbox.c:253 modules/process/grain_dist.c:101
 msgid "Grain size distribution"
 msgstr "Rozdělení velikosti zrn"
 
@@ -1372,6 +1372,14 @@ msgstr "Vzdálenosti"
 msgid "<b>Angle</b> [deg]"
 msgstr ""
 
+#: modules/tools/filter.c:84
+msgid "Basic filtering procedures."
+msgstr ""
+
+#: modules/tools/filter.c:111
+msgid "Basic filters"
+msgstr ""
+
 #: modules/tools/filter.c:185
 msgid "Filters"
 msgstr ""
@@ -1380,8 +1388,8 @@ msgstr ""
 msgid "<b>Filter:</b>"
 msgstr ""
 
-#: modules/tools/filter.c:210 modules/tools/polynom.c:176
-msgid "Type:"
+#: modules/tools/filter.c:210
+msgid "_Type:"
 msgstr ""
 
 #: modules/tools/filter.c:221 modules/tools/polynom.c:187
@@ -1392,7 +1400,11 @@ msgstr ""
 msgid "Size:"
 msgstr ""
 
-#: modules/tools/stats.c:136
+#: modules/tools/stats.c:60
+msgid "Statistical quantities."
+msgstr ""
+
+#: modules/tools/stats.c:87 modules/tools/stats.c:136
 msgid "Statistical quantities"
 msgstr ""
 
@@ -1424,8 +1436,36 @@ msgstr ""
 msgid "Projected area"
 msgstr ""
 
-#: modules/tools/stats.c:179 modules/process/grain_rem_threshold.c:226
+#: modules/tools/stats.c:179
 msgid "Area"
+msgstr ""
+
+#: modules/tools/sfunctions.c:78
+msgid "Statistical functions."
+msgstr ""
+
+#: modules/tools/sfunctions.c:96 modules/tools/sfunctions.c:97
+msgid "Height distribution"
+msgstr ""
+
+#: modules/tools/sfunctions.c:98 modules/tools/sfunctions.c:99
+msgid "Slope distribution"
+msgstr ""
+
+#: modules/tools/sfunctions.c:100
+msgid "ACF"
+msgstr ""
+
+#: modules/tools/sfunctions.c:101
+msgid "HHCF"
+msgstr ""
+
+#: modules/tools/sfunctions.c:102
+msgid "PSDF"
+msgstr ""
+
+#: modules/tools/sfunctions.c:115
+msgid "Compute 1D statistical functions."
 msgstr ""
 
 #: modules/tools/sfunctions.c:165
@@ -1448,8 +1488,7 @@ msgstr ""
 msgid "<b>Module parameters</b>"
 msgstr ""
 
-#: modules/tools/sfunctions.c:207 modules/process/fft.c:400
-#: modules/process/fractal.c:211
+#: modules/tools/sfunctions.c:207 modules/process/fractal.c:211
 msgid "_Output type:"
 msgstr ""
 
@@ -1457,7 +1496,7 @@ msgstr ""
 msgid "Computation _direction:"
 msgstr "S_měr výpočtu:"
 
-#: modules/tools/sfunctions.c:227 modules/tools/profile.c:226
+#: modules/tools/sfunctions.c:227
 msgid "Interpolation type:"
 msgstr "Typ interpolace:"
 
@@ -1529,6 +1568,10 @@ msgstr ""
 msgid "<b>Fiting mode:</b>"
 msgstr ""
 
+#: modules/tools/polynom.c:176
+msgid "Type:"
+msgstr ""
+
 #: modules/tools/polynom.c:199
 msgid "Exclude area if selected"
 msgstr ""
@@ -1552,6 +1595,14 @@ msgstr "Barevný rozsah"
 #: modules/tools/icolorange.c:158
 msgid "_Instant apply"
 msgstr "_Okamžitě použít"
+
+#: modules/tools/profile.c:77
+msgid "Profile tool."
+msgstr ""
+
+#: modules/tools/profile.c:104
+msgid "Extract profiles from data."
+msgstr ""
 
 #: modules/tools/profile.c:156
 msgid "Extract profile"
@@ -1579,8 +1630,24 @@ msgstr ""
 msgid "_Separate profiles"
 msgstr ""
 
+#: modules/tools/profile.c:226 modules/process/cwt.c:206
+#: modules/process/scale.c:206 modules/process/unrotate.c:231
+#: modules/process/rotate.c:205 modules/process/fractal.c:201
+msgid "_Interpolation type:"
+msgstr "Typ _interpolace:"
+
+#: modules/tools/grain_remove_manually.c:53
+#: modules/tools/grain_remove_manually.c:80
+msgid "Grain (mask) removal tool."
+msgstr ""
+
+#: modules/tools/grain_remove_manually.c:100
+#, c-format
+msgid "Layer type `%s' not available"
+msgstr ""
+
 #: modules/tools/grain_remove_manually.c:117
-msgid "Grain remove tool"
+msgid "Grain Remove Tool"
 msgstr ""
 
 #: modules/process/arithmetic.c:96
@@ -1669,6 +1736,14 @@ msgstr "/_Vyrovnání/Vyrování podle p_lošek"
 msgid "Facet-levelling"
 msgstr "Vyrovnávám podle plošek"
 
+#: modules/process/cwt.c:82
+msgid "2D Continuous Wavelet Transform module"
+msgstr ""
+
+#: modules/process/cwt.c:98
+msgid "/_Integral Transforms/_2D CWT..."
+msgstr ""
+
 #: modules/process/cwt.c:143
 msgid "CWT: Data field must be rectangular."
 msgstr ""
@@ -1685,15 +1760,17 @@ msgstr "Š_kála:"
 msgid "Data si_ze treatment:"
 msgstr ""
 
-#: modules/process/cwt.c:206 modules/process/fft.c:389
-#: modules/process/scale.c:206 modules/process/unrotate.c:231
-#: modules/process/rotate.c:205 modules/process/fractal.c:201
-msgid "_Interpolation type:"
-msgstr "Typ _interpolace:"
-
 #: modules/process/cwt.c:211
 msgid "_Wavelet type:"
 msgstr "Typ _waveletu:"
+
+#: modules/process/fft.c:108
+msgid "2D Fast Fourier Transform module"
+msgstr ""
+
+#: modules/process/fft.c:124
+msgid "/_Integral Transforms/_2D FFT..."
+msgstr ""
 
 #: modules/process/fft.c:178
 msgid "FFT: Data field must be rectangular."
@@ -1704,40 +1781,109 @@ msgid "2D FFT"
 msgstr ""
 
 #: modules/process/fft.c:378
-msgid "Data size treatment:"
+msgid "_Data Size Treatment:"
+msgstr ""
+
+#: modules/process/fft.c:389
+msgid "_Interpolation Type:"
 msgstr ""
 
 #: modules/process/fft.c:394
-msgid "_Windowing type:"
+msgid "_Windowing Type:"
 msgstr ""
 
-#: modules/process/tip_model.c:186
-msgid "Model tip"
+#: modules/process/fft.c:400
+msgid "_Output Type:"
 msgstr ""
 
-#: modules/process/tip_model.c:189 modules/process/grain_wshed.c:167
+#: modules/process/fft.c:483
+msgid "Real + Imaginary"
+msgstr ""
+
+#: modules/process/fft.c:484
+msgid "Module + Phase"
+msgstr ""
+
+#: modules/process/fft.c:485
+msgid "Real"
+msgstr ""
+
+#: modules/process/fft.c:486
+msgid "Imaginary"
+msgstr ""
+
+#: modules/process/fft.c:487
+msgid "Module"
+msgstr ""
+
+#: modules/process/fft.c:488
+msgid "Phase"
+msgstr ""
+
+#: modules/process/tip_model.c:37
+msgid "Pyramide (general)"
+msgstr ""
+
+#: modules/process/tip_model.c:38
+msgid "Contact etched"
+msgstr ""
+
+#: modules/process/tip_model.c:39
+msgid "Noncontact etched"
+msgstr ""
+
+#: modules/process/tip_model.c:40
+msgid "Delta function"
+msgstr ""
+
+#: modules/process/tip_model.c:121
+msgid "Model SPM tip"
+msgstr ""
+
+#: modules/process/tip_model.c:137
+msgid "/_Tip operations/_Model Tip..."
+msgstr ""
+
+#: modules/process/tip_model.c:184
+msgid "Model Tip"
+msgstr ""
+
+#: modules/process/tip_model.c:187 modules/process/grain_wshed.c:167
 #: modules/process/grain_rem_threshold.c:170 modules/process/grain_mark.c:180
 msgid "Update preview"
 msgstr ""
 
-#: modules/process/tip_model.c:231 modules/process/tip_blind.c:224
-msgid "Related data:"
+#: modules/process/tip_model.c:229 modules/process/tip_blind.c:224
+msgid "Related Data:"
 msgstr ""
 
-#: modules/process/tip_model.c:242
-msgid "Tip type:"
+#: modules/process/tip_model.c:240
+msgid "Tip Type:"
 msgstr ""
 
-#: modules/process/tip_model.c:253
-msgid "number of sides"
+#: modules/process/tip_model.c:251
+msgid "Number of Sides:"
 msgstr ""
 
-#: modules/process/tip_model.c:259
-msgid "tip slope"
+#: modules/process/tip_model.c:257
+msgid "Tip Slope:"
 msgstr ""
 
-#: modules/process/tip_model.c:265
-msgid "tip rotation"
+#: modules/process/tip_model.c:263
+msgid "Tip Rotation:"
+msgstr ""
+
+#: modules/process/tip_model.c:267
+msgid "Tip Apex Radius: "
+msgstr ""
+
+#: modules/process/tip_model.c:274
+msgid "Resolution will be determined according tip type."
+msgstr ""
+
+#: modules/process/tip_model.c:518
+#, c-format
+msgid "Tip resolution: %d x %d pixels"
 msgstr ""
 
 #: modules/process/scale.c:83
@@ -1796,8 +1942,7 @@ msgstr "_Tvrdý práh:"
 msgid "_Soft threshold:"
 msgstr "_Měkký práh:"
 
-#: modules/process/scars.c:439 modules/process/grain_wshed.c:237
-#: modules/process/grain_rem_threshold.c:237 modules/process/grain_mark.c:262
+#: modules/process/scars.c:439 modules/process/grain_mark.c:262
 msgid "Preview _mask color:"
 msgstr "Barva _masky v náhledu:"
 
@@ -1813,7 +1958,7 @@ msgstr "/_Statistika/Rozdělení ú_hlů..."
 msgid "Computing angle distribution"
 msgstr "Počítám rozdělení úhlů"
 
-#: modules/process/angle_dist.c:164
+#: modules/process/angle_dist.c:164 modules/process/crosscor.c:94
 msgid "Angle"
 msgstr "Úhel"
 
@@ -1857,9 +2002,37 @@ msgstr "/_Vyrovnání/Vyrování _rotací"
 msgid "/_Level/Fix _Zero"
 msgstr "/_Vyrovnání/Oprava _nuly"
 
+#: modules/process/shade.c:74
+msgid "Shade module"
+msgstr ""
+
+#: modules/process/shade.c:90
+msgid "/_Display/_Shading..."
+msgstr ""
+
 #: modules/process/shade.c:180
 msgid "Shading"
 msgstr "Stínování"
+
+#: modules/process/maskcor.c:69
+msgid "Objects marked"
+msgstr ""
+
+#: modules/process/maskcor.c:70
+msgid "Correlation maxima"
+msgstr ""
+
+#: modules/process/maskcor.c:71
+msgid "Correlation score"
+msgstr ""
+
+#: modules/process/maskcor.c:83
+msgid "Create mask by correlation with another data field."
+msgstr ""
+
+#: modules/process/maskcor.c:99
+msgid "/M_ultidata/_Mask by Correlation"
+msgstr ""
 
 #: modules/process/maskcor.c:162
 msgid "Mask by correlation"
@@ -1879,6 +2052,22 @@ msgstr ""
 
 #: modules/process/maskcor.c:206 modules/process/crosscor.c:288
 msgid "_Result:"
+msgstr ""
+
+#: modules/process/laplace.c:46
+msgid "Remove data under mask using laplace equation"
+msgstr ""
+
+#: modules/process/laplace.c:62
+msgid "/_Correct Data/_Remove Data Under Mask"
+msgstr ""
+
+#: modules/process/laplace.c:99
+msgid "Initializing..."
+msgstr ""
+
+#: modules/process/laplace.c:112
+msgid "Iterating..."
 msgstr ""
 
 #: modules/process/laplace.c:134 modules/process/fraccor.c:111
@@ -1933,6 +2122,14 @@ msgstr "Detekovaná struktura:"
 msgid "Rotation correction:"
 msgstr "Korekce rotace:"
 
+#: modules/process/outliers.c:45
+msgid "Create mask of outliers"
+msgstr ""
+
+#: modules/process/outliers.c:61
+msgid "/_Correct Data/_Mask of Outliers"
+msgstr ""
+
 #: modules/process/mask_grow_shrink.c:67
 msgid "Grows and shrinks masks."
 msgstr "Rošiřuje a zmenšuje masky."
@@ -1961,6 +2158,14 @@ msgstr "Zmenšení masky"
 msgid "Shrink mask by:"
 msgstr "Zmenšit masku o:"
 
+#: modules/process/tip_blind.c:112
+msgid "Blind estimation of SPM tip using Villarubia's algorithm"
+msgstr ""
+
+#: modules/process/tip_blind.c:128
+msgid "/_Tip operations/_Blind estimation..."
+msgstr ""
+
 #: modules/process/tip_blind.c:177
 msgid "Blind tip estimation"
 msgstr ""
@@ -1978,7 +2183,7 @@ msgid "Reset tip"
 msgstr ""
 
 #: modules/process/tip_blind.c:235
-msgid "Estimated tip size:"
+msgid "_Estimated Tip Size"
 msgstr ""
 
 #: modules/process/tip_blind.c:242
@@ -1989,8 +2194,12 @@ msgstr ""
 msgid "Height:"
 msgstr ""
 
+#: modules/process/tip_blind.c:261
+msgid "Threshold: "
+msgstr ""
+
 #: modules/process/tip_blind.c:271
-msgid "Use boundaries"
+msgid "Use Boundaries:"
 msgstr ""
 
 #: modules/process/slope_dist.c:103
@@ -2025,8 +2234,7 @@ msgstr "Typ výstupu:"
 msgid "Certainty map analysis"
 msgstr ""
 
-#: modules/process/tip_map.c:155 modules/process/tip_reconstruction.c:153
-#: modules/process/tip_dilation.c:153
+#: modules/process/tip_map.c:155
 msgid "_Tip morphology:"
 msgstr ""
 
@@ -2092,28 +2300,44 @@ msgstr "/_Jednoduché operations/Rotace v _kladném smyslu"
 msgid "/_Basic Operations/Flip _Both"
 msgstr "/_Jednoduché operace/Překlopení v _obou směrech"
 
-#: modules/process/grain_wshed.c:164
+#: modules/process/grain_wshed.c:100 modules/process/grain_wshed.c:164
 msgid "Mark grains by watershed algorithm"
 msgstr ""
 
+#: modules/process/grain_wshed.c:116
+msgid "/_Grains/Mark by _Watershed..."
+msgstr ""
+
 #: modules/process/grain_wshed.c:203
-msgid "<b>Grain location:</b>"
+msgid "<b>Grain Location</b>"
 msgstr ""
 
-#: modules/process/grain_wshed.c:210 modules/process/grain_wshed.c:223
-msgid "Number of steps"
+#: modules/process/grain_wshed.c:210
+msgid "Number of Steps:"
 msgstr ""
 
-#: modules/process/grain_wshed.c:214 modules/process/grain_wshed.c:228
-msgid "Drop size"
+#: modules/process/grain_wshed.c:214
+msgid "Drop Size:"
 msgstr ""
 
 #: modules/process/grain_wshed.c:219
 msgid "Threshold"
 msgstr ""
 
+#: modules/process/grain_wshed.c:223
+msgid "Number of Steps"
+msgstr ""
+
+#: modules/process/grain_wshed.c:228
+msgid "Drop Size"
+msgstr ""
+
 #: modules/process/grain_wshed.c:233
-msgid "<b>Segmentation:</b>"
+msgid "<b>Segmentation</b>"
+msgstr ""
+
+#: modules/process/grain_wshed.c:237 modules/process/grain_rem_threshold.c:237
+msgid "Preview _Mask Color:"
 msgstr ""
 
 #: modules/process/linecorrect.c:41
@@ -2124,36 +2348,68 @@ msgstr ""
 msgid "/_Correct Data/_Modus Line Correction"
 msgstr ""
 
+#: modules/process/tip_reconstruction.c:64
+msgid "Surface Reconstruction."
+msgstr ""
+
+#: modules/process/tip_reconstruction.c:80
+msgid "/_Tip operations/_Surface Reconstruction"
+msgstr ""
+
 #: modules/process/tip_reconstruction.c:139
-msgid "Surface reconstruction"
+msgid "Surface Reconstruction"
+msgstr ""
+
+#: modules/process/tip_reconstruction.c:153 modules/process/tip_dilation.c:153
+msgid "_Tip Morphology:"
 msgstr ""
 
 #: modules/process/tip_reconstruction.c:165
-msgid "_Surface to be reconstructed:"
+msgid "_Surface to be Reconstructed:"
+msgstr ""
+
+#: modules/process/grain_rem_threshold.c:99
+msgid "Remove grains by thresholding"
+msgstr ""
+
+#: modules/process/grain_rem_threshold.c:115
+msgid "/_Grains/_Remove by Threshold..."
 msgstr ""
 
 #: modules/process/grain_rem_threshold.c:206
-msgid "Threshold by maximum:"
+msgid "Threshold by _Maximum:"
 msgstr ""
 
 #: modules/process/grain_rem_threshold.c:214 modules/process/grain_mark.c:223
-msgid "Height value"
+msgid "Height Value:"
 msgstr ""
 
 #: modules/process/grain_rem_threshold.c:218
-msgid "Threshold by area:"
+msgid "Threshold by _Area:"
+msgstr ""
+
+#: modules/process/grain_rem_threshold.c:226
+msgid "Area:"
 msgstr ""
 
 #: modules/process/grain_rem_threshold.c:229
-msgid "Selection mode:"
+msgid "_Selection Mode:"
+msgstr ""
+
+#: modules/process/tip_dilation.c:64
+msgid "Tip Dilation."
+msgstr ""
+
+#: modules/process/tip_dilation.c:80
+msgid "/_Tip operations/_Dilation"
 msgstr ""
 
 #: modules/process/tip_dilation.c:139
-msgid "Tip dilation"
+msgid "Tip Dilation"
 msgstr ""
 
 #: modules/process/tip_dilation.c:165
-msgid "_Surface to be dilated:"
+msgid "_Surface to be Dilated:"
 msgstr ""
 
 #: modules/process/polylevel.c:74
@@ -2184,20 +2440,40 @@ msgstr "Supeň _svislého polynomu:"
 msgid "E_xtract background"
 msgstr "_Extrahovat pozadí"
 
+#: modules/process/crosscor.c:91
+msgid "Absolute"
+msgstr ""
+
+#: modules/process/crosscor.c:92
+msgid "X Distance"
+msgstr ""
+
+#: modules/process/crosscor.c:93
+msgid "Y Distance"
+msgstr ""
+
+#: modules/process/crosscor.c:106
+msgid "Cross-correlation of two data fields."
+msgstr ""
+
+#: modules/process/crosscor.c:122
+msgid "/M_ultidata/_Cross-Correlation"
+msgstr ""
+
 #: modules/process/crosscor.c:188
 msgid "Data Croscorrelation"
 msgstr ""
 
 #: modules/process/crosscor.c:202
-msgid "_First data field:"
+msgid "_First Data Field:"
 msgstr ""
 
 #: modules/process/crosscor.c:214
-msgid "_Second data field:"
+msgid "_Second Data Field:"
 msgstr ""
 
 #: modules/process/crosscor.c:227
-msgid "_Search size"
+msgid "S_earch Size"
 msgstr ""
 
 #: modules/process/crosscor.c:247
@@ -2214,6 +2490,34 @@ msgstr ""
 
 #: modules/process/crosscor.c:396
 msgid "Both data fields must have same size."
+msgstr ""
+
+#: modules/process/fraccor.c:47
+msgid "Remove data under mask using fractal approach"
+msgstr ""
+
+#: modules/process/fraccor.c:63
+msgid "/_Correct Data/_Fractal correction"
+msgstr ""
+
+#: modules/process/grain_dist.c:43
+msgid "Evaluate grain distribution"
+msgstr ""
+
+#: modules/process/grain_dist.c:59
+msgid "/_Grains/_Size Distribution"
+msgstr ""
+
+#: modules/process/grain_dist.c:95
+msgid "Grain size histogram"
+msgstr ""
+
+#: modules/process/fractal.c:125
+msgid "Fractal dimension evaluation"
+msgstr ""
+
+#: modules/process/fractal.c:141
+msgid "/_Statistics/_Fractal Dimension..."
 msgstr ""
 
 #: modules/process/fractal.c:183
@@ -2233,7 +2537,7 @@ msgid "From:"
 msgstr ""
 
 #: modules/process/fractal.c:233
-msgid "minimum"
+msgid "_minimum"
 msgstr ""
 
 #: modules/process/fractal.c:239
@@ -2241,7 +2545,7 @@ msgid "To:"
 msgstr ""
 
 #: modules/process/fractal.c:243
-msgid "maxium"
+msgid "ma_xium"
 msgstr ""
 
 #: modules/process/fractal.c:252
@@ -2264,30 +2568,94 @@ msgstr ""
 msgid "Power spectrum:"
 msgstr ""
 
+#: modules/process/fractal.c:442 modules/process/fractal.c:751
+msgid "Partitioning"
+msgstr ""
+
+#: modules/process/fractal.c:454 modules/process/fractal.c:752
+msgid "Cube counting"
+msgstr ""
+
+#: modules/process/fractal.c:466 modules/process/fractal.c:753
+msgid "Triangulation"
+msgstr ""
+
+#: modules/process/fractal.c:478 modules/process/fractal.c:754
+msgid "Power spectrum"
+msgstr ""
+
+#: modules/process/fractal.c:641
+msgid "minimum"
+msgstr ""
+
+#: modules/process/fractal.c:643
+msgid "maximum"
+msgstr ""
+
+#: modules/process/calibrate.c:91
+msgid "Recalibrate scan axis"
+msgstr ""
+
+#: modules/process/calibrate.c:110
+msgid "/_Basic Operations/Recalibrate..."
+msgstr ""
+
 #: modules/process/calibrate.c:184
 msgid "Calibrate"
 msgstr ""
 
+#: modules/process/calibrate.c:201
+msgid "_X Range: "
+msgstr ""
+
+#: modules/process/calibrate.c:209
+msgid "_Y Range: "
+msgstr ""
+
+#: modules/process/calibrate.c:217
+msgid "_Z Range: "
+msgstr ""
+
+#: modules/process/calibrate.c:237
+msgid "X C_alibration Factor: "
+msgstr ""
+
+#: modules/process/calibrate.c:258
+msgid "Y Cali_bration Factor: "
+msgstr ""
+
+#: modules/process/calibrate.c:279
+msgid "Z Calibration Fa_ctor: "
+msgstr ""
+
+#: modules/process/grain_mark.c:112
+msgid "Mark grains by thresholding"
+msgstr ""
+
+#: modules/process/grain_mark.c:128
+msgid "/_Grains/_Mark by Threshold..."
+msgstr ""
+
 #: modules/process/grain_mark.c:214
-msgid "Threshold by height:"
+msgid "Threshold by _Height:"
 msgstr ""
 
 #: modules/process/grain_mark.c:228
-msgid "Threshold by slope:"
+msgid "Threshold by _Slope:"
 msgstr ""
 
 #: modules/process/grain_mark.c:236
-msgid "Slope value"
+msgid "Slope value:"
 msgstr ""
 
 #: modules/process/grain_mark.c:241
-msgid "Threshold by curvature:"
+msgid "Threshold by _Curvature:"
 msgstr ""
 
 #: modules/process/grain_mark.c:249
-msgid "Curvature value"
+msgid "Curvature Value:"
 msgstr ""
 
 #: modules/process/grain_mark.c:253
-msgid "Merge mode:"
+msgid "Mer_ge Mode:"
 msgstr ""
