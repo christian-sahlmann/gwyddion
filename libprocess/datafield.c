@@ -1048,11 +1048,11 @@ gwy_data_field_get_rms(GwyDataField *a)
 {
     gint i;
     gdouble rms = 0;
-    gdouble avg=gwy_data_field_get_avg(a);
+    gdouble avg = gwy_data_field_get_avg(a);
 
-    for (i = 1; i < (a->xres * a->yres); i++) {
+    for (i = 0; i < (a->xres * a->yres); i++)
         rms += (a->data[i]-avg)*(a->data[i]-avg);
-    }
+
     return sqrt(rms)/((gdouble)(a->xres * a->yres));
 }
 
@@ -1062,8 +1062,9 @@ gwy_data_field_get_sum(GwyDataField *a)
     gint i;
     gdouble sum = 0;
 
-    for (i = 1; i < (a->xres * a->yres); i++)
+    for (i = 0; i < (a->xres * a->yres); i++)
         sum += a->data[i];
+
     return sum;
 }
 
