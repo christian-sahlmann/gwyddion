@@ -258,12 +258,16 @@ gwy_3d_label_description_create_adjustment(Gwy3DLabels *gwy3dlabels,
 
 /**
  * gwy_3d_labels_new:
+ * @container:
  *
+ * Creates a new 3D label collection object.
  *
+ * Returns: A new #Gwy3DLabels object.
  *
  * Since: 1.5
  **/
-Gwy3DLabels * gwy_3d_labels_new(GwyContainer * container)
+Gwy3DLabels*
+gwy_3d_labels_new(GwyContainer * container)
 {
     guint i;
     Gwy3DLabels * labels = g_object_new(GWY_TYPE_3D_LABELS, NULL);
@@ -301,23 +305,30 @@ Gwy3DLabels * gwy_3d_labels_new(GwyContainer * container)
 
 /**
  * gwy_3d_labels_get_description:
+ * @gwy3dlabels: 
+ * @label_name: 
  *
  *
+ * Returns: 
  *
  * Since: 1.5
  **/
 Gwy3DLabelDescription *
-gwy_3d_labels_get_description(Gwy3DLabels * labels, Gwy3DLabelName label_name)
+gwy_3d_labels_get_description(Gwy3DLabels *gwy3dlabels,
+                              Gwy3DLabelName label_name)
 {
 
-    g_return_val_if_fail(GWY_IS_3D_LABELS(labels), NULL);
+    g_return_val_if_fail(GWY_IS_3D_LABELS(gwy3dlabels), NULL);
     g_return_val_if_fail(label_name <= GWY_3D_VIEW_LABEL_MAX, NULL);
 
-    return labels->labels[label_name];
+    return gwy3dlabels->labels[label_name];
 }
 
 /**
  * gwy_3d_labels_get_update:
+ * @labels: 
+ * @container: 
+ * @si_unit: 
  *
  *
  *
@@ -389,8 +400,12 @@ void gwy_3d_labels_update(Gwy3DLabels * labels, GwyContainer* container, GwySIUn
 
 /**
  * gwy_3d_labels_format_text:
+ * @labels: A 3D labels object.
+ * @label_name:
  *
  *
+ *
+ * Returns: 
  *
  * Since: 1.5
  **/
@@ -444,6 +459,8 @@ gchar * gwy_3d_labels_format_text(Gwy3DLabels * labels, Gwy3DLabelName label_nam
 
 /**
  * gwy_3d_label_description_set_text:
+ * @label_description: A label desctiption.
+ * @text: 
  *
  *
  *
@@ -470,6 +487,7 @@ gwy_3d_label_description_set_text(Gwy3DLabelDescription * ld,
 
 /**
  * gwy_3d_label_description_reset:
+ * @label_description: A label desctiption.
  *
  *
  *
@@ -504,9 +522,20 @@ gwy_3d_labels_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_
     g_signal_emit(labels, labels_signals[LABEL_CHANGED], 0);
 }
 
-gdouble gwy_3d_labels_user_size(Gwy3DLabels *labels,
-                                Gwy3DLabelName name,
-                                gint user_size)
+/**
+ * gwy_3d_labels_user_size:
+ * @labels: A 3D labels object.
+ * @name: 
+ * @user_size: 
+ *
+ * 
+ *
+ * Returns:
+ **/
+gdouble
+gwy_3d_labels_user_size(Gwy3DLabels *labels,
+                        Gwy3DLabelName name,
+                        gint user_size)
 {
     Gwy3DLabelDescription * ld = gwy_3d_labels_get_description(labels, name);
     if (ld->auto_scale)
@@ -519,20 +548,23 @@ gdouble gwy_3d_labels_user_size(Gwy3DLabels *labels,
 
 /**
  * gwy_3d_label_description_get_autoscale:
+ * @label_description: A label desctiption.
  *
  *
+ * Returns: 
  *
  * Since: 1.5
  **/
 gboolean
-gwy_3d_label_description_get_autoscele(Gwy3DLabelDescription * label_description)
+gwy_3d_label_description_get_autoscale(Gwy3DLabelDescription* label_description)
 {
     return label_description->auto_scale;
 }
 
 /**
  * gwy_3d_label_description_set_autoscale:
- *
+ * @label_description: A label desctiption.
+ * @autoscale: 
  *
  *
  * Since: 1.5

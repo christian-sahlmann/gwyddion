@@ -46,7 +46,6 @@ G_BEGIN_DECLS
 
 
 typedef struct _Gwy3DLabelDescription      Gwy3DLabelDescription;
-typedef struct _Gwy3DLabelDescriptionClass Gwy3DLabelDescriptionClass;
 typedef struct _Gwy3DLabels                Gwy3DLabels;
 typedef struct _Gwy3DLabelsClass           Gwy3DLabelsClass;
 
@@ -99,24 +98,22 @@ struct _Gwy3DLabelsClass {
 
 GType                   gwy_3d_labels_get_type             (void) G_GNUC_CONST;
 
-Gwy3DLabels            * gwy_3d_labels_new            (GwyContainer * container);
-void                     gwy_3d_labels_update         (Gwy3DLabels * labels,
-                                                       GwyContainer * container,
-                                                       GwySIUnit * si_unit);
-gchar                  * gwy_3d_labels_format_text    (Gwy3DLabels * labels,
+Gwy3DLabels*            gwy_3d_labels_new            (GwyContainer *container);
+void                    gwy_3d_labels_update         (Gwy3DLabels *labels,
+                                                       GwyContainer *container,
+                                                       GwySIUnit *si_unit);
+gchar*                  gwy_3d_labels_format_text    (Gwy3DLabels *labels,
                                                        Gwy3DLabelName label_name);
 
-Gwy3DLabelDescription  * gwy_3d_labels_get_description(Gwy3DLabels * gwy3dlabels,
+Gwy3DLabelDescription*  gwy_3d_labels_get_description(Gwy3DLabels *gwy3dlabels,
                                                       Gwy3DLabelName label_name);
 
-void    gwy_3d_label_description_set_text(Gwy3DLabelDescription * label_description,
+void     gwy_3d_label_description_set_text(Gwy3DLabelDescription *label_description,
                                           const gchar* text);
-void    gwy_3d_label_description_reset    (Gwy3DLabelDescription * label_description);
-gboolean gwy_3d_label_description_get_autoscele(
-                                          Gwy3DLabelDescription * label_description);
-void     gwy_3d_label_description_set_autoscale(
-                                          Gwy3DLabelDescription * label_description,
-                                           const gboolean autoscale);
+void     gwy_3d_label_description_reset    (Gwy3DLabelDescription *label_description);
+gboolean gwy_3d_label_description_get_autoscale(Gwy3DLabelDescription *label_description);
+void     gwy_3d_label_description_set_autoscale(Gwy3DLabelDescription *label_description,
+                                                const gboolean autoscale);
 
 #define gwy_3d_labels_get_delta_x(labels, name) \
             (gwy_3d_labels_get_description(labels, name)->delta_x->value)
