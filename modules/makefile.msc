@@ -40,6 +40,8 @@ install: install-mod sub-install
 
 clean:: sub-clean
 
+.SUFFIXES: dll
+
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
 # vim: ft=make
