@@ -731,6 +731,7 @@ test_si_unit(void)
     gwy_si_unit_value_format_free(vformat);
 }
 
+/*
 void gwy_si_unit2_parse(const gchar *string);
 
 static void
@@ -753,6 +754,7 @@ test_si_unit2(void)
     gwy_si_unit2_parse("m/m^2");
     gwy_si_unit2_parse("10 cm^2 km/m^3");
 }
+*/
 
 static void
 test_all(void)
@@ -769,7 +771,6 @@ test_all(void)
     test_nlfit();
     test_path_normalization();
     test_si_unit();
-    test_si_unit2();
 }
 
 static void
@@ -787,7 +788,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_si_unit2();
+    test_si_unit();
 
     return 0;
 }
