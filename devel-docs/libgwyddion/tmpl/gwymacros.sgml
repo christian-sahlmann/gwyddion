@@ -22,6 +22,14 @@ Utility macros.
 @x: 
 
 
+<!-- ##### MACRO N_ ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
 <!-- ##### MACRO gwy_object_unref ##### -->
 <para>
 

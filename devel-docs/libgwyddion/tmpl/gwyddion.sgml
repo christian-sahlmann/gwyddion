@@ -8,7 +8,7 @@ Base functions
 <para>
 Gwyddion classes has to be initialized before they can be safely
 deserialized. The function <link linkend="gwy-type-init">gwy_type_init()</link>
-provides this initialization.
+performs this initialization.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

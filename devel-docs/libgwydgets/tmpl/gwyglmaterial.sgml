@@ -14,13 +14,6 @@ OpenGL materials
 #Gwy3DView
 </para>
 
-<!-- ##### MACRO WIN32_LEAN_AND_MEAN ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GWY_GL_MATERIAL_NONE ##### -->
 <para>
 

@@ -2,6 +2,9 @@
 from __future__ import generators
 import sys, re
 
+filter_out = ('WIN32_LEAN_AND_MEAN',)
+filter_out = dict([(x, 1) for x in filter_out])
+
 # Compatibility with Pyhton-2.2
 if not __builtins__.__dict__.has_key('enumerate'):
     def enumerate(collection):
@@ -43,5 +46,6 @@ for i, l in enumerate(lines):
         addme = m.group('object')
         if not objects.has_key(addme):
             addme = ''
-    fh.write(l)
+    if l.strip() not in filter_out:
+        fh.write(l)
 fh.close()

@@ -164,6 +164,26 @@ gwy_data_field_grains_intersect
 </SECTION>
 
 <SECTION>
+<FILE>tip</FILE>
+GwyTipType
+GwyTipModelFunc
+GwyTipGuessFunc
+GwyTipModelPreset
+gwy_tip_model_get_npresets
+gwy_tip_model_get_preset
+gwy_tip_model_get_preset_by_name
+gwy_tip_model_get_preset_id
+gwy_tip_model_get_preset_tip_name
+gwy_tip_model_get_preset_group_name
+gwy_tip_model_get_preset_nparams
+gwy_tip_dilation
+gwy_tip_erosion
+gwy_tip_cmap
+gwy_tip_estimate_partial
+gwy_tip_estimate_full
+</SECTION>
+
+<SECTION>
 <FILE>correlation</FILE>
 gwy_data_field_get_correlation_score
 gwy_data_field_crosscorrelate
@@ -183,6 +203,27 @@ gwy_data_field_yfft
 gwy_data_field_xfft_real
 gwy_data_field_yfft_real
 gwy_data_field_cwt
+</SECTION>
+
+<SECTION>
+<FILE>morph_lib</FILE>
+iallocmatrix
+ifreematrix
+ireflect
+idilation
+ierosion
+icmap
+dallocmatrix
+dfreematrix
+dreflect
+ddilation
+derosion
+iopen
+itip_estimate
+itip_estimate_iter
+itip_estimate0
+useit
+itip_estimate_point
 </SECTION>
 
 <SECTION>
@@ -291,6 +332,7 @@ gwy_data_field_fractal_cubecounting_dim
 gwy_data_field_fractal_triangulation_dim
 gwy_data_field_fractal_partitioning_dim
 gwy_data_field_fractal_psdf_dim
+gwy_data_field_fractal_correction
 </SECTION>
 
 <SECTION>

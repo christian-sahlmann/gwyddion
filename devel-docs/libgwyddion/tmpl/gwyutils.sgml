@@ -169,6 +169,14 @@ path manipulation
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_get_home_dir ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_canonicalize_path ##### -->
 <para>
 

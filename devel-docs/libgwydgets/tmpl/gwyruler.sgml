@@ -11,7 +11,7 @@ a scientific application.  It is scale-independent and thus has no arbitrary
 limits on the ranges or interpretation of displayed values.  It can display
 units on the ruler (this can be controlled with
 gwy_ruler_set_units_placement()) and cooperates with #GwySIUnit (see
-gwy_ruler_set_units()).
+gwy_ruler_set_units()).  It also better follows Gtk+ theme than #GtkRuler.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

@@ -6,6 +6,10 @@
     <title>Gwyddion Data Processing Library Reference Manual</title>
   </bookinfo>
 
+  <para>
+    This library contains classes representing one- and twodimensional data,
+    and all kinds of data processing methods operating on them.
+  </para>
   <xi:include href="xml/dataline.xml"/>
   <xi:include href="xml/datafield.xml"/>
   <xi:include href="xml/cdline.xml"/>

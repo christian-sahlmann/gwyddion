@@ -559,6 +559,12 @@ gwymodulemenus
 
 @x: 
 
+<!-- ##### MACRO WIN32_LEAN_AND_MEAN ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### VARIABLE gwyGL_mat_none ##### -->
 <para>
 

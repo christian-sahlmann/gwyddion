@@ -46,6 +46,26 @@ FFT output.
 @GWY_FRACTAL_TRIANGULATION: 
 @GWY_FRACTAL_PSDF: 
 
+<!-- ##### FUNCTION allocmatrix ##### -->
+<para>
+
+</para>
+
+@ysiz: 
+@xsiz: 
+@Returns: 
+@Param1: 
+@Param2: 
+
+<!-- ##### FUNCTION freematrix ##### -->
+<para>
+
+</para>
+
+@mptr: 
+@ysiz: 
+@Param2: 
+
 <!-- ##### FUNCTION gwy_data_field_alloc ##### -->
 <para>
 

@@ -40,13 +40,6 @@ the 3D view to update self, when data changes.
 <link linkend="GwyGLMaterial">GwyGLMaterial</link>
 </para>
 
-<!-- ##### MACRO WIN32_LEAN_AND_MEAN ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### ENUM Gwy3DMovement ##### -->
 <para>
 
