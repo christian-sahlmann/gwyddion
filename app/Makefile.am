@@ -9,7 +9,6 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 libgwyappincludedir = $(includedir)/gwyddion/app
 libgwyappinclude_HEADERS = \
 	app.h \
-	file.h \
 	gwyapp.h \
 	menu.h \
 	menu-windowlist.h \

@@ -22,7 +22,6 @@
 #define __GWY_APP_GWYAPP_H__
 
 #include <app/app.h>
-#include <app/file.h>
 #include <app/menu.h>
 #include <app/menu-windowlist.h>
 #include <app/settings.h>

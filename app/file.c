@@ -42,7 +42,6 @@
 #include "app.h"
 #include "menu.h"
 #include "settings.h"
-#include "file.h"
 
 static void              file_open_ok_cb       (GtkFileSelection *selector);
 static void              file_save_as_ok_cb    (GtkFileSelection *selector);

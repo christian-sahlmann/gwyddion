@@ -33,7 +33,6 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwymodule/gwymodulebrowser.h>
 #include "app.h"
-#include "file.h"
 #include "menu.h"
 #include "gwyappinternal.h"
 

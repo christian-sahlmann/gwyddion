@@ -48,7 +48,7 @@ int unlink(const char *name);
 #include <libgwydgets/gwystock.h>
 #include "app.h"
 #include "settings.h"
-#include "file.h"
+#include "gwyappinternal.h"
 #include "gwyddion.h"
 
 #ifdef G_OS_WIN32

@@ -26,6 +26,9 @@
 
 G_BEGIN_DECLS
 
+/* this should go to some preferences... */
+extern int gwy_app_n_recent_files;
+
 void            gwy_app_main_window_set             (GtkWidget *window);
 void            gwy_app_tool_use_cb                 (const gchar *toolname,
                                                      GtkWidget *button);
@@ -39,7 +42,16 @@ guint           gwy_app_run_process_func_cb         (gchar *name);
 void            gwy_app_run_process_func_in_mode    (gchar *name,
                                                      GwyRunType run);
 void            gwy_app_run_graph_func_cb           (gchar *name);
-
+void            gwy_app_file_open_cb                (void);
+void            gwy_app_file_open_recent_cb         (GObject *item);
+void            gwy_app_file_save_as_cb             (void);
+void            gwy_app_file_save_cb                (void);
+void            gwy_app_file_duplicate_cb           (void);
+void            gwy_app_file_close_cb               (void);
+void            gwy_app_file_export_cb              (const gchar *name);
+void            gwy_app_file_import_cb              (const gchar *name);
+void            gwy_app_file_open_initial           (gchar **args,
+                                                     gint n);
 
 G_END_DECLS
 
