@@ -81,6 +81,10 @@ enum {
     RAW_PRESET_LAST
 };
 
+enum {
+    RAW_ASCII_PARSE_ERROR = 1,
+};
+
 /* note: size, skip, and rowskip are in bits */
 typedef struct {
     gint format;  /* binary, text */
@@ -164,6 +168,9 @@ static GwyDataField* rawfile_read_data_field       (GtkWidget *parent,
 static void          rawfile_warn_too_short_file   (GtkWidget *parent,
                                                     RawFileArgs *args,
                                                     gsize reqsize);
+static void          rawfile_warn_parse_error      (GtkWidget *parent,
+                                                    RawFileArgs *args,
+                                                    GError *err);
 static void          builtin_changed_cb            (GtkWidget *item,
                                                     RawFileControls *controls);
 static void          delimiter_changed_cb          (GtkWidget *item,
@@ -204,7 +211,8 @@ static void          rawfile_read_bits             (RawFileArgs *args,
                                                     gdouble *data);
 static gboolean      rawfile_read_ascii            (RawFileArgs *args,
                                                     guchar *buffer,
-                                                    gdouble *data);
+                                                    gdouble *data,
+                                                    GError **error);
 static void          rawfile_sanitize_args         (RawFileArgs *args);
 static void          rawfile_load_args             (GwyContainer *settings,
                                                     RawFileArgs *args);
@@ -226,7 +234,7 @@ static GwyModuleInfo module_info = {
     "rawfile",
     "Read raw data according to user-specified format.",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -377,6 +385,9 @@ static const RawFileArgs rawfile_defaults = {
     1.0, -6,                        /* z-scale */
     NULL,                           /* preset name */
 };
+
+/* for read_ascii_data() error reporting */
+static GQuark error_domain = 0;
 
 /* This is the ONLY exported symbol.  The argument is the module info.
  * NO semicolon after. */
@@ -1102,6 +1113,7 @@ rawfile_read_data_field(GtkWidget *parent,
                         guchar *buffer)
 {
     GwyDataField *dfield = NULL;
+    GError *err = NULL;
     gsize reqsize;
     gdouble m;
 
@@ -1132,8 +1144,10 @@ rawfile_read_data_field(GtkWidget *parent,
                                                    m*args->yreal,
                                                    FALSE));
         if (!rawfile_read_ascii(args, buffer,
-                                gwy_data_field_get_data(dfield))) {
+                                gwy_data_field_get_data(dfield), &err)) {
+            rawfile_warn_parse_error(parent, args, err);
             g_object_unref(G_OBJECT(dfield));
+            g_clear_error(&err);
             return NULL;
         }
         break;
@@ -1164,6 +1178,25 @@ rawfile_warn_too_short_file(GtkWidget *parent,
                                       "but the length of `%s' "
                                       "is only %u bytes."),
                                     reqsize, args->filename, args->filesize),
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+}
+
+static void
+rawfile_warn_parse_error(GtkWidget *parent,
+                         RawFileArgs *args,
+                         GError *err)
+{
+    GtkWidget *dialog;
+
+    dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
+                                    GTK_DIALOG_DESTROY_WITH_PARENT
+                                    | GTK_DIALOG_MODAL,
+                                    GTK_MESSAGE_INFO,
+                                    GTK_BUTTONS_OK,
+                                    _("Parsing of %s failed:\n"
+                                      "%s."),
+                                     args->filename, err->message),
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
 }
@@ -1900,7 +1933,8 @@ rawfile_read_builtin(RawFileArgs *args,
 static gboolean
 rawfile_read_ascii(RawFileArgs *args,
                    guchar *buffer,
-                   gdouble *data)
+                   gdouble *data,
+                   GError **error)
 {
     gsize i, j, n;
     gint cdelim = '\0';
@@ -1908,11 +1942,16 @@ rawfile_read_ascii(RawFileArgs *args,
     gdouble x;
     guchar *end;
 
+    if (!error_domain)
+        error_domain = g_quark_from_static_string("RAWFILE_ERROR");
+
     /* skip lines */
     for (i = 0; i < args->lineoffset; i++) {
         buffer = strchr(buffer, '\n');
         if (!buffer) {
-            g_warning("Not enough lines for offset");
+            g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
+                        "Not enough lines (%d) for offset (%d)",
+                        i, args->lineoffset);
             return FALSE;
         }
         buffer++;
@@ -1935,8 +1974,10 @@ rawfile_read_ascii(RawFileArgs *args,
                 buffer += j;
                 j = strspn(buffer, " \t\n\r");
                 if (!j) {
-                    g_warning("Expected whitespace to skip more fields (%u)",
-                              n);
+                    g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
+                                "Expected whitespace to skip more fields "
+                                "in row %u, got `%.16s'",
+                                n, buffer);
                     return FALSE;
                 }
             }
@@ -1944,25 +1985,29 @@ rawfile_read_ascii(RawFileArgs *args,
 
             case 1:
             for (i = 0; i < args->skipfields; i++) {
-                buffer = strchr(buffer, cdelim);
-                if (!buffer) {
-                    g_warning("Expected `%c' to skip more fields (%u)",
-                              cdelim, n);
+                end = strchr(buffer, cdelim);
+                if (!end) {
+                    g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
+                                "Expected `%c' to skip more fields "
+                                "in row %u, got `%.16s'",
+                                cdelim, n, buffer);
                     return FALSE;
                 }
-                buffer++;
+                buffer = end + 1;
             }
             break;
 
             default:
             for (i = 0; i < args->skipfields; i++) {
-                buffer = strstr(buffer, args->delimiter);
-                if (!buffer) {
-                    g_warning("Expected `%s' to skip more fields (%u)",
-                              args->delimiter, n);
+                end = strstr(buffer, args->delimiter);
+                if (!end) {
+                    g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
+                                "Expected `%s' to skip more fields "
+                                "in row %u, got `%.16s'",
+                                args->delimiter, n, buffer);
                     return FALSE;
                 }
-                buffer += delimtype;
+                buffer = end + delimtype;
             }
             break;
         }
@@ -1973,7 +2018,9 @@ rawfile_read_ascii(RawFileArgs *args,
             for (i = 0; i < args->xres; i++) {
                 x = strtod(buffer, (char**)&end);
                 if (end == buffer) {
-                    g_warning("Garbage `%.32s' at (%u, %u)", buffer, n, i);
+                    g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
+                                "Garbage `%.16s' in row %u, column %u",
+                                buffer, n, i);
                     return FALSE;
                 }
                 buffer = end;
@@ -1985,7 +2032,9 @@ rawfile_read_ascii(RawFileArgs *args,
             for (i = 0; i < args->xres; i++) {
                 x = strtod(buffer, (char**)&end);
                 if (end == buffer) {
-                    g_warning("Garbage `%.32s' at (%u, %u)", buffer, n, i);
+                    g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
+                                "Garbage `%.16s' in row %u, column %u",
+                                buffer, n, i);
                     return FALSE;
                 }
                 buffer = end + strspn(end, " \t");
@@ -1995,9 +2044,10 @@ rawfile_read_ascii(RawFileArgs *args,
                          && (j = strspn(buffer, "\n\r")))
                     buffer += j;
                 else {
-                    g_warning("Expected delimiter `%c' after (%u, %u), "
-                              "got `%c'",
-                              cdelim, n, i, *buffer);
+                    g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
+                                "Expected delimiter `%c' after data "
+                                "in row %u, column %u, got `%c'",
+                                cdelim, n, i, *buffer);
                     return FALSE;
                 }
                 *(data++) = x;
@@ -2008,7 +2058,9 @@ rawfile_read_ascii(RawFileArgs *args,
             for (i = 0; i < args->xres; i++) {
                 x = strtod(buffer, (char**)&end);
                 if (end == buffer) {
-                    g_warning("Garbage `%.32s' at (%u, %u)", buffer, n, i);
+                    g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
+                                "Garbage `%.16s' in row %u, column %u",
+                                buffer, n, i);
                     return FALSE;
                 }
                 buffer = end + strspn(end, " \t");
@@ -2018,9 +2070,10 @@ rawfile_read_ascii(RawFileArgs *args,
                          && (j = strspn(buffer, "\n\r")))
                     buffer += j;
                 else {
-                    g_warning("Expected delimiter `%s' after (%u, %u), "
-                              "got `%.32s'",
-                              args->delimiter, n, i, buffer);
+                    g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
+                                "Expected delimiter `%s' after data "
+                                "in row %u, column %u, got `%.16s'",
+                                args->delimiter, n, i, buffer);
                     return FALSE;
                 }
                 *(data++) = x;
