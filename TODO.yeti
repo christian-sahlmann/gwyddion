@@ -1,4 +1,8 @@
 - Kill WIN32-LEAN-AND-MEAN-CAPS
+- Update Mark scars GUI after grain modules
+- Define abstract serializer interface
+- Add missing GObject property change notifications
+- Add remove data under grain functionality to remove grains
 - Speed up Document History -- seems hard; I don't quite understand how Gimp
   does it, but it may involve a custom cell renderer that can use exposition
   info efficiently
