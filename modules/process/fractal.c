@@ -35,16 +35,18 @@
 /* Data for this function.
  * (It looks a little bit silly with just one parameter.) */
 typedef struct {
-    gboolean preserve;
+    gdouble from;
+    gdouble to;
+    gdouble result;
     GwyInterpolationType interp;
-    GwyWindowingType window;
     GwyFractalType out;
 } FractalArgs;
 
 typedef struct {
-    GtkWidget *preserve;
+    GtkWidget *from;
+    GtkWidget *to;
+    GtkWidget *result;
     GtkWidget *interp;
-    GtkWidget *window;
     GtkWidget *out;
 } FractalControls;
 
@@ -54,11 +56,7 @@ static gboolean    fractal                        (GwyContainer *data,
 static gboolean    fractal_dialog                 (FractalArgs *args);
 static void        interp_changed_cb          (GObject *item,
                                                FractalArgs *args);
-static void        window_changed_cb          (GObject *item,
-                                               FractalArgs *args);
 static void        out_changed_cb             (GObject *item,
-                                               FractalArgs *args);
-static void        preserve_changed_cb        (GtkToggleButton *button,
                                                FractalArgs *args);
 static void        fractal_load_args              (GwyContainer *container,
                                                FractalArgs *args);
@@ -84,10 +82,9 @@ static void        set_dfield_imaginary       (GwyDataField *re,
 
 
 FractalArgs fractal_defaults = {
-    0,
+    0, 1, 2,
     GWY_INTERPOLATION_BILINEAR,
-    GWY_WINDOWING_HANN,
-    GWY_FFT_OUTPUT_MOD,
+    GWY_FRACTAL_PARTITIONING,
 };
 
 /* The module info. */
@@ -127,11 +124,13 @@ fractal(GwyContainer *data, GwyRunType run)
     GtkWidget *data_window, *dialog;
     GwyDataField *dfield;
     GwyDataField *raout, *ipout, *imin;
+    GwyDataLine *xline, *yline;
     GwySIUnit *xyunit, *zunit;
     FractalArgs args;
     gboolean ok;
     gint xsize, ysize, newsize;
     gdouble newreals;
+    gint i;
 
     g_assert(run & FRACTAL_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -151,22 +150,25 @@ fractal(GwyContainer *data, GwyRunType run)
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
 
-        if (gwy_data_field_get_xres(dfield) != gwy_data_field_get_yres(dfield))
-        {
-            dialog
-                = gtk_message_dialog_new(GTK_WINDOW(gwy_app_data_window_get_current()),
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_MESSAGE_ERROR,
-                                         GTK_BUTTONS_CLOSE,
-                                         "Fractal: data field must be rectangular.");
-           gtk_dialog_run(GTK_DIALOG(dialog));
-           gtk_widget_destroy(dialog);
-           return ok;
-        }
-        g_assert(gwy_data_field_get_xres(dfield) == gwy_data_field_get_yres(dfield));
-
         xsize = gwy_data_field_get_xres(dfield);
         ysize = gwy_data_field_get_yres(dfield);
+
+        xline = gwy_data_line_new(10, 10, FALSE);
+        yline = gwy_data_line_new(10, 10, FALSE);
+
+        if (args.out == GWY_FRACTAL_PARTITIONING)
+            gwy_data_field_fractal_partitioning(dfield, xline, yline, args.interp);
+        else if (args.out == GWY_FRACTAL_CUBECOUNTING)
+            gwy_data_field_fractal_cubecounting(dfield, xline, yline, args.interp);
+        else if (args.out == GWY_FRACTAL_TRIANGULATION)
+            gwy_data_field_fractal_triangulation(dfield, xline, yline, args.interp);
+
+        for (i=0; i<xline->res; i++)
+        {
+            printf("%g %g\n", log(xline->data[i]), log(yline->data[i]));
+        }
+        printf("\n");
+        
     }
 
     return ok;
@@ -241,25 +243,12 @@ fractal_dialog(FractalArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-    controls.preserve = gtk_check_button_new_with_label("preserve size");
-    gwy_table_attach_row(table, 0, _("Data size treatment:"), "",
-                         controls.preserve);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
-                                 args->preserve);
-
-    g_signal_connect(controls.preserve, "toggled",
-                     G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
     gwy_table_attach_row(table, 1, _("Interpolation type:"), "",
                          controls.interp);
-    controls.window
-        = gwy_option_menu_windowing(G_CALLBACK(window_changed_cb),
-                                    args, args->interp);
-    gwy_table_attach_row(table, 2, _("Windowing type:"), "",
-                         controls.window);
 
     controls.out
         = gwy_option_menu_fractal(G_CALLBACK(out_changed_cb),
@@ -311,26 +300,11 @@ out_changed_cb(GObject *item,
                   FractalArgs *args)
 {
     args->out = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "fractal-output-type"));
+                                                     "fractal-type"));
 }
 
-static void
-window_changed_cb(GObject *item,
-                  FractalArgs *args)
-{
-    args->window = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "windowing-type"));
-}
 
-static void
-preserve_changed_cb(GtkToggleButton *button, FractalArgs *args)
-{
-    args->preserve = gtk_toggle_button_get_active(button);
-}
-
-static const gchar *preserve_key = "/module/fractal/preserve";
 static const gchar *interp_key = "/module/fractal/interp";
-static const gchar *window_key = "/module/fractal/window";
 static const gchar *out_key = "/module/fractal/out";
 
 static void
@@ -339,12 +313,8 @@ fractal_load_args(GwyContainer *container,
 {
     *args = fractal_defaults;
 
-    if (gwy_container_contains_by_name(container, preserve_key))
-        args->preserve = gwy_container_get_boolean_by_name(container, preserve_key);
     if (gwy_container_contains_by_name(container, interp_key))
         args->interp = gwy_container_get_int32_by_name(container, interp_key);
-    if (gwy_container_contains_by_name(container, window_key))
-        args->window = gwy_container_get_int32_by_name(container, window_key);
     if (gwy_container_contains_by_name(container, out_key))
         args->out = gwy_container_get_int32_by_name(container, out_key);
 }
@@ -353,9 +323,7 @@ static void
 fractal_save_args(GwyContainer *container,
                  FractalArgs *args)
 {
-    gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
     gwy_container_set_int32_by_name(container, interp_key, args->interp);
-    gwy_container_set_int32_by_name(container, window_key, args->window);
     gwy_container_set_int32_by_name(container, out_key, args->out);
 }
 
@@ -369,8 +337,6 @@ fractal_dialog_update(FractalControls *controls,
      */
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
-    gwy_option_menu_set_history(controls->window, "windowing-type",
-                                args->window);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

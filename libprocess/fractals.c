@@ -136,15 +136,15 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field, GwyDataLine *xres
      
     buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
-    gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(xresult, dimexp+1, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(yresult, dimexp+1, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(yresult, 0);
 
 
     height = gwy_data_field_get_max(buffer) - gwy_data_field_get_min(buffer);
     dil = pow(2,dimexp) * pow(2,dimexp) / height / height;    
     
-    for(l=0; l<dimexp; l++)
+    for(l=0; l<=dimexp; l++)
     {
         rp = ROUND(pow(2,l));
         rp2 = ROUND(pow(2,dimexp)/rp);
@@ -170,7 +170,7 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field, GwyDataLine *xres
 				yresult->data[l] += s;
             }
         }
-        xresult->data[l] = 1.0/(gdouble)rp2;
+        xresult->data[l] = 1/pow(2,dimexp-l);
     }
     g_object_unref(buffer);
 }

@@ -133,21 +133,6 @@ shade(GwyContainer *data, GwyRunType run)
         gwy_data_field_shade(dfield, shadefield,
                              args.theta*180/G_PI, args.phi*180/G_PI);
 
-        /* ************************************************************** */
-        GwyDataLine *ble1 = gwy_data_line_new(100, 100, FALSE);
-        GwyDataLine *ble2 = gwy_data_line_new(100, 100, FALSE);
-        gint i;
-        gwy_data_field_fractal_triangulation(dfield, ble1, ble2, GWY_INTERPOLATION_BILINEAR);
-
-        for (i=0; i<ble1->res; i++)
-        {
-            printf("%g %g\n", log(ble1->data[i]), log(ble2->data[i]));
-        }
-
-
-
-        /******************************************************************/
-        
         if (run != GWY_RUN_WITH_DEFAULTS)
             shade_save_args(gwy_app_settings_get(), &args);
     }
