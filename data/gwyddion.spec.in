@@ -103,12 +103,18 @@ update-mime-database %{_datadir}/mime
 %dir %{_libdir}/%{name}/modules/tool
 %dir %{_libdir}/%{name}/modules
 %dir %{_libdir}/%{name}
-%{_libdir}/libgwyapp.so.*
-%{_libdir}/libgwyddion.so.*
-%{_libdir}/libgwydgets.so.*
-%{_libdir}/libgwydraw.so.*
-%{_libdir}/libgwymodule.so.*
-%{_libdir}/libgwyprocess.so.*
+#%{_libdir}/libgwyapp.so.*
+#%{_libdir}/libgwyddion.so.*
+#%{_libdir}/libgwydgets.so.*
+#%{_libdir}/libgwydraw.so.*
+#%{_libdir}/libgwymodule.so.*
+#%{_libdir}/libgwyprocess.so.*
+%{_libdir}/libgwyapp-1.99.*.so
+%{_libdir}/libgwyddion-1.99.*.so
+%{_libdir}/libgwydgets-1.99.*.so
+%{_libdir}/libgwydraw-1.99.*.so
+%{_libdir}/libgwymodule-1.99.*.so
+%{_libdir}/libgwyprocess-1.99.*.so
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
 %{_datadir}/locale/*/LC_MESSAGES/*.mo
@@ -156,12 +162,12 @@ update-mime-database %{_datadir}/mime
 %doc %dir %{_mandir}/man3
 %{_libdir}/pkgconfig/%{name}.pc
 %dir %{_libdir}/pkgconfig
-%{_libdir}/libgwyapp.so
-%{_libdir}/libgwyddion.so
-%{_libdir}/libgwydgets.so
-%{_libdir}/libgwydraw.so
-%{_libdir}/libgwymodule.so
-%{_libdir}/libgwyprocess.so
+#%{_libdir}/libgwyapp.so
+#%{_libdir}/libgwyddion.so
+#%{_libdir}/libgwydgets.so
+#%{_libdir}/libgwydraw.so
+#%{_libdir}/libgwymodule.so
+#%{_libdir}/libgwyprocess.so
 %{_libdir}/libgwyapp.la
 %{_libdir}/libgwyddion.la
 %{_libdir}/libgwydgets.la
