@@ -5,7 +5,6 @@ processdir = $(pkglibdir)/modules/process
 module_ldflags = -shared -Wl,-soname
 
 process_PROGRAMS = \
-        area.so \
 	angle_dist.so \
 	arithmetic.so \
 	basicops.so \
@@ -61,9 +60,6 @@ process_PROGRAMS = \
 EXTRA_DIST = \
 	makefile.msc
 
-area_so_SOURCES = area.c
-area_so_LDFLAGS = $(module_ldflags),area.so
-	
 angle_dist_so_SOURCES = angle_dist.c
 angle_dist_so_LDFLAGS = $(module_ldflags),angle_dist.so
 
