@@ -265,7 +265,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
     g_signal_connect(window, "destroy",
                      G_CALLBACK(gwy_app_graph_window_remove), NULL);
-    
+
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show(graph);
     gtk_widget_show_all(window);
@@ -322,6 +322,10 @@ gwy_app_data_view_update(GtkWidget *data_view)
     else {
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
     }
+
+    layer = gwy_data_view_get_top_layer(GWY_DATA_VIEW(data_view));
+    if (layer)
+        gwy_data_view_layer_updated(layer);
 }
 
 /**
