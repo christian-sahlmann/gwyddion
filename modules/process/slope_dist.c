@@ -176,7 +176,12 @@ slope_dist(GwyContainer *data, GwyRunType run)
 static gboolean
 slope_dialog(SlopeArgs *args)
 {
-    GtkWidget *dialog, *table, *spin, *radio, *label;
+    static const GwyEnum output_types[] = {
+        { "_Two-dimensional distribution", SLOPE_DIST_2D_DIST },
+        { "Per-angle _graph",              SLOPE_DIST_GRAPH },
+    };
+    GtkWidget *dialog, *table, *spin, *label;
+    GSList *group;
     SlopeControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
@@ -200,28 +205,18 @@ slope_dialog(SlopeArgs *args)
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    radio = gtk_radio_button_new_with_mnemonic
-                (NULL, _("_Two-dimensional distribution"));
-    g_object_set_data(G_OBJECT(radio), "slope-output-type",
-                      GUINT_TO_POINTER(SLOPE_DIST_2D_DIST));
-    g_signal_connect(radio, "toggled",
-                     G_CALLBACK(slope_output_type_cb), &controls);
-    gtk_table_attach(GTK_TABLE(table), radio,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
-
-    radio = gtk_radio_button_new_with_mnemonic_from_widget
-                (GTK_RADIO_BUTTON(radio), _("Per-angle _graph"));
-    g_object_set_data(G_OBJECT(radio), "slope-output-type",
-                      GUINT_TO_POINTER(SLOPE_DIST_GRAPH));
-    g_signal_connect(radio, "toggled",
-                     G_CALLBACK(slope_output_type_cb), &controls);
-    gtk_table_attach(GTK_TABLE(table), radio,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    controls.output_type_group
-        = gtk_radio_button_get_group(GTK_RADIO_BUTTON(radio));
-    row++;
+    group = gwy_radio_buttons_create(output_types, G_N_ELEMENTS(output_types),
+                                     "slope-output-type",
+                                     G_CALLBACK(slope_output_type_cb),
+                                     &controls,
+                                     args->output_type);
+    controls.output_type_group = group;
+    while (group) {
+        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(group->data),
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        row++;
+        group = g_slist_next(group);
+    }
 
     controls.size = gtk_adjustment_new(args->size, 10, 16384, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("Output size:"), "samples",
@@ -287,8 +282,6 @@ static void
 slope_dialog_update_controls(SlopeControls *controls,
                              SlopeArgs *args)
 {
-    GSList *l;
-
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size),
                              args->size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->kernel_size),
@@ -299,24 +292,15 @@ slope_dialog_update_controls(SlopeControls *controls,
                                  args->fit_plane);
     gtk_widget_set_sensitive(controls->kernel_size_spin, args->fit_plane);
     gtk_widget_set_sensitive(controls->logscale,
-                             args->output_type == SLOPE_DIST_GRAPH);
-
-    for (l = controls->output_type_group; l; l = g_slist_next(l)) {
-        if (GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(l->data),
-                                               "slope-output-type"))
-            == args->output_type) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(l->data), TRUE);
-            break;
-        }
-    }
+                             args->output_type != SLOPE_DIST_GRAPH);
+    gwy_radio_buttons_set_current(controls->output_type_group,
+                                  "slope-output-type", args->output_type);
 }
 
 static void
 slope_dialog_update_values(SlopeControls *controls,
                            SlopeArgs *args)
 {
-    GSList *l;
-
     args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
     args->kernel_size =
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->kernel_size));
@@ -324,15 +308,9 @@ slope_dialog_update_values(SlopeControls *controls,
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->logscale));
     args->fit_plane =
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fit_plane));
-
-    for (l = controls->output_type_group; l; l = g_slist_next(l)) {
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(l->data))) {
-            args->output_type
-                = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(l->data),
-                                                     "slope-output-type"));
-            break;
-        }
-    }
+    args->output_type =
+        gwy_radio_buttons_get_current(controls->output_type_group,
+                                      "slope-output-type");
 }
 
 static void
@@ -349,8 +327,6 @@ slope_output_type_cb(GObject *radio,
 {
     SlopeOutput otype;
 
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(radio)))
-        return;
     otype = GPOINTER_TO_UINT(g_object_get_data(radio, "slope-output-type"));
     gtk_widget_set_sensitive(controls->logscale,
                              otype == SLOPE_DIST_2D_DIST);
