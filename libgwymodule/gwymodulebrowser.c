@@ -20,11 +20,7 @@
 
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
-#include <gtk/gtkwindow.h>
-#include <gtk/gtktreeview.h>
-#include <gtk/gtkliststore.h>
-#include <gtk/gtktreeselection.h>
-#include <gtk/gtkcellrenderertext.h>
+#include <gtk/gtk.h>
 
 #include "gwymodulebrowser.h"
 
@@ -61,14 +57,19 @@ enum {
 void
 gwy_module_browser(void)
 {
-    GtkWidget *window, *browser;
+    GtkWidget *window, *browser, *scroll;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size(GTK_WINDOW(window), 480, 360);
     gtk_window_set_title(GTK_WINDOW(window), "Gwyddion Module Browser");
     gtk_window_set_wmclass(GTK_WINDOW(window), "browser_module",
                            g_get_application_name());
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_container_add(GTK_CONTAINER(window), scroll);
     browser = gwy_module_browser_construct();
-    gtk_container_add(GTK_CONTAINER(window), browser);
+    gtk_container_add(GTK_CONTAINER(scroll), browser);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_widget_destroy), NULL);
     gtk_widget_show_all(window);
 }
