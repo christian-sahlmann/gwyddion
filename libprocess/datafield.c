@@ -1464,7 +1464,7 @@ gwy_data_field_get_row_part(GwyDataField *a, GwyDataLine* b, gint row, gint from
     g_return_if_fail(row >= 0 && row < a->yres);
     if (to<from) GWY_SWAP(gint, from, to);    
 
-    gwy_data_line_resample(b, to-from, GWY_INTERPOLATION_NONE);
+    if (b->res != (to-from)) gwy_data_line_resample(b, to-from, GWY_INTERPOLATION_NONE);
     memcpy(b->data, a->data + row*a->xres + from, (to-from)*sizeof(gdouble));
 }
 
@@ -1482,19 +1482,15 @@ gwy_data_field_get_row_part(GwyDataField *a, GwyDataLine* b, gint row, gint from
 void
 gwy_data_field_get_column_part(GwyDataField *a, GwyDataLine* b, gint col, gint from, gint to)
 {
-    gint k;
+    gint k, i, j;
     gdouble *p;
 
     g_return_if_fail(col >= 0 && col < a->xres);
     if (to<from) GWY_SWAP(gint, from, to);
 
-    gwy_data_line_resample(b, to-from, GWY_INTERPOLATION_NONE);
-    p = a->data + col;
-    for (k = from; k < to; k++)
-    {
-        b->data[k] = p[k*a->xres];
-        if ((k*a->xres + col) >= (a->xres*a->yres)) printf("FUUUUUUUUUUUUUUUUJ\n");
-    }
+    if (b->res != (to-from)) gwy_data_line_resample(b, to-from, GWY_INTERPOLATION_NONE);
+
+    for (k = 0; k < to-from; k++) b->data[k]=a->data[(k+from)*a->xres + col];
 }
 
 /**
@@ -2464,12 +2460,11 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
         {
             gwy_data_line_resample(target_line, size, interpolation);
         }
-        gwy_data_line_fill(target_line, 0.0); 
+        gwy_data_line_fill(target_line, 0.0);  
      
         for (k = ulcol; k < brcol; k++) {
-            gwy_data_field_get_row_part(data_field, hlp_line, k, ulrow, brrow);
+            gwy_data_field_get_column_part(data_field, hlp_line, k, ulrow, brrow);
 
-            /*printf("max=%g, min=%g, nstats=%d\n", max, min, nstats);*/
             if (type==GWY_SF_OUTPUT_DH) 
                 gwy_data_line_dh(hlp_line, hlp_tarline, min, max, nstats);
             else if (type==GWY_SF_OUTPUT_CDH)
@@ -2495,7 +2490,6 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
         
      }
 
-    /*for (k=0; k<nstats; k++) printf("%f\n", target_line->data[k]);*/
     return 1;
  
 }

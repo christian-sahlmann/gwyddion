@@ -182,10 +182,10 @@ gwy_graph_init(GwyGraph *graph)
     graph->y_max = 0;
     graph->x_min = 0;
     graph->x_min = 0;
-    graph->x_reqmax = G_MINDOUBLE;
-    graph->y_reqmax = G_MINDOUBLE;
+    graph->x_reqmax = -G_MAXDOUBLE;
+    graph->y_reqmax = -G_MAXDOUBLE;
     graph->x_reqmin = G_MAXDOUBLE;
-    graph->x_reqmin = G_MAXDOUBLE;
+    graph->y_reqmin = G_MAXDOUBLE;
     graph->has_x_unit = 0;
     graph->has_y_unit = 0;
     graph->x_unit = NULL;
@@ -400,10 +400,10 @@ gwy_graph_clear(GwyGraph *graph)
     graph->y_max = 0;
     graph->x_min = 0;
     graph->x_min = 0;
-    graph->x_reqmax = G_MINDOUBLE;
-    graph->y_reqmax = G_MINDOUBLE;
+    graph->x_reqmax = -G_MAXDOUBLE;
+    graph->y_reqmax = -G_MAXDOUBLE;
     graph->x_reqmin = G_MAXDOUBLE;
-    graph->x_reqmin = G_MAXDOUBLE;
+    graph->y_reqmin = G_MAXDOUBLE;
 
     /* FIXME: why here? why not... */
     gtk_widget_queue_draw(GTK_WIDGET(graph));

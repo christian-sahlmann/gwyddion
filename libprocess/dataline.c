@@ -1071,7 +1071,9 @@ gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
         val = (gint)(data_line->data[i]/step) - imin; 
         if (val<0 || val>= nsteps) 
         {
-            printf("GRRRR, %f, %d,  val=%d, (ymax=%g, ymin=%g, nsteps=%d)\n", step, imin, val, ymax, ymin, nsteps);
+            /*printf("GRRRR, %f, %d,  val=%d, (ymax=%g, ymin=%g, nsteps=%d)\n", step, imin, val, ymax, ymin, nsteps);
+            printf("data: %g %g %g %g %g\n", data_line->data[0], data_line->data[1], data_line->data[2], data_line->data[3], data_line->data[4]);
+            */
             val = 0;
         }
         target_line->data[val] += 1.0;
