@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -108,13 +108,14 @@ static void
 gwy_si_unit_init(GwySIUnit *si_unit)
 {
     gwy_debug("");
+    si_unit->unitstr = NULL;
 }
 
 static void
 gwy_si_unit_finalize(GwySIUnit *si_unit)
 {
     gwy_debug("");
-    gwy_si_unit_free(si_unit);
+    g_free(si_unit->unitstr);
 }
 
 static guchar*
@@ -144,7 +145,7 @@ gwy_si_unit_deserialize(const guchar *buffer,
                            gsize *position)
 {
     gchar *unitstr=NULL;
-    
+
     GwySIUnit *si_unit;
     GwySerializeSpec spec[] = {
         { 's', "unitstr", &unitstr, NULL, },
@@ -166,7 +167,7 @@ gwy_si_unit_deserialize(const guchar *buffer,
 }
 
 
-static 
+static
 GObject* gwy_si_unit_duplicate (GObject *object)
 {
     GwySIUnit *si_unit;
@@ -175,65 +176,62 @@ GObject* gwy_si_unit_duplicate (GObject *object)
     g_return_val_if_fail(GWY_IS_SI_UNIT(object), NULL);
     si_unit = GWY_SI_UNIT(object);
     duplicate = gwy_si_unit_new(si_unit->unitstr);
-    
+
     return duplicate;
 }
 
-GObject* gwy_si_unit_new(char *unit_string)
+GObject*
+gwy_si_unit_new(char *unit_string)
 {
     GwySIUnit *siunit;
-    
+
     gwy_debug("");
-    siunit = g_new(GwySIUnit, 1);
-    if (unit_string != NULL) 
-    {
-        siunit->unitstr = (gchar *)g_malloc(sizeof(gchar)*strlen(unit_string));
-        strcpy(siunit->unitstr, unit_string);
-    }
-    else siunit->unitstr = NULL;
-    return (GObject*) siunit;
+    siunit = g_object_new(GWY_TYPE_SI_UNIT, NULL);
+    siunit->unitstr = g_strdup(unit_string);
+
+    return (GObject*)siunit;
 }
 
-void gwy_si_unit_free(GwySIUnit *siunit)
+void
+gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
 {
     gwy_debug("");
-    if (siunit->unitstr != NULL) g_free(siunit->unitstr);
+
+    g_free(siunit->unitstr);
+    siunit->unitstr = g_strdup(unit_string);
 }
 
-void gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
-{
-    gwy_debug("");
-    if (siunit->unitstr == NULL) 
-    {
-        siunit->unitstr = (gchar *)g_malloc(sizeof(gchar)*strlen(unit_string));
-    }
-    else if (strlen(unit_string) != strlen(siunit->unitstr))
-    {
-        siunit->unitstr = (gchar *)g_realloc(siunit->unitstr, sizeof(gchar)*strlen(unit_string));
-    }
-    strcpy(siunit->unitstr, unit_string);
-    
-}
-
-void gwy_si_unit_copy(GwySIUnit *target, GwySIUnit *example)
+void
+gwy_si_unit_copy(GwySIUnit *target, GwySIUnit *example)
 {
     gwy_si_unit_set_unit_string(target, example->unitstr);
 }
 
-gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit)
+gchar*
+gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
     gwy_debug("");
     return siunit->unitstr;
 }
 
-void gwy_si_unit_get_prefix(GwySIUnit *siunit, double value, gint precision, char *prefix, double *power)
+void
+gwy_si_unit_get_prefix(GwySIUnit *siunit,
+                       double value,
+                       gint precision,
+                       char *prefix,
+                       double *power)
 {
     gwy_debug("");
     *power = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
     strcpy(prefix, gwy_math_SI_prefix(*power));
 }
 
-void gwy_si_unit_get_prefixed(GwySIUnit *siunit, double value, gint precision, char *prefix, double *power)
+void
+gwy_si_unit_get_prefixed(GwySIUnit *siunit,
+                         double value,
+                         gint precision,
+                         char *prefix,
+                         double *power)
 {
     gwy_debug("");
     *power = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
