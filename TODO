@@ -15,6 +15,8 @@ Particularly (overall app issues, module issues not listed):
 - Multiple data in one file
 - Use GtkAction (Gtk+ 2.4) for module actions
 - Sessions
+- File module API should be extended to allow (at least): distinguish between
+  cancel and failure, open multiple data windows from a one file
 - ...
 
 Quite a few of these items are intrusive and will have to wait for the next
