@@ -187,9 +187,6 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
  * Performs a nonlinear fit of @nlfit function on (@x,@y) data, allowing
  * some fixed parameters.
  *
- * If no parameters are fixed, you should use gwy_math_nlfit_fit() which is
- * simplies and thus faster.
- *
  * Returns: The final residual sum, a negative number in the case of failure.
  *
  * Since: 1.2.

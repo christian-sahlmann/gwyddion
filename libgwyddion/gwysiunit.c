@@ -462,76 +462,15 @@ gwy_si_unit_value_format_free(GwySIValueFormat *format)
     g_free(format);
 }
 
+/************************** Documentation ****************************/
 
 /**
- * gwy_math_SI_prefix:
- * @magnitude: A power of 1000.
+ * GwySIValueFormat:
+ * @magnitude: Number to divide a quantity by (a power of 1000).
+ * @precision: Number of decimal places to format a quantity to.
+ * @units: Units to put after quantity divided by @magnitude.
  *
- * Finds SI prefix corresponding to a given power of 1000.
- *
- * In fact, @magnitude doesn't have to be power of 1000, but then the result
- * is mostly meaningless.
- *
- * Returns: The SI unit prefix corresponding to @magnitude, "?" if @magnitude
- *          is outside of the SI prefix range.  The returned value must be
- *          considered constant and never modified or freed.
- **/
-/*const gchar*
-gwy_math_SI_prefix(gdouble magnitude)
-{
-    static const gchar *positive[] = {
-        "", "k", "M", "G", "T", "P", "E", "Z", "Y"
-    };
-    static const gchar *negative[] = {
-        "", "m", "µ", "n", "p", "f", "a", "z", "y"
-    };
-    static const gchar *unknown = "?";
-    gint i;
-
-    i = ROUND(log10(magnitude)/3.0);
-    if (i >= 0 && i < (gint)G_N_ELEMENTS(positive))
-        return positive[i];
-    if (i <= 0 && -i < (gint)G_N_ELEMENTS(negative))
-        return negative[-i];
-*/    /* FIXME: the vertical ruler text placing routine can't reasonably
-     * break things like 10<sup>-36</sup> to lines */
- /*   g_warning("magnitude %g outside of prefix range.  FIXME!", magnitude);
-
-    return unknown;
-}
-*/
-/**
- * gwy_math_humanize_numbers:
- * @unit: The smallest possible step.
- * @maximum: The maximum possible value.
- * @precision: A location to store printf() precession, if not %NULL.
- *
- * Find a human readable representation for a range of numbers.
- *
- * Returns: The magnitude i.e., a power of 1000.
- **/
-/*
-gdouble
-gwy_math_humanize_numbers(gdouble unit,
-                          gdouble maximum,
-                          gint *precision)
-{
-    gdouble lm, lu, mag, range, min;
-
-    lm = log10(maximum);
-    lu = log10(unit);
-    mag = 3.0*floor((lm + lu)/6.0);
-    if (precision) {
-        range = lm - lu;
-        if (range > 3.0)
-            range = (range + 3.0)/2;
-        min = lm - range;
-        *precision = (min < mag) ? (gint)ceil(mag - min) : 0;
-    }
-
-    return exp(G_LN10*mag);
-}
-*/
-
+ * A physical quantity formatting information.
+ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
