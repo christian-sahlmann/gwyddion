@@ -83,13 +83,17 @@ function extract_build_documentation() {
 
 function coding_style_report() {
   phpdir=$phpswroot/$pkgname
-  cut -d: -f1 coding-style.log  | uniq -c | sort -nr >coding-style-byfile.log
-  head -n 20 coding-style-byfile.log >$phpdir/coding-style-byfile.txt
+  base=coding-style-byfile
+  cut -d: -f1 coding-style.log  | uniq -c | sort -nr >$base.log
+  head -n 20 $base.log >$phpdir/$base.txt
+  printf '% 7d total' $(wc -l <coding-style.log) >>$phpdir/$base.txt
 
+  base=coding-style-bytype
   cut -d: -f3- coding-style.log \
     | sed -e 's/: .*//' -e 's/ (col [0-9]*)//' | sort | uniq -c | sort -nr \
-    >coding-style-bytype.log
-  head -n 20 coding-style-bytype.log >$phpdir/coding-style-bytype.txt
+    >$base.log
+  head -n 20 $base.log >$phpdir/$base.txt
+  printf '% 7d  total' $(wc -l <coding-style.log) >>$phpdir/$base.txt
 }
 
 printerr update_tags
