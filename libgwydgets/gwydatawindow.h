@@ -79,9 +79,9 @@ GtkWidget*       gwy_data_window_get_data_view    (GwyDataWindow *data_window);
 GwyContainer*    gwy_data_window_get_data         (GwyDataWindow *data_window);
 void             gwy_data_window_set_zoom         (GwyDataWindow *data_window,
                                                    gint izoom);
-void             gwy_data_view_set_zoom_mode      (GwyDataWindow *data_window,
+void             gwy_data_window_set_zoom_mode    (GwyDataWindow *data_window,
                                                    GwyZoomMode zoom_mode);
-GwyZoomMode      gwy_data_view_get_zoom_mode      (GwyDataWindow *data_window);
+GwyZoomMode      gwy_data_window_get_zoom_mode    (GwyDataWindow *data_window);
 void             gwy_data_window_update_title     (GwyDataWindow *data_window);
 void             gwy_data_window_set_units        (GwyDataWindow *data_window,
                                                    const gchar *units);

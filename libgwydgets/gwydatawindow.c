@@ -383,7 +383,7 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
 }
 
 /**
- * gwy_data_view_set_zoom_mode:
+ * gwy_data_window_set_zoom_mode:
  * @data_window: A data window.
  * @zoom_mode: A zoom mode to use.
  *
@@ -393,8 +393,8 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
  * future.
  **/
 void
-gwy_data_view_set_zoom_mode(GwyDataWindow *data_window,
-                            GwyZoomMode zoom_mode)
+gwy_data_window_set_zoom_mode(GwyDataWindow *data_window,
+                              GwyZoomMode zoom_mode)
 {
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     g_return_if_fail(data_window->zoom_mode <= GWY_ZOOM_MODE_HALFPIX);
@@ -402,7 +402,7 @@ gwy_data_view_set_zoom_mode(GwyDataWindow *data_window,
 }
 
 /**
- * gwy_data_view_get_zoom_mode:
+ * gwy_data_window_get_zoom_mode:
  * @data_window: A data window.
  *
  * Returns the current zoom mode of a data window @data_window.
@@ -410,7 +410,7 @@ gwy_data_view_set_zoom_mode(GwyDataWindow *data_window,
  * Returns: The current zoom mode.
  **/
 GwyZoomMode
-gwy_data_view_get_zoom_mode(GwyDataWindow *data_window)
+gwy_data_window_get_zoom_mode(GwyDataWindow *data_window)
 {
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), 0);
     return data_window->zoom_mode;
