@@ -6,6 +6,7 @@ module_ldflags = -shared -Wl,-soname
 
 file_PROGRAMS = \
 	asciiexport.so \
+	assing-afm.so \
 	createc.so \
 	gwyfile.so \
 	nanoscope.so \
@@ -22,6 +23,9 @@ noinst_HEADERS = \
 
 EXTRA_DIST = \
 	makefile.msc
+
+assing_afm_so_SOURCES = assing-afm.c
+assing_afm_so_LDFLAGS = $(module_ldflags),assing-afm.so
 
 asciiexport_so_SOURCES = asciiexport.c
 asciiexport_so_LDFLAGS = $(module_ldflags),asciiexport.so
