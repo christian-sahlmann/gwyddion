@@ -243,7 +243,7 @@ gwy_data_field_max_of_fields(GwyDataField *result,
     p = operand1->data;
     q = operand2->data;
     for (i = xres*yres; i; i--, p++, q++, r++)
-        *r = MIN(*p, *q);
+        *r = MAX(*p, *q);
 
     gwy_data_field_invalidate(result);
 }
