@@ -384,6 +384,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
     siunit2 = (GwySIUnit2*)g_object_get_data((GObject*)siunit, "gwy-si-unit2");
     g_assert(siunit2);
 
+    value = fabs(value);
     if (!value) {
         format->magnitude = 1;
         format->precision = 2;
@@ -433,6 +434,8 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
     siunit2 = (GwySIUnit2*)g_object_get_data((GObject*)siunit, "gwy-si-unit2");
     g_assert(siunit2);
 
+    maximum = fabs(maximum);
+    resolution = fabs(resolution);
     if (!maximum) {
         format->magnitude = 1;
         format->precision = 2;
@@ -481,6 +484,7 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
     siunit2 = (GwySIUnit2*)g_object_get_data((GObject*)siunit, "gwy-si-unit2");
     g_assert(siunit2);
 
+    maximum = fabs(maximum);
     if (!maximum) {
         format->magnitude = 1;
         format->precision = sdigits;
