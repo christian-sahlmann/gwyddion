@@ -25,13 +25,9 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtkwindow.h>
 
-#ifndef GWY_TYPE_SI_UNIT
-#  include <libgwyddion/gwysiunit.h>
-#endif /* no GWY_TYPE_SI_UNIT */
-
-#ifndef GWY_TYPE_SPHERE_COORDS
-#  include <libgwydgets/gwydataview.h>
-#endif /* no GWY_TYPE_SPHERE_COORDS */
+#include <libgwyddion/gwycontainer.h>
+#include <libgwyddion/gwysiunit.h>
+#include <libgwydgets/gwydataview.h>
 
 G_BEGIN_DECLS
 
