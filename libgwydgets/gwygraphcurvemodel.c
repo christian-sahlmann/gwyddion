@@ -130,11 +130,11 @@ gwy_graph_curve_model_init(GwyGraphCurveModel *gcmodel)
     gcmodel->color.b = 0;
     gcmodel->color.a = 1;
 
-    gcmodel->is_point = TRUE;
+    gcmodel->type = GWY_GRAPH_CURVE_LINE_POINTS;
+
     gcmodel->point_type = GWY_GRAPH_POINT_SQUARE;
     gcmodel->point_size = 8;
 
-    gcmodel->is_line = TRUE;
     gcmodel->line_style = GDK_LINE_SOLID;
     gcmodel->line_size = 1;
 }
@@ -213,11 +213,15 @@ gwy_graph_curve_model_save_curve(GwyGraphCurveModel *gcmodel,
      * Fix the graph! */
     gwy_rgba_from_gdk_color(&gcmodel->color, &params->color);
 
-    gcmodel->is_point = !!params->is_point;
+    gcmodel->type = GWY_GRAPH_CURVE_HIDDEN;
+    if (params->is_point)
+        gcmodel->type |= GWY_GRAPH_CURVE_POINTS;
+    if (params->is_line)
+        gcmodel->type |= GWY_GRAPH_CURVE_LINE;
+
     gcmodel->point_type = params->point_type;
     gcmodel->point_size = params->point_size;
 
-    gcmodel->is_line = !!params->is_line;
     gcmodel->line_style = params->line_style;
     gcmodel->line_size = params->line_size;
 
@@ -235,11 +239,11 @@ gwy_graph_add_curve_from_model(GwyGraph *graph,
 
     gwy_rgba_to_gdk_color(&gcmodel->color, &params.color);
 
-    params.is_point = gcmodel->is_point;
+    params.is_point = (gcmodel->type & GWY_GRAPH_CURVE_POINTS) != 0;
     params.point_type = gcmodel->point_type;
     params.point_size = gcmodel->point_size;
 
-    params.is_line = gcmodel->is_line;
+    params.is_line = (gcmodel->type & GWY_GRAPH_CURVE_LINE) != 0;
     params.line_style = gcmodel->line_style;
     params.line_size = gcmodel->line_size;
 
@@ -266,10 +270,9 @@ gwy_graph_curve_model_serialize(GObject *object,
             { 'd', "color.red", &gcmodel->color.r, NULL },
             { 'd', "color.green", &gcmodel->color.g, NULL },
             { 'd', "color.blue", &gcmodel->color.b, NULL },
-            { 'b', "is_point", &gcmodel->is_point, NULL },
+            { 'i', "type", &gcmodel->type, NULL },
             { 'i', "point_type", &gcmodel->point_type, NULL },
             { 'i', "point_size", &gcmodel->point_size, NULL },
-            { 'b', "is_line", &gcmodel->is_line, NULL },
             { 'i', "line_style", &gcmodel->line_style, NULL },
             { 'i', "line_size", &gcmodel->line_size, NULL },
         };
@@ -301,10 +304,9 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
             { 'd', "color.red", &gcmodel->color.r, NULL },
             { 'd', "color.green", &gcmodel->color.g, NULL },
             { 'd', "color.blue", &gcmodel->color.b, NULL },
-            { 'b', "is_point", &gcmodel->is_point, NULL },
+            { 'i', "type", &gcmodel->type, NULL },
             { 'i', "point_type", &gcmodel->point_type, NULL },
             { 'i', "point_size", &gcmodel->point_size, NULL },
-            { 'b', "is_line", &gcmodel->is_line, NULL },
             { 'i', "line_style", &gcmodel->line_style, NULL },
             { 'i', "line_size", &gcmodel->line_size, NULL },
         };
@@ -349,12 +351,11 @@ gwy_graph_curve_model_duplicate(GObject *object)
 
     g_string_assign(duplicate->description, gcmodel->description->str);
     duplicate->color = gcmodel->color;
+    duplicate->type = gcmodel->type;
 
-    duplicate->is_point = gcmodel->is_point;
     duplicate->point_type = gcmodel->point_type;
     duplicate->point_size = gcmodel->point_size;
 
-    duplicate->is_line = gcmodel->is_line;
     duplicate->line_style = gcmodel->line_style;
     duplicate->line_size = gcmodel->line_size;
 
