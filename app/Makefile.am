@@ -9,6 +9,7 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 libgwyappincludedir = $(includedir)/gwyddion/app
 libgwyappinclude_HEADERS = \
 	app.h \
+	graphlist.h \
 	gwyapp.h \
 	menu.h \
 	menu-windowlist.h \
@@ -39,6 +40,7 @@ libgwyapp_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp_la_SOURCES = \
 	app.c \
 	file.c \
+	graphlist.c \
 	menu.c \
 	menu-windowlist.c \
 	settings.c \

@@ -459,6 +459,10 @@ gwy_app_graph_window_create(GtkWidget *graph)
     if (graph == NULL)
         graph = gwy_graph_new();
 
+    /* TODO: this is broken because we do not actually know which data window
+     * is the right one, but for GraphModel testing it doesn't matter much. */
+    gwy_app_graph_list_add(gwy_app_data_window_get_current(), GWY_GRAPH(graph));
+
     g_signal_connect(window, "focus-in-event",
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
     g_signal_connect(window, "destroy",
