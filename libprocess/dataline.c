@@ -1299,27 +1299,35 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
                   GwyInterpolationType interpolation, gboolean preserverms,
                   gboolean level)
 {
-    gint i;
+    gint i, n;
     gdouble rmsa, rmsb, av, bv;
     GwyDataLine multra, multia;
+    gdouble coefs[4];
 
+    g_return_val_if_fail(GWY_IS_DATA_LINE(ra), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(ia), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(rb), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(ib), NULL);
+    
    /* gwy_debug("");*/
     if (ia->res != ra->res)
+    {
         gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
+        gwy_data_line_fill(ia, 0);
+    }
     if (rb->res != ra->res)
         gwy_data_line_resample(rb, ra->res, GWY_INTERPOLATION_NONE);
     if (ib->res != ra->res)
         gwy_data_line_resample(ib, ra->res, GWY_INTERPOLATION_NONE);
 
     if (level == TRUE) {
-        gwy_data_line_line_coeffs(ra, &av, &bv);
-        gwy_data_line_line_level(ra, av, bv);
-        gwy_data_line_line_coeffs(ia, &av, &bv);
-        gwy_data_line_line_level(ia, av, bv);
+        n = 1;
+        gwy_data_line_fit_polynom(ra, n, coefs);
+        gwy_data_line_subtract_polynom(ra, n, coefs);
+        gwy_data_line_fit_polynom(ia, n, coefs);
+        gwy_data_line_subtract_polynom(ia, n, coefs);
     }
-    gwy_data_line_add(ra, -(gwy_data_line_get_min(ra)+gwy_data_line_get_max(ra))/2);
-    gwy_data_line_add(ia, -(gwy_data_line_get_min(ia)+gwy_data_line_get_max(ia))/2);
-
+    
     gwy_data_line_fill(rb, 0);
     gwy_data_line_fill(ib, 0);
 
@@ -1431,30 +1439,32 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
 void
 gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint windowing, gint interpolation)
 {
-    GwyDataLine iin, rout, iout;
+    GwyDataLine *iin, *rout, *iout;
     gint i;
 
-    gwy_data_line_initialize(&iin, data_line->res, data_line->real, TRUE);
-    gwy_data_line_initialize(&rout, data_line->res, data_line->real, FALSE);
-    gwy_data_line_initialize(&iout, data_line->res, data_line->real, FALSE);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+    
+    iin = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, TRUE);
+    rout = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, FALSE);
+    iout = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, FALSE);
 
 
-    gwy_data_line_fft(data_line, &iin, &rout, &iout, gwy_data_line_fft_hum,
+    gwy_data_line_fft(data_line, iin, rout, iout, gwy_data_line_fft_hum,
                    windowing, 1, interpolation,
-                   TRUE, FALSE);
+                   TRUE, TRUE); /*lvel was false*/
 
-    gwy_data_line_resample(target_line, rout.res/2.0, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(target_line, rout->res/2.0, GWY_INTERPOLATION_NONE);
 
-    for (i = 0; i < (rout.res/2); i++) {
-        target_line->data[i] = (rout.data[i]*rout.data[i] + iout.data[i]*iout.data[i])
+    for (i = 0; i < (rout->res/2); i++) {
+        target_line->data[i] = (rout->data[i]*rout->data[i] + iout->data[i]*iout->data[i])
             *data_line->real/(data_line->res*data_line->res*2*G_PI);
 
     }
     target_line->real = 2*G_PI*target_line->res/data_line->real;
 
-    gwy_data_line_free(&rout);
-    gwy_data_line_free(&iin);
-    gwy_data_line_free(&iout);
+    g_object_unref(rout);
+    g_object_unref(iin);
+    g_object_unref(iout);
 
 }
 

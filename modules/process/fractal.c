@@ -406,13 +406,13 @@ fractal_dialog_update(FractalControls *controls,
     GString *label;
     GwyGraphAreaCurveParams *params;
     GwyGraphAutoProperties prop;
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
     gint i;
     gboolean is_line;
     gdouble a, b;
     gchar buffer[16];
 
+    gwy_option_menu_set_history(controls->interp, "interpolation-type",
+                                args->interp);
     
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,

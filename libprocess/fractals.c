@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
+#include <math.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"

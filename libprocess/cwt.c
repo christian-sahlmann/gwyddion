@@ -34,7 +34,8 @@ gwy_cwt_wfunc_2d(gdouble scale,
     scale2 = scale*scale;
 
     if (wtype == GWY_2DCWT_GAUSS)
-        return exp(-(scale2*cur2)/2)*2*G_PI*scale2*2*G_PI*scale;
+/*        return exp(-(scale2*cur2)/2)*2*G_PI*scale2*2*G_PI*scale; changed only for reasonable normalization*/
+        return exp(-(scale2*cur2)/2);
     else if (wtype == GWY_2DCWT_HAT)
         return (scale2*cur2)*exp(-(scale2*cur2)/2)*2*G_PI*scale2;
     else
