@@ -1,18 +1,12 @@
+- Document minimum and maximum filters
+- Remove dialog separators
+- Look at Scale scale sync issues
 - Kill WIN32-LEAN-AND-MEAN-CAPS
-- Don't forget to remove "selection-finished" callback in remove grains
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
 - Convert Logarithmic scale value to logarithmic presentation
-- Fix gwyddion-x.desktop according to whatever current desktop standards happen
-  to say
-- Speed up Document History -- seems hard; I don't quite understand how Gimp
-  does it, but it may involve a custom cell renderer that can use exposition
-  info efficiently
-- Incorporate Zitko's stmprg module
 - Rework Scars
 - Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
-- Test GwyGradient
-- Implement GwyGradientSphere and mark GradSphere stuff deprecated
 - Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
   as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere
@@ -23,7 +17,7 @@
 - Make Ctrl-S save data associated with current window of whatever type, not
   with current data window -- or maybe better, switch data windows when other
   windows are switched
-- Remember file open/save dialog size
+- Remember app dialog sizes
 - GwyGradSphere background is strangely shifted in pixmap themes
 - Make keyboard zoom shortcuts work in graphs, 3D
 - Register application/x-gwyddion MIME types, on Win32 and Gnome
