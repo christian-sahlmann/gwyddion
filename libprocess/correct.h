@@ -48,12 +48,14 @@ void gwy_data_field_mask_outliers(GwyDataField *data_field,
                                   GwyDataField *mask_field,
                                   gdouble thresh);
 
+/*
 void gwy_data_field_mark_scars(GwyDataField *data_field,
                                GwyDataField *scar_field,
                                gdouble threshold_high,
                                gdouble threshold_low,
                                gdouble min_scar_len,
                                gdouble max_scar_width);
+*/
 
 GwyPlaneSymmetry gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
                                                           gdouble *correction);

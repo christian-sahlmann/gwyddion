@@ -128,6 +128,136 @@ module_register(const gchar *name)
     return TRUE;
 }
 
+/**
+ * gwy_data_field_mark_scars:
+ * @data_field: A data field to find scars in.
+ * @scar_field: A data field to store the result to (it is resized to match
+ *              @data_field).
+ * @threshold_high: Miminum relative step for scar marking, must be positive.
+ * @threshold_low: Definite relative step for scar marking, must be at least
+ *                 equal to @threshold_high.
+ * @min_scar_len: Minimum length of a scar, shorter ones are discarded
+ *                (must be at least one).
+ * @max_scar_width: Maximum width of a scar, must be at least one.
+ *
+ * Find and marks scars in a data field.
+ *
+ * Scars are linear horizontal defects, consisting of shifted values.
+ * Zero or negative values in @scar_field siginify normal data, positive
+ * values siginify samples that are part of a scar.
+ *
+ * Since: 1.4.
+ **/
+void
+gwy_data_field_mark_scars(GwyDataField *data_field,
+                          GwyDataField *scar_field,
+                          gdouble threshold_high,
+                          gdouble threshold_low,
+                          gdouble min_scar_len,
+                          gdouble max_scar_width)
+{
+    gint xres, yres, i, j, k;
+    gdouble rms;
+    gdouble *d, *m;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(scar_field));
+    g_return_if_fail(max_scar_width >= 1 && max_scar_width <= 16);
+    g_return_if_fail(min_scar_len >= 1);
+    g_return_if_fail(threshold_low >= 0.0);
+    g_return_if_fail(threshold_high >= threshold_low);
+    xres = gwy_data_field_get_xres(data_field);
+    yres = gwy_data_field_get_yres(data_field);
+    d = gwy_data_field_get_data(data_field);
+    gwy_data_field_resample(scar_field, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_fill(scar_field, 0.0);
+    m = gwy_data_field_get_data(scar_field);
+
+    if (min_scar_len > xres)
+        return;
+    max_scar_width = MIN(max_scar_width, yres - 2);
+
+    /* compute `vertical rms' */
+    rms = 0.0;
+    for (i = 0; i < yres-1; i++) {
+        gdouble *row = d + i*xres;
+
+        for (j = 0; j < xres; j++) {
+            gdouble z = row[j] - row[j + xres];
+
+            rms += z*z;
+        }
+    }
+    rms = sqrt(rms/(xres*yres));
+    if (rms == 0.0)
+        return;
+
+    /* initial scar search */
+    for (i = 0; i < yres - (max_scar_width + 1); i++) {
+        for (j = 0; j < xres; j++) {
+            gdouble top, bottom;
+            gdouble *row = d + i*xres + j;
+
+            bottom = row[0];
+            top = row[xres];
+            for (k = 1; k <= max_scar_width; k++) {
+                bottom = MAX(row[0], row[xres*(k + 1)]);
+                top = MIN(top, row[xres*k]);
+                if (top - bottom >= threshold_low*rms)
+                    break;
+            }
+            if (k <= max_scar_width) {
+                gdouble *mrow = m + i*xres + j;
+
+                while (k) {
+                    mrow[k*xres] = (row[k*xres] - bottom)/rms;
+                    k--;
+                }
+            }
+        }
+    }
+    /* expand high threshold to neighbouring low threshold */
+    for (i = 0; i < yres; i++) {
+        gdouble *mrow = m + i*xres;
+
+        for (j = 1; j < xres; j++) {
+            if (mrow[j] >= threshold_low && mrow[j-1] >= threshold_high)
+                mrow[j] = threshold_high;
+        }
+        for (j = xres-1; j > 0; j--) {
+            if (mrow[j-1] >= threshold_low && mrow[j] >= threshold_high)
+                mrow[j-1] = threshold_high;
+        }
+    }
+    /* kill too short segments, clamping scar_field along the way */
+    for (i = 0; i < yres; i++) {
+        gdouble *mrow = m + i*xres;
+
+        k = 0;
+        for (j = 0; j < xres; j++) {
+            if (mrow[j] >= threshold_high) {
+                mrow[j] = 1.0;
+                k++;
+                continue;
+            }
+            if (k && k < min_scar_len) {
+                while (k) {
+                    mrow[j-k] = 0.0;
+                    k--;
+                }
+            }
+            mrow[j] = 0.0;
+            k = 0;
+        }
+        if (k && k < min_scar_len) {
+            while (k) {
+                mrow[j-k] = 0.0;
+                k--;
+            }
+        }
+    }
+}
+
 static gboolean
 scars_remove(GwyContainer *data, GwyRunType run)
 {
