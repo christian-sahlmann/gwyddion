@@ -409,10 +409,22 @@ gwy_data_field_copy(GwyDataField *src,
     if (!nondata_too)
         return;
 
-    gwy_serializable_clone(G_OBJECT(src->si_unit_xy),
-                           G_OBJECT(dest->si_unit_xy));
-    gwy_serializable_clone(G_OBJECT(src->si_unit_z),
-                           G_OBJECT(dest->si_unit_z));
+    /* SI Units can be NULL */
+    if (src->si_unit_xy && dest->si_unit_xy)
+        gwy_serializable_clone(G_OBJECT(src->si_unit_xy),
+                               G_OBJECT(dest->si_unit_xy));
+    else if (src->si_unit_xy && !dest->si_unit_xy)
+        dest->si_unit_xy = gwy_si_unit_duplicate(src->si_unit_xy);
+    else if (!src->si_unit_xy && dest->si_unit_xy)
+        gwy_object_unref(dest->si_unit_xy);
+
+    if (src->si_unit_z && dest->si_unit_z)
+        gwy_serializable_clone(G_OBJECT(src->si_unit_z),
+                               G_OBJECT(dest->si_unit_z));
+    else if (src->si_unit_z && !dest->si_unit_z)
+        dest->si_unit_z = gwy_si_unit_duplicate(src->si_unit_z);
+    else if (!src->si_unit_z && dest->si_unit_z)
+        gwy_object_unref(dest->si_unit_z);
 }
 
 /**
