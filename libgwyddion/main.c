@@ -292,7 +292,7 @@ static void
 test_duplication(void)
 {
     GObject *obj, *ser;
-    GwyContainer *container;
+    GwyContainer *container, *duplicate;
 
     g_message("====== DUPLICATION ======================");
     container = GWY_CONTAINER(gwy_container_new());
@@ -314,6 +314,17 @@ test_duplication(void)
     ser = gwy_container_get_object_by_name(GWY_CONTAINER(obj), "ser");
     print(ser, "restored");
 
+    container = GWY_CONTAINER(gwy_container_new());
+    gwy_container_set_double_by_name(container, "/foo", 0.5227);
+    gwy_container_set_double_by_name(container, "/foobar", 1.4142);
+    gwy_container_set_int64_by_name(container, "/foo/bar", 64LL);
+    gwy_container_set_double_by_name(container, "/foo/barbar", 3.141592);
+    gwy_container_set_int32_by_name(container, "/quux", 42);
+
+    g_message("partially duplicating a container");
+    duplicate = gwy_container_duplicate_by_prefix(container,
+                                                  "/foo", "/quux", NULL);
+    gwy_container_foreach(duplicate, NULL, (GHFunc)bar_callback, "dupl");
 }
 
 #define pent(txt) \
@@ -757,7 +768,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_all();
+    test_duplication();
 
     return 0;
 }

@@ -1998,6 +1998,7 @@ gwy_container_duplicate_by_prefix_valist(GwyContainer *container,
             n += 16;
             pfxlist.prefixes = g_renew(const gchar*, pfxlist.prefixes, n);
         }
+        pfxlist.prefixes[pfxlist.nprefixes] = prefix;
         pfxlist.nprefixes++;
         prefix = va_arg(ap, const gchar*);
     }
@@ -2035,7 +2036,7 @@ hash_prefix_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
         return;
 
     for (n = 0; n < pfxlist->nprefixes; n++) {
-        if (strncmp(name, pfxlist->prefixes[n], pfxlist->pfxlengths[n])
+        if (strncmp(name, pfxlist->prefixes[n], pfxlist->pfxlengths[n]) == 0
             && (name[pfxlist->pfxlengths[n]] == '\0'
                 || name[pfxlist->pfxlengths[n]] == GWY_CONTAINER_PATHSEP)) {
             ok = TRUE;
