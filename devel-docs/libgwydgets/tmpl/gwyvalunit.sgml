@@ -2,7 +2,7 @@
 GwyValUnit
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Value entry with unit and selection of unit prefix
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
