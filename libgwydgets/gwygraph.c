@@ -712,7 +712,6 @@ zoomed_cb(GtkWidget *widget)
  * @graph: graph widget
  * @xval: x data points
  * @yval: y data points
- * @nofvals: number of data points
  * @curve: curve to be extracted
  *
  * Extracts data of a curve.
