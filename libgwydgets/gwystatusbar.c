@@ -40,7 +40,6 @@
 #define GWY_STATUSBAR_TYPE_NAME "GwyStatusbar"
 
 static void     gwy_statusbar_class_init     (GwyStatusbarClass *klass);
-static void     gwy_statusbar_init           (GwyStatusbar      *statusbar);
 static void     gwy_statusbar_update_markup  (GtkStatusbar *statusbar,
                                               guint context_id,
                                               const gchar *text);
@@ -62,7 +61,7 @@ gwy_statusbar_get_type (void)
             NULL,           /* class_data */
             sizeof(GwyStatusbar),
             0,              /* n_preallocs */
-            (GInstanceInitFunc)gwy_statusbar_init,
+            NULL,
             NULL,
         };
         gwy_debug("");
@@ -84,11 +83,6 @@ gwy_statusbar_class_init(GwyStatusbarClass *klass)
 
     statusbar_class->text_pushed = gwy_statusbar_update_markup;
     statusbar_class->text_popped = gwy_statusbar_update_markup;
-}
-
-static void
-gwy_statusbar_init(G_GNUC_UNUSED GwyStatusbar *statusbar)
-{
 }
 
 /**
