@@ -371,13 +371,13 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
     }
     const menu_items[] = {
         { "/_Remove Mask", gwy_app_mask_kill_cb, NULL },
-        { "/Change Mask _Color",  gwy_app_change_mask_color_cb, NULL },
+        { "/Mask _Color",  gwy_app_change_mask_color_cb, NULL },
         { "/Fix _Zero", gwy_app_run_process_func_cb, "fixzero" },
         { "/_Level", gwy_app_run_process_func_cb, "level" },
         { "/Zoom _1:1", gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
     };
     static const gchar *items_need_data_mask[] = {
-        "/Remove Mask", "/Change Mask Color", NULL
+        "/Remove Mask", "/Mask Color", NULL
     };
     GtkItemFactoryEntry entry = { NULL, NULL, NULL, 0, NULL, NULL };
     GtkItemFactory *item_factory;

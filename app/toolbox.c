@@ -137,7 +137,7 @@ gwy_app_toolbox_create(void)
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
 
     /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Zoom"), "zoom");
+    label = gwy_app_toolbox_create_label(_("View"), "zoom");
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
     labels = g_slist_append(labels, label);
 
@@ -154,6 +154,9 @@ gwy_app_toolbox_create(void)
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Zoom out"), NULL, GWY_STOCK_ZOOM_OUT,
                        G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(-1));
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Display a 3D view of data"), NULL, GWY_STOCK_3D_BASE,
+                       G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(10000));
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
@@ -496,20 +499,26 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             gwy_app_file_duplicate_cb, 0, "<StockItem>", GTK_STOCK_COPY },
         { "/Edit/---", NULL,
             NULL, 0, "<Separator>", NULL },
-        { "/Edit/Remove _Mask", NULL,
+        { "/Edit/Remove _Mask", "<control>K",
             gwy_app_mask_kill_cb, 0, NULL, NULL },
         { "/Edit/Remove _Presentation", NULL,
             gwy_app_show_kill_cb, 0, NULL, NULL },
-        { "/Edit/Change Mask _Color", NULL,
+        { "/Edit/Mask _Color", NULL,
             gwy_app_change_mask_color_cb, 0, NULL, NULL },
-        { "/Edit/Change Default Mask _Color", NULL,
+        { "/Edit/Default Mask _Color", NULL,
             gwy_app_change_mask_color_cb, 1, NULL, NULL },
+        /*
+        { "/Edit/---", NULL,
+            NULL, 0, "<Separator>", NULL },
+        { "/Edit/Palette _Z-Range", NULL,
+            gwy_app_change_palette_range_cb, 0, NULL, NULL },
+            */
     };
     static const gchar *items_need_data[] = {
         "/Edit/Duplicate", NULL
     };
     static const gchar *items_need_data_mask[] = {
-        "/Edit/Remove Mask", "/Edit/Change Mask Color", NULL
+        "/Edit/Remove Mask", "/Edit/Mask Color", NULL
     };
     static const gchar *items_need_data_show[] = {
         "/Edit/Remove Presentation", NULL
