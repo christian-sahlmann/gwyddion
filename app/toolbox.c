@@ -89,7 +89,7 @@ toolbox_append_graph_func(GtkWidget *toolbox,
 }
 
 GtkWidget*
-gwy_app_toolbox_create(void)
+gwy_app_toolbox_create(gboolean gl_ok)
 {
     GwyMenuSensData sens_data_data = { GWY_MENU_FLAG_DATA, 0 };
     GwyMenuSensData sens_data_graph = { GWY_MENU_FLAG_GRAPH, 0 };
@@ -154,12 +154,17 @@ gwy_app_toolbox_create(void)
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Zoom out"), NULL, GWY_STOCK_ZOOM_OUT,
                        G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(-1));
-    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
-                       _("Display a 3D view of data"), NULL, GWY_STOCK_3D_BASE,
-                       G_CALLBACK(gwy_app_3d_view_cb), NULL);
+    button = gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                                _("Display a 3D view of data"), NULL,
+                                GWY_STOCK_3D_BASE,
+                                G_CALLBACK(gwy_app_3d_view_cb), NULL);
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
+    gwy_app_menu_set_sensitive_both(button,
+                                    GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_GL_OK,
+                                    gl_ok ? GWY_MENU_FLAG_GL_OK : 0);
+
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 

@@ -36,8 +36,9 @@ typedef enum {
     GWY_MENU_FLAG_LAST_GRAPH = 1 << 5,
     GWY_MENU_FLAG_DATA_MASK  = 1 << 6,
     GWY_MENU_FLAG_DATA_SHOW  = 1 << 7,
-/*    GWY_MENU_FLAG_3D         = 1 << 8, */
-    GWY_MENU_FLAG_MASK       = 0xff
+    GWY_MENU_FLAG_GL_OK      = 1 << 8,
+/*    GWY_MENU_FLAG_3D         = 1 << 9, */
+    GWY_MENU_FLAG_MASK       = 0x1ff
 } GwyMenuSensFlags;
 
 typedef struct _GwyMenuSensData GwyMenuSensData;
