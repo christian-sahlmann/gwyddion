@@ -190,9 +190,13 @@ test -d $logdir || mkdir $logdir
 eval $(grep ^VERSION Makefile | tr -d ' ' | tr '[A-Z]' '[a-z]')
 
 if test -n "$1"; then
-  for x in $@; do
-    call $x
-  done
+  if test "$1" == help; then
+    help
+  else
+    for x in $@; do
+      call $x
+    done
+  fi
 else
   rm -f $logdir/*
   # LIST-BEGIN
