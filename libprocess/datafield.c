@@ -2255,12 +2255,9 @@ void
 gwy_data_field_get_stats(GwyDataField *data_field, gdouble *avg, gdouble *ra, gdouble *rms, gdouble *skew, gdouble *kurtosis)
 {
     gint i;
-    gdouble c_s1z, c_sz1, c_s2z, c_sz2, c_s3z, c_sz3, c_s4z, c_sz4, c_abs1;    
+    gdouble c_sz1, c_sz2, c_sz3, c_sz4, c_abs1;    
     gdouble *p = data_field->data;
     gdouble nn = data_field->xres * data_field->yres;
-    gdouble nn2 = nn*nn;
-    gdouble nn3 = nn2*nn;
-    gdouble nn4 = nn3*nn;
     gdouble dif;
     
     c_sz1 = c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
@@ -2277,15 +2274,15 @@ gwy_data_field_get_stats(GwyDataField *data_field, gdouble *avg, gdouble *ra, gd
         c_sz4 += dif*dif*dif*dif;
         
     }
-    c_s1z = c_sz1;
-    c_s2z = c_s1z*c_s1z;
-    c_s3z = c_s2z*c_s1z;
-    c_s4z = c_s3z*c_s1z;
 
     *ra = c_abs1/nn;
-    *rms = c_sz2/nn2;
-    *skew = (c_sz3/nn - 3*c_sz1*c_sz3/nn2 + 2*c_s3z/nn3)/pow((c_sz2/nn - c_s2z/nn2),1.5);
-    *kurtosis = (c_sz4/nn - 4*c_sz1*c_sz3/nn4 + 6*c_s2z*c_sz2/nn3 - 3*c_s4z/nn4 - 3)/pow((c_sz2/nn - c_s2z/nn2),2);
+    *rms = c_sz2/nn;
+    *skew = c_sz3/pow(*rms, 1.5)/nn;     
+    //*(c_sz3/nn - 3*c_sz1*c_sz3/nn2 + 2*c_s3z/nn3)/pow((c_sz2/nn - c_s2z/nn2),1.5);*/
+    *kurtosis = c_sz4/(*rms)/(*rms)/nn - 3;  
+    /*(c_sz4/nn - 4*c_sz1*c_sz3/nn4 + 6*c_s2z*c_sz2/nn3 - 3*c_s4z/nn4 - 3)/pow((c_sz2/nn - c_s2z/nn2),2);*/
+    
+    *rms = sqrt(*rms);
 
 }
 
@@ -2295,7 +2292,7 @@ gwy_data_field_get_area_stats(GwyDataField *data_field, gint ulcol, gint ulrow, 
 {
     gint i, j;
     gdouble c_sz1, c_sz2, c_sz3, c_sz4, c_abs1;
-    gdouble nn, nn2, nn3, nn4, dif;
+    gdouble nn, dif;
     
     gdouble *row;
 
@@ -2304,12 +2301,11 @@ gwy_data_field_get_area_stats(GwyDataField *data_field, gint ulcol, gint ulrow, 
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < data_field->xres && brrow < data_field->yres, 0);
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol <= data_field->xres && brrow <= data_field->yres, 0);
+    if (brcol==data_field->xres) brcol = data_field->xres -1;
+    if (brrow==data_field->yres) brrow = data_field->yres -1;
 
     nn = (brcol-ulcol)*(brrow-ulrow);
-    nn2 = nn*nn;
-    nn3 = nn2*nn;
-    nn4 = nn3*nn;
     c_sz1 = c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
     
     *avg = gwy_data_field_get_area_avg(data_field, ulcol, ulrow, brcol, brrow);
