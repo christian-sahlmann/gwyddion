@@ -26,6 +26,7 @@
 #include "file.h"
 #include "menu.h"
 #include "app.h"
+#include "settings.h"
 
 #include "gwyddion.h"
 
@@ -34,7 +35,8 @@ static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 const gchar *root_path,
                                                 GtkAccelGroup *accel_group,
                                                 GtkItemFactory **factory);
-static GtkWidget* gwy_app_toolbox_create_label (const gchar *text);
+static GtkWidget* gwy_app_toolbox_create_label (const gchar *text,
+                                                const gchar *id);
 static void       gwy_app_toolbox_showhide_cb  (GtkWidget *button,
                                                 GtkWidget *widget);
 static void       gwy_app_rerun_process_func_cb (void);
@@ -46,6 +48,7 @@ gwy_app_toolbox_create(void)
 {
     GtkWidget *toolbox, *vbox, *toolbar, *menu, *label;
     GtkAccelGroup *accel_group;
+    GSList *labels = NULL, *l;
     const gchar *first_tool;
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -82,13 +85,12 @@ gwy_app_toolbox_create(void)
     g_object_set_data(G_OBJECT(toolbox), "<xtns>", menu);
 
     /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Zoom"));
+    label = gwy_app_toolbox_create_label(_("Zoom"), "zoom");
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+    labels = g_slist_append(labels, label);
 
     toolbar = gwy_toolbox_new(4);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-    g_signal_connect(label, "clicked",
-                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Zoom in"), NULL, GWY_STOCK_ZOOM_IN,
@@ -100,15 +102,16 @@ gwy_app_toolbox_create(void)
                        _("Zoom out"), NULL, GWY_STOCK_ZOOM_OUT,
                        G_CALLBACK(gwy_app_zoom_set_cb), GINT_TO_POINTER(-1));
 
-    /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Data Process"));
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-
-    toolbar = gwy_toolbox_new(4);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
+    /***************************************************************/
+    label = gwy_app_toolbox_create_label(_("Data Process"), "proc");
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+    labels = g_slist_append(labels, label);
+
+    toolbar = gwy_toolbox_new(4);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Fix minimum value to zero"), NULL, GWY_STOCK_FIX_ZERO,
                        G_CALLBACK(gwy_app_run_process_func_cb), "fixzero");
@@ -134,19 +137,28 @@ gwy_app_toolbox_create(void)
                        _("Continuous Wavelet Transform"), NULL, GWY_STOCK_CWT,
                        G_CALLBACK(gwy_app_run_process_func_cb), "cwt");
 
-    /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Tools"));
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-
-    toolbar = gwy_tool_func_build_toolbox(G_CALLBACK(gwy_app_tool_use_cb),
-                                          4, &first_tool);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-    gwy_app_tool_use_cb(first_tool, NULL);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     /***************************************************************/
+    label = gwy_app_toolbox_create_label(_("Tools"), "tool");
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+    labels = g_slist_append(labels, label);
+
+    toolbar = gwy_tool_func_build_toolbox(G_CALLBACK(gwy_app_tool_use_cb),
+                                          4, &first_tool);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+
+    g_signal_connect(label, "clicked",
+                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
+
+    gwy_app_tool_use_cb(first_tool, NULL);
+
+    /***************************************************************/
     gtk_widget_show_all(toolbox);
+    for (l = labels; l; l = g_slist_next(l))
+        g_signal_emit_by_name(l->data, "clicked");
+    g_slist_free(labels);
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
 
     /* XXX */
@@ -361,14 +373,25 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 }
 
 static GtkWidget*
-gwy_app_toolbox_create_label(const gchar *text)
+gwy_app_toolbox_create_label(const gchar *text,
+                             const gchar *id)
 {
+    GwyContainer *settings;
     GtkWidget *label, *hbox, *button, *arrow;
-    gchar *s;
+    gboolean visible = TRUE;
+    gchar *s, *key;
+
+    settings = gwy_app_settings_get();
+    key = g_strconcat("/app/toolbox/visible/", id, NULL);
+    if (gwy_container_contains_by_name(settings, key))
+        visible = gwy_container_get_boolean_by_name(settings, key);
+    gwy_container_set_boolean_by_name(settings, key, !visible);
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    arrow = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_ETCHED_IN);
+    /* note we create the label in the OTHER state, then call showhide */
+    arrow = gtk_arrow_new(visible ? GTK_ARROW_RIGHT : GTK_ARROW_DOWN,
+                          GTK_SHADOW_ETCHED_IN);
     gtk_box_pack_start(GTK_BOX(hbox), arrow, FALSE, FALSE, 0);
 
     s = g_strconcat("<small>", text, "</small>", NULL);
@@ -384,6 +407,8 @@ gwy_app_toolbox_create_label(const gchar *text)
     gtk_container_add(GTK_CONTAINER(button), hbox);
 
     g_object_set_data(G_OBJECT(button), "arrow", arrow);
+    g_object_set_data(G_OBJECT(button), "key", key);
+    g_signal_connect_swapped(button, "destroy", G_CALLBACK(g_free), key);
 
     return button;
 }
@@ -392,28 +417,26 @@ static void
 gwy_app_toolbox_showhide_cb(GtkWidget *button,
                             GtkWidget *widget)
 {
+    GwyContainer *settings;
     GtkWidget *arrow;
-    GtkArrowType arrow_type;
+    gboolean visible;
+    const gchar *key;
 
+    settings = gwy_app_settings_get();
+    key = (const gchar*)g_object_get_data(G_OBJECT(button), "key");
+    visible = gwy_container_get_boolean_by_name(settings, key);
     arrow = GTK_WIDGET(g_object_get_data(G_OBJECT(button), "arrow"));
     g_assert(GTK_IS_ARROW(arrow));
-    g_object_get(arrow, "arrow-type", &arrow_type, NULL);
-    switch (arrow_type) {
-        case GTK_ARROW_RIGHT:
-        arrow_type = GTK_ARROW_DOWN;
+    visible = !visible;
+    gwy_container_set_boolean_by_name(settings, key, visible);
+
+    if (visible)
         gtk_widget_show(widget);
-        break;
-
-        case GTK_ARROW_DOWN:
-        arrow_type = GTK_ARROW_RIGHT;
+    else
         gtk_widget_hide(widget);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-    g_object_set(arrow, "arrow-type", arrow_type, NULL);
+    g_object_set(arrow, "arrow-type",
+                 visible ? GTK_ARROW_DOWN : GTK_ARROW_RIGHT,
+                 NULL);
 }
 
 static void
