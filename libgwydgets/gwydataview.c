@@ -26,6 +26,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
+#include "gwylayer-mask.h"
 #include "gwydataview.h"
 
 #define GWY_DATA_VIEW_TYPE_NAME "GwyDataView"
@@ -631,13 +632,28 @@ gwy_data_view_key_release(GtkWidget *widget,
 void
 gwy_data_view_update(GwyDataView *data_view)
 {
+    GwyDataViewLayer *layer;
+    GwyContainer *data;
     GtkWidget *widget;
+    gboolean has_mask;
 
     gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(data_view != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    data = data_view->data;
 
     data_view->force_update = TRUE;
+    /* XXX FIXME: this doesn't belong here.
+     * probably create gwy_app_data_view_update() taking care of the mask
+     * state automatically -- data view itself should not care */
+    has_mask = gwy_container_contains_by_name(data, "/0/mask");
+    if (has_mask && !data_view->alpha_layer) {
+        layer = GWY_DATA_VIEW_LAYER(gwy_layer_mask_new());
+        gwy_data_view_set_layer(data_view, &data_view->alpha_layer, layer);
+    }
+    else if (!has_mask && data_view->alpha_layer) {
+        gwy_data_view_set_layer(data_view, &data_view->alpha_layer, NULL);
+    }
     gwy_data_view_maybe_resize(data_view);
     widget = GTK_WIDGET(data_view);
     if (widget->window)
@@ -645,6 +661,8 @@ gwy_data_view_update(GwyDataView *data_view)
     g_signal_emit(data_view, data_view_signals[UPDATED], 0);
 }
 
+/* XXX FIXME: this is broken, must have support in layers first, then write
+ * this again */
 static void
 gwy_data_view_maybe_resize(GwyDataView *data_view)
 {
@@ -744,7 +762,6 @@ gwy_data_view_set_layer(GwyDataView *data_view,
     }
     *which = layer;
     data_view->force_update = TRUE;
-    gwy_data_view_update(data_view);
 }
 
 /**
@@ -766,6 +783,7 @@ gwy_data_view_set_base_layer(GwyDataView *data_view,
     g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
     g_return_if_fail(!gwy_data_view_layer_is_vector(layer));
     gwy_data_view_set_layer(data_view, &data_view->base_layer, layer);
+    gwy_data_view_update(data_view);
 }
 
 /**
@@ -787,6 +805,7 @@ gwy_data_view_set_alpha_layer(GwyDataView *data_view,
     g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
     g_return_if_fail(!gwy_data_view_layer_is_vector(layer));
     gwy_data_view_set_layer(data_view, &data_view->alpha_layer, layer);
+    gwy_data_view_update(data_view);
 }
 
 /**
@@ -808,6 +827,7 @@ gwy_data_view_set_top_layer(GwyDataView *data_view,
     g_return_if_fail(!layer || GWY_IS_DATA_VIEW_LAYER(layer));
     g_return_if_fail(gwy_data_view_layer_is_vector(layer));
     gwy_data_view_set_layer(data_view, &data_view->top_layer, layer);
+    gwy_data_view_update(data_view);
 }
 
 /**
