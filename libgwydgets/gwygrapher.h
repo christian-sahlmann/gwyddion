@@ -27,11 +27,12 @@
 
 #include <libprocess/dataline.h>
 
-#include "gwyaxiser.h"
-#include "gwygrapherbasics.h"
-#include "gwygrapherlabel.h"
-#include "gwygraphercorner.h"
-#include "gwygrapherarea.h"
+#include <libgwydgets/gwyaxiser.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygrapherbasics.h>
+#include <libgwydgets/gwygrapherlabel.h>
+#include <libgwydgets/gwygraphercorner.h>
+#include <libgwydgets/gwygrapherarea.h>
 
 G_BEGIN_DECLS
 
@@ -69,7 +70,7 @@ struct _GwyGrapher {
 
     GwyGrapherArea *area;
 
-    gpointer graph_model;
+    GwyGraphModel *graph_model;
 
     gint n_of_autocurves;
     GwyGrapherAutoProperties autoproperties;
@@ -88,13 +89,13 @@ struct _GwyGrapherClass {
     gpointer reserved2;
 };
 
-GtkWidget *gwy_grapher_new(gpointer *gmodel);
+GtkWidget *gwy_grapher_new(GwyGraphModel *gmodel);
 GType      gwy_grapher_get_type(void) G_GNUC_CONST;
 
 void       gwy_grapher_refresh(GwyGrapher *grapher);
 
 void       gwy_grapher_change_model(GwyGrapher *grapher, 
-                                    gpointer *gmodel);
+                                    GwyGraphModel *gmodel);
 void       gwy_grapher_set_status(GwyGrapher *grapher,
                                   GwyGrapherStatusType status);
 

@@ -47,8 +47,8 @@
 #include <libdraw/gwygradient.h>
 #include <libgwyddion/gwysiunit.h>
 
-#include "gwyglmaterial.h"
-#include "gwy3dlabels.h"
+#include <libgwydgets/gwyglmaterial.h>
+#include <libgwydgets/gwy3dlabels.h>
 
 G_BEGIN_DECLS
 

@@ -25,7 +25,7 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtk.h>
 
-#include "gwyscitext.h"
+#include <libgwydgets/gwyscitext.h>
 
 G_BEGIN_DECLS
 

@@ -24,9 +24,9 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtklayout.h>
-#include "gwygrapher.h"
-#include "gwygrapherareadialog.h"
-#include "gwygrapherlabeldialog.h"
+#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygrapherareadialog.h>
+#include <libgwydgets/gwygrapherlabeldialog.h>
 
 G_BEGIN_DECLS
 

@@ -25,7 +25,7 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtklayout.h>
 
-#include "gwygraphlabel.h"
+#include <libgwydgets/gwygraphlabel.h>
 
 G_BEGIN_DECLS
 

@@ -24,9 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 
-#ifndef GWY_TYPE_DATA_VIEW_LAYER
-#  include "libgwydgets/gwydataviewlayer.h"
-#endif /* no GWY_TYPE_DATA_VIEW_LAYER */
+#include <libgwydgets/gwydataviewlayer.h>
 
 G_BEGIN_DECLS
 

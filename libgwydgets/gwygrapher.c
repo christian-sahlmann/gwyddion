@@ -180,7 +180,7 @@ gwy_grapher_init(GwyGrapher *grapher)
 }
 
 GtkWidget*
-gwy_grapher_new(gpointer *gmodel)
+gwy_grapher_new(GwyGraphModel *gmodel)
 {
     GtkWidget *grapher = GTK_WIDGET(g_object_new(gwy_grapher_get_type(), NULL));
     gwy_debug("");
@@ -267,7 +267,7 @@ replot_cb(GObject *gobject, GParamSpec *arg1, GwyGrapher *grapher)
 }
 
 void
-gwy_grapher_change_model(GwyGrapher *grapher, gpointer *gmodel)
+gwy_grapher_change_model(GwyGrapher *grapher, GwyGraphModel *gmodel)
 {
     grapher->graph_model = gmodel;
 

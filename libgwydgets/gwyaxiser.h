@@ -24,7 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
-#include "gwyaxisdialog.h"
+#include <libgwydgets/gwyaxisdialog.h>
 
 
 G_BEGIN_DECLS

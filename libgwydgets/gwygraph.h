@@ -27,9 +27,9 @@
 
 #include <libprocess/dataline.h>
 
-#include "gwyaxis.h"
-#include "gwygrapharea.h"
-#include "gwygraphcorner.h"
+#include <libgwydgets/gwyaxis.h>
+#include <libgwydgets/gwygrapharea.h>
+#include <libgwydgets/gwygraphcorner.h>
 
 G_BEGIN_DECLS
 
