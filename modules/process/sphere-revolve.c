@@ -36,17 +36,17 @@ typedef enum {
     SPHREV_HORIZONTAL = 1,
     SPHREV_VERTICAL,
     SPHREV_BOTH
-} SphrevDirection;
+} Sphrev1DDirection;
 
 /* Data for this function. */
 typedef struct {
-    SphrevDirection direction;
+    Sphrev1DDirection direction;
     gdouble size;
     gboolean do_extract;
     /* interface only */
     GwySIValueFormat valform;
     gdouble pixelsize;
-} SphrevArgs;
+} Sphrev1DArgs;
 
 typedef struct {
     GSList *direction;
@@ -54,35 +54,35 @@ typedef struct {
     GtkObject *size;
     GtkWidget *do_extract;
     gboolean in_update;
-} SphrevControls;
+} Sphrev1DControls;
 
 static gboolean      module_register           (const gchar *name);
 static gboolean      sphrev                    (GwyContainer *data,
                                                 GwyRunType run);
-static GwyDataField* sphrev_horizontal         (SphrevArgs *args,
+static GwyDataField* sphrev_horizontal         (Sphrev1DArgs *args,
                                                 GwyDataField *dfield);
-static GwyDataField* sphrev_vertical          (SphrevArgs *args,
+static GwyDataField* sphrev_vertical           (Sphrev1DArgs *args,
                                                 GwyDataField *dfield);
 static GwyDataLine*  sphrev_make_sphere        (gdouble radius,
                                                 gint maxres);
-static gboolean      sphrev_dialog             (SphrevArgs *args);
+static gboolean      sphrev_dialog             (Sphrev1DArgs *args);
 static void          direction_changed_cb      (GObject *item,
-                                                SphrevArgs *args);
+                                                Sphrev1DArgs *args);
 static void          radius_changed_cb         (GtkAdjustment *adj,
-                                                SphrevArgs *args);
+                                                Sphrev1DArgs *args);
 static void          size_changed_cb           (GtkAdjustment *adj,
-                                                SphrevArgs *args);
+                                                Sphrev1DArgs *args);
 static void          do_extract_changed_cb     (GtkWidget *check,
-                                                SphrevArgs *args);
-static void          sphrev_dialog_update      (SphrevControls *controls,
-                                                SphrevArgs *args);
-static void          sphrev_sanitize_args      (SphrevArgs *args);
+                                                Sphrev1DArgs *args);
+static void          sphrev_dialog_update      (Sphrev1DControls *controls,
+                                                Sphrev1DArgs *args);
+static void          sphrev_sanitize_args      (Sphrev1DArgs *args);
 static void          sphrev_load_args          (GwyContainer *container,
-                                                SphrevArgs *args);
+                                                Sphrev1DArgs *args);
 static void          sphrev_save_args          (GwyContainer *container,
-                                                SphrevArgs *args);
+                                                Sphrev1DArgs *args);
 
-SphrevArgs sphrev_defaults = {
+Sphrev1DArgs sphrev_defaults = {
     SPHREV_HORIZONTAL,
     20,
     FALSE,
@@ -95,7 +95,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "sphere_revolve",
-    N_("Level data by revolving a sphere."),
+    N_("Level data by revolving an arc or a sphere."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -110,8 +110,8 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyProcessFuncInfo sphrev_func_info = {
-        "sphere_revolve",
-        N_("/_Level/Revolve _Sphere (1D)..."),
+        "arc_revolve",
+        N_("/_Level/Revolve _Arc..."),
         (GwyProcessFunc)&sphrev,
         SPHREV_RUN_MODES,
         0,
@@ -127,7 +127,7 @@ sphrev(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
     GwyDataField *dfield, *background = NULL;
-    SphrevArgs args;
+    Sphrev1DArgs args;
     gdouble xr, yr;
     gboolean ok;
 
@@ -198,7 +198,7 @@ sphrev(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-sphrev_dialog(SphrevArgs *args)
+sphrev_dialog(Sphrev1DArgs *args)
 {
     const GwyEnum directions[] = {
         { N_("_Horizontal direction"), SPHREV_HORIZONTAL, },
@@ -207,12 +207,12 @@ sphrev_dialog(SphrevArgs *args)
     };
     enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *spin;
-    SphrevControls controls;
+    Sphrev1DControls controls;
     gint response, row;
     GSList *radio;
     gdouble q;
 
-    dialog = gtk_dialog_new_with_buttons(_("Revolve Sphere (1D)"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Revolve Arc"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -308,7 +308,7 @@ sphrev_dialog(SphrevArgs *args)
 
 static void
 direction_changed_cb(GObject *item,
-                     SphrevArgs *args)
+                     Sphrev1DArgs *args)
 {
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(item)))
         return;
@@ -319,9 +319,9 @@ direction_changed_cb(GObject *item,
 
 static void
 radius_changed_cb(GtkAdjustment *adj,
-                  SphrevArgs *args)
+                  Sphrev1DArgs *args)
 {
-    SphrevControls *controls;
+    Sphrev1DControls *controls;
 
     controls = g_object_get_data(G_OBJECT(adj), "controls");
     if (controls->in_update)
@@ -336,9 +336,9 @@ radius_changed_cb(GtkAdjustment *adj,
 
 static void
 size_changed_cb(GtkAdjustment *adj,
-                SphrevArgs *args)
+                Sphrev1DArgs *args)
 {
-    SphrevControls *controls;
+    Sphrev1DControls *controls;
 
     controls = g_object_get_data(G_OBJECT(adj), "controls");
     if (controls->in_update)
@@ -352,14 +352,14 @@ size_changed_cb(GtkAdjustment *adj,
 
 static void
 do_extract_changed_cb(GtkWidget *check,
-                      SphrevArgs *args)
+                      Sphrev1DArgs *args)
 {
     args->do_extract = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check));
 }
 
 static void
-sphrev_dialog_update(SphrevControls *controls,
-                     SphrevArgs *args)
+sphrev_dialog_update(Sphrev1DControls *controls,
+                     Sphrev1DArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->radius),
                              args->size
@@ -432,7 +432,7 @@ moving_sums(gint res, gdouble *row, gdouble *buffer, gint size)
 }
 
 static GwyDataField*
-sphrev_horizontal(SphrevArgs *args,
+sphrev_horizontal(Sphrev1DArgs *args,
                   GwyDataField *dfield)
 {
     GwyDataField *rfield;
@@ -511,7 +511,7 @@ sphrev_horizontal(SphrevArgs *args,
 }
 
 static GwyDataField*
-sphrev_vertical(SphrevArgs *args,
+sphrev_vertical(Sphrev1DArgs *args,
                 GwyDataField *dfield)
 {
     GwyDataField *rfield;
@@ -625,12 +625,12 @@ sphrev_make_sphere(gdouble radius, gint maxres)
     return dline;
 }
 
-static const gchar *radius_key = "/module/sphere_revolve/radius";
-static const gchar *direction_key = "/module/sphere_revolve/direction";
-static const gchar *do_extract_key = "/module/sphere_revolve/do_extract";
+static const gchar *radius_key = "/module/arc_revolve/radius";
+static const gchar *direction_key = "/module/arc_revolve/direction";
+static const gchar *do_extract_key = "/module/arc_revolve/do_extract";
 
 static void
-sphrev_sanitize_args(SphrevArgs *args)
+sphrev_sanitize_args(Sphrev1DArgs *args)
 {
     args->size = CLAMP(args->size, 1, 16384);
     args->direction = CLAMP(args->direction, SPHREV_HORIZONTAL, SPHREV_BOTH);
@@ -639,7 +639,7 @@ sphrev_sanitize_args(SphrevArgs *args)
 
 static void
 sphrev_load_args(GwyContainer *container,
-                 SphrevArgs *args)
+                 Sphrev1DArgs *args)
 {
     *args = sphrev_defaults;
 
@@ -652,7 +652,7 @@ sphrev_load_args(GwyContainer *container,
 
 static void
 sphrev_save_args(GwyContainer *container,
-                 SphrevArgs *args)
+                 Sphrev1DArgs *args)
 {
     gwy_container_set_double_by_name(container, radius_key, args->size);
     gwy_container_set_enum_by_name(container, direction_key, args->direction);
