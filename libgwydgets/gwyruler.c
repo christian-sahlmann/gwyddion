@@ -55,19 +55,6 @@
 #include <libgwyddion/gwyddion.h>
 #include "gwyruler.h"
 
-typedef enum {
-    GWY_SCALE_0,
-    GWY_SCALE_1,
-    GWY_SCALE_2,
-    GWY_SCALE_2_5,
-    GWY_SCALE_5,
-    GWY_SCALE_LAST
-} GwyScaleScale;
-
-static const gdouble steps[GWY_SCALE_LAST] = {
-    0.0, 1.0, 2.0, 2.5, 5.0,
-};
-
 enum {
     PROP_0,
     PROP_LOWER,
@@ -75,7 +62,6 @@ enum {
     PROP_POSITION,
     PROP_MAX_SIZE,
     PROP_UNITS_PLACEMENT,
-    PROP_EXCHANGED_SIDES,
 };
 
 static void          gwy_ruler_class_init    (GwyRulerClass  *klass);
@@ -95,12 +81,6 @@ static void          gwy_ruler_get_property  (GObject        *object,
                                               guint           prop_id,
                                               GValue         *value,
                                               GParamSpec     *pspec);
-static gdouble       compute_base            (gdouble max,
-                                              gdouble basebase);
-static GwyScaleScale next_scale              (GwyScaleScale scale,
-                                              gdouble *base,
-                                              gdouble measure,
-                                              gint min_incr);
 
 static GtkWidgetClass *parent_class;
 
@@ -203,15 +183,6 @@ gwy_ruler_class_init(GwyRulerClass *class)
                                                       GWY_UNITS_PLACEMENT_AT_ZERO,
                                                       GWY_UNITS_PLACEMENT_NONE,
                                                       G_PARAM_READWRITE));
-
-    g_object_class_install_property(gobject_class,
-                                    PROP_EXCHANGED_SIDES,
-                                    g_param_spec_boolean("exchanged_sides",
-                                                         _("Exchanged sides"),
-                                                         _("Whether ticks should be drawn on other side than normally"),
-                                                         FALSE,
-                                                         G_PARAM_READWRITE));
-
 }
 
 static void
@@ -228,7 +199,6 @@ gwy_ruler_init(GwyRuler *ruler)
     ruler->max_size = 0;
     ruler->units_placement = GWY_UNITS_PLACEMENT_NONE;
     ruler->units = GWY_SI_UNIT(gwy_si_unit_new("m"));
-    ruler->exchanged_sides = GINT_TO_POINTER(0);
 }
 
 static void
@@ -265,10 +235,6 @@ gwy_ruler_set_property(GObject      *object,
                                       (GwyUnitsPlacement)g_value_get_uint(value));
         break;
 
-        case PROP_EXCHANGED_SIDES:
-        gwy_ruler_set_has_exchanged_sides(ruler, g_value_get_boolean(value));
-        break;
-
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -302,10 +268,6 @@ gwy_ruler_get_property(GObject      *object,
 
         case PROP_UNITS_PLACEMENT:
         g_value_set_uint(value, (guint)ruler->units_placement);
-        break;
-
-        case PROP_EXCHANGED_SIDES:
-        g_value_set_boolean(value, GPOINTER_TO_INT(ruler->exchanged_sides));
         break;
 
         default:
@@ -567,236 +529,6 @@ gwy_ruler_make_pixmap(GwyRuler *ruler)
     }
 }
 
-void
-_gwy_ruler_real_draw_ticks(GwyRuler *ruler,
-                           gint pixelsize,
-                           gint min_label_spacing,
-                           gint min_tick_spacing,
-                           void (*label_callback)(GwyRuler *ruler,
-                                                  gint position,
-                                                  const gchar *label,
-                                                  PangoLayout *layout,
-                                                  gint digit_height,
-                                                  gint digit_offset),
-                           void (*tick_callback)(GwyRuler *ruler,
-                                                 gint position,
-                                                 gint depth))
-{
-    gdouble lower, upper, max;
-    gint text_size, labels, i, scale_depth;
-    gdouble range, measure, base, step, first;
-    GwyScaleScale scale;
-    GwySIValueFormat *format;
-    PangoLayout *layout;
-    PangoRectangle ink_rect;
-    gchar *unit_str;
-    gboolean units_drawn;
-    GtkWidget *widget;
-    gint digit_height, digit_offset;
-    struct { GwyScaleScale scale; double base; } tick_info[4];
-
-    widget = GTK_WIDGET(ruler);
-
-    layout = gtk_widget_create_pango_layout(widget, "012456789");
-    pango_layout_get_extents(layout, &ink_rect, NULL);
-
-    digit_height = PANGO_PIXELS(ink_rect.height) + 1;
-    digit_offset = ink_rect.y;
-
-    upper = ruler->upper;
-    lower = ruler->lower;
-    if (upper <= lower || pixelsize < 2 || pixelsize > 10000)
-        return;
-    max = ruler->max_size;
-    if (max == 0)
-        max = MAX(fabs(lower), fabs(upper));
-
-    range = upper - lower;
-    format = gwy_si_unit_get_format_with_resolution(ruler->units,
-                                                    max, max/12, NULL);
-    measure = range/format->magnitude / pixelsize;
-    max /= format->magnitude;
-
-    switch (ruler->units_placement && ruler->units) {
-        case GWY_UNITS_PLACEMENT_AT_ZERO:
-        unit_str
-            = g_strdup_printf("%d %s",
-                              (lower > 0) ? (gint)(lower/format->magnitude) : 0,
-                              format->units);
-        break;
-
-        default:
-        unit_str = g_strdup_printf("%d", (gint)max);
-        break;
-    }
-    if (strchr(unit_str, '<')) {
-        GError *err = NULL;
-        PangoAttrList *attr_list = NULL;
-        gchar *text = NULL;
-        gboolean ok;
-
-        ok = pango_parse_markup(unit_str, -1, 0, &attr_list, &text, NULL, &err);
-        if (!ok) {
-            g_warning("Cannot parse unit string: %s", err->message);
-            text_size = digit_height + 1;
-        }
-        else {
-            /* FIXME: this is very aproximate */
-            text_size = g_utf8_strlen(text, -1)*digit_height + 1;
-            pango_attr_list_unref(attr_list);
-            g_free(text);
-        }
-        g_clear_error(&err);
-    }
-    else
-        text_size = g_utf8_strlen(unit_str, -1)*digit_height + 1;
-    g_free(unit_str);
-
-    /* fit as many labels as you can */
-    labels = floor(pixelsize/(text_size + min_label_spacing));
-    if (labels > 5)    /* but at five slow down */
-        labels = 5 + (labels - 5)/2;
-    if (labels == 0)    /* at least one */
-        labels = 1;
-
-    step = range/format->magnitude / labels;
-    base = compute_base(step, 10);
-    step /= base;
-    if (step >= 5.0 || base < 1.0) {
-        scale = GWY_SCALE_1;
-        base *= 10;
-    }
-    else if (step >= 2.5)
-        scale = GWY_SCALE_5;
-    else if (step >= 2.0)
-        scale = GWY_SCALE_2_5;
-    else
-        scale = GWY_SCALE_2;
-    step = steps[scale];
-
-    /* draw labels */
-    units_drawn = FALSE;
-    first = floor(lower/format->magnitude / (base*step))*base*step;
-    for (i = 0; ; i++) {
-        gint pos;
-        gdouble val;
-
-        val = i*step*base + first;
-        pos = floor((val - lower/format->magnitude)/measure);
-        if (pos >= pixelsize)
-            break;
-        if (pos < 0)
-            continue;
-        if (!units_drawn
-            && (upper < 0 || val >= 0)
-            && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO
-            && ruler->units) {
-            unit_str = g_strdup_printf("%d %s", ROUND(val), format->units);
-            units_drawn = TRUE;
-        }
-        else
-            unit_str = g_strdup_printf("%d", ROUND(val));
-        label_callback(ruler, pos, unit_str, layout,
-                       digit_height, digit_offset);
-        g_free(unit_str);
-    }
-
-    /* draw tick marks, from smallest to largest */
-    scale_depth = 0;
-    while (scale && scale_depth < (gint)G_N_ELEMENTS(tick_info)) {
-        tick_info[scale_depth].scale = scale;
-        tick_info[scale_depth].base = base;
-        scale = next_scale(scale, &base, measure, min_tick_spacing);
-        scale_depth++;
-    }
-    scale_depth--;
-
-    while (scale_depth > -1) {
-        scale = tick_info[scale_depth].scale;
-        base = tick_info[scale_depth].base;
-        step = steps[scale];
-        first = floor(lower/format->magnitude / (base*step))*base*step;
-        for (i = 0; ; i++) {
-            gint pos;
-            gdouble val;
-
-            val = (i + 0.000001)*step*base + first;
-            pos = floor((val - lower/format->magnitude)/measure);
-            if (pos >= pixelsize)
-                break;
-            if (pos < 0)
-                continue;
-            tick_callback(ruler, pos, scale_depth);
-        }
-        scale_depth--;
-    }
-
-    gwy_si_unit_value_format_free(format);
-    g_object_unref(layout);
-}
-
-static gdouble
-compute_base(gdouble max, gdouble basebase)
-{
-    gint i;
-    gdouble base;
-
-    i = floor(log(max)/log(basebase));
-    base = 1.0;
-    if (i > 0)
-        while (i--)
-            base *= basebase;
-    else
-        while (i++)
-            base /= basebase;
-    return base;
-}
-
-static GwyScaleScale
-next_scale(GwyScaleScale scale,
-           gdouble *base,
-           gdouble measure,
-           gint min_incr)
-{
-    GwyScaleScale new_scale = GWY_SCALE_0;
-
-    switch (scale) {
-        case GWY_SCALE_1:
-        *base /= 10.0;
-        if ((gint)floor(*base*2.0/measure) > min_incr)
-            new_scale = GWY_SCALE_5;
-        else if ((gint)floor(*base*2.5/measure) > min_incr)
-            new_scale = GWY_SCALE_2_5;
-        else if ((gint)floor(*base*5.0/measure) > min_incr)
-            new_scale = GWY_SCALE_5;
-        break;
-
-        case GWY_SCALE_2:
-        if ((gint)floor(*base/measure) > min_incr)
-            new_scale = GWY_SCALE_1;
-        break;
-
-        case GWY_SCALE_2_5:
-        *base /= 10.0;
-        if ((gint)floor(*base*5.0/measure) > min_incr)
-            new_scale = GWY_SCALE_5;
-        break;
-
-        case GWY_SCALE_5:
-        if ((gint)floor(*base/measure) > min_incr)
-            new_scale = GWY_SCALE_1;
-        else if ((gint)floor(*base*2.5/measure) > min_incr)
-            new_scale = GWY_SCALE_2_5;
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
-    return new_scale;
-}
-
 /**
  * gwy_ruler_set_units:
  * @ruler: A #GwyRuler.
@@ -831,52 +563,6 @@ gwy_ruler_get_units(GwyRuler *ruler)
 {
     g_return_val_if_fail(GWY_IS_RULER(ruler), NULL);
     return ruler->units;
-}
-
-/**
- * gwy_ruler_set_has_exchanged_sides:
- * @ruler: A #GwyRuler.
- * @exchanged_sides: Whether the ruler should have exchanged sides.
- *
- * Sets exchanged sides for a ruler.
- *
- * Rulers have a `normal' side where ticks are drawn (and labels are drawn
- * on the opposite).  This is bottom for horizontal, and right for vertical
- * rulers.  A ruler with exchanged sides have ticks and labels drawn on
- * opposite sides than normally.
- *
- * Since: 1.5
- **/
-void
-gwy_ruler_set_has_exchanged_sides(GwyRuler *ruler,
-                                  gboolean exchanged_sides)
-{
-    g_return_if_fail(GWY_IS_RULER(ruler));
-    exchanged_sides = !!exchanged_sides;
-    if (exchanged_sides == GPOINTER_TO_INT(ruler->exchanged_sides))
-        return;
-
-    ruler->exchanged_sides = GINT_TO_POINTER(exchanged_sides);
-    gtk_widget_queue_draw(GTK_WIDGET(ruler));
-}
-
-/**
- * gwy_ruler_get_has_exchanged_sides:
- * @ruler: A #GwyRuler.
- *
- * Returns whether a ruler has exchanged sides.
- *
- * See gwy_ruler_set_has_exchanged_sides() for details.
- *
- * Returns: %TRUE if the rules has exchanged sides, %FALSE if it has not.
- *
- * Since: 1.5
- **/
-gboolean
-gwy_ruler_get_has_exchanged_sides(GwyRuler *ruler)
-{
-    g_return_val_if_fail(GWY_IS_RULER(ruler), FALSE);
-    return GPOINTER_TO_INT(ruler->exchanged_sides);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
