@@ -505,6 +505,7 @@ tip_blind_run(TipBlindControls *controls,
                                          &count,
                                          gwy_app_wait_set_fraction,
                                          gwy_app_wait_set_message);
+        controls->good_tip = (tipfield != NULL && count > 0);
     }
     else {
         gwy_data_field_fill(tipfield, 0);
