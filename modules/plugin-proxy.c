@@ -164,11 +164,7 @@ module_register(const gchar *name)
     gchar *plugin_path;
     gchar *dir;
 
-#ifdef G_OS_WIN32
     plugin_path = gwy_find_self_dir("plugins");
-#else
-    plugin_path = g_strdup(GWY_PLUGIN_DIR);
-#endif
     g_return_val_if_fail(plugin_path, FALSE);
     gwy_debug("plug-in path is: %s", plugin_path);
 

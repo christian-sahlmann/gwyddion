@@ -49,11 +49,7 @@ gwy_app_splash_create(void)
 
     settings = gwy_app_settings_get();
 
-#ifdef G_OS_WIN32
     p = gwy_find_self_dir("pixmaps");
-#else
-    p = g_strdup(GWY_PIXMAP_DIR);
-#endif
     filename = g_build_filename(p, "splash.png", NULL);
     g_free(p);
 

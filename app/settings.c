@@ -38,6 +38,8 @@
 #include <libgwyddion/gwyserializable.h>
 #include "settings.h"
 
+static gchar* get_gwyddion_dir (void);
+
 static GwyContainer *gwy_settings = NULL;
 
 /**
@@ -179,11 +181,7 @@ gwy_app_settings_get_module_dirs(void)
     gsize i;
 
     module_dirs = g_new(gchar*, G_N_ELEMENTS(module_types)+2);
-#ifdef G_OS_WIN32
     p = gwy_find_self_dir("modules");
-#else
-    p = g_strdup(GWY_MODULE_DIR);
-#endif
     for (i = 0; i < G_N_ELEMENTS(module_types); i++)
         module_dirs[i] = g_build_filename(p, module_types[i], NULL);
     module_dirs[i++] = p;
@@ -202,6 +200,25 @@ gwy_app_settings_get_module_dirs(void)
 gchar*
 gwy_app_settings_get_config_filename(void)
 {
+    return g_build_filename(get_gwyddion_dir(), "gwydrc", NULL);
+}
+
+/**
+ * gwy_app_settings_get_log_filename:
+ *
+ * Returns a suitable log file name.
+ *
+ * Returns: The file name as a newly allocated string.
+ **/
+gchar*
+gwy_app_settings_get_log_filename(void)
+{
+    return g_build_filename(get_gwyddion_dir(), "gwyddion.log", NULL);
+}
+
+static gchar*
+get_gwyddion_dir(void)
+{
     const gchar *gwydir =
 #ifdef G_OS_WIN32
         "gwyddion";
@@ -209,7 +226,10 @@ gwy_app_settings_get_config_filename(void)
         ".gwyddion";
 #endif
     const gchar *homedir;
-    gchar *config_file;
+    static gchar *gwyhomedir = NULL;
+
+    if (gwyhomedir)
+        return gwyhomedir;
 
     homedir = g_get_home_dir();
 #ifdef G_OS_WIN32
@@ -218,9 +238,9 @@ gwy_app_settings_get_config_filename(void)
     if (!homedir)
         homedir = "C:\\Windows";  /* XXX :-))) */
 #endif
-    config_file = g_build_filename(homedir, gwydir, "gwydrc", NULL);
 
-    return config_file;
+    gwyhomedir = g_build_filename(homedir, gwydir, NULL);
+    return gwyhomedir;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

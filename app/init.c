@@ -75,11 +75,7 @@ gwy_app_init_set_window_icon(void)
     gchar *filename, *p;
     GError *err = NULL;
 
-#ifdef G_OS_WIN32
     p = gwy_find_self_dir("pixmaps");
-#else
-    p = g_strdup(GWY_PIXMAP_DIR);
-#endif
     filename = g_build_filename(p, "gwyddion.ico", NULL);
     gtk_window_set_default_icon_from_file(filename, &err);
     if (err) {

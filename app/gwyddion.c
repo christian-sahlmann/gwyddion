@@ -94,6 +94,9 @@ APIENTRY WinMain(HINSTANCE hInstance,
 
 #endif /* WIN32 */
 
+/* Redirect messages from all libraries we use to a file.  This (a) creates
+ * a possibly useful log if we don't crash totally (b) prevents the mesages
+ * to go to a DOS console thus creating it. */
 static void
 setup_logging(void)
 {
@@ -103,25 +106,11 @@ setup_logging(void)
         "Gwyddion", "GwyProcess", "GwyDraw", "Gwydgets", "GwyModule", "GwyApp",
         "Module", NULL
     };
-    const gchar *gwydir =
-#ifdef G_OS_WIN32
-        "gwyddion";
-#else
-        ".gwyddion";
-#endif
-    const gchar *homedir;
     gchar *log_filename;
     gsize i;
     FILE *logfile;
 
-    homedir = g_get_home_dir();
-#ifdef G_OS_WIN32
-    if (!homedir)
-        homedir = g_get_tmp_dir();
-    if (!homedir)
-        homedir = "C:\\Windows";  /* XXX :-))) */
-#endif
-    log_filename = g_build_filename(homedir, gwydir, "gwyddion.log", NULL);
+    log_filename = gwy_app_settings_get_log_filename();
     logfile = fopen(log_filename, "w");
     for (i = 0; i < G_N_ELEMENTS(domains); i++)
         g_log_set_handler(domains[i],

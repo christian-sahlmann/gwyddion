@@ -83,15 +83,7 @@ guess_pixmap_path(void)
 {
     gchar *p;
 
-#ifdef G_OS_WIN32
-    /* try find self from argv[0] and possibly from registry (once
-     * gwy_find_self_dir() implements it) */
     p = gwy_find_self_dir("pixmaps");
-#else /* G_OS_WIN32 */
-    /* try GWY_PIXMAP_DIR, try it after the previous ones, so an uninstalled
-     * version gets its own directory, not the system one */
-    p = g_strdup(GWY_PIXMAP_DIR);
-#endif /* G_OS_WIN32 */
     if (g_file_test(p, G_FILE_TEST_IS_DIR)) {
         gwy_debug("Icon path: %s", p);
         return p;

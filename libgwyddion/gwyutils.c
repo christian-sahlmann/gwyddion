@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -231,19 +231,20 @@ gwy_debug_gnu(const gchar *domain,
  *
  * Finds some gwyddion directory.
  *
- * This function is useful only on Win32, on sane systems the installation
- * path is known and thus use GWY_PIXMAP_DIR, etc. instead.  Moreover, the
- * directory layout is different on *nix anyway.
+ * This function exists only because of insane Win32 instalation manners.
+ * On sane systems is just returns a copy of GWY_PIXMAP_DIR, etc. instead.
  *
  * The returned value is not actually tested for existence, it's up to caller.
  *
- * gwy_find_self_set_argv0() must be called first.
+ * On Win32, gwy_find_self_set_argv0() must be called before any call to
+ * gwy_find_self_dir().
  *
  * Returns: The path as a newly allocated string.
  **/
 gchar*
 gwy_find_self_dir(const gchar *dirname)
 {
+#ifdef G_OS_WIN32
     gchar *p, *q, *b;
 
     /* TODO: to be sure, we should put the path to the registry, too */
@@ -265,6 +266,23 @@ gwy_find_self_dir(const gchar *dirname)
     g_free(p);
 
     return q;
+#endif /* G_OS_WIN32 */
+
+#ifdef G_OS_UNIX
+    static const struct { gchar *id; gchar *path; } paths[] = {
+        { "modules", GWY_MODULE_DIR },
+        { "pixmaps", GWY_PIXMAP_DIR },
+        { "plugins", GWY_PLUGIN_DIR },
+    };
+    gsize i;
+
+    for (i = 0; i < G_N_ELEMENTS(paths); i++) {
+        if (strcmp(dirname, paths[i].id) == 0)
+            return g_strdup(paths[i].path);
+    }
+    g_critical("Cannot find directory for `%s'", dirname);
+    return NULL;
+#endif /* G_OS_UNIX */
 }
 
 /**

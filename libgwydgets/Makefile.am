@@ -103,7 +103,7 @@ libgwydgets_la_SOURCES = \
 #	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\"
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\"
 
 clean-local:
 	rm -f core.* *~
