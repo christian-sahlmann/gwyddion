@@ -234,12 +234,13 @@ gwy_option_menu_create(const GwyEnum *entries,
         item = gtk_menu_item_new_with_label(_(entries[i].name));
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_object_set_qdata(G_OBJECT(item), quark,
-                          GINT_TO_POINTER(entries[i].value));
+                           GINT_TO_POINTER(entries[i].value));
         if (callback)
             g_signal_connect(item, "activate", callback, cbdata);
         if (entries[i].value == current)
             idx = i;
     }
+    gwy_debug("current: %d", idx);
 
     gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
     if (idx != -1)
@@ -283,6 +284,7 @@ gwy_option_menu_set_history(GtkWidget *option_menu,
             gtk_option_menu_set_history(GTK_OPTION_MENU(option_menu), i);
             return TRUE;
         }
+        i++;
     }
     return FALSE;
 }
@@ -303,6 +305,7 @@ gint
 gwy_option_menu_get_history(GtkWidget *option_menu,
                             const gchar *key)
 {
+    GList *c;
     GQuark quark;
     GtkWidget *menu, *item;
     gint idx;
@@ -316,8 +319,9 @@ gwy_option_menu_get_history(GtkWidget *option_menu,
         return -1;
     menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(option_menu));
     quark = g_quark_from_string(key);
-    item = GTK_WIDGET(g_list_nth(GTK_MENU_SHELL(menu)->children, (guint)idx));
-    g_return_val_if_fail(item, FALSE);
+    c = g_list_nth(GTK_MENU_SHELL(menu)->children, (guint)idx);
+    g_return_val_if_fail(c, FALSE);
+    item = GTK_WIDGET(c->data);
 
     return GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(item), quark));
 }
