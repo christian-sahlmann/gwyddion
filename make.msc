@@ -47,7 +47,7 @@ LINKDEBUG = /debug
 
 LDFLAGS = /machine:ix86 $(LINKDEBUG) /nologo
 
-COMMON_CFLAGS = -I "$(GTK_TOP)\include" -I "$(MSC_TOP)\include"
+COMMON_CFLAGS = -I "$(GTK_TOP)\include" -I "$(MSC_TOP)\include" -DDEBUG
 COMMON_LDFLAGS = /libpath:"$(GTK_TOP)\lib" /libpath:"$(MSC_TOP)\lib"
 
 ATK_CFLAGS = -I "$(GTK_TOP)\include\atk-$(ATK_VER)"
