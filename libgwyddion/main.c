@@ -462,7 +462,7 @@ test_string_utils(void)
 }
 
 gdouble
-gauss(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+gauss(gdouble x, G_GNUC_UNUSED gint n_par, const gdouble *b,
       G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     gdouble c;
@@ -498,6 +498,7 @@ test_nlfit(void)
     gdouble xmq[count + 1];
     gdouble ymq[count + 1];
     gdouble vmq[count + 1];
+    gboolean fixed[3];
     gdouble param[3];
     gboolean bb;
     gdouble xx, summ;
@@ -538,6 +539,34 @@ test_nlfit(void)
                     gwy_math_nlfit_get_correlations(ms, i, j));
         fputs("\n", stderr);
     }
+
+    fputs("\n", stderr);
+    param[0] = 5.0;
+    param[1] = 12.0;
+    param[2] = 1.1;
+    fixed[0] = FALSE;
+    fixed[1] = FALSE;
+    fixed[2] = TRUE;
+    summ = gwy_math_nlfit_fit_with_fixed(ms, count, xmq, ymq, vmq, 3, param,
+                                         fixed, NULL);
+
+    fprintf(stderr, "Evaluated: %d\n", ms->eval);
+    fprintf(stderr, "Suma: %f\n", summ);
+    for (i = 0; i < 3; i++)
+        fprintf(stderr, "Par[%d] = %f +- %f\n",
+                i, param[i], gwy_math_nlfit_get_sigma(ms, i));
+    fputs("\n", stderr);
+    for (i = 0; i < count; i++)
+        fprintf(stderr, "%3d: %.4f\t%.4f\t%.4f\t%.4f\n",
+                i, xmq[i], ymq[i], vmq[i], gauss(xmq[i], 3, param, NULL, &bb));
+    fputs("\n", stderr);
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j <= i; j++)
+            fprintf(stderr, "%.4f\t",
+                    gwy_math_nlfit_get_correlations(ms, i, j));
+        fputs("\n", stderr);
+    }
+
     gwy_math_nlfit_free(ms);
 }
 
@@ -571,8 +600,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_serializable_iface();
-    test_container_serialization();
+    test_nlfit();
 
     return 0;
 }

@@ -48,12 +48,12 @@ typedef enum {
 
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
                                  gint n_par,
-                                 gdouble *param,
+                                 const gdouble *param,
                                  gpointer user_data,
                                  gboolean *fres);
 
 typedef  void (*GwyNLFitDerFunc)(gint i,
-                                 gdouble *x,
+                                 const gdouble *x,
                                  gint n_par,
                                  gdouble *param,
                                  GwyNLFitFunc fmarq,
@@ -105,11 +105,20 @@ GwyNLFitter*   gwy_math_nlfit_new                (GwyNLFitFunc ff,
 void           gwy_math_nlfit_free               (GwyNLFitter *nlfit);
 gdouble        gwy_math_nlfit_fit                (GwyNLFitter *nlfit,
                                                   gint n_dat,
-                                                  gdouble *x,
-                                                  gdouble *y,
-                                                  gdouble *weight,
-                                                  gint n_par,
+                                                  const gdouble *x,
+                                                  const gdouble *y,
+                                                  const gdouble *weight,
+                                                  gint n_param,
                                                   gdouble *param,
+                                                  gpointer user_data);
+gdouble        gwy_math_nlfit_fit_with_fixed     (GwyNLFitter *nlfit,
+                                                  gint n_dat,
+                                                  const gdouble *x,
+                                                  const gdouble *y,
+                                                  const gdouble *weight,
+                                                  gint n_param,
+                                                  gdouble *param,
+                                                  const gboolean *fixed_param,
                                                   gpointer user_data);
 gint           gwy_math_nlfit_get_max_iterations (GwyNLFitter *nlfit);
 void           gwy_math_nlfit_set_max_iterations (GwyNLFitter *nlfit,
@@ -122,8 +131,8 @@ gdouble        gwy_math_nlfit_get_sigma          (GwyNLFitter *nlfit,
                                                   gint par);
 
 void           gwy_math_nlfit_derive             (gint i,
-                                                  gdouble *x,
-                                                  gint n_par,
+                                                  const gdouble *x,
+                                                  gint n_param,
                                                   gdouble *param,
                                                   GwyNLFitFunc ff,
                                                   gpointer user_data,
