@@ -61,7 +61,7 @@
 G_BEGIN_DECLS
 
 #define gwy_adjustment_get_int(adj) \
-    ((gint)(gtk_adjustment_get_value(GTK_ADJUSTMENT(adj)) + 0.5)
+    ((gint)(gtk_adjustment_get_value(GTK_ADJUSTMENT(adj)) + 0.5))
 
 typedef enum {
     GWY_HSCALE_DEFAULT  = 0,
