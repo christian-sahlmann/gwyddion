@@ -9,11 +9,11 @@
 #define _(x) (x)
 
 #define gwy_object_unref(x) \
-    G_STMT_START \
+    do { \
     if (x) \
         g_object_unref(x); \
     (x) = NULL; \
-    G_STMT_END
+    } while (0)
 
 #define GWY_SWAP(t, x, y) \
     do { \
