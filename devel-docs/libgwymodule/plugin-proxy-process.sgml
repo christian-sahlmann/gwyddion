@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="plugin-proxy-process" revision="@(#) $Id$">
+  <refmeta>
+    <refentrytitle>Data Process Plug-ins</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>Gwyddion</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>Data Process Plug-ins</refname>
+    <refpurpose>
+      XXX
+    </refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Registration</title>
+    <para>
+      When the plug-in is called with <literal>register</literal> as
+      its first argument it should dump following information to standard
+      output (each on a separate line) and terminate:
+    </para>
+    <itemizedlist>
+      <listitem>plug-in name</listitem>
+      <listitem>menu path</listitem>
+      <listitem>run modes</listitem>
+    </itemizedlist>
+    <para>
+      These information correspond to similar data process module
+      information.
+    </para>
+    <screen><![CDATA[
+my_plugin
+/_Plug-ins/My Plug-in
+noninteractive with_defaults
+]]></screen>
+  </refsect1>
+</refentry>
+
+

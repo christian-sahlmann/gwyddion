@@ -23,4 +23,11 @@
     <xi:include href="module-tutorial-minimal.sgml"/>
     <xi:include href="module-tutorial-beyond.sgml"/>
   </chapter>
+
+  <chapter>
+    <title>Plug-in Proxy Reference</title>
+    <xi:include href="plugin-proxy-overview.sgml"/>
+    <xi:include href="plugin-proxy-process.sgml"/>
+    <xi:include href="plugin-proxy-file.sgml"/>
+  </chapter>
 </book>

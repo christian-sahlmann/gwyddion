@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="plugin-proxy-overview" revision="@(#) $Id$">
+  <refmeta>
+    <refentrytitle>Plug-in Proxy Overview</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>Gwyddion</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>Plug-in Proxy Overview</refname>
+    <refpurpose>
+      Overview of Gwyddion plug-ins and the plugin-proxy module
+    </refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Overview</title>
+    <para>
+      FIXME: Much more to be said.
+    </para>
+    <para>
+      Plug-ins are external programs that can be executed by Gwyddion
+      to either perform some operation on the data or to read or write
+      data in a third-party file format.
+    </para>
+    <para>
+      The capability to use plug-ins is not a built-in Gwyddion feature,
+      instead it is provided a by a smart module called plug-in proxy.
+      With the small exception there is a dedicated directory for plug-ins
+      defined directly in Gwyddion, the plug-in proxy module is in no way
+      privileged or otherwise special.
+      It can be removed or there can be added other plug-in proxies and
+      happily coexist with the current one.
+    </para>
+    <para>
+      When the plug-in proxy module registeres self, it scans the plug-in
+      directories, requests information from the plug-ins it finds and passes
+      the information as its own features.
+      Likewise when it is run to process some data it executes
+      the appropriate plug-in to process it and passes the result back to
+      Gwyddion.  All plug-in features thus look as plug-in proxy features
+      to Gwyddion, as you can see yourself in the Module Browser.
+    </para>
+  </refsect1>
+</refentry>
+

@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="plugin-proxy-file" revision="@(#) $Id$">
+  <refmeta>
+    <refentrytitle>File Type Plug-ins</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>Gwyddion</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>File Type Plug-ins</refname>
+    <refpurpose>
+      XXX
+    </refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Registration</title>
+    <para>
+      When the plug-in is called with <literal>register</literal> as
+      its first argument it should dump following information to standard
+      output (each on a separate line) and terminate:
+    </para>
+    <itemizedlist>
+      <listitem>plug-in name</listitem>
+      <listitem>file format description</listitem>
+      <listitem>file globs</listitem>
+      <listitem>supported operations</listitem>
+    </itemizedlist>
+    <para>
+      These information correspond to similar data process module
+      information.
+    </para>
+    <screen><![CDATA[
+acme_file_v5
+ACME AFM Data Format v5 (*.ac5)
+*.ac5
+load save
+]]></screen>
+  </refsect1>
+</refentry>
+
+
+
