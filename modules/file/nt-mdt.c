@@ -229,7 +229,7 @@ static void           add_metadata        (MDTFile *mdtfile,
 static gboolean       mdt_real_load       (const guchar *buffer,
                                            gsize size,
                                            MDTFile *mdtfile);
-GwyDataField*         extract_scanned_data(MDTScannedDataFrame *dataframe);
+static GwyDataField*  extract_scanned_data(MDTScannedDataFrame *dataframe);
 
 static const GwyEnum frame_types[] = {
     { "Scanned",      MDT_FRAME_SCANNED },
@@ -811,7 +811,7 @@ mdt_real_load(const guchar *buffer,
     return TRUE;
 }
 
-GwyDataField*
+static GwyDataField*
 extract_scanned_data(MDTScannedDataFrame *dataframe)
 {
     GwyDataField *dfield;
