@@ -94,6 +94,7 @@ toolbox_add_menubar(GtkWidget *container,
                     const gchar *item_label,
                     GSList *menus)
 {
+#ifdef TOOLBOX_GWYVMENUBAR
     GtkWidget *item;
 
     item = gtk_menu_item_new_with_mnemonic(item_label);
@@ -103,6 +104,25 @@ toolbox_add_menubar(GtkWidget *container,
         menus = g_slist_append(menus, container);
 
     return menus;
+#else
+    GtkWidget *item, *alignment, *menubar;
+    GtkTextDirection direction;
+
+    menubar = gtk_menu_bar_new();
+    direction = gtk_widget_get_direction(menubar);
+    alignment = gtk_alignment_new(direction == GTK_TEXT_DIR_RTL ? 1.0 : 0.0,
+                                  0.0, 1.0, 0.0);
+    gtk_container_add(GTK_CONTAINER(container), alignment);
+    gtk_container_add(GTK_CONTAINER(alignment), menubar);
+    gtk_widget_set_name(menubar, "toolboxmenubar");
+
+    item = gtk_menu_item_new_with_mnemonic(item_label);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), item);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
+    menus = g_slist_append(menus, menubar);
+
+    return menus;
+#endif
 }
 
 GtkWidget*
@@ -139,8 +159,12 @@ gwy_app_toolbox_create(void)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(toolbox), vbox);
 
+#ifdef TOOLBOX_GWYVMENUBAR
     container = gwy_vmenu_bar_new();
     gtk_box_pack_start(GTK_BOX(vbox), container, FALSE, FALSE, 0);
+#else
+    container = vbox;
+#endif
 
     menus = toolbox_add_menubar(container,
                                 gwy_app_menu_create_file_menu(accel_group),

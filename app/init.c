@@ -64,17 +64,25 @@ gwy_app_init(void)
 
     gwy_app_init_set_window_icon();
 
-    gtk_rc_parse_string("style \"cornerbutton\" {\n"
+    gtk_rc_parse_string(/* data window corner buttons */
+                        "style \"cornerbutton\" {\n"
                         "GtkButton::focus_line_width = 0\n"
                         "GtkButton::focus_padding = 0\n"
                         "}\n"
                         "widget \"*.cornerbutton\" style \"cornerbutton\"\n"
                         "\n"
+                        /* toolbox group header buttons */
                         "style \"toolboxheader\" {\n"
                         "GtkButton::focus_line_width = 0\n"
                         "GtkButton::focus_padding = 0\n"
                         "}\n"
                         "widget \"*.toolboxheader\" style \"toolboxheader\"\n"
+                        "\n"
+                        /* toolbox single-item menubars */
+                        "style \"toolboxmenubar\" {\n"
+                        "GtkMenuBar::shadow_type = 0\n"
+                        "}\n"
+                        "widget \"*.toolboxmenubar\" style \"toolboxmenubar\"\n"
                         "\n");
 }
 
