@@ -116,6 +116,7 @@ dialog_create(GwyUnitoolState *state)
     ToolControls *controls;
     GwyContainer *settings;
     GtkWidget *dialog, *table, *label, *frame;
+    GString *str;
     gint radius;
 
     gwy_debug("");
@@ -132,16 +133,24 @@ dialog_create(GwyUnitoolState *state)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
+    str = g_string_new("");
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>X</b>"));
+    g_string_printf(str, _("<b>X</b> [%s]"), state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
+
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Y</b>"));
+    g_string_printf(str, _("<b>Y</b> [%s]"), state->coord_format->units);
+    gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
+
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Value</b>"));
+    g_string_printf(str, _("<b>Value</b> [%s]"), state->value_format->units);
+    gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
+
+    g_string_free(str, TRUE);
 
     label = controls->x = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
@@ -199,10 +208,13 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     if (is_selected) {
-        gwy_unitool_update_label(state->coord_format, controls->x, xy[0]);
-        gwy_unitool_update_label(state->coord_format, controls->y, xy[1]);
+        gwy_unitool_update_label_no_units(state->coord_format,
+                                          controls->x, xy[0]);
+        gwy_unitool_update_label_no_units(state->coord_format,
+                                          controls->y, xy[1]);
         value = gwy_unitool_get_z_average(dfield, xy[0], xy[1], radius);
-        gwy_unitool_update_label(state->value_format, controls->val, value);
+        gwy_unitool_update_label_no_units(state->value_format,
+                                          controls->val, value);
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls->x), "");
