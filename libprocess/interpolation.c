@@ -24,22 +24,32 @@
 #include <libgwyddion/gwymacros.h>
 #include "interpolation.h"
 
-gdouble 
-gwy_interpolation_get_dval(gdouble x, gdouble x1, gdouble y1, gdouble x2, gdouble y2, gint interpolation)
+/*simple interpolation of non-equidistant values using two neighbour values*/
+gdouble
+gwy_interpolation_get_dval(gdouble x,
+                           gdouble x1_, gdouble y1_,
+                           gdouble x2_, gdouble y2_,
+                           GwyInterpolationType interpolation)
 {
-    if (x1 > x2){GWY_SWAP(gdouble, x1, x2); GWY_SWAP(gdouble, y1, y2);}
+    if (x1_ > x2_) {
+        GWY_SWAP(gdouble, x1_, x2_);
+        GWY_SWAP(gdouble, y1_, y2_);
+    }
 
-    if (interpolation==GWY_INTERPOLATION_ROUND)
-    {
-	if ((x - x1) < (x2 - x)) return y1;
-	else return y2;
+    if (interpolation == GWY_INTERPOLATION_ROUND) {
+        if ((x - x1_) < (x2_ - x))
+            return y1_;
+        else
+            return y2_;
     }
-    else if (interpolation==GWY_INTERPOLATION_BILINEAR)
-    {
-	return y1 + (x - x1)/(x2 - x1)*(y2 - y1);
+    else if (interpolation==GWY_INTERPOLATION_BILINEAR) {
+        return y1_ + (x - x1_)/(x2_ - x1_)*(y2_ - y1_);
     }
-    else {g_warning("Interpolation not implemented yet.\n");}
+    else {
+        g_warning("Interpolation not implemented yet.\n");
+    }
     return 0;
 }
 
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
