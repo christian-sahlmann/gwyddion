@@ -48,7 +48,7 @@ sub _read_dfield {
     return undef if $fh->eof;
     $fh->read( $c, 1 );
     if ( $c ne '[' ) {
-        $fh->ungetc( $c );
+        $fh->ungetc( ord $c );
         return undef;
     }
     _dmove( $data, $base . '/xres', \%dfield, 'xres', 'int' );
