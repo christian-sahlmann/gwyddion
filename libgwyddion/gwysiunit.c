@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#define DEBUG 1
+
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -251,34 +253,34 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
                        GwySIValueFormat *format)
 {
     char num[23];
-    
+
     gwy_debug("");
     if (format==NULL) {
         format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
         format->units = NULL;
     }
-    
+
     if (format->units)
     {
         g_free(format->units);
     }
-   
+
     if (strlen(siunit->unitstr)<2)
     {
         format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
-  
+
         format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
         format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
     }
     else
     {
         format->magnitude = pow(10, (gint)(log10(fabs(value)))-1);
-        
+
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
         if ((gint)(log10(fabs(format->magnitude))) != 0)
         {
-            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));   
+            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
             format->units = strcpy(format->units, num);
             format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
         }
@@ -286,9 +288,10 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
         {
             format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
         }
-          
+
     }
     format->precision = 2;
+    gwy_debug("unitstr = <%s>, units = <%s>", siunit->unitstr, format->units);
     return format;
 }
 
@@ -325,15 +328,15 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
         format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
         format->units = NULL;
     }
-    
+
     if (format->units)
     {
         g_free(format->units);
     }
- 
+
     format->magnitude = gwy_math_humanize_numbers(resolution, maximum, &prec);
     format->precision = prec;
-       
+
     if (strlen(siunit->unitstr)<2)
     {
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
@@ -342,11 +345,11 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
     }
     else
     {
-        
+
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
         if ((gint)(log10(fabs(format->magnitude))) != 0)
         {
-            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));   
+            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
             format->units = strcpy(format->units, num);
             format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
         }
@@ -354,9 +357,10 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
         {
             format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
         }
-        
+
     }
-     
+
+    gwy_debug("unitstr = <%s>, units = <%s>", siunit->unitstr, format->units);
     return format;
 }
 
@@ -385,40 +389,40 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
 {
     char num[23];
     gdouble realmag;
-    
+
     gwy_debug("");
     if (format==NULL) {
         format = (GwySIValueFormat *)g_new(GwySIValueFormat, 1);
         format->units = NULL;
     }
-    
+
     if (format->units)
     {
         g_free(format->units);
     }
-   
+
     if (strlen(siunit->unitstr)<2)
     {
         format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(maximum))))/3.0));
         realmag = pow(10, (gint)(log10(fabs(maximum)))-1);
-        
+
         if (ROUND((gdouble)format->magnitude/realmag)==10.0)
         {
             if (maximum/format->magnitude >= 1)
                format->precision = sdigits-1;
             else
-               format->precision = sdigits; 
+               format->precision = sdigits;
         }
         else if (ROUND((gdouble)format->magnitude/realmag)==100.0)
         {
-            if (maximum/format->magnitude >= 0.1)                
+            if (maximum/format->magnitude >= 0.1)
                 format->precision = sdigits;
             else
                 format->precision = sdigits+1;
         }
          else if (ROUND((gdouble)format->magnitude/realmag)==1.0)
         {
-            if (maximum/format->magnitude >= 10)            
+            if (maximum/format->magnitude >= 10)
                 format->precision = sdigits-2;
             else
                 format->precision = sdigits-1;
@@ -428,18 +432,18 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
         if (format->precision < 0) format->precision = 0;
 
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
-  
+
         format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
         format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
     }
     else
     {
         format->magnitude = pow(10, (gint)(log10(fabs(maximum)))-1);
-        
+
         format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
         if ((gint)(log10(fabs(format->magnitude))) != 0)
         {
-            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));   
+            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
             format->units = strcpy(format->units, num);
             format->units = g_strconcat(format->units, gwy_si_unit_get_unit_string(siunit), NULL);
         }
@@ -448,8 +452,9 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
             format->units = strcpy(format->units, gwy_si_unit_get_unit_string(siunit));
         }
         format->precision = 2;
-        
+
     }
+    gwy_debug("unitstr = <%s>, units = <%s>", siunit->unitstr, format->units);
     return format;
 }
 
