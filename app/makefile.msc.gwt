@@ -50,7 +50,8 @@ PRG_LINK = \
 	libgwydgets-$(LIBGWYDGETS_VER).lib \
 	libgwydraw-$(LIBGWYDRAW_VER).lib \
 	libgwyprocess-$(LIBGWYPROCESS_VER).lib \
-	libgwyddion-$(LIBGWYDDION_VER).lib
+	libgwyddion-$(LIBGWYDDION_VER).lib \
+	/subsystem:WINDOWS /entry:mainCRTStartup
 
 <[[:LIB_OBJECTS:]]>
 
