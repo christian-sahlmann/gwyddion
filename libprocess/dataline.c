@@ -413,7 +413,6 @@ gdouble
 gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
 {
     gint l = floor(x);
-    gdouble w1, w2, w3, w4;
     gdouble rest = x - (gdouble)l;
     gdouble intline[4];
 

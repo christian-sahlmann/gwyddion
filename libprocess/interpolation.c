@@ -23,7 +23,21 @@
 #include <libgwyddion/gwymacros.h>
 #include "interpolation.h"
 
-/*simple interpolation of non-equidistant values using two neighbour values*/
+/**
+ * gwy_interpolation_get_dval:
+ * @x: requested value coordinate 
+ * @x1_: x coordinate of first value
+ * @y1_: y coordinate of first value
+ * @x2_: x coordinate of second value
+ * @y2_: y coordinate of second value
+ * @interpolation: interpolation type
+ *
+ * This function uses two-point interpolation
+ * methods to get interpolated value between
+ * two arbitrary data points.
+ *
+ * Returns: interpolated value
+ **/
 gdouble
 gwy_interpolation_get_dval(gdouble x,
                            gdouble x1_, gdouble y1_,
@@ -50,7 +64,23 @@ gwy_interpolation_get_dval(gdouble x,
     return 0;
 }
 
-/* (0) 1, 2, (3), x: zadava se 0-1, odpovida v poli 1-2*/
+/**
+ * gwy_interpolation_get_dval_of_equidists:
+ * @x: noninteger part of requested x
+ * @data: array of 4 gdoubles (see below)
+ * @interpolation: interpolation type
+ *
+ * Function computes interpolateed value bettween 2 or 4 
+ * equidistant values. For using GWY_INTERPOLATION_NONE,
+ * GWY_INTERPOLATION_ROUND or GWY_INTERPOLATION_BILINEAR
+ * it is enough to use @data in format {0, data[i], data[i+1], 0}
+ * and function computes value at data[i+x]. For four value
+ * interpolations you have to prapare @data as 
+ * {data[i-1], data[i], data[i+1], data[i+2]} and function again
+ * returns value at data[i+x].
+ *
+ * Returns: interpolated value
+ **/
 gdouble
 gwy_interpolation_get_dval_of_equidists(gdouble x,
                                         gdouble *data,
@@ -81,6 +111,9 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
         case GWY_INTERPOLATION_BILINEAR:
         return
             (1 - rest)*data[l] + rest*data[l+1];
+
+        default:
+        break;
     }
 
     w1 = rest + 1;
@@ -134,17 +167,13 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
         w4 = 1/(w4*w4*w4*w4);
         return (w1*data[l-1] + w2*data[l]
                 + w3*data[l+1] + w4*data[l+2])/(w1 + w2 + w3 + w4);
+
+        default:
+        break;
     }
 
     return w1*data[l-1] + w2*data[l] + w3*data[l+1] + w4*data[l+2];
 }
-
-/* XXX: ktery prase sem napsalo ten neukonceny komentar? */
-
-/**
-
-}
-
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

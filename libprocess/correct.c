@@ -130,6 +130,14 @@ gwy_data_field_mask_outliers(GwyDataField *data_field, GwyDataField *mask_field,
 }
 
 
+/**
+ * gwy_data_field_correct_average:
+ * @data_field: data field 
+ * @mask_field: mask to be used for changes
+ *
+ * Function simply puts average value of all the @data_field into
+ * points in @data_field lying under points where @mask_field values are nonzero.
+ **/
 void
 gwy_data_field_correct_average(GwyDataField *data_field, GwyDataField *mask_field)
 {

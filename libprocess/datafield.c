@@ -1459,6 +1459,15 @@ gwy_data_field_get_area_avg(GwyDataField *a,
            /((gdouble)(brcol-ulcol)*(brrow-ulrow));
 }
 
+/**
+ * gwy_data_field_get_surface_area:
+ * @a: data field 
+ * @interpolation: interpolation method
+ *
+ * Computes surface area.
+ *
+ * Returns: surface area
+ **/
 gdouble
 gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolation)
 {
@@ -1475,6 +1484,19 @@ gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolat
     return sum;
 }
 
+/**
+ * gwy_data_field_get_area_surface_area:
+ * @a: data field 
+ * @ulcol: upper-left column coordinate
+ * @ulrow: upper-left row coordinate
+ * @brcol: bottom-right column coordinate
+ * @brrow: bottom-right row coordinate
+ * @interpolation: interpolation method
+ *
+ * Computes surface area of selected part of area.
+ *
+ * Returns:
+ **/
 gdouble
 gwy_data_field_get_area_surface_area(GwyDataField *a, 
                                      gint ulcol, gint ulrow, gint brcol, gint brrow,

@@ -98,6 +98,8 @@ laplace(GwyContainer *data, GwyRunType run)
 
         gwy_data_field_correct_average(dfield, maskfield);
 
+        lastfrac = 0;
+        starter = 0;
         for (i=0; i<5000; i++)
         {
             gwy_data_field_correct_laplace_iteration(dfield, maskfield, buffer,
