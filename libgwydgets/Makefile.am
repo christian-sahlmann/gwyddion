@@ -15,7 +15,7 @@ libgwydgetsinclude_HEADERS = \
 	gwydataviewlayer.h \
 	gwydatawindow.h \
 	gwydgets.h \
-	gwyglmat.h \
+	gwyglmaterial.h \
 	gwygradsphere.h \
 	gwygraph.h \
 	gwygrapharea.h \
@@ -62,7 +62,7 @@ libgwydgets_la_SOURCES = \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
 	gwydgets.c \
-	gwyglmat.c \
+	gwyglmaterial.c \
 	gwygradsphere.c \
 	gwygraph.c \
 	gwygrapharea.c \

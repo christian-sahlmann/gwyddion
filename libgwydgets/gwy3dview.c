@@ -1,13 +1,9 @@
-
-#include <gdk/gdkkeysyms.h>
-
-
-
-/*//////////////////////////////////////////////////////////////////////////////////*/
 /*
  *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, silerm@... .
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2004 Martin Siler.
+ *  E-mail: silerm@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,10 +21,10 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
+#include <gdk/gdkkeysyms.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
 #include <gdk/gdkevents.h>
@@ -218,16 +214,13 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
 
 /**
  * gwy_3d_view_new:
- * @container:
+ * @data: A #GwyContainer containing the data to display.
  *
- * Creates a new #Gwy3DView.
- *
- * @container cannot be %NULL. If data is %NULL function returns %NULL
- *
- *
- *
+ * Creates a new threedimensional OpenGL display of @data.
  *
  * Returns: The new OpenGL 3D widget as a #GtkWidget.
+ *
+ * Since: 1.5
  **/
 GtkWidget*
 gwy_3d_view_new(GwyContainer *container)
@@ -276,7 +269,8 @@ gwy_3d_view_new(GwyContainer *container)
         gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
                                          g_strdup(palette_name));
     }
-    gwy3dview->palette = gwy_palette_new(gwy_palette_def_new(palette_name));
+    gwy3dview->palette
+        = gwy_palette_new(GWY_PALETTE_DEF(gwy_palette_def_new(palette_name)));
     g_object_ref(G_OBJECT(gwy3dview->palette));
 
     if (gwy_container_contains_by_name(container, "/0/3d/reduced_size"))
@@ -440,6 +434,14 @@ gwy_3d_view_unrealize(GtkWidget *widget)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
 }
 
+/**
+ * gwy_3d_view_update:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Instructs a 3D data view to update self and repaint.
+ *
+ * Since: 1.5
+ **/
 void
 gwy_3d_view_update(Gwy3DView *gwy3dview)
 {
@@ -536,6 +538,16 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
 
 
 
+/**
+ * gwy_3d_view_get_palette:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Returns the palette a 3D data view uses.
+ *
+ * Returns: The palette @gwy3dview uses.
+ *
+ * Since: 1.5
+ **/
 GwyPalette*
 gwy_3d_view_get_palette       (Gwy3DView *gwy3dview)
 {
@@ -545,13 +557,15 @@ gwy_3d_view_get_palette       (Gwy3DView *gwy3dview)
     return gwy3dview->palette;
 }
 
-/*
-void
-gwy_3d_view_set_palette(Gwy3DView *gwy3dview,
-                            GwyPalette *palette)
-{
-}
-*/
+/**
+ * gwy_3d_view_set_palette:
+ * @gwy3dview: A 3D data view widget.
+ * @palette: A palette.
+ *
+ * Sets the palette of a 3D data view.
+ *
+ * Since: 1.5
+ **/
 void
 gwy_3d_view_set_palette       (Gwy3DView *gwy3dview,
                                  GwyPalette *palette)
@@ -587,6 +601,16 @@ gwy_3d_view_set_palette       (Gwy3DView *gwy3dview,
 
 }
 
+/**
+ * gwy_3d_view_get_status:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
 Gwy3DMovement
 gwy_3d_view_get_status (Gwy3DView * gwy3dview)
 {
@@ -595,6 +619,15 @@ gwy_3d_view_get_status (Gwy3DView * gwy3dview)
     return gwy3dview->movement_status;
 }
 
+/**
+ * gwy_3d_view_set_status:
+ * @gwy3dview: A 3D data view widget.
+ * @mv: 
+ *
+ * 
+ *
+ * Since: 1.5
+ **/
 void
 gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
 {
@@ -603,6 +636,15 @@ gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
     gwy3dview->movement_status = mv;
 }
 
+/**
+ * gwy_3d_view_get_orthographic:
+ * @gwy3dview: A 3D data view widget.
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
 gboolean
 gwy_3d_view_get_orthographic   (Gwy3DView *gwy3dview)
 {
@@ -612,6 +654,15 @@ gwy_3d_view_get_orthographic   (Gwy3DView *gwy3dview)
     return gwy3dview->orthogonal_projection;
 }
 
+/**
+ * gwy_3d_view_set_orthographic:
+ * @gwy3dview: A 3D data view widget.
+ * @orthographic: 
+ *
+ * 
+ *
+ * Since: 1.5
+ **/
 void
 gwy_3d_view_set_orthographic   (Gwy3DView *gwy3dview,
                                  gboolean  orthographic)
@@ -628,6 +679,16 @@ gwy_3d_view_set_orthographic   (Gwy3DView *gwy3dview,
                        &GTK_WIDGET(gwy3dview)->allocation, FALSE);
 }
 
+/**
+ * gwy_3d_view_get_show_axes:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
 gboolean
 gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview)
 {
@@ -637,6 +698,15 @@ gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview)
     return gwy3dview->show_axes;
 }
 
+/**
+ * gwy_3d_view_set_show_axes:
+ * @gwy3dview: A 3D data view widget.
+ * @show_axes: 
+ *
+ * 
+ *
+ * Since: 1.5
+ **/
 void
 gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
                                  gboolean  show_axes)
@@ -653,6 +723,16 @@ gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
                        &GTK_WIDGET(gwy3dview)->allocation, FALSE);
 }
 
+/**
+ * gwy_3d_view_get_show_labels:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
 gboolean
 gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview)
 {
@@ -662,6 +742,15 @@ gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview)
     return gwy3dview->show_labels;
 }
 
+/**
+ * gwy_3d_view_set_show_labels:
+ * @gwy3dview: A 3D data view widget.
+ * @show_labels: 
+ *
+ * 
+ *
+ * Since: 1.5
+ **/
 void
 gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
                                  gboolean  show_labels)
@@ -678,6 +767,16 @@ gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
                        &GTK_WIDGET(gwy3dview)->allocation, FALSE);
 }
 
+/**
+ * gwy_3d_view_get_reduced_size:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
 guint
 gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview)
 {
@@ -687,6 +786,15 @@ gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview)
     return gwy3dview->reduced_size;
 }
 
+/**
+ * gwy_3d_view_set_reduced_size:
+ * @gwy3dview: A 3D data view widget.
+ * @reduced_size: 
+ *
+ * 
+ *
+ * Since: 1.5
+ **/
 void
 gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
                                  guint  reduced_size)
@@ -736,6 +844,16 @@ gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
 
 }
 
+/**
+ * gwy_3d_view_get_material:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
 GwyGLMaterialProp*
 gwy_3d_view_get_material      (Gwy3DView *gwy3dview)
 {
@@ -745,6 +863,15 @@ gwy_3d_view_get_material      (Gwy3DView *gwy3dview)
     return gwy3dview->mat_current;
 }
 
+/**
+ * gwy_3d_view_set_material:
+ * @gwy3dview: A 3D data view widget.
+ * @material: 
+ *
+ * 
+ *
+ * Since: 1.5
+ **/
 void
 gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
                                  GwyGLMaterialProp *material)
@@ -762,8 +889,24 @@ gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
 }
 
 
+/**
+ * gwy_3d_view_get_pixbuf:
+ * @gwy3dview: A 3D data view widget.
+ * @xres: Requested pixbuf x-resolution.  This parameters is currently
+ *        unimplemented.
+ * @yres: Requested pixbuf y-resolution.  This parameters is currently
+ *        unimplemented.
+ *
+ * 
+ *
+ * Returns:
+ *
+ * Since: 1.5
+ **/
 GdkPixbuf*
-gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview, guint xres, guint yres)
+gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview,
+                       G_GNUC_UNUSED guint xres,
+                       G_GNUC_UNUSED guint yres)
 {
     int width, height, rowstride, n_channels, i, j;
     guchar *pixels, *a, *b, z;
@@ -797,19 +940,27 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview, guint xres, guint yres)
     return pixbuf;
 }
 
+/**
+ * gwy_3d_view_reset_view:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * 
+ *
+ * Since: 1.5
+ **/
 void
-gwy_3d_view_reset_view(Gwy3DView * widget)
+gwy_3d_view_reset_view(Gwy3DView * gwy3dview)
 {
-   g_return_if_fail(GWY_IS_3D_VIEW(widget));
-   widget->rot_x = 45.0;
-   widget->rot_y = -45.0;
-   widget->view_scale = 1.0;
-   widget->deformation_z = 1.0;
-   widget->light_z = 0.0f;
-   widget->light_y = 0.0f;
-   if (GTK_WIDGET_REALIZED(widget))
-        gdk_window_invalidate_rect(GTK_WIDGET(widget)->window,
-                                   &GTK_WIDGET(widget)->allocation, FALSE);
+   g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+   gwy3dview->rot_x = 45.0;
+   gwy3dview->rot_y = -45.0;
+   gwy3dview->view_scale = 1.0;
+   gwy3dview->deformation_z = 1.0;
+   gwy3dview->light_z = 0.0f;
+   gwy3dview->light_y = 0.0f;
+   if (GTK_WIDGET_REALIZED(gwy3dview))
+        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
+                                   &GTK_WIDGET(gwy3dview)->allocation, FALSE);
 
 }
 
@@ -842,7 +993,8 @@ gwy_3d_view_realize(GtkWidget *widget)
 }
 
 static gboolean
-gwy_3d_view_configure (GtkWidget *widget, GdkEventConfigure *event)
+gwy_3d_view_configure (GtkWidget *widget,
+                       G_GNUC_UNUSED GdkEventConfigure *event)
 {
     Gwy3DView *gwy3dview;
 
@@ -883,9 +1035,11 @@ gwy_3d_view_size_request(GtkWidget *widget,
 }
 
 
+/* TODO: is it possible to redraw only the exposed part like e.g. GwyDataView
+ * does? */
 static gboolean
 gwy_3d_view_expose(GtkWidget *widget,
-                       GdkEventExpose *event)
+                   G_GNUC_UNUSED GdkEventExpose *event)
 {
     GdkGLContext  *glcontext;
     GdkGLDrawable *gldrawable;
@@ -1253,7 +1407,7 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
    GLfloat rx = widget->rot_x - ((int)(widget->rot_x / 360.0)) * 360.0;
    GLfloat Ax, Ay, Bx, By, Cx, Cy;
    gboolean yfirst = TRUE;
-   gchar text[30];
+   gchar text[32];
    gint xres = gwy_data_field_get_xres(widget->data);
    gint yres = gwy_data_field_get_yres(widget->data);
 
@@ -1351,27 +1505,27 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
 
          glListBase (widget->font_list_base);
          if (yfirst)
-            sprintf(text, "y:%1.1f um", yreal);
+            g_snprintf(text, sizeof(text), "y:%1.1f um", yreal);
          else
-            sprintf(text, "x:%1.1f um", xreal);
+            g_snprintf(text, sizeof(text), "x:%1.1f um", xreal);
          glRasterPos3f((Ax+2*Bx)/3 - (Cx-Bx)*0.1,
                        (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f );
          glBitmap(0, 0, 0, 0, -100, 0, (GLubyte *)&pom);
          glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
          if (! yfirst)
-            sprintf(text, "y:%1.1f um", yreal);
+            g_snprintf(text, sizeof(text), "y:%1.1f um", yreal);
          else
-            sprintf(text, "x:%1.1f um", xreal);
+            g_snprintf(text, sizeof(text), "x:%1.1f um", xreal);
          glRasterPos3f((2*Bx+Cx)/3 - (Ax-Bx)*0.1,
                        (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f );
          glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
 
-         sprintf(text, "%1.1f nm", widget->data_max*1e9);
+         g_snprintf(text, sizeof(text), "%1.1f nm", widget->data_max*1e9);
          glRasterPos3f(Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
                        (widget->data_max - widget->data_min));
          glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
 
-         sprintf(text, "%1.1f nm", widget->data_min*1e9);
+         g_snprintf(text, sizeof(text), "%1.1f nm", widget->data_min*1e9);
          glRasterPos3f(Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, -0.0f);
          glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
 
@@ -1549,3 +1703,5 @@ static void gwy_3d_set_projection(Gwy3DView *widget, GLfloat width, GLfloat heig
     }
     glMatrixMode(GL_MODELVIEW);
 }
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

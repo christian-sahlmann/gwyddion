@@ -21,6 +21,7 @@
 #ifndef __GWY_GWYDGETS_H__
 #define __GWY_GWYDGETS_H__
 
+#include <libgwydgets/gwy3dview.h>
 #include <libgwydgets/gwyaxis.h>
 #include <libgwydgets/gwyaxisdialog.h>
 #include <libgwydgets/gwycoloraxis.h>
@@ -28,6 +29,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydataviewlayer.h>
 #include <libgwydgets/gwydatawindow.h>
+#include <libgwydgets/gwyglmaterial.h>
 #include <libgwydgets/gwygradsphere.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygrapharea.h>

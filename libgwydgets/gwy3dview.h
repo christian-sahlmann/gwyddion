@@ -1,7 +1,9 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek, Martin Siler.
+ *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2004 Martin Siler.
+ *  E-mail: silerm@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,7 +34,7 @@
 #include <libprocess/datafield.h>
 #include <libdraw/gwypalette.h>
 
-#include "gwyglmat.h"
+#include "gwyglmaterial.h"
 
 G_BEGIN_DECLS
 
@@ -47,10 +49,10 @@ typedef struct _Gwy3DView      Gwy3DView;
 typedef struct _Gwy3DViewClass Gwy3DViewClass;
 
 typedef enum {
-	GWY_3D_ROTATION      = 1,
-	GWY_3D_SCALE         = 2,
-	GWY_3D_DEFORMATION   = 3,
-        GWY_3D_LIGHTMOVEMENT = 4
+    GWY_3D_ROTATION      = 1,
+    GWY_3D_SCALE         = 2,
+    GWY_3D_DEFORMATION   = 3,
+    GWY_3D_LIGHTMOVEMENT = 4
 }  Gwy3DMovement;
 
 
@@ -102,7 +104,7 @@ struct _Gwy3DViewClass {
     gpointer reserved1;
 };
 
-GtkWidget*       gwy_3d_view_new               (GwyContainer * container);
+GtkWidget*       gwy_3d_view_new               (GwyContainer *data);
 GType            gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
 void             gwy_3d_view_update            (Gwy3DView *gwy3dwiew);
@@ -137,8 +139,10 @@ GdkPixbuf *      gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dwiew,
                                                   guint xres,
                                                   guint yres);
 
-void             gwy_3d_view_reset_view        (Gwy3DView *gwy3Dview);
+void             gwy_3d_view_reset_view        (Gwy3DView *gwy3dview);
 
 G_END_DECLS
 
 #endif  /* gwy3Dwidget.h */
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
