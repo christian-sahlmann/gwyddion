@@ -298,7 +298,7 @@ static void
 apply(GwyUnitoolState *state)
 {
     GwyContainer *data;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *shadefield;
     GwyDataViewLayer *layer;
     ToolControls *controls;
     gboolean is_selected;
@@ -310,8 +310,18 @@ apply(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    gwy_container_remove_by_name(data, "/0/show");
-
+    
+    if (gwy_container_contains_by_name(data, "/0/show")) {
+       shadefield
+            = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                         "/0/show"));
+  
+        g_object_set_data(G_OBJECT(shadefield), "is_preview",
+                      GINT_TO_POINTER(FALSE));
+ 
+        gwy_container_remove_by_name(data, "/0/show");
+    }
+    
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
@@ -466,6 +476,8 @@ dialog_update(GwyUnitoolState *state,
             g_object_add_weak_pointer(G_OBJECT(shadefield),
                                       &controls->last_preview);
         }
+        g_object_set_data(G_OBJECT(shadefield), "is_preview",
+                          GINT_TO_POINTER(TRUE));
 
         if (controls->upd) {
             switch (controls->fil) {
