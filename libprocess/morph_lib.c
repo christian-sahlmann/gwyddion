@@ -602,6 +602,7 @@ _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
 {
     gint iter = 0;
     gint count = 1;
+    gint sumcount = 0;
     GString *str;
 
     str = g_string_new("");
@@ -613,12 +614,16 @@ _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
         count = itip_estimate_iter(image, im_xsiz, im_ysiz,
                                    tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                    use_edges, set_fraction, set_message);
-        if (count == -1) return count;
-        g_string_printf(str, N_("%d image locations produced refinement"), count);
+        if (count == -1)
+            return count;
+        g_string_printf(str, N_("%d image locations produced refinement"),
+                        count);
         if (set_message && !set_message(str->str))
             return -1;
+        sumcount += count;
     }
-    return count;
+
+    return sumcount;
 }
 
 
@@ -633,7 +638,6 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     gdouble fraction;
 
     gint count = 0;          /* counts places where tip estimate is improved */
-    gint sumcount = 0;
 
     open = iopen(image, im_xsiz, im_ysiz, tip0, tip_xsiz, tip_ysiz);
     if (!open)
@@ -647,7 +651,6 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                                         xc, yc, tip0, thresh, use_edges))
                 {
                     count++;
-                    sumcount++;
                 }
                 if (set_fraction) {
                     fraction = (gdouble)(jxp-(tip_ysiz - 1 - yc))
@@ -663,7 +666,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     }
     _gwy_morph_lib_ifreematrix(open, im_ysiz);
 
-    return sumcount;
+    return count;
 }
 
 /**
