@@ -24,6 +24,7 @@
 #include <gtk/gtkwidget.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwydgets/gwydatawindow.h>
+#include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
 
@@ -45,8 +46,12 @@ gulong         gwy_app_data_window_list_add_hook   (gpointer func,
                                                     gpointer data);
 gboolean       gwy_app_data_window_list_remove_hook(gulong hook_id);
 
-
+#ifndef GWY_DISALBE_DEPRECATED
 GtkWidget*     gwy_app_graph_window_create         (GtkWidget *graph);
+#endif
+GtkWidget*  gwy_app_graph_window_create_for_window (GwyGraph *graph,
+                                                    GwyDataWindow *data_window,
+                                                    const gchar *title);
 void           gwy_app_graph_window_remove         (GtkWidget *window);
 GtkWidget*     gwy_app_graph_window_get_current    (void);
 void           gwy_app_graph_window_set_current    (GtkWidget *window);

@@ -607,28 +607,56 @@ gwy_app_graph_window_remove(GtkWidget *window)
 
 /**
  * gwy_app_graph_window_create:
- * @graph: A #GwyGraph;
+ * @graph: A graph widget;
+ * @data_window: A data window to associate @graph with.
+ * @title: Title of the graph window.
  *
  * Creates a new graph window showing @graph and does some basic setup.
  *
- * Also calls gtk_window_present() on it.
+ * Use gwy_app_graph_window_create_for_window().
  *
  * Returns: The newly created graph window.
  **/
 GtkWidget*
 gwy_app_graph_window_create(GtkWidget *graph)
 {
+    return gwy_app_graph_window_create_for_window
+                   (GWY_GRAPH(graph), gwy_app_data_window_get_current(), NULL);
+}
 
+/**
+ * gwy_app_graph_window_create:
+ * @graph: A graph widget;
+ * @data_window: A data window to associate @graph with.
+ * @title: Title of the new graph window.
+ *
+ * Creates a new graph window showing a graph and does some basic setup.
+ *
+ * Also calls gtk_window_present() on the newly created window, associates
+ * it with a data window, and sets its title.
+ *
+ * Returns: The newly created graph window.
+ *
+ * Since: 1.7
+ **/
+GtkWidget*
+gwy_app_graph_window_create_for_window(GwyGraph *graph,
+                                       GwyDataWindow *data_window,
+                                       const gchar *title)
+{
     GtkWidget *window;
 
+    g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
+
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(graph));
+    gtk_window_set_title(GTK_WINDOW(window),
+                         title ? title : _("Untitled Graph"));
     gtk_container_set_border_width(GTK_CONTAINER (window), 0);
     gtk_window_add_accel_group
         (GTK_WINDOW(window),
          g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
-
-    if (graph == NULL)
-        graph = gwy_graph_new();
 
     /* TODO: this is broken because we do not actually know which data window
      * is the right one, but for GraphModel testing it doesn't matter much. */
@@ -636,8 +664,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
         /* FIXME: this is convoluted. We try to fix adding a graph just
          * created from a model for a second time. Also, a GwyGraph should
          * obviously know its model... */
-        gwy_app_graph_list_add(gwy_app_data_window_get_current(),
-                               GWY_GRAPH(graph));
+        gwy_app_graph_list_add(data_window, graph);
 
     g_signal_connect(window, "focus-in-event",
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
@@ -646,8 +673,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
 
     current_graph = g_list_append(current_graph, window);
 
-    gtk_container_add(GTK_CONTAINER(window), graph);
-    gtk_widget_show(graph);
+    gtk_widget_show(GTK_WIDGET(graph));
     gtk_widget_show_all(window);
     gtk_window_present(GTK_WINDOW(window));
 
