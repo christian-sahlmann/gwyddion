@@ -70,8 +70,7 @@ module_register(const gchar *name)
 static gboolean
 outliers(GwyContainer *data, GwyRunType run)
 {
-    GObject *maskfield;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *maskfield;
     gdouble thresh;
 
     g_assert(run & OUTLIERS_RUN_MODES);
@@ -85,7 +84,7 @@ outliers(GwyContainer *data, GwyRunType run)
     }
 
     thresh = 3.0;
-    gwy_data_field_mask_outliers(dfield, GWY_DATA_FIELD(maskfield), thresh);
+    gwy_data_field_mask_outliers(dfield, maskfield, thresh);
 
     return TRUE;
 }

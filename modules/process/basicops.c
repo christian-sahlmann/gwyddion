@@ -195,7 +195,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    newdata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    newdata = gwy_container_duplicate(data);
     gwy_app_clean_up_data(newdata);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
                                                              "/0/data"));
@@ -223,7 +223,7 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    newdata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    newdata = gwy_container_duplicate(data);
     gwy_app_clean_up_data(newdata);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
                                                              "/0/data"));

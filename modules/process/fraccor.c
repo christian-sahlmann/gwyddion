@@ -77,8 +77,7 @@ fraccor(GwyContainer *data, GwyRunType run)
 
     g_assert(run & FRACCOR_RUN_MODES);
 
-    if (gwy_container_gis_object_by_name(data, "/0/mask",
-                                         (GObject**)&maskfield)) {
+    if (gwy_container_gis_object_by_name(data, "/0/mask", &maskfield)) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
         buffer = gwy_data_field_new_alike(dfield, TRUE);

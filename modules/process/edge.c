@@ -130,7 +130,7 @@ laplacian(GwyContainer *data, GwyRunType run)
     }
     else {
         show = gwy_data_field_duplicate(dfield);
-        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(show));
+        gwy_container_set_object_by_name(data, "/0/show", show);
         g_object_unref(show);
     }
 
@@ -163,7 +163,7 @@ canny(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
     if (gwy_container_gis_object_by_name(data, "/0/show", &show)) {
-        gwy_data_field_resample(GWY_DATA_FIELD(show),
+        gwy_data_field_resample(show,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
@@ -205,7 +205,7 @@ rms(GwyContainer *data, GwyRunType run)
     }
     else {
         show = gwy_data_field_duplicate(dfield);
-        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(show));
+        gwy_container_set_object_by_name(data, "/0/show", show);
         g_object_unref(show);
     }
 
@@ -234,7 +234,7 @@ rms_edge(GwyContainer *data, GwyRunType run)
     }
     else {
         show = gwy_data_field_new_alike(dfield, FALSE);
-        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(show));
+        gwy_container_set_object_by_name(data, "/0/show", show);
         g_object_unref(show);
     }
 
@@ -280,7 +280,7 @@ nonlinearity(GwyContainer *data, GwyRunType run)
     }
     else {
         show = gwy_data_field_new_alike(dfield, FALSE);
-        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(show));
+        gwy_container_set_object_by_name(data, "/0/show", show);
         g_object_unref(show);
     }
 

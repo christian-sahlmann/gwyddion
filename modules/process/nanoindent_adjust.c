@@ -458,7 +458,7 @@ data_field_move(GwyDataField *sample, gint xoff, gint yoff)
     GwyDataField *buffer;
     gint ulcol, ulrow, brcol, brrow, dest_ulcol, dest_ulrow;
 
-    buffer = GWY_DATA_FIELD(gwy_data_field_new_alike(sample, FALSE));
+    buffer = gwy_data_field_new_alike(sample, FALSE);
     gwy_data_field_copy(sample, buffer);
 
    

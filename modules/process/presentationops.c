@@ -90,7 +90,8 @@ static gboolean
 presentation_extract(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GObject *dfield, *siunit;
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
     gdouble min, max;
     const gchar *pal;
 
@@ -99,17 +100,17 @@ presentation_extract(GwyContainer *data, GwyRunType run)
     g_return_val_if_fail(dfield, FALSE);
 
     pal = gwy_container_get_string_by_name(data, "/0/base/palette");
-    dfield = gwy_serializable_duplicate(dfield);
-    min = gwy_data_field_get_min(GWY_DATA_FIELD(dfield));
-    max = gwy_data_field_get_max(GWY_DATA_FIELD(dfield));
-    gwy_data_field_add(GWY_DATA_FIELD(dfield), -min);
+    dfield = gwy_data_field_duplicate(dfield);
+    min = gwy_data_field_get_min(dfield);
+    max = gwy_data_field_get_max(dfield);
+    gwy_data_field_add(dfield, -min);
     if (max > min)
-        gwy_data_field_multiply(GWY_DATA_FIELD(dfield), 1.0/(max - min));
+        gwy_data_field_multiply(dfield, 1.0/(max - min));
     siunit = gwy_si_unit_new("");
-    gwy_data_field_set_si_unit_z(GWY_DATA_FIELD(dfield), GWY_SI_UNIT(siunit));
+    gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
 
-    data = GWY_CONTAINER(gwy_container_new());
+    data = gwy_container_new();
     gwy_container_set_object_by_name(data, "/0/data", dfield);
     g_object_unref(dfield);
     gwy_container_set_string_by_name(data, "/0/base/palette", g_strdup(pal));

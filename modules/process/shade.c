@@ -109,8 +109,7 @@ module_register(const gchar *name)
 static gboolean
 shade(GwyContainer *data, GwyRunType run)
 {
-    GObject *shadefield;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *shadefield;
     ShadeArgs args;
     gboolean ok;
 
@@ -128,19 +127,18 @@ shade(GwyContainer *data, GwyRunType run)
     if (ok) {
         gwy_app_undo_checkpoint(data, "/0/show", NULL);
         if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
-            gwy_data_field_resample(GWY_DATA_FIELD(shadefield),
+            gwy_data_field_resample(shadefield,
                                     gwy_data_field_get_xres(dfield),
                                     gwy_data_field_get_yres(dfield),
                                     GWY_INTERPOLATION_NONE);
         }
         else {
-            shadefield = gwy_serializable_duplicate(G_OBJECT(dfield));
+            shadefield = gwy_data_field_duplicate(dfield);
             gwy_container_set_object_by_name(data, "/0/show", shadefield);
             g_object_unref(shadefield);
         }
 
-        gwy_data_field_shade(dfield, GWY_DATA_FIELD(shadefield),
-                             args.theta*180/G_PI, args.phi*180/G_PI);
+        gwy_data_field_shade(dfield, shadefield, args.theta, args.phi);
     }
 
     return ok;
@@ -151,21 +149,21 @@ static GwyContainer*
 create_preview_data(GwyContainer *data)
 {
     GwyContainer *preview;
-    GObject *dfield;
+    GwyDataField *dfield;
     gint xres, yres;
     gdouble zoomval;
 
-    preview = GWY_CONTAINER(gwy_container_duplicate_by_prefix(data,
-                                                              "/0/data",
-                                                              "/0/base/palette",
-                                                              NULL));
+    preview = gwy_container_duplicate_by_prefix(data,
+                                                "/0/data",
+                                                "/0/base/palette",
+                                                NULL);
     dfield = gwy_container_get_object_by_name(preview, "/0/data");
-    xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
-    yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
     zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
-    gwy_data_field_resample(GWY_DATA_FIELD(dfield), xres*zoomval, yres*zoomval,
+    gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
                             GWY_INTERPOLATION_BILINEAR);
-    dfield = gwy_serializable_duplicate(dfield);
+    dfield = gwy_data_field_duplicate(dfield);
     gwy_container_set_object_by_name(preview, "/0/show", dfield);
     g_object_unref(dfield);
 
@@ -330,12 +328,13 @@ static void
 shade_dialog_update(ShadeControls *controls,
                     ShadeArgs *args)
 {
-    GObject *dfield, *shader;
+    GwyDataField *dfield, *shader;
 
-    dfield = gwy_container_get_object_by_name(controls->data, "/0/data");
-    shader = gwy_container_get_object_by_name(controls->data, "/0/show");
-    gwy_data_field_shade(GWY_DATA_FIELD(dfield), GWY_DATA_FIELD(shader),
-                         args->theta*180.0/G_PI, args->phi*180.0/G_PI);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
+                                                             "/0/data"));
+    shader = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
+                                                             "/0/show"));
+    gwy_data_field_shade(dfield, shader, args->theta, args->phi);
     gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
 

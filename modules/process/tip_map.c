@@ -254,7 +254,7 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
-    
+
     /*result fields - after computation result should be at dfield */
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (gwy_container_contains_by_name(data, "/0/mask")) {
@@ -262,8 +262,8 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
                                                                  "/0/mask"));
     }
     else {
-        dfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield2)));
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(dfield));
+        dfield = gwy_data_field_duplicate(dfield2);
+        gwy_container_set_object_by_name(data, "/0/mask", dfield);
         g_object_unref(dfield);
     }
     gwy_app_wait_start(GTK_WIDGET(args->win2), _("Initializing"));

@@ -186,7 +186,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(hbox),
                        FALSE, FALSE, 4);
 
-    controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    controls.mydata = gwy_container_duplicate(data);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
@@ -440,7 +440,7 @@ preview(WshedControls *controls,
     else {
         maskfield = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask",
-                                         G_OBJECT(maskfield));
+                                         maskfield);
         g_object_unref(maskfield);
         layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
@@ -462,8 +462,7 @@ wshed_ok(WshedControls *controls,
          WshedArgs *args,
          GwyContainer *data)
 {
-    GwyDataField *dfield;
-    GObject *maskfield;
+    GwyDataField *dfield, *maskfield;
 
     if (controls->computed) {
         maskfield = gwy_container_get_object_by_name(controls->mydata,
@@ -474,8 +473,8 @@ wshed_ok(WshedControls *controls,
     }
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
-    if (mask_process(dfield, GWY_DATA_FIELD(maskfield), args,
+    maskfield = gwy_data_field_duplicate(dfield);
+    if (mask_process(dfield, maskfield, args,
                      GTK_WIDGET(gwy_app_data_window_get_for_data(data)))) {
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         gwy_container_set_object_by_name(data, "/0/mask", maskfield);
@@ -489,13 +488,12 @@ wshed_ok(WshedControls *controls,
 static gboolean
 run_noninteractive(WshedArgs *args, GwyContainer *data)
 {
-    GwyDataField *dfield;
-    GObject *maskfield;
+    GwyDataField *dfield, *maskfield;
     gboolean computed = FALSE;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
-    if (mask_process(dfield, GWY_DATA_FIELD(maskfield), args,
+    maskfield = gwy_data_field_duplicate(dfield);
+    if (mask_process(dfield, maskfield, args,
                      GTK_WIDGET(gwy_app_data_window_get_for_data(data)))) {
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         gwy_container_set_object_by_name(data, "/0/mask", maskfield);

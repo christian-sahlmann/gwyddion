@@ -158,7 +158,7 @@ median(GwyContainer *data, GwyRunType run)
                                              "/0/base/palette",
                                              "/0/select",
                                              NULL);
-    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(background));
+    gwy_container_set_object_by_name(data, "/0/data", background);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                      "Background");

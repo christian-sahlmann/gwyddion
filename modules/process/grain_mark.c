@@ -211,7 +211,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    controls.mydata = gwy_container_duplicate(data);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
@@ -432,8 +432,7 @@ static void
 preview(MarkControls *controls,
         MarkArgs *args)
 {
-    GwyDataField *dfield;
-    GObject *maskfield;
+    GwyDataField *dfield, *maskfield;
     GwyPixmapLayer *layer;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
@@ -443,7 +442,7 @@ preview(MarkControls *controls,
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
         maskfield = gwy_container_get_object_by_name(controls->mydata,
                                                      "/0/mask");
-        gwy_data_field_copy(dfield, GWY_DATA_FIELD(maskfield));
+        gwy_data_field_copy(dfield, maskfield);
         if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
             layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
             gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
@@ -451,7 +450,7 @@ preview(MarkControls *controls,
         }
     }
     else {
-        maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
+        maskfield = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask",
                                          maskfield);
         g_object_unref(maskfield);
@@ -461,7 +460,7 @@ preview(MarkControls *controls,
 
     }
 
-    mask_process(dfield, GWY_DATA_FIELD(maskfield), args);
+    mask_process(dfield, maskfield, args);
     controls->computed = TRUE;
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
@@ -471,8 +470,7 @@ mark_ok(MarkControls *controls,
         MarkArgs *args,
         GwyContainer *data)
 {
-    GwyDataField *dfield;
-    GObject *maskfield;
+    GwyDataField *dfield, *maskfield;
 
     if (controls && controls->computed) {
         maskfield = gwy_container_get_object_by_name(controls->mydata,
@@ -487,15 +485,15 @@ mark_ok(MarkControls *controls,
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (gwy_container_contains_by_name(data, "/0/mask")) {
         maskfield = gwy_container_get_object_by_name(data, "/0/mask");
-        gwy_data_field_copy(dfield, GWY_DATA_FIELD(maskfield));
+        gwy_data_field_copy(dfield, maskfield);
     }
     else {
-        maskfield = gwy_serializable_duplicate(G_OBJECT(dfield));
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
+        maskfield = gwy_data_field_duplicate(dfield);
+        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         g_object_unref(maskfield);
     }
 
-    mask_process(dfield, GWY_DATA_FIELD(maskfield), args);
+    mask_process(dfield, maskfield, args);
 }
 
 static void

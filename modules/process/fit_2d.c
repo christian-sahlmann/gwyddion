@@ -66,7 +66,7 @@ typedef struct {
     GtkWidget *view;
     GtkWidget *type;
     GtkWidget **param_des;
-    GtkObject **param_init;
+    GtkWidget **param_init;
     GtkWidget **param_res;
     GtkWidget **param_err;
     GtkWidget **param_fit;
@@ -343,7 +343,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.param_init = (GtkObject **)g_new(GtkWidget*, MAX_PARAMS);
+    controls.param_init = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_init[i] = gtk_entry_new();
         gtk_entry_set_max_length(GTK_ENTRY(controls.param_init[i]), 12);
@@ -356,7 +356,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.param_res = (GtkWidget **)g_new(GtkWidget*, MAX_PARAMS);
+    controls.param_res = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_res[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_res[i],
@@ -364,7 +364,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.param_err = (GtkWidget **)g_new(GtkWidget*, MAX_PARAMS);
+    controls.param_err = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_err[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_err[i],
@@ -372,7 +372,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    controls.param_fit = (GtkWidget **)g_new(GtkWidget*, MAX_PARAMS);
+    controls.param_fit = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_fit[i] = gtk_check_button_new();
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.param_fit[i]), args->par_fix[i]);
@@ -534,7 +534,7 @@ guess
     gtk_label_set_text(GTK_LABEL(controls->chisq), " ");
     for (i=0; i<4; i++)
     {
-        gtk_widget_set_sensitive(GTK_WIDGET(controls->param_init[i]), TRUE);
+        gtk_widget_set_sensitive(controls->param_init[i], TRUE);
         gtk_widget_set_sensitive(controls->param_fit[i], TRUE);
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->par_init[i]);
         gtk_entry_set_text(GTK_ENTRY(controls->param_init[i]), buffer);
@@ -685,7 +685,7 @@ fit_2d_do(Fit2dControls *controls,
 {
     GtkWidget *data_window;
 
-    data_window = gwy_app_data_window_create(GWY_CONTAINER(args->data));
+    data_window = gwy_app_data_window_create(args->data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 }
 
@@ -877,7 +877,7 @@ gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
     GwyDataField *xsc;
     gint i;
 
-    xsc = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres, dfield->xreal, dfield->yreal, FALSE));
+    xsc = gwy_data_field_new_alike(dfield, FALSE);
     for (i=0; i<(dfield->xres*dfield->yres); i++) xsc->data[i] = i;
 
 

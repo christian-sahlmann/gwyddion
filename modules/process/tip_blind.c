@@ -210,8 +210,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gwy_data_field_fill(dfield, 0);
 
     /*set up data of rescaled image of the tip*/
-    controls.vtip
-        = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(controls.tip)));
+    controls.vtip = gwy_container_duplicate(controls.tip);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.vtip,
                                                              "/0/data"));
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
@@ -540,7 +539,7 @@ tip_update(TipBlindControls *controls,
 
     tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
                                                                "/0/data"));
-    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(tipfield)));
+    buffer = gwy_data_field_duplicate(tipfield);
     gwy_data_field_resample(buffer, controls->vxres, controls->vyres,
                             GWY_INTERPOLATION_ROUND);
 
@@ -562,7 +561,7 @@ tip_blind_do(TipBlindControls *controls,
         gwy_container_set_string_by_name(controls->tip, "/0/base/palette",
                                          g_strdup(pal));
 
-    data_window = gwy_app_data_window_create(GWY_CONTAINER(controls->tip));
+    data_window = gwy_app_data_window_create(controls->tip);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     controls->tipdone = TRUE;
 }

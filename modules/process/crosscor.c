@@ -420,7 +420,7 @@ crosscor_do(CrosscorArgs *args)
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     /*result fields - after computation result should be at dfieldx */
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    data = gwy_container_duplicate(data);
     dfieldx = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     dfieldy = gwy_data_field_duplicate(dfieldx);
     score = gwy_data_field_duplicate(dfieldx);
@@ -464,7 +464,7 @@ crosscor_do(CrosscorArgs *args)
     /*create score mask if requested */
     if (args->add_ls_mask) {
         gwy_data_field_threshold(score, args->threshold, 1, 0);
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(score));
+        gwy_container_set_object_by_name(data, "/0/mask", score);
     }
 
     data_window = gwy_app_data_window_create(data);

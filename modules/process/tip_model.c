@@ -201,8 +201,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gwy_data_field_fill(dfield, 0);
 
     /* set up resamplev view data */
-    controls.vtip
-        = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(controls.tip)));
+    controls.vtip = gwy_container_duplicate(controls.tip);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.vtip,
                                                              "/0/data"));
     gwy_data_field_resample(dfield, controls.vxres, controls.vyres,
@@ -416,7 +415,7 @@ tip_update(TipModelControls *controls,
 
    tipfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip,
                                                               "/0/data"));
-   buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(tipfield)));
+   buffer = gwy_data_field_duplicate(tipfield);
    gwy_data_field_resample(buffer, controls->vxres, controls->vyres,
                            GWY_INTERPOLATION_ROUND);
 

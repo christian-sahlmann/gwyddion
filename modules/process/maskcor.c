@@ -252,7 +252,7 @@ plot_correlated(GwyDataField * retfield, gint xsize, gint ysize,
     GwyDataField *field;
     gint i, j;
 
-    field = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(retfield)));
+    field = gwy_data_field_duplicate(retfield);
     gwy_data_field_fill(retfield, 0);
 
     for (i = 0; i < retfield->xres; i++) {
@@ -299,7 +299,7 @@ maskcor_do(MaskcorArgs *args)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                              "/0/data"));
 
-    ret = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    ret = gwy_container_duplicate(data);
     retfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(ret,
                                                              "/0/data"));
 
@@ -339,8 +339,8 @@ maskcor_do(MaskcorArgs *args)
             gwy_app_undo_checkpoint(data, "/0/mask", NULL);
             plot_maxima(retfield, args->threshold);
         }
-        gwy_container_set_object_by_name(data, "/0/mask", 
-                       gwy_serializable_duplicate(G_OBJECT(retfield)));
+        gwy_container_set_object_by_name(data, "/0/mask",
+                                         gwy_data_field_duplicate(retfield));
         g_object_unref(ret);
         gwy_app_data_window_set_current(args->win1);
         gwy_app_data_view_update(gwy_data_window_get_data_view(operand1));

@@ -168,7 +168,7 @@ poly_level_do(GwyContainer *data,
     gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     newdata = (GwyContainer*)gwy_container_new();
     gwy_container_set_string_by_name(newdata, "/0/base/palette", g_strdup(pal));
-    gwy_container_set_object_by_name(newdata, "/0/data", G_OBJECT(dfield));
+    gwy_container_set_object_by_name(newdata, "/0/data", dfield);
     data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                      _("Background"));

@@ -149,7 +149,7 @@ sobel_vertical(GwyContainer *data, GwyRunType run)
                                 GWY_INTERPOLATION_NONE);
     }
     else {
-        shadefield = gwy_serializable_duplicate(G_OBJECT(dfield));
+        shadefield = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(data, "/0/show", shadefield);
         g_object_unref(shadefield);
     }
@@ -181,7 +181,7 @@ prewitt_horizontal(GwyContainer *data, GwyRunType run)
                                 GWY_INTERPOLATION_NONE);
     }
     else {
-        shadefield = gwy_serializable_duplicate(G_OBJECT(dfield));
+        shadefield = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(data, "/0/show", shadefield);
         g_object_unref(shadefield);
     }
@@ -212,7 +212,7 @@ prewitt_vertical(GwyContainer *data, GwyRunType run)
                                 GWY_INTERPOLATION_NONE);
     }
     else {
-        shadefield = gwy_serializable_duplicate(G_OBJECT(dfield));
+        shadefield = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(data, "/0/show", shadefield);
         g_object_unref(shadefield);
     }

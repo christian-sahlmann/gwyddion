@@ -110,38 +110,38 @@ static gboolean
 scale(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GObject *dfield;
+    GwyDataField *dfield;
     ScaleArgs args;
     gboolean ok;
 
     g_return_val_if_fail(run & SCALE_RUN_MODES, FALSE);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = scale_defaults;
     else
         scale_load_args(gwy_app_settings_get(), &args);
-    args.xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
-    args.yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
+    args.xres = gwy_data_field_get_xres(dfield);
+    args.yres = gwy_data_field_get_yres(dfield);
     ok = (run != GWY_RUN_MODAL) || scale_dialog(&args);
     if (run == GWY_RUN_MODAL)
         scale_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    data = gwy_container_duplicate(data);
     gwy_app_clean_up_data(data);
     dfield = gwy_container_get_object_by_name(data, "/0/data");
-    gwy_data_field_resample(GWY_DATA_FIELD(dfield),
+    gwy_data_field_resample(dfield,
                             ROUND(args.ratio*args.xres),
                             ROUND(args.ratio*args.yres),
                             args.interp);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield))
-        gwy_data_field_resample(GWY_DATA_FIELD(dfield),
+    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+        gwy_data_field_resample(dfield,
                                 ROUND(args.ratio*args.xres),
                                 ROUND(args.ratio*args.yres),
                                 args.interp);
-    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield))
-        gwy_data_field_resample(GWY_DATA_FIELD(dfield),
+    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
+        gwy_data_field_resample(dfield,
                                 ROUND(args.ratio*args.xres),
                                 ROUND(args.ratio*args.yres),
                                 args.interp);

@@ -229,14 +229,13 @@ contrast_do(GwyContainer *data, ContrastArgs *args)
         return FALSE;
 
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
-    if (gwy_container_gis_object_by_name(data, "/0/show",
-                                         (GObject**)&showfield)) {
+    if (gwy_container_gis_object_by_name(data, "/0/show", &showfield)) {
         gwy_data_field_resample(showfield, xres, yres, GWY_INTERPOLATION_NONE);
         gwy_data_field_area_copy(dfield, showfield, 0, 0, xres, yres, 0, 0);
     }
     else {
-        showfield = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
-        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(showfield));
+        showfield = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_container_set_object_by_name(data, "/0/show", showfield);
         g_object_unref(showfield);
     }
 

@@ -183,7 +183,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    controls.mydata = gwy_container_duplicate(data);
     controls.view = gwy_data_view_new(controls.mydata);
     g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
@@ -199,7 +199,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
     layer = gwy_layer_mask_new();
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view),
-                                 GWY_PIXMAP_LAYER(layer));
+                                  GWY_PIXMAP_LAYER(layer));
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
@@ -396,13 +396,10 @@ preview(RemoveControls *controls,
         maskfield
             = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                               "/0/mask"));
-
-        gwy_data_field_copy(GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                  "/0/mask")), maskfield);
         mask_process(dfield, maskfield, args);
 
         gwy_container_set_object_by_name(controls->mydata, "/0/mask",
-                                         G_OBJECT(maskfield));
+                                         maskfield);
 
     }
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
@@ -447,9 +444,9 @@ mask_process(GwyDataField *dfield,
     }
     else {
         output_field_a
-            = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(maskfield)));
+            = gwy_data_field_duplicate(maskfield);
         output_field_b
-            = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(maskfield)));
+            = gwy_data_field_duplicate(maskfield);
 
         gwy_data_field_grains_remove_by_height(dfield, output_field_a,
                                                args->inverted ?

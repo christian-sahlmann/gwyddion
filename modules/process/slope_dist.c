@@ -154,8 +154,8 @@ slope_dist(GwyContainer *data, GwyRunType run)
         switch (args.output_type) {
             case SLOPE_DIST_2D_DIST:
             dfield = slope_do(dfield, &args);
-            data = GWY_CONTAINER(gwy_container_new());
-            gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+            data = gwy_container_new();
+            gwy_container_set_object_by_name(data, "/0/data", dfield);
             g_object_unref(dfield);
             gwy_container_set_string_by_name(data, "/0/base/palette",
                                              g_strdup(pal));
@@ -495,15 +495,15 @@ make_datafield(GwyDataField *old,
     gdouble *d;
     gint i;
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(res, res, real, real, FALSE));
+    dfield = gwy_data_field_new(res, res, real, real, FALSE);
 
-    unit = GWY_SI_UNIT(gwy_si_unit_new(""));
+    unit = gwy_si_unit_new("");
     gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
 
     uz = gwy_data_field_get_si_unit_z(old);
     uxy = gwy_data_field_get_si_unit_xy(old);
-    unit = GWY_SI_UNIT(gwy_si_unit_new(""));
+    unit = gwy_si_unit_new("");
     gwy_si_unit_divide(uz, uxy, unit);
     gwy_data_field_set_si_unit_xy(dfield, unit);
     g_object_unref(unit);

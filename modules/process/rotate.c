@@ -149,7 +149,7 @@ static gboolean
 rotate(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GObject *dfield;
+    GwyDataField *dfield;
     RotateArgs args;
     gboolean ok;
 
@@ -165,14 +165,14 @@ rotate(GwyContainer *data, GwyRunType run)
     if (!ok)
         return FALSE;
 
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    data = gwy_container_duplicate(data);
     gwy_app_clean_up_data(data);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
-    rotate_datafield(GWY_DATA_FIELD(dfield), &args);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield))
-        rotate_datafield(GWY_DATA_FIELD(dfield), &args);
-    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield))
-        rotate_datafield(GWY_DATA_FIELD(dfield), &args);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    rotate_datafield(dfield, &args);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+        rotate_datafield(dfield, &args);
+    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
+        rotate_datafield(dfield, &args);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
@@ -184,21 +184,22 @@ static GwyContainer*
 create_preview_data(GwyContainer *data)
 {
     GwyContainer *preview;
-    GObject *dfield;
+    GwyDataField *dfield;
     gint xres, yres;
     gdouble zoomval;
 
-    preview = GWY_CONTAINER(gwy_container_duplicate_by_prefix(data,
-                                                              "/0/data",
-                                                              "/0/base/palette",
-                                                              NULL));
-    dfield = gwy_container_get_object_by_name(preview, "/0/data");
-    xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
-    yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
+    preview = gwy_container_duplicate_by_prefix(data,
+                                                "/0/data",
+                                                "/0/base/palette",
+                                                NULL);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(preview,
+                                                             "/0/data"));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
     zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
-    gwy_data_field_resample(GWY_DATA_FIELD(dfield), xres*zoomval, yres*zoomval,
+    gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
                             GWY_INTERPOLATION_BILINEAR);
-    dfield = gwy_serializable_duplicate(dfield);
+    dfield = gwy_data_field_duplicate(dfield);
     gwy_container_set_object_by_name(preview, "/0/show", dfield);
     g_object_unref(dfield);
 

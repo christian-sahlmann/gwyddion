@@ -147,7 +147,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
 
     mask = NULL;
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&mask);
+    gwy_container_gis_object_by_name(data, "/0/mask", &mask);
 
     newsize = gwy_data_field_get_fft_res(xsize);
     dfield = gwy_data_field_duplicate(dfield);
@@ -159,7 +159,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
                                 GWY_INTERPOLATION_NONE);
     else {
         mask = gwy_data_field_new_alike(dfield, TRUE);
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
+        gwy_container_set_object_by_name(data, "/0/mask", mask);
         g_object_unref(mask);
     }
 

@@ -116,7 +116,8 @@ static gboolean
 mask_extract(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GObject *dfield, *siunit;
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
     const gchar *pal;
 
     g_return_val_if_fail(run & MASKOPS_RUN_MODES, FALSE);
@@ -124,13 +125,13 @@ mask_extract(GwyContainer *data, GwyRunType run)
     g_return_val_if_fail(dfield, FALSE);
 
     pal = gwy_container_get_string_by_name(data, "/0/base/palette");
-    dfield = gwy_serializable_duplicate(dfield);
-    gwy_data_field_clamp(GWY_DATA_FIELD(dfield), 0.0, 1.0);
+    dfield = gwy_data_field_duplicate(dfield);
+    gwy_data_field_clamp(dfield, 0.0, 1.0);
     siunit = gwy_si_unit_new("");
-    gwy_data_field_set_si_unit_z(GWY_DATA_FIELD(dfield), GWY_SI_UNIT(siunit));
+    gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
 
-    data = GWY_CONTAINER(gwy_container_new());
+    data = gwy_container_new();
     gwy_container_set_object_by_name(data, "/0/data", dfield);
     g_object_unref(dfield);
     gwy_container_set_string_by_name(data, "/0/base/palette", g_strdup(pal));

@@ -86,9 +86,7 @@ laplace(GwyContainer *data, GwyRunType run)
                                                                  "/0/data"));
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                     "/0/mask"));
-        buffer = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres,
-                                                   dfield->xreal, dfield->yreal,
-                                                   TRUE));
+        buffer = gwy_data_field_new_alike(dfield, TRUE);
 
         gwy_app_undo_checkpoint(data, "/0/data", "/0/mask", NULL);
 

@@ -76,7 +76,7 @@ facet_level(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    dfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    dfield = gwy_data_field_duplicate(dfield);
 
     /* converge
      * FIXME: this can take a long time */
@@ -108,7 +108,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     gwy_app_wait_finish();
     if (!canceled) {
         gwy_app_undo_checkpoint(data, "/0/data", NULL);
-        gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+        gwy_container_set_object_by_name(data, "/0/data", dfield);
     }
     g_object_unref(dfield);
 

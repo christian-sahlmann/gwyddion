@@ -412,7 +412,7 @@ interp_changed_cb(GObject *item,
 
 static void
 out_changed_cb(GObject *item,
-                  FFTArgs *args)
+               FFTArgs *args)
 {
     args->out = GPOINTER_TO_INT(g_object_get_data(item, "fft-output-type"));
 }

@@ -188,7 +188,7 @@ sphrev(GwyContainer *data, GwyRunType run)
                                              "/0/base/palette",
                                              "/0/select",
                                              NULL);
-    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(background));
+    gwy_container_set_object_by_name(data, "/0/data", background);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                      "Background");
@@ -440,7 +440,7 @@ sphrev_horizontal(Sphrev1DArgs *args,
     gint i, j, k, size, xres, yres;
 
     data = gwy_data_field_get_data(dfield);
-    rfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    rfield = gwy_data_field_duplicate(dfield);
     xres = gwy_data_field_get_xres(rfield);
     yres = gwy_data_field_get_yres(rfield);
     rdata = gwy_data_field_get_data(rfield);
@@ -519,7 +519,7 @@ sphrev_vertical(Sphrev1DArgs *args,
     gint i, j, k, size, xres, yres;
 
     data = gwy_data_field_get_data(dfield);
-    rfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    rfield = gwy_data_field_duplicate(dfield);
     xres = gwy_data_field_get_xres(rfield);
     yres = gwy_data_field_get_yres(rfield);
     rdata = gwy_data_field_get_data(rfield);

@@ -305,10 +305,7 @@ scars_remove(GwyContainer *data, GwyRunType run)
     d = gwy_data_field_get_data(dfield);
 
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
-    mask = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
-                                             gwy_data_field_get_xreal(dfield),
-                                             gwy_data_field_get_yreal(dfield),
-                                             FALSE));
+    mask = gwy_data_field_new_alike(dfield, FALSE);
     gwy_data_field_mark_scars(dfield, mask,
                               args.threshold_high, args.threshold_low,
                               args.min_len, args.max_width, args.inverted);
@@ -369,16 +366,16 @@ scars_mark(GwyContainer *data, GwyRunType run)
 static void
 scars_mark_do(ScarsArgs *args, GwyContainer *data)
 {
-    GObject *dfield, *mask;
+    GwyDataField *dfield, *mask;
 
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     if (!gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
-        mask = gwy_serializable_duplicate(dfield);
+        mask = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(data, "/0/mask", mask);
         g_object_unref(mask);
     }
-    gwy_data_field_mark_scars(GWY_DATA_FIELD(dfield), GWY_DATA_FIELD(mask),
+    gwy_data_field_mark_scars(dfield, mask,
                               args->threshold_high, args->threshold_low,
                               args->min_len, args->max_width, args->inverted);
 }
@@ -386,12 +383,12 @@ scars_mark_do(ScarsArgs *args, GwyContainer *data)
 static gboolean
 scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *spin, *hbox;
-    ScarsControls controls;
     enum {
         RESPONSE_RESET = 1,
         RESPONSE_PREVIEW = 2
     };
+    GtkWidget *dialog, *table, *spin, *hbox;
+    ScarsControls controls;
     gint response;
     gdouble zoomval;
     GtkObject *layer;
@@ -414,7 +411,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    controls.mydata = gwy_container_duplicate(data);
     controls.view = gwy_data_view_new(controls.mydata);
     g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
@@ -626,8 +623,7 @@ preview(ScarsControls *controls,
                                                              "/0/data"));
 
     /*set up the mask*/
-    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
-                                         (GObject**)&mask)) {
+    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
         gwy_data_field_resample(mask,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
@@ -640,9 +636,8 @@ preview(ScarsControls *controls,
         }
     }
     else {
-        mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(controls->mydata, "/0/mask",
-                                         G_OBJECT(mask));
+        mask = gwy_data_field_duplicate(dfield);
+        gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
         g_object_unref(mask);
         layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),

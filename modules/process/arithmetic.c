@@ -410,8 +410,8 @@ arithmetic_do(ArithmeticArgs *args)
         }
     }
 
-    data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(data, "/0/data", (GObject*)result);
+    data = gwy_container_new();
+    gwy_container_set_object_by_name(data, "/0/data", result);
     g_object_unref(result);
 
     data_window = gwy_app_data_window_create(data);

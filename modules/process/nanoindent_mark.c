@@ -72,8 +72,7 @@ module_register(const gchar *name)
 static gboolean
 nanoindent_mark(GwyContainer *data, GwyRunType run)
 {
-    GObject *maskfield;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *maskfield;
     gdouble thresh;
 
     g_assert(run & NANOINDENT_MARK_RUN_MODES);
@@ -81,17 +80,13 @@ nanoindent_mark(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (!gwy_container_gis_object_by_name(data, "/0/mask", &maskfield)) {
-        maskfield = gwy_data_field_new(gwy_data_field_get_xres(dfield),
-                                       gwy_data_field_get_yres(dfield),
-                                       gwy_data_field_get_xreal(dfield),
-                                       gwy_data_field_get_yreal(dfield),
-                                       TRUE);
+        maskfield = gwy_data_field_new_alike(dfield, FALSE);
         gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         g_object_unref(maskfield);
     }
 
     thresh = 3.0;
-    mask_nanoindent(dfield, GWY_DATA_FIELD(maskfield));
+    mask_nanoindent(dfield, maskfield);
 
     return TRUE;
 }
