@@ -1,6 +1,8 @@
 
 TOP_SRCDIR = ..
 
+!INCLUDE $(TOP_SRCDIR)\make.msc
+
 PIXMAPS = \
 	gwy_bold-24.png \
 	gwy_crop-24.png \
