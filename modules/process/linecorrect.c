@@ -191,14 +191,18 @@ find_minima_golden(gdouble (*func)(gdouble x, gpointer data),
         if (fc < fd) {
             b = d;
             fb = fd;
-            d = (1.0 - GOLDEN_RATIO)*a + GOLDEN_RATIO*b;
-            fd = func(d, data);
+            d = c;
+            fd = fc;
+            c = GOLDEN_RATIO*a + (1.0 - GOLDEN_RATIO)*b;
+            fc = func(c, data);
         }
         else if (fc > fd) {
             a = c;
             fa = fc;
-            c = GOLDEN_RATIO*a + (1.0 - GOLDEN_RATIO)*b;
-            fc = func(c, data);
+            c = d;
+            fc = fd;
+            d = (1.0 - GOLDEN_RATIO)*a + GOLDEN_RATIO*b;
+            fd = func(d, data);
         }
         else
             break;
