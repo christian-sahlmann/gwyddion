@@ -43,6 +43,7 @@ struct _GwyDataWindowClass {
 
 GtkWidget*       gwy_data_window_new               (GwyDataView *data_view);
 GType            gwy_data_window_get_type          (void) G_GNUC_CONST;
+GtkWidget*       gwy_data_window_get_data_view     (GwyDataWindow *window);
 
 #ifdef __cplusplus
 }
