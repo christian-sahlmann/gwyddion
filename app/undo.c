@@ -205,18 +205,30 @@ gwy_app_undo_checkpointv(GwyContainer *data,
 void
 gwy_app_undo_undo(void)
 {
+    gwy_app_undo_undo_window(gwy_app_data_window_get_current());
+}
+
+/**
+ * gwy_app_undo_undo_window:
+ * @data_window: A data window (with undo available).
+ *
+ * Performs undo for the data window @data_window.
+ *
+ * Since: 1.2.
+ **/
+void
+gwy_app_undo_undo_window(GwyDataWindow *data_window)
+{
     GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_REDO
     };
-    GwyDataWindow *data_window;
     GtkWidget *data_view;
     GwyAppUndoLevel *level;
     GwyContainer *data;
     GList *undo, *redo, *l;
 
-    data_window = gwy_app_data_window_get_current();
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = gwy_data_window_get_data_view(data_window);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
@@ -252,25 +264,26 @@ gwy_app_undo_undo(void)
 }
 
 /**
- * gwy_app_undo_redo:
+ * gwy_app_undo_redo_window:
+ * @data_window: A data window (with redo available).
  *
- * Performs redo for the current data window.
+ * Performs redo for the data window @data_window.
+ *
+ * Since: 1.2.
  **/
 void
-gwy_app_undo_redo(void)
+gwy_app_undo_redo_window(GwyDataWindow *data_window)
 {
     GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_UNDO
     };
-    GwyDataWindow *data_window;
     GtkWidget *data_view;
     GwyAppUndoLevel *level;
     GList *undo, *redo, *l;
     GwyContainer *data;
 
-    data_window = gwy_app_data_window_get_current();
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = gwy_data_window_get_data_view(data_window);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
@@ -303,6 +316,17 @@ gwy_app_undo_redo(void)
     if (gwy_container_contains_by_name(data, "/0/show"))
         sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
     gwy_app_toolbox_update_state(&sens_data);
+}
+
+/**
+ * gwy_app_undo_redo:
+ *
+ * Performs redo for the current data window.
+ **/
+void
+gwy_app_undo_redo(void)
+{
+    gwy_app_undo_redo_window(gwy_app_data_window_get_current());
 }
 
 static void
