@@ -1,9 +1,10 @@
+# @(#) $Id$
 msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
 "POT-Creation-Date: 2004-10-09 00:00+0200\n"
-"PO-Revision-Date: 2004-10-09 00:06+0200\n"
+"PO-Revision-Date: 2004-10-09 00:07+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -12,7 +13,7 @@ msgstr ""
 
 #: libdraw/gwypalettedef.c:544 libgwydgets/gwyglmaterial.c:306
 msgid "Untitled"
-msgstr ""
+msgstr "Nepojmenovaný"
 
 #: libgwydgets/gwydgets.c:270
 msgid "Change Mask Color"
@@ -43,11 +44,11 @@ msgstr "Y-ová osa"
 
 #: libgwydgets/gwy3dwindow.c:178
 msgid "Minimum z value"
-msgstr ""
+msgstr "Nejmenší hodnota z"
 
 #: libgwydgets/gwy3dwindow.c:179
 msgid "Maximum z value"
-msgstr ""
+msgstr "Největší hodnota z"
 
 #: libgwydgets/gwy3dwindow.c:184
 msgid "_Lighting"
