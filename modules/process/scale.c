@@ -25,7 +25,6 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
-#include <app/file.h>
 #include <app/app.h>
 
 #define SCALE_RUN_MODES \

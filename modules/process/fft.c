@@ -27,7 +27,6 @@
 #include <libgwydgets/gwydgets.h>
 #include <libgwydgets/gwymodulemenus.h>
 #include <app/settings.h>
-#include <app/file.h>
 #include <app/app.h>
 
 #define FFT_RUN_MODES \
