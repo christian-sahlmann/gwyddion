@@ -46,12 +46,6 @@ struct _GwyMenuSensData {
     GwyMenuSensFlags set_to;
 };
 
-GtkWidget* gwy_app_menu_create_meta_menu          (GtkAccelGroup *accel_group);
-GtkWidget* gwy_app_menu_create_proc_menu          (GtkAccelGroup *accel_group);
-GtkWidget* gwy_app_menu_create_graph_menu         (GtkAccelGroup *accel_group);
-GtkWidget* gwy_app_menu_create_file_menu          (GtkAccelGroup *accel_group);
-GtkWidget* gwy_app_menu_create_edit_menu          (GtkAccelGroup *accel_group);
-
 void       gwy_app_menu_set_sensitive_recursive   (GtkWidget *widget,
                                                    GwyMenuSensData *data);
 void       gwy_app_menu_recent_files_update       (GList *recent_files);
@@ -64,7 +58,6 @@ void       gwy_app_menu_set_sensitive_array       (GtkItemFactory *item_factory,
 void       gwy_app_menu_set_sensitive_both        (GtkWidget *item,
                                                    GwyMenuSensFlags flags,
                                                    GwyMenuSensFlags state);
-void       gwy_app_menu_set_recent_files_menu     (GtkWidget *menu);
 void       gwy_app_toolbox_update_state           (GwyMenuSensData *sens_data);
 
 G_END_DECLS
