@@ -342,7 +342,7 @@ fractal_dialog_update(FractalControls *controls,
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
     gint i;
-    gdouble a, b;
+    gdouble a, b, xs[20], ys[20];
     
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -396,19 +396,22 @@ fractal_dialog_update(FractalControls *controls,
     for (i=0; i<xline->res; i++)
     {
         xfit->data[i] = xline->data[i];
-        yfit->data[i] = xfit->data[i]*a + b;
+        yfit->data[i] = yline->data[i]; /* xfit->data[i]*a + b;*/
+        xs[i] = xfit->data[i];
+        ys[i] = yfit->data[i];
         printf("%g %g\n",xfit->data[i], yfit->data[i]);
     }
    
     params = g_new(GwyGraphAreaCurveParams, 1);
-    label = g_string_new("fit");
+   /* label = g_string_new("fit");*/
     
     params->is_line = 1;
     params->is_point = 0;
     params->line_size = 1;
     params->color.pixel = 0x00000000; 
-    gwy_graph_add_datavalues(controls->graph, xfit->data, yfit->data, xline->res, 
-                             label, params);
+    
+    gwy_graph_add_datavalues(controls->graph, xs, ys, xline->res, 
+                             label, NULL);
 }
 
 static void
