@@ -64,16 +64,21 @@ typedef struct {
     gulong windowname_id;
 } GwyUnitoolState;
 
-typedef void (*GwyUnitoolFunc)(GwyUnitoolState *state);
+typedef void       (*GwyUnitoolFunc)         (GwyUnitoolState *state);
+typedef GtkWidget* (*GwyUnitoolCreateFunc)   (GwyUnitoolState *state);
+typedef void       (*GwyUnitoolResponseFunc) (GwyUnitoolState *state,
+                                              gint response);
+typedef void       (*GwyUnitoolUpdateFunc)   (GwyUnitoolState *state,
+                                              GwyUnitoolUpdateType reason);
 
 struct _GwyUnitoolSlots {
-    GType layer_type;
-    GwyUnitoolFunc layer_setup;
-    GtkWidget* (*dialog_create)(GwyUnitoolState *state);
-    void (*dialog_update)(GwyUnitoolState *state, GwyUnitoolUpdateType reason);
-    GwyUnitoolFunc dialog_abandon;
-    GwyUnitoolFunc apply;
-    void (*response)(GwyUnitoolState *state, gint response);
+    GType                  layer_type;
+    GwyUnitoolFunc         layer_setup;
+    GwyUnitoolCreateFunc   dialog_create;
+    GwyUnitoolUpdateFunc   dialog_update;
+    GwyUnitoolFunc         dialog_abandon;
+    GwyUnitoolFunc         apply;
+    GwyUnitoolResponseFunc response;
 };
 
 gboolean     gwy_unitool_use                     (GwyUnitoolState *state,
