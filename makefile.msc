@@ -1,4 +1,8 @@
 
+TOP_SRCDIR = .
+
+!include make.msc
+
 SUBDIRS = \
 	libgwyddion \
 	libprocess \
@@ -15,11 +19,12 @@ DOCUMENTS = \
 ## targets
 all: sub-all $(DOCUMENTS)
 
-clean: sub-clean
-
-install: sub-install
+clean:: sub-clean
 
 !INCLUDE rules.msc
+
+install: all sub-install
+	for %d in ($(DOCUMENTS)) do $(INSTALL) %d "$(DEST_DIR)"
 
 # FIXME:
 COPYING.wri: COPYING

@@ -2,10 +2,8 @@
 GTK_TOP = C:\Dev-C++
 MSC_TOP = C:\Program Files\Microsoft Visual Studio\VC98
 
-
-!IFNDEF DEST_DIR
-DEST_DIR = $(TOP_SRCDIR)/inst
-!endif
+# Don't change this it's used by iss too
+DEST_DIR = $(TOP_SRCDIR)\inst
 
 # debug by default
 DEBUG = 1
