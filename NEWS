@@ -1,4 +1,4 @@
-1.3cvs20040708
+1.3cvs20040713
 
 1.4
 Application:
@@ -16,6 +16,8 @@ Modules:
 - Nanoscope, Pixmap, Rawfile, SIS: Import dialog shows a preview.
 - Pixmap: Export dialog shows a preview.
 - Rawfile: Fixed Load preset damaging file infomation.
+- Shade: A preview was added.
+- Rotate: Can make the result large enough to show all data after rotation.
 - Plug-in proxy: Random insensitive plug-in menu items were fixed.
 - Plug-in proxy: Alternate plug-in registration method using RGI files
   (without running the plug-ins).
@@ -31,6 +33,7 @@ Library:
 
 Other:
 - New example plug-ins using Gwyddion::dump, Gwyddion.dump.
+- New example plug-ins in C++ and Pascal.
 
 
 1.3
