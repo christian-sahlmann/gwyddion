@@ -636,7 +636,7 @@ gwy_layer_lines_near_line(GwyLayerLines *layer,
         return -1;
 
     i = gwy_math_find_nearest_line(xreal, yreal, &d2min,
-                                   layer->nselected, layer->lines);
+                                   4*layer->nselected, layer->lines);
     if (i == -1)
         return -1;
 
