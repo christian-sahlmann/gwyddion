@@ -122,6 +122,21 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
 
     g_assert(run & DWT_DENOISE_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    xsize = gwy_data_field_get_xres(dfield);
+    ysize = gwy_data_field_get_yres(dfield);
+    if (xsize != ysize) {
+        dialog = gtk_message_dialog_new
+            (GTK_WINDOW(gwy_app_data_window_get_current()),
+             GTK_DIALOG_DESTROY_WITH_PARENT,
+             GTK_MESSAGE_ERROR,
+             GTK_BUTTONS_OK,
+             _("%s: Data must be square."), _("DWT Denoise"));
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+
+        return FALSE;
+    }
+
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = dwt_denoise_defaults;
     else
@@ -137,20 +152,6 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
                                              "/0/base/palette",
                                              NULL);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    xsize = gwy_data_field_get_xres(dfield);
-    ysize = gwy_data_field_get_yres(dfield);
-    if (xsize != ysize) {
-        dialog = gtk_message_dialog_new
-            (GTK_WINDOW(gwy_app_data_window_get_current()),
-             GTK_DIALOG_DESTROY_WITH_PARENT,
-             GTK_MESSAGE_ERROR,
-             GTK_BUTTONS_OK,
-             _("%s: Data must be square."), _("DWT Denoise"));
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        return ok;
-    }
 
     newsize = gwy_data_field_get_fft_res(xsize);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));

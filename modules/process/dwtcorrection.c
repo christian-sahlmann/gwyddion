@@ -110,18 +110,6 @@ dwt_correction(GwyContainer *data, GwyRunType run)
 
     g_assert(run & DWT_CORRECTION_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = dwt_correction_defaults;
-    else
-        dwt_correction_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || dwt_correction_dialog(&args);
-    if (run == GWY_RUN_MODAL)
-        dwt_correction_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
-
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
@@ -133,8 +121,19 @@ dwt_correction(GwyContainer *data, GwyRunType run)
              _("%s: Data must be square."), _("DWT Correction"));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
-        return ok;
+
+        return FALSE;
     }
+
+    if (run == GWY_RUN_WITH_DEFAULTS)
+        args = dwt_correction_defaults;
+    else
+        dwt_correction_load_args(gwy_app_settings_get(), &args);
+    ok = (run != GWY_RUN_MODAL) || dwt_correction_dialog(&args);
+    if (run == GWY_RUN_MODAL)
+        dwt_correction_save_args(gwy_app_settings_get(), &args);
+    if (!ok)
+        return FALSE;
 
     if (!gwy_container_gis_object_by_name(data, "/0/mask", (GObject*)&mask)) {
         mask = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));

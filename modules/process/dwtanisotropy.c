@@ -120,16 +120,6 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
 
     g_assert(run & DWT_ANISOTROPY_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = dwt_anisotropy_defaults;
-    else
-        dwt_anisotropy_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || dwt_anisotropy_dialog(&args);
-    if (run == GWY_RUN_MODAL)
-        dwt_anisotropy_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
-
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
@@ -144,6 +134,16 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
 
         return FALSE;
     }
+
+    if (run == GWY_RUN_WITH_DEFAULTS)
+        args = dwt_anisotropy_defaults;
+    else
+        dwt_anisotropy_load_args(gwy_app_settings_get(), &args);
+    ok = (run != GWY_RUN_MODAL) || dwt_anisotropy_dialog(&args);
+    if (run == GWY_RUN_MODAL)
+        dwt_anisotropy_save_args(gwy_app_settings_get(), &args);
+    if (!ok)
+        return FALSE;
 
     mask = NULL;
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);

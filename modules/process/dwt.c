@@ -115,16 +115,6 @@ dwt(GwyContainer *data, GwyRunType run)
 
     g_assert(run & DWT_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    if (run == GWY_RUN_WITH_DEFAULTS)
-        args = dwt_defaults;
-    else
-        dwt_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || dwt_dialog(&args);
-    if (run == GWY_RUN_MODAL)
-        dwt_save_args(gwy_app_settings_get(), &args);
-    if (!ok)
-        return FALSE;
-
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
     if (xsize != ysize) {
@@ -138,6 +128,16 @@ dwt(GwyContainer *data, GwyRunType run)
         gtk_widget_destroy(dialog);
         return ok;
     }
+
+    if (run == GWY_RUN_WITH_DEFAULTS)
+        args = dwt_defaults;
+    else
+        dwt_load_args(gwy_app_settings_get(), &args);
+    ok = (run != GWY_RUN_MODAL) || dwt_dialog(&args);
+    if (run == GWY_RUN_MODAL)
+        dwt_save_args(gwy_app_settings_get(), &args);
+    if (!ok)
+        return FALSE;
 
     data = gwy_container_duplicate_by_prefix(data,
                                              "/0/data",
