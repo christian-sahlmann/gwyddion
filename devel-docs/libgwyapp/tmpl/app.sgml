@@ -35,6 +35,8 @@ app
 
 </para>
 
+@window: 
+<!-- # Unused Parameters # -->
 @data_window: 
 
 
@@ -43,6 +45,8 @@ app
 
 </para>
 
+@window: 
+<!-- # Unused Parameters # -->
 @data_window: 
 
 
@@ -69,9 +73,11 @@ app
 
 </para>
 
-@data_window: 
+@window: 
 @templ: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@data_window: 
 
 
 <!-- ##### FUNCTION gwy_app_data_view_update ##### -->
