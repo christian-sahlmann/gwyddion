@@ -20,7 +20,6 @@ libgwydgetsinclude_HEADERS = \
 	gwydatawindow.h \
 	gwydgets.h \
 	gwyglmaterial.h \
-	gwygradsphere.h \
 	gwygraph.h \
 	gwygrapharea.h \
 	gwygraphcorner.h \
@@ -43,13 +42,10 @@ libgwydgetsinclude_HEADERS = \
 	gwyruler.h \
 	gwyscitext.h \
 	gwyshader.h \
-	gwyspherecoords.h \
 	gwystatusbar.h \
 	gwystock.h \
 	gwytoolbox.h \
 	gwyvectorlayer.h \
-	gwyvectorshade.h \
-	gwyvmenubar.h \
 	gwyvruler.h \
 	gwyvalunit.h
 
@@ -79,7 +75,6 @@ libgwydgets_la_SOURCES = \
 	gwydatawindow.c \
 	gwydgets.c \
 	gwyglmaterial.c \
-	gwygradsphere.c \
 	gwygraph.c \
 	gwygrapharea.c \
 	gwygraphcurvemodel.c \
@@ -103,13 +98,10 @@ libgwydgets_la_SOURCES = \
 	gwyruler.c \
 	gwyscitext.c \
 	gwyshader.c \
-	gwyspherecoords.c \
 	gwystatusbar.c \
 	gwystock.c \
 	gwytoolbox.c \
 	gwyvectorlayer.c \
-	gwyvectorshade.c \
-	gwyvmenubar.c \
 	gwyvruler.c \
 	gwyvalunit.c
 

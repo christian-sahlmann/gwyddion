@@ -32,7 +32,6 @@
 #include <libgwydgets/gwydataviewlayer.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwyglmaterial.h>
-#include <libgwydgets/gwygradsphere.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygrapharea.h>
 #include <libgwydgets/gwygraphcorner.h>
@@ -48,13 +47,10 @@
 #include <libgwydgets/gwyruler.h>
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyshader.h>
-#include <libgwydgets/gwyspherecoords.h>
 #include <libgwydgets/gwystatusbar.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwytoolbox.h>
 #include <libgwydgets/gwyvectorlayer.h>
-#include <libgwydgets/gwyvectorshade.h>
-#include <libgwydgets/gwyvmenubar.h>
 #include <libgwydgets/gwyvruler.h>
 #include <libgwydgets/gwyvalunit.h>
 
